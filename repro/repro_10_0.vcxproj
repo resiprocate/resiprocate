@@ -1,0 +1,404 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="SSL-Debug|Win32">
+      <Configuration>SSL-Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="SSL-Release|Win32">
+      <Configuration>SSL-Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectName>repro</ProjectName>
+    <ProjectGuid>{9D8D2649-213F-49D3-A8B0-C1849C611654}</ProjectGuid>
+    <RootNamespace>repro</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.21006.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Debug\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Release\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'">$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'">$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'">true</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'">$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'">$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'">false</LinkIncremental>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'" />
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <PreBuildEvent>
+      <Command>echo Generating reproInfo.hxx
+
+@echo off &amp; setlocal enableextensions enabledelayedexpansion
+echo #define REPRO_BUILD_HOST "%COMPUTERNAME%" &gt; reproInfo.hxx
+
+:: Get VERSION in a variable
+set lineNro_=
+for /f "tokens=* delims=" %%r in ('type VERSION') do (
+set /a lineNro_+=1
+echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)
+call %temp%\tmp$$$.cmd
+del %temp%\tmp$$$.cmd
+
+echo #define REPRO_RELEASE_VERSION "%line1_%" &gt;&gt; reproInfo.hxx
+
+endlocal
+</Command>
+    </PreBuildEvent>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/db/build_win32;$(ProjectDir)../contrib/pcre;$(ProjectDir)../contrib/popt/win32/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;HAVE_POPT_H;USE_IPV6;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(OutDir)repro.pdb</ProgramDatabaseFile>
+      <SubSystem>Console</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <PreBuildEvent>
+      <Command>echo Generating reproInfo.hxx
+
+@echo off &amp; setlocal enableextensions enabledelayedexpansion
+echo #define REPRO_BUILD_HOST "%COMPUTERNAME%" &gt; reproInfo.hxx
+
+:: Get VERSION in a variable
+set lineNro_=
+for /f "tokens=* delims=" %%r in ('type VERSION') do (
+set /a lineNro_+=1
+echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)
+call %temp%\tmp$$$.cmd
+del %temp%\tmp$$$.cmd
+
+echo #define REPRO_RELEASE_VERSION "%line1_%" &gt;&gt; reproInfo.hxx
+
+endlocal
+</Command>
+    </PreBuildEvent>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/db/build_win32;$(ProjectDir)../contrib/pcre;$(ProjectDir)../contrib/popt/win32/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_POPT_H;USE_IPV6;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'">
+    <PreBuildEvent>
+      <Command>echo Generating reproInfo.hxx
+
+@echo off &amp; setlocal enableextensions enabledelayedexpansion
+echo #define REPRO_BUILD_HOST "%COMPUTERNAME%" &gt; reproInfo.hxx
+
+:: Get VERSION in a variable
+set lineNro_=
+for /f "tokens=* delims=" %%r in ('type VERSION') do (
+set /a lineNro_+=1
+echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)
+call %temp%\tmp$$$.cmd
+del %temp%\tmp$$$.cmd
+
+echo #define REPRO_RELEASE_VERSION "%line1_%" &gt;&gt; reproInfo.hxx
+
+endlocal
+</Command>
+    </PreBuildEvent>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/db/build_win32;$(ProjectDir)../contrib/pcre;$(ProjectDir)../contrib/popt/win32/include;$(ProjectDir)../contrib/openssl/include;$(ProjectDir)../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;HAVE_POPT_H;USE_SSL;USE_IPV6;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\contrib\openssl\lib\vc\static\libeay32MDd.lib;$(ProjectDir)..\contrib\openssl\lib\vc\static\ssleay32MDd.lib;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(OutDir)repro.pdb</ProgramDatabaseFile>
+      <SubSystem>Console</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'">
+    <PreBuildEvent>
+      <Command>echo Generating reproInfo.hxx
+
+@echo off &amp; setlocal enableextensions enabledelayedexpansion
+echo #define REPRO_BUILD_HOST "%COMPUTERNAME%" &gt; reproInfo.hxx
+
+:: Get VERSION in a variable
+set lineNro_=
+for /f "tokens=* delims=" %%r in ('type VERSION') do (
+set /a lineNro_+=1
+echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)
+call %temp%\tmp$$$.cmd
+del %temp%\tmp$$$.cmd
+
+echo #define REPRO_RELEASE_VERSION "%line1_%" &gt;&gt; reproInfo.hxx
+
+endlocal
+</Command>
+    </PreBuildEvent>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/db/build_win32;$(ProjectDir)../contrib/pcre;$(ProjectDir)../contrib/popt/win32/include;$(ProjectDir)../contrib/openssl/include;$(ProjectDir)../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_POPT_H;USE_SSL;USE_IPV6;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\contrib\openssl\lib\vc\static\libeay32MD.lib;$(ProjectDir)..\contrib\openssl\lib\vc\static\ssleay32MD.lib;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="AbstractDb.cxx" />
+    <ClCompile Include="AclStore.cxx" />
+    <ClCompile Include="monkeys\AmIResponsible.cxx" />
+    <ClCompile Include="BerkeleyDb.cxx" />
+    <ClCompile Include="stateAgents\CertPublicationHandler.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="stateAgents\CertServer.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="stateAgents\CertSubscriptionHandler.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="CommandLineParser.cxx" />
+    <ClCompile Include="ConfigStore.cxx" />
+    <ClCompile Include="monkeys\ConstantLocationMonkey.cxx" />
+    <ClCompile Include="monkeys\DigestAuthenticator.cxx" />
+    <ClCompile Include="Dispatcher.cxx" />
+    <ClCompile Include="HttpBase.cxx" />
+    <ClCompile Include="HttpConnection.cxx" />
+    <ClCompile Include="monkeys\IsTrustedNode.cxx" />
+    <ClCompile Include="monkeys\LocationServer.cxx" />
+    <ClCompile Include="OutboundTarget.cxx" />
+    <ClCompile Include="monkeys\OutboundTargetHandler.cxx" />
+    <ClCompile Include="stateAgents\PrivateKeyPublicationHandler.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="stateAgents\PrivateKeySubscriptionHandler.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Processor.cxx" />
+    <ClCompile Include="ProcessorChain.cxx" />
+    <ClCompile Include="Proxy.cxx" />
+    <ClCompile Include="QValueTarget.cxx" />
+    <ClCompile Include="monkeys\QValueTargetHandler.cxx" />
+    <ClCompile Include="monkeys\RecursiveRedirect.cxx" />
+    <ClCompile Include="Registrar.cxx" />
+    <ClCompile Include="repro.cxx" />
+    <ClCompile Include="ReproServerAuthManager.cxx" />
+    <ClCompile Include="ReproVersion.cxx" />
+    <ClCompile Include="RequestContext.cxx" />
+    <ClCompile Include="ResponseContext.cxx" />
+    <ClCompile Include="RouteStore.cxx" />
+    <ClCompile Include="RRDecorator.cxx" />
+    <ClCompile Include="monkeys\SimpleStaticRoute.cxx" />
+    <ClCompile Include="monkeys\SimpleTargetHandler.cxx" />
+    <ClCompile Include="monkeys\StaticRoute.cxx" />
+    <ClCompile Include="Store.cxx" />
+    <ClCompile Include="monkeys\StrictRouteFixup.cxx" />
+    <ClCompile Include="Target.cxx" />
+    <ClCompile Include="UserStore.cxx" />
+    <ClCompile Include="WebAdmin.cxx" />
+    <ClCompile Include="WebAdminThread.cxx" />
+    <ClCompile Include="WorkerThread.cxx" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AbstractDb.hxx" />
+    <ClInclude Include="Ack200DoneMessage.hxx" />
+    <ClInclude Include="AclStore.hxx" />
+    <ClInclude Include="monkeys\AmIResponsible.hxx" />
+    <ClInclude Include="BerkeleyDb.hxx" />
+    <ClInclude Include="stateAgents\CertPublicationHandler.hxx" />
+    <ClInclude Include="stateAgents\CertServer.hxx" />
+    <ClInclude Include="stateAgents\CertSubscriptionHandler.hxx" />
+    <ClInclude Include="CommandLineParser.hxx" />
+    <ClInclude Include="ConfigStore.hxx" />
+    <ClInclude Include="monkeys\ConstantLocationMonkey.hxx" />
+    <ClInclude Include="monkeys\DigestAuthenticator.hxx" />
+    <ClInclude Include="Dispatcher.hxx" />
+    <ClInclude Include="HttpBase.hxx" />
+    <ClInclude Include="HttpConnection.hxx" />
+    <ClInclude Include="monkeys\IsTrustedNode.hxx" />
+    <ClInclude Include="monkeys\LocationServer.hxx" />
+    <ClInclude Include="OutboundTarget.hxx" />
+    <ClInclude Include="monkeys\OutboundTargetHandler.hxx" />
+    <ClInclude Include="stateAgents\PrivateKeyPublicationHandler.hxx" />
+    <ClInclude Include="stateAgents\PrivateKeySubscriptionHandler.hxx" />
+    <ClInclude Include="Processor.hxx" />
+    <ClInclude Include="ProcessorChain.hxx" />
+    <ClInclude Include="Proxy.hxx" />
+    <ClInclude Include="QValueTarget.hxx" />
+    <ClInclude Include="monkeys\QValueTargetHandler.hxx" />
+    <ClInclude Include="monkeys\RecursiveRedirect.hxx" />
+    <ClInclude Include="Registrar.hxx" />
+    <ClInclude Include="ReproServerAuthManager.hxx" />
+    <ClInclude Include="ReproVersion.hxx" />
+    <ClInclude Include="RequestContext.hxx" />
+    <ClInclude Include="ResponseContext.hxx" />
+    <ClInclude Include="RouteStore.hxx" />
+    <ClInclude Include="RRDecorator.hxx" />
+    <ClInclude Include="monkeys\SimpleStaticRoute.hxx" />
+    <ClInclude Include="monkeys\SimpleTargetHandler.hxx" />
+    <ClInclude Include="monkeys\StaticRoute.hxx" />
+    <ClInclude Include="Store.hxx" />
+    <ClInclude Include="monkeys\StrictRouteFixup.hxx" />
+    <ClInclude Include="Target.hxx" />
+    <ClInclude Include="TimerCMessage.hxx" />
+    <ClInclude Include="UserStore.hxx" />
+    <ClInclude Include="WebAdmin.hxx" />
+    <ClInclude Include="WebAdminThread.hxx" />
+    <ClInclude Include="WorkerThread.hxx" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="webadmin\pageOutlinePost.ixx" />
+    <None Include="webadmin\pageOutlinePre.ixx" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\contrib\db\build_win32\db_static_10_0.vcxproj">
+      <Project>{9e5a7645-1502-4467-91f8-bcf2eb06ef72}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\contrib\pcre\pcre_10_0.vcxproj">
+      <Project>{b933f895-8efb-4fdd-a46d-09b8c00d1d26}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\resip\dum\dum_10_0.vcxproj">
+      <Project>{31b0654f-e08e-405f-909f-80f86cb14b9d}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\resip\stack\resiprocate_10_0.vcxproj">
+      <Project>{2a8be839-6466-4001-b224-8f1c3168d04a}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\rutil\rutil_10_0.vcxproj">
+      <Project>{3d0e5ceb-93dc-4fdb-918b-d08fa369e106}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -137,6 +137,9 @@ class Data
 
       Data(const Data& data);
 
+#ifdef RESIP_HAS_RVALUE_REFS
+      Data(Data &&data);
+#endif
       /**
         Creates a data with the contents of the string.
       */
@@ -290,6 +293,10 @@ class Data
       friend bool operator<(const char* lhs, const Data& rhs);
 
       Data& operator=(const Data& data);
+
+#ifdef RESIP_HAS_RVALUE_REFS
+      Data& operator=(Data &&data);
+#endif
 
       /**
         Assigns a null-terminated string to the buffer.

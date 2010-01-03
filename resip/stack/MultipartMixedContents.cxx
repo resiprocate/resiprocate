@@ -75,6 +75,12 @@ MultipartMixedContents::setBoundary()
 }
 
 void
+MultipartMixedContents::setBoundary(const Data& boundary)
+{
+    mType.param(p_boundary) = boundary;
+}
+
+void
 MultipartMixedContents::clear()
 {
    for (vector<Contents*>::iterator i = mContents.begin(); 
@@ -126,6 +132,7 @@ MultipartMixedContents::encodeParsed(EncodeStream& str) const
    Data boundary(boundaryToken.size() + 2, Data::Preallocate);
    boundary = Symbols::DASHDASH;
    boundary += boundaryToken;
+   boundary.replace("\"", ""); // remove quotes
 
    assert( mContents.size() > 0 );
    

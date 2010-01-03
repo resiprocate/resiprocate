@@ -1,11 +1,23 @@
 #include "resip/dum/AppDialogSet.hxx"
 #include "resip/dum/InviteSessionHandler.hxx"
 #include "resip/dum/ClientInviteSession.hxx"
+#include "resip/stack/SdpContents.hxx"
 #include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
+
+void 
+InviteSessionHandler::onEarlyMedia(ClientInviteSessionHandle h, const SipMessage& msg, const Contents& body)
+{
+	if(!mGenericOfferAnswer)
+   {
+      const SdpContents* sdp = dynamic_cast<const SdpContents*>(&body);
+      assert(sdp);
+      onEarlyMedia(h, msg, *sdp);
+   }
+}
 
 void 
 InviteSessionHandler::onStaleCallTimeout(ClientInviteSessionHandle handle)
@@ -19,7 +31,7 @@ InviteSessionHandler::terminate(ClientInviteSessionHandle h)
    h->getAppDialogSet()->end();
 }
 
-void
+void 
 InviteSessionHandler::onAckReceived(InviteSessionHandle, const SipMessage& msg)
 {
 }
@@ -51,10 +63,42 @@ InviteSessionHandler::onSessionExpired(InviteSessionHandle handle)
    handle->end(InviteSession::SessionExpired);
 }
 
+void 
+InviteSessionHandler::onAnswer(InviteSessionHandle h, const SipMessage& msg, const Contents& body)
+{
+	if(!mGenericOfferAnswer)
+   {
+      const SdpContents* sdp = dynamic_cast<const SdpContents*>(&body);
+      assert(sdp);
+      onAnswer(h, msg, *sdp);
+   }
+}
+
+void
+InviteSessionHandler::onOffer(InviteSessionHandle h, const SipMessage& msg, const Contents& body)
+{
+	if(!mGenericOfferAnswer)
+   {
+      const SdpContents* sdp = dynamic_cast<const SdpContents*>(&body);
+      assert(sdp);
+      onOffer(h, msg, *sdp);
+   }
+}
 
 void 
 InviteSessionHandler::onRemoteSdpChanged(InviteSessionHandle, const SipMessage& msg, const SdpContents&)
 {
+}
+
+void 
+InviteSessionHandler::onRemoteAnswerChanged(InviteSessionHandle h, const SipMessage& msg, const Contents& body)
+{
+	if(!mGenericOfferAnswer)
+   {
+      const SdpContents* sdp = dynamic_cast<const SdpContents*>(&body);
+      assert(sdp);
+      onRemoteSdpChanged(h, msg, *sdp);
+   }
 }
 
 void 

@@ -5,6 +5,7 @@
 #include "resip/stack/MessageFilterRule.hxx"
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/SipMessage.hxx"
+#include "resip/stack/TransactionUser.hxx"
 #include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TRANSACTION
@@ -20,7 +21,8 @@ MessageFilterRule::MessageFilterRule(SchemeList    schemeList,
   : mSchemeList(schemeList),
     mHostpartMatches(hostpartType),
     mMethodList(methodList),
-    mEventList(eventList)
+    mEventList(eventList),
+	mTransactionUser(0)
 {
 }
 
@@ -32,7 +34,8 @@ MessageFilterRule::MessageFilterRule(SchemeList    schemeList,
     mHostpartMatches(List),
     mHostpartList(hostpartList),
     mMethodList(methodList),
-    mEventList(eventList)
+    mEventList(eventList),
+	mTransactionUser(0)
 {
 }
 
@@ -169,8 +172,10 @@ MessageFilterRule::hostIsInList(const Data& hostpart) const
            return false;
          break;
       case DomainIsMe:
-           // !abr! Waiting for TU support for this method.
-           //return (tu.domainIsMe(hostpart));
+           if(mTransactionUser)
+           {
+              return mTransactionUser->isMyDomain(hostpart);
+           }
            return false;
          break;
       case List:
@@ -178,7 +183,7 @@ MessageFilterRule::hostIsInList(const Data& hostpart) const
          for (HostpartList::const_iterator i = mHostpartList.begin() ; 
               i != mHostpartList.end() ; ++i)
          {
-            if (*i == hostpart)
+            if (isEqualNoCase(*i, hostpart))
                return true;
          }
          break;

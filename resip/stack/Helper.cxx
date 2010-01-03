@@ -383,7 +383,7 @@ Helper::makeResponse(SipMessage& response,
    if (!warning.empty())
    {
       WarningCategory warn;
-      warn.code() = 499;
+      warn.code() = 399;
       warn.hostname() = hostname;
       warn.text() = warning;
       response.header(h_Warnings).push_back(warn);
@@ -610,11 +610,10 @@ Helper::makeFailureAck(const SipMessage& request, const SipMessage& response)
 }
 
 
+static const Data cookie("z9hG4bK"); // magic cookie per rfc3261   
 Data 
 Helper::computeUniqueBranch()
 {
-   static const Data cookie("z9hG4bK"); // magic cookie per rfc2543bis-09    
-
    Data result(16, Data::Preallocate);
    result += cookie;
    result += Random::getRandomHex(4);
@@ -624,11 +623,11 @@ Helper::computeUniqueBranch()
 }
 
 
+static Data localhostname = DnsUtil::getLocalHostName();
 Data
 Helper::computeCallId()
 {
-   static Data hostname = DnsUtil::getLocalHostName();
-   Data hostAndSalt(hostname + Random::getRandomHex(16));
+   Data hostAndSalt(localhostname + Random::getRandomHex(16));
 #ifndef USE_SSL // .bwc. None of this is neccessary if we're using openssl
 #if defined(__linux__) || defined(__APPLE__)
    pid_t pid = getpid();
@@ -677,6 +676,7 @@ Helper::makeNonce(const SipMessage& request, const Data& timestamp)
    return getNonceHelper()->makeNonce(request, timestamp);
 }
 
+static Data noBody = MD5Stream().getHex();
 Data 
 Helper::makeResponseMD5WithA1(const Data& a1,
                               const Data& method, const Data& digestUri, const Data& nonce,
@@ -698,7 +698,6 @@ Helper::makeResponseMD5WithA1(const Data& a1,
       }
       else
       {
-         static Data noBody = MD5Stream().getHex();
          a2 << Symbols::COLON << noBody;
       }
    }
@@ -741,6 +740,7 @@ Helper::makeResponseMD5(const Data& username, const Data& password, const Data& 
                                 cnonce, cnonceCount, entity);
 }
 
+static Data digest("digest");
 std::pair<Helper::AuthResult,Data>
 Helper::advancedAuthenticateRequest(const SipMessage& request, 
                                     const Data& realm,
@@ -777,7 +777,6 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
              i->exists(p_response) &&
              i->param(p_realm) == realm)
          {
-            static Data digest("digest");
             if(!isEqualNoCase(i->scheme(),digest))
             {
                DebugLog(<< "Scheme must be Digest");
@@ -938,7 +937,6 @@ Helper::authenticateRequest(const SipMessage& request,
           i->exists(p_response) &&
           i->param(p_realm) == realm)
       {
-         static Data digest("digest");
          if(!isEqualNoCase(i->scheme(),digest))
          {
             DebugLog(<< "Scheme must be Digest");
@@ -1095,7 +1093,6 @@ Helper::authenticateRequestWithA1(const SipMessage& request,
           i->exists(p_response) &&
           i->param(p_realm) == realm)
       {
-         static Data digest("digest");
          if(!isEqualNoCase(i->scheme(),digest))
          {
             DebugLog(<< "Scheme must be Digest");
@@ -1260,7 +1257,7 @@ SipMessage*
 Helper::makeChallenge(const SipMessage& request, const Data& realm, bool useAuth, bool stale, bool proxy)
 {
    Auth auth;
-   auth.scheme() = "Digest";
+   auth.scheme() = Symbols::Digest;
    Data timestamp(Timer::getTimeSecs());
    auth.param(p_nonce) = makeNonce(request, timestamp);
    auth.param(p_algorithm) = "MD5";
@@ -1322,7 +1319,7 @@ Helper::makeChallengeResponseAuth(SipMessage& request,
                                   Data& nonceCountString)
 {
    Auth auth;
-   auth.scheme() = "Digest";
+   auth.scheme() = Symbols::Digest;
    auth.param(p_username) = username;
    assert(challenge.exists(p_realm));
    auth.param(p_realm) = challenge.param(p_realm);
@@ -1382,17 +1379,16 @@ Helper::makeChallengeResponseAuth(SipMessage& request,
    return auth;
 }
 
+// priority-order list of preferred qop tokens
+static Data preferredTokens[] = 
+{
+   "auth-int",
+   "auth"
+};
+static size_t pTokenSize=sizeof(preferredTokens)/sizeof(*preferredTokens);
 Data
 Helper::qopOption(const Auth& challenge)
 {
-   // priority-order list of preferred qop tokens
-   static Data preferredTokens[] = 
-   {
-      Symbols::authInt,
-      Symbols::auth
-   };
-   static size_t pTokenSize=sizeof(preferredTokens)/sizeof(*preferredTokens);
-   
    bool found = false;
    size_t index = pTokenSize;
    if (challenge.exists(p_qopOptions) && !challenge.param(p_qopOptions).empty())
@@ -1440,7 +1436,7 @@ Helper::makeChallengeResponseAuthWithA1(const SipMessage& request,
                                         Data& nonceCountString)
 {
    Auth auth;
-   auth.scheme() = "Digest";
+   auth.scheme() = Symbols::Digest;
    auth.param(p_username) = username;
    assert(challenge.exists(p_realm));
    auth.param(p_realm) = challenge.param(p_realm);
@@ -2105,10 +2101,9 @@ SdpContents* getSdpRecurse(Contents* tree)
    return 0;
 }
 
+static std::auto_ptr<SdpContents> emptysdp;
 auto_ptr<SdpContents> Helper::getSdp(Contents* tree)
 {
-   static std::auto_ptr<SdpContents> empty;
-
    if (tree) 
    {
       SdpContents* sdp = getSdpRecurse(tree);
@@ -2121,7 +2116,7 @@ auto_ptr<SdpContents> Helper::getSdp(Contents* tree)
    }
 
    //DebugLog(<< "No sdp" << endl);
-   return empty;
+   return emptysdp;
 }
 
 

@@ -69,7 +69,7 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
    if (!mUserProfile->getImsAuthUserName().empty())
    {
       Auth auth;
-      auth.scheme() = "Digest";
+      auth.scheme() = Symbols::Digest;
       auth.param(p_username) = mUserProfile->getImsAuthUserName();
       auth.param(p_realm) = mUserProfile->getImsAuthHost();
       auth.param(p_uri) = "sip:" + mUserProfile->getImsAuthHost();

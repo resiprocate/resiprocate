@@ -36,12 +36,17 @@ AmIResponsible::process(RequestContext& context)
    // Topmost route had a flow-token; this is our problem
    if(!context.getTopRoute().uri().user().empty())
    {
-      std::auto_ptr<Target> target(new Target(request.header(h_RequestLine).uri()));
       // !bwc! Move to encrypted tokens with some salt
-      target->rec().mReceivedFrom = Tuple::makeTuple(context.getTopRoute().uri().user().base64decode());
-      target->rec().mReceivedFrom.onlyUseExistingConnection=true;
-      context.getResponseContext().addTarget(target);
-      return SkipThisChain;
+      resip::Tuple dest(Tuple::makeTuple(context.getTopRoute().uri().user().base64decode()));
+      if(!(dest==resip::Tuple()))
+      {
+         // .bwc. Valid flow token
+         std::auto_ptr<Target> target(new Target(request.header(h_RequestLine).uri()));
+         target->rec().mReceivedFrom = dest;
+         target->rec().mReceivedFrom.onlyUseExistingConnection=true;
+         context.getResponseContext().addTarget(target);
+         return SkipThisChain;
+      }
    }
 
    // this if is just to be safe

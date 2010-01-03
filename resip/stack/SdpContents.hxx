@@ -377,10 +377,11 @@ class SdpContents : public Contents
                   Data& protocol() {return mProtocol;}
 
                   // preferred codec/format interface
+                  typedef std::list<Codec> CodecContainer;
                   // Note:  internal storage of formats, rtpmap attributes, and ftmp attributes are cleared out after 
                   //        codecs() is called, since they get converted internally as Codec objects
-                  const std::list<Codec>& codecs() const;
-                  std::list<Codec>& codecs();
+                  const CodecContainer& codecs() const;
+                  CodecContainer& codecs();
                   void clearCodecs();
                   void addCodec(const Codec& codec);
 
@@ -406,7 +407,7 @@ class SdpContents : public Contents
                   // Search through this mediums codecs to find and return the first match from the passed in list
                   // Note:  The codecList item that matched the codec from the medium is passed back via pMatchingCodec 
                   //        if a non-NULL pointer is passed in.  The codec returned if from this medium.
-                  const Codec& findFirstMatchingCodecs(const std::list<Codec>& codecList, Codec* pMatchingCodec = 0) const;
+                  const Codec& findFirstMatchingCodecs(const CodecContainer& codecs, Codec* pMatchingCodec = 0) const;
                   // Search through this mediums codecs to find and return the first match from the passed in medium
                   // Note:  The passed in medium's codec that matched the codec from this medium is passed back 
                   //        via pMatchingCodec if a non-NULL pointer is passed in.  The codec returned if from this medium.
@@ -423,7 +424,7 @@ class SdpContents : public Contents
                   unsigned long mMulticast;
                   Data mProtocol;
                   mutable std::list<Data> mFormats;
-                  mutable std::list<Codec> mCodecs;
+                  mutable CodecContainer mCodecs;
                   Data mTransport;
                   Data mInformation;
                   std::list<Connection> mConnections;
@@ -472,8 +473,9 @@ class SdpContents : public Contents
             const Encryption& getEncryption() const {return mEncryption;}
             const Encryption& encryption() const {return mEncryption;}
             Encryption& encryption() {return mEncryption;}
-            const std::list<Medium>& media() const {return mMedia;}
-            std::list<Medium>& media() {return mMedia;}
+            typedef std::list<Medium> MediumContainer;
+            const MediumContainer& media() const {return mMedia;}
+            MediumContainer& media() {return mMedia;}
 
             void addEmail(const Email& email);
             void addPhone(const Phone& phone);
@@ -490,7 +492,7 @@ class SdpContents : public Contents
             int mVersion;
             Origin mOrigin;
             Data mName;
-            std::list<Medium> mMedia;
+            MediumContainer mMedia;
 
             // applies to all Media where unspecified
             Data mInformation;
@@ -537,12 +539,6 @@ typedef SdpContents::Session::Codec Codec;
 
 bool operator==(const SdpContents::Session::Codec& lhs,
                 const SdpContents::Session::Codec& rhs);
-
-bool operator==(const SdpContents& lhs,
-                const SdpContents& rhs);
-
-bool operator!=(const SdpContents& lhs,
-                const SdpContents& rhs);
 
 EncodeStream& operator<<(EncodeStream& str, const SdpContents::Session::Codec& codec);
 

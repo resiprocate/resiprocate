@@ -1334,10 +1334,6 @@ main (int argc, char** argv)
    profile->addSupportedMimeType(UPDATE, Mime("multipart", "signed"));  
    profile->addSupportedMimeType(UPDATE, Mime("multipart", "alternative"));  
    profile->addSupportedMimeType(NOTIFY, Mime("message", "sipfrag"));  
-   profile->addSupportedMimeType(NOTIFY, Mime("multipart", "mixed"));  
-   profile->addSupportedMimeType(NOTIFY, Mime("multipart", "signed"));  
-   profile->addSupportedMimeType(NOTIFY, Mime("multipart", "alternative"));  
-   //profile->addSupportedMimeType(SUBSCRIBE, Mime("application", "simple-message-summary"));  
 
    profile->clearSupportedMethods();
    profile->addSupportedMethod(INVITE);

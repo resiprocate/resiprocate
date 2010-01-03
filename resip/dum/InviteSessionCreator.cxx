@@ -11,9 +11,9 @@ using namespace resip;
 InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
                                            const NameAddr& target,
                                            SharedPtr<UserProfile> userProfile,
-                                           const SdpContents* initial,
+                                           const Contents* initial,
                                            DialogUsageManager::EncryptionLevel level,
-                                           const SdpContents* alternative,
+                                           const Contents* alternative,
                                            ServerSubscriptionHandle serverSub)
    : BaseCreator(dum, userProfile),
      mState(Initialized),

@@ -157,6 +157,9 @@ class Contents : public LazyParser
       std::vector<char*> mBufferList;
 };
 
+bool operator==(const Contents& lhs, const Contents& rhs);
+bool operator!=(const Contents& lhs, const Contents& rhs);
+
 }
 
 #endif

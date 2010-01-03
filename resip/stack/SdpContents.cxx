@@ -9,7 +9,6 @@
 #include "resip/stack/Symbols.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/WinLeakCheck.hxx"
-#include "rutil/MD5Stream.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::SDP
 
@@ -294,9 +293,11 @@ SdpContents::Session::Origin::parse(ParseBuffer& pb)
 
    anchor = pb.skipChar(Symbols::SPACE[0]);
    mSessionId = pb.uInt64();
+   pb.skipToChar(Symbols::SPACE[0]);
 
    anchor = pb.skipChar(Symbols::SPACE[0]);
    mVersion = pb.uInt64();
+   pb.skipToChar(Symbols::SPACE[0]);
 
    pb.skipChar(Symbols::SPACE[0]);
    pb.skipChar('I');
@@ -961,7 +962,7 @@ SdpContents::Session::operator=(const Session& rhs)
       mEncryption = rhs.mEncryption;
       mAttributeHelper = rhs.mAttributeHelper;
 
-      for (std::list<Medium>::iterator i=mMedia.begin(); i != mMedia.end(); ++i)
+      for (MediumContainer::iterator i=mMedia.begin(); i != mMedia.end(); ++i)
       {
          i->setSession(this);
       }
@@ -1114,7 +1115,7 @@ SdpContents::Session::encode(EncodeStream& s) const
 
    mAttributeHelper.encode(s);
 
-   for (list<Medium>::const_iterator i = mMedia.begin();
+   for (MediumContainer::const_iterator i = mMedia.begin();
         i != mMedia.end(); ++i)
    {
       i->encode(s);
@@ -1161,7 +1162,7 @@ SdpContents::Session::addAttribute(const Data& key, const Data& value)
 
    if (key == rtpmap)
    {
-      for (list<Medium>::iterator i = mMedia.begin();
+      for (MediumContainer::iterator i = mMedia.begin();
            i != mMedia.end(); ++i)
       {
          i->mRtpMapDone = false;
@@ -1176,7 +1177,7 @@ SdpContents::Session::clearAttribute(const Data& key)
 
    if (key == rtpmap)
    {
-      for (list<Medium>::iterator i = mMedia.begin();
+      for (MediumContainer::iterator i = mMedia.begin();
            i != mMedia.end(); ++i)
       {
          i->mRtpMapDone = false;
@@ -1406,7 +1407,7 @@ SdpContents::Session::Medium::encode(EncodeStream& s) const
 
    if (!mCodecs.empty())
    {
-      for (list<Codec>::const_iterator i = mCodecs.begin();
+      for (CodecContainer::const_iterator i = mCodecs.begin();
            i != mCodecs.end(); ++i)
       {
          s << Symbols::SPACE[0] << i->payloadType();
@@ -1440,7 +1441,7 @@ SdpContents::Session::Medium::encode(EncodeStream& s) const
    if (!mCodecs.empty())
    {
       // add codecs to information and attributes
-      for (list<Codec>::const_iterator i = mCodecs.begin();
+      for (CodecContainer::const_iterator i = mCodecs.begin();
            i != mCodecs.end(); ++i)
       {
           // If codec is static (defined in RFC 3551) we probably shouldn't
@@ -1577,13 +1578,13 @@ SdpContents::Session::Medium::addCodec(const Codec& codec)
 }
 
 
-const list<Codec>&
+const SdpContents::Session::Medium::CodecContainer&
 SdpContents::Session::Medium::codecs() const
 {
    return const_cast<Medium*>(this)->codecs();
 }
 
-list<Codec>&
+SdpContents::Session::Medium::CodecContainer&
 SdpContents::Session::Medium::codecs()
 {
 #if defined(WIN32) && defined(_MSC_VER) && (_MSC_VER < 1310)  // CJ TODO fix 
@@ -1655,14 +1656,14 @@ SdpContents::Session::Medium::codecs()
 }
 
 const Codec& 
-SdpContents::Session::Medium::findFirstMatchingCodecs(const std::list<Codec>& codecList, Codec* pMatchingCodec) const
+SdpContents::Session::Medium::findFirstMatchingCodecs(const CodecContainer& codecList, Codec* pMatchingCodec) const
 {
-   const std::list<Codec>& internalCodecList = codecs();
+   const CodecContainer& internalCodecList = codecs();
    static Codec emptyCodec;
-   std::list<resip::SdpContents::Session::Codec>::const_iterator sIter;
-   std::list<resip::SdpContents::Session::Codec>::const_iterator sEnd = internalCodecList.end();
-   std::list<resip::SdpContents::Session::Codec>::const_iterator eIter;
-   std::list<resip::SdpContents::Session::Codec>::const_iterator eEnd = codecList.end();
+   resip::SdpContents::Session::Medium::CodecContainer::const_iterator sIter;
+   resip::SdpContents::Session::Medium::CodecContainer::const_iterator sEnd = internalCodecList.end();
+   resip::SdpContents::Session::Medium::CodecContainer::const_iterator eIter;
+   resip::SdpContents::Session::Medium::CodecContainer::const_iterator eEnd = codecList.end();
    for (eIter = codecList.begin(); eIter != eEnd ; ++eIter)
    {
       for (sIter = internalCodecList.begin(); sIter != sEnd; ++sIter)
@@ -1696,8 +1697,8 @@ SdpContents::Session::Medium::findFirstMatchingCodecs(const Medium& medium, Code
 int
 SdpContents::Session::Medium::findTelephoneEventPayloadType() const
 {
-   const std::list<Codec>& codecList = codecs();
-   for (std::list<Codec>::const_iterator i = codecList.begin(); i != codecList.end(); i++)
+   const CodecContainer& codecList = codecs();
+   for (CodecContainer::const_iterator i = codecList.begin(); i != codecList.end(); i++)
    {
       if (i->getName() == SdpContents::Session::Codec::TelephoneEvent.getName())
       {
@@ -1865,22 +1866,6 @@ resip::operator==(const Codec& lhs, const Codec& rhs)
            (lhs.mEncodingParameters == rhs.mEncodingParameters ||
             (lhs.mEncodingParameters.empty() && rhs.mEncodingParameters == defaultEncodingParameters) ||
             (lhs.mEncodingParameters == defaultEncodingParameters && rhs.mEncodingParameters.empty())));
-}
-
-bool
-resip::operator==(const SdpContents& lhs, const SdpContents& rhs)
-{
-   MD5Stream lhsStream;
-   lhsStream<< lhs;
-   MD5Stream rhsStream;
-   rhsStream << rhs;
-   return lhsStream.getHex() == rhsStream.getHex();
-}
-
-bool
-resip::operator!=(const SdpContents& lhs, const SdpContents& rhs)
-{
-   return !operator==(lhs,rhs);
 }
 
 EncodeStream&
