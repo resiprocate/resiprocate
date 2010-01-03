@@ -24,6 +24,7 @@
 
 typedef int socklen_t;
 
+#if(_WIN32_WINNT < 0x0601)   
 #define EWOULDBLOCK             WSAEWOULDBLOCK
 #define EINPROGRESS             WSAEINPROGRESS
 #define EALREADY                WSAEALREADY
@@ -33,12 +34,9 @@ typedef int socklen_t;
 #define EPROTOTYPE              WSAEPROTOTYPE
 #define ENOPROTOOPT             WSAENOPROTOOPT
 #define EPROTONOSUPPORT         WSAEPROTONOSUPPORT
-#define ESOCKTNOSUPPORT         WSAESOCKTNOSUPPORT
 #define EOPNOTSUPP              WSAEOPNOTSUPP
-#define EPFNOSUPPORT            WSAEPFNOSUPPORT
 #define EAFNOSUPPORT            WSAEAFNOSUPPORT
 #define EADDRINUSE              WSAEADDRINUSE
-#define EADDRNOTAVAIL           WSAEADDRNOTAVAIL
 #define ENETDOWN                WSAENETDOWN
 #define ENETUNREACH             WSAENETUNREACH
 #define ENETRESET               WSAENETRESET
@@ -47,13 +45,18 @@ typedef int socklen_t;
 #define ENOBUFS                 WSAENOBUFS
 #define EISCONN                 WSAEISCONN
 #define ENOTCONN                WSAENOTCONN
-#define ESHUTDOWN               WSAESHUTDOWN
-#define ETOOMANYREFS            WSAETOOMANYREFS
 #define ETIMEDOUT               WSAETIMEDOUT
 #define ECONNREFUSED            WSAECONNREFUSED
 #define ELOOP                   WSAELOOP
-#define EHOSTDOWN               WSAEHOSTDOWN
 #define EHOSTUNREACH            WSAEHOSTUNREACH
+#define EADDRNOTAVAIL           WSAEADDRNOTAVAIL
+#endif
+
+#define ESOCKTNOSUPPORT         WSAESOCKTNOSUPPORT
+#define EPFNOSUPPORT            WSAEPFNOSUPPORT
+#define ESHUTDOWN               WSAESHUTDOWN
+#define ETOOMANYREFS            WSAETOOMANYREFS
+#define EHOSTDOWN               WSAEHOSTDOWN
 #define EPROCLIM                WSAEPROCLIM
 #define EUSERS                  WSAEUSERS
 #define EDQUOT                  WSAEDQUOT
