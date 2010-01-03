@@ -383,7 +383,7 @@ Helper::makeResponse(SipMessage& response,
    if (!warning.empty())
    {
       WarningCategory warn;
-      warn.code() = 499;
+      warn.code() = 399;
       warn.hostname() = hostname;
       warn.text() = warning;
       response.header(h_Warnings).push_back(warn);
