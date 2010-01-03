@@ -513,7 +513,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                expiry = msg.header(h_Expires).value();
             }
          }
-         if (expiry != UINT_MAX)
+         if (expiry != 0 && expiry != UINT_MAX)
          {
             int exp = Helper::aBitSmallerThan(expiry);
             mExpires = exp + Timer::getTimeSecs();
@@ -527,8 +527,16 @@ ClientRegistration::dispatch(const SipMessage& msg)
          {
             case Querying:
             case Adding:
-               mState = Registered;
-               mDum.mClientRegistrationHandler->onSuccess(getHandle(), msg);
+               if(expiry != 0)
+               {
+                  mState = Registered;
+                  mDum.mClientRegistrationHandler->onSuccess(getHandle(), msg);
+               }
+               else
+               {
+                  mDum.mClientRegistrationHandler->onRemoved(getHandle(), msg);
+                  checkProfileRetry(msg);
+               }
                break;
 
             case Removing:
@@ -549,10 +557,18 @@ ClientRegistration::dispatch(const SipMessage& msg)
             case Registered:
             case Refreshing:
                mState = Registered;
-               if(mUserRefresh)
+               if(expiry != 0)
                {
-                   mUserRefresh = false;
-                   mDum.mClientRegistrationHandler->onSuccess(getHandle(), msg);
+                  if(mUserRefresh)
+                  {
+                      mUserRefresh = false;
+                      mDum.mClientRegistrationHandler->onSuccess(getHandle(), msg);
+                  }
+               }
+               else
+               {
+                  mDum.mClientRegistrationHandler->onRemoved(getHandle(), msg);
+                  checkProfileRetry(msg);
                }
                break;
 
@@ -634,35 +650,9 @@ ClientRegistration::dispatch(const SipMessage& msg)
          mUserRefresh = true;  // Reset this flag, so that the onSuccess callback will be called if we are successful when re-trying
 
          // Retry if Profile setting is set
-         if (mDialogSet.getUserProfile()->getDefaultRegistrationRetryTime() > 0 &&
-             (mState == Adding || mState == Refreshing) &&
-             !mEndWhenDone)
+         unsigned int retryInterval = checkProfileRetry(msg);
+         if(retryInterval > 0)
          {
-            unsigned int retryInterval = mDialogSet.getUserProfile()->getDefaultRegistrationRetryTime();
-            if (msg.exists(h_RetryAfter))
-            {
-               // Use retry interval from error response
-               retryInterval = msg.header(h_RetryAfter).value();
-            }
-            mExpires = 0;
-            switch(mState)
-            {
-            case Adding:
-               mState = RetryAdding;
-               break;
-            case Refreshing:
-               mState = RetryRefreshing;
-               break;
-            default:
-                assert(false);
-               break;
-            }
-
-            if(mDum.mClientAuthManager.get()) mDum.mClientAuthManager.get()->clearAuthenticationState(DialogSetId(*mLastRequest));
-            mDum.addTimer(DumTimeout::RegistrationRetry,
-                          retryInterval,
-                          getBaseHandle(),
-                          ++mTimerSeq);
             InfoLog( << "Registration error " << code << " for " << msg.header(h_To) << ", retrying in " << retryInterval << " seconds.");
             return;
          }
@@ -681,6 +671,43 @@ ClientRegistration::dispatch(const SipMessage& msg)
       mDum.mClientRegistrationHandler->onFailure(getHandle(), msg);
       delete this;
    }
+}
+
+unsigned int 
+ClientRegistration::checkProfileRetry(const SipMessage& msg)
+{
+   if (mDialogSet.getUserProfile()->getDefaultRegistrationRetryTime() > 0 &&
+      (mState == Adding || mState == Refreshing) &&
+      !mEndWhenDone)
+   {
+      unsigned int retryInterval = mDialogSet.getUserProfile()->getDefaultRegistrationRetryTime();
+      if (msg.exists(h_RetryAfter))
+      {
+         // Use retry interval from error response
+         retryInterval = msg.header(h_RetryAfter).value();
+      }
+      mExpires = 0;
+      switch(mState)
+      {
+      case Adding:
+         mState = RetryAdding;
+         break;
+      case Refreshing:
+         mState = RetryRefreshing;
+         break;
+      default:
+         assert(false);
+         break;
+      }
+
+      if(mDum.mClientAuthManager.get()) mDum.mClientAuthManager.get()->clearAuthenticationState(DialogSetId(*mLastRequest));
+      mDum.addTimer(DumTimeout::RegistrationRetry,
+         retryInterval,
+         getBaseHandle(),
+         ++mTimerSeq);
+      return retryInterval;
+   }
+   return 0;
 }
 
 void

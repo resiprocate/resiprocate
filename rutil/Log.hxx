@@ -28,7 +28,7 @@
 // defining hash function in mac os (non-sdk api) and cygwin because
 // ThreadIf::Id is a pointer,  (this assumes it's always the same pointer)
 #if defined(__APPLE__) || defined(__CYGWIN__)
-HashValue(ThreadIf::Id);
+HashValue(resip::ThreadIf::Id);
 #endif
 #endif
 

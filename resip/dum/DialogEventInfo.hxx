@@ -4,7 +4,7 @@
 #include "resip/stack/NameAddr.hxx"
 #include "resip/dum/DialogId.hxx"
 #include "resip/dum/Handles.hxx"
-#include "resip/stack/SdpContents.hxx"
+#include "resip/stack/Contents.hxx"
 
 namespace resip
 {
@@ -60,10 +60,10 @@ class DialogEventInfo
       const Uri& getRemoteTarget() const;
 
       // cache the first one, then forevermore lookup from InviteSession
-      const SdpContents& getLocalSdp() const;
-      const SdpContents& getRemoteSdp() const;
-      bool hasLocalSdp() const;
-      bool hasRemoteSdp() const;
+      const Contents& getLocalOfferAnswer() const;
+      const Contents& getRemoteOfferAnswer() const;
+      bool hasLocalOfferAnswer() const;
+      bool hasRemoteOfferAnswer() const;
 
       UInt64 getDurationSeconds() const; // in seconds
 
@@ -96,8 +96,8 @@ class DialogEventInfo
 
       UInt64 mCreationTimeSeconds;
 
-      std::auto_ptr<SdpContents> mLocalSdp;
-      std::auto_ptr<SdpContents> mRemoteSdp;
+      std::auto_ptr<Contents> mLocalOfferAnswer;
+      std::auto_ptr<Contents> mRemoteOfferAnswer;
 
    private:
       bool mReplaced;

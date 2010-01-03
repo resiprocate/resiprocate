@@ -232,12 +232,12 @@ ParseBuffer::skipLWS()
    return Pointer(*this, mPosition, true);
 }
 
+static Data CRLF("\r\n");
 ParseBuffer::Pointer
 ParseBuffer::skipToTermCRLF()
 {
    while (mPosition < mEnd)
    {
-      static Data CRLF("\r\n");
       skipToChars(CRLF);
       mPosition += 2;
       if ((*mPosition != ' ' &&

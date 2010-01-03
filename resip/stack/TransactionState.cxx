@@ -1669,7 +1669,7 @@ TransactionState::processNoDnsResults()
    SipMessage* response = Helper::makeResponse(*mMsgToRetransmit, 503);
    WarningCategory warning;
    warning.hostname() = DnsUtil::getLocalHostName();
-   warning.code() = 499;
+   warning.code() = 399;
    warning.text() = "No other DNS entries to try";
    switch(mFailureReason)
    {
@@ -1792,7 +1792,7 @@ TransactionState::processTransportFailure(TransactionMessage* msg)
          SipMessage* response = Helper::makeResponse(*mMsgToRetransmit, 503);
          WarningCategory warning;
          warning.hostname() = DnsUtil::getLocalHostName();
-         warning.code() = 499;
+         warning.code() = 399;
          warning.text() = "Failed to deliver CANCEL using the same transport as the INVITE was used";
          response->header(h_Warnings).push_back(warning);
          

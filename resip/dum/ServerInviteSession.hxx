@@ -19,7 +19,7 @@ class ServerInviteSession: public InviteSession
       void redirect(const NameAddrs& contacts, int code=302);
 
       /** send a 1xx - provisional response.  If you set earlyFlag to true, and have provided
-          an answer, then DUM will attach the answer SDP to the provisional response, as an 
+          an answer, then DUM will attach the answer to the provisional response, as an 
           early media indication */
       void provisional(int code=180, bool earlyFlag=true);
       
@@ -27,17 +27,17 @@ class ServerInviteSession: public InviteSession
           sends an offer. If possible, this will synchronously send the
           appropriate request or response. In some cases, the UAS might have to
           call accept in order to cause the message to be sent. */
-      virtual void provideOffer(const SdpContents& offer);
-      virtual void provideOffer(const SdpContents& offer, DialogUsageManager::EncryptionLevel level, const SdpContents* alternative);
+      virtual void provideOffer(const Contents& offer);
+      virtual void provideOffer(const Contents& offer, DialogUsageManager::EncryptionLevel level, const Contents* alternative);
 
       /** Called to request that the far end provide an offer.  This will cause a 
-          reinvite with no sdp to be sent.  */
+          reinvite with no body to be sent.  */
       virtual void requestOffer();
 
       /** Similar to provideOffer - called to set the answer to be signalled to
           the peer. May result in message being sent synchronously depending on
           the state. */
-      virtual void provideAnswer(const SdpContents& answer);
+      virtual void provideAnswer(const Contents& answer);
 
       /** Makes the specific dialog end. Will send a BYE (not a CANCEL) */
       virtual void end(EndReason reason);
@@ -56,11 +56,6 @@ class ServerInviteSession: public InviteSession
       void redirectCommand(const NameAddrs& contacts, int code=302);
       void provisionalCommand(int code=180);
       void acceptCommand(int statusCode=200);
-      // !nash! following are provided by InviteSession
-      //virtual void provideOfferCommand(const SdpContents& offer);
-      //virtual void provideOfferCommand(const SdpContents& offer, DialogUsageManager::EncryptionLevel level, const SdpContents* alternative);
-      //virtual void provideAnswerCommand(const SdpContents& answer);
-      //virtual void rejectCommand(int statusCode, WarningCategory *warning = 0);
 
       bool provisionalWillBeSentReliable();
 
@@ -98,10 +93,10 @@ class ServerInviteSession: public InviteSession
       // utilities
       void startRetransmit1xxTimer();
       void startRetransmit1xxRelTimer();
-      void sendAccept(int code, Contents* sdp); // sends 2xxI
+      void sendAccept(int code, Contents* offerAnswer); // sends 2xxI
       void sendProvisional(int code, bool earlyFlag);
       void queueResponse(int code, bool earlyFlag);
-      void sendUpdate(const SdpContents& sdp);
+      void sendUpdate(const Contents& offerAnswer);
       bool prackCheckProvisionals(const SipMessage& msg); // verify that prack has corresponding 1xx
       void prackCheckQueue();                             // send a queued message after prack
       void updateCheckQueue();                            // send a queued message after update

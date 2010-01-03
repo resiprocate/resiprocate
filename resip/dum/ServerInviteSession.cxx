@@ -251,9 +251,9 @@ ServerInviteSession::provisionalCommand(int statusCode)
 }
 
 void
-ServerInviteSession::provideOffer(const SdpContents& offer,
+ServerInviteSession::provideOffer(const Contents& offer,
                                   DialogUsageManager::EncryptionLevel level, 
-                                  const SdpContents* alternative)
+                                  const Contents* alternative)
 {
    InfoLog (<< toData(mState) << ": provideOffer");
    mAnswerSentReliably = false;
@@ -261,25 +261,25 @@ ServerInviteSession::provideOffer(const SdpContents& offer,
    {
       case UAS_NoOffer:
          transition(UAS_ProvidedOffer);
-         mProposedLocalSdp = InviteSession::makeSdp(offer, alternative);
+         mProposedLocalOfferAnswer = InviteSession::makeOfferAnswer(offer, alternative);
          mProposedEncryptionLevel = level;
          break;
 
       case UAS_EarlyNoOffer:
          transition(UAS_EarlyProvidedOffer);
-         mProposedLocalSdp = InviteSession::makeSdp(offer, alternative);
+         mProposedLocalOfferAnswer = InviteSession::makeOfferAnswer(offer, alternative);
          mProposedEncryptionLevel = level;
          break;
          
       case UAS_NoOfferReliable:
          transition(UAS_ProvidedOfferReliable);
-         mProposedLocalSdp = InviteSession::makeSdp(offer, alternative);
+         mProposedLocalOfferAnswer = InviteSession::makeOfferAnswer(offer, alternative);
          mProposedEncryptionLevel = level;
          break;
 
       case UAS_NegotiatedReliable:
          transition(UAS_SentUpdate);
-         mProposedLocalSdp = InviteSession::makeSdp(offer, alternative);
+         mProposedLocalOfferAnswer = InviteSession::makeOfferAnswer(offer, alternative);
          mProposedEncryptionLevel = level;
          sendUpdate(offer);
          break;
@@ -287,7 +287,7 @@ ServerInviteSession::provideOffer(const SdpContents& offer,
       case UAS_Accepted:
          // queue the offer to be sent after the ACK is received
          transition(UAS_WaitingToOffer);
-         mProposedLocalSdp = InviteSession::makeSdp(offer);
+         mProposedLocalOfferAnswer = InviteSession::makeOfferAnswer(offer);
          mProposedEncryptionLevel = level;
          break;
 
@@ -323,7 +323,7 @@ ServerInviteSession::provideOffer(const SdpContents& offer,
 }
 
 void 
-ServerInviteSession::provideOffer(const SdpContents& offer)
+ServerInviteSession::provideOffer(const Contents& offer)
 {
    this->provideOffer(offer, mCurrentEncryptionLevel, 0);
 }
@@ -351,7 +351,7 @@ ServerInviteSession::requestOffer()
 }
 
 void 
-ServerInviteSession::provideAnswer(const SdpContents& answer)
+ServerInviteSession::provideAnswer(const Contents& answer)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    InfoLog (<< toData(mState) << ": provideAnswer");
@@ -360,25 +360,25 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
    {
       case UAS_Offer:
          transition(UAS_OfferProvidedAnswer);
-         mCurrentRemoteSdp = mProposedRemoteSdp;
-         mCurrentLocalSdp = InviteSession::makeSdp(answer);
+         mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+         mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
          break;
 
       case UAS_EarlyOffer:
          transition(UAS_EarlyProvidedAnswer);
-         mCurrentRemoteSdp = mProposedRemoteSdp;
-         mCurrentLocalSdp = InviteSession::makeSdp(answer);
+         mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+         mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
          break;
          
       case UAS_ReceivedOfferReliable: 
-         mCurrentRemoteSdp = mProposedRemoteSdp;
-         mCurrentLocalSdp = InviteSession::makeSdp(answer);
+         mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+         mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
          transition(UAS_ReceivedOfferReliableProvidedAnswer);
          break;
 
       case UAS_FirstNoAnswerReliable: 
-         mCurrentRemoteSdp = mProposedRemoteSdp;
-         mCurrentLocalSdp = InviteSession::makeSdp(answer);
+         mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+         mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
          break;
 
       case UAS_ReceivedUpdate:
@@ -386,9 +386,9 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
             transition(UAS_NegotiatedReliable);
             SharedPtr<SipMessage> response(new SipMessage);
             mDialog.makeResponse(*response, *mLastRemoteSessionModification, 200);
-            InviteSession::setSdp(*response, answer, 0);
-            mCurrentLocalSdp = InviteSession::makeSdp(answer);
-            mCurrentRemoteSdp = mProposedRemoteSdp;
+            InviteSession::setOfferAnswer(*response, answer, 0);
+            mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
+            mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
             InfoLog (<< "Sending " << response->brief());
             DumHelper::setOutgoingEncryptionLevel(*response, mCurrentEncryptionLevel);
             send(response);
@@ -399,9 +399,9 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
          {
             SharedPtr<SipMessage> response(new SipMessage);
             mDialog.makeResponse(*response, *mLastRemoteSessionModification, 200);
-            InviteSession::setSdp(*response, answer, 0);
-            mCurrentLocalSdp = InviteSession::makeSdp(answer);
-            mCurrentRemoteSdp = mProposedRemoteSdp;
+            InviteSession::setOfferAnswer(*response, answer, 0);
+            mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
+            mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
             InfoLog (<< "Sending " << response->brief());
             DumHelper::setOutgoingEncryptionLevel(*response, mCurrentEncryptionLevel);
             updateCheckQueue();
@@ -409,18 +409,18 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
          break;
 
       case UAS_NoAnswerReliable:
-         mCurrentRemoteSdp = mProposedRemoteSdp;
-         mCurrentLocalSdp = InviteSession::makeSdp(answer);
+         mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+         mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
          break;
 
       case UAS_NegotiatedReliable:
-         mCurrentRemoteSdp = mProposedRemoteSdp;
-         mCurrentLocalSdp = InviteSession::makeSdp(answer);
+         mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+         mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
          if(mPrackWithOffer.get())
          {
             SharedPtr<SipMessage> p200(new SipMessage);
             mDialog.makeResponse(*p200, *mPrackWithOffer, 200);
-            setSdp(*p200, mCurrentLocalSdp.get());
+            setOfferAnswer(*p200, mCurrentLocalOfferAnswer.get());
             mAnswerSentReliably = true;
             mPrackWithOffer.reset();
             send(p200);
@@ -605,7 +605,7 @@ ServerInviteSession::accept(int code)
       case UAS_OfferProvidedAnswer:
       case UAS_EarlyProvidedAnswer:
          transition(UAS_Accepted);
-         sendAccept(code, mCurrentLocalSdp.get());
+         sendAccept(code, mCurrentLocalOfferAnswer.get());
          handler->onConnected(getSessionHandle(), *mInvite200);
          break;
          
@@ -617,7 +617,7 @@ ServerInviteSession::accept(int code)
       case UAS_ProvidedOfferReliable:
       case UAS_EarlyProvidedOffer:
          transition(UAS_AcceptedWaitingAnswer);
-         sendAccept(code, mProposedLocalSdp.get());
+         sendAccept(code, mProposedLocalOfferAnswer.get());
          break;
          
       case UAS_Accepted:
@@ -651,7 +651,7 @@ ServerInviteSession::accept(int code)
 
       case UAS_ReceivedOfferReliableProvidedAnswer: 
          transition(UAS_Accepted);
-         sendAccept(code, mCurrentLocalSdp.get());
+         sendAccept(code, mCurrentLocalOfferAnswer.get());
          handler->onConnected(getSessionHandle(), *mInvite200);
          break;
 
@@ -664,7 +664,7 @@ ServerInviteSession::accept(int code)
          else
          {
             transition(UAS_Accepted);
-            sendAccept(code, mCurrentLocalSdp.get());
+            sendAccept(code, mCurrentLocalOfferAnswer.get());
             handler->onConnected(getSessionHandle(), *mInvite200);
          }
          break;
@@ -880,7 +880,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
    assert(msg.header(h_CSeq).method() == INVITE);
 
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
    storePeerCapabilities(msg);
 
    if (mDum.mDialogEventStateManager)
@@ -888,17 +888,17 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
       mDum.mDialogEventStateManager->onTryingUas(mDialog, msg);
    }
 
-   switch (toEvent(msg, sdp.get()))
+   switch (toEvent(msg, offerAnswer.get()))
    {
       case OnInviteOffer:
          *mLastRemoteSessionModification = msg;
          transition(UAS_Offer);
-         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
+         mProposedRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          handler->onNewSession(getHandle(), InviteSession::Offer, msg);
          if(!isTerminated())  
          {
-            handler->onOffer(getSessionHandle(), msg, *sdp);
+            handler->onOffer(getSessionHandle(), msg, *offerAnswer);
          }
          break;
       case OnInvite:
@@ -913,12 +913,12 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
       case OnInviteReliableOffer:
          *mLastRemoteSessionModification = msg;
          transition(UAS_ReceivedOfferReliable);
-         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
+         mProposedRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          handler->onNewSession(getHandle(), InviteSession::Offer, msg);
          if(!isTerminated())  
          {
-            handler->onOffer(getSessionHandle(), msg, *sdp);
+            handler->onOffer(getSessionHandle(), msg, *offerAnswer);
          }
          break;
       case OnInviteReliable:
@@ -940,8 +940,8 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
 void
 ServerInviteSession::dispatchOfferOrEarly(const SipMessage& msg)
 {
-   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
-   switch (toEvent(msg, sdp.get()))
+   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   switch (toEvent(msg, offerAnswer.get()))
    {
       case OnCancel:
          dispatchCancel(msg);
@@ -960,10 +960,10 @@ void
 ServerInviteSession::dispatchAccepted(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
    InfoLog (<< "dispatchAccepted: " << msg.brief());
    
-   switch (toEvent(msg, sdp.get()))
+   switch (toEvent(msg, offerAnswer.get()))
    {
       case OnInvite:
       case OnInviteReliable:
@@ -1015,7 +1015,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
             return; // prack does not correspond to an unacknowedged provisional
          }
          
-         if(sdp.get())  // New offer
+         if(offerAnswer.get())  // New offer
          {
             if(!mAnswerSentReliably)    // new offer before previous answer sent 
             {
@@ -1028,11 +1028,11 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
                // dispatch offer here and respond with 200OK in provideAnswer
                transition(UAS_NegotiatedReliable);  // TODO - this doesn't look right - needs review
                mPrackWithOffer = resip::SharedPtr<SipMessage>(new SipMessage(msg));
-               mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
+               mProposedRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
                mCurrentEncryptionLevel = getEncryptionLevel(msg);
                if(!isTerminated())  
                {
-                  handler->onOffer(getSessionHandle(), msg, *sdp);
+                  handler->onOffer(getSessionHandle(), msg, *offerAnswer);
                }
             }
          }
@@ -1059,10 +1059,10 @@ void
 ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
    InfoLog (<< "dispatchWaitingToOffer: " << msg.brief());
    
-   switch (toEvent(msg, sdp.get()))
+   switch (toEvent(msg, offerAnswer.get()))
    {
       case OnInvite:
       case OnInviteReliable:
@@ -1080,7 +1080,7 @@ ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
       case OnAck:
       case OnAckAnswer:   // illegal but accept anyway for improved interop
       {
-         assert(mProposedLocalSdp.get());
+         assert(mProposedLocalOfferAnswer.get());
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
          provideProposedOffer(); 
          break;
@@ -1120,10 +1120,10 @@ void
 ServerInviteSession::dispatchWaitingToRequestOffer(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
    InfoLog (<< "dispatchWaitingToRequestOffer: " << msg.brief());
    
-   switch (toEvent(msg, sdp.get()))
+   switch (toEvent(msg, offerAnswer.get()))
    {
       case OnInvite:
       case OnInviteReliable:
@@ -1180,9 +1180,9 @@ void
 ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
-   switch (toEvent(msg, sdp.get()))
+   switch (toEvent(msg, offerAnswer.get()))
    {
       case OnInvite:
       case OnInviteReliable:
@@ -1201,10 +1201,10 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
       {
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
          transition(Connected);
-         setCurrentLocalSdp(msg);
+         setCurrentLocalOfferAnswer(msg);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
-         mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
-         handler->onAnswer(getSessionHandle(), msg, *sdp);
+         mCurrentRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
+         handler->onAnswer(getSessionHandle(), msg, *offerAnswer);
          if(!isTerminated())  // onAnswer callback may call end() or reject()
          {
             handler->onConnected(getSessionHandle(), msg);
@@ -1239,7 +1239,7 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
             return; // prack does not correspond to an unacknowedged provisional
          }
          
-         if(sdp.get())
+         if(offerAnswer.get())
          {
             // TODO - reject PRACK, teardown call?
             ErrLog (<< "PRACK with new offer when in state=" << toData(mState));
@@ -1268,8 +1268,8 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
 void
 ServerInviteSession::dispatchOfferReliable(const SipMessage& msg)
 {
-   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
-   switch (toEvent(msg, sdp.get()))
+   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   switch (toEvent(msg, offerAnswer.get()))
    {
       case OnCancel:
       {
@@ -1289,8 +1289,8 @@ ServerInviteSession::dispatchOfferReliable(const SipMessage& msg)
 void
 ServerInviteSession::dispatchNoOfferReliable(const SipMessage& msg)
 {
-   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
-   switch (toEvent(msg, sdp.get()))
+   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   switch (toEvent(msg, offerAnswer.get()))
    {
       case OnCancel:
       {
@@ -1311,9 +1311,9 @@ void
 ServerInviteSession::dispatchFirstSentOfferReliable(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
-   switch (toEvent(msg, sdp.get()))
+   switch (toEvent(msg, offerAnswer.get()))
    {
       case OnCancel:
       {
@@ -1328,16 +1328,16 @@ ServerInviteSession::dispatchFirstSentOfferReliable(const SipMessage& msg)
             return; // prack does not correspond to an unacknowedged provisional
          }
          
-         if(sdp.get())  // Answer
+         if(offerAnswer.get())  // Answer
          {
             SharedPtr<SipMessage> p200(new SipMessage);
             mDialog.makeResponse(*p200, msg, 200);
             send(p200);
 
-            setCurrentLocalSdp(msg);
-            mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
+            setCurrentLocalOfferAnswer(msg);
+            mCurrentRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
             mCurrentEncryptionLevel = getEncryptionLevel(msg);
-            handler->onAnswer(getSessionHandle(), msg, *sdp);
+            handler->onAnswer(getSessionHandle(), msg, *offerAnswer);
 
             if( mState != UAS_Accepted)    // queued 200 OK was sent in prackCheckProvisionals
             {                              // and state was changed there
@@ -1413,9 +1413,9 @@ ServerInviteSession::prackCheckQueue()
       InviteSessionHandler* handler = mDum.mInviteSessionHandler;
       transition(UAS_Accepted);
       Contents* sdp = 0;
-      if( !mAnswerSentReliably && mCurrentLocalSdp.get())
+      if( !mAnswerSentReliably && mCurrentLocalOfferAnswer.get())
       {
-         sdp = mCurrentLocalSdp.get();
+         sdp = mCurrentLocalOfferAnswer.get();
       }
       sendAccept(mQueuedResponses.front().first, sdp);
       handler->onConnected(getSessionHandle(), *mInvite200);
@@ -1446,9 +1446,9 @@ void
 ServerInviteSession::dispatchFirstSentAnswerReliable(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
-   switch (toEvent(msg, sdp.get()))
+   switch (toEvent(msg, offerAnswer.get()))
    {
          
       case OnCancel:
@@ -1464,7 +1464,7 @@ ServerInviteSession::dispatchFirstSentAnswerReliable(const SipMessage& msg)
             return; // prack does not correspond to an unacknowedged provisional
          }
          
-         if(sdp.get())  // New offer
+         if(offerAnswer.get())  // New offer
          {
             if(!mAnswerSentReliably)    // new offer before previous answer sent 
             {
@@ -1477,11 +1477,11 @@ ServerInviteSession::dispatchFirstSentAnswerReliable(const SipMessage& msg)
                // dispatch offer here and respond with 200OK in provideAnswer
                transition(UAS_NegotiatedReliable);
                mPrackWithOffer = resip::SharedPtr<SipMessage>(new SipMessage(msg));
-               mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
+               mProposedRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
                mCurrentEncryptionLevel = getEncryptionLevel(msg);
                if(!isTerminated())  
                {
-                  handler->onOffer(getSessionHandle(), msg, *sdp);
+                  handler->onOffer(getSessionHandle(), msg, *offerAnswer);
                }
             }
          }
@@ -1512,9 +1512,9 @@ void
 ServerInviteSession::dispatchFirstNoAnswerReliable(const SipMessage& msg)
 {
 //   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
-   switch (toEvent(msg, sdp.get()))
+   switch (toEvent(msg, offerAnswer.get()))
    {
          
       case OnCancel:
@@ -1530,7 +1530,7 @@ ServerInviteSession::dispatchFirstNoAnswerReliable(const SipMessage& msg)
             return; // prack does not correspond to an unacknowedged provisional
          }
          
-         if(sdp.get())
+         if(offerAnswer.get())
          {
             // TODO - reject PRACK, teardown call?
             ErrLog (<< "PRACK with new offer when in state=" << toData(mState));
@@ -1567,9 +1567,9 @@ void
 ServerInviteSession::dispatchEarlyReliable(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
-   switch (toEvent(msg, sdp.get()))
+   switch (toEvent(msg, offerAnswer.get()))
    {
          
       case OnCancel:
@@ -1589,7 +1589,7 @@ ServerInviteSession::dispatchEarlyReliable(const SipMessage& msg)
             transition(UAS_NegotiatedReliable);
          }
 
-         if(sdp.get())
+         if(offerAnswer.get())
          {
             if(!mAnswerSentReliably)    // new offer before previous answer sent 
             {
@@ -1601,11 +1601,11 @@ ServerInviteSession::dispatchEarlyReliable(const SipMessage& msg)
             {
                // dispatch offer here and respond with 200OK in provideAnswer
                mPrackWithOffer = resip::SharedPtr<SipMessage>(new SipMessage(msg));
-               mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
+               mProposedRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
                mCurrentEncryptionLevel = getEncryptionLevel(msg);
                if(!isTerminated())  
                {
-                  handler->onOffer(getSessionHandle(), msg, *sdp);
+                  handler->onOffer(getSessionHandle(), msg, *offerAnswer);
                }
             }
          }
@@ -1632,24 +1632,24 @@ void
 ServerInviteSession::dispatchSentUpdate(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
-   switch (toEvent(msg, sdp.get()))
+   switch (toEvent(msg, offerAnswer.get()))
    {
       case On200Update:
          transition(UAS_NegotiatedReliable);
-         if (sdp.get())
+         if (offerAnswer.get())
          {
-            setCurrentLocalSdp(msg);
-            mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
+            setCurrentLocalOfferAnswer(msg);
+            mCurrentRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
             mCurrentEncryptionLevel = getEncryptionLevel(msg);
-            handler->onAnswer(getSessionHandle(), msg, *sdp);
+            handler->onAnswer(getSessionHandle(), msg, *offerAnswer);
          }
          break;
 
      case OnUpdateRejected:
          transition(UAS_NegotiatedReliable);
-         mProposedLocalSdp.reset();
+         mProposedLocalOfferAnswer.reset();
          handler->onOfferRejected(getSessionHandle(), &msg);
          break;
 
@@ -1671,25 +1671,25 @@ void
 ServerInviteSession::dispatchSentUpdateAccepted(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
-   switch (toEvent(msg, sdp.get()))
+   switch (toEvent(msg, offerAnswer.get()))
    {
       case On200Update:
          transition(UAS_Accepted);
-         if (sdp.get())
+         if (offerAnswer.get())
          {
-            setCurrentLocalSdp(msg);
-            mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
+            setCurrentLocalOfferAnswer(msg);
+            mCurrentRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
             mCurrentEncryptionLevel = getEncryptionLevel(msg);
-            handler->onAnswer(getSessionHandle(), msg, *sdp);
+            handler->onAnswer(getSessionHandle(), msg, *offerAnswer);
          }
          updateCheckQueue();
          break;
 
       case OnUpdateRejected:
          transition(UAS_Accepted);
-         mProposedLocalSdp.reset();
+         mProposedLocalOfferAnswer.reset();
          handler->onOfferRejected(getSessionHandle(), &msg);
          updateCheckQueue();
          break;
@@ -1724,18 +1724,18 @@ void
 ServerInviteSession::dispatchNegotiatedReliable(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
-   switch (toEvent(msg, sdp.get()))
+   switch (toEvent(msg, offerAnswer.get()))
    {
       case OnUpdateOffer:
          *mLastRemoteSessionModification = msg;
          transition(UAS_ReceivedUpdate);
-         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
+         mProposedRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          if(!isTerminated())  
          {
-            handler->onOffer(getSessionHandle(), msg, *sdp);
+            handler->onOffer(getSessionHandle(), msg, *offerAnswer);
          }
          break;
          
@@ -1758,9 +1758,9 @@ ServerInviteSession::dispatchWaitingToTerminate(const SipMessage& msg)
 void
 ServerInviteSession::dispatchWaitingToHangup(const SipMessage& msg)
 {
-   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
-   switch (toEvent(msg, sdp.get()))
+   switch (toEvent(msg, offerAnswer.get()))
    {
       case OnPrack:
       case OnAck:
@@ -1864,9 +1864,9 @@ ServerInviteSession::sendProvisional(int code, bool earlyFlag)
       case UAS_EarlyProvidedAnswer:
       case UAS_FirstSentAnswerReliable:
       case UAS_NoAnswerReliable:
-         if (earlyFlag && !mAnswerSentReliably && mCurrentLocalSdp.get()) // early media
+         if (earlyFlag && !mAnswerSentReliably && mCurrentLocalOfferAnswer.get()) // early media
          {
-            setSdp(*m1xx, mCurrentLocalSdp.get());
+            setOfferAnswer(*m1xx, mCurrentLocalOfferAnswer.get());
             if (provisionalWillBeSentReliable())
             {
                 mAnswerSentReliably = true;
@@ -1875,9 +1875,9 @@ ServerInviteSession::sendProvisional(int code, bool earlyFlag)
          break;
 
       case UAS_NoOfferReliable:
-         if (code>100 && earlyFlag && !mAnswerSentReliably && mProposedLocalSdp.get()) // early media
+         if (code>100 && earlyFlag && !mAnswerSentReliably && mProposedLocalOfferAnswer.get()) // early media
          {
-            setSdp(*m1xx, mProposedLocalSdp.get());
+            setOfferAnswer(*m1xx, mProposedLocalOfferAnswer.get());
             mAnswerSentReliably = true;
             transition(UAS_FirstSentOfferReliable);
          }
@@ -1886,9 +1886,9 @@ ServerInviteSession::sendProvisional(int code, bool earlyFlag)
       case UAS_ProvidedOffer:
       case UAS_ProvidedOfferReliable:
       case UAS_EarlyProvidedOffer:
-         if (earlyFlag && mProposedLocalSdp.get()) 
+         if (earlyFlag && mProposedLocalOfferAnswer.get()) 
          {
-            setSdp(*m1xx, mProposedLocalSdp.get());
+            setOfferAnswer(*m1xx, mProposedLocalOfferAnswer.get());
          }
          break;
 
@@ -1921,13 +1921,13 @@ ServerInviteSession::queueResponse(int code, bool earlyFlag)
 }
 
 void
-ServerInviteSession::sendAccept(int code, Contents* sdp)
+ServerInviteSession::sendAccept(int code, Contents* offerAnswer)
 {
    mDialog.makeResponse(*mInvite200, mFirstRequest, code);
    handleSessionTimerRequest(*mInvite200, mFirstRequest);
-   if (sdp && !mAnswerSentReliably )
+   if (offerAnswer && !mAnswerSentReliably )
    {
-      setSdp(*mInvite200, sdp);
+      setOfferAnswer(*mInvite200, offerAnswer);
       mAnswerSentReliably = true;
    }
    mCurrentRetransmit1xx = 0; // Stop the 1xx timer
@@ -1943,12 +1943,12 @@ ServerInviteSession::sendAccept(int code, Contents* sdp)
 }
 
 void
-ServerInviteSession::sendUpdate(const SdpContents& sdp)
+ServerInviteSession::sendUpdate(const Contents& offerAnswer)
 {
    if (updateMethodSupported())
    {
       mDialog.makeRequest(*mLastLocalSessionModification, UPDATE);
-      InviteSession::setSdp(*mLastLocalSessionModification, sdp);
+      InviteSession::setOfferAnswer(*mLastLocalSessionModification, offerAnswer);
       DumHelper::setOutgoingEncryptionLevel(*mLastLocalSessionModification, mProposedEncryptionLevel);
       send(mLastLocalSessionModification);
    }

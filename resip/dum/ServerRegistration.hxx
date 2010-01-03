@@ -37,6 +37,9 @@ class ServerRegistration: public NonDialogUsage
         */
       bool asyncProvideContacts(std::auto_ptr<resip::ContactPtrList> contacts);
 
+      /// Returns true if there was contacts for the Aor when the request arrived
+      bool isInitialContacts();
+
    protected:
       virtual ~ServerRegistration();
    private:
@@ -157,6 +160,8 @@ class ServerRegistration: public NonDialogUsage
                log = mLog;
                modifiedContacts = mModifiedContacts;
             }
+
+            unsigned int numContacts() { if(mModifiedContacts.get()) return mModifiedContacts->size(); return 0; }
          private:
             std::auto_ptr<ContactRecordTransactionLog> mLog;
             std::auto_ptr<ContactPtrList> mModifiedContacts;

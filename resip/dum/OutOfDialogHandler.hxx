@@ -1,6 +1,9 @@
 #if !defined(RESIP_OutOfDialogHandler_hxx)
 #define RESIP_OutOfDialogHandler_hxx
 
+#include "resip/dum/Handles.hxx"
+#include "resip/stack/SipMessage.hxx"
+
 namespace resip
 {
 

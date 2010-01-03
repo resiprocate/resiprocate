@@ -417,6 +417,26 @@ ServerRegistration::dump(EncodeStream& strm) const
    return strm;
 }
 
+bool ServerRegistration::isInitialContacts()
+{
+   if(mDum.mServerRegistrationHandler->asyncProcessing())
+   {
+      if(mAsyncLocalStore.get())
+      {
+          return mAsyncLocalStore->numContacts() > 0;
+      }
+      return false;
+   }
+   else
+   {
+      if(mOriginalContacts.get())
+      {
+         return mOriginalContacts->size() > 0;
+      }
+      return false;
+   }
+}
+
 bool 
 ServerRegistration::tryFlow(ContactInstanceRecord& rec,
                               const resip::SipMessage& msg)

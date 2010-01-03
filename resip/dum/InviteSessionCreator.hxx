@@ -18,9 +18,9 @@ class InviteSessionCreator : public BaseCreator
       InviteSessionCreator(DialogUsageManager& dum, 
                            const NameAddr& target,
                            SharedPtr<UserProfile> userProfile,
-                           const SdpContents* initial, 
+                           const Contents* initial, 
                            DialogUsageManager::EncryptionLevel level,
-                           const SdpContents* alternative,
+                           const Contents* alternative,
                            ServerSubscriptionHandle serverSub = ServerSubscriptionHandle::NotValid());
 
 	  virtual ~InviteSessionCreator();
@@ -45,7 +45,6 @@ class InviteSessionCreator : public BaseCreator
       } State;
       
       State mState;
-      //SdpContents* mInitialOffer;
       Contents* mInitialOffer;
       ServerSubscriptionHandle mServerSub;
       DialogUsageManager::EncryptionLevel mEncryptionLevel;
