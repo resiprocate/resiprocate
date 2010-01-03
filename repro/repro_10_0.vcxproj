@@ -122,7 +122,7 @@ endlocal
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(TargetDir)reprolib.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)repro.pdb</ProgramDatabaseFile>
@@ -164,7 +164,7 @@ endlocal
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(TargetDir)reprolib.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -210,7 +210,7 @@ endlocal
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\contrib\openssl\lib\vc\static\libeay32MDd.lib;$(ProjectDir)..\contrib\openssl\lib\vc\static\ssleay32MDd.lib;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(TargetDir)reprolib.lib;Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\contrib\openssl\lib\vc\static\libeay32MDd.lib;$(ProjectDir)..\contrib\openssl\lib\vc\static\ssleay32MDd.lib;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)repro.pdb</ProgramDatabaseFile>
@@ -252,7 +252,7 @@ endlocal
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\contrib\openssl\lib\vc\static\libeay32MD.lib;$(ProjectDir)..\contrib\openssl\lib\vc\static\ssleay32MD.lib;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(TargetDir)reprolib.lib;Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\contrib\openssl\lib\vc\static\libeay32MD.lib;$(ProjectDir)..\contrib\openssl\lib\vc\static\ssleay32MD.lib;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -265,112 +265,23 @@ endlocal
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AbstractDb.cxx" />
-    <ClCompile Include="AclStore.cxx" />
-    <ClCompile Include="monkeys\AmIResponsible.cxx" />
     <ClCompile Include="BerkeleyDb.cxx" />
-    <ClCompile Include="stateAgents\CertPublicationHandler.cxx">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="stateAgents\CertServer.cxx">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="stateAgents\CertSubscriptionHandler.cxx">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="CommandLineParser.cxx" />
-    <ClCompile Include="ConfigStore.cxx" />
-    <ClCompile Include="monkeys\ConstantLocationMonkey.cxx" />
-    <ClCompile Include="monkeys\DigestAuthenticator.cxx" />
-    <ClCompile Include="Dispatcher.cxx" />
     <ClCompile Include="HttpBase.cxx" />
     <ClCompile Include="HttpConnection.cxx" />
-    <ClCompile Include="monkeys\IsTrustedNode.cxx" />
-    <ClCompile Include="monkeys\LocationServer.cxx" />
-    <ClCompile Include="OutboundTarget.cxx" />
-    <ClCompile Include="monkeys\OutboundTargetHandler.cxx" />
-    <ClCompile Include="stateAgents\PrivateKeyPublicationHandler.cxx">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="stateAgents\PrivateKeySubscriptionHandler.cxx">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="Processor.cxx" />
-    <ClCompile Include="ProcessorChain.cxx" />
-    <ClCompile Include="Proxy.cxx" />
-    <ClCompile Include="QValueTarget.cxx" />
-    <ClCompile Include="monkeys\QValueTargetHandler.cxx" />
-    <ClCompile Include="monkeys\RecursiveRedirect.cxx" />
-    <ClCompile Include="Registrar.cxx" />
     <ClCompile Include="repro.cxx" />
-    <ClCompile Include="ReproServerAuthManager.cxx" />
     <ClCompile Include="ReproVersion.cxx" />
-    <ClCompile Include="RequestContext.cxx" />
-    <ClCompile Include="ResponseContext.cxx" />
-    <ClCompile Include="RouteStore.cxx" />
-    <ClCompile Include="RRDecorator.cxx" />
-    <ClCompile Include="monkeys\SimpleStaticRoute.cxx" />
-    <ClCompile Include="monkeys\SimpleTargetHandler.cxx" />
-    <ClCompile Include="monkeys\StaticRoute.cxx" />
-    <ClCompile Include="Store.cxx" />
-    <ClCompile Include="monkeys\StrictRouteFixup.cxx" />
-    <ClCompile Include="Target.cxx" />
-    <ClCompile Include="UserStore.cxx" />
     <ClCompile Include="WebAdmin.cxx" />
     <ClCompile Include="WebAdminThread.cxx" />
-    <ClCompile Include="WorkerThread.cxx" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AbstractDb.hxx" />
-    <ClInclude Include="Ack200DoneMessage.hxx" />
-    <ClInclude Include="AclStore.hxx" />
-    <ClInclude Include="monkeys\AmIResponsible.hxx" />
     <ClInclude Include="BerkeleyDb.hxx" />
-    <ClInclude Include="stateAgents\CertPublicationHandler.hxx" />
-    <ClInclude Include="stateAgents\CertServer.hxx" />
-    <ClInclude Include="stateAgents\CertSubscriptionHandler.hxx" />
     <ClInclude Include="CommandLineParser.hxx" />
-    <ClInclude Include="ConfigStore.hxx" />
-    <ClInclude Include="monkeys\ConstantLocationMonkey.hxx" />
-    <ClInclude Include="monkeys\DigestAuthenticator.hxx" />
-    <ClInclude Include="Dispatcher.hxx" />
     <ClInclude Include="HttpBase.hxx" />
     <ClInclude Include="HttpConnection.hxx" />
-    <ClInclude Include="monkeys\IsTrustedNode.hxx" />
-    <ClInclude Include="monkeys\LocationServer.hxx" />
-    <ClInclude Include="OutboundTarget.hxx" />
-    <ClInclude Include="monkeys\OutboundTargetHandler.hxx" />
-    <ClInclude Include="stateAgents\PrivateKeyPublicationHandler.hxx" />
-    <ClInclude Include="stateAgents\PrivateKeySubscriptionHandler.hxx" />
-    <ClInclude Include="Processor.hxx" />
-    <ClInclude Include="ProcessorChain.hxx" />
-    <ClInclude Include="Proxy.hxx" />
-    <ClInclude Include="QValueTarget.hxx" />
-    <ClInclude Include="monkeys\QValueTargetHandler.hxx" />
-    <ClInclude Include="monkeys\RecursiveRedirect.hxx" />
-    <ClInclude Include="Registrar.hxx" />
-    <ClInclude Include="ReproServerAuthManager.hxx" />
     <ClInclude Include="ReproVersion.hxx" />
-    <ClInclude Include="RequestContext.hxx" />
-    <ClInclude Include="ResponseContext.hxx" />
-    <ClInclude Include="RouteStore.hxx" />
-    <ClInclude Include="RRDecorator.hxx" />
-    <ClInclude Include="monkeys\SimpleStaticRoute.hxx" />
-    <ClInclude Include="monkeys\SimpleTargetHandler.hxx" />
-    <ClInclude Include="monkeys\StaticRoute.hxx" />
-    <ClInclude Include="Store.hxx" />
-    <ClInclude Include="monkeys\StrictRouteFixup.hxx" />
-    <ClInclude Include="Target.hxx" />
-    <ClInclude Include="TimerCMessage.hxx" />
-    <ClInclude Include="UserStore.hxx" />
     <ClInclude Include="WebAdmin.hxx" />
     <ClInclude Include="WebAdminThread.hxx" />
-    <ClInclude Include="WorkerThread.hxx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="webadmin\pageOutlinePost.ixx" />
