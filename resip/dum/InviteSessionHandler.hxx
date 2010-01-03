@@ -7,13 +7,42 @@
 namespace resip
 {
 
-class SdpContents;
 class SipMessage;
+class SdpContents;
+class Contents;
 
+/** 
+    Base class for class InviteSessionHandler.  The application must override this class
+    and provide an imlementation of the handlers below.  The class must then be set as
+    an invite session handler on dum (DialogUsageManager::setInviteSessionHandler()).
+
+    If you wish to handle invite session offer/answers using generic contents instead of
+    SDP, then construct this class with a bool argument of true, and be sure to add 
+    implementations of all of the handlers below that take a Contents parameter type
+    (ie. onEarlyMedia, onOffer, onAnswer, and onRemoteAnswerChanged).  Overriding these 
+    methods will cause their SdpContent counterparts to not be called.  You can then provide 
+    a basic empty body implementation of these SdpContent versions of the callbacks.
+
+    Example handler for generic (non-sdp only) invite sessions:
+    class MyInviteSessionHandler : public InviteSessionHandler
+    {
+       MyInviteSessionHandler() : InviteSessionHandler(true) {};
+       ...
+       virtual void onOffer(InviteSessionHandle, const SipMessage& msg, const SdpContents&)
+       {}  // No body required
+       virtual void onOffer(InviteSessionHandle, const SipMessage& msg, const Contents&)
+       {
+          // Add handler body here
+       }
+       ...
+    };
+*/
 class InviteSessionHandler
 {
    public:
+      InviteSessionHandler(bool genericOfferAnswer=false) : mGenericOfferAnswer(genericOfferAnswer) {}
       virtual ~InviteSessionHandler() {}
+      virtual bool isGenericOfferAnswer() { return mGenericOfferAnswer; }
 
       /// called when an initial INVITE or the intial response to an outoing invite  
       virtual void onNewSession(ClientInviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)=0;
@@ -22,8 +51,9 @@ class InviteSessionHandler
       /// Received a failure response from UAS
       virtual void onFailure(ClientInviteSessionHandle, const SipMessage& msg)=0;
       
-      /// called when an in-dialog provisional response is received that contains an SDP body
+      /// called when an in-dialog provisional response is received that contains a body
       virtual void onEarlyMedia(ClientInviteSessionHandle, const SipMessage&, const SdpContents&)=0;
+      virtual void onEarlyMedia(ClientInviteSessionHandle, const SipMessage&, const Contents&);
 
       /// called when dialog enters the Early state - typically after getting 18x
       virtual void onProvisional(ClientInviteSessionHandle, const SipMessage&)=0;
@@ -63,7 +93,7 @@ class InviteSessionHandler
          Rejected, //Only as UAS, UAC has distinct onFailure callback
          Referred
       };
-
+            
       virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* related=0)=0;
 
       /// called when a fork that was created through a 1xx never receives a 2xx
@@ -81,23 +111,29 @@ class InviteSessionHandler
       /// called to allow app to adorn a message. default is to send immediately
       virtual void onReadyToSend(InviteSessionHandle, SipMessage& msg);
 
-      /// called when an SDP answer is received - has nothing to do with user
+      /// called when an answer is received - has nothing to do with user
       /// answering the call 
       virtual void onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContents&)=0;
+      // You should only override the following method if genericOfferAnswer is true
+      virtual void onAnswer(InviteSessionHandle, const SipMessage& msg, const Contents&);
 
-      /// called when an SDP offer is received - must send an answer soon after this
+      /// called when an offer is received - must send an answer soon after this
       virtual void onOffer(InviteSessionHandle, const SipMessage& msg, const SdpContents&)=0;      
+      // You should only override the following method if genericOfferAnswer is true
+      virtual void onOffer(InviteSessionHandle, const SipMessage& msg, const Contents&);      
 
-      /// called when a modified SDP is received in a 2xx response to a
+      /// called when a modified body is received in a 2xx response to a
       /// session-timer reINVITE. Under normal circumstances where the response
-      /// SDP is unchanged from current remote SDP no handler is called
+      /// body is unchanged from current remote body no handler is called
       virtual void onRemoteSdpChanged(InviteSessionHandle, const SipMessage& msg, const SdpContents&);
+      // You should only override the following method if genericOfferAnswer is true
+      virtual void onRemoteAnswerChanged(InviteSessionHandle, const SipMessage& msg, const Contents&);  
 
-      /// Called when an error response is received for a reinvite-nosdp request (via requestOffer)
+      /// Called when an error response is received for a reinvite-nobody request (via requestOffer)
       virtual void onOfferRequestRejected(InviteSessionHandle, const SipMessage& msg);
 
-      /// called when an Invite w/out SDP is sent, or any other context which
-      /// requires an SDP offer from the user
+      /// called when an Invite w/out offer is sent, or any other context which
+      /// requires an offer from the user
       virtual void onOfferRequired(InviteSessionHandle, const SipMessage& msg)=0;      
       
       /// called if an offer in a UPDATE or re-INVITE was rejected - not real
@@ -148,6 +184,9 @@ class InviteSessionHandler
       /// will be called if Session-Timers are used and Session Timer expires
       /// default behaviour is to send a BYE to send the dialog
       virtual void onSessionExpired(InviteSessionHandle);
+
+   private:
+	  bool mGenericOfferAnswer;
 };
 
 }
