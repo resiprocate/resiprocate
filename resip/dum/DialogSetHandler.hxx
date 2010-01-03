@@ -7,9 +7,7 @@
 namespace resip
 {
 
-class SdpContents;
 class SipMessage;
-
 
 class DialogSetHandler
 {

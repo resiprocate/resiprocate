@@ -13,9 +13,6 @@
 #include "rutil/Data.hxx"
 #include "resip/stack/Contents.hxx"
 #include "resip/stack/SecurityAttributes.hxx"
-#include "resip/stack/SdpContents.hxx"
-
-
 
 namespace resip
 {
