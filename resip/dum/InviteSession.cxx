@@ -383,7 +383,7 @@ InviteSession::requestOffer()
          transition(SentReinviteNoOffer);
          mDialog.makeRequest(*mLastLocalSessionModification, INVITE);
          startStaleReInviteTimer();
-         mLastLocalSessionModification->setContents(0);		// Clear the SDP contents from the INVITE
+         mLastLocalSessionModification->setContents(0);		// Clear the contents from the INVITE
          setSessionTimerHeaders(*mLastLocalSessionModification);
 
          InfoLog (<< "Sending " << mLastLocalSessionModification->brief());
@@ -1330,7 +1330,7 @@ InviteSession::dispatchConnected(const SipMessage& msg)
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mProposedRemoteOfferAnswer = offerAnswer; 
 
-         handler->onOffer(getSessionHandle(), msg, *((SdpContents*)mProposedRemoteOfferAnswer.get()));
+         handler->onOffer(getSessionHandle(), msg, *mProposedRemoteOfferAnswer);
          break;
 
       case On2xx:

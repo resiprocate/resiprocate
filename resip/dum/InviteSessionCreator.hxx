@@ -10,7 +10,7 @@ namespace resip
 
 class DialogUsageManager;
 class Uri;
-class SdpContents;
+class Contents;
 
 class InviteSessionCreator : public BaseCreator
 {
