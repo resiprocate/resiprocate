@@ -37,7 +37,7 @@ class RedirectManager;
 class ClientAuthManager;
 class ServerAuthManager;
 class Uri;
-class SdpContents;
+class Contents;
 
 class ClientRegistrationHandler;
 class ServerRegistrationHandler;
@@ -150,7 +150,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void setServerAuthManager(resip::SharedPtr<ServerAuthManager> server);
 
       /// If there is no such handler, calling makeInviteSession will throw and
-      /// receiving an INVITE as a UAS will respond with 405 Method Not Allowed
+      /// receiving an INVITE as a UAS will respond with 405 Method Not Allowed.
       void setInviteSessionHandler(InviteSessionHandler*);
       
       /// If there is no such handler, calling makeRegistration will throw
@@ -190,23 +190,23 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       // calls DialogUsageManager::send(msg);
       SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, 
                                               const SharedPtr<UserProfile>& userProfile, 
-                                              const SdpContents* initialOffer, 
+                                              const Contents* initialOffer, 
                                               AppDialogSet* ads = 0);
-      SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, const SdpContents* initialOffer, AppDialogSet* ads = 0);
-      SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const SdpContents* initialOffer, EncryptionLevel level, const SdpContents* alternative = 0, AppDialogSet* ads = 0);
-      SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, const SdpContents* initialOffer, EncryptionLevel level, const SdpContents* alternative = 0, AppDialogSet* ads = 0);
+      SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, const Contents* initialOffer, AppDialogSet* ads = 0);
+      SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Contents* initialOffer, EncryptionLevel level, const Contents* alternative = 0, AppDialogSet* ads = 0);
+      SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, const Contents* initialOffer, EncryptionLevel level, const Contents* alternative = 0, AppDialogSet* ads = 0);
 
       
       //will send a Notify(100)...currently can be decorated through the
       //OnReadyToSend callback.  Probably will change it's own callback/handler soon
       SharedPtr<SipMessage> makeInviteSessionFromRefer(const SipMessage& refer, ServerSubscriptionHandle, 
-                                                       const SdpContents* initialOffer, AppDialogSet* = 0);
+                                                       const Contents* initialOffer, AppDialogSet* = 0);
       SharedPtr<SipMessage> makeInviteSessionFromRefer(const SipMessage& refer, const SharedPtr<UserProfile>& userProfile, 
-                                                       const SdpContents* initialOffer, AppDialogSet* appDs = 0);
+                                                       const Contents* initialOffer, AppDialogSet* appDs = 0);
       SharedPtr<SipMessage> makeInviteSessionFromRefer(const SipMessage& refer, ServerSubscriptionHandle, 
-                                                       const SdpContents* initialOffer, EncryptionLevel level, const SdpContents* alternative, AppDialogSet* = 0);
+                                                       const Contents* initialOffer, EncryptionLevel level, const Contents* alternative, AppDialogSet* = 0);
       SharedPtr<SipMessage> makeInviteSessionFromRefer(const SipMessage& refer, const SharedPtr<UserProfile>& userProfile, ServerSubscriptionHandle, 
-                                                       const SdpContents* initialOffer, EncryptionLevel level, const SdpContents* alternative, AppDialogSet* = 0);
+                                                       const Contents* initialOffer, EncryptionLevel level, const Contents* alternative, AppDialogSet* = 0);
       
       SharedPtr<SipMessage> makeSubscription(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Data& eventType, AppDialogSet* = 0);
       SharedPtr<SipMessage> makeSubscription(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Data& eventType, 

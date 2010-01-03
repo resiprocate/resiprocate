@@ -507,13 +507,13 @@ DialogUsageManager::sendResponse(const SipMessage& response)
 }
 
 SharedPtr<SipMessage>
-DialogUsageManager::makeInviteSession(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const SdpContents* initialOffer, AppDialogSet* appDs)
+DialogUsageManager::makeInviteSession(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Contents* initialOffer, AppDialogSet* appDs)
 {
    return makeInviteSession(target, userProfile, initialOffer, None, 0, appDs);
 }
 
 SharedPtr<SipMessage>
-DialogUsageManager::makeInviteSession(const NameAddr& target, const SdpContents* initialOffer, AppDialogSet* appDs)
+DialogUsageManager::makeInviteSession(const NameAddr& target, const Contents* initialOffer, AppDialogSet* appDs)
 {
    return makeInviteSession(target, getMasterUserProfile(), initialOffer, None, 0, appDs);
 }
@@ -521,9 +521,9 @@ DialogUsageManager::makeInviteSession(const NameAddr& target, const SdpContents*
 SharedPtr<SipMessage>
 DialogUsageManager::makeInviteSession(const NameAddr& target, 
                                       const SharedPtr<UserProfile>& userProfile, 
-                                      const SdpContents* initialOffer, 
+                                      const Contents* initialOffer, 
                                       EncryptionLevel level, 
-                                      const SdpContents* alternative, 
+                                      const Contents* alternative, 
                                       AppDialogSet* appDs)
 {
    SharedPtr<SipMessage> inv = makeNewSession(new InviteSessionCreator(*this, target, userProfile, initialOffer, level, alternative), appDs);
@@ -533,9 +533,9 @@ DialogUsageManager::makeInviteSession(const NameAddr& target,
 
 SharedPtr<SipMessage>
 DialogUsageManager::makeInviteSession(const NameAddr& target, 
-                                      const SdpContents* initialOffer, 
+                                      const Contents* initialOffer, 
                                       EncryptionLevel level, 
-                                      const SdpContents* alternative,
+                                      const Contents* alternative,
                                       AppDialogSet* appDs)
 {
    return makeInviteSession(target, getMasterUserProfile(), initialOffer, level, alternative, appDs);
@@ -544,7 +544,7 @@ DialogUsageManager::makeInviteSession(const NameAddr& target,
 SharedPtr<SipMessage>
 DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
                                                ServerSubscriptionHandle serverSub,
-                                               const SdpContents* initialOffer,
+                                               const Contents* initialOffer,
                                                AppDialogSet* appDs)
 {
    return makeInviteSessionFromRefer(refer, serverSub, initialOffer, None, 0, appDs);
@@ -553,7 +553,7 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
 SharedPtr<SipMessage>
 DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
                                                const SharedPtr<UserProfile>& userProfile, 
-                                               const SdpContents* initialOffer,
+                                               const Contents* initialOffer,
                                                AppDialogSet* appDs)
 {
    ServerSubscriptionHandle empty;
@@ -563,9 +563,9 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
 SharedPtr<SipMessage>
 DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
                                                ServerSubscriptionHandle serverSub,
-                                               const SdpContents* initialOffer,
+                                               const Contents* initialOffer,
                                                EncryptionLevel level,
-                                               const SdpContents* alternative,
+                                               const Contents* alternative,
                                                AppDialogSet* appDs)
 {
    return makeInviteSessionFromRefer(refer, serverSub.isValid() ? serverSub->mDialog.mDialogSet.getUserProfile() : getMasterUserProfile(), serverSub, initialOffer, level, alternative, appDs);
@@ -575,9 +575,9 @@ SharedPtr<SipMessage>
 DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
                                                const SharedPtr<UserProfile>& userProfile, 
                                                ServerSubscriptionHandle serverSub,
-                                               const SdpContents* initialOffer,
+                                               const Contents* initialOffer,
                                                EncryptionLevel level,
-                                               const SdpContents* alternative,
+                                               const Contents* alternative,
                                                AppDialogSet* appDs)
 {
    if (serverSub.isValid())

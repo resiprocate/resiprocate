@@ -2,7 +2,7 @@
 #define RESIP_INVITESESSION_HXX
 
 #include "resip/stack/SipMessage.hxx"
-#include "resip/stack/SdpContents.hxx"
+#include "resip/stack/Contents.hxx"
 #include "resip/dum/DialogUsage.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 
@@ -12,6 +12,7 @@
 namespace resip
 {
 
+class Contents;
 class SdpContents;
 
 /** Base class for class ClientInviteSession and class ServerInviteSession.
@@ -25,21 +26,21 @@ class InviteSession : public DialogUsage
           sends an offer. If possible, this will synchronously send the
           appropriate request or response. In some cases, the UAS might have to
           call accept in order to cause the message to be sent. */
-      virtual void provideOffer(const SdpContents& offer);
-      virtual void provideOffer(const SdpContents& offer, DialogUsageManager::EncryptionLevel level, const SdpContents* alternative);
+      virtual void provideOffer(const Contents& offer);
+      virtual void provideOffer(const Contents& offer, DialogUsageManager::EncryptionLevel level, const Contents* alternative);
 
       /** Similar to provideOffer - called to set the answer to be signalled to
           the peer. May result in message being sent synchronously depending on
           the state. */
-      virtual void provideAnswer(const SdpContents& answer);
+      virtual void provideAnswer(const Contents& answer);
 
       /** Called to request that the far end provide an offer.  This will cause a 
-          reinvite with no sdp to be sent.  */
+          reinvite with no body to be sent.  */
       virtual void requestOffer();
 
       typedef enum
       {
-         None, // means no Offer or Answer (may have SDP)
+         None, // means no Offer or Answer (may have body)
          Offer,
          Answer
       } OfferAnswerType;
@@ -66,7 +67,7 @@ class InviteSession : public DialogUsage
           send a 488 to a reINVITE or UPDATE */
       virtual void reject(int statusCode, WarningCategory *warning = 0);
 
-      /** will send a reINVITE (current sdp) or UPDATE with new Contact header */
+      /** will send a reINVITE (current offerAnswer) or UPDATE with new Contact header */
       virtual void targetRefresh(const NameAddr& localUri);
 
       // Following methods are for sending requests within a dialog
@@ -102,9 +103,9 @@ class InviteSession : public DialogUsage
       /**
        * Provide asynchronous method access by using command
        */
-      virtual void provideOfferCommand(const SdpContents& offer);
-      virtual void provideOfferCommand(const SdpContents& offer, DialogUsageManager::EncryptionLevel level, const SdpContents* alternative);
-      virtual void provideAnswerCommand(const SdpContents& answer);
+      virtual void provideOfferCommand(const Contents& offer);
+      virtual void provideOfferCommand(const Contents& offer, DialogUsageManager::EncryptionLevel level, const Contents* alternative);
+      virtual void provideAnswerCommand(const Contents& answer);
       /** Asynchronously makes the specific dialog end. Will send a BYE (not a CANCEL) */
       virtual void endCommand(EndReason reason = NotSpecified);
       /** Asynchronously rejects an offer at the SIP level.  Can also be used to 
@@ -122,13 +123,23 @@ class InviteSession : public DialogUsage
       virtual void acceptReferNoSub(int statusCode = 200);
       virtual void rejectReferNoSub(int responseCode);
 
+      bool hasLocalOfferAnswer() const;
+      const Contents& getLocalOfferAnswer() const;
+      bool hasRemoteOfferAnswer() const;
+      const Contents& getRemoteOfferAnswer() const;
+      bool hasProposedRemoteOfferAnswer() const;
+      const Contents& getProposedRemoteOfferAnswer() const;
+
+      // Note:  The following fn's are for backwards compatibility and are only valid to call 
+      //        if the InviteSessionHandler is not in Generic mode (ie. 
+      //        InviteSessionHandler::isGenericOfferAnswer is false)
       bool hasLocalSdp() const;
-      const SdpContents& getLocalSdp() const;
+      const SdpContents& getLocalSdp() const;  
       bool hasRemoteSdp() const;
-      const SdpContents& getRemoteSdp() const;
+      const SdpContents& getRemoteSdp() const;   
       bool hasProposedRemoteSdp() const;
       const SdpContents& getProposedRemoteSdp() const;
-      
+
       bool isConnected() const;
       bool isTerminated() const;
       bool isEarly() const;     // UAC Early states
@@ -295,22 +306,22 @@ class InviteSession : public DialogUsage
       static Data toData(State state);
       void transition(State target);
 
-      std::auto_ptr<SdpContents> getSdp(const SipMessage& msg);
+      std::auto_ptr<Contents> getOfferAnswer(const SipMessage& msg);
       bool isReliable(const SipMessage& msg);
-      static std::auto_ptr<SdpContents> makeSdp(const SdpContents& sdp);
-      static std::auto_ptr<Contents> makeSdp(const SdpContents& sdp, const SdpContents* alternative);
-      static void setSdp(SipMessage& msg, const SdpContents& sdp, const SdpContents* alternative = 0);
-      static void setSdp(SipMessage& msg, const Contents* sdp);
+      static std::auto_ptr<Contents> makeOfferAnswer(const Contents& offerAnswer);
+      static std::auto_ptr<Contents> makeOfferAnswer(const Contents& offerAnswer, const Contents* alternative);
+      static void setOfferAnswer(SipMessage& msg, const Contents& offerAnswer, const Contents* alternative = 0);
+      static void setOfferAnswer(SipMessage& msg, const Contents* offerAnswer);
       void provideProposedOffer();
 
       void storePeerCapabilities(const SipMessage& msg);
       bool updateMethodSupported() const;
 
-      void sendAck(const SdpContents *sdp=0);
+      void sendAck(const Contents *answer=0);
       void sendBye();
 
       DialogUsageManager::EncryptionLevel getEncryptionLevel(const SipMessage& msg);
-      void setCurrentLocalSdp(const SipMessage& msg);
+      void setCurrentLocalOfferAnswer(const SipMessage& msg);
       void referNoSub(const SipMessage& msg);
 
       Tokens mPeerSupportedMethods;
@@ -322,17 +333,17 @@ class InviteSession : public DialogUsage
       Data   mPeerUserAgent;
       NameAddrs mPeerPAssertedIdentities;
 
-      Event toEvent(const SipMessage& msg, const SdpContents* sdp);
+      Event toEvent(const SipMessage& msg, const Contents* offeranswer);
       
       State mState;
       NitState mNitState;
       NitState mServerNitState;
 
-      std::auto_ptr<SdpContents> mCurrentLocalSdp;
-      std::auto_ptr<Contents> mProposedLocalSdp;
+      std::auto_ptr<Contents> mCurrentLocalOfferAnswer;
+      std::auto_ptr<Contents> mProposedLocalOfferAnswer;
 
-      std::auto_ptr<SdpContents> mCurrentRemoteSdp;
-      std::auto_ptr<SdpContents> mProposedRemoteSdp;
+      std::auto_ptr<Contents> mCurrentRemoteOfferAnswer;
+      std::auto_ptr<Contents> mProposedRemoteOfferAnswer;
 
       SharedPtr<SipMessage> mLastLocalSessionModification; // last UPDATE or reINVITE sent
       SharedPtr<SipMessage> mLastRemoteSessionModification; // last UPDATE or reINVITE received

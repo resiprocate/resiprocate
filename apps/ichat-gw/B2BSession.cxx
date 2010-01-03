@@ -4,6 +4,7 @@
 #include "AppSubsystem.hxx"
 
 #include <resip/stack/PlainContents.hxx>
+#include <resip/stack/SdpContents.hxx>
 #include <resip/dum/ServerInviteSession.hxx>
 #include <resip/dum/ClientInviteSession.hxx>
 #include <resip/dum/ClientSubscription.hxx>

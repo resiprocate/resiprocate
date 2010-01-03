@@ -25,7 +25,7 @@ DialogEventStateManager::onTryingUas(Dialog& dialog, const SipMessage& invite)
    eventInfo->mDirection = DialogEventInfo::Recipient;
    eventInfo->mCreationTimeSeconds = Timer::getTimeSecs();
    eventInfo->mInviteSession = InviteSessionHandle::NotValid();
-   eventInfo->mRemoteSdp = (dynamic_cast<SdpContents*>(invite.getContents()) != NULL ? std::auto_ptr<SdpContents>((SdpContents*)invite.getContents()->clone()) : std::auto_ptr<SdpContents>());
+   eventInfo->mRemoteOfferAnswer = (invite.getContents() != NULL ? std::auto_ptr<Contents>(invite.getContents()->clone()) : std::auto_ptr<Contents>());
    eventInfo->mLocalIdentity = dialog.getLocalNameAddr();
    eventInfo->mLocalTarget = dialog.getLocalContact().uri();
    eventInfo->mRemoteIdentity = dialog.getRemoteNameAddr();
@@ -97,7 +97,7 @@ DialogEventStateManager::onTryingUac(DialogSet& dialogSet, const SipMessage& inv
    assert(invite.header(h_Contacts).front().isWellFormed());
    eventInfo->mLocalTarget = invite.header(h_Contacts).front().uri();
    eventInfo->mRemoteIdentity = invite.header(h_To);
-   eventInfo->mLocalSdp = (dynamic_cast<SdpContents*>(invite.getContents()) != NULL ? std::auto_ptr<SdpContents>((SdpContents*)invite.getContents()->clone()) : std::auto_ptr<SdpContents>());
+   eventInfo->mLocalOfferAnswer = (invite.getContents() != NULL ? std::auto_ptr<Contents>(invite.getContents()->clone()) : std::auto_ptr<Contents>());
    eventInfo->mState = DialogEventInfo::Trying;
 
    if (invite.exists(h_ReferredBy) &&

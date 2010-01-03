@@ -7,7 +7,7 @@
 namespace resip
 {
 class SipMessage;
-class SdpContents;
+class Contents;
 
 class ClientInviteSession : public InviteSession
 {
@@ -24,14 +24,14 @@ class ClientInviteSession : public InviteSession
    public:
       /** Called to set the offer that will be used in the next message that
           sends an offer.  For a UAC in an early dialog, this can be used to send
-          an UPDATE request with an SDP offer. */
-      virtual void provideOffer (const SdpContents& offer);
-      virtual void provideOffer(const SdpContents& offer, DialogUsageManager::EncryptionLevel level, const SdpContents* alternative);
+          an UPDATE request with an offer. */
+      virtual void provideOffer (const Contents& offer);
+      virtual void provideOffer(const Contents& offer, DialogUsageManager::EncryptionLevel level, const Contents* alternative);
 
       /** Similar to provideOffer - called to set the answer to be signalled to
           the peer. May result in message being sent synchronously depending on
           the state. */
-      virtual void provideAnswer (const SdpContents& answer);
+      virtual void provideAnswer (const Contents& answer);
 
       /** Makes the specific dialog end. Will send a BYE (not a CANCEL) */
       virtual void end(EndReason reason);
@@ -42,7 +42,7 @@ class ClientInviteSession : public InviteSession
           that contains an offer in an early dialog. */
       virtual void reject (int statusCode, WarningCategory *warning = 0);
 
-      const SdpContents& getEarlyMedia() const;
+      const Contents& getEarlyMedia() const;
       
    private:
       virtual void dispatch(const SipMessage& msg);
@@ -63,10 +63,10 @@ class ClientInviteSession : public InviteSession
       void handleRedirect (const SipMessage& msg);
       void handleProvisional (const SipMessage& msg);
       void handleFinalResponse (const SipMessage& msg);
-      void handleOffer (const SipMessage& msg, const SdpContents& sdp);
-      void handleAnswer (const SipMessage& msg, const SdpContents& sdp);
+      void handleOffer (const SipMessage& msg, const Contents& offer);
+      void handleAnswer (const SipMessage& msg, const Contents& answer);
       void sendPrackIfNeeded(const SipMessage& msg);
-      void sendPrack(const SdpContents& sdp);
+      void sendPrack(const Contents& offerAnswer);
       
       // Called by the DialogSet (friend) when the app has CANCELed the request
       void cancel();
@@ -84,7 +84,7 @@ class ClientInviteSession : public InviteSession
       void onProvisionalAspect(ClientInviteSessionHandle c, const SipMessage& msg);
       void onFailureAspect(ClientInviteSessionHandle c, const SipMessage& msg);
 
-      std::auto_ptr<SdpContents> mEarlyMedia;
+      std::auto_ptr<Contents> mEarlyMedia;
 
       RAckCategory mRelRespInfo;
       unsigned int mStaleCallTimerSeq;
