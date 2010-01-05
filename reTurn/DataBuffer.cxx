@@ -18,7 +18,7 @@ mBuffer(size != 0 ? new char[size] : 0), mSize(size), mStart(mBuffer)
 
 DataBuffer::~DataBuffer() 
 { 
-   delete mBuffer; 
+   delete[] mBuffer; 
 }
 
 const char* 
