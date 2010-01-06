@@ -6,13 +6,13 @@
 #include <cassert>
 #include <cstdlib>
 
-#include "rutil/WinLeakCheck.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/Logger.hxx"
 
 #include "repro/AbstractDb.hxx"
 #include "repro/BerkeleyDb.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace repro;
