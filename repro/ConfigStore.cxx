@@ -36,7 +36,7 @@ void
 ConfigStore::addDomain(const resip::Data& domain,
                        const int tlsPort )
 { 
-   InfoLog( << "Add domain to config " );
+   InfoLog( << "Add domain " << domain << " to config." );
    
    AbstractDb::ConfigRecord rec;
    rec.mDomain = domain;

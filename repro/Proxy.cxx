@@ -32,7 +32,8 @@ Proxy::Proxy(SipStack& stack,
              ProcessorChain& responseP, 
              ProcessorChain& targetP, 
              UserStore& userStore,
-             int timerC) 
+             int timerC,
+             OptionsHandler* optionsHandler=0) 
    : TransactionUser(TransactionUser::RegisterForTransactionTermination),
      mStack(stack), 
      mRecordRoute(recordRoute),
@@ -40,7 +41,8 @@ Proxy::Proxy(SipStack& stack,
      mRequestProcessorChain(requestP), 
      mResponseProcessorChain(responseP),
      mTargetProcessorChain(targetP),
-     mUserStore(userStore)
+     mUserStore(userStore),
+     mOptionsHandler(optionsHandler)
 {
    mTimerC=timerC;
    if (!mRecordRoute.uri().host().empty())
@@ -112,18 +114,32 @@ Proxy::thread()
 
                   // The TU selector already checks the URI scheme for us (Sect 16.3, Step 2)
                   if(sip->method()==OPTIONS && 
-                     sip->header(h_RequestLine).uri().user().empty() &&
                      isMyUri(sip->header(h_RequestLine).uri()))
                   {
-                     std::auto_ptr<SipMessage> resp(new SipMessage);
-                     Helper::makeResponse(*resp,*sip,200);
-                     if(resip::InteropHelper::getOutboundSupported())
+                     if(mOptionsHandler)
                      {
-                        resp->header(h_Supporteds).push_back(Token("outbound"));
+                        std::auto_ptr<SipMessage> resp(new SipMessage);
+                        Helper::makeResponse(*resp,*sip,200);
+                        if(mOptionsHandler->onOptionsRequest(*sip, *resp))
+                        {
+                           mStack.send(*resp,this);
+                           delete sip;
+                           continue;
+                        }
                      }
-                     mStack.send(*resp,this);
-                     delete sip;
-                     continue;
+                     else if(sip->header(h_RequestLine).uri().user().empty())
+                     {
+                        std::auto_ptr<SipMessage> resp(new SipMessage);
+                        Helper::makeResponse(*resp,*sip,200);
+
+                        if(resip::InteropHelper::getOutboundSupported())
+                        {
+                           resp->header(h_Supporteds).push_back(Token("outbound"));
+                        }
+                        mStack.send(*resp,this);
+                        delete sip;
+                        continue;
+                     }
                   }
 
                   // check the MaxForwards isn't too low
