@@ -19,6 +19,16 @@ namespace repro
 class UserStore;
 class ProcessorChain;
 
+class OptionsHandler
+{
+public:
+    OptionsHandler() {}
+    virtual ~OptionsHandler() {}
+
+    // return true if handled and response should be sent, false to route normally through proxy
+    virtual bool onOptionsRequest(const resip::SipMessage& request, resip::SipMessage& response) = 0;
+};
+
 class Proxy : public resip::TransactionUser, public resip::ThreadIf
 {
    public:
@@ -29,7 +39,8 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
             ProcessorChain& responseP,
             ProcessorChain& targetP,
             UserStore& ,
-            int timerC);
+            int timerC,
+            OptionsHandler* optionsHandler);
       virtual ~Proxy();
 
       virtual bool isShutDown() const ;
@@ -79,6 +90,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       
       UserStore &mUserStore;
       std::set<resip::Data> mSupportedOptions;
+      OptionsHandler* mOptionsHandler;
 };
 }
 #endif
