@@ -6,12 +6,20 @@ namespace resip
 {
 class ExternalDns;
 
-//linker pattern, replace the cxx to use a different Dns provider. The deafult
-//is to use ares.
+// If no creator is provided (via setExternalCreator), then default is to use AresDns
+class ExternalDnsCreator
+{
+public:
+    virtual ExternalDns* createExternalDns() = 0;
+};
+
 class ExternalDnsFactory
 {
-   public:
+public:
       static ExternalDns* createExternalDns();
+   static void setExternalCreator(ExternalDnsCreator* creator);
+private:
+   static ExternalDnsCreator* mCreator;
 };
 
 }

@@ -15,15 +15,30 @@
 
 using namespace resip;
 
+ExternalDnsCreator* ExternalDnsFactory::mCreator = 0;
+
+void 
+ExternalDnsFactory::setExternalCreator(ExternalDnsCreator* creator)
+{
+    mCreator = creator;
+}
+
 ExternalDns* 
 ExternalDnsFactory::createExternalDns()
 {
+   if(mCreator)
+   {
+       return mCreator->createExternalDns();
+   }
+   else
+   {
 #ifdef USE_LOCAL_DNS
    InfoLog (<< "Using Local DNS instead of Ares. Should only be used for tests.");
    return new LocalDns();
 #else
    return new AresDns();
 #endif
+   }
 }
 
 /* ====================================================================
