@@ -24,6 +24,14 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
+RequestContext* 
+RequestContextFactory::createRequestContext(Proxy& proxy,
+                                                   ProcessorChain& requestP,  // monkeys
+                                                   ProcessorChain& responseP, // lemurs
+                                                   ProcessorChain& targetP)   // baboons
+{
+   return new RequestContext(proxy, requestP, responseP, targetP); 
+}
 
 Proxy::Proxy(SipStack& stack, 
              const Uri& recordRoute,
@@ -32,8 +40,7 @@ Proxy::Proxy(SipStack& stack,
              ProcessorChain& responseP, 
              ProcessorChain& targetP, 
              UserStore& userStore,
-             int timerC,
-             OptionsHandler* optionsHandler=0) 
+             int timerC) 
    : TransactionUser(TransactionUser::RegisterForTransactionTermination),
      mStack(stack), 
      mRecordRoute(recordRoute),
@@ -42,7 +49,8 @@ Proxy::Proxy(SipStack& stack,
      mResponseProcessorChain(responseP),
      mTargetProcessorChain(targetP),
      mUserStore(userStore),
-     mOptionsHandler(optionsHandler)
+     mRequestContextFactory(new RequestContextFactory),
+     mOptionsHandler(0)
 {
    mTimerC=timerC;
    if (!mRecordRoute.uri().host().empty())
@@ -59,6 +67,17 @@ Proxy::~Proxy()
    InfoLog (<< "Proxy::thread shutdown with " << mServerRequestContexts.size() << " ServerRequestContexts and " << mClientRequestContexts.size() << " ClientRequestContexts.");
 }
 
+void 
+Proxy::setOptionsHandler(OptionsHandler* handler)
+{
+   mOptionsHandler = handler;
+}
+ 
+void 
+Proxy::setRequestContextFactory(std::auto_ptr<RequestContextFactory> requestContextFactory)
+{
+   mRequestContextFactory = requestContextFactory;
+}
 
 bool
 Proxy::isShutDown() const
@@ -260,7 +279,7 @@ Proxy::thread()
                      // .bwc. This might be an ACK/200, or a stray ACK/failure
                      if(i == mServerRequestContexts.end())
                      {
-                        context = new RequestContext(*this, 
+                        context = mRequestContextFactory->createRequestContext(*this, 
                                                      mRequestProcessorChain, 
                                                      mResponseProcessorChain, 
                                                      mTargetProcessorChain);
@@ -293,7 +312,7 @@ Proxy::thread()
 
                      if(mServerRequestContexts.count(sip->getTransactionId()) == 0)
                      {
-                        RequestContext* context = new RequestContext(*this,
+                        RequestContext* context = mRequestContextFactory->createRequestContext(*this,
                                                                      mRequestProcessorChain, 
                                                                      mResponseProcessorChain, 
                                                                      mTargetProcessorChain);

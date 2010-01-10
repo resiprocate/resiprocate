@@ -35,6 +35,8 @@ class RequestContext
       void process(std::auto_ptr<resip::SipMessage> sip);
       void process(std::auto_ptr<resip::ApplicationMessage> app);
       
+      virtual void handleSelfAimedStrayAck(resip::SipMessage* sip);
+
       /// Returns the SipMessage associated with the server transaction
       resip::SipMessage& getOriginalRequest();
       const resip::SipMessage& getOriginalRequest() const;
@@ -53,6 +55,7 @@ class RequestContext
       
       resip::NameAddr& getTopRoute();
             
+      virtual void send(resip::SipMessage& msg);
       void sendResponse(resip::SipMessage& response);
 
       void forwardAck200(const resip::SipMessage& ack);
@@ -66,7 +69,7 @@ class RequestContext
       bool fromTrustedNode() const;
       
       bool mHaveSentFinalResponse;
-   private:
+   protected:
       resip::SipMessage*  mOriginalRequest;
       resip::Message*  mCurrentEvent;
       resip::SipMessage* mAck200ToRetransmit;
