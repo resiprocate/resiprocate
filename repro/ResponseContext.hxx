@@ -257,7 +257,7 @@ class ResponseContext
       bool selfAlreadyRecordRouted();
       bool sendingToSelf(Target* target);
 
-      void sendRequest(const resip::SipMessage& request);
+      void sendRequest(resip::SipMessage& request);
       
       TransactionMap mCandidateTransactionMap; //Targets with status Candidate.
       TransactionMap mActiveTransactionMap; //Targets with status Trying, Proceeding, or WaitingToCancel.

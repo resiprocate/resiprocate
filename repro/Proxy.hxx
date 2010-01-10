@@ -1,6 +1,8 @@
 #if !defined(RESIP_PROXY_HXX)
 #define RESIP_PROXY_HXX 
 
+#include <memory>
+
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TransactionUser.hxx"
 #include "rutil/HashMap.hxx"
@@ -29,6 +31,16 @@ public:
     virtual bool onOptionsRequest(const resip::SipMessage& request, resip::SipMessage& response) = 0;
 };
 
+class RequestContextFactory
+{
+   public:
+      virtual RequestContext* createRequestContext(Proxy& proxy,
+                                                   ProcessorChain& requestP,  // monkeys
+                                                   ProcessorChain& responseP, // lemurs
+                                                   ProcessorChain& targetP);  // baboons   
+      virtual ~RequestContextFactory() {}
+};
+
 class Proxy : public resip::TransactionUser, public resip::ThreadIf
 {
    public:
@@ -39,9 +51,12 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
             ProcessorChain& responseP,
             ProcessorChain& targetP,
             UserStore& ,
-            int timerC,
-            OptionsHandler* optionsHandler);
+            int timerC);
       virtual ~Proxy();
+
+      // Note:  These are not thread safe and should be called before run() only
+      void setOptionsHandler(OptionsHandler* handler);
+      void setRequestContextFactory(std::auto_ptr<RequestContextFactory> requestContextFactory);
 
       virtual bool isShutDown() const ;
       virtual void thread();
@@ -91,6 +106,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       UserStore &mUserStore;
       std::set<resip::Data> mSupportedOptions;
       OptionsHandler* mOptionsHandler;
+      std::auto_ptr<RequestContextFactory> mRequestContextFactory;
 };
 }
 #endif

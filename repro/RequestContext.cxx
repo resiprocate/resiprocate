@@ -150,7 +150,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                   // Route headers (after we have removed ourself). We will never perform 
                   // location service or retargeting on an ACK, and we shouldn't send 
                   // it to ourselves.  So, just drop the thing.
-                  InfoLog(<<"Stray ACK aimed at us that routes back to us. Dropping it...");            
+                  handleSelfAimedStrayAck(sip);
                }
                // Note: mTopRoute is only populated if RemoveTopRouteIfSelf successfully removes the top route.
                else if(!mTopRoute.uri().host().empty() || getProxy().isMyUri(sip->header(h_From).uri()))
@@ -545,6 +545,12 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
 }
 
 void
+RequestContext::handleSelfAimedStrayAck(SipMessage* sip)
+{
+    InfoLog(<<"Stray ACK aimed at us that routes back to us. Dropping it...");  
+}
+
+void
 RequestContext::forwardAck200(const resip::SipMessage& ack)
 {
    if(!mAck200ToRetransmit)
@@ -562,7 +568,7 @@ RequestContext::forwardAck200(const resip::SipMessage& ack)
       }
    }
 
-   mProxy.send(*mAck200ToRetransmit);
+   send(*mAck200ToRetransmit);
 }
 
 resip::SipMessage& 
@@ -631,6 +637,12 @@ RequestContext::postTimedMessage(std::auto_ptr<resip::ApplicationMessage> msg,in
 }
 
 void
+RequestContext::send(SipMessage& msg)
+{
+    mProxy.send(msg);
+}
+
+void
 RequestContext::sendResponse(SipMessage& msg)
 {
    assert (msg.isResponse());
@@ -690,9 +702,8 @@ RequestContext::sendResponse(SipMessage& msg)
          DebugLog(<<"Sending final response.");
          mHaveSentFinalResponse=true;
       }
-      mProxy.send(msg);
+      send(msg);
    }
-   
 }
 
 //      This function assumes that if ;lr shows up in the

@@ -792,7 +792,7 @@ ResponseContext::sendingToSelf(Target* target)
 }
 
 void 
-ResponseContext::sendRequest(const resip::SipMessage& request)
+ResponseContext::sendRequest(resip::SipMessage& request)
 {
    assert (request.isRequest());
 
@@ -815,7 +815,7 @@ ResponseContext::sendRequest(const resip::SipMessage& request)
      mRequestContext.getProxy().post(new Ack200DoneMessage(mRequestContext.getTransactionId()));
    }
 
-   mRequestContext.mProxy.send(request);
+   mRequestContext.send(request);
 }
 
 
