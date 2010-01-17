@@ -37,8 +37,7 @@ class ServerRegistration: public NonDialogUsage
         */
       bool asyncProvideContacts(std::auto_ptr<resip::ContactPtrList> contacts);
 
-      /// Returns true if there was contacts for the Aor when the request arrived
-      bool isInitialContacts();
+      resip::SharedPtr<ContactList> getOriginalContacts() { return mOriginalContacts; }  // WARNING - use this only if async mode is not used
 
    protected:
       virtual ~ServerRegistration();
