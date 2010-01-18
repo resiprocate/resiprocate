@@ -7,18 +7,22 @@
 #include <rutil/Random.hxx>
 #include <rutil/SharedPtr.hxx>
 
+#include <srtp.h>
+
+#ifdef USE_SSL  
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
-
-#include <srtp.h>
+#include "FlowDtlsTimerContext.hxx"
+#endif //USE_SSL
 
 #include "FlowManagerSubsystem.hxx"
 #include "FlowManager.hxx"
-#include "FlowDtlsTimerContext.hxx"
 
 using namespace flowmanager;
 using namespace resip;
+#ifdef USE_SSL 
 using namespace dtls;
+#endif 
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM FlowManagerSubsystem::FLOWMANAGER
@@ -41,18 +45,22 @@ private:
 };
 }
 
-FlowManager::FlowManager() : 
+FlowManager::FlowManager()
+#ifdef USE_SSL
+   : 
    mSslContext(mIOService, asio::ssl::context::tlsv1),
    mClientCert(0),
    mClientKey(0),
    mDtlsFactory(0)
+#endif  
 {
    mIOServiceWork = new asio::io_service::work(mIOService);
    mIOServiceThread = new IOServiceThread(mIOService);
    mIOServiceThread->run();
 
+#ifdef USE_SSL
    // Setup SSL context
-   asio::error_code ec;
+   asio::error_code ec; 
    mSslContext.set_verify_mode(asio::ssl::context::verify_peer | 
                                asio::ssl::context::verify_fail_if_no_peer_cert);
 #define VERIFY_FILE "ca.pem"
@@ -61,28 +69,33 @@ FlowManager::FlowManager() :
    {
       ErrLog(<< "Unable to load verify file: " << VERIFY_FILE << ", error=" << ec.value() << "(" << ec.message() << ")");
    }
+#endif 
 
-   // Initialize SRTP
+   // Initialize SRTP 
    err_status_t status = srtp_init();
    if(status && status != err_status_bad_param)  // Note: err_status_bad_param happens if srtp_init is called twice - we allow this for test programs
    {
       ErrLog(<< "Unable to initialize SRTP engine, error code=" << status);
       throw FlowManagerException("Unable to initialize SRTP engine", __FILE__, __LINE__);
    }
-   status = srtp_install_event_handler(FlowManager::srtpEventHandler);
+   status = srtp_install_event_handler(FlowManager::srtpEventHandler);   
 }
+  
 
 FlowManager::~FlowManager()
 {
    delete mIOServiceWork;
    mIOServiceThread->join();
    delete mIOServiceThread;
-
+ 
+ #ifdef USE_SSL
    if(mDtlsFactory) delete mDtlsFactory;
    if(mClientCert) X509_free(mClientCert);
    if(mClientKey) EVP_PKEY_free(mClientKey);
+ #endif 
 }
 
+#ifdef USE_SSL
 void 
 FlowManager::initializeDtlsFactory(const char* certAor)
 {
@@ -102,8 +115,9 @@ FlowManager::initializeDtlsFactory(const char* certAor)
    else
    {
       ErrLog(<< "Unable to create a client cert, cannot use Dtls-Srtp.");    
-   }
+   }   
 }
+#endif 
 
 void
 FlowManager::srtpEventHandler(srtp_event_data_t *data) 
@@ -125,7 +139,7 @@ FlowManager::srtpEventHandler(srtp_event_data_t *data)
      WarningLog(<< "SRTP unknown event reported to handler");
    }
  }
-
+ 
 MediaStream* 
 FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                const StunTuple& localBinding, 
@@ -140,18 +154,45 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
    if(rtcpEnabled)
    {
       StunTuple localRtcpBinding(localBinding.getTransportType(), localBinding.getAddress(), localBinding.getPort() + 1);
-      newMediaStream = new MediaStream(mIOService, mSslContext, mediaStreamHandler, localBinding, localRtcpBinding, mDtlsFactory,
-                                       natTraversalMode, natTraversalServerHostname, natTraversalServerPort, stunUsername, stunPassword);
+      newMediaStream = new MediaStream(mIOService,
+#ifdef USE_SSL
+                                       mSslContext,
+#endif
+                                       mediaStreamHandler,
+                                       localBinding,
+                                       localRtcpBinding,
+#ifdef USE_SSL
+                                       mDtlsFactory,
+#endif 
+                                       natTraversalMode,
+                                       natTraversalServerHostname, 
+                                       natTraversalServerPort, 
+                                       stunUsername, 
+                                       stunPassword);
    }
    else
    {
       StunTuple rtcpDisabled;  // Default constructor sets transport type to None - this signals Rtcp is disabled
-      newMediaStream = new MediaStream(mIOService, mSslContext, mediaStreamHandler, localBinding, rtcpDisabled, mDtlsFactory,
-                                       natTraversalMode, natTraversalServerHostname, natTraversalServerPort, stunUsername, stunPassword);
+      newMediaStream = new MediaStream(mIOService,
+#ifdef USE_SSL
+                                       mSslContext, 
+#endif
+                                       mediaStreamHandler, 
+                                       localBinding, 
+                                       rtcpDisabled, 
+#ifdef USE_SSL
+                                       mDtlsFactory,
+#endif 
+                                       natTraversalMode, 
+                                       natTraversalServerHostname, 
+                                       natTraversalServerPort, 
+                                       stunUsername, 
+                                       stunPassword);
    }
    return newMediaStream;
 }
 
+#ifdef USE_SSL 
 int 
 FlowManager::createCert(const resip::Data& pAor, int expireDays, int keyLen, X509*& outCert, EVP_PKEY*& outKey )
 {
@@ -227,7 +268,7 @@ FlowManager::createCert(const resip::Data& pAor, int expireDays, int keyLen, X50
    outKey = privkey;
    return ret; 
 }
-
+#endif
 
 /* ====================================================================
 

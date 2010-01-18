@@ -2,8 +2,9 @@
 #define MediaStream_hxx
 
 #include <asio.hpp>
+#ifdef USE_SSL
 #include <asio/ssl.hpp>
-
+#endif
 #include <srtp.h>
 
 #include "dtls_wrapper/DtlsFactory.hxx"
@@ -51,11 +52,15 @@ public:
    };
 
    MediaStream(asio::io_service& ioService,
+#ifdef USE_SSL
                asio::ssl::context& sslContext,
+#endif
                MediaStreamHandler& mediaStreamHandler,
                const StunTuple& localRtpBinding, 
                const StunTuple& localRtcpBinding,   // pass in transport type = None to disable RTCP
+ #ifdef USE_SSL
                dtls::DtlsFactory* dtlsFactory = 0,
+ #endif 
                NatTraversalMode natTraversalMode = NoNatTraversal,
                const char* natTraversalServerHostname = 0, 
                unsigned short natTraversalServerPort = 0, 
@@ -74,7 +79,9 @@ protected:
    friend class Flow;
 
    // SRTP members
+#ifdef USE_SSL
    dtls::DtlsFactory* mDtlsFactory;
+#endif
    volatile bool mSRTPSessionInCreated;
    volatile bool mSRTPSessionOutCreated;
    resip::Mutex mMutex;
@@ -89,7 +96,7 @@ protected:
 
    err_status_t srtpProtect(void* data, int* size, bool rtcp);
    err_status_t srtpUnprotect(void* data, int* size, bool rtcp);
-
+  
    // Nat Traversal Members
    NatTraversalMode mNatTraversalMode;
    resip::Data mNatTraversalServerHostname;

@@ -16,7 +16,6 @@
 #include "FakeSelectSocketDescriptor.hxx"
 #include "dtls_wrapper/DtlsSocket.hxx"
 
-
 using namespace reTurn;
 
 namespace flowmanager
@@ -49,7 +48,9 @@ public:
    };
 
    Flow(asio::io_service& ioService,
+#ifdef USE_SSL
         asio::ssl::context& sslContext,
+#endif
         unsigned int componentId,
         const StunTuple& localBinding, 
         MediaStream& mediaStream);
@@ -104,10 +105,11 @@ public:
    UInt64 getReservationToken();
    unsigned int getComponentId() { return mComponentId; }
 
-
 private:
    asio::io_service& mIOService;
+#ifdef USE_SSL
    asio::ssl::context& mSslContext;
+#endif
 
    // Note: these member variables are set at creation time and never changed, thus
    //       they do not require mutex protection
@@ -130,11 +132,13 @@ private:
    StunTuple mRelayTuple;
    resip::Data mRemoteSDPFingerprint;
 
+#ifdef USE_SSL
    // Map to store all DtlsSockets - in forking cases there can be more than one
    std::map<reTurn::StunTuple, dtls::DtlsSocket*> mDtlsSockets;
    dtls::DtlsSocket* getDtlsSocket(const reTurn::StunTuple& endpoint);
    dtls::DtlsSocket* createDtlsSocketClient(const StunTuple& endpoint);
    dtls::DtlsSocket* createDtlsSocketServer(const StunTuple& endpoint);
+#endif 
 
    volatile FlowState mFlowState;
    void changeFlowState(FlowState newState);
@@ -158,7 +162,6 @@ private:
    // Helpers to perform SRTP protection/unprotection
    bool processSendData(char* buffer, unsigned int& size, const asio::ip::address& address, unsigned short port);
    asio::error_code processReceivedData(char* buffer, unsigned int& size, ReceivedData* receivedData, asio::ip::address* sourceAddress=0, unsigned short* sourcePort=0);
-
    FakeSelectSocketDescriptor mFakeSelectSocketDescriptor;
 
    virtual void onConnectSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port);

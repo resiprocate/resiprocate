@@ -13,7 +13,11 @@
 
 using namespace flowmanager;
 using namespace resip;
+
+#ifdef USE_SSL
 using namespace dtls;
+#endif 
+
 using namespace std;
 
 #define MAX_RECEIVE_FIFO_DURATION 10 // seconds
@@ -106,12 +110,16 @@ char* srtp_error_string(err_status_t error)
 }
 
 Flow::Flow(asio::io_service& ioService,
+#ifdef USE_SSL
            asio::ssl::context& sslContext,
+#endif
            unsigned int componentId,
            const StunTuple& localBinding, 
            MediaStream& mediaStream) 
   : mIOService(ioService),
+#ifdef USE_SSL
     mSslContext(sslContext),
+#endif
     mComponentId(componentId),
     mLocalBinding(localBinding), 
     mMediaStream(mediaStream),
@@ -130,6 +138,7 @@ Flow::Flow(asio::io_service& ioService,
    case StunTuple::TCP:
       mTurnSocket.reset(new TurnAsyncTcpSocket(mIOService, this, mLocalBinding.getAddress(), mLocalBinding.getPort()));
       break;
+#ifdef USE_SSL
    case StunTuple::TLS:
       mTurnSocket.reset(new TurnAsyncTlsSocket(mIOService, 
                                                mSslContext, 
@@ -137,6 +146,7 @@ Flow::Flow(asio::io_service& ioService,
                                                this, 
                                                mLocalBinding.getAddress(), 
                                                mLocalBinding.getPort()));
+#endif
       break;
    default:
       // Bad Transport type!
@@ -156,6 +166,8 @@ Flow::~Flow()
 {
    InfoLog(<< "Flow: flow destroyed for " << mLocalBinding << "  ComponentId=" << mComponentId);
 
+
+#ifdef USE_SSL
    // Cleanup DtlsSockets
    {
       Lock lock(mMutex);
@@ -165,6 +177,7 @@ Flow::~Flow()
          delete it->second;
       }
    }
+ #endif //USE_SSL
 
    // Cleanup TurnSocket
    if(mTurnSocket.get())
@@ -249,8 +262,8 @@ Flow::sendTo(const asio::ip::address& address, unsigned short port, char* buffer
       if(processSendData(buffer, size, address, port))
       {
          mTurnSocket->sendTo(address, port, buffer, size);
-      }
-   }
+      }    
+    }
    else
    {
       onSendFailure(mTurnSocket->getSocketDescriptor(), asio::error_code(flowmanager::InvalidState, asio::error::misc_category));
@@ -265,6 +278,7 @@ Flow::rawSendTo(const asio::ip::address& address, unsigned short port, const cha
    mTurnSocket->sendTo(address, port, buffer, size);
 }
 
+
 bool
 Flow::processSendData(char* buffer, unsigned int& size, const asio::ip::address& address, unsigned short port)
 {
@@ -278,6 +292,7 @@ Flow::processSendData(char* buffer, unsigned int& size, const asio::ip::address&
          return false;
       }
    }
+#ifdef USE_SSL
    else
    {
       Lock lock(mMutex);
@@ -301,9 +316,13 @@ Flow::processSendData(char* buffer, unsigned int& size, const asio::ip::address&
             return false;
          }
       }
-   }
+   }   
+#endif //USE_SSL
+   
    return true;
 }
+
+
 
 // Receive Methods
 asio::error_code 
@@ -374,7 +393,6 @@ Flow::receive(char* buffer, unsigned int& size, unsigned int timeout, asio::ip::
    if(receivedData)
    {
       mFakeSelectSocketDescriptor.receive();
-
       errorCode = processReceivedData(buffer, size, receivedData, sourceAddress, sourcePort);
       delete receivedData;
    }
@@ -386,6 +404,7 @@ Flow::receive(char* buffer, unsigned int& size, unsigned int timeout, asio::ip::
    }
    return errorCode;
 }
+
 
 asio::error_code 
 Flow::processReceivedData(char* buffer, unsigned int& size, ReceivedData* receivedData, asio::ip::address* sourceAddress, unsigned short* sourcePort)
@@ -403,6 +422,7 @@ Flow::processReceivedData(char* buffer, unsigned int& size, ReceivedData* receiv
          //errorCode = asio::error_code(flowmanager::SRTPError, asio::error::misc_category);
       }
    }
+#ifdef USE_SSL
    else
    {
       Lock lock(mMutex);
@@ -425,7 +445,7 @@ Flow::processReceivedData(char* buffer, unsigned int& size, ReceivedData* receiv
          }
       }
    }
-
+#endif //USE_SSL
    if(!errorCode)
    {
       if(size > receivedsize)
@@ -470,12 +490,14 @@ Flow::setActiveDestination(const char* address, unsigned short port)
    }
 }
 
+#ifdef USE_SSL
 void 
 Flow::startDtlsClient(const char* address, unsigned short port)
 {
    Lock lock(mMutex);
    createDtlsSocketClient(StunTuple(mLocalBinding.getTransportType(), asio::ip::address::from_string(address), port));
 }
+#endif 
 
 void 
 Flow::setRemoteSDPFingerprint(const resip::Data& fingerprint)
@@ -483,6 +505,7 @@ Flow::setRemoteSDPFingerprint(const resip::Data& fingerprint)
    Lock lock(mMutex);
    mRemoteSDPFingerprint = fingerprint;
 
+#ifdef USE_SSL
    // Check all existing DtlsSockets and tear down those that don't match
    std::map<reTurn::StunTuple, dtls::DtlsSocket*>::iterator it;
    for(it = mDtlsSockets.begin(); it != mDtlsSockets.end(); it++)
@@ -494,6 +517,7 @@ Flow::setRemoteSDPFingerprint(const resip::Data& fingerprint)
          ((FlowDtlsSocketContext*)it->second->getSocketContext())->fingerprintMismatch();
       }
    }
+#endif //USE_SSL
 }
 
 const resip::Data 
@@ -711,6 +735,7 @@ Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address
 {
    DebugLog(<< "Flow::onReceiveSuccess: socketDesc=" << socketDesc << ", fromAddress=" << address.to_string() << ", fromPort=" << port << ", size=" << data->size() << ", componentId=" << mComponentId);
 
+#ifdef USE_SSL
    // Check if packet is a dtls packet - if so then process it
    // Note:  Stun messaging should be picked off by the reTurn library - so we only need to tell the difference between DTLS and SRTP here
    if(DtlsFactory::demuxPacket((const unsigned char*) data->data(), data->size()) == DtlsFactory::dtls)
@@ -732,6 +757,7 @@ Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address
       // Packet was a DTLS packet - do not queue for app
       return;
    }
+#endif 
 
    if(!mReceivedDataFifo.add(new ReceivedData(address, port, data), ReceivedDataFifo::EnforceTimeDepth))
    {
@@ -781,6 +807,7 @@ Flow::flowStateToString(FlowState state)
    }
 }
 
+#ifdef USE_SSL
 DtlsSocket* 
 Flow::getDtlsSocket(const StunTuple& endpoint)
 {
@@ -804,6 +831,7 @@ Flow::createDtlsSocketClient(const StunTuple& endpoint)
       dtlsSocket->startClient();
       mDtlsSockets[endpoint] = dtlsSocket;
    }
+   
    return dtlsSocket;
 }
 
@@ -822,6 +850,7 @@ Flow::createDtlsSocketServer(const StunTuple& endpoint)
    return dtlsSocket;
 }
 
+#endif 
 
 /* ====================================================================
 

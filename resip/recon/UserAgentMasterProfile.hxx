@@ -3,7 +3,7 @@
 
 #include <rutil/TransportType.hxx>
 #include <rutil/dns/DnsStub.hxx>
-#include <resip/stack/ssl/Security.hxx> // Why is this being included here?
+#include <resip/stack/SecurityTypes.hxx> 
 #include <resip/dum/MasterProfile.hxx>
 #include <vector>
 
