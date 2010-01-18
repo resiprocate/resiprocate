@@ -1,3 +1,5 @@
+#ifdef USE_SSL
+
 #include <asio.hpp>
 #include <boost/function.hpp>
 #include <iostream>
@@ -142,7 +144,7 @@ FlowDtlsSocketContext::srtpUnprotect(void* data, int* size, bool rtcp)
    return status;
 }
 
-
+#endif 
 /* ====================================================================
 
  Copyright (c) 2007-2008, Plantronics, Inc.

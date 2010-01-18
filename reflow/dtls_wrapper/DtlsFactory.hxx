@@ -1,8 +1,9 @@
+#ifdef USE_SSL
+
 #ifndef DtlsFactory_hxx
 #define DtlsFactory_hxx
 
 #include <memory>
-
 #include "DtlsTimer.hxx"
 
 typedef struct x509_st X509;
@@ -11,7 +12,6 @@ typedef struct evp_pkey_st EVP_PKEY;
 
 namespace dtls
 {
-
 class DtlsSocket;
 class DtlsSocketContext;
 class DtlsTimerContext;
@@ -63,7 +63,7 @@ private:
 }
 #endif
 
-
+#endif 
 /* ====================================================================
 
  Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 

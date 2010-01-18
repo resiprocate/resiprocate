@@ -728,6 +728,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
          secureMediaMode = ConversationProfile::Srtp;
          secureMediaRequired = true;
       }
+#ifdef USE_SSL
       else if(isEqualNoCase(arg[0], "SrtpDtls"))
       {
          secureMediaMode = ConversationProfile::SrtpDtls;
@@ -737,6 +738,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
          secureMediaMode = ConversationProfile::SrtpDtls;
          secureMediaRequired = true;
       }
+#endif
       else
       {
          arg[0] = "None";  // for display output only
@@ -763,10 +765,12 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
       {
          natTraversalMode = ConversationProfile::TurnTcpAllocation;
       }
+#ifdef USE_SSL
       else if(isEqualNoCase(arg[0], "TlsAlloc"))
       {
          natTraversalMode = ConversationProfile::TurnTlsAllocation;
       }
+#endif
       else
       {
          arg[0] = "None";  // for display output only
@@ -1030,8 +1034,13 @@ main (int argc, char** argv)
          cout << " -td <domain name> - domain name to use for TLS server connections" << endl;
          cout << " -nk - no keepalives, set this to disable sending of keepalives" << endl;
          cout << " -op <SIP URI> - URI of a proxy server to use a SIP outbound proxy" << endl;
+#ifdef USE_SSL
          cout << " -sm <Srtp|SrtpReq|SrtpDtls|SrtpDtlsReq> - sets the secure media mode" << endl;
          cout << " -nm <Bind|UdpAlloc|TcpAlloc|TlsAlloc> - sets the NAT traversal mode" << endl;
+#else
+         cout << " -sm <Srtp|SrtpReq> - sets the secure media mode" << endl;
+         cout << " -nm <Bind|UdpAlloc|TcpAlloc> - sets the NAT traversal mode" << endl;
+#endif
          cout << " -ns <server:port> - set the hostname and port of the NAT STUN/TURN server" << endl;
          cout << " -nu <username> - sets the STUN/TURN username to use for NAT server" << endl;
          cout << " -np <password> - sets the STUN/TURN password to use for NAT server" << endl;
@@ -1105,6 +1114,7 @@ main (int argc, char** argv)
                secureMediaMode = ConversationProfile::Srtp;
                secureMediaRequired = true;
             }
+#ifdef USE_SSL
             else if(isEqualNoCase(commandValue, "SrtpDtls"))
             {
                secureMediaMode = ConversationProfile::SrtpDtls;
@@ -1114,6 +1124,7 @@ main (int argc, char** argv)
                secureMediaMode = ConversationProfile::SrtpDtls;
                secureMediaRequired = true;
             }
+#endif
             else
             {
                cerr << "Invalid Secure Media Mode: " << commandValue << endl;
@@ -1134,10 +1145,12 @@ main (int argc, char** argv)
             {
                natTraversalMode = ConversationProfile::TurnTcpAllocation;
             }
+#ifdef USE_SSL
             else if(isEqualNoCase(commandValue, "TlsAlloc"))
             {
                natTraversalMode = ConversationProfile::TurnTlsAllocation;
             }
+#endif
             else
             {
                cerr << "Invalid NAT Traversal Mode: " << commandValue << endl;

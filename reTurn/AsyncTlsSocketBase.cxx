@@ -1,3 +1,4 @@
+#ifdef USE_SSL
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 
@@ -350,7 +351,7 @@ AsyncTlsSocketBase::handleReadHeader(const asio::error_code& e)
 }
 
 }
-
+#endif
 
 /* ====================================================================
 

@@ -1,3 +1,4 @@
+#ifdef USE_SSL
 #include "TurnTlsSocket.hxx"
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
@@ -222,7 +223,7 @@ TurnTlsSocket::cancelSocket()
 }
 
 } // namespace
-
+#endif
 
 /* ====================================================================
 

@@ -6,24 +6,32 @@
 #include "MediaStream.hxx"
 
 using namespace flowmanager;
+#ifdef USE_SSL
 using namespace dtls;
+#endif
 using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM FlowManagerSubsystem::FLOWMANAGER
 
 MediaStream::MediaStream(asio::io_service& ioService,
+#ifdef USE_SSL
                          asio::ssl::context& sslContext,
+#endif
                          MediaStreamHandler& mediaStreamHandler,
                          const StunTuple& localRtpBinding, 
                          const StunTuple& localRtcpBinding, 
+#ifdef USE_SSL
                          DtlsFactory* dtlsFactory,
+#endif 
                          NatTraversalMode natTraversalMode,
                          const char* natTraversalServerHostname, 
                          unsigned short natTraversalServerPort, 
                          const char* stunUsername,
                          const char* stunPassword) :
+#ifdef USE_SSL
    mDtlsFactory(dtlsFactory),
+#endif  
    mSRTPSessionInCreated(false),
    mSRTPSessionOutCreated(false),
    mNatTraversalMode(natTraversalMode),
@@ -39,13 +47,17 @@ MediaStream::MediaStream(asio::io_service& ioService,
    if(mRtcpEnabled)
    {
       mRtpFlow = new Flow(ioService, 
+#ifdef USE_SSL
                           sslContext, 
+#endif
                           RTP_COMPONENT_ID, 
                           localRtpBinding, 
                           *this);
 
       mRtcpFlow = new Flow(ioService, 
+#ifdef USE_SSL
                            sslContext, 
+#endif
                            RTCP_COMPONENT_ID,
                            localRtcpBinding, 
                            *this);
@@ -61,7 +73,9 @@ MediaStream::MediaStream(asio::io_service& ioService,
    else
    {
       mRtpFlow = new Flow(ioService, 
+#ifdef USE_SSL
                           sslContext, 
+#endif
                           RTP_COMPONENT_ID,
                           localRtpBinding, 
                           *this);
@@ -72,8 +86,9 @@ MediaStream::MediaStream(asio::io_service& ioService,
 
 MediaStream::~MediaStream() 
 {
-   {
+   {   
       Lock lock(mMutex);
+      
       if(mSRTPSessionOutCreated)
       {
          mSRTPSessionOutCreated = false;
@@ -83,7 +98,7 @@ MediaStream::~MediaStream()
       {
          mSRTPSessionInCreated = false;
          srtp_dealloc(mSRTPSessionIn);
-      }
+      }      
    }
    delete mRtpFlow;
    if(mRtcpEnabled)

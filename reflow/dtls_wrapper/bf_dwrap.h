@@ -1,9 +1,11 @@
+#ifdef USE_SSL 
+
 extern "C" 
 {
      BIO_METHOD *BIO_f_dwrap(void);
 }
 
-
+#endif
 /* ====================================================================
 
  Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 

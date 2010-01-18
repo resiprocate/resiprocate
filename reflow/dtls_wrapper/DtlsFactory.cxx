@@ -1,6 +1,7 @@
+#ifdef USE_SSL
+
 #include <cassert>
 #include <iostream>
-
 #include <rutil/ssl/OpenSSLInit.hxx>
 
 #include <openssl/e_os2.h>
@@ -39,6 +40,7 @@ DtlsFactory::~DtlsFactory()
 {
    SSL_CTX_free(mContext);
 }
+
 
 DtlsSocket*
 DtlsFactory::createClient(std::auto_ptr<DtlsSocketContext> context)
@@ -91,6 +93,8 @@ DtlsFactory::demuxPacket(const unsigned char *data, unsigned int len)
 
    return unknown;
 }
+
+#endif //USE_SSL
 
 
 /* ====================================================================

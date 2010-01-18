@@ -18,6 +18,9 @@
 #include <resip/dum/ClientRegistration.hxx>
 #include <resip/dum/KeepAliveManager.hxx>
 #include <resip/dum/AppDialogSet.hxx>
+#if defined(USE_SSL)
+#include <resip/stack/ssl/Security.hxx>
+#endif
 #include <rutil/WinLeakCheck.hxx>
 
 using namespace recon;
@@ -434,6 +437,7 @@ UserAgent::addConversationProfileImpl(ConversationProfileHandle handle, SharedPt
    // Store new profile
    mConversationProfiles[handle] = conversationProfile;
 
+#ifdef USE_SSL
    // If this is the first profile ever set - then use the aor defined in it as the aor used in 
    // the DTLS certificate for the DtlsFactory - TODO - improve this sometime so that we can change the aor in 
    // the cert at runtime to equal the aor in the default conversation profile
@@ -441,6 +445,7 @@ UserAgent::addConversationProfileImpl(ConversationProfileHandle handle, SharedPt
    {
       mConversationManager->getFlowManager().initializeDtlsFactory(conversationProfile->getDefaultFrom().uri().getAor().c_str());
    }
+#endif
 
    // Set the default outgoing if requested to do so, or we don't have one yet
    if(defaultOutgoing || mDefaultOutgoingConversationProfileHandle == 0)

@@ -885,6 +885,7 @@ RemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
          audioMedium->addAttribute("pcfg", "1 t=1");
       }
    }
+#ifdef USE_SSL
    else if(mDialogSet.getSecureMediaMode() == ConversationProfile::SrtpDtls)
    {
       if(mConversationManager.getFlowManager().getDtlsFactory())
@@ -916,6 +917,7 @@ RemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
          }
       }
    }
+#endif
 
    audioMedium->clearAttribute("sendrecv");
    audioMedium->clearAttribute("sendonly");
@@ -1006,6 +1008,7 @@ RemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessionCap
             return false;
          }
       }
+#ifdef USE_SSL
       else if(mConversationManager.getFlowManager().getDtlsFactory() &&
               (mDialogSet.getSecureMediaMode() == ConversationProfile::SrtpDtls || 
                protocolType == SdpMediaLine::PROTOCOL_TYPE_UDP_TLS_RTP_SAVP))  // allow accepting of DTLS SAVP profiles, even if DTLS-SRTP is not enabled as a SecureMedia mode
@@ -1041,6 +1044,7 @@ RemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessionCap
             return false;
          }
       }
+#endif
 
       if(potential && !sdpMediaLine.getPotentialMediaViewString().empty())
       {

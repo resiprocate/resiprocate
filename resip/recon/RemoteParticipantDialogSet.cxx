@@ -146,11 +146,13 @@ RemoteParticipantDialogSet::getLocalRTPPort()
          localBinding.setTransportType(StunTuple::TCP);
          mNatTraversalMode = MediaStream::TurnAllocation;
          break;
+#ifdef USE_SSL
       case ConversationProfile::TurnTlsAllocation:
          // Use TLS turn media relay
          localBinding.setTransportType(StunTuple::TLS);
          mNatTraversalMode = MediaStream::TurnAllocation;
          break;
+#endif
       case ConversationProfile::NoNatTraversal:
       default:
          // Use straight UDP
@@ -158,6 +160,7 @@ RemoteParticipantDialogSet::getLocalRTPPort()
          break;
       }
 
+#ifdef USE_SSL
       if(profile->secureMediaMode() == ConversationProfile::SrtpDtls &&
          mNatTraversalMode == MediaStream::TurnAllocation)
       {
@@ -165,6 +168,7 @@ RemoteParticipantDialogSet::getLocalRTPPort()
          mSecureMediaMode = ConversationProfile::NoSecureMedia;
       }
       else
+#endif
       {
          mSecureMediaMode = profile->secureMediaMode();
          mSecureMediaRequired = profile->secureMediaRequired();
@@ -495,6 +499,7 @@ RemoteParticipantDialogSet::setActiveDestination(const char* address, unsigned s
 void 
 RemoteParticipantDialogSet::startDtlsClient(const char* address, unsigned short rtpPort, unsigned short rtcpPort)
 {
+#ifdef USE_SSL
    if(mMediaStream && mMediaStream->getRtpFlow())
    {
       mMediaStream->getRtpFlow()->startDtlsClient(address, rtpPort);
@@ -503,6 +508,7 @@ RemoteParticipantDialogSet::startDtlsClient(const char* address, unsigned short 
    {
       mMediaStream->getRtcpFlow()->startDtlsClient(address, rtcpPort);
    }
+#endif
 }
 
 void 

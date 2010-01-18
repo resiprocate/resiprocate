@@ -1,3 +1,5 @@
+#ifdef USE_SSL
+
 #include <iostream>
 #include <cassert>
 #include <string.h>
@@ -379,7 +381,7 @@ DtlsSocket::getReadTimeout()
    return 500;
 }
 
-
+#endif 
 /* ====================================================================
 
  Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 

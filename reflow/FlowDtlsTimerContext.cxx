@@ -1,3 +1,6 @@
+#ifdef USE_SSL 
+
+
 #include <boost/bind.hpp>
 
 #include <rutil/Log.hxx>
@@ -43,6 +46,7 @@ FlowDtlsTimerContext::handleTimeout(dtls::DtlsTimer *timer, const asio::error_co
    mDeadlineTimers.erase(timer);
 }
 
+#endif
 
 /* ====================================================================
 

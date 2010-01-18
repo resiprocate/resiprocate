@@ -1,3 +1,5 @@
+#ifdef USE_SSL 
+
 #include <stdio.h>
 #include <errno.h>
 #include <openssl/bio.h>
@@ -137,6 +139,8 @@ static long dwrap_callback_ctrl(BIO *b, int cmd, bio_info_cb *fp)
 
    return ret;
 }
+
+#endif //USE_SSL
      
 
 /* ====================================================================

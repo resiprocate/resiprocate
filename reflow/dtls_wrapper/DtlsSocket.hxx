@@ -1,8 +1,9 @@
+#ifdef USE_SSL
+
 #ifndef DtlsSocket_hxx
 #define DtlsSocket_hxx
 
 #include <memory>
-
 extern "C" 
 {
 #include <srtp.h>
@@ -16,7 +17,6 @@ extern "C"
 
 namespace dtls
 {
-
 class DtlsFactory;
 class DtlsSocket;
 class DtlsTimer;
@@ -88,7 +88,7 @@ class DtlsSocket
 
       // Utility fn to compute a certificates fingerprint
       static void computeFingerprint(X509 *cert, char *fingerprint);
-     
+ 
       // Retrieves the DTLS negotiated SRTP profile - may return 0 if profile selection failed
       SRTP_PROTECTION_PROFILE* getSrtpProfile();      
 
@@ -121,8 +121,8 @@ class DtlsSocket
       DtlsFactory* mFactory;
       DtlsTimer *mReadTimer;  // Timer used during handshake process
       
-      // OpenSSL context data
-      SSL *mSsl;
+      // OpenSSL context data    
+      SSL *mSsl;      
       BIO *mInBio;
       BIO *mOutBio;
       
@@ -130,11 +130,10 @@ class DtlsSocket
       bool mHandshakeCompleted;      
 };
 
-
 }
 #endif
 
-
+#endif 
 /* ====================================================================
 
  Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 
