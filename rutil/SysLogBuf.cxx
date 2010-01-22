@@ -2,6 +2,7 @@
 #include <syslog.h>
 #endif
 
+#include <cstdio>
 #include <cassert>
 #include "rutil/SysLogBuf.hxx"
 
