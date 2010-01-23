@@ -1,6 +1,7 @@
 #if !defined(RESIP_DialogEventInfo_hxx)
 #define RESIP_DialogEventInfo_hxx
 
+#include <memory>
 #include "resip/stack/NameAddr.hxx"
 #include "resip/dum/DialogId.hxx"
 #include "resip/dum/Handles.hxx"
