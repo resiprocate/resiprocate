@@ -253,7 +253,8 @@ ServerInviteSession::provisionalCommand(int statusCode)
 void
 ServerInviteSession::provideOffer(const Contents& offer,
                                   DialogUsageManager::EncryptionLevel level, 
-                                  const Contents* alternative)
+                                  const Contents* alternative,
+                                  bool sendOfferAtAccept)
 {
    InfoLog (<< toData(mState) << ": provideOffer");
    mAnswerSentReliably = false;
@@ -278,10 +279,17 @@ ServerInviteSession::provideOffer(const Contents& offer,
          break;
 
       case UAS_NegotiatedReliable:
-         transition(UAS_SentUpdate);
          mProposedLocalOfferAnswer = InviteSession::makeOfferAnswer(offer, alternative);
          mProposedEncryptionLevel = level;
-         sendUpdate(offer);
+         if (sendOfferAtAccept)
+         {
+            transition(UAS_ProvidedOffer);
+         }
+         else
+         {
+            transition(UAS_SentUpdate);
+            sendUpdate(offer);
+         }
          break;
          
       case UAS_Accepted:
@@ -323,9 +331,10 @@ ServerInviteSession::provideOffer(const Contents& offer,
 }
 
 void 
-ServerInviteSession::provideOffer(const Contents& offer)
+ServerInviteSession::provideOffer(const Contents& offer,
+                                  bool sendOfferAtAccept)
 {
-   this->provideOffer(offer, mCurrentEncryptionLevel, 0);
+   this->provideOffer(offer, mCurrentEncryptionLevel, 0, sendOfferAtAccept);
 }
 
 
