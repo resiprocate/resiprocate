@@ -26,9 +26,12 @@ class ServerInviteSession: public InviteSession
       /** Called to set the offer that will be used in the next message that
           sends an offer. If possible, this will synchronously send the
           appropriate request or response. In some cases, the UAS might have to
-          call accept in order to cause the message to be sent. */
-      virtual void provideOffer(const Contents& offer);
-      virtual void provideOffer(const Contents& offer, DialogUsageManager::EncryptionLevel level, const Contents* alternative);
+          call accept in order to cause the message to be sent.
+          If sendOfferAtAccept is true, no UPDATE will be sent if media is negotiated reliable,
+          it will be sent at accept */
+      virtual void provideOffer(const Contents& offer, bool sendOfferAtAccept=false);
+      virtual void provideOffer(const Contents& offer, DialogUsageManager::EncryptionLevel level,
+                                const Contents* alternative, bool sendOfferAtAccept=false);
 
       /** Called to request that the far end provide an offer.  This will cause a 
           reinvite with no body to be sent.  */
