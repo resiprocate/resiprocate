@@ -323,7 +323,8 @@ TransactionState::process(TransactionController& controller)
          if(state->mController.getFixBadCSeqNumbers())
          {
             unsigned int old=state->mMsgToRetransmit->header(h_CSeq).sequence();
-            if(sip->header(h_CSeq).sequence()!=old)
+            if(state->mMsgToRetransmit->header(h_CSeq).method()==sip->header(h_CSeq).method() &&
+               sip->header(h_CSeq).sequence()!=old)
             {
                InfoLog(<<"Other end changed our CSeq number... replacing.");
                sip->header(h_CSeq).sequence()=old;
