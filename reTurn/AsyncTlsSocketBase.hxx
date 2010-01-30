@@ -1,4 +1,3 @@
-#ifdef USE_SSL
 #ifndef ASYNC_TLS_SOCKET_BASE_HXX
 #define ASYNC_TLS_SOCKET_BASE_HXX
 
@@ -31,6 +30,12 @@ public:
    virtual const asio::ip::address getSenderEndpointAddress();
    virtual unsigned short getSenderEndpointPort();
 
+   virtual bool setDSCP(ULONG ulInDSCPValue);
+   virtual bool setServiceType(
+      const asio::ip::udp::endpoint &tInDestinationIPAddress,
+      EQOSServiceTypes eInServiceType,
+      ULONG ulInBandwidthInBitsPerSecond);
+
 protected:
    virtual void handleReadHeader(const asio::error_code& e);
    virtual void handleServerHandshake(const asio::error_code& e);
@@ -53,7 +58,7 @@ private:
 }
 
 #endif 
-#endif
+
 
 /* ====================================================================
 

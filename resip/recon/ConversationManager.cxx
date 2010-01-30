@@ -1,12 +1,12 @@
 // sipX includes
-#include <sdp/SdpCodec.h>
-#include <mp/MpCodecFactory.h>
-#include <mp/MprBridge.h>
-#include <mp/MpResourceTopology.h>
-#include <mi/MiNotification.h>
-#include <mi/MiDtmfNotf.h>
-#include <mi/MiRtpStreamActivityNotf.h>
-#include <mi/MiIntNotf.h>
+//include <sdp/SdpCodec.h>
+//include <mp/MpCodecFactory.h>
+//include <mp/MprBridge.h>
+//include <mp/MpResourceTopology.h>
+//include <mi/MiNotification.h>
+//include <mi/MiDtmfNotf.h>
+//include <mi/MiRtpStreamActivityNotf.h>
+//include <mi/MiIntNotf.h>
 
 // resip includes
 #include <rutil/Log.hxx>
@@ -21,12 +21,16 @@
 
 #include "ReconSubsystem.hxx"
 #include "UserAgent.hxx"
+#include "UserAgentDialogSetFactory.hxx" // !ds! should probably be moved in future
+#include "UserAgentServerAuthManager.hxx"
 #include "ConversationManager.hxx"
 #include "ConversationManagerCmds.hxx"
 #include "Conversation.hxx"
 #include "Participant.hxx"
 #include "BridgeMixer.hxx"
 #include "DtmfEvent.hxx"
+#include "UserAgentRegistration.hxx"
+#include "media/Mixer.hxx"
 #include <rutil/WinLeakCheck.hxx>
 
 #if defined(WIN32) && !defined(__GNUC__)
@@ -39,104 +43,67 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-ConversationManager::ConversationManager(bool localAudioEnabled) 
-: mUserAgent(0),
+ConversationManager::ConversationManager(UserAgent& ua) 
+: mDefaultOutgoingConversationProfileHandle(0),
+  mCurrentConversationProfileHandle(1),
   mCurrentConversationHandle(1),
   mCurrentParticipantHandle(1),
-  mLocalAudioEnabled(localAudioEnabled),
-  mMediaFactory(0),
-  mMediaInterface(0),
-  mBridgeMixer(*this)
+  mLocalAudioEnabled(true),
+  mMediaStack(ua.getMediaStack()),
+  mBridgeMixer(*this),
+  mCodecFactory(ua.getCodecFactory()),
+  mRTPAllocator(NULL),
+  mDum(NULL)
 {
-#ifdef _DEBUG
-   UtlString codecPaths[] = {".", "../../../../sipXtapi/sipXmediaLib/bin"};
-#else
-   UtlString codecPaths[] = {"."};
-#endif
-   int codecPathsNum = sizeof(codecPaths)/sizeof(codecPaths[0]);
-   OsStatus rc = CpMediaInterfaceFactory::addCodecPaths(codecPathsNum, codecPaths);
-   assert(OS_SUCCESS == rc);
+   sdpcontainer::SdpMediaLine::CodecList codecs;
+   mCodecFactory->getCodecs(true, true, codecs);
+   
+   mDum = ua.getDialogUsageManager();
+   mDum->setRedirectHandler(this);
+   mDum->setInviteSessionHandler(this); 
+   mDum->setDialogSetHandler(this);
+   mDum->addOutOfDialogHandler(OPTIONS, this);
+   mDum->addOutOfDialogHandler(REFER, this);
+   mDum->addClientSubscriptionHandler("refer", this);
+   mDum->addServerSubscriptionHandler("refer", this);
 
-   mMediaFactory = sipXmediaFactoryFactory(NULL, 0, 0, 0, mLocalAudioEnabled);
+   // Set AppDialogSetFactory
+   // .jjg. this could interfere with apps that don't use recon for things other than INVITE dialogs...
+   //auto_ptr<AppDialogSetFactory> dsf(new UserAgentDialogSetFactory(*this));
+   //mDum->setAppDialogSetFactory(dsf);
 
-   // Create MediaInterface
-   UtlString localRtpInterfaceAddress("127.0.0.1");
-   OsSocket::getHostIp(&localRtpInterfaceAddress);  // Will be overridden in RemoteParticipantDialogSet, when connection is created anyway
-#ifndef TEST_DISABLE_SIPX
-   // Note:  STUN and TURN capabilities of the sipX media stack are not used - the FlowManager is responsible for STUN/TURN
-   mMediaInterface = mMediaFactory->createMediaInterface(NULL, 
-         localRtpInterfaceAddress, 
-         0,     /* numCodecs - not required at this point */
-         0,     /* codecArray - not required at this point */ 
-         NULL,  /* local */
-         0,     /* TOS Options */
-         NULL,  /* STUN Server Address */
-         0,     /* STUN Options */
-         25,    /* STUN Keepalive period (seconds) */
-         NULL,  /* TURN Server Address */
-         0,     /* TURN Port */
-         NULL,  /* TURN User */
-         NULL,  /* TURN Password */
-         25,    /* TURN Keepalive period (seconds) */
-         false); /* enable ICE? */
+   // Set UserAgentServerAuthManager
+   SharedPtr<ServerAuthManager> uasAuth( new UserAgentServerAuthManager(*this));
+   mDum->setServerAuthManager(uasAuth);
 
-   MpCodecFactory *pCodecFactory = MpCodecFactory::getMpCodecFactory();
-   unsigned int count = 0;
-   const MppCodecInfoV1_1 **codecInfoArray;
-   pCodecFactory->getCodecInfoArray(count, codecInfoArray);
+   mRegManager = ua.getRegistrationManager();
 
-   if(count == 0)
+   unsigned int minPort = 0, maxPort = 0;
+   ua.getPortRange(minPort, maxPort);
+   mRTPAllocator = new RTPPortAllocator(mFlowManager.getIOService(), minPort, maxPort);
+
+   if (codecs.size() == 0)
    {
-      ErrLog( << "No codec plugins found.  Cannot start.");
-      exit(-1);
+      ErrLog( << "No codec plugins found. Cannot start.");
    }
 
    InfoLog( << "Loaded codecs are:");
-   for(unsigned int i =0; i < count; i++)
+   sdpcontainer::SdpMediaLine::CodecList::const_iterator codecIter = codecs.begin();
+   for (; codecIter != codecs.end(); ++codecIter)
    {
-      InfoLog( << "  " << codecInfoArray[i]->codecName 
-               << "(" << codecInfoArray[i]->codecManufacturer << ") " 
-               << codecInfoArray[i]->codecVersion 
-               << " MimeSubtype: " << codecInfoArray[i]->mimeSubtype 
-               << " Rate: " << codecInfoArray[i]->sampleRate
-               << " Channels: " << codecInfoArray[i]->numChannels);
+      InfoLog( << "  " << codecIter->getMimeSubtype()
+               << " MediaType: " << codecIter->getMimeType()
+               << " SampleRate: " << codecIter->getRate()
+               << " PayloadType: " << codecIter->getPayloadType()
+               << " PacketLength: " << codecIter->getPacketTime());
    }
-
-   // Register the conversation manager class (derived from OsMsgDispatcher)
-   // as the sipX notification dispatcher
-   mMediaInterface->setNotificationDispatcher(this);
-
-   // Turn on notifications for all resources...
-   mMediaInterface->setNotificationsEnabled(true);
-
-   // This is the one and only media interface - give it focus
-   if(mLocalAudioEnabled)
-   {
-      mMediaInterface->giveFocus();
-   }
-
-#endif
 }
 
 ConversationManager::~ConversationManager()
 {
    assert(mConversations.empty());
    assert(mParticipants.empty());
-   if(mMediaInterface) mMediaInterface->release();
-   sipxDestroyMediaFactoryFactory();
-}
-
-void
-ConversationManager::setUserAgent(UserAgent* userAgent)
-{
-   mUserAgent = userAgent;
-
-   // Note: This is not really required, since we are managing the port allocation - but no harm done
-   // Really not needed now - since FlowManager integration
-   //mMediaFactory->getFactoryImplementation()->setRtpPortRange(mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMin(), 
-   //                                                           mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMax());
-
-   initRTPPortFreeList();
+   delete mRTPAllocator; mRTPAllocator = NULL;
 }
 
 void
@@ -145,7 +112,7 @@ ConversationManager::shutdown()
    // Destroy each Conversation
    ConversationMap tempConvs = mConversations;  // Create copy for safety, since ending conversations can immediately remove themselves from map
    ConversationMap::iterator i;
-   for(i = tempConvs.begin(); i != tempConvs.end(); i++)
+   for(i = tempConvs.begin(); i != tempConvs.end(); ++i)
    {
       InfoLog(<< "Destroying conversation: " << i->second->getHandle());
       i->second->destroy();
@@ -155,45 +122,277 @@ ConversationManager::shutdown()
    ParticipantMap tempParts = mParticipants;  
    ParticipantMap::iterator j;
    int j2=0;
-   for(j = tempParts.begin(); j != tempParts.end(); j++, j2++)
+   for(j = tempParts.begin(); j != tempParts.end(); ++j, ++j2)
    {
       InfoLog(<< "Destroying participant: " << j->second->getParticipantHandle());
       j->second->destroyParticipant();
    }
 }
 
+resip::AppDialogSetFactory* ConversationManager::getAppDialogSetFactory()
+{
+	return new UserAgentDialogSetFactory(*this);
+}
+
+ConversationProfileHandle 
+ConversationManager::getNewConversationProfileHandle()
+{
+   Lock lock(mConversationProfileHandleMutex);
+   return mCurrentConversationProfileHandle++; 
+}
+
+ConversationProfileHandle 
+ConversationManager::addConversationProfile(SharedPtr<ConversationProfile> conversationProfile, bool defaultOutgoing)
+{
+   ConversationProfileHandle handle = getNewConversationProfileHandle();
+   mDum->post(new AddConversationProfileCmd(this, handle, conversationProfile, defaultOutgoing));
+   return handle;
+}
+
+void
+ConversationManager::setDefaultOutgoingConversationProfile(ConversationProfileHandle handle)
+{
+   mDum->post(new SetDefaultOutgoingConversationProfileCmd(this, handle));
+}
+
+void 
+ConversationManager::destroyConversationProfile(ConversationProfileHandle handle)
+{
+   mDum->post(new DestroyConversationProfileCmd(this, handle));
+}
+
+ConversationProfileHandle ConversationManager::cloneConversationProfile( ConversationProfileHandle handle )
+{
+   ConversationProfileHandle newHandle = getNewConversationProfileHandle();
+   class CloneConversationCmd : public DumCommandStub
+   {
+   public:
+      CloneConversationCmd( ConversationManager* cmgr, ConversationProfileHandle oldHandle, ConversationProfileHandle newHandle )
+         : ConMgr( cmgr ), OldHandle( oldHandle ), NewHandle( newHandle ) {}
+      virtual void executeCommand()
+      {
+         SharedPtr<ConversationProfile> profile = ConMgr->getConversationProfile( OldHandle );
+         assert( profile.get() != NULL );
+
+         SharedPtr<ConversationProfile> clone( new ConversationProfile( *profile ));
+         assert( clone.get() != NULL );
+
+         ConMgr->addConversationProfileImpl(NewHandle, clone, false);
+      }
+   private:
+      ConversationManager *ConMgr;
+      ConversationProfileHandle OldHandle, NewHandle;
+   };
+   mDum->post(new CloneConversationCmd( this, handle, newHandle ));
+   return newHandle;
+}
+
+ConversationProfileHandle ConversationManager::createAnonymousConversationProfile( ConversationProfileHandle handle )
+{
+   ConversationProfileHandle newHandle = getNewConversationProfileHandle();
+   class AnonConvCmd : public DumCommandStub
+   {
+   public:
+      AnonConvCmd( ConversationManager* cmgr, ConversationProfileHandle oldHandle, ConversationProfileHandle newHandle )
+         : ConMgr( cmgr ), OldHandle( oldHandle ), NewHandle( newHandle ) {}
+      virtual void executeCommand()
+      {
+         SharedPtr<ConversationProfile> profile = ConMgr->getConversationProfile( OldHandle );
+         assert( profile.get() != NULL );
+
+         SharedPtr<ConversationProfile> anonClone = resip::dynamic_pointer_cast<ConversationProfile>( profile->getAnonymousUserProfile() );
+         assert( anonClone.get() != NULL );
+
+         anonClone->isAnonymous() = true;
+         ConMgr->addConversationProfileImpl(NewHandle, anonClone, false);
+      }
+   private:
+      ConversationManager *ConMgr;
+      ConversationProfileHandle OldHandle, NewHandle;
+   };
+   mDum->post(new AnonConvCmd( this, handle, newHandle ));
+   return newHandle;
+}
+
+void 
+ConversationManager::addConversationProfileImpl(ConversationProfileHandle handle, SharedPtr<ConversationProfile> conversationProfile, bool defaultOutgoing)
+{
+   // Store new profile
+   mConversationProfiles[handle] = conversationProfile;
+   conversationProfile->handle() = handle;
+
+#ifdef USE_DTLS
+   // If this is the first profile ever set - then use the aor defined in it as
+   // the aor used in the DTLS certificate for the DtlsFactory - TODO - improve
+   // this sometime so that we can change the aor in the cert at runtime to
+   // equal the aor in the default conversation profile
+   if(!mDefaultOutgoingConversationProfileHandle)
+   {
+      getFlowManager().initializeDtlsFactory(conversationProfile->getDefaultFrom().uri().getAor().c_str());
+   }
+#endif
+
+   // Set the default outgoing if requested to do so, or we don't have one yet
+   if(defaultOutgoing || mDefaultOutgoingConversationProfileHandle == 0)
+   {
+      setDefaultOutgoingConversationProfileImpl(handle);
+   }
+
+   //// Register new profile
+   //if(mRegManager && mRegManager->manageRegistrations() && ( conversationProfile->getDefaultRegistrationTime() != 0))
+   //{
+   //   UserAgentRegistration *registration = new UserAgentRegistration(*mRegManager, *mDum, handle);
+   //   mDum->send(mDum->makeRegistration(conversationProfile->getDefaultFrom(), conversationProfile, registration));
+   //}
+}
+
+void 
+ConversationManager::setDefaultOutgoingConversationProfileImpl(ConversationProfileHandle handle)
+{
+   mDefaultOutgoingConversationProfileHandle = handle;
+}
+
+void 
+ConversationManager::destroyConversationProfileImpl(ConversationProfileHandle handle)
+{
+   //if (mRegManager)
+   //{
+   //   // Remove matching registration if found
+   //   mRegManager->removeRegistration( handle );
+   //}
+
+   // Remove from ConversationProfile map
+   mConversationProfiles.erase(handle);
+
+   // If this Conversation Profile was the default - select the first item
+   // in the map as the new default
+   if(handle == mDefaultOutgoingConversationProfileHandle)
+   {
+      ConversationProfileMap::iterator it = mConversationProfiles.begin();
+      if(it != mConversationProfiles.end())
+      {
+         setDefaultOutgoingConversationProfileImpl(it->first);
+      }
+      else
+      {
+         setDefaultOutgoingConversationProfileImpl(0);
+      }
+   }
+}
+
+SharedPtr<ConversationProfile>
+ConversationManager::getConversationProfile( ConversationProfileHandle cpHandle )
+{
+   return mConversationProfiles[ cpHandle ];
+}
+
+SharedPtr<ConversationProfile> 
+ConversationManager::getDefaultOutgoingConversationProfile()
+{
+   if(mDefaultOutgoingConversationProfileHandle != 0)
+   {
+      return mConversationProfiles[mDefaultOutgoingConversationProfileHandle];
+   }
+   else
+   {
+      assert(false);
+      return SharedPtr<ConversationProfile>((ConversationProfile*)0);
+   }
+}
+
+SharedPtr<ConversationProfile> 
+ConversationManager::getIncomingConversationProfile(const SipMessage& msg)
+{
+   assert(msg.isRequest());
+
+   // Examine the sip message, and select the most appropriate conversation profile
+   // Check if request uri matches registration contact
+   const Uri& requestUri = msg.header(h_RequestLine).uri();
+   UriToConversationProfileMap::iterator cpIt = mMapDefaultIncomingConvProfile.find(requestUri);
+   if (cpIt != mMapDefaultIncomingConvProfile.end())
+   {
+      ConversationProfileMap::iterator conIt = mConversationProfiles.find(cpIt->second);
+      if(conIt != mConversationProfiles.end())
+      {
+         return conIt->second;
+      }
+   }
+
+   // Check if To header matches default from
+   Data toAor = msg.header(h_To).uri().getAor();
+   ConversationProfileMap::iterator conIt;
+   for(conIt = mConversationProfiles.begin(); conIt != mConversationProfiles.end(); ++conIt)
+   {
+      InfoLog( << "getIncomingConversationProfile: comparing toAor=" << toAor << " to defaultFromAor=" << conIt->second->getDefaultFrom().uri().getAor());
+      if(isEqualNoCase(toAor, conIt->second->getDefaultFrom().uri().getAor()))
+      {
+         return conIt->second;
+      }
+   }
+
+   // If can't find any matches, then return the default outgoing profile
+   InfoLog( << "getIncomingConversationProfile: no matching profile found, falling back to default outgoing profile");
+   return getDefaultOutgoingConversationProfile();
+}
+
 ConversationHandle 
 ConversationManager::createConversation()
 {
    ConversationHandle convHandle = getNewConversationHandle();
-
-   CreateConversationCmd* cmd = new CreateConversationCmd(this, convHandle);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new CreateConversationCmd(this, convHandle, 0));
    return convHandle;
+}
+
+ConversationHandle 
+ConversationManager::createConversation(ConversationProfileHandle cpHandle)
+{
+   ConversationHandle convHandle = getNewConversationHandle();
+   mDum->post(new CreateConversationCmd(this, convHandle, cpHandle));
+   return convHandle;
+}
+
+void 
+ConversationManager::updateMedia(ParticipantHandle partHandle, ConversationManager::MediaAttributes mediaAttribs, bool sendOffer)
+{
+  class UpdateMediaCmd : public DumCommandStub
+   {
+   public:
+      UpdateMediaCmd(ConversationManager* convMan, ParticipantHandle partHandle, ConversationManager::MediaAttributes mediaAttribs, bool sendOffer)
+         : mConvMan(convMan), mMediaAttribs(mediaAttribs), mPartHandle(partHandle), mSendOffer(sendOffer) {}
+      virtual void executeCommand()
+      {
+         RemoteParticipant* participant = dynamic_cast<RemoteParticipant*>(mConvMan->getParticipant(mPartHandle));
+         if (participant)
+         {
+            participant->updateMedia(mMediaAttribs, mSendOffer);
+         }
+      }
+   private:
+      ConversationManager*    mConvMan;
+      ConversationManager::MediaAttributes mMediaAttribs;
+      ParticipantHandle       mPartHandle;
+      bool                    mSendOffer;
+   };
+   mDum->post(new UpdateMediaCmd(this, partHandle, mediaAttribs, sendOffer));
 }
 
 void 
 ConversationManager::destroyConversation(ConversationHandle convHandle)
 {
-   DestroyConversationCmd* cmd = new DestroyConversationCmd(this, convHandle);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new DestroyConversationCmd(this, convHandle));
 }
 
 void 
 ConversationManager::joinConversation(ConversationHandle sourceConvHandle, ConversationHandle destConvHandle)
 {
-   JoinConversationCmd* cmd = new JoinConversationCmd(this, sourceConvHandle, destConvHandle);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new JoinConversationCmd(this, sourceConvHandle, destConvHandle));
 }
 
 ParticipantHandle 
-ConversationManager::createRemoteParticipant(ConversationHandle convHandle, NameAddr& destination, ParticipantForkSelectMode forkSelectMode)
+ConversationManager::createRemoteParticipant(ConversationHandle convHandle, NameAddr& destination, MediaAttributes mediaAttributes, ParticipantForkSelectMode forkSelectMode, const DialogId* replacesDialogId, const DialogId* joinDialogId)
 {
    ParticipantHandle partHandle = getNewParticipantHandle();
-
-   CreateRemoteParticipantCmd* cmd = new CreateRemoteParticipantCmd(this, partHandle, convHandle, destination, forkSelectMode);
-   mUserAgent->getDialogUsageManager().post(cmd);
-
+   mDum->post(new CreateRemoteParticipantCmd(this, partHandle, convHandle, destination, mediaAttributes, replacesDialogId, joinDialogId, forkSelectMode));
    return partHandle;
 }
 
@@ -201,10 +400,7 @@ ParticipantHandle
 ConversationManager::createMediaResourceParticipant(ConversationHandle convHandle, Uri& mediaUrl)
 {
    ParticipantHandle partHandle = getNewParticipantHandle();
-
-   CreateMediaResourceParticipantCmd* cmd = new CreateMediaResourceParticipantCmd(this, partHandle, convHandle, mediaUrl);
-   mUserAgent->getDialogUsageManager().post(cmd);
-
+   mDum->post(new CreateMediaResourceParticipantCmd(this, partHandle, convHandle, mediaUrl));
    return partHandle;
 }
 
@@ -215,9 +411,7 @@ ConversationManager::createLocalParticipant()
    if(mLocalAudioEnabled)
    {
       partHandle = getNewParticipantHandle();
-
-      CreateLocalParticipantCmd* cmd = new CreateLocalParticipantCmd(this, partHandle);
-      mUserAgent->getDialogUsageManager().post(cmd);
+      mDum->post(new CreateLocalParticipantCmd(this, partHandle));
    }
    else
    {
@@ -228,80 +422,69 @@ ConversationManager::createLocalParticipant()
 }
 
 void 
-ConversationManager::destroyParticipant(ParticipantHandle partHandle)
+ConversationManager::destroyParticipant(ParticipantHandle partHandle, const resip::Data& appDefinedReason)
 {
-   DestroyParticipantCmd* cmd = new DestroyParticipantCmd(this, partHandle);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new DestroyParticipantCmd(this, partHandle, appDefinedReason));
 }
 
 void 
 ConversationManager::addParticipant(ConversationHandle convHandle, ParticipantHandle partHandle)
 {
-   AddParticipantCmd* cmd = new AddParticipantCmd(this, convHandle, partHandle);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new AddParticipantCmd(this, convHandle, partHandle));
 }
 
 void 
 ConversationManager::removeParticipant(ConversationHandle convHandle, ParticipantHandle partHandle)
 {
-   RemoveParticipantCmd* cmd = new RemoveParticipantCmd(this, convHandle, partHandle);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new RemoveParticipantCmd(this, convHandle, partHandle));
 }
 
 void
 ConversationManager::moveParticipant(ParticipantHandle partHandle, ConversationHandle sourceConvHandle, ConversationHandle destConvHandle)
 {
-   MoveParticipantCmd* cmd = new MoveParticipantCmd(this, partHandle, sourceConvHandle, destConvHandle);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new MoveParticipantCmd(this, partHandle, sourceConvHandle, destConvHandle));
 }
 
 void 
 ConversationManager::modifyParticipantContribution(ConversationHandle convHandle, ParticipantHandle partHandle, unsigned int inputGain, unsigned int outputGain)
 {
-   ModifyParticipantContributionCmd* cmd = new ModifyParticipantContributionCmd(this, convHandle, partHandle, inputGain, outputGain);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new ModifyParticipantContributionCmd(this, convHandle, partHandle, inputGain, outputGain));
 }
 
 void 
 ConversationManager::outputBridgeMatrix()
 {
-   OutputBridgeMixWeightsCmd* cmd = new OutputBridgeMixWeightsCmd(this);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new OutputBridgeMixWeightsCmd(this));
 }
 
 void 
 ConversationManager::alertParticipant(ParticipantHandle partHandle, bool earlyFlag)
 {
-   AlertParticipantCmd* cmd = new AlertParticipantCmd(this, partHandle, earlyFlag);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new AlertParticipantCmd(this, partHandle, earlyFlag));
 }
 
 void 
-ConversationManager::answerParticipant(ParticipantHandle partHandle)
+ConversationManager::answerParticipant(ParticipantHandle partHandle, MediaAttributes mediaAttributes)
 {
-   AnswerParticipantCmd* cmd = new AnswerParticipantCmd(this, partHandle);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new AnswerParticipantCmd(this, partHandle, mediaAttributes));
 }
 
 void 
 ConversationManager::rejectParticipant(ParticipantHandle partHandle, unsigned int rejectCode)
 {
-   RejectParticipantCmd* cmd = new RejectParticipantCmd(this, partHandle, rejectCode);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new RejectParticipantCmd(this, partHandle, rejectCode));
 }
 
 void 
 ConversationManager::redirectParticipant(ParticipantHandle partHandle, NameAddr& destination)
 {
-   RedirectParticipantCmd* cmd = new RedirectParticipantCmd(this, partHandle, destination);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new RedirectParticipantCmd(this, partHandle, destination));
 }
 
 void 
 ConversationManager::redirectToParticipant(ParticipantHandle partHandle, ParticipantHandle destPartHandle)
 {
-   RedirectToParticipantCmd* cmd = new RedirectToParticipantCmd(this, partHandle, destPartHandle);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new RedirectToParticipantCmd(this, partHandle, destPartHandle));
 }
 
 ConversationHandle 
@@ -312,14 +495,20 @@ ConversationManager::getNewConversationHandle()
 }
 
 void 
-ConversationManager::registerConversation(Conversation *conversation)
+ConversationManager::registerConversation(Conversation* conversation)
 {
+   if ( conversation == NULL )
+      return;
+
    mConversations[conversation->getHandle()] = conversation;
 }
 
 void 
-ConversationManager::unregisterConversation(Conversation *conversation)
+ConversationManager::unregisterConversation(Conversation* conversation)
 {
+   if ( conversation == NULL )
+      return;
+
    mConversations.erase(conversation->getHandle());
 }
 
@@ -350,36 +539,6 @@ ConversationManager::unregisterParticipant(Participant *participant)
 }
 
 void 
-ConversationManager::initRTPPortFreeList()
-{
-   mRTPPortFreeList.clear();
-   for(unsigned int i = mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMin(); i <= mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMax();)
-   {
-      mRTPPortFreeList.push_back(i);
-      i=i+2;  // only add even ports - note we are assuming rtpPortRangeMin is even
-   }
-}
- 
-unsigned int 
-ConversationManager::allocateRTPPort()
-{
-   unsigned int port = 0;
-   if(!mRTPPortFreeList.empty())
-   {
-      port = mRTPPortFreeList.front();
-      mRTPPortFreeList.pop_front();
-   }
-   return port;
-}
- 
-void
-ConversationManager::freeRTPPort(unsigned int port)
-{
-   assert(port >= mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMin() && port <= mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMax());
-   mRTPPortFreeList.push_back(port);
-}
-
-void 
 ConversationManager::buildSdpOffer(ConversationProfile* profile, SdpContents& offer)
 {
    // copy over session capabilities
@@ -388,19 +547,14 @@ ConversationManager::buildSdpOffer(ConversationProfile* profile, SdpContents& of
    // Set sessionid and version for this offer
    UInt64 currentTime = Timer::getTimeMicroSec();
    offer.session().origin().getSessionId() = currentTime;
-   offer.session().origin().getVersion() = currentTime;  
-
-   // Set local port in offer
-   // for now we only allow 1 audio media
-   assert(offer.session().media().size() == 1);
-   assert(offer.session().media().front().name() == "audio");
+   offer.session().origin().getVersion() = currentTime;
 }
 
 void
 ConversationManager::setSpeakerVolume(int volume)
 {
-   OsStatus status =  mMediaFactory->getFactoryImplementation()->setSpeakerVolume(volume);
-   if(status != OS_SUCCESS)
+   int status = mMediaStack->setSpeakerVolume(volume);
+   if (status != 0)
    {
       WarningLog(<< "setSpeakerVolume failed: status=" << status);
    }
@@ -409,8 +563,8 @@ ConversationManager::setSpeakerVolume(int volume)
 void 
 ConversationManager::setMicrophoneGain(int gain)
 {
-   OsStatus status =  mMediaFactory->getFactoryImplementation()->setMicrophoneGain(gain);
-   if(status != OS_SUCCESS)
+   int status =  mMediaStack->setMicrophoneGain(gain);
+   if(status != 0)
    {
       WarningLog(<< "setMicrophoneGain failed: status=" << status);
    }
@@ -419,8 +573,8 @@ ConversationManager::setMicrophoneGain(int gain)
 void 
 ConversationManager::muteMicrophone(bool mute)
 {
-   OsStatus status =  mMediaFactory->getFactoryImplementation()->muteMicrophone(mute? TRUE : FALSE);
-   if(status != OS_SUCCESS)
+   int status =  mMediaStack->muteMicrophone(mute);
+   if(status != 0)
    {
       WarningLog(<< "muteMicrophone failed: status=" << status);
    }
@@ -429,38 +583,99 @@ ConversationManager::muteMicrophone(bool mute)
 void 
 ConversationManager::enableEchoCancel(bool enable)
 {
-   OsStatus status =  mMediaFactory->getFactoryImplementation()->setAudioAECMode(enable ? MEDIA_AEC_CANCEL : MEDIA_AEC_DISABLED);
-   if(status != OS_SUCCESS)
+   int status =  mMediaStack->setEchoCancellation(enable);
+   if(status != 0)
    {
       WarningLog(<< "enableEchoCancel failed: status=" << status);
    }
-   mMediaInterface->defocus();   // required to apply changes
-   mMediaInterface->giveFocus();
 }
 
 void 
 ConversationManager::enableAutoGainControl(bool enable)
 {
-   OsStatus status =  mMediaFactory->getFactoryImplementation()->enableAGC(enable ? TRUE : FALSE);
-   if(status != OS_SUCCESS)
+   int status =  mMediaStack->setAutomaticGainControl(enable);
+   if(status != 0)
    {
       WarningLog(<< "enableAutoGainControl failed: status=" << status);
    }
-   mMediaInterface->defocus();   // required to apply changes
-   mMediaInterface->giveFocus();
 }
  
 void 
 ConversationManager::enableNoiseReduction(bool enable)
 {
-   OsStatus status =  mMediaFactory->getFactoryImplementation()->setAudioNoiseReductionMode(enable ? MEDIA_NOISE_REDUCTION_MEDIUM /* arbitrary */ : MEDIA_NOISE_REDUCTION_DISABLED);
-   if(status != OS_SUCCESS)
+   int status =  mMediaStack->setNoiseReduction(enable);
+   if(status != 0)
    {
       WarningLog(<< "enableAutoGainControl failed: status=" << status);
    }
-   mMediaInterface->defocus();   // required to apply changes
-   mMediaInterface->giveFocus();
 }
+
+void
+ConversationManager::startRecording(
+      const ConversationHandle&  convHandle, const std::wstring& filePath,
+      unsigned long width, unsigned long height,
+      int videoFrameRate )
+{
+   class StartRecordCmd : public DumCommandStub
+   {
+   public:
+      StartRecordCmd( ConversationManager* cmgr, ConversationHandle convHandle,
+         const std::wstring& filePath, unsigned long width, unsigned long height, int videoFrameRate )
+         : ConMgr( cmgr ), mConvHandle(convHandle), mFilePath(filePath), mWidth(width), mHeight(height), mVideoFrameRate(videoFrameRate) {}
+      virtual void executeCommand()
+      {
+         // Find the conversation
+         Conversation* pConv = ConMgr->getConversation(mConvHandle);
+         if( pConv == NULL )
+            return;
+
+         // Get the associated mixer
+         boost::shared_ptr<Mixer> pMixer = pConv->getMixer();
+         if( pMixer.get() == NULL )
+            return;
+
+         pMixer->startRecording(mFilePath, mWidth, mHeight, mVideoFrameRate);
+      }
+   private:
+      ConversationManager *ConMgr;
+      ConversationHandle  mConvHandle;
+      const std::wstring  mFilePath;
+      unsigned long       mWidth;
+      unsigned long       mHeight;
+      int                 mVideoFrameRate;
+   };
+   mDum->post(new StartRecordCmd( this, convHandle, filePath, width, height, videoFrameRate ));
+}
+
+void
+ConversationManager::stopRecording(const ConversationHandle& convHandle)
+{
+   class StopRecordCmd : public DumCommandStub
+   {
+   public:
+      StopRecordCmd( ConversationManager* cmgr, ConversationHandle convHandle )
+         : ConMgr( cmgr ), mConvHandle(convHandle) {}
+      virtual void executeCommand()
+      {
+         // Find the conversation
+         Conversation* pConv = ConMgr->getConversation(mConvHandle);
+         if( pConv == NULL )
+            return;
+
+         // Get the associated mixer
+         boost::shared_ptr<Mixer> pMixer = pConv->getMixer();
+         if( pMixer.get() == NULL )
+            return;
+
+         pMixer->stopRecording();
+      }
+   private:
+      ConversationManager *ConMgr;
+      ConversationHandle  mConvHandle;
+   };
+   mDum->post(new StopRecordCmd( this, convHandle ));
+}
+
 
 Participant* 
 ConversationManager::getParticipant(ParticipantHandle partHandle)
@@ -494,18 +709,31 @@ ConversationManager::getRemoteParticipantFromMediaConnectionId(int mediaConnecti
    return 0;
 }
 
-Conversation* 
-ConversationManager::getConversation(ConversationHandle convHandle)
+boost::shared_ptr<Mixer>
+ConversationManager::getConversationMixer( ConversationHandle convHandle )
 {
+   boost::shared_ptr<Mixer> result;
+
    ConversationMap::iterator i = mConversations.find(convHandle);
    if(i != mConversations.end())
    {
-      return i->second;
+      if ( i->second != NULL )
+         result = i->second->getMixer();
    }
-   else
-   {
-      return 0;
-   }
+
+   return result;
+}
+
+Conversation*
+ConversationManager::getConversation(ConversationHandle convHandle)
+{
+   Conversation* result = NULL;
+
+   ConversationMap::iterator i = mConversations.find(convHandle);
+   if(i != mConversations.end())
+      result = i->second;
+
+   return result;
 }
 
 void 
@@ -515,90 +743,157 @@ ConversationManager::addBufferToMediaResourceCache(resip::Data& name, resip::Dat
 }
 
 void 
-ConversationManager::buildSessionCapabilities(resip::Data& ipaddress, unsigned int numCodecIds, 
-                                              unsigned int codecIds[], resip::SdpContents& sessionCaps)
+ConversationManager::buildSessionCapabilities(bool includeAudio, bool includeVideo, resip::Data& ipaddress, resip::SdpContents& sessionCaps)
 {
+   if (ipaddress == resip::Data::Empty)
+   {
+      // just use the IP address that was previously specified;
+      // this is intended for the case where we want to rebuild the codec list only
+      // at the start of each conversation
+      ipaddress = sessionCaps.session().origin().getAddress();
+   }
+
    sessionCaps = SdpContents::Empty;  // clear out passed in SdpContents
 
    // Create Session Capabilities 
    // Note:  port, sessionId and version will be replaced in actual offer/answer
    // Build s=, o=, t=, and c= lines
    SdpContents::Session::Origin origin("-", 0 /* sessionId */, 0 /* version */, SdpContents::IP4, ipaddress);   // o=   
-   SdpContents::Session session(0, origin, "-" /* s= */);
+   SdpContents::Session session(0, origin, " " /* s= */);
    session.connection() = SdpContents::Session::Connection(SdpContents::IP4, ipaddress);  // c=
    session.addTime(SdpContents::Session::Time(0, 0));
 
-   MpCodecFactory *pCodecFactory = MpCodecFactory::getMpCodecFactory();
-   SdpCodecList codecList;
-   pCodecFactory->addCodecsToList(codecList);
-   codecList.bindPayloadTypes();
+   sdpcontainer::SdpMediaLine::CodecList codecs;
+   mCodecFactory->getCodecs(includeAudio, includeVideo, codecs);
 
-   //UtlString output;
-   //codecList.toString(output);
-   //InfoLog( << "Codec List: " << output.data());
+   sdpcontainer::SdpMediaLine::CodecList::const_iterator codecIter;
 
    // Auto-Create Session Codec Capabilities
-   // Note:  port, and potentially payloadid will be replaced in actual offer/answer
+   // Note:  port, and potentially payload id will be replaced in actual
+   // offer/answer
 
    // Build Codecs and media offering
-   SdpContents::Session::Medium medium("audio", 0, 1, "RTP/AVP");
+   SdpContents::Session::Medium audioMedium("audio", 0, 1, "RTP/AVP");
+   audioMedium.encodeAttribsForStaticPLs() = false; // !jjg! todo: make a profile setting for this
 
    bool firstCodecAdded = false;
-   for(unsigned int idIter = 0; idIter < numCodecIds; idIter++)
+   bool anyCodecAdded = false;
+   for(codecIter = codecs.begin() ; codecIter != codecs.end(); ++codecIter)
    {
-      const SdpCodec* sdpcodec = codecList.getCodec((SdpCodec::SdpCodecTypes)codecIds[idIter]);
-      if(sdpcodec)
+      const sdpcontainer::SdpCodec& codec = (*codecIter);
+      
+      // Ensure this codec is an audio codec
+      if (! isEqualNoCase( codec.getMimeType(), "audio" ))
+         continue;
+
+      SdpContents::Session::Codec sdpCodec(codec.getMimeSubtype(), codec.getPayloadType(), codec.getRate());
+
+      if (Data(codec.getMimeSubtype()).lowercase().find("telephone-event") != Data::npos)
+         sdpCodec.parameters() = Data("0-15");
+      else
+         sdpCodec.parameters() = codec.getFormatParameters();
+
+      InfoLog(<< "Added audio codec to session capabilites:"
+              << " id=" << codec.getMimeSubtype() 
+              << " type=" << codec.getMimeType()
+              << " rate=" << codec.getRate()
+              << " plen=" << codec.getPacketTime()
+              << " payloadid=" << codec.getPayloadType()
+              << " fmtp=" << codec.getFormatParameters());
+
+      audioMedium.addCodec(sdpCodec);
+      anyCodecAdded = true;
+      if(!firstCodecAdded)
       {
-         UtlString mediaType;
-         sdpcodec->getMediaType(mediaType);
-         // Ensure this codec is an audio codec
-         if(mediaType.compareTo("audio", UtlString::ignoreCase) == 0)
-         {
-            UtlString mimeSubType;
-            sdpcodec->getEncodingName(mimeSubType);
-            //mimeSubType.toUpper();
-            
-            SdpContents::Session::Codec codec(mimeSubType.data(), sdpcodec->getSampleRate());
-            codec.payloadType() = sdpcodec->getCodecPayloadFormat();
+         firstCodecAdded = true;
 
-            // Check for telephone-event and add fmtp manually
-            if(mimeSubType.compareTo("telephone-event", UtlString::ignoreCase) == 0)
-            {
-               codec.parameters() = Data("0-15");
-            }
-            else
-            {
-               UtlString fmtpField;
-               sdpcodec->getSdpFmtpField(fmtpField);
-               if(fmtpField.length() != 0)
-               {
-                  codec.parameters() = Data(fmtpField.data());
-               }
-            }
-
-            InfoLog(<< "Added codec to session capabilites: id=" << codecIds[idIter] 
-                    << " type=" << mimeSubType.data()
-                    << " rate=" << sdpcodec->getSampleRate()
-                    << " plen=" << sdpcodec->getPacketLength()
-                    << " payloadid=" << sdpcodec->getCodecPayloadFormat()
-                    << " fmtp=" << codec.parameters());
-
-            medium.addCodec(codec);
-            if(!firstCodecAdded)
-            {
-               firstCodecAdded = true;
-
-               // 20 ms of speech per frame (note G711 has 10ms samples, so this is 2 samples per frame)
-               // Note:  There are known problems with SDP and the ptime attribute.  For now we will choose an
-               // appropriate ptime from the first codec
-               medium.addAttribute("ptime", Data(sdpcodec->getPacketLength() / 1000));  
-            }
-         }
+         // 20 ms of speech per frame (note G711 has 10ms samples, so this is 2 samples per frame)
+         // Note:  There are known problems with SDP and the ptime attribute.  For now we will choose an
+         // appropriate ptime from the first codec
+         //audioMedium.addAttribute("ptime", Data(codec.getFormatParameters()));  
       }
    }
 
-   session.addMedium(medium);
+   // Add the medium only if at least one codec was added
+   if ( anyCodecAdded )
+      session.addMedium(audioMedium);
+
+   anyCodecAdded = false;
+   SdpContents::Session::Medium videoMedium("video", 0, 1, "RTP/AVP");
+   videoMedium.encodeAttribsForStaticPLs() = false; // !jjg! todo: make a profile setting for this
+
+   for(codecIter = codecs.begin() ; codecIter != codecs.end(); ++codecIter)
+   {
+      const sdpcontainer::SdpCodec& codec = (*codecIter);
+
+      // Ensure this codec is a video codec
+      if (! isEqualNoCase( codec.getMimeType(), "video" ))
+         continue;
+
+      SdpContents::Session::Codec sdpCodec(codec.getMimeSubtype(), codec.getPayloadType(), codec.getRate());
+      sdpCodec.parameters() = codec.getFormatParameters();
+
+      InfoLog(<< "Added video codec to session capabilites:"
+              << " id=" << codec.getMimeSubtype() 
+              << " type=" << codec.getMimeType()
+              << " rate=" << codec.getRate()
+              << " payloadid=" << codec.getPayloadType()
+              << " fmtp=" << codec.getFormatParameters());
+
+      videoMedium.addCodec(sdpCodec);
+      anyCodecAdded = true;
+   }
+
+   if ( anyCodecAdded )
+      session.addMedium(videoMedium);
+
    sessionCaps.session() = session;
+}
+
+void ConversationManager::pauseSendingMedia(ParticipantHandle partHandle, const MediaStack::MediaType& mediaType)
+{
+   class PauseMediaCmd : public DumCommandStub
+   {
+   public:
+      PauseMediaCmd( ConversationManager* cmgr, ParticipantHandle partHandle, const MediaStack::MediaType& mediaType )
+         : ConMgr( cmgr ), mPartHandle(partHandle), mMediaType(mediaType) {}
+      virtual void executeCommand()
+      {
+         RemoteParticipant* remotePart = dynamic_cast<RemoteParticipant*>(ConMgr->getParticipant(mPartHandle));
+         if (remotePart)
+         {
+            remotePart->pauseOutboundMedia(mMediaType);
+         }
+      }
+   private:
+      ConversationManager *ConMgr;
+      ParticipantHandle mPartHandle;
+      const MediaStack::MediaType mMediaType;
+   };
+   mDum->post(new PauseMediaCmd( this, partHandle, mediaType ));
+}
+
+void ConversationManager::resumeSendingMedia(ParticipantHandle partHandle, const MediaStack::MediaType& mediaType)
+{
+   class ResumeMediaCmd : public DumCommandStub
+   {
+   public:
+      ResumeMediaCmd( ConversationManager* cmgr, ParticipantHandle partHandle, const MediaStack::MediaType& mediaType )
+         : ConMgr( cmgr ), mPartHandle(partHandle), mMediaType(mediaType) {}
+      virtual void executeCommand()
+      {
+         RemoteParticipant* remotePart = dynamic_cast<RemoteParticipant*>(ConMgr->getParticipant(mPartHandle));
+         if (remotePart)
+         {
+            remotePart->resumeOutboundMedia(mMediaType);
+         }
+      }
+   private:
+      ConversationManager *ConMgr;
+      ParticipantHandle mPartHandle;
+      const MediaStack::MediaType mMediaType;
+   };
+   mDum->post(new ResumeMediaCmd( this, partHandle, mediaType ));
 }
 
 void 
@@ -626,118 +921,6 @@ ConversationManager::onMediaEvent(MediaEvent::MediaEventType eventType)
          }
       }
    }
-}
-
-OsStatus 
-ConversationManager::post(const OsMsg& msg)
-{
-   if((OsMsg::MsgTypes)msg.getMsgType() == OsMsg::MI_NOTF_MSG)
-   {
-      MiNotification* pNotfMsg = (MiNotification*)&msg;
-      switch((MiNotification::NotfType)pNotfMsg->getType())
-      {
-      case MiNotification::MI_NOTF_PLAY_STARTED:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_PLAY_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
-         break;
-      case MiNotification::MI_NOTF_PLAY_PAUSED:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_PLAY_PAUSED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
-         break;
-      case MiNotification::MI_NOTF_PLAY_RESUMED:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_PLAY_RESUMED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
-         break;
-      case MiNotification::MI_NOTF_PLAY_STOPPED:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_PLAY_STOPPED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
-         break;
-      case MiNotification::MI_NOTF_PLAY_FINISHED:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_PLAY_FINISHED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
-         {
-            // Queue event to conversation manager thread
-            MediaEvent* mevent = new MediaEvent(*this, MediaEvent::PLAY_FINISHED);
-            mUserAgent->getDialogUsageManager().post(mevent);
-         }
-         break;
-      case MiNotification::MI_NOTF_PROGRESS:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_PROGRESS, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
-         break;
-      case MiNotification::MI_NOTF_RECORD_STARTED:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_RECORD_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
-         break;
-      case MiNotification::MI_NOTF_RECORD_STOPPED:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_RECORD_STOPPED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
-         break;
-      case MiNotification::MI_NOTF_RECORD_FINISHED:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_RECORD_FINISHED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
-         break;
-      case MiNotification::MI_NOTF_RECORD_ERROR:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_RECORD_ERROR, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
-         break;
-      case MiNotification::MI_NOTF_DTMF_RECEIVED:
-         {
-            MiDtmfNotf* pDtmfNotfMsg = (MiDtmfNotf*)&msg;
-
-            RemoteParticipant* remoteParticipant = getRemoteParticipantFromMediaConnectionId(pNotfMsg->getConnectionId());
-            if(remoteParticipant)
-            {
-               // Get event into dum queue, so that callback is on dum thread
-               DtmfEvent* devent = new DtmfEvent(*remoteParticipant, pDtmfNotfMsg->getKeyCode(), pDtmfNotfMsg->getDuration(), pDtmfNotfMsg->getKeyPressState()==MiDtmfNotf::KEY_UP);
-               mUserAgent->getDialogUsageManager().post(devent);
-            }
-
-            InfoLog( << "NotificationDispatcher: received MI_NOTF_DTMF_RECEIVED, sourceId=" << pNotfMsg->getSourceId().data() << 
-               ", connectionId=" << pNotfMsg->getConnectionId() << 
-               ", keyCode=" << pDtmfNotfMsg->getKeyCode() << 
-               ", state=" << pDtmfNotfMsg->getKeyPressState() << 
-               ", duration=" << pDtmfNotfMsg->getDuration());
-         }
-         break;
-      case MiNotification::MI_NOTF_DELAY_SPEECH_STARTED:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_DELAY_SPEECH_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
-         break;
-      case MiNotification::MI_NOTF_DELAY_NO_DELAY:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_DELAY_NO_DELAY, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
-         break;
-      case MiNotification::MI_NOTF_DELAY_QUIESCENCE:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_DELAY_QUIESCENCE, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
-         break;
-      case MiNotification::MI_NOTF_RX_STREAM_ACTIVITY: ///< Value for MiRtpStreamActivityNotf notifications.
-         {
-            MiRtpStreamActivityNotf* pRtpStreamActivityNotfMsg = (MiRtpStreamActivityNotf*)&msg;
-         
-            InfoLog( << "NotificationDispatcher: received MI_NOTF_RX_STREAM_ACTIVITY, sourceId=" << pNotfMsg->getSourceId().data() << 
-               ", connectionId=" << pNotfMsg->getConnectionId() <<
-               ", state=" << (pRtpStreamActivityNotfMsg->getState() == MiRtpStreamActivityNotf::STREAM_START ? "STREAM_START" :
-                              pRtpStreamActivityNotfMsg->getState() == MiRtpStreamActivityNotf::STREAM_STOP ? "STREAM_STOP" :
-                              pRtpStreamActivityNotfMsg->getState() == MiRtpStreamActivityNotf::STREAM_CHANGE ? "STREAM_CHANGE" : 
-                              Data(pRtpStreamActivityNotfMsg->getState()).c_str()) <<
-               ", ssrc=" << pRtpStreamActivityNotfMsg->getSsrc() <<
-               ", address=" << pRtpStreamActivityNotfMsg->getAddress() <<
-               ", port=" << pRtpStreamActivityNotfMsg->getPort());
-         }
-         break;
-      case MiNotification::MI_NOTF_ENERGY_LEVEL:       ///< Audio energy level (MiIntNotf)
-         {
-            //MiIntNotf* pIntNotfMsg = (MiIntNotf*)&msg;
-            //InfoLog( << "NotificationDispatcher: received MI_NOTF_ENERGY_LEVEL, sourceId=" << pNotfMsg->getSourceId().data() << 
-            //   ", connectionId=" << pNotfMsg->getConnectionId() <<
-            //   ", value=" << pIntNotfMsg->getValue());
-         }
-         break;
-      case MiNotification::MI_NOTF_VOICE_STARTED:
-         //InfoLog( << "NotificationDispatcher: received MI_NOTF_VOICE_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
-         break;
-      case MiNotification::MI_NOTF_VOICE_STOPPED:
-         //InfoLog( << "NotificationDispatcher: received MI_NOTF_VOICE_STOPPED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
-         break;
-
-      default:
-         InfoLog(<< "NotificationDispatcher: unrecognized MiNotification type = " << pNotfMsg->getType());
-      }
-   }
-   else
-   {
-      InfoLog(<< "NotificationDispatcher: unrecognized message type = " << msg.getMsgType());
-   }
-   return OS_SUCCESS;
 }
 
 void
@@ -995,7 +1178,7 @@ ConversationManager::onNewSubscriptionFromRefer(ServerSubscriptionHandle ss, con
          if(msg.exists(h_TargetDialog))
          {
             pair<InviteSessionHandle, int> presult;
-            presult = mUserAgent->getDialogUsageManager().findInviteSession(msg.header(h_TargetDialog));
+            presult = mDum->findInviteSession(msg.header(h_TargetDialog));
             if(!(presult.first == InviteSessionHandle::NotValid())) 
             {         
                RemoteParticipant* participantToRefer = (RemoteParticipant*)presult.first->getAppDialog().get();
@@ -1112,7 +1295,7 @@ ConversationManager::onReceivedRequest(ServerOutOfDialogReqHandle ood, const Sip
 
       // Attach an offer to the options request
       SdpContents sdp;
-      buildSdpOffer(mUserAgent->getIncomingConversationProfile(msg).get(), sdp);
+      buildSdpOffer(getIncomingConversationProfile(msg).get(), sdp);
       optionsAnswer->setContents(&sdp);
       ood->send(optionsAnswer);
       break;
@@ -1128,7 +1311,7 @@ ConversationManager::onReceivedRequest(ServerOutOfDialogReqHandle ood, const Sip
             if(msg.exists(h_TargetDialog))
             {
                pair<InviteSessionHandle, int> presult;
-               presult = mUserAgent->getDialogUsageManager().findInviteSession(msg.header(h_TargetDialog));
+               presult = mDum->findInviteSession(msg.header(h_TargetDialog));
                if(!(presult.first == InviteSessionHandle::NotValid())) 
                {         
                   RemoteParticipant* participantToRefer = (RemoteParticipant*)presult.first->getAppDialog().get();
@@ -1153,17 +1336,17 @@ ConversationManager::onReceivedRequest(ServerOutOfDialogReqHandle ood, const Sip
          }
          else
          {
-            WarningLog (<< "onReceivedRequest(ServerOutOfDialogReqHandle): Received refer w/out a Refer-To: " << msg.brief());
+            WarningLog (<< "Received refer w/out a Refer-To: " << msg.brief());
             ood->send(ood->reject(400));
          }
       }
       catch(BaseException &e)
       {
-         WarningLog(<< "onReceivedRequest(ServerOutOfDialogReqHandle): exception " << e);
+         WarningLog(<< "onNewSubscriptionFromRefer exception: " << e);
       }
       catch(...)
       {
-         WarningLog(<< "onReceivedRequest(ServerOutOfDialogReqHandle): unknown exception");
+         WarningLog(<< "onNewSubscriptionFromRefer unknown exception");
       }
 
       break;
@@ -1177,9 +1360,17 @@ ConversationManager::onReceivedRequest(ServerOutOfDialogReqHandle ood, const Sip
 // RedirectHandler /////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void 
-ConversationManager::onRedirectReceived(AppDialogSetHandle, const SipMessage& msg)
+ConversationManager::onRedirectReceived(AppDialogSetHandle h, const SipMessage& msg)
 {
    InfoLog(<< "onRedirectReceived(AppDialogSetHandle): " << msg.brief());
+   RemoteParticipantDialogSet *remoteParticipantDialogSet = dynamic_cast<RemoteParticipantDialogSet *>(h.get());
+   if(remoteParticipantDialogSet)
+   {
+      if(remoteParticipantDialogSet->getNumDialogs() == 0)
+      {
+         remoteParticipantDialogSet->onRedirectReceived(h,msg);
+      }
+   }
 }
 
 bool 

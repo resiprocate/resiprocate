@@ -415,6 +415,10 @@ class SdpContents : public Contents
 
                   int findTelephoneEventPayloadType() const;
 
+                  bool encodeAttribsForStaticPLs() const { return mEncodeAttribsForStaticPLs; }
+                  bool& encodeAttribsForStaticPLs() { return mEncodeAttribsForStaticPLs; }
+
+
                private:
                   void setSession(Session* session);
                   Session* mSession;
@@ -431,12 +435,15 @@ class SdpContents : public Contents
                   std::list<Bandwidth> mBandwidths;
                   Encryption mEncryption;
                   mutable AttributeHelper mAttributeHelper;
+                  bool mEncodeAttribsForStaticPLs;
 
-                  mutable bool mRtpMapDone;
                   typedef HashMap<int, Codec> RtpMap;
                   mutable RtpMap mRtpMap;
 
                   friend class Session;
+
+               public:
+                  mutable bool mRtpMapDone;
             };
 
             Session(int version,

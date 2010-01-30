@@ -11,6 +11,7 @@
 namespace recon
 {
 class UserAgent;
+class ConversationManager;
 
 /**
   This class is used to provide server digest authentication
@@ -27,7 +28,7 @@ class UserAgent;
 class UserAgentServerAuthManager: public resip::ServerAuthManager
 {
    public:
-      UserAgentServerAuthManager(UserAgent& userAgent);
+      UserAgentServerAuthManager(ConversationManager& cmgr);
       ~UserAgentServerAuthManager();
       
    protected:
@@ -48,7 +49,7 @@ class UserAgentServerAuthManager: public resip::ServerAuthManager
       virtual AsyncBool requiresChallenge(const resip::SipMessage& msg);
 
    private:
-      UserAgent& mUserAgent;
+      ConversationManager& mConversationManager;
 };
 
 }

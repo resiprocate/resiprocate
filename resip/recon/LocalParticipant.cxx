@@ -4,7 +4,6 @@
 #include "UserAgent.hxx"
 #include "ReconSubsystem.hxx"
 #include "LocalParticipant.hxx"
-#include <CpTopologyGraphInterface.h>
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -17,10 +16,11 @@ using namespace std;
 
 LocalParticipant::LocalParticipant(ParticipantHandle partHandle,
                                    ConversationManager& conversationManager)
-: Participant(partHandle, conversationManager)
+: Participant(partHandle, conversationManager),
+  mLocalPortOnBridge(-1)
 {
-   ((CpTopologyGraphInterface*)mConversationManager.getMediaInterface())->getResourceInputPortOnBridge(VIRTUAL_NAME_LOCAL_STREAM_OUTPUT,0,mLocalPortOnBridge);
-   InfoLog(<< "LocalParticipant created, handle=" << mHandle << ", localPortOnBridge=" << mLocalPortOnBridge);
+   // !jjg! todo: replace with something like Mixer->getBridgePort()?
+   //((CpTopologyGraphInterface*)mConversationManager.getMediaInterface())->getResourceInputPortOnBridge(VIRTUAL_NAME_LOCAL_STREAM_OUTPUT,0,mLocalPortOnBridge);
 }
 
 LocalParticipant::~LocalParticipant()
@@ -43,7 +43,7 @@ LocalParticipant::getConnectionPortOnBridge()
 }
 
 void
-LocalParticipant::destroyParticipant()
+LocalParticipant::destroyParticipant(const resip::Data&)
 {
    delete this;
 }

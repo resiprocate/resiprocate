@@ -56,11 +56,12 @@ class InviteSession : public DialogUsage
          AckNotReceived,
          SessionExpired,
          StaleReInvite,
+         AppDefined,       // for usage with the Data parameter in end()
          ENDREASON_MAX
       };
 
       /** Makes the specific dialog end. Will send a BYE (not a CANCEL) */
-      virtual void end(EndReason reason);
+      virtual void end(EndReason reason, const Data& customReason=Data::Empty);
       virtual void end(); // reason == NotSpecified ; same as above - required for BaseUsage pure virtual
 
       /** Rejects an offer at the SIP level.  Can also be used to 
@@ -318,7 +319,7 @@ class InviteSession : public DialogUsage
       bool updateMethodSupported() const;
 
       void sendAck(const Contents *answer=0);
-      void sendBye();
+      void sendBye(const Data& customReason=Data::Empty);
 
       DialogUsageManager::EncryptionLevel getEncryptionLevel(const SipMessage& msg);
       void setCurrentLocalOfferAnswer(const SipMessage& msg);

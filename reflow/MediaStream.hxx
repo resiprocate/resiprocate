@@ -28,8 +28,8 @@ public:
    MediaStreamHandler() {}
    virtual ~MediaStreamHandler() {}
 
-   virtual void onMediaStreamReady(const StunTuple& rtpTuple, const StunTuple& rtcpTuple) = 0;
-   virtual void onMediaStreamError(unsigned int errorCode) = 0;
+   virtual void onMediaStreamReady(MediaStream* ms, const StunTuple& rtpTuple, const StunTuple& rtcpTuple) = 0;
+   virtual void onMediaStreamError(MediaStream* ms, unsigned int errorCode) = 0;
 };
 
 #define RTP_COMPONENT_ID   1
@@ -42,7 +42,8 @@ public:
    {
       NoNatTraversal,
       StunBindDiscovery,
-      TurnAllocation
+      TurnAllocation,
+      Ice
    };
 
    enum SrtpCryptoSuite
@@ -96,7 +97,7 @@ protected:
 
    err_status_t srtpProtect(void* data, int* size, bool rtcp);
    err_status_t srtpUnprotect(void* data, int* size, bool rtcp);
-  
+
    // Nat Traversal Members
    NatTraversalMode mNatTraversalMode;
    resip::Data mNatTraversalServerHostname;

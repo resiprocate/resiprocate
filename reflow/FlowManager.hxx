@@ -6,6 +6,7 @@
 
 #ifdef USE_SSL
 #include "dtls_wrapper/DtlsFactory.hxx"
+
 #include <openssl/crypto.h>
 #include <openssl/ssl.h>
 #endif //USE_SSL 
@@ -28,6 +29,7 @@ namespace flowmanager
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 class IOServiceThread;
+class MediaStreamHandler;
 
 class FlowManager
 {
@@ -51,6 +53,8 @@ public:
    dtls::DtlsFactory* getDtlsFactory() { return mDtlsFactory; }
 #endif //USE_SSL   
 
+   asio::io_service& getIOService() { return mIOService; }
+
 protected: 
 
 private:
@@ -69,7 +73,7 @@ private:
    X509* mClientCert;
    EVP_PKEY* mClientKey;
    dtls::DtlsFactory* mDtlsFactory;
-#endif    
+#endif
 };
 
 }

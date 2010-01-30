@@ -612,7 +612,7 @@ InviteSession::end()
 }
 
 void
-InviteSession::end(EndReason reason)
+InviteSession::end(EndReason reason, const Data& customReason)
 {
    if (mEndReason == NotSpecified)
    {
@@ -631,7 +631,7 @@ InviteSession::end(EndReason reason)
       case SentReinviteAnswered:
       {
          // !jf! do we need to store the BYE somewhere?
-         sendBye();
+         sendBye(customReason);
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye); 
          break;
@@ -653,7 +653,7 @@ InviteSession::end(EndReason reason)
          else
          {
              // ACK has likely timedout - hangup immediately
-             sendBye();
+             sendBye(customReason);
              transition(Terminated);
              mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye);
          }
@@ -668,7 +668,7 @@ InviteSession::end(EndReason reason)
          InfoLog (<< "Sending " << response->brief());
          send(response);
 
-         sendBye();
+         sendBye(customReason);
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye); 
          break;
@@ -676,7 +676,7 @@ InviteSession::end(EndReason reason)
 
       case WaitingToTerminate:  // ?slg?  Why is this here?
       {
-         sendBye();
+         sendBye(customReason);
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye); 
          break;
@@ -3003,7 +3003,7 @@ void InviteSession::sendAck(const Contents *answer)
    send(ack);
 }
 
-void InviteSession::sendBye()
+void InviteSession::sendBye(const Data& customReason)
 {
    SharedPtr<SipMessage> bye(new SipMessage());
    mDialog.makeRequest(*bye, BYE);
@@ -3011,7 +3011,14 @@ void InviteSession::sendBye()
    if (mEndReason != NotSpecified)
    {
       Token reason("SIP");
-      txt = getEndReasonString(mEndReason);
+      if (mEndReason == AppDefined)
+      {
+         txt = customReason;
+      }
+      else
+      {
+         txt = getEndReasonString(mEndReason);
+      }
       reason.param(p_description) = txt;
       bye->header(h_Reasons).push_back(reason);      
    }

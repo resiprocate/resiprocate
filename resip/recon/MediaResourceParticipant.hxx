@@ -7,10 +7,10 @@
 #include "Participant.hxx"
 
 // sipX includes
-#include "mp/MpPlayerListener.h"
+//include "mp/MpPlayerListener.h"
 
-class MpStreamPlayer;
-class MpPlayerEvent;
+//class MpStreamPlayer;
+//class MpPlayerEvent;
 
 namespace recon
 {
@@ -24,7 +24,7 @@ class ConversationManager;
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class MediaResourceParticipant : public Participant, public MpPlayerListener
+class MediaResourceParticipant : public Participant
 {
 public:  
    typedef enum
@@ -45,22 +45,22 @@ public:
    virtual void startPlay();
    virtual int getConnectionPortOnBridge();
    virtual ResourceType getResourceType() { return mResourceType; }
-   virtual void destroyParticipant();
+   virtual void destroyParticipant(const resip::Data& appDefinedReason = resip::Data::Empty);
 
    // For Stream Player callbacks
-   virtual void playerRealized(MpPlayerEvent& event);
-   virtual void playerPrefetched(MpPlayerEvent& event);
-   virtual void playerPlaying(MpPlayerEvent& event);
-   virtual void playerPaused(MpPlayerEvent& event);
-   virtual void playerStopped(MpPlayerEvent& event);
-   virtual void playerFailed(MpPlayerEvent& event);
+   //virtual void playerRealized(MpPlayerEvent& event);
+   //virtual void playerPrefetched(MpPlayerEvent& event);
+   //virtual void playerPlaying(MpPlayerEvent& event);
+   //virtual void playerPaused(MpPlayerEvent& event);
+   //virtual void playerStopped(MpPlayerEvent& event);
+   //virtual void playerFailed(MpPlayerEvent& event);
 
 protected:       
 
 private:
    resip::Uri mMediaUrl;
    ResourceType mResourceType;
-   MpStreamPlayer* mStreamPlayer;
+   //MpStreamPlayer* mStreamPlayer;
    int mToneGenPortOnBridge;
    int mFromFilePortOnBridge;
 
@@ -73,6 +73,8 @@ private:
 
    bool mPlaying;
    bool mDestroying;
+
+   boost::shared_ptr<RtpStream> mRtpStream;
 };
 
 }

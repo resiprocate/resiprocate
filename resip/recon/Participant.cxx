@@ -67,7 +67,7 @@ Participant::addToConversation(Conversation* conversation, unsigned int inputGai
 }
 
 void 
-Participant::removeFromConversation(Conversation *conversation)
+Participant::removeFromConversation(Conversation* conversation)
 {
    assert(conversation);
    //InfoLog(<< "Participant handle=" << mHandle << " removed from conversation=" << conversation->getHandle());

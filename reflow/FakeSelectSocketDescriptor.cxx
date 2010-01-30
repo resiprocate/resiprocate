@@ -72,6 +72,7 @@ FakeSelectSocketDescriptor::send()
 #else
    size_t res = ::write(mPipe[1], fakeData, 1);
    assert(res == 1);   
+	((void)res); // elimiante warning GCC
 #endif
 }
 

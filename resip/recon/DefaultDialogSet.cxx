@@ -17,7 +17,7 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 DefaultDialogSet::DefaultDialogSet(ConversationManager& conversationManager)
-: AppDialogSet(conversationManager.getUserAgent()->getDialogUsageManager()),
+: AppDialogSet(*(conversationManager.mDum)),
   mConversationManager(conversationManager)
 {
 }
@@ -25,7 +25,7 @@ DefaultDialogSet::DefaultDialogSet(ConversationManager& conversationManager)
 SharedPtr<UserProfile> 
 DefaultDialogSet::selectUASUserProfile(const SipMessage& msg)
 {
-   return mConversationManager.getUserAgent()->getIncomingConversationProfile(msg);
+   return mConversationManager.getIncomingConversationProfile(msg);
 }
 
 

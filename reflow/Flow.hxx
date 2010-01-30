@@ -12,9 +12,12 @@
 #include "client/TurnAsyncTcpSocket.hxx"
 #include "client/TurnAsyncTlsSocket.hxx"
 #include "client/TurnAsyncSocketHandler.hxx"
+#include "client/IceCandidate.hxx"
 #include "StunMessage.hxx"
 #include "FakeSelectSocketDescriptor.hxx"
+#ifdef USE_SSL
 #include "dtls_wrapper/DtlsSocket.hxx"
+#endif
 
 using namespace reTurn;
 
@@ -30,6 +33,7 @@ namespace flowmanager
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 class MediaStream;
+class FlowHandler;
 class Flow;
 
 class Flow : public TurnAsyncSocketHandler
@@ -41,6 +45,7 @@ public:
       Unconnected,
       ConnectingServer,
       Connecting,
+      CheckingConnectivity,
       Binding,
       Allocating,
       Connected,
@@ -56,7 +61,11 @@ public:
         MediaStream& mediaStream);
    ~Flow();
 
-   void activateFlow(UInt8 allocationProps = StunMessage::PropsNone);
+   void shutdown();
+
+   void setHandler(FlowHandler* handler);
+
+   void activateFlow(UInt8 allocationProps = reTurn::StunMessage::PropsNone);
    void activateFlow(UInt64 reservationToken);
 
    bool isReady() { return mFlowState == Ready; }
@@ -81,9 +90,15 @@ public:
    asio::error_code receive(char* buffer, unsigned int& size, unsigned int timeout, asio::ip::address* sourceAddress=0, unsigned short* sourcePort=0);
    asio::error_code receiveFrom(const asio::ip::address& address, unsigned short port, char* buffer, unsigned int& size, unsigned int timeout);
 
-   /// Used to set where this flow should be sending to
-   void setActiveDestination(const char* address, unsigned short port);
+   void asyncReceive();
 
+   /// Used to set where this flow should be sending to
+   void setActiveDestination(const char* address, unsigned short port, const std::vector<reTurn::IceCandidate>& candidates);
+
+   void setIceRole(bool controlling);
+   void setPeerReflexiveCandidatePriority(UInt32 priority) { mPeerRflxCandidatePriority = priority; }
+
+#ifdef USE_SSL
    /// Dtls-Srtp Methods
 
    /// Starts the dtls client handshake process - (must call setActiveDestination first)
@@ -97,6 +112,27 @@ public:
 
    /// Retrieves the stored remote SDP Fingerprint.
    const resip::Data getRemoteSDPFingerprint();
+#endif
+
+   enum EQOSDirection
+   {
+      EQOSDirection_Sending,                 // QOS refering to the direction of sending out packets
+      EQOSDirection_Receiving                // QOS refering to the direction of receiving packets
+   };
+
+   bool setDSCP(ULONG ulInDSCPValue);
+   bool setServiceType(
+      const asio::ip::udp::endpoint &tInDestinationIPAddress,
+      EQOSServiceTypes eInServiceType,
+      ULONG ulInBandwidthInBitsPerSecond);
+   void setBandwidthQOS(
+      VOID* tInQOSUserParam,
+      EQOSDirection eInFlowDirection,
+      const asio::ip::udp::endpoint &tInDestinationIPAddress,
+      ULONG ulInBitsPerSecondToReserve);
+   ULONG getBandwidthQOS(
+      EQOSDirection eInFlowDirection,
+      const asio::ip::udp::endpoint &tInDestinationIPAddress);
 
    const StunTuple& getLocalTuple();
    StunTuple getSessionTuple();  // returns either local, reflexive, or relay tuple depending on NatTraversalMode
@@ -105,11 +141,30 @@ public:
    UInt64 getReservationToken();
    unsigned int getComponentId() { return mComponentId; }
 
+
 private:
+   void shutdownImpl();
+   /// Used only when ICE is enabled; should be called once the offer/answer exchange has been completed
+   void scheduleConnectivityChecks();
+   void onConnectivityCheckTimer(const asio::error_code& error);
+
+   FlowHandler* mHandler;
    asio::io_service& mIOService;
+   asio::deadline_timer mConnectivityCheckTimer;
 #ifdef USE_SSL
    asio::ssl::context& mSslContext;
 #endif
+   asio::deadline_timer mIcmpRetryTimer;
+   int mIcmpRetryCount;
+
+   enum IceRole
+   {
+      IceRole_Controlled,
+      IceRole_Controlling,
+      IceRole_Unknown
+   };
+   IceRole mIceRole;
+   UInt32 mPeerRflxCandidatePriority;
 
    // Note: these member variables are set at creation time and never changed, thus
    //       they do not require mutex protection
@@ -125,12 +180,31 @@ private:
    // These are only set once, then accessed - thus they do not require mutex protection
    UInt8 mAllocationProps;
    UInt64 mReservationToken; 
+   bool mActiveDestinationSet;
+   bool mConnectivityChecksPending;
 
    // Mutex to protect the following members that may be get/set from multiple threads
    resip::Mutex mMutex;
+   resip::Condition mShutdown;
    StunTuple mReflexiveTuple;
    StunTuple mRelayTuple;
    resip::Data mRemoteSDPFingerprint;
+
+   struct IceCandidatePair
+   {
+      enum State
+      {
+         InProgress,
+         Frozen,
+         Waiting,
+         Failed,
+         Succeeded
+      };
+      reTurn::IceCandidate mLocalCandidate;
+      reTurn::IceCandidate mRemoteCandidate;
+      State mState;
+   };
+   std::vector<IceCandidatePair> mIceCheckList;
 
 #ifdef USE_SSL
    // Map to store all DtlsSockets - in forking cases there can be more than one
@@ -138,7 +212,7 @@ private:
    dtls::DtlsSocket* getDtlsSocket(const reTurn::StunTuple& endpoint);
    dtls::DtlsSocket* createDtlsSocketClient(const StunTuple& endpoint);
    dtls::DtlsSocket* createDtlsSocketServer(const StunTuple& endpoint);
-#endif 
+#endif
 
    volatile FlowState mFlowState;
    void changeFlowState(FlowState newState);
@@ -162,6 +236,7 @@ private:
    // Helpers to perform SRTP protection/unprotection
    bool processSendData(char* buffer, unsigned int& size, const asio::ip::address& address, unsigned short port);
    asio::error_code processReceivedData(char* buffer, unsigned int& size, ReceivedData* receivedData, asio::ip::address* sourceAddress=0, unsigned short* sourcePort=0);
+
    FakeSelectSocketDescriptor mFakeSelectSocketDescriptor;
 
    virtual void onConnectSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port);
@@ -170,8 +245,10 @@ private:
    virtual void onSharedSecretSuccess(unsigned int socketDesc, const char* username, unsigned int usernameSize, const char* password, unsigned int passwordSize);
    virtual void onSharedSecretFailure(unsigned int socketDesc, const asio::error_code& e);
 
-   virtual void onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple);
-   virtual void onBindFailure(unsigned int socketDesc, const asio::error_code& e);
+   virtual void onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& stunServerTuple);
+   virtual void onBindFailure(unsigned int socketDesc, const asio::error_code& e, const StunTuple& stunServerTuple);
+
+   virtual void onIncomingBindRequestProcessed(unsigned int socketDest, const StunTuple& sourceTuple);
 
    virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, UInt64 reservationToken);
    virtual void onAllocationFailure(unsigned int socketDesc, const asio::error_code& e);

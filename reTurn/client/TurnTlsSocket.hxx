@@ -1,4 +1,3 @@
-#ifdef USE_SSL
 #ifndef TURNTLSSOCKET_HXX
 #define TURNTLSSOCKET_HXX
 
@@ -38,7 +37,7 @@ private:
 } 
 
 #endif
-#endif
+
 
 /* ====================================================================
 

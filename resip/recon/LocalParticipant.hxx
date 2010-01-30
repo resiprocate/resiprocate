@@ -26,7 +26,7 @@ class LocalParticipant : public Participant
       virtual ~LocalParticipant();
 
       virtual int getConnectionPortOnBridge();
-      virtual void destroyParticipant();
+      virtual void destroyParticipant(const resip::Data& appDefinedReason = resip::Data::Empty);
 
    protected:     
    private:

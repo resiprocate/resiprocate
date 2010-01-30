@@ -3,6 +3,7 @@
 
 #include "ConversationManager.hxx"
 #include "Participant.hxx"
+#include "media/RtpStream.hxx"
 #include "RemoteParticipantDialogSet.hxx"
 
 #include <resip/dum/AppDialogSet.hxx>
@@ -50,28 +51,36 @@ public:
    virtual ~RemoteParticipant();
 
    virtual resip::InviteSessionHandle& getInviteSessionHandle() { return mInviteSessionHandle; }
-   virtual unsigned int getLocalRTPPort();
-   void buildSdpOffer(bool holdSdp, resip::SdpContents& offer);
-   virtual bool isHolding() { return mLocalHold; }
+   virtual unsigned int getLocalRTPPort( const sdpcontainer::SdpMediaLine::SdpMediaType& mediaType, ConversationProfile* profile = NULL );
+   typedef std::map<sdpcontainer::SdpMediaLine::SdpMediaType, bool> MediaHoldStateMap;
+   void buildSdpOffer(ConversationProfile* profile, MediaHoldStateMap holdStates, resip::SdpContents& offer, std::set<sdpcontainer::SdpMediaLine::SdpMediaType> existingMediaTypes=std::set<sdpcontainer::SdpMediaLine::SdpMediaType>());
+   virtual bool isHolding();
 
-   virtual void initiateRemoteCall(const resip::NameAddr& destination);
+   virtual void initiateRemoteCall(resip::SharedPtr<ConversationProfile> profile, const resip::NameAddr& destination, ConversationManager::MediaAttributes mediaAttributes, Conversation* conversation, const resip::DialogId* replacesDialogId, const resip::DialogId* joinDialogId);
    virtual int getConnectionPortOnBridge();
+   virtual boost::shared_ptr<RtpStream> getRtpStream( sdpcontainer::SdpMediaLine::SdpMediaType mediaType ) { return mDialogSet.getRtpStream( mediaType ); }
+
    virtual int getMediaConnectionId();
-   virtual void destroyParticipant();
-   virtual void addToConversation(Conversation *conversation, unsigned int inputGain = 100, unsigned int outputGain = 100);
-   virtual void removeFromConversation(Conversation *conversation);
-   virtual void accept();
+   virtual void destroyParticipant(const resip::Data& appDefinedReason = resip::Data::Empty);
+   virtual void addToConversation(Conversation* conversation, unsigned int inputGain = 100, unsigned int outputGain = 100);
+   virtual void removeFromConversation(Conversation* conversation);
+   virtual void accept(ConversationManager::MediaAttributes mediaAttributes);
    virtual void alert(bool earlyFlag);
    virtual void reject(unsigned int rejectCode);
    virtual void redirect(resip::NameAddr& destination);
    virtual void redirectToParticipant(resip::InviteSessionHandle& destParticipantInviteSessionHandle);
    virtual void checkHoldCondition();
+   virtual void updateMedia(ConversationManager::MediaAttributes mediaAttribs, bool sendOffer);
+   void pauseOutboundMedia(MediaStack::MediaType mediaType);
+   void pauseOutboundMediaIfMarked();
+   void resumeOutboundMedia(MediaStack::MediaType mediaType);
 
    virtual void setPendingOODReferInfo(resip::ServerOutOfDialogReqHandle ood, const resip::SipMessage& referMsg); // OOD-Refer (no Sub)
    virtual void setPendingOODReferInfo(resip::ServerSubscriptionHandle ss, const resip::SipMessage& referMsg); // OOD-Refer (with Sub)
-   virtual void acceptPendingOODRefer();
+   virtual void acceptPendingOODRefer(ConversationManager::MediaAttributes mediaAttribs);
    virtual void rejectPendingOODRefer(unsigned int statusCode);
    virtual void processReferNotify(const resip::SipMessage& notify);
+   void handleNonDialogCreatingProvisionalWithEarlyMedia(const resip::SipMessage& msg, const resip::SdpContents& sdp);
 
    // Called by RemoteParticipantDialogSet when Related Conversations should be destroyed
    virtual void destroyConversations();
@@ -122,14 +131,24 @@ private:
    void unhold();
    void provideOffer(bool postOfferAccept);
    bool provideAnswer(const resip::SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert);
-   bool answerMediaLine(resip::SdpContents::Session::Medium& mediaSessionCaps, const sdpcontainer::SdpMediaLine& sdpMediaLine, resip::SdpContents& answer, bool potential);
+   bool answerMediaLine(resip::SdpContents::Session::Medium& mediaSessionCaps, const sdpcontainer::SdpMediaLine& sdpMediaLine, resip::SdpContents& answer, bool potential, ConversationProfile* profile );
    bool buildSdpAnswer(const resip::SdpContents& offer, resip::SdpContents& answer);
    bool formMidDialogSdpOfferOrAnswer(const resip::SdpContents& localSdp, const resip::SdpContents& remoteSdp, resip::SdpContents& newSdp, bool offer);
    void setProposedSdp(const resip::SdpContents& sdp);
    void setLocalSdp(const resip::SdpContents& sdp);
    void setRemoteSdp(const resip::SdpContents& sdp, bool answer=false);
    void setRemoteSdp(const resip::SdpContents& sdp, sdpcontainer::Sdp* remoteSdp);
-   void adjustRTPStreams(bool sendingOffer=false);
+   void adjustRTPStreams(bool sendingOffer=false, const resip::SipMessage* msg=NULL);
+   void onNewRtpSource(sdpcontainer::SdpMediaLine::SdpMediaType mediaType);
+   void onNewRtpDestination(sdpcontainer::SdpMediaLine::SdpMediaType mediaType);
+   void onRtpStreamClosed(sdpcontainer::SdpMediaLine::SdpMediaType mediaType, RtpStream::ClosedReason reason);
+
+   void subscribeForStreamEvents(sdpcontainer::SdpMediaLine::SdpMediaType mediaType);
+
+   typedef std::map<sdpcontainer::SdpMediaLine::SdpMediaType, boost::signals::connection> MapMediaTypeToConnection;
+   MapMediaTypeToConnection m_newRtpSourceConns;
+   MapMediaTypeToConnection m_newRtpDestConns;
+   MapMediaTypeToConnection m_onClosedConns;
 
    resip::DialogUsageManager &mDum;
    resip::InviteSessionHandle mInviteSessionHandle; 
@@ -149,8 +168,8 @@ private:
    } State;
    State mState;
    bool mOfferRequired;
-   bool mLocalHold;
-   bool mRemoteHold;
+   //bool mLocalHold;
+   MediaHoldStateMap mMediaHoldStates;
    void stateTransition(State state);
 
    resip::AppDialogHandle mReferringAppDialog; 
@@ -182,6 +201,16 @@ private:
    sdpcontainer::Sdp* mRemoteSdp;
 
    ConversationMap mRelatedConversations;
+
+   std::list<resip::SdpContents::Session::Codec> mLicensedCodecs;
+
+   // The last non-0.0.0.0 IP address from the session-level c= line of the remoteSdp.
+   // Used so that we can support receiving old-style hold.
+   resip::Data mLastRemoteIPAddr;
+
+   // list of paused media (per participant)
+   bool isMediaTypePaused(MediaStack::MediaType mediaType);
+   std::set<recon::MediaStack::MediaType> mPausedMedias;
 };
 
 }
