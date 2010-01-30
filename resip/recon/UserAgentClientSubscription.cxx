@@ -1,4 +1,4 @@
-#include "UserAgent.hxx"
+#include "BasicUserAgent.hxx"
 #include "ReconSubsystem.hxx"
 #include "UserAgentClientSubscription.hxx"
 
@@ -13,7 +13,7 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-UserAgentClientSubscription::UserAgentClientSubscription(UserAgent& userAgent, DialogUsageManager& dum, unsigned int handle)
+UserAgentClientSubscription::UserAgentClientSubscription(BasicUserAgent& userAgent, DialogUsageManager& dum, unsigned int handle)
 : AppDialogSet(dum),
   mUserAgent(userAgent),
   mDum(dum),

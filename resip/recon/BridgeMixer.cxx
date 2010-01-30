@@ -32,7 +32,7 @@ void
 BridgeMixer::calculateMixWeightsForParticipant(Participant* participant)
 {
    int bridgePort = participant->getConnectionPortOnBridge();
-   MpBridgeGain inputBridgeWeights[DEFAULT_BRIDGE_MAX_IN_OUTPUTS];
+   short inputBridgeWeights[DEFAULT_BRIDGE_MAX_IN_OUTPUTS];
 
    InfoLog( << "calculatingMixWeigthsForParticipant, handle=" << participant->getParticipantHandle() << ", bridgePort=" << bridgePort);
 
@@ -89,8 +89,9 @@ BridgeMixer::calculateMixWeightsForParticipant(Participant* participant)
       //outputBridgeMixWeights();
 
       // Apply new bridge weights
-      MprBridge::setMixWeightsForOutput(DEFAULT_BRIDGE_RESOURCE_NAME, *mConversationManager.getMediaInterface()->getMsgQ(), bridgePort, DEFAULT_BRIDGE_MAX_IN_OUTPUTS, mMixMatrix[bridgePort]);
-      MprBridge::setMixWeightsForInput(DEFAULT_BRIDGE_RESOURCE_NAME, *mConversationManager.getMediaInterface()->getMsgQ(), bridgePort, DEFAULT_BRIDGE_MAX_IN_OUTPUTS, inputBridgeWeights);
+      // !jjg! fixme
+      //MprBridge::setMixWeightsForOutput(DEFAULT_BRIDGE_RESOURCE_NAME, *mConversationManager.getMediaInterface()->getMsgQ(), bridgePort, DEFAULT_BRIDGE_MAX_IN_OUTPUTS, mMixMatrix[bridgePort]);
+      //MprBridge::setMixWeightsForInput(DEFAULT_BRIDGE_RESOURCE_NAME, *mConversationManager.getMediaInterface()->getMsgQ(), bridgePort, DEFAULT_BRIDGE_MAX_IN_OUTPUTS, inputBridgeWeights);
    }   
 }
 

@@ -2,6 +2,7 @@
 
 #include "UserAgent.hxx"
 #include "UserAgentServerAuthManager.hxx"
+#include "ConversationManager.hxx"
 
 #include <resip/dum/DialogUsageManager.hxx>
 #include <resip/dum/ServerAuthManager.hxx>
@@ -15,9 +16,9 @@
 using namespace recon;
 using namespace resip;
 
-UserAgentServerAuthManager::UserAgentServerAuthManager(UserAgent& userAgent) :
-   ServerAuthManager(userAgent.getDialogUsageManager(), userAgent.getDialogUsageManager().dumIncomingTarget()),
-   mUserAgent(userAgent)
+UserAgentServerAuthManager::UserAgentServerAuthManager(ConversationManager& cmgr) :
+   ServerAuthManager(*(cmgr.mDum), cmgr.mDum->dumIncomingTarget()),
+   mConversationManager( cmgr )
 {
 }
 
@@ -40,7 +41,7 @@ UserAgentServerAuthManager::proxyAuthenticationMode() const
 const Data& 
 UserAgentServerAuthManager::getChallengeRealm(const SipMessage& msg)
 {
-   return mUserAgent.getIncomingConversationProfile(msg)->getDefaultFrom().uri().host();
+   return mConversationManager.getIncomingConversationProfile(msg)->getDefaultFrom().uri().host();
 }
 
 bool 
@@ -62,7 +63,7 @@ ServerAuthManager::AsyncBool
 UserAgentServerAuthManager::requiresChallenge(const SipMessage& msg)
 {
    assert(msg.isRequest());
-   ConversationProfile* profile = mUserAgent.getIncomingConversationProfile(msg).get();
+   ConversationProfile* profile = mConversationManager.getIncomingConversationProfile(msg).get();
 
    // We want to challenge OOD Refer requests and Invite Requests with Auto-Answer indications
    switch(msg.method())
@@ -71,7 +72,7 @@ UserAgentServerAuthManager::requiresChallenge(const SipMessage& msg)
       if(profile->challengeOODReferRequests() && !msg.header(h_To).exists(p_tag))
       {
          // Don't challenge OOD Refer requests have a valid TargetDialog header
-         if(!msg.exists(h_TargetDialog) || mUserAgent.getDialogUsageManager().findInviteSession(msg.header(h_TargetDialog)).first == InviteSessionHandle::NotValid())
+         if(!msg.exists(h_TargetDialog) || mConversationManager.mDum->findInviteSession(msg.header(h_TargetDialog)).first == InviteSessionHandle::NotValid())
          {
             return True;
          }
@@ -100,7 +101,7 @@ UserAgentServerAuthManager::requestCredential(const Data& user,
                                               const Data& transactionId )
 {
    const UserProfile::DigestCredential& digestCredential = 
-         mUserAgent.getIncomingConversationProfile(msg)->getDigestCredential(realm);
+         mConversationManager.getIncomingConversationProfile(msg)->getDigestCredential(realm);
 
    MD5Stream a1;
    a1 << digestCredential.user
@@ -110,7 +111,7 @@ UserAgentServerAuthManager::requestCredential(const Data& user,
       << digestCredential.password;
    a1.flush();
    UserAuthInfo* userAuthInfo = new UserAuthInfo(user,realm,a1.getHex(),transactionId);
-   mUserAgent.getDialogUsageManager().post( userAuthInfo );      
+   mConversationManager.mDum->post( userAuthInfo );      
 }
  
 

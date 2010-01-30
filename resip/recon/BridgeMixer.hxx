@@ -1,8 +1,9 @@
 #if !defined(BridgeMixer_hxx)
 #define BridgeMixer_hxx
 
-#include <mp/MprBridge.h>
-#include <mp/MpResourceTopology.h>
+#if !defined(DEFAULT_BRIDGE_MAX_IN_OUTPUTS)
+#define DEFAULT_BRIDGE_MAX_IN_OUTPUTS 10
+#endif
 
 namespace recon
 {
@@ -48,7 +49,7 @@ public:
    void outputBridgeMixWeights();
 
 private:
-   MpBridgeGain mMixMatrix[DEFAULT_BRIDGE_MAX_IN_OUTPUTS][DEFAULT_BRIDGE_MAX_IN_OUTPUTS];
+   short mMixMatrix[DEFAULT_BRIDGE_MAX_IN_OUTPUTS][DEFAULT_BRIDGE_MAX_IN_OUTPUTS];
    ConversationManager& mConversationManager;
 };
 

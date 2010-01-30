@@ -8,7 +8,9 @@
 
 #include "StunTuple.hxx"
 
+#ifndef STUN_MAX_UNKNOWN_ATTRIBUTES
 #define STUN_MAX_UNKNOWN_ATTRIBUTES 8
+#endif
 
 namespace reTurn
 {
@@ -47,6 +49,12 @@ public:
    void setNonce(const char* nonce);
    void setSoftware(const char* software);
    void setTurnData(const char* data, unsigned int len);
+
+   // ICE-specific attributes
+   void setIcePriority(UInt32 priority);
+   void setIceUseCandidate();
+   void setIceControlled();
+   void setIceControlling();
 
    void createHeader(UInt16 stunclass, UInt16 method);  // Set info needed for a new stun message - set's tid as well
    void createUsernameAndPassword();  // Ensure mRemoteTuple is set first
@@ -145,6 +153,12 @@ public:
    //const static UInt16 TurnTimerVal         = 0x0021; // reserved (removed from latest draft)
    const static UInt16 TurnReservationToken   = 0x0022;
    const static UInt16 TurnConnectStat        = 0x0023; // tcp allocations
+
+   // ICE specific message attributes - from draft-ietf-mmusic-ice-19
+   const static UInt16 IcePriority            = 0x0024;
+   const static UInt16 IceUseCandidate        = 0x0025;
+   const static UInt16 IceControlled          = 0x8029;
+   const static UInt16 IceControlling         = 0x802A;
 
    const static UInt32 StunMagicCookie  = 0x2112A442;  
    typedef struct 
@@ -313,6 +327,17 @@ public:
 
    bool mHasTurnConnectStat;
    UInt32 mTurnConnectStat;
+
+   bool mHasIcePriority;
+   UInt32 mIcePriority;
+
+   bool mHasIceUseCandidate;
+
+   bool mHasIceControlled;
+   UInt64 mIceControlledTieBreaker;
+
+   bool mHasIceControlling;
+   UInt64 mIceControllingTieBreaker;
 
    StunAtrUnknown mUnknownRequiredAttributes;
 

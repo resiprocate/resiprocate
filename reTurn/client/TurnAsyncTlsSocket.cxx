@@ -1,4 +1,3 @@
-#ifdef USE_SSL
 #include "TurnAsyncTlsSocket.hxx"
 #include <boost/bind.hpp>
 
@@ -59,7 +58,7 @@ TurnAsyncTlsSocket::onSendFailure(const asio::error_code& e)
 }
 
 } // namespace
-#endif
+
 
 /* ====================================================================
 

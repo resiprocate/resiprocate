@@ -11,6 +11,7 @@ class LocalParticipant;
 class RemoteParticipant;
 class RelatedConversationSet;
 class BridgeMixer;
+class Mixer;
 
 /**
   This class is used to manage membership of participants.
@@ -27,10 +28,11 @@ class BridgeMixer;
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class Conversation 
+class Conversation
 {
 public:  
    Conversation(ConversationHandle handle, 
+                resip::SharedPtr<ConversationProfile> profile,
                 ConversationManager& conversationManager,
                 RelatedConversationSet* relatedConversationSet=0);   // Pass NULL to create new RelatedConversationSet 
    ~Conversation();
@@ -50,6 +52,8 @@ public:
    void destroy();
 
    ConversationHandle getHandle() { return mHandle; }
+   resip::SharedPtr<ConversationProfile> getProfile() { return mProfile; }
+   boost::shared_ptr<Mixer> getMixer() const { return mMediaMixer; }
 
 protected:
    friend class Participant;
@@ -61,10 +65,11 @@ protected:
 
    friend class BridgeMixer;
    typedef std::map<ParticipantHandle, ConversationParticipantAssignment> ParticipantMap;
-   ParticipantMap& getParticipants() { return mParticipants; }  
+   ParticipantMap& getParticipants() { return mParticipants; }
 
 private: 
    ConversationHandle mHandle;
+   resip::SharedPtr<ConversationProfile> mProfile;
    ConversationManager& mConversationManager;
    RelatedConversationSet *mRelatedConversationSet;
 
@@ -74,7 +79,9 @@ private:
    unsigned int mNumLocalParticipants;
    unsigned int mNumRemoteParticipants;
    unsigned int mNumMediaParticipants;
-};
+
+   boost::shared_ptr<Mixer> mMediaMixer;
+   };
 
 }
 

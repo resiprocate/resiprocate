@@ -2,6 +2,7 @@
 #include "../AsyncSocketBase.hxx"
 #include "ErrorCode.hxx"
 #include <boost/bind.hpp>
+#include <boost/function.hpp>
 #include <rutil/WinLeakCheck.hxx>
 #include <rutil/Logger.hxx>
 #include "../ReTurnSubsystem.hxx"
@@ -10,13 +11,6 @@
 
 using namespace std;
 using namespace resip;
-
-#define UDP_RT0 100  // RTO - Estimate of Roundtrip time - 100ms is recommened for fixed line transport - the initial value should be configurable
-                     // Should also be calculation this on the fly
-#define UDP_MAX_RETRANSMITS    7       // Defined by RFC5389 (Rc) - should be configurable
-#define TCP_RESPONSE_TIME      39500   // Defined by RFC5389 (Ti) - should be configurable
-#define UDP_Rm                 16      // Defined by RFC5389 - should be configurable
-#define UDP_FINAL_REQUEST_TIME (UDP_RT0 * UDP_Rm)  // Defined by RFC5389
 
 //#define TURN_CHANNEL_BINDING_REFRESH_SECONDS 20   // TESTING only
 #define TURN_CHANNEL_BINDING_REFRESH_SECONDS 240   // 4 minuntes - this is one minute before the permission will expire, Note:  ChannelBinding refreshes also refresh permissions
@@ -30,6 +24,43 @@ unsigned int TurnAsyncSocket::UnspecifiedLifetime = 0xFFFFFFFF;
 unsigned int TurnAsyncSocket::UnspecifiedBandwidth = 0xFFFFFFFF; 
 unsigned short TurnAsyncSocket::UnspecifiedToken = 0;
 asio::ip::address TurnAsyncSocket::UnspecifiedIpAddress = asio::ip::address::from_string("0.0.0.0");
+
+
+// weak functor template, used to reference the parent without explicitly
+// preventing it from being garbage collected. Functor will only call the
+// parent if it is still available.
+template < typename P, typename F > class weak_bind
+{
+public:
+   // !jjg! WARNING! if you are using boost::bind(..) to create the second
+   // argument for this constructor BE CAREFUL that you are passing 'this' and
+   // not 'shared_from_this()' to the bind(..) -- otherwise you will defeat the
+   // purpose of this class holding a weak_ptr
+   weak_bind<P,F>( boost::weak_ptr<P> parent, boost::function<F> func )
+      : mParent( parent ), mFunction( func ) {}
+
+   void operator()()
+   {
+      if ( boost::shared_ptr< P > ptr = mParent.lock() )
+      {
+         if ( !mFunction.empty() )
+            mFunction();
+      }
+   }
+
+   void operator()(const asio::error_code& e)
+   {
+      if ( boost::shared_ptr< P > ptr = mParent.lock() )
+      {
+         if ( !mFunction.empty() )
+            mFunction(e);
+      }
+   }
+
+private:
+   boost::weak_ptr< P > mParent;
+   boost::function< F > mFunction;
+};
 
 TurnAsyncSocket::TurnAsyncSocket(asio::io_service& ioService, 
                                  AsyncSocketBase& asyncSocketBase,
@@ -65,14 +96,12 @@ TurnAsyncSocket::disableTurnAsyncHandler()
 void
 TurnAsyncSocket::requestSharedSecret()
 {
-   mGuards.push(mAsyncSocketBase.shared_from_this());
-   mIOService.post(boost::bind(&TurnAsyncSocket::doRequestSharedSecret, this));
+   mIOService.post(weak_bind<AsyncSocketBase, void()>( mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::doRequestSharedSecret, this)));
 }
 
 void
 TurnAsyncSocket::doRequestSharedSecret()
 {
-   GuardReleaser guardReleaser(mGuards);
    // Should we check here if TLS and deny?
 
    // Ensure Connected
@@ -93,14 +122,12 @@ TurnAsyncSocket::doRequestSharedSecret()
 void
 TurnAsyncSocket::setUsernameAndPassword(const char* username, const char* password, bool shortTermAuth)
 {
-   mGuards.push(mAsyncSocketBase.shared_from_this());
-   mIOService.post(boost::bind(&TurnAsyncSocket::doSetUsernameAndPassword, this, new Data(username), new Data(password), shortTermAuth));
+   mIOService.post(weak_bind<AsyncSocketBase, void()>( mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::doSetUsernameAndPassword, this, new Data(username), new Data(password), shortTermAuth)));
 }
 
 void 
 TurnAsyncSocket::doSetUsernameAndPassword(Data* username, Data* password, bool shortTermAuth)
 {
-   GuardReleaser guardReleaser(mGuards);
    mUsername = *username;
    mPassword = *password;
    if(shortTermAuth)
@@ -115,18 +142,16 @@ TurnAsyncSocket::doSetUsernameAndPassword(Data* username, Data* password, bool s
 void 
 TurnAsyncSocket::bindRequest()
 {
-   mGuards.push(mAsyncSocketBase.shared_from_this());
-   mIOService.post(boost::bind(&TurnAsyncSocket::doBindRequest, this));
+   mIOService.post(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::doBindRequest, this)));
 }
 
 void 
 TurnAsyncSocket::doBindRequest()
 {
-   GuardReleaser guardReleaser(mGuards);
    // Ensure Connected
    if(!mAsyncSocketBase.isConnected())
    {
-      if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onBindFailure(getSocketDescriptor(), asio::error_code(reTurn::NotConnected, asio::error::misc_category));
+      if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onBindFailure(getSocketDescriptor(), asio::error_code(reTurn::NotConnected, asio::error::misc_category), StunTuple());
    }
    else
    {
@@ -137,18 +162,39 @@ TurnAsyncSocket::doBindRequest()
 }
 
 void
+TurnAsyncSocket::connectivityCheck(const StunTuple& targetAddr, UInt32 peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits)
+{
+   assert(setIceControlling || setIceControlled);
+   mIOService.post(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::doConnectivityCheck, this, new StunTuple(targetAddr.getTransportType(), targetAddr.getAddress(), targetAddr.getPort()), peerRflxPriority, setIceControlling, setIceControlled, numRetransmits)));
+}
+
+void
+TurnAsyncSocket::doConnectivityCheck(StunTuple* targetAddr, UInt32 peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits)
+{
+   // Form Stun Bind request
+   StunMessage* request = createNewStunMessage(StunMessage::StunClassRequest, StunMessage::BindMethod);
+   request->setIcePriority(peerRflxPriority);
+   if (setIceControlling)
+   {
+      request->setIceControlling();
+   }
+   else if (setIceControlled)
+   {
+      request->setIceControlled();
+   }
+
+   sendStunMessage(request, false, numRetransmits, targetAddr);
+   delete targetAddr;
+}
+
+void
 TurnAsyncSocket::createAllocation(unsigned int lifetime,
                                   unsigned int bandwidth,
                                   unsigned char requestedProps, 
                                   UInt64 reservationToken,
                                   StunTuple::TransportType requestedTransportType)
 {
-   mGuards.push(mAsyncSocketBase.shared_from_this());
-   mIOService.post(boost::bind(&TurnAsyncSocket::doCreateAllocation, this, lifetime, 
-                                                                           bandwidth, 
-                                                                           requestedProps, 
-                                                                           reservationToken, 
-                                                                           requestedTransportType));
+   mIOService.post(weak_bind<AsyncSocketBase, void()>( mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::doCreateAllocation, this, lifetime, bandwidth, requestedProps, reservationToken, requestedTransportType )));
 }
 
 void
@@ -158,8 +204,6 @@ TurnAsyncSocket::doCreateAllocation(unsigned int lifetime,
                                     UInt64 reservationToken,
                                     StunTuple::TransportType requestedTransportType)
 {
-   GuardReleaser guardReleaser(mGuards);
-
    // Store Allocation Properties
    mRequestedTransportType = requestedTransportType;
 
@@ -238,14 +282,12 @@ TurnAsyncSocket::doCreateAllocation(unsigned int lifetime,
 void 
 TurnAsyncSocket::refreshAllocation(unsigned int lifetime)
 {
-   mGuards.push(mAsyncSocketBase.shared_from_this());
-   mIOService.post(boost::bind(&TurnAsyncSocket::doRefreshAllocation, this, lifetime));
+   mIOService.post(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::doRefreshAllocation, this, lifetime)));
 }
 
 void 
 TurnAsyncSocket::doRefreshAllocation(unsigned int lifetime)
 {
-   GuardReleaser guardReleaser(mGuards);
    if(!mHaveAllocation)
    {
       if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onRefreshFailure(getSocketDescriptor(), asio::error_code(NoAllocation, asio::error::misc_category));
@@ -276,8 +318,7 @@ TurnAsyncSocket::doRefreshAllocation(unsigned int lifetime)
 void 
 TurnAsyncSocket::destroyAllocation()
 {
-   mGuards.push(mAsyncSocketBase.shared_from_this());
-   mIOService.post(boost::bind(&TurnAsyncSocket::doDestroyAllocation, this));
+   mIOService.post(weak_bind<AsyncSocketBase, void()>( mAsyncSocketBase.shared_from_this(), boost::bind( &TurnAsyncSocket::doDestroyAllocation, this )));
 }
 
 void 
@@ -289,15 +330,12 @@ TurnAsyncSocket::doDestroyAllocation()
 void
 TurnAsyncSocket::setActiveDestination(const asio::ip::address& address, unsigned short port)
 {
-   mGuards.push(mAsyncSocketBase.shared_from_this());
-   mIOService.post(boost::bind(&TurnAsyncSocket::doSetActiveDestination, this, address, port));
+   mIOService.post(weak_bind<AsyncSocketBase, void()>( mAsyncSocketBase.shared_from_this(), boost::bind( &TurnAsyncSocket::doSetActiveDestination, this, address, port )));
 }
 
 void
 TurnAsyncSocket::doSetActiveDestination(const asio::ip::address& address, unsigned short port)
 {
-   GuardReleaser guardReleaser(mGuards);
-
    // Setup Remote Peer 
    StunTuple remoteTuple(mRelayTransportType, address, port);
    RemotePeer* remotePeer = mChannelManager.findRemotePeerByPeerAddress(remoteTuple);
@@ -340,15 +378,12 @@ void TurnAsyncSocket::doChannelBinding(RemotePeer& remotePeer)
 void
 TurnAsyncSocket::clearActiveDestination()
 {
-   mGuards.push(mAsyncSocketBase.shared_from_this());
-   mIOService.post(boost::bind(&TurnAsyncSocket::doClearActiveDestination, this));
+   mIOService.post(weak_bind<AsyncSocketBase, void()>( mAsyncSocketBase.shared_from_this(), boost::bind( &TurnAsyncSocket::doClearActiveDestination, this )));
 }
 
 void
 TurnAsyncSocket::doClearActiveDestination()
 {
-   GuardReleaser guardReleaser(mGuards);
-
    // ensure there is an allocation
    if(!mHaveAllocation)
    {
@@ -387,7 +422,7 @@ TurnAsyncSocket::createNewStunMessage(UInt16 stunclass, UInt16 method, bool addA
 }
 
 void
-TurnAsyncSocket::sendStunMessage(StunMessage* message, bool reTransmission)
+TurnAsyncSocket::sendStunMessage(StunMessage* message, bool reTransmission, unsigned int numRetransmits, const StunTuple* targetAddress)
 {
 #define REQUEST_BUFFER_SIZE 1024
    boost::shared_ptr<DataBuffer> buffer = AsyncSocketBase::allocateBuffer(REQUEST_BUFFER_SIZE);
@@ -400,7 +435,7 @@ TurnAsyncSocket::sendStunMessage(StunMessage* message, bool reTransmission)
       // If message is a request, then start appropriate transaction and retranmission timers
       if(message->mClass == StunMessage::StunClassRequest)
       {
-         boost::shared_ptr<RequestEntry> requestEntry(new RequestEntry(mIOService, this, message));
+         boost::shared_ptr<RequestEntry> requestEntry(new RequestEntry(mIOService, this, message, numRetransmits, targetAddress));
          mActiveRequestMap[message->mHeader.magicCookieAndTid] = requestEntry;
          requestEntry->startTimer();
       }
@@ -410,7 +445,14 @@ TurnAsyncSocket::sendStunMessage(StunMessage* message, bool reTransmission)
       }
    }
 
-   send(buffer);
+   if (targetAddress)
+   {
+      sendTo(targetAddress->getAddress(), targetAddress->getPort(), buffer->data(), buffer->size());
+   }
+   else
+   {
+      send(buffer);
+   }
 }
 
 void 
@@ -422,7 +464,8 @@ TurnAsyncSocket::handleReceivedData(const asio::ip::address& address, unsigned s
       if((((*data)[0]) & 0xC0) == 0)
       {
          StunMessage* stunMsg = new StunMessage(mLocalBinding, 
-                                                StunTuple(mLocalBinding.getTransportType(), mAsyncSocketBase.getConnectedAddress(), mAsyncSocketBase.getConnectedPort()), 
+                                                //StunTuple(mLocalBinding.getTransportType(), mAsyncSocketBase.getConnectedAddress(), mAsyncSocketBase.getConnectedPort()), 
+                                                StunTuple(mLocalBinding.getTransportType(), address, port), 
                                                 &(*data)[0], data->size());
          if(stunMsg->isValid())
          {
@@ -646,7 +689,7 @@ TurnAsyncSocket::handleStunMessage(StunMessage& stunMessage)
          // Remove request from map if we haven't already cleared the map above;
          // (the handlers may have cleared the ActiveRequestMap when trying to close the connection)
 		 if (!mActiveRequestMap.empty())
-			mActiveRequestMap.erase(it);
+         mActiveRequestMap.erase(it);
       }
       break;
 
@@ -784,7 +827,9 @@ TurnAsyncSocket::handleBindRequest(StunMessage& stunMessage)
    response->setSoftware(SOFTWARE_STRING);
 
    // send bindResponse to local client
-   sendStunMessage(response);
+   sendStunMessage(response, false, UDP_MAX_RETRANSMITS, &(stunMessage.mRemoteTuple));
+   
+   if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onIncomingBindRequestProcessed(getSocketDescriptor(), stunMessage.mRemoteTuple);
 
    return asio::error_code();
 }
@@ -806,21 +851,21 @@ TurnAsyncSocket::handleBindResponse(StunMessage &request, StunMessage &response)
       }
       else
       {
-         if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onBindFailure(getSocketDescriptor(), asio::error_code(MissingAttributes, asio::error::misc_category));
+         if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onBindFailure(getSocketDescriptor(), asio::error_code(MissingAttributes, asio::error::misc_category), response.mRemoteTuple);
          return asio::error_code(MissingAttributes, asio::error::misc_category);
       }
-      if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onBindSuccess(getSocketDescriptor(), reflexiveTuple);
+      if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onBindSuccess(getSocketDescriptor(), reflexiveTuple, response.mRemoteTuple);
    }
    else
    {
       // Check if success or not
       if(response.mHasErrorCode)
       {
-         if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onBindFailure(getSocketDescriptor(), asio::error_code(response.mErrorCode.errorClass * 100 + response.mErrorCode.number, asio::error::misc_category));
+         if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onBindFailure(getSocketDescriptor(), asio::error_code(response.mErrorCode.errorClass * 100 + response.mErrorCode.number, asio::error::misc_category), response.mRemoteTuple);
       }
       else
       {
-         if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onBindFailure(getSocketDescriptor(), asio::error_code(MissingAttributes, asio::error::misc_category));
+         if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onBindFailure(getSocketDescriptor(), asio::error_code(MissingAttributes, asio::error::misc_category), response.mRemoteTuple);
          return asio::error_code(MissingAttributes, asio::error::misc_category);
       }
    }
@@ -958,15 +1003,12 @@ void
 TurnAsyncSocket::send(const char* buffer, unsigned int size)
 {
    boost::shared_ptr<DataBuffer> data(new DataBuffer(buffer, size));
-   mGuards.push(mAsyncSocketBase.shared_from_this());
-   mIOService.post(boost::bind(&TurnAsyncSocket::doSend, this, data));
+   mIOService.post(weak_bind<AsyncSocketBase, void()>( mAsyncSocketBase.shared_from_this(), boost::bind( &TurnAsyncSocket::doSend, this, data )));
 }
 
 void
 TurnAsyncSocket::doSend(boost::shared_ptr<DataBuffer>& data)
 {
-   GuardReleaser guardReleaser(mGuards);
-
    // Allow raw data to be sent if there is no allocation
    if(!mHaveAllocation)
    {
@@ -981,15 +1023,12 @@ void
 TurnAsyncSocket::sendTo(const asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size)
 {
    boost::shared_ptr<DataBuffer> data(new DataBuffer(buffer, size));
-   mGuards.push(mAsyncSocketBase.shared_from_this());
-   mIOService.post(boost::bind(&TurnAsyncSocket::doSendTo, this, address, port, data));
+   mIOService.post( weak_bind<AsyncSocketBase, void()>( mAsyncSocketBase.shared_from_this(), boost::bind( &TurnAsyncSocket::doSendTo, this, address, port, data )));
 }
 
 void 
 TurnAsyncSocket::doSendTo(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
 {
-   GuardReleaser guardReleaser(mGuards);
-
    // Allow raw data to be sent if there is no allocation
    if(!mHaveAllocation)
    {
@@ -1046,15 +1085,12 @@ TurnAsyncSocket::connect(const std::string& address, unsigned short port)
 void
 TurnAsyncSocket::close()
 {
-   mGuards.push(mAsyncSocketBase.shared_from_this());
-   mIOService.post(boost::bind(&TurnAsyncSocket::doClose, this));
+   mIOService.post(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::doClose, this)));
 }
 
 void
 TurnAsyncSocket::doClose()
 {
-   GuardReleaser guardReleaser(mGuards);
-
    // If we have an allocation over UDP then we should send a refresh with lifetime 0 to destroy the allocation
    // Note:  For TCP and TLS, the socket disconnection will destroy the allocation automatically
    if(mHaveAllocation && mLocalBinding.getTransportType() == StunTuple::UDP)
@@ -1108,34 +1144,45 @@ TurnAsyncSocket::send(unsigned short channel, boost::shared_ptr<DataBuffer>& dat
 
 TurnAsyncSocket::RequestEntry::RequestEntry(asio::io_service& ioService, 
                                             TurnAsyncSocket* turnAsyncSocket, 
-                                            StunMessage* requestMessage) : 
+                                            StunMessage* requestMessage,
+                                            unsigned int rc,
+                                            const StunTuple* dest)
+                                             : 
    mIOService(ioService), 
    mTurnAsyncSocket(turnAsyncSocket), 
    mRequestMessage(requestMessage), 
    mRequestTimer(ioService),
-   mRequestsSent(1)
+   mRequestsSent(1),
+   mDest(dest ? new StunTuple(dest->getTransportType(), dest->getAddress(), dest->getPort()) : 0),
+   mRc(rc)
 {
+   //std::cout << "RequestEntry::RequestEntry() " << mRequestMessage->mHeader.magicCookieAndTid << " dest: " << (mDest ? dest->getPort() : 0) << std::endl;
+
    mTimeout = mTurnAsyncSocket->mLocalBinding.getTransportType() == StunTuple::UDP ? UDP_RT0 : TCP_RESPONSE_TIME;
 }
 
 void
 TurnAsyncSocket::RequestEntry::startTimer()
 {
+   //std::cout << "RequestEntry::startTimer() " << mTimeout << " " << mRequestMessage->mHeader.magicCookieAndTid << std::endl;
    // start the request timer
    mRequestTimer.expires_from_now(boost::posix_time::milliseconds(mTimeout));  
-   mRequestTimer.async_wait(boost::bind(&TurnAsyncSocket::RequestEntry::requestTimerExpired, shared_from_this(), asio::placeholders::error));
+   mRequestTimer.async_wait(weak_bind<RequestEntry, void(const asio::error_code&)>(shared_from_this(), boost::bind(&TurnAsyncSocket::RequestEntry::requestTimerExpired, this, asio::placeholders::error)));
 }
 
 void
 TurnAsyncSocket::RequestEntry::stopTimer()
 {
-   // stop the request timer
+   //std::cout << "RequestEntry::stopTimer() " << mRequestMessage->mHeader.magicCookieAndTid << std::endl;
+// stop the request timer
    mRequestTimer.cancel();
 }
 
 TurnAsyncSocket::RequestEntry::~RequestEntry() 
 { 
+   //std::cout << "RequestEntry::~RequestEntry() " << mRequestMessage->mHeader.magicCookieAndTid << std::endl;
    delete mRequestMessage; 
+   delete mDest;
 }
 
 void 
@@ -1143,13 +1190,15 @@ TurnAsyncSocket::RequestEntry::requestTimerExpired(const asio::error_code& e)
 {
    if(!e && mRequestMessage)  // Note:  There is a race condition with clearing out of mRequestMessage when 401 is received - check that mRequestMessage is not 0 avoids any resulting badness
    {
-      if(mTurnAsyncSocket->mLocalBinding.getTransportType() != StunTuple::UDP || mRequestsSent == UDP_MAX_RETRANSMITS)
+      //std::cout << "RequestEntry::requestTimerExpired() " << mRequestMessage->mHeader.magicCookieAndTid << std::endl;
+
+      if(mTurnAsyncSocket->mLocalBinding.getTransportType() != StunTuple::UDP || mRequestsSent == mRc)
       {
          mTurnAsyncSocket->requestTimeout(mRequestMessage->mHeader.magicCookieAndTid);
          return;
       }
       // timed out and should retransmit - calculate next timeout
-      if(mRequestsSent == UDP_MAX_RETRANSMITS - 1)
+      if(mRequestsSent == mRc - 1)
       {
           mTimeout = UDP_FINAL_REQUEST_TIME;
       } 
@@ -1160,7 +1209,7 @@ TurnAsyncSocket::RequestEntry::requestTimerExpired(const asio::error_code& e)
       // retransmit
       DebugLog(<< "RequestEntry::requestTimerExpired: retransmitting...");
       mRequestsSent++;
-      mTurnAsyncSocket->sendStunMessage(mRequestMessage, true);
+      mTurnAsyncSocket->sendStunMessage(mRequestMessage, true, UDP_MAX_RETRANSMITS, mDest);
 
       startTimer();
    }
@@ -1172,10 +1221,12 @@ TurnAsyncSocket::requestTimeout(UInt128 tid)
    RequestMap::iterator it = mActiveRequestMap.find(tid);
    if(it != mActiveRequestMap.end())
    {
+      DebugLog(<< "TurnAsyncSocket::requestTimeout() " << it->second->mRequestMessage->mHeader.magicCookieAndTid);
+
       switch(it->second->mRequestMessage->mMethod)
       {
       case StunMessage::BindMethod:
-         if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onBindFailure(getSocketDescriptor(), asio::error_code(reTurn::ResponseTimeout, asio::error::misc_category));
+         if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onBindFailure(getSocketDescriptor(), asio::error_code(reTurn::ResponseTimeout, asio::error::misc_category), (it->second->mDest ? *(it->second->mDest) : StunTuple()));
          break;
       case StunMessage::SharedSecretMethod:
          if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSharedSecretFailure(getSocketDescriptor(), asio::error_code(reTurn::ResponseTimeout, asio::error::misc_category));
@@ -1198,7 +1249,7 @@ TurnAsyncSocket::requestTimeout(UInt128 tid)
 	  // Remove request from map if we haven't already cleared the map above
 	  // (the handlers may have cleared the ActiveRequestMap when trying to close the connection)
 	  if (!mActiveRequestMap.empty())
-	      mActiveRequestMap.erase(it);
+      mActiveRequestMap.erase(it);
    }
 }
 
@@ -1217,9 +1268,8 @@ TurnAsyncSocket::clearActiveRequestMap()
 void
 TurnAsyncSocket::startAllocationTimer()
 {
-   mAllocationTimer.expires_from_now(boost::posix_time::seconds((mLifetime*5)/8));  // Allocation refresh should sent before 3/4 lifetime - use 5/8 lifetime 
-   mGuards.push(mAsyncSocketBase.shared_from_this());
-   mAllocationTimer.async_wait(boost::bind(&TurnAsyncSocket::allocationTimerExpired, this, asio::placeholders::error));
+   mAllocationTimer.expires_from_now(boost::posix_time::seconds((mLifetime*5)/8));  // Allocation refresh should sent before 3/4 lifetime - use 5/8 lifetime
+   mAllocationTimer.async_wait(weak_bind<AsyncSocketBase, void(const asio::error_code&)>(mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::allocationTimerExpired, this, asio::placeholders::error)));
 }
 
 void
@@ -1232,15 +1282,7 @@ void
 TurnAsyncSocket::allocationTimerExpired(const asio::error_code& e)
 {
    if(!e)
-   {
       doRefreshAllocation(mLifetime);
-   }
-   else
-   {
-      // Note:  only release guard if not calling doRefreshAllocation - since
-      // doRefreshAllocation will release the guard
-      GuardReleaser guardReleaser(mGuards);
-   }
 }
 
 void
@@ -1255,8 +1297,7 @@ TurnAsyncSocket::startChannelBindingTimer(unsigned short channel)
       it = ret.first;
    }
    it->second->expires_from_now(boost::posix_time::seconds(TURN_CHANNEL_BINDING_REFRESH_SECONDS));  
-   mGuards.push(mAsyncSocketBase.shared_from_this());
-   it->second->async_wait(boost::bind(&TurnAsyncSocket::channelBindingTimerExpired, this, asio::placeholders::error, channel));
+   it->second->async_wait(weak_bind<AsyncSocketBase, void(const asio::error_code&)>( mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::channelBindingTimerExpired, this, asio::placeholders::error, channel)));
 }
 
 void
@@ -1275,7 +1316,6 @@ TurnAsyncSocket::cancelChannelBindingTimers()
 void 
 TurnAsyncSocket::channelBindingTimerExpired(const asio::error_code& e, unsigned short channel)
 {
-   GuardReleaser guardReleaser(mGuards);
    if(!e)
    {
       RemotePeer* remotePeer = mChannelManager.findRemotePeerByChannel(channel);
@@ -1284,6 +1324,23 @@ TurnAsyncSocket::channelBindingTimerExpired(const asio::error_code& e, unsigned 
          doChannelBinding(*remotePeer);
       }
    }
+}
+
+bool 
+TurnAsyncSocket::setDSCP(ULONG ulInDSCPValue)
+{
+   return mAsyncSocketBase.setDSCP(ulInDSCPValue);
+}
+
+bool 
+TurnAsyncSocket::setServiceType(
+   const asio::ip::udp::endpoint &tInDestinationIPAddress,
+   EQOSServiceTypes eInServiceType,
+   ULONG ulInBandwidthInBitsPerSecond
+)
+{
+   return mAsyncSocketBase.setServiceType(
+      tInDestinationIPAddress, eInServiceType, ulInBandwidthInBitsPerSecond);
 }
 
 } // namespace

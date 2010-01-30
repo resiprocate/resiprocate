@@ -86,7 +86,7 @@ MediaStream::MediaStream(asio::io_service& ioService,
 
 MediaStream::~MediaStream() 
 {
-   {   
+   {
       Lock lock(mMutex);
       
       if(mSRTPSessionOutCreated)
@@ -98,11 +98,15 @@ MediaStream::~MediaStream()
       {
          mSRTPSessionInCreated = false;
          srtp_dealloc(mSRTPSessionIn);
-      }      
+      }
    }
+
+   mRtpFlow->shutdown();
    delete mRtpFlow;
+
    if(mRtcpEnabled)
    {
+      mRtcpFlow->shutdown();
       delete mRtcpFlow;
    }
 }
@@ -287,12 +291,12 @@ MediaStream::onFlowReady(unsigned int componentId)
       {
          if(mRtpFlow->isReady() && mRtcpFlow->isReady())
          {
-            mMediaStreamHandler.onMediaStreamReady(mRtpFlow->getSessionTuple(), mRtcpFlow->getSessionTuple());
+            mMediaStreamHandler.onMediaStreamReady(this, mRtpFlow->getSessionTuple(), mRtcpFlow->getSessionTuple());
          }
       }
       else if(mRtpFlow && mRtpFlow->isReady())
       {
-         mMediaStreamHandler.onMediaStreamReady(mRtpFlow->getSessionTuple(), StunTuple());
+         mMediaStreamHandler.onMediaStreamReady(this, mRtpFlow->getSessionTuple(), StunTuple());
       }
    }
 }
@@ -300,7 +304,7 @@ MediaStream::onFlowReady(unsigned int componentId)
 void 
 MediaStream::onFlowError(unsigned int componentId, unsigned int errorCode)
 {
-   mMediaStreamHandler.onMediaStreamError(errorCode);  // TODO assign real error code
+   mMediaStreamHandler.onMediaStreamError(this, errorCode);  // TODO assign real error code
 }
 
 

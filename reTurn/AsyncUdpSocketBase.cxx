@@ -4,6 +4,7 @@
 #include "AsyncSocketBaseHandler.hxx"
 #include <rutil/Logger.hxx>
 #include "ReTurnSubsystem.hxx"
+#include "QosSocketManager.hxx"
 
 #define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
@@ -31,11 +32,18 @@ AsyncUdpSocketBase::getSocketDescriptor()
 asio::error_code 
 AsyncUdpSocketBase::bind(const asio::ip::address& address, unsigned short port)
 {
+   // DRL FIXIT! We should be setting the QOS values on the socket as it is opened. Unfortunately 
+   // we don't have that information at this point. The best solution may be to add a callback 
+   // notifying the application that the socket has been opened, allowing the QOS values to be 
+   // passed then. 
+
    asio::error_code errorCode;
    mSocket.open(address.is_v6() ? asio::ip::udp::v6() : asio::ip::udp::v4(), errorCode);
    if(!errorCode)
    {
       mSocket.set_option(asio::ip::udp::socket::reuse_address(true));
+      mSocket.set_option(asio::socket_base::receive_buffer_size(66560));
+      //mSocket.set_option(asio::socket_base::send_buffer_size(66560));
       mSocket.bind(asio::ip::udp::endpoint(address, port), errorCode);
    }
    return errorCode;
@@ -47,7 +55,11 @@ AsyncUdpSocketBase::connect(const std::string& address, unsigned short port)
    // Start an asynchronous resolve to translate the address
    // into a list of endpoints.
    resip::Data service(port);
+#ifdef USE_IPV6
    asio::ip::udp::resolver::query query(address, service.c_str());   
+#else
+   asio::ip::udp::resolver::query query(asio::ip::udp::v4(), address, service.c_str());   
+#endif
    mResolver.async_resolve(query,
         boost::bind(&AsyncSocketBase::handleUdpResolve, shared_from_this(),
                     asio::placeholders::error,
@@ -112,7 +124,26 @@ AsyncUdpSocketBase::transportFramedReceive()
 void 
 AsyncUdpSocketBase::transportClose()
 {
+   mQOSManager->SocketClose(mSocket.native());
+
    mSocket.close();
+}
+
+bool 
+AsyncUdpSocketBase::setDSCP(ULONG ulInDSCPValue)
+{
+   return mQOSManager->SocketSetDSCP(mSocket.native(), ulInDSCPValue, true);
+}
+
+bool 
+AsyncUdpSocketBase::setServiceType(
+   const asio::ip::udp::endpoint &tInDestinationIPAddress,
+   EQOSServiceTypes eInServiceType,
+   ULONG ulInBandwidthInBitsPerSecond
+)
+{
+   return mQOSManager->SocketSetServiceType(mSocket.native(), 
+      tInDestinationIPAddress, eInServiceType, ulInBandwidthInBitsPerSecond, true);
 }
 
 }

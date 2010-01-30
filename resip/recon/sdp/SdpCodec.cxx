@@ -57,6 +57,11 @@ sdpcontainer::operator<<( EncodeStream& strm, const SdpCodec& sdpCodec)
    return strm;
 }
 
+void SdpCodec::toString(resip::Data& sdpCodecString) const
+{
+   resip::DataStream ds(sdpCodecString);
+   ds << *this << '\0';
+}
 
 /* ====================================================================
 

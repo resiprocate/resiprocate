@@ -6,6 +6,7 @@
 #include "UserAgent.hxx"
 #include "RelatedConversationSet.hxx"
 #include "ReconSubsystem.hxx"
+#include "media/Mixer.hxx"
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -13,18 +14,22 @@
 
 using namespace recon;
 using namespace resip;
+using std::set;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 Conversation::Conversation(ConversationHandle handle,
+                           resip::SharedPtr<ConversationProfile> profile,
                            ConversationManager& conversationManager,
                            RelatedConversationSet* relatedConversationSet)
 : mHandle(handle),
+  mProfile(profile),
   mConversationManager(conversationManager),
   mDestroying(false),
   mNumLocalParticipants(0),
   mNumRemoteParticipants(0),
-  mNumMediaParticipants(0)
+  mNumMediaParticipants(0),
+  mMediaMixer(conversationManager.getMediaStack()->createMixer())
 {
    mConversationManager.registerConversation(this);
 
@@ -43,6 +48,10 @@ Conversation::Conversation(ConversationHandle handle,
 Conversation::~Conversation()
 {
    mConversationManager.unregisterConversation(this);
+
+   // Just in case any recording was happening, stop it
+   mMediaMixer->stopRecording();
+
    if(mRelatedConversationSet)
    {
       mRelatedConversationSet->removeConversation(mHandle);
@@ -72,6 +81,14 @@ Conversation::addParticipant(Participant* participant, unsigned int inputGain, u
    if(getParticipant(participant->getParticipantHandle()) == 0)
    {
       participant->addToConversation(this, inputGain, outputGain);
+
+      RemoteParticipant* rPart = dynamic_cast<RemoteParticipant*>(participant);
+      if ( rPart )
+      {
+         // Pause any streams that require pausing, after adding the remote
+         // participant to the conversation.
+         rPart->pauseOutboundMediaIfMarked();
+      }
    }
 }
 
@@ -125,7 +142,7 @@ Conversation::createRelatedConversation(RemoteParticipant* newForkedParticipant,
 {
    // Create new Related Conversation
    ConversationHandle relatedConvHandle = mConversationManager.getNewConversationHandle();
-   Conversation* conversation = new Conversation(relatedConvHandle, mConversationManager, mRelatedConversationSet);
+   Conversation* conversation = new Conversation(relatedConvHandle, mProfile, mConversationManager, mRelatedConversationSet);
 
    // Copy all participants to new Conversation, except origParticipant
    ParticipantMap::iterator i;
@@ -165,6 +182,9 @@ Conversation::destroy()
    }
    else
    {
+      // Stop recording just in case
+      mMediaMixer->stopRecording();
+
       // End each Participant - for local participants just remove them
       mDestroying = true;
       ParticipantMap temp = mParticipants;  // Need to copy since member list can be changed by terminating participants
@@ -264,7 +284,6 @@ Conversation::unregisterParticipant(Participant *participant)
       }
    }
 }
-
 
 /* ====================================================================
 

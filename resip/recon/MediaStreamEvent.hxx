@@ -21,7 +21,7 @@ class Message;
 class MediaStreamReadyEvent : public resip::DumCommand
 {
    public:
-      MediaStreamReadyEvent(RemoteParticipantDialogSet& remoteParticipantDialogSet, const reTurn::StunTuple& rtpTuple, const reTurn::StunTuple& rtcpTuple);
+      MediaStreamReadyEvent(resip::AppDialogSetHandle remoteParticipantDialogSet, flowmanager::MediaStream* ms, const reTurn::StunTuple& rtpTuple, const reTurn::StunTuple& rtcpTuple);
       virtual void executeCommand();
 
       Message* clone() const;
@@ -29,7 +29,8 @@ class MediaStreamReadyEvent : public resip::DumCommand
       EncodeStream& encodeBrief(EncodeStream& strm) const;
 
    private:
-      RemoteParticipantDialogSet& mRemoteParticipantDialogSet;
+      resip::AppDialogSetHandle mRemoteParticipantDialogSet;
+      flowmanager::MediaStream* mMediaStream;
       reTurn::StunTuple mRtpTuple;
       reTurn::StunTuple mRtcpTuple;
 };
@@ -37,7 +38,7 @@ class MediaStreamReadyEvent : public resip::DumCommand
 class MediaStreamErrorEvent : public resip::DumCommand
 {
    public:
-      MediaStreamErrorEvent(RemoteParticipantDialogSet& remoteParticipantDialogSet, unsigned int errorCode);
+      MediaStreamErrorEvent(resip::AppDialogSetHandle remoteParticipantDialogSet, flowmanager::MediaStream* ms, unsigned int errorCode);
       virtual void executeCommand();
 
       Message* clone() const;
@@ -45,7 +46,8 @@ class MediaStreamErrorEvent : public resip::DumCommand
       EncodeStream& encodeBrief(EncodeStream& strm) const;
 
    private:
-      RemoteParticipantDialogSet& mRemoteParticipantDialogSet;
+      resip::AppDialogSetHandle mRemoteParticipantDialogSet;
+      flowmanager::MediaStream* mMediaStream;
       unsigned int mErrorCode;
 };
 }

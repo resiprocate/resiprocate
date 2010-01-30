@@ -32,10 +32,9 @@ int _kbhit() {
 }
 #endif
 
-#include "../UserAgent.hxx"
-#include "../ReconSubsystem.hxx"
-
-#include <os/OsSysLog.h>
+#include "BasicUserAgent.hxx"
+#include "ConversationManager.hxx"
+#include "ReconSubsystem.hxx"
 
 // Test Prompts for cache testing
 #include "playback_prompt.h"
@@ -46,6 +45,8 @@ int _kbhit() {
 #include <rutil/DnsUtil.hxx>
 #include <rutil/BaseException.hxx>
 #include <rutil/WinLeakCheck.hxx>
+
+#include <boost/shared_ptr.hpp>
 
 using namespace recon;
 using namespace resip;
@@ -74,11 +75,18 @@ signalHandler(int signo)
    finished = true;
 }
 
-class MyUserAgent : public UserAgent
+class MyUserAgent : public BasicUserAgent, public ApplicationTimer
 {
 public:
-   MyUserAgent(ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile) :
-      UserAgent(conversationManager, profile) {}
+   MyUserAgent(SharedPtr<UserAgentMasterProfile> profile, recon::MediaStack* mediaStack, recon::CodecFactory* codecFactory) :
+      BasicUserAgent(profile, mediaStack, codecFactory),
+      mConvProfileHandle(0) {}
+
+   virtual void getPortRange( unsigned int& minPort, unsigned int& maxPort )
+   {
+      minPort = 0;
+      maxPort = 0;
+   }
 
    virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
    {
@@ -94,15 +102,21 @@ public:
    {
       InfoLog(<< "onSubscriptionNotify: handle=" << handle << " data=" << endl << notifyData);
    }
+
+   const ConversationProfileHandle& conversationProfile() const { return mConvProfileHandle; }
+   ConversationProfileHandle& conversationProfile() { return mConvProfileHandle; }
+
+private:
+   ConversationProfileHandle mConvProfileHandle;
 };
 
 class MyConversationManager : public ConversationManager
 {
 public:
 
-   MyConversationManager(bool localAudioEnabled)
-      : ConversationManager(localAudioEnabled),
-        mLocalAudioEnabled(localAudioEnabled)
+   MyConversationManager(UserAgent& ua)
+      : ConversationManager(ua),
+        mLocalAudioEnabled(true)
    { 
    };
 
@@ -144,7 +158,10 @@ public:
 
    virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, NameAddr& destination, ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic)
    {
-      ParticipantHandle partHandle = ConversationManager::createRemoteParticipant(convHandle, destination, forkSelectMode);
+      ConversationManager::MediaAttributes mediaAttribs;
+      mediaAttribs.audioDirection = ConversationManager::MediaDirection_SendReceive;
+      mediaAttribs.videoDirection = ConversationManager::MediaDirection_None;
+      ParticipantHandle partHandle = ConversationManager::createRemoteParticipant(convHandle, destination, mediaAttribs, forkSelectMode);
       mRemoteParticipantHandles.push_back(partHandle);
       return partHandle;
    }
@@ -201,7 +218,10 @@ public:
             addParticipant(convHandle, mLocalParticipantHandles.front());
          }
          addParticipant(mConversationHandles.front(), partHandle);
-         answerParticipant(partHandle);
+         ConversationManager::MediaAttributes mediaAttribs;
+         mediaAttribs.audioDirection = ConversationManager::MediaDirection_SendReceive;
+         mediaAttribs.videoDirection = ConversationManager::MediaDirection_None;
+         answerParticipant(partHandle, mediaAttribs);
       }
    }
 
@@ -215,10 +235,74 @@ public:
          addParticipant(convHandle, partHandle);
       }*/
    }
-    
-   virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode)
+
+   virtual void recon::ConversationManager::onIncomingJoinRequest(recon::ParticipantHandle partHandle,recon::ParticipantHandle newPartHandle,const resip::SipMessage& msg)
    {
-      InfoLog(<< "onParticipantTerminated: handle=" << partHandle);
+      InfoLog(<< "onIncomingJoinRequest: handle=" << partHandle << " msg=" << msg.brief());
+   }
+
+   virtual void recon::ConversationManager::onIncomingTransferRequest(recon::ParticipantHandle partHandle,recon::ParticipantHandle newPartHandle,const resip::SipMessage& msg)
+   {
+      InfoLog(<< "onIncomingTransferRequest: handle=" << partHandle << " msg=" << msg.brief());
+   }
+
+   virtual void onMediaStreamCreated(ParticipantHandle partHandle, boost::shared_ptr<RtpStream>)
+   {
+      InfoLog(<< "onMediaStreamCreated: handle=" << partHandle);
+   }
+
+   virtual void onRequestOutgoingParticipant(recon::ParticipantHandle transferTargetHandle, recon::ParticipantHandle /*transfererHandle*/, const resip::SipMessage& msg)
+   {
+      InfoLog(<< "onRequestOutgoingParticipant: transferTargetHandle=" << transferTargetHandle << " msg=" << msg.brief());
+   }
+
+   virtual void recon::ConversationManager::onLocalParticipantRedirected(recon::ParticipantHandle partHandle, const resip::SipMessage& msg)
+   {
+      InfoLog(<< "onLocalParticipantRedirected: handle=" << partHandle << " msg=" << msg.brief());
+   }
+
+   virtual void recon::ConversationManager::onNewOutgoingParticipant(recon::ParticipantHandle partHandle, const resip::SipMessage& msg)
+   {
+      InfoLog(<< "onNewOutgoingParticipant: handle=" << partHandle << " msg=" << msg.brief());
+   }
+
+   virtual void recon::ConversationManager::onParticipantEarlyMedia(recon::ParticipantHandle partHandle, const resip::SipMessage& msg)
+   {
+      InfoLog(<< "onParticipantEarlyMedia: handle=" << partHandle << " msg=" << msg.brief());
+   }
+
+   virtual void recon::ConversationManager::onParticipantRedirectSuccess(recon::ParticipantHandle partHandle, const resip::SipMessage* msg)
+   {
+      InfoLog(<< "onParticipantRedirectSuccess: handle=" << partHandle);
+   }
+
+   virtual void recon::ConversationManager::onParticipantRedirectFailure(recon::ParticipantHandle partHandle, unsigned int, const resip::Data&, const resip::SipMessage* msg)
+   {
+      InfoLog(<< "onParticipantRedirectFailure: handle=" << partHandle);
+   }
+
+   virtual void recon::ConversationManager::onParticipantMediaChangeRequested(recon::ParticipantHandle partHandle, recon::ConversationManager::MediaDirection, recon::ConversationManager::MediaDirection, const resip::SipMessage*)
+   {
+      InfoLog(<< "onParticipantMediaChangeRequested: handle=" << partHandle);
+      MediaAttributes mediaAttribs;
+      mediaAttribs.audioDirection = MediaDirection_SendReceive;
+      mediaAttribs.videoDirection = MediaDirection_None;
+      answerParticipant(partHandle, mediaAttribs);
+   }
+
+   virtual void recon::ConversationManager::onParticipantMediaChanged(recon::ParticipantHandle partHandle, recon::ConversationManager::MediaDirection, recon::ConversationManager::MediaDirection, const resip::SipMessage*)
+   {
+      InfoLog(<< "onParticipantMediaChanged: handle=" << partHandle);
+   }
+
+   virtual void recon::ConversationManager::onReadyToSendInvite(recon::ParticipantHandle partHandle, resip::SipMessage& msg)
+   {
+      InfoLog(<< "onReadyToSendInvite: handle=" << partHandle << " msg=" << msg.brief());
+   }
+    
+   virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode, resip::InviteSessionHandler::TerminatedReason reason, const resip::SipMessage* msg)
+   {
+      InfoLog(<< "onParticipantTerminated: handle=" << partHandle << " reason=" << reason);
    }
     
    virtual void onParticipantProceeding(ParticipantHandle partHandle, const SipMessage& msg)
@@ -308,7 +392,7 @@ public:
    bool mLocalAudioEnabled;
 };
 
-void processCommandLine(Data& commandline, MyConversationManager& myConversationManager, MyUserAgent& myUserAgent)
+void processCommandLine(Data& commandline, MyConversationManager& myConversationManager, boost::shared_ptr<MyUserAgent>& myUserAgent)
 {
    Data command;
 #define MAX_ARGS 5
@@ -533,7 +617,10 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
       unsigned long partHandle = arg[0].convertUnsignedLong();
       if(partHandle != 0)
       {
-         myConversationManager.answerParticipant(partHandle);
+         ConversationManager::MediaAttributes mediaAttribs;
+         mediaAttribs.audioDirection = ConversationManager::MediaDirection_SendReceive;
+         mediaAttribs.videoDirection = ConversationManager::MediaDirection_None;
+         myConversationManager.answerParticipant(partHandle, mediaAttribs);
       }
       else
       {
@@ -643,14 +730,14 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
          {
             NameAddr dest(arg[1]);
             Mime mime(arg[3], arg[4]);
-            myUserAgent.createSubscription(arg[0], dest, subTime, mime);
+            myUserAgent->createSubscription(arg[0], dest, subTime, mime, myUserAgent->conversationProfile());
          }
          catch(...)
          {
             NameAddr dest(uri);
             Mime mime(arg[3], arg[4]);
             dest.uri().user() = arg[1];
-            myUserAgent.createSubscription(arg[0], dest, subTime, mime);
+            myUserAgent->createSubscription(arg[0], dest, subTime, mime, myUserAgent->conversationProfile());
          }
       }
       else
@@ -665,7 +752,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
 
       if(subHandle > 0)
       {
-         myUserAgent.destroySubscription(subHandle);
+         myUserAgent->destroySubscription(subHandle);
       }
       else
       {
@@ -697,7 +784,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
             pb.skipChar(',');
          }
       }
-      unsigned int numCodecIds = idList.size();
+      size_t numCodecIds = idList.size();
       if(numCodecIds > 0)
       {
          unsigned int* codecIdArray = new unsigned int[numCodecIds];
@@ -710,7 +797,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
          Data ipAddress(conversationProfile->sessionCaps().session().connection().getAddress());
          // Note:  Technically modifying the conversation profile at runtime like this is not
          //        thread safe.  But it should be fine for this test consoles purposes.
-         myConversationManager.buildSessionCapabilities(ipAddress, numCodecIds, codecIdArray, conversationProfile->sessionCaps());
+         myConversationManager.buildSessionCapabilities(true, false, ipAddress, conversationProfile->sessionCaps());
          delete [] codecIdArray;
       }
       return;
@@ -771,6 +858,10 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
          natTraversalMode = ConversationProfile::TurnTlsAllocation;
       }
 #endif
+      else if(isEqualNoCase(arg[0], "Ice"))
+      {
+         natTraversalMode = ConversationProfile::Ice;
+      }
       else
       {
          arg[0] = "None";  // for display output only
@@ -831,7 +922,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
 
       if(durationMs > 0)
       {
-         myUserAgent.startApplicationTimer(timerId, durationMs, seqNumber);
+         myUserAgent->getTimers()->invokeOnce(myUserAgent, timerId, durationMs, seqNumber);
          InfoLog( << "Application Timer started for " << durationMs << "ms");
       }
       else
@@ -848,12 +939,12 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
    if(isEqualNoCase(command, "dns") || isEqualNoCase(command, "ld"))
    {
       InfoLog( << "DNS cache (at WARNING log level):");
-      myUserAgent.logDnsCache();
+      myUserAgent->logDnsCache();
       return;
    }
    if(isEqualNoCase(command, "cleardns") || isEqualNoCase(command, "cd"))
    {
-      myUserAgent.clearDnsCache();
+      myUserAgent->clearDnsCache();
       InfoLog( << "DNS cache has been cleared.");
       return;
    }
@@ -892,7 +983,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
          << "  setAutoAnswer            <'autoans'|'aa'> <'0'|'1'> (1 to enable (default))" << endl
          << "  setCodecs                <'setcodecs'|'sc'> <codecId>[,<codecId>]+ (comma separated list)" << endl
          << "  setSecureMediaMode       <'securemedia'|'sm'> <'None'|'Srtp'|'SrtpReq'|'SrtpDtls'|'SrtpDtlsReq'>" << endl
-         << "  setNATTraversalMode      <'natmode'|'nm'> <'None'|'Bind'|'UdpAlloc'|'TcpAlloc'|'TlsAlloc'>" << endl
+         << "  setNATTraversalMode      <'natmode'|'nm'> <'None'|'Bind'|'UdpAlloc'|'TcpAlloc'|'TlsAlloc'|'Ice'>" << endl
          << "  setNATTraversalServer    <'natserver'|'ns'> <server:port>" << endl
          << "  setNATUsername           <'natuser'|'nu'> <username>" << endl
          << "  setNATPassword           <'natpwd'|'np'> <password>" << endl
@@ -904,7 +995,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
 }
 
 #define KBD_BUFFER_SIZE 256
-void processKeyboard(char input, MyConversationManager& myConversationManager, MyUserAgent& myUserAgent)
+void processKeyboard(char input, MyConversationManager& myConversationManager, boost::shared_ptr<MyUserAgent>& myUserAgent)
 {
    static char buffer[KBD_BUFFER_SIZE];
    static int bufferpos = 0;
@@ -997,18 +1088,18 @@ main (int argc, char** argv)
    Data tlsDomain = DnsUtil::getLocalHostName();
    NameAddr outboundProxy;
    Data logLevel("INFO");
-   unsigned int codecIds[] = { SdpCodec::SDP_CODEC_PCMU /* 0 - pcmu */, 
-                               SdpCodec::SDP_CODEC_PCMA /* 8 - pcma */, 
-                               SdpCodec::SDP_CODEC_SPEEX /* 96 - speex NB 8,000bps */,
-                               SdpCodec::SDP_CODEC_SPEEX_15 /* 98 - speex NB 15,000bps */, 
-                               SdpCodec::SDP_CODEC_SPEEX_24 /* 99 - speex NB 24,600bps */,
-                               SdpCodec::SDP_CODEC_L16_44100_MONO /* PCM 16 bit/sample 44100 samples/sec. */, 
-                               SdpCodec::SDP_CODEC_ILBC /* 108 - iLBC */,
-                               SdpCodec::SDP_CODEC_ILBC_20MS /* 109 - Internet Low Bit Rate Codec, 20ms (RFC3951) */, 
-                               SdpCodec::SDP_CODEC_SPEEX_5 /* 97 - speex NB 5,950bps */,
-                               SdpCodec::SDP_CODEC_GSM /* 3 - GSM */,
-                               SdpCodec::SDP_CODEC_TONES /* 110 - telephone-event */};
-   unsigned int numCodecIds = sizeof(codecIds) / sizeof(codecIds[0]);
+//   unsigned int codecIds[] = { SdpCodec::SDP_CODEC_PCMU /* 0 - pcmu */, 
+//                               SdpCodec::SDP_CODEC_PCMA /* 8 - pcma */, 
+//                               SdpCodec::SDP_CODEC_SPEEX /* 96 - speex NB 8,000bps */,
+//                               SdpCodec::SDP_CODEC_SPEEX_15 /* 98 - speex NB 15,000bps */, 
+//                               SdpCodec::SDP_CODEC_SPEEX_24 /* 99 - speex NB 24,600bps */,
+//                               SdpCodec::SDP_CODEC_L16_44100_MONO /* PCM 16 bit/sample 44100 samples/sec. */, 
+//                               SdpCodec::SDP_CODEC_ILBC /* 108 - iLBC */,
+////                               SdpCodec::SDP_CODEC_ILBC_20MS /* 109 - Internet Low Bit Rate Codec, 20ms (RFC3951) */, 
+//                               SdpCodec::SDP_CODEC_SPEEX_5 /* 97 - speex NB 5,950bps */,
+//                               SdpCodec::SDP_CODEC_GSM /* 3 - GSM */,
+//                               SdpCodec::SDP_CODEC_TONES /* 110 - telephone-event */};
+//   unsigned int numCodecIds = sizeof(codecIds) / sizeof(codecIds[0]);
 
    // Loop through command line arguments and process them
    for(int i = 1; i < argc; i++)
@@ -1034,13 +1125,8 @@ main (int argc, char** argv)
          cout << " -td <domain name> - domain name to use for TLS server connections" << endl;
          cout << " -nk - no keepalives, set this to disable sending of keepalives" << endl;
          cout << " -op <SIP URI> - URI of a proxy server to use a SIP outbound proxy" << endl;
-#ifdef USE_SSL
          cout << " -sm <Srtp|SrtpReq|SrtpDtls|SrtpDtlsReq> - sets the secure media mode" << endl;
-         cout << " -nm <Bind|UdpAlloc|TcpAlloc|TlsAlloc> - sets the NAT traversal mode" << endl;
-#else
-         cout << " -sm <Srtp|SrtpReq> - sets the secure media mode" << endl;
-         cout << " -nm <Bind|UdpAlloc|TcpAlloc> - sets the NAT traversal mode" << endl;
-#endif
+         cout << " -nm <Bind|UdpAlloc|TcpAlloc|TlsAlloc|Ice> - sets the NAT traversal mode" << endl;
          cout << " -ns <server:port> - set the hostname and port of the NAT STUN/TURN server" << endl;
          cout << " -nu <username> - sets the STUN/TURN username to use for NAT server" << endl;
          cout << " -np <password> - sets the STUN/TURN password to use for NAT server" << endl;
@@ -1151,6 +1237,10 @@ main (int argc, char** argv)
                natTraversalMode = ConversationProfile::TurnTlsAllocation;
             }
 #endif
+            else if(isEqualNoCase(commandValue, "Ice"))
+            {
+               natTraversalMode = ConversationProfile::Ice;
+            }
             else
             {
                cerr << "Invalid NAT Traversal Mode: " << commandValue << endl;
@@ -1227,9 +1317,6 @@ main (int argc, char** argv)
       }
    }
 
-   //enableConsoleOutput(TRUE);  // Allow sipX console output
-   OsSysLog::initialize(0, "testUA");
-   OsSysLog::setOutputFile(0, "sipXtapilog.txt") ;
    Log::initialize("Cout", logLevel, "testUA");
    //UserAgent::setLogLevel(Log::Warning, UserAgent::SubsystemAll);
    //UserAgent::setLogLevel(Log::Info, UserAgent::SubsystemRecon);
@@ -1347,6 +1434,10 @@ main (int argc, char** argv)
    profile->addSupportedMimeType(UPDATE, Mime("multipart", "signed"));  
    profile->addSupportedMimeType(UPDATE, Mime("multipart", "alternative"));  
    profile->addSupportedMimeType(NOTIFY, Mime("message", "sipfrag"));  
+   profile->addSupportedMimeType(NOTIFY, Mime("multipart", "mixed"));  
+   profile->addSupportedMimeType(NOTIFY, Mime("multipart", "signed"));  
+   profile->addSupportedMimeType(NOTIFY, Mime("multipart", "alternative"));  
+   //profile->addSupportedMimeType(SUBSCRIBE, Mime("application", "simple-message-summary"));  
 
    profile->clearSupportedMethods();
    profile->addSupportedMethod(INVITE);
@@ -1462,47 +1553,61 @@ main (int argc, char** argv)
    conversationProfile->secureMediaRequired() = secureMediaRequired;
    conversationProfile->secureMediaDefaultCryptoSuite() = ConversationProfile::SRTP_AES_CM_128_HMAC_SHA1_80;
 
+   // Uncomment to test anonymous calling code
+   // conversationProfile->isAnonymous() = true;
+   // conversationProfile->isPrivacyRewriteFrom() = true;
+
    //////////////////////////////////////////////////////////////////////////////
    // Create ConverationManager and UserAgent
    //////////////////////////////////////////////////////////////////////////////
    {
-      MyConversationManager myConversationManager(localAudioEnabled);
-      MyUserAgent ua(&myConversationManager, profile);
-      myConversationManager.buildSessionCapabilities(address, numCodecIds, codecIds, conversationProfile->sessionCaps());
-      ua.addConversationProfile(conversationProfile);
+      // .jjg. TODO -- media stack initialization goes here
+      recon::MediaStack* mediaStack = NULL;
+      recon::CodecFactory* codecFactory = NULL;
+
+      boost::shared_ptr<MyUserAgent> ua(new MyUserAgent(profile, mediaStack, codecFactory));
+      boost::shared_ptr<MyConversationManager> myConversationManager(new MyConversationManager(*ua));
+      myConversationManager->buildSessionCapabilities(true, false, address, conversationProfile->sessionCaps());
+      ua->setConversationManager(myConversationManager.get());
+      ua->conversationProfile() = myConversationManager->addConversationProfile(conversationProfile);
+      RegistrationManager* rm = ua->getRegistrationManager();
 
       //////////////////////////////////////////////////////////////////////////////
       // Startup and run...
       //////////////////////////////////////////////////////////////////////////////
 
-      ua.startup();
-      myConversationManager.startup();
+      ua->startup();
+      myConversationManager->startup();
+      rm->makeRegistration(ua->conversationProfile());
 
       //ua.createSubscription("message-summary", uri, 120, Mime("application", "simple-message-summary")); // thread safe
 
       int input;
       while(true)
       {
-         ua.process(50);
+         ua->process(50);
          while(_kbhit() != 0)
          {
 #ifdef WIN32
             input = _getch();
-            processKeyboard(input, myConversationManager, ua);
+            processKeyboard(input, *myConversationManager, ua);
 #else
             input = fgetc(stdin);
             fflush(stdin);
             //cout << "input: " << input << endl;
-            processKeyboard(input, myConversationManager, ua);
+            processKeyboard(input, *myConversationManager, ua);
 #endif
          }
          if(finished) break;
       }
 
-      ua.shutdown();
+      rm->destroyRegistration(ua->conversationProfile());
+      ua->shutdown();
+
+      // .jjg. TODO -- media stack shutdown
    }
    InfoLog(<< "testUA is shutdown.");
-   OsSysLog::shutdown();
+
    sleepSeconds(2);
 
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 

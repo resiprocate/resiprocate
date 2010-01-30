@@ -6,7 +6,7 @@
 #include <resip/dum/DialogSetHandler.hxx>
 #include <resip/dum/SubscriptionHandler.hxx>
 
-#include "UserAgent.hxx"
+#include "BasicUserAgent.hxx"
 
 namespace resip
 {
@@ -27,7 +27,7 @@ class UserAgent;
 class UserAgentClientSubscription : public resip::AppDialogSet
 {
    public:  
-      UserAgentClientSubscription(UserAgent& userAgent, resip::DialogUsageManager& dum, unsigned int handle);  
+      UserAgentClientSubscription(BasicUserAgent& userAgent, resip::DialogUsageManager& dum, unsigned int handle);  
       virtual ~UserAgentClientSubscription();
 
       SubscriptionHandle getSubscriptionHandle();
@@ -44,7 +44,7 @@ class UserAgentClientSubscription : public resip::AppDialogSet
    private:       
       void notifyReceived(const resip::Data& notifyData);
 
-      UserAgent &mUserAgent;
+      BasicUserAgent &mUserAgent;
       resip::DialogUsageManager &mDum;
       SubscriptionHandle mSubscriptionHandle;
       size_t mLastNotifyHash;

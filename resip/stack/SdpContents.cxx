@@ -1206,14 +1206,16 @@ SdpContents::Session::Medium::Medium(const Data& name,
      mPort(port),
      mMulticast(multicast),
      mProtocol(protocol),
-     mRtpMapDone(false)
+     mRtpMapDone(false),
+     mEncodeAttribsForStaticPLs(true)
 {}
 
 SdpContents::Session::Medium::Medium()
    : mSession(0),
      mPort(0),
      mMulticast(1),
-     mRtpMapDone(false)
+     mRtpMapDone(false),
+     mEncodeAttribsForStaticPLs(true)
 {}
 
 SdpContents::Session::Medium::Medium(const Medium& rhs)
@@ -1231,7 +1233,8 @@ SdpContents::Session::Medium::Medium(const Medium& rhs)
      mEncryption(rhs.mEncryption),
      mAttributeHelper(rhs.mAttributeHelper),
      mRtpMapDone(rhs.mRtpMapDone),
-     mRtpMap(rhs.mRtpMap)
+     mRtpMap(rhs.mRtpMap),
+     mEncodeAttribsForStaticPLs(rhs.mEncodeAttribsForStaticPLs)
 {
 }
 
@@ -1256,6 +1259,7 @@ SdpContents::Session::Medium::operator=(const Medium& rhs)
       mAttributeHelper = rhs.mAttributeHelper;
       mRtpMapDone = rhs.mRtpMapDone;
       mRtpMap = rhs.mRtpMap;
+      mEncodeAttribsForStaticPLs = rhs.mEncodeAttribsForStaticPLs;
    }
    return *this;
 }
@@ -1440,21 +1444,22 @@ SdpContents::Session::Medium::encode(EncodeStream& s) const
 
    if (!mCodecs.empty())
    {
+      Codec::CodecMap& staticCodecs = Codec::getStaticCodecs();
+
       // add codecs to information and attributes
       for (CodecContainer::const_iterator i = mCodecs.begin();
            i != mCodecs.end(); ++i)
       {
           // If codec is static (defined in RFC 3551) we probably shouldn't
           // add attributes for it. But some UAs do include them.
-          //Codec::CodecMap& staticCodecs = Codec::getStaticCodecs();
-          //if (staticCodecs.find(i->payloadType()) != staticCodecs.end())
-          //{
-          //    continue;
-          //}
-
+         if (!i->parameters().empty() || encodeAttribsForStaticPLs() || (!encodeAttribsForStaticPLs() && staticCodecs.find(i->payloadType()) == staticCodecs.end()))
+         {
          s << "a=rtpmap:"
            << i->payloadType() << Symbols::SPACE[0] << *i
            << Symbols::CRLF;
+         }
+
+         // Always include the fmtp params
          if (!i->parameters().empty())
          {
             s << "a=fmtp:"

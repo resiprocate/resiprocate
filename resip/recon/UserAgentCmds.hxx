@@ -1,9 +1,10 @@
-#if !defined(ConversationManagerCmds_hxx)
-#define ConversationManagerCmds_hxx
+#if !defined(UserAgentCmds_hxx)
+#define UserAgentCmds_hxx
 
 #include <resip/dum/DumCommand.hxx>
 
-#include "UserAgent.hxx"
+#include "BasicUserAgent.hxx"
+#include "ConversationManager.hxx"
 
 namespace recon
 {
@@ -20,7 +21,7 @@ namespace recon
 class UserAgentShutdownCmd  : public resip::DumCommand
 {
    public:  
-      UserAgentShutdownCmd(UserAgent* userAgent)
+      UserAgentShutdownCmd(BasicUserAgent* userAgent)
          : mUserAgent(userAgent) {}
       virtual void executeCommand()
       {
@@ -30,133 +31,51 @@ class UserAgentShutdownCmd  : public resip::DumCommand
       EncodeStream& encode(EncodeStream& strm) const { strm << " UserAgentShutdownCmd: "; return strm; }
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
-      UserAgent* mUserAgent;
-};
-
-class AddConversationProfileCmd  : public resip::DumCommand
-{
-   public:  
-      AddConversationProfileCmd(UserAgent* userAgent,
-                                ConversationProfileHandle handle,
-                                resip::SharedPtr<ConversationProfile> conversationProfile,
-                                bool defaultOutgoing)
-         : mUserAgent(userAgent),
-           mHandle(handle),
-           mConversationProfile(conversationProfile),
-           mDefaultOutgoing(defaultOutgoing) {}
-      virtual void executeCommand()
-      {
-         mUserAgent->addConversationProfileImpl(mHandle, mConversationProfile, mDefaultOutgoing);
-      }
-      resip::Message* clone() const { assert(0); return 0; }
-      EncodeStream& encode(EncodeStream& strm) const { strm << " AddConversationProfileCmd: "; return strm; }
-      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
-   private:
-      UserAgent* mUserAgent;
-      ConversationProfileHandle mHandle;
-      resip::SharedPtr<ConversationProfile> mConversationProfile;
-      bool mDefaultOutgoing;
-};
-
-class SetDefaultOutgoingConversationProfileCmd  : public resip::DumCommand
-{
-   public:  
-      SetDefaultOutgoingConversationProfileCmd(UserAgent* userAgent,
-                                               ConversationProfileHandle handle)
-         : mUserAgent(userAgent),
-           mHandle(handle) {}
-      virtual void executeCommand()
-      {
-         mUserAgent->setDefaultOutgoingConversationProfileImpl(mHandle);
-      }
-      resip::Message* clone() const { assert(0); return 0; }
-      EncodeStream& encode(EncodeStream& strm) const { strm << " SetDefaultOutgoingConversationProfileCmd: "; return strm; }
-      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
-   private:
-      UserAgent* mUserAgent;
-      ConversationProfileHandle mHandle;
-};
-
-class DestroyConversationProfileCmd  : public resip::DumCommand
-{
-   public:  
-      DestroyConversationProfileCmd(UserAgent* userAgent,
-                                    ConversationProfileHandle handle)
-         : mUserAgent(userAgent),
-           mHandle(handle) {}
-      virtual void executeCommand()
-      {
-         mUserAgent->destroyConversationProfileImpl(mHandle);
-      }
-      resip::Message* clone() const { assert(0); return 0; }
-      EncodeStream& encode(EncodeStream& strm) const { strm << " DestroyConversationProfileCmd: "; return strm; }
-      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
-   private:
-      UserAgent* mUserAgent;
-      ConversationProfileHandle mHandle;
-};
-
-class UserAgentTimeout : public resip::DumCommand
-{
-   public:
-      UserAgentTimeout(UserAgent& userAgent, unsigned int timerId, unsigned int duration, unsigned int seqNumber) :
-         mUserAgent(userAgent), mTimerId(timerId), mDuration(duration), mSeqNumber(seqNumber) {}
-      UserAgentTimeout(const UserAgentTimeout& rhs) :
-         mUserAgent(rhs.mUserAgent), mTimerId(rhs.mTimerId), mDuration(rhs.mDuration), mSeqNumber(rhs.mSeqNumber) {}
-      ~UserAgentTimeout() {}
-
-      void executeCommand() { mUserAgent.onApplicationTimer(mTimerId, mDuration, mSeqNumber); }
-
-      resip::Message* clone() const { return new UserAgentTimeout(*this); }
-      EncodeStream& encode(EncodeStream& strm) const { strm << "UserAgentTimeout: id=" << mTimerId << ", duration=" << mDuration << ", seq=" << mSeqNumber; return strm; }
-      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
-
-      unsigned int id() const { return mTimerId; }
-      unsigned int seqNumber() const { return mSeqNumber; }
-      unsigned int duration() const { return mDuration; }
-      
-   private:
-      UserAgent& mUserAgent;
-      unsigned int mTimerId;
-      unsigned int mDuration;
-      unsigned int mSeqNumber;
+      BasicUserAgent* mUserAgent;
 };
 
 class CreateSubscriptionCmd  : public resip::DumCommand
 {
    public:  
-      CreateSubscriptionCmd(UserAgent* userAgent,
+      CreateSubscriptionCmd(BasicUserAgent* userAgent,
+                            ConversationManager* conversationManager,
                             SubscriptionHandle handle,
                             const resip::Data& eventType, 
                             const resip::NameAddr& target, 
                             unsigned int subscriptionTime, 
-                            const resip::Mime& mimeType)
+                            const resip::Mime& mimeType,
+                            ConversationProfileHandle convProfile)
          : mUserAgent(userAgent),
+           mConversationManager(conversationManager),
            mHandle(handle),
            mEventType(eventType),
            mTarget(target),
            mSubscriptionTime(subscriptionTime),
-           mMimeType(mimeType) {}
+           mMimeType(mimeType),
+           mConvProfile(convProfile) {}
       virtual void executeCommand()
       {
-         mUserAgent->createSubscriptionImpl(mHandle, mEventType, mTarget, mSubscriptionTime, mMimeType);
+         resip::SharedPtr<ConversationProfile> cp = mConversationManager->getConversationProfile(mConvProfile);
+         mUserAgent->createSubscriptionImpl(mHandle, mEventType, mTarget, mSubscriptionTime, mMimeType, cp);
       }
       resip::Message* clone() const { assert(0); return 0; }
       EncodeStream& encode(EncodeStream& strm) const { strm << " CreateSubscriptionCmd: "; return strm; }
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
-      UserAgent* mUserAgent;
+      BasicUserAgent* mUserAgent;
+      ConversationManager* mConversationManager;
       SubscriptionHandle mHandle;
       resip::Data mEventType;
       resip::NameAddr mTarget;
       unsigned int mSubscriptionTime;
       resip::Mime mMimeType;
+      ConversationProfileHandle mConvProfile;
 };
 
 class DestroySubscriptionCmd  : public resip::DumCommand
 {
    public:  
-      DestroySubscriptionCmd(UserAgent* userAgent,
+      DestroySubscriptionCmd(BasicUserAgent* userAgent,
                              SubscriptionHandle handle)
          : mUserAgent(userAgent),
            mHandle(handle) {}
@@ -168,7 +87,7 @@ class DestroySubscriptionCmd  : public resip::DumCommand
       EncodeStream& encode(EncodeStream& strm) const { strm << " DestroySubscriptionCmd: "; return strm; }
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
-      UserAgent* mUserAgent;
+      BasicUserAgent* mUserAgent;
       SubscriptionHandle mHandle;
 };
 

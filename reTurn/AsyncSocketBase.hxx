@@ -8,8 +8,9 @@
 
 #include "DataBuffer.hxx"
 #include "StunTuple.hxx"
+#include "QosSocketManager.hxx"  // import EQOSServiceTypes
 
-#define RECEIVE_BUFFER_SIZE 2048 // ?slg? should we shrink this to something closer to MTU (1500 bytes)?
+#define RECEIVE_BUFFER_SIZE 4096 // ?slg? should we shrink this to something closer to MTU (1500 bytes)? !hbr! never actually increase it otherwise re-assembled UDP packets get lost. (was 2048)
 
 namespace reTurn {
 
@@ -70,6 +71,12 @@ public:
    virtual void handleConnect(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator) { assert(false); }
    virtual void handleClientHandshake(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator) { assert(false); }
 
+   virtual bool setDSCP(ULONG ulInDSCPValue) = 0;
+   virtual bool setServiceType(
+      const asio::ip::udp::endpoint &tInDestinationIPAddress,
+      EQOSServiceTypes eInServiceType,
+      ULONG ulInBandwidthInBitsPerSecond) = 0;
+
 protected:
    /// Handle completion of a sendData operation.
    virtual void handleSend(const asio::error_code& e);
@@ -89,6 +96,7 @@ protected:
 
    /// Handlers
    AsyncSocketBaseHandler* mAsyncSocketBaseHandler;
+   QosSocketManager* mQOSManager;
 
 private:
    virtual void transportSend(const StunTuple& destination, std::vector<asio::const_buffer>& buffers) = 0;

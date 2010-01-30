@@ -27,6 +27,12 @@ public:
    virtual const asio::ip::address getSenderEndpointAddress();
    virtual unsigned short getSenderEndpointPort();
 
+   virtual bool setDSCP(ULONG ulInDSCPValue);
+   virtual bool setServiceType(
+      const asio::ip::udp::endpoint &tInDestinationIPAddress,
+      EQOSServiceTypes eInServiceType,
+      ULONG ulInBandwidthInBitsPerSecond);
+
 protected:
    asio::ip::udp::socket mSocket;
    asio::ip::udp::resolver mResolver;

@@ -9,10 +9,12 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::RECON
 
-MediaStreamReadyEvent::MediaStreamReadyEvent(RemoteParticipantDialogSet& remoteParticipantDialogSet, 
+MediaStreamReadyEvent::MediaStreamReadyEvent(resip::AppDialogSetHandle remoteParticipantDialogSet, 
+                                             flowmanager::MediaStream* ms, 
                                              const reTurn::StunTuple& rtpTuple, 
                                              const reTurn::StunTuple& rtcpTuple) : 
    mRemoteParticipantDialogSet(remoteParticipantDialogSet),
+   mMediaStream(ms),
    mRtpTuple(rtpTuple),
    mRtcpTuple(rtcpTuple)
 {
@@ -21,7 +23,14 @@ MediaStreamReadyEvent::MediaStreamReadyEvent(RemoteParticipantDialogSet& remoteP
 void 
 MediaStreamReadyEvent::executeCommand()
 {
-   mRemoteParticipantDialogSet.processMediaStreamReadyEvent(mRtpTuple, mRtcpTuple);
+   if (mRemoteParticipantDialogSet.isValid())
+   {
+      RemoteParticipantDialogSet* remoteParticipantDialogSet = dynamic_cast<RemoteParticipantDialogSet *>(mRemoteParticipantDialogSet.get());
+      if (remoteParticipantDialogSet)
+      {
+         remoteParticipantDialogSet->processMediaStreamReadyEvent(mMediaStream, mRtpTuple, mRtcpTuple);
+      }
+   }
 }
 
 resip::Message* 
@@ -45,9 +54,11 @@ MediaStreamReadyEvent::encodeBrief(EncodeStream& strm) const
 }
 
 
-MediaStreamErrorEvent::MediaStreamErrorEvent(RemoteParticipantDialogSet& remoteParticipantDialogSet, 
+MediaStreamErrorEvent::MediaStreamErrorEvent(resip::AppDialogSetHandle remoteParticipantDialogSet,
+                                             flowmanager::MediaStream* ms, 
                                              unsigned int errorCode) : 
    mRemoteParticipantDialogSet(remoteParticipantDialogSet),
+   mMediaStream(ms),
    mErrorCode(errorCode)
 {
 }
@@ -55,7 +66,14 @@ MediaStreamErrorEvent::MediaStreamErrorEvent(RemoteParticipantDialogSet& remoteP
 void 
 MediaStreamErrorEvent::executeCommand()
 {
-   mRemoteParticipantDialogSet.processMediaStreamErrorEvent(mErrorCode);
+   if (mRemoteParticipantDialogSet.isValid())
+   {
+      RemoteParticipantDialogSet* remoteParticipantDialogSet = dynamic_cast<RemoteParticipantDialogSet *>(mRemoteParticipantDialogSet.get());
+      if (remoteParticipantDialogSet)
+      {
+         remoteParticipantDialogSet->processMediaStreamErrorEvent(mMediaStream, mErrorCode);
+      }
+   }
 }
 
 resip::Message* 

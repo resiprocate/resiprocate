@@ -16,6 +16,7 @@ TurnUdpSocket::TurnUdpSocket(const asio::ip::address& address, unsigned short po
    if(!errorCode)
    {
       mSocket.set_option(asio::ip::udp::socket::reuse_address(true));
+      // mSocket.set_option(asio::socket_base::receive_buffer_size(66560));
       mSocket.bind(asio::ip::udp::endpoint(mLocalBinding.getAddress(), mLocalBinding.getPort()), errorCode);
    }
 }
@@ -28,7 +29,11 @@ TurnUdpSocket::connect(const std::string& address, unsigned short port)
    // Get a list of endpoints corresponding to the server name.
    asio::ip::udp::resolver resolver(mIOService);
    resip::Data service(port);
+#ifdef USE_IPV6
    asio::ip::udp::resolver::query query(address, service.c_str());   
+#else
+   asio::ip::udp::resolver::query query(asio::ip::udp::v4(), address, service.c_str());   
+#endif
    asio::ip::udp::resolver::iterator endpoint_iterator = resolver.resolve(query);
    asio::ip::udp::resolver::iterator end;
 

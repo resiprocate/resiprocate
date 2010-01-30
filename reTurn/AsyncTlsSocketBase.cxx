@@ -1,4 +1,3 @@
-#ifdef USE_SSL
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 
@@ -9,6 +8,7 @@
 #include "AsyncSocketBaseHandler.hxx"
 #include <rutil/Logger.hxx>
 #include "ReTurnSubsystem.hxx"
+#include "QosSocketManager.hxx"
 
 #define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
@@ -56,7 +56,11 @@ AsyncTlsSocketBase::connect(const std::string& address, unsigned short port)
    // Start an asynchronous resolve to translate the address
    // into a list of endpoints.
    resip::Data service(port);
+#ifdef USE_IPV6
    asio::ip::tcp::resolver::query query(address, service.c_str());   
+#else
+   asio::ip::tcp::resolver::query query(asio::ip::tcp::v4(), address, service.c_str());   
+#endif
    mResolver.async_resolve(query,
         boost::bind(&AsyncSocketBase::handleTcpResolve, shared_from_this(),
                     asio::placeholders::error,
@@ -300,6 +304,8 @@ AsyncTlsSocketBase::transportFramedReceive()
 void 
 AsyncTlsSocketBase::transportClose()
 {
+   mQOSManager->SocketClose(mSocket.lowest_layer().native());
+
    asio::error_code ec;
    //mSocket.shutdown(ec);  // ?slg? Should we use async_shutdown? !slg! note: this fn gives a stack overflow since ASIO 1.0.0 for some reason
    mSocket.lowest_layer().close();
@@ -350,8 +356,24 @@ AsyncTlsSocketBase::handleReadHeader(const asio::error_code& e)
    }
 }
 
+bool 
+AsyncTlsSocketBase::setDSCP(ULONG ulInDSCPValue)
+{
+   return mQOSManager->SocketSetDSCP(mSocket.lowest_layer().native(), ulInDSCPValue, false);
 }
-#endif
+
+bool 
+AsyncTlsSocketBase::setServiceType(
+   const asio::ip::udp::endpoint &tInDestinationIPAddress,
+   EQOSServiceTypes eInServiceType,
+   ULONG ulInBandwidthInBitsPerSecond
+)
+{
+   return mQOSManager->SocketSetServiceType(mSocket.lowest_layer().native(), 
+      tInDestinationIPAddress, eInServiceType, ulInBandwidthInBitsPerSecond, false);
+}
+
+}
 
 /* ====================================================================
 

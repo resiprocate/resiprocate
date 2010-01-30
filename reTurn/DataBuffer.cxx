@@ -5,20 +5,35 @@
 
 namespace reTurn {
 
-DataBuffer::DataBuffer(const char* data, unsigned int size) : 
-mBuffer(size != 0 ? new char[size] : 0), mSize(size), mStart(mBuffer) 
+DataBuffer::DataBuffer(const char* data, unsigned int size)
 {
-   memcpy(mBuffer, data, size);
+   mBuffer = 0;
+   mSize   = size;
+   if ( mSize > 0 )
+   {
+      mBuffer = new char[mSize];
+      memcpy(mBuffer, data, mSize);
+   }
+   mStart = mBuffer;
 }
 
-DataBuffer::DataBuffer(unsigned int size) : 
-mBuffer(size != 0 ? new char[size] : 0), mSize(size), mStart(mBuffer) 
+DataBuffer::DataBuffer(unsigned int size)
 {
+   mBuffer = 0;
+   mSize   = size;
+   if ( mSize > 0 )
+   {
+      mBuffer = new char[mSize];
+      memset(mBuffer, 0, mSize);
+   }
+
+   mStart  = mBuffer;
 }
 
 DataBuffer::~DataBuffer() 
 { 
-   delete[] mBuffer; 
+   if ( mBuffer != 0 )
+      delete [] mBuffer;
 }
 
 const char* 

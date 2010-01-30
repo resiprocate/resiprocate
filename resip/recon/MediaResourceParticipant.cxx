@@ -4,6 +4,7 @@
 #include "ConversationManager.hxx"
 #include "Conversation.hxx"
 #include "UserAgent.hxx"
+#include "media/Mixer.hxx"
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -11,12 +12,6 @@
 #include <rutil/WinLeakCheck.hxx>
 
 #include "ConversationManagerCmds.hxx"
-
-// sipX includes
-#include <CpTopologyGraphInterface.h>
-#include <mp/dtmflib.h>
-#include <mp/MprFromFile.h>
-#include <mp/MpStreamPlayer.h>
 
 using namespace recon;
 using namespace resip;
@@ -75,14 +70,15 @@ MediaResourceParticipant::MediaResourceParticipant(ParticipantHandle partHandle,
                                                    Uri& mediaUrl)
 : Participant(partHandle, conversationManager),
   mMediaUrl(mediaUrl),
-  mStreamPlayer(0),
   mLocalOnly(false),
   mRemoteOnly(false),
   mRepeat(false),
   mPrefetch(false),
   mDurationMs(0),
   mPlaying(false),
-  mDestroying(false)
+  mDestroying(false),
+  mToneGenPortOnBridge(-1),
+  mFromFilePortOnBridge(-1)
 {
    InfoLog(<< "MediaResourceParticipant created, handle=" << mHandle << " url=" << mMediaUrl);
    mResourceType = Invalid;  // default
@@ -117,19 +113,14 @@ MediaResourceParticipant::MediaResourceParticipant(ParticipantHandle partHandle,
    {
       WarningLog(<< "MediaResourceParticipant::MediaResourceParticipant unknown exception");
    }
-   ((CpTopologyGraphInterface*)mConversationManager.getMediaInterface())->getResourceInputPortOnBridge(DEFAULT_TONE_GEN_RESOURCE_NAME,0,mToneGenPortOnBridge);
-   ((CpTopologyGraphInterface*)mConversationManager.getMediaInterface())->getResourceInputPortOnBridge(DEFAULT_FROM_FILE_RESOURCE_NAME,0,mFromFilePortOnBridge);
+
+   // !jjg! fixme
+   //((CpTopologyGraphInterface*)mConversationManager.getMediaInterface())->getResourceInputPortOnBridge(DEFAULT_TONE_GEN_RESOURCE_NAME,0,mToneGenPortOnBridge);
+   //((CpTopologyGraphInterface*)mConversationManager.getMediaInterface())->getResourceInputPortOnBridge(DEFAULT_FROM_FILE_RESOURCE_NAME,0,mFromFilePortOnBridge);
 }
 
 MediaResourceParticipant::~MediaResourceParticipant()
 {
-   // Destroy stream player (if created)
-   if(mStreamPlayer)
-   {
-      mStreamPlayer->removeListener(this);
-      mStreamPlayer->destroy();
-   }
-
    // unregister from Conversations
    // Note:  ideally this functionality would exist in Participant Base class - but dynamic_cast required in unregisterParticipant will not work
    ConversationMap::iterator it;
@@ -181,38 +172,82 @@ MediaResourceParticipant::startPlay()
       {
       case Tone:
       {
-         int toneid;
+         // !jjg! fixme
+         int toneid = -1;
          if(mMediaUrl.host().size() == 1)
          {
-            toneid = mMediaUrl.host().at(0);
-         }
-         else
-         {
-            if(isEqualNoCase(mMediaUrl.host(), dialtoneTone)) toneid = DTMF_TONE_DIALTONE;
-            else if(isEqualNoCase(mMediaUrl.host(), busyTone)) toneid = DTMF_TONE_BUSY;
-            else if(isEqualNoCase(mMediaUrl.host(), ringbackTone)) toneid = DTMF_TONE_RINGBACK;
-            else if(isEqualNoCase(mMediaUrl.host(), ringTone)) toneid = DTMF_TONE_RINGTONE;
-            else if(isEqualNoCase(mMediaUrl.host(), fastbusyTone)) toneid = DTMF_TONE_CALLFAILED;
-            else if(isEqualNoCase(mMediaUrl.host(), backspaceTone)) toneid = DTMF_TONE_BACKSPACE;
-            else if(isEqualNoCase(mMediaUrl.host(), callwaitingTone)) toneid = DTMF_TONE_CALLWAITING;
-            else if(isEqualNoCase(mMediaUrl.host(), holdingTone)) toneid = DTMF_TONE_CALLHELD;
-            else if(isEqualNoCase(mMediaUrl.host(), loudfastbusyTone)) toneid = DTMF_TONE_LOUD_FAST_BUSY;
+            if (resip::isEqualNoCase(mMediaUrl.host(),"*"))
+            {
+               toneid = 10;
+            }
+            else if (resip::isEqualNoCase(mMediaUrl.host(),"#"))
+            {
+               toneid = 11;
+            }
+            else if (resip::isEqualNoCase(mMediaUrl.host(),"A"))
+            {
+               toneid = 12;
+            }
+            else if (resip::isEqualNoCase(mMediaUrl.host(),"B"))
+            {
+               toneid = 13;
+            }
+            else if (resip::isEqualNoCase(mMediaUrl.host(),"C"))
+            {
+               toneid = 14;
+            }
+            else if (resip::isEqualNoCase(mMediaUrl.host(),"D"))
+            {
+               toneid = 15;
+            }
             else
             {
-               WarningLog(<< "MediaResourceParticipant::startPlay invalid tone identifier: " << mMediaUrl.host());
-               return;
+               char c = mMediaUrl.host().at(0);
+               if (c >= 48 && c <= 57)
+               {
+                  toneid = mMediaUrl.host().convertInt();
+               }
             }
          }
-
-         OsStatus status = mConversationManager.getMediaInterface()->startTone(toneid, mRemoteOnly ? FALSE : TRUE /* local */, mLocalOnly ? FALSE : TRUE /* remote */);
-         if(status == OS_SUCCESS)
-         {
-            mPlaying = true;
-         }
+         //else
+         //{
+         //   if(isEqualNoCase(mMediaUrl.host(), dialtoneTone)) toneid = DTMF_TONE_DIALTONE;
+         //   else if(isEqualNoCase(mMediaUrl.host(), busyTone)) toneid = DTMF_TONE_BUSY;
+         //   else if(isEqualNoCase(mMediaUrl.host(), ringbackTone)) toneid = DTMF_TONE_RINGBACK;
+         //   else if(isEqualNoCase(mMediaUrl.host(), ringTone)) toneid = DTMF_TONE_RINGTONE;
+         //   else if(isEqualNoCase(mMediaUrl.host(), fastbusyTone)) toneid = DTMF_TONE_CALLFAILED;
+         //   else if(isEqualNoCase(mMediaUrl.host(), backspaceTone)) toneid = DTMF_TONE_BACKSPACE;
+         //   else if(isEqualNoCase(mMediaUrl.host(), callwaitingTone)) toneid = DTMF_TONE_CALLWAITING;
+         //   else if(isEqualNoCase(mMediaUrl.host(), holdingTone)) toneid = DTMF_TONE_CALLHELD;
+         //   else if(isEqualNoCase(mMediaUrl.host(), loudfastbusyTone)) toneid = DTMF_TONE_LOUD_FAST_BUSY;
          else
          {
-            WarningLog(<< "MediaResourceParticipant::startPlay error calling startTone: " << status);
+            WarningLog(<< "MediaResourceParticipant::startPlay invalid tone identifier: " << mMediaUrl.host());
+            return;
          }
+         //}
+         if (toneid == -1)
+         {
+            WarningLog(<< "MediaResourceParticipant::startPlay invalid tone identifier: " << mMediaUrl.host());
+            return;
+         }
+
+         ConversationMap::const_iterator convIter = getConversations().begin();
+         for (; convIter != getConversations().end(); ++convIter)
+         {
+            Conversation* conv = convIter->second;
+            const Mixer::RtpStreams& streams = conv->getMixer()->rtpStreams();
+            Mixer::RtpStreams::const_iterator it = streams.begin();
+            for (; it != streams.end(); ++it)
+            {
+               const boost::shared_ptr<RtpStream>& stream = *it;
+               if (stream->mediaType() == MediaStack::MediaType_Audio)
+               {
+                  stream->playTone(toneid, mLocalOnly, mRemoteOnly);
+               }
+            }
+         }
+         mPlaying = true;
       }
       break;
       case File:
@@ -225,90 +260,93 @@ MediaResourceParticipant::startPlay()
 
          InfoLog(<< "MediaResourceParticipant playing, handle=" << mHandle << " filepath=" << filepath);
 
-         OsStatus status = mConversationManager.getMediaInterface()->playAudio(filepath.c_str(), 
-                                                                               mRepeat ? TRUE: FALSE /* repeast? */,
-                                                                               mRemoteOnly ? FALSE : TRUE /* local */, 
-                                                                               mLocalOnly ? FALSE : TRUE /* remote */,
-                                                                               FALSE /* mixWithMic */,
-                                                                               100 /* downScaling */);
-         if(status == OS_SUCCESS)
-         {
-            mPlaying = true;
-         }
-         else
-         {
-            WarningLog(<< "MediaResourceParticipant::startPlay error calling playAudio: " << status);
-         }
+         // !jjg! fixme
+         //OsStatus status = mConversationManager.getMediaInterface()->playAudio(filepath.c_str(), 
+         //                                                                      mRepeat ? TRUE: FALSE /* repeast? */,
+         //                                                                      mRemoteOnly ? FALSE : TRUE /* local */, 
+         //                                                                      mLocalOnly ? FALSE : TRUE /* remote */,
+         //                                                                      FALSE /* mixWithMic */,
+         //                                                                      100 /* downScaling */);
+         //if(status == OS_SUCCESS)
+         //{
+         //   mPlaying = true;
+         //}
+         //else
+         //{
+         //   WarningLog(<< "MediaResourceParticipant::startPlay error calling playAudio: " << status);
+         //}
       }
       break;
       case Cache:
       {
          InfoLog(<< "MediaResourceParticipant playing, handle=" << mHandle << " cacheKey=" << mMediaUrl.host());
 
-         Data *buffer;
-         int type;
-         if(mConversationManager.mMediaResourceCache.getFromCache(mMediaUrl.host(), &buffer, &type))
-         {
-            OsStatus status = mConversationManager.getMediaInterface()->playBuffer((char*)buffer->data(),
-                                                                                   buffer->size(), 
-                                                                                   8000, /* rate */
-                                                                                   type, 
-                                                                                   mRepeat ? TRUE: FALSE /* repeast? */,
-                                                                                   mRemoteOnly ? FALSE : TRUE /* local */, 
-                                                                                   mLocalOnly ? FALSE : TRUE /* remote */,
-                                                                                   NULL /* OsProtectedEvent */,
-                                                                                   FALSE /* mixWithMic */,
-                                                                                   100 /* downScaling */);
-            if(status == OS_SUCCESS)
-            {
-               mPlaying = true;
-            }
-            else
-            {
-               WarningLog(<< "MediaResourceParticipant::startPlay error calling playAudio: " << status);
-            }
-         }
-         else
-         {
-            WarningLog(<< "MediaResourceParticipant::startPlay media not found in cache, key: " << mMediaUrl.host());
-         }
+			// !jjg! fixme
+         //Data *buffer;
+         //int type;
+         //if(mConversationManager.mMediaResourceCache.getFromCache(mMediaUrl.host(), &buffer, &type))
+         //{
+         //   OsStatus status = mConversationManager.getMediaInterface()->playBuffer((char*)buffer->data(),
+         //                                                                          buffer->size(), 
+         //                                                                          8000, /* rate */
+         //                                                                          type, 
+         //                                                                          mRepeat ? TRUE: FALSE /* repeast? */,
+         //                                                                          mRemoteOnly ? FALSE : TRUE /* local */, 
+         //                                                                          mLocalOnly ? FALSE : TRUE /* remote */,
+         //                                                                          NULL /* OsProtectedEvent */,
+         //                                                                          FALSE /* mixWithMic */,
+         //                                                                          100 /* downScaling */);
+         //   if(status == OS_SUCCESS)
+         //   {
+         //      mPlaying = true;
+         //   }
+         //   else
+         //   {
+         //      WarningLog(<< "MediaResourceParticipant::startPlay error calling playAudio: " << status);
+         //   }
+         //}
+         //else
+         //{
+         //   WarningLog(<< "MediaResourceParticipant::startPlay media not found in cache, key: " << mMediaUrl.host());
+         //}
       }
       break;
       case Http:
       case Https:
       {
-         int flags;
+         // !jjg! fixme
+         //int flags;
 
-         if(mLocalOnly)
-         {
-            flags = STREAM_SOUND_LOCAL;
-         }
-         else if(mRemoteOnly)
-         {
-            flags = STREAM_SOUND_REMOTE;
-         }
-         else 
-         {
-            flags = STREAM_SOUND_LOCAL | STREAM_SOUND_REMOTE;
-         }
-         OsStatus status = mConversationManager.getMediaInterface()->createPlayer(&mStreamPlayer, Data::from(mMediaUrl).c_str(), flags);
-         if(status == OS_SUCCESS)
-         {
-            mStreamPlayer->addListener(this);
-            status = mStreamPlayer->realize(FALSE /* block? */);
-            if(status != OS_SUCCESS)
-            {
-               WarningLog(<< "MediaResourceParticipant::startPlay error calling StreamPlayer::realize: " << status);
-            }
-            else
-            {
-               mPlaying = true;
-            }
-         }
-         else
-         {
-            WarningLog(<< "MediaResourceParticipant::startPlay error calling createPlayer: " << status);
-         }
+         //if(mLocalOnly)
+         //{
+         //   flags = STREAM_SOUND_LOCAL;
+         //}
+         //else if(mRemoteOnly)
+         //{
+         //   flags = STREAM_SOUND_REMOTE;
+         //}
+         //else 
+         //{
+         //   flags = STREAM_SOUND_LOCAL | STREAM_SOUND_REMOTE;
+         //}
+         //OsStatus status = mConversationManager.getMediaInterface()->createPlayer(&mStreamPlayer, Data::from(mMediaUrl).c_str(), flags);
+         //if(status == OS_SUCCESS)
+         //{
+         //   mStreamPlayer->addListener(this);
+         //   status = mStreamPlayer->realize(FALSE /* block? */);
+         //   if(status != OS_SUCCESS)
+         //   {
+         //      WarningLog(<< "MediaResourceParticipant::startPlay error calling StreamPlayer::realize: " << status);
+         //   }
+         //   else
+         //   {
+         //      mPlaying = true;
+         //   }
+         //}
+         //else
+         //{
+         //   WarningLog(<< "MediaResourceParticipant::startPlay error calling createPlayer: " << status);
+         //}
       }
       break;
       case Invalid:
@@ -331,7 +369,7 @@ MediaResourceParticipant::startPlay()
       {
          // Start timer to destroy media resource participant automatically
          DestroyParticipantCmd destroyer(&mConversationManager, mHandle);
-         mConversationManager.getUserAgent()->post(destroyer, mDurationMs);
+         mConversationManager.mDum->getSipStack().postMS( destroyer, mDurationMs, mConversationManager.mDum );
       }
    }
    else
@@ -363,7 +401,7 @@ MediaResourceParticipant::getConnectionPortOnBridge()
 }
 
 void
-MediaResourceParticipant::destroyParticipant()
+MediaResourceParticipant::destroyParticipant(const resip::Data&)
 {
    bool deleteNow = true;
 
@@ -376,36 +414,52 @@ MediaResourceParticipant::destroyParticipant()
       {
       case Tone:
          {
-            OsStatus status = mConversationManager.getMediaInterface()->stopTone();
-            if(status != OS_SUCCESS)
+            //OsStatus status = mConversationManager.getMediaInterface()->stopTone();
+            //if(status != OS_SUCCESS)
+            //{
+            //   WarningLog(<< "MediaResourceParticipant::destroyParticipant error calling stopTone: " << status);
+            //}
+
+            ConversationMap::const_iterator convIter = getConversations().begin();
+            for (; convIter != getConversations().end(); ++convIter)
             {
-               WarningLog(<< "MediaResourceParticipant::destroyParticipant error calling stopTone: " << status);
+               Conversation* conv = convIter->second;
+               const Mixer::RtpStreams& streams = conv->getMixer()->rtpStreams();
+               Mixer::RtpStreams::const_iterator it = streams.begin();
+               for (; it != streams.end(); ++it)
+               {
+                  const boost::shared_ptr<RtpStream>& stream = *it;
+                  if (stream->mediaType() == MediaStack::MediaType_Audio)
+                  {
+                     stream->stopTone();
+                  }
+               }
             }
          }
          break;
       case File:
       case Cache:
          {
-            OsStatus status = mConversationManager.getMediaInterface()->stopAudio();
-            if(status != OS_SUCCESS)
-            {
-               WarningLog(<< "MediaResourceParticipant::destroyParticipant error calling stopAudio: " << status);
-            }
+            //OsStatus status = mConversationManager.getMediaInterface()->stopAudio();
+            //if(status != OS_SUCCESS)
+            //{
+            //   WarningLog(<< "MediaResourceParticipant::destroyParticipant error calling stopAudio: " << status);
+            //}
          }
          break;
       case Http:
       case Https:
          {
-            mRepeat = false;  // Required so that player will not just repeat on stopped event
-            OsStatus status = mStreamPlayer->stop();
-            if(status != OS_SUCCESS)
-            {
-               WarningLog(<< "MediaResourceParticipant::destroyParticipant error calling StreamPlayer::stop: " << status);
-            }
-            else
-            {
-               deleteNow = false;  // Wait for play finished event to come in
-            }
+            //mRepeat = false;  // Required so that player will not just repeat on stopped event
+            //OsStatus status = mStreamPlayer->stop();
+            //if(status != OS_SUCCESS)
+            //{
+            //   WarningLog(<< "MediaResourceParticipant::destroyParticipant error calling StreamPlayer::stop: " << status);
+            //}
+            //else
+            //{
+            //   deleteNow = false;  // Wait for play finished event to come in
+            //}
          }
          break;
       case Invalid:
@@ -414,87 +468,6 @@ MediaResourceParticipant::destroyParticipant()
       }
    }
    if(deleteNow) delete this;
-}
-
-void 
-MediaResourceParticipant::playerRealized(MpPlayerEvent& event)
-{
-   InfoLog(<< "MediaResourceParticipant::playerRealized: handle=" << mHandle);
-   if(mPrefetch)
-   {
-      OsStatus status = mStreamPlayer->prefetch(FALSE);
-      if(status != OS_SUCCESS)
-      {
-         WarningLog(<< "MediaResourceParticipant::playerRealized error calling StreamPlayer::prefetch: " << status);
-         MediaResourceParticipantDeleterCmd* cmd = new MediaResourceParticipantDeleterCmd(mConversationManager, mHandle);
-         mConversationManager.getUserAgent()->getDialogUsageManager().post(cmd);
-      }
-   }
-   else
-   {
-      OsStatus status = mStreamPlayer->play(FALSE /*block?*/);
-      if(status != OS_SUCCESS)
-      {
-         WarningLog(<< "MediaResourceParticipant::playerRealized error calling StreamPlayer::play: " << status);
-         MediaResourceParticipantDeleterCmd* cmd = new MediaResourceParticipantDeleterCmd(mConversationManager, mHandle);
-         mConversationManager.getUserAgent()->getDialogUsageManager().post(cmd);
-      }
-   }
-}
-
-void 
-MediaResourceParticipant::playerPrefetched(MpPlayerEvent& event)
-{
-   InfoLog(<< "MediaResourceParticipant::playerPrefetched: handle=" << mHandle);
-   OsStatus status = mStreamPlayer->play(FALSE/*block?*/);
-   if(status != OS_SUCCESS)
-   {
-      WarningLog(<< "MediaResourceParticipant::playerPrefetched error calling StreamPlayer::play: " << status);
-       MediaResourceParticipantDeleterCmd* cmd = new MediaResourceParticipantDeleterCmd(mConversationManager, mHandle);
-       mConversationManager.getUserAgent()->getDialogUsageManager().post(cmd);
-   }
-}
-
-void 
-MediaResourceParticipant::playerPlaying(MpPlayerEvent& event)
-{
-   InfoLog(<< "MediaResourceParticipant::playerPlaying: handle=" << mHandle);
-}
-
-void 
-MediaResourceParticipant::playerPaused(MpPlayerEvent& event)
-{
-   InfoLog(<< "MediaResourceParticipant::playerPaused: handle=" << mHandle);
-}
-
-void 
-MediaResourceParticipant::playerStopped(MpPlayerEvent& event)
-{
-   InfoLog(<< "MediaResourceParticipant::playerStopped: handle=" << mHandle);
-   // We get this event when playing is completed
-   if(mRepeat)
-   {
-      OsStatus status = mStreamPlayer->rewind(FALSE/*block?*/);   // Generate playerPrefetched event
-      if(status != OS_SUCCESS)
-      {
-         WarningLog(<< "MediaResourceParticipant::playerStopped error calling StreamPlayer::rewind: " << status);
-         MediaResourceParticipantDeleterCmd* cmd = new MediaResourceParticipantDeleterCmd(mConversationManager, mHandle);
-         mConversationManager.getUserAgent()->getDialogUsageManager().post(cmd);
-      }
-   }
-   else
-   {
-      MediaResourceParticipantDeleterCmd* cmd = new MediaResourceParticipantDeleterCmd(mConversationManager, mHandle);
-      mConversationManager.getUserAgent()->getDialogUsageManager().post(cmd);
-   }
-}
- 
-void 
-MediaResourceParticipant::playerFailed(MpPlayerEvent& event)
-{
-   InfoLog(<< "MediaResourceParticipant::playerFailed: handle=" << mHandle);
-   MediaResourceParticipantDeleterCmd* cmd = new MediaResourceParticipantDeleterCmd(mConversationManager, mHandle);
-   mConversationManager.getUserAgent()->getDialogUsageManager().post(cmd);
 }
 
 

@@ -28,6 +28,12 @@ public:
    virtual const asio::ip::address getSenderEndpointAddress();
    virtual unsigned short getSenderEndpointPort();
 
+   virtual bool setDSCP(ULONG ulInDSCPValue);
+   virtual bool setServiceType(
+      const asio::ip::udp::endpoint &tInDestinationIPAddress,
+      EQOSServiceTypes eInServiceType,
+      ULONG ulInBandwidthInBitsPerSecond);
+
 protected:
    virtual void handleReadHeader(const asio::error_code& e);
    virtual void handleTcpResolve(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator);

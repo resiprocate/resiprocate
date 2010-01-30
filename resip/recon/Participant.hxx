@@ -21,7 +21,7 @@ class Participant
 {
    public:  
 
-      typedef std::map<ConversationHandle,Conversation*> ConversationMap;
+      typedef std::map<ConversationHandle, Conversation*> ConversationMap;
 
       Participant(ParticipantHandle partHandle,
                   ConversationManager& conversationManager);  
@@ -31,8 +31,8 @@ class Participant
       virtual ~Participant();
 
       virtual ParticipantHandle getParticipantHandle() { return mHandle; }
-      virtual void addToConversation(Conversation *conversation, unsigned int inputGain = 100, unsigned int outputGain = 100);
-      virtual void removeFromConversation(Conversation *conversation);
+      virtual void addToConversation(Conversation* conversation, unsigned int inputGain = 100, unsigned int outputGain = 100);
+      virtual void removeFromConversation(Conversation* conversation);
       virtual void copyConversationsToParticipant(Participant* destParticipant);
       virtual unsigned int getNumConversations() { return (unsigned int)mConversations.size(); }
       const ConversationMap& getConversations() { return mConversations; }
@@ -41,7 +41,7 @@ class Participant
       virtual void replaceWithParticipant(Participant* replacingParticipant);
       virtual int getConnectionPortOnBridge() = 0;
 
-      virtual void destroyParticipant() = 0;
+      virtual void destroyParticipant(const resip::Data& appDefinedReason = resip::Data::Empty) = 0;
 
    protected:       
       ParticipantHandle mHandle;

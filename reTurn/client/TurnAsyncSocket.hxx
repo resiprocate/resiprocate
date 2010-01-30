@@ -19,6 +19,13 @@
 #include "../AsyncSocketBase.hxx"
 #include "TurnAsyncSocketHandler.hxx"
 
+#define UDP_RT0 100  // RTO - Estimate of Roundtrip time - 100ms is recommened for fixed line transport - the initial value should be configurable
+                     // Should also be calculation this on the fly
+#define UDP_MAX_RETRANSMITS    7       // Defined by RFC5389 (Rc) - should be configurable
+#define TCP_RESPONSE_TIME      39500   // Defined by RFC5389 (Ti) - should be configurable
+#define UDP_Rm                 16      // Defined by RFC5389 - should be configurable
+#define UDP_FINAL_REQUEST_TIME (UDP_RT0 * UDP_Rm)  // Defined by RFC5389
+
 namespace reTurn {
 
 class TurnAsyncSocket
@@ -50,6 +57,9 @@ public:
    // Stun Binding Method - use getReflexiveTuple() to get binding info
    void bindRequest();
 
+   // ICE connectivity check
+   void connectivityCheck(const StunTuple& targetAddr, UInt32 peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits=UDP_MAX_RETRANSMITS);
+
    // Turn Allocation Methods
    void createAllocation(unsigned int lifetime = UnspecifiedLifetime,
                          unsigned int bandwidth = UnspecifiedBandwidth,
@@ -76,6 +86,12 @@ public:
 
    virtual void close();
    virtual void turnReceive();
+
+   virtual bool setDSCP(ULONG ulInDSCPValue);
+   virtual bool setServiceType(
+      const asio::ip::udp::endpoint &tInDestinationIPAddress,
+      EQOSServiceTypes eInServiceType,
+      ULONG ulInBandwidthInBitsPerSecond);
 
 protected:
 
@@ -113,7 +129,7 @@ private:
    class RequestEntry : public boost::enable_shared_from_this<RequestEntry>
    {
    public:
-      RequestEntry(asio::io_service& ioService, TurnAsyncSocket* turnAsyncSocket, StunMessage* requestMessage);
+      RequestEntry(asio::io_service& ioService, TurnAsyncSocket* turnAsyncSocket, StunMessage* requestMessage, unsigned int rc, const StunTuple* dest=NULL);
       ~RequestEntry();
 
       void startTimer();
@@ -126,24 +142,14 @@ private:
       asio::deadline_timer mRequestTimer;
       unsigned int mRequestsSent;
       unsigned int mTimeout;
+      const StunTuple* mDest;
+      const unsigned int mRc;
    };
    typedef std::map<UInt128, boost::shared_ptr<RequestEntry> > RequestMap;
    RequestMap mActiveRequestMap;
    friend class RequestEntry;
    void requestTimeout(UInt128 tid);
    void clearActiveRequestMap();
-
-   // Async guards - holds shared pointers to AsyncSocketBase so that TurnAsyncSocket 
-   // destruction will be delayed if there are outstanding async TurnAsyncSocket calls   
-   std::queue<boost::shared_ptr<AsyncSocketBase> > mGuards;
-   class GuardReleaser 
-   {
-   public:
-      GuardReleaser(std::queue<boost::shared_ptr<AsyncSocketBase> >&  guards) : mGuards(guards) {}
-      ~GuardReleaser() { mGuards.pop(); }
-   private:
-      std::queue<boost::shared_ptr<AsyncSocketBase> >&  mGuards;
-   };
 
    asio::deadline_timer mAllocationTimer;
    void startAllocationTimer();
@@ -159,6 +165,7 @@ private:
    void doRequestSharedSecret();
    void doSetUsernameAndPassword(resip::Data* username, resip::Data* password, bool shortTermAuth);
    void doBindRequest();
+   void doConnectivityCheck(StunTuple* targetAddr, UInt32 peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits);
    void doCreateAllocation(unsigned int lifetime = UnspecifiedLifetime,
                            unsigned int bandwidth = UnspecifiedBandwidth,
                            unsigned char requestedPortProps = StunMessage::PropsNone, 
@@ -175,7 +182,7 @@ private:
    void doChannelBinding(RemotePeer& remotePeer);
 
    StunMessage* createNewStunMessage(UInt16 stunclass, UInt16 method, bool addAuthInfo=true);
-   void sendStunMessage(StunMessage* request, bool reTransmission=false);
+   void sendStunMessage(StunMessage* request, bool reTransmission=false, unsigned int numRetransmits=UDP_MAX_RETRANSMITS, const StunTuple* targetAddress=NULL);
    void sendTo(RemotePeer& remotePeer, boost::shared_ptr<DataBuffer>& data);
    void send(boost::shared_ptr<DataBuffer>& data);  // Send unframed data
    void send(unsigned short channel, boost::shared_ptr<DataBuffer>& data);  // send with turn framing
