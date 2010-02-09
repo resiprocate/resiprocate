@@ -236,9 +236,9 @@ ifeq ($(ARCH),Power Macintosh)
 ARCH := powermac
 endif
 
-DEFINES += RESIP_OSTYPE_$(shell echo $(OSTYPE)|sed 'y/abcdefghijklmnopqrstuvwxyz/ABCEDFGHIJKLMNOPQRSTUVWXYZ/') \
-           RESIP_ARCH_$(shell echo $(ARCH)|sed 'y/abcdefghijklmnopqrstuvwxyz/ABCEDFGHIJKLMNOPQRSTUVWXYZ/') \
-           RESIP_LARCH_$(shell echo $(LARCH)|sed 'y/abcdefghijklmnopqrstuvwxyz/ABCEDFGHIJKLMNOPQRSTUVWXYZ/')
+DEFINES += RESIP_OSTYPE_$(shell echo $(OSTYPE)|sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/') \
+           RESIP_ARCH_$(shell echo $(ARCH)|sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/') \
+           RESIP_LARCH_$(shell echo $(LARCH)|sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/')
 
 # set the environment 
 
