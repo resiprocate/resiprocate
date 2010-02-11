@@ -140,6 +140,194 @@ TransactionState::~TransactionState()
    mState = Bogus;
 }
 
+bool
+TransactionState::processSipMessageAsNew(SipMessage* sip, TransactionController& controller, const Data& tid)
+{
+   StackLog (<< "No matching transaction for " << sip->brief());
+   TransactionUser* tu = 0;      
+   if (sip->isExternal())
+   {
+      if (controller.mTuSelector.haveTransactionUsers() && sip->isRequest())
+      {
+         tu = controller.mTuSelector.selectTransactionUser(*sip);
+         if (!tu)
+         {
+            //InfoLog (<< "Didn't find a TU for " << sip->brief());
+            // !bwc! We really should do something other than a 500 here.
+            // If none of the TUs liked the request because of the Request-
+            // Uri scheme, we should be returning a 416, for example.
+            InfoLog( << "No TU found for message: " << sip->brief());               
+            SipMessage* noMatch = Helper::makeResponse(*sip, 500);
+            Tuple target(sip->getSource());
+
+            controller.mTransportSelector.transmit(noMatch, target);
+            delete noMatch;
+            return false;
+         }
+         else
+         {
+            //InfoLog (<< "Found TU for " << sip->brief());
+         }
+      }
+   }
+   else
+   {
+      tu = sip->getTransactionUser();
+      if (!tu)
+      {
+         //InfoLog (<< "No TU associated with " << sip->brief());
+      }
+   }
+               
+   if (sip->isRequest())
+   {
+      // create a new state object and insert in the TransactionMap
+               
+      if (sip->isExternal()) // new sip msg from transport
+      {
+         if (sip->method() == INVITE)
+         {
+            // !rk! This might be needlessly created.  Design issue.
+            TransactionState* state = new TransactionState(controller, ServerInvite, Trying, tid, tu);
+            state->mMsgToRetransmit = state->make100(sip);
+            state->mResponseTarget = sip->getSource(); // UACs source address
+            // since we don't want to reply to the source port if rport present 
+            state->mResponseTarget.setPort(Helper::getPortForReply(*sip));
+            state->mIsReliable = isReliable(state->mResponseTarget.getType());
+            state->add(tid);
+               
+            if (Timer::T100 == 0)
+            {
+               state->sendToWire(state->mMsgToRetransmit); // will get deleted when this is deleted
+               state->mState = Proceeding;
+            }
+            else
+            {
+               //StackLog(<<" adding T100 timer (INV)");
+               controller.mTimers.add(Timer::TimerTrying, tid, Timer::T100);
+            }
+         }
+         else if (sip->method() == CANCEL)
+         {
+            TransactionState* matchingInvite = 
+               controller.mServerTransactionMap.find(sip->getTransactionId());
+            if (matchingInvite == 0)
+            {
+               InfoLog (<< "No matching INVITE for incoming (from wire) CANCEL to uas");
+               //was TransactionState::sendToTU(tu, controller, Helper::makeResponse(*sip, 481));
+               SipMessage* response = Helper::makeResponse(*sip, 481);
+               Tuple target(sip->getSource());
+               controller.mTransportSelector.transmit(response, target);
+               
+               delete response;
+               return false;
+            }
+            else
+            {
+               assert(matchingInvite);
+               TransactionState* state = TransactionState::makeCancelTransaction(matchingInvite, ServerNonInvite, tid);
+               state->startServerNonInviteTimerTrying(*sip,tid);
+            }
+         }
+         else if (sip->method() != ACK)
+         {
+            TransactionState* state = new TransactionState(controller, ServerNonInvite,Trying, tid, tu);
+            state->mResponseTarget = sip->getSource();
+            // since we don't want to reply to the source port if rport present 
+            state->mResponseTarget.setPort(Helper::getPortForReply(*sip));
+            state->add(tid);
+            state->mIsReliable = isReliable(state->mResponseTarget.getType());
+            state->startServerNonInviteTimerTrying(*sip,tid);
+         }
+            
+         // Incoming ACK just gets passed to the TU
+         //StackLog(<< "Adding incoming message to TU fifo " << tid);
+         TransactionState::sendToTU(tu, controller, sip);
+      }
+      else // new sip msg from the TU
+      {
+         if (sip->method() == INVITE)
+         {
+            TransactionState* state = new TransactionState(controller, ClientInvite, Calling, tid, tu);
+            state->add(state->mId);
+            state->processClientInvite(sip);
+         }
+         else if (sip->method() == ACK)
+         {
+            //TransactionState* state = new TransactionState(controller, Stateless, Calling, Data(StatelessIdCounter++));
+            TransactionState* state = new TransactionState(controller, Stateless, Calling, tid, tu);
+            state->add(state->mId);
+            state->mController.mTimers.add(Timer::TimerStateless, state->mId, Timer::TS );
+            state->processStateless(sip);
+         }
+         else if (sip->method() == CANCEL)
+         {
+            TransactionState* matchingInvite = controller.mClientTransactionMap.find(sip->getTransactionId());
+               
+            if (matchingInvite == 0)
+            {
+               InfoLog (<< "No matching INVITE for incoming (from TU) CANCEL to uac");
+               TransactionState::sendToTU(tu, controller, Helper::makeResponse(*sip,481));
+               return false;
+            }
+            else if (matchingInvite->mState == Calling) // CANCEL before 1xx received
+            {
+               WarningLog(<< "You can't CANCEL a request until a provisional has been received");
+               StackLog (<< *matchingInvite);
+               StackLog (<< *sip);
+
+               matchingInvite->mIsAbandoned = true;
+               return false;
+            }
+            else if (matchingInvite->mState == Completed)
+            {
+               // A final response was already seen for this INVITE transaction
+               matchingInvite->sendToTU(Helper::makeResponse(*sip, 200));
+               return false;
+            }
+            else
+            {
+               handleInternalCancel(sip, *matchingInvite);
+            }
+         }
+         else 
+         {
+            TransactionState* state = new TransactionState(controller, ClientNonInvite, 
+            Trying, tid, tu);
+            state->add(tid);
+            state->processClientNonInvite(sip);
+         }
+      }
+   }
+   else if (sip->isResponse()) // stray response
+   {
+      if (controller.mDiscardStrayResponses)
+      {
+         InfoLog (<< "discarding stray response: " << sip->brief());
+         return false;
+      }
+      else
+      {
+         StackLog (<< "forwarding stateless response: " << sip->brief());
+         TransactionState* state = 
+            new TransactionState(controller, Stateless, Calling, 
+            Data(StatelessIdCounter++), tu);
+         state->add(state->mId);
+         state->mController.mTimers.add(Timer::TimerStateless, state->mId, Timer::TS );
+         state->processStateless(sip);
+      }
+   }
+   else // wasn't a request or a response
+   {
+      ErrLog (<< "Got a SipMessage that was neither a request nor response!" 
+      << sip->brief());
+
+      return false;
+   }
+
+   return true;
+}
+
 void
 TransactionState::process(TransactionController& controller)
 {
@@ -386,184 +574,26 @@ TransactionState::process(TransactionController& controller)
    }
    else if (sip)  // new transaction
    {
-      StackLog (<< "No matching transaction for " << sip->brief());
-      TransactionUser* tu = 0;      
-      if (sip->isExternal())
+      try
       {
-         if (controller.mTuSelector.haveTransactionUsers() && sip->isRequest())
+         bool processed = processSipMessageAsNew(sip, controller, tid);
+         if (!processed)
          {
-            tu = controller.mTuSelector.selectTransactionUser(*sip);
-            if (!tu)
-            {
-               //InfoLog (<< "Didn't find a TU for " << sip->brief());
-               // !bwc! We really should do something other than a 500 here.
-               // If none of the TUs liked the request because of the Request-
-               // Uri scheme, we should be returning a 416, for example.
-               InfoLog( << "No TU found for message: " << sip->brief());               
-               SipMessage* noMatch = Helper::makeResponse(*sip, 500);
-               Tuple target(sip->getSource());
-               delete sip;
-               controller.mTransportSelector.transmit(noMatch, target);
-               delete noMatch;
-               return;
-            }
-            else
-            {
-               //InfoLog (<< "Found TU for " << sip->brief());
-            }
+            delete sip;      
          }
       }
-      else
+      catch(resip::ParseException& e)   
       {
-         tu = sip->getTransactionUser();
-         if (!tu)
+         StackLog ( << "Got badly formatted sip message, error: " << e.what());      
+         if(sip->isRequest() && sip->method()!=ACK)
          {
-            //InfoLog (<< "No TU associated with " << sip->brief());
-         }
+            handleBadRequest(*sip, controller);
+         }         
+         delete sip;      
       }
-               
-      if (sip->isRequest())
+      catch(std::exception& err)      
       {
-         // create a new state object and insert in the TransactionMap
-               
-         if (sip->isExternal()) // new sip msg from transport
-         {
-            if (sip->method() == INVITE)
-            {
-               // !rk! This might be needlessly created.  Design issue.
-               TransactionState* state = new TransactionState(controller, ServerInvite, Trying, tid, tu);
-               state->mMsgToRetransmit = state->make100(sip);
-               state->mResponseTarget = sip->getSource(); // UACs source address
-               // since we don't want to reply to the source port if rport present 
-               state->mResponseTarget.setPort(Helper::getPortForReply(*sip));
-               state->mIsReliable = isReliable(state->mResponseTarget.getType());
-               state->add(tid);
-               
-               if (Timer::T100 == 0)
-               {
-                  state->sendToWire(state->mMsgToRetransmit); // will get deleted when this is deleted
-                  state->mState = Proceeding;
-               }
-               else
-               {
-                  //StackLog(<<" adding T100 timer (INV)");
-                  controller.mTimers.add(Timer::TimerTrying, tid, Timer::T100);
-               }
-            }
-            else if (sip->method() == CANCEL)
-            {
-               TransactionState* matchingInvite = 
-                  controller.mServerTransactionMap.find(sip->getTransactionId());
-               if (matchingInvite == 0)
-               {
-                  InfoLog (<< "No matching INVITE for incoming (from wire) CANCEL to uas");
-                  //was TransactionState::sendToTU(tu, controller, Helper::makeResponse(*sip, 481));
-                  SipMessage* response = Helper::makeResponse(*sip, 481);
-                  Tuple target(sip->getSource());
-                  controller.mTransportSelector.transmit(response, target);
-                  delete sip;
-                  delete response;
-                  return;
-               }
-               else
-               {
-                  assert(matchingInvite);
-                  state = TransactionState::makeCancelTransaction(matchingInvite, ServerNonInvite, tid);
-                  state->startServerNonInviteTimerTrying(*sip,tid);
-               }
-            }
-            else if (sip->method() != ACK)
-            {
-               TransactionState* state = new TransactionState(controller, ServerNonInvite,Trying, tid, tu);
-               state->mResponseTarget = sip->getSource();
-               // since we don't want to reply to the source port if rport present 
-               state->mResponseTarget.setPort(Helper::getPortForReply(*sip));
-               state->add(tid);
-               state->mIsReliable = isReliable(state->mResponseTarget.getType());
-               state->startServerNonInviteTimerTrying(*sip,tid);
-            }
-            
-            // Incoming ACK just gets passed to the TU
-            //StackLog(<< "Adding incoming message to TU fifo " << tid);
-            TransactionState::sendToTU(tu, controller, sip);
-         }
-         else // new sip msg from the TU
-         {
-            if (sip->method() == INVITE)
-            {
-               TransactionState* state = new TransactionState(controller, ClientInvite, Calling, tid, tu);
-               state->add(state->mId);
-               state->processClientInvite(sip);
-            }
-            else if (sip->method() == ACK)
-            {
-               //TransactionState* state = new TransactionState(controller, Stateless, Calling, Data(StatelessIdCounter++));
-               TransactionState* state = new TransactionState(controller, Stateless, Calling, tid, tu);
-               state->add(state->mId);
-               state->mController.mTimers.add(Timer::TimerStateless, state->mId, Timer::TS );
-               state->processStateless(sip);
-            }
-            else if (sip->method() == CANCEL)
-            {
-               TransactionState* matchingInvite = controller.mClientTransactionMap.find(sip->getTransactionId());
-               
-               if (matchingInvite == 0)
-               {
-                  InfoLog (<< "No matching INVITE for incoming (from TU) CANCEL to uac");
-                  TransactionState::sendToTU(tu, controller, Helper::makeResponse(*sip,481));
-                  delete sip;
-               }
-               else if (matchingInvite->mState == Calling) // CANCEL before 1xx received
-               {
-                  WarningLog(<< "You can't CANCEL a request until a provisional has been received");
-                  StackLog (<< *matchingInvite);
-                  StackLog (<< *sip);
-
-                  matchingInvite->mIsAbandoned = true;
-                  delete sip;
-               }
-               else if (matchingInvite->mState == Completed)
-               {
-                  // A final response was already seen for this INVITE transaction
-                  matchingInvite->sendToTU(Helper::makeResponse(*sip, 200));
-                  delete sip;
-               }
-               else
-               {
-                  handleInternalCancel(sip, *matchingInvite);
-               }
-            }
-            else 
-            {
-               TransactionState* state = new TransactionState(controller, ClientNonInvite, 
-                                                              Trying, tid, tu);
-               state->add(tid);
-               state->processClientNonInvite(sip);
-            }
-         }
-      }
-      else if (sip->isResponse()) // stray response
-      {
-         if (controller.mDiscardStrayResponses)
-         {
-            InfoLog (<< "discarding stray response: " << sip->brief());
-            delete message;
-         }
-         else
-         {
-            StackLog (<< "forwarding stateless response: " << sip->brief());
-            TransactionState* state = 
-               new TransactionState(controller, Stateless, Calling, 
-                                    Data(StatelessIdCounter++), tu);
-            state->add(state->mId);
-            state->mController.mTimers.add(Timer::TimerStateless, state->mId, Timer::TS );
-            state->processStateless(sip);
-         }
-      }
-      else // wasn't a request or a response
-      {
-         ErrLog (<< "Got a SipMessage that was neither a request nor response!" 
-                  << sip->brief());
+         StackLog ( << "Got error: " << err.what());
          delete sip;
       }
    } 
@@ -575,7 +605,7 @@ TransactionState::process(TransactionController& controller)
 }
 
 void
-TransactionState::startServerNonInviteTimerTrying(SipMessage& sip, Data& tid)
+TransactionState::startServerNonInviteTimerTrying(SipMessage& sip, const Data& tid)
 {
    unsigned int duration = 3500;
    if(Timer::T1 != 500) // optimzed for T1 == 500
