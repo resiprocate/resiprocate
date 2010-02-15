@@ -1799,6 +1799,9 @@ RemoteParticipant::onNewSession(ServerInviteSessionHandle h, InviteSession::Offe
          RemoteParticipant* participantToReplace = dynamic_cast<RemoteParticipant *>(presult.first->getAppDialog().get());
          InfoLog(<< "onNewSession(Server): handle=" << mHandle << ", to replace handle=" << participantToReplace->getParticipantHandle() << ", " << msg.brief());
 
+         // Copy hold setting from old call - do this before conversation mappings are changed
+         mLocalHold = participantToReplace->mLocalHold;         
+
          // Assume Participant Handle of old call
          participantToReplace->replaceWithParticipant(this);      // adjust conversation mappings
 
@@ -1949,6 +1952,10 @@ RemoteParticipant::onTerminated(InviteSessionHandle h, InviteSessionHandler::Ter
    if(mHandle && mReferringAppDialog.isValid())
    {
       RemoteParticipant* participant = (RemoteParticipant*)mReferringAppDialog.get();
+
+      // Copy hold setting to old call - do this before conversation mappings are changed
+      participant->mLocalHold = mLocalHold;         
+
       replaceWithParticipant(participant);      // adjust conversation mappings
       if(participant->getParticipantHandle())
       {
@@ -2116,11 +2123,14 @@ RemoteParticipant::onRefer(InviteSessionHandle is, ServerSubscriptionHandle ss, 
       SdpContents offer;
       participant->buildSdpOffer(holdSdp, offer);
 
+      // Copy hold setting to new call - do this before conversation mappings are changed
+      participant->mLocalHold = mLocalHold;         
+
       replaceWithParticipant(participant);      // adjust conversation mappings - do this after buildSdpOffer, so that we have a bridge port
 
       // Build the Invite
       SharedPtr<SipMessage> NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, ss->getHandle(), &offer, participantDialogSet);
-      mDialogSet.sendInvite(NewInviteMsg); 
+      participantDialogSet->sendInvite(NewInviteMsg); 
 
       // Set RTP stack to listen
       participant->adjustRTPStreams(true);
@@ -2150,11 +2160,14 @@ RemoteParticipant::doReferNoSub(const SipMessage& msg)
    SdpContents offer;
    participant->buildSdpOffer(holdSdp, offer);
 
+   // Copy hold setting to new call - do this before conversation mappings are changed
+   participant->mLocalHold = mLocalHold;         
+
    replaceWithParticipant(participant);      // adjust conversation mappings - do this after buildSdpOffer, so that we have a bridge port
 
    // Build the Invite
    SharedPtr<SipMessage> NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, mDialogSet.getUserProfile(), &offer, participantDialogSet);
-   mDialogSet.sendInvite(NewInviteMsg); 
+   participantDialogSet->sendInvite(NewInviteMsg); 
 
    // Set RTP stack to listen
    participant->adjustRTPStreams(true);
