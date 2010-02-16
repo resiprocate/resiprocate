@@ -1398,7 +1398,7 @@ ServerInviteSession::prackCheckProvisionals(const SipMessage& msg)
       msgIt++;
    }
 
-   ErrLog (<< "spurious PRACK in state=" << toData(mState));
+   InfoLog (<< "spurious PRACK in state=" << toData(mState));
    SharedPtr<SipMessage> p481(new SipMessage);
    mDialog.makeResponse(*p481, msg, 481);
    send(p481);
