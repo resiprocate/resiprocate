@@ -1786,6 +1786,8 @@ void
 RemoteParticipant::onNewSession(ServerInviteSessionHandle h, InviteSession::OfferAnswerType oat, const SipMessage& msg)
 {
    InfoLog(<< "onNewSession(Server): handle=" << mHandle << ", " << msg.brief());
+
+   getLocalRTPPort();  // Allocate a port now - since it will be required as soon as we add this participant to a conversation
    mInviteSessionHandle = h->getSessionHandle();         
    mDialogId = getDialogId();
             
