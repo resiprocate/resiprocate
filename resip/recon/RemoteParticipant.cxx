@@ -1463,9 +1463,11 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
    Sdp::MediaLineList::const_iterator itMediaLine = localSdp->getMediaLines().begin();
    for(; itMediaLine != localSdp->getMediaLines().end(); itMediaLine++)
    {
-      DebugLog(<< "adjustRTPStreams: handle=" << mHandle << ", found media line in local sdp, mediaType=" << (*itMediaLine)->getMediaType() << 
-                 ", transportType=" << (*itMediaLine)->getTransportProtocolType() << ", numConnections=" << (*itMediaLine)->getConnections().size() <<
-                 ", port=" << ((*itMediaLine)->getConnections().size() > 0 ? (*itMediaLine)->getConnections().front().getPort() : 0));
+      DebugLog(<< "adjustRTPStreams: handle=" << mHandle << 
+                  ", found media line in local sdp, mediaType=" << SdpMediaLine::SdpMediaTypeString[(*itMediaLine)->getMediaType()] << 
+                  ", transportType=" << SdpMediaLine::SdpTransportProtocolTypeString[(*itMediaLine)->getTransportProtocolType()] << 
+                  ", numConnections=" << (*itMediaLine)->getConnections().size() <<
+                  ", port=" << ((*itMediaLine)->getConnections().size() > 0 ? (*itMediaLine)->getConnections().front().getPort() : 0));
       if((*itMediaLine)->getMediaType() == SdpMediaLine::MEDIA_TYPE_AUDIO && 
          ((*itMediaLine)->getTransportProtocolType() == SdpMediaLine::PROTOCOL_TYPE_RTP_AVP ||
           (*itMediaLine)->getTransportProtocolType() == SdpMediaLine::PROTOCOL_TYPE_RTP_SAVP ||
@@ -1630,7 +1632,7 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
       return;
    }
 
-   InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", mediaDirection=" << mediaDirection << ", remoteIp=" << remoteIPAddress << ", remotePort=" << remoteRtpPort);
+   InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", mediaDirection=" << SdpMediaLine::SdpDirectionTypeString[mediaDirection] << ", remoteIp=" << remoteIPAddress << ", remotePort=" << remoteRtpPort);
 
    if(!remoteIPAddress.empty() && remoteRtpPort != 0)
    {
@@ -1768,6 +1770,22 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
    }
 }
 
+void 
+RemoteParticipant::replaceWithParticipant(RemoteParticipant* replacingParticipant)
+{
+    // Copy our local hold setting to the replacing participant to replace us
+    replacingParticipant->mLocalHold = mLocalHold;         
+
+    // We are about to adjust the participant handle of the replacing participant to ours
+    // ensure that the mapping is also adjusted in the replacing participants dialog set
+    if(replacingParticipant->mHandle == replacingParticipant->mDialogSet.getActiveRemoteParticipantHandle())
+    {
+        replacingParticipant->mDialogSet.setActiveRemoteParticipantHandle(mHandle);
+    }
+
+    Participant::replaceWithParticipant(replacingParticipant);
+}
+
 void
 RemoteParticipant::onDtmfEvent(int dtmf, int duration, bool up)
 {
@@ -1800,9 +1818,6 @@ RemoteParticipant::onNewSession(ServerInviteSessionHandle h, InviteSession::Offe
       {         
          RemoteParticipant* participantToReplace = dynamic_cast<RemoteParticipant *>(presult.first->getAppDialog().get());
          InfoLog(<< "onNewSession(Server): handle=" << mHandle << ", to replace handle=" << participantToReplace->getParticipantHandle() << ", " << msg.brief());
-
-         // Copy hold setting from old call - do this before conversation mappings are changed
-         mLocalHold = participantToReplace->mLocalHold;         
 
          // Assume Participant Handle of old call
          participantToReplace->replaceWithParticipant(this);      // adjust conversation mappings
@@ -1954,9 +1969,6 @@ RemoteParticipant::onTerminated(InviteSessionHandle h, InviteSessionHandler::Ter
    if(mHandle && mReferringAppDialog.isValid())
    {
       RemoteParticipant* participant = (RemoteParticipant*)mReferringAppDialog.get();
-
-      // Copy hold setting to old call - do this before conversation mappings are changed
-      participant->mLocalHold = mLocalHold;         
 
       replaceWithParticipant(participant);      // adjust conversation mappings
       if(participant->getParticipantHandle())
@@ -2125,9 +2137,6 @@ RemoteParticipant::onRefer(InviteSessionHandle is, ServerSubscriptionHandle ss, 
       SdpContents offer;
       participant->buildSdpOffer(holdSdp, offer);
 
-      // Copy hold setting to new call - do this before conversation mappings are changed
-      participant->mLocalHold = mLocalHold;         
-
       replaceWithParticipant(participant);      // adjust conversation mappings - do this after buildSdpOffer, so that we have a bridge port
 
       // Build the Invite
@@ -2161,9 +2170,6 @@ RemoteParticipant::doReferNoSub(const SipMessage& msg)
    // Create offer
    SdpContents offer;
    participant->buildSdpOffer(holdSdp, offer);
-
-   // Copy hold setting to new call - do this before conversation mappings are changed
-   participant->mLocalHold = mLocalHold;         
 
    replaceWithParticipant(participant);      // adjust conversation mappings - do this after buildSdpOffer, so that we have a bridge port
 
