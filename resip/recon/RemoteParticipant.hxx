@@ -130,6 +130,7 @@ private:
    void setRemoteSdp(const resip::SdpContents& sdp, bool answer=false);
    void setRemoteSdp(const resip::SdpContents& sdp, sdpcontainer::Sdp* remoteSdp);
    void adjustRTPStreams(bool sendingOffer=false);
+   virtual void replaceWithParticipant(RemoteParticipant* replacingParticipant);
 
    resip::DialogUsageManager &mDum;
    resip::InviteSessionHandle mInviteSessionHandle; 
