@@ -298,7 +298,7 @@ SdpContents::Session::Origin::parse(ParseBuffer& pb)
    }
    catch(ParseException& e)
    {
-       InfoLog(<< "Exception parsing origin sessionid: " << e);
+       WarningLog(<< "Exception parsing origin sessionid: " << e);
    }
    pb.skipToChar(Symbols::SPACE[0]);
 
@@ -309,7 +309,7 @@ SdpContents::Session::Origin::parse(ParseBuffer& pb)
    }
    catch(ParseException& e)
    {
-       InfoLog(<< "Exception parsing origin version: " << e);
+       WarningLog(<< "Exception parsing origin version: " << e);
    }
    pb.skipToChar(Symbols::SPACE[0]);
 
