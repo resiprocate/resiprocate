@@ -99,8 +99,11 @@ RegSyncClient::thread()
       if(rc < 0) 
       {
          if(!mShutdown) ErrLog(<< "RegSyncClient: error connecting to " << mAddress << ":" << mPort);
-         closeSocket(mSocketDesc);
-         mSocketDesc = 0;
+         if(mSocketDesc)
+         {
+            closeSocket(mSocketDesc);
+            mSocketDesc = 0;
+         }
          delaySeconds(30);
          continue;
       }
@@ -115,8 +118,11 @@ RegSyncClient::thread()
       if(rc < 0) 
       {
          if(!mShutdown) ErrLog(<< "RegSyncClient: error sending");
-         closeSocket(mSocketDesc);
-         mSocketDesc = 0;
+         if(mSocketDesc)
+         {
+            closeSocket(mSocketDesc);
+            mSocketDesc = 0;
+         }
          continue;
       }
 
@@ -126,8 +132,11 @@ RegSyncClient::thread()
          if(rc < 0) 
          {
             if(!mShutdown) ErrLog(<< "RegSyncClient: error receiving");
-            closeSocket(mSocketDesc);
-            mSocketDesc = 0;
+            if(mSocketDesc)
+            {
+               closeSocket(mSocketDesc);
+               mSocketDesc = 0;
+            }
             break;
          }
 
