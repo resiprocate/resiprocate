@@ -53,7 +53,7 @@ SRC 	+=   \
 	Registrar.cxx \
 	RegSyncClient.cxx \
 	RegSyncServer.cxx \
-	RegSyncThread.cxx \
+	RegSyncServerThread.cxx \
 	ReproServerAuthManager.cxx \
 	RequestContext.cxx \
 	ResponseContext.cxx \
