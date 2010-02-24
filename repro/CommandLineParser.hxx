@@ -54,6 +54,8 @@ class CommandLineParser
       bool mParallelForkStaticRoutes;
       int mTimerC;
       Data mAdminPassword;
+      Data mRegSyncPeerAddress;
+      int mXmlRpcPort;
 };
  
 }

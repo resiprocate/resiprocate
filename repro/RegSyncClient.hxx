@@ -1,56 +1,48 @@
-#if !defined(RESIP_REGISTRATIONPERSISTENCEMANAGER_HXX)
-#define RESIP_REGISTRATIONPERSISTENCEMANAGER_HXX
+#if !defined(RegSyncClient_hxx)
+#define RegSyncClient_hxx 
 
-#include <list>
-#include "resip/stack/Uri.hxx"
-#include "resip/dum/ContactInstanceRecord.hxx"
+#include <rutil/Data.hxx>
+#include <resip/stack/XMLCursor.hxx>
+#include <resip/dum/InMemorySyncRegDb.hxx>
+#include <rutil/ThreadIf.hxx>
 
-namespace resip
+namespace repro
 {
 
-/** Abstract interface of a datastore of all registered endpoints processed by DUM. Derived classes implement the
-    actual storage of AOR's mapped to contact information.  resip::InMemoryRegistrationDatabase is an example of a local datastore.
-  */
-class RegistrationPersistenceManager
+class RegSyncClient : public resip::ThreadIf
 {
-  public:
-    typedef std::list<Uri> UriList;
+public:
+   RegSyncClient(resip::InMemorySyncRegDb* regDb,
+                 resip::Data address,
+                 unsigned short port);
 
-    typedef enum
-    {
-      CONTACT_CREATED,
-      CONTACT_UPDATED
-    } update_status_t;
+   virtual void thread();
+   virtual void shutdown();
 
-    RegistrationPersistenceManager() {}
-    virtual ~RegistrationPersistenceManager() {}
+private: 
+   void delaySeconds(unsigned int seconds);
+   bool tryParse();  // returns true if we processed something and there is more data in the buffer
+   void handleXml(const resip::Data& xmlData);
+   void handleRegInfoEvent(resip::XMLCursor& xml);
+   void processModify(const resip::Uri& aor, resip::ContactList& syncContacts);
 
-    virtual void addAor(const Uri& aor, const ContactList& contacts) = 0;
-    virtual void removeAor(const Uri& aor) = 0;
-    virtual bool aorIsRegistered(const Uri& aor) = 0;
- 
-    virtual void lockRecord(const Uri& aor) = 0;
-    virtual void unlockRecord(const Uri& aor) = 0;
-
-    virtual void getAors(UriList& container) = 0;
-
-    virtual update_status_t updateContact(const Uri& aor,
-                                          const ContactInstanceRecord& rec) = 0;
-
-    virtual void removeContact(const Uri& aor,
-                                 const ContactInstanceRecord& rec) = 0;
-
-    virtual void getContacts(const Uri& aor, ContactList& container) = 0;  
-
+   resip::InMemorySyncRegDb* mRegDb;
+   resip::Data mAddress;
+   unsigned short mPort;
+   char mRxBuffer[8000];
+   resip::Data mRxDataBuffer;
+   int mSocketDesc;
 };
+
 }
 
-#endif
+#endif  
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2010 SIP Spectrum, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -96,3 +88,4 @@ class RegistrationPersistenceManager
  * <http://www.vovida.org/>.
  *
  */
+

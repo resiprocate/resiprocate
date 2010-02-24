@@ -58,12 +58,12 @@ ServerRegistration::accept(SipMessage& ok)
       RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
 
       ContactList contacts;
-
-      contacts = database->getContacts(mAor);
-      database->unlockRecord(mAor);
+      database->getContacts(mAor, contacts);
 
       //removes expired entries from the ok msg as well as calls the database to remove expired contacts.
       processFinalOkMsg(ok,contacts);
+
+      database->unlockRecord(mAor);
 
       SharedPtr<SipMessage> msg(static_cast<SipMessage*>(ok.clone()));
       mDum.send(msg);
@@ -138,6 +138,7 @@ ServerRegistration::reject(int statusCode)
    // Async processing hasn't actually updated the database yet, so no need to roll back.
    if (mDum.mServerRegistrationHandler && !mDum.mServerRegistrationHandler->asyncProcessing())
    {
+      // Rollback changes, since rejected
       RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
       database->removeAor(mAor);
 	  if (mOriginalContacts.get())
@@ -235,7 +236,7 @@ ServerRegistration::processRegistration(const SipMessage& msg)
       database->lockRecord(mAor);
 
       mOriginalContacts = resip::SharedPtr<ContactList>(new ContactList);
-      *mOriginalContacts = database->getContacts(mAor);
+      database->getContacts(mAor, *mOriginalContacts);
    }
 
    // If no contacts are present in the request, this is simply a query.
@@ -357,9 +358,13 @@ ServerRegistration::processRegistration(const SipMessage& msg)
          DebugLog(<< "Contact has tuple " << rec.mReceivedFrom);
 
          if (!async)
+         {
             status = database->updateContact(mAor, rec);
+         }
          else
+         {
             status =  mAsyncLocalStore->updateContact(rec);
+         }
 
          if (status == RegistrationPersistenceManager::CONTACT_CREATED)
          {

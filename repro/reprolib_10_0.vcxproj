@@ -199,6 +199,9 @@
     <ClCompile Include="monkeys\QValueTargetHandler.cxx" />
     <ClCompile Include="monkeys\RecursiveRedirect.cxx" />
     <ClCompile Include="Registrar.cxx" />
+    <ClCompile Include="RegSyncClient.cxx" />
+    <ClCompile Include="RegSyncServer.cxx" />
+    <ClCompile Include="RegSyncServerThread.cxx" />
     <ClCompile Include="ReproServerAuthManager.cxx" />
     <ClCompile Include="RequestContext.cxx" />
     <ClCompile Include="ResponseContext.cxx" />
@@ -212,6 +215,8 @@
     <ClCompile Include="Target.cxx" />
     <ClCompile Include="UserStore.cxx" />
     <ClCompile Include="WorkerThread.cxx" />
+    <ClCompile Include="XmlRpcConnection.cxx" />
+    <ClCompile Include="XmlRpcServerBase.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDb.hxx" />
@@ -239,6 +244,9 @@
     <ClInclude Include="monkeys\QValueTargetHandler.hxx" />
     <ClInclude Include="monkeys\RecursiveRedirect.hxx" />
     <ClInclude Include="Registrar.hxx" />
+    <ClInclude Include="RegSyncClient.hxx" />
+    <ClInclude Include="RegSyncServer.hxx" />
+    <ClInclude Include="RegSyncServerThread.hxx" />
     <ClInclude Include="ReproServerAuthManager.hxx" />
     <ClInclude Include="RequestContext.hxx" />
     <ClInclude Include="ResponseContext.hxx" />
@@ -255,6 +263,8 @@
     <ClInclude Include="UserInfoMessage.hxx" />
     <ClInclude Include="UserStore.hxx" />
     <ClInclude Include="WorkerThread.hxx" />
+    <ClInclude Include="XmlRpcConnection.hxx" />
+    <ClInclude Include="XmlRpcServerBase.hxx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

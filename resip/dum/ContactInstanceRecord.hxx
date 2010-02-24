@@ -30,7 +30,8 @@ class ContactInstanceRecord
       NameAddrs mSipPath;   // Value of SIP Path header from the request
       Data mInstance;       // From the instance parameter; usually a UUID URI
       UInt32 mRegId;        // From regid parameter of Contact header
-      Data mServerSessionId;// if there is no SIP Path header, the connection/session identifier 
+      bool mSyncContact;    // This contact came from registration sync process, instead of direct SIP registration
+      // Data mServerSessionId;// if there is no SIP Path header, the connection/session identifier 
       // Uri gruu;  (GRUU is currently derived)
       void      *mUserInfo;       //!< can be used to map user record information (database record id for faster updates?)
       

@@ -8,6 +8,7 @@ ContactInstanceRecord::ContactInstanceRecord() :
    mRegExpires(0),
    mLastUpdated(Timer::getTimeSecs()),
    mRegId(0),
+   mSyncContact(false),
    mUserInfo(0)
 {
 }

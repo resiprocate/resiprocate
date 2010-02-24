@@ -753,13 +753,14 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
       "  <td><input type=\"submit\" value=\"Remove\"/></td>" << endl << 
       "</tr>" << endl;
   
-      RegistrationPersistenceManager::UriList aors = mRegDb.getAors();
+      RegistrationPersistenceManager::UriList aors;
+      mRegDb.getAors(aors);
       for ( RegistrationPersistenceManager::UriList::const_iterator 
                aor = aors.begin(); aor != aors.end(); ++aor )
       {
          Uri uri = *aor;
-         ContactList 
-            contacts = mRegDb.getContacts(uri);
+         ContactList contacts;
+         mRegDb.getContacts(uri, contacts);
          
          bool first = true;
          UInt64 now = Timer::getTimeSecs();

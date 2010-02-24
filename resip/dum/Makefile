@@ -44,6 +44,7 @@ SRC =   \
 	HandleManager.cxx \
 	Handled.cxx \
 	InMemoryRegistrationDatabase.cxx \
+	InMemorySyncRegDb.cxx \
 	InviteSession.cxx \
 	InviteSessionCreator.cxx \
 	InviteSessionHandler.cxx \
