@@ -45,7 +45,7 @@ RegSyncServer::sendResponse(unsigned int connectionId,
 {
    std::stringstream ss;
    ss << Symbols::CRLF << responseData << "    <Result Code=\"" << resultCode << "\"";
-   ss << ">" << resultText << "</Result>" << Symbols::CRLF;
+   ss << ">" << resultText.xmlCharDataEncode() << "</Result>" << Symbols::CRLF;
    XmlRpcServerBase::sendResponse(connectionId, requestId, ss.str().c_str(), resultCode >= 200 /* isFinal */);
 }
 
@@ -65,7 +65,7 @@ RegSyncServer::sendRegistrationModifiedEvent(unsigned int connectionId, const re
    bool infoFound = false;
 
    ss << "<reginfo>" << Symbols::CRLF;
-   ss << "   <aor>" << aor << "</aor>" << Symbols::CRLF;
+   ss << "   <aor>" << Data::from(aor).xmlCharDataEncode() << "</aor>" << Symbols::CRLF;
    ContactList::const_iterator cit = contacts.begin();
    for(; cit != contacts.end(); cit++)
    {
@@ -124,7 +124,7 @@ void
 RegSyncServer::streamContactInstanceRecord(std::stringstream& ss, const ContactInstanceRecord& rec)
 {
     ss << "   <contactinfo>" << Symbols::CRLF;
-    ss << "      <contacturi>" << rec.mContact.uri() << "</contacturi>" << Symbols::CRLF;
+    ss << "      <contacturi>" << Data::from(rec.mContact.uri()).xmlCharDataEncode() << "</contacturi>" << Symbols::CRLF;
     ss << "      <expires>" << rec.mRegExpires << "</expires>" << Symbols::CRLF;
     ss << "      <lastupdate>" << rec.mLastUpdated << "</lastupdate>" << Symbols::CRLF;
     if(rec.mReceivedFrom.getPort() != 0)
@@ -136,11 +136,11 @@ RegSyncServer::streamContactInstanceRecord(std::stringstream& ss, const ContactI
     NameAddrs::const_iterator naIt = rec.mSipPath.begin();
     for(; naIt != rec.mSipPath.end(); naIt++)
     {
-        ss << "      <sippath>" << naIt->uri() << "</sippath>" << Symbols::CRLF;
+        ss << "      <sippath>" << Data::from(naIt->uri()).xmlCharDataEncode() << "</sippath>" << Symbols::CRLF;
     }
     if(!rec.mInstance.empty())
     {
-        ss << "      <instance>" << rec.mInstance << "</instance>" << Symbols::CRLF;
+        ss << "      <instance>" << rec.mInstance.xmlCharDataEncode() << "</instance>" << Symbols::CRLF;
     }
     if(rec.mRegId != 0)
     {

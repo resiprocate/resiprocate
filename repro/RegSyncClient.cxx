@@ -201,7 +201,14 @@ RegSyncClient::handleXml(const Data& xmlData)
       }
       else if(isEqualNoCase(xml.getTag(), "reginfo"))
       {
-         handleRegInfoEvent(xml);
+         try
+         {
+            handleRegInfoEvent(xml);
+         }
+         catch(BaseException& e)
+         {
+             ErrLog(<< "RegSyncClient::handleXml: exception: " << e);
+         }
       }
       else 
       {
@@ -228,7 +235,7 @@ RegSyncClient::handleRegInfoEvent(resip::XMLCursor& xml)
           {
              if(xml.firstChild())
              {
-                aor = Uri(xml.getValue());
+                aor = Uri(xml.getValue().xmlCharDataDecode());
                 xml.parent();
              }
              //InfoLog(<< "RegSyncClient::handleRegInfoEvent: aor=" << aor);
@@ -245,7 +252,7 @@ RegSyncClient::handleRegInfoEvent(resip::XMLCursor& xml)
                         if(xml.firstChild())
                         {
                            //InfoLog(<< "RegSyncClient::handleRegInfoEvent: contacturi=" << xml.getValue());
-                           rec.mContact = NameAddr(xml.getValue());
+                           rec.mContact = NameAddr(xml.getValue().xmlCharDataDecode());
                            xml.parent();
                         }
                      }
@@ -281,7 +288,7 @@ RegSyncClient::handleRegInfoEvent(resip::XMLCursor& xml)
                         if(xml.firstChild())
                         {
                            //InfoLog(<< "RegSyncClient::handleRegInfoEvent: sippath=" << xml.getValue());
-                           rec.mSipPath.push_back(NameAddr(xml.getValue()));
+                           rec.mSipPath.push_back(NameAddr(xml.getValue().xmlCharDataDecode()));
                            xml.parent();
                         }
                      }
@@ -290,7 +297,7 @@ RegSyncClient::handleRegInfoEvent(resip::XMLCursor& xml)
                         if(xml.firstChild())
                         {
                            //InfoLog(<< "RegSyncClient::handleRegInfoEvent: instance=" << xml.getValue());
-                           rec.mInstance = xml.getValue();
+                           rec.mInstance = xml.getValue().xmlCharDataDecode();
                            xml.parent();
                         }
                      }
