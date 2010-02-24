@@ -465,6 +465,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\RegSyncClient.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\RegSyncServer.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\RegSyncServerThread.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ReproServerAuthManager.cxx"
 				>
 			</File>
@@ -514,6 +526,14 @@
 			</File>
 			<File
 				RelativePath=".\WorkerThread.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\XmlRpcConnection.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\XmlRpcServerBase.cxx"
 				>
 			</File>
 		</Filter>
@@ -623,6 +643,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\RegSyncClient.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\RegSyncServer.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\RegSyncServerThread.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ReproServerAuthManager.hxx"
 				>
 			</File>
@@ -684,6 +716,14 @@
 			</File>
 			<File
 				RelativePath=".\WorkerThread.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\XmlRpcConnection.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\XmlRpcServerBase.hxx"
 				>
 			</File>
 		</Filter>

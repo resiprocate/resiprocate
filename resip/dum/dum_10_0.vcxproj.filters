@@ -147,6 +147,9 @@
     <ClCompile Include="InMemoryRegistrationDatabase.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="InMemorySyncRegDb.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="InviteSession.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -399,6 +402,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="InMemoryRegistrationDatabase.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InMemorySyncRegDb.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="InviteSession.hxx">

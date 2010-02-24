@@ -38,7 +38,6 @@ LocationServer::process(RequestContext& context)
    {  
       resip::ContactList contacts;
       mStore.getContacts(inputUri,contacts);
-      mStore.unlockRecord(inputUri);
       
       std::list<Target*> batch;
       std::map<resip::Data,resip::ContactList> outboundBatch;
@@ -74,6 +73,8 @@ LocationServer::process(RequestContext& context)
             mStore.removeContact(inputUri, contact);
          }
       }
+
+      mStore.unlockRecord(inputUri);
 
       std::map<resip::Data,resip::ContactList>::iterator o;
       
