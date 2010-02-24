@@ -92,7 +92,7 @@ RegSyncClient::thread()
       localAddr.sin_addr.s_addr = htonl(INADDR_ANY);
       localAddr.sin_port = 0;
 
-      rc = bind(mSocketDesc, (struct sockaddr *) &localAddr, sizeof(localAddr));
+      rc = ::bind(mSocketDesc, (struct sockaddr *) &localAddr, sizeof(localAddr));
       if(rc < 0) 
       {
          ErrLog(<<"RegSyncClient: error binding locally");
@@ -102,7 +102,7 @@ RegSyncClient::thread()
       }
 
       // Connect to server
-      rc = connect(mSocketDesc, (struct sockaddr *) &servAddr, sizeof(servAddr));
+      rc = ::connect(mSocketDesc, (struct sockaddr *) &servAddr, sizeof(servAddr));
       if(rc < 0) 
       {
          if(!mShutdown) ErrLog(<< "RegSyncClient: error connecting to " << mAddress << ":" << mPort);
@@ -118,7 +118,7 @@ RegSyncClient::thread()
          "     <Version>1</Version>\r\n"   // For future use in detecting if client/server are a compatible version
          "  </Request>\r\n"
          "</InitialSync>\r\n");   
-      rc = send(mSocketDesc, request.c_str(), request.size(), 0);
+      rc = ::send(mSocketDesc, request.c_str(), request.size(), 0);
       if(rc < 0) 
       {
          if(!mShutdown) ErrLog(<< "RegSyncClient: error sending");
@@ -129,7 +129,7 @@ RegSyncClient::thread()
 
       while(rc > 0)
       {
-         rc = recv(mSocketDesc, (char*)&mRxBuffer, sizeof(mRxBuffer), 0);
+         rc = ::recv(mSocketDesc, (char*)&mRxBuffer, sizeof(mRxBuffer), 0);
          if(rc < 0) 
          {
             if(!mShutdown) ErrLog(<< "RegSyncClient: error receiving");
