@@ -142,7 +142,7 @@ XmlRpcServerBase::process(FdSet& fdset)
       ConnectionMap::iterator it = mConnections.find(responseInfo->getConnectionId());
       if(it != mConnections.end())
       {
-         it->second->sendResponse(responseInfo->getRequestId(), responseInfo->getResponseData());
+         it->second->sendResponse(responseInfo->getRequestId(), responseInfo->getResponseData(), responseInfo->getIsFinal());
          delete responseInfo;
       }
    }
@@ -202,9 +202,10 @@ XmlRpcServerBase::process(FdSet& fdset)
 void 
 XmlRpcServerBase::sendResponse(unsigned int connectionId,
                                unsigned int requestId, 
-                               const Data& responseData)
+                               const Data& responseData,
+                               bool isFinal)
 {
-   mResponseFifo.add(new ResponseInfo(connectionId, requestId, responseData));
+   mResponseFifo.add(new ResponseInfo(connectionId, requestId, responseData, isFinal));
    mSelectInterruptor.interrupt();
 }
 

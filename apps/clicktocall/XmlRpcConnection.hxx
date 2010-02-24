@@ -24,12 +24,12 @@ public:
    void buildFdSet(resip::FdSet& fdset);
    bool process(resip::FdSet& fdset);
 
-   virtual bool sendResponse(unsigned int requestId, const resip::Data& responseData);
+   virtual bool sendResponse(unsigned int requestId, const resip::Data& responseData, bool isFinal);
 
 private:
    bool processSomeReads();
    bool processSomeWrites();
-   void tryParse();
+   bool tryParse(); // returns true if we processed something and there is more data in the buffer
             
    XmlRpcServerBase& mXmlRcpServer;
    const unsigned int mConnectionId;
