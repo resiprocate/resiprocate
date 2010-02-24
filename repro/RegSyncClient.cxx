@@ -46,9 +46,16 @@ RegSyncClient::delaySeconds(unsigned int seconds)
 void
 RegSyncClient::shutdown()
 {
-    ThreadIf::shutdown();
-    if(mSocketDesc) closeSocket(mSocketDesc);
-    mSocketDesc = 0;
+   ThreadIf::shutdown();
+   if(mSocketDesc) 
+   {
+#ifdef WIN32
+      closesocket(mSocketDesc);
+      mSocketDesc = 0;
+#else
+      ::shutdown(mSocketDesc, SHUT_RDWR);
+#endif
+   }
 }
 
 void 
@@ -99,11 +106,8 @@ RegSyncClient::thread()
       if(rc < 0) 
       {
          if(!mShutdown) ErrLog(<< "RegSyncClient: error connecting to " << mAddress << ":" << mPort);
-         if(mSocketDesc)
-         {
-            closeSocket(mSocketDesc);
-            mSocketDesc = 0;
-         }
+         closeSocket(mSocketDesc);
+         mSocketDesc = 0;
          delaySeconds(30);
          continue;
       }
@@ -118,11 +122,8 @@ RegSyncClient::thread()
       if(rc < 0) 
       {
          if(!mShutdown) ErrLog(<< "RegSyncClient: error sending");
-         if(mSocketDesc)
-         {
-            closeSocket(mSocketDesc);
-            mSocketDesc = 0;
-         }
+         closeSocket(mSocketDesc);
+         mSocketDesc = 0;
          continue;
       }
 
@@ -132,11 +133,8 @@ RegSyncClient::thread()
          if(rc < 0) 
          {
             if(!mShutdown) ErrLog(<< "RegSyncClient: error receiving");
-            if(mSocketDesc)
-            {
-               closeSocket(mSocketDesc);
-               mSocketDesc = 0;
-            }
+            closeSocket(mSocketDesc);
+            mSocketDesc = 0;
             break;
          }
 
