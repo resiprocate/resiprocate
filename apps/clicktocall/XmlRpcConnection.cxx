@@ -120,13 +120,13 @@ XmlRpcConnection::processSomeReads()
 
    mRxBuffer += Data( buf, bytesRead );
    
-   tryParse();
+   while(tryParse());
    
    return true;
 }
 
 
-void 
+bool 
 XmlRpcConnection::tryParse()
 {
    ParseBuffer pb(mRxBuffer);
@@ -158,6 +158,7 @@ XmlRpcConnection::tryParse()
                anchor = pb.position();
                pb.skipToEnd();
                mRxBuffer = pb.data(anchor);
+               return true;
             }
             else
             {
@@ -166,6 +167,7 @@ XmlRpcConnection::tryParse()
          }   
       }
    }
+   return false;
 }
 
 
@@ -213,7 +215,7 @@ XmlRpcConnection::processSomeWrites()
 }
 
 bool
-XmlRpcConnection::sendResponse(unsigned int requestId, const Data& responseData)
+XmlRpcConnection::sendResponse(unsigned int requestId, const Data& responseData, bool isFinal)
 {
    RequestMap::iterator it = mRequests.find(requestId);
    if(it != mRequests.end())
@@ -250,6 +252,10 @@ XmlRpcConnection::sendResponse(unsigned int requestId, const Data& responseData)
          response = "<Response>" + responseData + "</Response>";
       }
       mTxBuffer += response;
+      if(isFinal)
+      {
+          mRequests.erase(it);
+      }
       return true;
    }
    return false;

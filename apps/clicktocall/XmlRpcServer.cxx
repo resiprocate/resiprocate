@@ -46,7 +46,8 @@ XmlRpcServer::sendResponse(unsigned int connectionId,
       ss << " Leg=\"" << leg << "\"";
    }
    ss << ">" << resultText << "</Result>" << Symbols::CRLF;
-   XmlRpcServerBase::sendResponse(connectionId, requestId, ss.str().c_str());
+   bool isFinal = resultCode >= 300 || (leg=="Destination" && resultCode >= 200);
+   XmlRpcServerBase::sendResponse(connectionId, requestId, ss.str().c_str(), isFinal);
 }
 
 void 
