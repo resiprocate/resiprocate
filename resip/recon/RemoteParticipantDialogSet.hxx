@@ -72,6 +72,7 @@ public:
    virtual void removeDialog(const resip::DialogId& dialogId);
    virtual ConversationManager::ParticipantForkSelectMode getForkSelectMode();
    virtual ParticipantHandle getActiveRemoteParticipantHandle() { return mActiveRemoteParticipantHandle; }
+   virtual void setActiveRemoteParticipantHandle(ParticipantHandle handle) { mActiveRemoteParticipantHandle = handle; }
 
    // DialogSetHandler
    virtual void onTrying(resip::AppDialogSetHandle, const resip::SipMessage& msg);

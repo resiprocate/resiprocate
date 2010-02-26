@@ -51,6 +51,9 @@ SRC 	+=   \
 	\
 	Proxy.cxx \
 	Registrar.cxx \
+	RegSyncClient.cxx \
+	RegSyncServer.cxx \
+	RegSyncServerThread.cxx \
 	ReproServerAuthManager.cxx \
 	RequestContext.cxx \
 	ResponseContext.cxx \
@@ -59,6 +62,8 @@ SRC 	+=   \
         ProcessorChain.cxx \
 	Target.cxx \
 	WorkerThread.cxx \
+	XmlRpcConnection.cxx \
+	XmlRpcServerBase.cxx \
 	Dispatcher.cxx \
 	OutboundTarget.cxx \
 	QValueTarget.cxx \

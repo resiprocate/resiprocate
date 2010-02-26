@@ -2320,7 +2320,7 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer, const resip::SipMessage* 
          return;
       }
 
-      InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", mediaDirection=" << mediaDirection[i] << ", remoteIp=" << remoteIPAddress << ", remotePort=" << remoteRtpPort);
+      InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", mediaDirection=" << SdpMediaLine::SdpDirectionTypeString[mediaDirection[i]] << ", remoteIp=" << remoteIPAddress << ", remotePort=" << remoteRtpPort);
 
       if(!remoteIPAddress.empty() && remoteRtpPort != 0)
       {
@@ -2476,6 +2476,22 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer, const resip::SipMessage* 
    }
 }
 
+void 
+RemoteParticipant::replaceWithParticipant(RemoteParticipant* replacingParticipant)
+{
+    // Copy our local hold setting to the replacing participant to replace us
+    replacingParticipant->mMediaHoldStates = mMediaHoldStates;         
+
+    // We are about to adjust the participant handle of the replacing participant to ours
+    // ensure that the mapping is also adjusted in the replacing participants dialog set
+    if(replacingParticipant->mHandle == replacingParticipant->mDialogSet.getActiveRemoteParticipantHandle())
+    {
+        replacingParticipant->mDialogSet.setActiveRemoteParticipantHandle(mHandle);
+    }
+
+    Participant::replaceWithParticipant(replacingParticipant);
+}
+
 void
 RemoteParticipant::onDtmfEvent(int dtmf, int duration, bool up)
 {
@@ -2497,7 +2513,9 @@ void
 RemoteParticipant::onNewSession(ServerInviteSessionHandle h, InviteSession::OfferAnswerType oat, const SipMessage& msg)
 {
    InfoLog(<< "onNewSession(Server): handle=" << mHandle << ", " << msg.brief());
-   mInviteSessionHandle = h->getSessionHandle();
+
+   getLocalRTPPort(sdpcontainer::SdpMediaLine::MEDIA_TYPE_AUDIO);  // Allocate a port now - since it will be required as soon as we add this participant to a conversation
+   mInviteSessionHandle = h->getSessionHandle();         
    mDialogId = getDialogId();
 
    // First check if this INVITE is to replace an existing session
@@ -2699,6 +2717,7 @@ RemoteParticipant::onTerminated(InviteSessionHandle h, InviteSessionHandler::Ter
    if(mHandle && mReferringAppDialog.isValid())
    {
       RemoteParticipant* participant = (RemoteParticipant*)mReferringAppDialog.get();
+
       replaceWithParticipant(participant);      // adjust conversation mappings
       if(participant->getParticipantHandle())
       {
@@ -3063,9 +3082,8 @@ RemoteParticipant::doReferNoSub(const SipMessage& msg)
    replaceWithParticipant(participant);      // adjust conversation mappings - do this after buildSdpOffer, so that we have a bridge port
 
    // Build the Invite
-   ServerSubscriptionHandle ss;  // empty
-   SharedPtr<SipMessage> NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, ss->getHandle(), &offer, participantDialogSet);
-   mDialogSet.sendInvite(NewInviteMsg);
+   SharedPtr<SipMessage> NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, mDialogSet.getUserProfile(), &offer, participantDialogSet);
+   participantDialogSet->sendInvite(NewInviteMsg); 
 
    // Set RTP stack to listen
    participant->adjustRTPStreams(true, &msg);

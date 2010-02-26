@@ -142,6 +142,7 @@ private:
    void onNewRtpSource(sdpcontainer::SdpMediaLine::SdpMediaType mediaType);
    void onNewRtpDestination(sdpcontainer::SdpMediaLine::SdpMediaType mediaType);
    void onRtpStreamClosed(sdpcontainer::SdpMediaLine::SdpMediaType mediaType, RtpStream::ClosedReason reason);
+   virtual void replaceWithParticipant(RemoteParticipant* replacingParticipant);
 
    void subscribeForStreamEvents(sdpcontainer::SdpMediaLine::SdpMediaType mediaType);
 

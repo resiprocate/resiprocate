@@ -1282,6 +1282,8 @@ DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
                makeResponse(failure, *sipMsg, 400, reason);
                sendResponse(failure);
             }
+
+            InfoLog (<< "Malformed header in message (" << reason << ") - rejecting/discarding: " << *sipMsg);
             
             // .bwc. Only forge a response when appropriate, but return in any 
             // case.

@@ -95,7 +95,7 @@ class TransactionState : public DnsHandler
       void terminateServerTransaction(const Data& tid); 
       const Data& tid(SipMessage* sip) const;
 
-      void startServerNonInviteTimerTrying(SipMessage& sip, Data& tid);
+      void startServerNonInviteTimerTrying(SipMessage& sip, const Data& tid);
 
       static TransactionState* makeCancelTransaction(TransactionState* tran, Machine machine, const Data& tid);
       static void handleInternalCancel(SipMessage* cancel,
@@ -110,7 +110,11 @@ class TransactionState : public DnsHandler
 
       void saveOriginalContactAndVia(const SipMessage& msg);
       void restoreOriginalContactAndVia();
-      
+
+      static bool processSipMessageAsNew(resip::SipMessage* sip, 
+                                         resip::TransactionController& controller,
+                                         const resip::Data& tid);
+
       TransactionController& mController;
       
       Machine mMachine;

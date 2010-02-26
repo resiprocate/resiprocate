@@ -17,7 +17,7 @@ class AppDialogSet : public Handled
 {
    public:
 
-      // by default, calls the destructor. application can override this if it
+      // by default, dum calls the destructor. application can override this if it
       // wants to manage memory on its own. 
       virtual void destroy();
 

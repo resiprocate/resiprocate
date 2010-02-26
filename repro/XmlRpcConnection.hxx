@@ -1,56 +1,59 @@
-#if !defined(RESIP_REGISTRATIONPERSISTENCEMANAGER_HXX)
-#define RESIP_REGISTRATIONPERSISTENCEMANAGER_HXX
+#if !defined(XmlRpcConnection_hxx)
+#define XmlRpcConnection_hxx 
 
-#include <list>
-#include "resip/stack/Uri.hxx"
-#include "resip/dum/ContactInstanceRecord.hxx"
+#include <map>
+#include <rutil/Data.hxx>
+#include <rutil/Socket.hxx>
+#include <rutil/TransportType.hxx>
+#include <resip/stack/Tuple.hxx>
 
-namespace resip
+#include "repro/XmlRpcServerBase.hxx"
+
+namespace repro
 {
 
-/** Abstract interface of a datastore of all registered endpoints processed by DUM. Derived classes implement the
-    actual storage of AOR's mapped to contact information.  resip::InMemoryRegistrationDatabase is an example of a local datastore.
-  */
-class RegistrationPersistenceManager
+class XmlRpcConnection
 {
-  public:
-    typedef std::list<Uri> UriList;
+   friend class XmlRpcServerBase;
+      
+public:
+   XmlRpcConnection(XmlRpcServerBase& server, resip::Socket sock);
+   ~XmlRpcConnection();
+   
+   unsigned int getConnectionId() const { return mConnectionId; }
+   void buildFdSet(resip::FdSet& fdset);
+   bool process(resip::FdSet& fdset);
 
-    typedef enum
-    {
-      CONTACT_CREATED,
-      CONTACT_UPDATED
-    } update_status_t;
+   virtual bool sendResponse(unsigned int requestId, const resip::Data& responseData, bool isFinal);
+   virtual void sendEvent(const resip::Data& eventData);
 
-    RegistrationPersistenceManager() {}
-    virtual ~RegistrationPersistenceManager() {}
+private:
+   bool processSomeReads();
+   bool processSomeWrites();
+   bool tryParse(); // returns true if we processed something and there is more data in the buffer
+            
+   XmlRpcServerBase& mXmlRcpServer;
+   const unsigned int mConnectionId;
+   static unsigned int NextConnectionId;
 
-    virtual void addAor(const Uri& aor, const ContactList& contacts) = 0;
-    virtual void removeAor(const Uri& aor) = 0;
-    virtual bool aorIsRegistered(const Uri& aor) = 0;
- 
-    virtual void lockRecord(const Uri& aor) = 0;
-    virtual void unlockRecord(const Uri& aor) = 0;
-
-    virtual void getAors(UriList& container) = 0;
-
-    virtual update_status_t updateContact(const Uri& aor,
-                                          const ContactInstanceRecord& rec) = 0;
-
-    virtual void removeContact(const Uri& aor,
-                                 const ContactInstanceRecord& rec) = 0;
-
-    virtual void getContacts(const Uri& aor, ContactList& container) = 0;  
-
+   unsigned int mNextRequestId;
+   typedef std::map<unsigned int, resip::Data> RequestMap;
+   RequestMap mRequests;
+           
+   resip::Socket mSock;
+   resip::Data mRxBuffer;
+   resip::Data mTxBuffer;
 };
+
 }
 
-#endif
+#endif  
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2010 SIP Spectrum, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

@@ -1,5 +1,5 @@
-#if !defined(RESIP_INMEMORYREGISTRATIONDATABASE_HXX)
-#define RESIP_INMEMORYREGISTRATIONDATABASE_HXX
+#if !defined(RESIP_INMEMORYSYNCREGDB_HXX)
+#define RESIP_INMEMORYSYNCREGDB_HXX
 
 #include <map>
 #include <set>
@@ -12,24 +12,41 @@
 namespace resip
 {
 
+class InMemorySyncRegDbHandler
+{
+public:
+    virtual void onAorModified(const resip::Uri& aor, const ContactList& contacts) = 0;
+    virtual void onInitialSyncAor(unsigned int connectionId, const resip::Uri& aor, const ContactList& contacts) = 0;
+};
+
 /**
-  Trivial implementation of a persistence manager. This class keeps
-  all registrations in memory, and has no schemes for disk storage
-  or replication of any kind. It's good for testing, but probably
-  inappropriate for any commercially deployable products.
+  Implementation of a persistence manager. This class keeps
+  all registrations in memory, and is used for remote replication.
+
+  Removed contact bindings are kept in memory with a RegExpires time
+  of 0.  This is required in order to properly syncronize removed 
+  contact bindings with a peer instance.  Contacts are not deleted 
+  from memory until they have been removed for "removeLingerSecs".
+  The removeLingerSecs parameter is passed into the contructor.
+  If removeLingerSecs is set to 0, then contacts are removed from
+  memory immediately and this class behaves very similar to the 
+  InMemoryRegistrationDatabase class.
+
+  The InMemorySyncRegDbHandler can be used by an external mechanism to 
+  transport registration bindings to a remote peer for replication.
+  See the RegSyncClient and RegSyncServer implementations in the repro
+  project.
 */
-class InMemoryRegistrationDatabase : public RegistrationPersistenceManager
+class InMemorySyncRegDb : public RegistrationPersistenceManager
 {
    public:
 
-      /**
-       * @param checkExpiry if set, then the methods aorIsRegistered() and
-       *                    getContacts() will check that contacts are
-       *                    not expired before returning an answer.
-       */
-      InMemoryRegistrationDatabase(bool checkExpiry = false);
-      virtual ~InMemoryRegistrationDatabase();
+      InMemorySyncRegDb(unsigned int removeLingerSecs = 0);
+      virtual ~InMemorySyncRegDb();
       
+      virtual void setHandler(InMemorySyncRegDbHandler* handler) { mHandler = handler; }
+      virtual void initialSync(unsigned int connectionId);
+
       virtual void addAor(const Uri& aor, const ContactList& contacts);
       virtual void removeAor(const Uri& aor);
       virtual bool aorIsRegistered(const Uri& aor);
@@ -43,6 +60,7 @@ class InMemoryRegistrationDatabase : public RegistrationPersistenceManager
                                  const ContactInstanceRecord& rec);
       
       virtual void getContacts(const Uri& aor, ContactList& container);
+      virtual void getContactsFull(const Uri& aor, ContactList& container);
    
       /// return all the AOR in the DB 
       virtual void getAors(UriList& container);
@@ -51,21 +69,13 @@ class InMemoryRegistrationDatabase : public RegistrationPersistenceManager
       typedef std::map<Uri,ContactList *> database_map_t;
       database_map_t mDatabase;
       Mutex mDatabaseMutex;
-      
+
       std::set<Uri> mLockedRecords;
       Mutex mLockedRecordsMutex;
       Condition mRecordUnlocked;
 
-      bool mCheckExpiry;
-
-   protected:
-      /**
-       * Find aor in mDatabase
-       * Before returning the iterator pointing to aor,
-       * delete all expired contacts
-       */
-      database_map_t::iterator findNotExpired(const Uri& aor);
-
+      unsigned int mRemoveLingerSecs;
+      InMemorySyncRegDbHandler* mHandler;      
 };
 
 }

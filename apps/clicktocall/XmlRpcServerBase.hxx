@@ -18,21 +18,25 @@ class ResponseInfo
 public:
    ResponseInfo(unsigned int connectionId,
                 unsigned int requestId,
-                const resip::Data& responseData) :
+                const resip::Data& responseData,
+                bool isFinal) :
       mConnectionId(connectionId),
       mRequestId(requestId),
-      mResponseData(responseData) {}
+      mResponseData(responseData),
+      mIsFinal(isFinal) {}
 
    ~ResponseInfo() {}
 
    unsigned int getConnectionId() const { return mConnectionId; }
    unsigned int getRequestId() const { return mRequestId; }
    const resip::Data& getResponseData() const { return mResponseData; }
+   bool getIsFinal() const { return mIsFinal; }
 
 private:
    unsigned int mConnectionId;
    unsigned int mRequestId;
    resip::Data mResponseData;
+   bool mIsFinal;
 };
 
 class XmlRpcServerBase
@@ -52,7 +56,8 @@ public:
    // thread safe - uses fifo
    void sendResponse(unsigned int connectionId,
                      unsigned int requestId, 
-                     const resip::Data& responseData);
+                     const resip::Data& responseData,
+                     bool isFinal=true);
 
 protected:
    virtual void handleRequest(unsigned int connectionId, 
