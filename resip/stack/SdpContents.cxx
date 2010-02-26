@@ -292,11 +292,25 @@ SdpContents::Session::Origin::parse(ParseBuffer& pb)
    pb.data(mUser, anchor);
 
    anchor = pb.skipChar(Symbols::SPACE[0]);
-   mSessionId = pb.uInt64();
+   try
+   {
+      mSessionId = pb.uInt64();
+   }
+   catch(ParseException& e)
+   {
+       WarningLog(<< "Exception parsing origin sessionid: " << e);
+   }
    pb.skipToChar(Symbols::SPACE[0]);
 
    anchor = pb.skipChar(Symbols::SPACE[0]);
-   mVersion = pb.uInt64();
+   try
+   {
+      mVersion = pb.uInt64();
+   }
+   catch(ParseException& e)
+   {
+       WarningLog(<< "Exception parsing origin version: " << e);
+   }
    pb.skipToChar(Symbols::SPACE[0]);
 
    pb.skipChar(Symbols::SPACE[0]);

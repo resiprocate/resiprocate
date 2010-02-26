@@ -52,19 +52,11 @@ InMemoryRegistrationDatabase::removeAor(const Uri& aor)
   }
 }
 
-
-InMemoryRegistrationDatabase::UriList 
-InMemoryRegistrationDatabase::getAors()
-{
-   UriList retList;   
-   getAors(retList);
-   return retList;
-}
-
 void
 InMemoryRegistrationDatabase::getAors(InMemoryRegistrationDatabase::UriList& container)
 {
    container.clear();
+   Lock g(mDatabaseMutex);
    for( database_map_t::const_iterator it = mDatabase.begin();
         it != mDatabase.end(); it++)
    {
@@ -203,26 +195,17 @@ InMemoryRegistrationDatabase::removeContact(const Uri& aor,
   }
 }
 
-ContactList
-InMemoryRegistrationDatabase::getContacts(const Uri& aor)
-{
-  ContactList result;
-  Lock g(mDatabaseMutex);
-  getContacts(aor,result);
-  return result;
-   
-}
-
 void
-InMemoryRegistrationDatabase::getContacts(const Uri& aor,ContactList& container)
+InMemoryRegistrationDatabase::getContacts(const Uri& aor, ContactList& container)
 {
+  Lock g(mDatabaseMutex);
   database_map_t::iterator i = findNotExpired(aor);
   if (i == mDatabase.end() || i->second == 0)
   {
+      container.clear();
       return;
   }
-  container= *(i->second);
-
+   container = *(i->second);
 }
 
 class RemoveIfExpired

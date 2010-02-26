@@ -493,6 +493,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\InMemorySyncRegDb.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\InviteSession.cxx"
 				>
 			</File>
@@ -832,6 +836,10 @@
 			</File>
 			<File
 				RelativePath=".\InMemoryRegistrationDatabase.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\InMemorySyncRegDb.hxx"
 				>
 			</File>
 			<File

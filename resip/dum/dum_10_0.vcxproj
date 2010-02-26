@@ -209,6 +209,7 @@
     <ClCompile Include="HttpProvider.cxx" />
     <ClCompile Include="IdentityHandler.cxx" />
     <ClCompile Include="InMemoryRegistrationDatabase.cxx" />
+    <ClCompile Include="InMemorySyncRegDb.cxx" />
     <ClCompile Include="InviteSession.cxx" />
     <ClCompile Include="InviteSessionCreator.cxx" />
     <ClCompile Include="InviteSessionHandler.cxx" />
@@ -295,6 +296,7 @@
     <ClInclude Include="HttpProvider.hxx" />
     <ClInclude Include="IdentityHandler.hxx" />
     <ClInclude Include="InMemoryRegistrationDatabase.hxx" />
+    <ClInclude Include="InMemorySyncRegDb.hxx" />
     <ClInclude Include="InviteSession.hxx" />
     <ClInclude Include="InviteSessionCreator.hxx" />
     <ClInclude Include="InviteSessionHandler.hxx" />

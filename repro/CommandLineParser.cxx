@@ -75,6 +75,9 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    
    mHttpHostname = DnsUtil::getLocalHostName();
 
+   char *regSyncPeerAddress = 0;
+   int xmlRpcPort = 0;
+
 #ifdef WIN32
 #ifndef HAVE_POPT_H
    noChallenge = 1;  // If no POPT, then default to no digest challenges
@@ -89,9 +92,9 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    struct poptOption table[] = {
       {"log-type",         'l',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logType,        0, "where to send logging messages", "syslog|cerr|cout"},
       {"log-level",        'v',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logLevel,       0, "specify the default log level", "STACK|DEBUG|INFO|WARNING|ALERT"},
-      {"db-path",           0,   POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,                            &dbPath,       0, "path to databases", 0},
+      {"db-path",           0,   POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,&dbPath,         0, "path to databases", 0},
       {"record-route",     'r',  POPT_ARG_STRING,                            &recordRouteUri,    0, "specify uri to use as Record-Route", "sip:example.com"},
-      {"force-record-route",     0,  POPT_ARG_NONE  | POPT_ARGFLAG_SHOW_DEFAULT,                            &forceRecordRoute,    0, "force record-routing", 0},
+      {"force-record-route", 0,  POPT_ARG_NONE | POPT_ARGFLAG_SHOW_DEFAULT,  &forceRecordRoute,0,"force record-routing", 0},
 #if defined(USE_MYSQL)
       {"mysqlServer",      'x',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &mySqlServer,    0, "enable MySQL and provide name of server", "localhost"},
 #endif
@@ -124,19 +127,21 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"http-hostname",     0,   POPT_ARG_STRING,                            &httpHostname,   0, "http hostname for this server (used in Identity headers)", 0},
       {"recursive-redirect",0,   POPT_ARG_NONE,                              &recursiveRedirect, 0, "Handle 3xx responses in the proxy", 0},
       {"q-value",           0,   POPT_ARG_NONE,                              &doQValue,       0, "Enable sequential q-value processing", 0},
-      {"q-value-behavior",  0,   POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,                            &forkBehavior,   0, "Specify forking behavior for q-value targets: FULL_SEQUENTIAL, EQUAL_Q_PARALLEL, or FULL_PARALLEL", 0},
+      {"q-value-behavior",  0,   POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,&forkBehavior,   0, "Specify forking behavior for q-value targets: FULL_SEQUENTIAL, EQUAL_Q_PARALLEL, or FULL_PARALLEL", 0},
       {"q-value-cancel-btw-fork-groups",0,POPT_ARG_NONE,                     &cancelBetweenForkGroups, 0, "Whether to cancel groups of parallel forks after the period specified by the --q-value-ms-before-cancel parameter.", 0},
       {"q-value-wait-for-terminate-btw-fork-groups",0,POPT_ARG_NONE,         &waitForTerminate, 0, "Whether to wait for parallel fork groups to terminate before starting new fork-groups.", 0},
-      {"q-value-ms-between-fork-groups",0,POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,                      &msBetweenForkGroups, 0, "msec to wait before starting new groups of parallel forks", 0},
-      {"q-value-ms-before-cancel",0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,                         &msBeforeCancel, 0, "msec to wait before cancelling parallel fork groups", 0},
+      {"q-value-ms-between-fork-groups",0,POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,&msBetweenForkGroups, 0, "msec to wait before starting new groups of parallel forks", 0},
+      {"q-value-ms-before-cancel",0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,&msBeforeCancel, 0, "msec to wait before cancelling parallel fork groups", 0},
       {"enum-suffix",     'e',   POPT_ARG_STRING,                            &enumSuffix,     0, "specify enum suffix to search", "e164.arpa"},
       {"allow-bad-reg",   'b',   POPT_ARG_NONE,                              &allowBadReg,    0, "allow To tag in registrations", 0},
       {"parallel-fork-static-routes",'p',POPT_ARG_NONE,                      &parallelForkStaticRoutes, 0, "paralled fork to all matching static routes and (first batch) registrations", 0},
       {"timer-C",         0,     POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,                               &timerC,         0, "specify length of timer C in sec (0 or negative will disable timer C)", 0},
-      {"admin-password",  'a',   POPT_ARG_STRING  | POPT_ARGFLAG_SHOW_DEFAULT,                            &adminPassword,  0, "set web administrator password", 0},
-      {"disable-outbound",0,     POPT_ARG_NONE,                              &outboundDisabled,0, "disable outbound support (draft-ietf-sip-outbound)", 0},
-      {"outbound-version",0,     POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &outboundVersion, 0, "set the version of outbound to support", 0},
-      {"enable-flow-tokens",0,   POPT_ARG_NONE,                              &rrTokenHackEnabled,0, "enable use of flow-tokens in non-outbound cases (This is a workaround, and it is broken. Only use it if you have to.)", 0},
+      {"admin-password",  'a',   POPT_ARG_STRING  | POPT_ARGFLAG_SHOW_DEFAULT,&adminPassword, 0, "set web administrator password", 0},
+      {"disable-outbound",  0,   POPT_ARG_NONE,                              &outboundDisabled,0,"disable outbound support (draft-ietf-sip-outbound)", 0},
+      {"outbound-version",  0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &outboundVersion,0, "set the version of outbound to support", 0},
+      {"enable-flow-tokens",0,   POPT_ARG_NONE,                              &rrTokenHackEnabled,0,"enable use of flow-tokens in non-outbound cases (This is a workaround, and it is broken. Only use it if you have to.)", 0},
+      {"xmlrpcport",        0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &xmlRpcPort,     0, "port on which to listen for and send XML RPC messaging (used for registration sync) - 0 to disable", 0},
+      {"regsyncpeer",       0,   POPT_ARG_STRING,                            &regSyncPeerAddress,0,"hostname/ip address of another instance of repro to syncronize registrations with (note xmlrpcport must also be specified)", 0},
       {"version",         'V',   POPT_ARG_NONE,                              &showVersion,     0, "show the version number and exit", 0},
       POPT_AUTOHELP 
       { NULL, 0, 0, NULL, 0 }
@@ -253,6 +258,12 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       InteropHelper::setOutboundSupported(false);
       InteropHelper::setRRTokenHackEnabled(false);
       mForceRecordRoute=false;
+   }
+
+   mXmlRpcPort = xmlRpcPort;
+   if(regSyncPeerAddress)
+   {
+       mRegSyncPeerAddress = regSyncPeerAddress;
    }
 
 #ifdef HAVE_POPT_H

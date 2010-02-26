@@ -25,6 +25,9 @@
 #include "repro/BerkeleyDb.hxx"
 #include "repro/WebAdmin.hxx"
 #include "repro/WebAdminThread.hxx"
+#include "repro/RegSyncClient.hxx"
+#include "repro/RegSyncServer.hxx"
+#include "repro/RegSyncServerThread.hxx"
 #include "repro/monkeys/IsTrustedNode.hxx"
 #include "repro/monkeys/AmIResponsible.hxx"
 #include "repro/monkeys/ConstantLocationMonkey.hxx"
@@ -237,7 +240,8 @@ main(int argc, char** argv)
    StackThread stackThread(stack);
 
    Registrar registrar;
-   InMemoryRegistrationDatabase regData;
+   // We only need removed records to linger if we have reg sync enabled
+   InMemorySyncRegDb regData(args.mXmlRpcPort ? 86400 /* 24 hours */ : 0 /* removeLingerSecs */);  // !slg! could make linger time a setting
    SharedPtr<MasterProfile> profile(new MasterProfile);
  
 
@@ -267,15 +271,13 @@ main(int argc, char** argv)
                     "Baboons" are processors which operate on a request for each target  
                               as the request is about to be forwarded to that target */
       
+   // Build Monkey Chain
    ProcessorChain requestProcessors(Processor::REQUEST_CHAIN);   // Monkeys
-   ProcessorChain responseProcessors(Processor::RESPONSE_CHAIN); // Lemurs
-   ProcessorChain targetProcessors(Processor::TARGET_CHAIN);     // Baboons
-
 #if 0
    if (args.mRequestProcessorChainName=="StaticTest")
    {
-      ConstantLocationMonkey* testMonkey = new ConstantLocationMonkey();
-      requestProcessors.addProcessor(std::auto_ptr<Processor>(testMonkey));
+      // Add contact location monkey
+      requestProcessors.addProcessor(std::auto_ptr<Processor>(new ContactLocationMonkey));
    }
    else
 #endif
@@ -283,14 +285,12 @@ main(int argc, char** argv)
       // Either the chainName is default or we don't know about it
       // Use default if we don't recognize the name
       // Should log about it.
-      ProcessorChain* locators = new ProcessorChain();
-      
-      StrictRouteFixup* srf = new StrictRouteFixup;
-      locators->addProcessor(std::auto_ptr<Processor>(srf));
 
-      IsTrustedNode* isTrusted = new IsTrustedNode(store.mAclStore);
-      locators->addProcessor(std::auto_ptr<Processor>(isTrusted));
+      // Add strict route fixup monkey
+      requestProcessors.addProcessor(std::auto_ptr<Processor>(new StrictRouteFixup));      
 
+      // Add is trusted node monkey
+      requestProcessors.addProcessor(std::auto_ptr<Processor>(new IsTrustedNode(store.mAclStore)));
       if (!args.mNoChallenge)
       {
          DigestAuthenticator* da = new DigestAuthenticator(store.mUserStore,
@@ -299,11 +299,12 @@ main(int argc, char** argv)
                                                            args.mHttpPort,
                                                            !args.mNoAuthIntChallenge /*useAuthInt*/,
                                                            args.mRejectBadNonces);
-         locators->addProcessor(std::auto_ptr<Processor>(da)); 
+         // Add digest authenticator monkey
+         requestProcessors.addProcessor(std::auto_ptr<Processor>(da)); 
       }
 
-      AmIResponsible* isme = new AmIResponsible;
-      locators->addProcessor(std::auto_ptr<Processor>(isme));
+      // Add am I responsible monkey
+      requestProcessors.addProcessor(std::auto_ptr<Processor>(new AmIResponsible)); 
       
       // [TODO] support for GRUU is on roadmap.  When it is added the GruuMonkey will go here
       
@@ -312,8 +313,12 @@ main(int argc, char** argv)
      
       if (args.mRouteSet.empty())
       {
-         StaticRoute* sr = new StaticRoute(store.mRouteStore, args.mNoChallenge, args.mParallelForkStaticRoutes, !args.mNoAuthIntChallenge /*useAuthInt*/);
-         locators->addProcessor(std::auto_ptr<Processor>(sr));
+         StaticRoute* sr = new StaticRoute(store.mRouteStore, 
+                                           args.mNoChallenge, 
+                                           args.mParallelForkStaticRoutes, 
+                                           !args.mNoAuthIntChallenge /*useAuthInt*/);
+         // add static route monkey
+         requestProcessors.addProcessor(std::auto_ptr<Processor>(sr)); 
       }
       else
       {
@@ -323,32 +328,28 @@ main(int argc, char** argv)
          {
             routes.push_back(NameAddr(*i));
          }
-         SimpleStaticRoute* sr = new SimpleStaticRoute(routes);
-         locators->addProcessor(std::auto_ptr<Processor>(sr));
+
+         // add simple static route monkey
+         requestProcessors.addProcessor(std::auto_ptr<Processor>(new SimpleStaticRoute(routes))); 
       }
       
-      LocationServer* ls = new LocationServer(regData, args.mParallelForkStaticRoutes);
-      locators->addProcessor(std::auto_ptr<Processor>(ls));
- 
-      requestProcessors.addProcessor(auto_ptr<Processor>(locators));      
-
+      // Add location server monkey
+      requestProcessors.addProcessor(std::auto_ptr<Processor>(new LocationServer(regData, 
+                                                                                 args.mParallelForkStaticRoutes))); 
    }
 
-   ProcessorChain* lemurs = new ProcessorChain;
-   OutboundTargetHandler* ob = new OutboundTargetHandler;
-   lemurs->addProcessor(auto_ptr<Processor>(ob));
-
+   // Build Lemur Chain
+   ProcessorChain responseProcessors(Processor::RESPONSE_CHAIN); // Lemurs
+   // Add outbound target handler lemur
+   responseProcessors.addProcessor(std::auto_ptr<Processor>(new OutboundTargetHandler)); 
    if (args.mRecursiveRedirect)
    {
-      RecursiveRedirect* red = new RecursiveRedirect;
-      lemurs->addProcessor(std::auto_ptr<Processor>(red));
+      // Add recursive redirect lemur
+      responseProcessors.addProcessor(std::auto_ptr<Processor>(new RecursiveRedirect)); 
    }
 
-   responseProcessors.addProcessor(auto_ptr<Processor>(lemurs));      
-
-   ProcessorChain* baboons = new ProcessorChain;
-
-   
+   // Build Baboons Chain
+   ProcessorChain targetProcessors(Processor::TARGET_CHAIN);     // Baboons   
    if( args.mDoQValue)
    {
       QValueTargetHandler::ForkBehavior behavior=QValueTargetHandler::EQUAL_Q_PARALLEL;
@@ -369,13 +370,12 @@ main(int argc, char** argv)
                                  args.mMsBetweenForkGroups, //ms between fork groups, moot in this case
                                  args.mMsBeforeCancel //ms before cancel
                                  );
-      baboons->addProcessor(std::auto_ptr<Processor>(qval));
+      // Add q value target handler baboon
+      targetProcessors.addProcessor(std::auto_ptr<Processor>(qval)); 
    }
    
-   SimpleTargetHandler* smpl = new SimpleTargetHandler;
-   baboons->addProcessor(std::auto_ptr<Processor>(smpl));
-   
-   targetProcessors.addProcessor(auto_ptr<Processor>(baboons));
+   // Add simple target handler baboon
+   targetProcessors.addProcessor(std::auto_ptr<Processor>(new SimpleTargetHandler)); 
 
    Proxy proxy(stack, 
                args.mRecordRoute, 
@@ -482,13 +482,49 @@ main(int argc, char** argv)
    stack.setFixBadDialogIdentifiers(false);
    stack.setFixBadCSeqNumbers(false);
 
+   // Create reg sync components if required
+   RegSyncClient* regSyncClient = 0;
+   RegSyncServer* regSyncServerV4 = 0;
+   RegSyncServer* regSyncServerV6 = 0;
+   RegSyncServerThread* regSyncServerThread = 0;
+   if(args.mXmlRpcPort != 0)
+   {
+      std::list<RegSyncServer*> regSyncServerList;
+      if(args.mUseV4) 
+      {
+         regSyncServerV4 = new RegSyncServer(&regData, args.mXmlRpcPort, V4);
+         regSyncServerList.push_back(regSyncServerV4);
+      }
+      if(args.mUseV6) 
+      {
+         regSyncServerV6 = new RegSyncServer(&regData, args.mXmlRpcPort, V6);
+          regSyncServerList.push_back(regSyncServerV6);
+      }
+      if(!regSyncServerList.empty())
+      {
+         regSyncServerThread = new RegSyncServerThread(regSyncServerList);
+      }
+      if(!args.mRegSyncPeerAddress.empty())
+      {
+          regSyncClient = new RegSyncClient(&regData, args.mRegSyncPeerAddress, args.mXmlRpcPort);
+      }
+   }
+
    /* Make it all go */
    stackThread.run();
    proxy.run();
    adminThread.run();
-   if (dumThread)
+   if(dumThread)
    {
       dumThread->run();
+   }
+   if(regSyncServerThread)
+   {
+      regSyncServerThread->run();
+   }
+   if(regSyncClient)
+   {
+      regSyncClient->run();
    }
    
    while (!finished)
@@ -507,6 +543,14 @@ main(int argc, char** argv)
    {
        dumThread->shutdown();
    }
+   if(regSyncServerThread)
+   {
+      regSyncServerThread->shutdown();
+   }
+   if(regSyncClient)
+   {
+      regSyncClient->shutdown();
+   }
 
    proxy.join();
    stackThread.join();
@@ -515,6 +559,25 @@ main(int argc, char** argv)
    {
       dumThread->join();
       delete dumThread;
+   }
+   if(regSyncServerThread)
+   {
+      regSyncServerThread->join();
+      delete regSyncServerThread;
+   }
+   if(regSyncClient)
+   {
+      regSyncClient->join();
+      delete regSyncClient;
+   }
+
+   if(regSyncServerV4)
+   {
+      delete regSyncServerV4;
+   }
+   if(regSyncServerV6)
+   {
+      delete regSyncServerV6;
    }
 
 #if defined(USE_SSL)

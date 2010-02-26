@@ -81,6 +81,15 @@
     <ClCompile Include="Registrar.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RegSyncClient.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RegSyncServer.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RegSyncServerThread.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="ReproServerAuthManager.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -121,6 +130,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="WorkerThread.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="XmlRpcConnection.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="XmlRpcServerBase.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -197,6 +212,15 @@
     <ClInclude Include="Registrar.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RegSyncClient.cxx">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RegSyncServer.cxx">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RegSyncServerThread.cxx">
+      <Filter>Source Files</Filter>
+    </ClInclude>
     <ClInclude Include="ReproServerAuthManager.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -246,6 +270,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="WorkerThread.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="XmlRpcConnection.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="XmlRpcServerBase.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
