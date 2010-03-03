@@ -525,6 +525,7 @@ ClientInviteSession::handleProvisional(const SipMessage& msg)
       InfoLog (<< "Failure:  CSeq doesn't match invite: " << msg.brief());
       onFailureAspect(getHandle(), msg);
       end(NotSpecified);
+      return;
    }
    //!dcm! this should never happen, the invite will have 100rel in the
    //required header.  Keep for interop?
