@@ -527,9 +527,7 @@ ClientInviteSession::handleProvisional(const SipMessage& msg)
       end(NotSpecified);
       return;
    }
-   //!dcm! this should never happen, the invite will have 100rel in the
-   //required header.  Keep for interop?
-   else if (mDum.getMasterProfile()->getUacReliableProvisionalMode() == MasterProfile::Required)
+   else if (isReliable(msg))
    {
       if (!msg.exists(h_RSeq))
       {
