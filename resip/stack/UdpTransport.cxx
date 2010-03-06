@@ -206,6 +206,28 @@ UdpTransport::process(FdSet& fdset)
          if (stunParseMessage(buffer, len, resp, false))
          {
             in_addr sin_addr;
+            // Use XorMappedAddress if present - if not use MappedAddress
+            if(resp.hasXorMappedAddress)
+            {
+               UInt16 id16 = resp.msgHdr.id.octet[0]<<8 
+                             | resp.msgHdr.id.octet[1];
+               UInt32 id32 = resp.msgHdr.id.octet[0]<<24 
+                             | resp.msgHdr.id.octet[1]<<16 
+                             | resp.msgHdr.id.octet[2]<<8 
+                             | resp.msgHdr.id.octet[3];
+               resp.xorMappedAddress.ipv4.port = resp.xorMappedAddress.ipv4.port^id16;
+               resp.xorMappedAddress.ipv4.addr = resp.xorMappedAddress.ipv4.addr^id32;
+
+#if defined(WIN32)
+               sin_addr.S_un.S_addr = htonl(resp.xorMappedAddress.ipv4.addr);
+#else
+               sin_addr.s_addr = htonl(resp.xorMappedAddress.ipv4.addr);
+#endif
+               mStunMappedAddress = Tuple(sin_addr,resp.xorMappedAddress.ipv4.port, UDP);
+               mStunSuccess = true;
+            }
+            else if(resp.hasMappedAddress)
+            {
 #if defined(WIN32)
             sin_addr.S_un.S_addr = htonl(resp.mappedAddress.ipv4.addr);
 #else
@@ -213,6 +235,7 @@ UdpTransport::process(FdSet& fdset)
 #endif
             mStunMappedAddress = Tuple(sin_addr,resp.mappedAddress.ipv4.port, UDP);
             mStunSuccess = true;
+            }
          }
          delete[] buffer;
          buffer = 0;
