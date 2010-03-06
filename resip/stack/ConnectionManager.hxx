@@ -39,7 +39,8 @@ class ConnectionManager
       void removeFromWritable(Connection* conn); // remove the current mWriteMark
 
       /// release excessively old connections (free up file descriptors)
-      void gc(UInt64 threshhold);
+      /// set maxToRemove to 0 for no-max
+      void gc(UInt64 threshhold, unsigned int maxToRemove);
 
       typedef std::map<Tuple, Connection*> AddrMap;
       typedef std::map<Socket, Connection*> IdMap;

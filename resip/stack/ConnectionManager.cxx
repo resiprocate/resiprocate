@@ -184,13 +184,15 @@ ConnectionManager::removeConnection(Connection* connection)
 
 // release excessively old connections (free up file descriptors)
 void
-ConnectionManager::gc(UInt64 relThreshhold)
+ConnectionManager::gc(UInt64 relThreshhold, unsigned int maxToRemove)
 {
    UInt64 threshhold = Timer::getTimeMs() - relThreshhold;
    InfoLog(<< "recycling connections older than " << relThreshhold/1000.0 << " seconds");
 
+   unsigned int numRemoved = 0;
    for (ConnectionLruList::iterator i = mLRUHead->begin();
-        i != mLRUHead->end();)
+        i != mLRUHead->end() &&
+        (maxToRemove == 0 || numRemoved != maxToRemove);)
    {
       if ((*i)->whenLastUsed() < threshhold)
       {
@@ -199,6 +201,7 @@ ConnectionManager::gc(UInt64 relThreshhold)
          // iterate before removing
          ++i;
          delete discard;
+         numRemoved++;
       }
       else
       {

@@ -157,7 +157,7 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
             int e = getErrno();
             InfoLog (<< "Failed to create a socket " << strerror(e));
             error(e);
-            mConnectionManager.gc(ConnectionManager::MinimumGcAge); // free one up
+            mConnectionManager.gc(ConnectionManager::MinimumGcAge, 1); // free one up
 
             sock = InternalTransport::socket( TCP, ipVersion());
             if ( sock == INVALID_SOCKET )
