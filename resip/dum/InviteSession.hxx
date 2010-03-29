@@ -312,7 +312,7 @@ class InviteSession : public DialogUsage
       void transition(State target);
 
       std::auto_ptr<Contents> getOfferAnswer(const SipMessage& msg);
-      bool isReliable(const SipMessage& msg);
+      bool isReliable(const SipMessage& msg) const;
       static std::auto_ptr<Contents> makeOfferAnswer(const Contents& offerAnswer);
       static std::auto_ptr<Contents> makeOfferAnswer(const Contents& offerAnswer, const Contents* alternative);
       static void setOfferAnswer(SipMessage& msg, const Contents& offerAnswer, const Contents* alternative = 0);
