@@ -60,7 +60,7 @@ class ServerInviteSession: public InviteSession
       void provisionalCommand(int code=180);
       void acceptCommand(int statusCode=200);
 
-      bool provisionalWillBeSentReliable();
+      bool provisionalWillBeSentReliable() const;
 
    private:
       friend class Dialog;

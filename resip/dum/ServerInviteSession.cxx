@@ -1968,7 +1968,7 @@ ServerInviteSession::sendUpdate(const Contents& offerAnswer)
 }
 
 bool 
-ServerInviteSession::provisionalWillBeSentReliable()
+ServerInviteSession::provisionalWillBeSentReliable() const
 {
    return isReliable(mFirstRequest);
 }

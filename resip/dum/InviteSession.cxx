@@ -2676,7 +2676,7 @@ InviteSession::transition(State target)
 }
 
 bool
-InviteSession::isReliable(const SipMessage& msg)
+InviteSession::isReliable(const SipMessage& msg) const
 {
    if(msg.method() != INVITE)
    {
