@@ -304,7 +304,7 @@ AsyncTlsSocketBase::transportFramedReceive()
 void 
 AsyncTlsSocketBase::transportClose()
 {
-   mQOSManager->SocketClose(mSocket.lowest_layer().native());
+   QosSocketManager::SocketClose(mSocket.lowest_layer().native());
 
    asio::error_code ec;
    //mSocket.shutdown(ec);  // ?slg? Should we use async_shutdown? !slg! note: this fn gives a stack overflow since ASIO 1.0.0 for some reason
@@ -359,7 +359,7 @@ AsyncTlsSocketBase::handleReadHeader(const asio::error_code& e)
 bool 
 AsyncTlsSocketBase::setDSCP(ULONG ulInDSCPValue)
 {
-   return mQOSManager->SocketSetDSCP(mSocket.lowest_layer().native(), ulInDSCPValue, false);
+   return QosSocketManager::SocketSetDSCP(mSocket.lowest_layer().native(), ulInDSCPValue, false);
 }
 
 bool 
@@ -369,7 +369,7 @@ AsyncTlsSocketBase::setServiceType(
    ULONG ulInBandwidthInBitsPerSecond
 )
 {
-   return mQOSManager->SocketSetServiceType(mSocket.lowest_layer().native(), 
+   return QosSocketManager::SocketSetServiceType(mSocket.lowest_layer().native(), 
       tInDestinationIPAddress, eInServiceType, ulInBandwidthInBitsPerSecond, false);
 }
 

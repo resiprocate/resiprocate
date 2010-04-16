@@ -12,6 +12,7 @@
 #include <asio.hpp>
 #include <rutil/Data.hxx>
 #include <rutil/Mutex.hxx>
+#include <boost/function.hpp>
 
 #include "../StunTuple.hxx"
 #include "../StunMessage.hxx"
@@ -52,6 +53,10 @@ public:
 
    // Set the username and password for all future requests
    void setUsernameAndPassword(const char* username, const char* password, bool shortTermAuth=false);
+
+   // Sets the local HmacKey, used to check the integrity of incoming STUN messages
+   void setLocalPassword(const char* password);
+
    void connect(const std::string& address, unsigned short port);
 
    // Stun Binding Method - use getReflexiveTuple() to get binding info
@@ -110,6 +115,9 @@ protected:
    resip::Data mRealm;
    resip::Data mNonce;
 
+   // Used to check integrity of incoming STUN messages
+   resip::Data mLocalHmacKey;
+
    // Turn Allocation Properties used in request
    StunTuple::TransportType mRequestedTransportType;
 
@@ -151,6 +159,42 @@ private:
    void requestTimeout(UInt128 tid);
    void clearActiveRequestMap();
 
+   // weak functor template, used to reference the parent without explicitly
+   // preventing it from being garbage collected. Functor will only call the
+   // parent if it is still available.
+   template < typename P, typename F > class weak_bind
+   {
+   public:
+      // !jjg! WARNING! if you are using boost::bind(..) to create the second
+      // argument for this constructor BE CAREFUL that you are passing 'this' and
+      // not 'shared_from_this()' to the bind(..) -- otherwise you will defeat the
+      // purpose of this class holding a weak_ptr
+      weak_bind<P,F>( boost::weak_ptr<P> parent, boost::function<F> func )
+         : mParent( parent ), mFunction( func ) {}
+
+      void operator()()
+      {
+         if ( boost::shared_ptr< P > ptr = mParent.lock() )
+         {
+            if ( !mFunction.empty() )
+               mFunction();
+         }
+      }
+
+      void operator()(const asio::error_code& e)
+      {
+         if ( boost::shared_ptr< P > ptr = mParent.lock() )
+         {
+            if ( !mFunction.empty() )
+               mFunction(e);
+         }
+      }
+
+   private:
+      boost::weak_ptr< P > mParent;
+      boost::function< F > mFunction;
+   };
+
    asio::deadline_timer mAllocationTimer;
    void startAllocationTimer();
    void cancelAllocationTimer();
@@ -164,6 +208,7 @@ private:
 
    void doRequestSharedSecret();
    void doSetUsernameAndPassword(resip::Data* username, resip::Data* password, bool shortTermAuth);
+   void doSetLocalPassword(resip::Data* password);
    void doBindRequest();
    void doConnectivityCheck(StunTuple* targetAddr, UInt32 peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits);
    void doCreateAllocation(unsigned int lifetime = UnspecifiedLifetime,

@@ -121,7 +121,7 @@ class CreateConversationCmd : public DumCommandStub
 
          // the list of selected codecs (among other things) may have changed
          resip::Data ipaddr = resip::Data::Empty;
-         mConversationManager->buildSessionCapabilities(cProfile->audioSupported(), cProfile->videoSupported(), ipaddr, cProfile->sessionCaps());
+         mConversationManager->buildSessionCapabilities(cProfile->audioSupported(), cProfile->videoSupported(), ipaddr, cProfile->sessionCaps(), cProfile->sessionName());
 
          Conversation* conversation(new Conversation(mConvHandle, cProfile, *mConversationManager));
          assert(conversation);
@@ -190,6 +190,7 @@ class CreateRemoteParticipantCmd : public DumCommandStub
                                  ConversationHandle convHandle,
                                  resip::NameAddr& destination,
                                  ConversationManager::MediaAttributes mediaAttributes,
+                                 bool requestAutoAnswer,
                                  const resip::DialogId* replacesDialogId, const resip::DialogId* joinDialogId,
                                  ConversationManager::ParticipantForkSelectMode forkSelectMode) 
          : DumCommandStub("CreateRemoteParticipantCmd"),
@@ -200,7 +201,8 @@ class CreateRemoteParticipantCmd : public DumCommandStub
            mMediaAttribs(mediaAttributes),
            mReplacesId(replacesDialogId),
            mJoinId(joinDialogId),
-           mForkSelectMode(forkSelectMode) {}
+           mForkSelectMode(forkSelectMode),
+           mRequestAutoAnswer(requestAutoAnswer) {}
       virtual void executeCommand()
       {
          Conversation* conversation = mConversationManager->getConversation(mConvHandle);
@@ -211,7 +213,7 @@ class CreateRemoteParticipantCmd : public DumCommandStub
             if(participant)
             {
                conversation->addParticipant(participant);
-               participant->initiateRemoteCall(conversation->getProfile(), mDestination, mMediaAttribs, conversation, mReplacesId, mJoinId);
+               participant->initiateRemoteCall(conversation->getProfile(), mDestination, mMediaAttribs, conversation, mRequestAutoAnswer, mReplacesId, mJoinId);
             }
             else
             {
@@ -234,6 +236,7 @@ class CreateRemoteParticipantCmd : public DumCommandStub
       const resip::DialogId* mReplacesId;
       const resip::DialogId* mJoinId;
       ConversationManager::ParticipantForkSelectMode mForkSelectMode;
+      bool mRequestAutoAnswer;
 };
 
 class CreateMediaResourceParticipantCmd : public DumCommandStub
@@ -388,9 +391,9 @@ class MoveParticipantCmd : public DumCommandStub
          Conversation* destConversation   = mConversationManager->getConversation(mDestConvHandle);
          if(participant && sourceConversation && destConversation)
          {
-            // Add to new conversation and remove from old (add before remove, so that hold/unhold won't happen)
+            // remove has to happen before add, since there could only be one mixer (optionally)
+            sourceConversation->removeParticipant(participant, false);
             destConversation->addParticipant(participant);
-            sourceConversation->removeParticipant(participant);
          }
       }
    private:

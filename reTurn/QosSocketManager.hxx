@@ -19,31 +19,24 @@ enum EQOSServiceTypes
 class QosSocketManager
 {
 public:
-   QosSocketManager() {}
-   virtual ~QosSocketManager() {}
-
    // these methods may be called to set the QOS values on a socket
-   virtual bool SocketSetDSCP(resip::Socket s, int DSCPValue, bool bUDP)
-   { 
-      return false;
-   }
-
-   virtual bool SocketSetServiceType(
+   static bool SocketSetDSCP(resip::Socket s, int DSCPValue, bool bUDP) { return false; }
+   static bool SocketSetServiceType(
       resip::Socket s,
       const asio::ip::udp::endpoint &tInDestinationIPAddress,
       EQOSServiceTypes eInServiceType,
       ULONG ulInBandwidthInBitsPerSecond,
       bool bUDP)
-   {
-      return false;
-   }
+   { return false; }
 
    // this method must be called on any socket that was passed into one 
    // of the above methods, before that socket is closed - it may be called 
    // on sockets that were not passed into one of the above methods
-   virtual void SocketClose(resip::Socket s)
-   {
-   }
+   static void SocketClose(resip::Socket s) {}
+
+protected:
+   QosSocketManager() {}
+   ~QosSocketManager() {}
 };
 
 }

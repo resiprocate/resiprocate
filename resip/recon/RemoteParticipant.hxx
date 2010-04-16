@@ -56,24 +56,21 @@ public:
    void buildSdpOffer(ConversationProfile* profile, MediaHoldStateMap holdStates, resip::SdpContents& offer, std::set<sdpcontainer::SdpMediaLine::SdpMediaType> existingMediaTypes=std::set<sdpcontainer::SdpMediaLine::SdpMediaType>());
    virtual bool isHolding();
 
-   virtual void initiateRemoteCall(resip::SharedPtr<ConversationProfile> profile, const resip::NameAddr& destination, ConversationManager::MediaAttributes mediaAttributes, Conversation* conversation, const resip::DialogId* replacesDialogId, const resip::DialogId* joinDialogId);
+   virtual void initiateRemoteCall(resip::SharedPtr<ConversationProfile> profile, const resip::NameAddr& destination, ConversationManager::MediaAttributes mediaAttributes, Conversation* conversation, bool requestAutoAnswer, const resip::DialogId* replacesDialogId, const resip::DialogId* joinDialogId);
    virtual int getConnectionPortOnBridge();
    virtual boost::shared_ptr<RtpStream> getRtpStream( sdpcontainer::SdpMediaLine::SdpMediaType mediaType ) { return mDialogSet.getRtpStream( mediaType ); }
 
    virtual int getMediaConnectionId();
    virtual void destroyParticipant(const resip::Data& appDefinedReason = resip::Data::Empty);
    virtual void addToConversation(Conversation* conversation, unsigned int inputGain = 100, unsigned int outputGain = 100);
-   virtual void removeFromConversation(Conversation* conversation);
+   virtual void removeFromConversation(Conversation* conversation, bool bTriggerHold );
    virtual void accept(ConversationManager::MediaAttributes mediaAttributes);
    virtual void alert(bool earlyFlag);
    virtual void reject(unsigned int rejectCode);
    virtual void redirect(resip::NameAddr& destination);
    virtual void redirectToParticipant(resip::InviteSessionHandle& destParticipantInviteSessionHandle);
    virtual void checkHoldCondition();
-   virtual void updateMedia(ConversationManager::MediaAttributes mediaAttribs, bool sendOffer);
-   void pauseOutboundMedia(MediaStack::MediaType mediaType);
-   void pauseOutboundMediaIfMarked();
-   void resumeOutboundMedia(MediaStack::MediaType mediaType);
+   virtual void updateMedia(ConversationManager::MediaAttributes mediaAttributes, bool sendOffer);
 
    virtual void setPendingOODReferInfo(resip::ServerOutOfDialogReqHandle ood, const resip::SipMessage& referMsg); // OOD-Refer (no Sub)
    virtual void setPendingOODReferInfo(resip::ServerSubscriptionHandle ss, const resip::SipMessage& referMsg); // OOD-Refer (with Sub)
@@ -139,17 +136,13 @@ private:
    void setRemoteSdp(const resip::SdpContents& sdp, bool answer=false);
    void setRemoteSdp(const resip::SdpContents& sdp, sdpcontainer::Sdp* remoteSdp);
    void adjustRTPStreams(bool sendingOffer=false, const resip::SipMessage* msg=NULL);
-   void onNewRtpSource(sdpcontainer::SdpMediaLine::SdpMediaType mediaType);
-   void onNewRtpDestination(sdpcontainer::SdpMediaLine::SdpMediaType mediaType);
-   void onRtpStreamClosed(sdpcontainer::SdpMediaLine::SdpMediaType mediaType, RtpStream::ClosedReason reason);
+   void checkRemoteIceAttribs(const resip::SdpContents& remoteSdp);
+   void onRtpStreamClosed(sdpcontainer::SdpMediaLine::SdpMediaType mediaType, RtpStream::ClosedReason reason, const asio::error_code& ec);
+   void handleRtpStreamClosed(sdpcontainer::SdpMediaLine::SdpMediaType mediaType, RtpStream::ClosedReason reason, const asio::error_code& ec);
    virtual void replaceWithParticipant(RemoteParticipant* replacingParticipant);
 
-   void subscribeForStreamEvents(sdpcontainer::SdpMediaLine::SdpMediaType mediaType);
-
    typedef std::map<sdpcontainer::SdpMediaLine::SdpMediaType, boost::signals::connection> MapMediaTypeToConnection;
-   MapMediaTypeToConnection m_newRtpSourceConns;
-   MapMediaTypeToConnection m_newRtpDestConns;
-   MapMediaTypeToConnection m_onClosedConns;
+   MapMediaTypeToConnection m_onRtpStreamClosedConns;
 
    resip::DialogUsageManager &mDum;
    resip::InviteSessionHandle mInviteSessionHandle; 
@@ -209,9 +202,9 @@ private:
    // Used so that we can support receiving old-style hold.
    resip::Data mLastRemoteIPAddr;
 
-   // list of paused media (per participant)
-   bool isMediaTypePaused(MediaStack::MediaType mediaType);
-   std::set<recon::MediaStack::MediaType> mPausedMedias;
+   // remote ICE u-frag, stored here so that we can determine when the other end signals
+   // an ICE restart
+   resip::Data mRemoteIceUFrag;
 };
 
 }

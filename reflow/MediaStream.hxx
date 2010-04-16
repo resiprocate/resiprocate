@@ -60,7 +60,9 @@ public:
                const StunTuple& localRtpBinding, 
                const StunTuple& localRtcpBinding,   // pass in transport type = None to disable RTCP
  #ifdef USE_SSL
+ #ifdef USE_DTLS
                dtls::DtlsFactory* dtlsFactory = 0,
+ #endif 
  #endif 
                NatTraversalMode natTraversalMode = NoNatTraversal,
                const char* natTraversalServerHostname = 0, 
@@ -76,12 +78,17 @@ public:
    bool createOutboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen);
    bool createInboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen);
 
+   void setOutgoingIceUsernameAndPassword(const resip::Data& username, const resip::Data& password);
+   void setLocalIcePassword(const resip::Data& password);
+
 protected:
    friend class Flow;
 
    // SRTP members
 #ifdef USE_SSL
+#ifdef USE_DTLS
    dtls::DtlsFactory* mDtlsFactory;
+#endif
 #endif
    volatile bool mSRTPSessionInCreated;
    volatile bool mSRTPSessionOutCreated;

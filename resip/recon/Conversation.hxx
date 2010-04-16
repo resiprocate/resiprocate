@@ -38,7 +38,7 @@ public:
    ~Conversation();
 
    void addParticipant(Participant* participant, unsigned int inputGain = 100, unsigned int outputGain = 100);
-   void removeParticipant(Participant* participant);
+   void removeParticipant(Participant* participant, bool bTriggerHold = true );
    void modifyParticipantContribution(Participant* participant, unsigned int inputGain, unsigned int outputGain);
 
    unsigned int getNumLocalParticipants() { return mNumLocalParticipants; }

@@ -96,7 +96,6 @@ protected:
 
    /// Handlers
    AsyncSocketBaseHandler* mAsyncSocketBaseHandler;
-   QosSocketManager* mQOSManager;
 
 private:
    virtual void transportSend(const StunTuple& destination, std::vector<asio::const_buffer>& buffers) = 0;

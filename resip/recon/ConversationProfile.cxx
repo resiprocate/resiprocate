@@ -19,9 +19,6 @@ ConversationProfile::ConversationProfile() :
    mAllowPriorityAutoAnswer(false),
    mChallengeAutoAnswerRequests(false),
    mChallengeOODReferRequests(true),
-   mSecureMediaMode(Srtp),
-   mSecureMediaRequired(false),
-   mDefaultSecureMediaCryptoSuite(SRTP_AES_CM_128_HMAC_SHA1_80),
    mNatTraversalMode(NoNatTraversal),
    mNatTraversalServerPort(0),
    mcpHandle(0),
@@ -29,7 +26,8 @@ ConversationProfile::ConversationProfile() :
    mPrivacyRewriteFrom(false),
    mAudioSupported(true),
    mVideoSupported(false),
-   mUseRfc2543Hold(false)
+   mUseRfc2543Hold(false),
+   mSessionName(" ")
 {
 }
 
@@ -39,9 +37,6 @@ ConversationProfile::ConversationProfile(SharedPtr<UserProfile> baseProfile) :
    mAllowPriorityAutoAnswer(false),
    mChallengeAutoAnswerRequests(false),
    mChallengeOODReferRequests(true),
-   mSecureMediaMode(Srtp),
-   mSecureMediaRequired(false),
-   mDefaultSecureMediaCryptoSuite(SRTP_AES_CM_128_HMAC_SHA1_80),
    mNatTraversalMode(NoNatTraversal),
    mNatTraversalServerPort(0),
    mcpHandle(0),
@@ -49,8 +44,8 @@ ConversationProfile::ConversationProfile(SharedPtr<UserProfile> baseProfile) :
    mPrivacyRewriteFrom(false),
    mAudioSupported(true),
    mVideoSupported(false),
-   mUseRfc2543Hold(false)
-   
+   mUseRfc2543Hold(false),
+   mSessionName(" ")
 {
 }
 
@@ -61,9 +56,6 @@ ConversationProfile::ConversationProfile( const ConversationProfile& thatProfile
    mAllowPriorityAutoAnswer(thatProfile.mAllowPriorityAutoAnswer),
    mChallengeAutoAnswerRequests(thatProfile.mChallengeAutoAnswerRequests),
    mChallengeOODReferRequests(thatProfile.mChallengeOODReferRequests),
-   mSecureMediaMode(thatProfile.mSecureMediaMode),
-   mSecureMediaRequired(thatProfile.mSecureMediaRequired),
-   mDefaultSecureMediaCryptoSuite(thatProfile.mDefaultSecureMediaCryptoSuite),
    mNatTraversalMode(thatProfile.mNatTraversalMode),
    mNatTraversalServerHostname(thatProfile.mNatTraversalServerHostname),
    mNatTraversalServerPort(thatProfile.mNatTraversalServerPort),
@@ -78,7 +70,8 @@ ConversationProfile::ConversationProfile( const ConversationProfile& thatProfile
    mSignalingQOS(thatProfile.mSignalingQOS),
    mAudioDataQOS(thatProfile.mAudioDataQOS),
    mVideoDataQOS(thatProfile.mVideoDataQOS),
-   mUseRfc2543Hold(thatProfile.mUseRfc2543Hold)
+   mUseRfc2543Hold(thatProfile.mUseRfc2543Hold),
+   mSessionName(thatProfile.mSessionName)
 {
    // Initializer does it all
 }

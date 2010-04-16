@@ -13,8 +13,7 @@ AsyncSocketBase::AsyncSocketBase(asio::io_service& ioService) :
   mIOService(ioService),
   mReceiving(false),
   mConnected(false),
-  mAsyncSocketBaseHandler(0),
-  mQOSManager(new QosSocketManager())
+  mAsyncSocketBaseHandler(0)
 {
 }
 

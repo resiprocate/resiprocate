@@ -11,7 +11,9 @@
 #include "MediaStream.hxx"
 #include "FlowHandler.hxx"
 #ifdef USE_SSL
+#ifdef USE_DTLS
 #include "FlowDtlsSocketContext.hxx"
+#endif
 #endif
 
 using namespace flowmanager;
@@ -135,6 +137,7 @@ Flow::Flow(asio::io_service& ioService,
     mHandler(NULL),
     mActiveDestinationSet(false),
     mConnectivityChecksPending(false),
+    mIceComplete(false),
     mIceRole(Flow::IceRole_Unknown),
     mPeerRflxCandidatePriority(0)
 {
@@ -177,6 +180,7 @@ Flow::~Flow()
    InfoLog(<< "Flow: flow destroyed for " << mLocalBinding << "  ComponentId=" << mComponentId);
 
 #ifdef USE_SSL
+#ifdef USE_DTLS
    // Cleanup DtlsSockets
    {
       Lock lock(mMutex);
@@ -186,7 +190,8 @@ Flow::~Flow()
          delete it->second;
       }
    }
- #endif //USE_SSL
+#endif //USE_DTLS
+#endif //USE_SSL
 
 }
 
@@ -196,6 +201,7 @@ Flow::shutdownImpl()
    Lock lock(mMutex);
    if (mTurnSocket.get())
    {
+      mIcmpRetryTimer.cancel();
       mTurnSocket->disableTurnAsyncHandler();
       mTurnSocket->close();
    }
@@ -334,6 +340,7 @@ Flow::processSendData(char* buffer, unsigned int& size, const asio::ip::address&
       }
    }
 #ifdef USE_SSL
+#ifdef USE_DTLS
    else
    {
       Lock lock(mMutex);
@@ -358,6 +365,7 @@ Flow::processSendData(char* buffer, unsigned int& size, const asio::ip::address&
          }
       }
    }
+#endif //USE_DTLS
 #endif //USE_SSL
    
    return true;
@@ -468,6 +476,7 @@ Flow::processReceivedData(char* buffer, unsigned int& size, ReceivedData* receiv
       }
    }
 #ifdef USE_SSL
+#ifdef USE_DTLS
    else
    {
       Lock lock(mMutex);
@@ -490,6 +499,7 @@ Flow::processReceivedData(char* buffer, unsigned int& size, ReceivedData* receiv
          }
       }
    }
+#endif //USE_DTLS
 #endif //USE_SSL
    if(!errorCode)
    {
@@ -526,12 +536,17 @@ Flow::setIceRole(bool controlling)
 void 
 Flow::setActiveDestination(const char* address, unsigned short port, const std::vector<reTurn::IceCandidate>& candidates)
 {
+   mIcmpRetryCount = 0;
+   mIcmpRetryTimer.cancel();
+
    if(mTurnSocket.get())
    {
       if(mMediaStream.mNatTraversalMode != MediaStream::TurnAllocation)
       {  
          if (mMediaStream.mNatTraversalMode == MediaStream::Ice && candidates.size() > 0)
          {
+            if (!mIceComplete)
+            {
             bool isRtpFlow = (mMediaStream.getRtpFlow() == this);
 
             std::vector<reTurn::IceCandidate>::const_iterator candIt = candidates.begin();
@@ -576,6 +591,7 @@ Flow::setActiveDestination(const char* address, unsigned short port, const std::
                mConnectivityChecksPending = true;
             }
          }
+         }
          else
          {
             changeFlowState(Connecting);
@@ -603,6 +619,30 @@ Flow::scheduleConnectivityChecks()
          mConnectivityCheckTimer.expires_from_now(boost::posix_time::milliseconds(20));
          mConnectivityCheckTimer.async_wait(boost::bind(&Flow::onConnectivityCheckTimer, this, asio::placeholders::error));
       }
+   }
+}
+
+void
+Flow::setOutgoingIceUsernameAndPassword(const resip::Data& username, const resip::Data& password)
+{
+   if (!username.empty() && !password.empty())
+   {
+      if (username != mOutgoingIceUsername || password != mOutgoingIcePassword)
+      {
+         mIceComplete = false;
+      }
+      mOutgoingIceUsername = username;
+      mOutgoingIcePassword = password;
+      mTurnSocket->setUsernameAndPassword(username.c_str(), password.c_str(), true);
+   }
+}
+
+void
+Flow::setLocalIcePassword(const resip::Data& password)
+{
+   if (!password.empty())
+   {
+      mTurnSocket->setLocalPassword(password.c_str());
    }
 }
 
@@ -644,6 +684,7 @@ Flow::onConnectivityCheckTimer(const asio::error_code& error)
 }
 
 #ifdef USE_SSL
+#ifdef USE_DTLS
 void 
 Flow::startDtlsClient(const char* address, unsigned short port)
 {
@@ -676,6 +717,7 @@ Flow::getRemoteSDPFingerprint()
    Lock lock(mMutex);
    return mRemoteSDPFingerprint; 
 }
+#endif // USE_DTLS
 #endif // USE_SSL
 
 bool Flow::setDSCP(
@@ -883,6 +925,7 @@ Flow::onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, co
          mTurnSocket->connect(stunServerTuple.getAddress().to_string(), stunServerTuple.getPort());
          DebugLog(<< "connecting RTP flow to " << stunServerTuple.getAddress().to_string() << ":" << stunServerTuple.getPort());
          mIceRole = IceRole_Unknown;
+         mIceComplete = true;
 
          // time to make the RTCP flow do its connectivity check, using the candidate with the same foundation
          // as that of the RTP candidate that has just succeeded
@@ -928,6 +971,7 @@ Flow::onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, co
          mTurnSocket->connect(stunServerTuple.getAddress().to_string(), stunServerTuple.getPort());
          DebugLog(<< "connecting RTCP flow to " << stunServerTuple.getAddress().to_string() << ":" << stunServerTuple.getPort());
          mIceRole = IceRole_Unknown;
+         mIceComplete = true;
       }
    }
    else if (mMediaStream.mNatTraversalMode == MediaStream::Ice && 
@@ -1144,8 +1188,10 @@ Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address
 {
    StackLog(<< "Flow::onReceiveSuccess: socketDesc=" << socketDesc << ", fromAddress=" << address.to_string() << ", fromPort=" << port << ", size=" << data->size() << ", componentId=" << mComponentId);
    mIcmpRetryCount = 0;
+   mIcmpRetryTimer.cancel();
 
 #ifdef USE_SSL
+#ifdef USE_DTLS
    // Check if packet is a dtls packet - if so then process it
    // Note:  Stun messaging should be picked off by the reTurn library - so we only need to tell the difference between DTLS and SRTP here
    if(DtlsFactory::demuxPacket((const unsigned char*) data->data(), data->size()) == DtlsFactory::dtls)
@@ -1167,6 +1213,7 @@ Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address
       // Packet was a DTLS packet - do not queue for app
       return;
    }
+#endif
 #endif
    Lock lock(mMutex);
    if (mHandler)
@@ -1222,9 +1269,13 @@ Flow::onReceiveFailure(unsigned int socketDesc, const asio::error_code& e)
    {
       if (mIcmpRetryCount < ICMP_RETRY_COUNT)
       {
+         asio::deadline_timer::duration_type d = mIcmpRetryTimer.expires_from_now();
+         if (d.is_special() || d.is_negative() || d.total_milliseconds() == 0)
+         {
          mIcmpRetryTimer.expires_from_now(boost::posix_time::milliseconds(ICMP_RETRY_PERIOD_MS));
          mIcmpRetryTimer.async_wait(boost::bind(&TurnAsyncSocket::turnReceive, mTurnSocket));
          mIcmpRetryCount++;
+         }
          return;
       }
    }
@@ -1271,6 +1322,7 @@ Flow::flowStateToString(FlowState state)
 }
 
 #ifdef USE_SSL
+#ifdef USE_DTLS
 DtlsSocket* 
 Flow::getDtlsSocket(const StunTuple& endpoint)
 {
@@ -1311,6 +1363,7 @@ Flow::createDtlsSocketServer(const StunTuple& endpoint)
 
    return dtlsSocket;
 }
+#endif // USE_DTLS
 #endif // USE_SSL
 
 /* ====================================================================

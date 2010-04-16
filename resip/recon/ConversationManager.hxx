@@ -163,10 +163,71 @@ public:
       MediaDirection_Inactive
    };
 
+   enum SecureMediaMode
+   {
+      NoSecureMedia, // Will accept secure media offers, but will not offer secure media in calls placed
+      Srtp,       // SRTP with keying outside of media stream - ie. SDES key negotiation via SDP
+      SrtpDtls    // SRTP with DTLS key negotiation
+   };
+
+   enum SecureMediaCryptoSuite
+   {
+      SRTP_AES_CM_128_HMAC_SHA1_32,
+      SRTP_AES_CM_128_HMAC_SHA1_80
+   };
+
    struct MediaAttributes
    {
+      MediaAttributes()
+         : audioDirection(MediaDirection_SendReceive),
+           videoDirection(MediaDirection_None),
+           secureMediaRequired(false),
+           secureMediaMode(NoSecureMedia),
+           secureMediaDefaultCryptoSuite(SRTP_AES_CM_128_HMAC_SHA1_80)
+      {
+      }
+
+      MediaAttributes(const MediaAttributes& rhs)
+         : audioDirection(rhs.audioDirection),
+           videoDirection(rhs.videoDirection),
+           secureMediaRequired(rhs.secureMediaRequired),
+           secureMediaMode(rhs.secureMediaMode),
+           secureMediaDefaultCryptoSuite(rhs.secureMediaDefaultCryptoSuite)
+      {
+      }
+
       MediaDirection audioDirection;  /* media direction */
       MediaDirection videoDirection;  /* video media direction */
+
+      /** 
+        Get/Set the whether Secure Media is required (default is false).
+        - if required then SAVP transport protocol is signalled in SDP offers
+        - if not required then AVP transport protocol is signalled in SDP offers 
+          and encryption=optional attribute is added
+      */
+      bool secureMediaRequired;
+
+      /** 
+        Get/Set the secure media mode that will be used for sending/receiving media packets.
+        NoSecureMedia - don't use any secure media strategies - RTP packets are sent 
+                        unencrypted via the specified transport.
+        Srtp          - use SRTP with keying outside of media stream - ie. SDES key negotiation via SDP (default)
+        SrtpDtls      - use SRTP with DTLS key negotiation
+
+        @note If TurnTlsAllocation NatTraversalMode is used, then media will be secured from 
+              this UA to the TURN the turn server, even if NoSecureMedia is used.
+      */
+      SecureMediaMode secureMediaMode;
+
+      /** 
+        Get/Set the secure media default crypto suite.  The default crypto suite is used when
+        forming SDP offers (SDES only - does not apply to DTLS-SRTP).
+        SRTP_AES_CM_128_HMAC_SHA1_32 - Counter Mode AES 128 bit encryption with 
+                                       32bit authenication code 
+        SRTP_AES_CM_128_HMAC_SHA1_80 - Counter Mode AES 128 bit encryption with 
+                                       80bit authenication code (default)
+      */
+      SecureMediaCryptoSuite secureMediaDefaultCryptoSuite;
    };
 
    /**
@@ -215,7 +276,7 @@ public:
 
      @return A handle to the newly created remote participant
    */
-   virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, resip::NameAddr& destination, MediaAttributes mediaAttributes, ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic, const resip::DialogId* replacesDialogId = 0, const resip::DialogId* joinDialogId = 0);
+   virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, resip::NameAddr& destination, MediaAttributes mediaAttributes, ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic, bool requestAutoAnswer = false, const resip::DialogId* replacesDialogId = 0, const resip::DialogId* joinDialogId = 0);
 
    /**
      Creates a new media resource participant in the specified conversation.
@@ -396,20 +457,7 @@ public:
      Builds a session capabilities SDPContents based on the passed in ipaddress.
      Invokes the CodecFactory for the (ordered) list of codecs.
    */
-   virtual void buildSessionCapabilities(bool includeAudio, bool includeVideo, resip::Data& ipaddress, resip::SdpContents& sessionCaps);
-
-   /**
-     This method will stop sending media for all streams that match the supplied
-     media type. Note that this will stop sending media, and keep-alives will be
-     sent in order to avoid media timers expiring on the remote side.
-    */
-   virtual void pauseSendingMedia(ParticipantHandle partHandle, const MediaStack::MediaType& mediaType);
-
-   /**
-     Resumes sending media for any streams which were previously paused of the
-     supplied media type.
-    */
-   virtual void resumeSendingMedia(ParticipantHandle partHandle, const MediaStack::MediaType& mediaType);
+   virtual void buildSessionCapabilities(bool includeAudio, bool includeVideo, resip::Data& ipaddress, resip::SdpContents& sessionCaps, const resip::Data& sessionName=" ");
 
    ///////////////////////////////////////////////////////////////////////
    // Conversation Manager Handlers //////////////////////////////////////

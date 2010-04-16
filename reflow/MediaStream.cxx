@@ -7,7 +7,9 @@
 
 using namespace flowmanager;
 #ifdef USE_SSL
+#ifdef USE_DTLS
 using namespace dtls;
+#endif
 #endif
 using namespace resip;
 using namespace std;
@@ -22,7 +24,9 @@ MediaStream::MediaStream(asio::io_service& ioService,
                          const StunTuple& localRtpBinding, 
                          const StunTuple& localRtcpBinding, 
 #ifdef USE_SSL
+#ifdef USE_DTLS
                          DtlsFactory* dtlsFactory,
+#endif 
 #endif 
                          NatTraversalMode natTraversalMode,
                          const char* natTraversalServerHostname, 
@@ -30,7 +34,9 @@ MediaStream::MediaStream(asio::io_service& ioService,
                          const char* stunUsername,
                          const char* stunPassword) :
 #ifdef USE_SSL
+#ifdef USE_DTLS
    mDtlsFactory(dtlsFactory),
+#endif  
 #endif  
    mSRTPSessionInCreated(false),
    mSRTPSessionOutCreated(false),
@@ -275,6 +281,34 @@ MediaStream::srtpUnprotect(void* data, int* size, bool rtcp)
       }
    }
    return status;
+}
+
+void 
+MediaStream::setOutgoingIceUsernameAndPassword(const resip::Data& username, const resip::Data& password)
+{
+   Lock lock(mMutex);
+   if (mRtpFlow)
+   {
+      mRtpFlow->setOutgoingIceUsernameAndPassword(username, password);
+   }
+   if (mRtcpFlow)
+   {
+      mRtcpFlow->setOutgoingIceUsernameAndPassword(username, password);
+   }
+}
+
+void 
+MediaStream::setLocalIcePassword(const resip::Data& password)
+{
+   Lock lock(mMutex);
+   if (mRtpFlow)
+   {
+      mRtpFlow->setLocalIcePassword(password);
+   }
+   if (mRtcpFlow)
+   {
+      mRtcpFlow->setLocalIcePassword(password);
+   }
 }
 
 void 

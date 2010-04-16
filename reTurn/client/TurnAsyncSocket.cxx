@@ -2,7 +2,6 @@
 #include "../AsyncSocketBase.hxx"
 #include "ErrorCode.hxx"
 #include <boost/bind.hpp>
-#include <boost/function.hpp>
 #include <rutil/WinLeakCheck.hxx>
 #include <rutil/Logger.hxx>
 #include "../ReTurnSubsystem.hxx"
@@ -24,43 +23,6 @@ unsigned int TurnAsyncSocket::UnspecifiedLifetime = 0xFFFFFFFF;
 unsigned int TurnAsyncSocket::UnspecifiedBandwidth = 0xFFFFFFFF; 
 unsigned short TurnAsyncSocket::UnspecifiedToken = 0;
 asio::ip::address TurnAsyncSocket::UnspecifiedIpAddress = asio::ip::address::from_string("0.0.0.0");
-
-
-// weak functor template, used to reference the parent without explicitly
-// preventing it from being garbage collected. Functor will only call the
-// parent if it is still available.
-template < typename P, typename F > class weak_bind
-{
-public:
-   // !jjg! WARNING! if you are using boost::bind(..) to create the second
-   // argument for this constructor BE CAREFUL that you are passing 'this' and
-   // not 'shared_from_this()' to the bind(..) -- otherwise you will defeat the
-   // purpose of this class holding a weak_ptr
-   weak_bind<P,F>( boost::weak_ptr<P> parent, boost::function<F> func )
-      : mParent( parent ), mFunction( func ) {}
-
-   void operator()()
-   {
-      if ( boost::shared_ptr< P > ptr = mParent.lock() )
-      {
-         if ( !mFunction.empty() )
-            mFunction();
-      }
-   }
-
-   void operator()(const asio::error_code& e)
-   {
-      if ( boost::shared_ptr< P > ptr = mParent.lock() )
-      {
-         if ( !mFunction.empty() )
-            mFunction(e);
-      }
-   }
-
-private:
-   boost::weak_ptr< P > mParent;
-   boost::function< F > mFunction;
-};
 
 TurnAsyncSocket::TurnAsyncSocket(asio::io_service& ioService, 
                                  AsyncSocketBase& asyncSocketBase,
@@ -136,6 +98,19 @@ TurnAsyncSocket::doSetUsernameAndPassword(Data* username, Data* password, bool s
       mHmacKey = *password;
    }
    delete username;
+   delete password;
+}
+
+void 
+TurnAsyncSocket::setLocalPassword(const char* password)
+{
+   mIOService.post(weak_bind<AsyncSocketBase, void()>( mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::doSetLocalPassword, this, new Data(password))));
+}
+
+void 
+TurnAsyncSocket::doSetLocalPassword(Data* password)
+{
+   mLocalHmacKey = *password;
    delete password;
 }
 
@@ -537,10 +512,22 @@ TurnAsyncSocket::handleStunMessage(StunMessage& stunMessage)
    asio::error_code errorCode;
    if(stunMessage.isValid())
    {
+      if(stunMessage.mClass == StunMessage::StunClassSuccessResponse ||
+         stunMessage.mClass == StunMessage::StunClassErrorResponse)
+      {
       if(!stunMessage.checkMessageIntegrity(mHmacKey))
       {
          WarningLog(<< "TurnAsyncSocket::handleStunMessage: Stun message integrity is bad!");
          return asio::error_code(reTurn::BadMessageIntegrity, asio::error::misc_category);
+      }
+      }
+      else
+      {
+         if(!stunMessage.checkMessageIntegrity(mLocalHmacKey))
+         {
+            WarningLog(<< "TurnAsyncSocket::handleStunMessage: Stun message integrity is bad!");
+            return asio::error_code(reTurn::BadMessageIntegrity, asio::error::misc_category);
+         }
       }
 
       // Request is authenticated, process it
@@ -825,6 +812,13 @@ TurnAsyncSocket::handleBindRequest(StunMessage& stunMessage)
 
    // Add Software Attribute
    response->setSoftware(SOFTWARE_STRING);
+
+   // If the request contained MESSAGE-INTEGRITY, then the response needs to as well
+   if (stunMessage.mHasMessageIntegrity)
+   {
+      response->mHasMessageIntegrity = true;
+      response->mHmacKey = mLocalHmacKey;
+   }
 
    // send bindResponse to local client
    sendStunMessage(response, false, UDP_MAX_RETRANSMITS, &(stunMessage.mRemoteTuple));

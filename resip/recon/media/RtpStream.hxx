@@ -68,33 +68,24 @@ public:
 	virtual void playTone(int toneId, bool playLocal, bool playRemote) = 0;
 	virtual void stopTone() = 0;
 
+   /**
+     The media type of this media stream.
+   */
    virtual MediaStack::MediaType mediaType() = 0;
-
-   /**
-     Signalled by the application to indicate that it is now receiving
-     RTP from a new endpoint; used by the Mixer to ensure all incoming
-     streams are heard.
-   */
-   virtual boost::signal<void ()>& onNewRtpSource() = 0;
-
-   /**
-     Signalled by the application to indicate that it is now sending
-     RTP to a new endpoint.
-   */
-   virtual boost::signal<void ()>& onNewRtpDestination() = 0;
 
    enum ClosedReason
    {
+      ClosedReason_UserRequest,
       ClosedReason_TransportError,
       ClosedReason_SSRC_Collision,
       ClosedReason_Inactivity,
       ClosedReason_UnknownError
    };
    /**
-     Signalled by the application to indicate that the RTP stream has closed
-     and that it should be removed from the Mixer.
+     Signalled by the media stack to indicate that the RTP stream has closed.
+     Used by recon to destroy the RemoteParticipant associated with this RtpStream.
    */
-   virtual boost::signal<void (ClosedReason)>& onClosed() = 0;
+   virtual boost::signal<void (ClosedReason, asio::error_code)>& onClosed() = 0;
 
 	// TODO: playStream, playMemory, playFile, playUrl ...
 
