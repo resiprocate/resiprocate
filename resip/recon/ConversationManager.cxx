@@ -389,10 +389,10 @@ ConversationManager::joinConversation(ConversationHandle sourceConvHandle, Conve
 }
 
 ParticipantHandle 
-ConversationManager::createRemoteParticipant(ConversationHandle convHandle, NameAddr& destination, MediaAttributes mediaAttributes, ParticipantForkSelectMode forkSelectMode, const DialogId* replacesDialogId, const DialogId* joinDialogId)
+ConversationManager::createRemoteParticipant(ConversationHandle convHandle, NameAddr& destination, MediaAttributes mediaAttributes, ParticipantForkSelectMode forkSelectMode, bool requestAutoAnswer, const DialogId* replacesDialogId, const DialogId* joinDialogId)
 {
    ParticipantHandle partHandle = getNewParticipantHandle();
-   mDum->post(new CreateRemoteParticipantCmd(this, partHandle, convHandle, destination, mediaAttributes, replacesDialogId, joinDialogId, forkSelectMode));
+   mDum->post(new CreateRemoteParticipantCmd(this, partHandle, convHandle, destination, mediaAttributes, requestAutoAnswer, replacesDialogId, joinDialogId, forkSelectMode));
    return partHandle;
 }
 
@@ -743,7 +743,7 @@ ConversationManager::addBufferToMediaResourceCache(resip::Data& name, resip::Dat
 }
 
 void 
-ConversationManager::buildSessionCapabilities(bool includeAudio, bool includeVideo, resip::Data& ipaddress, resip::SdpContents& sessionCaps)
+ConversationManager::buildSessionCapabilities(bool includeAudio, bool includeVideo, resip::Data& ipaddress, resip::SdpContents& sessionCaps, const resip::Data& sessionName)
 {
    if (ipaddress == resip::Data::Empty)
    {
@@ -759,7 +759,7 @@ ConversationManager::buildSessionCapabilities(bool includeAudio, bool includeVid
    // Note:  port, sessionId and version will be replaced in actual offer/answer
    // Build s=, o=, t=, and c= lines
    SdpContents::Session::Origin origin("-", 0 /* sessionId */, 0 /* version */, SdpContents::IP4, ipaddress);   // o=   
-   SdpContents::Session session(0, origin, " " /* s= */);
+   SdpContents::Session session(0, origin, sessionName /* s= */);
    session.connection() = SdpContents::Session::Connection(SdpContents::IP4, ipaddress);  // c=
    session.addTime(SdpContents::Session::Time(0, 0));
 
@@ -848,52 +848,6 @@ ConversationManager::buildSessionCapabilities(bool includeAudio, bool includeVid
       session.addMedium(videoMedium);
 
    sessionCaps.session() = session;
-}
-
-void ConversationManager::pauseSendingMedia(ParticipantHandle partHandle, const MediaStack::MediaType& mediaType)
-{
-   class PauseMediaCmd : public DumCommandStub
-   {
-   public:
-      PauseMediaCmd( ConversationManager* cmgr, ParticipantHandle partHandle, const MediaStack::MediaType& mediaType )
-         : ConMgr( cmgr ), mPartHandle(partHandle), mMediaType(mediaType) {}
-      virtual void executeCommand()
-      {
-         RemoteParticipant* remotePart = dynamic_cast<RemoteParticipant*>(ConMgr->getParticipant(mPartHandle));
-         if (remotePart)
-         {
-            remotePart->pauseOutboundMedia(mMediaType);
-         }
-      }
-   private:
-      ConversationManager *ConMgr;
-      ParticipantHandle mPartHandle;
-      const MediaStack::MediaType mMediaType;
-   };
-   mDum->post(new PauseMediaCmd( this, partHandle, mediaType ));
-}
-
-void ConversationManager::resumeSendingMedia(ParticipantHandle partHandle, const MediaStack::MediaType& mediaType)
-{
-   class ResumeMediaCmd : public DumCommandStub
-   {
-   public:
-      ResumeMediaCmd( ConversationManager* cmgr, ParticipantHandle partHandle, const MediaStack::MediaType& mediaType )
-         : ConMgr( cmgr ), mPartHandle(partHandle), mMediaType(mediaType) {}
-      virtual void executeCommand()
-      {
-         RemoteParticipant* remotePart = dynamic_cast<RemoteParticipant*>(ConMgr->getParticipant(mPartHandle));
-         if (remotePart)
-         {
-            remotePart->resumeOutboundMedia(mMediaType);
-         }
-      }
-   private:
-      ConversationManager *ConMgr;
-      ParticipantHandle mPartHandle;
-      const MediaStack::MediaType mMediaType;
-   };
-   mDum->post(new ResumeMediaCmd( this, partHandle, mediaType ));
 }
 
 void 

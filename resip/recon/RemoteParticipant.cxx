@@ -9,6 +9,7 @@
 #include "DtmfEvent.hxx"
 #include "ReconSubsystem.hxx"
 #include "media/Mixer.hxx"
+#include "ConversationManagerCmds.hxx"
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -127,30 +128,12 @@ RemoteParticipant::~RemoteParticipant()
    }
    mConversations.clear();
 
-   // unsubscribe media stream events
-   MapMediaTypeToConnection::iterator mediaEventConnIt = m_newRtpDestConns.begin();
-   while (mediaEventConnIt != m_newRtpDestConns.end())
+   MapMediaTypeToConnection::iterator connIt = m_onRtpStreamClosedConns.begin();
+   for (; connIt != m_onRtpStreamClosedConns.end(); ++connIt)
    {
-      mediaEventConnIt->second.disconnect();
-      m_newRtpDestConns.erase(mediaEventConnIt);
-      mediaEventConnIt = m_newRtpDestConns.begin();
+      connIt->second.disconnect();
    }
-
-   mediaEventConnIt = m_newRtpSourceConns.begin();
-   while (mediaEventConnIt != m_newRtpSourceConns.end())
-   {
-      mediaEventConnIt->second.disconnect();
-      m_newRtpSourceConns.erase(mediaEventConnIt);
-      mediaEventConnIt = m_newRtpSourceConns.begin();
-   }
-
-   mediaEventConnIt = m_onClosedConns.begin();
-   while (mediaEventConnIt != m_onClosedConns.end())
-   {
-      mediaEventConnIt->second.disconnect();
-      m_onClosedConns.erase(mediaEventConnIt);
-      mediaEventConnIt = m_onClosedConns.begin();
-   }
+   m_onRtpStreamClosedConns.clear();
 
    // Delete Sdp memory
    if(mLocalSdp) delete mLocalSdp;
@@ -181,17 +164,6 @@ RemoteParticipant::isHolding()
    return true;
 }
 
-bool 
-RemoteParticipant::isMediaTypePaused(MediaStack::MediaType mediaType)
-{
-   std::set<MediaStack::MediaType>::iterator iter = mPausedMedias.find( mediaType );
-   if ( iter != mPausedMedias.end() )
-   {
-      return true;
-   }
-   return false;
-}
-
 unsigned int
 RemoteParticipant::getLocalRTPPort( const sdpcontainer::SdpMediaLine::SdpMediaType& mediaType, ConversationProfile* profile /* = NULL */ )
 {
@@ -210,7 +182,7 @@ RemoteParticipant::getLocalRTPPort( const sdpcontainer::SdpMediaLine::SdpMediaTy
 }
 
 void
-RemoteParticipant::initiateRemoteCall(SharedPtr<ConversationProfile> profile, const NameAddr& destination, ConversationManager::MediaAttributes mediaAttributes, Conversation* conversation, const resip::DialogId* replacesDialogId, const resip::DialogId* joinDialogId)
+RemoteParticipant::initiateRemoteCall(SharedPtr<ConversationProfile> profile, const NameAddr& destination, ConversationManager::MediaAttributes mediaAttributes, Conversation* conversation, bool requestAutoAnswer, const resip::DialogId* replacesDialogId, const resip::DialogId* joinDialogId)
 {
    SdpContents offer;
 
@@ -238,6 +210,21 @@ RemoteParticipant::initiateRemoteCall(SharedPtr<ConversationProfile> profile, co
    // offer these m= lines
    mDialogSet.audioDirection() = mediaAttributes.audioDirection;
    mDialogSet.videoDirection() = mediaAttributes.videoDirection;
+
+   // set security-related params
+   if(mediaAttributes.secureMediaMode == ConversationManager::SrtpDtls &&
+      profile->natTraversalMode() == flowmanager::MediaStream::TurnAllocation)
+   {
+      WarningLog(<< "You cannot use SrtpDtls and a Turn allocation at the same time - disabling SrtpDtls!");
+      mDialogSet.setSecureMediaMode(ConversationManager::NoSecureMedia);
+   }
+   else
+   {
+      mDialogSet.setSecureMediaMode(mediaAttributes.secureMediaMode);
+   }
+
+   mDialogSet.setSecureMediaRequired(mediaAttributes.secureMediaRequired);
+   mDialogSet.setSrtpCryptoSuite(mediaAttributes.secureMediaDefaultCryptoSuite);
 
    // !jjg! fixme - should be handling media in general, not just audio and video
    if ((existingMediaTypes.size() == 0 && mDialogSet.audioActive()) || (existingMediaTypes.size() > 0 && (existingMediaTypes.find(SdpMediaLine::MEDIA_TYPE_AUDIO) != existingMediaTypes.end())))
@@ -272,6 +259,11 @@ RemoteParticipant::initiateRemoteCall(SharedPtr<ConversationProfile> profile, co
          profile->alternativePrivacyHeader().size()));
 
       invitemsg->setRawHeader(&values, resip::Headers::Privacy);
+   }
+
+   if (requestAutoAnswer)
+   {
+      invitemsg->header(h_AnswerMode).value() = "Auto";
    }
 
    if (replacesDialogId)
@@ -368,30 +360,6 @@ RemoteParticipant::destroyParticipant(const resip::Data& appDefinedReason)
 }
 
 void
-RemoteParticipant::subscribeForStreamEvents(sdpcontainer::SdpMediaLine::SdpMediaType mediaType)
-{
-   boost::shared_ptr<RtpStream> rtpStream = getRtpStream(mediaType);
-   if (rtpStream)
-   {
-      if (m_newRtpSourceConns.count(mediaType) == 0)
-      {
-         DebugLog(<< "subscribeForStreamEvents - onNewRtpSource - " << mediaType);
-         m_newRtpSourceConns[mediaType] = rtpStream->onNewRtpSource().connect(boost::bind(&RemoteParticipant::onNewRtpSource, this, mediaType));
-      }
-      if (m_newRtpDestConns.count(mediaType) == 0)
-      {
-         DebugLog(<< "subscribeForStreamEvents - onNewRtpDestination - " << mediaType);
-         m_newRtpDestConns[mediaType] = rtpStream->onNewRtpDestination().connect(boost::bind(&RemoteParticipant::onNewRtpDestination, this, mediaType));
-      }
-      if (m_onClosedConns.count(mediaType) == 0)
-      {
-         DebugLog(<< "subscribeForStreamEvents - onClosed - " << mediaType);
-         m_onClosedConns[mediaType] = rtpStream->onClosed().connect(boost::bind(&RemoteParticipant::onRtpStreamClosed, this, mediaType, _1));
-      }
-   }
-}
-
-void
 RemoteParticipant::addToConversation(Conversation* conversation, unsigned int inputGain, unsigned int outputGain)
 {
    Participant::addToConversation(conversation, inputGain, outputGain);
@@ -410,30 +378,27 @@ RemoteParticipant::addToConversation(Conversation* conversation, unsigned int in
       unhold();
    }
 
-   // when RTP starts flowing, we want to add the streams to the mixer in each conversation that we are a part of
-   boost::shared_ptr<RtpStream> rtpStream = getRtpStream(sdpcontainer::SdpMediaLine::MEDIA_TYPE_AUDIO);
-   if (rtpStream)
+   // add streams to the mixer here to handle the case where this participant is added to a new/different
+   // conversation
+   const RemoteParticipantDialogSet::RtpStreamMap& streams = mDialogSet.getRtpStreams();
+   RemoteParticipantDialogSet::RtpStreamMap::const_iterator streamIt = streams.begin();
+   for (; streamIt != streams.end(); ++streamIt)
    {
-      onNewRtpSource(sdpcontainer::SdpMediaLine::MEDIA_TYPE_AUDIO);
-      onNewRtpDestination(sdpcontainer::SdpMediaLine::MEDIA_TYPE_AUDIO);
-      subscribeForStreamEvents(sdpcontainer::SdpMediaLine::MEDIA_TYPE_AUDIO);
+      const boost::shared_ptr<RtpStream>& rtpStream = streamIt->second;
+      if (rtpStream.get())
+      {
+         conversation->getMixer()->addRtpStream(rtpStream, 1); // !jjg! todo: fix gain
+         if (m_onRtpStreamClosedConns.count(streamIt->first) == 0)
+         {
+            m_onRtpStreamClosedConns[streamIt->first] = rtpStream->onClosed().connect(boost::bind(&RemoteParticipant::onRtpStreamClosed, this, streamIt->first, _1, _2));
+         }
    }
-
-   rtpStream = getRtpStream(sdpcontainer::SdpMediaLine::MEDIA_TYPE_VIDEO);
-   if (rtpStream)
-   {
-      onNewRtpSource(sdpcontainer::SdpMediaLine::MEDIA_TYPE_VIDEO);
-      onNewRtpDestination(sdpcontainer::SdpMediaLine::MEDIA_TYPE_VIDEO);
-      subscribeForStreamEvents(sdpcontainer::SdpMediaLine::MEDIA_TYPE_VIDEO);
    }
 }
 
 void
-RemoteParticipant::removeFromConversation(Conversation* conversation)
+RemoteParticipant::removeFromConversation(Conversation* conversation, bool bTriggerHold )
 {
-   Participant::removeFromConversation(conversation);
-   checkHoldCondition();
-
    std::map<sdpcontainer::SdpMediaLine::SdpMediaType, boost::shared_ptr<RtpStream> > streams = mDialogSet.getRtpStreams();
    std::map<sdpcontainer::SdpMediaLine::SdpMediaType, boost::shared_ptr<RtpStream> >::const_iterator iter = streams.begin();
    while( iter != streams.end() )
@@ -441,6 +406,11 @@ RemoteParticipant::removeFromConversation(Conversation* conversation)
       conversation->getMixer()->removeRtpStream( iter->second );
       ++iter;
    }
+
+   Participant::removeFromConversation(conversation, bTriggerHold);
+
+   if( bTriggerHold )
+      checkHoldCondition();
 }
 
 void
@@ -471,53 +441,48 @@ RemoteParticipant::checkHoldCondition()
 }
 
 void 
-RemoteParticipant::updateMedia(ConversationManager::MediaAttributes mediaAttribs, bool sendOffer)
+RemoteParticipant::updateMedia(ConversationManager::MediaAttributes mediaAttributes, bool sendOffer)
 {
-   mDialogSet.audioDirection() = mediaAttribs.audioDirection;
-   mDialogSet.videoDirection() = mediaAttribs.videoDirection;
+   // !jjg! todo -- do some validation to prevent someone setting 'none' for a media type
+   // that is already enabled
+   mDialogSet.audioDirection() = mediaAttributes.audioDirection;
+   mDialogSet.videoDirection() = mediaAttributes.videoDirection;
+
+   ConversationProfile* profile = dynamic_cast<ConversationProfile*>(mDialogSet.getUserProfile().get());
+
+   if (profile)
+   {
+      // set security-related params
+      if(mediaAttributes.secureMediaMode == ConversationManager::SrtpDtls &&
+         profile->natTraversalMode() == flowmanager::MediaStream::TurnAllocation)
+   {
+         WarningLog(<< "You cannot use SrtpDtls and a Turn allocation at the same time - disabling SrtpDtls!");
+         mDialogSet.setSecureMediaMode(ConversationManager::NoSecureMedia);
+   }
+      else
+   {
+         mDialogSet.setSecureMediaMode(mediaAttributes.secureMediaMode);
+      }
+   }
+
+   mDialogSet.setSecureMediaRequired(mediaAttributes.secureMediaRequired);
+   mDialogSet.setSrtpCryptoSuite(mediaAttributes.secureMediaDefaultCryptoSuite);
+
+   // !jjg! fixme - should be handling media in general, not just audio and video
+   if (mDialogSet.audioEnabled() && mMediaHoldStates.count(SdpMediaLine::MEDIA_TYPE_AUDIO) == 0)
+   {
+      mMediaHoldStates[SdpMediaLine::MEDIA_TYPE_AUDIO] = false;
+   }
+   if (mDialogSet.videoEnabled() && mMediaHoldStates.count(SdpMediaLine::MEDIA_TYPE_VIDEO) == 0)
+   {
+      mMediaHoldStates[SdpMediaLine::MEDIA_TYPE_VIDEO] = false;
+   }
 
    if (sendOffer && mPendingRequest.mType == None && mPendingOffer.get() == 0)
    {
       // !jjg! should set mPendingRequest.mType = ReOffer
       provideOffer(false);
    }
-}
-
-void 
-RemoteParticipant::pauseOutboundMedia(MediaStack::MediaType mediaType)
-{
-   boost::shared_ptr<RtpStream> rtpStream(getRtpStream(toSdpMediaType(mediaType)));
-   if (rtpStream.get())
-   {
-      rtpStream->pauseRtpSend();
-   }
-
-   mPausedMedias.insert(mediaType);
-}
-
-void
-RemoteParticipant::pauseOutboundMediaIfMarked()
-{
-   if (isMediaTypePaused(MediaStack::MediaType_Audio))
-   {
-      pauseOutboundMedia(MediaStack::MediaType_Audio);
-   }
-   if (isMediaTypePaused(MediaStack::MediaType_Video))
-   {
-      pauseOutboundMedia(MediaStack::MediaType_Video);
-   }
-}
-
-void 
-RemoteParticipant::resumeOutboundMedia(MediaStack::MediaType mediaType)
-{
-   boost::shared_ptr<RtpStream> rtpStream(getRtpStream(toSdpMediaType(mediaType)));
-   rtpStream->resumeRtpSend();
-
-   // Update the media set
-   std::set<MediaStack::MediaType>::iterator iter = mPausedMedias.find( mediaType );
-   if ( iter != mPausedMedias.end() )
-      mPausedMedias.erase(iter);
 }
 
 void
@@ -644,6 +609,26 @@ RemoteParticipant::accept(ConversationManager::MediaAttributes mediaAttributes)
                   mDialogSet.videoDirection() = mediaAttributes.videoDirection;
                }
 
+               ConversationProfile* profile = dynamic_cast<ConversationProfile*>(mDialogSet.getUserProfile().get());
+
+               if (profile)
+               {
+                  // set security-related params
+                  if(mediaAttributes.secureMediaMode == ConversationManager::SrtpDtls &&
+                     profile->natTraversalMode() == flowmanager::MediaStream::TurnAllocation)
+                  {
+                     WarningLog(<< "You cannot use SrtpDtls and a Turn allocation at the same time - disabling SrtpDtls!");
+                     mDialogSet.setSecureMediaMode(ConversationManager::NoSecureMedia);
+                  }
+                  else
+                  {
+                     mDialogSet.setSecureMediaMode(mediaAttributes.secureMediaMode);
+                  }
+
+                  mDialogSet.setSecureMediaRequired(mediaAttributes.secureMediaRequired);
+                  mDialogSet.setSrtpCryptoSuite(mediaAttributes.secureMediaDefaultCryptoSuite);
+               }
+
                mDialogSet.setIceRole(false);
                provideAnswer(*mPendingOffer.get(), true /* postAnswerAccept */, false /* postAnswerAlert */);
                mPendingOffer.release();
@@ -691,6 +676,26 @@ RemoteParticipant::accept(ConversationManager::MediaAttributes mediaAttributes)
             else
             {
                mDialogSet.videoDirection() = mediaAttributes.videoDirection;
+            }
+
+            ConversationProfile* profile = dynamic_cast<ConversationProfile*>(mDialogSet.getUserProfile().get());
+
+            if (profile)
+            {
+               // set security-related params
+               if(mediaAttributes.secureMediaMode == ConversationManager::SrtpDtls &&
+                  profile->natTraversalMode() == flowmanager::MediaStream::TurnAllocation)
+               {
+                  WarningLog(<< "You cannot use SrtpDtls and a Turn allocation at the same time - disabling SrtpDtls!");
+                  mDialogSet.setSecureMediaMode(ConversationManager::NoSecureMedia);
+               }
+               else
+               {
+                  mDialogSet.setSecureMediaMode(mediaAttributes.secureMediaMode);
+               }
+
+               mDialogSet.setSecureMediaRequired(mediaAttributes.secureMediaRequired);
+               mDialogSet.setSrtpCryptoSuite(mediaAttributes.secureMediaDefaultCryptoSuite);
             }
 
             mDialogSet.setIceRole(false);
@@ -1057,6 +1062,21 @@ RemoteParticipant::acceptPendingOODRefer(ConversationManager::MediaAttributes me
          mDialogSet.audioDirection() = mediaAttribs.audioDirection;
          mDialogSet.videoDirection() = mediaAttribs.videoDirection;
 
+         // set security-related params
+         if(mediaAttribs.secureMediaMode == ConversationManager::SrtpDtls &&
+            convProfile->natTraversalMode() == flowmanager::MediaStream::TurnAllocation)
+         {
+            WarningLog(<< "You cannot use SrtpDtls and a Turn allocation at the same time - disabling SrtpDtls!");
+            mDialogSet.setSecureMediaMode(ConversationManager::NoSecureMedia);
+         }
+         else
+         {
+            mDialogSet.setSecureMediaMode(mediaAttribs.secureMediaMode);
+         }
+
+         mDialogSet.setSecureMediaRequired(mediaAttribs.secureMediaRequired);
+         mDialogSet.setSrtpCryptoSuite(mediaAttribs.secureMediaDefaultCryptoSuite);
+
          buildSdpOffer(convProfile.get(), mMediaHoldStates, offer);
 
          // Build the Invite
@@ -1393,7 +1413,7 @@ RemoteParticipant::buildSdpOffer(ConversationProfile* profile, MediaHoldStateMap
       offerMedium->clearAttribute("pcfg");
       offer.session().clearAttribute("fingerprint");
       offer.session().clearAttribute("setup");
-      if(mDialogSet.getSecureMediaMode() == ConversationProfile::Srtp)
+      if(mDialogSet.getSecureMediaMode() == ConversationManager::Srtp)
       {
          // Note:  We could add the crypto attribute to the "SDP Capabilties Negotiation"
          //        potential configuration if secure media is not required - but other implementations
@@ -1429,7 +1449,7 @@ RemoteParticipant::buildSdpOffer(ConversationProfile* profile, MediaHoldStateMap
             offerMedium->addAttribute("pcfg", "1 t=1");
          }
       }
-      else if(mDialogSet.getSecureMediaMode() == ConversationProfile::SrtpDtls)
+      else if(mDialogSet.getSecureMediaMode() == ConversationManager::SrtpDtls)
       {
 #ifdef USE_DTLS
          if(mConversationManager.getFlowManager().getDtlsFactory())
@@ -1535,7 +1555,7 @@ RemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessionCap
       // Check secure media properties and requirements
       bool secureMediaRequired = mDialogSet.getSecureMediaRequired() || protocol == resip::Data("RTP/SAVP");
 
-      if(mDialogSet.getSecureMediaMode() == ConversationProfile::Srtp ||
+      if(mDialogSet.getSecureMediaMode() == ConversationManager::Srtp ||
          isEqualNoCase( protocol, "RTP/SAVP"))  // allow accepting of SAVP profiles, even if SRTP is not enabled as a SecureMedia mode
       {
          bool supportedCryptoSuite = false;
@@ -1552,13 +1572,13 @@ RemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessionCap
                case SdpMediaLine::CRYPTO_SUITE_TYPE_AES_CM_128_HMAC_SHA1_80:
                   medium.addAttribute("crypto", Data(itCrypto->getTag()) + " AES_CM_128_HMAC_SHA1_80 inline:" + mDialogSet.getLocalSrtpSessionKey().base64encode());
                   supportedCryptoSuite = true;
-                  mDialogSet.setSecureMediaMode(ConversationProfile::Srtp);
+                  mDialogSet.setSecureMediaMode(ConversationManager::Srtp);
                   mDialogSet.setSrtpCryptoSuite(flowmanager::MediaStream::SRTP_AES_CM_128_HMAC_SHA1_80);
                   break;
                case SdpMediaLine::CRYPTO_SUITE_TYPE_AES_CM_128_HMAC_SHA1_32:
                   medium.addAttribute("crypto", Data(itCrypto->getTag()) + " AES_CM_128_HMAC_SHA1_32 inline:" + mDialogSet.getLocalSrtpSessionKey().base64encode());
                   supportedCryptoSuite = true;
-                  mDialogSet.setSecureMediaMode(ConversationProfile::Srtp);
+                  mDialogSet.setSecureMediaMode(ConversationManager::Srtp);
                   mDialogSet.setSrtpCryptoSuite(flowmanager::MediaStream::SRTP_AES_CM_128_HMAC_SHA1_32);
                   break;
                default:
@@ -1578,7 +1598,7 @@ RemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessionCap
       }
 #ifdef USE_DTLS
       else if(mConversationManager.getFlowManager().getDtlsFactory() &&
-              (mDialogSet.getSecureMediaMode() == ConversationProfile::SrtpDtls ||
+              (mDialogSet.getSecureMediaMode() == ConversationManager::SrtpDtls ||
                protocolType == SdpMediaLine::PROTOCOL_TYPE_UDP_TLS_RTP_SAVP))  // allow accepting of DTLS SAVP profiles, even if DTLS-SRTP is not enabled as a SecureMedia mode
       {
          bool supportedFingerprint = false;
@@ -2109,6 +2129,23 @@ toMediaState(sdpcontainer::SdpMediaLine::SdpDirectionType direction)
 }
 
 void
+RemoteParticipant::checkRemoteIceAttribs(const resip::SdpContents& remoteSdp)
+{
+   if (remoteSdp.session().exists("ice-ufrag"))
+   {
+      const resip::Data& latestUFrag = remoteSdp.session().getValues("ice-ufrag").front();
+      if (latestUFrag != mRemoteIceUFrag)
+      {
+         if (!mRemoteIceUFrag.empty())
+         {
+            mDialogSet.resetIceAttribs();
+         }
+         mRemoteIceUFrag = latestUFrag;
+      }
+   }
+}
+
+void
 RemoteParticipant::adjustRTPStreams(bool sendingOffer, const resip::SipMessage* msg)
 {
    // these are the 'base' used in the c= and m= lines
@@ -2145,6 +2182,8 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer, const resip::SipMessage* 
 
       // these are ICE candidates, in order by priority
       SdpMediaLine::SdpCandidateList candidates;
+      resip::Data iceUsername;
+      resip::Data icePassword;
 
       Sdp::MediaLineList::const_iterator itMediaLine = localSdp->getMediaLines().begin();
       for(; itMediaLine != localSdp->getMediaLines().end(); ++itMediaLine)
@@ -2193,6 +2232,13 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer, const resip::SipMessage* 
                remoteIPAddress = (*itRemMediaLine)->getConnections().front().getAddress();
                remoteCodecs = &(*itRemMediaLine)->getCodecs();
                candidates = (*itRemMediaLine)->getCandidates();
+               {
+                  resip::DataStream dsIceUsername(iceUsername);
+                  dsIceUsername << (*itRemMediaLine)->getIceUserFrag();
+                  dsIceUsername << ":";
+                  dsIceUsername << mDialogSet.getIceUFrag();
+               }
+               icePassword = (*itRemMediaLine)->getIcePassword();
 
                // Check if they are using "old-style" hold. If so, we need to
                // try to fetch a better remote IP address. Be careful, as it
@@ -2208,7 +2254,7 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer, const resip::SipMessage* 
 
                // Process Crypto settings (if required) - createSRTPSession using remote key
                // Note:  Top crypto in remote sdp will always be the correct suite/key
-               if(mDialogSet.getSecureMediaMode() == ConversationProfile::Srtp ||
+               if(mDialogSet.getSecureMediaMode() == ConversationManager::Srtp ||
                   isEqualNoCase( proto, "RTP/SAVP"))
                {
                   SdpMediaLine::CryptoList::const_iterator itCrypto = (*itRemMediaLine)->getCryptos().begin();
@@ -2324,27 +2370,31 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer, const resip::SipMessage* 
 
       if(!remoteIPAddress.empty() && remoteRtpPort != 0)
       {
+         mDialogSet.setShortTermCredentials(supportedMedias[i], iceUsername, icePassword);
          mDialogSet.setActiveDestination(supportedMedias[i], remoteIPAddress.c_str(), remoteRtpPort, remoteRtcpPort, candidates);
       }
 
-      bool mediaOnHold = mMediaHoldStates[ supportedMedias[i] ];
-
       // Fetch the rtp stream
-      boost::shared_ptr<RtpStream> rtpStream = mDialogSet.getRtpStream( supportedMedias[i] );
+      boost::shared_ptr<RtpStream> rtpStream = mDialogSet.getRtpStream(supportedMedias[i]);
 
-      // Subscribe for notification of new RTP sources/destinations so that we can
-      // update the mixer and get the incoming/outgoing streams connected for a conference call
-      // if there are multiple RemoteParticipants in this conversation.
-      // (This ensures that we subscribe only once.)
-      subscribeForStreamEvents(supportedMedias[i]);
+      if (rtpStream.get())
+      {
+         // the RTP streams may have just been created, so add them to the mixer now
+         Participant::ConversationMap::iterator convIter = mConversations.begin();
+         for (; convIter != mConversations.end(); ++convIter)
+         {
+            convIter->second->getMixer()->addRtpStream(rtpStream, 1);
+         }
+         if (m_onRtpStreamClosedConns.count(supportedMedias[i]) == 0)
+         {
+            m_onRtpStreamClosedConns[supportedMedias[i]] = rtpStream->onClosed().connect(boost::bind(&RemoteParticipant::onRtpStreamClosed, this, supportedMedias[i], _1, _2));
+         }
+      }
 
       // .jjg. in the future, this will need to reflect whether or not we are
       // doing music on hold; for now, just assume that pausing the RTP stream is OK
-      if(!mediaOnHold &&
-         (mediaDirection[i] == SdpMediaLine::DIRECTION_TYPE_SENDRECV ||
-         mediaDirection[i] == SdpMediaLine::DIRECTION_TYPE_SENDONLY) &&
-         !remoteIPAddress.empty() && remoteRtpPort != 0 &&
-         remoteCodecs && localCodecs && rtpStream.get() )
+      if(!remoteIPAddress.empty() && remoteRtpPort != 0 &&
+         remoteCodecs && localCodecs && rtpStream.get())
       {
          // Calculate intersection of local and remote codecs, and pass remote codecs that exist locally to RTP send fn
          int numCodecs=0;
@@ -2386,28 +2436,27 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer, const resip::SipMessage* 
 
          if(numCodecs > 0)
          {
-            if (rtpStream->isPausing())
+            if (mediaDirection[i] == SdpMediaLine::DIRECTION_TYPE_RECVONLY ||
+                mediaDirection[i] == SdpMediaLine::DIRECTION_TYPE_INACTIVE ||
+                (mediaDirection[i] == SdpMediaLine::DIRECTION_TYPE_SENDONLY && mConversations.size() == 0))
             {
-               MediaStack::MediaType mediaType = toReconMediaType(supportedMedias[i]);
-               // if the media type is paused, then do NOT resume; leave it in its current state
-               bool shouldResume = !isMediaTypePaused(mediaType);
-               if (shouldResume)
-               {
-                  rtpStream->resumeRtpSend();
-               }
+               // .jjg. NOTE that the media stack is required to keep track of the fact that pause
+               //       has been called, and do the right thing when startRtpSend(..) gets called below
+               //       (this typically means sending keepalive packets)
+               rtpStream->pauseRtpSend();
             }
             else
             {
-               rtpStream->startRtpSend(remoteIPAddress, remoteRtpPort, remoteIPAddress, remoteRtcpPort, matchedLocalCodecs, matchedRemoteCodecs);
-
-               // .jjg. the ability to have the stream paused as soon as it is started is needed for cases where we want to
-               // accept a new media type (e.g. video), but we don't want to start sending yet until the user acknowledges...
-               // this is arguably too CounterPath-specific to be here :-(
-               MediaStack::MediaType mediaType = toReconMediaType(supportedMedias[i]);
-               if (isMediaTypePaused(mediaType))
-               {
-                  rtpStream->pauseRtpSend();
+            if (rtpStream->isPausing())
+            {
+                  rtpStream->resumeRtpSend();
                }
+            }
+            if (!rtpStream->isSendingRtp())
+            {
+               // .jjg. ALWAYS start sending, because we need firewall keepalives (be they RTP packets with an
+               //       unused pltype, or STUN packets) need to flow no matter what media direction gets negotiated
+               rtpStream->startRtpSend(remoteIPAddress, remoteRtpPort, remoteIPAddress, remoteRtcpPort, matchedLocalCodecs, matchedRemoteCodecs);
             }
          }
          else
@@ -2415,22 +2464,11 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer, const resip::SipMessage* 
             WarningLog(<< "adjustRTPStreams: handle=" << mHandle << ", something went wrong during SDP negotiations, no common codec found.");
          }
       }
-      else
-      {
-         if ( rtpStream.get() && rtpStream->isSendingRtp() )
-         {
-            rtpStream->pauseRtpSend();
-         }
-         InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", stop sending.");
-      }
 
-
-      // .jjg. note that 'inactive' is specified here
+      // .jjg. note that all media directions are specified here
       // because the port is allocated, and we need keep-alives
       // to flow, so we'd better get our RTP stack listening
-      if((mediaDirection[i] == SdpMediaLine::DIRECTION_TYPE_SENDRECV ||
-          mediaDirection[i] == SdpMediaLine::DIRECTION_TYPE_RECVONLY ||
-          mediaDirection[i] == SdpMediaLine::DIRECTION_TYPE_INACTIVE) && rtpStream.get())
+      if(rtpStream.get())
       {
          if (!rtpStream->isReceivingRtp() && localCodecs)
          {
@@ -2459,11 +2497,6 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer, const resip::SipMessage* 
             rtpStream->startRtpReceive(offeredCodecs);
          }
          InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", receiving...");
-      }
-      else
-      {
-         // Never stop receiving - keep reading buffers and let mixing matrix handle suppression of audio output
-         InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", stop receiving (mediaHoldState=" << mMediaHoldStates[ supportedMedias[i] ] << ").");
       }
    }
 
@@ -2596,6 +2629,8 @@ RemoteParticipant::onEarlyMedia(ClientInviteSessionHandle h, const SipMessage& m
          mLastRemoteIPAddr = sdp.session().connection().getAddress();
       }
 
+      checkRemoteIceAttribs(sdp);
+
       adjustRTPStreams(false, &msg);
 
       if(mHandle) mConversationManager.onParticipantEarlyMedia(mHandle, msg);
@@ -2616,6 +2651,8 @@ RemoteParticipant::handleNonDialogCreatingProvisionalWithEarlyMedia(const resip:
    {
       mLastRemoteIPAddr = sdp.session().connection().getAddress();
    }
+
+   checkRemoteIceAttribs(sdp);
 
    adjustRTPStreams(false, &msg);
 
@@ -2771,6 +2808,8 @@ RemoteParticipant::onAnswer(InviteSessionHandle h, const SipMessage& msg, const 
          mLastRemoteIPAddr = sdp.session().connection().getAddress();
       }
 
+      checkRemoteIceAttribs(sdp);
+
       adjustRTPStreams(false, &msg);
    }
    stateTransition(Connected);  // This is valid until PRACK is implemented
@@ -2813,6 +2852,8 @@ RemoteParticipant::onOffer(InviteSessionHandle h, const SipMessage& msg, const S
          {
             mLastRemoteIPAddr = offer.session().connection().getAddress();
          }
+
+         checkRemoteIceAttribs(offer);
 
          ServerInviteSession* sis = dynamic_cast<ServerInviteSession*>(mInviteSessionHandle.get());
          if(mState == Connecting && sis && !sis->isAccepted())
@@ -3067,7 +3108,7 @@ void
 RemoteParticipant::doReferNoSub(const SipMessage& msg)
 {
    // Figure out hold SDP before removing ourselves from the conversation
-   MediaHoldStateMap holdStates = mMediaHoldStates;;
+   MediaHoldStateMap holdStates = mMediaHoldStates;
 
    // Create new Participant - but use same participant handle
    RemoteParticipantDialogSet* participantDialogSet = new RemoteParticipantDialogSet(mConversationManager, mDialogSet.getForkSelectMode());
@@ -3244,46 +3285,37 @@ RemoteParticipant::onRequestRetry(ClientSubscriptionHandle h, int retryMinimum, 
 }
 
 void
-RemoteParticipant::onNewRtpSource(SdpMediaLine::SdpMediaType mediaType)
+RemoteParticipant::onRtpStreamClosed(sdpcontainer::SdpMediaLine::SdpMediaType mediaType, RtpStream::ClosedReason reason, const asio::error_code& ec)
 {
-   InfoLog(<< "onNewRtpSource - mediaType: " << mediaType);
-   // !jjg! fixme -- wrong thread to do this from
-   Participant::ConversationMap::iterator convIter = mConversations.begin();
-   for (; convIter != mConversations.end(); ++convIter)
+   class HandleRtpStreamClosedCmd : public DumCommandStub
    {
-      boost::shared_ptr<RtpStream> rtpStream(mDialogSet.getRtpStream( mediaType ));
-      convIter->second->getMixer()->addIncomingRtpStream(rtpStream, 1);
-      if (isMediaTypePaused(toReconMediaType(mediaType)))
+   public:
+      HandleRtpStreamClosedCmd(RemoteParticipant* rp, sdpcontainer::SdpMediaLine::SdpMediaType mediaType, RtpStream::ClosedReason reason, const asio::error_code& ec)
+         : mRemoteParticipant(rp), mMediaType(mediaType), mReason(reason), mEc(ec) {}
+      virtual void executeCommand()
       {
-         rtpStream->pauseRtpSend();
-      }
+         mRemoteParticipant->handleRtpStreamClosed(mMediaType, mReason, mEc);
    }
+   private:
+      RemoteParticipant* mRemoteParticipant;
+      sdpcontainer::SdpMediaLine::SdpMediaType mMediaType;
+      RtpStream::ClosedReason mReason;
+      asio::error_code mEc;
+   };
+   mDum.post(new HandleRtpStreamClosedCmd(this, mediaType, reason, ec));   
 }
 
 void
-RemoteParticipant::onNewRtpDestination(SdpMediaLine::SdpMediaType mediaType)
-{
-   InfoLog(<< "onNewRtpDestination - mediaType: " << mediaType);
-   // !jjg! fixme -- wrong thread to do this from
-   Participant::ConversationMap::iterator convIter = mConversations.begin();
-   for (; convIter != mConversations.end(); ++convIter)
-   {
-      boost::shared_ptr<RtpStream> rtpStream(mDialogSet.getRtpStream( mediaType ));
-      convIter->second->getMixer()->addOutgoingRtpStream(rtpStream, 1);
-      if (isMediaTypePaused(toReconMediaType(mediaType)))
-      {
-         rtpStream->pauseRtpSend();
-      }
-   }
-}
-
-void
-RemoteParticipant::onRtpStreamClosed(sdpcontainer::SdpMediaLine::SdpMediaType mediaType, RtpStream::ClosedReason reason)
+RemoteParticipant::handleRtpStreamClosed(sdpcontainer::SdpMediaLine::SdpMediaType mediaType, RtpStream::ClosedReason reason, const asio::error_code& ec)
 {
    Data reasonStr;
    {
       resip::DataStream ds(reasonStr);
-      ds << "RTP stream closed; mediaType=" << sdpcontainer::SdpMediaLine::SdpMediaTypeString[mediaType] << " ; reason=" << reason;
+      ds << "RTP stream closed; mediaType=" << sdpcontainer::SdpMediaLine::SdpMediaTypeString[mediaType] << "; reason=" << reason;
+      if (ec)
+      {
+         ds << "; error_code=" << ec.value();
+      }
    }
    mConversationManager.destroyParticipant(mHandle, reasonStr);
 }

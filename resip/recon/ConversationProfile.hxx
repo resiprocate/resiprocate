@@ -32,19 +32,6 @@ public:
       Ice
    };
 
-   enum SecureMediaMode
-   {
-      NoSecureMedia, // Will accept secure media offers, but will not offer secure media in calls placed
-      Srtp,       // SRTP with keying outside of media stream - ie. SDES key negotiation via SDP
-      SrtpDtls    // SRTP with DTLS key negotiation
-   };
-
-   enum SecureMediaCryptoSuite
-   {
-      SRTP_AES_CM_128_HMAC_SHA1_32,
-      SRTP_AES_CM_128_HMAC_SHA1_80
-   };
-
    /**
      Constructor
 
@@ -79,6 +66,9 @@ public:
 
    virtual bool& videoSupported() { return mVideoSupported; }
    virtual const bool videoSupported() const { return mVideoSupported; }
+
+   virtual resip::Data& sessionName() { return mSessionName; }
+   virtual const resip::Data sessionName() const { return mSessionName; }
 
    /**
      Get/Set whether auto answers are allowed, if an autoanswer indication
@@ -133,46 +123,6 @@ public:
    */
    virtual bool& challengeOODReferRequests() { return mChallengeOODReferRequests; }
    virtual const bool challengeOODReferRequests() const { return mChallengeOODReferRequests; }
-
-   /** 
-     Get/Set the secure media mode that will be used for sending/receiving media packets.
-     NoSecureMedia - don't use any secure media strategies - RTP packets are sent 
-                     unencrypted via the specified transport.
-     Srtp          - use SRTP with keying outside of media stream - ie. SDES key negotiation via SDP (default)
-     SrtpDtls      - use SRTP with DTLS key negotiation
-
-     @note If TurnTlsAllocation NatTraversalMode is used, then media will be secured from 
-           this UA to the TURN the turn server, even if NoSecureMedia is used.
-
-     @return SecureMediaMode
-   */
-   virtual SecureMediaMode& secureMediaMode() { return mSecureMediaMode; }
-   virtual const SecureMediaMode secureMediaMode() const { return mSecureMediaMode; }
-
-   /** 
-     Get/Set the whether Secure Media is required (default is false).
-     - if required then SAVP transport protocol is signalled in SDP offers
-     - if not required then AVP transport protocol is signalled in SDP offers 
-       and encryption=optional attribute is added
-
-     @return true if secure media is required
-   */
-   virtual bool& secureMediaRequired() { return mSecureMediaRequired; }
-   virtual const bool secureMediaRequired() const { return mSecureMediaRequired; }
-
-
-   /** 
-     Get/Set the secure media default crypto suite.  The default crypto suite is used when
-     forming SDP offers (SDES only - does not apply to DTLS-SRTP).
-     SRTP_AES_CM_128_HMAC_SHA1_32 - Counter Mode AES 128 bit encryption with 
-                                    32bit authenication code 
-     SRTP_AES_CM_128_HMAC_SHA1_80 - Counter Mode AES 128 bit encryption with 
-                                    80bit authenication code (default)
-
-     @return SecureMediaMode
-   */
-   virtual SecureMediaCryptoSuite& secureMediaDefaultCryptoSuite() { return mDefaultSecureMediaCryptoSuite; }
-   virtual const SecureMediaCryptoSuite secureMediaDefaultCryptoSuite() const { return mDefaultSecureMediaCryptoSuite; }
 
    /** 
      Get/Set the NAT traversal mode that will be used for sending/receiving media packets.
@@ -306,9 +256,6 @@ private:
    bool mAllowPriorityAutoAnswer;
    bool mChallengeAutoAnswerRequests;
    bool mChallengeOODReferRequests;
-   SecureMediaMode mSecureMediaMode;
-   bool mSecureMediaRequired;
-   SecureMediaCryptoSuite mDefaultSecureMediaCryptoSuite;
    NatTraversalMode mNatTraversalMode;
    resip::Data mNatTraversalServerHostname;
    unsigned short mNatTraversalServerPort;
@@ -322,6 +269,7 @@ private:
    resip::Data mAudioDataQOS;
    resip::Data mVideoDataQOS;
    bool mUseRfc2543Hold;
+   resip::Data mSessionName;
 };
 
 }

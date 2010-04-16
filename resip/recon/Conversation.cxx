@@ -81,24 +81,16 @@ Conversation::addParticipant(Participant* participant, unsigned int inputGain, u
    if(getParticipant(participant->getParticipantHandle()) == 0)
    {
       participant->addToConversation(this, inputGain, outputGain);
-
-      RemoteParticipant* rPart = dynamic_cast<RemoteParticipant*>(participant);
-      if ( rPart )
-      {
-         // Pause any streams that require pausing, after adding the remote
-         // participant to the conversation.
-         rPart->pauseOutboundMediaIfMarked();
-      }
    }
 }
 
 void 
-Conversation::removeParticipant(Participant* participant)
+Conversation::removeParticipant(Participant* participant, bool bTriggerHold )
 {
    // If participant exists in this conversation - then remove them
    if(getParticipant(participant->getParticipantHandle()) != 0)
    {
-      participant->removeFromConversation(this);  // Can cause this to be deleted
+      participant->removeFromConversation(this, bTriggerHold);  // Can cause this to be deleted
    }
 }
 

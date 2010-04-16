@@ -16,7 +16,9 @@
 #include "StunMessage.hxx"
 #include "FakeSelectSocketDescriptor.hxx"
 #ifdef USE_SSL
+#ifdef USE_DTLS
 #include "dtls_wrapper/DtlsSocket.hxx"
+#endif
 #endif
 
 using namespace reTurn;
@@ -96,9 +98,12 @@ public:
    void setActiveDestination(const char* address, unsigned short port, const std::vector<reTurn::IceCandidate>& candidates);
 
    void setIceRole(bool controlling);
+   void setOutgoingIceUsernameAndPassword(const resip::Data& username, const resip::Data& password);
+   void setLocalIcePassword(const resip::Data& password);
    void setPeerReflexiveCandidatePriority(UInt32 priority) { mPeerRflxCandidatePriority = priority; }
 
 #ifdef USE_SSL
+#ifdef USE_DTLS
    /// Dtls-Srtp Methods
 
    /// Starts the dtls client handshake process - (must call setActiveDestination first)
@@ -112,6 +117,7 @@ public:
 
    /// Retrieves the stored remote SDP Fingerprint.
    const resip::Data getRemoteSDPFingerprint();
+#endif
 #endif
 
    enum EQOSDirection
@@ -189,6 +195,9 @@ private:
    StunTuple mReflexiveTuple;
    StunTuple mRelayTuple;
    resip::Data mRemoteSDPFingerprint;
+   bool mIceComplete;
+   resip::Data mOutgoingIceUsername;
+   resip::Data mOutgoingIcePassword;
 
    struct IceCandidatePair
    {
@@ -207,11 +216,13 @@ private:
    std::vector<IceCandidatePair> mIceCheckList;
 
 #ifdef USE_SSL
+#ifdef USE_DTLS
    // Map to store all DtlsSockets - in forking cases there can be more than one
    std::map<reTurn::StunTuple, dtls::DtlsSocket*> mDtlsSockets;
    dtls::DtlsSocket* getDtlsSocket(const reTurn::StunTuple& endpoint);
    dtls::DtlsSocket* createDtlsSocketClient(const StunTuple& endpoint);
    dtls::DtlsSocket* createDtlsSocketServer(const StunTuple& endpoint);
+#endif
 #endif
 
    volatile FlowState mFlowState;

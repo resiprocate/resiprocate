@@ -12,7 +12,9 @@
 #ifdef USE_SSL  
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
+#ifdef USE_DTLS
 #include "FlowDtlsTimerContext.hxx"
+#endif //USE_DTLS
 #endif //USE_SSL
 
 #include "FlowManagerSubsystem.hxx"
@@ -21,8 +23,10 @@
 using namespace flowmanager;
 using namespace resip;
 #ifdef USE_SSL 
+#ifdef USE_DTLS
 using namespace dtls;
 #endif 
+#endif
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM FlowManagerSubsystem::FLOWMANAGER
@@ -49,9 +53,12 @@ FlowManager::FlowManager()
 #ifdef USE_SSL
    : 
    mSslContext(mIOService, asio::ssl::context::tlsv1),
+#ifdef USE_DTLS
+   mDtlsFactory(0),
+#endif
    mClientCert(0),
-   mClientKey(0),
-   mDtlsFactory(0)
+   mClientKey(0)
+
 #endif  
 {
    mIOServiceWork = new asio::io_service::work(mIOService);
@@ -89,13 +96,16 @@ FlowManager::~FlowManager()
    delete mIOServiceThread;
  
  #ifdef USE_SSL
+ #ifdef USE_DTLS
    if(mDtlsFactory) delete mDtlsFactory;
+ #endif
    if(mClientCert) X509_free(mClientCert);
    if(mClientKey) EVP_PKEY_free(mClientKey);
  #endif 
 }
 
 #ifdef USE_SSL
+#ifdef USE_DTLS
 void 
 FlowManager::initializeDtlsFactory(const char* certAor)
 {
@@ -118,6 +128,7 @@ FlowManager::initializeDtlsFactory(const char* certAor)
    }   
 }
 #endif 
+#endif
 
 void
 FlowManager::srtpEventHandler(srtp_event_data_t *data) 
@@ -162,8 +173,10 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                        localBinding,
                                        localRtcpBinding,
 #ifdef USE_SSL
+#ifdef USE_DTLS
                                        mDtlsFactory,
 #endif 
+#endif
                                        natTraversalMode,
                                        natTraversalServerHostname, 
                                        natTraversalServerPort, 
@@ -181,8 +194,10 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                        localBinding, 
                                        rtcpDisabled, 
 #ifdef USE_SSL
+#ifdef USE_DTLS
                                        mDtlsFactory,
 #endif 
+#endif
                                        natTraversalMode, 
                                        natTraversalServerHostname, 
                                        natTraversalServerPort, 

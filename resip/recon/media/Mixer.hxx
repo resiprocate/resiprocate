@@ -4,11 +4,6 @@
 #include <vector>
 #include <boost/shared_ptr.hpp>
 
-namespace resip
-{
-   class Data;
-}
-
 namespace recon
 {
 class RtpStream;
@@ -34,14 +29,10 @@ public:
    virtual const RtpStreams& rtpStreams() const = 0;
 
    /**
-     Add an RTP stream to this Mixer so that other RTP streams receive its media. 
+     Add an RTP stream to this Mixer so that other RTP streams receive its media and
+     so that it receives the media from all existing RTP streams.
    */
-	virtual void addIncomingRtpStream(boost::shared_ptr<RtpStream> ms, unsigned int inputGain) = 0;
-
-   /**
-     Add an RTP stream to this Mixer so that it receives the media from all existing RTP streams.
-   */
-   virtual void addOutgoingRtpStream(boost::shared_ptr<RtpStream> ms, unsigned int outputGain) = 0;
+	virtual void addRtpStream(boost::shared_ptr<RtpStream> ms, unsigned int inputGain) = 0;
 
    /**
      Removes (incoming/outgoing) RTP stream from this Mixer.

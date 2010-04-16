@@ -124,7 +124,7 @@ AsyncUdpSocketBase::transportFramedReceive()
 void 
 AsyncUdpSocketBase::transportClose()
 {
-   mQOSManager->SocketClose(mSocket.native());
+   QosSocketManager::SocketClose(mSocket.native());
 
    mSocket.close();
 }
@@ -132,7 +132,7 @@ AsyncUdpSocketBase::transportClose()
 bool 
 AsyncUdpSocketBase::setDSCP(ULONG ulInDSCPValue)
 {
-   return mQOSManager->SocketSetDSCP(mSocket.native(), ulInDSCPValue, true);
+   return QosSocketManager::SocketSetDSCP(mSocket.native(), ulInDSCPValue, true);
 }
 
 bool 
@@ -142,7 +142,7 @@ AsyncUdpSocketBase::setServiceType(
    ULONG ulInBandwidthInBitsPerSecond
 )
 {
-   return mQOSManager->SocketSetServiceType(mSocket.native(), 
+   return QosSocketManager::SocketSetServiceType(mSocket.native(), 
       tInDestinationIPAddress, eInServiceType, ulInBandwidthInBitsPerSecond, true);
 }
 

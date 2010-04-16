@@ -32,7 +32,7 @@ class Participant
 
       virtual ParticipantHandle getParticipantHandle() { return mHandle; }
       virtual void addToConversation(Conversation* conversation, unsigned int inputGain = 100, unsigned int outputGain = 100);
-      virtual void removeFromConversation(Conversation* conversation);
+      virtual void removeFromConversation(Conversation* conversation, bool bTriggeredHold );
       virtual void copyConversationsToParticipant(Participant* destParticipant);
       virtual unsigned int getNumConversations() { return (unsigned int)mConversations.size(); }
       const ConversationMap& getConversations() { return mConversations; }

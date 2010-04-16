@@ -1,11 +1,17 @@
 #include "UserAgent.hxx"
+#include "BasicUserAgent.hxx"
+#include "ConversationManager.hxx"
 #include "ReconSubsystem.hxx"
+#include "ApplicationTimer.hxx"
 
 #include <signal.h>
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
 #include <rutil/WinLeakCheck.hxx>
+
+#include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
 #ifdef WIN32
 extern int sdpTests(void);
@@ -127,7 +133,8 @@ signalHandler(int signo)
 class AliceConversationManager : public ConversationManager
 {
 public:
-   AliceConversationManager() 
+   AliceConversationManager( UserAgent& ua )
+      : ConversationManager( ua )
    { 
       mLogPrefix = "Alice: ";
    };
@@ -144,7 +151,8 @@ public:
       ConversationHandle convHandle = createConversation();    
       mLocalParticipant = createLocalParticipant();
       addParticipant(convHandle, mLocalParticipant);
-      createRemoteParticipant(convHandle, bobUri, ConversationManager::ForkSelectAutomatic);
+      ConversationManager::MediaAttributes mediaAttribs;
+      createRemoteParticipant(convHandle, bobUri, mediaAttribs, ConversationManager::ForkSelectAutomatic);
    }
 
    virtual void onConversationDestroyed(ConversationHandle convHandle)
@@ -160,6 +168,22 @@ public:
    virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
    {
       InfoLog(<< mLogPrefix << "onApplicationTimeout: id=" << id << " dur=" << durationMs << " seq=" << seq);
+   }
+
+   virtual void recon::ConversationManager::onIncomingJoinRequest(recon::ParticipantHandle,recon::ParticipantHandle,const resip::SipMessage &)
+   {
+   }
+
+   virtual void recon::ConversationManager::onIncomingTransferRequest(recon::ParticipantHandle,recon::ParticipantHandle,const resip::SipMessage &)
+   {
+   }
+
+   virtual void onMediaStreamCreated(recon::ParticipantHandle, boost::shared_ptr<recon::RtpStream>)
+   {
+   }
+
+   virtual void onRequestOutgoingParticipant(recon::ParticipantHandle, recon::ParticipantHandle, const resip::SipMessage&)
+   {
    }
 
    virtual void onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer)
@@ -202,7 +226,7 @@ public:
             ConversationHandle convHandle = createConversation();
             addParticipant(convHandle, partHandle);
          }
-         answerParticipant(partHandle);
+         answerParticipant(partHandle, ConversationManager::MediaAttributes());
          break;
       default:
          assert(false);
@@ -215,7 +239,39 @@ public:
       InfoLog(<< mLogPrefix << "onRequestOutgoingParticipant: handle=" << partHandle << " msg=" << msg.brief());
    }
 
-   virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode)
+   virtual void onLocalParticipantRedirected(ParticipantHandle /*partHandle*/, const resip::SipMessage& /*msg*/)
+   {
+   }
+
+   virtual void onNewOutgoingParticipant(ParticipantHandle /*partHandle*/, const resip::SipMessage& /*msg*/)
+   {
+   }
+
+   virtual void onParticipantEarlyMedia(ParticipantHandle /*partHandle*/, const resip::SipMessage& /*msg*/)
+   {
+   }
+
+   virtual void onParticipantRedirectSuccess(ParticipantHandle /*partHandle*/, const resip::SipMessage* /*msg*/)
+   {
+   }
+
+   virtual void onParticipantRedirectFailure(ParticipantHandle /*partHandle*/, unsigned int /*statusCode*/, const resip::Data& /*reasonPhrase*/, const resip::SipMessage* /*msg*/)
+   {
+   }
+
+   virtual void onParticipantMediaChangeRequested(ParticipantHandle /*partHandle*/, ConversationManager::MediaDirection /*remoteAudioState*/, ConversationManager::MediaDirection /*remoteVideoState*/, const resip::SipMessage* /*msg*/)
+   {
+   }
+
+   virtual void onParticipantMediaChanged(ParticipantHandle /*partHandle*/, ConversationManager::MediaDirection /*audioState*/, ConversationManager::MediaDirection /*videoState*/, const resip::SipMessage* /*msg*/)
+   {
+   }
+
+   virtual void onReadyToSendInvite(ParticipantHandle /*partHandle*/, resip::SipMessage& /*msg*/)
+   {
+   }
+
+   virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode, resip::InviteSessionHandler::TerminatedReason terminateReason, const resip::SipMessage* msg)
    {
       InfoLog(<< mLogPrefix << "onParticipantTerminated: handle=" << partHandle << " status=" << statusCode);
 
@@ -344,10 +400,13 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 //  BOB
 ///////////////////////////////////////////////////////////////////////////////
-class BobConversationManager : public ConversationManager
+class BobConversationManager : public ConversationManager,
+                               public ApplicationTimer,
+                               public boost::enable_shared_from_this<BobConversationManager>
 {
 public:
-   BobConversationManager() 
+   BobConversationManager( BasicUserAgent& ua )
+      : ConversationManager( ua ), mUA( ua )
    { 
       mLogPrefix = "Bob: ";
    };
@@ -360,6 +419,54 @@ public:
    }
 
    virtual void startup()
+   {
+   }
+
+   virtual void recon::ConversationManager::onIncomingJoinRequest(recon::ParticipantHandle,recon::ParticipantHandle,const resip::SipMessage &)
+   {
+   }
+
+   virtual void recon::ConversationManager::onIncomingTransferRequest(recon::ParticipantHandle,recon::ParticipantHandle,const resip::SipMessage &)
+   {
+   }
+
+   virtual void onMediaStreamCreated(recon::ParticipantHandle, boost::shared_ptr<recon::RtpStream>)
+   {
+   }
+
+   virtual void onRequestOutgoingParticipant(recon::ParticipantHandle, recon::ParticipantHandle, const resip::SipMessage&)
+   {
+   }
+
+   virtual void onLocalParticipantRedirected(ParticipantHandle /*partHandle*/, const resip::SipMessage& /*msg*/)
+   {
+   }
+
+   virtual void onNewOutgoingParticipant(ParticipantHandle /*partHandle*/, const resip::SipMessage& /*msg*/)
+   {
+   }
+
+   virtual void onParticipantEarlyMedia(ParticipantHandle /*partHandle*/, const resip::SipMessage& /*msg*/)
+   {
+   }
+
+   virtual void onParticipantRedirectSuccess(ParticipantHandle /*partHandle*/, const resip::SipMessage* /*msg*/)
+   {
+   }
+
+   virtual void onParticipantRedirectFailure(ParticipantHandle /*partHandle*/, unsigned int /*statusCode*/, const resip::Data& /*reasonPhrase*/, const resip::SipMessage* /*msg*/)
+   {
+   }
+
+   virtual void onParticipantMediaChangeRequested(ParticipantHandle /*partHandle*/, ConversationManager::MediaDirection /*remoteAudioState*/, ConversationManager::MediaDirection /*remoteVideoState*/, const resip::SipMessage* /*msg*/)
+   {
+   }
+
+   virtual void onParticipantMediaChanged(ParticipantHandle /*partHandle*/, ConversationManager::MediaDirection /*audioState*/, ConversationManager::MediaDirection /*videoState*/, const resip::SipMessage* /*msg*/)
+   {
+   }
+
+   virtual void onReadyToSendInvite(ParticipantHandle /*partHandle*/, resip::SipMessage& /*msg*/)
    {
    }
 
@@ -393,8 +500,9 @@ public:
          case 2:
          case 3:
             {
-               ConversationHandle convHandle = createConversation();    
-               createRemoteParticipant(convHandle, aliceUri, ConversationManager::ForkSelectAutomatic);
+               ConversationHandle convHandle = createConversation(); 
+               ConversationManager::MediaAttributes mediaAttribs;
+               createRemoteParticipant(convHandle, aliceUri, mediaAttribs, ConversationManager::ForkSelectAutomatic);
             }
             break;
          case 4:
@@ -402,7 +510,8 @@ public:
                ConversationHandle convHandle = createConversation();    
                mLocalParticipant = createLocalParticipant();
                addParticipant(convHandle, mLocalParticipant);
-               createRemoteParticipant(convHandle, aliceUri, ConversationManager::ForkSelectAutomatic);
+               ConversationManager::MediaAttributes mediaAttribs;
+               createRemoteParticipant(convHandle, aliceUri, mediaAttribs, ConversationManager::ForkSelectAutomatic);
             }
             break;
          default:
@@ -427,7 +536,7 @@ public:
             ConversationHandle convHandle = createConversation();
             addParticipant(convHandle, partHandle);
          }
-         answerParticipant(partHandle);
+         answerParticipant(partHandle, ConversationManager::MediaAttributes());
          break;
       default:
          assert(false);
@@ -445,7 +554,7 @@ public:
       }
    }
 
-   virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode)
+   virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode, resip::InviteSessionHandler::TerminatedReason, const resip::SipMessage *)
    {
       InfoLog(<< mLogPrefix << "onParticipantTerminated: handle=" << partHandle << " status=" << statusCode);
 
@@ -458,7 +567,7 @@ public:
          MARKER;
 
          // Next Scenario
-         getUserAgent()->startApplicationTimer(0, 500, 0);
+         mUA.getTimers()->invokeOnce(shared_from_this(), 0, 500, 0);
          break;
       case 2:
          assert(CALLBACK_SEQUENCE++ == 3);
@@ -467,7 +576,7 @@ public:
          MARKER;
 
          // End Test
-         getUserAgent()->startApplicationTimer(0, 500, 0);
+         mUA.getTimers()->invokeOnce(shared_from_this(), 0, 500, 0);
          break;
       case 3:
          assert(CALLBACK_SEQUENCE++ == 5);
@@ -476,7 +585,7 @@ public:
          MARKER;
 
          // End Test
-         getUserAgent()->startApplicationTimer(0, 500, 0);
+         mUA.getTimers()->invokeOnce(shared_from_this(), 0, 500, 0);
          break;
       case 4:
          assert(CALLBACK_SEQUENCE++ == 5);
@@ -485,7 +594,7 @@ public:
          MARKER;
 
          // End Test
-         getUserAgent()->startApplicationTimer(0, 500, 0);
+         mUA.getTimers()->invokeOnce(shared_from_this(), 0, 500, 0);
          break;
       default:
          assert(false);
@@ -579,32 +688,52 @@ private:
    std::list<ConversationHandle> mConvHandles;
    ParticipantHandle mLocalParticipant;
    Data mLogPrefix;
+   BasicUserAgent& mUA;
 };
 
 
-class MyUserAgent : public UserAgent
+class MyUserAgent : public BasicUserAgent
 {
 public:
-   MyUserAgent(ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile) :
-      UserAgent(conversationManager, profile) {}
+   MyUserAgent(SharedPtr<UserAgentMasterProfile> profile) :
+      BasicUserAgent(profile, NULL, NULL) {}
 
-   virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
+   virtual resip::DialogUsageManager* getDialogUsageManager() { return NULL; }
+
+   /**
+    * The port range should return 0 .. 0 if there is no specified port
+    * range for min and max.
+    */
+   virtual void getPortRange( unsigned int& minPort, unsigned int& maxPort ) { minPort = 0; maxPort = 0; }
+
+   virtual recon::MediaStack* getMediaStack() { return NULL; }
+   virtual recon::CodecFactory* getCodecFactory() { return NULL; }
+   virtual recon::RegistrationManager* getRegistrationManager() { return NULL; }
+
+   class MyAppTimer : public recon::ApplicationTimer
    {
-      //InfoLog(<< "onApplicationTimeout: id=" << id << " dur=" << durationMs << " seq=" << seq);
-      BobConversationManager* bcm = dynamic_cast<BobConversationManager*>(getConversationManager());
-      if(bcm)
+   public:
+      MyAppTimer() {}
+      virtual ~MyAppTimer() {}
+
+      virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
       {
-         bcm->onApplicationTimer(id, durationMs, seq);
+         //InfoLog(<< "onApplicationTimeout: id=" << id << " dur=" << durationMs << " seq=" << seq);
+         //BobConversationManager* bcm = dynamic_cast<BobConversationManager*>(*this);
+         //if(bcm)
+         //{
+         //   bcm->onApplicationTimer(id, durationMs, seq);
+         //}
+         //else
+         //{
+         //   AliceConversationManager* acm = dynamic_cast<AliceConversationManager*>(*this);
+         //   if(acm)
+         //   {
+         //      acm->onApplicationTimer(id, durationMs, seq);
+         //   }
+         //}
       }
-      else
-      {
-         AliceConversationManager* acm = dynamic_cast<AliceConversationManager*>(getConversationManager());
-         if(acm)
-         {
-            acm->onApplicationTimer(id, durationMs, seq);
-         }
-      }
-   }
+   };
 
    virtual void onSubscriptionTerminated(SubscriptionHandle handle, unsigned int statusCode)
    {
@@ -753,23 +882,23 @@ main (int argc, char** argv)
    //////////////////////////////////////////////////////////////////////////////
 
    {
-      AliceConversationManager aliceConversationManager;
-      MyUserAgent aliceUa(&aliceConversationManager, profileAlice);
-      aliceUa.addConversationProfile(conversationProfileAlice);
+      MyUserAgent aliceUa(profileAlice);
+      boost::shared_ptr<AliceConversationManager> aliceConversationManager(new AliceConversationManager(aliceUa));
+      aliceConversationManager->addConversationProfile(conversationProfileAlice);
 
-      BobConversationManager   bobConversationManager;
-      MyUserAgent bobUa(&bobConversationManager, profileBob);
-      bobUa.addConversationProfile(conversationProfileBob);
+      MyUserAgent bobUa(profileBob);
+      boost::shared_ptr<BobConversationManager> bobConversationManager(new BobConversationManager(bobUa));
+      bobConversationManager->addConversationProfile(conversationProfileBob);
 
       //////////////////////////////////////////////////////////////////////////////
       // Startup and run...
       //////////////////////////////////////////////////////////////////////////////
 
       aliceUa.startup();
-      aliceConversationManager.startup();
+      aliceConversationManager->startup();
 
       bobUa.startup();
-      bobConversationManager.startup();
+      bobConversationManager->startup();
 
       while(true)
       {

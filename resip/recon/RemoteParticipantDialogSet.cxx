@@ -53,7 +53,7 @@ RemoteParticipantDialogSet::RemoteParticipantDialogSet(ConversationManager& conv
    mActiveRemoteParticipantHandle(0),
    mNatTraversalMode(flowmanager::MediaStream::NoNatTraversal),
    mProposedSdp(0),
-   mSecureMediaMode(ConversationProfile::NoSecureMedia),
+   mSecureMediaMode(ConversationManager::NoSecureMedia),
    mSecureMediaRequired(false),
    mMediaConnectionId(0),
    mConnectionPortOnBridge(-1),
@@ -66,6 +66,8 @@ RemoteParticipantDialogSet::RemoteParticipantDialogSet(ConversationManager& conv
    mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_TEXT ]        = 0;
    mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_APPLICATION ] = 0;
    mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_MESSAGE ]     = 0;
+
+   resetIceAttribs();
 
    InfoLog(<< "RemoteParticipantDialogSet created.");
 }
@@ -235,30 +237,8 @@ RemoteParticipantDialogSet::getLocalRTPPort( const sdpcontainer::SdpMediaLine::S
          break;
       }
 
-      if(profile->secureMediaMode() == ConversationProfile::SrtpDtls &&
-         mNatTraversalMode == flowmanager::MediaStream::TurnAllocation)
-      {
-         WarningLog(<< "You cannot use SrtpDtls and a Turn allocation at the same time - disabling SrtpDtls!");
-         mSecureMediaMode = ConversationProfile::NoSecureMedia;
-      }
-      else
-      {
-         mSecureMediaMode = profile->secureMediaMode();
-      }
-
       // Set other Srtp properties
       mLocalSrtpSessionKey = Random::getCryptoRandom(SRTP_MASTER_KEY_LEN);
-      mSecureMediaRequired = profile->secureMediaRequired();
-
-      switch(profile->secureMediaDefaultCryptoSuite())
-      {
-      case ConversationProfile::SRTP_AES_CM_128_HMAC_SHA1_32:
-         mSrtpCryptoSuite = flowmanager::MediaStream::SRTP_AES_CM_128_HMAC_SHA1_32;
-         break;
-      default:
-         mSrtpCryptoSuite = flowmanager::MediaStream::SRTP_AES_CM_128_HMAC_SHA1_80;
-         break;
-      }
 
 #ifdef DISABLE_FLOWMANAGER_IF_NO_NAT_TRAVERSAL
       if(mNatTraversalMode != MediaStream::NoNatTraversal)
@@ -440,7 +420,7 @@ computeCandidatePriority(unsigned int typePref, unsigned int localPref, unsigned
 }
 
 void
-RemoteParticipantDialogSet::addIceCandidates(resip::SdpContents::Session::Medium& medium, 
+RemoteParticipantDialogSet::setIceCandidates(resip::SdpContents::Session::Medium& medium, 
                                              const resip::Data& hostIp, unsigned int hostPort,
                                              const resip::Data& rtpSrflxIp, unsigned int rtpSrflxPort,
                                              const resip::Data& rtcpSrflxIp, unsigned int rtcpSrflxPort)
@@ -495,12 +475,38 @@ RemoteParticipantDialogSet::addIceCandidates(resip::SdpContents::Session::Medium
 }
 
 void
+RemoteParticipantDialogSet::resetIceAttribs()
+{
+   mIceUFrag = resip::Random::getCryptoRandomHex(3);
+   mIcePwd = resip::Random::getCryptoRandomHex(16);
+}
+
+void
+RemoteParticipantDialogSet::setIceUsernameAndPassword(resip::SdpContents::Session& session)
+{
+   ConversationProfile* profile = dynamic_cast<ConversationProfile*>(getUserProfile().get());
+   if (profile && profile->natTraversalMode() == ConversationProfile::Ice)
+   {
+      assert(!mIceUFrag.empty() && !mIcePwd.empty());
+      session.clearAttribute("ice-ufrag");
+      session.clearAttribute("ice-pwd");
+      session.addAttribute("ice-ufrag", mIceUFrag/*resip::Random::getCryptoRandomHex(3)*/);
+      session.addAttribute("ice-pwd", mIcePwd/*resip::Random::getCryptoRandomHex(16)*/);
+
+      MediaStreamMap::iterator msIt = mMediaStreamMap.begin();
+      for (; msIt != mMediaStreamMap.end(); ++msIt)
+      {
+         msIt->second->setLocalIcePassword(mIcePwd);
+      }
+   }
+}
+
+void
 RemoteParticipantDialogSet::setAddressFromStunResult(resip::SdpContents* sdp)
 {
    // Fix up address and port in SDP if we have remote info
    // Note:  the only time we don't is if there was an error preparing the media stream
    ConversationProfile* profile = dynamic_cast<ConversationProfile*>(getUserProfile().get());
-   //const resip::Data& sdpConnAddr = sdp->session().connection().getAddress();
    bool useOldStyleHold = false;
    bool iceEnabled = false;
    if (profile)
@@ -514,8 +520,6 @@ RemoteParticipantDialogSet::setAddressFromStunResult(resip::SdpContents* sdp)
       std::list<resip::SdpContents::Session::Medium>::iterator mediaIt = sdp->session().media().begin();
       for (; mediaIt != sdp->session().media().end(); ++mediaIt)
       {
-         //int origPort = mediaIt->port();
-
          if (isEqualNoCase(mediaIt->name(), "audio"))
          {
             StunTupleMap::const_iterator rtpTupleIt = mRtpTupleMap.find(sdpcontainer::SdpMediaLine::MEDIA_TYPE_AUDIO);
@@ -536,7 +540,7 @@ RemoteParticipantDialogSet::setAddressFromStunResult(resip::SdpContents* sdp)
                   if (iceEnabled)
                   {
                      flowmanager::Flow* rtpFlow = msIt->second->getRtpFlow();
-                     addIceCandidates(*mediaIt, 
+                     setIceCandidates(*mediaIt, 
                         rtpFlow->getLocalTuple().getAddress().to_string().c_str(), rtpFlow->getLocalTuple().getPort(), 
                         rtpTupleIt->second.getAddress().to_string().c_str(), rtpTupleIt->second.getPort(), 
                         rtcpTupleIt->second.getAddress().to_string().c_str(), rtcpTupleIt->second.getPort());
@@ -558,7 +562,7 @@ RemoteParticipantDialogSet::setAddressFromStunResult(resip::SdpContents* sdp)
                   if (iceEnabled)
                   {
                      flowmanager::Flow* rtpFlow = msIt->second->getRtpFlow();
-                     addIceCandidates(*mediaIt, 
+                     setIceCandidates(*mediaIt, 
                         rtpFlow->getLocalTuple().getAddress().to_string().c_str(), rtpFlow->getLocalTuple().getPort(), 
                         rtpTupleIt->second.getAddress().to_string().c_str(), rtpTupleIt->second.getPort(),
                         rtcpTupleIt->second.getAddress().to_string().c_str(), rtcpTupleIt->second.getPort());
@@ -574,6 +578,7 @@ void
 RemoteParticipantDialogSet::doSendInvite(SharedPtr<SipMessage> invite)
 {
    SdpContents* sdp  = dynamic_cast<SdpContents*>(invite->getContents());
+   setIceUsernameAndPassword(sdp->session());
    setAddressFromStunResult(sdp);
 
    // Give the app a chance to adorn the INVITE
@@ -626,6 +631,7 @@ RemoteParticipantDialogSet::doProvideOfferAnswer(bool offer, std::auto_ptr<resip
    {
       if (!inviteSessionHandle->isTerminated())
       {
+         setIceUsernameAndPassword(sdp->session());
          setAddressFromStunResult(sdp.get());
 
          if(offer)
@@ -691,6 +697,16 @@ RemoteParticipantDialogSet::setIceRole(bool controlling)
          ms->getRtcpFlow()->setIceRole(controlling);
          ms->getRtcpFlow()->setPeerReflexiveCandidatePriority(computeCandidatePriority(125, 65535, 2));
       }
+   }
+}
+
+void 
+RemoteParticipantDialogSet::setShortTermCredentials(sdpcontainer::SdpMediaLine::SdpMediaType mediaType, const resip::Data& username, const resip::Data& password)
+{
+   flowmanager::MediaStream* ms = mMediaStreamMap[mediaType];
+   if (ms)
+   {
+      ms->setOutgoingIceUsernameAndPassword(username, password);
    }
 }
 

@@ -86,6 +86,7 @@ public:
    virtual int getConnectionPortOnBridge() { return mConnectionPortOnBridge; }
 
    void setIceRole(bool controlling);
+   void setShortTermCredentials(sdpcontainer::SdpMediaLine::SdpMediaType mediaType, const resip::Data& username, const resip::Data& password);
    void setActiveDestination(sdpcontainer::SdpMediaLine::SdpMediaType mediaType, const char* address, unsigned short rtpPort, unsigned short rtcpPort, const sdpcontainer::SdpMediaLine::SdpCandidateList& candidates);
 #ifdef USE_DTLS
    void startDtlsClient(const char* address, unsigned short rtpPort, unsigned short rtcpPort);
@@ -101,10 +102,23 @@ public:
    void provideOffer(std::auto_ptr<resip::SdpContents> offer, resip::InviteSessionHandle& inviteSessionHandle, bool postOfferAccept);
    void provideAnswer(std::auto_ptr<resip::SdpContents> answer, resip::InviteSessionHandle& inviteSessionHandle, bool postAnswerAccept, bool postAnswerAlert);
    void accept(resip::InviteSessionHandle& inviteSessionHandle);
-   ConversationProfile::SecureMediaMode getSecureMediaMode() const { return mSecureMediaMode; }
-   void setSecureMediaMode(ConversationProfile::SecureMediaMode mode) { mSecureMediaMode = mode; }
+   ConversationManager::SecureMediaMode getSecureMediaMode() const { return mSecureMediaMode; }
+   void setSecureMediaMode(ConversationManager::SecureMediaMode mode) { mSecureMediaMode = mode; }
+   void setSecureMediaRequired(bool required) { mSecureMediaRequired = required; }
    flowmanager::MediaStream::SrtpCryptoSuite getSrtpCryptoSuite() const { return mSrtpCryptoSuite; }
    void setSrtpCryptoSuite(flowmanager::MediaStream::SrtpCryptoSuite crypto) { mSrtpCryptoSuite = crypto; }
+   void setSrtpCryptoSuite(ConversationManager::SecureMediaCryptoSuite crypto)
+   {
+      switch(crypto)
+      {
+      case ConversationManager::SRTP_AES_CM_128_HMAC_SHA1_32:
+         mSrtpCryptoSuite = flowmanager::MediaStream::SRTP_AES_CM_128_HMAC_SHA1_32;
+         break;
+      default:
+         mSrtpCryptoSuite = flowmanager::MediaStream::SRTP_AES_CM_128_HMAC_SHA1_80;
+         break;
+      }
+   }
    bool getSecureMediaRequired() { return mSecureMediaRequired; }
    unsigned int getNumDialogs() const { return mNumDialogs; }
    ConversationManager::MediaDirection audioDirection() const { return mAudioDirection; }
@@ -121,14 +135,21 @@ public:
    const resip::Data& getLocalSrtpSessionKey() { return mLocalSrtpSessionKey; }
 
    boost::shared_ptr<RtpStream> getRtpStream( sdpcontainer::SdpMediaLine::SdpMediaType mediaType ) { return mRtpStreamMap[mediaType]; }
-   const std::map<sdpcontainer::SdpMediaLine::SdpMediaType, boost::shared_ptr<RtpStream> > getRtpStreams() const { return mRtpStreamMap; }
+   typedef std::map<sdpcontainer::SdpMediaLine::SdpMediaType, boost::shared_ptr<RtpStream> > RtpStreamMap;
+   const RtpStreamMap getRtpStreams() const { return mRtpStreamMap; }
+
+   // used to reset the ice-ufrag and ice-pwd to new values
+   // when a remote ICE restart is detected or when we need to restart ICE
+   void resetIceAttribs();
+   resip::Data getIceUFrag() { return mIceUFrag; }
 
 protected:
    virtual resip::SharedPtr<resip::UserProfile> selectUASUserProfile(const resip::SipMessage&); 
 
 private:
    void setAddressFromStunResult(resip::SdpContents* sdp);
-   void addIceCandidates(resip::SdpContents::Session::Medium& medium, 
+   void setIceUsernameAndPassword(resip::SdpContents::Session& session);
+   void setIceCandidates(resip::SdpContents::Session::Medium& medium, 
       const resip::Data& hostIp, unsigned int hostPort, 
       const resip::Data& rtpSrflxIp, unsigned int rtpSrflxPort,
       const resip::Data& rtcpSrflxIp, unsigned int rtcpSrflxPort);
@@ -180,9 +201,13 @@ private:
    // used only if ConversationProfile::useRfc2543Hold() is set to true
    resip::Data mConnectionAddress;
 
+   // only used for ICE
+   resip::Data mIceUFrag;
+   resip::Data mIcePwd;
+
    // Secure Media 
    resip::Data mLocalSrtpSessionKey;
-   ConversationProfile::SecureMediaMode mSecureMediaMode;
+   ConversationManager::SecureMediaMode mSecureMediaMode;
    bool mSecureMediaRequired;
    flowmanager::MediaStream::SrtpCryptoSuite mSrtpCryptoSuite;
 

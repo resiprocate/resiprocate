@@ -194,7 +194,7 @@ AsyncTcpSocketBase::handleReadHeader(const asio::error_code& e)
 void 
 AsyncTcpSocketBase::transportClose()
 {
-   mQOSManager->SocketClose(mSocket.native());
+   QosSocketManager::SocketClose(mSocket.native());
 
    mSocket.close();
 }
@@ -202,7 +202,7 @@ AsyncTcpSocketBase::transportClose()
 bool 
 AsyncTcpSocketBase::setDSCP(ULONG ulInDSCPValue)
 {
-   return mQOSManager->SocketSetDSCP(mSocket.native(), ulInDSCPValue, false);
+   return QosSocketManager::SocketSetDSCP(mSocket.native(), ulInDSCPValue, false);
 }
 
 bool 
@@ -212,7 +212,7 @@ AsyncTcpSocketBase::setServiceType(
    ULONG ulInBandwidthInBitsPerSecond
 )
 {
-   return mQOSManager->SocketSetServiceType(mSocket.native(), 
+   return QosSocketManager::SocketSetServiceType(mSocket.native(), 
       tInDestinationIPAddress, eInServiceType, ulInBandwidthInBitsPerSecond, false);
 }
 

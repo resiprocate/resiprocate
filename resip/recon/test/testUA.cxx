@@ -67,6 +67,8 @@ static bool finished = false;
 NameAddr uri("sip:noreg@127.0.0.1");
 bool autoAnswerEnabled = false;  // If enabled then testUA will automatically answer incoming calls by adding to lowest numbered conversation
 SharedPtr<ConversationProfile> conversationProfile;
+ConversationManager::SecureMediaMode secureMediaMode = ConversationManager::NoSecureMedia;
+bool secureMediaRequired = false;
 
 static void
 signalHandler(int signo)
@@ -804,25 +806,25 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
    }
    if(isEqualNoCase(command, "securemedia") || isEqualNoCase(command, "sm"))
    {
-      ConversationProfile::SecureMediaMode secureMediaMode = ConversationProfile::NoSecureMedia;
-      bool secureMediaRequired = false;
+      //ConversationManager::SecureMediaMode secureMediaMode = ConversationManager::NoSecureMedia;
+      //bool secureMediaRequired = false;
       if(isEqualNoCase(arg[0], "Srtp"))
       {
-         secureMediaMode = ConversationProfile::Srtp;
+         secureMediaMode = ConversationManager::Srtp;
       }
       else if(isEqualNoCase(arg[0], "SrtpReq"))
       {
-         secureMediaMode = ConversationProfile::Srtp;
+         secureMediaMode = ConversationManager::Srtp;
          secureMediaRequired = true;
       }
 #ifdef USE_SSL
       else if(isEqualNoCase(arg[0], "SrtpDtls"))
       {
-         secureMediaMode = ConversationProfile::SrtpDtls;
+         secureMediaMode = ConversationManager::SrtpDtls;
       }
       else if(isEqualNoCase(arg[0], "SrtpDtlsReq"))
       {
-         secureMediaMode = ConversationProfile::SrtpDtls;
+         secureMediaMode = ConversationManager::SrtpDtls;
          secureMediaRequired = true;
       }
 #endif
@@ -832,8 +834,8 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
       }
       // Note:  Technically modifying the conversation profile at runtime like this is not
       //        thread safe.  But it should be fine for this test consoles purposes.
-      conversationProfile->secureMediaMode() = secureMediaMode;
-      conversationProfile->secureMediaRequired() = secureMediaRequired;      
+      //conversationProfile->secureMediaMode() = secureMediaMode;
+      //conversationProfile->secureMediaRequired() = secureMediaRequired;      
       InfoLog( << "Secure media mode set to: " << arg[0]);
       return;
    }
@@ -1074,7 +1076,7 @@ main (int argc, char** argv)
    Data password;
    Data dnsServers;
    Data address = DnsUtil::getLocalIpAddress();
-   ConversationProfile::SecureMediaMode secureMediaMode = ConversationProfile::NoSecureMedia;
+   ConversationManager::SecureMediaMode secureMediaMode = ConversationManager::NoSecureMedia;
    bool secureMediaRequired = false;
    ConversationProfile::NatTraversalMode natTraversalMode = ConversationProfile::NoNatTraversal;
    Data natTraversalServerHostname;
@@ -1193,21 +1195,21 @@ main (int argc, char** argv)
          {
             if(isEqualNoCase(commandValue, "Srtp"))
             {
-               secureMediaMode = ConversationProfile::Srtp;
+               secureMediaMode = ConversationManager::Srtp;
             }
             else if(isEqualNoCase(commandValue, "SrtpReq"))
             {
-               secureMediaMode = ConversationProfile::Srtp;
+               secureMediaMode = ConversationManager::Srtp;
                secureMediaRequired = true;
             }
 #ifdef USE_SSL
             else if(isEqualNoCase(commandValue, "SrtpDtls"))
             {
-               secureMediaMode = ConversationProfile::SrtpDtls;
+               secureMediaMode = ConversationManager::SrtpDtls;
             }
             else if(isEqualNoCase(commandValue, "SrtpDtlsReq"))
             {
-               secureMediaMode = ConversationProfile::SrtpDtls;
+               secureMediaMode = ConversationManager::SrtpDtls;
                secureMediaRequired = true;
             }
 #endif
@@ -1549,9 +1551,9 @@ main (int argc, char** argv)
    conversationProfile->stunPassword() = stunPassword;
 
    // Secure Media Settings
-   conversationProfile->secureMediaMode() = secureMediaMode;
-   conversationProfile->secureMediaRequired() = secureMediaRequired;
-   conversationProfile->secureMediaDefaultCryptoSuite() = ConversationProfile::SRTP_AES_CM_128_HMAC_SHA1_80;
+   //conversationProfile->secureMediaMode() = secureMediaMode;
+   //conversationProfile->secureMediaRequired() = secureMediaRequired;
+   //conversationProfile->secureMediaDefaultCryptoSuite() = ConversationProfile::SRTP_AES_CM_128_HMAC_SHA1_80;
 
    // Uncomment to test anonymous calling code
    // conversationProfile->isAnonymous() = true;
