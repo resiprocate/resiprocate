@@ -179,6 +179,20 @@ ServerRegistration::dispatch(const SipMessage& msg)
 
     mAor = msg.header(h_To).uri().getAorAsUri();
 
+   // Remove any default ports
+   if(mAor.port() == Symbols::DefaultSipPort && 
+      (msg.getSource().getType() == UDP || 
+       msg.getSource().getType() == TCP))
+   {
+       mAor.port() = 0;
+   }
+   else if(mAor.port() == Symbols::DefaultSipsPort && 
+      (msg.getSource().getType() == TLS || 
+       msg.getSource().getType() == DTLS))
+   {
+       mAor.port() = 0;
+   }
+
    // Checks to see whether this scheme is valid, and supported.
    if (!((mAor.scheme()=="sip" || mAor.scheme()=="sips")
          && mDum.getMasterProfile()->isSchemeSupported(mAor.scheme())))

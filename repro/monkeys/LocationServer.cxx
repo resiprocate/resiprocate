@@ -28,8 +28,21 @@ LocationServer::process(RequestContext& context)
 {
    DebugLog(<< "Monkey handling request: " << *this << "; reqcontext = " << context);
 
-   const resip::Uri& inputUri
-      = context.getOriginalRequest().header(h_RequestLine).uri();
+   resip::Uri inputUri = context.getOriginalRequest().header(h_RequestLine).uri().getAorAsUri();
+
+   // Remove any default ports
+   if(inputUri.port() == Symbols::DefaultSipPort && 
+      (context.getOriginalRequest().getSource().getType() == UDP || 
+       context.getOriginalRequest().getSource().getType() == TCP))
+   {
+       inputUri.port() = 0;
+   }
+   else if(inputUri.port() == Symbols::DefaultSipsPort && 
+      (context.getOriginalRequest().getSource().getType() == TLS || 
+       context.getOriginalRequest().getSource().getType() == DTLS))
+   {
+       inputUri.port() = 0;
+   }
 
    //!RjS! This doesn't look exception safe - need guards
    mStore.lockRecord(inputUri);
