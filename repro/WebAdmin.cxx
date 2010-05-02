@@ -1182,7 +1182,7 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
       }
    }
       
-   // !cj! - TODO - shoudl input method and envent type to test 
+   // !cj! - TODO - should input method and event type to test 
    RouteStore::UriList routeList;
    if ( !badUri )
    {

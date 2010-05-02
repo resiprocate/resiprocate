@@ -99,7 +99,7 @@ addDomains(TransactionUser& tu, CommandLineParser& args, Store& store)
    tu.addDomain(localhostname);
    if ( realm.empty() )
    {
-      realm =DnsUtil::getLocalHostName();
+      realm = localhostname;
    }
 
    tu.addDomain("localhost");
