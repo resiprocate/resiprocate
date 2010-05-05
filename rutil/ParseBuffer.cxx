@@ -752,7 +752,7 @@ ParseBuffer::integer()
    {
       last=num;
       num = num*10 + (*mPosition-'0');
-      if(signum*last > signum*num)
+      if(last > num)
       {
          fail(__FILE__, __LINE__,"Overflow detected.");
       }
