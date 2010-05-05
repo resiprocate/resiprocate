@@ -2965,7 +2965,6 @@ void InviteSession::sendAck(const Contents *answer)
 {
    SharedPtr<SipMessage> ack(new SipMessage);
 
-   assert(mAcks.count(mLastLocalSessionModification->getTransactionId()) == 0);
    SharedPtr<SipMessage> source;
    
    if (mLastLocalSessionModification->method() == UPDATE)
@@ -2978,17 +2977,23 @@ void InviteSession::sendAck(const Contents *answer)
       source = mLastLocalSessionModification;
    }
 
+   assert(mAcks.count(source->getTransactionId()) == 0);
+
    mDialog.makeRequest(*ack, ACK);
 
-   // Copy Authorization, Proxy Authorization headers and CSeq from original Invite
-   if(source->exists(h_Authorizations))
+   // Copy Authorization and Proxy Authorization headers from 
+   // mLastLocalSessionModification; regardless of whether this was the original 
+   // INVITE or not, this is the correct place to go for auth headers.
+   if(mLastLocalSessionModification->exists(h_Authorizations))
    {
-      ack->header(h_Authorizations) = source->header(h_Authorizations);
+      ack->header(h_Authorizations) = mLastLocalSessionModification->header(h_Authorizations);
    }
-   if(source->exists(h_ProxyAuthorizations))
+   if(mLastLocalSessionModification->exists(h_ProxyAuthorizations))
    {
-      ack->header(h_ProxyAuthorizations) = source->header(h_ProxyAuthorizations);
+      ack->header(h_ProxyAuthorizations) = mLastLocalSessionModification->header(h_ProxyAuthorizations);
    }
+
+   // Copy CSeq from original INVITE
    ack->header(h_CSeq).sequence() = source->header(h_CSeq).sequence();
 
    if(answer != 0)
