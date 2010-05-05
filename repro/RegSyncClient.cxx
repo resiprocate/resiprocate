@@ -62,24 +62,33 @@ void
 RegSyncClient::thread()
 {
    int rc;
-   struct sockaddr_in localAddr, servAddr;
-   struct hostent *h;
 
-   h = gethostbyname(mAddress.c_str());
-   if(h==0) 
+   addrinfo* results;
+   addrinfo hint;
+   memset(&hint, 0, sizeof(hint));
+   hint.ai_family    = AF_UNSPEC;
+   hint.ai_flags     = AI_PASSIVE;
+   hint.ai_socktype  = SOCK_STREAM;
+
+   rc = getaddrinfo(mAddress.c_str(), 0, &hint, &results);
+   if(rc != 0)
    {
       ErrLog(<< "RegSyncClient: unknown host " << mAddress);
       return;
    }
 
-   servAddr.sin_family = h->h_addrtype;
-   memcpy((char *) &servAddr.sin_addr.s_addr, h->h_addr_list[0], h->h_length);
-   servAddr.sin_port = htons(mPort);
+   // Use first address resolved if there are more than one.
+   Tuple servAddr(*results->ai_addr, TCP);
+   servAddr.setPort(mPort);
+   Tuple localAddr(Data::Empty /* all interfaces */, 0, servAddr.ipVersion(), TCP);
+   //InfoLog(<< "**********" << servAddr << " " << localAddr << " " << localAddr.isAnyInterface());
+
+   freeaddrinfo(results);
 
    while(!mShutdown)
    {
       // Create TCP Socket
-      mSocketDesc = socket(servAddr.sin_family, SOCK_STREAM, 0);
+      mSocketDesc = socket(servAddr.ipVersion() == V6 ? PF_INET6 : PF_INET , SOCK_STREAM, 0);
       if(mSocketDesc < 0) 
       {
          ErrLog(<< "RegSyncClient: cannot open socket");
@@ -88,11 +97,7 @@ RegSyncClient::thread()
       }
 
       // bind to any local interface/port
-      localAddr.sin_family = servAddr.sin_family;
-      localAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-      localAddr.sin_port = 0;
-
-      rc = ::bind(mSocketDesc, (struct sockaddr *) &localAddr, sizeof(localAddr));
+      rc = ::bind(mSocketDesc, &localAddr.getMutableSockaddr(), localAddr.length());
       if(rc < 0) 
       {
          ErrLog(<<"RegSyncClient: error binding locally");
@@ -102,7 +107,7 @@ RegSyncClient::thread()
       }
 
       // Connect to server
-      rc = ::connect(mSocketDesc, (struct sockaddr *) &servAddr, sizeof(servAddr));
+      rc = ::connect(mSocketDesc, &servAddr.getMutableSockaddr(), servAddr.length());
       if(rc < 0) 
       {
          if(!mShutdown) ErrLog(<< "RegSyncClient: error connecting to " << mAddress << ":" << mPort);
