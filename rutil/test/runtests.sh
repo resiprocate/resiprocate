@@ -21,6 +21,7 @@ for i in \
 	testMD5Stream \
 	testRandomHex \
 	testSHA1Stream \
+	testParseBuffer \
 	testThreadIf;
 do
     if test ! -x $i; then

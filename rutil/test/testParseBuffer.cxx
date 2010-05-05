@@ -401,6 +401,30 @@ main(int argc, char** argv)
       assert(pb.integer() == -17);
    }
 
+   {
+      char buf[] = "999999999999999999999999999 ";
+      ParseBuffer pb(buf, strlen(buf));
+      try
+      {
+         pb.integer();
+         assert(0);
+      }
+      catch(ParseException& e)
+      {}
+   }
+   
+   {
+      char buf[] = "-999999999999999999999999999 ";
+      ParseBuffer pb(buf, strlen(buf));
+      try
+      {
+         pb.integer();
+         assert(0);
+      }
+      catch(ParseException& e)
+      {}
+   }
+
 #ifndef WIN32
    {
       char buf[] = "2890844526";
