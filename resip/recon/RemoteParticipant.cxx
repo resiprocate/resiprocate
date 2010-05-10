@@ -82,7 +82,9 @@ RemoteParticipant::RemoteParticipant(ParticipantHandle partHandle,
   mState(Connecting),
   mOfferRequired(false),
   mLocalSdp(0),
-  mRemoteSdp(0)
+  mRemoteSdp(0),
+  mLocalSdpSessionId(0),
+  mLocalSdpVersion(1)
 {
    InfoLog(<< "RemoteParticipant created (UAC), handle=" << mHandle);
 }
@@ -90,7 +92,8 @@ RemoteParticipant::RemoteParticipant(ParticipantHandle partHandle,
 // UAS - or forked leg
 RemoteParticipant::RemoteParticipant(ConversationManager& conversationManager,
                                      DialogUsageManager& dum,
-                                     RemoteParticipantDialogSet& remoteParticipantDialogSet)
+                                     RemoteParticipantDialogSet& remoteParticipantDialogSet,
+                                     const RemoteParticipant* orig)
 : Participant(conversationManager),
   AppDialog(dum),
   mDum(dum),
@@ -99,7 +102,9 @@ RemoteParticipant::RemoteParticipant(ConversationManager& conversationManager,
   mState(Connecting),
   mOfferRequired(false),
   mLocalSdp(0),
-  mRemoteSdp(0)
+  mRemoteSdp(0),
+  mLocalSdpSessionId((orig ? orig->mLocalSdpSessionId : 0)),
+  mLocalSdpVersion((orig ? orig->mLocalSdpVersion : 1))
 {
    InfoLog(<< "RemoteParticipant created (UAS or forked leg), handle=" << mHandle);
 }
@@ -116,12 +121,20 @@ RemoteParticipant::~RemoteParticipant()
    ConversationMap::iterator it;
    for(it = mConversations.begin(); it != mConversations.end(); ++it)
    {
-      std::map<sdpcontainer::SdpMediaLine::SdpMediaType, boost::shared_ptr<RtpStream> > streams = mDialogSet.getRtpStreams();
-      std::map<sdpcontainer::SdpMediaLine::SdpMediaType, boost::shared_ptr<RtpStream> >::const_iterator iter = streams.begin();
-      while( iter != streams.end() )
+      // remove the streams for this participant from the mixer; need to handle the following cases:
+      // 1) forking, where we have several RemoteParticipants sharing an RtpStream and the RtpStream has
+      //    multiple sources
+      // 2) a single RemoteParticipant who receives from multiple sources (Asterisk 'echo test' is an example)
+      // 3) a single RemoteParticipant who receives from a single source
+      if (mDialogSet.getDialogCount() == 0)
       {
-         it->second->getMixer()->removeRtpStream( iter->second );
+         const RemoteParticipantDialogSet::RtpStreamMap& streams = mDialogSet.getRtpStreams();
+         RemoteParticipantDialogSet::RtpStreamMap::const_iterator iter = streams.begin();
+         while(iter != streams.end())
+      {
+            it->second->getMixer()->removeRtpStream(iter->second);
          ++iter;
+      }
       }
 
       it->second->unregisterParticipant(this);
@@ -182,7 +195,7 @@ RemoteParticipant::getLocalRTPPort( const sdpcontainer::SdpMediaLine::SdpMediaTy
 }
 
 void
-RemoteParticipant::initiateRemoteCall(SharedPtr<ConversationProfile> profile, const NameAddr& destination, ConversationManager::MediaAttributes mediaAttributes, Conversation* conversation, bool requestAutoAnswer, const resip::DialogId* replacesDialogId, const resip::DialogId* joinDialogId)
+RemoteParticipant::initiateRemoteCall(resip::SharedPtr<ConversationProfile> profile, const resip::NameAddr& destination, Conversation* conversation, const ConversationManager::MediaAttributes& mediaAttributes, const ConversationManager::CallAttributes& callAttributes)
 {
    SdpContents offer;
 
@@ -240,12 +253,12 @@ RemoteParticipant::initiateRemoteCall(SharedPtr<ConversationProfile> profile, co
 
    SharedPtr<SipMessage> invitemsg = mDum.makeInviteSession(
       destination,
-      profile,
+      (callAttributes.isAnonymous ? profile->getAnonymousUserProfile() : (resip::SharedPtr<UserProfile>)profile),
       &offer,
       &mDialogSet);
 
    // Modify the INVITE SIP message according to the privacy rules
-   if ( profile->isAnonymous() &&
+   if (callAttributes.isAnonymous/*profile->isAnonymous()*/ &&
        (!profile->alternativePrivacyHeader().empty() || !profile->rewriteFromHeaderIfAnonymous()))
    {
       if (profile->alternativePrivacyHeader().empty())
@@ -261,32 +274,26 @@ RemoteParticipant::initiateRemoteCall(SharedPtr<ConversationProfile> profile, co
       invitemsg->setRawHeader(&values, resip::Headers::Privacy);
    }
 
-   if (requestAutoAnswer)
+   if (callAttributes.requestAutoAnswer)
    {
       invitemsg->header(h_AnswerMode).value() = "Auto";
    }
 
-   if (replacesDialogId)
+   if (callAttributes.replacesDialogId.getCallId().size() > 0 &&
+       callAttributes.replacesDialogId.getLocalTag().size() > 0 &&
+       callAttributes.replacesDialogId.getRemoteTag().size() > 0)
    {
-      if (replacesDialogId->getCallId().size() > 0 &&
-          replacesDialogId->getLocalTag().size() > 0 &&
-          replacesDialogId->getRemoteTag().size() > 0)
-      {
-         invitemsg->header(h_Replaces).value() = replacesDialogId->getCallId();
-         invitemsg->header(h_Replaces).param(p_toTag) = replacesDialogId->getLocalTag();
-         invitemsg->header(h_Replaces).param(p_fromTag) = replacesDialogId->getRemoteTag();
-      }
+      invitemsg->header(h_Replaces).value() = callAttributes.replacesDialogId.getCallId();
+      invitemsg->header(h_Replaces).param(p_toTag) = callAttributes.replacesDialogId.getLocalTag();
+      invitemsg->header(h_Replaces).param(p_fromTag) = callAttributes.replacesDialogId.getRemoteTag();
    }
-   else if (joinDialogId)
+   if (callAttributes.joinDialogId.getCallId().size() > 0 &&
+       callAttributes.joinDialogId.getLocalTag().size() > 0 &&
+       callAttributes.joinDialogId.getRemoteTag().size() > 0)
    {
-      if (joinDialogId->getCallId().size() > 0 &&
-          joinDialogId->getLocalTag().size() > 0 &&
-          joinDialogId->getRemoteTag().size() > 0)
-      {
-         invitemsg->header(h_Join).value() = joinDialogId->getCallId();
-         invitemsg->header(h_Join).param(p_toTag) = joinDialogId->getLocalTag();
-         invitemsg->header(h_Join).param(p_fromTag) = joinDialogId->getRemoteTag();
-      }
+      invitemsg->header(h_Join).value() = callAttributes.joinDialogId.getCallId();
+      invitemsg->header(h_Join).param(p_toTag) = callAttributes.joinDialogId.getLocalTag();
+      invitemsg->header(h_Join).param(p_fromTag) = callAttributes.joinDialogId.getRemoteTag();
    }
 
    // we are ICE controlling if we sent the offer that kicks off the offer/answer exchange
@@ -399,8 +406,8 @@ RemoteParticipant::addToConversation(Conversation* conversation, unsigned int in
 void
 RemoteParticipant::removeFromConversation(Conversation* conversation, bool bTriggerHold )
 {
-   std::map<sdpcontainer::SdpMediaLine::SdpMediaType, boost::shared_ptr<RtpStream> > streams = mDialogSet.getRtpStreams();
-   std::map<sdpcontainer::SdpMediaLine::SdpMediaType, boost::shared_ptr<RtpStream> >::const_iterator iter = streams.begin();
+   const RemoteParticipantDialogSet::RtpStreamMap& streams = mDialogSet.getRtpStreams();
+   RemoteParticipantDialogSet::RtpStreamMap::const_iterator iter = streams.begin();
    while( iter != streams.end() )
    {
       conversation->getMixer()->removeRtpStream( iter->second );
@@ -914,13 +921,14 @@ RemoteParticipant::redirectToParticipant(InviteSessionHandle& destParticipantInv
 void
 RemoteParticipant::hold()
 {
-   MediaHoldStateMap::iterator it = mMediaHoldStates.begin();
-   for (; it != mMediaHoldStates.end(); ++it)
-   {
-      it->second = true;
-   }
-
    InfoLog(<< "RemoteParticipant::hold request: handle=" << mHandle);
+
+   const RemoteParticipantDialogSet::RtpStreamMap& streams = mDialogSet.getRtpStreams();
+   RemoteParticipantDialogSet::RtpStreamMap::const_iterator it = streams.begin();
+   for (; it != streams.end(); ++it)
+   {
+      mMediaHoldStates[it->first] = true;
+   }
 
    try
    {
@@ -1145,7 +1153,14 @@ RemoteParticipant::processReferNotify(const SipMessage& notify)
    }
 
    // Check if success or failure response code was in SipFrag
-   if(code >= 200 && code < 300)
+   if(code < 200)
+   {
+      if(mState == Redirecting)
+      {
+         if (mHandle) mConversationManager.onParticipantRedirectProgress(mHandle, &notify);
+      }
+   }
+   else if(code >= 200 && code < 300)
    {
       if(mState == Redirecting)
       {
@@ -1233,9 +1248,12 @@ RemoteParticipant::buildSdpOffer(ConversationProfile* profile, MediaHoldStateMap
       }
 
       // Set sessionid and version for this sdp
-      UInt64 currentTime = Timer::getTimeMicroSec();
-      offer.session().origin().getSessionId() = currentTime;
-      offer.session().origin().getVersion() = currentTime;
+      if (offer.session().origin().getSessionId() == 0)
+      {
+         mLocalSdpSessionId = Timer::getTimeMicroSec(); //UInt64 currentTime 
+         offer.session().origin().getSessionId() = mLocalSdpSessionId;
+      }
+      offer.session().origin().getVersion() = mLocalSdpVersion++;
 
       if (profile->useRfc2543Hold() && resip::isEqualNoCase(offer.session().connection().getAddress(),"0.0.0.0"))
       {
@@ -1357,6 +1375,8 @@ RemoteParticipant::buildSdpOffer(ConversationProfile* profile, MediaHoldStateMap
    {
       // Build base offer
       mConversationManager.buildSdpOffer(profile, offer);
+      mLocalSdpSessionId = offer.session().origin().getSessionId();
+      mLocalSdpVersion = offer.session().origin().getVersion() + 1;
 
       // Make sure the local port is set properly for all media types
       // in the base offer.
@@ -1504,18 +1524,41 @@ RemoteParticipant::buildSdpOffer(ConversationProfile* profile, MediaHoldStateMap
       offerMedium->clearAttribute("sendonly");
       offerMedium->clearAttribute("recvonly");
       offerMedium->clearAttribute("inactive");
-      if (mediumActive)
+
+      if( mediumActive && holdSdp )
       {
-         offerMedium->addAttribute( holdSdp ? "sendonly" : "sendrecv" );
+         // The medium is being held
+         offerMedium->addAttribute( "sendonly" );
+         if( profile->useRfc2543Hold() )
+            offer.session().connection().setAddress("0.0.0.0");
       }
       else
       {
-         offerMedium->addAttribute("inactive");
-      }
+         // The medium is either not being held, or it is inactive
+         ConversationManager::MediaDirection mediaDir = ConversationManager::MediaDirection_None;
+         if( resip::isEqualNoCase( offerMedium->name(), "audio" ))
+            mediaDir = mDialogSet.audioDirection();
+         else if( resip::isEqualNoCase( offerMedium->name(), "video"))
+            mediaDir = mDialogSet.videoDirection();
 
-      if (mediumActive && holdSdp && profile->useRfc2543Hold())
+         switch( mediaDir )
       {
-         offer.session().connection().setAddress("0.0.0.0");
+         case ConversationManager::MediaDirection_SendReceive:
+            offerMedium->addAttribute( "sendrecv" );
+            break;
+         case ConversationManager::MediaDirection_SendOnly:
+            offerMedium->addAttribute( "sendonly" );
+            break;
+         case ConversationManager::MediaDirection_ReceiveOnly:
+            offerMedium->addAttribute( "recvonly" );
+            break;
+         case ConversationManager::MediaDirection_Inactive:
+            offerMedium->addAttribute( "inactive" );
+            break;
+         case ConversationManager::MediaDirection_None:
+         default:
+            break;
+         }
       }
    }
 
@@ -1790,9 +1833,14 @@ RemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& answer)
       answer = sessionCaps;
 
       // Set sessionid and version for this answer
-      UInt64 currentTime = Timer::getTimeMicroSec();
-      answer.session().origin().getSessionId() = currentTime;
-      answer.session().origin().getVersion() = currentTime;
+      //UInt64 currentTime = Timer::getTimeMicroSec();
+      //answer.session().origin().getSessionId() = currentTime;
+      if (mLocalSdpSessionId == 0)
+      {
+         mLocalSdpSessionId = Timer::getTimeMicroSec(); //UInt64 currentTime 
+      }
+      answer.session().origin().getSessionId() = mLocalSdpSessionId;
+      answer.session().origin().getVersion() = mLocalSdpVersion++;
 
       // Copy t= field from sdp (RFC3264)
       if(offer.session().getTimes().size() >= 1)
@@ -1947,7 +1995,7 @@ RemoteParticipant::formMidDialogSdpOfferOrAnswer(const SdpContents& localSdp, co
       // Set sessionid and version for this sdp
       UInt64 currentTime = Timer::getTimeMicroSec();
       newSdp.session().origin().getSessionId() = currentTime;
-      newSdp.session().origin().getVersion() = currentTime;
+      newSdp.session().origin().getVersion() = mLocalSdpVersion++;
 
       // Loop through each m= line in local Sdp and remove or disable if not in remote
       for (std::list<SdpContents::Session::Medium>::const_iterator localMediaIt = localSdp.session().media().begin();
@@ -2547,7 +2595,9 @@ RemoteParticipant::onNewSession(ServerInviteSessionHandle h, InviteSession::Offe
 {
    InfoLog(<< "onNewSession(Server): handle=" << mHandle << ", " << msg.brief());
 
-   getLocalRTPPort(sdpcontainer::SdpMediaLine::MEDIA_TYPE_AUDIO);  // Allocate a port now - since it will be required as soon as we add this participant to a conversation
+   // !jjg! removed, because we don't know how many/what types of media streams we will have yet
+   //getLocalRTPPort(sdpcontainer::SdpMediaLine::MEDIA_TYPE_AUDIO);  // Allocate a port now - since it will be required as soon as we add this participant to a conversation
+
    mInviteSessionHandle = h->getSessionHandle();         
    mDialogId = getDialogId();
 
@@ -3005,6 +3055,8 @@ RemoteParticipant::onOfferRejected(InviteSessionHandle, const SipMessage* msg)
                   videoState = ConversationManager::MediaDirection_SendReceive;
             }
          }
+
+         stateTransition(Connected); // this is valid until PRACK is implemented
 
          mDialogSet.audioDirection() = audioState;
          mDialogSet.videoDirection() = videoState;

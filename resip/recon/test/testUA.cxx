@@ -163,7 +163,9 @@ public:
       ConversationManager::MediaAttributes mediaAttribs;
       mediaAttribs.audioDirection = ConversationManager::MediaDirection_SendReceive;
       mediaAttribs.videoDirection = ConversationManager::MediaDirection_None;
-      ParticipantHandle partHandle = ConversationManager::createRemoteParticipant(convHandle, destination, mediaAttribs, forkSelectMode);
+      ConversationManager::CallAttributes callAttribs;
+      callAttribs.forkSelectMode = forkSelectMode;
+      ParticipantHandle partHandle = ConversationManager::createRemoteParticipant(convHandle, destination, mediaAttribs, callAttribs);
       mRemoteParticipantHandles.push_back(partHandle);
       return partHandle;
    }

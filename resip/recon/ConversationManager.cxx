@@ -73,8 +73,12 @@ ConversationManager::ConversationManager(UserAgent& ua)
    //mDum->setAppDialogSetFactory(dsf);
 
    // Set UserAgentServerAuthManager
-   SharedPtr<ServerAuthManager> uasAuth( new UserAgentServerAuthManager(*this));
-   mDum->setServerAuthManager(uasAuth);
+   // !jjg! interferes with apps that don't use recon for things other than INVITEs...
+   // also is problematic for interop, since it means that we would send a 403 if we
+   // get an Auth header with a nonce that doesn't match the format we are expecting,
+   // whereas if we do not set a ServerAuthManager, we would never send the 403...
+   //SharedPtr<ServerAuthManager> uasAuth( new UserAgentServerAuthManager(*this));
+   //mDum->setServerAuthManager(uasAuth);
 
    mRegManager = ua.getRegistrationManager();
 
@@ -184,33 +188,6 @@ ConversationProfileHandle ConversationManager::cloneConversationProfile( Convers
       ConversationProfileHandle OldHandle, NewHandle;
    };
    mDum->post(new CloneConversationCmd( this, handle, newHandle ));
-   return newHandle;
-}
-
-ConversationProfileHandle ConversationManager::createAnonymousConversationProfile( ConversationProfileHandle handle )
-{
-   ConversationProfileHandle newHandle = getNewConversationProfileHandle();
-   class AnonConvCmd : public DumCommandStub
-   {
-   public:
-      AnonConvCmd( ConversationManager* cmgr, ConversationProfileHandle oldHandle, ConversationProfileHandle newHandle )
-         : ConMgr( cmgr ), OldHandle( oldHandle ), NewHandle( newHandle ) {}
-      virtual void executeCommand()
-      {
-         SharedPtr<ConversationProfile> profile = ConMgr->getConversationProfile( OldHandle );
-         assert( profile.get() != NULL );
-
-         SharedPtr<ConversationProfile> anonClone = resip::dynamic_pointer_cast<ConversationProfile>( profile->getAnonymousUserProfile() );
-         assert( anonClone.get() != NULL );
-
-         anonClone->isAnonymous() = true;
-         ConMgr->addConversationProfileImpl(NewHandle, anonClone, false);
-      }
-   private:
-      ConversationManager *ConMgr;
-      ConversationProfileHandle OldHandle, NewHandle;
-   };
-   mDum->post(new AnonConvCmd( this, handle, newHandle ));
    return newHandle;
 }
 
@@ -352,12 +329,12 @@ ConversationManager::createConversation(ConversationProfileHandle cpHandle)
 }
 
 void 
-ConversationManager::updateMedia(ParticipantHandle partHandle, ConversationManager::MediaAttributes mediaAttribs, bool sendOffer)
+ConversationManager::updateMedia(ParticipantHandle partHandle, const ConversationManager::MediaAttributes& mediaAttribs, bool sendOffer)
 {
   class UpdateMediaCmd : public DumCommandStub
    {
    public:
-      UpdateMediaCmd(ConversationManager* convMan, ParticipantHandle partHandle, ConversationManager::MediaAttributes mediaAttribs, bool sendOffer)
+      UpdateMediaCmd(ConversationManager* convMan, ParticipantHandle partHandle, const ConversationManager::MediaAttributes& mediaAttribs, bool sendOffer)
          : mConvMan(convMan), mMediaAttribs(mediaAttribs), mPartHandle(partHandle), mSendOffer(sendOffer) {}
       virtual void executeCommand()
       {
@@ -389,10 +366,10 @@ ConversationManager::joinConversation(ConversationHandle sourceConvHandle, Conve
 }
 
 ParticipantHandle 
-ConversationManager::createRemoteParticipant(ConversationHandle convHandle, NameAddr& destination, MediaAttributes mediaAttributes, ParticipantForkSelectMode forkSelectMode, bool requestAutoAnswer, const DialogId* replacesDialogId, const DialogId* joinDialogId)
+ConversationManager::createRemoteParticipant(ConversationHandle convHandle, NameAddr& destination, const MediaAttributes& mediaAttributes, const CallAttributes& callAttributes)
 {
    ParticipantHandle partHandle = getNewParticipantHandle();
-   mDum->post(new CreateRemoteParticipantCmd(this, partHandle, convHandle, destination, mediaAttributes, requestAutoAnswer, replacesDialogId, joinDialogId, forkSelectMode));
+   mDum->post(new CreateRemoteParticipantCmd(this, partHandle, convHandle, destination, mediaAttributes, callAttributes));
    return partHandle;
 }
 
@@ -547,7 +524,7 @@ ConversationManager::buildSdpOffer(ConversationProfile* profile, SdpContents& of
    // Set sessionid and version for this offer
    UInt64 currentTime = Timer::getTimeMicroSec();
    offer.session().origin().getSessionId() = currentTime;
-   offer.session().origin().getVersion() = currentTime;
+   offer.session().origin().getVersion() = 1;
 }
 
 void
@@ -1247,10 +1224,27 @@ ConversationManager::onReceivedRequest(ServerOutOfDialogReqHandle ood, const Sip
    {
       SharedPtr<SipMessage> optionsAnswer = ood->answerOptions();
 
+      if (msg.exists(h_Accepts))
+      {
+         bool acceptsSdp = false;
+         const Mimes& mimes = msg.header(h_Accepts);
+         Mimes::const_iterator mit = mimes.begin();
+         for (; mit != mimes.end(); ++mit)
+         {
+            if (*mit == Mime("application","sdp"))
+            {
+               acceptsSdp = true;
+               break;
+            }
+         }
+         if (acceptsSdp)
+         {
       // Attach an offer to the options request
       SdpContents sdp;
       buildSdpOffer(getIncomingConversationProfile(msg).get(), sdp);
       optionsAnswer->setContents(&sdp);
+         }
+      }
       ood->send(optionsAnswer);
       break;
    }

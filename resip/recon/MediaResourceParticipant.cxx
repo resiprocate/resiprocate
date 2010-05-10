@@ -19,8 +19,10 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-static const resip::ExtensionParameter p_localonly("local-only");
-static const resip::ExtensionParameter p_remoteonly("remote-only");
+static const resip::ExtensionParameter p_local("local");
+static const resip::ExtensionParameter p_remote("remote");
+static const resip::ExtensionParameter p_oob("oob");  // should we send out-of-band?
+static const resip::ExtensionParameter p_inband("inband");
 static const resip::ExtensionParameter p_repeat("repeat");
 static const resip::ExtensionParameter p_prefetch("prefetch");
 
@@ -70,8 +72,10 @@ MediaResourceParticipant::MediaResourceParticipant(ParticipantHandle partHandle,
                                                    Uri& mediaUrl)
 : Participant(partHandle, conversationManager),
   mMediaUrl(mediaUrl),
-  mLocalOnly(false),
-  mRemoteOnly(false),
+  mLocal(false),
+  mRemote(false),
+  mInBand(false),
+  mOutOfBand(false),
   mRepeat(false),
   mPrefetch(false),
   mDurationMs(0),
@@ -142,15 +146,25 @@ MediaResourceParticipant::startPlay()
       InfoLog(<< "MediaResourceParticipant playing, handle=" << mHandle << " url=" << mMediaUrl);
 
       // Common processing
-      if(mMediaUrl.exists(p_localonly))
+      if(mMediaUrl.exists(p_local))
       {
-         mLocalOnly = true;
-         mMediaUrl.remove(p_localonly);
+         mLocal = true;
+         mMediaUrl.remove(p_local);
       }
-      if(mMediaUrl.exists(p_remoteonly))
+      if(mMediaUrl.exists(p_remote))
       {
-         mRemoteOnly = true;
-         mMediaUrl.remove(p_remoteonly);
+         mRemote = true;
+         mMediaUrl.remove(p_remote);
+      }
+      if(mMediaUrl.exists(p_oob))
+      {
+         mOutOfBand = true;
+         mMediaUrl.remove(p_oob);
+      }
+      if(mMediaUrl.exists(p_inband))
+      {
+         mInBand = true;
+         mMediaUrl.remove(p_inband);
       }
       if(mMediaUrl.exists(p_duration))
       {
@@ -243,7 +257,7 @@ MediaResourceParticipant::startPlay()
                const boost::shared_ptr<RtpStream>& stream = *it;
                if (stream->mediaType() == MediaStack::MediaType_Audio)
                {
-                  stream->playTone(toneid, mLocalOnly, mRemoteOnly);
+                  stream->playTone(toneid, mLocal, mRemote, mInBand, mOutOfBand);
                }
             }
          }

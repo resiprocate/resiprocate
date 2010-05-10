@@ -79,7 +79,7 @@ AttributeHelper::operator=(const AttributeHelper& rhs)
 }
 
 bool
-AttributeHelper::exists(const Data& key) const
+AttributeHelper::exists(const Data& key, bool bCheckMediaLine, bool bCheckSession) const
 {
    return mAttributes.find(key) != mAttributes.end();
 }
@@ -1545,13 +1545,16 @@ SdpContents::Session::Medium::getConnections() const
 }
 
 bool
-SdpContents::Session::Medium::exists(const Data& key) const
+SdpContents::Session::Medium::exists(const Data& key, bool bCheckMediaLine, bool bCheckSession ) const
 {
-   if (mAttributeHelper.exists(key))
-   {
-      return true;
-   }
-   return mSession && mSession->exists(key);
+   bool result = false;
+   if( bCheckMediaLine )
+      result = mAttributeHelper.exists( key );
+
+   if( bCheckSession && mSession )
+      result |= mSession->exists( key );
+
+   return result;
 }
 
 const list<Data>&

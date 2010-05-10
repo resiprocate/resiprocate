@@ -188,32 +188,28 @@ class CreateRemoteParticipantCmd : public DumCommandStub
       CreateRemoteParticipantCmd(ConversationManager* conversationManager, 
                                  ParticipantHandle partHandle,
                                  ConversationHandle convHandle,
-                                 resip::NameAddr& destination,
-                                 ConversationManager::MediaAttributes mediaAttributes,
-                                 bool requestAutoAnswer,
-                                 const resip::DialogId* replacesDialogId, const resip::DialogId* joinDialogId,
-                                 ConversationManager::ParticipantForkSelectMode forkSelectMode) 
+                                 const resip::NameAddr& destination,
+                                 const ConversationManager::MediaAttributes& mediaAttributes,
+                                 const ConversationManager::CallAttributes& callAttributes) 
          : DumCommandStub("CreateRemoteParticipantCmd"),
            mConversationManager(conversationManager),
            mPartHandle(partHandle),
            mConvHandle(convHandle),
            mDestination(destination),
            mMediaAttribs(mediaAttributes),
-           mReplacesId(replacesDialogId),
-           mJoinId(joinDialogId),
-           mForkSelectMode(forkSelectMode),
-           mRequestAutoAnswer(requestAutoAnswer) {}
+           mCallAttribs(callAttributes)
+      {}
       virtual void executeCommand()
       {
          Conversation* conversation = mConversationManager->getConversation(mConvHandle);
          if(conversation != NULL)
          {
-            RemoteParticipantDialogSet* participantDialogSet = new RemoteParticipantDialogSet(*mConversationManager, mForkSelectMode);
+            RemoteParticipantDialogSet* participantDialogSet = new RemoteParticipantDialogSet(*mConversationManager, mCallAttribs.forkSelectMode);
             RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mPartHandle); 
             if(participant)
             {
                conversation->addParticipant(participant);
-               participant->initiateRemoteCall(conversation->getProfile(), mDestination, mMediaAttribs, conversation, mRequestAutoAnswer, mReplacesId, mJoinId);
+               participant->initiateRemoteCall(conversation->getProfile(), mDestination, conversation, mMediaAttribs, mCallAttribs);
             }
             else
             {
@@ -233,10 +229,7 @@ class CreateRemoteParticipantCmd : public DumCommandStub
       ConversationHandle mConvHandle;
       resip::NameAddr mDestination;
       ConversationManager::MediaAttributes mMediaAttribs;
-      const resip::DialogId* mReplacesId;
-      const resip::DialogId* mJoinId;
-      ConversationManager::ParticipantForkSelectMode mForkSelectMode;
-      bool mRequestAutoAnswer;
+      ConversationManager::CallAttributes mCallAttribs;
 };
 
 class CreateMediaResourceParticipantCmd : public DumCommandStub

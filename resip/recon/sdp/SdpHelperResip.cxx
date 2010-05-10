@@ -597,22 +597,58 @@ SdpHelperResip::parseMediaLine(const SdpContents::Session::Medium& resipMedia, c
 
    // Set direction, a=sendrecv, a=sendonly, a=recvonly, a=inactive
    SdpMediaLine::SdpDirectionType direction = SdpMediaLine::DIRECTION_TYPE_SENDRECV; // default
-   if(resipMedia.exists("sendrecv"))
+   bool bFoundMatch = false;
+
+   // First, test media lines only
+   if( !bFoundMatch )
    {
+      if( bFoundMatch = resipMedia.exists("sendrecv", true, false ))
       direction = SdpMediaLine::DIRECTION_TYPE_SENDRECV;
    }
-   else if(resipMedia.exists("sendonly"))
+
+   if( !bFoundMatch )
    {
+      if( bFoundMatch = resipMedia.exists("sendonly", true, false ))
       direction = SdpMediaLine::DIRECTION_TYPE_SENDONLY;
    }
-   else if(resipMedia.exists("recvonly"))
+
+   if( !bFoundMatch )
    {
+      if( bFoundMatch = resipMedia.exists("recvonly", true, false ))
       direction = SdpMediaLine::DIRECTION_TYPE_RECVONLY;
    }
-   else if(resipMedia.exists("inactive"))
+
+   if( !bFoundMatch )
    {
+      if( bFoundMatch = resipMedia.exists("inactive", true, false ))
       direction = SdpMediaLine::DIRECTION_TYPE_INACTIVE;
    }
+
+   // If still no match was found, try looking in the session
+   if( !bFoundMatch )
+   {
+      if( bFoundMatch = resipMedia.exists("sendrecv", false, true ))
+         direction = SdpMediaLine::DIRECTION_TYPE_SENDRECV;
+   }
+
+   if( !bFoundMatch )
+   {
+      if( bFoundMatch = resipMedia.exists("sendonly", false, true ))
+         direction = SdpMediaLine::DIRECTION_TYPE_SENDONLY;
+   }
+
+   if( !bFoundMatch )
+   {
+      if( bFoundMatch = resipMedia.exists("recvonly", false, true ))
+         direction = SdpMediaLine::DIRECTION_TYPE_RECVONLY;
+   }
+
+   if( !bFoundMatch )
+   {
+      if( bFoundMatch = resipMedia.exists("inactive", false, true ))
+         direction = SdpMediaLine::DIRECTION_TYPE_INACTIVE;
+   }
+
    mediaLine->setDirection(direction);
 
    // Note ptime is set above

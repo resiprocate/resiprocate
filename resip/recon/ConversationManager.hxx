@@ -123,13 +123,6 @@ public:
     */
    ConversationProfileHandle cloneConversationProfile( ConversationProfileHandle handle );
 
-   /**
-    * Creates an profile handle which is suitable for anonymous calls, and which
-    * is based on the passed-in handle. Typically this is done as a final step
-    * before calling.
-    */
-   ConversationProfileHandle createAnonymousConversationProfile( ConversationProfileHandle handle );
-
    ///////////////////////////////////////////////////////////////////////
    // Conversation methods  //////////////////////////////////////////////
    ///////////////////////////////////////////////////////////////////////
@@ -230,6 +223,40 @@ public:
       SecureMediaCryptoSuite secureMediaDefaultCryptoSuite;
    };
 
+   struct CallAttributes
+   {
+      CallAttributes() : forkSelectMode(ForkSelectAutomatic),
+                         isAnonymous(false),
+                         requestAutoAnswer(false),
+                         replacesDialogId(resip::Data::Empty,resip::Data::Empty,resip::Data::Empty),
+                         joinDialogId(resip::Data::Empty,resip::Data::Empty,resip::Data::Empty)
+      {
+      }
+
+      CallAttributes(const CallAttributes& rhs) : forkSelectMode(rhs.forkSelectMode),
+                                                  isAnonymous(rhs.isAnonymous),
+                                                  requestAutoAnswer(rhs.requestAutoAnswer),
+                                                  replacesDialogId(rhs.replacesDialogId),
+                                                  joinDialogId(rhs.joinDialogId)
+      {
+      }
+
+      /** Determine behaviour if forking occurs */
+      ParticipantForkSelectMode forkSelectMode;
+      
+      /** Enable basic support for RFC3323 */
+      bool isAnonymous; 
+
+      /** Include an Answer-Mode header */
+      bool requestAutoAnswer;
+      
+      /** If set, a Replaces header is added to the initial INVITE for this call */
+      resip::DialogId replacesDialogId;
+      
+      /** If set, a Join heaer is added to the initial INVITE for this call */
+      resip::DialogId joinDialogId;
+   };
+
    /**
      Changes the direction of each supported media type.
 
@@ -238,7 +265,7 @@ public:
      @param sendOffer If true, send an offer immediately; otherwise just apply the preferences
                       specified in mediaAttribs to the next offer/answer
    */
-   virtual void updateMedia(ParticipantHandle partHandle, MediaAttributes mediaAttribs, bool sendOffer=true);
+   virtual void updateMedia(ParticipantHandle partHandle, const MediaAttributes& mediaAttribs, bool sendOffer=true);
 
    /**
      Destroys an existing Conversation, and ends all
@@ -272,11 +299,12 @@ public:
      @param convHandle Handle of the conversation to create the
                        RemoteParticipant in
      @param destination Uri of the remote participant to reach
-     @param forkSelectMode Determines behavior if forking occurs
+     @param mediaAttributes Determines which media types are offered
+     @param callAttributes Sets various call attributes including fork select mode, anonymous, Replaces/Join headers
 
      @return A handle to the newly created remote participant
    */
-   virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, resip::NameAddr& destination, MediaAttributes mediaAttributes, ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic, bool requestAutoAnswer = false, const resip::DialogId* replacesDialogId = 0, const resip::DialogId* joinDialogId = 0);
+   virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, resip::NameAddr& destination, const MediaAttributes& mediaAttributes, const CallAttributes& callAttributes);
 
    /**
      Creates a new media resource participant in the specified conversation.
@@ -603,6 +631,14 @@ public:
      @param msg SIP message that caused the connection
    */
    virtual void onParticipantConnected(ParticipantHandle partHandle, const resip::SipMessage& msg) = 0;
+
+   /**
+     Notifies an application that a redirect request is progressing.
+     Implies a NOTIFY w/SipFrag status < 200.  Safe to ignore.
+
+     @param partHandle Handle of the participant that was redirected
+   */
+   virtual void onParticipantRedirectProgress(ParticipantHandle partHandle, const resip::SipMessage* msg=NULL) {}
 
    /**
      Notifies an application that a redirect request has succeeded.

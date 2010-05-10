@@ -46,7 +46,8 @@ public:
 
    RemoteParticipant(ConversationManager& conversationManager,            // UAS or forked leg
                      resip::DialogUsageManager& dum,
-                     RemoteParticipantDialogSet& remoteParticipantDialogSet);
+                     RemoteParticipantDialogSet& remoteParticipantDialogSet,
+                     const RemoteParticipant* orig = NULL);
 
    virtual ~RemoteParticipant();
 
@@ -56,7 +57,7 @@ public:
    void buildSdpOffer(ConversationProfile* profile, MediaHoldStateMap holdStates, resip::SdpContents& offer, std::set<sdpcontainer::SdpMediaLine::SdpMediaType> existingMediaTypes=std::set<sdpcontainer::SdpMediaLine::SdpMediaType>());
    virtual bool isHolding();
 
-   virtual void initiateRemoteCall(resip::SharedPtr<ConversationProfile> profile, const resip::NameAddr& destination, ConversationManager::MediaAttributes mediaAttributes, Conversation* conversation, bool requestAutoAnswer, const resip::DialogId* replacesDialogId, const resip::DialogId* joinDialogId);
+   virtual void initiateRemoteCall(resip::SharedPtr<ConversationProfile> profile, const resip::NameAddr& destination, Conversation* conversation, const ConversationManager::MediaAttributes& mediaAttributes, const ConversationManager::CallAttributes& callAttributes);
    virtual int getConnectionPortOnBridge();
    virtual boost::shared_ptr<RtpStream> getRtpStream( sdpcontainer::SdpMediaLine::SdpMediaType mediaType ) { return mDialogSet.getRtpStream( mediaType ); }
 
@@ -192,6 +193,8 @@ private:
    std::auto_ptr<resip::SdpContents> mPendingOffer;
 
    sdpcontainer::Sdp* mLocalSdp;
+   UInt64 mLocalSdpSessionId;
+   UInt64 mLocalSdpVersion;
    sdpcontainer::Sdp* mRemoteSdp;
 
    ConversationMap mRelatedConversations;
