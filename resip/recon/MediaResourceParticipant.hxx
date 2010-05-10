@@ -65,8 +65,11 @@ private:
    int mFromFilePortOnBridge;
 
    // Play settings
-   bool mLocalOnly;
-   bool mRemoteOnly;
+   bool mLocal;
+   bool mRemote;
+   bool mInBand;
+   bool mOutOfBand;
+
    bool mRepeat;
    bool mPrefetch;
    unsigned int mDurationMs;

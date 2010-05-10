@@ -121,6 +121,7 @@ public:
    }
    bool getSecureMediaRequired() { return mSecureMediaRequired; }
    unsigned int getNumDialogs() const { return mNumDialogs; }
+   unsigned int getDialogCount() const { return mDialogs.size(); }
    ConversationManager::MediaDirection audioDirection() const { return mAudioDirection; }
    ConversationManager::MediaDirection& audioDirection() { return mAudioDirection; }
    ConversationManager::MediaDirection videoDirection() const { return mVideoDirection; }
@@ -136,7 +137,7 @@ public:
 
    boost::shared_ptr<RtpStream> getRtpStream( sdpcontainer::SdpMediaLine::SdpMediaType mediaType ) { return mRtpStreamMap[mediaType]; }
    typedef std::map<sdpcontainer::SdpMediaLine::SdpMediaType, boost::shared_ptr<RtpStream> > RtpStreamMap;
-   const RtpStreamMap getRtpStreams() const { return mRtpStreamMap; }
+   const RtpStreamMap& getRtpStreams() const { return mRtpStreamMap; }
 
    // used to reset the ice-ufrag and ice-pwd to new values
    // when a remote ICE restart is detected or when we need to restart ICE

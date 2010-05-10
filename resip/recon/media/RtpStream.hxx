@@ -62,10 +62,9 @@ public:
 	virtual void stopRtpReceive() = 0;
 
    /**
-     Plays a DTMF tone on this RTP stream.  The application determines
-     whether this is sent inband, or using some other mechanism.
+     Plays a DTMF tone on this RTP stream.
    */
-	virtual void playTone(int toneId, bool playLocal, bool playRemote) = 0;
+	virtual void playTone(int toneId, bool playLocal, bool playRemote, bool sendInBand, bool sendOutOfBand) = 0;
 	virtual void stopTone() = 0;
 
    /**

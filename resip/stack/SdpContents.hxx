@@ -25,7 +25,7 @@ class AttributeHelper
       AttributeHelper(const AttributeHelper& rhs);
       AttributeHelper& operator=(const AttributeHelper& rhs);
 
-      bool exists(const Data& key) const;
+      bool exists(const Data& key, bool bCheckMediaLine = true, bool bCheckSession = true ) const;
       const std::list<Data>& getValues(const Data& key) const;
       EncodeStream& encode(EncodeStream& s) const;
       void parse(ParseBuffer& pb);
@@ -400,7 +400,7 @@ class SdpContents : public Contents
                   const Encryption& getEncryption() const {return mEncryption;}
                   const Encryption& encryption() const {return mEncryption;}
                   Encryption& encryption() {return mEncryption;}
-                  bool exists(const Data& key) const;
+                  bool exists(const Data& key, bool bCheckMediaLine = true, bool bCheckSession = true) const;
                   const std::list<Data>& getValues(const Data& key) const;
                   void clearAttribute(const Data& key);
 

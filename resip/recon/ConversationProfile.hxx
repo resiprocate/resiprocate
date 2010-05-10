@@ -193,12 +193,6 @@ public:
    virtual const ConversationProfileHandle handle() const { return mcpHandle; }
 
    /**
-    * Enable basic support for RFC3323.
-    */
-   virtual bool& isAnonymous() { return mIsAnonymous; }
-   virtual const bool isAnonymous() const { return mIsAnonymous; }
-
-   /**
     * When support for anonymous calling is enabled (RFC3323), sometimes
     * you want to ALSO rewrite the "From" header in order to further conceal
     * your identity. This provides that support.

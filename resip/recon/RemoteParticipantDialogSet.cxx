@@ -169,6 +169,8 @@ RemoteParticipantDialogSet::~RemoteParticipantDialogSet()
    // Delete Sdp memory
    if(mProposedSdp) delete mProposedSdp;
 
+   mRtpStreamMap.clear();
+
    InfoLog(<< "RemoteParticipantDialogSet destroyed.  mActiveRemoteParticipantHandle=" << mActiveRemoteParticipantHandle);
 }
 
@@ -839,7 +841,7 @@ RemoteParticipantDialogSet::createAppDialog(const SipMessage& msg)
       if(mNumDialogs > 1)
       {
          // forking occured and we now have multiple dialogs in this dialog set
-         RemoteParticipant* participant = new RemoteParticipant(mConversationManager, mDum, *this);
+         RemoteParticipant* participant = new RemoteParticipant(mConversationManager, mDum, *this, mUACOriginalRemoteParticipant);
 
          InfoLog(<< "Forking occurred for original UAC participant handle=" << mUACOriginalRemoteParticipant->getParticipantHandle() <<
                     " this is leg number " << mNumDialogs << " new handle=" << participant->getParticipantHandle());
@@ -876,7 +878,14 @@ RemoteParticipantDialogSet::createAppDialog(const SipMessage& msg)
    {
       RemoteParticipant *participant = new RemoteParticipant(mConversationManager, mDum, *this);
       mActiveRemoteParticipantHandle = participant->getParticipantHandle();
-      mDialogs[DialogId(msg)] = participant;
+      DialogId dlgId(msg);
+      if (!msg.header(h_To).exists(p_tag))
+      {
+         // we don't have a local tag assigned yet in the UAS case, so
+         // just assign empty; we'll check for Empty again when we remove the dialog
+         dlgId = DialogId(dlgId.getCallId(), Data::Empty, dlgId.getRemoteTag());
+      }
+      mDialogs[dlgId] = participant;
       return participant;
    }
 }
@@ -955,6 +964,14 @@ void
 RemoteParticipantDialogSet::removeDialog(const DialogId& dialogId)
 {
    std::map<DialogId, RemoteParticipant*>::iterator it = mDialogs.find(dialogId);
+   if(it == mDialogs.end())
+   {
+      // try again, since the dialog ID stored in mDialogs might not have a local tag
+      // if this is the UAS case
+      DialogId dialogIdWithoutLocal(dialogId.getCallId(), Data::Empty, dialogId.getRemoteTag());
+      it = mDialogs.find(dialogIdWithoutLocal);
+   }
+
    if(it != mDialogs.end())
    {
       if(it->second == mUACOriginalRemoteParticipant) mUACOriginalRemoteParticipant = 0;
