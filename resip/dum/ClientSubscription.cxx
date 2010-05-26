@@ -269,6 +269,7 @@ ClientSubscription::processNextNotify()
    assert(handler);
 
    unsigned long refreshInterval = 0;
+   bool setRefreshTimer=false; 
    if (!qn->outOfOrder())
    {
       UInt32 expires = 0;
@@ -307,6 +308,7 @@ ClientSubscription::processNextNotify()
       {
          refreshInterval = Helper::aBitSmallerThan((unsigned long)expires);
          mExpires = now + refreshInterval;
+         setRefreshTimer = true;
       }
    }
    //if no subscription state header, treat as an extension. Only allow for
@@ -363,7 +365,7 @@ ClientSubscription::processNextNotify()
 
    if (!mEnded && isEqualNoCase(qn->notify().header(h_SubscriptionState).value(), Symbols::Active))
    {
-      if (refreshInterval)
+      if (setRefreshTimer)
       {
          mDum.addTimer(DumTimeout::Subscription, refreshInterval, getBaseHandle(), ++mTimerSeq);
          InfoLog (<< "[ClientSubscription] reSUBSCRIBE in " << refreshInterval);
@@ -373,7 +375,7 @@ ClientSubscription::processNextNotify()
    }
    else if (!mEnded && isEqualNoCase(qn->notify().header(h_SubscriptionState).value(), Symbols::Pending))
    {
-      if (refreshInterval)
+      if (setRefreshTimer)
       {
          mDum.addTimer(DumTimeout::Subscription, refreshInterval, getBaseHandle(), ++mTimerSeq);
          InfoLog (<< "[ClientSubscription] reSUBSCRIBE in " << refreshInterval);
