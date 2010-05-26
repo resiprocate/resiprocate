@@ -255,7 +255,8 @@ ServerSubscription::dispatch(const SipMessage& msg)
          mDialog.makeResponse(*mLastResponse, mLastSubscribe, 200);
          mLastResponse->header(h_Expires).value() = mExpires;
          send(mLastResponse);
-         end(Timeout);
+
+         send(mLastRequest);  // Send Notify Expires
          return;
       }
       if (mSubscriptionState == Invalid)
