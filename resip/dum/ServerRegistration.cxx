@@ -476,8 +476,9 @@ ServerRegistration::tryFlow(ContactInstanceRecord& rec,
             }
          }
       }
+
       // Record-Route flow token hack; use with caution
-      else if(InteropHelper::getRRTokenHackEnabled())
+      if(InteropHelper::getRRTokenHackEnabled())
       {
          if(msg.header(h_Vias).size() == 1)
          {
