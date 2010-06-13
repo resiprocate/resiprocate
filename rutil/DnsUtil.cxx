@@ -508,7 +508,7 @@ const char* inet_ntop4(const u_char *src, char *dst, size_t size);
 #ifdef USE_IPV6
 const char * inet_ntop6(const u_char *src, char *dst, size_t size);
 #endif
-//adapted from freebsd inet_ntop.c(1.12) and inet_pton.c(1.5) for windows(non-compliant snprinf workardound)
+//adapted from freebsd inet_ntop.c(1.12) and inet_pton.c(1.5) for windows(non-compliant snprinf workaround)
 /* const char *
  * inet_ntop4(src, dst, size)
  *	format an IPv4 address, more or less like inet_ntoa()
