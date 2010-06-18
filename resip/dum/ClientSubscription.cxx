@@ -34,6 +34,10 @@ ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog,
    if(request.method() == SUBSCRIBE)
    {
       *mLastRequest = request;
+      if (defaultSubExpiration > 0)
+      {
+         mLastRequest->header(h_Expires).value() = defaultSubExpiration;
+      }
    }
    else
    {
