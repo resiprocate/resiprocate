@@ -1865,7 +1865,7 @@ ServerInviteSession::startRetransmit1xxRelTimer()
 void
 ServerInviteSession::sendProvisional(int code, bool earlyFlag)
 {
-   m1xx->releaseContents();
+   m1xx->setContents(0);
    mDialog.makeResponse(*m1xx, mFirstRequest, code);
    switch (mState)
    {
