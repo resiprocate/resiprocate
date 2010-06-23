@@ -2692,6 +2692,7 @@ InviteSession::isReliable(const SipMessage& msg) const
    {
       return mDum.getMasterProfile()->getUacReliableProvisionalMode() > MasterProfile::Never
          && (msg.exists(h_Supporteds) && msg.header(h_Supporteds).find(Token(Symbols::C100rel))
+             && msg.exists(h_RSeq)
              || (msg.exists(h_Requires) && msg.header(h_Requires).find(Token(Symbols::C100rel))));
    }
 }
