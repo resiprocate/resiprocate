@@ -233,23 +233,32 @@ WinCompat::determineSourceInterfaceWithIPv6(const GenericIPAddress& destination)
       } 
    }
 
-   // Check if this address is a local address
+   // Check if this address is a local address - this also avoids returning 
+   // the loopback address that can cause havoc if the registrar and user agent are on the same box
    IP_ADAPTER_ADDRESSES *AI;
    int i;
    for (i = 0, AI = pAdapterAddresses; AI != NULL; AI = AI->Next, i++) 
    {
+      PIP_ADAPTER_UNICAST_ADDRESS defaultAdaptorAddress = 0;
       for (PIP_ADAPTER_UNICAST_ADDRESS unicast = AI->FirstUnicastAddress;
            unicast; unicast = unicast->Next)
       {
          if (unicast->Address.lpSockaddr->sa_family != family)
             continue;
 
+         // Store first address of matching family as the Adaptors default address
+         if(!defaultAdaptorAddress) defaultAdaptorAddress = unicast;
+
          if (family == AF_INET && 
              reinterpret_cast<const struct sockaddr_in*>(unicast->Address.lpSockaddr)->sin_addr.S_un.S_addr == 
                                                          destination.v4Address.sin_addr.S_un.S_addr)
          {
+            // Return default address for NIC.  Note:  We could also just return the destination, 
+            // however returning the default address for NIC is beneficial in cases where the
+            // co-located registrar supports redundancy via a Virtual IP address.
+            GenericIPAddress ipaddress(*defaultAdaptorAddress->Address.lpSockaddr);
             LocalFree(pAdapterAddresses);
-            return(destination);
+            return(ipaddress);
          }
 #ifdef USE_IPV6
          else if (family == AF_INET6 && 
@@ -257,8 +266,16 @@ WinCompat::determineSourceInterfaceWithIPv6(const GenericIPAddress& destination)
                          &(reinterpret_cast<const struct sockaddr_in6*>(&destination.address)->sin6_addr), 
                          sizeof(IN6_ADDR)) == 0)
          {
+            // explicitly cast to sockaddr_in6, to use that version of GenericIPAddress' ctor. If we don't, then compiler
+            // defaults to ctor for sockaddr_in (at least under Win32), which will truncate the lower-bits of the IPv6 address.
+            const struct sockaddr_in6* psa = reinterpret_cast<const struct sockaddr_in6*>(defaultAdaptorAddress->Address.lpSockaddr);
+
+            // Return default address for NIC.  Note:  We could also just return the destination, 
+            // however returning the default address for NIC is beneficial in cases where the
+            // co-located registrar supports redundancy via a Virtual IP address.
+            GenericIPAddress ipaddress(*psa);
             LocalFree(pAdapterAddresses);
-            return(destination);
+            return(ipaddress);
          }
 #endif
       } 
@@ -317,6 +334,7 @@ WinCompat::determineSourceInterfaceWithoutIPv6(const GenericIPAddress& destinati
 
    struct sockaddr_in sourceIP;
    memset(&sourceIP, 0, sizeof(sockaddr_in));
+   sourceIP.sin_family = AF_INET;
 
    // look throught the local ip address - first we want to see if the address is local, if 
    // not then we want to look for the Best route
@@ -341,15 +359,26 @@ WinCompat::determineSourceInterfaceWithoutIPv6(const GenericIPAddress& destinati
 
    // Check if address is local or not
    DWORD i = 0;
-   for(DWORD i = 0; i <pIpAddrTable->dwNumEntries; i++)
+   for(i = 0; i <pIpAddrTable->dwNumEntries; i++)
    {
       if(pIpAddrTable->table[i].dwAddr ==
          destination.v4Address.sin_addr.S_un.S_addr)
       {
          // Address is local - no need to find best route - this also avoids returning 
          // 127.0.0.1 that can cause havoc if the registrar and user agent are on the same box
+         // Return default address for NIC.  Note:  We could also just return the destination, 
+         // however returning the default address for NIC is beneficial in cases where the
+         // co-located registrar supports redundancy via a Virtual IP address.
+         DWORD dwNicIndex = pIpAddrTable->table[i].dwIndex;
+         for(DWORD j = 0; j <pIpAddrTable->dwNumEntries; j++)
+         {
+            if(pIpAddrTable->table[j].dwIndex == dwNicIndex)  // Default address is first address found for NIC
+            {
+               sourceIP.sin_addr.s_addr = pIpAddrTable->table[j].dwAddr;               
          delete [] (char *) pIpAddrTable;
-         return destination;
+               return GenericIPAddress(sourceIP);
+            }
+         }
       }
    }
 
@@ -363,13 +392,11 @@ WinCompat::determineSourceInterfaceWithoutIPv6(const GenericIPAddress& destinati
    }
       
    // look throught the local ip address to find one that match the best route.
-   sourceIP.sin_family = AF_INET;
-         
    enum ENICEntryPreference {ENICUnknown = 0, ENextHopNotWithinNICSubnet, ENICSubnetIsAll1s, ENICServicesNextHop};
    ENICEntryPreference eCurrSelection = ENICUnknown;
 
    // try to find a match
-   for (DWORD i=0; i<pIpAddrTable->dwNumEntries; i++) 
+   for (i=0; i<pIpAddrTable->dwNumEntries; i++) 
    {
       MIB_IPADDRROW &entry = pIpAddrTable->table[i];
       
@@ -410,7 +437,7 @@ WinCompat::determineSourceInterfaceWithoutIPv6(const GenericIPAddress& destinati
                <<" next-hop=" <<DnsUtil::inet_ntop(nextHop)
                <<" if-index=" <<bestRoute.dwForwardIfIndex );
       // ip-table
-      for (DWORD i=0; i<pIpAddrTable->dwNumEntries; i++)
+      for (i=0; i<pIpAddrTable->dwNumEntries; i++)
       {
          MIB_IPADDRROW & entry = pIpAddrTable->table[i];
          in_addr nicIP, nicMask;
