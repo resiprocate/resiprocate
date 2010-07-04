@@ -109,10 +109,17 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                   }
                   else
                   {
-                     mLocalContact = NameAddr(request.header(h_RequestLine).uri()); // update later when send a request
                      if (mDialogSet.getUserProfile()->hasOverrideHostAndPort())
                      {
                         mLocalContact.uri() = mDialogSet.getUserProfile()->getOverrideHostAndPort();
+                     }
+                     if(request.header(h_RequestLine).uri().user().empty())
+                     {
+                        mLocalContact.uri().user() = request.header(h_To).uri().user(); 
+                     }
+                     else
+                     {
+                        mLocalContact.uri().user() = request.header(h_RequestLine).uri().user(); 
                      }
                   }
                }

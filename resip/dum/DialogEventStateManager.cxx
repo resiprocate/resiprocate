@@ -27,7 +27,7 @@ DialogEventStateManager::onTryingUas(Dialog& dialog, const SipMessage& invite)
    eventInfo->mInviteSession = InviteSessionHandle::NotValid();
    eventInfo->mRemoteOfferAnswer = (invite.getContents() != NULL ? std::auto_ptr<Contents>(invite.getContents()->clone()) : std::auto_ptr<Contents>());
    eventInfo->mLocalIdentity = dialog.getLocalNameAddr();
-   eventInfo->mLocalTarget = dialog.getLocalContact().uri();
+   eventInfo->mLocalTarget = dialog.getLocalContact().uri();  // !slg! TODO - fix me - the Dialog stored local contact has an empty hostname so that the stack will fill it in
    eventInfo->mRemoteIdentity = dialog.getRemoteNameAddr();
    eventInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(dialog.getRemoteTarget().uri()));
    eventInfo->mRouteSet = dialog.getRouteSet();
@@ -160,7 +160,7 @@ DialogEventStateManager::onEarly(const Dialog& dialog, InviteSessionHandle is)
       eventInfo->mInviteSession = is;
 
       // local or remote target might change due to an UPDATE or re-INVITE
-      eventInfo->mLocalTarget = dialog.getLocalContact().uri();
+      eventInfo->mLocalTarget = dialog.getLocalContact().uri();   // !slg! TODO - fix me - the Dialog stored local contact has an empty hostname so that the stack will fill it in
       eventInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(dialog.getRemoteTarget().uri()));
 
       EarlyDialogEvent evt(*eventInfo);
@@ -181,7 +181,7 @@ DialogEventStateManager::onConfirmed(const Dialog& dialog, InviteSessionHandle i
       eventInfo->mState = DialogEventInfo::Confirmed;
 
       // local or remote target might change due to an UPDATE or re-INVITE
-      eventInfo->mLocalTarget = dialog.getLocalContact().uri();
+      eventInfo->mLocalTarget = dialog.getLocalContact().uri();   // !slg! TODO - fix me - the Dialog stored local contact has an empty hostname so that the stack will fill it in
       eventInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(dialog.getRemoteTarget().uri()));
 
       // for the dialog that got the 200 OK
