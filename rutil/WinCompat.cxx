@@ -388,6 +388,7 @@ WinCompat::determineSourceInterfaceWithoutIPv6(const GenericIPAddress& destinati
    const sockaddr_in& sin = (const sockaddr_in&)destination.address;
    if (NO_ERROR != GetBestRoute(sin.sin_addr.s_addr, 0, &bestRoute)) 
    {
+      delete [] (char *) pIpAddrTable;
       throw Exception("Can't find source address for destination", __FILE__,__LINE__);
    }
       
