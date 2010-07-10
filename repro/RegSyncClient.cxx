@@ -9,6 +9,7 @@
 #include <rutil/ParseBuffer.hxx>
 #include <rutil/Socket.hxx>
 #include <rutil/TransportType.hxx>
+#include <rutil/Timer.hxx>
 
 #include "repro/RegSyncClient.hxx"
 
@@ -120,7 +121,7 @@ RegSyncClient::thread()
       Data request(
          "<InitialSync>\r\n"
          "  <Request>\r\n"
-         "     <Version>1</Version>\r\n"   // For future use in detecting if client/server are a compatible version
+         "     <Version>2</Version>\r\n"   // For use in detecting if client/server are a compatible version
          "  </Request>\r\n"
          "</InitialSync>\r\n");   
       rc = ::send(mSocketDesc, request.c_str(), request.size(), 0);
@@ -236,9 +237,10 @@ RegSyncClient::handleXml(const Data& xmlData)
 void 
 RegSyncClient::handleRegInfoEvent(resip::XMLCursor& xml)
 {
-   DebugLog(<< "RegSyncClient::handleRegInfoEvent");
+   UInt64 now = Timer::getTimeSecs();
    Uri aor;
    ContactList contacts;
+   DebugLog(<< "RegSyncClient::handleRegInfoEvent");
    if(xml.firstChild())
    {
       do
@@ -273,7 +275,7 @@ RegSyncClient::handleRegInfoEvent(resip::XMLCursor& xml)
                         if(xml.firstChild())
                         {
                            //InfoLog(<< "RegSyncClient::handleRegInfoEvent: expires=" << xml.getValue());
-                           rec.mRegExpires = xml.getValue().convertUInt64();
+                           rec.mRegExpires = now+xml.getValue().convertUInt64();
                            xml.parent();
                         }
                      }
@@ -282,7 +284,7 @@ RegSyncClient::handleRegInfoEvent(resip::XMLCursor& xml)
                         if(xml.firstChild())
                         {
                            //InfoLog(<< "RegSyncClient::handleRegInfoEvent: lastupdate=" << xml.getValue());
-                           rec.mLastUpdated = xml.getValue().convertUInt64();
+                           rec.mLastUpdated = now-xml.getValue().convertUInt64();
                            xml.parent();
                         }
                      }
