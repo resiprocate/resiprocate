@@ -23,8 +23,8 @@
 #ifdef WIN32
 
 typedef int socklen_t;
-
-#if(_WIN32_WINNT < 0x0601)   
+ 
+#if defined(_MSC_VER) && (_MSC_VER < 1600)
 #define EWOULDBLOCK             WSAEWOULDBLOCK
 #define EINPROGRESS             WSAEINPROGRESS
 #define EALREADY                WSAEALREADY
