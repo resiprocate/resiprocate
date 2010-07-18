@@ -315,10 +315,9 @@ WinCompat::determineSourceInterfaceWithIPv6(const GenericIPAddress& destination)
           }
 #endif
       } 
-      
-      LocalFree(pAdapterAddresses);
-      throw Exception("Can't find source address for destination", __FILE__,__LINE__);
    }
+   LocalFree(pAdapterAddresses);
+   throw Exception("Can't find source address for destination", __FILE__,__LINE__);
 
    return GenericIPAddress();
 }
