@@ -55,7 +55,19 @@ class SipStack
 
           @param stateless  This parameter does not appear to be used.
 
-          @param socketFunc [PLEASE FILL THIS IN]
+          @param socketFunc A pointer to a function that will be called after a socket 
+                            in the DNS or SIP transport layers of the stack has been 
+                            created.  This callback can be used to control low level 
+                            socket options, such as Quality-of-Service/DSCP.
+                            Note:  For SIP TCP sockets there is one call for the listen
+                            socket, and one (or two) calls for each connection created 
+                            afterwards.  For each inbound TCP connection the first 
+                            callback is called immediately before the socket is connected, 
+                            and if configured it is called again after the connect call
+                            has completed and before the first data is sent out.  
+                            On some OS's you cannot set QOS until the socket is successfully 
+                            connected.  To enable this behavior call:
+                            Connection::setEnablePostConnectSocketFuncCall();
 
           @param compression Compression configuration object required for
                              SigComp. If set to 0, then SigComp compression

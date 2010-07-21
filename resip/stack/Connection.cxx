@@ -22,11 +22,14 @@
 
 using namespace resip;
 
+volatile bool Connection::mEnablePostConnectSocketFuncCall = false;
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 Connection::Connection(Transport* transport,const Tuple& who, Socket socket,
                        Compression &compression)
    : ConnectionBase(transport,who,compression),
+     mRequestPostConnectSocketFuncCall(false),
      mInWritable(false)
 {
    mWho.mFlowKey=socket;
@@ -109,6 +112,13 @@ Connection::performWrite()
       delete sm;
    }
 #endif
+
+   if(mEnablePostConnectSocketFuncCall && mRequestPostConnectSocketFuncCall)
+   {
+       // Note:  The first time the socket is available for write, is when the TCP connect call is completed
+      mRequestPostConnectSocketFuncCall = false;
+      mTransport->callSocketFunc(getSocket());
+   }
 
    const Data& data = mOutstandingSends.front()->data;
 

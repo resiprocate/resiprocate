@@ -195,7 +195,7 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
                default:	
                {
                   // !jf! this has failed
-                  InfoLog( << "Error on TCP connect to " <<  data->destination << ": " << strerror(err));
+                  InfoLog( << "Error on TCP connect to " <<  data->destination << ", err=" << err << ": " << strerror(err));
                   error(e);
                   fdset.clear(sock);
                   closeSocket(sock);
@@ -208,6 +208,7 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
 
          // This will add the connection to the manager
          conn = createConnection(data->destination, sock, false);
+         conn->mRequestPostConnectSocketFuncCall = true;
 
          assert(conn);
          assert(conn->getSocket() >= 0);
