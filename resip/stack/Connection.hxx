@@ -70,6 +70,10 @@ class Connection : public ConnectionBase, public ConnectionLruList, public Conne
           @todo store fifo rather than pass */
       int read(Fifo<TransactionMessage>& fifo);
 
+      bool mRequestPostConnectSocketFuncCall;
+      static volatile bool mEnablePostConnectSocketFuncCall;
+      static void setEnablePostConnectSocketFuncCall(bool enabled = true) { mEnablePostConnectSocketFuncCall = enabled; }
+
    protected:
       /// pure virtual, but need concrete Connection for book-ends of lists
       virtual int read(char* /* buffer */, const int /* count */) { return 0; }

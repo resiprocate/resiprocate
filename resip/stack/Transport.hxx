@@ -126,6 +126,8 @@ class Transport
       //# queued messages on this transport
       virtual unsigned int getFifoSize() const=0;
 
+      void callSocketFunc(Socket sock);
+
    protected:
       Data mInterface;
       Tuple mTuple;

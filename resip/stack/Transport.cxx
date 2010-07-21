@@ -326,6 +326,15 @@ Transport::basicCheck(const SipMessage& msg)
    return true;
 }
 
+void 
+Transport::callSocketFunc(Socket sock)
+{
+   if (mSocketFunc)
+   {
+      mSocketFunc(sock, transport(), __FILE__, __LINE__);
+   }
+}
+
 bool 
 Transport::operator==(const Transport& rhs) const
 {
