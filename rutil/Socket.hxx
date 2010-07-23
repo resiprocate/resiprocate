@@ -22,9 +22,19 @@
 
 #ifdef WIN32
 
+/** With VS 2010 Berkeley errno constants have been redefined and are now different than WSAGetLastError() WSA prefixed constants.
+	@see http://msdn.microsoft.com/en-us/library/ms737828(VS.85).aspx, https://connect.microsoft.com/VisualStudio/feedback/details/509380/errno-h-socket-return-codes-now-inconsistent-with-wsagetlasterror?wa=wsignin1.0
+	@see <winsock2.h>
+	The recommended fix is to use WSAGetLastError() and with the WSAXXX constants.  One way to do this would be to create RESIP_XXX socket constants that would correclty use WSAXXX constants
+	on windows without using the Berkeley style constants.  For now just re-assign the Berkeley style constants as WSA constants.
+*/
+#if defined(_MSC_VER) && (_MSC_VER >= 1600)
+#pragma warning (push)
+#pragma warning (disable: 4005 )
+#endif
 typedef int socklen_t;
- 
-#if defined(_MSC_VER) && (_MSC_VER < 1600)
+
+//this list taken from <winsock2.h>, see #if 0 removed block.
 #define EWOULDBLOCK             WSAEWOULDBLOCK
 #define EINPROGRESS             WSAEINPROGRESS
 #define EALREADY                WSAEALREADY
@@ -34,9 +44,12 @@ typedef int socklen_t;
 #define EPROTOTYPE              WSAEPROTOTYPE
 #define ENOPROTOOPT             WSAENOPROTOOPT
 #define EPROTONOSUPPORT         WSAEPROTONOSUPPORT
+#define ESOCKTNOSUPPORT         WSAESOCKTNOSUPPORT
 #define EOPNOTSUPP              WSAEOPNOTSUPP
+#define EPFNOSUPPORT            WSAEPFNOSUPPORT
 #define EAFNOSUPPORT            WSAEAFNOSUPPORT
 #define EADDRINUSE              WSAEADDRINUSE
+#define EADDRNOTAVAIL           WSAEADDRNOTAVAIL
 #define ENETDOWN                WSAENETDOWN
 #define ENETUNREACH             WSAENETUNREACH
 #define ENETRESET               WSAENETRESET
@@ -45,26 +58,26 @@ typedef int socklen_t;
 #define ENOBUFS                 WSAENOBUFS
 #define EISCONN                 WSAEISCONN
 #define ENOTCONN                WSAENOTCONN
+#define ESHUTDOWN               WSAESHUTDOWN
+#define ETOOMANYREFS            WSAETOOMANYREFS
 #define ETIMEDOUT               WSAETIMEDOUT
 #define ECONNREFUSED            WSAECONNREFUSED
 #define ELOOP                   WSAELOOP
-#define EHOSTUNREACH            WSAEHOSTUNREACH
-#define EADDRNOTAVAIL           WSAEADDRNOTAVAIL
-#endif
-
-#define ESOCKTNOSUPPORT         WSAESOCKTNOSUPPORT
-#define EPFNOSUPPORT            WSAEPFNOSUPPORT
-#define ESHUTDOWN               WSAESHUTDOWN
-#define ETOOMANYREFS            WSAETOOMANYREFS
+//#define ENAMETOOLONG            WSAENAMETOOLONG
 #define EHOSTDOWN               WSAEHOSTDOWN
+#define EHOSTUNREACH            WSAEHOSTUNREACH
+//#define ENOTEMPTY               WSAENOTEMPTY
 #define EPROCLIM                WSAEPROCLIM
 #define EUSERS                  WSAEUSERS
 #define EDQUOT                  WSAEDQUOT
 #define ESTALE                  WSAESTALE
 #define EREMOTE                 WSAEREMOTE
 
-#else
+#if defined(_MSC_VER) && (_MSC_VER >= 1600)
+#pragma warning (pop)
+#endif
 
+#else
 
 #define WSANOTINITIALISED  EPROTONOSUPPORT
 
