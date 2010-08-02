@@ -712,8 +712,8 @@ Data
 DeprecatedDialog::dialogId(const SipMessage& msg)
 {
    CallID id(msg.header(h_CallId));
-   if (msg.isRequest() && msg.isExternal() ||
-       msg.isResponse() && !msg.isExternal())
+   if ((msg.isRequest() && msg.isExternal()) ||
+       (msg.isResponse() && !msg.isExternal()))
    {
       if (msg.header(h_To).exists(p_tag))
       {
