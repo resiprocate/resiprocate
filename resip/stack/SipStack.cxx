@@ -121,6 +121,32 @@ SipStack::addTransport( TransportType protocol,
                         SecurityTypes::SSLType sslType)
 {
    assert(!mShuttingDown);
+
+   // If address is specified, ensure it is valid
+   if(!ipInterface.empty())
+   {
+      if(version == V6)
+      {
+         if(!DnsUtil::isIpV6Address(ipInterface))
+         {
+            ErrLog(<< "Failed to create transport, invalid ipInterface specified (IP address required): V6 "
+                   << Tuple::toData(protocol) << " " << port << " on "
+                   << ipInterface.c_str());
+            throw Transport::Exception("Invalid ipInterface specified (IP address required)", __FILE__,__LINE__);
+         }
+      }
+      else // V4
+      {
+         if(!DnsUtil::isIpV4Address(ipInterface))
+         {
+            ErrLog(<< "Failed to create transport, invalid ipInterface specified (IP address required): V4 "
+                   << Tuple::toData(protocol) << " " << port << " on "
+                   << ipInterface.c_str());
+            throw Transport::Exception("Invalid ipInterface specified (IP address required)", __FILE__,__LINE__);
+         }
+      }
+   }
+
    InternalTransport* transport=0;
    Fifo<TransactionMessage>& stateMacFifo = mTransactionController.transportSelector().stateMacFifo();   
    try

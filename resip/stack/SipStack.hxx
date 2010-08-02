@@ -112,7 +112,8 @@ class SipStack
          @param version               Protocol Version:  V4 or V6
 
          @param ipInterface           Specifies which ethernet interface to bind to. If set to 
-                                      Data::Empty, bind to all interfaces.
+                                      Data::Empty, bind to all interfaces.  Note:  Interfaces
+                                      must be identified via IP address.
 
          @param sipDomainname         Only allow messages to 
                                       be sent as the specified domain.  For default case, 
