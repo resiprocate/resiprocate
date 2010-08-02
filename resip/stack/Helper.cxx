@@ -1501,8 +1501,8 @@ Helper::algorithmAndQopSupported(const Auth& challenge)
    {
       return false;
    }
-   return (!challenge.exists(p_algorithm) 
-           || isEqualNoCase(challenge.param(p_algorithm), "MD5")
+   return ((!challenge.exists(p_algorithm) 
+            || isEqualNoCase(challenge.param(p_algorithm), "MD5"))
            && (!challenge.exists(p_qop) 
                || isEqualNoCase(challenge.param(p_qop), Symbols::auth)
                || isEqualNoCase(challenge.param(p_qop), Symbols::authInt)));
