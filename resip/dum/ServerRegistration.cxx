@@ -124,6 +124,16 @@ ServerRegistration::accept(int statusCode)
 {
    SipMessage success;
    mDum.makeResponse(success, mRequest, statusCode);
+   // .bwc. Copy Path headers if present, indicate Path support
+   // ?bwc? If path headers are present, but client indicates no path support, 
+   // RFC 3327 says it is a matter of policy of whether to accept the 
+   // registration or not. What should we do here? Is it worth it to make this 
+   // configurable?
+   if(!mRequest.empty(h_Paths))
+   {
+      success.header(h_Paths)=mRequest.header(h_Paths);
+      success.header(h_Supporteds).push_back(Token("path"));
+   }
    accept(success);
 }
 
