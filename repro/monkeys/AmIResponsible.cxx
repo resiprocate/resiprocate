@@ -43,7 +43,6 @@ AmIResponsible::process(RequestContext& context)
          // .bwc. Valid flow token
          std::auto_ptr<Target> target(new Target(request.header(h_RequestLine).uri()));
          target->rec().mReceivedFrom = dest;
-         target->rec().mReceivedFrom.onlyUseExistingConnection=true;
          context.getResponseContext().addTarget(target);
          return SkipThisChain;
       }

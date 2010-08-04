@@ -550,9 +550,10 @@ Proxy::getRecordRouteEnabled() const
 }
 
 std::auto_ptr<resip::MessageDecorator> 
-Proxy::makeRRDecorator() const
+Proxy::makeRRDecorator(bool doPathInstead) const
 {
-   return std::auto_ptr<resip::MessageDecorator>(new RRDecorator(*this));
+   return std::auto_ptr<resip::MessageDecorator>(new RRDecorator(*this,
+                                                               doPathInstead));
 }
 
 bool 

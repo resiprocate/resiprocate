@@ -10,7 +10,7 @@ class Proxy;
 class RRDecorator : public resip::MessageDecorator
 {
    public:
-     explicit RRDecorator(const Proxy& proxy);
+     explicit RRDecorator(const Proxy& proxy, bool doPath=false);
      RRDecorator(const RRDecorator& proxy);
      virtual ~RRDecorator();
 
@@ -26,6 +26,7 @@ class RRDecorator : public resip::MessageDecorator
    private:
       const Proxy& mProxy;
       bool mAddedRecordRoute;
+      const bool mDoPath;
 
       //disabled
       RRDecorator();
