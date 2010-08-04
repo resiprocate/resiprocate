@@ -194,6 +194,10 @@ main(int argc, char** argv)
               i != args.mInterfaces.end(); ++i)
          {
             Uri intf(*i);
+            if(!DnsUtil::isIpAddress(intf.host()))
+            {
+               CritLog(<< "Malformed IP-address found in the --interfaces (-i) command-line option: " << intf.host());
+            }
             ExtensionParameter p_tls("tls"); // for specifying tls domain
             stack.addTransport(Tuple::toTransport(intf.param(p_transport)),
                                intf.port(), 
