@@ -612,14 +612,7 @@ SipMessage::encodeBrief(EncodeStream& str) const
    }
 
    str << cseq;
-   if (header(h_CSeq).method() != UNKNOWN)
-   {
-      str << getMethodName(header(h_CSeq).method());
-   }
-   else
-   {
-      str << header(h_CSeq).unknownMethodName();
-   }
+   str << header(h_CSeq);
 
    try
    {
