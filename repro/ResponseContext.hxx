@@ -251,10 +251,11 @@ class ResponseContext
       
       void insertRecordRoute(resip::SipMessage& outgoing,
                               const resip::Tuple& receivedTransport,
-                              Target* target);
-      resip::Data getInboundFlowToken();
+                              Target* target,
+                              bool doPathInstead=false);
+      resip::Data getInboundFlowToken(bool doPathInstead);
       bool outboundFlowTokenNeeded(Target* target);
-      bool selfAlreadyRecordRouted();
+      bool selfAlreadyRecordRouted(bool doPathInstead);
       bool sendingToSelf(Target* target);
 
       void sendRequest(resip::SipMessage& request);

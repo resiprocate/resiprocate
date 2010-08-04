@@ -6,6 +6,7 @@
 
 #include "repro/Proxy.hxx"
 #include "repro/RequestContext.hxx"
+#include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TransactionTerminated.hxx"
 #include "resip/stack/Helper.hxx"
@@ -746,13 +747,22 @@ RequestContext::removeTopRouteIfSelf()
 
       mOriginalRequest->header(h_Routes).pop_front();
 
-      if(!mOriginalRequest->header(h_Routes).empty()
-           &&  mProxy.isMyUri(mOriginalRequest->header(h_Routes).front().uri()))
+      static ExtensionParameter p_drr("drr");
+      if(mTopRoute.uri().exists(p_drr))
       {
-         // .bwc. Do double-record routing logic
-         mTopRoute = mOriginalRequest->header(h_Routes).front();
-   
-         mOriginalRequest->header(h_Routes).pop_front();
+         if(!mOriginalRequest->header(h_Routes).empty()
+              &&  mProxy.isMyUri(mOriginalRequest->header(h_Routes).front().uri()))
+         {
+            // .bwc. Do double-record routing logic
+            mTopRoute = mOriginalRequest->header(h_Routes).front();
+      
+            mOriginalRequest->header(h_Routes).pop_front();
+         }
+         else
+         {
+            // ?bwc? Somebody messed with our record-routes. Just ignore? Or 
+            // should we reject?
+         }
       }
    }
 }

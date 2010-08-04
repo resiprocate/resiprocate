@@ -576,39 +576,16 @@ ResponseContext::beginClientTransaction(repro::Target* target)
                            orig.getReceivedTransport()->getTuple(),
                            target);
       }
-      else if(request.method()==REGISTER)
+      else if(request.method()==REGISTER &&
+               !request.empty(h_Supporteds) &&
+               (  request.header(h_Supporteds).find(Token("path")) ||
+                  request.header(h_Supporteds).find(Token("outbound"))))
       {
-         // .bwc. Edge-proxy stuff for outbound.
-         if(request.header(h_Vias).size() == 1 
-            && resip::InteropHelper::getOutboundSupported()
-            && !request.empty(h_Contacts)
-            && request.header(h_Contacts).front().exists(p_regid))
-         {
-            resip::NameAddr rt;
-            if(orig.getReceivedTransport()->transport()==resip::TLS ||
-               orig.getReceivedTransport()->transport()==resip::DTLS )
-            {
-               // Use FQDN
-               rt = mRequestContext.mProxy.getRecordRoute();
-               rt.uri().scheme() = "sips";
-            }
-            else
-            {
-               rt.uri().host()=orig.getReceivedTransport()->interfaceName();
-               rt.uri().port()=orig.getReceivedTransport()->port();
-               rt.uri().param(resip::p_transport)=resip::Tuple::toData(orig.getReceivedTransport()->transport());
-            }
-            resip::Helper::massageRoute(request,rt);
-            resip::Data binaryFlowToken;
-            Tuple::writeBinaryToken(orig.getSource(),binaryFlowToken);
-            
-            // !bwc! TODO encrypt this binary token to self.
-            rt.uri().user()=binaryFlowToken.base64encode();
-            rt.param(p_ob);
-            request.header(h_Paths).push_front(rt);
-            InfoLog (<< "Added Path: " << rt);
-            request.header(h_Supporteds).push_back(Token("path"));
-         }
+         insertRecordRoute(request,
+                           orig.getReceivedTransport()->getTuple(),
+                           target,
+                           true /* do Path instead */);
+         request.header(h_Supporteds).push_back(Token("path"));
       }
       
       if( (resip::InteropHelper::getOutboundSupported() ||
@@ -659,9 +636,10 @@ ResponseContext::beginClientTransaction(repro::Target* target)
 void
 ResponseContext::insertRecordRoute(resip::SipMessage& outgoing,
                                     const Tuple& receivedTransport,
-                                    Target* target)
+                                    Target* target,
+                                    bool doPathInstead)
 {
-   resip::Data inboundFlowToken=getInboundFlowToken();
+   resip::Data inboundFlowToken=getInboundFlowToken(doPathInstead);
    bool needsOutboundFlowToken=outboundFlowTokenNeeded(target);
 
    // .bwc. If we have a flow-token we need to insert, we need to record-route.
@@ -704,8 +682,20 @@ ResponseContext::insertRecordRoute(resip::SipMessage& outgoing,
       }
 #endif
 
-      outgoing.header(h_RecordRoutes).push_front(rt);
-      InfoLog (<< "Added Record-Route: " << rt);
+      if(doPathInstead)
+      {
+         if(!inboundFlowToken.empty())
+         {
+            rt.uri().param(p_ob);
+         }
+         outgoing.header(h_Paths).push_front(rt);
+         InfoLog (<< "Added Path: " << rt);
+      }
+      else
+      {
+         outgoing.header(h_RecordRoutes).push_front(rt);
+         InfoLog (<< "Added Record-Route: " << rt);
+      }
    }
 
    // .bwc. We only double record-route if we are putting in a flow-token.
@@ -715,29 +705,55 @@ ResponseContext::insertRecordRoute(resip::SipMessage& outgoing,
    // circumstances (on transport switch, for instance)
    if(!inboundFlowToken.empty() || needsOutboundFlowToken)
    {
-      outgoing.addOutboundDecorator(mRequestContext.mProxy.makeRRDecorator());
+      outgoing.addOutboundDecorator(mRequestContext.mProxy.makeRRDecorator(doPathInstead));
    }
 }
 
 resip::Data
-ResponseContext::getInboundFlowToken()
+ResponseContext::getInboundFlowToken(bool doPathInstead)
 {
    resip::Data flowToken=resip::Data::Empty;
    resip::SipMessage& orig=mRequestContext.getOriginalRequest();
    
    if(InteropHelper::getOutboundSupported() && 
-      orig.header(h_Contacts).front().uri().exists(p_ob) &&
-      orig.header(h_Vias).size()==1)
+      !orig.empty(h_Contacts) &&
+      (orig.header(h_Contacts).front().uri().exists(p_ob) || 
+         orig.header(h_Contacts).front().exists(p_regid)))
    {
-      // This arrived over an outbound flow (or so the endpoint claims)
-      // (See outbound-09 Sec 4.3 para 3)
-      resip::Data binaryFlowToken;
-      Tuple::writeBinaryToken(orig.getSource(),binaryFlowToken);
-      // !bwc! TODO encrypt to self
-      flowToken = binaryFlowToken.base64encode();
+      if(orig.header(h_Vias).size()==1)
+      {
+         // This arrived over an outbound flow (or so the endpoint claims)
+         // (See outbound-09 Sec 4.3 para 3)
+         resip::Data binaryFlowToken;
+         resip::Tuple source(orig.getSource());
+         source.onlyUseExistingConnection=true;
+         Tuple::writeBinaryToken(source,binaryFlowToken);
+         // !bwc! TODO encrypt to self
+         flowToken = binaryFlowToken.base64encode();
+      }
+      else if(doPathInstead)
+      {
+         // Need to try to detect Path failures
+         if(orig.empty(h_Paths) || !orig.header(h_Paths).back().exists(p_ob))
+         {
+            // Yikes! Client is trying to use outbound, but edge-proxy did not
+            // support it. The registrar will either reject this (if it supports 
+            // outbound), or will not indicate outbound support (which should 
+            // let the client know that the flow setup failed)
+            WarningLog(<<"Client asked for outbound processing, but the edge "
+                     "proxy did not support it. There's nothing we can do to "
+                     "salvage this. The registrar might end up rejecting the "
+                     "registration (if is supports outbound), or it might just "
+                     "fail to add a Supported: outbound. In either case, the "
+                     "client should know what's up, so we just let it all "
+                     "happen.");
+         }
+      }
    }
-   else if(resip::InteropHelper::getRRTokenHackEnabled()
-      && !selfAlreadyRecordRouted() )
+   
+   if(flowToken.empty() &&
+      resip::InteropHelper::getRRTokenHackEnabled() &&
+      !selfAlreadyRecordRouted(doPathInstead) )
    {
       // !bwc! TODO remove this when flow-token hack is no longer needed.
       // Poor-man's outbound. Shouldn't be our default behavior, because it
@@ -772,13 +788,23 @@ ResponseContext::outboundFlowTokenNeeded(Target* target)
 }
 
 bool
-ResponseContext::selfAlreadyRecordRouted()
+ResponseContext::selfAlreadyRecordRouted(bool doPathInstead)
 {
    resip::SipMessage& orig=mRequestContext.getOriginalRequest();
-   return (!orig.empty(h_RecordRoutes) 
-            && orig.header(h_RecordRoutes).front().isWellFormed()
-            && mRequestContext.mProxy.isMyUri(
-                        orig.header(h_RecordRoutes).front().uri()));
+   if(doPathInstead)
+   {
+      return (!orig.empty(h_Paths) 
+               && orig.header(h_Paths).front().isWellFormed()
+               && mRequestContext.mProxy.isMyUri(
+                           orig.header(h_Paths).front().uri()));
+   }
+   else
+   {
+      return (!orig.empty(h_RecordRoutes) 
+               && orig.header(h_RecordRoutes).front().isWellFormed()
+               && mRequestContext.mProxy.isMyUri(
+                           orig.header(h_RecordRoutes).front().uri()));
+   }
 }
 
 bool

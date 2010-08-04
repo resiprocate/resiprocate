@@ -2,6 +2,7 @@
 
 #include "repro/Proxy.hxx"
 
+#include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/InteropHelper.hxx"
 #include "resip/stack/SipMessage.hxx"
@@ -13,14 +14,17 @@
 
 namespace repro
 {
-RRDecorator::RRDecorator(const Proxy& proxy) :
+RRDecorator::RRDecorator(const Proxy& proxy,
+                           bool doPath) :
    mProxy(proxy),
-   mAddedRecordRoute(false)
+   mAddedRecordRoute(false),
+   mDoPath(doPath)
 {}
 
 RRDecorator::RRDecorator(const RRDecorator& orig) :
    mProxy(orig.mProxy),
-   mAddedRecordRoute(false)
+   mAddedRecordRoute(false),
+   mDoPath(orig.mDoPath)
 {}
 
 RRDecorator::~RRDecorator()
@@ -34,7 +38,22 @@ RRDecorator::decorateMessage(resip::SipMessage& request,
 {
    DebugLog(<<"Proxy::decorateMessage called.");
    resip::NameAddr rt;
-   
+   resip::NameAddrs* routes=0;
+   if(mDoPath)
+   {
+      if(!request.empty(resip::h_Paths))
+      {
+         routes=&(request.header(resip::h_Paths));
+      }
+   }
+   else
+   {
+      if(!request.empty(resip::h_RecordRoutes))
+      {
+         routes=&(request.header(resip::h_RecordRoutes));
+      }
+   }
+
    // .bwc. Any of these cases means that we are assuming that whoever is
    // just downstream will remain in the call-path throughout the dialog.
    if(destination.onlyUseExistingConnection 
@@ -64,9 +83,9 @@ RRDecorator::decorateMessage(resip::SipMessage& request,
       // !bwc! TODO encrypt this binary token to self.
       rt.uri().user()=binaryFlowToken.base64encode();
    }
-   else if(!request.empty(resip::h_RecordRoutes) 
-            && mProxy.isMyUri(request.header(resip::h_RecordRoutes).front().uri())
-            && !request.header(resip::h_RecordRoutes).front().uri().user().empty())
+   else if(routes
+            && mProxy.isMyUri(routes->front().uri())
+            && !(routes->front().uri().user().empty()))
    {
       // .bwc. If we Record-Routed earlier with a flow-token, we need to
       // add a second Record-Route (to make in-dialog stuff work both ways)
@@ -90,9 +109,21 @@ RRDecorator::decorateMessage(resip::SipMessage& request,
    // same is if the target and source were the same entity.
    if (!rt.uri().host().empty())
    {
-      request.header(resip::h_RecordRoutes).push_front(rt);
+      static resip::ExtensionParameter p_drr("drr");
+      rt.uri().param(p_drr);
+      if(mDoPath)
+      {
+         request.header(resip::h_Paths).front().uri().param(p_drr);
+         request.header(resip::h_Paths).push_front(rt);
+         InfoLog (<< "Added outbound Path: " << rt);
+      }
+      else
+      {
+         request.header(resip::h_RecordRoutes).front().uri().param(p_drr);
+         request.header(resip::h_RecordRoutes).push_front(rt);
+         InfoLog (<< "Added outbound Record-Route: " << rt);
+      }
       mAddedRecordRoute=true;
-      InfoLog (<< "Added outbound Record-Route: " << rt);
    }
 }
 
@@ -101,8 +132,16 @@ RRDecorator::rollbackMessage(resip::SipMessage& request)
 {
    if(mAddedRecordRoute)
    {
-      assert(!request.header(resip::h_RecordRoutes).empty());
-      request.header(resip::h_RecordRoutes).pop_front();
+      if(mDoPath)
+      {
+         assert(!request.header(resip::h_Paths).empty());
+         request.header(resip::h_Paths).pop_front();
+      }
+      else
+      {
+         assert(!request.header(resip::h_RecordRoutes).empty());
+         request.header(resip::h_RecordRoutes).pop_front();
+      }
       mAddedRecordRoute=false;
    }
 }
