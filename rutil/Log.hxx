@@ -199,6 +199,8 @@ class Log
       static Level level(LocalLoggerId loggerId);
       static void setMaxLineCount(unsigned int maxLineCount);
       static void setMaxLineCount(unsigned int maxLineCount, LocalLoggerId loggerId);
+      static void setMaxByteCount(unsigned int maxByteCount);
+      static void setMaxByteCount(unsigned int maxByteCount, LocalLoggerId loggerId);
       static Level toLevel(const Data& l);
       static Type toType(const Data& t);
       static Data toString(Level l);
@@ -246,13 +248,14 @@ class Log
       static int setThreadLocalLogger(LocalLoggerId loggerId);
 
 
-      static std::ostream& Instance();
+      static std::ostream& Instance(unsigned int bytesToWrite);
       static bool isLogging(Log::Level level, const Subsystem&);
       static void OutputToWin32DebugWindow(const Data& result);      
       static void reset(); ///< Frees logger stream
 
    public:
-      static unsigned int MaxLineCount; ///< Left for compatibility for global logger
+      static unsigned int MaxLineCount; 
+      static unsigned int MaxByteCount; 
 
    protected:
       static Mutex _mutex;
@@ -267,6 +270,7 @@ class Log
                        ExternalLogger *pExternalLogger=NULL)
                : mLevel(level),
                  mMaxLineCount(0),
+                 mMaxByteCount(0),
                  mExternalLogger(pExternalLogger),
                  mId(id),
                  mType(type),
@@ -295,12 +299,14 @@ class Log
 
             LocalLoggerId id() const {return mId;}
             unsigned int maxLineCount() { return mMaxLineCount ? mMaxLineCount : MaxLineCount; }  // return local max, if not set use global max
+            unsigned int maxByteCount() { return mMaxByteCount ? mMaxByteCount : MaxByteCount; }  // return local max, if not set use global max
 
-            std::ostream& Instance(); ///< Return logger stream instance, creating it if needed.
+            std::ostream& Instance(unsigned int bytesToWrite); ///< Return logger stream instance, creating it if needed.
             void reset(); ///< Frees logger stream
 
             volatile Level mLevel;
             volatile unsigned int mMaxLineCount;
+            volatile unsigned int mMaxByteCount;
             ExternalLogger* mExternalLogger;
 
          protected:

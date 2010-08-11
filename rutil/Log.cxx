@@ -29,6 +29,7 @@ Log::ThreadData Log::mDefaultLoggerData(0, Log::Cout, Log::Info, NULL, NULL);
 Data Log::mAppName;
 Data Log::mHostname;
 unsigned int Log::MaxLineCount = 0; // no limit by default
+unsigned int Log::MaxByteCount = 0; // no limit by default
 
 #ifdef WIN32
 int Log::mPid=0;
@@ -250,6 +251,36 @@ Log::setMaxLineCount(unsigned int maxLineCount, Log::LocalLoggerId loggerId)
    {
       Lock lock(_mutex);
       mDefaultLoggerData.mMaxLineCount = maxLineCount;
+   }
+}
+
+void 
+Log::setMaxByteCount(unsigned int maxByteCount)
+{
+   Lock lock(_mutex);
+   getLoggerData().mMaxByteCount = maxByteCount; 
+}
+
+void 
+Log::setMaxByteCount(unsigned int maxByteCount, Log::LocalLoggerId loggerId)
+{
+   if (loggerId)
+   {
+      ThreadData *pData = mLocalLoggerMap.getData(loggerId);
+      if (pData)
+      {
+         // Local logger found. Set logging level.
+         pData->mMaxByteCount = maxByteCount;
+
+         // We don't need local logger instance anymore.
+         mLocalLoggerMap.decreaseUseCount(loggerId);
+         pData = NULL;
+      }
+   }
+   else
+   {
+      Lock lock(_mutex);
+      mDefaultLoggerData.mMaxByteCount = maxByteCount;
    }
 }
 
@@ -553,9 +584,9 @@ int Log::setThreadLocalLogger(Log::LocalLoggerId loggerId)
 }
 
 std::ostream&
-Log::Instance()
+Log::Instance(unsigned int bytesToWrite)
 {
-   return getLoggerData().Instance();
+   return getLoggerData().Instance(bytesToWrite);
 }
 
 void 
@@ -735,12 +766,12 @@ Log::Guard::~Guard()
    else 
    {
       // endl is magic in syslog -- so put it here
-      Instance() << mData << std::endl;
+      Instance(mData.size()+2) << mData << std::endl;  
    }
 }
 
 std::ostream&
-Log::ThreadData::Instance()
+Log::ThreadData::Instance(unsigned int bytesToWrite)
 {
 //   std::cerr << "Log::ThreadData::Instance() id=" << mId << " type=" << mType <<  std::endl;
    switch (mType)
@@ -761,23 +792,22 @@ Log::ThreadData::Instance()
 
       case Log::File:
          if (mLogger == 0 ||
-             (maxLineCount() && mLineCount > maxLineCount()))
+             (maxLineCount() && mLineCount >= maxLineCount()) ||
+             (maxByteCount() && ((unsigned int)mLogger->tellp()+bytesToWrite) >= maxByteCount()))
          {
             std::cerr << "Creating a logger for file \"" << mLogFileName.c_str() << "\"" << std::endl;
+            Data logFileName(mLogFileName != "" ? mLogFileName : "resiprocate.log");
             if (mLogger)
             {
+               Data oldLogFileName(logFileName + ".old");
                delete mLogger;
+               // Keep one backup file: Delete .old file, Rename log file to .old
+               // Could be expanded in the future to keep X backup log files
+               remove(oldLogFileName.c_str());
+               rename(logFileName.c_str(), oldLogFileName.c_str());
             }
-            if (mLogFileName != "")
-            {
-               mLogger = new std::ofstream(mLogFileName.c_str(), std::ios_base::out | std::ios_base::trunc);
+            mLogger = new std::ofstream(logFileName.c_str(), std::ios_base::out | std::ios_base::trunc);
                mLineCount = 0;
-            }
-            else
-            {
-               mLogger = new std::ofstream("resiprocate.log", std::ios_base::out | std::ios_base::trunc);
-               mLineCount = 0;
-            }
          }
          mLineCount++;
          return *mLogger;
