@@ -123,7 +123,7 @@ srtp: configure_srtp
 
 ifneq ($(SSL_LOCATION),)
 $(SSL_LOCATION)/Makefile:
-	cd $(SSL_LOCATION) && ./Configure linux-generic32 --openssldir=/usr enable-tlsext ${CONFIGURE_ARGS} && $(MAKE) depend
+	cd $(SSL_LOCATION) && ./Configure $(OPEN_SSL_CONFIG) --openssldir=/usr enable-tlsext ${CONFIGURE_ARGS} && $(MAKE) depend
 
 configure_dtls-srtp-openssl: $(SSL_LOCATION)/Makefile
 

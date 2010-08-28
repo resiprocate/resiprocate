@@ -19,6 +19,14 @@ ifeq ($(OSTYPE),FreeBSD)
     USE_LIBGETOPT = 1
     USE_R_WRAPPER = 1
 
+    ifeq ($(LARCH),ia32)
+        OPEN_SSL_CONFIG := BSD-x86
+    endif
+    ifeq ($(ARCH),x86_64)
+        OPEN_SSL_CONFIG := BSD-x86_64
+    endif
+    # TODO -- need OPEN_SSL_CONFIG for ia64, sparc64, sparcv8.
+
 endif
 
 ############################## NetBSD ##############################
@@ -43,6 +51,13 @@ ifeq ($(OSTYPE),NetBSD)
 	CXXFLAGS += $(CPUFLAGS)
 	CFLAGS   += $(CPUFLAGS)
 
+ifeq ($(LARCH),ia32)
+	OPEN_SSL_CONFIG := BSD-x86
+endif
+ifeq ($(ARCH),x86_64)
+	OPEN_SSL_CONFIG := BSD-x86_64
+endif
+
 endif
 
 ############################## Linux ##############################
@@ -51,15 +66,19 @@ ifeq ($(OSTYPE),Linux)
 
 ifeq ($(ARCH),i686)
 	CXXFLAGS += -march=i686
+	OPEN_SSL_CONFIG := linux-generic32
 endif
 ifeq ($(ARCH),i486)
 	CXXFLAGS += -march=i486
+	OPEN_SSL_CONFIG := linux-generic32
 endif
 ifeq ($(ARCH),i386)
 	CXXFLAGS += -march=i386
+	OPEN_SSL_CONFIG := linux-generic32
 endif
 ifeq ($(ARCH),x86_64)
 	CXXFLAGS += -march=x86-64
+	OPEN_SSL_CONFIG := linux-x86_64
 ifeq ($(BUILD_SHARED_LIBS),yes)
 	CXXFLAGS += -fPIC
 	CFLAGS   += -fPIC
@@ -90,6 +109,7 @@ ifeq ($(OSTYPE),QNX)
     CFLAGS   += -D_REENTRANT
     LDLIBS_LAST   += -lsocket -lstdc++ 
     USE_SSL = no
+    OPEN_SSL_CONFIG := QNX6
 endif
 
 
@@ -115,6 +135,22 @@ ifeq ($(OSTYPE),SunOS)
     ifeq ($(ARCH),sparc)
         CXXFLAGS += -dalign
     endif
+
+    ifeq ($(LARCH),ia32)
+      ifeq ($(VOCAL_TOOLCHAIN_TYPE),gnu)
+        OPEN_SSL_CONFIG := solaris-x86-gcc
+      else
+        OPEN_SSL_CONFIG := solaris-x86-cc
+      endif
+    endif
+    ifeq ($(ARCH),x86_64)
+      ifeq ($(VOCAL_TOOLCHAIN_TYPE),gnu)
+        OPEN_SSL_CONFIG := solaris64-x86_64-gcc
+      else
+        OPEN_SSL_CONFIG := solaris64-x86_64-cc
+      endif
+    endif
+    # TODO -- need OPEN_SSL_CONFIG for ia64, sparc64, sparcv{7,8,9}.
 endif
 
 
@@ -142,6 +178,16 @@ ifeq ($(OSTYPE),Darwin)
     USE_LIBGETOPT = 1
     USE_R_WRAPPER = 1
 
+    ifeq ($(LARCH),ia32)
+      OPEN_SSL_CONFIG := darwin-i386-cc
+    endif
+    ifeq ($(ARCH),x86_64)
+      OPEN_SSL_CONFIG := darwin64-x86_64-cc
+    endif
+    ifeq ($(ARCH),powermac)
+      OPEN_SSL_CONFIG := darwin-ppc-cc
+    endif
+    # TODO -- need darwin64-ppc-cc (?!?)
 endif
 
 
@@ -151,6 +197,13 @@ ifeq ($(OSTYPE),MinGW)
     CFLAGS      += -D_WIN32_WINNT=0x0501
     LDFLAGS     += -mconsole
     LDLIBS_LAST += -lws2_32 -lIphlpapi
+
+    ifeq ($(LARCH),ia32)
+      OPEN_SSL_CONFIG := mingw
+    endif
+    ifeq ($(ARCH),x86_64)
+      OPEN_SSL_CONFIG := mingw64
+    endif
 
 #    We probably want to add these and remove the -lIphlpapi flag
 #    from above at some point. See rutil/WinCompat.cxx for details.
@@ -166,9 +219,11 @@ ifeq ($(OSTYPE),cygwin)
 
     USE_LIBGETOPT = 1
     INCDIRS += $(ROOT)/contrib/win32/mingw/include $(ROOT)/contrib/win32/pthreads
+    OPEN_SSL_CONFIG := Cygwin
 
 endif
 
+######################################################################
 
 ifeq ($(VOCAL_PROCESSOR_OPTS),1)
     ifeq ($(ARCH),i686)
@@ -309,6 +364,10 @@ LDFLAGS  += -L/usr/local/lib/gcc-lib/sh-wrs-vxworks/2.95.1/m2
 LDLIBS_LAST   +=  -lstdc++ -lgcc
 OSCLASS = VXWORKS
 
+endif
+
+ifndef OPEN_SSL_CONFIG
+    OPEN_SSL_CONFIG := gcc
 endif
 
 OS_ARCH  := $(OSTYPE).$(ARCH)
