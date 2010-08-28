@@ -31,9 +31,9 @@ class RequestContext
                      ProcessorChain& targetP); // baboons
       virtual ~RequestContext();
 
-      void process(resip::TransactionTerminated& msg);
-      void process(std::auto_ptr<resip::SipMessage> sip);
-      void process(std::auto_ptr<resip::ApplicationMessage> app);
+      virtual void process(resip::TransactionTerminated& msg);
+      virtual void process(std::auto_ptr<resip::SipMessage> sip);
+      virtual void process(std::auto_ptr<resip::ApplicationMessage> app);
       
       virtual void handleSelfAimedStrayAck(resip::SipMessage* sip);
 
