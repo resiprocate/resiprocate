@@ -109,7 +109,7 @@ class UserProfile : public Profile
       bool mGruuEnabled;
       Uri mPubGruu;
       Uri mTempGruu;
-      bool mIsAnonymous;
+      const NameAddr mAnonymous;
       
       typedef std::set<DigestCredential> DigestCredentials;
       DigestCredentials mDigestCredentials;

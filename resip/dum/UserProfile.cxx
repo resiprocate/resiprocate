@@ -9,12 +9,16 @@
 using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
-UserProfile::UserProfile() : Profile(), mGruuEnabled(false)
+UserProfile::UserProfile() : Profile(), 
+   mGruuEnabled(false),
+   mAnonymous("\"Anonymous\" <sip:anonymous@anonymous.invalid>")
 {
     //InfoLog (<< "************ UserProfile created (no base)!: " << *this);
 }
 
-UserProfile::UserProfile(SharedPtr<Profile> baseProfile) : Profile(baseProfile), mGruuEnabled(false)
+UserProfile::UserProfile(SharedPtr<Profile> baseProfile) : Profile(baseProfile), 
+   mGruuEnabled(false),
+   mAnonymous("\"Anonymous\" <sip:anonymous@anonymous.invalid>")
 {
     //InfoLog (<< "************ UserProfile created (with base)!: " << *this);
 }
@@ -24,13 +28,11 @@ UserProfile::~UserProfile()
     //InfoLog (<< "************ UserProfile destroyed!: " << *this);
 }
 
-static NameAddr anonymous("\"Anonymous\" <sip:anonymous@anonymous.invalid>");
-
 SharedPtr<UserProfile> 
 UserProfile::getAnonymousUserProfile() const
 {
    SharedPtr<UserProfile> anon(this->clone());
-   anon->setDefaultFrom(anonymous);
+   anon->setDefaultFrom(mAnonymous);
    return anon;
 }
 
@@ -43,7 +45,7 @@ UserProfile::clone() const
 bool
 UserProfile::isAnonymous() const
 {
-   return (mDefaultFrom.uri().getAor() == anonymous.uri().getAor());
+   return (mDefaultFrom.uri().getAor() == mAnonymous.uri().getAor());
 }
 
 void
