@@ -6,6 +6,10 @@
 #include <cassert>
 #include "rutil/SysLogBuf.hxx"
 
+#ifndef EOF
+# define EOF (-1)
+#endif
+
 using resip::SysLogBuf;
 
 SysLogBuf::SysLogBuf ()
