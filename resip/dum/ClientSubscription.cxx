@@ -400,6 +400,23 @@ ClientSubscription::processNextNotify()
    {
       handler->onUpdateExtension(getHandle(), qn->notify(), qn->outOfOrder());
    }
+   else if (mEnded)
+   {
+      // We received a NOTIFY message when we thought the subscription was
+      // ended. This can happen, for example, when a previously sent NOTIFY gets
+      // resent while we (ClientSubscription) are trying to terminate the
+      // subscription. If we don't accept/reject this NOTIFY, it will stay into
+      // the mQueuedNotifies queue and we'll never terminate the subscription
+      // even if the server sends a NOTIFY/terminated. All received NOTIFY would
+      // get piled up on mQueuedNotifies and they will never get processed.
+      //
+      // Note that if that NOTIFY is in fact the terminated one, it will get
+      // caught by another if statement above and acted upon appropriately.
+      //
+      //!fjoanis! Is 481 a proper error code in this case?
+      InfoLog(<< "[ClientSubscription] received NOTIFY when subscription was ended, rejecting it...");
+      rejectUpdate(481);
+   }
 }
 
 void
