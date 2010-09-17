@@ -676,12 +676,12 @@ ClientRegistration::dispatch(const SipMessage& msg)
 unsigned int 
 ClientRegistration::checkProfileRetry(const SipMessage& msg)
 {
-   if (mDialogSet.getUserProfile()->getDefaultRegistrationRetryTime() > 0 &&
+   unsigned int retryInterval = mDialogSet.getUserProfile()->getDefaultRegistrationRetryTime();
+   if (retryInterval > 0 &&
       (mState == Adding || mState == Refreshing) &&
       !mEndWhenDone)
    {
-      unsigned int retryInterval = mDialogSet.getUserProfile()->getDefaultRegistrationRetryTime();
-      if (msg.exists(h_RetryAfter))
+      if (msg.exists(h_RetryAfter) && msg.header(h_RetryAfter).value() > 0)
       {
          // Use retry interval from error response
          retryInterval = msg.header(h_RetryAfter).value();
