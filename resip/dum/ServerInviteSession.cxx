@@ -1215,25 +1215,32 @@ void
 ServerInviteSession::sendProvisional(int code, bool earlyFlag)
 {
    mDialog.makeResponse(*m1xx, mFirstRequest, code);
-   switch (mState)
+   if(!earlyFlag)
    {
-      case UAS_OfferProvidedAnswer:
-      case UAS_EarlyProvidedAnswer:
-         if (earlyFlag && mCurrentLocalOfferAnswer.get()) // early media
-         {
-            setOfferAnswer(*m1xx, mCurrentLocalOfferAnswer.get());
-         }
-         break;
-      case UAS_ProvidedOffer:
-      case UAS_EarlyProvidedOffer:
-         if (earlyFlag && mProposedLocalOfferAnswer.get()) 
-         {
-            setOfferAnswer(*m1xx, mProposedLocalOfferAnswer.get());
-         }
-         break;
+	   m1xx->setContents(0);  // clear contents if present
+   }
+   else
+   {
+      switch (mState)
+      {
+         case UAS_OfferProvidedAnswer:
+         case UAS_EarlyProvidedAnswer:
+            if (mCurrentLocalOfferAnswer.get()) // early media
+            {
+               setOfferAnswer(*m1xx, mCurrentLocalOfferAnswer.get());
+            }
+            break;
+         case UAS_ProvidedOffer:
+         case UAS_EarlyProvidedOffer:
+            if (mProposedLocalOfferAnswer.get()) 
+            {
+               setOfferAnswer(*m1xx, mProposedLocalOfferAnswer.get());
+            }
+            break;
 
-      default:
-         break;
+         default:
+            break;
+      }
    }
    startRetransmit1xxTimer();
    DumHelper::setOutgoingEncryptionLevel(*m1xx, mProposedEncryptionLevel);
