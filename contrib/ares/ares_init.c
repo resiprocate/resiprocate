@@ -390,9 +390,13 @@ static int init_by_resolv_conf(ares_channel channel)
 static void init_by_defaults_systemconfiguration(ares_channel channel)
 {
   SCDynamicStoreContext context = {0, NULL, NULL, NULL, NULL};
-  SCDynamicStoreRef store = SCDynamicStoreCreate(NULL, CFSTR("init_by_defaults_systemconfiguration"), NULL, &context);
+  SCDynamicStoreRef store = 0;
   
   channel->nservers = 0;
+  // .amr. iPhone/iOS SDK's don't support SCDynamicStoreCreate so in that case fall back
+  // to the nservers=0 case.
+#ifndef TARGET_OS_IPHONE
+  store = SCDynamicStoreCreate(NULL, CFSTR("init_by_defaults_systemconfiguration"), NULL, &context);
 
   if (store)
   {
@@ -429,21 +433,22 @@ static void init_by_defaults_systemconfiguration(ares_channel channel)
       CFRelease(dnsDict);
     }
 
-    /* If no specified servers, try a local named. */
-    if (channel->nservers == 0)
-    {
-      channel->servers = malloc(sizeof(struct server_state));
-      memset(channel->servers, '\0', sizeof(struct server_state));
-
-#ifdef USE_IPV6			 
-      channel->servers[0].family = AF_INET;
-#endif
-
-      channel->servers[0].addr.s_addr = htonl(INADDR_LOOPBACK);
-      channel->nservers = 1;
-    }
-
     CFRelease(store);
+  }
+#endif // TARGET_OS_IPHONE
+
+  /* If no specified servers, try a local named. */
+  if (channel->nservers == 0)
+  {
+    channel->servers = malloc(sizeof(struct server_state));
+    memset(channel->servers, '\0', sizeof(struct server_state));
+		
+#ifdef USE_IPV6			 
+    channel->servers[0].family = AF_INET;
+#endif
+		
+    channel->servers[0].addr.s_addr = htonl(INADDR_LOOPBACK);
+    channel->nservers = 1;
   }
 }
 #endif
