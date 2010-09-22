@@ -672,6 +672,7 @@ int Log::LocalLoggerMap::remove(Log::LocalLoggerId loggerId)
       std::cerr << "Log::LocalLoggerMap::remove(): Use count is non-zero (" << it->second.second << ")!" << std::endl;
       return 2;
    }
+   delete it->second.first;  // delete ThreadData
    mLoggerInstancesMap.erase(it);
    return 0;
 }
@@ -806,8 +807,9 @@ Log::ThreadData::Instance(unsigned int bytesToWrite)
                remove(oldLogFileName.c_str());
                rename(logFileName.c_str(), oldLogFileName.c_str());
             }
-            mLogger = new std::ofstream(logFileName.c_str(), std::ios_base::out | std::ios_base::trunc);
-               mLineCount = 0;
+            // Append to log if we have a line count or byte count limit - otherwise truncate
+            mLogger = new std::ofstream(logFileName.c_str(), std::ios_base::out | ((maxLineCount() > 0 || maxByteCount() > 0) ? std::ios_base::app : std::ios_base::trunc));
+            mLineCount = 0;
          }
          mLineCount++;
          return *mLogger;
