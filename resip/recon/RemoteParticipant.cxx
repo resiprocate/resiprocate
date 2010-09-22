@@ -2049,6 +2049,10 @@ RemoteParticipant::onOfferRequired(InviteSessionHandle h, const SipMessage& msg)
    }
    else
    {
+      // We are being asked to provide SDP to the remote end - we should no longer be considering that
+      // remote end wants us to be on hold
+      mRemoteHold = false;
+
       if(mState == Connecting && !h->isAccepted())  
       {
          // If we haven't accepted yet - delay providing the offer until accept is called (this allows time 
