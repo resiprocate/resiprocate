@@ -282,6 +282,7 @@ class Log
                   mLogFileName = logFileName;
                }
             }
+            ~ThreadData() { reset(); }
 
             void set(Type type=Cout, Level level=Info,
                      const char *logFileName=NULL,
