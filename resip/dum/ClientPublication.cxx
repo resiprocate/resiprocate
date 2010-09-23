@@ -45,7 +45,6 @@ void
 ClientPublication::end()
 {
    InfoLog (<< "End client publication to " << mPublish->header(h_RequestLine).uri());
-   mPublish->header(h_CSeq).sequence()++;
    mPublish->header(h_Expires).value() = 0;
    send(mPublish);
 }
@@ -230,7 +229,6 @@ ClientPublication::refresh(unsigned int expiration)
    {
       expiration = mPublish->header(h_Expires).value();
    }
-   mPublish->header(h_CSeq).sequence()++;
    send(mPublish);
 }
 
@@ -283,7 +281,6 @@ ClientPublication::update(const Contents* body)
       }
    }
 
-   mPublish->header(h_CSeq).sequence()++;
    mPublish->setContents(mDocument);
    send(mPublish);
 }
@@ -328,6 +325,7 @@ ClientPublication::send(SharedPtr<SipMessage> request)
    }
    else
    {
+      request->header(h_CSeq).sequence()++;
       mDum.send(request);
       mWaitingForResponse = true;
       mPendingPublish = false;
