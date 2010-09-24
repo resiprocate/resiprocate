@@ -227,6 +227,25 @@
 		12BF593C0895D5FF00F7DD81 /* DumDecrypted.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 12BF593A0895D5FF00F7DD81 /* DumDecrypted.cxx */; };
 		12BF59580895D7B800F7DD81 /* CertMessage.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 12BF59570895D7B800F7DD81 /* CertMessage.cxx */; };
 		F8A057C7124D47D700112774 /* TcpConnection.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124D7916086CC3CE00BCA5A9 /* TcpConnection.cxx */; };
+		F8A057DB124D52BA00112774 /* AbandonServerTransaction.hxx in Headers */ = {isa = PBXBuildFile; fileRef = F8A057D3124D52BA00112774 /* AbandonServerTransaction.hxx */; };
+		F8A057DC124D52BA00112774 /* CancelClientInviteTransaction.hxx in Headers */ = {isa = PBXBuildFile; fileRef = F8A057D4124D52BA00112774 /* CancelClientInviteTransaction.hxx */; };
+		F8A057DD124D52BA00112774 /* ExistsOrDataParameter.cxx in Sources */ = {isa = PBXBuildFile; fileRef = F8A057D5124D52BA00112774 /* ExistsOrDataParameter.cxx */; };
+		F8A057DE124D52BA00112774 /* ExistsOrDataParameter.hxx in Headers */ = {isa = PBXBuildFile; fileRef = F8A057D6124D52BA00112774 /* ExistsOrDataParameter.hxx */; };
+		F8A057DF124D52BA00112774 /* InteropHelper.cxx in Sources */ = {isa = PBXBuildFile; fileRef = F8A057D7124D52BA00112774 /* InteropHelper.cxx */; };
+		F8A057E0124D52BA00112774 /* InteropHelper.hxx in Headers */ = {isa = PBXBuildFile; fileRef = F8A057D8124D52BA00112774 /* InteropHelper.hxx */; };
+		F8A057E1124D52BA00112774 /* PrivacyCategory.cxx in Sources */ = {isa = PBXBuildFile; fileRef = F8A057D9124D52BA00112774 /* PrivacyCategory.cxx */; };
+		F8A057E2124D52BA00112774 /* PrivacyCategory.hxx in Headers */ = {isa = PBXBuildFile; fileRef = F8A057DA124D52BA00112774 /* PrivacyCategory.hxx */; };
+		F8A057EE124D52DE00112774 /* ClientAuthExtension.cxx in Sources */ = {isa = PBXBuildFile; fileRef = F8A057E3124D52DE00112774 /* ClientAuthExtension.cxx */; };
+		F8A057EF124D52DE00112774 /* ClientAuthExtension.hxx in Headers */ = {isa = PBXBuildFile; fileRef = F8A057E4124D52DE00112774 /* ClientAuthExtension.hxx */; };
+		F8A057F0124D52DE00112774 /* DialogEventInfo.cxx in Sources */ = {isa = PBXBuildFile; fileRef = F8A057E5124D52DE00112774 /* DialogEventInfo.cxx */; };
+		F8A057F1124D52DE00112774 /* DialogEventInfo.hxx in Headers */ = {isa = PBXBuildFile; fileRef = F8A057E6124D52DE00112774 /* DialogEventInfo.hxx */; };
+		F8A057F2124D52DE00112774 /* DialogEventStateManager.cxx in Sources */ = {isa = PBXBuildFile; fileRef = F8A057E7124D52DE00112774 /* DialogEventStateManager.cxx */; };
+		F8A057F3124D52DE00112774 /* DialogEventStateManager.hxx in Headers */ = {isa = PBXBuildFile; fileRef = F8A057E8124D52DE00112774 /* DialogEventStateManager.hxx */; };
+		F8A057F4124D52DE00112774 /* InMemorySyncRegDb.cxx in Sources */ = {isa = PBXBuildFile; fileRef = F8A057E9124D52DE00112774 /* InMemorySyncRegDb.cxx */; };
+		F8A057F5124D52DE00112774 /* InMemorySyncRegDb.hxx in Headers */ = {isa = PBXBuildFile; fileRef = F8A057EA124D52DE00112774 /* InMemorySyncRegDb.hxx */; };
+		F8A057F6124D52DE00112774 /* RADIUSServerAuthManager.cxx in Sources */ = {isa = PBXBuildFile; fileRef = F8A057EB124D52DE00112774 /* RADIUSServerAuthManager.cxx */; };
+		F8A057F7124D52DE00112774 /* RADIUSServerAuthManager.hxx in Headers */ = {isa = PBXBuildFile; fileRef = F8A057EC124D52DE00112774 /* RADIUSServerAuthManager.hxx */; };
+		F8A057F8124D52DE00112774 /* RegistrationHandler.cxx in Sources */ = {isa = PBXBuildFile; fileRef = F8A057ED124D52DE00112774 /* RegistrationHandler.cxx */; };
 		F8C76C9D1243CCFF0076CFF8 /* AsyncProcessHandler.hxx in Headers */ = {isa = PBXBuildFile; fileRef = F8C76C911243CCFF0076CFF8 /* AsyncProcessHandler.hxx */; };
 		F8C76C9E1243CCFF0076CFF8 /* DataException.hxx in Headers */ = {isa = PBXBuildFile; fileRef = F8C76C921243CCFF0076CFF8 /* DataException.hxx */; };
 		F8C76C9F1243CCFF0076CFF8 /* DigestStream.cxx in Sources */ = {isa = PBXBuildFile; fileRef = F8C76C931243CCFF0076CFF8 /* DigestStream.cxx */; };
@@ -838,6 +857,25 @@
 		12BF59570895D7B800F7DD81 /* CertMessage.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = CertMessage.cxx; path = dum/CertMessage.cxx; sourceTree = "<group>"; };
 		12F79738086CBA1E00AF4EDF /* libresiprocate.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libresiprocate.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2AAC06F0554671400DB518D /* libares.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libares.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		F8A057D3124D52BA00112774 /* AbandonServerTransaction.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = AbandonServerTransaction.hxx; path = stack/AbandonServerTransaction.hxx; sourceTree = "<group>"; };
+		F8A057D4124D52BA00112774 /* CancelClientInviteTransaction.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = CancelClientInviteTransaction.hxx; path = stack/CancelClientInviteTransaction.hxx; sourceTree = "<group>"; };
+		F8A057D5124D52BA00112774 /* ExistsOrDataParameter.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ExistsOrDataParameter.cxx; path = stack/ExistsOrDataParameter.cxx; sourceTree = "<group>"; };
+		F8A057D6124D52BA00112774 /* ExistsOrDataParameter.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = ExistsOrDataParameter.hxx; path = stack/ExistsOrDataParameter.hxx; sourceTree = "<group>"; };
+		F8A057D7124D52BA00112774 /* InteropHelper.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = InteropHelper.cxx; path = stack/InteropHelper.cxx; sourceTree = "<group>"; };
+		F8A057D8124D52BA00112774 /* InteropHelper.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = InteropHelper.hxx; path = stack/InteropHelper.hxx; sourceTree = "<group>"; };
+		F8A057D9124D52BA00112774 /* PrivacyCategory.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PrivacyCategory.cxx; path = stack/PrivacyCategory.cxx; sourceTree = "<group>"; };
+		F8A057DA124D52BA00112774 /* PrivacyCategory.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = PrivacyCategory.hxx; path = stack/PrivacyCategory.hxx; sourceTree = "<group>"; };
+		F8A057E3124D52DE00112774 /* ClientAuthExtension.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ClientAuthExtension.cxx; path = dum/ClientAuthExtension.cxx; sourceTree = "<group>"; };
+		F8A057E4124D52DE00112774 /* ClientAuthExtension.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = ClientAuthExtension.hxx; path = dum/ClientAuthExtension.hxx; sourceTree = "<group>"; };
+		F8A057E5124D52DE00112774 /* DialogEventInfo.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DialogEventInfo.cxx; path = dum/DialogEventInfo.cxx; sourceTree = "<group>"; };
+		F8A057E6124D52DE00112774 /* DialogEventInfo.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = DialogEventInfo.hxx; path = dum/DialogEventInfo.hxx; sourceTree = "<group>"; };
+		F8A057E7124D52DE00112774 /* DialogEventStateManager.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DialogEventStateManager.cxx; path = dum/DialogEventStateManager.cxx; sourceTree = "<group>"; };
+		F8A057E8124D52DE00112774 /* DialogEventStateManager.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = DialogEventStateManager.hxx; path = dum/DialogEventStateManager.hxx; sourceTree = "<group>"; };
+		F8A057E9124D52DE00112774 /* InMemorySyncRegDb.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = InMemorySyncRegDb.cxx; path = dum/InMemorySyncRegDb.cxx; sourceTree = "<group>"; };
+		F8A057EA124D52DE00112774 /* InMemorySyncRegDb.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = InMemorySyncRegDb.hxx; path = dum/InMemorySyncRegDb.hxx; sourceTree = "<group>"; };
+		F8A057EB124D52DE00112774 /* RADIUSServerAuthManager.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RADIUSServerAuthManager.cxx; path = dum/RADIUSServerAuthManager.cxx; sourceTree = "<group>"; };
+		F8A057EC124D52DE00112774 /* RADIUSServerAuthManager.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = RADIUSServerAuthManager.hxx; path = dum/RADIUSServerAuthManager.hxx; sourceTree = "<group>"; };
+		F8A057ED124D52DE00112774 /* RegistrationHandler.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RegistrationHandler.cxx; path = dum/RegistrationHandler.cxx; sourceTree = "<group>"; };
 		F8C76C911243CCFF0076CFF8 /* AsyncProcessHandler.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = AsyncProcessHandler.hxx; path = ../rutil/AsyncProcessHandler.hxx; sourceTree = SOURCE_ROOT; };
 		F8C76C921243CCFF0076CFF8 /* DataException.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = DataException.hxx; path = ../rutil/DataException.hxx; sourceTree = SOURCE_ROOT; };
 		F8C76C931243CCFF0076CFF8 /* DigestStream.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DigestStream.cxx; path = ../rutil/DigestStream.cxx; sourceTree = SOURCE_ROOT; };
@@ -1348,6 +1386,17 @@
 		124D79A3086CC64E00BCA5A9 /* dum */ = {
 			isa = PBXGroup;
 			children = (
+				F8A057E3124D52DE00112774 /* ClientAuthExtension.cxx */,
+				F8A057E4124D52DE00112774 /* ClientAuthExtension.hxx */,
+				F8A057E5124D52DE00112774 /* DialogEventInfo.cxx */,
+				F8A057E6124D52DE00112774 /* DialogEventInfo.hxx */,
+				F8A057E7124D52DE00112774 /* DialogEventStateManager.cxx */,
+				F8A057E8124D52DE00112774 /* DialogEventStateManager.hxx */,
+				F8A057E9124D52DE00112774 /* InMemorySyncRegDb.cxx */,
+				F8A057EA124D52DE00112774 /* InMemorySyncRegDb.hxx */,
+				F8A057EB124D52DE00112774 /* RADIUSServerAuthManager.cxx */,
+				F8A057EC124D52DE00112774 /* RADIUSServerAuthManager.hxx */,
+				F8A057ED124D52DE00112774 /* RegistrationHandler.cxx */,
 				F8DB1CBA0C56B9B800853E27 /* AppDialog.hxx */,
 				F8DB1CBB0C56B9B800853E27 /* AppDialogSet.hxx */,
 				F8DB1CBC0C56B9B800853E27 /* AppDialogSetFactory.hxx */,
@@ -1521,6 +1570,14 @@
 		12F7983E086CBBEC00AF4EDF /* resip */ = {
 			isa = PBXGroup;
 			children = (
+				F8A057D3124D52BA00112774 /* AbandonServerTransaction.hxx */,
+				F8A057D4124D52BA00112774 /* CancelClientInviteTransaction.hxx */,
+				F8A057D5124D52BA00112774 /* ExistsOrDataParameter.cxx */,
+				F8A057D6124D52BA00112774 /* ExistsOrDataParameter.hxx */,
+				F8A057D7124D52BA00112774 /* InteropHelper.cxx */,
+				F8A057D8124D52BA00112774 /* InteropHelper.hxx */,
+				F8A057D9124D52BA00112774 /* PrivacyCategory.cxx */,
+				F8A057DA124D52BA00112774 /* PrivacyCategory.hxx */,
 				F8DB1E1C0C56CE9800853E27 /* Aor.cxx */,
 				F8DB1E1D0C56CE9800853E27 /* Aor.hxx */,
 				F8DB1E1E0C56CE9800853E27 /* ApiCheck.hxx */,
@@ -2221,6 +2278,16 @@
 				F8C76CA41243CCFF0076CFF8 /* RADIUSDigestAuthenticator.hxx in Headers */,
 				F8C76CA61243CCFF0076CFF8 /* resipfaststreams.hxx in Headers */,
 				F8C76CA81243CCFF0076CFF8 /* Time.hxx in Headers */,
+				F8A057DB124D52BA00112774 /* AbandonServerTransaction.hxx in Headers */,
+				F8A057DC124D52BA00112774 /* CancelClientInviteTransaction.hxx in Headers */,
+				F8A057DE124D52BA00112774 /* ExistsOrDataParameter.hxx in Headers */,
+				F8A057E0124D52BA00112774 /* InteropHelper.hxx in Headers */,
+				F8A057E2124D52BA00112774 /* PrivacyCategory.hxx in Headers */,
+				F8A057EF124D52DE00112774 /* ClientAuthExtension.hxx in Headers */,
+				F8A057F1124D52DE00112774 /* DialogEventInfo.hxx in Headers */,
+				F8A057F3124D52DE00112774 /* DialogEventStateManager.hxx in Headers */,
+				F8A057F5124D52DE00112774 /* InMemorySyncRegDb.hxx in Headers */,
+				F8A057F7124D52DE00112774 /* RADIUSServerAuthManager.hxx in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2567,6 +2634,15 @@
 				F8C76CA71243CCFF0076CFF8 /* Time.cxx in Sources */,
 				F8C76CAB1243CD2B0076CFF8 /* OpenSSLInit.cxx in Sources */,
 				F8C76CAC1243CD2B0076CFF8 /* SHA1Stream.cxx in Sources */,
+				F8A057DD124D52BA00112774 /* ExistsOrDataParameter.cxx in Sources */,
+				F8A057DF124D52BA00112774 /* InteropHelper.cxx in Sources */,
+				F8A057E1124D52BA00112774 /* PrivacyCategory.cxx in Sources */,
+				F8A057EE124D52DE00112774 /* ClientAuthExtension.cxx in Sources */,
+				F8A057F0124D52DE00112774 /* DialogEventInfo.cxx in Sources */,
+				F8A057F2124D52DE00112774 /* DialogEventStateManager.cxx in Sources */,
+				F8A057F4124D52DE00112774 /* InMemorySyncRegDb.cxx in Sources */,
+				F8A057F6124D52DE00112774 /* RADIUSServerAuthManager.cxx in Sources */,
+				F8A057F8124D52DE00112774 /* RegistrationHandler.cxx in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
