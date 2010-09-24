@@ -45,6 +45,7 @@
 #include "ares_private.h"
 
 #if defined(__APPLE__) || defined(__MACH__)
+#include <TargetConditionals.h>
 #define __CF_USE_FRAMEWORK_INCLUDES__
 #include <SystemConfiguration/SystemConfiguration.h>
 #endif
