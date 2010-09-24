@@ -109,11 +109,9 @@
 		124D7973086CC3CE00BCA5A9 /* StringCategory.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124D7913086CC3CE00BCA5A9 /* StringCategory.cxx */; };
 		124D7974086CC3CE00BCA5A9 /* Symbols.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124D7914086CC3CE00BCA5A9 /* Symbols.cxx */; };
 		124D7975086CC3CE00BCA5A9 /* TcpBaseTransport.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124D7915086CC3CE00BCA5A9 /* TcpBaseTransport.cxx */; };
-		124D7976086CC3CE00BCA5A9 /* TcpConnection.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124D7916086CC3CE00BCA5A9 /* TcpConnection.cxx */; };
 		124D7977086CC3CE00BCA5A9 /* TcpTransport.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124D7917086CC3CE00BCA5A9 /* TcpTransport.cxx */; };
 		124D7978086CC3CE00BCA5A9 /* TimerMessage.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124D7918086CC3CE00BCA5A9 /* TimerMessage.cxx */; };
 		124D7979086CC3CE00BCA5A9 /* TimerQueue.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124D7919086CC3CE00BCA5A9 /* TimerQueue.cxx */; };
-		124D797A086CC3CE00BCA5A9 /* TlsConnection.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124D791A086CC3CE00BCA5A9 /* TlsConnection.cxx */; };
 		124D797B086CC3CE00BCA5A9 /* TlsTransport.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124D791B086CC3CE00BCA5A9 /* TlsTransport.cxx */; };
 		124D797C086CC3CE00BCA5A9 /* Token.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124D791C086CC3CE00BCA5A9 /* Token.cxx */; };
 		124D797D086CC3CE00BCA5A9 /* TransactionController.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124D791D086CC3CE00BCA5A9 /* TransactionController.cxx */; };
@@ -228,6 +226,7 @@
 		12BF59390895D5E600F7DD81 /* EncryptionManager.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 12BF59380895D5E600F7DD81 /* EncryptionManager.cxx */; };
 		12BF593C0895D5FF00F7DD81 /* DumDecrypted.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 12BF593A0895D5FF00F7DD81 /* DumDecrypted.cxx */; };
 		12BF59580895D7B800F7DD81 /* CertMessage.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 12BF59570895D7B800F7DD81 /* CertMessage.cxx */; };
+		F8A057C7124D47D700112774 /* TcpConnection.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124D7916086CC3CE00BCA5A9 /* TcpConnection.cxx */; };
 		F8C76C9D1243CCFF0076CFF8 /* AsyncProcessHandler.hxx in Headers */ = {isa = PBXBuildFile; fileRef = F8C76C911243CCFF0076CFF8 /* AsyncProcessHandler.hxx */; };
 		F8C76C9E1243CCFF0076CFF8 /* DataException.hxx in Headers */ = {isa = PBXBuildFile; fileRef = F8C76C921243CCFF0076CFF8 /* DataException.hxx */; };
 		F8C76C9F1243CCFF0076CFF8 /* DigestStream.cxx in Sources */ = {isa = PBXBuildFile; fileRef = F8C76C931243CCFF0076CFF8 /* DigestStream.cxx */; };
@@ -2396,11 +2395,10 @@
 				124D7973086CC3CE00BCA5A9 /* StringCategory.cxx in Sources */,
 				124D7974086CC3CE00BCA5A9 /* Symbols.cxx in Sources */,
 				124D7975086CC3CE00BCA5A9 /* TcpBaseTransport.cxx in Sources */,
-				124D7976086CC3CE00BCA5A9 /* TcpConnection.cxx in Sources */,
+				F8A057C7124D47D700112774 /* TcpConnection.cxx in Sources */,
 				124D7977086CC3CE00BCA5A9 /* TcpTransport.cxx in Sources */,
 				124D7978086CC3CE00BCA5A9 /* TimerMessage.cxx in Sources */,
 				124D7979086CC3CE00BCA5A9 /* TimerQueue.cxx in Sources */,
-				124D797A086CC3CE00BCA5A9 /* TlsConnection.cxx in Sources */,
 				124D797B086CC3CE00BCA5A9 /* TlsTransport.cxx in Sources */,
 				124D797C086CC3CE00BCA5A9 /* Token.cxx in Sources */,
 				124D797D086CC3CE00BCA5A9 /* TransactionController.cxx in Sources */,
@@ -2656,15 +2654,14 @@
 		12F79720086CB6D700AF4EDF /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = (
-					ppc,
-					i386,
-				);
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				COPY_PHASE_STRIP = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = sip_MacPrefix.pch;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"USE_IPV6=1",
+					"USE_ARES=1",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				SDKROOT = macosx10.5;
 				USER_HEADER_SEARCH_PATHS = "../ ../contrib/ares";
@@ -2674,14 +2671,13 @@
 		12F79721086CB6D700AF4EDF /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = (
-					ppc,
-					i386,
-				);
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_OPTIMIZATION_LEVEL = s;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = sip_MacPrefix.pch;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"USE_IPV6=1",
+					"USE_ARES=1",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				SDKROOT = macosx10.5;
 				USER_HEADER_SEARCH_PATHS = "../ ../contrib/ares";
@@ -2691,12 +2687,11 @@
 		12F79722086CB6D700AF4EDF /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = (
-					ppc,
-					i386,
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"USE_IPV6=1",
+					"USE_ARES=1",
 				);
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = sip_MacPrefix.pch;
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				SDKROOT = macosx10.5;
 				USER_HEADER_SEARCH_PATHS = "../ ../contrib/ares";
