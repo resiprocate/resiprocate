@@ -402,7 +402,7 @@ Uri::operator==(const Uri& other) const
             }
             case ParameterTypes::method:
             {
-               // this should possilby be case sensitive, but is allowed to be
+               // this should possibly be case sensitive, but is allowed to be
                // case insensitive for robustness.  
                
                if (otherParam)
