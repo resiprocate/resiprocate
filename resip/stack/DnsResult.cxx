@@ -277,9 +277,17 @@ DnsResult::lookupInternal(const Uri& uri)
                   if (mHandler) mHandler->handle(this);
                   return;
                }
-               mSRVCount++;
-               mDns.lookup<RR_SRV>("_sips._udp." + mTarget, Protocol::Sip, this);
-               StackLog (<< "Doing SRV lookup of _sips._udp." << mTarget);
+               if(!mDns.supportedType(T_SRV)) 
+               {
+                  mPort = getDefaultPort(mTransport, uri.port());
+                  lookupHost(mTarget); // for current target and port
+               }
+               else
+               {
+                  mSRVCount++;
+                  mDns.lookup<RR_SRV>("_sips._udp." + mTarget, Protocol::Sip, this);
+                  StackLog (<< "Doing SRV lookup of _sips._udp." << mTarget);
+               }
             }
             else
             {
@@ -291,9 +299,17 @@ DnsResult::lookupInternal(const Uri& uri)
                   if (mHandler) mHandler->handle(this);
                   return;
                }
-               mSRVCount++;
-               mDns.lookup<RR_SRV>("_sips._tcp." + mTarget, Protocol::Sip,  this);
-               StackLog (<< "Doing SRV lookup of _sips._tcp." << mTarget);
+               if(!mDns.supportedType(T_SRV)) 
+               {
+                  mPort = getDefaultPort(mTransport, uri.port());
+                  lookupHost(mTarget); // for current target and port
+               }
+               else
+               {
+                  mSRVCount++;
+                  mDns.lookup<RR_SRV>("_sips._tcp." + mTarget, Protocol::Sip,  this);
+                  StackLog (<< "Doing SRV lookup of _sips._tcp." << mTarget);
+               }
             }
          }
          else
@@ -302,6 +318,13 @@ DnsResult::lookupInternal(const Uri& uri)
             {
                transition(Finished);
                if (mHandler) mHandler->handle(this);
+               return;
+            }
+
+            if(!mDns.supportedType(T_SRV)) 
+            {
+               mPort = getDefaultPort(mTransport, uri.port());
+               lookupHost(mTarget); // for current target and port
                return;
             }
 
@@ -335,7 +358,7 @@ DnsResult::lookupInternal(const Uri& uri)
    }
    else 
    {
-      if (isNumeric || uri.port() != 0)
+      if (isNumeric || uri.port() != 0 || !mDns.supportedType(T_NAPTR))
       {
          TupleMarkManager::MarkType mark=TupleMarkManager::BLACK;
          Tuple tuple;
@@ -427,7 +450,7 @@ DnsResult::lookupInternal(const Uri& uri)
             
             if(mTransport!=UNKNOWN_TRANSPORT)
             {
-               mPort=uri.port();
+               mPort=getDefaultPort(mTransport,uri.port());
                lookupHost(mTarget);
             }
             else

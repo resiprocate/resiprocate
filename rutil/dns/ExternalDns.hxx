@@ -61,6 +61,7 @@ class ExternalDns
       virtual void lookup(const char* target, unsigned short type, ExternalDnsHandler* handler, void* userData) = 0;
 
       virtual bool hostFileLookup(const char* target, in_addr &addr) = 0;
+      virtual bool hostFileLookupLookupOnlyMode() = 0;
 };
  
 class ExternalDnsResult : public AsyncResult

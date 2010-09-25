@@ -135,6 +135,7 @@ class DnsStub : public ExternalDnsHandler
       void clearDnsCache();
       void logDnsCache();
       bool checkDnsChange();
+      bool supportedType(int);
 
       template<class QueryType> void lookup(const Data& target, DnsResultSink* sink)
       {
@@ -350,7 +351,6 @@ class DnsStub : public ExternalDnsHandler
       const unsigned char* skipDNSQuestion(const unsigned char *aptr,
                                            const unsigned char *abuf,
                                            int alen);
-      bool supportedType(int);
       const unsigned char* createOverlay(const unsigned char* abuf, 
                                          const int alen, 
                                          const unsigned char* aptr, 
