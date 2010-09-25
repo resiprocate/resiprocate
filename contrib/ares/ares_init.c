@@ -449,6 +449,7 @@ static void init_by_defaults_systemconfiguration(ares_channel channel)
 #endif
 		
     channel->servers[0].addr.s_addr = htonl(INADDR_LOOPBACK);
+    channel->servers[0].default_localhost_server = 1;
     channel->nservers = 1;
   }
 }
@@ -583,6 +584,7 @@ static int init_by_defaults(ares_channel channel)
 #endif
 
 		   channel->servers[0].addr.s_addr = htonl(INADDR_LOOPBACK);
+           channel->servers[0].default_localhost_server = 1;
 		   channel->nservers = 1;
         }
 
@@ -601,6 +603,8 @@ static int init_by_defaults(ares_channel channel)
 		// need a way to test here if v4 or v6 is running
 		// if v4 is running...
 		channel->servers[0].addr.s_addr = htonl(INADDR_LOOPBACK);
+        channel->servers[0].default_localhost_server = 1;
+
 		// if v6 is running...
         //	channel->servers[0].addr6.s_addr = htonl6(IN6ADDR_LOOPBACK_INIT);
 		// hard to decide if there is one server or two here

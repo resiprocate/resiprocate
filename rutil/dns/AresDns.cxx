@@ -24,6 +24,8 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
+volatile bool AresDns::mHostFileLookupOnlyMode = false;
+
 int 
 AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers,
               AfterSocketCreationFuncPtr socketfunc,
@@ -43,6 +45,24 @@ AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers,
 
    if (ret != Success)
       return ret;
+
+#ifdef WIN32
+      // For windows OSs it is uncommon to run a local DNS server.  Therefor if there 
+      // are no defined DNS servers in windows networking and ARES just returned the 
+      // loopback address (ie. default localhost server / named)
+      // then put resip DNS resolution into hostfile lookup only mode
+      if(mChannel->nservers == 1 &&
+         mChannel->servers[0].default_localhost_server)
+      {
+         // enable hostfile only lookup mode
+         mHostFileLookupOnlyMode = true;
+      }
+      else
+      {
+         // disable hostfile only lookup mode
+         mHostFileLookupOnlyMode = false;
+      }
+#endif
 
    return Success;      
 }
@@ -359,6 +379,7 @@ bool AresDns::hostFileLookup(const char* target, in_addr &addr)
 
    if (status != ARES_SUCCESS)
    {
+      DebugLog(<< "hostFileLookup failed for " << target);
       return false;
    }
    sockaddr_in saddr;
@@ -367,6 +388,7 @@ bool AresDns::hostFileLookup(const char* target, in_addr &addr)
    memcpy((char *)&(saddr.sin_addr.s_addr),(char *)hostdata->h_addr_list[0], (size_t)hostdata->h_length);
    addr = saddr.sin_addr;
    
+   DebugLog(<< "hostFileLookup succeeded for " << target);
    return true;
 }
 

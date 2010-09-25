@@ -264,6 +264,10 @@ DnsStub::checkDnsChange()
 bool
 DnsStub::supportedType(int type)
 {
+   if(mDnsProvider && mDnsProvider->hostFileLookupLookupOnlyMode())
+   {
+      return (T_A == type);
+   }
 #ifdef USE_IPV6
    return (T_A == type ||
            T_AAAA == type ||
@@ -424,8 +428,39 @@ DnsStub::Query::go()
    
    if (!cached)
    {
-      StackLog (<< targetToQuery << " not cached. Doing external dns lookup");
-      mStub.lookupRecords(targetToQuery, mRRType, this);
+      if(mStub.mDnsProvider && mStub.mDnsProvider->hostFileLookupLookupOnlyMode())
+      {
+         assert(mRRType == T_A);
+         StackLog (<< targetToQuery << " not cached. Doing hostfile lookup");
+         in_addr address;  
+         if (mStub.mDnsProvider->hostFileLookup(targetToQuery.c_str(), address))
+         {
+            mStub.cache(mTarget, address);
+            DnsResourceRecordsByPtr result;
+            int queryStatus = 0;
+
+            RRCache::instance()->lookup(mTarget, mRRType, mProto, result, queryStatus);
+            if (mTransform) 
+            {
+                mTransform->transform(mTarget, mRRType, result);
+            }
+            mResultConverter->notifyUser(mTarget, queryStatus, mStub.errorMessage(queryStatus), result, mSink);
+         }
+         else
+         {
+            // Not in hosts file - return error - or.. we could fallback to doing the lookupRecords call on the local named
+            mResultConverter->notifyUser(mTarget, ARES_ENOTFOUND, mStub.errorMessage(ARES_ENOTFOUND), Empty, mSink);
+         }
+         mReQuery = 0;
+         mStub.removeQuery(this);
+         delete this;
+         return;
+      }
+      else
+      {
+         StackLog (<< targetToQuery << " not cached. Doing external dns lookup");
+         mStub.lookupRecords(targetToQuery, mRRType, this);
+      }
    }
    else // is cached
    {

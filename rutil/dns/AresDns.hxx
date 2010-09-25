@@ -45,6 +45,8 @@ class AresDns : public ExternalDns
       void lookup(const char* target, unsigned short type, ExternalDnsHandler* handler, void* userData);
 
       virtual bool hostFileLookup(const char* target, in_addr &addr);
+      virtual bool hostFileLookupLookupOnlyMode() { return mHostFileLookupOnlyMode; }
+      static void enableHostFileLookupOnlyMode(bool enable) { mHostFileLookupOnlyMode = enable; }
 
       friend void ::resip_AresDns_aresCallback(void *arg, int status, unsigned char* abuf, int alen);
       friend void ::resip_AresDns_caresCallback(void *arg, int status, int timeouts, unsigned char* abuf, int alen);
@@ -57,6 +59,7 @@ class AresDns : public ExternalDns
 	  struct ares_channeldata* mChannel;
 	  std::vector<GenericIPAddress> mAdditionalNameservers;
 	  unsigned int mFeatures;
+      volatile static bool mHostFileLookupOnlyMode;
 };
    
 }
