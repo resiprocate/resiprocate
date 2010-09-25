@@ -2164,7 +2164,10 @@ TransactionState::sendToTU(TransactionMessage* msg) const
             break;
       }
    }
-   TransactionState::sendToTU(mTransactionUser, mController, msg);
+   if(mController.mTuSelector.isTransactionUserStillRegistered(mTransactionUser))
+   {
+      TransactionState::sendToTU(mTransactionUser, mController, msg);
+   }
 }
 
 void
