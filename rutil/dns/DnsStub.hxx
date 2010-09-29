@@ -372,6 +372,9 @@ class DnsStub : public ExternalDnsHandler
 
       /// if this object exists, it gets notified when ApplicationMessage's get posted
       AsyncProcessHandler* mAsyncProcessHandler;
+
+      /// Dns Cache
+      RRCache mRRCache;
 };
 
 typedef DnsStub::Protocol Protocol;
