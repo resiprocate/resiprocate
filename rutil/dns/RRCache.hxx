@@ -27,7 +27,7 @@ class RRCache
       typedef std::vector<RROverlay>::const_iterator Itr;
       typedef std::vector<Data> DataArr;
 
-      static RRCache* instance();
+      RRCache();
       ~RRCache();
       void setTTL(int ttl) { if (ttl > 0) mUserDefinedTTL = ttl * MIN_TO_SEC; }
       void setSize(int size) { mSize = size; }
@@ -48,9 +48,7 @@ class RRCache
       static const int MIN_TO_SEC = 60;
       static const int DEFAULT_USER_DEFINED_TTL = 10; // in seconds.
 
-      RRCache();
       static const int DEFAULT_SIZE = 512;
-      static std::auto_ptr<RRCache> mInstance;
       class CompareT  : public std::binary_function<const RRList*, const RRList*, bool>
       {
          public:

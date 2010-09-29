@@ -135,7 +135,7 @@ void DnsStub::cache(const Data& key,
                     in_addr addr)
 {
    DnsHostRecord record(key, addr);
-   RRCache::instance()->updateCacheFromHostFile(record);
+   mRRCache.updateCacheFromHostFile(record);
 }
 
 void DnsStub::cache(const Data& key,
@@ -182,7 +182,7 @@ void DnsStub::cache(const Data& key,
    vector<RROverlay>::iterator itHigh = upper_bound(overlays.begin(), overlays.end(), *overlays.begin());
    while (itLow != overlays.end())
    {
-      RRCache::instance()->updateCache(key, (*itLow).type(), itLow, itHigh);
+      mRRCache.updateCache(key, (*itLow).type(), itLow, itHigh);
       itLow = itHigh;
       if (itHigh != overlays.end())
       {
@@ -222,7 +222,7 @@ void DnsStub::cacheTTL(const Data& key,
       return;
    }
 
-   RRCache::instance()->cacheTTL(key, rrType, status, soa[0]);
+   mRRCache.cacheTTL(key, rrType, status, soa[0]);
 }
 
 const unsigned char* 
@@ -402,7 +402,7 @@ DnsStub::Query::go()
    int status = 0;
    bool cached = false;
    Data targetToQuery = mTarget;
-   cached = RRCache::instance()->lookup(mTarget, mRRType, mProto, records, status);
+   cached = mStub.mRRCache.lookup(mTarget, mRRType, mProto, records, status);
 
    if (!cached)
    {
@@ -411,7 +411,7 @@ DnsStub::Query::go()
          do
          {
             DnsResourceRecordsByPtr cnames;
-            cached = RRCache::instance()->lookup(targetToQuery, T_CNAME, mProto, cnames, status);
+            cached = mStub.mRRCache.lookup(targetToQuery, T_CNAME, mProto, cnames, status);
             if (cached) 
             {
                targetToQuery = (dynamic_cast<DnsCnameRecord*>(cnames[0]))->cname();
@@ -423,7 +423,7 @@ DnsStub::Query::go()
    if (targetToQuery != mTarget)
    {
       StackLog(<< mTarget << " mapped to CNAME " << targetToQuery);
-      cached = RRCache::instance()->lookup(targetToQuery, mRRType, mProto, records, status);
+      cached = mStub.mRRCache.lookup(targetToQuery, mRRType, mProto, records, status);
    }
    
    if (!cached)
@@ -439,7 +439,7 @@ DnsStub::Query::go()
             DnsResourceRecordsByPtr result;
             int queryStatus = 0;
 
-            RRCache::instance()->lookup(mTarget, mRRType, mProto, result, queryStatus);
+            mStub.mRRCache.lookup(mTarget, mRRType, mProto, result, queryStatus);
             if (mTransform) 
             {
                 mTransform->transform(mTarget, mRRType, result);
@@ -498,7 +498,7 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
                   DnsResourceRecordsByPtr result;
                   int queryStatus = 0;
 
-                  RRCache::instance()->lookup(mTarget, mRRType, mProto, result, queryStatus);
+                  mStub.mRRCache.lookup(mTarget, mRRType, mProto, result, queryStatus);
                   if (mTransform) 
                   {
                      mTransform->transform(mTarget, mRRType, result);
@@ -603,7 +603,7 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
          int queryStatus = 0;
 
          if (mTarget != targetToQuery) DebugLog (<< mTarget << " mapped to " << targetToQuery << " and returned result");
-         RRCache::instance()->lookup(targetToQuery, mRRType, mProto, result, queryStatus);
+         mStub.mRRCache.lookup(targetToQuery, mRRType, mProto, result, queryStatus);
          if (mTransform) 
          {
             mTransform->transform(mTarget, mRRType, result);
@@ -670,7 +670,7 @@ DnsStub::Query::followCname(const unsigned char* aptr, const unsigned char*abuf,
             do
             {
                DnsResourceRecordsByPtr cnames;
-               cached = RRCache::instance()->lookup(targetToQuery, T_CNAME, mProto, cnames, status);
+               cached = mStub.mRRCache.lookup(targetToQuery, T_CNAME, mProto, cnames, status);
                if (cached) 
                {
                   ++mReQuery;
@@ -679,7 +679,7 @@ DnsStub::Query::followCname(const unsigned char* aptr, const unsigned char*abuf,
             } while(mReQuery < MAX_REQUERIES && cached);
 
             DnsResourceRecordsByPtr result;
-            if (!RRCache::instance()->lookup(targetToQuery, mRRType, mProto, result, status))
+            if (!mStub.mRRCache.lookup(targetToQuery, mRRType, mProto, result, status))
             {
                mStub.lookupRecords(targetToQuery, mRRType, this);
                bDeleteThis = false;
@@ -755,7 +755,7 @@ DnsStub::clearDnsCache()
 void
 DnsStub::doClearDnsCache()
 {
-    RRCache::instance()->clearCache();
+    mRRCache.clearCache();
 }
 
 void
@@ -773,5 +773,5 @@ DnsStub::logDnsCache()
 void
 DnsStub::doLogDnsCache()
 {
-    RRCache::instance()->logCache();
+    mRRCache.logCache();
 }
