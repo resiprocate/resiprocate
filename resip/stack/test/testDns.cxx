@@ -848,7 +848,7 @@ main(int argc, const char** argv)
             // DNS to death. (Odds are good that we have hit every NAPTR at
             // least once by now)
             sleep(2);
-            RRCache::instance()->logCache();
+            stub->logDnsCache();
          }
       }
       
