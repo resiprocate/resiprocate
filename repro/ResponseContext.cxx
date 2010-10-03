@@ -665,7 +665,14 @@ ResponseContext::insertRecordRoute(resip::SipMessage& outgoing,
          }
          else
          {
-            rt.uri().host()=resip::Tuple::inet_ntop(receivedTransport);
+            if(receivedTransport.isAnyInterface())
+            {
+               rt.uri().host()=mRequestContext.mProxy.getRecordRoute().uri().host();
+            }
+            else
+            {
+               rt.uri().host()=resip::Tuple::inet_ntop(receivedTransport);
+            }
             rt.uri().port()=receivedTransport.getPort();
             rt.uri().param(resip::p_transport)=resip::Tuple::toData(receivedTransport.getType());
          }
