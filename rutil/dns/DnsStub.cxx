@@ -775,3 +775,15 @@ DnsStub::doLogDnsCache()
 {
     mRRCache.logCache();
 }
+
+void 
+DnsStub::setDnsCacheTTL(int ttl)
+{
+	mRRCache.setTTL(ttl);
+}
+
+void 
+DnsStub::setDnsCacheSize(int size)
+{
+	mRRCache.setSize(size);
+}
