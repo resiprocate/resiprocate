@@ -340,6 +340,7 @@ InviteSession::isAccepted() const
       case UAS_FirstSentAnswerReliable:
       case UAS_FirstSentOfferReliable:
       case UAS_NegotiatedReliable:
+      case UAS_NoAnswerReliable:
          return false;
       default:
          return true;
