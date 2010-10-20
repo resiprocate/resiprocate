@@ -118,7 +118,7 @@ unsigned int Helper::hex2integer(const char* _s)
 SipMessage*
 Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr& contact, MethodTypes method)
 {
-   SipMessage* request = new SipMessage;
+   std::auto_ptr<SipMessage> request(new SipMessage);
    RequestLine rLine(method);
    rLine.uri() = target.uri();
    request->header(h_To) = target;
@@ -135,7 +135,7 @@ Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr
    Via via;
    request->header(h_Vias).push_back(via);
    
-   return request;
+   return request.release();
 }
 
 SipMessage*
@@ -155,7 +155,7 @@ Helper::makeRegister(const NameAddr& to, const NameAddr& from)
 SipMessage*
 Helper::makeRegister(const NameAddr& to, const NameAddr& from, const NameAddr& contact)
 {
-   SipMessage* request = new SipMessage;
+   std::auto_ptr<SipMessage> request(new SipMessage);
    RequestLine rLine(REGISTER);
 
    rLine.uri().scheme() = to.uri().scheme();
@@ -180,7 +180,7 @@ Helper::makeRegister(const NameAddr& to, const NameAddr& from, const NameAddr& c
    Via via;
    request->header(h_Vias).push_back(via);
    
-   return request;
+   return request.release();
 }
 
 SipMessage*
@@ -194,7 +194,7 @@ Helper::makeRegister(const NameAddr& to,const Data& transport)
 SipMessage*
 Helper::makeRegister(const NameAddr& to, const Data& transport, const NameAddr& contact)
 {
-   SipMessage* request = new SipMessage;
+   std::auto_ptr<SipMessage> request(new SipMessage);
    RequestLine rLine(REGISTER);
 
    rLine.uri().scheme() = to.uri().scheme();
@@ -219,7 +219,7 @@ Helper::makeRegister(const NameAddr& to, const Data& transport, const NameAddr& 
    Via via;
    request->header(h_Vias).push_back(via);
    
-   return request;
+   return request.release();
 }
 
 
@@ -233,7 +233,7 @@ Helper::makePublish(const NameAddr& target, const NameAddr& from)
 SipMessage*
 Helper::makePublish(const NameAddr& target, const NameAddr& from, const NameAddr& contact)
 {
-   SipMessage* request = new SipMessage;
+   std::auto_ptr<SipMessage> request(new SipMessage);
    RequestLine rLine(PUBLISH);
    rLine.uri() = target.uri();
 
@@ -250,7 +250,7 @@ Helper::makePublish(const NameAddr& target, const NameAddr& from, const NameAddr
    Via via;
    request->header(h_Vias).push_back(via);
    
-   return request;
+   return request.release();
 }
 
 SipMessage*
@@ -263,7 +263,7 @@ Helper::makeMessage(const NameAddr& target, const NameAddr& from)
 SipMessage*
 Helper::makeMessage(const NameAddr& target, const NameAddr& from, const NameAddr& contact)
 {
-   SipMessage* request = new SipMessage;
+   std::auto_ptr<SipMessage> request(new SipMessage);
    RequestLine rLine(MESSAGE);
    rLine.uri() = target.uri();
 
@@ -280,7 +280,7 @@ Helper::makeMessage(const NameAddr& target, const NameAddr& from, const NameAddr
    Via via;
    request->header(h_Vias).push_back(via);
    
-   return request;
+   return request.release();
 }
 
 
@@ -294,7 +294,7 @@ Helper::makeSubscribe(const NameAddr& target, const NameAddr& from)
 SipMessage*
 Helper::makeSubscribe(const NameAddr& target, const NameAddr& from, const NameAddr& contact)
 {
-   SipMessage* request = new SipMessage;
+   std::auto_ptr<SipMessage> request(new SipMessage);
    RequestLine rLine(SUBSCRIBE);
    rLine.uri() = target.uri();
 
@@ -311,7 +311,7 @@ Helper::makeSubscribe(const NameAddr& target, const NameAddr& from, const NameAd
    Via via;
    request->header(h_Vias).push_front(via);
    
-   return request;
+   return request.release();
 }
 
 int
@@ -552,7 +552,7 @@ Helper::makeCancel(const SipMessage& request)
 {
    assert(request.isRequest());
    assert(request.header(h_RequestLine).getMethod() == INVITE);
-   SipMessage* cancel = new SipMessage;
+   std::auto_ptr<SipMessage> cancel(new SipMessage);
 
    RequestLine rLine(CANCEL, request.header(h_RequestLine).getSipVersion());
    rLine.uri() = request.header(h_RequestLine).uri();
@@ -579,7 +579,7 @@ Helper::makeCancel(const SipMessage& request)
    cancel->header(h_CSeq).method() = CANCEL;
    cancel->header(h_Vias).push_back(request.header(h_Vias).front());
 
-   return cancel;
+   return cancel.release();
 }
 
 
@@ -589,7 +589,7 @@ Helper::makeFailureAck(const SipMessage& request, const SipMessage& response)
    assert (request.header(h_Vias).size() >= 1);
    assert (request.header(h_RequestLine).getMethod() == INVITE);
    
-   SipMessage* ack = new SipMessage;
+   std::auto_ptr<SipMessage> ack(new SipMessage);
 
    RequestLine rLine(ACK, request.header(h_RequestLine).getSipVersion());
    rLine.uri() = request.header(h_RequestLine).uri();
@@ -606,7 +606,7 @@ Helper::makeFailureAck(const SipMessage& request, const SipMessage& response)
       ack->header(h_Routes) = request.header(h_Routes);
    }
    
-   return ack;
+   return ack.release();
 }
 
 
