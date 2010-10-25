@@ -55,10 +55,12 @@ TuSelector::add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage)
    {
       if (exists(msg->getTransactionUser()))
       {
+         DebugLog (<< "Send to TU: " << *(msg->getTransactionUser()) << " " << std::endl << std::endl << *msg);
          msg->getTransactionUser()->postToTransactionUser(msg, usage);
       }
       else
       {
+         WarningLog (<< "Send to TU that no longer exists: " << std::endl << std::endl << *msg);
          delete msg;
       }
    }
@@ -74,6 +76,7 @@ TuSelector::add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage)
       }
       else
       {
+         DebugLog(<< "Send to default TU: " << std::endl << std::endl << *msg);
          mFallBackFifo.add(msg, usage);
       }
    }

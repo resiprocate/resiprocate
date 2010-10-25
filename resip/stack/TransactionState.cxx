@@ -2169,16 +2169,7 @@ TransactionState::sendToTU(TransactionMessage* msg) const
 
 void
 TransactionState::sendToTU(TransactionUser* tu, TransactionController& controller, TransactionMessage* msg) 
-{
-   if (!tu)
-   {
-      DebugLog(<< "Send to default TU: " << std::endl << std::endl << *msg);
-   }
-   else
-   {
-	  DebugLog (<< "Send to TU: " << *tu << " " << std::endl << std::endl << *msg);
-   }
-   
+{   
    msg->setTransactionUser(tu);   
    controller.mTuSelector.add(msg, TimeLimitFifo<Message>::InternalElement);
 }
