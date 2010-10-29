@@ -6,6 +6,8 @@
 #include "resip/stack/Message.hxx"
 
 #include "repro/AbstractDb.hxx"
+#include <boost/unordered_map.hpp>
+
 
 namespace resip
 {
@@ -21,7 +23,7 @@ class UserStore
 {
    public:
       typedef resip::Data Key;
-      
+      typedef boost::unordered_map<Key,AbstractDb::UserRecord> UserRecordHash;
       UserStore(AbstractDb& db);
       
       virtual ~UserStore();
@@ -63,6 +65,7 @@ class UserStore
                     const resip::Data& domain) const;
 
       AbstractDb& mDb;
+      UserRecordHash mUserRecords;
 };
 
  }

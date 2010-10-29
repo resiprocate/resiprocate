@@ -43,10 +43,7 @@ SipMessage::SipMessage(const Transport* fromWire)
      mForceTarget(0),
      mTlsDomain(Data::Empty)
 {
-   for (int i = 0; i < Headers::MAX_HEADERS; i++)
-   {
-      mHeaders[i] = 0;
-   }
+   memset(mHeaders,0,sizeof(mHeaders));
 }
 
 SipMessage::SipMessage(const SipMessage& from)
@@ -56,11 +53,9 @@ SipMessage::SipMessage(const SipMessage& from)
      mCreatedTime(Timer::getTimeMicroSec()),
      mForceTarget(0)
 {
-   for (int i = 0; i < Headers::MAX_HEADERS; i++)
-   {
-      mHeaders[i] = 0;
-   }
 
+// .dw. Sadly this needs to be memset here even though cleanUp() will be called, because cleanUp() may delete uninitialized data..
+   memset(mHeaders,0,sizeof(mHeaders));
    *this = from;
 }
 
@@ -100,10 +95,13 @@ SipMessage::operator=(const SipMessage& rhs)
          {
             mHeaders[i] = new HeaderFieldValueList(*rhs.mHeaders[i]);
          }
+// .dw. cleanUp() already wiped out mHeaders[i]
+#if 0
          else
          {
             mHeaders[i] = 0;
          }
+#endif
       }
   
       for (UnknownHeaders::const_iterator i = rhs.mUnknownHeaders.begin();
@@ -181,9 +179,9 @@ SipMessage::cleanUp()
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
    {
       delete mHeaders[i];
-      mHeaders[i] = 0;
    }
 
+   memset(mHeaders,0,sizeof(mHeaders));
    for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
         i != mUnknownHeaders.end(); i++)
    {

@@ -26,12 +26,14 @@ HeaderFieldValueList::HeaderFieldValueList(const HeaderFieldValueList& rhs)
    : mHeaders(0),
      mParserContainer(0)
 {
+   
    if (rhs.mParserContainer != 0)
    {
       mParserContainer = rhs.mParserContainer->clone();
    }
    else
    {
+      mHeaders.reserve(std::max(rhs.size(),size_t(10)));
       for (const_iterator i = rhs.begin(); i != rhs.end(); i++)
       {
          push_back(new HeaderFieldValue(**i));

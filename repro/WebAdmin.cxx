@@ -980,7 +980,7 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
       key = pos->second;
       rec = mStore.mUserStore.getUserInfo(key);
       // check to see if we actually found a record corresponding to the key
-      if (!rec.user.empty())
+      if (!rec.user.get().empty())
       {
          Data user = mHttpParams["user"];
          Data domain = mHttpParams["domain"];                  

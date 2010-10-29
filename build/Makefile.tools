@@ -50,11 +50,10 @@ LNDIR		= $(shell pwd)/$(ROOT)/build/lndir.sh
 CFLAGS		+= -Wall #-Werror
 CXXFLAGS	+= -Wall #-Werror
 DFLAG_INTEGRATED = -MMD
-DEBUG_FLAG	= -g 
+DEBUG_FLAG	= -g
 COMPILE_SMALL_FLAG = -Os -fno-inline -fno-keep-static-consts
-OPTFLAGS 	= -O3 -ffast-math -funroll-all-loops #-fomit-frame-pointer 
+OPTFLAGS 	= -O3 -ffast-math -funroll-loops -DNDEBUG #-fomit-frame-pointer 
 MAKE_SEPARATE_DEPENDENCY = 1
-
 endif
 
 ##############################  INTEL COMPILER toolchain  ##############################

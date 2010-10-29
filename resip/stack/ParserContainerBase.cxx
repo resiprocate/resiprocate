@@ -8,11 +8,14 @@ using namespace std;;
 
 ParserContainerBase::ParserContainerBase(Headers::Type type)
    : mType(type)
-{}
+{
+	mParsers.reserve(6);
+}
 
 ParserContainerBase::ParserContainerBase(const ParserContainerBase& rhs)
    : mType(rhs.mType)
 {
+   mParsers.reserve(std::max(rhs.mParsers.size(),rhs.mParsers.capacity()));
    for (std::vector<ParserCategory*>::const_iterator i = rhs.mParsers.begin(); 
         i != rhs.mParsers.end(); ++i)
    {
@@ -42,6 +45,7 @@ ParserContainerBase::operator=(const ParserContainerBase& rhs)
    if (this != &rhs)
    {
       clear();
+      mParsers.reserve(std::max(rhs.mParsers.size(),rhs.mParsers.capacity()));
       for (std::vector<ParserCategory*>::const_iterator i = rhs.mParsers.begin(); 
            i != rhs.mParsers.end(); ++i)
       {

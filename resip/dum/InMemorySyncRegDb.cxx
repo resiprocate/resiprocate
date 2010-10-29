@@ -2,7 +2,7 @@
 #include "rutil/Timer.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/WinLeakCheck.hxx"
-
+#include <boost/ref.hpp>
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -139,7 +139,7 @@ InMemorySyncRegDb::aorIsRegistered(const Uri& aor)
 {
    Lock g(mDatabaseMutex);
    database_map_t::iterator i = mDatabase.find(aor);
-   if (i != mDatabase.end() && i->second == 0)
+   if (i != mDatabase.end() && i->second != 0)
    {
       if(mRemoveLingerSecs > 0)
       {
@@ -294,15 +294,55 @@ InMemorySyncRegDb::removeContact(const Uri& aor,
    }
 }
 
+
+class UriUserCheck {
+
+        Data const & mUser;
+        public:
+        UriUserCheck(Data const & user) : mUser(user) {
+
+        }
+
+        bool operator()(std::pair<Uri,ContactList *> const & pair) const {
+                return pair.first.user() == mUser && pair.second != 0;
+        }
+};
+
+
 void
 InMemorySyncRegDb::getContacts(const Uri& aor, ContactList& container)
 {
+
    Lock g(mDatabaseMutex);
-   database_map_t::iterator i = mDatabase.find(aor);
-   if (i == mDatabase.end() || i->second == 0)
+   Uri uri;
+   uri.user() = aor.user();
+   database_map_t::iterator i = mDatabase.lower_bound(uri); 
+   if (i == mDatabase.end() /* || i->second == 0 */)
    {
       container.clear();
       return;
+   } else {
+
+	// super hack for searching by user but should work
+	for (; i != mDatabase.end(); ++i)
+	{
+		if (i->first.user() != aor.user())
+		{
+			container.clear();
+			return;
+		}
+
+		if (i->second != 0)
+		{
+			break;
+		}
+	}
+
+	if (i == mDatabase.end())
+	{
+		container.clear();
+		return;	
+	}
    }
    if(mRemoveLingerSecs > 0)
    {
@@ -322,13 +362,17 @@ InMemorySyncRegDb::getContacts(const Uri& aor, ContactList& container)
    {
       container = *(i->second);
    }
+
 }
+
+
 
 void
 InMemorySyncRegDb::getContactsFull(const Uri& aor, ContactList& container)
 {
    Lock g(mDatabaseMutex);
-   database_map_t::iterator i = mDatabase.find(aor);
+   database_map_t::iterator i = std::find_if(mDatabase.begin(), mDatabase.end(), UriUserCheck(aor.user()));
+
    if (i == mDatabase.end() || i->second == 0)
    {
       container.clear();

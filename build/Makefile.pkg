@@ -81,8 +81,9 @@ SRTP_LIBDIRS := $(ROOT)/contrib/srtp/
 SRTP_LIBNAME := srtp
 
 ifeq ($(USE_MYSQL),yes)
-MYSQL_LIBNAME :=  mysqlclient z m
+MYSQL_LIBNAME :=  mysqlclient_r z m
 MYSQL_DEFINES += USE_MYSQL
+MYSQL_LIBDIRS := /usr/lib64/mysql
 endif
 
 # We can only use one of CARES or ARES, and to avoid mucking up all the

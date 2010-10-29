@@ -56,6 +56,7 @@ class CommandLineParser
       Data mAdminPassword;
       Data mRegSyncPeerAddress;
       int mXmlRpcPort;
+      bool mNoInviteChallengeIfRegistered;
 };
  
 }

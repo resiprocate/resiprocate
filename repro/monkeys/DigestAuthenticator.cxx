@@ -28,12 +28,15 @@ DigestAuthenticator::DigestAuthenticator( UserStore& userStore,
                                           const Data& httpHostname, 
                                           int httpPort,
                                           bool useAuthInt,
-                                          bool rejectBadNonces) :
+                                          bool rejectBadNonces, bool challengeRegisteredInvites,
+                           resip::RegistrationPersistenceManager * regData) :
             mNoIdentityHeaders(noIdentityHeaders),
             mHttpHostname(httpHostname),
             mHttpPort(httpPort),
             mUseAuthInt(useAuthInt),
-            mRejectBadNonces(rejectBadNonces)
+            mRejectBadNonces(rejectBadNonces),
+	    mChallengeRegisteredInvites(challengeRegisteredInvites),
+	    mRegData(regData)
 {
    std::auto_ptr<Worker> grabber(new UserAuthGrabber(userStore));
    mAuthRequestDispatcher= new Dispatcher(grabber,stack);
@@ -98,8 +101,26 @@ DigestAuthenticator::process(repro::RequestContext &rc)
       {
          if (!rc.fromTrustedNode())
          {
-               challengeRequest(rc, false);
-               return SkipAllChains;
+		
+	       if (sipMessage->method() == INVITE && !mChallengeRegisteredInvites && mRegData)
+	       {
+			bool isRegistered = false;
+			for (resip::ParserContainer<resip::NameAddr>::iterator it = sipMessage->header(h_Contacts).begin(); it != sipMessage->header(h_Contacts).end(); ++it)
+			{
+				resip::Uri registerAor("sip:" +it->uri().getAorNoPort());
+				DebugLog(<< "Doing registration check for: " << registerAor << " and it is: " << mRegData->aorIsRegistered(registerAor));
+				isRegistered |= mRegData->aorIsRegistered(registerAor);
+			}
+
+			if (!isRegistered)
+			{
+				challengeRequest(rc, false);
+	                	return SkipAllChains;
+			}
+	       } else if (sipMessage->method() != INVITE) {
+	               challengeRequest(rc, false);
+        	       return SkipAllChains;
+	      }
          }
       }
    }

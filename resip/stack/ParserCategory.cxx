@@ -33,12 +33,14 @@ ParserCategory::ParserCategory(HeaderFieldValue* headerFieldValue,
       mUnknownParameters(),
       mHeaderType(headerType)
 {
+   mParameters.reserve(5);
 }
 
 ParserCategory::ParserCategory()
    : LazyParser(),
      mHeaderType(Headers::NONE)
 {
+   mParameters.reserve(5);
 }
 
 ParserCategory::ParserCategory(const ParserCategory& rhs)
@@ -91,11 +93,13 @@ ParserCategory::clear()
 void 
 ParserCategory::copyParametersFrom(const ParserCategory& other)
 {
+   mParameters.reserve(std::max(other.mParameters.size(),size_t(5)));
    for (ParameterList::iterator it = other.mParameters.begin();
         it != other.mParameters.end(); it++)
    {
       mParameters.push_back((*it)->clone());
    }
+
    for (ParameterList::iterator it = other.mUnknownParameters.begin();
         it != other.mUnknownParameters.end(); it++)
    {
