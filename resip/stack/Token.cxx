@@ -49,6 +49,26 @@ Token::operator=(const Token& rhs)
    return *this;
 }
 
+#ifdef RESIP_HAS_RVALUE_REFS
+Token::Token(Token && rhs) : ParserCategory() // Unsure about forwarding semantics esp. when calling operator= after this, let's use default constructor and fall on operator=
+{
+  *this = std::move(rhs);
+}
+
+Token&
+Token::operator=(Token && rhs) 
+{
+  if (this != &rhs)
+  {
+    mValue = std::move(rhs.mValue);
+    ParserCategory::operator=(std::move(rhs)); // !dw! Is this safe?
+  }
+  
+  return *this;
+}
+
+#endif
+
 bool
 Token::isEqual(const Token& rhs) const
 {

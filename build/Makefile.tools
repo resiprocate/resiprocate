@@ -28,8 +28,8 @@
 
 ifeq ($(VOCAL_TOOLCHAIN_TYPE),gnu)
 
-CC		= gcc
-CXX		= g++
+CC		= gcc-4.5
+CXX		= g++-4.5
 MKSHLIB		:= $(CC) -fPIC
 
 ifeq ($(OSTYPE),Darwin)
@@ -47,8 +47,8 @@ DFLAGS		= -MM
 DMANGLE		=
 INSTALL		= install
 LNDIR		= $(shell pwd)/$(ROOT)/build/lndir.sh
-CFLAGS		+= -Wall #-Werror
-CXXFLAGS	+= -Wall #-Werror
+CFLAGS		+= -Wall -std=c++0x  -DRESIP_HAS_RVALUE_REFS #-Werror
+CXXFLAGS	+= -Wall -std=c++0x  -DRESIP_HAS_RVALUE_REFS #-Werror
 DFLAG_INTEGRATED = -MMD
 DEBUG_FLAG	= -g
 COMPILE_SMALL_FLAG = -Os -fno-inline -fno-keep-static-consts

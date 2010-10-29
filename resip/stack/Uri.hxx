@@ -21,6 +21,10 @@ class Uri : public ParserCategory
       Uri();
       Uri(const Uri&);
       explicit Uri(const Data& data);
+#ifdef RESIP_HAS_RVALUE_REFS
+      Uri(Uri && other);
+      Uri& operator=( Uri && other);
+#endif
 
       ~Uri();
       

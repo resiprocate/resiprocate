@@ -55,7 +55,7 @@ main(int argc, char* argv[])
       saddr = reinterpret_cast<sockaddr*>(&addr4);
       saddrLen = sizeof(addr4);
 
-      if ( bind( fd[port], saddr, saddrLen) == SOCKET_ERROR )
+      if ( ::bind( fd[port], saddr, saddrLen) == SOCKET_ERROR )
       {
          assert(0);
       }

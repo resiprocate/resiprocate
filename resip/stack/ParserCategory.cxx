@@ -69,6 +69,30 @@ ParserCategory::operator=(const ParserCategory& rhs)
    return *this;
 }
 
+#ifdef RESIP_HAS_RVALUE_REFS
+ParserCategory::ParserCategory(ParserCategory && rhs) : LazyParser(rhs)
+{
+  *this = std::move(rhs);
+}
+
+ParserCategory &
+ParserCategory::operator=(ParserCategory &&rhs)
+{
+  if (this != &rhs)
+  {
+    clear();
+    mHeaderType = rhs.mHeaderType;
+    LazyParser::operator=(rhs);
+    if (rhs.isParsed())
+    {
+      mParameters = std::move(rhs.mParameters);
+      mUnknownParameters = std::move(rhs.mUnknownParameters);
+    }
+  }
+  return *this;
+}
+#endif
+
 void
 ParserCategory::clear()
 {

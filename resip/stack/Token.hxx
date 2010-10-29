@@ -24,6 +24,13 @@ class Token : public ParserCategory
       Token(HeaderFieldValue* hfv, Headers::Type type);
       Token(const Token&);
       Token& operator=(const Token&);
+      
+
+#ifdef RESIP_HAS_RVALUE_REFS
+      Token(Token&& rhs); 
+      Token& operator=(Token && rhs);
+#endif
+
       bool isEqual(const Token& rhs) const;
       bool operator==(const Token& rhs) const;
       bool operator!=(const Token& rhs) const;
