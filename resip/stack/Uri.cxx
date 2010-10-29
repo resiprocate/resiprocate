@@ -74,6 +74,40 @@ Uri::~Uri()
    delete mEmbeddedHeaders;
 }
 
+#ifdef RESIP_HAS_RVALUE_REFS
+
+Uri::Uri(Uri && rhs) : ParserCategory(),
+     mScheme(Data::Share, Symbols::DefaultSipScheme),
+     mPort(0),
+     mOldPort(0),
+     mEmbeddedHeaders(0)
+{ 
+  *this = std::move(rhs);
+}
+
+Uri& Uri::operator=(Uri && rhs) 
+{
+  if (this != &rhs)
+  {
+    mScheme = std::move(rhs.mScheme);
+    mHost = std::move(rhs.mHost);
+    mUser = std::move(rhs.mUser);
+    mUserParameters = std::move(rhs.mUserParameters);
+    mPort = rhs.mPort;
+    mPassword = std::move(rhs.mPassword);
+    mOldPort = rhs.mOldPort;
+    mEmbeddedHeadersText = std::move(rhs.mEmbeddedHeadersText);
+    if (rhs.mEmbeddedHeaders)
+    {
+      mEmbeddedHeaders = rhs.mEmbeddedHeaders;
+      rhs.mEmbeddedHeaders = 0;
+    }
+  }
+  return *this;
+}
+
+#endif
+
 // RFC 3261 19.1.6
 #if 0  // deprecated
 Uri

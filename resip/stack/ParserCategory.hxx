@@ -45,6 +45,11 @@ class ParserCategory : public LazyParser
       ParserCategory(const ParserCategory& rhs);
       ParserCategory& operator=(const ParserCategory& rhs);
 
+#ifdef RESIP_HAS_RVALUE_REFS
+      ParserCategory(ParserCategory && rhs);
+      ParserCategory & operator=(ParserCategory && rhs);
+#endif
+
       virtual ~ParserCategory();
 
       virtual ParserCategory* clone() const = 0;

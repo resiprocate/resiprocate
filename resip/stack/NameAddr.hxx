@@ -27,6 +27,12 @@ class NameAddr : public ParserCategory
 
       NameAddr(const NameAddr&);
       NameAddr& operator=(const NameAddr&);
+      
+#ifdef RESIP_HAS_RVALUE_REFS
+      NameAddr(NameAddr && rhs);
+      NameAddr& operator=(NameAddr && rhs);
+#endif
+      
       bool operator==(const NameAddr& other) const;
 
       virtual ~NameAddr();

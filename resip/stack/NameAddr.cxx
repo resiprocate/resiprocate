@@ -59,6 +59,26 @@ NameAddr::NameAddr(const Uri& uri)
      mDisplayName()
 {}
 
+#ifdef RESIP_HAS_RVALUE_REFS
+NameAddr::NameAddr(NameAddr &&rhs) : ParserCategory(),
+                                     mAllContacts(false)
+{
+  *this = std::move(rhs);
+}
+
+NameAddr & NameAddr::operator=(NameAddr &&rhs)
+{
+  if (this != &rhs)
+  {
+    mAllContacts = rhs.mAllContacts;
+    mUri = std::move(rhs.mUri);
+    mDisplayName = std::move(rhs.mDisplayName);
+  }
+  return *this;
+}
+
+#endif
+
 NameAddr::~NameAddr()
 {}
 

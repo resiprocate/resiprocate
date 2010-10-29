@@ -16,8 +16,7 @@
 #include <typeinfo>             // for std::bad_cast
 #include <iosfwd>               // for std::basic_ostream
 #include <cassert>
-#include <boost/shared_ptr.hpp>
-#include <boost/enable_shared_from_this.hpp>
+#include <memory>
 
 
 namespace resip
@@ -26,11 +25,11 @@ namespace resip
 //template <typename T> typedef boost::shared_ptr<T> SharedPtr<T>;
 //typedef boost::enable_shared_from_this enable_shared_from_this;
 //
-
-using boost::shared_ptr;
-using boost::enable_shared_from_this;
+using std::shared_ptr;
+using std::enable_shared_from_this;
 
 #define SharedPtr shared_ptr
+
 
 } // namespace resip
 
