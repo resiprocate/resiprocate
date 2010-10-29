@@ -600,29 +600,15 @@ Uri::operator<(const Uri& other) const
       return true;
    }
 
-   if (mUser > other.mUser)
-   {
-      return false;
-   }
-
    if (mUserParameters < other.mUserParameters)
    {
       return true;
    }
 
-   if (mUserParameters > other.mUserParameters)
-   {
-      return false;
-   }
 
    if (mHost < other.mHost)
    {
       return true;
-   }
-
-   if (mHost > other.mHost)
-   {
-      return false;
    }
 
    return mPort < other.mPort;
