@@ -5,7 +5,7 @@
 #include "repro/Processor.hxx"
 #include "repro/Dispatcher.hxx"
 #include "repro/UserStore.hxx"
-
+#include "resip/dum/InMemorySyncRegDb.hxx" 
 namespace resip
 {
    class SipStack;
@@ -16,7 +16,8 @@ namespace repro
   class DigestAuthenticator : public Processor
   {
     public:
-      DigestAuthenticator( UserStore& userStore, resip::SipStack* stack, bool noIdentityHeaders, const resip::Data& httpHostname, int httpPort, bool useAuthInt, bool rejectBadNonces);
+      DigestAuthenticator( UserStore& userStore, resip::SipStack* stack, bool noIdentityHeaders, const resip::Data& httpHostname, int httpPort, bool useAuthInt, bool rejectBadNonces, bool challengeRegisteredInvites,
+			   resip::RegistrationPersistenceManager * regData);
       ~DigestAuthenticator();
 
       virtual processor_action_t process(RequestContext &);
@@ -34,6 +35,8 @@ namespace repro
       int  mHttpPort;
       bool mUseAuthInt;
       bool mRejectBadNonces;
+      bool mChallengeRegisteredInvites;
+      resip::RegistrationPersistenceManager * mRegData;
   };
   
 }

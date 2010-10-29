@@ -360,7 +360,11 @@ class SipMessage : public TransactionMessage
       bool mIsExternal;
       
       // raw text corresponding to each typed header (not yet parsed)
+#if defined(__GNUC__) && __GNUC__ >= 3
+      mutable HeaderFieldValueList* mHeaders[Headers::MAX_HEADERS] __attribute__((aligned(16)));
+#else
       mutable HeaderFieldValueList* mHeaders[Headers::MAX_HEADERS];
+#endif
 
       // raw text corresponding to each unknown header
       mutable UnknownHeaders mUnknownHeaders;

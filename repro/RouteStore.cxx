@@ -367,16 +367,22 @@ RouteStore::process(const resip::Uri& ruri,
          int ret;
          // TODO - !cj! www.pcre.org looks like it has better performance
          // !mbg! is this true now that the compiled regexp is used?
+
          Data uri;
          {
+	    Uri editableUri(ruri);
+	    if (editableUri.port() == 5060)
+	    {
+		editableUri.port() = 0;
+	    }
             DataStream s(uri);
-            s << ruri;
+            s << editableUri;
             s.flush();
          }
          
          const int nmatch=10;
          regmatch_t pmatch[nmatch];
-         
+	          
          ret = regexec(it->preq, uri.c_str(), nmatch, pmatch, 0/*eflags*/);
          if ( ret != 0 )
          {

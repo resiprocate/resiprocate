@@ -77,7 +77,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
 
    char *regSyncPeerAddress = 0;
    int xmlRpcPort = 0;
-
+   int noInviteChallengeIfRegistered = 0;
 #ifdef WIN32
 #ifndef HAVE_POPT_H
    noChallenge = 1;  // If no POPT, then default to no digest challenges
@@ -115,6 +115,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"disable-v4",        0,   POPT_ARG_NONE,                              &disableV4,      0, "disable IPV4", 0},
       {"disable-auth",      0,   POPT_ARG_NONE,                              &noChallenge,    0, "disable DIGEST challenges", 0},
       {"disable-auth-int",  0,   POPT_ARG_NONE,                              &noAuthIntChallenge,0, "disable auth-int DIGEST challenges", 0},
+      {"disable-invite-challenges",0, POPT_ARG_NONE,			     &noInviteChallengeIfRegistered, 0, "disable invite challenges if the user is registered", 0},
       {"reject-bad-nonces",  0,   POPT_ARG_NONE,                              &rejectBadNonces,0, "Send 403 if a client sends a bad nonce in their credentials (will send a new challenge otherwise)", 0},
       {"disable-web-auth",  0,   POPT_ARG_NONE,                              &noWebChallenge, 0, "disable HTTP challenges", 0},
       {"disable-reg",       0,   POPT_ARG_NONE,                              &noRegistrar,    0, "disable registrar", 0},
@@ -214,6 +215,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mMsBeforeCancel=msBeforeCancel;
    mAllowBadReg = allowBadReg?true:false;
    mParallelForkStaticRoutes = parallelForkStaticRoutes?true:false;
+   mNoInviteChallengeIfRegistered = noInviteChallengeIfRegistered != 0;
    if (enumSuffix) mEnumSuffix = enumSuffix;
    
    if (mySqlServer) 

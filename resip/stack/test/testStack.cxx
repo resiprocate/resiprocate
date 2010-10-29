@@ -22,7 +22,7 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/Uri.hxx"
-
+#include "malloc.h"
 using namespace resip;
 using namespace std;
 
@@ -107,6 +107,9 @@ main(int argc, char* argv[])
    NameAddr from = target;
    from.uri().port() = senderPort;
    
+   WarningLog(<< "Malloc Stats After setup: " );
+   malloc_stats();
+
    UInt64 startTime = Timer::getTimeMs();
    int outstanding=0;
    int count = 0;
@@ -224,6 +227,9 @@ main(int argc, char* argv[])
          delete response;
       }
    }
+
+   WarningLog(<< "Malloc Stats after finishing");
+   malloc_stats();
    InfoLog (<< "Finished " << count << " runs");
    
    UInt64 elapsed = Timer::getTimeMs() - startTime;

@@ -4,7 +4,7 @@ REPRO_USER?=repro
 
 # repro is not GPL so if you want to link in MySQL, you needs a 
 # a comercial license for MySQL that is not GPL 
-USE_MYSQL = false
+USE_MYSQL = yes
 
 BUILD = ../build
 include $(BUILD)/Makefile.pre

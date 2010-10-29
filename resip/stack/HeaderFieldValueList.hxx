@@ -3,7 +3,7 @@
 
 #include <iosfwd>
 #include <vector>
-
+#include <algorithm>
 namespace resip
 {
 
@@ -17,7 +17,7 @@ class HeaderFieldValueList
       HeaderFieldValueList()
          : mHeaders(), 
            mParserContainer(0)
-      {}
+      { mHeaders.reserve(10); }
 
       ~HeaderFieldValueList();
       HeaderFieldValueList(const HeaderFieldValueList& rhs);

@@ -27,6 +27,9 @@ MySqlDb::MySqlDb( const Data& server )
    mConn = mysql_init(NULL);
    assert(mConn);
 
+
+   my_bool tVal = true;
+   mysql_options(mConn,MYSQL_OPT_RECONNECT,&tVal);
    MYSQL* ret = mysql_real_connect(mConn,
                                    server.c_str(), // hostname
                                    "repro",//user
@@ -142,6 +145,46 @@ MySqlDb::getUser( const AbstractDb::Key& key ) const
    mysql_free_result( result );
 
    return ret;
+}
+
+boost::shared_ptr<std::list<AbstractDb::UserRecord> > MySqlDb::getUsers() {
+   boost::shared_ptr<std::list<AbstractDb::UserRecord> > pList(new std::list<AbstractDb::UserRecord>());
+   int r;
+   Data command = Data("SELECT "
+                       "user, domain, realm, passwordHash, name "
+                       "email, forwardAddress FROM users ");
+   r = mysql_query(mConn,command.c_str());
+   if (r!= 0)
+   {
+      ErrLog( << "MySQL read failed: " << mysql_error(mConn) );
+      ErrLog( << " SQL Command was: " << command  ) ;
+      throw; /* !cj! TODO FIX */
+   }
+
+   MYSQL_RES* result = mysql_store_result(mConn);
+   if (result==NULL)
+   {
+      ErrLog( << "MySQL store result failed: " << mysql_error(mConn) );
+      throw; /* !cj! TODO FIX */
+   }
+
+   MYSQL_ROW row= NULL;
+   while ((row = mysql_fetch_row(result)))
+   {
+      UserRecord rec;
+      rec.user = Data( row[0] );
+      rec.domain = Data( row[1] );
+      rec.realm = Data( row[2] );
+      rec.passwordHash = Data( row[3] );
+      rec.name = Data( row[4] );
+      rec.email = Data( row[5] );
+      rec.forwardAddress = Data( row[6] );
+      pList->push_back(rec);
+   }
+   mysql_free_result( result );
+
+   return pList;
+
 }
 
 

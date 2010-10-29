@@ -22,7 +22,7 @@ using namespace std;
 
 StaticRoute::StaticRoute(RouteStore& store, bool noChallenge, bool parallelForkStaticRoutes, bool useAuthInt) :
    mRouteStore(store),
-   mNoChallenge(noChallenge),
+   mNoChallenge(true),
    mParallelForkStaticRoutes(parallelForkStaticRoutes),
    mUseAuthInt(useAuthInt)
 {}

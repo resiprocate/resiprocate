@@ -9,7 +9,9 @@
 
 #include "rutil/Data.hxx"
 #include "repro/AbstractDb.hxx"
-
+#include <boost/optional.hpp>
+#include <list>
+#include <boost/shared_ptr.hpp>
 namespace resip
 {
   class TransactionUser;
@@ -29,6 +31,7 @@ class MySqlDb: public AbstractDb
       virtual void eraseUser( const Key& key );
       virtual UserRecord getUser( const Key& key ) const;
       virtual resip::Data getUserAuthInfo(  const Key& key ) const;
+      virtual boost::shared_ptr<std::list<UserRecord> > getUsers();
       virtual Key firstUserKey();// return empty if no more
       virtual Key nextUserKey(); // return empty if no more 
 

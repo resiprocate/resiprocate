@@ -46,7 +46,9 @@ makeRequestProcessorChain(ProcessorChain& chain,
                                                       "localhost",
                                                       5080,
                                                       true,
-                                                      false);
+                                                      false,
+						      false,
+						      &regData);
    locators->addProcessor(std::auto_ptr<Processor>(da)); 
 
    AmIResponsible* isme = new AmIResponsible;

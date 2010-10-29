@@ -77,8 +77,8 @@ ifeq ($(ARCH),i386)
 	OPEN_SSL_CONFIG := linux-generic32
 endif
 ifeq ($(ARCH),x86_64)
-	CXXFLAGS += -march=x86-64
 	OPEN_SSL_CONFIG := linux-x86_64
+	CXXFLAGS += -march=x86-64
 ifeq ($(BUILD_SHARED_LIBS),yes)
 	CXXFLAGS += -fPIC
 	CFLAGS   += -fPIC
@@ -88,7 +88,7 @@ endif
 #	CXXFLAGS += -D_REENTRANT -frepo
 	CXXFLAGS += -D_REENTRANT
 	CFLAGS   += -D_REENTRANT 
-
+LDLIBS_LAST += -ltbbmalloc_proxy -ltbbmalloc
 ifeq ($(USE_GOOGLE_MALLOC),yes)
 LDLIBS_LAST += -ltcmalloc
 endif

@@ -13,7 +13,7 @@
 #include "repro/UserStore.hxx"
 #include "repro/AbstractDb.hxx"
 #include "rutil/WinLeakCheck.hxx"
-
+#include "repro/MySqlDb.hxx"
 
 using namespace resip;
 using namespace repro;
@@ -24,6 +24,17 @@ using namespace std;
 UserStore::UserStore(AbstractDb& db ):
    mDb(db)
 { 
+   MySqlDb * pSQLdb = dynamic_cast<MySqlDb*>(&db);
+   if (pSQLdb)
+   {
+	boost::shared_ptr<std::list<AbstractDb::UserRecord> > userRecords = pSQLdb->getUsers();
+	for (std::list<AbstractDb::UserRecord>::iterator i = userRecords->begin(); i != userRecords->end(); ++i)
+	{
+
+		InfoLog(<< "Inserting record for: " << buildKey(i->user,i->realm));
+		mUserRecords[buildKey(i->user,i->realm)] = *i;	
+	}
+   }
 }
 
 UserStore::~UserStore()
@@ -60,7 +71,13 @@ UserStore::requestUserAuthInfo( const resip::Data& user,
 AbstractDb::UserRecord
 UserStore::getUserInfo( const Key& key ) const
 {
-   return mDb.getUser(key);
+   UserRecordHash::const_iterator i = mUserRecords.find(key);
+   if (i != mUserRecords.end())
+   {
+	return i->second;
+   } else {
+   	return mDb.getUser(key);
+   }
 }
 
 
@@ -69,7 +86,13 @@ UserStore::getUserAuthInfo(  const resip::Data& user,
                              const resip::Data& realm ) const
 {
    Key key =  buildKey(user, realm);
-   return mDb.getUserAuthInfo( key );
+   UserRecordHash::const_iterator i = mUserRecords.find(key);
+   if (i != mUserRecords.end())
+   {
+        return i->second.passwordHash;
+   } else {
+   	return mDb.getUserAuthInfo( key );
+   }
 }
 
 
@@ -105,13 +128,20 @@ UserStore::addUser( const Data& username,
    rec.email = emailAddress;
    rec.forwardAddress = Data::Empty;
 
+   if (dynamic_cast<MySqlDb*>(&mDb))
+   {
+   	mUserRecords[buildKey(username,domain)] = rec;
+   }
    mDb.addUser( buildKey(username,domain), rec);
 }
 
 
 void 
 UserStore::eraseUser( const Key& key )
-{ 
+{
+
+// !dw! No need to check to see if it is mysql db for removal...
+   mUserRecords.erase(key); 
    mDb.eraseUser( key );
 }
 

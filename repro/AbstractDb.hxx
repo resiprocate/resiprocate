@@ -5,10 +5,22 @@
 #include "rutil/Fifo.hxx"
 #include "resip/stack/Message.hxx"
 #include <vector>
+#include <boost/flyweight.hpp>
+
+
+
+
 
 namespace resip
 {
   class TransactionUser;
+
+inline std::size_t hash_value(resip::Data const& data)
+{
+        return data.hash();
+}
+
+
 }
 
 namespace repro
@@ -23,13 +35,14 @@ class AbstractDb
       class UserRecord
       {
          public:
-            resip::Data user;
-            resip::Data domain;
-            resip::Data realm;
-            resip::Data passwordHash;
-            resip::Data name;
-            resip::Data email;
-            resip::Data forwardAddress;
+	    typedef boost::flyweight<resip::Data> fData;
+            fData user;
+            fData domain;
+            fData realm;
+            fData passwordHash;
+            fData name;
+            fData email;
+            fData forwardAddress;
       };
 
       class RouteRecord

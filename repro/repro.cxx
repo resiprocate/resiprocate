@@ -250,19 +250,32 @@ main(int argc, char** argv)
  
 
    AbstractDb* db=NULL;
+   AbstractDb* db2=NULL;
 #ifdef USE_MYSQL
    if ( !args.mMySqlServer.empty() )
    {
+      InfoLog(<< "Creating MySQL DBs");
       db = new MySqlDb(args.mMySqlServer);
+      db2 = new MySqlDb(args.mMySqlServer);
+      assert(db2);
    }
 #endif
    if (!db)
    {
+      InfoLog(<< "Creating Berkeley DBs");
       db = new BerkeleyDb(args.mDbPath);
       if (!static_cast<BerkeleyDb*>(db)->isSane())
       {
         CritLog(<<"Failed to open configuration database");
         exit(-1);
+      }
+
+      db2 = new BerkeleyDb(args.mDbPath);
+      if (!static_cast<BerkeleyDb*>(db)->isSane())
+      {
+        CritLog(<<"Failed to open configuration database");
+        exit(-1);
+
       }
    }
    assert( db );
@@ -302,7 +315,10 @@ main(int argc, char** argv)
                                                            args.mHttpHostname,
                                                            args.mHttpPort,
                                                            !args.mNoAuthIntChallenge /*useAuthInt*/,
-                                                           args.mRejectBadNonces);
+                                                           args.mRejectBadNonces,
+							   !args.mNoInviteChallengeIfRegistered, 
+							   !args.mNoRegistrar ? &regData : 0
+							);
          // Add digest authenticator monkey
          requestProcessors.addProcessor(std::auto_ptr<Processor>(da)); 
       }
@@ -464,14 +480,17 @@ main(int argc, char** argv)
 #endif
    }
 
+
+   UserStore dumUserStore(*db2);
+   AclStore dumAclStore(*db2);
    if (dum)
    {
       if (!args.mNoChallenge)
       {
          SharedPtr<ServerAuthManager> 
             uasAuth( new ReproServerAuthManager(*dum,
-                                                store.mUserStore,
-                                                store.mAclStore,
+                                                dumUserStore,
+                                                dumAclStore,
                                                 !args.mNoAuthIntChallenge /*useAuthInt*/,
                                                 args.mRejectBadNonces));
          dum->setServerAuthManager(uasAuth);
@@ -597,6 +616,7 @@ main(int argc, char** argv)
    }
 
    delete db; db=0;
+   delete db2; db2 = 0;
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
    }
 #endif
