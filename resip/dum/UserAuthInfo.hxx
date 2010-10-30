@@ -11,7 +11,7 @@ class UserAuthInfo : public resip::DumFeatureMessage
 {
    public:
 
-      typedef enum InfoMode 
+      enum InfoMode 
       {
         UserUnknown,       // the user/realm is not known
         RetrievedA1,       // the A1 string has been retrieved

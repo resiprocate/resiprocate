@@ -157,12 +157,12 @@ int main(int argc, char *argv[])
 
    SipStack clientStack(security);
    DialogUsageManager clientDum(clientStack);
-   clientDum.addTransport(UDP, 10000 + rand()&0x7fff, V4);
-   clientDum.addTransport(TCP, 10000 + rand()&0x7fff, V4);
-   clientDum.addTransport(TLS, 10000 + rand()&0x7fff, V4);
-   // clientDum.addTransport(UDP, 10000 + rand()&0x7fff, V6);
-   // clientDum.addTransport(TCP, 10000 + rand()&0x7fff, V6);
-   // clientDum.addTransport(TLS, 10000 + rand()&0x7fff, V6);
+   clientDum.addTransport(UDP, 0, V4);
+   clientDum.addTransport(TCP, 0, V4);
+   clientDum.addTransport(TLS, 0, V4);
+   // clientDum.addTransport(UDP, 0, V6);
+   // clientDum.addTransport(TCP, 0, V6);
+   // clientDum.addTransport(TLS, 0, V6);
 
    SharedPtr<MasterProfile> clientProfile(new MasterProfile);   
    auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager());   

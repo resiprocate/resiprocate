@@ -16,7 +16,7 @@ class DialogUsageManager;
 class ServerAuthManager : public DumFeature
 {
    public:
-      typedef enum Result
+      enum Result
       {
          //Authorized,
          RequestedInfo,
@@ -43,14 +43,14 @@ class ServerAuthManager : public DumFeature
       
    protected:
 
-      typedef enum AsyncBool
+      enum AsyncBool
       {
            True,  // response is true
            False, // response is false
            Async  // response will be sent asynchronously
       };
 
-      typedef enum AuthFailureReason
+      enum AuthFailureReason
       {
          InvalidRequest,   // some aspect of the request (e.g. nonce)
                            // is not valid/tampered with
