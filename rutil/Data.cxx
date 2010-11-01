@@ -784,19 +784,24 @@ Data& Data::operator=(Data &&data)
 {
    if (&data != this)
    {
+#if 0
       if (data.mPreBuffer != data.mBuf)
       {
          //data is not using the local buffer, take ownership of data.
          mBuf = data.mBuf;
+         data.mBuf = data.mPreBuffer;
          mCapacity = data.mCapacity;
          mMine = data.mMine;
+         data.mMine = Borrow; // .dw. Borrow should allow it to keep itself from trying to delete on copy...
          mSize = data.mSize;
-         data.mMine = Borrow; //don't delete the transferred buffer in data's destructor.
+	 // .dw. previous note below makes absolutely no sense...
+         //don't delete the transferred buffer in data's destructor.
       }
       else
       {
+#endif
          *this = data; //lvalue assignment operator will be called for named rvalue.
-      }
+//    }
    }
    
    return *this;

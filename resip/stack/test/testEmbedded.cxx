@@ -116,6 +116,7 @@ main(int argc, char** argv)
 
       NameAddr route;
       route.uri() = Uri("sip:flibble@gronk.example.com");
+      cerr << "Route: " << route << std::endl;
       foo.embedded().header(h_Routes).push_back(route);
 
       Data buf;

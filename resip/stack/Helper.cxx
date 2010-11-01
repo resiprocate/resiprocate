@@ -206,18 +206,18 @@ Helper::makeRegister(const NameAddr& to, const Data& transport, const NameAddr& 
    }
 
    request->header(h_To) = to;
-   request->header(h_RequestLine) = rLine;
+   request->header(h_RequestLine) = std::move(rLine);
    request->header(h_MaxForwards).value() = 70;
    request->header(h_CSeq).method() = REGISTER;
    request->header(h_CSeq).sequence() = 1;
    request->header(h_From) = to;
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
-   request->header(h_CallId).value() = Helper::computeCallId();
+   request->header(h_CallId).value() = std::move(Helper::computeCallId());
    assert(!request->exists(h_Contacts) || request->header(h_Contacts).empty());
    request->header(h_Contacts).push_back( contact );
    
    Via via;
-   request->header(h_Vias).push_back(via);
+   request->header(h_Vias).push_back(std::move(via));
    
    return request.release();
 }

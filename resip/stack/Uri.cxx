@@ -52,7 +52,11 @@ Uri::Uri(const Data& data)
    Uri tmp;
    ParseBuffer pb(data, parseContext);
    tmp.parse(pb);
+//#ifdef RESIP_HAS_RVALUE_REFS
+//   *this = std::move(tmp);
+//#else
    *this = tmp;
+//#endif
 }
 
 Uri::Uri(const Uri& rhs)
@@ -89,6 +93,7 @@ Uri& Uri::operator=(Uri && rhs)
 {
   if (this != &rhs)
   {
+    ParserCategory::operator=(std::move(rhs));
     mScheme = std::move(rhs.mScheme);
     mHost = std::move(rhs.mHost);
     mUser = std::move(rhs.mUser);

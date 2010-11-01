@@ -7,8 +7,7 @@
 
 #include "repro/AbstractDb.hxx"
 #include <boost/unordered_map.hpp>
-
-
+#include <boost/date_time/posix_time/posix_time.hpp>
 namespace resip
 {
   class TransactionUser;
@@ -18,7 +17,7 @@ namespace repro
 {
 
 typedef resip::Fifo<resip::Message> MessageFifo;
-
+using namespace boost::posix_time;
 class UserStore
 {
    public:
@@ -60,12 +59,16 @@ class UserStore
       Key getFirstKey();// return empty if no more
       Key getNextKey(); // return empty if no more 
       
+      void refreshUsers(bool deleteNoLongerExist = true) const;
+      
    private:
       Key buildKey( const resip::Data& user, 
                     const resip::Data& domain) const;
 
+
       AbstractDb& mDb;
-      UserRecordHash mUserRecords;
+      mutable UserRecordHash mUserRecords;
+      mutable ptime mLastRefresh;
 };
 
  }
