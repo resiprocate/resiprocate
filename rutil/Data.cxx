@@ -784,7 +784,7 @@ Data& Data::operator=(Data &&data)
 {
    if (&data != this)
    {
-#if 0
+
       if (data.mPreBuffer != data.mBuf)
       {
          //data is not using the local buffer, take ownership of data.
@@ -799,9 +799,9 @@ Data& Data::operator=(Data &&data)
       }
       else
       {
-#endif
+
          *this = data; //lvalue assignment operator will be called for named rvalue.
-//    }
+    }
    }
    
    return *this;

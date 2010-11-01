@@ -52,11 +52,7 @@ Uri::Uri(const Data& data)
    Uri tmp;
    ParseBuffer pb(data, parseContext);
    tmp.parse(pb);
-//#ifdef RESIP_HAS_RVALUE_REFS
-//   *this = std::move(tmp);
-//#else
    *this = tmp;
-//#endif
 }
 
 Uri::Uri(const Uri& rhs)
