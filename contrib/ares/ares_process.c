@@ -60,6 +60,7 @@ static int same_questions(const unsigned char *qbuf, int qlen,
 			  const unsigned char *abuf, int alen);
 static void end_query(ares_channel channel, struct query *query, int status,
 		      unsigned char *abuf, int alen);
+static int make_socket_non_blocking(int s);
 
 /* Something interesting happened on the wire, or there was a timeout.
  * See what's up and respond accordingly.
@@ -593,32 +594,11 @@ static int open_tcp_socket(ares_channel channel, struct server_state *server)
   if (s == -1)
     return -1;
 
-  /* Set the socket non-blocking. */
-#ifdef WIN32
+  if (make_socket_non_blocking(s))
   {
-	unsigned long noBlock = 1;
-	int errNoBlock = ioctlsocket( s, FIONBIO , &noBlock );
-	if ( errNoBlock != 0 )
-	{
-		return -1;
-	}
+    ares__kill_socket(s);
+	return -1;
   }
-#else
-  {
-	  int flags;
-  if (fcntl(s, F_GETFL, &flags) == -1)
-    {
-      ares__kill_socket(s);
-      return -1;
-    }
-  flags |= O_NONBLOCK; // Fixed evil but here - used to be &=
-  if (fcntl(s, F_SETFL, flags) == -1)
-    {
-      ares__kill_socket(s);
-      return -1;
-    }
-}
-#endif
 
 #ifdef WIN32
 #define PORTABLE_INPROGRESS_ERR WSAEWOULDBLOCK
@@ -690,18 +670,15 @@ static int open_udp_socket(ares_channel channel, struct server_state *server)
   /* Acquire a socket. */
   assert(server->family == AF_INET || server->family == AF_INET6);
   s = socket(server->family, SOCK_DGRAM, 0);
-#ifdef WIN32
-  {   
-	 unsigned long errNoBlock = 1;
-     errNoBlock = ioctlsocket( s, FIONBIO , &errNoBlock );
-     if ( errNoBlock != 0 )
-     {
-        return -1;
-     }
-  }
-#endif
+
   if (s == -1)
     return -1;
+
+  if (make_socket_non_blocking(s))
+  {
+    ares__kill_socket(s);
+	return -1;
+  }
 
   /* Connect to the server. */
   if (server->family == AF_INET6)
@@ -742,6 +719,12 @@ static int open_udp_socket(ares_channel channel, struct server_state *server)
 
   if (s == -1)
     return -1;
+
+  if (make_socket_non_blocking(s))
+  {
+    ares__kill_socket(s);
+	return -1;
+  }
 
   /* Connect to the server. */
   memset(&sin, 0, sizeof(sin));
@@ -877,5 +860,29 @@ void ares__kill_socket(int s)
 #else
    close(s);
 #endif
+}
+
+int make_socket_non_blocking(int s)
+{
+#ifdef WIN32
+  unsigned long noBlock = 1;
+  int errNoBlock = ioctlsocket( s, FIONBIO , &noBlock );
+  if ( errNoBlock != 0 )
+  {
+    return -1;
+  }
+#else
+  int flags;
+  if (fcntl(s, F_GETFL, &flags) == -1)
+  {
+    return -1;
+  }
+  flags |= O_NONBLOCK; // Fixed evil but here - used to be &=
+  if (fcntl(s, F_SETFL, flags) == -1)
+  {
+    return -1;
+  }
+#endif
+  return 0;
 }
 
