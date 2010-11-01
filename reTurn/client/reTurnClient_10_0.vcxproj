@@ -1,0 +1,133 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectName>reTurnClient</ProjectName>
+    <ProjectGuid>{67B5906C-5C9D-4D09-AC7E-AF71D72175F8}</ProjectGuid>
+    <RootNamespace>reTurnClient</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Debug\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Release\</IntDir>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>../../contrib/asio;../../contrib/boost_1_34_1;../../contrib/OpenSSL/include;../../contrib/OpenSSL/inc32;../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;USE_IPV6;USE_SSL;LEAK_CHECK;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <Lib>
+      <OutputFile>$(OutDir)reTurnClient.lib</OutputFile>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>../../contrib/asio;../../contrib/boost_1_34_1;../../contrib/OpenSSL/include;../../contrib/OpenSSL/inc32;../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;USE_IPV6;USE_SSL;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Lib>
+      <OutputFile>$(OutDir)reTurnClient.lib</OutputFile>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\AsyncSocketBase.cxx" />
+    <ClCompile Include="..\AsyncTcpSocketBase.cxx" />
+    <ClCompile Include="..\AsyncTlsSocketBase.cxx" />
+    <ClCompile Include="..\AsyncUdpSocketBase.cxx" />
+    <ClCompile Include="..\ChannelManager.cxx" />
+    <ClCompile Include="..\DataBuffer.cxx" />
+    <ClCompile Include="..\RemotePeer.cxx" />
+    <ClCompile Include="..\ReTurnSubsystem.cxx" />
+    <ClCompile Include="..\StunMessage.cxx" />
+    <ClCompile Include="..\StunTuple.cxx" />
+    <ClCompile Include="TurnAsyncSocket.cxx" />
+    <ClCompile Include="TurnAsyncSocketHandler.cxx" />
+    <ClCompile Include="TurnAsyncTcpSocket.cxx" />
+    <ClCompile Include="TurnAsyncTlsSocket.cxx" />
+    <ClCompile Include="TurnAsyncUdpSocket.cxx" />
+    <ClCompile Include="TurnSocket.cxx" />
+    <ClCompile Include="TurnTcpSocket.cxx" />
+    <ClCompile Include="TurnTlsSocket.cxx" />
+    <ClCompile Include="TurnUdpSocket.cxx" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\AsyncSocketBase.hxx" />
+    <ClInclude Include="..\AsyncSocketBaseHandler.hxx" />
+    <ClInclude Include="..\AsyncTcpSocketBase.hxx" />
+    <ClInclude Include="..\AsyncTlsSocketBase.hxx" />
+    <ClInclude Include="..\AsyncUdpSocketBase.hxx" />
+    <ClInclude Include="..\ChannelManager.hxx" />
+    <ClInclude Include="..\DataBuffer.hxx" />
+    <ClInclude Include="ErrorCode.hxx" />
+    <ClInclude Include="..\RemotePeer.hxx" />
+    <ClInclude Include="..\ReTurnSubsystem.hxx" />
+    <ClInclude Include="..\StunMessage.hxx" />
+    <ClInclude Include="..\StunTuple.hxx" />
+    <ClInclude Include="TurnAsyncSocket.hxx" />
+    <ClInclude Include="TurnAsyncSocketHandler.hxx" />
+    <ClInclude Include="TurnAsyncTcpSocket.hxx" />
+    <ClInclude Include="TurnAsyncTlsSocket.hxx" />
+    <ClInclude Include="TurnAsyncUdpSocket.hxx" />
+    <ClInclude Include="TurnSocket.hxx" />
+    <ClInclude Include="TurnTcpSocket.hxx" />
+    <ClInclude Include="TurnTlsSocket.hxx" />
+    <ClInclude Include="TurnUdpSocket.hxx" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

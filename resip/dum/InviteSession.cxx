@@ -972,29 +972,20 @@ InviteSession::referCommand(const NameAddr& referTo, InviteSessionHandle session
 void
 InviteSession::info(const Contents& contents)
 {
-   if (isConnected())  // ?slg? likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
+   SharedPtr<SipMessage> info(new SipMessage());
+   mDialog.makeRequest(*info, INFO);
+   // !jf! handle multipart here
+   info->setContents(&contents);
+   DumHelper::setOutgoingEncryptionLevel(*info, mCurrentEncryptionLevel);
+   if (mNitState == NitComplete)
    {
-      SharedPtr<SipMessage> info(new SipMessage());
-      mDialog.makeRequest(*info, INFO);
-      // !jf! handle multipart here
-      info->setContents(&contents);
-      DumHelper::setOutgoingEncryptionLevel(*info, mCurrentEncryptionLevel);
-      if (mNitState == NitComplete)
-      {
-         mNitState = NitProceeding;
-         send(info);
-         return;
-      }
-      mNITQueue.push(new QueuedNIT(info));
-      InfoLog(<< "info - queuing NIT:" << info->brief());
+      mNitState = NitProceeding;
+      send(info);
       return;
    }
-   else
-   {
-      WarningLog (<< "Can't send INFO before Connected");
-      assert(0);
-      throw UsageUseException("Can't send INFO before Connected", __FILE__, __LINE__);
-   }
+   mNITQueue.push(new QueuedNIT(info));
+   InfoLog(<< "info - queuing NIT:" << info->brief());
+   return;
 }
 
 class InviteSessionInfoCommand : public DumCommandAdapter
@@ -1029,30 +1020,21 @@ InviteSession::infoCommand(const Contents& contents)
 void
 InviteSession::message(const Contents& contents)
 {
-   if (isConnected())  // ?slg? likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
+   SharedPtr<SipMessage> message(new SipMessage());
+   mDialog.makeRequest(*message, MESSAGE);
+   // !jf! handle multipart here
+   message->setContents(&contents);
+   DumHelper::setOutgoingEncryptionLevel(*message, mCurrentEncryptionLevel);
+   InfoLog (<< "Trying to send MESSAGE: " << message);
+   if (mNitState == NitComplete)
    {
-      SharedPtr<SipMessage> message(new SipMessage());
-      mDialog.makeRequest(*message, MESSAGE);
-      // !jf! handle multipart here
-      message->setContents(&contents);
-      DumHelper::setOutgoingEncryptionLevel(*message, mCurrentEncryptionLevel);
-      InfoLog (<< "Trying to send MESSAGE: " << message);
-      if (mNitState == NitComplete)
-      {
-         mNitState = NitProceeding;
-         send(message);
-         return;
-      }
-      mNITQueue.push(new QueuedNIT(message));
-      InfoLog(<< "message - queuing NIT:" << message->brief());
+      mNitState = NitProceeding;
+      send(message);
       return;
    }
-   else
-   {
-      WarningLog (<< "Can't send MESSAGE before Connected");
-      assert(0);
-      throw UsageUseException("Can't send MESSAGE before Connected", __FILE__, __LINE__);
-   }
+   mNITQueue.push(new QueuedNIT(message));
+   InfoLog(<< "message - queuing NIT:" << message->brief());
+   return;
 }
 
 class InviteSessionMessageCommand : public DumCommandAdapter
