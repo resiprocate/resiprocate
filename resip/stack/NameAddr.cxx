@@ -49,7 +49,11 @@ NameAddr::NameAddr(const Data& unparsed)
    NameAddr tmp;
    ParseBuffer pb(unparsed, parseContext);
    tmp.parse(pb);
+#ifdef RESIP_HAS_RVALUE_REFS
+   *this = std::move(tmp);
+#else
    *this = tmp;
+#endif
 }
 
 NameAddr::NameAddr(const Uri& uri)
@@ -70,6 +74,7 @@ NameAddr & NameAddr::operator=(NameAddr &&rhs)
 {
   if (this != &rhs)
   {
+    ParserCategory::operator=(std::move(rhs));
     mAllContacts = rhs.mAllContacts;
     mUri = std::move(rhs.mUri);
     mDisplayName = std::move(rhs.mDisplayName);

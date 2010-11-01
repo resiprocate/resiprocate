@@ -1,11 +1,17 @@
 #if !defined(RESIP_ABSTRACTDB_HXX)
 #define RESIP_ABSTRACTDB_HXX 
 
+#ifdef _GLIBCXX_PARALLEL
+#undef _GLIBCXX_PARALLEL
+#endif
+
+
+#include <boost/flyweight.hpp>
 #include "rutil/Data.hxx"
 #include "rutil/Fifo.hxx"
 #include "resip/stack/Message.hxx"
 #include <vector>
-#include <boost/flyweight.hpp>
+#include <deque>
 
 
 

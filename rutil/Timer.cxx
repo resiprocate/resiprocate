@@ -152,21 +152,32 @@ Timer::operator=(const Timer& other)
     return *this;
 }
 
+#ifdef RESIP_HAS_RVALUE_REFS
+Timer::Timer(Timer && rhs)
+{
+  *this = std::move(rhs);
+}
+
+Timer& 
+Timer::operator=(Timer && rhs)
+{
+    if (this != &rhs)
+    {
+      mWhen = rhs.mWhen;
+      mId = rhs.mId;
+      mType = rhs.mType;
+      mTransactionId = std::move(rhs.mTransactionId);
+      mDuration = rhs.mDuration;
+      mMessage = rhs.mMessage;
+    }
+    return *this;
+}
+#endif
+
 Timer::~Timer() 
 {}
 
-bool 
-resip::operator<(const Timer& t1, const Timer& t2)
-{
-    //std::cerr << "operator(<" << t1.mWhen << ", " << t2.mWhen << ") = " << (t1.mWhen < t2.mWhen) << std::endl;
-    return t1.mWhen < t2.mWhen;
-}
 
-bool 
-resip::operator>(const Timer& t1, const Timer& t2)
-{
-    return t1.mWhen > t2.mWhen;
-}
 
 #ifndef RESIP_USE_STL_STREAMS
 std::ostream& 

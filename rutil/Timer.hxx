@@ -51,6 +51,11 @@ class Timer
       Timer(unsigned long ms, Message* message);
       Timer(const Timer& t);
       Timer& operator=(const Timer& t);
+      
+#ifdef RESIP_HAS_RVALUE_REFS
+      Timer(Timer && rhs);
+      Timer & operator=(Timer && rhs);
+#endif
 
       ~Timer();
 
@@ -153,8 +158,20 @@ class Timer
 };
  
 EncodeStream& operator<<(EncodeStream&, const Timer&);
-bool operator<(const Timer& t1, const Timer& t2);
-bool operator>(const Timer& t1, const Timer& t2);
+
+
+inline bool 
+operator<(const Timer& t1, const Timer& t2)
+{
+    //std::cerr << "operator(<" << t1.mWhen << ", " << t2.mWhen << ") = " << (t1.mWhen < t2.mWhen) << std::endl;
+    return t1.mWhen < t2.mWhen;
+}
+
+inline bool 
+operator>(const Timer& t1, const Timer& t2)
+{
+    return t1.mWhen > t2.mWhen;
+}
 
 }
 

@@ -21,192 +21,243 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
-UserStore::UserStore(AbstractDb& db ):
-   mDb(db)
-{ 
-   MySqlDb * pSQLdb = dynamic_cast<MySqlDb*>(&db);
-   if (pSQLdb)
-   {
-	boost::shared_ptr<std::list<AbstractDb::UserRecord> > userRecords = pSQLdb->getUsers();
-	for (std::list<AbstractDb::UserRecord>::iterator i = userRecords->begin(); i != userRecords->end(); ++i)
-	{
+UserStore::UserStore ( AbstractDb& db ) :
+        mDb ( db ), mLastRefresh(microsec_clock::local_time())
+{
+    MySqlDb * pSQLdb = dynamic_cast<MySqlDb*> ( &db );
+    if ( pSQLdb )
+    {
+        boost::shared_ptr<std::list<AbstractDb::UserRecord> > userRecords = pSQLdb->getUsers();
+        for ( std::list<AbstractDb::UserRecord>::iterator i = userRecords->begin(); i != userRecords->end(); ++i )
+        {
 
-		InfoLog(<< "Inserting record for: " << buildKey(i->user,i->realm));
-		mUserRecords[buildKey(i->user,i->realm)] = *i;	
-	}
-   }
+            InfoLog ( << "Inserting record for: " << buildKey ( i->user,i->realm ) );
+            mUserRecords[buildKey ( i->user,i->realm ) ] = *i;
+        }
+    }
 }
 
 UserStore::~UserStore()
-{ 
+{
 }
 
 
-void 
-UserStore::requestUserAuthInfo( const resip::Data& user, 
-                                const resip::Data& realm,
-                                const resip::Data& transactionToken,
-                                resip::TransactionUser& transactionUser ) const
+void
+UserStore::requestUserAuthInfo ( const resip::Data& user,
+                                 const resip::Data& realm,
+                                 const resip::Data& transactionToken,
+                                 resip::TransactionUser& transactionUser ) const
 {
-   // TODO - this should put a message on a local queue then a thread should
-   // read that and then do the stuff in the rest of this fucntion
-   
-   resip::Data a1 = getUserAuthInfo(user, realm);
+    // TODO - this should put a message on a local queue then a thread should
+    // read that and then do the stuff in the rest of this fucntion
 
-   UserAuthInfo* msg=0;
+    refreshUsers();
+    resip::Data a1 = getUserAuthInfo ( user, realm );
 
-   if(a1.empty())
-   {
-      msg = new UserAuthInfo(user,realm,UserAuthInfo::UserUnknown,transactionToken);
-   }
-   else
-   {
-      msg = new UserAuthInfo(user,realm,a1,transactionToken);
-   }
+    UserAuthInfo* msg=0;
 
-   transactionUser.post( msg );
+    if ( a1.empty() )
+    {
+        msg = new UserAuthInfo ( user,realm,UserAuthInfo::UserUnknown,transactionToken );
+    }
+    else
+    {
+        msg = new UserAuthInfo ( user,realm,a1,transactionToken );
+    }
+
+    transactionUser.post ( msg );
 }
 
 
 AbstractDb::UserRecord
-UserStore::getUserInfo( const Key& key ) const
+UserStore::getUserInfo ( const Key& key ) const
 {
-   UserRecordHash::const_iterator i = mUserRecords.find(key);
-   if (i != mUserRecords.end())
-   {
-	return i->second;
-   } else {
-   	return mDb.getUser(key);
-   }
+    refreshUsers();
+    UserRecordHash::const_iterator i = mUserRecords.find ( key );
+    if ( i != mUserRecords.end() )
+    {
+        return i->second;
+    }
+    else
+    {
+        return mDb.getUser ( key );
+    }
 }
 
 
-Data 
-UserStore::getUserAuthInfo(  const resip::Data& user, 
+Data
+UserStore::getUserAuthInfo ( const resip::Data& user,
                              const resip::Data& realm ) const
 {
-   Key key =  buildKey(user, realm);
-   UserRecordHash::const_iterator i = mUserRecords.find(key);
-   if (i != mUserRecords.end())
-   {
+    refreshUsers();
+    Key key =  buildKey ( user, realm );
+    UserRecordHash::const_iterator i = mUserRecords.find ( key );
+    if ( i != mUserRecords.end() )
+    {
         return i->second.passwordHash;
-   } else {
-   	return mDb.getUserAuthInfo( key );
-   }
+    }
+    else
+    {
+        return mDb.getUserAuthInfo ( key );
+    }
 }
 
 
-void 
-UserStore::addUser( const Data& username,
-                    const Data& domain,
-                    const Data& realm,
-                    const Data& password, 
-                    bool  applyA1HashToPassword,
-                    const Data& fullName, 
-                    const Data& emailAddress )
+void
+UserStore::addUser ( const Data& username,
+                     const Data& domain,
+                     const Data& realm,
+                     const Data& password,
+                     bool  applyA1HashToPassword,
+                     const Data& fullName,
+                     const Data& emailAddress )
 {
-   AbstractDb::UserRecord rec;
-   rec.user = username;
-   rec.domain = domain;
-   rec.realm = realm;
-   if(applyA1HashToPassword)
-   {
-      MD5Stream a1;
-      a1 << username
-         << Symbols::COLON
-         << realm
-         << Symbols::COLON
-         << password;
-      a1.flush();
-      rec.passwordHash = a1.getHex();
-   }
-   else
-   {
-      rec.passwordHash = password;
-   }
-   rec.name = fullName;
-   rec.email = emailAddress;
-   rec.forwardAddress = Data::Empty;
+    AbstractDb::UserRecord rec;
+    rec.user = username;
+    rec.domain = domain;
+    rec.realm = realm;
+    if ( applyA1HashToPassword )
+    {
+        MD5Stream a1;
+        a1 << username
+        << Symbols::COLON
+        << realm
+        << Symbols::COLON
+        << password;
+        a1.flush();
+        rec.passwordHash = a1.getHex();
+    }
+    else
+    {
+        rec.passwordHash = password;
+    }
+    rec.name = fullName;
+    rec.email = emailAddress;
+    rec.forwardAddress = Data::Empty;
 
-   if (dynamic_cast<MySqlDb*>(&mDb))
-   {
-   	mUserRecords[buildKey(username,domain)] = rec;
-   }
-   mDb.addUser( buildKey(username,domain), rec);
+    if ( dynamic_cast<MySqlDb*> ( &mDb ) )
+    {
+        mUserRecords[buildKey ( username,domain ) ] = rec;
+    }
+    mDb.addUser ( buildKey ( username,domain ), rec );
 }
 
 
-void 
-UserStore::eraseUser( const Key& key )
+void
+UserStore::eraseUser ( const Key& key )
 {
 
 // !dw! No need to check to see if it is mysql db for removal...
-   mUserRecords.erase(key); 
-   mDb.eraseUser( key );
+    mUserRecords.erase ( key );
+    mDb.eraseUser ( key );
 }
 
 void
-UserStore::updateUser( const Key& originalKey, 
-                       const resip::Data& user, 
-                       const resip::Data& domain, 
-                       const resip::Data& realm, 
-                       const resip::Data& password, 
-                       bool  applyA1HashToPassword,
-                       const resip::Data& fullName,
-                       const resip::Data& emailAddress )
+UserStore::updateUser ( const Key& originalKey,
+                        const resip::Data& user,
+                        const resip::Data& domain,
+                        const resip::Data& realm,
+                        const resip::Data& password,
+                        bool  applyA1HashToPassword,
+                        const resip::Data& fullName,
+                        const resip::Data& emailAddress )
 {
-   Key newkey = buildKey(user, domain);
-   
-   addUser( user,domain,realm,password,applyA1HashToPassword,fullName,emailAddress);
-   if ( newkey != originalKey )
-   {
-      eraseUser(originalKey);
-   }
+    Key newkey = buildKey ( user, domain );
+
+    addUser ( user,domain,realm,password,applyA1HashToPassword,fullName,emailAddress );
+    if ( newkey != originalKey )
+    {
+        eraseUser ( originalKey );
+    }
 }
 
 
 UserStore::Key
 UserStore::getFirstKey()
 {
-   return mDb.firstUserKey();
+    return mDb.firstUserKey();
 }
 
 
 UserStore::Key
 UserStore::getNextKey()
 {
-   return mDb.nextUserKey();
+    return mDb.nextUserKey();
 }
 
 
 UserStore::Key
-UserStore::buildKey( const resip::Data& user, 
-                     const resip::Data& realm) const
+UserStore::buildKey ( const resip::Data& user,
+                      const resip::Data& realm ) const
 {
-   Data ret = user + Data("@") + realm;
-   return ret;
+    Data ret = user + Data ( "@" ) + realm;
+    return ret;
+}
+
+void
+UserStore::refreshUsers ( bool deleteNoLongerExist ) const
+{
+
+     ptime current = microsec_clock::local_time();
+     if (current > (mLastRefresh + minutes(30)))
+     {
+        mLastRefresh = current;
+     } else {
+	return;
+     }
+
+    MySqlDb * pSQLdb = dynamic_cast<MySqlDb*> ( &mDb );
+
+    if ( pSQLdb )
+    {
+        if ( deleteNoLongerExist )
+        {
+            UserRecordHash userRecordsHash;
+            boost::shared_ptr<std::list<AbstractDb::UserRecord> > userRecords = pSQLdb->getUsers();
+            for ( std::list<AbstractDb::UserRecord>::iterator i = userRecords->begin(); i != userRecords->end(); ++i )
+            {
+
+                InfoLog ( << "Inserting record for: " << buildKey ( i->user,i->realm ) );
+                userRecordsHash[buildKey ( i->user,i->realm ) ] = *i;
+            }
+
+// Using std::move should prevent flyweight from being forced to rebalance if something like clear() was used first.
+            mUserRecords = std::move ( userRecordsHash );
+
+        }
+        else
+        {
+            boost::shared_ptr<std::list<AbstractDb::UserRecord> > userRecords = pSQLdb->getUsers();
+            for ( std::list<AbstractDb::UserRecord>::iterator i = userRecords->begin(); i != userRecords->end(); ++i )
+            {
+
+                InfoLog ( << "Inserting record for: " << buildKey ( i->user,i->realm ) );
+                mUserRecords[buildKey ( i->user,i->realm ) ] = *i;
+            }
+        }
+    }
 }
 
 
 
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -216,7 +267,7 @@ UserStore::buildKey( const resip::Data& user,
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -230,9 +281,9 @@ UserStore::buildKey( const resip::Data& user,
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see

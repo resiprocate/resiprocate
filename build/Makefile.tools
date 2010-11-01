@@ -47,8 +47,9 @@ DFLAGS		= -MM
 DMANGLE		=
 INSTALL		= install
 LNDIR		= $(shell pwd)/$(ROOT)/build/lndir.sh
-CFLAGS		+= -Wall -std=c++0x  -DRESIP_HAS_RVALUE_REFS #-Werror
-CXXFLAGS	+= -Wall -std=c++0x  -DRESIP_HAS_RVALUE_REFS #-Werror
+CFLAGS		+= -Wall -std=c++0x  -DRESIP_HAS_RVALUE_REFS -fopenmp  #-Werror
+CXXFLAGS	+= -Wall -std=c++0x  -DRESIP_HAS_RVALUE_REFS -fopenmp   #-Werror
+LDFLAGS		+= -fopenmp 
 DFLAG_INTEGRATED = -MMD
 DEBUG_FLAG	= -g
 COMPILE_SMALL_FLAG = -Os -fno-inline -fno-keep-static-consts

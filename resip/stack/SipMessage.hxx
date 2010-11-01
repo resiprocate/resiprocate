@@ -73,7 +73,7 @@ class SipMessage : public TransactionMessage
 {
    public:
       RESIP_HeapCount(SipMessage);
-      typedef std::list< std::pair<Data, HeaderFieldValueList*> > UnknownHeaders;
+      typedef std::list< std::pair<Data, std::unique_ptr<HeaderFieldValueList> > > UnknownHeaders;
 
       explicit SipMessage(const Transport* fromWire = 0);
       // .dlb. public, allows pass by value to compile.
@@ -360,11 +360,8 @@ class SipMessage : public TransactionMessage
       bool mIsExternal;
       
       // raw text corresponding to each typed header (not yet parsed)
-#if defined(__GNUC__) && __GNUC__ >= 3
-      mutable HeaderFieldValueList* mHeaders[Headers::MAX_HEADERS] __attribute__((aligned(16)));
-#else
-      mutable HeaderFieldValueList* mHeaders[Headers::MAX_HEADERS];
-#endif
+
+      mutable std::unique_ptr<HeaderFieldValueList> mHeaders[Headers::MAX_HEADERS];
 
       // raw text corresponding to each unknown header
       mutable UnknownHeaders mUnknownHeaders;
