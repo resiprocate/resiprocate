@@ -99,7 +99,7 @@ char* srtp_error_string(err_status_t error)
       return "error encoding data";
       break;
    case err_status_semaphore_err:
-      return "rror while using semaphores";
+      return "error while using semaphores";
       break;
    case err_status_pfkey_err:
       return "error while using pfkey";
@@ -773,6 +773,13 @@ void
 Flow::onReceiveFailure(unsigned int socketDesc, const asio::error_code& e)
 {
    WarningLog(<< "Flow::onReceiveFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId);
+
+   // Make sure we keep receiving if we get an ICMP error on a UDP socket
+   if(e.value() == asio::error::connection_reset && mLocalBinding.getTransportType() == StunTuple::UDP)
+   {
+      assert(mTurnSocket.get());
+      mTurnSocket->turnReceive();
+   }
 }
 
 void 
