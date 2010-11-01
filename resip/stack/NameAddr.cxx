@@ -49,11 +49,7 @@ NameAddr::NameAddr(const Data& unparsed)
    NameAddr tmp;
    ParseBuffer pb(unparsed, parseContext);
    tmp.parse(pb);
-#ifdef RESIP_HAS_RVALUE_REFS
-   *this = std::move(tmp);
-#else
    *this = tmp;
-#endif
 }
 
 NameAddr::NameAddr(const Uri& uri)

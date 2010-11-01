@@ -53,7 +53,7 @@ LDFLAGS		+= -fopenmp
 DFLAG_INTEGRATED = -MMD
 DEBUG_FLAG	= -g
 COMPILE_SMALL_FLAG = -Os -fno-inline -fno-keep-static-consts
-OPTFLAGS 	= -O3 -ffast-math -funroll-loops -DNDEBUG #-fomit-frame-pointer 
+OPTFLAGS 	= -O3 -ffast-math -funroll-loops  #-fomit-frame-pointer 
 MAKE_SEPARATE_DEPENDENCY = 1
 endif
 
