@@ -2,7 +2,7 @@
 // error_code.ipp
 // ~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2008 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2010 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -83,6 +83,7 @@ inline std::string error_code::message() const
   if (category() != error::get_system_category())
     return "asio error";
 #if defined(__sun) || defined(__QNX__)
+  using namespace std;
   return strerror(value_);
 #elif defined(__MACH__) && defined(__APPLE__) \
 || defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__) \

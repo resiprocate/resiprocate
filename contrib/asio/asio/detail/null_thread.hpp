@@ -2,7 +2,7 @@
 // null_thread.hpp
 // ~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2008 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2010 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -21,7 +21,7 @@
 #include <boost/config.hpp>
 #include "asio/detail/pop_options.hpp"
 
-#if !defined(BOOST_HAS_THREADS)
+#if !defined(BOOST_HAS_THREADS) || defined(ASIO_DISABLE_THREADS)
 
 #include "asio/detail/push_options.hpp"
 #include <boost/throw_exception.hpp>
@@ -38,12 +38,9 @@ class null_thread
   : private noncopyable
 {
 public:
-  // The purpose of the thread.
-  enum purpose { internal, external };
-
   // Constructor.
   template <typename Function>
-  null_thread(Function f, purpose = internal)
+  null_thread(Function f)
   {
     asio::system_error e(
         asio::error::operation_not_supported, "thread");
@@ -64,7 +61,7 @@ public:
 } // namespace detail
 } // namespace asio
 
-#endif // !defined(BOOST_HAS_THREADS)
+#endif // !defined(BOOST_HAS_THREADS) || defined(ASIO_DISABLE_THREADS)
 
 #include "asio/detail/pop_options.hpp"
 

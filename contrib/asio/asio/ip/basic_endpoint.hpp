@@ -2,7 +2,7 @@
 // basic_endpoint.hpp
 // ~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2008 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2010 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -18,12 +18,16 @@
 #include "asio/detail/push_options.hpp"
 
 #include "asio/detail/push_options.hpp"
+#include <boost/config.hpp>
 #include <boost/throw_exception.hpp>
 #include <boost/detail/workaround.hpp>
 #include <cstring>
-#if BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x564))
-# include <ostream>
-#endif // BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x564))
+#if !defined(BOOST_NO_IOSTREAM)
+# if BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x564))
+#  include <ostream>
+# endif // BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x564))
+# include <sstream>
+#endif // !defined(BOOST_NO_IOSTREAM)
 #include "asio/detail/pop_options.hpp"
 
 #include "asio/error.hpp"
@@ -295,6 +299,8 @@ private:
   } data_;
 };
 
+#if !defined(BOOST_NO_IOSTREAM)
+
 /// Output an endpoint as a string.
 /**
  * Used to output a human-readable string for a specified endpoint.
@@ -324,11 +330,14 @@ std::ostream& operator<<(std::ostream& os,
   }
   else
   {
+    std::ostringstream tmp_os;
+    tmp_os.imbue(std::locale::classic());
     if (addr.is_v4())
-      os << a;
+      tmp_os << a;
     else
-      os << '[' << a << ']';
-    os << ':' << endpoint.port();
+      tmp_os << '[' << a << ']';
+    tmp_os << ':' << endpoint.port();
+    os << tmp_os.str();
   }
   return os;
 }
@@ -350,15 +359,20 @@ std::basic_ostream<Elem, Traits>& operator<<(
   }
   else
   {
+    std::ostringstream tmp_os;
+    tmp_os.imbue(std::locale::classic());
     if (addr.is_v4())
-      os << a;
+      tmp_os << a;
     else
-      os << '[' << a << ']';
-    os << ':' << endpoint.port();
+      tmp_os << '[' << a << ']';
+    tmp_os << ':' << endpoint.port();
+    os << tmp_os.str();
   }
   return os;
 }
 #endif // BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x564))
+
+#endif // !defined(BOOST_NO_IOSTREAM)
 
 } // namespace ip
 } // namespace asio

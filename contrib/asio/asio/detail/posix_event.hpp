@@ -2,7 +2,7 @@
 // posix_event.hpp
 // ~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2008 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2010 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -68,6 +68,16 @@ public:
     BOOST_ASSERT(lock.locked());
     (void)lock;
     signalled_ = true;
+    ::pthread_cond_signal(&cond_); // Ignore EINVAL.
+  }
+
+  // Signal the event and unlock the mutex.
+  template <typename Lock>
+  void signal_and_unlock(Lock& lock)
+  {
+    BOOST_ASSERT(lock.locked());
+    signalled_ = true;
+    lock.unlock();
     ::pthread_cond_signal(&cond_); // Ignore EINVAL.
   }
 

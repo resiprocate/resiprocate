@@ -2,7 +2,7 @@
 // socket_select_interrupter.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2008 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2010 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -70,6 +70,11 @@ public:
       asio::system_error e(ec, "socket_select_interrupter");
       boost::throw_exception(e);
     }
+
+    // Some broken firewalls on Windows will intermittently cause getsockname to
+    // return 0.0.0.0 when the socket is actually bound to 127.0.0.1. We
+    // explicitly specify the target address here to work around this problem.
+    addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
     if (socket_ops::listen(acceptor.get(),
           SOMAXCONN, ec) == socket_error_retval)

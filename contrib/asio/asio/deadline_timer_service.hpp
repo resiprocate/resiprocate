@@ -2,7 +2,7 @@
 // deadline_timer_service.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2008 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2010 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -25,11 +25,7 @@
 #include "asio/io_service.hpp"
 #include "asio/time_traits.hpp"
 #include "asio/detail/deadline_timer_service.hpp"
-#include "asio/detail/epoll_reactor.hpp"
-#include "asio/detail/kqueue_reactor.hpp"
-#include "asio/detail/select_reactor.hpp"
 #include "asio/detail/service_base.hpp"
-#include "asio/detail/win_iocp_io_service.hpp"
 
 namespace asio {
 
@@ -61,22 +57,7 @@ public:
 
 private:
   // The type of the platform-specific implementation.
-#if defined(ASIO_HAS_IOCP)
-  typedef detail::deadline_timer_service<
-    traits_type, detail::win_iocp_io_service> service_impl_type;
-#elif defined(ASIO_HAS_EPOLL)
-  typedef detail::deadline_timer_service<
-    traits_type, detail::epoll_reactor<false> > service_impl_type;
-#elif defined(ASIO_HAS_KQUEUE)
-  typedef detail::deadline_timer_service<
-    traits_type, detail::kqueue_reactor<false> > service_impl_type;
-#elif defined(ASIO_HAS_DEV_POLL)
-  typedef detail::deadline_timer_service<
-    traits_type, detail::dev_poll_reactor<false> > service_impl_type;
-#else
-  typedef detail::deadline_timer_service<
-    traits_type, detail::select_reactor<false> > service_impl_type;
-#endif
+  typedef detail::deadline_timer_service<traits_type> service_impl_type;
 
 public:
   /// The implementation type of the deadline timer.
@@ -90,13 +71,14 @@ public:
   explicit deadline_timer_service(asio::io_service& io_service)
     : asio::detail::service_base<
         deadline_timer_service<TimeType, TimeTraits> >(io_service),
-      service_impl_(asio::use_service<service_impl_type>(io_service))
+      service_impl_(io_service)
   {
   }
 
   /// Destroy all user-defined handler objects owned by the service.
   void shutdown_service()
   {
+    service_impl_.shutdown_service();
   }
 
   /// Construct a new timer implementation.
@@ -157,8 +139,8 @@ public:
   }
 
 private:
-  // The service that provides the platform-specific implementation.
-  service_impl_type& service_impl_;
+  // The platform-specific implementation.
+  service_impl_type service_impl_;
 };
 
 } // namespace asio

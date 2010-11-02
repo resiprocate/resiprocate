@@ -2,7 +2,7 @@
 // posix_mutex.hpp
 // ~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2008 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2010 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -61,35 +61,19 @@ public:
   // Destructor.
   ~posix_mutex()
   {
-    ::pthread_mutex_destroy(&mutex_);
+    ::pthread_mutex_destroy(&mutex_); // Ignore EBUSY.
   }
 
   // Lock the mutex.
   void lock()
   {
-    int error = ::pthread_mutex_lock(&mutex_);
-    if (error != 0)
-    {
-      asio::system_error e(
-          asio::error_code(error,
-            asio::error::get_system_category()),
-          "mutex");
-      boost::throw_exception(e);
-    }
+    (void)::pthread_mutex_lock(&mutex_); // Ignore EINVAL.
   }
 
   // Unlock the mutex.
   void unlock()
   {
-    int error = ::pthread_mutex_unlock(&mutex_);
-    if (error != 0)
-    {
-      asio::system_error e(
-          asio::error_code(error,
-            asio::error::get_system_category()),
-          "mutex");
-      boost::throw_exception(e);
-    }
+    (void)::pthread_mutex_unlock(&mutex_); // Ignore EINVAL.
   }
 
 private:

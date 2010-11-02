@@ -2,7 +2,7 @@
 // address_v6.hpp
 // ~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2008 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2010 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -18,6 +18,10 @@
 #include "asio/detail/push_options.hpp"
 
 #include "asio/detail/push_options.hpp"
+#include <boost/config.hpp>
+#if !defined(BOOST_NO_IOSTREAM)
+# include <iosfwd>
+#endif // !defined(BOOST_NO_IOSTREAM)
 #include <cstring>
 #include <string>
 #include <stdexcept>
@@ -62,6 +66,17 @@ public:
   explicit address_v6(const bytes_type& bytes, unsigned long scope_id = 0)
     : scope_id_(scope_id)
   {
+#if UCHAR_MAX > 0xFF
+    for (std::size_t i = 0; i < bytes.size(); ++i)
+    {
+      if (bytes[i] > 0xFF)
+      {
+        std::out_of_range ex("address_v6 from bytes_type");
+        boost::throw_exception(ex);
+      }
+    }
+#endif // UCHAR_MAX > 0xFF
+
     using namespace std; // For memcpy.
     memcpy(addr_.s6_addr, bytes.elems, 16);
   }
@@ -99,7 +114,7 @@ public:
     scope_id_ = id;
   }
 
-  /// Get the address in bytes.
+  /// Get the address in bytes, in network byte order.
   bytes_type to_bytes() const
   {
     using namespace std; // For memcpy.
@@ -165,7 +180,11 @@ public:
   address_v4 to_v4() const
   {
     if (!is_v4_mapped() && !is_v4_compatible())
-      throw std::bad_cast();
+    {
+      std::bad_cast ex;
+      boost::throw_exception(ex);
+    }
+
     address_v4::bytes_type v4_bytes = { { addr_.s6_addr[12],
       addr_.s6_addr[13], addr_.s6_addr[14], addr_.s6_addr[15] } };
     return address_v4(v4_bytes);
@@ -367,6 +386,8 @@ private:
   unsigned long scope_id_;
 };
 
+#if !defined(BOOST_NO_IOSTREAM)
+
 /// Output an address as a string.
 /**
  * Used to output a human-readable string for a specified address.
@@ -397,6 +418,8 @@ std::basic_ostream<Elem, Traits>& operator<<(
       os << os.widen(*i);
   return os;
 }
+
+#endif // !defined(BOOST_NO_IOSTREAM)
 
 } // namespace ip
 } // namespace asio

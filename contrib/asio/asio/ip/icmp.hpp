@@ -2,7 +2,7 @@
 // icmp.hpp
 // ~~~~~~~~
 //
-// Copyright (c) 2003-2008 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2010 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -44,10 +44,10 @@ public:
   /// The type of a ICMP endpoint.
   typedef basic_endpoint<icmp> endpoint;
 
-  /// The type of a resolver query.
+  /// (Deprecated: use resolver::query.) The type of a resolver query.
   typedef basic_resolver_query<icmp> resolver_query;
 
-  /// The type of a resolver iterator.
+  /// (Deprecated: use resolver::iterator.) The type of a resolver iterator.
   typedef basic_resolver_iterator<icmp> resolver_iterator;
 
   /// Construct to represent the IPv4 ICMP protocol.
