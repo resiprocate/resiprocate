@@ -238,12 +238,16 @@ int main(int argc, char* argv[])
 
   try
   {
-    if (argc != 3)
+    if (argc != 3 && argc != 4)
     {
-      std::cerr << "Usage: TestAsyncClient <turn host> <turn port>\n";
+      std::cerr << "Usage: TestAsyncClient <turn host> <turn port> [<local address>]\n";
       return 1;
     }
     unsigned int port = resip::Data(argv[2]).convertUnsignedLong();
+	if(argc==4)
+	{
+		address = argv[3];
+	}
 
     InfoLog(<< "Using " << address << " as local IP address.");
 
