@@ -2,7 +2,7 @@
 // time_traits.hpp
 // ~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2008 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2010 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -42,7 +42,11 @@ struct time_traits<boost::posix_time::ptime>
   /// Get the current time.
   static time_type now()
   {
+#if defined(BOOST_DATE_TIME_HAS_HIGH_PRECISION_CLOCK)
     return boost::posix_time::microsec_clock::universal_time();
+#else // defined(BOOST_DATE_TIME_HAS_HIGH_PRECISION_CLOCK)
+    return boost::posix_time::second_clock::universal_time();
+#endif // defined(BOOST_DATE_TIME_HAS_HIGH_PRECISION_CLOCK)
   }
 
   /// Add a duration to a time.

@@ -2,7 +2,7 @@
 // socket_types.hpp
 // ~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2008 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2010 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -28,11 +28,15 @@
 # endif // defined(_WINSOCKAPI_) && !defined(_WINSOCK2API_)
 # if !defined(_WIN32_WINNT) && !defined(_WIN32_WINDOWS)
 #  if defined(_MSC_VER) || defined(__BORLANDC__)
-#   pragma message("Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately")
-#   pragma message("Assuming _WIN32_WINNT=0x0501 (i.e. Windows XP target)")
+#   pragma message( \
+  "Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately. For example:\n"\
+  "- add -D_WIN32_WINNT=0x0501 to the compiler command line; or\n"\
+  "- add _WIN32_WINNT=0x0501 to your project's Preprocessor Definitions.\n"\
+  "Assuming _WIN32_WINNT=0x0501 (i.e. Windows XP target).")
 #  else // defined(_MSC_VER) || defined(__BORLANDC__)
-#   warning Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately
-#   warning Assuming _WIN32_WINNT=0x0501 (i.e. Windows XP target)
+#   warning Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately.
+#   warning For example, add -D_WIN32_WINNT=0x0501 to the compiler command line.
+#   warning Assuming _WIN32_WINNT=0x0501 (i.e. Windows XP target).
 #  endif // defined(_MSC_VER) || defined(__BORLANDC__)
 #  define _WIN32_WINNT 0x0501
 # endif // !defined(_WIN32_WINNT) && !defined(_WIN32_WINDOWS)
@@ -64,13 +68,15 @@
 #   define WIN32_LEAN_AND_MEAN
 #  endif // !defined(WIN32_LEAN_AND_MEAN)
 # endif // !defined(ASIO_NO_WIN32_LEAN_AND_MEAN)
+# if !defined(ASIO_NO_NOMINMAX)
+#  if !defined(NOMINMAX)
+#   define NOMINMAX 1
+#  endif // !defined(NOMINMAX)
+# endif // !defined(ASIO_NO_NOMINMAX)
 # if defined(__CYGWIN__)
 #  if !defined(__USE_W32_SOCKETS)
 #   error You must add -D__USE_W32_SOCKETS to your compiler options.
 #  endif // !defined(__USE_W32_SOCKETS)
-#  if !defined(NOMINMAX)
-#   define NOMINMAX 1
-#  endif // !defined(NOMINMAX)
 # endif // defined(__CYGWIN__)
 # include <winsock2.h>
 # include <ws2tcpip.h>
@@ -158,7 +164,11 @@ typedef int socket_type;
 const int invalid_socket = -1;
 const int socket_error_retval = -1;
 const int max_addr_v4_str_len = INET_ADDRSTRLEN;
+#if defined(INET6_ADDRSTRLEN)
 const int max_addr_v6_str_len = INET6_ADDRSTRLEN + 1 + IF_NAMESIZE;
+#else // defined(INET6_ADDRSTRLEN)
+const int max_addr_v6_str_len = 256;
+#endif // defined(INET6_ADDRSTRLEN)
 typedef sockaddr socket_addr_type;
 typedef in_addr in4_addr_type;
 # if defined(__hpux)

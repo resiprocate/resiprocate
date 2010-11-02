@@ -2,7 +2,7 @@
 // read.hpp
 // ~~~~~~~~
 //
-// Copyright (c) 2003-2008 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2010 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -45,7 +45,7 @@ namespace asio {
  *
  * @li An error occurred.
  *
- * This operation is implemented in terms of one or more calls to the stream's
+ * This operation is implemented in terms of zero or more calls to the stream's
  * read_some function.
  *
  * @param s The stream from which the data is to be read. The type must support
@@ -82,9 +82,9 @@ std::size_t read(SyncReadStream& s, const MutableBufferSequence& buffers);
  * @li The supplied buffers are full. That is, the bytes transferred is equal to
  * the sum of the buffer sizes.
  *
- * @li The completion_condition function object returns true.
+ * @li The completion_condition function object returns 0.
  *
- * This operation is implemented in terms of one or more calls to the stream's
+ * This operation is implemented in terms of zero or more calls to the stream's
  * read_some function.
  *
  * @param s The stream from which the data is to be read. The type must support
@@ -97,15 +97,16 @@ std::size_t read(SyncReadStream& s, const MutableBufferSequence& buffers);
  * @param completion_condition The function object to be called to determine
  * whether the read operation is complete. The signature of the function object
  * must be:
- * @code bool completion_condition(
- *   const asio::error_code& error, // Result of latest read_some
- *                                           // operation.
+ * @code std::size_t completion_condition(
+ *   // Result of latest read_some operation.
+ *   const asio::error_code& error,
  *
- *   std::size_t bytes_transferred           // Number of bytes transferred
- *                                           // so far.
+ *   // Number of bytes transferred so far.
+ *   std::size_t bytes_transferred
  * ); @endcode
- * A return value of true indicates that the read operation is complete. False
- * indicates that further calls to the stream's read_some function are required.
+ * A return value of 0 indicates that the read operation is complete. A non-zero
+ * return value indicates the maximum number of bytes to be read on the next
+ * call to the stream's read_some function.
  *
  * @returns The number of bytes transferred.
  *
@@ -132,9 +133,9 @@ std::size_t read(SyncReadStream& s, const MutableBufferSequence& buffers,
  * @li The supplied buffers are full. That is, the bytes transferred is equal to
  * the sum of the buffer sizes.
  *
- * @li The completion_condition function object returns true.
+ * @li The completion_condition function object returns 0.
  *
- * This operation is implemented in terms of one or more calls to the stream's
+ * This operation is implemented in terms of zero or more calls to the stream's
  * read_some function.
  *
  * @param s The stream from which the data is to be read. The type must support
@@ -147,15 +148,16 @@ std::size_t read(SyncReadStream& s, const MutableBufferSequence& buffers,
  * @param completion_condition The function object to be called to determine
  * whether the read operation is complete. The signature of the function object
  * must be:
- * @code bool completion_condition(
- *   const asio::error_code& error, // Result of latest read_some
- *                                           // operation.
+ * @code std::size_t completion_condition(
+ *   // Result of latest read_some operation.
+ *   const asio::error_code& error,
  *
- *   std::size_t bytes_transferred           // Number of bytes transferred
- *                                           // so far.
+ *   // Number of bytes transferred so far.
+ *   std::size_t bytes_transferred
  * ); @endcode
- * A return value of true indicates that the read operation is complete. False
- * indicates that further calls to the stream's read_some function are required.
+ * A return value of 0 indicates that the read operation is complete. A non-zero
+ * return value indicates the maximum number of bytes to be read on the next
+ * call to the stream's read_some function.
  *
  * @param ec Set to indicate what error occurred, if any.
  *
@@ -167,6 +169,8 @@ template <typename SyncReadStream, typename MutableBufferSequence,
 std::size_t read(SyncReadStream& s, const MutableBufferSequence& buffers,
     CompletionCondition completion_condition, asio::error_code& ec);
 
+#if !defined(BOOST_NO_IOSTREAM)
+
 /// Attempt to read a certain amount of data from a stream before returning.
 /**
  * This function is used to read a certain number of bytes of data from a
@@ -174,7 +178,7 @@ std::size_t read(SyncReadStream& s, const MutableBufferSequence& buffers,
  *
  * @li An error occurred.
  *
- * This operation is implemented in terms of one or more calls to the stream's
+ * This operation is implemented in terms of zero or more calls to the stream's
  * read_some function.
  *
  * @param s The stream from which the data is to be read. The type must support
@@ -199,9 +203,9 @@ std::size_t read(SyncReadStream& s, basic_streambuf<Allocator>& b);
  * This function is used to read a certain number of bytes of data from a
  * stream. The call will block until one of the following conditions is true:
  *
- * @li The completion_condition function object returns true.
+ * @li The completion_condition function object returns 0.
  *
- * This operation is implemented in terms of one or more calls to the stream's
+ * This operation is implemented in terms of zero or more calls to the stream's
  * read_some function.
  *
  * @param s The stream from which the data is to be read. The type must support
@@ -212,15 +216,16 @@ std::size_t read(SyncReadStream& s, basic_streambuf<Allocator>& b);
  * @param completion_condition The function object to be called to determine
  * whether the read operation is complete. The signature of the function object
  * must be:
- * @code bool completion_condition(
- *   const asio::error_code& error, // Result of latest read_some
- *                                           // operation.
+ * @code std::size_t completion_condition(
+ *   // Result of latest read_some operation.
+ *   const asio::error_code& error,
  *
- *   std::size_t bytes_transferred           // Number of bytes transferred
- *                                           // so far.
+ *   // Number of bytes transferred so far.
+ *   std::size_t bytes_transferred
  * ); @endcode
- * A return value of true indicates that the read operation is complete. False
- * indicates that further calls to the stream's read_some function are required.
+ * A return value of 0 indicates that the read operation is complete. A non-zero
+ * return value indicates the maximum number of bytes to be read on the next
+ * call to the stream's read_some function.
  *
  * @returns The number of bytes transferred.
  *
@@ -236,9 +241,9 @@ std::size_t read(SyncReadStream& s, basic_streambuf<Allocator>& b,
  * This function is used to read a certain number of bytes of data from a
  * stream. The call will block until one of the following conditions is true:
  *
- * @li The completion_condition function object returns true.
+ * @li The completion_condition function object returns 0.
  *
- * This operation is implemented in terms of one or more calls to the stream's
+ * This operation is implemented in terms of zero or more calls to the stream's
  * read_some function.
  *
  * @param s The stream from which the data is to be read. The type must support
@@ -249,15 +254,16 @@ std::size_t read(SyncReadStream& s, basic_streambuf<Allocator>& b,
  * @param completion_condition The function object to be called to determine
  * whether the read operation is complete. The signature of the function object
  * must be:
- * @code bool completion_condition(
- *   const asio::error_code& error, // Result of latest read_some
- *                                           // operation.
+ * @code std::size_t completion_condition(
+ *   // Result of latest read_some operation.
+ *   const asio::error_code& error,
  *
- *   std::size_t bytes_transferred           // Number of bytes transferred
- *                                           // so far.
+ *   // Number of bytes transferred so far.
+ *   std::size_t bytes_transferred
  * ); @endcode
- * A return value of true indicates that the read operation is complete. False
- * indicates that further calls to the stream's read_some function are required.
+ * A return value of 0 indicates that the read operation is complete. A non-zero
+ * return value indicates the maximum number of bytes to be read on the next
+ * call to the stream's read_some function.
  *
  * @param ec Set to indicate what error occurred, if any.
  *
@@ -268,6 +274,8 @@ template <typename SyncReadStream, typename Allocator,
     typename CompletionCondition>
 std::size_t read(SyncReadStream& s, basic_streambuf<Allocator>& b,
     CompletionCondition completion_condition, asio::error_code& ec);
+
+#endif // !defined(BOOST_NO_IOSTREAM)
 
 /*@}*/
 /**
@@ -291,8 +299,11 @@ std::size_t read(SyncReadStream& s, basic_streambuf<Allocator>& b,
  *
  * @li An error occurred.
  *
- * This operation is implemented in terms of one or more calls to the stream's
- * async_read_some function.
+ * This operation is implemented in terms of zero or more calls to the stream's
+ * async_read_some function, and is known as a <em>composed operation</em>. The
+ * program must ensure that the stream performs no other read operations (such
+ * as async_read, the stream's async_read_some function, or any other composed
+ * operations that perform reads) until this operation completes.
  *
  * @param s The stream from which the data is to be read. The type must support
  * the AsyncReadStream concept.
@@ -351,7 +362,7 @@ void async_read(AsyncReadStream& s, const MutableBufferSequence& buffers,
  * @li The supplied buffers are full. That is, the bytes transferred is equal to
  * the sum of the buffer sizes.
  *
- * @li The completion_condition function object returns true.
+ * @li The completion_condition function object returns 0.
  *
  * @param s The stream from which the data is to be read. The type must support
  * the AsyncReadStream concept.
@@ -365,16 +376,16 @@ void async_read(AsyncReadStream& s, const MutableBufferSequence& buffers,
  * @param completion_condition The function object to be called to determine
  * whether the read operation is complete. The signature of the function object
  * must be:
- * @code bool completion_condition(
- *   const asio::error_code& error, // Result of latest read_some
- *                                           // operation.
+ * @code std::size_t completion_condition(
+ *   // Result of latest async_read_some operation.
+ *   const asio::error_code& error,
  *
- *   std::size_t bytes_transferred           // Number of bytes transferred
- *                                           // so far.
+ *   // Number of bytes transferred so far.
+ *   std::size_t bytes_transferred
  * ); @endcode
- * A return value of true indicates that the read operation is complete. False
- * indicates that further calls to the stream's async_read_some function are
- * required.
+ * A return value of 0 indicates that the read operation is complete. A non-zero
+ * return value indicates the maximum number of bytes to be read on the next
+ * call to the stream's async_read_some function.
  *
  * @param handler The handler to be called when the read operation completes.
  * Copies will be made of the handler as required. The function signature of the
@@ -408,6 +419,8 @@ template <typename AsyncReadStream, typename MutableBufferSequence,
 void async_read(AsyncReadStream& s, const MutableBufferSequence& buffers,
     CompletionCondition completion_condition, ReadHandler handler);
 
+#if !defined(BOOST_NO_IOSTREAM)
+
 /// Start an asynchronous operation to read a certain amount of data from a
 /// stream.
 /**
@@ -418,8 +431,11 @@ void async_read(AsyncReadStream& s, const MutableBufferSequence& buffers,
  *
  * @li An error occurred.
  *
- * This operation is implemented in terms of one or more calls to the stream's
- * async_read_some function.
+ * This operation is implemented in terms of zero or more calls to the stream's
+ * async_read_some function, and is known as a <em>composed operation</em>. The
+ * program must ensure that the stream performs no other read operations (such
+ * as async_read, the stream's async_read_some function, or any other composed
+ * operations that perform reads) until this operation completes.
  *
  * @param s The stream from which the data is to be read. The type must support
  * the AsyncReadStream concept.
@@ -463,10 +479,13 @@ void async_read(AsyncReadStream& s, basic_streambuf<Allocator>& b,
  * asynchronous operation will continue until one of the following conditions is
  * true:
  *
- * @li The completion_condition function object returns true.
+ * @li The completion_condition function object returns 0.
  *
- * This operation is implemented in terms of one or more calls to the stream's
- * async_read_some function.
+ * This operation is implemented in terms of zero or more calls to the stream's
+ * async_read_some function, and is known as a <em>composed operation</em>. The
+ * program must ensure that the stream performs no other read operations (such
+ * as async_read, the stream's async_read_some function, or any other composed
+ * operations that perform reads) until this operation completes.
  *
  * @param s The stream from which the data is to be read. The type must support
  * the AsyncReadStream concept.
@@ -478,16 +497,16 @@ void async_read(AsyncReadStream& s, basic_streambuf<Allocator>& b,
  * @param completion_condition The function object to be called to determine
  * whether the read operation is complete. The signature of the function object
  * must be:
- * @code bool completion_condition(
- *   const asio::error_code& error, // Result of latest read_some
- *                                           // operation.
+ * @code std::size_t completion_condition(
+ *   // Result of latest async_read_some operation.
+ *   const asio::error_code& error,
  *
- *   std::size_t bytes_transferred           // Number of bytes transferred
- *                                           // so far.
+ *   // Number of bytes transferred so far.
+ *   std::size_t bytes_transferred
  * ); @endcode
- * A return value of true indicates that the read operation is complete. False
- * indicates that further calls to the stream's async_read_some function are
- * required.
+ * A return value of 0 indicates that the read operation is complete. A non-zero
+ * return value indicates the maximum number of bytes to be read on the next
+ * call to the stream's async_read_some function.
  *
  * @param handler The handler to be called when the read operation completes.
  * Copies will be made of the handler as required. The function signature of the
@@ -510,6 +529,8 @@ template <typename AsyncReadStream, typename Allocator,
     typename CompletionCondition, typename ReadHandler>
 void async_read(AsyncReadStream& s, basic_streambuf<Allocator>& b,
     CompletionCondition completion_condition, ReadHandler handler);
+
+#endif // !defined(BOOST_NO_IOSTREAM)
 
 /*@}*/
 

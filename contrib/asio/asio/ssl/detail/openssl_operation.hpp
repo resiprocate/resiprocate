@@ -158,6 +158,10 @@ public:
           0;        
     int sys_error_code = ERR_get_error();
 
+    if (error_code == SSL_ERROR_SSL)
+      return handler_(asio::error_code(
+            error_code, asio::error::get_ssl_category()), rc);
+
     bool is_read_needed = (error_code == SSL_ERROR_WANT_READ);
     bool is_write_needed = (error_code == SSL_ERROR_WANT_WRITE ||
                               ::BIO_ctrl_pending( ssl_bio_ ));
@@ -168,7 +172,8 @@ public:
       ((::SSL_get_shutdown( session_ ) & SSL_SENT_SHUTDOWN) ==
             SSL_SENT_SHUTDOWN);
 
-    if (is_shut_down_sent && is_shut_down_received && is_operation_done && !is_write_needed)
+    if (is_shut_down_sent && is_shut_down_received
+        && is_operation_done && !is_write_needed)
       // SSL connection is shut down cleanly
       return handler_(asio::error_code(), 1);
 

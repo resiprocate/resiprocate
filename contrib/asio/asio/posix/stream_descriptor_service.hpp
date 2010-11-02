@@ -2,7 +2,7 @@
 // stream_descriptor_service.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2008 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2010 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -24,11 +24,7 @@
 
 #include "asio/error.hpp"
 #include "asio/io_service.hpp"
-#include "asio/detail/epoll_reactor.hpp"
-#include "asio/detail/kqueue_reactor.hpp"
-#include "asio/detail/select_reactor.hpp"
 #include "asio/detail/service_base.hpp"
-#include "asio/detail/reactive_descriptor_service.hpp"
 
 #if !defined(ASIO_DISABLE_POSIX_STREAM_DESCRIPTOR)
 # if !defined(BOOST_WINDOWS) && !defined(__CYGWIN__)
@@ -38,6 +34,8 @@
 
 #if defined(ASIO_HAS_POSIX_STREAM_DESCRIPTOR) \
   || defined(GENERATING_DOCUMENTATION)
+
+#include "asio/detail/reactive_descriptor_service.hpp"
 
 namespace asio {
 namespace posix {
@@ -58,19 +56,7 @@ public:
 
 private:
   // The type of the platform-specific implementation.
-#if defined(ASIO_HAS_EPOLL)
-  typedef detail::reactive_descriptor_service<
-      detail::epoll_reactor<false> > service_impl_type;
-#elif defined(ASIO_HAS_KQUEUE)
-  typedef detail::reactive_descriptor_service<
-      detail::kqueue_reactor<false> > service_impl_type;
-#elif defined(ASIO_HAS_DEV_POLL)
-  typedef detail::reactive_descriptor_service<
-      detail::dev_poll_reactor<false> > service_impl_type;
-#else
-  typedef detail::reactive_descriptor_service<
-      detail::select_reactor<false> > service_impl_type;
-#endif
+  typedef detail::reactive_descriptor_service service_impl_type;
 
 public:
   /// The type of a stream descriptor implementation.
@@ -90,13 +76,14 @@ public:
   /// Construct a new stream descriptor service for the specified io_service.
   explicit stream_descriptor_service(asio::io_service& io_service)
     : asio::detail::service_base<stream_descriptor_service>(io_service),
-      service_impl_(asio::use_service<service_impl_type>(io_service))
+      service_impl_(io_service)
   {
   }
 
   /// Destroy all user-defined descriptorr objects owned by the service.
   void shutdown_service()
   {
+    service_impl_.shutdown_service();
   }
 
   /// Construct a new stream descriptor implementation.
@@ -185,8 +172,8 @@ public:
   }
 
 private:
-  // The service that provides the platform-specific implementation.
-  service_impl_type& service_impl_;
+  // The platform-specific implementation.
+  service_impl_type service_impl_;
 };
 
 } // namespace posix

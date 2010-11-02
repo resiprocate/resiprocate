@@ -3,7 +3,7 @@
 // ~~~~~~~~~~
 //
 // Copyright (c) 2005 Voipster / Indrek dot Juhani at voipster dot com
-// Copyright (c) 2005-2008 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2005-2010 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -22,7 +22,7 @@
 #include <cstddef>
 #include <boost/config.hpp>
 #include <boost/noncopyable.hpp>
-#include <boost/type_traits.hpp>
+#include <boost/type_traits/remove_reference.hpp>
 #include "asio/detail/pop_options.hpp"
 
 #include "asio/error.hpp"
@@ -145,6 +145,19 @@ public:
    * Ownership is not transferred to the caller.
    */
   lowest_layer_type& lowest_layer()
+  {
+    return next_layer_.lowest_layer();
+  }
+
+  /// Get a const reference to the lowest layer.
+  /**
+   * This function returns a const reference to the lowest layer in a stack of
+   * stream layers.
+   *
+   * @return A const reference to the lowest layer in the stack of stream
+   * layers. Ownership is not transferred to the caller.
+   */
+  const lowest_layer_type& lowest_layer() const
   {
     return next_layer_.lowest_layer();
   }
