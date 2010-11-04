@@ -340,9 +340,9 @@ HttpConnection::processSomeWrites()
    //DebugLog (<< "Writing " << mTxBuffer );
 
 #if defined(WIN32)
-   int bytesWritten = ::send( mSock, mTxBuffer.data(), mTxBuffer.size(), 0);
+   int bytesWritten = ::send( mSock, mTxBuffer.data(), (int)mTxBuffer.size(), 0);
 #else
-   int bytesWritten = ::write(mSock, mTxBuffer.data(), mTxBuffer.size() );
+   int bytesWritten = ::write(mSock, mTxBuffer.data(), (int)mTxBuffer.size() );
 #endif
 
    if (bytesWritten == INVALID_SOCKET)

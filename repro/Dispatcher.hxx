@@ -9,8 +9,6 @@
 #include "rutil/Lock.hxx"
 #include <vector>
 
-
-
 class resip::SipStack;
 
 namespace repro
@@ -34,15 +32,10 @@ namespace repro
    Worker as many times as needed to fill the thread bank. 
    
    @note The functions in this class are intended to be thread-safe.
-
-
-
 */
 
 class Dispatcher
 {
-
-
    public:
    
       /**
@@ -119,8 +112,6 @@ class Dispatcher
       
    protected:
 
-
-
       resip::TimeLimitFifo<resip::ApplicationMessage> mFifo;
       bool mAcceptingWork;
       bool mShutdown;
@@ -130,7 +121,6 @@ class Dispatcher
       resip::RWMutex mMutex;
 
       std::vector<WorkerThread*> mWorkerThreads;
-
 
    private:
       //No copying!

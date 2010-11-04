@@ -747,7 +747,7 @@ static int config_sortlist(struct apattern **sortlist, int *nsort,
       q = str;
       while (*q && *q != '/' && *q != ';' && !isspace((unsigned char)*q))
 	q++;
-      if (ip_addr(str, q - str, &pat.addr) == 0)
+      if (ip_addr(str, (int)(q - str), &pat.addr) == 0)
 	{
 	  /* We have a pattern address; now determine the mask. */
 	  if (*q == '/')
@@ -755,7 +755,7 @@ static int config_sortlist(struct apattern **sortlist, int *nsort,
 	      str = q + 1;
 	      while (*q && *q != ';' && !isspace((unsigned char)*q))
 		q++;
-	      if (ip_addr(str, q - str, &pat.mask) != 0)
+	      if (ip_addr(str, (int)(q - str), &pat.mask) != 0)
 		natural_mask(&pat);
 	    }
 	  else
@@ -858,7 +858,7 @@ static char *try_config(char *s, char *opt)
 {
   int len;
 
-  len = strlen(opt);
+  len = (int)strlen(opt);
   if (strncmp(s, opt, len) != 0 || !isspace((unsigned char)s[len]))
     return NULL;
   s += len;
@@ -871,7 +871,7 @@ static const char *try_option(const char *p, const char *q, const char *opt)
 {
   int len;
 
-  len = strlen(opt);
+  len = (int)strlen(opt);
   return (q - p > len && strncmp(p, opt, len) == 0) ? p + len : NULL;
 }
 
@@ -1112,7 +1112,7 @@ inet_pton6(const char *src, u_char *dst)
        * Since some memmove()'s erroneously fail to handle
        * overlapping regions, we'll do the shift by hand.
        */
-      const int n = tp - colonp;
+      const int n = (int)(tp - colonp);
       int i;
 
       for (i = 1; i <= n; i++) {
@@ -1153,7 +1153,7 @@ inet_pton4(const char *src, u_char *dst)
       const char *pch;
 
       if ((pch = strchr(digits, ch)) != NULL) {
-         u_int newVal = *tp * 10 + (pch - digits);
+         u_int newVal = (u_int)(*tp * 10 + (pch - digits));
 
          if (newVal > 255)
             return (0);

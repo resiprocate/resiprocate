@@ -187,7 +187,7 @@ Uri::fromTel(const Uri& tel, const Uri& hostUri)
          Data param = pb.data(anchor);
          // !dlb! not supposed to lowercase extension parameters
          param.lowercase();
-         totalSize += param.size() + 1;
+         totalSize += (int)param.size() + 1;
 
          if (param.prefix(Symbols::Isub))
          {
@@ -1058,8 +1058,8 @@ Uri::parseEmbeddedHeaders(ParseBuffer& pb)
       else
       {
          DebugLog(<< "Uri::parseEmbeddedHeaders(" << headerName << ", " << Data(decodedContents, len) << ")");
-         mEmbeddedHeaders->addHeader(Headers::getType(headerName.data(), headerName.size()),
-                                     headerName.data(), headerName.size(),
+         mEmbeddedHeaders->addHeader(Headers::getType(headerName.data(), (int)headerName.size()),
+                                     headerName.data(), (int)headerName.size(),
                                      decodedContents, len);
       }
    }

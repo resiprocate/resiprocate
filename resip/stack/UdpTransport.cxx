@@ -40,7 +40,7 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
 {
    mTuple.setType(transport());
    mFd = InternalTransport::socket(transport(), version);
-   mTuple.mFlowKey=mFd;
+   mTuple.mFlowKey=(FlowKey)mFd;
    bind();
 
    InfoLog (<< "Creating UDP transport host=" << pinterface 
@@ -118,11 +118,11 @@ UdpTransport::process(FdSet& fdset)
       else
 #endif
       {
-          expected = sendData->data.size();
+          expected = (int)sendData->data.size();
           count = sendto(mFd, 
-                         sendData->data.data(), sendData->data.size(),  
+                         sendData->data.data(), (int)sendData->data.size(),  
                          0, // flags
-                         &addr, sendData->destination.length());
+                         &addr, (int)sendData->destination.length());
       }
       
       if ( count == SOCKET_ERROR )
@@ -386,7 +386,7 @@ UdpTransport::process(FdSet& fdset)
       }
 
       // no pp error
-      int used = unprocessedCharPtr - buffer;
+      int used = int(unprocessedCharPtr - buffer);
 
       if (used < len)
       {

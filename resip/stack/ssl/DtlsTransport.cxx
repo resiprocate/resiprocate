@@ -218,7 +218,7 @@ DtlsTransport::_read( FdSet& fdset )
          throw Security::Exception( "SSL_use_PrivateKey failed.",
                                    __FILE__, __LINE__ ) ;
 
-      wbio = BIO_new_dgram( mFd, BIO_NOCLOSE ) ;
+      wbio = BIO_new_dgram( (int)mFd, BIO_NOCLOSE ) ;
       assert( wbio ) ;
 
       BIO_dgram_set_peer( wbio, &peer ) ;
@@ -353,7 +353,7 @@ DtlsTransport::_read( FdSet& fdset )
    }
    
    // no pp error
-   int used = unprocessedCharPtr - (char *)pt ;
+   int used = int(unprocessedCharPtr - (char *)pt);
 
    if ( used < len )
    {
@@ -447,7 +447,7 @@ void DtlsTransport::_write( FdSet& fdset )
 
       SSL_set_connect_state( ssl ) ;
 
-      wBio = BIO_new_dgram( mFd, BIO_NOCLOSE ) ;
+      wBio = BIO_new_dgram( (int)mFd, BIO_NOCLOSE ) ;
       assert( wBio ) ;
       
       BIO_dgram_set_peer( wBio, &peer) ;
@@ -488,10 +488,10 @@ void DtlsTransport::_write( FdSet& fdset )
    else
 #endif
    {
-      expected = sendData->data.size();
+      expected = (int)sendData->data.size();
 
       count = SSL_write(ssl, sendData->data.data(), 
-                        sendData->data.size());
+                        (int)sendData->data.size());
    }
 
    /* 

@@ -143,7 +143,7 @@ XmlRpcConnection::tryParse()
          pb.skipToChars("</" + initialTag + ">");
          if (!pb.eof())
          {
-            pb.skipN(initialTag.size() + 3);  // Skip past </InitialTag>            
+            pb.skipN((int)initialTag.size() + 3);  // Skip past </InitialTag>            
             mRequests[mNextRequestId] = pb.data(start);
             mXmlRcpServer.handleRequest(mConnectionId, mNextRequestId, mRequests[mNextRequestId]);
             mNextRequestId++;

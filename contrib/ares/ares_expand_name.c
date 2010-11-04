@@ -75,7 +75,7 @@ int ares_expand_name(const unsigned char *encoded, const unsigned char *abuf,
 	{
 	  if (!indir)
 	    {
-	      *enclen = p + 2 - encoded;
+	      *enclen = (long)(p + 2 - encoded);
 	      indir = 1;
 	    }
 	  p = abuf + ((*p & ~INDIR_MASK) << 8 | *(p + 1));
@@ -95,7 +95,7 @@ int ares_expand_name(const unsigned char *encoded, const unsigned char *abuf,
 	}
     }
   if (!indir)
-    *enclen = p + 1 - encoded;
+    *enclen = (long)(p + 1 - encoded);
 
   /* Nuke the trailing period if we wrote one. */
   if (q > *s)

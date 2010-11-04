@@ -40,7 +40,7 @@ void
 repro::ProcessorChain::addProcessor(auto_ptr<Processor> rp)
 {
    DebugLog(<< "Adding new monkey to chain: " << *(rp.get()));
-   rp->pushAddress(mChain.size());
+   rp->pushAddress((short)mChain.size());
    rp->pushAddress(mAddress);
    rp->setChainType(mType);
    mChain.push_back(rp.release());

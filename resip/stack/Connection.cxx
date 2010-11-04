@@ -32,7 +32,7 @@ Connection::Connection(Transport* transport,const Tuple& who, Socket socket,
      mRequestPostConnectSocketFuncCall(false),
      mInWritable(false)
 {
-   mWho.mFlowKey=socket;
+   mWho.mFlowKey=(FlowKey)socket;
    if(mWho.mFlowKey && ConnectionBase::transport())
    {
       getConnectionManager().addConnection(this);
@@ -122,7 +122,7 @@ Connection::performWrite()
 
    const Data& data = mOutstandingSends.front()->data;
 
-   int nBytes = write(data.data() + mSendPos,data.size() - mSendPos);
+   int nBytes = write(data.data() + mSendPos,int(data.size() - mSendPos));
 
    //DebugLog (<< "Tried to send " << data.size() - mSendPos << " bytes, sent " << nBytes << " bytes");
 
@@ -187,7 +187,7 @@ Connection::read(Fifo<TransactionMessage>& fifo)
          
    assert(bytesToRead > 0);
 
-   int bytesRead = read(writePair.first, bytesToRead);
+   int bytesRead = read(writePair.first, (int)bytesToRead);
    if (bytesRead <= 0)
    {
       return bytesRead;

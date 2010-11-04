@@ -89,7 +89,7 @@ RegSyncClient::thread()
    while(!mShutdown)
    {
       // Create TCP Socket
-      mSocketDesc = socket(servAddr.ipVersion() == V6 ? PF_INET6 : PF_INET , SOCK_STREAM, 0);
+      mSocketDesc = (int)socket(servAddr.ipVersion() == V6 ? PF_INET6 : PF_INET , SOCK_STREAM, 0);
       if(mSocketDesc < 0) 
       {
          ErrLog(<< "RegSyncClient: cannot open socket");
@@ -124,7 +124,7 @@ RegSyncClient::thread()
          "     <Version>2</Version>\r\n"   // For use in detecting if client/server are a compatible version
          "  </Request>\r\n"
          "</InitialSync>\r\n");   
-      rc = ::send(mSocketDesc, request.c_str(), request.size(), 0);
+      rc = ::send(mSocketDesc, request.c_str(), (int)request.size(), 0);
       if(rc < 0) 
       {
          if(!mShutdown) ErrLog(<< "RegSyncClient: error sending");
@@ -175,7 +175,7 @@ RegSyncClient::tryParse()
          pb.skipToChars("</" + initialTag + ">");
          if (!pb.eof())
          {
-            pb.skipN(initialTag.size() + 3);  // Skip past </InitialTag>            
+            pb.skipN((int)initialTag.size() + 3);  // Skip past </InitialTag>            
             handleXml(pb.data(start));
 
             // Remove processed data from RxBuffer

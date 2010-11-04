@@ -22,7 +22,7 @@ ExtensionHeader::ExtensionHeader(const char* name)
       assert(false);
       throw Exception("Empty extension header",__FILE__,__LINE__);
    }
-   assert(Headers::getType(mName.data(), mName.size()) == Headers::UNKNOWN);
+   assert(Headers::getType(mName.data(), (int)mName.size()) == Headers::UNKNOWN);
 }
 
 ExtensionHeader::ExtensionHeader(const Data& name)
@@ -33,7 +33,7 @@ ExtensionHeader::ExtensionHeader(const Data& name)
       assert(false);
       throw Exception("Empty extension header",__FILE__,__LINE__);
    }
-   assert(Headers::getType(mName.data(), mName.size()) == Headers::UNKNOWN);
+   assert(Headers::getType(mName.data(), (int)mName.size()) == Headers::UNKNOWN);
 }
 
 const Data&

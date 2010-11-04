@@ -1734,7 +1734,7 @@ Helper::gruuUserPart(const Data& instanceId,
    ivec[7] = '\x51';
 
    BF_KEY fish;
-   BF_set_key(&fish, key.size(), (const unsigned char*)key.data());
+   BF_set_key(&fish, (int)key.size(), (const unsigned char*)key.data());
 
    const Data salt(resip::Random::getRandomHex(saltBytes));
 
@@ -1747,7 +1747,7 @@ Helper::gruuUserPart(const Data& instanceId,
    auto_ptr <unsigned char> out(new unsigned char[token.size()]);
    BF_cbc_encrypt((const unsigned char*)token.data(),
                   out.get(),
-                  token.size(),
+                  (long)token.size(),
                   &fish,
                   ivec, 
                   BF_ENCRYPT);
@@ -1780,14 +1780,14 @@ Helper::fromGruuUserPart(const Data& gruuUserPart,
    const Data gruu = gruuUserPart.substr(GRUU.size());
 
    BF_KEY fish;
-   BF_set_key(&fish, key.size(), (const unsigned char*)key.data());
+   BF_set_key(&fish, (int)key.size(), (const unsigned char*)key.data());
 
    const Data decoded = gruu.base64decode();
 
    auto_ptr <unsigned char> out(new unsigned char[gruuUserPart.size()+1]);
    BF_cbc_encrypt((const unsigned char*)decoded.data(),
                   out.get(),
-                  decoded.size(),
+                  (long)decoded.size(),
                   &fish,
                   ivec, 
                   BF_DECRYPT);

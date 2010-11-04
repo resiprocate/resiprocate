@@ -212,7 +212,7 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
 
          assert(conn);
          assert(conn->getSocket() >= 0);
-         data->destination.mFlowKey = conn->getSocket(); // !jf!
+         data->destination.mFlowKey = (FlowKey)conn->getSocket(); // !jf!
       }
    
       if (conn == 0)

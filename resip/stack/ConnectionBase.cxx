@@ -148,7 +148,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
       }
       case ReadingHeaders:
       {
-         unsigned int chunkLength = mBufferPos + bytesRead;
+         unsigned int chunkLength = (unsigned int)mBufferPos + bytesRead;
          char *unprocessedCharPtr;
          MsgHeaderScanner::ScanChunkResult scanChunkResult =
             mMsgHeaderScanner.scanChunk(mBuffer,
@@ -167,8 +167,8 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
             return;
          }
 
-         unsigned int numUnprocessedChars =
-            (mBuffer + chunkLength) - unprocessedCharPtr;
+         unsigned int numUnprocessedChars = 
+            unsigned int((mBuffer + chunkLength) - unprocessedCharPtr);
 
          if(numUnprocessedChars==chunkLength)
          {
@@ -182,7 +182,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
             char* newBuffer = 0;
             try
             {
-               newBuffer=MsgHeaderScanner::allocateBuffer(size);
+               newBuffer=MsgHeaderScanner::allocateBuffer((int)size);
             }
             catch(std::bad_alloc&)
             {
@@ -234,7 +234,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                char* newBuffer = 0;
                try
                {
-                  newBuffer = MsgHeaderScanner::allocateBuffer(size);
+                  newBuffer = MsgHeaderScanner::allocateBuffer((int)size);
                }
                catch(std::bad_alloc&)
                {
@@ -293,10 +293,10 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
             {
                // The message body is incomplete.
                DebugLog(<< "partial body received");
-               int newSize=resipMin(resipMax((size_t)numUnprocessedChars*3/2,
+               size_t newSize=resipMin(resipMax((size_t)numUnprocessedChars*3/2,
                                              (size_t)ConnectionBase::ChunkSize),
                                     contentLength);
-               char* newBuffer = MsgHeaderScanner::allocateBuffer(newSize);
+               char* newBuffer = MsgHeaderScanner::allocateBuffer((int)newSize);
                memcpy(newBuffer, unprocessedCharPtr, numUnprocessedChars);
                mBufferPos = numUnprocessedChars;
                mBufferSize = newSize;
@@ -309,7 +309,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                // Do this stuff BEFORE we kick the message out the door.
                // Remember, deleting or passing mMessage on invalidates our
                // buffer!
-               int overHang = numUnprocessedChars - contentLength;
+               int overHang = numUnprocessedChars - (int)contentLength;
 
                mConnState = NewMessage;
                mBuffer = 0;
@@ -321,7 +321,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                   {
                      size = ConnectionBase::ChunkSize;
                   }
-                  char* newBuffer = MsgHeaderScanner::allocateBuffer(size);
+                  char* newBuffer = MsgHeaderScanner::allocateBuffer((int)size);
                   memcpy(newBuffer,
                          unprocessedCharPtr + contentLength,
                          overHang);
@@ -336,7 +336,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                }
 
                // The message body is complete.
-               mMessage->setBody(unprocessedCharPtr, contentLength);
+               mMessage->setBody(unprocessedCharPtr, (UInt32)contentLength);
                if (!transport()->basicCheck(*mMessage))
                {
                   delete mMessage;
@@ -384,7 +384,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
          if (mBufferPos == contentLength)
          {
             mMessage->addBuffer(mBuffer);
-            mMessage->setBody(mBuffer, contentLength);
+            mMessage->setBody(mBuffer, (UInt32)contentLength);
             mBuffer = 0;
             if (!transport()->basicCheck(*mMessage))
             {
@@ -404,7 +404,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
          else if (mBufferPos == mBufferSize)
          {
             // .bwc. We've filled our buffer; go ahead and make more room.
-            int newSize = resipMin(mBufferSize*3/2, contentLength);
+            size_t newSize = resipMin(mBufferSize*3/2, contentLength);
             char* newBuffer = 0;
             try
             {
@@ -494,7 +494,7 @@ ConnectionBase::decompressNewBytes(int bytesRead,
         // TCP connection for identification purposes.
         if (via.exists(p_sigcompId))
         {
-                Data compId = via.param(p_sigcompId);
+            Data compId = via.param(p_sigcompId);
             if(!compId.empty())
             {
                 mSigcompStack->provideCompartmentId(sc, compId.data(), compId.size());
@@ -517,7 +517,7 @@ ConnectionBase::decompressNewBytes(int bytesRead,
         Data compId = via.param(p_branch).getSigcompCompartment();
         if(!compId.empty())
         {
-         mSigcompStack->provideCompartmentId(sc, compId.data(), compId.size());
+           mSigcompStack->provideCompartmentId(sc, compId.data(), compId.size());
         }
       }
       fifo.add(mMessage);
@@ -577,7 +577,7 @@ ConnectionBase::getWriteBufferForExtraBytes(int extraBytes)
 {
    if (extraBytes > 0)
    {
-      char* buffer = MsgHeaderScanner::allocateBuffer(mBufferSize + extraBytes);
+      char* buffer = MsgHeaderScanner::allocateBuffer((int)mBufferSize + extraBytes);
       memcpy(buffer, mBuffer, mBufferSize);
       delete [] mBuffer;
       mBuffer = buffer;
