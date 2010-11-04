@@ -346,7 +346,7 @@ SipStack::send(const SipMessage& msg, TransactionUser* tu)
    //DebugLog (<< msg);
    //assert(!mShuttingDown);
    
-   SipMessage* toSend = new SipMessage(msg);
+   SipMessage* toSend = static_cast<SipMessage*>(msg.clone());
    if (tu) 
    {
       toSend->setTransactionUser(tu);
@@ -403,7 +403,7 @@ SipStack::sendTo(const SipMessage& msg, const Uri& uri, TransactionUser* tu)
 {
    //assert(!mShuttingDown);
 
-   SipMessage* toSend = new SipMessage(msg);
+   SipMessage* toSend = static_cast<SipMessage*>(msg.clone());
    if (tu) toSend->setTransactionUser(tu);
    toSend->setForceTarget(uri);
    toSend->setFromTU();
@@ -419,8 +419,7 @@ SipStack::sendTo(const SipMessage& msg, const Tuple& destination, TransactionUse
 {
    assert(!mShuttingDown);
    
-   //SipMessage* toSend = new SipMessage(msg);
-   SipMessage* toSend = dynamic_cast<SipMessage*>(msg.clone());
+   SipMessage* toSend = static_cast<SipMessage*>(msg.clone());
    if (tu) toSend->setTransactionUser(tu);
    toSend->setDestination(destination);
    toSend->setFromTU();
