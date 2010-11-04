@@ -313,7 +313,7 @@ class TestUac : public TestInviteSessionHandler
                         "a=rtpmap:101 telephone-event/8000\r\n"
                         "a=fmtp:101 0-15\r\n");
          
-         hfv = new HeaderFieldValue(txt->data(), txt->size());
+         hfv = new HeaderFieldValue(txt->data(), (unsigned int)txt->size());
          Mime type("application", "sdp");
          mSdp = new SdpContents(hfv, type);
       }
@@ -386,7 +386,7 @@ class TestUas : public TestInviteSessionHandler
                         "a=rtpmap:101 telephone-event/8000\r\n"
                         "a=fmtp:101 0-15\r\n");
          
-         hfv = new HeaderFieldValue(txt->data(), txt->size());
+         hfv = new HeaderFieldValue(txt->data(), (unsigned int)txt->size());
          Mime type("application", "sdp");
          mSdp = new SdpContents(hfv, type);
       }

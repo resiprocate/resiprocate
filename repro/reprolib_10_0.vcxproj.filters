@@ -212,15 +212,6 @@
     <ClInclude Include="Registrar.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="RegSyncClient.cxx">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RegSyncServer.cxx">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RegSyncServerThread.cxx">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="ReproServerAuthManager.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -276,6 +267,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="XmlRpcServerBase.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RegSyncClient.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RegSyncServer.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RegSyncServerThread.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

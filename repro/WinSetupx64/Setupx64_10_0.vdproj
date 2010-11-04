@@ -3,7 +3,7 @@
 "VSVersion" = "3:800"
 "ProjectType" = "8:{978C614F-708E-4E1A-B201-565925725DBA}"
 "IsWebType" = "8:FALSE"
-"ProjectName" = "8:ReproSetup"
+"ProjectName" = "8:ReproSetupx64"
 "LanguageId" = "3:1033"
 "CodePage" = "3:1252"
 "UILanguageId" = "3:1033"
@@ -13,6 +13,12 @@
 "SccProvider" = "8:"
     "Hierarchy"
     {
+        "Entry"
+        {
+        "MsmKey" = "8:_299E4D9D49994209B927945B3AD95435"
+        "OwnerKey" = "8:_449747DB7BDE448E8557B9834BB2A62D"
+        "MsmSig" = "8:_UNDEFINED"
+        }
         "Entry"
         {
         "MsmKey" = "8:_449747DB7BDE448E8557B9834BB2A62D"
@@ -31,12 +37,6 @@
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
-        "Entry"
-        {
-        "MsmKey" = "8:_FDC78DDEC5004D72B11FF4B3F079C5A9"
-        "OwnerKey" = "8:_449747DB7BDE448E8557B9834BB2A62D"
-        "MsmSig" = "8:_UNDEFINED"
-        }
     }
     "Configurations"
     {
@@ -45,7 +45,7 @@
         "DisplayName" = "8:Debug"
         "IsDebugOnly" = "11:TRUE"
         "IsReleaseOnly" = "11:FALSE"
-        "OutputFilename" = "8:Debug\\reproSetup.msi"
+        "OutputFilename" = "8:Debug\\reproSetup64.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -72,7 +72,7 @@
         "DisplayName" = "8:Release"
         "IsDebugOnly" = "11:FALSE"
         "IsReleaseOnly" = "11:TRUE"
-        "OutputFilename" = "8:Release\\reproSetup.msi"
+        "OutputFilename" = "8:Release\\reproSetup64.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -243,7 +243,7 @@
         "ARPIconIndex" = "3:0"
         "SearchPath" = "8:"
         "UseSystemSearchPath" = "11:TRUE"
-        "TargetPlatform" = "3:0"
+        "TargetPlatform" = "3:1"
         "PreBuildEvent" = "8:"
         "PostBuildEvent" = "8:"
         "RunPostBuildEvent" = "3:0"
@@ -780,7 +780,7 @@
         }
         "MergeModule"
         {
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_FDC78DDEC5004D72B11FF4B3F079C5A9"
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_299E4D9D49994209B927945B3AD95435"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:TRUE"
@@ -799,7 +799,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_449747DB7BDE448E8557B9834BB2A62D"
             {
-            "SourcePath" = "8:..\\SSL-Release\\repro.exe"
+            "SourcePath" = "8:..\\Debug\\repro.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_96F138CFF79546568B8B0A6277D34A78"
