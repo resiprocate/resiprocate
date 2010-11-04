@@ -160,7 +160,7 @@ class ServerRegistration: public NonDialogUsage
                modifiedContacts = mModifiedContacts;
             }
 
-            unsigned int numContacts() { if(mModifiedContacts.get()) return mModifiedContacts->size(); return 0; }
+            unsigned int numContacts() { if(mModifiedContacts.get()) return (unsigned int)mModifiedContacts->size(); return 0; }
          private:
             std::auto_ptr<ContactRecordTransactionLog> mLog;
             std::auto_ptr<ContactPtrList> mModifiedContacts;

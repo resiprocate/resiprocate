@@ -138,7 +138,7 @@ RAckCategory::parse(ParseBuffer& pb)
    anchorPtr = pb.skipWhitespace();
    pb.skipNonWhitespace();
 
-   mMethod = getMethodType(anchorPtr, pb.position() - anchorPtr);
+   mMethod = getMethodType(anchorPtr, int(pb.position() - anchorPtr));
    // for backward compatibility, set the method name even if the method is known
    pb.data(mUnknownMethodName, anchorPtr);
 }

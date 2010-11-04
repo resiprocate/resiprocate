@@ -14,7 +14,7 @@ const char* ParseBuffer::ParamTerm = ";?"; // maybe include "@>,"?
 const char* ParseBuffer::Whitespace = " \t\r\n";
 const Data ParseBuffer::Pointer::msg("dereferenced ParseBuffer eof");
 
-ParseBuffer::ParseBuffer(const char* buff, unsigned int len, 
+ParseBuffer::ParseBuffer(const char* buff, size_t len, 
                          const Data& errorContext)
    : mBuff(buff),
      mPosition(buff),
@@ -275,7 +275,7 @@ ParseBuffer::Pointer
 ParseBuffer::skipToChars(const char* cs)
 {
    assert(cs);
-   unsigned int l = strlen(cs);
+   unsigned int l = (unsigned int)strlen(cs);
 
    const char* rpos;
    const char* cpos;
@@ -886,7 +886,7 @@ ParseBuffer::floatVal()
          skipChar();
          const char* pos = mPosition;
          mant = float(integer());
-         int s = mPosition - pos;
+         int s = int(mPosition - pos);
          while (s--)
          {
             mant /= 10.0;
@@ -978,7 +978,7 @@ spaces(unsigned int numSpaces)
 
 Data 
 escapeAndAnnotate(const char* buffer, 
-                  unsigned int size,
+                  Data::size_type size,
                   const char* position)
 { 
    Data ret(2*size+16, Data::Preallocate);

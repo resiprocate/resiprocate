@@ -86,7 +86,7 @@ class Data
                          from the constructor that takes a single
                          int. Always pass Data::Preallocate.
       */
-      Data(int capacity, const PreallocateType&);
+      Data(size_type capacity, const PreallocateType&);
 
 //#define DEPRECATED_PREALLOC
 #ifdef DEPRECATED_PREALLOC
@@ -109,7 +109,7 @@ class Data
 
         @todo Remove this constructor
       */
-      Data(int capacity, bool foo);
+      Data(size_type capacity, bool foo);
 #endif      
 
       /**
@@ -126,14 +126,14 @@ class Data
 
         @param length Number of bytes in the buffer
       */
-      Data(const char* buffer, int length);
+      Data(const char* buffer, size_type length);
 
       /**
         Creates a data with the contents of the buffer.
 
         @param length Number of bytes in the buffer
       */
-      Data(const unsigned char* buffer, int length);
+      Data(const unsigned char* buffer, size_type length);
 
       Data(const Data& data);
 
@@ -241,7 +241,7 @@ class Data
         @see ShareEnum
       */
 
-      Data(ShareEnum, const char* buffer, int length);
+      Data(ShareEnum, const char* buffer, size_type length);
 
       /**
         Takes a null-terminated string and creates a buffer.
@@ -706,7 +706,7 @@ class Data
       /**
         @deprecated use Data(ShareEnum ...)
       */
-      Data(const char* buffer, int length, bool);
+      Data(const char* buffer, size_t length, bool);
 
       /**
         Copies the contents of this data to a new buffer if the

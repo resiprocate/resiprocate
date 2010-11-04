@@ -142,7 +142,7 @@ CSeqCategory::parse(ParseBuffer& pb)
    const char* anchorPtr = pb.skipWhitespace();
    pb.skipNonWhitespace(); // .dcm. maybe pass an arg that says throw if you
                            // don't move
-   mMethod = getMethodType(anchorPtr, pb.position() - anchorPtr);
+   mMethod = getMethodType(anchorPtr, int(pb.position() - anchorPtr));
    // for backward compatibility, set the method name even if the method is known
    pb.data(mUnknownMethodName, anchorPtr);
 }

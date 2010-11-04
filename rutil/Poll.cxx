@@ -17,7 +17,7 @@ Poll::FDEntry::FDEntry(Poll* poll,
    _poll(poll),
    _fd(fd),
    _stateBitMask(isTransport ? Poll::FDEntry::rsbmIsTransport : 0),
-   _index(poll->_fdEntryVector.size())
+   _index((unsigned short)poll->_fdEntryVector.size())
 {
    _poll->_fdEntryVector.push_back(this);
 #ifdef RESIP_POLL_IMPL_POLL
@@ -106,7 +106,7 @@ Poll::findFDInWaitResult(int/*FD*/                        fd,
                          const vector<Poll::FDEntry *> &  waitResult)
 {
    unsigned int lowIndex = 0;
-   unsigned int highIndex = waitResult.size();
+   unsigned int highIndex = (unsigned int)waitResult.size();
    while (lowIndex + 1 < highIndex) 
    {
       // The goal fd is in waitResult in the range [lowIndex, highIndex[.

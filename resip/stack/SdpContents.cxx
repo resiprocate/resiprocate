@@ -1346,7 +1346,7 @@ SdpContents::Session::Medium::parse(ParseBuffer& pb)
 
          Connection& con = mConnections.back();
          const Data& addr = con.getAddress();
-         int i = addr.size() - 1;
+         size_t i = addr.size() - 1;
          for (; i; i--)
          {
             if (addr[i] == '.' || addr[i] == ':') // ipv4 or ipv6

@@ -16,7 +16,7 @@ static char* ConvertLPWSTRToLPSTR(LPWSTR lpwszStrIn)
    LPSTR pszOut = NULL;
    if (lpwszStrIn != NULL)
    {
-      int nInputStrLen = wcslen (lpwszStrIn);
+      int nInputStrLen = (int)wcslen(lpwszStrIn);
 
       // Double NULL Termination
       int nOutputStrLen = WideCharToMultiByte (CP_ACP, 0, lpwszStrIn, nInputStrLen, NULL, 0, 0, 0) + 2;

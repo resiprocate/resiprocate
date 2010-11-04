@@ -263,7 +263,7 @@ DateCategory::DayOfWeekFromData(const Data& dow)
 
    if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
    {
-      register int key = dayofweek_hash (str, len);
+      register int key = dayofweek_hash (str, (unsigned int)len);
       
       if (key <= MAX_HASH_VALUE && key >= 0)
       {
@@ -374,7 +374,7 @@ DateCategory::MonthFromData(const Data& mon)
 
    if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
    {
-      register int key = month_hash (str, len);
+      register int key = month_hash (str, (unsigned int)len);
 
       if (key <= MAX_HASH_VALUE && key >= 0)
       {

@@ -144,7 +144,7 @@ Contents::createContents(const Mime& contentType,
   // .dlb. owns its memory
 
    assert(!contents.mMine);
-   HeaderFieldValue *hfv = new HeaderFieldValue(contents.data(), contents.size());
+   HeaderFieldValue *hfv = new HeaderFieldValue(contents.data(), (unsigned int)contents.size());
 
    if(contentType.subType()=="sipfrag"||contentType.subType()=="external-body")
    {
@@ -342,7 +342,7 @@ Contents::preParseHeaders(ParseBuffer& pb)
       anchor = pb.skipWhitespace();
       pb.skipToTermCRLF();
 
-      Headers::Type type = Headers::getType(headerName.data(), headerName.size());
+      Headers::Type type = Headers::getType(headerName.data(), (int)headerName.size());
       ParseBuffer subPb(anchor, pb.position() - anchor);
 
       switch (type)
@@ -475,8 +475,8 @@ Contents::encodeHeaders(EncodeStream& str) const
    {
       str <<  "Content-Languages" << Symbols::COLON[0] << Symbols::SPACE[0];
 
-      int count = 0;
-      int size = header(h_ContentLanguages).size();
+      size_t count = 0;
+      size_t size = header(h_ContentLanguages).size();
 
       for (H_ContentLanguages::Type::iterator 
               i = header(h_ContentLanguages).begin();

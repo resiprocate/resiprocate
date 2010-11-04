@@ -147,7 +147,7 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
    else
    { 
       optmask |= ARES_OPT_SERVERS;
-      opt.nservers = additionalNameservers.size();
+      opt.nservers = (int)additionalNameservers.size();
       
 #if defined(USE_IPV6) && defined(USE_ARES)
       // With contrib/ares, you can configure IPv6 addresses for the
@@ -443,7 +443,7 @@ AresDns::errorMessage(long errorCode)
 {
    const char* aresMsg = ares_strerror(errorCode);
 
-   int len = strlen(aresMsg);
+   size_t len = strlen(aresMsg);
    char* errorString = new char[len+1];
 
    strncpy(errorString, aresMsg, len);

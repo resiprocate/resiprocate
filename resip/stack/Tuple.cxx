@@ -302,7 +302,7 @@ Tuple::makeTuple(const resip::Data& binaryFlowToken)
 #else
       Tuple result(resip::Data::Empty, port, type);
 #endif
-      result.mFlowKey=mFlowKey;
+      result.mFlowKey=(FlowKey)mFlowKey;
       result.onlyUseExistingConnection=isRealFlow;
       return result;
    }
@@ -312,7 +312,7 @@ Tuple::makeTuple(const resip::Data& binaryFlowToken)
       assert(sizeof(address)==4);
       memcpy(&address,&rawToken[2],4);
       Tuple result(address,port,type);
-      result.mFlowKey=mFlowKey;
+      result.mFlowKey=(FlowKey)mFlowKey;
       result.onlyUseExistingConnection=isRealFlow;
       return result;
    }

@@ -83,7 +83,7 @@ Dispatcher::fifoTimeDepth() const
 int
 Dispatcher::workPoolSize() const 
 {
-   return mWorkerThreads.size();
+   return (int)mWorkerThreads.size();
 }
 
 void
@@ -116,8 +116,6 @@ Dispatcher::shutdownAll()
          (*i)->join();
       }
    }
-
-   
 }
 
 void 

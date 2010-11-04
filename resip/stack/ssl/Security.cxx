@@ -102,7 +102,7 @@ readIntoData(const Data& filename)
    // get length of file:
 #if !defined(__MSL_CPP__) || (__MSL_CPP_ >= 0x00012000)
    is.seekg (0, ios::end);
-   length = is.tellg();
+   length = (int)is.tellg();
    is.seekg (0, ios::beg);
 #else
    // this is a work around for a bug in CodeWarrior 9's implementation of seekg.
@@ -320,7 +320,7 @@ BaseSecurity::addCertDER (PEMType type,
    unsigned const char* in = (unsigned const char*)certDER.data();
 #endif
 
-   if (d2i_X509(&cert,&in,certDER.size()) == 0)
+   if (d2i_X509(&cert,&in,(long)certDER.size()) == 0)
    {
       ErrLog(<< "Could not read DER certificate from " << certDER );
       throw BaseSecurity::Exception("Could not read DER certificate ", 
@@ -552,7 +552,7 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type,
          if(iter != mUserPassPhrases.end())
          {
             kstr = (char*)iter->second.c_str(); 
-            klen = iter->second.size();
+            klen = (int)iter->second.size();
          }
       }
 
@@ -1252,11 +1252,11 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    ASN1_INTEGER_set(X509_get_serialNumber(cert),serial);
    
    ret = X509_NAME_add_entry_by_txt( subject, "O",  MBSTRING_ASC, 
-                                     (unsigned char *) domain.data(), domain.size(), 
+                                     (unsigned char *) domain.data(), (int)domain.size(), 
                                      -1, 0);
    assert(ret);
    ret = X509_NAME_add_entry_by_txt( subject, "CN", MBSTRING_ASC, 
-                                     (unsigned char *) aor.data(), aor.size(), 
+                                     (unsigned char *) aor.data(), (int)aor.size(), 
                                      -1, 0);
    assert(ret);
    
@@ -1320,7 +1320,7 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
    //Security::dumpAsn("resip-sign-out-data",bodyData);
 
    const char* p = bodyData.data();
-   int s = bodyData.size();
+   int s = (int)bodyData.size();
    BIO* in=BIO_new_mem_buf( (void*)p,s);
    assert(in);
    DebugLog( << "created in BIO");
@@ -1424,7 +1424,7 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
    InfoLog( << "body data to encrypt is <" << bodyData.escaped() << ">" );
 
    const char* p = bodyData.data();
-   int s = bodyData.size();
+   int s = (int)bodyData.size();
 
    BIO* in = BIO_new_mem_buf( (void*)p,s);
    assert(in);
@@ -1556,7 +1556,7 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
    DebugLog( << "hash of string is 0x" << hashRes.hex() );
 
 #if 1
-   int r = RSA_sign(NID_sha1, (unsigned char *)hashRes.data(), hashRes.size(),
+   int r = RSA_sign(NID_sha1, (unsigned char *)hashRes.data(), (unsigned int)hashRes.size(),
                     result, (unsigned int*)( &resultSize ),
             rsa);
    assert( r == 1 );
@@ -1639,7 +1639,7 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
 
 #if 1
    int ret = RSA_verify(NID_sha1, (unsigned char *)hashRes.data(),
-                        hashRes.size(), (unsigned char*)sig.data(), sig.size(),
+                        (unsigned int)hashRes.size(), (unsigned char*)sig.data(), (unsigned int)sig.size(),
                         rsa);
 #else
    unsigned char result[4096];
@@ -1687,7 +1687,7 @@ BaseSecurity::checkAndSetIdentity( const SipMessage& msg, const Data& certDer) c
 #else
          unsigned const char* in = (unsigned const char*)certDer.data();
 #endif
-         if (d2i_X509(&cert,&in,certDer.size()) == 0)
+         if (d2i_X509(&cert,&in,(long)certDer.size()) == 0)
          {
             DebugLog(<< "Could not read DER certificate from " << certDer );
             cert = NULL;
@@ -1744,7 +1744,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
    static char RESIP_ASN_DECRYPT[] = "resip-asn-decrypt";
    Security::dumpAsn(RESIP_ASN_DECRYPT, text );
 
-   BIO* in = BIO_new_mem_buf( (void*)text.c_str(), text.size());
+   BIO* in = BIO_new_mem_buf( (void*)text.c_str(), (int)text.size());
    assert(in);
    InfoLog( << "created in BIO");
 
@@ -1999,7 +1999,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    Security::dumpAsn( RESIP_ASN_UNCODE_SIGNED_TEXT, textData );
    Security::dumpAsn( RESIP_ASN_UNCODE_SIGNED_SIG, sigData );
 
-   BIO* in = BIO_new_mem_buf( (void*)sigData.data(),sigData.size());
+   BIO* in = BIO_new_mem_buf( (void*)sigData.data(),(int)sigData.size());
    assert(in);
    InfoLog( << "created in BIO");
 
@@ -2007,7 +2007,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    assert(out);
    InfoLog( << "created out BIO" );
 
-   BIO* pkcs7Bio = BIO_new_mem_buf( (void*) textData.data(),textData.size());
+   BIO* pkcs7Bio = BIO_new_mem_buf( (void*) textData.data(),(int)textData.size());
    assert(pkcs7Bio);
    InfoLog( << "created pkcs7 BIO");
 

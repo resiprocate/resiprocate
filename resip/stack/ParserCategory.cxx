@@ -200,7 +200,7 @@ ParserCategory::parseParameters(ParseBuffer& pb)
 
          if((int)(keyEnd-keyStart) != 0)
          {
-            ParameterTypes::Type type = ParameterTypes::getType(keyStart, (keyEnd - keyStart));
+            ParameterTypes::Type type = ParameterTypes::getType(keyStart, unsigned int(keyEnd - keyStart));
             if (type == ParameterTypes::UNKNOWN)
             {
                mUnknownParameters.push_back(new UnknownParameter(keyStart, 

@@ -23,7 +23,7 @@ class ParseBuffer
 {
    public:
       // does NOT OWN the buffer memory
-      ParseBuffer(const char* buff, unsigned int len, 
+      ParseBuffer(const char* buff, size_t len, 
                   const Data& errorContext = Data::Empty);
 
       explicit ParseBuffer(const Data& data,

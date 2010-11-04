@@ -101,7 +101,7 @@ DnsInterface::isSupportedProtocol(TransportType t)
 
 int DnsInterface::supportedProtocols()
 {
-   return mSupportedTransports.size();
+   return (int)mSupportedTransports.size();
 }
 
 

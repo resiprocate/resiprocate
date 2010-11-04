@@ -430,7 +430,7 @@ Log::timestamp(Data& res)
       measure to the nearest millisecond. */
    sprintf(msbuf, ".%3.3ld", long(tv.tv_usec / 1000));
 
-   int datebufCharsRemaining = datebufSize - strlen (datebuf);
+   int datebufCharsRemaining = datebufSize - (int)strlen(datebuf);
    strncat (datebuf, msbuf, datebufCharsRemaining - 1);
 
    datebuf[datebufSize - 1] = '\0'; /* Just in case strncat truncated msbuf,
@@ -538,7 +538,7 @@ Log::setServiceLevel(int service, Level l)
       Log::mThreadToLevel[*i].first.mLevel = l;
       Log::mThreadToLevel[*i].second = true;
    }
-   Log::touchCount += threads.size();
+   Log::touchCount += (short)threads.size();
 #endif
 //   cerr << "**Log::setServiceLevel:touchCount: " << Log::touchCount << "**" << endl;
 }
@@ -736,7 +736,7 @@ Log::Guard::~Guard()
    {
       const resip::Data rest(resip::Data::Share,
                              mData.data() + mHeaderLength,
-                             mData.size() - mHeaderLength);
+                             (int)mData.size() - mHeaderLength);
       if (!(*resip::Log::getExternal())(mLevel, 
                                         mSubsystem, 
                                         resip::Log::getAppName(),
@@ -767,7 +767,7 @@ Log::Guard::~Guard()
    else 
    {
       // endl is magic in syslog -- so put it here
-      Instance(mData.size()+2) << mData << std::endl;  
+      Instance((int)mData.size()+2) << mData << std::endl;  
    }
 }
 

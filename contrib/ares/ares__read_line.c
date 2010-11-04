@@ -45,7 +45,7 @@ int ares__read_line(FILE *fp, char **buf, int *bufsize)
     {
       if (!fgets(*buf + offset, *bufsize - offset, fp))
 	return (offset != 0) ? 0 : (ferror(fp)) ? ARES_EFILE : ARES_EOF;
-      len = offset + strlen(*buf + offset);
+      len = offset + (int)strlen(*buf + offset);
       if ((*buf)[len - 1] == '\n')
 	{
 	  (*buf)[len - 1] = 0;

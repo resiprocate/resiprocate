@@ -199,7 +199,7 @@ Data::Data()
    mBuf[mSize] = 0;
 }
 
-Data::Data(int capacity,
+Data::Data(size_type capacity,
            const Data::PreallocateType&) 
    : mSize(0),
      mBuf(capacity > LocalAlloc 
@@ -216,7 +216,7 @@ Data::Data(int capacity,
 
 #ifdef DEPRECATED_PREALLOC
 // pre-allocate capacity
-Data::Data(int capacity, bool) 
+Data::Data(size_type capacity, bool) 
    : mSize(0),
      mBuf(capacity > LocalAlloc 
           ? new char[capacity + 1]
@@ -231,7 +231,7 @@ Data::Data(int capacity, bool)
 }
 #endif
 
-Data::Data(const char* str, int length) 
+Data::Data(const char* str, size_type length) 
    : mSize(length),
      mBuf(mSize > LocalAlloc 
           ? new char[mSize + 1]
@@ -249,7 +249,7 @@ Data::Data(const char* str, int length)
    mBuf[mSize]=0;
 }
 
-Data::Data(const unsigned char* str, int length) 
+Data::Data(const unsigned char* str, size_type length) 
    : mSize(length),
      mBuf(mSize > LocalAlloc 
           ? new char[mSize + 1]
@@ -270,7 +270,7 @@ Data::Data(const unsigned char* str, int length)
 // share memory KNOWN to be in a surrounding scope
 // wears off on, c_str, operator=, operator+=, non-const
 // operator[], append, reserve
-Data::Data(const char* str, int length, bool) 
+Data::Data(const char* str, size_type length, bool) 
    : mSize(length),
      mBuf(const_cast<char*>(str)),
      mCapacity(mSize),
@@ -279,7 +279,7 @@ Data::Data(const char* str, int length, bool)
    assert(str);
 }
 
-Data::Data(ShareEnum se, const char* buffer, int length)
+Data::Data(ShareEnum se, const char* buffer, size_type length)
    : mSize(length),
      mBuf(const_cast<char*>(buffer)),
      mCapacity(mSize),
@@ -818,7 +818,7 @@ Data::truncate(size_type len)
 Data 
 Data::operator+(const Data& data) const
 {
-   Data tmp(mSize + data.mSize, Data::Preallocate);
+   Data tmp(mSize + (int)data.mSize, Data::Preallocate);
    tmp.mSize = mSize + data.mSize;
    tmp.mCapacity = tmp.mSize;
    memcpy(tmp.mBuf, mBuf, mSize);
@@ -1060,7 +1060,7 @@ Data::md5() const
 {
    MD5Context context;
    MD5Init(&context);
-   MD5Update(&context, reinterpret_cast < unsigned const char* > (mBuf), mSize);
+   MD5Update(&context, reinterpret_cast < unsigned const char* > (mBuf), (unsigned int)mSize);
 
    unsigned char digestBuf[16];
    MD5Final(digestBuf, &context);
@@ -1184,8 +1184,8 @@ Data::charUnencoded() const
                return ret;
             }
             
-            int highInt = high - hexmap;
-            int lowInt = low - hexmap;
+            int highInt = int(high - hexmap);
+            int lowInt = int(low - hexmap);
             ret += char(highInt<<4 | lowInt);
             i += 2;
          }
@@ -1769,7 +1769,7 @@ Data::replace(const Data& match,
 
    int count = 0;
 
-   const int incr = replaceWith.size() - match.size();
+   const int incr = int(replaceWith.size() - match.size());
    for (size_type offset = find(match, 0); 
         offset != Data::npos; 
         offset = find(match, offset+replaceWith.size()))
@@ -1856,7 +1856,7 @@ Data::rawHash(const unsigned char* c, size_t size)
    }
 
    // convert from network to host byte order
-   return ntohl(st);
+   return ntohl((u_long)st);
 }
 
 // use only for ascii characters!
@@ -1886,7 +1886,7 @@ Data::rawCaseInsensitiveHash(const unsigned char* c, size_t size)
    }
 
    // convert from network to host byte order
-   return ntohl(st);
+   return ntohl((u_long)st);
 }
 
 Data
@@ -2012,7 +2012,7 @@ Data::base64encode(bool useSafeSet) const
 {
    unsigned char* codeChar = useSafeSet ? codeCharSafe : codeCharUnsafe;
    
-   int srcLength = this->size();
+   int srcLength = (int)this->size();
    unsigned int dstLimitLength = srcLength*4/3 + 1 + 2; // +2 for the == chars
    unsigned char * dstData = new unsigned char[dstLimitLength];
    unsigned int dstIndex = 0;

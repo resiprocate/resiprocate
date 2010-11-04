@@ -82,7 +82,7 @@ Random::initialize()
          strm << GetCurrentProcessId() << ":";
          strm << GetCurrentThreadId();
          strm.flush();
-         unsigned int seed = buffer.hash();
+         unsigned int seed = (unsigned int)buffer.hash();
 
          srand(seed);
          mIsInitialized = true;

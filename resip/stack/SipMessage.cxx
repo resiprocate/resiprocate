@@ -225,7 +225,7 @@ SipMessage::make(const Data& data,  bool isExternal)
    msgHeaderScanner.prepareForMessage(msg);
    
    char *unprocessedCharPtr;
-   if (msgHeaderScanner.scanChunk(buffer, len, &unprocessedCharPtr) != MsgHeaderScanner::scrEnd)
+   if (msgHeaderScanner.scanChunk(buffer, (unsigned int)len, &unprocessedCharPtr) != MsgHeaderScanner::scrEnd)
    {
       DebugLog(<<"Scanner rejecting buffer as unparsable / fragmented.");
       DebugLog(<< data);
@@ -235,7 +235,7 @@ SipMessage::make(const Data& data,  bool isExternal)
    }
 
    // no pp error
-   unsigned int used = unprocessedCharPtr - buffer;
+   unsigned int used = unsigned int(unprocessedCharPtr - buffer);
 
    if (used < len)
    {
@@ -246,7 +246,7 @@ SipMessage::make(const Data& data,  bool isExternal)
       // it doesn't need a new buffer in UDP b/c there
       // will only be one datagram per buffer. (1:1 strict)
 
-      msg->setBody(buffer+used,len-used);
+      msg->setBody(buffer+used,UInt32(len-used));
       //DebugLog(<<"added " << len-used << " byte body");
    }
 

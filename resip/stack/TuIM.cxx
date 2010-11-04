@@ -467,7 +467,7 @@ TuIM::processRegisterRequest(SipMessage* msg)
    {
       ParserContainer<NameAddr> &providedContacts(msg->header(h_Contacts));
 
-      int multipleContacts = providedContacts.size();
+      int multipleContacts = (int)providedContacts.size();
 
       DebugLog ( << multipleContacts << " contacts were in received message." );   
 

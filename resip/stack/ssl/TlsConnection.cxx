@@ -122,7 +122,7 @@ TlsConnection::TlsConnection( Transport* transport, const Tuple& tuple,
       SSL_set_verify(mSsl, 0, 0);
    }
 
-   mBio = BIO_new_socket(fd,0/*close flag*/);
+   mBio = BIO_new_socket((int)fd,0/*close flag*/);
    assert( mBio );
    
    SSL_set_bio( mSsl, mBio, mBio );

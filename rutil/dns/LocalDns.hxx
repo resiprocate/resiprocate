@@ -37,7 +37,7 @@ class LocalDns : public ExternalDns
       {
          const char* msg = "Local Dns";
 
-         int len = strlen(msg);
+         int len = (int)strlen(msg);
          char* errorString = new char[len+1];
 
          strncpy(errorString, msg, len);
