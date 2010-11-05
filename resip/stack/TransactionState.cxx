@@ -141,7 +141,7 @@ TransactionState::~TransactionState()
 }
 
 bool
-TransactionState::processSipMessageAsNew(SipMessage* sip, TransactionController& controller, const Data& tid)
+TransactionState::processSipMessageAsNew(SipMessage* sip, TransactionController& controller, const Data& tid, std::size_t threadNum)
 {
    StackLog (<< "No matching transaction for " << sip->brief());
    TransactionUser* tu = 0;      
@@ -210,7 +210,7 @@ TransactionState::processSipMessageAsNew(SipMessage* sip, TransactionController&
          else if (sip->method() == CANCEL)
          {
             TransactionState* matchingInvite = 
-               controller.mServerTransactionMap.find(sip->getTransactionId());
+               controller.mServerTransactionMaps[threadNum].find(sip->getTransactionId());
             if (matchingInvite == 0)
             {
                InfoLog (<< "No matching INVITE for incoming (from wire) CANCEL to uas");
@@ -262,7 +262,7 @@ TransactionState::processSipMessageAsNew(SipMessage* sip, TransactionController&
          }
          else if (sip->method() == CANCEL)
          {
-            TransactionState* matchingInvite = controller.mClientTransactionMap.find(sip->getTransactionId());
+            TransactionState* matchingInvite = controller.mClientTransactionMaps[threadNum].find(sip->getTransactionId());
                
             if (matchingInvite == 0)
             {
@@ -329,9 +329,8 @@ TransactionState::processSipMessageAsNew(SipMessage* sip, TransactionController&
 }
 
 void
-TransactionState::process(TransactionController& controller)
+TransactionState::process( TransactionController& controller, int threadNum, TransactionMessage* message)
 {
-   TransactionMessage* message = controller.mStateMacFifo.getNext();
    {
       KeepAliveMessage* keepAlive = dynamic_cast<KeepAliveMessage*>(message);
       if (keepAlive)
@@ -422,8 +421,8 @@ TransactionState::process(TransactionController& controller)
    }
       
    TransactionState* state = 0;
-   if (message->isClientTransaction()) state = controller.mClientTransactionMap.find(tid);
-   else state = controller.mServerTransactionMap.find(tid);
+   if (message->isClientTransaction()) state = controller.mClientTransactionMaps[threadNum].find(tid);
+   else state = controller.mServerTransactionMaps[threadNum].find(tid);
    
    if (state && sip && sip->isExternal())
    {
@@ -576,7 +575,7 @@ TransactionState::process(TransactionController& controller)
    {
       try
       {
-         bool processed = processSipMessageAsNew(sip, controller, tid);
+         bool processed = processSipMessageAsNew(sip, controller, tid, threadNum);
          if (!processed)
          {
             delete sip;      
@@ -2183,26 +2182,28 @@ TransactionState::make100(SipMessage* request) const
 void
 TransactionState::add(const Data& tid)
 {
+   int threadNum = tid.hash() % mController.numberOfThreads();
    if (isClient())
    {
-      mController.mClientTransactionMap.add(tid, this);
+      mController.mClientTransactionMaps[threadNum].add(tid, this);
    }
    else
    {
-      mController.mServerTransactionMap.add(tid, this);
+      mController.mServerTransactionMaps[threadNum].add(tid, this);
    }
 }
 
 void
 TransactionState::erase(const Data& tid)
 {
+   int threadNum = tid.hash() % mController.numberOfThreads();
    if (isClient())
    {
-      mController.mClientTransactionMap.erase(tid);
+      mController.mClientTransactionMaps[threadNum].erase(tid);
    }
    else
    {
-      mController.mServerTransactionMap.erase(tid);
+      mController.mServerTransactionMaps[threadNum].erase(tid);
    }
 }
 

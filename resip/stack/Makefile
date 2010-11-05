@@ -117,6 +117,7 @@ SRC = \
 	TransactionUserMessage.cxx \
 	TransactionMap.cxx \
 	TransactionState.cxx \
+	TransactionStateThread.cxx \
 	Transport.cxx \
 	TransportFailure.cxx \
 	TransportSelector.cxx \

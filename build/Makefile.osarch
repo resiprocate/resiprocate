@@ -88,7 +88,7 @@ endif
 #	CXXFLAGS += -D_REENTRANT -frepo
 	CXXFLAGS += -D_REENTRANT
 	CFLAGS   += -D_REENTRANT 
-LDLIBS_LAST += -ltbbmalloc_proxy -ltbbmalloc
+LDLIBS_LAST += -ltbb -ltbbmalloc_proxy -ltbbmalloc
 ifeq ($(USE_GOOGLE_MALLOC),yes)
 LDLIBS_LAST += -ltcmalloc
 endif

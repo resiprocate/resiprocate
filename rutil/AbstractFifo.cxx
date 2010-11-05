@@ -7,7 +7,7 @@ using namespace resip;
 
 
 AbstractFifo::AbstractFifo(unsigned int maxSize)
-   : mSize(0),
+   : 
      mMaxSize(maxSize)
 {}
 
@@ -18,76 +18,51 @@ AbstractFifo::~AbstractFifo()
 void*
 AbstractFifo ::getNext()
 {
-   Lock lock(mMutex); (void)lock;
-
-   // Wait util there are messages available.
-   while (mFifo.empty())
-   {
-      mCondition.wait(mMutex);
-   }
-
-   // Return the first message on the fifo.
-   //
-   void* firstMessage = mFifo.front();
-   mFifo.pop_front();
-   assert(mSize != 0);
-   mSize--;
-   return firstMessage;
+  void * ptr;
+  mFifo.pop(ptr);
+  return ptr;
 }
 
 void*
 AbstractFifo::getNext(int ms)
 {
+   using namespace std::chrono;
    if(ms == 0) 
    {
       return getNext();
-   }
-
-   const UInt64 begin(Timer::getTimeMs());
-   const UInt64 end(begin + (unsigned int)(ms)); // !kh! ms should've been unsigned :(
-   Lock lock(mMutex); (void)lock;
-
-   // Wait until there are messages available
-   while (mFifo.empty())
+   } 
+   else if (ms == -1)
    {
-      const UInt64 now(Timer::getTimeMs());
-      if(now >= end)
-      {
-          return 0;
-      }
+	void *ptr;
+	if (mFifo.try_pop(ptr))
+	{
+		return ptr;
+	} else {
+		return 0;
+	}
+   }
+	
 
-      unsigned int timeout((unsigned int)(end - now));
-              
-      // bail if total wait time exceeds limit
-      bool signaled = mCondition.wait(mMutex, timeout);
-      if (!signaled)
-      {
-         return 0;
-      }
+   void *ptr;
+   if (mFifo.pop(ptr, milliseconds(ms)))
+   {
+     return ptr;
    }
 
-   // Return the first message on the fifo.
-   //
-   void* firstMessage = mFifo.front();
-   mFifo.pop_front();
-   assert(mSize != 0);
-   mSize--;
-   return firstMessage;
+   return 0;
 }
 
 bool
 AbstractFifo::empty() const
 {
-   Lock lock(mMutex); (void)lock;
-   return mSize == 0;
+  return mFifo.empty();
 }
 
 
-unsigned int
+long
 AbstractFifo ::size() const
 {
-   Lock lock(mMutex); (void)lock;
-   return mSize;
+  return mFifo.size();
 }
 
 time_t
@@ -99,15 +74,13 @@ AbstractFifo::timeDepth() const
 bool
 AbstractFifo::messageAvailable() const
 {
-   Lock lock(mMutex); (void)lock;
-   assert(mSize != NoSize);
    return !mFifo.empty();
 }
 
 size_t 
 AbstractFifo::getCountDepth() const
 {
-   return mSize;
+   return mFifo.size();
 }
 
 time_t 

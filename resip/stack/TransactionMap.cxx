@@ -10,6 +10,12 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
+TransactionMap::TransactionMap()
+{
+
+}
+
+
 TransactionMap::~TransactionMap()
 {
    //DebugLog (<< "Deleting TransactionMap: " << this << " " << mMap.size() << " entries");
@@ -19,6 +25,25 @@ TransactionMap::~TransactionMap()
       delete mMap.begin()->second;
    }
 }
+
+#ifdef RESIP_HAS_RVALUE_REFS
+TransactionMap::TransactionMap(TransactionMap && rhs) 
+{
+  *this = std::move(rhs);
+}
+
+TransactionMap & 
+TransactionMap::operator=(TransactionMap && rhs) 
+{
+  if (this != &rhs)
+  {
+    mMap = std::move(rhs.mMap);
+  }
+  
+  return *this;
+}
+#endif
+
 
 TransactionState* 
 TransactionMap::find( const Data& tid ) const
@@ -78,6 +103,7 @@ TransactionMap::size() const
 {
    return mMap.size();
 }
+
 
 
 

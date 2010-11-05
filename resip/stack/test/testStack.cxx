@@ -23,10 +23,152 @@
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/Uri.hxx"
 #include "malloc.h"
+#include <atomic>
+#include <thread>
+#include <future>
+#include <functional>
 using namespace resip;
-using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
+
+
+   int runs;
+   int window;
+   int seltime = 10;
+   int v6 = 0;
+   int invite=0;
+
+
+std::atomic<int> outstanding;
+std::atomic<int> count;
+std::atomic<int> sent;
+
+
+
+void process(NameAddr const & target, NameAddr const & from, NameAddr const & contact, int senderPort, SipStack & sender ) {
+      while (sent < runs && outstanding < window)
+      {
+
+         SipMessage* next=0;
+         if (invite)
+         {
+            next = Helper::makeInvite( target, from, contact);
+         }
+         else
+         {
+            next = Helper::makeRegister( target, from, contact);
+         }
+
+         next->header(h_Vias).front().sentPort() = senderPort;
+         sender.send(*next);
+         outstanding++;
+         sent++;
+         delete next;
+      }
+
+}
+
+
+void processReceiver(SipStack & receiver) {
+      while (count < runs)
+      {
+      FdSet fdset;
+      receiver.buildFdSet(fdset);
+      fdset.selectMilliSeconds(seltime);
+      receiver.process(fdset);
+      SipMessage* request(0);
+      NameAddr contact;
+
+      while ((request = receiver.receive()) != NULL)
+      {
+         assert(request->isRequest());
+         SipMessage response;
+         switch (request->header(h_RequestLine).getMethod())
+         {
+            case INVITE:
+            {
+               DeprecatedDialog dlg(contact);
+               dlg.makeResponse(*request, response, 180);
+               receiver.send(response);
+               dlg.makeResponse(*request, response, 200);
+               receiver.send(response);
+               break;
+            }
+
+            case ACK:
+               break;
+
+            case BYE:
+               Helper::makeResponse(response, *request, 200);
+               receiver.send(response);
+               break;
+
+            case REGISTER:
+               Helper::makeResponse(response, *request, 200);
+               receiver.send(response);
+               break;
+            default:
+               assert(0);
+               break;
+         }
+         delete request;
+      }
+   }
+
+}
+
+
+void processSender(SipStack & sender) {
+      while (count < runs)
+      {
+      FdSet fdset;
+      sender.buildFdSet(fdset);
+      fdset.selectMilliSeconds(seltime);
+      sender.process(fdset);
+      SipMessage* response(0);
+      NameAddr contact;
+      while ((response = sender.receive()) != NULL)
+      {
+         assert(response->isResponse());
+         switch(response->header(h_CSeq).method())
+         {
+            case REGISTER:
+               --outstanding;
+               ++count;
+               break;
+
+            case INVITE:
+               if (response->header(h_StatusLine).statusCode() == 200)
+               {
+                  --outstanding;
+                  ++count;
+
+                  DeprecatedDialog dlg(contact);
+                  dlg.createDialogAsUAC(*response);
+                  SipMessage* ack = dlg.makeAck();
+                  sender.send(*ack);
+                  delete ack;
+
+                  SipMessage* bye = dlg.makeBye();
+                  sender.send(*bye);
+                  delete bye;
+               }
+               break;
+
+            case BYE:
+               break;
+
+            default:
+               assert(0);
+               break;
+         }
+
+         delete response;
+      }
+
+     }
+
+}
 
 int
 main(int argc, char* argv[])
@@ -37,12 +179,15 @@ main(int argc, char* argv[])
    const char* proto = "tcp";
    char* bindAddr = 0;
 
-   int runs = 10000;
-   int window = 100;
-   int seltime = 0;
-   int v6 = 0;
-   int invite=0;
-   
+   runs = 10000;
+   window = 100;
+   seltime = 5;
+   v6 = 0;
+   invite=0;
+
+   outstanding = 0;
+   count = 0;
+   sent = 0;   
 #if defined(HAVE_POPT_H)
    struct poptOption table[] = {
       {"log-type",    'l', POPT_ARG_STRING, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
@@ -62,7 +207,7 @@ main(int argc, char* argv[])
    poptGetNextOpt(context);
 #endif
    Log::initialize(logType, logLevel, argv[0]);
-   cout << "Performing " << runs << " runs." << endl;
+   std::cout << "Performing " << runs << " runs." << std::endl;
 
    IpVersion version = (v6 ? V6 : V4);
    SipStack receiver;
@@ -110,140 +255,38 @@ main(int argc, char* argv[])
    WarningLog(<< "Malloc Stats After setup: " );
    malloc_stats();
 
+   std::cout << "Starting now: " << Timer::getTimeMs() << std::endl;
    UInt64 startTime = Timer::getTimeMs();
-   int outstanding=0;
-   int count = 0;
-   int sent = 0;
 
+   std::future<void> sendRequestsFuture = std::async(std::launch::async, std::bind(processSender,std::ref(sender)));
+   std::future<void> receiveRequestsFuture = std::async(std::launch::async, std::bind(processReceiver,std::ref(receiver)));
    while (count < runs)
    {
       //InfoLog (<< "count=" << count << " messages=" << messages.size());
       
       // load up the send window
-      while (sent < runs && outstanding < window)
-      {
-         DebugLog (<< "Sending " << count << " / " << runs << " (" << outstanding << ")");
-         target.uri().port() = registrarPort; // +(sent%window);
-
-         SipMessage* next=0;
-         if (invite)
-         {
-            next = Helper::makeInvite( target, from, contact);            
-         }
-         else
-         {
-            next = Helper::makeRegister( target, from, contact);
-         }
-         
-         next->header(h_Vias).front().sentPort() = senderPort;
-         sender.send(*next);
-         outstanding++;
-         sent++;
-         delete next;
-      }
-
-      FdSet fdset; 
-      receiver.buildFdSet(fdset);
-      sender.buildFdSet(fdset);
-      fdset.selectMilliSeconds(seltime); 
-      receiver.process(fdset);
-      sender.process(fdset);
-      
-      SipMessage* request = receiver.receive();
-      static NameAddr contact;
-
-      if (request)
-      {
-         assert(request->isRequest());
-         SipMessage response;
-         switch (request->header(h_RequestLine).getMethod())
-         {
-            case INVITE:
-            {
-               DeprecatedDialog dlg(contact);
-               dlg.makeResponse(*request, response, 180);
-               receiver.send(response);               
-               dlg.makeResponse(*request, response, 200);
-               receiver.send(response);               
-               break;
-            }
-
-            case ACK:
-               break;
-
-            case BYE:
-               Helper::makeResponse(response, *request, 200);
-               receiver.send(response);
-               break;
-               
-            case REGISTER:
-               Helper::makeResponse(response, *request, 200);
-               receiver.send(response);
-               break;
-            default:
-               assert(0);
-               break;
-         }
-         delete request;
-      }
-      
-      SipMessage* response = sender.receive();
-      if (response)
-      {
-         assert(response->isResponse());
-         switch(response->header(h_CSeq).method())
-         {
-            case REGISTER:
-               outstanding--;
-               count++;
-               break;
-               
-            case INVITE:
-               if (response->header(h_StatusLine).statusCode() == 200)
-               {
-                  outstanding--;
-                  count++;
-
-                  DeprecatedDialog dlg(contact);
-                  dlg.createDialogAsUAC(*response);
-                  SipMessage* ack = dlg.makeAck();
-                  sender.send(*ack);
-                  delete ack;
-
-                  SipMessage* bye = dlg.makeBye();
-                  sender.send(*bye);
-                  delete bye;
-               }
-               break;
-
-            case BYE:
-               break;
-               
-            default:
-               assert(0);
-               break;
-         }
-         
-         delete response;
-      }
+      std::future<void> sendRequestsInitialFuture = std::async(std::launch::sync, std::bind(process,std::cref(target),std::cref(from),std::cref(contact),senderPort,std::ref(sender)));
+      sendRequestsInitialFuture.get();
+      usleep(15);
    }
 
    WarningLog(<< "Malloc Stats after finishing");
    malloc_stats();
    InfoLog (<< "Finished " << count << " runs");
-   
+  
+   std::cout << "Current Time: " << Timer::getTimeMs() << std::endl; 
    UInt64 elapsed = Timer::getTimeMs() - startTime;
    if (!invite)
    {
-      cout << runs << " registrations peformed in " << elapsed << " ms, a rate of " 
-           << runs / ((float) elapsed / 1000.0) << " transactions per second.]" << endl;
+      std::cout << runs << " registrations peformed in " << elapsed << " ms, a rate of " 
+           << runs / ((float) elapsed / 1000.0) << " transactions per second.]" << std::endl;
    }
    else
    {
-      cout << runs << " calls peformed in " << elapsed << " ms, a rate of " 
-           << runs / ((float) elapsed / 1000.0) << " calls per second.]" << endl;
+      std::cout << runs << " calls peformed in " << elapsed << " ms, a rate of " 
+           << runs / ((float) elapsed / 1000.0) << " calls per second.]" << std::endl;
    }
-   cout << "Note: this test runs both sides (client and server)" << endl;
+   std::cout << "Note: this test runs both sides (client and server)" << std::endl;
    
 #if defined(HAVE_POPT_H)
    poptFreeContext(context);

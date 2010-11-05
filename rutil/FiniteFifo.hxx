@@ -42,30 +42,25 @@ FiniteFifo<Msg>::FiniteFifo(unsigned int maxSize)
 template <class Msg>
 FiniteFifo<Msg>::~FiniteFifo()
 {
-   Lock lock(mMutex); (void)lock;
-   while ( ! mFifo.empty() )
+   void *ptr(0);
+   while ( mFifo.try_pop(ptr) )
    {
-      delete static_cast<Msg*>(mFifo.front());
-      mFifo.pop_front();
+      delete static_cast<Msg*>(ptr);
    }
-   mSize = NoSize;
 }
 
 template <class Msg>
 bool
 FiniteFifo<Msg>::add(Msg* msg)
 {
-   Lock lock(mMutex); (void)lock;
    if (mMaxSize != NoSize &&
-       mSize >= mMaxSize)
+       mFifo.size() >= mMaxSize)
    {
       return false;
    }
    else
    {
-      mFifo.push_back(msg);
-      mSize++;
-      mCondition.signal();
+      mFifo.push(msg);
       return true;
    }
 }

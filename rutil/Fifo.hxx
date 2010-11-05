@@ -63,25 +63,21 @@ template <class Msg>
 void
 Fifo<Msg>::clear()
 {
-   Lock lock(mMutex); (void)lock;
-   while ( ! mFifo.empty() )
+   void * ptr;
+   while (mFifo.try_pop(ptr) )
    {
-      Msg* msg = static_cast<Msg*>(mFifo.front());
-      mFifo.pop_front();
+      
+      Msg* msg = static_cast<Msg*>(ptr);
       delete msg;
    }
    assert(mFifo.empty());
-   mSize = 0UL -1;
 }
 
 template <class Msg>
 void
 Fifo<Msg>::add(Msg* msg)
 {
-   Lock lock(mMutex); (void)lock;
-   mFifo.push_back(msg);
-   mSize++;
-   mCondition.signal();
+   mFifo.push((void*)msg);
 }
 
 template <class Msg>

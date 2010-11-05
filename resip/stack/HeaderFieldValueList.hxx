@@ -17,7 +17,7 @@ class HeaderFieldValueList
       HeaderFieldValueList()
          : mHeaders(), 
            mParserContainer(0)
-      { mHeaders.reserve(10); }
+      { mHeaders.reserve(4); }
 
       ~HeaderFieldValueList();
       HeaderFieldValueList(const HeaderFieldValueList& rhs);

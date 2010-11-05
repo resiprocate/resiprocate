@@ -23,7 +23,7 @@ class TransactionState : public DnsHandler
 {
    public:
       RESIP_HeapCount(TransactionState);
-      static void process(TransactionController& controller); 
+      static void process(TransactionController& controller, int threadNum, TransactionMessage *msg); 
       ~TransactionState();
      
    private:
@@ -113,7 +113,9 @@ class TransactionState : public DnsHandler
 
       static bool processSipMessageAsNew(resip::SipMessage* sip, 
                                          resip::TransactionController& controller,
-                                         const resip::Data& tid);
+                                         const resip::Data& tid,
+					 std::size_t threadNum
+					);
 
       TransactionController& mController;
       

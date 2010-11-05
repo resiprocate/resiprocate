@@ -18,6 +18,8 @@
 #include "Winsock2.h"
 #endif
 
+#include <boost/functional/hash.hpp>
+
 using namespace resip;
 using namespace std;
 
@@ -1910,7 +1912,8 @@ bits(size_t v)
 size_t
 Data::hash() const
 {
-   return rawHash((const unsigned char*)(this->data()), this->size());
+     return boost::hash_range(this->data(),this->data()+this->size());
+//   return rawHash((const unsigned char*)(this->data()), this->size());
 }
 
 size_t

@@ -8,6 +8,9 @@
 #include "rutil/Fifo.hxx"
 #include "rutil/TimeLimitFifo.hxx"
 #include "rutil/Timer.hxx"
+#include <deque>
+#include <vector>
+#include <tbb/concurrent_queue.h>
 
 // .dlb. 
 // to do: timer wheel for transaction-bound timers and a heap for
@@ -31,6 +34,7 @@ class TuSelector;
 class BaseTimerQueue
 {
    public:
+     typedef std::multiset<Timer> TimerHeap;
       /// deletes the message associated with the timer as well.
       virtual ~BaseTimerQueue()=0;
 	  
@@ -53,7 +57,7 @@ class BaseTimerQueue
 #ifndef RESIP_USE_STL_STREAMS
 	  friend std::ostream& operator<<(std::ostream& strm, const BaseTimerQueue&);
 #endif
-      std::multiset<Timer> mTimers;
+      TimerHeap mTimers;
 };
 
 class BaseTimeLimitTimerQueue : public BaseTimerQueue
@@ -96,6 +100,18 @@ class TimerQueue : public BaseTimerQueue
       virtual void process();
    private:
       Fifo<TransactionMessage>& mFifo;
+};
+
+class LockedTimerQueue : public TimerQueue
+{
+  public:
+    LockedTimerQueue ( Fifo< TransactionMessage >& fifo );
+    Timer::Id add(Timer::Type type, const Data& transactionId, unsigned long msOffset);
+    virtual void process();
+  private:
+  
+    tbb::concurrent_bounded_queue<Timer> mPushedTimers;
+  
 };
 
 #ifdef USE_DTLS

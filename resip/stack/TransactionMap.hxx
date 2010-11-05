@@ -12,7 +12,11 @@ namespace resip
   {
      public:
         ~TransactionMap();
-        
+        TransactionMap();
+#ifdef RESIP_HAS_RVALUE_REFS
+	TransactionMap(TransactionMap && rhs);
+	TransactionMap & operator=(TransactionMap && rhs);
+#endif
         TransactionState* find( const Data& transactionId ) const;
         void add( const Data& transactionId, TransactionState* state  );
         void erase( const Data& transactionId );
