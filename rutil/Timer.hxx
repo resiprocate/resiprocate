@@ -47,6 +47,7 @@ class Timer
       
       static Data toData(Type timer);
 
+      Timer();
       Timer(unsigned long ms, Type type, const Data& transactionId);
       Timer(unsigned long ms, Message* message);
       Timer(const Timer& t);

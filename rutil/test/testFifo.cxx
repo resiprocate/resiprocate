@@ -10,7 +10,7 @@
 #include <unistd.h>
 #endif
 
-//#define VERBOSE
+#define VERBOSE
 
 using namespace resip;
 using namespace std;

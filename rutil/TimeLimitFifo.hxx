@@ -5,9 +5,11 @@
 #include <memory>
 #include "rutil/AbstractFifo.hxx"
 #include <iostream>
+#include <ctime>
 #if defined( WIN32 )
 #include <time.h>
 #endif
+#include <rutil/Timer.hxx>
 
 // efficiency note: use a circular buffer to avoid list node allocation
 
@@ -94,6 +96,7 @@ class TimeLimitFifo : public AbstractFifo
 
       time_t mMaxDurationSecs;
       unsigned int mUnreservedMaxSize;
+      mutable resip::Mutex mMutex;
 };
 
 template <class Msg>
@@ -109,7 +112,6 @@ TimeLimitFifo<Msg>::~TimeLimitFifo()
 {
    clear();
    assert(empty());
-   mSize = 0UL - 1;
 }
 
 template <class Msg>
@@ -117,14 +119,12 @@ bool
 TimeLimitFifo<Msg>::add(Msg* msg,
                         DepthUsage usage)
 {
-   Lock lock(mMutex); (void)lock;
-
+  Lock lock(mMutex); (void)lock;
    if (wouldAcceptInteral(usage))
    {
-      time_t n = time(0);
-      mFifo.push_back(new Timestamped(msg, n));
-      mSize++;
-      mCondition.signal();
+      Timer t;
+      time_t n = t.getTimeSecs();
+      mFifo.push(new Timestamped(msg, n));
       return true;
    }
    else
@@ -137,8 +137,7 @@ template <class Msg>
 bool
 TimeLimitFifo<Msg>::wouldAccept(DepthUsage usage) const
 {
-   Lock lock(mMutex); (void)lock;
-
+    Lock lock(mMutex); (void)lock;
    return wouldAcceptInteral(usage);
 }
 
@@ -146,6 +145,7 @@ template <class Msg>
 Msg*
 TimeLimitFifo<Msg>::getNext()
 {
+    Lock lock(mMutex); (void)lock;
    std::auto_ptr<Timestamped> tm(static_cast<Timestamped*>(AbstractFifo::getNext()));
    return tm->mMsg;
 }
@@ -171,16 +171,23 @@ TimeLimitFifo<Msg>::timeDepthInternal() const
 {
    assert(!mFifo.empty());
 
-   Timestamped* tm = static_cast<Timestamped*>(mFifo.front());
-   return time(0) - tm->mTime;
+   void* ptr(0);
+   if (mFifo.peek(ptr))
+   {
+      Timestamped* tm = static_cast<Timestamped*>(ptr);
+      Timer t;
+      return t.getTimeSecs() - tm->mTime;
+   }
+   
+   return 0;
 }   
 
 template <class Msg>
 bool
 TimeLimitFifo<Msg>::wouldAcceptInteral(DepthUsage usage) const
 {
-   if ((mMaxSize != 0 &&
-        mSize >= mMaxSize))
+   if ((mMaxSize != 0 && !mFifo.empty() &&
+        ((std::size_t)mFifo.size()) >= mMaxSize))
    {
       return false;
    }
@@ -191,7 +198,7 @@ TimeLimitFifo<Msg>::wouldAcceptInteral(DepthUsage usage) const
    }
 
    if (mUnreservedMaxSize != 0 &&
-       mSize >= mUnreservedMaxSize)
+       mFifo.size() >= mUnreservedMaxSize)
    {
       return false;
    }
@@ -203,7 +210,7 @@ TimeLimitFifo<Msg>::wouldAcceptInteral(DepthUsage usage) const
 
    assert(usage == EnforceTimeDepth);
 
-   if (mSize == 0 ||
+   if (mFifo.size() <= 0 ||
        mMaxDurationSecs == 0 ||
        timeDepthInternal() < mMaxDurationSecs)
    {
@@ -223,26 +230,32 @@ TimeLimitFifo<Msg>::timeDepth() const
    {
       return 0;
    }
-
-   Timestamped* tm = static_cast<Timestamped*>(mFifo.front());
-   return time(0) - tm->mTime;
+   void *ptr(0);
+   if (mFifo.peek(ptr))
+   {
+      Timestamped* tm = static_cast<Timestamped*>(ptr);
+      Timer t;
+      
+      return t.getTimeSecs() - tm->mTime;
+   }
+   
+   return 0;
 }   
 
 template <class Msg>
 void
 TimeLimitFifo<Msg>::clear()
 {
-   Lock lock(mMutex); (void)lock;
+  
+  Lock lock(mMutex); (void)lock;
 
-   while (!mFifo.empty())
+   void * ptr(0);
+   while (mFifo.try_pop(ptr))
    {
-      Timestamped* tm = static_cast<Timestamped*>(mFifo.front());
+      Timestamped* tm = static_cast<Timestamped*>(ptr);
       delete tm->mMsg;
       delete tm;
-
-      mFifo.pop_front();
    }
-   mSize = 0;
 }   
 
 template <class Msg>

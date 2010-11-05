@@ -15,6 +15,9 @@
 #include "rutil/Logger.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "rutil/WinLeakCheck.hxx"
+#include <thread>
+#include <boost/shared_ptr.hpp>
+#include <resip/stack/TransactionStateThread.hxx>
 
 using namespace resip;
 
@@ -38,10 +41,18 @@ TransactionController::TransactionController(SipStack& stack) :
                       stack.getSecurity(),
                       stack.getDnsStub(),
                       stack.getCompression()),
+   mClientTransactionMaps(numberOfThreads()),
+   mServerTransactionMaps(numberOfThreads()),
    mTimers(mStateMacFifo),
    mShuttingDown(false),
    mStatsManager(stack.mStatsManager)
 {
+      for (int i = 0; i < numberOfThreads(); ++i)
+      {
+	mThreads.push_back(boost::shared_ptr<TransactionStateThread>(new TransactionStateThread(*this,i)));
+      }
+      
+      
 }
 
 #if defined(WIN32) && !defined(__GNUC__)
@@ -50,6 +61,12 @@ TransactionController::TransactionController(SipStack& stack) :
 
 TransactionController::~TransactionController()
 {
+}
+
+
+std::size_t resip::TransactionController::numberOfThreads()
+{
+  return std::thread::hardware_concurrency() == 0 ? 4u : std::thread::hardware_concurrency();
 }
 
 
@@ -84,10 +101,25 @@ TransactionController::process(FdSet& fdset)
    {
       mTransportSelector.process(fdset);
       mTimers.process();
+      
+       
 
-      while (mStateMacFifo.messageAvailable())
-      {
-         TransactionState::process(*this);
+      TransactionMessage *msg(0);
+      while ((msg = mStateMacFifo.getNext(-1)))
+      { 
+	 try
+	 {
+	   
+	    Data const & tid = msg->getTransactionId();
+	    std::size_t threadNum = tid.hash() % numberOfThreads();
+	    mThreads[threadNum]->fifo().push(msg);
+	 }
+	 catch(SipMessage::Exception&)
+	 {
+            // .bwc This is not our error. Do not ErrLog.
+	    DebugLog( << "TransactionController::process dropping message with invalid tid " << msg->brief());
+	    delete msg;
+	 }
       }
    }
 }
@@ -141,13 +173,23 @@ TransactionController::getTransactionFifoSize() const
 unsigned int 
 TransactionController::getNumClientTransactions() const
 {
-   return mClientTransactionMap.size();
+   std::size_t transactions(0);
+   for (auto i = mClientTransactionMaps.begin(); i != mClientTransactionMaps.end(); ++i)
+   {
+    transactions += i->size();
+   }
+   return transactions;
 }
 
 unsigned int 
 TransactionController::getNumServerTransactions() const
 {
-   return mServerTransactionMap.size();
+   std::size_t transactions(0);
+   for (auto i = mServerTransactionMaps.begin(); i != mServerTransactionMaps.end(); ++i)
+   {
+    transactions += i->size();
+   }
+   return transactions;
 }
 
 unsigned int 

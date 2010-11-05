@@ -127,6 +127,15 @@ Timer::Timer(unsigned long tms) :
 {
 }
 
+Timer::Timer() : mWhen(getTimeMs()),
+		 mId(0),
+		 mDuration(0),
+		 mMessage(0)
+{
+
+}
+
+
 Timer::Timer(const Timer& other) : 
     mWhen(other.mWhen),
     mId(other.mTimerCount),

@@ -5,7 +5,7 @@
 #include "resip/stack/TransactionMap.hxx"
 #include "resip/stack/TransportSelector.hxx"
 #include "resip/stack/TimerQueue.hxx"
-
+#include <boost/shared_ptr.hpp>
 namespace resip
 {
 
@@ -14,6 +14,7 @@ class ApplicationMessage;
 class StatisticsManager;
 class SipStack;
 class Compression;
+class TransactionStateThread;
 
 class TransactionController
 {
@@ -69,6 +70,8 @@ class TransactionController
       void abandonServerTransaction(const Data& tid);
 
       void cancelClientInviteTransaction(const Data& tid);
+      
+      static std::size_t numberOfThreads();
 
    private:
       TransactionController(const TransactionController& rhs);
@@ -97,16 +100,18 @@ class TransactionController
       TransportSelector mTransportSelector;
 
       // stores all of the transactions that are currently active in this stack 
-      TransactionMap mClientTransactionMap;
-      TransactionMap mServerTransactionMap;
+      std::vector<TransactionMap> mClientTransactionMaps;
+      std::vector<TransactionMap> mServerTransactionMaps;
 
       // timers associated with the transactions. When a timer fires, it is
       // placed in the mStateMacFifo
-      TimerQueue  mTimers;
+      LockedTimerQueue  mTimers;
 
       bool mShuttingDown;
       
       StatisticsManager& mStatsManager;
+      
+      std::vector<boost::shared_ptr<TransactionStateThread> > mThreads;
 
       friend class SipStack; // for debug only
       friend class StatelessHandler;

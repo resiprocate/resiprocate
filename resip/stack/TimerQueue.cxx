@@ -13,6 +13,7 @@
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/WinLeakCheck.hxx"
+#include "rutil/Lock.hxx"
 
 using namespace resip;
 using namespace std;
@@ -37,7 +38,7 @@ BaseTimerQueue::~BaseTimerQueue()
 {
    //xkd-2004-11-4
    // delete the message associated with the timer
-   for (std::multiset<Timer>::iterator i = mTimers.begin(); i !=  mTimers.end(); ++i)
+   for (TimerHeap::iterator i = mTimers.begin(); i !=  mTimers.end(); ++i)
    {
       if (i->getMessage())
       {
@@ -87,13 +88,47 @@ TimerQueue::add(Timer::Type type, const Data& transactionId, unsigned long msOff
    return t.getId();
 }
 
+LockedTimerQueue::LockedTimerQueue ( Fifo< TransactionMessage >& fifo ) : TimerQueue ( fifo )
+{
+
+}
+
+Timer::Id LockedTimerQueue::add ( Timer::Type type, const resip::Data& transactionId, long unsigned int msOffset )
+{
+  Timer t(msOffset,type,transactionId);
+  mPushedTimers.push(Timer(t));
+  return t.getId();
+}
+
+void
+LockedTimerQueue::process()
+{
+  Timer t;
+  while (mPushedTimers.try_pop(t))
+  {
+    mTimers.insert(t);
+  }
+  TimerQueue::process();
+}
+
+
+
+
+
+
+
+
+
+
+
 #ifdef USE_DTLS
 
 void
 DtlsTimerQueue::add( SSL *ssl, unsigned long msOffset )
 {
    Timer t( msOffset, new DtlsMessage( ssl ) ) ;
-   mTimers.insert( t ) ;
+   mTimers.push_back(t);
+   std::push_heap(mTimers.begin(),mTimers.end());
 }
 
 #endif
@@ -130,8 +165,9 @@ BaseTimeLimitTimerQueue::process()
       if (now < *mTimers.begin())
          return;
 
-      std::multiset<Timer>::iterator end = mTimers.upper_bound(now);
-      for (std::multiset<Timer>::iterator i = mTimers.begin(); i != end; ++i)
+      // Use std::greater because I want the least significant elements...
+      TimerHeap::iterator end = mTimers.upper_bound(now);
+      for (TimerHeap::iterator i = mTimers.begin(); i != end; ++i)
       {
          assert(i->getMessage());
          addToFifo(i->getMessage(), TimeLimitFifo<Message>::InternalElement);
@@ -152,8 +188,8 @@ TimerQueue::process()
       if (now < *mTimers.begin())
          return;
 
-      std::multiset<Timer>::iterator end = mTimers.upper_bound(now);
-      for (std::multiset<Timer>::iterator i = mTimers.begin(); i != end; ++i)
+      TimerHeap::iterator end = mTimers.upper_bound(now);
+      for (TimerHeap::iterator i = mTimers.begin(); i != end; ++i)
       {
          mFifo.add(new TimerMessage(i->mTransactionId, i->mType, i->mDuration));
       }
@@ -194,8 +230,8 @@ DtlsTimerQueue::process()
       if (now < *mTimers.begin())
          return;
 
-      std::multiset<Timer>::iterator end = mTimers.upper_bound(now);
-      for (std::multiset<Timer>::iterator i = mTimers.begin(); i != end; ++i)
+      TimerHeap::iterator end = mTimers.upper_bound(now);
+      for (TimerHeap::iterator i = mTimers.begin(); i != end; ++i)
       {
           mFifo.add( (DtlsMessage *)i->getMessage() ) ;
       }
@@ -211,7 +247,7 @@ resip::operator<<(std::ostream& str, const BaseTimerQueue& tq)
 {
    str << "TimerQueue[" ;
 
-    for (std::multiset<Timer>::const_iterator i = tq.mTimers.begin(); 
+    for (typename BaseTimerQueue::TimerHeap::const_iterator i = tq.mTimers.begin(); 
         i != tq.mTimers.end(); ++i)
    {
       str << *i << " " ;
@@ -227,7 +263,7 @@ resip::operator<<(EncodeStream& str, const BaseTimerQueue& tq)
 {
    str << "TimerQueue[" ;
 
-    for (std::multiset<Timer>::const_iterator i = tq.mTimers.begin(); 
+    for (typename BaseTimerQueue::TimerHeap::const_iterator i = tq.mTimers.begin(); 
         i != tq.mTimers.end(); ++i)
    {
       str << *i << " " ;

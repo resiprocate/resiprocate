@@ -691,8 +691,8 @@ SipStack::dump(EncodeStream& strm)  const
         << " TUFifo size=" << this->mTUFifo.size() << std::endl
         << " Timers size=" << this->mTransactionController.mTimers.size() << std::endl
         << " AppTimers size=" << this->mAppTimers.size() << std::endl
-        << " ServerTransactionMap size=" << this->mTransactionController.mServerTransactionMap.size() << std::endl
-        << " ClientTransactionMap size=" << this->mTransactionController.mClientTransactionMap.size() << std::endl
+//        << " ServerTransactionMap size=" << this->mTransactionController.mServerTransactionMap.size() << std::endl
+//        << " ClientTransactionMap size=" << this->mTransactionController.mClientTransactionMap.size() << std::endl
         << " Exact Transports=" << Inserter(this->mTransactionController.mTransportSelector.mExactTransports) << std::endl
         << " Any Transports=" << Inserter(this->mTransactionController.mTransportSelector.mAnyInterfaceTransports) << std::endl;
    return strm;

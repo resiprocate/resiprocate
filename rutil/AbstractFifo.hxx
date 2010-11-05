@@ -3,6 +3,7 @@
 
 #include <deque>
 
+#include "rutil/SpinLockQueue.hxx"
 #include "rutil/Mutex.hxx"
 #include "rutil/Condition.hxx"
 #include "rutil/Lock.hxx"
@@ -28,6 +29,7 @@ class FifoStatsInterface
    @note Users of the resip stack will not need to interact with this class 
       directly in most cases. Look at Fifo and TimeLimitFifo instead.
  */
+
 class AbstractFifo : public FifoStatsInterface
 {
    public:
@@ -47,7 +49,7 @@ class AbstractFifo : public FifoStatsInterface
        *  to determine whether a call to getNext() will block or not.
        *  Use messageAvailable() instead.
        */
-      unsigned int size() const;
+      long size() const;
 
       /** @retval true (is a message is available ?)
        */
@@ -83,13 +85,17 @@ class AbstractFifo : public FifoStatsInterface
 
       enum {NoSize = 0UL -1};
 
+#if 0
       std::deque<void*> mFifo;
       unsigned long mSize;
       unsigned long mMaxSize;
       
       mutable Mutex mMutex;
       Condition mCondition;
-
+#else
+      unsigned long mMaxSize;
+      mutable resip::SpinLockQueue<void*> mFifo;
+#endif
    private:
       // no value semantics
       AbstractFifo(const AbstractFifo&);
