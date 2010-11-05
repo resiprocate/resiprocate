@@ -168,7 +168,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
          }
 
          unsigned int numUnprocessedChars = 
-            unsigned int((mBuffer + chunkLength) - unprocessedCharPtr);
+            (unsigned int)((mBuffer + chunkLength) - unprocessedCharPtr);
 
          if(numUnprocessedChars==chunkLength)
          {

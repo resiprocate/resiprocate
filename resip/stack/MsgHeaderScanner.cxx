@@ -956,7 +956,7 @@ MsgHeaderScanner::scanChunk(char * chunk,
          case taTermStatusLine:
             if (!processMsgHeaderStatusLine(mMsg,
                                             textStartCharPtr,
-                                            unsigned int(charPtr - textStartCharPtr),
+                                            (unsigned int)(charPtr - textStartCharPtr),
                                             localTextPropBitMask))
             {
                result = MsgHeaderScanner::scrError;
@@ -967,7 +967,7 @@ MsgHeaderScanner::scanChunk(char * chunk,
             break;
          case taTermFieldName:
          {
-            mFieldNameLength = unsigned int(charPtr - textStartCharPtr);
+            mFieldNameLength = (unsigned int)(charPtr - textStartCharPtr);
             bool isMultiValueAllowed;
             lookupMsgHeaderFieldInfo(textStartCharPtr,
                                      &mFieldNameLength,
@@ -997,7 +997,7 @@ MsgHeaderScanner::scanChunk(char * chunk,
                                               mFieldName,
                                               mFieldNameLength,
                                               textStartCharPtr,
-                                              unsigned int((charPtr - textStartCharPtr) - 2),
+                                              (unsigned int)((charPtr - textStartCharPtr) - 2),
                                               localTextPropBitMask);       //^:CRLF
             goto performStartTextAction;
          case taTermValue:
@@ -1006,7 +1006,7 @@ MsgHeaderScanner::scanChunk(char * chunk,
                                               mFieldName,
                                               mFieldNameLength,
                                               textStartCharPtr,
-                                              unsigned int(charPtr - textStartCharPtr),
+                                              (unsigned int)(charPtr - textStartCharPtr),
                                               localTextPropBitMask);
             textStartCharPtr = 0;
             break;
@@ -1032,7 +1032,7 @@ MsgHeaderScanner::scanChunk(char * chunk,
                }
                else
                {
-                  mPrevScanChunkNumSavedTextChars = unsigned int(termCharPtr - textStartCharPtr);
+                  mPrevScanChunkNumSavedTextChars = (unsigned int)(termCharPtr - textStartCharPtr);
                }
                mTextPropBitMask = localTextPropBitMask;
                result = MsgHeaderScanner::scrNextChunk;

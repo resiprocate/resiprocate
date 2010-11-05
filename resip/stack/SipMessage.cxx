@@ -235,7 +235,7 @@ SipMessage::make(const Data& data,  bool isExternal)
    }
 
    // no pp error
-   unsigned int used = unsigned int(unprocessedCharPtr - buffer);
+   unsigned int used = (unsigned int)(unprocessedCharPtr - buffer);
 
    if (used < len)
    {
