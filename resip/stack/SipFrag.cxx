@@ -207,7 +207,7 @@ SipFrag::parse(ParseBuffer& pb)
    char *scanTermCharPtr;
    MsgHeaderScanner::ScanChunkResult scanChunkResult =
        msgHeaderScanner.scanChunk(buffer,
-                                  unsigned int(size + sentinelLength),
+                                  (unsigned int)(size + sentinelLength),
                                   &scanTermCharPtr);
    
    memcpy(termCharArray,scratchpad,4);
