@@ -41,7 +41,7 @@ class Profile
       virtual UInt32 getDefaultRegistrationTime() const;
       virtual void unsetDefaultRegistrationTime();  
 
-      /// If a registration gets rejected with a 423, then we with the MinExpires value - if it is less than this
+      /// If a registration gets rejected with a 423, then we ensure the MinExpires value is less than this before re-registering
       /// Set to 0 to disable this check and accept any time suggested by the server.
       virtual void setDefaultMaxRegistrationTime(UInt32 secs);
       virtual UInt32 getDefaultMaxRegistrationTime() const;
