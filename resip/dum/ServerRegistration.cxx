@@ -719,10 +719,6 @@ ServerRegistration::AsyncLocalStore::create(std::auto_ptr<ContactPtrList> origin
 {
    mModifiedContacts = originalContacts;
    mLog = std::auto_ptr<ContactRecordTransactionLog>(new ContactRecordTransactionLog());
-   if (originalContacts.get())
-   {
-      mLog->resize(originalContacts->size());
-   }
 }
 
 void
