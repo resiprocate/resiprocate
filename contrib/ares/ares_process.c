@@ -740,7 +740,7 @@ static int open_udp_socket(ares_channel channel, struct server_state *server)
 #endif
   if(channel->socket_function)
   {
-     channel->socket_function(s, 1, __FILE__, __LINE__);
+     channel->socket_function(s, 0, __FILE__, __LINE__);
   }
     
   server->udp_socket = s;
@@ -873,7 +873,7 @@ int make_socket_non_blocking(int s)
   }
 #else
   int flags;
-  if (fcntl(s, F_GETFL, &flags) == -1)
+  if ((flags=fcntl(s, F_GETFL, 0)) == -1)
   {
     return -1;
   }
