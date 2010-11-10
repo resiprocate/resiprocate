@@ -32,7 +32,7 @@ class AresDns : public ExternalDns
 
       virtual bool checkDnsChange();
 
-      virtual bool requiresProcess();
+      virtual unsigned int getTimeTillNextProcessMS();
       virtual void buildFdSet(fd_set& read, fd_set& write, int& size);
       virtual void process(fd_set& read, fd_set& write);
 

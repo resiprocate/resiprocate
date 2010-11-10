@@ -108,10 +108,11 @@ DnsStub::~DnsStub()
    delete mDnsProvider;
 }
 
-bool 
-DnsStub::requiresProcess()
+unsigned int 
+DnsStub::getTimeTillNextProcessMS()
 {
-   return (mCommandFifo.size() > 0) || (mQueries.size() > 0);
+    if(mCommandFifo.size() > 0) return 0;
+    return mDnsProvider->getTimeTillNextProcessMS();;
 }
 
 void 
@@ -120,7 +121,8 @@ DnsStub::buildFdSet(FdSet& fdset)
    mDnsProvider->buildFdSet(fdset.read, fdset.write, fdset.size);
 }
 
-void DnsStub::process(FdSet& fdset)
+void 
+DnsStub::process(FdSet& fdset)
 {
    while (mCommandFifo.messageAvailable())
    {
@@ -131,16 +133,18 @@ void DnsStub::process(FdSet& fdset)
    mDnsProvider->process(fdset.read, fdset.write);
 }
 
-void DnsStub::cache(const Data& key,
-                    in_addr addr)
+void 
+DnsStub::cache(const Data& key,
+               in_addr addr)
 {
    DnsHostRecord record(key, addr);
    mRRCache.updateCacheFromHostFile(record);
 }
 
-void DnsStub::cache(const Data& key,
-                    const unsigned char* abuf, 
-                    int alen)
+void 
+DnsStub::cache(const Data& key,
+               const unsigned char* abuf, 
+               int alen)
 {
 
    vector<RROverlay> overlays;
@@ -191,11 +195,12 @@ void DnsStub::cache(const Data& key,
    }
 }
 
-void DnsStub::cacheTTL(const Data& key,
-                       int rrType,
-                       int status,
-                       const unsigned char* abuf, 
-                       int alen)
+void 
+DnsStub::cacheTTL(const Data& key,
+                  int rrType,
+                  int status,
+                  const unsigned char* abuf, 
+                  int alen)
 {
    // skip header
    const unsigned char* aptr = abuf + HFIXEDSZ;
@@ -330,12 +335,14 @@ DnsStub::removeQuery(Query* query)
    }
 }
 
-void DnsStub::setResultTransform(ResultTransform* transform)
+void 
+DnsStub::setResultTransform(ResultTransform* transform)
 {
    mTransform = transform;
 }
 
-void DnsStub::removeResultTransform()
+void 
+DnsStub::removeResultTransform()
 {
    mTransform = 0;
 }
@@ -704,7 +711,8 @@ DnsStub::errorMessage(int status)
    return Data(Data::Take, mDnsProvider->errorMessage(status));
 }
 
-void DnsStub::lookupRecords(const Data& target, unsigned short type, DnsRawSink* sink)
+void 
+DnsStub::lookupRecords(const Data& target, unsigned short type, DnsRawSink* sink)
 {
    mDnsProvider->lookup(target.c_str(), type, this, sink);
 }

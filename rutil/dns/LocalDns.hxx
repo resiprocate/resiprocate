@@ -20,7 +20,7 @@ class LocalDns : public ExternalDns
       virtual ~LocalDns();
 
       virtual int init(); 
-      virtual bool requiresProcess();
+      virtual unsigned int getTimeTillNextProcessMS();
       virtual void buildFdSet(fd_set& read, fd_set& write, int& size);
       virtual void process(fd_set& read, fd_set& write);
 

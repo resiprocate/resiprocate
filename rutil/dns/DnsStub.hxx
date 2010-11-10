@@ -161,7 +161,7 @@ class DnsStub : public ExternalDnsHandler
       }
 
       void process(FdSet& fdset);
-      bool requiresProcess();
+      unsigned int getTimeTillNextProcessMS();
       void buildFdSet(FdSet& fdset);
 
       virtual void handleDnsRaw(ExternalDnsRawResult);
