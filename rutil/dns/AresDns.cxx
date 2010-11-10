@@ -416,10 +416,12 @@ AresDns::makeRawResult(void *arg, int status, unsigned char *abuf, int alen)
    }
 }
       
-bool 
-AresDns::requiresProcess()
+unsigned int
+AresDns::getTimeTillNextProcessMS()
 {
-   return true; 
+   struct timeval tv;
+   ares_timeout(mChannel, NULL, &tv);
+   return tv.tv_sec*1000 + tv.tv_usec / 1000; 
 }
 
 void 

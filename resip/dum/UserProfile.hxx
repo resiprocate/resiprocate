@@ -60,7 +60,7 @@ class UserProfile : public Profile
       virtual NameAddr& getGruu(const Data& aor);
       virtual NameAddr& getGruu(const Data& aor, const NameAddr& contact);
 
-      //should do Supported wrangling--but what if rquired is desired? Same as 100rel?
+      //should do Supported wrangling--but what if required is desired? Same as 100rel?
       virtual bool& gruuEnabled() { return mGruuEnabled; }
       virtual bool gruuEnabled() const { return mGruuEnabled; }
 

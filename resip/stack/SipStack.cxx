@@ -586,10 +586,10 @@ SipStack::getTimeTillNextProcessMS()
 {
    Lock lock(mAppTimerMutex);
 
-   unsigned int dnsNextProcess = (mDnsStub->requiresProcess() ? 0 : 0xffffffff);
-   return resipMin(Timer::getMaxSystemTimeWaitMs(),resipMin(dnsNextProcess,
-                   resipMin(mTransactionController.getTimeTillNextProcessMS(),
-                            resipMin(mTuSelector.getTimeTillNextProcessMS(), mAppTimers.msTillNextTimer()))));
+   return resipMin(Timer::getMaxSystemTimeWaitMs(),
+                  resipMin(mDnsStub->getTimeTillNextProcessMS(),
+                           resipMin(mTransactionController.getTimeTillNextProcessMS(),
+                                    resipMin(mTuSelector.getTimeTillNextProcessMS(), mAppTimers.msTillNextTimer()))));
 } 
 
 void 

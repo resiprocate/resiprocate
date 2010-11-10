@@ -41,8 +41,8 @@ class ExternalDns
       //returns 'true' only is there are changes in the DNS server list
       virtual bool checkDnsChange() = 0;
 
-      //only call buildFdSet and process if requiresProcess is true.  
-      virtual bool requiresProcess() = 0;
+      //For use in select timeout
+      virtual unsigned int getTimeTillNextProcessMS() = 0;
 
       //this is scary on windows; the standard way to get a bigger fd_set is to
       //redefine FD_SETSIZE befor each inclusion of winsock2.h, so make sure
