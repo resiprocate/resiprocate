@@ -52,7 +52,8 @@ BaseSubscription::matches(const SipMessage& msg)
       }
       else
       {
-         return mEventType == "refer";
+         return (mEventType == "refer" && 
+                 Data(msg.header(h_CSeq).sequence()) == mSubscriptionId);      
       }
    }
 }

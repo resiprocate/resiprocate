@@ -27,9 +27,12 @@ ServerSubscription::ServerSubscription(DialogUsageManager& dum,
      mExpires(60),
      mAbsoluteExpiry(0)
 {
+   if (req.header(h_RequestLine).method() == REFER)
+   {
+      mSubscriptionId = Data(req.header(h_CSeq).sequence());
+   }   
    Data key = getEventType() + getDocumentKey();
    mDum.mServerSubscriptions.insert(DialogUsageManager::ServerSubscriptions::value_type(key, this));
-   //mDum.mServerSubscriptions.insert(std::make_pair(key, this));
 }
 
 ServerSubscription::~ServerSubscription()
