@@ -428,6 +428,8 @@ class Helper
                                        bool stale = false,
                                        bool proxy = false);
 
+      static Data qopOption(const Auth& challenge);
+      static void updateNonceCount(unsigned int& nonceCount, Data& nonceCountString);
       static bool algorithmAndQopSupported(const Auth& challenge);
       
 
@@ -447,6 +449,15 @@ class Helper
                                             const Data& cnonce,
                                             unsigned int& nonceCount,
                                             Data& nonceCountString);      
+
+      static void makeChallengeResponseAuth(SipMessage& request,
+                                           const Data& username,
+                                           const Data& password,
+                                           const Auth& challenge,
+                                           const Data& cnonce,
+                                           const Data& authQop,
+                                           const Data& nonceCountString,
+                                           Auth& auth);
 
       static Auth makeChallengeResponseAuthWithA1(const SipMessage& request,
                                                   const Data& username,
@@ -522,7 +533,6 @@ class Helper
       static std::auto_ptr<SdpContents> getSdp(Contents* tree);
 
    private:
-      static Data qopOption(const Auth& challenge);
       class NonceHelperPtr
       {
          public:

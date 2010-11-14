@@ -1284,7 +1284,8 @@ Helper::makeChallenge(const SipMessage& request, const Data& realm, bool useAuth
    return response;
 }
 
-void updateNonceCount(unsigned int& nonceCount, Data& nonceCountString)
+void 
+Helper::updateNonceCount(unsigned int& nonceCount, Data& nonceCountString)
 {
    if (!nonceCountString.empty())
    {
@@ -1319,6 +1320,25 @@ Helper::makeChallengeResponseAuth(SipMessage& request,
                                   Data& nonceCountString)
 {
    Auth auth;
+   Data authQop = qopOption(challenge);
+   if(!authQop.empty())
+   {
+       updateNonceCount(nonceCount, nonceCountString);
+   }
+   makeChallengeResponseAuth(request, username, password, challenge, cnonce, authQop, nonceCountString, auth);
+   return auth;
+}
+
+void
+Helper::makeChallengeResponseAuth(SipMessage& request,
+                                  const Data& username,
+                                  const Data& password,
+                                  const Auth& challenge,
+                                  const Data& cnonce,
+                                  const Data& authQop,
+                                  const Data& nonceCountString,
+                                  Auth& auth)
+{
    auth.scheme() = Symbols::Digest;
    auth.param(p_username) = username;
    assert(challenge.exists(p_realm));
@@ -1333,10 +1353,8 @@ Helper::makeChallengeResponseAuth(SipMessage& request,
    }
    auth.param(p_uri) = digestUri;
 
-   Data authQop = qopOption(challenge);
    if (!authQop.empty())
    {
-      updateNonceCount(nonceCount, nonceCountString);
       auth.param(p_response) = Helper::makeResponseMD5(username, 
                                                        password,
                                                        challenge.param(p_realm), 
@@ -1375,8 +1393,6 @@ Helper::makeChallengeResponseAuth(SipMessage& request,
    {
       auth.param(p_opaque) = challenge.param(p_opaque);
    }
-   
-   return auth;
 }
 
 // priority-order list of preferred qop tokens
