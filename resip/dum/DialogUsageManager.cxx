@@ -1523,8 +1523,8 @@ DialogUsageManager::validate100RelSuport(const SipMessage& request)
    {
       if (getMasterProfile()->getUasReliableProvisionalMode() == MasterProfile::Required)
       {
-         if (!(request.exists(h_Requires) && request.header(h_Requires).find(Token(Symbols::C100rel))
-               || request.exists(h_Supporteds) && request.header(h_Supporteds).find(Token(Symbols::C100rel))))
+         if (!((request.exists(h_Requires) && request.header(h_Requires).find(Token(Symbols::C100rel)))
+               || (request.exists(h_Supporteds) && request.header(h_Supporteds).find(Token(Symbols::C100rel)))))
          {
             SipMessage failure;
             makeResponse(failure, request, 421);
