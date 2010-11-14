@@ -795,6 +795,25 @@ DialogUsageManager::send(SharedPtr<SipMessage> msg)
       msg->header(h_ProxyRequires) = userProfile->getProxyRequires();
    }
    
+   // !bwc! This is to avoid leaving extra copies of the decorator in msg,
+   // when the caller of this function holds onto the reference (and this
+   // happens quite often in DUM). I would prefer to refactor such that we
+   // are operating on a copy in this function, but this would require a lot
+   // of work on the DumFeatureChain stuff (or, require an extra copy on top 
+   // of the one we're doing when we send the message to the stack, which
+   // would chew up a lot of extra cycles).
+   msg->clearOutboundDecorators();
+
+   // Add outbound decorator from userprofile - note:  it is important that this is
+   // done before the call to mClientAuthManager->addAuthentication, since the ClientAuthManager
+   // will install outbound decorators and we want these to run after the user provided ones, in
+   // case a user provided decorator modifes the message body used in auth.
+   SharedPtr<MessageDecorator> outboundDecorator = userProfile->getOutboundDecorator();
+   if (outboundDecorator.get())
+   {
+      msg->addOutboundDecorator(std::auto_ptr<MessageDecorator>(outboundDecorator->clone()));
+   }
+
    if (msg->isRequest())
    {
       // We may not need to call reset() if makeRequest is always used.
@@ -846,22 +865,6 @@ DialogUsageManager::send(SharedPtr<SipMessage> msg)
             }
          }
       }
-   }
-
-   // !bwc! This is to avoid leaving extra copies of the decorator in msg,
-   // when the caller of this function holds onto the reference (and this
-   // happens quite often in DUM). I would prefer to refactor such that we
-   // are operating on a copy in this function, but this would require a lot
-   // of work on the DumFeatureChain stuff (or, require an extra copy on top 
-   // of the one we're doing when we send the message to the stack, which
-   // would chew up a lot of extra cycles).
-   msg->clearOutboundDecorators();
-
-   // Add outbound decorator from userprofile
-   SharedPtr<MessageDecorator> outboundDecorator = userProfile->getOutboundDecorator();
-   if (outboundDecorator.get())
-   {
-      msg->addOutboundDecorator(std::auto_ptr<MessageDecorator>(outboundDecorator->clone()));
    }
 
    DebugLog (<< "SEND: " << std::endl << std::endl << *msg);

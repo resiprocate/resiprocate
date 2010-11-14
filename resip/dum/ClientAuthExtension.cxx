@@ -11,17 +11,17 @@ ClientAuthExtension::setInstance(std::auto_ptr<ClientAuthExtension> ext)
 }
 
 
-Auth 
+void
 ClientAuthExtension::makeChallengeResponseAuth(SipMessage& request,
                                                     const Data& username,
                                                     const Data& password,
                                                     const Auth& challenge,
                                                     const Data& cnonce,
-                                                    unsigned int& nonceCount,
-                                                    Data& nonceCountString)
+                                               const Data& authQop,
+                                               const Data& nonceCountString,
+                                               Auth& auth)
 {
    assert(0);
-   return Auth();
 }
 
       
