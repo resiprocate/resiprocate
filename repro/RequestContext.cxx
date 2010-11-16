@@ -703,6 +703,10 @@ RequestContext::sendResponse(SipMessage& msg)
          DebugLog(<<"Sending final response.");
          mHaveSentFinalResponse=true;
       }
+      const resip::Data& serverText = mProxy.getServerText();
+      if (!serverText.empty() && !msg.exists(h_Server) ) {
+         msg.header(h_Server).value() = serverText;
+      }
       send(msg);
    }
 }

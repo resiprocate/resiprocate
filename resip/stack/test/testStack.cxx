@@ -42,6 +42,7 @@ main(int argc, char* argv[])
    int seltime = 0;
    int v6 = 0;
    int invite=0;
+   int usePoll = 0;
    
 #if defined(HAVE_POPT_H)
    struct poptOption table[] = {
@@ -54,6 +55,7 @@ main(int argc, char* argv[])
       {"bind",        'b', POPT_ARG_STRING, &bindAddr,  0, "interface address to bind to",0},
       {"v6",          '6', POPT_ARG_NONE,   &v6     ,   0, "ipv6", 0},
       {"invite",      'i', POPT_ARG_NONE,   &invite     ,   0, "send INVITE/BYE instead of REGISTER", 0},
+      {"epoll",       0,   POPT_ARG_NONE,   &usePoll,   0, "use internal epoll", 0},
       POPT_AUTOHELP
       { NULL, 0, 0, NULL, 0 }
    };
@@ -62,7 +64,13 @@ main(int argc, char* argv[])
    poptGetNextOpt(context);
 #endif
    Log::initialize(logType, logLevel, argv[0]);
-   cout << "Performing " << runs << " runs." << endl;
+   cout << "Performing " << runs << " runs with"
+     <<" ip"<<(v6?"v4":"v4")
+     <<" proto="<<proto
+     <<" epoll="<<usePoll
+     <<"." << endl;
+
+   SipStack::setDefaultUseInternalPoll(usePoll?true:false);
 
    IpVersion version = (v6 ? V6 : V4);
    SipStack receiver;
@@ -71,7 +79,7 @@ main(int argc, char* argv[])
 //   sender.addTransport(UDP, 25060, version); // !ah! just for debugging TransportSelector
 //   sender.addTransport(TCP, 25060, version);
 
-   int senderPort = 25070 + rand()& 0x7fff;   
+   int senderPort = 25070 + (rand()& 0x1fff);   
    if (bindAddr)
    {
       InfoLog(<<"Binding to address: " << bindAddr);
@@ -84,7 +92,10 @@ main(int argc, char* argv[])
       sender.addTransport(TCP, senderPort, version);
    }
 
-   int registrarPort = 25080 + rand()& 0x7fff;   
+   int registrarPort;
+   do {
+      registrarPort = 25080 + (rand()& 0x1fff);   
+   } while ( registrarPort == senderPort );
    receiver.addTransport(UDP, registrarPort, version);
    receiver.addTransport(TCP, registrarPort, version);
 

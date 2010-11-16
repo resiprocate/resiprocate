@@ -37,7 +37,8 @@ TransactionController::TransactionController(SipStack& stack) :
    mTransportSelector(mStateMacFifo,
                       stack.getSecurity(),
                       stack.getDnsStub(),
-                      stack.getCompression()),
+                      stack.getCompression(),
+		      stack.mUseInternalPoll),
    mTimers(mStateMacFifo),
    mShuttingDown(false),
    mStatsManager(stack.mStatsManager)

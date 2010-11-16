@@ -577,9 +577,10 @@ ResponseContext::beginClientTransaction(repro::Target* target)
                            target);
       }
       else if(request.method()==REGISTER &&
-               !request.empty(h_Supporteds) &&
+	       (mRequestContext.mProxy.getForcePath() ||
+               (!request.empty(h_Supporteds) &&
                (  request.header(h_Supporteds).find(Token("path")) ||
-                  request.header(h_Supporteds).find(Token("outbound"))))
+                  request.header(h_Supporteds).find(Token("outbound"))))))
       {
          insertRecordRoute(request,
                            orig.getReceivedTransport()->getTuple(),
@@ -677,6 +678,7 @@ ResponseContext::insertRecordRoute(resip::SipMessage& outgoing,
             rt.uri().param(resip::p_transport)=resip::Tuple::toData(receivedTransport.getType());
          }
          rt.uri().user()=inboundFlowToken;
+         rt.uri().param(resip::p_ob);
       }
       Helper::massageRoute(outgoing,rt);
 

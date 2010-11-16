@@ -21,7 +21,7 @@ class ExternalDns
       enum Features
       {
          None = 0,
-         TryServersOfNextNetworkUponRcode3 = 1 << 0   // 'No such name'
+         TryServersOfNextNetworkUponRcode3 = 1 << 0,   // 'No such name'
       };
 
       //returns Success, BuildMismatch, otherwise ExternalDns specific 
@@ -32,6 +32,12 @@ class ExternalDns
          BuildMismatch = 4777
       };      
       
+      // call prior to init() to enable internal epoll() functionality
+      // When enabled, only the fd of the epoll itself will be exposed
+      // thru the fd set.
+      virtual void setInternalPoll() = 0;
+
+      //
       virtual int init(const std::vector<GenericIPAddress>& additionalNameservers,
                        AfterSocketCreationFuncPtr,
                        int dnsTimeout = 0,

@@ -96,7 +96,7 @@ ConnectionBase::getFlowKey() const
 }
 
 void
-ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
+ConnectionBase::preparseNewBytes(int bytesRead)
 {
 
    DebugLog(<< "In State: " << connectionStates[mConnState]);
@@ -346,7 +346,8 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                {
                   Transport::stampReceived(mMessage);
                   DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
-                  fifo.add(mMessage);
+		  assert( mTransport );
+                  mTransport->pushRxMsgUp(mMessage);
                   mMessage = 0;
                }
 
@@ -396,7 +397,8 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                DebugLog(<< "##ConnectionBase: " << *this << " received: " << *mMessage);
 
                Transport::stampReceived(mMessage);
-               fifo.add(mMessage);
+	       assert( mTransport );
+               mTransport->pushRxMsgUp(mMessage);
                mMessage = 0;
             }
             mConnState = NewMessage;
@@ -430,8 +432,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
 
 #ifdef USE_SIGCOMP
 void
-ConnectionBase::decompressNewBytes(int bytesRead,
-                                   Fifo<TransactionMessage>& fifo)
+ConnectionBase::decompressNewBytes(int bytesRead)
 {
   mConnState = SigComp;
 
@@ -520,7 +521,8 @@ ConnectionBase::decompressNewBytes(int bytesRead,
            mSigcompStack->provideCompartmentId(sc, compId.data(), compId.size());
         }
       }
-      fifo.add(mMessage);
+      assert( mTransport );
+      mTransport->pushRxMsgUp(mMessage);
       mMessage = 0;
       sc = 0;
     }

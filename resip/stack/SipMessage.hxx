@@ -319,6 +319,10 @@ class SipMessage : public TransactionMessage
       const Uri& getForceTarget() const;
       bool hasForceTarget() const;
 
+      // "out-of-band" forced Transport for SIP routing (requests only)
+      void setForceTransport(Transport *transport);
+      Transport* getForceTransport() const;
+
       const Data& getTlsDomain() const { return mTlsDomain; }
       void setTlsDomain(const Data& domain) { mTlsDomain = domain; }
 
@@ -405,6 +409,10 @@ class SipMessage : public TransactionMessage
       // used when next element is a strict router OR 
       // client forces next hop OOB
       Uri* mForceTarget;
+
+      // used to force sending transport for connections
+      // could be combined with mTransport (for rx), but confusing?
+      Transport *mForceTransport;
 
       // domain associated with this message for tls cert
       Data mTlsDomain;

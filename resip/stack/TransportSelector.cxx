@@ -33,6 +33,7 @@
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Socket.hxx"
+#include "rutil/FdPoll.hxx"
 #include "rutil/WinLeakCheck.hxx"
 #include "rutil/dns/DnsStub.hxx"
 
@@ -61,14 +62,15 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub, Compression &compression) :
+TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub, Compression &compression, bool internalPoll) :
    mDns(dnsStub),
    mStateMacFifo(fifo),
    mSecurity(security),
    mSocket( INVALID_SOCKET ),
    mSocket6( INVALID_SOCKET ),
    mCompression(compression),
-   mSigcompStack (0)
+   mSigcompStack (0),
+   mPollGrp(0)
 {
    memset(&mUnspecified.v4Address, 0, sizeof(sockaddr_in));
    mUnspecified.v4Address.sin_family = AF_UNSPEC;
@@ -92,6 +94,9 @@ TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* s
 #else
    DebugLog (<< "No compression library available");
 #endif
+   if ( internalPoll ) {
+      mPollGrp = new FdPollGrp();
+   }
 }
 
 template<class T> void 
@@ -114,8 +119,10 @@ TransportSelector::~TransportSelector()
    delete mSigcompStack;
 #endif
 
-    closeSocket( mSocket );
-    closeSocket( mSocket6 );
+    if ( mSocket != INVALID_SOCKET )
+        closeSocket( mSocket );
+    if ( mSocket6 != INVALID_SOCKET )
+        closeSocket( mSocket6 );
 
 }
 
@@ -230,6 +237,8 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport)
 
    if (transport->shareStackProcessAndSelect())
    {
+      if ( mPollGrp )
+         transport->setPollGrp(mPollGrp);
       mSharedProcessTransports.push_back(transport);
    }
    else
@@ -242,6 +251,10 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport)
 void
 TransportSelector::buildFdSet(FdSet& fdset)
 {
+   if ( mPollGrp ) {
+      mPollGrp->buildFdSet(fdset);
+      return;
+   }
    for(TransportList::iterator it = mSharedProcessTransports.begin(); 
        it != mSharedProcessTransports.end(); it++)
    {
@@ -252,6 +265,11 @@ TransportSelector::buildFdSet(FdSet& fdset)
 void
 TransportSelector::process(FdSet& fdset)
 {
+   if ( mPollGrp ) {
+      processTransmitQueue();
+      mPollGrp->processFdSet(fdset);
+      return;
+   }
    for(TransportList::iterator it = mSharedProcessTransports.begin(); 
        it != mSharedProcessTransports.end(); it++)
    {
@@ -262,6 +280,34 @@ TransportSelector::process(FdSet& fdset)
       catch (BaseException& e)
       {
          ErrLog (<< "Exception thrown from Transport::process: " << e);
+      }
+   }
+
+}
+
+
+/**
+   Iterate thru all our shared-process (aka Internal) transports and
+   let them check their transport queues. Unfortunately this is O(N)
+   with number of transports. This function works together with
+   hasDataToSend() which queries the transports, and if any have
+   data to send, TransactionController will set its timeout to zero,
+   causing process() (see above) to be immediately invoked.
+
+   Would be nice to split the queues up into request and reply fifos,
+   and priorities sending replies before doing io.
+**/
+void
+TransportSelector::processTransmitQueue()
+{
+   for(TransportList::iterator it = mSharedProcessTransports.begin();
+       it != mSharedProcessTransports.end(); it++)
+   {
+      try {
+         (*it)->processTransmitQueue();
+      } catch (BaseException& e) {
+         ErrLog(<< "Exception thrown from Transport::processTransmitQueue: " << e);
+         // add now what? disable transport? die?
       }
    }
 }
@@ -619,7 +665,10 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
       {
          Transport* transport=0;
 
-         transport = findTransportByDest(msg,target);
+	 transport = msg->getForceTransport();
+
+	 if ( !transport )
+            transport = findTransportByDest(msg,target);
          
          if(!transport && target.mFlowKey && target.onlyUseExistingConnection)
          {

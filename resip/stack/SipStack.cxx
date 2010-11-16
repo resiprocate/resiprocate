@@ -53,12 +53,13 @@ SipStack::SipStack(Security* pSecurity,
                    AfterSocketCreationFuncPtr socketFunc,
                    Compression *compression
    ) : 
+   mUseInternalPoll(mDefaultUseInternalPoll),
 #ifdef USE_SSL
    mSecurity( pSecurity ? pSecurity : new Security()),
 #else
    mSecurity(0),
 #endif
-   mDnsStub(new DnsStub(additional, socketFunc, handler)),
+   mDnsStub(new DnsStub(additional, socketFunc, handler, mUseInternalPoll)),
    mCompression(compression ? compression : new Compression(Compression::NONE)),
    mAsyncProcessHandler(handler),
    mTUFifo(TransactionController::MaxTUFifoTimeDepthSecs,
@@ -709,6 +710,13 @@ SipStack::isFlowAlive(const resip::Tuple& flow) const
 {
    return flow.getType()==UDP || 
          mTransactionController.transportSelector().connectionAlive(flow);
+}
+
+bool SipStack::mDefaultUseInternalPoll = false;
+
+void
+SipStack::setDefaultUseInternalPoll(bool useInternal) {
+   mDefaultUseInternalPoll = useInternal;
 }
 
 /* ====================================================================

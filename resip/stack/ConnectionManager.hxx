@@ -7,6 +7,7 @@
 
 namespace resip
 {
+class FdPollGrp;
 
 /**
    Collection of Connection per Transport. Maintains round-robin
@@ -31,8 +32,9 @@ class ConnectionManager
       const Connection* findConnection(const Tuple& tuple) const;
 
       /// populate the fdset againt the read and write lists
+      void setPollGrp(FdPollGrp *grp);
       void buildFdSet(FdSet& fdset);
-      void process(FdSet& fdset, Fifo<TransactionMessage>& fifo);
+      void process(FdSet& fdset);
 
    private:
       void addToWritable(Connection* conn); // add the specified conn to end
@@ -63,6 +65,9 @@ class ConnectionManager
       ConnectionReadList* mReadHead;
       /// least recently used list
       ConnectionLruList* mLRUHead;
+
+      /// collection for epoll
+      FdPollGrp* mPollGrp;
       //<<---------------------------------
 
       friend class TcpBaseTransport;

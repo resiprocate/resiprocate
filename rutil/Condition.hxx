@@ -92,8 +92,7 @@ class Condition
 #ifdef WIN32
 #  ifdef RESIP_CONDITION_WIN32_CONFORMANCE_TO_POSIX
    // !kh!
-   // boost clone with modification
-   // licesnse text below
+   // boost clone with modification (license text below)
    void enterWait ();
    void* m_gate;
    void* m_queue;

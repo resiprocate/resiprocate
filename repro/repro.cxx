@@ -173,6 +173,15 @@ main(int argc, char** argv)
    compression = new Compression(Compression::DEFLATE);
 #endif
 
+   if ( args.mUsePoll ) {
+#if RESIP_SIPSTACK_HAVE_FDPOLL
+      SipStack::setDefaultUseInternalPoll(args.mUsePoll);
+#else
+      cerr << "Poll not supported by SipStack" << endl;
+      exit(1);
+#endif
+   }
+
    SipStack stack(security,DnsStub::EmptyNameserverList,0,false,0,compression);
 
    std::vector<Data> enumSuffixes;
@@ -391,19 +400,25 @@ main(int argc, char** argv)
                args.mTimerC );
    Data realm = addDomains(proxy, args, store);
    
+   proxy.setForcePath(args.mForcePath);
    proxy.addSupportedOption("outbound");
+   proxy.setServerText(args.mServerText);
 
+   WebAdmin *admin = NULL;
+   WebAdminThread *adminThread = NULL;
+   if ( args.mHttpPort ) {
 #ifdef USE_SSL
-   WebAdmin admin( store, regData, security, args.mNoWebChallenge, realm, args.mAdminPassword, args.mHttpPort  );
+      admin = new WebAdmin( store, regData, security, args.mNoWebChallenge, realm, args.mAdminPassword, args.mHttpPort  );
 #else
-   WebAdmin admin( store, regData, NULL, args.mNoWebChallenge, realm, args.mAdminPassword, args.mHttpPort  );
+      admin = new WebAdmin( store, regData, NULL, args.mNoWebChallenge, realm, args.mAdminPassword, args.mHttpPort  );
 #endif
-   if (!admin.isSane())
-   {
-     CritLog(<<"Failed to start the WebAdmin - exiting");
-     exit(-1);
+      if (!admin->isSane())
+      {
+         CritLog(<<"Failed to start the WebAdmin - exiting");
+         exit(-1);
+      }
+      adminThread = new WebAdminThread(*admin);
    }
-   WebAdminThread adminThread(admin);
 
    profile->clearSupportedMethods();
    profile->addSupportedMethod(resip::REGISTER);
@@ -517,7 +532,8 @@ main(int argc, char** argv)
    /* Make it all go */
    stackThread.run();
    proxy.run();
-   adminThread.run();
+   if ( adminThread )
+      adminThread->run();
    if(dumThread)
    {
       dumThread->run();
@@ -542,7 +558,8 @@ main(int argc, char** argv)
 
    proxy.shutdown();
    stackThread.shutdown();
-   adminThread.shutdown();
+   if ( adminThread )
+       adminThread->shutdown();
    if (dumThread)
    {
        dumThread->shutdown();
@@ -558,7 +575,13 @@ main(int argc, char** argv)
 
    proxy.join();
    stackThread.join();
-   adminThread.join();
+   if ( adminThread ) {
+      adminThread->join();
+      delete adminThread; adminThread = NULL;
+   }
+   if ( admin ) {
+      delete admin; admin = NULL;
+   }
    if (dumThread)
    {
       dumThread->join();

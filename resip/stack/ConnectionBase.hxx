@@ -12,7 +12,7 @@
 #include <list>
 
 #include "rutil/Timer.hxx"
-#include "rutil/Fifo.hxx"
+// #include "rutil/Fifo.hxx"
 #include "resip/stack/Transport.hxx"
 #include "resip/stack/MsgHeaderScanner.hxx"
 #include "resip/stack/SendData.hxx"
@@ -64,8 +64,8 @@ class ConnectionBase
       } TransmissionFormat;
 
       ConnState getCurrentState() const { return mConnState; }
-      void preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo);
-      void decompressNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo);
+      void preparseNewBytes(int bytesRead);
+      void decompressNewBytes(int bytesRead);
       std::pair<char*, size_t> getWriteBuffer();
       char* getWriteBufferForExtraBytes(int extraBytes);
       

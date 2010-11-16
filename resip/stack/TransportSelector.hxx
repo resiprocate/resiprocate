@@ -33,6 +33,7 @@ class SipMessage;
 class TransactionController;
 class Security;
 class Compression;
+class FdPollGrp;
 
 /**
   TransportSelector has two distinct roles.  The first is transmit on the best
@@ -48,7 +49,7 @@ on Transport add.
 class TransportSelector 
 {
    public:
-      TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub, Compression &compression);
+      TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub, Compression &compression, bool useInternalPoll);
       virtual ~TransportSelector();
       /**
 	    @retval true	Some transport in the transport list has data to send
@@ -103,6 +104,8 @@ class TransportSelector
       Transport* findTransportByDest(SipMessage* msg, Tuple& dest);
       Transport* findTlsTransport(const Data& domain,TransportType type,IpVersion ipv);
       Tuple determineSourceInterface(SipMessage* msg, const Tuple& dest) const;
+
+      void processTransmitQueue();
 
       DnsInterface mDns;
       Fifo<TransactionMessage>& mStateMacFifo;
@@ -193,6 +196,9 @@ class TransportSelector
       /// SigComp configuration object
       Compression &mCompression;
       osc::Stack  *mSigcompStack;
+
+      // epoll support, for sharedprocess transports
+      FdPollGrp* mPollGrp;
 
       friend class TestTransportSelector;
       friend class SipStack; // for debug only
