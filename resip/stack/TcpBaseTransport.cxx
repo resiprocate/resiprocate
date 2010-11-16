@@ -14,6 +14,22 @@
 using namespace std;
 using namespace resip;
 
+
+class TcpBasePollItem : public FdPollItemBase {
+  public:
+   TcpBasePollItem(FdPollGrp* grp, Socket fd, TcpBaseTransport& tp)
+     : FdPollItemBase(grp, fd, FPEM_Read|FPEM_Edge), mTransport(tp) { }
+
+   virtual void		processPollEvent(FdPollEventMask mask) {
+      mTransport.processPollEvent(mask);
+   }
+
+  protected:
+
+   TcpBaseTransport&	mTransport;
+};
+
+
 const size_t TcpBaseTransport::MaxWriteSize = 4096;
 const size_t TcpBaseTransport::MaxReadSize = 4096;
 
@@ -45,6 +61,7 @@ TcpBaseTransport::~TcpBaseTransport()
    //mSendRoundRobin.clear(); // clear before we delete the connections
 }
 
+// called from constructor of TcpTransport
 void
 TcpBaseTransport::init()
 {
@@ -81,17 +98,27 @@ TcpBaseTransport::init()
    }
 }
 
+// XXX: when should this be called relative to init() above? merge?
 void
-TcpBaseTransport::buildFdSet( FdSet& fdset)
-{
-   mConnectionManager.buildFdSet(fdset);
-   fdset.setRead(mFd); // for the transport itself
+TcpBaseTransport::setPollGrp(FdPollGrp *grp) {
+   assert( mPollItem == NULL );
+   assert( mFd!=INVALID_SOCKET );
+   mPollItem = new TcpBasePollItem(grp, mFd, *this);
+   mConnectionManager.setPollGrp(grp);
 }
 
 void
-TcpBaseTransport::processListen(FdSet& fdset)
+TcpBaseTransport::buildFdSet( FdSet& fdset)
 {
-   if (fdset.readyToRead(mFd))
+   if ( mPollItem==NULL ) {
+      mConnectionManager.buildFdSet(fdset);
+      fdset.setRead(mFd); // for the transport itself (accept)
+   }
+}
+
+int
+TcpBaseTransport::processListen()
+{
    {
       Tuple tuple(mTuple);
       struct sockaddr& peer = tuple.getMutableSockaddr();
@@ -104,11 +131,12 @@ TcpBaseTransport::processListen(FdSet& fdset)
          {
             case EWOULDBLOCK:
                // !jf! this can not be ready in some cases 
-               return;
+	       // !kw! this will happen every epoll cycle
+               return 0;
             default:
                Transport::error(e);
          }
-         return;
+         return -1;
       }
       makeSocketNonBlocking(sock);
             
@@ -130,10 +158,11 @@ TcpBaseTransport::processListen(FdSet& fdset)
          closeSocket(sock);
       }
    }
+   return 1;
 }
 
 void
-TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
+TcpBaseTransport::processAllWriteRequests()
 {
    while (mTxFifo.messageAvailable())
    {
@@ -150,7 +179,7 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
       {
          // attempt to open
          Socket sock = InternalTransport::socket( TCP, ipVersion());
-         fdset.clear(sock);
+         // fdset.clear(sock); !kw! removed as part of epoll impl
          
          if ( sock == INVALID_SOCKET ) // no socket found - try to free one up and try again
          {
@@ -183,7 +212,7 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
          int e = connect( sock, &servaddr, data->destination.length() );
 
          // See Chapter 15.3 of Stevens, Unix Network Programming Vol. 1 2nd Edition
-         if (e == INVALID_SOCKET)
+         if (e == SOCKET_ERROR)
          {
             int err = getErrno();
             
@@ -197,7 +226,7 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
                   // !jf! this has failed
                   InfoLog( << "Error on TCP connect to " <<  data->destination << ", err=" << err << ": " << strerror(err));
                   error(e);
-                  fdset.clear(sock);
+                  //fdset.clear(sock);
                   closeSocket(sock);
                   fail(data->transactionId);
                   delete data;
@@ -211,8 +240,8 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
          conn->mRequestPostConnectSocketFuncCall = true;
 
          assert(conn);
-         assert(conn->getSocket() >= 0);
-         data->destination.mFlowKey = (FlowKey)conn->getSocket(); // !jf!
+         assert(conn->getSocket() != INVALID_SOCKET);
+         data->destination.mFlowKey = conn->getSocket(); // !jf!
       }
    
       if (conn == 0)
@@ -229,14 +258,32 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
 }
 
 void
+TcpBaseTransport::processTransmitQueue() {
+   processAllWriteRequests();
+}
+
+
+void
 TcpBaseTransport::process(FdSet& fdSet)
 {
-   processAllWriteRequests(fdSet);
+   assert( mPollItem == NULL );
+
+   processAllWriteRequests();
 
    // process the connections in ConnectionManager
-   mConnectionManager.process(fdSet, mStateMachineFifo);
+   mConnectionManager.process(fdSet);
 
-   processListen(fdSet);
+   // process our own listen/accept socket for incoming connections
+   if (fdSet.readyToRead(mFd))
+      processListen();
+}
+
+void
+TcpBaseTransport::processPollEvent(FdPollEventMask mask) {
+   if ( mask & FPEM_Read ) {
+      while ( processListen() > 0 )
+         ;
+   }
 }
 
 

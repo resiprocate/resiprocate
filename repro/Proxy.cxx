@@ -45,12 +45,13 @@ Proxy::Proxy(SipStack& stack,
      mStack(stack), 
      mRecordRoute(recordRoute),
      mRecordRouteEnabled(enableRecordRoute),
+     mForcePath(false),
      mRequestProcessorChain(requestP), 
      mResponseProcessorChain(responseP),
      mTargetProcessorChain(targetP),
      mUserStore(userStore),
-     mRequestContextFactory(new RequestContextFactory),
-     mOptionsHandler(0)
+     mOptionsHandler(0),
+     mRequestContextFactory(new RequestContextFactory)
 {
    mTimerC=timerC;
    if (!mRecordRoute.uri().host().empty())

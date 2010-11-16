@@ -15,6 +15,7 @@ class TransactionMessage;
 class SipMessage;
 class Connection;
 class Compression;
+class FdPollGrp;
 
 class Transport
 {
@@ -47,9 +48,12 @@ class Transport
 
       virtual bool isFinished() const=0;
       
+      // send a message on the wire. This may be called from outside
+      // our thread context. 
       virtual void send( const Tuple& tuple, const Data& data, const Data& tid, const Data &sigcompId = Data::Empty);
       virtual void process(FdSet& fdset) = 0;
       virtual void buildFdSet( FdSet& fdset) =0;
+      virtual void setPollGrp(FdPollGrp *grp) = 0;
 
       void flowTerminated(const Tuple& flow);
             
@@ -109,6 +113,12 @@ class Transport
       virtual void startOwnProcessing()=0;
 
       //only applies to transports that shareStackProcessAndSelect 
+      // Transport should either send any queued messages or
+      // enable a socket-writable callback
+      virtual void processTransmitQueue() = 0;
+
+      //only applies to transports that shareStackProcessAndSelect 
+      // Transmit should determine if it has any queue messages to send
       virtual bool hasDataToSend() const = 0;
       
       //overriding implementations should chain through to this
@@ -127,6 +137,9 @@ class Transport
       virtual unsigned int getFifoSize() const=0;
 
       void callSocketFunc(Socket sock);
+
+      // called by Connection to deliver a received message
+      virtual void pushRxMsgUp(TransactionMessage* msg);
 
    protected:
       Data mInterface;

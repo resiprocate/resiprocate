@@ -43,8 +43,9 @@ Connection::~Connection()
 {
    if(mWho.mFlowKey && ConnectionBase::transport())
    {
-      closeSocket(mWho.mFlowKey);
       getConnectionManager().removeConnection(this);
+      // remove first then close, since conn manager may need socket
+      closeSocket(mWho.mFlowKey);
    }
 }
 
@@ -179,7 +180,7 @@ resip::operator<<(EncodeStream& strm, const resip::Connection& c)
 }
 
 int
-Connection::read(Fifo<TransactionMessage>& fifo)
+Connection::read()
 {
    std::pair<char*, size_t> writePair = getWriteBuffer();
    size_t bytesToRead = resipMin(writePair.second, 
@@ -217,12 +218,12 @@ Connection::read(Fifo<TransactionMessage>& fifo)
 
    if (mReceivingTransmissionFormat == Compressed)
    {
-     decompressNewBytes(bytesRead, fifo);
+     decompressNewBytes(bytesRead);
    }
    else
 #endif
    {
-     preparseNewBytes(bytesRead, fifo); //.dcm. may delete this   
+     preparseNewBytes(bytesRead); //.dcm. may delete this   
    }
    return bytesRead;
 }
@@ -255,6 +256,34 @@ bool
 Connection::isWritable()
 {
    return true;
+}
+
+/**
+    Virtual function of FdPollItemIf, called to process io events
+**/
+void
+Connection::processPollEvent(FdPollEventMask mask) {
+   /* The original code in ConnectionManager.cxx didn't check
+    * for error events unless no writable event. (e.g., writable
+    * masked error. Why?
+    */
+   if ( mask & FPEM_Error ) {
+      Socket fd = getSocket();
+      int errNum = getSocketError(fd);
+      InfoLog(<< "Exception on socket " << fd << " code: " << errNum << "; closing connection");
+      delete this;
+      return;
+   }
+   if ( mask & FPEM_Write ) {
+      performWrite();
+   }
+   if ( mask & FPEM_Read ) {
+      int bytesRead = read();
+      if ( bytesRead < 0 ) {
+         delete this;
+   	 return;
+      }
+   }
 }
 
 /* ====================================================================

@@ -64,6 +64,9 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       bool isMyUri(const resip::Uri& uri) const;
       const resip::NameAddr& getRecordRoute() const;
       bool getRecordRouteEnabled() const;
+
+      void setForcePath(bool f) { mForcePath = f; }
+      bool getForcePath() const { return mForcePath; }
       
       UserStore& getUserStore();
       resip::SipStack& getStack(){return mStack;}
@@ -82,6 +85,9 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
 
       void addSupportedOption(const resip::Data& option);
       void removeSupportedOption(const resip::Data& option);
+
+      void setServerText(const resip::Data& text) { mServerText = text; }
+      const resip::Data& getServerText() const { return mServerText; }
    protected:
       virtual const resip::Data& name() const;
 
@@ -89,6 +95,8 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       resip::SipStack& mStack;
       resip::NameAddr mRecordRoute;
       bool mRecordRouteEnabled;
+      bool mForcePath;
+      resip::Data mServerText;
       
       // needs to be a reference since parent owns it
       ProcessorChain& mRequestProcessorChain;

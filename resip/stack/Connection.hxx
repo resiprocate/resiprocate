@@ -4,8 +4,9 @@
 #include <list>
 
 #include "resip/stack/ConnectionBase.hxx"
-#include "rutil/Fifo.hxx"
+//#include "rutil/Fifo.hxx"
 #include "rutil/Socket.hxx"
+#include "rutil/FdPoll.hxx"
 #include "rutil/Timer.hxx"
 #include "resip/stack/Transport.hxx"
 #include "resip/stack/MsgHeaderScanner.hxx"
@@ -31,7 +32,7 @@ typedef IntrusiveListElement2<Connection*> ConnectionWriteList;
     recently used garbage collection.
     Connection inherits three different instantiations of intrusive lists.
 */
-class Connection : public ConnectionBase, public ConnectionLruList, public ConnectionReadList, public ConnectionWriteList
+class Connection : public ConnectionBase, public ConnectionLruList, public ConnectionReadList, public ConnectionWriteList, public FdPollItemIf
 {
       friend class ConnectionManager;
       friend EncodeStream& operator<<(EncodeStream& strm, const resip::Connection& c);
@@ -66,13 +67,20 @@ class Connection : public ConnectionBase, public ConnectionLruList, public Conne
       void ensureWritable();
 
       /** move data from the connection to the buffer; move this to front of
-          least recently used list. when the message is complete, send to fifo.
-          @todo store fifo rather than pass */
-      int read(Fifo<TransactionMessage>& fifo);
+          least recently used list. when the message is complete,
+	  it is delivered via mTransport->pushRxMsgUp()
+	  which generally puts it on a fifo */
+      int read();
 
       bool mRequestPostConnectSocketFuncCall;
       static volatile bool mEnablePostConnectSocketFuncCall;
       static void setEnablePostConnectSocketFuncCall(bool enabled = true) { mEnablePostConnectSocketFuncCall = enabled; }
+
+      /*
+       * FdPollItemIf virtual methods
+       */
+      virtual Socket getPollSocket() const { return getSocket(); }
+      virtual void processPollEvent(FdPollEventMask mask);
 
    protected:
       /// pure virtual, but need concrete Connection for book-ends of lists

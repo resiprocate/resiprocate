@@ -205,7 +205,7 @@ Transport::fail(const Data& tid, TransportFailure::FailureReason reason)
    }
 }
 
-/// @todo unify w/ tramsit
+/// @todo unify w/ transmit
 void 
 Transport::send( const Tuple& dest, const Data& d, const Data& tid, const Data &sigcompId)
 {
@@ -334,6 +334,12 @@ Transport::callSocketFunc(Socket sock)
       mSocketFunc(sock, transport(), __FILE__, __LINE__);
    }
 }
+
+void 
+Transport::pushRxMsgUp(TransactionMessage* msg) {
+   mStateMachineFifo.add(msg);
+}
+
 
 bool 
 Transport::operator==(const Transport& rhs) const

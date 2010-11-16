@@ -46,7 +46,7 @@ main(int argc, char* argv[])
 #endif
 
    char* logType = 0;
-   char* logLevel = 0;
+   const char* logLevel = "WARNING";
    int runs = 100;
    int window = 10;
    int seltime = 100;

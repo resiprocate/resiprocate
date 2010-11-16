@@ -3,6 +3,9 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+
 #include "rutil/Socket.hxx"
 #include "rutil/Logger.hxx"
 
@@ -123,6 +126,17 @@ resip::closeSocket( Socket fd )
    return ret;
 }
 #endif
+
+// code moved from resip/stack/ConnectionManager.cxx
+// appears to work on both linux and windows
+int resip::getSocketError(Socket fd) {
+   int errNum = 0;
+   int errNumSize = sizeof(errNum);
+   getsockopt(fd, SOL_SOCKET, SO_ERROR, 
+     (char *)&errNum, (socklen_t *)&errNumSize);
+   /// XXX: should check return code of getsockopt
+   return errNum;
+}
 
 
 /* ====================================================================

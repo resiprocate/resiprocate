@@ -13,6 +13,7 @@
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/WinLeakCheck.hxx"
+#include "rutil/FdPoll.hxx"
 
 #if !defined(WIN32)
 #if !defined(__CYGWIN__)
@@ -24,7 +25,101 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
+/**********************************************************************
+ *
+ *		class AresDnsPollItem
+ *
+ * This is callback class used for epoll-based systems.
+ *
+ **********************************************************************/
+
+namespace resip {
+
+class AresDnsPollItem : public FdPollItemBase {
+  public:
+   AresDnsPollItem(FdPollGrp *grp, int fd, AresDns& aresObj, 
+     ares_channel chan, int server_idx)
+     : FdPollItemBase(grp, fd, FPEM_Read), mAres(aresObj), 
+       mChannel(chan), mServerIdx(server_idx) {
+   }
+
+   virtual void		processPollEvent(FdPollEventMask mask);
+
+   AresDns&		mAres;
+   ares_channel		mChannel;
+   int			mServerIdx;
+
+   static void 		socket_poll_cb(void *cb_data, 
+  	ares_channel channel, int server_idx,
+  	int fd, ares_poll_action_t act);
+};
+
+};
+
+void
+AresDnsPollItem::processPollEvent(FdPollEventMask mask) {
+   assert( (mask&(FPEM_Read|FPEM_Write))!= 0 );
+   ares_process_poll(mChannel, mServerIdx, 
+     (mask&FPEM_Read)?mPollSocket:-1, (mask&FPEM_Write)?mPollSocket:-1, 
+     mAres.mNow);
+}
+
+/**
+   C-function called by ares whenever it opens, closes or changes
+   interest in writability.
+**/
+
+void 
+AresDnsPollItem::socket_poll_cb(void *cb_data, 
+  	ares_channel channel, int server_idx,
+  	int fd, ares_poll_action_t act) {
+   AresDns *ares = static_cast<AresDns*>(cb_data);
+   // assert( ares );
+   FdPollGrp *grp = ares->mPollGrp;
+   assert( grp );
+   FdPollItemIf *olditem = grp->getItemByFd(fd);
+   AresDnsPollItem *newitem;
+   switch ( act ) {
+   case ARES_POLLACTION_OPEN:
+      assert( olditem==NULL );
+      assert( fd!=-1 );
+      newitem = new AresDnsPollItem( grp, fd, *ares, channel, server_idx);
+      // grp->addPollItem(newitem); constructor does this
+      /// XXX: track the item memory to destroy later.
+      break;
+   case ARES_POLLACTION_CLOSE:
+      assert( olditem );
+      delete olditem;	// destructor removes from poll
+      // grp->delPollItem(olditem);
+      break;
+   case ARES_POLLACTION_WRITEON:
+      assert( olditem );
+      grp->modPollItem(olditem, FPEM_Read|FPEM_Write);
+      break;
+   case ARES_POLLACTION_WRITEOFF:
+      assert( olditem );
+      grp->modPollItem(olditem, FPEM_Read);
+      break;
+   default:
+      assert( 0 );
+   }
+}
+
+
+/**********************************************************************
+ *
+ *		class AresDns
+ *
+ **********************************************************************/
+
 volatile bool AresDns::mHostFileLookupOnlyMode = false;
+
+void
+AresDns::setInternalPoll() {
+   if ( mPollGrp == NULL ) {
+      mPollGrp = new FdPollGrp();
+   }
+}
 
 int 
 AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers,
@@ -224,6 +319,9 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
          mChannel->tries = tries;
       }
 
+      if ( mPollGrp )
+         ares_process_set_poll_cb(mChannel, AresDnsPollItem::socket_poll_cb, this);
+
 #elif defined(USE_CARES)
       {
          // Log which version of c-ares we're using
@@ -360,6 +458,10 @@ AresDns::~AresDns()
 #elif defined(USE_CARES)
    ares_destroy(mChannel);
 #endif
+   if ( mPollGrp ) {
+      // XXX: what about all the items?
+      delete mPollGrp;
+   }
 }
 
 bool AresDns::hostFileLookup(const char* target, in_addr &addr)
@@ -427,6 +529,10 @@ AresDns::getTimeTillNextProcessMS()
 void 
 AresDns::buildFdSet(fd_set& read, fd_set& write, int& size)
 {
+   if ( mPollGrp ) {
+      mPollGrp->buildFdSet(read);
+      return;
+   }
    int newsize = ares_fds(mChannel, &read, &write);
    if ( newsize > size )
    {
@@ -437,7 +543,14 @@ AresDns::buildFdSet(fd_set& read, fd_set& write, int& size)
 void 
 AresDns::process(fd_set& read, fd_set& write)
 {
-   ares_process(mChannel, &read, &write);
+   if ( mPollGrp ) {
+      time(&mNow);
+      mPollGrp->processFdSet(read);
+      // below is for timeouts
+      ares_process_poll(mChannel, /*server*/-1, /*rd*/-1, /*wr*/-1, mNow);
+   } else {
+      ares_process(mChannel, &read, &write);
+   }
 }
 
 char* 

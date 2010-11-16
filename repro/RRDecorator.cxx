@@ -82,6 +82,7 @@ RRDecorator::decorateMessage(resip::SipMessage& request,
       
       // !bwc! TODO encrypt this binary token to self.
       rt.uri().user()=binaryFlowToken.base64encode();
+      rt.uri().param(resip::p_ob);
    }
    else if(routes
             && mProxy.isMyUri(routes->front().uri())

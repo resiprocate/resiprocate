@@ -41,6 +41,7 @@ SipMessage::SipMessage(const Transport* fromWire)
      mInvalid(false),
      mCreatedTime(Timer::getTimeMicroSec()),
      mForceTarget(0),
+     mForceTransport(0),
      mTlsDomain(Data::Empty)
 {
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
@@ -54,7 +55,8 @@ SipMessage::SipMessage(const SipMessage& from)
      mContentsHfv(0),
      mContents(0),
      mCreatedTime(Timer::getTimeMicroSec()),
-     mForceTarget(0)
+     mForceTarget(0),
+     mForceTransport(0)
 {
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
    {
@@ -92,6 +94,7 @@ SipMessage::operator=(const SipMessage& rhs)
       mInvalid = rhs.mInvalid;
       mReason = rhs.mReason;
       mForceTarget = 0;
+      mForceTransport = 0;
       mTlsDomain = rhs.mTlsDomain;
       
       for (int i = 0; i < Headers::MAX_HEADERS; i++)
@@ -1521,6 +1524,21 @@ bool
 SipMessage::hasForceTarget() const
 {
    return (mForceTarget != 0);
+}
+
+
+Transport*
+SipMessage::getForceTransport() const
+{
+   return mForceTransport;
+}
+
+
+void
+SipMessage::setForceTransport(Transport* transport)
+{
+   // transports aren't ref-counted or anything
+   mForceTransport = transport;
 }
 
 SipMessage& 

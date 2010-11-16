@@ -30,7 +30,8 @@ SelectInterruptor::SelectInterruptor()
    error= connect(mSocket, &mWakeupAddr, sizeof(mWakeupAddr)); 
    assert(error == 0);
 #else
-   pipe(mPipe);
+   int x = pipe(mPipe);
+   assert( x != -1 );
 #endif
 }
 
@@ -73,7 +74,8 @@ SelectInterruptor::process(FdSet& fdset)
    if ( fdset.readyToRead(mPipe[0]))
    {
       char rdBuf[16];
-      read(mPipe[0], rdBuf, sizeof(rdBuf));
+      int x = read(mPipe[0], rdBuf, sizeof(rdBuf));
+      (void)x;	// make compiler happy
    }
 #endif
 }
