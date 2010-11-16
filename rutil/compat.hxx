@@ -126,7 +126,7 @@ resipMax(const _Tp& __a, const _Tp& __b)
 
 // Mac OS X: UInt32 definition conflicts with the Mac OS or iPhone OS SDK.
 // If you've included either SDK then these will be defined.
-#if !defined(TARGET_OS_MAC) || !defined(TARGET_OS_IPHONE)
+#if !defined(TARGET_OS_MAC) && !defined(TARGET_OS_IPHONE)
 typedef unsigned char  UInt8;
 typedef unsigned short UInt16;
 typedef unsigned int   UInt32;
