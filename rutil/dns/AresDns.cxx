@@ -388,6 +388,11 @@ bool AresDns::hostFileLookup(const char* target, in_addr &addr)
    memcpy((char *)&(saddr.sin_addr.s_addr),(char *)hostdata->h_addr_list[0], (size_t)hostdata->h_length);
    addr = saddr.sin_addr;
    
+#if defined(USE_ARES)
+   // for resip-ares, the hostdata (and its contents) is dynamically allocated
+   ares_free_hostent(hostdata);
+#endif
+
    DebugLog(<< "hostFileLookup succeeded for " << target);
    return true;
 }
