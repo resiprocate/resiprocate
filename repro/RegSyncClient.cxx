@@ -275,7 +275,8 @@ RegSyncClient::handleRegInfoEvent(resip::XMLCursor& xml)
                         if(xml.firstChild())
                         {
                            //InfoLog(<< "RegSyncClient::handleRegInfoEvent: expires=" << xml.getValue());
-                           rec.mRegExpires = now+xml.getValue().convertUInt64();
+                           UInt64 expires = xml.getValue().convertUInt64();
+                           rec.mRegExpires = (expires == 0 ? 0 : now+expires);
                            xml.parent();
                         }
                      }
