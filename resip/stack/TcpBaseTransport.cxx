@@ -286,6 +286,14 @@ TcpBaseTransport::processPollEvent(FdPollEventMask mask) {
    }
 }
 
+void
+TcpBaseTransport::setRcvBufLen(int buflen)
+{
+   assert(0);	// not implemented yet
+   // need to store away the length and use when setting up new connections
+}
+
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0

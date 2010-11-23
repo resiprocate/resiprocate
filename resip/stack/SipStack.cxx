@@ -17,6 +17,7 @@
 #include "rutil/Random.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/Timer.hxx"
+#include "rutil/FdPoll.hxx"
 
 #include "resip/stack/Message.hxx"
 #include "resip/stack/ShutdownMessage.hxx"
@@ -54,12 +55,13 @@ SipStack::SipStack(Security* pSecurity,
                    Compression *compression
    ) : 
    mUseInternalPoll(mDefaultUseInternalPoll),
+   mPollGrp(mUseInternalPoll ? FdPollGrp::create() : 0),
 #ifdef USE_SSL
    mSecurity( pSecurity ? pSecurity : new Security()),
 #else
    mSecurity(0),
 #endif
-   mDnsStub(new DnsStub(additional, socketFunc, handler, mUseInternalPoll)),
+   mDnsStub( new DnsStub(additional, socketFunc, handler, mPollGrp)),
    mCompression(compression ? compression : new Compression(Compression::NONE)),
    mAsyncProcessHandler(handler),
    mTUFifo(TransactionController::MaxTUFifoTimeDepthSecs,
@@ -83,6 +85,8 @@ SipStack::SipStack(Security* pSecurity,
       assert(0);
 #endif
    }
+   if (mUseInternalPoll)
+      mTransactionController.setPollGrp(mPollGrp);
 
    assert(!mShuttingDown);
 }
@@ -90,11 +94,18 @@ SipStack::SipStack(Security* pSecurity,
 SipStack::~SipStack()
 {
    DebugLog (<< "SipStack::~SipStack()");
+   mTransactionController.deleteTransports();
 #ifdef USE_SSL
    delete mSecurity;
 #endif
    delete mCompression;
    delete mDnsStub;
+   if ( mPollGrp && mUseInternalPoll ) 
+   {
+      // delete pollGrp after deleting DNS
+      delete mPollGrp;
+   }
+
 }
 
 void
@@ -573,9 +584,18 @@ SipStack::process(FdSet& fdset)
    {
       mStatsManager.process();
    }
-   mTransactionController.process(fdset);
+   if ( mPollGrp ) {
+      mPollGrp->processFdSet(fdset);
+      mTransactionController.processTimers();
+   } else {
+      mTransactionController.process(fdset);
+   }
    mTuSelector.process();
-   mDnsStub->process(fdset);
+   if ( mPollGrp ) {
+      mDnsStub->processTimers();
+   } else {
+      mDnsStub->process(fdset);
+   }
    
    Lock lock(mAppTimerMutex); 
    mAppTimers.process();
@@ -596,8 +616,12 @@ SipStack::getTimeTillNextProcessMS()
 void 
 SipStack::buildFdSet(FdSet& fdset)
 {
-   mTransactionController.buildFdSet(fdset);
-   mDnsStub->buildFdSet(fdset);
+   if ( mPollGrp ) {
+      mPollGrp->buildFdSet(fdset);
+   } else {
+      mTransactionController.buildFdSet(fdset);
+      mDnsStub->buildFdSet(fdset);
+   }
 }
 
 Security*

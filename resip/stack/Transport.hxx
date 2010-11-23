@@ -141,6 +141,9 @@ class Transport
       // called by Connection to deliver a received message
       virtual void pushRxMsgUp(TransactionMessage* msg);
 
+      // set the receive buffer length (SO_RCVBUF)
+      virtual void setRcvBufLen(int buflen) { };	// make pure?
+
    protected:
       Data mInterface;
       Tuple mTuple;

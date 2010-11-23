@@ -34,6 +34,7 @@ class Uri;
 class TransactionUser;
 class AsyncProcessHandler;
 class Compression;
+class FdPollGrp;
 
 
 /**
@@ -557,6 +558,7 @@ class SipStack
       // Use internal epoll handlers, and only expose the fd of the
       // epoll itself thru the fdset interface
       bool mUseInternalPoll;
+      FdPollGrp* mPollGrp;
 
       /// if this object exists, it manages advanced security featues
       Security* mSecurity;

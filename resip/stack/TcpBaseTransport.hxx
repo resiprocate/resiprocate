@@ -22,6 +22,8 @@ class TcpBaseTransport : public InternalTransport
                        AfterSocketCreationFuncPtr socketFunc, 
                        Compression &compression);
       virtual  ~TcpBaseTransport();
+
+
       
       virtual void processPollEvent(FdPollEventMask mask);
       virtual void processTransmitQueue();
@@ -31,6 +33,7 @@ class TcpBaseTransport : public InternalTransport
       virtual bool isDatagram() const { return false; }
       virtual int maxFileDescriptors() const { return MaxFileDescriptors; }
       virtual void setPollGrp(FdPollGrp *grp);
+      virtual void setRcvBufLen(int buflen);
 
       ConnectionManager& getConnectionManager() {return mConnectionManager;}
       const ConnectionManager& getConnectionManager() const {return mConnectionManager;}
