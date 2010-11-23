@@ -65,7 +65,7 @@ class InternalTransport : public Transport
 
       Socket mFd; // this is a unix file descriptor or a windows SOCKET
       Fifo<SendData> mTxFifo; // owned by the transport
-      FdPollItemIf *mPollItem;
+      FdPollItemIf *mPollItem;	// not owned by the transport, just used
 };
 
 

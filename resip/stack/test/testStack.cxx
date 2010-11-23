@@ -21,6 +21,9 @@
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/SipStack.hxx"
+#include "resip/stack/StackThread.hxx"
+#include "resip/stack/SelectInterruptor.hxx"
+#include "resip/stack/InterruptableStackThread.hxx"
 #include "resip/stack/Uri.hxx"
 
 using namespace resip;
@@ -28,12 +31,81 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
+class SipStackAndThread {
+   public:
+      SipStackAndThread(const char *tType);
+         ~SipStackAndThread() {
+  	 destroy();
+      }
+
+      SipStack&		getStack() const { return *mStack; }
+
+      // I don't know if these are such a good idea
+      SipStack&		operator*() const { return *mStack; }
+      SipStack*		operator->() const { return mStack; }
+
+      void		run() { if ( mThread ) mThread->run(); }
+      void		shutdown() { if ( mThread ) mThread->shutdown(); }
+      void		join() { if ( mThread ) mThread->join(); }
+
+      // dis-allowed by not-implemented
+      SipStackAndThread& operator=(SipStackAndThread&);
+     
+   protected:
+      void		destroy();
+
+      SipStack		*mStack;
+      ThreadIf		*mThread;
+      SelectInterruptor	*mSelIntr;
+};
+
+   
+SipStackAndThread::SipStackAndThread(const char *tType) 
+  : mStack(0), mThread(0), mSelIntr(0)
+{
+   bool doStd = false;
+
+   assert( tType );
+   if ( strcmp(tType,"intr")==0 ) {
+      mSelIntr = new SelectInterruptor();
+   } else if ( strcmp(tType,"std")==0 ) {
+      doStd = true;
+   } else if ( strcmp(tType,"none")==0 ) {
+      ;
+   } else {
+      CritLog(<<"Bad thread-type: "<<tType);
+      exit(1);
+   }
+   mStack = new SipStack(/*security*/0, DnsStub::EmptyNameserverList, mSelIntr);
+   if ( mSelIntr ) {
+      mThread = new InterruptableStackThread(*mStack, *mSelIntr);
+   } else if ( doStd ) {
+      mThread = new StackThread(*mStack);
+   }
+}
+
+void
+SipStackAndThread::destroy() {
+   if ( mThread ) {
+      delete mThread;
+      mThread = 0;
+   }
+   if ( mStack ) {
+      delete mStack;
+      mStack = 0;
+   }
+   if ( mSelIntr ) {
+      delete mSelIntr;
+      mSelIntr = 0;
+   }
+}
+
 int
 main(int argc, char* argv[])
 {
 
    const char* logType = "cout";
-   const char* logLevel = "ALERT";
+   const char* logLevel = "WARNING";
    const char* proto = "tcp";
    char* bindAddr = 0;
 
@@ -42,7 +114,10 @@ main(int argc, char* argv[])
    int seltime = 0;
    int v6 = 0;
    int invite=0;
-   int usePoll = 0;
+   int usePollMode = 0;
+   int numPorts = 1;
+   int portBase = 0;
+   const char* threadType = "none";
    
 #if defined(HAVE_POPT_H)
    struct poptOption table[] = {
@@ -55,50 +130,66 @@ main(int argc, char* argv[])
       {"bind",        'b', POPT_ARG_STRING, &bindAddr,  0, "interface address to bind to",0},
       {"v6",          '6', POPT_ARG_NONE,   &v6     ,   0, "ipv6", 0},
       {"invite",      'i', POPT_ARG_NONE,   &invite     ,   0, "send INVITE/BYE instead of REGISTER", 0},
-      {"epoll",       0,   POPT_ARG_NONE,   &usePoll,   0, "use internal epoll", 0},
+      {"poll",        0,   POPT_ARG_INT,   &usePollMode,  0, "use epoll mode", 0},
+      {"port",	      0, POPT_ARG_INT,   &portBase,   0, "first port to use", 0},
+      {"numports",    'n', POPT_ARG_INT,   &numPorts,   0, "number of parallel sessions(ports)", 0},
+      {"thread-type", 't', POPT_ARG_STRING, &threadType,0, "stack thread type", "none|std|intr"},
       POPT_AUTOHELP
       { NULL, 0, 0, NULL, 0 }
    };
    
    poptContext context = poptGetContext(NULL, argc, const_cast<const char**>(argv), table, 0);
-   poptGetNextOpt(context);
+   int pret=poptGetNextOpt(context);
+   assert(pret==-1);
+   assert( poptGetArg(context)==NULL);
 #endif
    Log::initialize(logType, logLevel, argv[0]);
    cout << "Performing " << runs << " runs with"
+     <<" win="<<window
      <<" ip"<<(v6?"v4":"v4")
      <<" proto="<<proto
-     <<" epoll="<<usePoll
+     <<" numports="<<numPorts
+     <<" thread="<<threadType
+     <<" epoll="<<usePollMode
      <<"." << endl;
 
-   SipStack::setDefaultUseInternalPoll(usePoll?true:false);
+   SipStack::setDefaultUseInternalPoll(usePollMode?true:false);
 
    IpVersion version = (v6 ? V6 : V4);
-   SipStack receiver;
-   SipStack sender;
+   SipStackAndThread receiver(threadType);
+   SipStackAndThread sender(threadType);
+   bool noStackThread = strcmp(threadType,"none")==0;
+
+   // estimate number of sockets we need: 
+   // 2x for sender and receiver
+   // 1 for UDP + 2 for TCP (listen + connection)
+   // ~30 for misc (DNS)
+   int needFds = numPorts * 6 + 30;
+   increaseLimitFds(needFds);
    
+//   below isn't needed, just use --port option
 //   sender.addTransport(UDP, 25060, version); // !ah! just for debugging TransportSelector
 //   sender.addTransport(TCP, 25060, version);
 
-   int senderPort = 25070 + (rand()& 0x1fff);   
-   if (bindAddr)
+   Data senderIfAddr(bindAddr ? bindAddr : (const char*)"");
+   InfoLog(<<"Binding to address: " << senderIfAddr);
+
+   int senderPort = portBase;
+   if ( senderPort==0 )
+      senderPort = numPorts==1 ? 25060+(rand()&0x1fff) : 11000;
+   int registrarPort = senderPort + numPorts;
+
+   int idx;
+   for (idx=0; idx < numPorts; idx++) 
    {
-      InfoLog(<<"Binding to address: " << bindAddr);
-      sender.addTransport(UDP, senderPort, version, StunDisabled, bindAddr);
-      sender.addTransport(TCP, senderPort, version, StunDisabled, bindAddr);
-   }
-   else
-   {
-      sender.addTransport(UDP, senderPort, version);
-      sender.addTransport(TCP, senderPort, version);
+      sender->addTransport(UDP, senderPort+idx, version, StunDisabled, senderIfAddr);
+      sender->addTransport(TCP, senderPort+idx, version, StunDisabled, senderIfAddr);
+      receiver->addTransport(UDP, registrarPort+idx, version);
+      receiver->addTransport(TCP, registrarPort+idx, version);
    }
 
-   int registrarPort;
-   do {
-      registrarPort = 25080 + (rand()& 0x1fff);   
-   } while ( registrarPort == senderPort );
-   receiver.addTransport(UDP, registrarPort, version);
-   receiver.addTransport(TCP, registrarPort, version);
-
+   sender.run();
+   receiver.run();
 
    NameAddr target;
    target.uri().scheme() = "sip";
@@ -131,7 +222,7 @@ main(int argc, char* argv[])
       while (sent < runs && outstanding < window)
       {
          DebugLog (<< "Sending " << count << " / " << runs << " (" << outstanding << ")");
-         target.uri().port() = registrarPort; // +(sent%window);
+         target.uri().port() = registrarPort + (sent%numPorts);
 
          SipMessage* next=0;
          if (invite)
@@ -143,21 +234,23 @@ main(int argc, char* argv[])
             next = Helper::makeRegister( target, from, contact);
          }
          
-         next->header(h_Vias).front().sentPort() = senderPort;
-         sender.send(*next);
+         next->header(h_Vias).front().sentPort() = senderPort + (sent%numPorts);
+         sender->send(*next);
          outstanding++;
          sent++;
          delete next;
       }
 
-      FdSet fdset; 
-      receiver.buildFdSet(fdset);
-      sender.buildFdSet(fdset);
-      fdset.selectMilliSeconds(seltime); 
-      receiver.process(fdset);
-      sender.process(fdset);
+      if ( noStackThread ) {
+         FdSet fdset; 
+         receiver->buildFdSet(fdset);
+         sender->buildFdSet(fdset);
+         fdset.selectMilliSeconds(seltime); 
+         receiver->process(fdset);
+         sender->process(fdset);
+      }
       
-      SipMessage* request = receiver.receive();
+      SipMessage* request = receiver->receive();
       static NameAddr contact;
 
       if (request)
@@ -170,9 +263,9 @@ main(int argc, char* argv[])
             {
                DeprecatedDialog dlg(contact);
                dlg.makeResponse(*request, response, 180);
-               receiver.send(response);               
+               receiver->send(response);               
                dlg.makeResponse(*request, response, 200);
-               receiver.send(response);               
+               receiver->send(response);               
                break;
             }
 
@@ -181,12 +274,12 @@ main(int argc, char* argv[])
 
             case BYE:
                Helper::makeResponse(response, *request, 200);
-               receiver.send(response);
+               receiver->send(response);
                break;
                
             case REGISTER:
                Helper::makeResponse(response, *request, 200);
-               receiver.send(response);
+               receiver->send(response);
                break;
             default:
                assert(0);
@@ -195,7 +288,7 @@ main(int argc, char* argv[])
          delete request;
       }
       
-      SipMessage* response = sender.receive();
+      SipMessage* response = sender->receive();
       if (response)
       {
          assert(response->isResponse());
@@ -215,11 +308,11 @@ main(int argc, char* argv[])
                   DeprecatedDialog dlg(contact);
                   dlg.createDialogAsUAC(*response);
                   SipMessage* ack = dlg.makeAck();
-                  sender.send(*ack);
+                  sender->send(*ack);
                   delete ack;
 
                   SipMessage* bye = dlg.makeBye();
-                  sender.send(*bye);
+                  sender->send(*bye);
                   delete bye;
                }
                break;
@@ -241,14 +334,20 @@ main(int argc, char* argv[])
    if (!invite)
    {
       cout << runs << " registrations peformed in " << elapsed << " ms, a rate of " 
-           << runs / ((float) elapsed / 1000.0) << " transactions per second.]" << endl;
+           << runs / ((float) elapsed / 1000.0) << " transactions per second." << endl;
    }
    else
    {
       cout << runs << " calls peformed in " << elapsed << " ms, a rate of " 
-           << runs / ((float) elapsed / 1000.0) << " calls per second.]" << endl;
+           << runs / ((float) elapsed / 1000.0) << " calls per second." << endl;
    }
    cout << "Note: this test runs both sides (client and server)" << endl;
+
+   sender.shutdown();
+   receiver.shutdown();
+
+   sender.join();
+   receiver.join();
    
 #if defined(HAVE_POPT_H)
    poptFreeContext(context);

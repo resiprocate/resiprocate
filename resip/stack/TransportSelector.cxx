@@ -62,7 +62,7 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub, Compression &compression, bool internalPoll) :
+TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub, Compression &compression) :
    mDns(dnsStub),
    mStateMacFifo(fifo),
    mSecurity(security),
@@ -94,27 +94,12 @@ TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* s
 #else
    DebugLog (<< "No compression library available");
 #endif
-   if ( internalPoll ) {
-      mPollGrp = new FdPollGrp();
-   }
 }
 
-template<class T> void 
-deleteMap(T& m)
-{
-   for (typename T::iterator it = m.begin(); it != m.end(); it++)
-   {
-      delete it->second;
-   }
-   m.clear();
-}
 
 TransportSelector::~TransportSelector()
 {
-   mConnectionlessMap.clear();
-   deleteMap(mExactTransports);
-   deleteMap(mAnyInterfaceTransports);
-   deleteMap(mTlsTransports);
+   deleteTransports();
 #ifdef USE_SIGCOMP
    delete mSigcompStack;
 #endif
@@ -138,6 +123,29 @@ TransportSelector::shutdown()
    {
       i->second->shutdown();
    }
+}
+
+template<class T> void 
+deleteMap(T& m)
+{
+   for (typename T::iterator it = m.begin(); it != m.end(); it++)
+   {
+      delete it->second;
+   }
+   m.clear();
+}
+
+void
+TransportSelector::deleteTransports()
+{
+   mConnectionlessMap.clear();
+   mSharedProcessTransports.clear();
+   mHasOwnProcessTransports.clear();
+   deleteMap(mExactTransports);
+   deleteMap(mAnyInterfaceTransports);
+   deleteMap(mTlsTransports);
+   // XXX: what about mAnyPortTransports? would be nice if header
+   // documented which maps are "owning" and which "referencing"
 }
 
 bool
@@ -247,14 +255,19 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport)
       mHasOwnProcessTransports.back()->startOwnProcessing();
    }
 }
-  
+
+void
+TransportSelector::setPollGrp(FdPollGrp *grp)
+{
+   assert( mSharedProcessTransports.size() == 0 );
+   assert( mPollGrp==NULL );
+   mPollGrp = grp;
+}
+
 void
 TransportSelector::buildFdSet(FdSet& fdset)
 {
-   if ( mPollGrp ) {
-      mPollGrp->buildFdSet(fdset);
-      return;
-   }
+   assert( mPollGrp==NULL );
    for(TransportList::iterator it = mSharedProcessTransports.begin(); 
        it != mSharedProcessTransports.end(); it++)
    {

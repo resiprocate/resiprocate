@@ -49,7 +49,7 @@ on Transport add.
 class TransportSelector 
 {
    public:
-      TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub, Compression &compression, bool useInternalPoll);
+      TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub, Compression &compression);
       virtual ~TransportSelector();
       /**
 	    @retval true	Some transport in the transport list has data to send
@@ -64,11 +64,20 @@ class TransportSelector
       
       /// Returns true if all Transports have their buffers cleared, false otherwise.
       bool isFinished() const;
+
+      /// Configure a PollGrp to use (instead of buildFdSet/process)
+      /// Must be called before adding any transports
+      void setPollGrp(FdPollGrp *pollGrp);
       
-      /// Calls process on all suitable transports and the DNSInterface
+      /// Calls process on all suitable transports
+      /// NOTE that TransportSelector no longer handles DNSInterface
+      /// NOTE not used with pollGrp
       void process(FdSet& fdset);
-      /// Builds an FdSet comprised of all FDs from all suitable Transports and the DNSInterface
+      /// Builds an FdSet comprised of all FDs from all suitable Transports
       void buildFdSet(FdSet& fdset);
+
+      /// Called by transaction controller only if using pollGrp
+      void processTransmitQueue();
      
       void addTransport( std::auto_ptr<Transport> transport);
 
@@ -97,6 +106,9 @@ class TransportSelector
 
       static Tuple getFirstInterface(bool is_v4, TransportType type);
       bool connectionAlive(const Tuple& dest) const;
+
+      /// delete all known transports (including external)
+      void deleteTransports();
       
    private:
       const Connection* findConnection(const Tuple& dest) const;
@@ -105,7 +117,6 @@ class TransportSelector
       Transport* findTlsTransport(const Data& domain,TransportType type,IpVersion ipv);
       Tuple determineSourceInterface(SipMessage* msg, const Tuple& dest) const;
 
-      void processTransmitQueue();
 
       DnsInterface mDns;
       Fifo<TransactionMessage>& mStateMacFifo;

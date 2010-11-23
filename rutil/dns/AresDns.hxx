@@ -28,7 +28,6 @@ class AresDns : public ExternalDns
       AresDns() {mChannel = 0; mFeatures = 0; mPollGrp=NULL;}
       virtual ~AresDns();
 
-      virtual void setInternalPoll();
       virtual int init(const std::vector<GenericIPAddress>& additionalNameservers,
                        AfterSocketCreationFuncPtr socketfunc, int timeout=0, int tries=0, unsigned int features=0); 
 
@@ -40,6 +39,9 @@ class AresDns : public ExternalDns
       virtual unsigned int getTimeTillNextProcessMS();
       virtual void buildFdSet(fd_set& read, fd_set& write, int& size);
       virtual void process(fd_set& read, fd_set& write);
+
+      virtual void setPollGrp(FdPollGrp *pollGrp);
+      virtual void processTimers();
 
       //?dcm?  I believe these need to do nothing in the ARES case.
       virtual void freeResult(ExternalDnsRawResult /* res */) {}

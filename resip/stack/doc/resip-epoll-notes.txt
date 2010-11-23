@@ -100,3 +100,17 @@ Does any code is rutil/Poll.hxx?
 
 How to determine which platforms have epoll? Used to conditionally
 compile FdPoll.
+
+
+Valgrind w/epoll
+----------------
+Valgrind has issues when the application is using more than ~1000 sockets.
+See bug http://bugs.kde.org/show_bug.cgi?id=73146
+As written in the bug report "it doesn't seem that important".
+You cannot use resip::increaseLimitFds() (e.g., -n to testStack).
+To work around, this you need to increase the number of allowed fds *before*
+running valgrind. E.g.:
+   % sudo bash
+   # ulimit -Hn 200000
+   # ulimit -Sn 200000
+   # valgrind --leak-check=full ./testStack -n 10000

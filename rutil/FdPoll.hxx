@@ -1,42 +1,17 @@
 #if !defined(RESIP_FDPOLL_HXX)
 #define RESIP_FDPOLL_HXX
 
-// One of the following macros must be defined:
-//#define RESIP_POLL_IMPL_POLL
-//#define RESIP_POLL_IMPL_SELECT
-#define RESIP_POLL_IMPL_EPOLL  // Only one currently implemented
-
-/*
-  Define this macro to support applications that must call system call "poll"
-  or its ilk themselves rather than calling method "Poll::wait".
-*/
-// #define RESIP_POLL_EXTERN
-
-#include <vector>
-
-#ifdef RESIP_POLL_IMPL_EPOLL
-#  include <sys/epoll.h>
-#endif
-
-#ifdef RESIP_POLL_IMPL_POLL
-#  include <sys/poll.h>
-#endif
-
-#ifdef RESIP_POLL_IMPL_SELECT
-# ifdef WIN32
-#  include <winsock2.h>
-# else
-#  include <sys/time.h>
-#  include <sys/types.h>
-#  include <unistd.h>
-# endif // WIN32
-#endif // RESIP_POLL_IMPL_SELECT
-
-#ifdef RESIP_POLL_EXTERN
-# include <map>
-#endif // RESI
-
 #include "rutil/Socket.hxx"
+
+/* The Makefile system should define one of the following:
+ * HAVE_EPOLL: system call epoll() is available
+ * If none are defined then classes will still be defined, but
+ * calls to them will assert.
+ */
+
+#if defined(HAVE_EPOLL)
+#define RESIP_POLL_IMPL_EPOLL  // Only one currently implemented
+#endif
 
 namespace resip {
 
@@ -82,17 +57,25 @@ class FdPollItemBase : public FdPollItemIf {
 class FdPollGrp {
   public:
     FdPollGrp();
-    ~FdPollGrp();
+    virtual ~FdPollGrp();
+
+    /// factory
+    static FdPollGrp*		create();
 
 
-    void			addPollItem(FdPollItemIf *item,
-    				  FdPollEventMask newMask);
-    void			modPollItem(const FdPollItemIf *item, 
-    				  FdPollEventMask newMask);
-    void			delPollItem(FdPollItemIf *item);
+    virtual void		addPollItem(FdPollItemIf *item,
+    				  FdPollEventMask newMask) = 0;
+    virtual void		modPollItem(const FdPollItemIf *item, 
+    				  FdPollEventMask newMask) = 0;
+    virtual void		delPollItem(FdPollItemIf *item) = 0;
+
+    virtual void		process() = 0;
 
     /// get the epoll-fd (epoll_create()) -- it is int, not Socket
-    int				getEPollFd() const { return mEPollFd; }
+    /// This is fd (type int), not Socket. It may be -1 if epoll
+    /// is not enabled.
+    virtual int			getEPollFd() const = 0;
+
     /// Add our epoll-fd into the fdSet (for hierarchical selects)
     void			buildFdSet(FdSet& fdSet) const;
     void			buildFdSet(fd_set& readfds) const;
@@ -100,30 +83,11 @@ class FdPollGrp {
     void			processFdSet(FdSet& fdset);
     void			processFdSet(fd_set& readfds);
 
-    void			process();
+    virtual FdPollItemIf*		getItemByFd(Socket fd) = 0;
 
-
-    FdPollItemIf*		getItemByFd(Socket fd);
+    // convience functions. not sure if we should keep this or not
     FdPollItemIf*		modifyEventMaskByFd(FdPollEventMask mask, 
     				  Socket fd);
-
-  protected:
-    void			processItem(FdPollItemIf *item,
-    				  FdPollEventMask mask);
-    void			killCache(Socket fd);
-
-    std::vector<FdPollItemIf*>	mItems;	// indexed by fd
-    int				mEPollFd;	// from epoll_create()
-
-    /*
-     * This is temporary cache of poll events. It is a member (and
-     * not on stack) for two reasons: (1) simpler memory management,
-     * and (2) so delPollItem() can traverse it and clean up.
-     */
-    std::vector<struct epoll_event> mEvCache;
-    int				mEvCacheCur;
-    int				mEvCacheLen;
-
 };
 
 

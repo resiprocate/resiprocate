@@ -592,6 +592,12 @@ UdpTransport::setExternalUnknownDatagramHandler(ExternalUnknownDatagramHandler *
    mExternalUnknownDatagramHandler = handler;
 }
 
+void
+UdpTransport::setRcvBufLen(int buflen) 
+{
+   setSocketRcvBufLen(mFd, buflen);
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

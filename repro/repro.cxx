@@ -207,13 +207,24 @@ main(int argc, char** argv)
             {
                CritLog(<< "Malformed IP-address found in the --interfaces (-i) command-line option: " << intf.host());
             }
+	    TransportType tt = Tuple::toTransport(intf.param(p_transport));
+            ExtensionParameter p_rcvbuf("rcvbuf"); // SO_RCVBUF
+	    int rcvBufLen = 0;
+	    if ( intf.exists(p_rcvbuf) && !intf.param(p_rcvbuf).empty() ) 
+	        rcvBufLen = intf.param(p_rcvbuf).convertInt();
+	    // maybe do transport-type dependent processing of buf?
+
             ExtensionParameter p_tls("tls"); // for specifying tls domain
-            stack.addTransport(Tuple::toTransport(intf.param(p_transport)),
-                               intf.port(), 
+            Transport *t = stack.addTransport(tt,
+	      		       intf.port(), 
                                DnsUtil::isIpV6Address(intf.host()) ? V6 : V4,
                                StunEnabled, 
                                intf.host(), // interface to bind to
                                intf.param(p_tls));
+	     if (t && rcvBufLen>0 )
+	     {
+	        t->setRcvBufLen(rcvBufLen);
+	     }
          }
       }
       else

@@ -5,8 +5,21 @@
 #include "rutil/Logger.hxx"
 #include "rutil/BaseException.hxx"
 
+#include <vector>
+
+#ifdef RESIP_POLL_IMPL_EPOLL
+#  include <sys/epoll.h>
+#endif
+
+
 using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP	// What is best?
+
+/*****************************************************************
+ *
+ * FdPollItemIf and FdPollItemBase impl
+ *
+ *****************************************************************/
 
 FdPollItemIf::~FdPollItemIf() { }
 
@@ -19,7 +32,140 @@ FdPollItemBase::~FdPollItemBase() {
     mPollGrp->delPollItem(this);
 }
 
+/*****************************************************************
+ *
+ * FdPollGrp
+ * 
+ * Implementation for some of the base class methods.
+ * While some of these are epoll-specific, we can (and do) implement
+ * them at this level.
+ * For now we use delegation for the impl data structures
+ * rather than inhieritance. Long term, not sure which will
+ * be cleaner.
+ *
+ *****************************************************************/
 
+FdPollGrp::FdPollGrp() {
+}
+
+FdPollGrp::~FdPollGrp() {
+}
+
+
+void
+FdPollGrp::buildFdSet(FdSet& fdset) const {
+    int fd = getEPollFd();
+    if ( fd!=-1 )
+        fdset.setRead(fd);
+}
+
+void
+FdPollGrp::buildFdSet(fd_set& readfds) const {
+    int fd = getEPollFd();
+    if ( fd!=-1 )
+        FD_SET(fd, &readfds);
+}
+
+void
+FdPollGrp::processFdSet(FdSet& fdset) {
+    int fd = getEPollFd();
+    if ( fd!=-1 && fdset.readyToRead(fd) )
+	process();
+}
+
+void
+FdPollGrp::processFdSet(fd_set& readfds) {
+    int fd = getEPollFd();
+    if ( fd!=-1 && FD_ISSET(fd, &readfds) )
+	process();
+}
+
+
+FdPollItemIf*
+FdPollGrp::modifyEventMaskByFd(FdPollEventMask mask, int fd) {
+    FdPollItemIf* item = getItemByFd(fd);
+    // There is some legit reasons why item may be NULL -- not sure where
+    if ( item )
+	modPollItem(item, mask);
+    return item;
+}
+
+
+/*****************************************************************
+ *
+ * FdPollImplEpoll
+ * 
+ *****************************************************************/
+
+#ifdef RESIP_POLL_IMPL_EPOLL
+
+namespace resip {
+
+
+
+class FdPollImplEpoll : public FdPollGrp {
+  public:
+    FdPollImplEpoll();
+    ~FdPollImplEpoll();
+
+    virtual void		addPollItem(FdPollItemIf *item,
+    				  FdPollEventMask newMask);
+    virtual void		modPollItem(const FdPollItemIf *item, 
+    				  FdPollEventMask newMask);
+    virtual void		delPollItem(FdPollItemIf *item);
+
+    virtual void		process();
+
+    /// See baseclass. This is integer fd, not Socket
+    virtual int 		getEPollFd() const { return mEPollFd; }
+    virtual FdPollItemIf*	getItemByFd(int fd);
+
+  protected:
+    void			processItem(FdPollItemIf *item,
+    				  FdPollEventMask mask);
+    void			killCache(Socket fd);
+
+    std::vector<FdPollItemIf*>	mItems;	// indexed by fd
+    int				mEPollFd;	// from epoll_create()
+
+    /*
+     * This is temporary cache of poll events. It is a member (and
+     * not on stack) for two reasons: (1) simpler memory management,
+     * and (2) so delPollItem() can traverse it and clean up.
+     */
+    std::vector<struct epoll_event> mEvCache;
+    int				mEvCacheCur;
+    int				mEvCacheLen;
+};
+
+};	// namespace
+
+FdPollImplEpoll::FdPollImplEpoll() :
+  mEPollFd(-1) {
+    int sz = 200;	// ignored
+    if ( (mEPollFd = epoll_create(sz)) < 0 ) {
+        CritLog(<<"epoll_create() failed: "<<strerror(errno));
+        abort();
+    }
+    mEvCache.resize(sz);
+    mEvCacheCur = mEvCacheLen = 0;
+}
+
+FdPollImplEpoll::~FdPollImplEpoll() {
+    assert( mEvCacheLen == 0 );	// poll not active
+    unsigned itemIdx;
+    for (itemIdx=0; itemIdx < mItems.size(); itemIdx++) {
+	FdPollItemIf *item = mItems[itemIdx];
+	if ( item ) {
+	    int fd = item->getPollSocket();
+	    CritLog(<<"FdPollItem idx="<<itemIdx
+	      <<" fd="<<fd
+	      <<" not deleted prior to destruction");
+        }
+    }
+    if ( mEPollFd != -1 )
+        close(mEPollFd);
+}
 
 static inline unsigned short CvtSysToUsrMask(unsigned long sysMask) {
     unsigned usrMask = 0;
@@ -43,111 +189,68 @@ static inline unsigned long CvtUsrToSysMask(unsigned short usrMask) {
     return sysMask;
 }
 
-
-FdPollGrp::FdPollGrp() {
-    int sz = 200;	// ignored
-    if ( (mEPollFd = epoll_create(sz)) < 0 ) {
-        CritLog(<<"epoll_create() failed: "<<strerror(errno));
-        exit(1);
-    }
-    mEvCache.resize(sz);
-    mEvCacheCur = mEvCacheLen = 0;
-}
-
-FdPollGrp::~FdPollGrp() {
-    if ( mEPollFd >= 0 )
-        close(mEPollFd);
-}
-
 FdPollItemIf*
-FdPollGrp::getItemByFd(int fd) {
+FdPollImplEpoll::getItemByFd(int fd) {
     if ( fd < 0 || fd >= ((int)mItems.size()) )
         return NULL;
     return mItems[fd];
 }
 
 void
-FdPollGrp::addPollItem(FdPollItemIf *item, FdPollEventMask newMask) {
+FdPollImplEpoll::addPollItem(FdPollItemIf *item, FdPollEventMask newMask) {
     int fd = item->getPollSocket();
     assert(fd>=0);
     //DebugLog(<<"adding epoll item fd="<<fd);
-    if ( mItems.size() <= (unsigned)fd )
-        mItems.resize(fd+1);
+    if ( mItems.size() <= (unsigned)fd ) {
+	unsigned newsz = fd+1;
+	newsz += newsz/3;	// plus 30% margin
+	// WATCHOUT: below may trigger re-allocation, invalidating any iters
+	// Currently only iterator is destructor, so should be safe
+        mItems.resize(newsz);
+    }
     FdPollItemIf *olditem = mItems[fd];
     assert( olditem == NULL );	// what is right thing to do?
     mItems[fd] = item;
     struct epoll_event ev;
+    memset(&ev, 0, sizeof(ev));	// make valgrind happy
     ev.events = CvtUsrToSysMask(newMask);
     ev.data.fd = fd;
     if ( epoll_ctl(mEPollFd, EPOLL_CTL_ADD, fd, &ev) < 0 ) {
         CritLog(<<"epoll_ctl(ADD) failed: "<<strerror(errno));
-    	exit(1);
+    	abort();
     }
 }
 
 void
-FdPollGrp::modPollItem(const FdPollItemIf *item, FdPollEventMask newMask) {
+FdPollImplEpoll::modPollItem(const FdPollItemIf *item, FdPollEventMask newMask) {
     int fd = item->getPollSocket();
+    assert(fd>=0 && ((unsigned)fd) < mItems.size());
+    assert( mItems[fd] != NULL );
+
     struct epoll_event ev;
+    memset(&ev, 0, sizeof(ev));	// make valgrind happy
     ev.events = CvtUsrToSysMask(newMask);
     ev.data.fd = fd;
     if ( epoll_ctl(mEPollFd, EPOLL_CTL_MOD, fd, &ev) < 0 ) {
         CritLog(<<"epoll_ctl(MOD) failed: "<<strerror(errno));
-    	exit(1);
+    	abort();
     }
 }
 
-#if 0
 void
-FdPollGrp::modPollItem(FdPollItem *item, FdPollEventMask mask) {
-    item->mMask = mask;
-    modPollItem(item);
-}
-#endif
-
-FdPollItemIf*
-FdPollGrp::modifyEventMaskByFd(FdPollEventMask mask, int fd) {
-    FdPollItemIf* item = getItemByFd(fd);
-    if ( item )
-	modPollItem(item, mask);
-    return item;
-}
-
-void
-FdPollGrp::delPollItem(FdPollItemIf *item) {
+FdPollImplEpoll::delPollItem(FdPollItemIf *item) {
     int fd = item->getPollSocket();
     //DebugLog(<<"deleting epoll item fd="<<fd);
     assert(fd>=0 && ((unsigned)fd) < mItems.size());
-    if ( epoll_ctl(mEPollFd, EPOLL_CTL_DEL, fd, NULL) < 0 ) {
-        CritLog(<<"epoll_ctl(DEL) failed: "<<strerror(errno));
-    	exit(1);
-    }
+    assert( mItems[fd] != NULL );
     mItems[fd] = NULL;
+    if ( epoll_ctl(mEPollFd, EPOLL_CTL_DEL, fd, NULL) < 0 ) {
+        CritLog(<<"epoll_ctl(DEL) fd="<<fd<<" failed: "<<strerror(errno));
+    	abort();
+    }
     killCache(fd);
 }
 
-void
-FdPollGrp::buildFdSet(FdSet& fdset) const {
-    fdset.setRead(mEPollFd);
-}
-
-void
-FdPollGrp::buildFdSet(fd_set& readfds) const {
-    FD_SET(mEPollFd, &readfds);
-}
-
-
-void
-FdPollGrp::processFdSet(FdSet& fdset) {
-    if ( fdset.readyToRead(mEPollFd) )
-	process();
-}
-
-void
-FdPollGrp::processFdSet(fd_set& readfds) {
-    if ( FD_ISSET(mEPollFd, &readfds) )
-	process();
-}
 
 /**
     There is a boundary case:
@@ -173,7 +276,7 @@ FdPollGrp::processFdSet(fd_set& readfds) {
     recognize stale events.
 **/
 void
-FdPollGrp::killCache(int fd) {
+FdPollImplEpoll::killCache(int fd) {
     int ne;
     for (ne=mEvCacheCur; ne < mEvCacheLen; ne++) {
     	if ( mEvCache[ne].data.fd == fd ) {
@@ -183,7 +286,7 @@ FdPollGrp::killCache(int fd) {
 }
 
 void
-FdPollGrp::processItem(FdPollItemIf *item, FdPollEventMask mask) {
+FdPollImplEpoll::processItem(FdPollItemIf *item, FdPollEventMask mask) {
     try {
         item->processPollEvent( mask );
     } catch (BaseException& e) {
@@ -194,13 +297,13 @@ FdPollGrp::processItem(FdPollItemIf *item, FdPollEventMask mask) {
 }
 
 void
-FdPollGrp::process() {
+FdPollImplEpoll::process() {
     bool maybeMore;
     do {
         int nfds = epoll_wait(mEPollFd, &mEvCache.front(), mEvCache.size(), 0);
 	if ( nfds < 0 ) {
             CritLog(<<"epoll_wait() failed: "<<strerror(errno));
-	    exit(1);
+	    abort();
 	}
 	mEvCacheLen = nfds;	// for killCache()
         maybeMore = ( ((unsigned)nfds)==mEvCache.size()) ? 1 : 0;
@@ -221,9 +324,27 @@ FdPollGrp::process() {
 	    processItem( item, CvtSysToUsrMask(sysEvtMask) );
 	    item = NULL; // WATCHOUT: item may not exist anymore
 	}
+        mEvCacheLen = 0;
     } while ( maybeMore );
 }
 
+#endif // RESIP_POLL_IMPL_EPOLL
+
+/*****************************************************************
+ *
+ * Factory
+ * 
+ *****************************************************************/
+
+/*static*/FdPollGrp*
+FdPollGrp::create() {
+#ifdef RESIP_POLL_IMPL_EPOLL
+    return new FdPollImplEpoll();
+#else
+    assert(0);
+    return NULL;
+#endif
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

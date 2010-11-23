@@ -59,9 +59,13 @@ class AresDnsPollItem : public FdPollItemBase {
 void
 AresDnsPollItem::processPollEvent(FdPollEventMask mask) {
    assert( (mask&(FPEM_Read|FPEM_Write))!= 0 );
+
+   time_t nowSecs;
+   time(&nowSecs);	/// maybe nice if this was passed into us?
+
    ares_process_poll(mChannel, mServerIdx, 
      (mask&FPEM_Read)?mPollSocket:-1, (mask&FPEM_Write)?mPollSocket:-1, 
-     mAres.mNow);
+     nowSecs);
 }
 
 /**
@@ -78,6 +82,11 @@ AresDnsPollItem::socket_poll_cb(void *cb_data,
    FdPollGrp *grp = ares->mPollGrp;
    assert( grp );
    FdPollItemIf *olditem = grp->getItemByFd(fd);
+   if ( olditem ) {
+      AresDnsPollItem *oldaresitem = dynamic_cast<AresDnsPollItem*>(olditem);
+      assert( oldaresitem->mChannel==channel );
+      assert( oldaresitem->mServerIdx==server_idx );
+   }
    AresDnsPollItem *newitem;
    switch ( act ) {
    case ARES_POLLACTION_OPEN:
@@ -85,7 +94,9 @@ AresDnsPollItem::socket_poll_cb(void *cb_data,
       assert( fd!=-1 );
       newitem = new AresDnsPollItem( grp, fd, *ares, channel, server_idx);
       // grp->addPollItem(newitem); constructor does this
-      /// XXX: track the item memory to destroy later.
+      // Could track the item by channel number into map
+      // so that we don't have to do the lookup by fd above
+      // could also be used to verify that everything cleaned up when done
       break;
    case ARES_POLLACTION_CLOSE:
       assert( olditem );
@@ -115,10 +126,9 @@ AresDnsPollItem::socket_poll_cb(void *cb_data,
 volatile bool AresDns::mHostFileLookupOnlyMode = false;
 
 void
-AresDns::setInternalPoll() {
-   if ( mPollGrp == NULL ) {
-      mPollGrp = new FdPollGrp();
-   }
+AresDns::setPollGrp(FdPollGrp *grp) {
+   assert( mPollGrp == NULL );
+   mPollGrp = grp;
 }
 
 int 
@@ -458,10 +468,6 @@ AresDns::~AresDns()
 #elif defined(USE_CARES)
    ares_destroy(mChannel);
 #endif
-   if ( mPollGrp ) {
-      // XXX: what about all the items?
-      delete mPollGrp;
-   }
 }
 
 bool AresDns::hostFileLookup(const char* target, in_addr &addr)
@@ -489,6 +495,10 @@ bool AresDns::hostFileLookup(const char* target, in_addr &addr)
    saddr.sin_family = AF_INET;
    memcpy((char *)&(saddr.sin_addr.s_addr),(char *)hostdata->h_addr_list[0], (size_t)hostdata->h_length);
    addr = saddr.sin_addr;
+#if defined(USE_ARES)
+   // for resip-ares, the hostdata (and its contents) is dynamically allocated
+   ares_free_hostent(hostdata);
+#endif
    
    DebugLog(<< "hostFileLookup succeeded for " << target);
    return true;
@@ -529,10 +539,7 @@ AresDns::getTimeTillNextProcessMS()
 void 
 AresDns::buildFdSet(fd_set& read, fd_set& write, int& size)
 {
-   if ( mPollGrp ) {
-      mPollGrp->buildFdSet(read);
-      return;
-   }
+   assert( mPollGrp==0 );
    int newsize = ares_fds(mChannel, &read, &write);
    if ( newsize > size )
    {
@@ -540,17 +547,20 @@ AresDns::buildFdSet(fd_set& read, fd_set& write, int& size)
    }
 }
 
+void
+AresDns::processTimers() 
+{
+   assert( mPollGrp!=0 );
+   time_t timeSecs;
+   time(&timeSecs);
+   ares_process_poll(mChannel, /*server*/-1, /*rd*/-1, /*wr*/-1, timeSecs);
+}
+
 void 
 AresDns::process(fd_set& read, fd_set& write)
 {
-   if ( mPollGrp ) {
-      time(&mNow);
-      mPollGrp->processFdSet(read);
-      // below is for timeouts
-      ares_process_poll(mChannel, /*server*/-1, /*rd*/-1, /*wr*/-1, mNow);
-   } else {
-      ares_process(mChannel, &read, &write);
-   }
+   assert( mPollGrp==0 );
+   ares_process(mChannel, &read, &write);
 }
 
 char* 

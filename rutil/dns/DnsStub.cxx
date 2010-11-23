@@ -77,13 +77,13 @@ DnsResultSink::onLogDnsResult(const DNSResult<DnsCnameRecord>& rr)
 DnsStub::DnsStub(const NameserverList& additional,
                  AfterSocketCreationFuncPtr socketFunc,
                  AsyncProcessHandler* asyncProcessHandler,
-		 bool useInternalPoll) :
+		 FdPollGrp *pollGrp) :
    mTransform(0),
    mDnsProvider(ExternalDnsFactory::createExternalDns()),
    mAsyncProcessHandler(asyncProcessHandler)
 {
-   if ( useInternalPoll )
-       mDnsProvider->setInternalPoll();
+   if ( pollGrp )
+      mDnsProvider->setPollGrp(pollGrp);
    int retCode = mDnsProvider->init(additional, socketFunc, mDnsTimeout, mDnsTries, mDnsFeatures);
    if (retCode != ExternalDns::Success)
    {
@@ -125,7 +125,7 @@ DnsStub::buildFdSet(FdSet& fdset)
 }
 
 void 
-DnsStub::process(FdSet& fdset)
+DnsStub::processFifo()
 {
    while (mCommandFifo.messageAvailable())
    {
@@ -133,7 +133,21 @@ DnsStub::process(FdSet& fdset)
       command->execute();
       delete command;
    }
+}
+
+void 
+DnsStub::process(FdSet& fdset)
+{
+   processFifo();
    mDnsProvider->process(fdset.read, fdset.write);
+}
+
+void 
+DnsStub::processTimers()
+{
+   // the fifo is captures as a timer within getTimeTill... above
+   processFifo();
+   mDnsProvider->processTimers();
 }
 
 void 

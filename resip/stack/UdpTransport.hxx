@@ -53,6 +53,7 @@ public:
    virtual bool hasDataToSend() const;
    virtual void buildFdSet( FdSet& fdset);
    virtual void setPollGrp(FdPollGrp *grp);
+   virtual void setRcvBufLen(int buflen);
 
    // FdPollItemIf
    virtual Socket getPollSocket() const;

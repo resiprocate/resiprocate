@@ -110,6 +110,9 @@ bool makeSocketNonBlocking(Socket fd);
 bool makeSocketBlocking(Socket fd);
 int closeSocket( Socket fd );
 int getSocketError(Socket fd);	// getsockopt(SOCK_SOCKET,SO_ERROR)
+int increaseLimitFds(unsigned int targetFds);
+int setSocketRcvBufLen(Socket fd, int buflen);	// setsockopt(SO_RCVBUF)
+
 
 /**
    @brief Object-oriented wrapper for your platform's file-descriptor set.
