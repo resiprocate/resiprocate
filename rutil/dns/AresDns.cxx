@@ -499,7 +499,7 @@ bool AresDns::hostFileLookup(const char* target, in_addr &addr)
    // for resip-ares, the hostdata (and its contents) is dynamically allocated
    ares_free_hostent(hostdata);
 #endif
-   
+
    DebugLog(<< "hostFileLookup succeeded for " << target);
    return true;
 }
