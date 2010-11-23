@@ -30,7 +30,10 @@ SelectInterruptor::SelectInterruptor()
    error= connect(mSocket, &mWakeupAddr, sizeof(mWakeupAddr)); 
    assert(error == 0);
 #else
-   pipe(mPipe);
+   int x = pipe(mPipe);
+   assert( x != -1 );
+   // make write-side non-blocking to avoid deadlock
+   makeSocketNonBlocking(mPipe[1]);
 #endif
 }
 
@@ -86,8 +89,16 @@ SelectInterruptor::interrupt()
    int count = send(mSocket, wakeUp, sizeof(wakeUp), 0);
    assert(count == sizeof(wakeUp));
 #else
-   size_t res = write(mPipe[1], wakeUp, sizeof(wakeUp));
-   assert(res == sizeof(wakeUp));   
+   ssize_t res = write(mPipe[1], wakeUp, sizeof(wakeUp));
+   if ( res == -1 && errno==EAGAIN )
+   {
+      ; // this can happen when SipStack thread gets behind.
+      // no need to block since our only purpose is to wake up the thread
+      // also, this write can occur within the SipStack thread, in which
+      // case we get dead-lock if this blocks
+   } else {
+      assert(res == sizeof(wakeUp));   
+   }
 #endif
 }
 
