@@ -55,16 +55,16 @@ using namespace std;
 
 static const Data PEM(".pem");
 
+static const Data rootCert("root_cert_");
+static const Data domainCert("domain_cert_");
+static const Data domainKey("domain_key_");
+static const Data userCert("user_cert_");
+static const Data userKey("user_key_");
+static const Data unknownKey("user_key_");
+
 static const Data 
 pemTypePrefixes(  Security::PEMType pType )
 {
-   static const Data rootCert("root_cert_");
-   static const Data domainCert("domain_cert_");
-   static const Data domainKey("domain_key_");
-   static const Data userCert("user_cert_");
-   static const Data userKey("user_key_");
-   static const Data unknownKey("user_key_");
-
    switch (pType)
    {
       case  Security::RootCert:         return rootCert;
