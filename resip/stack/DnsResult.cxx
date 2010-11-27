@@ -1132,6 +1132,8 @@ void DnsResult::onDnsResult(const DNSResult<DnsSrvRecord>& result)
    }
 }
 
+static Data enumService1("e2u+sip");
+static Data enumService2("sip+e2u");
 void
 DnsResult::onEnumResult(const DNSResult<DnsNaptrRecord>& result)
 {
@@ -1139,9 +1141,6 @@ DnsResult::onEnumResult(const DNSResult<DnsNaptrRecord>& result)
    
    if (result.status == 0)
    {
-      static Data enumService1("e2u+sip");
-      static Data enumService2("sip+e2u");
-
       DnsNaptrRecord best;
       best.order() = -1;
 

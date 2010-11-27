@@ -1669,11 +1669,11 @@ SdpContents::Session::Medium::codecs()
    return mCodecs;
 }
 
+static Codec emptyCodec;
 const Codec& 
 SdpContents::Session::Medium::findFirstMatchingCodecs(const CodecContainer& codecList, Codec* pMatchingCodec) const
 {
    const CodecContainer& internalCodecList = codecs();
-   static Codec emptyCodec;
    resip::SdpContents::Session::Medium::CodecContainer::const_iterator sIter;
    resip::SdpContents::Session::Medium::CodecContainer::const_iterator sEnd = internalCodecList.end();
    resip::SdpContents::Session::Medium::CodecContainer::const_iterator eIter;
