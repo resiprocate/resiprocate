@@ -20,7 +20,8 @@ class TcpBaseTransport : public InternalTransport
                        IpVersion version, 
                        const Data& interfaceName, 
                        AfterSocketCreationFuncPtr socketFunc, 
-                       Compression &compression);
+                       Compression &compression,
+		       unsigned transportFlags = 0);
       virtual  ~TcpBaseTransport();
       
       virtual void process(FdSet& fdset);
@@ -45,7 +46,7 @@ class TcpBaseTransport : public InternalTransport
       */
       void processAllWriteRequests(FdSet& fdset);
       void sendFromRoundRobin(FdSet& fdset);
-      void processListen(FdSet& fdSet);
+      int processListen();
 
       static const size_t MaxWriteSize;
       static const size_t MaxReadSize;

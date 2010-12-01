@@ -16,6 +16,8 @@ class SipMessage;
 class Connection;
 class Compression;
 
+#define RESIP_TRANSPORT_FLAG_NOBIND (1<<0)
+
 class Transport
 {
    public:
@@ -40,7 +42,8 @@ class Transport
                 const Data& interfaceObj,
                 const Data& tlsDomain = Data::Empty,
                 AfterSocketCreationFuncPtr socketFunc = 0,
-                Compression &compression = Compression::Disabled
+                Compression &compression = Compression::Disabled,
+		unsigned transportFlags = 0
          );
 
       virtual ~Transport();
@@ -149,6 +152,7 @@ class Transport
    protected:
       AfterSocketCreationFuncPtr mSocketFunc;      
       Compression &mCompression;
+      unsigned mTransportFlags;
 };
 
 EncodeStream& operator<<(EncodeStream& strm, const Transport& rhs);
