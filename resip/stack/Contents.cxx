@@ -49,11 +49,11 @@ Contents::~Contents()
    freeMem();
 }
 
+static const Data errorContextData("Contents");
 const Data&
 Contents::errorContext() const
 {
-   static const Data context("Contents");
-   return context;
+   return errorContextData;
 }
 
 Contents& 

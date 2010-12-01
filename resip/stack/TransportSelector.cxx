@@ -678,7 +678,9 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
       {
          Transport* transport=0;
 
+#if 1
 	 transport = msg->getForceTransport();
+#endif
 
 	 if ( !transport )
             transport = findTransportByDest(msg,target);

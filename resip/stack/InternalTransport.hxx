@@ -32,7 +32,8 @@ class InternalTransport : public Transport
                         IpVersion version,
                         const Data& interfaceObj,
                         AfterSocketCreationFuncPtr socketFunc = 0,
-                        Compression &compression = Compression::Disabled);
+                        Compression &compression = Compression::Disabled,
+			unsigned transportFlags = 0);
 
       virtual ~InternalTransport();
 
@@ -47,7 +48,6 @@ class InternalTransport : public Transport
       void bind();      
       
       //used for epoll
-      virtual int maxFileDescriptors() const { return 1; }
       virtual void setPollGrp(FdPollGrp *grp);
 
       // used for statistics

@@ -117,7 +117,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
                                                                   // for TLS
                                                                   // based stuff 
                          const Data& privateKeyPassPhrase = Data::Empty,
-                         SecurityTypes::SSLType sslType = SecurityTypes::TLSv1 );
+                         SecurityTypes::SSLType sslType = SecurityTypes::TLSv1,
+			 unsigned transportFlags = 0);
 
       SipStack& getSipStack();
       Security* getSecurity();

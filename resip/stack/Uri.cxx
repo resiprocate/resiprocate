@@ -1012,6 +1012,7 @@ Uri::embedded() const
    return ncthis->embedded();
 }
 
+static const Data bodyData("Body");
 void
 Uri::parseEmbeddedHeaders(ParseBuffer& pb)
 {
@@ -1050,8 +1051,7 @@ Uri::parseEmbeddedHeaders(ParseBuffer& pb)
       char* decodedContents = Embedded::decode(headerContents, len);
       mEmbeddedHeaders->addBuffer(decodedContents);
 
-      static const Data body("Body");
-      if (isEqualNoCase(body, headerName))
+      if (isEqualNoCase(bodyData, headerName))
       {
          mEmbeddedHeaders->setBody(decodedContents, len); 
       }

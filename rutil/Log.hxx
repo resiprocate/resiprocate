@@ -197,6 +197,7 @@ class Log
       static Level level() { Lock lock(_mutex); return getLoggerData().mLevel; }
       /** Return logging level for given local logger. Use 0 to set global logging level. */
       static Level level(LocalLoggerId loggerId);
+      static LocalLoggerId id() { Lock lock(_mutex); return getLoggerData().id(); }
       static void setMaxLineCount(unsigned int maxLineCount);
       static void setMaxLineCount(unsigned int maxLineCount, LocalLoggerId loggerId);
       static void setMaxByteCount(unsigned int maxByteCount);

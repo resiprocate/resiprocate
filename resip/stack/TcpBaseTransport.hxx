@@ -13,14 +13,13 @@ class TransactionMessage;
 class TcpBaseTransport : public InternalTransport
 {
    public:
-      enum  {MaxFileDescriptors = 100000};
-
       TcpBaseTransport(Fifo<TransactionMessage>& fifo, 
                        int portNum,  
                        IpVersion version, 
                        const Data& interfaceName, 
                        AfterSocketCreationFuncPtr socketFunc, 
-                       Compression &compression);
+                       Compression &compression,
+		       unsigned transportFlags = 0);
       virtual  ~TcpBaseTransport();
 
 
@@ -31,7 +30,6 @@ class TcpBaseTransport : public InternalTransport
       virtual void buildFdSet( FdSet& fdset);
       virtual bool isReliable() const { return true; }
       virtual bool isDatagram() const { return false; }
-      virtual int maxFileDescriptors() const { return MaxFileDescriptors; }
       virtual void setPollGrp(FdPollGrp *grp);
       virtual void setRcvBufLen(int buflen);
 

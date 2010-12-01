@@ -141,7 +141,8 @@ class SipStack
                                                                   // for TLS
                                                                   // based stuff 
                          const Data& privateKeyPassPhrase = Data::Empty,
-                         SecurityTypes::SSLType sslType = SecurityTypes::TLSv1);
+                         SecurityTypes::SSLType sslType = SecurityTypes::TLSv1,
+			 unsigned transportFlags = 0);
       
       /**
           Used to plug-in custom transports.  Adds the transport to the Transport

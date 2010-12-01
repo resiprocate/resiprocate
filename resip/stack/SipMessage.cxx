@@ -563,22 +563,21 @@ SipMessage::method() const
    return res;
 }
 
+static const Data requestEB("SipReq:  ");
+static const Data responseEB("SipResp: ");
+static const Data tidEB(" tid=");
+static const Data contactEB(" contact=");
+static const Data cseqEB(" cseq=");
+static const Data slashEB(" / ");
+static const Data wireEB(" from(wire)");
+static const Data ftuEB(" from(tu)");
+static const Data tlsdEB(" tlsd=");
 EncodeStream&
 SipMessage::encodeBrief(EncodeStream& str) const
 {
-   static const Data  request("SipReq:  ");
-   static const Data response("SipResp: ");
-   static const Data tid(" tid=");
-   static const Data contact(" contact=");
-   static const Data cseq(" cseq=");
-   static const Data slash(" / ");
-   static const Data wire(" from(wire)");
-   static const Data ftu(" from(tu)");
-   static const Data tlsd(" tlsd=");
-
    if (isRequest()) 
    {
-      str << request;
+      str << requestEB;
       MethodTypes meth = header(h_RequestLine).getMethod();
       if (meth != UNKNOWN)
       {
@@ -594,12 +593,12 @@ SipMessage::encodeBrief(EncodeStream& str) const
    }
    else if (isResponse())
    {
-      str << response;
+      str << responseEB;
       str << header(h_StatusLine).responseCode();
    }
    if (!empty(h_Vias))
    {
-      str << tid;
+      str << tidEB;
       try
       {
          str << getTransactionId();
@@ -614,14 +613,14 @@ SipMessage::encodeBrief(EncodeStream& str) const
       str << " NO-VIAS ";
    }
 
-   str << cseq;
+   str << cseqEB;
    str << header(h_CSeq);
 
    try
    {
       if (!empty(h_Contacts))
       {
-         str << contact;
+         str << contactEB;
          str << header(h_Contacts).front().uri().getAor();
       }
    }
@@ -630,12 +629,12 @@ SipMessage::encodeBrief(EncodeStream& str) const
       str << " MALFORMED CONTACT ";
    }
    
-   str << slash;
+   str << slashEB;
    str << header(h_CSeq).sequence();
-   str << (mIsExternal ? wire : ftu);
+   str << (mIsExternal ? wireEB : ftuEB);
    if (!mTlsDomain.empty())
    {
-      str << tlsd << mTlsDomain;
+      str << tlsdEB << mTlsDomain;
    }
    
    return str;
