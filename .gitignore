@@ -1,6 +1,7 @@
-/.make_prefs
 /SVN-VERSION
+/.make_prefs
 /build/Makefile.conf
+tags
 *build.Linux*
 .dependlibs
 bin.debug.*
@@ -12,8 +13,6 @@ obj.gopt.*
 
 repro/reproInfo.hxx
 repro/repro
-tags
-
 
 resip/dum/test/BasicCall
 resip/dum/test/basicMessage
@@ -23,9 +22,9 @@ resip/dum/test/testSMIMEInvite
 resip/dum/test/testSMIMEMessage
 resip/dum/test/treg
 
-resip/stack/test/*.log
 resip/stack/.firstrun
 
+resip/stack/test/*.log
 resip/stack/test/RFC4475TortureTests
 resip/stack/test/UAS
 resip/stack/test/dumpTls
@@ -82,7 +81,6 @@ resip/stack/test/testXMLCursor
 
 rutil/test/*.log
 rutil/test/testLogger*.txt
-
 rutil/test/testCoders
 rutil/test/testCountStream
 rutil/test/testData
