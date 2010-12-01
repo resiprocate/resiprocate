@@ -21,10 +21,12 @@ TcpBaseTransport::TcpBaseTransport(Fifo<TransactionMessage>& fifo,
                                    int portNum, IpVersion version,
                                    const Data& pinterface,
                                    AfterSocketCreationFuncPtr socketFunc,
-                                   Compression &compression)
-   : InternalTransport(fifo, portNum, version, pinterface, socketFunc, compression)
+                                   Compression &compression,
+				   unsigned transportFlags)
+   : InternalTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags)
 {
-   mFd = InternalTransport::socket(TCP, version);
+   if ( (mTransportFlags & RESIP_TRANSPORT_FLAG_NOBIND)==0 )
+      mFd = InternalTransport::socket(TCP, version);
 }
 
 
@@ -85,13 +87,18 @@ void
 TcpBaseTransport::buildFdSet( FdSet& fdset)
 {
    mConnectionManager.buildFdSet(fdset);
-   fdset.setRead(mFd); // for the transport itself
+   if ( mFd!=INVALID_SOCKET )
+      fdset.setRead(mFd); // for the transport itself
 }
 
-void
-TcpBaseTransport::processListen(FdSet& fdset)
+/**
+    Returns 1 if created new connection, -1 if "bad" error,
+    and 0 if nothing to do (EWOULDBLOCK)
+**/
+int
+TcpBaseTransport::processListen()
 {
-   if (fdset.readyToRead(mFd))
+   if (1)
    {
       Tuple tuple(mTuple);
       struct sockaddr& peer = tuple.getMutableSockaddr();
@@ -104,11 +111,11 @@ TcpBaseTransport::processListen(FdSet& fdset)
          {
             case EWOULDBLOCK:
                // !jf! this can not be ready in some cases 
-               return;
+               return 0;
             default:
                Transport::error(e);
          }
-         return;
+         return -1;
       }
       makeSocketNonBlocking(sock);
             
@@ -130,6 +137,7 @@ TcpBaseTransport::processListen(FdSet& fdset)
          closeSocket(sock);
       }
    }
+   return 1;
 }
 
 void
@@ -236,7 +244,8 @@ TcpBaseTransport::process(FdSet& fdSet)
    // process the connections in ConnectionManager
    mConnectionManager.process(fdSet, mStateMachineFifo);
 
-   processListen(fdSet);
+   if ( mFd!=INVALID_SOCKET && fdSet.readyToRead(mFd))
+      processListen();
 }
 
 

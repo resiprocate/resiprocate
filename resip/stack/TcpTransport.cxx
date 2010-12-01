@@ -19,8 +19,9 @@ using namespace resip;
 TcpTransport::TcpTransport(Fifo<TransactionMessage>& fifo, int portNum, 
                            IpVersion version, const Data& pinterface, 
                            AfterSocketCreationFuncPtr socketFunc,
-                           Compression &compression)
-   : TcpBaseTransport(fifo, portNum, version, pinterface, socketFunc, compression)
+                           Compression &compression,
+			   unsigned transportFlags)
+   : TcpBaseTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags)
 {
    mTuple.setType(transport());
 

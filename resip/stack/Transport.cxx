@@ -40,7 +40,8 @@ Transport::Transport(Fifo<TransactionMessage>& rxFifo,
    mShuttingDown(false),
    mTlsDomain(tlsDomain),
    mSocketFunc(socketFunc),
-   mCompression(compression)
+   mCompression(compression),
+   mTransportFlags(0)
 {
    mInterface = Tuple::inet_ntop(mTuple);
 }
@@ -51,14 +52,16 @@ Transport::Transport(Fifo<TransactionMessage>& rxFifo,
                      const Data& intfc,
                      const Data& tlsDomain,
                      AfterSocketCreationFuncPtr socketFunc,
-                     Compression &compression) :
+                     Compression &compression,
+		     unsigned transportFlags) :
    mInterface(intfc),
    mTuple(intfc, portNum, version),
    mStateMachineFifo(rxFifo),
    mShuttingDown(false),
    mTlsDomain(tlsDomain),
    mSocketFunc(socketFunc),
-   mCompression(compression)
+   mCompression(compression),
+   mTransportFlags(transportFlags)
 {
 }
 

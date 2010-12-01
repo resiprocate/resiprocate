@@ -179,10 +179,12 @@ DialogUsageManager::addTransport( TransportType protocol,
                                   const Data& ipInterface,
                                   const Data& sipDomainname, // only used
                                   const Data& privateKeyPassPhrase,
-                                  SecurityTypes::SSLType sslType)
+                                  SecurityTypes::SSLType sslType,
+				  unsigned transportFlags)
 {
    mStack.addTransport(protocol, port, version, StunDisabled, ipInterface,
-                       sipDomainname, privateKeyPassPhrase, sslType);
+                       sipDomainname, privateKeyPassPhrase, sslType,
+		       transportFlags);
 }
 
 SipStack& 

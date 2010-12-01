@@ -26,16 +26,17 @@ InternalTransport::InternalTransport(Fifo<TransactionMessage>& rxFifo,
                                      IpVersion version,
                                      const Data& interfaceObj,
                                      AfterSocketCreationFuncPtr socketFunc,
-                                     Compression &compression) :
+                                     Compression &compression,
+				     unsigned transportFlags) :
    Transport(rxFifo, portNum, version, interfaceObj, Data::Empty, 
-             socketFunc, compression),
-   mFd(-1)
+             socketFunc, compression, transportFlags),
+   mFd(INVALID_SOCKET)
 {
 }
 
 InternalTransport::~InternalTransport()
 {
-   if (mFd != -1)
+   if  (mFd != INVALID_SOCKET)
    {
       //DebugLog (<< "Closing " << mFd);
       closeSocket(mFd);
