@@ -1331,9 +1331,10 @@ ResponseContext::forwardBestResponse()
    if(mBestResponse.header(h_StatusLine).statusCode() == 408 &&
       mBestResponse.method()!=INVITE)
    {
-      // We don't forward back NIT 408; we just silently abandon the transaction
+      // We don't forward back NIT 408; we just silently abandon the transaction - RFC4321 - section 1.4 408 for non-INVITE is not useful
       DebugLog(<< "Got NIT 408, abandoning: "<<mRequestContext.getTransactionId());
       mRequestContext.getProxy().getStack().abandonServerTransaction(mRequestContext.getTransactionId());
+      mRequestContext.mHaveSentFinalResponse = true;  // To avoid Request context from sending a response
    }
    else
    {
