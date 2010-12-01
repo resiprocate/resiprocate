@@ -577,7 +577,7 @@ ResponseContext::beginClientTransaction(repro::Target* target)
                            target);
       }
       else if(request.method()==REGISTER &&
-	       (mRequestContext.mProxy.getForcePath() ||
+	       (mRequestContext.mProxy.getAssumePath() ||
                (!request.empty(h_Supporteds) &&
                (  request.header(h_Supporteds).find(Token("path")) ||
                   request.header(h_Supporteds).find(Token("outbound"))))))

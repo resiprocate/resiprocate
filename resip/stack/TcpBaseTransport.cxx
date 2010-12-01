@@ -37,10 +37,12 @@ TcpBaseTransport::TcpBaseTransport(Fifo<TransactionMessage>& fifo,
                                    int portNum, IpVersion version,
                                    const Data& pinterface,
                                    AfterSocketCreationFuncPtr socketFunc,
-                                   Compression &compression)
-   : InternalTransport(fifo, portNum, version, pinterface, socketFunc, compression)
+                                   Compression &compression,
+				   unsigned transportFlags)
+   : InternalTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags)
 {
-   mFd = InternalTransport::socket(TCP, version);
+   if ( (mTransportFlags & RESIP_TRANSPORT_FLAG_NOBIND)==0 )
+      mFd = InternalTransport::socket(TCP, version);
 }
 
 
@@ -65,6 +67,9 @@ TcpBaseTransport::~TcpBaseTransport()
 void
 TcpBaseTransport::init()
 {
+   if ( (mTransportFlags & RESIP_TRANSPORT_FLAG_NOBIND)!=0 )
+       return;
+
    //DebugLog (<< "Opening TCP " << mFd << " : " << this);   
 
    int on = 1;
@@ -102,23 +107,29 @@ TcpBaseTransport::init()
 void
 TcpBaseTransport::setPollGrp(FdPollGrp *grp) {
    assert( mPollItem == NULL );
-   assert( mFd!=INVALID_SOCKET );
-   mPollItem = new TcpBasePollItem(grp, mFd, *this);
+   if ( mFd!=INVALID_SOCKET ) {
+      mPollItem = new TcpBasePollItem(grp, mFd, *this);
+   }
    mConnectionManager.setPollGrp(grp);
 }
 
 void
 TcpBaseTransport::buildFdSet( FdSet& fdset)
 {
-   if ( mPollItem==NULL ) {
-      mConnectionManager.buildFdSet(fdset);
+   assert( mPollItem==NULL );
+   mConnectionManager.buildFdSet(fdset);
+   if ( mFd!=INVALID_SOCKET )
       fdset.setRead(mFd); // for the transport itself (accept)
-   }
 }
 
+/**
+    Returns 1 if created new connection, -1 if "bad" error,
+    and 0 if nothing to do (EWOULDBLOCK)
+**/
 int
 TcpBaseTransport::processListen()
 {
+   if (1)
    {
       Tuple tuple(mTuple);
       struct sockaddr& peer = tuple.getMutableSockaddr();
@@ -274,7 +285,7 @@ TcpBaseTransport::process(FdSet& fdSet)
    mConnectionManager.process(fdSet);
 
    // process our own listen/accept socket for incoming connections
-   if (fdSet.readyToRead(mFd))
+   if (mFd!=INVALID_SOCKET && fdSet.readyToRead(mFd))
       processListen();
 }
 

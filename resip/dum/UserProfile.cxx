@@ -139,14 +139,14 @@ UserProfile::setDigestCredential( const Data& realm, const Data& user, const Dat
    mDigestCredentials.insert(cred);
 }
      
+static const UserProfile::DigestCredential emptyDigestCredential;
 const UserProfile::DigestCredential&
 UserProfile::getDigestCredential( const Data& realm  )
 {
    if(mDigestCredentials.empty())
    {
       // !jf! why not just throw here? 
-      static const DigestCredential empty;
-      return empty;
+      return emptyDigestCredential;
    }
 
    DigestCredentials::const_iterator it = mDigestCredentials.find(DigestCredential(realm));

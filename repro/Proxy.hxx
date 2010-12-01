@@ -65,8 +65,8 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       const resip::NameAddr& getRecordRoute() const;
       bool getRecordRouteEnabled() const;
 
-      void setForcePath(bool f) { mForcePath = f; }
-      bool getForcePath() const { return mForcePath; }
+      void setAssumePath(bool f) { mAssumePath = f; }
+      bool getAssumePath() const { return mAssumePath; }
       
       UserStore& getUserStore();
       resip::SipStack& getStack(){return mStack;}
@@ -95,7 +95,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       resip::SipStack& mStack;
       resip::NameAddr mRecordRoute;
       bool mRecordRouteEnabled;
-      bool mForcePath;
+      bool mAssumePath;
       resip::Data mServerText;
       
       // needs to be a reference since parent owns it

@@ -401,13 +401,13 @@ Tuple::isAnyInterface() const
 #endif
 }
 
+static Tuple loopbackv4("127.0.0.1",0,UNKNOWN_TRANSPORT);
 bool
 Tuple::isLoopback() const
 {
    
    if(ipVersion()==V4)
    {
-      static Tuple loopbackv4("127.0.0.1",0,UNKNOWN_TRANSPORT);
       return isEqualWithMask(loopbackv4,8,true,true);
    }
    else if (ipVersion()==V6)

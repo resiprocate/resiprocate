@@ -76,8 +76,10 @@ SelectInterruptor::process(FdSet& fdset)
    if ( fdset.readyToRead(mPipe[0]))
    {
       char rdBuf[16];
-      int x = read(mPipe[0], rdBuf, sizeof(rdBuf));
-      (void)x;	// make compiler happy
+      int x;
+      while ( (x=read(mPipe[0], rdBuf, sizeof(rdBuf))) == sizeof(rdBuf) )
+         ;
+      // XXX: should check for certain errors (like fd closed) and die?
    }
 #endif
 }

@@ -17,12 +17,18 @@ ContentsFactoryBase::ContentsFactoryBase(const Mime& contentType)
 
 ContentsFactoryBase::~ContentsFactoryBase()
 {
+   if (ContentsFactoryBase::FactoryMap == 0)
+      return;
+	
    HashMap<Mime, ContentsFactoryBase*>::iterator i;
    i = ContentsFactoryBase::getFactoryMap().find(mContentType);
-   ContentsFactoryBase::getFactoryMap().erase(i);
+   // .amr.	Need to check if iterator is valid since on some STL instances erase(i) will crash if i is invalid.
+   if (i != ContentsFactoryBase::getFactoryMap().end())
+      ContentsFactoryBase::getFactoryMap().erase(i);
    if (ContentsFactoryBase::getFactoryMap().size() == 0)
    {
       delete &ContentsFactoryBase::getFactoryMap();
+      ContentsFactoryBase::FactoryMap = 0;
    }
 }
 

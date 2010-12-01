@@ -24,7 +24,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    const char* logLevel = "INFO";
    char* tlsDomain = 0;
    int forceRecordRoute = 0;
-   int forcePath = 0;
+   int assumePath = 0;
    char* recordRouteUri = 0;
    int udpPort = 5060;
    int tcpPort = 5060;
@@ -99,7 +99,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"db-path",           0,   POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,&dbPath,         0, "path to databases", 0},
       {"record-route",     'r',  POPT_ARG_STRING,                            &recordRouteUri,    0, "specify uri to use as Record-Route", "sip:example.com"},
       {"force-record-route", 0,  POPT_ARG_NONE | POPT_ARGFLAG_SHOW_DEFAULT,  &forceRecordRoute,0,"force record-routing", 0},
-      {"force-path",         0,  POPT_ARG_NONE | POPT_ARGFLAG_SHOW_DEFAULT,  &forcePath,       0,"force Path header", 0},
+      {"assume-path",         0,  POPT_ARG_NONE | POPT_ARGFLAG_SHOW_DEFAULT,  &assumePath,       0,"assume path option", 0},
 #if defined(USE_MYSQL)
       {"mysqlServer",      'x',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &mySqlServer,    0, "enable MySQL and provide name of server", "localhost"},
 #endif
@@ -180,7 +180,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    }
 
    mForceRecordRoute = (forceRecordRoute!=0);
-   mForcePath = (forcePath!=0);
+   mAssumePath = (assumePath!=0);
 
    if (recordRouteUri) 
    {

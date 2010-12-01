@@ -411,7 +411,7 @@ main(int argc, char** argv)
                args.mTimerC );
    Data realm = addDomains(proxy, args, store);
    
-   proxy.setForcePath(args.mForcePath);
+   proxy.setAssumePath(args.mAssumePath);
    proxy.addSupportedOption("outbound");
    proxy.setServerText(args.mServerText);
 
