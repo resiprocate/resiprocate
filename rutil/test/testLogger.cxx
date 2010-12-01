@@ -32,6 +32,7 @@ class LogThread : public ThreadIf
       {
          Log::setThreadSetting(mSetting);
          int reval = Log::setThreadLocalLogger(mId);
+	 (void)reval;	// make gcc4 happy
 //         InfoLog(<< "setThreadLocalLogger(" << mId << ") returned " << reval);
          while(!waitForShutdown(1000))
          {
