@@ -11,9 +11,8 @@
 #  include <sys/epoll.h>
 #endif
 
-
 using namespace resip;
-#define RESIPROCATE_SUBSYSTEM Subsystem::SIP	// What is best?
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP	
 
 /*****************************************************************
  *
@@ -21,14 +20,18 @@ using namespace resip;
  *
  *****************************************************************/
 
-FdPollItemIf::~FdPollItemIf() { }
+FdPollItemIf::~FdPollItemIf() 
+{ 
+}
 
 FdPollItemBase::FdPollItemBase(FdPollGrp *grp, Socket fd, FdPollEventMask mask) :
-  mPollGrp(grp), mPollSocket(fd), mPollMask(mask) {
+  mPollGrp(grp), mPollSocket(fd), mPollMask(mask) 
+{
     mPollGrp->addPollItem(this, mPollMask);
 }
 
-FdPollItemBase::~FdPollItemBase() {
+FdPollItemBase::~FdPollItemBase() 
+{
     mPollGrp->delPollItem(this);
 }
 
@@ -45,49 +48,65 @@ FdPollItemBase::~FdPollItemBase() {
  *
  *****************************************************************/
 
-FdPollGrp::FdPollGrp() {
+FdPollGrp::FdPollGrp() 
+{
 }
 
-FdPollGrp::~FdPollGrp() {
+FdPollGrp::~FdPollGrp() 
+{
 }
 
 
 void
-FdPollGrp::buildFdSet(FdSet& fdset) const {
-    int fd = getEPollFd();
-    if ( fd!=-1 )
-        fdset.setRead(fd);
+FdPollGrp::buildFdSet(FdSet& fdset) const 
+{
+   int fd = getEPollFd();
+   if (fd != -1)
+   {
+      fdset.setRead(fd);
+   }
 }
 
 void
-FdPollGrp::buildFdSet(fd_set& readfds) const {
+FdPollGrp::buildFdSet(fd_set& readfds) const 
+{
     int fd = getEPollFd();
-    if ( fd!=-1 )
-        FD_SET(fd, &readfds);
+    if (fd != -1)
+	{
+       FD_SET(fd, &readfds);
+	}
 }
 
 void
-FdPollGrp::processFdSet(FdSet& fdset) {
-    int fd = getEPollFd();
-    if ( fd!=-1 && fdset.readyToRead(fd) )
-	process();
+FdPollGrp::processFdSet(FdSet& fdset) 
+{
+   int fd = getEPollFd();
+   if (fd !=- 1 && fdset.readyToRead(fd))
+   {
+      process();
+   }
 }
 
 void
-FdPollGrp::processFdSet(fd_set& readfds) {
-    int fd = getEPollFd();
-    if ( fd!=-1 && FD_ISSET(fd, &readfds) )
-	process();
+FdPollGrp::processFdSet(fd_set& readfds) 
+{
+   int fd = getEPollFd();
+   if (fd !=- 1 && FD_ISSET(fd, &readfds))
+   {
+      process();
+   }
 }
-
 
 FdPollItemIf*
-FdPollGrp::modifyEventMaskByFd(FdPollEventMask mask, int fd) {
-    FdPollItemIf* item = getItemByFd(fd);
-    // There is some legit reasons why item may be NULL -- not sure where
-    if ( item )
-	modPollItem(item, mask);
-    return item;
+FdPollGrp::modifyEventMaskByFd(FdPollEventMask mask, Socket fd) 
+{
+   FdPollItemIf* item = getItemByFd(fd);
+   // There is some legit reasons why item may be NULL -- not sure where
+   if (item)
+   {
+      modPollItem(item, mask);
+   }
+   return item;
 }
 
 
@@ -99,11 +118,13 @@ FdPollGrp::modifyEventMaskByFd(FdPollEventMask mask, int fd) {
 
 #ifdef RESIP_POLL_IMPL_EPOLL
 
-namespace resip {
+namespace resip 
+{
 
 
 
-class FdPollImplEpoll : public FdPollGrp {
+class FdPollImplEpoll : public FdPollGrp 
+{
   public:
     FdPollImplEpoll();
     ~FdPollImplEpoll();
@@ -141,114 +162,135 @@ class FdPollImplEpoll : public FdPollGrp {
 };	// namespace
 
 FdPollImplEpoll::FdPollImplEpoll() :
-  mEPollFd(-1) {
-    int sz = 200;	// ignored
-    if ( (mEPollFd = epoll_create(sz)) < 0 ) {
-        CritLog(<<"epoll_create() failed: "<<strerror(errno));
-        abort();
-    }
-    mEvCache.resize(sz);
-    mEvCacheCur = mEvCacheLen = 0;
+  mEPollFd(-1) 
+{
+   int sz = 200;	// ignored
+   if ( (mEPollFd = epoll_create(sz)) < 0 ) 
+   {
+      CritLog(<<"epoll_create() failed: "<<strerror(errno));
+      abort();
+   }
+   mEvCache.resize(sz);
+   mEvCacheCur = mEvCacheLen = 0;
 }
 
-FdPollImplEpoll::~FdPollImplEpoll() {
-    assert( mEvCacheLen == 0 );	// poll not active
-    unsigned itemIdx;
-    for (itemIdx=0; itemIdx < mItems.size(); itemIdx++) {
-	FdPollItemIf *item = mItems[itemIdx];
-	if ( item ) {
-	    int fd = item->getPollSocket();
-	    CritLog(<<"FdPollItem idx="<<itemIdx
-	      <<" fd="<<fd
-	      <<" not deleted prior to destruction");
-        }
-    }
-    if ( mEPollFd != -1 )
-        close(mEPollFd);
+FdPollImplEpoll::~FdPollImplEpoll() 
+{
+   assert( mEvCacheLen == 0 );	// poll not active
+   unsigned itemIdx;
+   for (itemIdx=0; itemIdx < mItems.size(); itemIdx++) 
+   {
+      FdPollItemIf *item = mItems[itemIdx];
+      if (item) 
+	  {
+	     int fd = item->getPollSocket();
+	     CritLog(<<"FdPollItem idx="<<itemIdx
+	       <<" fd="<<fd
+	       <<" not deleted prior to destruction");
+      }
+   }
+   if (mEPollFd != -1)
+   {
+      close(mEPollFd);
+   }
 }
 
-static inline unsigned short CvtSysToUsrMask(unsigned long sysMask) {
-    unsigned usrMask = 0;
-    if ( sysMask & EPOLLIN )
-        usrMask |= FPEM_Read;
-    if ( sysMask & EPOLLOUT )
-        usrMask |= FPEM_Write;
-    if ( sysMask & EPOLLERR )
-        usrMask |= FPEM_Error;
-    return usrMask;
+static inline unsigned short 
+CvtSysToUsrMask(unsigned long sysMask) 
+{
+   unsigned usrMask = 0;
+   if ( sysMask & EPOLLIN )
+       usrMask |= FPEM_Read;
+   if ( sysMask & EPOLLOUT )
+       usrMask |= FPEM_Write;
+   if ( sysMask & EPOLLERR )
+       usrMask |= FPEM_Error;
+   return usrMask;
 }
 
-static inline unsigned long CvtUsrToSysMask(unsigned short usrMask) {
-    unsigned long sysMask = 0;
-    if ( usrMask & FPEM_Read )
-        sysMask |= EPOLLIN;
-    if ( usrMask & FPEM_Write )
-        sysMask |= EPOLLOUT;
-    if ( usrMask & FPEM_Edge )
-        sysMask |= EPOLLET;
-    return sysMask;
+static inline unsigned long 
+CvtUsrToSysMask(unsigned short usrMask) 
+{
+   unsigned long sysMask = 0;
+   if ( usrMask & FPEM_Read )
+       sysMask |= EPOLLIN;
+   if ( usrMask & FPEM_Write )
+       sysMask |= EPOLLOUT;
+   if ( usrMask & FPEM_Edge )
+       sysMask |= EPOLLET;
+   return sysMask;
 }
 
 FdPollItemIf*
-FdPollImplEpoll::getItemByFd(int fd) {
-    if ( fd < 0 || fd >= ((int)mItems.size()) )
-        return NULL;
-    return mItems[fd];
+FdPollImplEpoll::getItemByFd(int fd) 
+{
+   if (fd < 0 || fd >= ((int)mItems.size()))
+   {
+       return NULL;
+   }
+   return mItems[fd];
 }
 
 void
-FdPollImplEpoll::addPollItem(FdPollItemIf *item, FdPollEventMask newMask) {
-    int fd = item->getPollSocket();
-    assert(fd>=0);
-    //DebugLog(<<"adding epoll item fd="<<fd);
-    if ( mItems.size() <= (unsigned)fd ) {
-	unsigned newsz = fd+1;
-	newsz += newsz/3;	// plus 30% margin
-	// WATCHOUT: below may trigger re-allocation, invalidating any iters
-	// Currently only iterator is destructor, so should be safe
-        mItems.resize(newsz);
-    }
-    FdPollItemIf *olditem = mItems[fd];
-    assert( olditem == NULL );	// what is right thing to do?
-    mItems[fd] = item;
-    struct epoll_event ev;
-    memset(&ev, 0, sizeof(ev));	// make valgrind happy
-    ev.events = CvtUsrToSysMask(newMask);
-    ev.data.fd = fd;
-    if ( epoll_ctl(mEPollFd, EPOLL_CTL_ADD, fd, &ev) < 0 ) {
-        CritLog(<<"epoll_ctl(ADD) failed: "<<strerror(errno));
-    	abort();
-    }
+FdPollImplEpoll::addPollItem(FdPollItemIf *item, FdPollEventMask newMask) 
+{
+   int fd = item->getPollSocket();
+   assert(fd>=0);
+   //DebugLog(<<"adding epoll item fd="<<fd);
+   if (mItems.size() <= (unsigned)fd) 
+   {
+      unsigned newsz = fd+1;
+      newsz += newsz/3;	// plus 30% margin
+      // WATCHOUT: below may trigger re-allocation, invalidating any iters
+      // Currently only iterator is destructor, so should be safe
+      mItems.resize(newsz);
+   }
+   FdPollItemIf *olditem = mItems[fd];
+   assert(olditem == NULL);	// what is right thing to do?
+   mItems[fd] = item;
+   struct epoll_event ev;
+   memset(&ev, 0, sizeof(ev));	// make valgrind happy
+   ev.events = CvtUsrToSysMask(newMask);
+   ev.data.fd = fd;
+   if (epoll_ctl(mEPollFd, EPOLL_CTL_ADD, fd, &ev) < 0) 
+   {
+      CritLog(<<"epoll_ctl(ADD) failed: " << strerror(errno));
+      abort();
+   }
 }
 
 void
-FdPollImplEpoll::modPollItem(const FdPollItemIf *item, FdPollEventMask newMask) {
-    int fd = item->getPollSocket();
-    assert(fd>=0 && ((unsigned)fd) < mItems.size());
-    assert( mItems[fd] != NULL );
+FdPollImplEpoll::modPollItem(const FdPollItemIf *item, FdPollEventMask newMask) 
+{
+   int fd = item->getPollSocket();
+   assert(fd>=0 && ((unsigned)fd) < mItems.size());
+   assert(mItems[fd] != NULL);
 
-    struct epoll_event ev;
-    memset(&ev, 0, sizeof(ev));	// make valgrind happy
-    ev.events = CvtUsrToSysMask(newMask);
-    ev.data.fd = fd;
-    if ( epoll_ctl(mEPollFd, EPOLL_CTL_MOD, fd, &ev) < 0 ) {
-        CritLog(<<"epoll_ctl(MOD) failed: "<<strerror(errno));
-    	abort();
-    }
+   struct epoll_event ev;
+   memset(&ev, 0, sizeof(ev));	// make valgrind happy
+   ev.events = CvtUsrToSysMask(newMask);
+   ev.data.fd = fd;
+   if (epoll_ctl(mEPollFd, EPOLL_CTL_MOD, fd, &ev) < 0) 
+   {
+      CritLog(<<"epoll_ctl(MOD) failed: "<<strerror(errno));
+      abort();
+   }
 }
 
 void
-FdPollImplEpoll::delPollItem(FdPollItemIf *item) {
-    int fd = item->getPollSocket();
-    //DebugLog(<<"deleting epoll item fd="<<fd);
-    assert(fd>=0 && ((unsigned)fd) < mItems.size());
-    assert( mItems[fd] != NULL );
-    mItems[fd] = NULL;
-    if ( epoll_ctl(mEPollFd, EPOLL_CTL_DEL, fd, NULL) < 0 ) {
-        CritLog(<<"epoll_ctl(DEL) fd="<<fd<<" failed: "<<strerror(errno));
-    	abort();
-    }
-    killCache(fd);
+FdPollImplEpoll::delPollItem(FdPollItemIf *item) 
+{
+   int fd = item->getPollSocket();
+   //DebugLog(<<"deleting epoll item fd="<<fd);
+   assert(fd>=0 && ((unsigned)fd) < mItems.size());
+   assert( mItems[fd] != NULL );
+   mItems[fd] = NULL;
+   if (epoll_ctl(mEPollFd, EPOLL_CTL_DEL, fd, NULL) < 0) 
+   {
+       CritLog(<<"epoll_ctl(DEL) fd="<<fd<<" failed: " << strerror(errno)); 
+	   abort();
+   }
+   killCache(fd);
 }
 
 
@@ -276,56 +318,70 @@ FdPollImplEpoll::delPollItem(FdPollItemIf *item) {
     recognize stale events.
 **/
 void
-FdPollImplEpoll::killCache(int fd) {
-    int ne;
-    for (ne=mEvCacheCur; ne < mEvCacheLen; ne++) {
-    	if ( mEvCache[ne].data.fd == fd ) {
-	    mEvCache[ne].data.fd = INVALID_SOCKET;
-	}
-    }
+FdPollImplEpoll::killCache(int fd) 
+{
+   int ne;
+   for (ne=mEvCacheCur; ne < mEvCacheLen; ne++) 
+   {
+      if ( mEvCache[ne].data.fd == fd ) 
+	  {
+         mEvCache[ne].data.fd = INVALID_SOCKET;
+      }
+   }
 }
 
 void
-FdPollImplEpoll::processItem(FdPollItemIf *item, FdPollEventMask mask) {
-    try {
-        item->processPollEvent( mask );
-    } catch (BaseException& e) {
-	// kill it or something?
-        ErrLog(<<"Exception thrown for FdPollItem: " << e);
-    }
-    item = NULL;	// WATCHOUT: item may have been deleted
+FdPollImplEpoll::processItem(FdPollItemIf *item, FdPollEventMask mask) 
+{
+   try 
+   {
+      item->processPollEvent( mask );
+   } 
+   catch(BaseException& e) 
+   {
+	   // kill it or something?
+       ErrLog(<<"Exception thrown for FdPollItem: " << e);
+   }
+   item = NULL;	// WATCHOUT: item may have been deleted
 }
 
 void
-FdPollImplEpoll::process() {
-    bool maybeMore;
-    do {
-        int nfds = epoll_wait(mEPollFd, &mEvCache.front(), mEvCache.size(), 0);
-	if ( nfds < 0 ) {
-            CritLog(<<"epoll_wait() failed: "<<strerror(errno));
-	    abort();
-	}
-	mEvCacheLen = nfds;	// for killCache()
-        maybeMore = ( ((unsigned)nfds)==mEvCache.size()) ? 1 : 0;
-	int ne;
-        for (ne=0; ne < nfds; ne++) {
-	    int fd = mEvCache[ne].data.fd;
-	    if ( fd == INVALID_SOCKET )
-	        continue;	// was killed by killCache()
-	    int sysEvtMask = mEvCache[ne].events;
-	    assert(fd>=0 && fd < (int)mItems.size());
-	    FdPollItemIf *item = mItems[fd];
-	    if ( item==NULL ) {
-	    	/* this can happen if item was deleted after
-		   event was generated in kernel, etc. */
-	        continue;
-	    }
-	    mEvCacheCur = ne;	// for killCache()
-	    processItem( item, CvtSysToUsrMask(sysEvtMask) );
-	    item = NULL; // WATCHOUT: item may not exist anymore
-	}
-        mEvCacheLen = 0;
-    } while ( maybeMore );
+FdPollImplEpoll::process() 
+{
+   bool maybeMore;
+   do 
+   {
+      int nfds = epoll_wait(mEPollFd, &mEvCache.front(), mEvCache.size(), 0);
+	  if (nfds < 0) 
+	  {
+         CritLog(<<"epoll_wait() failed: " << strerror(errno));
+         abort();
+      }
+	  mEvCacheLen = nfds;	// for killCache()
+      maybeMore = ( ((unsigned)nfds)==mEvCache.size()) ? 1 : 0;
+	  int ne;
+      for (ne=0; ne < nfds; ne++) 
+	  {
+	     int fd = mEvCache[ne].data.fd;
+	     if (fd == INVALID_SOCKET)
+		 {
+			 continue;	// was killed by killCache()
+		 }
+	     int sysEvtMask = mEvCache[ne].events;
+	     assert(fd>=0 && fd < (int)mItems.size());
+	     FdPollItemIf *item = mItems[fd];
+	     if (item == NULL) 
+		 {
+			 /* this can happen if item was deleted after
+                event was generated in kernel, etc. */
+			 continue;
+	     }
+	     mEvCacheCur = ne;	// for killCache()
+	     processItem(item, CvtSysToUsrMask(sysEvtMask));
+	     item = NULL; // WATCHOUT: item may not exist anymore
+	  }
+      mEvCacheLen = 0;
+   } while (maybeMore);
 }
 
 #endif // RESIP_POLL_IMPL_EPOLL
@@ -337,12 +393,13 @@ FdPollImplEpoll::process() {
  *****************************************************************/
 
 /*static*/FdPollGrp*
-FdPollGrp::create() {
+FdPollGrp::create() 
+{
 #ifdef RESIP_POLL_IMPL_EPOLL
-    return new FdPollImplEpoll();
+   return new FdPollImplEpoll();
 #else
-    assert(0);
-    return NULL;
+   assert(0);
+   return NULL;
 #endif
 }
 

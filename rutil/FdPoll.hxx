@@ -25,21 +25,23 @@ typedef unsigned short FdPollEventMask;
 class FdPollGrp;
 
 
-class FdPollItemIf {
+class FdPollItemIf 
+{
   //friend class FdPollGrp;
   public:
     FdPollItemIf() { };
     virtual ~FdPollItemIf();
 
-    virtual Socket	getPollSocket() const = 0;
+    virtual Socket getPollSocket() const = 0;
 
     /**
         Called by PollGrp when activity is possible
     **/
-    virtual void	processPollEvent(FdPollEventMask mask) = 0;
+    virtual void processPollEvent(FdPollEventMask mask) = 0;
 };
 
-class FdPollItemBase : public FdPollItemIf {
+class FdPollItemBase : public FdPollItemIf 
+{
   //friend class FdPollGrp;
   public:
     FdPollItemBase(FdPollGrp *grp, Socket fd, FdPollEventMask mask);
@@ -54,40 +56,38 @@ class FdPollItemBase : public FdPollItemIf {
     FdPollEventMask	mPollMask;		// events we want
 };
 
-class FdPollGrp {
+class FdPollGrp 
+{
   public:
     FdPollGrp();
     virtual ~FdPollGrp();
 
     /// factory
-    static FdPollGrp*		create();
+    static FdPollGrp* create();
 
 
-    virtual void		addPollItem(FdPollItemIf *item,
-    				  FdPollEventMask newMask) = 0;
-    virtual void		modPollItem(const FdPollItemIf *item, 
-    				  FdPollEventMask newMask) = 0;
-    virtual void		delPollItem(FdPollItemIf *item) = 0;
+    virtual void addPollItem(FdPollItemIf *item, FdPollEventMask newMask) = 0;
+    virtual void modPollItem(const FdPollItemIf *item, FdPollEventMask newMask) = 0;
+    virtual void delPollItem(FdPollItemIf *item) = 0;
 
-    virtual void		process() = 0;
+    virtual void process() = 0;
 
     /// get the epoll-fd (epoll_create()) -- it is int, not Socket
     /// This is fd (type int), not Socket. It may be -1 if epoll
     /// is not enabled.
-    virtual int			getEPollFd() const = 0;
+    virtual int	getEPollFd() const = 0;
 
     /// Add our epoll-fd into the fdSet (for hierarchical selects)
-    void			buildFdSet(FdSet& fdSet) const;
-    void			buildFdSet(fd_set& readfds) const;
+    void buildFdSet(FdSet& fdSet) const;
+    void buildFdSet(fd_set& readfds) const;
     /// process epoll queue if epoll-fd is readable in fdset
-    void			processFdSet(FdSet& fdset);
-    void			processFdSet(fd_set& readfds);
+    void processFdSet(FdSet& fdset);
+    void processFdSet(fd_set& readfds);
 
-    virtual FdPollItemIf*		getItemByFd(Socket fd) = 0;
+    virtual FdPollItemIf* getItemByFd(Socket fd) = 0;
 
     // convience functions. not sure if we should keep this or not
-    FdPollItemIf*		modifyEventMaskByFd(FdPollEventMask mask, 
-    				  Socket fd);
+    FdPollItemIf* modifyEventMaskByFd(FdPollEventMask mask, Socket fd);
 };
 
 

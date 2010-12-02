@@ -299,6 +299,7 @@
     <ClCompile Include="dns\DnsStub.cxx" />
     <ClCompile Include="DnsUtil.cxx" />
     <ClCompile Include="dns\ExternalDnsFactory.cxx" />
+    <ClCompile Include="FdPoll.cxx" />
     <ClCompile Include="FileSystem.cxx" />
     <ClCompile Include="HeapInstanceCounter.cxx" />
     <ClCompile Include="dns\LocalDns.cxx" />
@@ -368,6 +369,7 @@
     <ClInclude Include="DnsUtil.hxx" />
     <ClInclude Include="dns\ExternalDns.hxx" />
     <ClInclude Include="dns\ExternalDnsFactory.hxx" />
+    <ClInclude Include="FdPoll.hxx" />
     <ClInclude Include="Fifo.hxx" />
     <ClInclude Include="FileSystem.hxx" />
     <ClInclude Include="FiniteFifo.hxx" />
