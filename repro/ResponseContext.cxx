@@ -577,9 +577,10 @@ ResponseContext::beginClientTransaction(repro::Target* target)
                            target);
       }
       else if(request.method()==REGISTER &&
-               !request.empty(h_Supporteds) &&
+	       (mRequestContext.mProxy.getAssumePath() ||
+               (!request.empty(h_Supporteds) &&
                (  request.header(h_Supporteds).find(Token("path")) ||
-                  request.header(h_Supporteds).find(Token("outbound"))))
+                  request.header(h_Supporteds).find(Token("outbound"))))))
       {
          insertRecordRoute(request,
                            orig.getReceivedTransport()->getTuple(),

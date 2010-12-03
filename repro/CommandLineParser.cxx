@@ -24,6 +24,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    const char* logLevel = "INFO";
    char* tlsDomain = 0;
    int forceRecordRoute = 0;
+   int assumePath = 0;
    char* recordRouteUri = 0;
    int udpPort = 5060;
    int tcpPort = 5060;
@@ -40,7 +41,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* routeSet = 0;
    char certPathBuf[256];
    char* certPath = certPathBuf;
-   char* dbPath = "./";
+   const char* dbPath = "./";
    int noChallenge = false;
    int noAuthIntChallenge = false;
    int rejectBadNonces = false;
@@ -78,6 +79,9 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char *regSyncPeerAddress = 0;
    int xmlRpcPort = 0;
 
+   const char* serverText = 0;
+   int usePoll = 0;
+
 #ifdef WIN32
 #ifndef HAVE_POPT_H
    noChallenge = 1;  // If no POPT, then default to no digest challenges
@@ -95,6 +99,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"db-path",           0,   POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,&dbPath,         0, "path to databases", 0},
       {"record-route",     'r',  POPT_ARG_STRING,                            &recordRouteUri,    0, "specify uri to use as Record-Route", "sip:example.com"},
       {"force-record-route", 0,  POPT_ARG_NONE | POPT_ARGFLAG_SHOW_DEFAULT,  &forceRecordRoute,0,"force record-routing", 0},
+      {"assume-path",         0,  POPT_ARG_NONE | POPT_ARGFLAG_SHOW_DEFAULT,  &assumePath,       0,"assume path option", 0},
 #if defined(USE_MYSQL)
       {"mysqlServer",      'x',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &mySqlServer,    0, "enable MySQL and provide name of server", "localhost"},
 #endif
@@ -142,6 +147,9 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"enable-flow-tokens",0,   POPT_ARG_NONE,                              &rrTokenHackEnabled,0,"enable use of flow-tokens in non-outbound cases (This is a workaround, and it is broken. Only use it if you have to.)", 0},
       {"xmlrpcport",        0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &xmlRpcPort,     0, "port on which to listen for and send XML RPC messaging (used for registration sync) - 0 to disable", 0},
       {"regsyncpeer",       0,   POPT_ARG_STRING,                            &regSyncPeerAddress,0,"hostname/ip address of another instance of repro to syncronize registrations with (note xmlrpcport must also be specified)", 0},
+      {"server-text",       0,   POPT_ARG_STRING,                            &serverText,0,"Value of server header for local UAS responses", 0},
+      {"poll",              0,   POPT_ARG_NONE,                              &usePoll,     0, "use (e)poll", 0},
+      POPT_AUTOHELP 
       {"version",         'V',   POPT_ARG_NONE,                              &showVersion,     0, "show the version number and exit", 0},
       POPT_AUTOHELP 
       { NULL, 0, 0, NULL, 0 }
@@ -172,6 +180,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    }
 
    mForceRecordRoute = (forceRecordRoute!=0);
+   mAssumePath = (assumePath!=0);
 
    if (recordRouteUri) 
    {
@@ -265,6 +274,10 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    {
        mRegSyncPeerAddress = regSyncPeerAddress;
    }
+
+   if ( serverText && serverText[0] )
+       mServerText = resip::Data(serverText);
+   mUsePoll = usePoll;
 
 #ifdef HAVE_POPT_H
    poptFreeContext(context);
