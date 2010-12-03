@@ -418,7 +418,7 @@ TransportSelector::getFirstInterface(bool is_v4, TransportType type)
 /**
    Check the msg's top Via header for a source host&port that indicates
    a particular Transport.
-   DO not do this for a response, as it would allow malicious downstream
+   Do NOT do this for a response, as it would allow malicious downstream
    to insert bogus host in via header that we would then use.
 **/
 Transport*
@@ -434,6 +434,23 @@ TransportSelector::findTransportByVia(SipMessage* msg, const Tuple& target,
 
    // XXX: Is there better way to do below (without the copy)?
    source = Tuple(via.sentHost(), via.sentPort(), target.ipVersion(), target.getType());
+
+   if ( target.mFlowKey!=0 && (source.getPort()==0 || source.isAnyInterface()) )
+   {
+      WarningLog(<< "Sending request with incomplete Via header and FlowKey."
+        <<" This code no smart enough to pick the correct Transport."
+	<<" Via=" << via);
+      assert(0);
+   }
+   if ( source.isAnyInterface() )
+   {
+      // INADDR_ANY cannot go out on the wire, so remove it from
+      // via header now.
+      // transmit() will later use determineSourceInterface() to
+      // get the actual interface to populate the Contact & Via headers.
+      // Not sure if we should support this case or just assert.
+      msg->header(h_Vias).front().sentHost().clear();
+   }
 
    Transport *trans;
    if ( (trans = findTransportBySource(source)) == NULL )
