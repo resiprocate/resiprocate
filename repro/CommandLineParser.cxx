@@ -151,7 +151,6 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
 #if defined(RESIP_SIPSTACK_HAVE_FDPOLL)
       {"poll",              0,   POPT_ARG_NONE,                              &usePoll,     0, "use (e)poll", 0},
 #endif
-      POPT_AUTOHELP 
       {"version",         'V',   POPT_ARG_NONE,                              &showVersion,     0, "show the version number and exit", 0},
       POPT_AUTOHELP 
       { NULL, 0, 0, NULL, 0 }
