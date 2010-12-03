@@ -414,6 +414,37 @@ TransportSelector::getFirstInterface(bool is_v4, TransportType type)
 #endif
 }
 
+
+/**
+   Check the msg's top Via header for a source host&port that indicates
+   a particular Transport.
+   DO not do this for a response, as it would allow malicious downstream
+   to insert bogus host in via header that we would then use.
+**/
+Transport*
+TransportSelector::findTransportByVia(SipMessage* msg, const Tuple& target,
+  Tuple& source) const
+{
+   assert(msg->exists(h_Vias));
+   assert(!msg->header(h_Vias).empty());
+   const Via& via = msg->header(h_Vias).front();
+
+   if (via.sentHost().empty())
+      return NULL;
+
+   // XXX: Is there better way to do below (without the copy)?
+   source = Tuple(via.sentHost(), via.sentPort(), target.ipVersion(), target.getType());
+
+   Transport *trans;
+   if ( (trans = findTransportBySource(source)) == NULL )
+      return NULL;
+   if(source.getPort()==0)
+   {
+      source.setPort(trans->port());
+   }
+   return trans;
+}
+
 Tuple
 TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target) const
 {
@@ -421,13 +452,9 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
    assert(!msg->header(h_Vias).empty());
    const Via& via = msg->header(h_Vias).front();
 
-   if (msg->isRequest() && !via.sentHost().empty())
-      // hint provided in sent-by of via by application
-   {
-      DebugLog( << "hint provided by app: " <<  msg->header(h_Vias).front());      
-      return Tuple(via.sentHost(), via.sentPort(), target.ipVersion(), target.getType());
-   }
-   else
+   // this case should be handled already
+   assert( !(msg->isRequest() && !via.sentHost().empty()) );
+   if (1)
    {
       Tuple source(target);
 #if defined(WIN32) && !defined(NO_IPHLPAPI)
@@ -559,7 +586,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
       {
          source.setPort(0);
       }
- 
+
       DebugLog (<< "Looked up source for destination: " << target
                 << " -> " << source
                 << " sent-by=" << via.sentHost()
@@ -619,7 +646,12 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
       {
          Transport* transport=0;
 
-         transport = findTransportByDest(msg,target);
+	 transport = findTransportByVia(msg, target, source);
+	 if ( !transport )
+	 {
+            if ( (transport = findTransportByDest(msg,target)) != NULL )
+	       source = transport->getTuple();
+	 }
          
          if(!transport && target.mFlowKey && target.onlyUseExistingConnection)
          {
@@ -628,7 +660,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          }
          else if (transport)// .bwc. Here we use transport to find source.
          {
-            source = transport->getTuple();
+	    assert( source.getType()!=0 );
 
             // .bwc. If the transport has an ambiguous interface, we need to
             //look a little closer.
@@ -1106,48 +1138,64 @@ TransportSelector::findTransportByDest(SipMessage* msg, Tuple& target)
    return 0; 
 }
 
+
+/**
+   Search for Transport on any loopback interface matching {search}.
+   WATCHOUT: This is O(N) walk thru (nearly) all transports.
+**/
 Transport*
-TransportSelector::findTransportBySource(Tuple& search)
+TransportSelector::findLoopbackTransportBySource(bool ignorePort, Tuple& search)
+  const
+{
+   //When we are sending to a loopback address, the kernel makes an
+   //(effectively) arbitrary choice of which loopback address to send
+   //from. (Since any loopback address can be used to send to any other
+   //loopback address) This choice may not agree with our idea of what
+   //address we should be sending from, so we need to just choose the
+   //loopback address we like, and ignore what the kernel told us to do.
+   ExactTupleMap::const_iterator i;
+   for (i=mExactTransports.begin();i != mExactTransports.end();i++)
+   {
+      DebugLog(<<"search: " << search << " elem: " << i->first);
+      if(i->first.ipVersion()==V4)
+      {
+	 //Compare only the first byte (the 127)
+	 if(i->first.isEqualWithMask(search,8,false))
+	 {
+	    search=i->first;
+	    DebugLog(<<"Match!");
+	    return i->second;
+	 }
+      }
+#ifdef USE_IPV6
+      else if(i->first.ipVersion()==V6)
+      {
+	 //What to do?
+      }
+#endif
+      else
+      {
+	 assert(0);
+      }
+   }
+   return NULL;
+}
+
+Transport*
+TransportSelector::findTransportBySource(Tuple& search) const
 {
    DebugLog(<< "findTransportBySource(" << search << ")");
 
+   Transport *trans;
+   // 0. search on loopback interface (with or without port)
+   if ( (trans=findLoopbackTransportBySource(
+     /*ignorePort*/(search.getPort()==0), search)) != NULL )
+   {
+      return trans;
+   }
+
    if (search.getPort() != 0)
    {
-      //0. When we are sending to a loopback address, the kernel makes an
-      //(effectively) arbitrary choice of which loopback address to send
-      //from. (Since any loopback address can be used to send to any other
-      //loopback address) This choice may not agree with our idea of what
-      //address we should be sending from, so we need to just choose the
-      //loopback address we like, and ignore what the kernel told us to do.
-      if( search.isLoopback() )
-      {
-         ExactTupleMap::const_iterator i;
-         for (i=mExactTransports.begin();i != mExactTransports.end();i++)
-         {
-            DebugLog(<<"search: " << search << " elem: " << i->first);
-            if(i->first.ipVersion()==V4)
-            {
-               //Compare only the first byte (the 127)
-               if(i->first.isEqualWithMask(search,8,false))
-               {
-                  search=i->first;
-                  DebugLog(<<"Match!");
-                  return i->second;
-               }
-            }
-#ifdef USE_IPV6
-            else if(i->first.ipVersion()==V6)
-            {
-               //What to do?
-            }
-#endif
-            else
-            {
-               assert(0);
-            }
-         }
-      }
-
       // 1. search for matching port on a specific interface
       {
          ExactTupleMap::const_iterator i = mExactTransports.find(search);
@@ -1170,41 +1218,6 @@ TransportSelector::findTransportBySource(Tuple& search)
    }
    else
    {
-      //0. When we are sending to a loopback address, the kernel makes an
-      //(effectively) arbitrary choice of which loopback address to send
-      //from. (Since any loopback address can be used to send to any other
-      //loopback address) This choice may not agree with our idea of what
-      //address we should be sending from, so we need to just choose the
-      //loopback address we like, and ignore what the kernel told us to do.
-      if( search.isLoopback() )
-      {
-         ExactTupleMap::const_iterator i;
-         for (i=mExactTransports.begin();i != mExactTransports.end();i++)
-         {
-            DebugLog(<<"search: " << search << " elem: " << i->first);
-            if(i->first.ipVersion()==V4)
-            {
-               //Compare only the first byte (the 127)
-               if(i->first.isEqualWithMask(search,8,true))
-               {
-                  search=i->first;
-                  DebugLog(<<"Match!");
-                  return i->second;
-               }
-            }
-#ifdef USE_IPV6
-            else if(i->first.ipVersion()==V6)
-            {
-               //What to do?
-            }
-#endif
-            else
-            {
-               assert(0);
-            }
-         }
-      }
-
       // 1. search for ANY port on specific interface
       {
          AnyPortTupleMap::const_iterator i = mAnyPortTransports.find(search);

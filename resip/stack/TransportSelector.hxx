@@ -99,8 +99,11 @@ class TransportSelector
       
    private:
       const Connection* findConnection(const Tuple& dest) const;
-      Transport* findTransportBySource(Tuple& src);
+      Transport* findTransportBySource(Tuple& src) const;
+      Transport* findLoopbackTransportBySource(bool ignorePort, Tuple& src) const;
       Transport* findTransportByDest(SipMessage* msg, Tuple& dest);
+      Transport* findTransportByVia(SipMessage* msg, const Tuple& dest,
+        Tuple& src) const;
       Transport* findTlsTransport(const Data& domain,TransportType type,IpVersion ipv);
       Tuple determineSourceInterface(SipMessage* msg, const Tuple& dest) const;
 
