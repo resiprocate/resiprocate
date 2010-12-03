@@ -1,34 +1,42 @@
 #include "rutil/Lock.hxx"
 
+
 using resip::Lock;
 using resip::ReadLock;
 using resip::WriteLock;
+using resip::PtrLock;
+
 using resip::LockType;
 using resip::Lockable;
 
-Lock::Lock(Lockable & lockable, LockType lockType)
-   : myLockable(lockable)
-{
+
+static inline void takeLock(Lockable& lockable, LockType lockType) {
    switch ( lockType )
     {
-       case VOCAL_READLOCK:
+       case resip::VOCAL_READLOCK:
        {
-          myLockable.readlock();
+          lockable.readlock();
           break;
        }
 	    
-       case VOCAL_WRITELOCK:
+       case resip::VOCAL_WRITELOCK:
        {
-          myLockable.writelock();
+          lockable.writelock();
           break;
        }
        
        default:
        {
-          myLockable.lock();
+          lockable.lock();
           break;
        }
     }
+}
+
+Lock::Lock(Lockable & lockable, LockType lockType)
+   : myLockable(lockable)
+{
+   takeLock(lockable, lockType);
 }
 
 Lock::~Lock()
@@ -46,6 +54,19 @@ WriteLock::WriteLock(Lockable & lockable)
 {
 }
 
+
+PtrLock::PtrLock(Lockable* lockable, LockType lockType)
+   : myLockable(lockable)
+{
+   if (lockable)
+      takeLock(*lockable, lockType);
+}
+
+PtrLock::~PtrLock()
+{
+    if (myLockable)
+        myLockable->unlock();
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

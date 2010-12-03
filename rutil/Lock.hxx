@@ -45,7 +45,24 @@ class WriteLock : public Lock
       WriteLock(Lockable &);
 };
 
-}
+
+
+/**
+  Much like class Lock above, but takes pointer argument to Lockable,
+  which may be NULL. This allow for optional locking and avoids
+  if/else statements in caller.
+**/
+class PtrLock
+{
+   public:
+      PtrLock(Lockable*, LockType = VOCAL_LOCK);
+      virtual ~PtrLock();
+
+   private:
+      Lockable*   myLockable;
+};
+
+}	// namespace resip
 
 #endif
 
