@@ -20,6 +20,7 @@ class CommandLineParser
       Data mTlsDomain;
       Data mEnumSuffix;
       bool mForceRecordRoute;
+      bool mAssumePath;
       resip::Uri mRecordRoute;
       int mUdpPort;
       int mTcpPort;
@@ -56,6 +57,8 @@ class CommandLineParser
       Data mAdminPassword;
       Data mRegSyncPeerAddress;
       int mXmlRpcPort;
+      Data mServerText;
+      bool mUsePoll;
 };
  
 }
