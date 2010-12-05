@@ -34,6 +34,9 @@ SelectInterruptor::SelectInterruptor()
    assert( x != -1 );
    // make write-side non-blocking to avoid deadlock
    makeSocketNonBlocking(mPipe[1]);
+   // make read-side non-blocking so safe to read out entire pipe
+   // all in one go (also just safer)
+   makeSocketNonBlocking(mPipe[0]);
 #endif
 }
 
@@ -79,6 +82,8 @@ SelectInterruptor::process(FdSet& fdset)
       int x;
       while ( (x=read(mPipe[0], rdBuf, sizeof(rdBuf))) == sizeof(rdBuf) )
          ;
+      // WATCHOUT: EWOULDBLOCK *will* happen above when the pending
+      // number of writes is exactly size of rdBuf
       // XXX: should check for certain errors (like fd closed) and die?
    }
 #endif
