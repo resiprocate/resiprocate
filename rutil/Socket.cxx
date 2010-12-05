@@ -3,7 +3,7 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#include "rutil/Compat.hxx"
+#include "rutil/compat.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/Logger.hxx"
 
