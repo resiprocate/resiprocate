@@ -25,7 +25,7 @@
 #include <time.h>
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
-#define NO_REGISTRATION 1
+/* #define NO_REGISTRATION 1 -- This is now run-time option */
 
 using namespace resip;
 using namespace std;
@@ -473,34 +473,49 @@ class TestShutdownHandler : public DumShutdownHandler
 int 
 main (int argc, char** argv)
 {
-   Log::initialize(Log::Cout, resip::Log::Warning, argv[0]);
+   //Log::initialize(Log::Cout, resip::Log::Warning, argv[0]);
    //Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);
-   //Log::initialize(Log::Cout, resip::Log::Info, argv[0]);
+   Log::initialize(Log::Cout, resip::Log::Info, argv[0]);
    //Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);
 
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
    FindMemoryLeaks fml;
    {
 #endif
-
-#if !defined(NO_REGISTRATION)
-   if ( argc < 5 ) {
-      cout << "usage: " << argv[0] << " sip:user1 passwd1 sip:user2 passwd2" << endl;
-      return 0;
-   }
-   NameAddr uacAor(argv[1]);
-   Data uacPasswd(argv[2]);
-   NameAddr uasAor(argv[3]);
-   Data uasPasswd(argv[4]);
-#else
+   bool doReg = false;
    NameAddr uacAor;
    NameAddr uasAor;
-#endif
+   Data uacPasswd;
+   Data uasPasswd;
+   bool useOutbound = false;
+   Uri outboundUri;
+
+   if ( argc == 1 ) {
+      uacAor = NameAddr("sip:UAC@127.0.0.1:12005");
+      uasAor = NameAddr("sip:UAS@127.0.0.1:12010");
+      cout << "Skipping registration (no arguments)." << endl;
+   } else {
+      if ( argc < 5 ) {
+	 cout << "usage: " << argv[0] << 
+	 " sip:user1 passwd1 sip:user2 passwd2 [outbound]" << endl;
+	 return 1;
+      }
+      doReg = true;
+      uacAor = NameAddr(argv[1]);
+      uacPasswd = Data(argv[2]);
+      uasAor = NameAddr(argv[3]);
+      uasPasswd = Data(argv[4]);
+      if ( argc >= 6 ) {
+	   useOutbound = true;
+	   outboundUri = Uri(Data(argv[5]));
+      }
+   }
 
    //set up UAC
    SipStack stackUac;
    DialogUsageManager* dumUac = new DialogUsageManager(stackUac);
    dumUac->addTransport(UDP, 12005);
+   dumUac->addTransport(TCP, 12005);
 
    SharedPtr<MasterProfile> uacMasterProfile(new MasterProfile);
    auto_ptr<ClientAuthManager> uacAuth(new ClientAuthManager);
@@ -515,13 +530,13 @@ main (int argc, char** argv)
    auto_ptr<AppDialogSetFactory> uac_dsf(new testAppDialogSetFactory);
    dumUac->setAppDialogSetFactory(uac_dsf);
 
-#if !defined(NO_REGISTRATION)
-   //your aor, credentials, etc here
-   dumUac->getMasterProfile()->setDigestCredential(uacAor.uri().host(), uacAor.uri().user(), uacPasswd);
-   //dumUac->getMasterProfile()->setOutboundProxy(Uri("sip:209.134.58.33:9090"));    
-#else
-   uacAor = NameAddr("sip:UAC@127.0.0.1:12005");
-#endif
+   if ( doReg ) {
+      dumUac->getMasterProfile()->setDigestCredential(uacAor.uri().host(), uacAor.uri().user(), uacPasswd);
+   }
+   if (useOutbound) {
+       dumUac->getMasterProfile()->setOutboundProxy(outboundUri);    
+       dumUac->getMasterProfile()->addSupportedOptionTag(Token("outbound"));
+   }
 
    dumUac->getMasterProfile()->setDefaultFrom(uacAor);
    dumUac->getMasterProfile()->setDefaultRegistrationTime(70);
@@ -530,18 +545,20 @@ main (int argc, char** argv)
    SipStack stackUas;
    DialogUsageManager* dumUas = new DialogUsageManager(stackUas);
    dumUas->addTransport(UDP, 12010);
+   dumUas->addTransport(TCP, 12010);
    
    SharedPtr<MasterProfile> uasMasterProfile(new MasterProfile);
    std::auto_ptr<ClientAuthManager> uasAuth(new ClientAuthManager);
    dumUas->setMasterProfile(uasMasterProfile);
    dumUas->setClientAuthManager(uasAuth);
 
-#if !defined(NO_REGISTRATION)
-   dumUas->getMasterProfile()->setDigestCredential(uasAor.uri().host(), uasAor.uri().user(), uasPasswd);
-   //dumUas->getMasterProfile()->setOutboundProxy(Uri("sip:209.134.58.33:9090"));    
-#else
-   uasAor = NameAddr("sip:UAS@127.0.0.1:12010");
-#endif
+   if ( doReg ) {
+      dumUas->getMasterProfile()->setDigestCredential(uasAor.uri().host(), uasAor.uri().user(), uasPasswd);
+   }
+   if (useOutbound) {
+      dumUas->getMasterProfile()->setOutboundProxy(outboundUri);    
+      dumUas->getMasterProfile()->addSupportedOptionTag(Token("outbound"));
+   }
 
    dumUas->getMasterProfile()->setDefaultFrom(uasAor);
    dumUas->getMasterProfile()->setDefaultRegistrationTime(70);
@@ -555,21 +572,21 @@ main (int argc, char** argv)
    auto_ptr<AppDialogSetFactory> uas_dsf(new testAppDialogSetFactory);
    dumUas->setAppDialogSetFactory(uas_dsf);
 
-#if !defined(NO_REGISTRATION)
-   {
+   if ( doReg ) {
       SharedPtr<SipMessage> regMessage = dumUas->makeRegistration(uasAor, new testAppDialogSet(*dumUac, "UAS(Registration)"));
+      // XXXX: should above be *dumUas ???!!!!
       cout << "Sending register for Uas: " << endl << regMessage << endl;
       dumUas->send(regMessage);
+   } else {
+      uas.registered = true;
    }
-   {
+   if ( doReg ) {
       SharedPtr<SipMessage> regMessage = dumUac->makeRegistration(uacAor, new testAppDialogSet(*dumUac, "UAC(Registration)"));
       cout << "Sending register for Uac: " << endl << regMessage << endl;
       dumUac->send(regMessage);
+   } else {
+      uac.registered = true;
    }
-#else
-   uac.registered = true;
-   uas.registered = true;
-#endif
 
    bool finishedTest = false;
    bool stoppedRegistering = false;
@@ -606,9 +623,9 @@ main (int argc, char** argv)
            if (!startedCallFlow)
            {
               startedCallFlow = true;
-#if !defined(NO_REGISTRATION)
-              cout << "!!!!!!!!!!!!!!!! Registered !!!!!!!!!!!!!!!! " << endl;
-#endif
+	      if ( doReg ) {
+                 cout << "!!!!!!!!!!!!!!!! Registered !!!!!!!!!!!!!!!! " << endl;
+	      }
 
               // Kick off call flow by sending an OPTIONS request then an INVITE request from the UAC to the UAS
               cout << "UAC: Sending Options Request to UAS." << endl;
@@ -637,10 +654,10 @@ main (int argc, char** argv)
            stoppedRegistering = true;
            dumUas->shutdown(&uasShutdownHandler);
            dumUac->shutdown(&uacShutdownHandler);
-#if !defined(NO_REGISTRATION)
-           uas.registerHandle->stopRegistering();
-           uac.registerHandle->stopRegistering();
-#endif
+	   if ( doReg ) {
+              uas.registerHandle->stopRegistering();
+              uac.registerHandle->stopRegistering();
+	   }
         }
      }
    }

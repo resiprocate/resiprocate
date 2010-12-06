@@ -33,6 +33,7 @@ class SipMessage;
 class TransactionController;
 class Security;
 class Compression;
+class FdPollGrp;
 
 /**
   TransportSelector has two distinct roles.  The first is transmit on the best
@@ -63,11 +64,20 @@ class TransportSelector
       
       /// Returns true if all Transports have their buffers cleared, false otherwise.
       bool isFinished() const;
+
+      /// Configure a PollGrp to use (instead of buildFdSet/process)
+      /// Must be called before adding any transports
+      void setPollGrp(FdPollGrp *pollGrp);
       
-      /// Calls process on all suitable transports and the DNSInterface
+      /// Calls process on all suitable transports
+      /// NOTE that TransportSelector no longer handles DNSInterface
+      /// NOTE not used with pollGrp
       void process(FdSet& fdset);
-      /// Builds an FdSet comprised of all FDs from all suitable Transports and the DNSInterface
+      /// Builds an FdSet comprised of all FDs from all suitable Transports
       void buildFdSet(FdSet& fdset);
+
+      /// Called by transaction controller only if using pollGrp
+      void processTransmitQueue();
      
       void addTransport( std::auto_ptr<Transport> transport);
 
@@ -96,6 +106,9 @@ class TransportSelector
 
       static Tuple getFirstInterface(bool is_v4, TransportType type);
       bool connectionAlive(const Tuple& dest) const;
+
+      /// delete all known transports (including external)
+      void deleteTransports();
       
    private:
       const Connection* findConnection(const Tuple& dest) const;
@@ -106,6 +119,7 @@ class TransportSelector
         Tuple& src) const;
       Transport* findTlsTransport(const Data& domain,TransportType type,IpVersion ipv);
       Tuple determineSourceInterface(SipMessage* msg, const Tuple& dest) const;
+
 
       DnsInterface mDns;
       Fifo<TransactionMessage>& mStateMacFifo;
@@ -196,6 +210,9 @@ class TransportSelector
       /// SigComp configuration object
       Compression &mCompression;
       osc::Stack  *mSigcompStack;
+
+      // epoll support, for sharedprocess transports
+      FdPollGrp* mPollGrp;
 
       friend class TestTransportSelector;
       friend class SipStack; // for debug only

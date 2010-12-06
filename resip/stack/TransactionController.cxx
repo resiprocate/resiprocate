@@ -67,7 +67,19 @@ TransactionController::shutdown()
 }
 
 void
-TransactionController::process(FdSet& fdset)
+TransactionController::deleteTransports()
+{
+   mTransportSelector.deleteTransports();
+}
+
+void
+TransactionController::setPollGrp(FdPollGrp *grp)
+{
+   mTransportSelector.setPollGrp(grp);
+}
+
+void
+TransactionController::processEverything(FdSet* fdset)
 {
    if (mShuttingDown && 
        //mTimers.empty() && 
@@ -82,7 +94,12 @@ TransactionController::process(FdSet& fdset)
    }
    else
    {
-      mTransportSelector.process(fdset);
+      if ( fdset ) {
+         mTransportSelector.process(*fdset);
+      } else {
+         mTransportSelector.processTransmitQueue();
+      }
+
       mTimers.process();
 
       while (mStateMacFifo.messageAvailable())
@@ -90,6 +107,19 @@ TransactionController::process(FdSet& fdset)
          TransactionState::process(*this);
       }
    }
+}
+
+void
+TransactionController::processTimers()
+{
+   // we consider fifos a special case of Timers
+   processEverything(NULL);
+}
+
+void
+TransactionController::process(FdSet& fdset)
+{
+   processEverything(&fdset);
 }
 
 unsigned int 

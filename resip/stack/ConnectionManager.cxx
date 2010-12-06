@@ -19,7 +19,8 @@ ConnectionManager::ConnectionManager() :
    mHead(0,Tuple(),0,Compression::Disabled),
    mWriteHead(ConnectionWriteList::makeList(&mHead)),
    mReadHead(ConnectionReadList::makeList(&mHead)),
-   mLRUHead(ConnectionLruList::makeList(&mHead))
+   mLRUHead(ConnectionLruList::makeList(&mHead)),
+   mPollGrp(0)
 {
    DebugLog(<<"ConnectionManager::ConnectionManager() called ");
 }
@@ -119,6 +120,9 @@ ConnectionManager::findConnection(const Tuple& addr) const
 void
 ConnectionManager::buildFdSet(FdSet& fdset)
 {
+   // If using PollGrp, caller shouldn't call this
+   assert( mPollGrp==0 );
+
    for (ConnectionReadList::iterator i = mReadHead->begin(); 
         i != mReadHead->end(); ++i)
    {
@@ -137,14 +141,22 @@ ConnectionManager::buildFdSet(FdSet& fdset)
 void
 ConnectionManager::addToWritable(Connection* conn)
 {
-   mWriteHead->push_back(conn);
+   if ( mPollGrp ) {
+      mPollGrp->modPollItem(conn, FPEM_Read|FPEM_Write);
+   } else {
+      mWriteHead->push_back(conn);
+   }
 }
 
 void
 ConnectionManager::removeFromWritable(Connection* conn)
 {
-   assert(!mWriteHead->empty());
-   conn->ConnectionWriteList::remove();
+   if ( mPollGrp ) {
+      mPollGrp->modPollItem(conn, FPEM_Read);
+   } else {
+      assert(!mWriteHead->empty());
+      conn->ConnectionWriteList::remove();
+   }
 }
 
 void
@@ -158,7 +170,11 @@ ConnectionManager::addConnection(Connection* connection)
    mAddrMap[connection->who()] = connection;
    mIdMap[connection->who().mFlowKey] = connection;
 
-   mReadHead->push_back(connection);
+   if ( mPollGrp ) {
+      mPollGrp->addPollItem(connection, FPEM_Read);
+   } else {
+      mReadHead->push_back(connection);
+   }
    mLRUHead->push_back(connection);
 
    //DebugLog (<< "count=" << mAddrMap.count(connection->who()) << "who=" << connection->who() << " mAddrMap=" << Inserter(mAddrMap));
@@ -171,15 +187,19 @@ ConnectionManager::removeConnection(Connection* connection)
 {
    //DebugLog (<< "ConnectionManager::removeConnection()");
 
-   assert(!mReadHead->empty());
 
 
    mIdMap.erase(connection->mWho.mFlowKey);
    mAddrMap.erase(connection->mWho);
 
-   connection->ConnectionReadList::remove();
-   connection->ConnectionWriteList::remove();
-   connection->ConnectionLruList::remove();
+   if ( mPollGrp ) {
+      mPollGrp->delPollItem(connection);
+   } else {
+      assert(!mReadHead->empty());
+      connection->ConnectionReadList::remove();
+      connection->ConnectionWriteList::remove();
+      connection->ConnectionLruList::remove();
+   }
 }
 
 // release excessively old connections (free up file descriptors)
@@ -219,8 +239,10 @@ ConnectionManager::touch(Connection* connection)
 }
 
 void
-ConnectionManager::process(FdSet& fdset, Fifo<TransactionMessage>& fifo)
+ConnectionManager::process(FdSet& fdset)
 {
+   assert( mPollGrp==NULL );	// owner shouldn't call this if polling
+
    // process the write list
    for (ConnectionWriteList::iterator writeIter = mWriteHead->begin();
 	writeIter != mWriteHead->end(); )
@@ -266,7 +288,7 @@ ConnectionManager::process(FdSet& fdset, Fifo<TransactionMessage>& fifo)
       {
 	 fdset.clear(currConnection->getSocket());
          
-         int bytesRead = currConnection->read(fifo);
+         int bytesRead = currConnection->read();
          DebugLog(<< "ConnectionManager::process() " << " read=" << bytesRead);
          if (bytesRead < 0)
          {
@@ -283,6 +305,12 @@ ConnectionManager::process(FdSet& fdset, Fifo<TransactionMessage>& fifo)
 	 delete currConnection;
       }
    }
+}
+
+void
+ConnectionManager::setPollGrp(FdPollGrp *grp) {
+    assert( mPollGrp == NULL );
+    mPollGrp = grp;
 }
 
 /* ====================================================================

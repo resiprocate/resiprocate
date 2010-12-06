@@ -13,6 +13,7 @@ namespace resip
 class ExternalDnsHandler;
 class ExternalDnsRawResult;
 class ExternalDnsHostResult;
+class FdPollGrp;
 
 //used by the asynchronous executive
 class ExternalDns
@@ -21,7 +22,7 @@ class ExternalDns
       enum Features
       {
          None = 0,
-         TryServersOfNextNetworkUponRcode3 = 1 << 0   // 'No such name'
+         TryServersOfNextNetworkUponRcode3 = 1 << 0,   // 'No such name'
       };
 
       //returns Success, BuildMismatch, otherwise ExternalDns specific 
@@ -32,6 +33,8 @@ class ExternalDns
          BuildMismatch = 4777
       };      
       
+
+      //
       virtual int init(const std::vector<GenericIPAddress>& additionalNameservers,
                        AfterSocketCreationFuncPtr,
                        int dnsTimeout = 0,
@@ -47,8 +50,18 @@ class ExternalDns
       //this is scary on windows; the standard way to get a bigger fd_set is to
       //redefine FD_SETSIZE befor each inclusion of winsock2.h, so make sure
       //external libraries have been properly configured      
+      // MUST not be called when pollGrp (below) is active
       virtual void buildFdSet(fd_set& read, fd_set& write, int& size) = 0;
       virtual void process(fd_set& read, fd_set& write) = 0;
+
+      // call prior to init() to enable internal epoll() functionality
+      // When enabled, only the fd of the epoll itself will be exposed
+      // thru the fd set.
+      virtual void setPollGrp(FdPollGrp *grp) = 0;
+
+      // called by DnsStub to process timers requested by getTimeTillNext...()
+      // only used when poll group is active
+      virtual void processTimers() = 0;
 
       virtual void freeResult(ExternalDnsRawResult res) = 0;
       virtual void freeResult(ExternalDnsHostResult res) = 0;

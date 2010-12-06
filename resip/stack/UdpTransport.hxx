@@ -28,7 +28,7 @@ public:
    virtual void operator()(UdpTransport* transport, const Tuple& source, std::auto_ptr<Data> unknownDatagram) = 0; 
 };
 
-class UdpTransport : public InternalTransport
+class UdpTransport : public InternalTransport, public FdPollItemIf
 {
 public:
    RESIP_HeapCount(UdpTransport);
@@ -44,11 +44,20 @@ public:
                 Compression &compression = Compression::Disabled);
    virtual  ~UdpTransport();
 
-   void process(FdSet& fdset);
-   bool isReliable() const { return false; }
-   bool isDatagram() const { return true; }
-   TransportType transport() const { return UDP; }
+   virtual TransportType transport() const { return UDP; }
+   virtual bool isReliable() const { return false; }
+   virtual bool isDatagram() const { return true; }
+
+   virtual void process(FdSet& fdset);
+   virtual void processTransmitQueue();
+   virtual bool hasDataToSend() const;
    virtual void buildFdSet( FdSet& fdset);
+   virtual void setPollGrp(FdPollGrp *grp);
+   virtual void setRcvBufLen(int buflen);
+
+   // FdPollItemIf
+   virtual Socket getPollSocket() const;
+   virtual void processPollEvent(FdPollEventMask mask);
 
    static const int MaxBufferSize = 8192;
 
@@ -60,6 +69,10 @@ public:
    void setExternalUnknownDatagramHandler(ExternalUnknownDatagramHandler *handler);
 
 protected:
+   virtual void checkTransmitQueue();
+
+   void processRx();
+   void processTx();
    osc::Stack *mSigcompStack;
 
 private:
@@ -68,6 +81,8 @@ private:
    Tuple mStunMappedAddress;
    bool mStunSuccess;
    ExternalUnknownDatagramHandler* mExternalUnknownDatagramHandler;
+   FdPollGrp *mPollGrp;
+   bool mInWritable;
 };
 
 }

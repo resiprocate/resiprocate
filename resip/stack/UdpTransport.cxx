@@ -36,7 +36,8 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
                            Compression &compression) 
    : InternalTransport(fifo, portNum, version, pinterface, socketFunc, compression),
      mSigcompStack(0),
-     mExternalUnknownDatagramHandler(0)
+     mExternalUnknownDatagramHandler(0),
+     mPollGrp(0), mInWritable(false)
 {
    mTuple.setType(transport());
    mFd = InternalTransport::socket(transport(), version);
@@ -69,397 +70,68 @@ UdpTransport::~UdpTransport()
 #ifdef USE_SIGCOMP
    delete mSigcompStack;
 #endif
-}
-
-void 
-UdpTransport::process(FdSet& fdset)
-{
-   // pull buffers to send out of TxFifo
-   // receive datagrams from fd
-   // preparse and stuff into RxFifo
-
-   if (mTxFifo.messageAvailable() && fdset.readyToWrite(mFd))
-   {
-      std::auto_ptr<SendData> sendData = std::auto_ptr<SendData>(mTxFifo.getNext());
-      //DebugLog (<< "Sent: " <<  sendData->data);
-      //DebugLog (<< "Sending message on udp.");
-
-      assert( &(*sendData) );
-      assert( sendData->destination.getPort() != 0 );
-      
-      const sockaddr& addr = sendData->destination.getSockaddr();
-      int expected;
-      int count;
-
-#ifdef USE_SIGCOMP
-      // If message needs to be compressed, compress it here.
-      if (mSigcompStack &&
-          sendData->sigcompId.size() > 0 &&
-          !sendData->isAlreadyCompressed )
-      {
-          osc::SigcompMessage *sm = mSigcompStack->compressMessage
-            (sendData->data.data(), sendData->data.size(),
-             sendData->sigcompId.data(), sendData->sigcompId.size(),
-             isReliable());
-
-          DebugLog (<< "Compressed message from "
-                    << sendData->data.size() << " bytes to " 
-                    << sm->getDatagramLength() << " bytes");
-
-          expected = sm->getDatagramLength();
-
-          count = sendto(mFd, 
-                         sm->getDatagramMessage(),
-                         sm->getDatagramLength(),
-                         0, // flags
-                         &addr, sendData->destination.length());
-          delete sm;
-      }
-      else
-#endif
-      {
-          expected = (int)sendData->data.size();
-          count = sendto(mFd, 
-                         sendData->data.data(), (int)sendData->data.size(),  
-                         0, // flags
-                         &addr, (int)sendData->destination.length());
-      }
-      
-      if ( count == SOCKET_ERROR )
-      {
-         int e = getErrno();
-         error(e);
-         InfoLog (<< "Failed (" << e << ") sending to " << sendData->destination);
-         fail(sendData->transactionId);
-      }
-      else
-      {
-         if (count != expected)
-         {
-            ErrLog (<< "UDPTransport - send buffer full" );
-            fail(sendData->transactionId);
-         }
-      }
-   }
-   
-   // !jf! this may have to change - when we read a message that is too big
-   if ( fdset.readyToRead(mFd) )
-   {
-      //should this buffer be allocated on the stack and then copied out, as it
-      //needs to be deleted every time EWOULDBLOCK is encountered
-      // .dlb. can we determine the size of the buffer before we allocate?
-      // something about MSG_PEEK|MSG_TRUNC in Stevens..
-      // .dlb. RFC3261 18.1.1 MUST accept 65K datagrams. would have to attempt to
-      // adjust the UDP buffer as well...
-      char* buffer = MsgHeaderScanner::allocateBuffer(MaxBufferSize);      
-
-      // !jf! how do we tell if it discarded bytes 
-      // !ah! we use the len-1 trick :-(
-      Tuple tuple(mTuple);
-      socklen_t slen = tuple.length();
-      int len = recvfrom( mFd,
-                          buffer,
-                          MaxBufferSize,
-                          0 /*flags */,
-                          &tuple.getMutableSockaddr(), 
-                          &slen);
-      if ( len == SOCKET_ERROR )
-      {
-         int err = getErrno();
-         if ( err != EWOULDBLOCK  )
-         {
-            error( err );
-         }
-      }
-
-      if (len == 0 || len == SOCKET_ERROR)
-      {
-         delete[] buffer; 
-         buffer=0;
-         return;
-      }
-
-      if (len+1 >= MaxBufferSize)
-      {
-         InfoLog(<<"Datagram exceeded max length "<<MaxBufferSize);
-         delete [] buffer; buffer=0;
-         return;
-      }
-
-      //handle incoming CRLFCRLF keep-alive packets
-      if (len == 4 &&
-          strncmp(buffer, Symbols::CRLFCRLF, len) == 0)
-      {
-         delete[] buffer;
-         buffer = 0;
-         StackLog(<<"Throwing away incoming firewall keep-alive");
-         return;
-      }
-
-      // this must be a STUN response (or garbage)
-      if (buffer[0] == 1 && buffer[1] == 1 && ipVersion() == V4)
-      {
-         resip::Lock lock(myMutex);
-         StunMessage resp;
-         memset(&resp, 0, sizeof(StunMessage));
-      
-         if (stunParseMessage(buffer, len, resp, false))
-         {
-            in_addr sin_addr;
-            // Use XorMappedAddress if present - if not use MappedAddress
-            if(resp.hasXorMappedAddress)
-            {
-               UInt16 id16 = resp.msgHdr.id.octet[0]<<8 
-                             | resp.msgHdr.id.octet[1];
-               UInt32 id32 = resp.msgHdr.id.octet[0]<<24 
-                             | resp.msgHdr.id.octet[1]<<16 
-                             | resp.msgHdr.id.octet[2]<<8 
-                             | resp.msgHdr.id.octet[3];
-               resp.xorMappedAddress.ipv4.port = resp.xorMappedAddress.ipv4.port^id16;
-               resp.xorMappedAddress.ipv4.addr = resp.xorMappedAddress.ipv4.addr^id32;
-
-#if defined(WIN32)
-               sin_addr.S_un.S_addr = htonl(resp.xorMappedAddress.ipv4.addr);
-#else
-               sin_addr.s_addr = htonl(resp.xorMappedAddress.ipv4.addr);
-#endif
-               mStunMappedAddress = Tuple(sin_addr,resp.xorMappedAddress.ipv4.port, UDP);
-               mStunSuccess = true;
-            }
-            else if(resp.hasMappedAddress)
-            {
-#if defined(WIN32)
-            sin_addr.S_un.S_addr = htonl(resp.mappedAddress.ipv4.addr);
-#else
-            sin_addr.s_addr = htonl(resp.mappedAddress.ipv4.addr);
-#endif
-            mStunMappedAddress = Tuple(sin_addr,resp.mappedAddress.ipv4.port, UDP);
-            mStunSuccess = true;
-            }
-         }
-         delete[] buffer;
-         buffer = 0;
-         return;
-      }
-
-      // this must be a STUN request (or garbage)
-      if (buffer[0] == 0 && buffer[1] == 1 && ipVersion() == V4)
-      {
-         bool changePort = false;
-         bool changeIp = false;
-         
-         StunAddress4 myAddr;
-         const sockaddr_in& bi = (const sockaddr_in&)boundInterface();
-         myAddr.addr = ntohl(bi.sin_addr.s_addr);
-         myAddr.port = ntohs(bi.sin_port);
-         
-         StunAddress4 from; // packet source
-         const sockaddr_in& fi = (const sockaddr_in&)tuple.getSockaddr();
-         from.addr = ntohl(fi.sin_addr.s_addr);
-         from.port = ntohs(fi.sin_port);
-         
-         StunMessage resp;
-         StunAddress4 dest;
-         StunAtrString hmacPassword;  
-         hmacPassword.sizeValue = 0;
-         
-         StunAddress4 secondary;
-         secondary.port = 0;
-         secondary.addr = 0;
-         
-         bool ok = stunServerProcessMsg( buffer, len, // input buffer
-                                         from,  // packet source
-                                         secondary, // not used
-                                         myAddr, // address to fill into response
-                                         myAddr, // not used
-                                         &resp, // stun response
-                                         &dest, // where to send response
-                                         &hmacPassword, // not used
-                                         &changePort, // not used
-                                         &changeIp, // not used
-                                         false ); // logging
-         
-         if (ok)
-         {
-            DebugLog(<<"Got UDP STUN keepalive. Sending response...");
-            char* response = new char[STUN_MAX_MESSAGE_SIZE];
-            int rlen = stunEncodeMessage( resp, 
-                                          response, 
-                                          STUN_MAX_MESSAGE_SIZE, 
-                                          hmacPassword,
-                                          false );
-            SendData* stunResponse = new SendData(tuple, response, rlen);
-            mTxFifo.add(stunResponse);
-         }
-         delete[] buffer;
-         buffer = 0;
-         return;
-      }
-
-#ifdef USE_SIGCOMP
-      osc::StateChanges *sc = 0;
-#endif
-
-      // Attempt to decode SigComp message, if appropriate.
-      if ((buffer[0] & 0xf8) == 0xf8)
-      {
-        if (!mCompression.isEnabled())
-        {
-          InfoLog(<< "Discarding unexpected SigComp Message");
-          delete[] buffer;
-          buffer = 0;
-          return;
-        }
-#ifdef USE_SIGCOMP
-        char* newBuffer = MsgHeaderScanner::allocateBuffer(MaxBufferSize); 
-        size_t uncompressedLength =
-          mSigcompStack->uncompressMessage(buffer, len, 
-                                           newBuffer, MaxBufferSize, sc);
-
-       DebugLog (<< "Uncompressed message from "
-                 << len << " bytes to " 
-                 << uncompressedLength << " bytes");
-
-
-        osc::SigcompMessage *nack = mSigcompStack->getNack();
-
-        if (nack)
-        {
-          mTxFifo.add(new SendData(tuple, 
-                                   Data(nack->getDatagramMessage(),
-                                        nack->getDatagramLength()),
-                                   Data::Empty,
-                                   Data::Empty,
-                                   true)
-                     );
-          delete nack;
-        }
-
-        delete[] buffer;
-        buffer = newBuffer;
-        len = uncompressedLength;
-#endif
-      }
-
-      buffer[len]=0; // null terminate the buffer string just to make debug easier and reduce errors
-
-      //DebugLog ( << "UDP Rcv : " << len << " b" );
-      //DebugLog ( << Data(buffer, len).escaped().c_str());
-
-      SipMessage* message = new SipMessage(this);
-
-      // set the received from information into the received= parameter in the
-      // via
-
-      // It is presumed that UDP Datagrams are arriving atomically and that
-      // each one is a unique SIP message
-
-
-      // Save all the info where this message came from
-      tuple.transport = this;
-      tuple.mFlowKey=mTuple.mFlowKey;
-      message->setSource(tuple);   
-      //DebugLog (<< "Received from: " << tuple);
-   
-      // Tell the SipMessage about this datagram buffer.
-      message->addBuffer(buffer);
-
-      mMsgHeaderScanner.prepareForMessage(message);
-
-      char *unprocessedCharPtr;
-      if (mMsgHeaderScanner.scanChunk(buffer,
-                                      len,
-                                      &unprocessedCharPtr) !=
-          MsgHeaderScanner::scrEnd)
-      {
-         StackLog(<<"Scanner rejecting datagram as unparsable / fragmented from " << tuple);
-         StackLog(<< Data(Data::Borrow, buffer, len));
-         if(mExternalUnknownDatagramHandler)
-         {
-            auto_ptr<Data> datagram(new Data(buffer,len));
-            (*mExternalUnknownDatagramHandler)(this,tuple,datagram);
-         }
-
-         delete message; 
-         message=0; 
-         return;
-      }
-
-      // no pp error
-      int used = int(unprocessedCharPtr - buffer);
-
-      if (used < len)
-      {
-         // body is present .. add it up.
-         // NB. The Sip Message uses an overlay (again)
-         // for the body. It ALSO expects that the body
-         // will be contiguous (of course).
-         // it doesn't need a new buffer in UDP b/c there
-         // will only be one datagram per buffer. (1:1 strict)
-
-         message->setBody(buffer+used,len-used);
-         //DebugLog(<<"added " << len-used << " byte body");
-      }
-
-      if (!basicCheck(*message))
-      {
-         delete message; // cannot use it, so, punt on it...
-         // basicCheck queued any response required
-         message = 0;
-         return;
-      }
-
-      stampReceived(message);
-
-#ifdef USE_SIGCOMP
-      if (mCompression.isEnabled() && sc)
-      {
-        const Via &via = message->header(h_Vias).front();
-        if (message->isRequest())
-        {
-          // For requests, the compartment ID is read out of the
-          // top via header field; if not present, we use the
-          // TCP connection for identification purposes.
-          if (via.exists(p_sigcompId))
-          {
-            Data compId = via.param(p_sigcompId);
-            if(!compId.empty())
-            {
-               // .bwc. Crash was happening here. Why was there an empty sigcomp
-               // id?
-               mSigcompStack->provideCompartmentId(
-                                sc, compId.data(), compId.size());
-            }
-          }
-          else
-          {
-            mSigcompStack->provideCompartmentId(sc, this, sizeof(this));
-          }
-        }
-        else
-        {
-          // For responses, the compartment ID is supposed to be
-          // the same as the compartment ID of the request. We
-          // *could* dig down into the transaction layer to try to
-          // figure this out, but that's a royal pain, and a rather
-          // severe layer violation. In practice, we're going to ferret
-          // the ID out of the the Via header field, which is where we
-          // squirreled it away when we sent this request in the first place.
-          // !bwc! This probably shouldn't be going out over the wire.
-          Data compId = via.param(p_branch).getSigcompCompartment();
-          if(!compId.empty())
-          {
-            mSigcompStack->provideCompartmentId(sc, compId.data(), compId.size());
-          }
-        }
-  
-      }
-#endif
-
-      mStateMachineFifo.add(message);
+   if ( mPollGrp ) {
+      mPollGrp->delPollItem(this);
    }
 }
 
+void
+UdpTransport::setPollGrp(FdPollGrp *grp) {
+   assert( mPollGrp==NULL );
+   mPollGrp = grp;
+   mPollGrp->addPollItem(this, FPEM_Read);
+}
+
+
+Socket
+UdpTransport::getPollSocket() const {
+   return mFd;
+}
+
+
+void
+UdpTransport::checkTransmitQueue() {
+   if ( mPollGrp && !mInWritable && mTxFifo.messageAvailable() ) {
+      mPollGrp->modPollItem(this, FPEM_Read|FPEM_Write);
+      mInWritable = true;
+   }
+   if ( mPollGrp && mInWritable && !mTxFifo.messageAvailable() ) {
+      mPollGrp->modPollItem(this, FPEM_Read);
+      mInWritable = false;
+    }
+}
+
+void
+UdpTransport::processTransmitQueue() {
+   // could blast out messages now, but instead we wait for the
+   // writability event
+}
+
+void
+UdpTransport::processPollEvent(FdPollEventMask mask) {
+   if ( mask & FPEM_Write ) {
+      // why only write one? Why not everything we can?
+      if (mTxFifo.messageAvailable())
+         processTx();
+   }
+   if ( mask & FPEM_Read ) {
+      processRx();
+   }
+   if ( mask & FPEM_Error ) {
+      assert(0);
+   }
+   checkTransmitQueue(); // mainly to turn off writable-cb if not needed anymore
+}
+
+/**
+   If we return true, the TransactionController will set the timeout
+   to zero so that process() is called immediately. We don't want this;
+   instead, we depend upon the writable-socket callback (fdset or poll).
+**/
+bool 
+UdpTransport::hasDataToSend() const {
+   return false;
+}
 
 void 
 UdpTransport::buildFdSet( FdSet& fdset )
@@ -471,6 +143,406 @@ UdpTransport::buildFdSet( FdSet& fdset )
      fdset.setWrite(mFd);
    }
 }
+
+void 
+UdpTransport::process(FdSet& fdset)
+{
+   // pull buffers to send out of TxFifo
+   // receive datagrams from fd
+   // preparse and stuff into RxFifo
+
+   if (mTxFifo.messageAvailable() && fdset.readyToWrite(mFd)) {
+      processTx();
+   }
+
+   if ( fdset.readyToRead(mFd) ) {
+      processRx();
+   }
+}
+
+void 
+UdpTransport::processTx() {
+   // if (mTxFifo.messageAvailable() && fdset.readyToWrite(mFd))
+   std::auto_ptr<SendData> sendData = std::auto_ptr<SendData>(mTxFifo.getNext());
+   //DebugLog (<< "Sent: " <<  sendData->data);
+   //DebugLog (<< "Sending message on udp.");
+
+   assert( &(*sendData) );
+   assert( sendData->destination.getPort() != 0 );
+   
+   const sockaddr& addr = sendData->destination.getSockaddr();
+   int expected;
+   int count;
+
+#ifdef USE_SIGCOMP
+   // If message needs to be compressed, compress it here.
+   if (mSigcompStack &&
+       sendData->sigcompId.size() > 0 &&
+       !sendData->isAlreadyCompressed )
+   {
+       osc::SigcompMessage *sm = mSigcompStack->compressMessage
+	 (sendData->data.data(), sendData->data.size(),
+	  sendData->sigcompId.data(), sendData->sigcompId.size(),
+	  isReliable());
+
+       DebugLog (<< "Compressed message from "
+		 << sendData->data.size() << " bytes to " 
+		 << sm->getDatagramLength() << " bytes");
+
+       expected = sm->getDatagramLength();
+
+       count = sendto(mFd, 
+		      sm->getDatagramMessage(),
+		      sm->getDatagramLength(),
+		      0, // flags
+		      &addr, sendData->destination.length());
+       delete sm;
+   }
+   else
+#endif
+   {
+       expected = (int)sendData->data.size();
+       count = sendto(mFd, 
+		      sendData->data.data(), (int)sendData->data.size(),  
+		      0, // flags
+		      &addr, (int)sendData->destination.length());
+   }
+   
+   if ( count == SOCKET_ERROR )
+   {
+      int e = getErrno();
+      error(e);
+      InfoLog (<< "Failed (" << e << ") sending to " << sendData->destination);
+      fail(sendData->transactionId);
+   }
+   else
+   {
+      if (count != expected)
+      {
+	 ErrLog (<< "UDPTransport - send buffer full" );
+	 fail(sendData->transactionId);
+      }
+   }
+}
+   
+void 
+UdpTransport::processRx() {
+   // !jf! this may have to change - when we read a message that is too big
+   //should this buffer be allocated on the stack and then copied out, as it
+   //needs to be deleted every time EWOULDBLOCK is encountered
+   // .dlb. can we determine the size of the buffer before we allocate?
+   // something about MSG_PEEK|MSG_TRUNC in Stevens..
+   // .dlb. RFC3261 18.1.1 MUST accept 65K datagrams. would have to attempt to
+   // adjust the UDP buffer as well...
+   char* buffer = MsgHeaderScanner::allocateBuffer(MaxBufferSize);      
+
+   // !jf! how do we tell if it discarded bytes 
+   // !ah! we use the len-1 trick :-(
+   Tuple tuple(mTuple);
+   socklen_t slen = tuple.length();
+   int len = recvfrom( mFd,
+		       buffer,
+		       MaxBufferSize,
+		       0 /*flags */,
+		       &tuple.getMutableSockaddr(), 
+		       &slen);
+   if ( len == SOCKET_ERROR )
+   {
+      int err = getErrno();
+      if ( err != EWOULDBLOCK  )
+      {
+	 error( err );
+      }
+   }
+
+   if (len == 0 || len == SOCKET_ERROR)
+   {
+      delete[] buffer; 
+      buffer=0;
+      return;
+   }
+
+   if (len+1 >= MaxBufferSize)
+   {
+      InfoLog(<<"Datagram exceeded max length "<<MaxBufferSize);
+      delete [] buffer; buffer=0;
+      return;
+   }
+
+   //handle incoming CRLFCRLF keep-alive packets
+   if (len == 4 &&
+       strncmp(buffer, Symbols::CRLFCRLF, len) == 0)
+   {
+      delete[] buffer;
+      buffer = 0;
+      StackLog(<<"Throwing away incoming firewall keep-alive");
+      return;
+   }
+
+   // this must be a STUN response (or garbage)
+   if (buffer[0] == 1 && buffer[1] == 1 && ipVersion() == V4)
+   {
+      resip::Lock lock(myMutex);
+      StunMessage resp;
+      memset(&resp, 0, sizeof(StunMessage));
+   
+      if (stunParseMessage(buffer, len, resp, false))
+      {
+	 in_addr sin_addr;
+	 // Use XorMappedAddress if present - if not use MappedAddress
+	 if(resp.hasXorMappedAddress)
+	 {
+	    UInt16 id16 = resp.msgHdr.id.octet[0]<<8 
+			  | resp.msgHdr.id.octet[1];
+	    UInt32 id32 = resp.msgHdr.id.octet[0]<<24 
+			  | resp.msgHdr.id.octet[1]<<16 
+			  | resp.msgHdr.id.octet[2]<<8 
+			  | resp.msgHdr.id.octet[3];
+	    resp.xorMappedAddress.ipv4.port = resp.xorMappedAddress.ipv4.port^id16;
+	    resp.xorMappedAddress.ipv4.addr = resp.xorMappedAddress.ipv4.addr^id32;
+
+#if defined(WIN32)
+	    sin_addr.S_un.S_addr = htonl(resp.xorMappedAddress.ipv4.addr);
+#else
+	    sin_addr.s_addr = htonl(resp.xorMappedAddress.ipv4.addr);
+#endif
+	    mStunMappedAddress = Tuple(sin_addr,resp.xorMappedAddress.ipv4.port, UDP);
+	    mStunSuccess = true;
+	 }
+	 else if(resp.hasMappedAddress)
+	 {
+#if defined(WIN32)
+	 sin_addr.S_un.S_addr = htonl(resp.mappedAddress.ipv4.addr);
+#else
+	 sin_addr.s_addr = htonl(resp.mappedAddress.ipv4.addr);
+#endif
+	 mStunMappedAddress = Tuple(sin_addr,resp.mappedAddress.ipv4.port, UDP);
+	 mStunSuccess = true;
+	 }
+      }
+      delete[] buffer;
+      buffer = 0;
+      return;
+   }
+
+   // this must be a STUN request (or garbage)
+   if (buffer[0] == 0 && buffer[1] == 1 && ipVersion() == V4)
+   {
+      bool changePort = false;
+      bool changeIp = false;
+      
+      StunAddress4 myAddr;
+      const sockaddr_in& bi = (const sockaddr_in&)boundInterface();
+      myAddr.addr = ntohl(bi.sin_addr.s_addr);
+      myAddr.port = ntohs(bi.sin_port);
+      
+      StunAddress4 from; // packet source
+      const sockaddr_in& fi = (const sockaddr_in&)tuple.getSockaddr();
+      from.addr = ntohl(fi.sin_addr.s_addr);
+      from.port = ntohs(fi.sin_port);
+      
+      StunMessage resp;
+      StunAddress4 dest;
+      StunAtrString hmacPassword;  
+      hmacPassword.sizeValue = 0;
+      
+      StunAddress4 secondary;
+      secondary.port = 0;
+      secondary.addr = 0;
+      
+      bool ok = stunServerProcessMsg( buffer, len, // input buffer
+				      from,  // packet source
+				      secondary, // not used
+				      myAddr, // address to fill into response
+				      myAddr, // not used
+				      &resp, // stun response
+				      &dest, // where to send response
+				      &hmacPassword, // not used
+				      &changePort, // not used
+				      &changeIp, // not used
+				      false ); // logging
+      
+      if (ok)
+      {
+	 DebugLog(<<"Got UDP STUN keepalive. Sending response...");
+	 char* response = new char[STUN_MAX_MESSAGE_SIZE];
+	 int rlen = stunEncodeMessage( resp, 
+				       response, 
+				       STUN_MAX_MESSAGE_SIZE, 
+				       hmacPassword,
+				       false );
+	 SendData* stunResponse = new SendData(tuple, response, rlen);
+	 mTxFifo.add(stunResponse);
+      }
+      delete[] buffer;
+      buffer = 0;
+      return;
+   }
+
+#ifdef USE_SIGCOMP
+   osc::StateChanges *sc = 0;
+#endif
+
+   // Attempt to decode SigComp message, if appropriate.
+   if ((buffer[0] & 0xf8) == 0xf8)
+   {
+     if (!mCompression.isEnabled())
+     {
+       InfoLog(<< "Discarding unexpected SigComp Message");
+       delete[] buffer;
+       buffer = 0;
+       return;
+     }
+#ifdef USE_SIGCOMP
+     char* newBuffer = MsgHeaderScanner::allocateBuffer(MaxBufferSize); 
+     size_t uncompressedLength =
+       mSigcompStack->uncompressMessage(buffer, len, 
+					newBuffer, MaxBufferSize, sc);
+
+    DebugLog (<< "Uncompressed message from "
+	      << len << " bytes to " 
+	      << uncompressedLength << " bytes");
+
+
+     osc::SigcompMessage *nack = mSigcompStack->getNack();
+
+     if (nack)
+     {
+       mTxFifo.add(new SendData(tuple, 
+				Data(nack->getDatagramMessage(),
+				     nack->getDatagramLength()),
+				Data::Empty,
+				Data::Empty,
+				true)
+		  );
+       delete nack;
+     }
+
+     delete[] buffer;
+     buffer = newBuffer;
+     len = uncompressedLength;
+#endif
+   }
+
+   buffer[len]=0; // null terminate the buffer string just to make debug easier and reduce errors
+
+   //DebugLog ( << "UDP Rcv : " << len << " b" );
+   //DebugLog ( << Data(buffer, len).escaped().c_str());
+
+   SipMessage* message = new SipMessage(this);
+
+   // set the received from information into the received= parameter in the
+   // via
+
+   // It is presumed that UDP Datagrams are arriving atomically and that
+   // each one is a unique SIP message
+
+
+   // Save all the info where this message came from
+   tuple.transport = this;
+   tuple.mFlowKey=mTuple.mFlowKey;
+   message->setSource(tuple);   
+   //DebugLog (<< "Received from: " << tuple);
+
+   // Tell the SipMessage about this datagram buffer.
+   message->addBuffer(buffer);
+
+   mMsgHeaderScanner.prepareForMessage(message);
+
+   char *unprocessedCharPtr;
+   if (mMsgHeaderScanner.scanChunk(buffer,
+				   len,
+				   &unprocessedCharPtr) !=
+       MsgHeaderScanner::scrEnd)
+   {
+      StackLog(<<"Scanner rejecting datagram as unparsable / fragmented from " << tuple);
+      StackLog(<< Data(Data::Borrow, buffer, len));
+      if(mExternalUnknownDatagramHandler)
+      {
+	 auto_ptr<Data> datagram(new Data(buffer,len));
+	 (*mExternalUnknownDatagramHandler)(this,tuple,datagram);
+      }
+
+      delete message; 
+      message=0; 
+      return;
+   }
+
+   // no pp error
+   int used = int(unprocessedCharPtr - buffer);
+
+   if (used < len)
+   {
+      // body is present .. add it up.
+      // NB. The Sip Message uses an overlay (again)
+      // for the body. It ALSO expects that the body
+      // will be contiguous (of course).
+      // it doesn't need a new buffer in UDP b/c there
+      // will only be one datagram per buffer. (1:1 strict)
+
+      message->setBody(buffer+used,len-used);
+      //DebugLog(<<"added " << len-used << " byte body");
+   }
+
+   if (!basicCheck(*message))
+   {
+      delete message; // cannot use it, so, punt on it...
+      // basicCheck queued any response required
+      message = 0;
+      return;
+   }
+
+   stampReceived(message);
+
+#ifdef USE_SIGCOMP
+   if (mCompression.isEnabled() && sc)
+   {
+     const Via &via = message->header(h_Vias).front();
+     if (message->isRequest())
+     {
+       // For requests, the compartment ID is read out of the
+       // top via header field; if not present, we use the
+       // TCP connection for identification purposes.
+       if (via.exists(p_sigcompId))
+       {
+	 Data compId = via.param(p_sigcompId);
+	 if(!compId.empty())
+	 {
+	    // .bwc. Crash was happening here. Why was there an empty sigcomp
+	    // id?
+	    mSigcompStack->provideCompartmentId(
+			     sc, compId.data(), compId.size());
+	 }
+       }
+       else
+       {
+	 mSigcompStack->provideCompartmentId(sc, this, sizeof(this));
+       }
+     }
+     else
+     {
+       // For responses, the compartment ID is supposed to be
+       // the same as the compartment ID of the request. We
+       // *could* dig down into the transaction layer to try to
+       // figure this out, but that's a royal pain, and a rather
+       // severe layer violation. In practice, we're going to ferret
+       // the ID out of the the Via header field, which is where we
+       // squirreled it away when we sent this request in the first place.
+       // !bwc! This probably shouldn't be going out over the wire.
+       Data compId = via.param(p_branch).getSigcompCompartment();
+       if(!compId.empty())
+       {
+	 mSigcompStack->provideCompartmentId(sc, compId.data(), compId.size());
+       }
+     }
+
+   }
+#endif
+
+   mStateMachineFifo.add(message);
+}
+
+
 
 bool 
 UdpTransport::stunSendTest(const Tuple&  dest)
@@ -518,6 +590,12 @@ void
 UdpTransport::setExternalUnknownDatagramHandler(ExternalUnknownDatagramHandler *handler)
 {
    mExternalUnknownDatagramHandler = handler;
+}
+
+void
+UdpTransport::setRcvBufLen(int buflen) 
+{
+   setSocketRcvBufLen(mFd, buflen);
 }
 
 /* ====================================================================

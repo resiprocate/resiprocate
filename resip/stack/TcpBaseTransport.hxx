@@ -13,8 +13,6 @@ class TransactionMessage;
 class TcpBaseTransport : public InternalTransport
 {
    public:
-      enum  {MaxFileDescriptors = 100000};
-
       TcpBaseTransport(Fifo<TransactionMessage>& fifo, 
                        int portNum,  
                        IpVersion version, 
@@ -23,12 +21,17 @@ class TcpBaseTransport : public InternalTransport
                        Compression &compression,
 		       unsigned transportFlags = 0);
       virtual  ~TcpBaseTransport();
+
+
       
+      virtual void processPollEvent(FdPollEventMask mask);
+      virtual void processTransmitQueue();
       virtual void process(FdSet& fdset);
       virtual void buildFdSet( FdSet& fdset);
       virtual bool isReliable() const { return true; }
       virtual bool isDatagram() const { return false; }
-      virtual int maxFileDescriptors() const { return MaxFileDescriptors; }
+      virtual void setPollGrp(FdPollGrp *grp);
+      virtual void setRcvBufLen(int buflen);
 
       ConnectionManager& getConnectionManager() {return mConnectionManager;}
       const ConnectionManager& getConnectionManager() const {return mConnectionManager;}
@@ -44,8 +47,13 @@ class TcpBaseTransport : public InternalTransport
       /** Forms a connection if one doesn't exist, moves requests to the
 	  appropriate connection's fifo.
       */
-      void processAllWriteRequests(FdSet& fdset);
-      void sendFromRoundRobin(FdSet& fdset);
+      void processAllWriteRequests();
+
+      /** This doesn't exist anywhere that I can find? !kw!
+       *void sendFromRoundRobin(FdSet& fdset);
+       */
+
+      // return 1 if accepted connection
       int processListen();
 
       static const size_t MaxWriteSize;

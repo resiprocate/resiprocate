@@ -91,12 +91,13 @@ void
 initNetwork();
 
 #ifndef WIN32
-typedef int Socket;
+typedef int Socket;		// Un*x fds are signed
 #define INVALID_SOCKET (-1)
 #define SOCKET_ERROR   (-1)
 inline int getErrno() { return errno; }
 #else
-typedef SOCKET Socket;
+typedef SOCKET Socket;		// Windows defines as *unsigned* something
+// INVALID_SOCKET is defined by Windows as ~0
 inline int getErrno() { return WSAGetLastError(); }
 #endif
 
@@ -108,6 +109,10 @@ typedef void(*AfterSocketCreationFuncPtr)(Socket s, int transportType, const cha
 bool makeSocketNonBlocking(Socket fd);
 bool makeSocketBlocking(Socket fd);
 int closeSocket( Socket fd );
+int getSocketError(Socket fd);	// getsockopt(SOCK_SOCKET,SO_ERROR)
+int increaseLimitFds(unsigned int targetFds);
+int setSocketRcvBufLen(Socket fd, int buflen);	// setsockopt(SO_RCVBUF)
+
 
 /**
    @brief Object-oriented wrapper for your platform's file-descriptor set.

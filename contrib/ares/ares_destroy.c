@@ -35,8 +35,10 @@ void ares_destroy_internal(ares_channel channel, int suppressCallbacks)
    int i;
    struct query *query;
 
-   for (i = 0; i < channel->nservers; i++)
+   for (i = 0; i < channel->nservers; i++) {
+      ares__close_poll(channel, i);
       ares__close_sockets(&channel->servers[i]);
+   }
    free(channel->servers);
    for (i = 0; i < channel->ndomains; i++)
       free(channel->domains[i]);

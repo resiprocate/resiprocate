@@ -146,6 +146,8 @@ int ares_init_options_with_socket_function(ares_channel *channelptr, struct ares
    * been set yet.
    */
   channel->socket_function = socketFunc;  
+  channel->poll_cb_func = NULL;
+  channel->poll_cb_data = NULL;
   channel->flags = -1;
   channel->timeout = -1;
   channel->tries = -1;

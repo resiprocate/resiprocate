@@ -33,6 +33,7 @@
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Socket.hxx"
+#include "rutil/FdPoll.hxx"
 #include "rutil/WinLeakCheck.hxx"
 #include "rutil/dns/DnsStub.hxx"
 
@@ -68,7 +69,8 @@ TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* s
    mSocket( INVALID_SOCKET ),
    mSocket6( INVALID_SOCKET ),
    mCompression(compression),
-   mSigcompStack (0)
+   mSigcompStack (0),
+   mPollGrp(0)
 {
    memset(&mUnspecified.v4Address, 0, sizeof(sockaddr_in));
    mUnspecified.v4Address.sin_family = AF_UNSPEC;
@@ -94,28 +96,18 @@ TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* s
 #endif
 }
 
-template<class T> void 
-deleteMap(T& m)
-{
-   for (typename T::iterator it = m.begin(); it != m.end(); it++)
-   {
-      delete it->second;
-   }
-   m.clear();
-}
 
 TransportSelector::~TransportSelector()
 {
-   mConnectionlessMap.clear();
-   deleteMap(mExactTransports);
-   deleteMap(mAnyInterfaceTransports);
-   deleteMap(mTlsTransports);
+   deleteTransports();
 #ifdef USE_SIGCOMP
    delete mSigcompStack;
 #endif
 
-    closeSocket( mSocket );
-    closeSocket( mSocket6 );
+    if ( mSocket != INVALID_SOCKET )
+        closeSocket( mSocket );
+    if ( mSocket6 != INVALID_SOCKET )
+        closeSocket( mSocket6 );
 
 }
 
@@ -131,6 +123,29 @@ TransportSelector::shutdown()
    {
       i->second->shutdown();
    }
+}
+
+template<class T> void 
+deleteMap(T& m)
+{
+   for (typename T::iterator it = m.begin(); it != m.end(); it++)
+   {
+      delete it->second;
+   }
+   m.clear();
+}
+
+void
+TransportSelector::deleteTransports()
+{
+   mConnectionlessMap.clear();
+   mSharedProcessTransports.clear();
+   mHasOwnProcessTransports.clear();
+   deleteMap(mExactTransports);
+   deleteMap(mAnyInterfaceTransports);
+   deleteMap(mTlsTransports);
+   // XXX: what about mAnyPortTransports? would be nice if header
+   // documented which maps are "owning" and which "referencing"
 }
 
 bool
@@ -230,6 +245,8 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport)
 
    if (transport->shareStackProcessAndSelect())
    {
+      if ( mPollGrp )
+         transport->setPollGrp(mPollGrp);
       mSharedProcessTransports.push_back(transport);
    }
    else
@@ -238,10 +255,19 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport)
       mHasOwnProcessTransports.back()->startOwnProcessing();
    }
 }
-  
+
+void
+TransportSelector::setPollGrp(FdPollGrp *grp)
+{
+   assert( mSharedProcessTransports.size() == 0 );
+   assert( mPollGrp==NULL );
+   mPollGrp = grp;
+}
+
 void
 TransportSelector::buildFdSet(FdSet& fdset)
 {
+   assert( mPollGrp==NULL );
    for(TransportList::iterator it = mSharedProcessTransports.begin(); 
        it != mSharedProcessTransports.end(); it++)
    {
@@ -252,6 +278,11 @@ TransportSelector::buildFdSet(FdSet& fdset)
 void
 TransportSelector::process(FdSet& fdset)
 {
+   if ( mPollGrp ) {
+      processTransmitQueue();
+      mPollGrp->processFdSet(fdset);
+      return;
+   }
    for(TransportList::iterator it = mSharedProcessTransports.begin(); 
        it != mSharedProcessTransports.end(); it++)
    {
@@ -262,6 +293,34 @@ TransportSelector::process(FdSet& fdset)
       catch (BaseException& e)
       {
          ErrLog (<< "Exception thrown from Transport::process: " << e);
+      }
+   }
+
+}
+
+
+/**
+   Iterate thru all our shared-process (aka Internal) transports and
+   let them check their transport queues. Unfortunately this is O(N)
+   with number of transports. This function works together with
+   hasDataToSend() which queries the transports, and if any have
+   data to send, TransactionController will set its timeout to zero,
+   causing process() (see above) to be immediately invoked.
+
+   Would be nice to split the queues up into request and reply fifos,
+   and priorities sending replies before doing io.
+**/
+void
+TransportSelector::processTransmitQueue()
+{
+   for(TransportList::iterator it = mSharedProcessTransports.begin();
+       it != mSharedProcessTransports.end(); it++)
+   {
+      try {
+         (*it)->processTransmitQueue();
+      } catch (BaseException& e) {
+         ErrLog(<< "Exception thrown from Transport::processTransmitQueue: " << e);
+         // add now what? disable transport? die?
       }
    }
 }

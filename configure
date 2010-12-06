@@ -52,6 +52,7 @@ USE_CURL := no
 USE_GOOGLE_MALLOC := no
 USE_GOOGLE_CPUPERF := no
 USE_IPV6 := no
+HAVE_EPOLL := no
 POPT_INCDIR_CONFIG :=
 POPT_LIBDIR_CONFIG :=
 RESIP_FIXED_POINT := no
@@ -373,6 +374,15 @@ $uname = `uname`;
     default     => "no",
     validate    => [@yesno],
     flag        => 'ipv6',
+  },
+  {
+    # This enables epoll support to be compiled in; it still requires
+    # application to turn on to actually use it
+    name        => "HAVE_EPOLL",
+    description => "Enable support for epoll system call?",
+    default     => &detectEpoll,
+    validate    => [@yesno],
+    flag        => 'epoll',
   },
   {
     name        => "USE_POPT",
@@ -1320,6 +1330,15 @@ sub detectDistcc
 sub detectIpv6
 {
   if (-e "/usr/include/netinet6/in6.h")
+  {
+    return "yes";
+  }
+  return "no";
+}
+
+sub detectEpoll
+{
+  if (-e "/usr/include/sys/epoll.h")
   {
     return "yes";
   }

@@ -7,6 +7,7 @@
 #include "rutil/Data.hxx"
 #include "rutil/Fifo.hxx"
 #include "rutil/Socket.hxx"
+#include "rutil/FdPoll.hxx"
 #include "resip/stack/Message.hxx"
 #include "resip/stack/Transport.hxx"
 #include "resip/stack/Tuple.hxx"
@@ -19,6 +20,7 @@ namespace resip
 class TransactionMessage;
 class SipMessage;
 class Connection;
+class FdPollGrp;
 
 class InternalTransport : public Transport
 {
@@ -46,15 +48,24 @@ class InternalTransport : public Transport
       void bind();      
       
       //used for epoll
-      virtual int maxFileDescriptors() const { return 1; }
+      virtual void setPollGrp(FdPollGrp *grp);
+
+      // used for statistics
       virtual unsigned int getFifoSize() const;    
 
    protected:
       friend class SipStack;
       virtual void transmit(const Tuple& dest, const Data& pdata, const Data& tid, const Data& sigcompId);
 
+      // Whenever a message is added to queue by transmit(), it invokes this
+      // function synchronous.
+      // Can be used to setup any required callsback to later drain the
+      // queue. Be careful to avoid unwanted recursion within this function.
+      virtual void checkTransmitQueue() { };
+
       Socket mFd; // this is a unix file descriptor or a windows SOCKET
       Fifo<SendData> mTxFifo; // owned by the transport
+      FdPollItemIf *mPollItem;	// not owned by the transport, just used
 };
 
 
