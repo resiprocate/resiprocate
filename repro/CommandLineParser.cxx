@@ -148,7 +148,9 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"xmlrpcport",        0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &xmlRpcPort,     0, "port on which to listen for and send XML RPC messaging (used for registration sync) - 0 to disable", 0},
       {"regsyncpeer",       0,   POPT_ARG_STRING,                            &regSyncPeerAddress,0,"hostname/ip address of another instance of repro to syncronize registrations with (note xmlrpcport must also be specified)", 0},
       {"server-text",       0,   POPT_ARG_STRING,                            &serverText,0,"Value of server header for local UAS responses", 0},
+#if defined(HAVE_EPOLL)
       {"poll",              0,   POPT_ARG_NONE,                              &usePoll,     0, "use (e)poll", 0},
+#endif
       {"version",         'V',   POPT_ARG_NONE,                              &showVersion,     0, "show the version number and exit", 0},
       POPT_AUTOHELP 
       { NULL, 0, 0, NULL, 0 }
