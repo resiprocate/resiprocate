@@ -1,6 +1,7 @@
 #if !defined(WIN32)
 #include <sys/types.h>
 #endif
+#include <time.h>
 
 #include "rutil/dns/AresDns.hxx"
 #include "rutil/GenericIPAddress.hxx"
@@ -33,38 +34,42 @@ using namespace resip;
  *
  **********************************************************************/
 
-namespace resip {
+namespace resip 
+{
 
-class AresDnsPollItem : public FdPollItemBase {
+class AresDnsPollItem : public FdPollItemBase 
+{
   public:
    AresDnsPollItem(FdPollGrp *grp, int fd, AresDns& aresObj, 
      ares_channel chan, int server_idx)
      : FdPollItemBase(grp, fd, FPEM_Read), mAres(aresObj), 
-       mChannel(chan), mServerIdx(server_idx) {
+       mChannel(chan), mServerIdx(server_idx) 
+   {
    }
 
-   virtual void		processPollEvent(FdPollEventMask mask);
+   virtual void	processPollEvent(FdPollEventMask mask);
 
-   AresDns&		mAres;
-   ares_channel		mChannel;
-   int			mServerIdx;
+   AresDns&	mAres;
+   ares_channel	mChannel;
+   int mServerIdx;
 
-   static void 		socket_poll_cb(void *cb_data, 
-  	ares_channel channel, int server_idx,
-  	int fd, ares_poll_action_t act);
+   static void socket_poll_cb(void *cb_data, 
+                              ares_channel channel, int server_idx,
+  	                          int fd, ares_poll_action_t act);
 };
 
 };
 
 void
-AresDnsPollItem::processPollEvent(FdPollEventMask mask) {
+AresDnsPollItem::processPollEvent(FdPollEventMask mask) 
+{
    assert( (mask&(FPEM_Read|FPEM_Write))!= 0 );
 
    time_t nowSecs;
    time(&nowSecs);	/// maybe nice if this was passed into us?
 
    ares_process_poll(mChannel, mServerIdx, 
-     (mask&FPEM_Read)?mPollSocket:-1, (mask&FPEM_Write)?mPollSocket:-1, 
+     (mask&FPEM_Read)?(int)mPollSocket:-1, (mask&FPEM_Write)?(int)mPollSocket:-1, 
      nowSecs);
 }
 
@@ -76,19 +81,22 @@ AresDnsPollItem::processPollEvent(FdPollEventMask mask) {
 void 
 AresDnsPollItem::socket_poll_cb(void *cb_data, 
   	ares_channel channel, int server_idx,
-  	int fd, ares_poll_action_t act) {
+  	int fd, ares_poll_action_t act) 
+{
    AresDns *ares = static_cast<AresDns*>(cb_data);
    // assert( ares );
    FdPollGrp *grp = ares->mPollGrp;
    assert( grp );
    FdPollItemIf *olditem = grp->getItemByFd(fd);
-   if ( olditem ) {
+   if ( olditem ) 
+   {
       AresDnsPollItem *oldaresitem = dynamic_cast<AresDnsPollItem*>(olditem);
       assert( oldaresitem->mChannel==channel );
       assert( oldaresitem->mServerIdx==server_idx );
    }
    AresDnsPollItem *newitem;
-   switch ( act ) {
+   switch ( act ) 
+   {
    case ARES_POLLACTION_OPEN:
       assert( olditem==NULL );
       assert( fd!=-1 );
@@ -126,7 +134,8 @@ AresDnsPollItem::socket_poll_cb(void *cb_data,
 volatile bool AresDns::mHostFileLookupOnlyMode = false;
 
 void
-AresDns::setPollGrp(FdPollGrp *grp) {
+AresDns::setPollGrp(FdPollGrp *grp) 
+{
    assert( mPollGrp == NULL );
    mPollGrp = grp;
 }

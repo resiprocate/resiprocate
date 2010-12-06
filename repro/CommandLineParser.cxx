@@ -278,7 +278,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
 
    if ( serverText && serverText[0] )
        mServerText = resip::Data(serverText);
-   mUsePoll = usePoll;
+   mUsePoll = usePoll?true:false;
 
 #ifdef HAVE_POPT_H
    poptFreeContext(context);
