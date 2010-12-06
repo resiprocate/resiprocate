@@ -267,19 +267,23 @@ Connection::processPollEvent(FdPollEventMask mask) {
     * for error events unless no writable event. (e.g., writable
     * masked error. Why?
     */
-   if ( mask & FPEM_Error ) {
+   if ( mask & FPEM_Error ) 
+   {
       Socket fd = getSocket();
       int errNum = getSocketError(fd);
       InfoLog(<< "Exception on socket " << fd << " code: " << errNum << "; closing connection");
       delete this;
       return;
    }
-   if ( mask & FPEM_Write ) {
+   if ( mask & FPEM_Write ) 
+   {
       performWrite();
    }
-   if ( mask & FPEM_Read ) {
+   if ( mask & FPEM_Read ) 
+   {
       int bytesRead = read();
-      if ( bytesRead < 0 ) {
+      if ( bytesRead < 0 ) 
+      {
          delete this;
 	 return;
       }

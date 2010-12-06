@@ -107,7 +107,8 @@ TcpBaseTransport::init()
 void
 TcpBaseTransport::setPollGrp(FdPollGrp *grp) {
    assert( mPollItem == NULL );
-   if ( mFd!=INVALID_SOCKET ) {
+   if ( mFd!=INVALID_SOCKET ) 
+   {
       mPollItem = new TcpBasePollItem(grp, mFd, *this);
    }
    mConnectionManager.setPollGrp(grp);
@@ -291,7 +292,8 @@ TcpBaseTransport::process(FdSet& fdSet)
 
 void
 TcpBaseTransport::processPollEvent(FdPollEventMask mask) {
-   if ( mask & FPEM_Read ) {
+   if ( mask & FPEM_Read ) 
+   {
       while ( processListen() > 0 )
          ;
    }
