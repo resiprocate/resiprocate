@@ -56,7 +56,7 @@ class FakeTransport :  public Transport
 class TestConnection : public ConnectionBase
 {
    public:
-      TestConnection(Transport* transport,const Tuple& who, const Data& bytes) : 
+      TestConnection(Transport* transport,const Tuple& who, const Data& bytes) :
          ConnectionBase(transport,who),
          mTestStream(bytes),
          mStreamPos(0)

@@ -1423,7 +1423,7 @@ DialogUsageManager::process(resip::Lockable* mutex)
 {
    if (mFifo.messageAvailable())
    {
-      resip::PtrLock lock(mutex); 
+      resip::PtrLock lock(mutex);
       internalProcess(std::auto_ptr<Message>(mFifo.getNext()));
    }
    return mFifo.messageAvailable();
@@ -1444,7 +1444,7 @@ DialogUsageManager::process(int timeoutMs, resip::Lockable* mutex)
    }
    if (message.get())
    {
-      resip::PtrLock lock(mutex); 
+      resip::PtrLock lock(mutex);
       internalProcess(message);
    }
    return mFifo.messageAvailable();

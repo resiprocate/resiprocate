@@ -29,7 +29,7 @@ epoll support.
 This version uses epoll() internally, but doesn't change any external
 interfaces. E.g., StackThread doesn't change at all. This is possible
 for two reasons:
-  * epoll maybe used hierarchically/recursively. 
+  * epoll maybe used hierarchically/recursively.
   * select works fine for handful of descriptors that are small
 
 In particular, it is possible to select() on the epoll

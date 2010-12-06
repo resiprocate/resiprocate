@@ -125,7 +125,7 @@ TransportSelector::shutdown()
    }
 }
 
-template<class T> void 
+template<class T> void
 deleteMap(T& m)
 {
    for (typename T::iterator it = m.begin(); it != m.end(); it++)

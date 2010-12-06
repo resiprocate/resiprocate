@@ -102,7 +102,7 @@ SipStack::~SipStack()
 #endif
    delete mCompression;
    delete mDnsStub;
-   if (mPollGrp && mUseInternalPoll) 
+   if (mPollGrp && mUseInternalPoll)
    {
       // delete pollGrp after deleting DNS
       delete mPollGrp;
@@ -588,21 +588,21 @@ SipStack::process(FdSet& fdset)
    {
       mStatsManager.process();
    }
-   if (mPollGrp) 
+   if (mPollGrp)
    {
       mPollGrp->processFdSet(fdset);
       mTransactionController.processTimers();
-   } 
-   else 
+   }
+   else
    {
       mTransactionController.process(fdset);
    }
    mTuSelector.process();
-   if (mPollGrp) 
+   if (mPollGrp)
    {
       mDnsStub->processTimers();
-   } 
-   else 
+   }
+   else
    {
       mDnsStub->process(fdset);
    }
@@ -626,11 +626,11 @@ SipStack::getTimeTillNextProcessMS()
 void 
 SipStack::buildFdSet(FdSet& fdset)
 {
-   if (mPollGrp) 
+   if (mPollGrp)
    {
       mPollGrp->buildFdSet(fdset);
-   } 
-   else 
+   }
+   else
    {
       mTransactionController.buildFdSet(fdset);
       mDnsStub->buildFdSet(fdset);
@@ -752,7 +752,7 @@ SipStack::isFlowAlive(const resip::Tuple& flow) const
 bool SipStack::mDefaultUseInternalPoll = false;
 
 void
-SipStack::setDefaultUseInternalPoll(bool useInternal) 
+SipStack::setDefaultUseInternalPoll(bool useInternal)
 {
    mDefaultUseInternalPoll = useInternal;
 }

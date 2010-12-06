@@ -43,7 +43,7 @@ static int getErrno() { return WSAGetLastError(); }
 static int getErrno() { return errno; }
 #endif
 
-static void write_tcp_data_core(ares_channel channel, int server_idx, 
+static void write_tcp_data_core(ares_channel channel, int server_idx,
 			   time_t now);
 static void write_tcp_data(ares_channel channel,
 			   fd_set *write_fds, time_t now);
@@ -87,8 +87,8 @@ void ares_process(ares_channel channel, fd_set *read_fds, fd_set *write_fds)
 /* Something happened on wire or there was a timeout. This interface
  * is called for poll()-like systems.
  */
-void ares_process_poll(ares_channel channel, int server_idx, 
-  	int rdFd, int wrFd, time_t now) {
+void ares_process_poll(ares_channel channel, int server_idx,
+	int rdFd, int wrFd, time_t now) {
   if ( server_idx!= -1 ) {
       assert( rdFd!=-1 || wrFd!=-1 );	// at least one active
       if ( wrFd!=-1 && channel->servers[server_idx].tcp_socket==wrFd ) {
@@ -108,8 +108,8 @@ void ares_process_poll(ares_channel channel, int server_idx,
 /* If any TCP sockets select true for writing, write out queued data
  * we have for them.
  */
-static void write_tcp_data_core(ares_channel channel, int server_idx, 
-  	time_t now)
+static void write_tcp_data_core(ares_channel channel, int server_idx,
+	time_t now)
 {
   struct server_state *server;
   struct send_request *sendreq;
@@ -337,7 +337,7 @@ static void read_tcp_data(ares_channel channel, int server_idx, fd_set *read_fds
 }
 
 /* If any UDP sockets select true for reading, process them. */
-static void read_udp_packets(ares_channel channel, int server_idx, 
+static void read_udp_packets(ares_channel channel, int server_idx,
 			fd_set *read_fds, time_t now)
 {
   struct server_state *server;
@@ -366,7 +366,7 @@ static void read_udp_packets(ares_channel channel, int server_idx,
 		//err = errno;
 		switch (getErrno())
 		{
-		    case WSAEWOULDBLOCK: 
+		    case WSAEWOULDBLOCK:
 			    if ( read_fds ) {
 			       // read_fds is only null when using epoll
 			       // which shouldn't happen under windows
@@ -376,7 +376,7 @@ static void read_udp_packets(ares_channel channel, int server_idx,
 			    continue;
 		    case WSAECONNABORTED:
 			    break;
-		    case WSAECONNRESET: // got an ICMP error on a previous send 
+		    case WSAECONNRESET: // got an ICMP error on a previous send
 			    break;
 		}
 #endif
@@ -599,10 +599,10 @@ void ares__send_query(ares_channel channel, struct query *query, time_t now)
 	      next_server(channel, query, now);
 	      return;
 	    }
-  	  if ( channel->poll_cb_func ) {
-  	      // printf("ares_send_q: pollopen tcp fd=%d\n", server->tcp_socket);
-    	      (*(channel->poll_cb_func))( channel->poll_cb_data, channel, 
-	      	query->server, server->tcp_socket, ARES_POLLACTION_OPEN);
+	  if ( channel->poll_cb_func ) {
+	      // printf("ares_send_q: pollopen tcp fd=%d\n", server->tcp_socket);
+	      (*(channel->poll_cb_func))( channel->poll_cb_data, channel,
+		query->server, server->tcp_socket, ARES_POLLACTION_OPEN);
 	  }
 	}
       sendreq = malloc(sizeof(struct send_request));
@@ -619,7 +619,7 @@ void ares__send_query(ares_channel channel, struct query *query, time_t now)
       }
       server->qtail = sendreq;
       query->timeout = 0;
-      if ( tryWrite ) 
+      if ( tryWrite )
         {
 #if 0
 	  time_t now;
@@ -628,9 +628,9 @@ void ares__send_query(ares_channel channel, struct query *query, time_t now)
 	  /* XXX: the write code doesn't seem to handle EAGAIN properly! */
 #else
 	  if ( channel->poll_cb_func )
-              (*(channel->poll_cb_func))( channel->poll_cb_data, 
+              (*(channel->poll_cb_func))( channel->poll_cb_data,
 	        channel, query->server,
-	  	server->tcp_socket, ARES_POLLACTION_WRITEON);
+		server->tcp_socket, ARES_POLLACTION_WRITEON);
 #endif
         }
     }
@@ -645,9 +645,9 @@ void ares__send_query(ares_channel channel, struct query *query, time_t now)
 	      next_server(channel, query, now);
 	      return;
 	    }
-  	  if ( channel->poll_cb_func ) {
-  	      // printf("ares_send_q: pollopen udp fd=%d\n", server->udp_socket);
-    	      (*(channel->poll_cb_func))( channel->poll_cb_data, channel, 
+	  if ( channel->poll_cb_func ) {
+	      // printf("ares_send_q: pollopen udp fd=%d\n", server->udp_socket);
+	      (*(channel->poll_cb_func))( channel->poll_cb_data, channel,
 	      	query->server, server->udp_socket, ARES_POLLACTION_OPEN);
 	  }
 	}

@@ -223,7 +223,7 @@ Connection::read()
    else
 #endif
    {
-     preparseNewBytes(bytesRead); //.dcm. may delete this   
+     preparseNewBytes(bytesRead); //.dcm. may delete this
    }
    return bytesRead;
 }
@@ -281,7 +281,7 @@ Connection::processPollEvent(FdPollEventMask mask) {
       int bytesRead = read();
       if ( bytesRead < 0 ) {
          delete this;
-   	 return;
+	 return;
       }
    }
 }

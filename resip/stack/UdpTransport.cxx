@@ -128,16 +128,16 @@ UdpTransport::processPollEvent(FdPollEventMask mask) {
    to zero so that process() is called immediately. We don't want this;
    instead, we depend upon the writable-socket callback (fdset or poll).
 **/
-bool 
+bool
 UdpTransport::hasDataToSend() const {
    return false;
 }
 
-void 
+void
 UdpTransport::buildFdSet( FdSet& fdset )
 {
    fdset.setRead(mFd);
-    
+
    if (mTxFifo.messageAvailable())
    {
      fdset.setWrite(mFd);
@@ -160,7 +160,7 @@ UdpTransport::process(FdSet& fdset)
    }
 }
 
-void 
+void
 UdpTransport::processTx() {
    // if (mTxFifo.messageAvailable() && fdset.readyToWrite(mFd))
    std::auto_ptr<SendData> sendData = std::auto_ptr<SendData>(mTxFifo.getNext());
@@ -169,7 +169,7 @@ UdpTransport::processTx() {
 
    assert( &(*sendData) );
    assert( sendData->destination.getPort() != 0 );
-   
+
    const sockaddr& addr = sendData->destination.getSockaddr();
    int expected;
    int count;
@@ -186,12 +186,12 @@ UdpTransport::processTx() {
 	  isReliable());
 
        DebugLog (<< "Compressed message from "
-		 << sendData->data.size() << " bytes to " 
+		 << sendData->data.size() << " bytes to "
 		 << sm->getDatagramLength() << " bytes");
 
        expected = sm->getDatagramLength();
 
-       count = sendto(mFd, 
+       count = sendto(mFd,
 		      sm->getDatagramMessage(),
 		      sm->getDatagramLength(),
 		      0, // flags
@@ -202,12 +202,12 @@ UdpTransport::processTx() {
 #endif
    {
        expected = (int)sendData->data.size();
-       count = sendto(mFd, 
-		      sendData->data.data(), (int)sendData->data.size(),  
+       count = sendto(mFd,
+		      sendData->data.data(), (int)sendData->data.size(),
 		      0, // flags
 		      &addr, (int)sendData->destination.length());
    }
-   
+
    if ( count == SOCKET_ERROR )
    {
       int e = getErrno();
@@ -225,7 +225,7 @@ UdpTransport::processTx() {
    }
 }
    
-void 
+void
 UdpTransport::processRx() {
    // !jf! this may have to change - when we read a message that is too big
    //should this buffer be allocated on the stack and then copied out, as it
@@ -234,9 +234,9 @@ UdpTransport::processRx() {
    // something about MSG_PEEK|MSG_TRUNC in Stevens..
    // .dlb. RFC3261 18.1.1 MUST accept 65K datagrams. would have to attempt to
    // adjust the UDP buffer as well...
-   char* buffer = MsgHeaderScanner::allocateBuffer(MaxBufferSize);      
+   char* buffer = MsgHeaderScanner::allocateBuffer(MaxBufferSize);
 
-   // !jf! how do we tell if it discarded bytes 
+   // !jf! how do we tell if it discarded bytes
    // !ah! we use the len-1 trick :-(
    Tuple tuple(mTuple);
    socklen_t slen = tuple.length();
@@ -244,7 +244,7 @@ UdpTransport::processRx() {
 		       buffer,
 		       MaxBufferSize,
 		       0 /*flags */,
-		       &tuple.getMutableSockaddr(), 
+		       &tuple.getMutableSockaddr(),
 		       &slen);
    if ( len == SOCKET_ERROR )
    {
@@ -257,7 +257,7 @@ UdpTransport::processRx() {
 
    if (len == 0 || len == SOCKET_ERROR)
    {
-      delete[] buffer; 
+      delete[] buffer;
       buffer=0;
       return;
    }
@@ -285,18 +285,18 @@ UdpTransport::processRx() {
       resip::Lock lock(myMutex);
       StunMessage resp;
       memset(&resp, 0, sizeof(StunMessage));
-   
+
       if (stunParseMessage(buffer, len, resp, false))
       {
 	 in_addr sin_addr;
 	 // Use XorMappedAddress if present - if not use MappedAddress
 	 if(resp.hasXorMappedAddress)
 	 {
-	    UInt16 id16 = resp.msgHdr.id.octet[0]<<8 
+	    UInt16 id16 = resp.msgHdr.id.octet[0]<<8
 			  | resp.msgHdr.id.octet[1];
-	    UInt32 id32 = resp.msgHdr.id.octet[0]<<24 
-			  | resp.msgHdr.id.octet[1]<<16 
-			  | resp.msgHdr.id.octet[2]<<8 
+	    UInt32 id32 = resp.msgHdr.id.octet[0]<<24
+			  | resp.msgHdr.id.octet[1]<<16
+			  | resp.msgHdr.id.octet[2]<<8
 			  | resp.msgHdr.id.octet[3];
 	    resp.xorMappedAddress.ipv4.port = resp.xorMappedAddress.ipv4.port^id16;
 	    resp.xorMappedAddress.ipv4.addr = resp.xorMappedAddress.ipv4.addr^id32;
@@ -330,26 +330,26 @@ UdpTransport::processRx() {
    {
       bool changePort = false;
       bool changeIp = false;
-      
+
       StunAddress4 myAddr;
       const sockaddr_in& bi = (const sockaddr_in&)boundInterface();
       myAddr.addr = ntohl(bi.sin_addr.s_addr);
       myAddr.port = ntohs(bi.sin_port);
-      
+
       StunAddress4 from; // packet source
       const sockaddr_in& fi = (const sockaddr_in&)tuple.getSockaddr();
       from.addr = ntohl(fi.sin_addr.s_addr);
       from.port = ntohs(fi.sin_port);
-      
+
       StunMessage resp;
       StunAddress4 dest;
-      StunAtrString hmacPassword;  
+      StunAtrString hmacPassword;
       hmacPassword.sizeValue = 0;
-      
+
       StunAddress4 secondary;
       secondary.port = 0;
       secondary.addr = 0;
-      
+
       bool ok = stunServerProcessMsg( buffer, len, // input buffer
 				      from,  // packet source
 				      secondary, // not used
@@ -361,14 +361,14 @@ UdpTransport::processRx() {
 				      &changePort, // not used
 				      &changeIp, // not used
 				      false ); // logging
-      
+
       if (ok)
       {
 	 DebugLog(<<"Got UDP STUN keepalive. Sending response...");
 	 char* response = new char[STUN_MAX_MESSAGE_SIZE];
-	 int rlen = stunEncodeMessage( resp, 
-				       response, 
-				       STUN_MAX_MESSAGE_SIZE, 
+	 int rlen = stunEncodeMessage( resp,
+				       response,
+				       STUN_MAX_MESSAGE_SIZE,
 				       hmacPassword,
 				       false );
 	 SendData* stunResponse = new SendData(tuple, response, rlen);
@@ -394,13 +394,13 @@ UdpTransport::processRx() {
        return;
      }
 #ifdef USE_SIGCOMP
-     char* newBuffer = MsgHeaderScanner::allocateBuffer(MaxBufferSize); 
+     char* newBuffer = MsgHeaderScanner::allocateBuffer(MaxBufferSize);
      size_t uncompressedLength =
-       mSigcompStack->uncompressMessage(buffer, len, 
+       mSigcompStack->uncompressMessage(buffer, len,
 					newBuffer, MaxBufferSize, sc);
 
     DebugLog (<< "Uncompressed message from "
-	      << len << " bytes to " 
+	      << len << " bytes to "
 	      << uncompressedLength << " bytes");
 
 
@@ -408,7 +408,7 @@ UdpTransport::processRx() {
 
      if (nack)
      {
-       mTxFifo.add(new SendData(tuple, 
+       mTxFifo.add(new SendData(tuple,
 				Data(nack->getDatagramMessage(),
 				     nack->getDatagramLength()),
 				Data::Empty,
@@ -441,7 +441,7 @@ UdpTransport::processRx() {
    // Save all the info where this message came from
    tuple.transport = this;
    tuple.mFlowKey=mTuple.mFlowKey;
-   message->setSource(tuple);   
+   message->setSource(tuple);
    //DebugLog (<< "Received from: " << tuple);
 
    // Tell the SipMessage about this datagram buffer.
@@ -463,8 +463,8 @@ UdpTransport::processRx() {
 	 (*mExternalUnknownDatagramHandler)(this,tuple,datagram);
       }
 
-      delete message; 
-      message=0; 
+      delete message;
+      message=0;
       return;
    }
 
@@ -593,7 +593,7 @@ UdpTransport::setExternalUnknownDatagramHandler(ExternalUnknownDatagramHandler *
 }
 
 void
-UdpTransport::setRcvBufLen(int buflen) 
+UdpTransport::setRcvBufLen(int buflen)
 {
    setSocketRcvBufLen(mFd, buflen);
 }

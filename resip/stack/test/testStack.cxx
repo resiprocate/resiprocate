@@ -35,7 +35,7 @@ class SipStackAndThread {
    public:
       SipStackAndThread(const char *tType);
          ~SipStackAndThread() {
-  	 destroy();
+	 destroy();
       }
 
       SipStack&		getStack() const { return *mStack; }
@@ -50,7 +50,7 @@ class SipStackAndThread {
 
       // dis-allowed by not-implemented
       SipStackAndThread& operator=(SipStackAndThread&);
-     
+
    protected:
       void		destroy();
 
@@ -59,8 +59,8 @@ class SipStackAndThread {
       SelectInterruptor	*mSelIntr;
 };
 
-   
-SipStackAndThread::SipStackAndThread(const char *tType) 
+
+SipStackAndThread::SipStackAndThread(const char *tType)
   : mStack(0), mThread(0), mSelIntr(0)
 {
    bool doStd = false;
@@ -160,7 +160,7 @@ main(int argc, char* argv[])
    SipStackAndThread sender(threadType);
    bool noStackThread = strcmp(threadType,"none")==0;
 
-   // estimate number of sockets we need: 
+   // estimate number of sockets we need:
    // 2x for sender and receiver
    // 1 for UDP + 2 for TCP (listen + connection)
    // ~30 for misc (DNS)
@@ -180,7 +180,7 @@ main(int argc, char* argv[])
    int registrarPort = senderPort + numPorts;
 
    int idx;
-   for (idx=0; idx < numPorts; idx++) 
+   for (idx=0; idx < numPorts; idx++)
    {
       sender->addTransport(UDP, senderPort+idx, version, StunDisabled, senderIfAddr);
       sender->addTransport(TCP, senderPort+idx, version, StunDisabled, senderIfAddr);
@@ -242,10 +242,10 @@ main(int argc, char* argv[])
       }
 
       if ( noStackThread ) {
-         FdSet fdset; 
+         FdSet fdset;
          receiver->buildFdSet(fdset);
          sender->buildFdSet(fdset);
-         fdset.selectMilliSeconds(seltime); 
+         fdset.selectMilliSeconds(seltime);
          receiver->process(fdset);
          sender->process(fdset);
       }
@@ -263,9 +263,9 @@ main(int argc, char* argv[])
             {
                DeprecatedDialog dlg(contact);
                dlg.makeResponse(*request, response, 180);
-               receiver->send(response);               
+               receiver->send(response);
                dlg.makeResponse(*request, response, 200);
-               receiver->send(response);               
+               receiver->send(response);
                break;
             }
 
