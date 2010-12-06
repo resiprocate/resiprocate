@@ -3,9 +3,7 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#include <sys/types.h>
-#include <sys/socket.h>
-
+#include "rutil/Compat.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/Logger.hxx"
 
@@ -130,7 +128,8 @@ resip::closeSocket( Socket fd )
 
 // code moved from resip/stack/ConnectionManager.cxx
 // appears to work on both linux and windows
-int resip::getSocketError(Socket fd) {
+int resip::getSocketError(Socket fd) 
+{
    int errNum = 0;
    int errNumSize = sizeof(errNum);
    getsockopt(fd, SOL_SOCKET, SO_ERROR, 
@@ -143,34 +142,45 @@ int resip::getSocketError(Socket fd) {
     Returns negative on error, or number of (positive) allowed fds
 **/
 int
-resip::increaseLimitFds(unsigned int targetFds) {
+resip::increaseLimitFds(unsigned int targetFds) 
+{
 #if defined(WIN32)
     // kw: i don't know if any equiv on windows
     return targetFds;
 #else
     struct rlimit lim;
 
-    if ( getrlimit(RLIMIT_NOFILE, &lim)<0 ) {
-	CritLog(<<"getrlimit(NOFILE) failed: " << strerror(errno));
-	return -1;
+    if (getrlimit(RLIMIT_NOFILE, &lim) < 0) 
+	{
+	   CritLog(<<"getrlimit(NOFILE) failed: " << strerror(errno));
+	   return -1;
     }
-    if ( lim.rlim_cur==RLIM_INFINITY || targetFds < lim.rlim_cur )
+    if (lim.rlim_cur==RLIM_INFINITY || targetFds < lim.rlim_cur)
+	{
         return targetFds;
-    int euid = geteuid();
-    if ( lim.rlim_max==RLIM_INFINITY || targetFds < lim.rlim_max ) {
-    	lim.rlim_cur=targetFds;
-    } else {
-	if ( euid!=0 ) {
-	    CritLog(<<"Attempting to increase number of fds when not root. This probably wont work");
 	}
+
+    int euid = geteuid();
+    if (lim.rlim_max==RLIM_INFINITY || targetFds < lim.rlim_max) 
+	{
     	lim.rlim_cur=targetFds;
-    	lim.rlim_max=targetFds;
+    } 
+	else 
+	{
+	   if (euid!=0) 
+	   {
+	      CritLog(<<"Attempting to increase number of fds when not root. This probably wont work");
+	   }
+       lim.rlim_cur=targetFds;
+       lim.rlim_max=targetFds;
     }
-    if ( setrlimit(RLIMIT_NOFILE, &lim)<0 ) {
-	CritLog(<<"setrlimit(NOFILE)=(c="<<lim.rlim_cur<<",m="<<lim.rlim_max
-	  <<",uid="<<euid<<") failed: " << strerror(errno));
-	/* There is intermediate: could raise cur to max */
-	return -1;
+
+    if (setrlimit(RLIMIT_NOFILE, &lim) < 0) 
+	{
+	   CritLog(<<"setrlimit(NOFILE)=(c="<<lim.rlim_cur<<",m="<<lim.rlim_max
+	      <<",uid="<<euid<<") failed: " << strerror(errno));
+	   /* There is intermediate: could raise cur to max */
+	   return -1;
     }
     return targetFds;
 #endif
@@ -185,19 +195,31 @@ resip::increaseLimitFds(unsigned int targetFds) {
     If {buflen} is negative, we skip the set and just read
     Return the get size or -1 if the set didn't work
 **/
-static int trySetRcvBuf(Socket fd, int buflen) {
-   if ( buflen > 0 ) {
+static int trySetRcvBuf(Socket fd, int buflen) 
+{
+   if (buflen > 0) 
+   {
       int wbuflen = buflen;
-      if ( setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &wbuflen, sizeof(wbuflen))==-1 )
-	 return -1;
+#if !defined(WIN32)
+      if (::setsockopt (fd, SOL_SOCKET, SO_RCVBUF, &wbuflen, sizeof(wbuflen)) == -1)
+#else
+      if (::setsockopt (fd, SOL_SOCKET, SO_RCVBUF, (const char*)&wbuflen, sizeof(wbuflen)) == -1)
+#endif
+	  {
+	     return -1;
+	  }
    }
    int rbuflen = 0;
    unsigned optlen = sizeof(rbuflen);
-   if ( getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &rbuflen, &optlen)==-1 )
+   if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&rbuflen, (socklen_t *)&optlen) == -1)
+   {
       return -1;
+   }
    assert(optlen == sizeof(rbuflen));
-   if ( rbuflen<buflen )
+   if (rbuflen < buflen)
+   {
       return -1;
+   }
    return rbuflen;
 }
 
@@ -212,32 +234,41 @@ int resip::setSocketRcvBufLen(Socket fd, int buflen)
    int lastgoodset = 0, lastgoodget=0;
 
    /* go down by factors of 2 */
-   for (; ; trylen /= 2) {
-      if ( trylen < 1024 ) {
-	 ErrLog(<<"setsockopt(SO_RCVBUF) failed");
-	 return -1;
+   for (; ; trylen /= 2) 
+   {
+      if (trylen < 1024) 
+	  {
+	     ErrLog(<<"setsockopt(SO_RCVBUF) failed");
+	     return -1;
       }
-      if ( (sts=trySetRcvBuf(fd, trylen)) >= 0 ) {
-	lastgoodset = trylen;
-	lastgoodget = sts;
-        break;
+      if ((sts=trySetRcvBuf(fd, trylen)) >= 0) 
+	  {
+         lastgoodset = trylen;
+         lastgoodget = sts;
+         break;
       }
    }
 
    /* go up by 10% steps */
    unsigned step = trylen/10;
-   for ( ; trylen<goal; trylen+=step) {
-      if ( (sts=trySetRcvBuf(fd,trylen))< 0 )
+   for ( ; trylen<goal; trylen+=step) 
+   {
+      if ((sts=trySetRcvBuf(fd,trylen)) < 0)
+	  {
          break;
+	  }
       lastgoodset = trylen;
       lastgoodget = sts;
    }
-   if ( lastgoodset < goal ) {
+   if (lastgoodset < goal) 
+   {
       ErrLog(<<"setsockopt(SO_RCVBUF) goal "<<goal<<" not met (set="
-      <<lastgoodset<<",get="<<lastgoodget<<")");
-   } else {
+         <<lastgoodset<<",get="<<lastgoodget<<")");
+   } 
+   else 
+   {
       InfoLog(<<"setsockopt(SO_RCVBUF) goal "<<goal<<" met (set="
-      <<lastgoodset<<",get="<<lastgoodget<<")");
+         <<lastgoodset<<",get="<<lastgoodget<<")");
    }
    return lastgoodset;
 }
