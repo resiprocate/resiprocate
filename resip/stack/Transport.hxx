@@ -19,8 +19,6 @@ class FdPollGrp;
 
 #define RESIP_TRANSPORT_FLAG_NOBIND (1<<0)
 
-#define RESIP_TRANSPORT_FLAG_NOBIND (1<<0)
-
 class Transport
 {
    public:
