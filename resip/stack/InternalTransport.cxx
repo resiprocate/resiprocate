@@ -36,7 +36,8 @@ InternalTransport::InternalTransport(Fifo<TransactionMessage>& rxFifo,
 
 InternalTransport::~InternalTransport()
 {
-   if ( mPollItem ) {
+   if ( mPollItem ) 
+   {
       delete mPollItem;
       mPollItem = NULL;
    }

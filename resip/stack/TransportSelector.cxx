@@ -278,7 +278,8 @@ TransportSelector::buildFdSet(FdSet& fdset)
 void
 TransportSelector::process(FdSet& fdset)
 {
-   if ( mPollGrp ) {
+   if ( mPollGrp ) 
+   {
       processTransmitQueue();
       mPollGrp->processFdSet(fdset);
       return;
@@ -1262,7 +1263,8 @@ TransportSelector::findTransportBySource(Tuple& search) const
 {
    DebugLog(<< "findTransportBySource(" << search << ")");
 
-   if (search.isLoopback()) {
+   if (search.isLoopback())
+   {
       // 0. search on loopback interface (with or without port)
       Transport *trans;
       if ( (trans=findLoopbackTransportBySource(

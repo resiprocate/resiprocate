@@ -141,9 +141,12 @@ ConnectionManager::buildFdSet(FdSet& fdset)
 void
 ConnectionManager::addToWritable(Connection* conn)
 {
-   if ( mPollGrp ) {
+   if ( mPollGrp ) 
+   {
       mPollGrp->modPollItem(conn, FPEM_Read|FPEM_Write);
-   } else {
+   } 
+   else 
+   {
       mWriteHead->push_back(conn);
    }
 }
@@ -151,9 +154,12 @@ ConnectionManager::addToWritable(Connection* conn)
 void
 ConnectionManager::removeFromWritable(Connection* conn)
 {
-   if ( mPollGrp ) {
+   if ( mPollGrp ) 
+   {
       mPollGrp->modPollItem(conn, FPEM_Read);
-   } else {
+   }
+   else
+   {
       assert(!mWriteHead->empty());
       conn->ConnectionWriteList::remove();
    }
@@ -170,9 +176,12 @@ ConnectionManager::addConnection(Connection* connection)
    mAddrMap[connection->who()] = connection;
    mIdMap[connection->who().mFlowKey] = connection;
 
-   if ( mPollGrp ) {
+   if ( mPollGrp ) 
+   {
       mPollGrp->addPollItem(connection, FPEM_Read);
-   } else {
+   }
+   else 
+   {
       mReadHead->push_back(connection);
    }
    mLRUHead->push_back(connection);
@@ -192,9 +201,12 @@ ConnectionManager::removeConnection(Connection* connection)
    mIdMap.erase(connection->mWho.mFlowKey);
    mAddrMap.erase(connection->mWho);
 
-   if ( mPollGrp ) {
+   if ( mPollGrp ) 
+   {
       mPollGrp->delPollItem(connection);
-   } else {
+   }
+   else
+   {
       assert(!mReadHead->empty());
       connection->ConnectionReadList::remove();
       connection->ConnectionWriteList::remove();

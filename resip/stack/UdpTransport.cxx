@@ -70,7 +70,8 @@ UdpTransport::~UdpTransport()
 #ifdef USE_SIGCOMP
    delete mSigcompStack;
 #endif
-   if ( mPollGrp ) {
+   if ( mPollGrp ) 
+   {
       mPollGrp->delPollItem(this);
    }
 }
@@ -91,11 +92,13 @@ UdpTransport::getPollSocket() const {
 
 void
 UdpTransport::checkTransmitQueue() {
-   if ( mPollGrp && !mInWritable && mTxFifo.messageAvailable() ) {
+   if ( mPollGrp && !mInWritable && mTxFifo.messageAvailable() ) 
+   {
       mPollGrp->modPollItem(this, FPEM_Read|FPEM_Write);
       mInWritable = true;
    }
-   if ( mPollGrp && mInWritable && !mTxFifo.messageAvailable() ) {
+   if ( mPollGrp && mInWritable && !mTxFifo.messageAvailable() ) 
+   {
       mPollGrp->modPollItem(this, FPEM_Read);
       mInWritable = false;
     }
@@ -109,15 +112,18 @@ UdpTransport::processTransmitQueue() {
 
 void
 UdpTransport::processPollEvent(FdPollEventMask mask) {
-   if ( mask & FPEM_Write ) {
+   if ( mask & FPEM_Write ) 
+   {
       // why only write one? Why not everything we can?
       if (mTxFifo.messageAvailable())
          processTx();
    }
-   if ( mask & FPEM_Read ) {
+   if ( mask & FPEM_Read ) 
+   {
       processRx();
    }
-   if ( mask & FPEM_Error ) {
+   if ( mask & FPEM_Error ) 
+   {
       assert(0);
    }
    checkTransmitQueue(); // mainly to turn off writable-cb if not needed anymore
@@ -151,11 +157,13 @@ UdpTransport::process(FdSet& fdset)
    // receive datagrams from fd
    // preparse and stuff into RxFifo
 
-   if (mTxFifo.messageAvailable() && fdset.readyToWrite(mFd)) {
+   if (mTxFifo.messageAvailable() && fdset.readyToWrite(mFd)) 
+   {
       processTx();
    }
 
-   if ( fdset.readyToRead(mFd) ) {
+   if ( fdset.readyToRead(mFd) ) 
+   {
       processRx();
    }
 }

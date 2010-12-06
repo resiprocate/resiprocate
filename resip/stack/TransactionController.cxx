@@ -94,7 +94,8 @@ TransactionController::processEverything(FdSet* fdset)
    }
    else
    {
-      if ( fdset ) {
+      if ( fdset ) 
+      {
          mTransportSelector.process(*fdset);
       } else {
          mTransportSelector.processTransmitQueue();
