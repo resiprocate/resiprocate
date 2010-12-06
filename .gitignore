@@ -10,6 +10,8 @@ bin.opt.*
 obj.opt.*
 bin.gopt.*
 obj.gopt.*
+obj.prof.*
+bin.prof.*
 
 repro/reproInfo.hxx
 repro/repro
