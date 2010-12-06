@@ -1262,12 +1262,14 @@ TransportSelector::findTransportBySource(Tuple& search) const
 {
    DebugLog(<< "findTransportBySource(" << search << ")");
 
-   Transport *trans;
-   // 0. search on loopback interface (with or without port)
-   if ( (trans=findLoopbackTransportBySource(
-     /*ignorePort*/(search.getPort()==0), search)) != NULL )
-   {
-      return trans;
+   if (search.isLoopback()) {
+      // 0. search on loopback interface (with or without port)
+      Transport *trans;
+      if ( (trans=findLoopbackTransportBySource(
+	/*ignorePort*/(search.getPort()==0), search)) != NULL )
+      {
+	 return trans;
+      }
    }
 
    if (search.getPort() != 0)
