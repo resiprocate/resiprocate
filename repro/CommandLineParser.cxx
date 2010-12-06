@@ -148,18 +148,19 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"xmlrpcport",        0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &xmlRpcPort,     0, "port on which to listen for and send XML RPC messaging (used for registration sync) - 0 to disable", 0},
       {"regsyncpeer",       0,   POPT_ARG_STRING,                            &regSyncPeerAddress,0,"hostname/ip address of another instance of repro to syncronize registrations with (note xmlrpcport must also be specified)", 0},
       {"server-text",       0,   POPT_ARG_STRING,                            &serverText,0,"Value of server header for local UAS responses", 0},
-#if defined(RESIP_SIPSTACK_HAVE_FDPOLL)
       {"poll",              0,   POPT_ARG_NONE,                              &usePoll,     0, "use (e)poll", 0},
-#endif
       {"version",         'V',   POPT_ARG_NONE,                              &showVersion,     0, "show the version number and exit", 0},
       POPT_AUTOHELP 
       { NULL, 0, 0, NULL, 0 }
    };
    
    poptContext context = poptGetContext(NULL, argc, const_cast<const char**>(argv), table, 0);
-   if (poptGetNextOpt(context) < -1)
+   int rc;
+   if ((rc=poptGetNextOpt(context)) < -1)
    {
-      cerr << "Bad command line argument entered" << endl;
+      cerr << "Bad command line argument entered: "
+        << poptBadOption(context, 0)
+	<< ": " << poptStrerror(rc) << endl;
       poptPrintHelp(context, stderr, 0);
       exit(-1);
    }
