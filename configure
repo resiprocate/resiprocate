@@ -1369,7 +1369,9 @@ sub findDb4
     '/opt/local/include/db4',
     '/include/db4',
     '/usr/local/include/db4',
+    '/usr/include',
   );
+  # note: ubuntu puts db4 headers directly into in /usr/include
   my ($candidate);
 
   foreach $candidate (@candidates)
