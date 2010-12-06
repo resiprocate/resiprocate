@@ -14,6 +14,7 @@ class ApplicationMessage;
 class StatisticsManager;
 class SipStack;
 class Compression;
+class FdPollGrp;
 
 class TransactionController
 {
@@ -26,11 +27,18 @@ class TransactionController
       ~TransactionController();
 
       void process(FdSet& fdset);
+      void processTimers();
       unsigned int getTimeTillNextProcessMS();
       void buildFdSet(FdSet& fdset);
+
+      // set poll group to use (instead of buildFdSet/process)
+      void setPollGrp(FdPollGrp *grp);
       
       // graceful shutdown (eventually)
       void shutdown();
+
+      // kill transports (after shutdown, before destructor)
+      void deleteTransports();
 
       TransportSelector& transportSelector() { return mTransportSelector; }
       const TransportSelector& transportSelector() const { return mTransportSelector; }
@@ -71,6 +79,7 @@ class TransactionController
       void cancelClientInviteTransaction(const Data& tid);
 
    private:
+      void processEverything(FdSet* fdset);
       TransactionController(const TransactionController& rhs);
       TransactionController& operator=(const TransactionController& rhs);
       SipStack& mStack;

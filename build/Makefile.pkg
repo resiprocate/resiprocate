@@ -262,6 +262,10 @@ ifeq ($(USE_IPV6),yes)
 DEFINES += USE_IPV6
 endif
 
+ifeq ($(HAVE_EPOLL),yes)
+DEFINES += HAVE_EPOLL
+endif
+
 ifeq ($(USE_POPT),yes)
   POPT_DEFINES := HAVE_POPT_H
   POPT_LIBNAME := popt

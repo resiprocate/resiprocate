@@ -14,6 +14,12 @@
 #include "resip/stack/TuSelector.hxx"
 #include "rutil/dns/DnsStub.hxx"
 
+/**
+    Let external applications know that this version of the stack
+    supports the (e)poll interfaces.
+**/
+#define RESIP_SIPSTACK_HAVE_FDPOLL 1
+
 namespace resip 
 {
 
@@ -28,6 +34,7 @@ class Uri;
 class TransactionUser;
 class AsyncProcessHandler;
 class Compression;
+class FdPollGrp;
 
 
 /**
@@ -536,10 +543,23 @@ class SipStack
       Compression &getCompression() { return *mCompression; }
       
       bool isFlowAlive(const resip::Tuple& flow) const;
+
+      /* Indicate if should use "InternalPoll" system; see mUseInternalPoll.
+       * This sets a global default and must be called prior to creating
+       * the SipStack to have any effect. This is called "default"
+       * because someday the SipStack constructor may have argument
+       * to control this on per-stack basis.
+       */
+      static void setDefaultUseInternalPoll(bool useInternal);
       
    private:
       /// Notify an async process handler - if one has been registered
       void checkAsyncProcessHandler();
+
+      // Use internal epoll handlers, and only expose the fd of the
+      // epoll itself thru the fdset interface
+      bool mUseInternalPoll;
+      FdPollGrp* mPollGrp;
 
       /// if this object exists, it manages advanced security featues
       Security* mSecurity;
@@ -595,6 +615,8 @@ class SipStack
       TuSelector mTuSelector;
 
       AfterSocketCreationFuncPtr mSocketFunc;
+
+      static bool mDefaultUseInternalPoll;
 
       friend class Executive;
       friend class StatelessHandler;

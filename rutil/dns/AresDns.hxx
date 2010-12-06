@@ -18,10 +18,14 @@ extern "C" {
 
 namespace resip
 {
+class AresDnsPollItem;
+class FdPollGrp;
+
 class AresDns : public ExternalDns
 {
+   friend class AresDnsPollItem;
    public:
-      AresDns() {mChannel = 0; mFeatures = 0;}
+      AresDns() {mChannel = 0; mFeatures = 0; mPollGrp=NULL;}
       virtual ~AresDns();
 
       virtual int init(const std::vector<GenericIPAddress>& additionalNameservers,
@@ -35,6 +39,9 @@ class AresDns : public ExternalDns
       virtual unsigned int getTimeTillNextProcessMS();
       virtual void buildFdSet(fd_set& read, fd_set& write, int& size);
       virtual void process(fd_set& read, fd_set& write);
+
+      virtual void setPollGrp(FdPollGrp *pollGrp);
+      virtual void processTimers();
 
       //?dcm?  I believe these need to do nothing in the ARES case.
       virtual void freeResult(ExternalDnsRawResult /* res */) {}
@@ -51,6 +58,9 @@ class AresDns : public ExternalDns
       friend void ::resip_AresDns_aresCallback(void *arg, int status, unsigned char* abuf, int alen);
       friend void ::resip_AresDns_caresCallback(void *arg, int status, int timeouts, unsigned char* abuf, int alen);
 
+      // used for epoll() interface to ares lib
+      time_t mNow;
+
    private:
 
       typedef std::pair<ExternalDnsHandler*, void*> Payload;
@@ -60,6 +70,9 @@ class AresDns : public ExternalDns
 	  std::vector<GenericIPAddress> mAdditionalNameservers;
 	  unsigned int mFeatures;
       volatile static bool mHostFileLookupOnlyMode;
+
+      FdPollGrp*	mPollGrp;
+
 };
    
 }

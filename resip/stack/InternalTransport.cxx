@@ -30,12 +30,16 @@ InternalTransport::InternalTransport(Fifo<TransactionMessage>& rxFifo,
 				     unsigned transportFlags) :
    Transport(rxFifo, portNum, version, interfaceObj, Data::Empty, 
              socketFunc, compression, transportFlags),
-   mFd(INVALID_SOCKET)
+   mFd(INVALID_SOCKET), mPollItem(NULL)
 {
 }
 
 InternalTransport::~InternalTransport()
 {
+   if ( mPollItem ) {
+      delete mPollItem;
+      mPollItem = NULL;
+   }
    if  (mFd != INVALID_SOCKET)
    {
       //DebugLog (<< "Closing " << mFd);
@@ -80,7 +84,7 @@ InternalTransport::socket(TransportType type, IpVersion ipVer)
    if ( fd == INVALID_SOCKET )
    {
       int e = getErrno();
-      InfoLog (<< "Failed to create socket: " << strerror(e));
+      ErrLog (<< "Failed to create socket: " << strerror(e));
       throw Transport::Exception("Can't create TcpBaseTransport", __FILE__,__LINE__);
    }
 
@@ -153,6 +157,16 @@ InternalTransport::transmit(const Tuple& dest, const Data& pdata, const Data& ti
 {
    SendData* data = new SendData(dest, pdata, tid, sigcompId);
    mTxFifo.add(data);
+   /* For InternalTransport, this func should only be called in the single
+    * sipstack thread context. Thus safe to do stuff here. Would nice
+    * nice to assert() that fact here, but I don't know how. 
+    */
+   checkTransmitQueue();
+}
+
+void
+InternalTransport::setPollGrp(FdPollGrp *grp) {
+    assert(0);
 }
 
 

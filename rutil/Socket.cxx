@@ -3,11 +3,15 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+
 #include "rutil/Socket.hxx"
 #include "rutil/Logger.hxx"
 
 #ifndef WIN32
 #include <unistd.h>
+#include <sys/resource.h>	// for getrlimit()
 #endif
 
 using namespace resip;
@@ -123,6 +127,120 @@ resip::closeSocket( Socket fd )
    return ret;
 }
 #endif
+
+// code moved from resip/stack/ConnectionManager.cxx
+// appears to work on both linux and windows
+int resip::getSocketError(Socket fd) {
+   int errNum = 0;
+   int errNumSize = sizeof(errNum);
+   getsockopt(fd, SOL_SOCKET, SO_ERROR, 
+     (char *)&errNum, (socklen_t *)&errNumSize);
+   /// XXX: should check return code of getsockopt
+   return errNum;
+}
+
+/**
+    Returns negative on error, or number of (positive) allowed fds
+**/
+int
+resip::increaseLimitFds(unsigned int targetFds) {
+#if defined(WIN32)
+    // kw: i don't know if any equiv on windows
+    return targetFds;
+#else
+    struct rlimit lim;
+
+    if ( getrlimit(RLIMIT_NOFILE, &lim)<0 ) {
+	CritLog(<<"getrlimit(NOFILE) failed: " << strerror(errno));
+	return -1;
+    }
+    if ( lim.rlim_cur==RLIM_INFINITY || targetFds < lim.rlim_cur )
+        return targetFds;
+    int euid = geteuid();
+    if ( lim.rlim_max==RLIM_INFINITY || targetFds < lim.rlim_max ) {
+    	lim.rlim_cur=targetFds;
+    } else {
+	if ( euid!=0 ) {
+	    CritLog(<<"Attempting to increase number of fds when not root. This probably wont work");
+	}
+    	lim.rlim_cur=targetFds;
+    	lim.rlim_max=targetFds;
+    }
+    if ( setrlimit(RLIMIT_NOFILE, &lim)<0 ) {
+	CritLog(<<"setrlimit(NOFILE)=(c="<<lim.rlim_cur<<",m="<<lim.rlim_max
+	  <<",uid="<<euid<<") failed: " << strerror(errno));
+	/* There is intermediate: could raise cur to max */
+	return -1;
+    }
+    return targetFds;
+#endif
+}
+
+/**
+    Some OSs (Linux in particular) silently ignore requests to set
+    too big and do not return an error code. Thus we always check.
+    Also, the returned value (getsockopt) can be larger than the requested
+    value (kernel internally doubles).
+    manpage says sockopt uses integer as data-type
+    If {buflen} is negative, we skip the set and just read
+    Return the get size or -1 if the set didn't work
+**/
+static int trySetRcvBuf(Socket fd, int buflen) {
+   if ( buflen > 0 ) {
+      int wbuflen = buflen;
+      if ( setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &wbuflen, sizeof(wbuflen))==-1 )
+	 return -1;
+   }
+   int rbuflen = 0;
+   unsigned optlen = sizeof(rbuflen);
+   if ( getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &rbuflen, &optlen)==-1 )
+      return -1;
+   assert(optlen == sizeof(rbuflen));
+   if ( rbuflen<buflen )
+      return -1;
+   return rbuflen;
+}
+
+/**
+**/
+int resip::setSocketRcvBufLen(Socket fd, int buflen)
+{
+   assert(buflen >= 1024);
+   int goal=buflen;
+   int trylen=goal;
+   int sts;
+   int lastgoodset = 0, lastgoodget=0;
+
+   /* go down by factors of 2 */
+   for (; ; trylen /= 2) {
+      if ( trylen < 1024 ) {
+	 ErrLog(<<"setsockopt(SO_RCVBUF) failed");
+	 return -1;
+      }
+      if ( (sts=trySetRcvBuf(fd, trylen)) >= 0 ) {
+	lastgoodset = trylen;
+	lastgoodget = sts;
+        break;
+      }
+   }
+
+   /* go up by 10% steps */
+   unsigned step = trylen/10;
+   for ( ; trylen<goal; trylen+=step) {
+      if ( (sts=trySetRcvBuf(fd,trylen))< 0 )
+         break;
+      lastgoodset = trylen;
+      lastgoodget = sts;
+   }
+   if ( lastgoodset < goal ) {
+      ErrLog(<<"setsockopt(SO_RCVBUF) goal "<<goal<<" not met (set="
+      <<lastgoodset<<",get="<<lastgoodget<<")");
+   } else {
+      InfoLog(<<"setsockopt(SO_RCVBUF) goal "<<goal<<" met (set="
+      <<lastgoodset<<",get="<<lastgoodget<<")");
+   }
+   return lastgoodset;
+}
 
 
 /* ====================================================================

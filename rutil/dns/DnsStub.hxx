@@ -23,6 +23,7 @@
 
 namespace resip
 {
+class FdPollGrp;
 
 template<typename T>
 class DNSResult
@@ -116,7 +117,8 @@ class DnsStub : public ExternalDnsHandler
 
       DnsStub(const NameserverList& additional = EmptyNameserverList,
               AfterSocketCreationFuncPtr socketFunc = 0,
-              AsyncProcessHandler* asyncProcessHandler = 0);
+              AsyncProcessHandler* asyncProcessHandler = 0,
+	      FdPollGrp *pollGrp = 0);
       ~DnsStub();
 
       // call this method before you create SipStack if you'd like to change the
@@ -160,12 +162,16 @@ class DnsStub : public ExternalDnsHandler
          }
       }
 
+      virtual void handleDnsRaw(ExternalDnsRawResult);
+
       void process(FdSet& fdset);
       unsigned int getTimeTillNextProcessMS();
       void buildFdSet(FdSet& fdset);
 
-      virtual void handleDnsRaw(ExternalDnsRawResult);
-      
+      void processTimers();
+  private:
+      void processFifo();
+
    protected:
       void cache(const Data& key, in_addr addr);
       void cache(const Data& key, const unsigned char* abuf, int alen);
