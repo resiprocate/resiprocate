@@ -338,7 +338,7 @@ Transport::callSocketFunc(Socket sock)
    }
 }
 
-void 
+void
 Transport::pushRxMsgUp(TransactionMessage* msg) {
    mStateMachineFifo.add(msg);
 }

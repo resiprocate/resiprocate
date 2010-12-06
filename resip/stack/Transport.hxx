@@ -54,7 +54,7 @@ class Transport
       virtual bool isFinished() const=0;
       
       // send a message on the wire. This may be called from outside
-      // our thread context. 
+      // our thread context.
       virtual void send( const Tuple& tuple, const Data& data, const Data& tid, const Data &sigcompId = Data::Empty);
       virtual void process(FdSet& fdset) = 0;
       virtual void buildFdSet( FdSet& fdset) =0;
@@ -122,10 +122,10 @@ class Transport
       // enable a socket-writable callback
       virtual void processTransmitQueue() = 0;
 
-      //only applies to transports that shareStackProcessAndSelect 
+      //only applies to transports that shareStackProcessAndSelect
       // Transmit should determine if it has any queue messages to send
       virtual bool hasDataToSend() const = 0;
-      
+
       //overriding implementations should chain through to this
       //?dcm? pure virtual protected method to enforce this?
       virtual void shutdown()

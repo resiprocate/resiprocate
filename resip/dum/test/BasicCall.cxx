@@ -496,7 +496,7 @@ main (int argc, char** argv)
       cout << "Skipping registration (no arguments)." << endl;
    } else {
       if ( argc < 5 ) {
-	 cout << "usage: " << argv[0] << 
+	 cout << "usage: " << argv[0] <<
 	 " sip:user1 passwd1 sip:user2 passwd2 [outbound]" << endl;
 	 return 1;
       }
@@ -534,7 +534,7 @@ main (int argc, char** argv)
       dumUac->getMasterProfile()->setDigestCredential(uacAor.uri().host(), uacAor.uri().user(), uacPasswd);
    }
    if (useOutbound) {
-       dumUac->getMasterProfile()->setOutboundProxy(outboundUri);    
+       dumUac->getMasterProfile()->setOutboundProxy(outboundUri);
        dumUac->getMasterProfile()->addSupportedOptionTag(Token("outbound"));
    }
 
@@ -556,7 +556,7 @@ main (int argc, char** argv)
       dumUas->getMasterProfile()->setDigestCredential(uasAor.uri().host(), uasAor.uri().user(), uasPasswd);
    }
    if (useOutbound) {
-      dumUas->getMasterProfile()->setOutboundProxy(outboundUri);    
+      dumUas->getMasterProfile()->setOutboundProxy(outboundUri);
       dumUas->getMasterProfile()->addSupportedOptionTag(Token("outbound"));
    }
 

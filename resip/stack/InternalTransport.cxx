@@ -159,7 +159,7 @@ InternalTransport::transmit(const Tuple& dest, const Data& pdata, const Data& ti
    mTxFifo.add(data);
    /* For InternalTransport, this func should only be called in the single
     * sipstack thread context. Thus safe to do stuff here. Would nice
-    * nice to assert() that fact here, but I don't know how. 
+    * nice to assert() that fact here, but I don't know how.
     */
    checkTransmitQueue();
 }
