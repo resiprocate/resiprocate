@@ -1,4 +1,5 @@
 #include "resip/stack/SdpContents.hxx"
+#include "resip/stack/PlainContents.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/ShutdownMessage.hxx"
 #include "resip/stack/SipStack.hxx"
@@ -291,14 +292,16 @@ class TestUac : public TestInviteSessionHandler
       bool done;
       SdpContents* mSdp;     
       HeaderFieldValue* hfv;      
-      Data* txt;      
+      Data* txt;
+      int mNumExpectedMessages;
 
       TestUac() 
          : TestInviteSessionHandler("UAC"), 
            done(false),
            mSdp(0),
            hfv(0),
-           txt(0)
+           txt(0),
+           mNumExpectedMessages(2)
       {
          txt = new Data("v=0\r\n"
                         "o=1900 369696545 369696545 IN IP4 192.168.2.15\r\n"
@@ -320,6 +323,7 @@ class TestUac : public TestInviteSessionHandler
 
       virtual ~TestUac()
       {
+         assert(mNumExpectedMessages == 0);
          delete mSdp;
          delete txt;
          delete hfv;
@@ -338,6 +342,45 @@ class TestUac : public TestInviteSessionHandler
          cout << name << ": ClientInviteSession-onConnected - " << msg.brief() << endl;
          cout << "Connected now - requestingOffer from UAS" << endl;
          is->requestOffer();
+
+         // At this point no NIT should have been sent
+         assert(!is->getLastNITRequest());
+
+         // Send a first MESSAGE from UAC with some contents (we use a fake PlainContents contents here for
+         // simplicity)
+         PlainContents contents("Hi there!!!");
+         is->message(contents);
+
+         // Immediately send another one, which will end up queued on the
+         // InviteSession's NIT queue
+         PlainContents contentsOther("Hi again!!!");
+         is->message(contentsOther);
+      }
+
+      virtual void onMessageSuccess(InviteSessionHandle is, const SipMessage& msg)
+      {
+         cout << name << ": InviteSession-onMessageSuccess - " << msg.brief() << endl;
+
+         assert(is->getLastNITRequest());
+         PlainContents* pContents = dynamic_cast<PlainContents*>(is->getLastNITRequest()->getContents());
+         assert(pContents != NULL);
+
+         if(mNumExpectedMessages == 2)
+         {
+            assert(pContents->text() == Data("Hi there!!!"));
+            mNumExpectedMessages--;
+         }
+         else if(mNumExpectedMessages == 1)
+         {
+            assert(pContents->text() == Data("Hi again!!!"));
+            mNumExpectedMessages--;
+         }
+      }
+
+      virtual void onInfo(InviteSessionHandle is, const SipMessage& msg)
+      {
+         cout << name << ": InviteSession-onInfo - " << msg.brief() << endl;
+         is->acceptNIT();
       }
 
       virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* msg)
@@ -366,12 +409,15 @@ class TestUas : public TestInviteSessionHandler
       HeaderFieldValue* hfv;
       Data* txt;      
 
+      int mNumExpectedInfos;
+
       TestUas(time_t* pH) 
          : TestInviteSessionHandler("UAS"), 
            done(false),
            requestedOffer(false),
            pHangupAt(pH),
-           hfv(0)
+           hfv(0),
+           mNumExpectedInfos(2)
       { 
          txt = new Data("v=0\r\n"
                         "o=1900 369696545 369696545 IN IP4 192.168.2.15\r\n"
@@ -393,6 +439,7 @@ class TestUas : public TestInviteSessionHandler
 
       ~TestUas()
       {
+         assert(mNumExpectedInfos == 0);
          delete mSdp;
          delete txt;
          delete hfv;
@@ -429,14 +476,55 @@ class TestUas : public TestInviteSessionHandler
          is->provideOffer(*mSdp);
       }
 
-      virtual void onAnswer(InviteSessionHandle is, const SipMessage& msg, const SdpContents& sdp)      
+      virtual void onConnected(InviteSessionHandle is, const SipMessage& msg)
       {
-         cout << name << ": InviteSession-onAnswer(SDP)" << endl;
-         if(*pHangupAt == 0)
+         cout << name << ": InviteSession-onConnected - " << msg.brief() << endl;
+         
+         // At this point no NIT should have been sent
+         assert(!is->getLastNITRequest());
+
+         // Send a first INFO from UAS with some contents (we use a fake PlainContents contents here for
+         // simplicity)
+         PlainContents contents("Hello there!!!");
+         is->info(contents);
+
+         // Immediately send another one, which will end up queued on the
+         // InviteSession's NIT queue
+         PlainContents contentsOther("Hello again!!!");
+         is->info(contentsOther);
+      }
+
+      virtual void onInfoSuccess(InviteSessionHandle is, const SipMessage& msg)
+      {
+         cout << name << ": InviteSession-onInfoSuccess - " << msg.brief() << endl;
+
+         assert(is->getLastNITRequest());
+         PlainContents* pContents = dynamic_cast<PlainContents*>(is->getLastNITRequest()->getContents());
+         assert(pContents != NULL);
+
+         if(mNumExpectedInfos == 2)
          {
-            is->provideOffer(sdp);
-            *pHangupAt = time(NULL) + 5;
+            assert(pContents->text() == Data("Hello there!!!"));
+            mNumExpectedInfos--;
          }
+         else if(mNumExpectedInfos == 1)
+         {
+            assert(pContents->text() == Data("Hello again!!!"));
+            mNumExpectedInfos--;
+
+            // Schedule a BYE in 5 seconds
+            if(*pHangupAt == 0)
+            {
+               *pHangupAt = time(NULL) + 5;
+            }
+         }
+      }
+
+      virtual void onMessage(InviteSessionHandle is, const SipMessage& msg)
+      {
+         cout << name << ": InviteSession-onMessage - " << msg.brief() << endl;
+
+         is->acceptNIT();
       }
 
       // Normal people wouldn't put this functionality in the handler
@@ -539,6 +627,10 @@ main (int argc, char** argv)
    }
 
    dumUac->getMasterProfile()->setDefaultFrom(uacAor);
+   dumUac->getMasterProfile()->addSupportedMethod(INFO);
+   dumUac->getMasterProfile()->addSupportedMethod(MESSAGE);
+   dumUac->getMasterProfile()->addSupportedMimeType(INFO, PlainContents::getStaticType());
+   dumUac->getMasterProfile()->addSupportedMimeType(MESSAGE, PlainContents::getStaticType());
    dumUac->getMasterProfile()->setDefaultRegistrationTime(70);
 
    //set up UAS
@@ -561,6 +653,10 @@ main (int argc, char** argv)
    }
 
    dumUas->getMasterProfile()->setDefaultFrom(uasAor);
+   dumUas->getMasterProfile()->addSupportedMethod(INFO);
+   dumUas->getMasterProfile()->addSupportedMethod(MESSAGE);
+   dumUas->getMasterProfile()->addSupportedMimeType(INFO, PlainContents::getStaticType());
+   dumUas->getMasterProfile()->addSupportedMimeType(MESSAGE, PlainContents::getStaticType());
    dumUas->getMasterProfile()->setDefaultRegistrationTime(70);
 
    time_t bHangupAt = 0;
@@ -623,9 +719,9 @@ main (int argc, char** argv)
            if (!startedCallFlow)
            {
               startedCallFlow = true;
-	      if ( doReg ) {
-                 cout << "!!!!!!!!!!!!!!!! Registered !!!!!!!!!!!!!!!! " << endl;
-	      }
+               if ( doReg ) {
+                  cout << "!!!!!!!!!!!!!!!! Registered !!!!!!!!!!!!!!!! " << endl;
+               }
 
               // Kick off call flow by sending an OPTIONS request then an INVITE request from the UAC to the UAS
               cout << "UAC: Sending Options Request to UAS." << endl;
@@ -718,7 +814,7 @@ main (int argc, char** argv)
  * 
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
- * Inc.  For more information on Vovida Networks, Inc., please see
+ * Inc.  For more snformation on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
  */

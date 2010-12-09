@@ -100,6 +100,12 @@ class InviteSession : public DialogUsage
       /** rejects an INFO or MESSAGE request with an error status code */
       virtual void rejectNIT(int statusCode = 488);
 
+      /** gets the last NIT request that was sent by the session
+
+          @warning Can return a NULL SharedPtr if none was sent
+       */
+      const SharedPtr<SipMessage> getLastNITRequest() const;
+
       /**
        * Provide asynchronous method access by using command
        */
@@ -377,6 +383,7 @@ class InviteSession : public DialogUsage
       std::queue<QueuedNIT*> mNITQueue;
       void nitComplete();
       bool mReferSub;
+      SharedPtr<SipMessage> mLastNITRequest;
 
       DialogUsageManager::EncryptionLevel mCurrentEncryptionLevel;
       DialogUsageManager::EncryptionLevel mProposedEncryptionLevel; // UPDATE or RE-INVITE
