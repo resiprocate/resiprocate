@@ -104,7 +104,7 @@ class InviteSession : public DialogUsage
 
           @warning Can return a NULL SharedPtr if none was sent
        */
-      const SharedPtr<SipMessage> getLastNITRequest() const;
+      const SharedPtr<SipMessage> getLastSentNITRequest() const;
 
       /**
        * Provide asynchronous method access by using command
@@ -383,7 +383,7 @@ class InviteSession : public DialogUsage
       std::queue<QueuedNIT*> mNITQueue;
       void nitComplete();
       bool mReferSub;
-      SharedPtr<SipMessage> mLastNITRequest;
+      SharedPtr<SipMessage> mLastSentNITRequest;
 
       DialogUsageManager::EncryptionLevel mCurrentEncryptionLevel;
       DialogUsageManager::EncryptionLevel mProposedEncryptionLevel; // UPDATE or RE-INVITE
