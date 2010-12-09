@@ -719,9 +719,9 @@ main (int argc, char** argv)
            if (!startedCallFlow)
            {
               startedCallFlow = true;
-               if ( doReg ) {
-                  cout << "!!!!!!!!!!!!!!!! Registered !!!!!!!!!!!!!!!! " << endl;
-               }
+              if ( doReg ) {
+                 cout << "!!!!!!!!!!!!!!!! Registered !!!!!!!!!!!!!!!! " << endl;
+              }
 
               // Kick off call flow by sending an OPTIONS request then an INVITE request from the UAC to the UAS
               cout << "UAC: Sending Options Request to UAS." << endl;
