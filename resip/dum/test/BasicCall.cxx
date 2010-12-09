@@ -344,7 +344,7 @@ class TestUac : public TestInviteSessionHandler
          is->requestOffer();
 
          // At this point no NIT should have been sent
-         assert(!is->getLastNITRequest());
+         assert(!is->getLastSentNITRequest());
 
          // Send a first MESSAGE from UAC with some contents (we use a fake PlainContents contents here for
          // simplicity)
@@ -361,8 +361,8 @@ class TestUac : public TestInviteSessionHandler
       {
          cout << name << ": InviteSession-onMessageSuccess - " << msg.brief() << endl;
 
-         assert(is->getLastNITRequest());
-         PlainContents* pContents = dynamic_cast<PlainContents*>(is->getLastNITRequest()->getContents());
+         assert(is->getLastSentNITRequest());
+         PlainContents* pContents = dynamic_cast<PlainContents*>(is->getLastSentNITRequest()->getContents());
          assert(pContents != NULL);
 
          if(mNumExpectedMessages == 2)
@@ -481,7 +481,7 @@ class TestUas : public TestInviteSessionHandler
          cout << name << ": InviteSession-onConnected - " << msg.brief() << endl;
          
          // At this point no NIT should have been sent
-         assert(!is->getLastNITRequest());
+         assert(!is->getLastSentNITRequest());
 
          // Send a first INFO from UAS with some contents (we use a fake PlainContents contents here for
          // simplicity)
@@ -498,8 +498,8 @@ class TestUas : public TestInviteSessionHandler
       {
          cout << name << ": InviteSession-onInfoSuccess - " << msg.brief() << endl;
 
-         assert(is->getLastNITRequest());
-         PlainContents* pContents = dynamic_cast<PlainContents*>(is->getLastNITRequest()->getContents());
+         assert(is->getLastSentNITRequest());
+         PlainContents* pContents = dynamic_cast<PlainContents*>(is->getLastSentNITRequest()->getContents());
          assert(pContents != NULL);
 
          if(mNumExpectedInfos == 2)
