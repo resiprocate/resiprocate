@@ -821,6 +821,7 @@ InviteSession::refer(const NameAddr& referTo, std::auto_ptr<resip::Contents> con
       {
          mNitState = NitProceeding;
          mReferSub = referSub;
+         mLastSentNITRequest = refer;
          send(refer);
          return;
       }
