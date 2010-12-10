@@ -226,6 +226,8 @@
 		12BF59390895D5E600F7DD81 /* EncryptionManager.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 12BF59380895D5E600F7DD81 /* EncryptionManager.cxx */; };
 		12BF593C0895D5FF00F7DD81 /* DumDecrypted.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 12BF593A0895D5FF00F7DD81 /* DumDecrypted.cxx */; };
 		12BF59580895D7B800F7DD81 /* CertMessage.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 12BF59570895D7B800F7DD81 /* CertMessage.cxx */; };
+		F80A8D4A12B2CA66002D37E0 /* FdPoll.cxx in Sources */ = {isa = PBXBuildFile; fileRef = F80A8D4812B2CA66002D37E0 /* FdPoll.cxx */; };
+		F80A8D4B12B2CA66002D37E0 /* FdPoll.hxx in Headers */ = {isa = PBXBuildFile; fileRef = F80A8D4912B2CA66002D37E0 /* FdPoll.hxx */; };
 		F8A057C7124D47D700112774 /* TcpConnection.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124D7916086CC3CE00BCA5A9 /* TcpConnection.cxx */; };
 		F8A057DB124D52BA00112774 /* AbandonServerTransaction.hxx in Headers */ = {isa = PBXBuildFile; fileRef = F8A057D3124D52BA00112774 /* AbandonServerTransaction.hxx */; };
 		F8A057DC124D52BA00112774 /* CancelClientInviteTransaction.hxx in Headers */ = {isa = PBXBuildFile; fileRef = F8A057D4124D52BA00112774 /* CancelClientInviteTransaction.hxx */; };
@@ -857,6 +859,8 @@
 		12BF59570895D7B800F7DD81 /* CertMessage.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = CertMessage.cxx; path = dum/CertMessage.cxx; sourceTree = "<group>"; };
 		12F79738086CBA1E00AF4EDF /* libresiprocate.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libresiprocate.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2AAC06F0554671400DB518D /* libares.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libares.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		F80A8D4812B2CA66002D37E0 /* FdPoll.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FdPoll.cxx; path = ../rutil/FdPoll.cxx; sourceTree = SOURCE_ROOT; };
+		F80A8D4912B2CA66002D37E0 /* FdPoll.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = FdPoll.hxx; path = ../rutil/FdPoll.hxx; sourceTree = SOURCE_ROOT; };
 		F8A057D3124D52BA00112774 /* AbandonServerTransaction.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = AbandonServerTransaction.hxx; path = stack/AbandonServerTransaction.hxx; sourceTree = "<group>"; };
 		F8A057D4124D52BA00112774 /* CancelClientInviteTransaction.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = CancelClientInviteTransaction.hxx; path = stack/CancelClientInviteTransaction.hxx; sourceTree = "<group>"; };
 		F8A057D5124D52BA00112774 /* ExistsOrDataParameter.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ExistsOrDataParameter.cxx; path = stack/ExistsOrDataParameter.cxx; sourceTree = "<group>"; };
@@ -1849,6 +1853,8 @@
 		F8DB1C440C56B50E00853E27 /* rutil */ = {
 			isa = PBXGroup;
 			children = (
+				F80A8D4812B2CA66002D37E0 /* FdPoll.cxx */,
+				F80A8D4912B2CA66002D37E0 /* FdPoll.hxx */,
 				F8C76C911243CCFF0076CFF8 /* AsyncProcessHandler.hxx */,
 				F8C76C921243CCFF0076CFF8 /* DataException.hxx */,
 				F8C76C931243CCFF0076CFF8 /* DigestStream.cxx */,
@@ -2288,6 +2294,7 @@
 				F8A057F3124D52DE00112774 /* DialogEventStateManager.hxx in Headers */,
 				F8A057F5124D52DE00112774 /* InMemorySyncRegDb.hxx in Headers */,
 				F8A057F7124D52DE00112774 /* RADIUSServerAuthManager.hxx in Headers */,
+				F80A8D4B12B2CA66002D37E0 /* FdPoll.hxx in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2643,6 +2650,7 @@
 				F8A057F4124D52DE00112774 /* InMemorySyncRegDb.cxx in Sources */,
 				F8A057F6124D52DE00112774 /* RADIUSServerAuthManager.cxx in Sources */,
 				F8A057F8124D52DE00112774 /* RegistrationHandler.cxx in Sources */,
+				F80A8D4A12B2CA66002D37E0 /* FdPoll.cxx in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
