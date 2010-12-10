@@ -821,6 +821,7 @@ InviteSession::refer(const NameAddr& referTo, std::auto_ptr<resip::Contents> con
       {
          mNitState = NitProceeding;
          mReferSub = referSub;
+         mLastSentNITRequest = refer;
          send(refer);
          return;
       }
@@ -836,6 +837,12 @@ InviteSession::refer(const NameAddr& referTo, std::auto_ptr<resip::Contents> con
    }
 }
 
+const SharedPtr<SipMessage>
+InviteSession::getLastSentNITRequest() const
+{
+   return mLastSentNITRequest;
+}
+
 void
 InviteSession::nitComplete()
 {
@@ -846,8 +853,9 @@ InviteSession::nitComplete()
       mNITQueue.pop();
       mNitState = NitProceeding;
       mReferSub = qn->referSubscription();
-      InfoLog(<< "checkNITQueue - sending queued NIT:" << qn->getNIT()->brief());
-      send(qn->getNIT());
+      mLastSentNITRequest = qn->getNIT();
+      InfoLog(<< "checkNITQueue - sending queued NIT:" << mLastSentNITRequest->brief());
+      send(mLastSentNITRequest);
       delete qn;
    }
 }
@@ -920,6 +928,7 @@ InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToRepla
       {
          mNitState = NitProceeding;
          mReferSub = referSub;
+         mLastSentNITRequest = refer;
          send(refer);
          return;
       }
@@ -980,6 +989,7 @@ InviteSession::info(const Contents& contents)
    if (mNitState == NitComplete)
    {
       mNitState = NitProceeding;
+      mLastSentNITRequest = info;
       send(info);
       return;
    }
@@ -1029,6 +1039,7 @@ InviteSession::message(const Contents& contents)
    if (mNitState == NitComplete)
    {
       mNitState = NitProceeding;
+      mLastSentNITRequest = message;
       send(message);
       return;
    }
