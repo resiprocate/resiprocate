@@ -3,6 +3,7 @@
 
 #include <mp/MprBridge.h>
 #include <mp/MpResourceTopology.h>
+#include <mi/CpMediaInterface.h>
 
 namespace recon
 {
@@ -25,10 +26,9 @@ public:
    /**
      Constructor
 
-     @param conversationManager required for access to the sipX 
-     mediaInterface
+     @param mediaInterface
    */
-   BridgeMixer(ConversationManager& conversationManager);  
+   BridgeMixer(CpMediaInterface& mediaInterface);  
    virtual ~BridgeMixer();
 
    /**
@@ -49,7 +49,7 @@ public:
 
 private:
    MpBridgeGain mMixMatrix[DEFAULT_BRIDGE_MAX_IN_OUTPUTS][DEFAULT_BRIDGE_MAX_IN_OUTPUTS];
-   ConversationManager& mConversationManager;
+   CpMediaInterface& mMediaInterface;
 };
 
 }

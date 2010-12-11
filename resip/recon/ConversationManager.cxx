@@ -46,7 +46,7 @@ ConversationManager::ConversationManager(bool localAudioEnabled)
   mLocalAudioEnabled(localAudioEnabled),
   mMediaFactory(0),
   mMediaInterface(0),
-  mBridgeMixer(*this)
+  mBridgeMixer(0)
 {
 #ifdef _DEBUG
    UtlString codecPaths[] = {".", "../../../../sipXtapi/sipXmediaLib/bin"};
@@ -115,6 +115,7 @@ ConversationManager::ConversationManager(bool localAudioEnabled)
       mMediaInterface->giveFocus();
    }
 
+   mBridgeMixer = new BridgeMixer(*mMediaInterface);
 #endif
 }
 
@@ -122,6 +123,7 @@ ConversationManager::~ConversationManager()
 {
    assert(mConversations.empty());
    assert(mParticipants.empty());
+   delete mBridgeMixer;
    if(mMediaInterface) mMediaInterface->release();
    sipxDestroyMediaFactoryFactory();
 }
@@ -163,11 +165,11 @@ ConversationManager::shutdown()
 }
 
 ConversationHandle 
-ConversationManager::createConversation()
+ConversationManager::createConversation(bool broadcastOnly)
 {
    ConversationHandle convHandle = getNewConversationHandle();
 
-   CreateConversationCmd* cmd = new CreateConversationCmd(this, convHandle);
+   CreateConversationCmd* cmd = new CreateConversationCmd(this, convHandle, broadcastOnly);
    mUserAgent->getDialogUsageManager().post(cmd);
    return convHandle;
 }
@@ -326,7 +328,7 @@ ConversationManager::unregisterConversation(Conversation *conversation)
 BridgeMixer& 
 ConversationManager::getBridgeMixer()
 {
-   return mBridgeMixer;
+   return *mBridgeMixer;
 }
 
 ParticipantHandle 

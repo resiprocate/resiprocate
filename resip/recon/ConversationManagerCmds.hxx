@@ -26,12 +26,14 @@ class CreateConversationCmd  : public resip::DumCommand
 {
    public:  
       CreateConversationCmd(ConversationManager* conversationManager, 
-                            ConversationHandle convHandle) 
+                            ConversationHandle convHandle,
+                            bool broadcastOnly) 
          : mConversationManager(conversationManager),
-           mConvHandle(convHandle) {}
+           mConvHandle(convHandle),
+           mBroadcastOnly(broadcastOnly) {}
       virtual void executeCommand()
       {
-            Conversation* conversation = new Conversation(mConvHandle, *mConversationManager);
+            Conversation* conversation = new Conversation(mConvHandle, *mConversationManager, 0, mBroadcastOnly);
             assert(conversation);
       }
       resip::Message* clone() const { assert(0); return 0; }
@@ -40,6 +42,7 @@ class CreateConversationCmd  : public resip::DumCommand
    private:
       ConversationManager* mConversationManager;
       ConversationHandle mConvHandle;
+      bool mBroadcastOnly;
 };
 
 class DestroyConversationCmd  : public resip::DumCommand

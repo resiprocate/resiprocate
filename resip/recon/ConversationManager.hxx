@@ -89,7 +89,7 @@ public:
 
      @return A handle to the newly created conversation.
    */   
-   virtual ConversationHandle createConversation();
+   virtual ConversationHandle createConversation(bool broadcastOnly=false);
 
    /**
      Destroys an existing Conversation, and ends all 
@@ -593,7 +593,7 @@ private:
    virtual OsStatus post(const OsMsg& msg);
    CpMediaInterfaceFactory* mMediaFactory;
    CpMediaInterface* mMediaInterface;  
-   BridgeMixer mBridgeMixer;
+   BridgeMixer* mBridgeMixer;
 };
 
 }

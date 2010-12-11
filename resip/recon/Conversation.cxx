@@ -18,13 +18,15 @@ using namespace resip;
 
 Conversation::Conversation(ConversationHandle handle,
                            ConversationManager& conversationManager,
-                           RelatedConversationSet* relatedConversationSet)
+                           RelatedConversationSet* relatedConversationSet,
+                           bool broadcastOnly)
 : mHandle(handle),
   mConversationManager(conversationManager),
   mDestroying(false),
   mNumLocalParticipants(0),
   mNumRemoteParticipants(0),
-  mNumMediaParticipants(0)
+  mNumMediaParticipants(0),
+  mBroadcastOnly(broadcastOnly)
 {
    mConversationManager.registerConversation(this);
 
@@ -103,7 +105,15 @@ Conversation::shouldHold()
    // We should be offering a hold SDP if there is no LocalParticipant 
    // in the conversation and there are no other remote participants     or
    // there are no remote participants at all
-   return (mNumLocalParticipants == 0 && (mNumRemoteParticipants+mNumMediaParticipants) <= 1) || mNumRemoteParticipants == 0; 
+   return mBroadcastOnly ||
+          mNumRemoteParticipants == 0 ||
+          (mNumLocalParticipants == 0 && (mNumRemoteParticipants+mNumMediaParticipants) <= 1); 
+}  
+
+bool 
+Conversation::broadcastOnly() 
+{ 
+   return mBroadcastOnly;
 }  
 
 void
@@ -125,7 +135,7 @@ Conversation::createRelatedConversation(RemoteParticipant* newForkedParticipant,
 {
    // Create new Related Conversation
    ConversationHandle relatedConvHandle = mConversationManager.getNewConversationHandle();
-   Conversation* conversation = new Conversation(relatedConvHandle, mConversationManager, mRelatedConversationSet);
+   Conversation* conversation = new Conversation(relatedConvHandle, mConversationManager, mRelatedConversationSet, mBroadcastOnly);
 
    // Copy all participants to new Conversation, except origParticipant
    ParticipantMap::iterator i;

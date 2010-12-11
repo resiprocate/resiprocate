@@ -17,8 +17,8 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-BridgeMixer::BridgeMixer(ConversationManager& conversationManager) :
-   mConversationManager(conversationManager)
+BridgeMixer::BridgeMixer(CpMediaInterface& mediaInterface) :
+   mMediaInterface(mediaInterface)
 {
    // Set default to 0 gain for entire matrix
    memset(mMixMatrix, 0, sizeof(mMixMatrix));
@@ -89,8 +89,8 @@ BridgeMixer::calculateMixWeightsForParticipant(Participant* participant)
       //outputBridgeMixWeights();
 
       // Apply new bridge weights
-      MprBridge::setMixWeightsForOutput(DEFAULT_BRIDGE_RESOURCE_NAME, *mConversationManager.getMediaInterface()->getMsgQ(), bridgePort, DEFAULT_BRIDGE_MAX_IN_OUTPUTS, mMixMatrix[bridgePort]);
-      MprBridge::setMixWeightsForInput(DEFAULT_BRIDGE_RESOURCE_NAME, *mConversationManager.getMediaInterface()->getMsgQ(), bridgePort, DEFAULT_BRIDGE_MAX_IN_OUTPUTS, inputBridgeWeights);
+      MprBridge::setMixWeightsForOutput(DEFAULT_BRIDGE_RESOURCE_NAME, *mMediaInterface.getMsgQ(), bridgePort, DEFAULT_BRIDGE_MAX_IN_OUTPUTS, mMixMatrix[bridgePort]);
+      MprBridge::setMixWeightsForInput(DEFAULT_BRIDGE_RESOURCE_NAME, *mMediaInterface.getMsgQ(), bridgePort, DEFAULT_BRIDGE_MAX_IN_OUTPUTS, inputBridgeWeights);
    }   
 }
 
