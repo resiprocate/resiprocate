@@ -8,7 +8,6 @@
 // sipX includes
 #include <mi/CpMediaInterfaceFactoryFactory.h>
 #include <mi/CpMediaInterface.h>
-#include <os/OsMsgDispatcher.h>
 
 #include "BridgeMixer.hxx"
 
@@ -22,6 +21,9 @@
 
 #include "MediaResourceCache.hxx"
 #include "MediaEvent.hxx"
+#include "HandleTypes.hxx"
+#include "ParticipantFinderIf.hxx"
+#include "NotificationDispatcher.hxx"
 
 #include "FlowManager.hxx"
 
@@ -37,9 +39,8 @@ class Participant;
 class UserAgent;
 class ConversationProfile;
 class RemoteParticipant;
+class NotificationDispathcer;
 
-typedef unsigned int ConversationHandle;
-typedef unsigned int ParticipantHandle;
 
 /**
   This class is one of two main classes of concern to an application
@@ -67,7 +68,7 @@ class ConversationManager  : public resip::InviteSessionHandler,
                              public resip::ClientSubscriptionHandler,
                              public resip::ServerSubscriptionHandler,
                              public resip::RedirectHandler,
-                             public OsMsgDispatcher
+                             public ParticipantFinderIf
 {
 public:  
    ConversationManager(bool localAudioEnabled=true);
@@ -528,6 +529,7 @@ private:
    friend class UserAgent;
    void setUserAgent(UserAgent *userAgent);
 
+   friend class DtmfEvent;
    friend class MediaEvent;
    void onMediaEvent(MediaEvent::MediaEventType eventType);
 
@@ -535,6 +537,7 @@ private:
    friend class MediaResourceParticipant;
    friend class LocalParticipant;
    friend class BridgeMixer;
+   friend class NotificationDispatcher;
    CpMediaInterface* getMediaInterface() { return mMediaInterface; }
    unsigned int allocateRTPPort();
    void freeRTPPort(unsigned int port);
@@ -578,8 +581,11 @@ private:
    ParticipantHandle mCurrentParticipantHandle;
    ParticipantHandle getNewParticipantHandle();    // thread safe
    Participant* getParticipant(ParticipantHandle partHandle);
-   RemoteParticipant* getRemoteParticipantFromMediaConnectionId(int mediaConnectionId);
+   virtual ParticipantHandle getRemoteParticipantHandleFromMediaConnectionId(int mediaConnectionId);
    bool mLocalAudioEnabled;
+
+   void post(resip::Message *message);
+   void post(resip::ApplicationMessage& message, unsigned int ms=0);
 
    std::deque<unsigned int> mRTPPortFreeList;
    void initRTPPortFreeList();
@@ -590,7 +596,7 @@ private:
    flowmanager::FlowManager mFlowManager;
 
    // sipX Media related members
-   virtual OsStatus post(const OsMsg& msg);
+   NotificationDispatcher mNotificationDispatcher;
    CpMediaInterfaceFactory* mMediaFactory;
    CpMediaInterface* mMediaInterface;  
    BridgeMixer* mBridgeMixer;

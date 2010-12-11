@@ -27,7 +27,7 @@ class BridgeMixer;
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class Conversation 
+class Conversation : public ParticipantFinderIf
 {
 public:  
    Conversation(ConversationHandle handle, 
@@ -64,6 +64,7 @@ protected:
    friend class BridgeMixer;
    typedef std::map<ParticipantHandle, ConversationParticipantAssignment> ParticipantMap;
    ParticipantMap& getParticipants() { return mParticipants; }  
+   CpMediaInterface* getMediaInterface() { return mConversationManager.getMediaInterface(); }
 
 private: 
    ConversationHandle mHandle;
@@ -72,11 +73,17 @@ private:
 
    ParticipantMap mParticipants;
    Participant* getParticipant(ParticipantHandle partHandle);
+   virtual ParticipantHandle getRemoteParticipantHandleFromMediaConnectionId(int mediaConnectionId);
    bool mDestroying;
    unsigned int mNumLocalParticipants;
    unsigned int mNumRemoteParticipants;
    unsigned int mNumMediaParticipants;
    bool mBroadcastOnly;
+
+   // sipX Media related members
+   NotificationDispatcher mNotificationDispatcher;
+   CpMediaInterface* mMediaInterface;  
+   BridgeMixer* mBridgeMixer;
 };
 
 }
