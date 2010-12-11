@@ -32,7 +32,8 @@ class Conversation
 public:  
    Conversation(ConversationHandle handle, 
                 ConversationManager& conversationManager,
-                RelatedConversationSet* relatedConversationSet=0);   // Pass NULL to create new RelatedConversationSet 
+                RelatedConversationSet* relatedConversationSet=0,  // Pass NULL to create new RelatedConversationSet 
+                bool broadcastOnly = false);   
    ~Conversation();
 
    void addParticipant(Participant* participant, unsigned int inputGain = 100, unsigned int outputGain = 100);
@@ -42,6 +43,7 @@ public:
    unsigned int getNumLocalParticipants() { return mNumLocalParticipants; }
    unsigned int getNumRemoteParticipants() { return mNumRemoteParticipants; }
    bool shouldHold();
+   bool broadcastOnly();
    void notifyRemoteParticipantsOfHoldChange();
 
    void createRelatedConversation(RemoteParticipant* newForkedParticipant, ParticipantHandle origParticipantHandle);
@@ -74,6 +76,7 @@ private:
    unsigned int mNumLocalParticipants;
    unsigned int mNumRemoteParticipants;
    unsigned int mNumMediaParticipants;
+   bool mBroadcastOnly;
 };
 
 }

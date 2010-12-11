@@ -1582,8 +1582,21 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
 	  {
 		  mRemoteHold = false;
 	  }
+
+      // Check if any conversations are broadcast only - if so, then we need to send media to parties on hold
+      bool broadcastOnly = false;
+      ConversationMap::iterator it;
+      for(it = mConversations.begin(); it != mConversations.end(); it++)
+      {
+         if(it->second->broadcastOnly())
+         {
+            broadcastOnly = true;
+            break;
+         }
+      }
+
       // Aggregate local and remote direction attributes to determine overall media direction
-      if(mLocalHold ||
+      if((mLocalHold && !broadcastOnly) ||
          localMediaDirection == SdpMediaLine::DIRECTION_TYPE_INACTIVE || 
          remoteMediaDirection == SdpMediaLine::DIRECTION_TYPE_INACTIVE)
       {
