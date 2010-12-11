@@ -26,7 +26,10 @@ Conversation::Conversation(ConversationHandle handle,
   mNumLocalParticipants(0),
   mNumRemoteParticipants(0),
   mNumMediaParticipants(0),
-  mBroadcastOnly(broadcastOnly)
+  mBroadcastOnly(broadcastOnly),
+  mNotificationDispatcher(conversationManager, this),
+  mMediaInterface(0),
+  mBridgeMixer(0)
 {
    mConversationManager.registerConversation(this);
 
@@ -273,6 +276,25 @@ Conversation::unregisterParticipant(Participant *participant)
          delete this;
       }
    }
+}
+
+ParticipantHandle
+Conversation::getRemoteParticipantHandleFromMediaConnectionId(int mediaConnectionId)
+{
+    // TODO: !slg! - this is called from the sipX notification thread - protect!!
+   ParticipantMap::iterator i = mParticipants.begin();
+   for(; i != mParticipants.end(); i++)
+   {
+      RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(i->second.getParticipant());
+      if(remoteParticipant)
+      {
+         if(remoteParticipant->getMediaConnectionId() == mediaConnectionId)
+         {
+            return remoteParticipant->getParticipantHandle();
+         }
+      }
+   }
+   return 0;
 }
 
 

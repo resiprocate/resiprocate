@@ -6,10 +6,11 @@
 using namespace recon;
 using namespace resip;
 
-#define RESIPROCATE_SUBSYSTEM resip::Subsystem::RECON
+#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-DtmfEvent::DtmfEvent(RemoteParticipant& participant, int dtmf, int duration, bool up) : 
-   mParticipant(participant),
+DtmfEvent::DtmfEvent(ConversationManager& conversationManager, ParticipantHandle remoteParticipantHandle, int dtmf, int duration, bool up) : 
+   mConversationManager(conversationManager),
+   mRemoteParticipantHandle(remoteParticipantHandle),
    mDtmfTone(dtmf),
    mDuration(duration),
    mUp(up)
@@ -19,7 +20,16 @@ DtmfEvent::DtmfEvent(RemoteParticipant& participant, int dtmf, int duration, boo
 void 
 DtmfEvent::executeCommand()
 {
-   mParticipant.onDtmfEvent(mDtmfTone, mDuration, mUp);
+   Participant* participant = mConversationManager.getParticipant(mRemoteParticipantHandle);
+   if(participant)
+   {
+       RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(participant);
+       assert(remoteParticipant != 0);
+       if(remoteParticipant)
+       {
+           remoteParticipant->onDtmfEvent(mDtmfTone, mDuration, mUp);
+       }
+   }
 }
 
 resip::Message* 

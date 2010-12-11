@@ -6,7 +6,7 @@
 using namespace recon;
 using namespace resip;
 
-#define RESIPROCATE_SUBSYSTEM resip::Subsystem::RECON
+#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 MediaEvent::MediaEvent(ConversationManager& conversationManager, MediaEventType eventType) : 
    mConversationManager(conversationManager),

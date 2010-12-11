@@ -215,6 +215,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\NotificatoinDispatcher.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\Participant.cxx"
 				>
 			</File>
@@ -324,6 +328,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\HandleTypes.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\LocalParticipant.hxx"
 				>
 			</File>
@@ -344,7 +352,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\NotificationDispatcher.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\Participant.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ParticipantFinderIf.hxx"
 				>
 			</File>
 			<File

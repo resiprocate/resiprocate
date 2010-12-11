@@ -18,7 +18,7 @@ class Message;
 class DtmfEvent : public resip::DumCommand
 {
    public:
-      DtmfEvent(RemoteParticipant& participant, int dtmf, int duration, bool up);
+      DtmfEvent(ConversationManager& conversationManager, ParticipantHandle remoteParticipantHandle, int dtmf, int duration, bool up);
       virtual void executeCommand();
 
       Message* clone() const;
@@ -26,7 +26,8 @@ class DtmfEvent : public resip::DumCommand
       EncodeStream& encodeBrief(EncodeStream& strm) const;
 
    private:
-      RemoteParticipant& mParticipant;
+      ConversationManager& mConversationManager;
+      ParticipantHandle mRemoteParticipantHandle;
       int mDtmfTone;
       int mDuration;
       bool mUp;
