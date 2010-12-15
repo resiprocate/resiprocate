@@ -136,6 +136,8 @@ class SipMessage : public TransactionMessage
       bool isInvalid() const{return mInvalid;}
       
       resip::MethodTypes method() const;
+      /// Returns a string containing the SIP method for the message
+      const Data& methodStr() const;
       
       const resip::Data& getReason() const{return mReason;}
       

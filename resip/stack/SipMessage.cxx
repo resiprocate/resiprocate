@@ -560,6 +560,37 @@ SipMessage::method() const
    return res;
 }
 
+const Data&
+SipMessage::methodStr() const
+{
+   if(method()!=UNKNOWN)
+   {
+      return getMethodName(method());
+   }
+   else
+   {
+      try
+      {
+         if(isRequest())
+         {
+            return header(h_RequestLine).unknownMethodName();
+         }
+         else if(isResponse())
+         {
+            return header(h_CSeq).unknownMethodName();
+         }
+         else
+         {
+            assert(0);
+         }
+      }
+      catch(resip::ParseException&)
+      {
+      }
+   }
+   return Data::Empty;
+}
+
 static const Data requestEB("SipReq:  ");
 static const Data responseEB("SipResp: ");
 static const Data tidEB(" tid=");
