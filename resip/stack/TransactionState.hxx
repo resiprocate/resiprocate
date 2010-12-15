@@ -4,6 +4,7 @@
 #include <iosfwd>
 #include <memory>
 #include "rutil/dns/DnsHandler.hxx"
+#include "resip/stack/MethodTypes.hxx"
 #include "resip/stack/Transport.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 
@@ -53,6 +54,8 @@ class TransactionState : public DnsHandler
                        Machine m, 
                        State s, 
                        const Data& tid, 
+                       MethodTypes method,
+                       const Data& methodText,
                        TransactionUser* tu=0);
       
       void rewriteRequest(const Uri& rewrite);
@@ -119,7 +122,6 @@ class TransactionState : public DnsHandler
       
       Machine mMachine;
       State mState;
-      bool mIsCancel;
       bool mIsAbandoned; // TU doesn't care about this transaction anymore.
       
       // Indicates that the message has been sent with a reliable protocol. Set
@@ -142,7 +144,9 @@ class TransactionState : public DnsHandler
       std::auto_ptr<NameAddr> mOriginalContact;
       std::auto_ptr<Via> mOriginalVia;
 
-      Data mId;
+      const Data mId;
+      const MethodTypes mMethod;
+      Data* mMethodText;
       bool mAckIsValid;
       bool mWaitingForDnsResult;
       TransactionUser* mTransactionUser;
