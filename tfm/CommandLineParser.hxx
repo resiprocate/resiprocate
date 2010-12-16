@@ -11,23 +11,40 @@ class CommandLineParser
       CommandLineParser(int argc, char** argv);
       static resip::Uri toUri(const char* input, const char* description);
       static std::vector<resip::Uri> toUriVector(const char* input, const char* description);
-
+      static std::vector<resip::Data> toDataVector(const char* input, const char* description);
+      static std::set<int> toIntSet(const char* input, const char* description);
 
       resip::Data mLogType;
       resip::Data mLogLevel;
+      resip::Data mTlsDomain;
+      resip::Data mProxyHostName;
+      resip::Data mUserIPAddr;
+      std::vector<resip::Data> mMultihomedAddrs;
+      resip::Data mEnumSuffix;
+      resip::Uri mRecordRoute;
+      std::set<int> mUdpPorts;
+      std::set<int> mTcpPorts;
+      std::set<int> mTlsPorts;
+      std::set<int> mDtlsPorts;
+      bool mNoV4;
+      bool mNoV6;
+
+      resip::Data mCertPath;
+      bool mForceRecordRoute;
+      bool mEnableFlowTokenHack;
+      bool mNoChallenge;
+      bool mNoWebChallenge;
+      bool mNoRegistrar;
+      bool mCertServer;
+      resip::Data mRequestProcessorChainName;
+      resip::Data mMySqlServer;
+      int mHttpPort;
+
       bool mEncrypt;
       bool mSign;
       bool mGenUserCert;
-      resip::Data mTlsDomain;
-      
-      int mUdpPort;
-      int mTcpPort;
-      int mTlsPort;
-      int mDtlsPort;
       
       int mRegisterDuration;
-      bool mNoV4;
-      bool mNoV6;
       
       resip::Uri mAor;
       resip::Data mPassword;
@@ -37,9 +54,6 @@ class CommandLineParser
       std::vector<resip::Uri> mBuddies;
       resip::Uri mTarget;
       resip::Data mPassPhrase;
-      resip::Data mCertPath;
-      
-      bool mForceRecordRoute;
 };
  
 #endif

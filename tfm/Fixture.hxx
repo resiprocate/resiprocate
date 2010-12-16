@@ -48,6 +48,15 @@ class Fixture : public CppUnit::TestFixture
       static TestUser* cullen;
       static TestUser* jozsef;
       static TestUser* jasonTcp;
+      static TestUser* derekTcp;
+      static TestUser* davidTcp;
+      static TestUser* enlaiTcp;
+      static TestUser* cullenTcp;
+      static TestUser* jasonTls;
+      static TestUser* derekTls;
+      static TestUser* davidTls;
+      static TestUser* enlaiTls;
+      static TestUser* cullenTls;
       
       //static TestUser jason;
       static resip::Data publicInterface;

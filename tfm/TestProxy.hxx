@@ -16,9 +16,12 @@ class TestProxy
 {
    public:
       TestProxy(const resip::Data& name,
-                const resip::Data& host, 
-                int port, 
-                const resip::Data& interfaceObj = resip::Data::Empty);
+                  const resip::Data& host, 
+                  const std::set<int>& udpPorts, 
+                  const std::set<int>& tcpPorts, 
+                  const std::set<int>& tlsPorts, 
+                  const std::set<int>& dtlsPorts, 
+                  const resip::Data& interfaceObj = resip::Data::Empty);
       TestProxy();
       virtual ~TestProxy();
 
