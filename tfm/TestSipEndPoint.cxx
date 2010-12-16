@@ -11,12 +11,13 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/TcpTransport.hxx"
-#include "resip/stack/UdpTransport.hxx"
 
 #ifdef USE_SSL
 #include "resip/stack/ssl/TlsTransport.hxx"
 #endif // USE_SSL
 
+#include "resip/stack/UdpTransport.hxx"
+#include "resip/stack/UnknownHeaderType.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
@@ -61,30 +62,55 @@ TestSipEndPoint::TestSipEndPoint(const Uri& addressOfRecord,
 #ifdef RTP_ON
    mRtpSession = 0;
 #endif
-
+   
+   nwIf=interfaceObj;
+   
+   if(nwIf.empty())
+   {
+      nwIf=mContact.uri().host();
+   }
+   
    if (hasStack)
    {
-      if (!contactUrl.exists(p_transport) ||
-          (isEqualNoCase(contactUrl.param(p_transport), Tuple::toData(UDP))))
+      resip::IpVersion version=resip::V4;
+      
+      if(resip::DnsUtil::isIpV6Address(interfaceObj))
       {
-         InfoLog(<< "TestSipEndPoint[" << addressOfRecord << "]transport is UDP " << interfaceObj);
-         mTransport = new UdpTransport(mIncoming, mContact.uri().port(), V4, StunDisabled, interfaceObj);
-      }
-      else if (isEqualNoCase(contactUrl.param(p_transport), Tuple::toData(TCP)))
-      {
-         InfoLog(<< "TestSipEndPoint[" << addressOfRecord << "]transport is TCP " << interfaceObj);
-         mTransport = new TcpTransport(mIncoming, mContact.uri().port(), V4, interfaceObj);
-      }
-      else if (isEqualNoCase(contactUrl.param(p_transport), Tuple::toData(TLS)))
-      {
-#ifdef USE_SSL
-         InfoLog(<< "TestSipEndPoint[" << addressOfRecord << "]transport is TLS " << interfaceObj);
-         mTransport = new TlsTransport(mIncoming, mContact.uri().port(), V4, interfaceObj, 
-                                       *mSecurity, "localhost", SecurityTypes::TLSv1);
+#ifdef USE_IPV6
+         version=resip::V6;
 #else
-         ErrLog(<< "TestSipEndPoint[" << addressOfRecord << "]transport is TLS " << interfaceObj << ", but TLS is disabled.");
-         assert(0);
+         return;
 #endif
+      }
+      else if(resip::DnsUtil::isIpV4Address(interfaceObj))
+      {
+         version=resip::V4;
+      }
+
+      if (!mContact.uri().exists(p_transport) ||
+          (isEqualNoCase(mContact.uri().param(p_transport), Tuple::toData(UDP))))
+      {
+         InfoLog(<< "TestSipEndPoint[" << addressOfRecord << "]transport is UDP " << nwIf);
+         mTransport = new UdpTransport(mIncoming, mContact.uri().port(), version, StunDisabled, nwIf,0,resip::Compression::Disabled);
+      }
+      else if (isEqualNoCase(mContact.uri().param(p_transport), Tuple::toData(TCP)))
+      {
+         InfoLog(<< "TestSipEndPoint[" << addressOfRecord << "]transport is TCP " << nwIf);
+         mTransport = new TcpTransport(mIncoming, mContact.uri().port(), version, nwIf, 0, resip::Compression::Disabled, 0);
+      }
+      else if (isEqualNoCase(mContact.uri().param(p_transport), Tuple::toData(SCTP)))
+      {
+         InfoLog(<< "TestSipEndPoint[" << addressOfRecord << "]transport is SCTP  INADDR_ANY ("<< nwIf <<" will go in Vias)");
+         // .bwc. For SCTP, attach to INADDR_ANY, so we can test multihoming.
+         // Also recall that we've added a bool param that switches the behavior 
+         // of TcpTransport to instead use SCTP.
+         mTransport = new TcpTransport(mIncoming, mContact.uri().port(), version, "0.0.0.0", 0, resip::Compression::Disabled, 0);
+      }
+      else if (isEqualNoCase(mContact.uri().param(p_transport), Tuple::toData(TLS)))
+      {
+         InfoLog(<< "TestSipEndPoint[" << addressOfRecord << "]transport is TLS " << nwIf);
+         mTransport = new TlsTransport(mIncoming, mContact.uri().port(), version, nwIf, 
+                                       *mSecurity, nwIf, SecurityTypes::TLSv1, 0, resip::Compression::Disabled, 0);
       }
       else
       {
@@ -98,7 +124,6 @@ TestSipEndPoint::TestSipEndPoint(const Uri& addressOfRecord,
    {
       InfoLog (<< "Creating sip endpoint with no transport: " << addressOfRecord);
    }
-
    mContactSet.insert(mContact);
 }
 
@@ -298,17 +323,31 @@ TestSipEndPoint::send(shared_ptr<SipMessage>& msg, RawConditionerFn func)
    {
       assert(!msg->header(h_Vias).empty());
       msg->header(h_Vias).front().remove(p_maddr);
-      msg->header(h_Vias).front().transport() = Tuple::toData(mTransport->transport()); 
-      msg->header(h_Vias).front().sentHost() = Resolver::getHostName();
+      msg->header(h_Vias).front().transport() = Tuple::toData(mTransport->transport());
+
+      //Sufficient, and also necessary if we are sending on TLS.
+      if(msg->header(h_Vias).front().transport().lowercase() == "tls")
+      {
+         msg->header(h_Vias).front().sentHost() = mTransport->tlsDomain();
+      }
+      else if(mTransport->interfaceName()!="0.0.0.0" && 
+               !mTransport->interfaceName().empty())
+      {
+         msg->header(h_Vias).front().sentHost() = mTransport->interfaceName();
+      }
+      else
+      {
+         msg->header(h_Vias).front().sentHost() = nwIf;
+      }
       msg->header(h_Vias).front().sentPort() = mTransport->port();
    }
    
-   resip::Data& encoded = msg->getEncoded();
-   encoded = "";
-   DataStream encodeStream(encoded);
-   msg->encode(encodeStream);
-   encodeStream.flush();
-   
+   resip::Data encoded;
+   {
+      DataStream encodeStream(encoded);
+      msg->encode(encodeStream);
+      encodeStream.flush();
+   }
    DebugLog (<< "encoded=" << encoded.c_str());
 
    resip::Data toWrite = func(encoded);
@@ -319,10 +358,20 @@ TestSipEndPoint::send(shared_ptr<SipMessage>& msg, RawConditionerFn func)
    }
    else
    {
+      //The transport we are sending on had better match the transport we are sending to
+      uri.param(p_transport)=msg->header(h_Vias).front().transport();
+      DebugLog(<<"Trying to resolve...");
       // send it over the transport
-      uri.param(p_transport)=resip::toData(mTransport->transport());
       Resolver r(uri);
       assert (!r.mNextHops.empty());
+      DebugLog(<<"Resolved successfully.");
+      r.mNextHops.front().setTargetDomain(uri.host());
+
+      //Default TLS port
+      if(r.mNextHops.front().getType()==TLS && r.mNextHops.front().getPort()==5060)
+      {
+         r.mNextHops.front().setPort(5061);
+      }
       mTransport->send(r.mNextHops.front(), toWrite, "bogus");
    }
 }
@@ -624,7 +673,6 @@ TestSipEndPoint::makeResponse(SipMessage& request, int responseCode)
       }
       DebugLog(<< "Creating response using dialog: " << dialog);
       shared_ptr<SipMessage> response(dialog->makeResponse(request, responseCode));
-
       return response;
    }
    else
@@ -1087,9 +1135,11 @@ TestSipEndPoint::MessageAction::operator()(boost::shared_ptr<Event> event)
 
 TestSipEndPoint::Invite::Invite(TestSipEndPoint* from, 
                                 const resip::Uri& to, 
+                                bool useOutbound,
                                 boost::shared_ptr<resip::SdpContents> sdp)
    : MessageAction(*from, to),
-     mSdp(sdp)
+     mSdp(sdp),
+     mUseOutbound(useOutbound)
 {}
 
 shared_ptr<SipMessage>
@@ -1100,6 +1150,11 @@ TestSipEndPoint::Invite::go()
                                                     mEndPoint.getContact()));
    if (mSdp.get())
       invite->setContents(mSdp.get());
+
+   if(mUseOutbound)
+   {
+      invite->header(h_Contacts).front().uri().param(p_ob);
+   }
 
    mEndPoint.storeSentInvite(invite);
    return invite;
@@ -1121,7 +1176,7 @@ TestSipEndPoint::invite(const TestUser& endPoint)
 TestSipEndPoint::Invite*
 TestSipEndPoint::invite(const TestUser& endPoint, const boost::shared_ptr<resip::SdpContents>& sdp)
 {
-   return new Invite(this, endPoint.getAddressOfRecord(), sdp);
+   return new Invite(this, endPoint.getAddressOfRecord(), false, sdp);
 }
 
 TestSipEndPoint::Invite* 
@@ -1139,13 +1194,50 @@ TestSipEndPoint::invite(const resip::Uri& url)
 TestSipEndPoint::Invite* 
 TestSipEndPoint::invite(const resip::Uri& url, const boost::shared_ptr<resip::SdpContents>& sdp) 
 {
-   return new Invite(this, url, sdp); 
+   return new Invite(this, url, false, sdp); 
 }
 
 TestSipEndPoint::Invite* 
 TestSipEndPoint::invite(const resip::Data& url)
 {
    return new Invite(this, resip::Uri(url)); 
+}
+
+TestSipEndPoint::Invite* 
+TestSipEndPoint::inviteWithOutbound(const TestUser& endPoint)
+{
+   return new Invite(this, endPoint.getAddressOfRecord(), true);
+}
+
+
+TestSipEndPoint::Invite*
+TestSipEndPoint::inviteWithOutbound(const TestUser& endPoint, const boost::shared_ptr<resip::SdpContents>& sdp)
+{
+   return new Invite(this, endPoint.getAddressOfRecord(), true, sdp);
+}
+
+TestSipEndPoint::Invite* 
+TestSipEndPoint::inviteWithOutbound(const TestSipEndPoint& endPoint) 
+{
+   return new Invite(this, endPoint.mAor, true); 
+}
+
+TestSipEndPoint::Invite* 
+TestSipEndPoint::inviteWithOutbound(const resip::Uri& url) 
+{
+   return new Invite(this, url, true); 
+}
+
+TestSipEndPoint::Invite* 
+TestSipEndPoint::inviteWithOutbound(const resip::Uri& url, const boost::shared_ptr<resip::SdpContents>& sdp) 
+{
+   return new Invite(this, url, true, sdp); 
+}
+
+TestSipEndPoint::Invite* 
+TestSipEndPoint::inviteWithOutbound(const resip::Data& url)
+{
+   return new Invite(this, resip::Uri(url), true); 
 }
 
 TestSipEndPoint::SendSip::SendSip(TestSipEndPoint* from,
@@ -1478,9 +1570,11 @@ resip::Data
 TestSipEndPoint::Request::toString() const
 {
    resip::Data buffer;
-   DataStream strm(buffer);
-   strm << mEndPoint.getName() << "." << getMethodName(mType) << "(" << mTo << ")";
-   strm.flush();
+   {
+      DataStream strm(buffer);
+      strm << mEndPoint.getName() << "." << getMethodName(mType) << "(" << mTo << ")";
+      strm.flush();
+   }
    return buffer;
 }
 
@@ -1587,7 +1681,7 @@ TestSipEndPoint::message(const NameAddr& target, const Data& text, const message
 // end - vk
 
 TestSipEndPoint::Request*
-TestSipEndPoint::message(const Uri& target, const Data& text)
+TestSipEndPoint::message(const resip::Uri& target, const Data& text)
 {
    PlainContents* plain = new PlainContents;
    plain->text() = text;
@@ -1612,13 +1706,15 @@ TestSipEndPoint::Publish::Publish(TestSipEndPoint* from, const resip::Uri& to,
                     const resip::Token& eventPackage, 
                     boost::shared_ptr<resip::Contents> contents,
                     int pExpires, 
-                    const std::string PAssertedIdentity)
+                    const std::string PAssertedIdentity,
+                    const std::string pSIPIfEtag)
    : MessageAction(*from, to),
      mType(resip::PUBLISH),
      mContents(contents),
      mEventPackage(eventPackage),
      mExpires(pExpires),
-     mPAssertedIdentity(PAssertedIdentity)
+     mPAssertedIdentity(PAssertedIdentity),
+     mSIPIfEtag(pSIPIfEtag)
 {}
 
 TestSipEndPoint::Publish::Publish(TestSipEndPoint* from, 
@@ -1634,7 +1730,7 @@ TestSipEndPoint::Publish::Publish(TestSipEndPoint* from,
 TestSipEndPoint::Publish*
 TestSipEndPoint::publish(const Uri& url, const Token& eventPackage, 
                          const int pExpires, const string PAssertedIdentity, 
-                         const string publishBody)
+                         const string publishBody, const string pSIPIfEtag)
 {
    /* 
    WHAT PREVIOUSLY WORKED BUT NOW CORES...
@@ -1643,10 +1739,9 @@ TestSipEndPoint::publish(const Uri& url, const Token& eventPackage,
    Mime type("application", "pidf+xml");
    Pidf pc(&hfv, type);
    boost::shared_ptr<resip::Contents> body(&pc);
-   */
-
-   /*
-   WHAT NOW NEEDS TO BE DONE..
+   
+   ....
+   WHAT NOW NEEDS TO BE DONE INSTEAD..
    */
    Data* text = new Data(publishBody);
    HeaderFieldValue* hfv = new HeaderFieldValue(text->data(), text->size());
@@ -1657,7 +1752,8 @@ TestSipEndPoint::publish(const Uri& url, const Token& eventPackage,
    */
 
    Publish* localPublish = new Publish(this, url, eventPackage, 
-                                       body, pExpires, PAssertedIdentity);
+                                       body, pExpires, PAssertedIdentity,
+                                       pSIPIfEtag);
 
    DebugLog(<< "1. START OF MESSAGE" );
    DebugLog(<< localPublish->toString() );
@@ -2908,6 +3004,7 @@ TestSipEndPoint::Ack::go(shared_ptr<SipMessage> response)
       shared_ptr<SipMessage> ack(Helper::makeFailureAck(*invite, *response));
       invite->header(h_RequestLine).method()=method;
       invite->header(h_CSeq).method()=method;
+      ack->header(h_Vias).front().param(p_branch).reset(response->getTransactionId());
       return ack;
    }
 }
@@ -3304,7 +3401,7 @@ TestSipEndPoint::From::toString() const
    {
       return "from(" + mInstanceId + ")";
    }
-   
+
    assert(false);
    return Data::Empty;   
 }
@@ -3442,6 +3539,33 @@ TestSipEndPoint::HasMessageBodyMatch* hasMessageBodyMatch()
 
 // JF
 
+TestSipEndPoint::UnknownHeaderMatch::UnknownHeaderMatch(const resip::Data& name, const resip::Data& value)
+ : mName(name), mValue(value)
+{
+}
+
+TestSipEndPoint::UnknownHeaderMatch* 
+unknownHeaderMatch(const resip::Data& name, const resip::Data& value)
+{
+    return new TestSipEndPoint::UnknownHeaderMatch(name,value);
+}
+
+
+resip::Data
+TestSipEndPoint::UnknownHeaderMatch::toString() const
+{
+  return "UnknownHeaderMatch("+mName+","+mValue+")";
+}
+
+
+bool
+TestSipEndPoint::UnknownHeaderMatch::isMatch(shared_ptr<SipMessage>& message) const
+{
+  return (   message->exists(resip::UnknownHeaderType(mName)) 
+          && message->header(resip::UnknownHeaderType(mName)).front().value() == mValue 
+         );
+}
+
 
 shared_ptr<SipMessage>
 TestSipEndPoint::Cancel::go(shared_ptr<SipMessage> msg)
@@ -3499,7 +3623,7 @@ TestSipEndPoint::ToMatch::passes(boost::shared_ptr<Event> event)
    assert(mEndPoint);
 
    DebugLog(<< "TestSipEndPoint::ToMatch(" << Data::from(mTo) << " ? " << Data::from(sipEvent->getMessage()->header(h_To)) << ")");
-   return (sipEvent->getMessage()->exists(h_To) &
+   return (sipEvent->getMessage()->exists(h_To) &&
            sipEvent->getMessage()->header(h_To).uri() == mTo);
 }
 
@@ -4058,8 +4182,8 @@ Data
 TestSipEndPoint::MatchNonceCount::toString() const
 {
    Data ret;
-   DataStream ds(ret);
    {
+      DataStream ds(ret);
       ds << "MatchNonceCount " << mCount;
    }
    return ret;

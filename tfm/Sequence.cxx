@@ -194,7 +194,7 @@ SequenceClass::isMatch(shared_ptr<Event> event) const
    for (std::list<TestEndPoint::ExpectBase*>::const_iterator i = mExpects.begin();
         i != mExpects.end(); i++)
    {
-      //DebugLog("expect matching: " << **i);
+      DebugLog(<< "expect matching: " << **i);
       if (to)
       {
          if (to->getExpect() == *i)

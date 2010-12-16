@@ -1,6 +1,6 @@
 #include <popt.h>
 
-#include "CommandLineParser.hxx"
+#include "tfm/CommandLineParser.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/ParseException.hxx"
@@ -15,56 +15,79 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
 {
    const char* logType = "cout";
    const char* logLevel = "INFO";
+   const char* tlsDomain = 0;
+   const char* proxyHostName=0;
+   const char* userIPAddr=0;
+   const char* multihomedAddrs=0;
+   const char* recordRoute = 0;
+   int flowTokens = 0;
+   const char* udpPorts = "5060";
+   const char* tcpPorts = "5060";
+   const char* tlsPorts = "5061";
+   const char* dtlsPorts = 0;
+   int noV4 = 0;
+   int noV6 = 0;
+   const char* certPath = 0;
+   int noChallenge = 0;
+   int noWebChallenge =0;
+
+   int noRegistrar = 0;
+   int noCertServer = 0;
+
+   const char* reqChainName = "default";
+   const char* mySqlServer=0;
+   int httpPort=5180;
+   const char* enumSuffix="";
+
+
    int encrypt=false;
    int sign=false;
    int genUserCert = false;
-   char* tlsDomain = 0;
    
-   int udpPort = 5160;
-   int tcpPort = 5160;
-   int tlsPort = 5161;
-   int dtlsPort = 5161;
    
    mRegisterDuration = 3600;
-   int noV4 = false;
-   int noV6 = false;
    
-   char* inputAor = 0;
+   const char* inputAor = 0;
    const char* password = "";
    
-   char* inputOutboundProxy = 0;
-   char* inputContact = 0;
-   char* inputBuddies = 0;
-   char* inputTarget = 0;
-   char* passPhrase = 0;
-   char* certPath = 0;
+   const char* inputOutboundProxy = 0;
+   const char* inputContact = 0;
+   const char* inputBuddies = 0;
+   const char* inputTarget = 0;
+   const char* passPhrase = 0;
    Data basePath(getenv("HOME"));
 
 
    //!dcm! TODO - ability to set subsystem specfic log levels--prob. want a
    //!group options for everything in stack.  
-
-   int outboundDisabled=0;
-   int outboundVersion=8;
-   int rrTokenHackEnabled=0;
-   int forceRecordRoute = 0;
-
    struct poptOption table[] = {
-      {"log-type",     'l', POPT_ARG_STRING, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
-      {"log-level",    'v', POPT_ARG_STRING, &logLevel,  0, "specify the default log level", "DEBUG|INFO|WARNING|ALERT"},
-      {"encrypt",      'e', POPT_ARG_NONE, &encrypt, 0, "whether to encrypt or not", 0},
-      {"sign",         's', POPT_ARG_NONE, &sign, 0,   "signs messages you send", 0},
-      {"gen-user-cert",'u', POPT_ARG_NONE, &genUserCert, 0, "generate a new user certificate", 0},
-      {"tls-domain",   't', POPT_ARG_STRING, &tlsDomain,  0, "act as a TLS server for specified domain", "example.com"},
-      
-      {"udp",          0,   POPT_ARG_INT, &udpPort, 0, "add UDP transport on specified port", "5060"},
-      {"tcp",          0,   POPT_ARG_INT, &tcpPort, 0, "add TCP transport on specified port", "5060"},
-      {"tls",          0,   POPT_ARG_INT, &tlsPort, 0, "add TLS transport on specified port", "5061"},
-      {"dtls",         0,   POPT_ARG_INT, &dtlsPort, 0, "add DTLS transport on specified port", "5061"},
-
-      {"register-duration",  0,   POPT_ARG_INT, &mRegisterDuration, 0, "expires for register (0 for no reg)", "3600"},
+      {"log-type",     'l',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
+      {"log-level",    'v',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logLevel,  0, "specify the default log level", "DEBUG|INFO|WARN|ERROR|FATAL"},
+      {"record-route",  'r',  POPT_ARG_STRING, &recordRoute,  0, "specify uri to use as Record-Route", "sip:example.com"},
+      {"enable-flow-tokens",  'f',  POPT_ARG_NONE, &flowTokens,  0, "enable flow token hack", 0},
+      {"tls-domain",   't',  POPT_ARG_STRING, &tlsDomain,  0, "act as a TLS server for specified domain", "example.com"},
+      {"host",   0,  POPT_ARG_STRING, &proxyHostName,  0, "test a proxy running at a given hostname", "example.com"},
+      {"userIPAddr",   0,  POPT_ARG_STRING, &userIPAddr,  0, "User agents will bind to this interface", "192.168.0.12"},
+      {"multihome",   0,  POPT_ARG_STRING, &multihomedAddrs,  0, "A comma-separated list of available IP addresses for this machine; this can be used to test SCTP multihoming, when it is supported", ""},
+      {"mysqlServer",    'x',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &mySqlServer,  0, "enable MySQL and provide name of server", "localhost"},
+      {"udp",            0,  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT,    &udpPorts, 0, "add UDP transport on specified port/s", "5060"},
+      {"tcp",            0,  POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,    &tcpPorts, 0, "add TCP transport on specified port/s", "5060"},
+      {"tls",            0,  POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,    &tlsPorts, 0, "add TLS transport on specified port/s", "5061"},
+      {"dtls",           0,  POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,    &dtlsPorts, 0, "add DTLS transport on specified port/s", "none (dtls disabled)"},
       {"disable-v6",   0,   POPT_ARG_NONE, &noV6, 0, "disable IPV6", 0},
       {"disable-v4",   0,   POPT_ARG_NONE, &noV4, 0, "disable IPV4", 0},
+      {"disable-auth",   0,  POPT_ARG_NONE,   &noChallenge, 0, "disable DIGEST challenges", 0},
+      {"disable-web-auth",0, POPT_ARG_NONE,   &noWebChallenge, 0, "disable HTTP challenges", 0},
+      {"disable-reg",  0,    POPT_ARG_NONE,   &noRegistrar, 0, "disable registrar", 0},
+      {"disable-cert-server", 0,POPT_ARG_NONE, &noCertServer, 0, "run a cert server", 0},
+      {"cert-path",      0,   POPT_ARG_STRING, &certPath,  0, "path for certificates (default ~/.sipCerts)", 0},
+      {"reqChainName",   0,  POPT_ARG_STRING, &reqChainName,  0, "name of request chain (default: default)", 0},
+      {"http",            0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &httpPort, 0, "run HTTP server on specified port", "5180"},
+      {"enum-suffix",     'e',   POPT_ARG_STRING, &enumSuffix,  0, "specify enum suffix to search", "e164.arp"},
+      {"encrypt",      0, POPT_ARG_NONE, &encrypt, 0, "whether to encrypt or not", 0},
+      {"sign",         's', POPT_ARG_NONE, &sign, 0,   "signs messages you send", 0},
+      {"gen-user-cert",'u', POPT_ARG_NONE, &genUserCert, 0, "generate a new user certificate", 0},
+      {"register-duration",  0,   POPT_ARG_INT, &mRegisterDuration, 0, "expires for register (0 for no reg)", "3600"},
       // may want to be able to specify that PUBLISH will occur
 
       {"aor",         'a',  POPT_ARG_STRING, &inputAor,  0, "specify address of record", "sip:alice@example.com"},
@@ -75,37 +98,67 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"buddies",       'b',  POPT_ARG_STRING, &inputBuddies,  0, "list of buddy aors", "sip:b1@example.com,sip:b2@example.com"},
 
       {"pass-phrase",   'k',  POPT_ARG_STRING, &passPhrase,  0, "pass phrase for private key", 0},
-      {"cert-path",      0,   POPT_ARG_STRING, &certPath,  0, "path for certificates (default ~/.sipCerts)", 0},
-      {"disable-outbound",     0,   POPT_ARG_NONE,                            &outboundDisabled,     0, "disable outbound support (draft-ietf-sip-outbound)", 0},
-      {"outbound-version",     0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,                            &outboundVersion,     0, "set the version of outbound to support", "8"},
-      {"enable-flow-tokens",     0,   POPT_ARG_NONE,                            &rrTokenHackEnabled,     0, "enable use of flow-tokens in non-outbound cases (This is a workaround, and it is broken. Only use it if you have to.)", 0},
-      {"force-record-route",     0,  POPT_ARG_NONE,                            &forceRecordRoute,    0, "force record-routing", 0},
+      
       POPT_AUTOHELP
       { NULL, 0, 0, NULL, 0 }
    };
    
    poptContext context = poptGetContext(NULL, argc, const_cast<const char**>(argv), table, 0);
-   if (poptGetNextOpt(context) < -1)
-   {
-      cerr << "Bad command line argument entered" << endl;
-      poptPrintHelp(context, stderr, 0);
-      exit(-1);
-   }
-   
+   poptGetNextOpt(context);
+
+   mHttpPort = httpPort;
    mLogType = logType;
    mLogLevel = logLevel;
-   Log::initialize(mLogType, mLogLevel, argv[0]);
+   //Log::initialize(mLogType, mLogLevel, argv[0]);
+
+   if (tlsDomain) 
+   {
+      mTlsDomain = tlsDomain;
+   }
+
+   if(proxyHostName)
+   {
+      mProxyHostName=proxyHostName;
+   }
+   
+   if(userIPAddr)
+   {
+      mUserIPAddr=userIPAddr;
+   }
+
+   mMultihomedAddrs = toDataVector(multihomedAddrs, "IP addrs for multihoming tests");
+
+   if (recordRoute) 
+   {
+      mRecordRoute = toUri(recordRoute, "Record-Route");
+   }
+
+   mEnableFlowTokenHack = flowTokens;
+   mUdpPorts = toIntSet(udpPorts, "udp ports");
+   mTcpPorts = toIntSet(tcpPorts, "tcp ports");
+   mTlsPorts = toIntSet(tlsPorts, "tls ports");
+   mDtlsPorts = toIntSet(dtlsPorts, "dtls ports");
+   mNoV4 = noV4;
+   mNoV6 = noV6;
+   if (certPath) mCertPath = certPath;
+   else mCertPath = basePath + "/.sipCerts";
+   mNoChallenge = noChallenge != 0;
+   mNoWebChallenge = noWebChallenge != 0;
+   mNoRegistrar = noRegistrar != 0 ;
+   mCertServer = noCertServer==0 ;
+   mRequestProcessorChainName=reqChainName;
+
+   if (enumSuffix) mEnumSuffix = enumSuffix;
+   
+   if (mySqlServer) 
+   {
+      mMySqlServer = Data(mySqlServer);
+   }
+
    
    mEncrypt = encrypt;
    mSign = sign;
    mGenUserCert = genUserCert;
-   if (tlsDomain) mTlsDomain = tlsDomain;
-   mUdpPort = udpPort;
-   mTcpPort = tcpPort;
-   mTlsPort = tlsPort;
-   mDtlsPort = dtlsPort;
-   mNoV4 = noV4;
-   mNoV6 = noV6;
    if (inputAor)
    {
       mAor = toUri(inputAor, "aor");
@@ -122,14 +175,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mBuddies = toUriVector(inputBuddies, "buddies"); // was addList   
    mTarget = toUri(inputTarget, "target"); // was dest
    if (passPhrase) mPassPhrase = passPhrase;
-   if (certPath) mCertPath = certPath;
-   else mCertPath = basePath + "/.sipCerts";
-
-   InteropHelper::setOutboundVersion(outboundVersion);
-   InteropHelper::setOutboundSupported(outboundDisabled ? false : true);
-   InteropHelper::setRRTokenHackEnabled((rrTokenHackEnabled==0) ? false : true);
-   mForceRecordRoute = (forceRecordRoute!=0);
-
+   
    // pubList for publish targets
 
    // Free the option parsing context.
@@ -185,7 +231,61 @@ CommandLineParser::toUriVector(const char* input, const char* description)
    }
    return uris;
 }
-   
+
+std::set<int> 
+CommandLineParser::toIntSet(const char* input, const char* description)
+{
+   std::set<int> arguments; 
+
+   if (input)
+   {
+      Data buffer = input;
+      if (input)
+      {
+         for (char* token = strtok(const_cast<char*>(buffer.c_str()), ","); token != 0; token = strtok(0, ","))
+         {
+            try
+            {
+             int temp;
+            temp = Data(token).convertInt();
+            arguments.insert(temp);
+            } 
+            catch (ParseException& e)
+            {
+
+
+               exit(-1);
+            }
+            catch (...)
+            {
+
+
+            }
+         }
+      }
+   }
+   return arguments;
+}
+
+std::vector<Data> 
+CommandLineParser::toDataVector(const char* input, const char* description)
+{
+   std::vector<Data> datas; 
+   if (input)
+   {
+      char buffer[2048];
+      strcpy(buffer, input);
+
+      for (char* token = strtok(buffer, ","); token != 0; token = strtok(0, ","))
+      {
+         datas.push_back(Data(token));
+      }
+   }
+   return datas;
+}
+
+
+/* Copyright 2007 Estacado Systems */
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

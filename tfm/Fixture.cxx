@@ -7,6 +7,10 @@
 #include "tfm/repro/TestRepro.hxx"
 #include "tfm/repro/TestReproUser.hxx"
 
+#ifdef USE_SSL
+#include "resip/stack/ssl/Security.hxx"
+#endif
+
 #include "rutil/BaseException.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Log.hxx"
@@ -36,6 +40,15 @@ TestUser* Fixture::enlai = 0;
 TestUser* Fixture::cullen = 0;
 TestUser* Fixture::jozsef = 0;
 TestUser* Fixture::jasonTcp = 0;
+TestUser* Fixture::derekTcp = 0;
+TestUser* Fixture::davidTcp = 0;
+TestUser* Fixture::enlaiTcp = 0;
+TestUser* Fixture::cullenTcp = 0;
+TestUser* Fixture::jasonTls = 0;
+TestUser* Fixture::derekTls = 0;
+TestUser* Fixture::davidTls = 0;
+TestUser* Fixture::enlaiTls = 0;
+TestUser* Fixture::cullenTls = 0;
 
 Data Fixture::publicInterface;
 Data Fixture::privateInterface;
@@ -49,17 +62,15 @@ Fixture::~Fixture()
 {
 }
 
-static TestReproUser* makeReproUser(TestProxy& proxy, const Data& user, const Data& host, Security* security, resip::TransportType transport = resip::UDP)
+static TestReproUser* makeReproUser(TestProxy& proxy, const Data& user, const Data& host, const TransportType trans, Security* security)
 {
    Uri j;
    j.user() = user;
    j.host() = host;
-#if 0 // enable for TLS testing
-   j.param(p_transport) = Symbols::TLS;
-   return new TestReproUser(proxy, j, j.user(), j.user(), TLS, TestSipEndPoint::NoOutboundProxy, Data::Empty, security);
-#else
-   return new TestReproUser(proxy, j, j.user(), j.user(), transport, TestSipEndPoint::NoOutboundProxy, Data::Empty, security);
-#endif
+   
+   
+   return new TestReproUser(proxy, j, j.user(), j.user(), trans, TestSipEndPoint::NoOutboundProxy, Data::Empty, security);
+
 }
 
 void
@@ -71,18 +82,27 @@ Fixture::initialize(CommandLineParser& args)
                          5060);
 #else
    // enable for TLS testing
-   //security = new resip::Security(getenv("PWD"));
-   proxy = new TestRepro("proxy", "localhost", 5060,Data::Empty,args.mForceRecordRoute, security);
-   jason = makeReproUser(*proxy, "jason", "localhost", security);
-   jason1 = makeReproUser(*proxy, "jason", "localhost", security);
-   jason2 = makeReproUser(*proxy, "jason", "localhost", security);
-   jason3 = makeReproUser(*proxy, "jason", "localhost", security);
-   derek = makeReproUser(*proxy, "derek", "localhost", security);
-   david = makeReproUser(*proxy, "david", "localhost", security);
-   enlai = makeReproUser(*proxy, "enlai", "localhost", security);
-   cullen = makeReproUser(*proxy, "cullen", "localhost", security);
-   jozsef = makeReproUser(*proxy, "jozsef", "localhost", security, TCP);
-   jasonTcp = makeReproUser(*proxy, "jozsef", "localhost", security, TCP);
+   security = new resip::Security(getenv("PWD"));
+   proxy = new TestRepro("proxy", "localhost", args, "127.0.0.1", security);
+   jason = makeReproUser(*proxy, "jason", "localhost",UDP, security);
+   jason1 = makeReproUser(*proxy, "jason", "localhost",UDP, security);
+   jason2 = makeReproUser(*proxy, "jason", "localhost",UDP, security);
+   jason3 = makeReproUser(*proxy, "jason", "localhost",UDP, security);
+   derek = makeReproUser(*proxy, "derek", "localhost",UDP, security);
+   david = makeReproUser(*proxy, "david", "localhost",UDP, security);
+   enlai = makeReproUser(*proxy, "enlai", "localhost",UDP, security);
+   cullen = makeReproUser(*proxy, "cullen", "localhost",UDP, security);
+   jozsef = makeReproUser(*proxy, "jozsef", "localhost", TCP, security);
+   jasonTcp=makeReproUser(*proxy,"jason","localhost",TCP,security);
+   derekTcp = makeReproUser(*proxy, "derek", "localhost",TCP, security);
+   davidTcp = makeReproUser(*proxy, "david", "localhost",TCP, security);
+   enlaiTcp = makeReproUser(*proxy, "enlai", "localhost",TCP, security);
+   cullenTcp = makeReproUser(*proxy, "cullen", "localhost",TCP, security);
+   jasonTls=makeReproUser(*proxy,"jason","localhost",TLS,security);
+   derekTls = makeReproUser(*proxy, "derek", "localhost",TLS, security);
+   davidTls = makeReproUser(*proxy, "david", "localhost",TLS, security);
+   enlaiTls = makeReproUser(*proxy, "enlai", "localhost",TLS, security);
+   cullenTls = makeReproUser(*proxy, "cullen", "localhost",TLS, security);
 #endif
 }
 
@@ -104,9 +124,9 @@ Fixture::tearDown()
          WarningLog(<<"FAILED: Sleeping until retransmissions finish.");
          InfoLog(<<"===================================================");
 #ifndef WIN32
-         sleep(35); // could sleep longer here
+         sleep(65); // could sleep longer here
 #else
-         Sleep(35000); // could sleep longer here
+         Sleep(65000); // could sleep longer here
 #endif
       }
       else
@@ -128,12 +148,40 @@ Fixture::tearDown()
    cullen->clean();
    jozsef->clean();
    jasonTcp->clean();
+   derekTcp->clean();
+   davidTcp->clean();
+   enlaiTcp->clean();
+   cullenTcp->clean();
+   jasonTls->clean();
+   derekTls->clean();
+   davidTls->clean();
+   enlaiTls->clean();
+   cullenTls->clean();
 }
 
       
 void 
 Fixture::destroyStatic()
 {
+   delete jason;
+   delete jason1;
+   delete jason2;
+   delete jason3;
+   delete derek;
+   delete david;
+   delete enlai;
+   delete cullen;
+   delete jozsef;
+   delete jasonTcp;
+   delete derekTcp;
+   delete davidTcp;
+   delete enlaiTcp;
+   delete cullenTcp;
+   delete jasonTls;
+   delete derekTls;
+   delete davidTls;
+   delete enlaiTls;
+   delete cullenTls;
    InfoLog(<< "Deleting proxy");
    delete proxy;
    proxy = 0;

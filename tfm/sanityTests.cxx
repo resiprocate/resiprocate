@@ -2,6 +2,8 @@
 #include "cppunit/TextTestResult.h"
 
 #include <signal.h>
+#include "resip/stack/ApiCheckList.hxx"
+#include "resip/stack/InteropHelper.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Random.hxx"
 #include "tfm/CommandLineParser.hxx"
@@ -28,8 +30,8 @@ static const int WaitForResponse = 1000;
 static const int WaitForRegistration = 1000;
 static const int PauseTime = 100;
 static const int WaitForPause = 1100;
-static const int WaitForEndOfTest = 1000;
-static const int WaitForEndOfSeq = 1000;
+static const int WaitForEndOfTest = 100;
+static const int WaitForEndOfSeq = 100;
 static const int Seconds = 1000;
 
 // If defined test which are labeled with BUGTEST or BADTESTS will
@@ -69,10 +71,19 @@ class TestHolder : public Fixture
                i->param(p_response)="ffffffffffffffffffffffffffffffff";
             }
          }
-
+      
+         if(msg->exists(h_Authorizations))
+         {
+            Auths::iterator i = msg->header(h_Authorizations).begin();
+            for(; i!=msg->header(h_Authorizations).end(); ++i)
+            {
+               i->param(p_response)="ffffffffffffffffffffffffffffffff";
+            }
+         
+         }
+      
          return msg;
       }
-
 
       static boost::shared_ptr<SipMessage>
       badNonce(boost::shared_ptr<SipMessage> msg)
@@ -432,6 +443,32 @@ class TestHolder : public Fixture
          ExecuteSequences();
       }
 
+   /*!
+      @brief Registration callflow with Record-Route in REGISTER.
+      
+      This tests whether the registrar will copy the Record-Route in the
+      request into the 200. (This should not happen, see RFC 3261 sec 10.3)
+      (Otherwise, this is a basic register callflow with auth)
+   */
+   void testRegisterWithRecordRoute()
+   {
+      WarningLog(<<"*!testRegisterWithRecordRoute!*");
+
+      Seq(condition(addRecordRoute,jason->registerUser(60, jason->getDefaultContacts())),
+          jason->expect(REGISTER/407, from(proxy), WaitForResponse, chain(new AssertNoRecordRoutes,condition(addRecordRoute,jason->digestRespond()))),
+          jason->expect(REGISTER/200, from(proxy), WaitForResponse, new AssertNoRecordRoutes),
+          WaitForEndOfTest);
+   
+      ExecuteSequences();
+   }
+   
+   /*!
+      @brief Registration callflow with multiple contacts in the REGISTER.
+      
+      Testing the case where a UAC sends a REGISTER request with multiple
+      contacts, is challenged with a 401, and digest responds. The contacts in
+      the 200 are checked.
+   */
       void testMultiple1()
       {         
          WarningLog(<<"*!testMultiple1!*");
@@ -460,7 +497,7 @@ class TestHolder : public Fixture
          Seq(jason->registerUser(3000, contacts),
              jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
              jason->expect(REGISTER/200, from(proxy), 5000, new CheckContacts(contacts, 3000)),
-             500);
+             WaitForEndOfTest);
          
          ExecuteSequences();
       }
@@ -475,7 +512,7 @@ class TestHolder : public Fixture
          jason->registerUser(3000,contacts),
          jason->expect(REGISTER/407, from(proxy),1000, jason->digestRespond()),
          jason->expect(REGISTER/200,from(proxy),5000, new CheckContacts(contacts,3000)),
-         500
+         WaitForEndOfTest
       );
       
       ExecuteSequences();
@@ -494,7 +531,7 @@ class TestHolder : public Fixture
          Seq(jason->registerUser(67, con),
              jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
              jason->expect(REGISTER/200, from(proxy), 1000, new CheckContacts(contacts, 67)),
-             500);
+             WaitForEndOfTest);
          
          ExecuteSequences();
       }
@@ -512,7 +549,7 @@ class TestHolder : public Fixture
          Seq(jason->registerUser(68, con),
              jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
              jason->expect(REGISTER/200, from(proxy), 5000, new CheckContacts(contacts, 68)),
-             500);
+             WaitForEndOfTest);
          
          ExecuteSequences();
       }
@@ -692,7 +729,7 @@ class TestHolder : public Fixture
          Seq(derek->registerUser(71, derek->getDefaultContacts()),
              derek->expect(REGISTER/407, from(proxy), 1000, derek->digestRespond()),
              derek->expect(REGISTER/200, from(proxy), 10000, new CheckContacts(derek->getDefaultContacts(), 71)),
-             500);
+             WaitForEndOfTest);
          ExecuteSequences();
          
          sleepSeconds(1);
@@ -706,7 +743,7 @@ class TestHolder : public Fixture
          Seq(derek->registerUser(72,contacts),
             optional(derek->expect(REGISTER/407,from(proxy),WaitForResponse, derek->digestRespond())),
              derek->expect(REGISTER/200, from(proxy), 10000, new CheckContacts(contacts, 72)),
-             500);
+             WaitForEndOfTest);
          
          ExecuteSequences();
       }
@@ -788,13 +825,13 @@ class TestHolder : public Fixture
          Seq(jason->registerUser(73, contactsBefore),
              jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
              jason->expect(REGISTER/200, from(proxy), 5000, new CheckContacts(contactsBefore, 73)),
-             500);
+             WaitForEndOfTest);
          ExecuteSequences();
 
          Seq(jason->registerUser(74, contactsAfter),
              jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
              jason->expect(REGISTER/200, from(proxy), 5000, new CheckContacts(contactsAfter, 74)),
-             500);
+             WaitForEndOfTest);
          ExecuteSequences();
 
          Seq(jason->registerUser(74, withoutQ),
@@ -820,7 +857,7 @@ class TestHolder : public Fixture
          Seq(derek->registerUser(79, derek->getDefaultContacts()),
              derek->expect(REGISTER/407, from(proxy), 1000, derek->digestRespond()),
              derek->expect(REGISTER/200, from(proxy), 10000, new CheckContacts(derek->getDefaultContacts(), 79)),
-             500);
+             WaitForEndOfTest);
          ExecuteSequences();
 
          NameAddr con = *(derek->getDefaultContacts().begin());
@@ -833,7 +870,7 @@ class TestHolder : public Fixture
          Seq(derek->registerUser(0, contacts),
              derek->expect(REGISTER/407, from(proxy), 1000, derek->digestRespond()),
              derek->expect(REGISTER/200, from(proxy), 10000, new CheckContacts(emptySet, 60)),
-             500);
+             WaitForEndOfTest);
          ExecuteSequences();
       }
 
@@ -847,7 +884,7 @@ class TestHolder : public Fixture
       Seq(jason->registerUser(70, contacts),
           jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
           jason->expect(REGISTER/200, from(proxy), 5000, new CheckContacts(contacts, 70)),
-          500);
+          WaitForEndOfTest);
 
       ExecuteSequences();
 
@@ -982,14 +1019,14 @@ class TestHolder : public Fixture
       Seq(jason->registerUser(75, contacts),
           jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
           jason->expect(REGISTER/200, from(proxy), 5000, new CheckContacts(contacts, 75)),
-          500);
+          WaitForEndOfTest);
       ExecuteSequences();
       
       set<NameAddr> nullSet;
       Seq(jason->registerUser(76, nullSet),
           jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
           jason->expect(REGISTER/200, from(proxy), 10000, new CheckFetchedContacts(contacts)),
-          500);
+          WaitForEndOfTest);
       ExecuteSequences();
    }
 
@@ -1000,7 +1037,7 @@ class TestHolder : public Fixture
       Seq(derek->registerUser(10, derek->getDefaultContacts()),
           derek->expect(REGISTER/407, from(proxy), 1000, derek->digestRespond()),
           derek->expect(REGISTER/200, from(proxy), 10000, new CheckContacts(derek->getDefaultContacts(), 60)),
-          500);
+          WaitForEndOfTest);
 
       ExecuteSequences();
       sleepSeconds(12);
@@ -1010,7 +1047,7 @@ class TestHolder : public Fixture
       Seq(derek->registerUser(78, emptySet),
           derek->expect(REGISTER/407, from(proxy), 1000, derek->digestRespond()),
           derek->expect(REGISTER/200, from(proxy), 10000, new CheckContacts(emptySet, 78)),
-          500);
+          WaitForEndOfTest);
       ExecuteSequences();
    }     
 
@@ -1028,7 +1065,799 @@ class TestHolder : public Fixture
          condition(unknownUserInTo,jason->registerUser(76, nullSet)),
          jason->expect(REGISTER/407,from(proxy),WaitForResponse,condition(unknownUserInTo,jason->digestRespond())),
          jason->expect(REGISTER/404, from(proxy), 10000, jason->noAction()),
-         500
+         WaitForEndOfTest
+      );
+      
+      ExecuteSequences();
+   }
+
+
+//*****************************Registrar tests (with outbound)********************************//
+
+//***********************New Registration Cases******************//
+
+//*********Sunny day cases**********//
+
+
+   /*!
+      @brief Basic registration callflow, with auth.
+      
+      This tests the callflow where a single UAC sends REGISTER, is challenged
+      with a 401, and then responds to the challenge. The contacts returned in
+      the 200 are checked.
+   */
+   void testRegisterBasicWithOutbound()
+      {
+         WarningLog(<<"*!testRegisterBasicWithOutbound!*");
+         
+         Seq(jason->registerUserWithOutbound(60, jason->getDefaultContacts()),
+             jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
+             jason->expect(REGISTER/200, from(proxy), WaitForResponse, new CheckContacts(jason->getDefaultContacts(), 60)),
+             WaitForEndOfTest);
+         ExecuteSequences();
+      }
+
+   /*!
+      @brief Registration callflow with Record-Route in REGISTER.
+      
+      This tests whether the registrar will copy the Record-Route in the
+      request into the 200. (This should not happen, see RFC 3261 sec 10.3)
+      (Otherwise, this is a basic register callflow with auth)
+   */
+   void testRegisterWithRecordRouteWithOutbound()
+   {
+      WarningLog(<<"*!testRegisterWithRecordRouteWithOutbound!*");
+
+      Seq(condition(addRecordRoute,jason->registerUserWithOutbound(60, jason->getDefaultContacts())),
+          jason->expect(REGISTER/407, from(proxy), WaitForResponse, chain(new AssertNoRecordRoutes,condition(addRecordRoute,jason->digestRespond()))),
+          jason->expect(REGISTER/200, from(proxy), WaitForResponse, new AssertNoRecordRoutes),
+          WaitForEndOfTest);
+   
+      ExecuteSequences();
+   }
+   
+   /*!
+      @brief Registration callflow with multiple contacts in the REGISTER.
+      
+      Testing the case where a UAC sends a REGISTER request with multiple
+      contacts, is challenged with a 401, and digest responds. The contacts in
+      the 200 are checked.
+   */
+      void testMultiple1WithOutbound()
+      {         
+         WarningLog(<<"*!testMultiple1WithOutbound!*");
+
+         set<NameAddr> contacts = mergeContacts(*jason, *derek);
+         
+         Seq(jason->registerUserWithOutbound(70, contacts),
+             jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
+             jason->expect(REGISTER/200, from(proxy), 1000, new CheckContacts(contacts, 70)),
+             WaitForEndOfTest);
+
+         ExecuteSequences();
+      }
+      
+      /*!
+         @brief Registration with multiple contacts and expiries.
+         
+         Callflow with two contacts in REGISTER; one of which has an expires
+         parameter of 60000, the other of which has no expires param. The
+         REGISTER also includes an Expires header of 3000. This checks to see
+         whether the registrar will correctly assign an expiry of 60000 to the
+         first contact, and 3000 to the second. This callflow includes auth.
+      */
+      void testMixedExpiresWithOutbound()
+      {
+         WarningLog(<<"*!testMixedExpiresWithOutbound!*");
+
+         NameAddr cond = *(jason->getDefaultContacts().begin());
+         NameAddr conk = *(derek->getDefaultContacts().begin());
+         cond.param(p_expires) = 60000;
+         
+         set<NameAddr> contacts;
+         contacts.insert(cond);
+         contacts.insert(conk);
+
+         Seq(jason->registerUserWithOutbound(3000, contacts),
+             jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
+             jason->expect(REGISTER/200, from(proxy), 5000, new CheckContacts(contacts, 3000)),
+             WaitForEndOfTest);
+         
+         ExecuteSequences();
+      }
+
+   /*!
+      @brief Third-party registration callflow.
+      
+      This callflow features a UAC registering a contact that does not point to
+      it. (ie, the address in the contact is not the same as the address the
+      UAC is attached to). This callflow features auth.
+   */
+   void testThirdPartyRegistrationWithOutbound()
+   {
+      WarningLog(<<"*!testThirdPartyRegistrationWithOutbound!*");
+      set<NameAddr> contacts;
+      contacts.insert(*(derek->getDefaultContacts().begin()));
+      Seq
+      (
+         jason->registerUserWithOutbound(3000,contacts),
+         jason->expect(REGISTER/407, from(proxy),1000, jason->digestRespond()),
+         jason->expect(REGISTER/200,from(proxy),5000, new CheckContacts(contacts,3000)),
+         WaitForEndOfTest
+      );
+      
+      ExecuteSequences();
+   }
+   
+      /*!
+         @brief Registration callflow with q-value parameter.
+         
+         This callflow tests whether the registrar will store a q-value param
+         on a contact. (in the 200, we check to make sure the correct q-value
+         paramter is present) This callflow features auth.
+      */
+      void testDetailsQValueWithOutbound()
+      {
+         WarningLog(<<"*!testDetailsQValueWithOutbound!*");
+         
+         NameAddr con = *(jason->getDefaultContacts().begin());
+         
+         set<NameAddr> contacts;
+         contacts.insert(con);
+                  
+         Seq(jason->registerUserWithOutbound(67, con),
+             jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
+             jason->expect(REGISTER/200, from(proxy), 1000, new CheckContacts(contacts, 67)),
+             WaitForEndOfTest);
+         
+         ExecuteSequences();
+      }
+
+      /*!
+         @brief Callflow with conflicting expiry values.
+         
+         The REGISTER includes a single contact with expires param 60000, and
+         an Expires header of 68. We test to ensure that the expires param is
+         honored, and the Expires header is ignored. This callflow features
+         auth.
+      */
+      void testDetailsExpiresWithOutbound()
+      {
+         WarningLog(<<"*!testDetailsExpiresWithOutbound!*");
+
+         NameAddr con = *(jason->getDefaultContacts().begin());
+         con.param(p_expires) = 60000;
+         
+         set<NameAddr> contacts;
+         contacts.insert(con);
+         
+         Seq(jason->registerUserWithOutbound(68, con),
+             jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
+             jason->expect(REGISTER/200, from(proxy), 5000, new CheckContacts(contacts, 68)),
+             WaitForEndOfTest);
+         
+         ExecuteSequences();
+      }
+
+//*********Rainy day cases**********//
+
+   /*!
+      @brief Registration callflow where the first 401 is dropped.
+      
+      This tests the case where the first 401 does not arrive at the UAC,
+      prompting the UAC to retransmit.
+      This scenario features auth.
+   */
+   void testRegister407DroppedWithOutbound()
+   {
+      WarningLog(<<"*!testRegister407DroppedWithOutbound!*");
+      
+      boost::shared_ptr<SipMessage> reg;
+      Seq
+      (
+         save(reg,jason->registerUserWithOutbound(60,jason->getDefaultContacts())),
+         jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->retransmit(reg)),
+         jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
+         jason->expect(REGISTER/200, from(proxy), WaitForResponse, new CheckContacts(jason->getDefaultContacts(), 60)),
+         WaitForEndOfTest
+      );
+      
+      ExecuteSequences();
+         }
+
+   /*!
+      @brief Registration with bad digest response.
+      
+      This callflow tests the case where the UAC sends an incorrect response to
+      the digest challenge. We expect the registrar to respond with a 403.
+      This scenario features auth.
+   */
+   void testRegisterBogusAuthWithOutbound()
+   {
+      WarningLog(<<"*!testRegisterBogusAuthWithOutbound!*");
+      
+      Seq
+      (
+         jason->registerUserWithOutbound(60,jason->getDefaultContacts()),
+         jason->expect(REGISTER/407, from(proxy), WaitForResponse, condition(bogusAuth,jason->digestRespond())),
+         jason->expect(REGISTER/403, from(proxy), WaitForResponse, jason->noAction()),
+         WaitForEndOfTest
+      );
+      
+      ExecuteSequences();
+      }
+
+   /*!
+      @brief Registration with an extremely late digest response.
+      
+      This tests the case where the UAC does not digest respond until the
+      nonce has expired. (We expect the registrar to issue a new challenge)
+      This test is not run by default, since it takes a very long time for
+      a nonce to expire.
+      This scenario features auth.
+   */
+   void testRegisterLateDigestResponseWithOutbound()
+   {
+      WarningLog(<<"*!testRegisterLateDigestResponseWithOutbound!*");
+      
+      Seq
+      (
+         jason->registerUserWithOutbound(60,jason->getDefaultContacts()),
+         jason->expect(REGISTER/407, from(proxy), WaitForResponse, chain(jason->pause(3000000),jason->digestRespond())),
+         jason->expect(REGISTER/407, from(proxy), 3000000, jason->digestRespond()),
+         jason->expect(REGISTER/200, from(proxy), WaitForResponse, new CheckContacts(jason->getDefaultContacts(), 60) ),
+         WaitForEndOfTest
+      );
+      
+      ExecuteSequences();
+      
+   }
+   
+      /*!
+         @brief Registration scenario with retransmission of digest response.
+         
+         This tests the scenario where the UAC retransmits its digest response.
+         This scenario features auth.
+      */
+      void testRegisterClientRetransmitsWithOutbound()
+      {
+         WarningLog(<<"*!testRegisterClientRetransmitsWithOutbound!*");
+
+         boost::shared_ptr<SipMessage> reg;
+         Seq(save(reg, jason->registerUserWithOutbound(60, jason->getDefaultContacts())),
+             jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
+             jason->expect(REGISTER/200, from(proxy), WaitForResponse, jason->retransmit(reg)),
+             jason->expect(REGISTER/200, from(proxy), WaitForResponse, new CheckContacts(jason->getDefaultContacts(), 60)),
+             WaitForEndOfTest);
+         ExecuteSequences();
+      }
+
+   /*!
+      @brief Registration scenario with no userpart in the To header uri.
+      
+      This tests the case where the AOR is of the form sip:hostname. A
+      registrar is supposed to reject this with a 403.
+      This scenario features auth.
+   */
+   void testRegisterNoUserInToWithOutbound()
+   {
+      WarningLog(<<"*!testRegisterNoUserInToWithOutbound!*");
+      
+      
+      Seq
+      (
+         jason->registerUserWithOutbound(60,jason->getDefaultContacts()), //There would be a condition noUserInTo here, but that would corrupt the registration message that gets reused in every test. (This is broken behavior on tfm's part)
+         jason->expect(REGISTER/407,from(proxy), WaitForResponse, condition(noUserInTo,jason->digestRespond())),
+         jason->expect(REGISTER/403,from(proxy),WaitForResponse, jason->noAction()),
+         WaitForEndOfTest
+      );
+      
+      ExecuteSequences();
+   }
+
+
+   /*!
+      @brief Registration scenario with a userpart in the Request-Uri.
+      
+      This tests the case where the Request-Uri in a REGISTER contains a
+      userpart. (UACs are not supposed to do this, but there is no language
+      forcing registrars to reject this request)
+      This scenario features auth.
+   */
+   void testregisterUserWithOutboundInReqUriWithOutbound()
+   {
+      WarningLog(<<"*!testregisterUserWithOutboundInReqUriWithOutbound!*");
+      
+      Seq
+      (
+         jason->registerUserWithOutbound(60,jason->getDefaultContacts()),
+         jason->expect(REGISTER/407,from(proxy), WaitForResponse, condition(userInReqUri,jason->digestRespond())),
+         jason->expect(REGISTER/400,from(proxy),WaitForResponse,jason->noAction()),
+         WaitForEndOfTest
+      );
+      
+      ExecuteSequences();
+   }
+
+   /*!
+      @brief Registration scneario where the AOR contains a host that the
+      registrar is not authoritative for.
+      
+      This tests the case where the To: header (ie, the AOR) contains a
+      hostpart that does not refer to the registrar. A registrar is supposed
+      to reject this with a 404. (See RFC 3261 sec 10.3 bullet 5)
+      This scenario features auth.
+   */
+   void testRegisterUnknownAorHostWithOutbound()
+   {
+      WarningLog(<<"*!testRegisterUnknownAorHostWithOutbound!*");
+      
+      Seq
+      (
+         jason->registerUserWithOutbound(60,jason->getDefaultContacts()),
+         jason->expect(REGISTER/407,from(proxy),WaitForResponse,condition(unknownHostInTo,jason->digestRespond())),
+         jason->expect(REGISTER/404,from(proxy),WaitForResponse, jason->noAction()),
+         WaitForEndOfTest
+      );
+      
+      ExecuteSequences();
+   }
+
+   /*!
+      @brief Registration with unknown user in AOR.
+      
+      This tests the case were the To: header (ie, AOR) contains a user part
+      that is not provisioned at the registrar. The registrar is supposed to
+      reject this with a 404.
+      This scenario features auth.
+   */
+   void testRegisterUnknownAorUserWithOutbound()
+   {
+      WarningLog(<<"*!testRegisterUnknownAorUserWithOutbound!*");
+      
+      Seq
+      (
+         jason->registerUserWithOutbound(60,jason->getDefaultContacts()),
+         jason->expect(REGISTER/407,from(proxy),WaitForResponse,condition(unknownUserInTo,jason->digestRespond())),
+         jason->expect(REGISTER/404,from(proxy),WaitForResponse, jason->noAction()),
+         WaitForEndOfTest
+      );
+      
+      ExecuteSequences();
+   }
+
+      /*!
+         @brief Registration scenario with an over-large CallId.
+         
+         This tests the case where the REGISTER request conatins a CallId that
+         is 4096 characters long. We expect the registrar to reject this 
+         with a 400, although there is no language that mandates this.
+         This scenario features auth.
+      */
+      void testOversizeCallIdRegisterWithOutbound()
+      {
+         WarningLog(<<"*!testOversizeCallIdRegisterWithOutbound!*");
+         
+         Seq(condition(largeCallId, jasonTcp->registerUserWithOutbound(60, jasonTcp->getDefaultContacts())),
+             jasonTcp->expect(REGISTER/407, from(proxy), WaitForResponse, jasonTcp->noAction()),
+             WaitForEndOfTest);
+         ExecuteSequences();
+      }
+
+      /*!
+         @brief Registration scenario with an over-large contact.
+         
+         This tests the case where the REGISTER contains a Contact that is
+         4096 characters in length. We expect the regstrar to reject this
+         request with a 500, but there is no language mandating this behavior.
+         This scenario features auth.
+      */
+      void testOversizeContactRegisterWithOutbound()
+      {
+         WarningLog(<<"*!testOversizeContactRegisterWithOutbound!*");
+         Seq(condition(largeContact, jasonTcp->registerUserWithOutbound(60, jasonTcp->getDefaultContacts())),
+             jasonTcp->expect(REGISTER/407, from(proxy), WaitForResponse, jasonTcp->digestRespond()),
+             jasonTcp->expect(REGISTER/200, from(proxy), WaitForResponse, jasonTcp->noAction()),
+             WaitForEndOfTest);
+         ExecuteSequences();
+      }
+
+//*******************Refresh type tests*******************/
+
+//*********Sunny day cases**********//
+
+
+      /*!
+         @brief Basic registration refresh scenario.
+         
+         This tests the case where the UAC is refreshing an existing
+         registration. The contacts in the 200 to both the first registration
+         and the refresh are checks. This scenario features auth.
+      */
+      void testRefreshWithOutbound()
+      {
+         WarningLog(<<"*!testRefreshWithOutbound!*");
+
+         Seq(derek->registerUserWithOutbound(71, derek->getDefaultContacts()),
+             derek->expect(REGISTER/407, from(proxy), 1000, derek->digestRespond()),
+             derek->expect(REGISTER/200, from(proxy), 10000, new CheckContacts(derek->getDefaultContacts(), 71)),
+             WaitForEndOfTest);
+         ExecuteSequences();
+         
+         sleepSeconds(1);
+
+         NameAddr con = *(derek->getDefaultContacts().begin());
+         con.param(p_expires) = 6000;
+
+         set<NameAddr> contacts;
+         contacts.insert(con);
+
+         Seq(derek->registerUserWithOutbound(72,contacts),
+            optional(derek->expect(REGISTER/407,from(proxy),WaitForResponse, derek->digestRespond())),
+             derek->expect(REGISTER/200, from(proxy), 10000, new CheckContacts(contacts, 72)),
+             WaitForEndOfTest);
+         
+         ExecuteSequences();
+      }
+
+   /*!
+      @brief Registration refresh scenario with multiple contacts.
+      
+      This tests the case where the UAC refreshes multiple contacts in the same
+      REGISTER request. (These contacts are initially registered in a single
+      request as well) The contacts returned in the 200 are checked. This 
+      scenario features auth.
+   */
+   void testRefreshMultiWithOutbound()
+   {
+      WarningLog(<<"*!testRefreshMultiWithOutbound!*");
+   
+      set<NameAddr> contacts = mergeContacts(*jason, *derek);
+
+      Seq
+      (
+         jason->registerUserWithOutbound(60,contacts),
+         jason->expect(REGISTER/407,from(proxy),WaitForResponse,jason->digestRespond()),
+         jason->expect(REGISTER/200,from(proxy),WaitForResponse,new CheckContacts(contacts,60)),
+         WaitForEndOfSeq
+      );
+      
+      ExecuteSequences();
+      
+      sleepSeconds(1);
+      
+      Seq
+      (
+         jason->registerUserWithOutbound(120,contacts),
+         optional(jason->expect(REGISTER/407,from(proxy),WaitForResponse, jason->digestRespond())),
+         jason->expect(REGISTER/200,from(proxy),WaitForResponse, new CheckContacts(contacts,120)),
+         WaitForEndOfTest
+      );
+      
+      ExecuteSequences();
+   
+   }
+
+   /*!
+      @brief Third-party registration refresh scenario.
+      
+      This tests the case where a third party refreshes a registration that it
+      established earlier. This scenario features auth.
+   */
+   void testRefreshThirdPartyWithOutbound()
+   {
+      WarningLog(<<"*!testRefreshThirdPartyWithOutbound!*");
+      
+      Seq
+      (
+         jason->registerUserWithOutbound(60,derek->getDefaultContacts()),
+         jason->expect(REGISTER/407,from(proxy),WaitForResponse,jason->digestRespond()),
+         jason->expect(REGISTER/200,from(proxy),WaitForResponse,new CheckContacts(derek->getDefaultContacts(),60)),
+         WaitForEndOfSeq
+      );
+      
+      ExecuteSequences();
+      
+      Seq
+      (
+         jason->registerUserWithOutbound(120,derek->getDefaultContacts()),
+         jason->expect(REGISTER/407,from(proxy),WaitForResponse,jason->digestRespond()),
+         jason->expect(REGISTER/200,from(proxy),WaitForResponse,new CheckContacts(derek->getDefaultContacts(),120)),
+         WaitForEndOfSeq
+      );
+      
+      ExecuteSequences();
+   }
+
+
+      /*!
+         @brief Registration refresh scenario with a change in q-value.
+         
+         This tests the case where the q-value of a binding is changed when
+         the UAC refreshes. This scenario features auth.
+      */
+      void testChangeQValueWithOutbound()
+      {         
+         WarningLog(<<"*!testChangeQValueWithOutbound!*");
+
+         NameAddr con = *(jason->getDefaultContacts().begin());
+         con.param(p_q) = 0.1;
+         set<NameAddr> contactsBefore;
+         contactsBefore.insert(con);
+         
+         con.param(p_q) = 0.5;         
+         set<NameAddr> contactsAfter;
+         contactsAfter.insert(con);
+         
+         con.remove(p_q);
+         set<NameAddr> withoutQ;
+         withoutQ.insert(con);
+         
+         Seq(jason->registerUserWithOutbound(73, contactsBefore),
+             jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
+             jason->expect(REGISTER/200, from(proxy), 5000, new CheckContacts(contactsBefore, 73)),
+             WaitForEndOfTest);
+         ExecuteSequences();
+
+         Seq(jason->registerUserWithOutbound(74, contactsAfter),
+             jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
+             jason->expect(REGISTER/200, from(proxy), 5000, new CheckContacts(contactsAfter, 74)),
+             WaitForEndOfTest);
+         ExecuteSequences();
+
+         Seq(jason->registerUserWithOutbound(74, withoutQ),
+             jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
+             jason->expect(REGISTER/200, from(proxy), 5000, new CheckContacts(withoutQ, 74)),
+             WaitForEndOfTest);
+         ExecuteSequences();
+      }
+                               
+
+//*********Rainy day cases**********//
+
+       
+       
+//*******************Unregister type tests*******************/
+
+//*********Sunny day cases**********//
+
+      /*!
+         @brief Basic unregister scenario.
+         
+         This tests the case where a UAC unregisters a specific contact. This
+         scenario features auth.
+      */
+      void testSetThenRemoveSpecificWithOutbound()
+      {
+         WarningLog(<<"*!testSetThenRemoveSpecificWithOutbound!*");
+
+         Seq(derek->registerUserWithOutbound(79, derek->getDefaultContacts()),
+             derek->expect(REGISTER/407, from(proxy), 1000, derek->digestRespond()),
+             derek->expect(REGISTER/200, from(proxy), 10000, new CheckContacts(derek->getDefaultContacts(), 79)),
+             WaitForEndOfTest);
+         ExecuteSequences();
+
+         NameAddr con = *(derek->getDefaultContacts().begin());
+         con.param(p_expires) = 0;
+
+         set<NameAddr> contacts;
+         contacts.insert(con);
+
+         set<NameAddr> emptySet;
+         Seq(derek->registerUserWithOutbound(0, contacts),
+             derek->expect(REGISTER/407, from(proxy), 1000, derek->digestRespond()),
+             derek->expect(REGISTER/200, from(proxy), 10000, new CheckContacts(emptySet, 60)),
+             WaitForEndOfTest);
+         ExecuteSequences();
+      }
+
+
+   /*!
+      @brief Unregister scenario with multiple contacts.
+      
+      This tests the case where the UAC unregisters multiple contacts. This
+      is not done with the Contact: * style de-registration. This scenario
+      features auth.
+   */
+   void testUnregisterMultiWithOutbound()
+   {
+      WarningLog(<<"*!testUnregisterMultiWithOutbound!*");
+      
+      set<NameAddr> contacts = mergeContacts(*jason, *derek);
+      set<NameAddr> emptySet;
+      
+      Seq(jason->registerUserWithOutbound(70, contacts),
+          jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
+          jason->expect(REGISTER/200, from(proxy), 1000, new CheckContacts(contacts, 70)),
+          WaitForEndOfTest);
+
+      ExecuteSequences();
+
+      Seq
+      (
+         jason->registerUserWithOutbound(0,contacts),
+         jason->expect(REGISTER/407,from(proxy),WaitForResponse,jason->digestRespond()),
+         jason->expect(REGISTER/200,from(proxy),WaitForResponse,new CheckContacts(emptySet,0)),
+         WaitForEndOfTest
+      );
+      
+      ExecuteSequences();
+   
+   }
+
+   /*!
+      @brief Unregistration of a contact that has already expired.
+      
+      This tests the case where the UAC unregisters a contact that has already
+      expired. We expect a 200 from the registrar. This scenario features auth.
+   */
+   void testUnregisterExpiredWithOutbound()
+   {
+      WarningLog(<<"*!testUnregisterExpiredWithOutbound!*");
+      
+      set<NameAddr> emptySet;
+      Seq(derek->registerUserWithOutbound(5, derek->getDefaultContacts()),
+          derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
+          derek->expect(REGISTER/200, from(proxy), WaitForResponse, derek->noAction()),
+          WaitForEndOfSeq);
+      
+      ExecuteSequences();
+      
+      sleepSeconds(7);
+      
+      
+      Seq
+      (
+         derek->registerUserWithOutbound(0, derek->getDefaultContacts()),
+         derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
+         derek->expect(REGISTER/200, from(proxy), 4*Seconds + WaitForResponse, new CheckContacts(emptySet, 0)),
+         WaitForEndOfTest
+      );
+      ExecuteSequences();
+   }
+
+//*********Rainy day cases**********//
+
+   /*!
+      @brief Unregister all (Contact: *) with non-zero Expires header.
+      
+      This tests the case where the UAC sends a REGISTER request with a
+      Contact: *, but a non-zero Expires header. The registrar is expected to
+      reject with a 400. This scenario features auth.
+   */
+   void testUnregisterAllBadExpiresWithOutbound()
+   {
+      WarningLog(<<"*!testUnregisterAllBadExpiresWithOutbound!*");
+      
+      NameAddr na;
+      set<NameAddr> all;
+      set<NameAddr> emptySet;
+      
+      na.setAllContacts();
+      all.insert( na );
+      
+      Seq(jason1->registerUserWithOutbound(60, jason1->getDefaultContacts()),
+          jason1->expect(REGISTER/407, from(proxy), WaitForResponse, jason1->digestRespond()),
+          jason1->expect(REGISTER/200, from(proxy), WaitForResponse, new CheckContacts(jason1->getDefaultContacts(),60)),
+          WaitForEndOfTest);
+      ExecuteSequences();
+      
+      Seq(jason2->registerUserWithOutbound(60, jason2->getDefaultContacts()),
+          jason2->expect(REGISTER/407, from(proxy), WaitForResponse, jason2->digestRespond()),
+          jason2->expect(REGISTER/200, from(proxy), WaitForResponse, new CheckFetchedContacts( mergeContacts(*jason1, *jason2) )),
+          WaitForEndOfTest);
+      ExecuteSequences();
+      
+      Seq(jason1->registerUserWithOutbound(10, all ),
+          jason1->expect(REGISTER/407,from(proxy),WaitForResponse,jason1->digestRespond()),
+          jason1->expect(REGISTER/400, from(proxy), WaitForResponse, jason1->noAction()),
+          WaitForEndOfTest);
+      
+      ExecuteSequences();
+   }
+
+   /*!
+      @brief Unregistration of a non-existent AOR.
+      
+      This tests the case where a UAC attempts to unregister a contact for an
+      AOR that doesn't exist. The registrar is expected to reject with a 404.
+      This scenario features auth.
+   */
+   void testUnregisterNonExistentWithOutbound()
+   {
+      WarningLog(<<"*!testUnregisterNonExistentWithOutbound!*");
+      
+      
+      Seq
+      (
+         condition(unknownUserInTo,jason->registerUserWithOutbound(0,jason->getDefaultContacts())),
+         jason->expect(REGISTER/407,from(proxy),WaitForResponse,condition(unknownUserInTo,jason->digestRespond())),
+         jason->expect(REGISTER/404,from(proxy),WaitForResponse, jason->noAction()),
+         WaitForEndOfTest
+      );
+      
+      ExecuteSequences();
+   }
+       
+       
+//*******************Fetch type tests*******************/
+
+//*********Sunny day cases**********//
+
+   /*!
+      @brief Basic registration fetch scenario.
+      
+      Tests the case where the UAC fetches the current registrations on an AOR.
+      This scenario features auth.
+   */
+   void testFetchWithOutbound()
+   {         
+      WarningLog(<<"*!testFetchWithOutbound!*");
+      set<NameAddr> contacts = mergeContacts(*jason, *derek);
+      
+      Seq(jason->registerUserWithOutbound(75, contacts),
+          jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
+          jason->expect(REGISTER/200, from(proxy), 5000, new CheckContacts(contacts, 75)),
+          WaitForEndOfTest);
+      ExecuteSequences();
+      
+      set<NameAddr> nullSet;
+      Seq(jason->registerUserWithOutbound(76, nullSet),
+          jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
+          jason->expect(REGISTER/200, from(proxy), 10000, new CheckFetchedContacts(contacts)),
+          WaitForEndOfTest);
+      ExecuteSequences();
+   }
+
+   /*!
+      @brief Registration fetch of expired contact.
+      
+      This tests that contacts are expiring as they should be, by fetching
+      a contact after waiting long enough for it to expire. This scenario
+      features auth.
+   */
+   void testExpiryCleanupWithOutbound()
+   {
+      WarningLog(<<"*!testExpiryCleanupWithOutbound!*");
+
+      Seq(derek->registerUserWithOutbound(10, derek->getDefaultContacts()),
+          derek->expect(REGISTER/407, from(proxy), 1000, derek->digestRespond()),
+          derek->expect(REGISTER/200, from(proxy), 10000, new CheckContacts(derek->getDefaultContacts(), 60)),
+          WaitForEndOfTest);
+
+      ExecuteSequences();
+      sleepSeconds(12);
+      // !jf! cause registration bindings to expire here
+      
+      set<NameAddr> emptySet;
+      Seq(derek->registerUserWithOutbound(78, emptySet),
+          derek->expect(REGISTER/407, from(proxy), 1000, derek->digestRespond()),
+          derek->expect(REGISTER/200, from(proxy), 10000, new CheckContacts(emptySet, 78)),
+          WaitForEndOfTest);
+      ExecuteSequences();
+   }     
+
+
+
+//*********Rainy day cases**********//
+
+   /*!
+      @brief Registration fetch on non-existent AOR.
+      
+      This tests the case where the UAC attempts to fetch contacts for an AOR
+      that does not exist. This scenario features auth.
+   */
+   void testFetchNonExistentWithOutbound()
+   {         
+      WarningLog(<<"*!testFetchNonExistentWithOutbound!*");
+
+      set<NameAddr> nullSet;
+      Seq
+      (
+         condition(unknownUserInTo,jason->registerUserWithOutbound(76, nullSet)),
+         jason->expect(REGISTER/407,from(proxy),WaitForResponse,condition(unknownUserInTo,jason->digestRespond())),
+         jason->expect(REGISTER/404, from(proxy), 10000, jason->noAction()),
+         WaitForEndOfTest
       );
       
       ExecuteSequences();
@@ -1064,7 +1893,86 @@ class TestHolder : public Fixture
       ExecuteSequences();  
    }
 
+   void testInviteBasicUpperCaseBranch()
+   {
+      WarningLog(<<"*!testInviteBasicUpperCaseBranch!*");
+      Seq(condition(upperBranchCase,derek->registerUser(60, derek->getDefaultContacts())),
+          derek->expect(REGISTER/407, from(proxy), WaitForResponse, condition(upperBranchCase,derek->digestRespond())),
+          derek->expect(REGISTER/200, from(proxy), WaitForResponse, derek->noAction()),
+          WaitForEndOfSeq);
+      ExecuteSequences();
+      
+      Seq(condition(upperBranchCase,jason->invite(*derek)),
+          optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
+          jason->expect(INVITE/407, from(proxy), WaitForResponse, chain(jason->ack(), condition(upperBranchCase,jason->digestRespond()))),
+          And(Sub(optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction()))),
+              Sub(derek->expect(INVITE, contact(jason), WaitForCommand, chain(derek->ring(), derek->answer())),
+                  jason->expect(INVITE/180, from(derek), WaitFor100, jason->noAction()),
+                  jason->expect(INVITE/200, contact(derek), WaitForResponse, condition(upperBranchCase,jason->ack())),
+                  derek->expect(ACK, from(jason), WaitForResponse, jason->noAction()))),
+          WaitForEndOfTest);
+      ExecuteSequences();  
+   }
 
+   void testInviteBasicTls()
+   {
+      WarningLog(<<"*!testInviteBasicTls!*");
+      
+      Seq
+      (
+         derekTls->registerUserWithOutbound(60, derekTls->getDefaultContacts()),
+         derekTls->expect(REGISTER/407, from(proxy), WaitForResponse, derekTls->digestRespond()),
+         derekTls->expect(REGISTER/200, from(proxy), WaitForResponse, derekTls->noAction()),
+         WaitForEndOfSeq
+      );
+      
+      ExecuteSequences();
+      
+      Seq
+      (
+         jasonTls->inviteWithOutbound(*derekTls),
+         optional(jasonTls->expect(INVITE/100, from(proxy), WaitFor100, jasonTls->noAction())),
+         jasonTls->expect(INVITE/407, from(proxy), WaitForResponse, chain(jasonTls->ack(), jasonTls->digestRespond())),
+         And
+         (
+            Sub
+            (
+               optional(jasonTls->expect(INVITE/100, from(proxy), WaitFor100, jasonTls->noAction()))
+            ),
+            Sub
+            (
+               derekTls->expect(INVITE, contact(jasonTls), WaitForCommand, chain(derekTls->ring(), derekTls->answer())),
+               jasonTls->expect(INVITE/180, from(derekTls), WaitFor100, jasonTls->noAction()),
+               jasonTls->expect(INVITE/200, contact(derekTls), WaitForResponse, jasonTls->ack()),
+               derekTls->expect(ACK, from(jasonTls), WaitForResponse, jasonTls->noAction())
+            )
+         ),
+         WaitForEndOfTest
+      );
+         
+      
+      ExecuteSequences();
+   }
+
+   void testInviteBasicRedirect()
+   {
+      WarningLog(<<"*!testInviteBasicRedirect!*");
+      Seq(derek->registerUser(60, derek->getDefaultContacts()),
+          derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
+          derek->expect(REGISTER/200, from(proxy), WaitForResponse, derek->noAction()),
+          WaitForEndOfSeq);
+      ExecuteSequences();
+      
+      Seq(jason->invite(*derek),
+          optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
+          jason->expect(INVITE/407, from(proxy), WaitForResponse, chain(jason->ack(), jason->digestRespond())),
+          optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
+          jason->expect(INVITE/302,from(proxy),WaitForResponse,chain(new CheckContacts(derek->getDefaultContacts(),0),jason->ack())),
+          WaitForEndOfTest);
+      ExecuteSequences();  
+   }
+
+   
    void testInviteCallerHangsUp()
    {
       WarningLog(<<"*!testInviteCallerHangsUp!*");
@@ -1073,6 +1981,8 @@ class TestHolder : public Fixture
           jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
           jason->expect(REGISTER/200, from(proxy), WaitForResponse, jason->noAction()),
           WaitForEndOfSeq);
+
+      ExecuteSequences();
 
       Seq(derek->registerUser(60, derek->getDefaultContacts()),
           derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
@@ -1105,6 +2015,7 @@ class TestHolder : public Fixture
           derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
           derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
           WaitForEndOfSeq);
+      ExecuteSequences();
       Seq(jason->registerUser(60, jason->getDefaultContacts()),
           jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
           jason->expect(REGISTER/200, from(proxy), WaitForRegistration, jason->noAction()),
@@ -1135,11 +2046,12 @@ class TestHolder : public Fixture
       Seq(jason->registerUser(60, jason->getDefaultContacts()),
           jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
           jason->expect(REGISTER/200, from(proxy), WaitForRegistration, jason->noAction()),
-          1000);
+          WaitForEndOfSeq);
+      ExecuteSequences();
       Seq(derek->registerUser(60, derek->getDefaultContacts()),
           derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
           derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
-          1000);
+          WaitForEndOfSeq);
       ExecuteSequences();
 
       Seq(derek->invite(*jason),
@@ -1168,6 +2080,7 @@ class TestHolder : public Fixture
           derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
           derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
           WaitForEndOfTest);
+      ExecuteSequences();
       Seq(jason->registerUser(60, jason->getDefaultContacts()),
           jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
           jason->expect(REGISTER/200, from(proxy), WaitForRegistration, jason->noAction()),
@@ -1298,7 +2211,7 @@ class TestHolder : public Fixture
       Seq(derek->registerUser(60, derek->getDefaultContacts()),
           derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
           derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
-          1000);
+          WaitForEndOfSeq);
       ExecuteSequences();
 
       Seq(david->invite(*derek),
@@ -1323,7 +2236,7 @@ class TestHolder : public Fixture
       Seq(derek->registerUser(60, derek->getDefaultContacts()),
           derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
           derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
-          1000);
+          WaitForEndOfSeq);
       ExecuteSequences();
       
       Seq
@@ -1361,7 +2274,7 @@ class TestHolder : public Fixture
          derek->registerUser(60, derek->getDefaultContacts()),
          derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
          derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
-         1000
+         WaitForEndOfSeq
       );
       ExecuteSequences();
 
@@ -1407,7 +2320,7 @@ class TestHolder : public Fixture
       Seq(derek->registerUser(60, derek->getDefaultContacts()),
           derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
           derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
-          1000);
+          WaitForEndOfSeq);
       ExecuteSequences();
       
       Seq
@@ -1447,7 +2360,7 @@ class TestHolder : public Fixture
          derek->registerUser(60, derek->getDefaultContacts()),
          derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
          derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
-         1000
+         WaitForEndOfSeq
       );
       ExecuteSequences();
 
@@ -1508,16 +2421,16 @@ class TestHolder : public Fixture
          (
             Sub
             (
-               jason->expect(INVITE/100,from(proxy),WaitForResponse,jason->cancel()),
+               jason->expect(INVITE/100,from(proxy),WaitForResponse, chain(jason->noAction(), jason->pause(50),jason->cancel())),
                jason->expect(CANCEL/200,from(proxy),WaitForResponse,jason->noAction())
             ),
             Sub
             (
-               derek->expect(INVITE,contact(jason),WaitForCommand,chain(derek->pause(700),derek->send100()))
+               derek->expect(INVITE,contact(jason),WaitForCommand,chain(derek->pause(1200), derek->send100()))
             )
          ),
 
-         derek->expect(CANCEL,from(proxy),WaitForCommand,chain(derek->ok(),derek->send487())),
+         derek->expect(CANCEL,from(proxy),WaitForCommand+1200,chain(derek->ok(),derek->send487())),
          And
          (
             Sub
@@ -1557,16 +2470,16 @@ class TestHolder : public Fixture
          (
             Sub
             (
-               jason->expect(INVITE/100,from(proxy),WaitForResponse,jason->cancel()),
+               jason->expect(INVITE/100,from(proxy),WaitForResponse,chain(jason->pause(100),jason->cancel())),
                jason->expect(CANCEL/200,from(proxy),WaitForResponse,jason->noAction())
             ),
             Sub
             (
-               derek->expect(INVITE,contact(jason),WaitForCommand,chain(derek->pause(700), derek->send100()))
+               derek->expect(INVITE,contact(jason),WaitForCommand,chain(derek->pause(1200),derek->send100()))
             )
          ),
 
-         derek->expect(CANCEL,from(proxy),WaitForCommand,chain(derek->ok(),derek->noAction())),
+         derek->expect(CANCEL,from(proxy),WaitForCommand+1200,chain(derek->ok(),derek->noAction())),
          jason->expect(INVITE/408,from(proxy),64100,jason->ack()),
          WaitForEndOfTest
       );
@@ -1596,7 +2509,7 @@ class TestHolder : public Fixture
          (
             Sub
             (
-               jason->expect(INVITE/100,from(proxy),WaitForResponse,jason->cancel()),
+               jason->expect(INVITE/100,from(proxy),WaitForResponse,chain(jason->pause(50),jason->cancel())),
                jason->expect(CANCEL/200,from(proxy),WaitForResponse,jason->noAction())
             ),
             Sub
@@ -1619,7 +2532,7 @@ class TestHolder : public Fixture
       Seq(derek->registerUser(60, derek->getDefaultContacts()),
           derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
           derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
-          1000);
+          WaitForEndOfSeq);
       ExecuteSequences();
       
       Seq
@@ -1818,13 +2731,22 @@ class TestHolder : public Fixture
          derek->invite(*jason),
          optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
          derek->expect(INVITE/407, from(proxy), WaitForResponse, chain(derek->ack(), derek->digestRespond())),
-         optional(derek->expect(INVITE/100,from(proxy),WaitForResponse,derek->noAction())),
-         jason->expect(INVITE,contact(derek),WaitForCommand,chain(jason->ring(),jason->ring(),jason->ring(),jason->answer())),
-         derek->expect(INVITE/180,from(proxy),WaitForResponse,derek->noAction()),
-         derek->expect(INVITE/180,from(proxy),WaitForResponse,derek->noAction()),
-         derek->expect(INVITE/180,from(proxy),WaitForResponse,derek->noAction()),
-         derek->expect(INVITE/200,from(proxy),WaitForResponse,derek->ack()),
-         jason->expect(ACK,contact(derek),WaitForCommand,jason->noAction()),
+         And
+         (
+            Sub
+            (
+               optional(derek->expect(INVITE/100,from(proxy),WaitForResponse,derek->noAction())),
+               derek->expect(INVITE/180,from(proxy),WaitForResponse,derek->noAction()),
+               derek->expect(INVITE/180,from(proxy),WaitForResponse,derek->noAction()),
+               derek->expect(INVITE/180,from(proxy),WaitForResponse,derek->noAction()),
+               derek->expect(INVITE/200,from(proxy),WaitForResponse,derek->ack()),
+               jason->expect(ACK,contact(derek),WaitForCommand,jason->noAction())
+            ),
+            Sub
+            (
+               jason->expect(INVITE,contact(derek),WaitForCommand,chain(jason->ring(),jason->ring(),jason->ring(),jason->answer()))
+            )
+         ),
          WaitForEndOfTest
       );
       
@@ -2031,7 +2953,7 @@ class TestHolder : public Fixture
       
       Seq
       (
-         jasonTcp->invite(*derek),
+         jasonTcp->inviteWithOutbound(*derek),
          optional(jasonTcp->expect(INVITE/100,from(proxy),1000,jasonTcp->noAction())),
          jasonTcp->expect(INVITE/407,from(proxy),1000,chain(jasonTcp->ack(),jasonTcp->digestRespond())),
          And
@@ -2056,7 +2978,343 @@ class TestHolder : public Fixture
       
       ExecuteSequences();
    }
-
+   
+   void testInviteUDPToTLSCallerHangsUp()
+   {
+      WarningLog(<<"*!testInviteUDPToTLSCallerHangsUp!*");
+      Seq
+      (
+         derekTls->registerUserWithOutbound(60, derekTls->getDefaultContacts()),
+         derekTls->expect(REGISTER/407,from(proxy),1000,derekTls->digestRespond()),
+         derekTls->expect(REGISTER/200,from(proxy),1000,new CheckContacts(derekTls->getDefaultContacts(),60)),
+         WaitForEndOfSeq
+      );
+      
+      ExecuteSequences();
+      
+      Seq
+      (
+         jason->invite(*derekTls),
+         optional(jason->expect(INVITE/100,from(proxy),1000,jason->noAction())),
+         jason->expect(INVITE/407,from(proxy),1000,chain(jason->ack(),jason->digestRespond())),
+         And
+         (
+            Sub
+            (
+               optional(jason->expect(INVITE/100,from(proxy),1000,derekTls->noAction()))
+            ),
+            Sub
+            (
+               derekTls->expect(INVITE,contact(jason),1000,chain(derekTls->ring(),derekTls->answer())),
+               jason->expect(INVITE/180,contact(derekTls),1000,jason->noAction()),
+               jason->expect(INVITE/200,contact(derekTls),1000,jason->ack()),
+               derekTls->expect(ACK,from(proxy),1000,chain(jason->pause(1000),jason->bye())),
+               derekTls->expect(BYE,from(proxy),2000,derekTls->ok()),
+               jason->expect(BYE/200,contact(derekTls),1000,jason->noAction())
+            )
+         ),
+         WaitForEndOfSeq
+         
+      );
+      
+      ExecuteSequences();
+      
+   }
+   
+   void testInviteUDPToTLSCalleeHangsUp()
+   {
+      WarningLog(<<"*!testInviteUDPToTLSCalleeHangsUp!*");
+      Seq
+      (
+         derekTls->registerUserWithOutbound(60, derekTls->getDefaultContacts()),
+         derekTls->expect(REGISTER/407,from(proxy),1000,derekTls->digestRespond()),
+         derekTls->expect(REGISTER/200,from(proxy),1000,new CheckContacts(derekTls->getDefaultContacts(),60)),
+         WaitForEndOfSeq
+      );
+      
+      ExecuteSequences();
+      
+      Seq
+      (
+         jason->invite(*derekTls),
+         optional(jason->expect(INVITE/100,from(proxy),1000,jason->noAction())),
+         jason->expect(INVITE/407,from(proxy),1000,chain(jason->ack(),jason->digestRespond())),
+         And
+         (
+            Sub
+            (
+               optional(jason->expect(INVITE/100,from(proxy),1000,derekTls->noAction()))
+            ),
+            Sub
+            (
+               derekTls->expect(INVITE,contact(jason),1000,chain(derekTls->ring(),derekTls->answer())),
+               jason->expect(INVITE/180,contact(derekTls),1000,jason->noAction()),
+               jason->expect(INVITE/200,contact(derekTls),1000,jason->ack()),
+               derekTls->expect(ACK,from(proxy),1000,chain(derekTls->pause(1000),derekTls->bye())),
+               jason->expect(BYE,from(proxy),2000,jason->ok()),
+               derekTls->expect(BYE/200,contact(jason),1000,derekTls->noAction())
+            )
+         ),
+         WaitForEndOfSeq
+         
+      );
+      
+      ExecuteSequences();
+      
+   }
+   
+   void testInviteTCPToTLSCallerHangsUp()
+   {
+      WarningLog(<<"*!testInviteTCPToTLSCallerHangsUp!*");
+      Seq
+      (
+         derekTls->registerUserWithOutbound(60, derekTls->getDefaultContacts()),
+         derekTls->expect(REGISTER/407,from(proxy),1000,derekTls->digestRespond()),
+         derekTls->expect(REGISTER/200,from(proxy),1000,new CheckContacts(derekTls->getDefaultContacts(),60)),
+         WaitForEndOfSeq
+      );
+      
+      ExecuteSequences();
+      
+      Seq
+      (
+         jasonTcp->invite(*derekTls),
+         optional(jasonTcp->expect(INVITE/100,from(proxy),1000,jasonTcp->noAction())),
+         jasonTcp->expect(INVITE/407,from(proxy),1000,chain(jasonTcp->ack(),jasonTcp->digestRespond())),
+         And
+         (
+            Sub
+            (
+               optional(jasonTcp->expect(INVITE/100,from(proxy),1000,derekTls->noAction()))
+            ),
+            Sub
+            (
+               derekTls->expect(INVITE,contact(jasonTcp),1000,chain(derekTls->ring(),derekTls->answer())),
+               jasonTcp->expect(INVITE/180,contact(derekTls),1000,jasonTcp->noAction()),
+               jasonTcp->expect(INVITE/200,contact(derekTls),1000,jasonTcp->ack()),
+               derekTls->expect(ACK,from(proxy),1000,chain(jasonTcp->pause(1000),jasonTcp->bye())),
+               derekTls->expect(BYE,from(proxy),2000,derekTls->ok()),
+               jasonTcp->expect(BYE/200,contact(derekTls),1000,jasonTcp->noAction())
+            )
+         ),
+         WaitForEndOfSeq
+         
+      );
+      
+      ExecuteSequences();
+      
+   }
+   
+   void testInviteTCPToTLSCalleeHangsUp()
+   {
+      WarningLog(<<"*!testInviteTCPToTLSCalleeHangsUp!*");
+      Seq
+      (
+         derekTls->registerUserWithOutbound(60, derekTls->getDefaultContacts()),
+         derekTls->expect(REGISTER/407,from(proxy),1000,derekTls->digestRespond()),
+         derekTls->expect(REGISTER/200,from(proxy),1000,new CheckContacts(derekTls->getDefaultContacts(),60)),
+         WaitForEndOfSeq
+      );
+      
+      ExecuteSequences();
+      
+      Seq
+      (
+         jasonTcp->invite(*derekTls),
+         optional(jasonTcp->expect(INVITE/100,from(proxy),1000,jasonTcp->noAction())),
+         jasonTcp->expect(INVITE/407,from(proxy),1000,chain(jasonTcp->ack(),jasonTcp->digestRespond())),
+         And
+         (
+            Sub
+            (
+               optional(jasonTcp->expect(INVITE/100,from(proxy),1000,derekTls->noAction()))
+            ),
+            Sub
+            (
+               derekTls->expect(INVITE,contact(jasonTcp),1000,chain(derekTls->ring(),derekTls->answer())),
+               jasonTcp->expect(INVITE/180,contact(derekTls),1000,jasonTcp->noAction()),
+               jasonTcp->expect(INVITE/200,contact(derekTls),1000,jasonTcp->ack()),
+               derekTls->expect(ACK,from(proxy),1000,chain(derekTls->pause(1000),derekTls->bye())),
+               jasonTcp->expect(BYE,from(proxy),2000,jasonTcp->ok()),
+               derekTls->expect(BYE/200,contact(jasonTcp),1000,derekTls->noAction())
+            )
+         ),
+         WaitForEndOfSeq
+         
+      );
+      
+      ExecuteSequences();
+      
+   }
+   
+   void testInviteTLSToUDPCallerHangsUp()
+   {
+      WarningLog(<<"*!testInviteTLSToUDPCallerHangsUp!*");
+      Seq
+      (
+         derek->registerUser(60, derek->getDefaultContacts()),
+         derek->expect(REGISTER/407,from(proxy),1000,derek->digestRespond()),
+         derek->expect(REGISTER/200,from(proxy),1000,new CheckContacts(derek->getDefaultContacts(),60)),
+         WaitForEndOfSeq
+      );
+      
+      ExecuteSequences();
+      
+      Seq
+      (
+         jasonTls->inviteWithOutbound(*derek),
+         optional(jasonTls->expect(INVITE/100,from(proxy),1000,jasonTls->noAction())),
+         jasonTls->expect(INVITE/407,from(proxy),1000,chain(jasonTls->ack(),jasonTls->digestRespond())),
+         And
+         (
+            Sub
+            (
+               optional(jasonTls->expect(INVITE/100,from(proxy),1000,derek->noAction()))
+            ),
+            Sub
+            (
+               derek->expect(INVITE,contact(jasonTls),1000,chain(derek->ring(),derek->answer())),
+               jasonTls->expect(INVITE/180,contact(derek),1000,jasonTls->noAction()),
+               jasonTls->expect(INVITE/200,contact(derek),1000,jasonTls->ack()),
+               derek->expect(ACK,from(proxy),1000,chain(jasonTls->pause(1000),jasonTls->bye())),
+               derek->expect(BYE,from(proxy),2000,derek->ok()),
+               jasonTls->expect(BYE/200,contact(derek),1000,jasonTls->noAction())
+            )
+         ),
+         WaitForEndOfSeq
+         
+      );
+      
+      ExecuteSequences();
+      
+   }
+   
+   void testInviteTLSToUDPCalleeHangsUp()
+   {
+      WarningLog(<<"*!testInviteTLSToUDPCalleeHangsUp!*");
+      Seq
+      (
+         derek->registerUser(60, derek->getDefaultContacts()),
+         derek->expect(REGISTER/407,from(proxy),1000,derek->digestRespond()),
+         derek->expect(REGISTER/200,from(proxy),1000,new CheckContacts(derek->getDefaultContacts(),60)),
+         WaitForEndOfSeq
+      );
+      
+      ExecuteSequences();
+      
+      Seq
+      (
+         jasonTls->inviteWithOutbound(*derek),
+         optional(jasonTls->expect(INVITE/100,from(proxy),1000,jasonTls->noAction())),
+         jasonTls->expect(INVITE/407,from(proxy),1000,chain(jasonTls->ack(),jasonTls->digestRespond())),
+         And
+         (
+            Sub
+            (
+               optional(jasonTls->expect(INVITE/100,from(proxy),1000,derek->noAction()))
+            ),
+            Sub
+            (
+               derek->expect(INVITE,contact(jasonTls),1000,chain(derek->ring(),derek->answer())),
+               jasonTls->expect(INVITE/180,contact(derek),1000,jasonTls->noAction()),
+               jasonTls->expect(INVITE/200,contact(derek),1000,jasonTls->ack()),
+               derek->expect(ACK,from(proxy),1000,chain(derek->pause(1000),derek->bye())),
+               jasonTls->expect(BYE,from(proxy),2000,jasonTls->ok()),
+               derek->expect(BYE/200,contact(jasonTls),1000,derek->noAction())
+            )
+         ),
+         WaitForEndOfSeq
+         
+      );
+      
+      ExecuteSequences();
+      
+   }
+   
+   void testInviteTLSToTCPCallerHangsUp()
+   {
+      WarningLog(<<"*!testInviteTLSToTCPCallerHangsUp!*");
+      Seq
+      (
+         derekTcp->registerUser(60, derekTcp->getDefaultContacts()),
+         derekTcp->expect(REGISTER/407,from(proxy),1000,derekTcp->digestRespond()),
+         derekTcp->expect(REGISTER/200,from(proxy),1000,new CheckContacts(derekTcp->getDefaultContacts(),60)),
+         WaitForEndOfSeq
+      );
+      
+      ExecuteSequences();
+      
+      Seq
+      (
+         jasonTls->inviteWithOutbound(*derekTcp),
+         optional(jasonTls->expect(INVITE/100,from(proxy),1000,jasonTls->noAction())),
+         jasonTls->expect(INVITE/407,from(proxy),1000,chain(jasonTls->ack(),jasonTls->digestRespond())),
+         And
+         (
+            Sub
+            (
+               optional(jasonTls->expect(INVITE/100,from(proxy),1000,derekTcp->noAction()))
+            ),
+            Sub
+            (
+               derekTcp->expect(INVITE,contact(jasonTls),1000,chain(derekTcp->ring(),derekTcp->answer())),
+               jasonTls->expect(INVITE/180,contact(derekTcp),1000,jasonTls->noAction()),
+               jasonTls->expect(INVITE/200,contact(derekTcp),1000,jasonTls->ack()),
+               derekTcp->expect(ACK,from(proxy),1000,chain(jasonTls->pause(1000),jasonTls->bye())),
+               derekTcp->expect(BYE,from(proxy),2000,derekTcp->ok()),
+               jasonTls->expect(BYE/200,contact(derekTcp),1000,jasonTls->noAction())
+            )
+         ),
+         WaitForEndOfSeq
+         
+      );
+      
+      ExecuteSequences();
+      
+   }
+   
+   void testInviteTLSToTCPCalleeHangsUp()
+   {
+      WarningLog(<<"*!testInviteTLSToTCPCalleeHangsUp!*");
+      Seq
+      (
+         derekTcp->registerUser(60, derekTcp->getDefaultContacts()),
+         derekTcp->expect(REGISTER/407,from(proxy),1000,derekTcp->digestRespond()),
+         derekTcp->expect(REGISTER/200,from(proxy),1000,new CheckContacts(derekTcp->getDefaultContacts(),60)),
+         WaitForEndOfSeq
+      );
+      
+      ExecuteSequences();
+      
+      Seq
+      (
+         jasonTls->inviteWithOutbound(*derekTcp),
+         optional(jasonTls->expect(INVITE/100,from(proxy),1000,jasonTls->noAction())),
+         jasonTls->expect(INVITE/407,from(proxy),1000,chain(jasonTls->ack(),jasonTls->digestRespond())),
+         And
+         (
+            Sub
+            (
+               optional(jasonTls->expect(INVITE/100,from(proxy),1000,derekTcp->noAction()))
+            ),
+            Sub
+            (
+               derekTcp->expect(INVITE,contact(jasonTls),1000,chain(derekTcp->ring(),derekTcp->answer())),
+               jasonTls->expect(INVITE/180,contact(derekTcp),1000,jasonTls->noAction()),
+               jasonTls->expect(INVITE/200,contact(derekTcp),1000,jasonTls->ack()),
+               derekTcp->expect(ACK,from(proxy),1000,chain(derekTcp->pause(1000),derekTcp->bye())),
+               jasonTls->expect(BYE,from(proxy),2000,jasonTls->ok()),
+               derekTcp->expect(BYE/200,contact(jasonTls),1000,derekTcp->noAction())
+            )
+         ),
+         WaitForEndOfSeq
+         
+      );
+      
+      ExecuteSequences();
+      
+   }
+   
    void testInviteRecursiveRedirect()
    {
       WarningLog(<<"*!testInviteRecursiveRedirect!*");
@@ -2371,11 +3629,12 @@ class TestHolder : public Fixture
       Seq(jason->registerUser(600, jason->getDefaultContacts()),
           jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
           jason->expect(REGISTER/200, from(proxy), WaitForRegistration, jason->noAction()),
-          1000);
+          WaitForEndOfSeq);
+      ExecuteSequences();
       Seq(derek->registerUser(600, derek->getDefaultContacts()),
           derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
           derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
-          1000);
+          WaitForEndOfSeq);
       ExecuteSequences();
       
       Seq
@@ -2414,7 +3673,7 @@ class TestHolder : public Fixture
       Seq(jason->registerUser(600, jason->getDefaultContacts()),
           jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
           jason->expect(REGISTER/200, from(proxy), WaitForRegistration, jason->noAction()),
-          1000);
+          WaitForEndOfSeq);
       
       ExecuteSequences();
       
@@ -2468,7 +3727,7 @@ class TestHolder : public Fixture
       Seq(jason->registerUser(600, jason->getDefaultContacts()),
           jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
           jason->expect(REGISTER/200, from(proxy), WaitForRegistration, jason->noAction()),
-          1000);
+          WaitForEndOfSeq);
       
       ExecuteSequences();
 
@@ -2506,7 +3765,7 @@ class TestHolder : public Fixture
       Seq(jason->registerUser(600, jason->getDefaultContacts()),
           jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
           jason->expect(REGISTER/200, from(proxy), WaitForRegistration, jason->noAction()),
-          1000);
+          WaitForEndOfSeq);
       
       ExecuteSequences();
 
@@ -2560,7 +3819,7 @@ class TestHolder : public Fixture
       Seq(jason->registerUser(600, jason->getDefaultContacts()),
           jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
           jason->expect(REGISTER/200, from(proxy), WaitForRegistration, jason->noAction()),
-          1000);
+          WaitForEndOfSeq);
       
       ExecuteSequences();
 
@@ -2599,7 +3858,7 @@ class TestHolder : public Fixture
       Seq(jason->registerUser(600, jason->getDefaultContacts()),
           jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
           jason->expect(REGISTER/200, from(proxy), WaitForRegistration, jason->noAction()),
-          1000);
+          WaitForEndOfSeq);
       
       ExecuteSequences();
 
@@ -2631,7 +3890,7 @@ class TestHolder : public Fixture
       Seq(jason->registerUser(60, jason->getDefaultContacts()),
           jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
           jason->expect(REGISTER/200, from(proxy), WaitForRegistration, jason->noAction()),
-          1000);
+          WaitForEndOfSeq);
       ExecuteSequences();
 
       Seq(derek->invite(*jason),
@@ -2657,7 +3916,7 @@ class TestHolder : public Fixture
       Seq(jason->registerUser(60, jason->getDefaultContacts()),
           jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
           jason->expect(REGISTER/200, from(proxy), WaitForRegistration, jason->noAction()),
-          1000);
+          WaitForEndOfSeq);
       ExecuteSequences();
 
       boost::shared_ptr<SipMessage> busy;
@@ -2667,18 +3926,18 @@ class TestHolder : public Fixture
          derek->invite(*jason),
          optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
          derek->expect(INVITE/407,from(proxy),WaitForResponse,chain(derek->ack(),derek->digestRespond())),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,from(proxy),WaitForCommand,busy <= jason->send486()),
          
          And
          (
             Sub //Server side
             (
+               jason->expect(INVITE,from(proxy),WaitForCommand,busy <= jason->send486()),
                jason->expect(ACK,from(proxy),WaitForResponse,jason->retransmit(busy)),
                jason->expect(ACK,from(proxy),WaitForResponse,jason->noAction())
             ),
             Sub //Client side
             (
+               optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
                derek->expect(INVITE/486,contact(jason),WaitForResponse,derek->ack())
             )
          ),
@@ -2695,7 +3954,7 @@ class TestHolder : public Fixture
       Seq(jason->registerUser(60, jason->getDefaultContacts()),
           jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
           jason->expect(REGISTER/200, from(proxy), WaitForRegistration, jason->noAction()),
-          1000);
+          WaitForEndOfSeq);
       ExecuteSequences();
 
       boost::shared_ptr<SipMessage> error;
@@ -2734,7 +3993,7 @@ class TestHolder : public Fixture
       Seq(jason->registerUser(60, jason->getDefaultContacts()),
           jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
           jason->expect(REGISTER/200, from(proxy), WaitForRegistration, jason->noAction()),
-          1000);
+          WaitForEndOfSeq);
       ExecuteSequences();
 
       boost::shared_ptr<SipMessage> error;
@@ -2775,6 +4034,33 @@ class TestHolder : public Fixture
           jason->expect(INVITE/407, from(proxy), WaitForResponse, chain(jason->ack(), jason->digestRespond())),
           optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
           jason->expect(INVITE/480, from(proxy), 5000, jason->ack()),
+          WaitForEndOfTest);
+      ExecuteSequences();  
+   }
+
+   void testInviteNoDNSTcp()
+   {
+      WarningLog(<<"*!testInviteNoDNSTcp!*");
+      
+      RouteGuard dGuard(*proxy, "sip:.*@.*", "sip:foobar@dfkaslkfdas.com;transport=TCP");
+      Seq(jason->invite(*derek),
+          optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
+          jason->expect(INVITE/407, from(proxy), WaitForResponse, chain(jason->ack(), jason->digestRespond())),
+          optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
+          jason->expect(INVITE/480, from(proxy), 5000, jason->ack()),
+          WaitForEndOfTest);
+      ExecuteSequences();  
+   }
+   
+   void testInviteNoSuchUser()
+   {
+      WarningLog(<<"*!testInviteNoSuchUser!*");
+      
+      Seq(jason->invite(*derek),
+          optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
+          jason->expect(INVITE/407, from(proxy), WaitForResponse, chain(jason->ack(), condition(userInReqUri,jason->digestRespond()))),
+          optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
+          jason->expect(INVITE/480, from(proxy), WaitForResponse, jason->ack()),
           WaitForEndOfTest);
       ExecuteSequences();  
    }
@@ -2847,19 +4133,28 @@ class TestHolder : public Fixture
          derek->invite(*jason),
          optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
          derek->expect(INVITE/407,from(proxy),WaitForResponse,chain(derek->ack(),derek->digestRespond())),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,from(proxy),WaitForCommand,chain(jason->ring(),ok<=jason->answer())),
-         derek->expect(INVITE/180,from(proxy),WaitForResponse,derek->noAction()),
-         derek->expect(INVITE/200,contact(jason),WaitForResponse,chain(derek->noAction(),jason->pause(500),jason->retransmit(ok))),
-         derek->expect(INVITE/200,contact(jason),4800,chain(derek->noAction(),jason->pause(1000),jason->retransmit(ok))),
-         derek->expect(INVITE/200,contact(jason),4800,chain(derek->noAction(),jason->pause(2000),jason->retransmit(ok))),
-         derek->expect(INVITE/200,contact(jason),4800,chain(derek->noAction(),jason->pause(4000),jason->retransmit(ok))),
-         derek->expect(INVITE/200,contact(jason),4800,chain(derek->noAction(),jason->pause(4000),jason->retransmit(ok))),
-         derek->expect(INVITE/200,contact(jason),4800,chain(derek->noAction(),jason->pause(4000),jason->retransmit(ok))),
-         derek->expect(INVITE/200,contact(jason),4800,chain(derek->noAction(),jason->pause(4000),jason->retransmit(ok))),
-         derek->expect(INVITE/200,contact(jason),4800,chain(derek->noAction(),jason->pause(4000),jason->retransmit(ok))),
-         derek->expect(INVITE/200,contact(jason),4800,chain(derek->noAction(),jason->pause(4000),jason->retransmit(ok))),
-         derek->expect(INVITE/200,contact(jason),4800,chain(derek->noAction(),jason->pause(4000),jason->retransmit(ok))),      
+         And
+         (
+            Sub
+            (
+               optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction()))
+            ),
+            Sub
+            (
+               jason->expect(INVITE,from(proxy),WaitForCommand,chain(jason->ring(),ok<=jason->answer())),
+               derek->expect(INVITE/180,from(proxy),WaitForResponse,derek->noAction()),
+               derek->expect(INVITE/200,contact(jason),WaitForResponse,chain(derek->noAction(),jason->pause(500),jason->retransmit(ok))),
+               derek->expect(INVITE/200,contact(jason),4800,chain(derek->noAction(),jason->pause(1000),jason->retransmit(ok))),
+               derek->expect(INVITE/200,contact(jason),4800,chain(derek->noAction(),jason->pause(2000),jason->retransmit(ok))),
+               derek->expect(INVITE/200,contact(jason),4800,chain(derek->noAction(),jason->pause(4000),jason->retransmit(ok))),
+               derek->expect(INVITE/200,contact(jason),4800,chain(derek->noAction(),jason->pause(4000),jason->retransmit(ok))),
+               derek->expect(INVITE/200,contact(jason),4800,chain(derek->noAction(),jason->pause(4000),jason->retransmit(ok))),
+               derek->expect(INVITE/200,contact(jason),4800,chain(derek->noAction(),jason->pause(4000),jason->retransmit(ok))),
+               derek->expect(INVITE/200,contact(jason),4800,chain(derek->noAction(),jason->pause(4000),jason->retransmit(ok))),
+               derek->expect(INVITE/200,contact(jason),4800,chain(derek->noAction(),jason->pause(4000),jason->retransmit(ok))),
+               derek->expect(INVITE/200,contact(jason),4800,chain(derek->noAction(),jason->pause(4000),jason->retransmit(ok)))
+            )
+         ),
          WaitForEndOfTest
       );
       
@@ -2916,8 +4211,8 @@ class TestHolder : public Fixture
          david->invite(proxy->makeUrl("loop").uri()),
          optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          david->expect(INVITE/407, from(proxy), WaitForResponse, chain(david->ack(),david->digestRespond())),
-         optional(david->expect(INVITE/100,from(proxy),3600,david->noAction())),
-         david->expect(INVITE/483,from(proxy),3000,david->ack()),
+         optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
+         david->expect(INVITE/483,from(proxy),2000,david->ack()),
          WaitForEndOfTest
       );
       
@@ -3044,11 +4339,11 @@ class TestHolder : public Fixture
       Seq(jason->registerUser(60, jason->getDefaultContacts()),
           jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
           jason->expect(REGISTER/200, from(proxy), WaitForRegistration, jason->noAction()),
-          1000);
+          WaitForEndOfSeq);
       Seq(derek->registerUser(60, derek->getDefaultContacts()),
           derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
           derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
-          1000);
+          WaitForEndOfSeq);
       ExecuteSequences();
 
       Seq
@@ -3069,7 +4364,7 @@ class TestHolder : public Fixture
                derek->expect(INVITE/180, from(jason), WaitFor180, condition(inviteCSeq,derek->cancel())),
                derek->expect(INVITE/400, from(proxy), WaitForResponse, jason->answer()),
                derek->expect(INVITE/200,from(proxy), WaitForResponse, derek->ack()),
-               jason->expect(ACK, from(derek), WaitForCommand, jason->noAction())
+               jason->expect(ACK,contact(derek),WaitForCommand,jason->noAction())
             )
          ),
          WaitForEndOfTest
@@ -3085,7 +4380,7 @@ class TestHolder : public Fixture
       Seq(derek->registerUser(60, derek->getDefaultContacts()),
           derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
           derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
-          1000);
+          WaitForEndOfSeq);
    
       ExecuteSequences();
 
@@ -3108,7 +4403,7 @@ class TestHolder : public Fixture
       Seq(derek->registerUser(60, derek->getDefaultContacts()),
           derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
           derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
-          1000);
+          WaitForEndOfSeq);
    
       ExecuteSequences();
 
@@ -3142,6 +4437,8 @@ class TestHolder : public Fixture
           WaitForEndOfTest);
       ExecuteSequences();  
    }
+
+//****************** Oddball UAS ********************//
 
    void testInvite2543Tid()
    {
@@ -3209,6 +4506,64 @@ class TestHolder : public Fixture
       ExecuteSequences();
    }
 
+   void testNonInvite2543Tid()
+   {
+      WarningLog(<<"*!testNonInvite2543Tid!*");
+      
+      Seq(derek->registerUser(60, derek->getDefaultContacts()),
+          derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
+          derek->expect(REGISTER/200, from(proxy), WaitForResponse, derek->noAction()),
+          WaitForEndOfSeq);
+      ExecuteSequences();
+
+      Seq
+      (
+         jason->message(*derek,"Ping"),
+         jason->expect(MESSAGE/407, from(proxy), WaitForResponse, condition(missingTid,jason->digestRespond())),
+         derek->expect(MESSAGE, from(proxy), WaitForCommand, derek->send486()),
+         jason->expect(MESSAGE/486, from(proxy),WaitForResponse, jason->noAction()),
+         WaitForEndOfTest
+      );
+      
+      ExecuteSequences();
+   }
+
+   void testInvite2543TidWithDigest()
+   {
+      WarningLog(<<"*!testInvite2543TidWithDigest!*");
+
+      //Registering Derek
+      Seq(jason->registerUser(60, jason->getDefaultContacts()),
+          jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
+          jason->expect(REGISTER/200, from(proxy), WaitForResponse, jason->noAction()),
+          WaitForEndOfSeq);
+      ExecuteSequences();
+      
+      Seq
+      (
+         derek->invite(*jason),
+         optional(derek->expect(INVITE/100,from(proxy),WaitFor100, derek->noAction())),
+         derek->expect(INVITE/407,from(proxy),WaitForResponse,chain(derek->ack(),derek->digestRespond())),
+         And
+         (
+            Sub
+            (
+               optional(derek->expect(INVITE/100,from(proxy),WaitFor100, derek->noAction()))
+            ),
+            Sub
+            (
+               jason->expect(INVITE,from(proxy),WaitForCommand,chain(jason->ring(), jason->ok())),
+               derek->expect(INVITE/180,from(proxy),WaitForResponse,derek->noAction()),
+               derek->expect(INVITE/200,from(proxy),WaitForResponse, derek->ack()),
+               jason->expect(ACK,from(derek),WaitForCommand,jason->noAction())
+            )
+         ),
+         WaitForEndOfTest
+      );
+      ExecuteSequences();
+   }
+
+
 //*******************Forking INVITES, parallel******************//
 
 
@@ -3216,15 +4571,22 @@ class TestHolder : public Fixture
    void testInviteForkOneAnswers()
    {
       WarningLog(<<"*!testInviteForkOneAnswers!*");
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses forking, and tfm doesn't get the Record-Routing logic correct when forking occurs.");
+         return;
+      }
 
       Seq(derek->registerUser(60, derek->getDefaultContacts()),
           derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
           derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
           WaitForEndOfTest);
+      ExecuteSequences();
       Seq(jason1->registerUser(60, jason1->getDefaultContacts()),
           jason1->expect(REGISTER/407, from(proxy), WaitForResponse, jason1->digestRespond()),
           jason1->expect(REGISTER/200, from(proxy), WaitForRegistration, jason1->noAction()),
           WaitForEndOfTest);
+      ExecuteSequences();
       Seq(jason2->registerUser(60, jason2->getDefaultContacts()),
           jason2->expect(REGISTER/407, from(proxy), WaitForResponse, jason2->digestRespond()),
           jason2->expect(REGISTER/200, from(proxy), WaitForRegistration, jason2->noAction()),
@@ -3248,7 +4610,7 @@ class TestHolder : public Fixture
                jason2->expect(INVITE, contact(derek), WaitForCommand, chain(jason2->ring(), jason2->pause(PauseTime), jason2->answer())),
                derek->expect(INVITE/180, from(jason2), WaitFor180, derek->noAction()),
                derek->expect(INVITE/200, contact(jason2), WaitForPause, derek->ack()),
-               jason2->expect(ACK, from(derek), WaitForResponse, jason2->noAction())
+               jason2->expect(ACK, contact(derek), WaitForResponse, jason2->noAction())
             ),
             Sub
             (
@@ -3264,6 +4626,46 @@ class TestHolder : public Fixture
       ExecuteSequences();  
    }
 
+   void testInviteForkRedirect()
+   {
+      WarningLog(<<"*!testInviteForkRedirect!*");
+
+      Seq(derek->registerUser(60, derek->getDefaultContacts()),
+          derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
+          derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
+          WaitForEndOfTest);
+      ExecuteSequences();
+      Seq(jason1->registerUser(60, jason1->getDefaultContacts()),
+          jason1->expect(REGISTER/407, from(proxy), WaitForResponse, jason1->digestRespond()),
+          jason1->expect(REGISTER/200, from(proxy), WaitForRegistration, jason1->noAction()),
+          WaitForEndOfTest);
+      ExecuteSequences();
+      Seq(jason2->registerUser(60, jason2->getDefaultContacts()),
+          jason2->expect(REGISTER/407, from(proxy), WaitForResponse, jason2->digestRespond()),
+          jason2->expect(REGISTER/200, from(proxy), WaitForRegistration, jason2->noAction()),
+          WaitForEndOfTest);
+      ExecuteSequences();
+
+      set<NameAddr> contacts=jason1->getDefaultContacts();
+      set<NameAddr>::const_iterator i;
+      for(i=jason2->getDefaultContacts().begin();i!=jason2->getDefaultContacts().end();i++)
+      {
+         contacts.insert(*i);
+      }
+      
+      Seq
+      (
+         derek->invite(*jason),
+         optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
+         derek->expect(INVITE/407, from(proxy), WaitForResponse, chain(derek->ack(), derek->digestRespond())),
+         optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
+         derek->expect(INVITE/300,from(proxy),WaitForCommand,chain(new CheckContacts(contacts,0),derek->ack())),
+         WaitForEndOfTest
+      );
+      
+      ExecuteSequences();  
+   }
+
    void testInviteForkOneBusy()
    {
       WarningLog(<<"*!testInviteForkOneBusy!*");
@@ -3272,10 +4674,12 @@ class TestHolder : public Fixture
           derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
           derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
           WaitForEndOfTest);
+      ExecuteSequences();
       Seq(jason1->registerUser(60, jason1->getDefaultContacts()),
           jason1->expect(REGISTER/407, from(proxy), WaitForResponse, jason1->digestRespond()),
           jason1->expect(REGISTER/200, from(proxy), WaitForRegistration, jason1->noAction()),
           WaitForEndOfTest);
+      ExecuteSequences();
       Seq(jason2->registerUser(60, jason2->getDefaultContacts()),
           jason2->expect(REGISTER/407, from(proxy), WaitForResponse, jason2->digestRespond()),
           jason2->expect(REGISTER/200, from(proxy), WaitForRegistration, jason2->noAction()),
@@ -3301,6 +4705,11 @@ class TestHolder : public Fixture
    void testInviteAllBusyContacts()
    {
       WarningLog(<<"*!testInviteAllBusyContacts!*");
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses third-party registrations, and will not work with the flow-token hack enabled.");
+         return;
+      }
       Seq(derek->registerUser(60,mergeContacts(*david,*cullen,*enlai)),
           derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
           derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
@@ -3332,14 +4741,17 @@ class TestHolder : public Fixture
           derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
           derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
           WaitForEndOfTest);
+      ExecuteSequences();
       Seq(jason2->registerUser(60, jason2->getDefaultContacts()),
           jason2->expect(REGISTER/407, from(proxy), WaitForResponse, jason2->digestRespond()),
           jason2->expect(REGISTER/200, from(proxy), WaitForRegistration, jason2->noAction()),
           WaitForEndOfTest);
+      ExecuteSequences();
       Seq(jason1->registerUser(60, jason1->getDefaultContacts()),
           jason1->expect(REGISTER/407, from(proxy), WaitForResponse, jason1->digestRespond()),
           jason1->expect(REGISTER/200, from(proxy), WaitForRegistration, jason1->noAction()),
           WaitForEndOfTest);
+      ExecuteSequences();
       Seq(jason3->registerUser(60, jason3->getDefaultContacts()),
           jason3->expect(REGISTER/407, from(proxy), WaitForResponse, jason3->digestRespond()),
           jason3->expect(REGISTER/200, from(proxy), WaitForRegistration, jason3->noAction()),
@@ -3375,15 +4787,22 @@ class TestHolder : public Fixture
    void testInviteForkCallerHangsUp()
    {
       WarningLog(<<"*!testInviteForkCallerHangsUp!*");
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses forking, and tfm doesn't get the Record-Routing logic correct when forking occurs.");
+         return;
+      }
 
       Seq(derek->registerUser(60, derek->getDefaultContacts()),
           derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
           derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
           WaitForEndOfTest);
+      ExecuteSequences();
       Seq(jason1->registerUser(60, jason1->getDefaultContacts()),
           jason1->expect(REGISTER/407, from(proxy), WaitForResponse, jason1->digestRespond()),
           jason1->expect(REGISTER/200, from(proxy), WaitForRegistration, jason1->noAction()),
           WaitForEndOfTest);
+      ExecuteSequences();
       Seq(jason2->registerUser(60, jason2->getDefaultContacts()),
           jason2->expect(REGISTER/407, from(proxy), WaitForResponse, jason2->digestRespond()),
           jason2->expect(REGISTER/200, from(proxy), WaitForRegistration, jason2->noAction()),
@@ -3407,7 +4826,7 @@ class TestHolder : public Fixture
                jason2->expect(INVITE, contact(derek), WaitForCommand, chain(jason2->ring(), jason2->pause(PauseTime), jason2->answer())),
                derek->expect(INVITE/180, from(jason2), WaitFor180, derek->noAction()),
                derek->expect(INVITE/200, contact(jason2), WaitForPause, derek->ack()),
-               jason2->expect(ACK, from(derek), WaitForResponse, chain(jason2->noAction(),derek->pause(1000),derek->bye())),
+               jason2->expect(ACK, contact(derek), WaitForResponse, chain(jason2->noAction(),derek->pause(1000),derek->bye())),
                jason2->expect(BYE,contact(derek),2000,jason2->ok()),
                derek->expect(BYE/200,contact(jason2),WaitForResponse,derek->noAction())
             ),
@@ -3430,15 +4849,22 @@ class TestHolder : public Fixture
    void testInviteForkCalleeHangsUp()
    {
       WarningLog(<<"*!testInviteForkCalleeHangsUp!*");
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses forking, and tfm doesn't get the Record-Routing logic correct when forking occurs.");
+         return;
+      }
 
       Seq(derek->registerUser(60, derek->getDefaultContacts()),
           derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
           derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
           WaitForEndOfTest);
+      ExecuteSequences();
       Seq(jason1->registerUser(60, jason1->getDefaultContacts()),
           jason1->expect(REGISTER/407, from(proxy), WaitForResponse, jason1->digestRespond()),
           jason1->expect(REGISTER/200, from(proxy), WaitForRegistration, jason1->noAction()),
           WaitForEndOfTest);
+      ExecuteSequences();
       Seq(jason2->registerUser(60, jason2->getDefaultContacts()),
           jason2->expect(REGISTER/407, from(proxy), WaitForResponse, jason2->digestRespond()),
           jason2->expect(REGISTER/200, from(proxy), WaitForRegistration, jason2->noAction()),
@@ -3462,7 +4888,7 @@ class TestHolder : public Fixture
                jason2->expect(INVITE, contact(derek), WaitForCommand, chain(jason2->ring(), jason2->pause(PauseTime), jason2->answer())),
                derek->expect(INVITE/180, from(jason2), WaitFor180, derek->noAction()),
                derek->expect(INVITE/200, contact(jason2), WaitForPause, derek->ack()),
-               jason2->expect(ACK, from(derek), WaitForResponse, chain(jason2->pause(1000),jason2->bye())),
+               jason2->expect(ACK, contact(derek), WaitForResponse, chain(jason2->pause(1000),jason2->bye())),
                derek->expect(BYE,contact(jason2),2000,derek->ok()),
                jason2->expect(BYE/200,contact(derek),WaitForResponse,jason2->noAction())
             ),
@@ -3490,6 +4916,11 @@ class TestHolder : public Fixture
    void testInviteForkThenSpiral()
    {
       WarningLog(<<"*!testInviteForkThenSpiral!*");
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses third-party registrations, and will not work with the flow-token hack enabled.");
+         return;
+      }
       
       set<NameAddr> contacts=mergeContacts(*derek,*jason);
       NameAddr spiral(Uri("sip:spiral@localhost"));
@@ -3570,6 +5001,11 @@ class TestHolder : public Fixture
    void testInviteSpiralThenFork()
    {
       WarningLog(<<"*!testInviteSpiralThenFork!*");
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses third-party registrations, and will not work with the flow-token hack enabled.");
+         return;
+      }
       
       
       RouteGuard enter(*proxy,"sip:spiral@.*","sip:spiral1@localhost");
@@ -3638,7 +5074,12 @@ class TestHolder : public Fixture
       WarningLog(<<"*!testInviteForkAll4xxResponses!*");
       
       set<NameAddr> contacts = mergeContacts(*derek,*jason,*enlai);
-      
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses third-party registrations, and will not work with the flow-token hack enabled.");
+         return;
+      }
+
       Seq
       (
          enlai->registerUser(60,contacts),
@@ -3674,10 +5115,19 @@ class TestHolder : public Fixture
             Sub
             (
                enlai->expect(INVITE,contact(david),WaitForCommand,enlai->send480()),
+               And
+               (
+                  Sub
+                  (
                enlai->expect(ACK,from(proxy),WaitForCommand,enlai->noAction())
+                  ),
+                  Sub
+                  (
+                     david->expect(INVITE/480,from(proxy),WaitForResponse,david->ack())
+                  )
+               )
             )
          ),
-         david->expect(INVITE/480,from(proxy),WaitForResponse,david->ack()),
          WaitForEndOfTest
       );
       
@@ -3688,6 +5138,11 @@ class TestHolder : public Fixture
    void testInviteFork200And4xx()
    {
       WarningLog(<<"*!testInviteFork200And4xx!*");
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses third-party registrations, and will not work with the flow-token hack enabled.");
+         return;
+      }
       
       set<NameAddr> contacts = mergeContacts(*derek,*jason,*enlai);
       
@@ -3727,7 +5182,7 @@ class TestHolder : public Fixture
             (
                enlai->expect(INVITE,contact(david),WaitForCommand,chain(enlai->ring(),enlai->pause(100),enlai->answer())),
                david->expect(INVITE/180,contact(enlai),WaitForResponse,david->noAction()),
-               david->expect(INVITE/200,contact(enlai),WaitForResponse+100,david->ack()),
+               david->expect(INVITE/200,contact(enlai),WaitForResponse+1000,david->ack()),
                enlai->expect(ACK,contact(david),WaitForCommand,enlai->noAction())
             )
          ),
@@ -3741,6 +5196,12 @@ class TestHolder : public Fixture
    {
       WarningLog(<<"*!testInviteForkAll5xxResponses!*");
       
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses third-party registrations, and will not work with the flow-token hack enabled.");
+         return;
+      }
+
       set<NameAddr> contacts = mergeContacts(*derek,*jason,*enlai);
       
       Seq
@@ -3778,10 +5239,19 @@ class TestHolder : public Fixture
             Sub
             (
                enlai->expect(INVITE,contact(david),WaitForCommand,enlai->send513()),
+               And
+               (
+                  Sub
+                  (
                enlai->expect(ACK,from(proxy),WaitForCommand,enlai->noAction())
+                  ),
+                  Sub
+                  (
+                     david->expect(INVITE/513,from(proxy),WaitForResponse,david->ack())
+                  )
+               )
             )
          ),
-         david->expect(INVITE/513,from(proxy),WaitForResponse,david->ack()),
          WaitForEndOfTest
       );
       
@@ -3792,6 +5262,11 @@ class TestHolder : public Fixture
    void testInviteFork200And5xx()
    {
       WarningLog(<<"*!testInviteFork200And5xx!*");
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses third-party registrations, and will not work with the flow-token hack enabled.");
+         return;
+      }
       
       set<NameAddr> contacts = mergeContacts(*derek,*jason,*enlai);
       
@@ -3844,6 +5319,11 @@ class TestHolder : public Fixture
    void testInviteForkAll6xxResponses()
    {
       WarningLog(<<"*!testInviteForkAll6xxResponses!*");
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses third-party registrations, and will not work with the flow-token hack enabled.");
+         return;
+      }
       
       set<NameAddr> contacts = mergeContacts(*derek,*jason,*enlai);
       
@@ -3904,6 +5384,11 @@ class TestHolder : public Fixture
    void testInviteFork6xxBeats200()
    {
       WarningLog(<<"*!testInviteFork6xxBeats200!*");
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses third-party registrations, and will not work with the flow-token hack enabled.");
+         return;
+      }
       
       set<NameAddr> contacts = mergeContacts(*derek,*jason,*enlai);
       
@@ -3957,6 +5442,11 @@ class TestHolder : public Fixture
    void testInviteFork200Beats6xx()
    {
       WarningLog(<<"*!testInviteFork200Beats6xx!*");
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses third-party registrations, and will not work with the flow-token hack enabled.");
+         return;
+      }
       
       set<NameAddr> contacts = mergeContacts(*derek,*jason,*enlai);
       
@@ -4010,6 +5500,11 @@ class TestHolder : public Fixture
    void testInviteFork4xxAnd5xx()
    {
       WarningLog(<<"*!testInviteFork4xxAnd5xx!*");
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses third-party registrations, and will not work with the flow-token hack enabled.");
+         return;
+      }
       
       set<NameAddr> contacts = mergeContacts(*derek,*jason,*enlai);
       
@@ -4033,7 +5528,8 @@ class TestHolder : public Fixture
          (
             Sub
             (
-               optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction()))
+               optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
+               david->expect(INVITE/403,from(proxy),WaitForResponse,david->ack())
             ),
             Sub
             (
@@ -4051,7 +5547,6 @@ class TestHolder : public Fixture
                enlai->expect(ACK,from(proxy),WaitForCommand,enlai->noAction())
             )
          ),
-         david->expect(INVITE/403,from(proxy),WaitForResponse,david->ack()),
          WaitForEndOfTest
       );
       
@@ -4061,6 +5556,11 @@ class TestHolder : public Fixture
    void testInviteFork4xx5xx6xx()
    {
       WarningLog(<<"*!testInviteFork4xx5xx6xx!*");
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses third-party registrations, and will not work with the flow-token hack enabled.");
+         return;
+      }
       
       set<NameAddr> contacts = mergeContacts(*derek,*jason,*enlai);
       
@@ -4169,18 +5669,19 @@ class TestHolder : public Fixture
          david->expect(INVITE/407,from(proxy),WaitForResponse,chain(david->ack(),david->digestRespond())),
          optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          
-         enlai->expect(INVITE,contact(david),WaitForCommand,chain(enlai->ring(),enlai->answer())),
+         enlai->expect(INVITE,contact(david),WaitForCommand,chain(enlai->ring(),enlai->pause(150),enlai->answer())),
          And
          (
             Sub
             (
+               david->expect(INVITE/180,contact(enlai),WaitForResponse+300,david->noAction()),
                david->expect(INVITE/180,contact(enlai),WaitForResponse,david->noAction()),
                david->expect(INVITE/200,contact(enlai),WaitForResponse,david->ack()),
                enlai->expect(ACK,contact(david),WaitForResponse,enlai->noAction())
             ),
             Sub
             (
-               enlai->expect(INVITE,contact(david),WaitForCommand,enlai->ring()),
+               enlai->expect(INVITE,contact(david),WaitForCommand+300,chain(enlai->pause(150),enlai->ring())),
                enlai->expect(CANCEL,from(proxy),3000,chain(enlai->ok(), enlai->send487())),
                enlai->expect(ACK,from(proxy),WaitForResponse,enlai->noAction())
             )
@@ -4195,6 +5696,11 @@ class TestHolder : public Fixture
    void testInviteForkAllAnswerNo1xx()
    {
       WarningLog(<<"*!testInviteForkAllAnswerNo1xx!*");
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses third-party registrations, and will not work with the flow-token hack enabled.");
+         return;
+      }
       
       set<NameAddr> contacts = mergeContacts(*derek,*jason,*enlai);
       
@@ -4249,6 +5755,12 @@ class TestHolder : public Fixture
    void testSequentialQValueInvite()
    {
       WarningLog(<<"*!testSequentialQValueInvite!*");
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses third-party registrations, and will not work with the flow-token hack enabled.");
+         return;
+      }
+
       NameAddr con2 = *(jason->getDefaultContacts().begin());
       con2.param(p_q)=0.2;
 
@@ -4365,6 +5877,12 @@ class TestHolder : public Fixture
    void testInviteSeqForkOneBusy()
    {
       WarningLog(<<"*!testInviteSeqForkOneBusy!*");
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses third-party registrations, and will not work with the flow-token hack enabled.");
+         return;
+      }
+
       resip::NameAddr contact1=*(jason1->getDefaultContacts().begin());
       contact1.param(p_q)=0.1;
       resip::NameAddr contact2=*(jason2->getDefaultContacts().begin());
@@ -4374,10 +5892,12 @@ class TestHolder : public Fixture
           derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
           derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
           WaitForEndOfTest);
+      ExecuteSequences();
       Seq(jason1->registerUser(60, contact1),
           jason1->expect(REGISTER/407, from(proxy), WaitForResponse, jason1->digestRespond()),
           jason1->expect(REGISTER/200, from(proxy), WaitForRegistration, jason1->noAction()),
           WaitForEndOfTest);
+      ExecuteSequences();
       Seq(jason2->registerUser(60, contact2),
           jason2->expect(REGISTER/407, from(proxy), WaitForResponse, jason2->digestRespond()),
           jason2->expect(REGISTER/200, from(proxy), WaitForRegistration, jason2->noAction()),
@@ -4425,6 +5945,12 @@ class TestHolder : public Fixture
    void testInviteSeqAllBusyContacts()
    {
       WarningLog(<<"*!testInviteSeqAllBusyContacts!*");
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses third-party registrations, and will not work with the flow-token hack enabled.");
+         return;
+      }
+
       std::set<resip::NameAddr> contacts;
 
       resip::NameAddr contact1=*(enlai->getDefaultContacts().begin());
@@ -4499,6 +6025,12 @@ class TestHolder : public Fixture
    void testInviteSeqForkCallerCancels()
    {
       WarningLog(<<"*!testInviteSeqForkThreeCallerCancels!*");
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses third-party registrations, and will not work with the flow-token hack enabled.");
+         return;
+      }
+
       resip::NameAddr contact1=*(jason1->getDefaultContacts().begin());
       contact1.param(p_q)=0.1;
       resip::NameAddr contact2=*(jason2->getDefaultContacts().begin());
@@ -4511,14 +6043,17 @@ class TestHolder : public Fixture
           derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
           derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
           WaitForEndOfTest);
+      ExecuteSequences();
       Seq(jason2->registerUser(60, contact2),
           jason2->expect(REGISTER/407, from(proxy), WaitForResponse, jason2->digestRespond()),
           jason2->expect(REGISTER/200, from(proxy), WaitForRegistration, jason2->noAction()),
           WaitForEndOfTest);
+      ExecuteSequences();
       Seq(jason1->registerUser(60, contact1),
           jason1->expect(REGISTER/407, from(proxy), WaitForResponse, jason1->digestRespond()),
           jason1->expect(REGISTER/200, from(proxy), WaitForRegistration, jason1->noAction()),
           WaitForEndOfTest);
+      ExecuteSequences();
       Seq(jason3->registerUser(60, contact3),
           jason3->expect(REGISTER/407, from(proxy), WaitForResponse, jason3->digestRespond()),
           jason3->expect(REGISTER/200, from(proxy), WaitForRegistration, jason3->noAction()),
@@ -4586,14 +6121,17 @@ class TestHolder : public Fixture
           derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
           derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
           WaitForEndOfTest);
+      ExecuteSequences();
       Seq(jason1->registerUser(60, contact1),
           jason1->expect(REGISTER/407, from(proxy), WaitForResponse, jason1->digestRespond()),
           jason1->expect(REGISTER/200, from(proxy), WaitForRegistration, jason1->noAction()),
           WaitForEndOfTest);
+      ExecuteSequences();
       Seq(jason2->registerUser(60, contact2),
           jason2->expect(REGISTER/407, from(proxy), WaitForResponse, jason2->digestRespond()),
           jason2->expect(REGISTER/200, from(proxy), WaitForRegistration, jason2->noAction()),
           WaitForEndOfTest);
+      ExecuteSequences();
       Seq(jason3->registerUser(60, contact3),
           jason3->expect(REGISTER/407, from(proxy), WaitForResponse, jason3->digestRespond()),
           jason3->expect(REGISTER/200, from(proxy), WaitForRegistration, jason3->noAction()),
@@ -4655,14 +6193,17 @@ class TestHolder : public Fixture
           derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
           derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
           WaitForEndOfTest);
+      ExecuteSequences();
       Seq(jason1->registerUser(60, contact1),
           jason1->expect(REGISTER/407, from(proxy), WaitForResponse, jason1->digestRespond()),
           jason1->expect(REGISTER/200, from(proxy), WaitForRegistration, jason1->noAction()),
           WaitForEndOfTest);
+      ExecuteSequences();
       Seq(jason2->registerUser(60, contact2),
           jason2->expect(REGISTER/407, from(proxy), WaitForResponse, jason2->digestRespond()),
           jason2->expect(REGISTER/200, from(proxy), WaitForRegistration, jason2->noAction()),
           WaitForEndOfTest);
+      ExecuteSequences();
       Seq(jason3->registerUser(60, contact3),
           jason3->expect(REGISTER/407, from(proxy), WaitForResponse, jason3->digestRespond()),
           jason3->expect(REGISTER/200, from(proxy), WaitForRegistration, jason3->noAction()),
@@ -4713,6 +6254,12 @@ class TestHolder : public Fixture
    void testInviteSeqForkThenSpiral()
    {
       WarningLog(<<"*!testInviteSeqForkThenSpiral!*");
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses third-party registrations, and will not work with the flow-token hack enabled.");
+         return;
+      }
+
       resip::NameAddr spiral("sip:spiral@localhost");
       spiral.param(p_q)=0.4;
       resip::NameAddr con3=*(derek->getDefaultContacts().begin());
@@ -4814,6 +6361,11 @@ class TestHolder : public Fixture
    void testInviteSpiralThenSeqFork()
    {
       WarningLog(<<"*!testInviteSpiralThenSeqFork!*");
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses third-party registrations, and will not work with the flow-token hack enabled.");
+         return;
+      }
       
       
       RouteGuard enter(*proxy,"sip:spiral@.*","sip:spiral1@localhost");
@@ -4910,6 +6462,11 @@ class TestHolder : public Fixture
    void testInviteSeqForkAll4xxResponses()
    {
       WarningLog(<<"*!testInviteSeqForkAll4xxResponses!*");
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses third-party registrations, and will not work with the flow-token hack enabled.");
+         return;
+      }
       
       resip::NameAddr derekc=*(derek->getDefaultContacts().begin());
       derekc.param(p_q)=0.3;
@@ -4997,6 +6554,11 @@ class TestHolder : public Fixture
    void testInviteSeqFork200And4xx()
    {
       WarningLog(<<"*!testInviteSeqFork200And4xx!*");
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses third-party registrations, and will not work with the flow-token hack enabled.");
+         return;
+      }
       
       resip::NameAddr derekc=*(derek->getDefaultContacts().begin());
       derekc.param(p_q)=0.3;
@@ -5075,6 +6637,11 @@ class TestHolder : public Fixture
    void testInviteSeqForkAll5xxResponses()
    {
       WarningLog(<<"*!testInviteSeqForkAll5xxResponses!*");
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses third-party registrations, and will not work with the flow-token hack enabled.");
+         return;
+      }
       
       resip::NameAddr derekc=*(derek->getDefaultContacts().begin());
       derekc.param(p_q)=0.3;
@@ -5162,6 +6729,11 @@ class TestHolder : public Fixture
    void testInviteSeqFork200And5xx()
    {
       WarningLog(<<"*!testInviteSeqFork200And5xx!*");
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses third-party registrations, and will not work with the flow-token hack enabled.");
+         return;
+      }
       
       resip::NameAddr derekc=*(derek->getDefaultContacts().begin());
       derekc.param(p_q)=0.3;
@@ -5240,6 +6812,11 @@ class TestHolder : public Fixture
    void testInviteSeqFork6xxResponse()
    {
       WarningLog(<<"*!testInviteSeqFork6xxResponse!*");
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses third-party registrations, and will not work with the flow-token hack enabled.");
+         return;
+      }
       
       resip::NameAddr derekc=*(derek->getDefaultContacts().begin());
       derekc.param(p_q)=0.3;
@@ -5307,6 +6884,11 @@ class TestHolder : public Fixture
    void testInviteSeqFork4xxAnd5xx()
    {
       WarningLog(<<"*!testInviteSeqFork4xxAnd5xx!*");
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses third-party registrations, and will not work with the flow-token hack enabled.");
+         return;
+      }
       
       resip::NameAddr derekc=*(derek->getDefaultContacts().begin());
       derekc.param(p_q)=0.3;
@@ -5393,6 +6975,11 @@ class TestHolder : public Fixture
    void testInviteSeqFork4xx5xx6xx()
    {
       WarningLog(<<"*!testInviteFork4xx5xx6xx!*");
+      if(resip::InteropHelper::getRRTokenHackEnabled())
+      {
+         WarningLog(<<"This test uses third-party registrations, and will not work with the flow-token hack enabled.");
+         return;
+      }
       
       resip::NameAddr derekc=*(derek->getDefaultContacts().begin());
       derekc.param(p_q)=0.3;
@@ -5524,6 +7111,28 @@ class TestHolder : public Fixture
          jason->expect(MESSAGE/407, from(proxy), WaitForResponse, jason->digestRespond()),
          derek->expect(MESSAGE, from(proxy), WaitForCommand, derek->send486()),
          jason->expect(MESSAGE/486, from(proxy),WaitForResponse, jason->noAction()),
+         WaitForEndOfTest
+      );
+      
+      ExecuteSequences();
+   }
+
+   void testNonInviteTLS()
+   {
+      WarningLog(<<"*!testNonInviteTLS!*");
+      
+      Seq(derekTls->registerUserWithOutbound(60, derekTls->getDefaultContacts()),
+          derekTls->expect(REGISTER/407, from(proxy), WaitForResponse, derekTls->digestRespond()),
+          derekTls->expect(REGISTER/200, from(proxy), WaitForResponse, derekTls->noAction()),
+          WaitForEndOfSeq);
+      ExecuteSequences();
+
+      Seq
+      (
+         jasonTls->message(*derekTls,"Ping"),
+         jasonTls->expect(MESSAGE/407,from(proxy),WaitForResponse,jasonTls->digestRespond()),
+         derekTls->expect(MESSAGE,from(proxy),WaitForCommand,derekTls->ok()),
+         jasonTls->expect(MESSAGE/200,from(proxy),WaitForResponse, jasonTls->noAction()),
          WaitForEndOfTest
       );
       
@@ -5667,9 +7276,31 @@ class TestHolder : public Fixture
       ExecuteSequences();
    }
 
-   void testNonInvite2543Tid()
+   void testNonInviteUDPtoTCP()
    {
-      WarningLog(<<"*!testNonInvite2543Tid!*");
+      WarningLog(<<"*!testNonInviteUDPtoTCP!*");
+      
+      Seq(derekTcp->registerUser(60, derekTcp->getDefaultContacts()),
+          derekTcp->expect(REGISTER/407, from(proxy), WaitForResponse, derekTcp->digestRespond()),
+          derekTcp->expect(REGISTER/200, from(proxy), WaitForResponse, derekTcp->noAction()),
+          WaitForEndOfSeq);
+      ExecuteSequences();
+
+      Seq
+      (
+         jason->message(*derekTcp,"Ping"),
+         jason->expect(MESSAGE/407, from(proxy), WaitForResponse, jason->digestRespond()),
+         derekTcp->expect(MESSAGE, from(proxy), WaitForCommand, derekTcp->ok()),
+         jason->expect(MESSAGE/200, from(proxy),WaitForResponse, jason->noAction()),
+         WaitForEndOfTest
+      );
+      
+      ExecuteSequences();
+   }
+
+   void testNonInviteTCPtoUDP()
+   {
+      WarningLog(<<"*!testNonInviteTCPtoUDP!*");
       
       Seq(derek->registerUser(60, derek->getDefaultContacts()),
           derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
@@ -5679,10 +7310,10 @@ class TestHolder : public Fixture
 
       Seq
       (
-         jason->message(*derek,"Ping"),
-         jason->expect(MESSAGE/407, from(proxy), WaitForResponse, condition(missingTid,jason->digestRespond())),
-         derek->expect(MESSAGE, from(proxy), WaitForCommand, derek->send486()),
-         jason->expect(MESSAGE/486, from(proxy),WaitForResponse, jason->noAction()),
+         jasonTcp->message(*derek,"Ping"),
+         jasonTcp->expect(MESSAGE/407, from(proxy), WaitForResponse, jasonTcp->digestRespond()),
+         derek->expect(MESSAGE, from(proxy), WaitForCommand, derek->ok()),
+         jasonTcp->expect(MESSAGE/200, from(proxy),WaitForResponse, jasonTcp->noAction()),
          WaitForEndOfTest
       );
       
@@ -6024,7 +7655,7 @@ class TestHolder : public Fixture
       (
          jason->message(*derek,"Ping"),
          jason->expect(MESSAGE/407, from(proxy), WaitForResponse, save(msg,jason->digestRespond())),
-         derek->expect(MESSAGE, from(proxy), WaitForCommand, chain(jason->retransmit(msg),jason->retransmit(msg),jason->retransmit(msg),derek->pause(200),derek->send486())),
+         derek->expect(MESSAGE, from(proxy), WaitForCommand, chain(jason->retransmit(msg), jason->retransmit(msg), jason->retransmit(msg),derek->pause(200),derek->send486())),
          optional(jason->expect(MESSAGE/100,from(proxy),WaitForResponse+200,jason->noAction())),
          jason->expect(MESSAGE/486, from(proxy),WaitForResponse, jason->noAction()),
          WaitForEndOfTest
@@ -6059,7 +7690,6 @@ class TestHolder : public Fixture
       ExecuteSequences();
    }
    
-   
    void testNonInviteWithInviteCollision()
    {
       WarningLog(<<"*!testNonInviteWithInviteCollision!*");
@@ -6088,7 +7718,7 @@ class TestHolder : public Fixture
       WarningLog(<<"*!testNonInviteWithWrongMethodResponse!*");
       
       Seq(derek->registerUser(60, derek->getDefaultContacts()),
-          derek->expect(REGISTER/401, from(proxy), WaitForResponse, derek->digestRespond()),
+          derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
           derek->expect(REGISTER/200, from(proxy), WaitForResponse, derek->noAction()),
           WaitForEndOfSeq);
       ExecuteSequences();
@@ -6264,6 +7894,10 @@ class TestHolder : public Fixture
       );
       ExecuteSequences();
    }
+
+
+
+// ******************** non-INVITE ********************//
 
    void testNitReflectedAsInvite()
    {
@@ -6469,6 +8103,10 @@ class TestHolder : public Fixture
       );
       ExecuteSequences();
    }
+
+
+
+// ******************** ACK ********************//
 
    void testAck200ReflectedAsInvite()
    {
@@ -6766,6 +8404,10 @@ class TestHolder : public Fixture
       );
       ExecuteSequences();
    }
+
+
+
+//****************** Misbehaving UAS ********************//
 
    void testInviteUASRemovesProxyVia()
    {
@@ -7991,7 +9633,7 @@ class TestHolder : public Fixture
                  Sub(david->expect(INVITE, contact(derek), WaitForCommand, david->answer()),
                      derek->expect(INVITE/200, contact(david), WaitForResponse, derek->ack()),
                      david->expect(ACK, from(derek), WaitForResponse, david->noAction()))),
-             1000);
+             WaitForEndOfSeq);
          
          ExecuteSequences();
 
@@ -8122,7 +9764,7 @@ class TestHolder : public Fixture
                      jason->expect(INVITE/180, from(david), WaitFor180, jason->noAction()),
                      jason->expect(INVITE/200, contact(david), WaitForResponse, jason->ack()),
                      david->expect(ACK, from(jason), WaitForResponse, david->noAction()))),
-             1000);
+             WaitForEndOfSeq);
          
          ExecuteSequences();
          
@@ -8359,20 +10001,20 @@ class TestHolder : public Fixture
          Seq(jason->registerUser(60, jason->getDefaultContacts()),
              jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
              jason->expect(REGISTER/200, from(proxy), 1000, new CheckContacts(jason->getDefaultContacts(), 60)),
-             1000);
+             WaitForEndOfSeq);
          Seq(derek->registerUser(60, derek->getDefaultContacts()),
              derek->expect(REGISTER/407, from(proxy), 1000, derek->digestRespond()),
              derek->expect(REGISTER/200, from(proxy), 1000, new CheckContacts(derek->getDefaultContacts(), 60)),
-             1000);
+             WaitForEndOfSeq);
          ExecuteSequences();
 
          // second time, it has the credentials already
          Seq(jason->registerUser(60, jason->getDefaultContacts()),
              jason->expect(REGISTER/200, from(proxy), 1000, new CheckContacts(jason->getDefaultContacts(), 60)),
-             1000);
+             WaitForEndOfSeq);
          Seq(derek->registerUser(60, derek->getDefaultContacts()),
              derek->expect(REGISTER/200, from(proxy), 1000, new CheckContacts(derek->getDefaultContacts(), 60)),
-             1000);
+             WaitForEndOfSeq);
          ExecuteSequences();
 
       }
@@ -8385,11 +10027,11 @@ class TestHolder : public Fixture
          Seq(jason->registerUser(60, jason->getDefaultContacts()),
              jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
              jason->expect(REGISTER/200, from(proxy), 1000, new CheckContacts(jason->getDefaultContacts(), 60)),
-             1000);
+             WaitForEndOfSeq);
          Seq(derek->registerUser(60, derek->getDefaultContacts()),
              derek->expect(REGISTER/407, from(proxy), 1000, derek->digestRespond()),
              derek->expect(REGISTER/200, from(proxy), 1000, new CheckContacts(derek->getDefaultContacts(), 60)),
-             1000);
+             WaitForEndOfSeq);
          ExecuteSequences();
 
          Seq(david->invite(*jason),
@@ -8400,7 +10042,7 @@ class TestHolder : public Fixture
                       david->expect(INVITE/200, contact(jason), 2000, david->ack()),
                       jason->expect(ACK, from(david), 2000, jason->noAction())),
                   Sub(optional(david->expect(INVITE/100, from(proxy), 2000, david->noAction())))),
-             1000);
+             WaitForEndOfSeq);
          ExecuteSequences();  
       }
       
@@ -8704,11 +10346,11 @@ class TestHolder : public Fixture
          Seq(jason->registerUser(600, jason->getDefaultContacts()),
              jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
              jason->expect(REGISTER/200, from(proxy), WaitForRegistration, jason->noAction()),
-             1000);
+             WaitForEndOfSeq);
          Seq(derek->registerUser(600, derek->getDefaultContacts()),
              derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
              derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
-             1000);
+             WaitForEndOfSeq);
          ExecuteSequences();
          
          Seq
@@ -9336,13 +10978,17 @@ class MyTestCase
 
 #if 1
 // Non-invite tests
+         TEST(testNonInviteWithInviteCollision);
          TEST(testNonInviteBusy);
+         TEST(testNonInviteTLS);
          TEST(testNonInviteSpiral);
          TEST(testNonInviteNoContacts);
          TEST(testNonInvite4xxResponse);
          TEST(testNonInvite5xxResponse);
          TEST(testNonInvite6xxResponse);
          TEST(testNonInviteBadAuth);
+         TEST(testNonInviteUDPtoTCP);
+         TEST(testNonInviteTCPtoUDP);
          TEST(testNonInvite2543Tid);
          TEST(testNonInviteWith180andCancel);
          TEST(testNonInvite200ThenCancel);
@@ -9359,6 +11005,7 @@ class MyTestCase
          TEST(testNonInvite200then180);
          TEST(testNonInviteSpamRequestBeforeResponse);
          TEST(testNonInviteSpamRequestAfterResponse);
+         TEST(testNonInviteWithWrongMethodResponse);
          TEST(testNonInviteWithInviteCollision);
          TEST(testNonInviteClientRetransmissionsWithRecovery);
          TEST(testNonInviteClientRetransmissionsWithTimeout);
@@ -9397,10 +11044,42 @@ class MyTestCase
          TEST(testExpiryCleanup);
          //TEST(testFetchNonExistent); //repro doesn't compain about this yet
 
+         TEST(testRegisterBasicWithOutbound);
+         TEST(testMultiple1WithOutbound);
+         TEST(testMixedExpiresWithOutbound);
+         TEST(testThirdPartyRegistrationWithOutbound);
+         TEST(testDetailsQValueWithOutbound); 
+                   
+         TEST(testDetailsExpiresWithOutbound);
+         TEST(testRegister407DroppedWithOutbound);
+         TEST(testRegisterBogusAuthWithOutbound);
+         //TEST(testRegisterLateDigestResponseWithOutbound); //Extremely long test (around 50 minutes).
+         TEST(testRegisterClientRetransmitsWithOutbound);
+         //TEST(testRegisterNoUserInToWithOutbound); //repro doesn't complain about this yet
+         //TEST(testRegisterUserInReqUriWithOutbound); //repro doesn't complain about this yet
+         //TEST(testRegisterUnknownAorHostWithOutbound); //repro doesn't complain about this yet
+         //TEST(testRegisterUnknownAorUserWithOutbound); //repro doesn't complain about this yet
+         TEST(testOversizeCallIdRegisterWithOutbound); //message is getting dropped. Why?
+         TEST(testOversizeContactRegisterWithOutbound); //message is getting dropped. Why?
+         TEST(testRefreshWithOutbound);
+         TEST(testRefreshMultiWithOutbound);
+         TEST(testRefreshThirdPartyWithOutbound);
+         TEST(testChangeQValueWithOutbound); 
+         
+         TEST(testSetThenRemoveSpecificWithOutbound);
+         TEST(testUnregisterMultiWithOutbound);
+         TEST(testUnregisterExpiredWithOutbound);
+         TEST(testUnregisterAllBadExpiresWithOutbound);
+         //TEST(testUnregisterNonExistentWithOutbound);//repro doesn't complain about this yet
+         TEST(testFetchWithOutbound);
+         TEST(testExpiryCleanupWithOutbound);
+         //TEST(testFetchNonExistentWithOutbound); //repro doesn't complain about this yet
 
 //Proxy tests
 
          TEST(testInviteBasic);
+         TEST(testInviteBasicUpperCaseBranch);
+         TEST(testInviteBasicTls);
          TEST(testInviteCallerHangsUp);
          TEST(testInviteCalleeHangsUp);
          TEST(testInviteCallerCancels);
@@ -9431,8 +11110,15 @@ class MyTestCase
          TEST(testInviteUDPToTCPCalleeHangsUp);
          TEST(testInviteTCPToUDPCallerHangsUp);
          TEST(testInviteTCPToUDPCalleeHangsUp);
-
-
+         TEST(testInviteUDPToTLSCallerHangsUp);
+         TEST(testInviteUDPToTLSCalleeHangsUp);
+         TEST(testInviteTCPToTLSCallerHangsUp);
+         TEST(testInviteTCPToTLSCalleeHangsUp);
+         TEST(testInviteTLSToUDPCallerHangsUp);
+         TEST(testInviteTLSToUDPCalleeHangsUp);
+         TEST(testInviteTLSToTCPCallerHangsUp);
+         TEST(testInviteTLSToTCPCalleeHangsUp);
+         
          BUGTEST(testInviteRecursiveRedirect);
          TEST(testSupportedProxyRequire);
          TEST(testUnsupportedProxyRequire);
@@ -9455,6 +11141,8 @@ class MyTestCase
          TEST(testInviteServerRetransmits503);
          TEST(testInviteServerRetransmits603);
          TEST(testInviteNoDNS);
+         TEST(testInviteNoDNSTcp);
+         TEST(testInviteNoSuchUser);
          TEST(testInviteClientDiesAfterFirstInvite);
          TEST(testInviteClientDiesAfterSecondInvite);
          TEST(testInviteServerDead);
@@ -9466,6 +11154,7 @@ class MyTestCase
          TEST(testInviteBadAckTid1);
          TEST(testInviteBadAckTid2);
          TEST(testInvite2543Tid);
+         TEST(testInvite2543TidWithDigest);
          //TEST(testInviteForgedHostInFrom); 
 
          TEST(testInviteForkOneAnswers);
@@ -9486,7 +11175,7 @@ class MyTestCase
          TEST(testInviteFork200Beats6xx);
          TEST(testInviteFork4xxAnd5xx);
          TEST(testInviteFork4xx5xx6xx);
-         TEST(testInviteForkMerges);
+         BADTEST(testInviteForkMerges);
          TEST(testInviteForkAllAnswerNo1xx); //tfm is messing this one up; the same test endpoint needs to ACK in three different dialogs, but tfm is unable to handle multiple dialogs resulting from the same request (so, it sends the same ACK three times)
          TEST(testSequentialQValueInvite);
 

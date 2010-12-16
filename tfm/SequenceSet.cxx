@@ -168,7 +168,9 @@ SequenceSet::loop()
    //!dcm!--turn on/off event acceptance in the Executive
    while (!mActiveSet.empty() && !mFailed)
    {
+      DebugLog(<<"Looking for event...");
       handle(mEventFifo.getNext());
+      DebugLog(<<"Found and handled an event.");
    }
    
    return !mFailed;

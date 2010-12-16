@@ -191,7 +191,7 @@ TestUser::Register*
 TestUser::registerUser(int requestedExpireSecs,
                        const resip::NameAddr& contact)
 {
-   std::set<resip::NameAddr> contacts; 
+   std::set<resip::NameAddr> contacts;
    contacts.insert(contact);
    return registerUser(requestedExpireSecs, contacts);
 }

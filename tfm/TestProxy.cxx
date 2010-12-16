@@ -1,4 +1,5 @@
 #include "rutil/DnsUtil.hxx"
+#include "tfm/DnsUtils.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
 #include "resip/stack/NameAddr.hxx"
@@ -15,39 +16,124 @@ using namespace std;
 
 TestProxy::TestProxy(const Data& name,
                      const Data& host, 
-                     int port, 
+                     const std::set<int>& udpPorts, 
+                     const std::set<int>& tcpPorts, 
+                     const std::set<int>& tlsPorts, 
+                     const std::set<int>& dtlsPorts, 
                      const Data& interfaceObj)
 
    : mName(name)
 {
-   mPort = (port == 0 ? PortAllocator::getNextPort() : port);
-   mProxyUrl.uri().host() = host;
-   mProxyUrl.uri().port() = mPort;
+   //mPort = (port == 0 ? PortAllocator::getNextPort() : port);
 
-   try //throws if only loopback is available
+   bool proxyHasNameAddr=false;
+
+   std::set<int>::const_iterator p;
+   for(p=udpPorts.begin();p!=udpPorts.end();++p)
    {
-      Source s(resip::DnsUtil::getLocalIpAddress(), mPort, UDP);
-      addSource(s);
-      Source s2(resip::DnsUtil::getLocalIpAddress(), mPort, TCP);
-      addSource(s2);
-      Source s3(resip::DnsUtil::getLocalIpAddress(), mPort, TLS);
-      addSource(s2);
+      if(*p>0)
+      {
+         if(!proxyHasNameAddr)
+         {
+            mProxyUrl.uri().host() = host;
+            mProxyUrl.uri().port() = *p;
+            proxyHasNameAddr=true;
+         }
+         
+         if(!interfaceObj.empty())
+         {
+            if(!DnsUtil::isIpAddress(interfaceObj))
+            {
+               try
+               {
+                  Source s(resip::DnsUtil::getLocalIpAddress(interfaceObj), *p, UDP);
+                  addSource(s);
+               }
+               catch (resip::DnsUtil::Exception& e)
+               {
+                  DebugLog(<<"No external address found:" << e);
+               }
+            }
+            else
+            {
+               Source s(interfaceObj,*p,UDP);
+               addSource(s);
+            }
+         }
+         else
+         {
+            addSources(DnsUtils::makeSourceSet(host,*p,UDP));
+         }
+
+      }
    }
-   catch (resip::DnsUtil::Exception& e)
+
+   if(!interfaceObj.empty())
    {
-      DebugLog(<<"No external address found:" << e);
+      if(!DnsUtil::isIpAddress(interfaceObj))
+      {
+         try
+         {
+            Source s(resip::DnsUtil::getLocalIpAddress(interfaceObj), 5060, TCP);
+            addSource(s);
+         }
+         catch (resip::DnsUtil::Exception& e)
+         {
+            DebugLog(<<"No external address found:" << e);
+         }
+      }
+      else
+      {
+         Source s(interfaceObj,5060,TCP);
+         addSource(s);
+      }
+   }
+   else
+   {
+      addSources(DnsUtils::makeSourceSet(host,5060,TCP));
+      
+   }
+
+   if(interfaceObj.empty() || !DnsUtil::isIpAddress(interfaceObj))
+   {
+      std::list<std::pair<Data, Data> > ifs(resip::DnsUtil::getInterfaces(interfaceObj));
+      for(std::list<std::pair<Data, Data> >::iterator i=ifs.begin(); i!=ifs.end(); ++i)
+      {
+         Source s(i->second, 5060, SCTP);
+         addSource(s);
+      }
+   }
+   else
+   {
+      Source s(interfaceObj, 5060, SCTP);
+      addSource(s);
    }
    
-   // .dlb. other ethi
-   for (int i = 1; i < 11; ++i)
+   if(!interfaceObj.empty())
    {
-      Source ssu("127.0.0." + Data(i), mPort, UDP);
-      addSource(ssu);
-      Source sst("127.0.0." + Data(i), mPort, TCP);
-      addSource(sst);
-      Source sss("127.0.0." + Data(i), mPort, TLS);
-      addSource(sss);
+      if(!DnsUtil::isIpAddress(interfaceObj))
+      {
+         try
+         {
+            Source s(resip::DnsUtil::getLocalIpAddress(interfaceObj), 5061, TLS);
+            addSource(s);
+         }
+         catch (resip::DnsUtil::Exception& e)
+         {
+            DebugLog(<<"No external address found:" << e);
+         }
+      }
+      else
+      {
+         Source s(interfaceObj,5061,TLS);
+         addSource(s);
+      }
    }
+   else
+   {
+      addSources(DnsUtils::makeSourceSet(host,5061,TLS));
+   }
+
 }
 
 TestProxy::TestProxy()
@@ -134,17 +220,25 @@ TestProxy::isFromMe(const SipMessage& msg)
 {
    //DebugLog (<< "Received: " << msg << " from " << msg.getSource());
       
-   if (msg.header(h_Vias).front().transport() == "TCP")
-   {
-      // !dlb! can we do better?
-      return true;
-   }
-
    Source src;
    src.host = resip::Tuple::inet_ntop(msg.getSource());
    src.port = msg.getSource().getPort();
    src.transportType = msg.getSource().getType();
-   
+   resip::Data transport=msg.header(h_Vias).front().transport();
+   transport.lowercase();
+   if(transport == "tcp" || transport == "tls")
+   {
+      if (msg.getSource().isLoopback())
+      {
+         // !dlb! can we do better?
+         return true;
+      }
+      else
+      {
+         src.port=0;
+      }
+   }
+
    DebugLog(<<"Matching: " << src);
    DebugLog(<< "Sources: " << Inserter(mSources));
    
