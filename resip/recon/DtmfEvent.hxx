@@ -6,7 +6,6 @@
 namespace recon
 {
 
-class RemoteParticipant;
 class Message;
 
 /**
@@ -18,7 +17,7 @@ class Message;
 class DtmfEvent : public resip::DumCommand
 {
    public:
-      DtmfEvent(ConversationManager& conversationManager, ParticipantHandle remoteParticipantHandle, int dtmf, int duration, bool up);
+      DtmfEvent(ConversationManager& conversationManager, ConversationHandle conversationHandle, int connectionId, int dtmf, int duration, bool up);
       virtual void executeCommand();
 
       Message* clone() const;
@@ -27,7 +26,8 @@ class DtmfEvent : public resip::DumCommand
 
    private:
       ConversationManager& mConversationManager;
-      ParticipantHandle mRemoteParticipantHandle;
+      ConversationHandle mConversationHandle;
+      int mConnectionId;
       int mDtmfTone;
       int mDuration;
       bool mUp;

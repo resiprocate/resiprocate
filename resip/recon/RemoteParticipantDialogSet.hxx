@@ -70,7 +70,8 @@ public:
 
    // sipX Media Stuff
    virtual int getMediaConnectionId() { return mMediaConnectionId; }
-   virtual int getConnectionPortOnBridge() { return mConnectionPortOnBridge; }
+   virtual int getConnectionPortOnBridge();
+   virtual void freeMediaResources();
 
    void setActiveDestination(const char* address, unsigned short rtpPort, unsigned short rtcpPort);
    void startDtlsClient(const char* address, unsigned short rtpPort, unsigned short rtcpPort);
@@ -137,6 +138,8 @@ private:
    flowmanager::MediaStream::SrtpCryptoSuite mSrtpCryptoSuite;
 
    // sipX media stuff
+   virtual resip::SharedPtr<MediaInterface> getMediaInterface();
+   resip::SharedPtr<MediaInterface> mMediaInterface;
    int mMediaConnectionId; 
    int mConnectionPortOnBridge;
 

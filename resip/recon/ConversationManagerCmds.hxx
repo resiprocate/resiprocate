@@ -79,11 +79,34 @@ class JoinConversationCmd  : public resip::DumCommand
            mDestConvHandle(destConvHandle) {}
       virtual void executeCommand()
       {
-         Conversation* sourceConversation = mConversationManager->getConversation(mSourceConvHandle);
-         Conversation* destConversation = mConversationManager->getConversation(mDestConvHandle);
-         if(sourceConversation && destConversation)
+         if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
          {
-            sourceConversation->join(destConversation);  // Join source Conversation into dest Conversation and destroy source conversation
+            WarningLog(<< "JoinConversationCmd: command not allowed in sipXConversationMediaInterfaceMode.");
+         }
+         else
+         {
+            Conversation* sourceConversation = mConversationManager->getConversation(mSourceConvHandle);
+            Conversation* destConversation = mConversationManager->getConversation(mDestConvHandle);
+            if(sourceConversation && destConversation)
+            {
+               if(sourceConversation == destConversation)
+               {
+                  // NoOp
+                  return;
+               }
+               sourceConversation->join(destConversation);  // Join source Conversation into dest Conversation and destroy source conversation
+            }
+            else
+            {
+               if(!sourceConversation)
+               {
+                  WarningLog(<< "JoinConversationCmd: invalid source conversation handle.");
+               }
+               if(!destConversation)
+               {
+                  WarningLog(<< "JoinConversationCmd: invalid destination conversation handle.");
+               }
+            }
          }
       }
       resip::Message* clone() const { assert(0); return 0; }
@@ -243,9 +266,30 @@ class AddParticipantCmd  : public resip::DumCommand
       {
          Participant* participant = mConversationManager->getParticipant(mPartHandle);
          Conversation* conversation = mConversationManager->getConversation(mConvHandle);
+
          if(participant && conversation)
          {
+            if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
+            {
+               // Need to ensure, that we are not adding the participant to more than one conversation.
+               if(participant->getConversations().size() > 0)
+               {
+                  WarningLog(<< "AddParticipantCmd: participants cannot belong to multiple conversations in sipXConversationMediaInterfaceMode.");
+                  return;
+               }
+            }
             conversation->addParticipant(participant);
+         }
+         else
+         {
+            if(!participant)
+            {
+               WarningLog(<< "AddParticipantCmd: invalid participant handle.");
+            }
+            if(!conversation)
+            {
+               WarningLog(<< "AddParticipantCmd: invalid conversation handle.");
+            }
          }
       }
       resip::Message* clone() const { assert(0); return 0; }
@@ -272,7 +316,27 @@ class RemoveParticipantCmd  : public resip::DumCommand
          Conversation* conversation = mConversationManager->getConversation(mConvHandle);
          if(participant && conversation)
          {
+            if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
+            {
+               // Need to ensure, that only local participants can be removed from conversations
+               if(!dynamic_cast<LocalParticipant*>(participant))
+               {
+                  WarningLog(<< "RemoveParticipantCmd: only local participants can be removed from conversations in sipXConversationMediaInterfaceMode.");
+                  return;
+               }
+            }
             conversation->removeParticipant(participant);
+         }
+         else
+         {
+            if(!participant)
+            {
+               WarningLog(<< "RemoveParticipantCmd: invalid participant handle.");
+            }
+            if(!conversation)
+            {
+               WarningLog(<< "RemoveParticipantCmd: invalid conversation handle.");
+            }
          }
       }
       resip::Message* clone() const { assert(0); return 0; }
@@ -302,9 +366,46 @@ class MoveParticipantCmd  : public resip::DumCommand
          Conversation* destConversation   = mConversationManager->getConversation(mDestConvHandle);
          if(participant && sourceConversation && destConversation)
          {
-            // Add to new conversation and remove from old (add before remove, so that hold/unhold won't happen)
-            destConversation->addParticipant(participant);
-            sourceConversation->removeParticipant(participant);
+            if(sourceConversation == destConversation)
+            {
+               // No-Op
+               return;
+            }
+            if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
+            {
+               // Need to ensure, that only local participants can be moved between conversations
+               if(!dynamic_cast<LocalParticipant*>(participant))
+               {
+                  WarningLog(<< "MoveParticipantCmd: only local participants can be moved between conversations in sipXConversationMediaInterfaceMode.");
+                  return;
+               }
+               // Remove from old before adding to new conversation (since participants can't belong to multiple conversations
+               // and only local participants can be moved in sipXConversationMediaInterfaceMode - no need to worry about the
+               // hold/unhold issue that is mentioned in the 2nd half of the else statement for sipXGlobalMediaInterfaceMode)
+               sourceConversation->removeParticipant(participant);
+               destConversation->addParticipant(participant);
+            }
+            else
+            {
+               // Add to new conversation and remove from old (add before remove, so that hold/unhold won't happen)
+               destConversation->addParticipant(participant);
+               sourceConversation->removeParticipant(participant);
+            }
+         }
+         else
+         {
+            if(!participant)
+            {
+               WarningLog(<< "MoveParticipantCmd: invalid participant handle.");
+            }
+            if(!sourceConversation)
+            {
+               WarningLog(<< "MoveParticipantCmd: invalid source conversation handle.");
+            }
+            if(!destConversation)
+            {
+               WarningLog(<< "MoveParticipantCmd: invalid destination conversation handle.");
+            }
          }
       }
       resip::Message* clone() const { assert(0); return 0; }
@@ -338,6 +439,17 @@ class ModifyParticipantContributionCmd  : public resip::DumCommand
          {
             conversation->modifyParticipantContribution(participant, mInputGain, mOutputGain);
          }
+         else
+         {
+            if(!participant)
+            {
+               WarningLog(<< "ModifyParticipantContributionCmd: invalid participant handle.");
+            }
+            if(!conversation)
+            {
+               WarningLog(<< "ModifyParticipantContributionCmd: invalid conversation handle.");
+            }
+         }
       }
       resip::Message* clone() const { assert(0); return 0; }
       EncodeStream& encode(EncodeStream& strm) const { strm << " ModifyParticipantContributionCmd: "; return strm; }
@@ -357,7 +469,8 @@ class OutputBridgeMixWeightsCmd  : public resip::DumCommand
          : mConversationManager(conversationManager) {}
       virtual void executeCommand()
       {
-         mConversationManager->getBridgeMixer().outputBridgeMixWeights();
+         assert(mConversationManager->getBridgeMixer()!=0);
+         mConversationManager->getBridgeMixer()->outputBridgeMixWeights();
       }
       resip::Message* clone() const { assert(0); return 0; }
       EncodeStream& encode(EncodeStream& strm) const { strm << " OutputBridgeMixWeightsCmd: "; return strm; }
@@ -380,7 +493,21 @@ class AlertParticipantCmd  : public resip::DumCommand
          RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
          if(remoteParticipant)
          {
+            if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode && mEarlyFlag)
+            {
+               // Need to ensure, that the remote paticipant is added to a conversation before doing an opertation that requires
+               // media (ie. EarlyMediaFlag set to true).
+               if(remoteParticipant->getConversations().size() == 0)
+               {
+                  WarningLog(<< "AlertParticipantCmd: remote participants must to added to a conversation before alert with early flag can be used when in sipXConversationMediaInterfaceMode.");
+                  return;
+               }
+            }
             remoteParticipant->alert(mEarlyFlag);
+         }
+         else
+         {
+            WarningLog(<< "AlertParticipantCmd: invalid remote participant handle.");
          }
       }
       resip::Message* clone() const { assert(0); return 0; }
@@ -404,7 +531,20 @@ class AnswerParticipantCmd  : public resip::DumCommand
          RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
          if(remoteParticipant)
          {
+            if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
+            {
+               // Need to ensure, that the remote paticipant is added to a conversation before accepting the call
+               if(remoteParticipant->getConversations().size() == 0)
+               {
+                  WarningLog(<< "AnswerParticipantCmd: remote participant must to added to a conversation before calling accept in sipXConversationMediaInterfaceMode.");
+                  return;
+               }
+            }
             remoteParticipant->accept();
+         }
+         else
+         {
+            WarningLog(<< "AnswerParticipantCmd: invalid remote participant handle.");
          }
       }
       resip::Message* clone() const { assert(0); return 0; }
@@ -430,6 +570,10 @@ class RejectParticipantCmd  : public resip::DumCommand
          if(remoteParticipant)
          {
             remoteParticipant->reject(mRejectCode);
+         }
+         else
+         {
+            WarningLog(<< "RejectParticipantCmd: invalid remote participant handle.");
          }
       }
       resip::Message* clone() const { assert(0); return 0; }
@@ -457,6 +601,10 @@ class RedirectParticipantCmd  : public resip::DumCommand
          {
             remoteParticipant->redirect(mDestination);
          }
+         else
+         {
+            WarningLog(<< "RedirectParticipantCmd: invalid remote participant handle.");
+         }
       }
       resip::Message* clone() const { assert(0); return 0; }
       EncodeStream& encode(EncodeStream& strm) const { strm << " RedirectParticipantCmd: "; return strm; }
@@ -483,6 +631,17 @@ class RedirectToParticipantCmd  : public resip::DumCommand
          if(remoteParticipant && destRemoteParticipant)
          {
             remoteParticipant->redirectToParticipant(destRemoteParticipant->getInviteSessionHandle());
+         }
+         else
+         {
+            if(!remoteParticipant)
+            {
+               WarningLog(<< "RedirectToParticipantCmd: invalid remote participant handle.");
+            }
+            if(!destRemoteParticipant)
+            {
+               WarningLog(<< "RedirectToParticipantCmd: invalid destination remote participant handle.");
+            }
          }
       }
       resip::Message* clone() const { assert(0); return 0; }

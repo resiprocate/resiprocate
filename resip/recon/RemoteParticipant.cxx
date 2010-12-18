@@ -126,7 +126,7 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination)
    adjustRTPStreams(true);
 
    // Special case of this call - since call in addToConversation will not work, since we didn't know our bridge port at that time
-   mConversationManager.getBridgeMixer().calculateMixWeightsForParticipant(this);
+   applyBridgeMixWeights();
 }
 
 int 
@@ -286,6 +286,12 @@ RemoteParticipant::accept()
          ServerInviteSession* sis = dynamic_cast<ServerInviteSession*>(mInviteSessionHandle.get());
          if(sis && !sis->isAccepted())
          { 
+            if(getLocalRTPPort() == 0)
+            {
+               WarningLog(<< "RemoteParticipant::accept cannot accept call, since no free RTP ports, rejecting instead.");
+               sis->reject(480);  // Temporarily Unavailable - no free RTP ports
+               return;
+            }
             // Clear any pending hold/unhold requests since our offer/answer here will handle it
             if(mPendingRequest.mType == Hold ||
                mPendingRequest.mType == Unhold)
@@ -342,6 +348,13 @@ RemoteParticipant::alert(bool earlyFlag)
          {
             if(earlyFlag && mPendingOffer.get() != 0)
             {
+               if(getLocalRTPPort() == 0)
+               {
+                  WarningLog(<< "RemoteParticipant::alert cannot alert call with early media, since no free RTP ports, rejecting instead.");
+                  sis->reject(480);  // Temporarily Unavailable - no free RTP ports
+                  return;
+               }
+
                provideAnswer(*mPendingOffer.get(), false /* postAnswerAccept */, true /* postAnswerAlert */);
                mPendingOffer.release();               
             }
@@ -1718,7 +1731,7 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
 
       if(numCodecs > 0)
       {
-         mConversationManager.getMediaInterface()->startRtpSend(mDialogSet.getMediaConnectionId(), numCodecs, codecs);
+         getMediaInterface()->getInterface()->startRtpSend(mDialogSet.getMediaConnectionId(), numCodecs, codecs);
       }
       else
       {
@@ -1732,9 +1745,9 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
    }
    else
    {
-      if(mConversationManager.getMediaInterface()->isSendingRtpAudio(mDialogSet.getMediaConnectionId()))
+      if(getMediaInterface()->getInterface()->isSendingRtpAudio(mDialogSet.getMediaConnectionId()))
       {
-         mConversationManager.getMediaInterface()->stopRtpSend(mDialogSet.getMediaConnectionId());
+         getMediaInterface()->getInterface()->stopRtpSend(mDialogSet.getMediaConnectionId());
       }
       InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", stop sending.");
    }
@@ -1742,7 +1755,7 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
    if(mediaDirection == SdpMediaLine::DIRECTION_TYPE_SENDRECV ||
       mediaDirection == SdpMediaLine::DIRECTION_TYPE_RECVONLY)
    {
-      if(!mConversationManager.getMediaInterface()->isReceivingRtpAudio(mDialogSet.getMediaConnectionId()))
+      if(!getMediaInterface()->getInterface()->isReceivingRtpAudio(mDialogSet.getMediaConnectionId()))
       {
          // !SLG! - we could make this better, no need to recalculate this every time
          // We are always willing to receive any of our locally supported codecs
@@ -1763,7 +1776,7 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
             InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", receving: " << codecString.data());            
          }
           
-         mConversationManager.getMediaInterface()->startRtpReceive(mDialogSet.getMediaConnectionId(), numCodecs, codecs);
+         getMediaInterface()->getInterface()->startRtpReceive(mDialogSet.getMediaConnectionId(), numCodecs, codecs);
          for(int i = 0; i < numCodecs; i++)
          {
             delete codecs[i];
@@ -1775,9 +1788,9 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
    else
    {
       // Never stop receiving - keep reading buffers and let mixing matrix handle supression of audio output
-      //if(mConversationManager.getMediaInterface()->isReceivingRtpAudio(mDialogSet.getMediaConnectionId()))
+      //if(getMediaInterface()->getInterface()->isReceivingRtpAudio(mDialogSet.getMediaConnectionId()))
       //{
-      //   mConversationManager.getMediaInterface()->stopRtpReceive(mDialogSet.getMediaConnectionId());
+      //   getMediaInterface()->getInterface()->stopRtpReceive(mDialogSet.getMediaConnectionId());
       //}
       InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", stop receiving (mLocalHold=" << mLocalHold << ").");
    }
@@ -1818,7 +1831,6 @@ RemoteParticipant::onNewSession(ServerInviteSessionHandle h, InviteSession::Offe
 {
    InfoLog(<< "onNewSession(Server): handle=" << mHandle << ", " << msg.brief());
 
-   getLocalRTPPort();  // Allocate a port now - since it will be required as soon as we add this participant to a conversation
    mInviteSessionHandle = h->getSessionHandle();         
    mDialogId = getDialogId();
             
@@ -2022,25 +2034,25 @@ void
 RemoteParticipant::onOffer(InviteSessionHandle h, const SipMessage& msg, const SdpContents& offer)
 {         
    InfoLog(<< "onOffer: handle=" << mHandle << ", " << msg.brief());
-   unsigned int localRTPPort = getLocalRTPPort();
-   if(localRTPPort == 0)
+   if(mState == Connecting && mInviteSessionHandle.isValid())
    {
-      h->reject(486);  // Busy-Here? - is this the best return code?
+      ServerInviteSession* sis = dynamic_cast<ServerInviteSession*>(mInviteSessionHandle.get());
+      if(sis && !sis->isAccepted())
+      {
+         // Don't set answer now - store offer and set when needed - so that sendHoldSdp() can be calculated at the right instant
+         // we need to allow time for app to add to a conversation before alerting(with early flag) or answering
+         mPendingOffer = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(offer.clone()));
+         return;
+      }
+   }
+
+   if(getLocalRTPPort() == 0)
+   {
+      WarningLog(<< "RemoteParticipant::onOffer cannot continue due to no free RTP ports, rejecting offer.");
+      h->reject(480);  // Temporarily Unavailable
    }
    else
    {
-      if(mState == Connecting && mInviteSessionHandle.isValid())
-      {
-         ServerInviteSession* sis = dynamic_cast<ServerInviteSession*>(mInviteSessionHandle.get());
-         if(sis && !sis->isAccepted())
-         {
-            // Don't set answer now - store offer and set when needed - so that sendHoldSdp() can be calculated at the right instant
-            // we need to allow time for app to add to a conversation before alerting(with early flag) or answering
-            mPendingOffer = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(offer.clone()));
-            return;
-         }
-      }
-
       if(provideAnswer(offer, mState==Replacing /* postAnswerAccept */, false /* postAnswerAlert */))
       {
          if(mState == Replacing)
@@ -2055,22 +2067,22 @@ void
 RemoteParticipant::onOfferRequired(InviteSessionHandle h, const SipMessage& msg)
 {
    InfoLog(<< "onOfferRequired: handle=" << mHandle << ", " << msg.brief());
-   unsigned int localRTPPort = getLocalRTPPort();
-   if(localRTPPort == 0)
+   // We are being asked to provide SDP to the remote end - we should no longer be considering that
+   // remote end wants us to be on hold
+   mRemoteHold = false;
+
+   if(mState == Connecting && !h->isAccepted())  
    {
-      h->reject(486);  // Busy-Here? - is this the best return code?
+      // If we haven't accepted yet - delay providing the offer until accept is called (this allows time 
+      // for a localParticipant to be added before generating the offer)
+      mOfferRequired = true;
    }
    else
    {
-      // We are being asked to provide SDP to the remote end - we should no longer be considering that
-      // remote end wants us to be on hold
-      mRemoteHold = false;
-
-      if(mState == Connecting && !h->isAccepted())  
+      if(getLocalRTPPort() == 0)
       {
-         // If we haven't accepted yet - delay providing the offer until accept is called (this allows time 
-         // for a localParticipant to be added before generating the offer)
-         mOfferRequired = true;
+         WarningLog(<< "RemoteParticipant::onOfferRequired cannot continue due to no free RTP ports, rejecting offer request.");
+         h->reject(480);  // Temporarily Unavailable
       }
       else
       {
@@ -2150,11 +2162,11 @@ RemoteParticipant::onRefer(InviteSessionHandle is, ServerSubscriptionHandle ss, 
       RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mHandle); // This will replace old participant in ConversationManager map
       participant->mReferringAppDialog = getHandle();
 
+      replaceWithParticipant(participant);      // adjust conversation mappings 
+
       // Create offer
       SdpContents offer;
-      participant->buildSdpOffer(holdSdp, offer);
-
-      replaceWithParticipant(participant);      // adjust conversation mappings - do this after buildSdpOffer, so that we have a bridge port
+      participant->buildSdpOffer(holdSdp, offer);  
 
       // Build the Invite
       SharedPtr<SipMessage> NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, ss->getHandle(), &offer, participantDialogSet);
@@ -2184,11 +2196,11 @@ RemoteParticipant::doReferNoSub(const SipMessage& msg)
    RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mHandle); // This will replace old participant in ConversationManager map
    participant->mReferringAppDialog = getHandle();
 
+   replaceWithParticipant(participant);      // adjust conversation mappings
+
    // Create offer
    SdpContents offer;
    participant->buildSdpOffer(holdSdp, offer);
-
-   replaceWithParticipant(participant);      // adjust conversation mappings - do this after buildSdpOffer, so that we have a bridge port
 
    // Build the Invite
    SharedPtr<SipMessage> NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, mDialogSet.getUserProfile(), &offer, participantDialogSet);

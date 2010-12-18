@@ -28,7 +28,6 @@ Conversation::Conversation(ConversationHandle handle,
   mNumMediaParticipants(0),
   mBroadcastOnly(broadcastOnly),
   mNotificationDispatcher(conversationManager, this),
-  mMediaInterface(0),
   mBridgeMixer(0)
 {
    mConversationManager.registerConversation(this);
@@ -43,6 +42,14 @@ Conversation::Conversation(ConversationHandle handle,
       mRelatedConversationSet = new RelatedConversationSet(mConversationManager, mHandle, this);
    }
    InfoLog(<< "Conversation created, handle=" << mHandle);
+
+   if(mConversationManager.getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
+   {
+      mConversationManager.createMediaInterfaceAndMixer(false /* giveFocus?*/,    // Focus will be given when local participant is added
+                                                        mNotificationDispatcher, 
+                                                        mMediaInterface, 
+                                                        &mBridgeMixer);      
+   }
 }
 
 Conversation::~Conversation()
@@ -53,6 +60,7 @@ Conversation::~Conversation()
       mRelatedConversationSet->removeConversation(mHandle);
    }
    mConversationManager.onConversationDestroyed(mHandle);
+   delete mBridgeMixer;
    InfoLog(<< "Conversation destroyed, handle=" << mHandle);
 }
 
@@ -98,7 +106,7 @@ Conversation::modifyParticipantContribution(Participant* participant, unsigned i
    {
       it->second.setInputGain(inputGain);
       it->second.setOutputGain(outputGain);
-      mConversationManager.getBridgeMixer().calculateMixWeightsForParticipant(participant);
+      participant->applyBridgeMixWeights();
    }
 }
 
@@ -236,7 +244,7 @@ Conversation::registerParticipant(Participant *participant, unsigned int inputGa
 
    InfoLog(<< "Participant handle=" << participant->getParticipantHandle() << " added to conversation handle=" << mHandle << " (BridgePort=" << participant->getConnectionPortOnBridge() << ")");
 
-   mConversationManager.getBridgeMixer().calculateMixWeightsForParticipant(participant);
+   participant->applyBridgeMixWeights();
 }
 
 void 
@@ -268,7 +276,7 @@ Conversation::unregisterParticipant(Participant *participant)
          notifyRemoteParticipantsOfHoldChange();
       }
 
-      mConversationManager.getBridgeMixer().calculateMixWeightsForParticipant(participant);
+      participant->applyBridgeMixWeights(this);
       InfoLog(<< "Participant handle=" << participant->getParticipantHandle() << " removed from conversation handle=" << mHandle);
 
       if(mDestroying && mParticipants.size() == 0)
@@ -278,10 +286,36 @@ Conversation::unregisterParticipant(Participant *participant)
    }
 }
 
-ParticipantHandle
-Conversation::getRemoteParticipantHandleFromMediaConnectionId(int mediaConnectionId)
+void 
+Conversation::notifyMediaEvent(int mediaConnectionId, MediaEvent::MediaEventType eventType)
 {
-    // TODO: !slg! - this is called from the sipX notification thread - protect!!
+   assert(eventType == MediaEvent::PLAY_FINISHED);
+
+   if(eventType == MediaEvent::PLAY_FINISHED)
+   {
+      // sipX only allows you to have one active media participant per media interface
+      // actually playing a file (or from cache) at a time, so for now it is sufficient to have
+      // this event indicate that any active media participants (playing a file/cache) should be destroyed.
+      ParticipantMap::iterator it;
+      for(it = mParticipants.begin(); it != mParticipants.end();)
+      {
+         MediaResourceParticipant* mrPart = dynamic_cast<MediaResourceParticipant*>(it->second.getParticipant());
+         it++;  // increment iterator here, since destroy may end up calling unregisterParticipant
+         if(mrPart)
+         {
+            if(mrPart->getResourceType() == MediaResourceParticipant::File ||
+               mrPart->getResourceType() == MediaResourceParticipant::Cache)
+            {
+               mrPart->destroyParticipant();
+            }
+         }
+      }
+   }
+}
+
+void 
+Conversation::notifyDtmfEvent(int mediaConnectionId, int dtmf, int duration, bool up)
+{
    ParticipantMap::iterator i = mParticipants.begin();
    for(; i != mParticipants.end(); i++)
    {
@@ -290,11 +324,10 @@ Conversation::getRemoteParticipantHandleFromMediaConnectionId(int mediaConnectio
       {
          if(remoteParticipant->getMediaConnectionId() == mediaConnectionId)
          {
-            return remoteParticipant->getParticipantHandle();
+            mConversationManager.onDtmfEvent(remoteParticipant->getParticipantHandle(), dtmf, duration, up);
          }
       }
    }
-   return 0;
 }
 
 

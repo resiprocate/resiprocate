@@ -39,7 +39,11 @@ class Participant
 
       virtual void setHandle(ParticipantHandle partHandle);
       virtual void replaceWithParticipant(Participant* replacingParticipant);
+
       virtual int getConnectionPortOnBridge() = 0;
+      virtual resip::SharedPtr<MediaInterface> getMediaInterface();
+      virtual void applyBridgeMixWeights();
+      virtual void applyBridgeMixWeights(Conversation* removedConversation);  
 
       virtual void destroyParticipant() = 0;
 

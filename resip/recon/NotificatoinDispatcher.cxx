@@ -16,9 +16,9 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 NotificationDispatcher::NotificationDispatcher(ConversationManager& conversationManager, 
-                                               ParticipantFinderIf *participantFinderIf) :
+                                               EventRouterQueryIf *eventRouterQueryIf) :
    mConversationManager(conversationManager),
-   mParticipantFinderIf(participantFinderIf)
+   mEventRouterQueryIf(eventRouterQueryIf)
 {
 }
 
@@ -43,11 +43,16 @@ NotificationDispatcher::post(const OsMsg& msg)
          InfoLog( << "NotificationDispatcher: received MI_NOTF_PLAY_STOPPED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_PLAY_FINISHED:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_PLAY_FINISHED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          {
+            assert(mEventRouterQueryIf!=0);
+
             // Queue event to conversation manager thread
-            MediaEvent* mevent = new MediaEvent(mConversationManager, MediaEvent::PLAY_FINISHED);   // TODO - need to route to correct conversation
+            ConversationHandle convHandle = mEventRouterQueryIf->getConversationHandle();
+            MediaEvent* mevent = new MediaEvent(mConversationManager, pNotfMsg->getConnectionId(), convHandle, MediaEvent::PLAY_FINISHED);
             mConversationManager.post(mevent);
+            InfoLog( << "NotificationDispatcher: received MI_NOTF_PLAY_FINISHED, sourceId=" << pNotfMsg->getSourceId().data() << 
+               ", connectionId=" << pNotfMsg->getConnectionId() << 
+               ", conversationHandle=" << convHandle);
          }
          break;
       case MiNotification::MI_NOTF_PROGRESS:
@@ -68,18 +73,16 @@ NotificationDispatcher::post(const OsMsg& msg)
       case MiNotification::MI_NOTF_DTMF_RECEIVED:
          {
             MiDtmfNotf* pDtmfNotfMsg = (MiDtmfNotf*)&msg;
-            assert(mParticipantFinderIf!=0);
+            assert(mEventRouterQueryIf!=0);
 
-            ParticipantHandle partHandle = mParticipantFinderIf->getRemoteParticipantHandleFromMediaConnectionId(pNotfMsg->getConnectionId());
-            if(partHandle != 0)
-            {
-               // Get event into dum queue, so that callback is on dum thread
-               DtmfEvent* devent = new DtmfEvent(mConversationManager, partHandle, pDtmfNotfMsg->getKeyCode(), pDtmfNotfMsg->getDuration(), pDtmfNotfMsg->getKeyPressState()==MiDtmfNotf::KEY_UP);
-               mConversationManager.post(devent);
-            }
+            // Get event into dum queue, so that callback is on dum thread
+            ConversationHandle convHandle = mEventRouterQueryIf->getConversationHandle();
+            DtmfEvent* devent = new DtmfEvent(mConversationManager, convHandle, pNotfMsg->getConnectionId(), pDtmfNotfMsg->getKeyCode(), pDtmfNotfMsg->getDuration(), pDtmfNotfMsg->getKeyPressState()==MiDtmfNotf::KEY_UP);
+            mConversationManager.post(devent);
 
             InfoLog( << "NotificationDispatcher: received MI_NOTF_DTMF_RECEIVED, sourceId=" << pNotfMsg->getSourceId().data() << 
                ", connectionId=" << pNotfMsg->getConnectionId() << 
+               ", conversationHandle=" << convHandle <<
                ", keyCode=" << pDtmfNotfMsg->getKeyCode() << 
                ", state=" << pDtmfNotfMsg->getKeyPressState() << 
                ", duration=" << pDtmfNotfMsg->getDuration());

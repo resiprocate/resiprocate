@@ -70,10 +70,10 @@ extern int sdpTests(void);
 //                            addPartcipant
 //                            createRemoteParticipant
 // <-onIncomingCall                                            1
-// alertParticpant(early)
-//                            <-onParticipantAlerting          2
 // createConversation
 // addParticipant
+// alertParticpant(early)
+//                            <-onParticipantAlerting          2
 // answerParticipant
 //                            <-onParticpantConnected          3
 //                            removeParticipant(local/hold)    
@@ -127,7 +127,7 @@ signalHandler(int signo)
 class AliceConversationManager : public ConversationManager
 {
 public:
-   AliceConversationManager() 
+   AliceConversationManager(ConversationManager::MediaInterfaceMode mode) : ConversationManager(true, mode)
    { 
       mLogPrefix = "Alice: ";
    };
@@ -197,11 +197,11 @@ public:
          assert(partHandle == 6);    
          assert(autoAnswer == false);
          MARKER;
-         alertParticipant(partHandle, true);
          {
-            ConversationHandle convHandle = createConversation();
-            addParticipant(convHandle, partHandle);
+         ConversationHandle convHandle = createConversation();
+         addParticipant(convHandle, partHandle);
          }
+         alertParticipant(partHandle, true);
          answerParticipant(partHandle);
          break;
       default:
@@ -347,7 +347,7 @@ private:
 class BobConversationManager : public ConversationManager
 {
 public:
-   BobConversationManager() 
+   BobConversationManager(ConversationManager::MediaInterfaceMode mode) : ConversationManager(true, mode)
    { 
       mLogPrefix = "Bob: ";
    };
@@ -696,6 +696,60 @@ SharedPtr<ConversationProfile> createConversationProfile(SharedPtr<UserAgentMast
    return conversationProfile;
 }
 
+void executeConversationTest(ConversationManager::MediaInterfaceMode mode)
+{
+   //////////////////////////////////////////////////////////////////////////////
+   // Setup UserAgentMasterProfiles
+   //////////////////////////////////////////////////////////////////////////////
+   SharedPtr<UserAgentMasterProfile> profileAlice = createUserAgentMasterProfile();
+   profileAlice->addTransport(UDP, aliceUri.uri().port(), V4);
+   SharedPtr<ConversationProfile> conversationProfileAlice = createConversationProfile(profileAlice, 16384);
+   conversationProfileAlice->setDefaultFrom(aliceUri);
+   conversationProfileAlice->setUserAgent("Test-Alice");
+
+   SharedPtr<UserAgentMasterProfile> profileBob = createUserAgentMasterProfile();
+   profileBob->addTransport(UDP, bobUri.uri().port(), V4);
+   SharedPtr<ConversationProfile> conversationProfileBob = createConversationProfile(profileBob, 16385);
+   conversationProfileBob->setDefaultFrom(bobUri);
+   conversationProfileBob->setUserAgent("Test-Bob");
+
+   InfoLog(<< "Tests for sipXGlobalMediaInterfaceMode");
+
+   //////////////////////////////////////////////////////////////////////////////
+   // Create ConverationManagers and UserAgents
+   //////////////////////////////////////////////////////////////////////////////
+
+   {
+      AliceConversationManager aliceConversationManager(mode);
+      MyUserAgent aliceUa(&aliceConversationManager, profileAlice);
+      aliceUa.addConversationProfile(conversationProfileAlice);
+
+      BobConversationManager   bobConversationManager(mode);
+      MyUserAgent bobUa(&bobConversationManager, profileBob);
+      bobUa.addConversationProfile(conversationProfileBob);
+
+      //////////////////////////////////////////////////////////////////////////////
+      // Startup and run...
+      //////////////////////////////////////////////////////////////////////////////
+
+      aliceUa.startup();
+      aliceConversationManager.startup();
+
+      bobUa.startup();
+      bobConversationManager.startup();
+
+      while(true)
+      {
+         aliceUa.process(50);
+         bobUa.process(50);
+         if(finished) break;
+      }
+
+      aliceUa.shutdown();
+      bobUa.shutdown();
+   }
+}
+
 int 
 main (int argc, char** argv)
 {
@@ -733,54 +787,18 @@ main (int argc, char** argv)
    //Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);
    initNetwork();
 
-   //////////////////////////////////////////////////////////////////////////////
-   // Setup UserAgentMasterProfiles
-   //////////////////////////////////////////////////////////////////////////////
-   SharedPtr<UserAgentMasterProfile> profileAlice = createUserAgentMasterProfile();
-   profileAlice->addTransport(UDP, aliceUri.uri().port(), V4);
-   SharedPtr<ConversationProfile> conversationProfileAlice = createConversationProfile(profileAlice, 16384);
-   conversationProfileAlice->setDefaultFrom(aliceUri);
-   conversationProfileAlice->setUserAgent("Test-Alice");
+   cout << "Tests for sipXConversationMediaInterfaceMode" << endl;
+   executeConversationTest(ConversationManager::sipXConversationMediaInterfaceMode);
 
-   SharedPtr<UserAgentMasterProfile> profileBob = createUserAgentMasterProfile();
-   profileBob->addTransport(UDP, bobUri.uri().port(), V4);
-   SharedPtr<ConversationProfile> conversationProfileBob = createConversationProfile(profileBob, 16385);
-   conversationProfileBob->setDefaultFrom(bobUri);
-   conversationProfileBob->setUserAgent("Test-Bob");
+   // Reset counters, etc.
+   SCENARIO = 1;
+   LAST_SCENARIO = 4;
+   CALLBACK_SEQUENCE = 1;
+   finished = false;
 
-   //////////////////////////////////////////////////////////////////////////////
-   // Create ConverationManagers and UserAgents
-   //////////////////////////////////////////////////////////////////////////////
+   cout << "Tests for sipXGlobalMediaInterfaceMode" << endl;
+   executeConversationTest(ConversationManager::sipXGlobalMediaInterfaceMode);
 
-   {
-      AliceConversationManager aliceConversationManager;
-      MyUserAgent aliceUa(&aliceConversationManager, profileAlice);
-      aliceUa.addConversationProfile(conversationProfileAlice);
-
-      BobConversationManager   bobConversationManager;
-      MyUserAgent bobUa(&bobConversationManager, profileBob);
-      bobUa.addConversationProfile(conversationProfileBob);
-
-      //////////////////////////////////////////////////////////////////////////////
-      // Startup and run...
-      //////////////////////////////////////////////////////////////////////////////
-
-      aliceUa.startup();
-      aliceConversationManager.startup();
-
-      bobUa.startup();
-      bobConversationManager.startup();
-
-      while(true)
-      {
-         aliceUa.process(50);
-         bobUa.process(50);
-         if(finished) break;
-      }
-
-      aliceUa.shutdown();
-      bobUa.shutdown();
-   }
    InfoLog(<< "unitTests is shutdown.");
    //sleepSeconds(10);
 

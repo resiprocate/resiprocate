@@ -1,5 +1,5 @@
-#if !defined(ParticipantFinderIf_hxx)
-#define ParticipantFinderIf_hxx
+#if !defined(EventRouterQueryIf_hxx)
+#define EventRouterQueryIf_hxx
 
 #include "HandleTypes.hxx"
 
@@ -7,14 +7,15 @@ namespace recon
 {
 
 /**
-  This class is an interface used by the NotificationDispatcher
+  This class is an interface used by the NotificationDispatcher to help
+  route events to the proper destination
 
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
-class ParticipantFinderIf
+class EventRouterQueryIf
 {
 public:
-    virtual ParticipantHandle getRemoteParticipantHandleFromMediaConnectionId(int connectionId) = 0;
+    virtual ConversationHandle getConversationHandle() = 0;
 };
 
 }

@@ -18,11 +18,12 @@
 #include <resip/dum/OutOfDialogHandler.hxx>
 #include <resip/dum/RedirectHandler.hxx>
 #include <rutil/Mutex.hxx>
+#include <rutil/SharedPtr.hxx>
 
 #include "MediaResourceCache.hxx"
 #include "MediaEvent.hxx"
 #include "HandleTypes.hxx"
-#include "ParticipantFinderIf.hxx"
+#include "EventRouterQueryIf.hxx"
 #include "NotificationDispatcher.hxx"
 
 #include "FlowManager.hxx"
@@ -41,6 +42,20 @@ class ConversationProfile;
 class RemoteParticipant;
 class NotificationDispathcer;
 
+// Wrapper class to allow CpMediaIterface to be stored in a SharedPtr.
+// Note:  CpMediaIterface cannot be directly stored in a SharePrt because 
+//        the destructor is private and the release() call must be used 
+//        to destroy the object.
+class MediaInterface
+{
+public:
+   MediaInterface(CpMediaInterface* mediaInterface) :
+      mMediaInterface(mediaInterface) { }
+   ~MediaInterface() { mMediaInterface->release(); }
+   CpMediaInterface* getInterface() { return mMediaInterface; }
+private:
+   CpMediaInterface* mMediaInterface;
+};
 
 /**
   This class is one of two main classes of concern to an application
@@ -68,10 +83,49 @@ class ConversationManager  : public resip::InviteSessionHandler,
                              public resip::ClientSubscriptionHandler,
                              public resip::ServerSubscriptionHandler,
                              public resip::RedirectHandler,
-                             public ParticipantFinderIf
+                             public EventRouterQueryIf
 {
 public:  
-   ConversationManager(bool localAudioEnabled=true);
+  
+   /**
+     Note:  sipXtapi Media Interfaces have a finite number of supported endpoints 
+          that are allowed in each bridge mixer - by default this value is 10 
+          (2 are used for local mic / speaker, 1 for a MediaParticipant, leaving
+           7 remaining for RemoteParticipants).  This limit is controlled by the 
+          preprocessor define DEFAULT_BRIDGE_MAX_IN_OUTPUTS (see 
+          http://www.resiprocate.org/Limitations_with_sipXtapi_media_Integration
+          for more details.
+   
+          sipXGlobalMediaInterfaceMode - uses 1 global sipXtapi media interface  and 
+          allows for participants to exist in multiple conversations at the same 
+          time and have the bridge mixer properly control their mixing.  In this
+          mode, there can only be a single MediaParticipant for all conversations.
+          This arcitecture/mode is appropriate for single user agent devices (ie. 
+          sip phones).
+
+          sipXConversationMediaInterfaceMode - uses 1 sipXtapi media interface per
+          conversation.  Using this mode, participants cannot exist in multiple
+          conversations at the same time, however the limit of 7 participants is
+          no longer global, it now applies to each conversation.  A separate 
+          media participant for each conversation can also exist.
+          This arcitecture/mode is appropriate for server applications, such as
+          multi-party conference servers (up to 7 participants per conference), 
+          music on hold servers and call park servers.  Other API's that won't
+          function in this mode are:
+            -joinConversation
+            -addParticipant - only applies to the LocalParticipant
+            -moveParticipant - only applies to the LocalParticipant
+          Note:  For inbound (UAS) Remote Participant sessions, ensure that you
+                 add the Remote Participant to a conversation before you return 
+                 call accept() for alert() with early media.
+   */
+   typedef enum 
+   {
+      sipXGlobalMediaInterfaceMode,  
+      sipXConversationMediaInterfaceMode
+   } MediaInterfaceMode;
+
+   ConversationManager(bool localAudioEnabled=true, MediaInterfaceMode mediaInterfaceMode = sipXGlobalMediaInterfaceMode);
    virtual ~ConversationManager();
 
    typedef enum 
@@ -87,6 +141,12 @@ public:
    /**
      Create a new empty Conversation to which participants 
      can be added.
+
+     @param broadcastOnly - if set to true, then all participants in
+                            the conversation will be SIP held and will
+                            receive media from an added MediaParticipant.
+                            This option is useful for implementing music
+                            on hold servers.
 
      @return A handle to the newly created conversation.
    */   
@@ -106,6 +166,9 @@ public:
 
      @param sourceConvHandle Handle of source conversation
      @param destConvHandle   Handle of destination conversation
+
+     @note This API cannot be used when sipXConversationMediaInterfaceMode 
+           is enabled.
    */   
    virtual void joinConversation(ConversationHandle sourceConvHandle, ConversationHandle destConvHandle);
 
@@ -202,6 +265,9 @@ public:
 
      @param convHandle Handle of the conversation to add to
      @param partHandle Handle of the participant to add
+
+     @note When running in sipXConversationMediaInterfaceMode you cannot
+           add a participant to more than one conversation.
    */
    virtual void addParticipant(ConversationHandle convHandle, ParticipantHandle partHandle);  
 
@@ -213,6 +279,9 @@ public:
 
      @param convHandle Handle of the conversation to remove from
      @param partHandle Handle of the participant to remove
+
+     @note When running in sipXConversationMediaInterfaceMode this method
+           can only be used on the LocalPartipant.          
    */
    virtual void removeParticipant(ConversationHandle convHandle, ParticipantHandle partHandle);
 
@@ -225,6 +294,9 @@ public:
      @param partHandle Handle of the participant to move
      @param sourceConvHandle Handle of the conversation to move from
      @param destConvHandle   Handle of the conversation to move to
+
+     @note When running in sipXConversationMediaInterfaceMode this method
+           can only be used on the LocalPartipant.          
    */
    virtual void moveParticipant(ParticipantHandle partHandle, ConversationHandle sourceConvHandle, ConversationHandle destConvHandle);
 
@@ -519,7 +591,6 @@ private:
    friend class OutputBridgeMixWeightsCmd;
    void registerConversation(Conversation *);
    void unregisterConversation(Conversation *);
-   BridgeMixer& getBridgeMixer();
 
    friend class Participant;
    void registerParticipant(Participant *);
@@ -531,14 +602,14 @@ private:
 
    friend class DtmfEvent;
    friend class MediaEvent;
-   void onMediaEvent(MediaEvent::MediaEventType eventType);
+   void notifyMediaEvent(ConversationHandle conversationHandle, int mediaConnectionId, MediaEvent::MediaEventType eventType);
+   void notifyDtmfEvent(ConversationHandle conversationHandle, int connectionId, int dtmf, int duration, bool up);
 
    friend class RemoteParticipantDialogSet;
    friend class MediaResourceParticipant;
    friend class LocalParticipant;
    friend class BridgeMixer;
    friend class NotificationDispatcher;
-   CpMediaInterface* getMediaInterface() { return mMediaInterface; }
    unsigned int allocateRTPPort();
    void freeRTPPort(unsigned int port);
 
@@ -581,8 +652,13 @@ private:
    ParticipantHandle mCurrentParticipantHandle;
    ParticipantHandle getNewParticipantHandle();    // thread safe
    Participant* getParticipant(ParticipantHandle partHandle);
-   virtual ParticipantHandle getRemoteParticipantHandleFromMediaConnectionId(int mediaConnectionId);
+
    bool mLocalAudioEnabled;
+   MediaInterfaceMode mMediaInterfaceMode;
+   MediaInterfaceMode getMediaInterfaceMode() const { return mMediaInterfaceMode; }
+
+   // Virtual Fns for EventRouterQueryIf
+   virtual ConversationHandle getConversationHandle() { return 0; }
 
    void post(resip::Message *message);
    void post(resip::ApplicationMessage& message, unsigned int ms=0);
@@ -596,9 +672,13 @@ private:
    flowmanager::FlowManager mFlowManager;
 
    // sipX Media related members
+   void createMediaInterfaceAndMixer(bool giveFocus, NotificationDispatcher& notificationDispatcher, resip::SharedPtr<MediaInterface>& mediaInterface, BridgeMixer** bridgeMixer);
+   resip::SharedPtr<MediaInterface> getMediaInterface() const { assert(mMediaInterface.get()); return mMediaInterface; }
+   CpMediaInterfaceFactory* getMediaInterfaceFactory() { return mMediaFactory; }
+   BridgeMixer* getBridgeMixer() { return mBridgeMixer; }
    NotificationDispatcher mNotificationDispatcher;
    CpMediaInterfaceFactory* mMediaFactory;
-   CpMediaInterface* mMediaInterface;  
+   resip::SharedPtr<MediaInterface> mMediaInterface;  
    BridgeMixer* mBridgeMixer;
 };
 

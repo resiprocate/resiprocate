@@ -27,7 +27,7 @@ class BridgeMixer;
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class Conversation : public ParticipantFinderIf
+class Conversation : public EventRouterQueryIf
 {
 public:  
    Conversation(ConversationHandle handle, 
@@ -53,6 +53,9 @@ public:
 
    ConversationHandle getHandle() { return mHandle; }
 
+   void notifyMediaEvent(int mediaConnectionId, MediaEvent::MediaEventType eventType);
+   void notifyDtmfEvent(int mediaConnectionId, int dtmf, int duration, bool up);
+
 protected:
    friend class Participant;
    friend class LocalParticipant;
@@ -64,7 +67,8 @@ protected:
    friend class BridgeMixer;
    typedef std::map<ParticipantHandle, ConversationParticipantAssignment> ParticipantMap;
    ParticipantMap& getParticipants() { return mParticipants; }  
-   CpMediaInterface* getMediaInterface() { return mConversationManager.getMediaInterface(); }
+
+   resip::SharedPtr<MediaInterface> getMediaInterface() const { assert(mMediaInterface); return mMediaInterface; }
 
 private: 
    ConversationHandle mHandle;
@@ -73,16 +77,19 @@ private:
 
    ParticipantMap mParticipants;
    Participant* getParticipant(ParticipantHandle partHandle);
-   virtual ParticipantHandle getRemoteParticipantHandleFromMediaConnectionId(int mediaConnectionId);
    bool mDestroying;
    unsigned int mNumLocalParticipants;
    unsigned int mNumRemoteParticipants;
    unsigned int mNumMediaParticipants;
    bool mBroadcastOnly;
 
+   // Virtual Fns for EventRouterQueryIf
+   virtual ConversationHandle getConversationHandle() { return mHandle; }
+
    // sipX Media related members
+   BridgeMixer* getBridgeMixer() { return mBridgeMixer; }
    NotificationDispatcher mNotificationDispatcher;
-   CpMediaInterface* mMediaInterface;  
+   resip::SharedPtr<MediaInterface> mMediaInterface;  
    BridgeMixer* mBridgeMixer;
 };
 

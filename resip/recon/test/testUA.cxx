@@ -863,7 +863,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
          << "  destroyConversation:     <'destroyconv'|'dc'> <convHandle>" << endl
          << "  joinConversation:        <'joinconv'|'jc'> <sourceConvHandle> <destConvHandle>" << endl
          << endl 
-         << "  createLocalParticipant:  <'createlocal'|'cl'>" << endl
+         << "  createLocalParticipant:  <'createlocal'|'clp'>" << endl
          << "  createRemoteParticipant: <'createremote'|'crp'> <convHandle> <destURI> [<'manual'>] (last arg is fork select mode, 'auto' is default)" << endl 
          << "  createMediaResourceParticipant: <'createmedia'|'cmp'> <convHandle> <mediaURL> [<durationMs>]" << endl 
          << "  destroyParticipant:      <'destroypart'|'dp'> <parthandle>" << endl

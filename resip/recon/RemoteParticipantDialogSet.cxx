@@ -67,29 +67,14 @@ RemoteParticipantDialogSet::RemoteParticipantDialogSet(ConversationManager& conv
 
 RemoteParticipantDialogSet::~RemoteParticipantDialogSet() 
 {
-   if(mMediaConnectionId)
-   {
-      //mConversationManager.getMediaInterface()->removeToneListener(mMediaConnectionId);
-      mConversationManager.getMediaInterface()->deleteConnection(mMediaConnectionId);
-   }
-   if(mLocalRTPPort)
-   {
-      mConversationManager.freeRTPPort(mLocalRTPPort);
-      mLocalRTPPort = 0;
-   }
+   freeMediaResources();
+
    // If we have no dialogs and mUACOriginalRemoteParticipant is set, then we have not passed 
    // ownership of mUACOriginalRemoteParticipant to DUM - so we need to delete the participant
    if(mNumDialogs == 0 && mUACOriginalRemoteParticipant)
    {
       delete mUACOriginalRemoteParticipant;
    }
-
-   // Delete custom sockets - Note:  Must be done before MediaStream is deleted
-   if(mRtpSocket) delete mRtpSocket;
-   if(mRtcpSocket) delete mRtcpSocket;
-
-   // Delete Media Stream
-   delete mMediaStream;
 
    // Delete Sdp memory
    if(mProposedSdp) delete mProposedSdp;
@@ -205,14 +190,14 @@ RemoteParticipantDialogSet::getLocalRTPPort()
          // New Remote Participant - create media Interface connection
          mRtpSocket = new FlowManagerSipXSocket(mMediaStream->getRtpFlow());
          mRtcpSocket = new FlowManagerSipXSocket(mMediaStream->getRtcpFlow());
-         ret = ((CpTopologyGraphInterface*)mConversationManager.getMediaInterface())->createConnection(mMediaConnectionId,mRtpSocket,mRtcpSocket,false);
+         ret = ((CpTopologyGraphInterface*)getMediaInterface()->getInterface())->createConnection(mMediaConnectionId,mRtpSocket,mRtcpSocket,false);
 #ifdef DISABLE_FLOWMANAGER_IF_NO_NAT_TRAVERSAL
       }
       else
       {
-         ret = mConversationManager.getMediaInterface()->createConnection(mMediaConnectionId,
-                                                                 profile->sessionCaps().session().connection().getAddress().c_str(),
-                                                                 mLocalRTPPort);
+         ret = getMediaInterface()->getInterface()->createConnection(mMediaConnectionId,
+                                                     profile->sessionCaps().session().connection().getAddress().c_str(),
+                                                     mLocalRTPPort);
          mRtpTuple = localBinding;  // Just treat media stream as immediately ready using the localBinding in the SDP
       }
 #endif
@@ -231,7 +216,7 @@ RemoteParticipantDialogSet::getLocalRTPPort()
          int videoBandwidth;
          int videoFramerate;
 
-         ret = mConversationManager.getMediaInterface()->getCapabilities(
+         ret = getMediaInterface()->getInterface()->getCapabilities(
             mMediaConnectionId, 
             rtpHostAddress, 
             rtpAudioPort,
@@ -262,7 +247,7 @@ RemoteParticipantDialogSet::getLocalRTPPort()
       }
 
       //InfoLog(<< "About to get Connection Port on Bridge for MediaConnectionId: " << mMediaConnectionId);
-      ret = ((CpTopologyGraphInterface*)mConversationManager.getMediaInterface())->getConnectionPortOnBridge(mMediaConnectionId, 0, mConnectionPortOnBridge);
+      ret = ((CpTopologyGraphInterface*)getMediaInterface()->getInterface())->getConnectionPortOnBridge(mMediaConnectionId, 0, mConnectionPortOnBridge);
       InfoLog( << "RTP Port allocated=" << mLocalRTPPort << " (sipXmediaConnectionId=" << mMediaConnectionId << ", BridgePort=" << mConnectionPortOnBridge << ", ret=" << ret << ")");
    }
 
@@ -467,6 +452,73 @@ RemoteParticipantDialogSet::accept(resip::InviteSessionHandle& inviteSessionHand
    }
 }
 
+SharedPtr<MediaInterface>
+RemoteParticipantDialogSet::getMediaInterface()
+{
+   if(!mMediaInterface)
+   {
+      // Get the media interface from the active participant
+      if(mUACOriginalRemoteParticipant)
+      {
+         mMediaInterface = mUACOriginalRemoteParticipant->getMediaInterface();
+      }
+      else if(mDialogs.size() > 0)
+      {
+         // All participants in the set will have the same media interface - query from first
+         assert(mDialogs.begin()->second);
+         mMediaInterface = mDialogs.begin()->second->getMediaInterface();
+      }
+   }
+   assert(mMediaInterface);
+   return mMediaInterface;
+}
+
+int 
+RemoteParticipantDialogSet::getConnectionPortOnBridge() 
+{ 
+   if(mConnectionPortOnBridge==-1)
+   {
+      getLocalRTPPort();  // This call will create a MediaConnection if not already created at this point
+   }
+   return mConnectionPortOnBridge; 
+}
+
+void 
+RemoteParticipantDialogSet::freeMediaResources()
+{
+   if(mMediaConnectionId)
+   {
+      getMediaInterface()->getInterface()->deleteConnection(mMediaConnectionId);
+      mMediaConnectionId = 0;
+   }
+
+   // Delete custom sockets - Note:  Must be done before MediaStream is deleted
+   if(mRtpSocket)
+   { 
+      delete mRtpSocket;
+      mRtpSocket = 0;
+   }
+   if(mRtcpSocket) 
+   {
+      delete mRtcpSocket;
+      mRtcpSocket = 0;
+   }
+
+   // Delete Media Stream
+   if(mMediaStream)
+   {
+      delete mMediaStream;
+      mMediaStream = 0;
+   }
+
+   // Add the RTP port back to the pool
+   if(mLocalRTPPort)
+   {
+      mConversationManager.freeRTPPort(mLocalRTPPort);
+      mLocalRTPPort = 0;
+   }
+}
+
 void 
 RemoteParticipantDialogSet::setActiveDestination(const char* address, unsigned short rtpPort, unsigned short rtcpPort)
 {
@@ -486,7 +538,7 @@ RemoteParticipantDialogSet::setActiveDestination(const char* address, unsigned s
    }
    else
    {
-   mConversationManager.getMediaInterface()->setConnectionDestination(mMediaConnectionId,
+      getMediaInterface()->getInterface()->setConnectionDestination(mMediaConnectionId,
                                       address, 
                                       rtpPort,  /* audio rtp port */
                                       rtcpPort, /* audio rtcp port */
@@ -594,7 +646,7 @@ RemoteParticipantDialogSet::createAppDialog(const SipMessage& msg)
    {
       RemoteParticipant *participant = new RemoteParticipant(mConversationManager, mDum, *this);
       mActiveRemoteParticipantHandle = participant->getParticipantHandle();
-      mDialogs[DialogId(msg)] = participant;
+      mDialogs[DialogId(msg)] = participant;  // Note:  !slg! DialogId is not quite right here, since there is no To Tag on the INVITE
       return participant;
    }
 }

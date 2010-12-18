@@ -36,14 +36,14 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-ConversationManager::ConversationManager(bool localAudioEnabled) 
+ConversationManager::ConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode) 
 : mUserAgent(0),
   mCurrentConversationHandle(1),
   mCurrentParticipantHandle(1),
   mLocalAudioEnabled(localAudioEnabled),
+  mMediaInterfaceMode(mediaInterfaceMode),
   mNotificationDispatcher(*this, this),
   mMediaFactory(0),
-  mMediaInterface(0),
   mBridgeMixer(0)
 {
 #ifdef _DEBUG
@@ -58,26 +58,6 @@ ConversationManager::ConversationManager(bool localAudioEnabled)
    mMediaFactory = sipXmediaFactoryFactory(NULL, 0, 0, 0, mLocalAudioEnabled);
 
    // Create MediaInterface
-   UtlString localRtpInterfaceAddress("127.0.0.1");
-   OsSocket::getHostIp(&localRtpInterfaceAddress);  // Will be overridden in RemoteParticipantDialogSet, when connection is created anyway
-#ifndef TEST_DISABLE_SIPX
-   // Note:  STUN and TURN capabilities of the sipX media stack are not used - the FlowManager is responsible for STUN/TURN
-   mMediaInterface = mMediaFactory->createMediaInterface(NULL, 
-         localRtpInterfaceAddress, 
-         0,     /* numCodecs - not required at this point */
-         0,     /* codecArray - not required at this point */ 
-         NULL,  /* local */
-         0,     /* TOS Options */
-         NULL,  /* STUN Server Address */
-         0,     /* STUN Options */
-         25,    /* STUN Keepalive period (seconds) */
-         NULL,  /* TURN Server Address */
-         0,     /* TURN Port */
-         NULL,  /* TURN User */
-         NULL,  /* TURN Password */
-         25,    /* TURN Keepalive period (seconds) */
-         false); /* enable ICE? */
-
    MpCodecFactory *pCodecFactory = MpCodecFactory::getMpCodecFactory();
    unsigned int count = 0;
    const MppCodecInfoV1_1 **codecInfoArray;
@@ -100,21 +80,13 @@ ConversationManager::ConversationManager(bool localAudioEnabled)
                << " Channels: " << codecInfoArray[i]->numChannels);
    }
 
-   // Register the conversation manager class (derived from OsMsgDispatcher)
-   // as the sipX notification dispatcher
-   mMediaInterface->setNotificationDispatcher(&mNotificationDispatcher);
-
-   // Turn on notifications for all resources...
-   mMediaInterface->setNotificationsEnabled(true);
-
-   // This is the one and only media interface - give it focus
-   if(mLocalAudioEnabled)
+   if(mMediaInterfaceMode == sipXGlobalMediaInterfaceMode)
    {
-      mMediaInterface->giveFocus();
+      createMediaInterfaceAndMixer(mLocalAudioEnabled /* giveFocus?*/,    // This is the one and only media interface - give it focus
+                                   mNotificationDispatcher, 
+                                   mMediaInterface, 
+                                   &mBridgeMixer);      
    }
-
-   mBridgeMixer = new BridgeMixer(*mMediaInterface);
-#endif
 }
 
 ConversationManager::~ConversationManager()
@@ -122,7 +94,7 @@ ConversationManager::~ConversationManager()
    assert(mConversations.empty());
    assert(mParticipants.empty());
    delete mBridgeMixer;
-   if(mMediaInterface) mMediaInterface->release();
+   if(mMediaInterface) mMediaInterface.reset();  // Make sure inteface is destroyed before factory
    sipxDestroyMediaFactoryFactory();
 }
 
@@ -265,8 +237,15 @@ ConversationManager::modifyParticipantContribution(ConversationHandle convHandle
 void 
 ConversationManager::outputBridgeMatrix()
 {
-   OutputBridgeMixWeightsCmd* cmd = new OutputBridgeMixWeightsCmd(this);
-   post(cmd);
+   if(mMediaInterfaceMode == sipXGlobalMediaInterfaceMode)
+   {
+      OutputBridgeMixWeightsCmd* cmd = new OutputBridgeMixWeightsCmd(this);
+      post(cmd);
+   }
+   else
+   {
+      WarningLog(<< "ConversationManager::outputBridgeMatrix not supported in current Media Interface Mode");
+   }
 }
 
 void 
@@ -321,12 +300,6 @@ void
 ConversationManager::unregisterConversation(Conversation *conversation)
 {
    mConversations.erase(conversation->getHandle());
-}
-
-BridgeMixer& 
-ConversationManager::getBridgeMixer()
-{
-   return *mBridgeMixer;
 }
 
 ParticipantHandle 
@@ -446,8 +419,11 @@ ConversationManager::enableEchoCancel(bool enable)
    {
       WarningLog(<< "enableEchoCancel failed: status=" << status);
    }
-   mMediaInterface->defocus();   // required to apply changes
-   mMediaInterface->giveFocus();
+   if(mMediaInterfaceMode == sipXGlobalMediaInterfaceMode)  // Note for sipXConversationMediaInterfaceMode - setting will apply on next conversation given focus
+   {
+      mMediaInterface->getInterface()->defocus();   // required to apply changes
+      mMediaInterface->getInterface()->giveFocus();
+   }
 }
 
 void 
@@ -458,8 +434,11 @@ ConversationManager::enableAutoGainControl(bool enable)
    {
       WarningLog(<< "enableAutoGainControl failed: status=" << status);
    }
-   mMediaInterface->defocus();   // required to apply changes
-   mMediaInterface->giveFocus();
+   if(mMediaInterfaceMode == sipXGlobalMediaInterfaceMode)  // Note for sipXConversationMediaInterfaceMode - setting will apply on next conversation given focus
+   {
+      mMediaInterface->getInterface()->defocus();   // required to apply changes
+      mMediaInterface->getInterface()->giveFocus();
+   }
 }
  
 void 
@@ -470,8 +449,11 @@ ConversationManager::enableNoiseReduction(bool enable)
    {
       WarningLog(<< "enableAutoGainControl failed: status=" << status);
    }
-   mMediaInterface->defocus();   // required to apply changes
-   mMediaInterface->giveFocus();
+   if(mMediaInterfaceMode == sipXGlobalMediaInterfaceMode)  // Note for sipXConversationMediaInterfaceMode - setting will apply on next conversation given focus
+   {
+      mMediaInterface->getInterface()->defocus();   // required to apply changes
+      mMediaInterface->getInterface()->giveFocus();
+   }
 }
 
 Participant* 
@@ -486,25 +468,6 @@ ConversationManager::getParticipant(ParticipantHandle partHandle)
    {
       return 0;
    }
-}
-
-ParticipantHandle
-ConversationManager::getRemoteParticipantHandleFromMediaConnectionId(int mediaConnectionId)
-{
-    // TODO: !slg! - this is called from the sipX notification thread - protect!!
-   ParticipantMap::iterator i = mParticipants.begin();
-   for(; i != mParticipants.end(); i++)
-   {
-      RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(i->second);
-      if(remoteParticipant)
-      {
-         if(remoteParticipant->getMediaConnectionId() == mediaConnectionId)
-         {
-            return remoteParticipant->getParticipantHandle();
-         }
-      }
-   }
-   return 0;
 }
 
 Conversation* 
@@ -615,30 +578,109 @@ ConversationManager::buildSessionCapabilities(resip::Data& ipaddress, unsigned i
 }
 
 void 
-ConversationManager::onMediaEvent(MediaEvent::MediaEventType eventType)
+ConversationManager::notifyMediaEvent(ConversationHandle conversationHandle, int mediaConnectionId, MediaEvent::MediaEventType eventType)
 {
    assert(eventType == MediaEvent::PLAY_FINISHED);
 
-   if(eventType == MediaEvent::PLAY_FINISHED)
+   if(conversationHandle == 0) // sipXGlobalMediaInterfaceMode
    {
-      // Using current sipX architecture is it only possible to have one active media participant
-      // actually playing a file (or from cache) at a time, so for now it is sufficient to have
-      // this event indicate that any active media participants (playing a file/cache) should be destroyed.
-      ParticipantMap::iterator it;
-      for(it = mParticipants.begin(); it != mParticipants.end();)
+      if(eventType == MediaEvent::PLAY_FINISHED)
       {
-         MediaResourceParticipant* mrPart = dynamic_cast<MediaResourceParticipant*>(it->second);
-         it++;  // increment iterator here, since destroy may end up calling unregisterParticipant
-         if(mrPart)
+         // Using sipXGlobalMediaInterfaceMode it is only possible to have one active media participant
+         // actually playing a file (or from cache) at a time, so for now it is sufficient to have
+         // this event indicate that any active media participants (playing a file/cache) should be destroyed.
+         ParticipantMap::iterator it;
+         for(it = mParticipants.begin(); it != mParticipants.end();)
          {
-            if(mrPart->getResourceType() == MediaResourceParticipant::File ||
-               mrPart->getResourceType() == MediaResourceParticipant::Cache)
+            MediaResourceParticipant* mrPart = dynamic_cast<MediaResourceParticipant*>(it->second);
+            it++;  // increment iterator here, since destroy may end up calling unregisterParticipant
+            if(mrPart)
             {
-               mrPart->destroyParticipant();
+               if(mrPart->getResourceType() == MediaResourceParticipant::File ||
+                  mrPart->getResourceType() == MediaResourceParticipant::Cache)
+               {
+                  mrPart->destroyParticipant();
+               }
             }
          }
       }
    }
+   else
+   {
+      Conversation* conversation = getConversation(conversationHandle);
+      if(conversation)
+      {
+         conversation->notifyMediaEvent(mediaConnectionId, eventType);
+      }
+   }
+}
+
+void 
+ConversationManager::notifyDtmfEvent(ConversationHandle conversationHandle, int mediaConnectionId, int dtmf, int duration, bool up)
+{
+   if(conversationHandle == 0) // sipXGlobalMediaInterfaceMode
+   {
+      ParticipantMap::iterator i = mParticipants.begin();
+      for(; i != mParticipants.end(); i++)
+      {
+         RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(i->second);
+         if(remoteParticipant)
+         {
+            if(remoteParticipant->getMediaConnectionId() == mediaConnectionId)
+            {
+               onDtmfEvent(remoteParticipant->getParticipantHandle(), dtmf, duration, up);
+            }
+         }
+      }
+   }
+   else
+   {
+      Conversation* conversation = getConversation(conversationHandle);
+      if(conversation)
+      {
+         conversation->notifyDtmfEvent(mediaConnectionId, dtmf, duration, up);
+      }
+   }
+}
+
+void 
+ConversationManager::createMediaInterfaceAndMixer(bool giveFocus, 
+                                                  NotificationDispatcher& notificationDispatcher, 
+                                                  SharedPtr<MediaInterface>& mediaInterface, 
+                                                  BridgeMixer** bridgeMixer)
+{
+   UtlString localRtpInterfaceAddress("127.0.0.1");  // Will be overridden in RemoteParticipantDialogSet, when connection is created anyway
+
+   // Note:  STUN and TURN capabilities of the sipX media stack are not used - the FlowManager is responsible for STUN/TURN
+   mediaInterface = SharedPtr<MediaInterface>(new MediaInterface(mMediaFactory->createMediaInterface(NULL, 
+            localRtpInterfaceAddress, 
+            0,     /* numCodecs - not required at this point */
+            0,     /* codecArray - not required at this point */ 
+            NULL,  /* local */
+            0,     /* TOS Options */
+            NULL,  /* STUN Server Address */
+            0,     /* STUN Options */
+            25,    /* STUN Keepalive period (seconds) */
+            NULL,  /* TURN Server Address */
+            0,     /* TURN Port */
+            NULL,  /* TURN User */
+            NULL,  /* TURN Password */
+            25,    /* TURN Keepalive period (seconds) */
+            false))); /* enable ICE? */
+
+   // Register the NotificationDispatcher class (derived from OsMsgDispatcher)
+   // as the sipX notification dispatcher
+   mediaInterface->getInterface()->setNotificationDispatcher(&notificationDispatcher);
+
+   // Turn on notifications for all resources...
+   mediaInterface->getInterface()->setNotificationsEnabled(true);
+
+   if(giveFocus)
+   {
+      mediaInterface->getInterface()->giveFocus();
+   }
+
+   *bridgeMixer = new BridgeMixer(*(mediaInterface->getInterface()));
 }
 
 void
