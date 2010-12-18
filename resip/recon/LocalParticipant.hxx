@@ -26,6 +26,7 @@ class LocalParticipant : public Participant
       virtual ~LocalParticipant();
 
       virtual int getConnectionPortOnBridge();
+      virtual void addToConversation(Conversation *conversation, unsigned int inputGain = 100, unsigned int outputGain = 100);
       virtual void destroyParticipant();
 
    protected:     

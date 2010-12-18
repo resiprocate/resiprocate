@@ -2,7 +2,7 @@
 #define NotificationDispatcher_hxx
 
 #include <os/OsMsgDispatcher.h>
-#include "ParticipantFinderIf.hxx"
+#include "EventRouterQueryIf.hxx"
 
 namespace recon
 {
@@ -17,11 +17,11 @@ class ConversationManager;
 class NotificationDispatcher : public OsMsgDispatcher
 {
    public:
-      NotificationDispatcher(ConversationManager& conversationManager, ParticipantFinderIf *participantFinderIf);
+      NotificationDispatcher(ConversationManager& conversationManager, EventRouterQueryIf *eventRouterQueryIf);
 
    private:
       ConversationManager& mConversationManager;
-      ParticipantFinderIf *mParticipantFinderIf;
+      EventRouterQueryIf *mEventRouterQueryIf;
 
       virtual OsStatus post(const OsMsg& msg);
 };

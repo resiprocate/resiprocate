@@ -8,8 +8,13 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-MediaEvent::MediaEvent(ConversationManager& conversationManager, MediaEventType eventType) : 
+MediaEvent::MediaEvent(ConversationManager& conversationManager, 
+                       ConversationHandle conversationHandle, 
+                       int connectionId, 
+                       MediaEventType eventType) : 
    mConversationManager(conversationManager),
+   mConversationHandle(conversationHandle),
+   mConnectionId(connectionId),
    mEventType(eventType)
 {
 }
@@ -17,7 +22,7 @@ MediaEvent::MediaEvent(ConversationManager& conversationManager, MediaEventType 
 void 
 MediaEvent::executeCommand()
 {
-   mConversationManager.onMediaEvent(mEventType);
+   mConversationManager.notifyMediaEvent(mConversationHandle, mConnectionId, mEventType);
 }
 
 resip::Message* 
@@ -30,7 +35,7 @@ MediaEvent::clone() const
 EncodeStream& 
 MediaEvent::encode(EncodeStream& strm) const
 {
-   strm << " media event: " << mEventType;;
+   strm << " MediaEvent: conversationHandle=" << mConversationHandle << ", connectionId=" << mConnectionId << ", event=" << mEventType;
    return strm;
 }
 

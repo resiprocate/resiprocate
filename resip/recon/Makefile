@@ -19,6 +19,7 @@ SRC += \
         MediaResourceParticipant.cxx \
         MediaResourceCache.cxx \
         MediaStreamEvent.cxx \
+		NotificationDispatcher.cxx \
         Participant.cxx \
         ReconSubsystem.cxx \
         RelatedConversationSet.cxx \

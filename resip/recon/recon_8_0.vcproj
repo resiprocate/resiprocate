@@ -214,6 +214,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\NotificationDispatcher.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\Participant.cxx"
 				>
 			</File>

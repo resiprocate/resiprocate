@@ -76,6 +76,8 @@ MediaResourceParticipant::MediaResourceParticipant(ParticipantHandle partHandle,
 : Participant(partHandle, conversationManager),
   mMediaUrl(mediaUrl),
   mStreamPlayer(0),
+  mToneGenPortOnBridge(-1),
+  mFromFilePortOnBridge(-1),
   mLocalOnly(false),
   mRemoteOnly(false),
   mRepeat(false),
@@ -117,8 +119,6 @@ MediaResourceParticipant::MediaResourceParticipant(ParticipantHandle partHandle,
    {
       WarningLog(<< "MediaResourceParticipant::MediaResourceParticipant unknown exception");
    }
-   ((CpTopologyGraphInterface*)mConversationManager.getMediaInterface())->getResourceInputPortOnBridge(DEFAULT_TONE_GEN_RESOURCE_NAME,0,mToneGenPortOnBridge);
-   ((CpTopologyGraphInterface*)mConversationManager.getMediaInterface())->getResourceInputPortOnBridge(DEFAULT_FROM_FILE_RESOURCE_NAME,0,mFromFilePortOnBridge);
 }
 
 MediaResourceParticipant::~MediaResourceParticipant()
@@ -204,7 +204,7 @@ MediaResourceParticipant::startPlay()
             }
          }
 
-         OsStatus status = mConversationManager.getMediaInterface()->startTone(toneid, mRemoteOnly ? FALSE : TRUE /* local */, mLocalOnly ? FALSE : TRUE /* remote */);
+         OsStatus status = getMediaInterface()->getInterface()->startTone(toneid, mRemoteOnly ? FALSE : TRUE /* local */, mLocalOnly ? FALSE : TRUE /* remote */);
          if(status == OS_SUCCESS)
          {
             mPlaying = true;
@@ -225,12 +225,12 @@ MediaResourceParticipant::startPlay()
 
          InfoLog(<< "MediaResourceParticipant playing, handle=" << mHandle << " filepath=" << filepath);
 
-         OsStatus status = mConversationManager.getMediaInterface()->playAudio(filepath.c_str(), 
-                                                                               mRepeat ? TRUE: FALSE /* repeast? */,
-                                                                               mRemoteOnly ? FALSE : TRUE /* local */, 
-                                                                               mLocalOnly ? FALSE : TRUE /* remote */,
-                                                                               FALSE /* mixWithMic */,
-                                                                               100 /* downScaling */);
+         OsStatus status = getMediaInterface()->getInterface()->playAudio(filepath.c_str(), 
+                                                          mRepeat ? TRUE: FALSE /* repeast? */,
+                                                          mRemoteOnly ? FALSE : TRUE /* local */, 
+                                                          mLocalOnly ? FALSE : TRUE /* remote */,
+                                                          FALSE /* mixWithMic */,
+                                                          100 /* downScaling */);
          if(status == OS_SUCCESS)
          {
             mPlaying = true;
@@ -249,16 +249,16 @@ MediaResourceParticipant::startPlay()
          int type;
          if(mConversationManager.mMediaResourceCache.getFromCache(mMediaUrl.host(), &buffer, &type))
          {
-            OsStatus status = mConversationManager.getMediaInterface()->playBuffer((char*)buffer->data(),
-                                                                                   buffer->size(), 
-                                                                                   8000, /* rate */
-                                                                                   type, 
-                                                                                   mRepeat ? TRUE: FALSE /* repeast? */,
-                                                                                   mRemoteOnly ? FALSE : TRUE /* local */, 
-                                                                                   mLocalOnly ? FALSE : TRUE /* remote */,
-                                                                                   NULL /* OsProtectedEvent */,
-                                                                                   FALSE /* mixWithMic */,
-                                                                                   100 /* downScaling */);
+            OsStatus status = getMediaInterface()->getInterface()->playBuffer((char*)buffer->data(),
+                                                              buffer->size(), 
+                                                              8000, /* rate */
+                                                              type, 
+                                                              mRepeat ? TRUE: FALSE /* repeast? */,
+                                                              mRemoteOnly ? FALSE : TRUE /* local */, 
+                                                              mLocalOnly ? FALSE : TRUE /* remote */,
+                                                              NULL /* OsProtectedEvent */,
+                                                              FALSE /* mixWithMic */,
+                                                              100 /* downScaling */);
             if(status == OS_SUCCESS)
             {
                mPlaying = true;
@@ -291,7 +291,7 @@ MediaResourceParticipant::startPlay()
          {
             flags = STREAM_SOUND_LOCAL | STREAM_SOUND_REMOTE;
          }
-         OsStatus status = mConversationManager.getMediaInterface()->createPlayer(&mStreamPlayer, Data::from(mMediaUrl).c_str(), flags);
+         OsStatus status = getMediaInterface()->getInterface()->createPlayer(&mStreamPlayer, Data::from(mMediaUrl).c_str(), flags);
          if(status == OS_SUCCESS)
          {
             mStreamPlayer->addListener(this);
@@ -346,13 +346,25 @@ MediaResourceParticipant::getConnectionPortOnBridge()
    int connectionPort = -1;
    switch(mResourceType)
    {
-   case Tone:       
+   case Tone:     
+      if(mToneGenPortOnBridge == -1)
+      {
+         assert(getMediaInterface() != 0);     
+         ((CpTopologyGraphInterface*)getMediaInterface()->getInterface())->getResourceInputPortOnBridge(DEFAULT_TONE_GEN_RESOURCE_NAME,0,mToneGenPortOnBridge);
+         InfoLog(<< "MediaResourceParticipant getConnectionPortOnBridge, handle=" << mHandle << ", mToneGenPortOnBridge=" << mToneGenPortOnBridge);
+      }
       connectionPort = mToneGenPortOnBridge;
       break;
    case File:
    case Cache:
    case Http:
    case Https:
+      if(mFromFilePortOnBridge == -1)
+      {
+         assert(getMediaInterface() != 0);     
+         ((CpTopologyGraphInterface*)getMediaInterface()->getInterface())->getResourceInputPortOnBridge(DEFAULT_FROM_FILE_RESOURCE_NAME,0,mFromFilePortOnBridge);
+         InfoLog(<< "MediaResourceParticipant getConnectionPortOnBridge, handle=" << mHandle << ", mFromFilePortOnBridge=" << mFromFilePortOnBridge);
+      }
       connectionPort = mFromFilePortOnBridge;
       break;
    case Invalid:
@@ -376,7 +388,7 @@ MediaResourceParticipant::destroyParticipant()
       {
       case Tone:
          {
-            OsStatus status = mConversationManager.getMediaInterface()->stopTone();
+            OsStatus status = getMediaInterface()->getInterface()->stopTone();
             if(status != OS_SUCCESS)
             {
                WarningLog(<< "MediaResourceParticipant::destroyParticipant error calling stopTone: " << status);
@@ -386,7 +398,7 @@ MediaResourceParticipant::destroyParticipant()
       case File:
       case Cache:
          {
-            OsStatus status = mConversationManager.getMediaInterface()->stopAudio();
+            OsStatus status = getMediaInterface()->getInterface()->stopAudio();
             if(status != OS_SUCCESS)
             {
                WarningLog(<< "MediaResourceParticipant::destroyParticipant error calling stopAudio: " << status);

@@ -17,10 +17,10 @@ using namespace std;
 
 LocalParticipant::LocalParticipant(ParticipantHandle partHandle,
                                    ConversationManager& conversationManager)
-: Participant(partHandle, conversationManager)
+: Participant(partHandle, conversationManager),
+  mLocalPortOnBridge(-1)
 {
-   ((CpTopologyGraphInterface*)mConversationManager.getMediaInterface())->getResourceInputPortOnBridge(VIRTUAL_NAME_LOCAL_STREAM_OUTPUT,0,mLocalPortOnBridge);
-   InfoLog(<< "LocalParticipant created, handle=" << mHandle << ", localPortOnBridge=" << mLocalPortOnBridge);
+   InfoLog(<< "LocalParticipant created, handle=" << mHandle);
 }
 
 LocalParticipant::~LocalParticipant()
@@ -39,7 +39,26 @@ LocalParticipant::~LocalParticipant()
 int 
 LocalParticipant::getConnectionPortOnBridge()
 {
+   if(mLocalPortOnBridge == -1)
+   {
+      assert(getMediaInterface() != 0);       
+      ((CpTopologyGraphInterface*)getMediaInterface()->getInterface())->getResourceInputPortOnBridge(VIRTUAL_NAME_LOCAL_STREAM_OUTPUT,0,mLocalPortOnBridge);
+      InfoLog(<< "LocalParticipant getConnectionPortOnBridge, handle=" << mHandle << ", localPortOnBridge=" << mLocalPortOnBridge);
+   }
    return mLocalPortOnBridge;
+}
+
+void 
+LocalParticipant::addToConversation(Conversation *conversation, unsigned int inputGain, unsigned int outputGain)
+{
+    Participant::addToConversation(conversation, inputGain, outputGain);
+
+    if(mConversationManager.getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
+    {
+       // The Local participant is in a new Conversation, give that conversation focus
+       assert(getMediaInterface() != 0);       
+       getMediaInterface()->getInterface()->giveFocus();
+    }
 }
 
 void

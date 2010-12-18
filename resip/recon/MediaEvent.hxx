@@ -2,6 +2,7 @@
 #define MediaEvent_hxx
 
 #include <resip/dum/DumCommand.hxx>
+#include "HandleTypes.hxx"
 
 namespace recon
 {
@@ -20,10 +21,10 @@ class MediaEvent : public resip::DumCommand
    public:
       typedef enum 
       { 
-         PLAY_FINISHED 
+         PLAY_FINISHED
       } MediaEventType;
 
-      MediaEvent(ConversationManager& conversationManager, MediaEventType eventType);
+      MediaEvent(ConversationManager& conversationManager, ConversationHandle conversationHandle, int connectionId, MediaEventType eventType);
       virtual void executeCommand();
 
       Message* clone() const;
@@ -32,6 +33,8 @@ class MediaEvent : public resip::DumCommand
 
    private:
       ConversationManager& mConversationManager;
+      ConversationHandle mConversationHandle;  // set to 0 if media interface mode is global
+      int mConnectionId;
       MediaEventType mEventType;
 };
 

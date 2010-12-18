@@ -8,9 +8,10 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-DtmfEvent::DtmfEvent(ConversationManager& conversationManager, ParticipantHandle remoteParticipantHandle, int dtmf, int duration, bool up) : 
+DtmfEvent::DtmfEvent(ConversationManager& conversationManager, ConversationHandle conversationHandle, int connectionId, int dtmf, int duration, bool up) : 
    mConversationManager(conversationManager),
-   mRemoteParticipantHandle(remoteParticipantHandle),
+   mConversationHandle(conversationHandle),
+   mConnectionId(connectionId),
    mDtmfTone(dtmf),
    mDuration(duration),
    mUp(up)
@@ -20,16 +21,7 @@ DtmfEvent::DtmfEvent(ConversationManager& conversationManager, ParticipantHandle
 void 
 DtmfEvent::executeCommand()
 {
-   Participant* participant = mConversationManager.getParticipant(mRemoteParticipantHandle);
-   if(participant)
-   {
-       RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(participant);
-       assert(remoteParticipant != 0);
-       if(remoteParticipant)
-       {
-           remoteParticipant->onDtmfEvent(mDtmfTone, mDuration, mUp);
-       }
-   }
+   mConversationManager.notifyDtmfEvent(mConversationHandle, mConnectionId, mDtmfTone, mDuration, mUp);
 }
 
 resip::Message* 
@@ -42,7 +34,7 @@ DtmfEvent::clone() const
 EncodeStream& 
 DtmfEvent::encode(EncodeStream& strm) const
 {
-   strm << " dtmf event: " << mDtmfTone << " duration=" << mDuration << " up=" << mUp;
+   strm << " DtmfEvent: conversationHandle=" << mConversationHandle << ", connectionId=" << mConnectionId << ", tone=" << mDtmfTone << " duration=" << mDuration << " up=" << mUp;
    return strm;
 }
 

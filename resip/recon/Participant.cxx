@@ -90,12 +90,92 @@ Participant::replaceWithParticipant(Participant* replacingParticipant)
 {
    replacingParticipant->setHandle(mHandle);              // Set handle on replacing participant
    copyConversationsToParticipant(replacingParticipant);  // Will over-write our entry in the conversations participant map
+   Conversation* firstAssociatedConversation=0;
+   if(mConversations.size() > 0)
+   {
+      // If we are running in sipXConversationMediaInterfaceMode, then the call to applyBridgeMixWeights below must be
+      // passed a conversation pointer, since this participant will not be able to find the appropriate 
+      // BridgeMixer after it's conversation list is cleared.
+      firstAssociatedConversation = mConversations.begin()->second;
+   }
    mConversations.clear();  // Clear so that we won't remove replaced reference from Conversation 
    mHandle = 0;             // Set to 0 so that we won't remove replaced reference from ConversationManager
-   
-   mConversationManager.getBridgeMixer().calculateMixWeightsForParticipant(this);  // Ensure we remove ourselves from the bridge port matrix
+   assert(mConversationManager.getMediaInterfaceMode() == ConversationManager::sipXGlobalMediaInterfaceMode ||  // We are either running in sipXGlobalMediaInterfaceMode
+          firstAssociatedConversation != 0);                                                                    // or we are running in sipXConversationMediaInterfaceMode and must have belonged to a conversation
+   applyBridgeMixWeights(firstAssociatedConversation);  // Ensure we remove ourselves from the bridge port matrix
 }
 
+SharedPtr<MediaInterface> 
+Participant::getMediaInterface()
+{
+   switch(mConversationManager.getMediaInterfaceMode())
+   {
+   case ConversationManager::sipXGlobalMediaInterfaceMode:
+      assert(mConversationManager.getMediaInterface() != 0);
+      return mConversationManager.getMediaInterface();
+   case ConversationManager::sipXConversationMediaInterfaceMode:
+      assert(mConversations.size() == 1);
+      assert(mConversations.begin()->second->getMediaInterface() != 0);
+      return mConversations.begin()->second->getMediaInterface();
+   default:
+      assert(false);
+      return SharedPtr<MediaInterface>((MediaInterface*)0);
+   }
+}
+
+void
+Participant::applyBridgeMixWeights()
+{
+   BridgeMixer* mixer=0;
+   switch(mConversationManager.getMediaInterfaceMode())
+   {
+   case ConversationManager::sipXGlobalMediaInterfaceMode:
+      assert(mConversationManager.getBridgeMixer() != 0);
+      mixer = mConversationManager.getBridgeMixer();
+      break;
+   case ConversationManager::sipXConversationMediaInterfaceMode:
+      assert(mConversations.size() == 1);
+      assert(mConversations.begin()->second->getBridgeMixer() != 0);
+      mixer = mConversations.begin()->second->getBridgeMixer();
+      break;
+   default:
+      break;
+   }
+   assert(mixer);
+   if(mixer)
+   {
+      mixer->calculateMixWeightsForParticipant(this);
+   }
+}
+
+// Special version of this call used only when a participant
+// is removed from a conversation.  Required when sipXConversationMediaInterfaceMode
+// is used, in order to get a pointer to the bridge mixer
+// for a participant (ie. LocalParticipant) that has no currently
+// assigned conversations.
+void 
+Participant::applyBridgeMixWeights(Conversation* removedConversation)
+{
+   BridgeMixer* mixer=0;
+   switch(mConversationManager.getMediaInterfaceMode())
+   {
+   case ConversationManager::sipXGlobalMediaInterfaceMode:
+      assert(mConversationManager.getBridgeMixer() != 0);
+      mixer = mConversationManager.getBridgeMixer();
+      break;
+   case ConversationManager::sipXConversationMediaInterfaceMode:
+      assert(removedConversation->getBridgeMixer() != 0);
+      mixer = removedConversation->getBridgeMixer();
+      break;
+   default:
+      break;
+   }
+   assert(mixer);
+   if(mixer)
+   {
+      mixer->calculateMixWeightsForParticipant(this);
+   }
+}
 
 /* ====================================================================
 
