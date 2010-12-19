@@ -45,6 +45,9 @@
     <ClCompile Include="MediaEvent.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MediaInterface.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="MediaResourceCache.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -52,9 +55,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MediaStreamEvent.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="NotificationDispatcher.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Participant.cxx">
@@ -134,9 +134,6 @@
     <ClInclude Include="DtmfEvent.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="EventRouterQueryIf.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="FlowManagerSipXSocket.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -149,6 +146,9 @@
     <ClInclude Include="MediaEvent.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MediaInterface.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="MediaResourceCache.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -156,9 +156,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MediaStreamEvent.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="NotificationDispatcher.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Participant.hxx">

@@ -27,7 +27,7 @@ class BridgeMixer;
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class Conversation : public EventRouterQueryIf
+class Conversation 
 {
 public:  
    Conversation(ConversationHandle handle, 
@@ -83,12 +83,8 @@ private:
    unsigned int mNumMediaParticipants;
    bool mBroadcastOnly;
 
-   // Virtual Fns for EventRouterQueryIf
-   virtual ConversationHandle getConversationHandle() { return mHandle; }
-
    // sipX Media related members
    BridgeMixer* getBridgeMixer() { return mBridgeMixer; }
-   NotificationDispatcher mNotificationDispatcher;
    resip::SharedPtr<MediaInterface> mMediaInterface;  
    BridgeMixer* mBridgeMixer;
 };

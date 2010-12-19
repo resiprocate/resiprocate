@@ -23,8 +23,7 @@
 #include "MediaResourceCache.hxx"
 #include "MediaEvent.hxx"
 #include "HandleTypes.hxx"
-#include "EventRouterQueryIf.hxx"
-#include "NotificationDispatcher.hxx"
+#include "MediaInterface.hxx"
 
 #include "FlowManager.hxx"
 
@@ -40,22 +39,7 @@ class Participant;
 class UserAgent;
 class ConversationProfile;
 class RemoteParticipant;
-class NotificationDispathcer;
 
-// Wrapper class to allow CpMediaIterface to be stored in a SharedPtr.
-// Note:  CpMediaIterface cannot be directly stored in a SharePrt because 
-//        the destructor is private and the release() call must be used 
-//        to destroy the object.
-class MediaInterface
-{
-public:
-   MediaInterface(CpMediaInterface* mediaInterface) :
-      mMediaInterface(mediaInterface) { }
-   ~MediaInterface() { mMediaInterface->release(); }
-   CpMediaInterface* getInterface() { return mMediaInterface; }
-private:
-   CpMediaInterface* mMediaInterface;
-};
 
 /**
   This class is one of two main classes of concern to an application
@@ -82,8 +66,7 @@ class ConversationManager  : public resip::InviteSessionHandler,
                              public resip::OutOfDialogHandler,
                              public resip::ClientSubscriptionHandler,
                              public resip::ServerSubscriptionHandler,
-                             public resip::RedirectHandler,
-                             public EventRouterQueryIf
+                             public resip::RedirectHandler
 {
 public:  
   
@@ -407,7 +390,7 @@ public:
      call request has been initiated by a signaling mechanism other than
      the application, such as an out-of-dialog REFER request.
 
-     @param partHandle Handle of the new incoming participant
+     @param partHandle Handle of the new remote participant
      @param msg Includes information about the destination requested
                 to be attempted
    */
@@ -609,7 +592,7 @@ private:
    friend class MediaResourceParticipant;
    friend class LocalParticipant;
    friend class BridgeMixer;
-   friend class NotificationDispatcher;
+   friend class MediaInterface;
    unsigned int allocateRTPPort();
    void freeRTPPort(unsigned int port);
 
@@ -657,9 +640,6 @@ private:
    MediaInterfaceMode mMediaInterfaceMode;
    MediaInterfaceMode getMediaInterfaceMode() const { return mMediaInterfaceMode; }
 
-   // Virtual Fns for EventRouterQueryIf
-   virtual ConversationHandle getConversationHandle() { return 0; }
-
    void post(resip::Message *message);
    void post(resip::ApplicationMessage& message, unsigned int ms=0);
 
@@ -672,11 +652,11 @@ private:
    flowmanager::FlowManager mFlowManager;
 
    // sipX Media related members
-   void createMediaInterfaceAndMixer(bool giveFocus, NotificationDispatcher& notificationDispatcher, resip::SharedPtr<MediaInterface>& mediaInterface, BridgeMixer** bridgeMixer);
+   void createMediaInterfaceAndMixer(bool giveFocus, ConversationHandle ownerConversationHandle, 
+                                     resip::SharedPtr<MediaInterface>& mediaInterface, BridgeMixer** bridgeMixer);
    resip::SharedPtr<MediaInterface> getMediaInterface() const { assert(mMediaInterface.get()); return mMediaInterface; }
    CpMediaInterfaceFactory* getMediaInterfaceFactory() { return mMediaFactory; }
    BridgeMixer* getBridgeMixer() { return mBridgeMixer; }
-   NotificationDispatcher mNotificationDispatcher;
    CpMediaInterfaceFactory* mMediaFactory;
    resip::SharedPtr<MediaInterface> mMediaInterface;  
    BridgeMixer* mBridgeMixer;

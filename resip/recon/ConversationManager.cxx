@@ -23,7 +23,6 @@
 #include "Participant.hxx"
 #include "BridgeMixer.hxx"
 #include "DtmfEvent.hxx"
-#include "NotificationDispatcher.hxx"
 #include <rutil/WinLeakCheck.hxx>
 
 #if defined(WIN32) && !defined(__GNUC__)
@@ -42,7 +41,6 @@ ConversationManager::ConversationManager(bool localAudioEnabled, MediaInterfaceM
   mCurrentParticipantHandle(1),
   mLocalAudioEnabled(localAudioEnabled),
   mMediaInterfaceMode(mediaInterfaceMode),
-  mNotificationDispatcher(*this, this),
   mMediaFactory(0),
   mBridgeMixer(0)
 {
@@ -83,7 +81,7 @@ ConversationManager::ConversationManager(bool localAudioEnabled, MediaInterfaceM
    if(mMediaInterfaceMode == sipXGlobalMediaInterfaceMode)
    {
       createMediaInterfaceAndMixer(mLocalAudioEnabled /* giveFocus?*/,    // This is the one and only media interface - give it focus
-                                   mNotificationDispatcher, 
+                                   0,
                                    mMediaInterface, 
                                    &mBridgeMixer);      
    }
@@ -499,9 +497,9 @@ ConversationManager::buildSessionCapabilities(resip::Data& ipaddress, unsigned i
    // Create Session Capabilities 
    // Note:  port, sessionId and version will be replaced in actual offer/answer
    // Build s=, o=, t=, and c= lines
-   SdpContents::Session::Origin origin("-", 0 /* sessionId */, 0 /* version */, SdpContents::IP4, ipaddress);   // o=   
+   SdpContents::Session::Origin origin("-", 0 /* sessionId */, 0 /* version */, SdpContents::IP4, ipaddress.empty() ? "0.0.0.0" : ipaddress);   // o=   
    SdpContents::Session session(0, origin, "-" /* s= */);
-   session.connection() = SdpContents::Session::Connection(SdpContents::IP4, ipaddress);  // c=
+   session.connection() = SdpContents::Session::Connection(SdpContents::IP4, ipaddress.empty() ? "0.0.0.0" : ipaddress);  // c=
    session.addTime(SdpContents::Session::Time(0, 0));
 
    MpCodecFactory *pCodecFactory = MpCodecFactory::getMpCodecFactory();
@@ -645,14 +643,14 @@ ConversationManager::notifyDtmfEvent(ConversationHandle conversationHandle, int 
 
 void 
 ConversationManager::createMediaInterfaceAndMixer(bool giveFocus, 
-                                                  NotificationDispatcher& notificationDispatcher, 
+                                                  ConversationHandle ownerConversationHandle,
                                                   SharedPtr<MediaInterface>& mediaInterface, 
                                                   BridgeMixer** bridgeMixer)
 {
    UtlString localRtpInterfaceAddress("127.0.0.1");  // Will be overridden in RemoteParticipantDialogSet, when connection is created anyway
 
    // Note:  STUN and TURN capabilities of the sipX media stack are not used - the FlowManager is responsible for STUN/TURN
-   mediaInterface = SharedPtr<MediaInterface>(new MediaInterface(mMediaFactory->createMediaInterface(NULL, 
+   mediaInterface = SharedPtr<MediaInterface>(new MediaInterface(*this, ownerConversationHandle, mMediaFactory->createMediaInterface(NULL, 
             localRtpInterfaceAddress, 
             0,     /* numCodecs - not required at this point */
             0,     /* codecArray - not required at this point */ 
@@ -670,7 +668,7 @@ ConversationManager::createMediaInterfaceAndMixer(bool giveFocus,
 
    // Register the NotificationDispatcher class (derived from OsMsgDispatcher)
    // as the sipX notification dispatcher
-   mediaInterface->getInterface()->setNotificationDispatcher(&notificationDispatcher);
+   mediaInterface->getInterface()->setNotificationDispatcher(mediaInterface.get());
 
    // Turn on notifications for all resources...
    mediaInterface->getInterface()->setNotificationsEnabled(true);

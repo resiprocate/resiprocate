@@ -27,7 +27,6 @@ Conversation::Conversation(ConversationHandle handle,
   mNumRemoteParticipants(0),
   mNumMediaParticipants(0),
   mBroadcastOnly(broadcastOnly),
-  mNotificationDispatcher(conversationManager, this),
   mBridgeMixer(0)
 {
    mConversationManager.registerConversation(this);
@@ -46,7 +45,7 @@ Conversation::Conversation(ConversationHandle handle,
    if(mConversationManager.getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
    {
       mConversationManager.createMediaInterfaceAndMixer(false /* giveFocus?*/,    // Focus will be given when local participant is added
-                                                        mNotificationDispatcher, 
+                                                        mHandle,
                                                         mMediaInterface, 
                                                         &mBridgeMixer);      
    }
