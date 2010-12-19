@@ -43,10 +43,11 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(ProjectDir)/../../../&quot;;&quot;$(ProjectDir)/../../../../&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;USE_ARES;LEAK_CHECK"
-				MinimalRebuild="true"
+				MinimalRebuild="false"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				BufferSecurityCheck="true"
@@ -129,6 +130,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				FavorSizeOrSpeed="1"
@@ -136,6 +138,7 @@
 				AdditionalIncludeDirectories="&quot;$(ProjectDir)/../../../&quot;;&quot;$(ProjectDir)/../../../../&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				StringPooling="true"
+				MinimalRebuild="false"
 				RuntimeLibrary="2"
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
@@ -218,10 +221,11 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(ProjectDir)/../../../&quot;;&quot;$(ProjectDir)/../../../../&quot;;&quot;$(ProjectDir)../../../contrib/openssl/include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;USE_ARES;LEAK_CHECK;USE_SSL"
-				MinimalRebuild="true"
+				MinimalRebuild="false"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				BufferSecurityCheck="true"
@@ -304,6 +308,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				FavorSizeOrSpeed="1"
@@ -311,6 +316,7 @@
 				AdditionalIncludeDirectories="&quot;$(ProjectDir)/../../../&quot;;&quot;$(ProjectDir)/../../../../&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;USE_SSL"
 				StringPooling="true"
+				MinimalRebuild="false"
 				RuntimeLibrary="2"
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"

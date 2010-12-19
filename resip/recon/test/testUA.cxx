@@ -858,6 +858,14 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
       return;
    }
 
+#ifdef USE_SSL
+   Data setSecureMediaMode("  setSecureMediaMode       <'securemedia'|'sm'> <'None'|'Srtp'|'SrtpReq'|'SrtpDtls'|'SrtpDtlsReq'>");
+   Data setNATTraversalMode("  setNATTraversalMode      <'natmode'|'nm'> <'None'|'Bind'|'UdpAlloc'|'TcpAlloc'|'TlsAlloc'>" );
+#else
+   Data setSecureMediaMode("  setSecureMediaMode       <'securemedia'|'sm'> <'None'|'Srtp'|'SrtpReq'>");
+   Data setNATTraversalMode("  setNATTraversalMode      <'natmode'|'nm'> <'None'|'Bind'|'UdpAlloc'|'TcpAlloc'>" );
+#endif
+
    InfoLog( << "Possible commands are: " << endl
          << "  createConversation:      <'createconv'|'cc'>" << endl
          << "  destroyConversation:     <'destroyconv'|'dc'> <convHandle>" << endl
@@ -891,8 +899,8 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
          << endl
          << "  setAutoAnswer            <'autoans'|'aa'> <'0'|'1'> (1 to enable (default))" << endl
          << "  setCodecs                <'setcodecs'|'sc'> <codecId>[,<codecId>]+ (comma separated list)" << endl
-         << "  setSecureMediaMode       <'securemedia'|'sm'> <'None'|'Srtp'|'SrtpReq'|'SrtpDtls'|'SrtpDtlsReq'>" << endl
-         << "  setNATTraversalMode      <'natmode'|'nm'> <'None'|'Bind'|'UdpAlloc'|'TcpAlloc'|'TlsAlloc'>" << endl
+         << setSecureMediaMode << endl
+         << setNATTraversalMode << endl
          << "  setNATTraversalServer    <'natserver'|'ns'> <server:port>" << endl
          << "  setNATUsername           <'natuser'|'nu'> <username>" << endl
          << "  setNATPassword           <'natpwd'|'np'> <password>" << endl
@@ -1030,8 +1038,10 @@ main (int argc, char** argv)
          cout << " -d <DNS servers> - comma seperated list of DNS servers, overrides OS detected list" << endl;
          cout << " -sp <port num> - local port number to use for SIP messaging (UDP/TCP)" << endl;
          cout << " -mp <port num> - local port number to start allocating from for RTP media" << endl;
+#ifdef USE_SSL
          cout << " -tp <port num> - local port number to use for TLS SIP messaging" << endl;
          cout << " -td <domain name> - domain name to use for TLS server connections" << endl;
+#endif
          cout << " -nk - no keepalives, set this to disable sending of keepalives" << endl;
          cout << " -op <SIP URI> - URI of a proxy server to use a SIP outbound proxy" << endl;
 #ifdef USE_SSL
@@ -1251,8 +1261,10 @@ main (int argc, char** argv)
    InfoLog( << "  STUN/TURN password = " << stunPassword);
    InfoLog( << "  SIP Port = " << sipPort);
    InfoLog( << "  Media Port Range Start = " << mediaPortStart);
+#ifdef USE_SSL
    InfoLog( << "  TLS Port = " << tlsPort);
    InfoLog( << "  TLS Domain = " << tlsDomain);
+#endif
    InfoLog( << "  Outbound Proxy = " << outboundProxy);
    InfoLog( << "  Local Audio Enabled = " << (localAudioEnabled ? "true" : "false"));
    InfoLog( << "  Log Level = " << logLevel);
@@ -1268,7 +1280,9 @@ main (int argc, char** argv)
    // Add transports
    profile->addTransport(UDP, sipPort, V4, address);
    profile->addTransport(TCP, sipPort, V4, address);
+#ifdef USE_SSL
    profile->addTransport(TLS, tlsPort, V4, address, tlsDomain);
+#endif
 
    // The following settings are used to avoid a kernel panic seen on an ARM embedded platform.
    // The kernel panic happens when either binding a udp socket to port 0 (OS selected),
