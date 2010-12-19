@@ -100,7 +100,7 @@ public:
           allows for participants to exist in multiple conversations at the same 
           time and have the bridge mixer properly control their mixing.  In this
           mode, there can only be a single MediaParticipant for all conversations.
-          This arcitecture/mode is appropriate for single user agent devices (ie. 
+          This architecture/mode is appropriate for single user agent devices (ie. 
           sip phones).
 
           sipXConversationMediaInterfaceMode - uses 1 sipXtapi media interface per
@@ -108,7 +108,7 @@ public:
           conversations at the same time, however the limit of 7 participants is
           no longer global, it now applies to each conversation.  A separate 
           media participant for each conversation can also exist.
-          This arcitecture/mode is appropriate for server applications, such as
+          This architecture/mode is appropriate for server applications, such as
           multi-party conference servers (up to 7 participants per conference), 
           music on hold servers and call park servers.  Other API's that won't
           function in this mode are:
