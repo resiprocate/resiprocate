@@ -1,36 +1,33 @@
-#if !defined(MediaInterface_hxx)
-#define MediaInterface_hxx
+#if !defined(MOHManager_hxx)
+#define MOHManager_hxx
 
-#include <os/OsMsgDispatcher.h>
-#include <mi/CpMediaInterface.h>
-#include "HandleTypes.hxx"
+#include <map>
+#include <set>
+#include "../HandleTypes.hxx"
 
-namespace recon
+namespace mohparkserver
 {
-class ConversationManager;
+class Server;
 
-// Wrapper class to allow CpMediaIterface to be stored in a SharedPtr.
-// Note:  CpMediaIterface cannot be directly stored in a SharePtr because 
-//        the destructor is private and the release() call must be used 
-//        to destroy the object.
-class MediaInterface : public OsMsgDispatcher
+class MOHManager
 {
 public:
-   MediaInterface(ConversationManager& conversationManager, ConversationHandle ownerConversationHandle, CpMediaInterface* mediaInterface);
-   ~MediaInterface() { mMediaInterface->release(); }
-   CpMediaInterface* getInterface() { return mMediaInterface; }
+   MOHManager(Server& server);
+   virtual ~MOHManager(); 
+
+   void addParticipant(recon::ParticipantHandle participantHandle);
+   void removeParticipant(recon::ParticipantHandle participantHandle);
+
 private:
-   virtual OsStatus post(const OsMsg& msg);
+   Server& mServer;
 
-   ConversationManager& mConversationManager;
-   ConversationHandle mOwnerConversationHandle;
-   CpMediaInterface* mMediaInterface;
+   typedef std::map<recon::ConversationHandle, std::set<recon::ParticipantHandle> > ConversationMap;
+   ConversationMap mConversations;
 };
-
+ 
 }
 
 #endif
-
 
 /* ====================================================================
 
@@ -65,3 +62,4 @@ private:
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  ==================================================================== */
+
