@@ -1,36 +1,29 @@
-#if !defined(MediaInterface_hxx)
-#define MediaInterface_hxx
+#if !defined(AppSubsystem_hxx)
+#define AppSubsystem_hxx 
 
-#include <os/OsMsgDispatcher.h>
-#include <mi/CpMediaInterface.h>
-#include "HandleTypes.hxx"
+#include <iostream>
+#include <rutil/Subsystem.hxx>
 
-namespace recon
+/**
+  This class is used in the logging subsystem to identify
+  logging messages generated from the MOHPark server.
+
+  Author: Scott Godin (sgodin AT SipSpectrum DOT com)
+*/
+
+class AppSubsystem : public resip::Subsystem
 {
-class ConversationManager;
+   public:
+      // Add new systems below
+      static AppSubsystem MOHPARKSERVER;
 
-// Wrapper class to allow CpMediaIterface to be stored in a SharedPtr.
-// Note:  CpMediaIterface cannot be directly stored in a SharePtr because 
-//        the destructor is private and the release() call must be used 
-//        to destroy the object.
-class MediaInterface : public OsMsgDispatcher
-{
-public:
-   MediaInterface(ConversationManager& conversationManager, ConversationHandle ownerConversationHandle, CpMediaInterface* mediaInterface);
-   ~MediaInterface() { mMediaInterface->release(); }
-   CpMediaInterface* getInterface() { return mMediaInterface; }
-private:
-   virtual OsStatus post(const OsMsg& msg);
-
-   ConversationManager& mConversationManager;
-   ConversationHandle mOwnerConversationHandle;
-   CpMediaInterface* mMediaInterface;
+   private:
+      explicit AppSubsystem(const char* rhs) : resip::Subsystem(rhs) {};
+      explicit AppSubsystem(const resip::Data& rhs);
+      AppSubsystem& operator=(const resip::Data& rhs);
 };
 
-}
-
 #endif
-
 
 /* ====================================================================
 
@@ -65,3 +58,4 @@ private:
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  ==================================================================== */
+

@@ -652,8 +652,10 @@ RemoteParticipant::acceptPendingOODRefer()
          buildSdpOffer(mLocalHold, offer);
 
          // Build the Invite
+         SharedPtr<ConversationProfile> profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile();  // TODO - condsider using UserProfile assigned to inbound REFER request
+
          SharedPtr<SipMessage> invitemsg = mDum.makeInviteSessionFromRefer(mPendingOODReferMsg, 
-                                                                           mDialogSet.getUserProfile(),
+                                                                           profile,
                                                                            &offer, 
                                                                            &mDialogSet);
          mDialogSet.sendInvite(invitemsg); 

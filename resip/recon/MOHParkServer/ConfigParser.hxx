@@ -1,36 +1,57 @@
-#if !defined(MediaInterface_hxx)
-#define MediaInterface_hxx
+#if !defined(ConfigParser_hxx)
+#define ConfigParser_hxx
 
-#include <os/OsMsgDispatcher.h>
-#include <mi/CpMediaInterface.h>
-#include "HandleTypes.hxx"
+#include <list>
+#include <resip/dum/MasterProfile.hxx>
+#include <rutil/dns/DnsStub.hxx>
+#include <rutil/Log.hxx>
+#include <rutil/SharedPtr.hxx>
 
-namespace recon
+
+namespace mohparkserver
 {
-class ConversationManager;
 
-// Wrapper class to allow CpMediaIterface to be stored in a SharedPtr.
-// Note:  CpMediaIterface cannot be directly stored in a SharePtr because 
-//        the destructor is private and the release() call must be used 
-//        to destroy the object.
-class MediaInterface : public OsMsgDispatcher
+class ConfigParser 
 {
 public:
-   MediaInterface(ConversationManager& conversationManager, ConversationHandle ownerConversationHandle, CpMediaInterface* mediaInterface);
-   ~MediaInterface() { mMediaInterface->release(); }
-   CpMediaInterface* getInterface() { return mMediaInterface; }
-private:
-   virtual OsStatus post(const OsMsg& msg);
+   ConfigParser(int argc, char** argv);
+   virtual ~ConfigParser();
+   
+   void parseCommandLine(int argc, char** argv);
+   void parseConfigFile(const resip::Data& filename);
+   bool processOption(const resip::Data& name, const resip::Data& value);
+   bool assignNameAddr(const resip::Data& settingName, const resip::Data& settingValue, resip::NameAddr& nameAddr);
 
-   ConversationManager& mConversationManager;
-   ConversationHandle mOwnerConversationHandle;
-   CpMediaInterface* mMediaInterface;
+   // MOH Settings
+   resip::NameAddr mMOHUri;
+   resip::Data mMOHPassword;
+   unsigned long mMOHRegistrationTime;
+   resip::Uri mMOHFilenameUrl;
+
+   // SIP Settings
+   resip::Data mAddress;
+   resip::Data mDnsServers;
+   unsigned short mUdpPort;
+   unsigned short mTcpPort;
+   unsigned short mTlsPort;
+   resip::Data mTlsDomain;
+   resip::NameAddr mOutboundProxy;
+   bool mKeepAlives;
+
+   // Media Settings
+   unsigned short mMediaPortRangeStart;
+   unsigned short mMediaPortRangeSize;
+   resip::Data mSipXLogFilename;
+
+   // General Settings
+   resip::Data mLogLevel;
+   resip::Data mLogFilename;
+   unsigned int mLogFileMaxBytes;
 };
-
+ 
 }
 
 #endif
-
 
 /* ====================================================================
 
@@ -65,3 +86,4 @@ private:
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  ==================================================================== */
+
