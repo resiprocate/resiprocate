@@ -1,4 +1,4 @@
-#include "NotificationDispatcher.hxx"
+#include "MediaInterface.hxx"
 #include "ConversationManager.hxx"
 #include "ReconSubsystem.hxx"
 #include "DtmfEvent.hxx"
@@ -15,15 +15,17 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-NotificationDispatcher::NotificationDispatcher(ConversationManager& conversationManager, 
-                                               EventRouterQueryIf *eventRouterQueryIf) :
+MediaInterface::MediaInterface(ConversationManager& conversationManager, 
+                               ConversationHandle ownerConversationHandle, 
+                               CpMediaInterface* mediaInterface) :
    mConversationManager(conversationManager),
-   mEventRouterQueryIf(eventRouterQueryIf)
+   mOwnerConversationHandle(ownerConversationHandle),
+   mMediaInterface(mediaInterface)
 {
 }
 
 OsStatus 
-NotificationDispatcher::post(const OsMsg& msg)
+MediaInterface::post(const OsMsg& msg)
 {
    if((OsMsg::MsgTypes)msg.getMsgType() == OsMsg::MI_NOTF_MSG)
    {
@@ -31,77 +33,72 @@ NotificationDispatcher::post(const OsMsg& msg)
       switch((MiNotification::NotfType)pNotfMsg->getType())
       {
       case MiNotification::MI_NOTF_PLAY_STARTED:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_PLAY_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         InfoLog( << "MediaInterface: received MI_NOTF_PLAY_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_PLAY_PAUSED:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_PLAY_PAUSED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         InfoLog( << "MediaInterface: received MI_NOTF_PLAY_PAUSED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_PLAY_RESUMED:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_PLAY_RESUMED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         InfoLog( << "MediaInterface: received MI_NOTF_PLAY_RESUMED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_PLAY_STOPPED:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_PLAY_STOPPED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         InfoLog( << "MediaInterface: received MI_NOTF_PLAY_STOPPED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_PLAY_FINISHED:
          {
-            assert(mEventRouterQueryIf!=0);
-
             // Queue event to conversation manager thread
-            ConversationHandle convHandle = mEventRouterQueryIf->getConversationHandle();
-            MediaEvent* mevent = new MediaEvent(mConversationManager, pNotfMsg->getConnectionId(), convHandle, MediaEvent::PLAY_FINISHED);
+            MediaEvent* mevent = new MediaEvent(mConversationManager, pNotfMsg->getConnectionId(), mOwnerConversationHandle, MediaEvent::PLAY_FINISHED);
             mConversationManager.post(mevent);
-            InfoLog( << "NotificationDispatcher: received MI_NOTF_PLAY_FINISHED, sourceId=" << pNotfMsg->getSourceId().data() << 
+            InfoLog( << "MediaInterface: received MI_NOTF_PLAY_FINISHED, sourceId=" << pNotfMsg->getSourceId().data() << 
                ", connectionId=" << pNotfMsg->getConnectionId() << 
-               ", conversationHandle=" << convHandle);
+               ", conversationHandle=" << mOwnerConversationHandle);
          }
          break;
       case MiNotification::MI_NOTF_PROGRESS:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_PROGRESS, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         InfoLog( << "MediaInterface: received MI_NOTF_PROGRESS, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_RECORD_STARTED:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_RECORD_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         InfoLog( << "MediaInterface: received MI_NOTF_RECORD_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_RECORD_STOPPED:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_RECORD_STOPPED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         InfoLog( << "MediaInterface: received MI_NOTF_RECORD_STOPPED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_RECORD_FINISHED:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_RECORD_FINISHED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         InfoLog( << "MediaInterface: received MI_NOTF_RECORD_FINISHED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_RECORD_ERROR:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_RECORD_ERROR, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         InfoLog( << "MediaInterface: received MI_NOTF_RECORD_ERROR, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_DTMF_RECEIVED:
          {
             MiDtmfNotf* pDtmfNotfMsg = (MiDtmfNotf*)&msg;
-            assert(mEventRouterQueryIf!=0);
 
             // Get event into dum queue, so that callback is on dum thread
-            ConversationHandle convHandle = mEventRouterQueryIf->getConversationHandle();
-            DtmfEvent* devent = new DtmfEvent(mConversationManager, convHandle, pNotfMsg->getConnectionId(), pDtmfNotfMsg->getKeyCode(), pDtmfNotfMsg->getDuration(), pDtmfNotfMsg->getKeyPressState()==MiDtmfNotf::KEY_UP);
+            DtmfEvent* devent = new DtmfEvent(mConversationManager, mOwnerConversationHandle, pNotfMsg->getConnectionId(), pDtmfNotfMsg->getKeyCode(), pDtmfNotfMsg->getDuration(), pDtmfNotfMsg->getKeyPressState()==MiDtmfNotf::KEY_UP);
             mConversationManager.post(devent);
 
-            InfoLog( << "NotificationDispatcher: received MI_NOTF_DTMF_RECEIVED, sourceId=" << pNotfMsg->getSourceId().data() << 
+            InfoLog( << "MediaInterface: received MI_NOTF_DTMF_RECEIVED, sourceId=" << pNotfMsg->getSourceId().data() << 
                ", connectionId=" << pNotfMsg->getConnectionId() << 
-               ", conversationHandle=" << convHandle <<
+               ", conversationHandle=" << mOwnerConversationHandle <<
                ", keyCode=" << pDtmfNotfMsg->getKeyCode() << 
                ", state=" << pDtmfNotfMsg->getKeyPressState() << 
                ", duration=" << pDtmfNotfMsg->getDuration());
          }
          break;
       case MiNotification::MI_NOTF_DELAY_SPEECH_STARTED:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_DELAY_SPEECH_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         InfoLog( << "MediaInterface: received MI_NOTF_DELAY_SPEECH_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_DELAY_NO_DELAY:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_DELAY_NO_DELAY, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         InfoLog( << "MediaInterface: received MI_NOTF_DELAY_NO_DELAY, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_DELAY_QUIESCENCE:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_DELAY_QUIESCENCE, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         InfoLog( << "MediaInterface: received MI_NOTF_DELAY_QUIESCENCE, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_RX_STREAM_ACTIVITY: ///< Value for MiRtpStreamActivityNotf notifications.
          {
             MiRtpStreamActivityNotf* pRtpStreamActivityNotfMsg = (MiRtpStreamActivityNotf*)&msg;
          
-            InfoLog( << "NotificationDispatcher: received MI_NOTF_RX_STREAM_ACTIVITY, sourceId=" << pNotfMsg->getSourceId().data() << 
+            InfoLog( << "MediaInterface: received MI_NOTF_RX_STREAM_ACTIVITY, sourceId=" << pNotfMsg->getSourceId().data() << 
                ", connectionId=" << pNotfMsg->getConnectionId() <<
                ", state=" << (pRtpStreamActivityNotfMsg->getState() == MiRtpStreamActivityNotf::STREAM_START ? "STREAM_START" :
                               pRtpStreamActivityNotfMsg->getState() == MiRtpStreamActivityNotf::STREAM_STOP ? "STREAM_STOP" :
@@ -115,25 +112,25 @@ NotificationDispatcher::post(const OsMsg& msg)
       case MiNotification::MI_NOTF_ENERGY_LEVEL:       ///< Audio energy level (MiIntNotf)
          {
             //MiIntNotf* pIntNotfMsg = (MiIntNotf*)&msg;
-            //InfoLog( << "NotificationDispatcher: received MI_NOTF_ENERGY_LEVEL, sourceId=" << pNotfMsg->getSourceId().data() << 
+            //InfoLog( << "MediaInterface: received MI_NOTF_ENERGY_LEVEL, sourceId=" << pNotfMsg->getSourceId().data() << 
             //   ", connectionId=" << pNotfMsg->getConnectionId() <<
             //   ", value=" << pIntNotfMsg->getValue());
          }
          break;
       case MiNotification::MI_NOTF_VOICE_STARTED:
-         //InfoLog( << "NotificationDispatcher: received MI_NOTF_VOICE_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         //InfoLog( << "MediaInterface: received MI_NOTF_VOICE_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_VOICE_STOPPED:
-         //InfoLog( << "NotificationDispatcher: received MI_NOTF_VOICE_STOPPED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         //InfoLog( << "MediaInterface: received MI_NOTF_VOICE_STOPPED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
 
       default:
-         InfoLog(<< "NotificationDispatcher: unrecognized MiNotification type = " << pNotfMsg->getType());
+         InfoLog(<< "MediaInterface: unrecognized MiNotification type = " << pNotfMsg->getType());
       }
    }
    else
    {
-      InfoLog(<< "NotificationDispatcher: unrecognized message type = " << msg.getMsgType());
+      InfoLog(<< "MediaInterface: unrecognized message type = " << msg.getMsgType());
    }
    return OS_SUCCESS;
 }

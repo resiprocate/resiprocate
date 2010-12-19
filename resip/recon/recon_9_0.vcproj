@@ -345,6 +345,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MediaInterface.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\MediaResourceCache.cxx"
 				>
 			</File>
@@ -354,10 +358,6 @@
 			</File>
 			<File
 				RelativePath=".\MediaStreamEvent.cxx"
-				>
-			</File>
-			<File
-				RelativePath=".\NotificatoinDispatcher.cxx"
 				>
 			</File>
 			<File
@@ -466,10 +466,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\EventRouterQueryIf.hxx"
-				>
-			</File>
-			<File
 				RelativePath=".\FlowManagerSipXSocket.hxx"
 				>
 			</File>
@@ -486,6 +482,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MediaInterface.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\MediaResourceCache.hxx"
 				>
 			</File>
@@ -495,10 +495,6 @@
 			</File>
 			<File
 				RelativePath=".\MediaStreamEvent.hxx"
-				>
-			</File>
-			<File
-				RelativePath=".\NotificationDispatcher.hxx"
 				>
 			</File>
 			<File

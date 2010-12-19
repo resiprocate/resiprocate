@@ -141,6 +141,9 @@
 				RelativePath=".\MediaEvent.cxx">
 			</File>
 			<File
+				RelativePath=".\MediaInterface.cxx">
+			</File>
+			<File
 				RelativePath=".\MediaResourceCache.cxx">
 			</File>
 			<File
@@ -148,9 +151,6 @@
 			</File>
 			<File
 				RelativePath=".\MediaStreamEvent.cxx">
-			</File>
-			<File
-				RelativePath=".\NotificationDispatcher.cxx">
 			</File>
 			<File
 				RelativePath=".\Participant.cxx">

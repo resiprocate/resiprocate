@@ -4,6 +4,7 @@
 #include "ConversationProfile.hxx"
 #include "ConversationManager.hxx"
 #include "UserAgentMasterProfile.hxx"
+#include "HandleTypes.hxx"
 
 #include <resip/stack/InterruptableStackThread.hxx>
 #include <resip/stack/SelectInterruptor.hxx>
@@ -30,8 +31,6 @@ class UserAgentShutdownCmd;
 class SetActiveConversationProfileCmd;
 class UserAgentClientSubscription;
 class UserAgentRegistration;
-
-typedef unsigned int SubscriptionHandle;
 
 /**
   This class is one of two main classes of concern to an application

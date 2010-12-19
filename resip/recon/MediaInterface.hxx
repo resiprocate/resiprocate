@@ -1,21 +1,30 @@
-#if !defined(EventRouterQueryIf_hxx)
-#define EventRouterQueryIf_hxx
+#if !defined(MediaInterface_hxx)
+#define MediaInterface_hxx
 
+#include <os/OsMsgDispatcher.h>
+#include <mi/CpMediaInterface.h>
 #include "HandleTypes.hxx"
 
 namespace recon
 {
+class ConversationManager;
 
-/**
-  This class is an interface used by the NotificationDispatcher to help
-  route events to the proper destination
-
-  Author: Scott Godin (sgodin AT SipSpectrum DOT com)
-*/
-class EventRouterQueryIf
+// Wrapper class to allow CpMediaIterface to be stored in a SharedPtr.
+// Note:  CpMediaIterface cannot be directly stored in a SharePrt because 
+//        the destructor is private and the release() call must be used 
+//        to destroy the object.
+class MediaInterface : public OsMsgDispatcher
 {
 public:
-    virtual ConversationHandle getConversationHandle() = 0;
+   MediaInterface(ConversationManager& conversationManager, ConversationHandle ownerConversationHandle, CpMediaInterface* mediaInterface);
+   ~MediaInterface() { mMediaInterface->release(); }
+   CpMediaInterface* getInterface() { return mMediaInterface; }
+private:
+   virtual OsStatus post(const OsMsg& msg);
+
+   ConversationManager& mConversationManager;
+   ConversationHandle mOwnerConversationHandle;
+   CpMediaInterface* mMediaInterface;
 };
 
 }

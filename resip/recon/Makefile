@@ -16,10 +16,10 @@ SRC += \
         FlowManagerSipXSocket.cxx \
         LocalParticipant.cxx \
         MediaEvent.cxx \
+		MediaInterface.cxx \
         MediaResourceParticipant.cxx \
         MediaResourceCache.cxx \
         MediaStreamEvent.cxx \
-		NotificationDispatcher.cxx \
         Participant.cxx \
         ReconSubsystem.cxx \
         RelatedConversationSet.cxx \
