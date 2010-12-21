@@ -114,7 +114,7 @@ stunParseAtrChangeRequest( char* body, unsigned int hdrLen,  StunAtrChangeReques
 static bool 
 stunParseAtrError( char* body, unsigned int hdrLen,  StunAtrError& result )
 {
-   if ( hdrLen >= sizeof(result) )
+   if ( hdrLen >= (sizeof(result)-sizeof(result.sizeReason)) ) // Note: result.sizeReason is extra info in StunAtrError that is not on the wire
    {
       //clog << "head on Error too large" << endl;
       return false;
