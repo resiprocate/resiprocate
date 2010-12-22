@@ -110,11 +110,10 @@ ServerRegistration::accept(SipMessage& ok)
 
          mAsyncLocalStore->releaseLog(log,modifiedContacts);
 
-         mDum.mServerRegistrationHandler->asyncUpdateContacts(getHandle(),mAor,modifiedContacts,log);
-
-         mAsyncLocalStore->destroy(); //drop ownership of resources in the local store.
-
          mAsyncOkMsg = SharedPtr<SipMessage>(static_cast<SipMessage*>(ok.clone()));
+         mDum.mServerRegistrationHandler->asyncUpdateContacts(getHandle(),mAor,modifiedContacts,log);
+         //!WARN! Must not access this object beyond this point. The client my call reject() or accept(), deleting this object.  Also, watch out for local objects that are still in scope and access this object on destruction.
+         return;
       }
    }
 }
@@ -219,8 +218,9 @@ ServerRegistration::dispatch(const SipMessage& msg)
    
    if (handler->asyncProcessing())
    {
-      handler->asyncGetContacts(getHandle(),mAor);
       mAsyncState = asyncStateWaitingForInitialContactList;
+      handler->asyncGetContacts(getHandle(),mAor);
+      //!WARN! Must not access this object beyond this point. The client my call reject() or accept(), deleting this object.  Also, watch out for local objects that are still in scope and access this object on destruction.
       return;
    }
 
@@ -271,6 +271,7 @@ ServerRegistration::processRegistration(const SipMessage& msg)
          mAsyncState = asyncStateQueryOnly;
       }
       handler->onQuery(getHandle(), msg);
+      //!WARN! Must not access this object beyond this point. The client my call reject() or accept(), deleting this object.  Also, watch out for local objects that are still in scope and access this object on destruction.
       return;
     }
 
@@ -325,8 +326,9 @@ ServerRegistration::processRegistration(const SipMessage& msg)
             mAsyncState = asyncStateWaitingForAcceptReject;
          }
 
-        handler->onRemoveAll(getHandle(), msg);
-        return;
+         handler->onRemoveAll(getHandle(), msg);
+         //!WARN! Must not access this object beyond this point. The client my call reject() or accept(), deleting this object.  Also, watch out for local objects that are still in scope and access this object on destruction.
+         return;
       }
 
       ContactInstanceRecord rec;
@@ -419,15 +421,18 @@ ServerRegistration::processRegistration(const SipMessage& msg)
    {
       case REFRESH:
          handler->onRefresh(getHandle(), msg);
-         break;
+         //!WARN! Must not access this object beyond this point. The client my call reject() or accept(), deleting this object.  Also, watch out for local objects that are still in scope and access this object on destruction.
+         return;
 
       case REMOVE:
          handler->onRemove(getHandle(), msg);
-         break;
+         //!WARN! Must not access this object beyond this point. The client my call reject() or accept(), deleting this object.  Also, watch out for local objects that are still in scope and access this object on destruction.
+         return;
 
       case ADD:
          handler->onAdd(getHandle(), msg);
-         break;
+         //!WARN! Must not access this object beyond this point. The client my call reject() or accept(), deleting this object.  Also, watch out for local objects that are still in scope and access this object on destruction.
+         return;
 
       default:
          assert(0);
@@ -628,6 +633,8 @@ ServerRegistration::asyncProcessFinalOkMsg(SipMessage &msg, ContactPtrList &cont
       if (expired.get() && expired->size() > 0)
       {
          mDum.mServerRegistrationHandler->asyncRemoveExpired(getHandle(),mAor,expired);
+         //!WARN! Must not access this object beyond this point. The client my call reject() or accept(), deleting this object.  Also, watch out for local objects that are still in scope and access this object on destruction.
+         return;
       }
    }
 }
