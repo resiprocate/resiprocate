@@ -634,15 +634,18 @@ RemoteParticipant::acceptPendingOODRefer()
 {
    if(mState == PendingOODRefer)
    {
+      SharedPtr<UserProfile> profile;
       bool accepted = false;
       if(mPendingOODReferNoSubHandle.isValid())
       {
          mPendingOODReferNoSubHandle->send(mPendingOODReferNoSubHandle->accept(202));  // Accept OOD Refer
+         profile = mPendingOODReferNoSubHandle->getUserProfile();
          accepted = true;
       }
       else if(mPendingOODReferSubHandle.isValid())
       {
          mPendingOODReferSubHandle->send(mPendingOODReferSubHandle->accept(202));  // Accept OOD Refer
+         profile = mPendingOODReferSubHandle->getUserProfile();
          accepted = true;
       }
       if(accepted)
@@ -652,11 +655,12 @@ RemoteParticipant::acceptPendingOODRefer()
          buildSdpOffer(mLocalHold, offer);
 
          // Build the Invite
-         SharedPtr<ConversationProfile> profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile();  // TODO - condsider using UserProfile assigned to inbound REFER request
-
          SharedPtr<SipMessage> invitemsg = mDum.makeInviteSessionFromRefer(mPendingOODReferMsg, 
                                                                            profile,
+                                                                           mPendingOODReferSubHandle,  // Note will be invalid if refer no-sub, which is fine
                                                                            &offer, 
+                                                                           DialogUsageManager::None,  //EncryptionLevel 
+                                                                           0,     //Aleternative Contents
                                                                            &mDialogSet);
          mDialogSet.sendInvite(invitemsg); 
 

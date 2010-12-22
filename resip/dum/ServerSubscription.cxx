@@ -27,8 +27,9 @@ ServerSubscription::ServerSubscription(DialogUsageManager& dum,
      mExpires(60),
      mAbsoluteExpiry(0)
 {
-   if (req.header(h_RequestLine).method() == REFER)
+   if (req.header(h_RequestLine).method() == REFER && req.header(h_To).exists(p_tag))
    {
+      // If this is an in-dialog REFER, then use a subscription id
       mSubscriptionId = Data(req.header(h_CSeq).sequence());
    }   
    Data key = getEventType() + getDocumentKey();
