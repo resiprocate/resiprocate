@@ -356,6 +356,15 @@ ClientInviteSession::sendSipFrag(const SipMessage& msg)
          {
             SipFrag contents;
             contents.message().header(h_StatusLine) = msg.header(h_StatusLine);
+            if(mDialog.mDialogSet.getUserProfile()->getExtraHeadersInReferNotifySipFragEnabled())
+            {
+               contents.message().header(h_Vias) = msg.header(h_Vias);
+               contents.message().header(h_From) = msg.header(h_From);
+               contents.message().header(h_To) = msg.header(h_To);
+               contents.message().header(h_CallId) = msg.header(h_CallId);
+               contents.message().header(h_CSeq) = msg.header(h_CSeq);
+               contents.message().header(h_Contacts) = msg.header(h_Contacts);
+            }
             if (code < 200)
             {
                mServerSub->send(mServerSub->update(&contents));

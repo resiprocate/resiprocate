@@ -292,6 +292,7 @@ Server::Server(int argc, char** argv) :
    conversationProfile->setDefaultFrom(mMOHUri);
    conversationProfile->setDigestCredential(mMOHUri.uri().host(), mMOHUri.uri().user(), mMOHPassword);  
    conversationProfile->challengeOODReferRequests() = false;
+   conversationProfile->setExtraHeadersInReferNotifySipFragEnabled(true);  // Enable dialog identifying headers in SipFrag bodies of Refer Notifies - required for a music on hold server
 
    // Setup NatTraversal Settings
    conversationProfile->natTraversalMode() = ConversationProfile::NoNatTraversal;

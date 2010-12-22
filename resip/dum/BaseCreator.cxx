@@ -63,8 +63,6 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
    mLastRequest->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    mLastRequest->header(h_CallId).value() = Helper::computeCallId();
 
-   NameAddr contact; // if no GRUU, let the stack fill in the contact 
-
    assert(mUserProfile.get());
    if (!mUserProfile->getImsAuthUserName().empty())
    {
@@ -78,6 +76,8 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
       mLastRequest->header(h_Authorizations).push_back(auth);
       DebugLog ( << "Adding auth header to inital reg for IMS: " << auth);
    }
+
+   NameAddr contact; // if no GRUU, let the stack fill in the contact 
 
    //.dcm. If we want to use userprofiles oacross multiple registration we will
    //need the lookup-rtype hasGruu methods

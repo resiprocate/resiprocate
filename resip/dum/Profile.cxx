@@ -53,6 +53,7 @@ Profile::reset()
    unsetRinstanceEnabled();
    unsetOutboundDecorator();
    unsetMethodsParamEnabled();
+   unsetExtraHeadersInReferNotifySipFragEnabled();
 }
 
 void
@@ -914,6 +915,38 @@ Profile::unsetMethodsParamEnabled()
    {
       mHasMethodsParamEnabled = true;
       mMethodsParamEnabled = false;
+   }
+}
+
+void 
+Profile::setExtraHeadersInReferNotifySipFragEnabled(bool enabled)
+{
+   mExtraHeadersInReferNotifySipFragEnabled = enabled;
+   mHasExtraHeadersInReferNotifySipFragEnabled = true;
+}
+
+bool 
+Profile::getExtraHeadersInReferNotifySipFragEnabled() const
+{
+   // Fall through seting (if required)
+   if(!mHasExtraHeadersInReferNotifySipFragEnabled && mBaseProfile.get())
+   {
+       return mBaseProfile->getExtraHeadersInReferNotifySipFragEnabled();
+   }
+   return mExtraHeadersInReferNotifySipFragEnabled;
+}
+
+void
+Profile::unsetExtraHeadersInReferNotifySipFragEnabled()
+{
+   if(mBaseProfile.get()) 
+   {
+      mHasExtraHeadersInReferNotifySipFragEnabled = false;
+   }
+   else
+   {
+      mHasExtraHeadersInReferNotifySipFragEnabled = true;
+      mExtraHeadersInReferNotifySipFragEnabled = false;
    }
 }
 
