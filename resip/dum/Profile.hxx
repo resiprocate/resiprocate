@@ -206,7 +206,13 @@ class Profile
       ///If enabled then methods parameter is added to contacts.
       virtual void setMethodsParamEnabled(bool enabled) ;
       virtual bool getMethodsParamEnabled() const;
-      virtual void unsetMethodsParamEnabled();      
+      virtual void unsetMethodsParamEnabled();
+
+      ///If enabled then dialog identifying headers are added to SipFrag bodies 
+      ///that are generated in an InviteSession
+      virtual void setExtraHeadersInReferNotifySipFragEnabled(bool enabled) ;
+      virtual bool getExtraHeadersInReferNotifySipFragEnabled() const;
+      virtual void unsetExtraHeadersInReferNotifySipFragEnabled();
 
    private:
       bool mHasDefaultRegistrationExpires;
@@ -283,6 +289,9 @@ class Profile
       
       bool mHasMethodsParamEnabled;
       bool mMethodsParamEnabled;
+
+      bool mHasExtraHeadersInReferNotifySipFragEnabled;
+      bool mExtraHeadersInReferNotifySipFragEnabled;
 
       SharedPtr<Profile> mBaseProfile;  // All non-set settings will fall through to this Profile (if set)
 };
