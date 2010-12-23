@@ -1777,7 +1777,7 @@ InviteSession::dispatchReinviteNoOfferGlare(const SipMessage& msg)
 void
 InviteSession::dispatchReceivedUpdateOrReinvite(const SipMessage& msg)
 {
-   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   // InviteSessionHandler* handler = mDum.mInviteSessionHandler; // unused
    std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
@@ -2757,14 +2757,18 @@ InviteSession::setOfferAnswer(SipMessage& msg, const Contents* offerAnswer)
 void 
 InviteSession::provideProposedOffer()
 {
-   if (dynamic_cast<MultipartAlternativeContents*>(mProposedLocalOfferAnswer.get()))
+   MultipartAlternativeContents* mp_ans =
+     dynamic_cast<MultipartAlternativeContents*>(mProposedLocalOfferAnswer.get());
+   if (mp_ans)
    {
-      provideOffer( *(dynamic_cast<Contents*>((dynamic_cast<MultipartAlternativeContents*>(mProposedLocalOfferAnswer.get()))->parts().back())),
+      // .kw. can cast below ever be NULL? Need assert/throw?
+      provideOffer( *(dynamic_cast<Contents*>((mp_ans)->parts().back())),
                     mProposedEncryptionLevel,
-                    dynamic_cast<Contents*>((dynamic_cast<MultipartAlternativeContents*>(mProposedLocalOfferAnswer.get()))->parts().front()));
+                    dynamic_cast<Contents*>((mp_ans)->parts().front()));
    }
    else
    {
+      // .kw. can cast below ever be NULL? Need assert/throw?
       provideOffer(*(dynamic_cast<Contents*>(mProposedLocalOfferAnswer.get())), mProposedEncryptionLevel, 0);
    }
 }

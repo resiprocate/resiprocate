@@ -8,6 +8,7 @@ namespace resip
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 DialogEventStateManager::DialogEventStateManager()
+   : mDialogEventHandler(0)
 {
 }
 

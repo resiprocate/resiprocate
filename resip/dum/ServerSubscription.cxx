@@ -60,7 +60,7 @@ UInt32
 ServerSubscription::getTimeLeft()
 {
    UInt32 timeleft =  UInt32(mAbsoluteExpiry - Timer::getTimeSecs());
-   if (timeleft < 0)
+   if (timeleft < 0) // .kw. this can NEVER happen since unsigned!
    {
       return 0;
    }
@@ -109,7 +109,7 @@ ServerSubscription::send(SharedPtr<SipMessage> msg)
             mDum.addTimer(DumTimeout::Subscription, msg->header(h_Expires).value(), getBaseHandle(), ++mTimerSeq);
             DialogUsage::send(msg);
             mAbsoluteExpiry = Timer::getTimeSecs() + msg->header(h_Expires).value();            
-            mState = Established;            
+            mSubDlgState = SubDlgEstablished;            
          }
          else
          {
@@ -153,14 +153,14 @@ bool
 ServerSubscription::shouldDestroyAfterSendingFailure(const SipMessage& msg)
 {
    int code = msg.header(h_StatusLine).statusCode();
-   switch(mState)
+   switch(mSubDlgState)
    {
-      case Initial:
+      case SubDlgInitial:
          return true;
-      case Terminated: //terminated state not using in ServerSubscription
+      case SubDlgTerminating: //terminated state not using in ServerSubscription
          assert(0);
          return true;
-      case Established:
+      case SubDlgEstablished:
       {
          if (code == 405)
          {
@@ -186,6 +186,7 @@ ServerSubscription::shouldDestroyAfterSendingFailure(const SipMessage& msg)
          }
       }
       default: // !jf!
+         assert(0);
          break;
          
    }
