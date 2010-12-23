@@ -360,6 +360,7 @@ DnsUtil::getInterfaces(const Data& matching)
    struct ifconf ifc;
 
    int s = socket( AF_INET, SOCK_DGRAM, 0 );
+   assert( s != INVALID_SOCKET );	// can run out of file descs
    const int len = 100 * sizeof(struct ifreq);
    int maxRet = 40;
 

@@ -93,6 +93,9 @@ DataBuffer::overflow(int c)
 {
    // sync, but reallocate
    size_t len = pptr() - pbase();
+   // .kw. test below is always true. Checked with David Butcher
+   // and he says this is safe but perhaps performs unrequired
+   // re-allocs.
    if (len >= 0)
    {
       size_t pos = gptr() - eback();  // remember the get position

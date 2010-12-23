@@ -211,10 +211,12 @@ RRCache::getTTL(const RROverlay& overlay)
    if (overlay.type() != T_SOA) return -1;
    char* name = 0;
    long len = 0;
-   ares_expand_name(overlay.data(), overlay.msg(), overlay.msgLength(), &name, &len);
+   int status = ares_expand_name(overlay.data(), overlay.msg(), overlay.msgLength(), &name, &len);
+   assert( status == ARES_SUCCESS );
    const unsigned char* pPos = overlay.data() + len;
-   free(name);
-   ares_expand_name(pPos, overlay.msg(), overlay.msgLength(), &name, &len);
+   free(name); name = 0;
+   status = ares_expand_name(pPos, overlay.msg(), overlay.msgLength(), &name, &len);
+   assert( status == ARES_SUCCESS );
    free(name);
    pPos += len;
    pPos += 16; // skip four 32 bit entities.

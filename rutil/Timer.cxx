@@ -122,6 +122,7 @@ Timer::Timer(unsigned long tms, Message* message)
 Timer::Timer(unsigned long tms) :
     mWhen(tms + getTimeMs()),
     mId(0),
+    mType(ApplicationTimer),		// .kw. what is good default?
     mDuration(tms),
     mMessage(0)
 {
