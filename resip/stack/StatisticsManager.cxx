@@ -18,8 +18,15 @@ StatisticsManager::StatisticsManager(SipStack& stack, unsigned long intervalSecs
      mStack(stack),
      mInterval(intervalSecs*1000),
      mNextPoll(Timer::getTimeMs() + mInterval),
-     mExternalHandler(NULL)
+     mExternalHandler(NULL),
+     mPublicPayload(NULL)
 {}
+
+StatisticsManager::~StatisticsManager()
+{
+   if ( mPublicPayload )
+       delete mPublicPayload;
+}
 
 void 
 StatisticsManager::setInterval(unsigned long intervalSecs)
@@ -38,11 +45,21 @@ StatisticsManager::poll()
    activeClientTransactions = mStack.mTransactionController.getNumClientTransactions();
    activeServerTransactions = mStack.mTransactionController.getNumServerTransactions();   
 
-   StatisticsMessage::AtomicPayload appStats;
-   appStats.loadIn(*this);
+   // .kw. At last check payload was > 146kB, which seems too large
+   // to alloc on stack. Also, the post'd message has reference
+   // to the appStats, so not safe queue as ref to stack element.
+   // Converted to dynamic memory allocation.
+   if ( mPublicPayload==NULL )
+   {
+       mPublicPayload = new StatisticsMessage::AtomicPayload;
+       // re-used each time, free'd in destructor
+   }
+   mPublicPayload->loadIn(*this);
 
    bool postToStack = true;
-   StatisticsMessage msg(appStats);
+   StatisticsMessage msg(*mPublicPayload);
+   // WATCHOUT: msg contains reference to the payload, and this reference
+   // is preserved thru clone().
 
    if( mExternalHandler )
    {

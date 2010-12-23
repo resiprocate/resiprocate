@@ -581,11 +581,10 @@ TuIM::processMessageRequest(SipMessage* msg)
    if ( !contents )
    {
       InfoLog(<< "Received Message message with no contents" );
-      delete msg; msg=0;
+      // .kw. NO: delete msg; msg=0; // our caller owns msg
       return;
    }
 
-   assert( contents );
    Mime mime = contents->getType();
    DebugLog ( << "got body of type  " << mime.type() << "/" << mime.subType() );
 
