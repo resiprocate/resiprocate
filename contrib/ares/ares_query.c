@@ -51,11 +51,15 @@ void ares_query(ares_channel channel, const char *name, int dnsclass,
 
   /* Compose the query. */
   rd = !(channel->flags & ARES_FLAG_NORECURSE);
+  qbuf = 0;
   status = ares_mkquery(name, dnsclass, type, channel->next_id, rd, &qbuf,
 			&qlen);
+  /* WATCHOUT: qbuf is always allocated except in case of ENOMEM */
   channel->next_id++;
   if (status != ARES_SUCCESS)
     {
+      if (qbuf)
+         ares_free_string((char*)qbuf);
       callback(arg, status, NULL, 0);
       return;
     }

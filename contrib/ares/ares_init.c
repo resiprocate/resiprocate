@@ -241,11 +241,11 @@ static int init_by_options(ares_channel channel, struct ares_options *options,
      channel->tcp_port = options->tcp_port;
 
   /* Copy the servers, if given. */
-  if ((optmask & ARES_OPT_SERVERS) && channel->nservers == -1)
+  if ((optmask & ARES_OPT_SERVERS) && channel->nservers == -1 && options->nservers>0 )
   {
      channel->servers =
         malloc(options->nservers * sizeof(struct server_state));
-     if (!channel->servers && options->nservers != 0)
+     if (channel->servers == NULL)
         return ARES_ENOMEM;
      memset(channel->servers, '\0', options->nservers * sizeof(struct server_state));
      for (i = 0; i < options->nservers; i++)
@@ -263,9 +263,10 @@ static int init_by_options(ares_channel channel, struct ares_options *options,
 #else	  
 		channel->servers[i].addr = options->servers[i];
 #endif
+	// .kw. why is this inside the loop?
         channel->nservers = options->nservers;
-	  }
-    }
+     }
+  }
 
   /* Copy the domains, if given.  Keep channel->ndomains consistent so
    * we can clean up in case of error.

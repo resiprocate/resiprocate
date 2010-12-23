@@ -78,6 +78,7 @@ int ares_parse_ptr_reply(const unsigned char *abuf, int alen, const void *addr,
       aptr += len;
       if (aptr + RRFIXEDSZ > abuf + alen)
 	{
+	  free(rr_name);
 	  status = ARES_EBADRESP;
 	  break;
 	}

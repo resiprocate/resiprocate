@@ -115,12 +115,16 @@ void ares_search(ares_channel channel, const char *name, int dnsclass,
       squery->trying_as_is = 0;
       status = cat_domain(name, channel->domains[0], &s);
       if (status == ARES_SUCCESS)
-	{
+      {
 	  ares_query(channel, s, dnsclass, type, search_callback, squery);
 	  free(s);
-	}
+      }
       else
+      {
+	free(squery->name);
+        free(squery);
 	callback(arg, status, NULL, 0);
+      }
     }
 }
 
