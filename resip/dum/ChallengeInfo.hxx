@@ -15,8 +15,8 @@ class ChallengeInfo : public resip::DumFeatureMessage
                      const Data& transactionId);
       ~ChallengeInfo();
 
-      const bool isFailed() const;
-      const bool isChallengeRequired() const;
+      bool isFailed() const;
+      bool isChallengeRequired() const;
 
       virtual resip::Data brief() const;
       virtual resip::Message* clone() const;

@@ -1747,6 +1747,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
          }
          case PUBLISH:
             assert(false);
+	    return;
          case SUBSCRIBE:
             if (!checkEventPackage(request))
             {
@@ -1754,6 +1755,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
                         << request.brief());
                return;
             }
+	    /*FALLTHRU*/
          case NOTIFY : // handle unsolicited (illegal) NOTIFYs
          case INVITE:   // new INVITE
          case REFER:    // out-of-dialog REFER
