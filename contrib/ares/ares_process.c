@@ -181,9 +181,13 @@ static void write_tcp_data_core(ares_channel channel, int server_idx,
 	    {
 	      count -= sendreq->len;
 	      server->qhead = sendreq->next;
-	      if (server->qhead == NULL)
-		server->qtail = NULL;
 	      free(sendreq);
+	      if (server->qhead == NULL)
+	      {
+		server->qtail = NULL;
+		assert(count==0);
+		break;
+	      }
 	    }
 	  else
 	    {
