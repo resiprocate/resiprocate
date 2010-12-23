@@ -54,18 +54,22 @@ SequenceSet::clear()
          delete *i;
       }
       mSequences.clear();      
+
+      mActiveSet.clear();
+
+      mEventFifo.clear();
    }
 }
      
 void
-SequenceSet::enqueue(shared_ptr<Event> event)
+SequenceSet::enqueue(boost::shared_ptr<Event> event)
 {
    DebugLog(<< "SequenceSet::enqueue(" << &*event << ") " << event->briefString());
    mEventFifo.add(event);
 }
 
 SequenceSet::EventFifo::TimerId
-SequenceSet::enqueue(shared_ptr<Event> event, int delay)
+SequenceSet::enqueue(boost::shared_ptr<Event> event, int delay)
 {
    InfoLog(<< "SequenceClass::enqueue " << event->briefString() << " with delay " << delay);
    return mEventFifo.addDelayMs(event, delay);
@@ -123,6 +127,8 @@ SequenceSet::exec()
 
    // next sequence addition clears old sequences
    mReset = true;
+   clear();
+   release();
    return succ;
 }
 
@@ -193,7 +199,7 @@ SequenceSet::postLoop()
 }
 
 void
-SequenceSet::handle(shared_ptr<Event> event)
+SequenceSet::handle(boost::shared_ptr<Event> event)
 {
    //CerrLog( << "Current ActiveSet");
    for (set<SequenceClass*>::const_iterator i = mActiveSet.begin();
@@ -222,7 +228,7 @@ SequenceSet::handle(shared_ptr<Event> event)
    DebugLog(<< "handle_event::dequeue(" << event << ") " << event->briefString());
    //CerrLog(<< "Dequeued: " << event->briefString());
          
-   shared_ptr<ExpectActionEvent> action = shared_dynamic_cast<ExpectActionEvent>(event);
+   boost::shared_ptr<ExpectActionEvent> action = shared_dynamic_cast<ExpectActionEvent>(event);
    if (action)
    {
       try
@@ -237,7 +243,7 @@ SequenceSet::handle(shared_ptr<Event> event)
       return;
    }
          
-   shared_ptr<TimeoutEvent> timeout = shared_dynamic_cast<TimeoutEvent>(event);
+   boost::shared_ptr<TimeoutEvent> timeout = shared_dynamic_cast<TimeoutEvent>(event);
    if (timeout)
    {
       Data errorMessage;
@@ -266,7 +272,7 @@ SequenceSet::handle(shared_ptr<Event> event)
       return;
    }
          
-   shared_ptr<SequenceDoneEvent> seqDone = shared_dynamic_cast<SequenceDoneEvent>(event);
+   boost::shared_ptr<SequenceDoneEvent> seqDone = shared_dynamic_cast<SequenceDoneEvent>(event);
    if (seqDone)
    {
       // remove sequences that have completed
@@ -295,7 +301,7 @@ SequenceSet::handle(shared_ptr<Event> event)
 }
 
 void
-SequenceSet::handleEvent(shared_ptr<Event> event)
+SequenceSet::handleEvent(boost::shared_ptr<Event> event)
 {
    // prevent debug output on cascading message mismatches
    if (mFailed)
