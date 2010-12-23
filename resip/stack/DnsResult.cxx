@@ -753,6 +753,7 @@ DnsResult::NAPTR::operator<(const DnsResult::NAPTR& rhs) const
 
 DnsResult::SRV::SRV() : priority(0), weight(0), port(0)
 {
+    // .kw. member "transport" is not initialized. good default?
 }
 
 bool 

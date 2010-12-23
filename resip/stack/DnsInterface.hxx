@@ -83,7 +83,7 @@ class DnsInterface
       // When complete or partial results are ready, call DnsHandler::process()
       // For synchronous DnsInterface, set to 0
       friend class DnsResult;
-      DnsHandler* mHandler;
+      // DnsHandler* mHandler;		// .kw. not used anymore?
       std::set<Data> mSupportedNaptrs;
       typedef std::vector<std::pair<TransportType, IpVersion> > TransportMap;
       TransportMap mSupportedTransports;

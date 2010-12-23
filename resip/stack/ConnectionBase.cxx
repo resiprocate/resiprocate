@@ -33,10 +33,10 @@ ConnectionBase::ConnectionBase(Transport* transport, const Tuple& who, Compressi
      mWho(who),
      mFailureReason(TransportFailure::None),
      mCompression(compression),
-#ifdef USE_SIGCOMP
+// NO: #ifdef USE_SIGCOMP // class def doesn't decl members conditionally
      mSigcompStack(0),
      mSigcompFramer(0),
-#endif
+// NO: #endif
      mSendingTransmissionFormat(Unknown),
      mReceivingTransmissionFormat(Unknown),
      mMessage(0),

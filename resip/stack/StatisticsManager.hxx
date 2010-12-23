@@ -29,6 +29,7 @@ class StatisticsManager : public StatisticsMessage::Payload
       } Measurement;
       
       StatisticsManager(SipStack& stack, unsigned long intervalSecs=60);
+      ~StatisticsManager();
 
       void process();
       // not stricly thread-safe; needs to be called through the fifo somehow
@@ -51,6 +52,12 @@ class StatisticsManager : public StatisticsMessage::Payload
       UInt64 mNextPoll;
 
       ExternalStatsHandler *mExternalHandler;
+      //
+      // When statistics are published, a copy a values are made
+      // and copied into this member, and then reference to this is
+      // published thru both ExternalHandler and posted to stack as message.
+      // This payload is mutex protected.
+      StatisticsMessage::AtomicPayload *mPublicPayload;
 };
 
 }

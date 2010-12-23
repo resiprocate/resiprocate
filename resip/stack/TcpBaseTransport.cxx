@@ -237,7 +237,7 @@ TcpBaseTransport::processAllWriteRequests()
                {
                   // !jf! this has failed
                   InfoLog( << "Error on TCP connect to " <<  data->destination << ", err=" << err << ": " << strerror(err));
-                  error(e);
+                  error(err);
                   //fdset.clear(sock);
                   closeSocket(sock);
                   fail(data->transactionId);
