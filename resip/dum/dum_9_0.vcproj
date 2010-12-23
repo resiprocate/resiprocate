@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="9.00"
 	Name="dum"
-	ProjectGUID="{31B0654F-E08E-405F-909F-80F86CB14B9D}"
+	ProjectGUID="{12720B4D-F4FC-4502-8FA9-589BF5166216}"
 	RootNamespace="dum"
 	Keyword="ManagedCProj"
 	TargetFrameworkVersion="131072"

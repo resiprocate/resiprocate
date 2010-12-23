@@ -106,12 +106,14 @@ TestSipEndPoint::TestSipEndPoint(const Uri& addressOfRecord,
          // of TcpTransport to instead use SCTP.
          mTransport = new TcpTransport(mIncoming, mContact.uri().port(), version, "0.0.0.0", 0, resip::Compression::Disabled, 0);
       }
+#ifdef USE_SSL
       else if (isEqualNoCase(mContact.uri().param(p_transport), Tuple::toData(TLS)))
       {
          InfoLog(<< "TestSipEndPoint[" << addressOfRecord << "]transport is TLS " << nwIf);
          mTransport = new TlsTransport(mIncoming, mContact.uri().port(), version, nwIf, 
                                        *mSecurity, nwIf, SecurityTypes::TLSv1, 0, resip::Compression::Disabled, 0);
       }
+#endif
       else
       {
          assert(0);
@@ -217,7 +219,7 @@ TestSipEndPoint::setTransport(Transport* transport)
 }
 
 void 
-TestSipEndPoint::send(shared_ptr<SipMessage>& msg, RawConditionerFn func)
+TestSipEndPoint::send(boost::shared_ptr<SipMessage>& msg, RawConditionerFn func)
 {
    const Tuple* useTuple = 0;
 
@@ -376,7 +378,7 @@ TestSipEndPoint::send(shared_ptr<SipMessage>& msg, RawConditionerFn func)
    }
 }
 
-void TestSipEndPoint::storeSentInvite(const shared_ptr<SipMessage>& invite)
+void TestSipEndPoint::storeSentInvite(const boost::shared_ptr<SipMessage>& invite)
 {
    assert(invite->isRequest());
    assert(invite->header(h_RequestLine).getMethod() == INVITE);
@@ -394,7 +396,7 @@ void TestSipEndPoint::storeSentInvite(const shared_ptr<SipMessage>& invite)
    mInvitesSent.push_back(invite);
 }
 
-void TestSipEndPoint::storeReceivedInvite(const shared_ptr<SipMessage>& invite)
+void TestSipEndPoint::storeReceivedInvite(const boost::shared_ptr<SipMessage>& invite)
 {
    for(InviteList::iterator it = mInvitesReceived.begin();
        it != mInvitesReceived.end(); it++)
@@ -409,7 +411,7 @@ void TestSipEndPoint::storeReceivedInvite(const shared_ptr<SipMessage>& invite)
 }
 
 
-void TestSipEndPoint::storeSentUpdate(const shared_ptr<SipMessage>& update)
+void TestSipEndPoint::storeSentUpdate(const boost::shared_ptr<SipMessage>& update)
 {
    assert(update->isRequest());
    assert(update->header(h_RequestLine).getMethod() == UPDATE);
@@ -427,7 +429,7 @@ void TestSipEndPoint::storeSentUpdate(const shared_ptr<SipMessage>& update)
    mUpdatesSent.push_back(update);
 }
 
-void TestSipEndPoint::storeReceivedUpdate(const shared_ptr<SipMessage>& update)
+void TestSipEndPoint::storeReceivedUpdate(const boost::shared_ptr<SipMessage>& update)
 {
    for(UpdateList::iterator it = mUpdatesReceived.begin();
        it != mUpdatesReceived.end(); it++)
@@ -441,7 +443,7 @@ void TestSipEndPoint::storeReceivedUpdate(const shared_ptr<SipMessage>& update)
    mUpdatesReceived.push_back(update);
 }
 
-shared_ptr<SipMessage> 
+boost::shared_ptr<SipMessage> 
 TestSipEndPoint::getSentInvite(const CallId& callId)
 {
    for(InviteList::iterator it = mInvitesSent.begin();
@@ -457,7 +459,7 @@ TestSipEndPoint::getSentInvite(const CallId& callId)
    throw AssertException("No stored invites (likely retranmissions from failed test)", __FILE__, __LINE__);
 }
  
-shared_ptr<SipMessage> 
+boost::shared_ptr<SipMessage> 
 TestSipEndPoint::getReceivedInvite(const CallId& callId)
 {
    for(InviteList::iterator it = mInvitesReceived.begin();
@@ -468,11 +470,11 @@ TestSipEndPoint::getReceivedInvite(const CallId& callId)
          return *it;
       }
    }
-   return shared_ptr<SipMessage>();
+   return boost::shared_ptr<SipMessage>();
 }  
 
  
-shared_ptr<SipMessage> 
+boost::shared_ptr<SipMessage> 
 TestSipEndPoint::getReceivedUpdate(const CallId& callId)
 {
    for(UpdateList::iterator it = mUpdatesReceived.begin();
@@ -483,10 +485,10 @@ TestSipEndPoint::getReceivedUpdate(const CallId& callId)
          return *it;
       }
    }
-   return shared_ptr<SipMessage>();
+   return boost::shared_ptr<SipMessage>();
 }  
 
-void TestSipEndPoint::storeSentSubscribe(const shared_ptr<SipMessage>& subscribe)
+void TestSipEndPoint::storeSentSubscribe(const boost::shared_ptr<SipMessage>& subscribe)
 {
    InfoLog(<< "storeSentSubscribe " << *subscribe);
    for (SentSubscribeList::iterator it = mSubscribesSent.begin();
@@ -502,7 +504,7 @@ void TestSipEndPoint::storeSentSubscribe(const shared_ptr<SipMessage>& subscribe
    mSubscribesSent.push_back(::DialogSet(subscribe, *this));
 }
 
-void TestSipEndPoint::storeReceivedSubscribe(const shared_ptr<SipMessage>& subscribe)
+void TestSipEndPoint::storeReceivedSubscribe(const boost::shared_ptr<SipMessage>& subscribe)
 {
    for (ReceivedSubscribeList::iterator it = mSubscribesReceived.begin();
        it != mSubscribesReceived.end(); ++it)
@@ -516,7 +518,7 @@ void TestSipEndPoint::storeReceivedSubscribe(const shared_ptr<SipMessage>& subsc
    mSubscribesReceived.push_back(subscribe);
 }
 
-void TestSipEndPoint::storeReceivedPublish(const shared_ptr<SipMessage>& publish)
+void TestSipEndPoint::storeReceivedPublish(const boost::shared_ptr<SipMessage>& publish)
 {
    for (ReceivedPublishList::iterator it = mPublishReceived.begin();
        it != mPublishReceived.end(); ++it)
@@ -530,8 +532,8 @@ void TestSipEndPoint::storeReceivedPublish(const shared_ptr<SipMessage>& publish
    mPublishReceived.push_back(publish);
 }
 
-shared_ptr<SipMessage> 
-TestSipEndPoint::getSentSubscribe(shared_ptr<SipMessage> msg)
+boost::shared_ptr<SipMessage> 
+TestSipEndPoint::getSentSubscribe(boost::shared_ptr<SipMessage> msg)
 {
    InfoLog(<< "getSentSubscribe: " << *msg);
    for (SentSubscribeList::iterator it = mSubscribesSent.begin();
@@ -544,10 +546,10 @@ TestSipEndPoint::getSentSubscribe(shared_ptr<SipMessage> msg)
       }
    }
    ErrLog(<< "getSentSubscribe failed");
-   return shared_ptr<SipMessage>();
+   return boost::shared_ptr<SipMessage>();
 }
  
-shared_ptr<SipMessage> 
+boost::shared_ptr<SipMessage> 
 TestSipEndPoint::getReceivedSubscribe(const CallId& callId)
 {
   for(ReceivedSubscribeList::iterator it = mSubscribesReceived.begin();
@@ -558,10 +560,10 @@ TestSipEndPoint::getReceivedSubscribe(const CallId& callId)
          return *it;
       }
    }
-   return shared_ptr<SipMessage>();
+   return boost::shared_ptr<SipMessage>();
 }  
 
-shared_ptr<SipMessage> 
+boost::shared_ptr<SipMessage> 
 TestSipEndPoint::getReceivedPublish(const CallId& callId)
 {
   for(ReceivedSubscribeList::iterator it = mPublishReceived.begin();
@@ -572,7 +574,7 @@ TestSipEndPoint::getReceivedPublish(const CallId& callId)
          return *it;
       }
    }
-   return shared_ptr<SipMessage>();
+   return boost::shared_ptr<SipMessage>();
 }  
 
 DeprecatedDialog*
@@ -653,7 +655,7 @@ TestSipEndPoint::getDialog(const NameAddr& target)
 }
 
 // needs to deal with INVITE SDP contents
-shared_ptr<SipMessage>
+boost::shared_ptr<SipMessage>
 TestSipEndPoint::makeResponse(SipMessage& request, int responseCode)
 {
    assert(request.isRequest());
@@ -672,7 +674,8 @@ TestSipEndPoint::makeResponse(SipMessage& request, int responseCode)
          DebugLog(<< "made a dialog (" << dialog << "), contact: " << getContact());
       }
       DebugLog(<< "Creating response using dialog: " << dialog);
-      shared_ptr<SipMessage> response(dialog->makeResponse(request, responseCode));
+      boost::shared_ptr<SipMessage> response(dialog->makeResponse(request, responseCode));
+
       return response;
    }
    else
@@ -682,38 +685,38 @@ TestSipEndPoint::makeResponse(SipMessage& request, int responseCode)
       if (!dialog)
       {
          DebugLog(<<"making response outside of dialog, contact: " << getContact());
-         shared_ptr<SipMessage> response(Helper::makeResponse(request, responseCode, getContact()));
+         boost::shared_ptr<SipMessage> response(Helper::makeResponse(request, responseCode, getContact()));
          return response;
       }
       else
       {
          DebugLog(<< "Creating response using dialog: " << dialog);
-         shared_ptr<SipMessage> response(dialog->makeResponse(request, responseCode));
+         boost::shared_ptr<SipMessage> response(dialog->makeResponse(request, responseCode));
          return response;
       }
    }
 }
  
-shared_ptr<SipMessage>
-TestSipEndPoint::Dump::go(shared_ptr<SipMessage> msg)
+boost::shared_ptr<SipMessage>
+TestSipEndPoint::Dump::go(boost::shared_ptr<SipMessage> msg)
 {
    InfoLog(<<"##Dump: " << mEndPoint.getName() << " " << *msg);
    // don't send it
-   static const shared_ptr<SipMessage> nul;
+   static const boost::shared_ptr<SipMessage> nul;
    return nul;
 }
      
-shared_ptr<SipMessage>
-TestSipEndPoint::ByeTo::go(shared_ptr<SipMessage> msg, const Uri& target)
+boost::shared_ptr<SipMessage>
+TestSipEndPoint::ByeTo::go(boost::shared_ptr<SipMessage> msg, const Uri& target)
 {
    DeprecatedDialog* dialog = mEndPoint.getDialog(target);
    assert(dialog);
-   shared_ptr<SipMessage> bye(dialog->makeBye());
+   boost::shared_ptr<SipMessage> bye(dialog->makeBye());
    return bye;
 }
 
-shared_ptr<SipMessage>
-TestSipEndPoint::Bye::go(shared_ptr<SipMessage> msg)
+boost::shared_ptr<SipMessage>
+TestSipEndPoint::Bye::go(boost::shared_ptr<SipMessage> msg)
 {
    resip::Data remoteTag(msg->isRequest() ? msg->header(h_From).param(p_tag) :
                                             msg->header(h_To).param(p_tag) );
@@ -725,16 +728,16 @@ TestSipEndPoint::Bye::go(shared_ptr<SipMessage> msg)
       dialog=mEndPoint.getDialog(msg->header(h_CallId),localTag);
    }
    assert(dialog);
-   shared_ptr<SipMessage> bye(dialog->makeBye());
+   boost::shared_ptr<SipMessage> bye(dialog->makeBye());
    return bye;
 }
 
-shared_ptr<SipMessage>
-TestSipEndPoint::Notify200To::go(shared_ptr<SipMessage> msg, const Uri& target)
+boost::shared_ptr<SipMessage>
+TestSipEndPoint::Notify200To::go(boost::shared_ptr<SipMessage> msg, const Uri& target)
 {
    DeprecatedDialog* dialog = mEndPoint.getDialog(target);
    assert(dialog);
-   shared_ptr<SipMessage> notify(dialog->makeNotify());
+   boost::shared_ptr<SipMessage> notify(dialog->makeNotify());
    notify->header(h_Event).value() = "refer";
    SipFrag frag;
    frag.message().header(h_StatusLine).responseCode() = 200;
@@ -743,14 +746,14 @@ TestSipEndPoint::Notify200To::go(shared_ptr<SipMessage> msg, const Uri& target)
    return notify;
 }
 
-shared_ptr<SipMessage>
-TestSipEndPoint::Notify200::go(shared_ptr<SipMessage> msg)
+boost::shared_ptr<SipMessage>
+TestSipEndPoint::Notify200::go(boost::shared_ptr<SipMessage> msg)
 {
    resip::Data remoteTag(msg->isRequest() ? msg->header(h_From).param(p_tag) :
                                             msg->header(h_To).param(p_tag) );
    DeprecatedDialog* dialog = mEndPoint.getDialog(msg->header(h_CallId),remoteTag);
    assert(dialog);
-   shared_ptr<SipMessage> notify(dialog->makeNotify());
+   boost::shared_ptr<SipMessage> notify(dialog->makeNotify());
    notify->header(h_Event).value() = "refer";
    SipFrag frag;
    frag.message().header(h_StatusLine).responseCode() = 200;
@@ -790,7 +793,7 @@ TestSipEndPoint::Refer::operator()(TestSipEndPoint& endPoint)
 {  
    DeprecatedDialog* dialog = endPoint.getDialog(mWho.user());
    assert(dialog);
-   shared_ptr<SipMessage> refer(dialog->makeRefer(NameAddr(mTo)));
+   boost::shared_ptr<SipMessage> refer(dialog->makeRefer(NameAddr(mTo)));
    if (mReplaces)
    {
       refer->header(h_Replaces) = dialog->makeReplaces();
@@ -862,7 +865,7 @@ TestSipEndPoint::ReInvite::go()
       throw AssertException(resip::Data("No matching dialog"), __FILE__, __LINE__);
    }
       
-   shared_ptr<SipMessage> invite(dialog->makeInvite());
+   boost::shared_ptr<SipMessage> invite(dialog->makeInvite());
    if (mSdp.get())
    {
       invite->setContents(mSdp.get());
@@ -951,7 +954,7 @@ TestSipEndPoint::Update::go()
       throw AssertException(resip::Data("No matching dialog"), __FILE__, __LINE__);
    }
       
-   shared_ptr<SipMessage> update(dialog->makeUpdate());
+   boost::shared_ptr<SipMessage> update(dialog->makeUpdate());
    if (mSdp.get())
    {
       update->setContents(mSdp.get());
@@ -1003,15 +1006,15 @@ TestSipEndPoint::InviteReferReplaces::InviteReferReplaces(TestSipEndPoint* from,
 }
 
 void
-TestSipEndPoint::InviteReferReplaces::operator()(shared_ptr<Event> event)
+TestSipEndPoint::InviteReferReplaces::operator()(boost::shared_ptr<Event> event)
 {
    SipEvent* sipEvent = dynamic_cast<SipEvent*>(event.get());
    assert(sipEvent);
-   shared_ptr<SipMessage> refer = sipEvent->getMessage();
+   boost::shared_ptr<SipMessage> refer = sipEvent->getMessage();
    assert(refer->isRequest());
    assert(refer->header(h_RequestLine).getMethod() == REFER);
    
-   shared_ptr<SipMessage> invite(Helper::makeInvite(refer->header(h_ReferTo),
+   boost::shared_ptr<SipMessage> invite(Helper::makeInvite(refer->header(h_ReferTo),
                                                     NameAddr(mEndPoint.getAddressOfRecord()),
                                                     mEndPoint.getContact()));
    invite->header(h_ReferredBy) = refer->header(h_ReferredBy);
@@ -1142,7 +1145,7 @@ TestSipEndPoint::Invite::Invite(TestSipEndPoint* from,
      mUseOutbound(useOutbound)
 {}
 
-shared_ptr<SipMessage>
+boost::shared_ptr<SipMessage>
 TestSipEndPoint::Invite::go()
 {
    shared_ptr<SipMessage> invite(Helper::makeInvite(NameAddr(mTo),
@@ -1281,13 +1284,13 @@ TestSipEndPoint::RawInvite::RawInvite(TestSipEndPoint* from,
      mRawText(rawText)
 {}
 
-shared_ptr<SipMessage>
+boost::shared_ptr<SipMessage>
 TestSipEndPoint::RawInvite::go()
 {
    auto_ptr<SipMessage> msg(Helper::makeInvite(NameAddr(mTo),
                                                NameAddr(mEndPoint.getAddressOfRecord()),
                                                mEndPoint.getContact()));
-   shared_ptr<SipMessage> rawInvite(new SipRawMessage(*msg, mRawText));
+   boost::shared_ptr<SipMessage> rawInvite(new SipRawMessage(*msg, mRawText));
    mEndPoint.storeSentInvite(rawInvite);
    return rawInvite;
 }
@@ -1455,11 +1458,11 @@ TestSipEndPoint::Subscribe::operator()(boost::shared_ptr<Event> event)
       SipEvent* sipEvent = dynamic_cast<SipEvent*>(event.get());
       if (sipEvent)
       {
-         shared_ptr<SipMessage> request = sipEvent->getMessage();
+         boost::shared_ptr<SipMessage> request = sipEvent->getMessage();
          if (request && request->isRequest())
          {
             // Create the dialog by making a dummy response.
-            shared_ptr<SipMessage> dummy = mEndPoint.makeResponse(*request, 180);
+            boost::shared_ptr<SipMessage> dummy = mEndPoint.makeResponse(*request, 180);
          }
       }
    }
@@ -1469,7 +1472,7 @@ TestSipEndPoint::Subscribe::operator()(boost::shared_ptr<Event> event)
 boost::shared_ptr<resip::SipMessage>
 TestSipEndPoint::Subscribe::go()
 {
-   shared_ptr<SipMessage> subscribe;
+   boost::shared_ptr<SipMessage> subscribe;
 
    DeprecatedDialog* dialog = mEndPoint.getDialog();
    if (dialog && !mIgnoreExistingDialog)
@@ -1578,7 +1581,7 @@ TestSipEndPoint::Request::toString() const
    return buffer;
 }
 
-shared_ptr<SipMessage>
+boost::shared_ptr<SipMessage>
 TestSipEndPoint::Request::go()
 {
    // !jf! this really should be passed in a dialog-id to identify which dialog
@@ -1586,14 +1589,14 @@ TestSipEndPoint::Request::go()
    DeprecatedDialog* dialog = mEndPoint.getDialog();
    if (dialog)
    {
-      shared_ptr<SipMessage> request(dialog->makeRequest(mType));
+      boost::shared_ptr<SipMessage> request(dialog->makeRequest(mType));
       if (mContents.get() != 0) request->setContents(mContents.get());
       request->header(h_Expires).value() = 3600;
       return request;   
    }
    else
    {
-      shared_ptr<SipMessage> request(Helper::makeRequest(NameAddr(mTo), 
+      boost::shared_ptr<SipMessage> request(Helper::makeRequest(NameAddr(mTo), 
                                                          NameAddr(mEndPoint.getAddressOfRecord()), 
                                                          mEndPoint.getContact(),
                                                          mType));
@@ -2002,11 +2005,11 @@ TestSipEndPoint::RawReply::RawReply(TestSipEndPoint& from,
 {
 }
 
-shared_ptr<SipMessage>
-TestSipEndPoint::RawReply::go(shared_ptr<SipMessage> msg)
+boost::shared_ptr<SipMessage>
+TestSipEndPoint::RawReply::go(boost::shared_ptr<SipMessage> msg)
 {                                                                          
    // set via, from, to off msg?
-   shared_ptr<SipMessage> mmsg(SipMessage::make(mRawText));
+   boost::shared_ptr<SipMessage> mmsg(SipMessage::make(mRawText));
    return mmsg;
 }                                                                       
 
@@ -2246,7 +2249,15 @@ TestSipEndPoint::send503WithRetryAfter(int retryAfter)
 
 TestSipEndPoint::Send302::Send302(TestSipEndPoint & endPoint)
    : MessageExpectAction(endPoint),
-     mEndPoint(endPoint)
+     mEndPoint(endPoint),
+     mRedirectTo(0)
+{
+}
+
+TestSipEndPoint::Send302::Send302(TestSipEndPoint& endPoint, const resip::Uri& redirectTo)
+: MessageExpectAction(endPoint),
+  mEndPoint(endPoint),
+  mRedirectTo(new resip::Uri(redirectTo))
 {
 }
 
@@ -2254,7 +2265,13 @@ boost::shared_ptr<resip::SipMessage>
 TestSipEndPoint::Send302::go(boost::shared_ptr<resip::SipMessage> msg)
 {
    assert (msg->isRequest());
-   return mEndPoint.makeResponse(*msg, 302);                        
+   boost::shared_ptr<resip::SipMessage> resp = mEndPoint.makeResponse(*msg, 302);
+   if (mRedirectTo.get())
+   {
+      resp->header(h_Contacts).clear();
+      resp->header(h_Contacts).push_back(NameAddr(*mRedirectTo));
+   }
+   return resp;
 }
 
 TestSipEndPoint::MessageExpectAction* 
@@ -2262,6 +2279,13 @@ TestSipEndPoint::send302()
 {
    return new Send302(*this);
 }
+
+TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::send302(const resip::Uri& redirectTarget)
+{
+   return new Send302(*this, redirectTarget);
+}
+
 
 TestSipEndPoint::Send202ToSubscribe::Send202ToSubscribe(TestSipEndPoint & endPoint)
    : MessageExpectAction(endPoint),
@@ -2308,7 +2332,7 @@ TestSipEndPoint::Send200ToPublish::go(boost::shared_ptr<resip::SipMessage> msg)
       response->header(h_Expires).value() = publish->header(h_Expires).value();
    }
 
-   response->header(h_SIPETag).value() = Data(Random::getRandom());
+   response->header(h_SIPETag).value() = Data(resip::Random::getRandom());
 
    return response;
 }
@@ -2343,7 +2367,7 @@ TestSipEndPoint::Send423Or200ToPublish::go(boost::shared_ptr<resip::SipMessage> 
    else
    {
       response = mEndPoint.makeResponse(*publish, 200);
-      response->header(h_SIPETag).value() = Data(Random::getRandom());
+      response->header(h_SIPETag).value() = Data(resip::Random::getRandom());
       response->header(h_Expires).value() = publish->header(h_Expires).value();
    }
 
@@ -2369,7 +2393,7 @@ TestSipEndPoint::Send401::go(boost::shared_ptr<resip::SipMessage> msg)
 
    Auth auth;
    auth.scheme() = "Digest";
-   auth.param(p_nonce) = Random::getCryptoRandomHex(8);
+   auth.param(p_nonce) = resip::Random::getCryptoRandomHex(8);
    auth.param(p_algorithm) = "MD5";
    auth.param(p_realm) = "localhost";
    auth.param(p_qopOptions) = "auth";
@@ -2458,7 +2482,8 @@ TestSipEndPoint::Notify::Notify(TestSipEndPoint & endPoint, boost::shared_ptr<re
 boost::shared_ptr<resip::SipMessage>                                
 TestSipEndPoint::Notify::go(boost::shared_ptr<resip::SipMessage> msg)
 {
-   if (msg->header(h_Expires).value() < mMinExpires)
+   int expires = msg->header(h_Expires).value();
+   if (msg->isRequest() && (expires < mMinExpires))
    {
       boost::shared_ptr<resip::SipMessage> response;
       response = mEndPoint.makeResponse(*msg, 423);
@@ -2471,7 +2496,7 @@ TestSipEndPoint::Notify::go(boost::shared_ptr<resip::SipMessage> msg)
                                                msg->header(h_To).param(p_tag) );
       DeprecatedDialog* dialog = mEndPoint.getDialog(msg->header(h_CallId),remoteTag);
       assert(dialog);
-      shared_ptr<SipMessage> notify(dialog->makeNotify());
+      boost::shared_ptr<SipMessage> notify(dialog->makeNotify());
       notify->setContents(mContents.get());
       notify->header(h_Event).value() = mEventPackage;
       notify->header(h_SubscriptionState).value() = mSubscriptionState;
@@ -2513,7 +2538,7 @@ TestSipEndPoint::Respond::go(boost::shared_ptr<resip::SipMessage> msg)
    {
       boost::shared_ptr<resip::SipMessage> invite;
       invite = mEndPoint.getReceivedInvite(msg->header(resip::h_CallId));
-      if (invite == shared_ptr<SipMessage>())
+      if (invite == boost::shared_ptr<SipMessage>())
       {
         return mEndPoint.makeResponse(*msg, mCode);
       }
@@ -2653,12 +2678,60 @@ TestSipEndPoint::ring()
    return new Ring(*this);
 }
 
-TestSipEndPoint::Ring183::Ring183(TestSipEndPoint & endPoint, const boost::shared_ptr<resip::SdpContents> sdp)
+TestSipEndPoint::RingNewBranch::RingNewBranch(TestSipEndPoint& endPoint)
+: MessageExpectAction(endPoint),
+  mEndPoint(endPoint)
+{
+}
+
+boost::shared_ptr<resip::SipMessage>                                
+TestSipEndPoint::RingNewBranch::go(boost::shared_ptr<resip::SipMessage> msg)                                
+{
+   boost::shared_ptr<resip::SipMessage> inv = mEndPoint.getReceivedInvite(msg->header(resip::h_CallId));
+   //boost::shared_ptr<resip::SipMessage> response = mEndPoint.makeResponse(*inv, 183);
+
+   SipMessage& request = *inv;
+
+   assert(request.isRequest());
+   int responseCode = 180;
+   if (request.header(h_RequestLine).getMethod() == INVITE)
+   {
+      //DeprecatedDialog* dialog = getDialog(request.header(h_CallId));
+      //if (!dialog)
+      //{
+      DebugLog(<< "making a dialog, contact: " << mEndPoint.getContact());
+      DeprecatedDialog* dialog = new DeprecatedDialog(mEndPoint.getContact());
+      mEndPoint.mDialogs.push_back(dialog);
+      DebugLog(<< "made a dialog (" << dialog << "), contact: " << mEndPoint.getContact());
+      //}
+      DebugLog(<< "Creating response using dialog: " << dialog);
+      boost::shared_ptr<SipMessage> response(dialog->makeResponse(request, responseCode));
+
+      return response;
+   }
+   else
+   {
+      DebugLog(<<"RingNewBranch error -- original request must be an INVITE!!!");
+      throw AssertException("RingNewBranch error -- original request must be an INVITE!!!",
+                              __FILE__, __LINE__);
+   }
+
+   return boost::shared_ptr<SipMessage>((SipMessage*)0);
+}
+
+TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::ringNewBranch()
+{
+   return new RingNewBranch(*this);
+}
+
+TestSipEndPoint::Ring183::Ring183(TestSipEndPoint & endPoint, const boost::shared_ptr<resip::SdpContents> sdp, bool removeContact)
    : MessageExpectAction(endPoint),
      mEndPoint(endPoint),
      mSdp(sdp),
      mReliable(false),
-     mRseq(0)
+     mRseq(0),
+     mRemoveContact(removeContact)
 {
 }
 
@@ -2667,7 +2740,8 @@ TestSipEndPoint::Ring183::Ring183(TestSipEndPoint & endPoint, const boost::share
      mEndPoint(endPoint),
      mSdp(sdp),
      mReliable(true),
-     mRseq(rseq)
+     mRseq(rseq),
+     mRemoveContact(false)
 {
 }
 
@@ -2714,6 +2788,11 @@ TestSipEndPoint::Ring183::go(boost::shared_ptr<resip::SipMessage> msg)
    {
       response->setContents(mSdp.get());
    }
+
+   if (mRemoveContact)
+   {
+      response->remove(h_Contacts);
+   }
    return response;
 }
 
@@ -2727,6 +2806,12 @@ TestSipEndPoint::MessageExpectAction*
 TestSipEndPoint::ring183(const boost::shared_ptr<resip::SdpContents>& sdp)
 {
    return new Ring183(*this, sdp);
+}
+
+TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::ring183_missingContact(const boost::shared_ptr<resip::SdpContents>& sdp)
+{
+   return new Ring183(*this, sdp, true);
 }
 
 TestSipEndPoint::MessageExpectAction* 
@@ -2937,12 +3022,12 @@ TestSipEndPoint::Ack::Ack(TestSipEndPoint & endPoint, const boost::shared_ptr<re
 {
 }
 
-shared_ptr<SipMessage>
-TestSipEndPoint::Ack::go(shared_ptr<SipMessage> response)
+boost::shared_ptr<SipMessage>
+TestSipEndPoint::Ack::go(boost::shared_ptr<SipMessage> response)
 {
    assert(response->isResponse());
    int code = response->header(h_StatusLine).responseCode();
-   shared_ptr<SipMessage> invite;
+   boost::shared_ptr<SipMessage> invite;
    try
    {
       invite = mEndPoint.getSentInvite(response->header(h_CallId));
@@ -2965,7 +3050,7 @@ TestSipEndPoint::Ack::go(shared_ptr<SipMessage> response)
          DebugLog(<< "Constructing ack against 200 using dialog.");
          DebugLog(<< *dialog);
          // !dlb! should use contact from 200?
-         shared_ptr<SipMessage> ack(dialog->makeAck(*invite));
+         boost::shared_ptr<SipMessage> ack(dialog->makeAck(*invite));
          if( mSdp.get() )
             ack->setContents(mSdp.get());
          return ack;
@@ -2977,7 +3062,7 @@ TestSipEndPoint::Ack::go(shared_ptr<SipMessage> response)
          MethodTypes method=invite->method();
          invite->header(h_RequestLine).method()=INVITE;
          invite->header(h_CSeq).method()=INVITE;
-         shared_ptr<SipMessage> ack(Helper::makeFailureAck(*invite,*response));
+         boost::shared_ptr<SipMessage> ack(Helper::makeFailureAck(*invite,*response));
          // Reset tid
          ack->header(h_Vias).front().param(p_branch).reset();
          // Reset request-line
@@ -3001,7 +3086,7 @@ TestSipEndPoint::Ack::go(shared_ptr<SipMessage> response)
       MethodTypes method=invite->method();
       invite->header(h_RequestLine).method()=INVITE;
       invite->header(h_CSeq).method()=INVITE;
-      shared_ptr<SipMessage> ack(Helper::makeFailureAck(*invite, *response));
+      boost::shared_ptr<SipMessage> ack(Helper::makeFailureAck(*invite, *response));
       invite->header(h_RequestLine).method()=method;
       invite->header(h_CSeq).method()=method;
       ack->header(h_Vias).front().param(p_branch).reset(response->getTransactionId());
@@ -3028,15 +3113,15 @@ TestSipEndPoint::AckNewTid::AckNewTid(TestSipEndPoint & endPoint, const boost::s
 {
 }
 
-shared_ptr<SipMessage>
-TestSipEndPoint::AckNewTid::go(shared_ptr<SipMessage> response)
+boost::shared_ptr<SipMessage>
+TestSipEndPoint::AckNewTid::go(boost::shared_ptr<SipMessage> response)
 {
    assert(response->isResponse());
    int code = response->header(h_StatusLine).responseCode();
-   shared_ptr<SipMessage> invite = mEndPoint.getSentInvite(response->header(h_CallId));
+   boost::shared_ptr<SipMessage> invite = mEndPoint.getSentInvite(response->header(h_CallId));
    assert (invite->header(h_RequestLine).getMethod() == INVITE);
 
-   shared_ptr<SipMessage> ack;
+   boost::shared_ptr<SipMessage> ack;
 
    if (code == 200)
    {
@@ -3080,15 +3165,15 @@ TestSipEndPoint::AckOldTid::AckOldTid(TestSipEndPoint & endPoint, const boost::s
 {
 }
 
-shared_ptr<SipMessage>
-TestSipEndPoint::AckOldTid::go(shared_ptr<SipMessage> response)
+boost::shared_ptr<SipMessage>
+TestSipEndPoint::AckOldTid::go(boost::shared_ptr<SipMessage> response)
 {
    assert(response->isResponse());
    int code = response->header(h_StatusLine).responseCode();
-   shared_ptr<SipMessage> invite = mEndPoint.getSentInvite(response->header(h_CallId));
+   boost::shared_ptr<SipMessage> invite = mEndPoint.getSentInvite(response->header(h_CallId));
    assert (invite->header(h_RequestLine).getMethod() == INVITE);
 
-   shared_ptr<SipMessage> ack;
+   boost::shared_ptr<SipMessage> ack;
 
    if (code == 200)
    {
@@ -3285,7 +3370,7 @@ TestSipEndPoint::From::From(const resip::Data& instanceId)
 // this requires the endpoint to store all sent and received requests, not just
 // INVITE and SUBSCRIBE?
 bool 
-TestSipEndPoint::From::isMatch(shared_ptr<SipMessage>& message) const
+TestSipEndPoint::From::isMatch(boost::shared_ptr<SipMessage>& message) const
 {
    //DebugLog(<< "TestSipEndPoint::From::isMatch");
    // check that the from matches the stored agent
@@ -3429,7 +3514,7 @@ TestSipEndPoint::Contact::Contact(const resip::Uri& contact)
 }
 
 bool 
-TestSipEndPoint::Contact::isMatch(shared_ptr<SipMessage>& message) const
+TestSipEndPoint::Contact::isMatch(boost::shared_ptr<SipMessage>& message) const
 {
    if (message->exists(h_Contacts) &&
        message->header(h_Contacts).size() == 1)
@@ -3522,7 +3607,7 @@ TestSipEndPoint::HasMessageBodyMatch::toString() const
 }
 
 bool
-TestSipEndPoint::HasMessageBodyMatch::isMatch(shared_ptr<SipMessage>& message) const
+TestSipEndPoint::HasMessageBodyMatch::isMatch(boost::shared_ptr<SipMessage>& message) const
 {
    if (message->exists(h_ContentLength) && message->header(h_ContentLength).value())
    {
@@ -3570,7 +3655,7 @@ TestSipEndPoint::UnknownHeaderMatch::isMatch(shared_ptr<SipMessage>& message) co
 shared_ptr<SipMessage>
 TestSipEndPoint::Cancel::go(shared_ptr<SipMessage> msg)
 {
-   shared_ptr<SipMessage> invite;
+   boost::shared_ptr<SipMessage> invite;
    try
    {
       invite = mEndPoint.getSentInvite(msg->header(h_CallId));
@@ -3588,14 +3673,14 @@ TestSipEndPoint::Cancel::go(shared_ptr<SipMessage> msg)
    MethodTypes method=invite->method();
    invite->header(h_RequestLine).method()=INVITE;
    invite->header(h_CSeq).method()=INVITE;
-   shared_ptr<SipMessage> cancel(Helper::makeCancel(*invite));
+   boost::shared_ptr<SipMessage> cancel(Helper::makeCancel(*invite));
    invite->header(h_RequestLine).method()=method;
    invite->header(h_CSeq).method()=method;
    return cancel;
 }
 
 void 
-TestSipEndPoint::NoAction::operator()(shared_ptr<Event> event)
+TestSipEndPoint::NoAction::operator()(boost::shared_ptr<Event> event)
 {
 }
 
@@ -3673,7 +3758,7 @@ TestSipEndPoint::SipExpect::getTimeout() const
 }
 
 void
-TestSipEndPoint::SipExpect::onEvent(TestEndPoint& endPoint, shared_ptr<Event> event)
+TestSipEndPoint::SipExpect::onEvent(TestEndPoint& endPoint, boost::shared_ptr<Event> event)
 {
    mExpectAction->exec(event);
 }
@@ -3710,13 +3795,13 @@ TestSipEndPoint::SipExpect::output(EncodeStream& s) const
 }
 
 bool
-TestSipEndPoint::SipExpect::isMatch(shared_ptr<Event> event) const
+TestSipEndPoint::SipExpect::isMatch(boost::shared_ptr<Event> event) const
 {
    DebugLog (<< "matching: " << *event);
    SipEvent* sipEvent = dynamic_cast<SipEvent*>(event.get());
    if (!sipEvent) return false;
    
-   shared_ptr<SipMessage> msg = sipEvent->getMessage();
+   boost::shared_ptr<SipMessage> msg = sipEvent->getMessage();
 
    TestSipEndPoint* endPoint = dynamic_cast<TestSipEndPoint*>(sipEvent->getEndPoint());
    assert(endPoint);
@@ -3775,11 +3860,11 @@ TestSipEndPoint::SipExpect::isMatch(shared_ptr<Event> event) const
 }
 
 resip::Data
-TestSipEndPoint::SipExpect::explainMismatch(shared_ptr<Event> event) const
+TestSipEndPoint::SipExpect::explainMismatch(boost::shared_ptr<Event> event) const
 {
    SipEvent* sipEvent = dynamic_cast<SipEvent*>(event.get());
    assert(sipEvent);
-   shared_ptr<SipMessage> msg = sipEvent->getMessage();
+   boost::shared_ptr<SipMessage> msg = sipEvent->getMessage();
 
    Data s;
    {
@@ -3834,7 +3919,7 @@ TestSipEndPoint::process(FdSet& fdset)
          if (sip)
          {
             DebugLog ( << getName() << ":" << getPort() << " got message: " << sip->brief());
-            shared_ptr<SipMessage> sipMsg(sip);
+            boost::shared_ptr<SipMessage> sipMsg(sip);
             handleEvent(boost::shared_ptr<Event>(new SipEvent(this, sipMsg)));
          }
          else
@@ -3898,9 +3983,9 @@ TestSipEndPoint::process(FdSet& fdset)
 void 
 TestSipEndPoint::handleEvent(boost::shared_ptr<Event> event)
 {
-   shared_ptr<SipEvent> sipEvent = shared_dynamic_cast<SipEvent>(event);
+   boost::shared_ptr<SipEvent> sipEvent = shared_dynamic_cast<SipEvent>(event);
    assert(sipEvent);
-   shared_ptr<SipMessage> msg = sipEvent->getMessage();
+   boost::shared_ptr<SipMessage> msg = sipEvent->getMessage();
    mLastMessage = msg;
    
    DebugLog(<< getContact() << " is handling: " << *msg);
@@ -3910,7 +3995,7 @@ TestSipEndPoint::handleEvent(boost::shared_ptr<Event> event)
           msg->header(h_StatusLine).responseCode() > 100 &&
           msg->header(h_StatusLine).responseCode() <= 200)
       {
-         shared_ptr<SipMessage> invite = getSentInvite(msg->header(h_CallId));
+         boost::shared_ptr<SipMessage> invite = getSentInvite(msg->header(h_CallId));
          //DebugLog (<< "invite map = " << mInvitesSent);
          
          assert(invite != 0);
@@ -3954,7 +4039,7 @@ TestSipEndPoint::handleEvent(boost::shared_ptr<Event> event)
          }
          assert(found);
          
-         shared_ptr<SipMessage> subscribe = getSentSubscribe(msg);
+         boost::shared_ptr<SipMessage> subscribe = getSentSubscribe(msg);
          assert(subscribe != 0);
          
          DeprecatedDialog* dialog = getDialog(msg->header(h_CallId),

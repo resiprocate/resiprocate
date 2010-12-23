@@ -82,7 +82,6 @@ Fixture::initialize(CommandLineParser& args)
                          5060);
 #else
    // enable for TLS testing
-   security = new resip::Security(getenv("PWD"));
    proxy = new TestRepro("proxy", "localhost", args, "127.0.0.1", security);
    jason = makeReproUser(*proxy, "jason", "localhost",UDP, security);
    jason1 = makeReproUser(*proxy, "jason", "localhost",UDP, security);
@@ -98,11 +97,14 @@ Fixture::initialize(CommandLineParser& args)
    davidTcp = makeReproUser(*proxy, "david", "localhost",TCP, security);
    enlaiTcp = makeReproUser(*proxy, "enlai", "localhost",TCP, security);
    cullenTcp = makeReproUser(*proxy, "cullen", "localhost",TCP, security);
+#ifdef USE_SSL
+   security = new resip::Security(getenv("PWD"));
    jasonTls=makeReproUser(*proxy,"jason","localhost",TLS,security);
    derekTls = makeReproUser(*proxy, "derek", "localhost",TLS, security);
    davidTls = makeReproUser(*proxy, "david", "localhost",TLS, security);
    enlaiTls = makeReproUser(*proxy, "enlai", "localhost",TLS, security);
    cullenTls = makeReproUser(*proxy, "cullen", "localhost",TLS, security);
+#endif
 #endif
 }
 

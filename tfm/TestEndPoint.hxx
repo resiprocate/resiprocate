@@ -65,7 +65,7 @@ class TestEndPoint
          public:
             explicit EndPointAction(TestEndPoint* endPoint);
             virtual ~EndPointAction();
-            using TestEndPoint::Action::operator();
+            using Action::operator();
             virtual void operator()();
             virtual void operator()(TestEndPoint& endPoint) = 0;
 
@@ -77,7 +77,7 @@ class TestEndPoint
       {
          public:
             NoSeqAction();
-            using TestEndPoint::EndPointAction::operator();
+            using EndPointAction::operator();
             virtual void operator()(TestEndPoint& user);
             virtual resip::Data toString() const;
       };
