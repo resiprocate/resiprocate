@@ -335,6 +335,7 @@ Server::startup()
 {
    assert(mUserAgent);
    mUserAgent->startup();
+   mMOHManager.startup();
 }
 
 void 
