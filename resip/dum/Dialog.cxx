@@ -97,21 +97,28 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                if (isEqualNoCase(contact.uri().scheme(), Symbols::Sips) ||
                    isEqualNoCase(contact.uri().scheme(), Symbols::Sip))
                {
+                  // Store Remote Target
                   mRemoteTarget = contact;
                   
-                  if (!mDialogSet.getUserProfile()->isAnonymous() && mDialogSet.getUserProfile()->hasPublicGruu())
+                  // Create Local Contact
+                  SharedPtr<UserProfile> userProfile = mDialogSet.getUserProfile();
+                  if(userProfile->hasUserAgentCapabilities())
                   {
-                     mLocalContact.uri() = mDialogSet.getUserProfile()->getPublicGruu();
+                     mLocalContact = userProfile->getUserAgentCapabilities();
                   }
-                  else if(mDialogSet.getUserProfile()->isAnonymous() && mDialogSet.getUserProfile()->hasTempGruu())
+                  if(!userProfile->isAnonymous() && userProfile->hasPublicGruu())
                   {
-                     mLocalContact.uri() = mDialogSet.getUserProfile()->getTempGruu();
+                     mLocalContact.uri() = userProfile->getPublicGruu();
+                  }
+                  else if(userProfile->isAnonymous() && userProfile->hasTempGruu())
+                  {
+                     mLocalContact.uri() = userProfile->getTempGruu();
                   }
                   else
                   {
-                     if (mDialogSet.getUserProfile()->hasOverrideHostAndPort())
+                     if (userProfile->hasOverrideHostAndPort())
                      {
-                        mLocalContact.uri() = mDialogSet.getUserProfile()->getOverrideHostAndPort();
+                        mLocalContact.uri() = userProfile->getOverrideHostAndPort();
                      }
                      if(request.header(h_RequestLine).uri().user().empty())
                      {

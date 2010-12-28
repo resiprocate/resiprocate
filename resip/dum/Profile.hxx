@@ -198,15 +198,32 @@ class Profile
       virtual bool getRinstanceEnabled() const;
       virtual void unsetRinstanceEnabled();
 
-	  //If set then dum will add this MessageDecorator to all outbound messages
-	  virtual void setOutboundDecorator(SharedPtr<MessageDecorator> outboundDecorator);
-	  virtual SharedPtr<MessageDecorator> getOutboundDecorator();
-	  virtual void unsetOutboundDecorator();
+      //If set then dum will add this MessageDecorator to all outbound messages
+      virtual void setOutboundDecorator(SharedPtr<MessageDecorator> outboundDecorator);
+      virtual SharedPtr<MessageDecorator> getOutboundDecorator();
+      virtual void unsetOutboundDecorator();
 
       ///If enabled then methods parameter is added to contacts.
       virtual void setMethodsParamEnabled(bool enabled) ;
       virtual bool getMethodsParamEnabled() const;
       virtual void unsetMethodsParamEnabled();
+
+      ///If set, the parameters on the provided NameAddr are used in the contact header
+      ///Example: 
+      ///  #include <resip/stack/ExtensionParameter.hxx>
+      ///  static const resip::ExtensionParameter p_automaton("automaton");
+      ///  static const resip::ExtensionParameter p_byeless("+sip.byeless");
+      ///  static const resip::ExtensionParameter p_rendering("+sip.rendering");
+      ///  ...
+      ///  NameAddr capabilities;
+      ///  capabilities.param(p_automaton); 
+      ///  capabilities.param(p_byeless);
+      ///  capabilities.param(p_rendering) = "\"no\"";
+      ///  profile->setUserAgentCapabilities(capabilities);
+      virtual void setUserAgentCapabilities(const NameAddr& capabilities) ;
+      virtual bool hasUserAgentCapabilities() const;
+      virtual const NameAddr& getUserAgentCapabilities() const;
+      virtual void unsetUserAgentCapabilities();
 
       ///If enabled then dialog identifying headers are added to SipFrag bodies 
       ///that are generated in an InviteSession
@@ -289,6 +306,9 @@ class Profile
       
       bool mHasMethodsParamEnabled;
       bool mMethodsParamEnabled;
+
+      bool mHasUserAgentCapabilities;
+      NameAddr mUserAgentCapabilities;
 
       bool mHasExtraHeadersInReferNotifySipFragEnabled;
       bool mExtraHeadersInReferNotifySipFragEnabled;

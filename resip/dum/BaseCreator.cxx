@@ -79,6 +79,11 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
 
    NameAddr contact; // if no GRUU, let the stack fill in the contact 
 
+   if(mUserProfile->hasUserAgentCapabilities())
+   {
+      contact = mUserProfile->getUserAgentCapabilities();
+   }
+
    //.dcm. If we want to use userprofiles oacross multiple registration we will
    //need the lookup-rtype hasGruu methods
    //if (mUserProfile->hasGruu(target.uri().getAor()))
