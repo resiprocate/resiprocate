@@ -53,7 +53,7 @@ Transport::Transport(Fifo<TransactionMessage>& rxFifo,
                      const Data& tlsDomain,
                      AfterSocketCreationFuncPtr socketFunc,
                      Compression &compression,
-		     unsigned transportFlags) :
+                     unsigned transportFlags) :
    mInterface(intfc),
    mTuple(intfc, portNum, version),
    mStateMachineFifo(rxFifo),
@@ -339,7 +339,8 @@ Transport::callSocketFunc(Socket sock)
 }
 
 void
-Transport::pushRxMsgUp(TransactionMessage* msg) {
+Transport::pushRxMsgUp(TransactionMessage* msg) 
+{
    mStateMachineFifo.add(msg);
 }
 

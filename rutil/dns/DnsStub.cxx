@@ -77,13 +77,15 @@ DnsResultSink::onLogDnsResult(const DNSResult<DnsCnameRecord>& rr)
 DnsStub::DnsStub(const NameserverList& additional,
                  AfterSocketCreationFuncPtr socketFunc,
                  AsyncProcessHandler* asyncProcessHandler,
-		 FdPollGrp *pollGrp) :
+                 FdPollGrp *pollGrp) :
    mTransform(0),
    mDnsProvider(ExternalDnsFactory::createExternalDns()),
    mAsyncProcessHandler(asyncProcessHandler)
 {
    if ( pollGrp )
+   {
       mDnsProvider->setPollGrp(pollGrp);
+   }
    int retCode = mDnsProvider->init(additional, socketFunc, mDnsTimeout, mDnsTries, mDnsFeatures);
    if (retCode != ExternalDns::Success)
    {

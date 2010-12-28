@@ -19,7 +19,7 @@ class TcpBaseTransport : public InternalTransport
                        const Data& interfaceName, 
                        AfterSocketCreationFuncPtr socketFunc, 
                        Compression &compression,
-		       unsigned transportFlags = 0);
+                       unsigned transportFlags = 0);
       virtual  ~TcpBaseTransport();
 
 

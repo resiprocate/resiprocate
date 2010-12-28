@@ -27,7 +27,7 @@ InternalTransport::InternalTransport(Fifo<TransactionMessage>& rxFifo,
                                      const Data& interfaceObj,
                                      AfterSocketCreationFuncPtr socketFunc,
                                      Compression &compression,
-				     unsigned transportFlags) :
+                                     unsigned transportFlags) :
    Transport(rxFifo, portNum, version, interfaceObj, Data::Empty, 
              socketFunc, compression, transportFlags),
    mFd(INVALID_SOCKET), mPollItem(NULL)
@@ -36,12 +36,12 @@ InternalTransport::InternalTransport(Fifo<TransactionMessage>& rxFifo,
 
 InternalTransport::~InternalTransport()
 {
-   if ( mPollItem ) 
+   if(mPollItem) 
    {
       delete mPollItem;
       mPollItem = NULL;
    }
-   if  (mFd != INVALID_SOCKET)
+   if(mFd != INVALID_SOCKET)
    {
       //DebugLog (<< "Closing " << mFd);
       closeSocket(mFd);
@@ -166,7 +166,8 @@ InternalTransport::transmit(const Tuple& dest, const Data& pdata, const Data& ti
 }
 
 void
-InternalTransport::setPollGrp(FdPollGrp *grp) {
+InternalTransport::setPollGrp(FdPollGrp *grp) 
+{
     assert(0);
 }
 

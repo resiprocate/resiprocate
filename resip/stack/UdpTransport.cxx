@@ -77,7 +77,8 @@ UdpTransport::~UdpTransport()
 }
 
 void
-UdpTransport::setPollGrp(FdPollGrp *grp) {
+UdpTransport::setPollGrp(FdPollGrp *grp) 
+{
    assert( mPollGrp==NULL );
    mPollGrp = grp;
    mPollGrp->addPollItem(this, FPEM_Read);
@@ -85,13 +86,15 @@ UdpTransport::setPollGrp(FdPollGrp *grp) {
 
 
 Socket
-UdpTransport::getPollSocket() const {
+UdpTransport::getPollSocket() const 
+{
    return mFd;
 }
 
 
 void
-UdpTransport::checkTransmitQueue() {
+UdpTransport::checkTransmitQueue() 
+{
    if ( mPollGrp && !mInWritable && mTxFifo.messageAvailable() ) 
    {
       mPollGrp->modPollItem(this, FPEM_Read|FPEM_Write);
@@ -101,17 +104,19 @@ UdpTransport::checkTransmitQueue() {
    {
       mPollGrp->modPollItem(this, FPEM_Read);
       mInWritable = false;
-    }
+   }
 }
 
 void
-UdpTransport::processTransmitQueue() {
+UdpTransport::processTransmitQueue() 
+{
    // could blast out messages now, but instead we wait for the
    // writability event
 }
 
 void
-UdpTransport::processPollEvent(FdPollEventMask mask) {
+UdpTransport::processPollEvent(FdPollEventMask mask) 
+{
    if ( mask & FPEM_Write ) 
    {
       // why only write one? Why not everything we can?
@@ -135,7 +140,8 @@ UdpTransport::processPollEvent(FdPollEventMask mask) {
    instead, we depend upon the writable-socket callback (fdset or poll).
 **/
 bool
-UdpTransport::hasDataToSend() const {
+UdpTransport::hasDataToSend() const 
+{
    return false;
 }
 
@@ -169,7 +175,8 @@ UdpTransport::process(FdSet& fdset)
 }
 
 void
-UdpTransport::processTx() {
+UdpTransport::processTx() 
+{
    // if (mTxFifo.messageAvailable() && fdset.readyToWrite(mFd))
    std::auto_ptr<SendData> sendData = std::auto_ptr<SendData>(mTxFifo.getNext());
    //DebugLog (<< "Sent: " <<  sendData->data);
@@ -234,7 +241,8 @@ UdpTransport::processTx() {
 }
    
 void
-UdpTransport::processRx() {
+UdpTransport::processRx() 
+{
    // !jf! this may have to change - when we read a message that is too big
    //should this buffer be allocated on the stack and then copied out, as it
    //needs to be deleted every time EWOULDBLOCK is encountered

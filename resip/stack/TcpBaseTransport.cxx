@@ -38,11 +38,13 @@ TcpBaseTransport::TcpBaseTransport(Fifo<TransactionMessage>& fifo,
                                    const Data& pinterface,
                                    AfterSocketCreationFuncPtr socketFunc,
                                    Compression &compression,
-				   unsigned transportFlags)
+                                   unsigned transportFlags)
    : InternalTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags)
 {
    if ( (mTransportFlags & RESIP_TRANSPORT_FLAG_NOBIND)==0 )
+   {
       mFd = InternalTransport::socket(TCP, version);
+   }
 }
 
 
@@ -68,7 +70,9 @@ void
 TcpBaseTransport::init()
 {
    if ( (mTransportFlags & RESIP_TRANSPORT_FLAG_NOBIND)!=0 )
-       return;
+   {
+      return;
+   }
 
    //DebugLog (<< "Opening TCP " << mFd << " : " << this);   
 
@@ -103,9 +107,10 @@ TcpBaseTransport::init()
    }
 }
 
-// XXX: when should this be called relative to init() above? merge?
+// ?kw?: when should this be called relative to init() above? merge?
 void
-TcpBaseTransport::setPollGrp(FdPollGrp *grp) {
+TcpBaseTransport::setPollGrp(FdPollGrp *grp) 
+{
    assert( mPollItem == NULL );
    if ( mFd!=INVALID_SOCKET ) 
    {
@@ -120,7 +125,9 @@ TcpBaseTransport::buildFdSet( FdSet& fdset)
    assert( mPollItem==NULL );
    mConnectionManager.buildFdSet(fdset);
    if ( mFd!=INVALID_SOCKET )
+   {
       fdset.setRead(mFd); // for the transport itself (accept)
+   }
 }
 
 /**
@@ -143,7 +150,7 @@ TcpBaseTransport::processListen()
          {
             case EWOULDBLOCK:
                // !jf! this can not be ready in some cases 
-	       // !kw! this will happen every epoll cycle
+               // !kw! this will happen every epoll cycle
                return 0;
             default:
                Transport::error(e);
@@ -270,7 +277,8 @@ TcpBaseTransport::processAllWriteRequests()
 }
 
 void
-TcpBaseTransport::processTransmitQueue() {
+TcpBaseTransport::processTransmitQueue() 
+{
    processAllWriteRequests();
 }
 
@@ -287,7 +295,9 @@ TcpBaseTransport::process(FdSet& fdSet)
 
    // process our own listen/accept socket for incoming connections
    if (mFd!=INVALID_SOCKET && fdSet.readyToRead(mFd))
+   {
       processListen();
+   }
 }
 
 void

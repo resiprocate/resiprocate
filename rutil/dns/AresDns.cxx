@@ -339,7 +339,9 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
       }
 
       if ( mPollGrp )
+      {
          ares_process_set_poll_cb(mChannel, AresDnsPollItem::socket_poll_cb, this);
+      }
 
 #elif defined(USE_CARES)
       {
