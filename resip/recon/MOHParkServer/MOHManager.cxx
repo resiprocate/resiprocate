@@ -24,6 +24,17 @@ MOHManager::~MOHManager()
 {
 }
 
+void
+MOHManager::startup()
+{
+   // Create an initial conversation and start music
+   ConversationHandle convHandle = mServer.createConversation(true /* broadcast only*/);
+
+   // Play Music
+   mServer.createMediaResourceParticipant(convHandle, mServer.mMOHFilenameUrl);
+   mConversations[convHandle];
+}
+
 void 
 MOHManager::addParticipant(ParticipantHandle participantHandle)
 {
@@ -73,8 +84,8 @@ MOHManager::removeParticipant(ParticipantHandle participantHandle)
          // Found! Remove from conversation
          it->second.erase(partIt);
 
-         // Check if conversation is now empty
-         if(it->second.size() == 0)
+         // Check if conversation is now empty, and it's not the last conversation
+         if(it->second.size() == 0 && mConversations.size() > 1)
          {
             // Destroy conversation (and containing media participant)
             mServer.destroyConversation(it->first);

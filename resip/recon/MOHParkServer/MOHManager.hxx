@@ -15,6 +15,7 @@ public:
    MOHManager(Server& server);
    virtual ~MOHManager(); 
 
+   void startup();
    void addParticipant(recon::ParticipantHandle participantHandle);
    void removeParticipant(recon::ParticipantHandle participantHandle);
 
