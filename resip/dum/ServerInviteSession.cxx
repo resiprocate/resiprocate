@@ -529,7 +529,7 @@ ServerInviteSession::accept(int code)
       case UAS_NoOffer:
       case UAS_EarlyNoOffer:
          assert(0);
-	 break;
+         break;
 
       case UAS_ProvidedOffer:
       case UAS_EarlyProvidedOffer:

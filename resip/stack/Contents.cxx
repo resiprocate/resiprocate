@@ -380,7 +380,7 @@ Contents::preParseHeaders(ParseBuffer& pb)
                header(h_ContentLanguages).back().parse(subPb);
                subPb.skipLWS();
             }
-	    break;	// .kw. added -- this is needed, right?
+            break;	// .kw. added -- this is needed, right?
          }
          default :
          {

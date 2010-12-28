@@ -187,10 +187,10 @@ dayofweek_hash (register const char *str, register unsigned int len)
       default: /*FALLTHRU*/
       case 3:
         hval += asso_values[(unsigned char)str[2]];
-	/*FALLTHRU*/
+        /*FALLTHRU*/
       case 2:
         hval += asso_values[(unsigned char)str[1]];
-	/*FALLTHRU*/
+        /*FALLTHRU*/
       case 1:
         hval += asso_values[(unsigned char)str[0]];
         break;
@@ -332,10 +332,10 @@ month_hash (register const char *str, register unsigned int len)
       default: /*FALLTHRU*/
       case 3:
          hval += asso_values[(unsigned char)str[2]];
-	 /*FALLTHRU*/
+         /*FALLTHRU*/
       case 2:
          hval += asso_values[(unsigned char)str[1]];
-	 /*FALLTHRU*/
+         /*FALLTHRU*/
       case 1:
          hval += asso_values[(unsigned char)str[0]];
          break;
