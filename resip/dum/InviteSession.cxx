@@ -901,6 +901,18 @@ InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToRepla
       throw UsageUseException("Attempted to make a refer w/ and invalid replacement target", __FILE__, __LINE__);
    }
 
+   CallId replaces;
+   DialogId id = sessionToReplace->mDialog.getId();
+   replaces.value() = id.getCallId();
+   replaces.param(p_toTag) = id.getRemoteTag();
+   replaces.param(p_fromTag) = id.getLocalTag();
+
+   refer(referTo, replaces, referSub);
+}
+
+void 
+InviteSession::refer(const NameAddr& referTo, const CallId& replaces, bool referSub)
+{
    if (isConnected())  // ?slg? likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
    {
       SharedPtr<SipMessage> refer(new SipMessage());      
@@ -909,12 +921,6 @@ InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToRepla
       refer->header(h_ReferTo) = referTo;
       refer->header(h_ReferredBy) = myAddr();
       refer->header(h_ReferredBy).remove(p_tag);
-
-      CallId replaces;
-      DialogId id = sessionToReplace->mDialog.getId();
-      replaces.value() = id.getCallId();
-      replaces.param(p_toTag) = id.getRemoteTag();
-      replaces.param(p_fromTag) = id.getLocalTag();
 
       refer->header(h_ReferTo).uri().embedded().header(h_Replaces) = replaces;
       
