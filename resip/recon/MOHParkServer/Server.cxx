@@ -9,6 +9,7 @@
 #include "AppSubsystem.hxx"
 
 #include <resip/stack/Tuple.hxx>
+#include <resip/stack/ExtensionParameter.hxx>
 #include <rutil/DnsUtil.hxx>
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -23,6 +24,10 @@ using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM AppSubsystem::MOHPARKSERVER
+
+static const resip::ExtensionParameter p_automaton("automaton");
+static const resip::ExtensionParameter p_byeless("+sip.byeless");
+static const resip::ExtensionParameter p_rendering("+sip.rendering");
 
 namespace mohparkserver
 {
@@ -293,6 +298,11 @@ Server::Server(int argc, char** argv) :
    conversationProfile->setDigestCredential(mMOHUri.uri().host(), mMOHUri.uri().user(), mMOHPassword);  
    conversationProfile->challengeOODReferRequests() = false;
    conversationProfile->setExtraHeadersInReferNotifySipFragEnabled(true);  // Enable dialog identifying headers in SipFrag bodies of Refer Notifies - required for a music on hold server
+   NameAddr capabilities;
+   capabilities.param(p_automaton);
+   capabilities.param(p_byeless);
+   capabilities.param(p_rendering) = "\"no\"";
+   conversationProfile->setUserAgentCapabilities(capabilities);
 
    // Setup NatTraversal Settings
    conversationProfile->natTraversalMode() = ConversationProfile::NoNatTraversal;
