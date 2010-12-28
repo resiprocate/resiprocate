@@ -29,7 +29,7 @@ TlsTransport::TlsTransport(Fifo<TransactionMessage>& fifo,
                            SecurityTypes::SSLType sslType,
                            AfterSocketCreationFuncPtr socketFunc,
                            Compression &compression,
-			   unsigned transportFlags):
+                           unsigned transportFlags):
    TcpBaseTransport(fifo, portNum, version, interfaceObj, socketFunc, compression, transportFlags),
    mSecurity(&security),
    mSslType(sslType)

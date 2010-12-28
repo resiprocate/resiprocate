@@ -61,7 +61,7 @@ SipStack::SipStack(Security* pSecurity,
 #else
    mSecurity(0),
 #endif
-   mDnsStub( new DnsStub(additional, socketFunc, handler, mPollGrp)),
+   mDnsStub(new DnsStub(additional, socketFunc, handler, mPollGrp)),
    mCompression(compression ? compression : new Compression(Compression::NONE)),
    mAsyncProcessHandler(handler),
    mTUFifo(TransactionController::MaxTUFifoTimeDepthSecs,
@@ -133,7 +133,7 @@ SipStack::addTransport( TransportType protocol,
                         const Data& sipDomainname,
                         const Data& privateKeyPassPhrase,
                         SecurityTypes::SSLType sslType,
-			unsigned transportFlags)
+                        unsigned transportFlags)
 {
    assert(!mShuttingDown);
 
@@ -185,7 +185,7 @@ SipStack::addTransport( TransportType protocol,
                                          sslType, 
                                          mSocketFunc,
                                          *mCompression,
-					 transportFlags);
+                                         transportFlags);
 #else
             CritLog (<< "TLS not supported in this stack. You don't have openssl");
             assert(0);

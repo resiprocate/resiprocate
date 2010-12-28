@@ -346,7 +346,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                {
                   Transport::stampReceived(mMessage);
                   DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
-		  assert( mTransport );
+                  assert( mTransport );
                   mTransport->pushRxMsgUp(mMessage);
                   mMessage = 0;
                }
@@ -397,7 +397,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                DebugLog(<< "##ConnectionBase: " << *this << " received: " << *mMessage);
 
                Transport::stampReceived(mMessage);
-	       assert( mTransport );
+               assert( mTransport );
                mTransport->pushRxMsgUp(mMessage);
                mMessage = 0;
             }

@@ -320,7 +320,8 @@ ConnectionManager::process(FdSet& fdset)
 }
 
 void
-ConnectionManager::setPollGrp(FdPollGrp *grp) {
+ConnectionManager::setPollGrp(FdPollGrp *grp) 
+{
     assert( mPollGrp == NULL );
     mPollGrp = grp;
 }

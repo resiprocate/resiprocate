@@ -118,7 +118,7 @@ class DnsStub : public ExternalDnsHandler
       DnsStub(const NameserverList& additional = EmptyNameserverList,
               AfterSocketCreationFuncPtr socketFunc = 0,
               AsyncProcessHandler* asyncProcessHandler = 0,
-	      FdPollGrp *pollGrp = 0);
+              FdPollGrp *pollGrp = 0);
       ~DnsStub();
 
       // call this method before you create SipStack if you'd like to change the

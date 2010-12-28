@@ -26,7 +26,7 @@ class TlsTransport : public TcpBaseTransport
                    SecurityTypes::SSLType sslType,
                    AfterSocketCreationFuncPtr socketFunc=0,
                    Compression &compression = Compression::Disabled,
-		   unsigned transportFlags = 0);
+                   unsigned transportFlags = 0);
       virtual  ~TlsTransport();
 
       TransportType transport() const { return TLS; }

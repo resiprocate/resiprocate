@@ -39,6 +39,7 @@ ServerRegistration::end()
 {
 }
 
+static Token outbound("outbound");
 void
 ServerRegistration::accept(SipMessage& ok)
 {
@@ -48,7 +49,6 @@ ServerRegistration::accept(SipMessage& ok)
 
    if (mDidOutbound)
    {
-      static Token outbound("outbound");
       ok.header(h_Requires).push_back(outbound);
    }
 

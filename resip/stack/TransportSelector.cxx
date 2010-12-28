@@ -144,7 +144,7 @@ TransportSelector::deleteTransports()
    deleteMap(mExactTransports);
    deleteMap(mAnyInterfaceTransports);
    deleteMap(mTlsTransports);
-   // XXX: what about mAnyPortTransports? would be nice if header
+   // ?kw?: what about mAnyPortTransports? would be nice if header
    // documented which maps are "owning" and which "referencing"
 }
 
@@ -246,7 +246,9 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport)
    if (transport->shareStackProcessAndSelect())
    {
       if ( mPollGrp )
+      {
          transport->setPollGrp(mPollGrp);
+      }
       mSharedProcessTransports.push_back(transport);
    }
    else
@@ -317,9 +319,12 @@ TransportSelector::processTransmitQueue()
    for(TransportList::iterator it = mSharedProcessTransports.begin();
        it != mSharedProcessTransports.end(); it++)
    {
-      try {
+      try 
+      {
          (*it)->processTransmitQueue();
-      } catch (BaseException& e) {
+      } 
+      catch (BaseException& e) 
+      {
          ErrLog(<< "Exception thrown from Transport::processTransmitQueue: " << e);
          // add now what? disable transport? die?
       }
@@ -490,7 +495,9 @@ TransportSelector::findTransportByVia(SipMessage* msg, const Tuple& target,
    const Via& via = msg->header(h_Vias).front();
 
    if (via.sentHost().empty())
+   {
       return NULL;
+   }
 
    // XXX: Is there better way to do below (without the copy)?
    source = Tuple(via.sentHost(), via.sentPort(), target.ipVersion(), target.getType());
@@ -514,7 +521,9 @@ TransportSelector::findTransportByVia(SipMessage* msg, const Tuple& target,
 
    Transport *trans;
    if ( (trans = findTransportBySource(source)) == NULL )
+   {
       return NULL;
+   }
    if(source.getPort()==0)
    {
       source.setPort(trans->port());
@@ -723,12 +732,14 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
       {
          Transport* transport=0;
 
-	 transport = findTransportByVia(msg, target, source);
-	 if ( !transport )
-	 {
+         transport = findTransportByVia(msg, target, source);
+         if ( !transport )
+         {
             if ( (transport = findTransportByDest(msg,target)) != NULL )
-	       source = transport->getTuple();
-	 }
+            {
+               source = transport->getTuple();
+            }
+         }
          
          if(!transport && target.mFlowKey && target.onlyUseExistingConnection)
          {
@@ -737,7 +748,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          }
          else if (transport)// .bwc. Here we use transport to find source.
          {
-	    assert( source.getType()!=0 );
+            assert( source.getType()!=0 );
 
             // .bwc. If the transport has an ambiguous interface, we need to
             //look a little closer.
@@ -1268,9 +1279,9 @@ TransportSelector::findTransportBySource(Tuple& search) const
       // 0. search on loopback interface (with or without port)
       Transport *trans;
       if ( (trans=findLoopbackTransportBySource(
-	/*ignorePort*/(search.getPort()==0), search)) != NULL )
+              /*ignorePort*/(search.getPort()==0), search)) != NULL )
       {
-	 return trans;
+         return trans;
       }
    }
 

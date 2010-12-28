@@ -44,7 +44,7 @@ class Transport
                 const Data& tlsDomain = Data::Empty,
                 AfterSocketCreationFuncPtr socketFunc = 0,
                 Compression &compression = Compression::Disabled,
-		unsigned transportFlags = 0
+                unsigned transportFlags = 0
          );
 
       virtual ~Transport();
