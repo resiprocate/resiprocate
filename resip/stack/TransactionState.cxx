@@ -1824,8 +1824,12 @@ TransactionState::processNoDnsResults()
       return;
    }
 
-   InfoLog (<< "Ran out of dns entries for " << mDnsResult->target() << ". Send 503");
-   assert(mDnsResult->available() == DnsResult::Finished);
+   if(mDnsResult)
+   {
+      InfoLog (<< "Ran out of dns entries for " << mDnsResult->target() << ". Send 503");
+      assert(mDnsResult->available() == DnsResult::Finished);
+   }
+
    SipMessage* response = Helper::makeResponse(*mMsgToRetransmit, 503);
    WarningCategory warning;
    warning.hostname() = DnsUtil::getLocalHostName();
