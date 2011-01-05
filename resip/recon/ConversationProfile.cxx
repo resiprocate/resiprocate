@@ -15,6 +15,7 @@ static const resip::ExtensionParameter p_answerafter("answer-after");
 static const resip::ExtensionParameter p_required("required");
 
 ConversationProfile::ConversationProfile() :
+   mHandle(0),
    mAllowAutoAnswer(false),
    mAllowPriorityAutoAnswer(false),
    mChallengeAutoAnswerRequests(false),
@@ -29,6 +30,7 @@ ConversationProfile::ConversationProfile() :
 
 ConversationProfile::ConversationProfile(SharedPtr<Profile> baseProfile) :
    UserProfile(baseProfile),
+   mHandle(0),
    mAllowAutoAnswer(false),
    mAllowPriorityAutoAnswer(false),
    mChallengeAutoAnswerRequests(false),
@@ -39,6 +41,19 @@ ConversationProfile::ConversationProfile(SharedPtr<Profile> baseProfile) :
    mNatTraversalMode(NoNatTraversal),
    mNatTraversalServerPort(0)
 {
+}
+
+ConversationProfileHandle 
+ConversationProfile::getHandle()
+{
+    return mHandle;
+}
+
+void
+ConversationProfile::setHandle(ConversationProfileHandle handle)
+{
+    assert(mHandle==0);
+    mHandle = handle;
 }
 
 SdpContents& 
