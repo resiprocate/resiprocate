@@ -231,6 +231,8 @@ RemoteParticipant::stateTransition(State state)
    {
    case Connecting:
       stateName = "Connecting"; break;
+   case Accepted:
+      stateName = "Accepted"; break;
    case Connected:
       stateName = "Connected"; break;
    case Redirecting:
@@ -314,6 +316,7 @@ RemoteParticipant::accept()
                // we need to ensure the accept call is also delayed until the answer completes.
                mDialogSet.accept(mInviteSessionHandle);
             }
+            stateTransition(Accepted);
          }
       }
       // Accept Pending OOD Refer if required
@@ -420,11 +423,11 @@ RemoteParticipant::redirect(NameAddr& destination)
    {
       if(mPendingRequest.mType == None)
       {
-         if((mState == Connecting || mState == Connected) && mInviteSessionHandle.isValid())
+         if((mState == Connecting || mState == Accepted || mState == Connected) && mInviteSessionHandle.isValid())
          {
             ServerInviteSession* sis = dynamic_cast<ServerInviteSession*>(mInviteSessionHandle.get());
             // If this is a UAS session and we haven't sent a final response yet - then redirect via 302 response
-            if(sis && !sis->isAccepted())
+            if(sis && !sis->isAccepted() && mState == Connecting)
             {
                NameAddrs destinations;
                destinations.push_back(destination);
@@ -441,6 +444,10 @@ RemoteParticipant::redirect(NameAddr& destination)
                mPendingRequest.mType = Redirect;
                mPendingRequest.mDestination = destination;
             }
+         }
+         else if(mState == PendingOODRefer)
+         {
+            redirectPendingOODRefer(destination);
          }
          else
          {
@@ -473,11 +480,11 @@ RemoteParticipant::redirectToParticipant(InviteSessionHandle& destParticipantInv
       {
          if(mPendingRequest.mType == None)
          {
-            if((mState == Connecting || mState == Connected) && mInviteSessionHandle.isValid())
+            if((mState == Connecting || mState == Accepted || mState == Connected) && mInviteSessionHandle.isValid())
             {
                ServerInviteSession* sis = dynamic_cast<ServerInviteSession*>(mInviteSessionHandle.get());
                // If this is a UAS session and we haven't sent a final response yet - then redirect via 302 response
-               if(sis && !sis->isAccepted())
+               if(sis && !sis->isAccepted() && mState == Connecting)
                {
                   NameAddrs destinations;
                   destinations.push_back(destParticipantInviteSessionHandle->peerAddr());
@@ -697,7 +704,37 @@ RemoteParticipant::rejectPendingOODRefer(unsigned int statusCode)
          WarningLog(<< "rejectPendingOODRefer - no valid handles");
          mConversationManager.onParticipantTerminated(mHandle, 500);
       }
-      delete this;
+      mDialogSet.destroy();  // Will also cause "this" to be deleted
+   }
+}
+
+void 
+RemoteParticipant::redirectPendingOODRefer(resip::NameAddr& destination)
+{
+   if(mState == PendingOODRefer)
+   {
+      if(mPendingOODReferNoSubHandle.isValid())
+      {
+         SharedPtr<SipMessage> redirect = mPendingOODReferNoSubHandle->reject(302 /* Moved Temporarily */);
+         redirect->header(h_Contacts).clear();
+         redirect->header(h_Contacts).push_back(destination);
+         mPendingOODReferNoSubHandle->send(redirect);
+         mConversationManager.onParticipantTerminated(mHandle, 302 /* Moved Temporarily */);
+      }
+      else if(mPendingOODReferSubHandle.isValid())
+      {
+         SharedPtr<SipMessage> redirect = mPendingOODReferSubHandle->reject(302 /* Moved Temporarily */);
+         redirect->header(h_Contacts).clear();
+         redirect->header(h_Contacts).push_back(destination);
+         mPendingOODReferSubHandle->send(redirect);  
+         mConversationManager.onParticipantTerminated(mHandle, 302 /* Moved Temporarily */);
+      }
+      else
+      {
+         WarningLog(<< "rejectPendingOODRefer - no valid handles");
+         mConversationManager.onParticipantTerminated(mHandle, 500);
+      }
+      mDialogSet.destroy();  // Will also cause "this" to be deleted
    }
 }
 
@@ -1878,7 +1915,7 @@ RemoteParticipant::onNewSession(ServerInviteSessionHandle h, InviteSession::Offe
    }
   
    // notify of new participant
-   if(mHandle) mConversationManager.onIncomingParticipant(mHandle, msg, autoAnswer);
+   if(mHandle) mConversationManager.onIncomingParticipant(mHandle, msg, autoAnswer, *profile);
 }
 
 void
@@ -1941,6 +1978,13 @@ void
 RemoteParticipant::onConnected(InviteSessionHandle, const SipMessage& msg)
 {
    InfoLog(<< "onConnected: handle=" << mHandle << ", " << msg.brief());
+   stateTransition(Connected);
+}
+
+void
+RemoteParticipant::onConnectedConfirmed(InviteSessionHandle, const SipMessage& msg)
+{
+   InfoLog(<< "onConnectedConfirmed: handle=" << mHandle << ", " << msg.brief());
    stateTransition(Connected);
 }
 

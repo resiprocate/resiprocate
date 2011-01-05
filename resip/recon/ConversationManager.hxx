@@ -382,7 +382,7 @@ public:
      @param msg Includes information about the caller such as name and address
      @param autoAnswer Set to true if auto answer has been requested
    */
-   virtual void onIncomingParticipant(ParticipantHandle partHandle, const resip::SipMessage& msg, bool autoAnswer) = 0;
+   virtual void onIncomingParticipant(ParticipantHandle partHandle, const resip::SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile) = 0;
 
    /**
      Notifies an application about a new remote participant that is trying 
@@ -394,7 +394,7 @@ public:
      @param msg Includes information about the destination requested
                 to be attempted
    */
-   virtual void onRequestOutgoingParticipant(ParticipantHandle partHandle, const resip::SipMessage& msg) = 0;
+   virtual void onRequestOutgoingParticipant(ParticipantHandle partHandle, const resip::SipMessage& msg, ConversationProfile& conversationProfile) = 0;
 
    /**
      Notifies an application about a disconnect by a remote participant.  
@@ -504,6 +504,7 @@ protected:
    virtual void onProvisional(resip::ClientInviteSessionHandle, const resip::SipMessage& msg);
    virtual void onConnected(resip::ClientInviteSessionHandle h, const resip::SipMessage& msg);
    virtual void onConnected(resip::InviteSessionHandle, const resip::SipMessage& msg);
+   virtual void onConnectedConfirmed(resip::InviteSessionHandle, const resip::SipMessage &msg);
    virtual void onStaleCallTimeout(resip::ClientInviteSessionHandle);
    virtual void onTerminated(resip::InviteSessionHandle h, resip::InviteSessionHandler::TerminatedReason reason, const resip::SipMessage* msg);
    virtual void onRedirected(resip::ClientInviteSessionHandle, const resip::SipMessage& msg);

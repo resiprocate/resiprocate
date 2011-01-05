@@ -724,6 +724,12 @@ ConversationManager::onConnected(InviteSessionHandle h, const SipMessage& msg)
 }
 
 void
+ConversationManager::onConnectedConfirmed(InviteSessionHandle h, const SipMessage &msg)
+{
+   dynamic_cast<RemoteParticipant *>(h->getAppDialog().get())->onConnectedConfirmed(h, msg);
+}
+
+void
 ConversationManager::onStaleCallTimeout(ClientInviteSessionHandle h)
 {
    dynamic_cast<RemoteParticipant *>(h->getAppDialog().get())->onStaleCallTimeout(h);
@@ -954,7 +960,9 @@ ConversationManager::onNewSubscriptionFromRefer(ServerSubscriptionHandle ss, con
          participant->setPendingOODReferInfo(ss, msg);
 
          // Notify application
-         onRequestOutgoingParticipant(participant->getParticipantHandle(), msg);
+         ConversationProfile* profile = dynamic_cast<ConversationProfile*>(ss->getUserProfile().get());
+         assert(profile);
+         onRequestOutgoingParticipant(participant->getParticipantHandle(), msg, *profile);
       }
       else
       {
@@ -1090,7 +1098,9 @@ ConversationManager::onReceivedRequest(ServerOutOfDialogReqHandle ood, const Sip
             participant->setPendingOODReferInfo(ood, msg);
 
             // Notify application
-            onRequestOutgoingParticipant(participant->getParticipantHandle(), msg);
+            ConversationProfile* profile = dynamic_cast<ConversationProfile*>(ood->getUserProfile().get());
+            assert(profile);
+            onRequestOutgoingParticipant(participant->getParticipantHandle(), msg, *profile);
          }
          else
          {

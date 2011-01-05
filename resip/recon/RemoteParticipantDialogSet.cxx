@@ -398,7 +398,7 @@ RemoteParticipantDialogSet::provideAnswer(std::auto_ptr<resip::SdpContents> answ
 void 
 RemoteParticipantDialogSet::doProvideOfferAnswer(bool offer, std::auto_ptr<resip::SdpContents> sdp, resip::InviteSessionHandle& inviteSessionHandle, bool postOfferAnswerAccept, bool postAnswerAlert)
 {
-   if(inviteSessionHandle.isValid())
+   if(inviteSessionHandle.isValid() && !inviteSessionHandle->isTerminated())
    {
       // Fix up address and port in SDP if we have remote info
       // Note:  the only time we don't is if there was an error preparing the media stream

@@ -162,7 +162,7 @@ public:
       InfoLog(<< mLogPrefix << "onApplicationTimeout: id=" << id << " dur=" << durationMs << " seq=" << seq);
    }
 
-   virtual void onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer)
+   virtual void onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile)
    {
       InfoLog(<< mLogPrefix << "onIncomingParticipant: handle=" << partHandle << " msg=" << msg.brief());
       switch(SCENARIO)
@@ -210,7 +210,7 @@ public:
       }
    }
 
-   virtual void onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMessage& msg)
+   virtual void onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMessage& msg, ConversationProfile& conversationProfile)
    {
       InfoLog(<< mLogPrefix << "onRequestOutgoingParticipant: handle=" << partHandle << " msg=" << msg.brief());
    }
@@ -412,7 +412,7 @@ public:
       }
    }
 
-   virtual void onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer)
+   virtual void onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile)
    {
       InfoLog(<< mLogPrefix << "onIncomingParticipant: handle=" << partHandle << " msg=" << msg.brief());
       switch(SCENARIO)
@@ -435,7 +435,7 @@ public:
       }
    }
 
-   virtual void onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMessage& msg)
+   virtual void onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMessage& msg, ConversationProfile& conversationProfile)
    {
       InfoLog(<< mLogPrefix << "onRequestOutgoingParticipant: handle=" << partHandle << " msg=" << msg.brief());
       if(mConvHandles.empty())
