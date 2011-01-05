@@ -71,6 +71,7 @@ public:
    virtual void setPendingOODReferInfo(resip::ServerSubscriptionHandle ss, const resip::SipMessage& referMsg); // OOD-Refer (with Sub)
    virtual void acceptPendingOODRefer();
    virtual void rejectPendingOODRefer(unsigned int statusCode);
+   virtual void redirectPendingOODRefer(resip::NameAddr& destination);
    virtual void processReferNotify(const resip::SipMessage& notify);
 
    // Called by RemoteParticipantDialogSet when Related Conversations should be destroyed
@@ -87,6 +88,7 @@ public:
    virtual void onProvisional(resip::ClientInviteSessionHandle, const resip::SipMessage& msg);
    virtual void onConnected(resip::ClientInviteSessionHandle h, const resip::SipMessage& msg);
    virtual void onConnected(resip::InviteSessionHandle, const resip::SipMessage& msg);
+   virtual void onConnectedConfirmed(resip::InviteSessionHandle, const resip::SipMessage &msg);
    virtual void onStaleCallTimeout(resip::ClientInviteSessionHandle);
    virtual void onTerminated(resip::InviteSessionHandle h, resip::InviteSessionHandler::TerminatedReason reason, const resip::SipMessage* msg);
    virtual void onRedirected(resip::ClientInviteSessionHandle, const resip::SipMessage& msg);
@@ -140,6 +142,7 @@ private:
    typedef enum
    {
       Connecting=1, 
+      Accepted,
       Connected,
       Redirecting,
       Holding,
