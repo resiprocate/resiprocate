@@ -81,9 +81,9 @@ ServerSubscription::accept(int statusCode)
 SharedPtr<SipMessage>
 ServerSubscription::reject(int statusCode)
 {
-   if (statusCode < 400)
+   if (statusCode < 300)
    {
-      throw UsageUseException("Must reject with a 4xx", __FILE__, __LINE__);
+      throw UsageUseException("Must reject with a code greater than or equal to 300", __FILE__, __LINE__);
    }
    mDialog.makeResponse(*mLastResponse, mLastSubscribe, statusCode);
    return mLastResponse;
