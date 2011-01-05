@@ -1,62 +1,45 @@
-#if !defined(ConfigParser_hxx)
-#define ConfigParser_hxx
+#if !defined(ParkManager_hxx)
+#define ParkManager_hxx
 
-#include <list>
-#include <resip/dum/MasterProfile.hxx>
-#include <rutil/dns/DnsStub.hxx>
-#include <rutil/Log.hxx>
-#include <rutil/SharedPtr.hxx>
+#include <map>
+#include <deque>
+#include "../UserAgent.hxx"
+#include "../HandleTypes.hxx"
 
+namespace resip
+{
+class SipMessage;
+}
 
 namespace mohparkserver
 {
+class Server;
+class ParkOrbit;
 
-class ConfigParser 
+class ParkManager
 {
 public:
-   ConfigParser(int argc, char** argv);
-   virtual ~ConfigParser();
-   
-   void parseCommandLine(int argc, char** argv);
-   void parseConfigFile(const resip::Data& filename);
-   bool processOption(const resip::Data& name, const resip::Data& value);
-   bool assignNameAddr(const resip::Data& settingName, const resip::Data& settingValue, resip::NameAddr& nameAddr);
+   ParkManager(Server& server);
+   virtual ~ParkManager(); 
 
-   // MOH Settings
-   resip::NameAddr mMOHUri;
-   resip::Data mMOHPassword;
-   unsigned long mMOHRegistrationTime;
-   resip::Uri mMOHFilenameUrl;
+   void startup();
+   void shutdown();
 
-   // Park Settings
-   resip::NameAddr mParkUri;
-   resip::Data mParkPassword;
-   unsigned long mParkRegistrationTime;
-   resip::Uri mParkMOHFilenameUrl;
-   unsigned long mParkOrbitRangeStart;
-   unsigned long mParkNumOrbits;
-   unsigned long mParkOrbitRegistrationTime;
-   resip::Data mParkOrbitPassword;
+   bool isMyProfile(recon::ConversationProfile& profile);
+   void parkParticipant(recon::ParticipantHandle participantHandle, const resip::SipMessage& msg);
+   void incomingParticipant(recon::ParticipantHandle participantHandle, const resip::SipMessage& msg);
+   bool removeParticipant(recon::ParticipantHandle participantHandle);
 
-   // SIP Settings
-   resip::Data mAddress;
-   resip::Data mDnsServers;
-   unsigned short mUdpPort;
-   unsigned short mTcpPort;
-   unsigned short mTlsPort;
-   resip::Data mTlsDomain;
-   resip::NameAddr mOutboundProxy;
-   bool mKeepAlives;
+private:
+   Server& mServer;
+   resip::SharedPtr<recon::ConversationProfile> mConversationProfile;
+   std::deque<unsigned long> mFreeOrbitList;
 
-   // Media Settings
-   unsigned short mMediaPortRangeStart;
-   unsigned short mMediaPortRangeSize;
-   resip::Data mSipXLogFilename;
+   typedef std::map<unsigned long, ParkOrbit*> OrbitMap;
+   OrbitMap mOrbits;
 
-   // General Settings
-   resip::Data mLogLevel;
-   resip::Data mLogFilename;
-   unsigned int mLogFileMaxBytes;
+   typedef std::map<unsigned long, resip::SharedPtr<recon::ConversationProfile> > OrbitProfileMap;
+   OrbitProfileMap mOrbitProfiles;
 };
  
 }
@@ -65,7 +48,7 @@ public:
 
 /* ====================================================================
 
- Copyright (c) 2010, SIP Spectrum, Inc.
+ Copyright (c) 2011, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

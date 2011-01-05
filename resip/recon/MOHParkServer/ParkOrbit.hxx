@@ -1,62 +1,34 @@
-#if !defined(ConfigParser_hxx)
-#define ConfigParser_hxx
+#if !defined(ParkOrbit_hxx)
+#define ParkOrbit_hxx
 
-#include <list>
-#include <resip/dum/MasterProfile.hxx>
-#include <rutil/dns/DnsStub.hxx>
-#include <rutil/Log.hxx>
-#include <rutil/SharedPtr.hxx>
-
+#include <deque>
+#include "../HandleTypes.hxx"
 
 namespace mohparkserver
 {
+class Server;
+class ParticipantOrbitInfo;
 
-class ConfigParser 
+class ParkOrbit
 {
 public:
-   ConfigParser(int argc, char** argv);
-   virtual ~ConfigParser();
-   
-   void parseCommandLine(int argc, char** argv);
-   void parseConfigFile(const resip::Data& filename);
-   bool processOption(const resip::Data& name, const resip::Data& value);
-   bool assignNameAddr(const resip::Data& settingName, const resip::Data& settingValue, resip::NameAddr& nameAddr);
+   ParkOrbit(Server& server, unsigned long orbit);
+   virtual ~ParkOrbit(); 
 
-   // MOH Settings
-   resip::NameAddr mMOHUri;
-   resip::Data mMOHPassword;
-   unsigned long mMOHRegistrationTime;
-   resip::Uri mMOHFilenameUrl;
+   bool addParticipant(recon::ParticipantHandle participantHandle);
+   bool removeParticipant(recon::ParticipantHandle participantHandle);
 
-   // Park Settings
-   resip::NameAddr mParkUri;
-   resip::Data mParkPassword;
-   unsigned long mParkRegistrationTime;
-   resip::Uri mParkMOHFilenameUrl;
-   unsigned long mParkOrbitRangeStart;
-   unsigned long mParkNumOrbits;
-   unsigned long mParkOrbitRegistrationTime;
-   resip::Data mParkOrbitPassword;
+   recon::ParticipantHandle getNextQueuedParticipant();
+   unsigned long getOrbit() { return mOrbit; }
+   unsigned long getNumParticipants() { return (unsigned long)mParticipants.size(); }
+   recon::ConversationHandle getConversationHandle() { return mConversationHandle; }
 
-   // SIP Settings
-   resip::Data mAddress;
-   resip::Data mDnsServers;
-   unsigned short mUdpPort;
-   unsigned short mTcpPort;
-   unsigned short mTlsPort;
-   resip::Data mTlsDomain;
-   resip::NameAddr mOutboundProxy;
-   bool mKeepAlives;
-
-   // Media Settings
-   unsigned short mMediaPortRangeStart;
-   unsigned short mMediaPortRangeSize;
-   resip::Data mSipXLogFilename;
-
-   // General Settings
-   resip::Data mLogLevel;
-   resip::Data mLogFilename;
-   unsigned int mLogFileMaxBytes;
+private:
+   Server& mServer;
+   unsigned long mOrbit;
+   recon::ConversationHandle mConversationHandle;
+   typedef std::deque<ParticipantOrbitInfo*> ParticipantQueue;
+   ParticipantQueue mParticipants;
 };
  
 }
@@ -65,7 +37,7 @@ public:
 
 /* ====================================================================
 
- Copyright (c) 2010, SIP Spectrum, Inc.
+ Copyright (c) 2011, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

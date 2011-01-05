@@ -391,6 +391,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ParkManager.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ParkOrbit.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\Server.cxx"
 				>
 			</File>
@@ -409,6 +417,14 @@
 			</File>
 			<File
 				RelativePath=".\MOHManager.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ParkManager.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ParkOrbit.hxx"
 				>
 			</File>
 			<File

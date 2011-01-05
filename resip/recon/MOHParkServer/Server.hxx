@@ -3,6 +3,7 @@
 
 #include "ConfigParser.hxx"
 #include "MOHManager.hxx"
+#include "ParkManager.hxx"
 #include "../UserAgent.hxx"
 #include "../HandleTypes.hxx"
 
@@ -52,8 +53,8 @@ protected:
    virtual void onConversationDestroyed(recon::ConversationHandle convHandle);
    virtual void onParticipantDestroyed(recon::ParticipantHandle partHandle);
    virtual void onDtmfEvent(recon::ParticipantHandle partHandle, int dtmf, int duration, bool up);
-   virtual void onIncomingParticipant(recon::ParticipantHandle partHandle, const resip::SipMessage& msg, bool autoAnswer);
-   virtual void onRequestOutgoingParticipant(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
+   virtual void onIncomingParticipant(recon::ParticipantHandle partHandle, const resip::SipMessage& msg, bool autoAnswer, recon::ConversationProfile& conversationProfile);
+   virtual void onRequestOutgoingParticipant(recon::ParticipantHandle partHandle, const resip::SipMessage& msg, recon::ConversationProfile& conversationProfile);
    virtual void onParticipantTerminated(recon::ParticipantHandle partHandle, unsigned int statusCode);
    virtual void onParticipantProceeding(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
    virtual void onRelatedConversation(recon::ConversationHandle relatedConvHandle, recon::ParticipantHandle relatedPartHandle, 
@@ -64,10 +65,15 @@ protected:
    virtual void onParticipantRedirectFailure(recon::ParticipantHandle partHandle, unsigned int statusCode);
 
 private:
+   friend class MOHManager;
+   friend class ParkManager;
+   void buildSessionCapabilities(resip::SdpContents& sessionCaps);
+
    bool mIsV6Avail;
    recon::UserAgent *mUserAgent;
    resip::SharedPtr<recon::UserAgentMasterProfile> mUserAgentMasterProfile;
    MOHManager mMOHManager;
+   ParkManager mParkManager;
 };
  
 }
