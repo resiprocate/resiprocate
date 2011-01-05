@@ -436,6 +436,7 @@ UserAgent::addConversationProfileImpl(ConversationProfileHandle handle, SharedPt
 {
    // Store new profile
    mConversationProfiles[handle] = conversationProfile;
+   conversationProfile->setHandle(handle);
 
 #ifdef USE_SSL
    // If this is the first profile ever set - then use the aor defined in it as the aor used in 
