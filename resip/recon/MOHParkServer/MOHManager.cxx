@@ -1,7 +1,9 @@
 #include "AppSubsystem.hxx"
 #include "MOHManager.hxx"
 #include "Server.hxx"
+#include "../UserAgent.hxx"
 
+#include <resip/stack/ExtensionParameter.hxx>
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <rutil/WinLeakCheck.hxx>
@@ -11,6 +13,10 @@ using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM AppSubsystem::MOHPARKSERVER
+
+static const resip::ExtensionParameter p_automaton("automaton");
+static const resip::ExtensionParameter p_byeless("+sip.byeless");
+static const resip::ExtensionParameter p_rendering("+sip.rendering");
 
 namespace mohparkserver 
 {
@@ -27,12 +33,54 @@ MOHManager::~MOHManager()
 void
 MOHManager::startup()
 {
+   // Setup ConversationProfile
+   SharedPtr<ConversationProfile> mohConversationProfile = SharedPtr<ConversationProfile>(new ConversationProfile(mServer.mUserAgentMasterProfile));
+   mohConversationProfile->setDefaultRegistrationTime(mServer.mMOHRegistrationTime);  
+   mohConversationProfile->setDefaultRegistrationRetryTime(120);  // 2 mins
+   mohConversationProfile->setDefaultFrom(mServer.mMOHUri);
+   mohConversationProfile->setDigestCredential(mServer.mMOHUri.uri().host(), mServer.mMOHUri.uri().user(), mServer.mMOHPassword);  
+   mohConversationProfile->challengeOODReferRequests() = false;
+   mohConversationProfile->setExtraHeadersInReferNotifySipFragEnabled(true);  // Enable dialog identifying headers in SipFrag bodies of Refer Notifies - required for a music on hold server
+   NameAddr capabilities;
+   capabilities.param(p_automaton);
+   capabilities.param(p_byeless);
+   capabilities.param(p_rendering) = "\"no\"";
+   mohConversationProfile->setUserAgentCapabilities(capabilities);
+   mohConversationProfile->natTraversalMode() = ConversationProfile::NoNatTraversal;
+   mohConversationProfile->secureMediaMode() = ConversationProfile::NoSecureMedia;
+   mServer.buildSessionCapabilities(mohConversationProfile->sessionCaps());
+   mConversationProfile = mohConversationProfile;
+   mServer.mUserAgent->addConversationProfile(mConversationProfile);
+
    // Create an initial conversation and start music
    ConversationHandle convHandle = mServer.createConversation(true /* broadcast only*/);
 
    // Play Music
    mServer.createMediaResourceParticipant(convHandle, mServer.mMOHFilenameUrl);
    mConversations[convHandle];
+}
+
+void 
+MOHManager::shutdown()
+{
+   // Destroy all conversations
+   ConversationMap::iterator it = mConversations.begin();
+   for(; it != mConversations.end(); it++)
+   {
+       mServer.destroyConversation(it->first);
+   }
+   mConversations.clear();
+
+   if(mConversationProfile)
+   {
+       mServer.mUserAgent->destroyConversationProfile(mConversationProfile->getHandle());
+   }
+}
+
+bool 
+MOHManager::isMyProfile(recon::ConversationProfile& profile)
+{
+    return profile.getHandle() == mConversationProfile->getHandle();
 }
 
 void 
@@ -69,7 +117,7 @@ MOHManager::addParticipant(ParticipantHandle participantHandle)
    mConversations[conversationToUse].insert(participantHandle);
 }
 
-void 
+bool
 MOHManager::removeParticipant(ParticipantHandle participantHandle)
 {
    // Find Conversation that participant is in
@@ -95,9 +143,10 @@ MOHManager::removeParticipant(ParticipantHandle participantHandle)
 
             InfoLog(<< "MOHManager::removeParticipant last participant in conversation, destroying conversation, num conversations now=" << mConversations.size());
          }
-         break;
+         return true;
       }
    }
+   return false;
 }
 
 

@@ -22,8 +22,15 @@ namespace mohparkserver
 
 ConfigParser::ConfigParser(int argc, char** argv) : 
    // Defaults
-   mMOHUri("sip:moh@moh.com"),
+   mMOHUri("sip:moh@server.com"),
    mMOHRegistrationTime(3600),
+   mMOHFilenameUrl("file:music.wav;repeat"),
+   mParkUri("sip:park@server.com"),
+   mParkRegistrationTime(3600),
+   mParkMOHFilenameUrl("file:music.wav;repeat"),
+   mParkOrbitRangeStart(6000),
+   mParkNumOrbits(10),
+   mParkOrbitRegistrationTime(3600),
    mUdpPort(0),
    mTcpPort(0),
    mTlsPort(0),
@@ -190,6 +197,60 @@ ConfigParser::processOption(const Data& name, const Data& value)
          cerr << "Using " << url << " instead." << endl;
       }
       mMOHFilenameUrl = url;
+   }
+   else if(name == "parkuri")
+   {
+      result = assignNameAddr("Park Uri", value, mParkUri);
+   }
+   else if(name == "parkpassword")
+   {
+      mParkPassword = value;
+   }
+   else if(name == "parkregistrationtime")
+   {
+      mParkRegistrationTime = value.convertUnsignedLong();
+   }
+   else if(name == "parkmohfilename")
+   {
+      Uri url("file:music.wav;repeat");
+      Data urlData;
+      if(value.find("http://") != Data::npos || 
+         value.find("file:") != Data::npos)
+      {
+         // URL was specified - add repeat parameter
+         urlData = value + ";repeat";         
+      }
+      else
+      {
+         urlData = "file:" + value + ";repeat";
+      }
+      try
+      {
+         Uri temp(urlData);
+         url = temp;
+      }
+      catch(BaseException& e)
+      {
+         cerr << "Invalid Park MOHFilename format=" << value << ": " << e << endl;
+         cerr << "Using " << url << " instead." << endl;
+      }
+      mParkMOHFilenameUrl = url;
+   }
+   else if(name == "parkorbitrangestart")
+   {
+      mParkOrbitRangeStart = value.convertUnsignedLong();
+   }
+   else if(name == "parknumorbits")
+   {
+      mParkNumOrbits = value.convertUnsignedLong();
+   }
+   else if(name == "parkorbitregistrationtime")
+   {
+      mParkOrbitRegistrationTime = value.convertUnsignedLong();
+   }
+   else if(name == "parkorbitpassword")
+   {
+      mParkOrbitPassword = value;
    }
    else if(name == "a" || name == "ipaddress")
    {

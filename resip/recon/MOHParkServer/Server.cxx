@@ -9,7 +9,6 @@
 #include "AppSubsystem.hxx"
 
 #include <resip/stack/Tuple.hxx>
-#include <resip/stack/ExtensionParameter.hxx>
 #include <rutil/DnsUtil.hxx>
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -24,10 +23,6 @@ using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM AppSubsystem::MOHPARKSERVER
-
-static const resip::ExtensionParameter p_automaton("automaton");
-static const resip::ExtensionParameter p_byeless("+sip.byeless");
-static const resip::ExtensionParameter p_rendering("+sip.rendering");
 
 namespace mohparkserver
 {
@@ -81,7 +76,8 @@ Server::Server(int argc, char** argv) :
    ConversationManager(false /* local audio? */, ConversationManager::sipXConversationMediaInterfaceMode),
    mIsV6Avail(false),
    mUserAgent(0),
-   mMOHManager(*this)
+   mMOHManager(*this),
+   mParkManager(*this)
 {
    // Initialize loggers
    GenericLogImpl::MaxByteCount = mLogFileMaxBytes; 
@@ -97,6 +93,12 @@ Server::Server(int argc, char** argv) :
    InfoLog( << "  MOH URI = " << mMOHUri);
    InfoLog( << "  MOH Registration Time = " << mMOHRegistrationTime);
    InfoLog( << "  MOH Filename URL = " << mMOHFilenameUrl);
+   InfoLog( << "  Park URI = " << mParkUri);
+   InfoLog( << "  Park Registration Time = " << mParkRegistrationTime);
+   InfoLog( << "  Park MOH Filename URL = " << mParkMOHFilenameUrl);
+   InfoLog( << "  Park Orbit Range Start = " << mParkOrbitRangeStart);
+   InfoLog( << "  Park Number of Orbits = " << mParkNumOrbits);
+   InfoLog( << "  Park Orbit Registration Time = " << mParkOrbitRegistrationTime);
    InfoLog( << "  Local IP Address = " << mAddress);
    InfoLog( << "  Override DNS Servers = " << mDnsServers);
    InfoLog( << "  UDP Port = " << mUdpPort);
@@ -186,11 +188,6 @@ Server::Server(int argc, char** argv) :
       InfoLog (<< "Caught: " << e);
       exit(-1);
    }
-
-   // Settings
-   profile->setDefaultRegistrationTime(mMOHRegistrationTime);
-   profile->setDefaultFrom(mMOHUri);
-   profile->setDigestCredential(mMOHUri.uri().host(), mMOHUri.uri().user(), mMOHPassword); 
 
    // DNS Servers
    ParseBuffer pb(mDnsServers);
@@ -287,51 +284,10 @@ Server::Server(int argc, char** argv) :
    profile->rtpPortRangeMin() = mMediaPortRangeStart; 
    profile->rtpPortRangeMax() = mMediaPortRangeStart + mMediaPortRangeSize-1; 
 
-   //////////////////////////////////////////////////////////////////////////////
-   // Setup ConversationProfile
-   //////////////////////////////////////////////////////////////////////////////
-
-   SharedPtr<ConversationProfile> conversationProfile = SharedPtr<ConversationProfile>(new ConversationProfile(profile));
-   conversationProfile->setDefaultRegistrationTime(mMOHRegistrationTime);  
-   conversationProfile->setDefaultRegistrationRetryTime(120);  // 2 mins
-   conversationProfile->setDefaultFrom(mMOHUri);
-   conversationProfile->setDigestCredential(mMOHUri.uri().host(), mMOHUri.uri().user(), mMOHPassword);  
-   conversationProfile->challengeOODReferRequests() = false;
-   conversationProfile->setExtraHeadersInReferNotifySipFragEnabled(true);  // Enable dialog identifying headers in SipFrag bodies of Refer Notifies - required for a music on hold server
-   NameAddr capabilities;
-   capabilities.param(p_automaton);
-   capabilities.param(p_byeless);
-   capabilities.param(p_rendering) = "\"no\"";
-   conversationProfile->setUserAgentCapabilities(capabilities);
-
-   // Setup NatTraversal Settings
-   conversationProfile->natTraversalMode() = ConversationProfile::NoNatTraversal;
-
-   // Secure Media Settings
-   conversationProfile->secureMediaMode() = ConversationProfile::NoSecureMedia;
+   mUserAgentMasterProfile = profile;
 
    // Create UserAgent
    mUserAgent = new MyUserAgent(this, profile);
-
-   unsigned int codecIds[] = { SdpCodec::SDP_CODEC_PCMU /* 0 - pcmu */, 
-                               SdpCodec::SDP_CODEC_PCMA /* 8 - pcma */, 
-                               SdpCodec::SDP_CODEC_SPEEX /* 96 - speex NB 8,000bps */,
-                               SdpCodec::SDP_CODEC_SPEEX_15 /* 98 - speex NB 15,000bps */, 
-                               SdpCodec::SDP_CODEC_SPEEX_24 /* 99 - speex NB 24,600bps */,
-                               SdpCodec::SDP_CODEC_L16_44100_MONO /* PCM 16 bit/sample 44100 samples/sec. */, 
-                               SdpCodec::SDP_CODEC_ILBC /* 108 - iLBC */,
-                               SdpCodec::SDP_CODEC_ILBC_20MS /* 109 - Internet Low Bit Rate Codec, 20ms (RFC3951) */, 
-                               SdpCodec::SDP_CODEC_SPEEX_5 /* 97 - speex NB 5,950bps */,
-                               SdpCodec::SDP_CODEC_GSM /* 3 - GSM */,
-                               SdpCodec::SDP_CODEC_TONES /* 110 - telephone-event */};
-   unsigned int numCodecIds = sizeof(codecIds) / sizeof(codecIds[0]);
-
-   buildSessionCapabilities(mAddress, numCodecIds, codecIds, conversationProfile->sessionCaps());
-   mUserAgent->addConversationProfile(conversationProfile);
-
-   // Store Master Profile
-   mUserAgentMasterProfile = profile;
-
 }
 
 Server::~Server()
@@ -346,6 +302,7 @@ Server::startup()
    assert(mUserAgent);
    mUserAgent->startup();
    mMOHManager.startup();
+   mParkManager.startup();
 }
 
 void 
@@ -358,9 +315,33 @@ Server::process(int timeoutMs)
 void
 Server::shutdown()
 {
+   mMOHManager.shutdown();
+   mParkManager.shutdown();
    assert(mUserAgent);
    mUserAgent->shutdown();
    OsSysLog::shutdown();
+}
+
+void 
+Server::buildSessionCapabilities(resip::SdpContents& sessionCaps)
+{
+   unsigned int codecIds[] = { SdpCodec::SDP_CODEC_PCMU /* 0 - pcmu */, 
+                               SdpCodec::SDP_CODEC_PCMA /* 8 - pcma */, 
+                               SdpCodec::SDP_CODEC_SPEEX /* 96 - speex NB 8,000bps */,
+                               SdpCodec::SDP_CODEC_SPEEX_15 /* 98 - speex NB 15,000bps */, 
+                               SdpCodec::SDP_CODEC_SPEEX_24 /* 99 - speex NB 24,600bps */,
+                               SdpCodec::SDP_CODEC_L16_44100_MONO /* PCM 16 bit/sample 44100 samples/sec. */, 
+                               SdpCodec::SDP_CODEC_G726_16,
+                               SdpCodec::SDP_CODEC_G726_24,
+                               SdpCodec::SDP_CODEC_G726_32,
+                               SdpCodec::SDP_CODEC_G726_40,
+                               SdpCodec::SDP_CODEC_ILBC /* 108 - iLBC */,
+                               SdpCodec::SDP_CODEC_ILBC_20MS /* 109 - Internet Low Bit Rate Codec, 20ms (RFC3951) */, 
+                               SdpCodec::SDP_CODEC_SPEEX_5 /* 97 - speex NB 5,950bps */,
+                               SdpCodec::SDP_CODEC_GSM /* 3 - GSM */,
+                               SdpCodec::SDP_CODEC_TONES /* 110 - telephone-event */};
+   unsigned int numCodecIds = sizeof(codecIds) / sizeof(codecIds[0]);
+   ConversationManager::buildSessionCapabilities(mAddress, numCodecIds, codecIds, sessionCaps);
 }
 
 void 
@@ -373,7 +354,10 @@ void
 Server::onParticipantDestroyed(ParticipantHandle partHandle)
 {
    InfoLog(<< "onParticipantDestroyed: handle=" << partHandle);
-   mMOHManager.removeParticipant(partHandle);
+   if(!mMOHManager.removeParticipant(partHandle))
+   {
+      mParkManager.removeParticipant(partHandle);
+   }
 }
 
 void 
@@ -383,17 +367,40 @@ Server::onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool u
 }
 
 void 
-Server::onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer)
+Server::onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile)
 {
    InfoLog(<< "onIncomingParticipant: handle=" << partHandle << " auto=" << autoAnswer << " msg=" << msg.brief());
+
+   if(mMOHManager.isMyProfile(conversationProfile))
+   {
    mMOHManager.addParticipant(partHandle);
+   }
+   else if(mParkManager.isMyProfile(conversationProfile))
+   {
+      mParkManager.incomingParticipant(partHandle, msg);      
+   }
+   else
+   {
+      rejectParticipant(partHandle, 404);
+   }
 }
 
 void 
-Server::onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMessage& msg)
+Server::onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMessage& msg, ConversationProfile& conversationProfile)
 {
    InfoLog(<< "onRequestOutgoingParticipant: handle=" << partHandle << " msg=" << msg.brief());
+   if(mMOHManager.isMyProfile(conversationProfile))
+   {
    mMOHManager.addParticipant(partHandle);
+   }
+   else if(mParkManager.isMyProfile(conversationProfile))
+   {
+      mParkManager.parkParticipant(partHandle, msg);      
+   }
+   else
+   {
+      rejectParticipant(partHandle, 404);
+   }
 }
     
 void 

@@ -3,6 +3,7 @@
 
 #include <map>
 #include <set>
+#include "../UserAgent.hxx"
 #include "../HandleTypes.hxx"
 
 namespace mohparkserver
@@ -16,11 +17,15 @@ public:
    virtual ~MOHManager(); 
 
    void startup();
+   void shutdown();
+
+   bool isMyProfile(recon::ConversationProfile& profile);
    void addParticipant(recon::ParticipantHandle participantHandle);
-   void removeParticipant(recon::ParticipantHandle participantHandle);
+   bool removeParticipant(recon::ParticipantHandle participantHandle);
 
 private:
    Server& mServer;
+   resip::SharedPtr<recon::ConversationProfile> mConversationProfile;
 
    typedef std::map<recon::ConversationHandle, std::set<recon::ParticipantHandle> > ConversationMap;
    ConversationMap mConversations;
