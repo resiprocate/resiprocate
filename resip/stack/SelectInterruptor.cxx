@@ -29,6 +29,7 @@ SelectInterruptor::SelectInterruptor()
    assert(error == 0);
    error= connect(mSocket, &mWakeupAddr, sizeof(mWakeupAddr)); 
    assert(error == 0);
+   mReadThing = mSocket;
 #else
    int x = pipe(mPipe);
    assert( x != -1 );
@@ -37,6 +38,7 @@ SelectInterruptor::SelectInterruptor()
    // make read-side non-blocking so safe to read out entire pipe
    // all in one go (also just safer)
    makeSocketNonBlocking(mPipe[0]);
+   mReadThing = mPipe[0];
 #endif
 }
 
@@ -67,29 +69,34 @@ SelectInterruptor::buildFdSet(FdSet& fdset)
 }
 
 void 
-SelectInterruptor::process(FdSet& fdset)
+SelectInterruptor::processCleanup()
 {      
 #ifdef WIN32
-   if ( fdset.readyToRead(mSocket))
    {
       char rdBuf[16];
       recv(mSocket, rdBuf, sizeof(rdBuf), 0);
    }
 #else
-   if ( fdset.readyToRead(mPipe[0]))
    {
       char rdBuf[16];
       int x;
       while ( (x=read(mPipe[0], rdBuf, sizeof(rdBuf))) == sizeof(rdBuf) )
          ;
       // WATCHOUT: EWOULDBLOCK *will* happen above when the pending
-      // number of writes is exactly size of rdBuf
+      // number of bytes is exactly size of rdBuf
       // XXX: should check for certain errors (like fd closed) and die?
    }
 #endif
 }
 
 void 
+SelectInterruptor::process(FdSet& fdset)
+{
+   if (fdset.readyToRead(mReadThing))
+      processCleanup();
+}
+
+void
 SelectInterruptor::interrupt()
 {
    static char wakeUp[] = "w";

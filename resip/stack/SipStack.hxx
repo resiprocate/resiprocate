@@ -79,6 +79,11 @@ class SipStack
           @param compression Compression configuration object required for
                              SigComp. If set to 0, then SigComp compression
                              will be disabled.
+
+          @param fallbackPostNotify Handler is notified when a message is posted
+                             to the default application receive queue.
+
+          @param pollGrp     Polling group to support file-io callbacks for epoll.
       */
       SipStack(Security* security=0, 
                const DnsStub::NameserverList& additional = DnsStub::EmptyNameserverList,
@@ -86,7 +91,8 @@ class SipStack
                bool stateless=false,
                AfterSocketCreationFuncPtr socketFunc = 0,
                Compression *compression = 0,
-               AsyncProcessHandler* fallbackPostNotify = 0);
+               AsyncProcessHandler* fallbackPostNotify = 0,
+	       FdPollGrp* pollGrp = 0);
 
       virtual ~SipStack();
 
@@ -432,6 +438,9 @@ class SipStack
           @param fdset a populated and 'select'ed fdset
       */
       virtual void process(FdSet& fdset);
+
+      /// check all timers (called based upon getTimeTillNextProcessMS())
+      virtual void processTimers();
 
       /// returns time in milliseconds when process next needs to be called 
       virtual unsigned int getTimeTillNextProcessMS(); 

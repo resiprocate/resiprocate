@@ -1,96 +1,91 @@
-#ifndef RESIP_SelectInterruptor_HXX
-#define RESIP_SelectInterruptor_HXX
+#include "resip/stack/EventStackThread.hxx"
+#include "resip/stack/SipStack.hxx"
+// #include "resip/stack/SipMessage.hxx"
+//#include "resip/stack/SelectInterruptor.hxx"
+//#include "resip/stack/FdPoll.hxx"
 
-#include "rutil/AsyncProcessHandler.hxx"
-#include "rutil/Socket.hxx"
+#include "rutil/Logger.hxx"
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-#if 0
-#if defined(WIN32)
-#include <Ws2tcpip.h>
-#else
-#include <netinet/in.h>
-#endif
-#endif
+using namespace resip;
 
-namespace resip
+/****************************************************************
+ *
+ * EventThreadInterruptor
+ *
+ ****************************************************************/
+
+EventThreadInterruptor::EventThreadInterruptor(FdPollGrp& pollGrp)
+  : mPollGrp(pollGrp)
 {
-
-/**
-    Used to 'artificially' interrupt a select call
-*/
-class SelectInterruptor : public AsyncProcessHandler
-{
-   public:
-      SelectInterruptor();
-      virtual ~SelectInterruptor();
-      
-      /** 
-          Called by the stack when messages are posted to it.
-          Calls interrupt.  
-      */
-      virtual void handleProcessNotification(); 
-      
-      /** 
-          cause the 'artificial' fd to signal 
-      */
-      void interrupt();      
-
-      /** 
-          Used to add the 'artificial' fd to the fdset that
-          will be responsible for interrupting a subsequent select
-          call.  
-      */
-      void buildFdSet(FdSet& fdset);
-
-      /** 
-          cleanup signalled fd
-      */
-      void process(FdSet& fdset);
-   protected:
-      /* Get fd of read-side, for use within PollInterruptor,
-       * Declared as Socket for easier cross-platform even though pipe fd
-       * under linux.
-       */
-      Socket getReadSocket() const { return mReadThing; }
-
-      /* Cleanup the read side of the interruptor
-       * If fdset is provided, it will only try cleaning up if our pipe
-       * is ready in fdset. If NULL, it will unconditionally try reading.
-       * This last feature is for use within PollInterruptor.
-       */
-      void processCleanup();
-   private:
-#ifndef WIN32
-      int mPipe[2];
-#else
-      Socket mSocket;
-      sockaddr mWakeupAddr;
-#endif
-      // either mPipe[0] or mSocket
-      Socket mReadThing;
-};
-
+   mPollGrp.addPollItem(this, FPEM_Read);
 }
 
-#endif
+EventThreadInterruptor::~EventThreadInterruptor()
+{
+   mPollGrp.delPollItem(this);
+}
+
+/****************************************************************
+ *
+ * EventStackThread
+ *
+ ****************************************************************/
+
+EventStackThread::EventStackThread(SipStack& stack, EventThreadInterruptor& si,
+      FdPollGrp& pollGrp)
+   : mStack(stack), mIntr(si), mPollGrp(pollGrp)
+{
+}
+
+EventStackThread::~EventStackThread()
+{
+   //InfoLog (<< "EventStackThread::~EventStackThread()");
+}
+
+void
+EventStackThread::thread()
+{
+   while (!isShutdown())
+   {
+      unsigned waitMs = resipMin(mStack.getTimeTillNextProcessMS(),
+                                                     getTimeTillNextProcessMS());
+      mPollGrp.waitAndProcess((int)waitMs);
+      mStack.processTimers();
+   }
+   InfoLog (<< "Shutting down stack thread");
+}
+
+void
+EventStackThread::shutdown()
+{
+   ThreadIf::shutdown();
+   mIntr.interrupt();
+}
+
+unsigned int
+EventStackThread::getTimeTillNextProcessMS() const
+{
+   return 10000;
+}
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -100,7 +95,7 @@ class SelectInterruptor : public AsyncProcessHandler
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -114,9 +109,9 @@ class SelectInterruptor : public AsyncProcessHandler
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see

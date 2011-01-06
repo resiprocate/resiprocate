@@ -53,10 +53,11 @@ SipStack::SipStack(Security* pSecurity,
                    bool stateless,
                    AfterSocketCreationFuncPtr socketFunc,
                    Compression *compression,
-		   AsyncProcessHandler *fallbackPostNotify
+		   AsyncProcessHandler *fallbackPostNotify,
+		   FdPollGrp *pollGrp
    ) : 
-   mUseInternalPoll(mDefaultUseInternalPoll),
-   mPollGrp(mUseInternalPoll ? FdPollGrp::create() : 0),
+   mUseInternalPoll(pollGrp?0:mDefaultUseInternalPoll),
+   mPollGrp(pollGrp?pollGrp:(mUseInternalPoll ? FdPollGrp::create() : 0)),
 #ifdef USE_SSL
    mSecurity( pSecurity ? pSecurity : new Security()),
 #else
@@ -86,7 +87,7 @@ SipStack::SipStack(Security* pSecurity,
       assert(0);
 #endif
    }
-   if (mUseInternalPoll)
+   if (mPollGrp)
    {
       mTransactionController.setPollGrp(mPollGrp);
    }
@@ -582,6 +583,22 @@ SipStack::receiveAny()
    }
 }
 
+/* Called from external epoll (e.g., EventStackThread) */
+void
+SipStack::processTimers()
+{
+   if(!mShuttingDown && mStatisticsManagerEnabled)
+   {
+      mStatsManager.process();
+   }
+   mTransactionController.processTimers();
+   mDnsStub->processTimers();
+   mTuSelector.process();
+   Lock lock(mAppTimerMutex);
+   mAppTimers.process();
+}
+
+/* Called for internal epoll and non-epoll (e.g., StackThread) */
 void 
 SipStack::process(FdSet& fdset)
 {
