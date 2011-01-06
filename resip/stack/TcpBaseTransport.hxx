@@ -25,7 +25,6 @@ class TcpBaseTransport : public InternalTransport
 
       
       virtual void processPollEvent(FdPollEventMask mask);
-      virtual void processTransmitQueue();
       virtual void process(FdSet& fdset);
       virtual void buildFdSet( FdSet& fdset);
       virtual bool isReliable() const { return true; }
@@ -42,7 +41,10 @@ class TcpBaseTransport : public InternalTransport
           should call this in their constructors.  */
       virtual void init();
 
-      virtual Connection* createConnection(Tuple& who, Socket fd, bool server=false)=0;
+      virtual void checkTransmitQueue(bool justPosted);
+
+      /** Makes new Connection using provided socket. */
+      virtual Connection* createConnection(const Tuple& who, Socket fd, bool server=false)=0;
 
       /** Forms a connection if one doesn't exist, moves requests to the
 	  appropriate connection's fifo.
@@ -55,6 +57,12 @@ class TcpBaseTransport : public InternalTransport
 
       // return 1 if accepted connection
       int processListen();
+
+      /* Helper to make a new outgoing TCP connection.
+       * Makes the socket, connects it, etc.
+       */
+      Connection* makeOutgoingConnection(const Tuple &dest);
+
 
       static const size_t MaxWriteSize;
       static const size_t MaxReadSize;

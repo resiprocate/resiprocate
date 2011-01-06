@@ -37,7 +37,7 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
    : InternalTransport(fifo, portNum, version, pinterface, socketFunc, compression),
      mSigcompStack(0),
      mExternalUnknownDatagramHandler(0),
-     mPollGrp(0), mInWritable(false)
+     mInWritable(false)
 {
    mTuple.setType(transport());
    mFd = InternalTransport::socket(transport(), version);
@@ -92,26 +92,21 @@ UdpTransport::getPollSocket() const
 }
 
 
+/**
+ * Called after a message is added. Could try writing it now.
+ */
 void
-UdpTransport::checkTransmitQueue() 
-{
-   if ( mPollGrp && !mInWritable && mTxFifo.messageAvailable() ) 
+UdpTransport::checkTransmitQueue(bool justPosted) {
+   if ( mPollGrp && !mInWritable && (justPosted||mTxFifo.messageAvailable()) )
    {
       mPollGrp->modPollItem(this, FPEM_Read|FPEM_Write);
       mInWritable = true;
    }
-   if ( mPollGrp && mInWritable && !mTxFifo.messageAvailable() ) 
+   else if ( mPollGrp && mInWritable && !(justPosted||mTxFifo.messageAvailable()) )
    {
       mPollGrp->modPollItem(this, FPEM_Read);
       mInWritable = false;
    }
-}
-
-void
-UdpTransport::processTransmitQueue() 
-{
-   // could blast out messages now, but instead we wait for the
-   // writability event
 }
 
 void
@@ -131,7 +126,8 @@ UdpTransport::processPollEvent(FdPollEventMask mask)
    {
       assert(0);
    }
-   checkTransmitQueue(); // mainly to turn off writable-cb if not needed anymore
+   // mainly to turn off writable-cb if not needed anymore
+   checkTransmitQueue(/*justPosted*/false);
 }
 
 /**
@@ -662,4 +658,5 @@ UdpTransport::setRcvBufLen(int buflen)
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: shiftwidth=3 expandtabs:
  */

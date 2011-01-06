@@ -49,7 +49,6 @@ public:
    virtual bool isDatagram() const { return true; }
 
    virtual void process(FdSet& fdset);
-   virtual void processTransmitQueue();
    virtual bool hasDataToSend() const;
    virtual void buildFdSet( FdSet& fdset);
    virtual void setPollGrp(FdPollGrp *grp);
@@ -69,7 +68,7 @@ public:
    void setExternalUnknownDatagramHandler(ExternalUnknownDatagramHandler *handler);
 
 protected:
-   virtual void checkTransmitQueue();
+   virtual void checkTransmitQueue(bool justPosted);
 
    void processRx();
    void processTx();
@@ -81,7 +80,6 @@ private:
    Tuple mStunMappedAddress;
    bool mStunSuccess;
    ExternalUnknownDatagramHandler* mExternalUnknownDatagramHandler;
-   FdPollGrp *mPollGrp;
    bool mInWritable;
 };
 

@@ -76,9 +76,6 @@ class TransportSelector
       /// Builds an FdSet comprised of all FDs from all suitable Transports
       void buildFdSet(FdSet& fdset);
 
-      /// Called by transaction controller only if using pollGrp
-      void processTransmitQueue();
-     
       void addTransport( std::auto_ptr<Transport> transport);
 
       DnsResult* createDnsResult(DnsHandler* handler);

@@ -115,11 +115,6 @@ class Transport
       //TransportSelector race, but this might not be necessary.
       virtual void startOwnProcessing()=0;
 
-      //only applies to transports that shareStackProcessAndSelect 
-      // Transport should either send any queued messages or
-      // enable a socket-writable callback
-      virtual void processTransmitQueue() = 0;
-
       //only applies to transports that shareStackProcessAndSelect
       // Transmit should determine if it has any queue messages to send
       virtual bool hasDataToSend() const = 0;
