@@ -70,9 +70,14 @@ class FdPollGrp
     virtual void modPollItem(const FdPollItemIf *item, FdPollEventMask newMask) = 0;
     virtual void delPollItem(FdPollItemIf *item) = 0;
 
-    virtual void process() = 0;
+    /// Wait at most {ms} milliseconds. If any file activity has
+    /// already occurs or occurs before {ms} expires, then
+    /// FdPollItem will be informed (via cb method) and method will
+    /// return. Returns true iff any file activity occured.
+    /// ms<0: wait forever, ms=0: don't wait, ms>0: wait this long
+    virtual bool waitAndProcess(int ms=0) = 0;
 
-    /// get the epoll-fd (epoll_create()) -- it is int, not Socket
+    /// get the epoll-fd (epoll_create())
     /// This is fd (type int), not Socket. It may be -1 if epoll
     /// is not enabled.
     virtual int	getEPollFd() const = 0;
@@ -83,6 +88,7 @@ class FdPollGrp
     /// process epoll queue if epoll-fd is readable in fdset
     void processFdSet(FdSet& fdset);
     void processFdSet(fd_set& readfds);
+
 
     virtual FdPollItemIf* getItemByFd(Socket fd) = 0;
 
