@@ -355,6 +355,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="Embedded.cxx" />
+    <ClCompile Include="EventStackThread.cxx" />
     <ClCompile Include="ExistsOrDataParameter.cxx" />
     <ClCompile Include="ExistsParameter.cxx" />
     <ClCompile Include="ExpiresCategory.cxx" />
@@ -505,6 +506,7 @@
     <ClInclude Include="DtlsMessage.hxx" />
     <ClInclude Include="ssl\DtlsTransport.hxx" />
     <ClInclude Include="Embedded.hxx" />
+    <ClInclude Include="EventStackThread.hxx" />
     <ClInclude Include="ExistsOrDataParameter.hxx" />
     <ClInclude Include="ExistsParameter.hxx" />
     <ClInclude Include="ExpiresCategory.hxx" />
