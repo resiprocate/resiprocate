@@ -43,7 +43,7 @@ TcpBaseTransport::~TcpBaseTransport()
       SendData* data = mTxFifo.getNext();
       InfoLog (<< "Throwing away queued data for " << data->destination);
 
-      fail(data->transactionId);
+      fail(data->transactionId, TransportFailure::TransportShutdown);
       delete data;
    }
    DebugLog (<< "Shutting down " << mTuple);
@@ -168,7 +168,8 @@ TcpBaseTransport::processListen()
 }
 
 Connection*
-TcpBaseTransport::makeOutgoingConnection(const Tuple &dest)
+TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
+      TransportFailure::FailureReason &failReason, int &failSubCode)
 {
    // attempt to open
    Socket sock = InternalTransport::socket( TCP, ipVersion());
@@ -176,17 +177,19 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest)
 
    if ( sock == INVALID_SOCKET ) // no socket found - try to free one up and try again
    {
-      int e = getErrno();
-      InfoLog (<< "Failed to create a socket " << strerror(e));
-      error(e);
+      int err = getErrno();
+      InfoLog (<< "Failed to create a socket " << strerror(err));
+      error(err);
       mConnectionManager.gc(ConnectionManager::MinimumGcAge, 1); // free one up
 
       sock = InternalTransport::socket( TCP, ipVersion());
       if ( sock == INVALID_SOCKET )
       {
-	 int e = getErrno();
-	 WarningLog( << "Error in finding free filedescriptor to use. " << strerror(e));
-	 error(e);
+	 err = getErrno();
+	 WarningLog( << "Error in finding free filedescriptor to use. " << strerror(err));
+	 error(err);
+         failReason = TransportFailure::TransportNoSocket;
+         failSubCode = err;
 	 return NULL;
       }
    }
@@ -219,6 +222,8 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest)
 	    error(err);
 	    //fdset.clear(sock);
 	    closeSocket(sock);
+            failReason = TransportFailure::TransportBadConnect;
+            failSubCode = err;
 	    return NULL;
 	 }
       }
@@ -247,9 +252,11 @@ TcpBaseTransport::processAllWriteRequests()
       // There is no connection yet, so make a client connection
       if (conn == 0 && !data->destination.onlyUseExistingConnection)
       {
-	 if ( (conn=makeOutgoingConnection(data->destination)) == NULL )
+         TransportFailure::FailureReason failCode = TransportFailure::Failure;
+         int subCode = 0;
+	 if ( (conn=makeOutgoingConnection(data->destination, failCode, subCode)) == NULL )
          {
-	    fail(data->transactionId);
+	    fail(data->transactionId, failCode, subCode);
 	    delete data;
 	    return;	// .kw. WHY? What about messages left in queue?
          }
@@ -261,7 +268,7 @@ TcpBaseTransport::processAllWriteRequests()
       if (conn == 0)
       {
          DebugLog (<< "Failed to create/get connection: " << data->destination);
-         fail(data->transactionId);
+         fail(data->transactionId, TransportFailure::TransportNoExistConn, 0);
          delete data;
 	 // NOTE: We fail this one but don't give up on others in queue
       }
@@ -368,5 +375,5 @@ TcpBaseTransport::setRcvBufLen(int buflen)
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
- * vi: shiftwidth=3 expandtab:
+ * vi: set shiftwidth=3 expandtab:
  */

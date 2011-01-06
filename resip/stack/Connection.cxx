@@ -266,13 +266,14 @@ void
 Connection::processPollEvent(FdPollEventMask mask) {
    /* The original code in ConnectionManager.cxx didn't check
     * for error events unless no writable event. (e.g., writable
-    * masked error. Why?
+    * masked error. Why?)
     */
    if ( mask & FPEM_Error ) 
    {
       Socket fd = getSocket();
       int errNum = getSocketError(fd);
       InfoLog(<< "Exception on socket " << fd << " code: " << errNum << "; closing connection");
+      setFailureReason(TransportFailure::ConnectionException, errNum);
       delete this;
       return;
    }
@@ -286,7 +287,7 @@ Connection::processPollEvent(FdPollEventMask mask) {
       if ( bytesRead < 0 ) 
       {
          delete this;
-	 return;
+         return;
       }
    }
 }
@@ -339,4 +340,5 @@ Connection::processPollEvent(FdPollEventMask mask) {
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */

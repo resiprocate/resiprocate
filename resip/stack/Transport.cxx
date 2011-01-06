@@ -200,11 +200,11 @@ Transport::flowTerminated(const Tuple& flow)
 }
 
 void
-Transport::fail(const Data& tid, TransportFailure::FailureReason reason)
+Transport::fail(const Data& tid, TransportFailure::FailureReason reason, int subCode)
 {
    if (!tid.empty())
    {
-      mStateMachineFifo.add(new TransportFailure(tid, reason));
+      mStateMachineFifo.add(new TransportFailure(tid, reason, subCode));
    }
 }
 

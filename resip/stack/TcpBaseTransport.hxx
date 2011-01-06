@@ -61,8 +61,8 @@ class TcpBaseTransport : public InternalTransport, public FdPollItemIf
       /* Helper to make a new outgoing TCP connection.
        * Makes the socket, connects it, etc.
        */
-      Connection* makeOutgoingConnection(const Tuple &dest);
-
+      Connection* makeOutgoingConnection(const Tuple &dest,
+            TransportFailure::FailureReason &failCode, int &subCode);
 
       static const size_t MaxWriteSize;
       static const size_t MaxReadSize;
