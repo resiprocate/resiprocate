@@ -79,8 +79,9 @@ class Connection : public ConnectionBase, public ConnectionLruList, public Conne
       /*
        * FdPollItemIf virtual methods
        */
-      virtual Socket getPollSocket() const { return getSocket(); }
+      //virtual Socket getPollSocket() const { return getSocket(); }
       virtual void processPollEvent(FdPollEventMask mask);
+
 
    protected:
       /// pure virtual, but need concrete Connection for book-ends of lists
@@ -93,6 +94,7 @@ class Connection : public ConnectionBase, public ConnectionLruList, public Conne
    private:
       ConnectionManager& getConnectionManager() const;
       bool mInWritable;
+      FdPollItemHandle mPollItemHandle;
       
       /// no default c'tor
       Connection();

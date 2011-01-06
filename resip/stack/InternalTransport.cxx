@@ -30,18 +30,16 @@ InternalTransport::InternalTransport(Fifo<TransactionMessage>& rxFifo,
                                      unsigned transportFlags) :
    Transport(rxFifo, portNum, version, interfaceObj, Data::Empty, 
              socketFunc, compression, transportFlags),
-   mFd(INVALID_SOCKET), mPollGrp(NULL), mPollItem(NULL)
+   mFd(INVALID_SOCKET), mPollGrp(NULL), mPollItemHandle(NULL)
 {
 }
 
 InternalTransport::~InternalTransport()
 {
-   if(mPollItem) 
-   {
-      delete mPollItem;
-      mPollItem = NULL;
-   }
-   if(mFd != INVALID_SOCKET)
+   if (mPollItemHandle)
+      mPollGrp->delPollItem(mPollItemHandle);
+
+   if  (mFd != INVALID_SOCKET)
    {
       //DebugLog (<< "Closing " << mFd);
       closeSocket(mFd);

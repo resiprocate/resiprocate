@@ -86,10 +86,6 @@ UdpTransport::~UdpTransport()
 #ifdef USE_SIGCOMP
    delete mSigcompStack;
 #endif
-   if ( mPollGrp ) 
-   {
-      mPollGrp->delPollItem(this);
-   }
    if ( mRxBuffer )
    {
       delete[] mRxBuffer;
@@ -99,16 +95,10 @@ UdpTransport::~UdpTransport()
 void
 UdpTransport::setPollGrp(FdPollGrp *grp) 
 {
-   assert( mPollGrp==NULL );
+   assert(mPollGrp==NULL && grp!=NULL);
    mPollGrp = grp;
-   mPollGrp->addPollItem(this, FPEM_Read);
-}
-
-
-Socket
-UdpTransport::getPollSocket() const 
-{
-   return mFd;
+   mPollItemHandle = mPollGrp->addPollItem(mFd, FPEM_Read, this);
+   // above released by InternalTransport destructor
 }
 
 
@@ -135,12 +125,12 @@ UdpTransport::updateEvents()
    bool haveMsg = mTxFifo.messageAvailable();
    if ( !mInWritable && haveMsg )
    {
-      mPollGrp->modPollItem(this, FPEM_Read|FPEM_Write);
+      mPollGrp->modPollItem(mPollItemHandle, FPEM_Read|FPEM_Write);
       mInWritable = true;
    }
    else if ( mInWritable && !haveMsg )
    {
-      mPollGrp->modPollItem(this, FPEM_Read);
+      mPollGrp->modPollItem(mPollItemHandle, FPEM_Read);
       mInWritable = false;
    }
 }
@@ -225,18 +215,11 @@ UdpTransport::processTxAll()
 }
 
 void
-<<<<<<< HEAD
-UdpTransport::processTx() 
-{
-   // if (mTxFifo.messageAvailable() && fdset.readyToWrite(mFd))
-   std::auto_ptr<SendData> sendData = std::auto_ptr<SendData>(mTxFifo.getNext());
-=======
 UdpTransport::processTxOne(SendData *data)
 {
    ++mTxMsgCnt;
    assert(data);
    std::auto_ptr<SendData> sendData(data);
->>>>>>> Optimize UdpTransport socket-io
    //DebugLog (<< "Sent: " <<  sendData->data);
    //DebugLog (<< "Sending message on udp.");
    assert( sendData->destination.getPort() != 0 );
@@ -306,9 +289,6 @@ UdpTransport::processTxOne(SendData *data)
  * Probably "real" traffic (that is bursty) would more impact.
  */
 void
-<<<<<<< HEAD
-UdpTransport::processRx() 
-=======
 UdpTransport::processRxAll()
 {
    char *buffer = mRxBuffer;
@@ -350,7 +330,6 @@ UdpTransport::processRxAll()
 **/
 int
 UdpTransport::processRxRecv(char*& buffer, Tuple& sender)
->>>>>>> Optimize UdpTransport socket-io
 {
    // !jf! this may have to change - when we read a message that is too big
    //should this buffer be allocated on the stack and then copied out, as it

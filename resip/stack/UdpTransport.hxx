@@ -56,7 +56,7 @@ public:
    virtual void setRcvBufLen(int buflen);
 
    // FdPollItemIf
-   virtual Socket getPollSocket() const;
+   // virtual Socket getPollSocket() const;
    virtual void processPollEvent(FdPollEventMask mask);
 
    static const int MaxBufferSize = 8192;

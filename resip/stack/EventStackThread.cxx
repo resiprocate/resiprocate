@@ -1,3 +1,5 @@
+#include <climits>
+
 #include "resip/stack/EventStackThread.hxx"
 #include "resip/stack/SipStack.hxx"
 // #include "resip/stack/SipMessage.hxx"
@@ -18,12 +20,12 @@ using namespace resip;
 EventThreadInterruptor::EventThreadInterruptor(FdPollGrp& pollGrp)
   : mPollGrp(pollGrp)
 {
-   mPollGrp.addPollItem(this, FPEM_Read);
+   mPollItemHandle = mPollGrp.addPollItem(getReadSocket(), FPEM_Read, this);
 }
 
 EventThreadInterruptor::~EventThreadInterruptor()
 {
-   mPollGrp.delPollItem(this);
+   mPollGrp.delPollItem(mPollItemHandle);
 }
 
 /****************************************************************
@@ -32,11 +34,19 @@ EventThreadInterruptor::~EventThreadInterruptor()
  *
  ****************************************************************/
 
-EventStackThread::EventStackThread(SipStack& stack, EventThreadInterruptor& si,
+EventStackThread::EventStackThread(EventThreadInterruptor& si,
       FdPollGrp& pollGrp)
-   : mStack(stack), mIntr(si), mPollGrp(pollGrp)
+   : mIntr(si), mPollGrp(pollGrp)
 {
 }
+
+EventStackThread::EventStackThread(SipStack& stack, EventThreadInterruptor& si,
+      FdPollGrp& pollGrp)
+   : mIntr(si), mPollGrp(pollGrp)
+{
+    addStack(stack);
+}
+
 
 EventStackThread::~EventStackThread()
 {
@@ -44,14 +54,35 @@ EventStackThread::~EventStackThread()
 }
 
 void
+EventStackThread::addStack(SipStack& stack)
+{
+    mStacks.push_back(&stack);
+}
+
+void
 EventStackThread::thread()
 {
    while (!isShutdown())
    {
-      unsigned waitMs = resipMin(mStack.getTimeTillNextProcessMS(),
-                                                     getTimeTillNextProcessMS());
+      unsigned waitMs = getTimeTillNextProcessMS();
+      if ( waitMs > INT_MAX )
+         waitMs = INT_MAX;
+      StackList::iterator it;
+      for ( it=mStacks.begin(); it!=mStacks.end(); ++it)
+      {
+         SipStack *ss = *it;
+         unsigned wms = ss->getTimeTillNextProcessMS();
+         if ( wms < waitMs )
+            waitMs = wms;
+         // NOTE: In theory, we could early-out when waitMs gets to zero
+         // but I fear the stack may depend upon doing real-work in the query.
+      }
       mPollGrp.waitAndProcess((int)waitMs);
-      mStack.processTimers();
+      for ( it=mStacks.begin(); it!=mStacks.end(); ++it)
+      {
+         SipStack *ss = *it;
+         ss->processTimers();
+      }
    }
    InfoLog (<< "Shutting down stack thread");
 }
@@ -117,4 +148,5 @@ EventStackThread::getTimeTillNextProcessMS() const
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */

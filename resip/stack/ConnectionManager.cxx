@@ -143,7 +143,7 @@ ConnectionManager::addToWritable(Connection* conn)
 {
    if ( mPollGrp ) 
    {
-      mPollGrp->modPollItem(conn, FPEM_Read|FPEM_Write);
+      mPollGrp->modPollItem(conn->mPollItemHandle, FPEM_Read|FPEM_Write);
    } 
    else 
    {
@@ -156,7 +156,7 @@ ConnectionManager::removeFromWritable(Connection* conn)
 {
    if ( mPollGrp ) 
    {
-      mPollGrp->modPollItem(conn, FPEM_Read);
+      mPollGrp->modPollItem(conn->mPollItemHandle, FPEM_Read);
    }
    else
    {
@@ -178,7 +178,8 @@ ConnectionManager::addConnection(Connection* connection)
 
    if ( mPollGrp ) 
    {
-      mPollGrp->addPollItem(connection, FPEM_Read);
+      connection->mPollItemHandle = mPollGrp->addPollItem(
+	      connection->getSocket(), FPEM_Read, connection);
    }
    else 
    {
@@ -203,7 +204,7 @@ ConnectionManager::removeConnection(Connection* connection)
 
    if ( mPollGrp ) 
    {
-      mPollGrp->delPollItem(connection);
+      mPollGrp->delPollItem(connection->mPollItemHandle);
    }
    else
    {
