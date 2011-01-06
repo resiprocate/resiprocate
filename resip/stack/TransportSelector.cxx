@@ -471,7 +471,7 @@ TransportSelector::findTransportByVia(SipMessage* msg, const Tuple& target,
    {
       WarningLog(<< "Sending request with incomplete Via header and FlowKey."
         <<" This code no smart enough to pick the correct Transport."
-	<<" Via=" << via);
+        <<" Via=" << via);
       assert(0);
    }
    if ( source.isAnyInterface() )
@@ -1026,8 +1026,8 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          DebugLog (<< "Transmitting to " << target
                    << " tlsDomain=" << msg->getTlsDomain()
                    << " via " << source
-				   << std::endl << std::endl << encoded.escaped()
-				   << "sigcomp id=" << remoteSigcompId);
+                                   << std::endl << std::endl << encoded.escaped()
+                                   << "sigcomp id=" << remoteSigcompId);
 
          target.transport->send(target, encoded, msg->getTransactionId(),
                                 remoteSigcompId);
@@ -1212,23 +1212,23 @@ TransportSelector::findLoopbackTransportBySource(bool ignorePort, Tuple& search)
       DebugLog(<<"search: " << search << " elem: " << i->first);
       if(i->first.ipVersion()==V4)
       {
-	 //Compare only the first byte (the 127)
-	 if(i->first.isEqualWithMask(search,8,false))
-	 {
-	    search=i->first;
-	    DebugLog(<<"Match!");
-	    return i->second;
-	 }
+         //Compare only the first byte (the 127)
+         if(i->first.isEqualWithMask(search,8,false))
+         {
+            search=i->first;
+            DebugLog(<<"Match!");
+            return i->second;
+         }
       }
 #ifdef USE_IPV6
       else if(i->first.ipVersion()==V6)
       {
-	 //What to do?
+         //What to do?
       }
 #endif
       else
       {
-	 assert(0);
+         assert(0);
       }
    }
    return NULL;
@@ -1238,17 +1238,6 @@ Transport*
 TransportSelector::findTransportBySource(Tuple& search) const
 {
    DebugLog(<< "findTransportBySource(" << search << ")");
-
-   if (search.isLoopback())
-   {
-      // 0. search on loopback interface (with or without port)
-      Transport *trans;
-      if ( (trans=findLoopbackTransportBySource(
-              /*ignorePort*/(search.getPort()==0), search)) != NULL )
-      {
-         return trans;
-      }
-   }
 
    if (search.getPort() != 0)
    {
@@ -1262,7 +1251,17 @@ TransportSelector::findTransportBySource(Tuple& search) const
          }
       }
 
-      // 2. search for specific port on ANY interface
+      // 2. search for matching port on any loopback interface
+      if (search.isLoopback())
+      {
+         Transport *trans = 0;
+         if ( (trans=findLoopbackTransportBySource( /*ignorePort*/false, search)) != NULL )
+         {
+            return trans;
+         }
+      }
+
+      // 3. search for specific port on ANY interface
       {
          AnyInterfaceTupleMap::const_iterator i = mAnyInterfaceTransports.find(search);
          if (i != mAnyInterfaceTransports.end())
@@ -1284,7 +1283,17 @@ TransportSelector::findTransportBySource(Tuple& search) const
          }
       }
 
-      // 2. search for ANY port on ANY interface
+      // 2. search for ANY port on any loopback interface
+      if (search.isLoopback())
+      {
+         Transport *trans = 0;
+         if ( (trans=findLoopbackTransportBySource( /*ignorePort*/true, search)) != NULL )
+         {
+            return trans;
+         }
+      }
+
+      // 3. search for ANY port on ANY interface
       {
          //CerrLog(<< "Trying AnyPortAnyInterfaceTupleMap " << mAnyPortAnyInterfaceTransports.size());
          AnyPortAnyInterfaceTupleMap::const_iterator i = mAnyPortAnyInterfaceTransports.find(search);
@@ -1408,5 +1417,5 @@ void TransportSelector::unregisterMarkListener(MarkListener* listener)
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
- * vi: shiftwidth=3 expandtabs:
+ * vi: shiftwidth=3 expandtab:
  */
