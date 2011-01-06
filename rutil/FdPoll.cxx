@@ -70,11 +70,11 @@ FdPollGrp::buildFdSet(FdSet& fdset) const
 void
 FdPollGrp::buildFdSet(fd_set& readfds) const
 {
-    int fd = getEPollFd();
-    if (fd != -1)
-	{
-       FD_SET(fd, &readfds);
-	}
+   int fd = getEPollFd();
+   if (fd != -1)
+   {
+      FD_SET(fd, &readfds);
+   }
 }
 
 void
@@ -83,7 +83,7 @@ FdPollGrp::processFdSet(FdSet& fdset)
    int fd = getEPollFd();
    if (fd !=- 1 && fdset.readyToRead(fd))
    {
-      process();
+      waitAndProcess();
    }
 }
 
@@ -93,7 +93,7 @@ FdPollGrp::processFdSet(fd_set& readfds)
    int fd = getEPollFd();
    if (fd !=- 1 && FD_ISSET(fd, &readfds))
    {
-      process();
+      waitAndProcess();
    }
 }
 
@@ -125,46 +125,46 @@ namespace resip
 
 class FdPollImplEpoll : public FdPollGrp
 {
-  public:
-    FdPollImplEpoll();
-    ~FdPollImplEpoll();
+   public:
+      FdPollImplEpoll();
+      ~FdPollImplEpoll();
 
-    virtual void		addPollItem(FdPollItemIf *item,
-				  FdPollEventMask newMask);
-    virtual void		modPollItem(const FdPollItemIf *item,
-				  FdPollEventMask newMask);
-    virtual void		delPollItem(FdPollItemIf *item);
+      virtual void              addPollItem(FdPollItemIf *item,
+                                  FdPollEventMask newMask);
+      virtual void              modPollItem(const FdPollItemIf *item,
+                                  FdPollEventMask newMask);
+      virtual void              delPollItem(FdPollItemIf *item);
 
-    virtual void		process();
+      virtual bool              waitAndProcess(int ms=0);
 
-    /// See baseclass. This is integer fd, not Socket
-    virtual int 		getEPollFd() const { return mEPollFd; }
-    virtual FdPollItemIf*	getItemByFd(int fd);
+      /// See baseclass. This is integer fd, not Socket
+      virtual int               getEPollFd() const { return mEPollFd; }
+      virtual FdPollItemIf*     getItemByFd(int fd);
 
-  protected:
-    void			processItem(FdPollItemIf *item,
-				  FdPollEventMask mask);
-    void			killCache(Socket fd);
+   protected:
+      void                      processItem(FdPollItemIf *item,
+                                  FdPollEventMask mask);
+      void                      killCache(Socket fd);
 
-    std::vector<FdPollItemIf*>	mItems;	// indexed by fd
-    int				mEPollFd;	// from epoll_create()
+      std::vector<FdPollItemIf*>  mItems; // indexed by fd
+      int                       mEPollFd;       // from epoll_create()
 
-    /*
-     * This is temporary cache of poll events. It is a member (and
-     * not on stack) for two reasons: (1) simpler memory management,
-     * and (2) so delPollItem() can traverse it and clean up.
-     */
-    std::vector<struct epoll_event> mEvCache;
-    int				mEvCacheCur;
-    int				mEvCacheLen;
+      /*
+       * This is temporary cache of poll events. It is a member (and
+       * not on stack) for two reasons: (1) simpler memory management,
+       * and (2) so delPollItem() can traverse it and clean up.
+       */
+      std::vector<struct epoll_event> mEvCache;
+      int                       mEvCacheCur;
+      int                       mEvCacheLen;
 };
 
-};	// namespace
+};      // namespace
 
 FdPollImplEpoll::FdPollImplEpoll() :
   mEPollFd(-1)
 {
-   int sz = 200;	// ignored
+   int sz = 200;        // ignored
    if ( (mEPollFd = epoll_create(sz)) < 0 )
    {
       CritLog(<<"epoll_create() failed: "<<strerror(errno));
@@ -176,17 +176,17 @@ FdPollImplEpoll::FdPollImplEpoll() :
 
 FdPollImplEpoll::~FdPollImplEpoll()
 {
-   assert( mEvCacheLen == 0 );	// poll not active
+   assert( mEvCacheLen == 0 );  // poll not active
    unsigned itemIdx;
    for (itemIdx=0; itemIdx < mItems.size(); itemIdx++)
    {
       FdPollItemIf *item = mItems[itemIdx];
       if (item)
-	  {
-	     int fd = item->getPollSocket();
-	     CritLog(<<"FdPollItem idx="<<itemIdx
-	       <<" fd="<<fd
-	       <<" not deleted prior to destruction");
+      {
+         int fd = item->getPollSocket();
+         CritLog(<<"FdPollItem idx="<<itemIdx
+               <<" fd="<<fd
+               <<" not deleted prior to destruction");
       }
    }
    if (mEPollFd != -1)
@@ -204,7 +204,9 @@ CvtSysToUsrMask(unsigned long sysMask)
    if ( sysMask & EPOLLOUT )
        usrMask |= FPEM_Write;
    if ( sysMask & EPOLLERR )
-       usrMask |= FPEM_Error;
+       usrMask |= FPEM_Error|FPEM_Read|FPEM_Write;
+   // NOTE: above, fake read and write if error to encourage
+   // apps to actually do something about it
    return usrMask;
 }
 
@@ -240,16 +242,16 @@ FdPollImplEpoll::addPollItem(FdPollItemIf *item, FdPollEventMask newMask)
    if (mItems.size() <= (unsigned)fd)
    {
       unsigned newsz = fd+1;
-      newsz += newsz/3;	// plus 30% margin
+      newsz += newsz/3; // plus 30% margin
       // WATCHOUT: below may trigger re-allocation, invalidating any iters
       // Currently only iterator is destructor, so should be safe
       mItems.resize(newsz);
    }
    FdPollItemIf *olditem = mItems[fd];
-   assert(olditem == NULL);	// what is right thing to do?
+   assert(olditem == NULL);     // what is right thing to do?
    mItems[fd] = item;
    struct epoll_event ev;
-   memset(&ev, 0, sizeof(ev));	// make valgrind happy
+   memset(&ev, 0, sizeof(ev));  // make valgrind happy
    ev.events = CvtUsrToSysMask(newMask);
    ev.data.fd = fd;
    if (epoll_ctl(mEPollFd, EPOLL_CTL_ADD, fd, &ev) < 0)
@@ -267,7 +269,7 @@ FdPollImplEpoll::modPollItem(const FdPollItemIf *item, FdPollEventMask newMask)
    assert(mItems[fd] != NULL);
 
    struct epoll_event ev;
-   memset(&ev, 0, sizeof(ev));	// make valgrind happy
+   memset(&ev, 0, sizeof(ev));  // make valgrind happy
    ev.events = CvtUsrToSysMask(newMask);
    ev.data.fd = fd;
    if (epoll_ctl(mEPollFd, EPOLL_CTL_MOD, fd, &ev) < 0)
@@ -288,7 +290,7 @@ FdPollImplEpoll::delPollItem(FdPollItemIf *item)
    if (epoll_ctl(mEPollFd, EPOLL_CTL_DEL, fd, NULL) < 0)
    {
        CritLog(<<"epoll_ctl(DEL) fd="<<fd<<" failed: " << strerror(errno));
-	   abort();
+           abort();
    }
    killCache(fd);
 }
@@ -298,7 +300,7 @@ FdPollImplEpoll::delPollItem(FdPollItemIf *item)
     There is a boundary case:
     1. fdA and fdB are added to epoll
     2. events occur on fdA and fdB
-    2. process() reads queue for fdA and fdB into its cache
+    2. waitAndProcess() reads queue for fdA and fdB into its cache
     3. handler for fdA deletes fdB (closing fd)
     5. handler (same or differnt) opens new fd, gets fd as fdB, and adds
        it to epoll but under different object
@@ -324,7 +326,7 @@ FdPollImplEpoll::killCache(int fd)
    for (ne=mEvCacheCur; ne < mEvCacheLen; ne++)
    {
       if ( mEvCache[ne].data.fd == fd )
-	  {
+      {
          mEvCache[ne].data.fd = INVALID_SOCKET;
       }
    }
@@ -339,49 +341,70 @@ FdPollImplEpoll::processItem(FdPollItemIf *item, FdPollEventMask mask)
    }
    catch(BaseException& e)
    {
-	   // kill it or something?
+           // kill it or something?
        ErrLog(<<"Exception thrown for FdPollItem: " << e);
    }
-   item = NULL;	// WATCHOUT: item may have been deleted
+   item = NULL; // WATCHOUT: item may have been deleted
+   /*
+    * If FPEM_Error was reported, should really make sure it was deleted
+    * or disabled from polling. Otherwise were in stuck in an infinite loop.
+    * But difficult to do that checking robustly until we serials the items.
+    */
 }
 
-void
-FdPollImplEpoll::process()
+bool
+FdPollImplEpoll::waitAndProcess(int ms)
 {
+   bool didSomething = false;
    bool maybeMore;
+   int waitMs = ms;
+   assert( mEvCache.size() > 0 );
    do
    {
-      int nfds = epoll_wait(mEPollFd, &mEvCache.front(), mEvCache.size(), 0);
-	  if (nfds < 0)
-	  {
-         CritLog(<<"epoll_wait() failed: " << strerror(errno));
-         abort();
+      int nfds = epoll_wait(mEPollFd, &mEvCache.front(), mEvCache.size(), waitMs);
+      if (nfds < 0)
+      {
+	 if (errno==EINTR)
+	 {
+	    // signal handler (like alarm) broke loop. generally ok
+            DebugLog(<<"epoll_wait() broken by EINTR");
+	    nfds = 0;	// clean-up and return. could add return code
+			// to indicate this, but not needed by us
+	 }
+	 else
+	 {
+            CritLog(<<"epoll_wait() failed: " << strerror(errno));
+            abort();	// TBD: just throw instead?
+	 }
       }
-	  mEvCacheLen = nfds;	// for killCache()
+      waitMs = 0;             // don't wait anymore
+      mEvCacheLen = nfds;     // for killCache()
       maybeMore = ( ((unsigned)nfds)==mEvCache.size()) ? 1 : 0;
-	  int ne;
+      int ne;
       for (ne=0; ne < nfds; ne++)
-	  {
-	     int fd = mEvCache[ne].data.fd;
-	     if (fd == INVALID_SOCKET)
-		 {
-			 continue;	// was killed by killCache()
-		 }
-	     int sysEvtMask = mEvCache[ne].events;
-	     assert(fd>=0 && fd < (int)mItems.size());
-	     FdPollItemIf *item = mItems[fd];
-	     if (item == NULL)
-		 {
-			 /* this can happen if item was deleted after
-                event was generated in kernel, etc. */
-			 continue;
-	     }
-	     mEvCacheCur = ne;	// for killCache()
-	     processItem(item, CvtSysToUsrMask(sysEvtMask));
-	     item = NULL; // WATCHOUT: item may not exist anymore
-	  }
+      {
+         int fd = mEvCache[ne].data.fd;
+         if (fd == INVALID_SOCKET)
+         {
+            continue;      // was killed by killCache()
+         }
+         int sysEvtMask = mEvCache[ne].events;
+         assert(fd>=0 && fd < (int)mItems.size());
+         FdPollItemIf *item = mItems[fd];
+         if (item == NULL)
+         {
+            /* this can happen if item was deleted after
+             * event was generated in kernel, etc. */
+            continue;
+         }
+         mEvCacheCur = ne;  // for killCache()
+         processItem(item, CvtSysToUsrMask(sysEvtMask));
+         item = NULL; // WATCHOUT: item may not exist anymore
+         didSomething = true;
+      }
       mEvCacheLen = 0;
    } while (maybeMore);
+   return didSomething;
 }
 
 #endif // RESIP_POLL_IMPL_EPOLL
