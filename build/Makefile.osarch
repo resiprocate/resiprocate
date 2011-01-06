@@ -87,8 +87,15 @@ else ifeq ($(FORCE_PIC),yes)
 	# the code in it needs to be compiled PIC (Position Indep. Code)
 	CXXFLAGS += -fPIC
 	CFLAGS   += -fPIC
-	# Below works for resip-ares, don't know about any other modules
-	CONFIGURE_ARGS += "CFLAGS=-fPIC -g -O2 -Wall"
+	# resip-ares configure doesn't support PIC directly, hack it here
+	# This only work with GNU tool chain
+	ARES_CFLAGS += -fPIC -g -O2 -Wall
+	ifeq ($(VOCAL_COMPILE_TYPE),prof)
+	    # resip-ares configure doesn't seem to have support for
+	    # prof, so we hack it in here.
+	    ARES_CFLAGS += -pg -DNDEBUG
+	endif
+	ARES_CONFIGURE_ARGS += "CFLAGS=$(ARES_CFLAGS)"
 endif
 endif
 #       LDFLAGS += -frepo
