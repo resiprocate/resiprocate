@@ -3,8 +3,8 @@
 #endif
 
 #ifdef WIN32
-#include <winsock2.h> 
-#include <ws2tcpip.h> 
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #include <wspiapi.h>   // Required for freeaddrinfo implementation in Windows 2000, NT, Me/95/98
 #else
 #include <sys/types.h>
@@ -195,11 +195,11 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport)
    {
       assert(0);
    }
-   
-   Tuple tuple(transport->interfaceName(), transport->port(), 
+
+   Tuple tuple(transport->interfaceName(), transport->port(),
                    transport->ipVersion(), transport->transport());
    mTypeToTransportMap.insert(std::make_pair(tuple,transport));
-   
+
    switch (transport->transport())
    {
       case UDP:
@@ -209,7 +209,7 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport)
                 mAnyInterfaceTransports.find(tuple) == mAnyInterfaceTransports.end());
 
          DebugLog (<< "Adding transport: " << tuple);
-         
+
          // Store the transport in the ANY interface maps if the tuple specifies ANY
          // interface. Store the transport in the specific interface maps if the tuple
          // specifies an interface. See TransportSelector::findTransport.
@@ -270,7 +270,7 @@ void
 TransportSelector::buildFdSet(FdSet& fdset)
 {
    assert( mPollGrp==NULL );
-   for(TransportList::iterator it = mSharedProcessTransports.begin(); 
+   for(TransportList::iterator it = mSharedProcessTransports.begin();
        it != mSharedProcessTransports.end(); it++)
    {
       (*it)->buildFdSet(fdset);
@@ -281,7 +281,7 @@ void
 TransportSelector::process(FdSet& fdset)
 {
    assert( mPollGrp==NULL );
-   for(TransportList::iterator it = mSharedProcessTransports.begin(); 
+   for(TransportList::iterator it = mSharedProcessTransports.begin();
        it != mSharedProcessTransports.end(); it++)
    {
       try
@@ -439,7 +439,7 @@ TransportSelector::getFirstInterface(bool is_v4, TransportType type)
       InfoLog(<<"Additional address " << addr);
    }
    freeaddrinfo(results);
-   
+
    return source;
 #endif
 }
@@ -526,7 +526,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
       // 2. Might not work under unspecified condition on Windows,
       //    search "getsockname" in MSDN library.
       // 3. We've experienced this issue on our production software.
-      
+
       // this process will determine which interface the kernel would use to
       // send a packet to the target by making a connect call on a udp socket.
       Socket tmp = INVALID_SOCKET;
@@ -580,7 +580,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
       else  // IPv6
       {
 //should never reach here in WIN32 w/ V6 support
-#if defined(USE_IPV6) && !defined(WIN32) 
+#if defined(USE_IPV6) && !defined(WIN32)
          if (source.isAnyInterface())  //!dcm! -- when could this happen?
          {
             source = getFirstInterface(false, target.getType());
@@ -622,8 +622,8 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
          }
       }
 #endif
-      
-      // This is the port that the request will get sent out from. By default, 
+
+      // This is the port that the request will get sent out from. By default,
       // this value will be 0, since the Helper that creates the request will not
       // assign it. In this case, the stack will pick an arbitrary (but appropriate)
       // transport. If it is non-zero, it will only match transports that are bound to
@@ -642,7 +642,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
                 << " -> " << source
                 << " sent-by=" << via.sentHost()
                 << " sent-port=" << via.sentPort());
-      
+
       return source;
    }
 }
@@ -685,9 +685,9 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          fails, we must resort to the connected UDP trick to fill out source,
          which in turn is used to look up a matching transport.
 
-         Given the transport, it is always possible to get the port/protocol, 
+         Given the transport, it is always possible to get the port/protocol,
          and usually possible to get the host (if it is bound to INADDR_ANY, we
-         can't tell). However, if we had to fill out source in order to find 
+         can't tell). However, if we had to fill out source in order to find
          the transport in the first place, this is not an issue.
       */
 
@@ -705,10 +705,10 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                source = transport->getTuple();
             }
          }
-         
+
          if(!transport && target.mFlowKey && target.onlyUseExistingConnection)
          {
-            // .bwc. Connection info was specified, and use of this connection 
+            // .bwc. Connection info was specified, and use of this connection
             // was mandatory, but connection is no longer around. We fail.
          }
          else if (transport)// .bwc. Here we use transport to find source.
@@ -727,7 +727,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                         source.getType()==temp.getType());
                source=temp;
 
-               /* determineSourceInterface might return an arbitrary port 
+               /* determineSourceInterface might return an arbitrary port
                   here, so use the port specified in target.transport->port().
                */
                if(source.getPort()==0)
@@ -741,16 +741,16 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          {
             source = determineSourceInterface(msg, target);
             transport = findTransportBySource(source);
-            
+
             // .bwc. determineSourceInterface might give us a port
             if(transport && source.getPort()==0)
             {
                source.setPort(transport->port());
             }
          }
-                  
+
          target.transport=transport;
-         
+
          // .bwc. Topmost Via is only filled out in the request case. Also, if
          // we don't have a transport at this point, we're going to fail,
          // so don't bother doing the work.
@@ -793,7 +793,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                // if you are.
                Uri destination;// (*reinterpret_cast<Uri*>(0)); // !bwc! What?
 
-               if(msg->exists(h_Routes) && 
+               if(msg->exists(h_Routes) &&
                   !msg->header(h_Routes).empty())
                {
                   destination = msg->header(h_Routes).front().uri();
@@ -821,7 +821,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                topVia.param(p_branch).setSigcompCompartment(remoteSigcompId);
             }
          }
-         
+
       }
       else if (msg->isResponse())
       {
@@ -829,7 +829,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          // know the transport that the corresponding request was received on
          // and this has been copied by TransactionState::sendToWire into target.transport
          assert(target.transport);
-         
+
          source = target.transport->getTuple();
 
          // .bwc. If the transport has an ambiguous interface, we need to
@@ -897,8 +897,8 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                // transport used. Otherwise, leave it as is.
                if (contact.uri().host().empty())
                {
-                  contact.uri().host() = (target.transport->hasSpecificContact() ? 
-                                          target.transport->interfaceName() : 
+                  contact.uri().host() = (target.transport->hasSpecificContact() ?
+                                          target.transport->interfaceName() :
                                           Tuple::inet_ntop(source) );
                   contact.uri().port() = target.transport->port();
 
@@ -919,11 +919,11 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                      if (!contact.exists(p_Instance) &&
                          !contact.uri().exists(p_sigcompId))
                      {
-                        contact.uri().param(p_sigcompId) 
+                        contact.uri().param(p_sigcompId)
                           = mCompression.getSigcompId();
                      }
                   }
-               } 
+               }
                else
                {
                   if (contact.uri().exists(p_addTransport))
@@ -941,7 +941,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
 
          // Fix the Referred-By header if no host specified.
          // If malformed, leave it alone.
-         if (msg->exists(h_ReferredBy) 
+         if (msg->exists(h_ReferredBy)
                && msg->header(h_ReferredBy).isWellFormed())
          {
             if (msg->header(h_ReferredBy).uri().host().empty())
@@ -956,9 +956,9 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          // whether it came from something the TU synthesized or from the wire.
          // We shouldn't touch it. Frankly, I take issue with the method we have
          // chosen to signal to the stack that we want it to fill out various
-         // header-field-values. 
-         if (msg->exists(h_RecordRoutes) 
-               && !msg->header(h_RecordRoutes).empty() 
+         // header-field-values.
+         if (msg->exists(h_RecordRoutes)
+               && !msg->header(h_RecordRoutes).empty()
                && msg->header(h_RecordRoutes).front().isWellFormed())
          {
             NameAddr& rr = msg->header(h_RecordRoutes).front();
@@ -987,7 +987,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                }
             }
          }
-         
+
          // See draft-ietf-sip-identity
          if (mSecurity && msg->exists(h_Identity) && msg->header(h_Identity).value().empty())
          {
@@ -1004,10 +1004,10 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             {
                InfoLog (<< "Couldn't add identity header: " << e);
                msg->remove(h_Identity);
-               if (msg->exists(h_IdentityInfo)) 
+               if (msg->exists(h_IdentityInfo))
                {
                   msg->remove(h_IdentityInfo);
-               }                  
+               }
             }
 #endif
          }
@@ -1021,7 +1021,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          msg->encode(encodeStream);
          encodeStream.flush();
          msg->getCompartmentId() = remoteSigcompId;
-         
+
          assert(!msg->getEncoded().empty());
          DebugLog (<< "Transmitting to " << target
                    << " tlsDomain=" << msg->getTlsDomain()
@@ -1137,7 +1137,7 @@ TransportSelector::findConnection(const Tuple& target) const
          }
       }
    }
-   
+
    return 0;
 }
 
@@ -1163,7 +1163,7 @@ TransportSelector::findTransportByDest(SipMessage* msg, Tuple& target)
          // .bwc. We might find a match by the cid, or maybe using the
          // tuple itself.
          const Connection* conn = findConnection(target);
-         
+
          if(conn) // .bwc. Woohoo! Home free!
          {
             return conn->transport();
@@ -1174,13 +1174,13 @@ TransportSelector::findTransportByDest(SipMessage* msg, Tuple& target)
             return 0;
          }
       }
-      
+
       // !bwc! No luck finding with a FlowKey.
       if(target.getType()==TLS || target.getType()==DTLS)
       {
          return findTlsTransport(msg->getTlsDomain(),target.getType(),target.ipVersion());
       }
-            
+
    }
    else // .bwc. Easy as pie.
    {
@@ -1188,7 +1188,7 @@ TransportSelector::findTransportByDest(SipMessage* msg, Tuple& target)
    }
 
    // .bwc. No luck here. Maybe findTransportBySource will end up working.
-   return 0; 
+   return 0;
 }
 
 
@@ -1319,7 +1319,7 @@ Transport*
 TransportSelector::findTlsTransport(const Data& domainname,resip::TransportType type,resip::IpVersion version)
 {
    assert(type==TLS || type==DTLS);
-   DebugLog (<< "Searching for " << ((type==TLS) ? "TLS" : "DTLS") << " transport for domain='" 
+   DebugLog (<< "Searching for " << ((type==TLS) ? "TLS" : "DTLS") << " transport for domain='"
                   << domainname << "'" << " have " << mTlsTransports.size());
 
    if (domainname == Data::Empty)
@@ -1337,21 +1337,21 @@ TransportSelector::findTlsTransport(const Data& domainname,resip::TransportType 
    else
    {
       TlsTransportKey key(domainname,type,version);
-   
+
       TlsTransportMap::iterator i=mTlsTransports.find(key);
-      
+
       if(i!=mTlsTransports.end())
       {
          DebugLog(<< "Found a transport.");
          return i->second;
       }
    }
-   
+
    DebugLog(<<"No transport found.");
    return 0;
 }
 
-unsigned int 
+unsigned int
 TransportSelector::getTimeTillNextProcessMS()
 {
    return (mPollGrp==NULL&&hasDataToSend()) ? 0 : INT_MAX;

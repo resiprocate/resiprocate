@@ -20,7 +20,7 @@
 **/
 #define RESIP_SIPSTACK_HAVE_FDPOLL 1
 
-namespace resip 
+namespace resip
 {
 
 class ApplicationMessage;
@@ -46,33 +46,33 @@ class FdPollGrp;
 class SipStack
 {
    public:
-      /** 
+      /**
           Constructor
 
           @param security   Security Object required by the stack for TLS, DTLS, SMIME
-                            and Identity-draft compliance.  If 0 is passed in 
-                            the stack will not support these advanced security 
+                            and Identity-draft compliance.  If 0 is passed in
+                            the stack will not support these advanced security
                             features.  The compile flag USE_SSL is also required.
                             The security object will be owned by the SipStack and
-                            deleted in the SipStack destructor.  Default is 0. 
+                            deleted in the SipStack destructor.  Default is 0.
 
-          @param handler    AsyncProcessHandler that will be invoked when Messages 
+          @param handler    AsyncProcessHandler that will be invoked when Messages
                             are posted to the stack.  For example:  SelectInterruptor.
                             Default is 0.
 
           @param stateless  This parameter does not appear to be used.
 
-          @param socketFunc A pointer to a function that will be called after a socket 
-                            in the DNS or SIP transport layers of the stack has been 
-                            created.  This callback can be used to control low level 
+          @param socketFunc A pointer to a function that will be called after a socket
+                            in the DNS or SIP transport layers of the stack has been
+                            created.  This callback can be used to control low level
                             socket options, such as Quality-of-Service/DSCP.
                             Note:  For SIP TCP sockets there is one call for the listen
-                            socket, and one (or two) calls for each connection created 
-                            afterwards.  For each inbound TCP connection the first 
-                            callback is called immediately before the socket is connected, 
+                            socket, and one (or two) calls for each connection created
+                            afterwards.  For each inbound TCP connection the first
+                            callback is called immediately before the socket is connected,
                             and if configured it is called again after the connect call
-                            has completed and before the first data is sent out.  
-                            On some OS's you cannot set QOS until the socket is successfully 
+                            has completed and before the first data is sent out.
+                            On some OS's you cannot set QOS until the socket is successfully
                             connected.  To enable this behavior call:
                             Connection::setEnablePostConnectSocketFuncCall();
 
@@ -85,9 +85,9 @@ class SipStack
 
           @param pollGrp     Polling group to support file-io callbacks for epoll.
       */
-      SipStack(Security* security=0, 
+      SipStack(Security* security=0,
                const DnsStub::NameserverList& additional = DnsStub::EmptyNameserverList,
-               AsyncProcessHandler* handler = 0, 
+               AsyncProcessHandler* handler = 0,
                bool stateless=false,
                AfterSocketCreationFuncPtr socketFunc = 0,
                Compression *compression = 0,
@@ -96,7 +96,7 @@ class SipStack
 
       virtual ~SipStack();
 
-      /** 
+      /**
          Inform the transaction state machine processor that it should not
          create any new transactions and to perform an orderly shutdown. When
          the transactions are all terminated, return a ShutdownMessage to the TU
@@ -112,7 +112,7 @@ class SipStack
             const char* name() const { return "SipStack::Exception"; }
       };
 
-      /** 
+      /**
          Used by the application to add in a new built-in transport.  The transport is
          created and then added to the Transport Selector.
 
@@ -125,52 +125,52 @@ class SipStack
 
          @param version               Protocol Version:  V4 or V6
 
-         @param ipInterface           Specifies which ethernet interface to bind to. If set to 
+         @param ipInterface           Specifies which ethernet interface to bind to. If set to
                                       Data::Empty, bind to all interfaces.  Note:  Interfaces
                                       must be identified via IP address.
 
-         @param sipDomainname         Only allow messages to 
-                                      be sent as the specified domain.  For default case, 
+         @param sipDomainname         Only allow messages to
+                                      be sent as the specified domain.  For default case,
                                       you can pass in domainname = DnsUtil::getLocalDomainName().
 
-         @param privateKeyPassPhrase  Private key pass phrase used to decrypt private key 
+         @param privateKeyPassPhrase  Private key pass phrase used to decrypt private key
                                       certificates.  Note:  For now this parameter is not used
                                       we are loading PKCS7 keys, so a pass phrase is not required.
 
          @param sslType               Version of the TLS specification to use:  SSLv23 or TLSv1
-      */      
+      */
       Transport* addTransport( TransportType protocol,
-                         int port, 
+                         int port,
                          IpVersion version=V4,
                          StunSetting stun=StunDisabled,
-                         const Data& ipInterface = Data::Empty, 
+                         const Data& ipInterface = Data::Empty,
                          const Data& sipDomainname = Data::Empty, // only used
                                                                   // for TLS
-                                                                  // based stuff 
+                                                                  // based stuff
                          const Data& privateKeyPassPhrase = Data::Empty,
                          SecurityTypes::SSLType sslType = SecurityTypes::TLSv1,
                          unsigned transportFlags = 0);
-      
+
       /**
           Used to plug-in custom transports.  Adds the transport to the Transport
           Selector.
 
-          @param transport Pointer to an externally created transport.  SipStack 
+          @param transport Pointer to an externally created transport.  SipStack
                            assumes ownership.
       */
       void addTransport( std::auto_ptr<Transport> transport);
-      
-      /** 
+
+      /**
           Returns the fifo that subclasses of Transport should use for the rxFifo
           cons. param.
 
           @returns A fifo of TransactionMessage's
       */
-      Fifo<TransactionMessage>& stateMacFifo();      
+      Fifo<TransactionMessage>& stateMacFifo();
 
       /**
           Used to add an alias for this sip element. e.g. foobar.com and boo.com
-          are both handled by this proxy.  Not threadsafe.  Alias is added to 
+          are both handled by this proxy.  Not threadsafe.  Alias is added to
           internal list of Domains and can be checked with isMyDomain.
 
           @param domain   Domain name that this stack is responsible for.
@@ -178,26 +178,26 @@ class SipStack
           @param port     Port for domain that this stack is responsible for.
       */
       void addAlias(const Data& domain, int port);
-      
-      /** 
+
+      /**
           Returns true if domain is handled by this stack.  Convenience for
-          Transaction Users. 
+          Transaction Users.
 
           @param domain   Domain name to check.
 
           @param port     Port number to check.
       */
       bool isMyDomain(const Data& domain, int port) const;
-      
+
       /**
           Returns true if port is handled by this stack.  Convenience for
-          Transaction Users. 
+          Transaction Users.
 
-          @param port     Port number to check.        
+          @param port     Port number to check.
       */
       bool isMyPort(int port) const;
 
-      /** 
+      /**
           Get one of the names for this host (calls through to gethostbyname) and
           is not threadsafe.
       */
@@ -209,13 +209,13 @@ class SipStack
       */
       static Data getHostAddress();
 
-      /** 
-          Get one of the domains/ports that are handled by this stack in Uri form. 
+      /**
+          Get one of the domains/ports that are handled by this stack in Uri form.
           "sip:" scheme is assumed.
       */
       const Uri& getUri() const;
 
-      /** 
+      /**
           Interface for the TU to send a message.  Makes a copy of the
           SipMessage.  Caller is responsible for deleting the memory and may do
           so as soon as it returns.  Loose Routing processing as per RFC3261 must
@@ -228,7 +228,7 @@ class SipStack
       void send(const SipMessage& msg, TransactionUser* tu=0);
 
       void send(std::auto_ptr<SipMessage> msg, TransactionUser* tu = 0);
-      
+
       /** this is only if you want to send to a destination not in the route. You
           probably don't want to use it. */
       void sendTo(std::auto_ptr<SipMessage> msg, const Uri& uri, TransactionUser* tu=0);
@@ -239,7 +239,7 @@ class SipStack
       /**
           This is only if you want to send to a destination not in the route.
           Useful for implementing Outbound Proxy use.  Makes a copy of the
-          SipMessage.  Caller is responsible for deleting the memory and may 
+          SipMessage.  Caller is responsible for deleting the memory and may
           do so as soon as it returns.
 
           @param msg SipMessage to send.
@@ -251,9 +251,9 @@ class SipStack
       void sendTo(const SipMessage& msg, const Uri& uri, TransactionUser* tu=0);
 
       /**
-          This is only if you want to send to a destination not in the route. 
+          This is only if you want to send to a destination not in the route.
           Useful for implementing Outbound Proxy use.  Makes a copy of the
-          SipMessage.  Caller is responsible for deleting the memory and may 
+          SipMessage.  Caller is responsible for deleting the memory and may
           do so as soon as it returns.
 
           @param msg   SipMessage to send.
@@ -266,16 +266,16 @@ class SipStack
                   TransactionUser* tu=0);
 
       /**
-          This is only if you want to force send to only send over an existing 
-          connection.  If there is no connection, then it will try the next tuple.  
-          If there are no more Tuples to try, then a 503 is sent to the TU.  Makes 
-          a copy of the SipMessage.  Caller is responsible for deleting the memory 
+          This is only if you want to force send to only send over an existing
+          connection.  If there is no connection, then it will try the next tuple.
+          If there are no more Tuples to try, then a 503 is sent to the TU.  Makes
+          a copy of the SipMessage.  Caller is responsible for deleting the memory
           and may  do so as soon as it returns.
 
           @param msg   SipMessage to send.
 
           @param tuple Destination to send to, specified as a Tuple.  A
-                       connection to this destination must exist.  
+                       connection to this destination must exist.
 
           @param tu    TransactionUser to send from.
       */
@@ -284,44 +284,44 @@ class SipStack
 
       /**
           Makes the message available to the TU at some later time - specified in
-          seconds.  
+          seconds.
           Note:  TranasctionUser subclasses can just post to themselves.
-          
+
           @param message ApplicationMessage to post
 
           @param secondsLater Number of seconds before message is to be posted.
 
           @param tu    TransactionUser to post to.
       */
-      void post(const std::auto_ptr<ApplicationMessage> message, 
+      void post(const std::auto_ptr<ApplicationMessage> message,
                 unsigned int secondsLater,
                 TransactionUser* tu=0);
 
       /**
           Makes the message available to the TU at some later time - specified in
-          milli-seconds.  
+          milli-seconds.
           Note: TranasctionUser subclasses can just post to themselves.
-          
+
           @param message ApplicationMessage to post
 
           @param ms      Number of milli-seconds before message is to be posted.
 
           @param tu      TransactionUser to post to.
       */
-      void postMS(const std::auto_ptr<ApplicationMessage> message, 
+      void postMS(const std::auto_ptr<ApplicationMessage> message,
                   unsigned int ms,
                   TransactionUser* tu=0);
 
       /**
           Makes the message available to the TU later.  Makes a copy of the
-          Message.  Caller is responsible for deleting the memory and may 
-          do so as soon as it returns.  Since the addition of TransactionUsers, 
-          this method is deprecated.  Calling this will cause the TuSelector to 
-          post to the old TuFifo that is not associated with any 
+          Message.  Caller is responsible for deleting the memory and may
+          do so as soon as it returns.  Since the addition of TransactionUsers,
+          this method is deprecated.  Calling this will cause the TuSelector to
+          post to the old TuFifo that is not associated with any
           TransactionUser.
 
           Note:  TranasctionUser subclasses can just post to themselves.
-          
+
           @deprecated
 
           @param message ApplicationMessage to post
@@ -330,10 +330,10 @@ class SipStack
 
       /**
           Makes the message available to the TU at some later time - specified in
-          seconds.  Makes a copy of the ApplicationMessage.  Caller is responsible 
-          for deleting the memory and may do so as soon as it returns.  
+          seconds.  Makes a copy of the ApplicationMessage.  Caller is responsible
+          for deleting the memory and may do so as soon as it returns.
           Note:  TranasctionUser subclasses can just post to themselves.
-          
+
           @param message ApplicationMessage to post
 
           @param secondsLater Number of seconds before message is to be posted.
@@ -345,10 +345,10 @@ class SipStack
 
       /**
           Makes the message available to the TU at some later time - specified in
-          milli-seconds.  Makes a copy of the ApplicationMessage.  Caller is 
-          responsible for deleting the memory and may do so as soon as it returns.  
+          milli-seconds.  Makes a copy of the ApplicationMessage.  Caller is
+          responsible for deleting the memory and may do so as soon as it returns.
           Note:  TranasctionUser subclasses can just post to themselves.
-          
+
           @param message ApplicationMessage to post
 
           @param ms      Number of milli-seconds before message is to be posted.
@@ -360,8 +360,8 @@ class SipStack
 
       /**
          Tells the stack that the TU has abandoned a server transaction. This
-         is provided to allow better behavior in cases where an exception is 
-         thrown due to garbage in the request, and the code catching the 
+         is provided to allow better behavior in cases where an exception is
+         thrown due to garbage in the request, and the code catching the
          exception has no way of telling whether the original request is still
          around. This frees the TU of the obligation to respond to the request.
          @param tid The transaction identifier for the server transaction.
@@ -370,9 +370,9 @@ class SipStack
       void abandonServerTransaction(const Data& tid);
 
       /**
-         Tells the stack that the TU wishes to CANCEL an INVITE request. This 
-         frees the TU of the obligation to keep state on whether a 1xx has come 
-         in yet before actually sending a CANCEL request, and also the 
+         Tells the stack that the TU wishes to CANCEL an INVITE request. This
+         frees the TU of the obligation to keep state on whether a 1xx has come
+         in yet before actually sending a CANCEL request, and also the
          obligation of forming the CANCEL request itself. This _does_ _not_ free
          the TU of the obligation to handle any INVITE/200 that come in (usually
          by sending an ACK to the 200, and then a BYE).
@@ -381,47 +381,47 @@ class SipStack
       void cancelClientInviteTransaction(const Data& tid);
 
       /**
-          Return true if the stack has new messages for the TU.  Since the addition 
-          of TransactionUsers, this method is deprecated.  This only looks into the 
+          Return true if the stack has new messages for the TU.  Since the addition
+          of TransactionUsers, this method is deprecated.  This only looks into the
           old TuFifo that is not associated with any TransactionUser.
 
           @deprecated
       */
       bool hasMessage() const;
-      
-      /** 
-          Retrieve a SipMessage off the old TuFifo.  Caller now owns the memory.  Returns 
-          0 if nothing there.  Since the addition of TransactionUsers, this method 
-          is deprecated.  This only looks into the old TuFifo that is not associated 
+
+      /**
+          Retrieve a SipMessage off the old TuFifo.  Caller now owns the memory.  Returns
+          0 if nothing there.  Since the addition of TransactionUsers, this method
+          is deprecated.  This only looks into the old TuFifo that is not associated
           with any TransactionUser.
 
-          Note:  Applications posting non-sip messages must use receive any.  If non 
+          Note:  Applications posting non-sip messages must use receive any.  If non
                  SipMessages are on the Fifo, then they are just deleted.
-                    
+
           @deprecated
 
           @returns pointer to received SipMessage, 0 if nothing there.
       */
-      SipMessage* receive(); 
+      SipMessage* receive();
 
-      /** 
-          Retrieve a Message off the old TuFifo.  Caller now owns the memory.  Returns 
-          0 if nothing there.  Since the addition of TransactionUsers, this method 
-          is deprecated.  This only looks into the old TuFifo that is not associated 
+      /**
+          Retrieve a Message off the old TuFifo.  Caller now owns the memory.  Returns
+          0 if nothing there.  Since the addition of TransactionUsers, this method
+          is deprecated.  This only looks into the old TuFifo that is not associated
           with any TransactionUser.
 
-          Note:  Applications posting non-sip messages must use receive any.  If non 
+          Note:  Applications posting non-sip messages must use receive any.  If non
                  SipMessages are on the Fifo, then they are just deleted.
-                    
+
           @deprecated
 
-          @returns pointer to received Message, 0 if nothing there.  May return 
-                   TransactionTerminated*, TimerMessage*, SipMessage* or derived 
-                   ApplicationMessage* 
+          @returns pointer to received Message, 0 if nothing there.  May return
+                   TransactionTerminated*, TimerMessage*, SipMessage* or derived
+                   ApplicationMessage*
       */
-      Message* receiveAny(); 
+      Message* receiveAny();
 
-      /**  
+      /**
           Build the FD set to use in a select to find out when process must be
           called again. This must be called prior to calling process.
           Note:  select must also be called on the fdset prior to process.
@@ -431,8 +431,8 @@ class SipStack
       */
       virtual void buildFdSet(FdSet& fdset);
 	
-      /**  
-          This allows the executive to give processing time to stack components. 
+      /**
+          This allows the executive to give processing time to stack components.
           Must call buildFdSet and select before calling this.
 
           @param fdset a populated and 'select'ed fdset
@@ -442,13 +442,13 @@ class SipStack
       /// check all timers (called based upon getTimeTillNextProcessMS())
       virtual void processTimers();
 
-      /// returns time in milliseconds when process next needs to be called 
-      virtual unsigned int getTimeTillNextProcessMS(); 
+      /// returns time in milliseconds when process next needs to be called
+      virtual unsigned int getTimeTillNextProcessMS();
 
       /// Sets the interval that determines the time between Statistics messages
       void setStatisticsInterval(unsigned long seconds);
 
-      /** Installs a handler for the stacks internal StatisticsManager.  This handler is called before the 
+      /** Installs a handler for the stacks internal StatisticsManager.  This handler is called before the
         * default behavior.
         */
       void setExternalStatsHandler(ExternalStatsHandler *handler)
@@ -458,11 +458,11 @@ class SipStack
 
       /// output current state of the stack - for debug
       EncodeStream& dump(EncodeStream& strm) const;
-      
+
       /// Returns a pointer to the embedded Security object, 0 if not set
       Security* getSecurity() const;
 
-      /** 
+      /**
           Adds a TU to the TU selection chain.  Tu's do not call receive or
           receiveAny, the SipStack will call postToTu on the appropriate
           Tu. Messages not associated with a registered TU go into SipStack::mTuFifo.
@@ -476,13 +476,13 @@ class SipStack
       void unregisterTransactionUser(TransactionUser&);
 
       /**
-          Register a handler with the DNS Interface for notifications of when a Dns 
+          Register a handler with the DNS Interface for notifications of when a Dns
           Resource Record has been blacklisted.
 
-          @param rrType Resource Record type you are interested in receiving 
+          @param rrType Resource Record type you are interested in receiving
                         notifications for
 
-          @param BlackListListener Class implementing the onBlacklisted callback 
+          @param BlackListListener Class implementing the onBlacklisted callback
                                    event sink defined in BlackListListener
       */
       void registerMarkListener(MarkListener*);
@@ -493,17 +493,17 @@ class SipStack
 
           @param rrType Resource Record type
 
-          @param BlackListListener Pointer to the class implementing the 
+          @param BlackListListener Pointer to the class implementing the
                                    BlackListListener event sink
       */
       void unregisterMarkListener(MarkListener*);
 
       DnsStub& getDnsStub() const;
 
-      /** 
+      /**
           Specify which enum domains will be searched when sending to URIs that
           return true to Uri::isEnumSearchable(). An enum query will be done for
-          each suffix in parallel. 
+          each suffix in parallel.
       */
       void setEnumSuffixes(const std::vector<Data>& suffixes);
 
@@ -518,19 +518,19 @@ class SipStack
       void logDnsCache();
 
       /**
-          Enable Statistics Manager.  SIP Statistics will be collected and 
-          dispatched periodically via a StatisticsMessage.  Note:  By default 
+          Enable Statistics Manager.  SIP Statistics will be collected and
+          dispatched periodically via a StatisticsMessage.  Note:  By default
           the Statistics Manager is enabled.
       */
       volatile bool& statisticsManagerEnabled();
       const bool statisticsManagerEnabled() const;
-      
-      bool getFixBadDialogIdentifiers() const 
+
+      bool getFixBadDialogIdentifiers() const
       {
          return mTransactionController.mFixBadDialogIdentifiers;
       }
 
-      void setFixBadDialogIdentifiers(bool pFixBadDialogIdentifiers) 
+      void setFixBadDialogIdentifiers(bool pFixBadDialogIdentifiers)
       {
          mTransactionController.mFixBadDialogIdentifiers = pFixBadDialogIdentifiers;
       }
@@ -551,7 +551,7 @@ class SipStack
       }
 
       Compression &getCompression() { return *mCompression; }
-      
+
       bool isFlowAlive(const resip::Tuple& flow) const;
 
       /* Indicate if should use "InternalPoll" system; see mUseInternalPoll.
@@ -561,7 +561,7 @@ class SipStack
        * to control this on per-stack basis.
        */
       static void setDefaultUseInternalPoll(bool useInternal);
-      
+
    private:
       /// Notify an async process handler - if one has been registered
       void checkAsyncProcessHandler();
@@ -586,10 +586,10 @@ class SipStack
       SipStack(const SipStack& copy);
 
       /// Disallow assignment, by not implementing
-      SipStack& operator=(const SipStack& rhs);         
-      
-      /** fifo used to communicate between the TU (Transaction User) and stack 
-          Note:  since the introduction of multiple TU's this Fifo should no 
+      SipStack& operator=(const SipStack& rhs);
+
+      /** fifo used to communicate between the TU (Transaction User) and stack
+          Note:  since the introduction of multiple TU's this Fifo should no
           longer be used by most applications - each TU now owns it's own Fifo. */
       TimeLimitFifo<Message> mTUFifo;
 
@@ -600,14 +600,14 @@ class SipStack
           placed in the mTUFifo (if there is not associated TU), or it is placed
           on the fifo of the appropriate TU */
       TuSelectorTimerQueue  mAppTimers;
-      
+
       /// Used to Track stack statistics
       StatisticsManager mStatsManager;
-      
+
       /// All aspects of the Transaction State Machine / DNS resolver
       TransactionController mTransactionController;
-      
-      
+
+
       /** store all domains that this stack is responsible for. Controlled by
           addAlias and addTransport interfaces and checks can be made with isMyDomain() */
       std::set<Data> mDomains;
@@ -640,37 +640,37 @@ class SipStack
 
 EncodeStream& operator<<(EncodeStream& strm, const SipStack& stack);
 
-inline void 
+inline void
 SipStack::sendOverExistingConnection(const SipMessage& msg, const Tuple& tuple,
                                      TransactionUser* tu)
 {
-   assert(tuple.mFlowKey);   
+   assert(tuple.mFlowKey);
    Tuple tup(tuple);
-   tup.onlyUseExistingConnection = true;   
+   tup.onlyUseExistingConnection = true;
    sendTo(msg, tuple, tu);
 }
- 
+
 }
 
 #endif
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -680,7 +680,7 @@ SipStack::sendOverExistingConnection(const SipMessage& msg, const Tuple& tuple,
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -694,12 +694,13 @@ SipStack::sendOverExistingConnection(const SipMessage& msg, const Tuple& tuple,
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */

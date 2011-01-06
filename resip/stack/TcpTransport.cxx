@@ -16,8 +16,8 @@
 using namespace std;
 using namespace resip;
 
-TcpTransport::TcpTransport(Fifo<TransactionMessage>& fifo, int portNum, 
-                           IpVersion version, const Data& pinterface, 
+TcpTransport::TcpTransport(Fifo<TransactionMessage>& fifo, int portNum,
+                           IpVersion version, const Data& pinterface,
                            AfterSocketCreationFuncPtr socketFunc,
                            Compression &compression,
                            unsigned transportFlags)
@@ -27,7 +27,7 @@ TcpTransport::TcpTransport(Fifo<TransactionMessage>& fifo, int portNum,
 
    init();
 
-   InfoLog (<< "Creating TCP transport host=" << pinterface 
+   InfoLog (<< "Creating TCP transport host=" << pinterface
             << " port=" << mTuple.getPort()
             << " ipv4=" << bool(version==V4) );
 }
@@ -36,7 +36,7 @@ TcpTransport::~TcpTransport()
 {
 }
 
-Connection* 
+Connection*
 TcpTransport::createConnection(const Tuple& who, Socket fd, bool server)
 {
    assert(this);
@@ -93,4 +93,5 @@ TcpTransport::createConnection(const Tuple& who, Socket fd, bool server)
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */

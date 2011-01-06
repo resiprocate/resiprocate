@@ -13,17 +13,17 @@ class TransactionMessage;
 class TcpBaseTransport : public InternalTransport, public FdPollItemIf
 {
    public:
-      TcpBaseTransport(Fifo<TransactionMessage>& fifo, 
-                       int portNum,  
-                       IpVersion version, 
-                       const Data& interfaceName, 
-                       AfterSocketCreationFuncPtr socketFunc, 
+      TcpBaseTransport(Fifo<TransactionMessage>& fifo,
+                       int portNum,
+                       IpVersion version,
+                       const Data& interfaceName,
+                       AfterSocketCreationFuncPtr socketFunc,
                        Compression &compression,
                        unsigned transportFlags = 0);
       virtual  ~TcpBaseTransport();
 
 
-      
+
       virtual void processPollEvent(FdPollEventMask mask);
       virtual void process(FdSet& fdset);
       virtual void buildFdSet( FdSet& fdset);
@@ -36,7 +36,7 @@ class TcpBaseTransport : public InternalTransport, public FdPollItemIf
       const ConnectionManager& getConnectionManager() const {return mConnectionManager;}
 
    protected:
-      /** Performs constructor activities that depend on virtual 
+      /** Performs constructor activities that depend on virtual
        *  functions specified by derived classes.  Derived classes
           should call this in their constructors.  */
       virtual void init();
@@ -77,22 +77,22 @@ class TcpBaseTransport : public InternalTransport, public FdPollItemIf
 #endif
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -102,7 +102,7 @@ class TcpBaseTransport : public InternalTransport, public FdPollItemIf
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -116,12 +116,13 @@ class TcpBaseTransport : public InternalTransport, public FdPollItemIf
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */

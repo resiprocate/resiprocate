@@ -21,14 +21,14 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 
-InternalTransport::InternalTransport(Fifo<TransactionMessage>& rxFifo, 
-                                     int portNum, 
+InternalTransport::InternalTransport(Fifo<TransactionMessage>& rxFifo,
+                                     int portNum,
                                      IpVersion version,
                                      const Data& interfaceObj,
                                      AfterSocketCreationFuncPtr socketFunc,
                                      Compression &compression,
                                      unsigned transportFlags) :
-   Transport(rxFifo, portNum, version, interfaceObj, Data::Empty, 
+   Transport(rxFifo, portNum, version, interfaceObj, Data::Empty,
              socketFunc, compression, transportFlags),
    mFd(INVALID_SOCKET), mPollGrp(NULL), mPollItemHandle(NULL)
 {
@@ -79,7 +79,7 @@ InternalTransport::socket(TransportType type, IpVersion ipVer)
          assert(0);
          throw Transport::Exception("Unsupported transport", __FILE__,__LINE__);
    }
-   
+
    if ( fd == INVALID_SOCKET )
    {
       int e = getErrno();
@@ -88,15 +88,15 @@ InternalTransport::socket(TransportType type, IpVersion ipVer)
    }
 
    DebugLog (<< "Creating fd=" << fd << (ipVer == V4 ? " V4/" : " V6/") << (type == UDP ? "UDP" : "TCP"));
-   
+
    return fd;
 }
 
-void 
+void
 InternalTransport::bind()
 {
    DebugLog (<< "Binding to " << Tuple::inet_ntop(mTuple));
-   
+
    if ( ::bind( mFd, &mTuple.getMutableSockaddr(), mTuple.length()) == SOCKET_ERROR )
    {
       int e = getErrno();
@@ -113,7 +113,7 @@ InternalTransport::bind()
          throw Transport::Exception("Could not use port", __FILE__,__LINE__);
       }
    }
-   
+
    // If we bound to port 0, then query OS for assigned port number
    if(mTuple.getPort() == 0)
    {
@@ -139,19 +139,19 @@ InternalTransport::bind()
    }
 }
 
-unsigned int 
+unsigned int
 InternalTransport::getFifoSize() const
 {
    return mTxFifo.size();
 }
 
-bool 
+bool
 InternalTransport::hasDataToSend() const
 {
    return mTxFifo.messageAvailable();
 }
 
-void 
+void
 InternalTransport::transmit(const Tuple& dest, const Data& pdata, const Data& tid, const Data& sigcompId)
 {
    SendData* data = new SendData(dest, pdata, tid, sigcompId);
@@ -164,29 +164,29 @@ InternalTransport::transmit(const Tuple& dest, const Data& pdata, const Data& ti
 }
 
 void
-InternalTransport::setPollGrp(FdPollGrp *grp) 
+InternalTransport::setPollGrp(FdPollGrp *grp)
 {
     assert(0);
 }
 
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -196,7 +196,7 @@ InternalTransport::setPollGrp(FdPollGrp *grp)
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -210,12 +210,13 @@ InternalTransport::setPollGrp(FdPollGrp *grp)
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */

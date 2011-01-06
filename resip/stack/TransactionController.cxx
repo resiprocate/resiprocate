@@ -252,5 +252,5 @@ TransactionController::cancelClientInviteTransaction(const Data& tid)
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
- * vi: shiftwidth=3 expandtabs:
+ * vi: shiftwidth=3 expandtab:
  */

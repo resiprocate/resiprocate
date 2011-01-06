@@ -112,3 +112,20 @@ running valgrind. E.g.:
    # ulimit -Hn 200000
    # ulimit -Sn 200000
    # valgrind --leak-check=full ./testStack -n 10000
+
+Vi editing
+----------
+(These probably belong elsewhere). Resip uses 3-space indends
+without tabs. Suitable options for vi are:
+   set shiftwidth=3
+   set expandtab
+
+The command
+   :%retab
+will get rid of all existing tabs
+
+The following can be added at the bottom of each file:
+   /* ex: set shiftwidth=3 expandtab: */
+For above to work, you must have modelines enabled in your ~/.vimrc
+   set modeline
+It is disabled by default on many platforms for security reasons.

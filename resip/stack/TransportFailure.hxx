@@ -19,7 +19,7 @@ class TransportFailure : public TransactionMessage
       enum FailureReason
       {
          None = 0, //invalid
-         Failure, 
+         Failure,
          NoTransport,
          NoRoute,
          CertNameMismatch,
@@ -30,12 +30,12 @@ class TransportFailure : public TransactionMessage
 
       virtual const Data& getTransactionId() const;
       virtual bool isClientTransaction() const;
-      
+
       FailureReason getFailureReason() const { return mFailureReason; }
-         
+
       virtual EncodeStream& encodeBrief(EncodeStream& str) const;
-      virtual EncodeStream& encode(EncodeStream& strm) const;      
-      
+      virtual EncodeStream& encode(EncodeStream& strm) const;
+
    private:
       Data mTransactionId;
       FailureReason mFailureReason;
@@ -46,20 +46,20 @@ class TransportFailure : public TransactionMessage
 #endif
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -69,7 +69,7 @@ class TransportFailure : public TransactionMessage
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -83,12 +83,13 @@ class TransportFailure : public TransactionMessage
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */
