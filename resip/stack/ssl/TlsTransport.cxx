@@ -51,7 +51,7 @@ TlsTransport::~TlsTransport()
   
 
 Connection* 
-TlsTransport::createConnection(Tuple& who, Socket fd, bool server)
+TlsTransport::createConnection(const Tuple& who, Socket fd, bool server)
 {
    assert(this);
    Connection* conn = new TlsConnection(this,who, fd, mSecurity, server,

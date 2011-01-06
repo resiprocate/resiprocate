@@ -31,7 +31,7 @@ class TlsTransport : public TcpBaseTransport
 
       TransportType transport() const { return TLS; }
    protected:
-      Connection* createConnection(Tuple& who, Socket fd, bool server=false);
+      Connection* createConnection(const Tuple& who, Socket fd, bool server=false);
 
       Security* mSecurity;
       SecurityTypes::SSLType mSslType;
