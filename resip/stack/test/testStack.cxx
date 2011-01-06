@@ -31,28 +31,77 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
-class SipStackAndThread {
+class SharedAsyncNotify : public AsyncProcessHandler
+{
    public:
-      SipStackAndThread(const char *tType);
+      SharedAsyncNotify() { };
+      virtual ~SharedAsyncNotify() { };
+
+      virtual void handleProcessNotification();
+
+      bool waitNotify(int ms);
+
+   protected:
+      Mutex mMutex;
+      Condition mCondition;
+};
+
+void
+SharedAsyncNotify::handleProcessNotification()
+{
+   Lock lock(mMutex); (void)lock;
+   mCondition.signal();
+}
+
+/**
+   {ms}<0 -> wait forever
+   {ms}=0 -> don't wait
+   {ms}>0 -> Wait this many ms
+   Returns true if condition was signalled (false if timer
+   or other interrupt)
+**/
+bool
+SharedAsyncNotify::waitNotify(int ms)
+{
+   Lock lock(mMutex); (void)lock;
+
+   if (ms<0)
+   {
+      mCondition.wait(mMutex);
+      return true;
+   }
+   else
+   {
+      return mCondition.wait(mMutex, ms);
+   }
+}
+
+class SipStackAndThread
+{
+   public:
+      SipStackAndThread(const char *tType,
+        AsyncProcessHandler *notifyDn=0,
+        AsyncProcessHandler *notifyUp=0);
          ~SipStackAndThread() {
 	 destroy();
       }
 
-      SipStack&		getStack() const { return *mStack; }
+      SipStack&		getStack() const { assert(mStack); return *mStack; }
 
       // I don't know if these are such a good idea
-      SipStack&		operator*() const { return *mStack; }
+      SipStack&		operator*() const { assert(mStack); return *mStack; }
       SipStack*		operator->() const { return mStack; }
 
       void		run() { if ( mThread ) mThread->run(); }
       void		shutdown() { if ( mThread ) mThread->shutdown(); }
       void		join() { if ( mThread ) mThread->join(); }
 
+      void		destroy();
+
       // dis-allowed by not-implemented
       SipStackAndThread& operator=(SipStackAndThread&);
 
    protected:
-      void		destroy();
 
       SipStack		*mStack;
       ThreadIf		*mThread;
@@ -60,12 +109,14 @@ class SipStackAndThread {
 };
 
 
-SipStackAndThread::SipStackAndThread(const char *tType)
+SipStackAndThread::SipStackAndThread(const char *tType,
+ AsyncProcessHandler *notifyDn, AsyncProcessHandler *notifyUp)
   : mStack(0), mThread(0), mSelIntr(0)
 {
    bool doStd = false;
 
    assert( tType );
+
    if ( strcmp(tType,"intr")==0 ) {
       mSelIntr = new SelectInterruptor();
    } else if ( strcmp(tType,"std")==0 ) {
@@ -76,7 +127,9 @@ SipStackAndThread::SipStackAndThread(const char *tType)
       CritLog(<<"Bad thread-type: "<<tType);
       exit(1);
    }
-   mStack = new SipStack(/*security*/0, DnsStub::EmptyNameserverList, mSelIntr);
+   mStack = new SipStack(/*security*/0, DnsStub::EmptyNameserverList,
+     mSelIntr?mSelIntr:notifyDn,
+     /*stateless*/false, /*sockFnc*/0, /*comp*/0, notifyUp);
    if ( mSelIntr ) {
       mThread = new InterruptableStackThread(*mStack, *mSelIntr);
    } else if ( doStd ) {
@@ -85,16 +138,20 @@ SipStackAndThread::SipStackAndThread(const char *tType)
 }
 
 void
-SipStackAndThread::destroy() {
-   if ( mThread ) {
+SipStackAndThread::destroy()
+{
+   if ( mThread )
+   {
       delete mThread;
       mThread = 0;
    }
-   if ( mStack ) {
+   if ( mStack )
+   {
       delete mStack;
       mStack = 0;
    }
-   if ( mSelIntr ) {
+   if ( mSelIntr )
+   {
       delete mSelIntr;
       mSelIntr = 0;
    }
@@ -108,6 +165,7 @@ main(int argc, char* argv[])
    const char* logLevel = "WARNING";
    const char* proto = "tcp";
    char* bindAddr = 0;
+   int doListen = 1;
 
    int runs = 10000;
    int window = 100;
@@ -123,17 +181,18 @@ main(int argc, char* argv[])
    struct poptOption table[] = {
       {"log-type",    'l', POPT_ARG_STRING, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
       {"log-level",   'v', POPT_ARG_STRING, &logLevel,  0, "specify the default log level", "DEBUG|INFO|WARNING|ALERT"},
-      {"num-runs",    'r', POPT_ARG_INT,    &runs,      0, "number of calls in test", 0},
+      {"num-runs",    'r', POPT_ARG_INT,    &runs,      0, "number of runs (SIP requests) in test", 0},
       {"window-size", 'w', POPT_ARG_INT,    &window,    0, "number of concurrent transactions", 0},
-      { "select-time", 's', POPT_ARG_INT,    &seltime,   0, "number of runs in test", 0},
+      {"select-time", 's', POPT_ARG_INT,    &seltime,   0, "polling interval (ms) for stack thread", 0},
       {"protocol",    'p', POPT_ARG_STRING, &proto,     0, "protocol to use (tcp | udp)", 0},
       {"bind",        'b', POPT_ARG_STRING, &bindAddr,  0, "interface address to bind to",0},
+      {"listen",      0,   POPT_ARG_INT,   &doListen,   0, "do not bind/listen sender ports", 0},
       {"v6",          '6', POPT_ARG_NONE,   &v6     ,   0, "ipv6", 0},
       {"invite",      'i', POPT_ARG_NONE,   &invite     ,   0, "send INVITE/BYE instead of REGISTER", 0},
       {"poll",        0,   POPT_ARG_INT,   &usePollMode,  0, "use epoll mode", 0},
       {"port",	      0, POPT_ARG_INT,   &portBase,   0, "first port to use", 0},
       {"numports",    'n', POPT_ARG_INT,   &numPorts,   0, "number of parallel sessions(ports)", 0},
-      {"thread-type", 't', POPT_ARG_STRING, &threadType,0, "stack thread type", "none|std|intr"},
+      {"thread-type", 't', POPT_ARG_STRING, &threadType,0, "stack thread type", "none|common|std|intr"},
       POPT_AUTOHELP
       { NULL, 0, 0, NULL, 0 }
    };
@@ -144,6 +203,10 @@ main(int argc, char* argv[])
    assert( poptGetArg(context)==NULL);
 #endif
    Log::initialize(logType, logLevel, argv[0]);
+
+   Data bindIfAddr(bindAddr ? bindAddr : (const char*)"");
+   InfoLog(<<"Binding to address: " << bindIfAddr);
+
    cout << "Performing " << runs << " runs with"
      <<" win="<<window
      <<" ip"<<(v6?"v4":"v4")
@@ -151,39 +214,80 @@ main(int argc, char* argv[])
      <<" numports="<<numPorts
      <<" thread="<<threadType
      <<" epoll="<<usePollMode
+     <<" sendIf="<<bindIfAddr
+     <<" listen="<<doListen
      <<"." << endl;
 
+   // must occur before creating stacks
    SipStack::setDefaultUseInternalPoll(usePollMode?true:false);
 
+   const char *eachThreadType = threadType;
+   SelectInterruptor *commonIntr = NULL;
+   AsyncProcessHandler *notifyUp = NULL;
+   bool noStackThread = false;
+   SharedAsyncNotify sharedUp;
+   if ( strcmp(eachThreadType,"none")==0 )
+   {
+      // Everything runs in single thread,
+      // and we spin, just keep cycling thru looking for stuff to do.
+      // Default seltime is zero, so no delay at all. This isn't
+      // very useful for profiling because we spend all our time checking
+      // stuff to do.
+      noStackThread = true;
+   }
+   else if ( strcmp(eachThreadType,"common")==0 )
+   {
+      // Everything runs in single thread, but thread blocks
+      // until there is something to do. When there is something
+      // to do within the stack (notifyDn) or app (notifyUp) the
+      // common interruptor is invoked and it breaks the select loop.
+      seltime = 10*1000;
+      commonIntr = new SelectInterruptor();
+      notifyUp = commonIntr;
+      noStackThread = true;
+      eachThreadType = "none";
+   }
+   else
+   {
+      notifyUp = &sharedUp;
+   }
+   SipStackAndThread receiver(eachThreadType, commonIntr, notifyUp);
+   SipStackAndThread sender(eachThreadType, commonIntr, notifyUp);
+
    IpVersion version = (v6 ? V6 : V4);
-   SipStackAndThread receiver(threadType);
-   SipStackAndThread sender(threadType);
-   bool noStackThread = strcmp(threadType,"none")==0;
 
-   // estimate number of sockets we need:
-   // 2x for sender and receiver
-   // 1 for UDP + 2 for TCP (listen + connection)
-   // ~30 for misc (DNS)
-   int needFds = numPorts * 6 + 30;
-   increaseLimitFds(needFds);
+   if ( numPorts > 100 )
+   {
+      // estimate number of sockets we need:
+      // 2x for sender and receiver
+      // 1 for UDP + 2 for TCP (listen + connection)
+      // ~30 for misc (DNS)
+      int needFds = numPorts * 6 + 30;
+      increaseLimitFds(needFds);
+   }
    
-//   below isn't needed, just use --port option
-//   sender.addTransport(UDP, 25060, version); // !ah! just for debugging TransportSelector
-//   sender.addTransport(TCP, 25060, version);
+   /* On linux, the client TCP connection port range is controll by
+    * /proc/sys/net/ipv4/ip_local_port_range, and defaults to [32768,61000].
+    * To avoid conflicts when binding, the bound ports below should
+    * stay out of the range (e.g., below 32768)
+    */
 
-   Data senderIfAddr(bindAddr ? bindAddr : (const char*)"");
-   InfoLog(<<"Binding to address: " << senderIfAddr);
 
    int senderPort = portBase;
    if ( senderPort==0 )
-      senderPort = numPorts==1 ? 25060+(rand()&0x1fff) : 11000;
+      senderPort = numPorts==1 ? 25060+(rand()&0x0fff) : 11000;
    int registrarPort = senderPort + numPorts;
 
    int idx;
    for (idx=0; idx < numPorts; idx++)
    {
-      sender->addTransport(UDP, senderPort+idx, version, StunDisabled, senderIfAddr);
-      sender->addTransport(TCP, senderPort+idx, version, StunDisabled, senderIfAddr);
+      sender->addTransport(UDP, senderPort+idx, version, StunDisabled, bindIfAddr);
+      // NOBIND doesn't make sense for UDP
+      sender->addTransport(TCP, senderPort+idx, version, StunDisabled, bindIfAddr,
+        /*sipDomain*/Data::Empty, /*keypass*/Data::Empty, SecurityTypes::TLSv1,
+        doListen?0:RESIP_TRANSPORT_FLAG_NOBIND);
+      // NOTE: we could also bind receive to bindIfAddr, but existing code
+      // doesn't do this. Responses are sent from here, so why don't we?
       receiver->addTransport(UDP, registrarPort+idx, version);
       receiver->addTransport(TCP, registrarPort+idx, version);
    }
@@ -214,6 +318,9 @@ main(int argc, char* argv[])
    int count = 0;
    int sent = 0;
 
+   int rxReqTryCnt = 0, rxReqHitCnt = 0;
+   int rxRspTryCnt = 0, rxRspHitCnt = 0;
+
    while (count < runs)
    {
       //InfoLog (<< "count=" << count << " messages=" << messages.size());
@@ -234,6 +341,15 @@ main(int argc, char* argv[])
             next = Helper::makeRegister( target, from, contact);
          }
          
+	 // The Via header serves two purposes:
+	 // (1) tells the recipient where to send the response,
+	 // (2) selects which Transport we send from
+	 if (!bindIfAddr.empty() && numPorts > 1)
+	 {
+	     // currently TCP only honors Via if host is populated
+	     // the "numPorts>1" test is for backwards compat
+             next->header(h_Vias).front().sentHost() = bindIfAddr;
+	 }
          next->header(h_Vias).front().sentPort() = senderPort + (sent%numPorts);
          sender->send(*next);
          outstanding++;
@@ -241,20 +357,63 @@ main(int argc, char* argv[])
          delete next;
       }
 
-      if ( noStackThread ) {
+      if ( noStackThread )
+      {
          FdSet fdset;
          receiver->buildFdSet(fdset);
          sender->buildFdSet(fdset);
-         fdset.selectMilliSeconds(seltime);
+	 if ( commonIntr )
+	    commonIntr->buildFdSet(fdset);
+
+	 int thisseltime = seltime;
+	 if ( thisseltime > 0 )
+	 {
+	    unsigned int stackMs = resipMin(
+		    receiver->getTimeTillNextProcessMS(),
+		    sender->getTimeTillNextProcessMS());
+	    thisseltime = resipMin((unsigned)thisseltime, stackMs);
+         }
+         int numReady = fdset.selectMilliSeconds(thisseltime);
+
+	 if (thisseltime > 4000 && numReady==0)
+	 {
+	    cout << "STRANGE: Stuck for long time: "
+		<<" sent="<<sent
+		<<" done="<<count
+		<<" thisseltime="<<thisseltime
+		<<endl;
+	 }
+	 if ( commonIntr )
+         {
+	    commonIntr->process(fdset);
+         }
          receiver->process(fdset);
          sender->process(fdset);
       }
-      
-      SipMessage* request = receiver->receive();
-      static NameAddr contact;
-
-      if (request)
+      else
       {
+	 // XXX: do something here to spin until either queue has message
+	 int thisseltime = 4000;
+	 bool gotPost = sharedUp.waitNotify(thisseltime);
+	 if ( !gotPost )
+	 {
+	    cout << "STRANGE: Stuck for long time: "
+		<<" sent="<<sent
+		<<" done="<<count
+		<<" thisseltime="<<thisseltime
+		<<endl;
+	 }
+      }
+      
+      for (;;)
+      {
+         static NameAddr contact;
+
+         ++rxReqTryCnt;
+         SipMessage* request = receiver->receive();
+          if (request==NULL)
+             break;
+         ++rxReqHitCnt;
          assert(request->isRequest());
          SipMessage response;
          switch (request->header(h_RequestLine).getMethod())
@@ -288,9 +447,13 @@ main(int argc, char* argv[])
          delete request;
       }
       
-      SipMessage* response = sender->receive();
-      if (response)
+      for (;;)
       {
+         ++rxRspTryCnt;
+         SipMessage* response = sender->receive();
+         if (response==NULL)
+	    break;
+         ++rxRspHitCnt;
          assert(response->isResponse());
          switch(response->header(h_CSeq).method())
          {
@@ -333,21 +496,37 @@ main(int argc, char* argv[])
    UInt64 elapsed = Timer::getTimeMs() - startTime;
    if (!invite)
    {
-      cout << runs << " registrations peformed in " << elapsed << " ms, a rate of " 
+      cout << runs << " registrations performed in " << elapsed << " ms, a rate of "
            << runs / ((float) elapsed / 1000.0) << " transactions per second." << endl;
    }
    else
    {
-      cout << runs << " calls peformed in " << elapsed << " ms, a rate of " 
+      cout << runs << " calls performed in " << elapsed << " ms, a rate of "
            << runs / ((float) elapsed / 1000.0) << " calls per second." << endl;
    }
    cout << "Note: this test runs both sides (client and server)" << endl;
+
+   cout << "RxCnts: "
+     <<" Req="<<rxReqHitCnt<<"/"<<rxReqTryCnt
+     <<" ("<<(rxReqHitCnt*100/rxReqTryCnt)<<"%)"
+     <<" Rsp="<<rxRspHitCnt<<"/"<<rxRspTryCnt
+     <<" ("<<(rxRspHitCnt*100/rxRspTryCnt)<<"%)"
+     << endl;
 
    sender.shutdown();
    receiver.shutdown();
 
    sender.join();
    receiver.join();
+
+   sender.destroy();
+   receiver.destroy();
+
+   if ( commonIntr )
+   {
+       delete commonIntr;
+       commonIntr = NULL;
+   }
    
 #if defined(HAVE_POPT_H)
    poptFreeContext(context);
