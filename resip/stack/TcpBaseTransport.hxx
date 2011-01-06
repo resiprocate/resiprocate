@@ -41,7 +41,7 @@ class TcpBaseTransport : public InternalTransport
           should call this in their constructors.  */
       virtual void init();
 
-      virtual void checkTransmitQueue(bool justPosted);
+      virtual void checkTransmitQueue();
 
       /** Makes new Connection using provided socket. */
       virtual Connection* createConnection(const Tuple& who, Socket fd, bool server=false)=0;

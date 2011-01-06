@@ -33,16 +33,21 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
                            StunSetting stun,
                            const Data& pinterface,
                            AfterSocketCreationFuncPtr socketFunc,
-                           Compression &compression) 
-   : InternalTransport(fifo, portNum, version, pinterface, socketFunc, compression),
+                           Compression &compression,
+			   unsigned transportFlags)
+   : InternalTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags),
      mSigcompStack(0),
+     mRxBuffer(0),
      mExternalUnknownDatagramHandler(0),
      mInWritable(false)
 {
+   mPollEventCnt = 0;
+   mTxTryCnt = mTxMsgCnt = mTxFailCnt = 0;
+   mRxTryCnt = mRxMsgCnt = mRxKeepaliveCnt = mRxTransactionCnt = 0;
    mTuple.setType(transport());
    mFd = InternalTransport::socket(transport(), version);
    mTuple.mFlowKey=(FlowKey)mFd;
-   bind();
+   bind();	// also makes it non-blocking
 
    InfoLog (<< "Creating UDP transport host=" << pinterface 
             << " port=" << mTuple.getPort()
@@ -66,13 +71,28 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
 
 UdpTransport::~UdpTransport()
 {
-   InfoLog (<< "Shutting down " << mTuple);
+   InfoLog(<< "Shutting down " << mTuple
+	   <<" tf="<<mTransportFlags<<" evt="<<(mPollGrp?1:0)
+	   <<" stats:"
+	   <<" poll="<<mPollEventCnt
+	   <<" txtry="<<mTxTryCnt
+	   <<" txmsg="<<mTxMsgCnt
+	   <<" txfail="<<mTxFailCnt
+	   <<" rxtry="<<mRxTryCnt
+	   <<" rxmsg="<<mRxMsgCnt
+	   <<" rxka="<<mRxKeepaliveCnt
+	   <<" rxtr="<<mRxTransactionCnt
+	   );
 #ifdef USE_SIGCOMP
    delete mSigcompStack;
 #endif
    if ( mPollGrp ) 
    {
       mPollGrp->delPollItem(this);
+   }
+   if ( mRxBuffer )
+   {
+      delete[] mRxBuffer;
    }
 }
 
@@ -96,38 +116,53 @@ UdpTransport::getPollSocket() const
  * Called after a message is added. Could try writing it now.
  */
 void
-UdpTransport::checkTransmitQueue(bool justPosted) {
-   if ( mPollGrp && !mInWritable && (justPosted||mTxFifo.messageAvailable()) )
+UdpTransport::checkTransmitQueue() {
+   if ( (mTransportFlags & RESIP_TRANSPORT_FLAG_TXNOW)!= 0 )
+   {
+       processTxAll();
+       // FALLTHRU to code below in case queue not-empty
+       // shouldn't ever happen (with current code)
+       // but in future we may throttle transmits
+   }
+   if ( mPollGrp )
+       updateEvents();
+}
+
+void
+UdpTransport::updateEvents()
+{
+   //assert( mPollGrp );
+   bool haveMsg = mTxFifo.messageAvailable();
+   if ( !mInWritable && haveMsg )
    {
       mPollGrp->modPollItem(this, FPEM_Read|FPEM_Write);
       mInWritable = true;
    }
-   else if ( mPollGrp && mInWritable && !(justPosted||mTxFifo.messageAvailable()) )
+   else if ( mInWritable && !haveMsg )
    {
       mPollGrp->modPollItem(this, FPEM_Read);
       mInWritable = false;
    }
 }
 
+
 void
-UdpTransport::processPollEvent(FdPollEventMask mask) 
+UdpTransport::processPollEvent(FdPollEventMask mask)
 {
-   if ( mask & FPEM_Write ) 
-   {
-      // why only write one? Why not everything we can?
-      if (mTxFifo.messageAvailable())
-         processTx();
-   }
-   if ( mask & FPEM_Read ) 
-   {
-      processRx();
-   }
-   if ( mask & FPEM_Error ) 
+   ++mPollEventCnt;
+   if ( mask & FPEM_Error )
    {
       assert(0);
    }
-   // mainly to turn off writable-cb if not needed anymore
-   checkTransmitQueue(/*justPosted*/false);
+   if ( mask & FPEM_Write )
+   {
+      processTxAll();
+      updateEvents();	// turn-off writability
+   }
+   if ( mask & FPEM_Read )
+   {
+      processRxAll();
+   }
 }
 
 /**
@@ -148,7 +183,7 @@ UdpTransport::buildFdSet( FdSet& fdset )
 
    if (mTxFifo.messageAvailable())
    {
-     fdset.setWrite(mFd);
+      fdset.setWrite(mFd);
    }
 }
 
@@ -159,26 +194,51 @@ UdpTransport::process(FdSet& fdset)
    // receive datagrams from fd
    // preparse and stuff into RxFifo
 
-   if (mTxFifo.messageAvailable() && fdset.readyToWrite(mFd)) 
+   if (fdset.readyToWrite(mFd))
    {
-      processTx();
+      processTxAll();
    }
 
    if ( fdset.readyToRead(mFd) ) 
    {
-      processRx();
+      processRxAll();
+   }
+}
+
+/**
+ * Added support for TXNOW and TXALL. Generally only makes sense
+ * to specify one of these. Limited testing shows limited performance
+ * gain from either of these: the socket-event overhead appears tiny.
+ */
+void
+UdpTransport::processTxAll()
+{
+   SendData *msg;
+   ++mTxTryCnt;
+   while ( (msg=mTxFifo.getNext(RESIP_FIFO_NOWAIT)) != NULL )
+   {
+      processTxOne(msg);
+      // With UDP we don't need to worry about write blocking (I hope)
+      if ( (mTransportFlags & RESIP_TRANSPORT_FLAG_TXALL)==0 )
+	 break;
    }
 }
 
 void
+<<<<<<< HEAD
 UdpTransport::processTx() 
 {
    // if (mTxFifo.messageAvailable() && fdset.readyToWrite(mFd))
    std::auto_ptr<SendData> sendData = std::auto_ptr<SendData>(mTxFifo.getNext());
+=======
+UdpTransport::processTxOne(SendData *data)
+{
+   ++mTxMsgCnt;
+   assert(data);
+   std::auto_ptr<SendData> sendData(data);
+>>>>>>> Optimize UdpTransport socket-io
    //DebugLog (<< "Sent: " <<  sendData->data);
    //DebugLog (<< "Sending message on udp.");
-
-   assert( &(*sendData) );
    assert( sendData->destination.getPort() != 0 );
 
    const sockaddr& addr = sendData->destination.getSockaddr();
@@ -225,6 +285,7 @@ UdpTransport::processTx()
       error(e);
       InfoLog (<< "Failed (" << e << ") sending to " << sendData->destination);
       fail(sendData->transactionId);
+      ++mTxFailCnt;
    }
    else
    {
@@ -235,9 +296,61 @@ UdpTransport::processTx()
       }
    }
 }
-   
+
+/**
+ * Add options RXALL (to try receive all readable data) and KEEP_BUFFER.
+ * While each can be specified independently, generally should do both
+ * or neither. This is because with RXALL, every read cycle will have
+ * end with an EAGAIN read followed by buffer free (if no KEEP_BUFFER flag).
+ * Testing in very limited cases shows marginal (5%) performance improvements.
+ * Probably "real" traffic (that is bursty) would more impact.
+ */
 void
+<<<<<<< HEAD
 UdpTransport::processRx() 
+=======
+UdpTransport::processRxAll()
+{
+   char *buffer = mRxBuffer;
+   mRxBuffer = NULL;
+   ++mRxTryCnt;
+   for (;;)
+   {
+      // TBD: check StateMac capacity
+      Tuple sender(mTuple);
+      int len = processRxRecv(buffer, sender);
+      if ( len <= 0 )
+	 break;
+      ++mRxMsgCnt;
+      if ( processRxParse(buffer, len, sender) )
+      {
+	 buffer = NULL;
+      }
+      if ( (mTransportFlags & RESIP_TRANSPORT_FLAG_RXALL)==0 )
+	 break;
+   }
+   if ( buffer && (mTransportFlags & RESIP_TRANSPORT_FLAG_KEEP_BUFFER)!=0 )
+   {
+      assert(mRxBuffer==NULL);
+      mRxBuffer = buffer;
+      buffer = NULL;
+   }
+   if ( buffer )
+      delete[] buffer;
+}
+
+/*
+ * Receive from socket and store results into {buffer}. Updates
+ * {buffer} with actual buffer (in case allocation required),
+ * {len} with length of receive data, and {sender} with who
+ * sent the packet.
+ * Return length of data read:
+ *  0 if no data read and no more data to read (EAGAIN)
+ *  >0 if data read and may be more data to read
+**/
+int
+UdpTransport::processRxRecv(char*& buffer, Tuple& sender)
+>>>>>>> Optimize UdpTransport socket-io
 {
    // !jf! this may have to change - when we read a message that is too big
    //should this buffer be allocated on the stack and then copied out, as it
@@ -246,49 +359,59 @@ UdpTransport::processRx()
    // something about MSG_PEEK|MSG_TRUNC in Stevens..
    // .dlb. RFC3261 18.1.1 MUST accept 65K datagrams. would have to attempt to
    // adjust the UDP buffer as well...
-   char* buffer = MsgHeaderScanner::allocateBuffer(MaxBufferSize);
-
-   // !jf! how do we tell if it discarded bytes
-   // !ah! we use the len-1 trick :-(
-   Tuple tuple(mTuple);
-   socklen_t slen = tuple.length();
-   int len = recvfrom( mFd,
-		       buffer,
-		       MaxBufferSize,
-		       0 /*flags */,
-		       &tuple.getMutableSockaddr(),
-		       &slen);
-   if ( len == SOCKET_ERROR )
+   if (buffer==NULL)
    {
-      int err = getErrno();
-      if ( err != EWOULDBLOCK  )
+      buffer = MsgHeaderScanner::allocateBuffer(MaxBufferSize);
+   }
+
+   for (;;) {
+      // !jf! how do we tell if it discarded bytes
+      // !ah! we use the len-1 trick :-(
+      socklen_t slen = sender.length();
+      int len = recvfrom( mFd,
+			  buffer,
+			  MaxBufferSize,
+			  0 /*flags */,
+			  &sender.getMutableSockaddr(),
+			  &slen);
+      if ( len == SOCKET_ERROR )
       {
-	 error( err );
+	 int err = getErrno();
+	 if ( err != EWOULDBLOCK  )
+	 {
+	    error( err );
+	 }
+	 len = 0;
       }
+      if (len+1 >= MaxBufferSize)
+      {
+	 InfoLog(<<"Datagram exceeded max length "<<MaxBufferSize);
+	 continue;
+      }
+      return len;
    }
+}
 
-   if (len == 0 || len == SOCKET_ERROR)
-   {
-      delete[] buffer;
-      buffer=0;
-      return;
-   }
 
-   if (len+1 >= MaxBufferSize)
-   {
-      InfoLog(<<"Datagram exceeded max length "<<MaxBufferSize);
-      delete [] buffer; buffer=0;
-      return;
-   }
+/**
+ * Parse the contents of {buffer} and do something with it.
+ * Return true iff {buffer} was consumed (absorbed into SipMessage
+ * to be free'd later). Note return code doesn't indicate
+ * "success" in parsing the message; rather, it just indicates
+ * who owns buffer.
+**/
+bool
+UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
+{
+   bool origBufferConsumed = true;
 
    //handle incoming CRLFCRLF keep-alive packets
    if (len == 4 &&
        strncmp(buffer, Symbols::CRLFCRLF, len) == 0)
    {
-      delete[] buffer;
-      buffer = 0;
       StackLog(<<"Throwing away incoming firewall keep-alive");
-      return;
+      ++mRxKeepaliveCnt;
+      return false;
    }
 
    // this must be a STUN response (or garbage)
@@ -332,9 +455,7 @@ UdpTransport::processRx()
 	 mStunSuccess = true;
 	 }
       }
-      delete[] buffer;
-      buffer = 0;
-      return;
+      return false;
    }
 
    // this must be a STUN request (or garbage)
@@ -349,7 +470,7 @@ UdpTransport::processRx()
       myAddr.port = ntohs(bi.sin_port);
 
       StunAddress4 from; // packet source
-      const sockaddr_in& fi = (const sockaddr_in&)tuple.getSockaddr();
+      const sockaddr_in& fi = (const sockaddr_in&)sender.getSockaddr();
       from.addr = ntohl(fi.sin_addr.s_addr);
       from.port = ntohs(fi.sin_port);
 
@@ -383,12 +504,10 @@ UdpTransport::processRx()
 				       STUN_MAX_MESSAGE_SIZE,
 				       hmacPassword,
 				       false );
-	 SendData* stunResponse = new SendData(tuple, response, rlen);
+	 SendData* stunResponse = new SendData(sender, response, rlen);
 	 mTxFifo.add(stunResponse);
       }
-      delete[] buffer;
-      buffer = 0;
-      return;
+      return false;
    }
 
 #ifdef USE_SIGCOMP
@@ -401,9 +520,7 @@ UdpTransport::processRx()
      if (!mCompression.isEnabled())
      {
        InfoLog(<< "Discarding unexpected SigComp Message");
-       delete[] buffer;
-       buffer = 0;
-       return;
+       return false;
      }
 #ifdef USE_SIGCOMP
      char* newBuffer = MsgHeaderScanner::allocateBuffer(MaxBufferSize);
@@ -430,7 +547,8 @@ UdpTransport::processRx()
        delete nack;
      }
 
-     delete[] buffer;
+     // delete[] buffer; NO: let caller do this if needed
+     origBufferConsumed = false;
      buffer = newBuffer;
      len = uncompressedLength;
 #endif
@@ -451,12 +569,13 @@ UdpTransport::processRx()
 
 
    // Save all the info where this message came from
-   tuple.transport = this;
-   tuple.mFlowKey=mTuple.mFlowKey;
-   message->setSource(tuple);
-   //DebugLog (<< "Received from: " << tuple);
+   sender.transport = this;
+   sender.mFlowKey=mTuple.mFlowKey;
+   message->setSource(sender);
+   //DebugLog (<< "Received from: " << sender);
 
    // Tell the SipMessage about this datagram buffer.
+   // WATCHOUT: below here buffer is consumed by message
    message->addBuffer(buffer);
 
    mMsgHeaderScanner.prepareForMessage(message);
@@ -467,17 +586,18 @@ UdpTransport::processRx()
 				   &unprocessedCharPtr) !=
        MsgHeaderScanner::scrEnd)
    {
-      StackLog(<<"Scanner rejecting datagram as unparsable / fragmented from " << tuple);
+      StackLog(<<"Scanner rejecting datagram as unparsable / fragmented from " << sender);
       StackLog(<< Data(Data::Borrow, buffer, len));
       if(mExternalUnknownDatagramHandler)
       {
 	 auto_ptr<Data> datagram(new Data(buffer,len));
-	 (*mExternalUnknownDatagramHandler)(this,tuple,datagram);
+	 (*mExternalUnknownDatagramHandler)(this,sender,datagram);
       }
 
+      // Idea: consider backing buffer out of message and letting caller reuse it
       delete message;
       message=0;
-      return;
+      return origBufferConsumed;
    }
 
    // no pp error
@@ -501,7 +621,7 @@ UdpTransport::processRx()
       delete message; // cannot use it, so, punt on it...
       // basicCheck queued any response required
       message = 0;
-      return;
+      return origBufferConsumed;
    }
 
    stampReceived(message);
@@ -552,6 +672,8 @@ UdpTransport::processRx()
 #endif
 
    mStateMachineFifo.add(message);
+   ++mRxTransactionCnt;
+   return origBufferConsumed;
 }
 
 
@@ -658,5 +780,5 @@ UdpTransport::setRcvBufLen(int buflen)
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
- * vi: shiftwidth=3 expandtabs:
+ * vi: shiftwidth=3 expandtab:
  */

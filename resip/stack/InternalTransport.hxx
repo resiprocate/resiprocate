@@ -59,9 +59,9 @@ class InternalTransport : public Transport
 
       // Whenever a message is added to queue by transmit(), it invokes this
       // function synchronously.
-      // Can be used to setup any required callsback to later drain the
+      // Can be used to setup any required callbacks to later drain the
       // queue. Be careful to avoid unwanted recursion within this function.
-      virtual void checkTransmitQueue(bool justPosted) { };
+      virtual void checkTransmitQueue() { };
 
       Socket mFd; // this is a unix file descriptor or a windows SOCKET
       Fifo<SendData> mTxFifo; // owned by the transport

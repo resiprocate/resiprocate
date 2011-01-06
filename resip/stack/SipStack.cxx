@@ -171,7 +171,7 @@ SipStack::addTransport( TransportType protocol,
       switch (protocol)
       {
          case UDP:
-            transport = new UdpTransport(stateMacFifo, port, version, stun, ipInterface, mSocketFunc, *mCompression);
+            transport = new UdpTransport(stateMacFifo, port, version, stun, ipInterface, mSocketFunc, *mCompression, transportFlags);
             break;
          case TCP:
             transport = new TcpTransport(stateMacFifo, port, version, ipInterface, mSocketFunc, *mCompression, transportFlags);
