@@ -6,6 +6,7 @@ CONTRIB = ../../../contrib
 include $(BUILD)/Makefile.pre
 
 PACKAGES += RESIP RUTIL ARES OPENSSL PTHREAD POPT OPENSIGCOMP RADIUSCLIENTNG
+#LDLIBS_LAST += -static -static-libgcc # use with debian libc6-prof
 
 ifeq ($(USE_SSL), yes)
 TESTPROGRAMS += makeSelfCert.cxx \
