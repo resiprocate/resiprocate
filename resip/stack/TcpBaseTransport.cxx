@@ -116,13 +116,14 @@ TcpBaseTransport::setPollGrp(FdPollGrp *grp)
    {
       mPollItem = new TcpBasePollItem(grp, mFd, *this);
    }
+   mPollGrp = grp;
    mConnectionManager.setPollGrp(grp);
 }
 
 void
 TcpBaseTransport::buildFdSet( FdSet& fdset)
 {
-   assert( mPollItem==NULL );
+   assert( mPollGrp==NULL );
    mConnectionManager.buildFdSet(fdset);
    if ( mFd!=INVALID_SOCKET )
    {
@@ -180,6 +181,70 @@ TcpBaseTransport::processListen()
    return 1;
 }
 
+Connection*
+TcpBaseTransport::makeOutgoingConnection(const Tuple &dest)
+{
+   // attempt to open
+   Socket sock = InternalTransport::socket( TCP, ipVersion());
+   // fdset.clear(sock); !kw! removed as part of epoll impl
+
+   if ( sock == INVALID_SOCKET ) // no socket found - try to free one up and try again
+   {
+      int e = getErrno();
+      InfoLog (<< "Failed to create a socket " << strerror(e));
+      error(e);
+      mConnectionManager.gc(ConnectionManager::MinimumGcAge, 1); // free one up
+
+      sock = InternalTransport::socket( TCP, ipVersion());
+      if ( sock == INVALID_SOCKET )
+      {
+	 int e = getErrno();
+	 WarningLog( << "Error in finding free filedescriptor to use. " << strerror(e));
+	 error(e);
+	 return NULL;
+      }
+   }
+
+   assert(sock != INVALID_SOCKET);
+
+   DebugLog (<<"Opening new connection to " << dest);
+   makeSocketNonBlocking(sock);
+   if (mSocketFunc)
+   {
+      mSocketFunc(sock, transport(), __FILE__, __LINE__);
+   }
+   const sockaddr& servaddr = dest.getSockaddr();
+   int ret = connect( sock, &servaddr, dest.length() );
+
+   // See Chapter 15.3 of Stevens, Unix Network Programming Vol. 1 2nd Edition
+   if (ret == SOCKET_ERROR)
+   {
+      int err = getErrno();
+
+      switch (err)
+      {
+	 case EINPROGRESS:
+	 case EWOULDBLOCK:
+	    break;
+	 default:
+	 {
+	    // !jf! this has failed
+	    InfoLog( << "Error on TCP connect to " <<  dest << ", err=" << err << ": " << strerror(err));
+	    error(err);
+	    //fdset.clear(sock);
+	    closeSocket(sock);
+	    return NULL;
+	 }
+      }
+   }
+
+   // This will add the connection to the manager
+   Connection *conn = createConnection(dest, sock, false);
+   assert(conn);
+   conn->mRequestPostConnectSocketFuncCall = true;
+   return conn;
+}
+
 void
 TcpBaseTransport::processAllWriteRequests()
 {
@@ -196,70 +261,14 @@ TcpBaseTransport::processAllWriteRequests()
       // There is no connection yet, so make a client connection
       if (conn == 0 && !data->destination.onlyUseExistingConnection)
       {
-         // attempt to open
-         Socket sock = InternalTransport::socket( TCP, ipVersion());
-         // fdset.clear(sock); !kw! removed as part of epoll impl
-         
-         if ( sock == INVALID_SOCKET ) // no socket found - try to free one up and try again
+	 if ( (conn=makeOutgoingConnection(data->destination)) == NULL )
          {
-            int e = getErrno();
-            InfoLog (<< "Failed to create a socket " << strerror(e));
-            error(e);
-            mConnectionManager.gc(ConnectionManager::MinimumGcAge, 1); // free one up
-
-            sock = InternalTransport::socket( TCP, ipVersion());
-            if ( sock == INVALID_SOCKET )
-            {
-               int e = getErrno();
-               WarningLog( << "Error in finding free filedescriptor to use. " << strerror(e));
-               error(e);
-               fail(data->transactionId);
-               delete data;
-               return;
-            }
+	    fail(data->transactionId);
+	    delete data;
+	    return;	// .kw. WHY? What about messages left in queue?
          }
-
-         assert(sock != INVALID_SOCKET);
-         const sockaddr& servaddr = data->destination.getSockaddr(); 
-         
-         DebugLog (<<"Opening new connection to " << data->destination);
-         makeSocketNonBlocking(sock);         
-         if (mSocketFunc)
-         {
-            mSocketFunc(sock, transport(), __FILE__, __LINE__);
-         }
-         int e = connect( sock, &servaddr, data->destination.length() );
-
-         // See Chapter 15.3 of Stevens, Unix Network Programming Vol. 1 2nd Edition
-         if (e == SOCKET_ERROR)
-         {
-            int err = getErrno();
-            
-            switch (err)
-            {
-               case EINPROGRESS:
-               case EWOULDBLOCK:
-                  break;
-               default:	
-               {
-                  // !jf! this has failed
-                  InfoLog( << "Error on TCP connect to " <<  data->destination << ", err=" << err << ": " << strerror(err));
-                  error(err);
-                  //fdset.clear(sock);
-                  closeSocket(sock);
-                  fail(data->transactionId);
-                  delete data;
-                  return;
-               }
-            }
-         }
-
-         // This will add the connection to the manager
-         conn = createConnection(data->destination, sock, false);
-         conn->mRequestPostConnectSocketFuncCall = true;
-
-         assert(conn);
          assert(conn->getSocket() != INVALID_SOCKET);
+         // .kw. why do below? We already have the conn, who uses key?
          data->destination.mFlowKey = conn->getSocket(); // !jf!
       }
    
@@ -268,6 +277,7 @@ TcpBaseTransport::processAllWriteRequests()
          DebugLog (<< "Failed to create/get connection: " << data->destination);
          fail(data->transactionId);
          delete data;
+	 // NOTE: We fail this one but don't give up on others in queue
       }
       else // have a connection
       {
@@ -277,16 +287,22 @@ TcpBaseTransport::processAllWriteRequests()
 }
 
 void
-TcpBaseTransport::processTransmitQueue() 
+TcpBaseTransport::checkTransmitQueue(bool justPosted)
 {
-   processAllWriteRequests();
+   // called within SipStack's thread. There is some risk of
+   // recursion here if connection starts doing anything fancy
+   // for backward-compat when not-epoll, don't handle transmit synchronously
+   // now, but rather wait for the process() call
+   if (mPollGrp)
+   {
+      processAllWriteRequests();
+   }
 }
-
 
 void
 TcpBaseTransport::process(FdSet& fdSet)
 {
-   assert( mPollItem == NULL );
+   assert( mPollGrp==NULL );
 
    processAllWriteRequests();
 

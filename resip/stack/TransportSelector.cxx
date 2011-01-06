@@ -280,12 +280,7 @@ TransportSelector::buildFdSet(FdSet& fdset)
 void
 TransportSelector::process(FdSet& fdset)
 {
-   if ( mPollGrp ) 
-   {
-      processTransmitQueue();
-      mPollGrp->processFdSet(fdset);
-      return;
-   }
+   assert( mPollGrp==NULL );
    for(TransportList::iterator it = mSharedProcessTransports.begin(); 
        it != mSharedProcessTransports.end(); it++)
    {
@@ -299,36 +294,6 @@ TransportSelector::process(FdSet& fdset)
       }
    }
 
-}
-
-
-/**
-   Iterate thru all our shared-process (aka Internal) transports and
-   let them check their transport queues. Unfortunately this is O(N)
-   with number of transports. This function works together with
-   hasDataToSend() which queries the transports, and if any have
-   data to send, TransactionController will set its timeout to zero,
-   causing process() (see above) to be immediately invoked.
-
-   Would be nice to split the queues up into request and reply fifos,
-   and priorities sending replies before doing io.
-**/
-void
-TransportSelector::processTransmitQueue()
-{
-   for(TransportList::iterator it = mSharedProcessTransports.begin();
-       it != mSharedProcessTransports.end(); it++)
-   {
-      try 
-      {
-         (*it)->processTransmitQueue();
-      } 
-      catch (BaseException& e) 
-      {
-         ErrLog(<< "Exception thrown from Transport::processTransmitQueue: " << e);
-         // add now what? disable transport? die?
-      }
-   }
 }
 
 bool
@@ -1380,7 +1345,7 @@ TransportSelector::findTlsTransport(const Data& domainname,resip::TransportType 
 unsigned int 
 TransportSelector::getTimeTillNextProcessMS()
 {
-   return INT_MAX;
+   return (mPollGrp==NULL&&hasDataToSend()) ? 0 : INT_MAX;
 }
 
 void
@@ -1443,4 +1408,5 @@ void TransportSelector::unregisterMarkListener(MarkListener* listener)
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: shiftwidth=3 expandtabs:
  */

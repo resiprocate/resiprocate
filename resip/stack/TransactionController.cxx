@@ -97,10 +97,6 @@ TransactionController::processEverything(FdSet* fdset)
       if ( fdset ) 
       {
          mTransportSelector.process(*fdset);
-      } 
-      else 
-      {
-         mTransportSelector.processTransmitQueue();
       }
 
       mTimers.process();
@@ -132,11 +128,6 @@ TransactionController::getTimeTillNextProcessMS()
    {
       return 0;
    }
-   else if ( mTransportSelector.hasDataToSend() )
-   {
-      return 0;
-   }
-
    return resipMin(mTimers.msTillNextTimer(), mTransportSelector.getTimeTillNextProcessMS());   
 } 
    
@@ -261,4 +252,5 @@ TransactionController::cancelClientInviteTransaction(const Data& tid)
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: shiftwidth=3 expandtabs:
  */

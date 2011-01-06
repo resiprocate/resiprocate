@@ -58,14 +58,15 @@ class InternalTransport : public Transport
       virtual void transmit(const Tuple& dest, const Data& pdata, const Data& tid, const Data& sigcompId);
 
       // Whenever a message is added to queue by transmit(), it invokes this
-      // function synchronous.
+      // function synchronously.
       // Can be used to setup any required callsback to later drain the
       // queue. Be careful to avoid unwanted recursion within this function.
-      virtual void checkTransmitQueue() { };
+      virtual void checkTransmitQueue(bool justPosted) { };
 
       Socket mFd; // this is a unix file descriptor or a windows SOCKET
       Fifo<SendData> mTxFifo; // owned by the transport
-      FdPollItemIf *mPollItem;	// not owned by the transport, just used
+      FdPollGrp *mPollGrp;      // not owned by transport, just used
+      FdPollItemIf *mPollItem;	// owned by the transport
 };
 
 
