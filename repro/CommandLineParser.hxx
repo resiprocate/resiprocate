@@ -58,7 +58,8 @@ class CommandLineParser
       Data mRegSyncPeerAddress;
       int mXmlRpcPort;
       Data mServerText;
-      bool mUsePoll;
+      bool mUseInternalEPoll;
+      bool mUseEventThread;
 };
  
 }
@@ -113,5 +114,6 @@ class CommandLineParser
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */
 

@@ -80,7 +80,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int xmlRpcPort = 0;
 
    const char* serverText = 0;
-   int usePoll = 0;
+   int useInternalEPoll = 0;
+   int useEventThread = 0;
 
 #ifdef WIN32
 #ifndef HAVE_POPT_H
@@ -149,7 +150,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"regsyncpeer",       0,   POPT_ARG_STRING,                            &regSyncPeerAddress,0,"hostname/ip address of another instance of repro to syncronize registrations with (note xmlrpcport must also be specified)", 0},
       {"server-text",       0,   POPT_ARG_STRING,                            &serverText,0,"Value of server header for local UAS responses", 0},
 #if defined(HAVE_EPOLL)
-      {"poll",              0,   POPT_ARG_NONE,                              &usePoll,     0, "use (e)poll", 0},
+      {"internalepoll",              0,   POPT_ARG_NONE,                              &useInternalEPoll,     0, "use internal epoll", 0},
+      {"eventthread",              0,   POPT_ARG_NONE,                              &useEventThread,     0, "use event thread for stack", 0},
 #endif
       {"version",         'V',   POPT_ARG_NONE,                              &showVersion,     0, "show the version number and exit", 0},
       POPT_AUTOHELP 
@@ -281,7 +283,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
 
    if ( serverText && serverText[0] )
        mServerText = resip::Data(serverText);
-   mUsePoll = usePoll?true:false;
+   mUseInternalEPoll = useInternalEPoll?true:false;
+   mUseEventThread = useEventThread?true:false;
 
 #ifdef HAVE_POPT_H
    poptFreeContext(context);
@@ -393,5 +396,6 @@ CommandLineParser::toVector(const char* input, const char* description)
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */
 

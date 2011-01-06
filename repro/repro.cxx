@@ -3,7 +3,9 @@
 #include "resip/stack/Compression.hxx"
 #include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/SipStack.hxx"
-#include "resip/stack/StackThread.hxx"
+// #include "resip/stack/StackThread.hxx"
+#include "resip/stack/InterruptableStackThread.hxx"
+#include "resip/stack/EventStackThread.hxx"
 #include "resip/stack/Tuple.hxx"
 #include "resip/dum/DumThread.hxx"
 #include "resip/dum/InMemoryRegistrationDatabase.hxx"
@@ -11,6 +13,7 @@
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
+#include "rutil/FdPoll.hxx"
 
 #include "repro/CommandLineParser.hxx"
 #include "repro/Proxy.hxx"
@@ -173,16 +176,30 @@ main(int argc, char** argv)
    compression = new Compression(Compression::DEFLATE);
 #endif
 
-   if ( args.mUsePoll ) {
+   if ( args.mUseInternalEPoll ) {
 #if defined(RESIP_SIPSTACK_HAVE_FDPOLL)
-      SipStack::setDefaultUseInternalPoll(args.mUsePoll);
+      SipStack::setDefaultUseInternalPoll(args.mUseInternalEPoll);
 #else
       cerr << "Poll not supported by SipStack" << endl;
       exit(1);
 #endif
    }
 
-   SipStack stack(security,DnsStub::EmptyNameserverList,0,false,0,compression);
+   std::auto_ptr<FdPollGrp> pollGrp(NULL);
+   std::auto_ptr<SelectInterruptor> threadIntr(NULL);
+   if ( args.mUseEventThread )
+   {
+      pollGrp.reset(FdPollGrp::create());
+      threadIntr.reset(new EventThreadInterruptor(*pollGrp));
+   }
+   else
+   {
+      threadIntr.reset(new SelectInterruptor());
+   }
+
+   SipStack stack(security,DnsStub::EmptyNameserverList,
+	   threadIntr.get(), /*stateless*/false,/*socketFunc*/0,
+	   compression, /*fallbackPostNotify*/0, pollGrp.get());
 
    std::vector<Data> enumSuffixes;
    if (!args.mEnumSuffix.empty())
@@ -267,7 +284,17 @@ main(int argc, char** argv)
       exit(-1);
    }
    
-   StackThread stackThread(stack);
+   std::auto_ptr<ThreadIf> stackThread(NULL);
+   if ( args.mUseEventThread )
+   {
+      stackThread.reset(new EventStackThread(stack,
+               *dynamic_cast<EventThreadInterruptor*>(threadIntr.get()),
+               *pollGrp));
+   }
+   else
+   {
+      stackThread.reset(new InterruptableStackThread(stack, *threadIntr));
+   }
 
    Registrar registrar;
    // We only need removed records to linger if we have reg sync enabled
@@ -547,7 +574,7 @@ main(int argc, char** argv)
    }
 
    /* Make it all go */
-   stackThread.run();
+   stackThread->run();
    proxy.run();
    if ( adminThread )
       adminThread->run();
@@ -574,7 +601,7 @@ main(int argc, char** argv)
    }
 
    proxy.shutdown();
-   stackThread.shutdown();
+   stackThread->shutdown();
    if ( adminThread )
        adminThread->shutdown();
    if (dumThread)
@@ -591,7 +618,7 @@ main(int argc, char** argv)
    }
 
    proxy.join();
-   stackThread.join();
+   stackThread->join();
    if ( adminThread ) {
       adminThread->join();
       delete adminThread; adminThread = NULL;
@@ -641,3 +668,7 @@ main(int argc, char** argv)
    }
 #endif
 }
+
+/*
+ * vi: set shiftwidth=3 expandtab:
+ */
