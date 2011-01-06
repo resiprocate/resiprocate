@@ -10,7 +10,7 @@ namespace resip
 
 class TransactionMessage;
 
-class TcpBaseTransport : public InternalTransport
+class TcpBaseTransport : public InternalTransport, public FdPollItemIf
 {
    public:
       TcpBaseTransport(Fifo<TransactionMessage>& fifo, 

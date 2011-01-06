@@ -30,7 +30,8 @@ Connection::Connection(Transport* transport,const Tuple& who, Socket socket,
                        Compression &compression)
    : ConnectionBase(transport,who,compression),
      mRequestPostConnectSocketFuncCall(false),
-     mInWritable(false)
+     mInWritable(false),
+     mPollItemHandle(0)
 {
    mWho.mFlowKey=(FlowKey)socket;
    if(mWho.mFlowKey && ConnectionBase::transport())

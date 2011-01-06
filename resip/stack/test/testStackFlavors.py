@@ -90,8 +90,8 @@ def CalcParamCsv(ptbl, pset):
    return ','.join(popts)
 
 def IsParamSetValid(pset):
-    usingEpoll = pset['poll'] or pset['thread']=='poll'
-    if pset['poll'] and pset['thread']=='poll':
+    usingEpoll = pset['intepoll'] or pset['thread']=='event'
+    if pset['intepoll'] and pset['thread']=='event':
 	return False	# redundant
     if pset['ports'] > 100 and not usingEpoll:
 	return False
@@ -119,7 +119,7 @@ def RunParamTbl(ptbl):
 	    print "skipping pstr: %s" % pstr
 	    continue
 	print "running pstr: %s" % pstr
-	result = RunTest(runCnt, "-t common --bind=127.0.0.1 " + pstr)
+	result = RunTest(runCnt, "--bind=127.0.0.1 " + pstr)
 	assert( result['runs'] == pset['runs'] )
 	now = datetime.datetime.now()
 	nowfmt = now.strftime("%Y%m%d.%H%M%S")
@@ -135,10 +135,10 @@ def RunParamTbl(ptbl):
 TheParamTbl = [
   RunParam('runs', 'num-runs', [50000]),
   RunParam('protocol', 'protocol', ['tcp','udp']),
-  RunParam('poll', 'poll', [0,1]),
+  RunParam('intepoll', 'intepoll', [0,1]),
   RunParam('ports', 'numports', [1, 100, 10000]),
   RunParam('listen', 'listen', [1,0]),
-  RunParam('thread', 'thread-type', ['common','intr','poll']),
+  RunParam('thread', 'thread-type', ['common','intr','event']),
 ]
 
 RunParamTbl(TheParamTbl)

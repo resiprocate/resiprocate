@@ -1,6 +1,8 @@
 #ifndef RESIP_EventStackThread__hxx
 #define RESIP_EventStackThread__hxx
 
+#include <vector>
+
 #include "rutil/ThreadIf.hxx"
 #include "rutil/FdPoll.hxx"
 #include "resip/stack/SelectInterruptor.hxx"
@@ -14,23 +16,34 @@ class EventThreadInterruptor;
 class FdPollGrp;
 
 /**
-    This class is used to create a thread to run the SipStack in.  The
-    thread provides cycles to the SipStack by calling process.  Process
-    is called when select returns a signaled file descriptor.
+    This class creates a thread in which to run one or more SipStacks.  The
+    thread provides cycles to the stack(s). It provides cycles in 3 ways:
+    1. When socket-io is possible, the event-loop will directly invoke
+       the registered callback.
+    2. Prior to waiting for events, getTimeTillNextProcessMS() is called
+       on all stacks.
+    3. After waiting, processTimers() is called on all stacks.
 
     This implementation improves on StackThread and IntrruptableStackThread,
     by using the epoll() based system call (if available) provided
     by the FdPoll class.
 
-    You must register EventThreadInterruptor as an AsyncProcessHandler on the
-    SipStack in order to use this class.
+    Note that this is different than the InterruptableStackThread and
+    simple StackThread in that it doesn't use the buildFdSet()/process()
+    flow.
+
+    You must register {si} as an AsyncProcessHandler on the
+    stacks in order to use this class. The same {si} instance must be
+    used for all stacks.
 **/
 class EventStackThread : public ThreadIf
 {
    public:
+      EventStackThread(EventThreadInterruptor& si, FdPollGrp& pollGrp);
       EventStackThread(SipStack& stack, EventThreadInterruptor& si, FdPollGrp& pollGrp);
       virtual ~EventStackThread();
 
+      void addStack(SipStack& stack);
       virtual void thread();
       virtual void shutdown();
 
@@ -38,7 +51,8 @@ class EventStackThread : public ThreadIf
       virtual unsigned int getTimeTillNextProcessMS() const;
 
    private:
-      SipStack& mStack;
+      typedef std::vector<SipStack*> StackList;
+      StackList mStacks;
       EventThreadInterruptor& mIntr;
       FdPollGrp& mPollGrp;
 };
@@ -53,10 +67,10 @@ class EventThreadInterruptor : public SelectInterruptor, public FdPollItemIf
       /*
        * Interface for FdPollItemIf
        */
-      virtual Socket getPollSocket() const { return getReadSocket(); }
       virtual void processPollEvent(FdPollEventMask mask) { processCleanup(); }
    protected:
-      FdPollGrp& mPollGrp;	// used just to remove ourselves
+      FdPollGrp& mPollGrp;      // used just to remove ourselves
+      FdPollItemHandle mPollItemHandle;
 };
 
 }
@@ -112,4 +126,5 @@ class EventThreadInterruptor : public SelectInterruptor, public FdPollItemIf
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ *  vi: set shiftwidth=3 expandtab:
  */

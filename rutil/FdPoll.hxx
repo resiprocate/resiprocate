@@ -24,6 +24,13 @@ typedef unsigned short FdPollEventMask;
 
 class FdPollGrp;
 
+/**
+ * This is opaque type used to identify a particular Item. It is assigned
+ * when Item is allocated, and then used to modify or destroy the Item.
+ * NOTE: FdPollItemFake doesn't exist: it is fictious, thus this type
+ * can never be deferenced.
+ */
+typedef struct FdPollItemFake* FdPollItemHandle;
 
 class FdPollItemIf
 {
@@ -31,8 +38,6 @@ class FdPollItemIf
   public:
     FdPollItemIf() { };
     virtual ~FdPollItemIf();
-
-    virtual Socket getPollSocket() const = 0;
 
     /**
         Called by PollGrp when activity is possible
@@ -47,13 +52,11 @@ class FdPollItemBase : public FdPollItemIf
     FdPollItemBase(FdPollGrp *grp, Socket fd, FdPollEventMask mask);
     virtual ~FdPollItemBase();
 
-    virtual Socket	getPollSocket() const { return mPollSocket; }
-
  protected:
 
     FdPollGrp*		mPollGrp;
     Socket		mPollSocket;
-    FdPollEventMask	mPollMask;		// events we want
+    FdPollItemHandle	mPollHandle;
 };
 
 class FdPollGrp
@@ -66,9 +69,9 @@ class FdPollGrp
     static FdPollGrp* create();
 
 
-    virtual void addPollItem(FdPollItemIf *item, FdPollEventMask newMask) = 0;
-    virtual void modPollItem(const FdPollItemIf *item, FdPollEventMask newMask) = 0;
-    virtual void delPollItem(FdPollItemIf *item) = 0;
+    virtual FdPollItemHandle addPollItem(Socket sock, FdPollEventMask newMask, FdPollItemIf *item) = 0;
+    virtual void modPollItem(FdPollItemHandle handle, FdPollEventMask newMask) = 0;
+    virtual void delPollItem(FdPollItemHandle handle) = 0;
 
     /// Wait at most {ms} milliseconds. If any file activity has
     /// already occurs or occurs before {ms} expires, then
@@ -88,12 +91,6 @@ class FdPollGrp
     /// process epoll queue if epoll-fd is readable in fdset
     void processFdSet(FdSet& fdset);
     void processFdSet(fd_set& readfds);
-
-
-    virtual FdPollItemIf* getItemByFd(Socket fd) = 0;
-
-    // convience functions. not sure if we should keep this or not
-    FdPollItemIf* modifyEventMaskByFd(FdPollEventMask mask, Socket fd);
 };
 
 

@@ -55,7 +55,7 @@ class AresDnsPollItem : public FdPollItemBase
 
    static void socket_poll_cb(void *cb_data,
                               ares_channel channel, int server_idx,
-  	                          int fd, ares_poll_action_t act);
+	                      int fd, ares_poll_action_t act);
 };
 
 };
@@ -84,40 +84,34 @@ AresDnsPollItem::socket_poll_cb(void *cb_data,
   	int fd, ares_poll_action_t act)
 {
    AresDns *ares = static_cast<AresDns*>(cb_data);
-   // assert( ares );
+   //assert( ares );
    FdPollGrp *grp = ares->mPollGrp;
-   assert( grp );
-   FdPollItemIf *olditem = grp->getItemByFd(fd);
+   //assert( grp );
+   AresDnsPollItem *olditem = ares->mPollItems.at(server_idx);
    if ( olditem )
    {
-      AresDnsPollItem *oldaresitem = dynamic_cast<AresDnsPollItem*>(olditem);
-      assert( oldaresitem->mChannel==channel );
-      assert( oldaresitem->mServerIdx==server_idx );
+      assert( olditem->mChannel==channel );
+      assert( olditem->mServerIdx==server_idx );
    }
-   AresDnsPollItem *newitem;
    switch ( act )
    {
    case ARES_POLLACTION_OPEN:
       assert( olditem==NULL );
-      assert( fd!=-1 );
-      newitem = new AresDnsPollItem( grp, fd, *ares, channel, server_idx);
-      // grp->addPollItem(newitem); constructor does this
-      // Could track the item by channel number into map
-      // so that we don't have to do the lookup by fd above
-      // could also be used to verify that everything cleaned up when done
+      assert( fd!=INVALID_SOCKET );
+      ares->mPollItems[server_idx] = new AresDnsPollItem( grp, fd, *ares, channel, server_idx);
       break;
    case ARES_POLLACTION_CLOSE:
       assert( olditem );
+      ares->mPollItems[server_idx] = NULL;
       delete olditem;	// destructor removes from poll
-      // grp->delPollItem(olditem);
       break;
    case ARES_POLLACTION_WRITEON:
       assert( olditem );
-      grp->modPollItem(olditem, FPEM_Read|FPEM_Write);
+      grp->modPollItem(olditem->mPollHandle, FPEM_Read|FPEM_Write);
       break;
    case ARES_POLLACTION_WRITEOFF:
       assert( olditem );
-      grp->modPollItem(olditem, FPEM_Read);
+      grp->modPollItem(olditem->mPollHandle, FPEM_Read);
       break;
    default:
       assert( 0 );
@@ -340,6 +334,9 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
 
       if ( mPollGrp )
       {
+	 // expand vector to hold {nservers} and init to NULL
+	 mPollItems.insert( mPollItems.end(), (*channel)->nservers, NULL);
+	 // tell ares to let us know when things change
          ares_process_set_poll_cb(mChannel, AresDnsPollItem::socket_poll_cb, this);
       }
 
@@ -671,4 +668,5 @@ resip_AresDns_caresCallback(void *arg, int status, int timeouts,
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: shiftwidth=3 expandtab:
  */

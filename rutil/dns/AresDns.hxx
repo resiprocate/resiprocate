@@ -59,19 +59,20 @@ class AresDns : public ExternalDns
       friend void ::resip_AresDns_caresCallback(void *arg, int status, int timeouts, unsigned char* abuf, int alen);
 
       // used for epoll() interface to ares lib
-      time_t mNow;
+      // time_t mNow;
 
    private:
 
       typedef std::pair<ExternalDnsHandler*, void*> Payload;
       static ExternalDnsRawResult makeRawResult(void *arg, int status, unsigned char *abuf, int alen);
       static ExternalDnsHandler* getHandler(void* arg);
-	  struct ares_channeldata* mChannel;
-	  std::vector<GenericIPAddress> mAdditionalNameservers;
-	  unsigned int mFeatures;
+      struct ares_channeldata* mChannel;
+      std::vector<GenericIPAddress> mAdditionalNameservers;
+      unsigned int mFeatures;
       volatile static bool mHostFileLookupOnlyMode;
 
       FdPollGrp*	mPollGrp;
+      std::vector<AresDnsPollItem*> mPollItems;
 
 };
    

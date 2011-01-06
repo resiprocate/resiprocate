@@ -25,14 +25,14 @@ FdPollItemIf::~FdPollItemIf()
 }
 
 FdPollItemBase::FdPollItemBase(FdPollGrp *grp, Socket fd, FdPollEventMask mask) :
-  mPollGrp(grp), mPollSocket(fd), mPollMask(mask)
+  mPollGrp(grp), mPollSocket(fd)
 {
-    mPollGrp->addPollItem(this, mPollMask);
+    mPollHandle = mPollGrp->addPollItem(fd, mask, this);
 }
 
 FdPollItemBase::~FdPollItemBase()
 {
-    mPollGrp->delPollItem(this);
+    mPollGrp->delPollItem(mPollHandle);
 }
 
 /*****************************************************************
@@ -97,18 +97,6 @@ FdPollGrp::processFdSet(fd_set& readfds)
    }
 }
 
-FdPollItemIf*
-FdPollGrp::modifyEventMaskByFd(FdPollEventMask mask, Socket fd)
-{
-   FdPollItemIf* item = getItemByFd(fd);
-   // There is some legit reasons why item may be NULL -- not sure where
-   if (item)
-   {
-      modPollItem(item, mask);
-   }
-   return item;
-}
-
 
 /*****************************************************************
  *
@@ -129,17 +117,16 @@ class FdPollImplEpoll : public FdPollGrp
       FdPollImplEpoll();
       ~FdPollImplEpoll();
 
-      virtual void              addPollItem(FdPollItemIf *item,
+      virtual FdPollItemHandle  addPollItem(Socket fd,
+                                  FdPollEventMask newMask, FdPollItemIf *item);
+      virtual void              modPollItem(FdPollItemHandle handle,
                                   FdPollEventMask newMask);
-      virtual void              modPollItem(const FdPollItemIf *item,
-                                  FdPollEventMask newMask);
-      virtual void              delPollItem(FdPollItemIf *item);
+      virtual void              delPollItem(FdPollItemHandle handle);
 
       virtual bool              waitAndProcess(int ms=0);
 
       /// See baseclass. This is integer fd, not Socket
       virtual int               getEPollFd() const { return mEPollFd; }
-      virtual FdPollItemIf*     getItemByFd(int fd);
 
    protected:
       void                      processItem(FdPollItemIf *item,
@@ -160,6 +147,10 @@ class FdPollImplEpoll : public FdPollGrp
 };
 
 };      // namespace
+
+// NOTE: shift by one b/c so that fd=0 doesn't have NULL handle
+#define IMPL_EPOLL_FdToHandle(fd) ((FdPollItemHandle)( ((char*)0) + ((fd)+1) ))
+#define IMPL_EPOLL_HandleToFd(handle) ( ((char*)(handle)) - ((char*)0) - 1)
 
 FdPollImplEpoll::FdPollImplEpoll() :
   mEPollFd(-1)
@@ -183,9 +174,7 @@ FdPollImplEpoll::~FdPollImplEpoll()
       FdPollItemIf *item = mItems[itemIdx];
       if (item)
       {
-         int fd = item->getPollSocket();
          CritLog(<<"FdPollItem idx="<<itemIdx
-               <<" fd="<<fd
                <<" not deleted prior to destruction");
       }
    }
@@ -223,20 +212,9 @@ CvtUsrToSysMask(unsigned short usrMask)
    return sysMask;
 }
 
-FdPollItemIf*
-FdPollImplEpoll::getItemByFd(int fd)
+FdPollItemHandle
+FdPollImplEpoll::addPollItem(Socket fd, FdPollEventMask newMask, FdPollItemIf *item)
 {
-   if (fd < 0 || fd >= ((int)mItems.size()))
-   {
-       return NULL;
-   }
-   return mItems[fd];
-}
-
-void
-FdPollImplEpoll::addPollItem(FdPollItemIf *item, FdPollEventMask newMask)
-{
-   int fd = item->getPollSocket();
    assert(fd>=0);
    //DebugLog(<<"adding epoll item fd="<<fd);
    if (mItems.size() <= (unsigned)fd)
@@ -259,12 +237,13 @@ FdPollImplEpoll::addPollItem(FdPollItemIf *item, FdPollEventMask newMask)
       CritLog(<<"epoll_ctl(ADD) failed: " << strerror(errno));
       abort();
    }
+   return IMPL_EPOLL_FdToHandle(fd);
 }
 
 void
-FdPollImplEpoll::modPollItem(const FdPollItemIf *item, FdPollEventMask newMask)
+FdPollImplEpoll::modPollItem(const FdPollItemHandle handle, FdPollEventMask newMask)
 {
-   int fd = item->getPollSocket();
+   int fd = IMPL_EPOLL_HandleToFd(handle);
    assert(fd>=0 && ((unsigned)fd) < mItems.size());
    assert(mItems[fd] != NULL);
 
@@ -280,9 +259,9 @@ FdPollImplEpoll::modPollItem(const FdPollItemIf *item, FdPollEventMask newMask)
 }
 
 void
-FdPollImplEpoll::delPollItem(FdPollItemIf *item)
+FdPollImplEpoll::delPollItem(FdPollItemHandle handle)
 {
-   int fd = item->getPollSocket();
+   int fd = IMPL_EPOLL_HandleToFd(handle);
    //DebugLog(<<"deleting epoll item fd="<<fd);
    assert(fd>=0 && ((unsigned)fd) < mItems.size());
    assert( mItems[fd] != NULL );

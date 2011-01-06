@@ -15,6 +15,7 @@ using namespace std;
 using namespace resip;
 
 
+#if 0
 class TcpBasePollItem : public FdPollItemBase {
   public:
    TcpBasePollItem(FdPollGrp* grp, Socket fd, TcpBaseTransport& tp)
@@ -28,6 +29,7 @@ class TcpBasePollItem : public FdPollItemBase {
 
    TcpBaseTransport&	mTransport;
 };
+#endif
 
 
 const size_t TcpBaseTransport::MaxWriteSize = 4096;
@@ -111,10 +113,11 @@ TcpBaseTransport::init()
 void
 TcpBaseTransport::setPollGrp(FdPollGrp *grp) 
 {
-   assert( mPollItem == NULL );
+   assert(mPollGrp==NULL && grp!=NULL);
    if ( mFd!=INVALID_SOCKET ) 
    {
-      mPollItem = new TcpBasePollItem(grp, mFd, *this);
+      mPollItemHandle = grp->addPollItem(mFd, FPEM_Read|FPEM_Edge, this);
+      // above released by InternalTransport destructor
    }
    mPollGrp = grp;
    mConnectionManager.setPollGrp(grp);
@@ -382,6 +385,5 @@ TcpBaseTransport::setRcvBufLen(int buflen)
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: shiftwidth=3 expandtab:
  */
-
-

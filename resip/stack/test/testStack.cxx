@@ -24,13 +24,61 @@
 #include "resip/stack/StackThread.hxx"
 #include "resip/stack/SelectInterruptor.hxx"
 #include "resip/stack/InterruptableStackThread.hxx"
-#include "resip/stack/PollStackThread.hxx"
+#include "resip/stack/EventStackThread.hxx"
 #include "resip/stack/Uri.hxx"
 
 using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
+
+/************************************************************************
+  This application tests the core resip stack as a whole. It does
+  this by creating two instances of SipStack, and sending messages
+  (transactions) between them.
+
+  Resiprocate is designed to support a variety of threading modeling
+  and event handling models (e.g., select, poll, epoll system calls),
+  and this test application can excercise various combinations.
+
+  The various permutations and are controlled via the --thread-type option.
+  Note that because this testapp runs two stacks, its threading models
+  are unusual, and not a good template for a "normal" application.
+  Values are:
+
+    none	Everything (both stacks and test application) run in same
+		thread. App block for time specified by --seltime each
+		message cycle.  This defaults to zero, meaning app
+		will loop without every waiting, looking for any work to do.
+		When non-zero, app will wait this before checking queues.
+
+    common	Like "none", everything (both stacks and test application)
+		run in same thread. Thread blocks until something to do,
+		and stacks will be configured to break
+		the wait loop when there is something for app to do. This
+		avoids the endless spinning of "none", and is useful for
+		profiling.
+
+    std		Each stack runs in its own thread, and that thread is
+		a "standard" select-based thread.
+
+    intr	Each stack runs in its own thread, and that thread
+		is an interruptable select-based thread. Here, interruptable
+		means that when the app gives the thread work to do, it will
+		immediate wake up and do it, instead of waiting for
+		the select interval to expire.
+
+    event	Each stack runs in its own thread, and that thread
+		is an interruptable event-loop based thread. The specific
+		type of event-loop depends upon the underlying platform.
+
+    In addition to the above thread modes, the flag --intepoll turns on
+    internal epoll mode. This allows any of the above thread modes to be
+    used (including select-based) but internally uses the epoll system
+    call in hierarchical mode. This is largely obsolete at this point
+    but is useful for differential profiling.
+
+************************************************************************/
 
 class SharedAsyncNotify : public AsyncProcessHandler
 {
@@ -108,13 +156,13 @@ class SipStackAndThread
       ThreadIf		*mThread;
       SelectInterruptor	*mSelIntr;
       FdPollGrp		*mPollGrp;
-      PollInterruptor	*mPollIntr;
+      EventThreadInterruptor	*mEventIntr;
 };
 
 
 SipStackAndThread::SipStackAndThread(const char *tType,
  AsyncProcessHandler *notifyDn, AsyncProcessHandler *notifyUp)
-  : mStack(0), mThread(0), mSelIntr(0), mPollGrp(0), mPollIntr(0)
+  : mStack(0), mThread(0), mSelIntr(0), mPollGrp(0), mEventIntr(0)
 {
    bool doStd = false;
 
@@ -122,9 +170,9 @@ SipStackAndThread::SipStackAndThread(const char *tType,
 
    if ( strcmp(tType,"intr")==0 ) {
       mSelIntr = new SelectInterruptor();
-   } else if ( strcmp(tType,"poll")==0 ) {
+   } else if ( strcmp(tType,"event")==0 ) {
       mPollGrp = FdPollGrp::create();
-      mPollIntr = new PollInterruptor(*mPollGrp);
+      mEventIntr = new EventThreadInterruptor(*mPollGrp);
    } else if ( strcmp(tType,"std")==0 ) {
       doStd = true;
    } else if ( strcmp(tType,"none")==0 ) {
@@ -134,10 +182,10 @@ SipStackAndThread::SipStackAndThread(const char *tType,
       exit(1);
    }
    mStack = new SipStack(/*security*/0, DnsStub::EmptyNameserverList,
-     mPollIntr?mPollIntr:(mSelIntr?mSelIntr:notifyDn),
+     mEventIntr?mEventIntr:(mSelIntr?mSelIntr:notifyDn),
      /*stateless*/false, /*sockFnc*/0, /*comp*/0, notifyUp, mPollGrp);
-   if ( mPollIntr ) {
-      mThread = new PollStackThread(*mStack, *mPollIntr, *mPollGrp);
+   if ( mEventIntr ) {
+      mThread = new EventStackThread(*mStack, *mEventIntr, *mPollGrp);
    } else if ( mSelIntr ) {
       mThread = new InterruptableStackThread(*mStack, *mSelIntr);
    } else if ( doStd ) {
@@ -163,10 +211,10 @@ SipStackAndThread::destroy()
       delete mSelIntr;
       mSelIntr = 0;
    }
-   if ( mPollIntr )
+   if ( mEventIntr )
    {
-      delete mPollIntr;
-      mPollIntr = 0;
+      delete mEventIntr;
+      mEventIntr = 0;
    }
    if ( mPollGrp )
    {
@@ -220,7 +268,7 @@ main(int argc, char* argv[])
    int seltime = 0;
    int v6 = 0;
    int invite=0;
-   int usePollMode = 0;
+   int useInternalEPollMode = 0;
    int numPorts = 1;
    int portBase = 0;
    const char* threadType = "none";
@@ -239,10 +287,10 @@ main(int argc, char* argv[])
       {"listen",      0,   POPT_ARG_INT,    &doListen,  0, "do not bind/listen sender ports", 0},
       {"v6",          '6', POPT_ARG_NONE,   &v6     ,   0, "ipv6", 0},
       {"invite",      'i', POPT_ARG_NONE,   &invite ,   0, "send INVITE/BYE instead of REGISTER", 0},
-      {"poll",        0,   POPT_ARG_INT,    &usePollMode,0, "use epoll mode", 0},
+      {"intepoll",    0,   POPT_ARG_INT,    &useInternalEPollMode,0, "use internal epoll mode", 0},
       {"port",	      0,   POPT_ARG_INT,    &portBase,  0, "first port to use", 0},
       {"numports",    'n', POPT_ARG_INT,    &numPorts,  0, "number of parallel sessions(ports)", 0},
-      {"thread-type", 't', POPT_ARG_STRING, &threadType,0, "stack thread type", "none|common|std|intr|poll"},
+      {"thread-type", 't', POPT_ARG_STRING, &threadType,0, "stack thread type", "none|common|std|intr|event"},
       {"tf",          0,   POPT_ARG_INT,    &tpFlags,   0, "bit encoding of transportFlags", 0},
       {"sleep",       0,   POPT_ARG_INT,    &sendSleepUs,0, "time (us) to sleep after each sent request", 0},
       POPT_AUTOHELP
@@ -265,14 +313,14 @@ main(int argc, char* argv[])
      <<" proto="<<proto
      <<" numports="<<numPorts
      <<" thread="<<threadType
-     <<" epoll="<<usePollMode
+     <<" intepoll="<<useInternalEPollMode
      <<" sendIf="<<bindIfAddr
      <<" listen="<<doListen
      <<" tf="<<tpFlags
      <<"." << endl;
 
    // must occur before creating stacks
-   SipStack::setDefaultUseInternalPoll(usePollMode?true:false);
+   SipStack::setDefaultUseInternalPoll(useInternalEPollMode?true:false);
 
    const char *eachThreadType = threadType;
    SelectInterruptor *commonIntr = NULL;
@@ -553,23 +601,6 @@ main(int argc, char* argv[])
      << endl;
 #endif
 
-
-#if 0
-   for (;;)
-   {
-       int finishtime = 40*1000;
-       bool isStrange = false;
-       if ( noStackThread )
-       {
-	  waitForTwoStacks( receiver, sender, commonIntr, finishtime, isStrange);
-       }
-       else
-       {
-	  sharedUp.waitNotify(finishtime);
-       }
-   }
-#endif
-
    sender.shutdown();
    receiver.shutdown();
 
@@ -638,4 +669,5 @@ main(int argc, char* argv[])
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */
