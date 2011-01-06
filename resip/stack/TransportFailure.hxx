@@ -19,19 +19,26 @@ class TransportFailure : public TransactionMessage
       enum FailureReason
       {
          None = 0, //invalid
+         TransportNoExistConn,
          Failure,
+         TransportNoSocket,
+         TransportBadConnect,
+         TransportShutdown,
+         ConnectionUnknown,
+         ConnectionException,
          NoTransport,
          NoRoute,
          CertNameMismatch,
-         CertValidationFailure
+         CertValidationFailure,
       };
 
-      TransportFailure(const Data& transactionId, FailureReason f);
+      TransportFailure(const Data& transactionId, FailureReason f, int subCode=0);
 
       virtual const Data& getTransactionId() const;
       virtual bool isClientTransaction() const;
 
       FailureReason getFailureReason() const { return mFailureReason; }
+      int getFailureSubCode() const { return mFailureSubCode; }
 
       virtual EncodeStream& encodeBrief(EncodeStream& str) const;
       virtual EncodeStream& encode(EncodeStream& strm) const;
@@ -39,6 +46,7 @@ class TransportFailure : public TransactionMessage
    private:
       Data mTransactionId;
       FailureReason mFailureReason;
+      int mFailureSubCode;
 };
 
 }

@@ -32,6 +32,7 @@ ConnectionBase::ConnectionBase(Transport* transport, const Tuple& who, Compressi
      mTransport(transport),
      mWho(who),
      mFailureReason(TransportFailure::None),
+     mFailureSubCode(0),
      mCompression(compression),
 // NO: #ifdef USE_SIGCOMP // class def doesn't decl members conditionally
      mSigcompStack(0),
@@ -75,8 +76,9 @@ ConnectionBase::~ConnectionBase()
    while (!mOutstandingSends.empty())
    {
       SendData* sendData = mOutstandingSends.front();
-      mTransport->fail(sendData->transactionId, mFailureReason);
-      
+      mTransport->fail(sendData->transactionId,
+         mFailureReason ? mFailureReason : TransportFailure::ConnectionUnknown,
+         mFailureSubCode);
       delete sendData;
       mOutstandingSends.pop_front();
    }
@@ -87,6 +89,16 @@ ConnectionBase::~ConnectionBase()
 #endif
 
    DebugLog (<< "ConnectionBase::~ConnectionBase " << this);
+}
+
+void
+ConnectionBase::setFailureReason(TransportFailure::FailureReason failReason, int subCode)
+{
+   if ( failReason > mFailureReason )
+   {
+      mFailureReason = failReason;
+      mFailureSubCode = subCode;
+   }
 }
 
 FlowKey
@@ -666,5 +678,6 @@ resip::operator<<(EncodeStream& strm,
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */
 

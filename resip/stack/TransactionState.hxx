@@ -151,6 +151,7 @@ class TransactionState : public DnsHandler
       bool mWaitingForDnsResult;
       TransactionUser* mTransactionUser;
       TransportFailure::FailureReason mFailureReason;      
+      int mFailureSubCode;
 
       static unsigned long StatelessIdCounter;
       

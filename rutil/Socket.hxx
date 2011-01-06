@@ -97,7 +97,8 @@ typedef int Socket;		// Un*x fds are signed
 inline int getErrno() { return errno; }
 #else
 typedef SOCKET Socket;		// Windows defines as *unsigned* something
-// INVALID_SOCKET is defined by Windows as ~0
+// INVALID_SOCKET is defined by Windows as ~0 (since Windows socket unsigned)
+// SOCKET_ERROR is defined by Windows as -1 (most func retvals are signed)
 inline int getErrno() { return WSAGetLastError(); }
 #endif
 
@@ -267,4 +268,5 @@ public:
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */

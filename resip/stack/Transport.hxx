@@ -92,8 +92,10 @@ class Transport
 
       void flowTerminated(const Tuple& flow);
 
-
-      void fail(const Data& tid, TransportFailure::FailureReason reason = TransportFailure::Failure); // called when transport failed
+      // called when transport failed
+      void fail(const Data& tid,
+            TransportFailure::FailureReason reason = TransportFailure::Failure,
+            int subCode = 0);
 
       static void error(int e);
 

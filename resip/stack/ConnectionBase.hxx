@@ -75,6 +75,8 @@ class ConnectionBase
       Data::size_type mSendPos;
       std::list<SendData*> mOutstandingSends; // !jacob! intrusive queue?
 
+      void setFailureReason(TransportFailure::FailureReason failReason, int subCode);
+
       virtual ~ConnectionBase();
       // no value semantics
    private:
@@ -86,6 +88,7 @@ class ConnectionBase
       Transport* mTransport;
       Tuple mWho;
       TransportFailure::FailureReason mFailureReason;      
+      int mFailureSubCode;
       Compression &mCompression;
       osc::Stack *mSigcompStack;
       osc::TcpStream *mSigcompFramer;

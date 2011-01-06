@@ -759,5 +759,5 @@ UdpTransport::setRcvBufLen(int buflen)
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
- * vi: shiftwidth=3 expandtab:
+ * vi: set shiftwidth=3 expandtab:
  */

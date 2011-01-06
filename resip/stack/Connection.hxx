@@ -76,13 +76,6 @@ class Connection : public ConnectionBase, public ConnectionLruList, public Conne
       static volatile bool mEnablePostConnectSocketFuncCall;
       static void setEnablePostConnectSocketFuncCall(bool enabled = true) { mEnablePostConnectSocketFuncCall = enabled; }
 
-      /*
-       * FdPollItemIf virtual methods
-       */
-      //virtual Socket getPollSocket() const { return getSocket(); }
-      virtual void processPollEvent(FdPollEventMask mask);
-
-
    protected:
       /// pure virtual, but need concrete Connection for book-ends of lists
       virtual int read(char* /* buffer */, const int /* count */) { return 0; }
@@ -90,6 +83,8 @@ class Connection : public ConnectionBase, public ConnectionLruList, public Conne
       virtual int write(const char* /* buffer */, const int /* count */) { return 0; }
       virtual void onDoubleCRLF();
 
+      /* callback method of FdPollItemIf */
+      virtual void processPollEvent(FdPollEventMask mask);
 
    private:
       ConnectionManager& getConnectionManager() const;

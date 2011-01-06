@@ -52,7 +52,8 @@ TransactionState::TransactionState(TransactionController& controller, Machine m,
    mAckIsValid(false),
    mWaitingForDnsResult(false),
    mTransactionUser(tu),
-   mFailureReason(TransportFailure::None)
+   mFailureReason(TransportFailure::None),
+   mFailureSubCode(0)
 {
    StackLog (<< "Creating new TransactionState: " << *this);
 }
@@ -1834,13 +1835,27 @@ TransactionState::processNoDnsResults()
    WarningCategory warning;
    warning.hostname() = DnsUtil::getLocalHostName();
    warning.code() = 399;
-   warning.text() = "No other DNS entries to try";
+   {  // .kw. sub-block needed to flush stream
+      warning.text().reserve(100);
+      oDataStream warnText(warning.text());
+      warnText << "No other DNS entries to try ("
+         <<mFailureReason<<","<<mFailureSubCode<<")";
+   }
+   // warning.text() = "No other DNS entries to try";
    switch(mFailureReason)
    {
       case TransportFailure::None:
          response->header(h_StatusLine).reason() = "No DNS results";
          break;
+
+      case TransportFailure::TransportNoExistConn:
+         // .kw. in some cases, this should really be a "430 Flow failed"?
       case TransportFailure::Failure:
+      case TransportFailure::TransportNoSocket:
+      case TransportFailure::TransportBadConnect:
+      case TransportFailure::TransportShutdown:
+      case TransportFailure::ConnectionUnknown:
+      case TransportFailure::ConnectionException:
          response->header(h_StatusLine).reason() = "Transport failure: no transports left to try";
          break;
       case TransportFailure::NoTransport:
@@ -1854,6 +1869,9 @@ TransactionState::processNoDnsResults()
          break;
       case TransportFailure::CertValidationFailure:
          response->header(h_StatusLine).reason() = "Certificate Validation Failure";
+         break;
+         response->header(h_StatusLine).reason() = "Transport shutdown: no transports left to try";
+         break;
    }
          
    response->header(h_Warnings).push_back(warning);
@@ -1862,7 +1880,7 @@ TransactionState::processNoDnsResults()
    terminateClientTransaction(mId);
    if (mMachine != Stateless)
    {
-	   delete this; 
+           delete this;
    }
 }
 
@@ -1941,6 +1959,7 @@ TransactionState::processTransportFailure(TransactionMessage* msg)
       if (failure->getFailureReason() > mFailureReason)
       {
          mFailureReason = failure->getFailureReason();
+         mFailureSubCode = failure->getFailureSubCode();
       }
       
       if (mMsgToRetransmit->isRequest() && mMsgToRetransmit->method() == CANCEL)
@@ -2592,4 +2611,5 @@ resip::operator<<(EncodeStream& strm, const resip::TransactionState& state)
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */
