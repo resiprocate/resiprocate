@@ -85,7 +85,8 @@ class SipStack
                AsyncProcessHandler* handler = 0, 
                bool stateless=false,
                AfterSocketCreationFuncPtr socketFunc = 0,
-               Compression *compression = 0);      
+               Compression *compression = 0,
+               AsyncProcessHandler* fallbackPostNotify = 0);
 
       virtual ~SipStack();
 

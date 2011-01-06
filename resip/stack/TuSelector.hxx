@@ -13,11 +13,13 @@ namespace resip
 class ConnectionTerminated;
 class Message;
 class TransactionUser;
+class AsyncProcessHandler;
 
 class TuSelector
 {
    public:
-      TuSelector(TimeLimitFifo<Message>& fallBackFifo);
+      TuSelector(TimeLimitFifo<Message>& fallBackFifo,
+        AsyncProcessHandler *fallbackPostNotify = 0);
       ~TuSelector();
       
       void add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage);
@@ -53,6 +55,7 @@ class TuSelector
       typedef std::vector<Item> TuList;
       TuList mTuList;
       TimeLimitFifo<Message>& mFallBackFifo;
+      AsyncProcessHandler *mFallbackPostNotify;
       Fifo<TransactionUserMessage> mShutdownFifo;
       bool mTuSelectorMode;
       StatisticsMessage::Payload mStatsPayload;

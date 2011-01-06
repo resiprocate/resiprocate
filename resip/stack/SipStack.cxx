@@ -52,7 +52,8 @@ SipStack::SipStack(Security* pSecurity,
                    AsyncProcessHandler* handler, 
                    bool stateless,
                    AfterSocketCreationFuncPtr socketFunc,
-                   Compression *compression
+                   Compression *compression,
+		   AsyncProcessHandler *fallbackPostNotify
    ) : 
    mUseInternalPoll(mDefaultUseInternalPoll),
    mPollGrp(mUseInternalPoll ? FdPollGrp::create() : 0),
@@ -71,7 +72,7 @@ SipStack::SipStack(Security* pSecurity,
    mTransactionController(*this),
    mShuttingDown(false),
    mStatisticsManagerEnabled(true),
-   mTuSelector(mTUFifo),
+   mTuSelector(mTUFifo, fallbackPostNotify),
    mSocketFunc(socketFunc)
 {
    Timer::getTimeMs(); // initalize time offsets
