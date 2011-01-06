@@ -24,6 +24,7 @@
 #include "resip/stack/StackThread.hxx"
 #include "resip/stack/SelectInterruptor.hxx"
 #include "resip/stack/InterruptableStackThread.hxx"
+#include "resip/stack/PollStackThread.hxx"
 #include "resip/stack/Uri.hxx"
 
 using namespace resip;
@@ -106,12 +107,14 @@ class SipStackAndThread
       SipStack		*mStack;
       ThreadIf		*mThread;
       SelectInterruptor	*mSelIntr;
+      FdPollGrp		*mPollGrp;
+      PollInterruptor	*mPollIntr;
 };
 
 
 SipStackAndThread::SipStackAndThread(const char *tType,
  AsyncProcessHandler *notifyDn, AsyncProcessHandler *notifyUp)
-  : mStack(0), mThread(0), mSelIntr(0)
+  : mStack(0), mThread(0), mSelIntr(0), mPollGrp(0), mPollIntr(0)
 {
    bool doStd = false;
 
@@ -119,6 +122,9 @@ SipStackAndThread::SipStackAndThread(const char *tType,
 
    if ( strcmp(tType,"intr")==0 ) {
       mSelIntr = new SelectInterruptor();
+   } else if ( strcmp(tType,"poll")==0 ) {
+      mPollGrp = FdPollGrp::create();
+      mPollIntr = new PollInterruptor(*mPollGrp);
    } else if ( strcmp(tType,"std")==0 ) {
       doStd = true;
    } else if ( strcmp(tType,"none")==0 ) {
@@ -128,9 +134,11 @@ SipStackAndThread::SipStackAndThread(const char *tType,
       exit(1);
    }
    mStack = new SipStack(/*security*/0, DnsStub::EmptyNameserverList,
-     mSelIntr?mSelIntr:notifyDn,
-     /*stateless*/false, /*sockFnc*/0, /*comp*/0, notifyUp);
-   if ( mSelIntr ) {
+     mPollIntr?mPollIntr:(mSelIntr?mSelIntr:notifyDn),
+     /*stateless*/false, /*sockFnc*/0, /*comp*/0, notifyUp, mPollGrp);
+   if ( mPollIntr ) {
+      mThread = new PollStackThread(*mStack, *mPollIntr, *mPollGrp);
+   } else if ( mSelIntr ) {
       mThread = new InterruptableStackThread(*mStack, *mSelIntr);
    } else if ( doStd ) {
       mThread = new StackThread(*mStack);
@@ -154,6 +162,16 @@ SipStackAndThread::destroy()
    {
       delete mSelIntr;
       mSelIntr = 0;
+   }
+   if ( mPollIntr )
+   {
+      delete mPollIntr;
+      mPollIntr = 0;
+   }
+   if ( mPollGrp )
+   {
+      delete mPollGrp;
+      mPollGrp = 0;
    }
 }
 
@@ -192,7 +210,7 @@ main(int argc, char* argv[])
       {"poll",        0,   POPT_ARG_INT,   &usePollMode,  0, "use epoll mode", 0},
       {"port",	      0, POPT_ARG_INT,   &portBase,   0, "first port to use", 0},
       {"numports",    'n', POPT_ARG_INT,   &numPorts,   0, "number of parallel sessions(ports)", 0},
-      {"thread-type", 't', POPT_ARG_STRING, &threadType,0, "stack thread type", "none|common|std|intr"},
+      {"thread-type", 't', POPT_ARG_STRING, &threadType,0, "stack thread type", "none|common|std|intr|poll"},
       POPT_AUTOHELP
       { NULL, 0, 0, NULL, 0 }
    };

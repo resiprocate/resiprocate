@@ -99,6 +99,7 @@ SRC = \
 	SipStack.cxx \
 	StackThread.cxx \
 	InterruptableStackThread.cxx \
+	EventStackThread.cxx \
 	StatisticsHandler.cxx \
 	StatisticsManager.cxx \
 	StatisticsMessage.cxx \
