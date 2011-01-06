@@ -17,7 +17,39 @@ class Connection;
 class Compression;
 class FdPollGrp;
 
-#define RESIP_TRANSPORT_FLAG_NOBIND (1<<0)
+/**
+ * TransportFlags is bit-mask that can be set when creating a transport.
+ * All flags default to "off" to preserve "traditional" resip behavior.
+ * Not all Transports support all flags. All options are experimental.
+ * The flags are:
+ * NOBIND:
+ *    On transports that support it (TCP/TLS), do not bind a listening
+ *    socket; thus no in-bound connections are possible. This can conserve
+ *    ports and avoid port conflicts in pure-outbound (NAT'd) cases.
+ * RXALL:
+ *    When receiving from socket, read all possible messages before
+ *    returning to event loop. This allows higher thruput. Without this flag,
+ *    only one message is read at a time, which is slower over-all, but
+ *    is more "even" and balanced.
+ * TXALL:
+ *    When transmitting to a socket, write all possible messages before
+ *    returning to event loop. This allows higher thruput but burstier.
+ * KEEP_BUFFER:
+ *    With this flag, Transports will keep receive and transmit buffers
+ *    allocated even when not in use. This increases memory utilization
+ *    but speeds things up. Without this flag, the buffer is released
+ *    when not in used.
+ * TXNOW:
+ *    When a message to transmit is posted to Transport's transmit queue
+ *    immediately try sending it. This should have less latency
+ *    and less overhead with select/poll stuff, but will have deeper
+ *    call stacks.
+ */
+#define RESIP_TRANSPORT_FLAG_NOBIND      (1<<0)
+#define RESIP_TRANSPORT_FLAG_RXALL       (1<<1)
+#define RESIP_TRANSPORT_FLAG_TXALL       (1<<2)
+#define RESIP_TRANSPORT_FLAG_KEEP_BUFFER (1<<3)
+#define RESIP_TRANSPORT_FLAG_TXNOW       (1<<4)
 
 class Transport
 {

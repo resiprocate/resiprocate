@@ -175,6 +175,36 @@ SipStackAndThread::destroy()
    }
 }
 
+static void
+waitForTwoStacks( SipStackAndThread& receiver, SipStackAndThread& sender,
+	SelectInterruptor *commonIntr, int& thisseltime, bool& isStrange)
+{
+   FdSet fdset;
+   receiver->buildFdSet(fdset);
+   sender->buildFdSet(fdset);
+   if ( commonIntr )
+   {
+      commonIntr->buildFdSet(fdset);
+   }
+
+   if ( thisseltime > 0 )
+   {
+      unsigned int stackMs = resipMin(
+	      receiver->getTimeTillNextProcessMS(),
+	      sender->getTimeTillNextProcessMS());
+      thisseltime = resipMin((unsigned)thisseltime, stackMs);
+   }
+   int numReady = fdset.selectMilliSeconds(thisseltime);
+
+   isStrange = (thisseltime > 4000 && numReady==0);
+   if ( commonIntr )
+   {
+      commonIntr->process(fdset);
+   }
+   receiver->process(fdset);
+   sender->process(fdset);
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -194,6 +224,8 @@ main(int argc, char* argv[])
    int numPorts = 1;
    int portBase = 0;
    const char* threadType = "none";
+   int tpFlags = 0;
+   int sendSleepUs = 0;
    
 #if defined(HAVE_POPT_H)
    struct poptOption table[] = {
@@ -204,13 +236,15 @@ main(int argc, char* argv[])
       {"select-time", 's', POPT_ARG_INT,    &seltime,   0, "polling interval (ms) for stack thread", 0},
       {"protocol",    'p', POPT_ARG_STRING, &proto,     0, "protocol to use (tcp | udp)", 0},
       {"bind",        'b', POPT_ARG_STRING, &bindAddr,  0, "interface address to bind to",0},
-      {"listen",      0,   POPT_ARG_INT,   &doListen,   0, "do not bind/listen sender ports", 0},
+      {"listen",      0,   POPT_ARG_INT,    &doListen,  0, "do not bind/listen sender ports", 0},
       {"v6",          '6', POPT_ARG_NONE,   &v6     ,   0, "ipv6", 0},
-      {"invite",      'i', POPT_ARG_NONE,   &invite     ,   0, "send INVITE/BYE instead of REGISTER", 0},
-      {"poll",        0,   POPT_ARG_INT,   &usePollMode,  0, "use epoll mode", 0},
-      {"port",	      0, POPT_ARG_INT,   &portBase,   0, "first port to use", 0},
-      {"numports",    'n', POPT_ARG_INT,   &numPorts,   0, "number of parallel sessions(ports)", 0},
+      {"invite",      'i', POPT_ARG_NONE,   &invite ,   0, "send INVITE/BYE instead of REGISTER", 0},
+      {"poll",        0,   POPT_ARG_INT,    &usePollMode,0, "use epoll mode", 0},
+      {"port",	      0,   POPT_ARG_INT,    &portBase,  0, "first port to use", 0},
+      {"numports",    'n', POPT_ARG_INT,    &numPorts,  0, "number of parallel sessions(ports)", 0},
       {"thread-type", 't', POPT_ARG_STRING, &threadType,0, "stack thread type", "none|common|std|intr|poll"},
+      {"tf",          0,   POPT_ARG_INT,    &tpFlags,   0, "bit encoding of transportFlags", 0},
+      {"sleep",       0,   POPT_ARG_INT,    &sendSleepUs,0, "time (us) to sleep after each sent request", 0},
       POPT_AUTOHELP
       { NULL, 0, 0, NULL, 0 }
    };
@@ -234,6 +268,7 @@ main(int argc, char* argv[])
      <<" epoll="<<usePollMode
      <<" sendIf="<<bindIfAddr
      <<" listen="<<doListen
+     <<" tf="<<tpFlags
      <<"." << endl;
 
    // must occur before creating stacks
@@ -299,15 +334,23 @@ main(int argc, char* argv[])
    int idx;
    for (idx=0; idx < numPorts; idx++)
    {
-      sender->addTransport(UDP, senderPort+idx, version, StunDisabled, bindIfAddr);
+      sender->addTransport(UDP, senderPort+idx, version, StunDisabled, bindIfAddr,
+        /*sipDomain*/Data::Empty, /*keypass*/Data::Empty, SecurityTypes::TLSv1,
+	tpFlags);
       // NOBIND doesn't make sense for UDP
       sender->addTransport(TCP, senderPort+idx, version, StunDisabled, bindIfAddr,
         /*sipDomain*/Data::Empty, /*keypass*/Data::Empty, SecurityTypes::TLSv1,
-        doListen?0:RESIP_TRANSPORT_FLAG_NOBIND);
+        tpFlags|(doListen?0:RESIP_TRANSPORT_FLAG_NOBIND));
       // NOTE: we could also bind receive to bindIfAddr, but existing code
       // doesn't do this. Responses are sent from here, so why don't we?
-      receiver->addTransport(UDP, registrarPort+idx, version);
-      receiver->addTransport(TCP, registrarPort+idx, version);
+      receiver->addTransport(UDP, registrarPort+idx, version, StunDisabled,
+	/*ipInterface*/Data::Empty,
+        /*sipDomain*/Data::Empty, /*keypass*/Data::Empty, SecurityTypes::TLSv1,
+	tpFlags);
+      receiver->addTransport(TCP, registrarPort+idx, version, StunDisabled,
+	/*ipInterface*/Data::Empty,
+        /*sipDomain*/Data::Empty, /*keypass*/Data::Empty, SecurityTypes::TLSv1,
+	tpFlags);
    }
 
    sender.run();
@@ -369,60 +412,37 @@ main(int argc, char* argv[])
              next->header(h_Vias).front().sentHost() = bindIfAddr;
 	 }
          next->header(h_Vias).front().sentPort() = senderPort + (sent%numPorts);
-         sender->send(*next);
+         sender->send(std::auto_ptr<SipMessage>(next));
+         next = 0; // DON'T delete next; consumed by send above
          outstanding++;
          sent++;
-         delete next;
+#ifndef WIN32
+	 if (sendSleepUs>0)
+	    usleep(sendSleepUs);
+#endif
       }
 
+      int thisseltime = seltime;
+      bool isStrange = false;
       if ( noStackThread )
       {
-         FdSet fdset;
-         receiver->buildFdSet(fdset);
-         sender->buildFdSet(fdset);
-	 if ( commonIntr )
-	    commonIntr->buildFdSet(fdset);
-
-	 int thisseltime = seltime;
-	 if ( thisseltime > 0 )
-	 {
-	    unsigned int stackMs = resipMin(
-		    receiver->getTimeTillNextProcessMS(),
-		    sender->getTimeTillNextProcessMS());
-	    thisseltime = resipMin((unsigned)thisseltime, stackMs);
-         }
-         int numReady = fdset.selectMilliSeconds(thisseltime);
-
-	 if (thisseltime > 4000 && numReady==0)
-	 {
-	    cout << "STRANGE: Stuck for long time: "
-		<<" sent="<<sent
-		<<" done="<<count
-		<<" thisseltime="<<thisseltime
-		<<endl;
-	 }
-	 if ( commonIntr )
-         {
-	    commonIntr->process(fdset);
-         }
-         receiver->process(fdset);
-         sender->process(fdset);
+	 waitForTwoStacks( receiver, sender, commonIntr, thisseltime, isStrange);
       }
       else
       {
-	 // XXX: do something here to spin until either queue has message
-	 int thisseltime = 4000;
+	 thisseltime = 4000;
 	 bool gotPost = sharedUp.waitNotify(thisseltime);
-	 if ( !gotPost )
-	 {
-	    cout << "STRANGE: Stuck for long time: "
-		<<" sent="<<sent
-		<<" done="<<count
-		<<" thisseltime="<<thisseltime
-		<<endl;
-	 }
+	 isStrange = !gotPost;
       }
-      
+      if (isStrange)
+      {
+	 cout << "STRANGE: Stuck for long time: "
+	     <<" sent="<<sent
+	     <<" done="<<count
+	     <<" thisseltime="<<thisseltime
+	     <<endl;
+      }
+
       for (;;)
       {
          static NameAddr contact;
@@ -524,12 +544,31 @@ main(int argc, char* argv[])
    }
    cout << "Note: this test runs both sides (client and server)" << endl;
 
+#if 1
    cout << "RxCnts: "
      <<" Req="<<rxReqHitCnt<<"/"<<rxReqTryCnt
      <<" ("<<(rxReqHitCnt*100/rxReqTryCnt)<<"%)"
      <<" Rsp="<<rxRspHitCnt<<"/"<<rxRspTryCnt
      <<" ("<<(rxRspHitCnt*100/rxRspTryCnt)<<"%)"
      << endl;
+#endif
+
+
+#if 0
+   for (;;)
+   {
+       int finishtime = 40*1000;
+       bool isStrange = false;
+       if ( noStackThread )
+       {
+	  waitForTwoStacks( receiver, sender, commonIntr, finishtime, isStrange);
+       }
+       else
+       {
+	  sharedUp.waitNotify(finishtime);
+       }
+   }
+#endif
 
    sender.shutdown();
    receiver.shutdown();

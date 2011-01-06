@@ -41,7 +41,8 @@ public:
                 StunSetting stun,
                 const Data& interfaceObj,
                 AfterSocketCreationFuncPtr socketFunc = 0,
-                Compression &compression = Compression::Disabled);
+                Compression &compression = Compression::Disabled,
+		unsigned transportFlags = 0);
    virtual  ~UdpTransport();
 
    virtual TransportType transport() const { return UDP; }
@@ -68,19 +69,35 @@ public:
    void setExternalUnknownDatagramHandler(ExternalUnknownDatagramHandler *handler);
 
 protected:
-   virtual void checkTransmitQueue(bool justPosted);
+   virtual void checkTransmitQueue();
 
-   void processRx();
-   void processTx();
+   void processRxAll();
+   int processRxRecv(char*& buffer, Tuple& sender);
+   bool processRxParse(char *buffer, int len, Tuple& sender);
+   void processTxAll();
+   void processTxOne(SendData *data);
+   void updateEvents();
+
    osc::Stack *mSigcompStack;
 
+   // statistics
+   unsigned mPollEventCnt;
+   unsigned mTxTryCnt;
+   unsigned mTxMsgCnt;
+   unsigned mTxFailCnt;
+   unsigned mRxTryCnt;
+   unsigned mRxMsgCnt;
+   unsigned mRxKeepaliveCnt;
+   unsigned mRxTransactionCnt;
 private:
+   char* mRxBuffer;
    MsgHeaderScanner mMsgHeaderScanner;
    mutable resip::Mutex  myMutex;
    Tuple mStunMappedAddress;
    bool mStunSuccess;
    ExternalUnknownDatagramHandler* mExternalUnknownDatagramHandler;
    bool mInWritable;
+   bool mInActiveWrite;
 };
 
 }

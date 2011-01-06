@@ -287,7 +287,7 @@ TcpBaseTransport::processAllWriteRequests()
 }
 
 void
-TcpBaseTransport::checkTransmitQueue(bool justPosted)
+TcpBaseTransport::checkTransmitQueue()
 {
    // called within SipStack's thread. There is some risk of
    // recursion here if connection starts doing anything fancy
