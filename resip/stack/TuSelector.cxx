@@ -5,14 +5,16 @@
 #include "resip/stack/SipStack.hxx"
 
 #include "rutil/TimeLimitFifo.hxx"
+#include "rutil/AsyncProcessHandler.hxx"
 #include "rutil/WinLeakCheck.hxx"
 #include "rutil/Logger.hxx"
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
 using namespace resip;
 
-TuSelector::TuSelector(TimeLimitFifo<Message>& fallBackFifo) :
-   mFallBackFifo(fallBackFifo) ,
+TuSelector::TuSelector(TimeLimitFifo<Message>& fallBackFifo,
+ AsyncProcessHandler *fallbackPostNotify) :
+   mFallBackFifo(fallBackFifo) , mFallbackPostNotify(fallbackPostNotify),
    mTuSelectorMode(false),
    mStatsPayload()
 {
@@ -78,6 +80,8 @@ TuSelector::add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage)
       {
          DebugLog(<< "Send to default TU: " << std::endl << std::endl << *msg);
          mFallBackFifo.add(msg, usage);
+         if ( mFallbackPostNotify )
+	    mFallbackPostNotify->handleProcessNotification();
       }
    }
 }
