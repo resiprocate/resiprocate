@@ -153,7 +153,7 @@ endif
 contrib/ares-build.$(OS_ARCH)/Makefile:
 	mkdir -p contrib/ares-build.$(OS_ARCH)
 	cd contrib/ares-build.$(OS_ARCH) && \
-	  ../ares/configure ${ARES_IPV6} ${ARES_PREFIX_ARG} ${CONFIGURE_ARGS}
+	  ../ares/configure ${ARES_IPV6} ${ARES_PREFIX_ARG} ${ARES_CONFIGURE_ARGS}
 
 configure_ares: contrib/ares-build.$(OS_ARCH)/Makefile
 
