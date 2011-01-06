@@ -15,23 +15,6 @@ using namespace std;
 using namespace resip;
 
 
-#if 0
-class TcpBasePollItem : public FdPollItemBase {
-  public:
-   TcpBasePollItem(FdPollGrp* grp, Socket fd, TcpBaseTransport& tp)
-     : FdPollItemBase(grp, fd, FPEM_Read|FPEM_Edge), mTransport(tp) { }
-
-   virtual void		processPollEvent(FdPollEventMask mask) {
-      mTransport.processPollEvent(mask);
-   }
-
-  protected:
-
-   TcpBaseTransport&	mTransport;
-};
-#endif
-
-
 const size_t TcpBaseTransport::MaxWriteSize = 4096;
 const size_t TcpBaseTransport::MaxReadSize = 4096;
 
@@ -52,14 +35,14 @@ TcpBaseTransport::TcpBaseTransport(Fifo<TransactionMessage>& fifo,
 
 TcpBaseTransport::~TcpBaseTransport()
 {
-   //DebugLog (<< "Shutting down TCP Transport " << this << " " << mFd << " " << mInterface << ":" << port()); 
-   
-   // !jf! this is not right. should drain the sends before 
-   while (mTxFifo.messageAvailable()) 
+   //DebugLog (<< "Shutting down TCP Transport " << this << " " << mFd << " " << mInterface << ":" << port());
+
+   // !jf! this is not right. should drain the sends before
+   while (mTxFifo.messageAvailable())
    {
       SendData* data = mTxFifo.getNext();
       InfoLog (<< "Throwing away queued data for " << data->destination);
-      
+
       fail(data->transactionId);
       delete data;
    }
@@ -76,7 +59,7 @@ TcpBaseTransport::init()
       return;
    }
 
-   //DebugLog (<< "Opening TCP " << mFd << " : " << this);   
+   //DebugLog (<< "Opening TCP " << mFd << " : " << this);
 
    int on = 1;
 #if !defined(WIN32)
@@ -93,7 +76,7 @@ TcpBaseTransport::init()
 
    bind();
    makeSocketNonBlocking(mFd);
-   
+
    // do the listen, seting the maximum queue size for compeletly established
    // sockets -- on linux, tcp_max_syn_backlog should be used for the incomplete
    // queue size(see man listen)
@@ -111,10 +94,10 @@ TcpBaseTransport::init()
 
 // ?kw?: when should this be called relative to init() above? merge?
 void
-TcpBaseTransport::setPollGrp(FdPollGrp *grp) 
+TcpBaseTransport::setPollGrp(FdPollGrp *grp)
 {
    assert(mPollGrp==NULL && grp!=NULL);
-   if ( mFd!=INVALID_SOCKET ) 
+   if ( mFd!=INVALID_SOCKET )
    {
       mPollItemHandle = grp->addPollItem(mFd, FPEM_Read|FPEM_Edge, this);
       // above released by InternalTransport destructor
@@ -153,7 +136,7 @@ TcpBaseTransport::processListen()
          switch (e)
          {
             case EWOULDBLOCK:
-               // !jf! this can not be ready in some cases 
+               // !jf! this can not be ready in some cases
                // !kw! this will happen every epoll cycle
                return 0;
             default:
@@ -162,7 +145,7 @@ TcpBaseTransport::processListen()
          return -1;
       }
       makeSocketNonBlocking(sock);
-            
+
       DebugLog (<< "Received TCP connection from: " << tuple << " as fd=" << sock);
 
       if (mSocketFunc)
@@ -255,12 +238,12 @@ TcpBaseTransport::processAllWriteRequests()
    {
       SendData* data = mTxFifo.getNext();
       DebugLog (<< "Processing write for " << data->destination);
-      
+
       // this will check by connectionId first, then by address
       Connection* conn = mConnectionManager.findConnection(data->destination);
-            
+
       //DebugLog (<< "TcpBaseTransport::processAllWriteRequests() using " << conn);
-      
+
       // There is no connection yet, so make a client connection
       if (conn == 0 && !data->destination.onlyUseExistingConnection)
       {
@@ -274,7 +257,7 @@ TcpBaseTransport::processAllWriteRequests()
          // .kw. why do below? We already have the conn, who uses key?
          data->destination.mFlowKey = conn->getSocket(); // !jf!
       }
-   
+
       if (conn == 0)
       {
          DebugLog (<< "Failed to create/get connection: " << data->destination);
@@ -293,8 +276,8 @@ void
 TcpBaseTransport::checkTransmitQueue()
 {
    // called within SipStack's thread. There is some risk of
-   // recursion here if connection starts doing anything fancy
-   // for backward-compat when not-epoll, don't handle transmit synchronously
+   // recursion here if connection starts doing anything fancy.
+   // For backward-compat when not-epoll, don't handle transmit synchronously
    // now, but rather wait for the process() call
    if (mPollGrp)
    {
@@ -321,7 +304,7 @@ TcpBaseTransport::process(FdSet& fdSet)
 
 void
 TcpBaseTransport::processPollEvent(FdPollEventMask mask) {
-   if ( mask & FPEM_Read ) 
+   if ( mask & FPEM_Read )
    {
       while ( processListen() > 0 )
          ;

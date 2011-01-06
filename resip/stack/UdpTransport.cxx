@@ -28,13 +28,13 @@ using namespace std;
 using namespace resip;
 
 UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
-                           int portNum,  
+                           int portNum,
                            IpVersion version,
                            StunSetting stun,
                            const Data& pinterface,
                            AfterSocketCreationFuncPtr socketFunc,
                            Compression &compression,
-			   unsigned transportFlags)
+                           unsigned transportFlags)
    : InternalTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags),
      mSigcompStack(0),
      mRxBuffer(0),
@@ -47,9 +47,9 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
    mTuple.setType(transport());
    mFd = InternalTransport::socket(transport(), version);
    mTuple.mFlowKey=(FlowKey)mFd;
-   bind();	// also makes it non-blocking
+   bind();      // also makes it non-blocking
 
-   InfoLog (<< "Creating UDP transport host=" << pinterface 
+   InfoLog (<< "Creating UDP transport host=" << pinterface
             << " port=" << mTuple.getPort()
             << " ipv4=" << bool(version==V4) );
 
@@ -72,17 +72,17 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
 UdpTransport::~UdpTransport()
 {
    InfoLog(<< "Shutting down " << mTuple
-	   <<" tf="<<mTransportFlags<<" evt="<<(mPollGrp?1:0)
-	   <<" stats:"
-	   <<" poll="<<mPollEventCnt
-	   <<" txtry="<<mTxTryCnt
-	   <<" txmsg="<<mTxMsgCnt
-	   <<" txfail="<<mTxFailCnt
-	   <<" rxtry="<<mRxTryCnt
-	   <<" rxmsg="<<mRxMsgCnt
-	   <<" rxka="<<mRxKeepaliveCnt
-	   <<" rxtr="<<mRxTransactionCnt
-	   );
+           <<" tf="<<mTransportFlags<<" evt="<<(mPollGrp?1:0)
+           <<" stats:"
+           <<" poll="<<mPollEventCnt
+           <<" txtry="<<mTxTryCnt
+           <<" txmsg="<<mTxMsgCnt
+           <<" txfail="<<mTxFailCnt
+           <<" rxtry="<<mRxTryCnt
+           <<" rxmsg="<<mRxMsgCnt
+           <<" rxka="<<mRxKeepaliveCnt
+           <<" rxtr="<<mRxTransactionCnt
+           );
 #ifdef USE_SIGCOMP
    delete mSigcompStack;
 #endif
@@ -93,7 +93,7 @@ UdpTransport::~UdpTransport()
 }
 
 void
-UdpTransport::setPollGrp(FdPollGrp *grp) 
+UdpTransport::setPollGrp(FdPollGrp *grp)
 {
    assert(mPollGrp==NULL && grp!=NULL);
    mPollGrp = grp;
@@ -147,7 +147,7 @@ UdpTransport::processPollEvent(FdPollEventMask mask)
    if ( mask & FPEM_Write )
    {
       processTxAll();
-      updateEvents();	// turn-off writability
+      updateEvents();   // turn-off writability
    }
    if ( mask & FPEM_Read )
    {
@@ -161,7 +161,7 @@ UdpTransport::processPollEvent(FdPollEventMask mask)
    instead, we depend upon the writable-socket callback (fdset or poll).
 **/
 bool
-UdpTransport::hasDataToSend() const 
+UdpTransport::hasDataToSend() const
 {
    return false;
 }
@@ -177,7 +177,7 @@ UdpTransport::buildFdSet( FdSet& fdset )
    }
 }
 
-void 
+void
 UdpTransport::process(FdSet& fdset)
 {
    // pull buffers to send out of TxFifo
@@ -189,7 +189,7 @@ UdpTransport::process(FdSet& fdset)
       processTxAll();
    }
 
-   if ( fdset.readyToRead(mFd) ) 
+   if ( fdset.readyToRead(mFd) )
    {
       processRxAll();
    }
@@ -210,7 +210,7 @@ UdpTransport::processTxAll()
       processTxOne(msg);
       // With UDP we don't need to worry about write blocking (I hope)
       if ( (mTransportFlags & RESIP_TRANSPORT_FLAG_TXALL)==0 )
-	 break;
+         break;
    }
 }
 
@@ -235,21 +235,21 @@ UdpTransport::processTxOne(SendData *data)
        !sendData->isAlreadyCompressed )
    {
        osc::SigcompMessage *sm = mSigcompStack->compressMessage
-	 (sendData->data.data(), sendData->data.size(),
-	  sendData->sigcompId.data(), sendData->sigcompId.size(),
-	  isReliable());
+         (sendData->data.data(), sendData->data.size(),
+          sendData->sigcompId.data(), sendData->sigcompId.size(),
+          isReliable());
 
        DebugLog (<< "Compressed message from "
-		 << sendData->data.size() << " bytes to "
-		 << sm->getDatagramLength() << " bytes");
+                 << sendData->data.size() << " bytes to "
+                 << sm->getDatagramLength() << " bytes");
 
        expected = sm->getDatagramLength();
 
        count = sendto(mFd,
-		      sm->getDatagramMessage(),
-		      sm->getDatagramLength(),
-		      0, // flags
-		      &addr, sendData->destination.length());
+                      sm->getDatagramMessage(),
+                      sm->getDatagramLength(),
+                      0, // flags
+                      &addr, sendData->destination.length());
        delete sm;
    }
    else
@@ -257,9 +257,9 @@ UdpTransport::processTxOne(SendData *data)
    {
        expected = (int)sendData->data.size();
        count = sendto(mFd,
-		      sendData->data.data(), (int)sendData->data.size(),
-		      0, // flags
-		      &addr, (int)sendData->destination.length());
+                      sendData->data.data(), (int)sendData->data.size(),
+                      0, // flags
+                      &addr, (int)sendData->destination.length());
    }
 
    if ( count == SOCKET_ERROR )
@@ -274,8 +274,8 @@ UdpTransport::processTxOne(SendData *data)
    {
       if (count != expected)
       {
-	 ErrLog (<< "UDPTransport - send buffer full" );
-	 fail(sendData->transactionId);
+         ErrLog (<< "UDPTransport - send buffer full" );
+         fail(sendData->transactionId);
       }
    }
 }
@@ -300,14 +300,14 @@ UdpTransport::processRxAll()
       Tuple sender(mTuple);
       int len = processRxRecv(buffer, sender);
       if ( len <= 0 )
-	 break;
+         break;
       ++mRxMsgCnt;
       if ( processRxParse(buffer, len, sender) )
       {
-	 buffer = NULL;
+         buffer = NULL;
       }
       if ( (mTransportFlags & RESIP_TRANSPORT_FLAG_RXALL)==0 )
-	 break;
+         break;
    }
    if ( buffer && (mTransportFlags & RESIP_TRANSPORT_FLAG_KEEP_BUFFER)!=0 )
    {
@@ -348,24 +348,24 @@ UdpTransport::processRxRecv(char*& buffer, Tuple& sender)
       // !ah! we use the len-1 trick :-(
       socklen_t slen = sender.length();
       int len = recvfrom( mFd,
-			  buffer,
-			  MaxBufferSize,
-			  0 /*flags */,
-			  &sender.getMutableSockaddr(),
-			  &slen);
+                          buffer,
+                          MaxBufferSize,
+                          0 /*flags */,
+                          &sender.getMutableSockaddr(),
+                          &slen);
       if ( len == SOCKET_ERROR )
       {
-	 int err = getErrno();
-	 if ( err != EWOULDBLOCK  )
-	 {
-	    error( err );
-	 }
-	 len = 0;
+         int err = getErrno();
+         if ( err != EWOULDBLOCK  )
+         {
+            error( err );
+         }
+         len = 0;
       }
       if (len+1 >= MaxBufferSize)
       {
-	 InfoLog(<<"Datagram exceeded max length "<<MaxBufferSize);
-	 continue;
+         InfoLog(<<"Datagram exceeded max length "<<MaxBufferSize);
+         continue;
       }
       return len;
    }
@@ -402,37 +402,37 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
 
       if (stunParseMessage(buffer, len, resp, false))
       {
-	 in_addr sin_addr;
-	 // Use XorMappedAddress if present - if not use MappedAddress
-	 if(resp.hasXorMappedAddress)
-	 {
-	    UInt16 id16 = resp.msgHdr.id.octet[0]<<8
-			  | resp.msgHdr.id.octet[1];
-	    UInt32 id32 = resp.msgHdr.id.octet[0]<<24
-			  | resp.msgHdr.id.octet[1]<<16
-			  | resp.msgHdr.id.octet[2]<<8
-			  | resp.msgHdr.id.octet[3];
-	    resp.xorMappedAddress.ipv4.port = resp.xorMappedAddress.ipv4.port^id16;
-	    resp.xorMappedAddress.ipv4.addr = resp.xorMappedAddress.ipv4.addr^id32;
+         in_addr sin_addr;
+         // Use XorMappedAddress if present - if not use MappedAddress
+         if(resp.hasXorMappedAddress)
+         {
+            UInt16 id16 = resp.msgHdr.id.octet[0]<<8
+                          | resp.msgHdr.id.octet[1];
+            UInt32 id32 = resp.msgHdr.id.octet[0]<<24
+                          | resp.msgHdr.id.octet[1]<<16
+                          | resp.msgHdr.id.octet[2]<<8
+                          | resp.msgHdr.id.octet[3];
+            resp.xorMappedAddress.ipv4.port = resp.xorMappedAddress.ipv4.port^id16;
+            resp.xorMappedAddress.ipv4.addr = resp.xorMappedAddress.ipv4.addr^id32;
 
 #if defined(WIN32)
-	    sin_addr.S_un.S_addr = htonl(resp.xorMappedAddress.ipv4.addr);
+            sin_addr.S_un.S_addr = htonl(resp.xorMappedAddress.ipv4.addr);
 #else
-	    sin_addr.s_addr = htonl(resp.xorMappedAddress.ipv4.addr);
+            sin_addr.s_addr = htonl(resp.xorMappedAddress.ipv4.addr);
 #endif
-	    mStunMappedAddress = Tuple(sin_addr,resp.xorMappedAddress.ipv4.port, UDP);
-	    mStunSuccess = true;
-	 }
-	 else if(resp.hasMappedAddress)
-	 {
+            mStunMappedAddress = Tuple(sin_addr,resp.xorMappedAddress.ipv4.port, UDP);
+            mStunSuccess = true;
+         }
+         else if(resp.hasMappedAddress)
+         {
 #if defined(WIN32)
-	 sin_addr.S_un.S_addr = htonl(resp.mappedAddress.ipv4.addr);
+         sin_addr.S_un.S_addr = htonl(resp.mappedAddress.ipv4.addr);
 #else
-	 sin_addr.s_addr = htonl(resp.mappedAddress.ipv4.addr);
+         sin_addr.s_addr = htonl(resp.mappedAddress.ipv4.addr);
 #endif
-	 mStunMappedAddress = Tuple(sin_addr,resp.mappedAddress.ipv4.port, UDP);
-	 mStunSuccess = true;
-	 }
+         mStunMappedAddress = Tuple(sin_addr,resp.mappedAddress.ipv4.port, UDP);
+         mStunSuccess = true;
+         }
       }
       return false;
    }
@@ -463,28 +463,28 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
       secondary.addr = 0;
 
       bool ok = stunServerProcessMsg( buffer, len, // input buffer
-				      from,  // packet source
-				      secondary, // not used
-				      myAddr, // address to fill into response
-				      myAddr, // not used
-				      &resp, // stun response
-				      &dest, // where to send response
-				      &hmacPassword, // not used
-				      &changePort, // not used
-				      &changeIp, // not used
-				      false ); // logging
+                                      from,  // packet source
+                                      secondary, // not used
+                                      myAddr, // address to fill into response
+                                      myAddr, // not used
+                                      &resp, // stun response
+                                      &dest, // where to send response
+                                      &hmacPassword, // not used
+                                      &changePort, // not used
+                                      &changeIp, // not used
+                                      false ); // logging
 
       if (ok)
       {
-	 DebugLog(<<"Got UDP STUN keepalive. Sending response...");
-	 char* response = new char[STUN_MAX_MESSAGE_SIZE];
-	 int rlen = stunEncodeMessage( resp,
-				       response,
-				       STUN_MAX_MESSAGE_SIZE,
-				       hmacPassword,
-				       false );
-	 SendData* stunResponse = new SendData(sender, response, rlen);
-	 mTxFifo.add(stunResponse);
+         DebugLog(<<"Got UDP STUN keepalive. Sending response...");
+         char* response = new char[STUN_MAX_MESSAGE_SIZE];
+         int rlen = stunEncodeMessage( resp,
+                                       response,
+                                       STUN_MAX_MESSAGE_SIZE,
+                                       hmacPassword,
+                                       false );
+         SendData* stunResponse = new SendData(sender, response, rlen);
+         mTxFifo.add(stunResponse);
       }
       return false;
    }
@@ -505,11 +505,11 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
      char* newBuffer = MsgHeaderScanner::allocateBuffer(MaxBufferSize);
      size_t uncompressedLength =
        mSigcompStack->uncompressMessage(buffer, len,
-					newBuffer, MaxBufferSize, sc);
+                                        newBuffer, MaxBufferSize, sc);
 
     DebugLog (<< "Uncompressed message from "
-	      << len << " bytes to "
-	      << uncompressedLength << " bytes");
+              << len << " bytes to "
+              << uncompressedLength << " bytes");
 
 
      osc::SigcompMessage *nack = mSigcompStack->getNack();
@@ -517,12 +517,12 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
      if (nack)
      {
        mTxFifo.add(new SendData(tuple,
-				Data(nack->getDatagramMessage(),
-				     nack->getDatagramLength()),
-				Data::Empty,
-				Data::Empty,
-				true)
-		  );
+                                Data(nack->getDatagramMessage(),
+                                     nack->getDatagramLength()),
+                                Data::Empty,
+                                Data::Empty,
+                                true)
+                  );
        delete nack;
      }
 
@@ -561,16 +561,16 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
 
    char *unprocessedCharPtr;
    if (mMsgHeaderScanner.scanChunk(buffer,
-				   len,
-				   &unprocessedCharPtr) !=
+                                   len,
+                                   &unprocessedCharPtr) !=
        MsgHeaderScanner::scrEnd)
    {
       StackLog(<<"Scanner rejecting datagram as unparsable / fragmented from " << sender);
       StackLog(<< Data(Data::Borrow, buffer, len));
       if(mExternalUnknownDatagramHandler)
       {
-	 auto_ptr<Data> datagram(new Data(buffer,len));
-	 (*mExternalUnknownDatagramHandler)(this,sender,datagram);
+         auto_ptr<Data> datagram(new Data(buffer,len));
+         (*mExternalUnknownDatagramHandler)(this,sender,datagram);
       }
 
       // Idea: consider backing buffer out of message and letting caller reuse it
@@ -616,18 +616,18 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
        // TCP connection for identification purposes.
        if (via.exists(p_sigcompId))
        {
-	 Data compId = via.param(p_sigcompId);
-	 if(!compId.empty())
-	 {
-	    // .bwc. Crash was happening here. Why was there an empty sigcomp
-	    // id?
-	    mSigcompStack->provideCompartmentId(
-			     sc, compId.data(), compId.size());
-	 }
+         Data compId = via.param(p_sigcompId);
+         if(!compId.empty())
+         {
+            // .bwc. Crash was happening here. Why was there an empty sigcomp
+            // id?
+            mSigcompStack->provideCompartmentId(
+                             sc, compId.data(), compId.size());
+         }
        }
        else
        {
-	 mSigcompStack->provideCompartmentId(sc, this, sizeof(this));
+         mSigcompStack->provideCompartmentId(sc, this, sizeof(this));
        }
      }
      else
@@ -643,7 +643,7 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
        Data compId = via.param(p_branch).getSigcompCompartment();
        if(!compId.empty())
        {
-	 mSigcompStack->provideCompartmentId(sc, compId.data(), compId.size());
+         mSigcompStack->provideCompartmentId(sc, compId.data(), compId.size());
        }
      }
 
@@ -657,7 +657,7 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
 
 
 
-bool 
+bool
 UdpTransport::stunSendTest(const Tuple&  dest)
 {
    bool changePort=false;
@@ -699,7 +699,7 @@ UdpTransport::stunResult(Tuple& mappedAddress)
    return mStunSuccess;
 }
 
-void 
+void
 UdpTransport::setExternalUnknownDatagramHandler(ExternalUnknownDatagramHandler *handler)
 {
    mExternalUnknownDatagramHandler = handler;
@@ -712,22 +712,22 @@ UdpTransport::setRcvBufLen(int buflen)
 }
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -737,7 +737,7 @@ UdpTransport::setRcvBufLen(int buflen)
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -751,9 +751,9 @@ UdpTransport::setRcvBufLen(int buflen)
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see

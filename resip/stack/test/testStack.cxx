@@ -2,7 +2,7 @@
 #include "resip/stack/config.hxx"
 #endif
 
-#if defined (HAVE_POPT_H) 
+#if defined (HAVE_POPT_H)
 #include <popt.h>
 #else
 #ifndef WIN32
@@ -46,31 +46,31 @@ using namespace std;
   are unusual, and not a good template for a "normal" application.
   Values are:
 
-    none	Everything (both stacks and test application) run in same
-		thread. App block for time specified by --seltime each
-		message cycle.  This defaults to zero, meaning app
-		will loop without every waiting, looking for any work to do.
-		When non-zero, app will wait this before checking queues.
+    none        Everything (both stacks and test application) run in same
+                thread. App block for time specified by --seltime each
+                message cycle.  This defaults to zero, meaning app
+                will loop without every waiting, looking for any work to do.
+                When non-zero, app will wait this before checking queues.
 
-    common	Like "none", everything (both stacks and test application)
-		run in same thread. Thread blocks until something to do,
-		and stacks will be configured to break
-		the wait loop when there is something for app to do. This
-		avoids the endless spinning of "none", and is useful for
-		profiling.
+    common      Like "none", everything (both stacks and test application)
+                run in same thread. Thread blocks until something to do,
+                and stacks will be configured to break
+                the wait loop when there is something for app to do. This
+                avoids the endless spinning of "none", and is useful for
+                profiling.
 
-    std		Each stack runs in its own thread, and that thread is
-		a "standard" select-based thread.
+    std         Each stack runs in its own thread, and that thread is
+                a "standard" select-based thread.
 
-    intr	Each stack runs in its own thread, and that thread
-		is an interruptable select-based thread. Here, interruptable
-		means that when the app gives the thread work to do, it will
-		immediate wake up and do it, instead of waiting for
-		the select interval to expire.
+    intr        Each stack runs in its own thread, and that thread
+                is an interruptable select-based thread. Here, interruptable
+                means that when the app gives the thread work to do, it will
+                immediate wake up and do it, instead of waiting for
+                the select interval to expire.
 
-    event	Each stack runs in its own thread, and that thread
-		is an interruptable event-loop based thread. The specific
-		type of event-loop depends upon the underlying platform.
+    event       Each stack runs in its own thread, and that thread
+                is an interruptable event-loop based thread. The specific
+                type of event-loop depends upon the underlying platform.
 
     In addition to the above thread modes, the flag --intepoll turns on
     internal epoll mode. This allows any of the above thread modes to be
@@ -132,31 +132,31 @@ class SipStackAndThread
         AsyncProcessHandler *notifyDn=0,
         AsyncProcessHandler *notifyUp=0);
          ~SipStackAndThread() {
-	 destroy();
+         destroy();
       }
 
-      SipStack&		getStack() const { assert(mStack); return *mStack; }
+      SipStack&         getStack() const { assert(mStack); return *mStack; }
 
       // I don't know if these are such a good idea
-      SipStack&		operator*() const { assert(mStack); return *mStack; }
-      SipStack*		operator->() const { return mStack; }
+      SipStack&         operator*() const { assert(mStack); return *mStack; }
+      SipStack*         operator->() const { return mStack; }
 
-      void		run() { if ( mThread ) mThread->run(); }
-      void		shutdown() { if ( mThread ) mThread->shutdown(); }
-      void		join() { if ( mThread ) mThread->join(); }
+      void              run() { if ( mThread ) mThread->run(); }
+      void              shutdown() { if ( mThread ) mThread->shutdown(); }
+      void              join() { if ( mThread ) mThread->join(); }
 
-      void		destroy();
+      void              destroy();
 
       // dis-allowed by not-implemented
       SipStackAndThread& operator=(SipStackAndThread&);
 
    protected:
 
-      SipStack		*mStack;
-      ThreadIf		*mThread;
-      SelectInterruptor	*mSelIntr;
-      FdPollGrp		*mPollGrp;
-      EventThreadInterruptor	*mEventIntr;
+      SipStack          *mStack;
+      ThreadIf          *mThread;
+      SelectInterruptor *mSelIntr;
+      FdPollGrp         *mPollGrp;
+      EventThreadInterruptor    *mEventIntr;
 };
 
 
@@ -225,7 +225,7 @@ SipStackAndThread::destroy()
 
 static void
 waitForTwoStacks( SipStackAndThread& receiver, SipStackAndThread& sender,
-	SelectInterruptor *commonIntr, int& thisseltime, bool& isStrange)
+        SelectInterruptor *commonIntr, int& thisseltime, bool& isStrange)
 {
    FdSet fdset;
    receiver->buildFdSet(fdset);
@@ -238,8 +238,8 @@ waitForTwoStacks( SipStackAndThread& receiver, SipStackAndThread& sender,
    if ( thisseltime > 0 )
    {
       unsigned int stackMs = resipMin(
-	      receiver->getTimeTillNextProcessMS(),
-	      sender->getTimeTillNextProcessMS());
+              receiver->getTimeTillNextProcessMS(),
+              sender->getTimeTillNextProcessMS());
       thisseltime = resipMin((unsigned)thisseltime, stackMs);
    }
    int numReady = fdset.selectMilliSeconds(thisseltime);
@@ -274,7 +274,7 @@ main(int argc, char* argv[])
    const char* threadType = "none";
    int tpFlags = 0;
    int sendSleepUs = 0;
-   
+
 #if defined(HAVE_POPT_H)
    struct poptOption table[] = {
       {"log-type",    'l', POPT_ARG_STRING, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
@@ -288,7 +288,7 @@ main(int argc, char* argv[])
       {"v6",          '6', POPT_ARG_NONE,   &v6     ,   0, "ipv6", 0},
       {"invite",      'i', POPT_ARG_NONE,   &invite ,   0, "send INVITE/BYE instead of REGISTER", 0},
       {"intepoll",    0,   POPT_ARG_INT,    &useInternalEPollMode,0, "use internal epoll mode", 0},
-      {"port",	      0,   POPT_ARG_INT,    &portBase,  0, "first port to use", 0},
+      {"port",        0,   POPT_ARG_INT,    &portBase,  0, "first port to use", 0},
       {"numports",    'n', POPT_ARG_INT,    &numPorts,  0, "number of parallel sessions(ports)", 0},
       {"thread-type", 't', POPT_ARG_STRING, &threadType,0, "stack thread type", "none|common|std|intr|event"},
       {"tf",          0,   POPT_ARG_INT,    &tpFlags,   0, "bit encoding of transportFlags", 0},
@@ -296,7 +296,7 @@ main(int argc, char* argv[])
       POPT_AUTOHELP
       { NULL, 0, 0, NULL, 0 }
    };
-   
+
    poptContext context = poptGetContext(NULL, argc, const_cast<const char**>(argv), table, 0);
    int pret=poptGetNextOpt(context);
    assert(pret==-1);
@@ -366,7 +366,7 @@ main(int argc, char* argv[])
       int needFds = numPorts * 6 + 30;
       increaseLimitFds(needFds);
    }
-   
+
    /* On linux, the client TCP connection port range is controll by
     * /proc/sys/net/ipv4/ip_local_port_range, and defaults to [32768,61000].
     * To avoid conflicts when binding, the bound ports below should
@@ -384,7 +384,7 @@ main(int argc, char* argv[])
    {
       sender->addTransport(UDP, senderPort+idx, version, StunDisabled, bindIfAddr,
         /*sipDomain*/Data::Empty, /*keypass*/Data::Empty, SecurityTypes::TLSv1,
-	tpFlags);
+        tpFlags);
       // NOBIND doesn't make sense for UDP
       sender->addTransport(TCP, senderPort+idx, version, StunDisabled, bindIfAddr,
         /*sipDomain*/Data::Empty, /*keypass*/Data::Empty, SecurityTypes::TLSv1,
@@ -392,13 +392,13 @@ main(int argc, char* argv[])
       // NOTE: we could also bind receive to bindIfAddr, but existing code
       // doesn't do this. Responses are sent from here, so why don't we?
       receiver->addTransport(UDP, registrarPort+idx, version, StunDisabled,
-	/*ipInterface*/Data::Empty,
+        /*ipInterface*/Data::Empty,
         /*sipDomain*/Data::Empty, /*keypass*/Data::Empty, SecurityTypes::TLSv1,
-	tpFlags);
+        tpFlags);
       receiver->addTransport(TCP, registrarPort+idx, version, StunDisabled,
-	/*ipInterface*/Data::Empty,
+        /*ipInterface*/Data::Empty,
         /*sipDomain*/Data::Empty, /*keypass*/Data::Empty, SecurityTypes::TLSv1,
-	tpFlags);
+        tpFlags);
    }
 
    sender.run();
@@ -410,7 +410,7 @@ main(int argc, char* argv[])
    target.uri().host() = bindAddr ? bindAddr :DnsUtil::getLocalHostName();
    target.uri().port() = registrarPort;
    target.uri().param(p_transport) = proto;
-  
+
    NameAddr contact;
    contact.uri().scheme() = "sip";
    contact.uri().user() = "fluffy";
@@ -421,7 +421,7 @@ main(int argc, char* argv[])
 
    NameAddr from = target;
    from.uri().port() = senderPort;
-   
+
    UInt64 startTime = Timer::getTimeMs();
    int outstanding=0;
    int count = 0;
@@ -433,7 +433,7 @@ main(int argc, char* argv[])
    while (count < runs)
    {
       //InfoLog (<< "count=" << count << " messages=" << messages.size());
-      
+
       // load up the send window
       while (sent < runs && outstanding < window)
       {
@@ -443,30 +443,30 @@ main(int argc, char* argv[])
          SipMessage* next=0;
          if (invite)
          {
-            next = Helper::makeInvite( target, from, contact);            
+            next = Helper::makeInvite( target, from, contact);
          }
          else
          {
             next = Helper::makeRegister( target, from, contact);
          }
-         
-	 // The Via header serves two purposes:
-	 // (1) tells the recipient where to send the response,
-	 // (2) selects which Transport we send from
-	 if (!bindIfAddr.empty() && numPorts > 1)
-	 {
-	     // currently TCP only honors Via if host is populated
-	     // the "numPorts>1" test is for backwards compat
+
+         // The Via header serves two purposes:
+         // (1) tells the recipient where to send the response,
+         // (2) selects which Transport we send from
+         if (!bindIfAddr.empty() && numPorts > 1)
+         {
+             // currently TCP only honors Via if host is populated
+             // the "numPorts>1" test is for backwards compat
              next->header(h_Vias).front().sentHost() = bindIfAddr;
-	 }
+         }
          next->header(h_Vias).front().sentPort() = senderPort + (sent%numPorts);
          sender->send(std::auto_ptr<SipMessage>(next));
          next = 0; // DON'T delete next; consumed by send above
          outstanding++;
          sent++;
 #ifndef WIN32
-	 if (sendSleepUs>0)
-	    usleep(sendSleepUs);
+         if (sendSleepUs>0)
+            usleep(sendSleepUs);
 #endif
       }
 
@@ -474,21 +474,21 @@ main(int argc, char* argv[])
       bool isStrange = false;
       if ( noStackThread )
       {
-	 waitForTwoStacks( receiver, sender, commonIntr, thisseltime, isStrange);
+         waitForTwoStacks( receiver, sender, commonIntr, thisseltime, isStrange);
       }
       else
       {
-	 thisseltime = 4000;
-	 bool gotPost = sharedUp.waitNotify(thisseltime);
-	 isStrange = !gotPost;
+         thisseltime = 4000;
+         bool gotPost = sharedUp.waitNotify(thisseltime);
+         isStrange = !gotPost;
       }
       if (isStrange)
       {
-	 cout << "STRANGE: Stuck for long time: "
-	     <<" sent="<<sent
-	     <<" done="<<count
-	     <<" thisseltime="<<thisseltime
-	     <<endl;
+         cout << "STRANGE: Stuck for long time: "
+             <<" sent="<<sent
+             <<" done="<<count
+             <<" thisseltime="<<thisseltime
+             <<endl;
       }
 
       for (;;)
@@ -521,7 +521,7 @@ main(int argc, char* argv[])
                Helper::makeResponse(response, *request, 200);
                receiver->send(response);
                break;
-               
+
             case REGISTER:
                Helper::makeResponse(response, *request, 200);
                receiver->send(response);
@@ -532,13 +532,13 @@ main(int argc, char* argv[])
          }
          delete request;
       }
-      
+
       for (;;)
       {
          ++rxRspTryCnt;
          SipMessage* response = sender->receive();
          if (response==NULL)
-	    break;
+            break;
          ++rxRspHitCnt;
          assert(response->isResponse());
          switch(response->header(h_CSeq).method())
@@ -547,7 +547,7 @@ main(int argc, char* argv[])
                outstanding--;
                count++;
                break;
-               
+
             case INVITE:
                if (response->header(h_StatusLine).statusCode() == 200)
                {
@@ -568,17 +568,17 @@ main(int argc, char* argv[])
 
             case BYE:
                break;
-               
+
             default:
                assert(0);
                break;
          }
-         
+
          delete response;
       }
    }
    InfoLog (<< "Finished " << count << " runs");
-   
+
    UInt64 elapsed = Timer::getTimeMs() - startTime;
    if (!invite)
    {
@@ -615,29 +615,29 @@ main(int argc, char* argv[])
        delete commonIntr;
        commonIntr = NULL;
    }
-   
+
 #if defined(HAVE_POPT_H)
    poptFreeContext(context);
 #endif
    return 0;
 }
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -647,7 +647,7 @@ main(int argc, char* argv[])
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -661,9 +661,9 @@ main(int argc, char* argv[])
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see

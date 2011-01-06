@@ -47,15 +47,15 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-SipStack::SipStack(Security* pSecurity, 
+SipStack::SipStack(Security* pSecurity,
                    const DnsStub::NameserverList& additional,
-                   AsyncProcessHandler* handler, 
+                   AsyncProcessHandler* handler,
                    bool stateless,
                    AfterSocketCreationFuncPtr socketFunc,
                    Compression *compression,
 		   AsyncProcessHandler *fallbackPostNotify,
 		   FdPollGrp *pollGrp
-   ) : 
+   ) :
    mUseInternalPoll(pollGrp?0:mDefaultUseInternalPoll),
    mPollGrp(pollGrp?pollGrp:(mUseInternalPoll ? FdPollGrp::create() : 0)),
 #ifdef USE_SSL
@@ -128,10 +128,10 @@ SipStack::shutdown()
 
 Transport*
 SipStack::addTransport( TransportType protocol,
-                        int port, 
+                        int port,
                         IpVersion version,
                         StunSetting stun,
-                        const Data& ipInterface, 
+                        const Data& ipInterface,
                         const Data& sipDomainname,
                         const Data& privateKeyPassPhrase,
                         SecurityTypes::SSLType sslType,
@@ -165,7 +165,7 @@ SipStack::addTransport( TransportType protocol,
    }
 
    InternalTransport* transport=0;
-   Fifo<TransactionMessage>& stateMacFifo = mTransactionController.transportSelector().stateMacFifo();   
+   Fifo<TransactionMessage>& stateMacFifo = mTransactionController.transportSelector().stateMacFifo();
    try
    {
       switch (protocol)
@@ -184,7 +184,7 @@ SipStack::addTransport( TransportType protocol,
                                          ipInterface,
                                          *mSecurity,
                                          sipDomainname,
-                                         sslType, 
+                                         sslType,
                                          mSocketFunc,
                                          *mCompression,
                                          transportFlags);
@@ -221,15 +221,15 @@ SipStack::addTransport( TransportType protocol,
              << (ipInterface.empty() ? "ANY" : ipInterface.c_str()));
       throw;
    }
-   addTransport(std::auto_ptr<Transport>(transport));   
+   addTransport(std::auto_ptr<Transport>(transport));
    return transport;
 }
 
-void 
+void
 SipStack::addTransport(std::auto_ptr<Transport> transport)
 {
    //.dcm. once addTransport starts throwing, need to back out alias
-   if (!transport->interfaceName().empty()) 
+   if (!transport->interfaceName().empty())
    {
       addAlias(transport->interfaceName(), transport->port());
    }
@@ -255,7 +255,7 @@ SipStack::addTransport(std::auto_ptr<Transport> transport)
    mTransactionController.transportSelector().addTransport(transport);
 }
 
-Fifo<TransactionMessage>& 
+Fifo<TransactionMessage>&
 SipStack::stateMacFifo()
 {
    return mTransactionController.transportSelector().stateMacFifo();
@@ -265,7 +265,7 @@ void
 SipStack::addAlias(const Data& domain, int port)
 {
    int portToUse = (port == 0) ? Symbols::DefaultSipPort : port;
-   
+
    DebugLog (<< "Adding domain alias: " << domain << ":" << portToUse);
    assert(!mShuttingDown);
    mDomains.insert(domain + ":" + Data(portToUse));
@@ -278,64 +278,64 @@ SipStack::addAlias(const Data& domain, int port)
 
 }
 
-Data 
+Data
 SipStack::getHostname()
 {
-   // if you change this, please #def old version for windows 
+   // if you change this, please #def old version for windows
    char hostName[1024];
    int err =  gethostname( hostName, sizeof(hostName) );
    assert( err == 0 );
-   
+
    struct hostent* hostEnt = gethostbyname( hostName );
    if ( !hostEnt )
    {
-      // this can fail when there is no name server 
-      // !cj! - need to decided what error to return 
+      // this can fail when there is no name server
+      // !cj! - need to decided what error to return
       ErrLog( << "gethostbyname failed - name server is probably down" );
       return "localhost";
    }
    assert( hostEnt );
-   
+
    struct in_addr* addr = (struct in_addr*) hostEnt->h_addr_list[0];
    assert( addr );
-   
-   // if you change this, please #def old version for windows 
+
+   // if you change this, please #def old version for windows
    char* addrA = inet_ntoa( *addr );
    Data ret(addrA);
 
    Data retHost( hostEnt->h_name );
-      
+
    return retHost;
 }
 
 
-Data 
+Data
 SipStack::getHostAddress()
 {
-   // if you change this, please #def old version for windows 
+   // if you change this, please #def old version for windows
    char hostName[1024];
    int err =  gethostname( hostName, sizeof(hostName) );
    assert( err == 0 );
-   
+
    struct hostent* hostEnt = gethostbyname( hostName );
    assert( hostEnt );
-   
+
    struct in_addr* addr = (struct in_addr*) hostEnt->h_addr_list[0];
    assert( addr );
-   
-   // if you change this, please #def old version for windows 
+
+   // if you change this, please #def old version for windows
    char* addrA = inet_ntoa( *addr );
    Data ret(addrA);
 
    //Data retHost( hostEnt->h_name );
-      
+
    return ret;
 }
 
-bool 
+bool
 SipStack::isMyDomain(const Data& domain, int port) const
 {
-   return (mDomains.count(domain + ":" + 
+   return (mDomains.count(domain + ":" +
                           Data(port == 0 ? Symbols::DefaultSipPort : port)) != 0);
 }
 
@@ -357,18 +357,18 @@ SipStack::getUri() const
    return mUri;
 }
 
-void 
+void
 SipStack::send(const SipMessage& msg, TransactionUser* tu)
 {
    DebugLog (<< "SEND: " << msg.brief());
    //DebugLog (<< msg);
    //assert(!mShuttingDown);
-   
+
    SipMessage* toSend = static_cast<SipMessage*>(msg.clone());
-   if (tu) 
+   if (tu)
    {
       toSend->setTransactionUser(tu);
-   }         
+   }
    toSend->setFromTU();
 
    mTransactionController.send(toSend);
@@ -379,11 +379,11 @@ void
 SipStack::send(std::auto_ptr<SipMessage> msg, TransactionUser* tu)
 {
    DebugLog (<< "SEND: " << msg->brief());
-   
-   if (tu) 
+
+   if (tu)
    {
       msg->setTransactionUser(tu);
-   }         
+   }
    msg->setFromTU();
 
    mTransactionController.send(msg.release());
@@ -401,11 +401,11 @@ SipStack::sendTo(std::auto_ptr<SipMessage> msg, const Uri& uri, TransactionUser*
    checkAsyncProcessHandler();
 }
 
-void 
+void
 SipStack::sendTo(std::auto_ptr<SipMessage> msg, const Tuple& destination, TransactionUser* tu)
 {
    assert(!mShuttingDown);
-   
+
    if (tu) msg->setTransactionUser(tu);
    msg->setDestination(destination);
    msg->setFromTU();
@@ -415,8 +415,8 @@ SipStack::sendTo(std::auto_ptr<SipMessage> msg, const Tuple& destination, Transa
 }
 
 // this is only if you want to send to a destination not in the route. You
-// probably don't want to use it. 
-void 
+// probably don't want to use it.
+void
 SipStack::sendTo(const SipMessage& msg, const Uri& uri, TransactionUser* tu)
 {
    //assert(!mShuttingDown);
@@ -431,12 +431,12 @@ SipStack::sendTo(const SipMessage& msg, const Uri& uri, TransactionUser* tu)
 }
 
 // this is only if you want to send to a destination not in the route. You
-// probably don't want to use it. 
-void 
+// probably don't want to use it.
+void
 SipStack::sendTo(const SipMessage& msg, const Tuple& destination, TransactionUser* tu)
 {
    assert(!mShuttingDown);
-   
+
    SipMessage* toSend = static_cast<SipMessage*>(msg.clone());
    if (tu) toSend->setTransactionUser(tu);
    toSend->setDestination(destination);
@@ -446,7 +446,7 @@ SipStack::sendTo(const SipMessage& msg, const Tuple& destination, TransactionUse
    checkAsyncProcessHandler();
 }
 
-void 
+void
 SipStack::checkAsyncProcessHandler()
 {
    if (mAsyncProcessHandler)
@@ -487,8 +487,8 @@ SipStack::postMS(const ApplicationMessage& message, unsigned int ms,
    checkAsyncProcessHandler();
 }
 
-void 
-SipStack::post(std::auto_ptr<ApplicationMessage> message, 
+void
+SipStack::post(std::auto_ptr<ApplicationMessage> message,
                unsigned int secondsLater,
                TransactionUser* tu)
 {
@@ -496,8 +496,8 @@ SipStack::post(std::auto_ptr<ApplicationMessage> message,
 }
 
 
-void 
-SipStack::postMS( std::auto_ptr<ApplicationMessage> message, 
+void
+SipStack::postMS( std::auto_ptr<ApplicationMessage> message,
                   unsigned int ms,
                   TransactionUser* tu)
 {
@@ -510,14 +510,14 @@ SipStack::postMS( std::auto_ptr<ApplicationMessage> message,
    checkAsyncProcessHandler();
 }
 
-void 
+void
 SipStack::abandonServerTransaction(const Data& tid)
 {
    mTransactionController.abandonServerTransaction(tid);
    checkAsyncProcessHandler();
 }
 
-void 
+void
 SipStack::cancelClientInviteTransaction(const Data& tid)
 {
    mTransactionController.cancelClientInviteTransaction(tid);
@@ -531,15 +531,15 @@ SipStack::hasMessage() const
    return mTUFifo.messageAvailable();
 }
 
-SipMessage* 
+SipMessage*
 SipStack::receive()
 {
-   // Check to see if a message is available and if it is return the 
+   // Check to see if a message is available and if it is return the
    // waiting message. Otherwise, return 0
    if (mTUFifo.messageAvailable())
    {
       // we should only ever have SIP messages on the TU Fifo
-      // unless we've registered for termination messages. 
+      // unless we've registered for termination messages.
       Message* msg = mTUFifo.getNext();
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
       if (sip)
@@ -564,7 +564,7 @@ SipStack::receive()
 Message*
 SipStack::receiveAny()
 {
-   // Check to see if a message is available and if it is return the 
+   // Check to see if a message is available and if it is return the
    // waiting message. Otherwise, return 0
    if (mTUFifo.messageAvailable())
    {
@@ -599,7 +599,7 @@ SipStack::processTimers()
 }
 
 /* Called for internal epoll and non-epoll (e.g., StackThread) */
-void 
+void
 SipStack::process(FdSet& fdset)
 {
    if(!mShuttingDown && mStatisticsManagerEnabled)
@@ -624,13 +624,13 @@ SipStack::process(FdSet& fdset)
    {
       mDnsStub->process(fdset);
    }
-   
-   Lock lock(mAppTimerMutex); 
+
+   Lock lock(mAppTimerMutex);
    mAppTimers.process();
 }
 
-/// returns time in milliseconds when process next needs to be called 
-unsigned int 
+/// returns time in milliseconds when process next needs to be called
+unsigned int
 SipStack::getTimeTillNextProcessMS()
 {
    Lock lock(mAppTimerMutex);
@@ -639,9 +639,9 @@ SipStack::getTimeTillNextProcessMS()
                   resipMin(mDnsStub->getTimeTillNextProcessMS(),
                            resipMin(mTransactionController.getTimeTillNextProcessMS(),
                                     resipMin(mTuSelector.getTimeTillNextProcessMS(), mAppTimers.msTillNextTimer()))));
-} 
+}
 
-void 
+void
 SipStack::buildFdSet(FdSet& fdset)
 {
    if (mPollGrp)
@@ -656,7 +656,7 @@ SipStack::buildFdSet(FdSet& fdset)
 }
 
 Security*
-SipStack::getSecurity() const 
+SipStack::getSecurity() const
 {
     return mSecurity;
 }
@@ -667,20 +667,20 @@ SipStack::setStatisticsInterval(unsigned long seconds)
    mStatsManager.setInterval(seconds);
 }
 
-void 
+void
 SipStack::registerTransactionUser(TransactionUser& tu)
 {
    mTuSelector.registerTransactionUser(tu);
 }
 
-void 
+void
 SipStack::requestTransactionUserShutdown(TransactionUser& tu)
 {
    mTuSelector.requestTransactionUserShutdown(tu);
    checkAsyncProcessHandler();
 }
 
-void 
+void
 SipStack::unregisterTransactionUser(TransactionUser& tu)
 {
    mTuSelector.unregisterTransactionUser(tu);
@@ -723,19 +723,19 @@ SipStack::logDnsCache()
    mDnsStub->logDnsCache();
 }
 
-volatile bool& 
+volatile bool&
 SipStack::statisticsManagerEnabled()
 {
-   return mStatisticsManagerEnabled;   
+   return mStatisticsManagerEnabled;
 }
 
-const bool 
+const bool
 SipStack::statisticsManagerEnabled() const
 {
-   return mStatisticsManagerEnabled;   
+   return mStatisticsManagerEnabled;
 }
 
-EncodeStream& 
+EncodeStream&
 SipStack::dump(EncodeStream& strm)  const
 {
    Lock lock(mAppTimerMutex);
@@ -753,9 +753,9 @@ SipStack::dump(EncodeStream& strm)  const
    return strm;
 }
 
-EncodeStream& 
-resip::operator<<(EncodeStream& strm, 
-const SipStack& stack) 
+EncodeStream&
+resip::operator<<(EncodeStream& strm,
+const SipStack& stack)
 {
    return stack.dump(strm);
 }
@@ -763,7 +763,7 @@ const SipStack& stack)
 bool
 SipStack::isFlowAlive(const resip::Tuple& flow) const
 {
-   return flow.getType()==UDP || 
+   return flow.getType()==UDP ||
          mTransactionController.transportSelector().connectionAlive(flow);
 }
 
@@ -776,22 +776,22 @@ SipStack::setDefaultUseInternalPoll(bool useInternal)
 }
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -801,7 +801,7 @@ SipStack::setDefaultUseInternalPoll(bool useInternal)
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -815,12 +815,13 @@ SipStack::setDefaultUseInternalPoll(bool useInternal)
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */

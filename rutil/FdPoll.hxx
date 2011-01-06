@@ -142,4 +142,5 @@ class FdPollGrp
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
  *
+ * vi: set shiftwidth=3 expandtab:
  */

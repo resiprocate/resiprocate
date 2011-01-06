@@ -46,7 +46,7 @@ shareStackProcessAndSelect(), TransportSelector will call startOwnProcessing
 on Transport add.
 
 */
-class TransportSelector 
+class TransportSelector
 {
    public:
       TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub, Compression &compression);
@@ -56,19 +56,19 @@ class TransportSelector
 	    @retval false	No transport in the transport list has data to send
 	  */
       bool hasDataToSend() const;
-      
+
       /**
 		Shuts down all transports.
 	  */
       void shutdown();
-      
+
       /// Returns true if all Transports have their buffers cleared, false otherwise.
       bool isFinished() const;
 
       /// Configure a PollGrp to use (instead of buildFdSet/process)
       /// Must be called before adding any transports
       void setPollGrp(FdPollGrp *pollGrp);
-      
+
       /// Calls process on all suitable transports
       /// NOTE that TransportSelector no longer handles DNSInterface
       /// NOTE not used with pollGrp
@@ -88,10 +88,10 @@ class TransportSelector
        message to be encoded and via updated
 	  */
       void transmit( SipMessage* msg, Tuple& target );
-      
+
       /// Resend to the same transport as last time
       void retransmit(SipMessage* msg, Tuple& target );
-      
+
       unsigned int sumTransportFifoSizes() const;
 
       unsigned int getTimeTillNextProcessMS();
@@ -106,7 +106,7 @@ class TransportSelector
 
       /// delete all known transports (including external)
       void deleteTransports();
-      
+
    private:
       const Connection* findConnection(const Tuple& dest) const;
       Transport* findTransportBySource(Tuple& src) const;
@@ -139,7 +139,7 @@ class TransportSelector
       AnyPortAnyInterfaceTupleMap mAnyPortAnyInterfaceTransports;
 
       std::map<FlowKey,Transport*> mConnectionlessMap;
-      
+
       class TlsTransportKey
       {
          public:
@@ -148,14 +148,14 @@ class TransportSelector
                mType(type),
                mVersion(version)
             {}
-            
+
             TlsTransportKey(const TlsTransportKey& orig)
             {
                mDomain=orig.mDomain;
                mType=orig.mType;
                mVersion=orig.mVersion;
             }
-            
+
             ~TlsTransportKey(){}
             bool operator<(const TlsTransportKey& rhs) const
             {
@@ -176,17 +176,17 @@ class TransportSelector
                }
                return false;
             }
-            
+
             resip::Data mDomain;
             resip::TransportType mType;
             resip::IpVersion mVersion;
-         
+
          private:
             TlsTransportKey();
       };
-      
+
       typedef std::map<TlsTransportKey, Transport*> TlsTransportMap ;
-      
+
       TlsTransportMap mTlsTransports;
 
       typedef std::vector<Transport*> TransportList;
@@ -199,7 +199,7 @@ class TransportSelector
       // fake socket for connect() and route table lookups
       mutable Socket mSocket;
       mutable Socket mSocket6;
-      
+
       // An AF_UNSPEC addr_in for rapid unconnect
       GenericIPAddress mUnspecified;
       GenericIPAddress mUnspecified6;
@@ -220,22 +220,22 @@ class TransportSelector
 #endif
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -245,7 +245,7 @@ class TransportSelector
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -259,12 +259,13 @@ class TransportSelector
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */
