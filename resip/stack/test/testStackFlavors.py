@@ -1,10 +1,33 @@
 #!/usr/bin/python
 
+# Linux-configuration
+# Some of the test flavors require many open ports, and your system must be
+# configured to enabled this. In particular:
+# * This script opens up more than 1024 ports which means it needs to run
+#   as root. Thus do:
+#	sudo ./testStackFlavors.py
+# * Ports 11000 thru 31000 will be bound. Ports in this range must not be
+#   bound (kill any servers you have running in this range). Further,
+#   client TCP connections must not be configured to run in this range.
+#   This is configured via
+#	/proc/sys/net/ipv4/ip_local_port_range
+#   The default is "32678 61000" which is good. The left number must be
+#   larger than 31000.
+# * TCP connections will enter TIME_WAIT when each test completes,
+#   which may not leave enough ports for the next test.
+#   The script has a 5sec delay between tests that might help with this.
+#   You might need to tweak one of the following to work:
+#	/proc/sys/net/ipv4/tcp_tw_recycle
+#	/proc/sys/net/ipv4/tcp_tw_reuse
+#	/proc/sys/net/ipv4/tcp_fin_timeout
+#   I don't claim to fully understand this.
+
 import os
 import subprocess
 import re
 import platform
 import datetime
+import time
 
 def TryUnlink(path):
     try:
@@ -128,6 +151,11 @@ def RunParamTbl(ptbl):
 	resstr += ",dur=,%d,tps=,%d" % (result['dur'], result['tps'])
 	resstr += "\n"
 	resfile.write(resstr)
+	# TCP ports just entered TIME_WAIT. That may create problems
+	# for next test if it tries to bind one of those ports
+	# and/or needs more client ports. Try waiting short time
+	# See comments at top re system configuration.
+	time.sleep(5)
 
     resfile.close()
 
