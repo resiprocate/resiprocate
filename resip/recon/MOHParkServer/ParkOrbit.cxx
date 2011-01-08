@@ -20,9 +20,11 @@ namespace mohparkserver
 class ParticipantOrbitInfo
 {
 public:
-    ParticipantOrbitInfo(ParticipantHandle participantHandle) : mParticipantHandle(participantHandle) {} 
-    ParticipantHandle mParticipantHandle;
-    UInt64 mAllocationTime;
+   ParticipantOrbitInfo(ParticipantHandle participantHandle, const resip::Uri& parkerUri) : 
+      mParticipantHandle(participantHandle), mParkerUri(parkerUri) {} 
+   ParticipantHandle mParticipantHandle;
+   UInt64 mAllocationTime;
+   resip::Uri mParkerUri;
 };
 
 ParkOrbit::ParkOrbit(Server& server, unsigned long orbit) :
@@ -45,7 +47,7 @@ ParkOrbit::~ParkOrbit()
 }
 
 bool 
-ParkOrbit::addParticipant(recon::ParticipantHandle participantHandle)
+ParkOrbit::addParticipant(recon::ParticipantHandle participantHandle, const Uri& parkerUri)
 {
    if(mParticipants.size() < DEFAULT_BRIDGE_MAX_IN_OUTPUTS-3)
    {
@@ -53,8 +55,13 @@ ParkOrbit::addParticipant(recon::ParticipantHandle participantHandle)
       mServer.modifyParticipantContribution(mConversationHandle, participantHandle, 100, 0 /* Mute participant */);
       mServer.answerParticipant(participantHandle);
 
-      mParticipants.push_back(new ParticipantOrbitInfo(participantHandle));
-      InfoLog(<< "ParkOrbit::addParticipant added participant=" << participantHandle << " to orbit " << mOrbit << " (size=" << mParticipants.size() << ")");
+      if(mServer.mMaxParkTime != 0)
+      {
+         mServer.getMyUserAgent()->startApplicationTimer(MAXPARKTIMEOUT, mServer.mMaxParkTime*1000, participantHandle);
+      }
+
+      mParticipants.push_back(new ParticipantOrbitInfo(participantHandle, parkerUri));
+      InfoLog(<< "ParkOrbit::addParticipant added participant=" << participantHandle << " to orbit " << mOrbit << " (size=" << mParticipants.size() << "), parkerUri=" << parkerUri);
       return true;
    }
    else
@@ -100,6 +107,24 @@ ParkOrbit::getNextQueuedParticipant()
       }
    }
    return participantHandle;
+}
+
+bool 
+ParkOrbit::onMaxParkTimeout(recon::ParticipantHandle participantHandle)
+{
+   ParticipantQueue::iterator it = mParticipants.begin();
+   for(;it!=mParticipants.end();it++)
+   {
+      if((*it)->mParticipantHandle == participantHandle)
+      {
+         InfoLog(<< "ParkOrbit::onMaxParkTimeout sending parked call back to " << (*it)->mParkerUri << ", participant=" << participantHandle << " from orbit " << mOrbit << " (size=" << mParticipants.size() << ")");
+         mServer.redirectParticipant(participantHandle, NameAddr((*it)->mParkerUri));
+         (*it)->mAllocationTime = resip::Timer::getTimeSecs();  // Ensure call can't be retrieved between now and destruction
+         mServer.destroyParticipant(participantHandle);  // Fully blind transfer - don't wait for notifies
+         return true;
+      }
+   }
+   return false;
 }
 
 }

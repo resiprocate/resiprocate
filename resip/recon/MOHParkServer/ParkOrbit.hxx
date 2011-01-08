@@ -2,6 +2,7 @@
 #define ParkOrbit_hxx
 
 #include <deque>
+#include <resip/stack/Uri.hxx>
 #include "../HandleTypes.hxx"
 
 namespace mohparkserver
@@ -15,13 +16,15 @@ public:
    ParkOrbit(Server& server, unsigned long orbit);
    virtual ~ParkOrbit(); 
 
-   bool addParticipant(recon::ParticipantHandle participantHandle);
+   bool addParticipant(recon::ParticipantHandle participantHandle, const resip::Uri& parkerUri);
    bool removeParticipant(recon::ParticipantHandle participantHandle);
 
    recon::ParticipantHandle getNextQueuedParticipant();
    unsigned long getOrbit() { return mOrbit; }
    unsigned long getNumParticipants() { return (unsigned long)mParticipants.size(); }
    recon::ConversationHandle getConversationHandle() { return mConversationHandle; }
+
+   bool onMaxParkTimeout(recon::ParticipantHandle participantHandle);
 
 private:
    Server& mServer;

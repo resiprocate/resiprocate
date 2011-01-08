@@ -29,12 +29,21 @@ namespace mohparkserver
 class MyUserAgent : public UserAgent
 {
 public:
-   MyUserAgent(ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile) :
-      UserAgent(conversationManager, profile) {}
+   MyUserAgent(Server& server, SharedPtr<UserAgentMasterProfile> profile) :
+      UserAgent(&server, profile),
+      mServer(server) {}
 
    virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
    {
-      InfoLog(<< "onApplicationTimeout: id=" << id << " dur=" << durationMs << " seq=" << seq);
+      if(id == MAXPARKTIMEOUT)
+      {
+          mServer.onMaxParkTimeout((ParticipantHandle)seq);
+      }
+      else
+      {
+         InfoLog(<< "onApplicationTimeout: id=" << id << " dur=" << durationMs << " seq=" << seq);
+      }
+      
    }
 
    virtual void onSubscriptionTerminated(SubscriptionHandle handle, unsigned int statusCode)
@@ -46,6 +55,8 @@ public:
    {
       InfoLog(<< "onSubscriptionNotify: handle=" << handle << " data=" << endl << notifyData);
    }
+private:
+   Server& mServer;
 };
 
 class MOHParkServerLogger : public ExternalLogger
@@ -75,7 +86,7 @@ Server::Server(int argc, char** argv) :
    ConfigParser(argc, argv),
    ConversationManager(false /* local audio? */, ConversationManager::sipXConversationMediaInterfaceMode),
    mIsV6Avail(false),
-   mUserAgent(0),
+   mMyUserAgent(0),
    mMOHManager(*this),
    mParkManager(*this)
 {
@@ -287,20 +298,20 @@ Server::Server(int argc, char** argv) :
    mUserAgentMasterProfile = profile;
 
    // Create UserAgent
-   mUserAgent = new MyUserAgent(this, profile);
+   mMyUserAgent = new MyUserAgent(*this, profile);
 }
 
 Server::~Server()
 {
    shutdown();
-   delete mUserAgent;
+   delete mMyUserAgent;
 }
 
 void
 Server::startup()
 {
-   assert(mUserAgent);
-   mUserAgent->startup();
+   assert(mMyUserAgent);
+   mMyUserAgent->startup();
    mMOHManager.startup();
    mParkManager.startup();
 }
@@ -308,8 +319,8 @@ Server::startup()
 void 
 Server::process(int timeoutMs)
 {
-   assert(mUserAgent);
-   mUserAgent->process(timeoutMs);
+   assert(mMyUserAgent);
+   mMyUserAgent->process(timeoutMs);
 }
 
 void
@@ -317,8 +328,8 @@ Server::shutdown()
 {
    mMOHManager.shutdown();
    mParkManager.shutdown();
-   assert(mUserAgent);
-   mUserAgent->shutdown();
+   assert(mMyUserAgent);
+   mMyUserAgent->shutdown();
    OsSysLog::shutdown();
 }
 
@@ -373,7 +384,7 @@ Server::onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& ms
 
    if(mMOHManager.isMyProfile(conversationProfile))
    {
-   mMOHManager.addParticipant(partHandle);
+      mMOHManager.addParticipant(partHandle);      
    }
    else if(mParkManager.isMyProfile(conversationProfile))
    {
@@ -391,7 +402,7 @@ Server::onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMess
    InfoLog(<< "onRequestOutgoingParticipant: handle=" << partHandle << " msg=" << msg.brief());
    if(mMOHManager.isMyProfile(conversationProfile))
    {
-   mMOHManager.addParticipant(partHandle);
+      mMOHManager.addParticipant(partHandle);
    }
    else if(mParkManager.isMyProfile(conversationProfile))
    {
@@ -439,12 +450,20 @@ void
 Server::onParticipantRedirectSuccess(ParticipantHandle partHandle)
 {
    InfoLog(<< "onParticipantRedirectSuccess: handle=" << partHandle);
+   destroyParticipant(partHandle);  // Transfer is successful - end participant
 }
 
 void 
 Server::onParticipantRedirectFailure(ParticipantHandle partHandle, unsigned int statusCode)
 {
    InfoLog(<< "onParticipantRedirectFailure: handle=" << partHandle << " statusCode=" << statusCode);
+}
+
+void 
+Server::onMaxParkTimeout(recon::ParticipantHandle participantHandle)
+{
+   // Pass to ParkManager to see if participant is still around
+   mParkManager.onMaxParkTimeout(participantHandle);
 }
 
 }
