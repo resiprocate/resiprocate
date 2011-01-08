@@ -35,6 +35,7 @@ private:
    resip::SharedPtr<recon::ConversationProfile> mConversationProfile;
    std::deque<unsigned long> mFreeOrbitList;
 
+   ParkOrbit* getOrbit(unsigned long orbit);
    typedef std::map<unsigned long, ParkOrbit*> OrbitMap;
    OrbitMap mOrbits;
 
