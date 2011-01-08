@@ -50,7 +50,7 @@ MOHManager::startup()
    mohConversationProfile->secureMediaMode() = ConversationProfile::NoSecureMedia;
    mServer.buildSessionCapabilities(mohConversationProfile->sessionCaps());
    mConversationProfile = mohConversationProfile;
-   mServer.mUserAgent->addConversationProfile(mConversationProfile);
+   mServer.mMyUserAgent->addConversationProfile(mConversationProfile);
 
    // Create an initial conversation and start music
    ConversationHandle convHandle = mServer.createConversation(true /* broadcast only*/);
@@ -60,7 +60,7 @@ MOHManager::startup()
    mConversations[convHandle];
 }
 
-void 
+void
 MOHManager::shutdown()
 {
    // Destroy all conversations
@@ -73,7 +73,7 @@ MOHManager::shutdown()
 
    if(mConversationProfile)
    {
-       mServer.mUserAgent->destroyConversationProfile(mConversationProfile->getHandle());
+       mServer.mMyUserAgent->destroyConversationProfile(mConversationProfile->getHandle());
    }
 }
 

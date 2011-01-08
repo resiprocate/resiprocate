@@ -30,17 +30,28 @@ public:
    void incomingParticipant(recon::ParticipantHandle participantHandle, const resip::SipMessage& msg);
    bool removeParticipant(recon::ParticipantHandle participantHandle);
 
+   void onMaxParkTimeout(recon::ParticipantHandle participantHandle);
+
 private:
    Server& mServer;
    resip::SharedPtr<recon::ConversationProfile> mConversationProfile;
    std::deque<unsigned long> mFreeOrbitList;
 
+   // Orbit by orbit number
    ParkOrbit* getOrbit(unsigned long orbit);
    typedef std::map<unsigned long, ParkOrbit*> OrbitMap;
    OrbitMap mOrbits;
 
+   // index on orbits for fast access
+   ParkOrbit* getOrbitByParticipant(recon::ParticipantHandle participantHandle);
+   typedef std::map<recon::ParticipantHandle, ParkOrbit*> OrbitsByParticipantMap;
+   OrbitsByParticipantMap mOrbitsByParticipant;
+
+   bool addParticipantToOrbit(ParkOrbit* orbit, recon::ParticipantHandle participantHandle, const resip::Uri& parkerUri);
+
    typedef std::map<unsigned long, resip::SharedPtr<recon::ConversationProfile> > OrbitProfileMap;
    OrbitProfileMap mOrbitProfiles;
+
 };
  
 }

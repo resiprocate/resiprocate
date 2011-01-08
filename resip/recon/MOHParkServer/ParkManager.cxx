@@ -58,7 +58,7 @@ ParkManager::startup()
    parkConversationProfile->secureMediaMode() = ConversationProfile::NoSecureMedia;
    mServer.buildSessionCapabilities(parkConversationProfile->sessionCaps());
    mConversationProfile = parkConversationProfile;
-   mServer.mUserAgent->addConversationProfile(mConversationProfile);
+   mServer.mMyUserAgent->addConversationProfile(mConversationProfile);
 
    // Create Orbit Profiles
    for(unsigned long orbit = mServer.mParkOrbitRangeStart; orbit < mServer.mParkOrbitRangeStart + mServer.mParkNumOrbits; orbit++)
@@ -76,7 +76,7 @@ ParkManager::startup()
        orbitConversationProfile->natTraversalMode() = ConversationProfile::NoNatTraversal;
        orbitConversationProfile->secureMediaMode() = ConversationProfile::NoSecureMedia;
        mServer.buildSessionCapabilities(orbitConversationProfile->sessionCaps());
-       mServer.mUserAgent->addConversationProfile(orbitConversationProfile);
+       mServer.mMyUserAgent->addConversationProfile(orbitConversationProfile);
        mOrbitProfiles[orbit] = orbitConversationProfile;
    }
 }
@@ -95,7 +95,7 @@ ParkManager::shutdown()
    // Destroy main Park profile
    if(mConversationProfile)
    {
-       mServer.mUserAgent->destroyConversationProfile(mConversationProfile->getHandle());
+       mServer.mMyUserAgent->destroyConversationProfile(mConversationProfile->getHandle());
        mConversationProfile.reset();
        assert(!mConversationProfile);
    }
@@ -104,7 +104,7 @@ ParkManager::shutdown()
    OrbitProfileMap::iterator itOrbit = mOrbitProfiles.begin();
    for(;itOrbit!=mOrbitProfiles.end();itOrbit++)
    {
-       mServer.mUserAgent->destroyConversationProfile(itOrbit->second->getHandle());
+       mServer.mMyUserAgent->destroyConversationProfile(itOrbit->second->getHandle());
    }
    mOrbitProfiles.clear();
 }
@@ -165,10 +165,34 @@ ParkManager::getOrbit(unsigned long orbit)
    return parkOrbit;
 }
 
+ParkOrbit* 
+ParkManager::getOrbitByParticipant(recon::ParticipantHandle participantHandle)
+{
+   OrbitsByParticipantMap::iterator it = mOrbitsByParticipant.find(participantHandle);
+   if(it != mOrbitsByParticipant.end())
+   {
+      return it->second;
+   }
+   return 0;
+}
+
+bool 
+ParkManager::addParticipantToOrbit(ParkOrbit* orbit, recon::ParticipantHandle participantHandle, const resip::Uri& parkerUri)
+{
+   if(orbit->addParticipant(participantHandle, parkerUri))
+   {
+      mOrbitsByParticipant[participantHandle] = orbit;  // add participant to orbit index
+      return true;
+   }
+   return false;
+}
+
 void 
 ParkManager::parkParticipant(ParticipantHandle participantHandle, const SipMessage& msg)
 {
    unsigned long orbit = 0;
+
+   assert(msg.method() == REFER);
 
    // Check if Orbit parameter has been specified on the To header
    if(msg.header(h_To).uri().exists(p_orbit))
@@ -182,10 +206,7 @@ ParkManager::parkParticipant(ParticipantHandle participantHandle, const SipMessa
       // Park call at specified orbit
       ParkOrbit* parkOrbit = getOrbit(orbit);
       assert(parkOrbit);
-      if(parkOrbit->addParticipant(participantHandle))
-      {
-         InfoLog(<< "ParkManager::parkParticipant valid orbit specified (orbit=" << orbit << "), call parked");
-      }
+      addParticipantToOrbit(parkOrbit, participantHandle, msg.header(h_From).uri());
    }
    else
    {
@@ -213,8 +234,16 @@ ParkManager::parkParticipant(ParticipantHandle participantHandle, const SipMessa
 void 
 ParkManager::incomingParticipant(ParticipantHandle participantHandle, const SipMessage& msg)
 {
-   // Check if To user is an orbit number
-   unsigned long orbit = msg.header(h_To).uri().user().convertUnsignedLong();
+   // Get orbit number, either from To Uri parameter, or To user 
+   unsigned long orbit = 0;
+   if(msg.header(h_To).uri().exists(p_orbit))
+   {
+      orbit = msg.header(h_To).uri().param(p_orbit).convertUnsignedLong();
+   }
+   else
+   {
+      orbit = msg.header(h_To).uri().user().convertUnsignedLong();
+   }
    if((orbit >= mServer.mParkOrbitRangeStart) && 
       (orbit < (mServer.mParkOrbitRangeStart + mServer.mParkNumOrbits)))
    {
@@ -225,10 +254,7 @@ ParkManager::incomingParticipant(ParticipantHandle participantHandle, const SipM
          // Park call at specified orbit
          ParkOrbit* parkOrbit = getOrbit(orbit);
          assert(parkOrbit);
-         if(parkOrbit->addParticipant(participantHandle))
-         {
-            InfoLog(<< "ParkManager::incomingParticipant transferred call received (orbit=" << orbit << "), call parked");
-         }
+         addParticipantToOrbit(parkOrbit, participantHandle, msg.header(h_ReferredBy).uri());
       }
       else  // Direct call - retrieval attempt
       {
@@ -254,7 +280,7 @@ ParkManager::incomingParticipant(ParticipantHandle participantHandle, const SipM
    }
    else
    {
-      WarningLog(<< "ParkManager::incomingParticipant orbit not found in To user (" << msg.header(h_To).uri().user() << "), rejecting with 404.");
+      WarningLog(<< "ParkManager::incomingParticipant valid orbit not found in To header (" << msg.header(h_To).uri() << "), rejecting with 404.");
       mServer.rejectParticipant(participantHandle, 404 /* Not Found */);
    }
 }
@@ -262,22 +288,35 @@ ParkManager::incomingParticipant(ParticipantHandle participantHandle, const SipM
 bool 
 ParkManager::removeParticipant(ParticipantHandle participantHandle)
 {
-   OrbitMap::iterator it = mOrbits.begin();
-   for(;it!=mOrbits.end();it++)
+   ParkOrbit* orbit = getOrbitByParticipant(participantHandle);
+   if(orbit)
    {
-       if(it->second->removeParticipant(participantHandle))
+       mOrbitsByParticipant.erase(participantHandle);  // Remove participant from orbit index
+       if(orbit->removeParticipant(participantHandle))
        {
-           if(it->second->getNumParticipants() == 0)
+           if(orbit->getNumParticipants() == 0)
            {
                // Last participant just left orbit - destroy it
-               mFreeOrbitList.push_back(it->second->getOrbit()); 
-               delete it->second;
-               mOrbits.erase(it);
+               unsigned long orbitNum = orbit->getOrbit();
+               mFreeOrbitList.push_back(orbitNum); 
+               delete orbit;
+               mOrbits.erase(orbitNum);
            }
            return true;
        }
    }
    return false;
+}
+
+void 
+ParkManager::onMaxParkTimeout(recon::ParticipantHandle participantHandle)
+{
+   // Try to see if participant is still around
+   ParkOrbit* orbit = getOrbitByParticipant(participantHandle);
+   if(orbit)
+   {
+      orbit->onMaxParkTimeout(participantHandle);
+   }
 }
 
 

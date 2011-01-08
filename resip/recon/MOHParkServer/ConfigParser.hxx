@@ -37,6 +37,7 @@ public:
    unsigned long mParkNumOrbits;
    unsigned long mParkOrbitRegistrationTime;
    resip::Data mParkOrbitPassword;
+   unsigned long mMaxParkTime;
 
    // SIP Settings
    resip::Data mAddress;

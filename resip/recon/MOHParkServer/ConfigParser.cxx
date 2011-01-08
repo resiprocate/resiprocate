@@ -31,6 +31,7 @@ ConfigParser::ConfigParser(int argc, char** argv) :
    mParkOrbitRangeStart(6000),
    mParkNumOrbits(10),
    mParkOrbitRegistrationTime(3600),
+   mMaxParkTime(600),  // 600 seconds = 10 mins
    mUdpPort(0),
    mTcpPort(0),
    mTlsPort(0),
@@ -251,6 +252,10 @@ ConfigParser::processOption(const Data& name, const Data& value)
    else if(name == "parkorbitpassword")
    {
       mParkOrbitPassword = value;
+   }
+   else if(name == "maxparktime")
+   {
+      mMaxParkTime = value.convertUnsignedLong();
    }
    else if(name == "a" || name == "ipaddress")
    {

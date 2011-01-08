@@ -13,6 +13,8 @@
    #define sleepMs(t) usleep(t*1000)
 #endif
 
+#define MAXPARKTIMEOUT 1
+
 namespace mohparkserver
 {
 
@@ -48,6 +50,11 @@ public:
    */
    void shutdown();
 
+   recon::UserAgent* getMyUserAgent() { return mMyUserAgent; }
+
+   // Timer handler
+   virtual void onMaxParkTimeout(recon::ParticipantHandle participantHandle);
+
 protected:
    // Conversation Manager Handlers
    virtual void onConversationDestroyed(recon::ConversationHandle convHandle);
@@ -70,7 +77,7 @@ private:
    void buildSessionCapabilities(resip::SdpContents& sessionCaps);
 
    bool mIsV6Avail;
-   recon::UserAgent *mUserAgent;
+   recon::UserAgent* mMyUserAgent;
    resip::SharedPtr<recon::UserAgentMasterProfile> mUserAgentMasterProfile;
    MOHManager mMOHManager;
    ParkManager mParkManager;
