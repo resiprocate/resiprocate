@@ -131,75 +131,83 @@ ParkManager::isMyProfile(recon::ConversationProfile& profile)
     return false;
 }
 
+ParkOrbit* 
+ParkManager::getOrbit(unsigned long orbit)
+{
+   assert((orbit >= mServer.mParkOrbitRangeStart) && 
+          (orbit < (mServer.mParkOrbitRangeStart + mServer.mParkNumOrbits)));
+
+   // Check if Orbit is created or not yet
+   OrbitMap::iterator it = mOrbits.find(orbit);
+   ParkOrbit* parkOrbit = 0;
+   if(it == mOrbits.end())
+   {
+      // Create Orbit
+      parkOrbit = new ParkOrbit(mServer, orbit);
+      mOrbits[orbit] = parkOrbit;
+
+      // Remove from free list
+      std::deque<unsigned long>::iterator itFree = mFreeOrbitList.begin();
+      for(;itFree!=mFreeOrbitList.end();itFree++)
+      {
+         if(orbit == *itFree)
+         {
+            mFreeOrbitList.erase(itFree);
+            break;
+         }
+      }
+   }
+   else
+   {
+      // Use existing
+      parkOrbit = it->second;
+   }
+   return parkOrbit;
+}
+
 void 
 ParkManager::parkParticipant(ParticipantHandle participantHandle, const SipMessage& msg)
 {
-    unsigned long orbit = 0;
+   unsigned long orbit = 0;
 
-    // Check if Orbit parameter has been specified on the To header
-    if(msg.header(h_To).uri().exists(p_orbit))
-    {
-        orbit = msg.header(h_To).uri().param(p_orbit).convertUnsignedLong();
-    }
+   // Check if Orbit parameter has been specified on the To header
+   if(msg.header(h_To).uri().exists(p_orbit))
+   {
+      orbit = msg.header(h_To).uri().param(p_orbit).convertUnsignedLong();
+   }
 
-    if((orbit >= mServer.mParkOrbitRangeStart) && 
-       (orbit < (mServer.mParkOrbitRangeStart + mServer.mParkNumOrbits)))
-    {
-        // Park call at specified orbit
-
-        // Check if Orbit is created or not yet
-        OrbitMap::iterator it = mOrbits.find(orbit);
-        ParkOrbit* parkOrbit = 0;
-        if(it == mOrbits.end())
-        {
-            // Create Orbit
-            parkOrbit = new ParkOrbit(mServer, orbit);
-            mOrbits[orbit] = parkOrbit;
-
-            // Remove from free list
-            std::deque<unsigned long>::iterator itFree = mFreeOrbitList.begin();
-            for(;itFree!=mFreeOrbitList.end();itFree++)
-            {
-               if(orbit == *itFree)
-               {
-                   mFreeOrbitList.erase(itFree);
-                   break;
-               }
-            }
-        }
-        else
-        {
-            // Use existing
-            parkOrbit = it->second;
-        }
-
-        assert(parkOrbit);
-        if(parkOrbit->addParticipant(participantHandle))
-        {
-           InfoLog(<< "ParkManager::parkParticipant valid orbit specified (orbit=" << orbit << "), call parked");
-        }
-    }
-    else
-    {
-        // If no orbit was specified, or specified number is bad - select a free orbit, and redirect request to use newly allocated orbit
-        if(mFreeOrbitList.size() > 0)
-        {
-           unsigned long freeorbit = mFreeOrbitList.front();
-           // Move free item to end of list, to reduce chance it will be double allocated
-           mFreeOrbitList.pop_front();  
-           mFreeOrbitList.push_back(freeorbit);
-           InfoLog(<< "ParkManager::parkParticipant no valid orbit specified (orbit=" << orbit << ") redirecting to free orbit=" << freeorbit);
-           NameAddr destination(mServer.mParkUri);
-           destination.uri().param(p_orbit) = Data(freeorbit);
-           mServer.redirectParticipant(participantHandle, destination);
-        }
-        else
-        {
-           // No free orbits
-           WarningLog(<< "ParkManager::parkParticipant no free orbits available, rejecing with 486 busy.");
-           mServer.rejectParticipant(participantHandle, 486 /* Busy */);
-        }
-    }
+   if((orbit >= mServer.mParkOrbitRangeStart) && 
+      (orbit < (mServer.mParkOrbitRangeStart + mServer.mParkNumOrbits)))
+   {
+      // Park call at specified orbit
+      ParkOrbit* parkOrbit = getOrbit(orbit);
+      assert(parkOrbit);
+      if(parkOrbit->addParticipant(participantHandle))
+      {
+         InfoLog(<< "ParkManager::parkParticipant valid orbit specified (orbit=" << orbit << "), call parked");
+      }
+   }
+   else
+   {
+      // If no orbit was specified, or specified number is bad - select a free orbit, and redirect request to use newly allocated orbit
+      if(mFreeOrbitList.size() > 0)
+      {
+         unsigned long freeorbit = mFreeOrbitList.front();
+         // Move free item to end of list, to reduce chance it will be double allocated
+         mFreeOrbitList.pop_front();  
+         mFreeOrbitList.push_back(freeorbit);
+         InfoLog(<< "ParkManager::parkParticipant no valid orbit specified (orbit=" << orbit << ") redirecting to free orbit=" << freeorbit);
+         NameAddr destination(mServer.mParkUri);
+         destination.uri().param(p_orbit) = Data(freeorbit);
+         mServer.redirectParticipant(participantHandle, destination);
+      }
+      else
+      {
+         // No free orbits
+         WarningLog(<< "ParkManager::parkParticipant no free orbits available, rejecing with 486 busy.");
+         mServer.rejectParticipant(participantHandle, 486 /* Busy */);
+      }
+   }
 }
 
 void 
@@ -210,24 +218,39 @@ ParkManager::incomingParticipant(ParticipantHandle participantHandle, const SipM
    if((orbit >= mServer.mParkOrbitRangeStart) && 
       (orbit < (mServer.mParkOrbitRangeStart + mServer.mParkNumOrbits)))
    {
-       // Orbit is valid - see if we have a call parked there
-       OrbitMap::iterator it = mOrbits.find(orbit);
-       ParticipantHandle participantToRetrieve = 0;
-       if(it!=mOrbits.end() && (participantToRetrieve = it->second->getNextQueuedParticipant()) != 0)
-       {
-           // Answer incoming call and then immediately redirect to parked call
-           mServer.addParticipant(it->second->getConversationHandle(), participantHandle);
-           mServer.modifyParticipantContribution(it->second->getConversationHandle(), participantHandle, 0, 0 /* Mute participant */);
-           mServer.answerParticipant(participantHandle);
-           mServer.redirectToParticipant(participantHandle, participantToRetrieve);
+      // Check if this is a direct call, or a transferred call.  We will allow transferred calls to be parked, as an alternative parking method
+      if(msg.exists(h_ReferredBy))
+      {
+         // If a Referred-By header is present then this was a transferred call - park it
+         // Park call at specified orbit
+         ParkOrbit* parkOrbit = getOrbit(orbit);
+         assert(parkOrbit);
+         if(parkOrbit->addParticipant(participantHandle))
+         {
+            InfoLog(<< "ParkManager::incomingParticipant transferred call received (orbit=" << orbit << "), call parked");
+         }
+      }
+      else  // Direct call - retrieval attempt
+      {
+         // Orbit is valid - see if we have a call parked there
+         OrbitMap::iterator it = mOrbits.find(orbit);
+         ParticipantHandle participantToRetrieve = 0;
+         if(it!=mOrbits.end() && (participantToRetrieve = it->second->getNextQueuedParticipant()) != 0)
+         {
+            // Answer incoming call and then immediately redirect to parked call
+            mServer.addParticipant(it->second->getConversationHandle(), participantHandle);
+            mServer.modifyParticipantContribution(it->second->getConversationHandle(), participantHandle, 0, 0 /* Mute participant */);
+            mServer.answerParticipant(participantHandle);
+            mServer.redirectToParticipant(participantHandle, participantToRetrieve);
 
-           InfoLog(<< "ParkManager::incomingParticipant retrieving participant " << participantToRetrieve << " from orbit " << orbit);
-       }
-       else
-       {
-          WarningLog(<< "ParkManager::incomingParticipant orbit " << orbit << " has no call to retrieve, rejecting with 404.");
-          mServer.rejectParticipant(participantHandle, 404 /* Not Found */);
-       }
+            InfoLog(<< "ParkManager::incomingParticipant retrieving participant " << participantToRetrieve << " from orbit " << orbit);
+         }
+         else
+         {
+            WarningLog(<< "ParkManager::incomingParticipant orbit " << orbit << " has no call to retrieve, rejecting with 404.");
+            mServer.rejectParticipant(participantHandle, 404 /* Not Found */);
+         }
+      }
    }
    else
    {
