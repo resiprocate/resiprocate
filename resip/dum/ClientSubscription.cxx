@@ -23,7 +23,8 @@ ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog,
    : BaseSubscription(dum, dialog, request),
      mOnNewSubscriptionCalled(mEventType == "refer"),  // don't call onNewSubscription for Refer subscriptions
      mEnded(false),
-     mExpires(0),
+     mNextRefreshSecs(0),
+     mLastSubSecs(Timer::getTimeSecs()), // Not exactly, but more forgiving
      mDefaultExpires(defaultSubExpiration),
      mRefreshing(false),
      mHaveQueuedRefresh(false),
@@ -310,13 +311,18 @@ ClientSubscription::processNextNotify()
          DebugLog(<< "No expires header in last request, set to " << expires);
          mLastRequest->header(h_Expires).value() = expires;
       }
-      UInt64 now = Timer::getTimeSecs();
-      
-      if (mExpires == 0 || now + expires < mExpires)
+
+      if(!isEqualNoCase(qn->notify().header(h_SubscriptionState).value(), Symbols::Terminated))
       {
-         refreshInterval = Helper::aBitSmallerThan((unsigned long)expires);
-         mExpires = now + refreshInterval;
-         setRefreshTimer = true;
+         // Don't do this stuff for a NOTIFY terminated.
+         UInt64 now = Timer::getTimeSecs();
+         refreshInterval = Helper::aBitSmallerThan((signed long)expires);
+         
+         if (mNextRefreshSecs == 0 || now + refreshInterval < mNextRefreshSecs)
+         {
+            mNextRefreshSecs = now + refreshInterval;
+            setRefreshTimer = true;
+         }
       }
    }
    //if no subscription state header, treat as an extension. Only allow for
@@ -375,8 +381,7 @@ ClientSubscription::processNextNotify()
    {
       if (setRefreshTimer)
       {
-         mDum.addTimer(DumTimeout::Subscription, refreshInterval, getBaseHandle(), ++mTimerSeq);
-         InfoLog (<< "[ClientSubscription] reSUBSCRIBE in " << refreshInterval);
+         scheduleRefresh(refreshInterval);
       }
          
       handler->onUpdateActive(getHandle(), qn->notify(), qn->outOfOrder());
@@ -385,15 +390,41 @@ ClientSubscription::processNextNotify()
    {
       if (setRefreshTimer)
       {
-         mDum.addTimer(DumTimeout::Subscription, refreshInterval, getBaseHandle(), ++mTimerSeq);
-         InfoLog (<< "[ClientSubscription] reSUBSCRIBE in " << refreshInterval);
+         scheduleRefresh(refreshInterval);
       }
 
       handler->onUpdatePending(getHandle(), qn->notify(), qn->outOfOrder());
    }
    else if (isEqualNoCase(qn->notify().header(h_SubscriptionState).value(), Symbols::Terminated))
    {
-      acceptUpdate();
+      if(mLastRequest->header(h_Expires).value()!=0 &&
+         isEqualNoCase(qn->notify().header(h_SubscriptionState).param(p_reason), "timeout"))
+      {
+         // Unexpected timeout of some sort. Look closer.
+         if(mNextRefreshSecs==0)
+         {
+            // No refresh scheduled; maybe we are trying to avoid a tight SUB/
+            // NOT loop here?
+            if(Helper::aBitSmallerThan((signed long)(Timer::getTimeSecs() - mLastSubSecs)) < 2)
+            {
+               acceptUpdate(200, "I just sent a refresh, what more do you want "
+                                 "from me?");
+            }
+            else
+            {
+               acceptUpdate(200, "Why didn't I refresh here?");
+            }
+         }
+         else
+         {
+            acceptUpdate(200, "You terminated my subscription early! What "
+                              "gives?");
+         }
+      }
+      else
+      {
+         acceptUpdate();
+      }
       mEnded = true;
       handler->onTerminated(getHandle(), &qn->notify());
       DebugLog (<< "[ClientSubscription] " << mLastRequest->header(h_To) << "[ClientSubscription] Terminated");                   
@@ -493,9 +524,10 @@ ClientSubscription::requestRefresh(UInt32 expires)
       {
          mLastRequest->header(h_Expires).value() = expires;
       }
-      mExpires = 0;
+      mNextRefreshSecs = 0;
       InfoLog (<< "Refresh subscription: " << mLastRequest->header(h_Contacts).front());
       mRefreshing = true;
+      mLastSubSecs = Timer::getTimeSecs();
       send(mLastRequest);
       // Timer for reSUB NOTIFY.
       mDum.addTimer(DumTimeout::WaitForNotify, 
@@ -582,7 +614,7 @@ ClientSubscription::endCommand()
 }
 
 void 
-ClientSubscription::acceptUpdate(int statusCode)
+ClientSubscription::acceptUpdate(int statusCode, const char* reason)
 {
    assert(!mQueuedNotifies.empty());
    if (mQueuedNotifies.empty())
@@ -595,6 +627,10 @@ ClientSubscription::acceptUpdate(int statusCode)
    mQueuedNotifies.pop_front();
    mDustbin.push_back(qn);
    mDialog.makeResponse(*mLastResponse, qn->notify(), statusCode);
+   if(reason)
+   {
+      mLastResponse->header(h_StatusLine).reason()=reason;
+   }
    send(mLastResponse);
 }
 
@@ -766,6 +802,35 @@ ClientSubscription::clearDustbin()
    mDustbin.clear();
 
 }
+
+void 
+ClientSubscription::scheduleRefresh(unsigned long refreshInterval)
+{
+   if(mNextRefreshSecs-mLastSubSecs < 2)
+   {
+      // Server is using an unreasonably short expiry; we sent a SUB
+      // very recently, and the server has told us to refresh almost 
+      // immediately. By the time our refresh timer pops, less than two 
+      // seconds will have elapsed since our last SUBSCRIBE. This is 
+      // unacceptable. Just let the subscription end.
+      // It is also possible that our refresh SUB has crossed an update NOTIFY 
+      // on the wire; in this case, the right thing to do is to wait until a 
+      // NOTIFY for our refresh SUB comes in, which is exactly what this code 
+      // ends up doing in this case.
+      // ?bwc? Make this minimum inter-SUBSCRIBE time configurable?
+      WarningLog(<< "Server is using an unacceptably short expiry. "
+                  "Letting the subscription end so we don't get in a"
+                  " tight SUB/NOT loop.");
+      mNextRefreshSecs=0;
+   }
+   else
+   {
+      mDum.addTimer(DumTimeout::Subscription, refreshInterval, getBaseHandle(), ++mTimerSeq);
+      InfoLog (<< "[ClientSubscription] reSUBSCRIBE in " << refreshInterval);
+   }
+}
+
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0
