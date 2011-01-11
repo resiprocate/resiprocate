@@ -21,7 +21,7 @@ class ClientSubscription: public BaseSubscription
       ClientSubscriptionHandle getHandle();
       
       //.dcm. no adornment for ease of use, can add if there is a use case
-      void acceptUpdate(int statusCode = 200);
+      void acceptUpdate(int statusCode = 200, const char* reason=0);
       void rejectUpdate(int statusCode = 400, const Data& reasonPhrase = Data::Empty);
       void requestRefresh(UInt32 expires = 0);  // 0 defaults to using original expires value (to remove call end() instead)
       virtual void end();
@@ -70,7 +70,10 @@ class ClientSubscription: public BaseSubscription
       bool mOnNewSubscriptionCalled;
       //SipMessage mLastNotify;      
       bool mEnded;
-      UInt64 mExpires;  // Absolute Expiration Time
+      // .bwc. This is when our next reSUB is scheduled to happen.
+      UInt64 mNextRefreshSecs;
+      UInt64 mLastSubSecs;
+
       // this is the expires value from the 2xx coming from the SUB message
       UInt32 mDefaultExpires;
 
@@ -87,6 +90,7 @@ class ClientSubscription: public BaseSubscription
       void processNextNotify();
       void processResponse(const SipMessage& response);
       void clearDustbin();
+      void scheduleRefresh(unsigned long refreshInterval);
       
       // disabled
       ClientSubscription(const ClientSubscription&);
