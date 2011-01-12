@@ -17,7 +17,7 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM FlowManagerSubsystem::FLOWMANAGER
 
-FlowDtlsTimerContext::FlowDtlsTimerContext(asio::io_service& ioService) :
+FlowDtlsTimerContext::FlowDtlsTimerContext(boost::asio::io_service& ioService) :
   mIOService(ioService) 
 {
 }
@@ -25,15 +25,15 @@ FlowDtlsTimerContext::FlowDtlsTimerContext(asio::io_service& ioService) :
 void 
 FlowDtlsTimerContext::addTimer(dtls::DtlsTimer *timer, unsigned int durationMs) 
 {
-   resip::SharedPtr<asio::deadline_timer> deadlineTimer(new asio::deadline_timer(mIOService));
+   resip::SharedPtr<boost::asio::deadline_timer> deadlineTimer(new boost::asio::deadline_timer(mIOService));
    deadlineTimer->expires_from_now(boost::posix_time::milliseconds(durationMs));
-   deadlineTimer->async_wait(boost::bind(&FlowDtlsTimerContext::handleTimeout, this, timer, asio::placeholders::error));
+   deadlineTimer->async_wait(boost::bind(&FlowDtlsTimerContext::handleTimeout, this, timer, boost::asio::placeholders::error));
    mDeadlineTimers[timer] = deadlineTimer;
    //InfoLog(<< "FlowDtlsTimerContext: starting timer for " << durationMs << "ms.");
 }    
 
 void 
-FlowDtlsTimerContext::handleTimeout(dtls::DtlsTimer *timer, const asio::error_code& errorCode) 
+FlowDtlsTimerContext::handleTimeout(dtls::DtlsTimer *timer, const boost::system::error_code& errorCode) 
 {
    if(!errorCode)
    {

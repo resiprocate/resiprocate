@@ -1,5 +1,5 @@
 #ifdef USE_SSL
-
+#ifdef USE_DTLS
 #include <cassert>
 #include <iostream>
 #include <rutil/ssl/OpenSSLInit.hxx>
@@ -95,7 +95,7 @@ DtlsFactory::demuxPacket(const unsigned char *data, unsigned int len)
 }
 
 #endif //USE_SSL
-
+#endif
 
 /* ====================================================================
 

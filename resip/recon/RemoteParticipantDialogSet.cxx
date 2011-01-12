@@ -206,7 +206,7 @@ RemoteParticipantDialogSet::getLocalRTPPort( const sdpcontainer::SdpMediaLine::S
       }
 
       // Create localBinding Tuple - note:  transport may be changed depending on NAT traversal mode
-      StunTuple localBinding(StunTuple::UDP, asio::ip::address::from_string(profile->sessionCaps().session().connection().getAddress().c_str()), mLocalRTPPortMap[ mediaType ]);
+      StunTuple localBinding(StunTuple::UDP, boost::asio::ip::address::from_string(profile->sessionCaps().session().connection().getAddress().c_str()), mLocalRTPPortMap[ mediaType ]);
 
       switch(profile->natTraversalMode())
       {
@@ -733,13 +733,13 @@ RemoteParticipantDialogSet::setActiveDestination(sdpcontainer::SdpMediaLine::Sdp
          continue;
       }
       StunTuple connAddr((it->getTransport() == SdpCandidate::CANDIDATE_TRANSPORT_TYPE_UDP ? StunTuple::UDP : StunTuple::TCP),
-         asio::ip::address::from_string(it->getConnectionAddress().c_str()),
+         boost::asio::ip::address::from_string(it->getConnectionAddress().c_str()),
          it->getPort());
       StunTuple relatedAddr;
       if (it->getRelatedAddress().size() > 0 && it->getRelatedPort() != 0)
       {
          relatedAddr.setTransportType(connAddr.getTransportType());
-         relatedAddr.setAddress(asio::ip::address::from_string(it->getRelatedAddress().c_str()));
+         relatedAddr.setAddress(boost::asio::ip::address::from_string(it->getRelatedAddress().c_str()));
          relatedAddr.setPort(it->getRelatedPort());
       }
       reTurn::IceCandidate c(connAddr, IceCandidate::CandidateType_Unknown, it->getPriority(), it->getFoundation(), it->getId(), relatedAddr);

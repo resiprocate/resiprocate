@@ -1,11 +1,11 @@
 #ifndef FM_ERRORCODE_HXX
 #define FM_ERRORCODE_HXX
 
-#include <asio/error_code.hpp>
+#include <boost/asio/error.hpp>
 
 namespace flowmanager {
 
-typedef asio::error_code::value_type ErrorType;
+typedef boost::system::error_code::value_type ErrorType;
 
 static const ErrorType Success                               = 0;
 static const ErrorType GeneralError                          = -1;

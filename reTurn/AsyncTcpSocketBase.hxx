@@ -1,7 +1,7 @@
 #ifndef ASYNC_TCP_SOCKET_BASE_HXX
 #define ASYNC_TCP_SOCKET_BASE_HXX
 
-#include <asio.hpp>
+#include <boost/asio.hpp>
 #include <boost/bind.hpp>
 
 #include "AsyncSocketBase.hxx"
@@ -11,36 +11,36 @@ namespace reTurn {
 class AsyncTcpSocketBase : public AsyncSocketBase
 {
 public:
-   AsyncTcpSocketBase(asio::io_service& ioService); 
+   AsyncTcpSocketBase(boost::asio::io_service& ioService); 
    virtual ~AsyncTcpSocketBase();
 
    virtual unsigned int getSocketDescriptor();
 
-   virtual asio::error_code bind(const asio::ip::address& address, unsigned short port);
+   virtual boost::system::error_code bind(const boost::asio::ip::address& address, unsigned short port);
    virtual void connect(const std::string& address, unsigned short port);  
 
    virtual void transportReceive();
    virtual void transportFramedReceive();
-   virtual void transportSend(const StunTuple& destination, std::vector<asio::const_buffer>& buffers);
+   virtual void transportSend(const StunTuple& destination, std::vector<boost::asio::const_buffer>& buffers);
    virtual void transportClose();
 
    virtual void setConnectedAddressAndPort();  // Used by server side so that get fn's will work
-   virtual const asio::ip::address getSenderEndpointAddress();
+   virtual const boost::asio::ip::address getSenderEndpointAddress();
    virtual unsigned short getSenderEndpointPort();
 
-   virtual bool setDSCP(ULONG ulInDSCPValue);
+   virtual bool setDSCP(boost::uint32_t ulInDSCPValue);
    virtual bool setServiceType(
-      const asio::ip::udp::endpoint &tInDestinationIPAddress,
+      const boost::asio::ip::udp::endpoint &tInDestinationIPAddress,
       EQOSServiceTypes eInServiceType,
-      ULONG ulInBandwidthInBitsPerSecond);
+      boost::uint32_t ulInBandwidthInBitsPerSecond);
 
 protected:
-   virtual void handleReadHeader(const asio::error_code& e);
-   virtual void handleTcpResolve(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator);
-   virtual void handleConnect(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator);
+   virtual void handleReadHeader(const boost::system::error_code& e);
+   virtual void handleTcpResolve(const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::iterator endpoint_iterator);
+   virtual void handleConnect(const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::iterator endpoint_iterator);
 
-   asio::ip::tcp::socket mSocket;
-   asio::ip::tcp::resolver mResolver;
+   boost::asio::ip::tcp::socket mSocket;
+   boost::asio::ip::tcp::resolver mResolver;
 
 private:
 };

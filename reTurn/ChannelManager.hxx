@@ -1,7 +1,7 @@
 #ifndef CHANNELMANAGER_HXX
 #define CHANNELMANAGER_HXX
 
-#include <asio.hpp>
+#include <boost/asio.hpp>
 
 #include "RemotePeer.hxx"
 

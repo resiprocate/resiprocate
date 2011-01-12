@@ -17,10 +17,10 @@ using namespace resip;
 
 namespace reTurn {
 
-TlsConnection::TlsConnection(asio::io_service& ioService,
+TlsConnection::TlsConnection(boost::asio::io_service& ioService,
                              ConnectionManager& manager, 
                              RequestHandler& handler, 
-                             asio::ssl::context& context)
+                             boost::asio::ssl::context& context)
   : AsyncTlsSocketBase(ioService, context, false /* not needed in server */),
     mConnectionManager(manager),
     mRequestHandler(handler)
@@ -49,7 +49,7 @@ TlsConnection::start()
 void 
 TlsConnection::stop()
 {
-  asio::error_code ec;
+  boost::system::error_code ec;
   //mSocket.shutdown(ec);  // !slg! note: this fn gives a stack overflow since ASIO 1.0.0 for some reason
   mSocket.lowest_layer().close();
   if(ec)
@@ -72,14 +72,14 @@ TlsConnection::onServerHandshakeSuccess()
 }
  
 void 
-TlsConnection::onServerHandshakeFailure(const asio::error_code& e)
+TlsConnection::onServerHandshakeFailure(const boost::system::error_code& e)
 {
    WarningLog(<< "TlsConnection handshake failure, error=" << e.value() << "-" << e.message());
    close();
 }
 
 void 
-TlsConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
+TlsConnection::onReceiveSuccess(const boost::asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
 {
    if (data->size() > 4)
    {
@@ -156,9 +156,9 @@ TlsConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short
 }
 
 void 
-TlsConnection::onReceiveFailure(const asio::error_code& e)
+TlsConnection::onReceiveFailure(const boost::system::error_code& e)
 {
-   if(e != asio::error::operation_aborted)
+   if(e != boost::asio::error::operation_aborted)
    {
       InfoLog(<< "TlsConnection::onReceiveFailure: " << e.value() << "-" << e.message());
 
@@ -172,9 +172,9 @@ TlsConnection::onSendSuccess()
 }
 
 void
-TlsConnection::onSendFailure(const asio::error_code& error)
+TlsConnection::onSendFailure(const boost::system::error_code& error)
 {
-   if(error != asio::error::operation_aborted)
+   if(error != boost::asio::error::operation_aborted)
    {
       InfoLog(<< "TlsConnection::onSendFailure: " << error.value() << "-" << error.message());
       close();

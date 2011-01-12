@@ -1,6 +1,7 @@
+#include <signal.h>
 #include <iostream>
 #include <string>
-#include <asio.hpp>
+#include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include <boost/lexical_cast.hpp>
@@ -15,7 +16,7 @@
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include "ReTurnSubsystem.hxx"
-
+#include <boost/thread.hpp>
 #define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 #if defined(_WIN32)
@@ -70,7 +71,7 @@ int main(int argc, char* argv[])
       resip::GenericLogImpl::MaxLineCount = reTurnConfig.mLoggingFileMaxLineCount;
 
       // Initialize server.
-      asio::io_service ioService;                                // The one and only ioService for the stunServer
+      boost::asio::io_service ioService;                                // The one and only ioService for the stunServer
       reTurn::TurnManager turnManager(ioService, reTurnConfig);  // The one and only Turn Manager
 
       if(argc == 6)
@@ -78,8 +79,8 @@ int main(int argc, char* argv[])
          reTurnConfig.mTurnPort = (unsigned short)resip::Data(argv[2]).convertUnsignedLong();
          reTurnConfig.mTlsTurnPort = (unsigned short)resip::Data(argv[3]).convertUnsignedLong();
          reTurnConfig.mAltStunPort = (unsigned short)resip::Data(argv[5]).convertUnsignedLong();
-         reTurnConfig.mTurnAddress = asio::ip::address::from_string(argv[1]);
-         reTurnConfig.mAltStunAddress = asio::ip::address::from_string(argv[4]);
+         reTurnConfig.mTurnAddress = boost::asio::ip::address::from_string(argv[1]);
+         reTurnConfig.mAltStunAddress = boost::asio::ip::address::from_string(argv[4]);
       }
 
       boost::shared_ptr<reTurn::UdpServer> udpTurnServer;  // also a1p1StunUdpServer
@@ -120,7 +121,7 @@ int main(int argc, char* argv[])
 
 #ifdef _WIN32
       // Set console control handler to allow server to be stopped.
-      console_ctrl_function = boost::bind(&asio::io_service::stop, &ioService);
+      console_ctrl_function = boost::bind(&boost::asio::io_service::stop, &ioService);
       SetConsoleCtrlHandler(console_ctrl_handler, TRUE);
 #else
       // Block all signals for background thread.
@@ -132,8 +133,8 @@ int main(int argc, char* argv[])
 
       // Run the ioService until stopped.
       // Create a pool of threads to run all of the io_services.
-      boost::shared_ptr<asio::thread> thread(new asio::thread(
-         boost::bind(&asio::io_service::run, &ioService)));
+      boost::shared_ptr<boost::thread> thread(new boost::thread(
+         boost::bind(&boost::asio::io_service::run, &ioService)));
 
 #ifndef _WIN32
       // Restore previous signals.

@@ -4,8 +4,8 @@
 
 #include <iostream>
 #include <string>
-#include <asio.hpp>
-#include <asio/ssl.hpp>
+#include <boost/asio.hpp>
+#include <boost/asio/ssl.hpp>
 #include <rutil/ThreadIf.hxx>
 
 #include "../../StunTuple.hxx"
@@ -46,18 +46,18 @@ public:
 
    virtual void thread()
    {
-      asio::error_code rc;
-      TurnUdpSocket turnSocket(asio::ip::address::from_string(address.c_str()), 2000);
+      boost::system::error_code rc;
+      TurnUdpSocket turnSocket(boost::asio::ip::address::from_string(address.c_str()), 2000);
 
       char buffer[1024];
       unsigned int size = sizeof(buffer);
-      asio::ip::address sourceAddress;
+      boost::asio::ip::address sourceAddress;
       unsigned short sourcePort;
       bool connected = false;
 
       // Receive Data
       rc=turnSocket.receive(buffer, size, 1000, &sourceAddress, &sourcePort);
-      while((!rc || rc.value() == asio::error::operation_aborted) && !isShutdown())
+      while((!rc || rc.value() == boost::asio::error::operation_aborted) && !isShutdown())
       {
          if(!rc)
          {
@@ -75,7 +75,7 @@ public:
 
       if(rc)
       {
-         if(rc.value() != asio::error::operation_aborted)
+         if(rc.value() != boost::asio::error::operation_aborted)
          {
             ErrLog(<< "PEER: Receive error: " << rc.message());
          }
@@ -90,12 +90,12 @@ public:
    MyTurnAsyncSocketHandler() : mNumReceives(0) {}
    virtual ~MyTurnAsyncSocketHandler() {}
 
-   virtual void onConnectSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port)
+   virtual void onConnectSuccess(unsigned int socketDesc, const boost::asio::ip::address& address, unsigned short port)
    {
       InfoLog( << "MyTurnAsyncSocketHandler::onConnectSuccess: socketDest=" << socketDesc << ", address=" << address.to_string() << ", port=" << port);
       mTurnAsyncSocket->bindRequest();
    }
-   virtual void onConnectFailure(unsigned int socketDesc, const asio::error_code& e)
+   virtual void onConnectFailure(unsigned int socketDesc, const boost::system::error_code& e)
    {
       InfoLog( << "MyTurnAsyncSocketHandler::onConnectFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
    }
@@ -105,7 +105,7 @@ public:
       InfoLog( << "MyTurnAsyncSocketHandler::onSharedSecretSuccess: socketDest=" << socketDesc << ", username=" << username << ", password=" << password);
    }
    
-   virtual void onSharedSecretFailure(unsigned int socketDesc, const asio::error_code& e)
+   virtual void onSharedSecretFailure(unsigned int socketDesc, const boost::system::error_code& e)
    {
       InfoLog( << "MyTurnAsyncSocketHandler::onSharedSecretFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
    }
@@ -119,7 +119,7 @@ public:
                                          TurnAsyncSocket::UnspecifiedToken,
                                          StunTuple::UDP);  
    }
-   virtual void onBindFailure(unsigned int socketDesc, const asio::error_code& e)
+   virtual void onBindFailure(unsigned int socketDesc, const boost::system::error_code& e)
    {
       InfoLog( << "MyTurnAsyncSocketHandler::onBindingFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
    }
@@ -136,14 +136,14 @@ public:
        // Test Data sending and receiving over allocation
        resip::Data turnData("This test is for wrapped Turn Data!");
        InfoLog( << "CLIENT: Sending: " << turnData);
-       mTurnAsyncSocket->sendTo(asio::ip::address::from_string(address.c_str()), 2000, turnData.c_str(), turnData.size()+1);
+       mTurnAsyncSocket->sendTo(boost::asio::ip::address::from_string(address.c_str()), 2000, turnData.c_str(), turnData.size()+1);
 
        turnData = "This test should be in ChannelData message in TCP/TLS but not in UDP - since ChannelBindResponse is not yet received.";
        InfoLog( << "CLIENT: Sending: " << turnData);
-       mTurnAsyncSocket->setActiveDestination(asio::ip::address::from_string(address.c_str()), 2000);
+       mTurnAsyncSocket->setActiveDestination(boost::asio::ip::address::from_string(address.c_str()), 2000);
        mTurnAsyncSocket->send(turnData.c_str(), turnData.size()+1);       
    }
-   virtual void onAllocationFailure(unsigned int socketDesc, const asio::error_code& e)
+   virtual void onAllocationFailure(unsigned int socketDesc, const boost::system::error_code& e)
    {
       InfoLog( << "MyTurnAsyncSocketHandler::onAllocationFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
    }
@@ -155,7 +155,7 @@ public:
          mTurnAsyncSocket->close();
       }
    }
-   virtual void onRefreshFailure(unsigned int socketDesc, const asio::error_code& e)
+   virtual void onRefreshFailure(unsigned int socketDesc, const boost::system::error_code& e)
    {
       InfoLog( << "MyTurnAsyncSocketHandler::onRefreshFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
    }
@@ -164,7 +164,7 @@ public:
    {
       InfoLog( << "MyTurnAsyncSocketHandler::onSetActiveDestinationSuccess: socketDest=" << socketDesc);
    }
-   virtual void onSetActiveDestinationFailure(unsigned int socketDesc, const asio::error_code& e)
+   virtual void onSetActiveDestinationFailure(unsigned int socketDesc, const boost::system::error_code& e)
    {
       InfoLog( << "MyTurnAsyncSocketHandler::onSetActiveDestinationFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
    }
@@ -172,7 +172,7 @@ public:
    {
       InfoLog( << "MyTurnAsyncSocketHandler::onClearActiveDestinationSuccess: socketDest=" << socketDesc);
    }
-   virtual void onClearActiveDestinationFailure(unsigned int socketDesc, const asio::error_code& e)
+   virtual void onClearActiveDestinationFailure(unsigned int socketDesc, const boost::system::error_code& e)
    {
       InfoLog( << "MyTurnAsyncSocketHandler::onClearActiveDestinationFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
    }
@@ -181,12 +181,12 @@ public:
    {
       //InfoLog( << "MyTurnAsyncSocketHandler::onSendSuccess: socketDest=" << socketDesc);
    }
-   virtual void onSendFailure(unsigned int socketDesc, const asio::error_code& e)
+   virtual void onSendFailure(unsigned int socketDesc, const boost::system::error_code& e)
    {
       InfoLog( << "MyTurnAsyncSocketHandler::onSendFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
    }
 
-   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
+   virtual void onReceiveSuccess(unsigned int socketDesc, const boost::asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
    {
       InfoLog( << "MyTurnAsyncSocketHandler::onReceiveSuccess: socketDest=" << socketDesc << ", fromAddress=" << address.to_string() << ", fromPort=" << port << ", size=" << data->size() << ", data=" << data->data());
 
@@ -217,7 +217,7 @@ public:
          break;
       }
    }
-   virtual void onReceiveFailure(unsigned int socketDesc, const asio::error_code& e)
+   virtual void onReceiveFailure(unsigned int socketDesc, const boost::system::error_code& e)
    {
       InfoLog( << "MyTurnAsyncSocketHandler::onReceiveFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
    }
@@ -247,24 +247,24 @@ int main(int argc, char* argv[])
 
     InfoLog(<< "Using " << address << " as local IP address.");
 
-    asio::error_code rc;
+    boost::system::error_code rc;
     char username[256] = "test";
     char password[256] = "1234";
     TurnPeer turnPeer;
     turnPeer.run();
-    asio::io_service ioService;
+    boost::asio::io_service ioService;
     MyTurnAsyncSocketHandler handler;
 
     // Setup SSL context
-    asio::ssl::context sslContext(ioService, asio::ssl::context::tlsv1);
+    boost::asio::ssl::context sslContext(ioService, boost::asio::ssl::context::tlsv1);
     // Enable certificate validation
-    sslContext.set_verify_mode(asio::ssl::context::verify_peer |   // Verify the peer.
-                               asio::ssl::context::verify_fail_if_no_peer_cert);  // Fail verification if the peer has no certificate.
+    sslContext.set_verify_mode(boost::asio::ssl::context::verify_peer |   // Verify the peer.
+                               boost::asio::ssl::context::verify_fail_if_no_peer_cert);  // Fail verification if the peer has no certificate.
     sslContext.load_verify_file("ca.pem");
 
-    boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncUdpSocket(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0));
-    //boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncTcpSocket(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0));
-    //boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncTlsSocket(ioService, sslContext, false /* validateServerCertificateHostname */, &handler, asio::ip::address::from_string(address.c_str()), 0));
+    boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncUdpSocket(ioService, &handler, boost::asio::ip::address::from_string(address.c_str()), 0));
+    //boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncTcpSocket(ioService, &handler, boost::asio::ip::address::from_string(address.c_str()), 0));
+    //boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncTlsSocket(ioService, sslContext, false /* validateServerCertificateHostname */, &handler, boost::asio::ip::address::from_string(address.c_str()), 0));
     //port=5349;
 
     handler.setTurnAsyncSocket(turnSocket.get());

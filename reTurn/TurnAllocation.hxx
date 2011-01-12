@@ -3,7 +3,7 @@
 
 #include <map>
 #include <boost/noncopyable.hpp>
-#include <asio.hpp>
+#include <boost/asio.hpp>
 
 #include "StunTuple.hxx"
 #include "StunAuth.hxx"
@@ -38,10 +38,10 @@ public:
 
    // checks if the permission exists or not - also checks for expired
    // permissions
-   bool existsPermission(const asio::ip::address& address);
+   bool existsPermission(const boost::asio::ip::address& address);
 
    // create Permission if not present, otherwise refresh permission timer
-   void refreshPermission(const asio::ip::address& address);
+   void refreshPermission(const boost::asio::ip::address& address);
 
    // this get's called when being notified that the socket that the allocation came from
    // has been destroyed
@@ -69,11 +69,11 @@ private:
    time_t    mExpires;
    //unsigned int mBandwidth; // future use
 
-   typedef std::map<asio::ip::address,TurnPermission*> TurnPermissionMap;
+   typedef std::map<boost::asio::ip::address,TurnPermission*> TurnPermissionMap;
    TurnPermissionMap mTurnPermissionMap;
 
    TurnManager& mTurnManager;
-   asio::deadline_timer mAllocationTimer;
+   boost::asio::deadline_timer mAllocationTimer;
 
    AsyncSocketBase* mLocalTurnSocket;
    boost::shared_ptr<UdpRelayServer> mUdpRelayServer;

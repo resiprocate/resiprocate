@@ -86,11 +86,11 @@ TurnAllocation::refresh(unsigned int lifetime)  // update expiration time
 
    // start timer
    mAllocationTimer.expires_from_now(boost::posix_time::seconds(lifetime));
-   mAllocationTimer.async_wait(boost::bind(&TurnManager::allocationExpired, &mTurnManager, asio::placeholders::error, mKey));
+   mAllocationTimer.async_wait(boost::bind(&TurnManager::allocationExpired, &mTurnManager, boost::asio::placeholders::error, mKey));
 }
 
 bool 
-TurnAllocation::existsPermission(const asio::ip::address& address)
+TurnAllocation::existsPermission(const boost::asio::ip::address& address)
 {
    TurnPermissionMap::iterator it = mTurnPermissionMap.find(address);
    if(it != mTurnPermissionMap.end())
@@ -109,7 +109,7 @@ TurnAllocation::existsPermission(const asio::ip::address& address)
 }
 
 void 
-TurnAllocation::refreshPermission(const asio::ip::address& address)
+TurnAllocation::refreshPermission(const boost::asio::ip::address& address)
 {
    TurnPermissionMap::iterator it = mTurnPermissionMap.find(address);
    TurnPermission* turnPermission = 0;

@@ -78,6 +78,7 @@ ifeq ($(USE_GOOGLE_CPUPERF),yes)
 LDLIBS_LAST += -lprofiler
 endif
 
+LDLIBS_LAST += -lboost_thread -lboost_system
 LDLIBS_LAST += -lrt
 
 endif

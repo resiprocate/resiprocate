@@ -83,7 +83,7 @@ public:
       start = pb.position();
       pb.skipNonWhitespace();
       pb.data(connectionAddr, start);
-      mTransportAddr.setAddress(asio::ip::address::from_string(connectionAddr.c_str()));
+      mTransportAddr.setAddress(boost::asio::ip::address::from_string(connectionAddr.c_str()));
 
       pb.skipWhitespace();
       resip::Data port;
@@ -112,7 +112,7 @@ public:
          pb.skipNonWhitespace();
          pb.data(relatedAddr, start);
          mRelatedAddr.setTransportType(mTransportAddr.getTransportType());
-         mRelatedAddr.setAddress(asio::ip::address::from_string(relatedAddr.c_str()));
+         mRelatedAddr.setAddress(boost::asio::ip::address::from_string(relatedAddr.c_str()));
       }
 
       pb.skipWhitespace();

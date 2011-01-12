@@ -4,8 +4,8 @@
 
 #include <iostream>
 #include <string>
-#include <asio.hpp>
-#include <asio/ssl.hpp>
+#include <boost/asio.hpp>
+#include <boost/asio/ssl.hpp>
 #include <rutil/ThreadIf.hxx>
 #include <rutil/Logger.hxx>
 
@@ -42,18 +42,18 @@ public:
 
    virtual void thread()
    {
-      asio::error_code rc;
-      TurnUdpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 2000);
+      boost::system::error_code rc;
+      TurnUdpSocket turnSocket(boost::asio::ip::address::from_string("127.0.0.1"), 2000);
 
       char buffer[1024];
       unsigned int size = sizeof(buffer);
-      asio::ip::address sourceAddress;
+      boost::asio::ip::address sourceAddress;
       unsigned short sourcePort;
       bool connected = false;
 
       // Receive Data
       rc=turnSocket.receive(buffer, size, 1000, &sourceAddress, &sourcePort);
-      while((!rc || rc.value() == asio::error::operation_aborted) && !isShutdown())
+      while((!rc || rc.value() == boost::asio::error::operation_aborted) && !isShutdown())
       {
          if(!rc)
          {
@@ -71,7 +71,7 @@ public:
 
       if(rc)
       {
-         if(rc.value() != asio::error::operation_aborted)
+         if(rc.value() != boost::asio::error::operation_aborted)
          {
             ErrLog( << "PEER: Receive error: " << rc.message());
          }
@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
       }
       unsigned int port = resip::Data(argv[2]).convertUnsignedLong();
 
-      asio::error_code rc;
+      boost::system::error_code rc;
       char username[256] = "test";
       char password[256] = "1234";
       TurnPeer turnPeer;
@@ -100,8 +100,8 @@ int main(int argc, char* argv[])
 
 #ifndef NO_AUTHENTICATION
       {  // Connect via TLS, get SharedSecret, and disconnect
-         TurnTlsSocket tlsSocket(asio::ip::address::from_string("127.0.0.1"), 40001);
-         rc = tlsSocket.requestSharedSecret(asio::ip::address::from_string(argv[1]), 
+         TurnTlsSocket tlsSocket(boost::asio::ip::address::from_string("127.0.0.1"), 40001);
+         rc = tlsSocket.requestSharedSecret(boost::asio::ip::address::from_string(argv[1]), 
             port.convertUnsignedLong()+1,
             username, sizeof(username),
             password, sizeof(password));
@@ -118,9 +118,9 @@ int main(int argc, char* argv[])
          << std::endl;
 #endif
 
-      TurnUdpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0);
-      //TurnTcpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0);
-      //TurnTlsSocket turnSocket(false /* validateServerCertificateHostname */, asio::ip::address::from_string("127.0.0.1"), 0); 
+      TurnUdpSocket turnSocket(boost::asio::ip::address::from_string("127.0.0.1"), 0);
+      //TurnTcpSocket turnSocket(boost::asio::ip::address::from_string("127.0.0.1"), 0);
+      //TurnTlsSocket turnSocket(false /* validateServerCertificateHostname */, boost::asio::ip::address::from_string("127.0.0.1"), 0); 
       //port=5349;
 
       // Connect to Stun/Turn Server
@@ -165,17 +165,17 @@ int main(int argc, char* argv[])
 
          char buffer[1024];
          unsigned int size = sizeof(buffer);
-         asio::ip::address sourceAddress;
+         boost::asio::ip::address sourceAddress;
          unsigned short sourcePort;
 
          // Test Data sending and receiving over allocation
          resip::Data turnData("This test is for wrapped Turn Data!");
          InfoLog(<< "CLIENT: Sending: " << turnData);
-         turnSocket.sendTo(asio::ip::address::from_string("127.0.0.1"), 2000, turnData.c_str(), turnData.size());
+         turnSocket.sendTo(boost::asio::ip::address::from_string("127.0.0.1"), 2000, turnData.c_str(), turnData.size());
 
          turnData = "This test should be a Channel Data message in TCP/TLS but not in UDP - since ChannelBindResponse is not yet received.";
          InfoLog( << "CLIENT: Sending: " << turnData);
-         turnSocket.setActiveDestination(asio::ip::address::from_string("127.0.0.1"), 2000);
+         turnSocket.setActiveDestination(boost::asio::ip::address::from_string("127.0.0.1"), 2000);
          turnSocket.send(turnData.c_str(), turnData.size());
 
          // Receive Data
@@ -186,14 +186,14 @@ int main(int argc, char* argv[])
          }
          if(rc)
          {
-            if(rc.value() != asio::error::operation_aborted)
+            if(rc.value() != boost::asio::error::operation_aborted)
             {
                InfoLog( << "CLIENT: Receive error: [" << rc.value() << "] " << rc.message());
             }          
          }
 
 #ifdef CONTINUOUSTESTMODE
-         while(!rc || rc.value() == asio::error::operation_aborted) {
+         while(!rc || rc.value() == boost::asio::error::operation_aborted) {
 #endif
          turnData = "This test is for ChannelData message!";
          InfoLog( << "CLIENT: Sending: " << turnData);
@@ -207,7 +207,7 @@ int main(int argc, char* argv[])
          }
          if(rc)
          {
-            if(rc.value() != asio::error::operation_aborted)
+            if(rc.value() != boost::asio::error::operation_aborted)
             {
                InfoLog( << "CLIENT: Receive error: [" << rc.value() << "] " << rc.message());
             }

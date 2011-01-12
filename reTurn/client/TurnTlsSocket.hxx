@@ -1,8 +1,8 @@
 #ifndef TURNTLSSOCKET_HXX
 #define TURNTLSSOCKET_HXX
 
-#include <asio.hpp>
-#include <asio/ssl.hpp>
+#include <boost/asio.hpp>
+#include <boost/asio/ssl.hpp>
 
 #include "TurnTcpSocket.hxx"
 
@@ -12,25 +12,25 @@ namespace reTurn {
 {
 public:
    explicit TurnTlsSocket(bool validateServerCertificateHostname,
-                          const asio::ip::address& address = UnspecifiedIpAddress, 
+                          const boost::asio::ip::address& address = UnspecifiedIpAddress, 
                           unsigned short port = 0);
 
    virtual unsigned int getSocketDescriptor() { return mSocket.lowest_layer().native(); }
-   virtual  asio::error_code connect(const std::string& address, unsigned short port);
+   virtual  boost::system::error_code connect(const std::string& address, unsigned short port);
 
 protected:
    virtual bool validateServerCertificateHostname(const std::string& hostname);
 
-   virtual asio::error_code rawWrite(const char* buffer, unsigned int size);
-   virtual asio::error_code rawWrite(const std::vector<asio::const_buffer>& buffers);
+   virtual boost::system::error_code rawWrite(const char* buffer, unsigned int size);
+   virtual boost::system::error_code rawWrite(const std::vector<boost::asio::const_buffer>& buffers);
 
    virtual void readHeader();
    virtual void readBody(unsigned int len);
    virtual void cancelSocket();
 
 private:
-   asio::ssl::context mSslContext;
-   asio::ssl::stream<asio::ip::tcp::socket> mSocket;
+   boost::asio::ssl::context mSslContext;
+   boost::asio::ssl::stream<boost::asio::ip::tcp::socket> mSocket;
    bool mValidateServerCertificateHostname;
 };
 

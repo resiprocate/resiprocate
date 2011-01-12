@@ -13,7 +13,7 @@ using namespace std;
 
 namespace reTurn {
 
-UdpRelayServer::UdpRelayServer(asio::io_service& ioService, TurnAllocation& turnAllocation)
+UdpRelayServer::UdpRelayServer(boost::asio::io_service& ioService, TurnAllocation& turnAllocation)
 : AsyncUdpSocketBase(ioService),
   mTurnAllocation(turnAllocation),
   mStopping(false)
@@ -43,7 +43,7 @@ UdpRelayServer::stop()
 }
 
 void 
-UdpRelayServer::onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
+UdpRelayServer::onReceiveSuccess(const boost::asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
 {
    if(mStopping)
    {
@@ -76,9 +76,9 @@ UdpRelayServer::onReceiveSuccess(const asio::ip::address& address, unsigned shor
 }
 
 void 
-UdpRelayServer::onReceiveFailure(const asio::error_code& e)
+UdpRelayServer::onReceiveFailure(const boost::system::error_code& e)
 {
-   if(!mStopping && e != asio::error::operation_aborted && e != asio::error::bad_descriptor)
+   if(!mStopping && e != boost::asio::error::operation_aborted && e != boost::asio::error::bad_descriptor)
    {
       doReceive();
    }
@@ -90,9 +90,9 @@ UdpRelayServer::onSendSuccess()
 }
 
 void
-UdpRelayServer::onSendFailure(const asio::error_code& error)
+UdpRelayServer::onSendFailure(const boost::system::error_code& error)
 {
-   if(error != asio::error::operation_aborted)
+   if(error != boost::asio::error::operation_aborted)
    {
       WarningLog(<< "UdpRelayServer::onSendFailure: " << error.value() << "-" << error.message());
    }

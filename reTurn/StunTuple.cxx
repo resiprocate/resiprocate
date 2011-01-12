@@ -11,7 +11,7 @@ StunTuple::StunTuple() :
 {
 }
 
-StunTuple::StunTuple(TransportType transport, const asio::ip::address& address, unsigned int port) :
+StunTuple::StunTuple(TransportType transport, const boost::asio::ip::address& address, unsigned int port) :
    mTransport(transport),
    mAddress(address),
    mPort(port)

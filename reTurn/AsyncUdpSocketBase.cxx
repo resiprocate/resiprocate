@@ -12,7 +12,7 @@ using namespace std;
 
 namespace reTurn {
 
-AsyncUdpSocketBase::AsyncUdpSocketBase(asio::io_service& ioService) 
+AsyncUdpSocketBase::AsyncUdpSocketBase(boost::asio::io_service& ioService) 
    : AsyncSocketBase(ioService),
      mSocket(ioService),
      mResolver(ioService)
@@ -29,22 +29,22 @@ AsyncUdpSocketBase::getSocketDescriptor()
    return mSocket.native(); 
 }
 
-asio::error_code 
-AsyncUdpSocketBase::bind(const asio::ip::address& address, unsigned short port)
+boost::system::error_code 
+AsyncUdpSocketBase::bind(const boost::asio::ip::address& address, unsigned short port)
 {
    // DRL FIXIT! We should be setting the QOS values on the socket as it is opened. Unfortunately 
    // we don't have that information at this point. The best solution may be to add a callback 
    // notifying the application that the socket has been opened, allowing the QOS values to be 
    // passed then. 
 
-   asio::error_code errorCode;
-   mSocket.open(address.is_v6() ? asio::ip::udp::v6() : asio::ip::udp::v4(), errorCode);
+   boost::system::error_code errorCode;
+   mSocket.open(address.is_v6() ? boost::asio::ip::udp::v6() : boost::asio::ip::udp::v4(), errorCode);
    if(!errorCode)
    {
-      mSocket.set_option(asio::ip::udp::socket::reuse_address(true));
-      mSocket.set_option(asio::socket_base::receive_buffer_size(66560));
-      //mSocket.set_option(asio::socket_base::send_buffer_size(66560));
-      mSocket.bind(asio::ip::udp::endpoint(address, port), errorCode);
+      mSocket.set_option(boost::asio::ip::udp::socket::reuse_address(true));
+      mSocket.set_option(boost::asio::socket_base::receive_buffer_size(66560));
+      //mSocket.set_option(boost::asio::socket_base::send_buffer_size(66560));
+      mSocket.bind(boost::asio::ip::udp::endpoint(address, port), errorCode);
    }
    return errorCode;
 }
@@ -56,19 +56,19 @@ AsyncUdpSocketBase::connect(const std::string& address, unsigned short port)
    // into a list of endpoints.
    resip::Data service(port);
 #ifdef USE_IPV6
-   asio::ip::udp::resolver::query query(address, service.c_str());   
+   boost::asio::ip::udp::resolver::query query(address, service.c_str());   
 #else
-   asio::ip::udp::resolver::query query(asio::ip::udp::v4(), address, service.c_str());   
+   boost::asio::ip::udp::resolver::query query(boost::asio::ip::udp::v4(), address, service.c_str());   
 #endif
    mResolver.async_resolve(query,
         boost::bind(&AsyncSocketBase::handleUdpResolve, shared_from_this(),
-                    asio::placeholders::error,
-                    asio::placeholders::iterator));
+                    boost::asio::placeholders::error,
+                    boost::asio::placeholders::iterator));
 }
 
 void 
-AsyncUdpSocketBase::handleUdpResolve(const asio::error_code& ec,
-                                     asio::ip::udp::resolver::iterator endpoint_iterator)
+AsyncUdpSocketBase::handleUdpResolve(const boost::system::error_code& ec,
+                                     boost::asio::ip::udp::resolver::iterator endpoint_iterator)
 {
    if (!ec)
    {
@@ -86,7 +86,7 @@ AsyncUdpSocketBase::handleUdpResolve(const asio::error_code& ec,
    }
 }
 
-const asio::ip::address 
+const boost::asio::ip::address 
 AsyncUdpSocketBase::getSenderEndpointAddress() 
 { 
    return mSenderEndpoint.address(); 
@@ -99,19 +99,19 @@ AsyncUdpSocketBase::getSenderEndpointPort()
 }
 
 void 
-AsyncUdpSocketBase::transportSend(const StunTuple& destination, std::vector<asio::const_buffer>& buffers)
+AsyncUdpSocketBase::transportSend(const StunTuple& destination, std::vector<boost::asio::const_buffer>& buffers)
 {
    //InfoLog(<< "AsyncUdpSocketBase::transportSend " << buffers.size() << " buffer(s) to " << destination << " - buf1 size=" << buffer_size(buffers.front()));
    mSocket.async_send_to(buffers, 
-                         asio::ip::udp::endpoint(destination.getAddress(), destination.getPort()), 
-                         boost::bind(&AsyncUdpSocketBase::handleSend, shared_from_this(), asio::placeholders::error));
+                         boost::asio::ip::udp::endpoint(destination.getAddress(), destination.getPort()), 
+                         boost::bind(&AsyncUdpSocketBase::handleSend, shared_from_this(), boost::asio::placeholders::error));
 }
 
 void 
 AsyncUdpSocketBase::transportReceive()
 {
-   mSocket.async_receive_from(asio::buffer((void*)mReceiveBuffer->data(), RECEIVE_BUFFER_SIZE), mSenderEndpoint,
-               boost::bind(&AsyncUdpSocketBase::handleReceive, shared_from_this(), asio::placeholders::error, asio::placeholders::bytes_transferred));
+   mSocket.async_receive_from(boost::asio::buffer((void*)mReceiveBuffer->data(), RECEIVE_BUFFER_SIZE), mSenderEndpoint,
+               boost::bind(&AsyncUdpSocketBase::handleReceive, shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 
 void 
@@ -130,16 +130,16 @@ AsyncUdpSocketBase::transportClose()
 }
 
 bool 
-AsyncUdpSocketBase::setDSCP(ULONG ulInDSCPValue)
+AsyncUdpSocketBase::setDSCP(boost::uint32_t ulInDSCPValue)
 {
    return QosSocketManager::SocketSetDSCP(mSocket.native(), ulInDSCPValue, true);
 }
 
 bool 
 AsyncUdpSocketBase::setServiceType(
-   const asio::ip::udp::endpoint &tInDestinationIPAddress,
+   const boost::asio::ip::udp::endpoint &tInDestinationIPAddress,
    EQOSServiceTypes eInServiceType,
-   ULONG ulInBandwidthInBitsPerSecond
+   boost::uint32_t ulInBandwidthInBitsPerSecond
 )
 {
    return QosSocketManager::SocketSetServiceType(mSocket.native(), 

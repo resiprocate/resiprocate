@@ -4,7 +4,7 @@ using namespace std;
 
 namespace reTurn {
 
-TurnPermission::TurnPermission(const asio::ip::address& address, unsigned int timeoutSeconds) : 
+TurnPermission::TurnPermission(const boost::asio::ip::address& address, unsigned int timeoutSeconds) : 
    mAddress(address), 
    mExpires(time(0)+timeoutSeconds),
    mTimeoutSeconds(timeoutSeconds)

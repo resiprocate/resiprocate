@@ -1,4 +1,4 @@
-#include <asio.hpp>
+#include <boost/asio.hpp>
 
 #include <rutil/Random.hxx>
 
@@ -6,15 +6,15 @@
 #include "RTPPortAllocator.hxx"
 
 using namespace recon;
-using asio::ip::tcp;
-using asio::ip::udp;
+using boost::asio::ip::tcp;
+using boost::asio::ip::udp;
 
 #define MIN_DYNAMIC_PORT 49152
 #define MAX_DYNAMIC_PORT 65535
 
 /** @todo : We should check the operating system to see if these ports are valid */
 
-RTPPortAllocator::RTPPortAllocator(asio::io_service& ioService, unsigned int minPort, unsigned int maxPort)
+RTPPortAllocator::RTPPortAllocator(boost::asio::io_service& ioService, unsigned int minPort, unsigned int maxPort)
 : mIOService(ioService), mMinPort(minPort), mMaxPort(maxPort)
 {
    assert( mMinPort >= 0 );
@@ -31,7 +31,7 @@ RTPPortAllocator::RTPPortAllocator(asio::io_service& ioService, unsigned int min
    }
 }
 
-RTPPortAllocator::RTPPortAllocator(asio::io_service& ioService, resip::SharedPtr<UserAgentMasterProfile> uamp)
+RTPPortAllocator::RTPPortAllocator(boost::asio::io_service& ioService, resip::SharedPtr<UserAgentMasterProfile> uamp)
 : mIOService(ioService), mMinPort(uamp->rtpPortRangeMin()), mMaxPort(uamp->rtpPortRangeMax())
 {
    assert( mMinPort >= 0 );
@@ -57,7 +57,7 @@ RTPPortAllocator::~RTPPortAllocator()
 bool RTPPortAllocator::allocateUDPPort(unsigned int& ulOutPort)
 {
    ulOutPort = 0;
-   asio::error_code ec;
+   boost::system::error_code ec;
 
    for( unsigned int curPort = mMinPort ; curPort <= mMaxPort ; ++curPort )
    {
@@ -89,7 +89,7 @@ bool RTPPortAllocator::allocateUDPPort(unsigned int& ulOutPort)
 bool RTPPortAllocator::allocateTCPPort(unsigned int& ulOutPort)
 {
    ulOutPort = 0;
-   asio::error_code ec;
+   boost::system::error_code ec;
 
    for( unsigned int curPort = mMinPort ; curPort <= mMaxPort ; ++curPort )
    {
@@ -126,7 +126,7 @@ bool RTPPortAllocator::allocateRTPPortFromRange(unsigned int minPort, unsigned i
    // They should be in sequence (RTCP == RTP + 1)
    ulOutRTPPort  = 0;
    ulOutRTCPPort = 0;
-   asio::error_code ec;
+   boost::system::error_code ec;
 
    // a random number between mMinPort and mMaxPort inclusive
    unsigned int r = resip::Random::getCryptoRandom() % (maxPort - minPort + 1) + minPort;

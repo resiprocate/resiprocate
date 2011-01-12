@@ -1,7 +1,7 @@
 #ifndef STUNTUPLE_HXX
 #define STUNTUPLE_HXX
 
-#include <asio.hpp>
+#include <boost/asio.hpp>
 #include <rutil/resipfaststreams.hxx>
 
 namespace reTurn {
@@ -18,7 +18,7 @@ public:
    } TransportType;
 
    explicit StunTuple();
-   explicit StunTuple(TransportType transport, const asio::ip::address& address, unsigned int port);
+   explicit StunTuple(TransportType transport, const boost::asio::ip::address& address, unsigned int port);
 
    bool operator==(const StunTuple& rhs) const;
    bool operator!=(const StunTuple& rhs) const;
@@ -27,15 +27,15 @@ public:
    TransportType getTransportType() const { return mTransport; }
    void setTransportType(TransportType transport) { mTransport = transport; }
 
-   const asio::ip::address& getAddress() const { return mAddress; }
-   void setAddress(const asio::ip::address& address) { mAddress = address; }
+   const boost::asio::ip::address& getAddress() const { return mAddress; }
+   void setAddress(const boost::asio::ip::address& address) { mAddress = address; }
 
    unsigned int getPort() const { return mPort; }
    void setPort(unsigned int port) { mPort = port; }
 
 private:
    TransportType mTransport;
-   asio::ip::address mAddress;
+   boost::asio::ip::address mAddress;
    unsigned int mPort;
 
    friend EncodeStream& operator<<(EncodeStream& strm, const StunTuple& tuple);

@@ -1,7 +1,7 @@
 #ifndef TURNASYNCTCPSOCKET_HXX
 #define TURNASYNCTCPSOCKET_HXX
 
-#include <asio.hpp>
+#include <boost/asio.hpp>
 
 #include "TurnAsyncSocket.hxx"
 #include "../AsyncTcpSocketBase.hxx"
@@ -11,9 +11,9 @@ namespace reTurn {
 class TurnAsyncTcpSocket : public TurnAsyncSocket, public AsyncTcpSocketBase
 {
 public:
-   explicit TurnAsyncTcpSocket(asio::io_service& ioService, 
+   explicit TurnAsyncTcpSocket(boost::asio::io_service& ioService, 
                                TurnAsyncSocketHandler* turnAsyncSocketHandler,
-                               const asio::ip::address& address = UnspecifiedIpAddress, 
+                               const boost::asio::ip::address& address = UnspecifiedIpAddress, 
                                unsigned short port = 0);
 
    virtual unsigned int getSocketDescriptor() { return mSocket.native(); }
@@ -23,11 +23,11 @@ protected:
 private:
    // AsyncTcpSocketBase callbacks
    virtual void onConnectSuccess();
-   virtual void onConnectFailure(const asio::error_code& e);
-   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
-   virtual void onReceiveFailure(const asio::error_code& e);
+   virtual void onConnectFailure(const boost::system::error_code& e);
+   virtual void onReceiveSuccess(const boost::asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
+   virtual void onReceiveFailure(const boost::system::error_code& e);
    virtual void onSendSuccess();
-   virtual void onSendFailure(const asio::error_code& e);
+   virtual void onSendFailure(const boost::system::error_code& e);
 };
 
 } 

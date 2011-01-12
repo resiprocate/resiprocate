@@ -1,5 +1,5 @@
 #ifdef USE_SSL
-
+#ifdef USE_DTLS
 #include <iostream>
 #include <cassert>
 #include <string.h>
@@ -380,7 +380,7 @@ DtlsSocket::getReadTimeout()
 {
    return 500;
 }
-
+#endif
 #endif 
 /* ====================================================================
 

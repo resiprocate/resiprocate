@@ -8,7 +8,7 @@
 
 namespace reTurn {
 
-TcpServer::TcpServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port)
+TcpServer::TcpServer(boost::asio::io_service& ioService, RequestHandler& requestHandler, const boost::asio::ip::address& address, unsigned short port)
 : mIOService(ioService),
   mAcceptor(ioService),
   mConnectionManager(),
@@ -16,10 +16,10 @@ TcpServer::TcpServer(asio::io_service& ioService, RequestHandler& requestHandler
   mRequestHandler(requestHandler)
 {
    // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
-   asio::ip::tcp::endpoint endpoint(address, port);
+   boost::asio::ip::tcp::endpoint endpoint(address, port);
 
    mAcceptor.open(endpoint.protocol());
-   mAcceptor.set_option(asio::ip::tcp::acceptor::reuse_address(true));
+   mAcceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
    mAcceptor.bind(endpoint);
    mAcceptor.listen();
 
@@ -29,18 +29,18 @@ TcpServer::TcpServer(asio::io_service& ioService, RequestHandler& requestHandler
 void 
 TcpServer::start()
 {
-   mAcceptor.async_accept(((TcpConnection*)mNewConnection.get())->socket(), boost::bind(&TcpServer::handleAccept, this, asio::placeholders::error));
+   mAcceptor.async_accept(((TcpConnection*)mNewConnection.get())->socket(), boost::bind(&TcpServer::handleAccept, this, boost::asio::placeholders::error));
 }
 
 void 
-TcpServer::handleAccept(const asio::error_code& e)
+TcpServer::handleAccept(const boost::system::error_code& e)
 {
    if (!e)
    {
       mConnectionManager.start(mNewConnection);
 
       mNewConnection.reset(new TcpConnection(mIOService, mConnectionManager, mRequestHandler));
-      mAcceptor.async_accept(((TcpConnection*)mNewConnection.get())->socket(), boost::bind(&TcpServer::handleAccept, this, asio::placeholders::error));
+      mAcceptor.async_accept(((TcpConnection*)mNewConnection.get())->socket(), boost::bind(&TcpServer::handleAccept, this, boost::asio::placeholders::error));
    }
    else
    {

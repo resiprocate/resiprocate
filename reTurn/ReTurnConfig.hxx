@@ -2,7 +2,7 @@
 #define RETURN_CONFIG_HXX 
 
 #include <map>
-#include <asio.hpp>
+#include <boost/asio.hpp>
 #include <rutil/Data.hxx>
 #include <rutil/Log.hxx>
 
@@ -23,8 +23,8 @@ public:
    unsigned short mTurnPort;
    unsigned short mTlsTurnPort;
    unsigned short mAltStunPort;  
-   asio::ip::address mTurnAddress;
-   asio::ip::address mAltStunAddress;
+   boost::asio::ip::address mTurnAddress;
+   boost::asio::ip::address mAltStunAddress;
 
    AuthenticationMode mAuthenticationMode;
    resip::Data mAuthenticationRealm;

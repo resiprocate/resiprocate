@@ -1,7 +1,7 @@
 #ifndef REMOTEPEER_HXX
 #define REMOTEPEER_HXX
 
-#include <asio.hpp>
+#include <boost/asio.hpp>
 
 #include "StunTuple.hxx"
 

@@ -18,8 +18,8 @@ class RequestHandler
 {
 public:
    explicit RequestHandler(TurnManager& turnManager, 
-                           const asio::ip::address* prim3489Address = 0, unsigned short* prim3489Port = 0,
-                           const asio::ip::address* alt3489Address = 0, unsigned short* alt3489Port = 0);
+                           const boost::asio::ip::address* prim3489Address = 0, unsigned short* prim3489Port = 0,
+                           const boost::asio::ip::address* alt3489Address = 0, unsigned short* alt3489Port = 0);
 
    typedef enum
    {
@@ -43,9 +43,9 @@ private:
 
    // RFC3489 Server List
    bool mRFC3489SupportEnabled;
-   asio::ip::address mPrim3489Address;
+   boost::asio::ip::address mPrim3489Address;
    unsigned short mPrim3489Port;
-   asio::ip::address mAlt3489Address;
+   boost::asio::ip::address mAlt3489Address;
    unsigned short mAlt3489Port;
 
    resip::Data mPrivateNonceKey;

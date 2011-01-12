@@ -2,7 +2,6 @@
 #ifndef _FlowManagerSipXSocket_hxx_
 #define _FlowManagerSipXSocket_hxx_
 
-#include "os/OsSocket.h"
 #include "FlowManager.hxx"
 
 using namespace flowmanager;
@@ -10,7 +9,7 @@ using namespace flowmanager;
 namespace recon
 {
 
-class FlowManagerSipXSocket : public OsSocket
+class FlowManagerSipXSocket 
 {
 /* //////////////////////////// PUBLIC //////////////////////////////////// */
 public:
@@ -20,11 +19,8 @@ public:
 
 /* ============================ MANIPULATORS ============================== */
 
-    virtual OsSocket* getSocket();
     
     virtual int read(char* buffer, int bufferLength) ;
-    virtual int read(char* buffer, int bufferLength,
-            UtlString* ipAddress, int* port);
     virtual int read(char* buffer, int bufferLength,
             struct in_addr* ipAddress, int* port);
     virtual int read(char* buffer, int bufferLength, long waitMilliseconds);
@@ -46,10 +42,6 @@ public:
 
 /* ============================ ACCESSORS ================================= */
 
-    virtual OsSocket::IpProtocolSocketType getIpProtocol() const { return OsSocket::CUSTOM; }
-   //:Return the protocol type of this socket
-
-   virtual UtlBoolean reconnect() { return TRUE; }
    //:Set up the connection again, assuming the connection failed
 
    virtual int getSocketDescriptor() const; 
@@ -57,66 +49,6 @@ public:
    // Warning: Use of this method risks the creation of platform-dependent
    // code.
 
-   virtual void getLocalHostIp(UtlString* localHostAddress) const { *localHostAddress = "FlowManagerHost"; }
-   //:Return this host's ip address
-   // Returns the ip address for this host on which this socket is communicating
-   // On multi-homed machines, this is the address to the NIC over which the
-   // socket communicates. The format is of the form: xx.x.xxx.x
-   
-   virtual const UtlString& getLocalIp() const { static UtlString ipAddr="0.0.0.0"; return ipAddr; }
-   //:Return this socket's Local Ip Address
-      
-   virtual int getLocalHostPort() const { return 0; }
-   //:Return the local port number
-   // Returns the port to which this socket is bound on this host.
-
-   virtual void getRemoteHostName(UtlString* remoteHostName) const { *remoteHostName = "FlowManagerRemoteHost"; }
-   //:Return remote host name
-   // Returns a string containing the name of the host on which the socket
-   // on the other end of this socket is bound. This may be the local
-   // name, a fully qualified domain name or anything in between.
-
-
-   virtual void getRemoteHostIp(struct in_addr* remoteHostAddress,
-      int* remotePort = NULL) { printf("getRemoteHostIp\n"); return; }
-   //:Return remote host ip address
-   // Returns the ip address for the host on which the socket on the
-   // other end of this socket is bound.
-
-   virtual void getRemoteHostIp(UtlString* remoteHostAddress,
-                        int* remotePort = NULL) { printf("getRemoteHostIp\n"); return; }
-   //:Return remote host ip address
-   // Returns the ip address for the host on which the socket on the
-   // other end of this socket is bound. The format is of the form:
-   // xx.x.xxx.x
-
-   virtual int getRemoteHostPort() const { return 0; }
-   //:Return the remote port number
-   // Returns the port to which the socket on the other end of this socket
-   // is bound.
-
-
-/* ============================ INQUIRY =================================== */
-
-   virtual UtlBoolean isOk() const { return TRUE; }
-   //:Returns TRUE if this socket's descriptor is not the invalid descriptor
-
-   virtual UtlBoolean isConnected() const { return TRUE; }
-   //:Returns TRUE if this socket is connected
-
-   virtual UtlBoolean isReadyToReadEx(long waitMilliseconds, UtlBoolean &rSocketError) const { return TRUE; }
-   //:Poll if there are bytes to read
-   // Returns TRUE if socket is read to read.
-   // Returns FALSE if wait expires or socket error.
-   // rSocketError returns TRUE is socket error occurred.
-
-   virtual UtlBoolean isReadyToRead(long waitMilliseconds = 0) const { return TRUE; }
-   //:Poll if there are bytes to read
-   // Returns TRUE if socket is ready to read.
-   // Returns FALSE if wait expires or socket error.
-
-   virtual UtlBoolean isReadyToWrite(long waitMilliseconds = 0) const { return TRUE; }
-   //:Poll if socket is able to write without blocking
 
 
 /* //////////////////////////// PROTECTED ///////////////////////////////// */
