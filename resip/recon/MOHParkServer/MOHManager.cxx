@@ -61,7 +61,7 @@ MOHManager::startup()
 }
 
 void
-MOHManager::shutdown()
+MOHManager::shutdown(bool shuttingDownServer)
 {
    // Destroy all conversations
    ConversationMap::iterator it = mConversations.begin();
@@ -71,7 +71,11 @@ MOHManager::shutdown()
    }
    mConversations.clear();
 
-   if(mConversationProfile)
+   // If shutting down server, then we shouldn't remove the conversation profiles here
+   // shutting down the ConversationManager will take care of this.  We need to be sure
+   // we don't remove all conversation profiles when we are still processing SipMessages,
+   // since recon requires at least one to be present for inbound processing.
+   if(mConversationProfile && !shuttingDownServer)
    {
        mServer.mMyUserAgent->destroyConversationProfile(mConversationProfile->getHandle());
    }

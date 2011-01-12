@@ -727,7 +727,16 @@ Flow::onSendSuccess(unsigned int socketDesc)
 void 
 Flow::onSendFailure(unsigned int socketDesc, const asio::error_code& e)
 {
-   WarningLog(<< "Flow::onSendFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId );
+   if(e.value() == InvalidState)
+   {
+      // Note:  if setActiveDestination is called it can take some time to "connect" the socket to the destination
+      //        and send requests during this time, will be discarded - this can be considered normal
+      InfoLog(<< "Flow::onSendFailure: socketDesc=" << socketDesc << " socket is not in correct state to send yet, componentId=" << mComponentId );
+   }
+   else
+   {
+      WarningLog(<< "Flow::onSendFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId );
+   }
 }
 
 void 

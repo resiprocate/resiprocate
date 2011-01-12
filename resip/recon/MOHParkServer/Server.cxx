@@ -326,8 +326,8 @@ Server::process(int timeoutMs)
 void
 Server::shutdown()
 {
-   mMOHManager.shutdown();
-   mParkManager.shutdown();
+   mMOHManager.shutdown(true /*shuttingDownServer*/);
+   mParkManager.shutdown(true /*shuttingDownServer*/);
    assert(mMyUserAgent);
    mMyUserAgent->shutdown();
    OsSysLog::shutdown();

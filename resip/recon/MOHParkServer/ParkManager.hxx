@@ -23,7 +23,7 @@ public:
    virtual ~ParkManager(); 
 
    void startup();
-   void shutdown();
+   void shutdown(bool shuttingDownServer);
 
    bool isMyProfile(recon::ConversationProfile& profile);
    void parkParticipant(recon::ParticipantHandle participantHandle, const resip::SipMessage& msg);

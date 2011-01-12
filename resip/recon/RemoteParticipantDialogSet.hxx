@@ -101,6 +101,7 @@ private:
    std::list<ConversationHandle> mUACOriginalConversationHandles;
    unsigned int mNumDialogs;
    unsigned int mLocalRTPPort;
+   bool mAllocateLocalRTPPortFailed;
    ConversationManager::ParticipantForkSelectMode mForkSelectMode;
    resip::DialogId mUACConnectedDialogId;
    ParticipantHandle mActiveRemoteParticipantHandle;

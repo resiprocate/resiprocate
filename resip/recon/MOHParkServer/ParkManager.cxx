@@ -82,7 +82,7 @@ ParkManager::startup()
 }
 
 void 
-ParkManager::shutdown()
+ParkManager::shutdown(bool shuttingDownServer)
 {
    OrbitMap::iterator it = mOrbits.begin();
    for(;it!=mOrbits.end();it++)
@@ -91,22 +91,30 @@ ParkManager::shutdown()
        delete it->second;
    }
    mOrbits.clear();
+   mOrbitsByParticipant.clear();
 
-   // Destroy main Park profile
-   if(mConversationProfile)
+   // If shutting down server, then we shouldn't remove the conversation profiles here
+   // shutting down the ConversationManager will take care of this.  We need to be sure
+   // we don't remove all conversation profiles when we are still processing SipMessages,
+   // since recon requires at least one to be present for inbound processing.
+   if(!shuttingDownServer)
    {
-       mServer.mMyUserAgent->destroyConversationProfile(mConversationProfile->getHandle());
-       mConversationProfile.reset();
-       assert(!mConversationProfile);
-   }
+      // Destroy main Park profile
+      if(mConversationProfile)
+      {
+          mServer.mMyUserAgent->destroyConversationProfile(mConversationProfile->getHandle());
+          mConversationProfile.reset();
+          assert(!mConversationProfile);
+      }
 
-   // Destroy Orbit Profiles
-   OrbitProfileMap::iterator itOrbit = mOrbitProfiles.begin();
-   for(;itOrbit!=mOrbitProfiles.end();itOrbit++)
-   {
-       mServer.mMyUserAgent->destroyConversationProfile(itOrbit->second->getHandle());
+      // Destroy Orbit Profiles
+      OrbitProfileMap::iterator itOrbit = mOrbitProfiles.begin();
+      for(;itOrbit!=mOrbitProfiles.end();itOrbit++)
+      {
+          mServer.mMyUserAgent->destroyConversationProfile(itOrbit->second->getHandle());
+      }
+      mOrbitProfiles.clear();
    }
-   mOrbitProfiles.clear();
 }
 
 bool 

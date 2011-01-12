@@ -17,7 +17,7 @@ public:
    virtual ~MOHManager(); 
 
    void startup();
-   void shutdown();
+   void shutdown(bool shuttingDownServer);
 
    bool isMyProfile(recon::ConversationProfile& profile);
    void addParticipant(recon::ParticipantHandle participantHandle);

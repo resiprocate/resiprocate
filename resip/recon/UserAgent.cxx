@@ -273,6 +273,7 @@ UserAgent::getDefaultOutgoingConversationProfile()
    else
    {
       assert(false);
+      ErrLog( << "getDefaultOutgoingConversationProfile: something is wrong - no profiles to return");
       return SharedPtr<ConversationProfile>((ConversationProfile*)0);
    }
 }
@@ -412,7 +413,6 @@ UserAgent::shutdownImpl()
    mDum.shutdown(this);
 
    // End all subscriptions
-   // Destroy each Conversation
    SubscriptionMap tempSubs = mSubscriptions;  // Create copy for safety, since ending Subscriptions can immediately remove themselves from map
    SubscriptionMap::iterator i;
    for(i = tempSubs.begin(); i != tempSubs.end(); i++)
