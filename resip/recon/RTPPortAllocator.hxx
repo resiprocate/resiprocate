@@ -3,11 +3,13 @@
 
 #include <set>
 
+namespace boost
+{
 namespace asio
 {
    class io_service;
 }
-
+}
 namespace recon
 {
    class UserAgentMasterProfile;
@@ -23,8 +25,8 @@ namespace recon
        * Note that specifying zero for both minPoart and maxPort is the same
        * as using the default values, i.e. the dynamic range will be used.
        */
-      RTPPortAllocator(asio::io_service& ioService, unsigned int minPort = 49152, unsigned int maxPort = 65535);
-      RTPPortAllocator(asio::io_service& ioService, resip::SharedPtr<UserAgentMasterProfile> uamp);
+      RTPPortAllocator(boost::asio::io_service& ioService, unsigned int minPort = 49152, unsigned int maxPort = 65535);
+      RTPPortAllocator(boost::asio::io_service& ioService, resip::SharedPtr<UserAgentMasterProfile> uamp);
       virtual ~RTPPortAllocator();
 
       virtual bool allocateUDPPort(unsigned int& port);
@@ -46,7 +48,7 @@ namespace recon
       bool allocateRTPPortFromRange(unsigned int minPort, unsigned int maxPort, unsigned int& ulOutRTPPort, unsigned int& ulOutRTCPPort);
 
    private:
-      asio::io_service& mIOService;
+      boost::asio::io_service& mIOService;
       unsigned int mMinPort;
       unsigned int mMaxPort;
 

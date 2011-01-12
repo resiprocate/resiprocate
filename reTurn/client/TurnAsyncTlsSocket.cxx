@@ -5,11 +5,11 @@ using namespace std;
 
 namespace reTurn {
 
-TurnAsyncTlsSocket::TurnAsyncTlsSocket(asio::io_service& ioService,
-                                       asio::ssl::context& sslContext,
+TurnAsyncTlsSocket::TurnAsyncTlsSocket(boost::asio::io_service& ioService,
+                                       boost::asio::ssl::context& sslContext,
                                        bool validateServerCertificateHostname,
                                        TurnAsyncSocketHandler* turnAsyncSocketHandler,
-                                       const asio::ip::address& address, 
+                                       const boost::asio::ip::address& address, 
                                        unsigned short port) : 
    TurnAsyncSocket(ioService, *this, turnAsyncSocketHandler, address, port),
    AsyncTlsSocketBase(ioService, sslContext, validateServerCertificateHostname)
@@ -27,20 +27,20 @@ TurnAsyncTlsSocket::onConnectSuccess()
 }
 
 void 
-TurnAsyncTlsSocket::onConnectFailure(const asio::error_code& e)
+TurnAsyncTlsSocket::onConnectFailure(const boost::system::error_code& e)
 {
    if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onConnectFailure(getSocketDescriptor(), e);
 }
 
 void 
-TurnAsyncTlsSocket::onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
+TurnAsyncTlsSocket::onReceiveSuccess(const boost::asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
 {
    handleReceivedData(address, port, data);
    turnReceive();
 }
 
 void 
-TurnAsyncTlsSocket::onReceiveFailure(const asio::error_code& e)
+TurnAsyncTlsSocket::onReceiveFailure(const boost::system::error_code& e)
 {
    if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onReceiveFailure(getSocketDescriptor(), e);
 }
@@ -52,7 +52,7 @@ TurnAsyncTlsSocket::onSendSuccess()
 }
  
 void 
-TurnAsyncTlsSocket::onSendFailure(const asio::error_code& e)
+TurnAsyncTlsSocket::onSendFailure(const boost::system::error_code& e)
 {
    if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSendFailure(getSocketDescriptor(), e);
 }

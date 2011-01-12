@@ -1,7 +1,7 @@
 #ifndef TCP_CONNECTION_HXX
 #define TCP_CONNECTION_HXX
 
-#include <asio.hpp>
+#include <boost/asio.hpp>
 #include <boost/array.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
@@ -20,11 +20,11 @@ class TcpConnection
 {
 public:
    /// Construct a connection with the given io_service.
-   explicit TcpConnection(asio::io_service& ioService, ConnectionManager& manager, RequestHandler& handler);
+   explicit TcpConnection(boost::asio::io_service& ioService, ConnectionManager& manager, RequestHandler& handler);
    ~TcpConnection();
 
    /// Get the socket associated with the connection.
-   asio::ip::tcp::socket& socket();
+   boost::asio::ip::tcp::socket& socket();
 
    /// Start the first asynchronous operation for the connection.
    virtual void start();
@@ -37,12 +37,12 @@ public:
 
 protected:
    /// Handle completion of a receive operation
-   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
-   virtual void onReceiveFailure(const asio::error_code& e);
+   virtual void onReceiveSuccess(const boost::asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
+   virtual void onReceiveFailure(const boost::system::error_code& e);
 
    /// Handle completion of a send operation
    virtual void onSendSuccess();
-   virtual void onSendFailure(const asio::error_code& e);
+   virtual void onSendFailure(const boost::system::error_code& e);
 
    /// The manager for this connection.
    ConnectionManager& mConnectionManager;

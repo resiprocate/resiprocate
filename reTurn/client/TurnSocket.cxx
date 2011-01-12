@@ -29,9 +29,9 @@ namespace reTurn {
 unsigned int TurnSocket::UnspecifiedLifetime = 0xFFFFFFFF;
 unsigned int TurnSocket::UnspecifiedBandwidth = 0xFFFFFFFF; 
 unsigned short TurnSocket::UnspecifiedToken = 0;
-asio::ip::address TurnSocket::UnspecifiedIpAddress = asio::ip::address::from_string("0.0.0.0");
+boost::asio::ip::address TurnSocket::UnspecifiedIpAddress = boost::asio::ip::address::from_string("0.0.0.0");
 
-TurnSocket::TurnSocket(const asio::ip::address& address, unsigned short port) : 
+TurnSocket::TurnSocket(const boost::asio::ip::address& address, unsigned short port) : 
    mLocalBinding(StunTuple::None /* Set properly by sub class */, address, port),
    mHaveAllocation(false),
    mActiveDestination(0),
@@ -44,11 +44,11 @@ TurnSocket::~TurnSocket()
 {
 }
 
-asio::error_code 
+boost::system::error_code 
 TurnSocket::requestSharedSecret(char* username, unsigned int usernameSize, 
                                 char* password, unsigned int passwordSize)
 {
-   asio::error_code errorCode;
+   boost::system::error_code errorCode;
    resip::Lock lock(mMutex);
 
    // Should we check here if TLS and deny?
@@ -56,7 +56,7 @@ TurnSocket::requestSharedSecret(char* username, unsigned int usernameSize,
    // Ensure Connected
    if(!mConnected)
    {
-      return asio::error_code(reTurn::NotConnected, asio::error::misc_category); 
+      return boost::system::error_code(reTurn::NotConnected, boost::asio::error::misc_category); 
    }
 
    // Form Shared Secret request
@@ -73,7 +73,7 @@ TurnSocket::requestSharedSecret(char* username, unsigned int usernameSize,
    // Check if success or not
    if(response->mHasErrorCode)
    {
-      errorCode = asio::error_code(response->mErrorCode.errorClass * 100 + response->mErrorCode.number, asio::error::misc_category);
+      errorCode = boost::system::error_code(response->mErrorCode.errorClass * 100 + response->mErrorCode.number, boost::asio::error::misc_category);
       delete response;
       return errorCode;
    }
@@ -82,7 +82,7 @@ TurnSocket::requestSharedSecret(char* username, unsigned int usernameSize,
    if(!response->mHasUsername || !response->mHasPassword)
    {
       WarningLog(<< "Stun response message for SharedSecretRequest is missing username and/or password!");
-      errorCode = asio::error_code(reTurn::MissingAuthenticationAttributes, asio::error::misc_category);  
+      errorCode = boost::system::error_code(reTurn::MissingAuthenticationAttributes, boost::asio::error::misc_category);  
       delete response;
       return errorCode;
    }
@@ -90,7 +90,7 @@ TurnSocket::requestSharedSecret(char* username, unsigned int usernameSize,
    if(response->mUsername->size() > usernameSize || response->mPassword->size() > passwordSize)
    {
       WarningLog( << "Stun response message for SharedSecretRequest contains data that is too large to return!");
-      errorCode = asio::error_code(reTurn::BufferTooSmall, asio::error::misc_category);   
+      errorCode = boost::system::error_code(reTurn::BufferTooSmall, boost::asio::error::misc_category);   
       delete response;
       return errorCode;
    }
@@ -116,16 +116,16 @@ TurnSocket::setUsernameAndPassword(const char* username, const char* password, b
    }
 }
 
-asio::error_code 
+boost::system::error_code 
 TurnSocket::bindRequest()
 {
-   asio::error_code errorCode;
+   boost::system::error_code errorCode;
    resip::Lock lock(mMutex);
 
    // Ensure Connected
    if(!mConnected)
    {
-      return asio::error_code(reTurn::NotConnected, asio::error::misc_category); 
+      return boost::system::error_code(reTurn::NotConnected, boost::asio::error::misc_category); 
    }
 
    // Form Stun Bind request
@@ -151,21 +151,21 @@ TurnSocket::bindRequest()
    // Check if success or not
    if(response->mHasErrorCode)
    {
-      errorCode = asio::error_code(response->mErrorCode.errorClass * 100 + response->mErrorCode.number, asio::error::misc_category);
+      errorCode = boost::system::error_code(response->mErrorCode.errorClass * 100 + response->mErrorCode.number, boost::asio::error::misc_category);
    }
 
    delete response;
    return errorCode;
 }
 
-asio::error_code 
+boost::system::error_code 
 TurnSocket::createAllocation(unsigned int lifetime,
                              unsigned int bandwidth,
                              unsigned char requestedProps, 
                              UInt64 reservationToken,
                              StunTuple::TransportType requestedTransportType)
 {
-   asio::error_code errorCode;
+   boost::system::error_code errorCode;
    resip::Lock lock(mMutex);
 
    // Store Allocation Properties
@@ -178,12 +178,12 @@ TurnSocket::createAllocation(unsigned int lifetime,
    // Ensure Connected
    if(!mConnected)
    {
-      return asio::error_code(reTurn::NotConnected, asio::error::misc_category); 
+      return boost::system::error_code(reTurn::NotConnected, boost::asio::error::misc_category); 
    }
 
    if(mHaveAllocation)
    {
-      return asio::error_code(reTurn::AlreadyAllocated, asio::error::misc_category); 
+      return boost::system::error_code(reTurn::AlreadyAllocated, boost::asio::error::misc_category); 
    }
 
    // Form Turn Allocate request
@@ -217,7 +217,7 @@ TurnSocket::createAllocation(unsigned int lifetime,
    }
    else
    {
-      return asio::error_code(reTurn::InvalidRequestedTransport, asio::error::misc_category); 
+      return boost::system::error_code(reTurn::InvalidRequestedTransport, boost::asio::error::misc_category); 
    }
 
    if(mRequestedProps != StunMessage::PropsNone)
@@ -267,7 +267,7 @@ TurnSocket::createAllocation(unsigned int lifetime,
    // Check if success or not
    if(response->mHasErrorCode)
    {
-      errorCode = asio::error_code(response->mErrorCode.errorClass * 100 + response->mErrorCode.number, asio::error::misc_category);
+      errorCode = boost::system::error_code(response->mErrorCode.errorClass * 100 + response->mErrorCode.number, boost::asio::error::misc_category);
       delete response;
       return errorCode;
    }
@@ -282,10 +282,10 @@ TurnSocket::createAllocation(unsigned int lifetime,
    return errorCode;
 }
 
-asio::error_code 
+boost::system::error_code 
 TurnSocket::refreshAllocation()
 {
-   asio::error_code errorCode;
+   boost::system::error_code errorCode;
    resip::Lock lock(mMutex);
 
    // Form Turn Allocate request
@@ -317,7 +317,7 @@ TurnSocket::refreshAllocation()
          mHaveAllocation = false;
       }
 
-      errorCode = asio::error_code(response->mErrorCode.errorClass * 100 + response->mErrorCode.number, asio::error::misc_category);
+      errorCode = boost::system::error_code(response->mErrorCode.errorClass * 100 + response->mErrorCode.number, boost::asio::error::misc_category);
       delete response;
       return errorCode;
    }
@@ -336,7 +336,7 @@ TurnSocket::refreshAllocation()
    return errorCode;
 }
 
-asio::error_code 
+boost::system::error_code 
 TurnSocket::destroyAllocation()
 {
    resip::Lock lock(mMutex);
@@ -352,7 +352,7 @@ TurnSocket::destroyAllocation()
    }
    else
    {
-      return asio::error_code(reTurn::NoAllocation, asio::error::misc_category); 
+      return boost::system::error_code(reTurn::NoAllocation, boost::asio::error::misc_category); 
    }
 }
 
@@ -380,10 +380,10 @@ TurnSocket::getBandwidth()
    return mBandwidth;
 }
 
-asio::error_code 
-TurnSocket::setActiveDestination(const asio::ip::address& address, unsigned short port)
+boost::system::error_code 
+TurnSocket::setActiveDestination(const boost::asio::ip::address& address, unsigned short port)
 {
-   asio::error_code errorCode;
+   boost::system::error_code errorCode;
    resip::Lock lock(mMutex);
 
    // ensure there is an allocation
@@ -394,13 +394,13 @@ TurnSocket::setActiveDestination(const asio::ip::address& address, unsigned shor
          // TODO - Disconnect
       }
       return connect(address.to_string(), port);
-      //return asio::error_code(reTurn::NoAllocation, asio::error::misc_category); 
+      //return boost::system::error_code(reTurn::NoAllocation, boost::asio::error::misc_category); 
    }
 
    // Ensure Connected
    if(!mConnected)
    {
-      return asio::error_code(reTurn::NotConnected, asio::error::misc_category); 
+      return boost::system::error_code(reTurn::NotConnected, boost::asio::error::misc_category); 
    }
 
    // Setup Remote Peer 
@@ -421,10 +421,10 @@ TurnSocket::setActiveDestination(const asio::ip::address& address, unsigned shor
    return errorCode;
 }
 
-asio::error_code
+boost::system::error_code
 TurnSocket::channelBind(RemotePeer& remotePeer)
 {
-   asio::error_code ret;
+   boost::system::error_code ret;
 
    // Form Channel Bind request
    StunMessage request;
@@ -445,7 +445,7 @@ TurnSocket::channelBind(RemotePeer& remotePeer)
    // Check if success or not
    if(response->mHasErrorCode)
    {
-      ret = asio::error_code(response->mErrorCode.errorClass * 100 + response->mErrorCode.number, asio::error::misc_category);
+      ret = boost::system::error_code(response->mErrorCode.errorClass * 100 + response->mErrorCode.number, boost::asio::error::misc_category);
       delete response;
       return ret;
    }
@@ -457,16 +457,16 @@ TurnSocket::channelBind(RemotePeer& remotePeer)
    return ret;
 }
 
-asio::error_code 
+boost::system::error_code 
 TurnSocket::clearActiveDestination()
 {
-   asio::error_code errorCode;
+   boost::system::error_code errorCode;
    resip::Lock lock(mMutex);
 
    // ensure there is an allocation
    if(!mHaveAllocation)
    {
-      return asio::error_code(reTurn::NoAllocation, asio::error::misc_category); 
+      return boost::system::error_code(reTurn::NoAllocation, boost::asio::error::misc_category); 
    }
 
    mActiveDestination = 0;
@@ -474,7 +474,7 @@ TurnSocket::clearActiveDestination()
    return errorCode;
 }
 
-asio::error_code 
+boost::system::error_code 
 TurnSocket::send(const char* buffer, unsigned int size)
 {
    // Allow raw data to be sent if there is no allocation
@@ -485,20 +485,20 @@ TurnSocket::send(const char* buffer, unsigned int size)
 
    if(!mActiveDestination)
    {
-      return asio::error_code(reTurn::NoActiveDestination, asio::error::misc_category); 
+      return boost::system::error_code(reTurn::NoActiveDestination, boost::asio::error::misc_category); 
    }
 
    return sendTo(*mActiveDestination, buffer, size);
 }
 
-asio::error_code 
-TurnSocket::sendTo(const asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size)
+boost::system::error_code 
+TurnSocket::sendTo(const boost::asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size)
 {
    resip::Lock lock(mMutex);
    // ensure there is an allocation 
    if(!mHaveAllocation)
    {
-      return asio::error_code(reTurn::NoAllocation, asio::error::misc_category); 
+      return boost::system::error_code(reTurn::NoAllocation, boost::asio::error::misc_category); 
    }
 
    // Setup Remote Peer 
@@ -518,13 +518,13 @@ TurnSocket::sendTo(const asio::ip::address& address, unsigned short port, const 
    }
 }
 
-asio::error_code 
+boost::system::error_code 
 TurnSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size)
 {
    resip::Lock lock(mMutex);
 
    // Check to see if an allocation refresh is required - if so send it and make sure it was sucessful
-   asio::error_code ret = checkIfAllocationRefreshRequired();
+   boost::system::error_code ret = checkIfAllocationRefreshRequired();
    if(ret)
    {
       return ret;
@@ -556,9 +556,9 @@ TurnSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size
          turnDataSize = htons(turnDataSize);
          memcpy((void*)&framing[2], &turnDataSize, 2);
       }
-      std::vector<asio::const_buffer> bufs;
-      bufs.push_back(asio::buffer(framing, sizeof(framing)));
-      bufs.push_back(asio::buffer(buffer, size));
+      std::vector<boost::asio::const_buffer> bufs;
+      bufs.push_back(boost::asio::buffer(framing, sizeof(framing)));
+      bufs.push_back(boost::asio::buffer(buffer, size));
 
       return rawWrite(bufs);
    }
@@ -591,10 +591,10 @@ TurnSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size
    }
 }
 
-asio::error_code 
-TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, asio::ip::address* sourceAddress, unsigned short* sourcePort)
+boost::system::error_code 
+TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, boost::asio::ip::address* sourceAddress, unsigned short* sourcePort)
 {
-   asio::error_code errorCode;
+   boost::system::error_code errorCode;
    resip::Lock lock(mMutex);
    bool done = false;
 
@@ -663,7 +663,7 @@ TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, asio
             else
             {
                // Invalid Channel - teardown?
-               errorCode = asio::error_code(reTurn::InvalidChannelNumberReceived, asio::error::misc_category);  
+               errorCode = boost::system::error_code(reTurn::InvalidChannelNumberReceived, boost::asio::error::misc_category);  
                done = true;
             }
          }
@@ -671,20 +671,20 @@ TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, asio
       else  // size <= 4
       {
          // Less data than frame size received
-         errorCode = asio::error_code(reTurn::FrameError, asio::error::misc_category);
+         errorCode = boost::system::error_code(reTurn::FrameError, boost::asio::error::misc_category);
          done = true;
       }
    }
    return errorCode;
 }
 
-asio::error_code 
-TurnSocket::receiveFrom(const asio::ip::address& address, unsigned short port, char* buffer, unsigned int& size, unsigned int timeout)
+boost::system::error_code 
+TurnSocket::receiveFrom(const boost::asio::ip::address& address, unsigned short port, char* buffer, unsigned int& size, unsigned int timeout)
 {
-   asio::ip::address sourceAddress;
+   boost::asio::ip::address sourceAddress;
    unsigned short sourcePort;
    bool done = false;
-   asio::error_code errorCode;
+   boost::system::error_code errorCode;
    resip::Lock lock(mMutex);
 
    while(!done)
@@ -703,23 +703,23 @@ TurnSocket::receiveFrom(const asio::ip::address& address, unsigned short port, c
    return errorCode;
 }
 
-asio::error_code 
+boost::system::error_code 
 TurnSocket::handleRawData(char* data, unsigned int dataSize, unsigned int expectedSize, char* buffer, unsigned int& bufferSize)
 {
-   asio::error_code errorCode;
+   boost::system::error_code errorCode;
 
    if(dataSize != expectedSize)
    {
       // TODO - fix read logic so that we can read in chuncks
       WarningLog(<< "Did not read entire message: read=" << dataSize << " wanted=" << expectedSize);
-      return asio::error_code(reTurn::ReadError, asio::error::misc_category); 
+      return boost::system::error_code(reTurn::ReadError, boost::asio::error::misc_category); 
    }
 
    if(dataSize > bufferSize) 
    {
      // Passed in buffer is not large enough
      WarningLog(<< "Passed in buffer not large enough.");
-     return asio::error_code(reTurn::BufferTooSmall, asio::error::misc_category); 
+     return boost::system::error_code(reTurn::BufferTooSmall, boost::asio::error::misc_category); 
    }
 
    // Copy data to return buffer
@@ -729,10 +729,10 @@ TurnSocket::handleRawData(char* data, unsigned int dataSize, unsigned int expect
    return errorCode;
 }
 
-asio::error_code 
-TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned int& size, asio::ip::address* sourceAddress, unsigned short* sourcePort)
+boost::system::error_code 
+TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned int& size, boost::asio::ip::address* sourceAddress, unsigned short* sourcePort)
 {
-   asio::error_code errorCode;
+   boost::system::error_code errorCode;
    if(stunMessage.isValid())
    {
       if(stunMessage.mClass == StunMessage::StunClassIndication && stunMessage.mMethod == StunMessage::TurnDataMethod)
@@ -741,14 +741,14 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
          {
             // Unknown Comprehension-Required Attributes found
             WarningLog(<< "DataInd with unknown comprehension required attributes.");
-            return asio::error_code(reTurn::UnknownRequiredAttributes, asio::error::misc_category);
+            return boost::system::error_code(reTurn::UnknownRequiredAttributes, boost::asio::error::misc_category);
          }
 
          if(!stunMessage.mHasTurnXorPeerAddress || !stunMessage.mHasTurnData)
          {
             // Missing RemoteAddress or TurnData attribute
             WarningLog(<< "DataInd missing attributes.");
-            return asio::error_code(reTurn::MissingAttributes, asio::error::misc_category);
+            return boost::system::error_code(reTurn::MissingAttributes, boost::asio::error::misc_category);
          }
 
          StunTuple remoteTuple;
@@ -760,14 +760,14 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
          {
             // Remote Peer not found - discard data
             WarningLog(<< "Data received from unknown RemotePeer - discarding");
-            return asio::error_code(reTurn::UnknownRemoteAddress, asio::error::misc_category);
+            return boost::system::error_code(reTurn::UnknownRemoteAddress, boost::asio::error::misc_category);
          }
 
          if(stunMessage.mTurnData->size() > size)
          {
             // Passed in buffer is not large enough
             WarningLog(<< "Passed in buffer not large enough.");
-            return asio::error_code(reTurn::BufferTooSmall, asio::error::misc_category);
+            return boost::system::error_code(reTurn::BufferTooSmall, boost::asio::error::misc_category);
          }
 
          memcpy(buffer, stunMessage.mTurnData->data(), stunMessage.mTurnData->size());
@@ -842,7 +842,7 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
    else
    {
       WarningLog(<< "Read Invalid StunMsg.");
-      return asio::error_code(reTurn::ErrorParsingMessage, asio::error::misc_category);
+      return boost::system::error_code(reTurn::ErrorParsingMessage, boost::asio::error::misc_category);
    }
    return errorCode;
 }
@@ -853,12 +853,12 @@ TurnSocket::startReadTimer(unsigned int timeout)
    if(timeout != 0)
    {
       mReadTimer.expires_from_now(boost::posix_time::milliseconds(timeout));
-      mReadTimer.async_wait(boost::bind(&TurnSocket::handleRawReadTimeout, this, asio::placeholders::error));
+      mReadTimer.async_wait(boost::bind(&TurnSocket::handleRawReadTimeout, this, boost::asio::placeholders::error));
    }
 }
 
 void 
-TurnSocket::handleRawRead(const asio::error_code& errorCode, size_t bytesRead)
+TurnSocket::handleRawRead(const boost::system::error_code& errorCode, size_t bytesRead)
 {
    mBytesRead = bytesRead;
    mReadErrorCode = errorCode;
@@ -866,7 +866,7 @@ TurnSocket::handleRawRead(const asio::error_code& errorCode, size_t bytesRead)
 }
 
 void 
-TurnSocket::handleRawReadTimeout(const asio::error_code& errorCode)
+TurnSocket::handleRawReadTimeout(const boost::system::error_code& errorCode)
 {
    if(!errorCode)
    {
@@ -874,7 +874,7 @@ TurnSocket::handleRawReadTimeout(const asio::error_code& errorCode)
    }
 }
 
-asio::error_code 
+boost::system::error_code 
 TurnSocket::checkIfAllocationRefreshRequired()
 {
    if(mHaveAllocation && (time(0) >= mAllocationRefreshTime))
@@ -882,13 +882,13 @@ TurnSocket::checkIfAllocationRefreshRequired()
       // Do allocation refresh
       return refreshAllocation();
    }
-   return asio::error_code();  // 0
+   return boost::system::error_code();  // 0
 }
 
-asio::error_code 
+boost::system::error_code 
 TurnSocket::checkIfChannelBindingRefreshRequired()
 {
-   asio::error_code ret; // 0
+   boost::system::error_code ret; // 0
    if(mHaveAllocation)
    {
       time_t now = time(0);
@@ -912,7 +912,7 @@ TurnSocket::checkIfChannelBindingRefreshRequired()
 }
 
 StunMessage* 
-TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& errorCode, bool addAuthInfo)
+TurnSocket::sendRequestAndGetResponse(StunMessage& request, boost::system::error_code& errorCode, bool addAuthInfo)
 {
    bool sendRequest = true;
    bool reliableTransport = mLocalBinding.getTransportType() != StunTuple::UDP;
@@ -963,13 +963,13 @@ TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& er
       errorCode = rawRead(timeout, &readsize);
       if(errorCode)
       {
-         if(errorCode == asio::error::operation_aborted)
+         if(errorCode == boost::asio::error::operation_aborted)
          {
             totalTime += timeout;
             if(reliableTransport || requestsSent == UDP_MAX_RETRANSMITS)
             {
                InfoLog(<< "Timed out waiting for Stun response!");
-               errorCode = asio::error_code(reTurn::ResponseTimeout, asio::error::misc_category);
+               errorCode = boost::system::error_code(reTurn::ResponseTimeout, boost::asio::error::misc_category);
                return 0;
             }
 
@@ -1002,7 +1002,7 @@ TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& er
                {
                   WarningLog(<< "Stun response message integrity is bad!");
                   delete response;
-                  errorCode = asio::error_code(reTurn::BadMessageIntegrity, asio::error::misc_category);
+                  errorCode = boost::system::error_code(reTurn::BadMessageIntegrity, boost::asio::error::misc_category);
                   return 0;
                }
    
@@ -1034,28 +1034,28 @@ TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& er
                   return sendRequestAndGetResponse(request, errorCode, true);
                }
 
-               errorCode = asio::error_code(reTurn::Success, asio::error::misc_category);
+               errorCode = boost::system::error_code(reTurn::Success, boost::asio::error::misc_category);
                return response;
             }
             else
             {
                WarningLog(<< "Stun response message is invalid!");
                delete response;
-               errorCode = asio::error_code(reTurn::ErrorParsingMessage, asio::error::misc_category);  
+               errorCode = boost::system::error_code(reTurn::ErrorParsingMessage, boost::asio::error::misc_category);  
                return 0;
             }
          }
          else  // Channel Data Message
          {
             // TODO - handle buffering of Turn data that is receive while waiting for a Request/Response
-            errorCode = asio::error_code(reTurn::FrameError, asio::error::misc_category);  
+            errorCode = boost::system::error_code(reTurn::FrameError, boost::asio::error::misc_category);  
             return 0;
          }
       }
       else
       {
          // Less data than frame size received
-         errorCode = asio::error_code(reTurn::FrameError, asio::error::misc_category);  
+         errorCode = boost::system::error_code(reTurn::FrameError, boost::asio::error::misc_category);  
          return 0;
       }
    }

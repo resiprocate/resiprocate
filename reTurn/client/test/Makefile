@@ -4,8 +4,8 @@ include $(BUILD)/Makefile.pre
 PACKAGES += RETURNCLIENT ASIO RUTIL ARES OPENSSL BOOST PTHREAD 
 
 TESTPROGRAMS += \
-	TestClient.cxx \
-	TestAsyncClient.cxx \
+	TestClient.cxx
+#	TestAsyncClient.cxx \
 	TestRtpLoad.cxx
 
 include $(BUILD)/Makefile.post

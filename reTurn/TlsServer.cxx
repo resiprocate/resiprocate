@@ -8,18 +8,18 @@
 
 namespace reTurn {
 
-TlsServer::TlsServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port)
+TlsServer::TlsServer(boost::asio::io_service& ioService, RequestHandler& requestHandler, const boost::asio::ip::address& address, unsigned short port)
 : mIOService(ioService),
   mAcceptor(ioService),
-  mContext(ioService, asio::ssl::context::tlsv1),  // TLSv1.0
+  mContext(ioService, boost::asio::ssl::context::tlsv1),  // TLSv1.0
   mConnectionManager(),
   mRequestHandler(requestHandler)
 {
    // Set Context options 
-   asio::error_code ec;
-   mContext.set_options(asio::ssl::context::default_workarounds |  // Implement various bug workarounds.
-                        asio::ssl::context::no_sslv2 | // Disable SSL v2.
-                        asio::ssl::context::single_dh_use);  // enforce recalculation of the DH key for eatch session
+   boost::system::error_code ec;
+   mContext.set_options(boost::asio::ssl::context::default_workarounds |  // Implement various bug workarounds.
+                        boost::asio::ssl::context::no_sslv2 | // Disable SSL v2.
+                        boost::asio::ssl::context::single_dh_use);  // enforce recalculation of the DH key for eatch session
    
    mContext.set_password_callback(boost::bind(&TlsServer::getPassword, this));
 
@@ -31,7 +31,7 @@ TlsServer::TlsServer(asio::io_service& ioService, RequestHandler& requestHandler
    }
 
    // Use a private key from a file.
-   mContext.use_private_key_file(mRequestHandler.getConfig().mTlsServerCertificateFilename.c_str(), asio::ssl::context::pem, ec);
+   mContext.use_private_key_file(mRequestHandler.getConfig().mTlsServerCertificateFilename.c_str(), boost::asio::ssl::context::pem, ec);
    if(ec)
    {
       ErrLog(<< "Unable to load server private key file: " << mRequestHandler.getConfig().mTlsServerCertificateFilename << ", error=" << ec.value() << "(" << ec.message() << ")");
@@ -45,10 +45,10 @@ TlsServer::TlsServer(asio::io_service& ioService, RequestHandler& requestHandler
    }
 
    // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
-   asio::ip::tcp::endpoint endpoint(address, port);
+   boost::asio::ip::tcp::endpoint endpoint(address, port);
 
    mAcceptor.open(endpoint.protocol());
-   mAcceptor.set_option(asio::ip::tcp::acceptor::reuse_address(true));
+   mAcceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
    mAcceptor.bind(endpoint);
    mAcceptor.listen();
 
@@ -59,7 +59,7 @@ void
 TlsServer::start()
 {
    mNewConnection.reset(new TlsConnection(mIOService, mConnectionManager, mRequestHandler, mContext));
-   mAcceptor.async_accept(((TlsConnection*)mNewConnection.get())->socket(), boost::bind(&TlsServer::handleAccept, this, asio::placeholders::error));
+   mAcceptor.async_accept(((TlsConnection*)mNewConnection.get())->socket(), boost::bind(&TlsServer::handleAccept, this, boost::asio::placeholders::error));
 }
 
 std::string 
@@ -69,14 +69,14 @@ TlsServer::getPassword() const
 }
 
 void 
-TlsServer::handleAccept(const asio::error_code& e)
+TlsServer::handleAccept(const boost::system::error_code& e)
 {
    if (!e)
    {
       mConnectionManager.start(mNewConnection);
 
       mNewConnection.reset(new TlsConnection(mIOService, mConnectionManager, mRequestHandler, mContext));
-      mAcceptor.async_accept(((TlsConnection*)mNewConnection.get())->socket(), boost::bind(&TlsServer::handleAccept, this, asio::placeholders::error));
+      mAcceptor.async_accept(((TlsConnection*)mNewConnection.get())->socket(), boost::bind(&TlsServer::handleAccept, this, boost::asio::placeholders::error));
    }
    else
    {

@@ -1,7 +1,7 @@
 #ifndef TCP_SERVER_HXX
 #define TCP_SERVER_HXX
 
-#include <asio.hpp>
+#include <boost/asio.hpp>
 #include <string>
 #include <boost/noncopyable.hpp>
 #include "TcpConnection.hxx"
@@ -15,19 +15,19 @@ class TcpServer
 {
 public:
   /// Create the server to listen on the specified TCP address and port
-  explicit TcpServer(asio::io_service& ioService, RequestHandler& rqeuestHandler, const asio::ip::address& address, unsigned short port);
+  explicit TcpServer(boost::asio::io_service& ioService, RequestHandler& rqeuestHandler, const boost::asio::ip::address& address, unsigned short port);
 
   void start();
 
 private:
   /// Handle completion of an asynchronous accept operation.
-  void handleAccept(const asio::error_code& e);
+  void handleAccept(const boost::system::error_code& e);
 
   /// The io_service used to perform asynchronous operations.
-  asio::io_service& mIOService;
+  boost::asio::io_service& mIOService;
 
   /// Acceptor used to listen for incoming connections.
-  asio::ip::tcp::acceptor mAcceptor;
+  boost::asio::ip::tcp::acceptor mAcceptor;
 
   /// The connection manager which owns all live connections.
   ConnectionManager mConnectionManager;

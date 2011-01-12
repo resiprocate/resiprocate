@@ -1,7 +1,7 @@
 #ifndef TURNTCPSOCKET_HXX
 #define TURNTCPSOCKET_HXX
 
-#include <asio.hpp>
+#include <boost/asio.hpp>
 
 #include "TurnSocket.hxx"
 
@@ -10,30 +10,30 @@ namespace reTurn {
    class TurnTcpSocket : public TurnSocket
 {
 public:
-   explicit TurnTcpSocket(const asio::ip::address& address = UnspecifiedIpAddress, 
+   explicit TurnTcpSocket(const boost::asio::ip::address& address = UnspecifiedIpAddress, 
                           unsigned short port = 0);
 
    virtual unsigned int getSocketDescriptor() { return mSocket.native(); }
 
    // To use this socket without a Turn Relay, use this connect call to connect directly
    // to endpoint
-   virtual asio::error_code connect(const std::string& address, unsigned short port);
+   virtual boost::system::error_code connect(const std::string& address, unsigned short port);
 
 protected:
-   virtual asio::error_code rawWrite(const char* buffer, unsigned int size);
-   virtual asio::error_code rawWrite(const std::vector<asio::const_buffer>& buffers);
-   virtual asio::error_code rawRead(unsigned int timeout, unsigned int* bytesRead, asio::ip::address* sourceAddress=0, unsigned short* sourcePort=0);
+   virtual boost::system::error_code rawWrite(const char* buffer, unsigned int size);
+   virtual boost::system::error_code rawWrite(const std::vector<boost::asio::const_buffer>& buffers);
+   virtual boost::system::error_code rawRead(unsigned int timeout, unsigned int* bytesRead, boost::asio::ip::address* sourceAddress=0, unsigned short* sourcePort=0);
 
    virtual void readHeader();
    virtual void readBody(unsigned int len);
    virtual void cancelSocket();
 
    /// Handle completion of a read operation for first 32 bits
-   virtual void handleReadHeader(const asio::error_code& e);
+   virtual void handleReadHeader(const boost::system::error_code& e);
 
 private:
 
-   asio::ip::tcp::socket mSocket;
+   boost::asio::ip::tcp::socket mSocket;
 };
 
 } 

@@ -9,7 +9,7 @@ using namespace std;
 
 namespace reTurn {
 
-AsyncSocketBase::AsyncSocketBase(asio::io_service& ioService) : 
+AsyncSocketBase::AsyncSocketBase(boost::asio::io_service& ioService) : 
   mIOService(ioService),
   mReceiving(false),
   mConnected(false),
@@ -67,7 +67,7 @@ AsyncSocketBase::doSend(const StunTuple& destination, unsigned short channel, bo
 }
 
 void 
-AsyncSocketBase::handleSend(const asio::error_code& e)
+AsyncSocketBase::handleSend(const boost::system::error_code& e)
 {
    if(!e)
    {
@@ -89,12 +89,12 @@ AsyncSocketBase::handleSend(const asio::error_code& e)
 void 
 AsyncSocketBase::sendFirstQueuedData()
 {
-   std::vector<asio::const_buffer> bufs;
+   std::vector<boost::asio::const_buffer> bufs;
    if(mSendDataQueue.front().mFrameData.get() != 0) // If we have frame data
    {
-      bufs.push_back(asio::buffer(mSendDataQueue.front().mFrameData->data(), mSendDataQueue.front().mFrameData->size()));
+      bufs.push_back(boost::asio::buffer(mSendDataQueue.front().mFrameData->data(), mSendDataQueue.front().mFrameData->size()));
    }
-   bufs.push_back(asio::buffer(mSendDataQueue.front().mData->data()+mSendDataQueue.front().mBufferStartPos, mSendDataQueue.front().mData->size()-mSendDataQueue.front().mBufferStartPos));
+   bufs.push_back(boost::asio::buffer(mSendDataQueue.front().mData->data()+mSendDataQueue.front().mBufferStartPos, mSendDataQueue.front().mData->size()-mSendDataQueue.front().mBufferStartPos));
    transportSend(mSendDataQueue.front().mDestination, bufs);
 }
 
@@ -133,7 +133,7 @@ AsyncSocketBase::doFramedReceive()
 }
 
 void 
-AsyncSocketBase::handleReceive(const asio::error_code& e, std::size_t bytesTransferred)
+AsyncSocketBase::handleReceive(const boost::system::error_code& e, std::size_t bytesTransferred)
 {
    mReceiving = false;
 

@@ -23,9 +23,9 @@ public:
    static bool SocketSetDSCP(resip::Socket s, int DSCPValue, bool bUDP) { return false; }
    static bool SocketSetServiceType(
       resip::Socket s,
-      const asio::ip::udp::endpoint &tInDestinationIPAddress,
+      const boost::asio::ip::udp::endpoint &tInDestinationIPAddress,
       EQOSServiceTypes eInServiceType,
-      ULONG ulInBandwidthInBitsPerSecond,
+      boost::uint32_t ulInBandwidthInBitsPerSecond,
       bool bUDP)
    { return false; }
 

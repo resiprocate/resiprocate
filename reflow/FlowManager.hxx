@@ -56,7 +56,7 @@ public:
 #endif //USE_DTLS
 #endif //USE_SSL   
 
-   asio::io_service& getIOService() { return mIOService; }
+   boost::asio::io_service& getIOService() { return mIOService; }
 
 protected: 
 
@@ -64,12 +64,12 @@ private:
    static void srtpEventHandler(srtp_event_data_t *data);
 
    // Member variables used to manager asio io service thread
-   asio::io_service mIOService;
+   boost::asio::io_service mIOService;
    IOServiceThread* mIOServiceThread;
-   asio::io_service::work* mIOServiceWork;
+   boost::asio::io_service::work* mIOServiceWork;
 #ifdef USE_SSL
    static int createCert (const resip::Data& pAor, int expireDays, int keyLen, X509*& outCert, EVP_PKEY*& outKey );
-   asio::ssl::context mSslContext;
+   boost::asio::ssl::context mSslContext;
 #endif
    
 #ifdef USE_SSL

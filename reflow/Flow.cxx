@@ -1,4 +1,4 @@
-#include <asio.hpp>
+#include <boost/asio.hpp>
 #include <boost/function.hpp>
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -13,12 +13,12 @@
 #ifdef USE_SSL
 #ifdef USE_DTLS
 #include "FlowDtlsSocketContext.hxx"
+using namespace dtls;
 #endif
 #endif
 
 using namespace flowmanager;
 using namespace resip;
-using namespace dtls;
 using namespace std;
 
 #define MAX_RECEIVE_FIFO_DURATION 10 // seconds
@@ -113,9 +113,9 @@ char* srtp_error_string(err_status_t error)
    }
 }
 
-Flow::Flow(asio::io_service& ioService,
+Flow::Flow(boost::asio::io_service& ioService,
 #ifdef USE_SSL
-           asio::ssl::context& sslContext,
+           boost::asio::ssl::context& sslContext,
 #endif
            unsigned int componentId,
            const StunTuple& localBinding, 
@@ -296,12 +296,12 @@ Flow::send(char* buffer, unsigned int size)
    else
    {
       WarningLog(<< "Flow::send(..) failed in state " << mFlowState);
-      onSendFailure(mTurnSocket->getSocketDescriptor(), asio::error_code(flowmanager::InvalidState, asio::error::misc_category));
+      onSendFailure(mTurnSocket->getSocketDescriptor(), boost::system::error_code(flowmanager::InvalidState, boost::asio::error::misc_category));
    }
 }
 
 void
-Flow::sendTo(const asio::ip::address& address, unsigned short port, char* buffer, unsigned int size)
+Flow::sendTo(const boost::asio::ip::address& address, unsigned short port, char* buffer, unsigned int size)
 {
    assert(mTurnSocket.get());
    if(isReady())
@@ -314,20 +314,20 @@ Flow::sendTo(const asio::ip::address& address, unsigned short port, char* buffer
    else
    {
       WarningLog(<< "Flow::sendTo(..) failed in state " << flowStateToString(mFlowState));
-      onSendFailure(mTurnSocket->getSocketDescriptor(), asio::error_code(flowmanager::InvalidState, asio::error::misc_category));
+      onSendFailure(mTurnSocket->getSocketDescriptor(), boost::system::error_code(flowmanager::InvalidState, boost::asio::error::misc_category));
    }
 }
 
 // Note: this fn is used to send raw data to the far end, without attempting to SRTP encrypt it - ie. used for sending DTLS traffic
 void
-Flow::rawSendTo(const asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size)
+Flow::rawSendTo(const boost::asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size)
 {
    assert(mTurnSocket.get());
    mTurnSocket->sendTo(address, port, buffer, size);
 }
 
 bool
-Flow::processSendData(char* buffer, unsigned int& size, const asio::ip::address& address, unsigned short port)
+Flow::processSendData(char* buffer, unsigned int& size, const boost::asio::ip::address& address, unsigned short port)
 {
    if(mMediaStream.mSRTPSessionOutCreated)
    {
@@ -335,7 +335,7 @@ Flow::processSendData(char* buffer, unsigned int& size, const asio::ip::address&
       if(status != err_status_ok)
       {
          ErrLog(<< "Unable to SRTP protect the packet, error code=" << status << "(" << srtp_error_string(status) << ")  ComponentId=" << mComponentId);
-         onSendFailure(mTurnSocket->getSocketDescriptor(), asio::error_code(flowmanager::SRTPError, asio::error::misc_category));
+         onSendFailure(mTurnSocket->getSocketDescriptor(), boost::system::error_code(flowmanager::SRTPError, boost::asio::error::misc_category));
          return false;
       }
    }
@@ -353,14 +353,14 @@ Flow::processSendData(char* buffer, unsigned int& size, const asio::ip::address&
             if(status != err_status_ok)
             {
                ErrLog(<< "Unable to SRTP protect the packet, error code=" << status << "(" << srtp_error_string(status) << ")  ComponentId=" << mComponentId);
-               onSendFailure(mTurnSocket->getSocketDescriptor(), asio::error_code(flowmanager::SRTPError, asio::error::misc_category));
+               onSendFailure(mTurnSocket->getSocketDescriptor(), boost::system::error_code(flowmanager::SRTPError, boost::asio::error::misc_category));
                return false;
             }
          }
          else
          {
             //WarningLog(<< "Unable to send packet yet - handshake is not completed yet, ComponentId=" << mComponentId);
-            onSendFailure(mTurnSocket->getSocketDescriptor(), asio::error_code(flowmanager::InvalidState, asio::error::misc_category));
+            onSendFailure(mTurnSocket->getSocketDescriptor(), boost::system::error_code(flowmanager::InvalidState, boost::asio::error::misc_category));
             return false;
          }
       }
@@ -372,11 +372,11 @@ Flow::processSendData(char* buffer, unsigned int& size, const asio::ip::address&
 }
 
 // Receive Methods
-asio::error_code 
-Flow::receiveFrom(const asio::ip::address& address, unsigned short port, char* buffer, unsigned int& size, unsigned int timeout)
+boost::system::error_code 
+Flow::receiveFrom(const boost::asio::ip::address& address, unsigned short port, char* buffer, unsigned int& size, unsigned int timeout)
 {
    bool done = false;
-   asio::error_code errorCode;
+   boost::system::error_code errorCode;
 
    UInt64 startTime = Timer::getTimeMs();
    unsigned int recvTimeout;
@@ -386,14 +386,14 @@ Flow::receiveFrom(const asio::ip::address& address, unsigned short port, char* b
       if(timeout == 0 && mReceivedDataFifo.empty())
       {
          // timeout
-         return asio::error_code(flowmanager::ReceiveTimeout, asio::error::misc_category);
+         return boost::system::error_code(flowmanager::ReceiveTimeout, boost::asio::error::misc_category);
       }
 
       recvTimeout = timeout ? timeout - (Timer::getTimeMs() - startTime) : 0;
       if(timeout != 0 && recvTimeout <= 0)
       {
          // timeout
-         return asio::error_code(flowmanager::ReceiveTimeout, asio::error::misc_category);
+         return boost::system::error_code(flowmanager::ReceiveTimeout, boost::asio::error::misc_category);
       }
       ReceivedData* receivedData = mReceivedDataFifo.getNext(recvTimeout);  
       if(receivedData)
@@ -411,17 +411,17 @@ Flow::receiveFrom(const asio::ip::address& address, unsigned short port, char* b
       else
       {
          // timeout
-         errorCode = asio::error_code(flowmanager::ReceiveTimeout, asio::error::misc_category);
+         errorCode = boost::system::error_code(flowmanager::ReceiveTimeout, boost::asio::error::misc_category);
          done = true;
       }
    }
    return errorCode;
 }
 
-asio::error_code 
-Flow::receive(char* buffer, unsigned int& size, unsigned int timeout, asio::ip::address* sourceAddress, unsigned short* sourcePort)
+boost::system::error_code 
+Flow::receive(char* buffer, unsigned int& size, unsigned int timeout, boost::asio::ip::address* sourceAddress, unsigned short* sourcePort)
 {
-   asio::error_code errorCode;
+   boost::system::error_code errorCode;
 
    //InfoLog(<< "Flow::receive called with buffer size=" << size << ", timeout=" << timeout);
    // We define timeout of 0 differently then TimeLimitFifo - we want 0 to mean no-block at all
@@ -429,7 +429,7 @@ Flow::receive(char* buffer, unsigned int& size, unsigned int timeout, asio::ip::
    {
       // timeout
       InfoLog(<< "Receive timeout (timeout==0 and fifo empty)!");
-      return asio::error_code(flowmanager::ReceiveTimeout, asio::error::misc_category);
+      return boost::system::error_code(flowmanager::ReceiveTimeout, boost::asio::error::misc_category);
    }
    if(mReceivedDataFifo.empty())
    {
@@ -448,7 +448,7 @@ Flow::receive(char* buffer, unsigned int& size, unsigned int timeout, asio::ip::
    {
       // timeout
       InfoLog(<< "Receive timeout!  ComponentId=" << mComponentId);
-      errorCode = asio::error_code(flowmanager::ReceiveTimeout, asio::error::misc_category);
+      errorCode = boost::system::error_code(flowmanager::ReceiveTimeout, boost::asio::error::misc_category);
    }
    return errorCode;
 }
@@ -459,10 +459,10 @@ Flow::asyncReceive()
    mTurnSocket->turnReceive();
 }
 
-asio::error_code 
-Flow::processReceivedData(char* buffer, unsigned int& size, ReceivedData* receivedData, asio::ip::address* sourceAddress, unsigned short* sourcePort)
+boost::system::error_code 
+Flow::processReceivedData(char* buffer, unsigned int& size, ReceivedData* receivedData, boost::asio::ip::address* sourceAddress, unsigned short* sourcePort)
 {
-   asio::error_code errorCode;
+   boost::system::error_code errorCode;
    unsigned int receivedsize = receivedData->mData->size();
 
    // SRTP Unprotect (if required)
@@ -472,7 +472,7 @@ Flow::processReceivedData(char* buffer, unsigned int& size, ReceivedData* receiv
       if(status != err_status_ok)
       {
          ErrLog(<< "Unable to SRTP unprotect the packet (componentid=" << mComponentId << "), error code=" << status << "(" << srtp_error_string(status) << ")");
-         //errorCode = asio::error_code(flowmanager::SRTPError, asio::error::misc_category);
+         //errorCode = boost::system::error_code(flowmanager::SRTPError, boost::asio::error::misc_category);
       }
    }
 #ifdef USE_SSL
@@ -489,13 +489,13 @@ Flow::processReceivedData(char* buffer, unsigned int& size, ReceivedData* receiv
             if(status != err_status_ok)
             {
                ErrLog(<< "Unable to SRTP unprotect the packet (componentid=" << mComponentId << "), error code=" << status << "(" << srtp_error_string(status) << ")");
-               //errorCode = asio::error_code(flowmanager::SRTPError, asio::error::misc_category);
+               //errorCode = boost::system::error_code(flowmanager::SRTPError, boost::asio::error::misc_category);
             }
          }
          else
          {
             //WarningLog(<< "Unable to send packet yet - handshake is not completed yet, ComponentId=" << mComponentId);
-            errorCode = asio::error_code(flowmanager::InvalidState, asio::error::misc_category);
+            errorCode = boost::system::error_code(flowmanager::InvalidState, boost::asio::error::misc_category);
          }
       }
    }
@@ -513,7 +513,7 @@ Flow::processReceivedData(char* buffer, unsigned int& size, ReceivedData* receiv
       {
          // Receive buffer too small
          InfoLog(<< "Receive buffer too small for data size=" << receivedsize << "  ComponentId=" << mComponentId);
-         errorCode = asio::error_code(flowmanager::BufferTooSmall, asio::error::misc_category);
+         errorCode = boost::system::error_code(flowmanager::BufferTooSmall, boost::asio::error::misc_category);
       }
       if(sourceAddress)
       {
@@ -600,7 +600,7 @@ Flow::setActiveDestination(const char* address, unsigned short port, const std::
       }
       else
       {
-         mTurnSocket->setActiveDestination(asio::ip::address::from_string(address), port);
+         mTurnSocket->setActiveDestination(boost::asio::ip::address::from_string(address), port);
       }
       mActiveDestinationSet = true;
    }
@@ -617,7 +617,7 @@ Flow::scheduleConnectivityChecks()
          mConnectivityCheckTimer.cancel();
          // !jjg! todo: follow the formula for Ta in http://tools.ietf.org/html/draft-ietf-mmusic-ice-19#section-16
          mConnectivityCheckTimer.expires_from_now(boost::posix_time::milliseconds(20));
-         mConnectivityCheckTimer.async_wait(boost::bind(&Flow::onConnectivityCheckTimer, this, asio::placeholders::error));
+         mConnectivityCheckTimer.async_wait(boost::bind(&Flow::onConnectivityCheckTimer, this, boost::asio::placeholders::error));
       }
    }
 }
@@ -647,9 +647,9 @@ Flow::setLocalIcePassword(const resip::Data& password)
 }
 
 void
-Flow::onConnectivityCheckTimer(const asio::error_code& error)
+Flow::onConnectivityCheckTimer(const boost::system::error_code& error)
 {
-   if (error == asio::error::operation_aborted)
+   if (error == boost::asio::error::operation_aborted)
    {
       return;
    }
@@ -689,7 +689,7 @@ void
 Flow::startDtlsClient(const char* address, unsigned short port)
 {
    Lock lock(mMutex);
-   createDtlsSocketClient(StunTuple(mLocalBinding.getTransportType(), asio::ip::address::from_string(address), port));
+   createDtlsSocketClient(StunTuple(mLocalBinding.getTransportType(), boost::asio::ip::address::from_string(address), port));
 }
 
 void 
@@ -721,7 +721,7 @@ Flow::getRemoteSDPFingerprint()
 #endif // USE_SSL
 
 bool Flow::setDSCP(
-   ULONG ulInDSCPValue
+   boost::uint32_t ulInDSCPValue
 )
 {
    Lock lock(mMutex);
@@ -740,9 +740,9 @@ bool Flow::setDSCP(
 }
 
 bool Flow::setServiceType(
-   const asio::ip::udp::endpoint &tInDestinationIPAddress,
+   const boost::asio::ip::udp::endpoint &tInDestinationIPAddress,
    EQOSServiceTypes eInServiceType,
-   ULONG ulInBandwidthInBitsPerSecond
+   boost::uint32_t ulInBandwidthInBitsPerSecond
 )
 {
    Lock lock(mMutex);
@@ -762,10 +762,10 @@ bool Flow::setServiceType(
 }
 
 void Flow::setBandwidthQOS(
-   VOID* tInQOSUserParam,
+   void* tInQOSUserParam,
    EQOSDirection eInFlowDirection,
-   const asio::ip::udp::endpoint &tInDestinationIPAddress,
-   ULONG ulInBitsPerSecondToReserve
+   const boost::asio::ip::udp::endpoint &tInDestinationIPAddress,
+   boost::uint32_t ulInBitsPerSecondToReserve
 )
 {
 /* DRL FIXIT! The original code was firing an event here... not sure what interface we should be using!
@@ -786,9 +786,9 @@ void Flow::setBandwidthQOS(
 */
 }
 
-ULONG Flow::getBandwidthQOS(
+boost::uint32_t Flow::getBandwidthQOS(
    EQOSDirection eInFlowDirection,
-   const asio::ip::udp::endpoint &tInDestinationIPAddress
+   const boost::asio::ip::udp::endpoint &tInDestinationIPAddress
 )
 {
    assert(0);
@@ -843,7 +843,7 @@ Flow::getReservationToken()
 }
 
 void 
-Flow::onConnectSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port)
+Flow::onConnectSuccess(unsigned int socketDesc, const boost::asio::ip::address& address, unsigned short port)
 {
    InfoLog(<< "Flow::onConnectSuccess: socketDesc=" << socketDesc << ", address=" << address.to_string() << ", port=" << port << ", componentId=" << mComponentId);
 
@@ -880,7 +880,7 @@ Flow::onConnectSuccess(unsigned int socketDesc, const asio::ip::address& address
 }
 
 void 
-Flow::onConnectFailure(unsigned int socketDesc, const asio::error_code& e)
+Flow::onConnectFailure(unsigned int socketDesc, const boost::system::error_code& e)
 {
    WarningLog(<< "Flow::onConnectFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << ", componentId=" << mComponentId);
    changeFlowState(Unconnected);
@@ -895,7 +895,7 @@ Flow::onSharedSecretSuccess(unsigned int socketDesc, const char* username, unsig
 }
 
 void 
-Flow::onSharedSecretFailure(unsigned int socketDesc, const asio::error_code& e)
+Flow::onSharedSecretFailure(unsigned int socketDesc, const boost::system::error_code& e)
 {
    WarningLog(<< "Flow::onSharedSecretFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId );
 }
@@ -1010,7 +1010,7 @@ Flow::onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, co
    }
 }
 void 
-Flow::onBindFailure(unsigned int socketDesc, const asio::error_code& e, const StunTuple& stunServerTuple)
+Flow::onBindFailure(unsigned int socketDesc, const boost::system::error_code& e, const StunTuple& stunServerTuple)
 {
    WarningLog(<< "Flow::onBindingFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId );
    if (mMediaStream.mNatTraversalMode == MediaStream::Ice && mFlowState == CheckingConnectivity)
@@ -1124,7 +1124,7 @@ Flow::onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTup
 }
 
 void 
-Flow::onAllocationFailure(unsigned int socketDesc, const asio::error_code& e)
+Flow::onAllocationFailure(unsigned int socketDesc, const boost::system::error_code& e)
 {
    WarningLog(<< "Flow::onAllocationFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId );
    changeFlowState(Connected);
@@ -1142,7 +1142,7 @@ Flow::onRefreshSuccess(unsigned int socketDesc, unsigned int lifetime)
 }
 
 void 
-Flow::onRefreshFailure(unsigned int socketDesc, const asio::error_code& e)
+Flow::onRefreshFailure(unsigned int socketDesc, const boost::system::error_code& e)
 {
    WarningLog(<< "Flow::onRefreshFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId );
 }
@@ -1154,7 +1154,7 @@ Flow::onSetActiveDestinationSuccess(unsigned int socketDesc)
 }
 
 void 
-Flow::onSetActiveDestinationFailure(unsigned int socketDesc, const asio::error_code& e)
+Flow::onSetActiveDestinationFailure(unsigned int socketDesc, const boost::system::error_code& e)
 {
    WarningLog(<< "Flow::onSetActiveDestinationFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId );
 }
@@ -1166,7 +1166,7 @@ Flow::onClearActiveDestinationSuccess(unsigned int socketDesc)
 }
 
 void 
-Flow::onClearActiveDestinationFailure(unsigned int socketDesc, const asio::error_code& e)
+Flow::onClearActiveDestinationFailure(unsigned int socketDesc, const boost::system::error_code& e)
 {
    WarningLog(<< "Flow::onClearActiveDestinationFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId );
 }
@@ -1178,13 +1178,13 @@ Flow::onSendSuccess(unsigned int socketDesc)
 }
 
 void 
-Flow::onSendFailure(unsigned int socketDesc, const asio::error_code& e)
+Flow::onSendFailure(unsigned int socketDesc, const boost::system::error_code& e)
 {
    WarningLog(<< "Flow::onSendFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId );
 }
 
 void 
-Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, boost::shared_ptr<reTurn::DataBuffer>& data)
+Flow::onReceiveSuccess(unsigned int socketDesc, const boost::asio::ip::address& address, unsigned short port, boost::shared_ptr<reTurn::DataBuffer>& data)
 {
    StackLog(<< "Flow::onReceiveSuccess: socketDesc=" << socketDesc << ", fromAddress=" << address.to_string() << ", fromPort=" << port << ", size=" << data->size() << ", componentId=" << mComponentId);
    mIcmpRetryCount = 0;
@@ -1218,7 +1218,7 @@ Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address
    Lock lock(mMutex);
    if (mHandler)
    {
-      asio::error_code errorCode;
+      boost::system::error_code errorCode;
       if (mMediaStream.mSRTPSessionInCreated) // only do this if we're using SRTP (saves on a memcpy)
       {
          unsigned int ncbuff_size = data->size() * 2; // a guesstimate
@@ -1260,16 +1260,16 @@ Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address
 }
 
 void 
-Flow::onReceiveFailure(unsigned int socketDesc, const asio::error_code& e)
+Flow::onReceiveFailure(unsigned int socketDesc, const boost::system::error_code& e)
 {
    WarningLog(<< "Flow::onReceiveFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId);
 
-   if ((e.value() == asio::error::connection_refused || e.value() == asio::error::connection_reset)
+   if ((e.value() == boost::asio::error::connection_refused || e.value() == boost::asio::error::connection_reset)
        && mLocalBinding.getTransportType() == StunTuple::UDP)
    {
       if (mIcmpRetryCount < ICMP_RETRY_COUNT)
       {
-         asio::deadline_timer::duration_type d = mIcmpRetryTimer.expires_from_now();
+         boost::asio::deadline_timer::duration_type d = mIcmpRetryTimer.expires_from_now();
          if (d.is_special() || d.is_negative() || d.total_milliseconds() == 0)
          {
          mIcmpRetryTimer.expires_from_now(boost::posix_time::milliseconds(ICMP_RETRY_PERIOD_MS));

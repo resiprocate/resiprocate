@@ -3,10 +3,10 @@ include $(BUILD)/Makefile.pre
 
 PACKAGES += RECON DUM RESIP REFLOW RETURNCLIENT RUTIL ARES ASIO OPENSSL SRTP SIPX BOOST PTHREAD
 
-TESTPROGRAMS += \
-	testUA.cxx \
-	sdpTests.cxx \
-	unitTests.cxx
+#TESTPROGRAMS += \
+#	testUA.cxx \
+#	sdpTests.cxx \
+#	unitTests.cxx
 
 include $(BUILD)/Makefile.post
 

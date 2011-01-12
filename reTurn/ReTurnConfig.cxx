@@ -13,8 +13,8 @@ ReTurnConfig::ReTurnConfig() :
    mTurnPort(3478),
    mTlsTurnPort(5349),
    mAltStunPort(0), // Note:  The default is to disable RFC3489 binding support
-   mTurnAddress(asio::ip::address::from_string("0.0.0.0")),
-   mAltStunAddress(asio::ip::address::from_string("0.0.0.0")),
+   mTurnAddress(boost::asio::ip::address::from_string("0.0.0.0")),
+   mAltStunAddress(boost::asio::ip::address::from_string("0.0.0.0")),
    mAuthenticationMode(LongTermPassword),  // required for TURN
    mAuthenticationRealm("reTurn"),
    mNonceLifetime(3600),            // 1 hour - at least 1 hours is recommended by the draft

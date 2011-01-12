@@ -138,8 +138,8 @@ private:
    void setRemoteSdp(const resip::SdpContents& sdp, sdpcontainer::Sdp* remoteSdp);
    void adjustRTPStreams(bool sendingOffer=false, const resip::SipMessage* msg=NULL);
    void checkRemoteIceAttribs(const resip::SdpContents& remoteSdp);
-   void onRtpStreamClosed(sdpcontainer::SdpMediaLine::SdpMediaType mediaType, RtpStream::ClosedReason reason, const asio::error_code& ec);
-   void handleRtpStreamClosed(sdpcontainer::SdpMediaLine::SdpMediaType mediaType, RtpStream::ClosedReason reason, const asio::error_code& ec);
+   void onRtpStreamClosed(sdpcontainer::SdpMediaLine::SdpMediaType mediaType, RtpStream::ClosedReason reason, const boost::system::error_code& ec);
+   void handleRtpStreamClosed(sdpcontainer::SdpMediaLine::SdpMediaType mediaType, RtpStream::ClosedReason reason, const boost::system::error_code& ec);
    virtual void replaceWithParticipant(RemoteParticipant* replacingParticipant);
 
    typedef std::map<sdpcontainer::SdpMediaLine::SdpMediaType, boost::signals::connection> MapMediaTypeToConnection;

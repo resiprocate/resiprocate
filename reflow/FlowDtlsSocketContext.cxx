@@ -1,7 +1,7 @@
 #ifdef USE_SSL
 #ifdef USE_DTLS
 
-#include <asio.hpp>
+#include <boost/asio.hpp>
 #include <boost/function.hpp>
 #include <iostream>
 
@@ -18,7 +18,7 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM FlowManagerSubsystem::FLOWMANAGER
 
-FlowDtlsSocketContext::FlowDtlsSocketContext(Flow& flow, const asio::ip::address& address, unsigned short port) 
+FlowDtlsSocketContext::FlowDtlsSocketContext(Flow& flow, const boost::asio::ip::address& address, unsigned short port) 
    : mFlow(flow), mAddress(address), mPort(port), mSrtpInitialized(false)
 {
 }

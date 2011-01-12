@@ -3,7 +3,7 @@
 #if !defined(FlowDtlsSocketContext_hxx)
 #define FlowDtlsSocketContext_hxx 
 
-#include <asio.hpp>
+#include <boost/asio.hpp>
 #include <srtp.h>
 
 #include "dtls_wrapper/DtlsSocket.hxx"
@@ -24,7 +24,7 @@ namespace flowmanager
 class FlowDtlsSocketContext : public dtls::DtlsSocketContext
 {
 public:
-   FlowDtlsSocketContext(Flow& flow, const asio::ip::address& address, unsigned short port);
+   FlowDtlsSocketContext(Flow& flow, const boost::asio::ip::address& address, unsigned short port);
    virtual ~FlowDtlsSocketContext();
 
    // DtlsSocketContext Virtual Fns
@@ -42,7 +42,7 @@ public:
 
 private:   
    Flow& mFlow;
-   asio::ip::address mAddress;
+   boost::asio::ip::address mAddress;
    unsigned short mPort;
    srtp_policy_t mSRTPPolicyIn;
    srtp_policy_t mSRTPPolicyOut;

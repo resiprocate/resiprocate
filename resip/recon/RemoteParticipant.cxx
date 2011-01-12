@@ -3337,12 +3337,12 @@ RemoteParticipant::onRequestRetry(ClientSubscriptionHandle h, int retryMinimum, 
 }
 
 void
-RemoteParticipant::onRtpStreamClosed(sdpcontainer::SdpMediaLine::SdpMediaType mediaType, RtpStream::ClosedReason reason, const asio::error_code& ec)
+RemoteParticipant::onRtpStreamClosed(sdpcontainer::SdpMediaLine::SdpMediaType mediaType, RtpStream::ClosedReason reason, const boost::system::error_code& ec)
 {
    class HandleRtpStreamClosedCmd : public DumCommandStub
    {
    public:
-      HandleRtpStreamClosedCmd(RemoteParticipant* rp, sdpcontainer::SdpMediaLine::SdpMediaType mediaType, RtpStream::ClosedReason reason, const asio::error_code& ec)
+      HandleRtpStreamClosedCmd(RemoteParticipant* rp, sdpcontainer::SdpMediaLine::SdpMediaType mediaType, RtpStream::ClosedReason reason, const boost::system::error_code& ec)
          : mRemoteParticipant(rp), mMediaType(mediaType), mReason(reason), mEc(ec) {}
       virtual void executeCommand()
       {
@@ -3352,13 +3352,13 @@ RemoteParticipant::onRtpStreamClosed(sdpcontainer::SdpMediaLine::SdpMediaType me
       RemoteParticipant* mRemoteParticipant;
       sdpcontainer::SdpMediaLine::SdpMediaType mMediaType;
       RtpStream::ClosedReason mReason;
-      asio::error_code mEc;
+      boost::system::error_code mEc;
    };
    mDum.post(new HandleRtpStreamClosedCmd(this, mediaType, reason, ec));   
 }
 
 void
-RemoteParticipant::handleRtpStreamClosed(sdpcontainer::SdpMediaLine::SdpMediaType mediaType, RtpStream::ClosedReason reason, const asio::error_code& ec)
+RemoteParticipant::handleRtpStreamClosed(sdpcontainer::SdpMediaLine::SdpMediaType mediaType, RtpStream::ClosedReason reason, const boost::system::error_code& ec)
 {
    Data reasonStr;
    {

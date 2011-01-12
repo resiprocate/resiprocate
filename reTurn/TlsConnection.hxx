@@ -1,8 +1,8 @@
 #ifndef TLS_CONNECTION_HXX
 #define TLS_CONNECTION_HXX
 
-#include <asio.hpp>
-#include <asio/ssl.hpp>
+#include <boost/asio.hpp>
+#include <boost/asio/ssl.hpp>
 #include <boost/array.hpp>
 #include <boost/noncopyable.hpp>
 #include "RequestHandler.hxx"
@@ -12,7 +12,7 @@ namespace reTurn {
 
 class ConnectionManager;
 
-typedef asio::ssl::stream<asio::ip::tcp::socket> ssl_socket;
+typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> ssl_socket;
 
 /// Represents a single connection from a client.
 class TlsConnection
@@ -21,7 +21,7 @@ class TlsConnection
 {
 public:
   /// Construct a connection with the given io_service.
-   explicit TlsConnection(asio::io_service& ioService, ConnectionManager& manager, RequestHandler& handler, asio::ssl::context& context);
+   explicit TlsConnection(boost::asio::io_service& ioService, ConnectionManager& manager, RequestHandler& handler, boost::asio::ssl::context& context);
   ~TlsConnection();
 
    /// Get the socket associated with the connection.
@@ -39,15 +39,15 @@ public:
 protected:
    /// Handle completion of a handshake operation
    virtual void onServerHandshakeSuccess();
-   virtual void onServerHandshakeFailure(const asio::error_code& e);
+   virtual void onServerHandshakeFailure(const boost::system::error_code& e);
 
    /// Handle completion of a receive operation
-   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
-   virtual void onReceiveFailure(const asio::error_code& e);
+   virtual void onReceiveSuccess(const boost::asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
+   virtual void onReceiveFailure(const boost::system::error_code& e);
 
    /// Handle completion of a send operation
    virtual void onSendSuccess();
-   virtual void onSendFailure(const asio::error_code& e);
+   virtual void onSendFailure(const boost::system::error_code& e);
 
    /// The manager for this connection.
    ConnectionManager& mConnectionManager;

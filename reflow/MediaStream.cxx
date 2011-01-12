@@ -16,9 +16,9 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM FlowManagerSubsystem::FLOWMANAGER
 
-MediaStream::MediaStream(asio::io_service& ioService,
+MediaStream::MediaStream(boost::asio::io_service& ioService,
 #ifdef USE_SSL
-                         asio::ssl::context& sslContext,
+                         boost::asio::ssl::context& sslContext,
 #endif
                          MediaStreamHandler& mediaStreamHandler,
                          const StunTuple& localRtpBinding, 

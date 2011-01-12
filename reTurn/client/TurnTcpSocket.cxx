@@ -9,38 +9,38 @@ using namespace std;
 
 namespace reTurn {
 
-TurnTcpSocket::TurnTcpSocket(const asio::ip::address& address, unsigned short port) : 
+TurnTcpSocket::TurnTcpSocket(const boost::asio::ip::address& address, unsigned short port) : 
    TurnSocket(address,port),
    mSocket(mIOService)
 {
    mLocalBinding.setTransportType(StunTuple::TCP);
 
-   asio::error_code errorCode;
-   mSocket.open(address.is_v6() ? asio::ip::tcp::v6() : asio::ip::tcp::v4(), errorCode);
+   boost::system::error_code errorCode;
+   mSocket.open(address.is_v6() ? boost::asio::ip::tcp::v6() : boost::asio::ip::tcp::v4(), errorCode);
    if(!errorCode)
    {
-      mSocket.set_option(asio::ip::tcp::no_delay(true)); // ?slg? do we want this?
-      mSocket.set_option(asio::ip::tcp::socket::reuse_address(true));
-      mSocket.bind(asio::ip::tcp::endpoint(mLocalBinding.getAddress(), mLocalBinding.getPort()), errorCode);
+      mSocket.set_option(boost::asio::ip::tcp::no_delay(true)); // ?slg? do we want this?
+      mSocket.set_option(boost::asio::ip::tcp::socket::reuse_address(true));
+      mSocket.bind(boost::asio::ip::tcp::endpoint(mLocalBinding.getAddress(), mLocalBinding.getPort()), errorCode);
    }
 }
 
-asio::error_code 
+boost::system::error_code 
 TurnTcpSocket::connect(const std::string& address, unsigned short port)
 {
    // Get a list of endpoints corresponding to the server name.
-   asio::ip::tcp::resolver resolver(mIOService);
+   boost::asio::ip::tcp::resolver resolver(mIOService);
    resip::Data service(port);
 #ifdef USE_IPV6
-   asio::ip::tcp::resolver::query query(address, service.c_str());   
+   boost::asio::ip::tcp::resolver::query query(address, service.c_str());   
 #else
-   asio::ip::tcp::resolver::query query(asio::ip::tcp::v4(), address, service.c_str());   
+   boost::asio::ip::tcp::resolver::query query(boost::asio::ip::tcp::v4(), address, service.c_str());   
 #endif
-   asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-   asio::ip::tcp::resolver::iterator end;
+   boost::asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+   boost::asio::ip::tcp::resolver::iterator end;
 
    // Try each endpoint until we successfully establish a connection.
-   asio::error_code errorCode = asio::error::host_not_found;
+   boost::system::error_code errorCode = boost::asio::error::host_not_found;
    while (errorCode && endpoint_iterator != end)
    {
       mSocket.close();
@@ -59,24 +59,24 @@ TurnTcpSocket::connect(const std::string& address, unsigned short port)
    return errorCode;
 }
 
-asio::error_code 
+boost::system::error_code 
 TurnTcpSocket::rawWrite(const char* buffer, unsigned int size)
 {
-   asio::error_code errorCode;
-   asio::write(mSocket, asio::buffer(buffer, size), asio::transfer_all(), errorCode);
+   boost::system::error_code errorCode;
+   boost::asio::write(mSocket, boost::asio::buffer(buffer, size), boost::asio::transfer_all(), errorCode);
    return errorCode;
 }
 
-asio::error_code 
-TurnTcpSocket::rawWrite(const std::vector<asio::const_buffer>& buffers)
+boost::system::error_code 
+TurnTcpSocket::rawWrite(const std::vector<boost::asio::const_buffer>& buffers)
 {
-   asio::error_code errorCode;
-   asio::write(mSocket, buffers, asio::transfer_all(), errorCode);
+   boost::system::error_code errorCode;
+   boost::asio::write(mSocket, buffers, boost::asio::transfer_all(), errorCode);
    return errorCode;
 }
 
-asio::error_code 
-TurnTcpSocket::rawRead(unsigned int timeout, unsigned int* bytesRead, asio::ip::address* sourceAddress, unsigned short* sourcePort)
+boost::system::error_code 
+TurnTcpSocket::rawRead(unsigned int timeout, unsigned int* bytesRead, boost::asio::ip::address* sourceAddress, unsigned short* sourcePort)
 {
    startReadTimer(timeout);   
    readHeader();
@@ -103,26 +103,26 @@ TurnTcpSocket::rawRead(unsigned int timeout, unsigned int* bytesRead, asio::ip::
 void 
 TurnTcpSocket::readHeader()
 {
-   asio::async_read(mSocket, asio::buffer(mReadBuffer, 4),
-                    boost::bind(&TurnTcpSocket::handleReadHeader, this, asio::placeholders::error));
+   boost::asio::async_read(mSocket, boost::asio::buffer(mReadBuffer, 4),
+                    boost::bind(&TurnTcpSocket::handleReadHeader, this, boost::asio::placeholders::error));
 }
 
 void 
 TurnTcpSocket::readBody(unsigned int len)
 {
-   asio::async_read(mSocket, asio::buffer(&mReadBuffer[4], len),
-                    boost::bind(&TurnTcpSocket::handleRawRead, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
+   boost::asio::async_read(mSocket, boost::asio::buffer(&mReadBuffer[4], len),
+                    boost::bind(&TurnTcpSocket::handleRawRead, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 
 void
 TurnTcpSocket::cancelSocket()
 {
-   asio::error_code ec;
+   boost::system::error_code ec;
    mSocket.cancel(ec);
 }
 
 void 
-TurnTcpSocket::handleReadHeader(const asio::error_code& e)
+TurnTcpSocket::handleReadHeader(const boost::system::error_code& e)
 {
    if (!e)
    {
@@ -151,7 +151,7 @@ TurnTcpSocket::handleReadHeader(const asio::error_code& e)
    {
       mBytesRead = 0;
       mReadErrorCode = e;
-      if (e != asio::error::operation_aborted)
+      if (e != boost::asio::error::operation_aborted)
       {
          WarningLog(<< "Read header error: " << e.value() << "-" << e.message());
          mReadTimer.cancel();

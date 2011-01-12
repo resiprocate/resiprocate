@@ -13,9 +13,9 @@ public:
 
    virtual ~FlowHandler() {}
 
-   virtual void onReceiveSuccess(Flow* flow, unsigned int socketDesc, const asio::ip::address& address, unsigned short port, boost::shared_ptr<reTurn::DataBuffer>& data) = 0;
+   virtual void onReceiveSuccess(Flow* flow, unsigned int socketDesc, const boost::asio::ip::address& address, unsigned short port, boost::shared_ptr<reTurn::DataBuffer>& data) = 0;
    
-   virtual void onReceiveFailure(Flow* flow, unsigned int socketDesc, const asio::error_code& e) = 0;
+   virtual void onReceiveFailure(Flow* flow, unsigned int socketDesc, const boost::system::error_code& e) = 0;
 };
 
 }

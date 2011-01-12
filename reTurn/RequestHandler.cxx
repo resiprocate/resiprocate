@@ -25,8 +25,8 @@ namespace reTurn {
 #define DEFAULT_BANDWIDTH 100  // 100 kbit/s - enough for G711 RTP ?slg? what do we want this to be?
 
 RequestHandler::RequestHandler(TurnManager& turnManager,
-                               const asio::ip::address* prim3489Address, unsigned short* prim3489Port,
-                               const asio::ip::address* alt3489Address, unsigned short* alt3489Port) 
+                               const boost::asio::ip::address* prim3489Address, unsigned short* prim3489Port,
+                               const boost::asio::ip::address* alt3489Address, unsigned short* alt3489Port) 
  : mTurnManager(turnManager)
 {
    if(prim3489Address && prim3489Port && alt3489Address && alt3489Port)
@@ -622,7 +622,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
                                       allocationTuple, 
                                       lifetime);
    }
-   catch(asio::system_error e)
+   catch(boost::system::system_error & e)
    {
       // TODO - handle port in use error better - try to allocate a new port or something?
       ErrLog(<< "Error allocating socket for allocation.  Sending 500.");

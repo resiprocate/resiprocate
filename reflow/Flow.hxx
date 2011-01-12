@@ -54,9 +54,9 @@ public:
       Ready
    };
 
-   Flow(asio::io_service& ioService,
+   Flow(boost::asio::io_service& ioService,
 #ifdef USE_SSL
-        asio::ssl::context& sslContext,
+        boost::asio::ssl::context& sslContext,
 #endif
         unsigned int componentId,
         const StunTuple& localBinding, 
@@ -85,12 +85,12 @@ public:
    ///           end of the passed in buffer for the SRTP HMAC code to be appended
    ///           ***It would be good to make this safer***
    void send(char* buffer, unsigned int size);
-   void sendTo(const asio::ip::address& address, unsigned short port, char* buffer, unsigned int size);
-   void rawSendTo(const asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size);
+   void sendTo(const boost::asio::ip::address& address, unsigned short port, char* buffer, unsigned int size);
+   void rawSendTo(const boost::asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size);
 
    /// Receive Methods
-   asio::error_code receive(char* buffer, unsigned int& size, unsigned int timeout, asio::ip::address* sourceAddress=0, unsigned short* sourcePort=0);
-   asio::error_code receiveFrom(const asio::ip::address& address, unsigned short port, char* buffer, unsigned int& size, unsigned int timeout);
+   boost::system::error_code receive(char* buffer, unsigned int& size, unsigned int timeout, boost::asio::ip::address* sourceAddress=0, unsigned short* sourcePort=0);
+   boost::system::error_code receiveFrom(const boost::asio::ip::address& address, unsigned short port, char* buffer, unsigned int& size, unsigned int timeout);
 
    void asyncReceive();
 
@@ -126,19 +126,19 @@ public:
       EQOSDirection_Receiving                // QOS refering to the direction of receiving packets
    };
 
-   bool setDSCP(ULONG ulInDSCPValue);
+   bool setDSCP(boost::uint32_t ulInDSCPValue);
    bool setServiceType(
-      const asio::ip::udp::endpoint &tInDestinationIPAddress,
+      const boost::asio::ip::udp::endpoint &tInDestinationIPAddress,
       EQOSServiceTypes eInServiceType,
-      ULONG ulInBandwidthInBitsPerSecond);
+      boost::uint32_t ulInBandwidthInBitsPerSecond);
    void setBandwidthQOS(
-      VOID* tInQOSUserParam,
+      void* tInQOSUserParam,
       EQOSDirection eInFlowDirection,
-      const asio::ip::udp::endpoint &tInDestinationIPAddress,
-      ULONG ulInBitsPerSecondToReserve);
-   ULONG getBandwidthQOS(
+      const boost::asio::ip::udp::endpoint &tInDestinationIPAddress,
+      boost::uint32_t ulInBitsPerSecondToReserve);
+   boost::uint32_t getBandwidthQOS(
       EQOSDirection eInFlowDirection,
-      const asio::ip::udp::endpoint &tInDestinationIPAddress);
+      const boost::asio::ip::udp::endpoint &tInDestinationIPAddress);
 
    const StunTuple& getLocalTuple();
    StunTuple getSessionTuple();  // returns either local, reflexive, or relay tuple depending on NatTraversalMode
@@ -152,15 +152,15 @@ private:
    void shutdownImpl();
    /// Used only when ICE is enabled; should be called once the offer/answer exchange has been completed
    void scheduleConnectivityChecks();
-   void onConnectivityCheckTimer(const asio::error_code& error);
+   void onConnectivityCheckTimer(const boost::system::error_code& error);
 
    FlowHandler* mHandler;
-   asio::io_service& mIOService;
-   asio::deadline_timer mConnectivityCheckTimer;
+   boost::asio::io_service& mIOService;
+   boost::asio::deadline_timer mConnectivityCheckTimer;
 #ifdef USE_SSL
-   asio::ssl::context& mSslContext;
+   boost::asio::ssl::context& mSslContext;
 #endif
-   asio::deadline_timer mIcmpRetryTimer;
+   boost::asio::deadline_timer mIcmpRetryTimer;
    int mIcmpRetryCount;
 
    enum IceRole
@@ -232,11 +232,11 @@ private:
    class ReceivedData
    {
    public:
-      ReceivedData(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data) :
+      ReceivedData(const boost::asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data) :
          mAddress(address), mPort(port), mData(data) {}
       ~ReceivedData() {}
 
-      asio::ip::address mAddress;
+      boost::asio::ip::address mAddress;
       unsigned short mPort;
       boost::shared_ptr<DataBuffer> mData;
    };
@@ -245,39 +245,39 @@ private:
    ReceivedDataFifo mReceivedDataFifo; 
 
    // Helpers to perform SRTP protection/unprotection
-   bool processSendData(char* buffer, unsigned int& size, const asio::ip::address& address, unsigned short port);
-   asio::error_code processReceivedData(char* buffer, unsigned int& size, ReceivedData* receivedData, asio::ip::address* sourceAddress=0, unsigned short* sourcePort=0);
+   bool processSendData(char* buffer, unsigned int& size, const boost::asio::ip::address& address, unsigned short port);
+   boost::system::error_code processReceivedData(char* buffer, unsigned int& size, ReceivedData* receivedData, boost::asio::ip::address* sourceAddress=0, unsigned short* sourcePort=0);
 
    FakeSelectSocketDescriptor mFakeSelectSocketDescriptor;
 
-   virtual void onConnectSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port);
-   virtual void onConnectFailure(unsigned int socketDesc, const asio::error_code& e);
+   virtual void onConnectSuccess(unsigned int socketDesc, const boost::asio::ip::address& address, unsigned short port);
+   virtual void onConnectFailure(unsigned int socketDesc, const boost::system::error_code& e);
 
    virtual void onSharedSecretSuccess(unsigned int socketDesc, const char* username, unsigned int usernameSize, const char* password, unsigned int passwordSize);
-   virtual void onSharedSecretFailure(unsigned int socketDesc, const asio::error_code& e);
+   virtual void onSharedSecretFailure(unsigned int socketDesc, const boost::system::error_code& e);
 
    virtual void onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& stunServerTuple);
-   virtual void onBindFailure(unsigned int socketDesc, const asio::error_code& e, const StunTuple& stunServerTuple);
+   virtual void onBindFailure(unsigned int socketDesc, const boost::system::error_code& e, const StunTuple& stunServerTuple);
 
    virtual void onIncomingBindRequestProcessed(unsigned int socketDest, const StunTuple& sourceTuple);
 
    virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, UInt64 reservationToken);
-   virtual void onAllocationFailure(unsigned int socketDesc, const asio::error_code& e);
+   virtual void onAllocationFailure(unsigned int socketDesc, const boost::system::error_code& e);
 
    virtual void onRefreshSuccess(unsigned int socketDesc, unsigned int lifetime);
-   virtual void onRefreshFailure(unsigned int socketDesc, const asio::error_code& e);
+   virtual void onRefreshFailure(unsigned int socketDesc, const boost::system::error_code& e);
 
    virtual void onSetActiveDestinationSuccess(unsigned int socketDesc);
-   virtual void onSetActiveDestinationFailure(unsigned int socketDesc, const asio::error_code &e);
+   virtual void onSetActiveDestinationFailure(unsigned int socketDesc, const boost::system::error_code &e);
    virtual void onClearActiveDestinationSuccess(unsigned int socketDesc);
-   virtual void onClearActiveDestinationFailure(unsigned int socketDesc, const asio::error_code &e);
+   virtual void onClearActiveDestinationFailure(unsigned int socketDesc, const boost::system::error_code &e);
 
-   //virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size);
-   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
-   virtual void onReceiveFailure(unsigned int socketDesc, const asio::error_code& e);
+   //virtual void onReceiveSuccess(unsigned int socketDesc, const boost::asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size);
+   virtual void onReceiveSuccess(unsigned int socketDesc, const boost::asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
+   virtual void onReceiveFailure(unsigned int socketDesc, const boost::system::error_code& e);
 
    virtual void onSendSuccess(unsigned int socketDesc);
-   virtual void onSendFailure(unsigned int socketDesc, const asio::error_code& e);
+   virtual void onSendFailure(unsigned int socketDesc, const boost::system::error_code& e);
 };
 
 }

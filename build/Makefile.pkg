@@ -329,7 +329,7 @@ endif
 
 BOOST_INCLUDEDIRS := $(BOOST_INCDIR_CONFIG)
 BOOST_DEFINES := BOOST_ALL_NO_LIB
-
+BOOST_LDFLAGS := -lboost_thread -lboost_system
 BOOSTSER_LIBNAME = boost_serialization boost_wserialization
 
 ASIO_INCLUDEDIRS := $(ROOT)/contrib/asio

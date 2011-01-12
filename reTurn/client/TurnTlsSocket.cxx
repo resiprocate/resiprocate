@@ -12,10 +12,10 @@ using namespace std;
 namespace reTurn {
 
 TurnTlsSocket::TurnTlsSocket(bool validateServerCertificateHostname, 
-                             const asio::ip::address& address, 
+                             const boost::asio::ip::address& address, 
                              unsigned short port) : 
    TurnTcpSocket(address,port),
-   mSslContext(mIOService, asio::ssl::context::tlsv1),  // TLSv1.0
+   mSslContext(mIOService, boost::asio::ssl::context::tlsv1),  // TLSv1.0
    mSocket(mIOService, mSslContext),
    mValidateServerCertificateHostname(validateServerCertificateHostname)
 {
@@ -24,38 +24,38 @@ TurnTlsSocket::TurnTlsSocket(bool validateServerCertificateHostname,
    // Setup SSL context
    
    // Enable certificate validation
-   mSslContext.set_verify_mode(asio::ssl::context::verify_peer |   // Verify the peer.
-                               asio::ssl::context::verify_fail_if_no_peer_cert);  // Fail verification if the peer has no certificate.
+   mSslContext.set_verify_mode(boost::asio::ssl::context::verify_peer |   // Verify the peer.
+                               boost::asio::ssl::context::verify_fail_if_no_peer_cert);  // Fail verification if the peer has no certificate.
  
    // File that should contain all required root certificates
    mSslContext.load_verify_file("ca.pem");
 
-   asio::error_code errorCode;
-   mSocket.lowest_layer().open(address.is_v6() ? asio::ip::tcp::v6() : asio::ip::tcp::v4(), errorCode);
+   boost::system::error_code errorCode;
+   mSocket.lowest_layer().open(address.is_v6() ? boost::asio::ip::tcp::v6() : boost::asio::ip::tcp::v4(), errorCode);
    if(!errorCode)
    {
-      mSocket.lowest_layer().set_option(asio::ip::tcp::socket::reuse_address(true));
-      mSocket.lowest_layer().set_option(asio::ip::tcp::no_delay(true)); // ?slg? do we want this?
-      mSocket.lowest_layer().bind(asio::ip::tcp::endpoint(mLocalBinding.getAddress(), mLocalBinding.getPort()), errorCode);
+      mSocket.lowest_layer().set_option(boost::asio::ip::tcp::socket::reuse_address(true));
+      mSocket.lowest_layer().set_option(boost::asio::ip::tcp::no_delay(true)); // ?slg? do we want this?
+      mSocket.lowest_layer().bind(boost::asio::ip::tcp::endpoint(mLocalBinding.getAddress(), mLocalBinding.getPort()), errorCode);
    }
 }
 
-asio::error_code 
+boost::system::error_code 
 TurnTlsSocket::connect(const std::string& address, unsigned short port)
 {
    // Get a list of endpoints corresponding to the server name.
-   asio::ip::tcp::resolver resolver(mIOService);
+   boost::asio::ip::tcp::resolver resolver(mIOService);
    resip::Data service(port);
 #ifdef USE_IPV6
-   asio::ip::tcp::resolver::query query(address, service.c_str());   
+   boost::asio::ip::tcp::resolver::query query(address, service.c_str());   
 #else
-   asio::ip::tcp::resolver::query query(asio::ip::tcp::v4(), address, service.c_str());   
+   boost::asio::ip::tcp::resolver::query query(boost::asio::ip::tcp::v4(), address, service.c_str());   
 #endif
-   asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-   asio::ip::tcp::resolver::iterator end;
+   boost::asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+   boost::asio::ip::tcp::resolver::iterator end;
 
    // Try each endpoint until we successfully establish a connection.
-   asio::error_code errorCode = asio::error::host_not_found;
+   boost::system::error_code errorCode = boost::asio::error::host_not_found;
    while (errorCode && endpoint_iterator != end)
    {
       mSocket.lowest_layer().close();
@@ -63,7 +63,7 @@ TurnTlsSocket::connect(const std::string& address, unsigned short port)
       if(!errorCode)
       {
          DebugLog(<< "Connected!");
-         mSocket.handshake(asio::ssl::stream_base::client, errorCode);
+         mSocket.handshake(boost::asio::ssl::stream_base::client, errorCode);
          if(!errorCode)
          {  
             DebugLog(<< "Handshake complete!");
@@ -80,7 +80,7 @@ TurnTlsSocket::connect(const std::string& address, unsigned short port)
             {
                WarningLog(<< "Hostname in certificate does not match connection hostname!");
                mSocket.lowest_layer().close();
-               errorCode = asio::error::operation_aborted;
+               errorCode = boost::asio::error::operation_aborted;
             }
          }
       }
@@ -188,40 +188,40 @@ TurnTlsSocket::validateServerCertificateHostname(const std::string& hostname)
    return valid;
 }
 
-asio::error_code 
+boost::system::error_code 
 TurnTlsSocket::rawWrite(const char* buffer, unsigned int size)
 {
-   asio::error_code errorCode;
-   asio::write(mSocket, asio::buffer(buffer, size), asio::transfer_all(), errorCode); 
+   boost::system::error_code errorCode;
+   boost::asio::write(mSocket, boost::asio::buffer(buffer, size), boost::asio::transfer_all(), errorCode); 
    return errorCode;
 }
 
-asio::error_code 
-TurnTlsSocket::rawWrite(const std::vector<asio::const_buffer>& buffers)
+boost::system::error_code 
+TurnTlsSocket::rawWrite(const std::vector<boost::asio::const_buffer>& buffers)
 {
-   asio::error_code errorCode;
-   asio::write(mSocket, buffers, asio::transfer_all(), errorCode);
+   boost::system::error_code errorCode;
+   boost::asio::write(mSocket, buffers, boost::asio::transfer_all(), errorCode);
    return errorCode;
 }
 
 void 
 TurnTlsSocket::readHeader()
 {
-   asio::async_read(mSocket, asio::buffer(mReadBuffer, 4),
-                    boost::bind(&TurnTlsSocket::handleReadHeader, this, asio::placeholders::error));
+   boost::asio::async_read(mSocket, boost::asio::buffer(mReadBuffer, 4),
+                    boost::bind(&TurnTlsSocket::handleReadHeader, this, boost::asio::placeholders::error));
 }
 
 void 
 TurnTlsSocket::readBody(unsigned int len)
 {
-   asio::async_read(mSocket, asio::buffer(&mReadBuffer[4], len),
-                    boost::bind(&TurnTlsSocket::handleRawRead, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
+   boost::asio::async_read(mSocket, boost::asio::buffer(&mReadBuffer[4], len),
+                    boost::bind(&TurnTlsSocket::handleRawRead, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 
 void
 TurnTlsSocket::cancelSocket()
 {
-   asio::error_code ec;
+   boost::system::error_code ec;
    mSocket.lowest_layer().cancel(ec);
 }
 

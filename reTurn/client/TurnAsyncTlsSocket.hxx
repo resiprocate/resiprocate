@@ -1,8 +1,8 @@
 #ifndef TURNASYNCTLSSOCKET_HXX
 #define TURNASYNCTLSSOCKET_HXX
 
-#include <asio.hpp>
-#include <asio/ssl.hpp>
+#include <boost/asio.hpp>
+#include <boost/asio/ssl.hpp>
 
 #include "TurnAsyncTcpSocket.hxx"
 #include "../AsyncTlsSocketBase.hxx"
@@ -12,11 +12,11 @@ namespace reTurn {
 class TurnAsyncTlsSocket : public TurnAsyncSocket, public AsyncTlsSocketBase
 {
 public:
-   explicit TurnAsyncTlsSocket(asio::io_service& ioService, 
-                               asio::ssl::context& sslContext,
+   explicit TurnAsyncTlsSocket(boost::asio::io_service& ioService, 
+                               boost::asio::ssl::context& sslContext,
                                bool validateServerCertificateHostname,
                                TurnAsyncSocketHandler* turnAsyncSocketHandler,
-                               const asio::ip::address& address = UnspecifiedIpAddress, 
+                               const boost::asio::ip::address& address = UnspecifiedIpAddress, 
                                unsigned short port = 0);
 
    virtual unsigned int getSocketDescriptor() { return mSocket.lowest_layer().native(); }
@@ -26,11 +26,11 @@ protected:
 private:
    // AsyncTcpSocketBase callbacks
    virtual void onConnectSuccess();
-   virtual void onConnectFailure(const asio::error_code& e);
-   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
-   virtual void onReceiveFailure(const asio::error_code& e);
+   virtual void onConnectFailure(const boost::system::error_code& e);
+   virtual void onReceiveSuccess(const boost::asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
+   virtual void onReceiveFailure(const boost::system::error_code& e);
    virtual void onSendSuccess();
-   virtual void onSendFailure(const asio::error_code& e);
+   virtual void onSendFailure(const boost::system::error_code& e);
 };
 
 } 

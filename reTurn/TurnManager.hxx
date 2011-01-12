@@ -2,7 +2,7 @@
 #define TURNMANAGER_HXX
 
 #include <map>
-#include <asio.hpp>
+#include <boost/asio.hpp>
 #include "TurnAllocationKey.hxx"
 #include "ReTurnConfig.hxx"
 #include "StunTuple.hxx"
@@ -14,7 +14,7 @@ class TurnAllocation;
 class TurnManager
 {
 public:
-   explicit TurnManager(asio::io_service& ioService, const ReTurnConfig& config);  // ioService used to start timers
+   explicit TurnManager(boost::asio::io_service& ioService, const ReTurnConfig& config);  // ioService used to start timers
    ~TurnManager();
 
    void addTurnAllocation(TurnAllocation* turnAllocation);
@@ -25,9 +25,9 @@ public:
    TurnAllocation* findTurnAllocation(const TurnAllocationKey& turnAllocationKey);
    TurnAllocation* findTurnAllocation(const StunTuple& requestedTuple);
 
-   asio::io_service& getIOService() { return mIOService; }
+   boost::asio::io_service& getIOService() { return mIOService; }
 
-   void allocationExpired(const asio::error_code& e, const TurnAllocationKey& turnAllocationKey);
+   void allocationExpired(const boost::system::error_code& e, const TurnAllocationKey& turnAllocationKey);
 
    unsigned short allocateAnyPort(StunTuple::TransportType transport);
    unsigned short allocateEvenPort(StunTuple::TransportType transport);
@@ -56,7 +56,7 @@ private:
    PortAllocationMap& getPortAllocationMap(StunTuple::TransportType transport);
    unsigned short advanceLastAllocatedPort(StunTuple::TransportType transport, unsigned int numToAdvance = 1);
 
-   asio::io_service& mIOService;
+   boost::asio::io_service& mIOService;
    const ReTurnConfig& mConfig;
 };
 

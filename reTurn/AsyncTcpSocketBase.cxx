@@ -12,7 +12,7 @@ using namespace std;
 
 namespace reTurn {
 
-AsyncTcpSocketBase::AsyncTcpSocketBase(asio::io_service& ioService) 
+AsyncTcpSocketBase::AsyncTcpSocketBase(boost::asio::io_service& ioService) 
  : AsyncSocketBase(ioService),
    mSocket(ioService), 
    mResolver(ioService)
@@ -29,16 +29,16 @@ AsyncTcpSocketBase::getSocketDescriptor()
    return mSocket.native(); 
 }
 
-asio::error_code 
-AsyncTcpSocketBase::bind(const asio::ip::address& address, unsigned short port)
+boost::system::error_code 
+AsyncTcpSocketBase::bind(const boost::asio::ip::address& address, unsigned short port)
 {
-   asio::error_code errorCode;
-   mSocket.open(address.is_v6() ? asio::ip::tcp::v6() : asio::ip::tcp::v4(), errorCode);
+   boost::system::error_code errorCode;
+   mSocket.open(address.is_v6() ? boost::asio::ip::tcp::v6() : boost::asio::ip::tcp::v4(), errorCode);
    if(!errorCode)
    {
-      mSocket.set_option(asio::ip::tcp::no_delay(true)); // ?slg? do we want this?
-      mSocket.set_option(asio::ip::tcp::socket::reuse_address(true));
-      mSocket.bind(asio::ip::tcp::endpoint(address, port), errorCode);
+      mSocket.set_option(boost::asio::ip::tcp::no_delay(true)); // ?slg? do we want this?
+      mSocket.set_option(boost::asio::ip::tcp::socket::reuse_address(true));
+      mSocket.bind(boost::asio::ip::tcp::endpoint(address, port), errorCode);
    }   
    return errorCode;
 }
@@ -50,28 +50,28 @@ AsyncTcpSocketBase::connect(const std::string& address, unsigned short port)
    // into a list of endpoints.
    resip::Data service(port);
 #ifdef USE_IPV6
-   asio::ip::tcp::resolver::query query(address, service.c_str());   
+   boost::asio::ip::tcp::resolver::query query(address, service.c_str());   
 #else
-   asio::ip::tcp::resolver::query query(asio::ip::tcp::v4(), address, service.c_str());   
+   boost::asio::ip::tcp::resolver::query query(boost::asio::ip::tcp::v4(), address, service.c_str());   
 #endif
    mResolver.async_resolve(query,
         boost::bind(&AsyncSocketBase::handleTcpResolve, shared_from_this(),
-                    asio::placeholders::error,
-                    asio::placeholders::iterator));
+                    boost::asio::placeholders::error,
+                    boost::asio::placeholders::iterator));
 }
 
 void 
-AsyncTcpSocketBase::handleTcpResolve(const asio::error_code& ec,
-                                  asio::ip::tcp::resolver::iterator endpoint_iterator)
+AsyncTcpSocketBase::handleTcpResolve(const boost::system::error_code& ec,
+                                  boost::asio::ip::tcp::resolver::iterator endpoint_iterator)
 {
    if (!ec)
    {
       // Attempt a connection to the first endpoint in the list. Each endpoint
       // will be tried until we successfully establish a connection.
-      //asio::ip::tcp::endpoint endpoint = *endpoint_iterator;
+      //boost::asio::ip::tcp::endpoint endpoint = *endpoint_iterator;
       mSocket.async_connect(endpoint_iterator->endpoint(),
                             boost::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
-                            asio::placeholders::error, endpoint_iterator));
+                            boost::asio::placeholders::error, endpoint_iterator));
    }
    else
    {
@@ -80,8 +80,8 @@ AsyncTcpSocketBase::handleTcpResolve(const asio::error_code& ec,
 }
 
 void 
-AsyncTcpSocketBase::handleConnect(const asio::error_code& ec,
-                                  asio::ip::tcp::resolver::iterator endpoint_iterator)
+AsyncTcpSocketBase::handleConnect(const boost::system::error_code& ec,
+                                  boost::asio::ip::tcp::resolver::iterator endpoint_iterator)
 {
    if (!ec)
    {
@@ -92,13 +92,13 @@ AsyncTcpSocketBase::handleConnect(const asio::error_code& ec,
 
       onConnectSuccess();
    }
-   else if (++endpoint_iterator != asio::ip::tcp::resolver::iterator())
+   else if (++endpoint_iterator != boost::asio::ip::tcp::resolver::iterator())
    {
       // The connection failed. Try the next endpoint in the list.
       mSocket.close();
       mSocket.async_connect(endpoint_iterator->endpoint(),
                             boost::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
-                            asio::placeholders::error, endpoint_iterator));
+                            boost::asio::placeholders::error, endpoint_iterator));
    }
    else
    {
@@ -113,7 +113,7 @@ AsyncTcpSocketBase::setConnectedAddressAndPort()
    mConnectedPort = mSocket.remote_endpoint().port();
 }
 
-const asio::ip::address 
+const boost::asio::ip::address 
 AsyncTcpSocketBase::getSenderEndpointAddress() 
 { 
    return mConnectedAddress; 
@@ -126,29 +126,29 @@ AsyncTcpSocketBase::getSenderEndpointPort()
 }
 
 void 
-AsyncTcpSocketBase::transportSend(const StunTuple& destination, std::vector<asio::const_buffer>& buffers)
+AsyncTcpSocketBase::transportSend(const StunTuple& destination, std::vector<boost::asio::const_buffer>& buffers)
 {
    // Note: destination is ignored for TCP
-   asio::async_write(mSocket, buffers, 
-                     boost::bind(&AsyncTcpSocketBase::handleSend, shared_from_this(), asio::placeholders::error));
+   boost::asio::async_write(mSocket, buffers, 
+                     boost::bind(&AsyncTcpSocketBase::handleSend, shared_from_this(), boost::asio::placeholders::error));
 }
 
 void 
 AsyncTcpSocketBase::transportReceive()
 {
-   mSocket.async_read_some(asio::buffer((void*)mReceiveBuffer->data(), RECEIVE_BUFFER_SIZE),
-                           boost::bind(&AsyncTcpSocketBase::handleReceive, shared_from_this(), asio::placeholders::error, asio::placeholders::bytes_transferred));
+   mSocket.async_read_some(boost::asio::buffer((void*)mReceiveBuffer->data(), RECEIVE_BUFFER_SIZE),
+                           boost::bind(&AsyncTcpSocketBase::handleReceive, shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 
 void 
 AsyncTcpSocketBase::transportFramedReceive()
 {
-   asio::async_read(mSocket, asio::buffer((void*)mReceiveBuffer->data(), 4),
-                    boost::bind(&AsyncSocketBase::handleReadHeader, shared_from_this(), asio::placeholders::error));
+   boost::asio::async_read(mSocket, boost::asio::buffer((void*)mReceiveBuffer->data(), 4),
+                    boost::bind(&AsyncSocketBase::handleReadHeader, shared_from_this(), boost::asio::placeholders::error));
 }
 
 void 
-AsyncTcpSocketBase::handleReadHeader(const asio::error_code& e)
+AsyncTcpSocketBase::handleReadHeader(const boost::system::error_code& e)
 {
    if (!e)
    {
@@ -172,8 +172,8 @@ AsyncTcpSocketBase::handleReadHeader(const asio::error_code& e)
       }
       if(dataLen+4 < RECEIVE_BUFFER_SIZE)
       {
-         asio::async_read(mSocket, asio::buffer(&(*mReceiveBuffer)[4], dataLen),
-                          boost::bind(&AsyncTcpSocketBase::handleReceive, shared_from_this(), asio::placeholders::error, dataLen+4));
+         boost::asio::async_read(mSocket, boost::asio::buffer(&(*mReceiveBuffer)[4], dataLen),
+                          boost::bind(&AsyncTcpSocketBase::handleReceive, shared_from_this(), boost::asio::placeholders::error, dataLen+4));
       }
       else
       {
@@ -181,9 +181,9 @@ AsyncTcpSocketBase::handleReadHeader(const asio::error_code& e)
          close();
       }
    }
-   else if (e != asio::error::operation_aborted)
+   else if (e != boost::asio::error::operation_aborted)
    {
-      if(e != asio::error::eof && e != asio::error::connection_reset)
+      if(e != boost::asio::error::eof && e != boost::asio::error::connection_reset)
       {
          WarningLog(<< "Read header error: " << e.value() << "-" << e.message());
       }
@@ -200,16 +200,16 @@ AsyncTcpSocketBase::transportClose()
 }
 
 bool 
-AsyncTcpSocketBase::setDSCP(ULONG ulInDSCPValue)
+AsyncTcpSocketBase::setDSCP(boost::uint32_t ulInDSCPValue)
 {
    return QosSocketManager::SocketSetDSCP(mSocket.native(), ulInDSCPValue, false);
 }
 
 bool 
 AsyncTcpSocketBase::setServiceType(
-   const asio::ip::udp::endpoint &tInDestinationIPAddress,
+   const boost::asio::ip::udp::endpoint &tInDestinationIPAddress,
    EQOSServiceTypes eInServiceType,
-   ULONG ulInBandwidthInBitsPerSecond
+   boost::uint32_t ulInBandwidthInBitsPerSecond
 )
 {
    return QosSocketManager::SocketSetServiceType(mSocket.native(), 

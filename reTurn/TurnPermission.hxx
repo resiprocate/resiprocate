@@ -1,7 +1,7 @@
 #ifndef TURNPERMISSION_HXX
 #define TURNPERMISSION_HXX
 
-#include <asio.hpp>
+#include <boost/asio.hpp>
 
 #include "StunTuple.hxx"
 
@@ -10,13 +10,13 @@ namespace reTurn {
 class TurnPermission
 {
 public:
-   explicit TurnPermission(const asio::ip::address& address, unsigned int timeoutSeconds);
+   explicit TurnPermission(const boost::asio::ip::address& address, unsigned int timeoutSeconds);
 
    void refresh();
    bool isExpired();
 
 private:
-   asio::ip::address mAddress;  // we want to accept incoming requests (including connections) from any peer with this address   
+   boost::asio::ip::address mAddress;  // we want to accept incoming requests (including connections) from any peer with this address   
    time_t mExpires;
    unsigned int mTimeoutSeconds;
 };

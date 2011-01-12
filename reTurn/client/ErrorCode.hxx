@@ -1,11 +1,11 @@
 #ifndef ERRORCODE_HXX
 #define ERRORCODE_HXX
 
-#include <asio/error_code.hpp>
+#include <boost/asio/error.hpp>
 
 namespace reTurn {
 
-typedef asio::error_code::value_type ErrorType;
+typedef int ErrorType;
 
 static const ErrorType Success                               = 0;
 static const ErrorType GeneralError                          = -1;

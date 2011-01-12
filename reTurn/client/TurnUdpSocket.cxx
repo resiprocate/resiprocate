@@ -5,42 +5,42 @@ using namespace std;
 
 namespace reTurn {
 
-TurnUdpSocket::TurnUdpSocket(const asio::ip::address& address, unsigned short port) : 
+TurnUdpSocket::TurnUdpSocket(const boost::asio::ip::address& address, unsigned short port) : 
    TurnSocket(address,port),
    mSocket(mIOService)   
 {
    mLocalBinding.setTransportType(StunTuple::UDP);
 
-   asio::error_code errorCode;
-   mSocket.open(address.is_v6() ? asio::ip::udp::v6() : asio::ip::udp::v4(), errorCode);
+   boost::system::error_code errorCode;
+   mSocket.open(address.is_v6() ? boost::asio::ip::udp::v6() : boost::asio::ip::udp::v4(), errorCode);
    if(!errorCode)
    {
-      mSocket.set_option(asio::ip::udp::socket::reuse_address(true));
-      // mSocket.set_option(asio::socket_base::receive_buffer_size(66560));
-      mSocket.bind(asio::ip::udp::endpoint(mLocalBinding.getAddress(), mLocalBinding.getPort()), errorCode);
+      mSocket.set_option(boost::asio::ip::udp::socket::reuse_address(true));
+      // mSocket.set_option(boost::asio::socket_base::receive_buffer_size(66560));
+      mSocket.bind(boost::asio::ip::udp::endpoint(mLocalBinding.getAddress(), mLocalBinding.getPort()), errorCode);
    }
 }
 
-asio::error_code 
+boost::system::error_code 
 TurnUdpSocket::connect(const std::string& address, unsigned short port)
 {
-   asio::error_code errorCode;
+   boost::system::error_code errorCode;
 
    // Get a list of endpoints corresponding to the server name.
-   asio::ip::udp::resolver resolver(mIOService);
+   boost::asio::ip::udp::resolver resolver(mIOService);
    resip::Data service(port);
 #ifdef USE_IPV6
-   asio::ip::udp::resolver::query query(address, service.c_str());   
+   boost::asio::ip::udp::resolver::query query(address, service.c_str());   
 #else
-   asio::ip::udp::resolver::query query(asio::ip::udp::v4(), address, service.c_str());   
+   boost::asio::ip::udp::resolver::query query(boost::asio::ip::udp::v4(), address, service.c_str());   
 #endif
-   asio::ip::udp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-   asio::ip::udp::resolver::iterator end;
+   boost::asio::ip::udp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+   boost::asio::ip::udp::resolver::iterator end;
 
    // Use first endpoint in list
    if(endpoint_iterator == end)
    {
-      return asio::error::host_not_found;
+      return boost::asio::error::host_not_found;
    }
    
    // Nothing to do for UDP except store the remote endpoint
@@ -54,28 +54,28 @@ TurnUdpSocket::connect(const std::string& address, unsigned short port)
    return errorCode;
 }
 
-asio::error_code 
+boost::system::error_code 
 TurnUdpSocket::rawWrite(const char* buffer, unsigned int size)
 {
-   asio::error_code errorCode;
-   mSocket.send_to(asio::buffer(buffer, size), mRemoteEndpoint, 0, errorCode); 
+   boost::system::error_code errorCode;
+   mSocket.send_to(boost::asio::buffer(buffer, size), mRemoteEndpoint, 0, errorCode); 
    return errorCode;
 }
 
-asio::error_code 
-TurnUdpSocket::rawWrite(const std::vector<asio::const_buffer>& buffers)
+boost::system::error_code 
+TurnUdpSocket::rawWrite(const std::vector<boost::asio::const_buffer>& buffers)
 {
-   asio::error_code errorCode;
+   boost::system::error_code errorCode;
    mSocket.send_to(buffers, mRemoteEndpoint, 0, errorCode); 
    return errorCode;
 }
 
-asio::error_code 
-TurnUdpSocket::rawRead(unsigned int timeout, unsigned int* bytesRead, asio::ip::address* sourceAddress, unsigned short* sourcePort)
+boost::system::error_code 
+TurnUdpSocket::rawRead(unsigned int timeout, unsigned int* bytesRead, boost::asio::ip::address* sourceAddress, unsigned short* sourcePort)
 {
    startReadTimer(timeout);
 
-   mSocket.async_receive_from(asio::buffer(mReadBuffer, sizeof(mReadBuffer)), mSenderEndpoint, 0, boost::bind(&TurnUdpSocket::handleRawRead, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
+   mSocket.async_receive_from(boost::asio::buffer(mReadBuffer, sizeof(mReadBuffer)), mSenderEndpoint, 0, boost::bind(&TurnUdpSocket::handleRawRead, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 
    // Wait for timer and read to end
    mIOService.run();
@@ -100,7 +100,7 @@ TurnUdpSocket::rawRead(unsigned int timeout, unsigned int* bytesRead, asio::ip::
 void
 TurnUdpSocket::cancelSocket()
 {
-   asio::error_code ec;
+   boost::system::error_code ec;
    mSocket.cancel(ec);
 }
 

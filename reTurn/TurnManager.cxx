@@ -11,7 +11,7 @@ using namespace std;
 
 namespace reTurn {
 
-TurnManager::TurnManager(asio::io_service& ioService, const ReTurnConfig& config) : 
+TurnManager::TurnManager(boost::asio::io_service& ioService, const ReTurnConfig& config) : 
    mLastAllocatedUdpPort(config.mAllocationPortRangeMin-1),
    mLastAllocatedTcpPort(config.mAllocationPortRangeMin-1),
    mIOService(ioService),
@@ -80,9 +80,9 @@ TurnManager::findTurnAllocation(const StunTuple& requestedTuple)
 }
 
 void 
-TurnManager::allocationExpired(const asio::error_code& e, const TurnAllocationKey& turnAllocationKey)
+TurnManager::allocationExpired(const boost::system::error_code& e, const TurnAllocationKey& turnAllocationKey)
 {
-   if (e != asio::error::operation_aborted)  // Note: nothing currently stops timers
+   if (e != boost::asio::error::operation_aborted)  // Note: nothing currently stops timers
    {
       // Timer was not cancelled, take necessary action.
       InfoLog(<< "Turn Allocation Expired! clientLocal=" << turnAllocationKey.getClientLocalTuple() << " clientRemote=" << turnAllocationKey.getClientRemoteTuple());

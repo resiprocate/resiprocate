@@ -1,4 +1,4 @@
-#include <asio.hpp>
+#include <boost/asio.hpp>
 #include <boost/function.hpp>
 #include <map>
 #include <rutil/Log.hxx>
@@ -36,7 +36,7 @@ namespace flowmanager
 class IOServiceThread : public ThreadIf
 {
 public:
-   IOServiceThread(asio::io_service& ioService) : mIOService(ioService) {}
+   IOServiceThread(boost::asio::io_service& ioService) : mIOService(ioService) {}
 
    virtual ~IOServiceThread() {}
 
@@ -45,14 +45,14 @@ public:
       mIOService.run();
    }
 private:
-   asio::io_service& mIOService;
+   boost::asio::io_service& mIOService;
 };
 }
 
 FlowManager::FlowManager()
 #ifdef USE_SSL
    : 
-   mSslContext(mIOService, asio::ssl::context::tlsv1),
+   mSslContext(mIOService, boost::asio::ssl::context::tlsv1),
 #ifdef USE_DTLS
    mDtlsFactory(0),
 #endif
@@ -61,15 +61,15 @@ FlowManager::FlowManager()
 
 #endif  
 {
-   mIOServiceWork = new asio::io_service::work(mIOService);
+   mIOServiceWork = new boost::asio::io_service::work(mIOService);
    mIOServiceThread = new IOServiceThread(mIOService);
    mIOServiceThread->run();
 
 #ifdef USE_SSL
    // Setup SSL context
-   asio::error_code ec; 
-   mSslContext.set_verify_mode(asio::ssl::context::verify_peer | 
-                               asio::ssl::context::verify_fail_if_no_peer_cert);
+   boost::system::error_code ec; 
+   mSslContext.set_verify_mode(boost::asio::ssl::context::verify_peer | 
+                               boost::asio::ssl::context::verify_fail_if_no_peer_cert);
 #define VERIFY_FILE "ca.pem"
    mSslContext.load_verify_file(VERIFY_FILE, ec);   // TODO make a setting
    if(ec)

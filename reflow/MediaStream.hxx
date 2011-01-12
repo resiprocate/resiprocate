@@ -1,9 +1,9 @@
 #if !defined(MediaStream_hxx)
 #define MediaStream_hxx
 
-#include <asio.hpp>
+#include <boost/asio.hpp>
 #ifdef USE_SSL
-#include <asio/ssl.hpp>
+#include <boost/asio/ssl.hpp>
 #endif
 #include <srtp.h>
 
@@ -52,9 +52,9 @@ public:
       SRTP_AES_CM_128_HMAC_SHA1_80
    };
 
-   MediaStream(asio::io_service& ioService,
+   MediaStream(boost::asio::io_service& ioService,
 #ifdef USE_SSL
-               asio::ssl::context& sslContext,
+               boost::asio::ssl::context& sslContext,
 #endif
                MediaStreamHandler& mediaStreamHandler,
                const StunTuple& localRtpBinding, 

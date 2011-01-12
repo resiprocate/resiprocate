@@ -1,12 +1,12 @@
 #ifdef USE_SSL
-
+#ifdef USE_DTLS
 #ifndef DtlsSocket_hxx
 #define DtlsSocket_hxx
 
 #include <memory>
 extern "C" 
 {
-#include <srtp.h>
+#include <srtp/srtp.h>
 }
 
 #include <openssl/e_os2.h>
@@ -132,7 +132,7 @@ class DtlsSocket
 
 }
 #endif
-
+#endif
 #endif 
 /* ====================================================================
 

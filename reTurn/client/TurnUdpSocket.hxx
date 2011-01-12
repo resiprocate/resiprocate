@@ -1,7 +1,7 @@
 #ifndef TURNUDPSOCKET_HXX
 #define TURNUDPSOCKET_HXX
 
-#include <asio.hpp>
+#include <boost/asio.hpp>
 
 #include "TurnSocket.hxx"
 
@@ -10,24 +10,24 @@ namespace reTurn {
    class TurnUdpSocket : public TurnSocket
 {
 public:
-   explicit TurnUdpSocket(const asio::ip::address& address, unsigned short port);  
+   explicit TurnUdpSocket(const boost::asio::ip::address& address, unsigned short port);  
 
    virtual unsigned int getSocketDescriptor() { return mSocket.native(); }
 
-   virtual  asio::error_code connect(const std::string& address, unsigned short port);
+   virtual  boost::system::error_code connect(const std::string& address, unsigned short port);
 
 protected:
-   virtual asio::error_code rawWrite(const char* buffer, unsigned int size);
-   virtual asio::error_code rawWrite(const std::vector<asio::const_buffer>& buffers);
-   virtual asio::error_code rawRead(unsigned int timeout, unsigned int* bytesRead, asio::ip::address* sourceAddress=0, unsigned short* sourcePort=0);
+   virtual boost::system::error_code rawWrite(const char* buffer, unsigned int size);
+   virtual boost::system::error_code rawWrite(const std::vector<boost::asio::const_buffer>& buffers);
+   virtual boost::system::error_code rawRead(unsigned int timeout, unsigned int* bytesRead, boost::asio::ip::address* sourceAddress=0, unsigned short* sourcePort=0);
    virtual void cancelSocket();
 
 private:
-   asio::ip::udp::socket mSocket;
+   boost::asio::ip::udp::socket mSocket;
 
    // Remote binding info
-   asio::ip::udp::endpoint mRemoteEndpoint;
-   asio::ip::udp::endpoint mSenderEndpoint;  // for read operations
+   boost::asio::ip::udp::endpoint mRemoteEndpoint;
+   boost::asio::ip::udp::endpoint mSenderEndpoint;  // for read operations
 };
 
 } 

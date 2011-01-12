@@ -4,7 +4,7 @@
 #include <ostream>
 #include <rutil/compat.hxx>
 #include <rutil/Data.hxx>
-#include <asio.hpp>
+#include <boost/asio.hpp>
 
 #include "StunTuple.hxx"
 

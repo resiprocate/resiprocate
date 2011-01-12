@@ -1,5 +1,5 @@
 #ifdef USE_SSL
-
+#ifdef USE_DTLS
 #ifndef DtlsFactory_hxx
 #define DtlsFactory_hxx
 
@@ -62,7 +62,7 @@ private:
 
 }
 #endif
-
+#endif
 #endif 
 /* ====================================================================
 

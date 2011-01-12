@@ -84,7 +84,7 @@ public:
      Signalled by the media stack to indicate that the RTP stream has closed.
      Used by recon to destroy the RemoteParticipant associated with this RtpStream.
    */
-   virtual boost::signal<void (ClosedReason, asio::error_code)>& onClosed() = 0;
+   virtual boost::signal<void (ClosedReason, boost::system::error_code)>& onClosed() = 0;
 
 	// TODO: playStream, playMemory, playFile, playUrl ...
 

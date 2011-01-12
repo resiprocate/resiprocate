@@ -5,9 +5,9 @@ using namespace std;
 
 namespace reTurn {
 
-TurnAsyncTcpSocket::TurnAsyncTcpSocket(asio::io_service& ioService,
+TurnAsyncTcpSocket::TurnAsyncTcpSocket(boost::asio::io_service& ioService,
                                        TurnAsyncSocketHandler* turnAsyncSocketHandler,
-                                       const asio::ip::address& address, 
+                                       const boost::asio::ip::address& address, 
                                        unsigned short port) : 
    TurnAsyncSocket(ioService, *this, turnAsyncSocketHandler, address, port),
    AsyncTcpSocketBase(ioService)
@@ -24,20 +24,20 @@ TurnAsyncTcpSocket::onConnectSuccess()
 }
 
 void 
-TurnAsyncTcpSocket::onConnectFailure(const asio::error_code& e)
+TurnAsyncTcpSocket::onConnectFailure(const boost::system::error_code& e)
 {
    if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onConnectFailure(getSocketDescriptor(), e);
 }
 
 void 
-TurnAsyncTcpSocket::onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
+TurnAsyncTcpSocket::onReceiveSuccess(const boost::asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
 {
    handleReceivedData(address, port, data);
    turnReceive();
 }
 
 void 
-TurnAsyncTcpSocket::onReceiveFailure(const asio::error_code& e)
+TurnAsyncTcpSocket::onReceiveFailure(const boost::system::error_code& e)
 {
    if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onReceiveFailure(getSocketDescriptor(), e);
 }
@@ -49,7 +49,7 @@ TurnAsyncTcpSocket::onSendSuccess()
 }
  
 void 
-TurnAsyncTcpSocket::onSendFailure(const asio::error_code& e)
+TurnAsyncTcpSocket::onSendFailure(const boost::system::error_code& e)
 {
    if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSendFailure(getSocketDescriptor(), e);
 }

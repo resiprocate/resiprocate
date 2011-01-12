@@ -1,4 +1,4 @@
-#include <asio.hpp>
+#include <boost/asio.hpp>
 #include <boost/function.hpp>
 #include <rutil/Data.hxx>
 
@@ -20,7 +20,7 @@ using namespace recon;
 
 // Constructor
 FlowManagerSipXSocket::FlowManagerSipXSocket(Flow* flow) 
-        : OsSocket(),
+        : 
         mFlow(flow)
 {    
 }
@@ -31,11 +31,6 @@ FlowManagerSipXSocket::~FlowManagerSipXSocket()
 {
 }
 
-OsSocket* FlowManagerSipXSocket::getSocket()
-{
-    assert(false);
-    return 0;
-}
 
 int FlowManagerSipXSocket::getSocketDescriptor() const
 { 
@@ -59,50 +54,26 @@ int FlowManagerSipXSocket::read(char* buffer, int bufferLength)
 }
 
 int FlowManagerSipXSocket::read(char* buffer, int bufferLength,
-       UtlString* ipAddress, int* port)
-{
-   asio::ip::address receivedAddress;
-   unsigned short receivedPort=0;
-
-   //cout << "read(get address): bufferlen=" << bufferLength << endl;  // **********
-   assert(mFlow);
-
-   unsigned int len = bufferLength;
-   if(mFlow->receive(buffer, len, 0, &receivedAddress, &receivedPort))
-   {
-      //cout << "read(get address): done, len=0" << endl;
-      return 0;
-   }
-
-   if (ipAddress)
-   {
-      *ipAddress = receivedAddress.to_string().c_str();
-   }
-
-   if (port)
-   {
-       *port = (int)receivedPort ;
-   }
-   //cout << "read(get address): done, len=" << len << endl;
-
-   return len;
-}
-
-int FlowManagerSipXSocket::read(char* buffer, int bufferLength,
        struct in_addr* ipAddress, int* port)
 {
     int iRC ;
     int iReceivedPort ;
-    UtlString receivedIp ;
 
-    iRC = read(buffer, bufferLength, &receivedIp, &iReceivedPort) ;
+    unsigned int length = bufferLength;
+    boost::asio::ip::address sourceAddress;
+    unsigned short sourcePort(0);
+    if (mFlow->receive(buffer, length, 0, &sourceAddress, &sourcePort) != 0)
+    {
+	return 0;
+    }
+
     if (ipAddress)
-        ipAddress->s_addr = inet_addr(receivedIp) ;
+        ipAddress->s_addr = *(in_addr_t*)(&sourceAddress.to_v4().to_bytes()[0]) ;
 
     if (port)
-        *port = iReceivedPort ;
+        *port = sourcePort ;
 
-    return iRC ;
+    return length;
 }
 
 
@@ -136,7 +107,7 @@ int FlowManagerSipXSocket::write(const char* buffer,
 {
    //cout << "write: bufferlen=" << bufferLength << ", address=" << ipAddress << ", port=" << port << endl;
    assert(mFlow);
-   mFlow->sendTo(asio::ip::address::from_string(ipAddress), port, (char*)buffer, bufferLength);
+   mFlow->sendTo(boost::asio::ip::address::from_string(ipAddress), port, (char*)buffer, bufferLength);
    return 0;
 }
 
