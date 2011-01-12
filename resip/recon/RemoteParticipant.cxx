@@ -780,7 +780,6 @@ RemoteParticipant::provideOffer(bool postOfferAccept)
    
    buildSdpOffer(mLocalHold, *offer);
 
-   adjustRTPStreams(true);
    mDialogSet.provideOffer(offer, mInviteSessionHandle, postOfferAccept);
    mOfferRequired = false;
 }
@@ -794,7 +793,6 @@ RemoteParticipant::provideAnswer(const SdpContents& offer, bool postAnswerAccept
 
    if(answerOk)
    {
-      adjustRTPStreams();
       mDialogSet.provideAnswer(answer, mInviteSessionHandle, postAnswerAccept, postAnswerAlert);
    }
    else

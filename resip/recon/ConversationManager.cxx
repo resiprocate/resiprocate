@@ -1,5 +1,6 @@
 // sipX includes
 #include <sdp/SdpCodec.h>
+#include <os/OsConfigDb.h>
 #include <mp/MpCodecFactory.h>
 #include <mp/MprBridge.h>
 #include <mp/MpResourceTopology.h>
@@ -53,7 +54,16 @@ ConversationManager::ConversationManager(bool localAudioEnabled, MediaInterfaceM
    OsStatus rc = CpMediaInterfaceFactory::addCodecPaths(codecPathsNum, codecPaths);
    assert(OS_SUCCESS == rc);
 
-   mMediaFactory = sipXmediaFactoryFactory(NULL, 0, 0, 0, mLocalAudioEnabled);
+   if(mMediaInterfaceMode == sipXConversationMediaInterfaceMode)
+   {
+      OsConfigDb sipXconfig;
+      sipXconfig.set("PHONESET_MAX_ACTIVE_CALLS_ALLOWED",300);  // This controls the maximum number of flowgraphs allowed - default is 16
+      mMediaFactory = sipXmediaFactoryFactory(&sipXconfig, 0, 0, 0, mLocalAudioEnabled);
+   }
+   else
+   {
+      mMediaFactory = sipXmediaFactoryFactory(NULL, 0, 0, 0, mLocalAudioEnabled);
+   }
 
    // Create MediaInterface
    MpCodecFactory *pCodecFactory = MpCodecFactory::getMpCodecFactory();

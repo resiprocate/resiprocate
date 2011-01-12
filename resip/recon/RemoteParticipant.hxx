@@ -76,6 +76,7 @@ public:
 
    // Called by RemoteParticipantDialogSet when Related Conversations should be destroyed
    virtual void destroyConversations();
+   virtual void adjustRTPStreams(bool sendingOffer=false);
 
    // DTMF Handler
    virtual void onDtmfEvent(int dtmf, int duration, bool up);
@@ -131,7 +132,6 @@ private:
    void setLocalSdp(const resip::SdpContents& sdp);
    void setRemoteSdp(const resip::SdpContents& sdp, bool answer=false);
    void setRemoteSdp(const resip::SdpContents& sdp, sdpcontainer::Sdp* remoteSdp);
-   void adjustRTPStreams(bool sendingOffer=false);
    virtual void replaceWithParticipant(RemoteParticipant* replacingParticipant);
 
    resip::DialogUsageManager &mDum;

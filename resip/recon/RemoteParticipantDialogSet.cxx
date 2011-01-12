@@ -48,6 +48,7 @@ RemoteParticipantDialogSet::RemoteParticipantDialogSet(ConversationManager& conv
    mUACOriginalRemoteParticipant(0),
    mNumDialogs(0),
    mLocalRTPPort(0),
+   mAllocateLocalRTPPortFailed(false),
    mForkSelectMode(forkSelectMode),
    mUACConnectedDialogId(Data::Empty, Data::Empty, Data::Empty),
    mActiveRemoteParticipantHandle(0),
@@ -91,13 +92,15 @@ RemoteParticipantDialogSet::selectUASUserProfile(const SipMessage& msg)
 unsigned int 
 RemoteParticipantDialogSet::getLocalRTPPort()
 {
-   if(mLocalRTPPort == 0)
+   if(mLocalRTPPort == 0 && !mAllocateLocalRTPPortFailed)
    {
       bool isUAC = false;
       mLocalRTPPort = mConversationManager.allocateRTPPort();
       if(mLocalRTPPort == 0)
       {
          WarningLog(<< "Could not allocate a free RTP port for RemoteParticipantDialogSet!");
+         mAllocateLocalRTPPortFailed = true;
+         return 0;
       }
       else
       {
@@ -416,6 +419,9 @@ RemoteParticipantDialogSet::doProvideOfferAnswer(bool offer, std::auto_ptr<resip
       {
          inviteSessionHandle->provideAnswer(*sdp);
       }
+
+      // Adjust RTP Streams
+      dynamic_cast<RemoteParticipant*>(inviteSessionHandle->getAppDialog().get())->adjustRTPStreams(offer);
 
       // Do Post Answer Operations
       ServerInviteSession* sis = dynamic_cast<ServerInviteSession*>(inviteSessionHandle.get());
