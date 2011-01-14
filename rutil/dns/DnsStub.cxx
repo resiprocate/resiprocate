@@ -82,7 +82,7 @@ DnsStub::DnsStub(const NameserverList& additional,
    mDnsProvider(ExternalDnsFactory::createExternalDns()),
    mAsyncProcessHandler(asyncProcessHandler)
 {
-   if ( pollGrp )
+   if ( pollGrp && mDnsProvider->isPollSupported())
    {
       mDnsProvider->setPollGrp(pollGrp);
    }
@@ -149,7 +149,10 @@ DnsStub::processTimers()
 {
    // the fifo is captures as a timer within getTimeTill... above
    processFifo();
-   mDnsProvider->processTimers();
+   if(mDnsProvider->isPollSupported())
+   {
+      mDnsProvider->processTimers();
+   }
 }
 
 void
