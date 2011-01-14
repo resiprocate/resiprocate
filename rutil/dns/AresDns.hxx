@@ -40,6 +40,7 @@ class AresDns : public ExternalDns
       virtual void buildFdSet(fd_set& read, fd_set& write, int& size);
       virtual void process(fd_set& read, fd_set& write);
 
+      virtual bool isPollSupported() const;
       virtual void setPollGrp(FdPollGrp *pollGrp);
       virtual void processTimers();
 

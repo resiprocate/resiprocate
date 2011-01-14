@@ -34,6 +34,7 @@ using namespace resip;
  *
  **********************************************************************/
 
+#ifndef USE_CARES
 namespace resip
 {
 
@@ -118,6 +119,7 @@ AresDnsPollItem::socket_poll_cb(void *cb_data,
    }
 }
 
+#endif
 
 /**********************************************************************
  *
@@ -130,8 +132,12 @@ volatile bool AresDns::mHostFileLookupOnlyMode = false;
 void
 AresDns::setPollGrp(FdPollGrp *grp)
 {
+#ifdef USE_CARES
+   assert(0);
+#else
    assert( mPollGrp == NULL );
    mPollGrp = grp;
+#endif
 }
 
 int
@@ -332,6 +338,7 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
          mChannel->tries = tries;
       }
 
+#ifndef USE_CARES
       if ( mPollGrp )
       {
 	 // expand vector to hold {nservers} and init to NULL
@@ -339,6 +346,7 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
 	 // tell ares to let us know when things change
          ares_process_set_poll_cb(mChannel, AresDnsPollItem::socket_poll_cb, this);
       }
+#endif
 
 #elif defined(USE_CARES)
       {
@@ -555,13 +563,27 @@ AresDns::buildFdSet(fd_set& read, fd_set& write, int& size)
    }
 }
 
+bool 
+AresDns::isPollSupported() const
+{
+#ifdef USE_CARES
+   return false;
+#else
+   return true;
+#endif
+}
+
 void
 AresDns::processTimers()
 {
+#ifdef USE_CARES
+   assert(0);
+#else
    assert( mPollGrp!=0 );
    time_t timeSecs;
    time(&timeSecs);
    ares_process_poll(mChannel, /*server*/-1, /*rd*/-1, /*wr*/-1, timeSecs);
+#endif
 }
 
 void
