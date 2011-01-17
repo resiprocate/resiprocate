@@ -121,6 +121,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 			 unsigned transportFlags = 0);
 
       SipStack& getSipStack();
+      const SipStack& getSipStack() const;
       Security* getSecurity();
       
       Data getHostAddress();

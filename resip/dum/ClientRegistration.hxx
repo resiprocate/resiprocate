@@ -90,6 +90,11 @@ class ClientRegistration: public NonDialogUsage
       SharedPtr<SipMessage> tryModification(ClientRegistration::State state);
       void internalRequestRefresh(UInt32 expires = 0);  // 0 defaults to using original expires value (to remove use removeXXX() instead)
       unsigned int checkProfileRetry(const SipMessage& msg);
+      void tagContact(NameAddr& contact) const;
+      unsigned long calculateExpiry(const SipMessage& reg200) const;
+      bool contactIsMine(const NameAddr& contact) const;
+      bool rinstanceIsMine(const Data& rinstance) const;
+      bool searchByUri(const Uri& cUri) const;
 
       friend class DialogSet;
 

@@ -105,11 +105,7 @@ ClientRegistration::addBinding(const NameAddr& contact, UInt32 registrationTime)
 {
    SharedPtr<SipMessage> next = tryModification(Adding);
    mMyContacts.push_back(contact);
-
-   if(mDialogSet.getUserProfile()->getRinstanceEnabled())
-   {
-      mMyContacts.back().uri().param(p_rinstance) = Random::getCryptoRandomHex(8);  // .slg. poor mans instance id so that we can tell which contacts are ours - to be replaced by gruu someday
-   }
+   tagContact(mMyContacts.back());
 
    next->header(h_Contacts) = mMyContacts;
    mRegistrationTime = registrationTime;
@@ -441,86 +437,35 @@ ClientRegistration::dispatch(const SipMessage& msg)
          // !ah! take list of ctcs and push into mMy or mOther as required.
 
          // make timers to re-register
-         UInt32 expiry = UINT_MAX;
-         if (msg.exists(h_Contacts))
+         UInt32 expiry = calculateExpiry(msg);
+         if(msg.exists(h_Contacts))
          {
             mAllContacts = msg.header(h_Contacts);
+         }
+         else
+         {
+            mAllContacts.clear();
+         }
 
-            //!dcm! -- should do set intersection with my bindings and walk that
-            //small size, n^2, don't care
-            if (mDialogSet.getUserProfile()->getRinstanceEnabled())
+         if (expiry != 0 && expiry != UINT_MAX)
+         {
+            if(expiry>=7)
             {
-               UInt32 fallbackExpiry = UINT_MAX;  // Used if no contacts found with our rinstance - this can happen if proxies do not echo back the rinstance property correctly
-               for (NameAddrs::iterator itMy = mMyContacts.begin(); itMy != mMyContacts.end(); itMy++)
-               {
-                  for (NameAddrs::const_iterator it = msg.header(h_Contacts).begin(); it != msg.header(h_Contacts).end(); it++)
-                  {
-                     try
-                     {
-                        if(it->exists(p_expires))
-                        {
-                           // rinstace parameter is added to contacts created by this client, so we can 
-                           // use it to determine which contacts in the 200 response are ours.  This
-                           // should eventually be replaced by gruu stuff.
-                           if (it->uri().exists(p_rinstance) && 
-                               it->uri().param(p_rinstance) == itMy->uri().param(p_rinstance))
-                           {
-                              expiry = resipMin((UInt32)it->param(p_expires), expiry);
-                           }
-                           else
-                           {
-                              fallbackExpiry = resipMin((UInt32)it->param(p_expires), fallbackExpiry);
-                           }
-                        }
-                     }
-                     catch(ParseException& e)
-                     {
-                        DebugLog(<< "Ignoring unparsable contact in REG/200: " << e);
-                     }
-                  }
-                  if(expiry == UINT_MAX)  // if we didn't find a contact with our rinstance, then use the fallbackExpiry
-                  {
-                     expiry = fallbackExpiry;
-                  }
-               }
+               int exp = Helper::aBitSmallerThan(expiry);
+               mExpires = exp + Timer::getTimeSecs();
+               mDum.addTimer(DumTimeout::Registration,
+                             exp,
+                             getBaseHandle(),
+                             ++mTimerSeq);
             }
             else
             {
-               for (NameAddrs::const_iterator it = msg.header(h_Contacts).begin();
-                    it != msg.header(h_Contacts).end(); it++)
-               {
-                  //add to boolean exp. but needs testing
-                  //std::find(myContacts().begin(), myContacts().end(), *it) != myContacts().end()
-                  if (it->exists(p_expires))
-                  {
-                     try
-                     {
-                        expiry = resipMin((UInt32)it->param(p_expires), expiry);
-                     }
-                     catch(ParseException& e)
-                     {
-                        DebugLog(<< "Ignoring unparsable contact in REG/200: " << e);
-                     }
-                  }
-               }
-            }            
-         }
-
-         if (expiry == UINT_MAX)
-         {
-            if (msg.exists(h_Expires))
-            {
-               expiry = msg.header(h_Expires).value();
+               WarningLog(<< "Server is using an unreasonably low expiry: " 
+                           << expiry 
+                           << " We're just going to end this registration.");
+               end();
+               return;
             }
-         }
-         if (expiry != 0 && expiry != UINT_MAX)
-         {
-            int exp = Helper::aBitSmallerThan(expiry);
-            mExpires = exp + Timer::getTimeSecs();
-            mDum.addTimer(DumTimeout::Registration,
-                          exp,
-                          getBaseHandle(),
-                          ++mTimerSeq);
          }
 
          switch (mState)
@@ -671,6 +616,175 @@ ClientRegistration::dispatch(const SipMessage& msg)
       mDum.mClientRegistrationHandler->onFailure(getHandle(), msg);
       delete this;
    }
+}
+
+void 
+ClientRegistration::tagContact(NameAddr& contact) const
+{
+   if(contact.uri().host().empty() || 
+      mDum.getSipStack().isMyDomain(contact.uri().host(), contact.uri().port()))
+   {
+      // Contact points at us; it is appropriate to add a +sip.instance to 
+      // this Contact. We don't need to have full gruu support enabled to add
+      // a +sip.instance either...
+      if(mDialogSet.getUserProfile()->hasInstanceId())
+      {
+         contact.param(p_Instance) = mDialogSet.getUserProfile()->getInstanceId();
+      }
+      else if(mDialogSet.getUserProfile()->getRinstanceEnabled())
+      {
+         // !slg! poor mans instance id so that we can tell which contacts 
+         // are ours - to be replaced by gruu someday.
+         WarningLog(<< "You really should consider setting an instance id in"
+                     " the UserProfile (see UserProfile::setInstanceId())."
+                     " This is really easy, and makes this class much less "
+                     "likely to clash with another endpoint registering at "
+                     "the same AOR.");
+         contact.uri().param(p_rinstance) = Random::getCryptoRandomHex(8);  
+      }
+      else if(!contact.uri().user().empty())
+      {
+         WarningLog(<< "Ok, not only have you not specified an instance id, "
+                  "you have disabled the rinstance hack (ie; resip's \"poor"
+                  " man's +sip.instance\"). We will try to match Contacts"
+                  " based on what you've put in the user-part of your "
+                  "Contact, but this can be dicey, especially if you've put"
+                  " something there that another endpoint is likely to "
+                  "use.");
+      }
+      else
+      {
+         ErrLog(<< "Ok, not only have you not specified an instance id, "
+                  "you have disabled the rinstance hack (ie; resip's \"poor"
+                  " man's +sip.instance\"), _and_ you haven't put anything"
+                  " in the user-part of your Contact. This is asking for "
+                  "confusion later. We'll do our best to try to match things"
+                  " up later when the response comes in...");
+      }
+   }
+   else
+   {
+      // Looks like a third-party registration. +sip.instance is out of the 
+      // question, but we can still use rinstance.
+      if(mDialogSet.getUserProfile()->getRinstanceEnabled())
+      {
+         // !slg! poor mans instance id so that we can tell which contacts 
+         // are ours - to be replaced by gruu someday.
+         contact.uri().param(p_rinstance) = Random::getCryptoRandomHex(8);  
+      }
+      else if(!contact.uri().user().empty())
+      {
+         WarningLog(<< "You're trying to do a third-party registration, but "
+                  "you have disabled the rinstance hack (ie; resip's \"poor"
+                  " man's +sip.instance\"). We will try to match Contacts"
+                  " based on what you've put in the user-part of your "
+                  "Contact, but this can be dicey, especially if you've put"
+                  " something there that another endpoint is likely to "
+                  "use.");
+      }
+      else
+      {
+         ErrLog(<< "You're trying to do a third-party registration,  and "
+                  "not only have you disabled the rinstance hack (ie; "
+                  "resip's \"poor man's +sip.instance\"), you haven't"
+                  " put anything in the user-part of your Contact. This is "
+                  "asking for confusion later. We'll do our best to try to "
+                  "match things up later when the response comes in...");
+      }
+   }
+   
+   // ?bwc? Host and port override?
+}
+
+unsigned long 
+ClientRegistration::calculateExpiry(const SipMessage& reg200) const
+{
+   unsigned long expiry=mRegistrationTime;
+   if(reg200.exists(h_Expires) &&
+      reg200.header(h_Expires).isWellFormed() &&
+      reg200.header(h_Expires).value() < expiry)
+   {
+      expiry=reg200.header(h_Expires).value();
+   }
+
+   if(!reg200.exists(h_Contacts))
+   {
+      return expiry;
+   }
+
+   const NameAddrs& contacts(reg200.header(h_Contacts));
+
+   for(NameAddrs::const_iterator c=contacts.begin();c!=contacts.end();++c)
+   {
+      // Our expiry is never going to increase if we find one of our contacts, 
+      // so if the expiry is not lower, we just ignore it. For registrars that
+      // leave our requested expiry alone, this code ends up being pretty quick,
+      // especially if there aren't contacts from other endpoints laying around.
+      if(c->isWellFormed() &&
+         c->exists(p_expires) && 
+         c->param(p_expires) < expiry &&
+         contactIsMine(*c))
+      {
+         expiry=c->param(p_expires);
+      }
+   }
+   return expiry;
+}
+
+bool 
+ClientRegistration::contactIsMine(const NameAddr& contact) const
+{
+   // Try to find this contact in mMyContacts
+   if(mDialogSet.getUserProfile()->hasInstanceId() && 
+      contact.exists(p_Instance))
+   {
+      return contact.param(p_Instance)==mDialogSet.getUserProfile()->getInstanceId();
+   }
+   else if(mDialogSet.getUserProfile()->getRinstanceEnabled() &&
+            contact.uri().exists(p_rinstance))
+   {
+      return rinstanceIsMine(contact.uri().param(p_rinstance));
+   }
+   else
+   {
+      return searchByUri(contact.uri());
+   }
+}
+
+bool 
+ClientRegistration::rinstanceIsMine(const Data& rinstance) const
+{
+   // !bwc! This could be made faster if we used a single rinstance...
+   for(NameAddrs::const_iterator m=mMyContacts.begin(); m!=mMyContacts.end(); ++m)
+   {
+      if(m->uri().exists(p_rinstance) && m->uri().param(p_rinstance)==rinstance)
+      {
+         return true;
+      }
+   }
+   return false;
+}
+
+bool 
+ClientRegistration::searchByUri(const Uri& cUri) const
+{
+   for(NameAddrs::const_iterator m=mMyContacts.begin(); m!=mMyContacts.end(); ++m)
+   {
+      if(m->uri()==cUri)
+      {
+         return true;
+      }
+      else if(m->uri().host().empty() && 
+               m->uri().user()==cUri.user() &&
+               m->uri().scheme()==cUri.scheme() &&
+               mDum.getSipStack().isMyDomain(cUri.host(), cUri.port()))
+      {
+         // Empty host-part in our contact; this means we're relying on the 
+         // stack to fill out this Contact header. Also, the user-part matches.
+         return true;
+      }
+   }
+   return false;
 }
 
 unsigned int 

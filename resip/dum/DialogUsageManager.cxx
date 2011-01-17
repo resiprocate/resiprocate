@@ -193,6 +193,12 @@ DialogUsageManager::getSipStack()
    return mStack;
 }
 
+const SipStack& 
+DialogUsageManager::getSipStack() const
+{
+   return mStack;
+}
+
 Security*
 DialogUsageManager::getSecurity()
 {
