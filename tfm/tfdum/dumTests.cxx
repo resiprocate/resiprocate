@@ -318,7 +318,7 @@ class DumTestCase : public DumFixture
          // 3) do the test call, and watch the generated dialog events to ensure they match what we expect
 
          jason->getDum().addServerSubscriptionHandler("dialog", jason);
-         std::auto_ptr<DialogEventStateManager> desm(jason->getDum().createDialogEventStateManager(jason));
+         DialogEventStateManager* desm(jason->getDum().createDialogEventStateManager(jason));
 
          TestSipEndPoint* sheila = sipEndPoint;
          TestDialogEvent uac(jason);
@@ -389,7 +389,7 @@ class DumTestCase : public DumFixture
          // 3) do the test call, and watch the generated dialog events to ensure they match what we expect
 
          jason->getDum().addServerSubscriptionHandler("dialog", jason);
-         std::auto_ptr<DialogEventStateManager> desm(jason->getDum().createDialogEventStateManager(jason));
+         DialogEventStateManager* desm(jason->getDum().createDialogEventStateManager(jason));
 
          TestSipEndPoint* sheila = sipEndPoint;
          TestDialogEvent uac(jason);
@@ -433,7 +433,7 @@ class DumTestCase : public DumFixture
          InfoLog(<< "testDialogEventCancelUac");
 
          jason->getDum().addServerSubscriptionHandler("dialog", jason);
-         std::auto_ptr<DialogEventStateManager> desm(jason->getDum().createDialogEventStateManager(jason));
+         DialogEventStateManager* desm(jason->getDum().createDialogEventStateManager(jason));
 
          TestSipEndPoint* sheila = sipEndPoint;
          TestDialogEvent testDialogEvt(jason);
@@ -513,7 +513,7 @@ class DumTestCase : public DumFixture
          // 3) do the test call, and watch the generated dialog events to ensure they match what we expect
 
          jason->getDum().addServerSubscriptionHandler("dialog", jason);
-         std::auto_ptr<DialogEventStateManager> desm(jason->getDum().createDialogEventStateManager(jason));
+         DialogEventStateManager* desm(jason->getDum().createDialogEventStateManager(jason));
 
          TestSipEndPoint* sheila = sipEndPoint;
          TestDialogEvent uac(jason);
@@ -606,7 +606,7 @@ class DumTestCase : public DumFixture
          // 3) do the test call, and watch the generated dialog events to ensure they match what we expect
 
          jason->getDum().addServerSubscriptionHandler("dialog", jason);
-         std::auto_ptr<DialogEventStateManager> desm(jason->getDum().createDialogEventStateManager(jason));
+         DialogEventStateManager* desm(jason->getDum().createDialogEventStateManager(jason));
 
          TestSipEndPoint* sheila = sipEndPoint;
          TestDialogEvent uac(jason);
@@ -678,7 +678,7 @@ class DumTestCase : public DumFixture
          // 3) do the test call, and watch the generated dialog events to ensure they match what we expect
 
          jason->getDum().addServerSubscriptionHandler("dialog", jason);
-         std::auto_ptr<DialogEventStateManager> desm(jason->getDum().createDialogEventStateManager(jason));
+         DialogEventStateManager* desm(jason->getDum().createDialogEventStateManager(jason));
 
          TestSipEndPoint* sheila = sipEndPoint;
          TestDialogEvent testDialogEvt(jason);
@@ -776,7 +776,7 @@ class DumTestCase : public DumFixture
          WarningLog(<< "testDialogEventReplaces");
 
          jason->getDum().addServerSubscriptionHandler("dialog", jason);
-         std::auto_ptr<DialogEventStateManager> desm(jason->getDum().createDialogEventStateManager(jason));
+         DialogEventStateManager* desm(jason->getDum().createDialogEventStateManager(jason));
 
          TestClientRegistration regScott(scott);
          TestClientRegistration regJason(jason);
@@ -1000,7 +1000,7 @@ class DumTestCase : public DumFixture
          InfoLog(<< "testDialogEventUasBasic");
 
          jason->getDum().addServerSubscriptionHandler("dialog", jason);
-         std::auto_ptr<DialogEventStateManager> desm(jason->getDum().createDialogEventStateManager(jason));
+         DialogEventStateManager* desm(jason->getDum().createDialogEventStateManager(jason));
 
          TestClientRegistration regJason(jason);
          
@@ -1066,7 +1066,7 @@ class DumTestCase : public DumFixture
          InfoLog(<< "testDialogEvent302Uas");
 
          jason->getDum().addServerSubscriptionHandler("dialog", jason);
-         std::auto_ptr<DialogEventStateManager> desm(jason->getDum().createDialogEventStateManager(jason));
+         DialogEventStateManager* desm(jason->getDum().createDialogEventStateManager(jason));
 
          TestClientRegistration regJason(jason);
          
@@ -1126,7 +1126,7 @@ class DumTestCase : public DumFixture
          InfoLog(<< "testDialogEventCancelUas");
 
          jason->getDum().addServerSubscriptionHandler("dialog", jason);
-         std::auto_ptr<DialogEventStateManager> desm(jason->getDum().createDialogEventStateManager(jason));
+         DialogEventStateManager* desm(jason->getDum().createDialogEventStateManager(jason));
 
          TestClientRegistration regJason(jason);
          
@@ -1524,9 +1524,9 @@ class DumTestCase : public DumFixture
                                                                            david->notify(mwc, "message-summary", "active", 
                                                                                          derek->getProfile()->getDefaultSubscriptionTime()-50, 
                                                                                          derek->getProfile()->getDefaultSubscriptionTime()))),
-             optional(david->expect(NOTIFY/407, from(proxy), WaitForResponse, david->digestRespond())),
-             optional(david->expect(NOTIFY/407, from(proxy), WaitForResponse, david->digestRespond())),
-             And(Sub(derek->expect(ClientSubscription_NewSubscription, clientSub, *TestEndPoint::AlwaysTruePred, WaitForCommand, derek->noAction()),
+             And(Sub(optional(david->expect(NOTIFY/407, from(proxy), WaitForResponse, david->digestRespond())),
+                     optional(david->expect(NOTIFY/407, from(proxy), WaitForResponse, david->digestRespond()))),
+                 Sub(derek->expect(ClientSubscription_NewSubscription, clientSub, *TestEndPoint::AlwaysTruePred, WaitForCommand, derek->noAction()),
                      clientSub.expect(ClientSubscription_UpdateActive, *TestEndPoint::AlwaysTruePred, WaitForCommand, clientSub.acceptUpdate()),
                      clientSub.expect(ClientSubscription_UpdateActive, *TestEndPoint::AlwaysTruePred, WaitForCommand, 
                                       clientSub.acceptUpdate())),
@@ -2800,9 +2800,8 @@ class DumTestCase : public DumFixture
          // derek transfers david, david sends 202 and notify(200OK) to derek.
          Seq(invDerek.refer(jason->getProfile()->getDefaultFrom()),
              david->expect(REFER, contact(NameAddr(derekContact)), WaitForCommand, chain(david->send202(), david->notify200(derekContact))),
-             optional(david->expect(NOTIFY/407, from(proxy), WaitForResponse, david->digestRespond())),
-
-             And(Sub(david->expect(NOTIFY/200, contact(NameAddr(derekContact)), WaitForResponse, david->noAction())),
+             And(Sub(optional(david->expect(NOTIFY/407, from(proxy), WaitForResponse, david->digestRespond()))),
+                 Sub(david->expect(NOTIFY/200, contact(NameAddr(derekContact)), WaitForResponse, david->noAction())),
                  Sub(invDerek.expect(Invite_ReferAccepted, *TestEndPoint::AlwaysTruePred, WaitForCommand, invDerek.noAction()),
 //                     derek->expect(ClientSubscription_UpdateActive, clientSubDerek, *TestEndPoint::AlwaysTruePred, 
 //                                   WaitForCommand, clientSubDerek.acceptUpdate(200)),

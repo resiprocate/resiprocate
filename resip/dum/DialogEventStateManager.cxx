@@ -383,31 +383,31 @@ DialogEventStateManager::findOrCreateDialogInfo(const Dialog& dialog)
       // either we have a dialog set id with an empty remote tag, or we have other dialog(s) with different
       // remote tag(s)
       DialogId fakeId(dialog.getId().getDialogSetId(), Data::Empty);
-      std::map<DialogId, DialogEventInfo*, DialogIdComparator>::iterator it = mDialogIdToEventInfo.lower_bound(fakeId);
+      it = mDialogIdToEventInfo.lower_bound(fakeId);
 
       if (it != mDialogIdToEventInfo.end() && 
             it->first.getDialogSetId() == dialog.getId().getDialogSetId())
       {
          if (it->first.getRemoteTag().empty())
-      {
-         // convert this bad boy into a full on Dialog
-         eventInfo = it->second;
-         mDialogIdToEventInfo.erase(it);
-         eventInfo->mDialogId = dialog.getId();
+         {
+            // convert this bad boy into a full on Dialog
+            eventInfo = it->second;
+            mDialogIdToEventInfo.erase(it);
+            eventInfo->mDialogId = dialog.getId();
+         }
+         else
+         {
+            // clone this fellow member dialog, initializing it with a new id and creation time 
+            DialogEventInfo* newForkInfo = new DialogEventInfo(*(it->second));
+            newForkInfo->mDialogEventId = Random::getVersion4UuidUrn();
+               newForkInfo->mCreationTimeSeconds = Timer::getTimeSecs();
+            newForkInfo->mDialogId = dialog.getId();
+            newForkInfo->mRemoteIdentity = dialog.getRemoteNameAddr();
+            newForkInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(dialog.getRemoteTarget().uri()));
+            newForkInfo->mRouteSet = dialog.getRouteSet();
+            eventInfo = newForkInfo;
+         }
       }
-      else
-      {
-         // clone this fellow member dialog, initializing it with a new id and creation time 
-         DialogEventInfo* newForkInfo = new DialogEventInfo(*(it->second));
-         newForkInfo->mDialogEventId = Random::getVersion4UuidUrn();
-            newForkInfo->mCreationTimeSeconds = Timer::getTimeSecs();
-         newForkInfo->mDialogId = dialog.getId();
-         newForkInfo->mRemoteIdentity = dialog.getRemoteNameAddr();
-         newForkInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(dialog.getRemoteTarget().uri()));
-         newForkInfo->mRouteSet = dialog.getRouteSet();
-         eventInfo = newForkInfo;
-      }
-   }
       else
       {
          // .jjg. this can happen if onTryingUax(..) wasn't called yet for this dialog (set) id
