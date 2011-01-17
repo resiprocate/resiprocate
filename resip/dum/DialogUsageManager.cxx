@@ -881,6 +881,14 @@ DialogUsageManager::send(SharedPtr<SipMessage> msg)
    outgoingProcess(auto_ptr<Message>(event));
 }
 
+void 
+DialogUsageManager::safeSend(SharedPtr<SipMessage> request)
+{
+   SendCommand* s=new SendCommand(request, *this);
+   post(s);
+}
+
+
 void DialogUsageManager::outgoingProcess(auto_ptr<Message> message)
 {
    Data tid = Data::Empty;

@@ -88,11 +88,11 @@ DumUaSendingCommand::operator()(DumUserAgent& dua)
    SharedPtr<SipMessage> msg = mFunctor();
    if (mMessageAdorner)
    {
-      mUa->getDum().send((*mMessageAdorner)(msg));
+      mUa->getDum().safeSend((*mMessageAdorner)(msg));
    }
    else
    {
-      mUa->getDum().send(msg);
+      mUa->getDum().safeSend(msg);
    }
 }
 

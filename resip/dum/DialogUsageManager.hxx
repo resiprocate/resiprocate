@@ -249,6 +249,34 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       
       void end(DialogSetId invSessionId);
       void send(SharedPtr<SipMessage> request);
+      void safeSend(SharedPtr<SipMessage> request);
+
+      class SendCommand : public DumCommandAdapter
+      {
+         public:
+            SendCommand(SharedPtr<SipMessage> request,
+                        DialogUsageManager& dum):
+               mRequest(request),
+               mDum(dum)
+            {}
+            
+            virtual ~SendCommand(){}
+
+            virtual void executeCommand()
+            {
+               mDum.send(mRequest);
+            }
+
+            virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+            {
+               return strm << "DialogUsageManager::SendCommand" << std::endl;
+            }
+
+         protected:
+            SharedPtr<SipMessage> mRequest;
+            DialogUsageManager& mDum;
+      };
+
       //void send(SipMessage& request, EncryptionLevel level);
       
       // give dum an opportunity to handle its events. If process() returns true
