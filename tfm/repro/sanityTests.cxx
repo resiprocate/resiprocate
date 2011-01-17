@@ -11081,7 +11081,9 @@ class MyTestCase
 
          TEST(testInviteBasic);
          TEST(testInviteBasicUpperCaseBranch);
+#ifdef USE_SSL
          TEST(testInviteBasicTls);
+#endif
          TEST(testInviteCallerHangsUp);
          TEST(testInviteCalleeHangsUp);
          TEST(testInviteCallerCancels);
