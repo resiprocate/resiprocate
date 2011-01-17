@@ -10980,7 +10980,9 @@ class MyTestCase
 // Non-invite tests
          TEST(testNonInviteWithInviteCollision);
          TEST(testNonInviteBusy);
+#ifdef USE_SSL
          TEST(testNonInviteTLS);
+#endif
          TEST(testNonInviteSpiral);
          TEST(testNonInviteNoContacts);
          TEST(testNonInvite4xxResponse);
