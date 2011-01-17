@@ -16,7 +16,7 @@
 class DumUserAgent;
 
 //will fail if no SipMessage is present in the event
-//TODO migrate to tfcommon codebase
+//TODO migrate to tfm codebase
 class MessageMatcher
 {
    public:

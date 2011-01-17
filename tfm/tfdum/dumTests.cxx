@@ -11,8 +11,8 @@
 #include <cppunit/Test.h>
 #include <cppunit/TestResultCollector.h>
 #include <cppunit/TextTestRunner.h>
-#include "tfcommon/CppTestSelector.hxx"
-#include "tfcommon/CPTextTestProgressListener.hxx"
+#include "tfm/CppTestSelector.hxx"
+#include "tfm/CPTextTestProgressListener.hxx"
 
 #include "DumUserAgent.hxx"
 #include "DumFixture.hxx"
@@ -38,15 +38,15 @@
 
 #include "resip/dum/DialogEventStateManager.hxx"
 
-#include "tfdum/TestClientSubscription.hxx"
-#include "tfdum/TestServerSubscription.hxx"
-#include "tfdum/TestInviteSession.hxx"
-#include "tfdum/TestClientPagerMessage.hxx"
-#include "tfdum/TestServerPagerMessage.hxx"
-#include "tfdum/TestDialogEvent.hxx"
+#include "tfm/tfdum/TestClientSubscription.hxx"
+#include "tfm/tfdum/TestServerSubscription.hxx"
+#include "tfm/tfdum/TestInviteSession.hxx"
+#include "tfm/tfdum/TestClientPagerMessage.hxx"
+#include "tfm/tfdum/TestServerPagerMessage.hxx"
+#include "tfm/tfdum/TestDialogEvent.hxx"
 
-#include "tfcommon/TfmHelper.hxx"
-#include "tfcommon/CheckPrivacy.hxx"
+#include "tfm/TfmHelper.hxx"
+#include "tfm/CheckPrivacy.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 

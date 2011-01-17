@@ -17,7 +17,7 @@
 #include "rutil/SharedPtr.hxx"
 
 #include "DumEvent.hxx"
-#include "tfcommon/CommonAction.hxx"
+#include "tfm/CommonAction.hxx"
 
 class DumUserAgent;
 

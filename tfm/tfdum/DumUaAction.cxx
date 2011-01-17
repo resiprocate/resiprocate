@@ -1,6 +1,6 @@
-#include "tfdum/DumUaAction.hxx"
-#include "tfdum/DumUserAgent.hxx"
-//#include "tfdum/DumEvent.hxx"
+#include "tfm/tfdum/DumUaAction.hxx"
+#include "tfm/tfdum/DumUserAgent.hxx"
+//#include "tfm/tfdum/DumEvent.hxx"
 //#include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST

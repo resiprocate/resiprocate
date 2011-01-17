@@ -3,7 +3,7 @@
 
 #include "resip/stack/SipMessage.hxx"
 #include "tfm/Event.hxx"
-#include "tfdum/DumEvent.hxx"
+#include "tfm/tfdum/DumEvent.hxx"
 
 #include "resip/dum/Handles.hxx"
 

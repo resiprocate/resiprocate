@@ -6,7 +6,7 @@
 #include "cppunit/TestSuite.h"
 
 #include "DumUserAgent.hxx"
-#include "tfcommon/StunEndPoint.hxx"
+#include "tfm/StunEndPoint.hxx"
 
 #include "rutil/Data.hxx"
 #include "resip/stack/MethodTypes.hxx"
@@ -19,7 +19,7 @@
 #include "tfm/repro/TestReproUser.hxx"
 #include "tfm/Source.hxx"
 #include "tfm/TestSipEndPoint.hxx"
-#include "tfdum/TfdTestSipEndPoint.hxx"
+#include "tfm/tfdum/TfdTestSipEndPoint.hxx"
 
 class DumFixture : public CppUnit::TestFixture
 {

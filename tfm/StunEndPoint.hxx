@@ -6,8 +6,8 @@
 #include "resip/stack/Uri.hxx"
 #include "tfm/TransportDriver.hxx"
 
-#include "tfcommon/StunServer.hxx"
-#include "tfcommon/StunEvent.hxx"
+#include "tfm/StunServer.hxx"
+#include "tfm/StunEvent.hxx"
 
 #include <deque>
 

@@ -1,6 +1,6 @@
 #include "resip/dum/DialogUsageManager.hxx"
 #include "tfm/TestEndPoint.hxx"
-#include "tfcommon/CommonAction.hxx"
+#include "tfm/CommonAction.hxx"
 #include "TestServerSubscription.hxx"
 #include "DumUserAgent.hxx"
 #include "DumExpect.hxx"

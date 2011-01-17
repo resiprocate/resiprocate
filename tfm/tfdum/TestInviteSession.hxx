@@ -3,7 +3,7 @@
 
 #include "resip/dum/Handles.hxx"
 #include "TestUsage.hxx"
-#include "tfcommon/EndPoint.hxx"
+#include "tfm/EndPoint.hxx"
 #include "InviteSessionEvent.hxx"
 #include "DumUaAction.hxx"
 

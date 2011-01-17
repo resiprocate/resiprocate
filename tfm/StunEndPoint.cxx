@@ -1,12 +1,12 @@
-#include "tfcommon/StunEndPoint.hxx"
+#include "tfm/StunEndPoint.hxx"
 
 #include "tfm/SequenceSet.hxx"
 #include "tfm/ActionBase.hxx"
 
-#include "tfcommon/StunEvent.hxx"
+#include "tfm/StunEvent.hxx"
 
-#include "tfcommon/Expect.hxx"
-#include "tfcommon/CommonAction.hxx"
+#include "tfm/Expect.hxx"
+#include "tfm/CommonAction.hxx"
 
 #include "rutil/Data.hxx"
 #include "rutil/Logger.hxx"

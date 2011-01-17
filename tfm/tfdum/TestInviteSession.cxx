@@ -1,7 +1,7 @@
 #include "resip/stack/WarningCategory.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "tfm/TestEndPoint.hxx"
-#include "tfcommon/CommonAction.hxx"
+#include "tfm/CommonAction.hxx"
 #include "TestInviteSession.hxx"
 #include "DumUserAgent.hxx"
 #include "DumExpect.hxx"

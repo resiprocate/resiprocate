@@ -5,7 +5,7 @@
 #include "resip/dum/Handles.hxx"
 #include "resip/dum/DialogEventInfo.hxx"
 #include "resip/dum/InviteSessionHandler.hxx"
-#include "tfcommon/EndPoint.hxx"
+#include "tfm/EndPoint.hxx"
 #include "DialogEventHandlerEvent.hxx"
 #include "tfm/TestSipEndPoint.hxx"
 #include "tfm/Event.hxx"

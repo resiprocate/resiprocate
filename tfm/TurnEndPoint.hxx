@@ -5,8 +5,8 @@
 #include "EndPoint.hxx"
 #include "tfm/TransportDriver.hxx"
 
-#include "tfcommon/TurnEvent.hxx"
-#include "tfcommon/Expect.hxx"
+#include "tfm/TurnEvent.hxx"
+#include "tfm/Expect.hxx"
 
 class ActionBase;
 

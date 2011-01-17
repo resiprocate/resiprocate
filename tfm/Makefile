@@ -8,7 +8,7 @@ CODE_SUBDIRS = predicates
 ifneq ($(DB_HEADERS),/usr/include)
 CXXFLAGS += -I$(DB_HEADERS)
 endif
-PACKAGES += REPRO DB4CXX DUM RESIP RUTIL TFMLIBS OPENSSL ARES PTHREAD POPT OPENSIGCOMP
+PACKAGES += REPRO DB4CXX DUM RESIP RUTIL TFMLIBS OPENSSL ARES PTHREAD POPT OPENSIGCOMP XS SUA
 ifeq ($(OSTYPE),MinGW)
 PACKAGES += PCRE
 endif
@@ -18,6 +18,18 @@ TARGET_LIBRARY = libtfm
 CXXFLAGS += -I.. -Icontrib -I/usr/local/include/boost-1_33 -I/usr/local/include/boost-1_33_1
 
 SRC = ActionBase.cxx \
+	CppTestSelector.cxx \
+	StunEndPoint.cxx \
+	StunServer.cxx \
+	EndPoint.cxx \
+	TfmHelper.cxx \
+	Expect.cxx \
+	StunEvent.cxx \
+	TfmDns.cxx \
+	CPTestProgressListener.cxx \
+	TestRtp.cxx \
+	RtpEvent.cxx \
+	CheckPrivacy.cxx \
 	AsciiGraphic.cxx \
 	Box.cxx \
 	CheckContacts.cxx\
@@ -49,6 +61,9 @@ SRC = ActionBase.cxx \
 	predicates/SubscribeExpired.cxx \
 	predicates/SubscribeExpires.cxx \
 	\
+# .bwc. These need an include that does not exist anymore
+#	TurnEndPoint.cxx \
+#	TurnEvent.cxx \
 
 include $(BUILD)/Makefile.post
 

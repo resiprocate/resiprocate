@@ -3,7 +3,7 @@
 #endif
 
 #include "rutil/Logger.hxx"
-#include "tfdum/TfdTcpTransport.hxx"
+#include "tfm/tfdum/TfdTcpTransport.hxx"
 
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT

@@ -1,9 +1,9 @@
 #if !defined TestRtp_hxx
 #define TestRtp_hxx
 
-#include "tfcommon/EndPoint.hxx"
+#include "tfm/EndPoint.hxx"
 
-#include "tfcommon/RtpEvent.hxx"
+#include "tfm/RtpEvent.hxx"
 
 #include "rutil/Socket.hxx"
 #include "rutil/TransportType.hxx"
@@ -217,7 +217,7 @@ class TestRtp : public EndPoint,
 
       UInt16 getSeqNo(const Packet& packet);
 
-      void TestRtp::RtpPacketInfo();
+      void RtpPacketInfo();
 
    private:
       boost::shared_ptr<resip::SdpContents> mLocalSdp;

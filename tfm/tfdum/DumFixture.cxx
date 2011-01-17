@@ -7,7 +7,7 @@
 #include "tfm/repro/TestRepro.hxx"
 #include "tfm/repro/TestReproUser.hxx"
 
-#include "tfcommon/TfmDns.hxx"
+#include "tfm/TfmDns.hxx"
 
 #include "rutil/dns/ExternalDns.hxx"
 #include "rutil/dns/ExternalDnsFactory.hxx"

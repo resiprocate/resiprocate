@@ -17,7 +17,7 @@
 #include "TestServerOutOfDialogReq.hxx"
 #include "TestClientPagerMessage.hxx"
 #include "TestServerPagerMessage.hxx"
-#include "tfcommon/EndPoint.hxx"
+#include "tfm/EndPoint.hxx"
 #include "ClientRegistrationEvent.hxx"
 #include "InviteSessionEvent.hxx"
 #include "ClientPagerMessageEvent.hxx"
