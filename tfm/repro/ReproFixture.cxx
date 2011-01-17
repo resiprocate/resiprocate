@@ -156,11 +156,13 @@ ReproFixture::tearDown()
    davidTcp->clean();
    enlaiTcp->clean();
    cullenTcp->clean();
+#ifdef USE_SSL
    jasonTls->clean();
    derekTls->clean();
    davidTls->clean();
    enlaiTls->clean();
    cullenTls->clean();
+#endif
 }
 
       
