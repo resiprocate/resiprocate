@@ -23,11 +23,11 @@ TestClientSubscription::TestClientSubscription(DumUserAgent* ua)
 }
 
 CommonAction* 
-TestClientSubscription::acceptUpdate(int statusCode)
+TestClientSubscription::acceptUpdate(int statusCode, const char* reason)
 {
    return new CommonAction(mUa, "acceptUpdate", 
                            boost::bind(&ClientSubscription::acceptUpdate, boost::bind<ClientSubscription*>(&ClientSubscriptionHandle::get, boost::ref(mHandle)), 
-                                       statusCode));
+                                       statusCode, reason));
 }
 
 CommonAction* 

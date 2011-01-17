@@ -22,7 +22,7 @@ ifeq ($(BUILD_RETURN_SERVER),yes)
 DEFAULTS += return-server
 endif
 ifeq ($(BUILD_TFM),yes)
-DEFAULTS += tfm repro_harness
+DEFAULTS += tfm repro_harness dum_harness
 endif
 
 default: $(DEFAULTS)
@@ -30,7 +30,7 @@ default: $(DEFAULTS)
 
 stack: dum tests
 
-all: repro dum tests tfm repro_harness apps recon
+all: repro dum tests tfm repro_harness dum_harness apps recon
 
 tfm: tfmcontrib
 	$(MAKE) -C tfm

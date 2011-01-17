@@ -19,7 +19,7 @@ class TestClientSubscription : public TestUsage
 
       resip::Data getName() const { return "TestClientSubscription"; }
 
-      CommonAction* acceptUpdate(int statusCode = 200);
+      CommonAction* acceptUpdate(int statusCode = 200, const char* reason=0);
       CommonAction* rejectUpdate(int statusCode = 400, const resip::Data& reasonPhrase = resip::Data::Empty);
       CommonAction* requestRefresh(int expires = -1);
       CommonAction* end();

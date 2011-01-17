@@ -7,6 +7,8 @@ ifeq ($(OSTYPE),MinGW)
 PACKAGES += PCRE
 endif
 
+TARGET_LIBRARY = libtfmrepro
+
 TESTPROGRAMS =  sanityTests.cxx
 
 SRC =	TestRepro.cxx \

@@ -90,7 +90,7 @@ class DumUserAgent : public EndPoint,
       const resip::Data& getInstanceId() const;
 
       
-      static resip::SharedPtr<resip::MasterProfile> DumUserAgent::makeProfile(const resip::Uri& aor, const resip::Data& password);
+      static resip::SharedPtr<resip::MasterProfile> makeProfile(const resip::Uri& aor, const resip::Data& password);
 
       resip::SharedPtr<resip::MasterProfile> getProfile() const 
       {
