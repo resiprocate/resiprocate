@@ -11110,6 +11110,8 @@ class MyTestCase
          TEST(testInviteUDPToTCPCalleeHangsUp);
          TEST(testInviteTCPToUDPCallerHangsUp);
          TEST(testInviteTCPToUDPCalleeHangsUp);
+
+#ifdef USE_SSL
          TEST(testInviteUDPToTLSCallerHangsUp);
          TEST(testInviteUDPToTLSCalleeHangsUp);
          TEST(testInviteTCPToTLSCallerHangsUp);
@@ -11118,7 +11120,8 @@ class MyTestCase
          TEST(testInviteTLSToUDPCalleeHangsUp);
          TEST(testInviteTLSToTCPCallerHangsUp);
          TEST(testInviteTLSToTCPCalleeHangsUp);
-         
+#endif
+
          BUGTEST(testInviteRecursiveRedirect);
          TEST(testSupportedProxyRequire);
          TEST(testUnsupportedProxyRequire);
