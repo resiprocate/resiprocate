@@ -4250,6 +4250,14 @@ CPPUNIT_TEST_SUITE_REGISTRATION( DumTestCase );
 
 int main(int argc, char** argv)
 {
+#ifndef _WIN32
+   if ( signal( SIGPIPE, SIG_IGN) == SIG_ERR)
+   {
+      cerr << "Couldn't install signal handler for SIGPIPE" << endl;
+      exit(-1);
+   }
+#endif
+
    initNetwork();
    try
    {
