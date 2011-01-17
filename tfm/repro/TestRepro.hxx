@@ -14,7 +14,7 @@
 #include "resip/stack/StackThread.hxx"
 #include "rutil/SharedPtr.hxx"
 #include "tfm/TestProxy.hxx"
-#include "tfm/CommandLineParser.hxx"
+#include "tfm/repro/CommandLineParser.hxx"
 
 class TestRepro : public TestProxy
 {

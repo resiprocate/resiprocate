@@ -6,8 +6,8 @@
 #include "resip/stack/InteropHelper.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Random.hxx"
-#include "tfm/CommandLineParser.hxx"
-#include "tfm/Fixture.hxx"
+#include "tfm/repro/CommandLineParser.hxx"
+#include "tfm/repro/ReproFixture.hxx"
 #include "tfm/RouteGuard.hxx"
 #include "tfm/Sequence.hxx"
 #include "tfm/SipEvent.hxx"
@@ -57,7 +57,7 @@ void sleepSeconds(unsigned int seconds)
 #endif
 }
 
-class TestHolder : public Fixture
+class TestHolder : public ReproFixture
 {
    public:
       static boost::shared_ptr<SipMessage>
@@ -11246,7 +11246,7 @@ int main(int argc, char** argv)
       resip::Timer::T100 = 0;
       
       TestHolder::createStatic();
-      Fixture::initialize(args);
+      ReproFixture::initialize(args);
       
       CppUnit::TextTestRunner runner;
 
@@ -11256,7 +11256,7 @@ int main(int argc, char** argv)
       
       sleepSeconds(32);
 
-      Fixture::destroyStatic();
+      ReproFixture::destroyStatic();
    }
    catch (BaseException& e)
    {

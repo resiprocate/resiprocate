@@ -15,9 +15,9 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
-#include "tfm/CommandLineParser.hxx"
+#include "tfm/repro/CommandLineParser.hxx"
 #include "tfm/DnsUtils.hxx"
-#include "tfm/Fixture.hxx"
+#include "tfm/repro/ReproFixture.hxx"
 #include "tfm/PortAllocator.hxx"
 #include "tfm/Sequence.hxx"
 #include "tfm/TestProxy.hxx"
@@ -28,37 +28,37 @@ using namespace CppUnit;
 using namespace std;
 using namespace resip;
 
-Security* Fixture::security = 0;
-TestProxy* Fixture::proxy = 0;
-TestUser* Fixture::jason = 0;
-TestUser* Fixture::jason1 = 0;
-TestUser* Fixture::jason2 = 0;
-TestUser* Fixture::jason3 = 0;
-TestUser* Fixture::derek = 0;
-TestUser* Fixture::david = 0;
-TestUser* Fixture::enlai = 0;
-TestUser* Fixture::cullen = 0;
-TestUser* Fixture::jozsef = 0;
-TestUser* Fixture::jasonTcp = 0;
-TestUser* Fixture::derekTcp = 0;
-TestUser* Fixture::davidTcp = 0;
-TestUser* Fixture::enlaiTcp = 0;
-TestUser* Fixture::cullenTcp = 0;
-TestUser* Fixture::jasonTls = 0;
-TestUser* Fixture::derekTls = 0;
-TestUser* Fixture::davidTls = 0;
-TestUser* Fixture::enlaiTls = 0;
-TestUser* Fixture::cullenTls = 0;
+Security* ReproFixture::security = 0;
+TestProxy* ReproFixture::proxy = 0;
+TestUser* ReproFixture::jason = 0;
+TestUser* ReproFixture::jason1 = 0;
+TestUser* ReproFixture::jason2 = 0;
+TestUser* ReproFixture::jason3 = 0;
+TestUser* ReproFixture::derek = 0;
+TestUser* ReproFixture::david = 0;
+TestUser* ReproFixture::enlai = 0;
+TestUser* ReproFixture::cullen = 0;
+TestUser* ReproFixture::jozsef = 0;
+TestUser* ReproFixture::jasonTcp = 0;
+TestUser* ReproFixture::derekTcp = 0;
+TestUser* ReproFixture::davidTcp = 0;
+TestUser* ReproFixture::enlaiTcp = 0;
+TestUser* ReproFixture::cullenTcp = 0;
+TestUser* ReproFixture::jasonTls = 0;
+TestUser* ReproFixture::derekTls = 0;
+TestUser* ReproFixture::davidTls = 0;
+TestUser* ReproFixture::enlaiTls = 0;
+TestUser* ReproFixture::cullenTls = 0;
 
-Data Fixture::publicInterface;
-Data Fixture::privateInterface;
-resip::Uri Fixture::outboundProxy;
+Data ReproFixture::publicInterface;
+Data ReproFixture::privateInterface;
+resip::Uri ReproFixture::outboundProxy;
 
-Fixture::Fixture() 
+ReproFixture::ReproFixture() 
 {
 }
 
-Fixture::~Fixture() 
+ReproFixture::~ReproFixture() 
 {
 }
 
@@ -74,7 +74,7 @@ static TestReproUser* makeReproUser(TestProxy& proxy, const Data& user, const Da
 }
 
 void
-Fixture::initialize(CommandLineParser& args)
+ReproFixture::initialize(CommandLineParser& args)
 {
 #if 0
    proxy = new TestProxy("proxy",
@@ -112,12 +112,12 @@ Fixture::initialize(CommandLineParser& args)
 
 
 void 
-Fixture::setUp()
+ReproFixture::setUp()
 {
 }
 
 void 
-Fixture::tearDown()
+ReproFixture::tearDown()
 {
    DebugLog(<<"In teardown.");
    if (SequenceClass::CPUSequenceSet)
@@ -165,7 +165,7 @@ Fixture::tearDown()
 
       
 void 
-Fixture::destroyStatic()
+ReproFixture::destroyStatic()
 {
    delete jason;
    delete jason1;
@@ -193,7 +193,7 @@ Fixture::destroyStatic()
 
 #if 0
 void
-Fixture::makePserver(int argc, char** argv)
+ReproFixture::makePserver(int argc, char** argv)
 {
    char* proxyArg = 0;
    char* outboundArg = 0;

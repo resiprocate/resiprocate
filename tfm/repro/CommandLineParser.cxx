@@ -1,6 +1,6 @@
 #include <popt.h>
 
-#include "tfm/CommandLineParser.hxx"
+#include "tfm/repro/CommandLineParser.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/ParseException.hxx"

@@ -1,54 +1,18 @@
-# $Id: Makefile,v 1.64 2005/06/16 17:19:26 satluri Exp $
-BUILD = ../build
+BUILD = ../../build
 
 include $(BUILD)/Makefile.pre
 
-CODE_SUBDIRS = predicates
-
-ifneq ($(DB_HEADERS),/usr/include)
-CXXFLAGS += -I$(DB_HEADERS)
-endif
-PACKAGES += REPRO DB4CXX DUM RESIP RUTIL TFMLIBS OPENSSL ARES PTHREAD POPT OPENSIGCOMP
+PACKAGES += 	TFM REPRO DB4CXX DUM RESIP RUTIL TFMLIBS PCRE OPENSSL ARES PTHREAD POPT OPENSIGCOMP
 ifeq ($(OSTYPE),MinGW)
 PACKAGES += PCRE
 endif
 
-TARGET_LIBRARY = libtfm
+TESTPROGRAMS =  sanityTests.cxx
 
-CXXFLAGS += -I.. -Icontrib -I/usr/local/include/boost-1_33 -I/usr/local/include/boost-1_33_1
-
-SRC = ActionBase.cxx \
-	AsciiGraphic.cxx \
-	Box.cxx \
-	CheckContacts.cxx\
-	CheckFetchedContacts.cxx \
-	CountDown.cxx \
-	DialogSet.cxx \
-	DnsUtils.cxx \
-	Event.cxx \
-	ExpectAction.cxx \
-	ExpectActionEvent.cxx \
-	Renderer.cxx \
-	Resolver.cxx \
-	RouteGuard.cxx \
-	Sequence.cxx \
-	SequenceSet.cxx \
-	SequenceSetThread.cxx \
-	SipEvent.cxx \
-	SipRawMessage.cxx \
-	Source.cxx \
-	TelnetClient.cxx \
-	TestEndPoint.cxx \
-	TestException.cxx \
-	TestProxy.cxx \
-	TestSipEndPoint.cxx \
-	TestUser.cxx \
-	TransportDriver.cxx \
-	\
-	predicates/ExpectUtils.cxx \
-	predicates/SubscribeExpired.cxx \
-	predicates/SubscribeExpires.cxx \
-	\
+SRC =	TestRepro.cxx \
+	TestReproUser.cxx \
+	CommandLineParser.cxx \
+	ReproFixture.cxx 
 
 include $(BUILD)/Makefile.post
 
