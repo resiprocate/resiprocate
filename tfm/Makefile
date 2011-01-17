@@ -61,9 +61,6 @@ SRC = ActionBase.cxx \
 	predicates/SubscribeExpired.cxx \
 	predicates/SubscribeExpires.cxx \
 	\
-# .bwc. These need an include that does not exist anymore
-#	TurnEndPoint.cxx \
-#	TurnEvent.cxx \
 
 include $(BUILD)/Makefile.post
 

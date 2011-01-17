@@ -20,7 +20,7 @@
 
 #include "rutil/Logger.hxx"
 #include "rutil/Random.hxx"
-#include "tfm/CommandLineParser.hxx"
+#include "tfm/repro/CommandLineParser.hxx"
 #include "tfm/Sequence.hxx"
 #include "tfm/TestProxy.hxx"
 #include "tfm/TestUser.hxx"
@@ -74,7 +74,14 @@ static const int Owner491 = 5000;
 const Data transport("udp");
 static NameAddr localhost;
 
-
+void sleepSeconds(unsigned int seconds)
+{
+#ifdef WIN32
+   Sleep(seconds*1000);
+#else
+   sleep(seconds);
+#endif
+}
 
 class DumTestCase : public DumFixture
 {
@@ -248,7 +255,7 @@ class DumTestCase : public DumFixture
              WaitForEndOfSeq);
          ExecuteSequences();
          
-         Sleep(90000);
+         sleepSeconds(90);
 
          Seq(sheila->reInvite("jason", answer),
              uac.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideAnswer(*standardOffer)),

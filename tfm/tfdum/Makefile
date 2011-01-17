@@ -2,11 +2,13 @@ BUILD = ../../build
 
 include $(BUILD)/Makefile.pre
 
-PACKAGES += 	TFM DUM RESIP RUTIL TFMLIBS OPENSSL ARES PTHREAD POPT NATNAV TFCOMMON REFSUB TURN
+PACKAGES += 	TFMREPRO TFM REPRO DB4CXX DUM RESIP RUTIL TFMLIBS OPENSSL ARES PTHREAD POPT NATNAV REFSUB TURN
 
 TESTPROGRAMS = 	TestLamba.cxx  dumTests.cxx
 
 SRC =  DumUserAgent.cxx \
+	TestDialogEvent.cxx \
+	DialogEventExpect.cxx \
 	DumUaAction.cxx \
 	DumEvent.cxx \
 	DumExpect.cxx \
