@@ -4,7 +4,7 @@
 #include "tfm/Event.hxx"
 #include "rutil/Logger.hxx"
 
-#include "tfcommon/StunServer.hxx"
+#include "tfm/StunServer.hxx"
 
 #include <boost/shared_ptr.hpp>
 

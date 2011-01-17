@@ -1,5 +1,5 @@
-#include "tfcommon/TestRtp.hxx"
-#include "tfcommon/RtpEvent.hxx"
+#include "tfm/TestRtp.hxx"
+#include "tfm/RtpEvent.hxx"
 
 #include "rutil/Logger.hxx"
 #include "rutil/Data.hxx"
@@ -512,7 +512,7 @@ TestRtp::getLocalSdp() const
 
 // ----------------------------------------------------------------------------
 boost::shared_ptr<SdpContents>
-TestRtp::getLocalSdp(ULONG audioAttr, ULONG videoAttr) const
+TestRtp::getLocalSdp(unsigned long audioAttr, unsigned long videoAttr) const
 {
    SdpContents * contents = dynamic_cast<SdpContents*>(mLocalSdp->clone());
    mLocalSdp->session().origin().getVersion() += 1;
@@ -539,7 +539,7 @@ TestRtp::getLocalSdp(ULONG audioAttr, ULONG videoAttr) const
    for (list<Medium>::iterator it = sdp->session().media().begin(); it != sdp->session().media().end(); it++)
    {
       Medium & mline = *it;
-      ULONG mediaAttr = MEDIA_NONE;
+      unsigned long mediaAttr = MEDIA_NONE;
       if (mline.name() == SdpHelper::AudioMediaType)
          mediaAttr = audioAttr;
       else if (mline.name() == SdpHelper::VideoMediaType)

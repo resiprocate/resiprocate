@@ -2,8 +2,8 @@
 #define EndPoint_hxx
 
 #include "tfm/TestEndPoint.hxx"
-#include "tfcommon/Expect.hxx"
-#include "tfcommon/WrapperEvent.hxx"
+#include "tfm/Expect.hxx"
+#include "tfm/WrapperEvent.hxx"
 
 class ExpectPredicate;
 

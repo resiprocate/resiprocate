@@ -2,7 +2,7 @@
 #define DialogEventHandlerEvent_hxx
 
 #include "tfm/Event.hxx"
-#include "tfdum/DumEvent.hxx"
+#include "tfm/tfdum/DumEvent.hxx"
 #include "resip/dum/DialogEventInfo.hxx"
 
 typedef enum

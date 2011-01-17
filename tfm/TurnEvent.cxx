@@ -1,5 +1,5 @@
-#include "tfcommon/TurnEvent.hxx"
-#include "tfcommon/TurnEndPoint.hxx"
+#include "tfm/TurnEvent.hxx"
+#include "tfm/TurnEndPoint.hxx"
 
 TurnEvent::TurnEvent(TurnEndPoint* tua, Type type) : 
    Event(tua),

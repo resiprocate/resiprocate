@@ -3,7 +3,7 @@
 
 #include "TestUsage.hxx"
 #include "resip/dum/Handles.hxx"
-#include "tfcommon/EndPoint.hxx"
+#include "tfm/EndPoint.hxx"
 #include "ClientRegistrationEvent.hxx"
 
 class DumUserAgent;

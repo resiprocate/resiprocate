@@ -1,5 +1,5 @@
-#include "tfdum/DumEvent.hxx"
-#include "tfdum/DumUserAgent.hxx"
+#include "tfm/tfdum/DumEvent.hxx"
+#include "tfm/tfdum/DumUserAgent.hxx"
 
 using namespace resip;
 

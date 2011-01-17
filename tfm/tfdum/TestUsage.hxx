@@ -1,7 +1,7 @@
 #if !defined(TestUsage_hxx)
 #define TestUsage_hxx
 
-#include "tfcommon/EndPoint.hxx"
+#include "tfm/EndPoint.hxx"
 
 class DumUserAgent;
 

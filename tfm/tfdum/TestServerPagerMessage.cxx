@@ -1,6 +1,6 @@
 #include "resip/dum/DialogUsageManager.hxx"
 #include "tfm/TestEndPoint.hxx"
-#include "tfcommon/CommonAction.hxx"
+#include "tfm/CommonAction.hxx"
 #include "TestServerPagerMessage.hxx"
 #include "DumUserAgent.hxx"
 #include "resip/dum/ServerPagerMessage.hxx"

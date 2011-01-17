@@ -4,10 +4,10 @@
 #include "tfm/SequenceSet.hxx"
 #include "tfm/ActionBase.hxx"
 
-#include "tfcommon/TurnEvent.hxx"
+#include "tfm/TurnEvent.hxx"
 
-#include "tfcommon/Expect.hxx"
-#include "tfcommon/CommonAction.hxx"
+#include "tfm/Expect.hxx"
+#include "tfm/CommonAction.hxx"
 
 #include "rutil/Data.hxx"
 #include "rutil/Logger.hxx"

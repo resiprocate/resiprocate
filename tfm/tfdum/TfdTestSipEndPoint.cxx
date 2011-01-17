@@ -1,5 +1,5 @@
-#include "tfdum/TfdTcpTransport.hxx"
-#include "tfdum/TfdTestSipEndPoint.hxx"
+#include "tfm/tfdum/TfdTcpTransport.hxx"
+#include "tfm/tfdum/TfdTestSipEndPoint.hxx"
 #include "rutil/Logger.hxx"
 
 using namespace resip;

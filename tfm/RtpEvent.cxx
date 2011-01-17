@@ -1,5 +1,5 @@
-#include "tfcommon/RtpEvent.hxx"
-#include "tfcommon/TestRtp.hxx"
+#include "tfm/RtpEvent.hxx"
+#include "tfm/TestRtp.hxx"
 
 RtpEvent::RtpEvent(TestRtp *tua, Type event) :
    Event(tua),

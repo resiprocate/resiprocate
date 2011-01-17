@@ -1,7 +1,7 @@
 #if !defined WrapperEvent_hxx
 #define WrapperEvent_hxx
 
-#include "tfcommon/Expect.hxx"
+#include "tfm/Expect.hxx"
 
 template<class T>
 class WrapperEvent : public Event
