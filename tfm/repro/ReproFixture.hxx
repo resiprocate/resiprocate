@@ -11,7 +11,7 @@
 #include "resip/stack/Uri.hxx"
 #include "tfm/SequenceSet.hxx"
 #include "tfm/TestUser.hxx"
-#include "tfm/CommandLineParser.hxx"
+#include "tfm/repro/CommandLineParser.hxx"
 
 namespace resip
 {
@@ -24,13 +24,13 @@ class TestProxy;
 class TestEndPoint;
 class CommandLineParser;
 
-class Fixture : public CppUnit::TestFixture
+class ReproFixture : public CppUnit::TestFixture
 {
    public:
 
-      Fixture();
+      ReproFixture();
       
-      virtual ~Fixture() ;
+      virtual ~ReproFixture() ;
       virtual void setUp();
       virtual void tearDown();
       static void initialize(CommandLineParser& args);
