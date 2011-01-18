@@ -309,6 +309,15 @@ class DumTestCase : public DumFixture
          const boost::shared_ptr<resip::SipMessage>& mUpdatedMsg;
       };
 
+      class InviteHelper
+      {
+      public:
+         InviteHelper(SharedPtr<SipMessage> invite) : mInvite(invite) {}
+         SharedPtr<SipMessage> getInvite() const { return mInvite; }
+      private:
+         SharedPtr<SipMessage> mInvite;
+      };
+
       void testDialogEventUacBasic()
       {
          InfoLog(<< "testDialogEventUacBasic");
@@ -358,7 +367,9 @@ class DumTestCase : public DumFixture
          DialogEventPred* pDi3 = new DialogEventPred(di3);
          DialogEventPred* pDi4 = new DialogEventPred(di4);
 
-         Seq(jason->send(inviteMsg),
+         InviteHelper ih1(inviteMsg);
+
+         Seq(new DumUaSendingCommand(jason, boost::bind(&InviteHelper::getInvite, ih1)),
              uac.expect(DialogEvent_Trying, *pDi1, WaitForCommand, uac.noAction()),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, 
                             chain(save(sheilasRing, sheila->ring()), 
@@ -417,7 +428,9 @@ class DumTestCase : public DumFixture
          DialogEventPred* pDi1 = new DialogEventPred(di1);
          DialogEventPred* pDi2 = new DialogEventPred(di2);
 
-         Seq(jason->send(inviteMsg),
+         InviteHelper ih1(inviteMsg);
+
+         Seq(new DumUaSendingCommand(jason, boost::bind(&InviteHelper::getInvite, ih1)),
              uac.expect(DialogEvent_Trying, *pDi1, WaitForCommand, uac.noAction()),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, chain(sheila->send100(),sheila->send500())),
              And(Sub(uac.expect(DialogEvent_Terminated, *pDi2, InviteSessionHandler::Error, WaitForCommand, uac.noAction()),
@@ -474,7 +487,9 @@ class DumTestCase : public DumFixture
          DialogEventPred* pDi3 = new DialogEventPred(di3);
          DialogEventPred* pDi4 = new DialogEventPred(di4);
 
-         Seq(jason->send(inviteMsg),
+         InviteHelper ih1(inviteMsg);
+
+         Seq(new DumUaSendingCommand(jason, boost::bind(&InviteHelper::getInvite, ih1)),
              testDialogEvt.expect(DialogEvent_Trying, *pDi1, WaitForCommand, testDialogEvt.noAction()),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, 
                             chain(sheila->send100(),
@@ -568,7 +583,9 @@ class DumTestCase : public DumFixture
          DialogEventPred* pDi4 = new DialogEventPred(di4);
          DialogEventPred* pDi4a = new DialogEventPred(di4a);
 
-         Seq(jason->send(inviteMsg),
+         InviteHelper ih1(inviteMsg);
+
+         Seq(new DumUaSendingCommand(jason, boost::bind(&InviteHelper::getInvite, ih1)),
              uac.expect(DialogEvent_Trying, *pDi1, WaitForCommand, uac.noAction()),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, 
                             chain(save(sheilasRing, sheila->ring()), 
@@ -655,7 +672,9 @@ class DumTestCase : public DumFixture
          // therefore we'll treat the new INVITE as belonging to the same DialogSet as
          // the original INVITE
 
-         Seq(jason->send(inviteMsg),
+         InviteHelper ih1(inviteMsg);
+
+         Seq(new DumUaSendingCommand(jason, boost::bind(&InviteHelper::getInvite, ih1)),
              uac.expect(DialogEvent_Trying, *pDi1, WaitForCommand, uac.noAction()),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->send302(derek->getAor().uri())),
              And(Sub(uac.expect(DialogEvent_Terminated, *pDi3, InviteSessionHandler::Rejected, WaitForCommand, uac.noAction()),
@@ -743,7 +762,9 @@ class DumTestCase : public DumFixture
          // therefore we'll treat the new INVITE as belonging to the same DialogSet as
          // the original INVITE
 
-         Seq(jason->send(inviteMsg),
+         InviteHelper ih1(inviteMsg);
+
+         Seq(new DumUaSendingCommand(jason, boost::bind(&InviteHelper::getInvite, ih1)),
              testDialogEvt.expect(DialogEvent_Trying, *pDi1, WaitForCommand, testDialogEvt.noAction()),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, 
                             chain(save(sheilasRing, sheila->ring()), 
