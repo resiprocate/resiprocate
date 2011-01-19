@@ -1076,7 +1076,7 @@ class DumTestCase : public DumFixture
                          Sub(sheila->expect(INVITE/200, from(proxy), WaitForResponse, chain(sheila->ack(),
                                                                                             uac.end())))))),
              And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
-                 Sub(sheila->expect(BYE, from(proxy), CallTimeout, sheila->ok())),
+                 Sub(sheila->expect(BYE, contact(jason->getContact()), CallTimeout, sheila->ok())),
                  Sub(testDialogEvt.expect(DialogEvent_Terminated, *pDi4, InviteSessionHandler::LocalBye, WaitForCommand, uac.noAction()))),
              WaitForEndOfSeq);
          ExecuteSequences();
@@ -1273,7 +1273,7 @@ class DumTestCase : public DumFixture
              david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
              david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
              And(Sub(uas.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction())),
-                 Sub(david->expect(BYE, from(proxy), CallTimeout, david->ok()))),
+                 Sub(david->expect(BYE, contact(derek->getContact()), CallTimeout, david->ok()))),
              CallTimeout);
          ExecuteSequences();
       }
@@ -1297,7 +1297,7 @@ class DumTestCase : public DumFixture
              uas.expect(Invite_OfferRequired, dumFrom(proxy), WaitForCommand, chain(uas.provideOffer(*standardOffer), uas.accept(200))),
              david->expect(INVITE/200, from(proxy), CallTimeout, david->ack()),
              uas.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
-             david->expect(BYE, from(proxy), CallTimeout, david->ok()),
+             david->expect(BYE, contact(derek->getContact()), CallTimeout, david->ok()),
              CallTimeout);
          ExecuteSequences();
       }
@@ -1324,7 +1324,7 @@ class DumTestCase : public DumFixture
              invDerek.expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, invDerek.noAction()),
              invDerek.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, invDerek.noAction()),
              invDerek.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, invDerek.noAction()),
-             david->expect(ACK, from(proxy), WaitForResponse, derek->noAction()),
+             david->expect(ACK, contact(derek->getContact()), WaitForResponse, derek->noAction()),
              WaitForEndOfSeq);
          ExecuteSequences();
 
@@ -1333,13 +1333,13 @@ class DumTestCase : public DumFixture
              optional(david->expect(SUBSCRIBE/407, from(proxy), WaitForResponse, david->digestRespond())),
              derek->expect(ServerSubscription_NewSubscription, serv, *TestEndPoint::AlwaysTruePred, WaitForCommand, 
                            chain(serv.accept(), serv.neutralNotify())),
-             david->expect(SUBSCRIBE/200, from(proxy), WaitForResponse, david->noAction()),
-             david->expect(NOTIFY, from(proxy), WaitForCommand, david->respond(200)),             
+             david->expect(SUBSCRIBE/200, contact(derek->getContact()), WaitForResponse, david->noAction()),
+             david->expect(NOTIFY, contact(derek->getContact()), WaitForCommand, david->respond(200)),             
              WaitForEndOfSeq);
          ExecuteSequences();
          
          Seq(serv.end(),
-             david->expect(NOTIFY, from(proxy), WaitForCommand, david->respond(200)),  
+             david->expect(NOTIFY, contact(derek->getContact()), WaitForCommand, david->respond(200)),  
              WaitForEndOfTest);
          ExecuteSequences();
          
@@ -3809,7 +3809,7 @@ class DumTestCase : public DumFixture
              invDerek.expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, invDerek.noAction()),
              invDerek.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, invDerek.noAction()),
              invDerek.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, invDerek.noAction()),
-             david->expect(ACK, from(proxy), WaitForResponse, derek->noAction()),
+             david->expect(ACK, contact(derek->getContact()), WaitForResponse, derek->noAction()),
              WaitForEndOfSeq);
          ExecuteSequences();
 
@@ -3818,13 +3818,13 @@ class DumTestCase : public DumFixture
              optional(david->expect(SUBSCRIBE/407, from(proxy), WaitForResponse, david->digestRespond())),
              derek->expect(ServerSubscription_NewSubscription, serv, *TestEndPoint::AlwaysTruePred, WaitForCommand, 
                            chain(serv.accept(), serv.neutralNotify())),
-             david->expect(SUBSCRIBE/200, from(proxy), WaitForResponse, david->noAction()),
-             david->expect(NOTIFY, from(proxy), WaitForCommand, david->respond(200)),             
+             david->expect(SUBSCRIBE/200, contact(derek->getContact()), WaitForResponse, david->noAction()),
+             david->expect(NOTIFY, contact(derek->getContact()), WaitForCommand, david->respond(200)),             
              WaitForEndOfSeq);
          ExecuteSequences();
          
          Seq(serv.end(),
-             david->expect(NOTIFY, from(proxy), WaitForCommand, david->respond(200)),  
+             david->expect(NOTIFY, contact(derek->getContact()), WaitForCommand, david->respond(200)),  
              WaitForEndOfTest);
          ExecuteSequences();
 
@@ -3925,7 +3925,7 @@ class DumTestCase : public DumFixture
              invDerek.expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, invDerek.noAction()),
              invDerek.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, invDerek.noAction()),
              invDerek.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, invDerek.noAction()),
-             david->expect(ACK, from(proxy), WaitForResponse, derek->noAction()),
+             david->expect(ACK, contact(derek->getContact()), WaitForResponse, derek->noAction()),
              WaitForEndOfSeq);
          ExecuteSequences();
 

@@ -1277,6 +1277,7 @@ inline TestSipEndPoint::MatchNonceCount* matchNonceCount(int count) { return new
 TestSipEndPoint::Contact* contact(const TestSipEndPoint& testEndPoint);
 TestSipEndPoint::Contact* contact(TestProxy& testProxy);
 TestSipEndPoint::Contact* contact(const resip::NameAddr& contact);
+TestSipEndPoint::Contact* contact(const resip::Uri& contact);
 TestSipEndPoint::Contact* contact(const TestSipEndPoint* testEndPoint);
 TestSipEndPoint::Contact* contact(TestProxy* testProxy);
 TestSipEndPoint::Contact* contact(const resip::NameAddr* contact);
