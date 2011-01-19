@@ -19,10 +19,16 @@ using namespace std;
 using namespace recon;
 
 // Constructor
-FlowManagerSipXSocket::FlowManagerSipXSocket(Flow* flow) 
+FlowManagerSipXSocket::FlowManagerSipXSocket(Flow* flow, int tos) 
         : OsSocket(),
         mFlow(flow)
 {    
+#ifndef WIN32
+   setsockopt (flow->getSocketDescriptor(), IPPROTO_IP, IP_TOS, (char *)&tos, sizeof(int));
+#else
+   // TODO:: Implement QoS  request under Windows.  The following works under NT 4.0 and Windows 9x only (http://support.microsoft.com/kb/248611)
+   setsockopt (flow->getSocketDescriptor(), IPPROTO_IP, 3 /* IP_TOS */, (char *)&tos, sizeof(int));
+#endif
 }
 
 

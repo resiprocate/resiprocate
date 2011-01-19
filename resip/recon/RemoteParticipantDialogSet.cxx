@@ -191,8 +191,9 @@ RemoteParticipantDialogSet::getLocalRTPPort()
                      profile->stunPassword().c_str()); 
 
          // New Remote Participant - create media Interface connection
-         mRtpSocket = new FlowManagerSipXSocket(mMediaStream->getRtpFlow());
-         mRtcpSocket = new FlowManagerSipXSocket(mMediaStream->getRtcpFlow());
+         mRtpSocket = new FlowManagerSipXSocket(mMediaStream->getRtpFlow(), mConversationManager.mSipXTOSValue);
+         mRtcpSocket = new FlowManagerSipXSocket(mMediaStream->getRtcpFlow(), mConversationManager.mSipXTOSValue);
+
          ret = ((CpTopologyGraphInterface*)getMediaInterface()->getInterface())->createConnection(mMediaConnectionId,mRtpSocket,mRtcpSocket,false);
 #ifdef DISABLE_FLOWMANAGER_IF_NO_NAT_TRAVERSAL
       }

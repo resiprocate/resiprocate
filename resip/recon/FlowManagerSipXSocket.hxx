@@ -15,7 +15,7 @@ class FlowManagerSipXSocket : public OsSocket
 /* //////////////////////////// PUBLIC //////////////////////////////////// */
 public:
 
-    FlowManagerSipXSocket(Flow* flow);
+    FlowManagerSipXSocket(Flow* flow, int tos);
     virtual ~FlowManagerSipXSocket();
 
 /* ============================ MANIPULATORS ============================== */
