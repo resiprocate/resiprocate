@@ -491,7 +491,7 @@ public:
    virtual void enableEchoCancel(bool enable);       
    virtual void enableAutoGainControl(bool enable);  
    virtual void enableNoiseReduction(bool enable);   
-   virtual void setSipXTOSValue(int tos) { mSipXTOSValue = tos; } // only useful if not using NAT traversal and DISABLE_FLOWMANAGER_IF_NO_NAT_TRAVERSAL is defined
+   virtual void setSipXTOSValue(int tos) { mSipXTOSValue = tos; } 
 
 protected:
 
