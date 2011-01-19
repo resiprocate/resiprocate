@@ -57,6 +57,7 @@ POPT_INCDIR_CONFIG :=
 POPT_LIBDIR_CONFIG :=
 RESIP_FIXED_POINT := no
 PEDANTIC_STACK := no
+RESIP_DUM_THREAD_DEBUG := no
 # USE_SIGCOMP := no
 # SIGCOMP_BASEDIR:= /usr/local
 INSTALL_PREFIX := /usr/local
@@ -420,6 +421,13 @@ $uname = `uname`;
     default     => "no",
     validate    => [@yesno],
     flag        => 'pedantic-stack',
+  },
+  {
+    name        => "RESIP_DUM_THREAD_DEBUG",
+    description => "Enable thread debug for DUM?",
+    default     => "no",
+    validate    => [@yesno],
+    flag        => 'dum-thread-debug',
   },
   {
     name        => "INSTALL_PREFIX",
