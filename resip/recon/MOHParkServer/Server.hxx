@@ -18,11 +18,10 @@
 namespace mohparkserver
 {
 
-class Server : public ConfigParser,
-               public recon::ConversationManager
+class Server : public recon::ConversationManager
 {
 public:
-   Server(int argc, char** argv);
+   Server(ConfigParser& config);  
    virtual ~Server();
 
    /**
@@ -54,6 +53,9 @@ public:
 
    // Timer handler
    virtual void onMaxParkTimeout(recon::ParticipantHandle participantHandle);
+
+   // Configuration Container
+   ConfigParser& mConfig;
 
 protected:
    // Conversation Manager Handlers

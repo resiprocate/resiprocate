@@ -35,7 +35,7 @@ ParkOrbit::ParkOrbit(Server& server, unsigned long orbit) :
    mConversationHandle = mServer.createConversation(true /* broadcast only*/);
 
    // Play Music
-   mServer.createMediaResourceParticipant(mConversationHandle, mServer.mParkMOHFilenameUrl);
+   mServer.createMediaResourceParticipant(mConversationHandle, mServer.mConfig.mParkMOHFilenameUrl);
 
    InfoLog(<< "ParkOrbit::ParkOrbit created orbit " << mOrbit);
 }
@@ -55,9 +55,9 @@ ParkOrbit::addParticipant(recon::ParticipantHandle participantHandle, const Uri&
       mServer.modifyParticipantContribution(mConversationHandle, participantHandle, 100, 0 /* Mute participant */);
       mServer.answerParticipant(participantHandle);
 
-      if(mServer.mMaxParkTime != 0)
+      if(mServer.mConfig.mMaxParkTime != 0)
       {
-         mServer.getMyUserAgent()->startApplicationTimer(MAXPARKTIMEOUT, mServer.mMaxParkTime*1000, participantHandle);
+         mServer.getMyUserAgent()->startApplicationTimer(MAXPARKTIMEOUT, mServer.mConfig.mMaxParkTime*1000, participantHandle);
       }
 
       mParticipants.push_back(new ParticipantOrbitInfo(participantHandle, parkerUri));

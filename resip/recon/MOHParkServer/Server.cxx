@@ -82,52 +82,52 @@ public:
 };
 MOHParkServerLogger g_MOHParkServerLogger;
 
-Server::Server(int argc, char** argv) : 
-   ConfigParser(argc, argv),
+Server::Server(ConfigParser& config) : 
    ConversationManager(false /* local audio? */, ConversationManager::sipXConversationMediaInterfaceMode),
+   mConfig(config),
    mIsV6Avail(false),
    mMyUserAgent(0),
    mMOHManager(*this),
    mParkManager(*this)
 {
    // Initialize loggers
-   GenericLogImpl::MaxByteCount = mLogFileMaxBytes; 
-   Log::initialize("file", mLogLevel, "", mLogFilename.c_str(), &g_MOHParkServerLogger);
-   if(!mSipXLogFilename.empty())
+   GenericLogImpl::MaxByteCount = mConfig.mLogFileMaxBytes; 
+   Log::initialize("file", mConfig.mLogLevel, "", mConfig.mLogFilename.c_str(), &g_MOHParkServerLogger);
+   if(!mConfig.mSipXLogFilename.empty())
    {
       //enableConsoleOutput(TRUE);  // Allow sipX console output
       OsSysLog::initialize(0, "MOHParkServer");
-      OsSysLog::setOutputFile(0, mSipXLogFilename.c_str()) ;
+      OsSysLog::setOutputFile(0, mConfig.mSipXLogFilename.c_str()) ;
    }
 
    InfoLog( << "MOHParkServer settings:");
-   InfoLog( << "  MOH URI = " << mMOHUri);
-   InfoLog( << "  MOH Registration Time = " << mMOHRegistrationTime);
-   InfoLog( << "  MOH Filename URL = " << mMOHFilenameUrl);
-   InfoLog( << "  Park URI = " << mParkUri);
-   InfoLog( << "  Park Registration Time = " << mParkRegistrationTime);
-   InfoLog( << "  Park MOH Filename URL = " << mParkMOHFilenameUrl);
-   InfoLog( << "  Park Orbit Range Start = " << mParkOrbitRangeStart);
-   InfoLog( << "  Park Number of Orbits = " << mParkNumOrbits);
-   InfoLog( << "  Park Orbit Registration Time = " << mParkOrbitRegistrationTime);
-   InfoLog( << "  Local IP Address = " << mAddress);
-   InfoLog( << "  Override DNS Servers = " << mDnsServers);
-   InfoLog( << "  UDP Port = " << mUdpPort);
-   InfoLog( << "  TCP Port = " << mTcpPort);
-   InfoLog( << "  TLS Port = " << mTlsPort);
-   InfoLog( << "  TLS Domain = " << mTlsDomain);
-   InfoLog( << "  Keepalives = " << (mKeepAlives ? "enabled" : "disabled"));
-   InfoLog( << "  Outbound Proxy = " << mOutboundProxy);
-   InfoLog( << "  Media Port Range Start = " << mMediaPortRangeStart);
-   InfoLog( << "  Media Port Range Size = " << mMediaPortRangeSize);
-   InfoLog( << "  Log Level = " << mLogLevel);
+   InfoLog( << "  MOH URI = " << mConfig.mMOHUri);
+   InfoLog( << "  MOH Registration Time = " << mConfig.mMOHRegistrationTime);
+   InfoLog( << "  MOH Filename URL = " << mConfig.mMOHFilenameUrl);
+   InfoLog( << "  Park URI = " << mConfig.mParkUri);
+   InfoLog( << "  Park Registration Time = " << mConfig.mParkRegistrationTime);
+   InfoLog( << "  Park MOH Filename URL = " << mConfig.mParkMOHFilenameUrl);
+   InfoLog( << "  Park Orbit Range Start = " << mConfig.mParkOrbitRangeStart);
+   InfoLog( << "  Park Number of Orbits = " << mConfig.mParkNumOrbits);
+   InfoLog( << "  Park Orbit Registration Time = " << mConfig.mParkOrbitRegistrationTime);
+   InfoLog( << "  Local IP Address = " << mConfig.mAddress);
+   InfoLog( << "  Override DNS Servers = " << mConfig.mDnsServers);
+   InfoLog( << "  UDP Port = " << mConfig.mUdpPort);
+   InfoLog( << "  TCP Port = " << mConfig.mTcpPort);
+   InfoLog( << "  TLS Port = " << mConfig.mTlsPort);
+   InfoLog( << "  TLS Domain = " << mConfig.mTlsDomain);
+   InfoLog( << "  Keepalives = " << (mConfig.mKeepAlives ? "enabled" : "disabled"));
+   InfoLog( << "  Outbound Proxy = " << mConfig.mOutboundProxy);
+   InfoLog( << "  Media Port Range Start = " << mConfig.mMediaPortRangeStart);
+   InfoLog( << "  Media Port Range Size = " << mConfig.mMediaPortRangeSize);
+   InfoLog( << "  Log Level = " << mConfig.mLogLevel);
 
    resip::Data ;
 
-   if(!mAddress.empty())
+   if(!mConfig.mAddress.empty())
    {
       // If address is specified in config file, then just use this address only
-      Tuple myTuple(mAddress, mUdpPort, UDP);
+      Tuple myTuple(mConfig.mAddress, mConfig.mUdpPort, UDP);
       if(myTuple.ipVersion() == V6)
       {
          mIsV6Avail = true;
@@ -140,7 +140,7 @@ Server::Server(int argc, char** argv) :
       std::list<std::pair<Data,Data> >::iterator itInt = interfaces.begin();
       for(;itInt != interfaces.end(); itInt++)
       {
-         Tuple myTuple(itInt->second, mUdpPort, UDP);
+         Tuple myTuple(itInt->second, mConfig.mUdpPort, UDP);
          if(myTuple.ipVersion() == V6)
          {
             mIsV6Avail = true;
@@ -157,38 +157,38 @@ Server::Server(int argc, char** argv) :
    // Add transports
    try
    {
-      if(mUdpPort == (unsigned short)-1 
+      if(mConfig.mUdpPort == (unsigned short)-1 
 #ifdef USE_SSL
-         && mTlsPort == (unsigned short)-1 
+         && mConfig.mTlsPort == (unsigned short)-1 
 #endif
-         && mTcpPort == (unsigned short)-1)
+         && mConfig.mTcpPort == (unsigned short)-1)
       {
          // Ensure there is at least one transport enabled - if all are disabled, then enable UDP on an OS selected port
-         mUdpPort = 0;
+         mConfig.mUdpPort = 0;
       }
-      if(mUdpPort != (unsigned short)-1)
+      if(mConfig.mUdpPort != (unsigned short)-1)
       {
-         profile->addTransport(UDP, mUdpPort, V4, mAddress);
+         profile->addTransport(UDP, mConfig.mUdpPort, V4, mConfig.mAddress);
          if(mIsV6Avail)
          {
-            profile->addTransport(UDP, mUdpPort, V6, mAddress);
+            profile->addTransport(UDP, mConfig.mUdpPort, V6, mConfig.mAddress);
          }
       }
-      if(mTcpPort != (unsigned short)-1)
+      if(mConfig.mTcpPort != (unsigned short)-1)
       {
-         profile->addTransport(TCP, mTcpPort, V4, mAddress);
+         profile->addTransport(TCP, mConfig.mTcpPort, V4, mConfig.mAddress);
          if(mIsV6Avail)
          {
-            profile->addTransport(TCP, mTcpPort, V6, mAddress);
+            profile->addTransport(TCP, mConfig.mTcpPort, V6, mConfig.mAddress);
          }
       }
 #ifdef USE_SSL
-      if(mTlsPort != (unsigned short)-1)
+      if(mConfig.mTlsPort != (unsigned short)-1)
       {
-         profile->addTransport(TLS, mTlsPort, V4, mAddress, mTlsDomain);
+         profile->addTransport(TLS, mConfig.mTlsPort, V4, mConfig.mAddress, mConfig.mTlsDomain);
          if(mIsV6Avail)
          {
-            profile->addTransport(TLS, mTlsPort, V6, mAddress, mTlsDomain);
+            profile->addTransport(TLS, mConfig.mTlsPort, V6, mConfig.mAddress, mConfig.mTlsDomain);
          }
       }
 #endif
@@ -201,9 +201,9 @@ Server::Server(int argc, char** argv) :
    }
 
    // DNS Servers
-   ParseBuffer pb(mDnsServers);
+   ParseBuffer pb(mConfig.mDnsServers);
    Data dnsServer;
-   while(!mDnsServers.empty() && !pb.eof())
+   while(!mConfig.mDnsServers.empty() && !pb.eof())
    {
       pb.skipWhitespace();
       const char *start = pb.position();
@@ -227,7 +227,7 @@ Server::Server(int argc, char** argv) :
    // Disable Statisitics Manager
    profile->statisticsManagerEnabled() = false;
 
-   if(mKeepAlives)
+   if(mConfig.mKeepAlives)
    {
       profile->setKeepAliveTimeForDatagram(30);
       profile->setKeepAliveTimeForStream(180);
@@ -286,14 +286,14 @@ Server::Server(int argc, char** argv) :
    profile->setMethodsParamEnabled(true);
 
    //profile->setOverrideHostAndPort(mContact);
-   if(!mOutboundProxy.uri().host().empty())
+   if(!mConfig.mOutboundProxy.uri().host().empty())
    {
-      profile->setOutboundProxy(mOutboundProxy.uri());
+      profile->setOutboundProxy(mConfig.mOutboundProxy.uri());
    }
 
    profile->setUserAgent("MOHParkServer");
-   profile->rtpPortRangeMin() = mMediaPortRangeStart; 
-   profile->rtpPortRangeMax() = mMediaPortRangeStart + mMediaPortRangeSize-1; 
+   profile->rtpPortRangeMin() = mConfig.mMediaPortRangeStart; 
+   profile->rtpPortRangeMax() = mConfig.mMediaPortRangeStart + mConfig.mMediaPortRangeSize-1; 
 
    mUserAgentMasterProfile = profile;
 
@@ -352,7 +352,7 @@ Server::buildSessionCapabilities(resip::SdpContents& sessionCaps)
                                SdpCodec::SDP_CODEC_GSM /* 3 - GSM */,
                                SdpCodec::SDP_CODEC_TONES /* 110 - telephone-event */};
    unsigned int numCodecIds = sizeof(codecIds) / sizeof(codecIds[0]);
-   ConversationManager::buildSessionCapabilities(mAddress, numCodecIds, codecIds, sessionCaps);
+   ConversationManager::buildSessionCapabilities(mConfig.mAddress, numCodecIds, codecIds, sessionCaps);
 }
 
 void 
