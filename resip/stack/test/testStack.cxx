@@ -168,27 +168,51 @@ SipStackAndThread::SipStackAndThread(const char *tType,
 
    assert( tType );
 
-   if ( strcmp(tType,"intr")==0 ) {
+   if (strcmp(tType,"intr")==0) 
+   {
       mSelIntr = new SelectInterruptor();
-   } else if ( strcmp(tType,"event")==0 ) {
+   }
+#if defined(HAVE_EPOLL)
+   else if ( strcmp(tType,"event")==0 ) 
+   {
       mPollGrp = FdPollGrp::create();
       mEventIntr = new EventThreadInterruptor(*mPollGrp);
-   } else if ( strcmp(tType,"std")==0 ) {
+   }
+#endif
+   else if ( strcmp(tType,"std")==0 ) 
+   {
       doStd = true;
-   } else if ( strcmp(tType,"none")==0 ) {
-      ;
-   } else {
+   } 
+   else if ( strcmp(tType,"none")==0 ) 
+   {
+   } 
+   else 
+   {
       CritLog(<<"Bad thread-type: "<<tType);
       exit(1);
    }
-   mStack = new SipStack(/*security*/0, DnsStub::EmptyNameserverList,
-     mEventIntr?mEventIntr:(mSelIntr?mSelIntr:notifyDn),
-     /*stateless*/false, /*sockFnc*/0, /*comp*/0, notifyUp, mPollGrp);
-   if ( mEventIntr ) {
+   mStack = new SipStack(/*security*/0, 
+                         DnsStub::EmptyNameserverList,
+                         mEventIntr?mEventIntr:(mSelIntr?mSelIntr:notifyDn),
+                         /*stateless*/false, 
+                         /*sockFnc*/0, 
+                         /*comp*/0, 
+                         notifyUp, 
+                         mPollGrp);
+   
+#if defined(HAVE_EPOLL)
+   if (mEventIntr) 
+   {
       mThread = new EventStackThread(*mStack, *mEventIntr, *mPollGrp);
-   } else if ( mSelIntr ) {
+   } 
+   else 
+#endif
+   if (mSelIntr) 
+   {
       mThread = new InterruptableStackThread(*mStack, *mSelIntr);
-   } else if ( doStd ) {
+   } 
+   else if (doStd) 
+   {
       mThread = new StackThread(*mStack);
    }
 }
@@ -224,8 +248,8 @@ SipStackAndThread::destroy()
 }
 
 static void
-waitForTwoStacks( SipStackAndThread& receiver, SipStackAndThread& sender,
-        SelectInterruptor *commonIntr, int& thisseltime, bool& isStrange)
+waitForTwoStacks(SipStackAndThread& receiver, SipStackAndThread& sender,
+                 SelectInterruptor *commonIntr, int& thisseltime, bool& isStrange)
 {
    FdSet fdset;
    receiver->buildFdSet(fdset);
@@ -287,10 +311,16 @@ main(int argc, char* argv[])
       {"listen",      0,   POPT_ARG_INT,    &doListen,  0, "do not bind/listen sender ports", 0},
       {"v6",          '6', POPT_ARG_NONE,   &v6     ,   0, "ipv6", 0},
       {"invite",      'i', POPT_ARG_NONE,   &invite ,   0, "send INVITE/BYE instead of REGISTER", 0},
+#if defined(HAVE_EPOLL)
       {"intepoll",    0,   POPT_ARG_INT,    &useInternalEPollMode,0, "use internal epoll mode", 0},
+#endif
       {"port",        0,   POPT_ARG_INT,    &portBase,  0, "first port to use", 0},
       {"numports",    'n', POPT_ARG_INT,    &numPorts,  0, "number of parallel sessions(ports)", 0},
+#if defined(HAVE_EPOLL)
       {"thread-type", 't', POPT_ARG_STRING, &threadType,0, "stack thread type", "none|common|std|intr|event"},
+#else
+      {"thread-type", 't', POPT_ARG_STRING, &threadType,0, "stack thread type", "none|common|std|intr"},
+#endif
       {"tf",          0,   POPT_ARG_INT,    &tpFlags,   0, "bit encoding of transportFlags", 0},
       {"sleep",       0,   POPT_ARG_INT,    &sendSleepUs,0, "time (us) to sleep after each sent request", 0},
       POPT_AUTOHELP
@@ -382,23 +412,48 @@ main(int argc, char* argv[])
    int idx;
    for (idx=0; idx < numPorts; idx++)
    {
-      sender->addTransport(UDP, senderPort+idx, version, StunDisabled, bindIfAddr,
-        /*sipDomain*/Data::Empty, /*keypass*/Data::Empty, SecurityTypes::TLSv1,
-        tpFlags);
+      sender->addTransport(UDP, 
+                           senderPort+idx, 
+                           version, 
+                           StunDisabled, 
+                           bindIfAddr,
+                           /*sipDomain*/Data::Empty, 
+                           /*keypass*/Data::Empty, 
+                           SecurityTypes::TLSv1,
+                           tpFlags);
+
       // NOBIND doesn't make sense for UDP
-      sender->addTransport(TCP, senderPort+idx, version, StunDisabled, bindIfAddr,
-        /*sipDomain*/Data::Empty, /*keypass*/Data::Empty, SecurityTypes::TLSv1,
-        tpFlags|(doListen?0:RESIP_TRANSPORT_FLAG_NOBIND));
+      sender->addTransport(TCP, 
+                           senderPort+idx, 
+                           version, 
+                           StunDisabled, 
+                           bindIfAddr,
+                           /*sipDomain*/Data::Empty, 
+                           /*keypass*/Data::Empty, 
+                           SecurityTypes::TLSv1,
+                           tpFlags|(doListen?0:RESIP_TRANSPORT_FLAG_NOBIND));
+
       // NOTE: we could also bind receive to bindIfAddr, but existing code
       // doesn't do this. Responses are sent from here, so why don't we?
-      receiver->addTransport(UDP, registrarPort+idx, version, StunDisabled,
-        /*ipInterface*/Data::Empty,
-        /*sipDomain*/Data::Empty, /*keypass*/Data::Empty, SecurityTypes::TLSv1,
-        tpFlags);
-      receiver->addTransport(TCP, registrarPort+idx, version, StunDisabled,
-        /*ipInterface*/Data::Empty,
-        /*sipDomain*/Data::Empty, /*keypass*/Data::Empty, SecurityTypes::TLSv1,
-        tpFlags);
+      receiver->addTransport(UDP, 
+                             registrarPort+idx, 
+                             version, 
+                             StunDisabled,
+                             /*ipInterface*/Data::Empty,
+                             /*sipDomain*/Data::Empty, 
+                             /*keypass*/Data::Empty, 
+                             SecurityTypes::TLSv1,
+                             tpFlags);
+
+      receiver->addTransport(TCP, 
+                             registrarPort+idx, 
+                             version, 
+                             StunDisabled,
+                             /*ipInterface*/Data::Empty,
+                             /*sipDomain*/Data::Empty, 
+                             /*keypass*/Data::Empty, 
+                             SecurityTypes::TLSv1,
+                             tpFlags);
    }
 
    sender.run();
