@@ -195,7 +195,7 @@ class SendingAction : public ActionBase
          if (mHandle.isValid())
          {
             StackLog(<< "sending adorned message...");
-            mHandle->send((*mMessageAdorner)(mFunctor()));
+            mHandle->sendCommand((*mMessageAdorner)(mFunctor()));
          }
          else
          {
