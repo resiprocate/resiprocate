@@ -1200,7 +1200,7 @@ class DumTestCase : public DumFixture
                      And(Sub(testDialogEvt.expect(DialogEvent_Terminated, *pDi4, InviteSessionHandler::RemoteCancel, WaitForCommand, testDialogEvt.noAction()),
                              uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
                          Sub(sheila->expect(CANCEL/200, from(proxy), WaitForResponse, sheila->noAction()),
-                             sheila->expect(INVITE/487, from(proxy), WaitForResponse, sheila->noAction()))))),
+                             sheila->expect(INVITE/487, from(proxy), WaitForResponse, sheila->ack()))))),
              WaitForEndOfSeq);
          ExecuteSequences();
       }
@@ -3867,34 +3867,32 @@ class DumTestCase : public DumFixture
 
          Seq(
             derek->invite(NameAddr(david->getUri()), standardOffer),
-            And(
-               Sub(david->expect(
+            david->expect(
                   INVITE,
                   saveMatcher(from(proxy), invMsg),
                   WaitForCommand,
-                  david->subscribe(derek->getAor().uri(), Token("presence")))),
-               Sub(
-                  optional(david->expect(SUBSCRIBE/407, from(proxy), WaitForResponse, david->digestRespond()))),
-               david->answerTo(invMsg)),
+                  chain(david->subscribe(derek->getAor().uri(), Token("presence")), david->answerTo(invMsg))),
             //!dcm! -- need to unify from/dumFrom...
             And(
+               Sub(
+                  optional(david->expect(SUBSCRIBE/407, from(proxy), WaitForResponse, david->digestRespond()))),
                Sub(
                   derek->expect(Invite_NewClientSession, invDerek, *TestEndPoint::AlwaysTruePred, WaitForCommand, derek->noAction()),
                   invDerek.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, invDerek.noAction()),
                   invDerek.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, invDerek.noAction()),
-                  david->expect(ACK, from(proxy), WaitForResponse, derek->noAction())),
+                  david->expect(ACK, contact(derek->getContact()), WaitForResponse, derek->noAction())),
                Sub(
                   derek->expect(
                      ServerSubscription_NewSubscription,
                      serv, *TestEndPoint::AlwaysTruePred, WaitForCommand,
                      chain(serv.accept(), serv.neutralNotify()))),
-               Sub(david->expect(SUBSCRIBE/200, from(proxy), WaitForResponse, david->noAction())),
-               Sub(david->expect(NOTIFY, from(proxy), WaitForCommand, david->respond(200))),
+               Sub(david->expect(SUBSCRIBE/200, contact(derek->getContact()), WaitForResponse, david->noAction())),
+               Sub(david->expect(NOTIFY, contact(derek->getContact()), WaitForCommand, david->respond(200))),
                serv.end()),
             And(
                Sub(serv.expect(
                         ServerSubscription_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, serv.noAction())),
-               Sub(david->expect(NOTIFY, from(proxy), WaitForCommand, david->respond(200)))),
+               Sub(david->expect(NOTIFY, contact(derek->getContact()), WaitForCommand, david->respond(200)))),
             WaitForEndOfSeq);
          ExecuteSequences();
 
@@ -3931,7 +3929,7 @@ class DumTestCase : public DumFixture
 
          Seq(david->subscribe(derek->getAor().uri(), Token("unknownEvent")),
              optional(david->expect(SUBSCRIBE/407, from(proxy), WaitForResponse, david->digestRespond())),
-             david->expect(SUBSCRIBE/489, from(proxy), WaitForResponse, david->noAction()),
+             david->expect(SUBSCRIBE/489, from(derek->getContact()), WaitForResponse, david->noAction()),
              WaitForEndOfSeq);
          ExecuteSequences();
          
