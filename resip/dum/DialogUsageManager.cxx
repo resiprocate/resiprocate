@@ -70,6 +70,20 @@
 using namespace resip;
 using namespace std;
 
+#ifdef RESIP_DUM_THREAD_DEBUG
+#define threadCheck()                                                   \
+   do                                                                   \
+   {                                                                    \
+      if(mThreadDebugKey)                                               \
+      {                                                                 \
+         assert(ThreadIf::tlsGetValue(mThreadDebugKey));                \
+      }                                                                 \
+   } while (false)
+#else
+#define threadCheck() void()
+#endif
+
+
 DialogUsageManager::DialogUsageManager(SipStack& stack, bool createDefaultFeatures) :
    TransactionUser(TransactionUser::DoNotRegisterForTransactionTermination, TransactionUser::RegisterForConnectionTermination),
    mRedirectManager(new RedirectManager()),
@@ -86,7 +100,9 @@ DialogUsageManager::DialogUsageManager(SipStack& stack, bool createDefaultFeatur
    mAppDialogSetFactory(new AppDialogSetFactory()),
    mStack(stack),
    mDumShutdownHandler(0),
-   mShutdownState(Running)
+   mShutdownState(Running),
+   mThreadDebugKey(0),
+   mHiddenThreadDebugKey(0)
 {
    //TODO -- create default features
    mStack.registerTransactionUser(*this);
@@ -469,6 +485,7 @@ DialogUsageManager::clearExternalMessageHandler()
 DialogSet*
 DialogUsageManager::makeUacDialogSet(BaseCreator* creator, AppDialogSet* appDs)
 {
+   threadCheck();
    if (mDumShutdownHandler)
    {
       throw DumException("Cannot create new sessions when DUM is shutting down.", __FILE__, __LINE__);
@@ -803,7 +820,7 @@ DialogUsageManager::send(SharedPtr<SipMessage> msg)
       msg->header(h_ProxyRequires) = userProfile->getProxyRequires();
    }
    
-   // !bwc! This is to avoid leaving extra copies of the decorator in msg,
+   // .bwc. This is to avoid leaving extra copies of the decorator in msg,
    // when the caller of this function holds onto the reference (and this
    // happens quite often in DUM). I would prefer to refactor such that we
    // are operating on a copy in this function, but this would require a lot
@@ -1149,6 +1166,29 @@ DialogUsageManager::findInviteSession(CallId replaces)
 void
 DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
 {
+#ifdef RESIP_DUM_THREAD_DEBUG
+   if(!mThreadDebugKey)
+   {
+      // .bwc. Probably means multiple threads are trying to give DUM cycles 
+      // simultaneously.
+      assert(!mHiddenThreadDebugKey);
+      // No d'tor needed, since we're just going to use a pointer to this.
+      if(!ThreadIf::tlsKeyCreate(mThreadDebugKey, 0))
+      {
+         // .bwc. We really could pass anything here, but for the sake of 
+         // passing a valid pointer, I have (completely arbitrarily) chosen a 
+         // pointer to the DUM. All that matters is that this value is non-null
+         ThreadIf::tlsSetValue(mThreadDebugKey, this);
+      }
+      else
+      {
+         ErrLog(<< "ThreadIf::tlsKeyCreate() failed!");
+      }
+   }
+#endif
+
+   threadCheck();
+
    // After a Stack ShutdownMessage has been received, don't do anything else in dum
    if (mShutdownState == Shutdown)
    {
@@ -1438,7 +1478,20 @@ DialogUsageManager::process(resip::Lockable* mutex)
    if (mFifo.messageAvailable())
    {
       resip::PtrLock lock(mutex);
+#ifdef RESIP_DUM_THREAD_DEBUG
+      mThreadDebugKey=mHiddenThreadDebugKey;
+#endif
       internalProcess(std::auto_ptr<Message>(mFifo.getNext()));
+#ifdef RESIP_DUM_THREAD_DEBUG
+      // .bwc. Thread checking is disabled if mThreadDebugKey is 0; if the app 
+      // is using this mutex-locked process() call, we only enable thread-
+      // checking while the mutex is locked. Accesses from another thread while 
+      // the mutex is not locked are probably intentional. However, if the app 
+      // accesses the DUM inappropriately anyway, we'll probably detect it if 
+      // it happens during the internalProcess() call.
+      mHiddenThreadDebugKey=mThreadDebugKey;
+      mThreadDebugKey=0;
+#endif
    }
    return mFifo.messageAvailable();
 }
@@ -1459,7 +1512,20 @@ DialogUsageManager::process(int timeoutMs, resip::Lockable* mutex)
    if (message.get())
    {
       resip::PtrLock lock(mutex);
+#ifdef RESIP_DUM_THREAD_DEBUG
+      mThreadDebugKey=mHiddenThreadDebugKey;
+#endif
       internalProcess(message);
+#ifdef RESIP_DUM_THREAD_DEBUG
+      // .bwc. Thread checking is disabled if mThreadDebugKey is 0; if the app 
+      // is using this mutex-locked process() call, we only enable thread-
+      // checking while the mutex is locked. Accesses from another thread while 
+      // the mutex is not locked are probably intentional. However, if the app 
+      // accesses the DUM inappropriately anyway, we'll probably detect it if 
+      // it happens during the internalProcess() call.
+      mHiddenThreadDebugKey=mThreadDebugKey;
+      mThreadDebugKey=0;
+#endif
    }
    return mFifo.messageAvailable();
 }
@@ -1965,6 +2031,7 @@ DialogUsageManager::checkEventPackage(const SipMessage& request)
 DialogSet*
 DialogUsageManager::findDialogSet(const DialogSetId& id)
 {
+   threadCheck();
    StackLog ( << "Looking for dialogSet: " << id << " in map:" );
    StackLog ( << Inserter(mDialogSetMap) );
    DialogSetMap::const_iterator it = mDialogSetMap.find(id);

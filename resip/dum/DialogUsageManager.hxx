@@ -17,6 +17,7 @@
 #include "resip/dum/ServerSubscription.hxx"
 #include "rutil/BaseException.hxx"
 #include "rutil/SharedPtr.hxx"
+#include "rutil/ThreadIf.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/TransactionUser.hxx"
 #include "resip/dum/DumFeature.hxx"
@@ -553,6 +554,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 
       IncomingTarget* mIncomingTarget;
       OutgoingTarget* mOutgoingTarget;
+      ThreadIf::TlsKey mThreadDebugKey;
+      ThreadIf::TlsKey mHiddenThreadDebugKey;
 
       EventDispatcher<ConnectionTerminated> mConnectionTerminatedEventDispatcher;
 };
