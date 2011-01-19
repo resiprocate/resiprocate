@@ -102,6 +102,7 @@ void
 DumUserAgent::clean()
 {
    mTestUsages.clear();
+   getDum().createDialogEventStateManager(0);
    //clear out handles/etc here
 }
 
@@ -1568,17 +1569,21 @@ DumUserAgent::FindMatchingDialogToReplace::isMatch(const boost::shared_ptr<resip
    }
    else
    {
-      std::pair<InviteSessionHandle, int> inv = mUa->getDum().findInviteSession(message->header(h_Replaces));
-      if (inv.first.isValid())
-      {
-         DebugLog(<< "matching dialog to replace found");
-         return true;
-      }
-      else
-      {
-         DebugLog(<< "matching dialog to replace not found");
-         return false;
-      }
+      return true;
+// !bwc! This code is not safe. Maybe we could fire a DumCommand that did the 
+// check, and asserted if not the case? If there is no match, won't the test 
+// fail anyhow?
+//      std::pair<InviteSessionHandle, int> inv = mUa->getDum().findInviteSession(message->header(h_Replaces));
+//      if (inv.first.isValid())
+//      {
+//         DebugLog(<< "matching dialog to replace found");
+//         return true;
+//      }
+//      else
+//      {
+//         DebugLog(<< "matching dialog to replace not found");
+//         return false;
+//      }
    }
 }
 
