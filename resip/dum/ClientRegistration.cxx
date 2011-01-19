@@ -635,7 +635,7 @@ ClientRegistration::tagContact(NameAddr& contact) const
       {
          // !slg! poor mans instance id so that we can tell which contacts 
          // are ours - to be replaced by gruu someday.
-         WarningLog(<< "You really should consider setting an instance id in"
+         InfoLog(<< "You really should consider setting an instance id in"
                      " the UserProfile (see UserProfile::setInstanceId())."
                      " This is really easy, and makes this class much less "
                      "likely to clash with another endpoint registering at "
