@@ -3,6 +3,7 @@
 
 #include <list>
 #include <rutil/Data.hxx>
+#include <rutil/Socket.hxx>
 #include <resip/stack/NameAddr.hxx>
 
 namespace mohparkserver
@@ -56,6 +57,9 @@ public:
    resip::Data mLogLevel;
    resip::Data mLogFilename;
    unsigned int mLogFileMaxBytes;
+
+   // Store pointer to after socket creation fn - can be used for QOS
+   resip::AfterSocketCreationFuncPtr mSocketFunc;
 };
  
 }

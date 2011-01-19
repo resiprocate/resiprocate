@@ -41,7 +41,8 @@ ConfigParser::ConfigParser(int argc, char** argv) :
    mMediaPortRangeSize(100),
    mLogLevel("INFO"),
    mLogFilename("mohparkserver.log"),
-   mLogFileMaxBytes(5000000)     // about 5Mb size
+   mLogFileMaxBytes(5000000),     // about 5Mb size
+   mSocketFunc(0)
 {
    //mAddress = DnsUtil::getLocalIpAddress();
 
@@ -51,6 +52,31 @@ ConfigParser::ConfigParser(int argc, char** argv) :
    // Parse command line options
    // Note:  command line overrides config file setting
    parseCommandLine(argc, argv);
+}
+
+ConfigParser::ConfigParser() : 
+   // Defaults
+   mMOHUri("sip:moh@server.com"),
+   mMOHRegistrationTime(3600),
+   mMOHFilenameUrl("file:music.wav;repeat"),
+   mParkUri("sip:park@server.com"),
+   mParkRegistrationTime(3600),
+   mParkMOHFilenameUrl("file:music.wav;repeat"),
+   mParkOrbitRangeStart(6000),
+   mParkNumOrbits(10),
+   mParkOrbitRegistrationTime(3600),
+   mMaxParkTime(600),  // 600 seconds = 10 mins
+   mUdpPort(0),
+   mTcpPort(0),
+   mTlsPort(0),
+   mTlsDomain(DnsUtil::getLocalHostName()),
+   mKeepAlives(true),
+   mMediaPortRangeStart(50000),
+   mMediaPortRangeSize(100),
+   mLogLevel("INFO"),
+   mLogFilename("mohparkserver.log"),
+   mLogFileMaxBytes(5000000)     // about 5Mb size
+{
 }
 
 ConfigParser::~ConfigParser()

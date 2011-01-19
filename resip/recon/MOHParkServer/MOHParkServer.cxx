@@ -79,7 +79,7 @@ main (int argc, char** argv)
 
       while(true)
       {
-         server.process(50);
+         server.process(500);
          if(finished) break;
       }
 

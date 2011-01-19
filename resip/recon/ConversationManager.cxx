@@ -45,7 +45,8 @@ ConversationManager::ConversationManager(bool localAudioEnabled, MediaInterfaceM
   mLocalAudioEnabled(localAudioEnabled),
   mMediaInterfaceMode(mediaInterfaceMode),
   mMediaFactory(0),
-  mBridgeMixer(0)
+  mBridgeMixer(0),
+  mSipXTOSValue(0)
 {
 #ifdef _DEBUG
    UtlString codecPaths[] = {".", "../../../../sipXtapi/sipXmediaLib/bin"};
@@ -667,7 +668,7 @@ ConversationManager::createMediaInterfaceAndMixer(bool giveFocus,
             0,     /* numCodecs - not required at this point */
             0,     /* codecArray - not required at this point */ 
             NULL,  /* local */
-            0,     /* TOS Options */
+            mSipXTOSValue,  /* TOS Options */
             NULL,  /* STUN Server Address */
             0,     /* STUN Options */
             25,    /* STUN Keepalive period (seconds) */
