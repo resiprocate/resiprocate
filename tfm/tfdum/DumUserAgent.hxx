@@ -88,6 +88,7 @@ class DumUserAgent : public EndPoint,
       void process(resip::FdSet& fdset);
 
       const resip::Data& getInstanceId() const;
+      resip::Uri getContact() const;
 
       
       static resip::SharedPtr<resip::MasterProfile> makeProfile(const resip::Uri& aor, const resip::Data& password);

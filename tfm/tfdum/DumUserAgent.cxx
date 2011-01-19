@@ -292,6 +292,16 @@ DumUserAgent::getInstanceId() const
    return mProfile->getInstanceId();
 }
 
+resip::Uri 
+DumUserAgent::getContact() const
+{
+   Uri localContact = getProfile()->getDefaultFrom().uri();
+   localContact.host() = getIp();
+   localContact.port() = getPort();
+   return localContact;
+}
+
+
 resip::Data 
 DumUserAgent::getName() const
 {
@@ -1499,9 +1509,7 @@ DumUserAgent::From::isMatch(const boost::shared_ptr<resip::SipMessage>& message)
    if (mUa)
    {
       StackLog(<< "matching stored agent...");
-      Uri localContact = mUa->getProfile()->getDefaultFrom().uri();
-      localContact.host() = mUa->getIp();
-      localContact.port() = mUa->getPort();
+      Uri localContact(mUa->getContact());
 
       if (message->exists(h_Contacts) && message->header(h_Contacts).size() == 1)
       {
