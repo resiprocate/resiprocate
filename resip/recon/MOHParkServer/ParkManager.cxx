@@ -28,7 +28,7 @@ ParkManager::ParkManager(Server& server) :
    mServer(server)
 {
     // Initialize free orbit list
-   for(unsigned long orbit = mServer.mParkOrbitRangeStart; orbit < mServer.mParkOrbitRangeStart + mServer.mParkNumOrbits; orbit++)
+   for(unsigned long orbit = mServer.mConfig.mParkOrbitRangeStart; orbit < mServer.mConfig.mParkOrbitRangeStart + mServer.mConfig.mParkNumOrbits; orbit++)
    {
       mFreeOrbitList.push_back(orbit);
    }
@@ -43,10 +43,10 @@ ParkManager::startup()
 {
    // Setup Park ConversationProfile
    SharedPtr<ConversationProfile> parkConversationProfile = SharedPtr<ConversationProfile>(new ConversationProfile(mServer.mUserAgentMasterProfile));
-   parkConversationProfile->setDefaultRegistrationTime(mServer.mParkRegistrationTime);  
+   parkConversationProfile->setDefaultRegistrationTime(mServer.mConfig.mParkRegistrationTime);  
    parkConversationProfile->setDefaultRegistrationRetryTime(120);  // 2 mins
-   parkConversationProfile->setDefaultFrom(mServer.mParkUri);
-   parkConversationProfile->setDigestCredential(mServer.mParkUri.uri().host(), mServer.mParkUri.uri().user(), mServer.mParkPassword);  
+   parkConversationProfile->setDefaultFrom(mServer.mConfig.mParkUri);
+   parkConversationProfile->setDigestCredential(mServer.mConfig.mParkUri.uri().host(), mServer.mConfig.mParkUri.uri().user(), mServer.mConfig.mParkPassword);  
    parkConversationProfile->challengeOODReferRequests() = false;
    parkConversationProfile->setExtraHeadersInReferNotifySipFragEnabled(true);  // Enable dialog identifying headers in SipFrag bodies of Refer Notifies
    NameAddr capabilities;
@@ -61,15 +61,15 @@ ParkManager::startup()
    mServer.mMyUserAgent->addConversationProfile(mConversationProfile);
 
    // Create Orbit Profiles
-   for(unsigned long orbit = mServer.mParkOrbitRangeStart; orbit < mServer.mParkOrbitRangeStart + mServer.mParkNumOrbits; orbit++)
+   for(unsigned long orbit = mServer.mConfig.mParkOrbitRangeStart; orbit < mServer.mConfig.mParkOrbitRangeStart + mServer.mConfig.mParkNumOrbits; orbit++)
    {
        SharedPtr<ConversationProfile> orbitConversationProfile = SharedPtr<ConversationProfile>(new ConversationProfile(mConversationProfile));
        Data orbitData(orbit);
-       orbitConversationProfile->setDefaultRegistrationTime(mServer.mParkOrbitRegistrationTime);  
+       orbitConversationProfile->setDefaultRegistrationTime(mServer.mConfig.mParkOrbitRegistrationTime);  
        orbitConversationProfile->setDefaultRegistrationRetryTime(120);  // 2 mins
-       orbitConversationProfile->setDefaultFrom(mServer.mParkUri);
+       orbitConversationProfile->setDefaultFrom(mServer.mConfig.mParkUri);
        orbitConversationProfile->getDefaultFrom().uri().user() = orbitData;
-       orbitConversationProfile->setDigestCredential(mServer.mParkUri.uri().host(), orbitData, mServer.mParkOrbitPassword);  
+       orbitConversationProfile->setDigestCredential(mServer.mConfig.mParkUri.uri().host(), orbitData, mServer.mConfig.mParkOrbitPassword);  
        orbitConversationProfile->challengeOODReferRequests() = false;
        orbitConversationProfile->setExtraHeadersInReferNotifySipFragEnabled(true);  // Enable dialog identifying headers in SipFrag bodies of Refer Notifies
        orbitConversationProfile->setUserAgentCapabilities(capabilities);  // Same as above
@@ -142,8 +142,8 @@ ParkManager::isMyProfile(recon::ConversationProfile& profile)
 ParkOrbit* 
 ParkManager::getOrbit(unsigned long orbit)
 {
-   assert((orbit >= mServer.mParkOrbitRangeStart) && 
-          (orbit < (mServer.mParkOrbitRangeStart + mServer.mParkNumOrbits)));
+   assert((orbit >= mServer.mConfig.mParkOrbitRangeStart) && 
+          (orbit < (mServer.mConfig.mParkOrbitRangeStart + mServer.mConfig.mParkNumOrbits)));
 
    // Check if Orbit is created or not yet
    OrbitMap::iterator it = mOrbits.find(orbit);
@@ -208,8 +208,8 @@ ParkManager::parkParticipant(ParticipantHandle participantHandle, const SipMessa
       orbit = msg.header(h_To).uri().param(p_orbit).convertUnsignedLong();
    }
 
-   if((orbit >= mServer.mParkOrbitRangeStart) && 
-      (orbit < (mServer.mParkOrbitRangeStart + mServer.mParkNumOrbits)))
+   if((orbit >= mServer.mConfig.mParkOrbitRangeStart) && 
+      (orbit < (mServer.mConfig.mParkOrbitRangeStart + mServer.mConfig.mParkNumOrbits)))
    {
       // Park call at specified orbit
       ParkOrbit* parkOrbit = getOrbit(orbit);
@@ -226,7 +226,7 @@ ParkManager::parkParticipant(ParticipantHandle participantHandle, const SipMessa
          mFreeOrbitList.pop_front();  
          mFreeOrbitList.push_back(freeorbit);
          InfoLog(<< "ParkManager::parkParticipant no valid orbit specified (orbit=" << orbit << ") redirecting to free orbit=" << freeorbit);
-         NameAddr destination(mServer.mParkUri);
+         NameAddr destination(mServer.mConfig.mParkUri);
          destination.uri().param(p_orbit) = Data(freeorbit);
          mServer.redirectParticipant(participantHandle, destination);
       }
@@ -252,8 +252,8 @@ ParkManager::incomingParticipant(ParticipantHandle participantHandle, const SipM
    {
       orbit = msg.header(h_To).uri().user().convertUnsignedLong();
    }
-   if((orbit >= mServer.mParkOrbitRangeStart) && 
-      (orbit < (mServer.mParkOrbitRangeStart + mServer.mParkNumOrbits)))
+   if((orbit >= mServer.mConfig.mParkOrbitRangeStart) && 
+      (orbit < (mServer.mConfig.mParkOrbitRangeStart + mServer.mConfig.mParkNumOrbits)))
    {
       // Check if this is a direct call, or a transferred call.  We will allow transferred calls to be parked, as an alternative parking method
       if(msg.exists(h_ReferredBy))

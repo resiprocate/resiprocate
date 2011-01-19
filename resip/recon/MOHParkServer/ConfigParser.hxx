@@ -2,11 +2,8 @@
 #define ConfigParser_hxx
 
 #include <list>
-#include <resip/dum/MasterProfile.hxx>
-#include <rutil/dns/DnsStub.hxx>
-#include <rutil/Log.hxx>
-#include <rutil/SharedPtr.hxx>
-
+#include <rutil/Data.hxx>
+#include <resip/stack/NameAddr.hxx>
 
 namespace mohparkserver
 {
@@ -14,7 +11,8 @@ namespace mohparkserver
 class ConfigParser 
 {
 public:
-   ConfigParser(int argc, char** argv);
+   ConfigParser(int argc, char** argv); // Use this constructor to parse command line arguments and read configuration file from disk
+   ConfigParser();  // If you use this constructor you must manually set all configuration values
    virtual ~ConfigParser();
    
    void parseCommandLine(int argc, char** argv);

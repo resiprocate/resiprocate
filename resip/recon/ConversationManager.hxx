@@ -5,10 +5,6 @@
 #define BOOST__STDC_CONSTANT_MACROS_DEFINED  // elminate duplicate define warnings under windows
 #endif
 
-// sipX includes
-#include <mi/CpMediaInterfaceFactoryFactory.h>
-#include <mi/CpMediaInterface.h>
-
 #include "BridgeMixer.hxx"
 
 #include <resip/stack/Uri.hxx>
@@ -26,6 +22,8 @@
 #include "MediaInterface.hxx"
 
 #include "FlowManager.hxx"
+
+class CpMediaInterfaceFactory;
 
 namespace resip
 {

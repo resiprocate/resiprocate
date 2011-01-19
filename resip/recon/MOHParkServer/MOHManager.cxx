@@ -35,10 +35,10 @@ MOHManager::startup()
 {
    // Setup ConversationProfile
    SharedPtr<ConversationProfile> mohConversationProfile = SharedPtr<ConversationProfile>(new ConversationProfile(mServer.mUserAgentMasterProfile));
-   mohConversationProfile->setDefaultRegistrationTime(mServer.mMOHRegistrationTime);  
+   mohConversationProfile->setDefaultRegistrationTime(mServer.mConfig.mMOHRegistrationTime);  
    mohConversationProfile->setDefaultRegistrationRetryTime(120);  // 2 mins
-   mohConversationProfile->setDefaultFrom(mServer.mMOHUri);
-   mohConversationProfile->setDigestCredential(mServer.mMOHUri.uri().host(), mServer.mMOHUri.uri().user(), mServer.mMOHPassword);  
+   mohConversationProfile->setDefaultFrom(mServer.mConfig.mMOHUri);
+   mohConversationProfile->setDigestCredential(mServer.mConfig.mMOHUri.uri().host(), mServer.mConfig.mMOHUri.uri().user(), mServer.mConfig.mMOHPassword);  
    mohConversationProfile->challengeOODReferRequests() = false;
    mohConversationProfile->setExtraHeadersInReferNotifySipFragEnabled(true);  // Enable dialog identifying headers in SipFrag bodies of Refer Notifies - required for a music on hold server
    NameAddr capabilities;
@@ -56,7 +56,7 @@ MOHManager::startup()
    ConversationHandle convHandle = mServer.createConversation(true /* broadcast only*/);
 
    // Play Music
-   mServer.createMediaResourceParticipant(convHandle, mServer.mMOHFilenameUrl);
+   mServer.createMediaResourceParticipant(convHandle, mServer.mConfig.mMOHFilenameUrl);
    mConversations[convHandle];
 }
 
@@ -110,7 +110,7 @@ MOHManager::addParticipant(ParticipantHandle participantHandle)
       InfoLog(<< "MOHManager::addParticipant created new conversation for music on hold, id=" << conversationToUse);
 
       // Play Music
-      mServer.createMediaResourceParticipant(conversationToUse, mServer.mMOHFilenameUrl);
+      mServer.createMediaResourceParticipant(conversationToUse, mServer.mConfig.mMOHFilenameUrl);
    }
 
    assert(conversationToUse);

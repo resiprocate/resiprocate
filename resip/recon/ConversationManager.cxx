@@ -4,6 +4,8 @@
 #include <mp/MpCodecFactory.h>
 #include <mp/MprBridge.h>
 #include <mp/MpResourceTopology.h>
+#include <mi/CpMediaInterfaceFactoryFactory.h>
+#include <mi/CpMediaInterface.h>
 
 // resip includes
 #include <rutil/Log.hxx>
