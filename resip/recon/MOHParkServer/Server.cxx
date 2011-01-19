@@ -29,8 +29,8 @@ namespace mohparkserver
 class MyUserAgent : public UserAgent
 {
 public:
-   MyUserAgent(Server& server, SharedPtr<UserAgentMasterProfile> profile) :
-      UserAgent(&server, profile),
+   MyUserAgent(Server& server, SharedPtr<UserAgentMasterProfile> profile, resip::AfterSocketCreationFuncPtr socketFunc) :
+      UserAgent(&server, profile, socketFunc),
       mServer(server) {}
 
    virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
@@ -298,7 +298,7 @@ Server::Server(ConfigParser& config) :
    mUserAgentMasterProfile = profile;
 
    // Create UserAgent
-   mMyUserAgent = new MyUserAgent(*this, profile);
+   mMyUserAgent = new MyUserAgent(*this, profile, mConfig.mSocketFunc);
 }
 
 Server::~Server()

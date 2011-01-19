@@ -29,7 +29,7 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile) : 
+UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile, AfterSocketCreationFuncPtr socketFunc) : 
    mCurrentSubscriptionHandle(1),
    mCurrentConversationProfileHandle(1),
    mDefaultOutgoingConversationProfileHandle(0),
@@ -40,7 +40,7 @@ UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAge
 #else
    mSecurity(0),
 #endif
-   mStack(mSecurity, profile->getAdditionalDnsServers(), &mSelectInterruptor),
+   mStack(mSecurity, profile->getAdditionalDnsServers(), &mSelectInterruptor, false /* stateless */, socketFunc),
    mDum(mStack),
    mStackThread(mStack, mSelectInterruptor),
    mDumShutdown(false)
