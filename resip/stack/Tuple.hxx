@@ -104,8 +104,9 @@ class Tuple
            
       Data presentationFormat() const;
       
-      static TransportType toTransport( const Data& );
-      static const Data& toData( TransportType );
+      static TransportType toTransport(const Data& transportName);
+      static const Data& toData(TransportType type);
+      static const Data& toDataLower(TransportType type);
       static Data inet_ntop(const Tuple& tuple);
       static void writeBinaryToken(const Tuple& tuple,Data& container);
       static Tuple makeTuple(const Data& binaryToken);

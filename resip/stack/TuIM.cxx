@@ -1415,20 +1415,7 @@ TuIM::setOutbound( SipMessage& msg )
    {
       if ( ! msg.header(h_RequestLine).uri().exists(p_transport) )
       {
-         switch ( mDefaultProtocol )
-         {
-            case UDP:
-               msg.header(h_RequestLine).uri().param(p_transport) = Symbols::UDP;
-               break;
-            case TCP:
-               msg.header(h_RequestLine).uri().param(p_transport) = Symbols::TCP;
-               break;
-            case TLS:
-               msg.header(h_RequestLine).uri().param(p_transport) = Symbols::TLS;
-               break;
-            default:
-               assert(0);
-         }
+         msg.header(h_RequestLine).uri().param(p_transport) = Tuple::toDataLower(mDefaultProtocol);
       }
    }
 }

@@ -628,36 +628,22 @@ Tuple::hash() const
 
 HashValueImp(resip::Tuple, data.hash());
 
-static const Data transportNames[MAX_TRANSPORT] =
-{
-   Data("UNKNOWN_TRANSPORT"),
-   Data("TLS"),
-   Data("TCP"),
-   Data("UDP"),
-   Data("SCTP"),
-   Data("DCCP"),
-   Data("DTLS")
-};
-
 TransportType
-Tuple::toTransport(const Data& type)
+Tuple::toTransport(const Data& transportName)
 {
-   for (TransportType i = UNKNOWN_TRANSPORT; i < MAX_TRANSPORT; 
-        i = static_cast<TransportType>(i + 1))
-   {
-      if (isEqualNoCase(type, transportNames[i]))
-      {
-         return i;
-      }
-   }
-   return UNKNOWN_TRANSPORT;
+   return resip::toTransportType(transportName); // TransportTypes.hxx
 };
 
 const Data&
 Tuple::toData(TransportType type)
 {
-   assert(type >= UNKNOWN_TRANSPORT && type < MAX_TRANSPORT);
-   return transportNames[type];
+   return resip::toData(type);  // TransportTypes.hxx
+}
+
+const Data&
+Tuple::toDataLower(TransportType type)
+{
+   return resip::toDataLower(type);  // TransportTypes.hxx
 }
 
 Data

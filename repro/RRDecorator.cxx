@@ -72,7 +72,7 @@ RRDecorator::decorateMessage(resip::SipMessage& request,
          // existing flow to the next hop.
          rt.uri().host()=resip::Tuple::inet_ntop(source);
          rt.uri().port()=source.getPort();
-         rt.uri().param(resip::p_transport)=resip::Tuple::toData(source.getType());
+         rt.uri().param(resip::p_transport)=resip::Tuple::toDataLower(source.getType());
       }
       // .bwc. If our target has an outbound flow to us, we need to put a flow
       // token in a Record-Route.
