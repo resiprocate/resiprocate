@@ -26,6 +26,7 @@ class ServerPagerMessage : public NonDialogUsage
       void endCommand();
 
       virtual void send(SharedPtr<SipMessage> msg);
+      virtual void sendCommand(SharedPtr<SipMessage> msg);
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 

@@ -637,16 +637,17 @@ ClientSubscription::acceptUpdate(int statusCode, const char* reason)
 class ClientSubscriptionAcceptUpdateCommand : public DumCommandAdapter
 {
 public:
-   ClientSubscriptionAcceptUpdateCommand(ClientSubscription& clientSubscription, int statusCode)
+   ClientSubscriptionAcceptUpdateCommand(ClientSubscription& clientSubscription, int statusCode, const char* reason)
       : mClientSubscription(clientSubscription),
-        mStatusCode(statusCode)
+        mStatusCode(statusCode),
+        mReason(reason ? Data(reason) : Data::Empty)
    {
 
    }
 
    virtual void executeCommand()
    {
-      mClientSubscription.acceptUpdate(mStatusCode);
+      mClientSubscription.acceptUpdate(mStatusCode, mReason.c_str());
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -656,12 +657,13 @@ public:
 private:
    ClientSubscription& mClientSubscription;
    int mStatusCode;
+   Data mReason;
 };
 
 void 
-ClientSubscription::acceptUpdateCommand(int statusCode)
+ClientSubscription::acceptUpdateCommand(int statusCode, const char* reason)
 {
-   mDum.post(new ClientSubscriptionAcceptUpdateCommand(*this, statusCode));
+   mDum.post(new ClientSubscriptionAcceptUpdateCommand(*this, statusCode, reason));
 }
 
 void 

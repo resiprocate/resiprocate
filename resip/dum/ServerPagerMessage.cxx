@@ -96,6 +96,35 @@ ServerPagerMessage::send(SharedPtr<SipMessage> response)
    delete this;
 }
 
+class ServerPagerMessageSendCommand : public DumCommandAdapter
+{
+public:
+   ServerPagerMessageSendCommand(ServerPagerMessage& serverPagerMessage, SharedPtr<SipMessage> response)
+      : mServerPagerMessage(serverPagerMessage),
+        mResponse(response)
+   {
+   }
+
+   virtual void executeCommand()
+   {
+      mServerPagerMessage.send(mResponse);
+   }
+
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   {
+      return strm << "ServerPagerMessageSendCommand";
+   }
+private:
+   ServerPagerMessage& mServerPagerMessage;
+   SharedPtr<SipMessage> mResponse;
+};
+
+void
+ServerPagerMessage::sendCommand(SharedPtr<SipMessage> response)
+{   
+   mDum.post(new ServerPagerMessageSendCommand(*this, response));
+}
+
 SharedPtr<SipMessage>
 ServerPagerMessage::accept(int statusCode)
 {   

@@ -29,7 +29,7 @@ class ClientSubscription: public BaseSubscription
       /**
        * Provide asynchronous method access by using command
        */
-      void acceptUpdateCommand(int statusCode = 200);
+      void acceptUpdateCommand(int statusCode = 200, const char* reason=0);
       void rejectUpdateCommand(int statusCode = 400, const Data& reasonPhrase = Data::Empty);
       void requestRefreshCommand(UInt32 expires = 0);  // 0 defaults to using original expires value (to remove call endCommand() instead)
       virtual void endCommand();
