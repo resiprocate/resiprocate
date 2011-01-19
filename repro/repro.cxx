@@ -186,20 +186,24 @@ main(int argc, char** argv)
    }
 
    std::auto_ptr<FdPollGrp> pollGrp(NULL);
-   std::auto_ptr<SelectInterruptor> threadIntr(NULL);
-   if ( args.mUseEventThread )
+   std::auto_ptr<SelectInterruptor> threadInterruptor(NULL);
+#if defined(HAVE_EPOLL)
+   if (args.mUseEventThread)
    {
       pollGrp.reset(FdPollGrp::create());
-      threadIntr.reset(new EventThreadInterruptor(*pollGrp));
+      threadInterruptor.reset(new EventThreadInterruptor(*pollGrp));
    }
    else
-   {
-      threadIntr.reset(new SelectInterruptor());
-   }
+#endif
+   threadInterruptor.reset(new SelectInterruptor());
 
    SipStack stack(security,DnsStub::EmptyNameserverList,
-	   threadIntr.get(), /*stateless*/false,/*socketFunc*/0,
-	   compression, /*fallbackPostNotify*/0, pollGrp.get());
+	              threadInterruptor.get(), 
+                  /*stateless*/false,
+                  /*socketFunc*/0,
+	              compression, 
+                  /*fallbackPostNotify*/0, 
+                  pollGrp.get());
 
    std::vector<Data> enumSuffixes;
    if (!args.mEnumSuffix.empty())
@@ -285,6 +289,7 @@ main(int argc, char** argv)
    }
    
    std::auto_ptr<ThreadIf> stackThread(NULL);
+#if defined(HAVE_EPOLL)
    if ( args.mUseEventThread )
    {
       stackThread.reset(new EventStackThread(stack,
@@ -292,9 +297,9 @@ main(int argc, char** argv)
                *pollGrp));
    }
    else
-   {
-      stackThread.reset(new InterruptableStackThread(stack, *threadIntr));
-   }
+#endif
+
+   stackThread.reset(new InterruptableStackThread(stack, *threadInterruptor));
 
    Registrar registrar;
    // We only need removed records to linger if we have reg sync enabled
