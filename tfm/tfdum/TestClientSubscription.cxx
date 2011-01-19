@@ -26,7 +26,7 @@ CommonAction*
 TestClientSubscription::acceptUpdate(int statusCode, const char* reason)
 {
    return new CommonAction(mUa, "acceptUpdate", 
-                           boost::bind(&ClientSubscription::acceptUpdate, boost::bind<ClientSubscription*>(&ClientSubscriptionHandle::get, boost::ref(mHandle)), 
+                           boost::bind(&ClientSubscription::acceptUpdateCommand, boost::bind<ClientSubscription*>(&ClientSubscriptionHandle::get, boost::ref(mHandle)), 
                                        statusCode, reason));
 }
 
@@ -34,7 +34,7 @@ CommonAction*
 TestClientSubscription::rejectUpdate(int statusCode, const Data& reasonPhrase)
 {
    return new CommonAction(mUa, "rejectUpdate", 
-                           boost::bind(&ClientSubscription::rejectUpdate, boost::bind<ClientSubscription*>(&ClientSubscriptionHandle::get, boost::ref(mHandle)),
+                           boost::bind(&ClientSubscription::rejectUpdateCommand, boost::bind<ClientSubscription*>(&ClientSubscriptionHandle::get, boost::ref(mHandle)),
                                        statusCode, reasonPhrase));
 }
 
@@ -42,14 +42,14 @@ CommonAction*
 TestClientSubscription::requestRefresh(int expires)
 {
    return new CommonAction(mUa, "requestRefresh", 
-                           boost::bind(&ClientSubscription::requestRefresh, boost::bind<ClientSubscription*>(&ClientSubscriptionHandle::get, boost::ref(mHandle)),
+                           boost::bind(&ClientSubscription::requestRefreshCommand, boost::bind<ClientSubscription*>(&ClientSubscriptionHandle::get, boost::ref(mHandle)),
                                        expires));
 }
 
 CommonAction* 
 TestClientSubscription::end()
 {
-   return new CommonAction(mUa, "end", boost::bind(&ClientSubscription::end, boost::bind<ClientSubscription*>(&ClientSubscriptionHandle::get, boost::ref(mHandle))));
+   return new CommonAction(mUa, "end", boost::bind(&ClientSubscription::endCommand, boost::bind<ClientSubscription*>(&ClientSubscriptionHandle::get, boost::ref(mHandle))));
 }
 
 bool 
