@@ -312,7 +312,8 @@ ClientSubscription::processNextNotify()
          mLastRequest->header(h_Expires).value() = expires;
       }
 
-      if(!isEqualNoCase(qn->notify().header(h_SubscriptionState).value(), Symbols::Terminated))
+      if(!qn->notify().exists(h_SubscriptionState) || 
+         !isEqualNoCase(qn->notify().header(h_SubscriptionState).value(), Symbols::Terminated))
       {
          // Don't do this stuff for a NOTIFY terminated.
          UInt64 now = Timer::getTimeSecs();
