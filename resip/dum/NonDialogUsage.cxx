@@ -69,6 +69,35 @@ NonDialogUsage::send(SharedPtr<SipMessage> msg)
    mDum.send(msg);
 }
 
+class NonDialogUsageSendCommand : public DumCommandAdapter
+{
+public:
+   NonDialogUsageSendCommand(NonDialogUsage& usage, SharedPtr<SipMessage> msg)
+      : mNonDialogUsage(usage),
+        mMessage(msg)
+   {
+   }
+
+   virtual void executeCommand()
+   {
+      mNonDialogUsage.send(mMessage);
+   }
+
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   {
+      return strm << "NonDialogUsageSendCommand";
+   }
+private:
+   NonDialogUsage& mNonDialogUsage;
+   SharedPtr<SipMessage> mMessage;
+};
+
+void
+NonDialogUsage::sendCommand(SharedPtr<SipMessage> message)
+{   
+   mDum.post(new NonDialogUsageSendCommand(*this, message));
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

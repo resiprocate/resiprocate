@@ -88,6 +88,13 @@ DialogUsage::send(SharedPtr<SipMessage> msg)
    mDialog.send(msg);
 }
 
+void
+DialogUsage::sendCommand(SharedPtr<SipMessage> message)
+{   
+   mDum.post(new DialogUsageSendCommand(*this, message));
+}
+
+
 /*
 void 
 DialogUsage::send(SipMessage& msg)

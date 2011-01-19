@@ -2245,8 +2245,16 @@ DialogUsageManager::dumOutgoingTarget()
 DialogEventStateManager* 
 DialogUsageManager::createDialogEventStateManager(DialogEventHandler* handler)
 {
-   mDialogEventStateManager = new DialogEventStateManager();
-   mDialogEventStateManager->mDialogEventHandler = handler;
+   if(handler)
+   {
+      mDialogEventStateManager = new DialogEventStateManager();
+      mDialogEventStateManager->mDialogEventHandler = handler;
+   }
+   else
+   {
+      delete mDialogEventStateManager;
+      mDialogEventStateManager=0;
+   }
    return mDialogEventStateManager;
 }
 
