@@ -675,7 +675,7 @@ ResponseContext::insertRecordRoute(resip::SipMessage& outgoing,
                rt.uri().host()=resip::Tuple::inet_ntop(receivedTransport);
             }
             rt.uri().port()=receivedTransport.getPort();
-            rt.uri().param(resip::p_transport)=resip::Tuple::toData(receivedTransport.getType());
+            rt.uri().param(resip::p_transport)=resip::Tuple::toDataLower(receivedTransport.getType());
          }
          rt.uri().user()=inboundFlowToken;
       }

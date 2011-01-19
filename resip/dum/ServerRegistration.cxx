@@ -531,7 +531,7 @@ ServerRegistration::testFlowRequirements(ContactInstanceRecord &rec,
       
       if(contact.uri().exists(p_transport))
       {
-         TransportType type = toTransportType(contact.uri().param(p_transport));
+         TransportType type = Tuple::toTransport(contact.uri().param(p_transport));
          if(type==TLS || type == DTLS)
          {
             // secure transport and IP-address. Almost certainly won't work, but
@@ -564,7 +564,7 @@ ServerRegistration::testFlowRequirements(ContactInstanceRecord &rec,
    {
       if(contact.uri().exists(p_transport))
       {
-         TransportType type = toTransportType(contact.uri().param(p_transport));
+         TransportType type = Tuple::toTransport(contact.uri().param(p_transport));
          if(type == TLS || type == TCP)
          {
             // Client is using sigcomp on the first hop using a connection-

@@ -904,7 +904,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
 
                   if (target.transport->transport() != UDP && !contact.uri().exists(p_gr))
                   {
-                     contact.uri().param(p_transport) = Tuple::toData(target.transport->transport());
+                     contact.uri().param(p_transport) = Tuple::toDataLower(target.transport->transport());
                   }
 
                   // Add comp=sigcomp to contact URI
@@ -930,7 +930,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                   {
                      if (target.getType() != UDP)
                      {
-                        contact.uri().param(p_transport) = Tuple::toData(target.getType());
+                        contact.uri().param(p_transport) = Tuple::toDataLower(target.getType());
                      }
                      contact.uri().remove(p_addTransport);
                   }
@@ -968,7 +968,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                rr.uri().port() = target.transport->port();
                if (target.getType() != UDP && !rr.uri().exists(p_transport))
                {
-                  rr.uri().param(p_transport) = Tuple::toData(target.getType());
+                  rr.uri().param(p_transport) = Tuple::toDataLower(target.getType());
                }
                // Add comp=sigcomp and sigcomp-id="<urn>" to Record-Route
                // XXX This isn't quite right -- should be set only
