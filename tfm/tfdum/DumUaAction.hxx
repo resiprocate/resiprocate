@@ -9,6 +9,7 @@
 #include "resip/dum/ClientOutOfDialogReq.hxx"
 #include "resip/dum/ServerOutOfDialogReq.hxx"
 #include "resip/dum/Handles.hxx"
+#include "resip/dum/DumCommand.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "rutil/Logger.hxx"
 #include "tfm/ActionBase.hxx"
@@ -299,8 +300,7 @@ class SendingUsageAction : public DumUaAction
       MessageAdorner* mMessageAdorner;
 }; 
 
-class DumUaSendingCommand : public DumUaAction
-{
+class DumUaSendingCommand : public DumUaAction{
    public:      
       typedef boost::function<resip::SharedPtr<resip::SipMessage> (void) > Functor;
       //TODO adornment functor support
@@ -312,6 +312,22 @@ class DumUaSendingCommand : public DumUaAction
    protected:
       Functor mFunctor;
       MessageAdorner* mMessageAdorner;
+};
+
+class DumUaSendingCommandCommand : public resip::DumCommandAdapter
+{
+   public:
+      typedef boost::function<resip::SharedPtr<resip::SipMessage> (void) > Functor;
+      //TODO adornment functor support
+
+      DumUaSendingCommandCommand(resip::DialogUsageManager& dum, Functor func, MessageAdorner* adorn);
+      ~DumUaSendingCommandCommand();
+      virtual void executeCommand();
+      virtual EncodeStream& encodeBrief(EncodeStream& strm) const;
+   protected:
+      Functor mFunctor;
+      MessageAdorner* mMessageAdorner;
+      resip::DialogUsageManager& mDum;
 };
 
 class DumUaCommand : public DumUaAction
