@@ -564,18 +564,22 @@ DialogSet::dispatch(const SipMessage& msg)
                DebugLog(<< "in dialog refer request");
                break; // in dialog
             }
-            else if (!request.exists(h_ReferSub) || request.header(h_ReferSub).value() == "true")
-            {
-               DebugLog(<< "out of dialog refer request with refer sub");
-               break; // dialog creating
-            }
-            else // out of dialog & noReferSub=true
+            else if((request.exists(h_ReferSub) && 
+                     request.header(h_ReferSub).isWellFormed() &&
+                     request.header(h_ReferSub).value()=="false") ||
+                     (request.exists(h_Requires) &&
+                     request.header(h_Requires).find(Token("norefersub"))))// out of dialog & noReferSub=true
             {
                DebugLog(<< "out of dialog refer request with norefersub");
                assert(mServerOutOfDialogRequest == 0);
                mServerOutOfDialogRequest = makeServerOutOfDialog(request);
                mServerOutOfDialogRequest->dispatch(request);
                return;
+            }
+            else
+            {
+               DebugLog(<< "out of dialog refer request with refer sub");
+               break; // dialog creating
             }
             break;            
          case NOTIFY:
