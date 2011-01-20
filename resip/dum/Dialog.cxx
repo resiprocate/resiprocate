@@ -525,7 +525,11 @@ Dialog::dispatch(const SipMessage& msg)
             }
             else
             {
-               if (request.exists(h_ReferSub) && request.header(h_ReferSub).value()=="false")
+               if ((request.exists(h_ReferSub) && 
+                     request.header(h_ReferSub).isWellFormed() &&
+                     request.header(h_ReferSub).value()=="false") ||
+                     (request.exists(h_Requires) &&
+                     request.header(h_Requires).find(Token("norefersub"))))
                {
                   assert(mInviteSession);
                   mInviteSession->referNoSub(msg);
