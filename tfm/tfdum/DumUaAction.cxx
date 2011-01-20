@@ -84,15 +84,39 @@ DumUaSendingCommand::~DumUaSendingCommand()
 void 
 DumUaSendingCommand::operator()(DumUserAgent& dua)
 {
+   dua.getDum().post(new DumUaSendingCommandCommand(dua.getDum(), mFunctor, mMessageAdorner));
+   mMessageAdorner=0;
+}
+
+DumUaSendingCommandCommand::DumUaSendingCommandCommand(resip::DialogUsageManager& dum, Functor func, MessageAdorner* adorn) :
+   mFunctor(func),
+   mMessageAdorner(adorn),
+   mDum(dum)
+{}
+
+DumUaSendingCommandCommand::~DumUaSendingCommandCommand()
+{
+   delete mMessageAdorner;
+}
+
+EncodeStream& 
+DumUaSendingCommandCommand::encodeBrief(EncodeStream& strm) const
+{
+   return strm << "DumUaSendingCommandCommand" << std::endl;
+}
+
+void
+DumUaSendingCommandCommand::executeCommand()
+{
    StackLog(<< "DumUaSendingCommand::operator(): Executing deferred call: ");
    SharedPtr<SipMessage> msg = mFunctor();
    if (mMessageAdorner)
    {
-      mUa->getDum().safeSend((*mMessageAdorner)(msg));
+      mDum.send((*mMessageAdorner)(msg));
    }
    else
    {
-      mUa->getDum().safeSend(msg);
+      mDum.send(msg);
    }
 }
 
