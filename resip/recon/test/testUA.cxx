@@ -149,7 +149,7 @@ public:
       return partHandle;
    }
 
-   virtual ParticipantHandle createMediaResourceParticipant(ConversationHandle convHandle, Uri& mediaUrl)
+   virtual ParticipantHandle createMediaResourceParticipant(ConversationHandle convHandle, const Uri& mediaUrl)
    {
       ParticipantHandle partHandle = ConversationManager::createMediaResourceParticipant(convHandle, mediaUrl);
       mMediaParticipantHandles.push_back(partHandle);

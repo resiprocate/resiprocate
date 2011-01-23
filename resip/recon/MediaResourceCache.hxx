@@ -19,14 +19,14 @@ class MediaResourceCache
    public:  
       MediaResourceCache();
       virtual ~MediaResourceCache();
-      void addToCache(resip::Data& name, resip::Data& buffer, int type);
-      bool getFromCache(resip::Data& name, resip::Data** buffer, int* type);
+      void addToCache(const resip::Data& name, const resip::Data& buffer, int type);
+      bool getFromCache(const resip::Data& name, resip::Data** buffer, int* type);
 
    private:
       class CacheItem
       {
       public:
-         CacheItem(resip::Data& buffer, int type) :
+         CacheItem(const resip::Data& buffer, int type) :
             mBuffer(buffer), mType(type) {}
          resip::Data mBuffer;
          int mType;

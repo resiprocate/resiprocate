@@ -124,7 +124,7 @@ class CreateRemoteParticipantCmd  : public resip::DumCommand
       CreateRemoteParticipantCmd(ConversationManager* conversationManager, 
                                  ParticipantHandle partHandle,
                                  ConversationHandle convHandle,
-                                 resip::NameAddr& destination,
+                                 const resip::NameAddr& destination,
                                  ConversationManager::ParticipantForkSelectMode forkSelectMode) 
          : mConversationManager(conversationManager),
            mPartHandle(partHandle),
@@ -172,7 +172,7 @@ class CreateMediaResourceParticipantCmd  : public resip::DumCommand
       CreateMediaResourceParticipantCmd(ConversationManager* conversationManager, 
                                         ParticipantHandle partHandle,
                                         ConversationHandle convHandle,
-                                        resip::Uri& mediaUrl) 
+                                        const resip::Uri& mediaUrl) 
          : mConversationManager(conversationManager),
            mPartHandle(partHandle),
            mConvHandle(convHandle),
@@ -590,7 +590,7 @@ class RedirectParticipantCmd  : public resip::DumCommand
    public:  
       RedirectParticipantCmd(ConversationManager* conversationManager, 
                              ParticipantHandle partHandle,
-                             resip::NameAddr& destination) 
+                             const resip::NameAddr& destination) 
          : mConversationManager(conversationManager),
            mPartHandle(partHandle),
            mDestination(destination) {}

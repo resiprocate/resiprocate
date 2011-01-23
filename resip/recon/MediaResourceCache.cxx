@@ -26,7 +26,7 @@ MediaResourceCache::~MediaResourceCache()
 }
 
 void 
-MediaResourceCache::addToCache(resip::Data& name, resip::Data& buffer, int type)
+MediaResourceCache::addToCache(const resip::Data& name, const resip::Data& buffer, int type)
 {
    Lock lock(mMutex);
 
@@ -46,7 +46,7 @@ MediaResourceCache::addToCache(resip::Data& name, resip::Data& buffer, int type)
 }
 
 bool 
-MediaResourceCache::getFromCache(resip::Data& name, resip::Data** buffer, int* type)
+MediaResourceCache::getFromCache(const resip::Data& name, resip::Data** buffer, int* type)
 {
    Lock lock(mMutex);
 
