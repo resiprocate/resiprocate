@@ -22,7 +22,9 @@ namespace mohparkserver
 {
 
 MOHManager::MOHManager(Server& server) :
-   mServer(server)
+   mServer(server),
+   mConversationProfileHandle(0),
+   mMusicFilenameChanged(false)
 {
 }
 
@@ -33,12 +35,35 @@ MOHManager::~MOHManager()
 void
 MOHManager::startup()
 {
+   // Initialize settings
+   initializeSettings(mServer.mConfig.mMOHFilenameUrl);
+
+   // Setup ConversationProfile
+   initializeConversationProfile(mServer.mConfig.mMOHUri, mServer.mConfig.mMOHPassword, mServer.mConfig.mMOHRegistrationTime, mServer.mConfig.mOutboundProxy);
+
+   // Create an initial conversation and start music
+   ConversationHandle convHandle = mServer.createConversation(true /* broadcast only*/);   
+   mServer.createMediaResourceParticipant(convHandle, mServer.mConfig.mMOHFilenameUrl);  // Play Music
+   mConversations[convHandle];
+   mMusicFilenameChanged = false;
+}
+
+void 
+MOHManager::initializeConversationProfile(const NameAddr& uri, const Data& password, unsigned long registrationTime, const resip::NameAddr& outboundProxy)
+{
+   if(mConversationProfileHandle)
+   {
+       mServer.mMyUserAgent->destroyConversationProfile(mConversationProfileHandle);
+       mConversationProfileHandle = 0;
+   }
+
    // Setup ConversationProfile
    SharedPtr<ConversationProfile> mohConversationProfile = SharedPtr<ConversationProfile>(new ConversationProfile(mServer.mUserAgentMasterProfile));
-   mohConversationProfile->setDefaultRegistrationTime(mServer.mConfig.mMOHRegistrationTime);  
+   mohConversationProfile->setDefaultRegistrationTime(registrationTime);  
    mohConversationProfile->setDefaultRegistrationRetryTime(120);  // 2 mins
-   mohConversationProfile->setDefaultFrom(mServer.mConfig.mMOHUri);
-   mohConversationProfile->setDigestCredential(mServer.mConfig.mMOHUri.uri().host(), mServer.mConfig.mMOHUri.uri().user(), mServer.mConfig.mMOHPassword);  
+   mohConversationProfile->setDefaultFrom(uri);
+   mohConversationProfile->setDigestCredential(uri.uri().host(), uri.uri().user(), password);  
+   mohConversationProfile->setOutboundProxy(outboundProxy.uri());
    mohConversationProfile->challengeOODReferRequests() = false;
    mohConversationProfile->setExtraHeadersInReferNotifySipFragEnabled(true);  // Enable dialog identifying headers in SipFrag bodies of Refer Notifies - required for a music on hold server
    NameAddr capabilities;
@@ -49,20 +74,36 @@ MOHManager::startup()
    mohConversationProfile->natTraversalMode() = ConversationProfile::NoNatTraversal;
    mohConversationProfile->secureMediaMode() = ConversationProfile::NoSecureMedia;
    mServer.buildSessionCapabilities(mohConversationProfile->sessionCaps());
-   mConversationProfile = mohConversationProfile;
-   mServer.mMyUserAgent->addConversationProfile(mConversationProfile);
+   mConversationProfileHandle = mServer.mMyUserAgent->addConversationProfile(mohConversationProfile);
+}
 
-   // Create an initial conversation and start music
-   ConversationHandle convHandle = mServer.createConversation(true /* broadcast only*/);
+void 
+MOHManager::initializeSettings(const resip::Uri& musicFilename)
+{
+   Lock lock(mMutex);
+   mMusicFilename = musicFilename;
+   // If there is a single conversation with no participants, then there are no 
+   // current parties on hold - re-create the conversation with new music
+   if(mConversations.size() == 1 && mConversations.begin()->second.size() == 0)
+   {
+      mServer.destroyConversation(mConversations.begin()->first);
+      mConversations.clear();
 
-   // Play Music
-   mServer.createMediaResourceParticipant(convHandle, mServer.mConfig.mMOHFilenameUrl);
-   mConversations[convHandle];
+      // re-create an initial conversation and start music
+      ConversationHandle convHandle = mServer.createConversation(true /* broadcast only*/);      
+      mServer.createMediaResourceParticipant(convHandle, mMusicFilename);  // Play Music
+      mConversations[convHandle];
+   }
+   else
+   {
+      mMusicFilenameChanged = true;
+   }
 }
 
 void
 MOHManager::shutdown(bool shuttingDownServer)
 {
+   Lock lock(mMutex);
    // Destroy all conversations
    ConversationMap::iterator it = mConversations.begin();
    for(; it != mConversations.end(); it++)
@@ -75,21 +116,24 @@ MOHManager::shutdown(bool shuttingDownServer)
    // shutting down the ConversationManager will take care of this.  We need to be sure
    // we don't remove all conversation profiles when we are still processing SipMessages,
    // since recon requires at least one to be present for inbound processing.
-   if(mConversationProfile && !shuttingDownServer)
+   if(mConversationProfileHandle && !shuttingDownServer)
    {
-       mServer.mMyUserAgent->destroyConversationProfile(mConversationProfile->getHandle());
+       mServer.mMyUserAgent->destroyConversationProfile(mConversationProfileHandle);
+       mConversationProfileHandle = 0;
    }
 }
 
 bool 
 MOHManager::isMyProfile(recon::ConversationProfile& profile)
 {
-    return profile.getHandle() == mConversationProfile->getHandle();
+   Lock lock(mMutex);
+   return profile.getHandle() == mConversationProfileHandle;
 }
 
 void 
 MOHManager::addParticipant(ParticipantHandle participantHandle)
 {
+   Lock lock(mMutex);
    ConversationHandle conversationToUse = 0;
    // Check if we have an existing conversation with room to add this party
    ConversationMap::iterator it = mConversations.begin();
@@ -110,7 +154,7 @@ MOHManager::addParticipant(ParticipantHandle participantHandle)
       InfoLog(<< "MOHManager::addParticipant created new conversation for music on hold, id=" << conversationToUse);
 
       // Play Music
-      mServer.createMediaResourceParticipant(conversationToUse, mServer.mConfig.mMOHFilenameUrl);
+      mServer.createMediaResourceParticipant(conversationToUse, mMusicFilename);
    }
 
    assert(conversationToUse);
@@ -124,6 +168,7 @@ MOHManager::addParticipant(ParticipantHandle participantHandle)
 bool
 MOHManager::removeParticipant(ParticipantHandle participantHandle)
 {
+   Lock lock(mMutex);
    // Find Conversation that participant is in
    ConversationMap::iterator it = mConversations.begin();
    for(; it != mConversations.end(); it++)
@@ -137,15 +182,29 @@ MOHManager::removeParticipant(ParticipantHandle participantHandle)
          it->second.erase(partIt);
 
          // Check if conversation is now empty, and it's not the last conversation
-         if(it->second.size() == 0 && mConversations.size() > 1)
-         {
-            // Destroy conversation (and containing media participant)
-            mServer.destroyConversation(it->first);
+         if(it->second.size() == 0)
+         {    
+            if(mConversations.size() > 1)
+            {
+               // Destroy conversation (and containing media participant)
+               mServer.destroyConversation(it->first);
 
-            // Remove Conversation from Map
-            mConversations.erase(it);
+               // Remove Conversation from Map
+               mConversations.erase(it);
 
-            InfoLog(<< "MOHManager::removeParticipant last participant in conversation, destroying conversation, num conversations now=" << mConversations.size());
+               InfoLog(<< "MOHManager::removeParticipant last participant in conversation, destroying conversation, num conversations now=" << mConversations.size());
+            }
+            else if(mConversations.size() == 1 && mMusicFilenameChanged)  // If the initial conversation is empty, and the music filename setting changed, then restart it
+            {
+               mServer.destroyConversation(mConversations.begin()->first);
+               mConversations.clear();
+
+               // re-create an initial conversation and start music
+               ConversationHandle convHandle = mServer.createConversation(true /* broadcast only*/);      
+               mServer.createMediaResourceParticipant(convHandle, mMusicFilename);  // Play Music
+               mConversations[convHandle];
+               mMusicFilenameChanged = false;
+            }
          }
          return true;
       }

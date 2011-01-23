@@ -13,7 +13,7 @@ class ParticipantOrbitInfo;
 class ParkOrbit
 {
 public:
-   ParkOrbit(Server& server, unsigned long orbit);
+   ParkOrbit(Server& server, unsigned long orbit, unsigned long maxParkTime, const resip::Uri& musicFilename);
    virtual ~ParkOrbit(); 
 
    bool addParticipant(recon::ParticipantHandle participantHandle, const resip::Uri& parkerUri);
@@ -29,6 +29,7 @@ public:
 private:
    Server& mServer;
    unsigned long mOrbit;
+   unsigned long mMaxParkTime;
    recon::ConversationHandle mConversationHandle;
    typedef std::deque<ParticipantOrbitInfo*> ParticipantQueue;
    ParticipantQueue mParticipants;

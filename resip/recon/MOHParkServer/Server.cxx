@@ -91,8 +91,7 @@ Server::Server(ConfigParser& config) :
    mParkManager(*this)
 {
    // Initialize loggers
-   GenericLogImpl::MaxByteCount = mConfig.mLogFileMaxBytes; 
-   Log::initialize("file", mConfig.mLogLevel, "", mConfig.mLogFilename.c_str(), &g_MOHParkServerLogger);
+   initializeResipLogging(mConfig.mLogFileMaxBytes, mConfig.mLogLevel, mConfig.mLogFilename);
    if(!mConfig.mSipXLogFilename.empty())
    {
       //enableConsoleOutput(TRUE);  // Allow sipX console output
@@ -305,6 +304,14 @@ Server::~Server()
 {
    shutdown();
    delete mMyUserAgent;
+}
+
+void 
+Server::initializeResipLogging(unsigned int maxByteCount, const Data& level, const Data& resipFilename)
+{
+   // Initialize loggers
+   GenericLogImpl::MaxByteCount = maxByteCount; 
+   Log::initialize("file", level.c_str(), "", resipFilename.c_str(), &g_MOHParkServerLogger);
 }
 
 void
