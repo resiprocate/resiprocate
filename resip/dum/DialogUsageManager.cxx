@@ -899,7 +899,7 @@ DialogUsageManager::send(SharedPtr<SipMessage> msg)
 }
 
 void 
-DialogUsageManager::safeSend(SharedPtr<SipMessage> request)
+DialogUsageManager::sendCommand(SharedPtr<SipMessage> request)
 {
    SendCommand* s=new SendCommand(request, *this);
    post(s);
