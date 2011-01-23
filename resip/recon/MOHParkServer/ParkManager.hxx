@@ -23,6 +23,9 @@ public:
    virtual ~ParkManager(); 
 
    void startup();
+   void initializeConversationProfile(const resip::NameAddr& uri, const resip::Data& password, unsigned long registrationTime, const resip::NameAddr& outboundProxy);
+   void initializeOrbitConversationProfiles(unsigned long orbitStart, unsigned long numOrbits, const resip::NameAddr& uri, const resip::Data& password, unsigned long registrationTime, const resip::NameAddr& outboundProxy);
+   void initializeParkSettings(unsigned long maxParkTime, const resip::Uri& musicFilename);
    void shutdown(bool shuttingDownServer);
 
    bool isMyProfile(recon::ConversationProfile& profile);
@@ -33,8 +36,14 @@ public:
    void onMaxParkTimeout(recon::ParticipantHandle participantHandle);
 
 private:
+   resip::Mutex mMutex;
    Server& mServer;
-   resip::SharedPtr<recon::ConversationProfile> mConversationProfile;
+   volatile recon::ConversationProfileHandle mConversationProfileHandle;
+   resip::NameAddr mParkUri;
+   unsigned long mOrbitRangeStart;
+   unsigned long mNumOrbits;
+   unsigned long mMaxParkTime;
+   resip::Uri mMusicFilename;
    std::deque<unsigned long> mFreeOrbitList;
 
    // Orbit by orbit number
@@ -49,9 +58,8 @@ private:
 
    bool addParticipantToOrbit(ParkOrbit* orbit, recon::ParticipantHandle participantHandle, const resip::Uri& parkerUri);
 
-   typedef std::map<unsigned long, resip::SharedPtr<recon::ConversationProfile> > OrbitProfileMap;
+   typedef std::map<unsigned long, recon::ConversationProfileHandle> OrbitProfileMap;
    OrbitProfileMap mOrbitProfiles;
-
 };
  
 }

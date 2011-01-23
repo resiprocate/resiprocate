@@ -24,6 +24,9 @@ public:
    Server(ConfigParser& config);  
    virtual ~Server();
 
+   // Called in contructor, but can be used to modify logging at runtime
+   void initializeResipLogging(unsigned int maxByteCount, const resip::Data& level, const resip::Data& resipFilename);
+
    /**
      Starts the recon thread(s).
      
@@ -50,6 +53,8 @@ public:
    void shutdown();
 
    recon::UserAgent* getMyUserAgent() { return mMyUserAgent; }
+   MOHManager& getMOHManager() { return mMOHManager; }
+   ParkManager& getParkManager() { return mParkManager; }
 
    // Timer handler
    virtual void onMaxParkTimeout(recon::ParticipantHandle participantHandle);

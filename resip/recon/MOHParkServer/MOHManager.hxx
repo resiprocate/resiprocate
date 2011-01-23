@@ -17,6 +17,9 @@ public:
    virtual ~MOHManager(); 
 
    void startup();
+   void initializeConversationProfile(const resip::NameAddr& uri, const resip::Data& password, unsigned long registrationTime, const resip::NameAddr& outboundProxy);
+   void initializeSettings(const resip::Uri& musicFilename);
+
    void shutdown(bool shuttingDownServer);
 
    bool isMyProfile(recon::ConversationProfile& profile);
@@ -24,8 +27,11 @@ public:
    bool removeParticipant(recon::ParticipantHandle participantHandle);
 
 private:
+   resip::Mutex mMutex;
    Server& mServer;
-   resip::SharedPtr<recon::ConversationProfile> mConversationProfile;
+   volatile recon::ConversationProfileHandle mConversationProfileHandle;
+   resip::Uri mMusicFilename;
+   volatile bool mMusicFilenameChanged;
 
    typedef std::map<recon::ConversationHandle, std::set<recon::ParticipantHandle> > ConversationMap;
    ConversationMap mConversations;
