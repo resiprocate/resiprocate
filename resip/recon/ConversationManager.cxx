@@ -170,7 +170,7 @@ ConversationManager::joinConversation(ConversationHandle sourceConvHandle, Conve
 }
 
 ParticipantHandle 
-ConversationManager::createRemoteParticipant(ConversationHandle convHandle, NameAddr& destination, ParticipantForkSelectMode forkSelectMode)
+ConversationManager::createRemoteParticipant(ConversationHandle convHandle, const NameAddr& destination, ParticipantForkSelectMode forkSelectMode)
 {
    ParticipantHandle partHandle = getNewParticipantHandle();
 
@@ -181,7 +181,7 @@ ConversationManager::createRemoteParticipant(ConversationHandle convHandle, Name
 }
 
 ParticipantHandle 
-ConversationManager::createMediaResourceParticipant(ConversationHandle convHandle, Uri& mediaUrl)
+ConversationManager::createMediaResourceParticipant(ConversationHandle convHandle, const Uri& mediaUrl)
 {
    ParticipantHandle partHandle = getNewParticipantHandle();
 
@@ -281,7 +281,7 @@ ConversationManager::rejectParticipant(ParticipantHandle partHandle, unsigned in
 }
 
 void 
-ConversationManager::redirectParticipant(ParticipantHandle partHandle, NameAddr& destination)
+ConversationManager::redirectParticipant(ParticipantHandle partHandle, const NameAddr& destination)
 {
    RedirectParticipantCmd* cmd = new RedirectParticipantCmd(this, partHandle, destination);
    post(cmd);
@@ -496,13 +496,13 @@ ConversationManager::getConversation(ConversationHandle convHandle)
 }
 
 void 
-ConversationManager::addBufferToMediaResourceCache(resip::Data& name, resip::Data& buffer, int type)
+ConversationManager::addBufferToMediaResourceCache(const resip::Data& name, const resip::Data& buffer, int type)
 {
    mMediaResourceCache.addToCache(name, buffer, type);
 }
 
 void 
-ConversationManager::buildSessionCapabilities(resip::Data& ipaddress, unsigned int numCodecIds, 
+ConversationManager::buildSessionCapabilities(const resip::Data& ipaddress, unsigned int numCodecIds, 
                                               unsigned int codecIds[], resip::SdpContents& sessionCaps)
 {
    sessionCaps = SdpContents::Empty;  // clear out passed in SdpContents

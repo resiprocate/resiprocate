@@ -72,7 +72,7 @@ class MediaResourceParticipantDeleterCmd : public DumCommand
 
 MediaResourceParticipant::MediaResourceParticipant(ParticipantHandle partHandle,
                                                    ConversationManager& conversationManager,
-                                                   Uri& mediaUrl)
+                                                   const Uri& mediaUrl)
 : Participant(partHandle, conversationManager),
   mMediaUrl(mediaUrl),
   mStreamPlayer(0),

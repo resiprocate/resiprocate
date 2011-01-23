@@ -39,7 +39,7 @@ public:
 
    MediaResourceParticipant(ParticipantHandle partHandle,
       ConversationManager& conversationManager,
-      resip::Uri& mediaUrl);  
+      const resip::Uri& mediaUrl);  
    virtual ~MediaResourceParticipant();
 
    virtual void startPlay();

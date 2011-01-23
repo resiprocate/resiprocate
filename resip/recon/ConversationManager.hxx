@@ -172,7 +172,7 @@ public:
 
      @return A handle to the newly created remote participant
    */   
-   virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic);
+   virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, const resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic);
 
    /**
      Creates a new media resource participant in the specified conversation.  
@@ -220,7 +220,7 @@ public:
 
      @return A handle to the newly created media participant
    */   
-   virtual ParticipantHandle createMediaResourceParticipant(ConversationHandle convHandle, resip::Uri& mediaUrl);
+   virtual ParticipantHandle createMediaResourceParticipant(ConversationHandle convHandle, const resip::Uri& mediaUrl);
 
    /**
      Creates a new local participant in the specified conversation.
@@ -332,7 +332,7 @@ public:
      @param partHandle Handle of the participant to redirect
      @param destination Uri of destination to redirect to
    */
-   virtual void redirectParticipant(ParticipantHandle partHandle, resip::NameAddr& destination);
+   virtual void redirectParticipant(ParticipantHandle partHandle, const resip::NameAddr& destination);
 
    /**
      This is used for attended transfer scenarios where both participants 
@@ -354,7 +354,7 @@ public:
      @param buffer Data object containing the media
      @param type   Type of media that is being added. (RAW_PCM_16 = 0)
    */
-   virtual void addBufferToMediaResourceCache(resip::Data& name, resip::Data& buffer, int type);
+   virtual void addBufferToMediaResourceCache(const resip::Data& name, const resip::Data& buffer, int type);
 
    /**
      Builds a session capabilties SDPContents based on the passed in ipaddress
@@ -362,7 +362,7 @@ public:
      Note:  Codec ordering is an array of sipX internal codecId's.  Id's for 
             codecs not loaded are ignored.
    */
-   virtual void buildSessionCapabilities(resip::Data& ipaddress, unsigned int numCodecIds, 
+   virtual void buildSessionCapabilities(const resip::Data& ipaddress, unsigned int numCodecIds, 
                                          unsigned int codecIds[], resip::SdpContents& sessionCaps);
 
    ///////////////////////////////////////////////////////////////////////
