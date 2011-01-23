@@ -250,7 +250,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       
       void end(DialogSetId invSessionId);
       void send(SharedPtr<SipMessage> request);
-      void safeSend(SharedPtr<SipMessage> request);
+      void sendCommand(SharedPtr<SipMessage> request);
 
       class SendCommand : public DumCommandAdapter
       {
