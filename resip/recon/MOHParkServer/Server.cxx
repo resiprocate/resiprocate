@@ -7,6 +7,8 @@
 #include "Server.hxx"
 #include "../UserAgent.hxx"
 #include "AppSubsystem.hxx"
+#include "WebAdmin.hxx"
+#include "WebAdminThread.hxx"
 
 #include <resip/stack/Tuple.hxx>
 #include <rutil/DnsUtil.hxx>
@@ -26,6 +28,29 @@ using namespace std;
 
 namespace mohparkserver
 {
+
+class SdpMessageDecorator : public MessageDecorator
+{
+public:
+   virtual ~SdpMessageDecorator() {}
+   virtual void decorateMessage(SipMessage &msg, 
+                                const Tuple &source,
+                                const Tuple &destination,
+                                const Data& sigcompId)
+   {
+      SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
+      if(sdp && sdp->session().media().size() > 0 && sdp->session().connection().getAddress() == "0.0.0.0")  
+      {
+         // Fill in IP and Port from source
+         sdp->session().connection().setAddress(Tuple::inet_ntop(source), source.ipVersion() == V6 ? SdpContents::IP6 : SdpContents::IP4);
+         sdp->session().origin().setAddress(Tuple::inet_ntop(source), source.ipVersion() == V6 ? SdpContents::IP6 : SdpContents::IP4);
+         DebugLog( << "SdpMessageDecorator: src=" << source << ", dest=" << destination << ", msg=" << endl << msg.brief());
+      }
+   }
+   virtual void rollbackMessage(SipMessage& msg) {}  // Nothing to do
+   virtual MessageDecorator* clone() const { return new SdpMessageDecorator; }
+};
+
 class MyUserAgent : public UserAgent
 {
 public:
@@ -88,7 +113,9 @@ Server::Server(ConfigParser& config) :
    mIsV6Avail(false),
    mMyUserAgent(0),
    mMOHManager(*this),
-   mParkManager(*this)
+   mParkManager(*this),
+   mWebAdmin(0),
+   mWebAdminThread(0)
 {
    // Initialize loggers
    initializeResipLogging(mConfig.mLogFileMaxBytes, mConfig.mLogLevel, mConfig.mLogFilename);
@@ -284,24 +311,44 @@ Server::Server(ConfigParser& config) :
    profile->addAdvertisedCapability(Headers::Supported);  
    profile->setMethodsParamEnabled(true);
 
-   //profile->setOverrideHostAndPort(mContact);
-   if(!mConfig.mOutboundProxy.uri().host().empty())
-   {
-      profile->setOutboundProxy(mConfig.mOutboundProxy.uri());
-   }
-
    profile->setUserAgent("MOHParkServer");
    profile->rtpPortRangeMin() = mConfig.mMediaPortRangeStart; 
    profile->rtpPortRangeMax() = mConfig.mMediaPortRangeStart + mConfig.mMediaPortRangeSize-1; 
+
+   // Install Sdp Message Decorator
+   SharedPtr<MessageDecorator> outboundDecorator(new SdpMessageDecorator);
+   profile->setOutboundDecorator(outboundDecorator);
 
    mUserAgentMasterProfile = profile;
 
    // Create UserAgent
    mMyUserAgent = new MyUserAgent(*this, profile, mConfig.mSocketFunc);
+
+   if(mConfig.mHttpPort != 0)
+   {
+      // Create WebAdmin
+      mWebAdmin = new WebAdmin(*this, true /* noWebChallenges */, Data::Empty, Data::Empty, mConfig.mHttpPort, resip::V4);
+      mWebAdminThread = new WebAdminThread(*mWebAdmin);
+      assert(mWebAdminThread && mWebAdmin);
+      mWebAdminThread->run();
+   }
 }
 
 Server::~Server()
 {
+   if(mWebAdminThread) 
+   {
+       mWebAdminThread->shutdown();
+       mWebAdminThread->join();
+       delete mWebAdminThread;
+       mWebAdminThread = 0;
+   }
+   if(mWebAdmin)
+   {
+       delete mWebAdmin;
+       mWebAdmin = 0;
+   }
+
    shutdown();
    delete mMyUserAgent;
 }
@@ -363,6 +410,14 @@ Server::buildSessionCapabilities(resip::SdpContents& sessionCaps)
 }
 
 void 
+Server::getActiveCallsInfo(std::list<ActiveCallInfo>& callInfos)
+{
+    callInfos.clear();
+    mMOHManager.getActiveCallsInfo(callInfos);
+    mParkManager.getActiveCallsInfo(callInfos);
+}
+
+void 
 Server::onConversationDestroyed(ConversationHandle convHandle)
 {
    InfoLog(<< "onConversationDestroyed: handle=" << convHandle);
@@ -391,7 +446,7 @@ Server::onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& ms
 
    if(mMOHManager.isMyProfile(conversationProfile))
    {
-      mMOHManager.addParticipant(partHandle);      
+      mMOHManager.addParticipant(partHandle, msg.header(h_From).uri(), msg.header(h_From).uri());      
    }
    else if(mParkManager.isMyProfile(conversationProfile))
    {
@@ -409,7 +464,7 @@ Server::onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMess
    InfoLog(<< "onRequestOutgoingParticipant: handle=" << partHandle << " msg=" << msg.brief());
    if(mMOHManager.isMyProfile(conversationProfile))
    {
-      mMOHManager.addParticipant(partHandle);
+      mMOHManager.addParticipant(partHandle, msg.header(h_ReferTo).uri().getAorAsUri(), msg.header(h_From).uri());
    }
    else if(mParkManager.isMyProfile(conversationProfile))
    {

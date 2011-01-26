@@ -66,7 +66,10 @@ ParkManager::initializeConversationProfile(const NameAddr& uri, const Data& pass
    parkConversationProfile->setDefaultRegistrationRetryTime(120);  // 2 mins
    parkConversationProfile->setDefaultFrom(uri);
    parkConversationProfile->setDigestCredential(uri.uri().host(), uri.uri().user(), password);  
-   parkConversationProfile->setOutboundProxy(outboundProxy.uri());
+   if(!outboundProxy.uri().host().empty())
+   {
+      parkConversationProfile->setOutboundProxy(outboundProxy.uri());
+   }
    parkConversationProfile->challengeOODReferRequests() = false;
    parkConversationProfile->setExtraHeadersInReferNotifySipFragEnabled(true);  // Enable dialog identifying headers in SipFrag bodies of Refer Notifies
    NameAddr capabilities;
@@ -115,7 +118,10 @@ ParkManager::initializeOrbitConversationProfiles(unsigned long orbitStart,
       orbitConversationProfile->setDefaultFrom(uri);
       orbitConversationProfile->getDefaultFrom().uri().user() = orbitData;
       orbitConversationProfile->setDigestCredential(uri.uri().host(), orbitData, password);  
-      orbitConversationProfile->setOutboundProxy(outboundProxy.uri());
+      if(!outboundProxy.uri().host().empty())
+      {
+         orbitConversationProfile->setOutboundProxy(outboundProxy.uri());
+      }
       orbitConversationProfile->challengeOODReferRequests() = false;
       orbitConversationProfile->setExtraHeadersInReferNotifySipFragEnabled(true);  // Enable dialog identifying headers in SipFrag bodies of Refer Notifies
       NameAddr capabilities;
@@ -249,9 +255,9 @@ ParkManager::getOrbitByParticipant(recon::ParticipantHandle participantHandle)
 }
 
 bool 
-ParkManager::addParticipantToOrbit(ParkOrbit* orbit, recon::ParticipantHandle participantHandle, const resip::Uri& parkerUri)
+ParkManager::addParticipantToOrbit(ParkOrbit* orbit, recon::ParticipantHandle participantHandle, const resip::Uri& parkedUri, const resip::Uri& parkerUri)
 {
-   if(orbit->addParticipant(participantHandle, parkerUri))
+   if(orbit->addParticipant(participantHandle, parkedUri, parkerUri))
    {
       mOrbitsByParticipant[participantHandle] = orbit;  // add participant to orbit index
       return true;
@@ -279,7 +285,7 @@ ParkManager::parkParticipant(ParticipantHandle participantHandle, const SipMessa
       // Park call at specified orbit
       ParkOrbit* parkOrbit = getOrbit(orbit);
       assert(parkOrbit);
-      addParticipantToOrbit(parkOrbit, participantHandle, msg.header(h_From).uri());
+      addParticipantToOrbit(parkOrbit, participantHandle, msg.header(h_ReferTo).uri().getAorAsUri(), msg.header(h_From).uri());
    }
    else
    {
@@ -329,7 +335,7 @@ ParkManager::incomingParticipant(ParticipantHandle participantHandle, const SipM
          // Park call at specified orbit
          ParkOrbit* parkOrbit = getOrbit(orbit);
          assert(parkOrbit);
-         addParticipantToOrbit(parkOrbit, participantHandle, msg.header(h_ReferredBy).uri());
+         addParticipantToOrbit(parkOrbit, participantHandle, msg.header(h_From).uri(), msg.header(h_ReferredBy).uri());
       }
       else  // Direct call - retrieval attempt
       {
@@ -387,6 +393,26 @@ ParkManager::removeParticipant(ParticipantHandle participantHandle)
       }
    }
    return false;
+}
+
+void 
+ParkManager::getActiveCallsInfo(CallInfoList& callInfos)
+{
+   Lock lock(mMutex);
+
+   OrbitMap::iterator it = mOrbits.begin();
+   for(; it != mOrbits.end(); it++)
+   {
+       ParkOrbit::ParticipantQueue::iterator it2 = it->second->mParticipants.begin();
+       for(; it2 != it->second->mParticipants.end(); it2++)
+       {
+          callInfos.push_back(ActiveCallInfo((*it2)->mParkedUri, 
+                                             (*it2)->mParkerUri, 
+                                             Data("Parked at " + Data(it->first)), 
+                                             (*it2)->mParticipantHandle, 
+                                             it->second->mConversationHandle));
+       }
+   }
 }
 
 void 

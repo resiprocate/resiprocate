@@ -3,6 +3,7 @@
 
 #include <map>
 #include <deque>
+#include "ActiveCallInfo.hxx"
 #include "../UserAgent.hxx"
 #include "../HandleTypes.hxx"
 
@@ -32,6 +33,7 @@ public:
    void parkParticipant(recon::ParticipantHandle participantHandle, const resip::SipMessage& msg);
    void incomingParticipant(recon::ParticipantHandle participantHandle, const resip::SipMessage& msg);
    bool removeParticipant(recon::ParticipantHandle participantHandle);
+   void getActiveCallsInfo(CallInfoList& callInfos);
 
    void onMaxParkTimeout(recon::ParticipantHandle participantHandle);
 
@@ -56,7 +58,7 @@ private:
    typedef std::map<recon::ParticipantHandle, ParkOrbit*> OrbitsByParticipantMap;
    OrbitsByParticipantMap mOrbitsByParticipant;
 
-   bool addParticipantToOrbit(ParkOrbit* orbit, recon::ParticipantHandle participantHandle, const resip::Uri& parkerUri);
+   bool addParticipantToOrbit(ParkOrbit* orbit, recon::ParticipantHandle participantHandle, const resip::Uri& parkedUri, const resip::Uri& parkerUri);
 
    typedef std::map<unsigned long, recon::ConversationProfileHandle> OrbitProfileMap;
    OrbitProfileMap mOrbitProfiles;

@@ -17,16 +17,6 @@ using namespace std;
 namespace mohparkserver 
 {
 
-class ParticipantOrbitInfo
-{
-public:
-   ParticipantOrbitInfo(ParticipantHandle participantHandle, const resip::Uri& parkerUri) : 
-      mParticipantHandle(participantHandle), mParkerUri(parkerUri) {} 
-   ParticipantHandle mParticipantHandle;
-   UInt64 mAllocationTime;
-   resip::Uri mParkerUri;
-};
-
 ParkOrbit::ParkOrbit(Server& server, unsigned long orbit, unsigned long maxParkTime, const resip::Uri& musicFilename) :
    mServer(server),
    mOrbit(orbit),
@@ -48,7 +38,7 @@ ParkOrbit::~ParkOrbit()
 }
 
 bool 
-ParkOrbit::addParticipant(recon::ParticipantHandle participantHandle, const Uri& parkerUri)
+ParkOrbit::addParticipant(recon::ParticipantHandle participantHandle, const Uri& parkedUri, const Uri& parkerUri)
 {
    if(mParticipants.size() < DEFAULT_BRIDGE_MAX_IN_OUTPUTS-3)
    {
@@ -61,8 +51,8 @@ ParkOrbit::addParticipant(recon::ParticipantHandle participantHandle, const Uri&
          mServer.getMyUserAgent()->startApplicationTimer(MAXPARKTIMEOUT, mMaxParkTime*1000, participantHandle);
       }
 
-      mParticipants.push_back(new ParticipantOrbitInfo(participantHandle, parkerUri));
-      InfoLog(<< "ParkOrbit::addParticipant added participant=" << participantHandle << " to orbit " << mOrbit << " (size=" << mParticipants.size() << "), parkerUri=" << parkerUri);
+      mParticipants.push_back(new ParticipantOrbitInfo(participantHandle, parkedUri, parkerUri));
+      InfoLog(<< "ParkOrbit::addParticipant added participant=" << participantHandle << " to orbit " << mOrbit << " (size=" << mParticipants.size() << "), parkedUri=" << parkedUri << ", parkerUri=" << parkerUri);
       return true;
    }
    else

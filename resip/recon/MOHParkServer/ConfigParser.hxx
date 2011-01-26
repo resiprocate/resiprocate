@@ -54,6 +54,7 @@ public:
    resip::Data mSipXLogFilename;
 
    // General Settings
+   unsigned short mHttpPort;
    resip::Data mLogLevel;
    resip::Data mLogFilename;
    unsigned int mLogFileMaxBytes;

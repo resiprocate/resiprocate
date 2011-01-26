@@ -383,6 +383,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\HttpBase.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\HttpConnection.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\MOHManager.cxx"
 				>
 			</File>
@@ -402,17 +410,37 @@
 				RelativePath=".\Server.cxx"
 				>
 			</File>
+			<File
+				RelativePath=".\WebAdmin.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\WebAdminThread.cxx"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc"
 			>
 			<File
+				RelativePath=".\ActiveCallInfo.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\AppSubsystem.hxx"
 				>
 			</File>
 			<File
 				RelativePath=".\ConfigParser.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\HttpBase.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\HttpConnection.hxx"
 				>
 			</File>
 			<File
@@ -429,6 +457,14 @@
 			</File>
 			<File
 				RelativePath=".\Server.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\WebAdmin.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\WebAdminThread.hxx"
 				>
 			</File>
 		</Filter>

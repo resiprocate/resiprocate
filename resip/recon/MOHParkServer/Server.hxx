@@ -4,6 +4,7 @@
 #include "ConfigParser.hxx"
 #include "MOHManager.hxx"
 #include "ParkManager.hxx"
+#include "ActiveCallInfo.hxx"
 #include "../UserAgent.hxx"
 #include "../HandleTypes.hxx"
 
@@ -17,6 +18,8 @@
 
 namespace mohparkserver
 {
+class WebAdminThread;
+class WebAdmin;
 
 class Server : public recon::ConversationManager
 {
@@ -55,6 +58,7 @@ public:
    recon::UserAgent* getMyUserAgent() { return mMyUserAgent; }
    MOHManager& getMOHManager() { return mMOHManager; }
    ParkManager& getParkManager() { return mParkManager; }
+   void getActiveCallsInfo(CallInfoList& callInfos);
 
    // Timer handler
    virtual void onMaxParkTimeout(recon::ParticipantHandle participantHandle);
@@ -88,6 +92,8 @@ private:
    resip::SharedPtr<recon::UserAgentMasterProfile> mUserAgentMasterProfile;
    MOHManager mMOHManager;
    ParkManager mParkManager;
+   WebAdmin* mWebAdmin;
+   WebAdminThread* mWebAdminThread;
 };
  
 }
