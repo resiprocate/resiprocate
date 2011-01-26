@@ -9,7 +9,11 @@
 #include "rutil/Lock.hxx"
 #include <vector>
 
-class resip::SipStack;
+namespace resip
+{ 
+   class SipStack; 
+   class ApplicationMessage; 
+};
 
 namespace repro
 {
