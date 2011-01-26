@@ -37,7 +37,9 @@ class Uri : public ParserCategory
       Data& opaque() {checkParsed(); return mHost;}
       const Data& opaque() const {checkParsed(); return mHost;}
 
+      // Returns user@host[:port] (no scheme)
       const Data& getAor() const;
+      // Returns user@host (no scheme or port)
       const Data getAorNoPort() const;
 
       // Actually returns the AOR; <scheme>:<user>@<host>
