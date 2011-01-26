@@ -18,8 +18,7 @@ class AsyncProcessHandler;
 class TuSelector
 {
    public:
-      TuSelector(TimeLimitFifo<Message>& fallBackFifo,
-        AsyncProcessHandler *fallbackPostNotify = 0);
+      TuSelector(TimeLimitFifo<Message>& fallBackFifo);
       ~TuSelector();
       
       void add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage);
@@ -37,6 +36,9 @@ class TuSelector
       unsigned int getTimeTillNextProcessMS();
       bool isTransactionUserStillRegistered(const TransactionUser* ) const;
 
+      // Handler is notified when a message is posted
+      // to the default application receive queue.
+      void setFallbackPostNotify(AsyncProcessHandler *handler);
       
    private:
       void remove(TransactionUser* tu);

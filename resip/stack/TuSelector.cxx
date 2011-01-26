@@ -12,9 +12,8 @@
 
 using namespace resip;
 
-TuSelector::TuSelector(TimeLimitFifo<Message>& fallBackFifo,
- AsyncProcessHandler *fallbackPostNotify) :
-   mFallBackFifo(fallBackFifo) , mFallbackPostNotify(fallbackPostNotify),
+TuSelector::TuSelector(TimeLimitFifo<Message>& fallBackFifo) :
+   mFallBackFifo(fallBackFifo) , mFallbackPostNotify(NULL),
    mTuSelectorMode(false),
    mStatsPayload()
 {
@@ -23,6 +22,12 @@ TuSelector::TuSelector(TimeLimitFifo<Message>& fallBackFifo,
 TuSelector::~TuSelector()
 {
    //assert(mTuList.empty());
+}
+
+
+void
+TuSelector::setFallbackPostNotify(AsyncProcessHandler *handler) {
+    mFallbackPostNotify = handler;
 }
 
 void
