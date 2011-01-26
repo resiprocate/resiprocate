@@ -53,7 +53,7 @@ SipStack::SipStack(Security* pSecurity,
                    bool stateless,
                    AfterSocketCreationFuncPtr socketFunc,
                    Compression *compression,
-		   FdPollGrp *pollGrp
+                   FdPollGrp *pollGrp
    ) :
    mUseInternalPoll(pollGrp?0:mDefaultUseInternalPoll),
    mPollGrp(pollGrp?pollGrp:(mUseInternalPoll ? FdPollGrp::create() : 0)),
@@ -583,7 +583,8 @@ SipStack::receiveAny()
 }
 
 void
-SipStack::setFallbackPostNotify(AsyncProcessHandler *handler) {
+SipStack::setFallbackPostNotify(AsyncProcessHandler *handler) 
+{
    mTuSelector.setFallbackPostNotify(handler);
 }
 

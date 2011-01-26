@@ -563,7 +563,7 @@ ConversationManager::buildSessionCapabilities(const resip::Data& ipaddress, unsi
                }
             }
 
-            InfoLog(<< "Added codec to session capabilites: id=" << codecIds[idIter] 
+            DebugLog(<< "Added codec to session capabilites: id=" << codecIds[idIter] 
                     << " type=" << mimeSubType.data()
                     << " rate=" << sdpcodec->getSampleRate()
                     << " plen=" << sdpcodec->getPacketLength()
