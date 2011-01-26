@@ -39,6 +39,7 @@ ConfigParser::ConfigParser(int argc, char** argv) :
    mKeepAlives(true),
    mMediaPortRangeStart(50000),
    mMediaPortRangeSize(100),
+   mHttpPort(5082),
    mLogLevel("INFO"),
    mLogFilename("mohparkserver.log"),
    mLogFileMaxBytes(5000000),     // about 5Mb size
@@ -73,6 +74,7 @@ ConfigParser::ConfigParser() :
    mKeepAlives(true),
    mMediaPortRangeStart(50000),
    mMediaPortRangeSize(100),
+   mHttpPort(5082),
    mLogLevel("INFO"),
    mLogFilename("mohparkserver.log"),
    mLogFileMaxBytes(5000000)     // about 5Mb size
@@ -332,6 +334,10 @@ ConfigParser::processOption(const Data& name, const Data& value)
    else if(name == "mediaportrangesize")
    {
       mMediaPortRangeSize = (unsigned short)value.convertUnsignedLong();
+   }
+   else if(name == "httpport")
+   {
+      mHttpPort = (unsigned short)value.convertUnsignedLong();
    }
    else if(name == "sipxlogfilename")
    {

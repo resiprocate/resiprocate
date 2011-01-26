@@ -63,7 +63,10 @@ MOHManager::initializeConversationProfile(const NameAddr& uri, const Data& passw
    mohConversationProfile->setDefaultRegistrationRetryTime(120);  // 2 mins
    mohConversationProfile->setDefaultFrom(uri);
    mohConversationProfile->setDigestCredential(uri.uri().host(), uri.uri().user(), password);  
-   mohConversationProfile->setOutboundProxy(outboundProxy.uri());
+   if(!outboundProxy.uri().host().empty())
+   {
+      mohConversationProfile->setOutboundProxy(outboundProxy.uri());
+   }
    mohConversationProfile->challengeOODReferRequests() = false;
    mohConversationProfile->setExtraHeadersInReferNotifySipFragEnabled(true);  // Enable dialog identifying headers in SipFrag bodies of Refer Notifies - required for a music on hold server
    NameAddr capabilities;
@@ -108,6 +111,14 @@ MOHManager::shutdown(bool shuttingDownServer)
    ConversationMap::iterator it = mConversations.begin();
    for(; it != mConversations.end(); it++)
    {
+      // Clean up participant memory
+      ParticipantMap::iterator partIt = it->second.begin();
+      for(;partIt!= it->second.end(); partIt++)
+      {
+         delete partIt->second;
+      }
+      it->second.clear();
+
        mServer.destroyConversation(it->first);
    }
    mConversations.clear();
@@ -131,7 +142,7 @@ MOHManager::isMyProfile(recon::ConversationProfile& profile)
 }
 
 void 
-MOHManager::addParticipant(ParticipantHandle participantHandle)
+MOHManager::addParticipant(ParticipantHandle participantHandle, const Uri& heldUri, const Uri& holdingUri)
 {
    Lock lock(mMutex);
    ConversationHandle conversationToUse = 0;
@@ -162,7 +173,7 @@ MOHManager::addParticipant(ParticipantHandle participantHandle)
    mServer.addParticipant(conversationToUse, participantHandle);
    mServer.modifyParticipantContribution(conversationToUse, participantHandle, 100, 0 /* Mute participant */);
    mServer.answerParticipant(participantHandle);
-   mConversations[conversationToUse].insert(participantHandle);
+   mConversations[conversationToUse].insert(std::make_pair(participantHandle, new ParticipantMOHInfo(participantHandle, heldUri, holdingUri)));
 }
 
 bool
@@ -173,12 +184,13 @@ MOHManager::removeParticipant(ParticipantHandle participantHandle)
    ConversationMap::iterator it = mConversations.begin();
    for(; it != mConversations.end(); it++)
    {
-      std::set<ParticipantHandle>::iterator partIt = it->second.find(participantHandle);
+      ParticipantMap::iterator partIt = it->second.find(participantHandle);
       if(partIt != it->second.end())
       {
          InfoLog(<< "MOHManager::removeParticipant found in conversation id=" << it->first << ", size=" << it->second.size());
 
          // Found! Remove from conversation
+         delete partIt->second;
          it->second.erase(partIt);
 
          // Check if conversation is now empty, and it's not the last conversation
@@ -212,6 +224,21 @@ MOHManager::removeParticipant(ParticipantHandle participantHandle)
    return false;
 }
 
+void 
+MOHManager::getActiveCallsInfo(CallInfoList& callInfos)
+{
+   Lock lock(mMutex);
+   // Find Conversation that participant is in
+   ConversationMap::iterator it = mConversations.begin();
+   for(; it != mConversations.end(); it++)
+   {
+      ParticipantMap::iterator partIt = it->second.begin();
+      for(; partIt != it->second.end(); partIt++)
+      {
+         callInfos.push_back(ActiveCallInfo(partIt->second->mHeldUri, partIt->second->mHoldingUri, "MOH", partIt->first, it->first));
+      }
+   }
+}
 
 }
 

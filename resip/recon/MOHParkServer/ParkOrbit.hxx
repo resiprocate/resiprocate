@@ -8,7 +8,17 @@
 namespace mohparkserver
 {
 class Server;
-class ParticipantOrbitInfo;
+
+class ParticipantOrbitInfo
+{
+public:
+   ParticipantOrbitInfo(recon::ParticipantHandle participantHandle, const resip::Uri& parkedUri, const resip::Uri& parkerUri) : 
+      mParticipantHandle(participantHandle), mParkedUri(parkedUri), mParkerUri(parkerUri) {} 
+   recon::ParticipantHandle mParticipantHandle;
+   UInt64 mAllocationTime;
+   resip::Uri mParkedUri;
+   resip::Uri mParkerUri;
+};
 
 class ParkOrbit
 {
@@ -16,7 +26,7 @@ public:
    ParkOrbit(Server& server, unsigned long orbit, unsigned long maxParkTime, const resip::Uri& musicFilename);
    virtual ~ParkOrbit(); 
 
-   bool addParticipant(recon::ParticipantHandle participantHandle, const resip::Uri& parkerUri);
+   bool addParticipant(recon::ParticipantHandle participantHandle, const resip::Uri& parkedUri, const resip::Uri& parkerUri);
    bool removeParticipant(recon::ParticipantHandle participantHandle);
 
    recon::ParticipantHandle getNextQueuedParticipant();
@@ -27,6 +37,7 @@ public:
    bool onMaxParkTimeout(recon::ParticipantHandle participantHandle);
 
 private:
+   friend class ParkManager;
    Server& mServer;
    unsigned long mOrbit;
    unsigned long mMaxParkTime;

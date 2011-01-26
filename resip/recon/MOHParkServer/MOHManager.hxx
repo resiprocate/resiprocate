@@ -3,12 +3,23 @@
 
 #include <map>
 #include <set>
+#include "ActiveCallInfo.hxx"
 #include "../UserAgent.hxx"
 #include "../HandleTypes.hxx"
 
 namespace mohparkserver
 {
 class Server;
+
+class ParticipantMOHInfo
+{
+public:
+   ParticipantMOHInfo(recon::ParticipantHandle participantHandle, const resip::Uri& heldUri, const resip::Uri& holdingUri) : 
+      mParticipantHandle(participantHandle), mHeldUri(heldUri), mHoldingUri(holdingUri) {} 
+   recon::ParticipantHandle mParticipantHandle;
+   resip::Uri mHeldUri;
+   resip::Uri mHoldingUri;
+};
 
 class MOHManager
 {
@@ -23,8 +34,9 @@ public:
    void shutdown(bool shuttingDownServer);
 
    bool isMyProfile(recon::ConversationProfile& profile);
-   void addParticipant(recon::ParticipantHandle participantHandle);
+   void addParticipant(recon::ParticipantHandle participantHandle, const resip::Uri& heldUri, const resip::Uri& holdingUri);
    bool removeParticipant(recon::ParticipantHandle participantHandle);
+   void getActiveCallsInfo(CallInfoList& callInfos);
 
 private:
    resip::Mutex mMutex;
@@ -33,7 +45,8 @@ private:
    resip::Uri mMusicFilename;
    volatile bool mMusicFilenameChanged;
 
-   typedef std::map<recon::ConversationHandle, std::set<recon::ParticipantHandle> > ConversationMap;
+   typedef std::map<recon::ParticipantHandle, ParticipantMOHInfo*> ParticipantMap;
+   typedef std::map<recon::ConversationHandle, ParticipantMap> ConversationMap;
    ConversationMap mConversations;
 };
  
