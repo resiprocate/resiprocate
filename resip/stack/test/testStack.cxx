@@ -197,9 +197,9 @@ SipStackAndThread::SipStackAndThread(const char *tType,
                          /*stateless*/false, 
                          /*sockFnc*/0, 
                          /*comp*/0, 
-                         notifyUp, 
                          mPollGrp);
    
+   mStack->setFallbackPostNotify(notifyUp);
 #if defined(HAVE_EPOLL)
    if (mEventIntr) 
    {

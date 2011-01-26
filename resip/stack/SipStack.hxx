@@ -80,9 +80,6 @@ class SipStack
                              SigComp. If set to 0, then SigComp compression
                              will be disabled.
 
-          @param fallbackPostNotify Handler is notified when a message is posted
-                             to the default application receive queue.
-
           @param pollGrp     Polling group to support file-io callbacks for epoll.
       */
       SipStack(Security* security=0,
@@ -91,7 +88,6 @@ class SipStack
                bool stateless=false,
                AfterSocketCreationFuncPtr socketFunc = 0,
                Compression *compression = 0,
-               AsyncProcessHandler* fallbackPostNotify = 0,
 	       FdPollGrp* pollGrp = 0);
 
       virtual ~SipStack();
@@ -420,6 +416,14 @@ class SipStack
                    ApplicationMessage*
       */
       Message* receiveAny();
+
+      /*
+       * Handler is notified when a message is posted to the default
+       * application receive queue. (Fetching using receive() above).
+       * This handler is called from SipStack's thread, and can
+       * be used to "wake-up" the application's thread.
+       */
+      void setFallbackPostNotify(AsyncProcessHandler *handler);
 
       /**
           Build the FD set to use in a select to find out when process must be

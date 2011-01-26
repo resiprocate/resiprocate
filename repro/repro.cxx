@@ -198,11 +198,10 @@ main(int argc, char** argv)
    threadInterruptor.reset(new SelectInterruptor());
 
    SipStack stack(security,DnsStub::EmptyNameserverList,
-	              threadInterruptor.get(), 
+                  threadInterruptor.get(),
                   /*stateless*/false,
                   /*socketFunc*/0,
-	              compression, 
-                  /*fallbackPostNotify*/0, 
+                  compression,
                   pollGrp.get());
 
    std::vector<Data> enumSuffixes;
@@ -228,30 +227,30 @@ main(int argc, char** argv)
             {
                CritLog(<< "Malformed IP-address found in the --interfaces (-i) command-line option: " << intf.host());
             }
-	    TransportType tt = Tuple::toTransport(intf.param(p_transport));
+            TransportType tt = Tuple::toTransport(intf.param(p_transport));
             ExtensionParameter p_rcvbuf("rcvbuf"); // SO_RCVBUF
-	    int rcvBufLen = 0;
-	    if ( intf.exists(p_rcvbuf) && !intf.param(p_rcvbuf).empty() ) 
-	        rcvBufLen = intf.param(p_rcvbuf).convertInt();
-	    // maybe do transport-type dependent processing of buf?
+            int rcvBufLen = 0;
+            if ( intf.exists(p_rcvbuf) && !intf.param(p_rcvbuf).empty() )
+                rcvBufLen = intf.param(p_rcvbuf).convertInt();
+            // maybe do transport-type dependent processing of buf?
 
             ExtensionParameter p_tls("tls"); // for specifying tls domain
             Transport *t = stack.addTransport(tt,
-	      		       intf.port(), 
+                               intf.port(),
                                DnsUtil::isIpV6Address(intf.host()) ? V6 : V4,
                                StunEnabled, 
                                intf.host(), // interface to bind to
                                intf.param(p_tls));
-	     if (t && rcvBufLen>0 )
-	     {
+             if (t && rcvBufLen>0 )
+             {
 #if defined(RESIP_SIPSTACK_HAVE_FDPOLL)
-		// this new method is part of the epoll changeset,
-		// which isn't commited yet.
-	        t->setRcvBufLen(rcvBufLen);
+                // this new method is part of the epoll changeset,
+                // which isn't commited yet.
+                t->setRcvBufLen(rcvBufLen);
 #else
-		assert(0);
+                assert(0);
 #endif
-	     }
+             }
          }
       }
       else
