@@ -292,7 +292,7 @@ main(int argc, char** argv)
    if ( args.mUseEventThread )
    {
       stackThread.reset(new EventStackThread(stack,
-               *dynamic_cast<EventThreadInterruptor*>(threadIntr.get()),
+               *dynamic_cast<EventThreadInterruptor*>(threadInterruptor.get()),
                *pollGrp));
    }
    else
