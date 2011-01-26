@@ -88,7 +88,7 @@ class SipStack
                bool stateless=false,
                AfterSocketCreationFuncPtr socketFunc = 0,
                Compression *compression = 0,
-	       FdPollGrp* pollGrp = 0);
+               FdPollGrp* pollGrp = 0);
 
       virtual ~SipStack();
 

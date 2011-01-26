@@ -26,7 +26,8 @@ TuSelector::~TuSelector()
 
 
 void
-TuSelector::setFallbackPostNotify(AsyncProcessHandler *handler) {
+TuSelector::setFallbackPostNotify(AsyncProcessHandler *handler) 
+{
     mFallbackPostNotify = handler;
 }
 
