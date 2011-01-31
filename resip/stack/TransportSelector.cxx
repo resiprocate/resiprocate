@@ -698,14 +698,14 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          Transport* transport=0;
 
          transport = findTransportByVia(msg, target, source);
-         if ( !transport )
+         if (!transport)
          {
-            if ( (transport = findTransportByDest(msg,target)) != NULL )
+            if ((transport = findTransportByDest(msg,target)) != NULL)
             {
                source = transport->getTuple();
             }
          }
-
+         
          if(!transport && target.mFlowKey && target.onlyUseExistingConnection)
          {
             // .bwc. Connection info was specified, and use of this connection
@@ -1026,8 +1026,8 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          DebugLog (<< "Transmitting to " << target
                    << " tlsDomain=" << msg->getTlsDomain()
                    << " via " << source
-                                   << std::endl << std::endl << encoded.escaped()
-                                   << "sigcomp id=" << remoteSigcompId);
+                   << std::endl << std::endl << encoded.escaped()
+                   << "sigcomp id=" << remoteSigcompId);
 
          target.transport->send(target, encoded, msg->getTransactionId(),
                                 remoteSigcompId);
