@@ -342,7 +342,7 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
       if ( mPollGrp )
       {
 	 // expand vector to hold {nservers} and init to NULL
-	 mPollItems.insert( mPollItems.end(), (*channel)->nservers, NULL);
+	 mPollItems.insert( mPollItems.end(), (*channel)->nservers, (AresDnsPollItem*)0);
 	 // tell ares to let us know when things change
          ares_process_set_poll_cb(mChannel, AresDnsPollItem::socket_poll_cb, this);
       }
