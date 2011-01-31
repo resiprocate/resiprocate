@@ -77,6 +77,7 @@ ChannelManager::findRemotePeerByChannel(unsigned short channelNumber)
       {
          // cleanup expired channel binding
          mTupleRemotePeerMap.erase(it->second->getPeerTuple());
+		 delete it->second;
          mChannelRemotePeerMap.erase(it);
       }
    }
@@ -98,6 +99,7 @@ ChannelManager::findRemotePeerByPeerAddress(const StunTuple& peerAddress)
       {
          // cleanup expired channel binding
          mChannelRemotePeerMap.erase(it->second->getChannel());
+		 delete it->second;
          mTupleRemotePeerMap.erase(it);
       }
    }
