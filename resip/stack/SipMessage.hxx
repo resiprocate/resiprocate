@@ -116,6 +116,7 @@ class SipMessage : public TransactionMessage
          mIsExternal = true;
       }
       
+	  // Note:  use getReceivedTransport() != 0 in order to tell if the message is from the wire or not
       bool isExternal() const
       {
          return mIsExternal;
