@@ -1111,7 +1111,7 @@ void DialogSet::dispatchToAllDialogs(const SipMessage& msg)
 }
 
 SharedPtr<UserProfile>
-DialogSet::getUserProfile()
+DialogSet::getUserProfile() const
 {
    if(mUserProfile.get())
    {

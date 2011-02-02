@@ -33,7 +33,7 @@ class DialogSet
       bool empty() const;
       BaseCreator* getCreator();
 
-      SharedPtr<UserProfile> getUserProfile();
+      SharedPtr<UserProfile> getUserProfile() const;
       void setUserProfile(SharedPtr<UserProfile> userProfile);
 
       void end();

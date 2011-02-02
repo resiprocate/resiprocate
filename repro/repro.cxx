@@ -473,8 +473,8 @@ main(int argc, char** argv)
 #ifdef USE_SSL
    profile->addSupportedScheme(Symbols::Sips);
 #endif
-   profile->addSupportedOptionTag(Token("outbound"));
-   profile->addSupportedOptionTag(Token("path"));
+   profile->addSupportedOptionTag(Token(Symbols::Outbound));
+   profile->addSupportedOptionTag(Token(Symbols::Path));
    if(args.mAllowBadReg)
    {
        profile->allowBadRegistrationEnabled() = true;

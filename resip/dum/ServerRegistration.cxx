@@ -39,7 +39,7 @@ ServerRegistration::end()
 {
 }
 
-static Token outbound("outbound");
+static Token outbound(Symbols::Outbound);
 void
 ServerRegistration::accept(SipMessage& ok)
 {
@@ -131,7 +131,7 @@ ServerRegistration::accept(int statusCode)
    if(!mRequest.empty(h_Paths))
    {
       success.header(h_Paths)=mRequest.header(h_Paths);
-      success.header(h_Supporteds).push_back(Token("path"));
+      success.header(h_Supporteds).push_back(Token(Symbols::Path));
    }
    accept(success);
 }

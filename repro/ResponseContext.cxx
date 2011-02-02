@@ -579,14 +579,14 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       else if(request.method()==REGISTER &&
 	       (mRequestContext.mProxy.getAssumePath() ||
                (!request.empty(h_Supporteds) &&
-               (  request.header(h_Supporteds).find(Token("path")) ||
-                  request.header(h_Supporteds).find(Token("outbound"))))))
+               (  request.header(h_Supporteds).find(Token(Symbols::Path)) ||
+                  request.header(h_Supporteds).find(Token(Symbols::Outbound))))))
       {
          insertRecordRoute(request,
                            orig.getReceivedTransport()->getTuple(),
                            target,
                            true /* do Path instead */);
-         request.header(h_Supporteds).push_back(Token("path"));
+         request.header(h_Supporteds).push_back(Token(Symbols::Path));
       }
       
       if( (resip::InteropHelper::getOutboundSupported() ||

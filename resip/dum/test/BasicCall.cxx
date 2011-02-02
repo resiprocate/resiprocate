@@ -578,24 +578,29 @@ main (int argc, char** argv)
    bool useOutbound = false;
    Uri outboundUri;
 
-   if ( argc == 1 ) {
+   if ( argc == 1 ) 
+   {
       uacAor = NameAddr("sip:UAC@127.0.0.1:12005");
       uasAor = NameAddr("sip:UAS@127.0.0.1:12010");
       cout << "Skipping registration (no arguments)." << endl;
-   } else {
-      if ( argc < 5 ) {
-	 cout << "usage: " << argv[0] <<
-	 " sip:user1 passwd1 sip:user2 passwd2 [outbound]" << endl;
-	 return 1;
+   } 
+   else 
+   {
+      if ( argc < 5 ) 
+      {
+         cout << "usage: " << argv[0] <<
+                 " sip:user1 passwd1 sip:user2 passwd2 [outbound]" << endl;
+         return 1;
       }
       doReg = true;
       uacAor = NameAddr(argv[1]);
       uacPasswd = Data(argv[2]);
       uasAor = NameAddr(argv[3]);
       uasPasswd = Data(argv[4]);
-      if ( argc >= 6 ) {
-	   useOutbound = true;
-	   outboundUri = Uri(Data(argv[5]));
+      if ( argc >= 6 ) 
+      {
+         useOutbound = true;
+         outboundUri = Uri(Data(argv[5]));
       }
    }
 
@@ -618,12 +623,14 @@ main (int argc, char** argv)
    auto_ptr<AppDialogSetFactory> uac_dsf(new testAppDialogSetFactory);
    dumUac->setAppDialogSetFactory(uac_dsf);
 
-   if ( doReg ) {
+   if ( doReg ) 
+   {
       dumUac->getMasterProfile()->setDigestCredential(uacAor.uri().host(), uacAor.uri().user(), uacPasswd);
    }
-   if (useOutbound) {
+   if (useOutbound) 
+   {
        dumUac->getMasterProfile()->setOutboundProxy(outboundUri);
-       dumUac->getMasterProfile()->addSupportedOptionTag(Token("outbound"));
+       dumUac->getMasterProfile()->addSupportedOptionTag(Token(Symbols::Outbound));
    }
 
    dumUac->getMasterProfile()->setDefaultFrom(uacAor);
@@ -644,12 +651,14 @@ main (int argc, char** argv)
    dumUas->setMasterProfile(uasMasterProfile);
    dumUas->setClientAuthManager(uasAuth);
 
-   if ( doReg ) {
+   if(doReg) 
+   {
       dumUas->getMasterProfile()->setDigestCredential(uasAor.uri().host(), uasAor.uri().user(), uasPasswd);
    }
-   if (useOutbound) {
+   if(useOutbound) 
+   {
       dumUas->getMasterProfile()->setOutboundProxy(outboundUri);
-      dumUas->getMasterProfile()->addSupportedOptionTag(Token("outbound"));
+      dumUas->getMasterProfile()->addSupportedOptionTag(Token(Symbols::Outbound));
    }
 
    dumUas->getMasterProfile()->setDefaultFrom(uasAor);
@@ -668,19 +677,24 @@ main (int argc, char** argv)
    auto_ptr<AppDialogSetFactory> uas_dsf(new testAppDialogSetFactory);
    dumUas->setAppDialogSetFactory(uas_dsf);
 
-   if ( doReg ) {
+   if (doReg) 
+   {
       SharedPtr<SipMessage> regMessage = dumUas->makeRegistration(uasAor, new testAppDialogSet(*dumUac, "UAS(Registration)"));
-      // XXXX: should above be *dumUas ???!!!!
       cout << "Sending register for Uas: " << endl << regMessage << endl;
       dumUas->send(regMessage);
-   } else {
+   } 
+   else 
+   {
       uas.registered = true;
    }
-   if ( doReg ) {
+   if (doReg) 
+   {
       SharedPtr<SipMessage> regMessage = dumUac->makeRegistration(uacAor, new testAppDialogSet(*dumUac, "UAC(Registration)"));
       cout << "Sending register for Uac: " << endl << regMessage << endl;
       dumUac->send(regMessage);
-   } else {
+   } 
+   else 
+   {
       uac.registered = true;
    }
 
@@ -725,7 +739,7 @@ main (int argc, char** argv)
 
               // Kick off call flow by sending an OPTIONS request then an INVITE request from the UAC to the UAS
               cout << "UAC: Sending Options Request to UAS." << endl;
-			  dumUac->send(dumUac->makeOutOfDialogRequest(uasAor, OPTIONS, new testAppDialogSet(*dumUac, "UAC(OPTIONS)")));  // Should probably add Allow, Accept, Accept-Encoding, Accept-Language and Supported headers - but this is fine for testing/demonstration
+              dumUac->send(dumUac->makeOutOfDialogRequest(uasAor, OPTIONS, new testAppDialogSet(*dumUac, "UAC(OPTIONS)")));  // Should probably add Allow, Accept, Accept-Encoding, Accept-Language and Supported headers - but this is fine for testing/demonstration
 
               cout << "UAC: Sending Invite Request to UAS." << endl;
               dumUac->send(dumUac->makeInviteSession(uasAor, uac.mSdp, new testAppDialogSet(*dumUac, "UAC(INVITE)")));
@@ -750,10 +764,11 @@ main (int argc, char** argv)
            stoppedRegistering = true;
            dumUas->shutdown(&uasShutdownHandler);
            dumUac->shutdown(&uacShutdownHandler);
-	   if ( doReg ) {
+            if ( doReg ) 
+            {
               uas.registerHandle->stopRegistering();
               uac.registerHandle->stopRegistering();
-	   }
+            }
         }
      }
    }
