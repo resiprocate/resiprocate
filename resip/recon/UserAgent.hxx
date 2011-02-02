@@ -1,8 +1,8 @@
 #if !defined(UserAgent_hxx)
 #define UserAgent_hxx
 
-#include "ConversationProfile.hxx"
 #include "ConversationManager.hxx"
+#include "ConversationProfile.hxx"
 #include "UserAgentMasterProfile.hxx"
 #include "HandleTypes.hxx"
 
