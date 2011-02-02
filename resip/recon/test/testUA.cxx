@@ -9,7 +9,9 @@
 #include <stdio.h>
 #include <sys/select.h>
 #include <termios.h>
-#include <stropts.h>
+#ifndef __GNUC__
+ #include <stropts.h>
+#endif
 #include <sys/ioctl.h>
 
 int _kbhit() {
