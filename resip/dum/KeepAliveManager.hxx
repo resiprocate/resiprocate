@@ -19,7 +19,15 @@ class KeepAliveManager
             int keepAliveInterval;  // In seconds
             int id;
       };
-      typedef std::map<Tuple, NetworkAssociationInfo> NetworkAssociationMap;
+
+      // .slg.  We track unique Network Associations per transport transport type, transport family, 
+      //        target ip addr, target port, and source/transport flow key
+      //        This means that if we have two different TCP connections to the same destination, 
+      //        each originating from a different NIC, then we will send keepalives on each separately.
+      //        For UDP, this is not currently the case, when the transport is bound to any interface
+      //        (ie. 0.0.0.0), as the flow key will be same regardless of the source interface used to
+      //        send the UDP message - fixing this for UDP remains an outstanding item.
+      typedef std::map<Tuple, NetworkAssociationInfo, Tuple::FlowKeyCompare> NetworkAssociationMap;
 
       KeepAliveManager() : mCurrentId(0) {}
       virtual ~KeepAliveManager() {}

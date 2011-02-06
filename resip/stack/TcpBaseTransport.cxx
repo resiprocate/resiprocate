@@ -68,7 +68,7 @@ TcpBaseTransport::init()
    if ( ::setsockopt ( mFd, SOL_SOCKET, SO_REUSEADDR, (const char*)&on, sizeof(on)) )
 #endif
    {
-	   int e = getErrno();
+       int e = getErrno();
        InfoLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << strerror(e));
        error(e);
        throw Exception("Failed setsockopt", __FILE__,__LINE__);
@@ -88,7 +88,7 @@ TcpBaseTransport::init()
       InfoLog (<< "Failed listen " << strerror(e));
       error(e);
       // !cj! deal with errors
-	  throw Transport::Exception("Address already in use", __FILE__,__LINE__);
+      throw Transport::Exception("Address already in use", __FILE__,__LINE__);
    }
 }
 
@@ -185,12 +185,12 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
       sock = InternalTransport::socket( TCP, ipVersion());
       if ( sock == INVALID_SOCKET )
       {
-	 err = getErrno();
-	 WarningLog( << "Error in finding free filedescriptor to use. " << strerror(err));
-	 error(err);
+         err = getErrno();
+         WarningLog( << "Error in finding free filedescriptor to use. " << strerror(err));
+         error(err);
          failReason = TransportFailure::TransportNoSocket;
          failSubCode = err;
-	 return NULL;
+         return NULL;
       }
    }
 
@@ -212,20 +212,20 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
 
       switch (err)
       {
-	 case EINPROGRESS:
-	 case EWOULDBLOCK:
-	    break;
-	 default:
-	 {
-	    // !jf! this has failed
-	    InfoLog( << "Error on TCP connect to " <<  dest << ", err=" << err << ": " << strerror(err));
-	    error(err);
-	    //fdset.clear(sock);
-	    closeSocket(sock);
+         case EINPROGRESS:
+         case EWOULDBLOCK:
+            break;
+         default:
+         {
+            // !jf! this has failed
+            InfoLog( << "Error on TCP connect to " <<  dest << ", err=" << err << ": " << strerror(err));
+            error(err);
+            //fdset.clear(sock);
+            closeSocket(sock);
             failReason = TransportFailure::TransportBadConnect;
             failSubCode = err;
-	    return NULL;
-	 }
+            return NULL;
+         }
       }
    }
 
@@ -254,11 +254,11 @@ TcpBaseTransport::processAllWriteRequests()
       {
          TransportFailure::FailureReason failCode = TransportFailure::Failure;
          int subCode = 0;
-	 if ( (conn=makeOutgoingConnection(data->destination, failCode, subCode)) == NULL )
+         if((conn=makeOutgoingConnection(data->destination, failCode, subCode)) == NULL)
          {
-	    fail(data->transactionId, failCode, subCode);
-	    delete data;
-	    return;	// .kw. WHY? What about messages left in queue?
+            fail(data->transactionId, failCode, subCode);
+            delete data;
+            return;	// .kw. WHY? What about messages left in queue?
          }
          assert(conn->getSocket() != INVALID_SOCKET);
          // .kw. why do below? We already have the conn, who uses key?
@@ -270,7 +270,7 @@ TcpBaseTransport::processAllWriteRequests()
          DebugLog (<< "Failed to create/get connection: " << data->destination);
          fail(data->transactionId, TransportFailure::TransportNoExistConn, 0);
          delete data;
-	 // NOTE: We fail this one but don't give up on others in queue
+         // NOTE: We fail this one but don't give up on others in queue
       }
       else // have a connection
       {

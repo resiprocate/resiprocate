@@ -10,13 +10,14 @@
 using namespace resip;
 using namespace std;
 
+
 void KeepAliveManager::add(const Tuple& target, int keepAliveInterval)
 {
    assert(mDum);
    NetworkAssociationMap::iterator it = mNetworkAssociations.find(target);
    if (it == mNetworkAssociations.end())
    {
-      DebugLog( << "First keep alive for: " << target );
+      DebugLog( << "First keep alive for: " << target);
       DebugLog( << "Keepalive interval " << keepAliveInterval << " seconds" );
       DebugLog( << "Keepalive id " << mCurrentId );
 

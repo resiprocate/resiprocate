@@ -29,7 +29,7 @@ class TransportFailure : public TransactionMessage
          NoTransport,
          NoRoute,
          CertNameMismatch,
-         CertValidationFailure,
+         CertValidationFailure
       };
 
       TransportFailure(const Data& transactionId, FailureReason f, int subCode=0);

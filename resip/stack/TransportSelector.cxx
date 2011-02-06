@@ -661,6 +661,8 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
 
    try
    {
+      TransportFailure::FailureReason transportFailureReason = TransportFailure::NoTransport;
+
       // !ah! You NEED to do this for responses too -- the transport doesn't
       // !ah! know it's IP addres(es) in all cases, AND it's function of the dest.
       // (imagine a synthetic message...)
@@ -710,6 +712,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          {
             // .bwc. Connection info was specified, and use of this connection
             // was mandatory, but connection is no longer around. We fail.
+            transportFailureReason = TransportFailure::TransportNoExistConn;
          }
          else if (transport)// .bwc. Here we use transport to find source.
          {
@@ -1035,7 +1038,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
       else
       {
          InfoLog (<< "tid=" << msg->getTransactionId() << " failed to find a transport to " << target);
-         mStateMacFifo.add(new TransportFailure(msg->getTransactionId(), TransportFailure::NoTransport));
+         mStateMacFifo.add(new TransportFailure(msg->getTransactionId(), transportFailureReason));
       }
 
    }

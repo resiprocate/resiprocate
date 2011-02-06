@@ -465,7 +465,7 @@ ServerRegistration::tryFlow(ContactInstanceRecord& rec,
          resip::NameAddr& contact(rec.mContact);
          if(contact.exists(p_Instance) && contact.exists(p_regid))
          {
-            if(!msg.empty(h_Paths) && msg.header(h_Paths).back().exists(p_ob))
+            if(!msg.empty(h_Paths) && msg.header(h_Paths).back().uri().exists(p_ob))
             {
                rec.mRegId=contact.param(p_regid);
                // Not directly connected, so we don't care how we contact the 

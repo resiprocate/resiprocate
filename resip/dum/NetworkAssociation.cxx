@@ -1,4 +1,4 @@
-
+#include "rutil/Logger.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/NetworkAssociation.hxx"
@@ -6,18 +6,26 @@
 
 using namespace resip;
 
-void 
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
+
+bool
 NetworkAssociation::update(const SipMessage& msg, int keepAliveInterval)
 {
    if (mDum && mDum->mKeepAliveManager.get())
    {
-      if (msg.getSource().getType() != 0 && !(msg.getSource() == mTarget))
+      const Tuple& source = msg.getSource();
+      if(source.getType() != 0 &&    // if source is populated
+         (!(source == mTarget) ||     // and target is different from current
+          source.mFlowKey != mTarget.mFlowKey)) // and flow key is different, then add to keepalive manager
       {
          mDum->mKeepAliveManager->remove(mTarget);
-         mTarget = msg.getSource();
+         mTarget = source;
+         mTarget.onlyUseExistingConnection = true;  // Ensure that keepalives never open up a new connection
          mDum->mKeepAliveManager->add(mTarget, keepAliveInterval);
+         return true;
       }
    }
+   return false;
 }
 
 NetworkAssociation::~NetworkAssociation()
