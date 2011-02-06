@@ -154,6 +154,14 @@ class Tuple
       };
       friend class AnyPortAnyInterfaceCompare;
 
+      class FlowKeyCompare
+      {
+         public:
+            bool operator()(const Tuple& x,
+                            const Tuple& y) const;
+      };
+      friend class FlowKeyCompare;
+
       void setTargetDomain(const Data& target)
       {
          mTargetDomain = target;

@@ -851,6 +851,17 @@ Tuple::AnyPortCompare::operator()(const Tuple& lhs,
    return false;
 }
 
+bool
+Tuple::FlowKeyCompare::operator()(const Tuple& lhs,
+                                  const Tuple& rhs) const
+{
+   if (lhs == rhs)
+   {
+      return lhs.mFlowKey < rhs.mFlowKey;
+   }
+   return lhs < rhs;
+};
+
 GenericIPAddress 
 Tuple::toGenericIPAddress() const
 {

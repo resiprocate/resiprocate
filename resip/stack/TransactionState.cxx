@@ -1841,19 +1841,15 @@ TransactionState::processNoDnsResults()
       warnText << "No other DNS entries to try ("
          <<mFailureReason<<","<<mFailureSubCode<<")";
    }
-   // warning.text() = "No other DNS entries to try";
    switch(mFailureReason)
    {
       case TransportFailure::None:
          response->header(h_StatusLine).reason() = "No DNS results";
          break;
 
-      case TransportFailure::TransportNoExistConn:
-         // .kw. in some cases, this should really be a "430 Flow failed"?
       case TransportFailure::Failure:
       case TransportFailure::TransportNoSocket:
       case TransportFailure::TransportBadConnect:
-      case TransportFailure::TransportShutdown:
       case TransportFailure::ConnectionUnknown:
       case TransportFailure::ConnectionException:
          response->header(h_StatusLine).reason() = "Transport failure: no transports left to try";
@@ -1870,17 +1866,23 @@ TransactionState::processNoDnsResults()
       case TransportFailure::CertValidationFailure:
          response->header(h_StatusLine).reason() = "Certificate Validation Failure";
          break;
+      case TransportFailure::TransportNoExistConn:
+         response->header(h_StatusLine).statusCode() = 430;
+         response->header(h_StatusLine).reason() = "Flow failed";
+         warning.text() = "Flow no longer exists";
+         break;
+      case TransportFailure::TransportShutdown:
          response->header(h_StatusLine).reason() = "Transport shutdown: no transports left to try";
          break;
    }
-         
+
    response->header(h_Warnings).push_back(warning);
 
-   sendToTU(response); // !jf! should be 480? 
+   sendToTU(response); 
    terminateClientTransaction(mId);
    if (mMachine != Stateless)
    {
-           delete this;
+      delete this;
    }
 }
 

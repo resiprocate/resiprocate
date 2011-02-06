@@ -144,7 +144,7 @@ Transport::error(int e)
          InfoLog (<<"Connection reset ");
          break;
 
-	   case WSAEWOULDBLOCK:
+      case WSAEWOULDBLOCK:
          DebugLog (<<"Would Block ");
          break;
 
@@ -276,11 +276,11 @@ Transport::stampReceived(SipMessage* message)
    if (message->isRequest() && message->exists(h_Vias) && !message->header(h_Vias).empty())
    {
       const Tuple& tuple = message->getSource();
-	  Data received = Tuple::inet_ntop(tuple);
-	  if(message->header(h_Vias).front().sentHost() != received)  // only add if received address is different from sent-by in Via
-	  {
+      Data received = Tuple::inet_ntop(tuple);
+      if(message->header(h_Vias).front().sentHost() != received)  // only add if received address is different from sent-by in Via
+      {
          message->header(h_Vias).front().param(p_received) = received;
-	  }
+      }
       //message->header(h_Vias).front().param(p_received) = Tuple::inet_ntop(tuple);
       if (message->header(h_Vias).front().exists(p_rport))
       {

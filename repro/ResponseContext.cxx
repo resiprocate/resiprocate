@@ -586,7 +586,10 @@ ResponseContext::beginClientTransaction(repro::Target* target)
                            orig.getReceivedTransport()->getTuple(),
                            target,
                            true /* do Path instead */);
-         request.header(h_Supporteds).push_back(Token(Symbols::Path));
+         if(!request.header(h_Supporteds).find(Token(Symbols::Path)))
+         {
+            request.header(h_Supporteds).push_back(Token(Symbols::Path));
+         }
       }
       
       if( (resip::InteropHelper::getOutboundSupported() ||
@@ -742,7 +745,7 @@ ResponseContext::getInboundFlowToken(bool doPathInstead)
       else if(doPathInstead)
       {
          // Need to try to detect Path failures
-         if(orig.empty(h_Paths) || !orig.header(h_Paths).back().exists(p_ob))
+         if(orig.empty(h_Paths) || !orig.header(h_Paths).back().uri().exists(p_ob))
          {
             // Yikes! Client is trying to use outbound, but edge-proxy did not
             // support it. The registrar will either reject this (if it supports 
