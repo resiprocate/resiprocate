@@ -896,6 +896,12 @@ InviteSession::referCommand(const NameAddr& referTo, bool referSub)
 void
 InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace, bool referSub)
 {
+   refer(referTo,sessionToReplace,std::auto_ptr<resip::Contents>(0),referSub);
+}
+
+void
+InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace, std::auto_ptr<resip::Contents> contents, bool referSub)
+{
    if (!sessionToReplace.isValid())
    {
       throw UsageUseException("Attempted to make a refer w/ and invalid replacement target", __FILE__, __LINE__);
@@ -907,17 +913,23 @@ InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToRepla
    replaces.param(p_toTag) = id.getRemoteTag();
    replaces.param(p_fromTag) = id.getLocalTag();
 
-   refer(referTo, replaces, referSub);
+   refer(referTo, replaces, contents, referSub);
 }
 
 void 
 InviteSession::refer(const NameAddr& referTo, const CallId& replaces, bool referSub)
 {
+   refer(referTo,replaces,std::auto_ptr<resip::Contents>(0),referSub);
+}
+
+void 
+InviteSession::refer(const NameAddr& referTo, const CallId& replaces, std::auto_ptr<resip::Contents> contents, bool referSub)
+{
    if (isConnected())  // ?slg? likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
    {
       SharedPtr<SipMessage> refer(new SipMessage());      
       mDialog.makeRequest(*refer, REFER);
-
+      refer->setContents(contents);
       refer->header(h_ReferTo) = referTo;
       refer->header(h_ReferredBy) = myAddr();
       refer->header(h_ReferredBy).remove(p_tag);
