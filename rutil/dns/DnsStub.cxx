@@ -117,7 +117,7 @@ unsigned int
 DnsStub::getTimeTillNextProcessMS()
 {
     if(mCommandFifo.size() > 0) return 0;
-    return mDnsProvider->getTimeTillNextProcessMS();;
+    return mDnsProvider->getTimeTillNextProcessMS();
 }
 
 void
