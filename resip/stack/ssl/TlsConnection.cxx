@@ -316,7 +316,7 @@ TlsConnection::checkState()
    mTlsState = Up;
    if (!mOutstandingSends.empty())
    {
-   ensureWritable();
+      ensureWritable();
    }
 #endif // USE_SSL   
    return mTlsState;

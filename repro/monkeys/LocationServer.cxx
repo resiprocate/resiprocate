@@ -69,7 +69,7 @@ LocationServer::process(RequestContext& context)
                batch.push_back(target);
             }
             else if(!contact.mReceivedFrom.onlyUseExistingConnection ||
-               context.getProxy().getStack().isFlowAlive(contact.mReceivedFrom))
+               context.getProxy().getStack().isFlowAlive(contact.mReceivedFrom))  // !slg!  WARNING - the call to isFlowAlive is not threadsafe - consider just removing this call
             {
                outboundBatch[contact.mInstance].push_back(contact);
             }

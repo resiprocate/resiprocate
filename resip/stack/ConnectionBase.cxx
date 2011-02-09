@@ -110,7 +110,6 @@ ConnectionBase::getFlowKey() const
 void
 ConnectionBase::preparseNewBytes(int bytesRead)
 {
-
    DebugLog(<< "In State: " << connectionStates[mConnState]);
    //getConnectionManager().touch(this); -- !dcm!
    
@@ -122,7 +121,6 @@ ConnectionBase::preparseNewBytes(int bytesRead)
       {
          if (strncmp(mBuffer + mBufferPos, Symbols::CRLFCRLF, 4) == 0)
          {
-            StackLog(<<"Throwing away incoming firewall keep-alive");
             DebugLog(<< "Got incoming double-CRLF keepalive (aka ping).");
             mBufferPos += 4;
             bytesRead -= 4;
@@ -138,6 +136,24 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                return;
             }
          }
+         else if (strncmp(mBuffer + mBufferPos, Symbols::CRLF, 2) == 0)
+         {
+            //DebugLog(<< "Got incoming CRLF keepalive response (aka pong).");
+            mBufferPos += 2;
+            bytesRead -= 2;
+            onSingleCRLF();
+            if (bytesRead)
+            {
+               goto start;
+            }
+            else
+            {
+               delete [] mBuffer;
+               mBuffer = 0;
+               return;
+            }
+         }
+
          assert(mTransport);
          mMessage = new SipMessage(mTransport);
          
