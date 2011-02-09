@@ -179,7 +179,7 @@ ConnectionManager::addConnection(Connection* connection)
    if ( mPollGrp ) 
    {
       connection->mPollItemHandle = mPollGrp->addPollItem(
-	      connection->getSocket(), FPEM_Read, connection);
+         connection->getSocket(), FPEM_Read, connection);
    }
    else 
    {
@@ -196,8 +196,6 @@ void
 ConnectionManager::removeConnection(Connection* connection)
 {
    //DebugLog (<< "ConnectionManager::removeConnection()");
-
-
 
    mIdMap.erase(connection->mWho.mFlowKey);
    mAddrMap.erase(connection->mWho);
@@ -258,7 +256,7 @@ ConnectionManager::process(FdSet& fdset)
 
    // process the write list
    for (ConnectionWriteList::iterator writeIter = mWriteHead->begin();
-	writeIter != mWriteHead->end(); )
+        writeIter != mWriteHead->end(); )
    {
       Connection* currConnection = *writeIter;
 
@@ -267,25 +265,25 @@ ConnectionManager::process(FdSet& fdset)
       ++writeIter;
 
       if (!currConnection)
-	 continue;
+         continue;
 
       if (fdset.readyToWrite(currConnection->getSocket()))
       {
-	 currConnection->performWrite();
+         currConnection->performWrite();
       }
       else if (fdset.hasException(currConnection->getSocket()))
       {
-	 int errNum = 0;
-	 int errNumSize = sizeof(errNum);
-	 getsockopt(currConnection->getSocket(), SOL_SOCKET, SO_ERROR, (char *)&errNum, (socklen_t *)&errNumSize);
-	 InfoLog(<< "Exception writing to socket " << currConnection->getSocket() << " code: " << errNum << "; closing connection");
-	 delete currConnection;
+         int errNum = 0;
+         int errNumSize = sizeof(errNum);
+         getsockopt(currConnection->getSocket(), SOL_SOCKET, SO_ERROR, (char *)&errNum, (socklen_t *)&errNumSize);
+         InfoLog(<< "Exception writing to socket " << currConnection->getSocket() << " code: " << errNum << "; closing connection");
+         delete currConnection;
       }
    }
 
    // process the read list
    for (ConnectionReadList::iterator readIter = mReadHead->begin();
-	readIter != mReadHead->end(); )
+        readIter != mReadHead->end(); )
    {
       Connection* currConnection = *readIter; 
 
@@ -294,12 +292,12 @@ ConnectionManager::process(FdSet& fdset)
       ++readIter;
 
       if (!currConnection)
-	 continue;
+         continue;
 
       if ( fdset.readyToRead(currConnection->getSocket()) ||
-	   currConnection->hasDataToRead() )
+           currConnection->hasDataToRead() )
       {
-	 fdset.clear(currConnection->getSocket());
+         fdset.clear(currConnection->getSocket());
          
          int bytesRead = currConnection->read();
          DebugLog(<< "ConnectionManager::process() " << " read=" << bytesRead);
@@ -311,11 +309,11 @@ ConnectionManager::process(FdSet& fdset)
       }
       else if (fdset.hasException(currConnection->getSocket()))
       {
-	 int errNum = 0;
-	 int errNumSize = sizeof(errNum);
-	 getsockopt(currConnection->getSocket(), SOL_SOCKET, SO_ERROR, (char *)&errNum, (socklen_t *)&errNumSize);
-	 InfoLog(<< "Exception reading from socket " << currConnection->getSocket() << " code: " << errNum << "; closing connection");
-	 delete currConnection;
+         int errNum = 0;
+         int errNumSize = sizeof(errNum);
+         getsockopt(currConnection->getSocket(), SOL_SOCKET, SO_ERROR, (char *)&errNum, (socklen_t *)&errNumSize);
+         InfoLog(<< "Exception reading from socket " << currConnection->getSocket() << " code: " << errNum << "; closing connection");
+         delete currConnection;
       }
    }
 }

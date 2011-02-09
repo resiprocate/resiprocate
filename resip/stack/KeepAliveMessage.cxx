@@ -42,7 +42,7 @@ KeepAliveMessage::clone() const
 EncodeStream&
 KeepAliveMessage::encode(EncodeStream& str) const
 {
-   str << Symbols::CRLF << Symbols::CRLF;
+   str << Symbols::CRLFCRLF;
    return str;
 }
 
