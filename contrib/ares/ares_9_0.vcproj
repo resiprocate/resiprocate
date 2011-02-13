@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="9.00"
 	Name="ares"
-	ProjectGUID="{96CD935E-1951-43B8-AF75-F1C06B3778C1}"
+	ProjectGUID="{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}"
 	RootNamespace="ares"
 	Keyword="ManagedCProj"
 	TargetFrameworkVersion="131072"
