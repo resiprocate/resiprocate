@@ -75,8 +75,8 @@ class TransactionController
       }
 
       void abandonServerTransaction(const Data& tid);
-
       void cancelClientInviteTransaction(const Data& tid);
+      void terminateFlow(const resip::Tuple& flow);
 
    private:
       void processEverything(FdSet* fdset);

@@ -6,6 +6,7 @@
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/TransactionUserMessage.hxx"
 #include "resip/stack/ConnectionTerminated.hxx"
+#include "resip/stack/KeepAlivePong.hxx"
 #include "resip/dum/AppDialog.hxx"
 #include "resip/dum/AppDialogSet.hxx"
 #include "resip/dum/AppDialogSetFactory.hxx"
@@ -85,7 +86,9 @@ using namespace std;
 
 
 DialogUsageManager::DialogUsageManager(SipStack& stack, bool createDefaultFeatures) :
-   TransactionUser(TransactionUser::DoNotRegisterForTransactionTermination, TransactionUser::RegisterForConnectionTermination),
+   TransactionUser(TransactionUser::DoNotRegisterForTransactionTermination, 
+                   TransactionUser::RegisterForConnectionTermination,
+                   TransactionUser::RegisterForKeepAlivePongs),
    mRedirectManager(new RedirectManager()),
    mInviteSessionHandler(0),
    mClientRegistrationHandler(0),
@@ -982,7 +985,7 @@ void DialogUsageManager::outgoingProcess(auto_ptr<Message> message)
          assert(userProfile);
 
          //!dcm! -- unique SharedPtr to auto_ptr conversion prob. a worthwhile
-         //optimzation here. SharedPtr would ahve to be changed; would
+         //optimzation here. SharedPtr would have to be changed; would
          //throw/assert if not unique.
          std::auto_ptr<SipMessage> toSend(static_cast<SipMessage*>(event->message()->clone()));
 
@@ -1012,6 +1015,12 @@ void DialogUsageManager::outgoingProcess(auto_ptr<Message> message)
 void
 DialogUsageManager::sendUsingOutboundIfAppropriate(UserProfile& userProfile, auto_ptr<SipMessage> msg)
 {
+   if(userProfile.clientOutboundEnabled() && userProfile.mClientOutboundFlowTuple.mFlowKey != 0)
+   {
+      mStack.sendTo(msg, userProfile.mClientOutboundFlowTuple, this);
+      return;
+   }
+
    //a little inefficient, branch parameter might be better
    DialogId id(*msg);
    if (userProfile.hasOutboundProxy() && 
@@ -1213,6 +1222,19 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
    }
    
    {
+      KeepAlivePong* pong = dynamic_cast<KeepAlivePong*>(msg.get());
+      if (pong)
+      {
+         DebugLog(<< "keepalive pong received from " << pong->getFlow());
+         if (mKeepAliveManager.get())
+         {
+            mKeepAliveManager->receivedPong(pong->getFlow());
+         }
+         return;
+      }
+   }
+
+   {
       DestroyUsage* destroyUsage = dynamic_cast<DestroyUsage*>(msg.get());
       if (destroyUsage)
       {
@@ -1250,9 +1272,29 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
    }
 
    {
+      KeepAlivePongTimeout* keepAlivePongMsg = dynamic_cast<KeepAlivePongTimeout*>(msg.get());
+      if (keepAlivePongMsg)
+      {
+         //DebugLog(<< "Keep Alive Pong Message" );
+         if (mKeepAliveManager.get())
+         {
+            mKeepAliveManager->process(*keepAlivePongMsg);
+         }
+         return;      
+      }
+   }
+
+   {
       ConnectionTerminated* terminated = dynamic_cast<ConnectionTerminated*>(msg.get());
       if (terminated)
       {
+         // Notify all dialogSets, in case they need to react (ie. client outbound support)
+         DialogSetMap::iterator it =  mDialogSetMap.begin();
+         for(; it != mDialogSetMap.end(); it++)
+         {
+            it->second->flowTerminated(terminated->getFlow());
+         }
+
          DebugLog(<< "connection terminated message");
          if (mConnectionTerminatedEventDispatcher.dispatch(msg.get()))
          {

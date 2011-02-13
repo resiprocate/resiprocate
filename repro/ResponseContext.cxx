@@ -540,101 +540,101 @@ ResponseContext::isDuplicate(const repro::Target* target) const
 void
 ResponseContext::beginClientTransaction(repro::Target* target)
 {
-      // .bwc. This is a private function, and if anything calls this with a
-      // target in an invalid state, it is a bug.
-      assert(target->status() == Target::Candidate);
+   // .bwc. This is a private function, and if anything calls this with a
+   // target in an invalid state, it is a bug.
+   assert(target->status() == Target::Candidate);
 
-      SipMessage& orig=mRequestContext.getOriginalRequest();
-      SipMessage request(orig);
+   SipMessage& orig=mRequestContext.getOriginalRequest();
+   SipMessage request(orig);
       
-      request.header(h_RequestLine).uri() = target->uri(); 
+   request.header(h_RequestLine).uri() = target->uri(); 
 
-      // .bwc. Proxy checks whether this is valid, and rejects if not.
-      request.header(h_MaxForwards).value()--;
+   // .bwc. Proxy checks whether this is valid, and rejects if not.
+   request.header(h_MaxForwards).value()--;
       
-      bool inDialog=false;
+   bool inDialog=false;
       
-      try
-      {
-         inDialog=request.header(h_To).exists(p_tag);
-      }
-      catch(resip::ParseException&)
-      {
-         // ?bwc? Do we ignore this and just say this is a dialog-creating
-         // request?
-      }
+   try
+   {
+      inDialog=request.header(h_To).exists(p_tag);
+   }
+   catch(resip::ParseException&)
+   {
+      // ?bwc? Do we ignore this and just say this is a dialog-creating
+      // request?
+   }
       
-      // Potential source Record-Route addition only for new dialogs
-      // !bwc! It looks like we really ought to be record-routing in-dialog
-      // stuff.
-      if ( !inDialog &&  // only for dialog-creating request
-           (request.method() == INVITE ||
-            request.method() == SUBSCRIBE ) &&
-           !mRequestContext.mProxy.getRecordRoute().uri().host().empty())  // only add record route if configured to do so
+   // Potential source Record-Route addition only for new dialogs
+   // !bwc! It looks like we really ought to be record-routing in-dialog
+   // stuff.
+   if ( !inDialog &&  // only for dialog-creating request
+        (request.method() == INVITE ||
+         request.method() == SUBSCRIBE ) &&
+        !mRequestContext.mProxy.getRecordRoute().uri().host().empty())  // only add record route if configured to do so
+   {
+      insertRecordRoute(request,
+                        orig.getReceivedTransport()->getTuple(),
+                        target);
+   }
+   else if(request.method()==REGISTER &&
+           (mRequestContext.mProxy.getAssumePath() ||
+            (!request.empty(h_Supporteds) &&
+            (  request.header(h_Supporteds).find(Token(Symbols::Path)) ||
+               request.header(h_Supporteds).find(Token(Symbols::Outbound))))))
+   {
+      insertRecordRoute(request,
+                        orig.getReceivedTransport()->getTuple(),
+                        target,
+                        true /* do Path instead */);
+      if(!request.header(h_Supporteds).find(Token(Symbols::Path)))
       {
-         insertRecordRoute(request,
-                           orig.getReceivedTransport()->getTuple(),
-                           target);
+         request.header(h_Supporteds).push_back(Token(Symbols::Path));
       }
-      else if(request.method()==REGISTER &&
-	       (mRequestContext.mProxy.getAssumePath() ||
-               (!request.empty(h_Supporteds) &&
-               (  request.header(h_Supporteds).find(Token(Symbols::Path)) ||
-                  request.header(h_Supporteds).find(Token(Symbols::Outbound))))))
-      {
-         insertRecordRoute(request,
-                           orig.getReceivedTransport()->getTuple(),
-                           target,
-                           true /* do Path instead */);
-         if(!request.header(h_Supporteds).find(Token(Symbols::Path)))
-         {
-            request.header(h_Supporteds).push_back(Token(Symbols::Path));
-         }
-      }
+   }
       
-      if( (resip::InteropHelper::getOutboundSupported() ||
-          resip::InteropHelper::getRRTokenHackEnabled()) 
-          && target->rec().mReceivedFrom.mFlowKey)
-      {
-         // .bwc. We only override the destination if we are sending to an
-         // outbound contact. If this is not an outbound contact, but the
-         // endpoint has given us a Contact with the correct ip-address and 
-         // port, we might be able to find the connection they formed when they
-         // registered earlier, but that will happen down in TransportSelector.
-         request.setDestination(target->rec().mReceivedFrom);
-      }
+   if( (resip::InteropHelper::getOutboundSupported() ||
+       resip::InteropHelper::getRRTokenHackEnabled()) 
+       && target->rec().mReceivedFrom.mFlowKey)
+   {
+      // .bwc. We only override the destination if we are sending to an
+      // outbound contact. If this is not an outbound contact, but the
+      // endpoint has given us a Contact with the correct ip-address and 
+      // port, we might be able to find the connection they formed when they
+      // registered earlier, but that will happen down in TransportSelector.
+      request.setDestination(target->rec().mReceivedFrom);
+   }
 
-      DebugLog(<<"Set tuple dest: " << request.getDestination());
+   DebugLog(<<"Set tuple dest: " << request.getDestination());
 
-      // .bwc. Path header addition.
-      if(!target->rec().mSipPath.empty())
-      {
-         request.header(h_Routes).append(target->rec().mSipPath);
-      }
+   // .bwc. Path header addition.
+   if(!target->rec().mSipPath.empty())
+   {
+      request.header(h_Routes).append(target->rec().mSipPath);
+   }
 
-      // !jf! unleash the baboons here
-      // a baboon might adorn the message, record call logs or CDRs, might
-      // insert loose routes on the way to the next hop
+   // !jf! unleash the baboons here
+   // a baboon might adorn the message, record call logs or CDRs, might
+   // insert loose routes on the way to the next hop
       
-      Helper::processStrictRoute(request);
+   Helper::processStrictRoute(request);
       
-      //This is where the request acquires the tid of the Target. The tids 
-      //should be the same from here on out.
-      request.header(h_Vias).push_front(target->via());
+   //This is where the request acquires the tid of the Target. The tids 
+   //should be the same from here on out.
+   request.header(h_Vias).push_front(target->via());
 
-      if(!mRequestContext.mInitialTimerCSet)
-      {
-         mRequestContext.mInitialTimerCSet=true;
-         mRequestContext.updateTimerC();
-      }
+   if(!mRequestContext.mInitialTimerCSet)
+   {
+      mRequestContext.mInitialTimerCSet=true;
+      mRequestContext.updateTimerC();
+   }
       
-      // the rest of 16.6 is implemented by the transaction layer of resip
-      // - determining the next hop (tuple)
-      // - adding a content-length if needed
-      // - sending the request
-      sendRequest(request); 
+   // the rest of 16.6 is implemented by the transaction layer of resip
+   // - determining the next hop (tuple)
+   // - adding a content-length if needed
+   // - sending the request
+   sendRequest(request); 
 
-      target->status() = Target::Started;
+   target->status() = Target::Started;
 }
 
 void

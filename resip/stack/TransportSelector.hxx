@@ -103,6 +103,7 @@ class TransportSelector
 
       static Tuple getFirstInterface(bool is_v4, TransportType type);
       bool connectionAlive(const Tuple& dest) const;
+      void terminateFlow(const resip::Tuple& flow);
 
       /// delete all known transports (including external)
       void deleteTransports();

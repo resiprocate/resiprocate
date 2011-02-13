@@ -34,6 +34,8 @@ Connection::Connection(Transport* transport,const Tuple& who, Socket socket,
      mPollItemHandle(0)
 {
    mWho.mFlowKey=(FlowKey)socket;
+   WarningLog (<< "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@Connection::Connection, who: " << mWho);  // !slg! TODO - remove me - do NOT COMMIT
+
    if(mWho.mFlowKey && ConnectionBase::transport())
    {
       getConnectionManager().addConnection(this);
@@ -239,6 +241,13 @@ Connection::onDoubleCRLF()
       DebugLog(<<"Sending response CRLF (aka pong).");
       requestWrite(new SendData(mWho,Symbols::CRLF,Data::Empty,Data::Empty));
    }
+}
+
+void
+Connection::onSingleCRLF()
+{
+   DebugLog(<<"Received response CRLF (aka pong).");
+   mTransport->keepAlivePong(mWho);
 }
 
 bool 

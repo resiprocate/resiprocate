@@ -8,12 +8,14 @@
 using namespace resip;
 
 TransactionUser::TransactionUser(TransactionTermination t,
-                                 ConnectionTermination c)
-   : mFifo(0, 0),
-     mRuleList(),
-     mDomainList(),
-     mRegisteredForTransactionTermination(t == RegisterForTransactionTermination),
-     mRegisteredForConnectionTermination(c == RegisterForConnectionTermination)
+                                 ConnectionTermination c,
+                                 KeepAlivePongs k) : 
+   mFifo(0, 0),
+   mRuleList(),
+   mDomainList(),
+   mRegisteredForTransactionTermination(t == RegisterForTransactionTermination),
+   mRegisteredForConnectionTermination(c == RegisterForConnectionTermination),
+   mRegisteredForKeepAlivePongs(k == RegisterForKeepAlivePongs)
 {
   // This creates a default message filter rule, which
   // handles all sip:, sips:, and tel: requests.
@@ -22,12 +24,14 @@ TransactionUser::TransactionUser(TransactionTermination t,
 
 TransactionUser::TransactionUser(MessageFilterRuleList &mfrl, 
                                  TransactionTermination t,
-                                 ConnectionTermination c)
-  : mFifo(0, 0), 
-    mRuleList(mfrl),
-    mDomainList(),
-    mRegisteredForTransactionTermination(t == RegisterForTransactionTermination),
-    mRegisteredForConnectionTermination(c == RegisterForConnectionTermination)    
+                                 ConnectionTermination c,
+                                 KeepAlivePongs k) : 
+   mFifo(0, 0), 
+   mRuleList(mfrl),
+   mDomainList(),
+   mRegisteredForTransactionTermination(t == RegisterForTransactionTermination),
+   mRegisteredForConnectionTermination(c == RegisterForConnectionTermination),
+   mRegisteredForKeepAlivePongs(k == RegisterForKeepAlivePongs)
 {
 }
 
@@ -120,6 +124,12 @@ bool
 TransactionUser::isRegisteredForConnectionTermination() const
 {
    return mRegisteredForConnectionTermination;
+}
+
+bool
+TransactionUser::isRegisteredForKeepAlivePongs() const
+{
+   return mRegisteredForKeepAlivePongs;
 }
 
 EncodeStream& 

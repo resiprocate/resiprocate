@@ -91,6 +91,7 @@ class Transport
       virtual void setPollGrp(FdPollGrp *grp) = 0;
 
       void flowTerminated(const Tuple& flow);
+      void keepAlivePong(const Tuple& flow);
 
       // called when transport failed
       void fail(const Data& tid,

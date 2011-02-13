@@ -4,7 +4,9 @@
 
 #include "resip/stack/AbandonServerTransaction.hxx"
 #include "resip/stack/CancelClientInviteTransaction.hxx"
+#include "resip/stack/TerminateFlow.hxx"
 #include "resip/stack/ConnectionTerminated.hxx"
+#include "resip/stack/KeepAlivePong.hxx"
 #include "resip/stack/DnsInterface.hxx"
 #include "resip/stack/DnsResult.hxx"
 #include "resip/stack/Helper.hxx"
@@ -396,6 +398,22 @@ TransactionState::process(TransactionController& controller)
       {
          controller.mTuSelector.add(term);
          delete term;
+         return;
+      }
+
+      KeepAlivePong* pong = dynamic_cast<KeepAlivePong*>(message);
+      if (pong)
+      {
+         controller.mTuSelector.add(pong);
+         delete pong;
+         return;
+      }
+
+      TerminateFlow* termFlow = dynamic_cast<TerminateFlow*>(message);
+      if(termFlow)
+      {
+         controller.mTransportSelector.terminateFlow(termFlow->getFlow());
+         delete termFlow;
          return;
       }
    }

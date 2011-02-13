@@ -82,6 +82,7 @@ class Connection : public ConnectionBase, public ConnectionLruList, public Conne
       /// pure virtual, but need concrete Connection for book-ends of lists
       virtual int write(const char* /* buffer */, const int /* count */) { return 0; }
       virtual void onDoubleCRLF();
+      virtual void onSingleCRLF();
 
       /* callback method of FdPollItemIf */
       virtual void processPollEvent(FdPollEventMask mask);

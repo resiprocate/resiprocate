@@ -114,6 +114,8 @@ class Dialog
       bool matches(const SipMessage& msg);      
       void handleTargetRefresh(const SipMessage& msg);
 
+      void flowTerminated();
+
       DialogUsageManager& mDum;
       DialogSet& mDialogSet;
       DialogId mId;  
