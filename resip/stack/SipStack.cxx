@@ -772,6 +772,13 @@ SipStack::isFlowAlive(const resip::Tuple& flow) const
          mTransactionController.transportSelector().connectionAlive(flow);
 }
 
+void 
+SipStack::terminateFlow(const resip::Tuple& flow)
+{
+   mTransactionController.terminateFlow(flow);
+   checkAsyncProcessHandler();
+}
+
 bool SipStack::mDefaultUseInternalPoll = false;
 
 void

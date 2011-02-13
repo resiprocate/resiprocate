@@ -40,7 +40,7 @@ NonDialogUsage::getAppDialogSet()
 SharedPtr<UserProfile> 
 NonDialogUsage::getUserProfile() 
 {
-   return mDialogSet.getUserProfile();
+   return mDialogSet.mUserProfile;
 }
 
 void 

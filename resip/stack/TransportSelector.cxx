@@ -1117,6 +1117,16 @@ TransportSelector::connectionAlive(const Tuple& target) const
    return (findConnection(target)!=0);
 }
 
+void 
+TransportSelector::terminateFlow(const resip::Tuple& flow)
+{
+   const Connection* connection = findConnection(flow);
+   if(connection)
+   {
+      delete connection;
+   }
+}
+
 const Connection*
 TransportSelector::findConnection(const Tuple& target) const
 {

@@ -69,7 +69,7 @@ class DialogSet
          ReceivedProvisional,
          Established,
          Terminating,
-		 Cancelling,  // only used when cancelling and no dialogs exist
+         Cancelling,  // only used when cancelling and no dialogs exist
          Destroying
       } State;
 
@@ -101,6 +101,8 @@ class DialogSet
       ServerPagerMessage* makeServerPagerMessage(const SipMessage& request);      
 
       void dispatchToAllDialogs(const SipMessage& msg);      
+
+      void flowTerminated(const Tuple& flow);
 
       MergedRequestKey mMergeKey;
       Data mCancelKey;

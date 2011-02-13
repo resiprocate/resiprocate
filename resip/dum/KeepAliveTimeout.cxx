@@ -36,7 +36,39 @@ KeepAliveTimeout::encodeBrief(EncodeStream& strm) const
 EncodeStream& 
 KeepAliveTimeout::encode(EncodeStream& strm) const
 {
-   return strm << mTarget << "(" << mId << ")";
+   return strm << "KeepAliveTimeout" << mTarget << "(" << mId << ")";
+}
+
+KeepAlivePongTimeout::KeepAlivePongTimeout(const Tuple& target,int id)
+   : mTarget(target),
+     mId(id)
+{}
+
+KeepAlivePongTimeout::KeepAlivePongTimeout(const KeepAlivePongTimeout& timeout)
+   : mTarget(timeout.mTarget),
+     mId(timeout.mId)
+{
+}
+
+KeepAlivePongTimeout::~KeepAlivePongTimeout()
+{}
+
+Message*
+KeepAlivePongTimeout::clone() const
+{
+   return new KeepAlivePongTimeout(*this);
+}
+
+EncodeStream&
+KeepAlivePongTimeout::encodeBrief(EncodeStream& strm) const
+{
+   return encode(strm);
+}
+
+EncodeStream& 
+KeepAlivePongTimeout::encode(EncodeStream& strm) const
+{
+   return strm << "KeepAlivePongTimeout" << mTarget << "(" << mId << ")";
 }
 
 /* ====================================================================

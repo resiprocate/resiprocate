@@ -5,6 +5,7 @@
 #include <set>
 #include "resip/stack/Headers.hxx"
 #include "resip/stack/MethodTypes.hxx"
+#include "resip/stack/Tuple.hxx"
 #include "resip/dum/Profile.hxx"
 
 namespace resip
@@ -22,32 +23,18 @@ class UserProfile : public Profile
       virtual void setDefaultFrom(const NameAddr& from);
       virtual NameAddr& getDefaultFrom();
 
-      virtual void setServiceRoute( const NameAddrs& sRoute);
+      virtual void setServiceRoute(const NameAddrs& sRoute);
       virtual NameAddrs& getServiceRoute();
       
-      virtual void setImsAuthUser( const Data& userName, const Data& host )
-      {
-         mImsAuthUserName = userName;
-		 mImsAuthHost = host;
-      }
-      
-      virtual Data& getImsAuthUserName()
-      {
-         return mImsAuthUserName;
-      }
-      
-      virtual Data& getImsAuthHost()
-      {
-         return mImsAuthHost;
-      }
+      virtual void setImsAuthUser(const Data& userName, const Data& host) { mImsAuthUserName = userName; mImsAuthHost = host; }      
+      virtual Data& getImsAuthUserName() { return mImsAuthUserName; }      
+      virtual Data& getImsAuthHost() { return mImsAuthHost; }
 
       // Returns a UserProfile that will return a UserProfile that can be used
       // to send requests according to RFC 3323 and RFC 3325
-      virtual SharedPtr<UserProfile> getAnonymousUserProfile() const;
-      
+      virtual SharedPtr<UserProfile> getAnonymousUserProfile() const;      
       bool isAnonymous() const;
       
-
       // !cj! - this GRUU stuff looks very suspect
       // !dcm! -- yep, I don't think you can adda gruu..and disabling is weird.
       //Anon should be on a per-call level...all of these will prob. go away.
@@ -71,10 +58,6 @@ class UserProfile : public Profile
       virtual bool hasTempGruu() const { return !mTempGruu.host().empty(); }
       virtual const Uri& getTempGruu() { return mTempGruu; }
       virtual void setTempGruu(const Uri& gruu) { mTempGruu = gruu; }
-
-      virtual bool hasInstanceId();
-      virtual void setInstanceId(const Data& id);
-      virtual const Data& getInstanceId() const;
       
       struct DigestCredential
       {
@@ -86,7 +69,6 @@ class UserProfile : public Profile
                              
             Data realm;
             Data user;
-//            Data passwordHashA1;
             Data password;            
 
             bool operator<(const DigestCredential& rhs) const;
@@ -98,8 +80,31 @@ class UserProfile : public Profile
                                         const Data& user, 
                                         const Data& password);
       virtual const DigestCredential& getDigestCredential( const Data& realm  );
+
+      // Enable this to enable RFC5626 suuport in DUM - ie. add regId to registrations, and 
+      // ;ob parameter to Path, Route, and Contact headers - !slg! TODO add more detail here
+      // Warning:  You MUST set an instanceId, a regId and an outbound proxy if you enable 
+      // clientOutbound support
+      virtual bool& clientOutboundEnabled() { return mClientOutboundEnabled; }
+      virtual bool clientOutboundEnabled() const { return mClientOutboundEnabled; }
+
+      // Outbound (RFC5626) instanceId used in contact headers
+      virtual bool hasInstanceId();
+      virtual void setInstanceId(const Data& id);
+      virtual const Data& getInstanceId() const;
+
+      // Outbound (RFC5626) regId used in registrations
+      virtual void setRegId(int regId) { mRegId = regId; }
+      virtual int getRegId() { return mRegId; }
+
+      // Returns the current Flow Tuple that is being used for communication on usages
+      // that use this profile
+      const Tuple& getClientOutboundFlowTuple() const { return mClientOutboundFlowTuple; }
+      void clearClientOutboundFlowTuple() { mClientOutboundFlowTuple = Tuple(); }
+
    protected:
       virtual UserProfile* clone() const;
+
    private:
       NameAddr mDefaultFrom;
       Data mInstanceId;
@@ -110,6 +115,13 @@ class UserProfile : public Profile
       Uri mPubGruu;
       Uri mTempGruu;
       const NameAddr mAnonymous;
+
+      int mRegId;
+      bool mClientOutboundEnabled;
+      friend class DialogUsageManager;  // Give DialogUsageManager, ClientRegistration, and Dialog access to mClientOutboundFlowKey
+      friend class ClientRegistration;
+      friend class Dialog;
+      Tuple mClientOutboundFlowTuple;
       
       typedef std::set<DigestCredential> DigestCredentials;
       DigestCredentials mDigestCredentials;

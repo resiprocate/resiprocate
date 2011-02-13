@@ -290,15 +290,6 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       //if the handle is inValid, int represents the errorcode
       std::pair<InviteSessionHandle, int> findInviteSession(CallId replaces);
 
-      std::vector<ClientSubscriptionHandle> findClientSubscriptions(DialogId id);
-      std::vector<ClientSubscriptionHandle> findClientSubscriptions(DialogSetId id);
-      std::vector<ClientSubscriptionHandle> findClientSubscriptions(DialogSetId id, const Data& eventType, const Data& subId);
-      ServerSubscriptionHandle findServerSubscription(DialogId id);
-      ClientPublicationHandle findClientPublication(DialogId id);
-      ServerPublicationHandle findServerPublication(DialogId id);
-      std::vector<ClientOutOfDialogReqHandle> findClientOutOfDialog(DialogId id);
-      ServerOutOfDialogReqHandle findServerOutOfDialog(DialogId id);
-
       ClientPublicationHandler* getClientPublicationHandler(const Data& eventType);
       ServerPublicationHandler* getServerPublicationHandler(const Data& eventType);
 
@@ -510,7 +501,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 
       RegistrationPersistenceManager *mRegistrationPersistenceManager;
 
-	  OutOfDialogHandler* getOutOfDialogHandler(const MethodTypes type);
+      OutOfDialogHandler* getOutOfDialogHandler(const MethodTypes type);
 
       std::map<Data, ClientSubscriptionHandler*> mClientSubscriptionHandlers;
       std::map<Data, ServerSubscriptionHandler*> mServerSubscriptionHandlers;

@@ -262,11 +262,9 @@ class SipStack
                   TransactionUser* tu=0);
 
       /**
-          This is only if you want to force send to only send over an existing
-          connection.  If there is no connection, then it will try the next tuple.
-          If there are no more Tuples to try, then a 503 is sent to the TU.  Makes
-          a copy of the SipMessage.  Caller is responsible for deleting the memory
-          and may  do so as soon as it returns.
+          This is only if you want to force the stack to only send over an existing
+          connection.  If there is no connection, then a 430 is sent to the TU.  Makes
+          a copy of the SipMessage.
 
           @param msg   SipMessage to send.
 
@@ -556,7 +554,8 @@ class SipStack
 
       Compression &getCompression() { return *mCompression; }
 
-      bool isFlowAlive(const resip::Tuple& flow) const;
+      bool isFlowAlive(const resip::Tuple& flow) const;  // Must be called from StackThread
+      void terminateFlow(const resip::Tuple& flow);
 
       /* Indicate if should use "InternalPoll" system; see mUseInternalPoll.
        * This sets a global default and must be called prior to creating
