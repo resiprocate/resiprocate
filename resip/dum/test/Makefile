@@ -8,7 +8,7 @@ PACKAGES += DUM RESIP RUTIL OPENSSL ARES PTHREAD POPT RADIUSCLIENTNG
 TARGET_LIBRARY = 
 
 #testDumTimer.cxx
-TESTPROGRAMS += basicRegister.cxx BasicCall.cxx basicMessage.cxx
+TESTPROGRAMS += basicRegister.cxx BasicCall.cxx basicMessage.cxx basicClient.cxx
 
 TESTPROGRAMS += treg.cxx
 
@@ -17,9 +17,8 @@ TESTPROGRAMS += testSMIMEMessage.cxx testSMIMEInvite.cxx
 TESTPROGRAMS += limpc.cxx
 endif
 
-SRC = CommandLineParser.cxx UserAgent.cxx
-
-SRC += RegEventClient.cxx
+SRC = CommandLineParser.cxx UserAgent.cxx RegEventClient.cxx 
+SRC += basicClientCall.cxx basicClientCmdLineParser.cxx basicClientUserAgent.cxx
 
 ifeq ($(USE_CURL),yes)
 TESTPROGRAMS += testIdentity.cxx
