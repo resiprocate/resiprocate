@@ -277,6 +277,7 @@ class InviteSession : public DialogUsage
       virtual ~InviteSession();
       virtual void dialogDestroyed(const SipMessage& msg);
       virtual void onReadyToSend(SipMessage& msg);
+      virtual void flowTerminated();
 
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);

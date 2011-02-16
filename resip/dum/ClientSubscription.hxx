@@ -42,6 +42,7 @@ class ClientSubscription: public BaseSubscription
       virtual void dialogDestroyed(const SipMessage& msg);
       virtual void onReadyToSend(SipMessage& msg);
       virtual void send(SharedPtr<SipMessage> msg);
+      virtual void flowTerminated();
 
    private:
       friend class Dialog;

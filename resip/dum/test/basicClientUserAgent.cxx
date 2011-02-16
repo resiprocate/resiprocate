@@ -3,6 +3,7 @@
 #include <rutil/DnsUtil.hxx>
 #include <resip/stack/SdpContents.hxx>
 #include <resip/stack/ConnectionTerminated.hxx>
+#include <resip/stack/Helper.hxx>
 #include <resip/dum/AppDialogSetFactory.hxx>
 #include <resip/dum/ClientAuthManager.hxx>
 #include <resip/dum/KeepAliveManager.hxx>
@@ -29,6 +30,10 @@ using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
+
+static unsigned int MaxRegistrationRetryTime = 1800;              // RFC5626 section 4.5 default
+static unsigned int BaseRegistrationRetryTimeAllFlowsFailed = 30; // RFC5626 section 4.5 default
+static unsigned int BaseRegistrationRetryTime = 90;               // RFC5626 section 4.5 default
 
 class ClientAppDialogSetFactory : public AppDialogSetFactory
 {
@@ -85,7 +90,8 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
    mDum(new DialogUsageManager(mStack)),
    mStackThread(mStack, mSelectInterruptor),
    mDumShutdownRequested(false),
-   mDumShutdown(false)
+   mDumShutdown(false),
+   mRegistrationRetryDelayTime(0)
 {
    Log::initialize(mLogType, mLogLevel, argv[0]);
 
@@ -357,6 +363,7 @@ BasicClientUserAgent::onSuccess(ClientRegistrationHandle h, const SipMessage& ms
 {
    InfoLog(<< "onSuccess(ClientRegistrationHandle): msg=" << msg.brief());
    mRegHandle = h;
+   mRegistrationRetryDelayTime = 0;  // reset
 }
 
 void
@@ -376,9 +383,21 @@ BasicClientUserAgent::onRemoved(ClientRegistrationHandle h, const SipMessage&msg
 int 
 BasicClientUserAgent::onRequestRetry(ClientRegistrationHandle h, int retryMinimum, const SipMessage& msg)
 {
-   InfoLog(<< "onRequestRetry(ClientRegistrationHandle): msg=" << msg.brief());
    mRegHandle = h;
-   return -1;  // Let Profile retry setting take effect
+
+   if(mRegistrationRetryDelayTime == 0)
+   {
+      mRegistrationRetryDelayTime = BaseRegistrationRetryTimeAllFlowsFailed; // We only have one flow in this test app
+   }
+
+   // Use back off procedures of RFC 5626 section 4.5
+   mRegistrationRetryDelayTime = resipMin(MaxRegistrationRetryTime, mRegistrationRetryDelayTime * 2);
+
+   // return an evenly distributed random number between 50% and 100% of mRegistrationRetryDelayTime
+   int retryTime = Helper::jitterValue(mRegistrationRetryDelayTime, 50, 100);
+   InfoLog(<< "onRequestRetry(ClientRegistrationHandle): msg=" << msg.brief() << ", retryTime=" << retryTime);
+
+   return retryTime;
 }
 
 
