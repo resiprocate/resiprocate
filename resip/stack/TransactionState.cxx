@@ -1843,22 +1843,27 @@ TransactionState::processNoDnsResults()
       return;
    }
 
+   WarningCategory warning;
+   SipMessage* response = Helper::makeResponse(*mMsgToRetransmit, 503);
+   warning.hostname() = DnsUtil::getLocalHostName();
+   warning.code() = 399;
+   warning.text().reserve(100);
+
    if(mDnsResult)
    {
       InfoLog (<< "Ran out of dns entries for " << mDnsResult->target() << ". Send 503");
       assert(mDnsResult->available() == DnsResult::Finished);
-   }
-
-   SipMessage* response = Helper::makeResponse(*mMsgToRetransmit, 503);
-   WarningCategory warning;
-   warning.hostname() = DnsUtil::getLocalHostName();
-   warning.code() = 399;
-   {  // .kw. sub-block needed to flush stream
-      warning.text().reserve(100);
       oDataStream warnText(warning.text());
       warnText << "No other DNS entries to try ("
-         <<mFailureReason<<","<<mFailureSubCode<<")";
+               << mFailureReason << "," << mFailureSubCode << ")";
    }
+   else
+   {
+      oDataStream warnText(warning.text());
+      warnText << "Transport failure ("
+               << mFailureReason << "," << mFailureSubCode << ")";
+   }
+
    switch(mFailureReason)
    {
       case TransportFailure::None:
@@ -1910,102 +1915,107 @@ TransactionState::processTransportFailure(TransactionMessage* msg)
    TransportFailure* failure = dynamic_cast<TransportFailure*>(msg);
    assert(failure);
    assert(mState!=Bogus);
+   assert(mMsgToRetransmit);
 
-   // .bwc. We should only try multiple dns results if we are originating a
-   // request. Additionally, there are (potential) cases where it would not
-   // be appropriate to fail over even then.
-   bool shouldFailover=false;
-   if(mMachine==ClientNonInvite)
+   // Store failure reasons
+   if (failure->getFailureReason() > mFailureReason)
    {
-      if(mState==Completed || mState==Terminated)
-      {
-         WarningLog(<<"Got a TransportFailure message in a " << mState <<
-         " ClientNonInvite transaction. How did this happen? Since we have"
-         " already completed the transaction, we shouldn't try"
-         " additional DNS results.");
-      }
-      else
-      {
-         shouldFailover=true;
-      }
-   }
-   else if(mMachine==ClientInvite)
-   {
-      if(mState==Completed || mState==Terminated)
-      {
-         // .bwc. Perhaps the attempted transmission of the ACK failed here.
-         // (assuming this transaction got a failure response; not sure what
-         // might have happened if this is not the case)
-         // In any case, we should not try sending the INVITE anywhere else.
-         InfoLog(<<"Got a TransportFailure message in a " << mState <<
-         " ClientInvite transaction. Since we have"
-         " already completed the transaction, we shouldn't try"
-         " additional DNS results.");
-      }
-      else
-      {
-         if(mState==Proceeding)
-         {
-            // .bwc. We need to revert our state back to Calling, since we are
-            // going to be sending the INVITE to a new endpoint entirely.
-
-            // !bwc!
-            // An interesting consequence occurs if our failover ultimately
-            // sends to the same instance of a resip stack; we increment the 
-            // transport sequence in our branch parameter, but any resip-based
-            // stack will ignore this change, and process this "new" request as
-            // a retransmission! Furthermore, our state will be out of phase
-            // with the state at the remote endpoint, and if we have sent a
-            // PRACK, it will know (and stuff will break)!
-            // TODO What else needs to be done here to safely revert our state?
-            mState=Calling;
-         }
-         shouldFailover=true;
-      }
+      mFailureReason = failure->getFailureReason();
+      mFailureSubCode = failure->getFailureSubCode();
    }
 
-   if(mDnsResult)
+   if (mMsgToRetransmit->isRequest() && mMsgToRetransmit->method() == CANCEL &&
+       mState != Completed && mState != Terminated)
+   {
+      WarningLog (<< "Failed to deliver a CANCEL request");
+      StackLog (<< *this);
+      assert(mMethod==CANCEL);
+
+      // In the case of a client-initiated CANCEL, we don't want to
+      // try other transports in the case of transport error as the
+      // CANCEL MUST be sent to the same IP/PORT as the orig. INVITE.
+      //?dcm? insepct failure enum?
+      SipMessage* response = Helper::makeResponse(*mMsgToRetransmit, 503);
+      WarningCategory warning;
+      warning.hostname() = DnsUtil::getLocalHostName();
+      warning.code() = 399;
+      warning.text() = "Failed to deliver CANCEL using the same transport as the INVITE was used";
+      response->header(h_Warnings).push_back(warning);
+         
+      sendToTU(response);
+      return;
+   }
+
+   if(!mDnsResult)
+   {
+      InfoLog(<< "Transport failure on send that did not use DNS.");
+      processNoDnsResults();
+   }
+   // else If we did DNS resolution, then check if we should try to failover to another DNS entry
+   else if(mDnsResult)
    {
       // .bwc. Greylist for 32s
       // !bwc! TODO make this duration configurable.
       mDnsResult->greylistLast(Timer::getTimeMs()+32000);
-   }
-   
-   
-   if(shouldFailover)
-   {
-      InfoLog (<< "Try sending request to a different dns result");
-      assert(mMsgToRetransmit);
-      if (failure->getFailureReason() > mFailureReason)
-      {
-         mFailureReason = failure->getFailureReason();
-         mFailureSubCode = failure->getFailureSubCode();
-      }
-      
-      if (mMsgToRetransmit->isRequest() && mMsgToRetransmit->method() == CANCEL)
-      {
-         WarningLog (<< "Failed to deliver a CANCEL request");
-         StackLog (<< *this);
-         assert(mMethod==CANCEL);
 
-         // In the case of a client-initiated CANCEL, we don't want to
-         // try other transports in the case of transport error as the
-         // CANCEL MUST be sent to the same IP/PORT as the orig. INVITE.
-         //?dcm? insepct failure enum?
-         SipMessage* response = Helper::makeResponse(*mMsgToRetransmit, 503);
-         WarningCategory warning;
-         warning.hostname() = DnsUtil::getLocalHostName();
-         warning.code() = 399;
-         warning.text() = "Failed to deliver CANCEL using the same transport as the INVITE was used";
-         response->header(h_Warnings).push_back(warning);
-         
-         sendToTU(response);
-         return;
-      }
-
-      assert(mMethod!=CANCEL);
-      if (mDnsResult)
+      // .bwc. We should only try multiple dns results if we are originating a
+      // request. Additionally, there are (potential) cases where it would not
+      // be appropriate to fail over even then.
+      bool shouldFailover=false;
+      if(mMachine==ClientNonInvite)
       {
+         if(mState==Completed || mState==Terminated)
+         {
+            WarningLog(<<"Got a TransportFailure message in a " << mState <<
+                         " ClientNonInvite transaction. How did this happen? Since we have"
+                         " already completed the transaction, we shouldn't try"
+                         " additional DNS results.");
+         }
+         else
+         {
+            shouldFailover=true;
+         }
+      }
+      else if(mMachine==ClientInvite)
+      {
+         if(mState==Completed || mState==Terminated)
+         {
+            // .bwc. Perhaps the attempted transmission of the ACK failed here.
+            // (assuming this transaction got a failure response; not sure what
+            // might have happened if this is not the case)
+            // In any case, we should not try sending the INVITE anywhere else.
+            InfoLog(<<"Got a TransportFailure message in a " << mState <<
+                      " ClientInvite transaction. Since we have"
+                      " already completed the transaction, we shouldn't try"
+                      " additional DNS results.");
+         }
+         else
+         {
+            if(mState==Proceeding)
+            {
+               // .bwc. We need to revert our state back to Calling, since we are
+               // going to be sending the INVITE to a new endpoint entirely.
+
+               // !bwc!
+               // An interesting consequence occurs if our failover ultimately
+               // sends to the same instance of a resip stack; we increment the 
+               // transport sequence in our branch parameter, but any resip-based
+               // stack will ignore this change, and process this "new" request as
+               // a retransmission! Furthermore, our state will be out of phase
+               // with the state at the remote endpoint, and if we have sent a
+               // PRACK, it will know (and stuff will break)!
+               // TODO What else needs to be done here to safely revert our state?
+               mState=Calling;
+            }
+            shouldFailover=true;
+         }
+      }
+   
+      if(shouldFailover)
+      {
+         InfoLog (<< "Try sending request to a different dns result");
+         assert(mMethod!=CANCEL);
+
          switch (mDnsResult->available())
          {
             case DnsResult::Available:
@@ -2035,16 +2045,10 @@ TransactionState::processTransportFailure(TransactionMessage* msg)
       }
       else
       {
-         InfoLog(<< "Transport failure on send that did not use DNS.");
+         InfoLog(<< "Transport failure on send, and failover is disabled.");
          processNoDnsResults();
       }
    }
-   else
-   {
-      InfoLog(<< "Transport failure on send, and failover is disabled.");
-      processNoDnsResults();
-   }
-   
 }
 
 // called by DnsResult
