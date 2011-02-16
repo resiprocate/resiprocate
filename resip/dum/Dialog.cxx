@@ -1186,15 +1186,17 @@ Dialog::flowTerminated()
    mNetworkAssociation.clear();
    
    // notify server subscirption dialogs
-   for (std::list<ServerSubscription*>::iterator is=mServerSubscriptions.begin();
-        is != mServerSubscriptions.end(); ++is)
+   std::list<ServerSubscription*> tempServerList = mServerSubscriptions;  // Create copy since subscription can be deleted
+   for (std::list<ServerSubscription*>::iterator is=tempServerList.begin();
+        is != tempServerList.end(); ++is)
    {
       (*is)->flowTerminated();
    }
 
    // notify client subscription dialogs
-   for (std::list<ClientSubscription*>::iterator ic=mClientSubscriptions.begin();
-        ic != mClientSubscriptions.end(); ++ic)
+   std::list<ClientSubscription*> tempClientList = mClientSubscriptions;  // Create copy since subscription can be deleted
+   for (std::list<ClientSubscription*>::iterator ic=tempClientList.begin();
+        ic != tempClientList.end(); ++ic)
    {
       (*ic)->flowTerminated();
    }

@@ -1336,10 +1336,23 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       if (terminated)
       {
          // Notify all dialogSets, in case they need to react (ie. client outbound support)
+         // First find all applicable dialogsets, since flow token in user profile will 
+         // be cleared by first dialogset we notify, then notify all dialogset's
+         std::list<DialogSet*> dialogSetsToNotify;
          DialogSetMap::iterator it =  mDialogSetMap.begin();
          for(; it != mDialogSetMap.end(); it++)
          {
-            it->second->flowTerminated(terminated->getFlow());
+            if(it->second->mUserProfile->clientOutboundEnabled() && 
+               it->second->mUserProfile->getClientOutboundFlowTuple().mFlowKey == terminated->getFlow().mFlowKey)
+            {
+               dialogSetsToNotify.push_back(it->second);
+            }
+         }
+         // Now dispatch notification to all dialogsets found above
+         std::list<DialogSet*>::iterator it2 = dialogSetsToNotify.begin();
+         for(; it2 != dialogSetsToNotify.end();it2++)
+         {
+            (*it2)->flowTerminated(terminated->getFlow());
          }
 
          DebugLog(<< "connection terminated message");
@@ -1659,9 +1672,9 @@ DialogUsageManager::validateRequiredOptions(const SipMessage& request)
        request.header(h_RequestLine).getMethod() != CANCEL))
    {
       Tokens unsupported = getMasterProfile()->getUnsupportedOptionsTags(request.header(h_Requires));
-	  if (!unsupported.empty())
-	  {
-	     InfoLog (<< "Received an unsupported option tag(s): " << request.brief());
+      if (!unsupported.empty())
+      {
+         InfoLog (<< "Received an unsupported option tag(s): " << request.brief());
 
          SipMessage failure;
          makeResponse(failure, request, 420);
@@ -1669,7 +1682,7 @@ DialogUsageManager::validateRequiredOptions(const SipMessage& request)
          sendResponse(failure);
 
          return false;
-	  }
+      }
    }
 
    return true;

@@ -1133,25 +1133,21 @@ DialogSet::setUserProfile(SharedPtr<UserProfile> userProfile)
 void 
 DialogSet::flowTerminated(const Tuple& flow)
 {
-   if(mUserProfile->clientOutboundEnabled() && 
-      mUserProfile->getClientOutboundFlowTuple().mFlowKey == flow.mFlowKey)
+   // The flow has failed - clear the flow key/tuple in the UserProfile
+   mUserProfile->clearClientOutboundFlowTuple();
+
+   // If this profile is configured for client outbound and the connectionTerminated
+   // matches the connection stored in the profile, then notify the client registration
+   // and all dialogs in this dialogset that the flow has terminated
+   // Check other usage types that we send requests on
+   if(mClientRegistration)
    {
-      // The flow has failed - clear the flow key/tuple in the UserProfile
-      mUserProfile->clearClientOutboundFlowTuple();
+      mClientRegistration->flowTerminated();
+   }
 
-      // If this profile is configured for client outbound and the connectionTerminated
-      // matches the connection stored in the profile, then notify the client registration
-      // and all dialogs in this dialogset that the flow has terminated
-      // Check other usage types that we send requests on
-      if(mClientRegistration)
-      {
-         mClientRegistration->flowTerminated();
-      }
-
-      for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
-      {
-         it->second->flowTerminated();
-      }
+   for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
+   {
+      it->second->flowTerminated();
    }
 }
 

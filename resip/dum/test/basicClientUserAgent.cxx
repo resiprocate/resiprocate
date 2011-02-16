@@ -2,6 +2,7 @@
 #include <rutil/Logger.hxx>
 #include <rutil/DnsUtil.hxx>
 #include <resip/stack/SdpContents.hxx>
+#include <resip/stack/PlainContents.hxx>
 #include <resip/stack/ConnectionTerminated.hxx>
 #include <resip/stack/Helper.hxx>
 #include <resip/dum/AppDialogSetFactory.hxx>
@@ -34,7 +35,11 @@ using namespace std;
 static unsigned int MaxRegistrationRetryTime = 1800;              // RFC5626 section 4.5 default
 static unsigned int BaseRegistrationRetryTimeAllFlowsFailed = 30; // RFC5626 section 4.5 default
 static unsigned int BaseRegistrationRetryTime = 90;               // RFC5626 section 4.5 default
+static unsigned int NotifySendTime = 30;  // If someone subscribes to our test event package, then send notifies every 30 seconds
+static unsigned int FailedSubscriptionRetryTime = 60; 
 
+namespace resip
+{
 class ClientAppDialogSetFactory : public AppDialogSetFactory
 {
 public:
@@ -78,6 +83,25 @@ public:
    virtual MessageDecorator* clone() const { return new SdpMessageDecorator; }
 };
 
+class NotifyTimer : public resip::DumCommand
+{
+   public:
+      NotifyTimer(BasicClientUserAgent& userAgent, unsigned int timerId) : mUserAgent(userAgent), mTimerId(timerId) {}
+      NotifyTimer(const NotifyTimer& rhs) : mUserAgent(rhs.mUserAgent), mTimerId(rhs.mTimerId) {}
+      ~NotifyTimer() {}
+
+      void executeCommand() { mUserAgent.onNotifyTimeout(mTimerId); }
+
+      resip::Message* clone() const { return new NotifyTimer(*this); }
+      EncodeStream& encode(EncodeStream& strm) const { strm << "NotifyTimer: id=" << mTimerId; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+
+   private:
+      BasicClientUserAgent& mUserAgent;
+      unsigned int mTimerId;
+};
+} // end namespace
+
 BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) : 
    BasicClientCmdLineParser(argc, argv),
    mProfile(new MasterProfile),
@@ -91,7 +115,8 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
    mStackThread(mStack, mSelectInterruptor),
    mDumShutdownRequested(false),
    mDumShutdown(false),
-   mRegistrationRetryDelayTime(0)
+   mRegistrationRetryDelayTime(0),
+   mCurrentNotifyTimerId(0)
 {
    Log::initialize(mLogType, mLogLevel, argv[0]);
 
@@ -115,8 +140,8 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
    mProfile->addSupportedMethod(OPTIONS);
    mProfile->addSupportedMethod(BYE);
    //mProfile->addSupportedMethod(REFER);    
-   //mProfile->addSupportedMethod(NOTIFY);    
-   //mProfile->addSupportedMethod(SUBSCRIBE); 
+   mProfile->addSupportedMethod(NOTIFY);    
+   mProfile->addSupportedMethod(SUBSCRIBE); 
    //mProfile->addSupportedMethod(UPDATE);    
    mProfile->addSupportedMethod(INFO);    
    mProfile->addSupportedMethod(PRACK);     
@@ -146,6 +171,7 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
    mProfile->addSupportedMimeType(UPDATE, Mime("multipart", "mixed"));  
    mProfile->addSupportedMimeType(UPDATE, Mime("multipart", "signed"));  
    mProfile->addSupportedMimeType(UPDATE, Mime("multipart", "alternative"));  
+   mProfile->addSupportedMimeType(NOTIFY, Mime("text","plain"));  // subscription testing
    //mProfile->addSupportedMimeType(NOTIFY, Mime("message", "sipfrag"));  
 
    // Supported Options Tags
@@ -242,9 +268,9 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
    mDum->addOutOfDialogHandler(OPTIONS, this);
    //mDum->addOutOfDialogHandler(REFER, this);
    mDum->setRedirectHandler(this);
-   mDum->setClientRegistrationHandler(this);
-   //mDum->addClientSubscriptionHandler("refer", this);
-   //mDum->addServerSubscriptionHandler("refer", this);
+   mDum->setClientRegistrationHandler(this);   
+   mDum->addClientSubscriptionHandler("basicClientTest", this);   // fabricated test event package
+   mDum->addServerSubscriptionHandler("basicClientTest", this);
 
    // Set AppDialogSetFactory
    auto_ptr<AppDialogSetFactory> dsf(new ClientAppDialogSetFactory(*this));
@@ -295,6 +321,16 @@ BasicClientUserAgent::process(int timeoutMs)
             mRegHandle->end();
          }
 
+         // end any subscriptions
+         if(mServerSubscriptionHandle.isValid())
+         {
+            mServerSubscriptionHandle->end();
+         }
+         if(mClientSubscriptionHandle.isValid())
+         {
+            mClientSubscriptionHandle->end();
+         }
+
          // End all calls - !slg! TODO 
 
          mDum->shutdown(this);
@@ -342,11 +378,34 @@ BasicClientUserAgent::post(Message* msg)
    ConnectionTerminated* terminated = dynamic_cast<ConnectionTerminated*>(msg);
    if (terminated)
    {
-      InfoLog(<< "BasicClientUserAgent received connection terminated message for: " << terminated->getFlow());
+      InfoLog(<< "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% BasicClientUserAgent received connection terminated message for: " << terminated->getFlow());  // !slg! TODO - remove strange log markers
       delete msg;
       return;
    }
    assert(false);
+}
+
+void 
+BasicClientUserAgent::onNotifyTimeout(unsigned int timerId)
+{
+   if(timerId == mCurrentNotifyTimerId)
+   {
+      sendNotify();
+   }
+}
+
+void
+BasicClientUserAgent::sendNotify()
+{
+   if(mServerSubscriptionHandle.isValid())
+   {
+      PlainContents plain("test notify");
+      mServerSubscriptionHandle->send(mServerSubscriptionHandle->update(&plain));
+
+      // start timer for next one
+      auto_ptr<ApplicationMessage> timer(new NotifyTimer(*this, ++mCurrentNotifyTimerId));
+      mStack.post(timer, NotifySendTime, mDum);
+   }
 }
 
 void 
@@ -362,6 +421,15 @@ void
 BasicClientUserAgent::onSuccess(ClientRegistrationHandle h, const SipMessage& msg)
 {
    InfoLog(<< "onSuccess(ClientRegistrationHandle): msg=" << msg.brief());
+   if(mRegHandle.getId() == 0)  // Note: reg handle id will only be 0 on first successful registration
+   {
+      // Check if we should try to form a test subscription
+      if(!mSubscribeTarget.host().empty())
+      {
+         SharedPtr<SipMessage> sub = mDum->makeSubscription(NameAddr(mSubscribeTarget), mProfile, "basicClientTest");
+         mDum->send(sub);
+      }
+   }
    mRegHandle = h;
    mRegistrationRetryDelayTime = 0;  // reset
 }
@@ -617,6 +685,7 @@ BasicClientUserAgent::onUpdatePending(ClientSubscriptionHandle h, const SipMessa
       return;
    }
    InfoLog(<< "onUpdatePending(ClientSubscriptionHandle): " << msg.brief());
+   h->acceptUpdate();
 }
 
 void
@@ -629,6 +698,7 @@ BasicClientUserAgent::onUpdateActive(ClientSubscriptionHandle h, const SipMessag
       return;
    }
    InfoLog(<< "onUpdateActive(ClientSubscriptionHandle): " << msg.brief());
+   h->acceptUpdate();
 }
 
 void
@@ -641,6 +711,7 @@ BasicClientUserAgent::onUpdateExtension(ClientSubscriptionHandle h, const SipMes
       return;
    }
    InfoLog(<< "onUpdateExtension(ClientSubscriptionHandle): " << msg.brief());
+   h->acceptUpdate();
 }
 
 void 
@@ -684,6 +755,7 @@ BasicClientUserAgent::onNewSubscription(ClientSubscriptionHandle h, const SipMes
       call->onNewSubscription(h, msg);
       return;
    }
+   mClientSubscriptionHandle = h;
    InfoLog(<< "onNewSubscription(ClientSubscriptionHandle): msg=" << msg.brief());
 }
 
@@ -696,16 +768,22 @@ BasicClientUserAgent::onRequestRetry(ClientSubscriptionHandle h, int retrySecond
       return call->onRequestRetry(h, retrySeconds, msg);
    }
    InfoLog(<< "onRequestRetry(ClientSubscriptionHandle): msg=" << msg.brief());
-   return -1;
+   return FailedSubscriptionRetryTime;  
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // ServerSubscriptionHandler ///////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void 
-BasicClientUserAgent::onNewSubscription(ServerSubscriptionHandle, const SipMessage& msg)
+BasicClientUserAgent::onNewSubscription(ServerSubscriptionHandle h, const SipMessage& msg)
 {
    InfoLog(<< "onNewSubscription(ServerSubscriptionHandle): " << msg.brief());
+
+   mServerSubscriptionHandle = h;
+   mServerSubscriptionHandle->setSubscriptionState(Active);
+   mServerSubscriptionHandle->send(mServerSubscriptionHandle->accept());
+
+   sendNotify();
 }
 
 void 
