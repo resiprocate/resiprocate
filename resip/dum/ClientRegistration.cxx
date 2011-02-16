@@ -595,7 +595,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                }
                else
                {
-                  DebugLog(<< "Application requested delayed retry on 408: " << retry);
+                  DebugLog(<< "Application requested delayed retry on 408 or internal 503: " << retry);
                   mExpires = 0;
                   switch(mState)
                   {

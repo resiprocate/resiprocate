@@ -424,7 +424,10 @@ ServerSubscription::onReadyToSend(SipMessage& msg)
 void
 ServerSubscription::flowTerminated()
 {
-   // !slg! TODO - notify handler
+   // notify handler
+   ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
+   assert(handler);
+   handler->onFlowTerminated(getHandle());
 }
 
 EncodeStream& 

@@ -31,6 +31,13 @@ class ClientSubscriptionHandler
       /// called to allow app to adorn a message.
       virtual void onReadyToSend(ClientSubscriptionHandle, SipMessage& msg);
       virtual void onNotifyNotReceived(ClientSubscriptionHandle);
+
+      /// Called when a TCP or TLS flow to the server has terminated.  This can be caused by socket
+      /// errors, or missing CRLF keep alives pong responses from the server.
+      //  Called only if clientOutbound is enabled on the UserProfile and the first hop server 
+      /// supports RFC5626 (outbound).
+      /// Default implementation is to re-form the subscription using a new flow
+      virtual void onFlowTerminated(ClientSubscriptionHandle);
 };
 
 class ServerSubscriptionHandler
@@ -65,20 +72,27 @@ class ServerSubscriptionHandler
       virtual void onExpiredByClient(ServerSubscriptionHandle, const SipMessage& sub, SipMessage& notify);
       virtual void onExpired(ServerSubscriptionHandle, SipMessage& notify);
 
-	  /** Default behavior is to use the expires value in the SipMessage, if it exists. Then verify the expires >= Min and <= Max (if set).  If an expires value does
-	    * not exists, use getDefaultExpires().  If hasDefaultExpires() is false, then reject the message with a 400.
-		* Set errorReturnCode to an error code >= 400 to reject this subscription. 
-		*/	  
-	  virtual void getExpires(const SipMessage &msg, UInt32 &expires, int &errorResponseCode);//ivr mod
+      /// Called when a TCP or TLS flow to the server has terminated.  This can be caused by socket
+      /// errors, or missing CRLF keep alives pong responses from the server.
+      //  Called only if clientOutbound is enabled on the UserProfile and the first hop server 
+      /// supports RFC5626 (outbound).
+      /// Default implementation is to tear down the subscription
+      virtual void onFlowTerminated(ServerSubscriptionHandle);
+
+      /** Default behavior is to use the expires value in the SipMessage, if it exists. Then verify the expires >= Min and <= Max (if set).  If an expires value does
+       * not exists, use getDefaultExpires().  If hasDefaultExpires() is false, then reject the message with a 400.
+       * Set errorReturnCode to an error code >= 400 to reject this subscription. 
+       */  
+      virtual void getExpires(const SipMessage &msg, UInt32 &expires, int &errorResponseCode);//ivr mod
 
       virtual bool hasDefaultExpires() const;
       virtual UInt32 getDefaultExpires() const;
 
-	  virtual bool hasMinExpires() const;
-	  virtual UInt32 getMinExpires() const;
+      virtual bool hasMinExpires() const;
+      virtual UInt32 getMinExpires() const;
 
-	  virtual bool hasMaxExpires() const;
-	  virtual UInt32 getMaxExpires() const;
+      virtual bool hasMaxExpires() const;
+      virtual UInt32 getMaxExpires() const;
 
       const Mimes& getSupportedMimeTypes() const;
 };
