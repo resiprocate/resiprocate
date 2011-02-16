@@ -1,8 +1,19 @@
 #include "resip/dum/MasterProfile.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/dum/RegistrationHandler.hxx"
+#include "resip/dum/ClientRegistration.hxx"
+#include "rutil/Logger.hxx"
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
+
+void 
+ClientRegistrationHandler::onFlowTerminated(ClientRegistrationHandle h)
+{
+   InfoLog (<< "ClientRegistrationHandler::onFlowTerminated, refreshing registration to open new flow");  // !slg! TODO - make Debug log
+   h->requestRefresh();
+}
 
 void
 ServerRegistrationHandler::getGlobalExpires(const SipMessage& msg, SharedPtr<MasterProfile> masterProfile,

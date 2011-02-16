@@ -1185,7 +1185,25 @@ Dialog::flowTerminated()
    // Clear the network association
    mNetworkAssociation.clear();
    
-   // !slg! TODO - notify dialogs??
+   // notify server subscirption dialogs
+   for (std::list<ServerSubscription*>::iterator is=mServerSubscriptions.begin();
+        is != mServerSubscriptions.end(); ++is)
+   {
+      (*is)->flowTerminated();
+   }
+
+   // notify client subscription dialogs
+   for (std::list<ClientSubscription*>::iterator ic=mClientSubscriptions.begin();
+        ic != mClientSubscriptions.end(); ++ic)
+   {
+      (*ic)->flowTerminated();
+   }
+
+   // notify invite session dialog
+   if (mInviteSession)
+   {
+      mInviteSession->flowTerminated();
+   }
 }
 
 EncodeStream&

@@ -130,7 +130,8 @@ protected:
    InterruptableStackThread mStackThread;
    volatile bool mDumShutdownRequested;
    bool mDumShutdown;
-   ClientRegistrationHandle mRegHandle;  
+   ClientRegistrationHandle mRegHandle;
+   unsigned int mRegistrationRetryDelayTime;
 };
  
 }

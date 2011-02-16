@@ -25,7 +25,6 @@
 #include "rutil/Inserter.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
-
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;

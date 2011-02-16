@@ -268,14 +268,19 @@ ClientRegistration::requestRefresh(UInt32 expires)
 void
 ClientRegistration::internalRequestRefresh(UInt32 expires)
 {
-   if (mState == Refreshing || mState == RetryRefreshing)
+   if(mState == RetryAdding && mState == RetryRefreshing)
    {
+      // disable retry time and try refresh immediately
+      ++mTimerSeq;
+   }
+   else if (mState != Registered)
+   {
+      InfoLog (<< "a request is already in progress, no need to refresh " << *this);
       return;
    }
 
    InfoLog (<< "requesting refresh of " << *this);
    
-   assert (mState == Registered);
    mState = Refreshing;
    mLastRequest->header(h_CSeq).sequence()++;
    mLastRequest->header(h_Contacts)=mMyContacts;
@@ -571,7 +576,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                   return;
                }
             }
-            else if (code == 408)
+            else if (code == 408 || (code == 503 && msg.getReceivedTransport() == 0))
             {
                int retry = mDum.mClientRegistrationHandler->onRequestRetry(getHandle(), 0, msg);
             
@@ -581,7 +586,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                }
                else if (retry == 0)
                {
-                  DebugLog(<< "Application requested immediate retry on 408");
+                  DebugLog(<< "Application requested immediate retry on 408 or internal 503");
                
                   mLastRequest->header(h_CSeq).sequence()++;
                   send(mLastRequest);
@@ -914,16 +919,9 @@ ClientRegistration::flowTerminated()
    // Clear the network association
    mNetworkAssociation.clear();
 
-   // Refresh registration - !slg! TODO use RFC526 procedures for retry times
-   if(mState == Registered)
-   {
-      requestRefresh();
-      InfoLog (<< "ClientRegistration::flowTerminated, refreshing registration to open new flow" << mState);  // !slg! TODO - make Debug log
-   }
-   else
-   {
-      InfoLog (<< "ClientRegistration::flowTerminated, mState=" << mState);  // !slg! TODO - make Debug log
-   }
+   // Notify application - not default handler implementation is to immediately attempt
+   // a re-registration in order to form a new flow
+   mDum.mClientRegistrationHandler->onFlowTerminated(getHandle());
 }
 
 

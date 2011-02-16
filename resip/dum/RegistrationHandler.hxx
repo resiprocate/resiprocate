@@ -30,6 +30,13 @@ class ClientRegistrationHandler
       /// Called if registration fails, usage will be destroyed (unless a 
       /// Registration retry interval is enabled in the Profile)
       virtual void onFailure(ClientRegistrationHandle, const SipMessage& response)=0;
+
+      /// Called when a TCP or TLS flow to the server has terminated.  This can be caused by socket
+      /// errors, or missing CRLF keep alives pong responses from the server.
+      //  Called only if clientOutbound is enabled on the UserProfile and the first hop server 
+      /// supports RFC5626 (outbound).
+      /// Default implementation is to immediately re-Register in an attempt to form a new flow.
+      virtual void onFlowTerminated(ClientRegistrationHandle);
 };
 
 class ServerRegistrationHandler

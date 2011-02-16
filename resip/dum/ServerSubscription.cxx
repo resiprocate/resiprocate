@@ -413,11 +413,18 @@ ServerSubscription::dialogDestroyed(const SipMessage& msg)
    delete this;
 }
 
-void ServerSubscription::onReadyToSend(SipMessage& msg)
+void 
+ServerSubscription::onReadyToSend(SipMessage& msg)
 {
    ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
    assert(handler);
    handler->onReadyToSend(getHandle(), msg);
+}
+
+void
+ServerSubscription::flowTerminated()
+{
+   // !slg! TODO - notify handler
 }
 
 EncodeStream& 

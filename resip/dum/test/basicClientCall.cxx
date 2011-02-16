@@ -88,7 +88,7 @@ BasicClientCall::onFailure(ClientInviteSessionHandle h, const SipMessage& msg)
          case 503:
             if(msg.getReceivedTransport() == 0)
             {
-               // Try another flow? TODO
+               // Try another flow? !slg! TODO
             }
          default:
             break;

@@ -153,6 +153,7 @@ ClientPublication::dispatch(const SipMessage& msg)
             }
          }
          else if (code == 408 ||
+                  (code == 503 && msg.getReceivedTransport() == 0) ||
                   ((code == 404 ||
                     code == 413 ||
                     code == 480 ||
