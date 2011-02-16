@@ -3094,7 +3094,8 @@ InviteSession::onReadyToSend(SipMessage& msg)
 void
 InviteSession::flowTerminated()
 {
-   // !slg! TODO - notify handler
+   // notify handler
+   mDum.mInviteSessionHandler->onFlowTerminated(getSessionHandle());
 }
 
 void 

@@ -185,6 +185,13 @@ class InviteSessionHandler
       /// default behaviour is to send a BYE to send the dialog
       virtual void onSessionExpired(InviteSessionHandle);
 
+      /// Called when a TCP or TLS flow to the server has terminated.  This can be caused by socket
+      /// errors, or missing CRLF keep alives pong responses from the server.
+      //  Called only if clientOutbound is enabled on the UserProfile and the first hop server 
+      /// supports RFC5626 (outbound).
+      /// Default implementation is to do nothing
+      virtual void onFlowTerminated(InviteSessionHandle);
+
    private:
 	  bool mGenericOfferAnswer;
 };
