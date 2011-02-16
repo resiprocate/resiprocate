@@ -121,6 +121,9 @@ protected:
 
 protected:
    void addTransport(TransportType type, int port);
+   friend class NotifyTimer;
+   void onNotifyTimeout(unsigned int timerId);
+   void sendNotify();
 
    SharedPtr<MasterProfile> mProfile;
    Security* mSecurity;
@@ -131,7 +134,10 @@ protected:
    volatile bool mDumShutdownRequested;
    bool mDumShutdown;
    ClientRegistrationHandle mRegHandle;
+   ClientSubscriptionHandle mClientSubscriptionHandle;
+   ServerSubscriptionHandle mServerSubscriptionHandle;
    unsigned int mRegistrationRetryDelayTime;
+   unsigned int mCurrentNotifyTimerId;
 };
  
 }

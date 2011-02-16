@@ -37,6 +37,8 @@ BasicClientCmdLineParser::BasicClientCmdLineParser(int argc, char** argv)
 
    int outboundEnabled = false;
 
+   char* subscribeTarget = 0;
+
 #if defined(HAVE_POPT_H)
    struct poptOption table[] = {
       {"log-type",         'l', POPT_ARG_STRING, &logType,            0, "where to send logging messages", "syslog|cerr|cout"},
@@ -64,7 +66,9 @@ BasicClientCmdLineParser::BasicClientCmdLineParser(int argc, char** argv)
       {"outbound-proxy",   'o', POPT_ARG_STRING, &inputOutboundProxy, 0, "specify uri for outbound proxy (if none present, don't use)", "sip:outbound.example.com"},
       {"contact",          'c', POPT_ARG_STRING, &inputContact,       0, "override default contact", "sip:alice@contact.example.com"},      
       {"enable-outbound",  'b', POPT_ARG_NONE,   &outboundEnabled,    0, "enable RFC 5626 outbound support", 0},
-      
+
+      {"subtarget",        's', POPT_ARG_STRING, &subscribeTarget,    0, "specify a SIP URI to subscribe to", "sip:bob@example.com"},
+
       POPT_AUTOHELP
       { NULL, 0, 0, NULL, 0 }
    };
@@ -100,6 +104,11 @@ BasicClientCmdLineParser::BasicClientCmdLineParser(int argc, char** argv)
    mContact = toUri(inputContact, "contact");
 
    mOutboundEnabled = outboundEnabled != 0;
+
+   if(subscribeTarget)
+   {
+      mSubscribeTarget = toUri(subscribeTarget, "subscribe target");
+   }
 
    // Free the option parsing context.
 #if defined(HAVE_POPT_H)

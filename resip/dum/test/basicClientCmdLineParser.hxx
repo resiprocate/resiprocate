@@ -34,6 +34,8 @@ public:
    Uri mOutboundProxy;
    Uri mContact;
    bool mOutboundEnabled;
+
+   Uri mSubscribeTarget;
 };
  
 }

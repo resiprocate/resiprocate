@@ -35,11 +35,11 @@ class DumTimeout : public ApplicationMessage
       static const unsigned long StaleCallTimeout;
 
       DumTimeout(Type type, 
-					unsigned long duration, 
-					BaseUsageHandle target, 
-					unsigned int seq, 
-					unsigned int aseq = 0,
-					const Data &transactionId = Data::Empty);
+      unsigned long duration, 
+      BaseUsageHandle target, 
+      unsigned int seq, 
+      unsigned int aseq = 0,
+      const Data &transactionId = Data::Empty);
       DumTimeout(const DumTimeout&);      
       ~DumTimeout();
 
@@ -48,7 +48,7 @@ class DumTimeout : public ApplicationMessage
       Type type() const;
       unsigned int seq() const;
       unsigned int secondarySeq() const;
-	   const Data & transactionId() const;
+      const Data & transactionId() const;
 
       BaseUsageHandle getBaseUsage() const;
 
@@ -63,7 +63,7 @@ class DumTimeout : public ApplicationMessage
       BaseUsageHandle mUsageHandle;
       unsigned int mSeq;
       unsigned int mSecondarySeq;
-	   Data mTransactionId;
+      Data mTransactionId;
 };
 
 }
