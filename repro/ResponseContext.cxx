@@ -569,7 +569,8 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       // stuff.
       if ( !inDialog &&  // only for dialog-creating request
            (request.method() == INVITE ||
-            request.method() == SUBSCRIBE ) &&
+            request.method() == SUBSCRIBE ||
+            request.method() == REFER ) &&
            !mRequestContext.mProxy.getRecordRoute().uri().host().empty())  // only add record route if configured to do so
       {
          insertRecordRoute(request,
