@@ -166,6 +166,31 @@ BasicClientCall::onNewSession(ServerInviteSessionHandle h, InviteSession::OfferA
 {
    InfoLog(<< "onNewSession(ServerInviteSessionHandle):  msg=" << msg.brief());
    mInviteSessionHandle = h->getSessionHandle();
+
+   // First check if this INVITE is to replace an existing session
+   if(msg.exists(h_Replaces))
+   {
+      pair<InviteSessionHandle, int> presult;
+      presult = mDum.findInviteSession(msg.header(h_Replaces));
+      if(!(presult.first == InviteSessionHandle::NotValid())) 
+      {         
+         BasicClientCall* callToReplace = dynamic_cast<BasicClientCall *>(presult.first->getAppDialogSet().get());
+         InfoLog(<< "onNewSession(ServerInviteSessionHandle): replacing existing call");
+
+         // Copy over flag that indicates if we placed the call or not
+         mPlacedCall = callToReplace->mPlacedCall;
+
+         if(mPlacedCall)
+         {
+            // Restart Call Timer
+            auto_ptr<ApplicationMessage> timer(new CallTimer(mUserAgent, this));
+            mUserAgent.mStack.post(timer, CallTimerTime, &mUserAgent.getDialogUsageManager());
+         }
+
+         // Session to replace was found - end old session
+         callToReplace->end();
+      }
+   }
 }
 
 void
