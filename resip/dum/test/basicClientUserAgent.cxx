@@ -425,7 +425,8 @@ BasicClientUserAgent::onCallTimeout(BasicClientCall* call)
    }
    else  // call no longer exists
    {
-      if(!mCallTarget.host().empty())
+      // If there are no more calls, then start a new one
+      if(mCallList.empty() && !mCallTarget.host().empty())
       {
          // re-start a new call
          BasicClientCall* newCall = new BasicClientCall(*this);
