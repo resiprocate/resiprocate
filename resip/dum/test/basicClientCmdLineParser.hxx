@@ -36,6 +36,7 @@ public:
    bool mOutboundEnabled;
 
    Uri mSubscribeTarget;
+   Uri mCallTarget;
 };
  
 }

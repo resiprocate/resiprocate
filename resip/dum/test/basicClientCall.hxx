@@ -19,67 +19,75 @@ class BasicClientCall : public AppDialogSet
 public:
    BasicClientCall(BasicClientUserAgent& userAgent);
    virtual ~BasicClientCall();
-      
+   
+   virtual void initiateCall(const Uri& target, SharedPtr<UserProfile> profile);
+   virtual void terminateCall();
+   virtual void timerExpired();
+
 protected:
    friend class BasicClientUserAgent;
 
    // This API must return an appropriate user profile after inspecting the incoming INVITE
    virtual SharedPtr<UserProfile> selectUASUserProfile(const SipMessage&); 
 
-	// Invite Session Handler /////////////////////////////////////////////////////
-	virtual void onNewSession(resip::ClientInviteSessionHandle h, resip::InviteSession::OfferAnswerType oat, const resip::SipMessage& msg);
-	virtual void onNewSession(resip::ServerInviteSessionHandle h, resip::InviteSession::OfferAnswerType oat, const resip::SipMessage& msg);
-	virtual void onFailure(resip::ClientInviteSessionHandle h, const resip::SipMessage& msg);
-	virtual void onEarlyMedia(resip::ClientInviteSessionHandle, const resip::SipMessage&, const resip::SdpContents&);
-	virtual void onProvisional(resip::ClientInviteSessionHandle, const resip::SipMessage& msg);
-	virtual void onConnected(resip::ClientInviteSessionHandle h, const resip::SipMessage& msg);
-	virtual void onConnected(resip::InviteSessionHandle, const resip::SipMessage& msg);
-	virtual void onStaleCallTimeout(resip::ClientInviteSessionHandle);
-	virtual void onTerminated(resip::InviteSessionHandle h, resip::InviteSessionHandler::TerminatedReason reason, const resip::SipMessage* msg);
-	virtual void onRedirected(resip::ClientInviteSessionHandle, const resip::SipMessage& msg);
-	virtual void onAnswer(resip::InviteSessionHandle, const resip::SipMessage& msg, const resip::SdpContents&);
-	virtual void onOffer(resip::InviteSessionHandle handle, const resip::SipMessage& msg, const resip::SdpContents& offer);
-	virtual void onOfferRequired(resip::InviteSessionHandle, const resip::SipMessage& msg);
-	virtual void onOfferRejected(resip::InviteSessionHandle, const resip::SipMessage* msg);
-	virtual void onOfferRequestRejected(resip::InviteSessionHandle, const resip::SipMessage& msg);
-	virtual void onRemoteSdpChanged(resip::InviteSessionHandle, const resip::SipMessage& msg, const resip::SdpContents& sdp);
-	virtual void onInfo(resip::InviteSessionHandle, const resip::SipMessage& msg);
-	virtual void onInfoSuccess(resip::InviteSessionHandle, const resip::SipMessage& msg);
-	virtual void onInfoFailure(resip::InviteSessionHandle, const resip::SipMessage& msg);
-	virtual void onRefer(resip::InviteSessionHandle, resip::ServerSubscriptionHandle, const resip::SipMessage& msg);
-	virtual void onReferAccepted(resip::InviteSessionHandle, resip::ClientSubscriptionHandle, const resip::SipMessage& msg);
-	virtual void onReferRejected(resip::InviteSessionHandle, const resip::SipMessage& msg);
-	virtual void onReferNoSub(resip::InviteSessionHandle, const resip::SipMessage& msg);
-	virtual void onMessage(resip::InviteSessionHandle, const resip::SipMessage& msg);
-	virtual void onMessageSuccess(resip::InviteSessionHandle, const resip::SipMessage& msg);
-	virtual void onMessageFailure(resip::InviteSessionHandle, const resip::SipMessage& msg);
-	virtual void onForkDestroyed(resip::ClientInviteSessionHandle);
+   // Invite Session Handler /////////////////////////////////////////////////////
+   virtual void onNewSession(resip::ClientInviteSessionHandle h, resip::InviteSession::OfferAnswerType oat, const resip::SipMessage& msg);
+   virtual void onNewSession(resip::ServerInviteSessionHandle h, resip::InviteSession::OfferAnswerType oat, const resip::SipMessage& msg);
+   virtual void onFailure(resip::ClientInviteSessionHandle h, const resip::SipMessage& msg);
+   virtual void onEarlyMedia(resip::ClientInviteSessionHandle, const resip::SipMessage&, const resip::SdpContents&);
+   virtual void onProvisional(resip::ClientInviteSessionHandle, const resip::SipMessage& msg);
+   virtual void onConnected(resip::ClientInviteSessionHandle h, const resip::SipMessage& msg);
+   virtual void onConnected(resip::InviteSessionHandle, const resip::SipMessage& msg);
+   virtual void onStaleCallTimeout(resip::ClientInviteSessionHandle);
+   virtual void onTerminated(resip::InviteSessionHandle h, resip::InviteSessionHandler::TerminatedReason reason, const resip::SipMessage* msg);
+   virtual void onRedirected(resip::ClientInviteSessionHandle, const resip::SipMessage& msg);
+   virtual void onAnswer(resip::InviteSessionHandle, const resip::SipMessage& msg, const resip::SdpContents&);
+   virtual void onOffer(resip::InviteSessionHandle handle, const resip::SipMessage& msg, const resip::SdpContents& offer);
+   virtual void onOfferRequired(resip::InviteSessionHandle, const resip::SipMessage& msg);
+   virtual void onOfferRejected(resip::InviteSessionHandle, const resip::SipMessage* msg);
+   virtual void onOfferRequestRejected(resip::InviteSessionHandle, const resip::SipMessage& msg);
+   virtual void onRemoteSdpChanged(resip::InviteSessionHandle, const resip::SipMessage& msg, const resip::SdpContents& sdp);
+   virtual void onInfo(resip::InviteSessionHandle, const resip::SipMessage& msg);
+   virtual void onInfoSuccess(resip::InviteSessionHandle, const resip::SipMessage& msg);
+   virtual void onInfoFailure(resip::InviteSessionHandle, const resip::SipMessage& msg);
+   virtual void onRefer(resip::InviteSessionHandle, resip::ServerSubscriptionHandle, const resip::SipMessage& msg);
+   virtual void onReferAccepted(resip::InviteSessionHandle, resip::ClientSubscriptionHandle, const resip::SipMessage& msg);
+   virtual void onReferRejected(resip::InviteSessionHandle, const resip::SipMessage& msg);
+   virtual void onReferNoSub(resip::InviteSessionHandle, const resip::SipMessage& msg);
+   virtual void onMessage(resip::InviteSessionHandle, const resip::SipMessage& msg);
+   virtual void onMessageSuccess(resip::InviteSessionHandle, const resip::SipMessage& msg);
+   virtual void onMessageFailure(resip::InviteSessionHandle, const resip::SipMessage& msg);
+   virtual void onForkDestroyed(resip::ClientInviteSessionHandle);
    virtual void onReadyToSend(InviteSessionHandle, SipMessage& msg);
 
-	// DialogSetHandler  //////////////////////////////////////////////
-	virtual void onTrying(resip::AppDialogSetHandle, const resip::SipMessage& msg);
-	virtual void onNonDialogCreatingProvisional(resip::AppDialogSetHandle, const resip::SipMessage& msg);
+   // DialogSetHandler  //////////////////////////////////////////////
+   virtual void onTrying(resip::AppDialogSetHandle, const resip::SipMessage& msg);
+   virtual void onNonDialogCreatingProvisional(resip::AppDialogSetHandle, const resip::SipMessage& msg);
 
-	// ClientSubscriptionHandler ///////////////////////////////////////////////////
-	virtual void onUpdatePending(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify, bool outOfOrder);
-	virtual void onUpdateActive(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify, bool outOfOrder);
-	virtual void onUpdateExtension(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify, bool outOfOrder);
-	virtual void onNotifyNotReceived(resip::ClientSubscriptionHandle h);
-	virtual void onTerminated(resip::ClientSubscriptionHandle h, const resip::SipMessage* notify);
-	virtual void onNewSubscription(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify);
-	virtual int  onRequestRetry(resip::ClientSubscriptionHandle h, int retrySeconds, const resip::SipMessage& notify);
+   // ClientSubscriptionHandler ///////////////////////////////////////////////////
+   virtual void onUpdatePending(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify, bool outOfOrder);
+   virtual void onUpdateActive(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify, bool outOfOrder);
+   virtual void onUpdateExtension(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify, bool outOfOrder);
+   virtual void onNotifyNotReceived(resip::ClientSubscriptionHandle h);
+   virtual void onTerminated(resip::ClientSubscriptionHandle h, const resip::SipMessage* notify);
+   virtual void onNewSubscription(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify);
+   virtual int  onRequestRetry(resip::ClientSubscriptionHandle h, int retrySeconds, const resip::SipMessage& notify);
 
-	// RedirectHandler /////////////////////////////////////////////////////////////
+   // RedirectHandler /////////////////////////////////////////////////////////////
    virtual void onRedirectReceived(AppDialogSetHandle h, const SipMessage& msg);
 
 private:       
-	BasicClientUserAgent &mUserAgent;
-	resip::InviteSessionHandle mInviteSessionHandle;
+   BasicClientUserAgent &mUserAgent;
+   resip::InviteSessionHandle mInviteSessionHandle;
+   unsigned int mTimerExpiredCounter;
+   bool mPlacedCall;
 
-	// UAC forked call handling helper members
-	bool isUACConnected();
-	bool isStaleFork(const resip::DialogId& dialogId);
-	resip::DialogId mUACConnectedDialogId;
+   // UAC forked call handling helper members
+   bool isUACConnected();
+   bool isStaleFork(const resip::DialogId& dialogId);
+   resip::DialogId mUACConnectedDialogId;
+
+   void makeOffer(SdpContents& offer);
 };
  
 }

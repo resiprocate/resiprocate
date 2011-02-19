@@ -1,6 +1,7 @@
 #if !defined(basicClientUserAgent_hxx)
 #define basicClientUserAgent_hxx
 
+#include <set>
 #include "basicClientCmdLineParser.hxx"
 
 #include "resip/stack/InterruptableStackThread.hxx"
@@ -18,6 +19,7 @@
 
 namespace resip
 {
+class BasicClientCall;
 
 class BasicClientUserAgent : public BasicClientCmdLineParser, 
                              public Postable,
@@ -124,6 +126,8 @@ protected:
    friend class NotifyTimer;
    void onNotifyTimeout(unsigned int timerId);
    void sendNotify();
+   friend class CallTimer;
+   void onCallTimeout(BasicClientCall* call);
 
    SharedPtr<MasterProfile> mProfile;
    Security* mSecurity;
@@ -138,6 +142,12 @@ protected:
    ServerSubscriptionHandle mServerSubscriptionHandle;
    unsigned int mRegistrationRetryDelayTime;
    unsigned int mCurrentNotifyTimerId;
+
+   friend class BasicClientCall;
+   std::set<BasicClientCall*> mCallList;
+   void registerCall(BasicClientCall* call);
+   void unregisterCall(BasicClientCall* call);
+   bool isValidCall(BasicClientCall* call);
 };
  
 }

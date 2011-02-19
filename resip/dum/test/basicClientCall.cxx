@@ -28,21 +28,89 @@
 using namespace resip;
 using namespace std;
 
+static unsigned int CallTimerTime = 30;  // Time between call timer
+static unsigned int CallTimeCounterToByeOn = 6;  // BYE the call after the call timer has expired 6 times
+
+namespace resip
+{
+class CallTimer : public resip::DumCommand
+{
+   public:
+      CallTimer(BasicClientUserAgent& userAgent, BasicClientCall* call) : mUserAgent(userAgent), mCall(call) {}
+      CallTimer(const CallTimer& rhs) : mUserAgent(rhs.mUserAgent), mCall(rhs.mCall) {}
+      ~CallTimer() {}
+
+      void executeCommand() { mUserAgent.onCallTimeout(mCall); }
+
+      resip::Message* clone() const { return new CallTimer(*this); }
+      EncodeStream& encode(EncodeStream& strm) const { strm << "CallTimer:"; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+
+   private:
+      BasicClientUserAgent& mUserAgent;
+      BasicClientCall* mCall;
+};
+}
+
 BasicClientCall::BasicClientCall(BasicClientUserAgent& userAgent) 
 : AppDialogSet(userAgent.getDialogUsageManager()),
   mUserAgent(userAgent),
+  mTimerExpiredCounter(0),
+  mPlacedCall(false),
   mUACConnectedDialogId(Data::Empty, Data::Empty, Data::Empty)
 {
+   mUserAgent.registerCall(this);
 }
 
 BasicClientCall::~BasicClientCall()
 {
+   mUserAgent.unregisterCall(this);
+}
+
+void 
+BasicClientCall::initiateCall(const Uri& target, SharedPtr<UserProfile> profile)
+{
+   SdpContents offer;
+   makeOffer(offer);
+   SharedPtr<SipMessage> invite = mUserAgent.getDialogUsageManager().makeInviteSession(NameAddr(target), profile, &offer, this);
+   mUserAgent.getDialogUsageManager().send(invite);
+   mPlacedCall = true;
+}
+
+void 
+BasicClientCall::terminateCall()
+{
+   AppDialogSet::end(); 
+}
+
+void 
+BasicClientCall::timerExpired()
+{
+   mTimerExpiredCounter++;
+   if(mTimerExpiredCounter < CallTimeCounterToByeOn)
+   {
+      // First few times, send a message to the other party
+      if(mInviteSessionHandle.isValid())
+      {
+         PlainContents plain("test message");
+         mInviteSessionHandle->message(plain);
+      }
+   }
+   else 
+   {
+      // Then hangup
+      terminateCall();
+   }
+
+   // start timer for next one
+   auto_ptr<ApplicationMessage> timer(new CallTimer(mUserAgent, this));
+   mUserAgent.mStack.post(timer, CallTimerTime, &mUserAgent.getDialogUsageManager());
 }
 
 SharedPtr<UserProfile> 
 BasicClientCall::selectUASUserProfile(const SipMessage& msg)
 {
-	return mUserAgent.getIncomingUserProfile(msg);
+   return mUserAgent.getIncomingUserProfile(msg);
 }
 
 bool 
@@ -55,6 +123,31 @@ bool
 BasicClientCall::isStaleFork(const DialogId& dialogId)
 {
    return (!mUACConnectedDialogId.getCallId().empty() && dialogId != mUACConnectedDialogId);
+}
+
+void 
+BasicClientCall::makeOffer(SdpContents& offer)
+{
+   static Data txt("v=0\r\n"
+                   "o=- 0 0 IN IP4 0.0.0.0\r\n"
+                   "s=basicClient\r\n"
+                   "c=IN IP4 0.0.0.0\r\n"  
+                   "t=0 0\r\n"
+                   "m=audio 8000 RTP/AVP 0 101\r\n"
+                   "a=rtpmap:0 pcmu/8000\r\n"
+                   "a=rtpmap:101 telephone-event/8000\r\n"
+                   "a=fmtp:101 0-15\r\n");
+
+   static HeaderFieldValue hfv(txt.data(), txt.size());
+   static Mime type("application", "sdp");
+   static SdpContents offerSdp(&hfv, type);
+
+   offer = offerSdp;
+
+   // Set sessionid and version for this offer
+   UInt64 currentTime = Timer::getTimeMicroSec();
+   offer.session().origin().getSessionId() = currentTime;
+   offer.session().origin().getVersion() = currentTime;  
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -127,6 +220,10 @@ BasicClientCall::onConnected(ClientInviteSessionHandle h, const SipMessage& msg)
       mUACConnectedDialogId = h->getDialogId();
       // Note:  each forked leg will update mInviteSessionHandle (in onNewSession call) - need to set mInviteSessionHandle for final answering leg on 200
       mInviteSessionHandle = h->getSessionHandle();  
+
+      // start call timer
+      auto_ptr<ApplicationMessage> timer(new CallTimer(mUserAgent, this));
+      mUserAgent.mStack.post(timer, CallTimerTime, &mUserAgent.getDialogUsageManager());
    }
    else
    {
@@ -263,26 +360,10 @@ BasicClientCall::onOfferRequired(InviteSessionHandle h, const SipMessage& msg)
    InfoLog(<< "onOfferRequired: msg=" << msg.brief());
 
    // Provide Offer Here
-   static Data txt("v=0\r\n"
-                   "o=- 0 0 IN IP4 0.0.0.0\r\n"
-                   "s=basicClient\r\n"
-                   "c=IN IP4 0.0.0.0\r\n"  
-                   "t=0 0\r\n"
-                   "m=audio 8000 RTP/AVP 0 101\r\n"
-                   "a=rtpmap:0 pcmu/8000\r\n"
-                   "a=rtpmap:101 telephone-event/8000\r\n"
-                   "a=fmtp:101 0-15\r\n");
+   SdpContents offer;
+   makeOffer(offer);
 
-   static HeaderFieldValue hfv(txt.data(), txt.size());
-   static Mime type("application", "sdp");
-   SdpContents sdp(&hfv, type);
-
-   // Set sessionid and version for this offer
-   UInt64 currentTime = Timer::getTimeMicroSec();
-   sdp.session().origin().getSessionId() = currentTime;
-   sdp.session().origin().getVersion() = currentTime;  
-
-   h->provideOffer(sdp);
+   h->provideOffer(offer);
 }
 
 void
@@ -388,6 +469,13 @@ BasicClientCall::onMessage(InviteSessionHandle h, const SipMessage& msg)
 
    // Handle message here
    h->acceptNIT();
+
+   if(!mPlacedCall)
+   {
+      // If we didn't place the call - answer the message with another message
+      PlainContents plain("test message answer");
+      h->message(plain);
+   }
 }
 
 void
