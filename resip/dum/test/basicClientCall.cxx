@@ -501,6 +501,23 @@ BasicClientCall::onReadyToSend(InviteSessionHandle h, SipMessage& msg)
 {
 }
 
+void 
+BasicClientCall::onFlowTerminated(InviteSessionHandle h)
+{
+   if(h->isConnected())
+   {
+      // The flow terminated - try an Invite (with Replaces) to recover the call
+      BasicClientCall *replacesCall = new BasicClientCall(mUserAgent);
+      SdpContents offer;
+      replacesCall->makeOffer(offer);
+      SharedPtr<SipMessage> invite = mUserAgent.getDialogUsageManager().makeInviteSession(h->remoteTarget(), h, getUserProfile(), &offer, replacesCall);
+      mUserAgent.getDialogUsageManager().send(invite);
+   }
+
+   // end this call - can't be used for anything anyway
+   terminateCall();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // DialogSetHandler ///////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////

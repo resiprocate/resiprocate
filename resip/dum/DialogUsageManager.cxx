@@ -574,6 +574,28 @@ DialogUsageManager::makeInviteSession(const NameAddr& target,
                                       InviteSessionHandle sessionToReplace, 
                                       const SharedPtr<UserProfile>& userProfile, 
                                       const Contents* initialOffer, 
+                                      AppDialogSet* ads)
+{
+   SharedPtr<SipMessage> inv = makeInviteSession(target, userProfile, initialOffer, ads);
+   // add replaces header
+   assert(sessionToReplace.isValid());
+   if(sessionToReplace.isValid())
+   {
+      CallId replaces;
+      DialogId id = sessionToReplace->getDialogId();
+      replaces.value() = id.getCallId();
+      replaces.param(p_toTag) = id.getRemoteTag();
+      replaces.param(p_fromTag) = id.getLocalTag();
+      inv->header(h_Replaces) = replaces;
+   }
+   return inv;
+}
+
+SharedPtr<SipMessage> 
+DialogUsageManager::makeInviteSession(const NameAddr& target, 
+                                      InviteSessionHandle sessionToReplace, 
+                                      const SharedPtr<UserProfile>& userProfile, 
+                                      const Contents* initialOffer, 
                                       EncryptionLevel level, 
                                       const Contents* alternative, 
                                       AppDialogSet* ads)
