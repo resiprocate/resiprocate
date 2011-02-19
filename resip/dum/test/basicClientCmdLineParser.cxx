@@ -38,6 +38,7 @@ BasicClientCmdLineParser::BasicClientCmdLineParser(int argc, char** argv)
    int outboundEnabled = false;
 
    char* subscribeTarget = 0;
+   char* callTarget = 0;
 
 #if defined(HAVE_POPT_H)
    struct poptOption table[] = {
@@ -57,7 +58,7 @@ BasicClientCmdLineParser::BasicClientCmdLineParser(int argc, char** argv)
       {"dtls",               0, POPT_ARG_INT,    &dtlsPort,           0, "add DTLS transport on specified port", "5161"},
 #endif
 
-      {"register-duration",  0, POPT_ARG_INT,    &mRegisterDuration,  0, "expires for register (0 for no reg)", "3600"},
+      {"register-duration",'r', POPT_ARG_INT,    &mRegisterDuration,  0, "expires for register (0 for no reg)", "3600"},
       {"enable-v6",          0, POPT_ARG_NONE,   &enableV6,           0, "enable IPV6", 0},
       {"disable-v4",         0, POPT_ARG_NONE,   &noV4,               0, "disable IPV4", 0},
 
@@ -67,7 +68,8 @@ BasicClientCmdLineParser::BasicClientCmdLineParser(int argc, char** argv)
       {"contact",          'c', POPT_ARG_STRING, &inputContact,       0, "override default contact", "sip:alice@contact.example.com"},      
       {"enable-outbound",  'b', POPT_ARG_NONE,   &outboundEnabled,    0, "enable RFC 5626 outbound support", 0},
 
-      {"subtarget",        's', POPT_ARG_STRING, &subscribeTarget,    0, "specify a SIP URI to subscribe to", "sip:bob@example.com"},
+      {"subtarget",          0, POPT_ARG_STRING, &subscribeTarget,    0, "specify a SIP URI to subscribe to", "sip:bob@example.com"},
+      {"calltarget",         0, POPT_ARG_STRING, &callTarget,         0, "specify a SIP URI to call", "sip:carol@example.com"},
 
       POPT_AUTOHELP
       { NULL, 0, 0, NULL, 0 }
@@ -108,6 +110,11 @@ BasicClientCmdLineParser::BasicClientCmdLineParser(int argc, char** argv)
    if(subscribeTarget)
    {
       mSubscribeTarget = toUri(subscribeTarget, "subscribe target");
+   }
+
+   if(callTarget)
+   {
+      mCallTarget = toUri(callTarget, "call target");
    }
 
    // Free the option parsing context.

@@ -144,7 +144,8 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
    mProfile->addSupportedMethod(SUBSCRIBE); 
    //mProfile->addSupportedMethod(UPDATE);    
    mProfile->addSupportedMethod(INFO);    
-   mProfile->addSupportedMethod(PRACK);     
+   mProfile->addSupportedMethod(MESSAGE);    
+   //mProfile->addSupportedMethod(PRACK);     
    //mProfile->addSupportedOptionTag(Token(Symbols::C100rel));  // Automatically added when using setUacReliableProvisionalMode
    mProfile->setUacReliableProvisionalMode(MasterProfile::Supported);
    //mProfile->setUasReliableProvisionalMode(MasterProfile::Supported);  // TODO - needs support in DUM, currently unimplemented
@@ -171,6 +172,7 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
    mProfile->addSupportedMimeType(UPDATE, Mime("multipart", "mixed"));  
    mProfile->addSupportedMimeType(UPDATE, Mime("multipart", "signed"));  
    mProfile->addSupportedMimeType(UPDATE, Mime("multipart", "alternative"));  
+   mProfile->addSupportedMimeType(MESSAGE, Mime("text","plain")); // Invite session in-dialog routing testing
    mProfile->addSupportedMimeType(NOTIFY, Mime("text","plain"));  // subscription testing
    //mProfile->addSupportedMimeType(NOTIFY, Mime("message", "sipfrag"));  
 
@@ -331,7 +333,13 @@ BasicClientUserAgent::process(int timeoutMs)
             mClientSubscriptionHandle->end();
          }
 
-         // End all calls - !slg! TODO 
+         // End all calls - copy list in case delete/unregister of call is immediate
+         std::set<BasicClientCall*> tempCallList = mCallList;
+         std::set<BasicClientCall*>::iterator it = tempCallList.begin();
+         for(; it != tempCallList.end(); it++)
+         {
+            (*it)->terminateCall();
+         }
 
          mDum->shutdown(this);
          mDumShutdownRequested = false;
@@ -409,6 +417,51 @@ BasicClientUserAgent::sendNotify()
 }
 
 void 
+BasicClientUserAgent::onCallTimeout(BasicClientCall* call)
+{
+   if(isValidCall(call))
+   {
+      call->timerExpired();
+   }
+   else  // call no longer exists
+   {
+      if(!mCallTarget.host().empty())
+      {
+         // re-start a new call
+         BasicClientCall* newCall = new BasicClientCall(*this);
+         newCall->initiateCall(mCallTarget, mProfile);
+      }
+   }
+}
+
+void 
+BasicClientUserAgent::registerCall(BasicClientCall* call)
+{
+   mCallList.insert(call);
+}
+
+void 
+BasicClientUserAgent::unregisterCall(BasicClientCall* call)
+{
+   std::set<BasicClientCall*>::iterator it = mCallList.find(call);
+   if(it != mCallList.end())
+   {
+      mCallList.erase(it);
+   }
+}
+
+bool 
+BasicClientUserAgent::isValidCall(BasicClientCall* call)
+{
+   std::set<BasicClientCall*>::iterator it = mCallList.find(call);
+   if(it != mCallList.end())
+   {
+      return true;
+   }
+   return false;
+}
+
+void 
 BasicClientUserAgent::onDumCanBeDeleted()
 {
    mDumShutdown = true;
@@ -428,6 +481,13 @@ BasicClientUserAgent::onSuccess(ClientRegistrationHandle h, const SipMessage& ms
       {
          SharedPtr<SipMessage> sub = mDum->makeSubscription(NameAddr(mSubscribeTarget), mProfile, "basicClientTest");
          mDum->send(sub);
+      }
+
+      // Check if we should try to form a test call
+      if(!mCallTarget.host().empty())
+      {
+         BasicClientCall* newCall = new BasicClientCall(*this);
+         newCall->initiateCall(mCallTarget, mProfile);
       }
    }
    mRegHandle = h;
