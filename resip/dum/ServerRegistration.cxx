@@ -150,10 +150,10 @@ ServerRegistration::reject(int statusCode)
       // Rollback changes, since rejected
       RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
       database->removeAor(mAor);
-	  if (mOriginalContacts.get())
-	  {
+      if (mOriginalContacts.get())
+      {
          database->addAor(mAor, *mOriginalContacts);
-	  }
+      }
       database->unlockRecord(mAor);
    }
 
@@ -264,8 +264,8 @@ ServerRegistration::processRegistration(const SipMessage& msg)
    }
 
    // If no contacts are present in the request, this is simply a query.
-    if (!msg.exists(h_Contacts))
-    {
+   if (!msg.exists(h_Contacts))
+   {
       if (async)
       {
          mAsyncState = asyncStateQueryOnly;
@@ -273,9 +273,9 @@ ServerRegistration::processRegistration(const SipMessage& msg)
       handler->onQuery(getHandle(), msg);
       //!WARN! Must not access this object beyond this point. The client my call reject() or accept(), deleting this object.  Also, watch out for local objects that are still in scope and access this object on destruction.
       return;
-    }
+   }
 
-    ParserContainer<NameAddr> contactList(msg.header(h_Contacts));
+   ParserContainer<NameAddr> contactList(msg.header(h_Contacts));
    ParserContainer<NameAddr>::iterator i(contactList.begin());
    ParserContainer<NameAddr>::iterator iEnd(contactList.end());
 
@@ -303,18 +303,18 @@ ServerRegistration::processRegistration(const SipMessage& msg)
       // Check for "Contact: *" style deregistration
       if (i->isAllContacts())
       {
-        if (contactList.size() > 1 || expires != 0)
-        {
-           SharedPtr<SipMessage> failure(new SipMessage);
-           mDum.makeResponse(*failure, msg, 400, "Invalid use of 'Contact: *'");
-           mDum.send(failure);
+         if (contactList.size() > 1 || expires != 0)
+         {
+            SharedPtr<SipMessage> failure(new SipMessage);
+            mDum.makeResponse(*failure, msg, 400, "Invalid use of 'Contact: *'");
+            mDum.send(failure);
             if (!async)
             {
                database->unlockRecord(mAor);
             }
-           delete(this);
-           return;
-        }
+            delete(this);
+            return;
+         }
 
          if (!async)
          {

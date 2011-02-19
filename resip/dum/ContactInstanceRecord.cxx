@@ -16,9 +16,25 @@ ContactInstanceRecord::ContactInstanceRecord() :
 bool
 ContactInstanceRecord::operator==(const ContactInstanceRecord& rhs) const
 {
-   return (mRegId == rhs.mRegId &&
-            mInstance == rhs.mInstance &&
-            mContact.uri() == rhs.mContact.uri());
+   if(!mInstance.empty() || !rhs.mInstance.empty())
+   {
+      // If instanceId is specified on any of the instance records, then it must match
+      if(mInstance == rhs.mInstance)
+      {
+         if(mRegId != 0 || rhs.mRegId != 0)
+         {
+            // If regId is specified on either, then make sure it matches
+            return mRegId == rhs.mRegId;
+         }
+         return true;  // InstanceId matches and no regId provided
+      }
+      return false;  // instance doesn't match
+   }
+   else
+   {
+      // No InstanceId on either, check if contactUri matches
+      return mContact.uri() == rhs.mContact.uri();
+   }
 }
 
 ContactInstanceRecord 
