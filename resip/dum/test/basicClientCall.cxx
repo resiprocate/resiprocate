@@ -506,6 +506,7 @@ BasicClientCall::onFlowTerminated(InviteSessionHandle h)
 {
    if(h->isConnected())
    {
+      InfoLog(<< "BasicClientCall::onFlowTerminated: trying INVITE w/replaces to " << h->remoteTarget());
       // The flow terminated - try an Invite (with Replaces) to recover the call
       BasicClientCall *replacesCall = new BasicClientCall(mUserAgent);
       SdpContents offer;
