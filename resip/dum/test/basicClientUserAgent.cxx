@@ -700,6 +700,12 @@ BasicClientUserAgent::onReadyToSend(InviteSessionHandle h, SipMessage& msg)
    dynamic_cast<BasicClientCall *>(h->getAppDialogSet().get())->onReadyToSend(h, msg);
 }
 
+void 
+BasicClientUserAgent::onFlowTerminated(InviteSessionHandle h)
+{
+   dynamic_cast<BasicClientCall *>(h->getAppDialogSet().get())->onFlowTerminated(h);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // DialogSetHandler ///////////////////////////////////////////////////

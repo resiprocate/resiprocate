@@ -59,6 +59,7 @@ protected:
    virtual void onMessageFailure(resip::InviteSessionHandle, const resip::SipMessage& msg);
    virtual void onForkDestroyed(resip::ClientInviteSessionHandle);
    virtual void onReadyToSend(InviteSessionHandle, SipMessage& msg);
+   virtual void onFlowTerminated(InviteSessionHandle);
 
    // DialogSetHandler  //////////////////////////////////////////////
    virtual void onTrying(resip::AppDialogSetHandle, const resip::SipMessage& msg);
