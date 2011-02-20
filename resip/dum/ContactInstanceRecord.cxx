@@ -16,24 +16,19 @@ ContactInstanceRecord::ContactInstanceRecord() :
 bool
 ContactInstanceRecord::operator==(const ContactInstanceRecord& rhs) const
 {
-   if(!mInstance.empty() || !rhs.mInstance.empty())
+   if((mRegId != 0 && !mInstance.empty()) || 
+      (rhs.mRegId != 0 && !rhs.mInstance.empty()))
    {
-      // If instanceId is specified on any of the instance records, then it must match
-      if(mInstance == rhs.mInstance)
-      {
-         if(mRegId != 0 || rhs.mRegId != 0)
-         {
-            // If regId is specified on either, then make sure it matches
-            return mRegId == rhs.mRegId;
-         }
-         return true;  // InstanceId matches and no regId provided
-      }
-      return false;  // instance doesn't match
+      // If regId and instanceId is specified on either, then outbound RFC5626 is 
+      // in use - match only if both instance id and reg-id match - ignore contact URI
+      return mInstance == rhs.mInstance && 
+             mRegId == rhs.mRegId;
    }
    else
    {
-      // No InstanceId on either, check if contactUri matches
-      return mContact.uri() == rhs.mContact.uri();
+      // otherwise both instance (if specified) and contact must match
+      return mInstance == rhs.mInstance &&
+             mContact.uri() == rhs.mContact.uri();
    }
 }
 
