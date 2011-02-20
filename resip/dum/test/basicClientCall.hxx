@@ -82,6 +82,7 @@ private:
    resip::InviteSessionHandle mInviteSessionHandle;
    unsigned int mTimerExpiredCounter;
    bool mPlacedCall;
+   resip::InviteSessionHandle mInviteSessionHandleReplaced;
 
    // UAC forked call handling helper members
    bool isUACConnected();

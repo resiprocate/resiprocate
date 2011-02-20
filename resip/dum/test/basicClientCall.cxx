@@ -159,6 +159,11 @@ BasicClientCall::onNewSession(ClientInviteSessionHandle h, InviteSession::OfferA
 {
    InfoLog(<< "onNewSession(ClientInviteSessionHandle): msg=" << msg.brief());
    mInviteSessionHandle = h->getSessionHandle();  // Note:  each forked leg will update mInviteSession - need to set mInviteSessionHandle for final answering leg on 200
+   if(mInviteSessionHandleReplaced.isValid())
+   {
+       // See comment in flowTerminated for an explanation of this logic
+       ((BasicClientCall*)mInviteSessionHandleReplaced->getAppDialogSet().get())->terminateCall();
+   }
 }
 
 void
@@ -531,17 +536,31 @@ BasicClientCall::onFlowTerminated(InviteSessionHandle h)
 {
    if(h->isConnected())
    {
-      InfoLog(<< "BasicClientCall::onFlowTerminated: trying INVITE w/replaces to " << h->remoteTarget());
+      //NameAddr inviteWithReplacesTarget(h->remoteTarget().uri());
+      NameAddr inviteWithReplacesTarget(h->peerAddr().uri());
+      InfoLog(<< "BasicClientCall::onFlowTerminated: trying INVITE w/replaces to " << inviteWithReplacesTarget);
       // The flow terminated - try an Invite (with Replaces) to recover the call
-      BasicClientCall *replacesCall = new BasicClientCall(mUserAgent);
+      BasicClientCall *replacesCall = new BasicClientCall(mUserAgent);      
+
+      // Copy over flag that indicates wether original call was placed or received
+      replacesCall->mPlacedCall = mPlacedCall;  
+
+      // Note:  We want to end this call since it is to be replaced.  Normally the endpoint
+      // receiving the INVITE with replaces would send us a BYE for the session being replaced.
+      // However, since the old flow is dead, we will never see this BYE.  We need this call to
+      // go away somehow, however we cannot just end it directly here via terminateCall.
+      // Since the flow to other party is likely fine - if we terminate this call now the BYE 
+      // is very likely to make it to the far end, before the above INVITE - if this happens then 
+      // the replaces logic of the INVITE will have no effect.  We want to delay the release of 
+      // this call, by passing our handle to the new INVITE call and have it terminate this call, 
+      // once we know the far end has processed our new INVITE.
+      replacesCall->mInviteSessionHandleReplaced = mInviteSessionHandle;
+
       SdpContents offer;
       replacesCall->makeOffer(offer);
-      SharedPtr<SipMessage> invite = mUserAgent.getDialogUsageManager().makeInviteSession(h->remoteTarget(), h, getUserProfile(), &offer, replacesCall);
+      SharedPtr<SipMessage> invite = mUserAgent.getDialogUsageManager().makeInviteSession(inviteWithReplacesTarget, h, getUserProfile(), &offer, replacesCall);
       mUserAgent.getDialogUsageManager().send(invite);
    }
-
-   // end this call - can't be used for anything anyway
-   terminateCall();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
