@@ -251,17 +251,18 @@ static int init_by_options(ares_channel channel, struct ares_options *options,
      for (i = 0; i < options->nservers; i++)
      {
 #ifdef USE_IPV6
-		channel->servers[i].family = options->servers[i].family;
-		if (options->servers[i].family == AF_INET6)
-		{
-		  channel->servers[i].addr6 = options->servers[i].addr6;
-		}
-		else
-		{
-		  channel->servers[i].addr = options->servers[i].addr;
-		}
+	channel->servers[i].family = options->servers[i].family;
+	if (options->servers[i].family == AF_INET6)
+	{
+	  channel->servers[i].addr6 = options->servers[i].addr6;
+	}
+	else
+	{
+	  assert( channel->servers[i].family == AF_INET );
+	  channel->servers[i].addr = options->servers[i].addr;
+	}
 #else	  
-		channel->servers[i].addr = options->servers[i];
+	channel->servers[i].addr = options->servers[i];
 #endif
 	// .kw. why is this inside the loop?
         channel->nservers = options->nservers;
@@ -1180,3 +1181,7 @@ inet_pton4(const char *src, u_char *dst)
    memcpy(dst, tmp, NS_INADDRSZ);
    return (1);
 }
+
+/*
+ * vi: set shiftwidth=3 expandtab:
+ */
