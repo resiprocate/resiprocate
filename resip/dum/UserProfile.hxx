@@ -82,9 +82,12 @@ class UserProfile : public Profile
       virtual const DigestCredential& getDigestCredential( const Data& realm  );
 
       // Enable this to enable RFC5626 suuport in DUM - ie. add regId to registrations, and 
-      // ;ob parameter to Path, Route, and Contact headers - !slg! TODO add more detail here
+      // ;ob parameter to Path, Route, and Contact headers
       // Warning:  You MUST set an instanceId, a regId and an outbound proxy if you enable 
-      // clientOutbound support
+      // clientOutbound support.  You MUST also ensure that you add the following Supported
+      // options:
+      // profile->addSupportedOptionTag(Token(Symbols::Outbound));  // RFC 5626 - outbound
+      // profile->addSupportedOptionTag(Token(Symbols::Path));      // RFC 3327 - path
       virtual bool& clientOutboundEnabled() { return mClientOutboundEnabled; }
       virtual bool clientOutboundEnabled() const { return mClientOutboundEnabled; }
 
