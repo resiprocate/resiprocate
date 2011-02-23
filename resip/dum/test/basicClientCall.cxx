@@ -195,6 +195,11 @@ BasicClientCall::onNewSession(ServerInviteSessionHandle h, InviteSession::OfferA
          // Session to replace was found - end old session
          callToReplace->end();
       }
+      else
+      {
+          // Session to replace not found - reject it
+          h->reject(481 /* Call/Transaction Does Not Exist */);
+      }
    }
 }
 
@@ -536,8 +541,17 @@ BasicClientCall::onFlowTerminated(InviteSessionHandle h)
 {
    if(h->isConnected())
    {
-      //NameAddr inviteWithReplacesTarget(h->remoteTarget().uri());
-      NameAddr inviteWithReplacesTarget(h->peerAddr().uri());
+      NameAddr inviteWithReplacesTarget;
+      if(h->remoteTarget().uri().exists(p_gr))
+      {
+         // If remote contact is a GRUU then use it
+         inviteWithReplacesTarget.uri() = h->remoteTarget().uri();
+      }
+      else
+      {
+         //.Use remote AOR
+         inviteWithReplacesTarget.uri() = h->peerAddr().uri();
+      }
       InfoLog(<< "BasicClientCall::onFlowTerminated: trying INVITE w/replaces to " << inviteWithReplacesTarget);
       // The flow terminated - try an Invite (with Replaces) to recover the call
       BasicClientCall *replacesCall = new BasicClientCall(mUserAgent);      
