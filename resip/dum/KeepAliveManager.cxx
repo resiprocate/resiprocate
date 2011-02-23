@@ -96,7 +96,7 @@ KeepAliveManager::process(KeepAliveTimeout& timeout)
          assert((it->second.keepAliveInterval*1000) > mKeepAlivePongTimeoutMs);
 
          // Start pong timeout
-         InfoLog( << "Starting pong timeout for keepalive id " << it->second.id);  // !slg! TODO - change me to Debug log
+         DebugLog( << "Starting pong timeout for keepalive id " << it->second.id);
          KeepAlivePongTimeout t(it->first, it->second.id);
          stack.postMS(t, mKeepAlivePongTimeoutMs, mDum);
       }
@@ -130,7 +130,7 @@ KeepAliveManager::receivedPong(const Tuple& flow)
    NetworkAssociationMap::iterator it = mNetworkAssociations.find(flow);
    if (it != mNetworkAssociations.end())
    {
-      InfoLog(<< "Received pong response for keep alive id=" << it->second.id << ": " << it->first);  // !slg! TODO - change to DebugLog
+      DebugLog(<< "Received pong response for keep alive id=" << it->second.id << ": " << it->first);
       it->second.pongReceivedForLastPing = true;
    }
 }

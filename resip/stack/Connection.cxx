@@ -34,7 +34,7 @@ Connection::Connection(Transport* transport,const Tuple& who, Socket socket,
      mPollItemHandle(0)
 {
    mWho.mFlowKey=(FlowKey)socket;
-   WarningLog (<< "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@Connection::Connection, who: " << mWho);  // !slg! TODO - remove me - do NOT COMMIT
+   InfoLog (<< "Connection::Connection: new connection created to who: " << mWho);
 
    if(mWho.mFlowKey && ConnectionBase::transport())
    {

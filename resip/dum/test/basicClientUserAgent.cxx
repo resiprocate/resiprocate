@@ -267,8 +267,7 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
    mDum->setClientAuthManager(std::auto_ptr<ClientAuthManager>(new ClientAuthManager));
    mDum->setKeepAliveManager(std::auto_ptr<KeepAliveManager>(new KeepAliveManager));
    mProfile->setKeepAliveTimeForDatagram(30);
-   //mProfile->setKeepAliveTimeForStream(120);
-   mProfile->setKeepAliveTimeForStream(30);   // !slg! TODO - testing only
+   mProfile->setKeepAliveTimeForStream(120);
 
    // Install Handlers
    mDum->setInviteSessionHandler(this); 
@@ -392,7 +391,7 @@ BasicClientUserAgent::post(Message* msg)
    ConnectionTerminated* terminated = dynamic_cast<ConnectionTerminated*>(msg);
    if (terminated)
    {
-      InfoLog(<< "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% BasicClientUserAgent received connection terminated message for: " << terminated->getFlow());  // !slg! TODO - remove strange log markers
+      InfoLog(<< "BasicClientUserAgent received connection terminated message for: " << terminated->getFlow());
       delete msg;
       return;
    }

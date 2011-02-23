@@ -11,7 +11,7 @@ using namespace resip;
 void 
 ClientRegistrationHandler::onFlowTerminated(ClientRegistrationHandle h)
 {
-   InfoLog (<< "ClientRegistrationHandler::onFlowTerminated, refreshing registration to open new flow");  // !slg! TODO - make Debug log
+   InfoLog (<< "ClientRegistrationHandler::onFlowTerminated, refreshing registration to open new flow");
    h->requestRefresh();
 }
 
