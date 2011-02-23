@@ -27,6 +27,7 @@ BasicClientCmdLineParser::BasicClientCmdLineParser(int argc, char** argv)
    mRegisterDuration = 3600;
    int noV4 = false;
    int enableV6 = false;
+   int hostFileLookupOnlyDnsMode = false;
    
    char* inputAor = 0;
    const char* password = "";
@@ -61,6 +62,7 @@ BasicClientCmdLineParser::BasicClientCmdLineParser(int argc, char** argv)
       {"register-duration",'r', POPT_ARG_INT,    &mRegisterDuration,  0, "expires for register (0 for no reg)", "3600"},
       {"enable-v6",          0, POPT_ARG_NONE,   &enableV6,           0, "enable IPV6", 0},
       {"disable-v4",         0, POPT_ARG_NONE,   &noV4,               0, "disable IPV4", 0},
+      {"enable-hostfileonly",0, POPT_ARG_NONE,   &hostFileLookupOnlyDnsMode,0, "enable hostfile only dns lookup mode", 0},
 
       {"aor",              'a', POPT_ARG_STRING, &inputAor,           0, "specify address of record", "sip:alice@example.com"},
       {"password",         'p', POPT_ARG_STRING, &password,           0, "specify password for address of record", "password"},
@@ -91,6 +93,7 @@ BasicClientCmdLineParser::BasicClientCmdLineParser(int argc, char** argv)
    mDtlsPort = dtlsPort;
    mNoV4 = noV4 != 0;
    mEnableV6 = enableV6 != 0;
+   mHostFileLookupOnlyDnsMode = hostFileLookupOnlyDnsMode != 0;
    if (inputAor)
    {
       mAor = toUri(inputAor, "aor");

@@ -15,6 +15,7 @@
 #include <resip/dum/ClientRegistration.hxx>
 #include <resip/dum/ServerRegistration.hxx>
 #include <resip/dum/ServerOutOfDialogReq.hxx>
+#include <rutil/dns/AresDns.hxx>
 
 #if defined (USE_SSL)
 #if defined(WIN32) 
@@ -119,6 +120,11 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
    mCurrentNotifyTimerId(0)
 {
    Log::initialize(mLogType, mLogLevel, argv[0]);
+
+   if(mHostFileLookupOnlyDnsMode)
+   {
+      AresDns::enableHostFileLookupOnlyMode(true);
+   }
 
    addTransport(UDP, mUdpPort);
    addTransport(TCP, mTcpPort);
