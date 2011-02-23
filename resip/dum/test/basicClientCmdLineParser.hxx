@@ -27,6 +27,7 @@ public:
    int mRegisterDuration;
    bool mNoV4;
    bool mEnableV6;
+   bool mHostFileLookupOnlyDnsMode;
       
    Uri mAor;
    Data mPassword;

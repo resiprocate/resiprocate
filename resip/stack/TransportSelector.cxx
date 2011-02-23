@@ -114,12 +114,16 @@ TransportSelector::~TransportSelector()
 void
 TransportSelector::shutdown()
 {
-    //!dcm! repeat shutodwn template pattern in all loop over all tranport functions, refactor to functor?
+    //!dcm! repeat shutdown template pattern in all loop over all transport functions, refactor to functor?
     for (ExactTupleMap::iterator i=mExactTransports.begin(); i!=mExactTransports.end(); ++i)
    {
       i->second->shutdown();
    }
    for (AnyInterfaceTupleMap::iterator i=mAnyInterfaceTransports.begin(); i!=mAnyInterfaceTransports.end(); ++i)
+   {
+      i->second->shutdown();
+   }
+   for (TlsTransportMap::iterator i=mTlsTransports.begin(); i!=mTlsTransports.end(); ++i)
    {
       i->second->shutdown();
    }
@@ -144,8 +148,6 @@ TransportSelector::deleteTransports()
    deleteMap(mExactTransports);
    deleteMap(mAnyInterfaceTransports);
    deleteMap(mTlsTransports);
-   // ?kw?: what about mAnyPortTransports? would be nice if header
-   // documented which maps are "owning" and which "referencing"
 }
 
 bool
@@ -156,6 +158,10 @@ TransportSelector::isFinished() const
       if (!i->second->isFinished()) return false;
    }
    for (AnyInterfaceTupleMap::const_iterator i=mAnyInterfaceTransports.begin(); i!=mAnyInterfaceTransports.end(); ++i)
+   {
+      if (!i->second->isFinished()) return false;
+   }
+   for (TlsTransportMap::const_iterator i=mTlsTransports.begin(); i!=mTlsTransports.end(); ++i)
    {
       if (!i->second->isFinished()) return false;
    }
@@ -232,7 +238,7 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport)
          TlsTransportKey key(transport->tlsDomain(),transport->transport(),transport->ipVersion());
          mTlsTransports[key]=transport;
       }
-         break;
+      break;
       default:
          assert(0);
          break;
@@ -503,8 +509,8 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
    assert(!msg->header(h_Vias).empty());
    const Via& via = msg->header(h_Vias).front();
 
-   // this case should be handled already
-   assert( !(msg->isRequest() && !via.sentHost().empty()) );
+   // this case should be handled already for UDP and TCP targets
+   assert( (!(msg->isRequest() && !via.sentHost().empty())) || (target.getType() == TLS || target.getType() == DTLS) );
    if (1)
    {
       Tuple source(target);
@@ -1250,6 +1256,12 @@ TransportSelector::findLoopbackTransportBySource(bool ignorePort, Tuple& search)
 Transport*
 TransportSelector::findTransportBySource(Tuple& search) const
 {
+   if(search.getType() == TLS || search.getType() == DTLS)
+   {
+      // TLS or DTLS transports cannot be found by Source
+      return 0;
+   }
+
    DebugLog(<< "findTransportBySource(" << search << ")");
 
    if (search.getPort() != 0)
