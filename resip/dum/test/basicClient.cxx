@@ -74,11 +74,13 @@ main(int argc, char* argv[])
          }
       }
    }
+#ifdef USE_SSL
    catch (BaseSecurity::Exception& e)
    {
       WarningLog (<< "Couldn't set up security object: " << e);
       exit(-1);
    }
+#endif
    catch (BaseException& e)
    {
       ErrLog (<< "Caught: " << e);
