@@ -31,15 +31,6 @@
 using namespace resip;
 using namespace std;
 
-void sleepSeconds(unsigned int seconds)
-{
-#ifdef WIN32
-   Sleep(seconds*1000);
-#else
-   sleep(seconds);
-#endif
-}
-
 /////////////////////////////////////////////////////////////////////////////////
 //
 // Classes that provide the mapping between Application Data and DUM 
