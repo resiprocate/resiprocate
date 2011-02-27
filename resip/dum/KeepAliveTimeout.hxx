@@ -11,11 +11,29 @@ namespace resip
 
 class KeepAliveTimeout : public ApplicationMessage
 {
-   public:
-      
+   public:      
       KeepAliveTimeout(const Tuple& target, int id);
       KeepAliveTimeout(const KeepAliveTimeout&);      
       virtual ~KeepAliveTimeout();
+      
+      const Tuple& target() const { return mTarget; }
+      int id() const { return mId; }
+      virtual Message* clone() const;
+      virtual EncodeStream& encode(EncodeStream& strm) const;
+      virtual EncodeStream& encodeBrief(EncodeStream& strm) const;
+
+   private:
+      Tuple mTarget;
+      int mId;
+};
+
+class KeepAlivePongTimeout : public ApplicationMessage
+{
+   public:
+      
+      KeepAlivePongTimeout(const Tuple& target, int id);
+      KeepAlivePongTimeout(const KeepAlivePongTimeout&);      
+      virtual ~KeepAlivePongTimeout();
       
       const Tuple& target() const { return mTarget; }
       int id() const { return mId; }

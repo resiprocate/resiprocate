@@ -117,6 +117,12 @@ InviteSessionHandler::onConnectedConfirmed(InviteSessionHandle handle, const Sip
 {
 }
 
+void 
+InviteSessionHandler::onFlowTerminated(InviteSessionHandle)
+{
+   InfoLog(<< "InviteSessionHandler::onFlowTerminated");
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

@@ -11,14 +11,18 @@ using namespace resip;
 
 UserProfile::UserProfile() : Profile(), 
    mGruuEnabled(false),
-   mAnonymous("\"Anonymous\" <sip:anonymous@anonymous.invalid>")
+   mAnonymous("\"Anonymous\" <sip:anonymous@anonymous.invalid>"),
+   mRegId(0),
+   mClientOutboundEnabled(false)
 {
     //InfoLog (<< "************ UserProfile created (no base)!: " << *this);
 }
 
 UserProfile::UserProfile(SharedPtr<Profile> baseProfile) : Profile(baseProfile), 
    mGruuEnabled(false),
-   mAnonymous("\"Anonymous\" <sip:anonymous@anonymous.invalid>")
+   mAnonymous("\"Anonymous\" <sip:anonymous@anonymous.invalid>"),
+   mRegId(0),
+   mClientOutboundEnabled(false)
 {
     //InfoLog (<< "************ UserProfile created (with base)!: " << *this);
 }
@@ -167,13 +171,6 @@ UserProfile::DigestCredential::DigestCredential(const Data& r, const Data& u, co
    user(u),
    password(pwd)
 {  
-//    MD5Stream a1;
-//    a1 << user
-//       << Symbols::COLON
-//       << realm
-//       << Symbols::COLON
-//       << password;
-//    passwordHashA1 = a1.getHex();
 }
 
 UserProfile::DigestCredential::DigestCredential() : 

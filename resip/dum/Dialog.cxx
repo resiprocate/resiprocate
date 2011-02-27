@@ -101,24 +101,23 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                   mRemoteTarget = contact;
                   
                   // Create Local Contact
-                  SharedPtr<UserProfile> userProfile = mDialogSet.getUserProfile();
-                  if(userProfile->hasUserAgentCapabilities())
+                  if(mDialogSet.mUserProfile->hasUserAgentCapabilities())
                   {
-                     mLocalContact = userProfile->getUserAgentCapabilities();
+                     mLocalContact = mDialogSet.mUserProfile->getUserAgentCapabilities();
                   }
-                  if(!userProfile->isAnonymous() && userProfile->hasPublicGruu())
+                  if(!mDialogSet.mUserProfile->isAnonymous() && mDialogSet.mUserProfile->hasPublicGruu())
                   {
-                     mLocalContact.uri() = userProfile->getPublicGruu();
+                     mLocalContact.uri() = mDialogSet.mUserProfile->getPublicGruu();
                   }
-                  else if(userProfile->isAnonymous() && userProfile->hasTempGruu())
+                  else if(mDialogSet.mUserProfile->isAnonymous() && mDialogSet.mUserProfile->hasTempGruu())
                   {
-                     mLocalContact.uri() = userProfile->getTempGruu();
+                     mLocalContact.uri() = mDialogSet.mUserProfile->getTempGruu();
                   }
                   else
                   {
-                     if (userProfile->hasOverrideHostAndPort())
+                     if (mDialogSet.mUserProfile->hasOverrideHostAndPort())
                      {
-                        mLocalContact.uri() = userProfile->getOverrideHostAndPort();
+                        mLocalContact.uri() = mDialogSet.mUserProfile->getOverrideHostAndPort();
                      }
                      if(request.header(h_RequestLine).uri().user().empty())
                      {
@@ -128,6 +127,16 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                      {
                         mLocalContact.uri().user() = request.header(h_RequestLine).uri().user(); 
                      }
+                     const Data& instanceId = mDialogSet.mUserProfile->getInstanceId();
+                     if (!contact.uri().exists(p_gr) && !instanceId.empty())
+                     {
+                        mLocalContact.param(p_Instance) = instanceId;
+                     }
+                  }
+                  if(mDialogSet.mUserProfile->clientOutboundEnabled())
+                  {
+                     // Add ;ob parm to non-register requests - RFC5626 pg17
+                     mLocalContact.uri().param(p_ob);
                   }
                }
                else
@@ -390,16 +399,16 @@ Dialog::dispatch(const SipMessage& msg)
          receivedTransport == Symbols::TLS ||
          receivedTransport == Symbols::SCTP)
       {
-         keepAliveTime = mDialogSet.getUserProfile()->getKeepAliveTimeForStream();
+         keepAliveTime = mDialogSet.mUserProfile->getKeepAliveTimeForStream();
       }
       else
       {
-         keepAliveTime = mDialogSet.getUserProfile()->getKeepAliveTimeForDatagram();
+         keepAliveTime = mDialogSet.mUserProfile->getKeepAliveTimeForDatagram();
       }
 
       if(keepAliveTime > 0)
       {
-         mNetworkAssociation.update(msg, keepAliveTime);
+         mNetworkAssociation.update(msg, keepAliveTime, false /* targetSupportsOutbound */); // target supports outbound is detected in registration responses only
       }
    }
    
@@ -617,7 +626,7 @@ Dialog::dispatch(const SipMessage& msg)
          {         
             bool handledByAuth = false;
             if (mDum.mClientAuthManager.get() && 
-                mDum.mClientAuthManager->handle(*mDialogSet.getUserProfile(), *r->second, msg))
+                mDum.mClientAuthManager->handle(*mDialogSet.mUserProfile, *r->second, msg))
             {
                InfoLog( << "about to re-send request with digest credentials" << r->second->brief());
 
@@ -1015,11 +1024,11 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
    // If method is INVITE then advertise required headers
    if(method == INVITE || method == UPDATE)
    {
-      if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::Allow)) request.header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
-      if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::AcceptEncoding)) request.header(h_AcceptEncodings) = mDum.getMasterProfile()->getSupportedEncodings();
-      if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::AcceptLanguage)) request.header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
-      if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::AllowEvents)) request.header(h_AllowEvents) = mDum.getMasterProfile()->getAllowedEvents();
-      if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::Supported)) request.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
+      if(mDialogSet.mUserProfile->isAdvertisedCapability(Headers::Allow)) request.header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
+      if(mDialogSet.mUserProfile->isAdvertisedCapability(Headers::AcceptEncoding)) request.header(h_AcceptEncodings) = mDum.getMasterProfile()->getSupportedEncodings();
+      if(mDialogSet.mUserProfile->isAdvertisedCapability(Headers::AcceptLanguage)) request.header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
+      if(mDialogSet.mUserProfile->isAdvertisedCapability(Headers::AllowEvents)) request.header(h_AllowEvents) = mDum.getMasterProfile()->getAllowedEvents();
+      if(mDialogSet.mUserProfile->isAdvertisedCapability(Headers::Supported)) request.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
    }
 
    if (mDialogSet.mUserProfile->isAnonymous())
@@ -1062,23 +1071,23 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
          && code >= 200 && code < 300)
       {
          // Check if we should add our capabilites to the invite success response
-         if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::Allow)) 
+         if(mDialogSet.mUserProfile->isAdvertisedCapability(Headers::Allow)) 
          {
             response.header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
          }
-         if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::AcceptEncoding)) 
+         if(mDialogSet.mUserProfile->isAdvertisedCapability(Headers::AcceptEncoding)) 
          {
             response.header(h_AcceptEncodings) = mDum.getMasterProfile()->getSupportedEncodings();
          }
-         if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::AcceptLanguage)) 
+         if(mDialogSet.mUserProfile->isAdvertisedCapability(Headers::AcceptLanguage)) 
          {
             response.header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
          }
-         if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::AllowEvents)) 
+         if(mDialogSet.mUserProfile->isAdvertisedCapability(Headers::AllowEvents)) 
          {
             response.header(h_AllowEvents) = mDum.getMasterProfile()->getAllowedEvents();
          }
-         if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::Supported)) 
+         if(mDialogSet.mUserProfile->isAdvertisedCapability(Headers::Supported)) 
          {
             response.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
          }
@@ -1155,7 +1164,8 @@ Dialog::onForkAccepted()
    }
 }
 
-void Dialog::possiblyDie()
+void 
+Dialog::possiblyDie()
 {
    if (!mDestroying)
    {
@@ -1166,6 +1176,35 @@ void Dialog::possiblyDie()
          mDestroying = true;
          mDum.destroy(this);
       }
+   }
+}
+
+void
+Dialog::flowTerminated()
+{
+   // Clear the network association
+   mNetworkAssociation.clear();
+   
+   // notify server subscirption dialogs
+   std::list<ServerSubscription*> tempServerList = mServerSubscriptions;  // Create copy since subscription can be deleted
+   for (std::list<ServerSubscription*>::iterator is=tempServerList.begin();
+        is != tempServerList.end(); ++is)
+   {
+      (*is)->flowTerminated();
+   }
+
+   // notify client subscription dialogs
+   std::list<ClientSubscription*> tempClientList = mClientSubscriptions;  // Create copy since subscription can be deleted
+   for (std::list<ClientSubscription*>::iterator ic=tempClientList.begin();
+        ic != tempClientList.end(); ++ic)
+   {
+      (*ic)->flowTerminated();
+   }
+
+   // notify invite session dialog
+   if (mInviteSession)
+   {
+      mInviteSession->flowTerminated();
    }
 }
 

@@ -42,9 +42,9 @@ ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog,
    }
    else
    {
-	   // If a NOTIFY request is use to make this ClientSubscription, then create the implied SUBSCRIBE 
-	   // request as the mLastRequest
-	   mDialog.makeRequest(*mLastRequest, SUBSCRIBE);
+      // If a NOTIFY request is use to make this ClientSubscription, then create the implied SUBSCRIBE 
+      // request as the mLastRequest
+      mDialog.makeRequest(*mLastRequest, SUBSCRIBE);
    }
 }
 
@@ -82,7 +82,6 @@ ClientSubscription::dispatch(const SipMessage& msg)
    {
       assert( msg.header(h_RequestLine).getMethod() == NOTIFY );
       mRefreshing = false;
-
 
       // !dlb! 481 NOTIFY iff state is dead?
 
@@ -137,8 +136,9 @@ ClientSubscription::processResponse(const SipMessage& msg)
    assert(handler);
 
    mRefreshing = false;
+   int statusCode = msg.header(h_StatusLine).statusCode();
 
-   if (msg.header(h_StatusLine).statusCode() >= 200 && msg.header(h_StatusLine).statusCode() <300)
+   if (statusCode >= 200 && statusCode <300)
    {
       if (msg.exists(h_Expires))
       {
@@ -165,45 +165,37 @@ ClientSubscription::processResponse(const SipMessage& msg)
       sendQueuedRefreshRequest();
    }
    else if (!mEnded &&
-            msg.header(h_StatusLine).statusCode() == 481 &&
+            statusCode == 481 &&
             msg.exists(h_Expires) && msg.header(h_Expires).value() > 0)
    {
       InfoLog (<< "Received 481 to SUBSCRIBE, reSUBSCRIBEing (presence server probably restarted) "
                << mLastRequest->header(h_To));
 
-	  NameAddr target(mLastRequest->header(h_To));
-	  target.remove(p_tag);  // ensure To tag is removed
-      SharedPtr<SipMessage> sub = mDum.makeSubscription(target, getUserProfile(), getEventType(), getAppDialogSet()->reuse());
-      mDum.send(sub);
-
-      delete this;
+      reSubscribe();  // will delete "this"
       return;
    }
    else if (!mEnded &&
-            (msg.header(h_StatusLine).statusCode() == 408 ||
-            ((msg.header(h_StatusLine).statusCode() == 413 ||
-              msg.header(h_StatusLine).statusCode() == 480 ||
-              msg.header(h_StatusLine).statusCode() == 486 ||
-              msg.header(h_StatusLine).statusCode() == 500 ||
-              msg.header(h_StatusLine).statusCode() == 503 ||
-              msg.header(h_StatusLine).statusCode() == 600 ||
-              msg.header(h_StatusLine).statusCode() == 603) &&
-             msg.exists(h_RetryAfter))))
+            (statusCode == 408 ||
+             (statusCode == 503 && msg.getReceivedTransport() == 0) ||
+             ((statusCode == 413 ||
+               statusCode == 480 ||
+               statusCode == 486 ||
+               statusCode == 500 ||
+               statusCode == 503 ||
+               statusCode == 600 ||
+               statusCode == 603) &&
+              msg.exists(h_RetryAfter))))
    {
       int retry;
+      int retryAfter = 0;
+      if(msg.exists(h_RetryAfter))
+      {
+         retryAfter = msg.header(h_RetryAfter).value();
+      }
 
-      if (msg.header(h_StatusLine).statusCode() == 408)
-      {
-         InfoLog (<< "Received 408 to SUBSCRIBE "
-                  << mLastRequest->header(h_To));
-         retry = handler->onRequestRetry(getHandle(), 0, msg);
-      }
-      else
-      {
-         InfoLog (<< "Received non-408 retriable to SUBSCRIBE "
-                  << mLastRequest->header(h_To));
-         retry = handler->onRequestRetry(getHandle(), msg.header(h_RetryAfter).value(), msg);
-      }
+      InfoLog (<< "Received " << statusCode << " to SUBSCRIBE "
+               << mLastRequest->header(h_To));
+      retry = handler->onRequestRetry(getHandle(), retryAfter, msg);
 
       if (retry < 0)
       {
@@ -224,11 +216,7 @@ ClientSubscription::processResponse(const SipMessage& msg)
          }
          else
          {
-            NameAddr target(mLastRequest->header(h_To));
-	        target.remove(p_tag);  // ensure To tag is removed
-            SharedPtr<SipMessage> sub = mDum.makeSubscription(target, getUserProfile(), getEventType(), getAppDialogSet()->reuse());
-            mDum.send(sub);
-            delete this;
+            reSubscribe();  // will delete "this"
             return;
          }
       }
@@ -485,15 +473,11 @@ ClientSubscription::dispatch(const DumTimeout& timer)
          else
          {
             InfoLog(<< "ClientSubscription: application retry new request");
-  
-            NameAddr target(mLastRequest->header(h_To));
-	        target.remove(p_tag);  // ensure To tag is removed
-            SharedPtr<SipMessage> sub = mDum.makeSubscription(target, getUserProfile(), getEventType(), getAppDialogSet()->reuse());
-            mDum.send(sub);            
-            delete this;
+            reSubscribe();  // will delete "this"
+            return;
          }
       }
-	  else if(timer.type() == DumTimeout::Subscription)
+      else if(timer.type() == DumTimeout::Subscription)
       {
          requestRefresh();
       }
@@ -667,6 +651,17 @@ ClientSubscription::acceptUpdateCommand(int statusCode, const char* reason)
    mDum.post(new ClientSubscriptionAcceptUpdateCommand(*this, statusCode, reason));
 }
 
+void
+ClientSubscription::reSubscribe()
+{
+   NameAddr target(mLastRequest->header(h_To));
+   target.remove(p_tag);  // ensure To tag is removed
+   SharedPtr<SipMessage> sub = mDum.makeSubscription(target, getUserProfile(), getEventType(), getAppDialogSet()->reuse());
+   mDum.send(sub);
+
+   delete this;
+}
+
 void 
 ClientSubscription::send(SharedPtr<SipMessage> msg)
 {
@@ -774,11 +769,21 @@ ClientSubscription::dump(EncodeStream& strm) const
    return strm;
 }
 
-void ClientSubscription::onReadyToSend(SipMessage& msg)
+void 
+ClientSubscription::onReadyToSend(SipMessage& msg)
 {
    ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
    assert(handler);
    handler->onReadyToSend(getHandle(), msg);
+}
+
+void
+ClientSubscription::flowTerminated()
+{
+   // notify handler
+   ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
+   assert(handler);
+   handler->onFlowTerminated(getHandle());
 }
 
 void
