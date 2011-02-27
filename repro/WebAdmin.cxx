@@ -749,6 +749,7 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
       "  <td>Contact</td>" << endl << 
       "  <td>Instance ID</td>" << endl <<
       "  <td>Reg ID</td>" << endl <<
+      "  <td>Path</td>" << endl <<
       "  <td>Expires In</td>" << endl << 
       "  <td><input type=\"submit\" value=\"Remove\"/></td>" << endl << 
       "</tr>" << endl;
@@ -788,8 +789,13 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
 
                s << contact.uri();
                s <<"</td>" << endl 
-                 << "<td> " << instanceId.xmlCharDataEncode() << "</td> <td>" << regId << "</td>"
-                 <<"<td>" << secondsRemaining << "s</td>" << endl
+                 << "<td> " << instanceId.xmlCharDataEncode() << "</td> <td>" << regId << "</td><td>";
+               NameAddrs::const_iterator naIt = r.mSipPath.begin();
+               for(;naIt != r.mSipPath.end(); naIt++)
+               {
+                  s << naIt->uri() << "<br>" << endl;
+               }
+               s <<"</td><td>" << secondsRemaining << "s</td>" << endl
                  << "  <td>"
                  << "<input type=\"checkbox\" name=\"remove." << uri << "\" value=\"" << Data::from(contact.uri()).urlEncoded() << "|" << instanceId.urlEncoded() << "|" << regId
                  << "\"/></td>" << endl
