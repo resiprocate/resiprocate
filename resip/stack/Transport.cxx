@@ -14,6 +14,7 @@
 #include "rutil/ParseBuffer.hxx"
 
 #include "resip/stack/ConnectionTerminated.hxx"
+#include "resip/stack/KeepAlivePong.hxx"
 #include "resip/stack/Transport.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TransportFailure.hxx"
@@ -197,6 +198,12 @@ void
 Transport::flowTerminated(const Tuple& flow)
 {
    mStateMachineFifo.add(new ConnectionTerminated(flow));
+}
+
+void
+Transport::keepAlivePong(const Tuple& flow)
+{
+   mStateMachineFifo.add(new KeepAlivePong(flow));
 }
 
 void

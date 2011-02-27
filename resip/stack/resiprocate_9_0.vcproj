@@ -943,6 +943,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ConnectionTerminated.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\Contents.hxx"
 				>
 			</File>
@@ -1076,6 +1080,10 @@
 			</File>
 			<File
 				RelativePath=".\KeepAliveMessage.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\KeepAlivePong.hxx"
 				>
 			</File>
 			<File
@@ -1308,6 +1316,10 @@
 			</File>
 			<File
 				RelativePath=".\TcpTransport.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\TerminateFlow.hxx"
 				>
 			</File>
 			<File

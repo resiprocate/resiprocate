@@ -91,6 +91,7 @@ class Transport
       virtual void setPollGrp(FdPollGrp *grp) = 0;
 
       void flowTerminated(const Tuple& flow);
+      void keepAlivePong(const Tuple& flow);
 
       // called when transport failed
       void fail(const Data& tid,
@@ -132,15 +133,15 @@ class Transport
       // mark the received= and rport parameters if necessary
       static void stampReceived(SipMessage* request);
 
-	  /**
-	  Returns true if this Transport should be included in the FdSet processing
-	  loop, false if the Transport will provide its own cycles.  If the Transport
-	  is going to provide its own cycles, the startOwnProcessing() and
-	  shutdown() will be called to tell the Transport when to process.
+      /**
+      Returns true if this Transport should be included in the FdSet processing
+      loop, false if the Transport will provide its own cycles.  If the Transport
+      is going to provide its own cycles, the startOwnProcessing() and
+      shutdown() will be called to tell the Transport when to process.
 
-	  @retval true will run in the SipStack's processing context
+      @retval true will run in the SipStack's processing context
       @retval false provides own cycles, just puts messages in rxFifo
-	  */
+      */
       virtual bool shareStackProcessAndSelect() const=0;
 
       //transports that returned false to shareStackProcessAndSelect() shouldn't

@@ -1,4 +1,5 @@
 #include "resip/stack/ConnectionTerminated.hxx"
+#include "resip/stack/KeepAlivePong.hxx"
 #include "resip/stack/TuSelector.hxx"
 #include "resip/stack/TransactionUser.hxx"
 #include "resip/stack/TransactionUserMessage.hxx"
@@ -102,6 +103,20 @@ TuSelector::add(ConnectionTerminated* term)
       if (!it->shuttingDown && it->tu->isRegisteredForConnectionTermination())
       {
          it->tu->post(term->clone());
+      }
+   }
+}
+
+void 
+TuSelector::add(KeepAlivePong* pong)
+{
+   //InfoLog (<< "Sending " << *pong << " to TUs");
+   
+   for(TuList::const_iterator it = mTuList.begin(); it != mTuList.end(); it++)
+   {
+      if (!it->shuttingDown && it->tu->isRegisteredForKeepAlivePongs())
+      {
+         it->tu->post(pong->clone());
       }
    }
 }

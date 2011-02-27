@@ -11,6 +11,7 @@ namespace resip
 {
 
 class ConnectionTerminated;
+class KeepAlivePong;
 class Message;
 class TransactionUser;
 class AsyncProcessHandler;
@@ -23,6 +24,7 @@ class TuSelector
       
       void add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage);
       void add(ConnectionTerminated* term);
+      void add(KeepAlivePong* pong);
       
       unsigned int size() const;      
       bool wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const;
