@@ -103,6 +103,7 @@ class TransportSelector
 
       static Tuple getFirstInterface(bool is_v4, TransportType type);
       bool connectionAlive(const Tuple& dest) const;
+      void terminateFlow(const resip::Tuple& flow);
 
       /// delete all known transports (including external)
       void deleteTransports();
@@ -123,22 +124,22 @@ class TransportSelector
       Security* mSecurity;// for computing identity header
 
       // specific port and interface
-      typedef std::map<Tuple, Transport*> ExactTupleMap;
-      ExactTupleMap mExactTransports;
+      typedef std::map<Tuple, Transport*> ExactTupleMap;  
+      ExactTupleMap mExactTransports;  // owns transport pointers
 
       // specific port, ANY interface
       typedef std::map<Tuple, Transport*, Tuple::AnyInterfaceCompare> AnyInterfaceTupleMap;
-      AnyInterfaceTupleMap mAnyInterfaceTransports;
+      AnyInterfaceTupleMap mAnyInterfaceTransports;  // owns transport pointers
 
       // ANY port, specific interface
       typedef std::map<Tuple, Transport*, Tuple::AnyPortCompare> AnyPortTupleMap;
-      AnyPortTupleMap mAnyPortTransports;
+      AnyPortTupleMap mAnyPortTransports;   // references transport pointers owened by mExactTransports
 
       // ANY port, ANY interface
       typedef std::map<Tuple, Transport*, Tuple::AnyPortAnyInterfaceCompare> AnyPortAnyInterfaceTupleMap;
-      AnyPortAnyInterfaceTupleMap mAnyPortAnyInterfaceTransports;
+      AnyPortAnyInterfaceTupleMap mAnyPortAnyInterfaceTransports;    // references transport pointers owened by mAnyInterfaceTransports
 
-      std::map<FlowKey,Transport*> mConnectionlessMap;
+      std::map<FlowKey,Transport*> mConnectionlessMap;   // references transport pointers owned by mExactTransports, mAnyInterfaceTransports, or mTlsTransports
 
       class TlsTransportKey
       {
@@ -185,13 +186,13 @@ class TransportSelector
             TlsTransportKey();
       };
 
-      typedef std::map<TlsTransportKey, Transport*> TlsTransportMap ;
+      typedef std::map<TlsTransportKey, Transport*> TlsTransportMap ;  // owns transport pointers
 
       TlsTransportMap mTlsTransports;
 
       typedef std::vector<Transport*> TransportList;
-      TransportList mSharedProcessTransports;
-      TransportList mHasOwnProcessTransports;
+      TransportList mSharedProcessTransports;   // references transport pointers owned by mExactTransports, mAnyInterfaceTransports, or mTlsTransports
+      TransportList mHasOwnProcessTransports;   // references transport pointers owned by mExactTransports, mAnyInterfaceTransports, or mTlsTransports
 
       typedef std::multimap<Tuple, Transport*, Tuple::AnyPortAnyInterfaceCompare> TypeToTransportMap;
       TypeToTransportMap mTypeToTransportMap;

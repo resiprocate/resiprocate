@@ -386,6 +386,9 @@
     <ClCompile Include="XMLCursor.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="EventStackThread.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Aor.hxx">
@@ -806,6 +809,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="XMLCursor.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EventStackThread.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ConnectionTerminated.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="KeepAlivePong.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TerminateFlow.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

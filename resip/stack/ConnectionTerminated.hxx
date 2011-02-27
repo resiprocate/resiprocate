@@ -7,7 +7,6 @@
 
 namespace resip
 {
-class ConnectionUser;
 
 class ConnectionTerminated : public TransactionMessage
 {
@@ -40,7 +39,7 @@ class ConnectionTerminated : public TransactionMessage
    private:
       const Tuple mFlow;
 };
- 
+
 }
 
 #endif

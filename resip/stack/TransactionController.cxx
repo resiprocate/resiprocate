@@ -5,6 +5,7 @@
 #include "resip/stack/AbandonServerTransaction.hxx"
 #include "resip/stack/ApplicationMessage.hxx"
 #include "resip/stack/CancelClientInviteTransaction.hxx"
+#include "resip/stack/TerminateFlow.hxx"
 #include "resip/stack/ShutdownMessage.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TransactionController.hxx"
@@ -203,6 +204,11 @@ TransactionController::cancelClientInviteTransaction(const Data& tid)
    mStateMacFifo.add(new CancelClientInviteTransaction(tid));
 }
 
+void
+TransactionController::terminateFlow(const resip::Tuple& flow)
+{
+   mStateMacFifo.add(new TerminateFlow(flow));
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

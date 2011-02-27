@@ -493,6 +493,7 @@
     <ClInclude Include="Connection.hxx" />
     <ClInclude Include="ConnectionBase.hxx" />
     <ClInclude Include="ConnectionManager.hxx" />
+    <ClInclude Include="ConnectionTerminated.hxx" />
     <ClInclude Include="Contents.hxx" />
     <ClInclude Include="ContentsFactory.hxx" />
     <ClInclude Include="ContentsFactoryBase.hxx" />
@@ -504,6 +505,7 @@
     <ClInclude Include="DnsInterface.hxx" />
     <ClInclude Include="DnsResult.hxx" />
     <ClInclude Include="DtlsMessage.hxx" />
+    <ClInclude Include="KeepAlivePong.hxx" />
     <ClInclude Include="ssl\DtlsTransport.hxx" />
     <ClInclude Include="Embedded.hxx" />
     <ClInclude Include="EventStackThread.hxx" />
@@ -586,6 +588,7 @@
     <ClInclude Include="TcpBaseTransport.hxx" />
     <ClInclude Include="TcpConnection.hxx" />
     <ClInclude Include="TcpTransport.hxx" />
+    <ClInclude Include="TerminateFlow.hxx" />
     <ClInclude Include="TextParameter.hxx" />
     <ClInclude Include="TimeAccumulate.hxx" />
     <ClInclude Include="TimerMessage.hxx" />
