@@ -1382,7 +1382,15 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
             if(it->second->mUserProfile->clientOutboundEnabled() && 
                it->second->mUserProfile->getClientOutboundFlowTuple().mFlowKey == terminated->getFlow().mFlowKey)
             {
-               dialogSetsToNotify.push_back(it->second);
+               if(it->second->getClientRegistration().isValid())
+               {
+                   // ensure client registrations are notified first
+                   dialogSetsToNotify.push_front(it->second);
+               }
+               else
+               {
+                  dialogSetsToNotify.push_back(it->second);
+               }
             }
          }
          // Now dispatch notification to all dialogsets found above
