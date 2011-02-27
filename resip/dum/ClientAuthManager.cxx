@@ -34,7 +34,9 @@ public:
       {
          DebugLog(<<"Using extension to make auth response");
       
-         ClientAuthExtension::instance().makeChallengeResponseAuth(msg,
+         if(mCredential.isPasswordA1Hash)
+         {
+            ClientAuthExtension::instance().makeChallengeResponseAuthWithA1(msg,
                                                             mCredential.user,
                                                             mCredential.password,
                                                             mAuth, 
@@ -42,10 +44,24 @@ public:
                                                             mAuthQop, 
                                                             mNonceCountString,
                                                             auth);      
+         }
+         else
+         {
+            ClientAuthExtension::instance().makeChallengeResponseAuth(msg,
+                                                            mCredential.user,
+                                                            mCredential.password,
+                                                            mAuth, 
+                                                            cnonce,
+                                                            mAuthQop, 
+                                                            mNonceCountString,
+                                                            auth);      
+         }
       }
       else
       {
-         Helper::makeChallengeResponseAuth(msg, 
+         if(mCredential.isPasswordA1Hash)
+         {
+            Helper::makeChallengeResponseAuthWithA1(msg, 
                                            mCredential.user, 
                                            mCredential.password, 
                                            mAuth, 
@@ -53,6 +69,18 @@ public:
                                            mAuthQop, 
                                            mNonceCountString, 
                                            auth);
+         }
+         else
+         {
+            Helper::makeChallengeResponseAuth(msg, 
+                                           mCredential.user, 
+                                           mCredential.password, 
+                                           mAuth, 
+                                           cnonce, 
+                                           mAuthQop, 
+                                           mNonceCountString, 
+                                           auth);
+         }
       }
       target.push_back(auth);
    

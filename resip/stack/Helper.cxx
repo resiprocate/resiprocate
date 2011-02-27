@@ -1311,7 +1311,7 @@ Helper::updateNonceCount(unsigned int& nonceCount, Data& nonceCountString)
 
 
 Auth 
-Helper::makeChallengeResponseAuth(SipMessage& request,
+Helper::makeChallengeResponseAuth(const SipMessage& request,
                                   const Data& username,
                                   const Data& password,
                                   const Auth& challenge,
@@ -1330,7 +1330,7 @@ Helper::makeChallengeResponseAuth(SipMessage& request,
 }
 
 void
-Helper::makeChallengeResponseAuth(SipMessage& request,
+Helper::makeChallengeResponseAuth(const SipMessage& request,
                                   const Data& username,
                                   const Data& password,
                                   const Auth& challenge,
@@ -1445,13 +1445,32 @@ Helper::qopOption(const Auth& challenge)
 Auth 
 Helper::makeChallengeResponseAuthWithA1(const SipMessage& request,
                                         const Data& username,
-                                        const Data& a1,
+                                        const Data& passwordHashA1,
                                         const Auth& challenge,
                                         const Data& cnonce,
                                         unsigned int& nonceCount,
                                         Data& nonceCountString)
 {
    Auth auth;
+   Data authQop = qopOption(challenge);
+   if(!authQop.empty())
+   {
+       updateNonceCount(nonceCount, nonceCountString);
+   }
+   makeChallengeResponseAuthWithA1(request, username, passwordHashA1, challenge, cnonce, authQop, nonceCountString, auth);
+   return auth;
+}
+
+void
+Helper::makeChallengeResponseAuthWithA1(const SipMessage& request,
+                                        const Data& username,
+                                        const Data& passwordHashA1,
+                                        const Auth& challenge,
+                                        const Data& cnonce,
+                                        const Data& authQop,
+                                        const Data& nonceCountString,
+                                        Auth& auth)
+{
    auth.scheme() = Symbols::Digest;
    auth.param(p_username) = username;
    assert(challenge.exists(p_realm));
@@ -1466,11 +1485,9 @@ Helper::makeChallengeResponseAuthWithA1(const SipMessage& request,
    }
    auth.param(p_uri) = digestUri;
 
-   Data authQop = qopOption(challenge);
    if (!authQop.empty())
    {
-      updateNonceCount(nonceCount, nonceCountString);
-      auth.param(p_response) = Helper::makeResponseMD5WithA1(a1,
+      auth.param(p_response) = Helper::makeResponseMD5WithA1(passwordHashA1,
                                                              getMethodName(request.header(h_RequestLine).getMethod()), 
                                                              digestUri, 
                                                              challenge.param(p_nonce),
@@ -1485,7 +1502,7 @@ Helper::makeChallengeResponseAuthWithA1(const SipMessage& request,
    else
    {
       assert(challenge.exists(p_realm));
-      auth.param(p_response) = Helper::makeResponseMD5WithA1(a1,
+      auth.param(p_response) = Helper::makeResponseMD5WithA1(passwordHashA1,
                                                              getMethodName(request.header(h_RequestLine).getMethod()),
                                                              digestUri, 
                                                              challenge.param(p_nonce));
@@ -1504,8 +1521,6 @@ Helper::makeChallengeResponseAuthWithA1(const SipMessage& request,
    {
       auth.param(p_opaque) = challenge.param(p_opaque);
    }
-   
-   return auth;
 }
    
 //.dcm. all the auth stuff should be yanked out of helper and

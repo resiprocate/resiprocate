@@ -442,7 +442,7 @@ class Helper
                                           const Data& cnonce,
                                           unsigned int& nonceCount);
 
-      static Auth makeChallengeResponseAuth(SipMessage& request,
+      static Auth makeChallengeResponseAuth(const SipMessage& request,
                                             const Data& username,
                                             const Data& password,
                                             const Auth& challenge,
@@ -450,14 +450,14 @@ class Helper
                                             unsigned int& nonceCount,
                                             Data& nonceCountString);      
 
-      static void makeChallengeResponseAuth(SipMessage& request,
-                                           const Data& username,
-                                           const Data& password,
-                                           const Auth& challenge,
-                                           const Data& cnonce,
-                                           const Data& authQop,
-                                           const Data& nonceCountString,
-                                           Auth& auth);
+      static void makeChallengeResponseAuth(const SipMessage& request,
+                                            const Data& username,
+                                            const Data& password,
+                                            const Auth& challenge,
+                                            const Data& cnonce,
+                                            const Data& authQop,
+                                            const Data& nonceCountString,
+                                            Auth& auth);
 
       static Auth makeChallengeResponseAuthWithA1(const SipMessage& request,
                                                   const Data& username,
@@ -466,6 +466,15 @@ class Helper
                                                   const Data& cnonce,
                                                   unsigned int& nonceCount,
                                                   Data& nonceCountString);      
+
+      static void makeChallengeResponseAuthWithA1(const SipMessage& request,
+                                                  const Data& username,
+                                                  const Data& passwordHashA1,
+                                                  const Auth& challenge,
+                                                  const Data& cnonce,
+                                                  const Data& authQop,
+                                                  const Data& nonceCountString,
+                                                  Auth& auth);
 
       static Data makeResponseMD5WithA1(const Data& a1,
                                         const Data& method, const Data& digestUri, const Data& nonce,

@@ -1,6 +1,7 @@
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <rutil/DnsUtil.hxx>
+#include <rutil/MD5Stream.hxx>
 #include <resip/stack/SdpContents.hxx>
 #include <resip/stack/PlainContents.hxx>
 #include <resip/stack/ConnectionTerminated.hxx>
@@ -38,6 +39,8 @@ static unsigned int BaseRegistrationRetryTimeAllFlowsFailed = 30; // RFC5626 sec
 static unsigned int BaseRegistrationRetryTime = 90;               // RFC5626 section 4.5 default
 static unsigned int NotifySendTime = 30;  // If someone subscribes to our test event package, then send notifies every 30 seconds
 static unsigned int FailedSubscriptionRetryTime = 60; 
+
+//#define TEST_PASSING_A1_HASH_FOR_PASSWORD
 
 namespace resip
 {
@@ -235,7 +238,17 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
 
    // UserProfile Settings
    mProfile->setDefaultFrom(NameAddr(mAor));
+#ifdef TEST_PASSING_A1_HASH_FOR_PASSWORD
+   MD5Stream a1;
+   a1 << mAor.user()
+      << Symbols::COLON
+      << mAor.host()
+      << Symbols::COLON
+      << mPassword;
+   mProfile->setDigestCredential(mAor.host(), mAor.user(), a1.getHex(), true);   
+#else
    mProfile->setDigestCredential(mAor.host(), mAor.user(), mPassword);   
+#endif
    // Generate InstanceId appropriate for testing only.  Should be UUID that persists 
    // across machine re-starts and is unique to this applicaiton instance.  The one used 
    // here is only as unique as the hostname of this machine.  If someone runs two 

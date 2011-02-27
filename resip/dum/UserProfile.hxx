@@ -64,21 +64,29 @@ class UserProfile : public Profile
             DigestCredential(); 
             DigestCredential(const Data& realm, 
                              const Data& username, 
-                             const Data& pwd);
+                             const Data& pwd,
+                             bool isPasswordA1Hash);
             DigestCredential(const Data& realm);
                              
             Data realm;
             Data user;
             Data password;            
+            bool isPasswordA1Hash;
 
             bool operator<(const DigestCredential& rhs) const;
       };
       
       /// The following functions deal with clearing, setting and getting of digest credentals 
       virtual void clearDigestCredentials();
+      /// For the password you may either provide the plain text password (isPasswordA1Hash = false)
+      /// or the Digest A1 MD5 Hash (isPasswordA1Hash = true).  Note:  If the A1 hash is provided
+      /// then the realm MUST match the realm in the challenge or authentication will fail.  If the
+      /// plain text password is provided, then we will form the A1 hash using the realm from
+      /// the challenge.
       virtual void setDigestCredential( const Data& realm, 
                                         const Data& user, 
-                                        const Data& password);
+                                        const Data& password,
+                                        bool isPasswordA1Hash=false);
       virtual const DigestCredential& getDigestCredential( const Data& realm  );
 
       // Enable this to enable RFC5626 support in DUM - adds regId to registrations, and 

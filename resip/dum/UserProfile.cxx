@@ -134,9 +134,9 @@ UserProfile::clearDigestCredentials()
 }
 
 void 
-UserProfile::setDigestCredential( const Data& realm, const Data& user, const Data& password)
+UserProfile::setDigestCredential( const Data& realm, const Data& user, const Data& password, bool isPasswordA1Hash)
 {
-   DigestCredential cred( realm, user, password );
+   DigestCredential cred(realm, user, password, isPasswordA1Hash);
 
    DebugLog (<< "Adding credential: " << cred);
    mDigestCredentials.erase(cred);
@@ -166,24 +166,27 @@ UserProfile::getDigestCredential( const Data& realm  )
    }
 }
 
-UserProfile::DigestCredential::DigestCredential(const Data& r, const Data& u, const Data& pwd) :
+UserProfile::DigestCredential::DigestCredential(const Data& r, const Data& u, const Data& pwd, bool pwdA1Hash) :
    realm(r),
    user(u),
-   password(pwd)
+   password(pwd),
+   isPasswordA1Hash(pwdA1Hash)
 {  
 }
 
 UserProfile::DigestCredential::DigestCredential() : 
    realm(Data::Empty),
    user(Data::Empty),
-   password(Data::Empty)
+   password(Data::Empty),
+   isPasswordA1Hash(false)
 {
 }  
 
 UserProfile::DigestCredential::DigestCredential(const Data& pRealm) : 
    realm(pRealm),
    user(Data::Empty),
-   password(Data::Empty) 
+   password(Data::Empty),
+   isPasswordA1Hash(false)
 {
 }  
 
