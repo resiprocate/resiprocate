@@ -26,7 +26,7 @@ class ClientAuthExtension
 {
    public:
       virtual ~ClientAuthExtension() {}
-      virtual void makeChallengeResponseAuth(SipMessage& request,
+      virtual void makeChallengeResponseAuth(const SipMessage& request,
                                              const Data& username,
                                              const Data& password,
                                              const Auth& challenge,
@@ -34,6 +34,14 @@ class ClientAuthExtension
                                              const Data& authQop,
                                              const Data& nonceCountString,
                                              Auth& auth);      
+      virtual void makeChallengeResponseAuthWithA1(const SipMessage& request,
+                                                   const Data& username,
+                                                   const Data& passwordHashA1,
+                                                   const Auth& challenge,
+                                                   const Data& cnonce,
+                                                   const Data& authQop,
+                                                   const Data& nonceCountString,
+                                                   Auth& auth);      
       
       virtual bool algorithmAndQopSupported(const Auth& challenge);
 
