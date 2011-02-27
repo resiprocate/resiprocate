@@ -71,6 +71,8 @@ class ClientRegistration: public NonDialogUsage
    
       virtual EncodeStream& dump(EncodeStream& strm) const;
 
+      static void tagContact(NameAddr& contact, DialogUsageManager& dum, SharedPtr<UserProfile>& userProfile);
+
    protected:
       virtual ~ClientRegistration();
 
@@ -97,6 +99,7 @@ class ClientRegistration: public NonDialogUsage
       bool searchByUri(const Uri& cUri) const;
 
       friend class DialogSet;
+      void flowTerminated();
 
       //SipMessage& mLastRequest;
       SharedPtr<SipMessage> mLastRequest;

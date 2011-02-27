@@ -25,7 +25,6 @@
 #include "rutil/Inserter.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
-
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
@@ -240,9 +239,9 @@ bool
 DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
 {
    if (msg.isResponse() && !(mState == Terminating || 
-	                         mState == WaitingToEnd || 
-							 mState == Destroying || 
-							 mState == Cancelling))
+                             mState == WaitingToEnd || 
+                             mState == Destroying || 
+                             mState == Cancelling))
    {
       // !dcm! -- multiple usage grief...only one of each method type allowed
       if (getCreator() &&
@@ -997,7 +996,7 @@ DialogSet::end()
          break;
       }
       case Terminating:
-	  case Cancelling:
+      case Cancelling:
       case Destroying:
          DebugLog (<< "DialogSet::end() called on a DialogSet that is already Terminating");
          //assert(0);
@@ -1129,6 +1128,27 @@ DialogSet::setUserProfile(SharedPtr<UserProfile> userProfile)
 {
    assert(userProfile.get());
    mUserProfile = userProfile;
+}
+
+void 
+DialogSet::flowTerminated(const Tuple& flow)
+{
+   // The flow has failed - clear the flow key/tuple in the UserProfile
+   mUserProfile->clearClientOutboundFlowTuple();
+
+   // If this profile is configured for client outbound and the connectionTerminated
+   // matches the connection stored in the profile, then notify the client registration
+   // and all dialogs in this dialogset that the flow has terminated
+   // Check other usage types that we send requests on
+   if(mClientRegistration)
+   {
+      mClientRegistration->flowTerminated();
+   }
+
+   for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
+   {
+      it->second->flowTerminated();
+   }
 }
 
 

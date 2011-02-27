@@ -35,7 +35,7 @@ ClientRegistration::ClientRegistration(DialogUsageManager& dum,
      mState(mLastRequest->exists(h_Contacts) ? Adding : Querying),
      mEndWhenDone(false),
      mUserRefresh(false),
-      mRegistrationTime(mDialogSet.getUserProfile()->getDefaultRegistrationTime()),
+     mRegistrationTime(mDialogSet.mUserProfile->getDefaultRegistrationTime()),
      mExpires(0),
      mQueuedState(None),
      mQueuedRequest(new SipMessage)
@@ -61,13 +61,13 @@ ClientRegistration::~ClientRegistration()
    mDialogSet.mClientRegistration = 0;
 
    // !dcm! Will not interact well with multiple registrations from the same AOR
-   getUserProfile()->setServiceRoute(NameAddrs());
+   mDialogSet.mUserProfile->setServiceRoute(NameAddrs());
 }
 
 void
 ClientRegistration::addBinding(const NameAddr& contact)
 {
-   addBinding(contact, mDialogSet.getUserProfile()->getDefaultRegistrationTime());
+   addBinding(contact, mDialogSet.mUserProfile->getDefaultRegistrationTime());
 }
 
 SharedPtr<SipMessage>
@@ -268,14 +268,19 @@ ClientRegistration::requestRefresh(UInt32 expires)
 void
 ClientRegistration::internalRequestRefresh(UInt32 expires)
 {
-   if (mState == Refreshing)
+   if(mState == RetryAdding && mState == RetryRefreshing)
    {
+      // disable retry time and try refresh immediately
+      ++mTimerSeq;
+   }
+   else if (mState != Registered)
+   {
+      InfoLog (<< "a request is already in progress, no need to refresh " << *this);
       return;
    }
 
    InfoLog (<< "requesting refresh of " << *this);
    
-   assert (mState == Registered);
    mState = Refreshing;
    mLastRequest->header(h_CSeq).sequence()++;
    mLastRequest->header(h_Contacts)=mMyContacts;
@@ -357,6 +362,31 @@ ClientRegistration::dispatch(const SipMessage& msg)
    {
       // !jf! there may be repairable errors that we can handle here
       assert(msg.isResponse());
+      const int& code = msg.header(h_StatusLine).statusCode();
+      bool nextHopSupportsOutbound = false;
+
+      // If registration was successful - look for next hop indicating support for outbound
+      if(mDialogSet.mUserProfile->clientOutboundEnabled() && msg.isExternal() && code >= 200 && code < 300)
+      {
+         // If ClientOutbound support is enabled and the registration response contains 
+         // Requires: outbound or a Path with outbound then outbound is supported by the 
+         // server, so store the flow key in the UserProfile 
+         // and use it for sending all messages (DialogUsageManager::sendUsingOutboundIfAppropriate)
+         try
+         {
+            if(!msg.empty(h_Paths) && msg.header(h_Paths).back().uri().exists(p_ob) ||
+               !msg.empty(h_Requires) && msg.header(h_Requires).find(Token(Symbols::Outbound)))
+            {
+               mDialogSet.mUserProfile->mClientOutboundFlowTuple = msg.getSource();
+               mDialogSet.mUserProfile->mClientOutboundFlowTuple.onlyUseExistingConnection = true;
+               nextHopSupportsOutbound = true;
+            }
+         }
+         catch(BaseException&e)
+         {
+            ErrLog(<<"Error parsing Path or Requires:" << e);
+         }
+      }
 
       if(msg.isExternal())
       {
@@ -366,20 +396,19 @@ ClientRegistration::dispatch(const SipMessage& msg)
             receivedTransport == Symbols::TLS ||
             receivedTransport == Symbols::SCTP)
          {
-            keepAliveTime = mDialogSet.getUserProfile()->getKeepAliveTimeForStream();
+            keepAliveTime = mDialogSet.mUserProfile->getKeepAliveTimeForStream();
          }
          else
          {
-            keepAliveTime = mDialogSet.getUserProfile()->getKeepAliveTimeForDatagram();
+            keepAliveTime = mDialogSet.mUserProfile->getKeepAliveTimeForDatagram();
          }
 
          if(keepAliveTime > 0)
          {
-            mNetworkAssociation.update(msg, keepAliveTime);
+            mNetworkAssociation.update(msg, keepAliveTime, nextHopSupportsOutbound);
          }
       }
 
-      const int& code = msg.header(h_StatusLine).statusCode();
       if (code < 200)
       {
          // throw it away
@@ -392,36 +421,36 @@ ClientRegistration::dispatch(const SipMessage& msg)
             if (msg.exists(h_ServiceRoutes))
             {
                InfoLog(<< "Updating service route: " << Inserter(msg.header(h_ServiceRoutes)));
-               getUserProfile()->setServiceRoute(msg.header(h_ServiceRoutes));
+               mDialogSet.mUserProfile->setServiceRoute(msg.header(h_ServiceRoutes));
             }
             else
             {
                DebugLog(<< "Clearing service route (" << Inserter(getUserProfile()->getServiceRoute()) << ")");
-               getUserProfile()->setServiceRoute(NameAddrs());
+               mDialogSet.mUserProfile->setServiceRoute(NameAddrs());
             }
          }
          catch(BaseException &e)
          {
-            InfoLog(<< "Error Parsing Service Route:" << e);
+            ErrLog(<< "Error Parsing Service Route:" << e);
          }    
 
          //gruu update, should be optimized
          try
          {
-            if(getUserProfile()->gruuEnabled() && msg.exists(h_Contacts))
+            if(mDialogSet.mUserProfile->gruuEnabled() && msg.exists(h_Contacts))
             {
                for (NameAddrs::const_iterator it = msg.header(h_Contacts).begin(); 
                     it != msg.header(h_Contacts).end(); it++)
                {
-                  if (it->exists(p_Instance) && it->param(p_Instance) == getUserProfile()->getInstanceId())
+                  if (it->exists(p_Instance) && it->param(p_Instance) == mDialogSet.mUserProfile->getInstanceId())
                   {
                      if(it->exists(p_pubGruu))
                      {
-                        getUserProfile()->setPublicGruu(Uri(it->param(p_pubGruu)));
+                        mDialogSet.mUserProfile->setPublicGruu(Uri(it->param(p_pubGruu)));
                      }
                      if(it->exists(p_tempGruu))
                      {
-                        getUserProfile()->setTempGruu(Uri(it->param(p_tempGruu)));
+                        mDialogSet.mUserProfile->setTempGruu(Uri(it->param(p_tempGruu)));
                      }
                      break;
                    }
@@ -430,7 +459,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
          }
          catch(BaseException&e)
          {
-            InfoLog(<<"Error parsing GRUU:" << e);
+            ErrLog(<<"Error parsing GRUU:" << e);
          }
          
          // !jf! consider what to do if no contacts
@@ -536,7 +565,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
          {
             if (code == 423) // interval too short
             {
-               UInt32 maxRegistrationTime = mDialogSet.getUserProfile()->getDefaultMaxRegistrationTime();
+               UInt32 maxRegistrationTime = mDialogSet.mUserProfile->getDefaultMaxRegistrationTime();
                if (msg.exists(h_MinExpires) && 
                    (maxRegistrationTime == 0 || msg.header(h_MinExpires).value() < maxRegistrationTime)) // If maxRegistrationTime is enabled, then check it
                {
@@ -547,7 +576,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                   return;
                }
             }
-            else if (code == 408)
+            else if (code == 408 || (code == 503 && msg.getReceivedTransport() == 0))
             {
                int retry = mDum.mClientRegistrationHandler->onRequestRetry(getHandle(), 0, msg);
             
@@ -557,7 +586,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                }
                else if (retry == 0)
                {
-                  DebugLog(<< "Application requested immediate retry on 408");
+                  DebugLog(<< "Application requested immediate retry on 408 or internal 503");
                
                   mLastRequest->header(h_CSeq).sequence()++;
                   send(mLastRequest);
@@ -566,7 +595,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                }
                else
                {
-                  DebugLog(<< "Application requested delayed retry on 408: " << retry);
+                  DebugLog(<< "Application requested delayed retry on 408 or internal 503: " << retry);
                   mExpires = 0;
                   switch(mState)
                   {
@@ -621,17 +650,27 @@ ClientRegistration::dispatch(const SipMessage& msg)
 void 
 ClientRegistration::tagContact(NameAddr& contact) const
 {
+   tagContact(contact, mDum, mDialogSet.mUserProfile);
+}
+
+void 
+ClientRegistration::tagContact(NameAddr& contact, DialogUsageManager& dum, SharedPtr<UserProfile>& userProfile)
+{
    if(contact.uri().host().empty() || 
-      mDum.getSipStack().isMyDomain(contact.uri().host(), contact.uri().port()))
+      dum.getSipStack().isMyDomain(contact.uri().host(), contact.uri().port()))
    {
       // Contact points at us; it is appropriate to add a +sip.instance to 
       // this Contact. We don't need to have full gruu support enabled to add
       // a +sip.instance either...
-      if(mDialogSet.getUserProfile()->hasInstanceId())
+      if(userProfile->hasInstanceId())
       {
-         contact.param(p_Instance) = mDialogSet.getUserProfile()->getInstanceId();
+         contact.param(p_Instance) = userProfile->getInstanceId();
+         if(userProfile->getRegId() != 0)
+         {
+            contact.param(p_regid) = userProfile->getRegId();
+         }
       }
-      else if(mDialogSet.getUserProfile()->getRinstanceEnabled())
+      else if(userProfile->getRinstanceEnabled())
       {
          // !slg! poor mans instance id so that we can tell which contacts 
          // are ours - to be replaced by gruu someday.
@@ -666,7 +705,7 @@ ClientRegistration::tagContact(NameAddr& contact) const
    {
       // Looks like a third-party registration. +sip.instance is out of the 
       // question, but we can still use rinstance.
-      if(mDialogSet.getUserProfile()->getRinstanceEnabled())
+      if(userProfile->getRinstanceEnabled())
       {
          // !slg! poor mans instance id so that we can tell which contacts 
          // are ours - to be replaced by gruu someday.
@@ -693,6 +732,11 @@ ClientRegistration::tagContact(NameAddr& contact) const
       }
    }
    
+   if (userProfile->getMethodsParamEnabled())
+   {
+      contact.param(p_methods) = dum.getMasterProfile()->getAllowedMethodsData();
+   }
+
    // ?bwc? Host and port override?
 }
 
@@ -735,12 +779,12 @@ bool
 ClientRegistration::contactIsMine(const NameAddr& contact) const
 {
    // Try to find this contact in mMyContacts
-   if(mDialogSet.getUserProfile()->hasInstanceId() && 
+   if(mDialogSet.mUserProfile->hasInstanceId() && 
       contact.exists(p_Instance))
    {
-      return contact.param(p_Instance)==mDialogSet.getUserProfile()->getInstanceId();
+      return contact.param(p_Instance)==mDialogSet.mUserProfile->getInstanceId();
    }
-   else if(mDialogSet.getUserProfile()->getRinstanceEnabled() &&
+   else if(mDialogSet.mUserProfile->getRinstanceEnabled() &&
             contact.uri().exists(p_rinstance))
    {
       return rinstanceIsMine(contact.uri().param(p_rinstance));
@@ -790,7 +834,7 @@ ClientRegistration::searchByUri(const Uri& cUri) const
 unsigned int 
 ClientRegistration::checkProfileRetry(const SipMessage& msg)
 {
-   unsigned int retryInterval = mDialogSet.getUserProfile()->getDefaultRegistrationRetryTime();
+   unsigned int retryInterval = mDialogSet.mUserProfile->getDefaultRegistrationRetryTime();
    if (retryInterval > 0 &&
       (mState == Adding || mState == Refreshing) &&
       !mEndWhenDone)
@@ -867,6 +911,17 @@ ClientRegistration::dispatch(const DumTimeout& timer)
       default:
          break;
    }
+}
+
+void 
+ClientRegistration::flowTerminated()
+{
+   // Clear the network association
+   mNetworkAssociation.clear();
+
+   // Notify application - not default handler implementation is to immediately attempt
+   // a re-registration in order to form a new flow
+   mDum.mClientRegistrationHandler->onFlowTerminated(getHandle());
 }
 
 

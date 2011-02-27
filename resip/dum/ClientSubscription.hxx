@@ -25,6 +25,7 @@ class ClientSubscription: public BaseSubscription
       void rejectUpdate(int statusCode = 400, const Data& reasonPhrase = Data::Empty);
       void requestRefresh(UInt32 expires = 0);  // 0 defaults to using original expires value (to remove call end() instead)
       virtual void end();
+      virtual void reSubscribe();  // forms a new Subscription dialog - reusing the same target and AppDialogSet
       
       /**
        * Provide asynchronous method access by using command
@@ -34,7 +35,6 @@ class ClientSubscription: public BaseSubscription
       void requestRefreshCommand(UInt32 expires = 0);  // 0 defaults to using original expires value (to remove call endCommand() instead)
       virtual void endCommand();
 
-
       virtual EncodeStream& dump(EncodeStream& strm) const;
 
    protected:
@@ -42,6 +42,7 @@ class ClientSubscription: public BaseSubscription
       virtual void dialogDestroyed(const SipMessage& msg);
       virtual void onReadyToSend(SipMessage& msg);
       virtual void send(SharedPtr<SipMessage> msg);
+      virtual void flowTerminated();
 
    private:
       friend class Dialog;

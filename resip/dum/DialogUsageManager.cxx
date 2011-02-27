@@ -6,6 +6,7 @@
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/TransactionUserMessage.hxx"
 #include "resip/stack/ConnectionTerminated.hxx"
+#include "resip/stack/KeepAlivePong.hxx"
 #include "resip/dum/AppDialog.hxx"
 #include "resip/dum/AppDialogSet.hxx"
 #include "resip/dum/AppDialogSetFactory.hxx"
@@ -85,7 +86,9 @@ using namespace std;
 
 
 DialogUsageManager::DialogUsageManager(SipStack& stack, bool createDefaultFeatures) :
-   TransactionUser(TransactionUser::DoNotRegisterForTransactionTermination, TransactionUser::RegisterForConnectionTermination),
+   TransactionUser(TransactionUser::DoNotRegisterForTransactionTermination, 
+                   TransactionUser::RegisterForConnectionTermination,
+                   TransactionUser::RegisterForKeepAlivePongs),
    mRedirectManager(new RedirectManager()),
    mInviteSessionHandler(0),
    mClientRegistrationHandler(0),
@@ -566,6 +569,75 @@ DialogUsageManager::makeInviteSession(const NameAddr& target,
    return makeInviteSession(target, getMasterUserProfile(), initialOffer, level, alternative, appDs);
 }
 
+SharedPtr<SipMessage> 
+DialogUsageManager::makeInviteSession(const NameAddr& target, 
+                                      InviteSessionHandle sessionToReplace, 
+                                      const SharedPtr<UserProfile>& userProfile, 
+                                      const Contents* initialOffer, 
+                                      AppDialogSet* ads)
+{
+   SharedPtr<SipMessage> inv = makeInviteSession(target, userProfile, initialOffer, ads);
+   // add replaces header
+   assert(sessionToReplace.isValid());
+   if(sessionToReplace.isValid())
+   {
+      CallId replaces;
+      DialogId id = sessionToReplace->getDialogId();
+      replaces.value() = id.getCallId();
+      replaces.param(p_toTag) = id.getRemoteTag();
+      replaces.param(p_fromTag) = id.getLocalTag();
+      inv->header(h_Replaces) = replaces;
+   }
+   return inv;
+}
+
+SharedPtr<SipMessage> 
+DialogUsageManager::makeInviteSession(const NameAddr& target, 
+                                      InviteSessionHandle sessionToReplace, 
+                                      const SharedPtr<UserProfile>& userProfile, 
+                                      const Contents* initialOffer, 
+                                      EncryptionLevel level, 
+                                      const Contents* alternative, 
+                                      AppDialogSet* ads)
+{
+   SharedPtr<SipMessage> inv = makeInviteSession(target, userProfile, initialOffer, level, alternative, ads);
+   // add replaces header
+   assert(sessionToReplace.isValid());
+   if(sessionToReplace.isValid())
+   {
+      CallId replaces;
+      DialogId id = sessionToReplace->getDialogId();
+      replaces.value() = id.getCallId();
+      replaces.param(p_toTag) = id.getRemoteTag();
+      replaces.param(p_fromTag) = id.getLocalTag();
+      inv->header(h_Replaces) = replaces;
+   }
+   return inv;
+}
+
+SharedPtr<SipMessage> 
+DialogUsageManager::makeInviteSession(const NameAddr& target, 
+                                      InviteSessionHandle sessionToReplace, 
+                                      const Contents* initialOffer, 
+                                      EncryptionLevel level, 
+                                      const Contents* alternative , 
+                                      AppDialogSet* ads)
+{
+   SharedPtr<SipMessage> inv = makeInviteSession(target, initialOffer, level, alternative, ads);
+   // add replaces header
+   assert(sessionToReplace.isValid());
+   if(sessionToReplace.isValid())
+   {
+      CallId replaces;
+      DialogId id = sessionToReplace->getDialogId();
+      replaces.value() = id.getCallId();
+      replaces.param(p_toTag) = id.getRemoteTag();
+      replaces.param(p_fromTag) = id.getLocalTag();
+      inv->header(h_Replaces) = replaces;
+   }
+   return inv;
+}
+
 SharedPtr<SipMessage>
 DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
                                                ServerSubscriptionHandle serverSub,
@@ -982,7 +1054,7 @@ void DialogUsageManager::outgoingProcess(auto_ptr<Message> message)
          assert(userProfile);
 
          //!dcm! -- unique SharedPtr to auto_ptr conversion prob. a worthwhile
-         //optimzation here. SharedPtr would ahve to be changed; would
+         //optimzation here. SharedPtr would have to be changed; would
          //throw/assert if not unique.
          std::auto_ptr<SipMessage> toSend(static_cast<SipMessage*>(event->message()->clone()));
 
@@ -1025,17 +1097,38 @@ DialogUsageManager::sendUsingOutboundIfAppropriate(UserProfile& userProfile, aut
       {
          // prepend the outbound proxy to the service route
          msg->header(h_Routes).push_front(NameAddr(userProfile.getOutboundProxy().uri()));
-         mStack.send(msg, this);
+         if(userProfile.clientOutboundEnabled() && userProfile.mClientOutboundFlowTuple.mFlowKey != 0)
+         {
+            mStack.sendTo(msg, userProfile.mClientOutboundFlowTuple, this);
+         }
+         else
+         {
+            mStack.send(msg, this);
+         }
       }
       else
       {
-         mStack.sendTo(msg, userProfile.getOutboundProxy().uri(), this);
+         if(userProfile.clientOutboundEnabled() && userProfile.mClientOutboundFlowTuple.mFlowKey != 0)
+         {
+            mStack.sendTo(msg, userProfile.mClientOutboundFlowTuple, this);
+         }
+         else
+         {
+            mStack.sendTo(msg, userProfile.getOutboundProxy().uri(), this);
+         }
       }
    }
    else
    {
       DebugLog (<< "Send: " << msg->brief());
-      mStack.send(msg, this);
+      if(userProfile.clientOutboundEnabled() && userProfile.mClientOutboundFlowTuple.mFlowKey != 0)
+      {
+         mStack.sendTo(msg, userProfile.mClientOutboundFlowTuple, this);
+      }
+      else
+      {
+         mStack.send(msg, this);
+      }
    }
 }
 
@@ -1213,6 +1306,19 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
    }
    
    {
+      KeepAlivePong* pong = dynamic_cast<KeepAlivePong*>(msg.get());
+      if (pong)
+      {
+         DebugLog(<< "keepalive pong received from " << pong->getFlow());
+         if (mKeepAliveManager.get())
+         {
+            mKeepAliveManager->receivedPong(pong->getFlow());
+         }
+         return;
+      }
+   }
+
+   {
       DestroyUsage* destroyUsage = dynamic_cast<DestroyUsage*>(msg.get());
       if (destroyUsage)
       {
@@ -1250,9 +1356,42 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
    }
 
    {
+      KeepAlivePongTimeout* keepAlivePongMsg = dynamic_cast<KeepAlivePongTimeout*>(msg.get());
+      if (keepAlivePongMsg)
+      {
+         //DebugLog(<< "Keep Alive Pong Message" );
+         if (mKeepAliveManager.get())
+         {
+            mKeepAliveManager->process(*keepAlivePongMsg);
+         }
+         return;      
+      }
+   }
+
+   {
       ConnectionTerminated* terminated = dynamic_cast<ConnectionTerminated*>(msg.get());
       if (terminated)
       {
+         // Notify all dialogSets, in case they need to react (ie. client outbound support)
+         // First find all applicable dialogsets, since flow token in user profile will 
+         // be cleared by first dialogset we notify, then notify all dialogset's
+         std::list<DialogSet*> dialogSetsToNotify;
+         DialogSetMap::iterator it =  mDialogSetMap.begin();
+         for(; it != mDialogSetMap.end(); it++)
+         {
+            if(it->second->mUserProfile->clientOutboundEnabled() && 
+               it->second->mUserProfile->getClientOutboundFlowTuple().mFlowKey == terminated->getFlow().mFlowKey)
+            {
+               dialogSetsToNotify.push_back(it->second);
+            }
+         }
+         // Now dispatch notification to all dialogsets found above
+         std::list<DialogSet*>::iterator it2 = dialogSetsToNotify.begin();
+         for(; it2 != dialogSetsToNotify.end();it2++)
+         {
+            (*it2)->flowTerminated(terminated->getFlow());
+         }
+
          DebugLog(<< "connection terminated message");
          if (mConnectionTerminatedEventDispatcher.dispatch(msg.get()))
          {
@@ -1570,9 +1709,9 @@ DialogUsageManager::validateRequiredOptions(const SipMessage& request)
        request.header(h_RequestLine).getMethod() != CANCEL))
    {
       Tokens unsupported = getMasterProfile()->getUnsupportedOptionsTags(request.header(h_Requires));
-	  if (!unsupported.empty())
-	  {
-	     InfoLog (<< "Received an unsupported option tag(s): " << request.brief());
+      if (!unsupported.empty())
+      {
+         InfoLog (<< "Received an unsupported option tag(s): " << request.brief());
 
          SipMessage failure;
          makeResponse(failure, request, 420);
@@ -1580,7 +1719,7 @@ DialogUsageManager::validateRequiredOptions(const SipMessage& request)
          sendResponse(failure);
 
          return false;
-	  }
+      }
    }
 
    return true;

@@ -127,6 +127,12 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
          }
       }
    }
+
+   if(mUserProfile->clientOutboundEnabled() && method != REGISTER)
+   {
+      // Add ;ob parm to non-register requests - RFC5626 pg17
+      mLastRequest->header(h_Contacts).front().uri().param(p_ob);
+   }
       
    Via via;
    mLastRequest->header(h_Vias).push_front(via);

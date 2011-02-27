@@ -9,23 +9,36 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 bool
-NetworkAssociation::update(const SipMessage& msg, int keepAliveInterval)
+NetworkAssociation::update(const SipMessage& msg, int keepAliveInterval, bool targetSupportsOutbound)
 {
    if (mDum && mDum->mKeepAliveManager.get())
    {
       const Tuple& source = msg.getSource();
       if(source.getType() != 0 &&    // if source is populated
          (!(source == mTarget) ||     // and target is different from current
-          source.mFlowKey != mTarget.mFlowKey)) // and flow key is different, then add to keepalive manager
+          source.mFlowKey != mTarget.mFlowKey)||
+          mTargetSupportsOutbound != targetSupportsOutbound) // and flow key is different, then add to keepalive manager
       {
          mDum->mKeepAliveManager->remove(mTarget);
          mTarget = source;
          mTarget.onlyUseExistingConnection = true;  // Ensure that keepalives never open up a new connection
-         mDum->mKeepAliveManager->add(mTarget, keepAliveInterval);
+         mTargetSupportsOutbound = targetSupportsOutbound;
+         mDum->mKeepAliveManager->add(mTarget, keepAliveInterval, targetSupportsOutbound);
          return true;
       }
    }
    return false;
+}
+
+void
+NetworkAssociation::clear()
+{
+   if (mDum && mDum->mKeepAliveManager.get())
+   {
+      mDum->mKeepAliveManager->remove(mTarget);
+      mTarget = Tuple();
+      mTargetSupportsOutbound = false;
+   }
 }
 
 NetworkAssociation::~NetworkAssociation()

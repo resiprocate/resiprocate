@@ -1,4 +1,5 @@
 #include "resip/dum/RegistrationCreator.hxx"
+#include "resip/dum/ClientRegistration.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/MasterProfile.hxx"
 #include "rutil/Random.hxx"
@@ -18,25 +19,10 @@ RegistrationCreator::RegistrationCreator(DialogUsageManager& dum,
    mLastRequest->header(h_RequestLine).uri().user() = Data::Empty;
    mLastRequest->header(h_Expires).value() = registrationTime;
 
-   if (userProfile->getRinstanceEnabled())
-   {
-      mLastRequest->header(h_Contacts).front().uri().param(p_rinstance) = Random::getCryptoRandomHex(8);  // .slg. poor mans instance id so that we can tell which contacts are ours - to be replaced by gruu someday
-   }
-
-   if(userProfile->gruuEnabled() && userProfile->hasInstanceId())
-   {
-      mLastRequest->header(h_Contacts).front().param(p_Instance) = mUserProfile->getInstanceId();
-   }
-
-   if (userProfile->getMethodsParamEnabled())
-   {
-      mLastRequest->header(h_Contacts).front().param(p_methods) = dum.getMasterProfile()->getAllowedMethodsData();
-   }
+   // Tag Contact with rInstance, InstanceId, regId, and/or methods parameter according to profile settings
+   ClientRegistration::tagContact(mLastRequest->header(h_Contacts).front(), dum, userProfile);
    
    DebugLog ( << "RegistrationCreator::RegistrationCreator: " << mLastRequest);   
-   // add instance parameter to the contact for gruu !cj! TODO 
-
-   // store caller prefs in Contact
 }
 
 /* ====================================================================

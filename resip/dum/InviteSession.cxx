@@ -2976,7 +2976,8 @@ InviteSession::toEvent(const SipMessage& msg, const Contents* offerAnswer)
    }
 }
 
-void InviteSession::sendAck(const Contents *answer)
+void 
+InviteSession::sendAck(const Contents *answer)
 {
    SharedPtr<SipMessage> ack(new SipMessage);
 
@@ -3022,7 +3023,8 @@ void InviteSession::sendAck(const Contents *answer)
    send(ack);
 }
 
-void InviteSession::sendBye()
+void 
+InviteSession::sendBye()
 {
    SharedPtr<SipMessage> bye(new SipMessage());
    mDialog.makeRequest(*bye, BYE);
@@ -3044,7 +3046,8 @@ void InviteSession::sendBye()
    send(bye);
 }
 
-DialogUsageManager::EncryptionLevel InviteSession::getEncryptionLevel(const SipMessage& msg)
+DialogUsageManager::EncryptionLevel 
+InviteSession::getEncryptionLevel(const SipMessage& msg)
 {
    DialogUsageManager::EncryptionLevel level = DialogUsageManager::None;
    const SecurityAttributes* secAttr = msg.getSecurityAttributes();
@@ -3060,7 +3063,8 @@ DialogUsageManager::EncryptionLevel InviteSession::getEncryptionLevel(const SipM
    return level;
 }
 
-void InviteSession::setCurrentLocalOfferAnswer(const SipMessage& msg)
+void 
+InviteSession::setCurrentLocalOfferAnswer(const SipMessage& msg)
 {
    assert(mProposedLocalOfferAnswer.get());
    if (dynamic_cast<MultipartAlternativeContents*>(mProposedLocalOfferAnswer.get()))
@@ -3081,12 +3085,21 @@ void InviteSession::setCurrentLocalOfferAnswer(const SipMessage& msg)
    mProposedLocalOfferAnswer.reset();   
 }
 
-void InviteSession::onReadyToSend(SipMessage& msg)
+void 
+InviteSession::onReadyToSend(SipMessage& msg)
 {
    mDum.mInviteSessionHandler->onReadyToSend(getSessionHandle(), msg);
 }
 
-void InviteSession::referNoSub(const SipMessage& msg)
+void
+InviteSession::flowTerminated()
+{
+   // notify handler
+   mDum.mInviteSessionHandler->onFlowTerminated(getSessionHandle());
+}
+
+void 
+InviteSession::referNoSub(const SipMessage& msg)
 {
    assert(msg.isRequest() && msg.header(h_CSeq).method()==REFER);
    mLastReferNoSubRequest = msg;
