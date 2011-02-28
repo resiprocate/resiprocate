@@ -362,7 +362,7 @@ Condition::wait(Mutex& mutex,
    assert(ret != WAIT_FAILED);
    return (ret == WAIT_OBJECT_0);
 #   endif
-#else
+#else	// WIN32
    UInt64 expires64 = Timer::getTimeMs() + ms;
    timespec expiresTS;
    expiresTS.tv_sec = expires64 / 1000;
@@ -383,7 +383,7 @@ Condition::wait(Mutex& mutex,
       assert( ret == 0 );
       return true;
    }
-#endif
+#endif	// not WIN32
 }
 
 bool
