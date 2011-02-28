@@ -193,8 +193,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       // calls DialogUsageManager::send(msg);
       SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Contents* initialOffer, AppDialogSet* ads = 0);
       SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, const Contents* initialOffer, AppDialogSet* ads = 0);
-      SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Contents* initialOffer, EncryptionLevel level = None, const Contents* alternative = 0, AppDialogSet* ads = 0);
-      SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, const Contents* initialOffer, EncryptionLevel level = None, const Contents* alternative = 0, AppDialogSet* ads = 0);
+      SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Contents* initialOffer, EncryptionLevel level, const Contents* alternative = 0, AppDialogSet* ads = 0);
+      SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, const Contents* initialOffer, EncryptionLevel level, const Contents* alternative = 0, AppDialogSet* ads = 0);
       // Versions that add a replaces header
       SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, InviteSessionHandle sessionToReplace, const SharedPtr<UserProfile>& userProfile, const Contents* initialOffer, AppDialogSet* ads = 0);
       SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, InviteSessionHandle sessionToReplace, const SharedPtr<UserProfile>& userProfile, const Contents* initialOffer, EncryptionLevel level = None, const Contents* alternative = 0, AppDialogSet* ads = 0);
