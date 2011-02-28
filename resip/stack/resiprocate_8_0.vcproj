@@ -411,6 +411,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\EventStackThread.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ExistsOrDataParameter.cxx"
 				>
 			</File>
@@ -989,6 +993,10 @@
 			</File>
 			<File
 				RelativePath=".\Embedded.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\EventStackThread.hxx"
 				>
 			</File>
 			<File
