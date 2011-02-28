@@ -193,7 +193,7 @@ extern 	int ares_fds(ares_channel channel, fd_set *read_fds, fd_set *write_fds);
 extern 	struct timeval *ares_timeout(ares_channel channel, struct timeval *maxtv,
 					struct timeval *tv);
 extern 	void ares_process(ares_channel channel, fd_set *read_fds, fd_set *write_fds);
-extern void ares_process_set_poll_cb(ares_channel channel, ares_poll_cb_func cb_func, void *cb_data);
+extern void ares_process_set_poll_cb(ares_channel channel, ares_poll_cb_func* cb_func, void *cb_data);
 extern void ares_process_poll(ares_channel channel, int server_idx,
         int rdFd, int wrFd, time_t now);
 
