@@ -5,6 +5,12 @@
 #include "rutil/Data.hxx"
 #include <cassert>
 
+/**
+ * Define below enable "RtlGenRandom" (aka SystemFunction036) on
+ * Windows platform. See Random.cxx for details.
+ */
+// #define RESIP_RANDOM_WIN32_RTL 1
+
 namespace resip
 {
 
@@ -61,6 +67,10 @@ class Random
             DWORD mThreadStorage;
       };
       static Initializer mInitializer;
+
+#ifdef RESIP_RANDOM_WIN32_RTL
+      static BOOLEAN (APIENTRY *RtlGenRandom)(void*, ULONG);
+#endif
 #endif
       
 };
@@ -117,4 +127,5 @@ class Random
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */

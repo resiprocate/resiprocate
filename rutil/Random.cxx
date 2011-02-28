@@ -50,6 +50,9 @@ bool Random::mIsInitialized = false;
 
 #ifdef WIN32
 Random::Initializer Random::mInitializer;
+#ifdef RESIP_RANDOM_WIN32_RTL
+BOOLEAN (APIENTRY *Random::RtlGenRandom)(void*, ULONG) = 0;
+#endif
 #endif
 
 void
@@ -85,6 +88,29 @@ Random::initialize()
          unsigned int seed = (unsigned int)buffer.hash();
 
          srand(seed);
+
+#ifdef RESIP_RANDOM_WIN32_RTL
+         // .jjg. from http://blogs.msdn.com/michael_howard/archive/2005/01/14/353379.aspx
+         // srand(..) and rand() have proven to be insufficient sources of randomness,
+         // leading to transaction id collisions in resip.
+         // SystemFunction036 maps to RtlGenRandom, which is used by rand_s() (which is available
+         // only with the VC 8.0 runtime or later) and is the Microsoft-recommended way of getting
+         // a random number. This code allows that functionality to be accessed even from VC 7.1.
+         // However, SystemFunction036 only exists in Windows XP and later, so we may need to fallback
+         // to the old method using rand().
+         HMODULE hLib = LoadLibrary("ADVAPI32.DLL");
+         if (hLib)
+         {
+            Random::RtlGenRandom =
+               (BOOLEAN (APIENTRY *)(void*,ULONG))GetProcAddress(hLib,"SystemFunction036");
+
+            if (!Random::RtlGenRandom)
+            {
+               WarningLog(<< "Using srand(..) and rand() for random numbers");
+            }
+         }
+#endif
+
          mIsInitialized = true;
 
       }
@@ -159,14 +185,36 @@ Random::getRandom()
    initialize();
 
 #ifdef WIN32
-   assert( RAND_MAX == 0x7fff );
-   int r1 = rand();
-   int r2 = rand();
 
-   int ret = (r1<<16) + r2;
+   int ret = 0;
+
+#ifdef RESIP_RANDOM_WIN32_RTL
+   // see comment in initialize()
+   if (Random::RtlGenRandom)
+   {
+      char buff[32];
+      ULONG ulCbBuff = sizeof(buff);
+      if (Random::RtlGenRandom(buff,ulCbBuff))
+      {
+         // use buff full of random goop
+         ret = (int)buff[0] << 24;
+         ret += (int)buff[1] << 16;
+         ret += (int)buff[2] << 8;
+         ret += (int)buff[3];
+         return ret;
+      }
+   }
+   // fallback to using rand() if this is a Windows version previous to XP
+#endif	// RESIP_RANDOM_WIN32_RTL
+   {
+      assert( RAND_MAX == 0x7fff );
+      int r1 = rand();
+      int r2 = rand();
+      ret = (r1<<16) + r2;
+   }
 
    return ret;
-#else
+#else	// WIN32
    return random(); 
 #endif
 }
@@ -393,5 +441,5 @@ Random::Initializer::isInitialized()
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */
-
