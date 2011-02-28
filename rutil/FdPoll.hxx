@@ -3,10 +3,14 @@
 
 #include "rutil/Socket.hxx"
 
-/* The Makefile system should define one of the following:
+/* The Makefile system may define the following:
  * HAVE_EPOLL: system call epoll() is available
- * If none are defined then classes will still be defined, but
- * calls to them will assert.
+ *
+ * An implementation based upon FdSet (and select()) is always available.
+ *
+ * This file and class is somewhat misnamed. It should really be
+ * called "SocketEvent" or such. The name "FdPoll" originated
+ * from an epoll-specific implementation.
  */
 
 #if defined(HAVE_EPOLL)
@@ -17,10 +21,10 @@ namespace resip {
 
 
 typedef unsigned short FdPollEventMask;
-#define FPEM_Read	0x0001	// POLLIN
-#define FPEM_Write	0x0002	// POLLOUT
-#define FPEM_Error	0x0004	// POLLERR	(select exception)
-#define FPEM_Edge	0x4000	// EPOLLET
+#define FPEM_Read       0x0001  // POLLIN
+#define FPEM_Write      0x0002  // POLLOUT
+#define FPEM_Error      0x0004  // POLLERR      (select exception)
+#define FPEM_Edge       0x4000  // EPOLLET
 
 class FdPollGrp;
 
@@ -34,63 +38,73 @@ typedef struct FdPollItemFake* FdPollItemHandle;
 
 class FdPollItemIf
 {
-  //friend class FdPollGrp;
-  public:
-    FdPollItemIf() { };
-    virtual ~FdPollItemIf();
+   //friend class FdPollGrp;
+   public:
+      FdPollItemIf() { };
+      virtual ~FdPollItemIf();
 
-    /**
+      /**
         Called by PollGrp when activity is possible
-    **/
-    virtual void processPollEvent(FdPollEventMask mask) = 0;
+      **/
+      virtual void processPollEvent(FdPollEventMask mask) = 0;
 };
 
 class FdPollItemBase : public FdPollItemIf
 {
-  //friend class FdPollGrp;
-  public:
-    FdPollItemBase(FdPollGrp *grp, Socket fd, FdPollEventMask mask);
-    virtual ~FdPollItemBase();
+   //friend class FdPollGrp;
+   public:
+      FdPollItemBase(FdPollGrp *grp, Socket fd, FdPollEventMask mask);
+      virtual ~FdPollItemBase();
 
- protected:
+   protected:
 
-    FdPollGrp*		mPollGrp;
-    Socket		mPollSocket;
-    FdPollItemHandle	mPollHandle;
+      FdPollGrp*        mPollGrp;
+      Socket            mPollSocket;
+      FdPollItemHandle  mPollHandle;
 };
 
 class FdPollGrp
 {
-  public:
-    FdPollGrp();
-    virtual ~FdPollGrp();
+   public:
+      FdPollGrp();
+      virtual ~FdPollGrp();
 
-    /// factory
-    static FdPollGrp* create();
+      /// factory
+      static FdPollGrp* create(const char *implName=NULL);
+      /// Return candidate impl names with vertical bar (|) between them
+      /// Intended for help messages
+      static const char* getImplList();
 
+      virtual const char* getImplName() const = 0;
 
-    virtual FdPollItemHandle addPollItem(Socket sock, FdPollEventMask newMask, FdPollItemIf *item) = 0;
-    virtual void modPollItem(FdPollItemHandle handle, FdPollEventMask newMask) = 0;
-    virtual void delPollItem(FdPollItemHandle handle) = 0;
+      virtual FdPollItemHandle addPollItem(Socket sock, FdPollEventMask newMask, FdPollItemIf *item) = 0;
+      virtual void modPollItem(FdPollItemHandle handle, FdPollEventMask newMask) = 0;
+      virtual void delPollItem(FdPollItemHandle handle) = 0;
 
-    /// Wait at most {ms} milliseconds. If any file activity has
-    /// already occurs or occurs before {ms} expires, then
-    /// FdPollItem will be informed (via cb method) and method will
-    /// return. Returns true iff any file activity occured.
-    /// ms<0: wait forever, ms=0: don't wait, ms>0: wait this long
-    virtual bool waitAndProcess(int ms=0) = 0;
+      /// Wait at most {ms} milliseconds. If any file activity has
+      /// already occurs or occurs before {ms} expires, then
+      /// FdPollItem will be informed (via cb method) and this method will
+      /// return. Returns true iff any file activity occured.
+      /// ms<0: wait forever, ms=0: don't wait, ms>0: wait this long
+      /// NOTE: "forever" may be a little as 60sec or as much as forever
+      virtual bool waitAndProcess(int ms=0) = 0;
 
-    /// get the epoll-fd (epoll_create())
-    /// This is fd (type int), not Socket. It may be -1 if epoll
-    /// is not enabled.
-    virtual int	getEPollFd() const = 0;
+      /// get the epoll-fd (epoll_create())
+      /// This is fd (type int), not Socket. It may be -1 if epoll
+      /// is not enabled.
+      virtual int       getEPollFd() const;
 
-    /// Add our epoll-fd into the fdSet (for hierarchical selects)
-    void buildFdSet(FdSet& fdSet) const;
-    void buildFdSet(fd_set& readfds) const;
-    /// process epoll queue if epoll-fd is readable in fdset
-    void processFdSet(FdSet& fdset);
-    void processFdSet(fd_set& readfds);
+      /// Add our epoll-fd into the fdSet (for hierarchical selects)
+      /// Does nothing if epoll not enabled.
+      void buildFdSet(FdSet& fdSet) const;
+      void buildFdSet(fd_set& readfds) const;
+      /// process epoll queue if epoll-fd is readable in fdset
+      /// Does nothing if epoll not enabled.
+      void processFdSet(FdSet& fdset);
+      void processFdSet(fd_set& readfds);
+
+   protected:
+      void processItem(FdPollItemIf *item, FdPollEventMask mask);
 };
 
 

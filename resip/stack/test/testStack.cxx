@@ -72,6 +72,11 @@ using namespace std;
                 is an interruptable event-loop based thread. The specific
                 type of event-loop depends upon the underlying platform.
 
+    epoll       Like "event", but specifically uses the epoll implmentation.
+
+    fdset       Like "event", but specifically uses the FdSet/select
+                implmentation.
+
     In addition to the above thread modes, the flag --intepoll turns on
     internal epoll mode. This allows any of the above thread modes to be
     used (including select-based) but internally uses the epoll system
@@ -172,13 +177,13 @@ SipStackAndThread::SipStackAndThread(const char *tType,
    {
       mSelIntr = new SelectInterruptor();
    }
-#if defined(HAVE_EPOLL)
-   else if ( strcmp(tType,"event")==0 ) 
+   else if ( strcmp(tType,"event")==0
+          || strcmp(tType,"epoll")==0
+          || strcmp(tType,"fdset")==0 )
    {
-      mPollGrp = FdPollGrp::create();
+      mPollGrp = FdPollGrp::create(tType);
       mEventIntr = new EventThreadInterruptor(*mPollGrp);
    }
-#endif
    else if ( strcmp(tType,"std")==0 ) 
    {
       doStd = true;
@@ -200,13 +205,11 @@ SipStackAndThread::SipStackAndThread(const char *tType,
                          mPollGrp);
    
    mStack->setFallbackPostNotify(notifyUp);
-#if defined(HAVE_EPOLL)
    if (mEventIntr) 
    {
       mThread = new EventStackThread(*mStack, *mEventIntr, *mPollGrp);
    } 
    else 
-#endif
    if (mSelIntr) 
    {
       mThread = new InterruptableStackThread(*mStack, *mSelIntr);
@@ -300,6 +303,11 @@ main(int argc, char* argv[])
    int sendSleepUs = 0;
 
 #if defined(HAVE_POPT_H)
+
+   char threadTypeDesc[200];
+   strcpy(threadTypeDesc, "none|common|std|intr|");
+   strcat(threadTypeDesc, FdPollGrp::getImplList());
+
    struct poptOption table[] = {
       {"log-type",    'l', POPT_ARG_STRING, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
       {"log-level",   'v', POPT_ARG_STRING, &logLevel,  0, "specify the default log level", "DEBUG|INFO|WARNING|ALERT"},
@@ -316,11 +324,7 @@ main(int argc, char* argv[])
 #endif
       {"port",        0,   POPT_ARG_INT,    &portBase,  0, "first port to use", 0},
       {"numports",    'n', POPT_ARG_INT,    &numPorts,  0, "number of parallel sessions(ports)", 0},
-#if defined(HAVE_EPOLL)
-      {"thread-type", 't', POPT_ARG_STRING, &threadType,0, "stack thread type", "none|common|std|intr|event"},
-#else
-      {"thread-type", 't', POPT_ARG_STRING, &threadType,0, "stack thread type", "none|common|std|intr"},
-#endif
+      {"thread-type", 't', POPT_ARG_STRING, &threadType,0, "stack thread type", threadTypeDesc},
       {"tf",          0,   POPT_ARG_INT,    &tpFlags,   0, "bit encoding of transportFlags", 0},
       {"sleep",       0,   POPT_ARG_INT,    &sendSleepUs,0, "time (us) to sleep after each sent request", 0},
       POPT_AUTOHELP
@@ -331,7 +335,7 @@ main(int argc, char* argv[])
    int pret=poptGetNextOpt(context);
    assert(pret==-1);
    assert( poptGetArg(context)==NULL);
-#endif
+#endif  // popt
    Log::initialize(logType, logLevel, argv[0]);
 
    Data bindIfAddr(bindAddr ? bindAddr : (const char*)"");

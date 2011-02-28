@@ -97,6 +97,322 @@ FdPollGrp::processFdSet(fd_set& readfds)
    }
 }
 
+void
+FdPollGrp::processItem(FdPollItemIf *item, FdPollEventMask mask)
+{
+   try
+   {
+      item->processPollEvent( mask );
+   }
+   catch(BaseException& e)
+   {
+           // kill it or something?
+       ErrLog(<<"Exception thrown for FdPollItem: " << e);
+   }
+   item = NULL; // WATCHOUT: item may have been deleted
+   /*
+    * If FPEM_Error was reported, should really make sure it was deleted
+    * or disabled from polling. Otherwise were in stuck in an infinite loop.
+    * But difficult to do that checking robustly until we serials the items.
+    */
+}
+
+int
+FdPollGrp::getEPollFd() const
+{
+   return -1;
+}
+
+/*****************************************************************
+ *
+ * FdPollImplFdSet
+ *
+ *****************************************************************/
+
+/**
+  This is an implemention built around FdSet, which in turn is built
+  around select(). As such, it should work on all platforms. The
+  number of concurrent fds is limited by your platform's select call.
+**/
+
+namespace resip
+{
+
+class FdPollItemFdSetInfo
+{
+   public:
+      FdPollItemFdSetInfo()
+         : mSocketFd(INVALID_SOCKET), mItemObj(0), mEvMask(0), mNextIdx(-1)
+      {
+      }
+
+      Socket mSocketFd; // socket
+      FdPollItemIf* mItemObj; // callback object
+      FdPollEventMask mEvMask; // events the application wants
+      int mNextIdx;             // next link for live or free list
+};
+
+
+
+class FdPollImplFdSet : public FdPollGrp
+{
+   public:
+      FdPollImplFdSet();
+      ~FdPollImplFdSet();
+
+      virtual const char*       getImplName() const { return "fdset"; }
+
+      virtual FdPollItemHandle  addPollItem(Socket fd,
+                                  FdPollEventMask newMask, FdPollItemIf *item);
+      virtual void              modPollItem(FdPollItemHandle handle,
+                                  FdPollEventMask newMask);
+      virtual void              delPollItem(FdPollItemHandle handle);
+
+      virtual bool              waitAndProcess(int ms=0);
+
+   protected:
+      void                      killCache(Socket fd);
+
+      std::vector<FdPollItemFdSetInfo>  mItems;
+
+      /*
+       * The ItemInfos are stored in a vector (above) that grows as needed.
+       * Every Info is in one single-linked list, either the "Live" list
+       * or the "Free" list. This is somewhat like using
+       * boost::intrusive::slist, except we use indices not pointers
+       * since the vector may reallocate and move around.
+       */
+      int                       mLiveHeadIdx;
+      int                       mFreeHeadIdx;
+
+      /*
+       * This is temporary cache of poll events. It is a member (and
+       * not on stack) for two reasons: (1) simpler memory management,
+       * and (2) so delPollItem() can traverse it and clean up.
+       */
+      FdSet                     mSelectSet;
+};
+
+};      // namespace
+
+// NOTE: shift by one so that idx=0 doesn't have NULL handle
+#define IMPL_FDSET_IdxToHandle(idx) ((FdPollItemHandle)( ((char*)0) + ((idx)+1) ))
+#define IMPL_FDSET_HandleToIdx(handle) ( ((char*)(handle)) - ((char*)0) - 1)
+
+FdPollImplFdSet::FdPollImplFdSet()
+   : mLiveHeadIdx(-1), mFreeHeadIdx(-1)
+{
+}
+
+FdPollImplFdSet::~FdPollImplFdSet()
+{
+   // assert( mEvCacheLen == 0 );  // poll not active
+   unsigned itemIdx;
+   for (itemIdx=0; itemIdx < mItems.size(); itemIdx++)
+   {
+      FdPollItemFdSetInfo& info = mItems[itemIdx];
+      if (info.mItemObj)
+      {
+         CritLog(<<"FdPollItem idx="<<itemIdx
+               <<" not deleted prior to destruction");
+      }
+   }
+}
+
+FdPollItemHandle
+FdPollImplFdSet::addPollItem(Socket fd, FdPollEventMask newMask, FdPollItemIf *item)
+{
+   // if this isn't true then the linked lists will get messed up
+   assert(item);
+   assert(fd!=INVALID_SOCKET);
+
+   unsigned useIdx;
+   if ( mFreeHeadIdx >= 0 )
+   {
+      useIdx = mFreeHeadIdx;
+      mFreeHeadIdx = mItems[useIdx].mNextIdx;
+   }
+   else
+   {
+      useIdx = mItems.size();
+      unsigned newsz = 10+useIdx + useIdx/3; // plus 30% margin
+      // WATCHOUT: below may trigger re-allocation, invalidating any iters
+      // We don't use iters (only indices), but need to watchout for
+      // cached pointers
+      mItems.resize(newsz);
+      // push new items onto the free list
+      unsigned itemIdx;
+      for (itemIdx=useIdx+1; itemIdx < newsz; itemIdx++)
+      {
+         mItems[itemIdx].mNextIdx = mFreeHeadIdx;
+         mFreeHeadIdx = itemIdx;
+      }
+   }
+   FdPollItemFdSetInfo& info = mItems[useIdx];
+   info.mItemObj = item;
+   info.mSocketFd = fd;
+   info.mEvMask = newMask;
+   info.mNextIdx = mLiveHeadIdx;
+   mLiveHeadIdx = useIdx;
+   return IMPL_FDSET_IdxToHandle(useIdx);
+}
+
+void
+FdPollImplFdSet::modPollItem(const FdPollItemHandle handle, FdPollEventMask newMask)
+{
+   int useIdx = IMPL_FDSET_HandleToIdx(handle);
+   assert(useIdx>=0 && ((unsigned)useIdx) < mItems.size());
+   FdPollItemFdSetInfo& info = mItems[useIdx];
+   assert(info.mSocketFd!=INVALID_SOCKET);
+   assert(info.mItemObj);
+   info.mEvMask = newMask;
+}
+
+void
+FdPollImplFdSet::delPollItem(FdPollItemHandle handle)
+{
+   int useIdx = IMPL_FDSET_HandleToIdx(handle);
+   //DebugLog(<<"deleting epoll item fd="<<fd);
+   assert(useIdx>=0 && ((unsigned)useIdx) < mItems.size());
+   FdPollItemFdSetInfo& info = mItems[useIdx];
+   assert(info.mSocketFd!=INVALID_SOCKET);
+   assert(info.mItemObj);
+   killCache(info.mSocketFd);
+   // we don't change the lists here since the select loop might
+   // be iterating. Just mark it as dead and gc it later.
+   info.mSocketFd = INVALID_SOCKET;
+   info.mItemObj = NULL;
+   info.mEvMask = 0;
+}
+
+
+/**
+    There is a boundary case:
+    1. fdA and fdB are added to epoll
+    2. events occur on fdA and fdB
+    2. waitAndProcess() select and gets events for fdA and fdB
+    3. handler for fdA deletes fdB (closing fd)
+    5. handler (same or differnt) opens new fd, gets fd as fdB, and adds
+       it to us but under different object
+    6. cache processes "old" fdB event masks but binds it to the new
+       (wrong) object
+
+    For read or write events it would be relatively harmless to
+    pass these events to the new object (all objects should be prepared
+    to get EAGAIN). But passing an error event could incorrectly kill
+    the wrong object.
+
+    To prevent this, we kill the events in the mSelectSet. In POSIX,
+    I'm pretty sure this is always safe. In Windows, I don't know what
+    happens if the fd isn't already in the FdSet.
+**/
+void
+FdPollImplFdSet::killCache(Socket fd)
+{
+   mSelectSet.clear(fd);
+}
+
+
+bool
+FdPollImplFdSet::waitAndProcess(int ms)
+{
+   bool didsomething = false;
+   int itemIdx;
+   int* prevIdxRef;
+   int loopCnt;
+
+   // Step 1: build a new FdSet from the Items vector
+   mSelectSet.reset();
+   prevIdxRef = &mLiveHeadIdx;
+   loopCnt = 0;
+   while ( (itemIdx = *prevIdxRef) != -1 )
+   {
+      assert( ++loopCnt < 99123123 );
+      FdPollItemFdSetInfo& info = mItems[itemIdx];
+      if ( info.mItemObj==0 )
+      {
+         // item was deleted, need to garbage collect
+         assert( info.mEvMask==0 );
+         // unlink from live list
+         *prevIdxRef = info.mNextIdx;
+         // link into free list
+         info.mNextIdx = mFreeHeadIdx;
+         mFreeHeadIdx = itemIdx;
+         continue;
+      }
+      if ( info.mEvMask!=0 )
+      {
+         assert(info.mSocketFd!=INVALID_SOCKET);
+         if ( info.mEvMask & FPEM_Read )
+            mSelectSet.setRead(info.mSocketFd);
+         if ( info.mEvMask & FPEM_Write )
+            mSelectSet.setWrite(info.mSocketFd);
+         if ( info.mEvMask & FPEM_Error )
+            mSelectSet.setExcept(info.mSocketFd);
+      }
+      prevIdxRef = &info.mNextIdx;
+   }
+
+   // Step 2: Select on our built FdSet
+   if ( ms < 0 )
+   {
+      // On Linux, passing a NULL timeout ptr to select() will wait
+      // forever, but I don't want to trust that on all platforms.
+      // So use 60sec as approximation of "forever".
+      // Use 60sec b/c fits in short.
+      ms = 60*1000;
+   }
+   int numReady = mSelectSet.selectMilliSeconds(ms);
+   if ( numReady < 0 )
+   {
+      int err = getErrno();
+      if ( err!=EINTR )
+      {
+         CritLog(<<"select() failed: "<<strerror(err));
+         assert(0);     // .kw. not sure correct behavior...
+      }
+      return false;
+   }
+   if ( numReady==0 )
+      return false;     // timer expired
+
+   // Step 3: Invoke callbacks
+   // Could take advantage of early via numReady, but book keeping
+   // seems tedious especially if items are deleted during walk
+   prevIdxRef = &mLiveHeadIdx;
+   loopCnt = 0;
+   while ( (itemIdx = *prevIdxRef) != -1 )
+   {
+      FdPollItemFdSetInfo& info = mItems[itemIdx];
+      assert( ++loopCnt < 99123123 );
+      if ( info.mEvMask!=0 && info.mItemObj!=0 )
+      {
+         FdPollEventMask usrMask = 0;
+         assert(info.mSocketFd!=INVALID_SOCKET);
+         if ( mSelectSet.readyToRead(info.mSocketFd) )
+            usrMask = FPEM_Read;
+         if ( mSelectSet.readyToWrite(info.mSocketFd) )
+            usrMask = FPEM_Write;
+         if ( mSelectSet.hasException(info.mSocketFd) )
+            usrMask = FPEM_Error;
+
+         // items's mask may have changed since select occured, so mask it again
+         usrMask &= info.mEvMask;
+         if ( usrMask )
+         {
+            processItem(info.mItemObj, usrMask);
+            didsomething = true;
+         }
+      }
+      // WATCHOUT: {info} may have moved due to add during processItem()
+      // set pointer using index, not {info}
+      prevIdxRef = &mItems[itemIdx].mNextIdx;
+   }
+   return didsomething;
+}
+
+// end of ImplFdSet
+
 
 /*****************************************************************
  *
@@ -117,6 +433,8 @@ class FdPollImplEpoll : public FdPollGrp
       FdPollImplEpoll();
       ~FdPollImplEpoll();
 
+      virtual const char*       getImplName() const { return "epoll"; }
+
       virtual FdPollItemHandle  addPollItem(Socket fd,
                                   FdPollEventMask newMask, FdPollItemIf *item);
       virtual void              modPollItem(FdPollItemHandle handle,
@@ -129,8 +447,6 @@ class FdPollImplEpoll : public FdPollGrp
       virtual int               getEPollFd() const { return mEPollFd; }
 
    protected:
-      void                      processItem(FdPollItemIf *item,
-                                  FdPollEventMask mask);
       void                      killCache(Socket fd);
 
       std::vector<FdPollItemIf*>  mItems; // indexed by fd
@@ -148,7 +464,7 @@ class FdPollImplEpoll : public FdPollGrp
 
 };      // namespace
 
-// NOTE: shift by one b/c so that fd=0 doesn't have NULL handle
+// NOTE: shift by one so that fd=0 doesn't have NULL handle
 #define IMPL_EPOLL_FdToHandle(fd) ((FdPollItemHandle)( ((char*)0) + ((fd)+1) ))
 #define IMPL_EPOLL_HandleToFd(handle) ( ((char*)(handle)) - ((char*)0) - 1)
 
@@ -311,25 +627,6 @@ FdPollImplEpoll::killCache(int fd)
    }
 }
 
-void
-FdPollImplEpoll::processItem(FdPollItemIf *item, FdPollEventMask mask)
-{
-   try
-   {
-      item->processPollEvent( mask );
-   }
-   catch(BaseException& e)
-   {
-           // kill it or something?
-       ErrLog(<<"Exception thrown for FdPollItem: " << e);
-   }
-   item = NULL; // WATCHOUT: item may have been deleted
-   /*
-    * If FPEM_Error was reported, should really make sure it was deleted
-    * or disabled from polling. Otherwise were in stuck in an infinite loop.
-    * But difficult to do that checking robustly until we serials the items.
-    */
-}
 
 bool
 FdPollImplEpoll::waitAndProcess(int ms)
@@ -395,13 +692,33 @@ FdPollImplEpoll::waitAndProcess(int ms)
  *****************************************************************/
 
 /*static*/FdPollGrp*
-FdPollGrp::create()
+FdPollGrp::create(const char *implName)
 {
+   if ( implName==0 || implName[0]==0 || strcmp(implName,"event")==0 )
+      implName = 0;     // pick the first (best) one supported
 #ifdef RESIP_POLL_IMPL_EPOLL
-   return new FdPollImplEpoll();
-#else
+   if ( implName==0 || strcmp(implName,"epoll")==0 )
+   {
+      return new FdPollImplEpoll();
+   }
+#endif
+   if ( implName==0 || strcmp(implName,"fdset")==0 )
+   {
+      return new FdPollImplFdSet();
+   }
    assert(0);
    return NULL;
+}
+
+/*static*/const char*
+FdPollGrp::getImplList()
+{
+   // .kw. this isn't really scalable approach if we get a lot of impls
+   // but it works for now
+#ifdef RESIP_POLL_IMPL_EPOLL
+   return "event|epoll|fdset";
+#else
+   return "event|fdset";
 #endif
 }
 
