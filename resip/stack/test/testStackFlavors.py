@@ -113,9 +113,9 @@ def CalcParamCsv(ptbl, pset):
    return ','.join(popts)
 
 def IsParamSetValid(pset):
-    usingEpoll = pset['intepoll'] or pset['thread']=='event'
-    if pset['intepoll'] and pset['thread']=='event':
-	return False	# redundant
+    usingEpoll = pset['intepoll'] or pset['thread']=='epoll'
+    if pset['intepoll'] and (pset['thread'] in ('epoll','fdset')):
+	return False	# redundant/silly
     if pset['ports'] > 100 and not usingEpoll:
 	return False
     if pset['listen']==0 and pset['protocol']=='udp':
@@ -166,7 +166,7 @@ TheParamTbl = [
   RunParam('intepoll', 'intepoll', [0,1]),
   RunParam('ports', 'numports', [1, 100, 10000]),
   RunParam('listen', 'listen', [1,0]),
-  RunParam('thread', 'thread-type', ['common','intr','event']),
+  RunParam('thread', 'thread-type', ['common','intr','epoll','fdset']),
 ]
 
 RunParamTbl(TheParamTbl)
