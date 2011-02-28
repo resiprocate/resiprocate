@@ -705,9 +705,14 @@ SipMessage::encode(EncodeStream& str, bool isSipFrag) const
    }
    else if (mContentsHfv != 0)
    {
+#if 0
       // !bwc! This causes an additional copy; sure would be nice to have a way
       // to get a data to take on a buffer with Data::Share _after_ construction
       contents.append(mContentsHfv->mField, mContentsHfv->mFieldLength);
+#else
+      // .kw. Your wish is granted
+      mContentsHfv->toShareData(contents);
+#endif
    }
 
 
@@ -779,7 +784,7 @@ SipMessage::encodeEmbedded(EncodeStream& str) const
       i->second->encodeEmbedded(i->first, str);
    }
 
-   if (mContents != 0)
+   if (mContents != 0 || mContentsHfv != 0)
    {
       if (first)
       {
@@ -791,33 +796,26 @@ SipMessage::encodeEmbedded(EncodeStream& str) const
       }
       str << "body=";
       // !dlb! encode escaped for characters
+      // .kw. what does that mean? what needs to be escaped?
       Data contents;
+      if (mContents != 0)
       {
          DataStream s(contents);
          mContents->encode(s);
       }
-      str << Embedded::encode(contents);
-   }
-   else if (mContentsHfv != 0)
-   {
-      if (first)
-      {
-         str << Symbols::QUESTION;
-      }
       else
       {
-         str << Symbols::AMPERSAND;
-      }
-      str << "body=";
-      // !dlb! encode escaped for characters
-      Data contents;
-      {
-         DataStream s(contents);
-         mContentsHfv->encode(str);
+	 // .kw. Early code did:
+         // DataStream s(contents);
+         // mContentsHfv->encode(str);
+         // str << Embedded::encode(contents);
+	 // .kw. which I think is buggy b/c Hfv was written directly
+	 // to str and skipped the encode step via contents
+	  mContentsHfv->toShareData(contents);
       }
       str << Embedded::encode(contents);
    }
-   
+
    return str;
 }
 
@@ -1721,4 +1719,5 @@ SipMessage::rollbackOutboundDecorators()
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */

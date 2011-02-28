@@ -2,6 +2,7 @@
 #define RESIP_HEADERFIELDVALUE_HXX 
 
 #include "rutil/ParseException.hxx"
+#include "rutil/Data.hxx"
 #include "resip/stack/ParameterTypes.hxx"
 
 #include <iosfwd>
@@ -33,6 +34,11 @@ class HeaderFieldValue
       ~HeaderFieldValue();
 
       EncodeStream& encode(EncodeStream& str) const;
+
+      void toShareData(Data& data)
+      {
+         data.setBuf(Data::Share, mField, mFieldLength);
+      }
       
       const char* mField;
       const unsigned int mFieldLength;
@@ -101,4 +107,5 @@ EncodeStream& operator<<(EncodeStream& stream,
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * set shiftwidth=3 expandtab:
  */
