@@ -17,6 +17,17 @@ class TestData;
 namespace resip
 {
 
+/**
+   This template is here to help diagnose API/ABI mismatches. Say you build
+   librutil. A single Data::init(DataLocalSize<RESIP_DATA_LOCAL_SIZE>)
+   function is implemented in Data.cxx, with the default
+   value. (Data::init(DataLocalSize<16>) ends up being defined,
+   Data::init(DataLocalSize<15>) does not) If, later, another build using
+   that librutil tries to tweak the local alloc size to 24, it will end
+   up attempting to call Data::init(DataLocalSize<24>); this will result
+   in a link-time error, that while opaque, is less opaque than the stack
+   corruption that would result otherwise.
+**/
 template <int S>
 struct DataLocalSize
 {
@@ -28,7 +39,7 @@ struct DataLocalSize
   bytes.
 
   It has a variety of memory management styles that can be
-  established at contruction time.
+  established at contruction time and changed later via setBuf().
 
   Three modes of allocation are currently available:
 
@@ -71,8 +82,8 @@ class Data
 
       class PreallocateType
       {
-	    friend class Data;
-	    explicit PreallocateType(int);
+         friend class Data;
+         explicit PreallocateType(int);
       };
       static const PreallocateType Preallocate;
 
@@ -197,7 +208,7 @@ class Data
                           Trailing zeros will be removed.
       */
       explicit Data(double value, 
-		    Data::DoubleDigitPrecision precision = FourDigitPrecision);
+                    Data::DoubleDigitPrecision precision = FourDigitPrecision);
 #endif
 
       /**
@@ -230,7 +241,8 @@ class Data
         Borrow,
 
         /** The Data instance takes complete ownership of the
-            buffer.
+            buffer. The buffer must have been allocate using
+            "new char[]" so that it can be freed with "delete char[]".
         */
         Take
       };
@@ -271,6 +283,67 @@ class Data
       ~Data();
 
       /**
+        Set the Data to hold {buf} using share type {se}, which may be any
+        of Share (read-only, no-free), Borrow (read-write, no-free)
+        or Take (read-write, yes-free). Both the capacity
+        and current length are set to {length}; you can call truncate2()
+        afterwords to shorten.  The provided buffer (and its current
+        contents) will be used going forward; any currently owned buffer
+        will be released.
+        NOTE: The {buf} param is declared const to support Share type; for
+        Borrow and Take the buffer may be written (e.g., treated non-const).
+      **/
+      Data& setBuf(ShareEnum se, const char *buf, size_type length);
+
+      /**
+        Convience function to call setBuf() with a NULL-terminated string.
+        This is in-lined for case where compiler knows strlen statically.
+      **/
+      Data& setBuf(ShareEnum se, const char *str)
+      {
+         return setBuf(se, str, strlen(str));
+      };
+
+
+      /**
+        Take the data from {other}. Any current buffer is released.
+        {this} will have the same storage mode as {other} and steal
+        its buffer. All storage modes of {other} (Share,Borrow,Take)
+        are legal. When done, {other} will be empty (it will ref its
+        internal buffer).
+      **/
+      Data& takeBuf(Data& other);
+
+      /**
+        Functional equivalent of: *this = Data(buf, length)
+        but avoid the intermediate allocation and free. Also,
+        will never decrease capacity. Safe to call even if {buf}
+        is part of {this}.
+
+        @note The result is always NULL terminated. Unfortunately,
+        this requires a buffer allocation even if capacity exactly
+        equals length.
+      **/
+      Data& copy(const char *buf, size_type length);
+
+      /**
+        Set size to be exactly {length}, extending buffer if needed.
+        Also, reallocate buffer if needed so that it is writable.
+        Buffer contents is NOT initialized, and existing contents
+        may or may not be preserved.
+
+        @note Purpose of this function is to provide a working buffer
+        of fixed size that the application fills in after this call.
+
+        @note If you want just the buffer without changing the size,
+        use data() and cast-away the const-ness.
+
+        @note The result may or may not be NULL terminated. The buffer
+        is NULL terminated only when safe to do so without extra reallocation.
+      **/
+      char* getBuf(size_type length);
+
+      /**
         Converts from arbitrary other type to Data. Requires the other
         type to have an operator<<.
       */
@@ -292,7 +365,12 @@ class Data
       friend bool operator<(const Data& lhs, const char* rhs);
       friend bool operator<(const char* lhs, const Data& rhs);
 
-      Data& operator=(const Data& data);
+      Data& operator=(const Data& data)
+      {
+         if (&data==this)
+             return *this;
+         return copy(data.mBuf,data.mSize);
+      }
 
 #ifdef RESIP_HAS_RVALUE_REFS
       Data& operator=(Data &&data);
@@ -303,8 +381,13 @@ class Data
 
         @warning Passing a non-null-terminated string to this
                  method would be a Really Bad Thing.
+        The strlen() inlined to take advantages of cases where
+        the compiler knows the length statically.
       */
-      Data& operator=(const char* str);
+      Data& operator=(const char* str)
+      {
+         return copy(str, strlen(str));
+      }
 
       /**
         Concatenates two Data objects.
@@ -353,6 +436,10 @@ class Data
       */
       Data& operator^=(const Data& rhs);
 
+
+      /**
+        Returns the character at the specified position.
+      */
       char& operator[](size_type p);
       char operator[](size_type p) const;
 
@@ -377,6 +464,8 @@ class Data
       /**
         Shortens the size of this Data. Does not
         impact the size of the allocated buffer.
+        This owns() the buffer (undoes Share) so as to write
+        terminating NULL. See truncate2() as alternative.
 
         @deprecated dlb says that no one uses this and
                     it should be removed.
@@ -384,6 +473,15 @@ class Data
         @todo Remove this at some point.
       */
       size_type truncate(size_type len);
+
+      /**
+        Shortens the size of this Data so length is at most of {len}.
+        (If already shorter, doesn't increase length).
+        Does not affect buffer allocation, and doesn't impact writing
+        terminating NULL. Thus is safe to use with Share'd or external
+        Take'n buffers.
+      **/
+      Data& truncate2(size_type len);
 
       /**
         Checks whether the Data is empty.
@@ -458,7 +556,7 @@ class Data
       */
       Data hex() const;
 
-      /**	
+      /**
         Returns a representation of the contents of the data
         with any non-printable characters escaped.
 
@@ -519,22 +617,22 @@ class Data
       /**
         Performs in-place XML Character Data escaping of a Data.
       */
-	  Data xmlCharDataEncode() const;
+      Data xmlCharDataEncode() const;
 
       /**
         Performs in-place XML Character Data un-escaping of a Data.
       */
-	  Data xmlCharDataDecode() const;
+      Data xmlCharDataDecode() const;
 
       /**
         Escapes a Data to a stream according to XML Character Data encoding rules.
       */
-	  EncodeStream& xmlCharDataEncode(EncodeStream& s) const;
+      EncodeStream& xmlCharDataEncode(EncodeStream& s) const;
 
       /**
         Un-escapes a Data to a stream according to XML Character Data encoding rules.
       */
-	  EncodeStream& xmlCharDataDecode(EncodeStream& s) const;
+      EncodeStream& xmlCharDataDecode(EncodeStream& s) const;
 
       /**
         Shortens the size of this Data. If the contents are truncated,
@@ -545,9 +643,10 @@ class Data
 
       /**
         Clears the contents of this Data. This call does not modify
-        the capacity of the Data.
-      */	
-      Data& clear();
+        the capacity of the Data. It does not write terminating NULL,
+        and thus is safe to use with external buffers.
+      */
+      Data& clear() { return truncate2(0); };
 
       /**
         Takes the contents of the Data and converts them to an 
@@ -630,7 +729,7 @@ class Data
       static const Data Empty;
 
       /**
-	 Represents an impossible position; returned to indicate failure to find.
+         Represents an impossible position; returned to indicate failure to find.
       */
       static const size_type npos;
 
@@ -696,7 +795,7 @@ class Data
                             character should be escaped, false if
                             it should not.
 
-	@deprecated dlb -- pass a 256 array of bits rather than a function.
+        @deprecated dlb -- pass a 256 array of bits rather than a function.
       */      
       template<class Predicate> EncodeStream& 
           escapeToStream(EncodeStream& str, 
@@ -722,8 +821,8 @@ class Data
       static bool isHex(unsigned char c);      
 
       /** Trade off between in-object and heap allocation
-	  Larger LocalAlloc makes for larger objects that have Data members but
-	  bulk allocation/deallocation of Data  members. */
+          Larger LocalAlloc makes for larger objects that have Data members but
+          bulk allocation/deallocation of Data  members. */
       enum {LocalAlloc = RESIP_DATA_LOCAL_SIZE };
       char mPreBuffer[LocalAlloc+1];
 
@@ -733,11 +832,10 @@ class Data
       ShareEnum mMine;
       // The invariant for a Data with !mMine is mSize == mCapacity
 
-      static const bool isCharHex[256];
 
-	  friend std::ostream& operator<<(std::ostream& strm, const Data& d);
+      friend std::ostream& operator<<(std::ostream& strm, const Data& d);
 #ifndef RESIP_USE_STL_STREAMS
-	  friend EncodeStream& operator<<(EncodeStream& strm, const Data& d);
+      friend EncodeStream& operator<<(EncodeStream& strm, const Data& d);
 #endif
       friend class ParseBuffer;
       friend class DataBuffer;
@@ -748,11 +846,16 @@ class Data
       friend class Contents;
 };
 
+class DataHelper {
+   public:
+      static const bool isCharHex[256];
+};
+
 static bool invokeDataInit = Data::init(DataLocalSize<RESIP_DATA_LOCAL_SIZE>(0));
 
 inline bool Data::isHex(unsigned char c)
 {
-   return isCharHex[c];
+   return DataHelper::isCharHex[c];
 }
 
 inline bool isEqualNoCase(const Data& left, const Data& right)
@@ -809,7 +912,7 @@ Data::escapeToStream(EncodeStream& str, Predicate shouldEscape) const
       {
          int hi = (*p & 0xF0)>>4;
          int low = (*p & 0x0F);
-	   
+
          str << '%' << hex[hi] << hex[low];
          p++;
       }

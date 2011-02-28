@@ -29,7 +29,7 @@ Data::PreallocateType::PreallocateType(int)
 
 const Data::PreallocateType Data::Preallocate(0);
 
-const bool Data::isCharHex[256] = 
+const bool DataHelper::isCharHex[256] =
 {
 // 0       1       2       3       4       5       6       7       8       9       a   b   c   d   e   f
    false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  //0
@@ -663,6 +663,96 @@ Data::~Data()
    }
 }
 
+Data&
+Data::setBuf(ShareEnum se, const char* buffer, size_type length)
+{
+   assert(buffer);
+   if (mMine == Take)
+   {
+      delete[] mBuf;
+   }
+   mBuf = const_cast<char*>(buffer);
+   mCapacity = mSize = length;
+   mMine = se;
+   return *this;
+}
+
+Data&
+Data::takeBuf(Data& other)
+{
+   if ( &other == this )
+      return *this;
+
+   if (mMine == Data::Take)
+      delete[] mBuf;
+
+   if ( other.mBuf == other.mPreBuffer )
+   {
+      // plus one picks up the terminating safety NULL
+      memcpy( mPreBuffer, other.mPreBuffer, other.mSize+1);
+      mBuf = mPreBuffer;
+   }
+   else
+   {
+      mBuf = other.mBuf;
+      other.mBuf = other.mPreBuffer;
+   }
+   mSize = other.mSize;
+   mCapacity = other.mCapacity;
+   mMine = other.mMine;
+
+   // reset {other} to same state as the default Data() constructor
+   // note that other.mBuf is set above
+   other.mSize = 0;
+   other.mCapacity = LocalAlloc;
+   other.mMine = Data::Borrow;
+   other.mPreBuffer[0] = 0;
+
+   return *this;
+}
+
+Data&
+Data::copy(const char *buf, size_type length)
+{
+   if (mMine == Data::Share || mCapacity < length+1)
+   {
+      // will alloc length+1, so the term NULL below is safe
+      resize(length, false);
+   }
+   // {buf} might be part of ourselves already, in which case {length}
+   // is smaller than our capacity, so resize above won't happen, so
+   // just memmove (not memcpy) and everything good
+   mSize = length;
+   if (mSize>0)
+   {
+      memmove(mBuf, buf, mSize);
+   }
+   // DONT do term NULL until after copy, because may be shifting contents
+   // down and don't want to put NULL in middle of it
+   mBuf[mSize] = 0;
+   return *this;
+}
+
+char*
+Data::getBuf(size_type length)
+{
+   if (mMine == Data::Share || mCapacity < length)
+   {
+      // will alloc length+1, so the term NULL below is safe
+      resize(length, false);
+      mBuf[length] = 0;
+   }
+   else if ( mCapacity != length )
+   {
+      mBuf[length] = 0;
+   }
+   // even if we don't NULL-term it, it may have NULL term from before.
+   // But if external buffer (taken or borrow'd) then don't know if it
+   // has a NULL or not.
+   mSize = length;
+   return mBuf;
+}
+
 bool 
 resip::operator==(const Data& lhs, const Data& rhs)
 {
@@ -749,6 +839,10 @@ resip::operator<(const char* lhs, const Data& rhs)
    }
 }
 
+
+
+#if 0
+// Moved to inline header as special case of copy()
 Data& 
 Data::operator=(const Data& data)
 {
@@ -778,6 +872,7 @@ Data::operator=(const Data& data)
    }
    return *this;
 }
+#endif
 
 #ifdef RESIP_HAS_RVALUE_REFS
 Data& Data::operator=(Data &&data)
@@ -813,6 +908,17 @@ Data::truncate(size_type len)
    }
 
    return mSize;
+}
+
+Data&
+Data::truncate2(size_type len)
+{
+   if (len < mSize)
+   {
+      // NOTE: Do not write terminating NULL, to avoid un-doing Share
+      mSize = len;
+   }
+   return *this;
 }
 
 Data 
@@ -871,6 +977,7 @@ Data::operator+=(char c)
    return append(&c, 1);
 }
 
+
 char& 
 Data::operator[](size_type p)
 {
@@ -906,6 +1013,8 @@ Data::operator[](size_type p) const
    return mBuf[p];
 }
 
+#if 0
+// Moved to inline header as special case of copy()
 Data& 
 Data::operator=(const char* str)
 {
@@ -930,6 +1039,7 @@ Data::operator=(const char* str)
 
    return *this;
 }
+#endif
 
 Data 
 Data::operator+(const char* str) const
@@ -1496,12 +1606,15 @@ Data::uppercase()
    return *this;
 }
 
+#if 0
+// in-lined into header as special case of truncate2()
 Data&
 Data::clear()
 {
    mSize = 0;
    return *this;
 }
+#endif
 
 int 
 Data::convertInt() const
@@ -2125,5 +2238,5 @@ Data::base64encode(bool useSafeSet) const
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */
-
