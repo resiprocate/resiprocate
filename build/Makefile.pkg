@@ -273,6 +273,10 @@ ifeq ($(HAVE_EPOLL),yes)
 DEFINES += HAVE_EPOLL
 endif
 
+ifeq ($(USE_RANDOM_THREAD_LOCAL),yes)
+DEFINES += RESIP_RANDOM_THREAD_LOCAL
+endif
+
 ifeq ($(USE_POPT),yes)
   POPT_DEFINES := HAVE_POPT_H
   POPT_LIBNAME := popt

@@ -25,6 +25,7 @@ TESTPROGRAMS += \
 	testMD5Stream.cxx \
 	testParseBuffer.cxx \
 	testRandomHex.cxx \
+	testRandomThread.cxx \
 	testThreadIf.cxx \
 #	testDigestStream.cxx \
 
