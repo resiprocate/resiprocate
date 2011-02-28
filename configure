@@ -51,6 +51,7 @@ USE_POPT := yes
 USE_CURL := no
 USE_GOOGLE_MALLOC := no
 USE_GOOGLE_CPUPERF := no
+USE_RANDOM_THREAD_LOCAL := no
 USE_IPV6 := no
 HAVE_EPOLL := no
 POPT_INCDIR_CONFIG :=
@@ -367,6 +368,14 @@ $uname = `uname`;
     default     => "no",
     validate    => [@yesno],
     flag        => 'google-cpuperf',
+  },
+  {
+    name        => "USE_RANDOM_THREAD_LOCAL",
+    description => "Use Thread Local Storage w/ random_r()?",
+    #   default     => &detectRandomr,  # don't make default til more testing
+    default     => "no",
+    validate    => [@yesno],
+    flag        => 'random-thread-local',
   },
   {
     name        => "USE_IPV6",
@@ -1351,6 +1360,19 @@ sub detectEpoll
     return "yes";
   }
   return "no";
+}
+
+
+# Detect if random_r() is supported. Might be best
+# to grep /usr/include/stdlib.h for "random_r", but not sure
+# how to do that in perl
+sub detectRandomr
+{
+  if ($uname =~ /Linux/)
+  {
+    return "yes";
+  }
+  "no";
 }
 
 sub sigcompInstalled

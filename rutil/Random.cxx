@@ -53,7 +53,60 @@ Random::Initializer Random::mInitializer;
 #ifdef RESIP_RANDOM_WIN32_RTL
 BOOLEAN (APIENTRY *Random::RtlGenRandom)(void*, ULONG) = 0;
 #endif
+#endif //WIN32
+
+#ifdef RESIP_RANDOM_THREAD_MUTEX
+struct random_data* Random::sRandomState = 0;
 #endif
+
+#ifdef RESIP_RANDOM_THREAD_LOCAL
+ThreadIf::TlsKey Random::sRandomStateKey = 0;
+#endif
+
+#define RANDOM_STATE_SIZE 128
+
+const char*
+Random::getImplName()
+{
+#ifdef WIN32
+#if defined(RESIP_RANDOM_WIN32_RTL)
+   return "win32_rtl";
+#else
+   return "win32_rand";
+#endif
+#else // WIN32
+#if defined(RESIP_RANDOM_THREAD_LOCAL)
+   return "posix_thread_local";
+#elif defined(RESIP_RANDOM_THREAD_MUTEX)
+   return "posix_thread_mutex";
+#else
+   return "posix_random";
+#endif
+#endif // not WIN32
+}
+
+/**
+   Key goal is to make sure that each thread has distinct seed.
+**/
+unsigned
+Random::getSimpleSeed()
+{
+   // !cj! need to find a better way - use pentium random commands?
+   Data buffer;
+   {
+      DataStream strm(buffer);
+#ifdef WIN32
+      strm << GetTickCount() << ":";
+      strm << GetCurrentProcessId() << ":";
+      strm << GetCurrentThreadId();
+#else
+      // .kw. previously just used the lower 32bits of getTimeMs()
+      strm << ResipClock::getTimeMicroSec() << ":";
+      strm << getpid();
+#endif
+   }
+   return (unsigned int)buffer.hash();
+}
 
 void
 Random::initialize()
@@ -77,16 +130,7 @@ Random::initialize()
       Lock lock(mMutex);      
       if (!Random::mInitializer.isInitialized())
       {
-         Random::mInitializer.setInitialized();
-         // !cj! need to find a better way - use pentium random commands?
-         Data buffer;
-         DataStream strm(buffer);
-         strm << GetTickCount() << ":";
-         strm << GetCurrentProcessId() << ":";
-         strm << GetCurrentThreadId();
-         strm.flush();
-         unsigned int seed = (unsigned int)buffer.hash();
-
+         unsigned seed = getSimpleSeed();
          srand(seed);
 
 #ifdef RESIP_RANDOM_WIN32_RTL
@@ -109,15 +153,15 @@ Random::initialize()
                WarningLog(<< "Using srand(..) and rand() for random numbers");
             }
          }
-#endif
+#endif   // RESIP_RANDOM_WIN32_RTL
 
          mIsInitialized = true;
 
       }
    }
-#endif
+#endif  // not dead code
 
-#else
+#else   // WIN32
    // ?dcm? -- OpenSSL will transparently initialize PRNG if /dev/urandom is
    // present. In any case, will move into OpenSSLInit
    if ( !Random::mIsInitialized)
@@ -128,9 +172,21 @@ Random::initialize()
          mIsInitialized = true;
          Timer::setupTimeOffsets();
 
-         //throwing away first 32 bits
-         unsigned int seed = static_cast<unsigned int>(Timer::getTimeMs());
+         unsigned seed = getSimpleSeed();
+
+#if defined(RESIP_RANDOM_THREAD_LOCAL)
+         ThreadIf::tlsKeyCreate(sRandomStateKey, ::free);
+#elif defined(RESIP_RANDOM_THREAD_MUTEX)
+         struct random_data *buf;
+         size_t sz = sizeof(*buf)+RANDOM_STATE_SIZE;
+         buf = (struct random_data*) ::malloc(sz);
+         memset( buf, 0, sz);      // .kw. strange segfaults without this
+         initstate_r(seed, ((char*)buf)+sizeof(*buf), RANDOM_STATE_SIZE, buf);
+         sRandomState = buf;
+#else
          srandom(seed);
+#endif
+
 
          int fd = open("/dev/urandom", O_RDONLY);
          // !ah! blocks on embedded devices -- not enough entropy.
@@ -169,14 +225,14 @@ Random::initialize()
          
             RAND_add(buf,sizeof(buf),double(s*8));
          }
-#endif
+#endif   // SSL
          if (fd != -1 )
          {
             ::close(fd);
          }
       }
    }
-#endif
+#endif  // not WIN32
 }
 
 int
@@ -192,22 +248,23 @@ Random::getRandom()
    // see comment in initialize()
    if (Random::RtlGenRandom)
    {
-      char buff[32];
+      unsigned long buff[1];
       ULONG ulCbBuff = sizeof(buff);
       if (Random::RtlGenRandom(buff,ulCbBuff))
       {
-         // use buff full of random goop
-         ret = (int)buff[0] << 24;
-         ret += (int)buff[1] << 16;
-         ret += (int)buff[2] << 8;
-         ret += (int)buff[3];
+         // .kw. all other impls here return positive number, so do the same...
+         ret = buff[0] & (~(1<<31));
          return ret;
       }
    }
    // fallback to using rand() if this is a Windows version previous to XP
 #endif	// RESIP_RANDOM_WIN32_RTL
    {
+      // rand() returns [0,RAND_MAX], which on Windows is 15 bits and positive
+      // code below gets 30bits of randomness; with bit31 and bit15
+      // always zero; result is always positive
       assert( RAND_MAX == 0x7fff );
+      // WATCHOUT: on Linux, rand() returns 31bits, and assert above will fail
       int r1 = rand();
       int r2 = rand();
       ret = (r1<<16) + r2;
@@ -215,8 +272,34 @@ Random::getRandom()
 
    return ret;
 #else	// WIN32
+
+#if defined(RESIP_RANDOM_THREAD_LOCAL)
+   struct random_data *buf = (struct random_data*) ThreadIf::tlsGetValue(sRandomStateKey);
+   if ( buf==NULL ) {
+      size_t sz = sizeof(*buf)+RANDOM_STATE_SIZE;
+      buf = (struct random_data*) ::malloc(sz);
+      memset( buf, 0, sz);      // .kw. strange segfaults without this
+      unsigned seed = getSimpleSeed();
+      initstate_r(seed, ((char*)buf)+sizeof(*buf), RANDOM_STATE_SIZE, buf);
+      ThreadIf::tlsSetValue(sRandomStateKey, buf);
+   }
+   int32_t ret;
+   random_r(buf, &ret);
+   return ret;
+#elif defined(RESIP_RANDOM_THREAD_MUTEX)
+   int32_t ret;
+   {
+      Lock statelock(mMutex);
+      random_r(sRandomState, &ret);
+   }
+   return ret;
+#else
+   // random returns [0,RAN_MAX]. On Linux, this is 31 bits and positive.
+   // On some platforms it might be on 15 bits, and will need to do something.
+   assert( RAND_MAX == ((1<<31)-1) );
    return random(); 
-#endif
+#endif  // THREAD_LOCAL
+#endif // WIN32
 }
 
 int
