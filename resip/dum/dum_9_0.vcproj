@@ -950,6 +950,10 @@
 				RelativePath=".\RemoteCertStore.hxx"
 				>
 			</File>
+         <File
+				RelativePath=".\RequestValidationHandler.hxx"
+				>
+			</File>
 			<File
 				RelativePath=".\ServerAuthManager.hxx"
 				>
