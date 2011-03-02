@@ -455,6 +455,7 @@
     <ClInclude Include="RegistrationHandler.hxx" />
     <ClInclude Include="RegistrationPersistenceManager.hxx" />
     <ClInclude Include="RemoteCertStore.hxx" />
+    <ClInclude Include="RequestValidationHandler.hxx" />
     <ClInclude Include="ServerAuthManager.hxx" />
     <ClInclude Include="ServerInviteSession.hxx" />
     <ClInclude Include="ServerOutOfDialogReq.hxx" />
