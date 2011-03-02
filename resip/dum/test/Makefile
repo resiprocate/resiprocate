@@ -8,7 +8,7 @@ PACKAGES += DUM RESIP RUTIL OPENSSL ARES PTHREAD POPT RADIUSCLIENTNG
 TARGET_LIBRARY = 
 
 #testDumTimer.cxx
-TESTPROGRAMS += basicRegister.cxx BasicCall.cxx basicMessage.cxx basicClient.cxx
+TESTPROGRAMS += basicRegister.cxx BasicCall.cxx basicMessage.cxx basicClient.cxx testRequestValidationHandler.cxx
 
 TESTPROGRAMS += treg.cxx
 

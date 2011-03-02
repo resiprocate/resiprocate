@@ -40,6 +40,7 @@
 #include "resip/dum/RedirectManager.hxx"
 #include "resip/dum/RegistrationCreator.hxx"
 #include "resip/dum/RemoteCertStore.hxx"
+#include "resip/dum/RequestValidationHandler.hxx"
 #include "resip/dum/ServerAuthManager.hxx"
 #include "resip/dum/ServerInviteSession.hxx"
 #include "resip/dum/ServerPublication.hxx"
@@ -95,6 +96,7 @@ DialogUsageManager::DialogUsageManager(SipStack& stack, bool createDefaultFeatur
    mServerRegistrationHandler(0),
    mRedirectHandler(0),
    mDialogSetHandler(0),
+   mRequestValidationHandler(0),
    mRegistrationPersistenceManager(0),
    mIsDefaultServerReferHandler(true),
    mClientPagerMessageHandler(0),
@@ -367,6 +369,13 @@ DialogUsageManager::setInviteSessionHandler(InviteSessionHandler* handler)
 {
    assert(!mInviteSessionHandler);
    mInviteSessionHandler = handler;
+}
+
+void
+DialogUsageManager::setRequestValidationHandler(RequestValidationHandler* handler)
+{
+   assert(!mRequestValidationHandler);
+   mRequestValidationHandler = handler;
 }
 
 void
@@ -1690,6 +1699,9 @@ DialogUsageManager::validateRequestURI(const SipMessage& request)
       failure.header(h_Allows) = getMasterProfile()->getAllowedMethods();
       sendResponse(failure);
 
+      if(mRequestValidationHandler)
+         mRequestValidationHandler->onInvalidMethod(request);
+
       return false;
    }
 
@@ -1700,8 +1712,11 @@ DialogUsageManager::validateRequestURI(const SipMessage& request)
       SipMessage failure;
       makeResponse(failure, request, 416);
       sendResponse(failure);
+      
+      if(mRequestValidationHandler)
+         mRequestValidationHandler->onInvalidScheme(request);
 
-	  return false;
+      return false;
    }
 
    return true;
@@ -1725,6 +1740,9 @@ DialogUsageManager::validateRequiredOptions(const SipMessage& request)
          makeResponse(failure, request, 420);
          failure.header(h_Unsupporteds) = unsupported;
          sendResponse(failure);
+      
+         if(mRequestValidationHandler)
+            mRequestValidationHandler->onInvalidRequiredOptions(request);
 
          return false;
       }
@@ -1748,6 +1766,10 @@ DialogUsageManager::validate100RelSuport(const SipMessage& request)
             makeResponse(failure, request, 421);
             failure.header(h_Requires).push_back(Token(Symbols::C100rel));
             sendResponse(failure);
+      
+            if(mRequestValidationHandler)
+               mRequestValidationHandler->on100RelNotSupportedByRemote(request);
+
             return false;
          }
       }
@@ -1773,6 +1795,9 @@ DialogUsageManager::validateContent(const SipMessage& request)
          makeResponse(failure, request, 415);
          failure.header(h_Accepts) = getMasterProfile()->getSupportedMimeTypes(request.header(h_RequestLine).method());
          sendResponse(failure);
+            
+         if(mRequestValidationHandler)
+            mRequestValidationHandler->onInvalidContentType(request);
 
          return false;
       }
@@ -1784,6 +1809,9 @@ DialogUsageManager::validateContent(const SipMessage& request)
          makeResponse(failure, request, 415);
          failure.header(h_AcceptEncodings) = getMasterProfile()->getSupportedEncodings();
          sendResponse(failure);
+         
+         if(mRequestValidationHandler)
+            mRequestValidationHandler->onInvalidContentEncoding(request);
 
          return false;
       }
@@ -1797,6 +1825,9 @@ DialogUsageManager::validateContent(const SipMessage& request)
          makeResponse(failure, request, 415);
          failure.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
          sendResponse(failure);
+         
+         if(mRequestValidationHandler)
+            mRequestValidationHandler->onInvalidContentLanguage(request);
 
          return false;
       }
@@ -1843,6 +1874,10 @@ DialogUsageManager::validateAccept(const SipMessage& request)
    makeResponse(failure, request, 406);
    failure.header(h_Accepts) = getMasterProfile()->getSupportedMimeTypes(method);
    sendResponse(failure);
+
+   if(mRequestValidationHandler)
+      mRequestValidationHandler->onInvalidAccept(request);
+
    return false;
 }
 

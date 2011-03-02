@@ -52,6 +52,7 @@ class ServerPagerMessageHandler;
 class OutOfDialogHandler;
 class RedirectHandler;
 class DialogSetHandler;
+class RequestValidationHandler;
 
 class Dialog;
 class InviteSessionCreator;
@@ -172,6 +173,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void addServerPublicationHandler(const Data& eventType, ServerPublicationHandler*);
       
       void addOutOfDialogHandler(MethodTypes, OutOfDialogHandler*);
+
+      void setRequestValidationHandler(RequestValidationHandler*);
 
       void setClientPagerMessageHandler(ClientPagerMessageHandler*);
       void setServerPagerMessageHandler(ServerPagerMessageHandler*);
@@ -498,6 +501,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       ServerRegistrationHandler* mServerRegistrationHandler;      
       RedirectHandler* mRedirectHandler;
       DialogSetHandler* mDialogSetHandler;      
+      RequestValidationHandler* mRequestValidationHandler;
 
       RegistrationPersistenceManager *mRegistrationPersistenceManager;
 
