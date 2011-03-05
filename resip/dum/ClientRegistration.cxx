@@ -364,6 +364,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
       assert(msg.isResponse());
       const int& code = msg.header(h_StatusLine).statusCode();
       bool nextHopSupportsOutbound = false;
+      int keepAliveTime = 0;
 
       // If registration was successful - look for next hop indicating support for outbound
       if(mDialogSet.mUserProfile->clientOutboundEnabled() && msg.isExternal() && code >= 200 && code < 300)
@@ -374,12 +375,16 @@ ClientRegistration::dispatch(const SipMessage& msg)
          // and use it for sending all messages (DialogUsageManager::sendUsingOutboundIfAppropriate)
          try
          {
-            if(!msg.empty(h_Paths) && msg.header(h_Paths).back().uri().exists(p_ob) ||
-               !msg.empty(h_Requires) && msg.header(h_Requires).find(Token(Symbols::Outbound)))
+            if((!msg.empty(h_Paths) && msg.header(h_Paths).back().uri().exists(p_ob)) ||
+               (!msg.empty(h_Requires) && msg.header(h_Requires).find(Token(Symbols::Outbound))))
             {
                mDialogSet.mUserProfile->mClientOutboundFlowTuple = msg.getSource();
                mDialogSet.mUserProfile->mClientOutboundFlowTuple.onlyUseExistingConnection = true;
                nextHopSupportsOutbound = true;
+               if(!msg.empty(h_FlowTimer))
+               {
+                  keepAliveTime = msg.header(h_FlowTimer).value();
+               }
             }
          }
          catch(BaseException&e)
@@ -391,16 +396,18 @@ ClientRegistration::dispatch(const SipMessage& msg)
       if(msg.isExternal())
       {
          const Data& receivedTransport = msg.header(h_Vias).front().transport();
-         int keepAliveTime = 0;
-         if(receivedTransport == Symbols::TCP ||
-            receivedTransport == Symbols::TLS ||
-            receivedTransport == Symbols::SCTP)
+         if(keepAliveTime == 0)
          {
-            keepAliveTime = mDialogSet.mUserProfile->getKeepAliveTimeForStream();
-         }
-         else
-         {
-            keepAliveTime = mDialogSet.mUserProfile->getKeepAliveTimeForDatagram();
+            if(receivedTransport == Symbols::TCP ||
+               receivedTransport == Symbols::TLS ||
+               receivedTransport == Symbols::SCTP)
+            {
+               keepAliveTime = mDialogSet.mUserProfile->getKeepAliveTimeForStream();
+            }
+            else
+            {
+               keepAliveTime = mDialogSet.mUserProfile->getKeepAliveTimeForDatagram();
+            }
          }
 
          if(keepAliveTime > 0)

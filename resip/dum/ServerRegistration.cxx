@@ -50,6 +50,11 @@ ServerRegistration::accept(SipMessage& ok)
    if (mDidOutbound)
    {
       ok.header(h_Requires).push_back(outbound);
+      if(InteropHelper::getFlowTimerSeconds() > 0)
+      {
+         ok.header(h_FlowTimer).value() = InteropHelper::getFlowTimerSeconds();         
+         mDum.getSipStack().enableFlowTimer(mRequest.getSource());
+      }
    }
 
    if (!mDum.mServerRegistrationHandler->asyncProcessing())

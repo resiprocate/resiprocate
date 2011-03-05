@@ -12,7 +12,7 @@ class DialogUsageManager;
 class NetworkAssociation
 {
    public:
-      NetworkAssociation() : mDum(0), mTargetSupportsOutbound(false) {}
+      NetworkAssociation() : mDum(0), mTargetSupportsOutbound(false), mKeepAliveInterval(0) {}
       void setDum(DialogUsageManager* dum) { mDum = dum; }
       bool update(const SipMessage& msg, int keepAliveInterval, bool targetSupportsOutbound);  // returns true if an update was required
       void clear();
@@ -21,6 +21,7 @@ class NetworkAssociation
       Tuple mTarget;
       DialogUsageManager* mDum;
       bool mTargetSupportsOutbound;
+      int mKeepAliveInterval;
 };
 
 }

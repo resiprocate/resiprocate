@@ -1007,6 +1007,20 @@ ResponseContext::processResponse(SipMessage& response)
             mRequestContext.mHaveSentFinalResponse = true;
             mBestResponse.header(h_StatusLine).statusCode()=
                response.header(h_StatusLine).statusCode();
+
+            // If this is a registration response and we have flow timers enabled, and
+            // we are doing outbound for this registration and there is no FlowTimer
+            // header present already, then add a FlowTimer header
+            if(response.method() == REGISTER &&
+               InteropHelper::getFlowTimerSeconds() > 0 &&
+               response.empty(h_FlowTimer) &&
+               ((!response.empty(h_Paths) && response.header(h_Paths).back().uri().exists(p_ob)) ||
+                (!response.empty(h_Requires) && response.header(h_Requires).find(Token(Symbols::Outbound)))))
+            {
+               response.header(h_FlowTimer).value() = InteropHelper::getFlowTimerSeconds();
+               mRequestContext.getProxy().getStack().enableFlowTimer(mRequestContext.getOriginalRequest().getSource());
+            }
+
             mRequestContext.sendResponse(response);            
          }
          break;

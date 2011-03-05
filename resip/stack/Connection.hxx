@@ -25,14 +25,19 @@ class Compression;
 typedef IntrusiveListElement<Connection*> ConnectionLruList;
 typedef IntrusiveListElement1<Connection*> ConnectionReadList;
 typedef IntrusiveListElement2<Connection*> ConnectionWriteList;
+typedef IntrusiveListElement3<Connection*> FlowTimerLruList;
 
-/** @todo reads are a linear walk -- integrate with epoll 
-    Connection implements, via sockets, ConnectionBase for managed
-    connections. Connections are managed for apprximate fairness and least
+/** Connection implements, via sockets, ConnectionBase for managed
+    connections. Connections are managed for approximate fairness and least
     recently used garbage collection.
     Connection inherits three different instantiations of intrusive lists.
 */
-class Connection : public ConnectionBase, public ConnectionLruList, public ConnectionReadList, public ConnectionWriteList, public FdPollItemIf
+class Connection : public ConnectionBase, 
+                   public ConnectionLruList, 
+                   public ConnectionReadList, 
+                   public ConnectionWriteList, 
+                   public FlowTimerLruList, 
+                   public FdPollItemIf
 {
       friend class ConnectionManager;
       friend EncodeStream& operator<<(EncodeStream& strm, const resip::Connection& c);
@@ -68,9 +73,13 @@ class Connection : public ConnectionBase, public ConnectionLruList, public Conne
 
       /** move data from the connection to the buffer; move this to front of
           least recently used list. when the message is complete,
-	  it is delivered via mTransport->pushRxMsgUp()
-	  which generally puts it on a fifo */
+          it is delivered via mTransport->pushRxMsgUp()
+          which generally puts it on a fifo */
       int read();
+
+      /// Ensures this connection is in the FlowTimer LRU list in the connection manager
+      void enableFlowTimer();
+      bool isFlowTimerEnabled() { return mFlowTimerEnabled; }
 
       bool mRequestPostConnectSocketFuncCall;
       static volatile bool mEnablePostConnectSocketFuncCall;
@@ -90,6 +99,7 @@ class Connection : public ConnectionBase, public ConnectionLruList, public Conne
    private:
       ConnectionManager& getConnectionManager() const;
       bool mInWritable;
+      bool mFlowTimerEnabled;
       FdPollItemHandle mPollItemHandle;
       
       /// no default c'tor

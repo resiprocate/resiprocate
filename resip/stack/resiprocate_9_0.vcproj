@@ -1003,6 +1003,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\EnableFlowTimer.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\EventStackThread.hxx"
 				>
 			</File>

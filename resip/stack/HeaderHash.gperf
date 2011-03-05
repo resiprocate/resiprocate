@@ -63,6 +63,7 @@ record-route, Headers::RecordRoute
 reply-to, Headers::ReplyTo
 require, Headers::Require
 retry-after, Headers::RetryAfter
+flow-timer, Headers::FlowTimer
 server, Headers::Server
 sip-etag, Headers::SIPETag
 sip-if-match, Headers::SIPIfMatch
