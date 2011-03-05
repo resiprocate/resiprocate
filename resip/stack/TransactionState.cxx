@@ -5,6 +5,7 @@
 #include "resip/stack/AbandonServerTransaction.hxx"
 #include "resip/stack/CancelClientInviteTransaction.hxx"
 #include "resip/stack/TerminateFlow.hxx"
+#include "resip/stack/EnableFlowTimer.hxx"
 #include "resip/stack/ConnectionTerminated.hxx"
 #include "resip/stack/KeepAlivePong.hxx"
 #include "resip/stack/DnsInterface.hxx"
@@ -414,6 +415,14 @@ TransactionState::process(TransactionController& controller)
       {
          controller.mTransportSelector.terminateFlow(termFlow->getFlow());
          delete termFlow;
+         return;
+      }
+
+      EnableFlowTimer* enableFlowTimer = dynamic_cast<EnableFlowTimer*>(message);
+      if(enableFlowTimer)
+      {
+         controller.mTransportSelector.enableFlowTimer(enableFlowTimer->getFlow());
+         delete enableFlowTimer;
          return;
       }
    }

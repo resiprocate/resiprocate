@@ -239,6 +239,8 @@ defineHeader(RSeq, "RSeq", UInt32Category, "RFC 3262");
 // !dlb! this one is not quite right -- can have (comment) after field value
 // !rwm!  WHO CARES!!!! Comments are evil
 defineHeader(RetryAfter, "Retry-After", UInt32Category, "RFC 3261");
+defineHeader(FlowTimer, "Flow-Timer", UInt32Category, "RFC 5626");
+
 defineHeader(Expires, "Expires", ExpiresCategory, "RFC 3261");
 defineHeader(SessionExpires, "Session-Expires", ExpiresCategory, "RFC 4028");
 defineHeader(MinSE, "Min-SE", ExpiresCategory, "RFC 4028");

@@ -779,6 +779,13 @@ SipStack::terminateFlow(const resip::Tuple& flow)
    checkAsyncProcessHandler();
 }
 
+void 
+SipStack::enableFlowTimer(const resip::Tuple& flow)
+{
+   mTransactionController.enableFlowTimer(flow);
+   checkAsyncProcessHandler();
+}
+
 bool SipStack::mDefaultUseInternalPoll = false;
 
 void

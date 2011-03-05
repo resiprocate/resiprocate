@@ -1126,14 +1126,24 @@ TransportSelector::connectionAlive(const Tuple& target) const
 void 
 TransportSelector::terminateFlow(const resip::Tuple& flow)
 {
-   const Connection* connection = findConnection(flow);
+   Connection* connection = findConnection(flow);
    if(connection)
    {
       delete connection;
    }
 }
 
-const Connection*
+void 
+TransportSelector::enableFlowTimer(const resip::Tuple& flow)
+{
+   Connection* connection = findConnection(flow);
+   if(connection)
+   {
+      connection->enableFlowTimer();
+   }
+}
+
+Connection*
 TransportSelector::findConnection(const Tuple& target) const
 {
    // !bwc! If we can find a match in the ConnectionManager, we can

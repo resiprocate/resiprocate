@@ -104,12 +104,13 @@ class TransportSelector
       static Tuple getFirstInterface(bool is_v4, TransportType type);
       bool connectionAlive(const Tuple& dest) const;
       void terminateFlow(const resip::Tuple& flow);
+      void enableFlowTimer(const resip::Tuple& flow);
 
       /// delete all known transports (including external)
       void deleteTransports();
 
    private:
-      const Connection* findConnection(const Tuple& dest) const;
+      Connection* findConnection(const Tuple& dest) const;
       Transport* findTransportBySource(Tuple& src) const;
       Transport* findLoopbackTransportBySource(bool ignorePort, Tuple& src) const;
       Transport* findTransportByDest(SipMessage* msg, Tuple& dest);

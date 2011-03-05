@@ -1389,7 +1389,8 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
          for(; it != mDialogSetMap.end(); it++)
          {
             if(it->second->mUserProfile->clientOutboundEnabled() && 
-               it->second->mUserProfile->getClientOutboundFlowTuple().mFlowKey == terminated->getFlow().mFlowKey)
+               it->second->mUserProfile->getClientOutboundFlowTuple().mFlowKey == terminated->getFlow().mFlowKey &&  // Flow key is not part of Tuple operator=, check it first
+               it->second->mUserProfile->getClientOutboundFlowTuple() == terminated->getFlow())
             {
                if(it->second->getClientRegistration().isValid())
                {

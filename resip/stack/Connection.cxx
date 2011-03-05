@@ -31,6 +31,7 @@ Connection::Connection(Transport* transport,const Tuple& who, Socket socket,
    : ConnectionBase(transport,who,compression),
      mRequestPostConnectSocketFuncCall(false),
      mInWritable(false),
+     mFlowTimerEnabled(false),
      mPollItemHandle(0)
 {
    mWho.mFlowKey=(FlowKey)socket;
@@ -229,6 +230,18 @@ Connection::read()
      preparseNewBytes(bytesRead); //.dcm. may delete this
    }
    return bytesRead;
+}
+
+void
+Connection::enableFlowTimer()
+{
+   if(!mFlowTimerEnabled)
+   {
+      mFlowTimerEnabled = true;
+
+      // ensure connection is in a FlowTimer LRU list on the connection manager
+      getConnectionManager().moveToFlowTimerLru(this);
+   }
 }
 
 void

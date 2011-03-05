@@ -3,6 +3,7 @@
 #endif
 
 #include "resip/stack/ConnectionManager.hxx"
+#include "resip/stack/InteropHelper.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
 
@@ -13,13 +14,15 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-const UInt64 ConnectionManager::MinimumGcAge = 1;
+UInt64 ConnectionManager::MinimumGcAge = 1;  // in milliseconds
+bool ConnectionManager::EnableAgressiveGc = false;
 
 ConnectionManager::ConnectionManager() : 
    mHead(0,Tuple(),0,Compression::Disabled),
    mWriteHead(ConnectionWriteList::makeList(&mHead)),
    mReadHead(ConnectionReadList::makeList(&mHead)),
    mLRUHead(ConnectionLruList::makeList(&mHead)),
+   mFlowTimerLRUHead(FlowTimerLruList::makeList(&mHead)),
    mPollGrp(0)
 {
    DebugLog(<<"ConnectionManager::ConnectionManager() called ");
@@ -34,6 +37,7 @@ ConnectionManager::~ConnectionManager()
    assert(mReadHead->empty());
    assert(mWriteHead->empty());
    assert(mLRUHead->empty());
+   assert(mFlowTimerLRUHead->empty());
 }
 
 Connection*
@@ -187,6 +191,12 @@ ConnectionManager::addConnection(Connection* connection)
    }
    mLRUHead->push_back(connection);
 
+   // Garbage collect old connections if agressive is enabled
+   if(EnableAgressiveGc)
+   {
+      gc(MinimumGcAge, 0);  // cleanup all connections that haven't seen data in last x ms
+   }
+
    //DebugLog (<< "count=" << mAddrMap.count(connection->who()) << "who=" << connection->who() << " mAddrMap=" << Inserter(mAddrMap));
    //assert(mAddrMap.begin()->first == connection->who());
    assert(mAddrMap.count(connection->who()) == 1);
@@ -209,23 +219,32 @@ ConnectionManager::removeConnection(Connection* connection)
       assert(!mReadHead->empty());
       connection->ConnectionReadList::remove();
       connection->ConnectionWriteList::remove();
-      connection->ConnectionLruList::remove();
+      if(connection->isFlowTimerEnabled())
+      {
+         connection->FlowTimerLruList::remove();
+      }
+      else
+      {
+         connection->ConnectionLruList::remove();
+      }
    }
 }
 
 // release excessively old connections (free up file descriptors)
 void
-ConnectionManager::gc(UInt64 relThreshhold, unsigned int maxToRemove)
+ConnectionManager::gc(UInt64 relThreshold, unsigned int maxToRemove)
 {
-   UInt64 threshhold = Timer::getTimeMs() - relThreshhold;
-   InfoLog(<< "recycling connections older than " << relThreshhold/1000.0 << " seconds");
+   UInt64 curTimeMs = Timer::getTimeMs();
+   UInt64 threshold = curTimeMs - relThreshold;
+   DebugLog(<< "recycling connections not used in last " << relThreshold/1000.0 << " seconds");
 
+   // Look through non-flow-timer connections and close those using the passed in relThreshold
    unsigned int numRemoved = 0;
    for (ConnectionLruList::iterator i = mLRUHead->begin();
         i != mLRUHead->end() &&
         (maxToRemove == 0 || numRemoved != maxToRemove);)
    {
-      if ((*i)->whenLastUsed() < threshhold)
+      if ((*i)->whenLastUsed() < threshold)
       {
          Connection* discard = *i;
          InfoLog(<< "recycling connection: " << discard << " " << discard->getSocket());
@@ -239,14 +258,55 @@ ConnectionManager::gc(UInt64 relThreshhold, unsigned int maxToRemove)
          break;
       }
    }
+
+   // Look through flow-timer connections and close those using the configured FlowTimer 
+   // value + the configured grace period as a threshold
+   if(mFlowTimerLRUHead->begin() != mFlowTimerLRUHead->end())
+   {
+      threshold = curTimeMs - ((InteropHelper::getFlowTimerSeconds() + InteropHelper::getFlowTimerGracePeriodSeconds()) * 1000);
+      for (FlowTimerLruList::iterator i2 = mFlowTimerLRUHead->begin();
+         i2 != mFlowTimerLRUHead->end() &&
+         (maxToRemove == 0 || numRemoved != maxToRemove);)
+      {  
+         if ((*i2)->whenLastUsed() < threshold)
+         {
+            Connection* discard = *i2;
+            InfoLog(<< "recycling flow-timer enabled connection: " << discard << " " << discard->getSocket());
+            // iterate before removing
+            ++i2;
+            delete discard;
+            numRemoved++;
+         }
+         else
+         {
+            break;
+         }
+      }
+   }
 }
 
 // move to youngest
 void
 ConnectionManager::touch(Connection* connection)
 {
+   connection->resetLastUsed();
+   if(connection->isFlowTimerEnabled())
+   {
+      connection->FlowTimerLruList::remove();
+      mFlowTimerLRUHead->push_back(connection);
+   }
+   else
+   {
+      connection->ConnectionLruList::remove();
+      mLRUHead->push_back(connection);
+   }
+}
+
+void 
+ConnectionManager::moveToFlowTimerLru(Connection *connection)
+{
    connection->ConnectionLruList::remove();
-   mLRUHead->push_back(connection);
+   mFlowTimerLRUHead->push_back(connection);
 }
 
 void

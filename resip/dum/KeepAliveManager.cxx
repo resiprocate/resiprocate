@@ -3,6 +3,7 @@
 #include "resip/dum/KeepAliveManager.hxx"
 #include "resip/dum/KeepAliveTimeout.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
+#include "resip/stack/Helper.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/SipStack.hxx"
 
@@ -32,16 +33,24 @@ KeepAliveManager::add(const Tuple& target, int keepAliveInterval, bool targetSup
       mNetworkAssociations.insert(NetworkAssociationMap::value_type(target, info));
       KeepAliveTimeout t(target, mCurrentId);
       SipStack &stack = mDum->getSipStack();
-      stack.post(t, keepAliveInterval, mDum);
+      if(targetSupportsOutbound)
+      {
+         // Used randomized timeout between 80% and 100% of keepalivetime
+         stack.post(t, Helper::jitterValue(keepAliveInterval, 80, 100), mDum);
+      }
+      else
+      {
+         stack.post(t, keepAliveInterval, mDum);
+      }
       ++mCurrentId;
    }
    else
    {
       it->second.refCount++;
-      if(keepAliveInterval < it->second.keepAliveInterval)
+      if(keepAliveInterval < it->second.keepAliveInterval || targetSupportsOutbound)  // if targetSupportsOutbound, then always update the interval, as value may be from Flow-Timer header
       {
          // ?slg? only allow value to be shortened???  What if 2 different profiles 
-         // with different keepAliveTime settings are sharing this network association?
+         // with different keepAliveTime settings are sharing this network association?         
          it->second.keepAliveInterval = keepAliveInterval;  
       }
       if(targetSupportsOutbound)
@@ -104,7 +113,15 @@ KeepAliveManager::process(KeepAliveTimeout& timeout)
 
       stack.sendTo(msg, timeout.target(), mDum);
       KeepAliveTimeout t(it->first, it->second.id);
-      stack.post(t, it->second.keepAliveInterval, mDum);
+      if(it->second.supportsOutbound)
+      {
+         // Used randomized timeout between 80% and 100% of keepalivetime
+         stack.post(t, Helper::jitterValue(it->second.keepAliveInterval, 80, 100), mDum);
+      }
+      else
+      {
+         stack.post(t, it->second.keepAliveInterval, mDum);
+      }
    }
 }
 

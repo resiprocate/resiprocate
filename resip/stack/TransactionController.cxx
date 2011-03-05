@@ -6,6 +6,7 @@
 #include "resip/stack/ApplicationMessage.hxx"
 #include "resip/stack/CancelClientInviteTransaction.hxx"
 #include "resip/stack/TerminateFlow.hxx"
+#include "resip/stack/EnableFlowTimer.hxx"
 #include "resip/stack/ShutdownMessage.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TransactionController.hxx"
@@ -208,6 +209,12 @@ void
 TransactionController::terminateFlow(const resip::Tuple& flow)
 {
    mStateMacFifo.add(new TerminateFlow(flow));
+}
+
+void
+TransactionController::enableFlowTimer(const resip::Tuple& flow)
+{
+   mStateMacFifo.add(new EnableFlowTimer(flow));
 }
 
 /* ====================================================================

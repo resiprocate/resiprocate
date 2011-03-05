@@ -15,20 +15,20 @@ class ServerRegistration: public NonDialogUsage
 
       /** Accept a SIP registration with a specific response.  Any contacts in this message will be deleted and replaced with the list created during REGISTER processing.
 
-	      !Warning! After calling this function from a ServerRegistrationHandle, do not access the handle as this function
-	      may delete this object. Use ServerRegistrationHandle::isValidHandle() to test if it's deleted.
-	  */
+         !Warning! After calling this function from a ServerRegistrationHandle, do not access the handle as this function
+         may delete this object. Use ServerRegistrationHandle::isValidHandle() to test if it's deleted.
+      */
       void accept(SipMessage& ok);
 
       /** Accept a SIP registration.
 
         !Warning! After calling this function from a ServerRegistrationHandle, do not access the handle as this function
         may delete this object. Use ServerRegistrationHandle::isValidHandle() to test if it's deleted.
-	  */
+     */
       void accept(int statusCode = 200);
 
       /** Reject a SIP registration.  
-	  
+  
         !Warning! After calling this function from a ServerRegistrationHandle, do not access the handle as this function
         may delete this object. Use ServerRegistrationHandle::isValidHandle() to test if it's deleted.
       */

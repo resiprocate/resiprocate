@@ -556,6 +556,7 @@ class SipStack
 
       bool isFlowAlive(const resip::Tuple& flow) const;  // Must be called from StackThread
       void terminateFlow(const resip::Tuple& flow);
+      void enableFlowTimer(const resip::Tuple& flow);
 
       /* Indicate if should use "InternalPoll" system; see mUseInternalPoll.
        * This sets a global default and must be called prior to creating

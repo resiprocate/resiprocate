@@ -111,7 +111,6 @@ void
 ConnectionBase::preparseNewBytes(int bytesRead)
 {
    DebugLog(<< "In State: " << connectionStates[mConnState]);
-   //getConnectionManager().touch(this); -- !dcm!
    
   start:   // If there is an overhang come back here, effectively recursing
    

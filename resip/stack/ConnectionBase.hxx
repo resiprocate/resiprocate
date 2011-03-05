@@ -43,6 +43,7 @@ class ConnectionBase
 
       Tuple& who() { return mWho; }
       const UInt64& whenLastUsed() { return mLastUsed; }
+      void resetLastUsed() { mLastUsed = Timer::getTimeMs(); }
 
       enum { ChunkSize = 2048 }; // !jf! what is the optimal size here?
 

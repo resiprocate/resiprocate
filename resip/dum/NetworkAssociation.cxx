@@ -14,10 +14,11 @@ NetworkAssociation::update(const SipMessage& msg, int keepAliveInterval, bool ta
    if (mDum && mDum->mKeepAliveManager.get())
    {
       const Tuple& source = msg.getSource();
-      if(source.getType() != 0 &&    // if source is populated
-         (!(source == mTarget) ||     // and target is different from current
-          source.mFlowKey != mTarget.mFlowKey)||
-          mTargetSupportsOutbound != targetSupportsOutbound) // and flow key is different, then add to keepalive manager
+      if(source.getType() != 0 &&                              // if source is populated in message
+         (!(source == mTarget) ||                              // and (target is different from current
+          source.mFlowKey != mTarget.mFlowKey ||               // or flow key is different
+          mTargetSupportsOutbound != targetSupportsOutbound || // or outbound support flag is different 
+          mKeepAliveInterval != keepAliveInterval))            // or keepaliveinterval is different) -> add to keepalivemanager
       {
          mDum->mKeepAliveManager->remove(mTarget);
          mTarget = source;
@@ -38,6 +39,7 @@ NetworkAssociation::clear()
       mDum->mKeepAliveManager->remove(mTarget);
       mTarget = Tuple();
       mTargetSupportsOutbound = false;
+      mKeepAliveInterval = 0;
    }
 }
 

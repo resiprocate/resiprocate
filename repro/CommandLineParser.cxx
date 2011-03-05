@@ -12,6 +12,7 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/ParseException.hxx"
 #include "resip/stack/InteropHelper.hxx"
+#include "resip/stack/ConnectionManager.hxx"
 
 using namespace resip;
 using namespace std;
@@ -73,6 +74,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int outboundDisabled=0;
    int outboundVersion=11;
    int rrTokenHackEnabled=0;
+   int outboundFlowTimer=0;
    
    mHttpHostname = DnsUtil::getLocalHostName();
 
@@ -146,6 +148,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"disable-outbound",  0,   POPT_ARG_NONE,                              &outboundDisabled,0,"disable outbound support (draft-ietf-sip-outbound)", 0},
       {"outbound-version",  0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &outboundVersion,0, "set the version of outbound to support", 0},
       {"enable-flow-tokens",0,   POPT_ARG_NONE,                              &rrTokenHackEnabled,0,"enable use of flow-tokens in non-outbound cases (This is a workaround, and it is broken. Only use it if you have to.)", 0},
+      {"flow-timer",        0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &outboundFlowTimer,0, "set to greater than 0 to enable addition of Flow-Timer header to REGISTER responses if outbound is enabled", 0},
       {"xmlrpcport",        0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &xmlRpcPort,     0, "port on which to listen for and send XML RPC messaging (used for registration sync) - 0 to disable", 0},
       {"regsyncpeer",       0,   POPT_ARG_STRING,                            &regSyncPeerAddress,0,"hostname/ip address of another instance of repro to syncronize registrations with (note xmlrpcport must also be specified)", 0},
       {"server-text",       0,   POPT_ARG_STRING,                            &serverText,0,"Value of server header for local UAS responses", 0},
@@ -260,6 +263,12 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    InteropHelper::setOutboundVersion(outboundVersion);
    InteropHelper::setOutboundSupported(outboundDisabled ? false : true);
    InteropHelper::setRRTokenHackEnabled((rrTokenHackEnabled==0) ? false : true);
+   if(outboundFlowTimer > 0)
+   {
+      InteropHelper::setFlowTimerSeconds(outboundFlowTimer);
+      ConnectionManager::MinimumGcAge = 7200000; // Timeout connections not related to a flow timer after 2 hours
+      ConnectionManager::EnableAgressiveGc = true;
+   }
    
    if((InteropHelper::getOutboundSupported() 
          || InteropHelper::getRRTokenHackEnabled()

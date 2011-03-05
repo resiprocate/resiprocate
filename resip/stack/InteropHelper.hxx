@@ -16,6 +16,19 @@ class InteropHelper
       static void setOutboundVersion(int version) {theOutboundVersion=version;}
       static bool getOutboundSupported() {return isOutboundSupported;}
       static void setOutboundSupported(bool supported) {isOutboundSupported=supported;}
+
+      // If this value is set, then DUM/repro will populate a Flow-Timer header in a 
+      // successful registration reponse
+      static unsigned int getFlowTimerSeconds() {return flowTimerSeconds;}
+      static void setFlowTimerSeconds(unsigned int seconds) {flowTimerSeconds=seconds;}
+
+      // Only relevant if setFlowTimerSeconds is set to value greater than 0.
+      // Specifies the amount of time beyond the FlowTimer time, before the stack
+      // will consider any Flow-Timer based connection to be in a bad state.  This
+      // is used by the ConnectionManager garbage collection logic to cleanup
+      // flow-timer based connections for which we are no-longer receiving keepalives.
+      static unsigned int getFlowTimerGracePeriodSeconds() {return flowTimerGracePeriodSeconds;}
+      static void setFlowTimerGracePeriodSeconds(unsigned int seconds) {flowTimerGracePeriodSeconds=seconds;}
       
       // .bwc. If this is enabled, we will record-route with flow tokens 
       // whenever possible. This will make things work with endpoints that don't
@@ -33,6 +46,8 @@ class InteropHelper
       
       static int theOutboundVersion;
       static bool isOutboundSupported;
+      static unsigned int flowTimerSeconds;
+      static unsigned int flowTimerGracePeriodSeconds;
       static bool useRRTokenHack;
 };
 }
