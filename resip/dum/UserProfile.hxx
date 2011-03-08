@@ -125,7 +125,7 @@ class UserProfile : public Profile
       bool mGruuEnabled;
       Uri mPubGruu;
       Uri mTempGruu;
-      const NameAddr mAnonymous;
+      const static NameAddr mAnonymous;
 
       int mRegId;
       bool mClientOutboundEnabled;
