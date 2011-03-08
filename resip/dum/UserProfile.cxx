@@ -9,9 +9,10 @@
 using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
+const resip::NameAddr UserProfile::mAnonymous("\"Anonymous\" <sip:anonymous@anonymous.invalid>");
+
 UserProfile::UserProfile() : Profile(), 
    mGruuEnabled(false),
-   mAnonymous("\"Anonymous\" <sip:anonymous@anonymous.invalid>"),
    mRegId(0),
    mClientOutboundEnabled(false)
 {
@@ -20,7 +21,6 @@ UserProfile::UserProfile() : Profile(),
 
 UserProfile::UserProfile(SharedPtr<Profile> baseProfile) : Profile(baseProfile), 
    mGruuEnabled(false),
-   mAnonymous("\"Anonymous\" <sip:anonymous@anonymous.invalid>"),
    mRegId(0),
    mClientOutboundEnabled(false)
 {
