@@ -54,6 +54,9 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
             int timerC);
       virtual ~Proxy();
 
+      // Crypto Random Key for Salting Flow Token HMACs
+      static resip::Data FlowTokenSalt;
+
       // Note:  These are not thread safe and should be called before run() only
       void setOptionsHandler(OptionsHandler* handler);
       void setRequestContextFactory(std::auto_ptr<RequestContextFactory> requestContextFactory);

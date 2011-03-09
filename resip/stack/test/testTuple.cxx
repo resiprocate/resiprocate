@@ -13,6 +13,44 @@ main()
    typedef HashMap<Tuple, Connection*> AddrMap;
    //typedef std::map<Tuple, Connection*> AddrMap;
 
+   {
+      Tuple testTuple("192.168.1.106", 5069, V4, TCP);
+      Data binaryToken;
+      Tuple::writeBinaryToken(testTuple, binaryToken);
+      Data binaryTokenWithSalt;
+      Tuple::writeBinaryToken(testTuple, binaryTokenWithSalt, "salt");
+      Tuple madeTestTuple = Tuple::makeTupleFromBinaryToken(binaryToken);
+      Tuple madeTestTupleWithSalt = Tuple::makeTupleFromBinaryToken(binaryTokenWithSalt, "salt");
+      Tuple madeTestTupleWithBadSalt = Tuple::makeTupleFromBinaryToken(binaryTokenWithSalt, "badsalt");
+      assert(testTuple == madeTestTuple);
+      assert(testTuple.onlyUseExistingConnection == madeTestTuple.onlyUseExistingConnection);
+      assert(testTuple.mFlowKey == madeTestTuple.mFlowKey);
+      assert(testTuple == madeTestTupleWithSalt);
+      assert(testTuple.onlyUseExistingConnection == madeTestTupleWithSalt.onlyUseExistingConnection);
+      assert(testTuple.mFlowKey == madeTestTupleWithSalt.mFlowKey);
+      assert(madeTestTupleWithBadSalt == Tuple());
+   }
+
+#ifdef USE_IPV6
+   {
+      Tuple testTuple("2000:1::203:baff:fe30:1176", 5069, V6, TCP);
+      Data binaryToken;
+      Tuple::writeBinaryToken(testTuple, binaryToken);
+      Data binaryTokenWithSalt;
+      Tuple::writeBinaryToken(testTuple, binaryTokenWithSalt, "salt");
+      Tuple madeTestTuple = Tuple::makeTupleFromBinaryToken(binaryToken);
+      Tuple madeTestTupleWithSalt = Tuple::makeTupleFromBinaryToken(binaryTokenWithSalt, "salt");
+      Tuple madeTestTupleWithBadSalt = Tuple::makeTupleFromBinaryToken(binaryTokenWithSalt, "badsalt");
+      assert(testTuple == madeTestTuple);
+      assert(testTuple.onlyUseExistingConnection == madeTestTuple.onlyUseExistingConnection);
+      assert(testTuple.mFlowKey == madeTestTuple.mFlowKey);
+      assert(testTuple == madeTestTupleWithSalt);
+      assert(testTuple.onlyUseExistingConnection == madeTestTupleWithSalt.onlyUseExistingConnection);
+      assert(testTuple.mFlowKey == madeTestTupleWithSalt.mFlowKey);
+      assert(madeTestTupleWithBadSalt == Tuple());
+   }
+#endif
+
 #ifdef USE_IPV6
    {
       AddrMap mMap;
@@ -62,13 +100,13 @@ main()
       Tuple::writeBinaryToken(t6,token6);
       Tuple::writeBinaryToken(loopback,tokenloopback);
             
-      Tuple t1prime=Tuple::makeTuple(token1);
-      Tuple t2prime=Tuple::makeTuple(token2);
-      Tuple t3prime=Tuple::makeTuple(token3);
-      Tuple t4prime=Tuple::makeTuple(token4);
-      Tuple t5prime=Tuple::makeTuple(token5);
-      Tuple t6prime=Tuple::makeTuple(token6);
-      Tuple loopbackprime=Tuple::makeTuple(tokenloopback);
+      Tuple t1prime=Tuple::makeTupleFromBinaryToken(token1);
+      Tuple t2prime=Tuple::makeTupleFromBinaryToken(token2);
+      Tuple t3prime=Tuple::makeTupleFromBinaryToken(token3);
+      Tuple t4prime=Tuple::makeTupleFromBinaryToken(token4);
+      Tuple t5prime=Tuple::makeTupleFromBinaryToken(token5);
+      Tuple t6prime=Tuple::makeTupleFromBinaryToken(token6);
+      Tuple loopbackprime=Tuple::makeTupleFromBinaryToken(tokenloopback);
       
       assert(t1==t1prime);
       assert(t2==t2prime);
@@ -127,13 +165,13 @@ main()
       Tuple::writeBinaryToken(t6,token6);
       Tuple::writeBinaryToken(loopback,tokenloopback);
             
-      Tuple t1prime=Tuple::makeTuple(token1);
-      Tuple t2prime=Tuple::makeTuple(token2);
-      Tuple t3prime=Tuple::makeTuple(token3);
-      Tuple t4prime=Tuple::makeTuple(token4);
-      Tuple t5prime=Tuple::makeTuple(token5);
-      Tuple t6prime=Tuple::makeTuple(token6);
-      Tuple loopbackprime=Tuple::makeTuple(tokenloopback);
+      Tuple t1prime=Tuple::makeTupleFromBinaryToken(token1);
+      Tuple t2prime=Tuple::makeTupleFromBinaryToken(token2);
+      Tuple t3prime=Tuple::makeTupleFromBinaryToken(token3);
+      Tuple t4prime=Tuple::makeTupleFromBinaryToken(token4);
+      Tuple t5prime=Tuple::makeTupleFromBinaryToken(token5);
+      Tuple t6prime=Tuple::makeTupleFromBinaryToken(token6);
+      Tuple loopbackprime=Tuple::makeTupleFromBinaryToken(tokenloopback);
       
       assert(t1==t1prime);
       assert(t2==t2prime);
@@ -158,10 +196,6 @@ main()
       assert(loopback.mFlowKey == loopbackprime.mFlowKey);
    }
 #endif
-
-   {
-      
-   }
 
    resipCerr << "ALL OK" << std::endl;
 }

@@ -22,6 +22,7 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/GenericIPAddress.hxx"
 #include "rutil/HashMap.hxx"
+#include "rutil/MD5Stream.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/Transport.hxx"
 
@@ -210,7 +211,7 @@ Tuple::setSockaddr(const GenericIPAddress& addr)
 }
 
 void
-Tuple::writeBinaryToken(const resip::Tuple& tuple,resip::Data& container)
+Tuple::writeBinaryToken(const resip::Tuple& tuple, resip::Data& container, const Data& salt)
 {
    // .bwc. Maybe should just write the raw sockaddr into a buffer, and tack
    // on the flowid and onlyUseExistingConnection flag. Would require 10 extra
@@ -246,16 +247,26 @@ Tuple::writeBinaryToken(const resip::Tuple& tuple,resip::Data& container)
    {
       rawToken[1] += 0x00000010;
    }
-   
+
    container.clear();
+   container.reserve(((tuple.ipVersion()==V6) ? 24 : 12) + (salt.empty() ? 0 : 32));
    container.append((char*)&rawToken[0],(tuple.ipVersion()==V6) ? 24 : 12);
 
+   if(!salt.empty())
+   {
+      // TODO - potentially use SHA1 HMAC if USE_SSL is defined for stronger encryption
+      MD5Stream ms;
+      ms << container << salt;
+      container += ms.getHex();
+   }
 }
 
 
 Tuple
-Tuple::makeTuple(const resip::Data& binaryFlowToken)
+Tuple::makeTupleFromBinaryToken(const resip::Data& binaryFlowToken, const Data& salt)
 {
+   // To check if size is valid, we first need the IP version, so make sure the token is at least
+   // the size of an IPv4 token
    if(binaryFlowToken.size()<12)
    {
       // !bwc! Should not assert here, since this sort of thing
@@ -268,14 +279,31 @@ Tuple::makeTuple(const resip::Data& binaryFlowToken)
    const UInt32* rawToken=reinterpret_cast<const UInt32*>(binaryFlowToken.data());
 
    Socket mFlowKey=rawToken[0];
-
    IpVersion version = (rawToken[1] & 0x00000001 ? V6 : V4);
-   
-   if(!((version==V4 && binaryFlowToken.size()==12) ||
-         (version==V6 && binaryFlowToken.size()==24)))
+
+   // Now that we have the version we can do a more accurate check on the size
+   if(!((version==V4 && salt.empty() && binaryFlowToken.size()==12) ||
+        (version==V4 && !salt.empty() && binaryFlowToken.size()==44) ||
+        (version==V6 && salt.empty() && binaryFlowToken.size()==24) ||
+        (version==V6 && !salt.empty() && binaryFlowToken.size()==56)))
    {
       DebugLog(<<"Binary flow token is the wrong size for its IP version.");
       return Tuple();
+   }
+
+   // If salt is specified, validate HMAC
+   if(!salt.empty())
+   {
+      unsigned int tokenSizeLessHMAC = version == V4 ? 12 : 24;
+      Data flowTokenLessHMAC(Data::Share, binaryFlowToken.data(), tokenSizeLessHMAC);
+      Data flowTokenHMAC(Data::Share, binaryFlowToken.data()+tokenSizeLessHMAC, 32);
+      MD5Stream ms;
+      ms << flowTokenLessHMAC << salt;
+      if(ms.getHex() != flowTokenHMAC)
+      {
+         DebugLog(<<"Binary flow token has invalid HMAC, not our token");
+         return Tuple();
+      }
    }
 
    bool isRealFlow = (rawToken[1] & 0x00000010 ? true : false);

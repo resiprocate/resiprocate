@@ -78,9 +78,7 @@ RRDecorator::decorateMessage(resip::SipMessage& request,
       // token in a Record-Route.
       resip::Helper::massageRoute(request,rt);
       resip::Data binaryFlowToken;
-      resip::Tuple::writeBinaryToken(destination,binaryFlowToken);
-      
-      // !bwc! TODO encrypt this binary token to self.
+      resip::Tuple::writeBinaryToken(destination, binaryFlowToken, Proxy::FlowTokenSalt);
       rt.uri().user()=binaryFlowToken.base64encode();
    }
    else if(routes
