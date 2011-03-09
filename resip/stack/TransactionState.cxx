@@ -26,13 +26,14 @@
 #include "resip/stack/TransportSelector.hxx"
 #include "resip/stack/TransactionUser.hxx"
 #include "resip/stack/TuSelector.hxx"
+#include "resip/stack/InteropHelper.hxx"
+#include "resip/stack/KeepAliveMessage.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/MD5Stream.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/Random.hxx"
 #include "rutil/WinLeakCheck.hxx"
-#include "resip/stack/KeepAliveMessage.hxx"
 
 using namespace resip;
 
@@ -1899,7 +1900,14 @@ TransactionState::processNoDnsResults()
          response->header(h_StatusLine).reason() = "Certificate Validation Failure";
          break;
       case TransportFailure::TransportNoExistConn:
-         response->header(h_StatusLine).statusCode() = 430;
+         if(InteropHelper::getOutboundVersion() >= 5)
+         {
+            response->header(h_StatusLine).statusCode() = 430;
+         }
+         else
+         {
+            response->header(h_StatusLine).statusCode() = 410;
+         }
          response->header(h_StatusLine).reason() = "Flow failed";
          warning.text() = "Flow no longer exists";
          break;

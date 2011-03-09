@@ -191,21 +191,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
        return;
     }
 
-    mAor = msg.header(h_To).uri().getAorAsUri();
-
-   // Remove any default ports
-   if(mAor.port() == Symbols::DefaultSipPort && 
-      (msg.getSource().getType() == UDP || 
-       msg.getSource().getType() == TCP))
-   {
-       mAor.port() = 0;
-   }
-   else if(mAor.port() == Symbols::DefaultSipsPort && 
-      (msg.getSource().getType() == TLS || 
-       msg.getSource().getType() == DTLS))
-   {
-       mAor.port() = 0;
-   }
+    mAor = msg.header(h_To).uri().getAorAsUri(msg.getSource().getType());
 
    // Checks to see whether this scheme is valid, and supported.
    if (!((mAor.scheme()=="sip" || mAor.scheme()=="sips")

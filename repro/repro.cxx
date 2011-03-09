@@ -402,7 +402,7 @@ main(int argc, char** argv)
    // Build Lemur Chain
    ProcessorChain responseProcessors(Processor::RESPONSE_CHAIN); // Lemurs
    // Add outbound target handler lemur
-   responseProcessors.addProcessor(std::auto_ptr<Processor>(new OutboundTargetHandler)); 
+   responseProcessors.addProcessor(std::auto_ptr<Processor>(new OutboundTargetHandler(regData))); 
    if (args.mRecursiveRedirect)
    {
       // Add recursive redirect lemur
