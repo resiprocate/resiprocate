@@ -383,6 +383,13 @@ ServerInviteSession::end()
    end(NotSpecified);
 }
 
+void
+ServerInviteSession::end(const Data& userReason)
+{
+   mUserEndReason = userReason;
+   end(InviteSession::UserSpecified);
+}
+
 void 
 ServerInviteSession::end(EndReason reason)
 {

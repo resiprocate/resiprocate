@@ -185,6 +185,13 @@ ClientInviteSession::end()
 }
 
 void
+ClientInviteSession::end(const Data& userReason)
+{
+   mUserEndReason = userReason;
+   end(InviteSession::UserSpecified);
+}
+
+void
 ClientInviteSession::end(EndReason reason)
 {
    InfoLog (<< toData(mState) << ": end");

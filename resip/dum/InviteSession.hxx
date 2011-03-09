@@ -56,10 +56,12 @@ class InviteSession : public DialogUsage
          AckNotReceived,
          SessionExpired,
          StaleReInvite,
-         ENDREASON_MAX
+         ENDREASON_MAX, // Maximum used by the global array in InviteSession.cxx
+         UserSpecified  // User-specified reason - doesn't use the array in InviteSession.cxx
       };
 
       /** Makes the specific dialog end. Will send a BYE (not a CANCEL) */
+      virtual void end(const Data& userReason);
       virtual void end(EndReason reason);
       virtual void end(); // reason == NotSpecified ; same as above - required for BaseUsage pure virtual
 
@@ -330,6 +332,8 @@ class InviteSession : public DialogUsage
       void sendAck(const Contents *answer=0);
       void sendBye();
 
+      const Data& getEndReasonString(InviteSession::EndReason reason);
+
       DialogUsageManager::EncryptionLevel getEncryptionLevel(const SipMessage& msg);
       void setCurrentLocalOfferAnswer(const SipMessage& msg);
       void referNoSub(const SipMessage& msg);
@@ -392,7 +396,10 @@ class InviteSession : public DialogUsage
       DialogUsageManager::EncryptionLevel mCurrentEncryptionLevel;
       DialogUsageManager::EncryptionLevel mProposedEncryptionLevel; // UPDATE or RE-INVITE
 
-      EndReason mEndReason;   
+      EndReason mEndReason;
+
+      // Used when a user-specified EndReason is needed
+      Data mUserEndReason;
 
       // Used to respond to 2xx retransmissions.
       typedef HashMap<Data, SharedPtr<SipMessage> > AckMap;
