@@ -739,8 +739,7 @@ ResponseContext::getInboundFlowToken(bool doPathInstead)
          resip::Data binaryFlowToken;
          resip::Tuple source(orig.getSource());
          source.onlyUseExistingConnection=true;
-         Tuple::writeBinaryToken(source,binaryFlowToken);
-         // !bwc! TODO encrypt to self
+         Tuple::writeBinaryToken(source, binaryFlowToken, Proxy::FlowTokenSalt);
          flowToken = binaryFlowToken.base64encode();
       }
       else if(doPathInstead)
@@ -773,8 +772,7 @@ ResponseContext::getInboundFlowToken(bool doPathInstead)
       // flow-token cannot be changed, and will override any update to the 
       // Contact)
       resip::Data binaryFlowToken;
-      Tuple::writeBinaryToken(orig.getSource(),binaryFlowToken);
-      // !bwc! TODO encrypt to self
+      Tuple::writeBinaryToken(orig.getSource(), binaryFlowToken, Proxy::FlowTokenSalt);
       flowToken = binaryFlowToken.base64encode();
    }
    

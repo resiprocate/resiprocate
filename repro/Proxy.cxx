@@ -14,6 +14,7 @@
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/InteropHelper.hxx"
+#include "rutil/Random.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -23,6 +24,8 @@
 using namespace resip;
 using namespace repro;
 using namespace std;
+
+resip::Data repro::Proxy::FlowTokenSalt;
 
 RequestContext* 
 RequestContextFactory::createRequestContext(Proxy& proxy,
@@ -58,6 +61,7 @@ Proxy::Proxy(SipStack& stack,
    {
       mRecordRoute.uri().param(p_lr);
    }
+   FlowTokenSalt = Random::getCryptoRandom(20);   // 20-octet Crypto Random Key for Salting Flow Token HMACs
 }
 
 

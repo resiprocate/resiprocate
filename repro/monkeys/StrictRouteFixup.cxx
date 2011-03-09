@@ -5,6 +5,7 @@
 #include "resip/stack/SipMessage.hxx"
 #include "repro/monkeys/StrictRouteFixup.hxx"
 #include "repro/RequestContext.hxx"
+#include "repro/Proxy.hxx"
 
 #include "resip/stack/Helper.hxx"
 
@@ -26,7 +27,7 @@ StrictRouteFixup::~StrictRouteFixup()
  *        a Route header (the RequestContext has already
  *        done preprocessing, and has removed any topmost
  *        route that was self). If there is, the previous
- *		   hop was a strict routing proxy and the candidate
+ *        hop was a strict routing proxy and the candidate
  *        set is exactly the RURI of the received request
  *        (after the above preprocessing).
  */
@@ -56,7 +57,12 @@ StrictRouteFixup::process(RequestContext& context)
       std::auto_ptr<Target> target(new Target(request.header(h_RequestLine).uri()));
       if(!context.getTopRoute().uri().user().empty())
       {
-         target->rec().mReceivedFrom = Tuple::makeTuple(context.getTopRoute().uri().user().base64decode());
+         resip::Tuple source(Tuple::makeTupleFromBinaryToken(context.getTopRoute().uri().user().base64decode(), Proxy::FlowTokenSalt));
+         if(!(source==resip::Tuple()))
+         {
+            // valid flow token
+            target->rec().mReceivedFrom = source;
+         }
       }
       context.getResponseContext().addTarget(target);
       return Processor::SkipThisChain;

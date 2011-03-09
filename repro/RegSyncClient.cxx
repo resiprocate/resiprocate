@@ -293,7 +293,7 @@ RegSyncClient::handleRegInfoEvent(resip::XMLCursor& xml)
                      {
                         if(xml.firstChild())
                         {
-                           rec.mReceivedFrom = Tuple::makeTuple(xml.getValue().base64decode());
+                           rec.mReceivedFrom = Tuple::makeTupleFromBinaryToken(xml.getValue().base64decode());
                            //InfoLog(<< "RegSyncClient::handleRegInfoEvent: receivedfrom=" << xml.getValue() << " tuple=" << rec.mReceivedFrom);
                            xml.parent();
                         }
