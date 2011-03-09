@@ -5,6 +5,7 @@
 #include <cassert>
 
 #include "resip/stack/ParserCategory.hxx"
+#include "rutil/TransportType.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 
 #define URI_ENCODING_TABLE_SIZE 128
@@ -42,10 +43,11 @@ class Uri : public ParserCategory
       // Returns user@host (no scheme or port)
       const Data getAorNoPort() const;
 
-      // Actually returns the AOR; <scheme>:<user>@<host>
+      // Actually returns the AOR; <scheme>:<user>@<host>[:<port>]
       Data getAorNoReally() const;
-      //strips all paramters
-      Uri getAorAsUri() const;
+      //strips all paramters - if transport type is specified (ie. not UNKNOWN_TRANSPORT),
+      //and the default port for the transport is on the Aor, then it is removed
+      Uri getAorAsUri(TransportType transportTypeToRemoveDefaultPort = UNKNOWN_TRANSPORT) const;
       
       Data& scheme() {checkParsed(); return mScheme;}
       const Data& scheme() const {checkParsed(); return mScheme;}

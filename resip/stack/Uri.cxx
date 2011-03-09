@@ -722,7 +722,7 @@ Uri::getAorNoReally() const
 }
 
 Uri 
-Uri::getAorAsUri() const
+Uri::getAorAsUri(TransportType transportTypeToRemoveDefaultPort) const
 {   
    //.dcm. -- tel conversion?
    checkParsed();
@@ -730,8 +730,29 @@ Uri::getAorAsUri() const
    ret.scheme() = mScheme;   
    ret.user() = mUser;
    ret.host() = mHost;
-   ret.port() = mPort;
-   
+
+   // Remove any default ports (if required)
+   if(transportTypeToRemoveDefaultPort == UDP || 
+       transportTypeToRemoveDefaultPort == TCP)
+   {
+      if(mPort != Symbols::DefaultSipPort)
+      {
+         ret.port() = mPort;
+      }
+   }
+   else if (transportTypeToRemoveDefaultPort == TLS || 
+            transportTypeToRemoveDefaultPort == DTLS)
+   {
+      if(mPort != Symbols::DefaultSipsPort)
+      {
+         ret.port() = mPort;
+      }
+   }
+   else
+   {
+      ret.port() = mPort;
+   }
+
    return ret;
 }
 
