@@ -47,10 +47,17 @@ Data EndReasons[] =
    "Stale re-Invite"
 };
 
-const Data& getEndReasonString(InviteSession::EndReason reason)
+const Data& InviteSession::getEndReasonString(InviteSession::EndReason reason)
 {
-   assert(reason >= InviteSession::NotSpecified && reason < InviteSession::ENDREASON_MAX); //!dcm! -- necessary?
-   return EndReasons[reason];
+   if(reason != InviteSession::UserSpecified)
+   {
+      assert(reason >= InviteSession::NotSpecified && reason < InviteSession::ENDREASON_MAX); //!dcm! -- necessary?
+      return EndReasons[reason];
+   }
+   else
+   {
+      return mUserEndReason;
+   }
 }
 
 InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog)
@@ -609,6 +616,13 @@ void
 InviteSession::end()
 {
    end(NotSpecified);
+}
+
+void
+InviteSession::end(const Data& userReason)
+{
+   mUserEndReason = userReason;
+   end(UserSpecified);
 }
 
 void
