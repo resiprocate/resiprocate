@@ -433,8 +433,8 @@ TurnSocket::channelBind(RemotePeer& remotePeer)
    // Set headers
    request.mHasTurnChannelNumber = true;
    request.mTurnChannelNumber = remotePeer.getChannel();
-   request.mHasTurnXorPeerAddress = true;
-   StunMessage::setStunAtrAddressFromTuple(request.mTurnXorPeerAddress, remotePeer.getPeerTuple());
+   request.mCntTurnXorPeerAddress = 1;
+   StunMessage::setStunAtrAddressFromTuple(request.mTurnXorPeerAddress[0], remotePeer.getPeerTuple());
 
    StunMessage* response = sendRequestAndGetResponse(request, ret);
    if(response == 0)
@@ -568,17 +568,17 @@ TurnSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size
       // Wrap data in a SendInd
       StunMessage ind;
       ind.createHeader(StunMessage::StunClassIndication, StunMessage::TurnSendMethod);
-      ind.mHasTurnXorPeerAddress = true;
-      ind.mTurnXorPeerAddress.port = remotePeer.getPeerTuple().getPort();
+      ind.mCntTurnXorPeerAddress = 1;
+      ind.mTurnXorPeerAddress[0].port = remotePeer.getPeerTuple().getPort();
       if(remotePeer.getPeerTuple().getAddress().is_v6())
       {
-         ind.mTurnXorPeerAddress.family = StunMessage::IPv6Family;
-         memcpy(&ind.mTurnXorPeerAddress.addr.ipv6, remotePeer.getPeerTuple().getAddress().to_v6().to_bytes().c_array(), sizeof(ind.mTurnXorPeerAddress.addr.ipv6));
+         ind.mTurnXorPeerAddress[0].family = StunMessage::IPv6Family;
+         memcpy(&ind.mTurnXorPeerAddress[0].addr.ipv6, remotePeer.getPeerTuple().getAddress().to_v6().to_bytes().c_array(), sizeof(ind.mTurnXorPeerAddress[0].addr.ipv6));
       }
       else
       {
-         ind.mTurnXorPeerAddress.family = StunMessage::IPv4Family;
-         ind.mTurnXorPeerAddress.addr.ipv4 = remotePeer.getPeerTuple().getAddress().to_v4().to_ulong();
+         ind.mTurnXorPeerAddress[0].family = StunMessage::IPv4Family;
+         ind.mTurnXorPeerAddress[0].addr.ipv4 = remotePeer.getPeerTuple().getAddress().to_v4().to_ulong();
       }
       if(size > 0)
       {
@@ -744,7 +744,7 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
             return asio::error_code(reTurn::UnknownRequiredAttributes, asio::error::misc_category);
          }
 
-         if(!stunMessage.mHasTurnXorPeerAddress || !stunMessage.mHasTurnData)
+         if(stunMessage.mCntTurnXorPeerAddress == 0 || !stunMessage.mHasTurnData)
          {
             // Missing RemoteAddress or TurnData attribute
             WarningLog(<< "DataInd missing attributes.");
@@ -753,7 +753,7 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
 
          StunTuple remoteTuple;
          remoteTuple.setTransportType(mRelayTuple.getTransportType());
-         StunMessage::setTupleFromStunAtrAddress(remoteTuple, stunMessage.mTurnXorPeerAddress);
+         StunMessage::setTupleFromStunAtrAddress(remoteTuple, stunMessage.mTurnXorPeerAddress[0]);
 
          RemotePeer* remotePeer = mChannelManager.findRemotePeerByPeerAddress(remoteTuple);
          if(!remotePeer)
