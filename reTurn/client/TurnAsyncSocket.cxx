@@ -324,8 +324,8 @@ void TurnAsyncSocket::doChannelBinding(RemotePeer& remotePeer)
    // Set headers
    request->mHasTurnChannelNumber = true;
    request->mTurnChannelNumber = remotePeer.getChannel();
-   request->mHasTurnXorPeerAddress = true;
-   StunMessage::setStunAtrAddressFromTuple(request->mTurnXorPeerAddress, remotePeer.getPeerTuple());
+   request->mCntTurnXorPeerAddress = 1;
+   StunMessage::setStunAtrAddressFromTuple(request->mTurnXorPeerAddress[0], remotePeer.getPeerTuple());
 
    // Send the Request and start transaction timers
    sendStunMessage(request);
@@ -666,7 +666,7 @@ TurnAsyncSocket::handleStunMessage(StunMessage& stunMessage)
 asio::error_code
 TurnAsyncSocket::handleDataInd(StunMessage& stunMessage)
 {
-   if(!stunMessage.mHasTurnXorPeerAddress || !stunMessage.mHasTurnData)
+   if(stunMessage.mCntTurnXorPeerAddress == 0 || !stunMessage.mHasTurnData)
    {
       // Missing RemoteAddress or TurnData attribute
       WarningLog(<< "TurnAsyncSocket::handleDataInd: DataInd missing attributes.");
@@ -675,7 +675,7 @@ TurnAsyncSocket::handleDataInd(StunMessage& stunMessage)
 
    StunTuple remoteTuple;
    remoteTuple.setTransportType(mRelayTransportType);
-   StunMessage::setTupleFromStunAtrAddress(remoteTuple, stunMessage.mTurnXorPeerAddress);
+   StunMessage::setTupleFromStunAtrAddress(remoteTuple, stunMessage.mTurnXorPeerAddress[0]);
 
    RemotePeer* remotePeer = mChannelManager.findRemotePeerByPeerAddress(remoteTuple);
    if(!remotePeer)
@@ -1025,8 +1025,8 @@ TurnAsyncSocket::sendTo(RemotePeer& remotePeer, boost::shared_ptr<DataBuffer>& d
       // Data must be wrapped in a Send Indication
       // Wrap data in a SendInd
       StunMessage* ind = createNewStunMessage(StunMessage::StunClassIndication, StunMessage::TurnSendMethod, false);
-      ind->mHasTurnXorPeerAddress = true;
-      StunMessage::setStunAtrAddressFromTuple(ind->mTurnXorPeerAddress, remotePeer.getPeerTuple());
+      ind->mCntTurnXorPeerAddress = 1;
+      StunMessage::setStunAtrAddressFromTuple(ind->mTurnXorPeerAddress[0], remotePeer.getPeerTuple());
       if(data->size() > 0)
       {
          ind->setTurnData(data->data(), data->size());

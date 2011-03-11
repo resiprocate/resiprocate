@@ -133,7 +133,6 @@ StunMessage::init()
    mHasTurnChannelNumber = false;
    mHasTurnLifetime = false;
    mHasTurnBandwidth = false;
-   mHasTurnXorPeerAddress = false;
    mHasTurnData = false;
    mHasTurnXorRelayedAddress = false;
    mHasTurnEvenPort = false;
@@ -141,6 +140,7 @@ StunMessage::init()
    mHasTurnDontFragment = false;
    mHasTurnReservationToken = false;
    mHasTurnConnectStat = false;
+   mCntTurnXorPeerAddress = 0;
    mErrorCode.reason = 0;
    mUsername = 0;
    mPassword = 0;
@@ -902,15 +902,15 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
             break;
 
          case TurnXorPeerAddress:
-            if(!mHasTurnXorPeerAddress)
+            if(mCntTurnXorPeerAddress < TURN_MAX_XOR_PEER_ADDR)
             {
-               mHasTurnXorPeerAddress = true;
-               if ( stunParseAtrXorAddress(  body,  attrLen,  mTurnXorPeerAddress ) == false )
+               if ( stunParseAtrXorAddress(  body,  attrLen,  mTurnXorPeerAddress[mCntTurnXorPeerAddress]) == false )
                {
                   WarningLog(<< "problem parsing turn peer address");
                   return false;
                }
-               StackLog(<< "Turn Peer Address = " << mTurnXorPeerAddress);
+               StackLog(<< "Turn Peer Address = " << mTurnXorPeerAddress[mCntTurnXorPeerAddress]);
+               mCntTurnXorPeerAddress++;
             }
             else
             {
@@ -1437,10 +1437,13 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
       StackLog(<< "Encoding Turn Bandwidth: " << mTurnBandwidth);
       ptr = encodeAtrUInt32(ptr, TurnBandwidth, mTurnBandwidth);
    }   
-   if (mHasTurnXorPeerAddress)
+   if (mCntTurnXorPeerAddress > 0)
    {
-      StackLog(<< "Encoding Turn XorPeerAddress: " << mTurnXorPeerAddress);
-      ptr = encodeAtrXorAddress (ptr, TurnXorPeerAddress, mTurnXorPeerAddress);
+      for (int i = 0; i < mCntTurnXorPeerAddress; i++)
+      { 
+         StackLog(<< "Encoding Turn XorPeerAddress: " << mTurnXorPeerAddress[i]);
+         ptr = encodeAtrXorAddress (ptr, TurnXorPeerAddress, mTurnXorPeerAddress[i]);
+      }
    }
    if (mHasTurnData)
    {

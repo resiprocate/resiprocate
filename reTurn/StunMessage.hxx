@@ -9,6 +9,7 @@
 #include "StunTuple.hxx"
 
 #define STUN_MAX_UNKNOWN_ATTRIBUTES 8
+#define TURN_MAX_XOR_PEER_ADDR      8
 
 namespace reTurn
 {
@@ -290,8 +291,8 @@ public:
    bool mHasTurnBandwidth;
    UInt32 mTurnBandwidth;
 
-   bool mHasTurnXorPeerAddress;
-   StunAtrAddress mTurnXorPeerAddress;
+   int mCntTurnXorPeerAddress;
+   StunAtrAddress mTurnXorPeerAddress[TURN_MAX_XOR_PEER_ADDR];
 
    bool mHasTurnData;
    resip::Data* mTurnData;

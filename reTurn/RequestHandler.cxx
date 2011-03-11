@@ -781,14 +781,15 @@ RequestHandler::processTurnCreatePermissionRequest(StunMessage& request, StunMes
       return RespondFromReceiving;
    }
 
-   if(request.mHasTurnXorPeerAddress)
+   if(request.mCntTurnXorPeerAddress > 0)
    {
       StunTuple remoteAddress;
       remoteAddress.setTransportType(allocation->getRequestedTuple().getTransportType());
-      StunMessage::setTupleFromStunAtrAddress(remoteAddress, request.mTurnXorPeerAddress);
-
-      // TODO - need to handle multiple XorPeerAddresses
-      allocation->refreshPermission(remoteAddress.getAddress());
+      for (int i = 0; i < request.mCntTurnXorPeerAddress; i++)
+      {
+         StunMessage::setTupleFromStunAtrAddress(remoteAddress, request.mTurnXorPeerAddress[i]);
+         allocation->refreshPermission(remoteAddress.getAddress());
+      }
    }
    else
    {
@@ -843,7 +844,7 @@ RequestHandler::processTurnChannelBindRequest(StunMessage& request, StunMessage&
       return RespondFromReceiving;
    }
 
-   if(request.mHasTurnXorPeerAddress && request.mHasTurnChannelNumber)
+   if(request.mCntTurnXorPeerAddress > 0 && request.mHasTurnChannelNumber)
    {
       // Ensure channel number is in valid range
       if(request.mTurnChannelNumber < MIN_CHANNEL_NUM || request.mTurnChannelNumber > MAX_CHANNEL_NUM)
@@ -855,7 +856,8 @@ RequestHandler::processTurnChannelBindRequest(StunMessage& request, StunMessage&
 
       StunTuple remoteAddress;
       remoteAddress.setTransportType(allocation->getRequestedTuple().getTransportType());
-      StunMessage::setTupleFromStunAtrAddress(remoteAddress, request.mTurnXorPeerAddress);
+      // Shouldn't have more than one xor-peer-address attribute in this request
+      StunMessage::setTupleFromStunAtrAddress(remoteAddress, request.mTurnXorPeerAddress[0]);
 
       if(!allocation->addChannelBinding(remoteAddress, request.mTurnChannelNumber))
       {
@@ -894,7 +896,7 @@ RequestHandler::processTurnSendIndication(StunMessage& request)
       return;
    }
 
-   if(!request.mHasTurnXorPeerAddress || !request.mHasTurnData)
+   if(request.mCntTurnXorPeerAddress == 0 || !request.mHasTurnData)
    {
       WarningLog(<< "Turn send indication with no peer address or data.  Dropping.");
       return;
@@ -909,7 +911,8 @@ RequestHandler::processTurnSendIndication(StunMessage& request)
 
    StunTuple remoteAddress;
    remoteAddress.setTransportType(allocation->getRequestedTuple().getTransportType());
-   StunMessage::setTupleFromStunAtrAddress(remoteAddress, request.mTurnXorPeerAddress);
+   // Shouldn't have more than one xor-peer-address attribute in this request
+   StunMessage::setTupleFromStunAtrAddress(remoteAddress, request.mTurnXorPeerAddress[0]);
 
    // Check if permission exists, if not then drop
    if(!allocation->existsPermission(remoteAddress.getAddress()))
