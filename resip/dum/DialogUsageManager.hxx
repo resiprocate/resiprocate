@@ -120,7 +120,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
                                                                   // based stuff 
                          const Data& privateKeyPassPhrase = Data::Empty,
                          SecurityTypes::SSLType sslType = SecurityTypes::TLSv1,
-			 unsigned transportFlags = 0);
+                         unsigned transportFlags = 0);
 
       SipStack& getSipStack();
       const SipStack& getSipStack() const;

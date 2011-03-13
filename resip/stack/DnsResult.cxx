@@ -270,7 +270,6 @@ DnsResult::lookupInternal(const Uri& uri)
             if (mTransport == UDP)
             {
                mTransport = DTLS;
-               mHaveChosenTransport=true;
                if (!mInterface.isSupportedProtocol(mTransport))
                {
                   transition(Finished);
@@ -424,7 +423,7 @@ DnsResult::lookupInternal(const Uri& uri)
             if (mHandler) mHandler->handle(this);
 
          }
-        else // host is not numeric, so we need to make a query
+         else // host is not numeric, so we need to make a query
          {
             mTransport=UNKNOWN_TRANSPORT;
             
@@ -844,8 +843,8 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
 #ifdef WIN32_SYNCRONOUS_RESOLUTION_ON_ARES_FAILURE
          // Try Windows Name Resolution (not asyncronous)
          WSAQUERYSET QuerySet = { 0 };
-	     GUID guidServiceTypeUDP = SVCID_UDP(mPort);
-	     GUID guidServiceTypeTCP = SVCID_TCP(mPort);
+         GUID guidServiceTypeUDP = SVCID_UDP(mPort);
+         GUID guidServiceTypeTCP = SVCID_TCP(mPort);
          HANDLE hQuery;
          QuerySet.dwSize = sizeof(WSAQUERYSET);
          QuerySet.lpServiceClassId = mTransport == UDP ? &guidServiceTypeUDP : &guidServiceTypeTCP;
@@ -870,7 +869,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
                 {
                    for(DWORD i = 0; i < pQueryResult->dwNumberOfCsAddrs; i++)
                    {
-     	              SOCKADDR_IN *pSockAddrIn = (SOCKADDR_IN *)pQueryResult->lpcsaBuffer[i].RemoteAddr.lpSockaddr;
+                      SOCKADDR_IN *pSockAddrIn = (SOCKADDR_IN *)pQueryResult->lpcsaBuffer[i].RemoteAddr.lpSockaddr;
                       Tuple tuple(pSockAddrIn->sin_addr, mPort, mTransport, mTarget);
                       
                       if(mInterface.getMarkManager().getMarkType(tuple)!=TupleMarkManager::BLACK)
@@ -1266,7 +1265,6 @@ DnsResult::onNaptrResult(const DNSResult<DnsNaptrRecord>& result)
 
    if (bFail)
    {
-
       if (mSips)
       {
          if (!mInterface.isSupportedProtocol(TLS))

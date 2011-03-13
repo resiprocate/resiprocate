@@ -142,21 +142,21 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"q-value-ms-before-cancel",0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,&msBeforeCancel, 0, "msec to wait before cancelling parallel fork groups", 0},
       {"enum-suffix",     'e',   POPT_ARG_STRING,                            &enumSuffix,     0, "specify enum suffix to search", "e164.arpa"},
       {"allow-bad-reg",   'b',   POPT_ARG_NONE,                              &allowBadReg,    0, "allow To tag in registrations", 0},
-      {"parallel-fork-static-routes",'p',POPT_ARG_NONE,                      &parallelForkStaticRoutes, 0, "paralled fork to all matching static routes and (first batch) registrations", 0},
+      {"parallel-fork-static-routes",'p',POPT_ARG_NONE,                      &parallelForkStaticRoutes, 0, "parallel fork to all matching static routes and (first batch) registrations", 0},
       {"timer-C",         0,     POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,                               &timerC,         0, "specify length of timer C in sec (0 or negative will disable timer C)", 0},
       {"admin-password",  'a',   POPT_ARG_STRING  | POPT_ARGFLAG_SHOW_DEFAULT,&adminPassword, 0, "set web administrator password", 0},
-      {"disable-outbound",  0,   POPT_ARG_NONE,                              &outboundDisabled,0,"disable outbound support (draft-ietf-sip-outbound)", 0},
-      {"outbound-version",  0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &outboundVersion,0, "set the version of outbound to support", 0},
+      {"disable-outbound",  0,   POPT_ARG_NONE,                              &outboundDisabled,0,"disable outbound support (RFC5626)", 0},
+      {"outbound-version",  0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &outboundVersion,0, "set the draft version of outbound to support", 0},
       {"enable-flow-tokens",0,   POPT_ARG_NONE,                              &rrTokenHackEnabled,0,"enable use of flow-tokens in non-outbound cases (This is a workaround, and it is broken. Only use it if you have to.)", 0},
       {"flow-timer",        0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &outboundFlowTimer,0, "set to greater than 0 to enable addition of Flow-Timer header to REGISTER responses if outbound is enabled", 0},
       {"xmlrpcport",        0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &xmlRpcPort,     0, "port on which to listen for and send XML RPC messaging (used for registration sync) - 0 to disable", 0},
-      {"regsyncpeer",       0,   POPT_ARG_STRING,                            &regSyncPeerAddress,0,"hostname/ip address of another instance of repro to syncronize registrations with (note xmlrpcport must also be specified)", 0},
-      {"server-text",       0,   POPT_ARG_STRING,                            &serverText,0,"Value of server header for local UAS responses", 0},
+      {"regsyncpeer",       0,   POPT_ARG_STRING,                            &regSyncPeerAddress,0,"hostname/ip address of another instance of repro to synchronize registrations with (note xmlrpcport must also be specified)", 0},
+      {"server-text",       0,   POPT_ARG_STRING,                            &serverText,     0,"Value of server header for local UAS responses", 0},
 #if defined(HAVE_EPOLL)
-      {"internalepoll",              0,   POPT_ARG_NONE,                              &useInternalEPoll,     0, "use internal epoll", 0},
-      {"eventthread",              0,   POPT_ARG_NONE,                              &useEventThread,     0, "use event thread for stack", 0},
+      {"internalepoll",     0,   POPT_ARG_NONE,                              &useInternalEPoll,0, "use internal epoll", 0},
+      {"eventthread",       0,   POPT_ARG_NONE,                              &useEventThread, 0, "use event thread for stack", 0},
 #endif
-      {"version",         'V',   POPT_ARG_NONE,                              &showVersion,     0, "show the version number and exit", 0},
+      {"version",         'V',   POPT_ARG_NONE,                              &showVersion,    0, "show the version number and exit", 0},
       POPT_AUTOHELP 
       { NULL, 0, 0, NULL, 0 }
    };
@@ -167,7 +167,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    {
       cerr << "Bad command line argument entered: "
         << poptBadOption(context, 0)
-	<< ": " << poptStrerror(rc) << endl;
+         << ": " << poptStrerror(rc) << endl;
       poptPrintHelp(context, stderr, 0);
       exit(-1);
    }
