@@ -433,7 +433,6 @@ static Tuple loopbackv4("127.0.0.1",0,UNKNOWN_TRANSPORT);
 bool
 Tuple::isLoopback() const
 {
-   
    if(ipVersion()==V4)
    {
       return isEqualWithMask(loopbackv4,8,true,true);
@@ -469,6 +468,34 @@ IpVersion
 Tuple::ipVersion() const
 {
    return mSockaddr.sa_family == AF_INET ? V4 : V6;
+}
+
+static Tuple v4privateaddrbase1("10.0.0.0",0,UNKNOWN_TRANSPORT);
+static Tuple v4privateaddrbase2("172.16.0.0",0,UNKNOWN_TRANSPORT);
+static Tuple v4privateaddrbase3("192.168.0.0",0,UNKNOWN_TRANSPORT);
+static Tuple v6privateaddrbase("fc00::",0,UNKNOWN_TRANSPORT);
+bool 
+Tuple::isPrivateAddress() const
+{
+   if(ipVersion()==V4)
+   {
+      // RFC 1918
+      return isEqualWithMask(v4privateaddrbase1,8,true,true) ||  // 10.0.0.0        -   10.255.255.255  (10/8 prefix)
+             isEqualWithMask(v4privateaddrbase2,12,true,true) || // 172.16.0.0      -   172.31.255.255  (172.16/12 prefix)
+             isEqualWithMask(v4privateaddrbase3,16,true,true);   // 192.168.0.0     -   192.168.255.255 (192.168/16 prefix)
+   }
+   else if (ipVersion()==V6)
+   {
+      // RFC 4193
+      // ?slg? should we look specifically for ipv4 mapped/compatible address and apply V4 rules to them?
+      return isEqualWithMask(v6privateaddrbase,7,true,true);  // fc00::/7
+   }
+   else
+   {
+      assert(0);
+   }
+   
+   return false;
 }
 
 socklen_t

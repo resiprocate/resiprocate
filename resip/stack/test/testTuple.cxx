@@ -13,6 +13,42 @@ main()
    typedef HashMap<Tuple, Connection*> AddrMap;
    //typedef std::map<Tuple, Connection*> AddrMap;
 
+   // Test isPrivateAddress function - v4
+   {
+      Tuple testTuple("192.168.1.106", 5069, V4, TCP);
+      assert(testTuple.isPrivateAddress());
+      Tuple testTuple2("10.0.0.5", 5069, V4, TCP);
+      assert(testTuple2.isPrivateAddress());
+      Tuple testTuple3("172.16.10.5", 5069, V4, TCP);
+      assert(testTuple3.isPrivateAddress());
+      Tuple testTuple4("150.1.1.106", 5069, V4, TCP);
+      assert(!testTuple4.isPrivateAddress());
+      Tuple testTuple5("127.0.0.1", 5069, V4, TCP);
+      assert(!testTuple5.isPrivateAddress());
+   }
+
+#ifdef USE_IPV6
+   // Test isPrivateAddress function - v6
+   {
+      Tuple testTuple("fd00::1", 5069, V6, TCP);
+      assert(testTuple.isPrivateAddress());
+      Tuple testTuple1("fd9b:70f6:0a18:31cc::1", 5069, V6, TCP);
+      assert(testTuple1.isPrivateAddress());
+      Tuple testTuple2("fe80::1", 5069, V6, TCP);          // Link Local ?slg? do we want this to return private or not?  For now we do only RFC 4193
+      assert(!testTuple2.isPrivateAddress());
+      Tuple testTuple3("::ffff:10.0.0.5", 5069, V6, TCP);  // V4 mapped
+      assert(!testTuple3.isPrivateAddress());
+      Tuple testTuple4("::ffff:150.1.1.106", 5069, V6, TCP); // ?slg? do we want this to return private or not?    For now we do only RFC 4193
+      assert(!testTuple4.isPrivateAddress());
+      Tuple testTuple5("::10.0.0.5", 5069, V6, TCP);       // V4 compatible
+      assert(!testTuple5.isPrivateAddress());
+      Tuple testTuple6("::150.1.1.106", 5069, V6, TCP);   // ?slg? do we want this to return private or not?  For now we do only RFC 4193
+      assert(!testTuple6.isPrivateAddress());
+      Tuple testTuple7("2000:1::203:baff:fe30:1176", 5069, V6, TCP);
+      assert(!testTuple7.isPrivateAddress());
+   }
+#endif
+
    {
       Tuple testTuple("192.168.1.106", 5069, V4, TCP);
       Data binaryToken;

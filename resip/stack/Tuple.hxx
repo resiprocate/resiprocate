@@ -98,6 +98,7 @@ class Tuple
       bool isAnyInterface() const;
       socklen_t length() const; // of sockaddr
       bool isLoopback() const;
+      bool isPrivateAddress() const;  // Return boolean based on definitions in RFC1918(v4) and RFC4193(v6)
       
       bool operator<(const Tuple& rhs) const;
       bool operator==(const Tuple& rhs) const;
