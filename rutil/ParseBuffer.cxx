@@ -428,6 +428,40 @@ ParseBuffer::skipToOneOf(const Data& cs1,
    return Pointer(*this, mPosition, true);
 }
 
+ParseBuffer&
+ParseBuffer::skipChars(const std::bitset<256>& cs)
+{
+   while (mPosition < mEnd)
+   {
+      if (cs.test((unsigned char)(*mPosition)))
+      {
+         mPosition++;
+      }
+      else
+      {
+         return *this;
+      }
+   }
+   return *this;
+}
+
+ParseBuffer&
+ParseBuffer::skipToOneOf(const std::bitset<256>& cs)
+{
+   while (mPosition < mEnd)
+   {
+      if (cs.test((unsigned char)(*mPosition)))
+      {
+         return *this;
+      }
+      else
+      {
+         mPosition++;
+      }
+   }
+   return *this;
+}
+
 const char*
 ParseBuffer::skipToEndQuote(char quote)
 {

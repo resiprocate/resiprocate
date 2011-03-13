@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <bitset>
 
 #include "rutil/compat.hxx"
 #include "rutil/DataStream.hxx"
@@ -782,6 +783,13 @@ class Data
         normalizing any alphabetic characters to lowercase.
       */
       size_t caseInsensitivehash() const;
+
+      /**
+         Creates a bitset reflecting the contents of this data (as a set)
+         ie. "15eo" would have the bits 49, 53, 101, and 111 set to true, and
+         all others set to false
+      */
+      static std::bitset<256> toBitset(const resip::Data& chars);
 
       /**
         Performs escaping of this Data according to the indicated
