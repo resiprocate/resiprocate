@@ -473,7 +473,11 @@ Tuple::ipVersion() const
 static Tuple v4privateaddrbase1("10.0.0.0",0,UNKNOWN_TRANSPORT);
 static Tuple v4privateaddrbase2("172.16.0.0",0,UNKNOWN_TRANSPORT);
 static Tuple v4privateaddrbase3("192.168.0.0",0,UNKNOWN_TRANSPORT);
+
+#ifdef USE_IPV6
 static Tuple v6privateaddrbase("fc00::",0,UNKNOWN_TRANSPORT);
+#endif
+
 bool 
 Tuple::isPrivateAddress() const
 {
@@ -484,12 +488,14 @@ Tuple::isPrivateAddress() const
              isEqualWithMask(v4privateaddrbase2,12,true,true) || // 172.16.0.0      -   172.31.255.255  (172.16/12 prefix)
              isEqualWithMask(v4privateaddrbase3,16,true,true);   // 192.168.0.0     -   192.168.255.255 (192.168/16 prefix)
    }
+#ifdef USE_IPV6
    else if (ipVersion()==V6)
    {
       // RFC 4193
       // ?slg? should we look specifically for ipv4 mapped/compatible address and apply V4 rules to them?
       return isEqualWithMask(v6privateaddrbase,7,true,true);  // fc00::/7
    }
+#endif
    else
    {
       assert(0);
