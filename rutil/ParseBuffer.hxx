@@ -90,6 +90,11 @@ class ParseBuffer
       Pointer skipToOneOf(const char* cs1, const char* cs2);
       Pointer skipToOneOf(const Data& cs);
       Pointer skipToOneOf(const Data& cs1, const Data& cs2);
+
+      // std::bitset based parse function
+      ParseBuffer& skipChars(const std::bitset<256>& cs);
+      ParseBuffer& skipToOneOf(const std::bitset<256>& cs);
+
       const char* skipToEndQuote(char quote = '"');
       Pointer skipN(int count);
       Pointer skipToEnd();

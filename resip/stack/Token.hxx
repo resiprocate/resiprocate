@@ -29,6 +29,9 @@ class Token : public ParserCategory
       bool operator!=(const Token& rhs) const;
       bool operator<(const Token& rhs) const;
 
+      /**
+         Gets the value (ie; no parameters) of this Token as a Data&.
+      */
       Data& value() const;
 
       virtual void parse(ParseBuffer& pb); // remember to call parseParameters()

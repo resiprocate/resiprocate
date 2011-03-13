@@ -28,8 +28,17 @@ bool Uri::mEncodingReady = false;
 // in user and password strings respectively
 Data Uri::mUriNonEncodingUserChars = Data("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*\\()&=+$,;?/");
 Data Uri::mUriNonEncodingPasswordChars = Data("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*\\()&=+$");
+
+// ?bwc? 'p' and 'w' are allowed in 2806, but have been removed in 3966. Should
+// we support these or not?
+const Data Uri::mLocalNumberChars = Data("*#-.()0123456789ABCDEFpw");
+const Data Uri::mGlobalNumberChars = Data("-.()0123456789");
+
+
 Uri::EncodingTable Uri::mUriEncodingUserTable;
 Uri::EncodingTable Uri::mUriEncodingPasswordTable;
+Uri::EncodingTable Uri::mLocalNumberTable(Data::toBitset(mLocalNumberChars));
+Uri::EncodingTable Uri::mGlobalNumberTable(Data::toBitset(mGlobalNumberChars));
 
 Uri::Uri() 
    : ParserCategory(),
@@ -626,6 +635,85 @@ Uri::operator<(const Uri& other) const
    }
 
    return mPort < other.mPort;
+}
+
+bool 
+Uri::userIsTelephoneSubscriber() const
+{
+   try
+   {
+      ParseBuffer pb(mUser);
+      pb.assertNotEof();
+      const char* anchor=pb.position();
+      bool local=false;
+      if(*pb.position()=='+')
+      {
+         // Might be a global phone number
+         pb.skipChar();
+         pb.skipChars(mGlobalNumberTable);
+      }
+      else
+      {
+         pb.skipChars(mLocalNumberTable);
+         local=true;
+      }
+
+      Data dialString(pb.data(anchor));
+      if(dialString.empty())
+      {
+         pb.fail(__FILE__, __LINE__, "Dial string is empty.");
+      }
+
+      // ?bwc? More dial-string checking? For instance, +/ (or simply /) is not 
+      // a valid dial-string according to the BNF; the string must contain at 
+      // least one actual digit (or in the local number case, one hex digit or 
+      // '*' or '#'. Interestingly, this means that stuff like ///*/// is 
+      // valid)
+
+      // Dial string looks ok so far; now look for params (there must be a 
+      // phone-context param if this is a local number, otherwise there might 
+      // or might not be one)
+      if(local || !pb.eof())
+      {
+         // The only thing that can be here is a ';'. If it does, we're going 
+         // to say it is good enough for us. If something in the parameter 
+         // string is malformed, it'll get caught when/if 
+         // getUserAsTelephoneSubscriber() is called.
+         pb.skipChar(';');
+      }
+
+      return true;
+   }
+   catch(ParseException& e)
+   {
+      return false;
+   }
+}
+
+Token 
+Uri::getUserAsTelephoneSubscriber() const
+{
+   // !bwc! Ugly. Someday, refactor all this lazy-parser stuff and make it 
+   // possible to control ownership explicitly.
+   // Set this up as lazy-parsed, to prevent exceptions from being thrown.
+   HeaderFieldValue temp(mUser.data(), mUser.size());
+   Token tempToken(&temp, Headers::NONE);
+   // tempToken does not own the HeaderFieldValue temp, and temp does not own 
+   // its buffer.
+
+   // Here's the voodoo; invoking operator= makes a deep copy of the stuff in
+   // tempToken, with result owning the memory, and result is in the unparsed 
+   // state.
+   Token result = tempToken;
+   return result;
+}
+
+void 
+Uri::setUserAsTelephoneSubscriber(const Token& telephoneSubscriber)
+{
+   mUser.clear();
+   oDataStream str(mUser);
+   str << telephoneSubscriber;
 }
 
 const Data

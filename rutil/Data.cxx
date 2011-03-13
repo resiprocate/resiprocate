@@ -2027,6 +2027,18 @@ Data::caseInsensitivehash() const
    return rawCaseInsensitiveHash((const unsigned char*)(this->data()), this->size());
 }
 
+std::bitset<256>
+Data::toBitset(const resip::Data& chars)
+{
+   std::bitset<256> result;
+   result.reset();
+   for (unsigned int i=0; i!=chars.mSize;++i)
+   {
+      result.set(*(unsigned char*)(chars.mBuf+i));
+   }
+   return result;
+}
+
 HashValueImp(resip::Data, data.hash());
 
 static signed char base64Lookup[128] = 

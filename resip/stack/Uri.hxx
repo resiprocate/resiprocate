@@ -5,10 +5,11 @@
 #include <cassert>
 
 #include "resip/stack/ParserCategory.hxx"
+#include "resip/stack/Token.hxx"
 #include "rutil/TransportType.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 
-#define URI_ENCODING_TABLE_SIZE 128
+#define URI_ENCODING_TABLE_SIZE 256
 
 namespace resip
 {
@@ -49,6 +50,80 @@ class Uri : public ParserCategory
       //and the default port for the transport is on the Aor, then it is removed
       Uri getAorAsUri(TransportType transportTypeToRemoveDefaultPort = UNKNOWN_TRANSPORT) const;
       
+
+      /**
+         Returns true if the user appears to fit the BNF for the 
+         'telephone-subscriber' element in the RFC 3261 (and by extension, RFC 
+         3966) grammar. This is important because 'telephone-subscriber' can 
+         have parameters, which you could then access easily through the
+         getUserAsTelephoneSubscriber() and setUserAsTelephoneSubscriber() 
+         calls.
+      */
+      bool userIsTelephoneSubscriber() const;
+
+      /**
+         Returns the user-part as a 'telephone-subscriber' grammar element (in 
+         other words, this parses the user-part into a dial string and 
+         parameters, with the dial-string accessible with Token::value(), and 
+         the parameters accessible with the various Token::param() and 
+         Token::exists() interfaces). 
+         
+         For example, suppose the following is in the Request-URI:
+         
+         sip:5555551234;phone-context=+86\@example.com;user=dialstring
+         
+         The user-part of this SIP URI is "5555551234;phone-context=+86", and it
+         fits the BNF for the 'telephone-subscriber' grammar element. To access 
+         the 'phone-context' parameter, do something like the following:
+
+         @code
+            Uri& reqUri(sip.header(h_RequestLine).uri());
+
+            // !bwc! May add native support for this param later
+            static ExtensionParameter p_phoneContext("phone-context");
+            Data phoneContextValue;
+
+            if(reqUri.isWellFormed())
+            {
+               if(reqUri.exists(p_phoneContext))
+               {
+                  // Phone context as URI param
+                  phoneContextValue=reqUri.param(p_phoneContext);
+               }
+               else if(reqUri.scheme()=="sip" || reqUri.scheme()=="sips")
+               {
+                  // Might have phone-context as a user param (only happens 
+                  // in a sip or sips URI)
+                  // Technically, this userIsTelephoneSubscriber() check is 
+                  // required: 
+                  // sip:bob;phone-context=+86@example.com doesn't have a 
+                  // phone-context param according to the BNF in 3261. But, 
+                  // interop may require you to parse this as if it did have 
+                  // such a param.
+                  if(reqUri.userIsTelephoneSubscriber())
+                  {
+                     Token telSub(reqUri.getUserAsTelephoneSubscriber());
+                     if(telSub.isWellFormed() && telSub.exists(p_phoneContext))
+                     {
+                        // Phone context as user param
+                        phoneContextValue=telSub.param(p_phoneContext);
+                     }
+                  }
+               }
+            }
+         @endcode
+      */
+      Token getUserAsTelephoneSubscriber() const;
+
+      /**
+         Sets the user-part of this URI using the dial-string and parameters 
+         stored in telephoneSubscriber.
+         @param telephoneSubscriber The user-part, as a 'telephone-subscriber'
+            grammar element.
+      */
+      void setUserAsTelephoneSubscriber(const Token& telephoneSubscriber);
+
+
       Data& scheme() {checkParsed(); return mScheme;}
       const Data& scheme() const {checkParsed(); return mScheme;}
       int& port() {checkParsed(); return mPort;}
@@ -110,10 +185,14 @@ class Uri : public ParserCategory
       // characters listed in these strings should not be URI encoded
       static Data mUriNonEncodingUserChars;
       static Data mUriNonEncodingPasswordChars;
+      static const Data mLocalNumberChars;
+      static const Data mGlobalNumberChars;
       typedef std::bitset<URI_ENCODING_TABLE_SIZE> EncodingTable;
       // if a bit is set/true, the corresponding character should be encoded
       static EncodingTable mUriEncodingUserTable;
       static EncodingTable mUriEncodingPasswordTable;
+      static EncodingTable mLocalNumberTable;
+      static EncodingTable mGlobalNumberTable;
 
       static void initialiseEncodingTables();
       static inline bool shouldEscapeUserChar(char c);
