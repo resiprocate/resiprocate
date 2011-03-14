@@ -2172,13 +2172,14 @@ stunNatType( StunAddress4& dest,
       struct timeval tv;
       fd_set fdSet; 
 #ifdef WIN32
-      unsigned int fdSetSize;
+      typedef unsigned int FdSetSize;
 #else
-      int fdSetSize;
+      typedef int FdSetSize;
 #endif
+      FdSetSize fdSetSize;
       FD_ZERO(&fdSet); fdSetSize=0;
-      FD_SET(myFd1,&fdSet); fdSetSize = ((unsigned int)myFd1+1>fdSetSize) ? (unsigned int)myFd1+1 : fdSetSize;
-      FD_SET(myFd2,&fdSet); fdSetSize = ((unsigned int)myFd2+1>fdSetSize) ? (unsigned int)myFd2+1 : fdSetSize;
+      FD_SET(myFd1,&fdSet); fdSetSize = ((FdSetSize)myFd1+1>fdSetSize) ? (FdSetSize)myFd1+1 : fdSetSize;
+      FD_SET(myFd2,&fdSet); fdSetSize = ((FdSetSize)myFd2+1>fdSetSize) ? (FdSetSize)myFd2+1 : fdSetSize;
       tv.tv_sec=0;
       tv.tv_usec=150*1000; // 150 ms 
       if ( count == 0 ) tv.tv_usec=0;
