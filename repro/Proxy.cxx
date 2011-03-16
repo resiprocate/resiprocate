@@ -57,10 +57,6 @@ Proxy::Proxy(SipStack& stack,
      mRequestContextFactory(new RequestContextFactory)
 {
    mTimerC=timerC;
-   if (!mRecordRoute.uri().host().empty())
-   {
-      mRecordRoute.uri().param(p_lr);
-   }
    FlowTokenSalt = Random::getCryptoRandom(20);   // 20-octet Crypto Random Key for Salting Flow Token HMACs
 }
 
