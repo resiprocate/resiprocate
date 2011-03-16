@@ -84,11 +84,11 @@ main(int argc, char* argv[])
    if (dumpPid==0)
    {
      // todo - make this something that can come on the command line
-     char *args[] = { "ssldump","-A","-i","lo0",NULL };
+     const char *args[] = { "ssldump","-A","-i","lo0",NULL };
      // .kw. execvp takes a 'char* const *' -- for some reason it doesn't
      // promise to not modify the strings. Thus shouldn't use static string
      // initializers above!
-     int ret = execvp("ssldump",args);
+     int ret = execvp("ssldump",const_cast<char**>(args));
      ErrLog(<< "Can't execvp: return is " << ret <<" errno is " << errno);
      exit(-1);
    }
