@@ -312,7 +312,11 @@ BaseSecurity::addCertDER (PEMType type,
                           const Data& certDER, 
                           bool write) const
 {
-   assert( !certDER.empty() );
+   if( certDER.empty() )
+   {
+      ErrLog(<< "File is empty. Skipping.");
+      return;
+   }
 
    X509* cert = 0;
 
@@ -338,7 +342,11 @@ BaseSecurity::addCertPEM (PEMType type,
                           const Data& certPEM, 
                           bool write) const
 {
-   assert( !certPEM.empty() );
+   if( certPEM.empty() )
+   {
+      ErrLog(<< name << " is empty. Skipping.");
+      return;
+   }
    X509* cert=NULL;
    
    BIO* in = BIO_new_mem_buf(const_cast<char*>(certPEM.c_str()), -1);
@@ -393,27 +401,46 @@ BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write)
    {
       // creates a read/write BIO buffer.
       BIO *out = BIO_new(BIO_s_mem());
-      assert(out);
+      if(!out)
+      {
+         ErrLog(<< "Failed to create BIO: this cert will not be added.");
+         assert(0);
+         return;
+      }
+
       try
       {
          int ret = PEM_write_bio_X509(out, cert);
-         assert(ret);
+         if(!ret)
+         {
+            assert(0);
+            throw Exception("PEM_write_bio_X509 failed: this cert will not be "
+                              "added.", __FILE__,__LINE__);
+         }
          
          (void)BIO_flush(out);
          // get content in BIO buffer to our buffer.
          char* p = 0;
          size_t len = BIO_get_mem_data(out,&p);
-         assert(p);
-         assert(len);
+         if(!p || !len)
+         {
+            assert(0);
+            throw Exception("BIO_get_mem_data failed: this cert will not be "
+                              "added.", __FILE__,__LINE__);
+         }
          Data  buf(Data::Borrow, p, len);
          
          this->onWritePEM(key, type, buf);
       }
-      catch(...)
+      catch(Exception& e)
       {
-         ErrLog(<<"Caught exception: ");
+         ErrLog(<<"Caught exception: " << e);
+      }
+      catch(std::exception& e)
+      {
+         ErrLog(<<"Caught unknown exception, rethrowing");
          BIO_free(out);
-         throw;
+         throw e;
       }
       BIO_free(out);
    }
@@ -559,7 +586,12 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type,
       }
 
       BIO *bio = BIO_new(BIO_s_mem());
-      assert(bio);
+      if(!bio)
+      {
+         ErrLog(<< "BIO_new failed: cannot add private key.");
+         assert(0);
+      }
+
       try
       {
          assert( EVP_des_ede3_cbc() );
@@ -577,21 +609,34 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type,
                                                  kstr, klen,
                                                  NULL, NULL);
 #endif
-         assert(ret);
-         
+         if(!ret)
+         {
+            assert(0);
+            throw Exception("PEM_write_bio_PKCS8PrivateKey failed: cannot add"
+                              " private key.", __FILE__, __LINE__);
+         }
+
          (void)BIO_flush(bio);
          char* p = 0;
          size_t len = BIO_get_mem_data(bio,&p);
-         assert(p);
-         assert(len);
+         if(!p || !len)
+         {
+            assert(0);
+            throw Exception("BIO_get_mem_data failed: cannot add"
+                              " private key.", __FILE__, __LINE__);
+         }
          Data  pem(Data::Borrow, p, len);
          onWritePEM(name, type, pem );
       }
-      catch(...)
+      catch(Exception& e)
       {
-         ErrLog(<<"Caught exception: ");
+         ErrLog( << "Caught exception: " << e);
+      }
+      catch(std::exception& e)
+      {
+         ErrLog(<<"Caught unknown exception, rethrowing: " << e.what());
          BIO_free(bio);
-         throw;
+         throw e;
       }
       BIO_free(bio);
    }
@@ -605,7 +650,11 @@ BaseSecurity::addPrivateKeyDER( PEMType type,
                                 bool write ) const
 {
    assert( !name.empty() );
-   assert( !privateKeyDER.empty() );
+   if( privateKeyDER.empty() )
+   {
+      ErrLog(<< name << " is empty. Skipping.");
+      return;
+   }
 
    char* passPhrase = 0;
    if (type != DomainPrivateKey)
@@ -636,11 +685,11 @@ BaseSecurity::addPrivateKeyDER( PEMType type,
       
       addPrivateKeyPKEY(type,name,privateKey,write);
    }
-   catch(...)
+   catch(std::exception& e)
    {
       ErrLog(<<"Caught exception: ");
       BIO_free(in);
-      throw;
+      throw e;
    }
    
    BIO_free(in);
@@ -654,7 +703,11 @@ BaseSecurity::addPrivateKeyPEM( PEMType type,
                                 bool write ) const 
 {
    assert( !name.empty() );
-   assert( !privateKeyPEM.empty() );
+   if( privateKeyPEM.empty() )
+   {
+      ErrLog(<< name << " is empty. Skipping.");
+      return;
+   }
 
    BIO* in = BIO_new_mem_buf(const_cast<char*>(privateKeyPEM.c_str()), -1);
    if ( !in )
@@ -684,11 +737,11 @@ BaseSecurity::addPrivateKeyPEM( PEMType type,
       
       addPrivateKeyPKEY(type,name,privateKey,write);
    }
-   catch(...)
+   catch(std::exception& e)
    {
       ErrLog(<<"Caught exception: ");
       BIO_free(in);
-      throw;
+      throw e;
    }
 
    BIO_free(in);
@@ -717,14 +770,14 @@ BaseSecurity::hasPrivateKey( PEMType type,
       BaseSecurity* mutable_this = const_cast<BaseSecurity*>(this);
       mutable_this->addPrivateKeyPEM(type, key, privateKeyPEM, false);
    }
-   catch (Exception& e)
+   catch(std::exception& e)
    {
-      ErrLog(<<"Caught exception: " << e);
+      ErrLog(<<"Caught exception: " << e.what());
       return   false;
    }
    catch(...)
    {
-      ErrLog(<<"Caught exception: ");
+      ErrLog(<<"Caught unknown class!");
       return   false;
    }
 
@@ -769,6 +822,7 @@ BaseSecurity::getPrivateKeyPEM( PEMType type,
    // write pk to out using key phrase p, with no cipher.
    int ret = PEM_write_bio_PrivateKey(out, pk, 0, 0, 0, 0, p);  // paraters
                                                                 // are in the wrong order
+   (void)ret;
    assert(ret == 1);
 
    // get content in BIO buffer to our buffer.
@@ -820,6 +874,7 @@ BaseSecurity::getPrivateKeyDER( PEMType type,
 
    // write pk to out using key phrase p, with no cipher.
    int ret = i2d_PKCS8PrivateKey_bio(out, pk, 0, 0, 0, 0, p);
+   (void)ret;
    assert(ret == 1);
 
    // get content in BIO buffer to our buffer.
@@ -1349,7 +1404,14 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
    EVP_PKEY* privateKey = mUserPrivateKeys[senderAor];
 
    int rv = X509_check_private_key(publicCert, privateKey);
-   assert(rv);
+   if(!rv)
+   {
+      BIO_free(in);
+      BIO_free(out);
+      sk_X509_free(chain);
+      ErrLog (<< "X509_check_private_key failed for " << senderAor);
+      return 0;
+   }
 
    // compute the signature
    int flags = 0;
@@ -1403,6 +1465,7 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
    BIO_free(in);
    BIO_free(out);
    sk_X509_free(chain);
+   PKCS7_free(pkcs7);
 
    return multi;
 }
@@ -1510,6 +1573,7 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
    BIO_free(in);
    BIO_free(out);
    sk_X509_free(certs);
+   PKCS7_free(pkcs7);
 
    return outBody;
 }
@@ -1561,7 +1625,12 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
    int r = RSA_sign(NID_sha1, (unsigned char *)hashRes.data(), (unsigned int)hashRes.size(),
                     result, (unsigned int*)( &resultSize ),
             rsa);
-   assert( r == 1 );
+   if( r != 1 )
+   {
+      ErrLog(<< "RSA_sign failed with return " << r);
+      assert(0);
+      return Data::Empty;
+   }
 #else
    resultSize = RSA_private_encrypt(hashResLen, hashRes,
                                     result, rsa, RSA_PKCS1_PADDING);
@@ -1824,6 +1893,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
          BIO_free(in);
          BIO_free(out);
          sk_X509_free(certs);
+         PKCS7_free(pkcs7);
          throw Exception("Signed and enveloped is not supported", __FILE__, __LINE__);
       }
       break;
@@ -1835,6 +1905,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
             BIO_free(in);
             BIO_free(out);
             sk_X509_free(certs);
+            PKCS7_free(pkcs7);
             InfoLog( << "Don't have a private key for " << decryptorAor << " for  PKCS7_decrypt" );
             throw Exception("Missing private key", __FILE__, __LINE__);
          }
@@ -1843,6 +1914,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
             BIO_free(in);
             BIO_free(out);
             sk_X509_free(certs);
+            PKCS7_free(pkcs7);
             InfoLog( << "Don't have a public cert for " << decryptorAor << " for  PKCS7_decrypt" );
             throw Exception("Missing cert", __FILE__, __LINE__);
          }
@@ -1873,6 +1945,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
             BIO_free(in);
             BIO_free(out);
             sk_X509_free(certs);
+            PKCS7_free(pkcs7);
             return 0;
          }
       }
@@ -1882,6 +1955,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
          BIO_free(in);
          BIO_free(out);
          sk_X509_free(certs);
+         PKCS7_free(pkcs7);
          ErrLog(<< "Got PKCS7 data that could not be handled type=" << type );
          throw Exception("Unsupported PKCS7 data type", __FILE__, __LINE__);
    }
@@ -1898,6 +1972,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
    BIO_free(in);
    BIO_free(out);
    sk_X509_free(certs);
+   PKCS7_free(pkcs7);
 
    // parse out the header information and form new body.
    // TODO !jf! this is a really crappy parser - shoudl do proper mime stuff 
@@ -2143,6 +2218,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
       BIO_free(out);
       BIO_free(pkcs7Bio);
       sk_X509_free(certs);
+      PKCS7_free(pkcs7);
       *sigStat = SignatureIsBad;
       InfoLog(<< "No valid signers of this messages" );
       return first;
@@ -2217,6 +2293,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
             BIO_free(out);
             BIO_free(pkcs7Bio);
             sk_X509_free(certs);
+            PKCS7_free(pkcs7);
             return first;
          }
          if ( sigStat )
@@ -2256,6 +2333,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
          BIO_free(out);
          BIO_free(pkcs7Bio);
          sk_X509_free(certs);
+         PKCS7_free(pkcs7);
          ErrLog(<< "Got PKCS7 data that could not be handled type=" << type );
          return 0;
    }
@@ -2272,6 +2350,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    BIO_free(out);
    BIO_free(pkcs7Bio);
    sk_X509_free(certs);
+   PKCS7_free(pkcs7);
    return first;
 }
 
