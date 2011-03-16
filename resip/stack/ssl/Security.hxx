@@ -167,11 +167,15 @@ class BaseSecurity
 
       static bool isSelfSigned(const X509* cert);
 
-      // match with wildcards
       static int matchHostName(const Data& certificateName, const Data& domainName);
 
       // allow particular classes to acces the functions below 
       // friend class TlsConnection;
+
+      // Allow overriding of RFC 5922 rules on certificate matching.
+      static void setAllowWildcardCertificates(bool bEnable) { mAllowWildcardCertificates = bEnable; }
+      static bool allowWildcardCertificates() { return mAllowWildcardCertificates; }
+
    public:
       SSL_CTX*       getTlsCtx ();
       SSL_CTX*       getSslCtx ();
@@ -216,6 +220,10 @@ class BaseSecurity
       Data getPrivateKeyPEM (PEMType type, const Data& name) const;
       Data getPrivateKeyDER (PEMType type, const Data& name) const;
       void addPrivateKeyPKEY(PEMType type, const Data& name, EVP_PKEY* pKey, bool write) const;
+
+      // match with wildcards
+      static int matchHostNameWithWildcards(const Data& certificateName, const Data& domainName);
+      static bool mAllowWildcardCertificates;
 };
 
 class Security : public BaseSecurity

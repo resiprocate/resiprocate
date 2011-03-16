@@ -171,6 +171,8 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
  
 }
 
+// .amr. RFC 5922 mandates exact match only on certificates, so this is the default, but RFC 2459 and RFC 3261 don't prevent wildcards, so enable if you want that mode.
+bool BaseSecurity::mAllowWildcardCertificates = false;
 BaseSecurity::CipherList BaseSecurity::ExportableSuite("!SSLv2:aRSA+AES:aDSS+AES:@STRENGTH:aRSA+3DES:aDSS+3DES:aRSA+RC4+MEDIUM:aDSS+RC4+MEDIUM:aRSA+DES:aDSS+DES:aRSA+RC4:aDSS+RC4");
 BaseSecurity::CipherList BaseSecurity::StrongestSuite("!SSLv2:aRSA+AES:aDSS+AES:@STRENGTH:aRSA+3DES:aDSS+3DES");
 
@@ -2434,11 +2436,21 @@ BaseSecurity::getCertName(X509 *cert)
    return Data::Empty;
 }
 /**
-   Matchtes subjectAltName and cnames 
-   @todo    looks incomplete, make better
+   Applies the certificate and domain name matching rules
 */
 int 
 BaseSecurity::matchHostName(const Data& certificateName, const Data& domainName)
+{
+   if(mAllowWildcardCertificates)
+      return matchHostNameWithWildcards(certificateName,domainName);
+   return isEqualNoCase(certificateName,domainName);
+}
+/**
+   Does a wildcard match on domain and certificate name
+   @todo    looks incomplete, make better
+*/
+int 
+BaseSecurity::matchHostNameWithWildcards(const Data& certificateName, const Data& domainName)
 {
    const char *dot = NULL;
 
