@@ -68,11 +68,12 @@ makeRequestProcessorChain(ProcessorChain& chain,
 }
 
 static ProcessorChain&  
-makeResponseProcessorChain(ProcessorChain& chain) 
+makeResponseProcessorChain(ProcessorChain& chain,
+                          RegistrationPersistenceManager& regData) 
 {
    ProcessorChain* lemurs = new ProcessorChain;
 
-   OutboundTargetHandler* ob = new OutboundTargetHandler;
+   OutboundTargetHandler* ob = new OutboundTargetHandler(regData);
    lemurs->addProcessor(std::auto_ptr<Processor>(ob));
 
    chain.addProcessor(std::auto_ptr<Processor>(lemurs));
@@ -143,7 +144,7 @@ TestRepro::TestRepro(const resip::Data& name,
           makeUri(host, *args.mUdpPorts.begin()),
           args.mForceRecordRoute, //<- Enable record-route
           makeRequestProcessorChain(mRequestProcessors, mStore, mRegData,&mStack),
-          makeResponseProcessorChain(mResponseProcessors),
+          makeResponseProcessorChain(mResponseProcessors,mRegData),
           makeTargetProcessorChain(mTargetProcessors,args),
           mStore.mUserStore,
           180),
