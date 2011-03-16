@@ -45,8 +45,9 @@ TestInviteSession::provideAnswer(const resip::SdpContents& answer)
 CommonAction* 
 TestInviteSession::end(resip::InviteSession::EndReason reason)
 {
+   void (resip::InviteSession::*fn)(resip::InviteSession::EndReason);
    return new CommonAction(mUa, "InviteSession::end",
-                           boost::bind(&InviteSession::end, boost::bind<InviteSession*>(&InviteSessionHandle::get, boost::ref(mSessionHandle)), reason));
+                           boost::bind(fn, boost::bind<InviteSession*>(&InviteSessionHandle::get, boost::ref(mSessionHandle)), reason));
 }
  
 CommonAction* 
@@ -292,8 +293,9 @@ TestClientInviteSession::provideAnswer(const resip::SdpContents& answer)
 CommonAction* 
 TestClientInviteSession::end(resip::InviteSession::EndReason reason)
 {
+   void (resip::ClientInviteSession::*fn)(resip::InviteSession::EndReason);
    return new CommonAction(mUa, "ClientInviteSession::end",
-                           boost::bind(&ClientInviteSession::end, boost::bind<ClientInviteSession*>(&ClientInviteSessionHandle::get, boost::ref(mHandle)), 
+                           boost::bind(fn, boost::bind<ClientInviteSession*>(&ClientInviteSessionHandle::get, boost::ref(mHandle)), 
                                        reason));
 }
  
@@ -373,8 +375,9 @@ TestServerInviteSession::provideAnswer(const resip::SdpContents& answer)
 CommonAction* 
 TestServerInviteSession::end(resip::InviteSession::EndReason reason)
 {
+   void (resip::ServerInviteSession::*fn)(resip::InviteSession::EndReason);
    return new CommonAction(mUa, "ServerInviteSession::end",
-                           boost::bind(&ServerInviteSession::end, boost::bind<ServerInviteSession*>(&ServerInviteSessionHandle::get, boost::ref(mHandle)),
+                           boost::bind(fn, boost::bind<ServerInviteSession*>(&ServerInviteSessionHandle::get, boost::ref(mHandle)),
                               reason));
 }
 

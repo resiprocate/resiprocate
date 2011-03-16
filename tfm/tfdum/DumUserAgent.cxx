@@ -331,7 +331,8 @@ DumUserAgent::invite(const NameAddr& target,
                      const SdpContents* alternative,
                      DialogUsageManager::EncryptionLevel level)
 {
-  return new DumUaSendingCommand(this, boost::bind(&resip::DialogUsageManager::makeInviteSession, boost::ref(mDum),
+  resip::SharedPtr<resip::SipMessage> (resip::DialogUsageManager::*fn)(const NameAddr&, const Contents*, DialogUsageManager::EncryptionLevel, const Contents*, AppDialogSet*) = &resip::DialogUsageManager::makeInviteSession;
+  return new DumUaSendingCommand(this, boost::bind(fn, boost::ref(mDum),
                                                    target, initialOffer, level, alternative, (AppDialogSet*)0));
 }
 
