@@ -1283,8 +1283,8 @@ Data::charUnencoded() const
       {
          if ( i+2 < size())
          {
-            const char* high = strchr(hexmap, *p++);
-            const char* low = strchr(hexmap, *p++);
+            const char* high = strchr(hexmap, tolower(*p++));
+            const char* low = strchr(hexmap, tolower(*p++));
 
             // !rwm! changed from high==0 || low==0
             if (high == 0 && low == 0)
