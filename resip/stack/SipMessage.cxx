@@ -1051,8 +1051,9 @@ SipMessage::getContents() const
 auto_ptr<Contents>
 SipMessage::releaseContents()
 {
+   Contents* c=getContents();
    // .bwc. auto_ptr owns the Contents. No other references allowed!
-   auto_ptr<Contents> ret(getContents());
+   auto_ptr<Contents> ret(c ? c->clone() : 0);
    mContents = 0;
 
    if (ret.get() != 0 && !ret->isWellFormed())
@@ -1060,6 +1061,7 @@ SipMessage::releaseContents()
       ret.reset(0);
    }
 
+   // ?bwc? Shouldn't we be clearing Content-Type headers and such?
    // .bwc. At this point, the Contents object has been parsed, so we don't need
    // this anymore.
    delete mContentsHfv;
