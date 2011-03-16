@@ -274,6 +274,7 @@ class ResponseContext
       resip::SipMessage mBestResponse;
       int mBestPriority;
       bool mSecure;
+      bool mIsSenderBehindNAT;  // Only set if InteropHelper::getClientNATDetectionEnabled() is true
 
       void forwardBestResponse();
 

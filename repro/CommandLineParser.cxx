@@ -74,6 +74,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int outboundDisabled=0;
    int outboundVersion=11;
    int rrTokenHackEnabled=0;
+   const char* clientNATDetectionMode="DISABLED";
    int outboundFlowTimer=0;
    
    mHttpHostname = DnsUtil::getLocalHostName();
@@ -148,6 +149,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"disable-outbound",  0,   POPT_ARG_NONE,                              &outboundDisabled,0,"disable outbound support (RFC5626)", 0},
       {"outbound-version",  0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &outboundVersion,0, "set the draft version of outbound to support", 0},
       {"enable-flow-tokens",0,   POPT_ARG_NONE,                              &rrTokenHackEnabled,0,"enable use of flow-tokens in non-outbound cases (This is a workaround, and it is broken. Only use it if you have to.)", 0},
+      {"nat-detection-mode",0,   POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,&clientNATDetectionMode,0,"enable use of flow-tokens in non-outbound cases for clients detected to be behind a NAT (This is a workaround, and it is broken. Only use it if you have to.): DISABLED, ENABLED, PRIVATE_TO_PUBLIC", 0},
       {"flow-timer",        0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &outboundFlowTimer,0, "set to greater than 0 to enable addition of Flow-Timer header to REGISTER responses if outbound is enabled", 0},
       {"xmlrpcport",        0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &xmlRpcPort,     0, "port on which to listen for and send XML RPC messaging (used for registration sync) - 0 to disable", 0},
       {"regsyncpeer",       0,   POPT_ARG_STRING,                            &regSyncPeerAddress,0,"hostname/ip address of another instance of repro to synchronize registrations with (note xmlrpcport must also be specified)", 0},
@@ -263,6 +265,14 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    InteropHelper::setOutboundVersion(outboundVersion);
    InteropHelper::setOutboundSupported(outboundDisabled ? false : true);
    InteropHelper::setRRTokenHackEnabled((rrTokenHackEnabled==0) ? false : true);
+   if(isEqualNoCase(clientNATDetectionMode, "ENABLED"))
+   {
+      InteropHelper::setClientNATDetectionMode(InteropHelper::ClientNATDetectionEnabled);
+   }
+   else if(isEqualNoCase(clientNATDetectionMode, "PRIVATE_TO_PUBLIC"))
+   {
+      InteropHelper::setClientNATDetectionMode(InteropHelper::ClientNATDetectionPrivateToPublicOnly);
+   }
    if(outboundFlowTimer > 0)
    {
       InteropHelper::setFlowTimerSeconds(outboundFlowTimer);
@@ -272,6 +282,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    
    if((InteropHelper::getOutboundSupported() 
          || InteropHelper::getRRTokenHackEnabled()
+         || InteropHelper::getClientNATDetectionMode() != InteropHelper::ClientNATDetectionDisabled
          || mForceRecordRoute
       )
       && !recordRouteUri)
@@ -281,6 +292,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       "without...");
       InteropHelper::setOutboundSupported(false);
       InteropHelper::setRRTokenHackEnabled(false);
+      InteropHelper::setClientNATDetectionMode(InteropHelper::ClientNATDetectionDisabled);
       mForceRecordRoute=false;
    }
 

@@ -27,7 +27,8 @@ using namespace std;
 ResponseContext::ResponseContext(RequestContext& context) : 
    mRequestContext(context),
    mBestPriority(50),
-   mSecure(false) //context.getOriginalRequest().header(h_RequestLine).uri().scheme() == Symbols::Sips)
+   mSecure(false), //context.getOriginalRequest().header(h_RequestLine).uri().scheme() == Symbols::Sips)
+   mIsSenderBehindNAT(false)
 {
 }
 
@@ -593,8 +594,9 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       }
    }
       
-   if( (resip::InteropHelper::getOutboundSupported() ||
-       resip::InteropHelper::getRRTokenHackEnabled()) 
+   if((resip::InteropHelper::getOutboundSupported() ||
+       resip::InteropHelper::getRRTokenHackEnabled() ||
+       mIsSenderBehindNAT)
        && target->rec().mReceivedFrom.mFlowKey)
    {
       // .bwc. We only override the destination if we are sending to an
@@ -698,7 +700,12 @@ ResponseContext::insertRecordRoute(resip::SipMessage& outgoing,
       {
          if(!inboundFlowToken.empty())
          {
-            rt.uri().param(p_ob);
+            // Only add ;ob parameter if client really supports outbound (ie. not for NAT detection mode or flow token hack)
+            if(!mRequestContext.getOriginalRequest().empty(h_Supporteds) &&
+               mRequestContext.getOriginalRequest().header(h_Supporteds).find(Token(Symbols::Outbound)))
+            {
+               rt.uri().param(p_ob);
+            }
          }
          outgoing.header(h_Paths).push_front(rt);
          InfoLog (<< "Added Path: " << rt);
@@ -717,7 +724,7 @@ ResponseContext::insertRecordRoute(resip::SipMessage& outgoing,
    // circumstances (on transport switch, for instance)
    if(!inboundFlowToken.empty() || needsOutboundFlowToken)
    {
-      outgoing.addOutboundDecorator(mRequestContext.mProxy.makeRRDecorator(doPathInstead));
+      outgoing.addOutboundDecorator(mRequestContext.mProxy.makeRRDecorator(doPathInstead, mIsSenderBehindNAT));
    }
 }
 
@@ -763,8 +770,9 @@ ResponseContext::getInboundFlowToken(bool doPathInstead)
    }
    
    if(flowToken.empty() &&
-      resip::InteropHelper::getRRTokenHackEnabled() &&
-      !selfAlreadyRecordRouted(doPathInstead) )
+      (resip::InteropHelper::getRRTokenHackEnabled() ||
+       mIsSenderBehindNAT)
+      && !selfAlreadyRecordRouted(doPathInstead) )
    {
       // !bwc! TODO remove this when flow-token hack is no longer needed.
       // Poor-man's outbound. Shouldn't be our default behavior, because it
@@ -789,7 +797,8 @@ ResponseContext::outboundFlowTokenNeeded(Target* target)
    }
 
    if(target->rec().mReceivedFrom.onlyUseExistingConnection
-      || resip::InteropHelper::getRRTokenHackEnabled())
+      || resip::InteropHelper::getRRTokenHackEnabled()
+      || mIsSenderBehindNAT)
    {
       return true;
    }

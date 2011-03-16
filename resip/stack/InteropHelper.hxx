@@ -40,6 +40,23 @@ class InteropHelper
       static bool getRRTokenHackEnabled(){return useRRTokenHack;}
       static void setRRTokenHackEnabled(bool enabled) {useRRTokenHack=enabled;}
       
+      enum ClientNATDetectionMode
+      {
+         ClientNATDetectionDisabled,
+         ClientNATDetectionEnabled,
+         ClientNATDetectionPrivateToPublicOnly
+      };
+
+      // If this is enabled, and we have clients not explicitly supporting outbound
+      // that we detect to be behind a NAT device, we will record-route with flow tokens 
+      // whenever possible. However, this will break several things:
+      // 1) Target-refreshes won't work.
+      // 2) Proxies that do not record-route may be implicitly included in the
+      //    route-set by this proxy, because a flow token may point to them.
+      // 3) Third-party registrations won't work.
+      static InteropHelper::ClientNATDetectionMode getClientNATDetectionMode(){return clientNATDetection;}
+      static void setClientNATDetectionMode(InteropHelper::ClientNATDetectionMode mode) {clientNATDetection=mode;}
+
    private:
       InteropHelper();
       ~InteropHelper();
@@ -49,6 +66,7 @@ class InteropHelper
       static unsigned int flowTimerSeconds;
       static unsigned int flowTimerGracePeriodSeconds;
       static bool useRRTokenHack;
+      static ClientNATDetectionMode clientNATDetection;
 };
 }
 

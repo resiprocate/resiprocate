@@ -10,6 +10,7 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TransactionTerminated.hxx"
 #include "resip/stack/Helper.hxx"
+#include "resip/stack/InteropHelper.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
 
@@ -99,8 +100,11 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
       assert(sip);
       mOriginalRequest=sip;
       original = true;
-	  
-	  // RFC 3261 Section 16.4
+      mResponseContext.mIsSenderBehindNAT = InteropHelper::getClientNATDetectionMode() != InteropHelper::ClientNATDetectionDisabled && 
+                                            Helper::isSenderBehindNAT(*sip, 
+                                                  InteropHelper::getClientNATDetectionMode() == InteropHelper::ClientNATDetectionPrivateToPublicOnly);
+     
+      // RFC 3261 Section 16.4
       try
       {
          fixStrictRouterDamage();

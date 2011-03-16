@@ -15,16 +15,19 @@
 namespace repro
 {
 RRDecorator::RRDecorator(const Proxy& proxy,
-                           bool doPath) :
+                         bool doPath,
+                         bool isOriginalSenderBehindNAT) :
    mProxy(proxy),
    mAddedRecordRoute(false),
-   mDoPath(doPath)
+   mDoPath(doPath),
+   mIsOriginalSenderBehindNAT(isOriginalSenderBehindNAT)
 {}
 
 RRDecorator::RRDecorator(const RRDecorator& orig) :
    mProxy(orig.mProxy),
    mAddedRecordRoute(false),
-   mDoPath(orig.mDoPath)
+   mDoPath(orig.mDoPath),
+   mIsOriginalSenderBehindNAT(orig.mIsOriginalSenderBehindNAT)
 {}
 
 RRDecorator::~RRDecorator()
@@ -58,6 +61,7 @@ RRDecorator::decorateMessage(resip::SipMessage& request,
    // just downstream will remain in the call-path throughout the dialog.
    if(destination.onlyUseExistingConnection 
       || resip::InteropHelper::getRRTokenHackEnabled()
+      || mIsOriginalSenderBehindNAT
       || !sigcompId.empty())
    {
       if(destination.getType()==resip::TLS || 
