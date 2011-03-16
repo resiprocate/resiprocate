@@ -75,6 +75,10 @@ SRC = 		TestSupport.cxx
 dumpasn1: dumpasn1.c
 	gcc -o dumpasn1 dumpasn1.c
 
+# Strip -DNDEBUG out of CFLAGS and CXXFLAGS, since these are test programs
+CFLAGS := $(shell echo "${CFLAGS}" | sed s/-DNDEBUG//g)
+CXXFLAGS := $(shell echo "${CXXFLAGS}" | sed s/-DNDEBUG//g)
+
 include $(BUILD)/Makefile.post
 
 ##############################################################################
