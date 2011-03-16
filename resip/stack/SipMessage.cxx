@@ -1061,11 +1061,6 @@ SipMessage::releaseContents()
       ret.reset(0);
    }
 
-   // .bwc. At this point, the Contents object has been parsed, so we don't need
-   // this anymore.
-   delete mContentsHfv;
-   mContentsHfv=0;
-
    return ret;
 }
 
