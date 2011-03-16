@@ -555,10 +555,11 @@ Proxy::getRecordRouteEnabled() const
 }
 
 std::auto_ptr<resip::MessageDecorator> 
-Proxy::makeRRDecorator(bool doPathInstead) const
+Proxy::makeRRDecorator(bool doPathInstead, bool isOriginalSenderBehindNAT) const
 {
    return std::auto_ptr<resip::MessageDecorator>(new RRDecorator(*this,
-                                                               doPathInstead));
+                                                                 doPathInstead,
+                                                                 isOriginalSenderBehindNAT));
 }
 
 bool 

@@ -22,8 +22,6 @@
 #include "rutil/compat.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "resip/stack/SipMessage.hxx"
-//#include "resip/stack/SecurityAttributes.hxx"
-//#include "resip/stack/Contents.hxx"
 #include "resip/stack/Pkcs7Contents.hxx"
 #include "resip/stack/MultipartSignedContents.hxx"
 #include "resip/stack/MultipartMixedContents.hxx"
@@ -2148,6 +2146,33 @@ auto_ptr<SdpContents> Helper::getSdp(Contents* tree)
 
    //DebugLog(<< "No sdp" << endl);
    return emptysdp;
+}
+
+bool 
+Helper::isSenderBehindNAT(const SipMessage& request, bool privateToPublicOnly)
+{
+   assert(request.isRequest());
+   assert(!request.header(h_Vias).empty());
+
+   // If received parameter is on top Via, then the source of the message doesn't match
+   // the address provided in the via.  Assume this is because the sender is behind a NAT.
+   if(request.header(h_Vias).front().exists(p_received))
+   {
+      if(privateToPublicOnly)
+      {
+         if(Tuple(request.header(h_Vias).front().sentHost(), 0, UNKNOWN_TRANSPORT).isPrivateAddress() &&
+            !Tuple(request.header(h_Vias).front().param(p_received), 0, UNKNOWN_TRANSPORT).isPrivateAddress())
+         {
+            return true;
+         }
+         else
+         {
+            return false;
+         }
+      }
+      return true;
+   }
+   return false;
 }
 
 

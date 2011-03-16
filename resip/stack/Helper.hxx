@@ -541,6 +541,20 @@ class Helper
       // the tree.
       static std::auto_ptr<SdpContents> getSdp(Contents* tree);
 
+      /** Looks at SIP headers and message source for a mismatch to make an
+          assumption that the sender is behind a NAT device.
+
+          @param request Request message that we use for checking.
+
+          @privateToPublicOnly If enabled then we ensure that the via is private
+                               address and that the source was a public address.
+                               This allows us to ignore cases of private-private NAT'ing
+                               or false detections, when a server behind a load balancer
+                               is sending us requests and using the load balancer address
+                               in the Via, instead of the real of the adapter.
+      */
+      static bool isSenderBehindNAT(const SipMessage& request, bool privateToPublicOnly=true);
+
    private:
       class NonceHelperPtr
       {

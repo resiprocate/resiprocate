@@ -1,6 +1,7 @@
 #include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/InteropHelper.hxx"
 #include "resip/stack/SipMessage.hxx"
+#include "resip/stack/Helper.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/MasterProfile.hxx"
 #include "resip/dum/ServerRegistration.hxx"
@@ -483,8 +484,10 @@ ServerRegistration::tryFlow(ContactInstanceRecord& rec,
          }
       }
 
-      // Record-Route flow token hack; use with caution
-      if(InteropHelper::getRRTokenHackEnabled())
+      // Record-Route flow token hack, or client NAT detect hack; use with caution
+      if(InteropHelper::getRRTokenHackEnabled() ||
+         (InteropHelper::getClientNATDetectionMode() != InteropHelper::ClientNATDetectionDisabled &&
+          Helper::isSenderBehindNAT(msg, InteropHelper::getClientNATDetectionMode() == InteropHelper::ClientNATDetectionPrivateToPublicOnly)))
       {
          if(msg.header(h_Vias).size() == 1)
          {

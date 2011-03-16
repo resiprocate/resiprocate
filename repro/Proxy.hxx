@@ -82,7 +82,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
 
       int mTimerC;
       
-      std::auto_ptr<resip::MessageDecorator> makeRRDecorator(bool doPathInstead) const;
+      std::auto_ptr<resip::MessageDecorator> makeRRDecorator(bool doPathInstead, bool isOriginalSenderBehindNAT) const;
 
       bool compressionEnabled() const;
 
