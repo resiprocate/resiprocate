@@ -32,6 +32,7 @@ SelectInterruptor::SelectInterruptor()
    mReadThing = mSocket;
 #else
    int x = pipe(mPipe);
+   (void)x;
    assert( x != -1 );
    // make write-side non-blocking to avoid deadlock
    makeSocketNonBlocking(mPipe[1]);

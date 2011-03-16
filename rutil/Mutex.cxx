@@ -23,6 +23,7 @@ Mutex::Mutex()
 {
 #ifndef WIN32
     int  rc = pthread_mutex_init(&mId,0);
+    (void)rc;
     assert( rc == 0 );
 #else
 	// Note:  Windows Critical sections are recursive in nature and perhaps
@@ -38,6 +39,7 @@ Mutex::~Mutex ()
 {
 #ifndef WIN32
     int  rc = pthread_mutex_destroy(&mId);
+    (void)rc;
     assert( rc != EBUSY );  // currently locked 
     assert( rc == 0 );
 #else
@@ -51,6 +53,7 @@ Mutex::lock()
 {
 #ifndef WIN32
     int  rc = pthread_mutex_lock(&mId);
+    (void)rc;
     assert( rc != EINVAL );
     assert( rc != EDEADLK );
     assert( rc == 0 );
@@ -64,6 +67,7 @@ Mutex::unlock()
 {
 #ifndef WIN32
     int  rc = pthread_mutex_unlock(&mId);
+    (void)rc;
     assert( rc != EINVAL );
     assert( rc != EPERM );
     assert( rc == 0 );

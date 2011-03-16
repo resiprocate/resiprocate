@@ -418,6 +418,11 @@ Uri::operator==(const Uri& other) const
                {
                   DataParameter* dp1 = dynamic_cast<DataParameter*>(*it);
                   DataParameter* dp2 = dynamic_cast<DataParameter*>(otherParam);
+                  (void)dp1;
+                  (void)dp2;
+                  // ?bwc? It looks like we're just assuming the dynamic_cast 
+                  // will succeed everywhere else; why are we bothering to 
+                  // assert()?
                   assert(dp1);
                   assert(dp2);
                }
