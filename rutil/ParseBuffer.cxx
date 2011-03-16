@@ -302,7 +302,11 @@ ParseBuffer::skipToChars(const Data& sub)
 {
    const char* begSub = sub.mBuf;
    const char* endSub = sub.mBuf + sub.mSize;
-   assert(begSub != endSub);
+   if(begSub == endSub)
+   {
+      fail(__FILE__, __LINE__, "ParseBuffer::skipToChars() called with an "
+                                 "empty string. Don't do this!");
+   }
 
    while (true)
    {

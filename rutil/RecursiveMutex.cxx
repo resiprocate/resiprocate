@@ -101,6 +101,7 @@ RecursiveMutex::lock()
 {
 #ifndef WIN32
     int  rc = pthread_mutex_lock(&mId);
+    (void)rc;
     assert( rc != EINVAL );
     assert( rc != EDEADLK );
     assert( rc == 0 );
@@ -114,6 +115,7 @@ RecursiveMutex::unlock()
 {
 #ifndef WIN32
     int  rc = pthread_mutex_unlock(&mId);
+    (void)rc;
     assert( rc != EINVAL );
     assert( rc != EPERM );
     assert( rc == 0 );

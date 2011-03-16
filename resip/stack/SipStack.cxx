@@ -283,8 +283,14 @@ SipStack::getHostname()
    // if you change this, please #def old version for windows
    char hostName[1024];
    int err =  gethostname( hostName, sizeof(hostName) );
-   assert( err == 0 );
-
+   if(err != 0)
+   {
+      ErrLog(<< "gethostname failed with return " << err << " Returning "
+            "\"localhost\"");
+      assert(0);
+      return "localhost";
+   }
+   
    struct hostent* hostEnt = gethostbyname( hostName );
    if ( !hostEnt )
    {
@@ -314,15 +320,32 @@ SipStack::getHostAddress()
    // if you change this, please #def old version for windows
    char hostName[1024];
    int err =  gethostname( hostName, sizeof(hostName) );
-   assert( err == 0 );
-
+   if(err != 0)
+   {
+      ErrLog(<< "gethostname failed with return " << err << " Returning "
+            "\"127.0.0.1\"");
+      assert(0);
+      return "127.0.0.1";
+   }
+   
    struct hostent* hostEnt = gethostbyname( hostName );
-   assert( hostEnt );
-
+   if(!hostEnt)
+   {
+      ErrLog(<< "gethostbyname failed, returning \"127.0.0.1\"");
+      assert(0);
+      return "127.0.0.1";
+   }
+   
    struct in_addr* addr = (struct in_addr*) hostEnt->h_addr_list[0];
-   assert( addr );
-
-   // if you change this, please #def old version for windows
+   if( !addr )
+   {
+      ErrLog(<< "gethostbyname returned a hostent* with an empty h_addr_list,"
+               " returning \"127.0.0.1\"");
+      assert(0);
+      return "127.0.0.1";
+   }
+   
+   // if you change this, please #def old version for windows 
    char* addrA = inet_ntoa( *addr );
    Data ret(addrA);
 
