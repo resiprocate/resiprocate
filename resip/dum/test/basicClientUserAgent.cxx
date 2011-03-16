@@ -36,7 +36,7 @@ using namespace std;
 
 static unsigned int MaxRegistrationRetryTime = 1800;              // RFC5626 section 4.5 default
 static unsigned int BaseRegistrationRetryTimeAllFlowsFailed = 30; // RFC5626 section 4.5 default
-static unsigned int BaseRegistrationRetryTime = 90;               // RFC5626 section 4.5 default
+//static unsigned int BaseRegistrationRetryTime = 90;               // RFC5626 section 4.5 default
 static unsigned int NotifySendTime = 30;  // If someone subscribes to our test event package, then send notifies every 30 seconds
 static unsigned int FailedSubscriptionRetryTime = 60; 
 

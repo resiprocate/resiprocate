@@ -397,7 +397,7 @@ BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write)
          int ret = PEM_write_bio_X509(out, cert);
          assert(ret);
          
-         BIO_flush(out);
+         (void)BIO_flush(out);
          // get content in BIO buffer to our buffer.
          char* p = 0;
          size_t len = BIO_get_mem_data(out,&p);
@@ -577,7 +577,7 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type,
 #endif
          assert(ret);
          
-         BIO_flush(bio);
+         (void)BIO_flush(bio);
          char* p = 0;
          size_t len = BIO_get_mem_data(bio,&p);
          assert(p);
@@ -771,7 +771,7 @@ BaseSecurity::getPrivateKeyPEM( PEMType type,
 
    // get content in BIO buffer to our buffer.
    // hand our buffer to a Data object.
-   BIO_flush(out);
+   (void)BIO_flush(out);
    char* buf = 0;
    int len = BIO_get_mem_data(out, &buf);
    Data retVal(Data::Borrow, buf, len);
@@ -822,7 +822,7 @@ BaseSecurity::getPrivateKeyDER( PEMType type,
 
    // get content in BIO buffer to our buffer.
    // hand our buffer to a Data object.
-   BIO_flush(out);
+   (void)BIO_flush(out);
    char* buf = 0;
    int len = BIO_get_mem_data(out, &buf);
    Data retVal(Data::Borrow, buf, len);
@@ -1375,7 +1375,7 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
    DebugLog( << "created PKCS7 signature object " );
 
    i2d_PKCS7_bio(out,pkcs7);
-   BIO_flush(out);
+   (void)BIO_flush(out);
 
    char* outBuf=0;
    long size = BIO_get_mem_data(out,&outBuf);
@@ -1480,7 +1480,7 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
 
    i2d_PKCS7_bio(out,pkcs7);
 
-   BIO_flush(out);
+   (void)BIO_flush(out);
 
    char* outBuf=0;
    long size = BIO_get_mem_data(out,&outBuf);
@@ -1780,7 +1780,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
 
       return 0;
    }
-   BIO_flush(in);
+   (void)BIO_flush(in);
 
    int type=OBJ_obj2nid(pkcs7->type);
    switch (type)
@@ -1884,7 +1884,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
          throw Exception("Unsupported PKCS7 data type", __FILE__, __LINE__);
    }
 
-   BIO_flush(out);   
+   (void)BIO_flush(out);   
    BUF_MEM* bufMem;
    BIO_get_mem_ptr(out, &bufMem);
 
@@ -1892,7 +1892,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
    char* buffer = new char[len];
    memcpy(buffer, bufMem->data, len);
 
-   BIO_set_close(out, BIO_CLOSE);
+   (void)BIO_set_close(out, BIO_CLOSE);
    BIO_free(in);
    BIO_free(out);
    sk_X509_free(certs);
@@ -2039,7 +2039,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
 
       return first;
    }
-   BIO_flush(in);
+   (void)BIO_flush(in);
 
    int type=OBJ_obj2nid(pkcs7->type);
    switch (type)
@@ -2258,7 +2258,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
          return 0;
    }
 
-   BIO_flush(out);
+   (void)BIO_flush(out);
    char* outBuf=0;
    long size = BIO_get_mem_data(out,&outBuf);
    assert( size >= 0 );
