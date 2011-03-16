@@ -280,24 +280,11 @@ TlsConnection::checkState()
       bool matches = false;
       for(std::list<BaseSecurity::PeerName>::iterator it = mPeerNames.begin(); it != mPeerNames.end(); it++)
       {
-         if(it->mType == BaseSecurity::CommonName)
-         {
-            //allow wildcard match for subdomain name (RFC 2459)
-            if(BaseSecurity::matchHostName(it->mName, who().getTargetDomain()))
-            {
-               matches=true;
-               break;
-            }
-         }
-         else //it->mType == SubjectAltName
-      {
-            //no wildcards for SubjectAltName
-            if(isEqualNoCase(it->mName, who().getTargetDomain()))
+         if(BaseSecurity::matchHostName(it->mName, who().getTargetDomain()))
          {
              matches=true;
              break;
          }
-      }
       }
       if(!matches)
       {
