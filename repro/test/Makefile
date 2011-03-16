@@ -10,6 +10,10 @@ PACKAGES += REPRO RESIP RUTIL ARES OPENSSL PTHREAD POPT RADIUSCLIENTNG
 
 TESTPROGRAMS += testDispatcher.cxx
 
+# Strip -DNDEBUG out of CFLAGS and CXXFLAGS, since these are test programs
+CFLAGS := $(shell echo "${CFLAGS}" | sed s/-DNDEBUG//g)
+CXXFLAGS := $(shell echo "${CXXFLAGS}" | sed s/-DNDEBUG//g)
+
 include $(BUILD)/Makefile.post
 
 ##############################################################################
