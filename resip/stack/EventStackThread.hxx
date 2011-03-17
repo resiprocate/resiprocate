@@ -48,7 +48,17 @@ class EventStackThread : public ThreadIf
       virtual void shutdown();
 
    protected:
+      /*
+       * Return time (in milliseconds) until your next timer, or
+       * ~30sec for infinity.
+       */
       virtual unsigned int getTimeTillNextProcessMS() const;
+
+      /*
+       * Called after all socket IO and sip stack timers. Process
+       * any application timers here.
+       */
+      virtual void afterProcess();
 
    private:
       typedef std::vector<SipStack*> StackList;

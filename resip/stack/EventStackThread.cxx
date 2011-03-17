@@ -83,6 +83,7 @@ EventStackThread::thread()
          SipStack *ss = *it;
          ss->processTimers();
       }
+      afterProcess();
    }
    InfoLog (<< "Shutting down stack thread");
 }
@@ -98,6 +99,11 @@ unsigned int
 EventStackThread::getTimeTillNextProcessMS() const
 {
    return 10000;
+}
+
+void
+EventStackThread::afterProcess()
+{
 }
 
 /* ====================================================================
