@@ -33,6 +33,7 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
 /************************************************************************
+
   This application tests the core resip stack as a whole. It does
   this by creating two instances of SipStack, and sending messages
   (transactions) between them.
@@ -41,36 +42,47 @@ using namespace std;
   and event handling models (e.g., select, poll, epoll system calls),
   and this test application can excercise various combinations.
 
-  The various permutations and are controlled via the --thread-type option.
-  Note that because this testapp runs two stacks, its threading models
-  are unusual, and not a good template for a "normal" application.
+  =============================================
+  Options: --thread-type, --seltime, --intepoll
+  The various permutations and are controlled via the --thread-type
+  option.  Note that because this test application runs two stacks, its
+  threading models are unusual, and not a good template for a "normal"
+  application.
+
+  The default thread-type is now "event" to better model "typical"
+  applications.  The old behavior (pre-2011) can be obtained with
+  "--thread-type=common"; this is useful for debugging stack internal
+  issues since fewer threads running around.
+
   Values are:
 
     none        Everything (both stacks and test application) run in same
                 thread. App block for time specified by --seltime each
-                message cycle.  This defaults to zero, meaning app
-                will loop without every waiting, looking for any work to do.
+                message cycle.  This defaults to zero, meaning app will
+                loop without every waiting, looking for any work to do.
                 When non-zero, app will wait this before checking queues.
+                Because of the endless spinning checking for work to do,
+                this mode is not useful for profiling.
 
     common      Like "none", everything (both stacks and test application)
                 run in same thread. Thread blocks until something to do,
-                and stacks will be configured to break
-                the wait loop when there is something for app to do. This
-                avoids the endless spinning of "none", and is useful for
-                profiling.
+                and stacks will be configured to break the wait loop
+                when there is something for app to do. This avoids the
+                endless spinning of "none", and is useful for profiling.
 
     std         Each stack runs in its own thread, and that thread is
-                a "standard" select-based thread.
+                a "standard" select-based thread. This mode is now obsolete.
 
     intr        Each stack runs in its own thread, and that thread
                 is an interruptable select-based thread. Here, interruptable
                 means that when the app gives the thread work to do, it will
                 immediate wake up and do it, instead of waiting for
-                the select interval to expire.
+                the select interval to expire. This mode is now obsolete.
 
     event       Each stack runs in its own thread, and that thread
                 is an interruptable event-loop based thread. The specific
-                type of event-loop depends upon the underlying platform.
+                type of event-loop depends upon the underlying platform
+                and how you compiled the stack.
 
     epoll       Like "event", but specifically uses the epoll implmentation.
 
@@ -82,6 +94,18 @@ using namespace std;
     used (including select-based) but internally uses the epoll system
     call in hierarchical mode. This is largely obsolete at this point
     but is useful for differential profiling.
+
+  ===============
+  Option: --bind
+  The test application creates two stack and sends messages (requests
+  and responses) between them using UDP or TCP transports. The --bind
+  option controls where the UAS side is listening. This defaults to
+  "127.0.0.1"; we use this as default because it avoids any dependency on DNS.
+
+  If DNS is working on your system, then you can set this to the DNS name
+  of one of your interfaces. Or you can use --bind=='' and we'll try
+  to figure out your local DNS name.
+
 
 ************************************************************************/
 
@@ -196,13 +220,11 @@ SipStackAndThread::SipStackAndThread(const char *tType,
       CritLog(<<"Bad thread-type: "<<tType);
       exit(1);
    }
-   mStack = new SipStack(/*security*/0, 
-                         DnsStub::EmptyNameserverList,
-                         mEventIntr?mEventIntr:(mSelIntr?mSelIntr:notifyDn),
-                         /*stateless*/false, 
-                         /*sockFnc*/0, 
-                         /*comp*/0, 
-                         mPollGrp);
+   SipStackOptions options;
+   options.mAsyncProcessHandler = mEventIntr?mEventIntr
+      :(mSelIntr?mSelIntr:notifyDn);
+   options.mPollGrp = mPollGrp;
+   mStack = new SipStack(options);
    
    mStack->setFallbackPostNotify(notifyUp);
    if (mEventIntr) 
@@ -280,6 +302,237 @@ waitForTwoStacks(SipStackAndThread& receiver, SipStackAndThread& sender,
    sender->process(fdset);
 }
 
+struct StackThreadPair
+{
+   StackThreadPair(SipStackAndThread& receiver,
+     SipStackAndThread& sender, SharedAsyncNotify& sharedUp)
+      : mReceiver(receiver), mSender(sender), mSharedUp(sharedUp),
+       mSeltime(0), mNoStackThread(false), mCommonIntr(0)
+   {
+   }
+
+   bool wait(int& thisseltime);
+
+   SipStackAndThread& mReceiver;
+   SipStackAndThread& mSender;
+   SharedAsyncNotify& mSharedUp;
+   int mSeltime;
+   bool mNoStackThread;
+   SelectInterruptor *mCommonIntr;
+};
+
+bool
+StackThreadPair::wait(int& thisseltime) {
+   thisseltime = mSeltime;
+   bool isStrange = false;
+   if ( mNoStackThread )
+   {
+      // handles 'none' and 'common' thread-type
+      // if none, then commonIntr will be NULL
+      waitForTwoStacks( mReceiver, mSender, mCommonIntr, thisseltime, isStrange);
+   }
+   else
+   {
+      thisseltime = 4000;
+      bool gotPost = mSharedUp.waitNotify(thisseltime);
+      isStrange = !gotPost;
+   }
+   return isStrange;
+}
+
+
+static void
+performTest(int verbose, int runs, int window, int invite,
+      Data& bindIfAddr,
+      int numPorts, int senderPort, int registrarPort, const char *proto,
+      int sendSleepUs,
+      StackThreadPair& pair)
+{
+   NameAddr target;
+   target.uri().scheme() = "sip";
+   target.uri().user() = "fluffy";
+   target.uri().host() = bindIfAddr;
+   target.uri().port() = registrarPort;
+   target.uri().param(p_transport) = proto;
+
+   NameAddr contact;
+   contact.uri().scheme() = "sip";
+   contact.uri().user() = "fluffy";
+
+   NameAddr from = target;
+   from.uri().port() = senderPort;
+
+   UInt64 startTime = Timer::getTimeMs();
+   int outstanding=0;
+   int count = 0;
+   int sent = 0;
+
+   int rxReqTryCnt = 0, rxReqHitCnt = 0;
+   int rxRspTryCnt = 0, rxRspHitCnt = 0;
+
+   while (count < runs)
+   {
+      //InfoLog (<< "count=" << count << " messages=" << messages.size());
+
+      // load up the send window
+      while (sent < runs && outstanding < window)
+      {
+         DebugLog (<< "Sending " << count << " / " << runs << " (" << outstanding << ")");
+         target.uri().port() = registrarPort + (sent%numPorts);
+
+         SipMessage* next=0;
+         if (invite)
+         {
+            next = Helper::makeInvite( target, from, contact);
+         }
+         else
+         {
+            next = Helper::makeRegister( target, from, contact);
+         }
+
+         // The Via header serves two purposes:
+         // (1) tells the recipient where to send the response,
+         // (2) selects which Transport we send from
+         if (!bindIfAddr.empty() && numPorts > 1)
+         {
+             // currently TCP only honors Via if host is populated
+             // the "numPorts>1" test is for backwards compat
+             next->header(h_Vias).front().sentHost() = bindIfAddr;
+         }
+         next->header(h_Vias).front().sentPort() = senderPort + (sent%numPorts);
+         pair.mSender->send(std::auto_ptr<SipMessage>(next));
+         next = 0; // DON'T delete next; consumed by send above
+         outstanding++;
+         sent++;
+#ifndef WIN32
+         if (sendSleepUs>0)
+            usleep(sendSleepUs);
+#endif
+      }
+
+      int thisseltime = 0;
+      bool isStrange = pair.wait(thisseltime);
+      if (isStrange)
+      {
+         cout << "STRANGE: Stuck for long time: "
+             <<" sent="<<sent
+             <<" done="<<count
+             <<" thisseltime="<<thisseltime
+             <<endl;
+      }
+
+      for (;;)
+      {
+         static NameAddr contact;
+
+         ++rxReqTryCnt;
+         SipMessage* request = pair.mReceiver->receive();
+          if (request==NULL)
+             break;
+         ++rxReqHitCnt;
+         assert(request->isRequest());
+         SipMessage response;
+         switch (request->header(h_RequestLine).getMethod())
+         {
+            case INVITE:
+            {
+               DeprecatedDialog dlg(contact);
+               dlg.makeResponse(*request, response, 180);
+               pair.mReceiver->send(response);
+               dlg.makeResponse(*request, response, 200);
+               pair.mReceiver->send(response);
+               break;
+            }
+
+            case ACK:
+               break;
+
+            case BYE:
+               Helper::makeResponse(response, *request, 200);
+               pair.mReceiver->send(response);
+               break;
+
+            case REGISTER:
+               Helper::makeResponse(response, *request, 200);
+               pair.mReceiver->send(response);
+               break;
+            default:
+               assert(0);
+               break;
+         }
+         delete request;
+      }
+
+      for (;;)
+      {
+         ++rxRspTryCnt;
+         SipMessage* response = pair.mSender->receive();
+         if (response==NULL)
+            break;
+         ++rxRspHitCnt;
+         assert(response->isResponse());
+         switch(response->header(h_CSeq).method())
+         {
+            case REGISTER:
+               outstanding--;
+               count++;
+               break;
+
+            case INVITE:
+               if (response->header(h_StatusLine).statusCode() == 200)
+               {
+                  outstanding--;
+                  count++;
+
+                  DeprecatedDialog dlg(contact);
+                  dlg.createDialogAsUAC(*response);
+                  SipMessage* ack = dlg.makeAck();
+                  pair.mSender->send(*ack);
+                  delete ack;
+
+                  SipMessage* bye = dlg.makeBye();
+                  pair.mSender->send(*bye);
+                  delete bye;
+               }
+               break;
+
+            case BYE:
+               break;
+
+            default:
+               assert(0);
+               break;
+         }
+
+         delete response;
+      }
+   }
+   InfoLog (<< "Finished " << count << " runs");
+
+   UInt64 elapsed = Timer::getTimeMs() - startTime;
+   if (!invite)
+   {
+      cout << runs << " registrations performed in " << elapsed << " ms, a rate of "
+           << runs / ((float) elapsed / 1000.0) << " transactions per second." << endl;
+   }
+   else
+   {
+      cout << runs << " calls performed in " << elapsed << " ms, a rate of "
+           << runs / ((float) elapsed / 1000.0) << " calls per second." << endl;
+   }
+   if ( verbose )
+   {
+      cout << "Note: this test runs both sides (client and server)" << endl;
+
+      cout << "RxCnts: "
+        <<" Req="<<rxReqHitCnt<<"/"<<rxReqTryCnt
+        <<" ("<<(rxReqHitCnt*100/rxReqTryCnt)<<"%)"
+        <<" Rsp="<<rxRspHitCnt<<"/"<<rxRspTryCnt
+        <<" ("<<(rxRspHitCnt*100/rxRspTryCnt)<<"%)"
+        << endl;
+   }
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -287,9 +540,10 @@ main(int argc, char* argv[])
    const char* logType = "cout";
    const char* logLevel = "WARNING";
    const char* proto = "tcp";
-   char* bindAddr = 0;
+   const char* bindAddr = "127.0.0.1";
    int doListen = 1;
 
+   int verbose = 0;
    int runs = 10000;
    int window = 100;
    int seltime = 0;
@@ -298,7 +552,7 @@ main(int argc, char* argv[])
    int useInternalEPollMode = 0;
    int numPorts = 1;
    int portBase = 0;
-   const char* threadType = "none";
+   const char* threadType = "event";
    int tpFlags = 0;
    int sendSleepUs = 0;
 
@@ -317,6 +571,7 @@ main(int argc, char* argv[])
       {"protocol",    'p', POPT_ARG_STRING, &proto,     0, "protocol to use (tcp | udp)", 0},
       {"bind",        'b', POPT_ARG_STRING, &bindAddr,  0, "interface address to bind to",0},
       {"listen",      0,   POPT_ARG_INT,    &doListen,  0, "do not bind/listen sender ports", 0},
+      {"verbose",     0,   POPT_ARG_INT,    &verbose,   0, "verbose", 0},
       {"v6",          '6', POPT_ARG_NONE,   &v6     ,   0, "ipv6", 0},
       {"invite",      'i', POPT_ARG_NONE,   &invite ,   0, "send INVITE/BYE instead of REGISTER", 0},
 #if defined(HAVE_EPOLL)
@@ -338,8 +593,11 @@ main(int argc, char* argv[])
 #endif  // popt
    Log::initialize(logType, logLevel, argv[0]);
 
-   Data bindIfAddr(bindAddr ? bindAddr : (const char*)"");
-   InfoLog(<<"Binding to address: " << bindIfAddr);
+   Data bindIfAddr(bindAddr);
+   if ( bindIfAddr.size()==0 )
+   {
+      bindIfAddr = DnsUtil::getLocalHostName();
+   }
 
    cout << "Performing " << runs << " runs with"
      <<" win="<<window
@@ -348,7 +606,7 @@ main(int argc, char* argv[])
      <<" numports="<<numPorts
      <<" thread="<<threadType
      <<" intepoll="<<useInternalEPollMode
-     <<" sendIf="<<bindIfAddr
+     <<" bindIf="<<bindIfAddr
      <<" listen="<<doListen
      <<" tf="<<tpFlags
      <<"." << endl;
@@ -463,202 +721,14 @@ main(int argc, char* argv[])
    sender.run();
    receiver.run();
 
-   NameAddr target;
-   target.uri().scheme() = "sip";
-   target.uri().user() = "fluffy";
-   target.uri().host() = bindAddr ? bindAddr :DnsUtil::getLocalHostName();
-   target.uri().port() = registrarPort;
-   target.uri().param(p_transport) = proto;
+   StackThreadPair pair(receiver, sender, sharedUp);
+   pair.mSeltime = seltime;
+   pair.mCommonIntr = commonIntr;
+   pair.mNoStackThread = noStackThread;
 
-   NameAddr contact;
-   contact.uri().scheme() = "sip";
-   contact.uri().user() = "fluffy";
-
-#ifdef WIN32
-     target.uri().host() = Data("127.0.0.1");
-#endif
-
-   NameAddr from = target;
-   from.uri().port() = senderPort;
-
-   UInt64 startTime = Timer::getTimeMs();
-   int outstanding=0;
-   int count = 0;
-   int sent = 0;
-
-   int rxReqTryCnt = 0, rxReqHitCnt = 0;
-   int rxRspTryCnt = 0, rxRspHitCnt = 0;
-
-   while (count < runs)
-   {
-      //InfoLog (<< "count=" << count << " messages=" << messages.size());
-
-      // load up the send window
-      while (sent < runs && outstanding < window)
-      {
-         DebugLog (<< "Sending " << count << " / " << runs << " (" << outstanding << ")");
-         target.uri().port() = registrarPort + (sent%numPorts);
-
-         SipMessage* next=0;
-         if (invite)
-         {
-            next = Helper::makeInvite( target, from, contact);
-         }
-         else
-         {
-            next = Helper::makeRegister( target, from, contact);
-         }
-
-         // The Via header serves two purposes:
-         // (1) tells the recipient where to send the response,
-         // (2) selects which Transport we send from
-         if (!bindIfAddr.empty() && numPorts > 1)
-         {
-             // currently TCP only honors Via if host is populated
-             // the "numPorts>1" test is for backwards compat
-             next->header(h_Vias).front().sentHost() = bindIfAddr;
-         }
-         next->header(h_Vias).front().sentPort() = senderPort + (sent%numPorts);
-         sender->send(std::auto_ptr<SipMessage>(next));
-         next = 0; // DON'T delete next; consumed by send above
-         outstanding++;
-         sent++;
-#ifndef WIN32
-         if (sendSleepUs>0)
-            usleep(sendSleepUs);
-#endif
-      }
-
-      int thisseltime = seltime;
-      bool isStrange = false;
-      if ( noStackThread )
-      {
-         waitForTwoStacks( receiver, sender, commonIntr, thisseltime, isStrange);
-      }
-      else
-      {
-         thisseltime = 4000;
-         bool gotPost = sharedUp.waitNotify(thisseltime);
-         isStrange = !gotPost;
-      }
-      if (isStrange)
-      {
-         cout << "STRANGE: Stuck for long time: "
-             <<" sent="<<sent
-             <<" done="<<count
-             <<" thisseltime="<<thisseltime
-             <<endl;
-      }
-
-      for (;;)
-      {
-         static NameAddr contact;
-
-         ++rxReqTryCnt;
-         SipMessage* request = receiver->receive();
-          if (request==NULL)
-             break;
-         ++rxReqHitCnt;
-         assert(request->isRequest());
-         SipMessage response;
-         switch (request->header(h_RequestLine).getMethod())
-         {
-            case INVITE:
-            {
-               DeprecatedDialog dlg(contact);
-               dlg.makeResponse(*request, response, 180);
-               receiver->send(response);
-               dlg.makeResponse(*request, response, 200);
-               receiver->send(response);
-               break;
-            }
-
-            case ACK:
-               break;
-
-            case BYE:
-               Helper::makeResponse(response, *request, 200);
-               receiver->send(response);
-               break;
-
-            case REGISTER:
-               Helper::makeResponse(response, *request, 200);
-               receiver->send(response);
-               break;
-            default:
-               assert(0);
-               break;
-         }
-         delete request;
-      }
-
-      for (;;)
-      {
-         ++rxRspTryCnt;
-         SipMessage* response = sender->receive();
-         if (response==NULL)
-            break;
-         ++rxRspHitCnt;
-         assert(response->isResponse());
-         switch(response->header(h_CSeq).method())
-         {
-            case REGISTER:
-               outstanding--;
-               count++;
-               break;
-
-            case INVITE:
-               if (response->header(h_StatusLine).statusCode() == 200)
-               {
-                  outstanding--;
-                  count++;
-
-                  DeprecatedDialog dlg(contact);
-                  dlg.createDialogAsUAC(*response);
-                  SipMessage* ack = dlg.makeAck();
-                  sender->send(*ack);
-                  delete ack;
-
-                  SipMessage* bye = dlg.makeBye();
-                  sender->send(*bye);
-                  delete bye;
-               }
-               break;
-
-            case BYE:
-               break;
-
-            default:
-               assert(0);
-               break;
-         }
-
-         delete response;
-      }
-   }
-   InfoLog (<< "Finished " << count << " runs");
-
-   UInt64 elapsed = Timer::getTimeMs() - startTime;
-   if (!invite)
-   {
-      cout << runs << " registrations performed in " << elapsed << " ms, a rate of "
-           << runs / ((float) elapsed / 1000.0) << " transactions per second." << endl;
-   }
-   else
-   {
-      cout << runs << " calls performed in " << elapsed << " ms, a rate of "
-           << runs / ((float) elapsed / 1000.0) << " calls per second." << endl;
-   }
-   cout << "Note: this test runs both sides (client and server)" << endl;
-
-#if 1
-   cout << "RxCnts: "
-     <<" Req="<<rxReqHitCnt<<"/"<<rxReqTryCnt
-     <<" ("<<(rxReqHitCnt*100/rxReqTryCnt)<<"%)"
-     <<" Rsp="<<rxRspHitCnt<<"/"<<rxRspTryCnt
-     <<" ("<<(rxRspHitCnt*100/rxRspTryCnt)<<"%)"
-     << endl;
-#endif
+   performTest(verbose, runs, window, invite,
+      bindIfAddr, numPorts, senderPort, registrarPort, proto,
+      sendSleepUs, pair);
 
    sender.shutdown();
    receiver.shutdown();

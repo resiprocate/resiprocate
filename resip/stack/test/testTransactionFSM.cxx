@@ -82,7 +82,7 @@ class TestFSM  // this class is a friend of the SipStack and can directly access
    public:
       static void addMessage(SipStack* stack,SipMessage* message)
       {
-         stack->mTransactionController.mStateMacFifo.add(message);
+         stack->mTransactionController->mStateMacFifo.add(message);
       }
 };
 }
