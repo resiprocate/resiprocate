@@ -10,6 +10,7 @@
 namespace resip
 {
 
+class SipStackOptions;
 class SipStack;
 class SelectInterruptor;
 class EventThreadInterruptor;
@@ -43,7 +44,14 @@ class EventStackThread : public ThreadIf
       EventStackThread(SipStack& stack, EventThreadInterruptor& si, FdPollGrp& pollGrp);
       virtual ~EventStackThread();
 
+      /*
+       * If you use the 1st constructor form, use this after creating
+       * the stack to add it into the list to which the thread is providing
+       * cycles. Even with only one active stack, this approach can
+       * be used to solve the cyclic initialization problem.
+       */
       void addStack(SipStack& stack);
+
       virtual void thread();
       virtual void shutdown();
 
@@ -83,7 +91,64 @@ class EventThreadInterruptor : public SelectInterruptor, public FdPollItemIf
       FdPollItemHandle mPollItemHandle;
 };
 
-}
+/**
+    Helper class to properly manage event loop for simple applications.
+
+    To use:
+    {
+        EventStackSimpleMgr myMgr(implName);
+        SipStackOptions options;
+        options.something = something;
+        SipStack& myStack = myMgr.createStack(options);
+        // do other init here (like start dum)
+        myMgr.getThread.run();
+        // loop doing stuff with myStack until app finished
+        myMgr.getThread.shutdown();
+        myMgr.getThread.join();
+    }
+
+    There is nothing unique about this class; you can inline it all
+    into your app if want.
+**/
+class EventStackSimpleMgr
+{
+   public:
+      EventStackSimpleMgr(const char *implName);
+      ~EventStackSimpleMgr();
+      /*
+       * Configure {options} with our pollGrp and asyncHandler.
+       * Use this prior to creating your SipStack instance.
+       */
+      void setOptions(SipStackOptions& options);
+
+      /*
+       * Convenience function to create SipStack instance. Will add
+       * appropriate options, cerate the stack and add the stack to
+       * the thread.
+       */
+      SipStack& createStack(SipStackOptions& options);
+
+
+      /*
+       * Thread accessor.
+       * Use this to invoke addStack(), run(), shutdown(), join(), etc.
+       */
+      EventStackThread& getThread() { assert(mThread); return *mThread; }
+
+      /*
+       * Call to release all owned resources early. Stack must be
+       * stopped and thread joined prior to releasing.
+       */
+      void release();
+
+   protected:
+      FdPollGrp* mPollGrp;
+      EventThreadInterruptor* mIntr;
+      EventStackThread* mThread;
+      SipStack* mStack;
+};
+
+} // namespace
 
 #endif
 

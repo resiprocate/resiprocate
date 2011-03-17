@@ -47,6 +47,18 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
+SipStack::SipStack(const SipStackOptions& options)
+   :
+        mTUFifo(TransactionController::MaxTUFifoTimeDepthSecs,
+                TransactionController::MaxTUFifoSize),
+        mTuSelector(mTUFifo),
+        mAppTimers(mTuSelector),
+        mStatsManager(*this)
+{
+   init(options);
+}
+
+
 SipStack::SipStack(Security* pSecurity,
                    const DnsStub::NameserverList& additional,
                    AsyncProcessHandler* handler,
@@ -67,12 +79,12 @@ SipStack::SipStack(Security* pSecurity,
    mAsyncProcessHandler(handler),
    mTUFifo(TransactionController::MaxTUFifoTimeDepthSecs,
            TransactionController::MaxTUFifoSize),
+   mTuSelector(mTUFifo),
    mAppTimers(mTuSelector),
    mStatsManager(*this),
-   mTransactionController(*this),
+   mTransactionController(new TransactionController(*this, mPollGrp)),
    mShuttingDown(false),
    mStatisticsManagerEnabled(true),
-   mTuSelector(mTUFifo),
    mSocketFunc(socketFunc)
 {
    Timer::getTimeMs(); // initalize time offsets
@@ -86,10 +98,73 @@ SipStack::SipStack(Security* pSecurity,
       assert(0);
 #endif
    }
-   if (mPollGrp)
+   assert(!mShuttingDown);
+#if 0
+  // .kw. originally tried to share common init() for the two
+  // constructors, but too much risk for changing sequencing,
+  // first prove out new constructor before merging (or obsoleting)
+        mTUFifo(TransactionController::MaxTUFifoTimeDepthSecs,
+           TransactionController::MaxTUFifoSize),
+        mTuSelector(mTUFifo),
+        mAppTimers(mTuSelector),
+        mStatsManager(*this)
+{
+   SipStackOptions options;
+   options.mSecurity = pSecurity;
+   options.mExtraNameserverList = &additional;
+   options.mStateless = stateless;
+   options.mSocketFunc = socketFunc;
+   options.mCompression = compression;
+   options.mPollGrp = pollGrp;
+   init(options);
+#endif
+}
+
+void
+SipStack::init(const SipStackOptions& options)
+{
+   mShuttingDown = false;
+   mStatisticsManagerEnabled = true;
+   mSocketFunc = options.mSocketFunc;
+   mAsyncProcessHandler = options.mAsyncProcessHandler;
+
+   // .kw. note that stats manager has already called getTimeMs()
+   Timer::getTimeMs(); // initalize time offsets
+   Random::initialize();
+   initNetwork();
+
+   mUseInternalPoll = false;
+   mPollGrp = 0;
+   if ( options.mPollGrp )
    {
-      mTransactionController.setPollGrp(mPollGrp);
+      mPollGrp = options.mPollGrp;
    }
+   else if ( mDefaultUseInternalPoll )
+   {
+      mUseInternalPoll = true;
+      mPollGrp = FdPollGrp::create();
+   }
+
+#ifdef USE_SSL
+   mSecurity = options.mSecurity ? options.mSecurity : new Security();
+   mSecurity->preload();
+#else
+   mSecurity = 0;
+   assert(options.mSecurity==0);
+#endif
+
+   mDnsStub = new DnsStub(
+         options.mExtraNameserverList
+                ? *options.mExtraNameserverList : DnsStub::EmptyNameserverList,
+         options.mSocketFunc,
+         mAsyncProcessHandler,
+         mPollGrp);
+   mCompression = options.mCompression
+         ? options.mCompression : new Compression(Compression::NONE);
+
+   // WATCHOUT: the transaction controller constructor will
+   // grab the security, DnsStub, compression and statsManager
+   mTransactionController = new TransactionController(*this, mPollGrp);
 
    assert(!mShuttingDown);
 }
@@ -97,7 +172,8 @@ SipStack::SipStack(Security* pSecurity,
 SipStack::~SipStack()
 {
    DebugLog (<< "SipStack::~SipStack()");
-   mTransactionController.deleteTransports();
+   mTransactionController->deleteTransports();
+   delete mTransactionController;
 #ifdef USE_SSL
    delete mSecurity;
 #endif
@@ -122,7 +198,7 @@ SipStack::shutdown()
       mShuttingDown = true;
    }
 
-   mTransactionController.shutdown();
+   mTransactionController->shutdown();
 }
 
 Transport*
@@ -164,7 +240,7 @@ SipStack::addTransport( TransportType protocol,
    }
 
    InternalTransport* transport=0;
-   Fifo<TransactionMessage>& stateMacFifo = mTransactionController.transportSelector().stateMacFifo();
+   Fifo<TransactionMessage>& stateMacFifo = mTransactionController->transportSelector().stateMacFifo();
    try
    {
       switch (protocol)
@@ -251,13 +327,13 @@ SipStack::addTransport(std::auto_ptr<Transport> transport)
       }
    }
    mPorts.insert(transport->port());
-   mTransactionController.transportSelector().addTransport(transport);
+   mTransactionController->transportSelector().addTransport(transport);
 }
 
 Fifo<TransactionMessage>&
 SipStack::stateMacFifo()
 {
-   return mTransactionController.transportSelector().stateMacFifo();
+   return mTransactionController->transportSelector().stateMacFifo();
 }
 
 void
@@ -393,7 +469,7 @@ SipStack::send(const SipMessage& msg, TransactionUser* tu)
    }
    toSend->setFromTU();
 
-   mTransactionController.send(toSend);
+   mTransactionController->send(toSend);
    checkAsyncProcessHandler();
 }
 
@@ -408,7 +484,7 @@ SipStack::send(std::auto_ptr<SipMessage> msg, TransactionUser* tu)
    }
    msg->setFromTU();
 
-   mTransactionController.send(msg.release());
+   mTransactionController->send(msg.release());
    checkAsyncProcessHandler();
 }
 
@@ -419,7 +495,7 @@ SipStack::sendTo(std::auto_ptr<SipMessage> msg, const Uri& uri, TransactionUser*
    msg->setForceTarget(uri);
    msg->setFromTU();
 
-   mTransactionController.send(msg.release());
+   mTransactionController->send(msg.release());
    checkAsyncProcessHandler();
 }
 
@@ -432,7 +508,7 @@ SipStack::sendTo(std::auto_ptr<SipMessage> msg, const Tuple& destination, Transa
    msg->setDestination(destination);
    msg->setFromTU();
 
-   mTransactionController.send(msg.release());
+   mTransactionController->send(msg.release());
    checkAsyncProcessHandler();
 }
 
@@ -448,7 +524,7 @@ SipStack::sendTo(const SipMessage& msg, const Uri& uri, TransactionUser* tu)
    toSend->setForceTarget(uri);
    toSend->setFromTU();
 
-   mTransactionController.send(toSend);
+   mTransactionController->send(toSend);
    checkAsyncProcessHandler();
 }
 
@@ -464,7 +540,7 @@ SipStack::sendTo(const SipMessage& msg, const Tuple& destination, TransactionUse
    toSend->setDestination(destination);
    toSend->setFromTU();
 
-   mTransactionController.send(toSend);
+   mTransactionController->send(toSend);
    checkAsyncProcessHandler();
 }
 
@@ -535,14 +611,14 @@ SipStack::postMS( std::auto_ptr<ApplicationMessage> message,
 void
 SipStack::abandonServerTransaction(const Data& tid)
 {
-   mTransactionController.abandonServerTransaction(tid);
+   mTransactionController->abandonServerTransaction(tid);
    checkAsyncProcessHandler();
 }
 
 void
 SipStack::cancelClientInviteTransaction(const Data& tid)
 {
-   mTransactionController.cancelClientInviteTransaction(tid);
+   mTransactionController->cancelClientInviteTransaction(tid);
    checkAsyncProcessHandler();
 }
 
@@ -619,7 +695,7 @@ SipStack::processTimers()
    {
       mStatsManager.process();
    }
-   mTransactionController.processTimers();
+   mTransactionController->processTimers();
    mDnsStub->processTimers();
    mTuSelector.process();
    Lock lock(mAppTimerMutex);
@@ -637,11 +713,11 @@ SipStack::process(FdSet& fdset)
    if (mPollGrp)
    {
       mPollGrp->processFdSet(fdset);
-      mTransactionController.processTimers();
+      mTransactionController->processTimers();
    }
    else
    {
-      mTransactionController.process(fdset);
+      mTransactionController->process(fdset);
    }
    mTuSelector.process();
    if (mPollGrp)
@@ -665,7 +741,7 @@ SipStack::getTimeTillNextProcessMS()
 
    return resipMin(Timer::getMaxSystemTimeWaitMs(),
                   resipMin(mDnsStub->getTimeTillNextProcessMS(),
-                           resipMin(mTransactionController.getTimeTillNextProcessMS(),
+                           resipMin(mTransactionController->getTimeTillNextProcessMS(),
                                     resipMin(mTuSelector.getTimeTillNextProcessMS(), mAppTimers.msTillNextTimer()))));
 }
 
@@ -678,7 +754,7 @@ SipStack::buildFdSet(FdSet& fdset)
    }
    else
    {
-      mTransactionController.buildFdSet(fdset);
+      mTransactionController->buildFdSet(fdset);
       mDnsStub->buildFdSet(fdset);
    }
 }
@@ -718,13 +794,13 @@ SipStack::unregisterTransactionUser(TransactionUser& tu)
 void
 SipStack::registerMarkListener(MarkListener* listener)
 {
-   mTransactionController.registerMarkListener(listener);
+   mTransactionController->registerMarkListener(listener);
 }
 
 void
 SipStack::unregisterMarkListener(MarkListener* listener)
 {
-   mTransactionController.unregisterMarkListener(listener);
+   mTransactionController->unregisterMarkListener(listener);
 }
 
 DnsStub&
@@ -772,12 +848,12 @@ SipStack::dump(EncodeStream& strm)  const
         << "domains: " << Inserter(this->mDomains)
         << std::endl
         << " TUFifo size=" << this->mTUFifo.size() << std::endl
-        << " Timers size=" << this->mTransactionController.mTimers.size() << std::endl
+        << " Timers size=" << this->mTransactionController->mTimers.size() << std::endl
         << " AppTimers size=" << this->mAppTimers.size() << std::endl
-        << " ServerTransactionMap size=" << this->mTransactionController.mServerTransactionMap.size() << std::endl
-        << " ClientTransactionMap size=" << this->mTransactionController.mClientTransactionMap.size() << std::endl
-        << " Exact Transports=" << Inserter(this->mTransactionController.mTransportSelector.mExactTransports) << std::endl
-        << " Any Transports=" << Inserter(this->mTransactionController.mTransportSelector.mAnyInterfaceTransports) << std::endl;
+        << " ServerTransactionMap size=" << this->mTransactionController->mServerTransactionMap.size() << std::endl
+        << " ClientTransactionMap size=" << this->mTransactionController->mClientTransactionMap.size() << std::endl
+        << " Exact Transports=" << Inserter(this->mTransactionController->mTransportSelector.mExactTransports) << std::endl
+        << " Any Transports=" << Inserter(this->mTransactionController->mTransportSelector.mAnyInterfaceTransports) << std::endl;
    return strm;
 }
 
@@ -792,20 +868,20 @@ bool
 SipStack::isFlowAlive(const resip::Tuple& flow) const
 {
    return flow.getType()==UDP ||
-         mTransactionController.transportSelector().connectionAlive(flow);
+         mTransactionController->transportSelector().connectionAlive(flow);
 }
 
 void 
 SipStack::terminateFlow(const resip::Tuple& flow)
 {
-   mTransactionController.terminateFlow(flow);
+   mTransactionController->terminateFlow(flow);
    checkAsyncProcessHandler();
 }
 
 void 
 SipStack::enableFlowTimer(const resip::Tuple& flow)
 {
-   mTransactionController.enableFlowTimer(flow);
+   mTransactionController->enableFlowTimer(flow);
    checkAsyncProcessHandler();
 }
 

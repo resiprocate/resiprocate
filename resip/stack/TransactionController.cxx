@@ -29,7 +29,7 @@ using namespace resip;
 unsigned int TransactionController::MaxTUFifoSize = 0;
 unsigned int TransactionController::MaxTUFifoTimeDepthSecs = 0;
 
-TransactionController::TransactionController(SipStack& stack) :
+TransactionController::TransactionController(SipStack& stack, FdPollGrp *pollGrp) :
    mStack(stack),
    mDiscardStrayResponses(true),
    mFixBadDialogIdentifiers(true),
@@ -44,6 +44,7 @@ TransactionController::TransactionController(SipStack& stack) :
    mShuttingDown(false),
    mStatsManager(stack.mStatsManager)
 {
+   mTransportSelector.setPollGrp(pollGrp);
 }
 
 #if defined(WIN32) && !defined(__GNUC__)
@@ -72,12 +73,6 @@ void
 TransactionController::deleteTransports()
 {
    mTransportSelector.deleteTransports();
-}
-
-void
-TransactionController::setPollGrp(FdPollGrp *grp)
-{
-   mTransportSelector.setPollGrp(grp);
 }
 
 void

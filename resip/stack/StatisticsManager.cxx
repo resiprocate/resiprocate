@@ -38,12 +38,12 @@ void
 StatisticsManager::poll()
 {
    // get snapshot data now..
-   tuFifoSize = mStack.mTransactionController.getTuFifoSize();
-   transportFifoSizeSum = mStack.mTransactionController.sumTransportFifoSizes();
-   transactionFifoSize = mStack.mTransactionController.getTransactionFifoSize();
-   activeTimers = mStack.mTransactionController.getTimerQueueSize();
-   activeClientTransactions = mStack.mTransactionController.getNumClientTransactions();
-   activeServerTransactions = mStack.mTransactionController.getNumServerTransactions();   
+   tuFifoSize = mStack.mTransactionController->getTuFifoSize();
+   transportFifoSizeSum = mStack.mTransactionController->sumTransportFifoSizes();
+   transactionFifoSize = mStack.mTransactionController->getTransactionFifoSize();
+   activeTimers = mStack.mTransactionController->getTimerQueueSize();
+   activeClientTransactions = mStack.mTransactionController->getNumClientTransactions();
+   activeServerTransactions = mStack.mTransactionController->getNumServerTransactions();
 
    // .kw. At last check payload was > 146kB, which seems too large
    // to alloc on stack. Also, the post'd message has reference
