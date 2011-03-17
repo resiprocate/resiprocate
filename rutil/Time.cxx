@@ -224,24 +224,6 @@ ResipClock::getSystemTime()
 }
 
 UInt64
-ResipClock::getTimeMicroSec()
-{
-   return getSystemTime();
-}
-
-UInt64
-ResipClock::getTimeMs()
-{
-   return getSystemTime()/1000LL;
-}
-
-UInt64
-ResipClock::getTimeSecs()
-{
-   return getSystemTime()/1000000LL;
-}
-
-UInt64
 ResipClock::getForever()
 {
    assert( sizeof(UInt64) == 8 );
@@ -377,5 +359,6 @@ ResipClock::queryTimerInfo(unsigned &min, unsigned &max, unsigned &actual, bool 
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */
 
