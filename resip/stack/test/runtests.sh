@@ -41,7 +41,7 @@ drivers="
 	testSipFrag 
 	testSipMessage 
 	testSipMessageMemory 
-	testStack 
+	testStackStd.sh
 	testTcp 
 	testTime 
 	testTimer	 
