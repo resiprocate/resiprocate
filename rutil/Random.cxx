@@ -103,6 +103,9 @@ Random::getSimpleSeed()
       // .kw. previously just used the lower 32bits of getTimeMs()
       strm << ResipClock::getTimeMicroSec() << ":";
       strm << getpid();
+#if defined(RESIP_RANDOM_THREAD_LOCAL)
+      strm << ":" << ThreadIf::selfId();
+#endif
 #endif
    }
    return (unsigned int)buffer.hash();
