@@ -55,13 +55,25 @@ class ResipClock
 
       /** Returns the current clock time in microseconds.
       */
-      static UInt64 getTimeMicroSec();
+      static UInt64 getTimeMicroSec()
+      {
+         return getSystemTime();
+      }
+
+
       /** Returns the current clock time in milliseconds.
       */
-      static UInt64 getTimeMs();
+      static UInt64 getTimeMs()
+      {
+         return getSystemTime()/1000LL;
+      }
+
       /** Returns the current clock time in seconds.
       */
-      static UInt64 getTimeSecs();
+      static UInt64 getTimeSecs()
+      {
+         return getSystemTime()/1000000LL;
+      }
 
       /** Returns an absolute time in ms that is between 50% and 90% of
           passed in ms from now.
@@ -268,5 +280,5 @@ class ResipClock
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */
-
