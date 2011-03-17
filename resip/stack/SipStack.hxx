@@ -36,6 +36,74 @@ class AsyncProcessHandler;
 class Compression;
 class FdPollGrp;
 
+/**
+   This class holds constructor-time initialization arguments for SipStack.
+
+   Most values are pointers, and default to zero unless otherwise indicated.
+
+   It has public members:
+      mSecurity
+         Security Object required by the stack for TLS, DTLS, SMIME and
+         Identity-draft compliance.  If empty the stack will not support
+         these advanced security features.  The compile flag USE_SSL is
+         also required.  The security object will be owned by the SipStack
+         and deleted in the SipStack destructor.
+
+       mAsyncProcessHandler
+          AsyncProcessHandler that will be invoked when Messages
+          are posted to the stack.  Posted messages are added
+          to thread-safe queue, and then processed later within
+          event loop. For example:  SelectInterruptor.
+
+       mStateless
+          This parameter does not appear to be used. Default false.
+
+       mSocketFunc
+          A pointer to a function that will be called after a socket in
+          the DNS or SIP transport layers of the stack has been created.
+          This callback can be used to control low level socket options,
+          such as Quality-of-Service/DSCP.  Note:  For SIP TCP sockets
+          there is one call for the listen socket, and one (or two)
+          calls for each connection created afterwards.  For each inbound
+          TCP connection the first callback is called immediately before
+          the socket is connected, and if configured it is called again
+          after the connect call has completed and before the first data
+          is sent out.  On some OS's you cannot set QOS until the socket
+          is successfully connected.  To enable this behavior call:
+                  Connection::setEnablePostConnectSocketFuncCall();
+
+       mCompression
+          Compression configuration object required for
+          SigComp. If set to 0, then SigComp compression
+          will be disabled. The SipStack takes ownership of this object,
+          and will be deleted in the destructor.
+
+       mPollGrp
+          Polling group to support file-io callbacks.
+          See EventStackThread. The SipStack does NOT take ownership;
+          the application (or a helper such as EventStackSimpleMgr) must
+          release this object after the SipStack is destructed.
+**/
+class SipStackOptions
+{
+   public:
+      SipStackOptions()
+         : mSecurity(0), mExtraNameserverList(0),
+           mAsyncProcessHandler(0), mStateless(false),
+           mSocketFunc(0), mCompression(0), mPollGrp(0)
+      {
+      }
+
+      Security* mSecurity;
+      const DnsStub::NameserverList* mExtraNameserverList;
+      AsyncProcessHandler* mAsyncProcessHandler;
+      bool mStateless;
+      AfterSocketCreationFuncPtr mSocketFunc;
+      Compression *mCompression;
+      FdPollGrp* mPollGrp;
+};
+
+
 
 /**
    @ingroup resip_crit
@@ -47,7 +115,19 @@ class SipStack
 {
    public:
       /**
-          Constructor
+         Constructor. First instantiate SipStackOptions, then set
+         any values special to your application, then call this constructor.
+         The {options} instance is not referenced after construction (i.e.,
+         the SipStack doesn't keep a reference to it). However, it does
+         copy each individual value, and takes ownership of several
+         of the objects.
+      **/
+
+      SipStack(const SipStackOptions& options);
+
+      /**
+          Constructor. This constructor is obsolete. The SipStackOptions-based
+          constructor should be used instead.
 
           @param security   Security Object required by the stack for TLS, DTLS, SMIME
                             and Identity-draft compliance.  If 0 is passed in
@@ -529,22 +609,22 @@ class SipStack
 
       bool getFixBadDialogIdentifiers() const
       {
-         return mTransactionController.mFixBadDialogIdentifiers;
+         return mTransactionController->mFixBadDialogIdentifiers;
       }
 
       void setFixBadDialogIdentifiers(bool pFixBadDialogIdentifiers)
       {
-         mTransactionController.mFixBadDialogIdentifiers = pFixBadDialogIdentifiers;
+         mTransactionController->mFixBadDialogIdentifiers = pFixBadDialogIdentifiers;
       }
 
       inline bool getFixBadCSeqNumbers() const
       {
-         return mTransactionController.getFixBadCSeqNumbers();
+         return mTransactionController->getFixBadCSeqNumbers();
       }
 
       inline void setFixBadCSeqNumbers(bool pFixBadCSeqNumbers)
       {
-         mTransactionController.setFixBadCSeqNumbers(pFixBadCSeqNumbers);
+         mTransactionController->setFixBadCSeqNumbers(pFixBadCSeqNumbers);
       }
 
       void setContentLengthChecking(bool check)
@@ -567,6 +647,10 @@ class SipStack
       static void setDefaultUseInternalPoll(bool useInternal);
 
    private:
+      /// Performs bulk of work of constructor.
+      // WATCHOUT: can only be called once (just like constructor)
+      void init(const SipStackOptions& options);
+
       /// Notify an async process handler - if one has been registered
       void checkAsyncProcessHandler();
 
@@ -597,6 +681,9 @@ class SipStack
           longer be used by most applications - each TU now owns it's own Fifo. */
       TimeLimitFifo<Message> mTUFifo;
 
+      /// Responsible for routing messages to the correct TU based on installed rules
+      TuSelector mTuSelector;
+
       /// Protection for AppTimerQueue
       mutable Mutex mAppTimerMutex;
 
@@ -609,7 +696,7 @@ class SipStack
       StatisticsManager mStatsManager;
 
       /// All aspects of the Transaction State Machine / DNS resolver
-      TransactionController mTransactionController;
+      TransactionController* mTransactionController;
 
 
       /** store all domains that this stack is responsible for. Controlled by
@@ -625,8 +712,6 @@ class SipStack
       mutable Mutex mShutdownMutex;
       volatile bool mStatisticsManagerEnabled;
 
-      /// Responsible for routing messages to the correct TU based on installed rules
-      TuSelector mTuSelector;
 
       AfterSocketCreationFuncPtr mSocketFunc;
 

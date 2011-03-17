@@ -106,6 +106,67 @@ EventStackThread::afterProcess()
 {
 }
 
+
+/****************************************************************
+ *
+ * EventStackSimpleMgr
+ *
+ * This is a helper class that constructs the thread-related
+ * classes in the appropriate order, and destructs them when done.
+ * It is to help save typing in simple applications.
+ *
+ ****************************************************************/
+
+EventStackSimpleMgr::EventStackSimpleMgr(const char *implName)
+   : mPollGrp(0), mIntr(0), mThread(0), mStack(0)
+{
+   mPollGrp = FdPollGrp::create(implName);
+   mIntr = new EventThreadInterruptor(*mPollGrp);
+   mThread = new EventStackThread(*mIntr, *mPollGrp);
+}
+
+EventStackSimpleMgr::~EventStackSimpleMgr()
+{
+   release();
+}
+
+void
+EventStackSimpleMgr::setOptions(SipStackOptions& options)
+{
+   options.mPollGrp = mPollGrp;
+   options.mAsyncProcessHandler = mIntr;
+}
+
+
+SipStack&
+EventStackSimpleMgr::createStack(SipStackOptions& options)
+{
+   setOptions(options);
+   mStack = new SipStack(options);
+   mThread->addStack(*mStack);
+   return *mStack;
+}
+
+void
+EventStackSimpleMgr::release() {
+   if ( mThread )
+   {
+      delete mThread; mThread = NULL;
+   }
+   if ( mStack ) {
+      // we only delete the stack if we created, not if externally created
+      delete mStack; mStack = NULL;
+   }
+   if ( mIntr )
+   {
+      delete mIntr; mIntr = NULL;
+   }
+   if ( mPollGrp )
+   {
+      delete mPollGrp; mPollGrp = NULL;
+   }
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *

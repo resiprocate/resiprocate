@@ -23,7 +23,7 @@ class TransactionController
       static unsigned int MaxTUFifoSize;
       static unsigned int MaxTUFifoTimeDepthSecs;
 
-      TransactionController(SipStack& stack);
+      TransactionController(SipStack& stack, FdPollGrp *pollGrp);
       ~TransactionController();
 
       void process(FdSet& fdset);
@@ -31,9 +31,6 @@ class TransactionController
       unsigned int getTimeTillNextProcessMS();
       void buildFdSet(FdSet& fdset);
 
-      // set poll group to use (instead of buildFdSet/process)
-      void setPollGrp(FdPollGrp *grp);
-      
       // graceful shutdown (eventually)
       void shutdown();
 
