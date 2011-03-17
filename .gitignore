@@ -17,12 +17,14 @@ repro/reproInfo.hxx
 repro/repro
 
 resip/dum/test/BasicCall
+resip/dum/test/basicClient
 resip/dum/test/basicMessage
 resip/dum/test/basicRegister
 resip/dum/test/limpc
 resip/dum/test/testSMIMEInvite
 resip/dum/test/testSMIMEMessage
 resip/dum/test/treg
+resip/dum/test/testRequestValidationHandler
 
 resip/stack/.firstrun
 
@@ -97,6 +99,7 @@ rutil/test/testLogger
 rutil/test/testMD5Stream
 rutil/test/testParseBuffer
 rutil/test/testRandomHex
+rutil/test/testRandomThread
 rutil/test/testSHA1Stream
 rutil/test/testThreadIf
 
