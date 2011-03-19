@@ -18,6 +18,7 @@
 namespace resip
 {
 class SipMessage;
+class Transport;
 }
 
 namespace repro
@@ -250,9 +251,9 @@ class ResponseContext
       //a branch is very simple. The guts can be found in the API functions.
       
       void insertRecordRoute(resip::SipMessage& outgoing,
-                              const resip::Tuple& receivedTransport,
-                              Target* target,
-                              bool doPathInstead=false);
+                             const resip::Transport* receivedTransport,
+                             Target* target,
+                             bool doPathInstead=false);
       resip::Data getInboundFlowToken(bool doPathInstead);
       bool outboundFlowTokenNeeded(Target* target);
       bool selfAlreadyRecordRouted(bool doPathInstead);

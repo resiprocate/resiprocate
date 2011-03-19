@@ -3,10 +3,10 @@
 #include "resip/stack/Compression.hxx"
 #include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/SipStack.hxx"
-// #include "resip/stack/StackThread.hxx"
 #include "resip/stack/InterruptableStackThread.hxx"
 #include "resip/stack/EventStackThread.hxx"
 #include "resip/stack/Tuple.hxx"
+#include "resip/stack/InteropHelper.hxx"
 #include "resip/dum/DumThread.hxx"
 #include "resip/dum/InMemoryRegistrationDatabase.hxx"
 #include "rutil/DnsUtil.hxx"
@@ -211,6 +211,7 @@ main(int argc, char** argv)
       stack.setEnumSuffixes(enumSuffixes);
    }
 
+   bool allTransportsSpecifyRecordRoute=false;
    try
    {
       // An example of how to use this follows. This sets up 2 transports, 1 TLS
@@ -219,38 +220,91 @@ main(int argc, char** argv)
       // Note: If you specify interfaces the other transport arguments have no effect
       if (!args.mInterfaces.empty())
       {
+         allTransportsSpecifyRecordRoute = true;
          for (std::vector<Data>::iterator i=args.mInterfaces.begin(); 
               i != args.mInterfaces.end(); ++i)
          {
-            Uri intf(*i);
-            if(!DnsUtil::isIpAddress(intf.host()))
+            try
             {
-               CritLog(<< "Malformed IP-address found in the --interfaces (-i) command-line option: " << intf.host());
-            }
-            TransportType tt = Tuple::toTransport(intf.param(p_transport));
-            ExtensionParameter p_rcvbuf("rcvbuf"); // SO_RCVBUF
-            int rcvBufLen = 0;
-            if ( intf.exists(p_rcvbuf) && !intf.param(p_rcvbuf).empty() )
-                rcvBufLen = intf.param(p_rcvbuf).convertInt();
-            // maybe do transport-type dependent processing of buf?
+               Uri intf(*i);
+               if(!DnsUtil::isIpAddress(intf.host()))
+               {
+                  CritLog(<< "Malformed IP-address found in the --interfaces (-i) command-line option: " << intf.host());
+               }
+               TransportType tt = Tuple::toTransport(intf.param(p_transport));
+               ExtensionParameter p_rcvbuf("rcvbuf"); // SO_RCVBUF
+               int rcvBufLen = 0;
+               if (intf.exists(p_rcvbuf) && !intf.param(p_rcvbuf).empty())
+               {
+                  rcvBufLen = intf.param(p_rcvbuf).convertInt();
+               }
+               // maybe do transport-type dependent processing of buf?
 
-            ExtensionParameter p_tls("tls"); // for specifying tls domain
-            Transport *t = stack.addTransport(tt,
-                               intf.port(),
-                               DnsUtil::isIpV6Address(intf.host()) ? V6 : V4,
-                               StunEnabled, 
-                               intf.host(), // interface to bind to
-                               intf.param(p_tls));
-             if (t && rcvBufLen>0 )
-             {
+               ExtensionParameter p_tls("tls"); // for specifying tls domain
+               Transport *t = stack.addTransport(tt,
+                                 intf.port(),
+                                 DnsUtil::isIpV6Address(intf.host()) ? V6 : V4,
+                                 StunEnabled, 
+                                 intf.host(), // interface to bind to
+                                 intf.param(p_tls));
+               if (t && rcvBufLen>0 )
+               {
 #if defined(RESIP_SIPSTACK_HAVE_FDPOLL)
-                // this new method is part of the epoll changeset,
-                // which isn't commited yet.
-                t->setRcvBufLen(rcvBufLen);
+                  // this new method is part of the epoll changeset,
+                  // which isn't commited yet.
+                  t->setRcvBufLen(rcvBufLen);
 #else
-                assert(0);
+                   assert(0);
 #endif
-             }
+               }
+               ExtensionParameter p_rr("rr"); // for specifying transport specific record route
+               if(intf.exists(p_rr))
+               {
+                  // Note:  Any ';' in record-route must be escaped as %3b
+                  // repro -i "sip:192.168.1.200:5060;transport=tcp;rr=sip:example.com%3btransport=tcp,sip:192.168.1.200:5060;transport=udp;rr=sip:example.com%3btransport=udp"
+                  try
+                  {
+                     if(intf.param(p_rr).empty())
+                     {
+                        if(tt == TLS || tt == DTLS)
+                        {
+                           NameAddr rr;
+                           rr.uri().host()=intf.param(p_tls);
+                           t->setRecordRoute(rr);
+                           InfoLog (<< "Transport specific record-route enabled (generated): " << rr);
+                        }
+                        else
+                        {
+                           NameAddr rr;
+                           rr.uri().host()=intf.host();
+                           rr.uri().port()=intf.port();
+                           rr.uri().param(resip::p_transport)=resip::Tuple::toDataLower(tt);
+                           t->setRecordRoute(rr);
+                           InfoLog (<< "Transport specific record-route enabled (generated): " << rr);
+                        }
+                     }
+                     else
+                     {
+                        NameAddr rr(intf.param(p_rr).charUnencoded());
+                        t->setRecordRoute(rr);
+                        InfoLog (<< "Transport specific record-route enabled: " << rr);
+                     }
+                  }
+                  catch(BaseException& e)
+                  {
+                     ErrLog (<< "Invalid transport record-route uri provided (ignoring): " << e);
+                     allTransportsSpecifyRecordRoute = false;
+                  }
+               }
+               else 
+               {
+                  allTransportsSpecifyRecordRoute = false;
+               }
+            }
+            catch(ParseException& e)
+            {
+               ErrLog (<< "Invalid transport uri provided (ignoring): " << e);
+            }
          }
       }
       else
@@ -287,6 +341,24 @@ main(int argc, char** argv)
       exit(-1);
    }
    
+   if((InteropHelper::getOutboundSupported() 
+         || InteropHelper::getRRTokenHackEnabled()
+         || InteropHelper::getClientNATDetectionMode() != InteropHelper::ClientNATDetectionDisabled
+         || args.mAssumePath
+         || args.mForceRecordRoute
+      )
+      && !(allTransportsSpecifyRecordRoute || !args.mRecordRoute.host().empty()))
+   {
+      CritLog(<< "In order for outbound support, the Record-Route flow-token"
+      " hack, or force-record-route to work, you MUST specify a Record-Route URI. Launching "
+      "without...");
+      InteropHelper::setOutboundSupported(false);
+      InteropHelper::setRRTokenHackEnabled(false);
+      InteropHelper::setClientNATDetectionMode(InteropHelper::ClientNATDetectionDisabled);
+      args.mAssumePath = false;
+      args.mForceRecordRoute=false;
+   }
+
    std::auto_ptr<ThreadIf> stackThread(NULL);
 #if defined(HAVE_EPOLL)
    if ( args.mUseEventThread )
