@@ -38,7 +38,7 @@ RequestContextFactory::createRequestContext(Proxy& proxy,
 
 Proxy::Proxy(SipStack& stack, 
              const Uri& recordRoute,
-             bool enableRecordRoute,
+             bool forceRecordRoute,
              ProcessorChain& requestP, 
              ProcessorChain& responseP, 
              ProcessorChain& targetP, 
@@ -47,7 +47,7 @@ Proxy::Proxy(SipStack& stack,
    : TransactionUser(TransactionUser::RegisterForTransactionTermination),
      mStack(stack), 
      mRecordRoute(recordRoute),
-     mRecordRouteEnabled(enableRecordRoute),
+     mRecordRouteForced(forceRecordRoute),
      mAssumePath(false),
      mRequestProcessorChain(requestP), 
      mResponseProcessorChain(responseP),
@@ -539,23 +539,21 @@ Proxy::isMyUri(const Uri& uri) const
 }
 
 const resip::NameAddr& 
-Proxy::getRecordRoute() const
+Proxy::getRecordRoute(const Transport* transport) const
 {
+   assert(transport);
+   if(transport->hasRecordRoute())
+   {
+      // Transport specific record-route found
+      return transport->getRecordRoute();
+   }
    return mRecordRoute;
 }
 
 bool
-Proxy::getRecordRouteEnabled() const
+Proxy::getRecordRouteForced() const
 {
-   return mRecordRouteEnabled;
-}
-
-std::auto_ptr<resip::MessageDecorator> 
-Proxy::makeRRDecorator(bool doPathInstead, bool isOriginalSenderBehindNAT) const
-{
-   return std::auto_ptr<resip::MessageDecorator>(new RRDecorator(*this,
-                                                                 doPathInstead,
-                                                                 isOriginalSenderBehindNAT));
+   return mRecordRouteForced;
 }
 
 bool 

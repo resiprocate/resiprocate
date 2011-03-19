@@ -6,6 +6,7 @@
 #include "rutil/Fifo.hxx"
 #include "resip/stack/TransportFailure.hxx"
 #include "resip/stack/Tuple.hxx"
+#include "resip/stack/NameAddr.hxx"
 #include "resip/stack/Compression.hxx"
 
 namespace resip
@@ -177,9 +178,16 @@ class Transport
       // set the receive buffer length (SO_RCVBUF)
       virtual void setRcvBufLen(int buflen) { };	// make pure?
 
+      // Storing and retrieving transport specific record-route header
+      virtual void setRecordRoute(const NameAddr& recordRoute) { mRecordRoute = recordRoute; mHasRecordRoute = true; }
+      virtual bool hasRecordRoute() const { return mHasRecordRoute; }
+      virtual const NameAddr& getRecordRoute() const { assert(mHasRecordRoute); return mRecordRoute; }
+
    protected:
       Data mInterface;
       Tuple mTuple;
+      NameAddr mRecordRoute;
+      bool mHasRecordRoute;
 
       Fifo<TransactionMessage>& mStateMachineFifo; // passed in
       bool mShuttingDown;

@@ -280,30 +280,16 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       ConnectionManager::EnableAgressiveGc = true;
    }
    
-   if((InteropHelper::getOutboundSupported() 
-         || InteropHelper::getRRTokenHackEnabled()
-         || InteropHelper::getClientNATDetectionMode() != InteropHelper::ClientNATDetectionDisabled
-         || mForceRecordRoute
-      )
-      && !recordRouteUri)
-   {
-      CritLog(<< "In order for outbound support, the Record-Route flow-token"
-      " hack, or force-record-route to work, you MUST specify a Record-Route URI. Launching "
-      "without...");
-      InteropHelper::setOutboundSupported(false);
-      InteropHelper::setRRTokenHackEnabled(false);
-      InteropHelper::setClientNATDetectionMode(InteropHelper::ClientNATDetectionDisabled);
-      mForceRecordRoute=false;
-   }
-
    mXmlRpcPort = xmlRpcPort;
    if(regSyncPeerAddress)
    {
        mRegSyncPeerAddress = regSyncPeerAddress;
    }
 
-   if ( serverText && serverText[0] )
-       mServerText = resip::Data(serverText);
+   if (serverText && serverText[0])
+   {
+      mServerText = resip::Data(serverText);
+   }
    mUseInternalEPoll = useInternalEPoll?true:false;
    mUseEventThread = useEventThread?true:false;
 

@@ -13,6 +13,7 @@
 namespace resip
 {
 class SipStack;
+class Transport;
 }
 
 namespace repro
@@ -46,7 +47,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
    public:
       Proxy(resip::SipStack&,
             const resip::Uri& recordRoute, 
-            bool enableRecordRoute,
+            bool forceRecordRoute,
             ProcessorChain& requestP, 
             ProcessorChain& responseP,
             ProcessorChain& targetP,
@@ -65,8 +66,8 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       virtual void thread();
       
       bool isMyUri(const resip::Uri& uri) const;
-      const resip::NameAddr& getRecordRoute() const;
-      bool getRecordRouteEnabled() const;
+      const resip::NameAddr& getRecordRoute(const resip::Transport* transport) const;
+      bool getRecordRouteForced() const;
 
       void setAssumePath(bool f) { mAssumePath = f; }
       bool getAssumePath() const { return mAssumePath; }
@@ -82,8 +83,6 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
 
       int mTimerC;
       
-      std::auto_ptr<resip::MessageDecorator> makeRRDecorator(bool doPathInstead, bool isOriginalSenderBehindNAT) const;
-
       bool compressionEnabled() const;
 
       void addSupportedOption(const resip::Data& option);
@@ -97,7 +96,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
    private:
       resip::SipStack& mStack;
       resip::NameAddr mRecordRoute;
-      bool mRecordRouteEnabled;
+      bool mRecordRouteForced;
       bool mAssumePath;
       resip::Data mServerText;
       

@@ -15,6 +15,7 @@
 #include "repro/Proxy.hxx"
 #include "repro/ResponseContext.hxx"
 #include "repro/RequestContext.hxx"
+#include "repro/RRDecorator.hxx"
 #include "repro/Ack200DoneMessage.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
@@ -568,29 +569,33 @@ ResponseContext::beginClientTransaction(repro::Target* target)
    // Potential source Record-Route addition only for new dialogs
    // !bwc! It looks like we really ought to be record-routing in-dialog
    // stuff.
-   if ( !inDialog &&  // only for dialog-creating request
-        (request.method() == INVITE ||
-         request.method() == SUBSCRIBE ||
-         request.method() == REFER) &&
-        !mRequestContext.mProxy.getRecordRoute().uri().host().empty())  // only add record route if configured to do so
+
+   // only add record route if configured to do so
+   if(!mRequestContext.mProxy.getRecordRoute(orig.getReceivedTransport()).uri().host().empty())
    {
-      insertRecordRoute(request,
-                        orig.getReceivedTransport()->getTuple(),
-                        target);
-   }
-   else if(request.method()==REGISTER &&
-           (mRequestContext.mProxy.getAssumePath() ||
-            (!request.empty(h_Supporteds) &&
-            (  request.header(h_Supporteds).find(Token(Symbols::Path)) ||
-               request.header(h_Supporteds).find(Token(Symbols::Outbound))))))
-   {
-      insertRecordRoute(request,
-                        orig.getReceivedTransport()->getTuple(),
-                        target,
-                        true /* do Path instead */);
-      if(!request.header(h_Supporteds).find(Token(Symbols::Path)))
+      if (!inDialog &&  // only for dialog-creating request
+          (request.method() == INVITE ||
+           request.method() == SUBSCRIBE ||
+           request.method() == REFER))
       {
-         request.header(h_Supporteds).push_back(Token(Symbols::Path));
+         insertRecordRoute(request,
+                           orig.getReceivedTransport(),
+                           target);
+      }
+      else if(request.method()==REGISTER &&
+              (mRequestContext.mProxy.getAssumePath() ||
+               (!request.empty(h_Supporteds) &&
+                (request.header(h_Supporteds).find(Token(Symbols::Path)) ||
+                 request.header(h_Supporteds).find(Token(Symbols::Outbound))))))
+      {
+         insertRecordRoute(request,
+                           orig.getReceivedTransport(),
+                           target,
+                           true /* do Path instead */);
+         if(!request.header(h_Supporteds).find(Token(Symbols::Path)))
+         {
+            request.header(h_Supporteds).push_back(Token(Symbols::Path));
+         }
       }
    }
       
@@ -625,7 +630,8 @@ ResponseContext::beginClientTransaction(repro::Target* target)
    //should be the same from here on out.
    request.header(h_Vias).push_front(target->via());
 
-   if(!mRequestContext.mInitialTimerCSet)
+   if(!mRequestContext.mInitialTimerCSet &&
+      mRequestContext.getOriginalRequest().method()==INVITE)
    {
       mRequestContext.mInitialTimerCSet=true;
       mRequestContext.updateTimerC();
@@ -641,47 +647,47 @@ ResponseContext::beginClientTransaction(repro::Target* target)
 }
 
 void
-ResponseContext::insertRecordRoute(resip::SipMessage& outgoing,
-                                    const Tuple& receivedTransport,
-                                    Target* target,
-                                    bool doPathInstead)
+ResponseContext::insertRecordRoute(SipMessage& outgoing,
+                                   const Transport* receivedTransport,
+                                   Target* target,
+                                   bool doPathInstead)
 {
    resip::Data inboundFlowToken=getInboundFlowToken(doPathInstead);
    bool needsOutboundFlowToken=outboundFlowTokenNeeded(target);
-
+   bool recordRouted=false;
    // .bwc. If we have a flow-token we need to insert, we need to record-route.
    // Also, we might record-route if we are configured to do so.
    if( !inboundFlowToken.empty() 
       || needsOutboundFlowToken 
-      || mRequestContext.mProxy.getRecordRouteEnabled() )
+      || mRequestContext.mProxy.getRecordRouteForced() )
    {
       resip::NameAddr rt;
       if(inboundFlowToken.empty())
       {
-         rt=mRequestContext.mProxy.getRecordRoute();
+         rt=mRequestContext.mProxy.getRecordRoute(receivedTransport);
       }
       else
       {
-         if(receivedTransport.getType()==TLS || 
-            receivedTransport.getType()==DTLS)
+         if(receivedTransport->getTuple().getType()==TLS || 
+            receivedTransport->getTuple().getType()==DTLS)
          {
             // .bwc. Debatable. Should we be willing to reuse a TLS connection
             // at the behest of a Route header with no hostname in it?
-            rt=mRequestContext.mProxy.getRecordRoute();
+            rt=mRequestContext.mProxy.getRecordRoute(receivedTransport);
             rt.uri().scheme() = "sips";
          }
          else
          {
-            if(receivedTransport.isAnyInterface())
+            if(receivedTransport->getTuple().isAnyInterface())
             {
-               rt.uri().host()=mRequestContext.mProxy.getRecordRoute().uri().host();
+               rt=mRequestContext.mProxy.getRecordRoute(receivedTransport);
             }
             else
             {
-               rt.uri().host()=resip::Tuple::inet_ntop(receivedTransport);
+               rt.uri().host()=resip::Tuple::inet_ntop(receivedTransport->getTuple());
             }
-            rt.uri().port()=receivedTransport.getPort();
-            rt.uri().param(resip::p_transport)=resip::Tuple::toDataLower(receivedTransport.getType());
+            rt.uri().port()=receivedTransport->getTuple().getPort();
+            rt.uri().param(resip::p_transport)=resip::Tuple::toDataLower(receivedTransport->getTuple().getType());
          }
          rt.uri().user()=inboundFlowToken;
       }
@@ -696,6 +702,7 @@ ResponseContext::insertRecordRoute(resip::SipMessage& outgoing,
       }
 #endif
 
+      recordRouted=true;
       if(doPathInstead)
       {
          if(!inboundFlowToken.empty())
@@ -717,15 +724,17 @@ ResponseContext::insertRecordRoute(resip::SipMessage& outgoing,
       }
    }
 
-   // .bwc. We only double record-route if we are putting in a flow-token.
-   // (if we are configured to always record-route, we will have already record-
-   // routed once above, no sense in putting a second, identical RR in.)
-   // !bwc! TODO some logic or config to allow double record-routing in other
-   // circumstances (on transport switch, for instance)
-   if(!inboundFlowToken.empty() || needsOutboundFlowToken)
-   {
-      outgoing.addOutboundDecorator(mRequestContext.mProxy.makeRRDecorator(doPathInstead, mIsSenderBehindNAT));
-   }
+   // .bwc. We always need to add this, since we never know if a transport 
+   // switch is going to happen.
+   std::auto_ptr<resip::MessageDecorator> rrDecorator(
+                              new RRDecorator(mRequestContext.mProxy,
+                                             receivedTransport,
+                                             recordRouted,
+                                             !inboundFlowToken.empty(),
+                                             mRequestContext.mProxy.getRecordRouteForced(),
+                                             doPathInstead,
+                                             mIsSenderBehindNAT));
+   outgoing.addOutboundDecorator(rrDecorator);
 }
 
 resip::Data
@@ -985,7 +994,10 @@ ResponseContext::processResponse(SipMessage& response)
    switch (code / 100)
    {
       case 1:
-         mRequestContext.updateTimerC();
+         if(mRequestContext.getOriginalRequest().method()==INVITE)
+         {
+            mRequestContext.updateTimerC();
+         }
 
          if  (!mRequestContext.mHaveSentFinalResponse)
          {

@@ -358,9 +358,9 @@ BaseSecurity::addCertPEM (PEMType type,
    cert = PEM_read_bio_X509(in,0,0,0);
    if (cert == NULL)
    {
-	   ErrLog( << "Could not load X509 cert from '" << certPEM << "'" );
-	   BIO_free(in); 
-	   throw Exception("Could not load X509 cert from BIO buffer", __FILE__,__LINE__);
+      ErrLog( << "Could not load X509 cert from '" << certPEM << "'" );
+      BIO_free(in); 
+      throw Exception("Could not load X509 cert from BIO buffer", __FILE__,__LINE__);
    }
    
    addCertX509(type,name,cert,write);

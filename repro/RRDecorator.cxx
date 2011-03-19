@@ -7,27 +7,38 @@
 #include "resip/stack/InteropHelper.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Tuple.hxx"
+#include "resip/stack/Transport.hxx"
 
 #include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
+using resip::ExtensionParameter;
+using resip::NameAddr;
+using resip::UDP;
+using resip::h_RecordRoutes;
+using resip::h_Paths;
+using resip::h_RequestLine;
+using resip::h_Routes;
+using resip::p_comp;
+
 namespace repro
 {
 RRDecorator::RRDecorator(const Proxy& proxy,
+                         const resip::Transport* receivedTransport,
+                         bool alreadySingleRecordRouted,
+                         bool hasInboundFlowToken,
+                         bool forceRecordRouteEnabled,
                          bool doPath,
                          bool isOriginalSenderBehindNAT) :
    mProxy(proxy),
-   mAddedRecordRoute(false),
+   mAddedRecordRoute(0),
+   mAlreadySingleRecordRouted(alreadySingleRecordRouted),
+   mHasInboundFlowToken(hasInboundFlowToken),
+   mForceRecordRouteEnabled(forceRecordRouteEnabled),
    mDoPath(doPath),
-   mIsOriginalSenderBehindNAT(isOriginalSenderBehindNAT)
-{}
-
-RRDecorator::RRDecorator(const RRDecorator& orig) :
-   mProxy(orig.mProxy),
-   mAddedRecordRoute(false),
-   mDoPath(orig.mDoPath),
-   mIsOriginalSenderBehindNAT(orig.mIsOriginalSenderBehindNAT)
+   mIsOriginalSenderBehindNAT(isOriginalSenderBehindNAT),
+   mReceivedTransport(receivedTransport)
 {}
 
 RRDecorator::~RRDecorator()
@@ -41,33 +52,73 @@ RRDecorator::decorateMessage(resip::SipMessage& request,
 {
    DebugLog(<<"Proxy::decorateMessage called.");
    resip::NameAddr rt;
-   resip::NameAddrs* routes=0;
-   if(mDoPath)
+
+   if(isTransportSwitch(source))
    {
-      if(!request.empty(resip::h_Paths))
+      if(mAlreadySingleRecordRouted)
       {
-         routes=&(request.header(resip::h_Paths));
+         singleRecordRoute(request, source, destination, sigcompId);
+      }
+      else
+      {
+         doubleRecordRoute(request, source, destination, sigcompId);
       }
    }
    else
    {
-      if(!request.empty(resip::h_RecordRoutes))
+      // We might still want to record-route in this case; if we need an 
+      // outbound flow token or something.
+      if(outboundFlowTokenNeeded(request, source, destination, sigcompId))
       {
-         routes=&(request.header(resip::h_RecordRoutes));
+         assert(mAlreadySingleRecordRouted);
+         singleRecordRoute(request, source, destination, sigcompId);
       }
    }
 
-   // .bwc. Any of these cases means that we are assuming that whoever is
+   static ExtensionParameter p_drr("drr");
+   resip::NameAddrs* routes=0;
+   if(mDoPath)
+   {
+      routes=&(request.header(resip::h_Paths));
+   }
+   else
+   {
+      routes=&(request.header(resip::h_RecordRoutes));
+   }
+
+   if(routes->size() > 1 && 
+      mAddedRecordRoute && 
+      routes->front().uri().exists(p_drr))
+   {
+      // .bwc. It is possible that we have duplicate Record-Routes at this 
+      // point, if we have done a transport switch but both transports use the 
+      // same FQDN.
+      resip::NameAddrs::iterator second = ++(routes->begin());
+      if(*second == routes->front())
+      {
+         // Duplicated record-routes; pare down to a single one.
+         routes->pop_front();
+         --mAddedRecordRoute;
+         routes->front().uri().remove(p_drr);
+      }
+   }
+}
+
+void 
+RRDecorator::singleRecordRoute(resip::SipMessage& request, 
+                               const resip::Tuple &source,
+                               const resip::Tuple &destination,
+                               const resip::Data& sigcompId)
+{
+   resip::NameAddr rt;
+   // .bwc. outboundFlowTokenNeeded means that we are assuming that whoever is
    // just downstream will remain in the call-path throughout the dialog.
-   if(destination.onlyUseExistingConnection 
-      || resip::InteropHelper::getRRTokenHackEnabled()
-      || mIsOriginalSenderBehindNAT
-      || !sigcompId.empty())
+   if(outboundFlowTokenNeeded(request, source, destination, sigcompId))
    {
       if(destination.getType()==resip::TLS || 
          destination.getType()==resip::DTLS)
       {
-         rt = mProxy.getRecordRoute();
+         rt = mProxy.getRecordRoute(destination.transport);
          rt.uri().scheme()="sips";
       }
       else
@@ -76,75 +127,130 @@ RRDecorator::decorateMessage(resip::SipMessage& request,
          // existing flow to the next hop.
          rt.uri().host()=resip::Tuple::inet_ntop(source);
          rt.uri().port()=source.getPort();
-         rt.uri().param(resip::p_transport)=resip::Tuple::toDataLower(source.getType());
+         rt.uri().param(resip::p_transport)=resip::Tuple::toData(source.getType());
       }
       // .bwc. If our target has an outbound flow to us, we need to put a flow
       // token in a Record-Route.
       resip::Helper::massageRoute(request,rt);
       resip::Data binaryFlowToken;
-      resip::Tuple::writeBinaryToken(destination, binaryFlowToken, Proxy::FlowTokenSalt);
+      resip::Tuple::writeBinaryToken(destination,binaryFlowToken, Proxy::FlowTokenSalt);
+      
       rt.uri().user()=binaryFlowToken.base64encode();
    }
-   else if(routes
-            && mProxy.isMyUri(routes->front().uri())
-            && !(routes->front().uri().user().empty()))
+   else
    {
-      // .bwc. If we Record-Routed earlier with a flow-token, we need to
-      // add a second Record-Route (to make in-dialog stuff work both ways)
-      rt = mProxy.getRecordRoute();
+      // No need for a flow-token; just use an ordinary record-route.
+      rt = mProxy.getRecordRoute(destination.transport);
       resip::Helper::massageRoute(request,rt);
    }
-   
+
 #ifdef USE_SIGCOMP
-   if(mRequestContext.mProxy.compressionEnabled() && !sigcompId.empty())
+   if(mProxy.compressionEnabled() && !sigcompId.empty())
    {
       rt.uri().param(p_comp)="sigcomp";
    }
 #endif
 
-   // This pushes the Record-Route that represents the interface from
-   // which the request is being sent
-   //
-   // .bwc. This shouldn't duplicate the previous Record-Route, since rt only
-   // gets defined if we need to double-record-route. (ie, the source or the
-   // target had an outbound flow to us). The only way these could end up the
-   // same is if the target and source were the same entity.
-   if (!rt.uri().host().empty())
+   static ExtensionParameter p_drr("drr");
+   rt.uri().param(p_drr);
+
+   resip::NameAddrs* routes=0;
+   if(mDoPath)
    {
-      static resip::ExtensionParameter p_drr("drr");
-      rt.uri().param(p_drr);
-      if(mDoPath)
-      {
-         request.header(resip::h_Paths).front().uri().param(p_drr);
-         request.header(resip::h_Paths).push_front(rt);
-         InfoLog (<< "Added outbound Path: " << rt);
-      }
-      else
-      {
-         request.header(resip::h_RecordRoutes).front().uri().param(p_drr);
-         request.header(resip::h_RecordRoutes).push_front(rt);
-         InfoLog (<< "Added outbound Record-Route: " << rt);
-      }
-      mAddedRecordRoute=true;
+      routes=&(request.header(resip::h_Paths));
+      InfoLog(<< "Adding outbound Path: " << rt);
    }
+   else
+   {
+      routes=&(request.header(resip::h_RecordRoutes));
+      InfoLog(<< "Adding outbound Record-Route: " << rt);
+   }
+
+   routes->front().uri().param(p_drr);
+   routes->push_front(rt);
+   ++mAddedRecordRoute;
+}
+
+void 
+RRDecorator::doubleRecordRoute(resip::SipMessage& request, 
+                               const resip::Tuple &source,
+                               const resip::Tuple &destination,
+                               const resip::Data& sigcompId)
+{
+   // We only use this on transport switch when we have not yet Record-Routed.
+   // If we needed a flow-token in the inbound Record-Route, it would have been 
+   // added already.
+   resip::NameAddr rt(mProxy.getRecordRoute(mReceivedTransport));
+   resip::Helper::massageRoute(request,rt);
+   if(mDoPath)
+   {
+      request.header(h_Paths).push_front(rt);
+   }
+   else
+   {
+      request.header(h_RecordRoutes).push_front(rt);
+   }
+   ++mAddedRecordRoute;
+   singleRecordRoute(request, source, destination, sigcompId);
+}
+
+bool 
+RRDecorator::isTransportSwitch(const resip::Tuple& sendingFrom)
+{
+   if(mForceRecordRouteEnabled)
+   {
+      // If we are forcing record routes to be added, then DRR on any transport switch
+      return mReceivedTransport != sendingFrom.transport;
+   }
+   else
+   {
+      // If record routing is not forced then only DRR if we are switching transport types or
+      // protocol versions, since the interfaces themselves may all be equally reachable
+      return sendingFrom.getType() != mReceivedTransport->getTuple().getType() ||
+             sendingFrom.ipVersion() != mReceivedTransport->getTuple().ipVersion();
+   }
+}
+
+bool 
+RRDecorator::outboundFlowTokenNeeded(resip::SipMessage &msg, 
+                                     const resip::Tuple &source,
+                                     const resip::Tuple &destination,
+                                     const resip::Data& sigcompId)
+{
+   return (destination.onlyUseExistingConnection            // destination is an outbound target
+           || mHasInboundFlowToken                          // or we have an inbound flow
+           || resip::InteropHelper::getRRTokenHackEnabled() // or the token is enabled
+           || mIsOriginalSenderBehindNAT                    // or the nat detection hack is enabled
+           || !sigcompId.empty());                          // or we are routing to a SigComp transport 
+                                                            // ?slg? For Sigcomp are we guaranteed to always have 
+                                                            // single RR at this point?  If not, then strangeness 
+                                                            // will happen when singleRecordRoute adds a ;drr param
 }
 
 void 
 RRDecorator::rollbackMessage(resip::SipMessage& request) 
 {
-   if(mAddedRecordRoute)
+   resip::NameAddrs* routes=0;
+   if(mDoPath)
    {
-      if(mDoPath)
-      {
-         assert(!request.header(resip::h_Paths).empty());
-         request.header(resip::h_Paths).pop_front();
-      }
-      else
-      {
-         assert(!request.header(resip::h_RecordRoutes).empty());
-         request.header(resip::h_RecordRoutes).pop_front();
-      }
-      mAddedRecordRoute=false;
+      routes=&(request.header(resip::h_Paths));
+   }
+   else
+   {
+      routes=&(request.header(resip::h_RecordRoutes));
+   }
+
+   while(mAddedRecordRoute--)
+   {
+      assert(!routes->empty());
+      routes->pop_front();
+   }
+
+   if(mAlreadySingleRecordRouted)
+   {
+      // Make sure we remove the drr param if it is there.
+      static ExtensionParameter p_drr("drr");
+      routes->front().uri().remove(p_drr);
    }
 }
 
