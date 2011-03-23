@@ -150,6 +150,7 @@ class DnsResult : public DnsResultSink
             
             Data key; // SRV record key
             
+            int naptrpref;
             TransportType transport;
             int priority;
             int weight;
@@ -227,8 +228,8 @@ class DnsResult : public DnsResultSink
       std::deque<Tuple> mResults;
       std::vector<Tuple> mGreylistedTuples;
       
-      // The best NAPTR record. Only one NAPTR record will be selected
-      NAPTR mPreferredNAPTR;
+      // Map of NAPTR records by replacement (ie. SRV lookup key)
+      std::map<Data, NAPTR> mTopOrderedNAPTRs;
 
       // used in determining the next SRV record to use as per rfc2782
       int mCumulativeWeight; // for current priority
