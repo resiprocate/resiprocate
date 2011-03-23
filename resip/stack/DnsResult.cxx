@@ -515,8 +515,8 @@ DnsResult::getDefaultPort(TransportType transport, int port)
       return port;
    }
 
-	assert(0);
-	return 0;
+   assert(0);
+   return 0;
 }
 
 void
@@ -537,23 +537,21 @@ DnsResult::primeResults()
       StackLog (<< "No A or AAAA record for " << next.target << " in additional records");
       if (mInterface.isSupported(mTransport, V6) || mInterface.isSupported(mTransport, V4))
       {
-         Item top;
-         while (!mCurrentPath.empty())
+         Item item;
+         clearCurrPath();
+         // Check if SRV came from a NAPTR look up
+         std::map<Data, NAPTR>::iterator it = mTopOrderedNAPTRs.find(next.key);
+         if(it != mTopOrderedNAPTRs.end())
          {
-            top = mCurrentPath.back();
-            if (top.rrType != T_NAPTR)
-            {
-               mCurrentPath.pop_back();
-            }
-            else
-            {
-               break;
-            }
+            item.domain = (*it).second.key;
+            item.rrType = T_NAPTR;
+            item.value = (*it).second.replacement;
+            mCurrentPath.push_back(item);
          }
-         top.domain = next.key;
-         top.rrType = T_SRV;
-         top.value = next.target + ":" + Data(next.port);
-         mCurrentPath.push_back(top);
+         item.domain = next.key;
+         item.rrType = T_SRV;
+         item.value = next.target + ":" + Data(next.port);
+         mCurrentPath.push_back(item);
          lookupHost(next.target);
       }
       else
@@ -758,27 +756,34 @@ DnsResult::SRV::SRV() : priority(0), weight(0), port(0)
 bool 
 DnsResult::SRV::operator<(const DnsResult::SRV& rhs) const
 {
-   if (transport < rhs.transport)
+   if (naptrpref < rhs.naptrpref)
    {
       return true;
    }
-   else if (transport == rhs.transport)
+   else if(naptrpref == rhs.naptrpref)
    {
-      if (priority < rhs.priority)
+      if (transport < rhs.transport)
       {
          return true;
       }
-      else if (priority == rhs.priority)
+      else if (transport == rhs.transport)
       {
-         if (weight < rhs.weight)
+         if (priority < rhs.priority)
          {
             return true;
          }
-         else if (weight == rhs.weight)
+         else if (priority == rhs.priority)
          {
-            if (target < rhs.target)
+            if (weight < rhs.weight)
             {
                return true;
+            }
+            else if (weight == rhs.weight)
+            {
+               if (target < rhs.target)
+               {
+                  return true;
+               }
             }
          }
       }
@@ -1026,6 +1031,16 @@ void DnsResult::onDnsResult(const DNSResult<DnsSrvRecord>& result)
          srv.weight = (*it).weight();
          srv.port = (*it).port();
          srv.target = (*it).target();
+         // fillin srv.naptrpref - if found in NAPTR map, then SRV query was driven from a NAPTR lookup
+         std::map<Data, NAPTR>::iterator itNaptr = mTopOrderedNAPTRs.find(srv.key);
+         if(itNaptr != mTopOrderedNAPTRs.end())
+         {
+            srv.naptrpref = itNaptr->second.pref;
+         }
+         else
+         {
+            srv.naptrpref = 0;
+         }
          if (srv.key.find("_sips._udp") != Data::npos)
          {
             srv.transport = DTLS;
@@ -1207,6 +1222,8 @@ DnsResult::onNaptrResult(const DNSResult<DnsNaptrRecord>& result)
    bool bFail = false;
    if (result.status == 0)
    {
+      int preferredNAPTROrder=65536; // order is unsigned short - so max is 65535, initialize to one higher
+      std::list<NAPTR> supportedNAPTRs;
       for (vector<DnsNaptrRecord>::const_iterator it = result.records.begin(); it != result.records.end(); ++it)
       {
          NAPTR naptr;
@@ -1218,36 +1235,42 @@ DnsResult::onNaptrResult(const DNSResult<DnsNaptrRecord>& result)
          naptr.replacement = (*it).replacement();
          naptr.service = (*it).service();
          
-         StackLog (<< "Adding NAPTR record: " << naptr);
+         StackLog (<< "Received NAPTR record: " << naptr);
          
          if ( !mSips || naptr.service.find("SIPS") == 0)
          {
-            if (mInterface.isSupported(naptr.service) && naptr < mPreferredNAPTR)
+            if (mInterface.isSupported(naptr.service))
             {
-               mPreferredNAPTR = naptr;
-               StackLog (<< "Picked preferred: " << mPreferredNAPTR);
+               supportedNAPTRs.push_back(naptr);
+               if(naptr.order < preferredNAPTROrder)
+               {               
+                  preferredNAPTROrder = naptr.order;
+               }
             }
          }
       }
 
       // This means that dns / NAPTR is misconfigured for this client 
-      if (mPreferredNAPTR.key.empty())
+      if (supportedNAPTRs.empty())
       {
          StackLog (<< "There are no NAPTR records supported by this client so do an SRV lookup instead");
          bFail = true;
       }
       else
       {
+         // Go through NAPTR's and issue SRV queries for each supported record, that has equal
+         // ordering to the most preferred order discovered above
          transition(Pending);
-         Item item;
-         item.domain = mPreferredNAPTR.key;
-         item.rrType = T_NAPTR;
-         item.value = mPreferredNAPTR.replacement;
-         clearCurrPath();
-         mCurrentPath.push_back(item);
-         mSRVCount++;
-         InfoLog (<< "Doing SRV lookup of " << mPreferredNAPTR.replacement);
-         mDns.lookup<RR_SRV>(mPreferredNAPTR.replacement, Protocol::Sip, this);
+         for (std::list<NAPTR>::const_iterator it = supportedNAPTRs.begin(); it != supportedNAPTRs.end(); ++it)
+         {
+            if(preferredNAPTROrder == (*it).order)
+            {
+               StackLog (<< "NAPTR record is supported and matches highes priority order. doing SRV query: " << (*it));
+               mTopOrderedNAPTRs[(*it).replacement] = (*it);
+               mSRVCount++;
+               mDns.lookup<RR_SRV>((*it).replacement, Protocol::Sip, this);
+            }
+         }
       }
    }
    else
