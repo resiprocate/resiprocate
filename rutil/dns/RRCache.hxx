@@ -31,12 +31,14 @@ class RRCache
       ~RRCache();
       void setTTL(int ttl) { if (ttl > 0) mUserDefinedTTL = ttl * MIN_TO_SEC; }
       void setSize(int size) { mSize = size; }
+      // Update existing cache record, or add a new one
       void updateCache(const Data& target,
                        const int rrType,
                        Itr  begin, 
                        Itr  end);
       void updateCacheFromHostFile(const DnsHostRecord&);
-      void cacheTTL(const Data& target,                    
+      // Called to update the cache when there are DNS server errors (ie. record not found)
+      void cacheTTL(const Data& target,
                     const int rrType,
                     const int status,
                     RROverlay overlay);
