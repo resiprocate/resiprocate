@@ -809,11 +809,11 @@ DnsStub::doLogDnsCache()
 void
 DnsStub::setDnsCacheTTL(int ttl)
 {
-	mRRCache.setTTL(ttl);
+   mRRCache.setTTL(ttl);
 }
 
 void
 DnsStub::setDnsCacheSize(int size)
 {
-	mRRCache.setSize(size);
+   mRRCache.setSize(size);
 }

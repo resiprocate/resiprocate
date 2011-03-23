@@ -355,8 +355,9 @@ DnsResult::lookupInternal(const Uri& uri)
          }
       }
    }
-   else 
+   else // transport parameter is not specified
    {
+      // if hostname is numeric, a port is specified, or NAPTR queries are not support by the DNS layer - skip NAPTR lookup
       if (isNumeric || uri.port() != 0 || !mDns.supportedType(T_NAPTR))
       {
          TupleMarkManager::MarkType mark=TupleMarkManager::BLACK;

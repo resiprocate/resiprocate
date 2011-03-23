@@ -136,8 +136,8 @@ class DnsStub : public ExternalDnsHandler
       const std::vector<Data>& getEnumSuffixes() const;
       void clearDnsCache();
       void logDnsCache();
-	  void setDnsCacheTTL(int ttl);
-	  void setDnsCacheSize(int size);
+      void setDnsCacheTTL(int ttl);
+      void setDnsCacheSize(int size);
       bool checkDnsChange();
       bool supportedType(int);
 
