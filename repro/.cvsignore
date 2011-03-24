@@ -15,3 +15,7 @@ repro_config.db
 repro_route.db
 repro_user.db
 userAdmin
+Debug
+Release
+SSL-Debug
+SSL-Release

@@ -72,6 +72,8 @@ testXMLCursor
 core.*
 Debug
 Release
+SSL-Debug
+SSL-Release
 *.stackdump
 testFileSystem
 testExternalLogger
