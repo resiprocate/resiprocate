@@ -11,8 +11,10 @@ HashMap<Mime, ContentsFactoryBase*>* ContentsFactoryBase::FactoryMap = 0;
 ContentsFactoryBase::ContentsFactoryBase(const Mime& contentType)
    : mContentType(contentType)
 {
-   assert(ContentsFactoryBase::getFactoryMap().count(contentType) == 0);
-   ContentsFactoryBase::getFactoryMap()[contentType] = this;
+   // .amr. Due to multiple static initializers, this can be called more than once for a mimetype
+   // so gracefully handle it
+   if(ContentsFactoryBase::getFactoryMap().count(contentType) == 0)
+      ContentsFactoryBase::getFactoryMap()[contentType] = this;
 }
 
 ContentsFactoryBase::~ContentsFactoryBase()
