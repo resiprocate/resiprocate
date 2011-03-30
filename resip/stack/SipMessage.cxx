@@ -935,6 +935,17 @@ SipMessage::setBody(const char* start, UInt32 len)
 }
 
 void
+SipMessage::setRawBody(const HeaderFieldValue* body)
+{
+   setContents(0);
+   if ( body && body->mFieldLength > 0 )
+   {
+      mContentsHfv = new HeaderFieldValue(*body);
+   }
+}
+
+
+void
 SipMessage::setContents(auto_ptr<Contents> contents)
 {
    Contents* contentsP = contents.release();

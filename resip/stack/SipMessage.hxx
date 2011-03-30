@@ -271,6 +271,24 @@ class SipMessage : public TransactionMessage
       const HeaderFieldValueList* getRawHeader(Headers::Type headerType) const;
       void setRawHeader(const HeaderFieldValueList* hfvs, Headers::Type headerType);
       const UnknownHeaders& getRawUnknownHeaders() const {return mUnknownHeaders;}
+      /**
+	 Return the raw body string (if it exists). The returned HFV
+	 and its underlying memory is owned by the SipMessage, and may
+	 be released when this SipMessage is manipulated.
+
+         This is a low-level interface; see getContents() for higher level.
+      **/
+      const HeaderFieldValue* getRawBody() const {return mContentsHfv;}
+
+      /**
+         Remove any existing body/contents, and (if non-empty)
+         set the body to {body}. It makes full copy of the body
+         to stored within the SipMessage (since lifetime of
+         the message is unpredictable).
+
+         This is a low-level interface; see setContents() for higher level.
+      **/
+      void setRawBody(const HeaderFieldValue* body);
 
       Contents* getContents() const;
       // removes the contents from the message

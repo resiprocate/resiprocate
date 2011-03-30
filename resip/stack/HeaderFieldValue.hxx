@@ -39,6 +39,11 @@ class HeaderFieldValue
       {
          data.setBuf(Data::Share, mField, mFieldLength);
       }
+
+      void toBorrowData(Data& data) const
+      {
+         data.setBuf(Data::Borrow, mField, mFieldLength);
+      }
       
       const char* mField;
       const unsigned int mFieldLength;
