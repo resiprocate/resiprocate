@@ -55,7 +55,7 @@ BasicClientCmdLineParser::BasicClientCmdLineParser(int argc, char** argv)
 #if defined(USE_SSL)
       {"tls",                0, POPT_ARG_INT,    &tlsPort,            0, "add TLS transport on specified port", "5161"},
 #endif
-#if defined(USED_DTLS)
+#if defined(USE_DTLS)
       {"dtls",               0, POPT_ARG_INT,    &dtlsPort,           0, "add DTLS transport on specified port", "5161"},
 #endif
 
