@@ -70,6 +70,9 @@
 using namespace std;
 using namespace resip;
 
+// .slg. Note that DTLS handshakes were really broken in older versions of OpenSSL 0.9.8
+//       You should use at least version 0.9.8g for both client and server.
+
 DtlsTransport::DtlsTransport(Fifo<TransactionMessage>& fifo,
                              int portNum,
                              IpVersion version,
@@ -78,11 +81,11 @@ DtlsTransport::DtlsTransport(Fifo<TransactionMessage>& fifo,
                              const Data& sipDomain,
                              AfterSocketCreationFuncPtr socketFunc,
                              Compression& compression)
-                             : UdpTransport( fifo, portNum, version, 
-                                 StunDisabled, interfaceObj, socketFunc, compression ),
-                               mTimer( mHandshakePending ),
-                               mSecurity( &security ),
-                               mDomain(sipDomain)
+ : UdpTransport( fifo, portNum, version, 
+   StunDisabled, interfaceObj, socketFunc, compression ),
+   mTimer( mHandshakePending ),
+   mSecurity( &security ),
+   mDomain(sipDomain)
 {
    setTlsDomain(sipDomain);   
    InfoLog ( << "Creating DTLS transport host=" << interfaceObj 
@@ -91,8 +94,8 @@ DtlsTransport::DtlsTransport(Fifo<TransactionMessage>& fifo,
 
    mTuple.setType( transport() );
 
-   mClientCtx = SSL_CTX_new( DTLSv1_client_method() ) ;
-   mServerCtx = SSL_CTX_new( DTLSv1_server_method() ) ;
+   mClientCtx = mSecurity->createDomainCtx(DTLSv1_client_method(), Data::Empty) ;
+   mServerCtx = mSecurity->createDomainCtx(DTLSv1_server_method(), sipDomain) ;
    assert( mClientCtx ) ;
    assert( mServerCtx ) ;
 
@@ -100,6 +103,13 @@ DtlsTransport::DtlsTransport(Fifo<TransactionMessage>& fifo,
    assert( mDummyBio ) ;
 
    mSendData = NULL ;
+
+   /* DTLS: partial reads end up discarding unread UDP bytes :-( 
+    * Setting read ahead solves this problem.
+    * Source of this comment is: apps/s_client.c from OpenSSL source
+    */
+   SSL_CTX_set_read_ahead(mClientCtx, 1);
+   SSL_CTX_set_read_ahead(mServerCtx, 1);
 
    /* trying to read from this BIO always returns retry */
    BIO_set_mem_eof_return( mDummyBio, -1 ) ;
@@ -186,37 +196,9 @@ DtlsTransport::_read( FdSet& fdset )
       ssl = SSL_new( mServerCtx ) ;
       assert( ssl ) ;
 
+      // clear SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE set in SSL_CTX if we are a server
+      SSL_set_verify(ssl, 0, 0);
       SSL_set_accept_state( ssl ) ;
-
-      X509 *cert = mSecurity->getDomainCert( mDomain ) ;
-      EVP_PKEY *pkey = mSecurity->getDomainKey( mDomain ) ;
-
-      if( !cert )
-      {
-         Data error = Data("Could not load certifiacte for domain: ") 
-             + mDomain;
-         throw Security::Exception( error,__FILE__, __LINE__ ) ;
-      }
-
-      if( !pkey )
-      {
-         Data error = Data("Could not load private key for domain: ") 
-             + mDomain;
-         throw Security::Exception( error,__FILE__, __LINE__ ) ;
-      }
-
-      assert( cert ) ;
-      assert( pkey ) ;
-
-      if( ! SSL_use_certificate( ssl, cert ) )
-      {
-         throw Security::Exception( "SSL_use_certificate failed",
-                                   __FILE__, __LINE__ ) ;
-      }
-
-      if ( ! SSL_use_PrivateKey( ssl, pkey ) )
-         throw Security::Exception( "SSL_use_PrivateKey failed.",
-                                   __FILE__, __LINE__ ) ;
 
       wbio = BIO_new_dgram( (int)mFd, BIO_NOCLOSE ) ;
       assert( wbio ) ;
@@ -628,9 +610,10 @@ DtlsTransport::_cleanupConnectionState( SSL *ssl, struct sockaddr_in peer )
     * SSL_free decrements the ref-count for mDummyBio by 1, so
     * add 1 to the ref-count to make sure it does not get free'd
     */
-   CRYPTO_add( &mDummyBio->references, 1, CRYPTO_LOCK_BIO ) ;
-   SSL_free( ssl ) ;
-   mDtlsConnections.erase( peer ) ;
+   CRYPTO_add(&mDummyBio->references, 1, CRYPTO_LOCK_BIO);
+   SSL_shutdown(ssl);
+   SSL_free(ssl) ;
+   mDtlsConnections.erase(peer) ;
 }
 
 void

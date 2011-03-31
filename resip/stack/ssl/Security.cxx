@@ -263,6 +263,57 @@ Security::preload()
    }
 }
 
+SSL_CTX* 
+Security::createDomainCtx(const SSL_METHOD* method, const Data& domain)
+{
+#if (OPENSSL_VERSION_NUMBER >= 0x1000000fL )
+   SSL_CTX* ctx = SSL_CTX_new(method);
+#else
+   SSL_CTX* ctx = SSL_CTX_new((SSL_METHOD*)method);
+#endif
+   assert(ctx);
+
+   X509_STORE* x509Store = X509_STORE_new();
+   assert(x509Store);
+
+   // Load root certs into store
+   X509List::iterator it;
+   for(it = mRootCerts.begin(); it != mRootCerts.end(); it++)
+   {
+      X509_STORE_add_cert(x509Store,*it);
+   }
+   SSL_CTX_set_cert_store(ctx, x509Store);
+
+   // Load domain cert chain and private key
+   if(!domain.empty())
+   {
+      Data certFilename(mPath + pemTypePrefixes(DomainCert) + domain + PEM);
+      if(SSL_CTX_use_certificate_chain_file(ctx, certFilename.c_str()) != 1)
+      {
+         ErrLog (<< "Error reading domain chain file " << certFilename);
+         SSL_CTX_free(ctx);
+         throw BaseSecurity::Exception("Failed opening PEM chain file", __FILE__,__LINE__);
+      }
+      Data keyFilename(mPath + pemTypePrefixes(DomainPrivateKey) + domain + PEM);
+      if(SSL_CTX_use_PrivateKey_file(ctx, keyFilename.c_str(), SSL_FILETYPE_PEM) != 1)
+      {
+         ErrLog (<< "Error reading domain private key file " << keyFilename);
+         SSL_CTX_free(ctx);
+         throw BaseSecurity::Exception("Failed opening PEM private key file", __FILE__,__LINE__);
+      }
+      if (!SSL_CTX_check_private_key(ctx))
+      {
+         ErrLog (<< "Invalid domain private key from file: " << keyFilename);
+         SSL_CTX_free(ctx);
+         throw BaseSecurity::Exception("Invalid domain private key", __FILE__,__LINE__);
+      }
+   }
+
+   SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE, verifyCallback);
+   SSL_CTX_set_cipher_list(ctx, mCipherList.cipherList().c_str());
+
+   return ctx;
+}
 
 void
 Security::onReadPEM(const Data& name, PEMType type, Data& buffer) const
@@ -386,9 +437,9 @@ BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write)
       break;
       case RootCert:
       {
+         mRootCerts.push_back(cert);
          X509_STORE_add_cert(mRootTlsCerts,cert);
          X509_STORE_add_cert(mRootSslCerts,cert);
-         X509_free(cert);
       }
       break;
       default:
@@ -916,6 +967,7 @@ Security::Exception::Exception(const Data& msg, const Data& file, const int line
 
 
 BaseSecurity::BaseSecurity (const CipherList& cipherSuite) :
+   mCipherList(cipherSuite),
    mTlsCtx(0),
    mSslCtx(0),
    mRootTlsCerts(0),                    
@@ -966,29 +1018,29 @@ void clearMap(T& m, Func& clearFunc)
    }
    m.clear();
 }
-         
+
+template<class T, class Func> 
+void clearList(T& m, Func& clearFunc)
+{
+   for (typename T::iterator it = m.begin(); it != m.end(); it++)
+   {
+      clearFunc(*it);
+   }
+   m.clear();
+}
+
 BaseSecurity::~BaseSecurity ()
 {
    DebugLog(<< "BaseSecurity::~BaseSecurity");
 
    // cleanup certificates
+   clearList(mRootCerts, X509_free);
    clearMap(mDomainCerts, X509_free);
    clearMap(mUserCerts, X509_free);
 
    // cleanup private keys
    clearMap(mDomainPrivateKeys, EVP_PKEY_free);
    clearMap(mUserPrivateKeys, EVP_PKEY_free);
-
-/*
-// !abr! This intentional memory leak appears to be unnecessary. Derek to verify.
-// !dcm! - still crashses...I think if there were no certs to load. 
-
-   // sailesh@counterpath.com : this code leaks memory but it's necessary on
-   // mac and windows. if we don't have this code then SSL_CTX_new( TLSv1_method() )
-   // returns NULL when BaseSecurity::BaseSecurity() is called the second time.
-   X509_STORE_free(mRootTlsCerts);
-   X509_STORE_free(mRootSslCerts);
-*/
 
    // cleanup SSL_CTXes
    if (mTlsCtx)
@@ -1351,7 +1403,6 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    addCertX509( UserCert, aor, cert, true /* write */ );
    addPrivateKeyPKEY( UserPrivateKey, aor, privkey, true /* write */ );
 }
-
 
 MultipartSignedContents*
 BaseSecurity::sign(const Data& senderAor, Contents* contents)

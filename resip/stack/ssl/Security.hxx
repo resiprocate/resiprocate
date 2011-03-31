@@ -187,6 +187,7 @@ class BaseSecurity
 
       // map of name to certificates
       typedef std::map<Data,X509*>     X509Map;
+      typedef std::list<X509*>         X509List;
       typedef std::map<Data,EVP_PKEY*> PrivateKeyMap;
       typedef std::map<Data,Data>      PassPhraseMap;
 
@@ -195,7 +196,10 @@ class BaseSecurity
       SSL_CTX*       mSslCtx;
       static void dumpAsn(char*, Data);
 
+      CipherList mCipherList;
+
       // root cert list
+      mutable X509List       mRootCerts;
       mutable X509_STORE*    mRootTlsCerts;
       mutable X509_STORE*    mRootSslCerts;
 
@@ -233,6 +237,7 @@ class Security : public BaseSecurity
       Security(const CipherList& = ExportableSuite);
 
       virtual void preload();
+      virtual SSL_CTX* createDomainCtx(const SSL_METHOD* method, const Data& domain);
 
       virtual void onReadPEM(const Data& name, PEMType type, Data& buffer) const;
       virtual void onWritePEM(const Data& name, PEMType type, const Data& buffer) const;
