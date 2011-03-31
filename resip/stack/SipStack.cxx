@@ -288,12 +288,13 @@ SipStack::addTransport( TransportType protocol,
             break;
       }
    }
-   catch (Transport::Exception& )
+   catch (BaseException& e)
    {
       ErrLog(<< "Failed to create transport: "
              << (version == V4 ? "V4" : "V6") << " "
              << Tuple::toData(protocol) << " " << port << " on "
-             << (ipInterface.empty() ? "ANY" : ipInterface.c_str()));
+             << (ipInterface.empty() ? "ANY" : ipInterface.c_str()) 
+             << ": " << e);
       throw;
    }
    addTransport(std::auto_ptr<Transport>(transport));

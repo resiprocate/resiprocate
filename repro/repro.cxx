@@ -270,6 +270,8 @@ main(int argc, char** argv)
                         {
                            NameAddr rr;
                            rr.uri().host()=intf.param(p_tls);
+                           rr.uri().port()=intf.port();
+                           rr.uri().param(resip::p_transport)=resip::Tuple::toDataLower(tt);
                            t->setRecordRoute(rr);
                            InfoLog (<< "Transport specific record-route enabled (generated): " << rr);
                         }
@@ -334,7 +336,7 @@ main(int argc, char** argv)
          }
       }
    }
-   catch (Transport::Exception& e)
+   catch (BaseException& e)
    {
       std::cerr << "Likely a port is already in use" << endl;
       InfoLog (<< "Caught: " << e);
