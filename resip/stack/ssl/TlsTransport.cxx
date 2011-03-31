@@ -32,12 +32,27 @@ TlsTransport::TlsTransport(Fifo<TransactionMessage>& fifo,
                            unsigned transportFlags):
    TcpBaseTransport(fifo, portNum, version, interfaceObj, socketFunc, compression, transportFlags),
    mSecurity(&security),
-   mSslType(sslType)
+   mSslType(sslType),
+   mDomainCtx(0)
 {
    setTlsDomain(sipDomain);   
    mTuple.setType(transport());
 
    init();
+
+   // If we have specified a sipDomain, then we need to create a new context for this domain,
+   // otherwise we will use the SSL Ctx or TLS Ctx created in the Security class
+   if(!sipDomain.empty())
+   {
+      if (sslType == SecurityTypes::SSLv23)
+      {
+         mDomainCtx = mSecurity->createDomainCtx(SSLv23_method(), sipDomain);
+      }
+      else
+      {
+         mDomainCtx = mSecurity->createDomainCtx(TLSv1_method(), sipDomain);
+      }
+   }
 
    InfoLog (<< "Creating TLS transport for domain " 
             << sipDomain << " interface=" << interfaceObj 
@@ -47,8 +62,25 @@ TlsTransport::TlsTransport(Fifo<TransactionMessage>& fifo,
 
 TlsTransport::~TlsTransport()
 {
+   if (mDomainCtx)
+   {
+      SSL_CTX_free(mDomainCtx);mDomainCtx=0;
+   }
 }
-  
+
+SSL_CTX* 
+TlsTransport::getCtx() const 
+{ 
+   if(mDomainCtx)
+   {
+      return mDomainCtx;
+   }
+   else if(mSslType == SecurityTypes::SSLv23)
+   {
+      return mSecurity->getSslCtx();
+   }
+   return mSecurity->getTlsCtx();
+}
 
 Connection* 
 TlsTransport::createConnection(const Tuple& who, Socket fd, bool server)

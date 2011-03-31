@@ -5,6 +5,7 @@
 #if defined(USE_SSL)
 
 #include "resip/stack/ssl/TlsConnection.hxx"
+#include "resip/stack/ssl/TlsTransport.hxx"
 #include "resip/stack/ssl/Security.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/Uri.hxx"
@@ -57,64 +58,15 @@ TlsConnection::TlsConnection( Transport* transport, const Tuple& tuple,
    {
       DebugLog( << "Trying to form TLS connection - acting as client" );
    }
-
    assert( mSecurity );
-   SSL_CTX* ctx=NULL;
-   if ( mSslType ==  SecurityTypes::SSLv23 )
-   {
-      ctx = mSecurity->getSslCtx();
-   }
-   else
-   {
-      ctx = mSecurity->getTlsCtx();
-   }   
+
+   SSL_CTX* ctx=dynamic_cast<TlsTransport*>(transport)->getCtx();
    assert(ctx);
    
    mSsl = SSL_new(ctx);
    assert(mSsl);
 
    assert( mSecurity );
-
-   if(!mDomain.empty())
-   {
-      X509* cert = mSecurity->getDomainCert(mDomain); //mDomainCerts[mDomain];
-      if (!cert)
-      {
-         if(mServer)
-         {
-            ErrLog(<< "Don't have certificate for domain " << mDomain );
-            throw Security::Exception("getDomainCert failed",
-                                      __FILE__,__LINE__);
-         }
-      }
-      else
-      {      
-         if( !SSL_use_certificate(mSsl, cert) )
-         {
-            throw Security::Exception("SSL_use_certificate failed",
-                                      __FILE__,__LINE__);
-         }
-      }
-      
-      EVP_PKEY* pKey = mSecurity->getDomainKey(mDomain); //mDomainPrivateKeys[mDomain];
-      if (!pKey)
-      {
-         if(mServer)
-         {
-            ErrLog(<< "Don't have private key for domain " << mDomain );
-            throw Security::Exception("getDomainKey failed.",
-                                      __FILE__,__LINE__);
-         }
-      }
-      else
-      {
-         if ( !SSL_use_PrivateKey(mSsl, pKey) )
-         {
-            throw Security::Exception("SSL_use_PrivateKey failed.",
-                                      __FILE__,__LINE__);
-         }
-      }
-   }
 
    if(mServer)
    {

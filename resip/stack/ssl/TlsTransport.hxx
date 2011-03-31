@@ -6,6 +6,8 @@
 #include "rutil/HeapInstanceCounter.hxx"
 #include "resip/stack/Compression.hxx"
 
+#include <openssl/ssl.h>
+
 namespace resip
 {
 
@@ -30,11 +32,13 @@ class TlsTransport : public TcpBaseTransport
       virtual  ~TlsTransport();
 
       TransportType transport() const { return TLS; }
+      SSL_CTX* getCtx() const;
    protected:
       Connection* createConnection(const Tuple& who, Socket fd, bool server=false);
 
       Security* mSecurity;
       SecurityTypes::SSLType mSslType;
+      SSL_CTX* mDomainCtx;
 };
 
 }
