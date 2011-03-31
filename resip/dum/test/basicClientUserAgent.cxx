@@ -134,7 +134,7 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
 #if defined(USE_SSL)
    addTransport(TLS, mTlsPort);
 #endif
-#if defined(USED_DTLS)
+#if defined(USE_DTLS)
    addTransport(DTLS, mDtlsPort);
 #endif
 
