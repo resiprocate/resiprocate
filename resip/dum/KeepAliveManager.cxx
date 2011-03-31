@@ -104,10 +104,13 @@ KeepAliveManager::process(KeepAliveTimeout& timeout)
          // missing pong responses - ie. interval must be greater than 10s
          assert((it->second.keepAliveInterval*1000) > mKeepAlivePongTimeoutMs);
 
-         // Start pong timeout
-         DebugLog( << "Starting pong timeout for keepalive id " << it->second.id);
-         KeepAlivePongTimeout t(it->first, it->second.id);
-         stack.postMS(t, mKeepAlivePongTimeoutMs, mDum);
+         // Start pong timeout if transport is TCP based (note: pong processing of Stun messaging is currently not implemented)
+         if(it->first.getType() == TCP || it->first.getType() == TLS)
+         {
+            DebugLog( << "Starting pong timeout for keepalive id " << it->second.id);
+            KeepAlivePongTimeout t(it->first, it->second.id);
+            stack.postMS(t, mKeepAlivePongTimeoutMs, mDum);
+         }
       }
       it->second.pongReceivedForLastPing = false;  // reset flag
 
