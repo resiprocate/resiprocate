@@ -67,8 +67,9 @@ RRDecorator::decorateMessage(resip::SipMessage& request,
    else
    {
       // We might still want to record-route in this case; if we need an 
-      // outbound flow token or something.
-      if(outboundFlowTokenNeeded(request, source, destination, sigcompId))
+      // outbound flow token or we've already added an inbound flow token
+      if(outboundFlowTokenNeeded(request, source, destination, sigcompId) ||
+         mHasInboundFlowToken)  // or we have an inbound flow
       {
          assert(mAlreadySingleRecordRouted);
          singleRecordRoute(request, source, destination, sigcompId);
@@ -127,7 +128,7 @@ RRDecorator::singleRecordRoute(resip::SipMessage& request,
          // existing flow to the next hop.
          rt.uri().host()=resip::Tuple::inet_ntop(source);
          rt.uri().port()=source.getPort();
-         rt.uri().param(resip::p_transport)=resip::Tuple::toData(source.getType());
+         rt.uri().param(resip::p_transport)=resip::Tuple::toDataLower(source.getType());
       }
       // .bwc. If our target has an outbound flow to us, we need to put a flow
       // token in a Record-Route.
@@ -206,6 +207,7 @@ RRDecorator::isTransportSwitch(const resip::Tuple& sendingFrom)
    {
       // If record routing is not forced then only DRR if we are switching transport types or
       // protocol versions, since the interfaces themselves may all be equally reachable
+      // !slg! - could make this behavior more configurable
       return sendingFrom.getType() != mReceivedTransport->getTuple().getType() ||
              sendingFrom.ipVersion() != mReceivedTransport->getTuple().ipVersion();
    }
@@ -218,7 +220,6 @@ RRDecorator::outboundFlowTokenNeeded(resip::SipMessage &msg,
                                      const resip::Data& sigcompId)
 {
    return (destination.onlyUseExistingConnection            // destination is an outbound target
-           || mHasInboundFlowToken                          // or we have an inbound flow
            || resip::InteropHelper::getRRTokenHackEnabled() // or the token is enabled
            || mIsOriginalSenderBehindNAT                    // or the nat detection hack is enabled
            || !sigcompId.empty());                          // or we are routing to a SigComp transport 
