@@ -212,9 +212,9 @@ ClientInviteSession::end(EndReason reason)
       case UAC_QueuedUpdate:
       case UAC_Cancelled: // !jf! possibly incorrect to always BYE in UAC_Cancelled
       {
-         sendBye();
+         SharedPtr<SipMessage> msg = sendBye();
          transition(Terminated);
-         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye); 
+         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get()); 
          break;
       }
 
@@ -255,14 +255,15 @@ ClientInviteSession::reject (int statusCode, WarningCategory *warning)
          break;
       }
 
-      case UAC_Answered:
+      case UAC_Answered:{
          // We received an offer in a 2xx response, and we want to reject it
          // ACK with no body, then send bye
          sendAck();
-         sendBye();
+         SharedPtr<SipMessage> msg = sendBye();
          transition(Terminated);
-         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye); 
+         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get()); 
          break;
+      }
 
       case UAC_Start:
       case UAC_Early:
