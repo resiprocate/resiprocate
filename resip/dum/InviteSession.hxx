@@ -330,7 +330,7 @@ class InviteSession : public DialogUsage
       bool updateMethodSupported() const;
 
       void sendAck(const Contents *answer=0);
-      void sendBye();
+      SharedPtr<SipMessage> sendBye();
 
       const Data& getEndReasonString(InviteSession::EndReason reason);
 

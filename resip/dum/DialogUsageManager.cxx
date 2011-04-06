@@ -1108,10 +1108,13 @@ DialogUsageManager::sendUsingOutboundIfAppropriate(UserProfile& userProfile, aut
          msg->header(h_Routes).push_front(NameAddr(userProfile.getOutboundProxy().uri()));
          if(userProfile.clientOutboundEnabled() && userProfile.mClientOutboundFlowTuple.mFlowKey != 0)
          {
+            DebugLog ( << "Sending with client outbound flow tuple to express outbound" );
+            DebugLog ( << "Flow Tuple: " << userProfile.mClientOutboundFlowTuple << " and key: " << userProfile.mClientOutboundFlowTuple.mFlowKey);
             mStack.sendTo(msg, userProfile.mClientOutboundFlowTuple, this);
          }
          else
          {
+            DebugLog ( << "Sending to express outbound w/o flow tuple");
             mStack.send(msg, this);
          }
       }
@@ -1119,10 +1122,12 @@ DialogUsageManager::sendUsingOutboundIfAppropriate(UserProfile& userProfile, aut
       {
          if(userProfile.clientOutboundEnabled() && userProfile.mClientOutboundFlowTuple.mFlowKey != 0)
          {
+            DebugLog ( << "Sending to outbound (no express) with flow tuple");
             mStack.sendTo(msg, userProfile.mClientOutboundFlowTuple, this);
          }
          else
          {
+            DebugLog ( << "Sending to outbound uri");
             mStack.sendTo(msg, userProfile.getOutboundProxy().uri(), this);
          }
       }

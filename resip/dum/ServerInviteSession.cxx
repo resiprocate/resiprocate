@@ -440,9 +440,9 @@ ServerInviteSession::end(EndReason reason)
          else
          {
              // ACK has likely timedout - hangup immediately
-             sendBye();
+             SharedPtr<SipMessage> msg = sendBye();
              transition(Terminated);
-             mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye);
+             mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get());
          }
          break;
 
@@ -1141,9 +1141,9 @@ ServerInviteSession::dispatchWaitingToHangup(const SipMessage& msg)
       {
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
 
-         sendBye();
+         SharedPtr<SipMessage> msg = sendBye();
          transition(Terminated);
-         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye);
+         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get());
          break;
       }
       

@@ -645,9 +645,10 @@ InviteSession::end(EndReason reason)
       case SentReinviteAnswered:
       {
          // !jf! do we need to store the BYE somewhere?
-         sendBye();
+         // .dw. BYE message handled
+         SharedPtr<SipMessage> msg = sendBye();
          transition(Terminated);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye); 
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get()); 
          break;
       }
 
@@ -667,9 +668,9 @@ InviteSession::end(EndReason reason)
          else
          {
              // ACK has likely timedout - hangup immediately
-             sendBye();
+             SharedPtr<SipMessage> msg = sendBye();
              transition(Terminated);
-             mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye);
+             mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get());
          }
          break;
 
@@ -682,17 +683,17 @@ InviteSession::end(EndReason reason)
          InfoLog (<< "Sending " << response->brief());
          send(response);
 
-         sendBye();
+         SharedPtr<SipMessage> msg = sendBye();
          transition(Terminated);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye); 
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get()); 
          break;
       }
 
       case WaitingToTerminate:  // ?slg?  Why is this here?
       {
-         sendBye();
+         SharedPtr<SipMessage> msg = sendBye();
          transition(Terminated);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye); 
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get()); 
          break;
       }
 
@@ -1209,9 +1210,9 @@ InviteSession::dispatch(const DumTimeout& timeout)
             if(mState == UAS_WaitingToHangup || 
                mState == WaitingToHangup)
             {
-               sendBye();
+               SharedPtr<SipMessage> msg = sendBye();
                transition(Terminated);
-               mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye); 
+               mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get()); 
             }
             else if(mState == ReceivedReinviteSentOffer)
             {
@@ -1292,9 +1293,9 @@ InviteSession::dispatch(const DumTimeout& timeout)
       {
          if(mState == WaitingToTerminate)
          {
-            sendBye();
+            SharedPtr<SipMessage> msg = sendBye();
             transition(Terminated);
-            mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye); 
+            mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get()); 
          }
          else if(mState == SentReinvite ||
                  mState == SentReinviteNoOffer)
@@ -1915,9 +1916,9 @@ InviteSession::dispatchWaitingToTerminate(const SipMessage& msg)
          // !jf! Need to include the answer here.
          sendAck();
       }
-      sendBye();
+      SharedPtr<SipMessage> msg = sendBye();
       transition(Terminated);
-      mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye); 
+      mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get()); 
    }
    else if(msg.isRequest())
    {
@@ -1946,9 +1947,9 @@ InviteSession::dispatchWaitingToHangup(const SipMessage& msg)
       {
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
 
-         sendBye();
+         SharedPtr<SipMessage> msg = sendBye();
          transition(Terminated);
-         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye);
+         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get());
          break;
       }
       
@@ -3037,7 +3038,7 @@ InviteSession::sendAck(const Contents *answer)
    send(ack);
 }
 
-void 
+SharedPtr<SipMessage>
 InviteSession::sendBye()
 {
    SharedPtr<SipMessage> bye(new SipMessage());
@@ -3058,6 +3059,7 @@ InviteSession::sendBye()
    
    InfoLog (<< myAddr() << " Sending BYE " << txt);
    send(bye);
+   return bye;
 }
 
 DialogUsageManager::EncryptionLevel 
