@@ -45,7 +45,6 @@ class InviteSessionCreator : public BaseCreator
       } State;
       
       State mState;
-      Contents* mInitialOffer;
       ServerSubscriptionHandle mServerSub;
       DialogUsageManager::EncryptionLevel mEncryptionLevel;
 };

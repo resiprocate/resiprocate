@@ -17,7 +17,6 @@ InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
                                            ServerSubscriptionHandle serverSub)
    : BaseCreator(dum, userProfile),
      mState(Initialized),
-     mInitialOffer(0),
      mServerSub(serverSub),
      mEncryptionLevel(level)
 {
@@ -37,6 +36,8 @@ InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
          getLastRequest()->header(h_MinSE).value() = 90;  // Absolute minimum specified by RFC4028
       }
    }
+
+   std::auto_ptr<Contents> initialOffer;
    if (initial)
    {
       if (alternative)
@@ -44,13 +45,13 @@ InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
          MultipartAlternativeContents* mac = new MultipartAlternativeContents;
          mac->parts().push_back(alternative->clone());
          mac->parts().push_back(initial->clone());
-         mInitialOffer = mac;
+         initialOffer.reset(mac);
       }
       else
       {
-         mInitialOffer = initial->clone();
+         initialOffer.reset(initial->clone());
       }
-      getLastRequest()->setContents(mInitialOffer);
+      getLastRequest()->setContents(initialOffer);
    }
    //100rel 
    switch(mDum.getMasterProfile()->getUacReliableProvisionalMode())
@@ -71,7 +72,6 @@ InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
 
 InviteSessionCreator::~InviteSessionCreator()
 {
-	delete mInitialOffer;
 }
 
 void
@@ -90,7 +90,7 @@ InviteSessionCreator::dispatch(const SipMessage& msg)
 const Contents*
 InviteSessionCreator::getInitialOffer() const
 {
-   return mInitialOffer;
+   return getLastRequest()->getContents();
 }
 
 
