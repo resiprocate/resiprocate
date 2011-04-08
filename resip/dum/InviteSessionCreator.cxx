@@ -88,7 +88,7 @@ InviteSessionCreator::dispatch(const SipMessage& msg)
 }
 
 const Contents*
-InviteSessionCreator::getInitialOffer() const
+InviteSessionCreator::getInitialOffer()
 {
    return getLastRequest()->getContents();
 }

@@ -27,7 +27,7 @@ class InviteSessionCreator : public BaseCreator
       void end();
 
       virtual void dispatch(const SipMessage& msg);
-      const Contents* getInitialOffer() const;
+      const Contents* getInitialOffer();
             
       ServerSubscriptionHandle getServerSubscription() { return mServerSub; }
 
