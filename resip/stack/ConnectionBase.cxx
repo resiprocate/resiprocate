@@ -189,13 +189,39 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             mBuffer = 0;
             delete mMessage;
             mMessage = 0;
-            //.jacob. Shouldn't the state also be set here?
+            mConnState=NewMessage;
+            delete this;
+            return;
+         }
+
+         if (mMsgHeaderScanner.getHeaderCount() > 256)
+         {
+            WarningLog(<< "Discarding preparse; too many headers");
+            delete [] mBuffer;
+            mBuffer = 0;
+            delete mMessage;
+            mMessage = 0;
+            mConnState=NewMessage;
             delete this;
             return;
          }
 
          unsigned int numUnprocessedChars = 
             (unsigned int)((mBuffer + chunkLength) - unprocessedCharPtr);
+
+         if(numUnprocessedChars > 2048 &&
+            scanChunkResult == MsgHeaderScanner::scrNextChunk)
+         {
+            WarningLog(<< "Discarding preparse; header-field-value (or "
+                        "header name) too long");
+            delete [] mBuffer;
+            mBuffer = 0;
+            delete mMessage;
+            mMessage = 0;
+            mConnState=NewMessage;
+            delete this;
+            return;
+         }
 
          if(numUnprocessedChars==chunkLength)
          {
@@ -598,6 +624,12 @@ ConnectionBase::getWriteBuffer()
       mBufferSize = ConnectionBase::ChunkSize;
       mBufferPos = 0;
    }
+   return getCurrentWriteBuffer();
+}
+
+std::pair<char*, size_t> 
+ConnectionBase::getCurrentWriteBuffer()
+{
    return std::make_pair(mBuffer + mBufferPos, mBufferSize - mBufferPos);
 }
 

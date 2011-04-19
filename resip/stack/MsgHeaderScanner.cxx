@@ -890,6 +890,7 @@ MsgHeaderScanner::prepareForMessage(SipMessage *  msg)
    mMsg = msg;
    mState = sMsgStart;
    mPrevScanChunkNumSavedTextChars = 0;
+   mNumHeaders=0;
 }
 
 void
@@ -905,6 +906,7 @@ MsgHeaderScanner::prepareForFrag(SipMessage *  msg, bool hasStartLine)
       mState = sAfterLineBreakAfterStatusLine;
    }
    mPrevScanChunkNumSavedTextChars = 0;
+   mNumHeaders=0;
 }
 
 MsgHeaderScanner::ScanChunkResult
@@ -990,6 +992,7 @@ MsgHeaderScanner::scanChunk(char * chunk,
                                               0,
                                               0,
                                               0);
+            ++mNumHeaders;
             goto performStartTextAction;
          case taTermValueAfterLineBreak:
             processMsgHeaderFieldNameAndValue(mMsg,
@@ -999,6 +1002,7 @@ MsgHeaderScanner::scanChunk(char * chunk,
                                               textStartCharPtr,
                                               (unsigned int)((charPtr - textStartCharPtr) - 2),
                                               localTextPropBitMask);       //^:CRLF
+            ++mNumHeaders;
             goto performStartTextAction;
          case taTermValue:
             processMsgHeaderFieldNameAndValue(mMsg,
@@ -1009,6 +1013,7 @@ MsgHeaderScanner::scanChunk(char * chunk,
                                               (unsigned int)(charPtr - textStartCharPtr),
                                               localTextPropBitMask);
             textStartCharPtr = 0;
+            ++mNumHeaders;
             break;
          case taStartText:
         performStartTextAction:
