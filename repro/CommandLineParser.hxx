@@ -60,6 +60,7 @@ class CommandLineParser
       Data mServerText;
       bool mUseInternalEPoll;
       bool mUseEventThread;
+      int mOverrideT1;
 };
  
 }
