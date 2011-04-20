@@ -1079,7 +1079,7 @@ SipMessage::releaseContents()
 const StringCategories& 
 SipMessage::header(const ExtensionHeader& headerName) const
 {
-   for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
+   for (UnknownHeaders::const_iterator i = mUnknownHeaders.begin();
         i != mUnknownHeaders.end(); i++)
    {
       // !dlb! case sensitive?
@@ -1127,7 +1127,7 @@ SipMessage::header(const ExtensionHeader& headerName)
 bool
 SipMessage::exists(const ExtensionHeader& symbol) const
 {
-   for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
+   for (UnknownHeaders::const_iterator i = mUnknownHeaders.begin();
         i != mUnknownHeaders.end(); i++)
    {
       if (i->first == symbol.getName())
@@ -1310,7 +1310,7 @@ SipMessage::ensureHeaders(Headers::Type type, bool single)
       }
    }
 
-   return hfvs;
+   return const_cast<HeaderFieldValueList*>(hfvs);
 }
 
 HeaderFieldValueList* 
@@ -1340,7 +1340,7 @@ SipMessage::ensureHeaders(Headers::Type type, bool single) const
       }
    }
 
-   return hfvs;
+   return const_cast<HeaderFieldValueList*>(hfvs);
 }
 
 // type safe header accessors
@@ -1633,7 +1633,7 @@ SipMessage::mergeUri(const Uri& source)
 }
 
 void 
-SipMessage::setSecurityAttributes(auto_ptr<SecurityAttributes> sec) const
+SipMessage::setSecurityAttributes(auto_ptr<SecurityAttributes> sec)
 {
    mSecurityAttributes = sec;
 }
