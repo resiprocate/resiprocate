@@ -309,7 +309,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             try
             {
                // The message header is complete.
-               contentLength=mMessage->header(h_ContentLength).value();
+               contentLength=mMessage->const_header(h_ContentLength).value();
             }
             catch(resip::ParseException& e)
             {
@@ -418,7 +418,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
 
          try
          {
-             contentLength = mMessage->header(h_ContentLength).value();
+             contentLength = mMessage->const_header(h_ContentLength).value();
          }
          catch(resip::ParseException& e)
          {
@@ -540,7 +540,7 @@ ConnectionBase::decompressNewBytes(int bytesRead)
       Transport::stampReceived(mMessage);
       // If the message made it this far, we should let it store
       // SigComp state: extract the compartment ID.
-      const Via &via = mMessage->header(h_Vias).front();
+      const Via &via = mMessage->const_header(h_Vias).front();
       if (mMessage->isRequest())
       {
         // For requests, the compartment ID is read out of the

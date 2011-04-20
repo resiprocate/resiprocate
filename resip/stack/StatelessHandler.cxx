@@ -53,7 +53,7 @@ StatelessHandler::process()
    
    if (sip)
    {
-      if (sip->header(h_Vias).empty())
+      if (sip->const_header(h_Vias).empty())
       {
          InfoLog(<< "TransactionState::process dropping message with no Via: " << sip->brief());
          delete sip;
@@ -88,7 +88,7 @@ StatelessHandler::process()
          {
             assert(sip->isResponse());
             DebugLog (<< "Processing response from TU: " << msg->brief());
-            const Via& via = sip->header(h_Vias).front();
+            const Via& via = sip->const_header(h_Vias).front();
             int port = via.sentPort();
             if (sip->hasForceTarget())
             {
@@ -126,7 +126,7 @@ void
 StatelessMessage::rewriteRequest(const Uri& rewrite)
 {
    assert(mMsg->isRequest());
-   if (mMsg->header(h_RequestLine).uri() != rewrite)
+   if (mMsg->const_header(h_RequestLine).uri() != rewrite)
    {
       InfoLog (<< "Rewriting request-uri to " << rewrite);
       mMsg->header(h_RequestLine).uri() = rewrite;

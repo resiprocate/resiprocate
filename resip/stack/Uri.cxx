@@ -49,6 +49,14 @@ Uri::Uri()
 {
 }
 
+Uri::Uri(HeaderFieldValue* hfv, Headers::Type type) :
+   ParserCategory(hfv, type),
+   mPort(0),
+   mOldPort(0),
+   mEmbeddedHeaders(0)
+{}
+
+
 static const Data parseContext("Uri constructor");
 Uri::Uri(const Data& data)
    : ParserCategory(), 
@@ -57,10 +65,10 @@ Uri::Uri(const Data& data)
      mOldPort(0),
      mEmbeddedHeaders(0)
 {
+   HeaderFieldValue hfv(data.data(), data.size());
    // must copy because parse creates overlays
-   Uri tmp;
-   ParseBuffer pb(data, parseContext);
-   tmp.parse(pb);
+   Uri tmp(&hfv, Headers::UNKNOWN);
+   tmp.checkParsed();
    *this = tmp;
 }
 
@@ -252,7 +260,8 @@ Uri::fromTel(const Uri& tel, const Uri& hostUri)
 bool
 Uri::isEnumSearchable() const
 {
-   return (!user().empty() && user().size() >= 2 && user()[0] == '+');
+   checkParsed();
+   return (!mUser.empty() && mUser.size() >= 2 && mUser[0] == '+');
 }
 
 std::vector<Data> 
@@ -290,6 +299,7 @@ Uri::hasEmbedded() const
 void 
 Uri::removeEmbedded()
 {
+   checkParsed();
    delete mEmbeddedHeaders;
    mEmbeddedHeaders = 0;
    mEmbeddedHeadersText = Data::Empty;   
@@ -383,7 +393,7 @@ Uri::operator==(const Uri& other) const
        mPassword == other.mPassword &&
        mPort == other.mPort)
    {
-      for (ParameterList::iterator it = mParameters.begin(); it != mParameters.end(); ++it)
+      for (ParameterList::const_iterator it = mParameters.begin(); it != mParameters.end(); ++it)
       {
          Parameter* otherParam = other.getParameterByEnum((*it)->getType());
 
@@ -465,7 +475,7 @@ Uri::operator==(const Uri& other) const
       }         
 
       // now check the other way, sigh
-      for (ParameterList::iterator it = other.mParameters.begin(); it != other.mParameters.end(); ++it)
+      for (ParameterList::const_iterator it = other.mParameters.begin(); it != other.mParameters.end(); ++it)
       {
          Parameter* param = getParameterByEnum((*it)->getType());
          switch ((*it)->getType())

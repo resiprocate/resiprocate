@@ -27,13 +27,9 @@ Auth::Auth(HeaderFieldValue* hfv, Headers::Type type)
 {}
 
 Auth::Auth(const Auth& rhs)
-   : ParserCategory(rhs)
-{
-   if (isParsed())
-   {
-      scheme() = rhs.scheme();
-   }
-}
+   : ParserCategory(rhs),
+   mScheme(rhs.mScheme)
+{}
 
 Auth&
 Auth::operator=(const Auth& rhs)
@@ -41,7 +37,7 @@ Auth::operator=(const Auth& rhs)
    if (this != &rhs)
    {
       ParserCategory::operator=(rhs);
-      scheme() = rhs.scheme();
+      mScheme = rhs.mScheme;
    }
    return *this;
 }

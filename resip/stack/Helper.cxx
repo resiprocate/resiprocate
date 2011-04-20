@@ -388,8 +388,8 @@ Helper::makeResponse(SipMessage& response,
    }
 
    if(responseCode > 100 &&
-      response.header(h_To).isWellFormed() &&
-      !response.header(h_To).exists(p_tag))
+      response.const_header(h_To).isWellFormed() &&
+      !response.const_header(h_To).exists(p_tag))
    {
       // Only generate a To: tag if one doesn't exist.  Think Re-INVITE.   
       // No totag for failure responses or 100s   
@@ -414,7 +414,7 @@ Helper::makeResponse(SipMessage& response,
    // thing twice, see LazyParser::checkParsed())
    if (responseCode/100 == 2 &&
          !response.exists(h_Contacts) &&
-         !(response.header(h_CSeq).method()==CANCEL) )
+         !(response.const_header(h_CSeq).method()==CANCEL) )
    {
       // in general, this should not create a Contact header since only requests
       // that create a dialog (or REGISTER requests) should produce a response with
@@ -1478,8 +1478,8 @@ Helper::makeChallengeResponseAuthWithA1(const SipMessage& request,
    Data digestUri;
    {
       DataStream s(digestUri);
-      //s << request.header(h_RequestLine).uri().host(); // wrong 
-      s << request.header(h_RequestLine).uri(); // right 
+      //s << request.const_header(h_RequestLine).uri().host(); // wrong 
+      s << request.const_header(h_RequestLine).uri(); // right 
    }
    auth.param(p_uri) = digestUri;
 
@@ -1592,17 +1592,17 @@ void
 Helper::processStrictRoute(SipMessage& request)
 {
    if (request.exists(h_Routes) && 
-       !request.header(h_Routes).empty() &&
-       !request.header(h_Routes).front().uri().exists(p_lr))
+       !request.const_header(h_Routes).empty() &&
+       !request.const_header(h_Routes).front().uri().exists(p_lr))
    {
       // The next hop is a strict router.  Move the next hop into the
       // Request-URI and move the ultimate destination to the end of the
       // route list.  Force the message target to be the next hop router.
-      request.header(h_Routes).push_back(NameAddr(request.header(h_RequestLine).uri()));
-      request.header(h_RequestLine).uri() = request.header(h_Routes).front().uri();
+      request.header(h_Routes).push_back(NameAddr(request.const_header(h_RequestLine).uri()));
+      request.header(h_RequestLine).uri() = request.const_header(h_Routes).front().uri();
       request.header(h_Routes).pop_front(); // !jf!
       assert(!request.hasForceTarget());
-      request.setForceTarget(request.header(h_RequestLine).uri());
+      request.setForceTarget(request.const_header(h_RequestLine).uri());
    }
 }
 
@@ -1633,33 +1633,33 @@ Helper::getPortForReply(SipMessage& request)
 {
    assert(request.isRequest());
    int port = 0;
-   if(request.header(h_Vias).front().transport() == Symbols::TCP ||
-      request.header(h_Vias).front().transport() == Symbols::TLS)
+   if(request.const_header(h_Vias).front().transport() == Symbols::TCP ||
+      request.const_header(h_Vias).front().transport() == Symbols::TLS)
    {
       // 18.2.2 - bullet 1 and 2 
       port = request.getSource().getPort();
       if(port == 0) // .slg. not sure if it makes sense for sourcePort to be 0
       {
-         port = request.header(h_Vias).front().sentPort();
+         port = request.const_header(h_Vias).front().sentPort();
       }
    }
    else   // unreliable transport 18.2.2 bullets 3 and 4
    {
-      if (request.header(h_Vias).front().exists(p_rport))
+      if (request.const_header(h_Vias).front().exists(p_rport))
       {
          port = request.getSource().getPort();
       }
       else
       {
-         port = request.header(h_Vias).front().sentPort();
+         port = request.const_header(h_Vias).front().sentPort();
       }
    }
 
    // If we haven't got a valid port yet, then use the default
    if (port <= 0 || port > 65535) 
    {
-      if(request.header(h_Vias).front().transport() == Symbols::TLS ||
-         request.header(h_Vias).front().transport() == Symbols::DTLS)
+      if(request.const_header(h_Vias).front().transport() == Symbols::TLS ||
+         request.const_header(h_Vias).front().transport() == Symbols::DTLS)
       {
          port = Symbols::DefaultSipsPort;
       }
