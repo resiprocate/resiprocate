@@ -110,6 +110,23 @@ main(int arc, char** argv)
    }
 
    {
+      TR _tr("Test NameAddr encode from underlying after read-only parse");
+
+      resip::Data raw("<sip:jason_AT_example.com@10.0.0.1:5060;opaque=blah>");
+      HeaderFieldValue hfv(raw.data(), raw.size());
+      NameAddr test(&hfv, Headers::UNKNOWN);
+      const NameAddr& c_test(test);
+      // We should be calling the const version of uri() here, since we don't 
+      // need to modify anything.
+      resip::Data opaque(c_test.uri().param(p_opaque));
+      cerr << test << endl;
+      NameAddr copy = test;
+      cerr << copy << endl;
+      assert(resip::Data::from(test)==raw);
+      assert(resip::Data::from(copy)==raw);
+   }
+
+   {
       TR _tr("Test find in ParserContainer");
 
       Tokens tokens;

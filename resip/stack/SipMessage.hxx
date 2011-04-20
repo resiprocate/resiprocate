@@ -148,11 +148,23 @@ class SipMessage : public TransactionMessage
       RequestLine& 
       header(const RequestLineType& l);
 
+      inline const RequestLine& 
+      const_header(const RequestLineType& l) const
+      {
+         return header(l);
+      }
+
       const StatusLine& 
       header(const StatusLineType& l) const;
 
       StatusLine& 
       header(const StatusLineType& l);
+
+      inline const StatusLine& 
+      const_header(const StatusLineType& l) const
+      {
+         return header(l);
+      }
 
       bool exists(const HeaderBase& headerType) const;
       bool empty(const HeaderBase& headerType) const;
@@ -160,11 +172,20 @@ class SipMessage : public TransactionMessage
 
 #define defineHeader(_header, _name, _type, _rfc)                       \
       const H_##_header::Type& header(const H_##_header& headerType) const; \
-            H_##_header::Type& header(const H_##_header& headerType)
+            H_##_header::Type& header(const H_##_header& headerType); \
+      inline const H_##_header::Type& const_header(const H_##_header& headerType) const \
+      {\
+         return header(headerType);\
+      }
+
       
 #define defineMultiHeader(_header, _name, _type, _rfc)                  \
       const H_##_header##s::Type& header(const H_##_header##s& headerType) const; \
-            H_##_header##s::Type& header(const H_##_header##s& headerType)
+            H_##_header##s::Type& header(const H_##_header##s& headerType); \
+      inline const H_##_header##s::Type& const_header(const H_##_header##s& headerType) const \
+      {\
+         return header(headerType);\
+      }
       
       defineHeader(ContentDisposition, "Content-Disposition", Token, "RFC 3261");
       defineHeader(ContentEncoding, "Content-Encoding", Token, "RFC 3261");

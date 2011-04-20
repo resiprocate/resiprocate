@@ -882,7 +882,7 @@ SipMessage::setBody(const char* start, UInt32 len)
       {
          try
          {
-            header(h_ContentLength).checkParsed();
+            const_header(h_ContentLength).checkParsed();
          }
          catch(resip::ParseException& e)
          {
@@ -897,7 +897,7 @@ SipMessage::setBody(const char* start, UInt32 len)
             header(h_ContentLength).value()=len;
          }
          
-         UInt32 contentLength=header(h_ContentLength).value();
+         UInt32 contentLength=const_header(h_ContentLength).value();
          
          if(len > contentLength)
          {
@@ -1011,48 +1011,48 @@ SipMessage::getContents() const
    if (mContents == 0 && mContentsHfv != 0)
    {
       if (empty(h_ContentType) ||
-            !header(h_ContentType).isWellFormed())
+            !const_header(h_ContentType).isWellFormed())
       {
          StackLog(<< "SipMessage::getContents: ContentType header does not exist - implies no contents");
          return 0;
       }
       DebugLog(<< "SipMessage::getContents: " 
-               << header(h_ContentType).type()
+               << const_header(h_ContentType).type()
                << "/"
-               << header(h_ContentType).subType());
+               << const_header(h_ContentType).subType());
 
-      if ( ContentsFactoryBase::getFactoryMap().find(header(h_ContentType)) == ContentsFactoryBase::getFactoryMap().end() )
+      if ( ContentsFactoryBase::getFactoryMap().find(const_header(h_ContentType)) == ContentsFactoryBase::getFactoryMap().end() )
       {
          InfoLog(<< "SipMessage::getContents: got content type ("
-                 << header(h_ContentType).type()
+                 << const_header(h_ContentType).type()
                  << "/"
-                 << header(h_ContentType).subType()
+                 << const_header(h_ContentType).subType()
                  << ") that is not known, "
                  << "returning as opaque application/octet-stream");
          mContents = ContentsFactoryBase::getFactoryMap()[OctetContents::getStaticType()]->create(mContentsHfv, OctetContents::getStaticType());
       }
       else
       {
-         mContents = ContentsFactoryBase::getFactoryMap()[header(h_ContentType)]->create(mContentsHfv, header(h_ContentType));
+         mContents = ContentsFactoryBase::getFactoryMap()[const_header(h_ContentType)]->create(mContentsHfv, const_header(h_ContentType));
       }
       assert( mContents );
       
       // copy contents headers into the contents
       if (!empty(h_ContentDisposition))
       {
-         mContents->header(h_ContentDisposition) = header(h_ContentDisposition);
+         mContents->header(h_ContentDisposition) = const_header(h_ContentDisposition);
       }
       if (!empty(h_ContentTransferEncoding))
       {
-         mContents->header(h_ContentTransferEncoding) = header(h_ContentTransferEncoding);
+         mContents->header(h_ContentTransferEncoding) = const_header(h_ContentTransferEncoding);
       }
       if (!empty(h_ContentLanguages))
       {
-         mContents->header(h_ContentLanguages) = header(h_ContentLanguages);
+         mContents->header(h_ContentLanguages) = const_header(h_ContentLanguages);
       }
       if (!empty(h_ContentType))
       {
-         mContents->header(h_ContentType) = header(h_ContentType);
+         mContents->header(h_ContentType) = const_header(h_ContentType);
       }
       // !dlb! Content-Transfer-Encoding?
    }
