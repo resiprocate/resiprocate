@@ -47,8 +47,8 @@ class NameAddr : public ParserCategory
       bool mustQuoteDisplayName() const;      
    protected:
       bool mAllContacts;
-      mutable Uri mUri;
-      mutable Data mDisplayName;
+      Uri mUri;
+      Data mDisplayName;
 
    private:
 #if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) && (__GNUC_MINOR__ <= 3) )

@@ -31,15 +31,17 @@ class Mime : public ParserCategory
       bool operator==(const Mime& rhs) const;
       bool operator!=(const Mime& rhs) const;
       
-      Data& type() const;
-      Data& subType() const;
+      const Data& type() const;
+      const Data& subType() const;
+      Data& type();
+      Data& subType();
          
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
    private:
-      mutable Data mType;
-      mutable Data mSubType;
+      Data mType;
+      Data mSubType;
 };
 typedef ParserContainer<Mime> Mimes;
  

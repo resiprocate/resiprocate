@@ -50,18 +50,32 @@ ParserCategory* IntegerCategory::clone() const
    return new IntegerCategory(*this);
 }
 
-int& IntegerCategory::value() const 
+int IntegerCategory::value() const 
+{
+   checkParsed(); 
+   return mValue;
+}
+
+const Data& 
+IntegerCategory::comment() const 
+{
+   checkParsed(); 
+   return mComment;
+}
+
+int& IntegerCategory::value()
 {
    checkParsed(); 
    return mValue;
 }
 
 Data& 
-IntegerCategory::comment() const 
+IntegerCategory::comment()
 {
    checkParsed(); 
    return mComment;
 }
+
 
 void
 IntegerCategory::parse(ParseBuffer& pb)

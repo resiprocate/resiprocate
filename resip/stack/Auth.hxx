@@ -53,7 +53,7 @@ class Auth : public ParserCategory
       defineParam(username, "username", QuotedDataParameter, "RFC ????");
 
    private:
-      mutable Data mScheme;
+      Data mScheme;
 };
 
 #undef defineParam

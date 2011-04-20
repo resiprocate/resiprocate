@@ -649,15 +649,12 @@ main(int argc, char* argv[])
 
    IpVersion version = (v6 ? V6 : V4);
 
-   if ( numPorts > 100 )
-   {
-      // estimate number of sockets we need:
-      // 2x for sender and receiver
-      // 1 for UDP + 2 for TCP (listen + connection)
-      // ~30 for misc (DNS)
-      int needFds = numPorts * 6 + 30;
-      increaseLimitFds(needFds);
-   }
+   // estimate number of sockets we need:
+   // 2x for sender and receiver
+   // 1 for UDP + 2 for TCP (listen + connection)
+   // ~30 for misc (DNS)
+   int needFds = numPorts * 6 + 30;
+   increaseLimitFds(needFds);
 
    /* On linux, the client TCP connection port range is controll by
     * /proc/sys/net/ipv4/ip_local_port_range, and defaults to [32768,61000].
