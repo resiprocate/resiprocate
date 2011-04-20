@@ -31,7 +31,7 @@ class GenericUri : public ParserCategory
       const Data& uri() const;
 
    private:
-      mutable Data mUri;
+      Data mUri;
 };
 typedef ParserContainer<GenericUri> GenericUris;
 typedef GenericUri GenericURI; //.dcm. deprecated, should be removed soon

@@ -50,14 +50,29 @@ ParserCategory* UInt32Category::clone() const
    return new UInt32Category(*this);
 }
 
-UInt32& UInt32Category::value() const 
+const UInt32& 
+UInt32Category::value() const
+{
+   checkParsed(); 
+   return mValue;
+}
+
+const Data& 
+UInt32Category::comment() const
+{
+   checkParsed(); 
+   return mComment;
+}
+
+UInt32& 
+UInt32Category::value()
 {
    checkParsed(); 
    return mValue;
 }
 
 Data& 
-UInt32Category::comment() const 
+UInt32Category::comment()
 {
    checkParsed(); 
    return mComment;

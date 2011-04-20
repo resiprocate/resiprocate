@@ -155,7 +155,7 @@ EncodeStream&
 Auth::encodeAuthParameters(EncodeStream& str) const
 {
    bool first = true;
-   for (ParameterList::iterator it = mParameters.begin();
+   for (ParameterList::const_iterator it = mParameters.begin();
         it != mParameters.end(); it++)
    {
       if (!first)
@@ -166,7 +166,7 @@ Auth::encodeAuthParameters(EncodeStream& str) const
       (*it)->encode(str);
    }
 
-   for (ParameterList::iterator it = mUnknownParameters.begin();
+   for (ParameterList::const_iterator it = mUnknownParameters.begin();
         it != mUnknownParameters.end(); it++)
    {
       if (!first)

@@ -1843,6 +1843,8 @@ Helper::ContentsSecAttrs::ContentsSecAttrs(std::auto_ptr<Contents> contents,
      mAttributes(attributes)
 {}
 
+// !!bwc!! Yikes! Destructive copy c'tor! Are we _sure_ this is the 
+// intended behavior?
 Helper::ContentsSecAttrs::ContentsSecAttrs(const ContentsSecAttrs& rhs)
    : mContents(rhs.mContents),
      mAttributes(rhs.mAttributes)
@@ -1853,6 +1855,8 @@ Helper::ContentsSecAttrs::operator=(const ContentsSecAttrs& rhs)
 {
    if (&rhs != this)
    {
+      // !!bwc!! Yikes! Destructive assignment operator! Are we _sure_ this is 
+      // the intended behavior?
       mContents = rhs.mContents;
       mAttributes = rhs.mAttributes;
    }

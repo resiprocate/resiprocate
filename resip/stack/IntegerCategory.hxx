@@ -26,12 +26,14 @@ class IntegerCategory : public ParserCategory
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
       virtual ParserCategory* clone() const;
 
-      int& value() const;
-      Data& comment() const;
+      int value() const;
+      int& value();
+      Data& comment();
+      const Data& comment() const;
 
    private:
-      mutable int mValue;
-      mutable Data mComment;
+      int mValue;
+      Data mComment;
 };
  
 }
