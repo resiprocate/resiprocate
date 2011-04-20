@@ -507,14 +507,6 @@ ServerRegistration::testFlowRequirements(ContactInstanceRecord &rec,
 {
    const resip::NameAddr& contact(rec.mContact);
 
-   if(!hasFlow && flowTokenNeededForTls(rec))
-   {
-      SharedPtr<SipMessage> failure(new SipMessage);
-      mDum.makeResponse(*failure, msg, 400, "Trying to use TLS with an IP-address in your Contact header won't work if you don't have a flow. Consider implementing outbound, or putting an FQDN in your contact header.");
-      mDum.send(failure);
-      return false;
-   }
-
    if(contact.exists(p_Instance) && contact.exists(p_regid))
    {
       // Client has explicitly requested Outbound processing, which requires us 
@@ -526,6 +518,14 @@ ServerRegistration::testFlowRequirements(ContactInstanceRecord &rec,
          mDum.send(failure);
          return false;
       }
+   }
+
+   if(!hasFlow && flowTokenNeededForTls(rec))
+   {
+      SharedPtr<SipMessage> failure(new SipMessage);
+      mDum.makeResponse(*failure, msg, 400, "Trying to use TLS with an IP-address in your Contact header won't work if you don't have a flow. Consider implementing outbound, or putting an FQDN in your contact header.");
+      mDum.send(failure);
+      return false;
    }
 
    if(!hasFlow && flowTokenNeededForSigcomp(rec))
