@@ -461,15 +461,29 @@ MessageWaitingContents::Header::Header(unsigned int numNew,
 {}
 
 MessageWaitingContents::Header& 
+MessageWaitingContents::header(HeaderType ht)
+{
+   checkParsed();
+
+   /* this is a trick to allow a const method to update "this" with an empty
+      Header in case there wasn't a corresponding header line in the MessageWaiting doc
+    */
+   if (mHeaders[ht] == 0)
+   {
+      mHeaders[ht] = new Header(0, 0);
+   }
+   return *mHeaders[ht];
+}
+
+const MessageWaitingContents::Header& 
 MessageWaitingContents::header(HeaderType ht) const
 {
    checkParsed();
-   MessageWaitingContents& ncthis = *const_cast<MessageWaitingContents*>(this);
    if (mHeaders[ht] == 0)
    {
-      ncthis.mHeaders[ht] = new Header(0, 0);
+      mHeaders[ht] = new Header(0, 0);
    }
-   return *ncthis.mHeaders[ht];
+   return *mHeaders[ht];
 }
 
 bool 
@@ -488,15 +502,29 @@ MessageWaitingContents::remove(HeaderType ht)
 }
 
 Uri& 
+MessageWaitingContents::header(const AccountHeader& ht)
+{
+   checkParsed();
+
+   /* this is a trick to allow a const method to update "this" with an empty
+      Uri in case there wasn't a Message-Account line in the MessageWaiting doc
+    */
+   if (mAccountUri == 0)
+   {
+      mAccountUri = new Uri();
+   }
+   return *mAccountUri;
+}
+
+const Uri& 
 MessageWaitingContents::header(const AccountHeader& ht) const
 {
    checkParsed();
-   MessageWaitingContents& ncthis = *const_cast<MessageWaitingContents*>(this);
    if (mAccountUri == 0)
    {
-      ncthis.mAccountUri = new Uri();
+      mAccountUri = new Uri();
    }
-   return *ncthis.mAccountUri;
+   return *mAccountUri;
 }
 
 bool 
@@ -515,10 +543,22 @@ MessageWaitingContents::remove(const AccountHeader& ht)
 }
 
 Data&
-MessageWaitingContents::header(const Data& hn) const
+MessageWaitingContents::header(const Data& hn)
 {
    checkParsed();
    return mExtensions[hn];
+}
+
+const Data&
+MessageWaitingContents::header(const Data& hn) const
+{
+   checkParsed();
+   std::map<Data, Data>::const_iterator h=mExtensions.find(hn);
+   if(h==mExtensions.end())
+   {
+      h=mExtensions.insert(std::make_pair<Data, Data>(hn,Data::Empty)).first;
+   }
+   return h->second;
 }
 
 bool

@@ -372,7 +372,7 @@ class SipMessage : public TransactionMessage
       
       SipMessage& mergeUri(const Uri& source);      
 
-      void setSecurityAttributes(std::auto_ptr<SecurityAttributes>) const;
+      void setSecurityAttributes(std::auto_ptr<SecurityAttributes>);
       const SecurityAttributes* getSecurityAttributes() const { return mSecurityAttributes.get(); }
 
       void addOutboundDecorator(std::auto_ptr<MessageDecorator> md){mOutboundDecorators.push_back(md.release());}
@@ -403,10 +403,10 @@ class SipMessage : public TransactionMessage
       bool mIsExternal;
       
       // raw text corresponding to each typed header (not yet parsed)
-      mutable HeaderFieldValueList* mHeaders[Headers::MAX_HEADERS];
+      HeaderFieldValueList* mHeaders[Headers::MAX_HEADERS];
 
       // raw text corresponding to each unknown header
-      mutable UnknownHeaders mUnknownHeaders;
+      UnknownHeaders mUnknownHeaders;
   
       // !jf!
       const Transport* mTransport;
@@ -422,10 +422,10 @@ class SipMessage : public TransactionMessage
       std::vector<char*> mBufferList;
 
       // special case for the first line of message
-      mutable HeaderFieldValueList* mStartLine;
+      HeaderFieldValueList* mStartLine;
 
       // raw text for the contents (all of them)
-      mutable HeaderFieldValue* mContentsHfv;
+      HeaderFieldValue* mContentsHfv;
 
       // lazy parser for the contents
       mutable Contents* mContents;
@@ -435,8 +435,8 @@ class SipMessage : public TransactionMessage
       mutable Data mRFC2543TransactionId;
 
       // is a request or response
-      mutable bool mRequest;
-      mutable bool mResponse;
+      bool mRequest;
+      bool mResponse;
 
       bool mInvalid;
       resip::Data mReason;
@@ -455,7 +455,7 @@ class SipMessage : public TransactionMessage
       // peers domain associate with this message (MTLS)
       std::list<Data> mTlsPeerNames; 
 
-      mutable std::auto_ptr<SecurityAttributes> mSecurityAttributes;
+      std::auto_ptr<SecurityAttributes> mSecurityAttributes;
 
       std::vector<MessageDecorator*> mOutboundDecorators;
 
