@@ -831,7 +831,8 @@ ResponseContext::needsFlowTokenToWork(const resip::NameAddr& contact) const
       // IP address in host-part.
       if(contact.uri().scheme()=="sips")
       {
-         // sips: and IP-address in contact. This will probably not work anyway.
+         // TLS with no FQDN. Impossible without flow-token fixup, even if no 
+         // NAT is involved.
          return true;
       }
 
@@ -840,8 +841,8 @@ ResponseContext::needsFlowTokenToWork(const resip::NameAddr& contact) const
          TransportType type = toTransportType(contact.uri().param(p_transport));
          if(type==TLS || type == DTLS)
          {
-            // secure transport and IP-address. Almost certainly won't work, but
-            // we'll try anyway.
+            // TLS with no FQDN. Impossible without flow-token fixup, even if no 
+            // NAT is involved.
             return true;
          }
       }
