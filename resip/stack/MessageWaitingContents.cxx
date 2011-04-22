@@ -3,12 +3,15 @@
 #endif
 
 #include "resip/stack/MessageWaitingContents.hxx"
+#include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 
 using namespace resip;
 using namespace std;
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::CONTENTS
 
 bool
 MessageWaitingContents::init()
@@ -464,10 +467,6 @@ MessageWaitingContents::Header&
 MessageWaitingContents::header(HeaderType ht)
 {
    checkParsed();
-
-   /* this is a trick to allow a const method to update "this" with an empty
-      Header in case there wasn't a corresponding header line in the MessageWaiting doc
-    */
    if (mHeaders[ht] == 0)
    {
       mHeaders[ht] = new Header(0, 0);
@@ -479,9 +478,23 @@ const MessageWaitingContents::Header&
 MessageWaitingContents::header(HeaderType ht) const
 {
    checkParsed();
+
+   /* this is a trick to allow a const method to update "this" with an empty
+      Header in case there wasn't a corresponding header line in the MessageWaiting doc
+    */
    if (mHeaders[ht] == 0)
    {
-      mHeaders[ht] = new Header(0, 0);
+      ErrLog(<< "You called "
+            "MessageWaitingContents::header(HeaderType ht) _const_ "
+            "without first calling exists(), and the header does not exist. Our"
+            " behavior in this scenario is to implicitly create the header(using const_cast!); "
+            "this is probably not what you want, but it is either this or "
+            "assert/throw an exception. Since this has been the behavior for "
+            "so long, we are not throwing here, _yet_. You need to fix your "
+            "code, before we _do_ start throwing. This is why const-correctness"
+            " should never be made a TODO item </rant>");
+      MessageWaitingContents* ncthis = const_cast<MessageWaitingContents*>(this);
+      ncthis->mHeaders[ht] = new Header(0, 0);
    }
    return *mHeaders[ht];
 }
@@ -505,10 +518,6 @@ Uri&
 MessageWaitingContents::header(const AccountHeader& ht)
 {
    checkParsed();
-
-   /* this is a trick to allow a const method to update "this" with an empty
-      Uri in case there wasn't a Message-Account line in the MessageWaiting doc
-    */
    if (mAccountUri == 0)
    {
       mAccountUri = new Uri();
@@ -520,9 +529,23 @@ const Uri&
 MessageWaitingContents::header(const AccountHeader& ht) const
 {
    checkParsed();
+
+   /* this is a trick to allow a const method to update "this" with an empty
+      Uri in case there wasn't a Message-Account line in the MessageWaiting doc
+    */
    if (mAccountUri == 0)
    {
-      mAccountUri = new Uri();
+      ErrLog(<< "You called "
+            "MessageWaitingContents::header(const AccountHeader& ht) _const_ "
+            "without first calling exists(), and the header does not exist. Our"
+            " behavior in this scenario is to implicitly create the header(using const_cast!); "
+            "this is probably not what you want, but it is either this or "
+            "assert/throw an exception. Since this has been the behavior for "
+            "so long, we are not throwing here, _yet_. You need to fix your "
+            "code, before we _do_ start throwing. This is why const-correctness"
+            " should never be made a TODO item </rant>");
+      MessageWaitingContents* ncthis = const_cast<MessageWaitingContents*>(this);
+      ncthis->mAccountUri = new Uri();
    }
    return *mAccountUri;
 }
@@ -556,7 +579,17 @@ MessageWaitingContents::header(const Data& hn) const
    std::map<Data, Data>::const_iterator h=mExtensions.find(hn);
    if(h==mExtensions.end())
    {
-      h=mExtensions.insert(std::make_pair<Data, Data>(hn,Data::Empty)).first;
+      ErrLog(<< "You called "
+            "MessageWaitingContents::header(const Data& hn) _const_ "
+            "without first calling exists(), and the header does not exist. Our"
+            " behavior in this scenario is to implicitly create the header(using const_cast!); "
+            "this is probably not what you want, but it is either this or "
+            "assert/throw an exception. Since this has been the behavior for "
+            "so long, we are not throwing here, _yet_. You need to fix your "
+            "code, before we _do_ start throwing. This is why const-correctness"
+            " should never be made a TODO item </rant>");
+      MessageWaitingContents* ncthis = const_cast<MessageWaitingContents*>(this);
+      h=ncthis->mExtensions.insert(std::make_pair<Data, Data>(hn,Data::Empty)).first;
    }
    return h->second;
 }

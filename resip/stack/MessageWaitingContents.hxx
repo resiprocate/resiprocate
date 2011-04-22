@@ -82,11 +82,9 @@ class MessageWaitingContents : public Contents
       void clear();
 
       bool mHasMessages;
-      // .bwc. Mutable because of the behavior of header() const when no such
-      // header exists.
-      mutable Uri* mAccountUri;
-      mutable Header* mHeaders[MW_MAX];
-      mutable std::map<Data, Data> mExtensions;
+      Uri* mAccountUri;
+      Header* mHeaders[MW_MAX];
+      std::map<Data, Data> mExtensions;
 };
 
 extern MessageWaitingContents::AccountHeader mw_account;
