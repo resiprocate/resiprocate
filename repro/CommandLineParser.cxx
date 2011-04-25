@@ -6,7 +6,7 @@
 #include <popt.h>
 #endif
 
-#include "CommandLineParser.hxx"
+#include "repro/CommandLineParser.hxx"
 #include "repro/ReproVersion.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
