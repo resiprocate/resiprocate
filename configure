@@ -1,12 +1,12 @@
 #!/bin/sh
 
-for PERL in /opt/local/bin/perl \
+for PERL in `which perl ` \
+            /opt/local/bin/perl \
             /usr/bin/perl \
             /bin/perl \
             /usr/local/bin/perl \
             /usr/pkg/bin/perl \
-            /usr/athena/bin/perl \
-            `which perl`
+            /usr/athena/bin/perl
 do
   if [ -x $PERL ]
   then
@@ -28,7 +28,7 @@ CROSS_PLATFORM := arm-unknown-linux-gnu
 CROSS_TOOL_PREFIX := arm-unknown-linux-gnu
 VOCAL_CROSS_ROOT := /opt/crosstool/current/arm-unknown-linux-gnu/bin
 BUILD_SHARED_LIBS := no
-FORCE_PIC := no
+DISABLE_PIC := no
 USE_DISTCC := no
 USE_CCACHE := no
 BUILD_REPRO := yes
@@ -50,6 +50,8 @@ SIPX_INCDIR := /usr/local/include
 USE_POPT := yes
 USE_CURL := no
 USE_GOOGLE_MALLOC := no
+USE_DEBUG_MALLOC := no
+USE_EFENCE := no
 USE_GOOGLE_CPUPERF := no
 USE_RANDOM_THREAD_LOCAL := no
 USE_IPV6 := no
@@ -189,11 +191,12 @@ $uname = `uname`;
     flag        => 'shared-libs',
   },
   {
-    name        => "FORCE_PIC",
-    description => "Compile with -fPIC even if not shared?",
+    name        => "DISABLE_PIC",
+    description => "Disable -fPIC when building static libraries?",
     default     => "no",
     validate    => [@yesno],
-    flag        => 'force-pic',
+    predicate   => "\$config{BUILD_SHARED_LIBS} eq 'no'",
+    flag        => 'disable-pic',
   },
   {
     name        => "USE_DISTCC",
@@ -370,6 +373,20 @@ $uname = `uname`;
     flag        => 'google-cpuperf',
   },
   {
+    name        => "USE_DEBUG_MALLOC",
+    description => "Use the debug malloc() implementation?",
+    default     => "no",
+    validate    => [@yesno],
+    flag        => 'debug-malloc',
+  },
+  {
+    name        => "USE_EFENCE",
+    description => "Use the ElectricFence memory debugger?",
+    default     => "no",
+    validate    => [@yesno],
+    flag        => 'efence',
+  },
+  {
     name        => "USE_RANDOM_THREAD_LOCAL",
     description => "Use Thread Local Storage w/ random_r()?",
     #   default     => &detectRandomr,  # don't make default til more testing
@@ -486,7 +503,7 @@ if (open (CONF, "build/Makefile.conf"))
     chomp;
     if (/([^ :=]+) *:?= *([^ #]*)/)
     {
-      $config{$1} = $2;
+      $config{$1} = $2 if (defined($2) and $2 );
     }
   }
   close (CONF);
@@ -1395,7 +1412,7 @@ sub findDb4
   my (@candidates) = 
   (
     '/usr/include/db4',
-    '/opt/local/include/db42',
+    '/opt/local/include/db44',
     '/opt/local/include/db4',
     '/include/db4',
     '/usr/local/include/db4',
