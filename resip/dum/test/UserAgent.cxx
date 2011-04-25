@@ -132,7 +132,7 @@ UserAgent::process()
 void
 UserAgent::addTransport(TransportType type, int port)
 {
-   for (; port < port+10; ++port)
+   for (int i=0; i < 10; ++i)
    {
       try
       {
@@ -140,13 +140,13 @@ UserAgent::addTransport(TransportType type, int port)
          {
             if (!mNoV4)
             {
-               mDum.addTransport(type, port, V4, Data::Empty, mTlsDomain);
+               mDum.addTransport(type, port+i, V4, Data::Empty, mTlsDomain);
                return;
             }
 
             if (!mNoV6)
             {
-               mDum.addTransport(type, port, V6, Data::Empty, mTlsDomain);
+               mDum.addTransport(type, port+i, V6, Data::Empty, mTlsDomain);
                return;
             }
          }

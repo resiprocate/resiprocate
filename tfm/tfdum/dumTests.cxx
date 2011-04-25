@@ -196,8 +196,8 @@ class DumTestCase : public DumFixture
                            
             SessionTimerControl(Mode mode, int sessionExpires, int minExpires=90) :
                mMode(mode),
-               mMinExpires(minExpires),
-               mSessionExpires(sessionExpires)
+               mSessionExpires(sessionExpires),
+               mMinExpires(minExpires)
             {
             }
                
@@ -328,6 +328,7 @@ class DumTestCase : public DumFixture
 
          jason->getDum().addServerSubscriptionHandler("dialog", jason);
          DialogEventStateManager* desm(jason->getDum().createDialogEventStateManager(jason));
+         (void)desm;
 
          TestSipEndPoint* sheila = sipEndPoint;
          TestDialogEvent uac(jason);
@@ -401,6 +402,7 @@ class DumTestCase : public DumFixture
 
          jason->getDum().addServerSubscriptionHandler("dialog", jason);
          DialogEventStateManager* desm(jason->getDum().createDialogEventStateManager(jason));
+         (void)desm;
 
          TestSipEndPoint* sheila = sipEndPoint;
          TestDialogEvent uac(jason);
@@ -447,6 +449,7 @@ class DumTestCase : public DumFixture
 
          jason->getDum().addServerSubscriptionHandler("dialog", jason);
          DialogEventStateManager* desm(jason->getDum().createDialogEventStateManager(jason));
+         (void)desm;
 
          TestSipEndPoint* sheila = sipEndPoint;
          TestDialogEvent testDialogEvt(jason);
@@ -484,7 +487,7 @@ class DumTestCase : public DumFixture
          // !jjg! leaks
          DialogEventPred* pDi1 = new DialogEventPred(di1);
          DialogEventPred* pDi2 = new DialogEventPred(di2);
-         DialogEventPred* pDi3 = new DialogEventPred(di3);
+//         DialogEventPred* pDi3 = new DialogEventPred(di3);
          DialogEventPred* pDi4 = new DialogEventPred(di4);
 
          InviteHelper ih1(inviteMsg);
@@ -529,6 +532,7 @@ class DumTestCase : public DumFixture
 
          jason->getDum().addServerSubscriptionHandler("dialog", jason);
          DialogEventStateManager* desm(jason->getDum().createDialogEventStateManager(jason));
+         (void)desm;
 
          TestSipEndPoint* sheila = sipEndPoint;
          TestDialogEvent uac(jason);
@@ -579,9 +583,9 @@ class DumTestCase : public DumFixture
          DialogEventPred* pDi1 = new DialogEventPred(di1);
          DialogEventPred* pDi2 = new DialogEventPred(di2);
          DialogEventPred* pDi2a = new DialogEventPred(di2a);
-         DialogEventPred* pDi3 = new DialogEventPred(di3);
-         DialogEventPred* pDi4 = new DialogEventPred(di4);
-         DialogEventPred* pDi4a = new DialogEventPred(di4a);
+//         DialogEventPred* pDi3 = new DialogEventPred(di3);
+//         DialogEventPred* pDi4 = new DialogEventPred(di4);
+//         DialogEventPred* pDi4a = new DialogEventPred(di4a);
 
          InviteHelper ih1(inviteMsg);
 
@@ -624,6 +628,7 @@ class DumTestCase : public DumFixture
 
          jason->getDum().addServerSubscriptionHandler("dialog", jason);
          DialogEventStateManager* desm(jason->getDum().createDialogEventStateManager(jason));
+         (void)desm;
 
          TestSipEndPoint* sheila = sipEndPoint;
          TestDialogEvent uac(jason);
@@ -698,6 +703,7 @@ class DumTestCase : public DumFixture
 
          jason->getDum().addServerSubscriptionHandler("dialog", jason);
          DialogEventStateManager* desm(jason->getDum().createDialogEventStateManager(jason));
+         (void)desm;
 
          TestSipEndPoint* sheila = sipEndPoint;
          TestDialogEvent testDialogEvt(jason);
@@ -798,6 +804,7 @@ class DumTestCase : public DumFixture
 
          jason->getDum().addServerSubscriptionHandler("dialog", jason);
          DialogEventStateManager* desm(jason->getDum().createDialogEventStateManager(jason));
+         (void)desm;
 
          TestClientRegistration regScott(scott);
          TestClientRegistration regJason(jason);
@@ -1022,6 +1029,7 @@ class DumTestCase : public DumFixture
 
          jason->getDum().addServerSubscriptionHandler("dialog", jason);
          DialogEventStateManager* desm(jason->getDum().createDialogEventStateManager(jason));
+         (void)desm;
 
          TestClientRegistration regJason(jason);
          
@@ -1057,7 +1065,7 @@ class DumTestCase : public DumFixture
 
          // !jjg! leaks
          DialogEventPred* pDi1 = new DialogEventPred(di1);
-         DialogEventPred* pDi2 = new DialogEventPred(di2);
+//         DialogEventPred* pDi2 = new DialogEventPred(di2);
          DialogEventPred* pDi3 = new DialogEventPred(di3);
          DialogEventPred* pDi4 = new DialogEventPred(di4);
 
@@ -1088,6 +1096,7 @@ class DumTestCase : public DumFixture
 
          jason->getDum().addServerSubscriptionHandler("dialog", jason);
          DialogEventStateManager* desm(jason->getDum().createDialogEventStateManager(jason));
+         (void)desm;
 
          TestClientRegistration regJason(jason);
          
@@ -1148,6 +1157,7 @@ class DumTestCase : public DumFixture
 
          jason->getDum().addServerSubscriptionHandler("dialog", jason);
          DialogEventStateManager* desm(jason->getDum().createDialogEventStateManager(jason));
+         (void)desm;
 
          TestClientRegistration regJason(jason);
          
@@ -1183,7 +1193,7 @@ class DumTestCase : public DumFixture
          // !jjg! leaks
          DialogEventPred* pDi1 = new DialogEventPred(di1);
          DialogEventPred* pDi2 = new DialogEventPred(di2);
-         DialogEventPred* pDi3 = new DialogEventPred(di3);
+//         DialogEventPred* pDi3 = new DialogEventPred(di3);
          DialogEventPred* pDi4 = new DialogEventPred(di4);
 
          Seq(chain(save(sheilasInvite, sheila->invite(jason->getAor().uri(), offer)),

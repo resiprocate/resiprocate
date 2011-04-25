@@ -2482,7 +2482,7 @@ TestSipEndPoint::Notify::Notify(TestSipEndPoint & endPoint, boost::shared_ptr<re
 boost::shared_ptr<resip::SipMessage>                                
 TestSipEndPoint::Notify::go(boost::shared_ptr<resip::SipMessage> msg)
 {
-   int expires = msg->header(h_Expires).value();
+   UInt32 expires = msg->header(h_Expires).value();
    if (msg->isRequest() && (expires < mMinExpires))
    {
       boost::shared_ptr<resip::SipMessage> response;

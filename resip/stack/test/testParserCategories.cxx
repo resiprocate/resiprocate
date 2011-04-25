@@ -277,7 +277,7 @@ main(int arc, char** argv)
 #ifdef USE_IPV6
    {
       TR _tr("Test cleverly malformed V6 addr in Uri");
-      char* buf="sip:foo@[:x]";
+      const char* buf="sip:foo@[:x]";
       HeaderFieldValue hfv(buf, strlen(buf));
       NameAddr nameaddr(&hfv, Headers::UNKNOWN);
       assert(!nameaddr.isWellFormed());
@@ -684,7 +684,7 @@ main(int arc, char** argv)
 #ifdef USE_IPV6
    {
       TR _tr( "Via assert bug with malformed IPV6 addr [boom]" );
-      char* viaString = "SIP/2.0/UDP [boom]:5060;branch=z9hG4bKblah";
+      const char* viaString = "SIP/2.0/UDP [boom]:5060;branch=z9hG4bKblah";
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv, Headers::UNKNOWN);
       assert(!via.isWellFormed());
@@ -692,7 +692,7 @@ main(int arc, char** argv)
 
    {
       TR _tr( "Via assert bug with malformed IPV6 addr [:z]" );
-      char* viaString = "SIP/2.0/UDP [:z]:5060;branch=z9hG4bKblah";
+      const char* viaString = "SIP/2.0/UDP [:z]:5060;branch=z9hG4bKblah";
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv, Headers::UNKNOWN);
       assert(!via.isWellFormed());
@@ -777,7 +777,7 @@ main(int arc, char** argv)
    {
       TR _tr( "full on via parse, IPV6");
       // !dlb! deal with maddr=[5f1b:df00:ce3e:e200:20:800:2b37:6426]
-      char *viaString = /* Via: */ " SIP/2.0/UDP [5f1b:df00:ce3e:e200:20:800:2b37:6426]:5000;ttl=3;maddr=1.2.3.4;received=foo.com";
+      const char *viaString = /* Via: */ " SIP/2.0/UDP [5f1b:df00:ce3e:e200:20:800:2b37:6426]:5000;ttl=3;maddr=1.2.3.4;received=foo.com";
       
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv, Headers::UNKNOWN);

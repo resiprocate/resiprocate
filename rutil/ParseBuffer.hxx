@@ -4,10 +4,6 @@
 #include "rutil/Data.hxx"
 #include "rutil/ParseException.hxx"
 
-#if defined(RESIP_PB_TEST_DRIVER)
-#define RESIP_DEPRECATED
-#endif
-
 namespace resip
 {
 

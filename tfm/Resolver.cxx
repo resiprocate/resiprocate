@@ -127,10 +127,12 @@ void
 Resolver::lookupARecords()
 {
    struct hostent hostbuf; 
+   (void)hostbuf;
    struct hostent* result;
 
    int herrno=0;
    char buffer[8192];
+   (void)buffer;
 #ifdef __QNX__
    result = gethostbyname_r (mHost.c_str(), &hostbuf, buffer, sizeof(buffer), &herrno);
    if (result == 0)

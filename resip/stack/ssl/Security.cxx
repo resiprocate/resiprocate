@@ -967,9 +967,9 @@ Security::Exception::Exception(const Data& msg, const Data& file, const int line
 
 
 BaseSecurity::BaseSecurity (const CipherList& cipherSuite) :
-   mCipherList(cipherSuite),
    mTlsCtx(0),
    mSslCtx(0),
+   mCipherList(cipherSuite),
    mRootTlsCerts(0),                    
    mRootSslCerts(0)
 { 
