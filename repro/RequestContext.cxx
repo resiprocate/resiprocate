@@ -16,7 +16,7 @@
 
 #include "repro/Ack200DoneMessage.hxx"
 #include "repro/ForkControlMessage.hxx"
-#include "repro/ChainTraverser.hxx"
+#include "repro/ProcessorMessage.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 // Remove warning about 'this' use in initiator list
@@ -434,11 +434,11 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
       return;
    }
 
-   ChainTraverser* ct=dynamic_cast<ChainTraverser*>(mCurrentEvent);
+   ProcessorMessage* proc=dynamic_cast<ProcessorMessage*>(mCurrentEvent);
    
-   if(ct)
+   if(proc)
    {
-      Processor::ChainType type = ct->chainType();
+      Processor::ChainType type = proc->chainType();
       Processor::processor_action_t ret=Processor::Continue;
 
       switch(type)
