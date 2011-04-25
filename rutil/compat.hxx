@@ -173,6 +173,18 @@ typedef unsigned int   UInt32;
 #endif
 #endif
 
+// !bwc! Some poking around seems to indicate that icc supports gcc's function 
+// attributes, at least as far back as version 8. I have no idea what support is 
+// like prior to that. As for SUNPRO, it uses gcc's frontend, so I would expect 
+// gnu-c function attributes to work, but does it define __GNUC__?
+#if defined(__GNUC__) || (__INTEL_COMPILER > 800)
+#define RESIP_DEPRECATED __attribute__ ((deprecated))
+#elif defined(_MSC_VER)
+#define RESIP_DEPRECATED __declspec(deprecated)
+#else
+#define RESIP_DEPRECATED
+#endif
+
 #endif
 
 /* ====================================================================
