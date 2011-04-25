@@ -373,19 +373,19 @@ BasicClientUserAgent::addTransport(TransportType type, int port)
 {
    if(port == 0) return;  // Transport disabled
 
-   for (; port < port+10; ++port)
+   for (int i=0; i < 10; ++i)
    {
       try
       {
          if (!mNoV4)
          {
-            mStack.addTransport(type, port, V4, StunEnabled, Data::Empty, mTlsDomain);
+            mStack.addTransport(type, port+i, V4, StunEnabled, Data::Empty, mTlsDomain);
             return;
          }
 
          if (mEnableV6)
          {
-            mStack.addTransport(type, port, V6, StunEnabled, Data::Empty, mTlsDomain);
+            mStack.addTransport(type, port+i, V6, StunEnabled, Data::Empty, mTlsDomain);
             return;
          }
       }
