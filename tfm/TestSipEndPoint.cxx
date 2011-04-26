@@ -111,7 +111,7 @@ TestSipEndPoint::TestSipEndPoint(const Uri& addressOfRecord,
       {
          InfoLog(<< "TestSipEndPoint[" << addressOfRecord << "]transport is TLS " << nwIf);
          mTransport = new TlsTransport(mIncoming, mContact.uri().port(), version, nwIf, 
-                                       *mSecurity, nwIf, SecurityTypes::TLSv1, 0, resip::Compression::Disabled, 0);
+                                       *mSecurity, resip::Data::Empty, SecurityTypes::TLSv1, 0, resip::Compression::Disabled, 0);
       }
 #endif
       else
