@@ -553,9 +553,9 @@ ResponseContext::beginClientTransaction(repro::Target* target)
 
    // .bwc. Proxy checks whether this is valid, and rejects if not.
    request.header(h_MaxForwards).value()--;
-      
+   
    bool inDialog=false;
-      
+   
    try
    {
       inDialog=request.header(h_To).exists(p_tag);
@@ -565,7 +565,7 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       // ?bwc? Do we ignore this and just say this is a dialog-creating
       // request?
    }
-      
+   
    // Potential source Record-Route addition only for new dialogs
    // !bwc! It looks like we really ought to be record-routing in-dialog
    // stuff.
@@ -623,9 +623,9 @@ ResponseContext::beginClientTransaction(repro::Target* target)
    // !jf! unleash the baboons here
    // a baboon might adorn the message, record call logs or CDRs, might
    // insert loose routes on the way to the next hop
-      
+   
    Helper::processStrictRoute(request);
-      
+   
    //This is where the request acquires the tid of the Target. The tids 
    //should be the same from here on out.
    request.header(h_Vias).push_front(target->via());
@@ -636,7 +636,7 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       mRequestContext.mInitialTimerCSet=true;
       mRequestContext.updateTimerC();
    }
-      
+   
    // the rest of 16.6 is implemented by the transaction layer of resip
    // - determining the next hop (tuple)
    // - adding a content-length if needed
@@ -792,7 +792,7 @@ ResponseContext::getInboundFlowToken(bool doPathInstead)
       Tuple::writeBinaryToken(orig.getSource(), binaryFlowToken, Proxy::FlowTokenSalt);
       flowToken = binaryFlowToken.base64encode();
    }
-   
+
    return flowToken;
 }
 
@@ -930,19 +930,29 @@ ResponseContext::processResponse(SipMessage& response)
       }
       else if (response.header(h_StatusLine).statusCode() > 199)
       {
-         InfoLog( << "Received final response, but can't forward as there are no more Vias: " << response.brief() );
+         InfoLog( << "Received final response, but can't forward as there are "
+                        "no more Vias. Considering this branch failed. " 
+                        << response.brief() );
          // .bwc. Treat as server error.
          terminateClientTransaction(mCurrentResponseTid);
          return;
       }
       else if(response.header(h_StatusLine).statusCode() != 100)
       {
-         InfoLog( << "Received response, but can't forward as there are no more Vias: " << response.brief() );
+         InfoLog( << "Received provisional response, but can't forward as there"
+                     " are no more Vias. Ignoring. " << response.brief() );
          return;
       }
    }
-   else
+   else // We have a second Via
    {
+      if(!mRequestContext.getOriginalRequest().getRFC2543TransactionId().empty())
+      {
+         // .bwc. Original request had an RFC 2543 transaction-id. Set in 
+         // response.
+         response.setRFC2543TransactionId(mRequestContext.getOriginalRequest().getRFC2543TransactionId());
+      }
+
       const Via& via = response.header(h_Vias).front();
 
       if(!via.isWellFormed())
@@ -951,6 +961,24 @@ ResponseContext::processResponse(SipMessage& response)
          // transaction if not.
          DebugLog(<<"Some endpoint has corrupted one of our Vias"
             " in their response. (Via is malformed) This is not fixable.");
+         if(response.header(h_StatusLine).statusCode() > 199)
+         {
+            terminateClientTransaction(mCurrentResponseTid);
+         }
+         
+         return;
+      }
+
+      const Via& origVia = mRequestContext.getOriginalRequest().header(h_Vias).front();
+      const Data& branch=(via.exists(p_branch) ? via.param(p_branch).getTransactionId() : Data::Empty);
+      const Data& origBranch=(origVia.exists(p_branch) ? origVia.param(p_branch).getTransactionId() : Data::Empty);
+
+      if(!isEqualNoCase(branch,origBranch))
+      {
+         // .bwc. Someone altered our branch. Ignore if provisional, terminate 
+         // transaction otherwise.
+         DebugLog(<<"Some endpoint has altered one of our Vias"
+            " in their response. (branch is different) This is not fixable.");
          if(response.header(h_StatusLine).statusCode() > 199)
          {
             terminateClientTransaction(mCurrentResponseTid);
@@ -1006,7 +1034,8 @@ ResponseContext::processResponse(SipMessage& response)
                return;  // stop processing 100 responses
             }
                
-            mRequestContext.sendResponse(response);            
+            mRequestContext.sendResponse(response);
+            return;            
          }
          break;
          
