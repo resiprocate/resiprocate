@@ -201,7 +201,8 @@ ParserCategory::parseParameters(ParseBuffer& pb)
          if((int)(keyEnd-keyStart) != 0)
          {
             ParameterTypes::Type type = ParameterTypes::getType(keyStart, (unsigned int)(keyEnd - keyStart));
-            if (type == ParameterTypes::UNKNOWN)
+            Parameter* p=createParam(type, pb, " \t\r\n;?>");
+            if (!p)
             {
                mUnknownParameters.push_back(new UnknownParameter(keyStart, 
                                                                  int((keyEnd - keyStart)), pb, " \t\r\n;?>"));
@@ -209,7 +210,7 @@ ParserCategory::parseParameters(ParseBuffer& pb)
             else
             {
                // invoke the particular factory
-               mParameters.push_back(ParameterTypes::ParameterFactories[type](type, pb, " \t\r\n;?>"));
+               mParameters.push_back(p);
             }
          }
       }
@@ -220,6 +221,17 @@ ParserCategory::parseParameters(ParseBuffer& pb)
       }
    }
 }      
+
+Parameter* 
+ParserCategory::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+{
+   if(type == ParameterTypes::UNKNOWN)
+   {
+      return 0;
+   }
+
+   return ParameterTypes::ParameterFactories[type](type, pb, terminators);
+}
 
 static Data up_Msgr("msgr");
 
