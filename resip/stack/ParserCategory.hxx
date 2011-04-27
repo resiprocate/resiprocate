@@ -48,6 +48,7 @@ class ParserCategory : public LazyParser
       virtual ~ParserCategory();
 
       virtual ParserCategory* clone() const = 0;
+      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators);
 
       bool exists(const ParamBase& paramType) const;
       void remove(const ParamBase& paramType);
