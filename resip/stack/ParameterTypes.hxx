@@ -13,8 +13,24 @@
 #include "resip/stack/RportParameter.hxx"
 #include "resip/stack/Symbols.hxx"
 
-#define defineParam(_enum, _name, _type, _RFC_ref_ignored)  \
-   class _enum##_Param : public ParamBase                   \
+
+#define defineParam(_enum, _name, _type, _headertype, _RFC_ref_ignored)  \
+   class _enum##_Param : public Param<_headertype>                   \
+   {                                                        \
+     public:                                                \
+      typedef _type Type;                                   \
+      typedef _type::Type DType;                            \
+      virtual ParameterTypes::Type getTypeNum() const;      \
+      virtual const char* name() const { return _name; }    \
+      _enum##_Param();                                      \
+   };                                                       \
+   extern _enum##_Param p_##_enum
+
+// .bwc. So far, I have not discovered any parameter types that are defined for
+// more than two ParserCategories. This may change. If so, we just create
+// another macro with one more _headertype field.
+#define defineParam2(_enum, _name, _type, _headertype, _headertype2, _RFC_ref_ignored)  \
+   class _enum##_Param : public Param<_headertype>, public Param<_headertype2> \
    {                                                        \
      public:                                                \
       typedef _type Type;                                   \
@@ -27,7 +43,6 @@
 
 namespace resip
 {
-
 class ParamBase
 {
    public:
@@ -36,101 +51,125 @@ class ParamBase
       virtual const char* name() const = 0;
 };
 
-defineParam(data, "data", ExistsParameter, "RFC 3840");
-defineParam(control, "control", ExistsParameter, "RFC 3840");
-defineParam(mobility, "mobility", QuotedDataParameter, "RFC 3840"); // mobile|fixed
-defineParam(description, "description", QuotedDataParameter, "RFC 3840"); // <> quoted
-defineParam(events, "events", QuotedDataParameter, "RFC 3840"); // list
-defineParam(priority, "priority", QuotedDataParameter, "RFC 3840"); // non-urgent|normal|urgent|emergency
-defineParam(methods, "methods", QuotedDataParameter, "RFC 3840"); // list
-defineParam(schemes, "schemes", QuotedDataParameter, "RFC 3840"); // list
-defineParam(application, "application", ExistsParameter, "RFC 3840");
-defineParam(video, "video", ExistsParameter, "RFC 3840");
-defineParam(language, "language", QuotedDataParameter, "RFC 3840"); // list
-defineParam(type, "type", QuotedDataParameter, "RFC 3840"); // list
-defineParam(isFocus, "isfocus", ExistsParameter, "RFC 3840");
-defineParam(actor, "actor", QuotedDataParameter, "RFC 3840"); // principal|msg-taker|attendant|information
-defineParam(text, "text", ExistsOrDataParameter, "RFC 3840"); // using ExistsOrDataParameter so this parameter is compatible with both RFC3840 and RFC3326
-defineParam(extensions, "extensions", QuotedDataParameter, "RFC 3840"); //list
-defineParam(Instance, "+sip.instance", QuotedDataParameter, "RFC 5626");  // <> quoted
-defineParam(regid, "reg-id", UInt32Parameter, "RFC 5626");
-defineParam(ob,"ob",ExistsParameter,"RFC 5626");
-defineParam(pubGruu, "pub-gruu", QuotedDataParameter, "RFC 5627");
-defineParam(tempGruu, "temp-gruu", QuotedDataParameter, "RFC 5627");
-defineParam(gr, "gr", ExistsOrDataParameter, "RFC 5627");
+template<class T>
+class Param : virtual public ParamBase
+{};
 
-defineParam(accessType, "access-type", DataParameter, "RFC 2046");
-defineParam(algorithm, "algorithm", DataParameter, "RFC 2617");
-defineParam(boundary, "boundary", DataParameter, "RFC 2046");
-defineParam(branch, "branch", BranchParameter, "RFC 3261");
-defineParam(charset, "charset", DataParameter, "RFC 2045");
-defineParam(cnonce, "cnonce", QuotedDataParameter, "RFC 2617");
-defineParam(comp, "comp", DataParameter, "RFC 3486");
-defineParam(dAlg, "d-alg", DataParameter, "RFC 3329");
-defineParam(dQop, "d-qop", DataParameter, "RFC ????");
-defineParam(dVer, "d-ver", QuotedDataParameter, "RFC ????");
-defineParam(directory, "directory", DataParameter, "RFC 2046");
-defineParam(domain, "domain", QuotedDataParameter, "RFC ????");
-defineParam(duration, "duration", UInt32Parameter, "RFC ????");
-defineParam(expiration, "expiration", QuotedDataParameter, "RFC 2046");
-defineParam(expires, "expires", UInt32Parameter, "RFC 3261");
-defineParam(filename, "filename", DataParameter, "RFC ????");
-defineParam(fromTag, "from-tag", DataParameter, "RFC ????");
-defineParam(handling, "handling", DataParameter, "RFC ????");
-defineParam(id, "id", DataParameter, "RFC ????");
-defineParam(lr, "lr", ExistsParameter, "RFC 3261");
-defineParam(maddr, "maddr", DataParameter, "RFC 3261");
-defineParam(method, "method", DataParameter, "RFC ????");
-defineParam(micalg, "micalg", DataParameter, "RFC 1847");
-defineParam(mode, "mode", DataParameter, "RFC 2046");
-defineParam(name, "name", DataParameter, "RFC 2046");
-defineParam(nc, "nc", DataParameter, "RFC 2617");
-defineParam(nonce, "nonce", QuotedDataParameter, "RFC 2617");
-defineParam(opaque, "opaque", QuotedDataParameter, "RFC 2617");
-defineParam(permission, "permission", DataParameter, "RFC 2046");
-defineParam(protocol, "protocol", QuotedDataParameter, "RFC 1847");
-defineParam(purpose, "purpose", DataParameter, "RFC ????");
-defineParam(q, "q", QValueParameter, "RFC 3261");
-defineParam(realm, "realm", QuotedDataParameter, "RFC 2617");
-defineParam(reason, "reason", DataParameter, "RFC ????");
-defineParam(received, "received", DataParameter, "RFC 3261");
-defineParam(response, "response", QuotedDataParameter, "RFC ????");
-defineParam(retryAfter, "retry-after", UInt32Parameter, "RFC 3261");
-defineParam(rinstance, "rinstance", DataParameter, "");
-defineParam(rport, "rport", RportParameter, "RFC 3261");
-defineParam(server, "server", DataParameter, "RFC 2046");
-defineParam(site, "site", DataParameter, "RFC 2046");
-defineParam(size, "size", DataParameter, "RFC 2046");
-defineParam(smimeType, "smime-type", DataParameter, "RFC 2633");
-defineParam(stale, "stale", DataParameter, "RFC 2617");
-defineParam(tag, "tag", DataParameter, "RFC 3261");
-defineParam(toTag, "to-tag", DataParameter, "RFC ????");
-defineParam(transport, "transport", DataParameter, "RFC 3261");
-defineParam(ttl, "ttl", UInt32Parameter, "RFC ????");
-defineParam(uri, "uri", QuotedDataParameter, "RFC ????");
-defineParam(user, "user", DataParameter, "RFC ????");
-defineParam(extension, "ext", DataParameter, "RFC ????");
-defineParam(username, "username", QuotedDataParameter, "RFC 3261");
-defineParam(earlyOnly, "early-only", ExistsParameter, "RFC 3891");
-defineParam(refresher, "refresher", DataParameter, "RFC 4028");
+class Auth;
+class CSeqCategory;
+class CallID;
+class DateCategory;
+class ExpiresCategory;
+class GenericUri;
+class IntegerCategory;
+class UInt32Category;
+class Mime;
+class NameAddr;
+class PrivacyCategory;
+class RAckCategory;
+class RequestLine;
+class StatusLine;
+class StringCategory;
+class Token;
+class Uri;
+class Via;
+class WarningCategory;
 
-defineParam(profileType, "profile-type", DataParameter, "draft-ietf-sipping-config-framework");
-defineParam(vendor, "vendor", QuotedDataParameter, "draft-ietf-sipping-config-framework");
-defineParam(model, "model", QuotedDataParameter, "draft-ietf-sipping-config-framework");
-defineParam(version, "version", QuotedDataParameter, "draft-ietf-sipping-config-framework");
-defineParam(effectiveBy, "effective-by", UInt32Parameter, "draft-ietf-sipping-config-framework");
-defineParam(document, "document", DataParameter, "draft-ietf-sipping-config-framework");
-defineParam(appId, "app-id", DataParameter, "draft-ietf-sipping-config-framework");
-defineParam(networkUser, "network-user", DataParameter, "draft-ietf-sipping-config-framework");
+defineParam(data, "data", ExistsParameter, NameAddr, "RFC 3840");
+defineParam(control, "control", ExistsParameter, NameAddr, "RFC 3840");
+defineParam(mobility, "mobility", QuotedDataParameter, NameAddr, "RFC 3840"); // mobile|fixed
+defineParam(description, "description", QuotedDataParameter, NameAddr, "RFC 3840"); // <> quoted
+defineParam(events, "events", QuotedDataParameter, NameAddr, "RFC 3840"); // list
+defineParam(priority, "priority", QuotedDataParameter, NameAddr, "RFC 3840"); // non-urgent|normal|urgent|emergency
+defineParam(methods, "methods", QuotedDataParameter, NameAddr, "RFC 3840"); // list
+defineParam(schemes, "schemes", QuotedDataParameter, NameAddr, "RFC 3840"); // list
+defineParam(application, "application", ExistsParameter, NameAddr, "RFC 3840");
+defineParam(video, "video", ExistsParameter, NameAddr, "RFC 3840");
+defineParam(language, "language", QuotedDataParameter, NameAddr, "RFC 3840"); // list
+defineParam(type, "type", QuotedDataParameter, NameAddr, "RFC 3840"); // list
+defineParam(isFocus, "isfocus", ExistsParameter, NameAddr, "RFC 3840");
+defineParam(actor, "actor", QuotedDataParameter, NameAddr, "RFC 3840"); // principal|msg-taker|attendant|information
+defineParam2(text, "text", ExistsOrDataParameter, NameAddr, Token, "RFC 3840");
+defineParam(extensions, "extensions", QuotedDataParameter, NameAddr, "RFC 3840"); //list
+defineParam(Instance, "+sip.instance", QuotedDataParameter, NameAddr, "RFC 5626");  // <> quoted
+defineParam(regid, "reg-id", UInt32Parameter, NameAddr, "RFC 5626");
+defineParam(ob,"ob",ExistsParameter,NameAddr, "RFC 5626");
+defineParam(pubGruu, "pub-gruu", QuotedDataParameter, NameAddr, "RFC 5627");
+defineParam(tempGruu, "temp-gruu", QuotedDataParameter, NameAddr, "RFC 5627");
+defineParam(gr, "gr", ExistsOrDataParameter, Uri, "RFC 5627");
 
-defineParam(url, "url", QuotedDataParameter, "RFC 4483");
+defineParam(accessType, "access-type", DataParameter, Mime, "RFC 2046");
+defineParam(algorithm, "algorithm", DataParameter, Auth, "RFC 2617");
+defineParam(boundary, "boundary", DataParameter, Mime, "RFC 2046");
+defineParam(branch, "branch", BranchParameter, Via, "RFC 3261");
+defineParam(charset, "charset", DataParameter, Mime, "RFC 2045");
+defineParam(cnonce, "cnonce", QuotedDataParameter, Auth, "RFC 2617");
+defineParam2(comp, "comp", DataParameter, Uri, Via, "RFC 3486");
+defineParam(dAlg, "d-alg", DataParameter, Token, "RFC 3329");
+defineParam(dQop, "d-qop", DataParameter, Token, "RFC 3329");
+defineParam(dVer, "d-ver", QuotedDataParameter, Token, "RFC 3329");
+defineParam(directory, "directory", DataParameter, Mime, "RFC 2046");
+defineParam(domain, "domain", QuotedDataParameter, Auth, "RFC 3261");
+defineParam(duration, "duration", UInt32Parameter, Uri, "RFC 4240");
+defineParam(expiration, "expiration", QuotedDataParameter, Mime, "RFC 2046");
+defineParam2(expires, "expires", UInt32Parameter, NameAddr, Token, "RFC 3261");
+defineParam(filename, "filename", DataParameter, Token, "RFC 2183");
+defineParam(fromTag, "from-tag", DataParameter, Token, "RFC 4235");
+defineParam(handling, "handling", DataParameter, Token, "RFC 3261");
+defineParam(id, "id", DataParameter, Token, "RFC 3265");
+defineParam(lr, "lr", ExistsParameter, Uri, "RFC 3261");
+defineParam(maddr, "maddr", DataParameter, Uri, "RFC 3261");
+defineParam(method, "method", DataParameter, Uri, "RFC 3261");
+defineParam(micalg, "micalg", DataParameter, Mime, "RFC 1847");
+defineParam(mode, "mode", DataParameter, Mime, "RFC 2046");
+defineParam(name, "name", DataParameter, Mime, "RFC 2046");
+defineParam(nc, "nc", DataParameter, Auth, "RFC 2617");
+defineParam(nonce, "nonce", QuotedDataParameter, Auth, "RFC 2617");
+defineParam(opaque, "opaque", QuotedDataParameter, Auth, "RFC 2617");
+defineParam(permission, "permission", DataParameter, Mime, "RFC 2046");
+defineParam(protocol, "protocol", QuotedDataParameter, Mime, "RFC 1847");
+defineParam(purpose, "purpose", DataParameter, GenericUri, "RFC 3261");
+defineParam2(q, "q", QValueParameter, NameAddr, Token, "RFC 3261");
+defineParam(realm, "realm", QuotedDataParameter, Auth, "RFC 2617");
+defineParam(reason, "reason", DataParameter, Token, "RFC 3265");
+defineParam(received, "received", DataParameter, Via, "RFC 3261");
+defineParam(response, "response", QuotedDataParameter, Auth, "RFC 3261");
+defineParam(retryAfter, "retry-after", UInt32Parameter, Token, "RFC 3265");
+defineParam(rinstance, "rinstance", DataParameter, NameAddr, "proprietary (resip)");
+defineParam(rport, "rport", RportParameter, Via, "RFC 3581");
+defineParam(server, "server", DataParameter, Mime, "RFC 2046");
+defineParam(site, "site", DataParameter, Mime, "RFC 2046");
+defineParam(size, "size", DataParameter, Mime, "RFC 2046");
+defineParam(smimeType, "smime-type", DataParameter, Mime, "RFC 2633");
+defineParam(stale, "stale", DataParameter, Auth, "RFC 2617");
+defineParam(tag, "tag", DataParameter, Uri, "RFC 3261");
+defineParam(toTag, "to-tag", DataParameter, Token, "RFC 4235");
+defineParam(transport, "transport", DataParameter, Uri, "RFC 3261");
+defineParam2(ttl, "ttl", UInt32Parameter, Uri, Via, "RFC 3261");
+defineParam(uri, "uri", QuotedDataParameter, Auth, "RFC 3261");
+defineParam(user, "user", DataParameter, Uri, "RFC 3261, 4967");
+defineParam2(extension, "ext", DataParameter, Uri, Token, "RFC 3966"); // Token is used when ext is a user-parameter
+defineParam(username, "username", QuotedDataParameter, Auth, "RFC 3261");
+defineParam(earlyOnly, "early-only", ExistsParameter, CallID, "RFC 3891");
+defineParam(refresher, "refresher", DataParameter, ExpiresCategory, "RFC 4028");
 
-defineParam(sigcompId, "sigcomp-id", QuotedDataParameter, "draft-ietf-rohc-sigcomp-sip");
-defineParam(qop,"qop",DataParameter,"RFC3261");
+defineParam(profileType, "profile-type", DataParameter, Token, "RFC 6080");
+defineParam(vendor, "vendor", QuotedDataParameter, Token, "RFC 6080");
+defineParam(model, "model", QuotedDataParameter, Token, "RFC 6080");
+defineParam(version, "version", QuotedDataParameter, Token, "RFC 6080");
+defineParam(effectiveBy, "effective-by", UInt32Parameter, Token, "RFC 6080");
+defineParam(document, "document", DataParameter, Token, "draft-ietf-sipping-config-framework-07 (removed in 08)");
+defineParam(appId, "app-id", DataParameter, Token, "draft-ietf-sipping-config-framework-05 (renamed to auid in 06, which was then removed in 08)");
+defineParam(networkUser, "network-user", DataParameter, Token, "draft-ietf-sipping-config-framework-11 (removed in 12)");
+
+defineParam(url, "url", QuotedDataParameter, Mime, "RFC 4483");
+
+defineParam2(sigcompId, "sigcomp-id", QuotedDataParameter, Uri, Via, "RFC 5049");
+defineParam(qop,"qop",DataParameter, Auth, "RFC 3261");
 
 // Internal use only
-defineParam(qopOptions,"qop",DataParameter,"RFC3261");
-defineParam(addTransport, "addTransport", ExistsParameter, "RESIP INTERNAL");
+defineParam(qopOptions,"qop",DataParameter, Auth, "RFC 3261");
+defineParam(addTransport, "addTransport", ExistsParameter, Uri, "RESIP INTERNAL");
 
 }
 
