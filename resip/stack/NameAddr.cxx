@@ -214,34 +214,23 @@ NameAddr::parse(ParseBuffer& pb)
       }
       else
       {
-         // deal with Uri/NameAddr parameter ambiguity
-         // heuristically assign Uri parameters to the Uri
-         swap(mParameters, mUri.mParameters);
-         swap(mUnknownParameters, mUri.mUnknownParameters);
-         for (ParameterList::iterator it = mParameters.begin(); 
-              it != mParameters.end();)
+         Data temp;
          {
-            switch ((*it)->getType())
+            oDataStream str(temp);
+            // deal with Uri/NameAddr parameter ambiguity
+            // heuristically assign Uri parameters to the Uri
+            for (ParameterList::iterator it = mUri.mUnknownParameters.begin(); 
+                 it != mUri.mUnknownParameters.end(); ++it)
             {
-               case ParameterTypes::comp:             
-               case ParameterTypes::lr:
-               case ParameterTypes::maddr:
-               case ParameterTypes::method: 
-               case ParameterTypes::transport:
-               case ParameterTypes::ttl:
-               case ParameterTypes::user:
-               {
-                  mUri.mParameters.push_back(*it);
-                  it = mParameters.erase(it);
-                  break;
-               }
-               default:
-               {
-                  it++;
-               }
+               // We're just going to assume all unknown (to Uri) params really
+               // belong on the header. This is not necessarily the case.
+               str << ";";
+               (*it)->encode(str);
             }
-            // fall through to parse any parameters left which are not Uri parameters
+            mUri.clearUnknownParameters();
          }
+         ParseBuffer pb2(temp);
+         parseParameters(pb2);
       }
    }
    parseParameters(pb);
