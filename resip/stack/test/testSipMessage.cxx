@@ -28,6 +28,7 @@ int
 main(int argc, char** argv)
 {
    Log::initialize(Log::Cout, Log::Debug, argv[0]);
+   static ExtensionParameter p_tag_ext("tag");
 #
    Data txt(
       "SIP/2.0 401 Unauthorized\r\n"
@@ -1880,7 +1881,7 @@ main(int argc, char** argv)
       assert(message->exists(h_To));
       assert(message->header(h_To).uri().user() == "user");
       assert(message->header(h_To).uri().host() == "company.com");
-      assert(message->header(h_To).uri().exists(p_tag) == false);
+      assert(message->header(h_To).uri().exists(p_tag_ext) == false);
 
       assert(message->exists(h_From));
       assert(message->header(h_From).uri().user() == "user");
@@ -1889,7 +1890,7 @@ main(int argc, char** argv)
 
       assert(message->exists(h_MaxForwards));
       assert(message->header(h_MaxForwards).value() == 8);
-      assert(message->header(h_MaxForwards).exists(p_tag) == false);
+      assert(message->header(h_MaxForwards).exists(p_tag_ext) == false);
 
       assert(message->exists(h_Contacts));
       assert(message->header(h_Contacts).empty() == false);
