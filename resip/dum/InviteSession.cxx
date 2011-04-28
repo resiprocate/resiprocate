@@ -3048,7 +3048,7 @@ InviteSession::sendBye()
    {
       Token reason("SIP");
       txt = getEndReasonString(mEndReason);
-      reason.param(p_description) = txt;
+      reason.param(p_text) = txt;
       bye->header(h_Reasons).push_back(reason);      
    }
 
