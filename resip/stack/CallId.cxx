@@ -89,7 +89,56 @@ CallID::encodeParsed(EncodeStream& str) const
    return str;
 }
 
+bool 
+CallID::exists(const Param<CallID>& paramType) const
+{
+    checkParsed();
+    bool ret = getParameterByEnum(paramType.getTypeNum()) != NULL;
+    return ret;
+}
 
+void 
+CallID::remove(const Param<CallID>& paramType)
+{
+    checkParsed();
+    removeParameterByEnum(paramType.getTypeNum());
+}
+
+#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                                                      \
+_enum##_Param::DType&                                                                                           \
+CallID::param(const _enum##_Param& paramType)                                                           \
+{                                                                                                               \
+   checkParsed();                                                                                               \
+   _enum##_Param::Type* p =                                                                                     \
+      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                            \
+   if (!p)                                                                                                      \
+   {                                                                                                            \
+      p = new _enum##_Param::Type(paramType.getTypeNum());                                                      \
+      mParameters.push_back(p);                                                                                 \
+   }                                                                                                            \
+   return p->value();                                                                                           \
+}                                                                                                               \
+                                                                                                                \
+const _enum##_Param::DType&                                                                                     \
+CallID::param(const _enum##_Param& paramType) const                                                     \
+{                                                                                                               \
+   checkParsed();                                                                                               \
+   _enum##_Param::Type* p =                                                                                     \
+      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                            \
+   if (!p)                                                                                                      \
+   {                                                                                                            \
+      InfoLog(<< "Missing parameter " _name " " << ParameterTypes::ParameterNames[paramType.getTypeNum()]);     \
+      DebugLog(<< *this);                                                                                       \
+      throw Exception("Missing parameter " _name, __FILE__, __LINE__);                                          \
+   }                                                                                                            \
+   return p->value();                                                                                           \
+}
+
+defineParam(fromTag, "from-tag", DataParameter, "RFC 3891 (not in IANA, apparently)");
+defineParam(toTag, "to-tag", DataParameter, "RFC 3891 (not in IANA, apparently)");
+defineParam(earlyOnly, "early-only", ExistsParameter, "RFC 3891 (not in IANA, apparently)");
+
+#undef defineParam
 
 
 /* ====================================================================

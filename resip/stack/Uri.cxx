@@ -1205,6 +1205,68 @@ Uri::toString() const
    return out;
 }
 
+bool 
+Uri::exists(const Param<Uri>& paramType) const
+{
+    checkParsed();
+    bool ret = getParameterByEnum(paramType.getTypeNum()) != NULL;
+    return ret;
+}
+
+void 
+Uri::remove(const Param<Uri>& paramType)
+{
+    checkParsed();
+    removeParameterByEnum(paramType.getTypeNum());
+}
+
+#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                                                      \
+_enum##_Param::DType&                                                                                           \
+Uri::param(const _enum##_Param& paramType)                                                           \
+{                                                                                                               \
+   checkParsed();                                                                                               \
+   _enum##_Param::Type* p =                                                                                     \
+      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                            \
+   if (!p)                                                                                                      \
+   {                                                                                                            \
+      p = new _enum##_Param::Type(paramType.getTypeNum());                                                      \
+      mParameters.push_back(p);                                                                                 \
+   }                                                                                                            \
+   return p->value();                                                                                           \
+}                                                                                                               \
+                                                                                                                \
+const _enum##_Param::DType&                                                                                     \
+Uri::param(const _enum##_Param& paramType) const                                                     \
+{                                                                                                               \
+   checkParsed();                                                                                               \
+   _enum##_Param::Type* p =                                                                                     \
+      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                            \
+   if (!p)                                                                                                      \
+   {                                                                                                            \
+      InfoLog(<< "Missing parameter " _name " " << ParameterTypes::ParameterNames[paramType.getTypeNum()]);     \
+      DebugLog(<< *this);                                                                                       \
+      throw Exception("Missing parameter " _name, __FILE__, __LINE__);                                          \
+   }                                                                                                            \
+   return p->value();                                                                                           \
+}
+
+defineParam(ob,"ob",ExistsParameter,"RFC 5626");
+defineParam(gr, "gr", ExistsOrDataParameter, "RFC 5627");
+defineParam(comp, "comp", DataParameter, "RFC 3486");
+defineParam(duration, "duration", UInt32Parameter, "RFC 4240");
+defineParam(lr, "lr", ExistsParameter, "RFC 3261");
+defineParam(maddr, "maddr", DataParameter, "RFC 3261");
+defineParam(method, "method", DataParameter, "RFC 3261");
+defineParam(transport, "transport", DataParameter, "RFC 3261");
+defineParam(ttl, "ttl", UInt32Parameter, "RFC 3261");
+defineParam(user, "user", DataParameter, "RFC 3261, 4967");
+defineParam(extension, "ext", DataParameter, "RFC 3966"); // Token is used when ext is a user-parameter
+defineParam(sigcompId, "sigcomp-id", QuotedDataParameter, "RFC 5049");
+defineParam(rinstance, "rinstance", DataParameter, "proprietary (resip)");
+defineParam(addTransport, "addTransport", ExistsParameter, "RESIP INTERNAL");
+
+#undef defineParam
+
 HashValueImp(resip::Uri, resip::Data::from(data).hash());
 
 /* ====================================================================

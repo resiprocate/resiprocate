@@ -124,8 +124,8 @@ class Headers
 
          defineHeader(ContentLength, "Content-Length", UInt32Category, "RFC 3261"),
          defineHeader(ReferSub, "Refer-Sub", Token, "RFC 4488"),
-         defineHeader(AnswerMode, "Answer-Mode", Token, "draft-ietf-answermode-01"),
-         defineHeader(PrivAnswerMode, "Priv-Answer-Mode", Token, "draft-ietf-answermode-01"),
+         defineHeader(AnswerMode, "Answer-Mode", Token, "RFC 5373"),
+         defineHeader(PrivAnswerMode, "Priv-Answer-Mode", Token, "RFC 5373"),
          defineMultiHeader(RemotePartyId, "Remote-Party-ID", NameAddr, "draft-ietf-sip-privacy-04"), // ?bwc? Not in 3323, should we keep?
          defineMultiHeader(HistoryInfo, "History-Info", NameAddr, "RFC 4244"),
 

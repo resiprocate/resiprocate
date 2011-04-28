@@ -163,6 +163,36 @@ class Uri : public ParserCategory
       bool operator!=(const Uri& other) const;
       bool operator<(const Uri& other) const;
       
+      // Inform the compiler that overloads of these may be found in
+      // ParserCategory, too.
+      using ParserCategory::exists;
+      using ParserCategory::remove;
+      using ParserCategory::param;
+
+      bool exists(const Param<Uri>& paramType) const;
+      void remove(const Param<Uri>& paramType);
+
+#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \
+      const _enum##_Param::DType& param(const _enum##_Param& paramType) const;  \
+      _enum##_Param::DType& param(const _enum##_Param& paramType)
+
+      defineParam(ob,"ob",ExistsParameter,"RFC 5626");
+      defineParam(gr, "gr", ExistsOrDataParameter, "RFC 5627");
+      defineParam(comp, "comp", DataParameter, "RFC 3486");
+      defineParam(duration, "duration", UInt32Parameter, "RFC 4240");
+      defineParam(lr, "lr", ExistsParameter, "RFC 3261");
+      defineParam(maddr, "maddr", DataParameter, "RFC 3261");
+      defineParam(method, "method", DataParameter, "RFC 3261");
+      defineParam(transport, "transport", DataParameter, "RFC 3261");
+      defineParam(ttl, "ttl", UInt32Parameter, "RFC 3261");
+      defineParam(user, "user", DataParameter, "RFC 3261, 4967");
+      defineParam(extension, "ext", DataParameter, "RFC 3966"); // Token is used when ext is a user-parameter
+      defineParam(sigcompId, "sigcomp-id", QuotedDataParameter, "RFC 5049");
+      defineParam(rinstance, "rinstance", DataParameter, "proprietary (resip)");
+      defineParam(addTransport, "addTransport", ExistsParameter, "RESIP INTERNAL");
+
+#undef defineParam
+
    protected:
       mutable Data mScheme;
       mutable Data mHost;

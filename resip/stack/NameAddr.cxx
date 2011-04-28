@@ -393,6 +393,77 @@ NameAddr::mustQuoteDisplayName() const
    return false;
 }
 
+bool 
+NameAddr::exists(const Param<NameAddr>& paramType) const
+{
+    checkParsed();
+    bool ret = getParameterByEnum(paramType.getTypeNum()) != NULL;
+    return ret;
+}
+
+void 
+NameAddr::remove(const Param<NameAddr>& paramType)
+{
+    checkParsed();
+    removeParameterByEnum(paramType.getTypeNum());
+}
+
+#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                                                      \
+_enum##_Param::DType&                                                                                           \
+NameAddr::param(const _enum##_Param& paramType)                                                           \
+{                                                                                                               \
+   checkParsed();                                                                                               \
+   _enum##_Param::Type* p =                                                                                     \
+      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                            \
+   if (!p)                                                                                                      \
+   {                                                                                                            \
+      p = new _enum##_Param::Type(paramType.getTypeNum());                                                      \
+      mParameters.push_back(p);                                                                                 \
+   }                                                                                                            \
+   return p->value();                                                                                           \
+}                                                                                                               \
+                                                                                                                \
+const _enum##_Param::DType&                                                                                     \
+NameAddr::param(const _enum##_Param& paramType) const                                                     \
+{                                                                                                               \
+   checkParsed();                                                                                               \
+   _enum##_Param::Type* p =                                                                                     \
+      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                            \
+   if (!p)                                                                                                      \
+   {                                                                                                            \
+      InfoLog(<< "Missing parameter " _name " " << ParameterTypes::ParameterNames[paramType.getTypeNum()]);     \
+      DebugLog(<< *this);                                                                                       \
+      throw Exception("Missing parameter " _name, __FILE__, __LINE__);                                          \
+   }                                                                                                            \
+   return p->value();                                                                                           \
+}
+
+defineParam(data, "data", ExistsParameter, "RFC 3840");
+defineParam(control, "control", ExistsParameter, "RFC 3840");
+defineParam(mobility, "mobility", QuotedDataParameter, "RFC 3840"); // mobile|fixed
+defineParam(description, "description", QuotedDataParameter, "RFC 3840"); // <> quoted
+defineParam(events, "events", QuotedDataParameter, "RFC 3840"); // list
+defineParam(priority, "priority", QuotedDataParameter, "RFC 3840"); // non-urgent|normal|urgent|emergency
+defineParam(methods, "methods", QuotedDataParameter, "RFC 3840"); // list
+defineParam(schemes, "schemes", QuotedDataParameter, "RFC 3840"); // list
+defineParam(application, "application", ExistsParameter, "RFC 3840");
+defineParam(video, "video", ExistsParameter, "RFC 3840");
+defineParam(language, "language", QuotedDataParameter, "RFC 3840"); // list
+defineParam(type, "type", QuotedDataParameter, "RFC 3840"); // list
+defineParam(isFocus, "isfocus", ExistsParameter, "RFC 3840");
+defineParam(actor, "actor", QuotedDataParameter, "RFC 3840"); // principal|msg-taker|attendant|information
+defineParam(text, "text", ExistsOrDataParameter, "RFC 3840");
+defineParam(extensions, "extensions", QuotedDataParameter, "RFC 3840"); //list
+defineParam(Instance, "+sip.instance", QuotedDataParameter, "RFC 5626");  // <> quoted
+defineParam(regid, "reg-id", UInt32Parameter, "RFC 5626");
+defineParam(pubGruu, "pub-gruu", QuotedDataParameter, "RFC 5627");
+defineParam(tempGruu, "temp-gruu", QuotedDataParameter, "RFC 5627");
+defineParam(expires, "expires", UInt32Parameter, "RFC 3261");
+defineParam(q, "q", QValueParameter, "RFC 3261");
+defineParam(tag, "tag", DataParameter, "RFC 3261");
+
+#undef defineParam
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

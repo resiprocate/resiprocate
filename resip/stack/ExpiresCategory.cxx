@@ -85,6 +85,54 @@ ExpiresCategory::encodeParsed(EncodeStream& str) const
    return str;
 }
 
+bool 
+ExpiresCategory::exists(const Param<ExpiresCategory>& paramType) const
+{
+    checkParsed();
+    bool ret = getParameterByEnum(paramType.getTypeNum()) != NULL;
+    return ret;
+}
+
+void 
+ExpiresCategory::remove(const Param<ExpiresCategory>& paramType)
+{
+    checkParsed();
+    removeParameterByEnum(paramType.getTypeNum());
+}
+
+#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                                                      \
+_enum##_Param::DType&                                                                                           \
+ExpiresCategory::param(const _enum##_Param& paramType)                                                           \
+{                                                                                                               \
+   checkParsed();                                                                                               \
+   _enum##_Param::Type* p =                                                                                     \
+      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                            \
+   if (!p)                                                                                                      \
+   {                                                                                                            \
+      p = new _enum##_Param::Type(paramType.getTypeNum());                                                      \
+      mParameters.push_back(p);                                                                                 \
+   }                                                                                                            \
+   return p->value();                                                                                           \
+}                                                                                                               \
+                                                                                                                \
+const _enum##_Param::DType&                                                                                     \
+ExpiresCategory::param(const _enum##_Param& paramType) const                                                     \
+{                                                                                                               \
+   checkParsed();                                                                                               \
+   _enum##_Param::Type* p =                                                                                     \
+      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                            \
+   if (!p)                                                                                                      \
+   {                                                                                                            \
+      InfoLog(<< "Missing parameter " _name " " << ParameterTypes::ParameterNames[paramType.getTypeNum()]);     \
+      DebugLog(<< *this);                                                                                       \
+      throw Exception("Missing parameter " _name, __FILE__, __LINE__);                                          \
+   }                                                                                                            \
+   return p->value();                                                                                           \
+}
+
+defineParam(refresher, "refresher", DataParameter, "RFC 4028");
+
+#undef defineParam
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
