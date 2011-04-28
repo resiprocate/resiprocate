@@ -104,6 +104,18 @@ Token::encodeParsed(EncodeStream& str) const
    return str;
 }
 
+ParameterTypes::Factory Token::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
+
+Parameter* 
+Token::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+{
+   if(ParameterFactories[type])
+   {
+      return ParameterFactories[type](type, pb, terminators);
+   }
+   return 0;
+}
+
 bool 
 Token::exists(const Param<Token>& paramType) const
 {

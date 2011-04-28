@@ -83,6 +83,18 @@ GenericUri::encodeParsed(EncodeStream& str) const
    return str;
 }
 
+ParameterTypes::Factory GenericUri::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
+
+Parameter* 
+GenericUri::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+{
+   if(ParameterFactories[type])
+   {
+      return ParameterFactories[type](type, pb, terminators);
+   }
+   return 0;
+}
+
 bool 
 GenericUri::exists(const Param<GenericUri>& paramType) const
 {

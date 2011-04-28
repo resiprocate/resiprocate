@@ -135,6 +135,18 @@ Mime::encodeParsed(EncodeStream& str) const
 
 HashValueImp(resip::Mime, data.type().caseInsensitivehash() ^ data.subType().caseInsensitivehash());
 
+ParameterTypes::Factory Mime::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
+
+Parameter* 
+Mime::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+{
+   if(ParameterFactories[type])
+   {
+      return ParameterFactories[type](type, pb, terminators);
+   }
+   return 0;
+}
+
 bool 
 Mime::exists(const Param<Mime>& paramType) const
 {
@@ -190,6 +202,7 @@ defineParam(mode, "mode", DataParameter, "RFC 2046");
 defineParam(name, "name", DataParameter, "RFC 2046");
 defineParam(permission, "permission", DataParameter, "RFC 2046");
 defineParam(protocol, "protocol", QuotedDataParameter, "RFC 1847");
+defineParam(q, "q", QValueParameter, "RFC 3261");
 defineParam(server, "server", DataParameter, "RFC 2046");
 defineParam(site, "site", DataParameter, "RFC 2046");
 defineParam(size, "size", DataParameter, "RFC 2046");

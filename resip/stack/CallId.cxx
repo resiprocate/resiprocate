@@ -89,6 +89,18 @@ CallID::encodeParsed(EncodeStream& str) const
    return str;
 }
 
+ParameterTypes::Factory CallID::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
+
+Parameter* 
+CallID::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+{
+   if(ParameterFactories[type])
+   {
+      return ParameterFactories[type](type, pb, terminators);
+   }
+   return 0;
+}
+
 bool 
 CallID::exists(const Param<CallID>& paramType) const
 {

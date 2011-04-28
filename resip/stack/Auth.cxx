@@ -179,6 +179,18 @@ Auth::encodeAuthParameters(EncodeStream& str) const
    return str;
 }
 
+ParameterTypes::Factory Auth::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
+
+Parameter* 
+Auth::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+{
+   if(ParameterFactories[type])
+   {
+      return ParameterFactories[type](type, pb, terminators);
+   }
+   return 0;
+}
+
 bool 
 Auth::exists(const Param<Auth>& paramType) const
 {
