@@ -110,46 +110,31 @@ Auth::parseAuthParameters(ParseBuffer& pb)
    {
       const char* keyStart = pb.position();
       const char* keyEnd = pb.skipToOneOf(" \t\r\n=");
-      ParameterTypes::Type type = ParameterTypes::getType(keyStart, (unsigned int)(keyEnd - keyStart));
-      if (type == ParameterTypes::UNKNOWN)
+      if((int)(keyEnd-keyStart) != 0)
       {
-         mUnknownParameters.push_back(new UnknownParameter(keyStart, 
-                                                           int((keyEnd - keyStart)), pb, 
-                                                           " \t\r\n,"));
-      }
-      else if(type==ParameterTypes::qop)
-      {
-         DataParameter* qop = 0;
-         switch(mHeaderType)
+         ParameterTypes::Type type = ParameterTypes::getType(keyStart, (unsigned int)(keyEnd - keyStart));
+         Parameter* p=createParam(type, pb, " \t\r\n,");
+         if (!p)
          {
-            case Headers::ProxyAuthenticate:
-            case Headers::WWWAuthenticate:
-               qop = new DataParameter(ParameterTypes::qopOptions,pb," \t\r\n,");
-               qop->setQuoted(true);
-               break;
-            case Headers::ProxyAuthorization:
-            case Headers::Authorization:
-            case Headers::AuthenticationInfo:
-            default:
-               qop = new DataParameter(ParameterTypes::qop,pb," \t\r\n,");
-               qop->setQuoted(false);
+            mUnknownParameters.push_back(new UnknownParameter(keyStart, 
+                                                              int((keyEnd - keyStart)), pb, 
+                                                              " \t\r\n,"));
          }
-         mParameters.push_back(qop);
+         else
+         {
+            // invoke the particular factory
+            mParameters.push_back(p);
+         }
+         pb.skipWhitespace();
+         if (pb.eof() || *pb.position() != Symbols::COMMA[0])
+         {
+            break;
+         }
+         pb.skipChar();
+         pb.skipWhitespace();
       }
-      else
-      {
-         // invoke the particular factory
-         mParameters.push_back(ParameterTypes::ParameterFactories[type](type, pb, " \t\r\n,"));
-      }
-      pb.skipWhitespace();
-      if (pb.eof() || *pb.position() != Symbols::COMMA[0])
-      {
-	 break;
-      }
-      pb.skipChar();
-      pb.skipWhitespace();
    }
-}      
+}
 
 EncodeStream&
 Auth::encodeAuthParameters(EncodeStream& str) const
@@ -184,6 +169,26 @@ ParameterTypes::Factory Auth::ParameterFactories[ParameterTypes::MAX_PARAMETER]=
 Parameter* 
 Auth::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
 {
+   if(type==ParameterTypes::qop)
+   {
+      DataParameter* qop = 0;
+      switch(mHeaderType)
+      {
+         case Headers::ProxyAuthenticate:
+         case Headers::WWWAuthenticate:
+            qop = new DataParameter(ParameterTypes::qopOptions,pb," \t\r\n,");
+            qop->setQuoted(true);
+            break;
+         case Headers::ProxyAuthorization:
+         case Headers::Authorization:
+         case Headers::AuthenticationInfo:
+         default:
+            qop = new DataParameter(ParameterTypes::qop,pb," \t\r\n,");
+            qop->setQuoted(false);
+      }
+      return qop;
+   }
+
    if(ParameterFactories[type])
    {
       return ParameterFactories[type](type, pb, terminators);
