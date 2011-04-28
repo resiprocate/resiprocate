@@ -34,9 +34,8 @@ class RportParameter : public Parameter
 
       virtual Parameter* clone() const;
       
-   private:
-      friend class ParserCategory;
       Type& value() { return *this; }
+   private:
 
       int mValue;
       bool mHasValue;

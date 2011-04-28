@@ -45,6 +45,46 @@ class NameAddr : public ParserCategory
       bool operator<(const NameAddr& other) const;
 
       bool mustQuoteDisplayName() const;      
+
+      // Inform the compiler that overloads of these may be found in
+      // ParserCategory, too.
+      using ParserCategory::exists;
+      using ParserCategory::remove;
+      using ParserCategory::param;
+
+      bool exists(const Param<NameAddr>& paramType) const;
+      void remove(const Param<NameAddr>& paramType);
+
+#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \
+      const _enum##_Param::DType& param(const _enum##_Param& paramType) const;  \
+      _enum##_Param::DType& param(const _enum##_Param& paramType)
+
+      defineParam(data, "data", ExistsParameter, "RFC 3840");
+      defineParam(control, "control", ExistsParameter, "RFC 3840");
+      defineParam(mobility, "mobility", QuotedDataParameter, "RFC 3840"); // mobile|fixed
+      defineParam(description, "description", QuotedDataParameter, "RFC 3840"); // <> quoted
+      defineParam(events, "events", QuotedDataParameter, "RFC 3840"); // list
+      defineParam(priority, "priority", QuotedDataParameter, "RFC 3840"); // non-urgent|normal|urgent|emergency
+      defineParam(methods, "methods", QuotedDataParameter, "RFC 3840"); // list
+      defineParam(schemes, "schemes", QuotedDataParameter, "RFC 3840"); // list
+      defineParam(application, "application", ExistsParameter, "RFC 3840");
+      defineParam(video, "video", ExistsParameter, "RFC 3840");
+      defineParam(language, "language", QuotedDataParameter, "RFC 3840"); // list
+      defineParam(type, "type", QuotedDataParameter, "RFC 3840"); // list
+      defineParam(isFocus, "isfocus", ExistsParameter, "RFC 3840");
+      defineParam(actor, "actor", QuotedDataParameter, "RFC 3840"); // principal|msg-taker|attendant|information
+      defineParam(text, "text", ExistsOrDataParameter, "RFC 3840");
+      defineParam(extensions, "extensions", QuotedDataParameter, "RFC 3840"); //list
+      defineParam(Instance, "+sip.instance", QuotedDataParameter, "RFC 5626");  // <> quoted
+      defineParam(regid, "reg-id", UInt32Parameter, "RFC 5626");
+      defineParam(pubGruu, "pub-gruu", QuotedDataParameter, "RFC 5627");
+      defineParam(tempGruu, "temp-gruu", QuotedDataParameter, "RFC 5627");
+      defineParam(expires, "expires", UInt32Parameter, "RFC 3261");
+      defineParam(q, "q", QValueParameter, "RFC 3261");
+      defineParam(tag, "tag", DataParameter, "RFC 3261");
+
+#undef defineParam
+
    protected:
       bool mAllContacts;
       mutable Uri mUri;

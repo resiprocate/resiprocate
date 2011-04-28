@@ -179,6 +179,21 @@ Auth::encodeAuthParameters(EncodeStream& str) const
    return str;
 }
 
+bool 
+Auth::exists(const Param<Auth>& paramType) const
+{
+    checkParsed();
+    bool ret = getParameterByEnum(paramType.getTypeNum()) != NULL;
+    return ret;
+}
+
+void 
+Auth::remove(const Param<Auth>& paramType)
+{
+    checkParsed();
+    removeParameterByEnum(paramType.getTypeNum());
+}
+
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)                                                      \
 _enum##_Param::DType&                                                                                           \
 Auth::param(const _enum##_Param& paramType)                                                                     \
@@ -206,12 +221,17 @@ Auth::param(const _enum##_Param& paramType) const                               
    return p->value();                                                                                           \
 }
 
-defineParam(algorithm, "algorithm", DataParameter, "RFC ????");
-defineParam(cnonce, "cnonce", QuotedDataParameter, "RFC ????");
-defineParam(nonce, "nonce", QuotedDataParameter, "RFC ????");
-defineParam(domain, "domain", QuotedDataParameter, "RFC ????");
-defineParam(nc, "nc", DataParameter, "RFC ????");
-defineParam(opaque, "opaque", QuotedDataParameter, "RFC ????");
+defineParam(algorithm, "algorithm", DataParameter, "RFC 2617");
+defineParam(cnonce, "cnonce", QuotedDataParameter, "RFC 2617");
+defineParam(domain, "domain", QuotedDataParameter, "RFC 3261");
+defineParam(nc, "nc", DataParameter, "RFC 2617");
+defineParam(nonce, "nonce", QuotedDataParameter, "RFC 2617");
+defineParam(opaque, "opaque", QuotedDataParameter, "RFC 2617");
+defineParam(realm, "realm", QuotedDataParameter, "RFC 2617");
+defineParam(response, "response", QuotedDataParameter, "RFC 3261");
+defineParam(stale, "stale", DataParameter, "RFC 2617");
+defineParam(uri, "uri", QuotedDataParameter, "RFC 3261");
+defineParam(username, "username", QuotedDataParameter, "RFC 3261");
 
 DataParameter::Type&
 Auth::param(const qop_Param& paramType)
@@ -267,12 +287,8 @@ Auth::param(const qopOptions_Param& paramType) const
    return p->value();
 }
 
-defineParam(realm, "realm", QuotedDataParameter, "RFC ????");
-defineParam(response, "response", QuotedDataParameter, "RFC ????");
-defineParam(stale, "stale", DataParameter, "RFC ????");
-defineParam(uri, "uri", QuotedDataParameter, "RFC ????");
-defineParam(username, "username", DataParameter, "RFC ????");
 
+#undef defineParam
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

@@ -37,6 +37,38 @@ class Mime : public ParserCategory
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
+
+      // Inform the compiler that overloads of these may be found in
+      // ParserCategory, too.
+      using ParserCategory::exists;
+      using ParserCategory::remove;
+      using ParserCategory::param;
+
+      bool exists(const Param<Mime>& paramType) const;
+      void remove(const Param<Mime>& paramType);
+
+#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \
+      const _enum##_Param::DType& param(const _enum##_Param& paramType) const;  \
+      _enum##_Param::DType& param(const _enum##_Param& paramType)
+
+      defineParam(accessType, "access-type", DataParameter, "RFC 2046");
+      defineParam(boundary, "boundary", DataParameter, "RFC 2046");
+      defineParam(charset, "charset", DataParameter, "RFC 2045");
+      defineParam(directory, "directory", DataParameter, "RFC 2046");
+      defineParam(expiration, "expiration", QuotedDataParameter, "RFC 2046");
+      defineParam(micalg, "micalg", DataParameter, "RFC 1847");
+      defineParam(mode, "mode", DataParameter, "RFC 2046");
+      defineParam(name, "name", DataParameter, "RFC 2046");
+      defineParam(permission, "permission", DataParameter, "RFC 2046");
+      defineParam(protocol, "protocol", QuotedDataParameter, "RFC 1847");
+      defineParam(server, "server", DataParameter, "RFC 2046");
+      defineParam(site, "site", DataParameter, "RFC 2046");
+      defineParam(size, "size", DataParameter, "RFC 2046");
+      defineParam(smimeType, "smime-type", DataParameter, "RFC 2633");
+      defineParam(url, "url", QuotedDataParameter, "RFC 4483");
+
+#undef defineParam
+
    private:
       mutable Data mType;
       mutable Data mSubType;
@@ -44,6 +76,7 @@ class Mime : public ParserCategory
 typedef ParserContainer<Mime> Mimes;
  
 }
+
 
 HashValue(resip::Mime);
 

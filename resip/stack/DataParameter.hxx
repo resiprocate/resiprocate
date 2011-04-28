@@ -31,6 +31,7 @@ class DataParameter : public Parameter
       virtual Parameter* clone() const;
       virtual EncodeStream& encode(EncodeStream& stream) const;
       
+      Type& value() {return mValue;}            // does not return a quoted string
    protected:
       DataParameter(const DataParameter& other) 
          : Parameter(other), 
@@ -41,12 +42,6 @@ class DataParameter : public Parameter
 
       Type mValue;
       bool mQuoted;
-
-   private:
-      friend class ParserCategory;
-      friend class Auth;
-      friend class Uri;
-      Type& value() {return mValue;}            // does not return a quoted string
 };
  
 }

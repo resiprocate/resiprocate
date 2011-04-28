@@ -38,6 +38,29 @@ class Via : public ParserCategory
       virtual ParserCategory* clone() const;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
 
+      // Inform the compiler that overloads of these may be found in
+      // ParserCategory, too.
+      using ParserCategory::exists;
+      using ParserCategory::remove;
+      using ParserCategory::param;
+
+      bool exists(const Param<Via>& paramType) const;
+      void remove(const Param<Via>& paramType);
+
+#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \
+      const _enum##_Param::DType& param(const _enum##_Param& paramType) const;  \
+      _enum##_Param::DType& param(const _enum##_Param& paramType)
+
+defineParam(branch, "branch", BranchParameter, "RFC 3261");
+defineParam(comp, "comp", DataParameter, "RFC 3486");
+defineParam(received, "received", DataParameter, "RFC 3261");
+defineParam(rport, "rport", RportParameter, "RFC 3581");
+defineParam(ttl, "ttl", UInt32Parameter, "RFC 3261");
+defineParam(sigcompId, "sigcomp-id", QuotedDataParameter, "RFC 5049");
+defineParam(maddr, "maddr", DataParameter, "RFC 3261");
+
+#undef defineParam
+
    private:
       mutable Data mProtocolName;
       mutable Data mProtocolVersion;

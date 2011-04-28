@@ -135,6 +135,68 @@ Mime::encodeParsed(EncodeStream& str) const
 
 HashValueImp(resip::Mime, data.type().caseInsensitivehash() ^ data.subType().caseInsensitivehash());
 
+bool 
+Mime::exists(const Param<Mime>& paramType) const
+{
+    checkParsed();
+    bool ret = getParameterByEnum(paramType.getTypeNum()) != NULL;
+    return ret;
+}
+
+void 
+Mime::remove(const Param<Mime>& paramType)
+{
+    checkParsed();
+    removeParameterByEnum(paramType.getTypeNum());
+}
+
+#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                                                      \
+_enum##_Param::DType&                                                                                           \
+Mime::param(const _enum##_Param& paramType)                                                           \
+{                                                                                                               \
+   checkParsed();                                                                                               \
+   _enum##_Param::Type* p =                                                                                     \
+      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                            \
+   if (!p)                                                                                                      \
+   {                                                                                                            \
+      p = new _enum##_Param::Type(paramType.getTypeNum());                                                      \
+      mParameters.push_back(p);                                                                                 \
+   }                                                                                                            \
+   return p->value();                                                                                           \
+}                                                                                                               \
+                                                                                                                \
+const _enum##_Param::DType&                                                                                     \
+Mime::param(const _enum##_Param& paramType) const                                                     \
+{                                                                                                               \
+   checkParsed();                                                                                               \
+   _enum##_Param::Type* p =                                                                                     \
+      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                            \
+   if (!p)                                                                                                      \
+   {                                                                                                            \
+      InfoLog(<< "Missing parameter " _name " " << ParameterTypes::ParameterNames[paramType.getTypeNum()]);     \
+      DebugLog(<< *this);                                                                                       \
+      throw Exception("Missing parameter " _name, __FILE__, __LINE__);                                          \
+   }                                                                                                            \
+   return p->value();                                                                                           \
+}
+
+defineParam(accessType, "access-type", DataParameter, "RFC 2046");
+defineParam(boundary, "boundary", DataParameter, "RFC 2046");
+defineParam(charset, "charset", DataParameter, "RFC 2045");
+defineParam(directory, "directory", DataParameter, "RFC 2046");
+defineParam(expiration, "expiration", QuotedDataParameter, "RFC 2046");
+defineParam(micalg, "micalg", DataParameter, "RFC 1847");
+defineParam(mode, "mode", DataParameter, "RFC 2046");
+defineParam(name, "name", DataParameter, "RFC 2046");
+defineParam(permission, "permission", DataParameter, "RFC 2046");
+defineParam(protocol, "protocol", QuotedDataParameter, "RFC 1847");
+defineParam(server, "server", DataParameter, "RFC 2046");
+defineParam(site, "site", DataParameter, "RFC 2046");
+defineParam(size, "size", DataParameter, "RFC 2046");
+defineParam(smimeType, "smime-type", DataParameter, "RFC 2633");
+defineParam(url, "url", QuotedDataParameter, "RFC 4483");
+
+#undef defineParam
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
