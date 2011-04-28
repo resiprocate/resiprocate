@@ -55,7 +55,10 @@ main(int arc, char** argv)
 {
    Log::initialize(Log::Cout, Log::Debug, argv[0]);
 
-
+   static ExtensionParameter p_mobility_ext("mobility");
+   static ExtensionParameter p_lr_ext("lr");
+   static ExtensionParameter p_tag_ext("tag");
+   static ExtensionParameter p_ttl_ext("ttl");
 
    {
       TR _tr("Test poorly formed NameAddr by construction");
@@ -375,17 +378,17 @@ main(int arc, char** argv)
       Token s = Token("jason");
       s.value() = "value";
       s.param(p_expires) = 17;
-      s.param(p_lr);
+      s.param(p_lr_ext);
       s.param(UnknownParameterType("foobie")) = "quux";
 
       Token s1;
       s1.value() = "other";
-      s1.param(p_ttl) = 21;
+      s1.param(p_retryAfter) = 21;
 
-      s.setParameter(s1.getParameterByEnum(ParameterTypes::ttl));
+      s.setParameter(s1.getParameterByEnum(ParameterTypes::retryAfter));
       assert(s.value() == "value");
-      assert(s.param(p_ttl) == 21);
-      assert(s.param(p_lr));
+      assert(s.param(p_retryAfter) == 21);
+      assert(s.exists(p_lr_ext));
       assert(s.param(UnknownParameterType("foobie")) == "quux");
    }
 
@@ -394,18 +397,18 @@ main(int arc, char** argv)
       Token s;
       s.value() = "value";
       s.param(p_expires) = 17;
-      s.param(p_ttl) = 12;
-      s.param(p_lr);
+      s.param(p_retryAfter) = 12;
+      s.param(p_lr_ext);
       s.param(UnknownParameterType("foobie")) = "quux";
 
       Token s1;
       s1.value() = "other";
-      s1.param(p_ttl) = 21;
+      s1.param(p_retryAfter) = 21;
 
-      s.setParameter(s1.getParameterByEnum(ParameterTypes::ttl));
+      s.setParameter(s1.getParameterByEnum(ParameterTypes::retryAfter));
       assert(s.value() == "value");
-      assert(s.param(p_ttl) == 21);
-      assert(s.param(p_lr));
+      assert(s.param(p_retryAfter) == 21);
+      assert(s.exists(p_lr_ext));
       assert(s.param(UnknownParameterType("foobie")) == "quux");
 
       s.encode(resipCerr);
@@ -654,12 +657,13 @@ main(int arc, char** argv)
 
    {
       TR _tr( "Token + parameters parse test");
-      const char *org = "WuggaWuggaFoo;ttl=2";
+      const char *org = "WuggaWuggaFoo;ttl=2;retry-after=3";
       
       HeaderFieldValue hfv(org, strlen(org));
       Token tok(&hfv, Headers::UNKNOWN);
       assert(tok.value() == "WuggaWuggaFoo");
-      assert(tok.param(p_ttl) == 2);
+      assert(tok.param(p_ttl_ext) == "2");
+      assert(tok.param(p_retryAfter) == 3);
    }
 
    {
@@ -1095,8 +1099,8 @@ main(int arc, char** argv)
       assert(nameAddr.param(p_tag) == "456248");
       assert(nameAddr.param(p_mobility) == "hobble");
 
-      assert(nameAddr.uri().exists(p_tag) == false);
-      assert(nameAddr.uri().exists(p_mobility) == false);
+      assert(nameAddr.uri().exists(p_tag_ext) == false);
+      assert(nameAddr.uri().exists(p_mobility_ext) == false);
    }
    {
       TR _tr( "NameAddr parse, quoted displayname, parameterMove");
@@ -1118,8 +1122,8 @@ main(int arc, char** argv)
       assert(nameAddr.param(p_tag) == "456248");
       assert(nameAddr.param(p_mobility) == "hobble");
 
-      assert(nameAddr.uri().exists(p_tag) == false);
-      assert(nameAddr.uri().exists(p_mobility) == false);
+      assert(nameAddr.uri().exists(p_tag_ext) == false);
+      assert(nameAddr.uri().exists(p_mobility_ext) == false);
    }
    {
       TR _tr( "NameAddr parse, unquoted displayname, paramterMove");
@@ -1137,8 +1141,8 @@ main(int arc, char** argv)
       nameAddr.uri().encodeParameters(resipCerr) << endl;
       cerr << "Header params: ";
       nameAddr.encodeParameters(resipCerr) << endl;
-      assert(nameAddr.uri().param(p_tag) == "456248");
-      assert(nameAddr.uri().param(p_mobility) == "hobble");
+      assert(nameAddr.uri().param(p_tag_ext) == "456248");
+      assert(nameAddr.uri().param(p_mobility_ext) == "hobble");
 
       assert(nameAddr.exists(p_tag) == false);
       assert(nameAddr.exists(p_mobility) == false);
@@ -1159,8 +1163,8 @@ main(int arc, char** argv)
       nameAddr.uri().encodeParameters(resipCerr) << endl;
       cerr << "Header params: ";
       nameAddr.encodeParameters(resipCerr) << endl;
-      assert(nameAddr.uri().param(p_mobility) == "hobb;le");
-      assert(nameAddr.uri().param(p_tag) == "true;false");
+      assert(nameAddr.uri().param(p_mobility_ext) == "hobb;le");
+      assert(nameAddr.uri().param(p_tag_ext) == "true;false");
       //      assert("true;false" == nameAddr.uri().param(Data("useless")));
 
       assert(nameAddr.exists(p_mobility) == false);
