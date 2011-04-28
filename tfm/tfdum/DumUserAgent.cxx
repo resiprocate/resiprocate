@@ -1668,7 +1668,7 @@ bool
 DumUserAgent::HasMethodsParam::isMatch(const boost::shared_ptr<resip::SipMessage>& message) const
 {
    // assume there is only one contact.
-   return message->header(h_Contacts).begin()->uri().exists(p_methods);
+   return message->header(h_Contacts).begin()->exists(p_methods);
 }
 
 DumUserAgent::HasMethodsParam*
@@ -1686,7 +1686,7 @@ DumUserAgent::HasMethodsParam::toString() const
 bool
 DumUserAgent::NoMethodsParam::isMatch(const boost::shared_ptr<resip::SipMessage>& message) const
 {
-   return !message->header(h_Contacts).begin()->uri().exists(p_methods);
+   return !message->header(h_Contacts).begin()->exists(p_methods);
 }
 
 Data
