@@ -63,6 +63,7 @@ class ParserCategory : public LazyParser
 
       //doesn't remove unknown parameters
       void removeParametersExcept(const ParameterTypeSet& set = EmptyParameterTypeSet);
+      void clearUnknownParameters();
 
       class Exception : public BaseException
       {
