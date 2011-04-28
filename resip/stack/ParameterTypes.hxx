@@ -187,6 +187,8 @@ defineParam(addTransport, "addTransport", ExistsParameter, Uri, "RESIP INTERNAL"
 }
 
 #undef defineParam
+#undef defineParam2
+#undef defineParam3
 #endif
 
 /* ====================================================================

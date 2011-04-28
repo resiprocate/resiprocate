@@ -36,13 +36,15 @@ class GenericUri : public ParserCategory
       using ParserCategory::remove;
       using ParserCategory::param;
 
+      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators);
       // .bwc, This is an awful lot for one lousy param type.
       bool exists(const Param<GenericUri>& paramType) const;
       void remove(const Param<GenericUri>& paramType);
 
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \
       const _enum##_Param::DType& param(const _enum##_Param& paramType) const;  \
-      _enum##_Param::DType& param(const _enum##_Param& paramType)
+      _enum##_Param::DType& param(const _enum##_Param& paramType); \
+      friend class _enum##_Param
 
 defineParam(purpose, "purpose", DataParameter, "RFC 3261");
 
@@ -50,6 +52,8 @@ defineParam(purpose, "purpose", DataParameter, "RFC 3261");
 
    private:
       mutable Data mUri;
+
+      static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
 };
 typedef ParserContainer<GenericUri> GenericUris;
 typedef GenericUri GenericURI; //.dcm. deprecated, should be removed soon

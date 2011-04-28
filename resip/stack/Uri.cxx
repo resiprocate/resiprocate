@@ -1205,6 +1205,18 @@ Uri::toString() const
    return out;
 }
 
+ParameterTypes::Factory Uri::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
+
+Parameter* 
+Uri::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+{
+   if(ParameterFactories[type])
+   {
+      return ParameterFactories[type](type, pb, terminators);
+   }
+   return 0;
+}
+
 bool 
 Uri::exists(const Param<Uri>& paramType) const
 {

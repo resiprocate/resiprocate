@@ -393,6 +393,18 @@ NameAddr::mustQuoteDisplayName() const
    return false;
 }
 
+ParameterTypes::Factory NameAddr::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
+
+Parameter* 
+NameAddr::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+{
+   if(ParameterFactories[type])
+   {
+      return ParameterFactories[type](type, pb, terminators);
+   }
+   return 0;
+}
+
 bool 
 NameAddr::exists(const Param<NameAddr>& paramType) const
 {

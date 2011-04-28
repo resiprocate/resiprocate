@@ -52,12 +52,14 @@ class NameAddr : public ParserCategory
       using ParserCategory::remove;
       using ParserCategory::param;
 
+      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators);
       bool exists(const Param<NameAddr>& paramType) const;
       void remove(const Param<NameAddr>& paramType);
 
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \
       const _enum##_Param::DType& param(const _enum##_Param& paramType) const;  \
-      _enum##_Param::DType& param(const _enum##_Param& paramType)
+      _enum##_Param::DType& param(const _enum##_Param& paramType); \
+      friend class _enum##_Param
 
       defineParam(data, "data", ExistsParameter, "RFC 3840");
       defineParam(control, "control", ExistsParameter, "RFC 3840");
@@ -91,19 +93,8 @@ class NameAddr : public ParserCategory
       mutable Data mDisplayName;
 
    private:
-#if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) && (__GNUC_MINOR__ <= 3) )
-      //disallow the following parameters from being accessed in NameAddr
-      //this works on gcc 3.2 so far. definitely does not work on gcc 2.95 on
-      //qnx
-      // as well as on gcc 3.4.0 and 3.4.1
-      using ParserCategory::param;
-      transport_Param::DType& param(const transport_Param& paramType) const;
-      method_Param::DType& param(const method_Param& paramType) const;
-      ttl_Param::DType& param(const ttl_Param& paramType) const;
-      maddr_Param::DType& param(const maddr_Param& paramType) const;
-      lr_Param::DType& param(const lr_Param& paramType) const;
-      comp_Param::DType& param(const comp_Param& paramType) const;
-#endif
+
+      static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
 };
 typedef ParserContainer<NameAddr> NameAddrs;
  

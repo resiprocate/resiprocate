@@ -169,12 +169,14 @@ class Uri : public ParserCategory
       using ParserCategory::remove;
       using ParserCategory::param;
 
+      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators);
       bool exists(const Param<Uri>& paramType) const;
       void remove(const Param<Uri>& paramType);
 
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \
       const _enum##_Param::DType& param(const _enum##_Param& paramType) const;  \
-      _enum##_Param::DType& param(const _enum##_Param& paramType)
+      _enum##_Param::DType& param(const _enum##_Param& paramType); \
+      friend class _enum##_Param
 
       defineParam(ob,"ob",ExistsParameter,"RFC 5626");
       defineParam(gr, "gr", ExistsOrDataParameter, "RFC 5627");
@@ -231,6 +233,8 @@ class Uri : public ParserCategory
    private:
       Data mEmbeddedHeadersText;
       SipMessage* mEmbeddedHeaders;
+
+      static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
 };
 
 }

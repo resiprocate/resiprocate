@@ -228,6 +228,18 @@ Via::encodeParsed(EncodeStream& str) const
    return str;
 }
 
+ParameterTypes::Factory Via::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
+
+Parameter* 
+Via::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+{
+   if(ParameterFactories[type])
+   {
+      return ParameterFactories[type](type, pb, terminators);
+   }
+   return 0;
+}
+
 bool 
 Via::exists(const Param<Via>& paramType) const
 {

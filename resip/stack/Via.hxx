@@ -44,12 +44,14 @@ class Via : public ParserCategory
       using ParserCategory::remove;
       using ParserCategory::param;
 
+      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators);
       bool exists(const Param<Via>& paramType) const;
       void remove(const Param<Via>& paramType);
 
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \
       const _enum##_Param::DType& param(const _enum##_Param& paramType) const;  \
-      _enum##_Param::DType& param(const _enum##_Param& paramType)
+      _enum##_Param::DType& param(const _enum##_Param& paramType); \
+      friend class _enum##_Param
 
 defineParam(branch, "branch", BranchParameter, "RFC 3261");
 defineParam(comp, "comp", DataParameter, "RFC 3486");
@@ -67,6 +69,8 @@ defineParam(maddr, "maddr", DataParameter, "RFC 3261");
       mutable Data mTransport;
       mutable Data mSentHost;
       mutable int mSentPort;
+
+      static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
 };
 typedef ParserContainer<Via> Vias;
 

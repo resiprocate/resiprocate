@@ -40,12 +40,14 @@ class Auth : public ParserCategory
       using ParserCategory::remove;
       using ParserCategory::param;
 
+      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators);
       bool exists(const Param<Auth>& paramType) const;
       void remove(const Param<Auth>& paramType);
 
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)  \
       _enum##_Param::DType& param(const _enum##_Param& paramType); \
-      const _enum##_Param::DType& param(const _enum##_Param& paramType) const
+      const _enum##_Param::DType& param(const _enum##_Param& paramType) const; \
+      friend class _enum##_Param
 
       defineParam(algorithm, "algorithm", DataParameter, "RFC 2617");
       defineParam(cnonce, "cnonce", QuotedDataParameter, "RFC 2617");
@@ -66,6 +68,8 @@ class Auth : public ParserCategory
 
    private:
       mutable Data mScheme;
+
+      static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
 };
  
 }

@@ -209,12 +209,7 @@ ParserCategory::parseParameters(ParseBuffer& pb)
 Parameter* 
 ParserCategory::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
 {
-   if(type == ParameterTypes::UNKNOWN)
-   {
-      return 0;
-   }
-
-   return ParameterTypes::ParameterFactories[type](type, pb, terminators);
+   return 0;
 }
 
 static Data up_Msgr("msgr");

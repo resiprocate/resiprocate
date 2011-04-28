@@ -44,12 +44,14 @@ class Token : public ParserCategory
       using ParserCategory::remove;
       using ParserCategory::param;
 
+      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators);
       bool exists(const Param<Token>& paramType) const;
       void remove(const Param<Token>& paramType);
 
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \
       const _enum##_Param::DType& param(const _enum##_Param& paramType) const;  \
-      _enum##_Param::DType& param(const _enum##_Param& paramType)
+      _enum##_Param::DType& param(const _enum##_Param& paramType); \
+      friend class _enum##_Param
 
       defineParam(text, "text", ExistsOrDataParameter, "RFC 3840");
       defineParam(dAlg, "d-alg", DataParameter, "RFC 3329");
@@ -79,6 +81,8 @@ class Token : public ParserCategory
 
    private:
       mutable Data mValue;
+
+      static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
 };
 typedef ParserContainer<Token> Tokens;
  

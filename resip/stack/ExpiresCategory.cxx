@@ -85,6 +85,18 @@ ExpiresCategory::encodeParsed(EncodeStream& str) const
    return str;
 }
 
+ParameterTypes::Factory ExpiresCategory::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
+
+Parameter* 
+ExpiresCategory::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+{
+   if(ParameterFactories[type])
+   {
+      return ParameterFactories[type](type, pb, terminators);
+   }
+   return 0;
+}
+
 bool 
 ExpiresCategory::exists(const Param<ExpiresCategory>& paramType) const
 {

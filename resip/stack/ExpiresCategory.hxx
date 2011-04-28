@@ -39,13 +39,15 @@ class ExpiresCategory : public ParserCategory
       using ParserCategory::remove;
       using ParserCategory::param;
 
+      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators);
       // .bwc, This is an awful lot for one lousy param type.
       bool exists(const Param<ExpiresCategory>& paramType) const;
       void remove(const Param<ExpiresCategory>& paramType);
 
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \
       const _enum##_Param::DType& param(const _enum##_Param& paramType) const;  \
-      _enum##_Param::DType& param(const _enum##_Param& paramType)
+      _enum##_Param::DType& param(const _enum##_Param& paramType); \
+      friend class _enum##_Param
 
 defineParam(refresher, "refresher", DataParameter, "RFC 4028");
 
@@ -53,6 +55,8 @@ defineParam(refresher, "refresher", DataParameter, "RFC 4028");
 
    private:
       mutable UInt32 mValue;
+
+      static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
 };
  
 }
