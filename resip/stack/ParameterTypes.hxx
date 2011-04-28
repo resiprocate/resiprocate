@@ -26,11 +26,23 @@
    };                                                       \
    extern _enum##_Param p_##_enum
 
-// .bwc. So far, I have not discovered any parameter types that are defined for
-// more than two ParserCategories. This may change. If so, we just create
-// another macro with one more _headertype field.
 #define defineParam2(_enum, _name, _type, _headertype, _headertype2, _RFC_ref_ignored)  \
    class _enum##_Param : public Param<_headertype>, public Param<_headertype2> \
+   {                                                        \
+     public:                                                \
+      typedef _type Type;                                   \
+      typedef _type::Type DType;                            \
+      virtual ParameterTypes::Type getTypeNum() const;      \
+      virtual const char* name() const { return _name; }    \
+      _enum##_Param();                                      \
+   };                                                       \
+   extern _enum##_Param p_##_enum
+
+// .bwc. So far, I have not discovered any parameter types that are defined for
+// more than three ParserCategories. This may change. If so, we just create
+// another macro with one more _headertype field.
+#define defineParam3(_enum, _name, _type, _headertype, _headertype2, _headertype3, _RFC_ref_ignored)  \
+   class _enum##_Param : public Param<_headertype>, public Param<_headertype2>, public Param<_headertype3> \
    {                                                        \
      public:                                                \
       typedef _type Type;                                   \
@@ -89,11 +101,11 @@ defineParam(language, "language", QuotedDataParameter, NameAddr, "RFC 3840"); //
 defineParam(type, "type", QuotedDataParameter, NameAddr, "RFC 3840"); // list
 defineParam(isFocus, "isfocus", ExistsParameter, NameAddr, "RFC 3840");
 defineParam(actor, "actor", QuotedDataParameter, NameAddr, "RFC 3840"); // principal|msg-taker|attendant|information
-defineParam2(text, "text", ExistsOrDataParameter, NameAddr, Token, "RFC 3840");
+defineParam2(text, "text", ExistsOrDataParameter, NameAddr, Token, "RFC 3326/3840");
 defineParam(extensions, "extensions", QuotedDataParameter, NameAddr, "RFC 3840"); //list
 defineParam(Instance, "+sip.instance", QuotedDataParameter, NameAddr, "RFC 5626");  // <> quoted
 defineParam(regid, "reg-id", UInt32Parameter, NameAddr, "RFC 5626");
-defineParam(ob,"ob",ExistsParameter,NameAddr, "RFC 5626");
+defineParam(ob,"ob",ExistsParameter, Uri, "RFC 5626");
 defineParam(pubGruu, "pub-gruu", QuotedDataParameter, NameAddr, "RFC 5627");
 defineParam(tempGruu, "temp-gruu", QuotedDataParameter, NameAddr, "RFC 5627");
 defineParam(gr, "gr", ExistsOrDataParameter, Uri, "RFC 5627");
@@ -114,11 +126,11 @@ defineParam(duration, "duration", UInt32Parameter, Uri, "RFC 4240");
 defineParam(expiration, "expiration", QuotedDataParameter, Mime, "RFC 2046");
 defineParam2(expires, "expires", UInt32Parameter, NameAddr, Token, "RFC 3261");
 defineParam(filename, "filename", DataParameter, Token, "RFC 2183");
-defineParam(fromTag, "from-tag", DataParameter, Token, "RFC 4235");
+defineParam2(fromTag, "from-tag", DataParameter, Token, CallID, "RFC 4235");
 defineParam(handling, "handling", DataParameter, Token, "RFC 3261");
 defineParam(id, "id", DataParameter, Token, "RFC 3265");
 defineParam(lr, "lr", ExistsParameter, Uri, "RFC 3261");
-defineParam(maddr, "maddr", DataParameter, Uri, "RFC 3261");
+defineParam2(maddr, "maddr", DataParameter, Uri, Via, "RFC 3261");
 defineParam(method, "method", DataParameter, Uri, "RFC 3261");
 defineParam(micalg, "micalg", DataParameter, Mime, "RFC 1847");
 defineParam(mode, "mode", DataParameter, Mime, "RFC 2046");
@@ -129,21 +141,22 @@ defineParam(opaque, "opaque", QuotedDataParameter, Auth, "RFC 2617");
 defineParam(permission, "permission", DataParameter, Mime, "RFC 2046");
 defineParam(protocol, "protocol", QuotedDataParameter, Mime, "RFC 1847");
 defineParam(purpose, "purpose", DataParameter, GenericUri, "RFC 3261");
-defineParam2(q, "q", QValueParameter, NameAddr, Token, "RFC 3261");
+defineParam3(q, "q", QValueParameter, NameAddr, Token, Mime, "RFC 3261");
 defineParam(realm, "realm", QuotedDataParameter, Auth, "RFC 2617");
 defineParam(reason, "reason", DataParameter, Token, "RFC 3265");
 defineParam(received, "received", DataParameter, Via, "RFC 3261");
+defineParam(require, "require", DataParameter, Token, "RFC 5373");
 defineParam(response, "response", QuotedDataParameter, Auth, "RFC 3261");
 defineParam(retryAfter, "retry-after", UInt32Parameter, Token, "RFC 3265");
-defineParam(rinstance, "rinstance", DataParameter, NameAddr, "proprietary (resip)");
+defineParam(rinstance, "rinstance", DataParameter, Uri, "proprietary (resip)");
 defineParam(rport, "rport", RportParameter, Via, "RFC 3581");
 defineParam(server, "server", DataParameter, Mime, "RFC 2046");
 defineParam(site, "site", DataParameter, Mime, "RFC 2046");
 defineParam(size, "size", DataParameter, Mime, "RFC 2046");
 defineParam(smimeType, "smime-type", DataParameter, Mime, "RFC 2633");
 defineParam(stale, "stale", DataParameter, Auth, "RFC 2617");
-defineParam(tag, "tag", DataParameter, Uri, "RFC 3261");
-defineParam(toTag, "to-tag", DataParameter, Token, "RFC 4235");
+defineParam(tag, "tag", DataParameter, NameAddr, "RFC 3261");
+defineParam2(toTag, "to-tag", DataParameter, Token, CallID, "RFC 4235");
 defineParam(transport, "transport", DataParameter, Uri, "RFC 3261");
 defineParam2(ttl, "ttl", UInt32Parameter, Uri, Via, "RFC 3261");
 defineParam(uri, "uri", QuotedDataParameter, Auth, "RFC 3261");
