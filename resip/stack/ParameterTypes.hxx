@@ -122,7 +122,7 @@ defineParam(dQop, "d-qop", DataParameter, Token, "RFC 3329");
 defineParam(dVer, "d-ver", QuotedDataParameter, Token, "RFC 3329");
 defineParam(directory, "directory", DataParameter, Mime, "RFC 2046");
 defineParam(domain, "domain", QuotedDataParameter, Auth, "RFC 3261");
-defineParam(duration, "duration", UInt32Parameter, Uri, "RFC 4240");
+defineParam2(duration, "duration", UInt32Parameter, Uri, UInt32Category, "RFC 4240");
 defineParam(expiration, "expiration", QuotedDataParameter, Mime, "RFC 2046");
 defineParam2(expires, "expires", UInt32Parameter, NameAddr, Token, "RFC 3261");
 defineParam(filename, "filename", DataParameter, Token, "RFC 2183");
