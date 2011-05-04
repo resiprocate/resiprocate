@@ -33,7 +33,6 @@ class LazyParser
       virtual void parse(ParseBuffer& pb) = 0;
 
       EncodeStream& encode(EncodeStream& str) const;
-      EncodeStream& encodeFromHeaderFieldValue(EncodeStream& str) const;
       bool isParsed() const {return (mState!=NOT_PARSED);}
 
       HeaderFieldValue& getHeaderField() { return *mHeaderField; }
