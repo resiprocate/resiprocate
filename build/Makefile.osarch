@@ -19,6 +19,9 @@ ifeq ($(OSTYPE),FreeBSD)
     USE_LIBGETOPT = 1
     USE_R_WRAPPER = 1
 
+    INCDIRS  += /usr/local/include
+    LIBDIRS  += /usr/local/lib
+
     ifeq ($(LARCH),ia32)
         OPEN_SSL_CONFIG := BSD-x86
     endif
@@ -82,7 +85,7 @@ ifeq ($(ARCH),x86_64)
 ifeq ($(BUILD_SHARED_LIBS),yes)
 	CXXFLAGS += -fPIC
 	CFLAGS   += -fPIC
-else ifeq ($(FORCE_PIC),yes)
+else ifeq ($(DISABLE_PIC),no)
 	# If a static-lib is later linked into a shared lib, then
 	# the code in it needs to be compiled PIC (Position Indep. Code)
 	CXXFLAGS += -fPIC
@@ -104,7 +107,7 @@ endif
 	CFLAGS   += -D_REENTRANT 
 
 ifeq ($(USE_GOOGLE_MALLOC),yes)
-LDLIBS_LAST += -ltcmalloc
+   LDLIBS_LAST += -ltcmalloc_minimal
 endif
 
 ifeq ($(USE_GOOGLE_CPUPERF),yes)
@@ -112,6 +115,14 @@ LDLIBS_LAST += -lprofiler
 endif
 
 LDLIBS_LAST += -lrt
+
+ifeq ($(USE_DEBUG_MALLOC),yes)
+   LDLIBS_LAST += -ldmallocthcxx
+endif
+
+ifeq ($(USE_EFENCE),yes)
+   LDLIBS_LAST += -lefence
+endif
 
 endif
 
@@ -191,6 +202,10 @@ ifeq ($(OSTYPE),Darwin)
 
     USE_LIBGETOPT = 1
     USE_R_WRAPPER = 1
+
+ifeq ($(USE_GOOGLE_MALLOC),yes)
+   LDLIBS_LAST += -ltcmalloc_minimal
+endif
 
     ifeq ($(LARCH),ia32)
       OPEN_SSL_CONFIG := darwin-i386-cc
@@ -303,6 +318,8 @@ CFLAGS += $(COMPILE_SMALL_FLAG)
 endif
 
 ifeq ($(VOCAL_COMPILE_TYPE),nodebug)
+CXXFLAGS += -DNDEBUG
+CFLAGS   += -DNDEBUG
 endif
 
 ifeq ($(VOCAL_COMPILE_TYPE),debug)
@@ -317,8 +334,8 @@ LDFLAGS  += -fprofile-arcs -ftest-coverage
 endif
 
 ifeq ($(VOCAL_COMPILE_TYPE),opt)
-CXXFLAGS += $(OPTFLAGS) #-DNDEBUG
-CFLAGS += $(OPTFLAGS) #-DNDEBUG
+CXXFLAGS += $(OPTFLAGS) -DNDEBUG
+CFLAGS += $(OPTFLAGS) -DNDEBUG
 endif
 
 ifeq ($(VOCAL_COMPILE_TYPE),gopt)

@@ -47,8 +47,8 @@ BasicNonceHelper::makeNonce(const SipMessage& request, const Data& timestamp)
    Data noncePrivate(100, Data::Preallocate);
    noncePrivate += timestamp;
    noncePrivate += Symbols::COLON;
-   //!jf! don't include the Call-Id since it might not be the same.
-   //noncePrivate += request.header(h_CallId).value();
+   // !jf! don't include the Call-Id since it might not be the same.
+   // noncePrivate += request.header(h_CallId).value();
    noncePrivate += request.header(h_From).uri().user();
    noncePrivate += privateKey;
    nonce += noncePrivate.md5();

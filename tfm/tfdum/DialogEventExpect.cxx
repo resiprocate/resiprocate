@@ -16,13 +16,14 @@ DialogEventExpect::DialogEventExpect(TestEndPoint& testEndpoint,
                      int timeoutMs,
                      ActionBase* expectAction,
                      ActionBase* matchTimeAction)
-: mTimeoutMs(timeoutMs*TestEndPoint::DebugTimeMult()),
+: mDialogEventMatcher(matcher),
+  mPredicate(pred),
+  mMatcher(0),
+  mTimeoutMs(timeoutMs*TestEndPoint::DebugTimeMult()),
   mExpectAction(expectAction),
   mMatchTimeAction(matchTimeAction),
   mTestEndPoint(testEndpoint),
-  mDialogEventMatcher(matcher),
-  mTerminatedReason(InviteSessionHandler::Error),
-  mPredicate(pred)
+  mTerminatedReason(InviteSessionHandler::Error)
 {
 }
 
@@ -33,13 +34,14 @@ DialogEventExpect::DialogEventExpect(TestEndPoint& testEndpoint,
                         int timeoutMs,
                         ActionBase* expectAction,
                         ActionBase* matchTimeAction)
-: mTimeoutMs(timeoutMs*TestEndPoint::DebugTimeMult()),
+: mDialogEventMatcher(matcher),
+  mPredicate(pred),
+  mMatcher(0),
+  mTimeoutMs(timeoutMs*TestEndPoint::DebugTimeMult()),
   mExpectAction(expectAction),
   mMatchTimeAction(matchTimeAction),
   mTestEndPoint(testEndpoint),
-  mDialogEventMatcher(matcher),
-  mTerminatedReason(reason),
-  mPredicate(pred)
+  mTerminatedReason(reason)
 {
 }
 

@@ -112,7 +112,7 @@ RouteStore::addRoute(const resip::Data& method,
    }
 
    {
-      Lock lock(mMutex, VOCAL_WRITELOCK);
+      WriteLock lock(mMutex);
       mRouteOperators.insert( route );
    }
    mCursor = mRouteOperators.begin(); 
@@ -154,7 +154,7 @@ RouteStore::eraseRoute(const resip::Data& key )
    mDb.eraseRoute(key);
 
    {
-      Lock lock(mMutex, VOCAL_WRITELOCK);
+      WriteLock lock(mMutex);
 
       RouteOpList::iterator it = mRouteOperators.begin();
       while ( it != mRouteOperators.end() )
@@ -207,7 +207,7 @@ RouteStore::updateRoute( const resip::Data& originalKey,
 RouteStore::Key 
 RouteStore::getFirstKey()
 {
-   Lock lock(mMutex, VOCAL_READLOCK);
+   ReadLock lock(mMutex);
 
    mCursor = mRouteOperators.begin();
    if ( mCursor == mRouteOperators.end() )
@@ -246,7 +246,7 @@ RouteStore::findKey(const Key& key)
 RouteStore::Key 
 RouteStore::getNextKey(Key& key)
 {  
-   Lock lock(mMutex, VOCAL_READLOCK);
+   ReadLock lock(mMutex);
 
    if ( !findKey(key) )
    {
@@ -266,8 +266,8 @@ RouteStore::getNextKey(Key& key)
 
 resip::Data 
 RouteStore::getRouteMethod( const resip::Data& key )
-{ 
-   Lock lock(mMutex, VOCAL_READLOCK);
+{
+   ReadLock lock(mMutex);
 
    if ( !findKey(key) )
    {
@@ -279,7 +279,7 @@ RouteStore::getRouteMethod( const resip::Data& key )
 resip::Data 
 RouteStore::getRouteEvent( const resip::Data& key )
 {
-   Lock lock(mMutex, VOCAL_READLOCK);
+   ReadLock lock(mMutex);
 
    if ( !findKey(key) )
    {
@@ -291,7 +291,7 @@ RouteStore::getRouteEvent( const resip::Data& key )
 resip::Data 
 RouteStore::getRoutePattern( const resip::Data& key )
 {
-   Lock lock(mMutex, VOCAL_READLOCK);
+   ReadLock lock(mMutex);
 
    if ( !findKey(key) )
    {
@@ -303,7 +303,7 @@ RouteStore::getRoutePattern( const resip::Data& key )
 resip::Data 
 RouteStore::getRouteRewrite( const resip::Data& key )
 {
-   Lock lock(mMutex, VOCAL_READLOCK);
+   ReadLock lock(mMutex);
 
    if ( !findKey(key) )
    {
@@ -315,7 +315,7 @@ RouteStore::getRouteRewrite( const resip::Data& key )
 int         
 RouteStore::getRouteOrder( const resip::Data& key )
 {
-   Lock lock(mMutex, VOCAL_READLOCK);
+   ReadLock lock(mMutex);
 
    if ( !findKey(key) )
    {
@@ -330,7 +330,7 @@ RouteStore::process(const resip::Uri& ruri,
                     const resip::Data& method, 
                     const resip::Data& event )
 {
-   Lock lock(mMutex, VOCAL_READLOCK);
+   ReadLock lock(mMutex);
    RouteStore::UriList targetSet;
 
    for (RouteOpList::iterator it = mRouteOperators.begin();

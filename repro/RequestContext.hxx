@@ -59,7 +59,8 @@ class RequestContext
       void sendResponse(resip::SipMessage& response);
 
       void forwardAck200(const resip::SipMessage& ack);
-
+      void postAck200Done();
+      
       void updateTimerC();
       bool mInitialTimerCSet;
 
@@ -77,6 +78,15 @@ class RequestContext
       ProcessorChain& mResponseProcessorChain; // lemurs
       ProcessorChain& mTargetProcessorChain; // baboons
 
+      bool processRequestInviteTransaction(resip::SipMessage* msg,bool original);
+      bool processRequestNonInviteTransaction(resip::SipMessage* msg,bool original);
+      void processRequestAckTransaction(resip::SipMessage* msg,bool original);
+      void doPostRequestProcessing(resip::SipMessage* msg, bool original);
+      bool processResponseInviteTransaction(resip::SipMessage* msg);
+      bool processResponseNonInviteTransaction(resip::SipMessage* msg);
+      void processResponseAckTransaction(resip::SipMessage* msg);
+      void doPostResponseProcessing(resip::SipMessage* msg);
+      
       resip::Data mDigestIdentity;
       int mTransactionCount;
       Proxy& mProxy;

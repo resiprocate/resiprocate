@@ -111,7 +111,7 @@ TestSipEndPoint::TestSipEndPoint(const Uri& addressOfRecord,
       {
          InfoLog(<< "TestSipEndPoint[" << addressOfRecord << "]transport is TLS " << nwIf);
          mTransport = new TlsTransport(mIncoming, mContact.uri().port(), version, nwIf, 
-                                       *mSecurity, nwIf, SecurityTypes::TLSv1, 0, resip::Compression::Disabled, 0);
+                                       *mSecurity, resip::Data::Empty, SecurityTypes::TLSv1, 0, resip::Compression::Disabled, 0);
       }
 #endif
       else
@@ -2482,7 +2482,7 @@ TestSipEndPoint::Notify::Notify(TestSipEndPoint & endPoint, boost::shared_ptr<re
 boost::shared_ptr<resip::SipMessage>                                
 TestSipEndPoint::Notify::go(boost::shared_ptr<resip::SipMessage> msg)
 {
-   int expires = msg->header(h_Expires).value();
+   UInt32 expires = msg->header(h_Expires).value();
    if (msg->isRequest() && (expires < mMinExpires))
    {
       boost::shared_ptr<resip::SipMessage> response;

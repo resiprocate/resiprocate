@@ -203,7 +203,7 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport)
    }
 
    Tuple tuple(transport->interfaceName(), transport->port(),
-                   transport->ipVersion(), transport->transport());
+               transport->ipVersion(), transport->transport());
    mTypeToTransportMap.insert(std::make_pair(tuple,transport));
 
    switch (transport->transport())
@@ -220,6 +220,7 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport)
          // interface. Store the transport in the specific interface maps if the tuple
          // specifies an interface. See TransportSelector::findTransport.
          if (transport->interfaceName().empty() ||
+             transport->getTuple().isAnyInterface() ||
              transport->hasSpecificContact() )
          {
             mAnyInterfaceTransports[tuple] = transport;
