@@ -309,7 +309,7 @@ main (int argc, char** argv)
          ShuttingDown,
          Finished
       } state;
-   time_t endTime;
+   time_t endTime=0;
 
    // register client and server
    SharedPtr<SipMessage> clientRegMessage = clientDum.makeRegistration(clientAor);

@@ -60,11 +60,11 @@ void CommandLineSelector::DisplayTestCases2(std::vector<std::string>& names)
    int off   = 0;
    int off1  = 0;
    int off2  = 0;
-   char *sep = "::";
-   char *indent0 = "  ";
-   char *indent1 = "    ";
-   char *indent2 = "    ...  ";
-   char *indent;
+   const char *sep = "::";
+   const char *indent0 = "  ";
+   const char *indent1 = "    ";
+   const char *indent2 = "    ...  ";
+   const char *indent;
 
    int count = (int) names.size();
    std::cout << std::endl;
@@ -254,7 +254,6 @@ void CppTestSelector::GetTestCases(CppUnit::Test *test, std::vector<std::string>
 // may throw memory exception 
 int CppTestSelector::SelectTests(CppUnit::Test *suite, CppUnit::TestRunner &testRunner, UISelector &uiSelector, int &numTimes)
 {
-	CppUnit::Test *selection = NULL;
 	CppUnitVector<std::string>    testNames ;
 	std::vector<int>   selectedTests;
 	size_t i = 0;

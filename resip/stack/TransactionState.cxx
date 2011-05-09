@@ -2111,6 +2111,10 @@ TransactionState::handle(DnsResult* result)
          case DnsResult::Available:
             mWaitingForDnsResult=false;
             mTarget = mDnsResult->next();
+            assert( mTarget.transport==0 );
+            // below allows TU to which transport we send on
+            // (The Via mechanism for setting transport doesn't work for TLS)
+            mTarget.transport = mMsgToRetransmit->getDestination().transport;
             processReliability(mTarget.getType());
             mController.mTransportSelector.transmit(mMsgToRetransmit, mTarget);
             break;

@@ -52,29 +52,30 @@ using namespace std;
 // RTCP interval in seconds
 #define RTCP_INTERVAL 1
 
-static int
-timeval_subtract(timeval *result, timeval* x, timeval*y)
-{
-  /* Perform the carry for the later subtraction by updating y. */
-  if (x->tv_usec < y->tv_usec) {
-    int nsec = (y->tv_usec - x->tv_usec) / 1000000 + 1;
-    y->tv_usec -= 1000000 * nsec;
-    y->tv_sec += nsec;
-  }
-  if (x->tv_usec - y->tv_usec > 1000000) {
-    int nsec = (x->tv_usec - y->tv_usec) / 1000000;
-    y->tv_usec += 1000000 * nsec;
-    y->tv_sec -= nsec;
-  }
-
-  /* Compute the time remaining to wait.
-     tv_usec is certainly positive. */
-  result->tv_sec = x->tv_sec - y->tv_sec;
-  result->tv_usec = x->tv_usec - y->tv_usec;
-
-  /* Return 1 if result is negative. */
-  return x->tv_sec < y->tv_sec;
-}
+// .bwc. Not used. Do we plan on ever uncommenting the code that uses this?
+//static int
+//timeval_subtract(timeval *result, timeval* x, timeval*y)
+//{
+//  /* Perform the carry for the later subtraction by updating y. */
+//  if (x->tv_usec < y->tv_usec) {
+//    int nsec = (y->tv_usec - x->tv_usec) / 1000000 + 1;
+//    y->tv_usec -= 1000000 * nsec;
+//    y->tv_sec += nsec;
+//  }
+//  if (x->tv_usec - y->tv_usec > 1000000) {
+//    int nsec = (x->tv_usec - y->tv_usec) / 1000000;
+//    y->tv_usec += 1000000 * nsec;
+//    y->tv_sec -= nsec;
+//  }
+//
+//  /* Compute the time remaining to wait.
+//     tv_usec is certainly positive. */
+//  result->tv_sec = x->tv_sec - y->tv_sec;
+//  result->tv_usec = x->tv_usec - y->tv_usec;
+//
+//  /* Return 1 if result is negative. */
+//  return x->tv_sec < y->tv_sec;
+//}
 
 PacketSenderStatistics::PacketSenderStatistics() :
    mSent(0)
@@ -489,7 +490,7 @@ TestRtp::sendPacket(resip::Socket fd, Tuple& dest, const Data& data)
 {
    size_t count = sendto(fd, data.data(), (int) data.size(), 0, &dest.getSockaddr(), dest.length());
 
-   if( count == SOCKET_ERROR )
+   if( count == (size_t)SOCKET_ERROR )
    {
       int e = getErrno();
       ErrLog(<< "Failed to send packet to " << dest << ": " << strerror(e));
@@ -989,7 +990,7 @@ TestRtp::thread()
    //    The current solution consumes all CPU since it spins and checks
    //    the time periodically
 
-   time_t lastRtcp = time(NULL);
+   // time_t lastRtcp = time(NULL);
    struct timeval lastPacketTime;
    if( !mPacketsRtp.empty() )
       lastPacketTime = mPacketsRtp.front().mTimeStamp;
@@ -1006,7 +1007,7 @@ TestRtp::thread()
       fdSet.setRead(mFdRtp);
       fdSet.setRead(mFdRtcp);
 
-      int ready = fdSet.selectMilliSeconds(RTP_INTERVAL);
+      /*int ready = */fdSet.selectMilliSeconds(RTP_INTERVAL);
  
       if( fdSet.readyToRead(mFdRtp) )
       {

@@ -84,7 +84,7 @@ AclStore::addAcl(const resip::Data& tlsPeerName,
       addressRecord.mMask = rec.mMask;
       addressRecord.key = buildKey(Data::Empty, rec.mAddress, rec.mMask, rec.mPort, rec.mFamily, rec.mTransport);
       {
-         Lock lock(mMutex, VOCAL_WRITELOCK);
+         WriteLock lock(mMutex);
          mAddressList.push_back(addressRecord);
       }
    }
@@ -94,7 +94,7 @@ AclStore::addAcl(const resip::Data& tlsPeerName,
       tlsPeerNameRecord.mTlsPeerName = rec.mTlsPeerName;
       tlsPeerNameRecord.key = buildKey(rec.mTlsPeerName, Data::Empty, 0, 0, 0, 0);
       {
-         Lock lock(mMutex, VOCAL_WRITELOCK);
+         WriteLock lock(mMutex);
          mTlsPeerNameList.push_back(tlsPeerNameRecord); 
       }
    }
@@ -267,7 +267,7 @@ AclStore::eraseAcl(const resip::Data& key)
    // Erase local storage
    if(key.prefix(":"))  // a key that starts with a : has no peer name - thus a Address key
    {
-      Lock lock(mMutex, VOCAL_WRITELOCK);
+      WriteLock lock(mMutex);
       if(findAddressKey(key))
       {
          mAddressList.erase(mAddressCursor);
@@ -275,7 +275,7 @@ AclStore::eraseAcl(const resip::Data& key)
    }
    else
    {
-      Lock lock(mMutex, VOCAL_WRITELOCK);
+      WriteLock lock(mMutex);
       if(findTlsPeerNameKey(key))
       {
          mTlsPeerNameCursor = mTlsPeerNameList.erase(mTlsPeerNameCursor);
@@ -300,7 +300,7 @@ AclStore::buildKey(const resip::Data& tlsPeerName,
 AclStore::Key 
 AclStore::getFirstTlsPeerNameKey()
 {
-   Lock lock(mMutex, VOCAL_READLOCK);
+   ReadLock lock(mMutex);
    mTlsPeerNameCursor = mTlsPeerNameList.begin();
    if ( mTlsPeerNameCursor == mTlsPeerNameList.end() )
    {
@@ -340,7 +340,7 @@ AclStore::findTlsPeerNameKey(const Key& key)
 AclStore::Key 
 AclStore::getNextTlsPeerNameKey(Key& key)
 {  
-   Lock lock(mMutex, VOCAL_READLOCK);
+   ReadLock lock(mMutex);
    if ( !findTlsPeerNameKey(key) )
    {
       return Key(Data::Empty);
@@ -360,7 +360,7 @@ AclStore::getNextTlsPeerNameKey(Key& key)
 AclStore::Key 
 AclStore::getFirstAddressKey()
 {
-   Lock lock(mMutex, VOCAL_READLOCK);
+   ReadLock lock(mMutex);
    mAddressCursor = mAddressList.begin();
    if ( mAddressCursor == mAddressList.end() )
    {
@@ -400,7 +400,7 @@ AclStore::findAddressKey(const Key& key)
 AclStore::Key 
 AclStore::getNextAddressKey(Key& key)
 {  
-   Lock lock(mMutex, VOCAL_READLOCK);
+   ReadLock lock(mMutex);
    if ( !findAddressKey(key) )
    {
       return Key(Data::Empty);
@@ -420,7 +420,7 @@ AclStore::getNextAddressKey(Key& key)
 resip::Data 
 AclStore::getTlsPeerName( const resip::Data& key )
 {
-   Lock lock(mMutex, VOCAL_READLOCK);
+   ReadLock lock(mMutex);
    if ( !findTlsPeerNameKey(key) )
    {
       return Data::Empty;
@@ -432,7 +432,7 @@ AclStore::getTlsPeerName( const resip::Data& key )
 resip::Tuple 
 AclStore::getAddressTuple( const resip::Data& key )
 {
-   Lock lock(mMutex, VOCAL_READLOCK);
+   ReadLock lock(mMutex);
    if ( !findAddressKey(key) )
    {
       return Tuple();
@@ -444,7 +444,7 @@ AclStore::getAddressTuple( const resip::Data& key )
 short 
 AclStore::getAddressMask( const resip::Data& key )
 {
-   Lock lock(mMutex, VOCAL_READLOCK);
+   ReadLock lock(mMutex);
    if ( !findAddressKey(key) )
    {
       return 0;
@@ -456,7 +456,7 @@ AclStore::getAddressMask( const resip::Data& key )
 bool 
 AclStore::isTlsPeerNameTrusted(const std::list<Data>& tlsPeerNames)
 {
-   Lock lock(mMutex, VOCAL_READLOCK);
+   ReadLock lock(mMutex);
    for(std::list<Data>::const_iterator it = tlsPeerNames.begin(); it != tlsPeerNames.end(); it++)
    {
       for(TlsPeerNameList::iterator i = mTlsPeerNameList.begin(); i != mTlsPeerNameList.end(); i++)
@@ -475,7 +475,7 @@ AclStore::isTlsPeerNameTrusted(const std::list<Data>& tlsPeerNames)
 bool 
 AclStore::isAddressTrusted(const Tuple& address)
 {
-   Lock lock(mMutex, VOCAL_READLOCK);
+   ReadLock lock(mMutex);
    for(AddressList::iterator i = mAddressList.begin(); i != mAddressList.end(); i++)
    {
       if(i->mAddressTuple.isEqualWithMask(address, i->mMask, i->mAddressTuple.getPort() == 0))

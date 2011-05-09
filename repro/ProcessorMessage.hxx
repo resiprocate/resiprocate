@@ -2,47 +2,70 @@
 #define PROCESSOR_MESSAGE_HXX 1
 
 #include "resip/stack/ApplicationMessage.hxx"
-#include "repro/ChainTraverser.hxx"
 #include "resip/stack/TransactionUser.hxx"
 
 namespace repro
 {
 
-class ProcessorMessage : public resip::ApplicationMessage, public ChainTraverser
+class ProcessorMessage : public resip::ApplicationMessage
 {
    public:
    
       ProcessorMessage(const Processor& proc,
                         const resip::Data& tid,
                         resip::TransactionUser* tupassed):
-         ChainTraverser(proc)
+         mTid(tid)
       {
-         mTid=tid;
          tu=tupassed;
+         mReturnAddress=proc.getAddress();
+         mType=proc.getChainType();
       }
-      
-      ProcessorMessage(const ProcessorMessage& orig):
-         ChainTraverser(orig)
+
+      ProcessorMessage(const ProcessorMessage& orig) :
+         resip::ApplicationMessage(orig),
+         mTid(orig.mTid)
       {
-         mTid=orig.mTid;
-         tu=orig.tu;
+         mReturnAddress=orig.mReturnAddress;
+         mType=orig.mType;
       }
 
+      virtual ~ProcessorMessage(){}
 
-      virtual ProcessorMessage* clone() const =0;
+      void pushAddr(int addr)
+      {
+         mReturnAddress.push_back(addr);
+      }
       
+      int popAddr()
+      {
+         if(mReturnAddress.empty())
+         {
+            return 0;
+         }
+         
+         int addr = mReturnAddress.back();
+         mReturnAddress.pop_back();
+         return addr;
+      }
+      
+      Processor::ChainType chainType() const
+      {
+         return mType;
+      }
+
+      virtual Message* clone() const = 0;
+
+      virtual EncodeStream& encode(EncodeStream& strm) const = 0;
+      virtual EncodeStream& encodeBrief(EncodeStream& strm) const = 0;
+
       virtual const resip::Data& getTransactionId() const
       {
          return mTid;
       }
-      
-      virtual EncodeStream& encode(EncodeStream& ostr) const =0;
-      virtual EncodeStream& encodeBrief(EncodeStream& ostr) const=0;
-
-
    protected:
-   
       resip::Data mTid;
+      std::vector<short> mReturnAddress;
+      Processor::ChainType mType;
 };
 
 }

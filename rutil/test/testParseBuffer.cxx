@@ -1,5 +1,3 @@
-#define RESIP_PB_TEST_DRIVER 1
-
 #include "rutil/ParseBuffer.hxx"
 #include <string.h>
 #include <assert.h>
@@ -429,7 +427,7 @@ main(int argc, char** argv)
    {
       char buf[] = "2890844526";
       ParseBuffer pb(buf, strlen(buf));   
-      assert(pb.unsignedInteger() == 2890844526UL);
+      assert(pb.uInt64() == 2890844526UL);
    }
 #endif
 

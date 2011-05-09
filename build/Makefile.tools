@@ -265,6 +265,16 @@ ifeq ($(USE_CCACHE),yes)
 
   CC := $(CCACHE) $(CC)
   CXX := $(CCACHE) $(CXX)
+else
+# Just in case gcc happens to point to ccache by default
+  CCACHE_DISABLE := yes
+  export CCACHE_DISABLE
+
+endif
+
+ifeq ($(USE_DEBUG_GLIBCXX),yes)
+
+   CXXFLAGS += -D_GLIBCXX_DEBUG
 
 endif
 
