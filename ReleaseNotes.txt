@@ -1,0 +1,204 @@
+= Release Notes v 1.7 =
+
+==General==
+===New features===
+
+===Bug fixes===
+
+
+==Build system==
+===New features===
+* added Darwin support to ax_resip.m4 - thanks to Volodymyr Tarasenko
+* created reprolib, reflow, recon, and reTurn projects for VS2010
+* allow reflow, recon, and reTurn to be built without openssl support
+* allow builds against a non-installed build of openssl
+* updated XCode build
+* iPhone/iOS build support
+
+===Bug fixes===
+* fixing a bug where RESIP_OSTYPE_*, RESIP_ARCH_*, and RESIP_LARCH_* may be set incorrectly
+* On OS X, use bdb 4.4 instead of 4.2, since sdb 4.2 is no longer available through MacPorts
+* remove NO_IPHLPAPI from SSL configurations of rutil - to match non-SSL
+* allow the use of -fPIC for static libs; static libs without PIC are unusable by shared libs on x86_64 architecture
+
+
+==rutil==
+===New features===
+* enhanced ExternalDnsFactory to allow users of librutil to define an external DNS provider at runtime
+* modified windows version of WinCompat::determineSourceInterface API's to return the default NIC address for any destination address that exists on a local NIC
+* implemented rolling log-files in the logging system
+* added windows memory leak detection to testLogger.cxx
+* better support for running test-cases under Windows
+* add support for DNS resolution using only host-file lookups
+* use non-blocking IO for DNS resolver
+* expose resip local logger id to applications
+* added PtrLock class that handles pointer to Lockable (this makes implementing optional locking easy)
+
+===Bug fixes===
+* build fix in SysLogBuf.cxx for compilers that do not have an implicit <cstdio> include
+* fixing a bug in ParseBuffer::integer() where we were checking for overflow incorrectly, causing negative integers not to parse. Also, adding testParseBuffer to the tests run by runtests.sh (which, incidentally, had a test for parsing negative numbers all along...)
+* fix 64-bit Windows build failure in stun/Stun.cxx
+* modified the Windows implementation of WinCompat::determineSourceInterface to not return the loopback adapter (127.0.0.1)
+* fix for errno defines when compiling under VS2005/2008 - should be checking compiler version (< VS2010) and not the target OS version
+* fix bug in WinCompat::determineSourceInterfaceWithIPv6() where only the first adapter was checked
+* fix memory leak in ThreadIf destructor
+* fix build failure on amd64 in SysLogBuf.cxx
+* enable recursive mutex support on OS X (this has been implemented since 10.3)
+* fixed some memory leaks in resip logger if using thread local loggers and starting/stopping threads
+* fix for DNS spin issue while waiting for a DNS result
+
+==stack==
+===New features===
+* allow Multipart Mixed boundary token to be defined by an application
+* calls to either SipStack::abandonServerTransaction or SipStack::cancelClientInviteTransaction will invoke the AsyncProcessHandler, if set
+* added the ability for the afterSocketCreationFuncPtr to be called after an outbound TCP socket has been "connected"
+* added checks to ensure that the user has passed in a properly formed ip address when calling addTranport
+* output the CSeq number in SipMessage::brief()
+* better support for running test-cases under Windows
+* updated SipStack interfaces that need to copy SipMessages before sending to use the clone method instead of the copy constructor so that subclasses messages get properly copied
+* use an outbound decorator to handle calculating digest responses, in case a preceding decorator modifies the body (which will invalidate preceding auth-int calculations)
+* allow TCP-based transports to be configured in a send-only mode (ie; do not open a listen port)
+* added epoll support
+
+===Bug fixes===
+* fix NameAddr parser when a '*' contact is used and is followed by uri parameters
+* fixed warning codes to use 399 instead of the non-standard 499
+* better protection against memory leaks in TransactionState when garbage SIP traffic comes from the wire
+* fixed the TCP connection garbage collector, so that it will not tear down all TCP connections when the OS runs out of TCP connections
+* modified the STUN server support in UDP transport to use XorMappedAddress instead of MappedAddress if present in the STUN response
+* fixed bug where Helper::algorithmAndQopSupported() would return true on an unsupported qop type if no algorithm parameter was present (order of operations bug)
+* fix a build failure on gcc 4.2 in ssl/TlsConnection.cxx
+* fix build failure (in makeCert.cxx) when openssl support is disabled
+* fix a build failure in test/testThreads.cxx
+* fixed crash when a TU unregisters in the middle of a transaction
+* fixed threadsafety of RRCache when multiple SipStacks were used in the same process
+* fix for potential memory leak if ParseExcpetion throws during request/response construction
+* fix crash-on-shutdown in ContentsFactoryBase when multiple of the same type exist
+* fixed bug where the X in the Via of outgoing requests was ignored by the stack in the TCP case
+
+==DUM==
+===New features===
+* made DUM InviteSession offer answer logic to be Content type generic
+* added a new test for simple PUBLISH handling
+* allow INFO and MESSAGE to be sent in early dialogs
+* cache outgoing NIT requests, to make it easier for implementors to correlate responses
+
+===Bug fixes===
+* build fix in DialogEventInfo.hxx for compilers that do not have an implicit <memory> include
+* fix for reception of REFER request - newly generated INVITE was going out with incorrect RTP port
+* fix for extraneous re-invite's going out during transfer scenario - due to participant hold setting not being properly copied when one participant is replaced by another
+* fix memory corruption bug when a client INVITE session receives a provisional with a CSeq that does not match the most recent INVITE
+* tweak to RSeq check in INVITE session; check RSeq if a reliable provisional comes in when we didn't use Require: 100rel, but used Supported: 100rel instead. Also, don't treat Supported: 100rel in a provisional response as indicating reliability
+* modified Dialog.cxx and setting of mLocalContact from profile getOverrideHostAndPort so that parameters will be preserved; as it may be required to add the p_addTransport to override host and port settings to direct the stack to stamp the contact header with ;transport=XXX appropriately
+* reuse credentials from UPDATE in ACK, in the case where the UPDATE followed the INVITE
+* fixed a subscription bug where if expires time in notify is less than 5 seconds, we don't send a refresh properly
+* fix CSeq double increment in NOTIFY terminated when server subscription is ended by client
+* fixed bug where ServerRegistration would refuse to use the flow-token hack if outbound support was enabled; this prevented flow-token fixup for clients that did not support outbound
+* fixed bug where the Expires header in a SUBSCRIBE/2xx was ignored when the NOTIFY lacked an expiry (either an Expires header, or an expires param on the Subscription-State header)
+* fixed bug where UAS Dialogs were not using the automatic Contact fillout functionality in the stack, because it was setting the Contact header to whatever the Request-URI was on the SIP request
+* fixed bug where Path headers were not copied into response for REGISTER
+* fix thread-safety bug in UserProfile::isAnonymous()
+* in ClientRegistration, handle case where Retry-After header contains a value of 0
+* fixed bug where reception of a non-terminating NOTIFY would permanently halt teardown of ClientSubscription (if it had already sent an unSUBSCRIBE)
+* fixed bug in ServerInviteSession::sendProvisional(), where passing earlyFlag==false would not prevent a session body from being added to the provisional
+* fixed bug where retries of an initial SUBSCRIBE would have a to-tag
+* fixed bug in ClientPublication where queueing a PUBLISH request (while a previous PUBLISH was outstanding) would cause the CSeq checking logic to fail when the response to the first PUBLISH arrived
+* fix to refer handling to be able to properly handle multiple REFER's within a dialog
+
+==repro==
+===New features===
+* added ability to add an application defined OPTIONS handler for repro proxy
+* added Request Context Factory so that virtual fn's in Request Context can be overridden by an application to provide custom handling
+* added ability for repro to synchronize registrations with another instance
+* log a warning if an IP-address isn't used with the --interfaces command line option
+* added new command-line option --server-text to specify the contents of the 'Server' header when acting as UAS
+* added new command-line option --poll to trigger support for epoll. The implementation is conditionally compiled, so can be used in tree without the rest of the epoll changes
+* added new parameter 'rcvbuf' to URIs of the --interfaces command-line option. If specified, this sets the receive buffer length for the corresponding socket. This is currently only meaningful for UDP transports.
+* allow the webadmin to be disabled
+
+===Bug fixes===
+* fixed some registration storage locking bugs
+* change to repro to ignore port on registration and Location Server lookup if port specified is the default port
+* remove uri parameters from LocationServer lookup, since registration removes all parameters on aor
+* numerous Record-Route and Path header fixes
+* fixed an erroneous error log when dropping a NIT 408 response (as specified in RFC 4320 section 4.2)
+
+==reTurn==
+===New features===
+* add ability to pass local IP address to TestAsyncClient command line
+
+===Bug fixes===
+* fixed memory leak in d'tor of DataBuffer
+
+
+==recon==
+===New features===
+* add "BroadcastOnly" conversation types - where all participants are considered on hold, but will receive media from the media participant in the conversation - for implementing a Music-On-Hold conversation
+* allow a Media Interface per conversation, instead of one global one
+* use participant handle instead of pointer in Dtmfevent for better thread safety
+* created post convenience methods on Conversation Manager
+
+===Bug fixes===
+* fix for recon bug when we get an inbound INVITE with a replaces header, where a media connection was not being allocated before the bridge mixer readjusted
+* fix bug where audio path/hold state was not being propagated to the new remote participant in the case of a participant replacement
+* fix bug where a re-INVITE with no SDP (ie. requesting an offer) when we were on hold, would not cause us to come off hold (this is how you request someone to come off hold, after all)
+* fix some uses of recon subsystem
+
+==reflow==
+===New features===
+
+===Bug fixes===
+* fixed bug where reception of an ICMP error on a UDP flow would cause the flow to stop receiving data
+
+
+==clicktocall==
+===New features===
+
+===Bug fixes===
+* fixed a bug in xml rpc server - need to call tryParse multiple times in cases where we end up with two entire requests in one socket read
+* fixed memory leak in xml rpc server with stored requests
+
+
+==nICEr==
+===New features===
+
+===Bug fixes===
+
+
+
+==ichat-gw==
+===New features===
+
+===Bug fixes===
+
+
+
+==sipdial==
+===New features===
+
+===Bug fixes===
+
+
+
+==p2p==
+===New features===
+
+===Bug fixes===
+
+
+
+==tfm==
+===New features===
+
+===Bug fixes===
+
+
+
+==b2bua==
+===New features===
+
+===Bug fixes===
+
+
+
+
