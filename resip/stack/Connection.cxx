@@ -197,6 +197,9 @@ Connection::read()
    {
       return bytesRead;
    }  
+   // mBuffer might have been reallocated inside read()
+   writePair = getCurrentWriteBuffer();
+
    getConnectionManager().touch(this);
 
 #ifdef USE_SIGCOMP
