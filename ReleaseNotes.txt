@@ -46,6 +46,9 @@
 * enable recursive mutex support on OS X (this has been implemented since 10.3)
 * fixed some memory leaks in resip logger if using thread local loggers and starting/stopping threads
 * fix for DNS spin issue while waiting for a DNS result
+* fixed bug in stun/Stun.cxx where StunAtrError would be rejected due to an erroneous buffer length check
+* fixed various crash/leak bugs in resip-ares/DNS code
+* fixed some uninitialized members in RRVip::MapKey and Timer
 
 ==stack==
 ===New features===
@@ -59,6 +62,7 @@
 * use an outbound decorator to handle calculating digest responses, in case a preceding decorator modifies the body (which will invalidate preceding auth-int calculations)
 * allow TCP-based transports to be configured in a send-only mode (ie; do not open a listen port)
 * added epoll support
+* implemented (optional) RAck fixup for (PRACK) responses; protects against malicious endpoints changing the RAck in the PRACK response, for TUs that will not cope well
 
 ===Bug fixes===
 * fix NameAddr parser when a '*' contact is used and is followed by uri parameters
@@ -75,6 +79,12 @@
 * fix for potential memory leak if ParseExcpetion throws during request/response construction
 * fix crash-on-shutdown in ContentsFactoryBase when multiple of the same type exist
 * fixed bug where the X in the Via of outgoing requests was ignored by the stack in the TCP case
+* fixed leaks/crashes caused by transaction-id collisions in the transaction processing code
+* fixed crash when TU sends a request to the stack with a malformed Contact (this can easily happen in repro, since repro doesn't necessarily care what is in the Contact header)
+* fixed bug where 503s would not be sent to the TU in the event of a transport failure, when no DNS resolution occurred (sending to a bare IP address, or using flow tokens)
+* fixed some (potentially) uninitialized members in ConnectionBase
+* fixed a double-free bug in TuIM
+* fixed bug where unnecessary string comparisons would be performed when a Content-Language header was parsed on a Contents object
 
 ==DUM==
 ===New features===
@@ -82,6 +92,7 @@
 * added a new test for simple PUBLISH handling
 * allow INFO and MESSAGE to be sent in early dialogs
 * cache outgoing NIT requests, to make it easier for implementors to correlate responses
+* added new profile setting to allow additional headers to be passed in SipFrag bodies of notify messages that result from a REFER request
 
 ===Bug fixes===
 * build fix in DialogEventInfo.hxx for compilers that do not have an implicit <memory> include
@@ -104,6 +115,8 @@
 * fixed bug where retries of an initial SUBSCRIBE would have a to-tag
 * fixed bug in ClientPublication where queueing a PUBLISH request (while a previous PUBLISH was outstanding) would cause the CSeq checking logic to fail when the response to the first PUBLISH arrived
 * fix to refer handling to be able to properly handle multiple REFER's within a dialog
+* fixed bug where Subscription-Ids were used in subscriptions created by an OOD refer request (not breaking spec, just unnecessary)
+* fixed potential memory corruption bugs in ServerRegistration (cetain perfectly legitimate app behaviors that would cause these bugs to manifest)
 
 ==repro==
 ===New features===
@@ -137,12 +150,16 @@
 * allow a Media Interface per conversation, instead of one global one
 * use participant handle instead of pointer in Dtmfevent for better thread safety
 * created post convenience methods on Conversation Manager
+* implemented a Music-On-Hold and Park server
 
 ===Bug fixes===
 * fix for recon bug when we get an inbound INVITE with a replaces header, where a media connection was not being allocated before the bridge mixer readjusted
 * fix bug where audio path/hold state was not being propagated to the new remote participant in the case of a participant replacement
 * fix bug where a re-INVITE with no SDP (ie. requesting an offer) when we were on hold, would not cause us to come off hold (this is how you request someone to come off hold, after all)
 * fix some uses of recon subsystem
+* re-architected Media Interface notification scheme to be thread-safe
+* fixed trap when receiving an OOD refer request
+* fixed bug where NOTIFY requests associated with a OOD refer would not be sent correctly
 
 ==reflow==
 ===New features===
@@ -187,10 +204,14 @@
 
 
 
-==tfm==
+==tfm (repro)==
 ===New features===
+* added IPV6, TLS, and outbound support
+* added a lot of new tests, including TLS and outbound tests
+* added support for subnot-etags in the SUB/PUB testing classes
 
 ===Bug fixes===
+* fixed bugs in a number of tests
 
 
 
