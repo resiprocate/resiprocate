@@ -40,7 +40,7 @@ NameAddr::NameAddr(const NameAddr& rhs)
 {}
 
 static const Data parseContext("NameAddr constructor");
-NameAddr::NameAddr(const Data& unparsed)
+NameAddr::NameAddr(const Data& unparsed, bool preCacheAor)
    : ParserCategory(),
      mAllContacts(false),
      mDisplayName()
@@ -50,6 +50,10 @@ NameAddr::NameAddr(const Data& unparsed)
    ParseBuffer pb(unparsed, parseContext);
    tmp.parse(pb);
    *this = tmp;
+   if(preCacheAor)
+   {
+      mUri.getAor();
+   }
 }
 
 NameAddr::NameAddr(const Uri& uri)
