@@ -85,7 +85,6 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    const char* serverText = 0;
    int useInternalEPoll = 0;
    int useEventThread = 0;
-   int overrideT1 = 0;
 
 #ifdef WIN32
 #ifndef HAVE_POPT_H
@@ -159,7 +158,6 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"internalepoll",     0,   POPT_ARG_NONE,                              &useInternalEPoll,0, "use internal epoll", 0},
       {"eventthread",       0,   POPT_ARG_NONE,                              &useEventThread, 0, "use event thread for stack", 0},
 #endif
-      {"override-T1", 0, POPT_ARG_INT,   &overrideT1,  0, "Override the default value of T1 (you probably should not do this)" },
       {"version",         'V',   POPT_ARG_NONE,                              &showVersion,    0, "show the version number and exit", 0},
       POPT_AUTOHELP 
       { NULL, 0, 0, NULL, 0 }
@@ -187,8 +185,6 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
      exit(0);
    }
    
-   mOverrideT1=overrideT1;
-
    if (tlsDomain) 
    {
       mTlsDomain = tlsDomain;

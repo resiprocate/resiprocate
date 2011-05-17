@@ -103,7 +103,6 @@
     <ClCompile Include="FlowManagerSipXSocket.cxx" />
     <ClCompile Include="LocalParticipant.cxx" />
     <ClCompile Include="MediaEvent.cxx" />
-    <ClCompile Include="MediaInterface.cxx" />
     <ClCompile Include="MediaResourceCache.cxx" />
     <ClCompile Include="MediaResourceParticipant.cxx" />
     <ClCompile Include="MediaStreamEvent.cxx" />
@@ -137,7 +136,6 @@
     <ClInclude Include="FlowManagerSipXSocket.hxx" />
     <ClInclude Include="LocalParticipant.hxx" />
     <ClInclude Include="MediaEvent.hxx" />
-    <ClInclude Include="MediaInterface.hxx" />
     <ClInclude Include="MediaResourceCache.hxx" />
     <ClInclude Include="MediaResourceParticipant.hxx" />
     <ClInclude Include="MediaStreamEvent.hxx" />

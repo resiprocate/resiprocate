@@ -66,13 +66,10 @@ class MsgHeaderScanner
       };
       typedef unsigned char TextPropBitMask;
     
-      inline unsigned int getHeaderCount() const { return mNumHeaders;} 
-
    private:
     
       // Fields:
       SipMessage *                       mMsg;
-      unsigned int                       mNumHeaders;
       /*State*/int                       mState;      // Type defined in .cxx file.
       int                                mPrevScanChunkNumSavedTextChars;
       MsgHeaderScanner::TextPropBitMask  mTextPropBitMask;

@@ -40,10 +40,10 @@ class RequestLine : public ParserCategory
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
 
    private:
-      Uri mUri;
-      MethodTypes mMethod;
-      Data mUnknownMethodName;
-      Data mSipVersion;
+      mutable Uri mUri;
+      mutable MethodTypes mMethod;
+      mutable Data mUnknownMethodName;
+      mutable Data mSipVersion;
 };
  
 }

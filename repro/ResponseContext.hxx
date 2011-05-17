@@ -258,7 +258,7 @@ class ResponseContext
                              bool doPathInstead=false);
       resip::Data getInboundFlowToken(bool doPathInstead);
       bool outboundFlowTokenNeeded(Target* target);
-      bool needsFlowTokenToWork(const resip::NameAddr& contact) const;
+      bool selfAlreadyRecordRouted(bool doPathInstead);
       bool sendingToSelf(Target* target);
 
       void sendRequest(resip::SipMessage& request);

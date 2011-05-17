@@ -110,8 +110,6 @@ class Timer
          return ResipClock::getMaxSystemTimeWaitMs();
       }
 
-      static void resetT1(unsigned long t1);
-
       // These values can be changed but it is not recommended to do so after a
       // stack is up and running since they are not mutexed
       // These times are all in ms 

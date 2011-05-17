@@ -73,15 +73,8 @@ Token::operator<(const Token& rhs) const
    return (value() < rhs.value());
 }
 
-const Data& 
-Token::value() const 
-{
-   checkParsed(); 
-   return mValue;
-}
-
 Data& 
-Token::value()
+Token::value() const 
 {
    checkParsed(); 
    return mValue;

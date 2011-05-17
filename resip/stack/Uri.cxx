@@ -26,8 +26,8 @@ using namespace resip;
 bool Uri::mEncodingReady = false;
 // class static variables listing the default characters not to encode
 // in user and password strings respectively
-const Data Uri::mUriNonEncodingUserChars = Data("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*\\()&=+$,;?/");
-const Data Uri::mUriNonEncodingPasswordChars = Data("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*\\()&=+$");
+Data Uri::mUriNonEncodingUserChars = Data("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*\\()&=+$,;?/");
+Data Uri::mUriNonEncodingPasswordChars = Data("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*\\()&=+$");
 
 // ?bwc? 'p' and 'w' are allowed in 2806, but have been removed in 3966. Should
 // we support these or not?
@@ -49,14 +49,6 @@ Uri::Uri()
 {
 }
 
-Uri::Uri(HeaderFieldValue* hfv, Headers::Type type) :
-   ParserCategory(hfv, type),
-   mPort(0),
-   mOldPort(0),
-   mEmbeddedHeaders(0)
-{}
-
-
 static const Data parseContext("Uri constructor");
 Uri::Uri(const Data& data)
    : ParserCategory(), 
@@ -65,10 +57,10 @@ Uri::Uri(const Data& data)
      mOldPort(0),
      mEmbeddedHeaders(0)
 {
-   HeaderFieldValue hfv(data.data(), data.size());
    // must copy because parse creates overlays
-   Uri tmp(&hfv, Headers::UNKNOWN);
-   tmp.checkParsed();
+   Uri tmp;
+   ParseBuffer pb(data, parseContext);
+   tmp.parse(pb);
    *this = tmp;
 }
 
@@ -260,8 +252,7 @@ Uri::fromTel(const Uri& tel, const Uri& hostUri)
 bool
 Uri::isEnumSearchable() const
 {
-   checkParsed();
-   return (!mUser.empty() && mUser.size() >= 2 && mUser[0] == '+');
+   return (!user().empty() && user().size() >= 2 && user()[0] == '+');
 }
 
 std::vector<Data> 
@@ -299,7 +290,6 @@ Uri::hasEmbedded() const
 void 
 Uri::removeEmbedded()
 {
-   checkParsed();
    delete mEmbeddedHeaders;
    mEmbeddedHeaders = 0;
    mEmbeddedHeadersText = Data::Empty;   
@@ -393,7 +383,7 @@ Uri::operator==(const Uri& other) const
        mPassword == other.mPassword &&
        mPort == other.mPort)
    {
-      for (ParameterList::const_iterator it = mParameters.begin(); it != mParameters.end(); ++it)
+      for (ParameterList::iterator it = mParameters.begin(); it != mParameters.end(); ++it)
       {
          Parameter* otherParam = other.getParameterByEnum((*it)->getType());
 
@@ -475,7 +465,7 @@ Uri::operator==(const Uri& other) const
       }         
 
       // now check the other way, sigh
-      for (ParameterList::const_iterator it = other.mParameters.begin(); it != other.mParameters.end(); ++it)
+      for (ParameterList::iterator it = other.mParameters.begin(); it != other.mParameters.end(); ++it)
       {
          Parameter* param = getParameterByEnum((*it)->getType());
          switch ((*it)->getType())
@@ -967,7 +957,7 @@ Uri::clone() const
    return new Uri(*this);
 }
 
-void Uri::setUriUserEncoding(unsigned char c, bool encode) 
+void Uri::setUriUserEncoding(char c, bool encode) 
 {
    if(!mEncodingReady)
    {
@@ -976,16 +966,28 @@ void Uri::setUriUserEncoding(unsigned char c, bool encode)
       initialiseEncodingTables();
    }
 
+   if(c < 0)
+   {
+      ErrLog(<< "unable to change encoding for character '" << c << "', table size = " << URI_ENCODING_TABLE_SIZE);
+      return;
+   }
+
    mUriEncodingUserTable[c] = encode; 
 }
 
-void Uri::setUriPasswordEncoding(unsigned char c, bool encode)
+void Uri::setUriPasswordEncoding(char c, bool encode)
 {
    if(!mEncodingReady)
    {
       // if we don't init first, the changes we make will be lost when
       // init is invoked
       initialiseEncodingTables();
+   }
+
+   if(c < 0)
+   {
+      ErrLog(<< "unable to change encoding for character '" << c << "', table size = " << URI_ENCODING_TABLE_SIZE);
+      return;
    }
 
    mUriEncodingPasswordTable[c] = encode;
@@ -994,28 +996,56 @@ void Uri::setUriPasswordEncoding(unsigned char c, bool encode)
 void Uri::initialiseEncodingTables() {
 
    // set all bits
-   mUriEncodingUserTable=Data::toBitset(mUriNonEncodingUserChars).flip();
-   mUriEncodingPasswordTable=Data::toBitset(mUriNonEncodingPasswordChars).flip();
+   mUriEncodingUserTable.set();
+   mUriEncodingPasswordTable.set();
+
+   for(Data::size_type i = 0; i < mUriNonEncodingUserChars.size(); i++) 
+   {
+      char& c = mUriNonEncodingUserChars.at(i);
+      if(c >= 0)
+      {
+         mUriEncodingUserTable[c] = false;
+      }
+   }
+   for(Data::size_type i = 0; i < mUriNonEncodingPasswordChars.size(); i++) 
+   {
+      char& c = mUriNonEncodingPasswordChars.at(i);
+      if(c >= 0)
+      {
+         mUriEncodingPasswordTable[c] = false; 
+      }
+   }
+
    mEncodingReady = true;
 }
 
 inline bool 
-Uri::shouldEscapeUserChar(unsigned char c)
+Uri::shouldEscapeUserChar(char c)
 {
    if(!mEncodingReady)
    {
       initialiseEncodingTables();
    }
 
+   if(c < 0)
+   {
+      return false;
+   }
+
    return mUriEncodingUserTable[c];
 }
 
 inline bool 
-Uri::shouldEscapePasswordChar(unsigned char c)
+Uri::shouldEscapePasswordChar(char c)
 {
    if(!mEncodingReady)
    {
       initialiseEncodingTables();
+   }
+
+   if(c < 0)
+   {
+      return false;
    }
 
    return mUriEncodingPasswordTable[c];

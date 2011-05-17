@@ -82,20 +82,14 @@ class Contents : public LazyParser
       // !dlb! requires a nested exception...
 
       // shared header types
-      const H_ContentType::Type& header(const H_ContentType& headerType) const;
-      H_ContentType::Type& header(const H_ContentType& headerType);
-      const H_ContentDisposition::Type& header(const H_ContentDisposition& headerType) const;
-      H_ContentDisposition::Type& header(const H_ContentDisposition& headerType);
-      const H_ContentTransferEncoding::Type& header(const H_ContentTransferEncoding& headerType) const;
-      H_ContentTransferEncoding::Type& header(const H_ContentTransferEncoding& headerType);
-      const H_ContentLanguages::Type& header(const H_ContentLanguages& headerType) const;
-      H_ContentLanguages::Type& header(const H_ContentLanguages& headerType);
+      H_ContentType::Type& header(const H_ContentType& headerType) const;
+      H_ContentDisposition::Type& header(const H_ContentDisposition& headerType) const;
+      H_ContentTransferEncoding::Type& header(const H_ContentTransferEncoding& headerType) const;
+      H_ContentLanguages::Type& header(const H_ContentLanguages& headerType) const;
 
       // MIME specific header types
-      const H_ContentID::Type& header(const H_ContentID& headerType) const;
-      H_ContentID::Type& header(const H_ContentID& headerType);
-      const H_ContentDescription::Type& header(const H_ContentDescription& headerType) const;
-      H_ContentDescription::Type& header(const H_ContentDescription& headerType);
+      H_ContentID::Type& header(const H_ContentID& headerType) const;
+      H_ContentDescription::Type& header(const H_ContentDescription& headerType) const;
 
       int& version() {return mVersion;}
       int& minorVersion() {return mMinorVersion;}
@@ -149,16 +143,16 @@ class Contents : public LazyParser
       }
       virtual const Data& errorContext() const;
 
-      Mime mType;
-      H_ContentDisposition::Type *mDisposition;
-      H_ContentTransferEncoding::Type *mTransferEncoding;
-      H_ContentLanguages::Type *mLanguages;
-      Token *mId;
-      H_ContentDescription::Type *mDescription;
-      StringCategory *mLength;
+      mutable Mime mType;
+      mutable H_ContentDisposition::Type *mDisposition;
+      mutable H_ContentTransferEncoding::Type *mTransferEncoding;      
+      mutable H_ContentLanguages::Type *mLanguages;
+      mutable Token *mId;
+      mutable H_ContentDescription::Type *mDescription;
+      mutable StringCategory *mLength;
 
-      int mVersion;
-      int mMinorVersion;
+      mutable int mVersion;
+      mutable int mMinorVersion;
 
       std::vector<char*> mBufferList;
 };

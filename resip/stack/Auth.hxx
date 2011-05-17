@@ -67,7 +67,7 @@ class Auth : public ParserCategory
 #undef defineParam
 
    private:
-      Data mScheme;
+      mutable Data mScheme;
 
       static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
 };

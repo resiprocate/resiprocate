@@ -64,11 +64,11 @@ defineParam(maddr, "maddr", DataParameter, "RFC 3261");
 #undef defineParam
 
    private:
-      Data mProtocolName;
-      Data mProtocolVersion;
-      Data mTransport;
-      Data mSentHost;
-      int mSentPort;
+      mutable Data mProtocolName;
+      mutable Data mProtocolVersion;
+      mutable Data mTransport;
+      mutable Data mSentHost;
+      mutable int mSentPort;
 
       static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
 };

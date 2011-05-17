@@ -582,12 +582,20 @@ ResponseContext::beginClientTransaction(repro::Target* target)
                            orig.getReceivedTransport(),
                            target);
       }
-      else if(request.method()==REGISTER)
+      else if(request.method()==REGISTER &&
+              (mRequestContext.mProxy.getAssumePath() ||
+               (!request.empty(h_Supporteds) &&
+                (request.header(h_Supporteds).find(Token(Symbols::Path)) ||
+                 request.header(h_Supporteds).find(Token(Symbols::Outbound))))))
       {
          insertRecordRoute(request,
                            orig.getReceivedTransport(),
                            target,
                            true /* do Path instead */);
+         if(!request.header(h_Supporteds).find(Token(Symbols::Path)))
+         {
+            request.header(h_Supporteds).push_back(Token(Symbols::Path));
+         }
       }
    }
       
@@ -707,10 +715,6 @@ ResponseContext::insertRecordRoute(SipMessage& outgoing,
             }
          }
          outgoing.header(h_Paths).push_front(rt);
-         if(!outgoing.header(h_Supporteds).find(Token("path")))
-         {
-            outgoing.header(h_Supporteds).push_back(Token("path"));
-         }
          InfoLog (<< "Added Path: " << rt);
       }
       else
@@ -721,21 +725,16 @@ ResponseContext::insertRecordRoute(SipMessage& outgoing,
    }
 
    // .bwc. We always need to add this, since we never know if a transport 
-   // switch is going to happen. (Except for Path headers; we don't care about 
-   // transport switches on REGISTER requests. If we already put a Path header 
-   // in, we do care though.)
-   if(!doPathInstead || recordRouted)
-   {
-      std::auto_ptr<resip::MessageDecorator> rrDecorator(
-                                 new RRDecorator(mRequestContext.mProxy,
-                                                receivedTransport,
-                                                recordRouted,
-                                                !inboundFlowToken.empty(),
-                                                mRequestContext.mProxy.getRecordRouteForced(),
-                                                doPathInstead,
-                                                mIsSenderBehindNAT));
-      outgoing.addOutboundDecorator(rrDecorator);
-   }
+   // switch is going to happen.
+   std::auto_ptr<resip::MessageDecorator> rrDecorator(
+                              new RRDecorator(mRequestContext.mProxy,
+                                             receivedTransport,
+                                             recordRouted,
+                                             !inboundFlowToken.empty(),
+                                             mRequestContext.mProxy.getRecordRouteForced(),
+                                             doPathInstead,
+                                             mIsSenderBehindNAT));
+   outgoing.addOutboundDecorator(rrDecorator);
 }
 
 resip::Data
@@ -743,15 +742,11 @@ ResponseContext::getInboundFlowToken(bool doPathInstead)
 {
    resip::Data flowToken=resip::Data::Empty;
    resip::SipMessage& orig=mRequestContext.getOriginalRequest();
-   if(orig.empty(h_Contacts) || !orig.header(h_Contacts).front().isWellFormed())
-   {
-      return flowToken;
-   }
-
-   const resip::NameAddr& contact(orig.header(h_Contacts).front());
-
+   
    if(InteropHelper::getOutboundSupported() && 
-      (contact.uri().exists(p_ob) || contact.exists(p_regid)))
+      !orig.empty(h_Contacts) &&
+      (orig.header(h_Contacts).front().uri().exists(p_ob) || 
+         orig.header(h_Contacts).front().exists(p_regid)))
    {
       if(orig.header(h_Vias).size()==1)
       {
@@ -782,22 +777,20 @@ ResponseContext::getInboundFlowToken(bool doPathInstead)
          }
       }
    }
-
-   if(flowToken.empty() && orig.header(h_Vias).size()==1)
+   
+   if(flowToken.empty() &&
+      (resip::InteropHelper::getRRTokenHackEnabled() ||
+       mIsSenderBehindNAT)
+      && !selfAlreadyRecordRouted(doPathInstead) )
    {
-      if(resip::InteropHelper::getRRTokenHackEnabled() ||
-         mIsSenderBehindNAT ||
-         needsFlowTokenToWork(contact))
-      {
-         // !bwc! TODO remove this when flow-token hack is no longer needed.
-         // Poor-man's outbound. Shouldn't be our default behavior, because it
-         // breaks target-refreshes (once a flow-token is in the Route-Set, the 
-         // flow-token cannot be changed, and will override any update to the 
-         // Contact)
-         resip::Data binaryFlowToken;
-         Tuple::writeBinaryToken(orig.getSource(), binaryFlowToken, Proxy::FlowTokenSalt);
-         flowToken = binaryFlowToken.base64encode();
-      }
+      // !bwc! TODO remove this when flow-token hack is no longer needed.
+      // Poor-man's outbound. Shouldn't be our default behavior, because it
+      // breaks target-refreshes (once a flow-token is in the Route-Set, the 
+      // flow-token cannot be changed, and will override any update to the 
+      // Contact)
+      resip::Data binaryFlowToken;
+      Tuple::writeBinaryToken(orig.getSource(), binaryFlowToken, Proxy::FlowTokenSalt);
+      flowToken = binaryFlowToken.base64encode();
    }
 
    return flowToken;
@@ -812,57 +805,34 @@ ResponseContext::outboundFlowTokenNeeded(Target* target)
       return false;
    }
 
-   if(target->rec().mReceivedFrom.mFlowKey
+   if(target->rec().mReceivedFrom.onlyUseExistingConnection
       || resip::InteropHelper::getRRTokenHackEnabled()
       || mIsSenderBehindNAT)
    {
-      target->rec().mReceivedFrom.onlyUseExistingConnection=true;
       return true;
    }
 
    return false;
 }
 
-bool 
-ResponseContext::needsFlowTokenToWork(const resip::NameAddr& contact) const
+bool
+ResponseContext::selfAlreadyRecordRouted(bool doPathInstead)
 {
-   if(DnsUtil::isIpAddress(contact.uri().host()))
+   resip::SipMessage& orig=mRequestContext.getOriginalRequest();
+   if(doPathInstead)
    {
-      // IP address in host-part.
-      if(contact.uri().scheme()=="sips")
-      {
-         // TLS with no FQDN. Impossible without flow-token fixup, even if no 
-         // NAT is involved.
-         return true;
-      }
-
-      if(contact.uri().exists(p_transport))
-      {
-         TransportType type = toTransportType(contact.uri().param(p_transport));
-         if(type==TLS || type == DTLS)
-         {
-            // TLS with no FQDN. Impossible without flow-token fixup, even if no 
-            // NAT is involved.
-            return true;
-         }
-      }
+      return (!orig.empty(h_Paths) 
+               && orig.header(h_Paths).front().isWellFormed()
+               && mRequestContext.mProxy.isMyUri(
+                           orig.header(h_Paths).front().uri()));
    }
-
-   if(contact.uri().exists(p_sigcompId))
+   else
    {
-      if(contact.uri().exists(p_transport))
-      {
-         TransportType type = toTransportType(contact.uri().param(p_transport));
-         if(type == TLS || type == TCP)
-         {
-            // Client is using sigcomp on the first hop using a connection-
-            // oriented transport. For this to work, that connection has to be
-            // reused for all traffic.
-            return true;
-         }
-      }
+      return (!orig.empty(h_RecordRoutes) 
+               && orig.header(h_RecordRoutes).front().isWellFormed()
+               && mRequestContext.mProxy.isMyUri(
+                           orig.header(h_RecordRoutes).front().uri()));
    }
-   return false;
 }
 
 bool

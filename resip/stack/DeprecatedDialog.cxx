@@ -331,7 +331,7 @@ DeprecatedDialog::makeResponse(const SipMessage& request, SipMessage& response, 
       mLocalSequence = 0;
       mLocalEmpty = true;
       mCallId = request.header(h_CallId);
-      assert (response.const_header(h_To).exists(p_tag));
+      assert (response.header(h_To).exists(p_tag));
       mLocalTag = response.header(h_To).param(p_tag); // from response 
       if (request.header(h_From).exists(p_tag))  // 2543 compat
       {
@@ -367,14 +367,14 @@ DeprecatedDialog::makeInitialRegister(const NameAddr& registrar, const NameAddr&
    SipMessage* msg = Helper::makeRegister( registrar, aor, mContact );
    assert( msg );
 
-   mRequestUri = msg->const_header(h_RequestLine).uri();
+   mRequestUri = msg->header(h_RequestLine).uri();
    mLocalEmpty = false;
-   mLocalSequence = msg->const_header(h_CSeq).sequence();
-   mCallId = msg->const_header(h_CallId);
-   assert(msg->const_header(h_From).exists(p_tag));
-   mLocalTag = msg->const_header(h_From).param(p_tag);  
-   mRemoteUri = msg->const_header(h_To);
-   mLocalUri = msg->const_header(h_From);
+   mLocalSequence = msg->header(h_CSeq).sequence();
+   mCallId = msg->header(h_CallId);
+   assert(msg->header(h_From).exists(p_tag));
+   mLocalTag = msg->header(h_From).param(p_tag);  
+   mRemoteUri = msg->header(h_To);
+   mLocalUri = msg->header(h_From);
    mCreated = true;
    
    mRemoteTarget = mRemoteUri;
@@ -389,14 +389,14 @@ DeprecatedDialog::makeInitialSubscribe(const NameAddr& target, const NameAddr& f
    SipMessage* msg = Helper::makeSubscribe( target, from, mContact );
    assert( msg );
 
-   mRequestUri = msg->const_header(h_RequestLine).uri();
+   mRequestUri = msg->header(h_RequestLine).uri();
    mLocalEmpty = false;
-   mLocalSequence = msg->const_header(h_CSeq).sequence();
-   mCallId = msg->const_header(h_CallId);
-   assert(msg->const_header(h_From).exists(p_tag));
-   mLocalTag = msg->const_header(h_From).param(p_tag);  
-   mRemoteUri = msg->const_header(h_To);
-   mLocalUri = msg->const_header(h_From);
+   mLocalSequence = msg->header(h_CSeq).sequence();
+   mCallId = msg->header(h_CallId);
+   assert(msg->header(h_From).exists(p_tag));
+   mLocalTag = msg->header(h_From).param(p_tag);  
+   mRemoteUri = msg->header(h_To);
+   mLocalUri = msg->header(h_From);
    
    return msg;
 }
@@ -408,14 +408,14 @@ DeprecatedDialog::makeInitialPublish(const NameAddr& target, const NameAddr& fro
    SipMessage* msg = Helper::makePublish( target, from, mContact );
    assert( msg );
 
-   mRequestUri = msg->const_header(h_RequestLine).uri();
+   mRequestUri = msg->header(h_RequestLine).uri();
    mLocalEmpty = false;
-   mLocalSequence = msg->const_header(h_CSeq).sequence();
-   mCallId = msg->const_header(h_CallId);
-   assert(msg->const_header(h_From).exists(p_tag));
-   mLocalTag = msg->const_header(h_From).param(p_tag);  
-   mRemoteUri = msg->const_header(h_To);
-   mLocalUri = msg->const_header(h_From);
+   mLocalSequence = msg->header(h_CSeq).sequence();
+   mCallId = msg->header(h_CallId);
+   assert(msg->header(h_From).exists(p_tag));
+   mLocalTag = msg->header(h_From).param(p_tag);  
+   mRemoteUri = msg->header(h_To);
+   mLocalUri = msg->header(h_From);
    
    return msg;
 }
@@ -427,14 +427,14 @@ DeprecatedDialog::makeInitialMessage(const NameAddr& target, const NameAddr& fro
    SipMessage* msg = Helper::makeMessage( target, from, mContact );
    assert( msg );
 
-   mRequestUri = msg->const_header(h_RequestLine).uri();
+   mRequestUri = msg->header(h_RequestLine).uri();
    mLocalEmpty = false;
-   mLocalSequence = msg->const_header(h_CSeq).sequence();
-   mCallId = msg->const_header(h_CallId);
-   assert(msg->const_header(h_From).exists(p_tag));
-   mLocalTag = msg->const_header(h_From).param(p_tag);  
-   mRemoteUri = msg->const_header(h_To);
-   mLocalUri = msg->const_header(h_From);
+   mLocalSequence = msg->header(h_CSeq).sequence();
+   mCallId = msg->header(h_CallId);
+   assert(msg->header(h_From).exists(p_tag));
+   mLocalTag = msg->header(h_From).param(p_tag);  
+   mRemoteUri = msg->header(h_To);
+   mLocalUri = msg->header(h_From);
    
    return msg;
 }
@@ -446,14 +446,14 @@ DeprecatedDialog::makeInitialInvite(const NameAddr& target, const NameAddr& from
    SipMessage* msg = Helper::makeInvite( target, from, mContact );
    assert( msg );
 
-   mRequestUri = msg->const_header(h_RequestLine).uri();
+   mRequestUri = msg->header(h_RequestLine).uri();
    mLocalEmpty = false;
-   mLocalSequence = msg->const_header(h_CSeq).sequence();
-   mCallId = msg->const_header(h_CallId);
-   assert(msg->const_header(h_From).exists(p_tag));
-   mLocalTag = msg->const_header(h_From).param(p_tag);  
-   mRemoteUri = msg->const_header(h_To);
-   mLocalUri = msg->const_header(h_From);
+   mLocalSequence = msg->header(h_CSeq).sequence();
+   mCallId = msg->header(h_CallId);
+   assert(msg->header(h_From).exists(p_tag));
+   mLocalTag = msg->header(h_From).param(p_tag);  
+   mRemoteUri = msg->header(h_To);
+   mLocalUri = msg->header(h_From);
    
    return msg;
 }

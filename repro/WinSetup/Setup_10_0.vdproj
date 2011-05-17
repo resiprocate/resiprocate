@@ -15,12 +15,6 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_0741BCA175681B47B523D2552E9B8CD5"
-        "OwnerKey" = "8:_449747DB7BDE448E8557B9834BB2A62D"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_449747DB7BDE448E8557B9834BB2A62D"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -39,7 +33,7 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_F469AA98BE7B43899560D3BD8737F84A"
+        "MsmKey" = "8:_FDC78DDEC5004D72B11FF4B3F079C5A9"
         "OwnerKey" = "8:_449747DB7BDE448E8557B9834BB2A62D"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -120,26 +114,6 @@
         }
         "File"
         {
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_0741BCA175681B47B523D2552E9B8CD5"
-            {
-            "SourcePath" = "8:IPHLPAPI.DLL"
-            "TargetName" = "8:IPHLPAPI.DLL"
-            "Tag" = "8:"
-            "Folder" = "8:_96F138CFF79546568B8B0A6277D34A78"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_5752D824D4BA4CC4AE9A4129533CC084"
             {
             "SourcePath" = "8:readme.txt"
@@ -248,7 +222,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Repro SIP Proxy"
         "ProductCode" = "8:{1D66F08D-5168-4EC9-B809-CC792E780CA9}"
-        "PackageCode" = "8:{CA110B4E-64C6-4073-AF8B-596F9C837820}"
+        "PackageCode" = "8:{6623C25A-DF2E-4742-8B95-23D1C6C7F19A}"
         "UpgradeCode" = "8:{7BD08495-64E4-4565-A1DC-93954D304A2E}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
@@ -806,11 +780,11 @@
         }
         "MergeModule"
         {
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_F469AA98BE7B43899560D3BD8737F84A"
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_FDC78DDEC5004D72B11FF4B3F079C5A9"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:TRUE"
-            "SourcePath" = "8:Microsoft_VC100_DebugCRT_x86.msm"
+            "SourcePath" = "8:Microsoft_VC100_DebugCRT_x64.msm"
                 "Properties"
                 {
                 }
@@ -825,7 +799,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_449747DB7BDE448E8557B9834BB2A62D"
             {
-            "SourcePath" = "8:..\\Release\\repro.exe"
+            "SourcePath" = "8:..\\SSL-Release\\repro.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_96F138CFF79546568B8B0A6277D34A78"

@@ -15,14 +15,14 @@ using namespace resip;
 
 LazyParser::LazyParser(HeaderFieldValue* headerFieldValue)
    : mHeaderField(headerFieldValue),
-      mState(mHeaderField->mField == 0 ? DIRTY : NOT_PARSED),
+      mState(mHeaderField->mField == 0 ? EMPTY : NOT_PARSED),
       mIsMine(false)
 {
 }
   
 LazyParser::LazyParser()
    : mHeaderField(0),
-      mState(DIRTY),
+      mState(EMPTY),
      mIsMine(true)
 {
 }
@@ -32,7 +32,7 @@ LazyParser::LazyParser(const LazyParser& rhs)
       mState(rhs.mState),
      mIsMine(true)
 {
-   if (rhs.mState!=DIRTY && rhs.mHeaderField)
+   if (rhs.mState==NOT_PARSED && rhs.mHeaderField)
    {
       mHeaderField = new HeaderFieldValue(*rhs.mHeaderField);
    }
@@ -43,7 +43,7 @@ LazyParser::LazyParser(const LazyParser& rhs,HeaderFieldValue::CopyPaddingEnum e
       mState(rhs.mState),
       mIsMine(true)
 {
-   if (rhs.mState!=DIRTY && rhs.mHeaderField)
+   if (rhs.mState==NOT_PARSED && rhs.mHeaderField)
    {
       mHeaderField = new HeaderFieldValue(*rhs.mHeaderField,e);
    }
@@ -65,7 +65,7 @@ LazyParser::operator=(const LazyParser& rhs)
    {
       clear();
       mState = rhs.mState;
-      if (rhs.mState==DIRTY)
+      if (rhs.mState!=NOT_PARSED)
       {
          mHeaderField = 0;
          mIsMine = false;
@@ -95,14 +95,6 @@ LazyParser::checkParsed() const
    }
 }
 
-void
-LazyParser::checkParsed()
-{
-   const LazyParser* constThis = const_cast<const LazyParser*>(this);
-   constThis->checkParsed();
-   mState=DIRTY;
-}
-
 bool
 LazyParser::isWellFormed() const
 {
@@ -130,7 +122,7 @@ LazyParser::clear()
 EncodeStream&
 LazyParser::encode(EncodeStream& str) const
 {
-   if (mState == DIRTY)
+   if (isParsed())
    {
       return encodeParsed(str);
    }

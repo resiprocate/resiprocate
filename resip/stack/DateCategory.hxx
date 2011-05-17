@@ -77,13 +77,13 @@ class DateCategory : public ParserCategory
       int second() const;
 
    private:
-      enum DayOfWeek mDayOfWeek;
-      int mDayOfMonth;
-      enum Month mMonth;
-      int mYear;
-      int mHour;
-      int mMin;
-      int mSec;
+      mutable enum DayOfWeek mDayOfWeek;
+      mutable int mDayOfMonth;
+      mutable enum Month mMonth;
+      mutable int mYear;
+      mutable int mHour;
+      mutable int mMin;
+      mutable int mSec;
 };
  
 }

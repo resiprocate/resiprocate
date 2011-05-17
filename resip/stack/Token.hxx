@@ -32,8 +32,7 @@ class Token : public ParserCategory
       /**
          Gets the value (ie; no parameters) of this Token as a Data&.
       */
-      const Data& value() const;
-      Data& value();
+      Data& value() const;
 
       virtual void parse(ParseBuffer& pb); // remember to call parseParameters()
       virtual ParserCategory* clone() const;
@@ -81,7 +80,7 @@ class Token : public ParserCategory
 #undef defineParam
 
    private:
-      Data mValue;
+      mutable Data mValue;
 
       static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
 };
