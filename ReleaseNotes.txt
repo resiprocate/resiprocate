@@ -2,6 +2,7 @@
 
 ==General==
 ===New features===
+* added tfdum, a tfm suite for DUM
 
 ===Bug fixes===
 
@@ -14,12 +15,16 @@
 * allow builds against a non-installed build of openssl
 * updated XCode build
 * iPhone/iOS build support
+* allow resip-ares to be compiled with gprof support
+* allow building against electric fence or debug malloc
+* when building without ccache support, ensure that ccache is not used when gcc is actually an alias that points at ccache
 
 ===Bug fixes===
 * fixing a bug where RESIP_OSTYPE_*, RESIP_ARCH_*, and RESIP_LARCH_* may be set incorrectly
 * On OS X, use bdb 4.4 instead of 4.2, since sdb 4.2 is no longer available through MacPorts
 * remove NO_IPHLPAPI from SSL configurations of rutil - to match non-SSL
-* allow the use of -fPIC for static libs; static libs without PIC are unusable by shared libs on x86_64 architecture
+* use -fPIC for static libs, by default; static libs without PIC are unusable by shared libs on x86_64 architecture
+* fixed bug where the build system assumes that any file whose extension starts with 'h' is a header file, which needs to be installed (now installs .h and .h??; might still have false positives, but at least is better)
 
 
 ==rutil==
@@ -33,6 +38,11 @@
 * use non-blocking IO for DNS resolver
 * expose resip local logger id to applications
 * added PtrLock class that handles pointer to Lockable (this makes implementing optional locking easy)
+* added a number of performance-optimization oriented functions to Data
+* added support for Windows's RtlGenRandom function to Random. Enabled via
+compile-time ifdef; disabled by default
+* improved thread-safety of Random
+* force asserts to be enabled in test-cases regardless of whether asserts are enabled in the library builds
 
 ===Bug fixes===
 * build fix in SysLogBuf.cxx for compilers that do not have an implicit <cstdio> include
@@ -49,6 +59,7 @@
 * fixed bug in stun/Stun.cxx where StunAtrError would be rejected due to an erroneous buffer length check
 * fixed various crash/leak bugs in resip-ares/DNS code
 * fixed some uninitialized members in RRVip::MapKey and Timer
+* fixed bug where Data::charUnencoded() was not compatible with capitalized hex encoding
 
 ==stack==
 ===New features===
@@ -63,6 +74,21 @@
 * allow TCP-based transports to be configured in a send-only mode (ie; do not open a listen port)
 * added epoll support
 * implemented (optional) RAck fixup for (PRACK) responses; protects against malicious endpoints changing the RAck in the PRACK response, for TUs that will not cope well
+* added ability for app to receive callbacks when messages are posted to the fallback fifo (Add fallbackPostNotify handler to SipStack constructor)
+* added a lot of flexibility to test/testStack.cxx
+* added atomic check-and-get getNext() function to Fifo (pass negative to getNext(int ms))
+* added a number of transport flags (TXNOW, TXALL, RXALL and KEEP_BUFFER) that can be used to tweak performance characteristics of the transport code
+* better Transport and Connection failure reporting
+* better keepalive support; enough to do client outbound, including flow-timer (ie; close connections if keepalives are not received frequently enough)
+* added a new ConnectionManager::EnableAgressiveGc static member setting - if enabled this will cause the connection garbage collection to run every time a new connection is formed, instead of just when we run out of FDs
+* added method to Tuple to test if an address is private or not: RFC1819 for v4 and RFC4193 for v6
+* added better support for the telephone-subscriber grammar element when used in a SIP URI userinfo
+* modified the TLS certificate common name and sub-alt-name matching rules to follow RFC 5922 by default; allow app to enable wildcard certs if desired
+* force asserts to be enabled in test-cases regardless of whether asserts are enabled in the library builds
+* allow NAPTR failover when pref values are the same
+* allow direct (raw) access to SipMessage body
+* added support for passing a chain of certificates in the TLS handshake process
+* limit the number/length of header-field-values that were are willing to accept in a single SIP message (in connection-based transports), to protect against state exhaustion attacks
 
 ===Bug fixes===
 * fix NameAddr parser when a '*' contact is used and is followed by uri parameters
@@ -85,6 +111,19 @@
 * fixed some (potentially) uninitialized members in ConnectionBase
 * fixed a double-free bug in TuIM
 * fixed bug where unnecessary string comparisons would be performed when a Content-Language header was parsed on a Contents object
+* fixed bug where TLS and DTLS transports were not being shut down properly
+* fixed bug where unparsed Contents would not be encoded into embedded (in a URI) SIP messages
+* fixed a nasty heap corruption bug when SipMessage::releaseContents() was called for a message with a multipart body
+* fixed leaks of of PKCS7s in Security
+* fixed lots of instances of the egregious "throw;"
+* fixed an improper assert when initializing ContentsFactory types
+* fixed bug where multiple DTLS connections from the same client were failing
+* fixed bug where we were not calling SSL_shutdown to properly terminate a DTLS "connection" when exiting an application
+* fixed bug where sigcomp-id was not being set in the constructor for Compression
+* fixed bug where transports added as 0.0.0.0 (as opposed to the empty string) were not added to the any interface maps in the transport selector
+* fixed bug where the automatic contact fillout logic would trip over Contacts with IPV6 addresses in them, when built without IPV6 support
+* fixed a bug in Connection::read() where a buffer could be invalidated before it was used in sigcomp-related code
+* fixed bug where userpart escaping in Uri did not support char values > 127
 
 ==DUM==
 ===New features===
@@ -93,6 +132,17 @@
 * allow INFO and MESSAGE to be sent in early dialogs
 * cache outgoing NIT requests, to make it easier for implementors to correlate responses
 * added new profile setting to allow additional headers to be passed in SipFrag bodies of notify messages that result from a REFER request
+* added client support for RFC 3840 (user agent capabilities) using Profile
+* added new method to dum InviteSession to allow creating a refer with replaces with application-provided replaces information
+* modified DUM ServerSubscription to allow 3xx responses to be sent
+* much better Contact matching logic in ClientRegistration (ie; I registered one Contact, and the server sent a response with 3 Contacts. Which one is mine, so I know what the expiry is?)
+* better keepalive code
+* expanded the REFER with Replaces API to allow sending a Contents* just like the plain REFER api does
+* added client outbound support, including support for Flow-Timer
+* allow a client DUM application to optionally provide a MD5 A1 Hash of a users password, instead of the clear text version
+* added a RequestValidationHandler so that applications can be notified when an incoming request is rejected because of a validation error in DUM
+* added ability to specify a user-defined Reason when ending an InviteSession
+* force asserts to be enabled in test-cases regardless of whether asserts are enabled in the library builds
 
 ===Bug fixes===
 * build fix in DialogEventInfo.hxx for compilers that do not have an implicit <memory> include
@@ -108,7 +158,7 @@
 * fixed bug where the Expires header in a SUBSCRIBE/2xx was ignored when the NOTIFY lacked an expiry (either an Expires header, or an expires param on the Subscription-State header)
 * fixed bug where UAS Dialogs were not using the automatic Contact fillout functionality in the stack, because it was setting the Contact header to whatever the Request-URI was on the SIP request
 * fixed bug where Path headers were not copied into response for REGISTER
-* fix thread-safety bug in UserProfile::isAnonymous()
+* fixed thread-safety bug in UserProfile::isAnonymous()
 * in ClientRegistration, handle case where Retry-After header contains a value of 0
 * fixed bug where reception of a non-terminating NOTIFY would permanently halt teardown of ClientSubscription (if it had already sent an unSUBSCRIBE)
 * fixed bug in ServerInviteSession::sendProvisional(), where passing earlyFlag==false would not prevent a session body from being added to the provisional
@@ -117,6 +167,15 @@
 * fix to refer handling to be able to properly handle multiple REFER's within a dialog
 * fixed bug where Subscription-Ids were used in subscriptions created by an OOD refer request (not breaking spec, just unnecessary)
 * fixed potential memory corruption bugs in ServerRegistration (cetain perfectly legitimate app behaviors that would cause these bugs to manifest)
+* fixed uninitialized members in ClientAuthManager, DialogEventStateManager, and MasterProfile
+* fixed tight loop in ClientSubscription/ClientRegistration when receiving an expiry of 5 or less
+* fixed bug where we would not re-schedule refreshes in ClientSubscription if the server reduced the expiry by less than the amount of "wiggle room" we left ourselves earlier (ie; we scheduled our refresh 10 seconds early, then the server reduced our expiry by 9 seconds. We should reschedule so that we have more than the 1 second of wiggle room we're left with)
+* fixed bug where +sip.instance was added to third-party registrations
+* fixed bug where rinstance and +sip.instance could be used on the same contact (redundant)
+* fixed potential leaks associated with malformed Contact and Expiry headers in ClientRegistration
+* fixed a bug in ServerRegistration where we are not doing a case insensitive check of the transport parameter
+* fix for ContactInstanceRecord equality checks - registration server was not treating contacts with the same instance id as equal if the contact URI was different
+* reject INVITE with replaces if session to replace is not found
 
 ==repro==
 ===New features===
@@ -128,21 +187,35 @@
 * added new command-line option --poll to trigger support for epoll. The implementation is conditionally compiled, so can be used in tree without the rest of the epoll changes
 * added new parameter 'rcvbuf' to URIs of the --interfaces command-line option. If specified, this sets the receive buffer length for the corresponding socket. This is currently only meaningful for UDP transports.
 * allow the webadmin to be disabled
+* added path header display to repro web interface registrations page
+* added support for Flow-Timer
+* use an HMAC code in FlowTokens; provides integrity protection and protects against forged flow tokens
+* force asserts to be enabled in test-cases regardless of whether asserts are enabled in the library builds
+* added support for flow-token fixup when NATs are detected
+* added support for automatic flow-token fixup when the first hop is TLS, but the Contact has an IP-address
+* ensure that we double Record-Route when transport switches occur
+* added support for specifying the Record-Route header on a per-transport basis
 
 ===Bug fixes===
 * fixed some registration storage locking bugs
 * change to repro to ignore port on registration and Location Server lookup if port specified is the default port
 * remove uri parameters from LocationServer lookup, since registration removes all parameters on aor
 * numerous Record-Route and Path header fixes
+* various outbound fixes
 * fixed an erroneous error log when dropping a NIT 408 response (as specified in RFC 4320 section 4.2)
+* fixed bug where Record-Routing would not happen on REFER requests; these can establish a dialog
+* fixed bug where Timer C was being scheduled for non-invite transactions (led to logging spew)
+* fixed a few places where a response could be sent to an ACK
+* fixed a few places where remote modification of a branch parameter (either case-fiddling, or outright trashing) could confuse us
 
 ==reTurn==
 ===New features===
 * add ability to pass local IP address to TestAsyncClient command line
+* allow multiple XOR_PEER_ADDRESS in Create Permission requests - thanks to Anshuman
 
 ===Bug fixes===
 * fixed memory leak in d'tor of DataBuffer
-
+* fixed leak of expired RemotePeers in ChannelManager
 
 ==recon==
 ===New features===
@@ -151,6 +224,10 @@
 * use participant handle instead of pointer in Dtmfevent for better thread safety
 * created post convenience methods on Conversation Manager
 * implemented a Music-On-Hold and Park server
+* modified recon onIncomingParticipant and onRequestOutgoingParticipant to pass back profile selected for the request
+* added ability for an OOD REFER request in recon to be redirected
+* added ability for an application to pass an after socket creation function pointer to recon
+* added fn to allow setting of QOS/TOS bit in sipX media interface
 
 ===Bug fixes===
 * fix for recon bug when we get an inbound INVITE with a replaces header, where a media connection was not being allocated before the bridge mixer readjusted
@@ -160,6 +237,12 @@
 * re-architected Media Interface notification scheme to be thread-safe
 * fixed trap when receiving an OOD refer request
 * fixed bug where NOTIFY requests associated with a OOD refer would not be sent correctly
+* fixed memory leak when rejecting an OOD REFER
+* fixed sending of a redirect request immediately after answering/accepting a call
+* fixed bug in recon where we could try to start sending media before media stream is ready
+* fixed a potential issue/trap in recon when we run out of media ports
+* fixed bug where to/from tags were put in Refer-To headers
+* fixed a bug where we were not including codec information on rejected m= lines
 
 ==reflow==
 ===New features===
@@ -209,6 +292,7 @@
 * added IPV6, TLS, and outbound support
 * added a lot of new tests, including TLS and outbound tests
 * added support for subnot-etags in the SUB/PUB testing classes
+* refactored so that the repro-specific stuff is separate from the generic tfm stuff
 
 ===Bug fixes===
 * fixed bugs in a number of tests
