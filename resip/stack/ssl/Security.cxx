@@ -361,7 +361,7 @@ void
 BaseSecurity::addCertDER (PEMType type, 
                           const Data& key, 
                           const Data& certDER, 
-                          bool write) const
+                          bool write)
 {
    if( certDER.empty() )
    {
@@ -391,7 +391,7 @@ void
 BaseSecurity::addCertPEM (PEMType type, 
                           const Data& name, 
                           const Data& certPEM, 
-                          bool write) const
+                          bool write)
 {
    if( certPEM.empty() )
    {
@@ -421,7 +421,7 @@ BaseSecurity::addCertPEM (PEMType type,
 
 
 void
-BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write) const
+BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write)
 {
    switch (type)
    {
@@ -502,9 +502,9 @@ bool
 BaseSecurity::hasCert (PEMType type, const Data& aor) const
 {
    assert( !aor.empty() );
-   X509Map& certs = (type == DomainCert ? mDomainCerts : mUserCerts);
+   const X509Map& certs = (type == DomainCert ? mDomainCerts : mUserCerts);
 
-   X509Map::iterator where = certs.find(aor);
+   X509Map::const_iterator where = certs.find(aor);
    if (where != certs.end())
    {
       return true;
@@ -568,8 +568,8 @@ BaseSecurity::getCertDER (PEMType type, const Data& key) const
       throw BaseSecurity::Exception("Could not find certificate", __FILE__,__LINE__);
    }
 
-   X509Map& certs = (type == DomainCert ? mDomainCerts : mUserCerts);
-   BaseSecurity::X509Map::iterator where = certs.find(key);
+   const X509Map& certs = (type == DomainCert ? mDomainCerts : mUserCerts);
+   BaseSecurity::X509Map::const_iterator where = certs.find(key);
    if (where == certs.end())
    {
       // not supposed to happen,
@@ -603,7 +603,7 @@ void
 BaseSecurity::addPrivateKeyPKEY(PEMType type, 
                                 const Data& name, 
                                 EVP_PKEY* pKey, 
-                                bool write) const 
+                                bool write)
 { 
    PrivateKeyMap& privateKeys = (type == DomainPrivateKey ? 
                                  mDomainPrivateKeys : mUserPrivateKeys);
@@ -698,7 +698,7 @@ void
 BaseSecurity::addPrivateKeyDER( PEMType type,
                                 const Data& name,
                                 const Data& privateKeyDER,
-                                bool write ) const
+                                bool write )
 {
    assert( !name.empty() );
    if( privateKeyDER.empty() )
@@ -751,7 +751,7 @@ void
 BaseSecurity::addPrivateKeyPEM( PEMType type,
                                 const Data& name,
                                 const Data& privateKeyPEM,
-                                bool write ) const 
+                                bool write )
 {
    assert( !name.empty() );
    if( privateKeyPEM.empty() )
@@ -805,7 +805,7 @@ BaseSecurity::hasPrivateKey( PEMType type,
 {
    assert( !key.empty() );
 
-   PrivateKeyMap& privateKeys = (type == DomainPrivateKey 
+   const PrivateKeyMap& privateKeys = (type == DomainPrivateKey 
                                  ? mDomainPrivateKeys : mUserPrivateKeys);
 
    PrivateKeyMap::const_iterator where = privateKeys.find(key);
@@ -848,7 +848,7 @@ BaseSecurity::getPrivateKeyPEM( PEMType type,
       throw Exception("Could not find private key", __FILE__,__LINE__);
    }
 
-   PrivateKeyMap& privateKeys = (type == DomainPrivateKey ? mDomainPrivateKeys : mUserPrivateKeys);
+   const PrivateKeyMap& privateKeys = (type == DomainPrivateKey ? mDomainPrivateKeys : mUserPrivateKeys);
 
    PrivateKeyMap::const_iterator where = privateKeys.find(key);
    char* p = 0;
@@ -901,7 +901,7 @@ BaseSecurity::getPrivateKeyDER( PEMType type,
       throw Exception("Could not find private key", __FILE__,__LINE__);
    }
 
-   PrivateKeyMap& privateKeys = (type == DomainPrivateKey ? mDomainPrivateKeys : mUserPrivateKeys);
+   const PrivateKeyMap& privateKeys = (type == DomainPrivateKey ? mDomainPrivateKeys : mUserPrivateKeys);
 
    PrivateKeyMap::const_iterator where = privateKeys.find(key);
    char* p = 0;
@@ -1644,13 +1644,14 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
 {
    DebugLog( << "Compute identity for " << in );
 
-   if (mDomainPrivateKeys.count(signerDomain) == 0)
+   PrivateKeyMap::const_iterator k(mDomainPrivateKeys.find(signerDomain));
+   if (k == mDomainPrivateKeys.end())
    {
       InfoLog( << "No private key for " << signerDomain );
       throw Exception("Missing private key when computing identity",__FILE__,__LINE__);
    }
 
-   EVP_PKEY* pKey = mDomainPrivateKeys[signerDomain];
+   EVP_PKEY* pKey = k->second;
    assert( pKey );
  
    if ( pKey->type !=  EVP_PKEY_RSA )
@@ -1734,12 +1735,13 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
    X509* cert =  pCert;
    if (!cert)
    {
-      if (mDomainCerts.count(signerDomain) == 0)
+      X509Map::const_iterator x=mDomainCerts.find(signerDomain);
+      if (x == mDomainCerts.end())
       {
          ErrLog( << "No public key for " << signerDomain );
          throw Exception("Missing public key when verifying identity",__FILE__,__LINE__);
       }
-      cert = mDomainCerts[signerDomain];
+      cert = x->second;
    }
    
    DebugLog( << "Check identity for " << in );
@@ -1795,7 +1797,7 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
 
 
 void
-BaseSecurity::checkAndSetIdentity( const SipMessage& msg, const Data& certDer) const
+BaseSecurity::checkAndSetIdentity(SipMessage& msg, const Data& certDer) const
 {
    auto_ptr<SecurityAttributes> sec(new SecurityAttributes);
    X509* cert=NULL;
@@ -1817,30 +1819,30 @@ BaseSecurity::checkAndSetIdentity( const SipMessage& msg, const Data& certDer) c
       }
       if ( certDer.empty() || cert )
       {
-         if ( checkIdentity(msg.header(h_From).uri().host(),
+         if ( checkIdentity(msg.const_header(h_From).uri().host(),
                             msg.getCanonicalIdentityString(),
-                            msg.header(h_Identity).value(),
+                            msg.const_header(h_Identity).value(),
                             cert ) )
          {
-            sec->setIdentity(msg.header(h_From).uri().getAor());
+            sec->setIdentity(msg.const_header(h_From).uri().getAor());
             sec->setIdentityStrength(SecurityAttributes::Identity);
          }
          else
          {
-            sec->setIdentity(msg.header(h_From).uri().getAor());
+            sec->setIdentity(msg.const_header(h_From).uri().getAor());
             sec->setIdentityStrength(SecurityAttributes::FailedIdentity);
          }
       }
       else
       {
-         sec->setIdentity(msg.header(h_From).uri().getAor());
+         sec->setIdentity(msg.const_header(h_From).uri().getAor());
          sec->setIdentityStrength(SecurityAttributes::FailedIdentity);
       }
    }
    catch (BaseException& e)
    {
       ErrLog(<<"Caught exception: "<< e);
-      sec->setIdentity(msg.header(h_From).uri().getAor());
+      sec->setIdentity(msg.const_header(h_From).uri().getAor());
       sec->setIdentityStrength(SecurityAttributes::FailedIdentity);
    }
    msg.setSecurityAttributes(sec);

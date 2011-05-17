@@ -21,6 +21,7 @@ class Uri : public ParserCategory
       RESIP_HeapCount(Uri);
       
       Uri();
+      Uri(HeaderFieldValue* hfv, Headers::Type type);
       Uri(const Uri&);
       explicit Uri(const Data& data);
 
@@ -164,13 +165,13 @@ class Uri : public ParserCategory
       bool operator<(const Uri& other) const;
       
    protected:
-      mutable Data mScheme;
-      mutable Data mHost;
-      mutable Data mUser;
-      mutable Data mUserParameters;
-      mutable int mPort;
+      Data mScheme;
+      Data mHost;
+      Data mUser;
+      Data mUserParameters;
+      int mPort;
       mutable Data mAor;
-      mutable Data mPassword;
+      Data mPassword;
 
       // cache for aor
       mutable Data mOldScheme;

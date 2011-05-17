@@ -254,7 +254,7 @@ Transport::makeFailedResponse(const SipMessage& msg,
   Data remoteSigcompId;
   if (mCompression.isEnabled())
   {
-    Via &topVia(errMsg->header(h_Vias).front());
+     const Via &topVia(errMsg->const_header(h_Vias).front());
 
     if(topVia.exists(p_comp) && topVia.param(p_comp) == "sigcomp")
     {
@@ -282,16 +282,16 @@ void
 Transport::stampReceived(SipMessage* message)
 {
    // set the received= and rport= parameters in the message if necessary !jf!
-   if (message->isRequest() && message->exists(h_Vias) && !message->header(h_Vias).empty())
+   if (message->isRequest() && message->exists(h_Vias) && !message->const_header(h_Vias).empty())
    {
       const Tuple& tuple = message->getSource();
       Data received = Tuple::inet_ntop(tuple);
-      if(message->header(h_Vias).front().sentHost() != received)  // only add if received address is different from sent-by in Via
+	  if(message->const_header(h_Vias).front().sentHost() != received)  // only add if received address is different from sent-by in Via
       {
          message->header(h_Vias).front().param(p_received) = received;
       }
       //message->header(h_Vias).front().param(p_received) = Tuple::inet_ntop(tuple);
-      if (message->header(h_Vias).front().exists(p_rport))
+      if (message->const_header(h_Vias).front().exists(p_rport))
       {
          message->header(h_Vias).front().param(p_rport).port() = tuple.getPort();
       }

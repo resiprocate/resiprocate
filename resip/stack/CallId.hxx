@@ -33,7 +33,7 @@ class CallID : public ParserCategory
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
 
    private:
-      mutable Data mValue;
+      Data mValue;
 };
 typedef ParserContainer<CallID> CallIDs;
 typedef CallID CallId; // code convention compatible
