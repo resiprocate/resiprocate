@@ -339,7 +339,7 @@ DnsUtil::canonicalizeIpV6Address(const Data& ipV6Address)
 #else
    // assert(0);
 
-   return ipV6Address;
+   return Data::Empty;
 #endif
 }
 

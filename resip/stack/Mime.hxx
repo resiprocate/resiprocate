@@ -31,10 +31,8 @@ class Mime : public ParserCategory
       bool operator==(const Mime& rhs) const;
       bool operator!=(const Mime& rhs) const;
       
-      const Data& type() const;
-      const Data& subType() const;
-      Data& type();
-      Data& subType();
+      Data& type() const;
+      Data& subType() const;
          
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
@@ -75,8 +73,8 @@ class Mime : public ParserCategory
 #undef defineParam
 
    private:
-      Data mType;
-      Data mSubType;
+      mutable Data mType;
+      mutable Data mSubType;
 
       static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
 };

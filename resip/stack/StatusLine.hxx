@@ -33,9 +33,9 @@ class StatusLine : public ParserCategory
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
 
    private:
-      int mResponseCode;
+      mutable int mResponseCode;
       Data mSipVersion;
-      Data mReason;
+      mutable Data mReason;
 };
  
 }

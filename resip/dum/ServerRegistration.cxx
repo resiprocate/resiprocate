@@ -460,6 +460,10 @@ ServerRegistration::tryFlow(ContactInstanceRecord& rec,
             if(!msg.empty(h_Paths) && msg.header(h_Paths).back().uri().exists(p_ob))
             {
                rec.mRegId=contact.param(p_regid);
+               // Not directly connected, so we don't care how we contact the 
+               // edge proxy.
+               rec.mReceivedFrom.onlyUseExistingConnection=false;
+               DebugLog(<<"Set rec.mReceivedFrom: " << rec.mReceivedFrom);
                // Edge-proxy is directly connected to the client, and ready to 
                // send traffic down the "connection" (TCP connection, or NAT 
                // pinhole, or what-have-you).
@@ -481,17 +485,15 @@ ServerRegistration::tryFlow(ContactInstanceRecord& rec,
       }
 
       // Record-Route flow token hack, or client NAT detect hack; use with caution
-      if(msg.header(h_Vias).size() == 1)
+      if(InteropHelper::getRRTokenHackEnabled() ||
+         (InteropHelper::getClientNATDetectionMode() != InteropHelper::ClientNATDetectionDisabled &&
+          Helper::isSenderBehindNAT(msg, InteropHelper::getClientNATDetectionMode() == InteropHelper::ClientNATDetectionPrivateToPublicOnly)))
       {
-         if(InteropHelper::getRRTokenHackEnabled() || 
-            flowTokenNeededForTls(rec) || 
-            flowTokenNeededForSigcomp(rec) ||
-            (InteropHelper::getClientNATDetectionMode() != InteropHelper::ClientNATDetectionDisabled &&
-             Helper::isSenderBehindNAT(msg, InteropHelper::getClientNATDetectionMode() == InteropHelper::ClientNATDetectionPrivateToPublicOnly)))
+         if(msg.header(h_Vias).size() == 1)
          {
-               rec.mReceivedFrom=msg.getSource();
-               rec.mReceivedFrom.onlyUseExistingConnection=false;
-               return true;
+            rec.mReceivedFrom=msg.getSource();
+            rec.mReceivedFrom.onlyUseExistingConnection=false;
+            return true;
          }
       }
    }
@@ -506,6 +508,38 @@ ServerRegistration::testFlowRequirements(ContactInstanceRecord &rec,
                                           bool hasFlow) const
 {
    const resip::NameAddr& contact(rec.mContact);
+   if(DnsUtil::isIpAddress(contact.uri().host()))
+   {
+      // IP address in host-part.
+      if(contact.uri().scheme()=="sips")
+      {
+         // sips: and IP-address in contact. This will probably not work anyway.
+         if(!hasFlow)
+         {
+            SharedPtr<SipMessage> failure(new SipMessage);
+            mDum.makeResponse(*failure, msg, 400, "Trying to use TLS with an IP-address in your Contact header won't work if you don't have a flow. Consider implementing outbound, or putting an FQDN in your contact header.");
+            mDum.send(failure);
+            return false;
+         }
+      }
+      
+      if(contact.uri().exists(p_transport))
+      {
+         TransportType type = Tuple::toTransport(contact.uri().param(p_transport));
+         if(type==TLS || type == DTLS)
+         {
+            // secure transport and IP-address. Almost certainly won't work, but
+            // we'll try anyway.
+            if(!hasFlow)
+            {
+               SharedPtr<SipMessage> failure(new SipMessage);
+               mDum.makeResponse(*failure, msg, 400, "Trying to use TLS with an IP-address in your Contact header won't work if you don't have a flow. Consider implementing outbound, or putting an FQDN in your contact header.");
+               mDum.send(failure);
+               return false;
+            }
+         }
+      }
+   }
 
    if(contact.exists(p_Instance) && contact.exists(p_regid))
    {
@@ -520,57 +554,6 @@ ServerRegistration::testFlowRequirements(ContactInstanceRecord &rec,
       }
    }
 
-   if(!hasFlow && flowTokenNeededForTls(rec))
-   {
-      SharedPtr<SipMessage> failure(new SipMessage);
-      mDum.makeResponse(*failure, msg, 400, "Trying to use TLS with an IP-address in your Contact header won't work if you don't have a flow. Consider implementing outbound, or putting an FQDN in your contact header.");
-      mDum.send(failure);
-      return false;
-   }
-
-   if(!hasFlow && flowTokenNeededForSigcomp(rec))
-   {
-      SharedPtr<SipMessage> failure(new SipMessage);
-      mDum.makeResponse(*failure, msg, 400, "Trying to use sigcomp on a connection-oriented protocol won't work if you don't have a flow. Consider implementing outbound, or using UDP/DTLS for this case.");
-      mDum.send(failure);
-      return false;
-   }
-
-   return true;
-}
-
-bool 
-ServerRegistration::flowTokenNeededForTls(const ContactInstanceRecord &rec) const
-{
-   const resip::NameAddr& contact(rec.mContact);
-   if(DnsUtil::isIpAddress(contact.uri().host()))
-   {
-      // IP address in host-part.
-      if(contact.uri().scheme()=="sips")
-      {
-         // sips: and IP-address in contact. This will probably not work anyway.
-         return true;
-      }
-
-      if(contact.uri().exists(p_transport))
-      {
-         TransportType type = Tuple::toTransport(contact.uri().param(p_transport));
-         if(type==TLS || type == DTLS)
-         {
-            // secure transport and IP-address. Almost certainly won't work, but
-            // we'll try anyway.
-            return true;
-         }
-      }
-   }
-   return false;
-}
-
-bool 
-ServerRegistration::flowTokenNeededForSigcomp(const ContactInstanceRecord &rec) const
-{
-   const resip::NameAddr& contact(rec.mContact);
-
    if(contact.uri().exists(p_sigcompId))
    {
       if(contact.uri().exists(p_transport))
@@ -581,7 +564,13 @@ ServerRegistration::flowTokenNeededForSigcomp(const ContactInstanceRecord &rec) 
             // Client is using sigcomp on the first hop using a connection-
             // oriented transport. For this to work, that connection has to be
             // reused for all traffic.
-            return true;
+            if(!hasFlow)
+            {
+               SharedPtr<SipMessage> failure(new SipMessage);
+               mDum.makeResponse(*failure, msg, 400, "Trying to use sigcomp on a connection-oriented protocol won't work if you don't have a flow. Consider implementing outbound, or using UDP/DTLS for this case.");
+               mDum.send(failure);
+               return false;
+            }
          }
       }
       else
@@ -595,9 +584,9 @@ ServerRegistration::flowTokenNeededForSigcomp(const ContactInstanceRecord &rec) 
                      );
       }
    }
-   return false;
-}
 
+   return true;
+}
 
 void
 ServerRegistration::asyncProcessFinalOkMsg(SipMessage &msg, ContactPtrList &contacts)

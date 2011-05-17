@@ -54,7 +54,7 @@ defineParam(earlyOnly, "early-only", ExistsParameter, "RFC 3891 (not in IANA, ap
 #undef defineParam
 
    private:
-      Data mValue;
+      mutable Data mValue;
 
       static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
 };

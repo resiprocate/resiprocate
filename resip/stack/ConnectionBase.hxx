@@ -68,7 +68,6 @@ class ConnectionBase
       void preparseNewBytes(int bytesRead);
       void decompressNewBytes(int bytesRead);
       std::pair<char*, size_t> getWriteBuffer();
-      std::pair<char*, size_t> getCurrentWriteBuffer();
       char* getWriteBufferForExtraBytes(int extraBytes);
       
       // for avoiding copies in external transports--not used in core resip

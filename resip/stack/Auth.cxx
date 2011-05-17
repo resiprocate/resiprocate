@@ -27,9 +27,13 @@ Auth::Auth(HeaderFieldValue* hfv, Headers::Type type)
 {}
 
 Auth::Auth(const Auth& rhs)
-   : ParserCategory(rhs),
-   mScheme(rhs.mScheme)
-{}
+   : ParserCategory(rhs)
+{
+   if (isParsed())
+   {
+      scheme() = rhs.scheme();
+   }
+}
 
 Auth&
 Auth::operator=(const Auth& rhs)
@@ -37,7 +41,7 @@ Auth::operator=(const Auth& rhs)
    if (this != &rhs)
    {
       ParserCategory::operator=(rhs);
-      mScheme = rhs.mScheme;
+      scheme() = rhs.scheme();
    }
    return *this;
 }
@@ -136,7 +140,7 @@ EncodeStream&
 Auth::encodeAuthParameters(EncodeStream& str) const
 {
    bool first = true;
-   for (ParameterList::const_iterator it = mParameters.begin();
+   for (ParameterList::iterator it = mParameters.begin();
         it != mParameters.end(); it++)
    {
       if (!first)
@@ -147,7 +151,7 @@ Auth::encodeAuthParameters(EncodeStream& str) const
       (*it)->encode(str);
    }
 
-   for (ParameterList::const_iterator it = mUnknownParameters.begin();
+   for (ParameterList::iterator it = mUnknownParameters.begin();
         it != mUnknownParameters.end(); it++)
    {
       if (!first)

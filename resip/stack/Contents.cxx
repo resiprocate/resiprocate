@@ -258,41 +258,14 @@ Contents::remove(const MIME_Header& type)
    assert(false);
 }
 
-const H_ContentType::Type&
+H_ContentType::Type&
 Contents::header(const H_ContentType& headerType) const
 {
    return mType;
 }
 
-H_ContentType::Type&
-Contents::header(const H_ContentType& headerType)
-{
-   return mType;
-}
-
-const H_ContentDisposition::Type&
-Contents::header(const H_ContentDisposition& headerType) const
-{
-   checkParsed();
-   if (mDisposition == 0)
-   {
-      ErrLog(<< "You called "
-            "Contents::header(const H_ContentDisposition& headerType) _const_ "
-            "without first calling exists(), and the header does not exist. Our"
-            " behavior in this scenario is to implicitly create the header(using const_cast!); "
-            "this is probably not what you want, but it is either this or "
-            "assert/throw an exception. Since this has been the behavior for "
-            "so long, we are not throwing here, _yet_. You need to fix your "
-            "code, before we _do_ start throwing. This is why const-correctness"
-            " should never be made a TODO item </rant>");
-      Contents* ncthis = const_cast<Contents*>(this);
-      ncthis->mDisposition = new H_ContentDisposition::Type;
-   }
-   return *mDisposition;
-}
-
 H_ContentDisposition::Type&
-Contents::header(const H_ContentDisposition& headerType)
+Contents::header(const H_ContentDisposition& headerType) const
 {
    checkParsed();
    if (mDisposition == 0)
@@ -302,29 +275,8 @@ Contents::header(const H_ContentDisposition& headerType)
    return *mDisposition;
 }
 
-const H_ContentTransferEncoding::Type&
-Contents::header(const H_ContentTransferEncoding& headerType) const
-{
-   checkParsed();
-   if (mTransferEncoding == 0)
-   {
-      ErrLog(<< "You called "
-            "Contents::header(const H_ContentTransferEncoding& headerType) _const_ "
-            "without first calling exists(), and the header does not exist. Our"
-            " behavior in this scenario is to implicitly create the header(using const_cast!); "
-            "this is probably not what you want, but it is either this or "
-            "assert/throw an exception. Since this has been the behavior for "
-            "so long, we are not throwing here, _yet_. You need to fix your "
-            "code, before we _do_ start throwing. This is why const-correctness"
-            " should never be made a TODO item </rant>");
-      Contents* ncthis = const_cast<Contents*>(this);
-      ncthis->mTransferEncoding = new H_ContentTransferEncoding::Type;
-   }
-   return *mTransferEncoding;
-}
-
 H_ContentTransferEncoding::Type&
-Contents::header(const H_ContentTransferEncoding& headerType)
+Contents::header(const H_ContentTransferEncoding& headerType) const
 {
    checkParsed();
    if (mTransferEncoding == 0)
@@ -334,29 +286,8 @@ Contents::header(const H_ContentTransferEncoding& headerType)
    return *mTransferEncoding;
 }
 
-const H_ContentLanguages::Type&
-Contents::header(const H_ContentLanguages& headerType) const 
-{
-   checkParsed();
-   if (mLanguages == 0)
-   {
-      ErrLog(<< "You called "
-            "Contents::header(const H_ContentLanguages& headerType) _const_ "
-            "without first calling exists(), and the header does not exist. Our"
-            " behavior in this scenario is to implicitly create the header(using const_cast!); "
-            "this is probably not what you want, but it is either this or "
-            "assert/throw an exception. Since this has been the behavior for "
-            "so long, we are not throwing here, _yet_. You need to fix your "
-            "code, before we _do_ start throwing. This is why const-correctness"
-            " should never be made a TODO item </rant>");
-      Contents* ncthis = const_cast<Contents*>(this);
-      ncthis->mLanguages = new H_ContentLanguages::Type;
-   }
-   return *mLanguages;
-}
-
 H_ContentLanguages::Type&
-Contents::header(const H_ContentLanguages& headerType)
+Contents::header(const H_ContentLanguages& headerType) const 
 {
    checkParsed();
    if (mLanguages == 0)
@@ -366,29 +297,8 @@ Contents::header(const H_ContentLanguages& headerType)
    return *mLanguages;
 }
 
-const H_ContentDescription::Type&
-Contents::header(const H_ContentDescription& headerType) const
-{
-   checkParsed();
-   if (mDescription == 0)
-   {
-      ErrLog(<< "You called "
-            "Contents::header(const H_ContentDescription& headerType) _const_ "
-            "without first calling exists(), and the header does not exist. Our"
-            " behavior in this scenario is to implicitly create the header(using const_cast!); "
-            "this is probably not what you want, but it is either this or "
-            "assert/throw an exception. Since this has been the behavior for "
-            "so long, we are not throwing here, _yet_. You need to fix your "
-            "code, before we _do_ start throwing. This is why const-correctness"
-            " should never be made a TODO item </rant>");
-      Contents* ncthis = const_cast<Contents*>(this);
-      ncthis->mDescription = new H_ContentDescription::Type;
-   }
-   return *mDescription;
-}
-
 H_ContentDescription::Type&
-Contents::header(const H_ContentDescription& headerType)
+Contents::header(const H_ContentDescription& headerType) const
 {
    checkParsed();
    if (mDescription == 0)
@@ -398,29 +308,8 @@ Contents::header(const H_ContentDescription& headerType)
    return *mDescription;
 }
 
-const H_ContentID::Type&
-Contents::header(const H_ContentID& headerType) const
-{
-   checkParsed();
-   if (mId == 0)
-   {
-      ErrLog(<< "You called "
-            "Contents::header(const H_ContentID& headerType) _const_ "
-            "without first calling exists(), and the header does not exist. Our"
-            " behavior in this scenario is to implicitly create the header(using const_cast!); "
-            "this is probably not what you want, but it is either this or "
-            "assert/throw an exception. Since this has been the behavior for "
-            "so long, we are not throwing here, _yet_. You need to fix your "
-            "code, before we _do_ start throwing. This is why const-correctness"
-            " should never be made a TODO item </rant>");
-      Contents* ncthis = const_cast<Contents*>(this);
-      ncthis->mId = new H_ContentID::Type;
-   }
-   return *mId;
-}
-
 H_ContentID::Type&
-Contents::header(const H_ContentID& headerType)
+Contents::header(const H_ContentID& headerType) const
 {
    checkParsed();
    if (mId == 0)
@@ -588,7 +477,7 @@ Contents::encodeHeaders(EncodeStream& str) const
       size_t count = 0;
       size_t size = header(h_ContentLanguages).size();
 
-      for (H_ContentLanguages::Type::const_iterator 
+      for (H_ContentLanguages::Type::iterator 
               i = header(h_ContentLanguages).begin();
            i != header(h_ContentLanguages).end(); ++i)
       {

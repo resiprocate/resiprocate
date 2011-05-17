@@ -36,9 +36,9 @@ class WarningCategory : public ParserCategory
       const Data& text() const;
 
    private:
-      int mCode;
-      Data mHostname;
-      Data mText;
+      mutable int mCode;
+      mutable Data mHostname;
+      mutable Data mText;
 };
 typedef ParserContainer<WarningCategory> WarningCategories;
  

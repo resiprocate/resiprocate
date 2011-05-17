@@ -14,9 +14,9 @@ PrivacyCategory::PrivacyCategory(const Data& d)
    : ParserCategory(),
      mValue() 
 {
-   HeaderFieldValue hfv(d.data(), d.size());
-   PrivacyCategory tmp(&hfv, Headers::UNKNOWN);
-   tmp.checkParsed();
+   PrivacyCategory tmp;
+   ParseBuffer pb(d, parseContext);
+   tmp.parse(pb);
    *this = tmp;
 }
 
@@ -35,6 +35,7 @@ PrivacyCategory::operator=(const PrivacyCategory& rhs)
 {
    if (this != &rhs)
    {
+      rhs.checkParsed();
       ParserCategory::operator=(rhs);
       mValue = rhs.mValue;
    }

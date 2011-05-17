@@ -93,7 +93,7 @@ TransactionState::handleInternalCancel(SipMessage* cancel,
    // Make sure the branch in the CANCEL matches the current 
    // branch of the INVITE, in case we have done a DNS failover (the transport 
    // sequences could be different by now)
-   cancel->header(h_Vias).front().param(p_branch)=clientInvite.mMsgToRetransmit->const_header(h_Vias).front().param(p_branch);
+   cancel->header(h_Vias).front().param(p_branch)=clientInvite.mMsgToRetransmit->header(h_Vias).front().param(p_branch);
    state->processClientNonInvite(cancel);
    // for the INVITE in case we never get a 487
    clientInvite.mController.mTimers.add(Timer::TimerCleanUp, clientInvite.mId, 128*Timer::T1);
@@ -519,36 +519,36 @@ TransactionState::process(TransactionController& controller)
          // and/or CallId when it isn't supposed to. (DUM is one such TU)
          if(state->mController.getFixBadDialogIdentifiers())
          {
-            if(sip->const_header(h_CallId).isWellFormed())
+            if(sip->header(h_CallId).isWellFormed())
             {
-               if(!(sip->const_header(h_CallId) == 
-                           state->mMsgToRetransmit->const_header(h_CallId)))
+               if(!(sip->header(h_CallId) == 
+                           state->mMsgToRetransmit->header(h_CallId)))
                {
                   InfoLog(<< "Other end modified our Call-Id... correcting.");
-                  sip->header(h_CallId) = state->mMsgToRetransmit->const_header(h_CallId);
+                  sip->header(h_CallId) = state->mMsgToRetransmit->header(h_CallId);
                }
             }
             else
             {
                InfoLog(<< "Other end corrupted our CallId... correcting.");
-               sip->header(h_CallId) = state->mMsgToRetransmit->const_header(h_CallId);
+               sip->header(h_CallId) = state->mMsgToRetransmit->header(h_CallId);
             }
    
-            const NameAddr& from = state->mMsgToRetransmit->const_header(h_From);
-            if(sip->const_header(h_From).isWellFormed())
+            NameAddr& from = state->mMsgToRetransmit->header(h_From);
+            if(sip->header(h_From).isWellFormed())
             {
                // Overwrite tag.
                if(from.exists(p_tag))
                {
-                  if(sip->const_header(h_From).param(p_tag) != from.param(p_tag))
+                  if(sip->header(h_From).param(p_tag) != from.param(p_tag))
                   {
                      InfoLog(<<"Other end modified our local tag... correcting.");
                      sip->header(h_From).param(p_tag) = from.param(p_tag);
                   }
                }
-               else if(sip->const_header(h_From).exists(p_tag))
+               else if(sip->header(h_From).exists(p_tag))
                {
-                  if(sip->const_header(h_From).exists(p_tag))
+                  if(sip->header(h_From).exists(p_tag))
                   {
                      InfoLog(<<"Other end added a local tag for us... removing.");
                      sip->header(h_From).remove(p_tag);
@@ -562,13 +562,13 @@ TransactionState::process(TransactionController& controller)
                sip->header(h_From) = from;
             }
    
-            const NameAddr& to = state->mMsgToRetransmit->const_header(h_To);
-            if(sip->const_header(h_To).isWellFormed())
+            NameAddr& to = state->mMsgToRetransmit->header(h_To);
+            if(sip->header(h_To).isWellFormed())
             {
                // Overwrite tag.
                if(to.exists(p_tag))
                {
-                  if(sip->const_header(h_To).param(p_tag) != to.param(p_tag))
+                  if(sip->header(h_To).param(p_tag) != to.param(p_tag))
                   {
                      InfoLog(<<"Other end modified the (existing) remote tag... "
                                  "correcting.");
@@ -591,8 +591,8 @@ TransactionState::process(TransactionController& controller)
          // for incoming messages)
          if(state->mController.getFixBadCSeqNumbers())
          {
-            unsigned int old=state->mMsgToRetransmit->const_header(h_CSeq).sequence();
-            if(sip->const_header(h_CSeq).sequence()!=old)
+            unsigned int old=state->mMsgToRetransmit->header(h_CSeq).sequence();
+            if(sip->header(h_CSeq).sequence()!=old)
             {
                InfoLog(<<"Other end changed our CSeq number... replacing.");
                sip->header(h_CSeq).sequence()=old;
@@ -600,10 +600,10 @@ TransactionState::process(TransactionController& controller)
 
             if(state->mMsgToRetransmit->exists(h_RAck))
             {
-               if(!(sip->const_header(h_RAck)==state->mMsgToRetransmit->const_header(h_RAck)))
+               if(!(sip->header(h_RAck)==state->mMsgToRetransmit->header(h_RAck)))
                {
                   InfoLog(<<"Other end changed our RAck... replacing.");
-                  sip->header(h_RAck)=state->mMsgToRetransmit->const_header(h_RAck);
+                  sip->header(h_RAck)=state->mMsgToRetransmit->header(h_RAck);
                }
             }
          }
@@ -790,8 +790,8 @@ TransactionState::processStateless(TransactionMessage* message)
 void 
 TransactionState::saveOriginalContactAndVia(const SipMessage& sip)
 {
-   if(sip.exists(h_Contacts) && sip.const_header(h_Contacts).size() == 1 &&
-      sip.const_header(h_Contacts).front().isWellFormed())
+   if(sip.exists(h_Contacts) && sip.header(h_Contacts).size() == 1 &&
+      sip.header(h_Contacts).front().isWellFormed())
    {
       mOriginalContact = std::auto_ptr<NameAddr>(new NameAddr(sip.header(h_Contacts).front()));
    }
@@ -831,7 +831,7 @@ TransactionState::processClientNonInvite(TransactionMessage* msg)
       //StackLog (<< "received response from wire");
 
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-      int code = sip->const_header(h_StatusLine).responseCode();
+      int code = sip->header(h_StatusLine).responseCode();
       if (code >= 100 && code < 200) // 1XX
       {
          if (mState == Trying || mState == Proceeding)
@@ -931,7 +931,7 @@ TransactionState::processClientNonInvite(TransactionMessage* msg)
                {
                   WarningLog(<< "Transaction timed out while waiting for DNS "
                               "result uri=" << 
-                              mMsgToRetransmit->const_header(h_RequestLine).uri());
+                              mMsgToRetransmit->header(h_RequestLine).uri());
                   sendToTU(Helper::makeResponse(*mMsgToRetransmit, 503, "DNS Timeout"));
                }
                else
@@ -1010,7 +1010,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
    else if (isResponse(msg) && isFromWire(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-      int code = sip->const_header(h_StatusLine).responseCode();
+      int code = sip->header(h_StatusLine).responseCode();
       switch (sip->method())
       {
          case INVITE:
@@ -1170,7 +1170,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                {
                   WarningLog(<< "Transaction timed out while waiting for DNS "
                               "result uri=" << 
-                              mMsgToRetransmit->const_header(h_RequestLine).uri());
+                              mMsgToRetransmit->header(h_RequestLine).uri());
                   sendToTU(Helper::makeResponse(*mMsgToRetransmit, 503, "DNS Timeout"));
                }
                else
@@ -1200,7 +1200,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                {
                   WarningLog(<< "Transaction timed out while waiting for DNS "
                               "result uri=" << 
-                              mMsgToRetransmit->const_header(h_RequestLine).uri());
+                              mMsgToRetransmit->header(h_RequestLine).uri());
                   sendToTU(Helper::makeResponse(*mMsgToRetransmit, 503, "DNS Timeout"));
                }
                else
@@ -1289,7 +1289,7 @@ TransactionState::processServerNonInvite(TransactionMessage* msg)
    else if (isResponse(msg) && isFromTU(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-      int code = sip->const_header(h_StatusLine).responseCode();
+      int code = sip->header(h_StatusLine).responseCode();
       if (code >= 100 && code < 200) // 1XX
       {
          if (mState == Trying || mState == Proceeding)
@@ -1522,7 +1522,7 @@ TransactionState::processServerInvite(TransactionMessage* msg)
    else if (isResponse(msg, 100, 699) && isFromTU(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-      int code = sip->const_header(h_StatusLine).responseCode();
+      int code = sip->header(h_StatusLine).responseCode();
       switch (sip->method())
       {
          case INVITE:
@@ -1698,7 +1698,7 @@ TransactionState::processServerInvite(TransactionMessage* msg)
          {
             // hey, we had a 1xx laying around! Turn it into a 500 and send.
             assert(mMsgToRetransmit->isResponse());
-            assert(mMsgToRetransmit->const_header(h_StatusLine).statusCode()/100==1);
+            assert(mMsgToRetransmit->header(h_StatusLine).statusCode()/100==1);
             mMsgToRetransmit->header(h_StatusLine).statusCode()=500;
             mMsgToRetransmit->header(h_StatusLine).reason()="Server Error";
             sendToWire(mMsgToRetransmit);
@@ -2081,7 +2081,7 @@ TransactionState::rewriteRequest(const Uri& rewrite)
    // message.
 
    assert(mMsgToRetransmit->isRequest());
-   if (mMsgToRetransmit->const_header(h_RequestLine).uri() != rewrite)
+   if (mMsgToRetransmit->header(h_RequestLine).uri() != rewrite)
    {
       InfoLog (<< "Rewriting request-uri to " << rewrite);
       mMsgToRetransmit->header(h_RequestLine).uri() = rewrite;
@@ -2111,10 +2111,6 @@ TransactionState::handle(DnsResult* result)
          case DnsResult::Available:
             mWaitingForDnsResult=false;
             mTarget = mDnsResult->next();
-            assert( mTarget.transport==0 );
-            // below allows TU to which transport we send on
-            // (The Via mechanism for setting transport doesn't work for TLS)
-            mTarget.transport = mMsgToRetransmit->getDestination().transport;
             processReliability(mTarget.getType());
             mController.mTransportSelector.transmit(mMsgToRetransmit, mTarget);
             break;
@@ -2305,7 +2301,7 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
       {
          assert(mDnsResult == 0);
          assert(sip->exists(h_Vias));
-         assert(!sip->const_header(h_Vias).empty());
+         assert(!sip->header(h_Vias).empty());
 
          // .bwc. Code that tweaks mResponseTarget based on stuff in the SipMessage.
          // ?bwc? Why?
@@ -2319,13 +2315,13 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
             mController.mTransportSelector.transmit(sip, target);
             return;
          }
-         else if (sip->const_header(h_Vias).front().exists(p_rport) && sip->const_header(h_Vias).front().param(p_rport).hasValue())
+         else if (sip->header(h_Vias).front().exists(p_rport) && sip->header(h_Vias).front().param(p_rport).hasValue())
          {
             // ?bwc? This was not setting the port in mResponseTarget before. Why would
             // the rport be different than the port in mResponseTarget? Didn't we 
             // already set this? Maybe the TU messed with it? If so, why should we pay 
             // attention to it? Again, this hasn't been thought out.
-            mResponseTarget.setPort(sip->const_header(h_Vias).front().param(p_rport).port());
+            mResponseTarget.setPort(sip->header(h_Vias).front().param(p_rport).port());
             StackLog(<< "rport present in response: " << mResponseTarget.getPort());
          }
 
@@ -2344,16 +2340,16 @@ TransactionState::sendToTU(TransactionMessage* msg) const
    if (sipMsg && sipMsg->isResponse() && mDnsResult)
    {
       // whitelisting rules.
-      switch (sipMsg->const_header(h_StatusLine).statusCode())
+      switch (sipMsg->header(h_StatusLine).statusCode())
       {
          case 503:
             // blacklist last target.
             // .bwc. If there is no Retry-After, we do not blacklist
             // (see RFC 3261 sec 21.5.4 para 1)
             if(sipMsg->exists(resip::h_RetryAfter) && 
-               sipMsg->const_header(resip::h_RetryAfter).isWellFormed())
+               sipMsg->header(resip::h_RetryAfter).isWellFormed())
             {
-               unsigned int relativeExpiry= sipMsg->const_header(resip::h_RetryAfter).value();
+               unsigned int relativeExpiry= sipMsg->header(resip::h_RetryAfter).value();
                
                mDnsResult->blacklistLast(resip::Timer::getTimeMs()+relativeExpiry*1000);
             }
@@ -2442,7 +2438,7 @@ TransactionState::isResponse(TransactionMessage* msg, int lower, int upper) cons
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);
    if (sip && sip->isResponse())
    {
-      int c = sip->const_header(h_StatusLine).responseCode();
+      int c = sip->header(h_StatusLine).responseCode();
       return (c >= lower && c <= upper);
    }
    return false;

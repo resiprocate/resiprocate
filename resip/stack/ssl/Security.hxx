@@ -151,7 +151,7 @@ class BaseSecurity
       Data computeIdentity( const Data& signerDomain, const Data& in ) const;
       bool checkIdentity( const Data& signerDomain, const Data& in, const Data& sig, X509* cert=NULL ) const;
 
-      void checkAndSetIdentity(SipMessage& msg, const Data& derCert=Data::Empty ) const;
+      void checkAndSetIdentity( const SipMessage& msg, const Data& derCert=Data::Empty ) const;
 
       // returns NULL if it fails
       Contents* decrypt( const Data& decryptorAor, const Pkcs7Contents* );
@@ -199,31 +199,31 @@ class BaseSecurity
       CipherList mCipherList;
 
       // root cert list
-      X509List       mRootCerts;
-      X509_STORE*    mRootTlsCerts;
-      X509_STORE*    mRootSslCerts;
+      mutable X509List       mRootCerts;
+      mutable X509_STORE*    mRootTlsCerts;
+      mutable X509_STORE*    mRootSslCerts;
 
-      X509Map        mDomainCerts;
-      PrivateKeyMap  mDomainPrivateKeys;
+      mutable X509Map        mDomainCerts;
+      mutable PrivateKeyMap  mDomainPrivateKeys;
 
-      X509Map        mUserCerts;
-      PassPhraseMap  mUserPassPhrases;
-      PrivateKeyMap  mUserPrivateKeys;
+      mutable X509Map        mUserCerts;
+      mutable PassPhraseMap  mUserPassPhrases;
+      mutable PrivateKeyMap  mUserPrivateKeys;
 
-      void addCertPEM (PEMType type, const Data& name, const Data& certPEM, bool write);
-      void addCertDER (PEMType type, const Data& name, const Data& certDER, bool write);
+      void addCertPEM (PEMType type, const Data& name, const Data& certPEM, bool write) const;
+      void addCertDER (PEMType type, const Data& name, const Data& certDER, bool write) const;
       bool hasCert    (PEMType type, const Data& name) const;
       void removeCert (PEMType type, const Data& name);
       Data getCertDER (PEMType type, const Data& name) const;
-      void addCertX509(PEMType type, const Data& name, X509* cert, bool write);
+      void addCertX509(PEMType type, const Data& name, X509* cert, bool write) const;
 
-      void addPrivateKeyPEM (PEMType type, const Data& name, const Data& privateKeyPEM, bool write);
-      void addPrivateKeyDER (PEMType type, const Data& name, const Data& privateKeyDER, bool write);
+      void addPrivateKeyPEM (PEMType type, const Data& name, const Data& privateKeyPEM, bool write) const;
+      void addPrivateKeyDER (PEMType type, const Data& name, const Data& privateKeyDER, bool write) const;
       bool hasPrivateKey    (PEMType type, const Data& name) const;
       void removePrivateKey (PEMType type, const Data& name);
       Data getPrivateKeyPEM (PEMType type, const Data& name) const;
       Data getPrivateKeyDER (PEMType type, const Data& name) const;
-      void addPrivateKeyPKEY(PEMType type, const Data& name, EVP_PKEY* pKey, bool write);
+      void addPrivateKeyPKEY(PEMType type, const Data& name, EVP_PKEY* pKey, bool write) const;
 
       // match with wildcards
       static int matchHostNameWithWildcards(const Data& certificateName, const Data& domainName);

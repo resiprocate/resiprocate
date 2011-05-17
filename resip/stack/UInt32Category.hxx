@@ -28,10 +28,8 @@ class UInt32Category : public ParserCategory
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
       virtual ParserCategory* clone() const;
 
-      const UInt32& value() const;
-      const Data& comment() const;
-      UInt32& value();
-      Data& comment();
+      UInt32& value() const;
+      Data& comment() const;
 
       // Inform the compiler that overloads of these may be found in
       // ParserCategory, too.
@@ -54,8 +52,8 @@ defineParam(duration, "duration", UInt32Parameter, "RFC 3261");
 #undef defineParam
 
    private:
-      UInt32 mValue;
-      Data mComment;
+      mutable UInt32 mValue;
+      mutable Data mComment;
 
       static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
 };

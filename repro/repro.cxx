@@ -161,13 +161,6 @@ main(int argc, char** argv)
       Log::initialize(args.mLogType, args.mLogLevel, argv[0]);
    }
 
-   if(args.mOverrideT1)
-   {
-      WarningLog(<< "Overriding T1! (new value is " << 
-               args.mOverrideT1 << ")");
-      resip::Timer::resetT1(args.mOverrideT1);
-   }
-
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
    { FindMemoryLeaks fml;
 #endif

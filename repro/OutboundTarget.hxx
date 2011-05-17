@@ -18,7 +18,7 @@ class OutboundTarget : public QValueTarget
       static bool instanceCompare(const resip::ContactInstanceRecord& lhs, 
                                     const resip::ContactInstanceRecord& rhs)
       {
-         return lhs.mLastUpdated > rhs.mLastUpdated;
+         return lhs.mLastUpdated < rhs.mLastUpdated;
       }
 
    protected:

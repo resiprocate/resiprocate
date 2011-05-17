@@ -59,8 +59,6 @@ class ServerRegistration: public NonDialogUsage
 
       bool tryFlow(ContactInstanceRecord& rec,
                      const resip::SipMessage& msg);
-      bool flowTokenNeededForTls(const ContactInstanceRecord &rec) const;
-      bool flowTokenNeededForSigcomp(const ContactInstanceRecord &rec) const;
       bool testFlowRequirements(ContactInstanceRecord &rec,
                                  const resip::SipMessage& msg,
                                  bool hasFlow) const;

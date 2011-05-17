@@ -423,18 +423,18 @@ class SdpContents : public Contents
                   unsigned long mPort;
                   unsigned long mMulticast;
                   Data mProtocol;
-                  std::list<Data> mFormats;
-                  CodecContainer mCodecs;
+                  mutable std::list<Data> mFormats;
+                  mutable CodecContainer mCodecs;
                   Data mTransport;
                   Data mInformation;
                   std::list<Connection> mConnections;
                   std::list<Bandwidth> mBandwidths;
                   Encryption mEncryption;
-                  AttributeHelper mAttributeHelper;
+                  mutable AttributeHelper mAttributeHelper;
 
-                  bool mRtpMapDone;
+                  mutable bool mRtpMapDone;
                   typedef HashMap<int, Codec> RtpMap;
-                  RtpMap mRtpMap;
+                  mutable RtpMap mRtpMap;
 
                   friend class Session;
             };

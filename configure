@@ -196,7 +196,7 @@ $uname = `uname`;
     default     => "no",
     validate    => [@yesno],
     predicate   => "\$config{BUILD_SHARED_LIBS} eq 'no'",
-    flag        => 'no-pic',
+    flag        => 'disable-pic',
   },
   {
     name        => "USE_DISTCC",

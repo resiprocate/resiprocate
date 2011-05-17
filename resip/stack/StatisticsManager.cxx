@@ -100,7 +100,7 @@ StatisticsManager::sent(SipMessage* msg, bool retrans)
    }
    else if (msg->isResponse())
    {
-      int code = msg->const_header(h_StatusLine).statusCode();
+      int code = msg->header(h_StatusLine).statusCode();
       if (code < 0 || code >= MaxCode)
       {
          code = 0;
@@ -134,7 +134,7 @@ StatisticsManager::received(SipMessage* msg)
    {
       ++responsesReceived;
       ++responsesReceivedByMethod[met];
-      int code = msg->const_header(h_StatusLine).statusCode();
+      int code = msg->header(h_StatusLine).statusCode();
       if (code < 0 || code >= MaxCode)
       {
          code = 0;

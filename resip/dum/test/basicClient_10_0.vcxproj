@@ -190,7 +190,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;winmm.lib;$(ProjectDir)..\..\..\contrib\popt\Debug\popt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)basicClient.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
@@ -209,7 +209,7 @@
     <ClCompile>
       <AdditionalOptions>/MP %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)/../../../;$(ProjectDir)/../../../../;$(ProjectDir)../../../contrib/popt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)/../../../;$(ProjectDir)/../../../../;$(ProjectDir)../../../contrib/popt/win32/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;USE_ARES;LEAK_CHECK;HAVE_POPT_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -224,7 +224,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;winmm.lib;$(ProjectDir)..\..\..\contrib\popt\Debug\popt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)basicClient.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
@@ -260,7 +260,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;winmm.lib;$(ProjectDir)..\..\..\contrib\popt\Release\popt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)basicClient.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
@@ -283,7 +283,7 @@
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>$(ProjectDir)/../../../;$(ProjectDir)/../../../../;$(ProjectDir)../../../contrib/popt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)/../../../;$(ProjectDir)/../../../../;$(ProjectDir)../../../contrib/popt/win32/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_POPT_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <MinimalRebuild>false</MinimalRebuild>
@@ -298,7 +298,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;winmm.lib;$(ProjectDir)..\..\..\contrib\popt\Release\popt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)basicClient.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
@@ -351,7 +351,7 @@
     <ClCompile>
       <AdditionalOptions>/MP %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)/../../../;$(ProjectDir)/../../../../;$(ProjectDir)../../../contrib/openssl/include;$(ProjectDir)../../../contrib/openssl/inc32;$(ProjectDir)../../../contrib/popt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)/../../../;$(ProjectDir)/../../../../;$(ProjectDir)../../../contrib/openssl/include;$(ProjectDir)../../../contrib/openssl/inc32;$(ProjectDir)../../../contrib/popt/win32/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;USE_ARES;LEAK_CHECK;USE_SSL;HAVE_POPT_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -366,7 +366,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\static\libeay32MDd.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\static\ssleay32MDd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\static\libeay32MDd.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\static\ssleay32MDd.lib;$(ProjectDir)..\..\..\contrib\popt\Debug\popt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)basicClient.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
@@ -402,7 +402,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\static\libeay32MD.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\static\ssleay32MD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\static\libeay32MD.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\static\ssleay32MD.lib;$(ProjectDir)..\..\..\contrib\popt\Release\popt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)basicClient.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
@@ -425,7 +425,7 @@
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>$(ProjectDir)/../../../;$(ProjectDir)/../../../../;$(ProjectDir)../../../contrib/openssl/include;$(ProjectDir)../../../contrib/openssl/inc32;$(ProjectDir)../../../contrib/popt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)/../../../;$(ProjectDir)/../../../../;$(ProjectDir)../../../contrib/openssl/include;$(ProjectDir)../../../contrib/openssl/inc32;$(ProjectDir)../../../contrib/popt/win32/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;USE_SSL;HAVE_POPT_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <MinimalRebuild>false</MinimalRebuild>
@@ -440,7 +440,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\static\libeay32MD.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\static\ssleay32MD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\static\libeay32MD.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\static\ssleay32MD.lib;$(ProjectDir)..\..\..\contrib\popt\Release\popt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)basicClient.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>

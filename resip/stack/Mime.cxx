@@ -87,27 +87,14 @@ Mime::operator!=(const Mime& rhs) const
    return !(*this == rhs);
 }
 
-const Data& 
+Data& 
 Mime::type() const 
 {
    checkParsed(); 
    return mType;
 }
 
-const Data& Mime::subType() const 
-{
-   checkParsed(); 
-   return mSubType;
-}
-
-Data& 
-Mime::type()
-{
-   checkParsed(); 
-   return mType;
-}
-
-Data& Mime::subType()
+Data& Mime::subType() const 
 {
    checkParsed(); 
    return mSubType;

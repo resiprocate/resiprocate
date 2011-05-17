@@ -32,19 +32,16 @@ class MessageWaitingContents : public Contents
 
       class Header;
 
-      Header& header(HeaderType ht);
-      const Header& header(HeaderType ht) const;
+      Header& header(HeaderType ht) const;
       bool exists(HeaderType ht) const;
       void remove(HeaderType ht);
 
       class AccountHeader {};
-      const Uri& header(const AccountHeader& ht) const;
-      Uri& header(const AccountHeader& ht);
+      Uri& header(const AccountHeader& ht) const;
       bool exists(const AccountHeader& ht) const;
       void remove(const AccountHeader& ht);
 
-      const Data& header(const Data& hn) const;
-      Data& header(const Data& hn);
+      Data& header(const Data& hn) const;
       bool exists(const Data& hn) const;
       void remove(const Data& hn);
 
@@ -84,7 +81,8 @@ class MessageWaitingContents : public Contents
       bool mHasMessages;
       Uri* mAccountUri;
       Header* mHeaders[MW_MAX];
-      std::map<Data, Data> mExtensions;
+      
+      mutable std::map<Data, Data> mExtensions;
 };
 
 extern MessageWaitingContents::AccountHeader mw_account;

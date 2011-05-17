@@ -33,7 +33,7 @@ class StringCategory : public ParserCategory
       Data& value();
 
    private:
-      Data mValue;
+      mutable Data mValue;
 };
 typedef ParserContainer<StringCategory> StringCategories;
  

@@ -106,7 +106,7 @@ main(int argc, char* argv[])
          std::string body(contentLength,'0');
          std::auto_ptr<Contents> contents(new PlainContents(Data(body.data(), body.size())));
          m->setContents(contents);
-         int headerLength=resip::Random::getRandom()%1024;
+         int headerLength=resip::Random::getRandom()%65535;
          std::string bigHeader(headerLength,'h');
          m->header(h_Subject).value()=Data(bigHeader.data(), bigHeader.size());
          messages.push_back(m);
@@ -235,59 +235,27 @@ main(int argc, char* argv[])
       InfoLog (<< "Messages created");
    }
 
-   int type=0;
-   Data badContentLength1("-1");
-   Data badContentLength2("999999999999999999999999999999");
-   std::string hugeString(4096,'h');
-   ExtensionHeader h_huge(Data::from(hugeString));
-
    while (!garbage.empty())
    {
-      Data encoded;
+      Data badContentLength1("-1");
+      Data badContentLength2("999999999999999999999999999999");
             
-      switch(type%4)
+      int oscillator=0;
+      // .bwc. Send one at a time for maximum potential damage.
+      Data encoded;
       {
-         case 0:
-         case 1:
-         {
-            // .bwc. Send one at a time for maximum potential damage.
-            {
-               DataStream strm(encoded);
-               SipMessage* next = garbage.front();
-               garbage.pop_front();
-               // .bwc. encodeSipFrag doesn't encode Content-Length if there is no
-               // body; allowing us to add a bad one without conflicting.
-               next->encodeSipFrag(strm);
-               outstanding++;
-               delete next;
-            }
-
-            encoded.replace("\r\n\r\n","\r\nContent-Length: "+( type ? badContentLength1 : badContentLength2)+"\r\n\r\n");
-         }
-         break;
-         case 2:
-         {
-            DataStream strm(encoded);
-            SipMessage* next = garbage.front();
-            garbage.pop_front();
-            next->header(h_Subject).value()=Data(hugeString.data(), hugeString.size());
-            next->encode(strm);
-            delete next;
-         }
-         break;
-         case 3:
-         {
-            DataStream strm(encoded);
-            SipMessage* next = garbage.front();
-            garbage.pop_front();
-            next->header(h_huge).push_front(StringCategory("foo"));
-            next->encode(strm);
-            delete next;
-         }
-         break;
+         DataStream strm(encoded);
+         SipMessage* next = garbage.front();
+         garbage.pop_front();
+         // .bwc. encodeSipFrag doesn't encode Content-Length if there is no
+         // body; allowing us to add a bad one without conflicting.
+         next->encodeSipFrag(strm);
+         outstanding++;
+         delete next;
       }
-
-      ++type;
+      
+      encoded.replace("\r\n\r\n","\r\nContent-Length: "+( (oscillator=1-oscillator) ? badContentLength1 : badContentLength2)+"\r\n\r\n");
+      
       sender->send(dest, encoded, Data(tid++), Data::Empty);
 
       FdSet fdset; 

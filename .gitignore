@@ -1,6 +1,3 @@
-# This file is only looked at when a checked-out SVN
-# repository is used as the source for a git repo.
-
 /SVN-VERSION
 /.make_prefs
 /build/Makefile.conf

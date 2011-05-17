@@ -40,10 +40,10 @@ class RAckCategory : public ParserCategory
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
 
    private:
-      MethodTypes mMethod;
-      Data mUnknownMethodName;
-      unsigned int mRSequence;
-      unsigned int mCSequence;
+      mutable MethodTypes mMethod;
+      mutable Data mUnknownMethodName;
+      mutable unsigned int mRSequence;
+      mutable unsigned int mCSequence;
 };
  
 }
