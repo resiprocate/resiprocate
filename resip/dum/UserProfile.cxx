@@ -9,7 +9,7 @@
 using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
-const resip::NameAddr UserProfile::mAnonymous("\"Anonymous\" <sip:anonymous@anonymous.invalid>");
+const resip::NameAddr UserProfile::mAnonymous("\"Anonymous\" <sip:anonymous@anonymous.invalid>", true /* preCacheAor */);
 
 UserProfile::UserProfile() : Profile(), 
    mGruuEnabled(false),
