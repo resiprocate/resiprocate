@@ -40,9 +40,9 @@ class CSeqCategory : public ParserCategory
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
 
    private:
-      mutable MethodTypes mMethod;
-      mutable Data mUnknownMethodName;
-      mutable unsigned int mSequence;
+      MethodTypes mMethod;
+      Data mUnknownMethodName;
+      unsigned int mSequence;
 };
  
 }

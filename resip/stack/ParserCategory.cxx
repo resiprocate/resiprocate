@@ -91,12 +91,12 @@ ParserCategory::clear()
 void 
 ParserCategory::copyParametersFrom(const ParserCategory& other)
 {
-   for (ParameterList::iterator it = other.mParameters.begin();
+   for (ParameterList::const_iterator it = other.mParameters.begin();
         it != other.mParameters.end(); it++)
    {
       mParameters.push_back((*it)->clone());
    }
-   for (ParameterList::iterator it = other.mUnknownParameters.begin();
+   for (ParameterList::const_iterator it = other.mUnknownParameters.begin();
         it != other.mUnknownParameters.end(); it++)
    {
       mUnknownParameters.push_back((*it)->clone());
@@ -229,7 +229,7 @@ EncodeStream&
 ParserCategory::encodeParameters(EncodeStream& str) const
 {
     
-   for (ParameterList::iterator it = mParameters.begin();
+   for (ParameterList::const_iterator it = mParameters.begin();
         it != mParameters.end(); it++)
    {
 #if 0
@@ -282,7 +282,7 @@ ParserCategory::encodeParameters(EncodeStream& str) const
       (*it)->encode(str);
 #endif
    }
-   for (ParameterList::iterator it = mUnknownParameters.begin();
+   for (ParameterList::const_iterator it = mUnknownParameters.begin();
         it != mUnknownParameters.end(); it++)
    {
       str << Symbols::SEMI_COLON;
@@ -301,7 +301,7 @@ resip::operator<<(EncodeStream& stream, const ParserCategory& category)
 Parameter* 
 ParserCategory::getParameterByEnum(ParameterTypes::Type type) const
 {
-   for (ParameterList::iterator it = mParameters.begin();
+   for (ParameterList::const_iterator it = mParameters.begin();
         it != mParameters.end(); it++)
    {
       if ((*it)->getType() == type)
@@ -356,7 +356,7 @@ ParserCategory::removeParameterByEnum(ParameterTypes::Type type)
 Parameter* 
 ParserCategory::getParameterByData(const Data& data) const
 {
-   for (ParameterList::iterator it = mUnknownParameters.begin();
+   for (ParameterList::const_iterator it = mUnknownParameters.begin();
         it != mUnknownParameters.end(); it++)
    {
       if (isEqualNoCase((*it)->getName(), data))
@@ -406,7 +406,7 @@ ParserCategory::commutativeParameterHash() const
    }
 
    buffer.clear();
-   for (ParameterList::iterator i = mUnknownParameters.begin(); i != mUnknownParameters.end(); ++i)
+   for (ParameterList::const_iterator i = mUnknownParameters.begin(); i != mUnknownParameters.end(); ++i)
    {
       UnknownParameter* p = static_cast<UnknownParameter*>(*i);
       buffer = p->getName();

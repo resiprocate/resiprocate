@@ -51,7 +51,7 @@ defineParam(purpose, "purpose", DataParameter, "RFC 3261");
 #undef defineParam
 
    private:
-      mutable Data mUri;
+      Data mUri;
 
       static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
 };

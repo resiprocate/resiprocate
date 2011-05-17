@@ -231,7 +231,7 @@ private:
 
 int main(int argc, char* argv[])
 {
-#ifdef WIN32
+#if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK)
   resip::FindMemoryLeaks fml;
 #endif
   //resip::Log::initialize(resip::Log::Cout, resip::Log::Stack, argv[0]);
