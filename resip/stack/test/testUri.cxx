@@ -71,7 +71,7 @@ main(int argc, char* argv[])
        modified.uri().user() = "alphabet-soup";
 
        Data gruuData ( Data::from(modified.uri())) ;
-       msg->header(h_Contacts).back().param(p_gr) = gruuData;
+       msg->header(h_Contacts).back().param(p_pubGruu) = gruuData;
 
 
        cout << *msg << endl;
@@ -98,7 +98,6 @@ main(int argc, char* argv[])
 
        Uri s6("sip:bob@example.com");
        s6.host();
-       s6.param(p_q) = 1000;  // 1.0
 
        Uri s7("sip:testproxy.example.com");
 	   assert (s7.user().empty());

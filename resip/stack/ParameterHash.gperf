@@ -47,6 +47,7 @@ handling, ParameterTypes::handling
 tag, ParameterTypes::tag
 branch, ParameterTypes::branch
 received, ParameterTypes::received
+require, ParameterTypes::require
 rinstance, ParameterTypes::rinstance
 comp, ParameterTypes::comp
 rport, ParameterTypes::rport

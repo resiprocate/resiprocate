@@ -28,11 +28,9 @@ class UInt32Parameter : public Parameter
       virtual EncodeStream& encode(EncodeStream& stream) const;
 
       virtual Parameter* clone() const;
-   private:
-      friend class ParserCategory;
-      friend class Uri;
       Type& value() {return mValue;}
 
+   private:
       UInt32 mValue;
 };
  

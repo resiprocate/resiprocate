@@ -24,11 +24,9 @@ class ExistsParameter : public Parameter
 
       virtual Parameter* clone() const;
       virtual EncodeStream& encode(EncodeStream& stream) const;
-
-   private:
-      friend class ParserCategory;
       Type& value() {return mValue;}
 
+   private:
       Type mValue;
 };
 
