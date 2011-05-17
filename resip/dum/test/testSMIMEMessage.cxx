@@ -81,7 +81,7 @@ class TestSMIMEMessageHandler : public ClientPagerMessageHandler,
          InfoLog( << "received type " << message.header(h_ContentType) );
 
          Helper::ContentsSecAttrs csa(Helper::extractFromPkcs7(message, *security));
-         message.setSecurityAttributes(csa.mAttributes);
+         const_cast<SipMessage&>(message).setSecurityAttributes(csa.mAttributes);
 
          InfoLog( << "Body: " << *csa.mContents << "\n" );
 

@@ -54,7 +54,7 @@ defineParam(refresher, "refresher", DataParameter, "RFC 4028");
 #undef defineParam
 
    private:
-      mutable UInt32 mValue;
+      UInt32 mValue;
 
       static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
 };
