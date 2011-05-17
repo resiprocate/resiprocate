@@ -170,6 +170,9 @@ MethodHash.cxx: MethodHash.gperf
 	sed -e 's/\!strncmp/\!strncasecmp/' > $@ || \
 	echo "gperf not installed, touching $@" && touch $@
 
+NameAddr.cxx NameAddr.hxx: paramgen/NameAddr_params.in
+	./updateParams.sh NameAddr
+
 include $(BUILD)/Makefile.post
 INSTALL_INCDIR := $(DESTDIR)$(INSTALL_PREFIX)/include/resip/stack
 

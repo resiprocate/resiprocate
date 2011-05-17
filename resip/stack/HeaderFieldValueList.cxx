@@ -40,7 +40,7 @@ HeaderFieldValueList::HeaderFieldValueList(const HeaderFieldValueList& rhs)
 }
 
 EncodeStream&
-HeaderFieldValueList::encode(int headerEnum, EncodeStream& str)
+HeaderFieldValueList::encode(int headerEnum, EncodeStream& str) const
 {
    const Data& headerName = Headers::getHeaderName(static_cast<Headers::Type>(headerEnum));
 
@@ -77,7 +77,7 @@ HeaderFieldValueList::encode(int headerEnum, EncodeStream& str)
 }
 
 EncodeStream&
-HeaderFieldValueList::encode(const Data& headerName, EncodeStream& str)
+HeaderFieldValueList::encode(const Data& headerName, EncodeStream& str) const
 {
    if (getParserContainer() != 0)
    {
@@ -104,7 +104,7 @@ HeaderFieldValueList::encode(const Data& headerName, EncodeStream& str)
 }
 
 EncodeStream&
-HeaderFieldValueList::encodeEmbedded(const Data& headerName, EncodeStream& str)
+HeaderFieldValueList::encodeEmbedded(const Data& headerName, EncodeStream& str) const
 {
   assert(!headerName.empty());
 

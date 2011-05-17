@@ -45,9 +45,6 @@
     <ClCompile Include="MediaEvent.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MediaInterface.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MediaResourceCache.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -108,6 +105,9 @@
     <ClCompile Include="UserAgentServerAuthManager.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MediaInterface.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BridgeMixer.hxx">
@@ -137,16 +137,10 @@
     <ClInclude Include="FlowManagerSipXSocket.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HandleTypes.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="LocalParticipant.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MediaEvent.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MediaInterface.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MediaResourceCache.hxx">
@@ -210,6 +204,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="UserAgentServerAuthManager.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MediaInterface.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -203,7 +203,7 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport)
    }
 
    Tuple tuple(transport->interfaceName(), transport->port(),
-                   transport->ipVersion(), transport->transport());
+               transport->ipVersion(), transport->transport());
    mTypeToTransportMap.insert(std::make_pair(tuple,transport));
 
    switch (transport->transport())
@@ -220,6 +220,7 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport)
          // interface. Store the transport in the specific interface maps if the tuple
          // specifies an interface. See TransportSelector::findTransport.
          if (transport->interfaceName().empty() ||
+             transport->getTuple().isAnyInterface() ||
              transport->hasSpecificContact() )
          {
             mAnyInterfaceTransports[tuple] = transport;
@@ -343,18 +344,18 @@ TransportSelector::dnsResolve(DnsResult* result,
          //DebugLog(<< "!ah! RESOLVING request with force target : " << msg->getForceTarget() );
          mDns.lookup(result, msg->getForceTarget());
       }
-      else if (msg->exists(h_Routes) && !msg->header(h_Routes).empty())
+      else if (msg->exists(h_Routes) && !msg->const_header(h_Routes).empty())
       {
          // put this into the target, in case the send later fails, so we don't
          // lose the target
-         msg->setForceTarget(msg->header(h_Routes).front().uri());
+         msg->setForceTarget(msg->const_header(h_Routes).front().uri());
          DebugLog (<< "Looking up dns entries (from route) for " << msg->getForceTarget());
          mDns.lookup(result, msg->getForceTarget());
       }
       else
       {
-         DebugLog (<< "Looking up dns entries for " << msg->header(h_RequestLine).uri());
-         mDns.lookup(result, msg->header(h_RequestLine).uri());
+         DebugLog (<< "Looking up dns entries for " << msg->const_header(h_RequestLine).uri());
+         mDns.lookup(result, msg->const_header(h_RequestLine).uri());
       }
    }
    else if (msg->isResponse())
@@ -462,8 +463,8 @@ TransportSelector::findTransportByVia(SipMessage* msg, const Tuple& target,
   Tuple& source) const
 {
    assert(msg->exists(h_Vias));
-   assert(!msg->header(h_Vias).empty());
-   const Via& via = msg->header(h_Vias).front();
+   assert(!msg->const_header(h_Vias).empty());
+   const Via& via = msg->const_header(h_Vias).front();
 
    if (via.sentHost().empty())
    {
@@ -775,11 +776,11 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             }
             if (!topVia.sentHost().size())
             {
-               msg->header(h_Vias).front().sentHost() = Tuple::inet_ntop(source);
+               topVia.sentHost() = Tuple::inet_ntop(source);
             }
             if (!topVia.sentPort())
             {
-               msg->header(h_Vias).front().sentPort() = source.getPort();
+               topVia.sentPort() = source.getPort();
             }
 
             if (mCompression.isEnabled())
@@ -803,13 +804,13 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                Uri destination;// (*reinterpret_cast<Uri*>(0)); // !bwc! What?
 
                if(msg->exists(h_Routes) &&
-                  !msg->header(h_Routes).empty())
+                  !msg->const_header(h_Routes).empty())
                {
-                  destination = msg->header(h_Routes).front().uri();
+                  destination = msg->const_header(h_Routes).front().uri();
                }
                else
                {
-                  destination = msg->header(h_RequestLine).uri();
+                  destination = msg->const_header(h_RequestLine).uri();
                }
 
                if (destination.exists(p_comp) &&
@@ -901,10 +902,11 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          {
             for (NameAddrs::iterator i=msg->header(h_Contacts).begin(); i != msg->header(h_Contacts).end(); i++)
             {
+               const NameAddr& c_contact = *i;
                NameAddr& contact = *i;
                // No host specified, so use the ip address and port of the
                // transport used. Otherwise, leave it as is.
-               if (contact.uri().host().empty())
+               if (c_contact.uri().host().empty())
                {
                   contact.uri().host() = (target.transport->hasSpecificContact() ?
                                           target.transport->interfaceName() :
@@ -935,7 +937,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                }
                else
                {
-                  if (contact.uri().exists(p_addTransport))
+                  if (c_contact.uri().exists(p_addTransport))
                   {
                      if (target.getType() != UDP)
                      {
@@ -951,9 +953,9 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          // Fix the Referred-By header if no host specified.
          // If malformed, leave it alone.
          if (msg->exists(h_ReferredBy)
-               && msg->header(h_ReferredBy).isWellFormed())
+               && msg->const_header(h_ReferredBy).isWellFormed())
          {
-            if (msg->header(h_ReferredBy).uri().host().empty())
+            if (msg->const_header(h_ReferredBy).uri().host().empty())
             {
                msg->header(h_ReferredBy).uri().host() = Tuple::inet_ntop(source);
                msg->header(h_ReferredBy).uri().port() = target.transport->port();
@@ -967,11 +969,12 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          // chosen to signal to the stack that we want it to fill out various
          // header-field-values.
          if (msg->exists(h_RecordRoutes)
-               && !msg->header(h_RecordRoutes).empty()
-               && msg->header(h_RecordRoutes).front().isWellFormed())
+               && !msg->const_header(h_RecordRoutes).empty() 
+               && msg->const_header(h_RecordRoutes).front().isWellFormed())
          {
+            const NameAddr& c_rr = msg->const_header(h_RecordRoutes).front();
             NameAddr& rr = msg->header(h_RecordRoutes).front();
-            if (rr.uri().host().empty())
+            if (c_rr.uri().host().empty())
             {
                rr.uri().host() = Tuple::inet_ntop(source);
                rr.uri().port() = target.transport->port();
@@ -998,14 +1001,14 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          }
 
          // See draft-ietf-sip-identity
-         if (mSecurity && msg->exists(h_Identity) && msg->header(h_Identity).value().empty())
+         if (mSecurity && msg->exists(h_Identity) && msg->const_header(h_Identity).value().empty())
          {
             DateCategory now;
             msg->header(h_Date) = now;
 #if defined(USE_SSL)
             try
             {
-               const Data& domain = msg->header(h_From).uri().host();
+               const Data& domain = msg->const_header(h_From).uri().host();
                msg->header(h_Identity).value() = mSecurity->computeIdentity( domain,
                                                                              msg->getCanonicalIdentityString());
             }
