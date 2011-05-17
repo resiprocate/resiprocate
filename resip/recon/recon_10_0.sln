@@ -36,7 +36,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testUA", "test\testUA_10_0.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unitTests", "test\unitTests_10_0.vcxproj", "{16CD976A-5D3B-4329-88BA-A32560CDFCC9}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libSRTP", "..\..\contrib\srtp\srtp9.vcxproj", "{EEF031CB-FED8-451E-A471-91EC8D4F6750}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libSRTP", "..\..\contrib\srtp\srtp10.vcxproj", "{EEF031CB-FED8-451E-A471-91EC8D4F6750}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "plgilbc-msvc8", "..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgilbc\plgilbc-msvc8.vcxproj", "{6442C7DE-E500-4BA2-B821-98092F1EDCAF}"
 EndProject

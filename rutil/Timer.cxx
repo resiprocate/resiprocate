@@ -52,6 +52,17 @@ resip::Timer::TH = 64*T1;
 unsigned long
 resip::Timer::TS = 32000;
 
+void 
+Timer::resetT1(unsigned long t1)
+{
+   T1 = t1;
+   T2 = 8 * T1;
+   T4 = 10 * T1;
+   TB = 64*T1;
+   TF = 64*T1;
+   TH = 64*T1;
+}
+
 Data
 Timer::toData(Type timer)
 {

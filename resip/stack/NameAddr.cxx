@@ -40,16 +40,20 @@ NameAddr::NameAddr(const NameAddr& rhs)
 {}
 
 static const Data parseContext("NameAddr constructor");
-NameAddr::NameAddr(const Data& unparsed)
+NameAddr::NameAddr(const Data& unparsed, bool preCacheAor)
    : ParserCategory(),
      mAllContacts(false),
      mDisplayName()
 {
+   HeaderFieldValue hfv(unparsed.data(), unparsed.size());
    // must copy because parse creates overlays
-   NameAddr tmp;
-   ParseBuffer pb(unparsed, parseContext);
-   tmp.parse(pb);
+   NameAddr tmp(&hfv, Headers::UNKNOWN);
+   tmp.checkParsed();
    *this = tmp;
+   if(preCacheAor)
+   {
+      mUri.getAor();
+   }
 }
 
 NameAddr::NameAddr(const Uri& uri)

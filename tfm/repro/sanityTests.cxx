@@ -703,7 +703,6 @@ class TestHolder : public ReproFixture
          WarningLog(<<"*!testOversizeCallIdRegister!*");
          
          Seq(condition(largeCallId, jason->registerUser(60, jason->getDefaultContacts())),
-             jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->noAction()),
              WaitForEndOfTest);
          ExecuteSequences();
       }
@@ -712,8 +711,6 @@ class TestHolder : public ReproFixture
       {
          WarningLog(<<"*!testOversizeContactRegister!*");
          Seq(condition(largeContact, jason->registerUser(60, jason->getDefaultContacts())),
-             jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
-             jason->expect(REGISTER/500, from(proxy), WaitForResponse, jason->noAction()),
              WaitForEndOfTest);
          ExecuteSequences();
       }
@@ -1439,7 +1436,6 @@ class TestHolder : public ReproFixture
          WarningLog(<<"*!testOversizeCallIdRegisterWithOutbound!*");
          
          Seq(condition(largeCallId, jasonTcp->registerUserWithOutbound(60, jasonTcp->getDefaultContacts())),
-             jasonTcp->expect(REGISTER/407, from(proxy), WaitForResponse, jasonTcp->noAction()),
              WaitForEndOfTest);
          ExecuteSequences();
       }
@@ -1456,8 +1452,6 @@ class TestHolder : public ReproFixture
       {
          WarningLog(<<"*!testOversizeContactRegisterWithOutbound!*");
          Seq(condition(largeContact, jasonTcp->registerUserWithOutbound(60, jasonTcp->getDefaultContacts())),
-             jasonTcp->expect(REGISTER/407, from(proxy), WaitForResponse, jasonTcp->digestRespond()),
-             jasonTcp->expect(REGISTER/200, from(proxy), WaitForResponse, jasonTcp->noAction()),
              WaitForEndOfTest);
          ExecuteSequences();
       }

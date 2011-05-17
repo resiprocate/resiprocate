@@ -148,11 +148,23 @@ class SipMessage : public TransactionMessage
       RequestLine& 
       header(const RequestLineType& l);
 
+      inline const RequestLine& 
+      const_header(const RequestLineType& l) const
+      {
+         return header(l);
+      }
+
       const StatusLine& 
       header(const StatusLineType& l) const;
 
       StatusLine& 
       header(const StatusLineType& l);
+
+      inline const StatusLine& 
+      const_header(const StatusLineType& l) const
+      {
+         return header(l);
+      }
 
       bool exists(const HeaderBase& headerType) const;
       bool empty(const HeaderBase& headerType) const;
@@ -160,11 +172,20 @@ class SipMessage : public TransactionMessage
 
 #define defineHeader(_header, _name, _type, _rfc)                       \
       const H_##_header::Type& header(const H_##_header& headerType) const; \
-            H_##_header::Type& header(const H_##_header& headerType)
+            H_##_header::Type& header(const H_##_header& headerType); \
+      inline const H_##_header::Type& const_header(const H_##_header& headerType) const \
+      {\
+         return header(headerType);\
+      }
+
       
 #define defineMultiHeader(_header, _name, _type, _rfc)                  \
       const H_##_header##s::Type& header(const H_##_header##s& headerType) const; \
-            H_##_header##s::Type& header(const H_##_header##s& headerType)
+            H_##_header##s::Type& header(const H_##_header##s& headerType); \
+      inline const H_##_header##s::Type& const_header(const H_##_header##s& headerType) const \
+      {\
+         return header(headerType);\
+      }
       
       defineHeader(ContentDisposition, "Content-Disposition", Token, "RFC 3261");
       defineHeader(ContentEncoding, "Content-Encoding", Token, "RFC 3261");
@@ -351,7 +372,7 @@ class SipMessage : public TransactionMessage
       
       SipMessage& mergeUri(const Uri& source);      
 
-      void setSecurityAttributes(std::auto_ptr<SecurityAttributes>) const;
+      void setSecurityAttributes(std::auto_ptr<SecurityAttributes>);
       const SecurityAttributes* getSecurityAttributes() const { return mSecurityAttributes.get(); }
 
       void addOutboundDecorator(std::auto_ptr<MessageDecorator> md){mOutboundDecorators.push_back(md.release());}
@@ -382,10 +403,10 @@ class SipMessage : public TransactionMessage
       bool mIsExternal;
       
       // raw text corresponding to each typed header (not yet parsed)
-      mutable HeaderFieldValueList* mHeaders[Headers::MAX_HEADERS];
+      HeaderFieldValueList* mHeaders[Headers::MAX_HEADERS];
 
       // raw text corresponding to each unknown header
-      mutable UnknownHeaders mUnknownHeaders;
+      UnknownHeaders mUnknownHeaders;
   
       // !jf!
       const Transport* mTransport;
@@ -401,10 +422,10 @@ class SipMessage : public TransactionMessage
       std::vector<char*> mBufferList;
 
       // special case for the first line of message
-      mutable HeaderFieldValueList* mStartLine;
+      HeaderFieldValueList* mStartLine;
 
       // raw text for the contents (all of them)
-      mutable HeaderFieldValue* mContentsHfv;
+      HeaderFieldValue* mContentsHfv;
 
       // lazy parser for the contents
       mutable Contents* mContents;
@@ -414,8 +435,8 @@ class SipMessage : public TransactionMessage
       mutable Data mRFC2543TransactionId;
 
       // is a request or response
-      mutable bool mRequest;
-      mutable bool mResponse;
+      bool mRequest;
+      bool mResponse;
 
       bool mInvalid;
       resip::Data mReason;
@@ -434,7 +455,7 @@ class SipMessage : public TransactionMessage
       // peers domain associate with this message (MTLS)
       std::list<Data> mTlsPeerNames; 
 
-      mutable std::auto_ptr<SecurityAttributes> mSecurityAttributes;
+      std::auto_ptr<SecurityAttributes> mSecurityAttributes;
 
       std::vector<MessageDecorator*> mOutboundDecorators;
 

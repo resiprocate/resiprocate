@@ -23,7 +23,7 @@ class NameAddr : public ParserCategory
       NameAddr();
       NameAddr(HeaderFieldValue* hfv, Headers::Type type);
       explicit NameAddr(const Uri&);
-      explicit NameAddr(const Data& unparsed);
+      explicit NameAddr(const Data& unparsed, bool preCacheAor=false);
 
       NameAddr(const NameAddr&);
       NameAddr& operator=(const NameAddr&);
@@ -89,8 +89,8 @@ class NameAddr : public ParserCategory
 
    protected:
       bool mAllContacts;
-      mutable Uri mUri;
-      mutable Data mDisplayName;
+      Uri mUri;
+      Data mDisplayName;
 
    private:
 

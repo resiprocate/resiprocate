@@ -436,7 +436,7 @@ RemoteParticipant::redirect(NameAddr& destination)
             }
             else if(mInviteSessionHandle->isConnected()) // redirect via blind transfer 
             {
-               mInviteSessionHandle->refer(destination, true /* refersub */);
+               mInviteSessionHandle->refer(NameAddr(destination.uri()) /* remove tags */, true /* refersub */);
                stateTransition(Redirecting);
             }
             else
@@ -487,7 +487,7 @@ RemoteParticipant::redirectToParticipant(InviteSessionHandle& destParticipantInv
                if(sis && !sis->isAccepted() && mState == Connecting)
                {
                   NameAddrs destinations;
-                  destinations.push_back(destParticipantInviteSessionHandle->peerAddr());
+                  destinations.push_back(NameAddr(destParticipantInviteSessionHandle->peerAddr().uri()));  // ensure we don't get to or from tag by only using the inner uri()
                   mConversationManager.onParticipantRedirectSuccess(mHandle);
                   sis->redirect(destinations);
                }
@@ -1242,6 +1242,13 @@ RemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& answer)
          {
             SdpContents::Session::Medium rejmedium((*itMediaLine)->getMediaTypeString(), 0, 1,  // Reject medium by specifying port 0 (RFC3264)	
                                                    (*itMediaLine)->getTransportProtocolTypeString());
+            if((*itMediaLine)->getCodecs().size() > 0)
+            {
+                rejmedium.addCodec(SdpContents::Session::Codec((*itMediaLine)->getCodecs().front().getMimeSubtype(), 
+                                                               (*itMediaLine)->getCodecs().front().getRate(), 
+                                                               (*itMediaLine)->getCodecs().front().getFormatParameters()));
+                rejmedium.codecs().front().payloadType() = (*itMediaLine)->getCodecs().front().getPayloadType();
+            }
             answer.session().addMedium(rejmedium);
             continue;
          }
@@ -1268,6 +1275,13 @@ RemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& answer)
             {
                SdpContents::Session::Medium rejmedium((*itMediaLine)->getMediaTypeString(), 0, 1,  // Reject medium by specifying port 0 (RFC3264)	
                                                       (*itMediaLine)->getTransportProtocolTypeString());
+               if((*itMediaLine)->getCodecs().size() > 0)
+               {
+                  rejmedium.addCodec(SdpContents::Session::Codec((*itMediaLine)->getCodecs().front().getMimeSubtype(), 
+                                                                 (*itMediaLine)->getCodecs().front().getRate(), 
+                                                                 (*itMediaLine)->getCodecs().front().getFormatParameters()));
+                  rejmedium.codecs().front().payloadType() = (*itMediaLine)->getCodecs().front().getPayloadType();
+               }
                answer.session().addMedium(rejmedium);
             }
             else

@@ -21,6 +21,7 @@ class Uri : public ParserCategory
       RESIP_HeapCount(Uri);
       
       Uri();
+      Uri(HeaderFieldValue* hfv, Headers::Type type);
       Uri(const Uri&);
       explicit Uri(const Data& data);
 
@@ -141,8 +142,8 @@ class Uri : public ParserCategory
       std::vector<Data> getEnumLookups(const std::vector<Data>& suffixes) const;
 
       /** Modifies the default URI encoding character sets */
-      static void setUriUserEncoding(char c, bool encode);
-      static void setUriPasswordEncoding(char c, bool encode);
+      static void setUriUserEncoding(unsigned char c, bool encode);
+      static void setUriPasswordEncoding(unsigned char c, bool encode);
       
       bool hasEmbedded() const;
       SipMessage& embedded();
@@ -196,13 +197,13 @@ class Uri : public ParserCategory
 #undef defineParam
 
    protected:
-      mutable Data mScheme;
-      mutable Data mHost;
-      mutable Data mUser;
-      mutable Data mUserParameters;
-      mutable int mPort;
+      Data mScheme;
+      Data mHost;
+      Data mUser;
+      Data mUserParameters;
+      int mPort;
       mutable Data mAor;
-      mutable Data mPassword;
+      Data mPassword;
 
       // cache for aor
       mutable Data mOldScheme;
@@ -215,8 +216,8 @@ class Uri : public ParserCategory
 
       static bool mEncodingReady;
       // characters listed in these strings should not be URI encoded
-      static Data mUriNonEncodingUserChars;
-      static Data mUriNonEncodingPasswordChars;
+      static const Data mUriNonEncodingUserChars;
+      static const Data mUriNonEncodingPasswordChars;
       static const Data mLocalNumberChars;
       static const Data mGlobalNumberChars;
       typedef std::bitset<URI_ENCODING_TABLE_SIZE> EncodingTable;
@@ -227,8 +228,8 @@ class Uri : public ParserCategory
       static EncodingTable mGlobalNumberTable;
 
       static void initialiseEncodingTables();
-      static inline bool shouldEscapeUserChar(char c);
-      static inline bool shouldEscapePasswordChar(char c);
+      static inline bool shouldEscapeUserChar(unsigned char c);
+      static inline bool shouldEscapePasswordChar(unsigned char c);
 
    private:
       Data mEmbeddedHeadersText;

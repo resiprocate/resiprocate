@@ -31,8 +31,12 @@ HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv)
      mFieldLength(hfv.mFieldLength),
      mMine(true)
 {
-   mField = new char[mFieldLength];
-   memcpy(const_cast<char*>(mField), hfv.mField, mFieldLength);
+   if(mFieldLength)
+   {
+      char* newField = new char[mFieldLength];
+      memcpy(newField, hfv.mField, mFieldLength);
+      mField=newField;
+   }
 }
 
 HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv, CopyPaddingEnum e)
@@ -40,8 +44,9 @@ HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv, CopyPaddingEnum 
      mFieldLength(hfv.mFieldLength),
      mMine(true)
 {
-   mField = MsgHeaderScanner::allocateBuffer(mFieldLength);
-   memcpy(const_cast<char*>(mField), hfv.mField, mFieldLength);
+   char* newField = MsgHeaderScanner::allocateBuffer(mFieldLength);
+   memcpy(newField, hfv.mField, mFieldLength);
+   mField=newField;
 }
 
 HeaderFieldValue::~HeaderFieldValue()

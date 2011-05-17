@@ -97,8 +97,8 @@ class ParserCategory : public LazyParser
       virtual const Data& errorContext() const;
 
       typedef std::vector<Parameter*> ParameterList; 
-      mutable ParameterList mParameters;
-      mutable ParameterList mUnknownParameters;
+      ParameterList mParameters;
+      ParameterList mUnknownParameters;
       Headers::Type mHeaderType;
    private:
       void clear();
