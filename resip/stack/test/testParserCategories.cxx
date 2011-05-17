@@ -121,7 +121,8 @@ main(int arc, char** argv)
       const NameAddr& c_test(test);
       // We should be calling the const version of uri() here, since we don't 
       // need to modify anything.
-      resip::Data opaque(c_test.uri().param(p_opaque));
+      static ExtensionParameter p_opaque_ext("opaque");
+      resip::Data opaque(c_test.uri().param(p_opaque_ext));
       cerr << test << endl;
       NameAddr copy = test;
       cerr << copy << endl;
