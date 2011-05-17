@@ -39,11 +39,11 @@ class Via : public ParserCategory
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
 
    private:
-      mutable Data mProtocolName;
-      mutable Data mProtocolVersion;
-      mutable Data mTransport;
-      mutable Data mSentHost;
-      mutable int mSentPort;
+      Data mProtocolName;
+      Data mProtocolVersion;
+      Data mTransport;
+      Data mSentHost;
+      int mSentPort;
 };
 typedef ParserContainer<Via> Vias;
 

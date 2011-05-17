@@ -32,13 +32,14 @@ class Token : public ParserCategory
       /**
          Gets the value (ie; no parameters) of this Token as a Data&.
       */
-      Data& value() const;
+      const Data& value() const;
+      Data& value();
 
       virtual void parse(ParseBuffer& pb); // remember to call parseParameters()
       virtual ParserCategory* clone() const;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
    private:
-      mutable Data mValue;
+      Data mValue;
 };
 typedef ParserContainer<Token> Tokens;
  

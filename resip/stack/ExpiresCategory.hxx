@@ -34,7 +34,7 @@ class ExpiresCategory : public ParserCategory
       UInt32 value() const;
 
    private:
-      mutable UInt32 mValue;
+      UInt32 mValue;
 };
  
 }

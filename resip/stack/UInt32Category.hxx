@@ -28,12 +28,14 @@ class UInt32Category : public ParserCategory
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
       virtual ParserCategory* clone() const;
 
-      UInt32& value() const;
-      Data& comment() const;
+      const UInt32& value() const;
+      const Data& comment() const;
+      UInt32& value();
+      Data& comment();
 
    private:
-      mutable UInt32 mValue;
-      mutable Data mComment;
+      UInt32 mValue;
+      Data mComment;
 };
  
 }
