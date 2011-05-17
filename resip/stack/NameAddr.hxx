@@ -45,25 +45,56 @@ class NameAddr : public ParserCategory
       bool operator<(const NameAddr& other) const;
 
       bool mustQuoteDisplayName() const;      
+
+      // Inform the compiler that overloads of these may be found in
+      // ParserCategory, too.
+      using ParserCategory::exists;
+      using ParserCategory::remove;
+      using ParserCategory::param;
+
+      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators);
+      bool exists(const Param<NameAddr>& paramType) const;
+      void remove(const Param<NameAddr>& paramType);
+
+#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \
+      const _enum##_Param::DType& param(const _enum##_Param& paramType) const;  \
+      _enum##_Param::DType& param(const _enum##_Param& paramType); \
+      friend class _enum##_Param
+
+      defineParam(data, "data", ExistsParameter, "RFC 3840");
+      defineParam(control, "control", ExistsParameter, "RFC 3840");
+      defineParam(mobility, "mobility", QuotedDataParameter, "RFC 3840"); // mobile|fixed
+      defineParam(description, "description", QuotedDataParameter, "RFC 3840"); // <> quoted
+      defineParam(events, "events", QuotedDataParameter, "RFC 3840"); // list
+      defineParam(priority, "priority", QuotedDataParameter, "RFC 3840"); // non-urgent|normal|urgent|emergency
+      defineParam(methods, "methods", QuotedDataParameter, "RFC 3840"); // list
+      defineParam(schemes, "schemes", QuotedDataParameter, "RFC 3840"); // list
+      defineParam(application, "application", ExistsParameter, "RFC 3840");
+      defineParam(video, "video", ExistsParameter, "RFC 3840");
+      defineParam(language, "language", QuotedDataParameter, "RFC 3840"); // list
+      defineParam(type, "type", QuotedDataParameter, "RFC 3840"); // list
+      defineParam(isFocus, "isfocus", ExistsParameter, "RFC 3840");
+      defineParam(actor, "actor", QuotedDataParameter, "RFC 3840"); // principal|msg-taker|attendant|information
+      defineParam(text, "text", ExistsOrDataParameter, "RFC 3840");
+      defineParam(extensions, "extensions", QuotedDataParameter, "RFC 3840"); //list
+      defineParam(Instance, "+sip.instance", QuotedDataParameter, "RFC 5626");  // <> quoted
+      defineParam(regid, "reg-id", UInt32Parameter, "RFC 5626");
+      defineParam(pubGruu, "pub-gruu", QuotedDataParameter, "RFC 5627");
+      defineParam(tempGruu, "temp-gruu", QuotedDataParameter, "RFC 5627");
+      defineParam(expires, "expires", UInt32Parameter, "RFC 3261");
+      defineParam(q, "q", QValueParameter, "RFC 3261");
+      defineParam(tag, "tag", DataParameter, "RFC 3261");
+
+#undef defineParam
+
    protected:
       bool mAllContacts;
       Uri mUri;
       Data mDisplayName;
 
    private:
-#if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) && (__GNUC_MINOR__ <= 3) )
-      //disallow the following parameters from being accessed in NameAddr
-      //this works on gcc 3.2 so far. definitely does not work on gcc 2.95 on
-      //qnx
-      // as well as on gcc 3.4.0 and 3.4.1
-      using ParserCategory::param;
-      transport_Param::DType& param(const transport_Param& paramType) const;
-      method_Param::DType& param(const method_Param& paramType) const;
-      ttl_Param::DType& param(const ttl_Param& paramType) const;
-      maddr_Param::DType& param(const maddr_Param& paramType) const;
-      lr_Param::DType& param(const lr_Param& paramType) const;
-      comp_Param::DType& param(const comp_Param& paramType) const;
-#endif
+
+      static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
 };
 typedef ParserContainer<NameAddr> NameAddrs;
  

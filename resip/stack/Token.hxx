@@ -38,8 +38,52 @@ class Token : public ParserCategory
       virtual void parse(ParseBuffer& pb); // remember to call parseParameters()
       virtual ParserCategory* clone() const;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
+
+      // Inform the compiler that overloads of these may be found in
+      // ParserCategory, too.
+      using ParserCategory::exists;
+      using ParserCategory::remove;
+      using ParserCategory::param;
+
+      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators);
+      bool exists(const Param<Token>& paramType) const;
+      void remove(const Param<Token>& paramType);
+
+#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \
+      const _enum##_Param::DType& param(const _enum##_Param& paramType) const;  \
+      _enum##_Param::DType& param(const _enum##_Param& paramType); \
+      friend class _enum##_Param
+
+      defineParam(text, "text", ExistsOrDataParameter, "RFC 3840");
+      defineParam(dAlg, "d-alg", DataParameter, "RFC 3329");
+      defineParam(dQop, "d-qop", DataParameter, "RFC 3329");
+      defineParam(dVer, "d-ver", QuotedDataParameter, "RFC 3329");
+      defineParam(expires, "expires", UInt32Parameter, "RFC 3261");
+      defineParam(filename, "filename", DataParameter, "RFC 2183");
+      defineParam(fromTag, "from-tag", DataParameter, "RFC 4235");
+      defineParam(handling, "handling", DataParameter, "RFC 3261");
+      defineParam(id, "id", DataParameter, "RFC 3265");
+      defineParam(q, "q", QValueParameter, "RFC 3261");
+      defineParam(reason, "reason", DataParameter, "RFC 3265");
+      defineParam(retryAfter, "retry-after", UInt32Parameter, "RFC 3265");
+      defineParam(toTag, "to-tag", DataParameter, "RFC 4235");
+      defineParam(extension, "ext", DataParameter, "RFC 3966"); // Token is used when ext is a user-parameter
+      defineParam(profileType, "profile-type", DataParameter, "RFC 6080");
+      defineParam(vendor, "vendor", QuotedDataParameter, "RFC 6080");
+      defineParam(model, "model", QuotedDataParameter, "RFC 6080");
+      defineParam(version, "version", QuotedDataParameter, "RFC 6080");
+      defineParam(effectiveBy, "effective-by", UInt32Parameter, "RFC 6080");
+      defineParam(document, "document", DataParameter, "draft-ietf-sipping-config-framework-07 (removed in 08)");
+      defineParam(appId, "app-id", DataParameter, "draft-ietf-sipping-config-framework-05 (renamed to auid in 06, which was then removed in 08)");
+      defineParam(networkUser, "network-user", DataParameter, "draft-ietf-sipping-config-framework-11 (removed in 12)");
+      defineParam(require, "require", DataParameter, "RFC 5373");
+
+#undef defineParam
+
    private:
       Data mValue;
+
+      static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
 };
 typedef ParserContainer<Token> Tokens;
  

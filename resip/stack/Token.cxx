@@ -111,6 +111,89 @@ Token::encodeParsed(EncodeStream& str) const
    return str;
 }
 
+ParameterTypes::Factory Token::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
+
+Parameter* 
+Token::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+{
+   if(ParameterFactories[type])
+   {
+      return ParameterFactories[type](type, pb, terminators);
+   }
+   return 0;
+}
+
+bool 
+Token::exists(const Param<Token>& paramType) const
+{
+    checkParsed();
+    bool ret = getParameterByEnum(paramType.getTypeNum()) != NULL;
+    return ret;
+}
+
+void 
+Token::remove(const Param<Token>& paramType)
+{
+    checkParsed();
+    removeParameterByEnum(paramType.getTypeNum());
+}
+
+#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                                                      \
+_enum##_Param::DType&                                                                                           \
+Token::param(const _enum##_Param& paramType)                                                           \
+{                                                                                                               \
+   checkParsed();                                                                                               \
+   _enum##_Param::Type* p =                                                                                     \
+      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                            \
+   if (!p)                                                                                                      \
+   {                                                                                                            \
+      p = new _enum##_Param::Type(paramType.getTypeNum());                                                      \
+      mParameters.push_back(p);                                                                                 \
+   }                                                                                                            \
+   return p->value();                                                                                           \
+}                                                                                                               \
+                                                                                                                \
+const _enum##_Param::DType&                                                                                     \
+Token::param(const _enum##_Param& paramType) const                                                     \
+{                                                                                                               \
+   checkParsed();                                                                                               \
+   _enum##_Param::Type* p =                                                                                     \
+      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                            \
+   if (!p)                                                                                                      \
+   {                                                                                                            \
+      InfoLog(<< "Missing parameter " _name " " << ParameterTypes::ParameterNames[paramType.getTypeNum()]);     \
+      DebugLog(<< *this);                                                                                       \
+      throw Exception("Missing parameter " _name, __FILE__, __LINE__);                                          \
+   }                                                                                                            \
+   return p->value();                                                                                           \
+}
+
+defineParam(text, "text", ExistsOrDataParameter, "RFC 3840");
+defineParam(dAlg, "d-alg", DataParameter, "RFC 3329");
+defineParam(dQop, "d-qop", DataParameter, "RFC 3329");
+defineParam(dVer, "d-ver", QuotedDataParameter, "RFC 3329");
+defineParam(expires, "expires", UInt32Parameter, "RFC 3261");
+defineParam(filename, "filename", DataParameter, "RFC 2183");
+defineParam(fromTag, "from-tag", DataParameter, "RFC 4235");
+defineParam(handling, "handling", DataParameter, "RFC 3261");
+defineParam(id, "id", DataParameter, "RFC 3265");
+defineParam(q, "q", QValueParameter, "RFC 3261");
+defineParam(reason, "reason", DataParameter, "RFC 3265");
+defineParam(retryAfter, "retry-after", UInt32Parameter, "RFC 3265");
+defineParam(toTag, "to-tag", DataParameter, "RFC 4235");
+defineParam(extension, "ext", DataParameter, "RFC 3966"); // Token is used when ext is a user-parameter
+defineParam(profileType, "profile-type", DataParameter, "RFC 6080");
+defineParam(vendor, "vendor", QuotedDataParameter, "RFC 6080");
+defineParam(model, "model", QuotedDataParameter, "RFC 6080");
+defineParam(version, "version", QuotedDataParameter, "RFC 6080");
+defineParam(effectiveBy, "effective-by", UInt32Parameter, "RFC 6080");
+defineParam(document, "document", DataParameter, "draft-ietf-sipping-config-framework-07 (removed in 08)");
+defineParam(appId, "app-id", DataParameter, "draft-ietf-sipping-config-framework-05 (renamed to auid in 06, which was then removed in 08)");
+defineParam(networkUser, "network-user", DataParameter, "draft-ietf-sipping-config-framework-11 (removed in 12)");
+defineParam(require, "require", DataParameter, "RFC 5373");
+
+#undef defineParam
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
