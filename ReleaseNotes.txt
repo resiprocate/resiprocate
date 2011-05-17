@@ -3,7 +3,6 @@
 ==General==
 ===New features===
 * added tfdum, a tfm suite for DUM
-* added new Music-On-Hold Park Server (MOHParkServer) project (Note: this is a recon subproject)
 
 
 ==Build system==
