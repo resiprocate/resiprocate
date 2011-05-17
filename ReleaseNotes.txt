@@ -4,8 +4,6 @@
 ===New features===
 * added tfdum, a tfm suite for DUM
 
-===Bug fixes===
-
 
 ==Build system==
 ===New features===
@@ -39,8 +37,7 @@
 * expose resip local logger id to applications
 * added PtrLock class that handles pointer to Lockable (this makes implementing optional locking easy)
 * added a number of performance-optimization oriented functions to Data
-* added support for Windows's RtlGenRandom function to Random. Enabled via
-compile-time ifdef; disabled by default
+* added support for Windows's RtlGenRandom function to Random. Enabled via compile-time ifdef; disabled by default
 * improved thread-safety of Random
 * force asserts to be enabled in test-cases regardless of whether asserts are enabled in the library builds
 
@@ -60,6 +57,7 @@ compile-time ifdef; disabled by default
 * fixed various crash/leak bugs in resip-ares/DNS code
 * fixed some uninitialized members in RRVip::MapKey and Timer
 * fixed bug where Data::charUnencoded() was not compatible with capitalized hex encoding
+
 
 ==stack==
 ===New features===
@@ -125,6 +123,7 @@ compile-time ifdef; disabled by default
 * fixed a bug in Connection::read() where a buffer could be invalidated before it was used in sigcomp-related code
 * fixed bug where userpart escaping in Uri did not support char values > 127
 
+
 ==DUM==
 ===New features===
 * made DUM InviteSession offer answer logic to be Content type generic
@@ -177,6 +176,7 @@ compile-time ifdef; disabled by default
 * fix for ContactInstanceRecord equality checks - registration server was not treating contacts with the same instance id as equal if the contact URI was different
 * reject INVITE with replaces if session to replace is not found
 
+
 ==repro==
 ===New features===
 * added ability to add an application defined OPTIONS handler for repro proxy
@@ -208,6 +208,7 @@ compile-time ifdef; disabled by default
 * fixed a few places where a response could be sent to an ACK
 * fixed a few places where remote modification of a branch parameter (either case-fiddling, or outright trashing) could confuse us
 
+
 ==reTurn==
 ===New features===
 * add ability to pass local IP address to TestAsyncClient command line
@@ -216,6 +217,7 @@ compile-time ifdef; disabled by default
 ===Bug fixes===
 * fixed memory leak in d'tor of DataBuffer
 * fixed leak of expired RemotePeers in ChannelManager
+
 
 ==recon==
 ===New features===
@@ -244,47 +246,16 @@ compile-time ifdef; disabled by default
 * fixed bug where to/from tags were put in Refer-To headers
 * fixed a bug where we were not including codec information on rejected m= lines
 
-==reflow==
-===New features===
 
+==reflow==
 ===Bug fixes===
 * fixed bug where reception of an ICMP error on a UDP flow would cause the flow to stop receiving data
 
 
 ==clicktocall==
-===New features===
-
 ===Bug fixes===
 * fixed a bug in xml rpc server - need to call tryParse multiple times in cases where we end up with two entire requests in one socket read
 * fixed memory leak in xml rpc server with stored requests
-
-
-==nICEr==
-===New features===
-
-===Bug fixes===
-
-
-
-==ichat-gw==
-===New features===
-
-===Bug fixes===
-
-
-
-==sipdial==
-===New features===
-
-===Bug fixes===
-
-
-
-==p2p==
-===New features===
-
-===Bug fixes===
-
 
 
 ==tfm (repro)==
@@ -296,14 +267,3 @@ compile-time ifdef; disabled by default
 
 ===Bug fixes===
 * fixed bugs in a number of tests
-
-
-
-==b2bua==
-===New features===
-
-===Bug fixes===
-
-
-
-
