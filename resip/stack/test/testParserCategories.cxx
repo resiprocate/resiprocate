@@ -401,8 +401,76 @@ main(int arc, char** argv)
    }
 
    {
+      TR _tr("Test unquoted @ in params for Uri");
+      // This is actually not an ambiguous case; '@' is not valid in either a 
+      // param name or value, and ';' is legal in a userpart
+      Uri uri(Data("sip:example.com;lr;foo=fooba@haha"));
+      assert(uri.user()=="example.com;lr;foo=fooba");
+      assert(uri.host()=="haha");
+      assert(uri.port()==0);
+   }
+
+   {
       TR _tr("Test : in params for Uri");
       Uri uri(Data("sip:example.com;lr;foo=\":lol\""));
+      assert(uri.user().empty());
+      assert(uri.host()=="example.com");
+      assert(uri.port()==0);
+   }
+
+   {
+      TR _tr("Test unquoted : in params for Uri");
+      Uri uri(Data("sip:example.com;lr;foo=:lol"));
+      assert(uri.user().empty());
+      assert(uri.host()=="example.com");
+      assert(uri.port()==0);
+   }
+
+   {
+      TR _tr("Test unquoted : in params for Uri (2)");
+      Uri uri(Data("sip:example.com;lr;:foo=:lol"));
+      assert(uri.user().empty());
+      assert(uri.host()=="example.com");
+      assert(uri.port()==0);
+   }
+
+   {
+      TR _tr("Test @ in headers for Uri");
+      Uri uri(Data("sip:example.com?foo=\"@haha\""));
+      assert(uri.user().empty());
+      assert(uri.host()=="example.com");
+      assert(uri.port()==0);
+   }
+
+   {
+      TR _tr("Test unquoted @ in headers for Uri");
+      // This is actually not an ambiguous case; '@' is not valid in either an 
+      // embedded header name or value, and '?' is legal in a userpart
+      Uri uri(Data("sip:example.com?foo=fooba@haha"));
+      assert(uri.user()=="example.com?foo=fooba");
+      assert(uri.host()=="haha");
+      assert(uri.port()==0);
+   }
+
+   {
+      TR _tr("Test : in headers for Uri");
+      Uri uri(Data("sip:example.com?foo=\":lol\""));
+      assert(uri.user().empty());
+      assert(uri.host()=="example.com");
+      assert(uri.port()==0);
+   }
+
+   {
+      TR _tr("Test unquoted : in headers for Uri");
+      Uri uri(Data("sip:example.com?foo=:lol"));
+      assert(uri.user().empty());
+      assert(uri.host()=="example.com");
+      assert(uri.port()==0);
+   }
+
+   {
+      TR _tr("Test unquoted : in headers for Uri (2)");
+      Uri uri(Data("sip:example.com?:foo=:lol"));
       assert(uri.user().empty());
       assert(uri.host()=="example.com");
       assert(uri.port()==0);
