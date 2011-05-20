@@ -391,6 +391,23 @@ main(int arc, char** argv)
       cout << "original : ->" << original << "<-"<< endl;
       assert(Data::from(original) == Data::from(newna));
    }
+
+   {
+      TR _tr("Test @ in params for Uri");
+      Uri uri(Data("sip:example.com;lr;foo=\"@haha\""));
+      assert(uri.user().empty());
+      assert(uri.host()=="example.com");
+      assert(uri.port()==0);
+   }
+
+   {
+      TR _tr("Test : in params for Uri");
+      Uri uri(Data("sip:example.com;lr;foo=\":lol\""));
+      assert(uri.user().empty());
+      assert(uri.host()=="example.com");
+      assert(uri.port()==0);
+   }
+
    {
       TR _tr("Test typeless parameter copy");
       Token s = Token("jason");
