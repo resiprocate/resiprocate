@@ -887,28 +887,53 @@ Uri::parse(ParseBuffer& pb)
    }
    
    start = pb.position();
-   pb.skipToChar(Symbols::AT_SIGN[0]);
+   // stop at double-quote to prevent matching an '@' in a quoted string param. 
+   pb.skipToOneOf("@:\"");
    if (!pb.eof())
    {
-      pb.reset(start);
-      start = pb.position();
-      pb.skipToOneOf(":@");
-#ifdef HANDLE_CHARACTER_ESCAPING
-      pb.dataUnescaped(mUser, start);
-#else
-      pb.data(mUser, start);
-#endif
-      if (!pb.eof() && *pb.position() == Symbols::COLON[0])
+      const char* atSign=0;
+      if (*pb.position() == Symbols::COLON[0])
       {
-         start = pb.skipChar();
-         pb.skipToChar(Symbols::AT_SIGN[0]);
+         // Either a password, or a port
+         const char* afterColon = pb.skipChar();
+         pb.skipToOneOf("@\"");
+         if(!pb.eof() && *pb.position() == Symbols::AT_SIGN[0])
+         {
+            atSign=pb.position();
+            // password
 #ifdef HANDLE_CHARACTER_ESCAPING
-         pb.dataUnescaped(mPassword, start);
+            pb.dataUnescaped(mPassword, afterColon);
 #else
-         pb.data(mPassword, start);
+            pb.data(mPassword, afterColon);
 #endif
+            pb.reset(afterColon-1);
+         }
+         else
+         {
+            // port. No user part.
+            pb.reset(start);
+         }
       }
-      start = pb.skipChar();
+      else if(*pb.position() == Symbols::AT_SIGN[0])
+      {
+         atSign=pb.position();
+      }
+      else
+      {
+         // Only a hostpart
+         pb.reset(start);
+      }
+
+      if(atSign)
+      {
+#ifdef HANDLE_CHARACTER_ESCAPING
+         pb.dataUnescaped(mUser, start);
+#else
+         pb.data(mUser, start);
+#endif
+         pb.reset(atSign);
+         start = pb.skipChar();
+      }
    }
    else
    {
