@@ -558,12 +558,12 @@ Uri::operator==(const Uri& other) const
    typedef std::set<Parameter*, OrderUnknownParameters> ParameterSet;
    ParameterSet unA, unB;
 
-   for (ParameterList::iterator i = mUnknownParameters.begin();
+   for (ParameterList::const_iterator i = mUnknownParameters.begin();
         i != mUnknownParameters.end(); ++i)
    {
       unA.insert(*i);
    }
-   for (ParameterList::iterator i = other.mUnknownParameters.begin();
+   for (ParameterList::const_iterator i = other.mUnknownParameters.begin();
         i != other.mUnknownParameters.end(); ++i)
    {
       unB.insert(*i);
