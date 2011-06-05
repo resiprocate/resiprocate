@@ -1216,7 +1216,7 @@ ResponseContext::cancelClientTransaction(repro::Target* target)
    if (target->status() == Target::Started)
    {
       InfoLog (<< "Cancel client transaction: " << target);
-      mRequestContext.getProxy().getStack().cancelClientInviteTransaction(target->via().param(p_branch).getTransactionId());
+      mRequestContext.cancelClientTransaction(target->via().param(p_branch).getTransactionId());
 
       DebugLog(<< "Canceling a transaction with uri: " 
                << resip::Data::from(target->uri()) << " , to host: " 

@@ -72,7 +72,7 @@ class TransactionController
       }
 
       void abandonServerTransaction(const Data& tid);
-      void cancelClientInviteTransaction(const Data& tid);
+      void cancelClientInviteTransaction(const Data& tid, std::auto_ptr<MessageDecorator> messageDecorator);
       void terminateFlow(const resip::Tuple& flow);
       void enableFlowTimer(const resip::Tuple& flow);
 

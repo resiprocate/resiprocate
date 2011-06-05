@@ -9,6 +9,7 @@
 #include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TransactionTerminated.hxx"
+#include "resip/stack/SipStack.hxx"
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/InteropHelper.hxx"
 #include "rutil/Inserter.hxx"
@@ -777,6 +778,12 @@ void
 RequestContext::handleSelfAimedStrayAck(SipMessage* sip)
 {
     InfoLog(<<"Stray ACK aimed at us that routes back to us. Dropping it...");  
+}
+
+void
+RequestContext::cancelClientTransaction(const resip::Data& tid)
+{
+   getProxy().getStack().cancelClientInviteTransaction(tid);
 }
 
 void

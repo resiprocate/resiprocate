@@ -617,9 +617,9 @@ SipStack::abandonServerTransaction(const Data& tid)
 }
 
 void
-SipStack::cancelClientInviteTransaction(const Data& tid)
+SipStack::cancelClientInviteTransaction(const Data& tid, std::auto_ptr<MessageDecorator> messageDecorator)
 {
-   mTransactionController->cancelClientInviteTransaction(tid);
+   mTransactionController->cancelClientInviteTransaction(tid, messageDecorator);
    checkAsyncProcessHandler();
 }
 
