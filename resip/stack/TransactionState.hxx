@@ -19,6 +19,7 @@ class TransactionController;
 class TransactionUser;
 class NameAddr;
 class Via;
+class MessageDecorator;
 
 class TransactionState : public DnsHandler
 {
@@ -123,6 +124,7 @@ class TransactionState : public DnsHandler
       Machine mMachine;
       State mState;
       bool mIsAbandoned; // TU doesn't care about this transaction anymore.
+      std::auto_ptr<resip::MessageDecorator> mAdandonedMessageDecorator;  // Set if a message decorator was passed to cancelClientInviteTransaction to be used on created CANCEL messages
       
       // Indicates that the message has been sent with a reliable protocol. Set
       // by the TransportSelector
