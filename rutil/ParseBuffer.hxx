@@ -12,6 +12,7 @@ namespace resip
       overflow.
 
    Throws ParseException when parse failures occur.
+   @ingroup text_proc
 */
 class ParseBuffer
 {
@@ -25,20 +26,55 @@ class ParseBuffer
 
       ParseBuffer(const ParseBuffer& other);
 
-      // .bwc. Backwards-compatibility hack; ParseBuffer::Exception used to be
+///@cond
+      // .bwc. Backwards-compatibility hack; ParseException used to be
       // a full inner class of ParseBuffer, and we also had a separate 
       // ParseException class that other things used. For consistency, we have
       // moved everything over to use ParseException, but there is app-code
-      // out there that still expects ParseBuffer::Exception to exist.
+      // out there that still expects ParseException to exist.
       typedef ParseException Exception;
+///@endcond
 
    private:
+      /**
+         @internal
+         @brief Provides some access to the current position of a ParseBuffer, 
+         which guards against invalid accesses. Just a wrapper around a 
+         ParseBuffer&, so is very cheap to initialize/copy.
+      */
+      class CurrentPosition
+      {
+         public:
+            inline explicit CurrentPosition(const ParseBuffer& pb) :
+               mPb(pb)
+            {}
+
+            operator const char*() const
+            {
+               return mPb.mPosition;
+            }
+
+            const char& operator*() const
+            {
+               mPb.assertNotEof();
+               return *mPb.mPosition;
+            }
+
+            const ParseBuffer& mPb;
+      };
+
+      /**
+         @internal
+         @brief Similar to CurrentPosition, but does not move depending on the 
+         state of the ParseBuffer. Initializing one of these is more expensive.
+      */
       class Pointer
       {
          public:
             Pointer(const ParseBuffer& pb,
                     const char* position,
                     bool atEof);
+            Pointer(const CurrentPosition& pos);
 
             operator const char*() const
             {
@@ -54,55 +90,143 @@ class ParseBuffer
       };
 
    public:
-      const Data& getContext() const;
+      const Data& getContext() const {return mErrorContext;}
       
       // allow the buffer to be rolled back
       ParseBuffer& operator=(const ParseBuffer& other);
-      void reset(const char* pos);
+      void reset(const char* pos)
+      {
+         assert( mBuff <= mEnd);
+         assert( (pos >= mBuff) && (pos <= mEnd) );
+         mPosition = pos;
+      }
 
       // abcdef
       // ^     ^
       // begin end
       bool eof() const { return mPosition >= mEnd;}
       bool bof() const { return mPosition <= mBuff;}
+      bool valid() const {return (!eof()) && (!bof());}
       Pointer start() const { return Pointer(*this, mBuff, eof()); }
-      Pointer position() const { return Pointer(*this, mPosition, eof()); }
+      CurrentPosition position() const { return CurrentPosition(*this); }
       Pointer end() const { return Pointer(*this, mEnd, true); }
 
-      Pointer skipChar();
-      Pointer skipChar(char c);
-      Pointer skipChars(const char* cs);
-      Pointer skipChars(const Data& cs);
-      Pointer skipNonWhitespace();
-      Pointer skipWhitespace();
-      Pointer skipLWS();
-      Pointer skipToTermCRLF();
-      Pointer skipToChar(char c);
-      Pointer skipToChars(const char* cs);
-      Pointer skipToChars(const Data& cs); // ?dlb? case sensitivity arg?
-      Pointer skipToOneOf(const char* cs);
-      Pointer skipToOneOf(const char* cs1, const char* cs2);
-      Pointer skipToOneOf(const Data& cs);
-      Pointer skipToOneOf(const Data& cs1, const Data& cs2);
+      CurrentPosition skipChar()
+      {
+         if (eof())
+         {
+            fail(__FILE__, __LINE__,"skipped over eof");
+         }
+         ++mPosition;
+         return CurrentPosition(*this);
+      }
+
+      CurrentPosition skipChar(char c);
+      CurrentPosition skipChars(const char* cs);
+      CurrentPosition skipChars(const Data& cs);
+      CurrentPosition skipNonWhitespace();
+      CurrentPosition skipWhitespace();
+      CurrentPosition skipLWS();
+      CurrentPosition skipToTermCRLF();
+      CurrentPosition skipToChar(char c)
+      {
+         mPosition = (const char*)memchr(mPosition, c, mEnd-mPosition);
+         if(!mPosition)
+         {
+            mPosition=mEnd;
+         }
+         return CurrentPosition(*this);
+      }
+      CurrentPosition skipToChars(const char* cs);
+      CurrentPosition skipToChars(const Data& cs); // ?dlb? case sensitivity arg?
+      CurrentPosition skipToOneOf(const char* cs);
+      CurrentPosition skipToOneOf(const char* cs1, const char* cs2);
+      CurrentPosition skipToOneOf(const Data& cs);
+      CurrentPosition skipToOneOf(const Data& cs1, const Data& cs2);
 
       // std::bitset based parse function
-      ParseBuffer& skipChars(const std::bitset<256>& cs);
-      ParseBuffer& skipToOneOf(const std::bitset<256>& cs);
+      CurrentPosition skipChars(const std::bitset<256>& cs)
+      {
+         while (mPosition < mEnd)
+         {
+            if (cs.test((unsigned char)(*mPosition)))
+            {
+               mPosition++;
+            }
+            else
+            {
+               return CurrentPosition(*this);
+            }
+         }
+         return CurrentPosition(*this);
+      }
+
+      CurrentPosition skipToOneOf(const std::bitset<256>& cs)
+      {
+         while (mPosition < mEnd)
+         {
+            if (cs.test((unsigned char)(*mPosition)))
+            {
+               return CurrentPosition(*this);
+            }
+            else
+            {
+               mPosition++;
+            }
+         }
+         return CurrentPosition(*this);
+      }
 
       const char* skipToEndQuote(char quote = '"');
-      Pointer skipN(int count);
-      Pointer skipToEnd();
+      CurrentPosition skipN(int count)
+      {
+         mPosition += count;
+         if (mPosition > mEnd)
+         {
+            fail(__FILE__, __LINE__, "skipped eof");
+         }
+         return CurrentPosition(*this);
+      }
+
+      CurrentPosition skipToEnd()
+      {
+         mPosition = mEnd;
+         return CurrentPosition(*this);
+      }
 
       // inverse of skipChar() -- end up at char not before it
       const char* skipBackChar();
       const char* skipBackWhitespace();
-      const char* skipBackN(int count);
+      const char* skipBackN(int count)
+      {
+         mPosition -= count;
+         if (bof())
+         { 
+           fail(__FILE__, __LINE__,"backed over beginning of buffer");
+         }
+         return mPosition;
+      }
+
       const char* skipBackChar(char c);
       const char* skipBackToChar(char c);
       const char* skipBackToOneOf(const char* cs);
 
-      void assertEof() const;
-      void assertNotEof() const;
+      void assertEof() const
+      {
+         if (!eof())
+         {
+            fail(__FILE__, __LINE__,"expected eof");
+         }
+      }
+
+      void assertNotEof() const
+      {
+         if (eof())
+         {
+            fail(__FILE__, __LINE__,"unexpected eof");
+         }
+      }
+
       void fail(const char* file, unsigned int line,
                 const Data& errmsg = Data::Empty) const;
 
@@ -133,6 +257,7 @@ class ParseBuffer
       static const char* Whitespace;
       static const char* ParamTerm;
    private:
+      friend class ParseBuffer::CurrentPosition;
       const char* mBuff;
       const char* mPosition;
       const char* mEnd;
