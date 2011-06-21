@@ -258,21 +258,96 @@ DnsUtil::inet_pton(const Data& printableIp, struct in6_addr& dst)
 bool
 DnsUtil::isIpV4Address(const Data& ipAddress)
 {
-   // ok, this is fairly monstrous but it works.
-   unsigned int p1,p2,p3,p4;
-   int count=0;
-   int result = sscanf( ipAddress.c_str(),
-                        "%u.%u.%u.%u%n",
-                        &p1, &p2, &p3, &p4, &count );
+   // ok, this is fairly monstrous but it works. It is also more than 10 times 
+   // faster than the commented-out code below, in the worst case scenario.
 
-   if ( (result == 4) && (p1 <= 255) && (p2 <= 255) && (p3 <= 255) && (p4 <= 255) && (count == int(ipAddress.size())) )
+   const char* first = ipAddress.data();
+   const char* end = first + ipAddress.size();
+   int octets = 0;
+   while(octets++ < 4)
    {
-      return true;
+      const char* last=first;
+
+      // .bwc. I have tried using std::bitset instead of the 0 <= *last <= 9
+      // check, but it is slower.
+      while(*last >= '0' && *last <= '9' && last - first <= 3 && last != end)
+      {
+         // Skip at most 3 decimals, without going past the end of the buffer.
+         ++last;
+      }
+
+      // last should now point to either a '.', or the end of the buffer.
+
+      switch(last-first) // number of decimals in this octet
+      {
+         case 2:
+            if(*first == '0')
+            {
+               // Two-decimal octet can't begin with 0...
+               // ?bwc? Maybe let this slide?
+               return false;
+            }
+         case 1:
+            // ... but a one-decimal octet can begin with a 0.
+            break; // x. or xx.
+         case 3:
+            // xxx. (could be too large)
+            // .bwc. I have tried implementing this with a reinterpret_cast 
+            // and a UInt32 comparison (accounting for endianness), and memcmp, 
+            // but both appear to be slower, even when using 
+            // "255.255.255.255" (which maximizes the number of comparisons).
+            if(*first != '1')
+            {
+               if(*first == '2')
+               {
+                  // Might have overflow if first digit is 2
+                  if(*(first+1)>'5' || (*(first+1)=='5' && *(first+2)>'5'))
+                  {
+                     return false;
+                  }
+               }
+               else
+               {
+                  // First digit greater than 2 means overflow, 0 not allowed.
+                  return false;
+               }
+            }
+            break;
+         default:
+            return false;
+      }
+
+      if(octets < 4)
+      {
+         if(*last == '.')
+         {
+            // Skip over the '.'
+            ++last;
+         }
+         else
+         {
+            return false;
+         }
+      }
+      first = last; // is now pointing at either the first digit in the next
+                     // octet, or the end of the buffer.
    }
-   else
-   {
-      return false;
-   }
+
+   return first==end;
+//   unsigned int p1,p2,p3,p4;
+//   int count=0;
+//   int result = sscanf( ipAddress.c_str(),
+//                        "%u.%u.%u.%u%n",
+//                        &p1, &p2, &p3, &p4, &count );
+//
+//   if ( (result == 4) && (p1 <= 255) && (p2 <= 255) && (p3 <= 255) && (p4 <= 255) && (count == int(ipAddress.size())) )
+//   {
+//      return true;
+//   }
+//   else
+//   {
+//      return false;
+//   }
 }
 
 // RFC 1884
@@ -486,12 +561,68 @@ DnsUtil::getInterfaces(const Data& matching)
    return results;
 }
 
+#ifdef __APPLE__
+const Data DnsUtil::UInt8ToStr[]={
+  "0.",  "1.",  "2.",  "3.",  "4.",  "5.",  "6.",  "7.",
+  "8.",  "9.", "10.", "11.", "12.", "13.", "14.", "15.",
+ "16.", "17.", "18.", "19.", "20.", "21.", "22.", "23.",
+ "24.", "25.", "26.", "27.", "28.", "29.", "30.", "31.",
+ "32.", "33.", "34.", "35.", "36.", "37.", "38.", "39.",
+ "40.", "41.", "42.", "43.", "44.", "45.", "46.", "47.",
+ "48.", "49.", "50.", "51.", "52.", "53.", "54.", "55.",
+ "56.", "57.", "58.", "59.", "60.", "61.", "62.", "63.",
+ "64.", "65.", "66.", "67.", "68.", "69.", "70.", "71.",
+ "72.", "73.", "74.", "75.", "76.", "77.", "78.", "79.",
+ "80.", "81.", "82.", "83.", "84.", "85.", "86.", "87.",
+ "88.", "89.", "90.", "91.", "92.", "93.", "94.", "95.",
+ "96.", "97.", "98.", "99.","100.","101.","102.","103.",
+"104.","105.","106.","107.","108.","109.","110.","111.",
+"112.","113.","114.","115.","116.","117.","118.","119.",
+"120.","121.","122.","123.","124.","125.","126.","127.",
+"128.","129.","130.","131.","132.","133.","134.","135.",
+"136.","137.","138.","139.","140.","141.","142.","143.",
+"144.","145.","146.","147.","148.","149.","150.","151.",
+"152.","153.","154.","155.","156.","157.","158.","159.",
+"160.","161.","162.","163.","164.","165.","166.","167.",
+"168.","169.","170.","171.","172.","173.","174.","175.",
+"176.","177.","178.","179.","180.","181.","182.","183.",
+"184.","185.","186.","187.","188.","189.","190.","191.",
+"192.","193.","194.","195.","196.","197.","198.","199.",
+"200.","201.","202.","203.","204.","205.","206.","207.",
+"208.","209.","210.","211.","212.","213.","214.","215.",
+"216.","217.","218.","219.","220.","221.","222.","223.",
+"224.","225.","226.","227.","228.","229.","230.","231.",
+"232.","233.","234.","235.","236.","237.","238.","239.",
+"240.","241.","242.","243.","244.","245.","246.","247.",
+"248.","249.","250.","251.","252.","253.","254.","255."
+};
+#endif // __APPLE__
+
 #if !(defined(WIN32) || defined(__CYGWIN__))
 const char *DnsUtil::inet_ntop(int af, const void* src, char* dst,
                                size_t size)
 {
-   return ::inet_ntop(af, src, dst, size);
-//   ::inet_ntop(af, (u_int32_t*)src, dst, size); //is the cast necessary?
+
+#ifdef __APPLE__
+   if(af==AF_INET)
+   {
+      // .bwc. inet_ntop4 seems to be implemented with sprintf on OS X.
+      // This code is about 5-6 times faster. Linux has a well-optimized 
+      // inet_ntop, however.
+      const UInt8* bytes=(const UInt8*)src;
+      Data dest(Data::Borrow, dst, sizeof("xxx.xxx.xxx.xxx."));
+      dest.clear();
+      dest.append(UInt8ToStr[bytes[0]].data(), UInt8ToStr[bytes[0]].size());
+      dest.append(UInt8ToStr[bytes[1]].data(), UInt8ToStr[bytes[1]].size());
+      dest.append(UInt8ToStr[bytes[2]].data(), UInt8ToStr[bytes[2]].size());
+      dest.append(UInt8ToStr[bytes[3]].data(), UInt8ToStr[bytes[3]].size()-1);
+      return dst;
+   }
+   else
+#endif // __APPLE__
+   {
+      return ::inet_ntop(af, src, dst, size);
+   }
 }
 
 int DnsUtil::inet_pton(int af, const char* src, void* dst)
