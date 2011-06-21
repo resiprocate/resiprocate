@@ -133,22 +133,28 @@ DnsUtil::getLocalHostName()
       throw Exception("could not find local hostname",__FILE__,__LINE__);
    }
 
-   struct hostent* he;
-   if ((he = gethostbyname(buffer)) != 0) 
+   struct addrinfo* result=0;
+   struct addrinfo hints;
+   memset(&hints, 0, sizeof(hints));
+   hints.ai_flags |= AI_CANONNAME;
+   hints.ai_family |= AF_UNSPEC;
+   int res = getaddrinfo(buffer, 0, &hints, &result);
+   if (!res) 
    {
       // !jf! this should really use the Data class 
-      if (strchr(he->h_name, '.') != 0) 
+      if (strchr(result->ai_canonname, '.') != 0) 
       {
-         strncpy(buffer, he->h_name, sizeof(buffer));
+         strncpy(buffer, result->ai_canonname, sizeof(buffer));
       }
       else 
       {
          InfoLog( << "local hostname does not contain a domain part " << buffer);
       }
+      freeaddrinfo(result);
    }
    else
    {
-      InfoLog (<< "Couldn't determine local hostname. Returning empty string");
+      InfoLog (<< "Couldn't determine local hostname. Error was: " << gai_strerror(res) << ". Returning empty string");
    }
    
    return Data(buffer);
