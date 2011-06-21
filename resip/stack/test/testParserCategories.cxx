@@ -2234,6 +2234,771 @@ main(int arc, char** argv)
       test.value().pop_back();
    }
 
+   // Performance tests
+
+   {
+      resip::Data test("Raw header-field-value creation/deletion");
+      cout << endl << test << endl;
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         HeaderFieldValue hfv(test.data(), test.size());
+//         (hfv, Headers::UNKNOWN);
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   // Auth
+   {
+      resip::Data test("Auth creation/deletion");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         Auth auth(&hfv, Headers::UNKNOWN);
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("Digest nonce=\"1305231689:fed475e952ee1d3ecaf60b17bce12218\",algorithm=MD5,realm=\"localhost\",qop=\"auth,auth-int\"");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         Auth auth(&hfv, Headers::UNKNOWN);
+         auth.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      Auth pc(&hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("Digest username=\"derek\",realm=\"localhost\",nonce=\"1305231689:fed475e952ee1d3ecaf60b17bce12218\",uri=\"sip:jason@localhost\",response=\"88f519f04c2a09c500af88ff7bccdf52\",cnonce=\"foo\",nc=0000005D,qop=auth-int,algorithm=MD5");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         Auth auth(&hfv, Headers::UNKNOWN);
+         auth.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      Auth pc(&hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   // CSeq
+   {
+      resip::Data test("CSeq creation/deletion");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         CSeqCategory cseq(&hfv, Headers::UNKNOWN);
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("9872643 INVITE");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         CSeqCategory cseq(&hfv, Headers::UNKNOWN);
+         cseq.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      CSeqCategory pc(&hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("1 INVITE");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         CSeqCategory cseq(&hfv, Headers::UNKNOWN);
+         cseq.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      CSeqCategory pc(&hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+
+   // CallId
+   {
+      resip::Data test("CallId creation/deletion");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         CallId callid(&hfv, Headers::UNKNOWN);
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("NOIUYCEOGoIUBaocuwyVCopiuVAbcs");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         CallId callid(&hfv, Headers::UNKNOWN);
+         callid.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      CallId pc(&hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+
+   // Date
+   {
+      resip::Data test("Date creation/deletion");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         DateCategory date(&hfv, Headers::UNKNOWN);
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("Thu, 21 Feb 2002 13:02:03 GMT");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         DateCategory date(&hfv, Headers::UNKNOWN);
+         date.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      DateCategory pc(&hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+
+   // Expires
+   {
+      resip::Data test("Expires creation/deletion");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         ExpiresCategory pc(&hfv, Headers::UNKNOWN);
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("3600");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         ExpiresCategory pc(&hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      ExpiresCategory pc(&hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+
+   // Mime
+   {
+      resip::Data test("Mime creation/deletion");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         Mime pc(&hfv, Headers::UNKNOWN);
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+   
+   {
+      resip::Data test("application/rlmi+xml");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         Mime pc(&hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      Mime pc(&hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+   
+   {
+      resip::Data test("application/sdp");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         Mime pc(&hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      Mime pc(&hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+   
+   
+   // NameAddr
+   {
+      resip::Data test("NameAddr creation/deletion");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         NameAddr pc(&hfv, Headers::UNKNOWN);
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("<sip:rls.example.com>");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         NameAddr pc(&hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      NameAddr pc(&hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("<sip:rls.example.com;lr>");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         NameAddr pc(&hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      NameAddr pc(&hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("<sipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsip:rls.example.com;lr>");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         NameAddr pc(&hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      NameAddr pc(&hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data strangeUser("работающий");
+      strangeUser=strangeUser.charEncoded();
+      resip::Data test("<sip:" + strangeUser+ "@example.com;lr>");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         NameAddr pc(&hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      NameAddr pc(&hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test(" \"Derek\" <sip:derek@localhost>;tag=16d1246e");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         NameAddr pc(&hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      NameAddr pc(&hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("<sip:line1@192.0.2.2;transport=tcp>; reg-id=1;+sip.instance=\"<urn:uuid:00000000-0000-1000-8000-000A95A0E128>\"");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         NameAddr pc(&hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      NameAddr pc(&hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("<sip:line1@192.0.2.2:5060;transport=tcp>; reg-id=1;+sip.instance=\"<urn:uuid:00000000-0000-1000-8000-000A95A0E128>\"");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         NameAddr pc(&hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      NameAddr pc(&hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+
+   // RequestLine
+   {
+      resip::Data test("RequestLine creation/deletion");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         RequestLine pc(&hfv, Headers::UNKNOWN);
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("INVITE sip:bob@example.com SIP/2.0");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         RequestLine pc(&hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      RequestLine pc(&hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("UNKNOWN sip:bob@example.com SIP/2.0");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         RequestLine pc(&hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      RequestLine pc(&hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+
+   // StatusLine
+   {
+      resip::Data test("StatusLine creation/deletion");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         StatusLine pc(&hfv, Headers::UNKNOWN);
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("SIP/2.0 200 OK");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         StatusLine pc(&hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      StatusLine pc(&hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("SIP/2.0 200 OKokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokok");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         StatusLine pc(&hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      StatusLine pc(&hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("NOTSIP/2.0 200 OK");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         StatusLine pc(&hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      StatusLine pc(&hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+
+   // Via
+   {
+      resip::Data test("Via creation/deletion");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         Via pc(&hfv, Headers::UNKNOWN);
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("SIP/2.0/TCP 127.0.0.1:5060;branch=z9hG4bK-d8754z-1---307cd5596615cb2e;rport");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         Via pc(&hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      Via pc(&hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+
+   {
+      resip::Data test("");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         Token pc(&hfv, Headers::UNKNOWN);
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         Token pc(&hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      Token pc(&hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
    cerr << "\nTEST OK" << endl;
 
    return 0;
