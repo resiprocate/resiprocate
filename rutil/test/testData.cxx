@@ -852,30 +852,30 @@ class TestData
          {
             const char *txt = "here is some text";
             Data notOwner(Data::Share, txt, strlen(txt));
-            assert(notOwner.mMine == Data::Share);
+            assert(notOwner.mShareEnum == Data::Share);
             
             notOwner += " more text";
-            assert(notOwner.mMine == Data::Take);
+            assert(notOwner.mShareEnum == Data::Take);
             assert(notOwner == "here is some text more text");
          }
 
          {
             const char *txt = "here is some text";
             Data notOwner(Data::Share, txt, strlen(txt));
-            assert(notOwner.mMine == Data::Share);
+            assert(notOwner.mShareEnum == Data::Share);
             
             notOwner += '!';
-            assert(notOwner.mMine == Data::Take);
+            assert(notOwner.mShareEnum == Data::Take);
             assert(notOwner == "here is some text!");
          }
 
          {
             const char *txt = "here is some text";
             Data notOwner(Data::Share, txt, strlen(txt));
-            assert(notOwner.mMine == Data::Share);
+            assert(notOwner.mShareEnum == Data::Share);
             
             notOwner += Data(" more text");
-            assert(notOwner.mMine == Data::Take);
+            assert(notOwner.mShareEnum == Data::Take);
             assert(notOwner == "here is some text more text");
          }
 
@@ -1295,6 +1295,126 @@ class TestData
             assert(  Data("1234567" ).base64encode() == d7 );
          }
          
+         {
+            const char* buf1="5d7a9b7c02034b5b";
+            const char* buf2=" 5d7a9b7c02034b5b";
+            const char* buf3="  5d7a9b7c02034b5b";
+            const char* buf4="   5d7a9b7c02034b5b";
+            const char* ubuf1="5D7A9B7C02034B5B";
+            const char* ubuf2=" 5D7A9B7C02034B5B";
+            const char* ubuf3="  5D7A9B7C02034B5B";
+            const char* ubuf4="   5D7A9B7C02034B5B";
+
+            Data d1(Data::Share, buf1, 16);
+            Data d2(Data::Share, buf2+1, 16);
+            Data d3(Data::Share, buf3+2, 16);
+            Data d4(Data::Share, buf4+3, 16);
+
+            Data u1(Data::Share, ubuf1, 16);
+            Data u2(Data::Share, ubuf2+1, 16);
+            Data u3(Data::Share, ubuf3+2, 16);
+            Data u4(Data::Share, ubuf4+3, 16);
+
+            // All of these point to the same data, but aligned differently.
+            assert(d1.hash()==d2.hash());
+            assert(d1.hash()==d3.hash());
+            assert(d1.hash()==d4.hash());
+
+            assert(d1.hash()!=u1.hash());
+            assert(d1.hash()!=u2.hash());
+            assert(d1.hash()!=u3.hash());
+            assert(d1.hash()!=u4.hash());
+
+            assert(d1.caseInsensitivehash()==d2.caseInsensitivehash());
+            assert(d1.caseInsensitivehash()==d3.caseInsensitivehash());
+            assert(d1.caseInsensitivehash()==d4.caseInsensitivehash());
+
+            assert(d1.caseInsensitivehash()==u1.caseInsensitivehash());
+            assert(d1.caseInsensitivehash()==u2.caseInsensitivehash());
+            assert(d1.caseInsensitivehash()==u3.caseInsensitivehash());
+            assert(d1.caseInsensitivehash()==u4.caseInsensitivehash());
+
+            assert(d1.caseInsensitiveTokenHash()==d2.caseInsensitiveTokenHash());
+            assert(d1.caseInsensitiveTokenHash()==d3.caseInsensitiveTokenHash());
+            assert(d1.caseInsensitiveTokenHash()==d4.caseInsensitiveTokenHash());
+
+            assert(d1.caseInsensitiveTokenHash()==u1.caseInsensitiveTokenHash());
+            assert(d1.caseInsensitiveTokenHash()==u2.caseInsensitiveTokenHash());
+            assert(d1.caseInsensitiveTokenHash()==u3.caseInsensitiveTokenHash());
+            assert(d1.caseInsensitiveTokenHash()==u4.caseInsensitiveTokenHash());
+
+            assert(d1.caseInsensitiveTokenCompare(d1));
+            assert(d1.caseInsensitiveTokenCompare(d2));
+            assert(d1.caseInsensitiveTokenCompare(d3));
+            assert(d1.caseInsensitiveTokenCompare(d4));
+            assert(d1.caseInsensitiveTokenCompare(u1));
+            assert(d1.caseInsensitiveTokenCompare(u2));
+            assert(d1.caseInsensitiveTokenCompare(u3));
+            assert(d1.caseInsensitiveTokenCompare(u4));
+
+            assert(d2.caseInsensitiveTokenCompare(d1));
+            assert(d2.caseInsensitiveTokenCompare(d2));
+            assert(d2.caseInsensitiveTokenCompare(d3));
+            assert(d2.caseInsensitiveTokenCompare(d4));
+            assert(d2.caseInsensitiveTokenCompare(u1));
+            assert(d2.caseInsensitiveTokenCompare(u2));
+            assert(d2.caseInsensitiveTokenCompare(u3));
+            assert(d2.caseInsensitiveTokenCompare(u4));
+
+            assert(d3.caseInsensitiveTokenCompare(d1));
+            assert(d3.caseInsensitiveTokenCompare(d2));
+            assert(d3.caseInsensitiveTokenCompare(d3));
+            assert(d3.caseInsensitiveTokenCompare(d4));
+            assert(d3.caseInsensitiveTokenCompare(u1));
+            assert(d3.caseInsensitiveTokenCompare(u2));
+            assert(d3.caseInsensitiveTokenCompare(u3));
+            assert(d3.caseInsensitiveTokenCompare(u4));
+
+            assert(d4.caseInsensitiveTokenCompare(d1));
+            assert(d4.caseInsensitiveTokenCompare(d2));
+            assert(d4.caseInsensitiveTokenCompare(d3));
+            assert(d4.caseInsensitiveTokenCompare(d4));
+            assert(d4.caseInsensitiveTokenCompare(u1));
+            assert(d4.caseInsensitiveTokenCompare(u2));
+            assert(d4.caseInsensitiveTokenCompare(u3));
+            assert(d4.caseInsensitiveTokenCompare(u4));
+
+            assert(u1.caseInsensitiveTokenCompare(d1));
+            assert(u1.caseInsensitiveTokenCompare(d2));
+            assert(u1.caseInsensitiveTokenCompare(d3));
+            assert(u1.caseInsensitiveTokenCompare(d4));
+            assert(u1.caseInsensitiveTokenCompare(u1));
+            assert(u1.caseInsensitiveTokenCompare(u2));
+            assert(u1.caseInsensitiveTokenCompare(u3));
+            assert(u1.caseInsensitiveTokenCompare(u4));
+
+            assert(u2.caseInsensitiveTokenCompare(d1));
+            assert(u2.caseInsensitiveTokenCompare(d2));
+            assert(u2.caseInsensitiveTokenCompare(d3));
+            assert(u2.caseInsensitiveTokenCompare(d4));
+            assert(u2.caseInsensitiveTokenCompare(u1));
+            assert(u2.caseInsensitiveTokenCompare(u2));
+            assert(u2.caseInsensitiveTokenCompare(u3));
+            assert(u2.caseInsensitiveTokenCompare(u4));
+
+            assert(u3.caseInsensitiveTokenCompare(d1));
+            assert(u3.caseInsensitiveTokenCompare(d2));
+            assert(u3.caseInsensitiveTokenCompare(d3));
+            assert(u3.caseInsensitiveTokenCompare(d4));
+            assert(u3.caseInsensitiveTokenCompare(u1));
+            assert(u3.caseInsensitiveTokenCompare(u2));
+            assert(u3.caseInsensitiveTokenCompare(u3));
+            assert(u3.caseInsensitiveTokenCompare(u4));
+
+            assert(u4.caseInsensitiveTokenCompare(d1));
+            assert(u4.caseInsensitiveTokenCompare(d2));
+            assert(u4.caseInsensitiveTokenCompare(d3));
+            assert(u4.caseInsensitiveTokenCompare(d4));
+            assert(u4.caseInsensitiveTokenCompare(u1));
+            assert(u4.caseInsensitiveTokenCompare(u2));
+            assert(u4.caseInsensitiveTokenCompare(u3));
+            assert(u4.caseInsensitiveTokenCompare(u4));
+         }
          std::cerr << "All OK" << endl;
          return 0;
       }

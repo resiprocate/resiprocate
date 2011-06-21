@@ -621,14 +621,14 @@ ParseBuffer::data(Data& data, const char* start) const
       fail(__FILE__, __LINE__,"Bad anchor position");
    }
 
-   if (data.mMine == Data::Take)
+   if (data.mShareEnum == Data::Take)
    {
       delete[] data.mBuf;
    }
    data.mSize = (unsigned int)(mPosition - start);
    data.mBuf = const_cast<char*>(start);
    data.mCapacity = data.mSize;
-   data.mMine = Data::Share;
+   data.mShareEnum = Data::Share;
 }
 
 static const unsigned char isHex[256] = 
