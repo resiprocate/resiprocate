@@ -47,31 +47,7 @@ ParseBuffer::operator=(const ParseBuffer& rhs)
    return *this;
 }
 
-const Data& 
-ParseBuffer::getContext() const
-{
-   return mErrorContext;
-}
-
-void
-ParseBuffer::reset(const char* pos)
-{
-   assert( mBuff <= mEnd);
-   assert( (pos >= mBuff) && (pos <= mEnd) );
-   mPosition = pos;
-}
-
-ParseBuffer::Pointer 
-ParseBuffer::skipChar()
-{
-   if (eof())
-   {
-      fail(__FILE__, __LINE__,"skipped over eof");
-   }
-   return Pointer(*this, ++mPosition, eof());
-}
-
-ParseBuffer::Pointer
+ParseBuffer::CurrentPosition
 ParseBuffer::skipChar(char c)
 {
    if (eof())
@@ -85,10 +61,11 @@ ParseBuffer::skipChar(char c)
       msg += "'";
       fail(__FILE__, __LINE__,msg);
    }
-   return Pointer(*this, ++mPosition, eof());
+   ++mPosition;
+   return CurrentPosition(*this);
 }
 
-ParseBuffer::Pointer 
+ParseBuffer::CurrentPosition
 ParseBuffer::skipChars(const char* cs)
 {
    const char* match = cs;
@@ -104,10 +81,10 @@ ParseBuffer::skipChars(const char* cs)
       match++;
       mPosition++;
    }
-   return Pointer(*this, mPosition, eof());
+   return CurrentPosition(*this);
 }
 
-ParseBuffer::Pointer 
+ParseBuffer::CurrentPosition
 ParseBuffer::skipChars(const Data& cs)
 {
    const char* match = cs.data();
@@ -123,10 +100,10 @@ ParseBuffer::skipChars(const Data& cs)
       match++;
       mPosition++;
    }
-   return Pointer(*this, mPosition, eof());
+   return CurrentPosition(*this);
 }
 
-ParseBuffer::Pointer 
+ParseBuffer::CurrentPosition
 ParseBuffer::skipNonWhitespace()
 {
    assertNotEof();
@@ -138,15 +115,15 @@ ParseBuffer::skipNonWhitespace()
          case '\t' : 
          case '\r' : 
          case '\n' : 
-            return Pointer(*this, mPosition, false);
+            return CurrentPosition(*this);
          default : 
             mPosition++;
       }
    }
-   return Pointer(*this, mPosition, eof());
+   return CurrentPosition(*this);
 }
 
-ParseBuffer::Pointer 
+ParseBuffer::CurrentPosition
 ParseBuffer::skipWhitespace()
 {
    while (mPosition < mEnd)
@@ -162,17 +139,17 @@ ParseBuffer::skipWhitespace()
             break;
          }
          default : 
-            return Pointer(*this, mPosition, false);
+            return CurrentPosition(*this);
       }
    }
-   return Pointer(*this, mPosition, true);
+   return CurrentPosition(*this);
 }
 
 // "SIP header field values can be folded onto multiple lines if the
 //  continuation line begins with a space or horizontal tab"
 
 // CR can be quote with \ within "" and comments -- treat \CR as whitespace
-ParseBuffer::Pointer 
+ParseBuffer::CurrentPosition
 ParseBuffer::skipLWS()
 {
    enum State {WS, CR, LF};
@@ -225,15 +202,15 @@ ParseBuffer::skipLWS()
             {
                mPosition--;
             }
-            return Pointer(*this, mPosition, false);
+            return CurrentPosition(*this);
          }
       }
    }
-   return Pointer(*this, mPosition, true);
+   return CurrentPosition(*this);
 }
 
 static Data CRLF("\r\n");
-ParseBuffer::Pointer
+ParseBuffer::CurrentPosition
 ParseBuffer::skipToTermCRLF()
 {
    while (mPosition < mEnd)
@@ -248,30 +225,13 @@ ParseBuffer::skipToTermCRLF()
             (mPosition-4 > mBuff && *(mPosition-4) == '\\'))))
       {
          mPosition -= 2;
-         return Pointer(*this, mPosition, false);
+         return CurrentPosition(*this);
       }
    }
-   return Pointer(*this, mPosition, true);
+   return CurrentPosition(*this);
 }
 
-ParseBuffer::Pointer 
-ParseBuffer::skipToChar(char c)
-{
-   while (mPosition < mEnd)
-   {
-      if (*mPosition == c)
-      {
-         return Pointer(*this, mPosition, false);
-      }
-      else
-      {
-         mPosition++;
-      }
-   }
-   return Pointer(*this, mEnd, true);
-}
-
-ParseBuffer::Pointer
+ParseBuffer::CurrentPosition
 ParseBuffer::skipToChars(const char* cs)
 {
    assert(cs);
@@ -291,13 +251,13 @@ ParseBuffer::skipToChars(const char* cs)
             goto skip;
          }
       }
-      return Pointer(*this, mPosition, false);
+      return CurrentPosition(*this);
      skip: ;
    }
-   return Pointer(*this, mPosition, true);
+   return CurrentPosition(*this);
 }
 
-ParseBuffer::Pointer
+ParseBuffer::CurrentPosition
 ParseBuffer::skipToChars(const Data& sub)
 {
    const char* begSub = sub.mBuf;
@@ -316,21 +276,21 @@ next:
 
      while (subPos != endSub) 
      {
-	if (searchPos == mEnd)
-	{
-	   // nope
-	   mPosition = mEnd;
-	   return Pointer(*this, mPosition, true);
-	}
-	if (*subPos++ != *searchPos++)
-	{
-	   // nope, but try the next position
-	   ++mPosition;
-	   goto next;
-	}
+         if (searchPos == mEnd)
+         {
+            // nope
+            mPosition = mEnd;
+            return CurrentPosition(*this);
+         }
+         if (*subPos++ != *searchPos++)
+         {
+            // nope, but try the next position
+            ++mPosition;
+            goto next;
+         }
      }
      // found a match
-     return Pointer(*this, searchPos, false);
+     return CurrentPosition(*this);
    }
 }
 
@@ -360,24 +320,24 @@ ParseBuffer::oneOf(char c, const Data& cs)
    return false;
 }
 
-ParseBuffer::Pointer 
+ParseBuffer::CurrentPosition
 ParseBuffer::skipToOneOf(const char* cs)
 {
    while (mPosition < mEnd)
    {
       if (oneOf(*mPosition, cs))
       {
-         return Pointer(*this, mPosition, false);
+         return CurrentPosition(*this);
       }
       else
       {
          mPosition++;
       }
    }
-   return Pointer(*this, mPosition, true);
+   return CurrentPosition(*this);
 }
 
-ParseBuffer::Pointer 
+ParseBuffer::CurrentPosition
 ParseBuffer::skipToOneOf(const char* cs1,
                          const char* cs2)
 {
@@ -386,34 +346,34 @@ ParseBuffer::skipToOneOf(const char* cs1,
       if (oneOf(*mPosition, cs1) ||
           oneOf(*mPosition, cs2))
       {
-         return Pointer(*this, mPosition, false);
+         return CurrentPosition(*this);
       }
       else
       {
          mPosition++;
       }
    }
-   return Pointer(*this, mPosition, true);
+   return CurrentPosition(*this);
 }
 
-ParseBuffer::Pointer 
+ParseBuffer::CurrentPosition
 ParseBuffer::skipToOneOf(const Data& cs)
 {
    while (mPosition < mEnd)
    {
       if (oneOf(*mPosition, cs))
       {
-         return Pointer(*this, mPosition, false);
+         return CurrentPosition(*this);
       }
       else
       {
          mPosition++;
       }
    }
-   return Pointer(*this, mPosition, true);
+   return CurrentPosition(*this);
 }
 
-ParseBuffer::Pointer 
+ParseBuffer::CurrentPosition
 ParseBuffer::skipToOneOf(const Data& cs1,
                          const Data& cs2)
 {
@@ -422,48 +382,14 @@ ParseBuffer::skipToOneOf(const Data& cs1,
       if (oneOf(*mPosition, cs1) ||
           oneOf(*mPosition, cs2))
       {
-         return Pointer(*this, mPosition, false);
+         return CurrentPosition(*this);
       }
       else
       {
          mPosition++;
       }
    }
-   return Pointer(*this, mPosition, true);
-}
-
-ParseBuffer&
-ParseBuffer::skipChars(const std::bitset<256>& cs)
-{
-   while (mPosition < mEnd)
-   {
-      if (cs.test((unsigned char)(*mPosition)))
-      {
-         mPosition++;
-      }
-      else
-      {
-         return *this;
-      }
-   }
-   return *this;
-}
-
-ParseBuffer&
-ParseBuffer::skipToOneOf(const std::bitset<256>& cs)
-{
-   while (mPosition < mEnd)
-   {
-      if (cs.test((unsigned char)(*mPosition)))
-      {
-         return *this;
-      }
-      else
-      {
-         mPosition++;
-      }
-   }
-   return *this;
+   return CurrentPosition(*this);
 }
 
 const char*
@@ -493,25 +419,6 @@ ParseBuffer::skipToEndQuote(char quote)
       fail(__FILE__,__LINE__,msg);
    }
    return 0;
-}
-
-ParseBuffer::Pointer 
-ParseBuffer::skipN(int count)
-{
-   mPosition += count;
-   if (mPosition > mEnd)
-   {
-
-      fail(__FILE__, __LINE__, "skipped eof");
-   }
-   return Pointer(*this, mPosition, eof());
-}
-
-ParseBuffer::Pointer 
-ParseBuffer::skipToEnd()
-{
-   mPosition = mEnd;
-   return Pointer(*this, mPosition, true);
 }
 
 const char*
@@ -544,17 +451,6 @@ ParseBuffer::skipBackWhitespace()
       }
    }
    return mBuff;
-}
-
-const char*
-ParseBuffer::skipBackN(int count)
-{
-   mPosition -= count;
-   if (bof())
-   { 
-     fail(__FILE__, __LINE__,"backed over beginning of buffer");
-   }
-   return mPosition;
 }
 
 // abcde
@@ -631,38 +527,25 @@ ParseBuffer::data(Data& data, const char* start) const
    data.mShareEnum = Data::Share;
 }
 
-static const unsigned char isHex[256] = 
+static const unsigned char hexToByte[256] = 
 {
 // 0   1   2   3   4   5   6   7   8   9   a   b   c   d   e   f
-   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  //0
-   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  //1
-   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  //2
-   1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,  0,  0,  //3
-   0,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  //4
-   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  //5
-   0,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  //6
-   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  //8
-   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  //9
-   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  //a
-   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  //b
-   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  //c
-   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  //d
-   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  //e
-   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0   //f
-
-};
-
-static const unsigned char hexToByte[128] = 
-{
- // 0   1   2   3   4   5   6   7   8   9   a   b   c   d   e   f
-   'k','k','k','k','k','k','k','k','k','k','k','k','k','k','k','k', //0
-   'k','k','k','k','k','k','k','k','k','k','k','k','k','k','k','k', //1
-   'k','k','k','k','k','k','k','k','k','k','k','k','k','k','k','k', //2
+   'k','k','k','k','k','k','k','k','k','k','k','k','k','k','k','k',//0
+   'k','k','k','k','k','k','k','k','k','k','k','k','k','k','k','k',//1
+   'k','k','k','k','k','k','k','k','k','k','k','k','k','k','k','k',//2
    0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  'k','k','k','k','k','k', //3
    'k',0xA,0xB,0xC,0xD,0xE,0xF,'k','k','k','k','k','k','k','k','k', //4
-   'k','k','k','k','k','k','k','k','k','k','k','k','k','k','k','k', //5
+   'k','k','k','k','k','k','k','k','k','k','k','k','k','k','k','k',//5
    'k',0xA,0xB,0xC,0xD,0xE,0xF,'k','k','k','k','k','k','k','k','k', //6
-   'k','k','k','k','k','k','k','k','k','k','k','k','k','k','k','k'  //7
+   'k','k','k','k','k','k','k','k','k','k','k','k','k','k','k','k',//8
+   'k','k','k','k','k','k','k','k','k','k','k','k','k','k','k','k',//9
+   'k','k','k','k','k','k','k','k','k','k','k','k','k','k','k','k',//a
+   'k','k','k','k','k','k','k','k','k','k','k','k','k','k','k','k',//b
+   'k','k','k','k','k','k','k','k','k','k','k','k','k','k','k','k',//c
+   'k','k','k','k','k','k','k','k','k','k','k','k','k','k','k','k',//d
+   'k','k','k','k','k','k','k','k','k','k','k','k','k','k','k','k',//e
+   'k','k','k','k','k','k','k','k','k','k','k','k','k','k','k','k'   //f
+
 };
 
 void
@@ -706,14 +589,18 @@ ParseBuffer::dataUnescaped(Data& dataToUse, const char* start) const
          {
             fail(__FILE__, __LINE__,"Illegal escaping");
          }
-         const char high = *current;
-         const char low = *(current + 1);         
-         if (isHex[(size_t)high] && isHex[(size_t)low])
+         const char high = hexToByte[(unsigned char)*current];
+         const char low = hexToByte[(unsigned char)*(current + 1)];
+         if (high!='k' && low!='k')
          {
             unsigned char escaped = 0;            
-            assert(hexToByte[(size_t)high] != 'k');
-            assert(hexToByte[(size_t)low] != 'k');
-            escaped = hexToByte[(size_t)high] << 4 | hexToByte[(size_t)low];
+            escaped = high << 4 | low;
+            // !bwc! I think this check is bogus, especially the ':' (58) check
+            // You could maybe argue that the point of %-escaping is to allow
+            // the use of UTF-8 data (including ASCII that is not allowed in an 
+            // on-the-wire representation of whatever it is we're unescaping),
+            // and not unprintable characters (the unprintable codes are not 
+            // used by UTF-8). 
             if (escaped > 31 && escaped != 127 && escaped != 58)
             {
                *target++ = escaped;
@@ -722,9 +609,8 @@ ParseBuffer::dataUnescaped(Data& dataToUse, const char* start) const
             else
             {
                *target++ = '%';
-               *target++ = high;
-               *target++ = low;               
-               current += 2;
+               *target++ = *current++;
+               *target++ = *current++;
             }
          }
          else
@@ -762,22 +648,20 @@ ParseBuffer::integer()
       fail(__FILE__, __LINE__,"Expected a digit, got eof ");
    }
 
-   char c = *position();
-
    int signum = 1;
-   if (c == '-')
+   if (*mPosition == '-')
    {
       signum = -1;
-      skipChar();
-      c = *position();
+      ++mPosition;
+      assertNotEof();
    }
-   else if (c == '+')
+   else if (*mPosition == '+')
    {
-      skipChar();
-      c = *position();
+      ++mPosition;
+      assertNotEof();
    }
 
-   if (!isdigit(c))
+   if (!isdigit(*mPosition))
    {
        Data msg("Expected a digit, got: ");
        msg += Data(mPosition, (mEnd - mPosition));
@@ -794,7 +678,7 @@ ParseBuffer::integer()
       {
          fail(__FILE__, __LINE__,"Overflow detected.");
       }
-      skipChar();
+      ++mPosition;
    }
    
    return signum*num;
@@ -803,23 +687,7 @@ ParseBuffer::integer()
 UInt8
 ParseBuffer::uInt8()
 {
-   if (this->eof())
-   {
-
-      fail(__FILE__, __LINE__,"Expected a digit, got eof ");
-   }
-
-   const char* p = mPosition;
-   assert(p);
-   char c = *p;
-
-   if (!isdigit(c))
-   {
-      Data msg("Expected a digit, got: ");
-      msg += Data(mPosition, (mEnd - mPosition));
-      fail(__FILE__, __LINE__,msg);
-   }
-   
+   const char* begin=mPosition;
    UInt8 num = 0;
    UInt8 last = 0;
    while (!eof() && isdigit(*mPosition))
@@ -830,9 +698,13 @@ ParseBuffer::uInt8()
       {
          fail(__FILE__, __LINE__,"Overflow detected.");
       }
-      skipChar();
+      ++mPosition;
    }
    
+   if(mPosition==begin)
+   {
+      fail(__FILE__, __LINE__,"Expected a digit");
+   }
    return num;
 }
 
@@ -841,71 +713,88 @@ ParseBuffer::uInt8()
 UInt32
 ParseBuffer::uInt32()
 {
-   if (this->eof())
-   {
-
-      fail(__FILE__, __LINE__,"Expected a digit, got eof ");
-   }
-
-   const char* p = mPosition;
-   assert(p);
-   char c = *p;
-
-   if (!isdigit(c))
-   {
-      Data msg("Expected a digit, got: ");
-      msg += Data(mPosition, (mEnd - mPosition));
-      fail(__FILE__, __LINE__,msg);
-   }
-   
+   const char* begin=mPosition;
    UInt32 num = 0;
-   UInt32 last = 0;
    while (!eof() && isdigit(*mPosition))
    {
-      last = num;
       num = num*10 + (*mPosition-'0');
-      if(last>num)
-      {
-         fail(__FILE__, __LINE__,"Overflow detected.");
-      }
-      skipChar();
+      ++mPosition;
    }
-   
+
+   switch(mPosition-begin)
+   {
+      case 0:
+         fail(__FILE__, __LINE__,"Expected a digit");
+      case 1:
+      case 2:
+      case 3:
+      case 4:
+      case 5:
+      case 6:
+      case 7:
+      case 8:
+      case 9:
+         break;
+      case 10:
+         if(*begin<'4')
+         {
+            break;
+         }
+         else if(*begin=='4' && num >= 4000000000)
+         {
+            break;
+         }
+      default:
+         fail(__FILE__, __LINE__,"Overflow detected");
+   }
+
    return num;
 }
 
 UInt64
 ParseBuffer::uInt64()
 {
-   if (this->eof())
-   {
-
-      fail(__FILE__, __LINE__,"Expected a digit, got eof ");
-   }
-
-   const char* p = mPosition;
-   assert(p);
-   char c = *p;
-
-   if (!isdigit(c))
-   {
-      Data msg("Expected a digit, got: ");
-      msg += Data(mPosition, (mEnd - mPosition));
-      fail(__FILE__, __LINE__,msg);
-   }
-   
+   const char* begin=mPosition;
    UInt64 num = 0;
-   UInt64 last = 0;
    while (!eof() && isdigit(*mPosition))
    {
-      last = num;
       num = num*10 + (*mPosition-'0');
-      if(last>num)
-      {
-         fail(__FILE__, __LINE__,"Overflow detected.");
-      }
-      skipChar();
+      ++mPosition;
    }
+
+   switch(mPosition-begin)
+   {
+      case 0:
+         fail(__FILE__, __LINE__,"Expected a digit");
+      case 1:
+      case 2:
+      case 3:
+      case 4:
+      case 5:
+      case 6:
+      case 7:
+      case 8:
+      case 9:
+      case 10:
+      case 11:
+      case 12:
+      case 13:
+      case 14:
+      case 15:
+      case 16:
+      case 17:
+      case 18:
+      case 19:
+         break;
+      case 20:
+         if(*begin=='1' && num >= 10000000000000000000UL)
+         {
+            break;
+         }
+      default:
+         fail(__FILE__, __LINE__,"Overflow detected");
+   }
+
    return num;
 }
 
@@ -984,25 +873,6 @@ ParseBuffer::qVal()
 }
    
 
-void
-ParseBuffer::assertEof() const
-{
-   if (!eof())
-   {
-
-      fail(__FILE__, __LINE__,"expected eof");
-   }      
-}
-
-void
-ParseBuffer::assertNotEof() const
-{
-   if (eof())
-   {
-      fail(__FILE__, __LINE__,"unexpected eof");
-   }      
-}
-
 Data
 spaces(unsigned int numSpaces)
 {
@@ -1077,17 +947,20 @@ void
 ParseBuffer::fail(const char* file, unsigned int line, const Data& detail) const
 {
     Data errmsg;
-    DataStream ds(errmsg);
-    ds << file << ":" << line
-       << ", Parse failed ";
+    {
+       DataStream ds(errmsg);
+       ds << file << ":" << line
+          << ", Parse failed ";
 
-    if (detail != Data::Empty) ds << detail << ' ' ;
+       if (detail != Data::Empty) ds << detail << ' ' ;
 
-    ds << "in context: " << mErrorContext
-       << std::endl
-       << escapeAndAnnotate(mBuff, mEnd - mBuff, mPosition);
-    ds.flush();
-
+       ds << "in context: " << mErrorContext
+          << std::endl
+          << escapeAndAnnotate(mBuff, mEnd - mBuff, mPosition);
+          
+       ds.flush();
+   }
+   DebugLog(<<errmsg);
    throw ParseException(errmsg, mErrorContext, file, line);
 }
 
@@ -1097,6 +970,12 @@ ParseBuffer::Pointer::Pointer(const ParseBuffer& pb,
    : mPb(pb),
      mPosition(position),
      mIsValid(!atEof)
+{}
+
+ParseBuffer::Pointer::Pointer(const CurrentPosition& pos) :
+   mPb(pos.mPb),
+   mPosition(pos),
+   mIsValid(pos.mPb.valid())
 {}
 
 const char& 
