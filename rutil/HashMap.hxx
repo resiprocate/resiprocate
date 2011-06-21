@@ -3,12 +3,22 @@
 
 // !cj! if all these machine have to use map then we can just delete them and use the default 
 
+/**
+   @file
+   @brief Wraps your platform's implementation of hash_map, hash_multimap, 
+      and hash_set.
+
+   @ingroup data_structures
+*/
+
 #  if ( (__GNUC__ == 4) && (__GNUC_MINOR__ >= 3) ) || ( __GNUC__ > 4 )
 #    include <tr1/unordered_map>
 #    include <tr1/unordered_set>
 #    define HASH_MAP_NAMESPACE std::tr1
 #    define HashMap std::tr1::unordered_map
 #    define HashSet std::tr1::unordered_set
+#    define HashMultiMap std::tr1::unordered_multimap
+#    define RESIP_HAS_HASH_MAP
 
 #define HashValue(type)                           \
 namespace std                                     \
@@ -30,6 +40,24 @@ struct hash<type>                                 \
 #    define HASH_MAP_NAMESPACE __gnu_cxx
 #    define HashMap __gnu_cxx::hash_map
 #    define HashSet __gnu_cxx::hash_set
+#    define HashMultiMap __gnu_cxx::hash_multimap
+#    define RESIP_HAS_HASH_MAP
+// this allows us to hash on a pointer as the key 
+namespace HASH_MAP_NAMESPACE
+{
+/**
+@internal
+*/
+template <class T>
+struct hash<T*>
+{
+      size_t operator()(const T* t) const
+      {
+         return size_t(t);
+      }
+};
+ 
+}
 
 #define HashValue(type)                           \
 namespace HASH_MAP_NAMESPACE                      \
@@ -47,6 +75,8 @@ struct hash<type>                                 \
 #    define HASH_MAP_NAMESPACE std
 #    define HashMap std::hash_map
 #    define HashSet std::hash_set
+#    define HashMultiMap std::hash_multimap
+#    define RESIP_HAS_HASH_MAP
 #    define HashValue(type)              \
      namespace HASH_MAP_NAMESPACE        \
      {                                   \
@@ -59,6 +89,8 @@ struct hash<type>                                 \
 #    define HASH_MAP_NAMESPACE stdext
 #    define HashMap stdext::hash_map
 #    define HashSet stdext::hash_set
+#    define HashMultiMap stdext::hash_multimap
+#    define RESIP_HAS_HASH_MAP
 #    define HashValue(type)              \
      namespace HASH_MAP_NAMESPACE        \
      {                                   \
@@ -69,6 +101,7 @@ struct hash<type>                                 \
 #    include <map>
 #    define HashMap std::map
 #    define HashSet std::set
+#    define HashMultiMap std::multimap
 #    define HashValue(type)    
 #    define HashValueImp(type, ret) 
 #  endif
