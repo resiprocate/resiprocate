@@ -20,9 +20,6 @@
 using namespace resip;
  
 unsigned long
-resip::Timer::mTimerCount = 1L;
-
-unsigned long
 resip::Timer::T1 = 500;
 
 unsigned long
@@ -111,7 +108,6 @@ Timer::toData(Type timer)
 
 Timer::Timer(unsigned long tms, Timer::Type type, const Data& transactionId) :
     mWhen(tms + getTimeMs()),
-    mId(++mTimerCount),
     mType(type),
     mTransactionId(transactionId),
     mDuration(tms),
@@ -121,7 +117,6 @@ Timer::Timer(unsigned long tms, Timer::Type type, const Data& transactionId) :
 
 Timer::Timer(unsigned long tms, Message* message) 
    : mWhen(tms + getTimeMs()),
-     mId(++mTimerCount),
      mType(Timer::ApplicationTimer),
      mTransactionId(),
      mDuration(tms),
@@ -132,7 +127,6 @@ Timer::Timer(unsigned long tms, Message* message)
 
 Timer::Timer(unsigned long tms) :
     mWhen(tms + getTimeMs()),
-    mId(0),
     mType(ApplicationTimer),		// .kw. what is good default?
     mDuration(tms),
     mMessage(0)
@@ -141,7 +135,6 @@ Timer::Timer(unsigned long tms) :
 
 Timer::Timer(const Timer& other) : 
     mWhen(other.mWhen),
-    mId(other.mTimerCount),
     mType(other.mType),
     mTransactionId(other.mTransactionId),
     mDuration(other.mDuration),
@@ -155,7 +148,6 @@ Timer::operator=(const Timer& other)
     if (this != &other)
     {
         mWhen = other.mWhen;
-        mId = other.mTimerCount;
         mType = other.mType;
         mTransactionId = other.mTransactionId;
         mDuration = other.mDuration;
@@ -186,7 +178,7 @@ resip::operator<<(std::ostream& str, const Timer& t)
 {
    UInt64 now = Timer::getTimeMs();
 
-   str << "Timer[id=" << t.mId << " when=" << t.mWhen << " rel=";
+   str << "Timer[when=" << t.mWhen << " rel=";
    if (t.mWhen < now)
    {
       str << "past";
@@ -204,7 +196,7 @@ resip::operator<<(EncodeStream& str, const Timer& t)
 {
    UInt64 now = Timer::getTimeMs();
 
-   str << "Timer[id=" << t.mId << " when=" << t.mWhen << " rel=";
+   str << "Timer[when=" << t.mWhen << " rel=";
    if (t.mWhen < now)
    {
       str << "past";

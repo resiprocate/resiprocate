@@ -77,14 +77,12 @@ BaseTimerQueue::msTillNextTimer()
    }
 }
 
-Timer::Id
+void
 TimerQueue::add(Timer::Type type, const Data& transactionId, unsigned long msOffset)
 {
    Timer t(msOffset, type, transactionId);
    mTimers.insert(t);
    DebugLog (<< "Adding timer: " << Timer::toData(type) << " tid=" << transactionId << " ms=" << msOffset);
-   
-   return t.getId();
 }
 
 #ifdef USE_DTLS
