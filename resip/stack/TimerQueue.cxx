@@ -37,21 +37,18 @@ BaseTimerQueue::~BaseTimerQueue()
 {
    //xkd-2004-11-4
    // delete the message associated with the timer
-   for (std::multiset<Timer>::iterator i = mTimers.begin(); i !=  mTimers.end(); ++i)
+   while (!mTimers.empty())
    {
-      if (i->getMessage())
-      {
-         delete i->getMessage();
-      }
+      mTimers.pop();
    }
 }
 
 unsigned int
-BaseTimerQueue::msTillNextTimer()
+BaseTimerQueue::msTillNextTimer() const
 {
    if (!mTimers.empty())
    {
-      UInt64 next = mTimers.begin()->mWhen;
+      UInt64 next = mTimers.top().mWhen;
       UInt64 now = Timer::getTimeMs();
       if (now > next) 
       {
@@ -81,7 +78,7 @@ void
 TimerQueue::add(Timer::Type type, const Data& transactionId, unsigned long msOffset)
 {
    Timer t(msOffset, type, transactionId);
-   mTimers.insert(t);
+   mTimers.push(t);
    DebugLog (<< "Adding timer: " << Timer::toData(type) << " tid=" << transactionId << " ms=" << msOffset);
 }
 
@@ -91,7 +88,7 @@ void
 DtlsTimerQueue::add( SSL *ssl, unsigned long msOffset )
 {
    Timer t( msOffset, new DtlsMessage( ssl ) ) ;
-   mTimers.insert( t ) ;
+   mTimers.push( t ) ;
 }
 
 #endif
@@ -101,7 +98,7 @@ BaseTimeLimitTimerQueue::add(const Timer& timer)
 {
    assert(timer.getMessage());
    DebugLog(<< "Adding application timer: " << timer.getMessage()->brief());
-   mTimers.insert(timer);
+   mTimers.push(timer);
 }
 
 int
@@ -117,46 +114,15 @@ BaseTimerQueue::empty() const
 }
 
 void
-BaseTimeLimitTimerQueue::process()
+BaseTimeLimitTimerQueue::processTimer(const Timer& t)
 {
-   // get the set of timers that have fired and insert TimerMsg into the state
-   // machine fifo and application messages into the TU fifo
-
-   if (!mTimers.empty())
-   {
-      Timer now(0);
-      if (now < *mTimers.begin())
-         return;
-
-      std::multiset<Timer>::iterator end = mTimers.upper_bound(now);
-      for (std::multiset<Timer>::iterator i = mTimers.begin(); i != end; ++i)
-      {
-         assert(i->getMessage());
-         addToFifo(i->getMessage(), TimeLimitFifo<Message>::InternalElement);
-      }
-      mTimers.erase(mTimers.begin(), end);
-   }
+   addToFifo(t.getMessage(), TimeLimitFifo<Message>::InternalElement);
 }
 
 void
-TimerQueue::process()
+TimerQueue::processTimer(const Timer& t)
 {
-   // get the set of timers that have fired and insert TimerMsg into the state
-   // machine fifo and application messages into the TU fifo
-
-   if (!mTimers.empty())
-   {
-      Timer now(0);
-      if (now < *mTimers.begin())
-         return;
-
-      std::multiset<Timer>::iterator end = mTimers.upper_bound(now);
-      for (std::multiset<Timer>::iterator i = mTimers.begin(); i != end; ++i)
-      {
-         mFifo.add(new TimerMessage(i->mTransactionId, i->mType, i->mDuration));
-      }
-      mTimers.erase(mTimers.begin(), end);
-   }
+   mFifo.add(new TimerMessage(t.mTransactionId, t.mType, t.mDuration));
 }
 
 TimeLimitTimerQueue::TimeLimitTimerQueue(TimeLimitFifo<Message>& fifo) : mFifo(fifo)
@@ -181,24 +147,9 @@ TuSelectorTimerQueue::addToFifo(Message*msg, TimeLimitFifo<Message>::DepthUsage 
 #ifdef USE_DTLS
 
 void
-DtlsTimerQueue::process()
+DtlsTimerQueue::processTimer(const Timer& t)
 {
-   // get the set of timers that have fired and insert TimerMsg into the state
-   // machine fifo and application messages into the TU fifo
-   
-   if (!mTimers.empty())
-   {
-      Timer now(0);
-      if (now < *mTimers.begin())
-         return;
-
-      std::multiset<Timer>::iterator end = mTimers.upper_bound(now);
-      for (std::multiset<Timer>::iterator i = mTimers.begin(); i != end; ++i)
-      {
-          mFifo.add( (DtlsMessage *)i->getMessage() ) ;
-      }
-      mTimers.erase( mTimers.begin(), end );
-   }
+   mFifo.add( (DtlsMessage *)t->getMessage() ) ;
 }
 
 #endif
@@ -207,15 +158,7 @@ DtlsTimerQueue::process()
 std::ostream& 
 resip::operator<<(std::ostream& str, const BaseTimerQueue& tq)
 {
-   str << "TimerQueue[" ;
-
-    for (std::multiset<Timer>::const_iterator i = tq.mTimers.begin(); 
-        i != tq.mTimers.end(); ++i)
-   {
-      str << *i << " " ;
-   }
-
-   str << "]" << endl;
+   str << "TimerQueue[size=" << tq.size() << " top=" << tq.msTillNextTimer() << "]" << endl;
    return str;
 }
 #endif
@@ -223,15 +166,7 @@ resip::operator<<(std::ostream& str, const BaseTimerQueue& tq)
 EncodeStream& 
 resip::operator<<(EncodeStream& str, const BaseTimerQueue& tq)
 {
-   str << "TimerQueue[" ;
-
-    for (std::multiset<Timer>::const_iterator i = tq.mTimers.begin(); 
-        i != tq.mTimers.end(); ++i)
-   {
-      str << *i << " " ;
-   }
-
-   str << "]" << endl;
+   str << "TimerQueue[size=" << tq.size() << " top=" << tq.msTillNextTimer() << "]" << endl;
    return str;
 }
 
