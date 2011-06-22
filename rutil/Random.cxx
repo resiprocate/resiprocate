@@ -352,20 +352,9 @@ Random::getRandom(unsigned int len)
 Data 
 Random::getCryptoRandom(unsigned int len)
 {
-   initialize();
-   assert(len < Random::maxLength+1);
-   
-   union 
-   {
-         char cbuf[Random::maxLength+1];
-         unsigned int  ibuf[(Random::maxLength+1)/sizeof(int)];
-   };
-   
-   for (unsigned int count=0; count<(len+sizeof(int)-1)/sizeof(int); ++count)
-   {
-      ibuf[count] = Random::getCryptoRandom();
-   }
-   return Data(cbuf, len);
+   unsigned char* buf = new unsigned char[len];
+   getCryptoRandom(buf, len); // USE_SSL check is in here
+   return Data(Data::Take, (char*)buf, len);
 }
 
 Data 
@@ -451,6 +440,33 @@ Random::getVersion4UuidUrn()
   urn += "-";
   urn += getCryptoRandomHex(6); // node
   return urn;
+}
+
+void 
+Random::getCryptoRandom(unsigned char* buf, unsigned int numBytes)
+{
+   initialize();
+   assert(numBytes < Random::maxLength+1);
+
+#if USE_OPENSSL
+   int e = RAND_bytes( (unsigned char*)buf , numBytes );
+   if ( e < 0 )
+   {
+      // error of some type - likely not enough rendomness to dod this 
+      long err = ERR_get_error();
+      
+      char buf[1024];
+      ERR_error_string_n(err,buf,sizeof(buf));
+      
+      ErrLog( << buf );
+      assert(0);
+   }
+#else
+   // !bwc! Should optimize this.
+   Data temp(Data::Borrow, (char*)buf, numBytes);
+   temp.clear();
+   temp=Random::getRandom(numBytes);
+#endif
 }
 
 #ifdef WIN32

@@ -44,6 +44,7 @@ namespace resip
 /**
    @brief A static class that wraps the random-number generation code of your
       platform.
+   @ingroup crypto
 */
 class Random
 {
@@ -60,6 +61,8 @@ class Random
       static Data getCryptoRandom(unsigned int numBytes);
       static Data getCryptoRandomHex(unsigned int numBytes); // actual length is 2*numBytes
       static Data getCryptoRandomBase64(unsigned int numBytes); // actual length is 1.5*numBytes
+
+      static void getCryptoRandom(unsigned char* buf, unsigned int numBytes);
 
       /**
         Returns a version 4 (random) UUID as defined in RFC 4122
@@ -89,6 +92,7 @@ class Random
       
 #ifdef WIN32
       // ensure each thread is initialized since windows requires you to call srand for each thread
+      ///@internal
       class Initializer
       {
          public:
