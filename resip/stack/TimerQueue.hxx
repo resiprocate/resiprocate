@@ -1,6 +1,7 @@
 #if !defined(RESIP_TIMERQUEUE_HXX)
 #define RESIP_TIMERQUEUE_HXX 
 
+#include <queue>
 #include <set>
 #include <iosfwd>
 #include "resip/stack/TransactionMessage.hxx"
@@ -36,7 +37,26 @@ class BaseTimerQueue
 	  
       /// gets the set of timers that have fired and inserts TimerMsg into the state
       /// machine fifo and application messages into the TU fifo
-      virtual void process()=0;
+      virtual UInt64 process()
+      {
+         if (!mTimers.empty())
+         {
+            UInt64 now=Timer::getTimeMs();
+            while (!mTimers.empty() && !(mTimers.top().mWhen > now))
+            {
+               processTimer(mTimers.top());
+               mTimers.pop();
+            }
+
+            if(!mTimers.empty())
+            {
+               return mTimers.top().mWhen;
+            }
+         }
+         return 0;
+      }
+
+      virtual void processTimer(const Timer& timer)=0;
 
       int size() const;
       bool empty() const;
@@ -46,21 +66,22 @@ class BaseTimerQueue
 	    *  @retval 0 (implies that timers occur in the past)
 	    * @retval INT_MAX (implies that there are no timers)
 	   **/
-      unsigned int msTillNextTimer();
+      unsigned int msTillNextTimer() const;
       
    protected:
       friend EncodeStream& operator<<(EncodeStream&, const BaseTimerQueue&);
 #ifndef RESIP_USE_STL_STREAMS
 	  friend std::ostream& operator<<(std::ostream& strm, const BaseTimerQueue&);
 #endif
-      std::multiset<Timer> mTimers;
+      typedef std::vector<Timer, std::allocator<Timer> > TimerVector;
+      std::priority_queue<Timer, TimerVector, std::greater<Timer> > mTimers;
 };
 
 class BaseTimeLimitTimerQueue : public BaseTimerQueue
 {
    public:
       void add(const Timer& timer);
-      virtual void process();
+      virtual void processTimer(const Timer& t);
    protected:
       virtual void addToFifo(Message*, TimeLimitFifo<Message>::DepthUsage)=0;      
 };
@@ -93,7 +114,7 @@ class TimerQueue : public BaseTimerQueue
    public:
       TimerQueue(Fifo<TransactionMessage>& fifo);
       void add(Timer::Type type, const Data& transactionId, unsigned long msOffset);
-      virtual void process();
+      virtual void processTimer(const Timer& t);
    private:
       Fifo<TransactionMessage>& mFifo;
 };
@@ -107,7 +128,7 @@ class DtlsTimerQueue : public BaseTimerQueue
    public:
       DtlsTimerQueue( Fifo<DtlsMessage>& fifo ) ;
       void add( SSL *, unsigned long msOffset ) ;
-      virtual void process() ;
+      virtual void processTimer(const Timer& t);
       
    private:
       Fifo<DtlsMessage>& mFifo ;
