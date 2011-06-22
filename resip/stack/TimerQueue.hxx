@@ -92,7 +92,7 @@ class TimerQueue : public BaseTimerQueue
 {
    public:
       TimerQueue(Fifo<TransactionMessage>& fifo);
-      Timer::Id add(Timer::Type type, const Data& transactionId, unsigned long msOffset);
+      void add(Timer::Type type, const Data& transactionId, unsigned long msOffset);
       virtual void process();
    private:
       Fifo<TransactionMessage>& mFifo;

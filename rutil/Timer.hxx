@@ -22,7 +22,6 @@ class Timer
 {
    public:
       RESIP_HeapCount(Timer);
-      typedef unsigned long Id;
       typedef enum 
       {
          TimerA, // doubling
@@ -55,7 +54,6 @@ class Timer
       ~Timer();
 
       // returns the unique identifier
-      Id getId() const { return mId; }
       Type getType() const { return mType; }
       // return the message to queue, possibly null
       Message* getMessage() const { return mMessage;} 
@@ -132,13 +130,10 @@ class Timer
       Timer(unsigned long ms); // for TimerQueue only - don't use
 
       UInt64 mWhen; // time when the timer "goes off" in MS 
-      Id mId;
       Type mType;
       Data mTransactionId;
       unsigned long mDuration; // duration of time in ms 
       Message* mMessage; // message to queue on timeout
-
-      static unsigned long mTimerCount; // counter to genreate unique timers ids 
 
       friend bool operator<(const Timer& t1, const Timer& t2);
       friend bool operator>(const Timer& t1, const Timer& t2);
