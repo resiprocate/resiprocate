@@ -580,7 +580,7 @@ SipStack::postMS(const ApplicationMessage& message, unsigned int ms,
    Message* toPost = message.clone();
    if (tu) toPost->setTransactionUser(tu);
    Lock lock(mAppTimerMutex);
-   mAppTimers.add(Timer(ms, toPost));
+   mAppTimers.add(ms,toPost);
    //.dcm. timer update rather than process cycle...optimize by checking if sooner
    //than current timeTillNextProcess?
    checkAsyncProcessHandler();
@@ -603,7 +603,7 @@ SipStack::postMS( std::auto_ptr<ApplicationMessage> message,
    assert(!mShuttingDown);
    if (tu) message->setTransactionUser(tu);
    Lock lock(mAppTimerMutex);
-   mAppTimers.add(Timer(ms, message.release()));
+   mAppTimers.add(ms, message.release());
    //.dcm. timer update rather than process cycle...optimize by checking if sooner
    //than current timeTillNextProcess?
    checkAsyncProcessHandler();

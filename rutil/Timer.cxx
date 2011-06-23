@@ -18,7 +18,7 @@
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 using namespace resip;
- 
+
 unsigned long
 resip::Timer::T1 = 500;
 
@@ -106,67 +106,21 @@ Timer::toData(Type timer)
 }
 
 
-Timer::Timer(unsigned long tms, Timer::Type type, const Data& transactionId) :
-    mWhen(tms + getTimeMs()),
-    mType(type),
-    mTransactionId(transactionId),
-    mDuration(tms),
-    mMessage(0)
-{
-}
-
-Timer::Timer(unsigned long tms, Message* message) 
-   : mWhen(tms + getTimeMs()),
-     mType(Timer::ApplicationTimer),
-     mTransactionId(),
-     mDuration(tms),
-     mMessage(message)
-{
-   assert(mMessage);
-}
-
-Timer::Timer(unsigned long tms) :
-    mWhen(tms + getTimeMs()),
-    mType(ApplicationTimer),		// .kw. what is good default?
-    mDuration(tms),
-    mMessage(0)
-{
-}
-
-Timer::Timer(const Timer& other) : 
-    mWhen(other.mWhen),
-    mType(other.mType),
-    mTransactionId(other.mTransactionId),
-    mDuration(other.mDuration),
-    mMessage(other.mMessage)
-{
-}
-
-Timer&
-Timer::operator=(const Timer& other)
-{
-    if (this != &other)
-    {
-        mWhen = other.mWhen;
-        mType = other.mType;
-        mTransactionId = other.mTransactionId;
-        mDuration = other.mDuration;
-        mMessage = other.mMessage;
-    }
-    return *this;
-}
-
-Timer::~Timer() 
+TransactionTimer::TransactionTimer(unsigned long ms, 
+                                    Timer::Type type, 
+                                    const Data& transactionId) :
+   mWhen(ms + Timer::getTimeMs()),
+   mType(type),
+   mTransactionId(transactionId),
+   mDuration(ms)
 {}
-
 
 #ifndef RESIP_USE_STL_STREAMS
 std::ostream& 
-Timer::encode(std::ostream& str) const
+TransactionTimer::encode(std::ostream& str) const
 {
-   UInt64 now = Timer::getTimeMs();
-
-   str << "Timer[when=" << mWhen << " rel=";
+   UInt64 now(Timer::getTimeMs());
+   str << "TransactionTimer[ when=" << mWhen << " rel=";
    if (mWhen < now)
    {
       str << "past";
@@ -181,11 +135,53 @@ Timer::encode(std::ostream& str) const
 #endif
 
 EncodeStream& 
-Timer::encode(EncodeStream& str) const
+TransactionTimer::encode(EncodeStream& str) const
 {
-   UInt64 now = Timer::getTimeMs();
+   UInt64 now(Timer::getTimeMs());
+   str << "TransactionTimer[ when=" << mWhen << " rel=";
+   if (mWhen < now)
+   {
+      str << "past";
+   }
+   else
+   {
+      str << (mWhen - now);
+   }
+   str << "]";
+   return str;
+}
 
-   str << "Timer[when=" << mWhen << " rel=";
+TimerWithPayload::TimerWithPayload(unsigned long ms, Message* message) :
+   mWhen(ms + Timer::getTimeMs()),
+   mMessage(message)
+{
+   assert(mMessage);
+}
+
+#ifndef RESIP_USE_STL_STREAMS
+std::ostream& 
+TimerWithPayload::encode(std::ostream& str) const
+{
+   UInt64 now(Timer::getTimeMs());
+   str << "TimerWithPayload[ when=" << mWhen << " rel=";
+   if (mWhen < now)
+   {
+      str << "past";
+   }
+   else
+   {
+      str << (mWhen - now);
+   }
+   str << "]";
+   return str;
+}
+#endif
+
+EncodeStream& 
+TimerWithPayload::encode(EncodeStream& str) const
+{
+   UInt64 now(Timer::getTimeMs());
+   str << "TimerWithPayload[ when=" << mWhen << " rel=";
    if (mWhen < now)
    {
       str << "past";

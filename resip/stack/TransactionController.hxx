@@ -10,6 +10,7 @@ namespace resip
 {
 
 class TransactionMessage;
+class TimerMessage;
 class ApplicationMessage;
 class StatisticsManager;
 class SipStack;
@@ -109,7 +110,7 @@ class TransactionController
 
       // timers associated with the transactions. When a timer fires, it is
       // placed in the mStateMacFifo
-      TimerQueue  mTimers;
+      TransactionTimerQueue  mTimers;
 
       bool mShuttingDown;
       

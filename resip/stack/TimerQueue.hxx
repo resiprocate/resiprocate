@@ -4,7 +4,7 @@
 #include <queue>
 #include <set>
 #include <iosfwd>
-#include "resip/stack/TransactionMessage.hxx"
+#include "resip/stack/TimerMessage.hxx"
 #include "resip/stack/DtlsMessage.hxx"
 #include "rutil/Fifo.hxx"
 #include "rutil/TimeLimitFifo.hxx"
@@ -22,20 +22,72 @@ class TransactionMessage;
 class TuSelector;
 
 /**
-  * This class takes a fifo as a place to where you can write your stuff.
-  * In the main loop when using this you need to call process() on this.
-  * During Transaction processing, TimerMessages and SIP messages get generated.
-  **/
-
-
-//!dcm! - refactor, templatize
-class BaseTimerQueue
+  * @internal
+  * @brief This class takes a fifo as a place to where you can write your stuff.
+  * When using this in the main loop, call process() on this.
+  * During Transaction processing, TimerMessages and SIP messages are generated.
+  * 
+  * @todo !dcm! - refactor, templatize
+    @todo .dlb. timer wheel for transaction-bound timers and a heap for 
+      everything longer.
+  */
+template <class T>
+class TimerQueue
 {
    public:
-      /// deletes the message associated with the timer as well.
-      virtual ~BaseTimerQueue()=0;
-	  
-      /// gets the set of timers that have fired and inserts TimerMsg into the state
+      // This is the logic that runs when a timer goes off. This is the only
+      // thing subclasses must implement.
+      virtual void processTimer(const T& timer)=0;
+
+
+
+      /// @brief deletes the message associated with the timer as well.
+      virtual ~TimerQueue()
+      {
+         //xkd-2004-11-4
+         // delete the message associated with the timer
+         while (!mTimers.empty())
+         {
+            mTimers.pop();
+         }
+      }
+
+	  /// @brief provides the time in milliseconds before the next timer will fire
+      ///  @retval milliseconds time until the next timer will fire
+	  ///  @retval 0 implies that timers occur in the past
+	  /// @retval INT_MAX implies that there are no timers
+	  ///
+      unsigned int msTillNextTimer()
+      {
+         if (!mTimers.empty())
+         {
+            UInt64 next = mTimers.top().getWhen();
+            UInt64 now = Timer::getTimeMs();
+            if (now > next) 
+            {
+               return 0;
+            }
+            else
+            {
+               UInt64 ret64 = next - now;
+               if ( ret64 > UInt64(INT_MAX) )
+               {
+                  return INT_MAX;
+               }
+               else
+               { 
+                  int ret = int(ret64);
+                  return ret;
+               }
+            }
+         }
+         else
+         {
+            return INT_MAX;
+         }
+      }
+
+      /// @brief gets the set of timers that have fired, and inserts TimerMsg into the state
       /// machine fifo and application messages into the TU fifo
       virtual UInt64 process()
       {
@@ -56,65 +108,84 @@ class BaseTimerQueue
          return 0;
       }
 
-      virtual void processTimer(const Timer& timer)=0;
+      int size() const
+      {
+         return (int)mTimers.size();
+      }
+      bool empty() const
+      {
+         return mTimers.empty();
+      }
 
-      int size() const;
-      bool empty() const;
-      
-	  /** Give me the time before the next timer will fire in milliseconds
-        *  @retval milliseconds (time until the next timer will fire)
-	    *  @retval 0 (implies that timers occur in the past)
-	    * @retval INT_MAX (implies that there are no timers)
-	   **/
-      unsigned int msTillNextTimer() const;
-      
-   protected:
-      friend EncodeStream& operator<<(EncodeStream&, const BaseTimerQueue&);
 #ifndef RESIP_USE_STL_STREAMS
-	  friend std::ostream& operator<<(std::ostream& strm, const BaseTimerQueue&);
+      std::ostream& encode(std::ostream& str) const
+      {
+         return str << "TimerQueue[ size =" << mTimers.size() 
+               << " top=" << mTimers.top() << "]" ;
+      }
 #endif
-      typedef std::vector<Timer, std::allocator<Timer> > TimerVector;
-      std::priority_queue<Timer, TimerVector, std::greater<Timer> > mTimers;
+
+      EncodeStream& encode(EncodeStream& str) const
+      {
+         return str << "TimerQueue[ size =" << mTimers.size() 
+               << " top=" << mTimers.top() << "]" ;
+      }
+
+   protected:
+      typedef std::vector<T, std::allocator<T> > TimerVector;
+      std::priority_queue<T, TimerVector, std::greater<T> > mTimers;
 };
 
-class BaseTimeLimitTimerQueue : public BaseTimerQueue
+/**
+   @internal
+*/
+class BaseTimeLimitTimerQueue : public TimerQueue<TimerWithPayload>
 {
    public:
-      void add(const Timer& timer);
-      virtual void processTimer(const Timer& t);
+      UInt64 add(unsigned int timeMs,Message* payload);
+      virtual void processTimer(const TimerWithPayload& timer);
    protected:
       virtual void addToFifo(Message*, TimeLimitFifo<Message>::DepthUsage)=0;      
 };
 
 
+/**
+   @internal
+*/
 class TimeLimitTimerQueue : public BaseTimeLimitTimerQueue
 {
    public:
       TimeLimitTimerQueue(TimeLimitFifo<Message>& fifo);
    protected:
-      virtual void addToFifo(Message*, TimeLimitFifo<Message>::DepthUsage);      
+      virtual void addToFifo(Message*, TimeLimitFifo<Message>::DepthUsage);
    private:
       TimeLimitFifo<Message>& mFifo;
 };
 
 
-class TuSelectorTimerQueue : public BaseTimeLimitTimerQueue
+/**
+   @internal
+*/
+class TuSelectorTimerQueue : public TimerQueue<TimerWithPayload>
 {
    public:
       TuSelectorTimerQueue(TuSelector& sel);
-   protected:
-      virtual void addToFifo(Message*, TimeLimitFifo<Message>::DepthUsage);      
+      UInt64 add(unsigned int timeMs,Message* payload);
+      virtual void processTimer(const TimerWithPayload& timer);
    private:
       TuSelector& mFifoSelector;
 };
 
 
-class TimerQueue : public BaseTimerQueue
+/**
+   @internal
+*/
+class TransactionTimerQueue : public TimerQueue<TransactionTimer>
 {
    public:
-      TimerQueue(Fifo<TransactionMessage>& fifo);
-      void add(Timer::Type type, const Data& transactionId, unsigned long msOffset);
-      virtual void processTimer(const Timer& t);
+      TransactionTimerQueue(Fifo<TransactionMessage>& fifo);
+      UInt64 add(Timer::Type type, const Data& transactionId, unsigned long msOffset);
+      virtual void processTimer(const TransactionTimer& timer);
    private:
       Fifo<TransactionMessage>& mFifo;
 };
@@ -123,12 +194,15 @@ class TimerQueue : public BaseTimerQueue
 
 #include <openssl/ssl.h>
 
-class DtlsTimerQueue : public BaseTimerQueue
+/**
+   @internal
+*/
+class DtlsTimerQueue : public TimerQueue<TimerWithPayload>
 {
    public:
       DtlsTimerQueue( Fifo<DtlsMessage>& fifo ) ;
-      void add( SSL *, unsigned long msOffset ) ;
-      virtual void processTimer(const Timer& t);
+      UInt64 add( SSL *, unsigned long msOffset ) ;
+      virtual void processTimer(const TimerWithPayload& timer) ;
       
    private:
       Fifo<DtlsMessage>& mFifo ;
@@ -136,7 +210,20 @@ class DtlsTimerQueue : public BaseTimerQueue
 
 #endif
 
-EncodeStream& operator<<(EncodeStream&, const BaseTimerQueue&);
+#ifndef RESIP_USE_STL_STREAMS
+template <class T>
+std::ostream& operator<<(std::ostream& str, const TimerQueue<T>& tq)
+{
+   return tq.encode(str);
+}
+#endif
+
+template <class T>
+EncodeStream& operator<<(EncodeStream& str, const TimerQueue<T>& tq)
+{
+   return tq.encode(str);
+}
+
 
 }
 
