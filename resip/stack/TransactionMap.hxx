@@ -8,23 +8,70 @@ namespace resip
 {
   class TransactionState;
 
-  class TransactionMap 
-  {
-     public:
-        ~TransactionMap();
-        
-        TransactionState* find( const Data& transactionId ) const;
-        void add( const Data& transactionId, TransactionState* state  );
-        void erase( const Data& transactionId );
-        int size() const;
-        
-     private:
-        typedef HashMap<Data, TransactionState*> Map;
-        Map mMap;
+/**
+   @internal
+*/
+class TransactionMap 
+{
+  public:
+     ~TransactionMap();
+     
+     TransactionState* find( const Data& transactionId ) const;
+     void add( const Data& transactionId, TransactionState* state  );
+     void erase( const Data& transactionId );
+     int size() const;
+     
+  private:
 
-        typedef Map::iterator MapIterator;
-        typedef Map::const_iterator MapConstIterator;
-  };
+      /**
+         @internal
+      */
+      class BranchHasher
+      {
+         public:
+            inline size_t operator()(const Data& branch) const
+            {
+               return branch.caseInsensitiveTokenHash();
+            }
+      };
+
+      /**
+         @internal
+      */
+      class BranchEqual
+      {
+         public:
+            inline bool operator()(const Data& branch1, const Data& branch2) const
+            {
+               return isEqualNoCase(branch1,branch2);
+            }
+      };
+
+      /**
+         @internal
+      */
+      class BranchCompare
+      {
+         public:
+            inline bool operator()(const Data& branch1, const Data& branch2) const
+            {
+               return isLessThanNoCase(branch1,branch2);
+            }
+      };
+
+      // .bwc. If rutil/HashMap.hxx fails to find a hash_map impl for the 
+      // platform we're using, it will #define HashMap to a std::map, which
+      // takes different template args. We try to compensate for this here.
+#ifdef HASH_MAP_NAMESPACE
+     typedef HashMap<Data, TransactionState*, BranchHasher, BranchEqual> Map;
+#else
+     typedef std::map<Data, TransactionState*, BranchCompare> Map;
+#endif
+
+     Map mMap;
+     typedef Map::iterator MapIterator;
+     typedef Map::const_iterator MapConstIterator;
+};
 }
 
 #endif
