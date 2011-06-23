@@ -12,8 +12,7 @@ namespace resip
 class Message;
 
 /**
-   @brief Instances of this class represent a SIP timer, while static functions
-      in this class are used to get the current system time.
+   @brief This class is used to get the current system time.
 
    @note Should we refactor this? It seems like the SIP-timer stuff should live
       in resip/stack somewhere.
@@ -45,35 +44,6 @@ class Timer
       } Type;
       
       static Data toData(Type timer);
-
-      Timer(unsigned long ms, Type type, const Data& transactionId);
-      Timer(unsigned long ms, Message* message);
-      Timer(const Timer& t);
-      Timer& operator=(const Timer& t);
-
-      ~Timer();
-
-      inline bool operator<(const Timer& rhs) const
-      {
-         return mWhen < rhs.mWhen;
-      }
-
-      inline bool operator>(const Timer& rhs) const
-      {
-         return mWhen > rhs.mWhen;
-      }
-
-#ifndef RESIP_USE_STL_STREAMS
-      std::ostream& encode(std::ostream& str) const;
-#endif
-      EncodeStream& encode(EncodeStream& str) const;
-
-      inline UInt64 getWhen() const { return mWhen;} 
-      Type getType() const { return mType; }
-      inline const Data& getTransactionId() const { return mTransactionId;} 
-      inline unsigned long getDuration() const { return mDuration;} 
-      // return the message to queue, possibly null
-      Message* getMessage() const { return mMessage;} 
 
       /** @deprecated.  Does not do anything at the moment.
       */
@@ -142,27 +112,121 @@ class Timer
       
       static unsigned long TD;
       static unsigned long TS;       
-      
-   private:
-      Timer(unsigned long ms); // for TimerQueue only - don't use
-
-      UInt64 mWhen; // time when the timer "goes off" in MS 
-      Type mType;
-      Data mTransactionId;
-      unsigned long mDuration; // duration of time in ms 
-      Message* mMessage; // message to queue on timeout
 };
 
-inline EncodeStream& operator<<(EncodeStream& str, const Timer& t)
+// !bwc! There is some duplicated code between TransactionTimer and 
+// TimerWithPayload. Should eventually create a single template class like the 
+// following, and use it with Payload=Message* and Payload=TransactionTimer
+// template <typename Payload>
+// class Timestamped
+// {
+//    // blah blah blah
+//    private:
+//       UInt64 mTimestamp;
+//       Payload mPayload;
+// };
+class TransactionTimer
 {
-   return t.encode(str);
-}
+   public:
+      RESIP_HeapCount(TransactionTimer);
+
+      TransactionTimer(unsigned long ms, 
+                        Timer::Type type, 
+                        const Data& transactionId);
+
+      ~TransactionTimer(){}
+
+      const Data& getTransactionId() const {return mTransactionId;}
+      Timer::Type getType() const { return mType; }
+      unsigned long getDuration() const { return mDuration;} 
+
+      UInt64 getWhen() const {return mWhen;}
 #ifndef RESIP_USE_STL_STREAMS
-std::ostream& operator<<(EncodeStream& str, const Timer& t)
+      std::ostream& encode(std::ostream& str) const;
+#endif
+      EncodeStream& encode(EncodeStream& str) const;
+
+      inline bool operator<(const TransactionTimer& rhs) const
+      {
+         return mWhen < rhs.mWhen;
+      }
+
+      inline bool operator>(const TransactionTimer& rhs) const
+      {
+         return mWhen > rhs.mWhen;
+      }
+
+   protected:
+      UInt64 mWhen;
+      Timer::Type mType;
+      Data mTransactionId;
+      unsigned long mDuration; // duration of time in ms 
+
+   private:
+      // disabled
+      TransactionTimer();
+};
+
+class TimerWithPayload
+{
+   public:
+      RESIP_HeapCount(TimerWithPayload);
+
+      TimerWithPayload(unsigned long ms, Message* message);
+
+      ~TimerWithPayload(){}
+
+      // return the message to queue, possibly null
+      Message* getMessage() const { return mMessage;}
+
+      UInt64 getWhen() const {return mWhen;}
+#ifndef RESIP_USE_STL_STREAMS
+      std::ostream& encode(std::ostream& str) const;
+#endif
+      EncodeStream& encode(EncodeStream& str) const;
+
+      inline bool operator<(const TimerWithPayload& rhs) const
+      {
+         return mWhen < rhs.mWhen;
+      }
+
+      inline bool operator>(const TimerWithPayload& rhs) const
+      {
+         return mWhen > rhs.mWhen;
+      }
+
+   protected:
+      UInt64 mWhen;
+      Message* mMessage; // message to queue on timeout
+
+   private:
+      // disabled
+      TimerWithPayload();
+};
+
+
+#ifndef RESIP_USE_STL_STREAMS
+inline std::ostream& operator<<(std::ostream& str, const TransactionTimer& t)
 {
    return t.encode(str);
 }
+
+inline std::ostream& operator<<(std::ostream& str, const TimerWithPayload& t)
+{
+   return t.encode(str);
+}
+
 #endif
+inline EncodeStream& operator<<(EncodeStream& str, const TransactionTimer& t)
+{
+   return t.encode(str);
+}
+
+inline EncodeStream& operator<<(EncodeStream& str, const TimerWithPayload& t)
+{
+   return t.encode(str);
+}
+
 
 }
 
@@ -206,6 +270,8 @@ Timer K  T4 for UDP       Section 17.1.2.2     Wait time for
 #endif
 
 #endif
+
+/* Copyright 2007 Estacado Systems */
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
