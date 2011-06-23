@@ -642,7 +642,7 @@ Helper::computeCallId()
    hostAndSalt.append((char*)&threadId,sizeof(threadId));
 #endif
 #endif // of USE_SSL
-   return hostAndSalt.md5().base64encode(true);
+   return hostAndSalt.md5(Data::BASE64);
 }
 
 Data
