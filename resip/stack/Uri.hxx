@@ -15,6 +15,11 @@ namespace resip
 {
 class SipMessage;
 
+/**
+   @ingroup sip_grammar
+   @brief Represents the "SIP-URI" and "SIPS-URI" elements in the RFC 3261 
+      grammar. Also can be made to represent other URI types (like tel URIs)
+*/
 class Uri : public ParserCategory
 {
    public:
@@ -31,7 +36,7 @@ class Uri : public ParserCategory
       //static Uri fromTel(const Uri&, const Data& host);  // deprecate...
       static Uri fromTel(const Uri&, const Uri& hostUri);
 
-      Data& host() {checkParsed(); return mHost;}
+      Data& host() {checkParsed(); mHostCanonicalized=false; return mHost;}
       const Data& host() const {checkParsed(); return mHost;}
       Data& user() {checkParsed(); return mUser;}
       const Data& user() const {checkParsed(); return mUser;}
@@ -41,12 +46,19 @@ class Uri : public ParserCategory
       const Data& opaque() const {checkParsed(); return mHost;}
 
       // Returns user@host[:port] (no scheme)
-      const Data& getAor() const;
+      Data getAor() const;
       // Returns user@host (no scheme or port)
-      const Data getAorNoPort() const;
+      Data getAorNoPort() const;
 
-      // Actually returns the AOR; <scheme>:<user>@<host>[:<port>]
-      Data getAorNoReally() const;
+      // Actually returns the AOR; <scheme>:<user>@<host>
+      Data getAorNoReally() const
+      {
+         return getAOR(false);
+      }
+
+      // Returns the AOR, optionally adding the port
+      Data getAOR(bool addPort) const;
+
       //strips all paramters - if transport type is specified (ie. not UNKNOWN_TRANSPORT),
       //and the default port for the transport is on the Aor, then it is removed
       Uri getAorAsUri(TransportType transportTypeToRemoveDefaultPort = UNKNOWN_TRANSPORT) const;
@@ -164,6 +176,8 @@ class Uri : public ParserCategory
       bool operator!=(const Uri& other) const;
       bool operator<(const Uri& other) const;
       
+      bool aorEqual(const Uri& rhs) const;
+
       // Inform the compiler that overloads of these may be found in
       // ParserCategory, too.
       using ParserCategory::exists;
@@ -198,21 +212,15 @@ class Uri : public ParserCategory
 
    protected:
       Data mScheme;
-      Data mHost;
+      // .bwc. I don't like this.
+      mutable Data mHost;
       Data mUser;
       Data mUserParameters;
       int mPort;
-      mutable Data mAor;
       Data mPassword;
 
-      // cache for aor
-      mutable Data mOldScheme;
-      mutable Data mOldHost;
-      mutable Data mOldUser;
-      mutable int mOldPort;
-
-      // cache for IPV6 host comparison
-      mutable Data mCanonicalHost;
+      void getAorInternal(bool dropScheme, bool addPort, Data& aor) const;
+      mutable bool mHostCanonicalized;
 
       static bool mEncodingReady;
       // characters listed in these strings should not be URI encoded
@@ -232,8 +240,8 @@ class Uri : public ParserCategory
       static inline bool shouldEscapePasswordChar(unsigned char c);
 
    private:
-      Data mEmbeddedHeadersText;
-      SipMessage* mEmbeddedHeaders;
+      std::auto_ptr<Data> mEmbeddedHeadersText;
+      std::auto_ptr<SipMessage> mEmbeddedHeaders;
 
       static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
 };
