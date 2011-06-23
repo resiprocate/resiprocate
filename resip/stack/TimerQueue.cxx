@@ -48,7 +48,7 @@ BaseTimerQueue::msTillNextTimer() const
 {
    if (!mTimers.empty())
    {
-      UInt64 next = mTimers.top().mWhen;
+      UInt64 next = mTimers.top().getWhen();
       UInt64 now = Timer::getTimeMs();
       if (now > next) 
       {
@@ -122,7 +122,9 @@ BaseTimeLimitTimerQueue::processTimer(const Timer& t)
 void
 TimerQueue::processTimer(const Timer& t)
 {
-   mFifo.add(new TimerMessage(t.mTransactionId, t.mType, t.mDuration));
+   mFifo.add(new TimerMessage(t.getTransactionId(), 
+                              t.getType(), 
+                              t.getDuration()));
 }
 
 TimeLimitTimerQueue::TimeLimitTimerQueue(TimeLimitFifo<Message>& fifo) : mFifo(fifo)
