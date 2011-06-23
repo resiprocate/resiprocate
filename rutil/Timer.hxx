@@ -53,8 +53,25 @@ class Timer
 
       ~Timer();
 
-      // returns the unique identifier
+      inline bool operator<(const Timer& rhs) const
+      {
+         return mWhen < rhs.mWhen;
+      }
+
+      inline bool operator>(const Timer& rhs) const
+      {
+         return mWhen > rhs.mWhen;
+      }
+
+#ifndef RESIP_USE_STL_STREAMS
+      std::ostream& encode(std::ostream& str) const;
+#endif
+      EncodeStream& encode(EncodeStream& str) const;
+
+      inline UInt64 getWhen() const { return mWhen;} 
       Type getType() const { return mType; }
+      inline const Data& getTransactionId() const { return mTransactionId;} 
+      inline unsigned long getDuration() const { return mDuration;} 
       // return the message to queue, possibly null
       Message* getMessage() const { return mMessage;} 
 
@@ -134,24 +151,18 @@ class Timer
       Data mTransactionId;
       unsigned long mDuration; // duration of time in ms 
       Message* mMessage; // message to queue on timeout
-
-      friend bool operator<(const Timer& t1, const Timer& t2);
-      friend bool operator>(const Timer& t1, const Timer& t2);
-#ifndef RESIP_USE_STL_STREAMS
-	  friend std::ostream& operator<<(std::ostream&, const Timer&);
-#endif
-      friend EncodeStream& operator<<(EncodeStream&, const Timer&);
-      friend class BaseTimeLimitTimerQueue;
-      friend class BaseTimerQueue;
-      friend class DtlsTimerQueue;
-      friend class TimeLimitTimerQueue;
-      friend class TimerQueue;
-      friend class TuSelectorTimerQueue;
 };
- 
-EncodeStream& operator<<(EncodeStream&, const Timer&);
-bool operator<(const Timer& t1, const Timer& t2);
-bool operator>(const Timer& t1, const Timer& t2);
+
+inline EncodeStream& operator<<(EncodeStream& str, const Timer& t)
+{
+   return t.encode(str);
+}
+#ifndef RESIP_USE_STL_STREAMS
+std::ostream& operator<<(EncodeStream& str, const Timer& t)
+{
+   return t.encode(str);
+}
+#endif
 
 }
 

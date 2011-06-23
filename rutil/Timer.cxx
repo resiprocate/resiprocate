@@ -159,51 +159,40 @@ Timer::operator=(const Timer& other)
 Timer::~Timer() 
 {}
 
-bool 
-resip::operator<(const Timer& t1, const Timer& t2)
-{
-    //std::cerr << "operator(<" << t1.mWhen << ", " << t2.mWhen << ") = " << (t1.mWhen < t2.mWhen) << std::endl;
-    return t1.mWhen < t2.mWhen;
-}
-
-bool 
-resip::operator>(const Timer& t1, const Timer& t2)
-{
-    return t1.mWhen > t2.mWhen;
-}
 
 #ifndef RESIP_USE_STL_STREAMS
 std::ostream& 
-resip::operator<<(std::ostream& str, const Timer& t)
+Timer::encode(std::ostream& str) const
 {
    UInt64 now = Timer::getTimeMs();
 
-   str << "Timer[when=" << t.mWhen << " rel=";
-   if (t.mWhen < now)
+   str << "Timer[when=" << mWhen << " rel=";
+   if (mWhen < now)
    {
       str << "past";
    }
    else
    {
-      str << (t.mWhen - now);
+      str << (mWhen - now);
    }
    str << "]";
    return str;
 }
 #endif
+
 EncodeStream& 
-resip::operator<<(EncodeStream& str, const Timer& t)
+Timer::encode(EncodeStream& str) const
 {
    UInt64 now = Timer::getTimeMs();
 
-   str << "Timer[when=" << t.mWhen << " rel=";
-   if (t.mWhen < now)
+   str << "Timer[when=" << mWhen << " rel=";
+   if (mWhen < now)
    {
       str << "past";
    }
    else
    {
-      str << (t.mWhen - now);
+      str << (mWhen - now);
    }
    str << "]";
    return str;

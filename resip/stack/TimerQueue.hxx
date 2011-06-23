@@ -42,7 +42,7 @@ class BaseTimerQueue
          if (!mTimers.empty())
          {
             UInt64 now=Timer::getTimeMs();
-            while (!mTimers.empty() && !(mTimers.top().mWhen > now))
+            while (!mTimers.empty() && !(mTimers.top().getWhen() > now))
             {
                processTimer(mTimers.top());
                mTimers.pop();
@@ -50,7 +50,7 @@ class BaseTimerQueue
 
             if(!mTimers.empty())
             {
-               return mTimers.top().mWhen;
+               return mTimers.top().getWhen();
             }
          }
          return 0;
