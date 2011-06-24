@@ -86,7 +86,7 @@ GenericUri::encodeParsed(EncodeStream& str) const
 ParameterTypes::Factory GenericUri::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
 
 Parameter* 
-GenericUri::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+GenericUri::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators)
 {
    if(ParameterFactories[type])
    {

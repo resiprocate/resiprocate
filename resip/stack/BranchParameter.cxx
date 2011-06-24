@@ -19,7 +19,8 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 BranchParameter::BranchParameter(ParameterTypes::Type type,
-                                 ParseBuffer& pb, const char* terminators)
+                                 ParseBuffer& pb, 
+                                 const std::bitset<256>& terminators)
    : Parameter(type), 
      mHasMagicCookie(false),
      mIsMyBranch(false),
@@ -43,7 +44,8 @@ BranchParameter::BranchParameter(ParameterTypes::Type type,
    }
 
    const char* start = pb.position();
-   const char* end = pb.skipToOneOf(ParseBuffer::Whitespace, ";=?>"); // !dlb! add to ParseBuffer as terminator set
+   static std::bitset<256> delimiter=Data::toBitset("\r\n\t ;=?>");
+   const char* end = pb.skipToOneOf(delimiter);
 
    if (mHasMagicCookie &&
        (end - start > 2*8) &&

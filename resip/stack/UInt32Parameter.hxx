@@ -12,15 +12,23 @@ namespace resip
 
 class ParseBuffer;
 
+/**
+   @ingroup sip_grammar
+
+   @brief Generically represents unsigned 32-bit integer values
+   conveyed by SIP parameters.
+*/
 class UInt32Parameter : public Parameter
 {
    public:
       typedef UInt32 Type;
 
-      UInt32Parameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);
+      UInt32Parameter(ParameterTypes::Type, ParseBuffer& pb, const std::bitset<256>& terminators);
       explicit UInt32Parameter(ParameterTypes::Type type, UInt32 value = 0);
       
-      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+      static Parameter* decode(ParameterTypes::Type type, 
+                                 ParseBuffer& pb, 
+                                 const std::bitset<256>& terminators)
       {
          return new UInt32Parameter(type, pb, terminators);
       }

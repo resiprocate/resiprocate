@@ -145,12 +145,13 @@ Via::parse(ParseBuffer& pb)
 {
    const char* startMark;
    startMark = pb.skipWhitespace();
-   pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SLASH);
+   static std::bitset<256> wos=Data::toBitset("\r\n\t /");
+   pb.skipToOneOf(wos);
    pb.data(mProtocolName, startMark);
    pb.skipToChar('/');
    pb.skipChar();
    startMark = pb.skipWhitespace();
-   pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SLASH);
+   pb.skipToOneOf(wos);
    pb.data(mProtocolVersion, startMark);
 
    pb.skipToChar('/');
@@ -186,7 +187,8 @@ Via::parse(ParseBuffer& pb)
    else
    {
       // .bwc. If we hit whitespace, we have the host.
-      pb.skipToOneOf(";: \t\r\n");
+      static std::bitset<256> delimiter=Data::toBitset(";: \t\r\n");
+      pb.skipToOneOf(delimiter);
       pb.data(mSentHost, startMark);
    }
 
@@ -196,7 +198,8 @@ Via::parse(ParseBuffer& pb)
    {
       startMark = pb.skipChar(':');
       mSentPort = pb.integer();
-      pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SEMI_COLON);
+      static std::bitset<256> delimiter=Data::toBitset("; \t\r\n");
+      pb.skipToOneOf(delimiter);
    }
    else
    {
@@ -231,7 +234,7 @@ Via::encodeParsed(EncodeStream& str) const
 ParameterTypes::Factory Via::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
 
 Parameter* 
-Via::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+Via::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators)
 {
    if(ParameterFactories[type])
    {

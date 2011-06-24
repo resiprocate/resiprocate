@@ -10,15 +10,23 @@ namespace resip
 
 class ParseBuffer;
 
+/**
+   @ingroup sip_grammar
+
+   @brief Generically represents integer values conveyed by SIP
+   parameters.
+*/
 class IntegerParameter : public Parameter
 {
    public:
       typedef int Type;
 
-      IntegerParameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);
+      IntegerParameter(ParameterTypes::Type, ParseBuffer& pb, const std::bitset<256>& terminators);
       explicit IntegerParameter(ParameterTypes::Type type, int value = -666999666);
       
-      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+      static Parameter* decode(ParameterTypes::Type type, 
+                                 ParseBuffer& pb, 
+                                 const std::bitset<256>& terminators)
       {
          return new IntegerParameter(type, pb, terminators);
       }

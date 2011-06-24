@@ -116,9 +116,15 @@ DateCategory::DateCategory(HeaderFieldValue* hfv, Headers::Type type)
 {}
 
 DateCategory::DateCategory(const DateCategory& rhs)
-{
-   *this = rhs;
-}
+   : ParserCategory(rhs),
+     mDayOfWeek(rhs.mDayOfWeek),
+     mDayOfMonth(rhs.mDayOfMonth),
+     mMonth(rhs.mMonth),
+     mYear(rhs.mYear),
+     mHour(rhs.mHour),
+     mMin(rhs.mMin),
+     mSec(rhs.mSec)
+{}
 
 DateCategory&
 DateCategory::operator=(const DateCategory& rhs)
@@ -139,6 +145,9 @@ DateCategory::operator=(const DateCategory& rhs)
 
 /* ANSI-C code produced by gperf version 2.7.2 */
 /* Command-line: gperf -L ANSI-C -t -k '*' dayofweek.gperf  */
+/**
+   @internal
+*/
 struct days { char name[32]; DayOfWeek day; };
 
 #ifdef __GNUC__
@@ -282,6 +291,9 @@ DateCategory::DayOfWeekFromData(const Data& dow)
 
 /* ANSI-C code produced by gperf version 2.7.2 */
 /* Command-line: gperf -L ANSI-C -t -k '*' month.gperf  */
+/**
+   @internal
+*/
 struct months { char name[32]; Month type; };
 
 /* maximum key range = 31, duplicates = 0 */

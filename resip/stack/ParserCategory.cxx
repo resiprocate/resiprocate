@@ -191,16 +191,18 @@ ParserCategory::parseParameters(ParseBuffer& pb)
          // extract the key
          pb.skipChar();
          const char* keyStart = pb.skipWhitespace();
-         const char* keyEnd = pb.skipToOneOf(" \t\r\n;=?>");  //!dlb! @ here?
+         static std::bitset<256> terminators1=Data::toBitset(" \t\r\n;=?>"); //!dlb! @ here?
+         const char* keyEnd = pb.skipToOneOf(terminators1);  
 
          if((int)(keyEnd-keyStart) != 0)
          {
             ParameterTypes::Type type = ParameterTypes::getType(keyStart, (unsigned int)(keyEnd - keyStart));
-            Parameter* p=createParam(type, pb, " \t\r\n;?>");
+            static std::bitset<256> terminators2 = Data::toBitset(" \t\r\n;?>");
+            Parameter* p=createParam(type, pb, terminators2);
             if (!p)
             {
                mUnknownParameters.push_back(new UnknownParameter(keyStart, 
-                                                                 int((keyEnd - keyStart)), pb, " \t\r\n;?>"));
+                                                                 int((keyEnd - keyStart)), pb, terminators2));
             }
             else
             {
@@ -218,7 +220,7 @@ ParserCategory::parseParameters(ParseBuffer& pb)
 }      
 
 Parameter* 
-ParserCategory::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+ParserCategory::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators)
 {
    return 0;
 }

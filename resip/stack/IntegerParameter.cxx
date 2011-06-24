@@ -12,7 +12,7 @@ using namespace std;
 
 IntegerParameter::IntegerParameter(ParameterTypes::Type type,
                                    ParseBuffer& pb, 
-                                   const char* terminators)
+                                   const std::bitset<256>& terminators)
    : Parameter(type),
      mValue(0)
 {

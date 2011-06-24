@@ -114,7 +114,7 @@ Token::encodeParsed(EncodeStream& str) const
 ParameterTypes::Factory Token::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
 
 Parameter* 
-Token::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+Token::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators)
 {
    if(ParameterFactories[type])
    {

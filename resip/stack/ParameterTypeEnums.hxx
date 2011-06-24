@@ -3,7 +3,18 @@
 
 #include "rutil/Data.hxx"
 
+/**
+  @internal
+  @brief local definition for this file, translates the defineParams to 
+   simply enums using the first parameter passed to the defineParam
+  @note defineParam is hence defined differently in different header files some
+   of which use the other parameters that are passed as well.
+  */
 #define defineParam(_enum, _name, _type, _rfc) _enum
+/**
+  @brief unused as of nov 12th, 2007
+  @internal
+  */
 #define UNUSED_defineParam(_enum, _name, _type, _rfc) SAVE##_enum, _enum = UNKNOWN, RESET##enum = SAVE##_enum-1
 
 namespace resip
@@ -12,6 +23,17 @@ namespace resip
 class Parameter;
 class ParseBuffer;
 
+ /**
+   @ingroup sip_grammar
+   @brief This is one of the places where new parameter types must be defined.
+    There must be corresponding entries in ParameterTypes.[ch]xx, 
+    Parameters.gperf and ParserCategory.[ch]xx
+   @note If you make any changes, run testParserCategories to ensure that 
+    the changes are consistent.
+   @class ParameterTypes
+   @internal
+   @see ParamBase
+   */
 class ParameterTypes
 {
   
@@ -126,12 +148,30 @@ class ParameterTypes
          MAX_PARAMETER
       };
 
-      // convert to enum from two pointers into the HFV raw buffer
+      /**
+        @brief does a convert to enum from a pointer into the HFV raw buffer
+        */
       static Type getType(const char* start, unsigned int length);
 
-      typedef Parameter* (*Factory)(ParameterTypes::Type, ParseBuffer&, const char*);
+      /**
+         @param ParameterTypes::Type class on which to call decode to get 
+          the Parameter*
+         @param ParseBuffer buffer to parse
+         @param terminators The terminator characters to use
+         @return ParameterTypes::Type.decode() defined in each class type. 
+        */
+      typedef Parameter* (*Factory)(ParameterTypes::Type, ParseBuffer&, const std::bitset<256>& terminators);
 
+      /**
+        @brief static array of Factorys indexed by the 2nd element 
+         in defineParam(...)
+        */
       static Factory ParameterFactories[MAX_PARAMETER];
+
+      /**
+        @brief static array of ParameterNames indexed by the 2nd element 
+         in defineParam(...) 
+        */
       static Data ParameterNames[MAX_PARAMETER];
 };
  
