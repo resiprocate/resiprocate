@@ -22,54 +22,27 @@ Message::Brief::Brief(const Message& source) :
    mSource(source)
 {}
 
+#ifndef  RESIP_USE_STL_STREAMS
 std::ostream& 
 resip::operator<<(std::ostream& strm, 
                   const resip::Message& msg)
 {
-
-   // .dlb. what a bad idea..
-   // escaping should be handled at Data 
-   // msg scanner should indicate that it saw escaped characters
-   // Data's coming from a marked buffer should assume they need to be escaped.
-   // Data's coming from user should assume they need to be escaped.
-   // Otherwise, Data's should NOT escape.
-
-   Data encoded;
-
-   DataStream encodeStream(encoded);
-   msg.encode(encodeStream);
-   encodeStream.flush();
-
-  // strm << encoded.escaped();
-	
-	strm << encoded.c_str();
-   //msg.encode(strm);
-   
-   return strm;
+   return msg.encode(strm);
 }
 
 std::ostream& 
 resip::operator<<(std::ostream& strm, 
                   const resip::Message::Brief& brief)
 {
-	Data encoded;
-
-   DataStream encodeStream(encoded);
-   brief.mSource.encodeBrief(encodeStream);
-   encodeStream.flush();
-
-   strm << encoded.c_str();
-
-   return strm;
+   return brief.mSource.encodeBrief(strm);
 }
+#endif
 
-#ifndef  RESIP_USE_STL_STREAMS
 EncodeStream& 
 resip::operator<<(EncodeStream& strm, 
                   const resip::Message& msg)
 {
-msg.encode(strm);
-return strm;
+   return msg.encode(strm);
 }
 
 EncodeStream& 
@@ -78,7 +51,6 @@ resip::operator<<(EncodeStream& strm,
 {
    return brief.mSource.encodeBrief(strm);
 }
-#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
