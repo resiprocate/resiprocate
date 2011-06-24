@@ -178,6 +178,44 @@ class Uri : public ParserCategory
       
       bool aorEqual(const Uri& rhs) const;
 
+      typedef std::bitset<URI_ENCODING_TABLE_SIZE> EncodingTable;
+
+      static EncodingTable& getUserEncodingTable()
+      {
+         static EncodingTable userEncodingTable(
+               Data::toBitset("abcdefghijklmnopqrstuvwxyz"
+                              "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                              "0123456789"
+                              "-_.!~*\\()&=+$,;?/").flip());
+         return userEncodingTable;
+      }
+
+      static EncodingTable& getPasswordEncodingTable()
+      {
+         static EncodingTable passwordEncodingTable(
+               Data::toBitset("abcdefghijklmnopqrstuvwxyz"
+                              "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                              "0123456789"
+                              "-_.!~*\\()&=+$").flip());
+         return passwordEncodingTable;
+      }
+
+      static EncodingTable& getLocalNumberTable()
+      {
+         // ?bwc? 'p' and 'w' are allowed in 2806, but have been removed in 
+         // 3966. Should we support these or not?
+         static EncodingTable localNumberTable(
+               Data::toBitset("*#-.()0123456789ABCDEFpw"));
+         return localNumberTable;
+      }
+
+      static EncodingTable& getGlobalNumberTable()
+      {
+         static EncodingTable globalNumberTable(
+               Data::toBitset("-.()0123456789"));
+         return globalNumberTable;
+      }
+
       // Inform the compiler that overloads of these may be found in
       // ParserCategory, too.
       using ParserCategory::exists;
@@ -222,28 +260,24 @@ class Uri : public ParserCategory
       void getAorInternal(bool dropScheme, bool addPort, Data& aor) const;
       mutable bool mHostCanonicalized;
 
-      static bool mEncodingReady;
-      // characters listed in these strings should not be URI encoded
-      static const Data mUriNonEncodingUserChars;
-      static const Data mUriNonEncodingPasswordChars;
-      static const Data mLocalNumberChars;
-      static const Data mGlobalNumberChars;
-      typedef std::bitset<URI_ENCODING_TABLE_SIZE> EncodingTable;
-      // if a bit is set/true, the corresponding character should be encoded
-      static EncodingTable mUriEncodingUserTable;
-      static EncodingTable mUriEncodingPasswordTable;
-      static EncodingTable mLocalNumberTable;
-      static EncodingTable mGlobalNumberTable;
-
-      static void initialiseEncodingTables();
-      static inline bool shouldEscapeUserChar(unsigned char c);
-      static inline bool shouldEscapePasswordChar(unsigned char c);
-
    private:
       std::auto_ptr<Data> mEmbeddedHeadersText;
       std::auto_ptr<SipMessage> mEmbeddedHeaders;
 
       static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
+
+      /** 
+         Dummy static initialization variable, for ensuring that the encoding 
+         tables are initialized sometime during static initialization, 
+         preventing the scenario where multiple threads try to runtime init the 
+         same table at the same time.
+         @note Prior to static initialization of this bool, it could be either 
+            true or false; you should not be using this variable to check 
+            whether the tables are initialized. Just call the getXTable() 
+            accessor function; it will init the table if it is not already.
+      */
+      static const bool tablesMightBeInitialized;
+
 };
 
 }
