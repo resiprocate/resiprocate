@@ -219,7 +219,7 @@ SdpContents::getStaticType()
 static Data nullOrigin("0.0.0.0");
 
 SdpContents::Session::Origin::Origin()
-   : mUser(Data::Empty),
+   : mUser(),
      mSessionId(0),
      mVersion(0),
      mAddrType(IP4),
@@ -487,7 +487,7 @@ SdpContents::Session::Connection::Connection(AddrType addType,
 
 SdpContents::Session::Connection::Connection()
    : mAddrType(IP4),
-     mAddress(Data::Empty),
+     mAddress(),
      mTTL(0)
 {}
 
@@ -858,7 +858,7 @@ SdpContents::Session::Timezones::addAdjustment(const Adjustment& adjust)
 
 SdpContents::Session::Encryption::Encryption()
    : mMethod(NoEncryption),
-     mKey(Data::Empty)
+     mKey()
 {}
 
 SdpContents::Session::Encryption::Encryption(const KeyType& method,
