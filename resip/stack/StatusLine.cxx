@@ -116,7 +116,7 @@ StatusLine::parse(ParseBuffer& pb)
    start = pb.skipWhitespace();
    mResponseCode = pb.integer();
    start = pb.skipWhitespace();
-   pb.reset(pb.end());
+   pb.skipToEnd();
    pb.data(mReason, start);
 }
 

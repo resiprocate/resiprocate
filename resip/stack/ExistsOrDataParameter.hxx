@@ -17,11 +17,14 @@ class ExistsOrDataParameter : public DataParameter
       explicit ExistsOrDataParameter(ParameterTypes::Type);
       ExistsOrDataParameter(ParameterTypes::Type, bool);
 
-      ExistsOrDataParameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);
+      ExistsOrDataParameter(ParameterTypes::Type, ParseBuffer& pb, 
+                            const std::bitset<256>& terminators);
 
       virtual EncodeStream& encode(EncodeStream& stream) const;
 
-      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators);
+      static Parameter* decode(ParameterTypes::Type type, 
+                                 ParseBuffer& pb, 
+                                 const std::bitset<256>& terminators);
 
       virtual Parameter* clone() const;
       

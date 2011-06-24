@@ -117,15 +117,16 @@ void
 Mime::parse(ParseBuffer& pb)
 {
    const char* anchor = pb.skipWhitespace();
-
-   pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SLASH);
+   static std::bitset<256> delimiter1=Data::toBitset("\r\n\t /");
+   pb.skipToOneOf(delimiter1);
    pb.data(mType, anchor);
 
    pb.skipWhitespace();
    pb.skipChar(Symbols::SLASH[0]);
 
    anchor = pb.skipWhitespace();
-   pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SEMI_COLON);
+   static std::bitset<256> delimiter2=Data::toBitset("\r\n\t ;");
+   pb.skipToOneOf(delimiter2);
    pb.data(mSubType, anchor);
 
    pb.skipWhitespace();
@@ -146,12 +147,10 @@ Mime::encodeParsed(EncodeStream& str) const
    return str;
 }
 
-HashValueImp(resip::Mime, data.type().caseInsensitivehash() ^ data.subType().caseInsensitivehash());
-
 ParameterTypes::Factory Mime::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
 
 Parameter* 
-Mime::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+Mime::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators)
 {
    if(ParameterFactories[type])
    {
@@ -223,6 +222,8 @@ defineParam(smimeType, "smime-type", DataParameter, "RFC 2633");
 defineParam(url, "url", QuotedDataParameter, "RFC 4483");
 
 #undef defineParam
+
+HashValueImp(resip::Mime, data.type().caseInsensitiveTokenHash() ^ data.subType().caseInsensitiveTokenHash());
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

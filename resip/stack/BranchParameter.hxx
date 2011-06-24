@@ -16,12 +16,18 @@ class ParseBuffer;
 // rfc3261cookie-sip2cookie-tid-transportseq-clientdata-sip2cookie
 // Notably, the tid MAY contain dashes by the clientdata MUST NOT.
 //
+
+/**
+   @ingroup sip_grammar
+   @brief Represents the "via-branch" parameter of the RFC 3261 grammar.
+*/
+
 class BranchParameter : public Parameter
 {
    public:
       typedef BranchParameter Type;
       
-      BranchParameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);
+      BranchParameter(ParameterTypes::Type, ParseBuffer& pb, const std::bitset<256>& terminators);
       explicit BranchParameter(ParameterTypes::Type);
 
       ~BranchParameter();
@@ -47,7 +53,9 @@ class BranchParameter : public Parameter
       void setSigcompCompartment(const Data &);
       Data getSigcompCompartment() const;
 
-      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+      static Parameter* decode(ParameterTypes::Type type, 
+                                 ParseBuffer& pb, 
+                                 const std::bitset<256>& terminators)
       {
          return new BranchParameter(type, pb, terminators);
       }

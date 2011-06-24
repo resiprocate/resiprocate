@@ -145,10 +145,11 @@ NameAddr::parse(ParseBuffer& pb)
 {
    const char* start;
    start = pb.skipWhitespace();
+   pb.assertNotEof();
    bool laQuote = false;
    bool starContact = false;
    
-   if (!pb.eof() && *pb.position() == Symbols::STAR[0])
+   if (*pb.position() == Symbols::STAR[0])
    {
       pb.skipChar(Symbols::STAR[0]);
       pb.skipWhitespace();
@@ -166,7 +167,7 @@ NameAddr::parse(ParseBuffer& pb)
    else
    {
       pb.reset(start);
-      if (!pb.eof() && *pb.position() == Symbols::DOUBLE_QUOTE[0])
+      if (*pb.position() == Symbols::DOUBLE_QUOTE[0])
       {
          start = pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
          pb.skipToEndQuote();
@@ -186,7 +187,7 @@ NameAddr::parse(ParseBuffer& pb)
             pb.skipChar(Symbols::LA_QUOTE[0]);
          }
       }
-      else if (!pb.eof() && *pb.position() == Symbols::LA_QUOTE[0])
+      else if (*pb.position() == Symbols::LA_QUOTE[0])
       {
          pb.skipChar(Symbols::LA_QUOTE[0]);
          laQuote = true;
@@ -389,7 +390,7 @@ NameAddr::mustQuoteDisplayName() const
 ParameterTypes::Factory NameAddr::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
 
 Parameter* 
-NameAddr::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+NameAddr::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators)
 {
    if(ParameterFactories[type])
    {

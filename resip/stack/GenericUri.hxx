@@ -36,7 +36,7 @@ class GenericUri : public ParserCategory
       using ParserCategory::remove;
       using ParserCategory::param;
 
-      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators);
+      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators);
       // .bwc, This is an awful lot for one lousy param type.
       bool exists(const Param<GenericUri>& paramType) const;
       void remove(const Param<GenericUri>& paramType);

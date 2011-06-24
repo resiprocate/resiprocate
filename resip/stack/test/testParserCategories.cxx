@@ -1798,7 +1798,7 @@ main(int arc, char** argv)
       
       Data txt("=z9hG4bK" RESIP_COOKIE "jason-1--" RESIP_COOKIE "");
       ParseBuffer pb(txt.data(), txt.size());
-      BranchParameter bp(ParameterTypes::branch, pb, ";");
+      BranchParameter bp(ParameterTypes::branch, pb, Data::toBitset(";"));
       assert(bp.hasMagicCookie());
       assert(bp.getTransactionId() == "jason");
 
@@ -1821,7 +1821,7 @@ main(int arc, char** argv)
       Data txt("=z9hG4bK" RESIP_COOKIE "jason.1.2.3-14--" RESIP_COOKIE "");
       ParseBuffer pb(txt.data(), txt.size());
 
-      BranchParameter bpc(ParameterTypes::branch, pb, ";");
+      BranchParameter bpc(ParameterTypes::branch, pb, Data::toBitset(";"));
       assert(bpc.hasMagicCookie());
       assert(bpc.getTransactionId() == "jason.1.2.3");
 
@@ -1839,7 +1839,7 @@ main(int arc, char** argv)
       Data txt("=z9hG4bK" RESIP_COOKIE "3e565-ef7w-17.1.2.3-14--" RESIP_COOKIE "foobie");
       ParseBuffer pb(txt.data(), txt.size());
 
-      BranchParameter bpcc(ParameterTypes::branch, pb, ";");
+      BranchParameter bpcc(ParameterTypes::branch, pb, Data::toBitset(";"));
       assert(bpcc.hasMagicCookie());
       assert(bpcc.getTransactionId() == "" RESIP_COOKIE "3e565-ef7w-17.1.2.3-14--" RESIP_COOKIE "foobie");
 
@@ -1867,7 +1867,7 @@ main(int arc, char** argv)
       Data txt("=z9hG4bK" RESIP_COOKIE "3e565-ef7w-17.1.2.3-14--" RESIP_COOKIE "");
       ParseBuffer pb(txt.data(), txt.size());
 
-      BranchParameter bpcc(ParameterTypes::branch, pb, ";");
+      BranchParameter bpcc(ParameterTypes::branch, pb, Data::toBitset(";"));
       assert(bpcc.hasMagicCookie());
       assert(bpcc.getTransactionId() == "3e565-ef7w-17.1.2.3");
 
@@ -1885,7 +1885,7 @@ main(int arc, char** argv)
       Data txt("=z9hG4bK" RESIP_COOKIE "" RESIP_COOKIE "3e565-ef7w-17.1.2.3-14" RESIP_COOKIE "foobie-1--" RESIP_COOKIE "");
       ParseBuffer pb(txt.data(), txt.size());
 
-      BranchParameter bpcc(ParameterTypes::branch, pb, ";");
+      BranchParameter bpcc(ParameterTypes::branch, pb, Data::toBitset(";"));
       assert(bpcc.hasMagicCookie());
       assert(bpcc.getTransactionId() == "" RESIP_COOKIE "3e565-ef7w-17.1.2.3-14" RESIP_COOKIE "foobie");
 
@@ -1903,7 +1903,7 @@ main(int arc, char** argv)
       Data txt("=z9hG4bK" RESIP_COOKIE "");
       ParseBuffer pb(txt.data(), txt.size());
 
-      BranchParameter bpcc(ParameterTypes::branch, pb, ";");
+      BranchParameter bpcc(ParameterTypes::branch, pb, Data::toBitset(";"));
       assert(bpcc.hasMagicCookie());
       assert(bpcc.getTransactionId() == "" RESIP_COOKIE "");
 
@@ -1921,7 +1921,7 @@ main(int arc, char** argv)
       Data txt("=z9hG4bK" RESIP_COOKIE "-1--" RESIP_COOKIE "");
       ParseBuffer pb(txt.data(), txt.size());
 
-      BranchParameter bpcc(ParameterTypes::branch, pb, ";");
+      BranchParameter bpcc(ParameterTypes::branch, pb, Data::toBitset(";"));
       assert(bpcc.hasMagicCookie());
       assert(bpcc.getTransactionId() == "");
 
@@ -1941,7 +1941,7 @@ main(int arc, char** argv)
 
       try
       {
-         BranchParameter bpcc(ParameterTypes::branch, pb, ";");
+         BranchParameter bpcc(ParameterTypes::branch, pb, Data::toBitset(";"));
          assert(bpcc.hasMagicCookie());
          bpcc.getTransactionId();
          assert(false);
@@ -1956,7 +1956,7 @@ main(int arc, char** argv)
 
       Data txt("=z9hG4bK" RESIP_COOKIE "5b42cb698e8c6827790212ac5bdade1a-1-UEEzMjc2OA..-" RESIP_COOKIE ";rport;received=64.124.66.32");
       ParseBuffer pb(txt.data(), txt.size());
-      BranchParameter bp(ParameterTypes::branch, pb, ";");
+      BranchParameter bp(ParameterTypes::branch, pb, Data::toBitset(";"));
       assert(bp.hasMagicCookie());
       assert(bp.getTransactionId() == "5b42cb698e8c6827790212ac5bdade1a");
       resipCerr << "!! " << bp.clientData() << endl;
@@ -1970,7 +1970,7 @@ main(int arc, char** argv)
 
       Data txt("=z9hG4bk15775865934415"); //little k
       ParseBuffer pb(txt.data(), txt.size());
-      BranchParameter bp(ParameterTypes::branch, pb, ";");
+      BranchParameter bp(ParameterTypes::branch, pb, Data::toBitset(";"));
       assert(bp.hasMagicCookie());
       
       assert(bp.getTransactionId() == "15775865934415");
@@ -1996,7 +1996,7 @@ main(int arc, char** argv)
       Data txt2("=z9hG4bk1577234fhg8df");
       ParseBuffer pb2(txt2.data(), txt2.size());
 
-      BranchParameter bpAssignOp(ParameterTypes::branch, pb2, ";");      
+      BranchParameter bpAssignOp(ParameterTypes::branch, pb2, Data::toBitset(";"));
       bpAssignOp = bp;
       
       Data encAssignOp;
@@ -2059,7 +2059,7 @@ main(int arc, char** argv)
 
       ParseBuffer pb(txt.data(), txt.size());
 
-      BranchParameter bpcc(ParameterTypes::branch, pb, ";");
+      BranchParameter bpcc(ParameterTypes::branch, pb, Data::toBitset(";"));
       assert (bpcc.getTransactionId() == "T-i-D");
       assert (bpcc.clientData() == "ClientData");
 
@@ -2078,7 +2078,7 @@ main(int arc, char** argv)
 
       ParseBuffer pb(txt.data(), txt.size());
 
-      BranchParameter bpcc(ParameterTypes::branch, pb, ";");
+      BranchParameter bpcc(ParameterTypes::branch, pb, Data::toBitset(";"));
       assert (bpcc.getTransactionId() == "T-i-D");
       assert (bpcc.clientData() == "");
       assert (bpcc.getSigcompCompartment() == "<urn:uuid:fa33c72d-121f-47e8-42e2-1eb6e24aba64>");
@@ -2100,7 +2100,7 @@ main(int arc, char** argv)
 
       ParseBuffer pb(txt.data(), txt.size());
 
-      BranchParameter bpcc(ParameterTypes::branch, pb, ";");
+      BranchParameter bpcc(ParameterTypes::branch, pb, Data::toBitset(";"));
       assert (bpcc.getTransactionId() == "T-i-D");
       assert (bpcc.clientData() == "ClientData");
       assert (bpcc.getSigcompCompartment() == "<urn:uuid:fa33c72d-121f-47e8-42e2-1eb6e24aba64>");

@@ -75,7 +75,8 @@ void
 CallID::parse(ParseBuffer& pb)
 {
    const char* start = pb.skipWhitespace();
-   pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SEMI_COLON);
+   static const std::bitset<256> wsOrSemi(Data::toBitset(ParseBuffer::Whitespace).set(Symbols::SEMI_COLON[0]));
+   pb.skipToOneOf(wsOrSemi);
    pb.data(mValue, start);
 
    parseParameters(pb);
@@ -92,7 +93,7 @@ CallID::encodeParsed(EncodeStream& str) const
 ParameterTypes::Factory CallID::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
 
 Parameter* 
-CallID::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+CallID::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators)
 {
    if(ParameterFactories[type])
    {

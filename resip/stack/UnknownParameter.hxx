@@ -9,13 +9,19 @@ namespace resip
 
 class ParseBuffer;
 
+/**
+   @ingroup sip_grammar
+
+   @brief Generically used to represent any parameter that is not
+   known by the implmentation.
+*/
 class UnknownParameter : public Parameter
 {
    public:
       UnknownParameter(const char* startName, 
                        unsigned int nameSize,
                        ParseBuffer& pb, 
-                       const char* terminators);
+                       const std::bitset<256>& terminators);
       
       // empty value indicates exists style (e.g. ;unknown;...)
       UnknownParameter(ParameterTypes::Type type, const Data& value);

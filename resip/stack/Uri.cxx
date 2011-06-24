@@ -940,18 +940,19 @@ Uri::parse(ParseBuffer& pb)
 {
    pb.skipWhitespace();
    const char* start = pb.position();
-   pb.skipToOneOf(":@"); // make sure the colon precedes
+   pb.skipToOneOf(":@");
 
    pb.assertNotEof();
 
    pb.data(mScheme, start);
    pb.skipChar(Symbols::COLON[0]);
-   mScheme.lowercase();
+   mScheme.schemeLowercase();
 
-   if (isEqualNoCase(mScheme, Symbols::Tel))
+   if (mScheme==Symbols::Tel)
    {
       const char* anchor = pb.position();
-      pb.skipToOneOf(ParseBuffer::Whitespace, ";>");
+      static std::bitset<256> delimiter=Data::toBitset("\r\n\t ;>");
+      pb.skipToOneOf(delimiter);
       pb.data(mUser, anchor);
       if (!pb.eof() && *pb.position() == Symbols::SEMI_COLON[0])
       {
@@ -963,8 +964,9 @@ Uri::parse(ParseBuffer& pb)
    }
    
    start = pb.position();
+   static std::bitset<256> userPortOrPasswordDelim(Data::toBitset("@:\""));
    // stop at double-quote to prevent matching an '@' in a quoted string param. 
-   pb.skipToOneOf("@:\"");
+   pb.skipToOneOf(userPortOrPasswordDelim);
    if (!pb.eof())
    {
       const char* atSign=0;
@@ -1017,6 +1019,7 @@ Uri::parse(ParseBuffer& pb)
    }
 
    mHostCanonicalized=false;
+   static std::bitset<256> hostDelimiter(Data::toBitset("\r\n\t :;?>"));
    if (*start == '[')
    {
       start = pb.skipChar();
@@ -1034,25 +1037,24 @@ Uri::parse(ParseBuffer& pb)
                                        __LINE__);
       }
       pb.skipChar();
+      pb.skipToOneOf(hostDelimiter);
    }
    else
    {
-      pb.skipToOneOf(ParseBuffer::Whitespace, ":;?>");
+      pb.skipToOneOf(hostDelimiter);
       pb.data(mHost, start);
    }
 
-   pb.skipToOneOf(ParseBuffer::Whitespace, ":;?>");
    if (!pb.eof() && *pb.position() == ':')
    {
       start = pb.skipChar();
-      mPort = pb.integer();
-      pb.skipToOneOf(ParseBuffer::Whitespace, ";?>");
+      mPort = pb.uInt32();
    }
    else
    {
       mPort = 0;
    }
-   
+
    parseParameters(pb);
 
    if (!pb.eof() && *pb.position() == Symbols::QUESTION[0])
@@ -1237,7 +1239,7 @@ Uri::toString() const
 ParameterTypes::Factory Uri::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
 
 Parameter* 
-Uri::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+Uri::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators)
 {
    if(ParameterFactories[type])
    {

@@ -17,7 +17,7 @@ using namespace std;
 
 QuotedDataParameter::QuotedDataParameter(ParameterTypes::Type type,
                                          ParseBuffer& pb,
-                                         const char* terminators)
+                                         const std::bitset<256>& terminators)
    : DataParameter(type, pb, terminators)
 {
    if (!mQuoted)

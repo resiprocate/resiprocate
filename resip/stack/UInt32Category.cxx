@@ -117,7 +117,7 @@ UInt32Category::encodeParsed(EncodeStream& str) const
 ParameterTypes::Factory UInt32Category::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
 
 Parameter* 
-UInt32Category::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+UInt32Category::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators)
 {
    if(ParameterFactories[type])
    {

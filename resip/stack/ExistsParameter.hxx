@@ -9,15 +9,23 @@ namespace resip
 
 class ParseBuffer;
 
+/**
+   @ingroup sip_grammar 
+
+   @brief Represents various parameters that are indicated to be in
+   effect merely by being present, e.g. ";lr"
+*/
 class ExistsParameter : public Parameter
 {
    public:
       typedef bool Type;
       
-      ExistsParameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);
+      ExistsParameter(ParameterTypes::Type, ParseBuffer& pb, const std::bitset<256>& terminators);
       explicit ExistsParameter(ParameterTypes::Type type);
 
-      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+      static Parameter* decode(ParameterTypes::Type type, 
+                                 ParseBuffer& pb, 
+                                 const std::bitset<256>& terminators)
       {
          return new ExistsParameter(type, pb, terminators);
       }

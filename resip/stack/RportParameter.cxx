@@ -16,7 +16,7 @@ using namespace std;
 
 RportParameter::RportParameter(ParameterTypes::Type type,
                                ParseBuffer& pb, 
-                               const char* terminators)
+                               const std::bitset<256>& terminators)
    : Parameter(type),
      mValue(0),
      mHasValue(false)
@@ -26,7 +26,7 @@ RportParameter::RportParameter(ParameterTypes::Type type,
    {
       mHasValue = true;
       
-      pb.skipChar(Symbols::EQUALS[0]);
+      pb.skipChar();
       pb.skipWhitespace();
 
       // Catch the exception gracefully to handle seeing ;rport=

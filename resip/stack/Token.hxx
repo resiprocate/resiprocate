@@ -45,7 +45,7 @@ class Token : public ParserCategory
       using ParserCategory::remove;
       using ParserCategory::param;
 
-      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators);
+      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators);
       bool exists(const Param<Token>& paramType) const;
       void remove(const Param<Token>& paramType);
 

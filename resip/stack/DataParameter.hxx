@@ -11,19 +11,26 @@ namespace resip
 
 class ParseBuffer;
 
+
+/**
+   @ingroup sip_grammar
+   @brief Generically represents miscellaneous parameter data.
+*/
 class DataParameter : public Parameter
 {
    public:
       typedef Data Type;
 
       DataParameter(ParameterTypes::Type, ParseBuffer& pb, 
-		    const char* terminators);
+		    const std::bitset<256>& terminators);
       explicit DataParameter(ParameterTypes::Type);
 
       bool isQuoted() const { return mQuoted; }
       void setQuoted(bool b) { mQuoted = b; }; // this parameter will be enclosed in quotes e.g. "foo"
 
-      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+      static Parameter* decode(ParameterTypes::Type type, 
+                                 ParseBuffer& pb, 
+                                 const std::bitset<256>& terminators)
       {
          return new DataParameter(type, pb, terminators);
       }

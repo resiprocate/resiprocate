@@ -17,7 +17,7 @@ using namespace std;
 
 DataParameter::DataParameter(ParameterTypes::Type type,
                              ParseBuffer& pb,
-			     const char* terminators)
+                             const std::bitset<256>& terminators)
    : Parameter(type), 
      mValue(),
      mQuoted(false)
@@ -25,8 +25,7 @@ DataParameter::DataParameter(ParameterTypes::Type type,
    pb.skipWhitespace();
    pb.skipChar(Symbols::EQUALS[0]);
    pb.skipWhitespace();
-
-   if(ParseBuffer::oneOf(*pb.position(),terminators)) // handle cases such as ;tag=
+   if(terminators[(unsigned char)(*pb.position())]) // handle cases such as ;tag=
    {
       throw ParseException("Empty value in string-type parameter.",
                               "DataParameter",
