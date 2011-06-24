@@ -20,14 +20,14 @@ using namespace std;
 StatusLine::StatusLine() 
    : ParserCategory(), 
      mResponseCode(-1),
-     mSipVersion(Symbols::DefaultSipVersion), 
+     mSipVersion(Data::Share,Symbols::DefaultSipVersion), 
      mReason()
 {}
 
 StatusLine::StatusLine(HeaderFieldValue* hfv, Headers::Type type)
    : ParserCategory(hfv, type), 
      mResponseCode(-1), 
-     mSipVersion(Symbols::DefaultSipVersion), 
+     mSipVersion(Data::Share,Symbols::DefaultSipVersion), 
      mReason() 
 {}
 

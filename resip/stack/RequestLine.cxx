@@ -28,8 +28,8 @@ RequestLine::RequestLine(MethodTypes method,
 RequestLine::RequestLine(HeaderFieldValue* hfv, Headers::Type type) 
    : ParserCategory(hfv, type),
      mMethod(UNKNOWN),
-     mUnknownMethodName(getMethodName(UNKNOWN)),
-     mSipVersion(Symbols::DefaultSipVersion)
+     mUnknownMethodName(Data::Share,getMethodName(UNKNOWN)),
+     mSipVersion(Data::Share,Symbols::DefaultSipVersion)
 {}
       
 RequestLine::RequestLine(const RequestLine& rhs)

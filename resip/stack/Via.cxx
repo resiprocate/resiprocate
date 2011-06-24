@@ -19,8 +19,8 @@ using namespace std;
 //====================
 Via::Via() 
    : ParserCategory(), 
-     mProtocolName(Symbols::ProtocolName),
-     mProtocolVersion(Symbols::ProtocolVersion),
+     mProtocolName(Data::Share,Symbols::ProtocolName),
+     mProtocolVersion(Data::Share,Symbols::ProtocolVersion),
      mTransport(),
      mSentHost(),
      mSentPort(0) 
@@ -32,9 +32,9 @@ Via::Via()
 
 Via::Via(HeaderFieldValue* hfv, Headers::Type type) 
    : ParserCategory(hfv, type),
-     mProtocolName(Symbols::ProtocolName),
-     mProtocolVersion(Symbols::ProtocolVersion),
-     mTransport(Symbols::UDP), // !jf! 
+     mProtocolName(Data::Share,Symbols::ProtocolName),
+     mProtocolVersion(Data::Share,Symbols::ProtocolVersion),
+     mTransport(Data::Share,Symbols::UDP), // !jf! 
      mSentHost(),
      mSentPort(-1) 
 {}

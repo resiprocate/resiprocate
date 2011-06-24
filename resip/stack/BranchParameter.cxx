@@ -28,7 +28,7 @@ BranchParameter::BranchParameter(ParameterTypes::Type type,
      mTransportSeq(1),
      mClientData(),
      mInteropMagicCookie(0),
-     mSigcompCompartment(Data::Empty)
+     mSigcompCompartment()
 {
    try
    {
@@ -102,7 +102,7 @@ BranchParameter::BranchParameter(ParameterTypes::Type type)
      mTransactionId(Random::getRandomHex(8)),
      mTransportSeq(1),
      mInteropMagicCookie(0),
-     mSigcompCompartment(Data::Empty)
+     mSigcompCompartment()
 {
 }
 
