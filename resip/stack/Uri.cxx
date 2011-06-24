@@ -22,23 +22,16 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 #define HANDLE_CHARACTER_ESCAPING //undef for old behaviour
 
-// Set to true only after the tables are initialised
-bool Uri::mEncodingReady = false;
-// class static variables listing the default characters not to encode
-// in user and password strings respectively
-const Data Uri::mUriNonEncodingUserChars = Data("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*\\()&=+$,;?/");
-const Data Uri::mUriNonEncodingPasswordChars = Data("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*\\()&=+$");
+static bool initAllTables()
+{
+   Uri::getUserEncodingTable();
+   Uri::getPasswordEncodingTable();
+   Uri::getLocalNumberTable();
+   Uri::getGlobalNumberTable();
+   return true;
+}
 
-// ?bwc? 'p' and 'w' are allowed in 2806, but have been removed in 3966. Should
-// we support these or not?
-const Data Uri::mLocalNumberChars = Data("*#-.()0123456789ABCDEFpw");
-const Data Uri::mGlobalNumberChars = Data("-.()0123456789");
-
-
-Uri::EncodingTable Uri::mUriEncodingUserTable;
-Uri::EncodingTable Uri::mUriEncodingPasswordTable;
-Uri::EncodingTable Uri::mLocalNumberTable(Data::toBitset(mLocalNumberChars));
-Uri::EncodingTable Uri::mGlobalNumberTable(Data::toBitset(mGlobalNumberChars));
+const bool Uri::tablesMightBeInitialized(initAllTables());
 
 Uri::Uri() 
    : ParserCategory(),
@@ -775,7 +768,7 @@ Uri::getAorInternal(bool dropScheme, bool addPort, Data& aor) const
 #ifdef HANDLE_CHARACTER_ESCAPING
       {
          oDataStream str(aor);
-         mUser.escapeToStream(str, mUriEncodingUserTable); 
+         mUser.escapeToStream(str, getUserEncodingTable()); 
       }
 #else
       aor += mUser;
@@ -825,11 +818,11 @@ Uri::userIsTelephoneSubscriber() const
       {
          // Might be a global phone number
          pb.skipChar();
-         pb.skipChars(mGlobalNumberTable);
+         pb.skipChars(getGlobalNumberTable());
       }
       else
       {
-         pb.skipChars(mLocalNumberTable);
+         pb.skipChars(getLocalNumberTable());
          local=true;
       }
 
@@ -1079,58 +1072,14 @@ Uri::clone() const
 
 void Uri::setUriUserEncoding(unsigned char c, bool encode) 
 {
-   if(!mEncodingReady)
-   {
-      // if we don't init first, the changes we make will be lost when
-      // init is invoked
-      initialiseEncodingTables();
-   }
-
-   mUriEncodingUserTable[c] = encode; 
+   getUserEncodingTable()[c] = encode; 
 }
 
 void Uri::setUriPasswordEncoding(unsigned char c, bool encode)
 {
-   if(!mEncodingReady)
-   {
-      // if we don't init first, the changes we make will be lost when
-      // init is invoked
-      initialiseEncodingTables();
-   }
-
-   mUriEncodingPasswordTable[c] = encode;
+   getPasswordEncodingTable()[c] = encode;
 }
 
-void Uri::initialiseEncodingTables() {
-
-   // set all bits
-   mUriEncodingUserTable=Data::toBitset(mUriNonEncodingUserChars).flip();
-   mUriEncodingPasswordTable=Data::toBitset(mUriNonEncodingPasswordChars).flip();
-   mEncodingReady = true;
-}
-
-inline bool 
-Uri::shouldEscapeUserChar(unsigned char c)
-{
-   if(!mEncodingReady)
-   {
-      initialiseEncodingTables();
-   }
-
-   return mUriEncodingUserTable[c];
-}
-
-inline bool 
-Uri::shouldEscapePasswordChar(unsigned char c)
-{
-   if(!mEncodingReady)
-   {
-      initialiseEncodingTables();
-   }
-
-   return mUriEncodingPasswordTable[c];
-}
- 
 // should not encode user parameters unless its a tel?
 EncodeStream& 
 Uri::encodeParsed(EncodeStream& str) const
@@ -1139,7 +1088,7 @@ Uri::encodeParsed(EncodeStream& str) const
    if (!mUser.empty())
    {
 #ifdef HANDLE_CHARACTER_ESCAPING
-      mUser.escapeToStream(str, shouldEscapeUserChar); 
+      mUser.escapeToStream(str, getUserEncodingTable()); 
 #else
       str << mUser;
 #endif
@@ -1151,7 +1100,7 @@ Uri::encodeParsed(EncodeStream& str) const
       {
          str << Symbols::COLON;
 #ifdef HANDLE_CHARACTER_ESCAPING
-         mPassword.escapeToStream(str, shouldEscapePasswordChar);
+         mPassword.escapeToStream(str, getPasswordEncodingTable());
 #else
          str << mPassword;
 #endif
