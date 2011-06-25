@@ -19,6 +19,7 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TransportFailure.hxx"
 #include "resip/stack/Helper.hxx"
+#include "resip/stack/SendData.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
@@ -217,13 +218,12 @@ Transport::fail(const Data& tid, TransportFailure::FailureReason reason, int sub
    }
 }
 
-/// @todo unify w/ transmit
-void
-Transport::send( const Tuple& dest, const Data& d, const Data& tid, const Data &sigcompId)
+std::auto_ptr<SendData>
+Transport::makeSendData( const Tuple& dest, const Data& d, const Data& tid, const Data &sigcompId)
 {
    assert(dest.getPort() != -1);
-   DebugLog (<< "Adding message to tx buffer to: " << dest); // << " " << d.escaped());
-   transmit(dest, d, tid, sigcompId);
+   std::auto_ptr<SendData> data(new SendData(dest, d, tid, sigcompId));
+   return data;
 }
 
 void
@@ -252,31 +252,45 @@ Transport::makeFailedResponse(const SipMessage& msg,
 
   // Calculate compartment ID for outbound message
   Data remoteSigcompId;
-  if (mCompression.isEnabled())
-  {
-     const Via &topVia(errMsg->const_header(h_Vias).front());
-
-    if(topVia.exists(p_comp) && topVia.param(p_comp) == "sigcomp")
-    {
-      if (topVia.exists(p_sigcompId))
-      {
-        remoteSigcompId = topVia.param(p_sigcompId);
-      }
-      else
-      {
-        // XXX rohc-sigcomp-sip-03 says "sent-by",
-        // but this should probably be "received" if present,
-        // and "sent-by" otherwise.
-        // XXX Also, the spec is ambiguous about whether
-        // to include the port in this identifier.
-        remoteSigcompId = topVia.sentHost();
-      }
-    }
-  }
-
-  transmit(dest, encoded, Data::Empty, remoteSigcompId);
+   setRemoteSigcompId(*errMsg,remoteSigcompId);
+  send(std::auto_ptr<SendData>(makeSendData(dest, encoded, Data::Empty, remoteSigcompId)));
 }
 
+
+void
+Transport::setRemoteSigcompId(SipMessage& msg, Data& remoteSigcompId)
+{
+   if (mCompression.isEnabled())
+   {
+      try
+      {
+         const Via &topVia(msg.const_header(h_Vias).front());
+         
+         if(topVia.exists(p_comp) && topVia.param(p_comp) == "sigcomp")
+         {
+            if (topVia.exists(p_sigcompId))
+            {
+               remoteSigcompId = topVia.param(p_sigcompId);
+            }
+            else
+            {
+               // XXX rohc-sigcomp-sip-03 says "sent-by",
+               // but this should probably be "received" if present,
+               // and "sent-by" otherwise.
+               // XXX Also, the spec is ambiguous about whether
+               // to include the port in this identifier.
+               remoteSigcompId = topVia.sentHost();
+            }
+         }
+      }
+      catch(BaseException&)
+      {
+         // ?bwc? Couldn't grab sigcomp compartment id. We don't even know if
+         // the initial request was using sigcomp or not. 
+         // What should we do here?
+      }
+   }
+}
 
 void
 Transport::stampReceived(SipMessage* message)

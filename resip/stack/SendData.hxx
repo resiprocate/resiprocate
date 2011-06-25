@@ -7,9 +7,15 @@
 namespace resip
 {
 
+/**
+   @internal
+*/
 class SendData
 {
    public:
+      SendData() : isAlreadyCompressed(false)
+      {}
+
       SendData(const Tuple& dest,
                const Data& pdata,
                const Data& tid,
@@ -32,12 +38,26 @@ class SendData
          isAlreadyCompressed(false)
       {
       }
-      
-      
+
+      SendData* clone() const
+      {
+         return new SendData(*this);
+      }
+
+      void clear()
+      {
+         data.clear();
+      }
+
+      bool empty() const
+      {
+         return data.empty();
+      }
+
       Tuple destination;
-      const Data data;
-      const Data transactionId;
-      const Data sigcompId;
+      Data data;
+      Data transactionId;
+      Data sigcompId;
       bool isAlreadyCompressed;
 };
 

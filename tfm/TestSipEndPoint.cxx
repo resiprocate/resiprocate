@@ -356,7 +356,8 @@ TestSipEndPoint::send(boost::shared_ptr<SipMessage>& msg, RawConditionerFn func)
    
    if (useTuple)
    {
-      useTuple->transport->send(*useTuple, toWrite, "bogus");
+      std::auto_ptr<SendData> toSend(useTuple->transport->makeSendData(*useTuple, toWrite, "bogus"));
+      useTuple->transport->send(toSend);
    }
    else
    {
@@ -374,7 +375,8 @@ TestSipEndPoint::send(boost::shared_ptr<SipMessage>& msg, RawConditionerFn func)
       {
          r.mNextHops.front().setPort(5061);
       }
-      mTransport->send(r.mNextHops.front(), toWrite, "bogus");
+      std::auto_ptr<SendData> toSend(mTransport->makeSendData(r.mNextHops.front(), toWrite, "bogus"));
+      mTransport->send(toSend);
    }
 }
 
@@ -1351,7 +1353,8 @@ TestSipEndPoint::RawSend::go()
 {
    Tuple target(mTo.uri().host(), mTo.uri().port(), TCP);
    mRawText=mRawConditioner(mRawText);
-   mEndPoint.mTransport->send(target, mRawText, 0);
+   std::auto_ptr<SendData> toSend(mEndPoint.mTransport->makeSendData(target, mRawText, 0));
+   mEndPoint.mTransport->send(toSend);
 }
 
 void

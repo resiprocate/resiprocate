@@ -36,6 +36,8 @@ class Compression;
 class FdPollGrp;
 
 /**
+   @internal
+
   TransportSelector has two distinct roles.  The first is transmit on the best
 outgoing Transport for a given SipMessage based on the target's TransportType
 and the hints present in the topmost Via in the SipMessage.  The second role
@@ -87,10 +89,10 @@ class TransportSelector
        kick off dns resolution or to pick the next tuple and will cause the
        message to be encoded and via updated
 	  */
-      void transmit( SipMessage* msg, Tuple& target );
+      bool transmit( SipMessage* msg, Tuple& target, SendData* sendData=0 );
 
       /// Resend to the same transport as last time
-      void retransmit(SipMessage* msg, Tuple& target );
+      void retransmit(const SendData& msg);
 
       unsigned int sumTransportFifoSizes() const;
 
@@ -119,7 +121,6 @@ class TransportSelector
       Transport* findTlsTransport(const Data& domain,TransportType type,IpVersion ipv);
       Tuple determineSourceInterface(SipMessage* msg, const Tuple& dest) const;
 
-
       DnsInterface mDns;
       Fifo<TransactionMessage>& mStateMacFifo;
       Security* mSecurity;// for computing identity header
@@ -142,6 +143,9 @@ class TransportSelector
 
       std::map<FlowKey,Transport*> mConnectionlessMap;   // references transport pointers owned by mExactTransports, mAnyInterfaceTransports, or mTlsTransports
 
+      /**
+         @internal
+      */
       class TlsTransportKey
       {
          public:
@@ -212,6 +216,8 @@ class TransportSelector
 
       // epoll support, for sharedprocess transports
       FdPollGrp* mPollGrp;
+
+      int mAvgBufferSize;
 
       friend class TestTransportSelector;
       friend class SipStack; // for debug only
