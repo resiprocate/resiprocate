@@ -70,7 +70,8 @@ TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* s
    mSocket6( INVALID_SOCKET ),
    mCompression(compression),
    mSigcompStack (0),
-   mPollGrp(0)
+   mPollGrp(0),
+   mAvgBufferSize(1024)
 {
    memset(&mUnspecified.v4Address, 0, sizeof(sockaddr_in));
    mUnspecified.v4Address.sin_family = AF_UNSPEC;
@@ -95,7 +96,6 @@ TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* s
    DebugLog (<< "No compression library available");
 #endif
 }
-
 
 TransportSelector::~TransportSelector()
 {
@@ -656,8 +656,8 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
 
 // !jf! there may be an extra copy of a tuple here. can probably get rid of it
 // but there are some const issues.
-void
-TransportSelector::transmit(SipMessage* msg, Tuple& target)
+bool
+TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
 {
    assert(msg);
 
@@ -1027,27 +1027,42 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          // Call back anyone who wants to perform outbound decoration
          msg->callOutboundDecorators(source, target,remoteSigcompId);
 
-         Data& encoded = msg->getEncoded();
-         encoded.clear();
-         DataStream encodeStream(encoded);
-         msg->encode(encodeStream);
-         encodeStream.flush();
-         msg->getCompartmentId() = remoteSigcompId;
+         std::auto_ptr<SendData> send(new SendData(target, 
+                                                   resip::Data::Empty, 
+                                                   msg->getTransactionId(),
+                                                   remoteSigcompId));
 
-         assert(!msg->getEncoded().empty());
+         send->data.reserve(mAvgBufferSize + mAvgBufferSize/4);
+
+         DataStream str(send->data);
+         msg->encode(str);
+         str.flush();
+
+         // !bwc! Moving average of message size. (Used to intelligently
+         // predict how much space to reserve in the buffer, to minimize
+         // dynamic resizing.)
+         mAvgBufferSize = (255*mAvgBufferSize + send->data.size()+128)/256;
+
+         assert(!send->data.empty());
          DebugLog (<< "Transmitting to " << target
                    << " tlsDomain=" << msg->getTlsDomain()
                    << " via " << source
-                   << std::endl << std::endl << encoded.escaped()
+                   << std::endl << std::endl << send->data.escaped()
                    << "sigcomp id=" << remoteSigcompId);
 
-         target.transport->send(target, encoded, msg->getTransactionId(),
-                                remoteSigcompId);
+         if(sendData)
+         {
+            *sendData = *send;
+         }
+
+         target.transport->send(send);
+         return true;
       }
       else
       {
          InfoLog (<< "tid=" << msg->getTransactionId() << " failed to find a transport to " << target);
          mStateMacFifo.add(new TransportFailure(msg->getTransactionId(), transportFailureReason));
+         return false;
       }
 
    }
@@ -1055,14 +1070,14 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
    {
       InfoLog (<< "tid=" << msg->getTransactionId() << " no route to target: " << target);
       mStateMacFifo.add(new TransportFailure(msg->getTransactionId(), TransportFailure::NoRoute));
-      return;
+      return false;
    }
 }
 
 void
-TransportSelector::retransmit(SipMessage* msg, Tuple& target)
+TransportSelector::retransmit(const SendData& data)
 {
-   assert(target.transport);
+   assert(data.destination.transport);
 
    // !jf! The previous call to transmit may have blocked or failed (It seems to
    // block in windows when the network is disconnected - don't know why just
@@ -1087,11 +1102,7 @@ TransportSelector::retransmit(SipMessage* msg, Tuple& target)
    // data to be transmitted, sendto will block unless the socket has been
    // placed in a nonblocking mode.
 
-   if(!msg->getEncoded().empty())
-   {
-      //DebugLog(<<"!ah! retransmit to " << target);
-      target.transport->send(target, msg->getEncoded(), msg->getTransactionId(), msg->getCompartmentId());
-   }
+   data.destination.transport->send(std::auto_ptr<SendData>(data.clone()));
 }
 
 unsigned int

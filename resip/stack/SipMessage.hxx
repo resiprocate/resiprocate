@@ -344,16 +344,6 @@ class SipMessage : public TransactionMessage
 
       void addBuffer(char* buf);
 
-      // returns the encoded buffer which was encoded by
-      // TransportSelector::transmit()
-      // !!! should only be called by the TransportSelector !!!
-      Data& getEncoded();
-
-      // returns the compartment ID which was computed by
-      // TransportSelector::transmit()
-      // !!! should only be called by the TransportSelector !!!
-      Data& getCompartmentId();
-
       UInt64 getCreatedTimeMicroSec() {return mCreatedTime;}
 
       // deal with a notion of an "out-of-band" forced target for SIP routing
@@ -441,8 +431,6 @@ class SipMessage : public TransactionMessage
       bool mInvalid;
       resip::Data mReason;
       
-      Data mEncoded; // to be retransmitted
-      Data mCompartmentId; // for retransmissions
       UInt64 mCreatedTime;
 
       // used when next element is a strict router OR 

@@ -50,7 +50,7 @@ class FakeTransport :  public Transport
       virtual void setPollGrp(FdPollGrp* grp) { assert(0); }
       virtual unsigned int getFifoSize() const { assert(0); return 0; }
 
-      virtual void transmit(const Tuple& dest, const Data& pdata, const Data& tid, const Data &sigcompCompartment) { assert(0); }
+      virtual void send(std::auto_ptr<SendData> data) { assert(0); }
 };
 
 class TestConnection : public ConnectionBase

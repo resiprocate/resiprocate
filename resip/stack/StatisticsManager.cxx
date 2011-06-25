@@ -84,17 +84,12 @@ StatisticsManager::process()
 }
 
 bool
-StatisticsManager::sent(SipMessage* msg, bool retrans)
+StatisticsManager::sent(SipMessage* msg)
 {
-   MethodTypes met = msg->header(h_CSeq).method();
+   MethodTypes met = msg->method();
 
    if (msg->isRequest())
    {
-      if (retrans)
-      {
-         ++requestsRetransmitted;
-         ++requestsRetransmittedByMethod[met];
-      }
       ++requestsSent;
       ++requestsSentByMethod[met];
    }
@@ -106,17 +101,30 @@ StatisticsManager::sent(SipMessage* msg, bool retrans)
          code = 0;
       }
 
-      if (retrans)
-      {
-         ++responsesRetransmitted;
-         ++responsesRetransmittedByMethod[met];
-         ++responsesRetransmittedByMethodByCode[met][code];
-      }
       ++responsesSent;
       ++responsesSentByMethod[met];
       ++responsesSentByMethodByCode[met][code];
    }
+   
+   return false;
+}
 
+bool 
+StatisticsManager::retransmitted(MethodTypes met, 
+                                 bool request, 
+                                 unsigned int code)
+{
+   if(request)
+   {
+      ++requestsRetransmitted;
+      ++requestsRetransmittedByMethod[met];
+   }
+   else
+   {
+      ++responsesRetransmitted;
+      ++responsesRetransmittedByMethod[met];
+      ++responsesRetransmittedByMethodByCode[met][code];
+   }
    return false;
 }
 

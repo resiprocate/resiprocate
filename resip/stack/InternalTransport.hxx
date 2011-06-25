@@ -22,6 +22,9 @@ class SipMessage;
 class Connection;
 class FdPollGrp;
 
+/**
+   @internal
+*/
 class InternalTransport : public Transport
 {
    public:
@@ -52,10 +55,10 @@ class InternalTransport : public Transport
 
       // used for statistics
       virtual unsigned int getFifoSize() const;
+      virtual void send(std::auto_ptr<SendData> data);
 
    protected:
       friend class SipStack;
-      virtual void transmit(const Tuple& dest, const Data& pdata, const Data& tid, const Data& sigcompId);
 
       // Whenever a message is added to queue by transmit(), it invokes this
       // function synchronously.

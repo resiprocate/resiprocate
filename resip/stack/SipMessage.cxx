@@ -1219,18 +1219,6 @@ SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLe
    }
 }
 
-Data&
-SipMessage::getEncoded() 
-{
-   return mEncoded;
-}
-
-Data&
-SipMessage::getCompartmentId() 
-{
-   return mCompartmentId;
-}
-
 RequestLine& 
 SipMessage::header(const RequestLineType& l)
 {
