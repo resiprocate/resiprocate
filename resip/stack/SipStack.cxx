@@ -328,7 +328,7 @@ SipStack::addTransport(std::auto_ptr<Transport> transport)
       }
    }
    mPorts.insert(transport->port());
-   mTransactionController->transportSelector().addTransport(transport);
+   mTransactionController->transportSelector().addTransport(transport,true);
 }
 
 Fifo<TransactionMessage>&
@@ -863,13 +863,6 @@ resip::operator<<(EncodeStream& strm,
 const SipStack& stack)
 {
    return stack.dump(strm);
-}
-
-bool
-SipStack::isFlowAlive(const resip::Tuple& flow) const
-{
-   return flow.getType()==UDP ||
-         mTransactionController->transportSelector().connectionAlive(flow);
 }
 
 void 

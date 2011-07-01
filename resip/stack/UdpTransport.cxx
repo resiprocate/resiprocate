@@ -549,6 +549,7 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
 
    // Save all the info where this message came from
    sender.transport = this;
+   sender.transportKey = getKey();
    sender.mFlowKey=mTuple.mFlowKey;
    message->setSource(sender);
    //DebugLog (<< "Received from: " << sender);

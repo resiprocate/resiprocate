@@ -636,7 +636,6 @@ class SipStack
 
       Compression &getCompression() { return *mCompression; }
 
-      bool isFlowAlive(const resip::Tuple& flow) const;  // Must be called from StackThread
       void terminateFlow(const resip::Tuple& flow);
       void enableFlowTimer(const resip::Tuple& flow);
 
