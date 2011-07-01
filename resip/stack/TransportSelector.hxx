@@ -78,7 +78,7 @@ class TransportSelector
       /// Builds an FdSet comprised of all FDs from all suitable Transports
       void buildFdSet(FdSet& fdset);
 
-      void addTransport( std::auto_ptr<Transport> transport);
+      void addTransport( std::auto_ptr<Transport> transport, bool immediate);
 
       DnsResult* createDnsResult(DnsHandler* handler);
 
@@ -94,6 +94,8 @@ class TransportSelector
       /// Resend to the same transport as last time
       void retransmit(const SendData& msg);
 
+      void closeConnection(const Tuple& peer);
+
       unsigned int sumTransportFifoSizes() const;
 
       unsigned int getTimeTillNextProcessMS();
@@ -104,7 +106,6 @@ class TransportSelector
       void setEnumSuffixes(const std::vector<Data>& suffixes);
 
       static Tuple getFirstInterface(bool is_v4, TransportType type);
-      bool connectionAlive(const Tuple& dest) const;
       void terminateFlow(const resip::Tuple& flow);
       void enableFlowTimer(const resip::Tuple& flow);
 
@@ -112,13 +113,14 @@ class TransportSelector
       void deleteTransports();
 
    private:
+      void addTransportInternal( std::auto_ptr<Transport> transport);
       Connection* findConnection(const Tuple& dest) const;
-      Transport* findTransportBySource(Tuple& src) const;
+      Transport* findTransportBySource(Tuple& src, const SipMessage* msg) const;
       Transport* findLoopbackTransportBySource(bool ignorePort, Tuple& src) const;
-      Transport* findTransportByDest(SipMessage* msg, Tuple& dest);
+      Transport* findTransportByDest(const Tuple& dest);
       Transport* findTransportByVia(SipMessage* msg, const Tuple& dest,
         Tuple& src) const;
-      Transport* findTlsTransport(const Data& domain,TransportType type,IpVersion ipv);
+      Transport* findTlsTransport(const Data& domain,TransportType type,IpVersion ipv) const;
       Tuple determineSourceInterface(SipMessage* msg, const Tuple& dest) const;
 
       DnsInterface mDns;
@@ -126,22 +128,22 @@ class TransportSelector
       Security* mSecurity;// for computing identity header
 
       // specific port and interface
-      typedef std::map<Tuple, Transport*> ExactTupleMap;  
-      ExactTupleMap mExactTransports;  // owns transport pointers
+      typedef std::map<Tuple, Transport*> ExactTupleMap;
+      ExactTupleMap mExactTransports;
 
       // specific port, ANY interface
       typedef std::map<Tuple, Transport*, Tuple::AnyInterfaceCompare> AnyInterfaceTupleMap;
-      AnyInterfaceTupleMap mAnyInterfaceTransports;  // owns transport pointers
+      AnyInterfaceTupleMap mAnyInterfaceTransports;
 
       // ANY port, specific interface
       typedef std::map<Tuple, Transport*, Tuple::AnyPortCompare> AnyPortTupleMap;
-      AnyPortTupleMap mAnyPortTransports;   // references transport pointers owened by mExactTransports
+      AnyPortTupleMap mAnyPortTransports;
 
       // ANY port, ANY interface
       typedef std::map<Tuple, Transport*, Tuple::AnyPortAnyInterfaceCompare> AnyPortAnyInterfaceTupleMap;
-      AnyPortAnyInterfaceTupleMap mAnyPortAnyInterfaceTransports;    // references transport pointers owened by mAnyInterfaceTransports
+      AnyPortAnyInterfaceTupleMap mAnyPortAnyInterfaceTransports;
 
-      std::map<FlowKey,Transport*> mConnectionlessMap;   // references transport pointers owned by mExactTransports, mAnyInterfaceTransports, or mTlsTransports
+      std::vector<Transport*> mTransports; // owns all Transports
 
       /**
          @internal
@@ -190,14 +192,14 @@ class TransportSelector
          private:
             TlsTransportKey();
       };
-
-      typedef std::map<TlsTransportKey, Transport*> TlsTransportMap ;  // owns transport pointers
-
+      
+      typedef std::map<TlsTransportKey, Transport*> TlsTransportMap ;
+      
       TlsTransportMap mTlsTransports;
 
       typedef std::vector<Transport*> TransportList;
-      TransportList mSharedProcessTransports;   // references transport pointers owned by mExactTransports, mAnyInterfaceTransports, or mTlsTransports
-      TransportList mHasOwnProcessTransports;   // references transport pointers owned by mExactTransports, mAnyInterfaceTransports, or mTlsTransports
+      TransportList mSharedProcessTransports;
+      TransportList mHasOwnProcessTransports;
 
       typedef std::multimap<Tuple, Transport*, Tuple::AnyPortAnyInterfaceCompare> TypeToTransportMap;
       TypeToTransportMap mTypeToTransportMap;
@@ -218,6 +220,7 @@ class TransportSelector
       FdPollGrp* mPollGrp;
 
       int mAvgBufferSize;
+      Fifo<Transport> mTransportsToAdd;
 
       friend class TestTransportSelector;
       friend class SipStack; // for debug only

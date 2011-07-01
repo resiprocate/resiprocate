@@ -28,6 +28,7 @@ class Transport;
 // its lifetime so they must not be included in the hash or comparisons. 
 
 typedef unsigned long FlowKey;
+typedef unsigned long TransportKey;
 
 /**
    @ingroup resip_crit
@@ -36,8 +37,18 @@ typedef unsigned long FlowKey;
    This includes:
       - IP address
       - port
-      - protocol
+      - protocol (TransportType)
       - TLS hostname (since this is integral to connection establishment)
+
+   Internally the class is aware of the struct
+   sockaddr/sin_addr/sin6addr binary representation of the address.
+   The sa_family of struct sockaddr is used to keep track of whether a
+   Tuple is representing a an IPv4 or IPv6 address.
+
+   Also included are some comparator classes that can be used for
+   containers of Tuple.
+
+
 */
 class Tuple
 {
@@ -84,30 +95,62 @@ class Tuple
             const Data& targetDomain = Data::Empty);
 #endif
       
-      // convert from a tuple to a sockaddr structure
+      /// @brief Retrieve a const binary representation of the socket address
+      /// for this tuple.
       const sockaddr& getSockaddr() const { return mSockaddr; }
+
+      ///  @brief Retrieve the binary representation of the socket address for
+      /// this tuple.
       sockaddr& getMutableSockaddr() { return mSockaddr; }
+
+      ///  @brief Set the internal binary representation of the socket address
+      /// from the GenericIPAddress.
       void setSockaddr(const GenericIPAddress &);
 
       TransportType getType() const { return mTransportType; }
       void setType(TransportType type) { mTransportType = type ;}
       void setPort(int port);
       int getPort() const;
-      bool isV4() const; //!dcm! -- should deprecate asap
-      IpVersion ipVersion() const;     
+      inline FlowKey getFlowKey() const { return mFlowKey;} 
+
+      /// @deprecated use ipVersion()
+	  /// @todo !dcm! -- should deprecate asap
+      bool isV4() const; 
+
+      /// Returns V4 or V6 as appropriate.
+      IpVersion ipVersion() const;
+      void setIpVersion(IpVersion version);
+
+      ///  @brief TRUE if this address is equal to the "INADDR_ANY" value for
+      /// this address family.  
       bool isAnyInterface() const;
       socklen_t length() const; // of sockaddr
       bool isLoopback() const;
       bool isPrivateAddress() const;  // Return boolean based on definitions in RFC1918(v4) and RFC4193(v6)
       
+      ///  @brief Compares TransportType, the binary address, port, and
+      /// address family of the Tuple.
       bool operator<(const Tuple& rhs) const;
+
+      ///  @brief Compares TransportType, the binary address, port, and
+      /// address family of the Tuple.
       bool operator==(const Tuple& rhs) const;
-           
+      
+      /// Wrapper around the inet_top() method.
       Data presentationFormat() const;
       
-      static TransportType toTransport(const Data& transportName);
-      static const Data& toData(TransportType type);
+      ///  @brief Converts a string representation of transport type,
+      /// i.e. "UDP" to a TransportType
+      static TransportType toTransport( const Data& );
+
+      ///  @brief Converts the TransportType to a string representation of the
+      /// transport type, e.g. "TCP"
+      static const Data& toData( TransportType );
+
       static const Data& toDataLower(TransportType type);
+
+      ///  @brief Converts the binary socket address to presentation format,
+      /// via the DnsUtil::inet_ntop() method.
       static Data inet_ntop(const Tuple& tuple);
 
       // Creates a binary token from the provided Tuple - if salt is provided, then an HMAC is appended
@@ -127,14 +170,20 @@ class Tuple
       /// (It is highly recommended that these ids are unique across all
       /// instances of a transport type)
       FlowKey mFlowKey;
+      TransportKey transportKey;
+
+      // deprecate
       Transport* transport;
       bool onlyUseExistingConnection;
 
-      /// compares this tuple with the one passed in for family, port and address equality
-      /// using the passed in address mask (mask is specified by number of bits)
+      ///  @brief compares this tuple with the one passed in for family, port
+      /// and address equality using the passed in address mask (mask
+      /// is specified by number of bits)
       bool isEqualWithMask(const Tuple& tuple, short mask, bool ignorePort=false, bool ignoreTransport=false) const;
 
-      // special comparitors
+      ///  @brief A "less than" comparator for Tuple, for use in map
+      /// containers etc. Comparison is based on transport type, and
+      /// if those are equal, it is based on port number.
       class AnyInterfaceCompare
       {
          public:
@@ -143,6 +192,11 @@ class Tuple
       };
       friend class AnyInterfaceCompare;
 
+      ///  @brief A "less than" comparator for Tuple, for use in map
+      /// containers etc. Comparison is based on transport type, and
+      /// if those are equal, it is based on the binary representation
+      /// of the socket internet address (v4 or v6, whichever is
+      /// appropriate).
       class AnyPortCompare
       {
          public:
@@ -151,6 +205,8 @@ class Tuple
       };
       friend class AnyPortCompare;
 
+      ///  @brief A "less than" comparator for Tuple, for use in map
+      /// containers etc. Comparison is based only on transport type
       class AnyPortAnyInterfaceCompare
       {
          public:
@@ -167,18 +223,21 @@ class Tuple
       };
       friend class FlowKeyCompare;
 
+      ///  @brief Set the domain name this address tuple intends to represent.
       void setTargetDomain(const Data& target)
       {
          mTargetDomain = target;
       }
       
+      ///  @brief Get the domain name this address tuple intends to represent.
+      /// Useful with DnsUtil, for example.
       const Data& getTargetDomain() const
       {
          return mTargetDomain;
       }
       
       /**
-        Creates a 32-bit hash based on the contents of this Tuple.
+         @brief Creates a 32-bit hash based on the contents of this Tuple.
       */
       size_t hash() const;   
 
@@ -192,7 +251,7 @@ private:
             // ?bwc? Is there a more standard preprocessor macro for this?
             sockaddr_in6 m_anonv6;
 #endif
-            char pad[28]; // this make union same size if v6 is in or out
+            char pad[28]; //< this make union same size if v6 is in or out
       };
       TransportType mTransportType;
       Data mTargetDomain; 

@@ -296,11 +296,17 @@ class Transport
       virtual bool hasRecordRoute() const { return mHasRecordRoute; }
       virtual const NameAddr& getRecordRoute() const { assert(mHasRecordRoute); return mRecordRoute; }
 
+      inline unsigned int getKey() const {return mKey;} 
+
    protected:
+      friend class TransportSelector;
+      inline void setKey(unsigned int pKey) { mKey = pKey;}
+
       Data mInterface;
       Tuple mTuple;
       NameAddr mRecordRoute;
       bool mHasRecordRoute;
+      unsigned int mKey;
 
       Fifo<TransactionMessage>& mStateMachineFifo; // passed in
       bool mShuttingDown;

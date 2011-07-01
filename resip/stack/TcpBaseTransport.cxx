@@ -250,7 +250,9 @@ TcpBaseTransport::processAllWriteRequests()
       //DebugLog (<< "TcpBaseTransport::processAllWriteRequests() using " << conn);
 
       // There is no connection yet, so make a client connection
-      if (conn == 0 && !data->destination.onlyUseExistingConnection)
+      if (conn == 0 && 
+            !data->destination.onlyUseExistingConnection &&
+            !data->eof)
       {
          TransportFailure::FailureReason failCode = TransportFailure::Failure;
          int subCode = 0;

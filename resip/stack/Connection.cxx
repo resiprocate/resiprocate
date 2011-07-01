@@ -75,6 +75,12 @@ Connection::performWrite()
    }
 
    assert(!mOutstandingSends.empty());
+   if(mOutstandingSends.front()->eof)
+   {
+      // .bwc. Close this connection.
+      delete this;
+      return;
+   }
 
    const Data& sigcompId = mOutstandingSends.front()->sigcompId;
 

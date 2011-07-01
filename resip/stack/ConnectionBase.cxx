@@ -63,7 +63,9 @@ ConnectionBase::ConnectionBase(Transport* transport, const Tuple& who, Compressi
    DebugLog (<< "No compression library available: " << this);
 #endif
 
+   // deprecated; stop doing this eventually
    mWho.transport=mTransport;
+   mWho.transportKey=mTransport ? mTransport->getKey() : 0;
 }
 
 ConnectionBase::~ConnectionBase()

@@ -3,8 +3,10 @@
 namespace repro
 {
 
-OutboundTarget::OutboundTarget(const resip::ContactList& recs) :
+OutboundTarget::OutboundTarget(const resip::Data& aor, 
+                                 const resip::ContactList& recs) :
    QValueTarget(recs.empty() ? resip::ContactInstanceRecord() : recs.front()),
+   mAor(aor),
    mList(recs)
 {
    if(!mList.empty())
@@ -25,7 +27,7 @@ OutboundTarget::nextInstance()
    }
 
    mList.pop_front();
-   return new OutboundTarget(mList);
+   return new OutboundTarget(mAor, mList);
 }
 
 OutboundTarget* 

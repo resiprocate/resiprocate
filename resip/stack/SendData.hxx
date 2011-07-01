@@ -13,7 +13,7 @@ namespace resip
 class SendData
 {
    public:
-      SendData() : isAlreadyCompressed(false)
+      SendData() : isAlreadyCompressed(false), eof(false)
       {}
 
       SendData(const Tuple& dest,
@@ -25,7 +25,8 @@ class SendData
          data(pdata),
          transactionId(tid),
          sigcompId(scid),
-         isAlreadyCompressed(isCompressed)
+         isAlreadyCompressed(isCompressed),
+         eof(false)
       {
       }
 
@@ -35,7 +36,8 @@ class SendData
          data(Data::Take, buffer, length),
          transactionId(Data::Empty),
          sigcompId(Data::Empty),
-         isAlreadyCompressed(false)
+         isAlreadyCompressed(false),
+         eof(false)
       {
       }
 
@@ -59,6 +61,8 @@ class SendData
       Data transactionId;
       Data sigcompId;
       bool isAlreadyCompressed;
+      // .bwc. Used to close connections
+      bool eof;
 };
 
 }
