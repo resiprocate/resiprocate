@@ -619,7 +619,7 @@ SipStack::abandonServerTransaction(const Data& tid)
 void
 SipStack::cancelClientInviteTransaction(const Data& tid)
 {
-   mTransactionController.cancelClientInviteTransaction(tid);
+   mTransactionController->cancelClientInviteTransaction(tid);
    checkAsyncProcessHandler();
 }
 
