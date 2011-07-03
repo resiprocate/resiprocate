@@ -1029,11 +1029,8 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                   if(mIsAbandoned)
                   {
                      SipMessage* cancel = Helper::makeCancel(*mMsgToRetransmit);
-                     if(mAdandonedMessageDecorator.get() != 0)
-                     {
-                        // If decorator is specified then add it to the created cancel message
-                        cancel->addOutboundDecorator(mAdandonedMessageDecorator);
-                     }
+                     // Iterate through message decorators on the INVITE and see if any need to be copied to the CANCEL
+                     mMsgToRetransmit->copyOutboundDecoratorsToStackCancel(*cancel);
                      handleInternalCancel(cancel, *this);
                      mIsAbandoned=false;
                   }
@@ -1074,6 +1071,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                   // reliable
                   SipMessage* invite = mMsgToRetransmit;
                   mMsgToRetransmit = Helper::makeFailureAck(*invite, *sip);
+                  invite->copyOutboundDecoratorsToStackFailureAck(*mMsgToRetransmit);
                   delete invite;
                   
                   // want to use the same transport as was selected for Invite
@@ -1101,6 +1099,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                      mController.mTimers.add(Timer::TimerD, mId, Timer::TD );
                      SipMessage* ack;
                      ack = Helper::makeFailureAck(*mMsgToRetransmit, *sip);
+                     mMsgToRetransmit->copyOutboundDecoratorsToStackFailureAck(*ack);
                      delete mMsgToRetransmit;
                      mMsgToRetransmit = ack; 
                      sendToWire(ack);
@@ -1235,19 +1234,13 @@ TransactionState::processClientInvite(TransactionMessage* msg)
       {
          // We can send the CANCEL now.
          SipMessage* cancel=Helper::makeCancel(*mMsgToRetransmit);
-         std::auto_ptr<MessageDecorator> messageDecorator = (dynamic_cast<CancelClientInviteTransaction*>(msg))->getMessageDecorator();
-         if(messageDecorator.get() != 0)
-         {
-            // If decorator is specified then add it to the created cancel message
-            cancel->addOutboundDecorator(messageDecorator);
-         }
+         mMsgToRetransmit->copyOutboundDecoratorsToStackCancel(*cancel);
          TransactionState::handleInternalCancel(cancel, *this);
       }
       else if(mState==Calling)
       {
          // We can't send the CANCEL yet, remember to.
          mIsAbandoned = true;
-         mAdandonedMessageDecorator = (dynamic_cast<CancelClientInviteTransaction*>(msg))->getMessageDecorator();
       }
       delete msg;
    }
