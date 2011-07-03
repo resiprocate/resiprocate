@@ -1678,6 +1678,33 @@ SipMessage::rollbackOutboundDecorators()
    mIsDecorated = false;
 }
 
+void 
+SipMessage::copyOutboundDecoratorsToStackCancel(SipMessage& cancel)
+{
+  std::vector<MessageDecorator*>::iterator i;
+  for (i = mOutboundDecorators.begin();
+       i != mOutboundDecorators.end(); i++)
+  {
+     if((*i)->copyToStackCancels())
+     {
+        cancel.addOutboundDecorator(*(new auto_ptr<MessageDecorator>((*i)->clone())));
+     }    
+  }
+}
+
+void 
+SipMessage::copyOutboundDecoratorsToStackFailureAck(SipMessage& ack)
+{
+  std::vector<MessageDecorator*>::iterator i;
+  for (i = mOutboundDecorators.begin();
+       i != mOutboundDecorators.end(); i++)
+  {
+     if((*i)->copyToStackFailureAcks())
+     {
+        ack.addOutboundDecorator(*(new auto_ptr<MessageDecorator>((*i)->clone())));
+     }    
+  }
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
