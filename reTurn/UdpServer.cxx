@@ -87,7 +87,7 @@ UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short por
          if(request.isValid())
          {
             StunMessage* response;
-            asio::ip::udp::socket* responseSocket;
+            UdpServer* responseUdpServer;
             ResponseMap::iterator it = mResponseMap.find(request.mHeader.magicCookieAndTid);
             if(it == mResponseMap.end())
             {
@@ -102,28 +102,28 @@ UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short por
                   doReceive();
                   return;
                case RequestHandler::RespondFromAlternatePort:
-                  responseSocket = &mAlternatePortUdpServer->getSocket();
+                  responseUdpServer = mAlternatePortUdpServer;
                   break;
                case RequestHandler::RespondFromAlternateIp:
-                  responseSocket = &mAlternateIpUdpServer->getSocket();
+                  responseUdpServer = mAlternateIpUdpServer;
                   break;
                case RequestHandler::RespondFromAlternateIpPort:
-                  responseSocket = &mAlternateIpPortUdpServer->getSocket();
+                  responseUdpServer = mAlternateIpPortUdpServer;
                   break;
                case RequestHandler::RespondFromReceiving:
                default:
-                  responseSocket = &mSocket;            
+                  responseUdpServer = this;
                   break;
                }
 
                // Store response in Map - to be resent if a retranmission is received
-               mResponseMap[response->mHeader.magicCookieAndTid] = new ResponseEntry(this, responseSocket, response);
+               mResponseMap[response->mHeader.magicCookieAndTid] = new ResponseEntry(this, responseUdpServer, response);
             }
             else
             {
                InfoLog(<< "UdpServer: received retransmission of request with tid: " << request.mHeader.magicCookieAndTid);
                response = it->second->mResponseMessage;
-               responseSocket = it->second->mResponseSocket;
+               responseUdpServer = it->second->mResponseUdpServer;
             }
 
 #define RESPONSE_BUFFER_SIZE 1024
@@ -132,7 +132,7 @@ UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short por
             responseSize = response->stunEncodeMessage((char*)buffer->data(), RESPONSE_BUFFER_SIZE);
             buffer->truncate(responseSize);  // set size to real size
 
-            doSend(response->mRemoteTuple, buffer);
+            responseUdpServer->doSend(response->mRemoteTuple, buffer);
          }            
       }
       else // ChannelData message
@@ -192,14 +192,14 @@ UdpServer::onSendFailure(const asio::error_code& error)
    }
 }
 
-UdpServer::ResponseEntry::ResponseEntry(UdpServer* udpServer, asio::ip::udp::socket* responseSocket, StunMessage* responseMessage) :
-   mResponseSocket(responseSocket),
+UdpServer::ResponseEntry::ResponseEntry(UdpServer* requestUdpServer, UdpServer* responseUdpServer, StunMessage* responseMessage) :
+   mResponseUdpServer(responseUdpServer),
    mResponseMessage(responseMessage),
-   mCleanupTimer(udpServer->mIOService)
+   mCleanupTimer(requestUdpServer->mIOService)
 {
    // start timer
    mCleanupTimer.expires_from_now(boost::posix_time::seconds(10));  // Transaction Responses are cached for 10 seconds
-   mCleanupTimer.async_wait(boost::bind(&UdpServer::cleanupResponseMap, udpServer, asio::placeholders::error, responseMessage->mHeader.magicCookieAndTid));
+   mCleanupTimer.async_wait(boost::bind(&UdpServer::cleanupResponseMap, requestUdpServer, asio::placeholders::error, responseMessage->mHeader.magicCookieAndTid));
 }
 
 UdpServer::ResponseEntry::~ResponseEntry() 

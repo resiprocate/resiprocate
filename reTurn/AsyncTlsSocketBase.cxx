@@ -149,7 +149,7 @@ AsyncTlsSocketBase::validateServerCertificateHostname()
    bool valid = false;
 
    // print session info
-   SSL_CIPHER *ciph;
+   const SSL_CIPHER *ciph;
    ciph=SSL_get_current_cipher(mSocket.impl()->ssl);
    InfoLog( << "TLS session set up with " 
       <<  SSL_get_version(mSocket.impl()->ssl) << " "
