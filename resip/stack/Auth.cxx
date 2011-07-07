@@ -27,13 +27,9 @@ Auth::Auth(HeaderFieldValue* hfv, Headers::Type type)
 {}
 
 Auth::Auth(const Auth& rhs)
-   : ParserCategory(rhs)
-{
-   if (isParsed())
-   {
-      scheme() = rhs.scheme();
-   }
-}
+   : ParserCategory(rhs),
+   mScheme(rhs.mScheme)
+{}
 
 Auth&
 Auth::operator=(const Auth& rhs)
@@ -41,7 +37,7 @@ Auth::operator=(const Auth& rhs)
    if (this != &rhs)
    {
       ParserCategory::operator=(rhs);
-      scheme() = rhs.scheme();
+      mScheme = rhs.mScheme;
    }
    return *this;
 }
@@ -110,52 +106,37 @@ Auth::parseAuthParameters(ParseBuffer& pb)
    {
       const char* keyStart = pb.position();
       const char* keyEnd = pb.skipToOneOf(" \t\r\n=");
-      ParameterTypes::Type type = ParameterTypes::getType(keyStart, (keyEnd - keyStart));
-      if (type == ParameterTypes::UNKNOWN)
+      if((int)(keyEnd-keyStart) != 0)
       {
-         mUnknownParameters.push_back(new UnknownParameter(keyStart, 
-                                                           int((keyEnd - keyStart)), pb, 
-                                                           " \t\r\n,"));
-      }
-      else if(type==ParameterTypes::qop)
-      {
-         DataParameter* qop = 0;
-         switch(mHeaderType)
+         ParameterTypes::Type type = ParameterTypes::getType(keyStart, (unsigned int)(keyEnd - keyStart));
+         Parameter* p=createParam(type, pb, " \t\r\n,");
+         if (!p)
          {
-            case Headers::ProxyAuthenticate:
-            case Headers::WWWAuthenticate:
-               qop = new DataParameter(ParameterTypes::qopOptions,pb," \t\r\n,");
-               qop->setQuoted(true);
-               break;
-            case Headers::ProxyAuthorization:
-            case Headers::Authorization:
-            case Headers::AuthenticationInfo:
-            default:
-               qop = new DataParameter(ParameterTypes::qop,pb," \t\r\n,");
-               qop->setQuoted(false);
+            mUnknownParameters.push_back(new UnknownParameter(keyStart, 
+                                                              int((keyEnd - keyStart)), pb, 
+                                                              " \t\r\n,"));
          }
-         mParameters.push_back(qop);
+         else
+         {
+            // invoke the particular factory
+            mParameters.push_back(p);
+         }
+         pb.skipWhitespace();
+         if (pb.eof() || *pb.position() != Symbols::COMMA[0])
+         {
+            break;
+         }
+         pb.skipChar();
+         pb.skipWhitespace();
       }
-      else
-      {
-         // invoke the particular factory
-         mParameters.push_back(ParameterTypes::ParameterFactories[type](type, pb, " \t\r\n,"));
-      }
-      pb.skipWhitespace();
-      if (pb.eof() || *pb.position() != Symbols::COMMA[0])
-      {
-	 break;
-      }
-      pb.skipChar();
-      pb.skipWhitespace();
    }
-}      
+}
 
 EncodeStream&
 Auth::encodeAuthParameters(EncodeStream& str) const
 {
    bool first = true;
-   for (ParameterList::iterator it = mParameters.begin();
+   for (ParameterList::const_iterator it = mParameters.begin();
         it != mParameters.end(); it++)
    {
       if (!first)
@@ -166,7 +147,7 @@ Auth::encodeAuthParameters(EncodeStream& str) const
       (*it)->encode(str);
    }
 
-   for (ParameterList::iterator it = mUnknownParameters.begin();
+   for (ParameterList::const_iterator it = mUnknownParameters.begin();
         it != mUnknownParameters.end(); it++)
    {
       if (!first)
@@ -177,6 +158,53 @@ Auth::encodeAuthParameters(EncodeStream& str) const
       (*it)->encode(str);
    }
    return str;
+}
+
+ParameterTypes::Factory Auth::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
+
+Parameter* 
+Auth::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+{
+   if(type==ParameterTypes::qop)
+   {
+      DataParameter* qop = 0;
+      switch(mHeaderType)
+      {
+         case Headers::ProxyAuthenticate:
+         case Headers::WWWAuthenticate:
+            qop = new DataParameter(ParameterTypes::qopOptions,pb," \t\r\n,");
+            qop->setQuoted(true);
+            break;
+         case Headers::ProxyAuthorization:
+         case Headers::Authorization:
+         case Headers::AuthenticationInfo:
+         default:
+            qop = new DataParameter(ParameterTypes::qop,pb," \t\r\n,");
+            qop->setQuoted(false);
+      }
+      return qop;
+   }
+
+   if(ParameterFactories[type])
+   {
+      return ParameterFactories[type](type, pb, terminators);
+   }
+   return 0;
+}
+
+bool 
+Auth::exists(const Param<Auth>& paramType) const
+{
+    checkParsed();
+    bool ret = getParameterByEnum(paramType.getTypeNum()) != NULL;
+    return ret;
+}
+
+void 
+Auth::remove(const Param<Auth>& paramType)
+{
+    checkParsed();
+    removeParameterByEnum(paramType.getTypeNum());
 }
 
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)                                                      \
@@ -206,12 +234,17 @@ Auth::param(const _enum##_Param& paramType) const                               
    return p->value();                                                                                           \
 }
 
-defineParam(algorithm, "algorithm", DataParameter, "RFC ????");
-defineParam(cnonce, "cnonce", QuotedDataParameter, "RFC ????");
-defineParam(nonce, "nonce", QuotedDataParameter, "RFC ????");
-defineParam(domain, "domain", QuotedDataParameter, "RFC ????");
-defineParam(nc, "nc", DataParameter, "RFC ????");
-defineParam(opaque, "opaque", QuotedDataParameter, "RFC ????");
+defineParam(algorithm, "algorithm", DataParameter, "RFC 2617");
+defineParam(cnonce, "cnonce", QuotedDataParameter, "RFC 2617");
+defineParam(domain, "domain", QuotedDataParameter, "RFC 3261");
+defineParam(nc, "nc", DataParameter, "RFC 2617");
+defineParam(nonce, "nonce", QuotedDataParameter, "RFC 2617");
+defineParam(opaque, "opaque", QuotedDataParameter, "RFC 2617");
+defineParam(realm, "realm", QuotedDataParameter, "RFC 2617");
+defineParam(response, "response", QuotedDataParameter, "RFC 3261");
+defineParam(stale, "stale", DataParameter, "RFC 2617");
+defineParam(uri, "uri", QuotedDataParameter, "RFC 3261");
+defineParam(username, "username", QuotedDataParameter, "RFC 3261");
 
 DataParameter::Type&
 Auth::param(const qop_Param& paramType)
@@ -267,12 +300,8 @@ Auth::param(const qopOptions_Param& paramType) const
    return p->value();
 }
 
-defineParam(realm, "realm", QuotedDataParameter, "RFC ????");
-defineParam(response, "response", QuotedDataParameter, "RFC ????");
-defineParam(stale, "stale", DataParameter, "RFC ????");
-defineParam(uri, "uri", QuotedDataParameter, "RFC ????");
-defineParam(username, "username", DataParameter, "RFC ????");
 
+#undef defineParam
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

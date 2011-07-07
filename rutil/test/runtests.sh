@@ -1,3 +1,5 @@
+#!/bin/bash
+
 function die() {
     echo "$1" >&2;
     exit 1;
@@ -21,6 +23,7 @@ for i in \
 	testMD5Stream \
 	testRandomHex \
 	testSHA1Stream \
+	testParseBuffer \
 	testThreadIf;
 do
     if test ! -x $i; then

@@ -6,7 +6,7 @@
 
 #include "repro/ProcessorChain.hxx"
 #include "resip/stack/SipMessage.hxx"
-#include "repro/ChainTraverser.hxx"
+#include "repro/ProcessorMessage.hxx"
 #include "repro/RequestContext.hxx"
 
 #include "rutil/Logger.hxx"
@@ -40,7 +40,7 @@ void
 repro::ProcessorChain::addProcessor(auto_ptr<Processor> rp)
 {
    DebugLog(<< "Adding new monkey to chain: " << *(rp.get()));
-   rp->pushAddress(mChain.size());
+   rp->pushAddress((short)mChain.size());
    rp->pushAddress(mAddress);
    rp->setChainType(mType);
    mChain.push_back(rp.release());
@@ -56,18 +56,15 @@ repro::ProcessorChain::process(RequestContext &rc)
 
    resip::Message* msg = rc.getCurrentEvent();
 
-   if(!msg)
+   if(msg)
    {
-      return SkipAllChains;
+      ProcessorMessage* proc = dynamic_cast<ProcessorMessage*>(msg);
+      
+      if(proc)
+      {
+         position=proc->popAddr();
+      }
    }
-
-   repro::ChainTraverser* proc = dynamic_cast<ChainTraverser*>(msg);
-   
-   if(proc)
-   {
-      position=proc->popAddr();      
-   }
-   
    
    for (; (position >=0 && position < mChain.size()); ++position)
    {

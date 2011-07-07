@@ -8,10 +8,6 @@
 namespace resip
 {
 
-#define defineParam(_enum, _name, _type, _RFC_ref_ignored)  \
-      _enum##_Param::DType& param(const _enum##_Param& paramType); \
-      const _enum##_Param::DType& param(const _enum##_Param& paramType) const
-
 
 /**
    @ingroup sip_grammar
@@ -38,25 +34,43 @@ class Auth : public ParserCategory
       Data& scheme();
       const Data& scheme() const;
 
-      defineParam(algorithm, "algorithm", DataParameter, "RFC ????");
-      defineParam(cnonce, "cnonce", QuotedDataParameter, "RFC ????");
-      defineParam(nonce, "nonce", QuotedDataParameter, "RFC ????");
-      defineParam(domain, "domain", QuotedDataParameter, "RFC ????");
-      defineParam(nc, "nc", DataParameter, "RFC ????");
-      defineParam(opaque, "opaque", QuotedDataParameter, "RFC ????");
-      defineParam(qop, "qop", DataParameter, "RFC ????");
-      defineParam(qopOptions, "qop-options", DataParameter, "RFC ????");
-      defineParam(realm, "realm", QuotedDataParameter, "RFC ????");
-      defineParam(response, "response", QuotedDataParameter, "RFC ????");
-      defineParam(stale, "stale", DataParameter, "RFC ????");
-      defineParam(uri, "uri", QuotedDataParameter, "RFC ????");
-      defineParam(username, "username", QuotedDataParameter, "RFC ????");
+      // Inform the compiler that overloads of these may be found in
+      // ParserCategory, too.
+      using ParserCategory::exists;
+      using ParserCategory::remove;
+      using ParserCategory::param;
 
-   private:
-      mutable Data mScheme;
-};
+      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators);
+      bool exists(const Param<Auth>& paramType) const;
+      void remove(const Param<Auth>& paramType);
+
+#define defineParam(_enum, _name, _type, _RFC_ref_ignored)  \
+      _enum##_Param::DType& param(const _enum##_Param& paramType); \
+      const _enum##_Param::DType& param(const _enum##_Param& paramType) const; \
+      friend class _enum##_Param
+
+      defineParam(algorithm, "algorithm", DataParameter, "RFC 2617");
+      defineParam(cnonce, "cnonce", QuotedDataParameter, "RFC 2617");
+      defineParam(domain, "domain", QuotedDataParameter, "RFC 3261");
+      defineParam(nc, "nc", DataParameter, "RFC 2617");
+      defineParam(nonce, "nonce", QuotedDataParameter, "RFC 2617");
+      defineParam(opaque, "opaque", QuotedDataParameter, "RFC 2617");
+      defineParam(realm, "realm", QuotedDataParameter, "RFC 2617");
+      defineParam(response, "response", QuotedDataParameter, "RFC 3261");
+      defineParam(stale, "stale", DataParameter, "RFC 2617");
+      defineParam(uri, "uri", QuotedDataParameter, "RFC 3261");
+      defineParam(username, "username", QuotedDataParameter, "RFC 3261");
+      defineParam(qop,"qop",DataParameter, "RFC 3261");
+      // Internal use only
+      defineParam(qopOptions,"qop",DataParameter, "RFC 3261");
 
 #undef defineParam
+
+   private:
+      Data mScheme;
+
+      static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
+};
  
 }
 

@@ -533,5 +533,8 @@
     <ClInclude Include="UserProfile.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RequestValidationHandler.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

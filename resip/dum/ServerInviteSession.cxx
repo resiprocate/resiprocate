@@ -383,6 +383,13 @@ ServerInviteSession::end()
    end(NotSpecified);
 }
 
+void
+ServerInviteSession::end(const Data& userReason)
+{
+   mUserEndReason = userReason;
+   end(InviteSession::UserSpecified);
+}
+
 void 
 ServerInviteSession::end(EndReason reason)
 {
@@ -433,9 +440,9 @@ ServerInviteSession::end(EndReason reason)
          else
          {
              // ACK has likely timedout - hangup immediately
-             sendBye();
+             SharedPtr<SipMessage> msg = sendBye();
              transition(Terminated);
-             mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye);
+             mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get());
          }
          break;
 
@@ -529,6 +536,7 @@ ServerInviteSession::accept(int code)
       case UAS_NoOffer:
       case UAS_EarlyNoOffer:
          assert(0);
+         break;
 
       case UAS_ProvidedOffer:
       case UAS_EarlyProvidedOffer:
@@ -1133,9 +1141,9 @@ ServerInviteSession::dispatchWaitingToHangup(const SipMessage& msg)
       {
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
 
-         sendBye();
+         SharedPtr<SipMessage> msg = sendBye();
          transition(Terminated);
-         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye);
+         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get());
          break;
       }
       
@@ -1215,25 +1223,32 @@ void
 ServerInviteSession::sendProvisional(int code, bool earlyFlag)
 {
    mDialog.makeResponse(*m1xx, mFirstRequest, code);
-   switch (mState)
+   if(!earlyFlag)
    {
-      case UAS_OfferProvidedAnswer:
-      case UAS_EarlyProvidedAnswer:
-         if (earlyFlag && mCurrentLocalOfferAnswer.get()) // early media
-         {
-            setOfferAnswer(*m1xx, mCurrentLocalOfferAnswer.get());
-         }
-         break;
-      case UAS_ProvidedOffer:
-      case UAS_EarlyProvidedOffer:
-         if (earlyFlag && mProposedLocalOfferAnswer.get()) 
-         {
-            setOfferAnswer(*m1xx, mProposedLocalOfferAnswer.get());
-         }
-         break;
+	   m1xx->setContents(0);  // clear contents if present
+   }
+   else
+   {
+      switch (mState)
+      {
+         case UAS_OfferProvidedAnswer:
+         case UAS_EarlyProvidedAnswer:
+            if (mCurrentLocalOfferAnswer.get()) // early media
+            {
+               setOfferAnswer(*m1xx, mCurrentLocalOfferAnswer.get());
+            }
+            break;
+         case UAS_ProvidedOffer:
+         case UAS_EarlyProvidedOffer:
+            if (mProposedLocalOfferAnswer.get()) 
+            {
+               setOfferAnswer(*m1xx, mProposedLocalOfferAnswer.get());
+            }
+            break;
 
-      default:
-         break;
+         default:
+            break;
+      }
    }
    startRetransmit1xxTimer();
    DumHelper::setOutgoingEncryptionLevel(*m1xx, mProposedEncryptionLevel);

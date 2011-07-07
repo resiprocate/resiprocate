@@ -1,12 +1,12 @@
 #!/bin/sh
 
-for PERL in /opt/local/bin/perl \
+for PERL in `which perl ` \
+            /opt/local/bin/perl \
             /usr/bin/perl \
             /bin/perl \
             /usr/local/bin/perl \
             /usr/pkg/bin/perl \
-            /usr/athena/bin/perl \
-            `which perl`
+            /usr/athena/bin/perl
 do
   if [ -x $PERL ]
   then
@@ -28,6 +28,7 @@ CROSS_PLATFORM := arm-unknown-linux-gnu
 CROSS_TOOL_PREFIX := arm-unknown-linux-gnu
 VOCAL_CROSS_ROOT := /opt/crosstool/current/arm-unknown-linux-gnu/bin
 BUILD_SHARED_LIBS := no
+DISABLE_PIC := no
 USE_DISTCC := no
 USE_CCACHE := no
 BUILD_REPRO := yes
@@ -49,12 +50,17 @@ SIPX_INCDIR := /usr/local/include
 USE_POPT := yes
 USE_CURL := no
 USE_GOOGLE_MALLOC := no
+USE_DEBUG_MALLOC := no
+USE_EFENCE := no
 USE_GOOGLE_CPUPERF := no
+USE_RANDOM_THREAD_LOCAL := no
 USE_IPV6 := no
+HAVE_EPOLL := no
 POPT_INCDIR_CONFIG :=
 POPT_LIBDIR_CONFIG :=
 RESIP_FIXED_POINT := no
 PEDANTIC_STACK := no
+RESIP_DUM_THREAD_DEBUG := no
 # USE_SIGCOMP := no
 # SIGCOMP_BASEDIR:= /usr/local
 INSTALL_PREFIX := /usr/local
@@ -183,6 +189,14 @@ $uname = `uname`;
     default     => "no",
     validate    => [@yesno],
     flag        => 'shared-libs',
+  },
+  {
+    name        => "DISABLE_PIC",
+    description => "Disable -fPIC when building static libraries?",
+    default     => "no",
+    validate    => [@yesno],
+    predicate   => "\$config{BUILD_SHARED_LIBS} eq 'no'",
+    flag        => 'no-pic',
   },
   {
     name        => "USE_DISTCC",
@@ -359,12 +373,43 @@ $uname = `uname`;
     flag        => 'google-cpuperf',
   },
   {
+    name        => "USE_DEBUG_MALLOC",
+    description => "Use the debug malloc() implementation?",
+    default     => "no",
+    validate    => [@yesno],
+    flag        => 'debug-malloc',
+  },
+  {
+    name        => "USE_EFENCE",
+    description => "Use the ElectricFence memory debugger?",
+    default     => "no",
+    validate    => [@yesno],
+    flag        => 'efence',
+  },
+  {
+    name        => "USE_RANDOM_THREAD_LOCAL",
+    description => "Use Thread Local Storage w/ random_r()?",
+    #   default     => &detectRandomr,  # don't make default til more testing
+    default     => "no",
+    validate    => [@yesno],
+    flag        => 'random-thread-local',
+  },
+  {
     name        => "USE_IPV6",
     description => "Compile in IPv6 support?",
 #    default     => &detectIpv6, #Should we enable this by default if supported?
     default     => "no",
     validate    => [@yesno],
     flag        => 'ipv6',
+  },
+  {
+    # This enables epoll support to be compiled in; it still requires
+    # application to turn on to actually use it
+    name        => "HAVE_EPOLL",
+    description => "Enable support for epoll system call?",
+    default     => &detectEpoll,
+    validate    => [@yesno],
+    flag        => 'epoll',
   },
   {
     name        => "USE_POPT",
@@ -402,6 +447,13 @@ $uname = `uname`;
     default     => "no",
     validate    => [@yesno],
     flag        => 'pedantic-stack',
+  },
+  {
+    name        => "RESIP_DUM_THREAD_DEBUG",
+    description => "Enable thread debug for DUM?",
+    default     => "no",
+    validate    => [@yesno],
+    flag        => 'dum-thread-debug',
   },
   {
     name        => "INSTALL_PREFIX",
@@ -451,7 +503,7 @@ if (open (CONF, "build/Makefile.conf"))
     chomp;
     if (/([^ :=]+) *:?= *([^ #]*)/)
     {
-      $config{$1} = $2;
+      $config{$1} = $2 if (defined($2) and $2 );
     }
   }
   close (CONF);
@@ -1318,6 +1370,28 @@ sub detectIpv6
   return "no";
 }
 
+sub detectEpoll
+{
+  if (-e "/usr/include/sys/epoll.h")
+  {
+    return "yes";
+  }
+  return "no";
+}
+
+
+# Detect if random_r() is supported. Might be best
+# to grep /usr/include/stdlib.h for "random_r", but not sure
+# how to do that in perl
+sub detectRandomr
+{
+  if ($uname =~ /Linux/)
+  {
+    return "yes";
+  }
+  "no";
+}
+
 sub sigcompInstalled
 {
   if (-e "/usr/local/lib/libopensigcomp.a")
@@ -1335,14 +1409,22 @@ sub findDb4
     return "$crossPath/include/db4";
   }
 
+  # Think really hard before removing a candidate from this list.
+  # If a path is listed here, it's because it works for some
+  # system out there -- a system that someone who uses resip
+  # actually uses or has used. When you remove a path, you break
+  # the build for that system.
   my (@candidates) = 
   (
     '/usr/include/db4',
+    '/opt/local/include/db44',
     '/opt/local/include/db42',
     '/opt/local/include/db4',
     '/include/db4',
     '/usr/local/include/db4',
+    '/usr/include',
   );
+  # note: ubuntu puts db4 headers directly into in /usr/include
   my ($candidate);
 
   foreach $candidate (@candidates)

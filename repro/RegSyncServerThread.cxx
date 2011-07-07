@@ -30,7 +30,7 @@ RegSyncServerThread::thread()
            {
               (*it)->buildFdSet(fdset);
            }
-           fdset.selectMilliSeconds( 10*1000 );
+           fdset.selectMilliSeconds( 2*1000 );
            
            it = mRegSyncServerList.begin();
            for(;it!=mRegSyncServerList.end();it++)

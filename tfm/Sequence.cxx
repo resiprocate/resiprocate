@@ -188,13 +188,13 @@ SequenceClass::prettyPrint(EncodeStream& str, bool& previousActive, int ind) con
 }
 
 bool
-SequenceClass::isMatch(shared_ptr<Event> event) const
+SequenceClass::isMatch(boost::shared_ptr<Event> event) const
 {
-   shared_ptr<OptionalTimeoutEvent> to = shared_dynamic_cast<OptionalTimeoutEvent>(event);
+   boost::shared_ptr<OptionalTimeoutEvent> to = shared_dynamic_cast<OptionalTimeoutEvent>(event);
    for (std::list<TestEndPoint::ExpectBase*>::const_iterator i = mExpects.begin();
         i != mExpects.end(); i++)
    {
-      //DebugLog("expect matching: " << **i);
+      DebugLog(<< "expect matching: " << **i);
       if (to)
       {
          if (to->getExpect() == *i)
@@ -219,7 +219,7 @@ SequenceClass::isMatch(shared_ptr<Event> event) const
 }
 
 void
-SequenceClass::handleEvent(shared_ptr<Event> event)
+SequenceClass::handleEvent(boost::shared_ptr<Event> event)
 {
    TestEndPoint* user = event->getEndPoint();
 
@@ -232,7 +232,7 @@ SequenceClass::handleEvent(shared_ptr<Event> event)
       mUsedExpects.push_back(mExpects.front());
       mExpects.pop_front();
 
-      shared_ptr<OptionalTimeoutEvent> ot = shared_dynamic_cast<OptionalTimeoutEvent>(event);
+      boost::shared_ptr<OptionalTimeoutEvent> ot = shared_dynamic_cast<OptionalTimeoutEvent>(event);
       if (ot && ot->getExpect() == expect)
       {
          mTimerId=-7;
@@ -353,20 +353,20 @@ void SequenceClass::scheduleTimeout()
       // schedule sequence done event
       InfoLog(<< "Queuing Sequence done: hangAroundTime: " <<mHangAroundTimeMs);
       mTimingOut = true;
-      getSequenceSet()->enqueue(shared_ptr<Event>(new SequenceDoneEvent(this)), mHangAroundTimeMs);
+      getSequenceSet()->enqueue(boost::shared_ptr<Event>(new SequenceDoneEvent(this)), mHangAroundTimeMs);
    }
    else
    {
       TestEndPoint::ExpectBase* f = mExpects.front();
       if (f->isOptional())
       {
-         mTimerId = getSequenceSet()->enqueue(shared_ptr<Event>(new OptionalTimeoutEvent(*this, f)), 
+         mTimerId = getSequenceSet()->enqueue(boost::shared_ptr<Event>(new OptionalTimeoutEvent(*this, f)), 
                                               f->getTimeout());
          InfoLog(<< "SequenceClass::scheduleTimeout(" << mTimerId << ") optional");
       }
       else
       {
-         mTimerId = getSequenceSet()->enqueue(shared_ptr<Event>(new TimeoutEvent(*this)), 
+         mTimerId = getSequenceSet()->enqueue(boost::shared_ptr<Event>(new TimeoutEvent(*this)), 
                                               f->getTimeout());
          InfoLog(<< "SequenceClass::scheduleTimeout(" << mTimerId << ") for " << *f << " with timeout "<< f->getTimeout());
       }

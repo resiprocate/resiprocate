@@ -79,6 +79,12 @@ ClientOutOfDialogReq::dispatch(const SipMessage& msg)
     }    
 }
 
+const SipMessage&
+ClientOutOfDialogReq::getRequest() const
+{
+   return mRequest;
+}
+
 void 
 ClientOutOfDialogReq::dispatch(const DumTimeout& timer)
 {

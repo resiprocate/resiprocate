@@ -50,14 +50,29 @@ ParserCategory* UInt32Category::clone() const
    return new UInt32Category(*this);
 }
 
-UInt32& UInt32Category::value() const 
+const UInt32& 
+UInt32Category::value() const
+{
+   checkParsed(); 
+   return mValue;
+}
+
+const Data& 
+UInt32Category::comment() const
+{
+   checkParsed(); 
+   return mComment;
+}
+
+UInt32& 
+UInt32Category::value()
 {
    checkParsed(); 
    return mValue;
 }
 
 Data& 
-UInt32Category::comment() const 
+UInt32Category::comment()
 {
    checkParsed(); 
    return mComment;
@@ -99,6 +114,66 @@ UInt32Category::encodeParsed(EncodeStream& str) const
   return str;
 }
 
+ParameterTypes::Factory UInt32Category::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
+
+Parameter* 
+UInt32Category::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+{
+   if(ParameterFactories[type])
+   {
+      return ParameterFactories[type](type, pb, terminators);
+   }
+   return 0;
+}
+
+bool 
+UInt32Category::exists(const Param<UInt32Category>& paramType) const
+{
+    checkParsed();
+    bool ret = getParameterByEnum(paramType.getTypeNum()) != NULL;
+    return ret;
+}
+
+void 
+UInt32Category::remove(const Param<UInt32Category>& paramType)
+{
+    checkParsed();
+    removeParameterByEnum(paramType.getTypeNum());
+}
+
+#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                                                      \
+_enum##_Param::DType&                                                                                           \
+UInt32Category::param(const _enum##_Param& paramType)                                                           \
+{                                                                                                               \
+   checkParsed();                                                                                               \
+   _enum##_Param::Type* p =                                                                                     \
+      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                            \
+   if (!p)                                                                                                      \
+   {                                                                                                            \
+      p = new _enum##_Param::Type(paramType.getTypeNum());                                                      \
+      mParameters.push_back(p);                                                                                 \
+   }                                                                                                            \
+   return p->value();                                                                                           \
+}                                                                                                               \
+                                                                                                                \
+const _enum##_Param::DType&                                                                                     \
+UInt32Category::param(const _enum##_Param& paramType) const                                                     \
+{                                                                                                               \
+   checkParsed();                                                                                               \
+   _enum##_Param::Type* p =                                                                                     \
+      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                            \
+   if (!p)                                                                                                      \
+   {                                                                                                            \
+      InfoLog(<< "Missing parameter " _name " " << ParameterTypes::ParameterNames[paramType.getTypeNum()]);     \
+      DebugLog(<< *this);                                                                                       \
+      throw Exception("Missing parameter " _name, __FILE__, __LINE__);                                          \
+   }                                                                                                            \
+   return p->value();                                                                                           \
+}
+
+defineParam(duration, "duration", UInt32Parameter, "RFC 3261");
+
+#undef defineParam
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

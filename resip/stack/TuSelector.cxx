@@ -1,10 +1,12 @@
 #include "resip/stack/ConnectionTerminated.hxx"
+#include "resip/stack/KeepAlivePong.hxx"
 #include "resip/stack/TuSelector.hxx"
 #include "resip/stack/TransactionUser.hxx"
 #include "resip/stack/TransactionUserMessage.hxx"
 #include "resip/stack/SipStack.hxx"
 
 #include "rutil/TimeLimitFifo.hxx"
+#include "rutil/AsyncProcessHandler.hxx"
 #include "rutil/WinLeakCheck.hxx"
 #include "rutil/Logger.hxx"
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
@@ -12,7 +14,7 @@
 using namespace resip;
 
 TuSelector::TuSelector(TimeLimitFifo<Message>& fallBackFifo) :
-   mFallBackFifo(fallBackFifo) ,
+   mFallBackFifo(fallBackFifo) , mFallbackPostNotify(NULL),
    mTuSelectorMode(false),
    mStatsPayload()
 {
@@ -21,6 +23,13 @@ TuSelector::TuSelector(TimeLimitFifo<Message>& fallBackFifo) :
 TuSelector::~TuSelector()
 {
    //assert(mTuList.empty());
+}
+
+
+void
+TuSelector::setFallbackPostNotify(AsyncProcessHandler *handler) 
+{
+    mFallbackPostNotify = handler;
 }
 
 void
@@ -55,10 +64,12 @@ TuSelector::add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage)
    {
       if (exists(msg->getTransactionUser()))
       {
+         DebugLog (<< "Send to TU: " << *(msg->getTransactionUser()) << " " << std::endl << std::endl << *msg);
          msg->getTransactionUser()->postToTransactionUser(msg, usage);
       }
       else
       {
+         WarningLog (<< "Send to TU that no longer exists: " << std::endl << std::endl << *msg);
          delete msg;
       }
    }
@@ -74,7 +85,10 @@ TuSelector::add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage)
       }
       else
       {
+         DebugLog(<< "Send to default TU: " << std::endl << std::endl << *msg);
          mFallBackFifo.add(msg, usage);
+         if ( mFallbackPostNotify )
+	    mFallbackPostNotify->handleProcessNotification();
       }
    }
 }
@@ -89,6 +103,20 @@ TuSelector::add(ConnectionTerminated* term)
       if (!it->shuttingDown && it->tu->isRegisteredForConnectionTermination())
       {
          it->tu->post(term->clone());
+      }
+   }
+}
+
+void 
+TuSelector::add(KeepAlivePong* pong)
+{
+   //InfoLog (<< "Sending " << *pong << " to TUs");
+   
+   for(TuList::const_iterator it = mTuList.begin(); it != mTuList.end(); it++)
+   {
+      if (!it->shuttingDown && it->tu->isRegisteredForKeepAlivePongs())
+      {
+         it->tu->post(pong->clone());
       }
    }
 }

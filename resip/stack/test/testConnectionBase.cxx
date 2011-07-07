@@ -39,6 +39,7 @@ class FakeTransport :  public Transport
       virtual TransportType transport() const { return TCP; }
       virtual bool isFinished() const { assert(0); return true; }
       virtual void process(FdSet& fdset) { assert(0); }
+      virtual void processTransmitQueue() { assert(0); }
       virtual void buildFdSet( FdSet& fdset) { assert(0); }
 
       virtual bool isReliable() const { assert(0); return true; }
@@ -46,6 +47,7 @@ class FakeTransport :  public Transport
       virtual bool shareStackProcessAndSelect() const { assert(0); return true;}
       virtual void startOwnProcessing() { assert(0); }
       virtual bool hasDataToSend() const { assert(0); return false; }
+      virtual void setPollGrp(FdPollGrp* grp) { assert(0); }
       virtual unsigned int getFifoSize() const { assert(0); return 0; }
 
       virtual void transmit(const Tuple& dest, const Data& pdata, const Data& tid, const Data &sigcompCompartment) { assert(0); }
@@ -54,11 +56,10 @@ class FakeTransport :  public Transport
 class TestConnection : public ConnectionBase
 {
    public:
-      TestConnection(Transport* transport,const Tuple& who, const Data& bytes, Fifo<TransactionMessage>& fifo) : 
+      TestConnection(Transport* transport,const Tuple& who, const Data& bytes) :
          ConnectionBase(transport,who),
          mTestStream(bytes),
-         mStreamPos(0),
-         mRxFifo(fifo)
+         mStreamPos(0)
       {}
       
       bool read(unsigned int minChunkSize, unsigned int maxChunkSize)
@@ -74,14 +75,14 @@ class TestConnection : public ConnectionBase
          mStreamPos += chunk;
          assert(mStreamPos <= mTestStream.size());
 
-         preparseNewBytes(chunk, mRxFifo);
+         preparseNewBytes(chunk);
          return mStreamPos != mTestStream.size();
       }
       
    private:
       Data mTestStream;
       unsigned int mStreamPos;
-      Fifo<TransactionMessage>& mRxFifo;
+      // Fifo<TransactionMessage>& mRxFifo;
 };
 
 int
@@ -137,7 +138,7 @@ main(int argc, char** argv)
 
    for (unsigned int i=0; i < runs; i++)
    {
-      TestConnection cBase(&fake,who, bytes, testRxFifo);
+      TestConnection cBase(&fake,who, bytes);
       int minChunk = (Random::getRandom() % chunkRange)+1;
       int maxChunk = (Random::getRandom() % chunkRange)+1;
       if (maxChunk < minChunk) swap(maxChunk, minChunk);

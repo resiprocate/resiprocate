@@ -33,13 +33,13 @@ class LazyParser
       virtual void parse(ParseBuffer& pb) = 0;
 
       EncodeStream& encode(EncodeStream& str) const;
-      EncodeStream& encodeFromHeaderFieldValue(EncodeStream& str) const;
       bool isParsed() const {return (mState!=NOT_PARSED);}
 
       HeaderFieldValue& getHeaderField() { return *mHeaderField; }
 
       // call (internally) before every access 
       void checkParsed() const;
+      void checkParsed();
       
       bool isWellFormed() const;
    protected:
@@ -60,9 +60,9 @@ class LazyParser
       typedef enum
       {
          NOT_PARSED,
-         WELL_FORMED,
-         MALFORMED,
-         EMPTY 
+         WELL_FORMED, // Parsed, well-formed, but underlying buffer is still valid
+         MALFORMED, // Parsed, malformed, underlying buffer is still valid
+         DIRTY // Well-formed, and underlying buffer is invalid
       } ParseState;
       ParseState mState;
       bool mIsMine;

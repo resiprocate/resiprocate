@@ -30,7 +30,7 @@ TcpConnection::read( char* buf, int count )
    int bytesRead = ::read(getSocket(), buf, count);
 #endif
 
-   if (bytesRead == INVALID_SOCKET)
+   if (bytesRead == SOCKET_ERROR)
    {
       int e = getErrno();
       switch (e)
@@ -64,7 +64,7 @@ TcpConnection::read( char* buf, int count )
 
       InfoLog (<< "Failed read on " << getSocket() << " " << strerror(e));
       Transport::error(e);
-      
+      setFailureReason(TransportFailure::ConnectionException, e+2000);
       return -1;
    }
    else if (bytesRead == 0)
@@ -96,6 +96,7 @@ TcpConnection::write( const char* buf, const int count )
       int e = getErrno();
       InfoLog (<< "Failed write on " << getSocket() << " " << strerror(e));
       Transport::error(e);
+      //setFailureReason(TransportFailure::ConnectionException, e+1000);
       return -1;
    }
    
@@ -168,4 +169,5 @@ TcpConnection::isWritable()
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */

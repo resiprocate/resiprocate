@@ -7,6 +7,7 @@
 #include "rutil/Data.hxx"
 #include "rutil/Fifo.hxx"
 #include "rutil/Socket.hxx"
+#include "rutil/FdPoll.hxx"
 #include "resip/stack/Message.hxx"
 #include "resip/stack/Transport.hxx"
 #include "resip/stack/Tuple.hxx"
@@ -19,18 +20,20 @@ namespace resip
 class TransactionMessage;
 class SipMessage;
 class Connection;
+class FdPollGrp;
 
 class InternalTransport : public Transport
 {
    public:
       // sendHost what to put in the Via:sent-by
       // portNum is the port to receive and/or send on
-      InternalTransport(Fifo<TransactionMessage>& rxFifo, 
-                        int portNum, 
+      InternalTransport(Fifo<TransactionMessage>& rxFifo,
+                        int portNum,
                         IpVersion version,
                         const Data& interfaceObj,
                         AfterSocketCreationFuncPtr socketFunc = 0,
-                        Compression &compression = Compression::Disabled);
+                        Compression &compression = Compression::Disabled,
+                        unsigned transportFlags = 0);
 
       virtual ~InternalTransport();
 
@@ -42,18 +45,29 @@ class InternalTransport : public Transport
 
       // shared by UDP, TCP, and TLS
       static Socket socket(TransportType type, IpVersion ipVer);
-      void bind();      
-      
+      void bind();
+
       //used for epoll
-      virtual int maxFileDescriptors() const { return 1; }
-      virtual unsigned int getFifoSize() const;    
+      virtual void setPollGrp(FdPollGrp *grp);
+
+      // used for statistics
+      virtual unsigned int getFifoSize() const;
 
    protected:
       friend class SipStack;
       virtual void transmit(const Tuple& dest, const Data& pdata, const Data& tid, const Data& sigcompId);
 
+      // Whenever a message is added to queue by transmit(), it invokes this
+      // function synchronously.
+      // Can be used to setup any required callbacks to later drain the
+      // queue. Be careful to avoid unwanted recursion within this function.
+      virtual void checkTransmitQueue() { };
+
       Socket mFd; // this is a unix file descriptor or a windows SOCKET
       Fifo<SendData> mTxFifo; // owned by the transport
+      FdPollGrp *mPollGrp;      // not owned by transport, just used
+      // FdPollItemIf *mPollItem;	// owned by the transport
+      FdPollItemHandle mPollItemHandle; // owned by the transport
 };
 
 
@@ -62,22 +76,22 @@ class InternalTransport : public Transport
 #endif
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -87,7 +101,7 @@ class InternalTransport : public Transport
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -101,12 +115,13 @@ class InternalTransport : public Transport
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */

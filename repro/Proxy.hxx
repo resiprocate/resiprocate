@@ -13,6 +13,7 @@
 namespace resip
 {
 class SipStack;
+class Transport;
 }
 
 namespace repro
@@ -46,13 +47,16 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
    public:
       Proxy(resip::SipStack&,
             const resip::Uri& recordRoute, 
-            bool enableRecordRoute,
+            bool forceRecordRoute,
             ProcessorChain& requestP, 
             ProcessorChain& responseP,
             ProcessorChain& targetP,
             UserStore& ,
             int timerC);
       virtual ~Proxy();
+
+      // Crypto Random Key for Salting Flow Token HMACs
+      static resip::Data FlowTokenSalt;
 
       // Note:  These are not thread safe and should be called before run() only
       void setOptionsHandler(OptionsHandler* handler);
@@ -62,8 +66,11 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       virtual void thread();
       
       bool isMyUri(const resip::Uri& uri) const;
-      const resip::NameAddr& getRecordRoute() const;
-      bool getRecordRouteEnabled() const;
+      const resip::NameAddr& getRecordRoute(const resip::Transport* transport) const;
+      bool getRecordRouteForced() const;
+
+      void setAssumePath(bool f) { mAssumePath = f; }
+      bool getAssumePath() const { return mAssumePath; }
       
       UserStore& getUserStore();
       resip::SipStack& getStack(){return mStack;}
@@ -76,19 +83,22 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
 
       int mTimerC;
       
-      std::auto_ptr<resip::MessageDecorator> makeRRDecorator() const;
-
       bool compressionEnabled() const;
 
       void addSupportedOption(const resip::Data& option);
       void removeSupportedOption(const resip::Data& option);
+
+      void setServerText(const resip::Data& text) { mServerText = text; }
+      const resip::Data& getServerText() const { return mServerText; }
    protected:
       virtual const resip::Data& name() const;
 
    private:
       resip::SipStack& mStack;
       resip::NameAddr mRecordRoute;
-      bool mRecordRouteEnabled;
+      bool mRecordRouteForced;
+      bool mAssumePath;
+      resip::Data mServerText;
       
       // needs to be a reference since parent owns it
       ProcessorChain& mRequestProcessorChain;

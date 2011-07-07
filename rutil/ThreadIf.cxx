@@ -81,7 +81,7 @@ TlsDestructorInitializer::~TlsDestructorInitializer()
    if (--mInstanceCounter == 0)
    {
       delete ThreadIf::mTlsDestructorsMutex;
-      delete ThreadIf::mTlsDestructors;
+      delete [] ThreadIf::mTlsDestructors;
    }
 }
 #endif

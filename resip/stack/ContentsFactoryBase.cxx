@@ -11,18 +11,26 @@ HashMap<Mime, ContentsFactoryBase*>* ContentsFactoryBase::FactoryMap = 0;
 ContentsFactoryBase::ContentsFactoryBase(const Mime& contentType)
    : mContentType(contentType)
 {
-   assert(ContentsFactoryBase::getFactoryMap().count(contentType) == 0);
-   ContentsFactoryBase::getFactoryMap()[contentType] = this;
+   // .amr. Due to multiple static initializers, this can be called more than once for a mimetype
+   // so gracefully handle it
+   if(ContentsFactoryBase::getFactoryMap().count(contentType) == 0)
+      ContentsFactoryBase::getFactoryMap()[contentType] = this;
 }
 
 ContentsFactoryBase::~ContentsFactoryBase()
 {
+   if (ContentsFactoryBase::FactoryMap == 0)
+      return;
+	
    HashMap<Mime, ContentsFactoryBase*>::iterator i;
    i = ContentsFactoryBase::getFactoryMap().find(mContentType);
-   ContentsFactoryBase::getFactoryMap().erase(i);
+   // .amr.	Need to check if iterator is valid since on some STL instances erase(i) will crash if i is invalid.
+   if (i != ContentsFactoryBase::getFactoryMap().end())
+      ContentsFactoryBase::getFactoryMap().erase(i);
    if (ContentsFactoryBase::getFactoryMap().size() == 0)
    {
       delete &ContentsFactoryBase::getFactoryMap();
+      ContentsFactoryBase::FactoryMap = 0;
    }
 }
 

@@ -82,6 +82,7 @@ class StatisticsMessage : public ApplicationMessage
          private:
             mutable Mutex mMutex;
 
+            // dis-allowed by not implemented
             AtomicPayload(const AtomicPayload&);
             AtomicPayload& operator=(const AtomicPayload&);
       };

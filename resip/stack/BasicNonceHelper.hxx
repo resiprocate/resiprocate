@@ -10,12 +10,12 @@ namespace resip
 {
 
 /**
- * BasicNonceHelper implements the makeNonce function in the same way
+ * @brief Implements the makeNonce function in the same way
  * as the original implementation of makeNonce within Helper.cxx
  *
  * To operate a farm/cluster of UASs/proxies, you must:
- * a) make sure the clocks are sychronized (using ntpd for instance)
- * b) use the same privateKey value on every instance of the application
+ * -# make sure the clocks are sychronized (using ntpd for instance)
+ * -# use the same privateKey value on every instance of the application
  *
  * To operate with SER, use the SERNonceHelper instead, as that generates
  * the nonce string the same way as SER.  You must also observe the same

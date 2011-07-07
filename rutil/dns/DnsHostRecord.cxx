@@ -28,7 +28,9 @@ DnsHostRecord::DnsHostRecord(const RROverlay& overlay)
 {
    char* name = 0;
    long len = 0;
-   ares_expand_name(overlay.data()-overlay.nameLength()-RRFIXEDSZ, overlay.msg(), overlay.msgLength(), &name, &len);
+   int status = ares_expand_name(overlay.data()-overlay.nameLength()-RRFIXEDSZ, overlay.msg(), overlay.msgLength(), &name, &len);
+   (void)status;
+   assert(status == ARES_SUCCESS);	// .kw. what should we do if bad?
    mName = name;
    free(name);
    memcpy(&mAddr, overlay.data(), sizeof(in_addr));

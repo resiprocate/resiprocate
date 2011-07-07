@@ -1,3 +1,4 @@
+#ifdef USE_DTLS
 #ifdef USE_SSL
 
 #include <iostream>
@@ -382,6 +383,7 @@ DtlsSocket::getReadTimeout()
 }
 
 #endif 
+#endif
 /* ====================================================================
 
  Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 

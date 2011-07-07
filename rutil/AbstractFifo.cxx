@@ -42,7 +42,17 @@ AbstractFifo::getNext(int ms)
    {
       return getNext();
    }
-
+   if(ms < 0)
+   {
+      Lock lock(mMutex); (void)lock;
+      if (mFifo.empty())	// WATCHOUT: Do not test mSize instead
+	  return NULL;
+      void* firstMessage = mFifo.front();
+      mFifo.pop_front();
+      assert(mSize!=0);
+      mSize--;
+      return firstMessage;
+   }
    const UInt64 begin(Timer::getTimeMs());
    const UInt64 end(begin + (unsigned int)(ms)); // !kh! ms should've been unsigned :(
    Lock lock(mMutex); (void)lock;

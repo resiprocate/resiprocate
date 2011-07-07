@@ -56,12 +56,13 @@ class InviteSession : public DialogUsage
          AckNotReceived,
          SessionExpired,
          StaleReInvite,
-         AppDefined,       // for usage with the Data parameter in end()
-         ENDREASON_MAX
+         ENDREASON_MAX, // Maximum used by the global array in InviteSession.cxx
+         UserSpecified  // User-specified reason - doesn't use the array in InviteSession.cxx
       };
 
       /** Makes the specific dialog end. Will send a BYE (not a CANCEL) */
-      virtual void end(EndReason reason, const Data& customReason=Data::Empty);
+      virtual void end(const Data& userReason);
+      virtual void end(EndReason reason);
       virtual void end(); // reason == NotSpecified ; same as above - required for BaseUsage pure virtual
 
       /** Rejects an offer at the SIP level.  Can also be used to 
@@ -79,6 +80,9 @@ class InviteSession : public DialogUsage
 
       /** sends a refer request with a replaces header */
       virtual void refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace, bool referSub = true);
+      virtual void refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace, std::auto_ptr<resip::Contents> contents, bool referSub = true);
+      virtual void refer(const NameAddr& referTo, const CallId& replaces, bool referSub = true);
+      virtual void refer(const NameAddr& referTo, const CallId& replaces, std::auto_ptr<resip::Contents> contents, bool referSub = true);
 
       /** sends an info request */
       virtual void info(const Contents& contents);
@@ -100,6 +104,12 @@ class InviteSession : public DialogUsage
 
       /** rejects an INFO or MESSAGE request with an error status code */
       virtual void rejectNIT(int statusCode = 488);
+
+      /** gets the last NIT request that was sent by the session
+
+          @warning Can return a NULL SharedPtr if none was sent
+       */
+      const SharedPtr<SipMessage> getLastSentNITRequest() const;
 
       /**
        * Provide asynchronous method access by using command
@@ -269,6 +279,7 @@ class InviteSession : public DialogUsage
       virtual ~InviteSession();
       virtual void dialogDestroyed(const SipMessage& msg);
       virtual void onReadyToSend(SipMessage& msg);
+      virtual void flowTerminated();
 
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
@@ -319,7 +330,9 @@ class InviteSession : public DialogUsage
       bool updateMethodSupported() const;
 
       void sendAck(const Contents *answer=0);
-      void sendBye(const Data& customReason=Data::Empty);
+      SharedPtr<SipMessage> sendBye();
+
+      const Data& getEndReasonString(InviteSession::EndReason reason);
 
       DialogUsageManager::EncryptionLevel getEncryptionLevel(const SipMessage& msg);
       void setCurrentLocalOfferAnswer(const SipMessage& msg);
@@ -378,11 +391,15 @@ class InviteSession : public DialogUsage
       std::queue<QueuedNIT*> mNITQueue;
       void nitComplete();
       bool mReferSub;
+      SharedPtr<SipMessage> mLastSentNITRequest;
 
       DialogUsageManager::EncryptionLevel mCurrentEncryptionLevel;
       DialogUsageManager::EncryptionLevel mProposedEncryptionLevel; // UPDATE or RE-INVITE
 
       EndReason mEndReason;   
+
+      // Used when a user-specified EndReason is needed
+      Data mUserEndReason;
 
       // Used to respond to 2xx retransmissions.
       typedef HashMap<Data, SharedPtr<SipMessage> > AckMap;

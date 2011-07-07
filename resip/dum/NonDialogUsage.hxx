@@ -30,6 +30,7 @@ class NonDialogUsage : public BaseUsage
       SharedPtr<UserProfile> getUserProfile();
       //virtual void send(SipMessage& msg);
       virtual void send(SharedPtr<SipMessage> msg);
+      virtual void sendCommand(SharedPtr<SipMessage> msg);
 
    protected:
       NonDialogUsage(DialogUsageManager& dum, DialogSet& dialogSet);

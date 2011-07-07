@@ -17,6 +17,7 @@
 #include "rutil/Random.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/Timer.hxx"
+#include "rutil/FdPoll.hxx"
 
 #include "resip/stack/Message.hxx"
 #include "resip/stack/ShutdownMessage.hxx"
@@ -46,29 +47,44 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-SipStack::SipStack(Security* pSecurity, 
+SipStack::SipStack(const SipStackOptions& options)
+   :
+        mTUFifo(TransactionController::MaxTUFifoTimeDepthSecs,
+                TransactionController::MaxTUFifoSize),
+        mTuSelector(mTUFifo),
+        mAppTimers(mTuSelector),
+        mStatsManager(*this)
+{
+   init(options);
+}
+
+
+SipStack::SipStack(Security* pSecurity,
                    const DnsStub::NameserverList& additional,
-                   AsyncProcessHandler* handler, 
+                   AsyncProcessHandler* handler,
                    bool stateless,
                    AfterSocketCreationFuncPtr socketFunc,
-                   Compression *compression
-   ) : 
+                   Compression *compression,
+                   FdPollGrp *pollGrp
+   ) :
+   mUseInternalPoll(pollGrp?0:mDefaultUseInternalPoll),
+   mPollGrp(pollGrp?pollGrp:(mUseInternalPoll ? FdPollGrp::create() : 0)),
 #ifdef USE_SSL
    mSecurity( pSecurity ? pSecurity : new Security()),
 #else
    mSecurity(0),
 #endif
-   mDnsStub(new DnsStub(additional, socketFunc, handler)),
+   mDnsStub(new DnsStub(additional, socketFunc, handler, mPollGrp)),
    mCompression(compression ? compression : new Compression(Compression::NONE)),
    mAsyncProcessHandler(handler),
    mTUFifo(TransactionController::MaxTUFifoTimeDepthSecs,
            TransactionController::MaxTUFifoSize),
+   mTuSelector(mTUFifo),
    mAppTimers(mTuSelector),
    mStatsManager(*this),
-   mTransactionController(*this),
+   mTransactionController(new TransactionController(*this, mPollGrp)),
    mShuttingDown(false),
    mStatisticsManagerEnabled(true),
-   mTuSelector(mTUFifo),
    mSocketFunc(socketFunc)
 {
    Timer::getTimeMs(); // initalize time offsets
@@ -82,6 +98,73 @@ SipStack::SipStack(Security* pSecurity,
       assert(0);
 #endif
    }
+   assert(!mShuttingDown);
+#if 0
+  // .kw. originally tried to share common init() for the two
+  // constructors, but too much risk for changing sequencing,
+  // first prove out new constructor before merging (or obsoleting)
+        mTUFifo(TransactionController::MaxTUFifoTimeDepthSecs,
+           TransactionController::MaxTUFifoSize),
+        mTuSelector(mTUFifo),
+        mAppTimers(mTuSelector),
+        mStatsManager(*this)
+{
+   SipStackOptions options;
+   options.mSecurity = pSecurity;
+   options.mExtraNameserverList = &additional;
+   options.mStateless = stateless;
+   options.mSocketFunc = socketFunc;
+   options.mCompression = compression;
+   options.mPollGrp = pollGrp;
+   init(options);
+#endif
+}
+
+void
+SipStack::init(const SipStackOptions& options)
+{
+   mShuttingDown = false;
+   mStatisticsManagerEnabled = true;
+   mSocketFunc = options.mSocketFunc;
+   mAsyncProcessHandler = options.mAsyncProcessHandler;
+
+   // .kw. note that stats manager has already called getTimeMs()
+   Timer::getTimeMs(); // initalize time offsets
+   Random::initialize();
+   initNetwork();
+
+   mUseInternalPoll = false;
+   mPollGrp = 0;
+   if ( options.mPollGrp )
+   {
+      mPollGrp = options.mPollGrp;
+   }
+   else if ( mDefaultUseInternalPoll )
+   {
+      mUseInternalPoll = true;
+      mPollGrp = FdPollGrp::create();
+   }
+
+#ifdef USE_SSL
+   mSecurity = options.mSecurity ? options.mSecurity : new Security();
+   mSecurity->preload();
+#else
+   mSecurity = 0;
+   assert(options.mSecurity==0);
+#endif
+
+   mDnsStub = new DnsStub(
+         options.mExtraNameserverList
+                ? *options.mExtraNameserverList : DnsStub::EmptyNameserverList,
+         options.mSocketFunc,
+         mAsyncProcessHandler,
+         mPollGrp);
+   mCompression = options.mCompression
+         ? options.mCompression : new Compression(Compression::NONE);
+
+   // WATCHOUT: the transaction controller constructor will
+   // grab the security, DnsStub, compression and statsManager
+   mTransactionController = new TransactionController(*this, mPollGrp);
 
    assert(!mShuttingDown);
 }
@@ -89,11 +172,19 @@ SipStack::SipStack(Security* pSecurity,
 SipStack::~SipStack()
 {
    DebugLog (<< "SipStack::~SipStack()");
+   mTransactionController->deleteTransports();
+   delete mTransactionController;
 #ifdef USE_SSL
    delete mSecurity;
 #endif
    delete mCompression;
    delete mDnsStub;
+   if (mPollGrp && mUseInternalPoll)
+   {
+      // delete pollGrp after deleting DNS
+      delete mPollGrp;
+   }
+
 }
 
 void
@@ -107,31 +198,58 @@ SipStack::shutdown()
       mShuttingDown = true;
    }
 
-   mTransactionController.shutdown();
+   mTransactionController->shutdown();
 }
 
 Transport*
 SipStack::addTransport( TransportType protocol,
-                        int port, 
+                        int port,
                         IpVersion version,
                         StunSetting stun,
-                        const Data& ipInterface, 
+                        const Data& ipInterface,
                         const Data& sipDomainname,
                         const Data& privateKeyPassPhrase,
-                        SecurityTypes::SSLType sslType)
+                        SecurityTypes::SSLType sslType,
+                        unsigned transportFlags)
 {
    assert(!mShuttingDown);
+
+   // If address is specified, ensure it is valid
+   if(!ipInterface.empty())
+   {
+      if(version == V6)
+      {
+         if(!DnsUtil::isIpV6Address(ipInterface))
+         {
+            ErrLog(<< "Failed to create transport, invalid ipInterface specified (IP address required): V6 "
+                   << Tuple::toData(protocol) << " " << port << " on "
+                   << ipInterface.c_str());
+            throw Transport::Exception("Invalid ipInterface specified (IP address required)", __FILE__,__LINE__);
+         }
+      }
+      else // V4
+      {
+         if(!DnsUtil::isIpV4Address(ipInterface))
+         {
+            ErrLog(<< "Failed to create transport, invalid ipInterface specified (IP address required): V4 "
+                   << Tuple::toData(protocol) << " " << port << " on "
+                   << ipInterface.c_str());
+            throw Transport::Exception("Invalid ipInterface specified (IP address required)", __FILE__,__LINE__);
+         }
+      }
+   }
+
    InternalTransport* transport=0;
-   Fifo<TransactionMessage>& stateMacFifo = mTransactionController.transportSelector().stateMacFifo();   
+   Fifo<TransactionMessage>& stateMacFifo = mTransactionController->transportSelector().stateMacFifo();
    try
    {
       switch (protocol)
       {
          case UDP:
-            transport = new UdpTransport(stateMacFifo, port, version, stun, ipInterface, mSocketFunc, *mCompression);
+            transport = new UdpTransport(stateMacFifo, port, version, stun, ipInterface, mSocketFunc, *mCompression, transportFlags);
             break;
          case TCP:
-            transport = new TcpTransport(stateMacFifo, port, version, ipInterface, mSocketFunc, *mCompression);
+            transport = new TcpTransport(stateMacFifo, port, version, ipInterface, mSocketFunc, *mCompression, transportFlags);
             break;
          case TLS:
 #if defined( USE_SSL )
@@ -141,9 +259,10 @@ SipStack::addTransport( TransportType protocol,
                                          ipInterface,
                                          *mSecurity,
                                          sipDomainname,
-                                         sslType, 
+                                         sslType,
                                          mSocketFunc,
-                                         *mCompression);
+                                         *mCompression,
+                                         transportFlags);
 #else
             CritLog (<< "TLS not supported in this stack. You don't have openssl");
             assert(0);
@@ -169,23 +288,24 @@ SipStack::addTransport( TransportType protocol,
             break;
       }
    }
-   catch (Transport::Exception& )
+   catch (BaseException& e)
    {
       ErrLog(<< "Failed to create transport: "
              << (version == V4 ? "V4" : "V6") << " "
              << Tuple::toData(protocol) << " " << port << " on "
-             << (ipInterface.empty() ? "ANY" : ipInterface.c_str()));
+             << (ipInterface.empty() ? "ANY" : ipInterface.c_str()) 
+             << ": " << e);
       throw;
    }
-   addTransport(std::auto_ptr<Transport>(transport));   
+   addTransport(std::auto_ptr<Transport>(transport));
    return transport;
 }
 
-void 
+void
 SipStack::addTransport(std::auto_ptr<Transport> transport)
 {
    //.dcm. once addTransport starts throwing, need to back out alias
-   if (!transport->interfaceName().empty()) 
+   if (!transport->interfaceName().empty())
    {
       addAlias(transport->interfaceName(), transport->port());
    }
@@ -208,20 +328,20 @@ SipStack::addTransport(std::auto_ptr<Transport> transport)
       }
    }
    mPorts.insert(transport->port());
-   mTransactionController.transportSelector().addTransport(transport);
+   mTransactionController->transportSelector().addTransport(transport);
 }
 
-Fifo<TransactionMessage>& 
+Fifo<TransactionMessage>&
 SipStack::stateMacFifo()
 {
-   return mTransactionController.transportSelector().stateMacFifo();
+   return mTransactionController->transportSelector().stateMacFifo();
 }
 
 void
 SipStack::addAlias(const Data& domain, int port)
 {
    int portToUse = (port == 0) ? Symbols::DefaultSipPort : port;
-   
+
    DebugLog (<< "Adding domain alias: " << domain << ":" << portToUse);
    assert(!mShuttingDown);
    mDomains.insert(domain + ":" + Data(portToUse));
@@ -234,64 +354,87 @@ SipStack::addAlias(const Data& domain, int port)
 
 }
 
-Data 
+Data
 SipStack::getHostname()
 {
-   // if you change this, please #def old version for windows 
+   // if you change this, please #def old version for windows
    char hostName[1024];
    int err =  gethostname( hostName, sizeof(hostName) );
-   assert( err == 0 );
+   if(err != 0)
+   {
+      ErrLog(<< "gethostname failed with return " << err << " Returning "
+            "\"localhost\"");
+      assert(0);
+      return "localhost";
+   }
    
    struct hostent* hostEnt = gethostbyname( hostName );
    if ( !hostEnt )
    {
-      // this can fail when there is no name server 
-      // !cj! - need to decided what error to return 
+      // this can fail when there is no name server
+      // !cj! - need to decided what error to return
       ErrLog( << "gethostbyname failed - name server is probably down" );
       return "localhost";
    }
    assert( hostEnt );
-   
+
    struct in_addr* addr = (struct in_addr*) hostEnt->h_addr_list[0];
    assert( addr );
-   
-   // if you change this, please #def old version for windows 
+
+   // if you change this, please #def old version for windows
    char* addrA = inet_ntoa( *addr );
    Data ret(addrA);
 
    Data retHost( hostEnt->h_name );
-      
+
    return retHost;
 }
 
 
-Data 
+Data
 SipStack::getHostAddress()
 {
-   // if you change this, please #def old version for windows 
+   // if you change this, please #def old version for windows
    char hostName[1024];
    int err =  gethostname( hostName, sizeof(hostName) );
-   assert( err == 0 );
+   if(err != 0)
+   {
+      ErrLog(<< "gethostname failed with return " << err << " Returning "
+            "\"127.0.0.1\"");
+      assert(0);
+      return "127.0.0.1";
+   }
    
    struct hostent* hostEnt = gethostbyname( hostName );
-   assert( hostEnt );
+   if(!hostEnt)
+   {
+      ErrLog(<< "gethostbyname failed, returning \"127.0.0.1\"");
+      assert(0);
+      return "127.0.0.1";
+   }
    
    struct in_addr* addr = (struct in_addr*) hostEnt->h_addr_list[0];
-   assert( addr );
+   if( !addr )
+   {
+      ErrLog(<< "gethostbyname returned a hostent* with an empty h_addr_list,"
+               " returning \"127.0.0.1\"");
+      assert(0);
+      return "127.0.0.1";
+   }
    
    // if you change this, please #def old version for windows 
    char* addrA = inet_ntoa( *addr );
    Data ret(addrA);
 
    //Data retHost( hostEnt->h_name );
-      
+
    return ret;
 }
 
-bool 
+bool
 SipStack::isMyDomain(const Data& domain, int port) const
 {
-   return (mDomains.count(domain + ":" + 
+   return (mDomains.count(domain + ":" +
                           Data(port == 0 ? Symbols::DefaultSipPort : port)) != 0);
 }
 
@@ -313,21 +456,21 @@ SipStack::getUri() const
    return mUri;
 }
 
-void 
+void
 SipStack::send(const SipMessage& msg, TransactionUser* tu)
 {
    DebugLog (<< "SEND: " << msg.brief());
    //DebugLog (<< msg);
    //assert(!mShuttingDown);
-   
-   SipMessage* toSend = new SipMessage(msg);
-   if (tu) 
+
+   SipMessage* toSend = static_cast<SipMessage*>(msg.clone());
+   if (tu)
    {
       toSend->setTransactionUser(tu);
-   }         
+   }
    toSend->setFromTU();
 
-   mTransactionController.send(toSend);
+   mTransactionController->send(toSend);
    checkAsyncProcessHandler();
 }
 
@@ -335,14 +478,14 @@ void
 SipStack::send(std::auto_ptr<SipMessage> msg, TransactionUser* tu)
 {
    DebugLog (<< "SEND: " << msg->brief());
-   
-   if (tu) 
+
+   if (tu)
    {
       msg->setTransactionUser(tu);
-   }         
+   }
    msg->setFromTU();
 
-   mTransactionController.send(msg.release());
+   mTransactionController->send(msg.release());
    checkAsyncProcessHandler();
 }
 
@@ -353,57 +496,56 @@ SipStack::sendTo(std::auto_ptr<SipMessage> msg, const Uri& uri, TransactionUser*
    msg->setForceTarget(uri);
    msg->setFromTU();
 
-   mTransactionController.send(msg.release());
+   mTransactionController->send(msg.release());
    checkAsyncProcessHandler();
 }
 
-void 
+void
 SipStack::sendTo(std::auto_ptr<SipMessage> msg, const Tuple& destination, TransactionUser* tu)
 {
    assert(!mShuttingDown);
-   
+
    if (tu) msg->setTransactionUser(tu);
    msg->setDestination(destination);
    msg->setFromTU();
 
-   mTransactionController.send(msg.release());
+   mTransactionController->send(msg.release());
    checkAsyncProcessHandler();
 }
 
 // this is only if you want to send to a destination not in the route. You
-// probably don't want to use it. 
-void 
+// probably don't want to use it.
+void
 SipStack::sendTo(const SipMessage& msg, const Uri& uri, TransactionUser* tu)
 {
    //assert(!mShuttingDown);
 
-   SipMessage* toSend = new SipMessage(msg);
+   SipMessage* toSend = static_cast<SipMessage*>(msg.clone());
    if (tu) toSend->setTransactionUser(tu);
    toSend->setForceTarget(uri);
    toSend->setFromTU();
 
-   mTransactionController.send(toSend);
+   mTransactionController->send(toSend);
    checkAsyncProcessHandler();
 }
 
 // this is only if you want to send to a destination not in the route. You
-// probably don't want to use it. 
-void 
+// probably don't want to use it.
+void
 SipStack::sendTo(const SipMessage& msg, const Tuple& destination, TransactionUser* tu)
 {
    assert(!mShuttingDown);
-   
-   //SipMessage* toSend = new SipMessage(msg);
-   SipMessage* toSend = dynamic_cast<SipMessage*>(msg.clone());
+
+   SipMessage* toSend = static_cast<SipMessage*>(msg.clone());
    if (tu) toSend->setTransactionUser(tu);
    toSend->setDestination(destination);
    toSend->setFromTU();
 
-   mTransactionController.send(toSend);
+   mTransactionController->send(toSend);
    checkAsyncProcessHandler();
 }
 
-void 
+void
 SipStack::checkAsyncProcessHandler()
 {
    if (mAsyncProcessHandler)
@@ -444,8 +586,8 @@ SipStack::postMS(const ApplicationMessage& message, unsigned int ms,
    checkAsyncProcessHandler();
 }
 
-void 
-SipStack::post(std::auto_ptr<ApplicationMessage> message, 
+void
+SipStack::post(std::auto_ptr<ApplicationMessage> message,
                unsigned int secondsLater,
                TransactionUser* tu)
 {
@@ -453,8 +595,8 @@ SipStack::post(std::auto_ptr<ApplicationMessage> message,
 }
 
 
-void 
-SipStack::postMS( std::auto_ptr<ApplicationMessage> message, 
+void
+SipStack::postMS( std::auto_ptr<ApplicationMessage> message,
                   unsigned int ms,
                   TransactionUser* tu)
 {
@@ -467,16 +609,18 @@ SipStack::postMS( std::auto_ptr<ApplicationMessage> message,
    checkAsyncProcessHandler();
 }
 
-void 
+void
 SipStack::abandonServerTransaction(const Data& tid)
 {
-   mTransactionController.abandonServerTransaction(tid);
+   mTransactionController->abandonServerTransaction(tid);
+   checkAsyncProcessHandler();
 }
 
-void 
+void
 SipStack::cancelClientInviteTransaction(const Data& tid)
 {
-   mTransactionController.cancelClientInviteTransaction(tid);
+   mTransactionController->cancelClientInviteTransaction(tid);
+   checkAsyncProcessHandler();
 }
 
 
@@ -486,15 +630,15 @@ SipStack::hasMessage() const
    return mTUFifo.messageAvailable();
 }
 
-SipMessage* 
+SipMessage*
 SipStack::receive()
 {
-   // Check to see if a message is available and if it is return the 
+   // Check to see if a message is available and if it is return the
    // waiting message. Otherwise, return 0
    if (mTUFifo.messageAvailable())
    {
       // we should only ever have SIP messages on the TU Fifo
-      // unless we've registered for termination messages. 
+      // unless we've registered for termination messages.
       Message* msg = mTUFifo.getNext();
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
       if (sip)
@@ -519,7 +663,7 @@ SipStack::receive()
 Message*
 SipStack::receiveAny()
 {
-   // Check to see if a message is available and if it is return the 
+   // Check to see if a message is available and if it is return the
    // waiting message. Otherwise, return 0
    if (mTUFifo.messageAvailable())
    {
@@ -538,42 +682,86 @@ SipStack::receiveAny()
    }
 }
 
-void 
+void
+SipStack::setFallbackPostNotify(AsyncProcessHandler *handler) 
+{
+   mTuSelector.setFallbackPostNotify(handler);
+}
+
+/* Called from external epoll (e.g., EventStackThread) */
+void
+SipStack::processTimers()
+{
+   if(!mShuttingDown && mStatisticsManagerEnabled)
+   {
+      mStatsManager.process();
+   }
+   mTransactionController->processTimers();
+   mDnsStub->processTimers();
+   mTuSelector.process();
+   Lock lock(mAppTimerMutex);
+   mAppTimers.process();
+}
+
+/* Called for internal epoll and non-epoll (e.g., StackThread) */
+void
 SipStack::process(FdSet& fdset)
 {
    if(!mShuttingDown && mStatisticsManagerEnabled)
    {
       mStatsManager.process();
    }
-   mTransactionController.process(fdset);
+   if (mPollGrp)
+   {
+      mPollGrp->processFdSet(fdset);
+      mTransactionController->processTimers();
+   }
+   else
+   {
+      mTransactionController->process(fdset);
+   }
    mTuSelector.process();
-   mDnsStub->process(fdset);
-   
-   Lock lock(mAppTimerMutex); 
+   if (mPollGrp)
+   {
+      mDnsStub->processTimers();
+   }
+   else
+   {
+      mDnsStub->process(fdset);
+   }
+
+   Lock lock(mAppTimerMutex);
    mAppTimers.process();
 }
 
-/// returns time in milliseconds when process next needs to be called 
-unsigned int 
+/// returns time in milliseconds when process next needs to be called
+unsigned int
 SipStack::getTimeTillNextProcessMS()
 {
    Lock lock(mAppTimerMutex);
 
-   unsigned int dnsNextProcess = (mDnsStub->requiresProcess() ? 0 : 0xffffffff);
-   return resipMin(Timer::getMaxSystemTimeWaitMs(),resipMin(dnsNextProcess,
-                   resipMin(mTransactionController.getTimeTillNextProcessMS(),
-                            resipMin(mTuSelector.getTimeTillNextProcessMS(), mAppTimers.msTillNextTimer()))));
-} 
+   return resipMin(Timer::getMaxSystemTimeWaitMs(),
+                  resipMin(mDnsStub->getTimeTillNextProcessMS(),
+                           resipMin(mTransactionController->getTimeTillNextProcessMS(),
+                                    resipMin(mTuSelector.getTimeTillNextProcessMS(), mAppTimers.msTillNextTimer()))));
+}
 
-void 
+void
 SipStack::buildFdSet(FdSet& fdset)
 {
-   mTransactionController.buildFdSet(fdset);
-   mDnsStub->buildFdSet(fdset);
+   if (mPollGrp)
+   {
+      mPollGrp->buildFdSet(fdset);
+   }
+   else
+   {
+      mTransactionController->buildFdSet(fdset);
+      mDnsStub->buildFdSet(fdset);
+   }
 }
 
 Security*
-SipStack::getSecurity() const 
+SipStack::getSecurity() const
 {
     return mSecurity;
 }
@@ -584,20 +772,20 @@ SipStack::setStatisticsInterval(unsigned long seconds)
    mStatsManager.setInterval(seconds);
 }
 
-void 
+void
 SipStack::registerTransactionUser(TransactionUser& tu)
 {
    mTuSelector.registerTransactionUser(tu);
 }
 
-void 
+void
 SipStack::requestTransactionUserShutdown(TransactionUser& tu)
 {
    mTuSelector.requestTransactionUserShutdown(tu);
    checkAsyncProcessHandler();
 }
 
-void 
+void
 SipStack::unregisterTransactionUser(TransactionUser& tu)
 {
    mTuSelector.unregisterTransactionUser(tu);
@@ -607,13 +795,13 @@ SipStack::unregisterTransactionUser(TransactionUser& tu)
 void
 SipStack::registerMarkListener(MarkListener* listener)
 {
-   mTransactionController.registerMarkListener(listener);
+   mTransactionController->registerMarkListener(listener);
 }
 
 void
 SipStack::unregisterMarkListener(MarkListener* listener)
 {
-   mTransactionController.unregisterMarkListener(listener);
+   mTransactionController->unregisterMarkListener(listener);
 }
 
 DnsStub&
@@ -640,19 +828,19 @@ SipStack::logDnsCache()
    mDnsStub->logDnsCache();
 }
 
-volatile bool& 
+volatile bool&
 SipStack::statisticsManagerEnabled()
 {
-   return mStatisticsManagerEnabled;   
+   return mStatisticsManagerEnabled;
 }
 
-const bool 
+const bool
 SipStack::statisticsManagerEnabled() const
 {
-   return mStatisticsManagerEnabled;   
+   return mStatisticsManagerEnabled;
 }
 
-EncodeStream& 
+EncodeStream&
 SipStack::dump(EncodeStream& strm)  const
 {
    Lock lock(mAppTimerMutex);
@@ -661,18 +849,18 @@ SipStack::dump(EncodeStream& strm)  const
         << "domains: " << Inserter(this->mDomains)
         << std::endl
         << " TUFifo size=" << this->mTUFifo.size() << std::endl
-        << " Timers size=" << this->mTransactionController.mTimers.size() << std::endl
+        << " Timers size=" << this->mTransactionController->mTimers.size() << std::endl
         << " AppTimers size=" << this->mAppTimers.size() << std::endl
-        << " ServerTransactionMap size=" << this->mTransactionController.mServerTransactionMap.size() << std::endl
-        << " ClientTransactionMap size=" << this->mTransactionController.mClientTransactionMap.size() << std::endl
-        << " Exact Transports=" << Inserter(this->mTransactionController.mTransportSelector.mExactTransports) << std::endl
-        << " Any Transports=" << Inserter(this->mTransactionController.mTransportSelector.mAnyInterfaceTransports) << std::endl;
+        << " ServerTransactionMap size=" << this->mTransactionController->mServerTransactionMap.size() << std::endl
+        << " ClientTransactionMap size=" << this->mTransactionController->mClientTransactionMap.size() << std::endl
+        << " Exact Transports=" << Inserter(this->mTransactionController->mTransportSelector.mExactTransports) << std::endl
+        << " Any Transports=" << Inserter(this->mTransactionController->mTransportSelector.mAnyInterfaceTransports) << std::endl;
    return strm;
 }
 
-EncodeStream& 
-resip::operator<<(EncodeStream& strm, 
-const SipStack& stack) 
+EncodeStream&
+resip::operator<<(EncodeStream& strm,
+const SipStack& stack)
 {
    return stack.dump(strm);
 }
@@ -680,27 +868,49 @@ const SipStack& stack)
 bool
 SipStack::isFlowAlive(const resip::Tuple& flow) const
 {
-   return flow.getType()==UDP || 
-         mTransactionController.transportSelector().connectionAlive(flow);
+   return flow.getType()==UDP ||
+         mTransactionController->transportSelector().connectionAlive(flow);
+}
+
+void 
+SipStack::terminateFlow(const resip::Tuple& flow)
+{
+   mTransactionController->terminateFlow(flow);
+   checkAsyncProcessHandler();
+}
+
+void 
+SipStack::enableFlowTimer(const resip::Tuple& flow)
+{
+   mTransactionController->enableFlowTimer(flow);
+   checkAsyncProcessHandler();
+}
+
+bool SipStack::mDefaultUseInternalPoll = false;
+
+void
+SipStack::setDefaultUseInternalPoll(bool useInternal)
+{
+   mDefaultUseInternalPoll = useInternal;
 }
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -710,7 +920,7 @@ SipStack::isFlowAlive(const resip::Tuple& flow) const
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -724,12 +934,13 @@ SipStack::isFlowAlive(const resip::Tuple& flow) const
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */

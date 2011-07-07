@@ -350,6 +350,15 @@ class TestData
          }
 
          {
+            Data charEncodeCase("%5b%5D%5B%5d");
+
+            cerr << charEncodeCase.charUnencoded() << endl;
+
+            Data shouldMatch("[][]");
+            assert(charEncodeCase.charUnencoded()==shouldMatch);
+         }
+
+         {
             Data s1;
             assert(s1.convertInt() == 0);
             

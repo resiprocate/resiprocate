@@ -1,6 +1,7 @@
 #include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/InteropHelper.hxx"
 #include "resip/stack/SipMessage.hxx"
+#include "resip/stack/Helper.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/MasterProfile.hxx"
 #include "resip/dum/ServerRegistration.hxx"
@@ -39,6 +40,7 @@ ServerRegistration::end()
 {
 }
 
+static Token outbound(Symbols::Outbound);
 void
 ServerRegistration::accept(SipMessage& ok)
 {
@@ -48,8 +50,12 @@ ServerRegistration::accept(SipMessage& ok)
 
    if (mDidOutbound)
    {
-      static Token outbound("outbound");
       ok.header(h_Requires).push_back(outbound);
+      if(InteropHelper::getFlowTimerSeconds() > 0)
+      {
+         ok.header(h_FlowTimer).value() = InteropHelper::getFlowTimerSeconds();         
+         mDum.getSipStack().enableFlowTimer(mRequest.getSource());
+      }
    }
 
    if (!mDum.mServerRegistrationHandler->asyncProcessing())
@@ -110,11 +116,10 @@ ServerRegistration::accept(SipMessage& ok)
 
          mAsyncLocalStore->releaseLog(log,modifiedContacts);
 
-         mDum.mServerRegistrationHandler->asyncUpdateContacts(getHandle(),mAor,modifiedContacts,log);
-
-         mAsyncLocalStore->destroy(); //drop ownership of resources in the local store.
-
          mAsyncOkMsg = SharedPtr<SipMessage>(static_cast<SipMessage*>(ok.clone()));
+         mDum.mServerRegistrationHandler->asyncUpdateContacts(getHandle(),mAor,modifiedContacts,log);
+         //!WARN! Must not access this object beyond this point. The client my call reject() or accept(), deleting this object.  Also, watch out for local objects that are still in scope and access this object on destruction.
+         return;
       }
    }
 }
@@ -124,6 +129,16 @@ ServerRegistration::accept(int statusCode)
 {
    SipMessage success;
    mDum.makeResponse(success, mRequest, statusCode);
+   // .bwc. Copy Path headers if present, indicate Path support
+   // ?bwc? If path headers are present, but client indicates no path support, 
+   // RFC 3327 says it is a matter of policy of whether to accept the 
+   // registration or not. What should we do here? Is it worth it to make this 
+   // configurable?
+   if(!mRequest.empty(h_Paths))
+   {
+      success.header(h_Paths)=mRequest.header(h_Paths);
+      success.header(h_Supporteds).push_back(Token(Symbols::Path));
+   }
    accept(success);
 }
 
@@ -141,10 +156,10 @@ ServerRegistration::reject(int statusCode)
       // Rollback changes, since rejected
       RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
       database->removeAor(mAor);
-	  if (mOriginalContacts.get())
-	  {
+      if (mOriginalContacts.get())
+      {
          database->addAor(mAor, *mOriginalContacts);
-	  }
+      }
       database->unlockRecord(mAor);
    }
 
@@ -177,7 +192,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
        return;
     }
 
-    mAor = msg.header(h_To).uri().getAorAsUri();
+    mAor = msg.header(h_To).uri().getAorAsUri(msg.getSource().getType());
 
    // Checks to see whether this scheme is valid, and supported.
    if (!((mAor.scheme()=="sip" || mAor.scheme()=="sips")
@@ -195,8 +210,9 @@ ServerRegistration::dispatch(const SipMessage& msg)
    
    if (handler->asyncProcessing())
    {
-      handler->asyncGetContacts(getHandle(),mAor);
       mAsyncState = asyncStateWaitingForInitialContactList;
+      handler->asyncGetContacts(getHandle(),mAor);
+      //!WARN! Must not access this object beyond this point. The client my call reject() or accept(), deleting this object.  Also, watch out for local objects that are still in scope and access this object on destruction.
       return;
    }
 
@@ -240,17 +256,18 @@ ServerRegistration::processRegistration(const SipMessage& msg)
    }
 
    // If no contacts are present in the request, this is simply a query.
-    if (!msg.exists(h_Contacts))
-    {
+   if (!msg.exists(h_Contacts))
+   {
       if (async)
       {
          mAsyncState = asyncStateQueryOnly;
       }
       handler->onQuery(getHandle(), msg);
+      //!WARN! Must not access this object beyond this point. The client my call reject() or accept(), deleting this object.  Also, watch out for local objects that are still in scope and access this object on destruction.
       return;
-    }
+   }
 
-    ParserContainer<NameAddr> contactList(msg.header(h_Contacts));
+   ParserContainer<NameAddr> contactList(msg.header(h_Contacts));
    ParserContainer<NameAddr>::iterator i(contactList.begin());
    ParserContainer<NameAddr>::iterator iEnd(contactList.end());
 
@@ -278,18 +295,18 @@ ServerRegistration::processRegistration(const SipMessage& msg)
       // Check for "Contact: *" style deregistration
       if (i->isAllContacts())
       {
-        if (contactList.size() > 1 || expires != 0)
-        {
-           SharedPtr<SipMessage> failure(new SipMessage);
-           mDum.makeResponse(*failure, msg, 400, "Invalid use of 'Contact: *'");
-           mDum.send(failure);
+         if (contactList.size() > 1 || expires != 0)
+         {
+            SharedPtr<SipMessage> failure(new SipMessage);
+            mDum.makeResponse(*failure, msg, 400, "Invalid use of 'Contact: *'");
+            mDum.send(failure);
             if (!async)
             {
                database->unlockRecord(mAor);
             }
-           delete(this);
-           return;
-        }
+            delete(this);
+            return;
+         }
 
          if (!async)
          {
@@ -301,8 +318,9 @@ ServerRegistration::processRegistration(const SipMessage& msg)
             mAsyncState = asyncStateWaitingForAcceptReject;
          }
 
-        handler->onRemoveAll(getHandle(), msg);
-        return;
+         handler->onRemoveAll(getHandle(), msg);
+         //!WARN! Must not access this object beyond this point. The client my call reject() or accept(), deleting this object.  Also, watch out for local objects that are still in scope and access this object on destruction.
+         return;
       }
 
       ContactInstanceRecord rec;
@@ -395,15 +413,18 @@ ServerRegistration::processRegistration(const SipMessage& msg)
    {
       case REFRESH:
          handler->onRefresh(getHandle(), msg);
-         break;
+         //!WARN! Must not access this object beyond this point. The client my call reject() or accept(), deleting this object.  Also, watch out for local objects that are still in scope and access this object on destruction.
+         return;
 
       case REMOVE:
          handler->onRemove(getHandle(), msg);
-         break;
+         //!WARN! Must not access this object beyond this point. The client my call reject() or accept(), deleting this object.  Also, watch out for local objects that are still in scope and access this object on destruction.
+         return;
 
       case ADD:
          handler->onAdd(getHandle(), msg);
-         break;
+         //!WARN! Must not access this object beyond this point. The client my call reject() or accept(), deleting this object.  Also, watch out for local objects that are still in scope and access this object on destruction.
+         return;
 
       default:
          assert(0);
@@ -436,13 +457,9 @@ ServerRegistration::tryFlow(ContactInstanceRecord& rec,
          resip::NameAddr& contact(rec.mContact);
          if(contact.exists(p_Instance) && contact.exists(p_regid))
          {
-            if(!msg.empty(h_Paths) && msg.header(h_Paths).back().exists(p_ob))
+            if(!msg.empty(h_Paths) && msg.header(h_Paths).back().uri().exists(p_ob))
             {
                rec.mRegId=contact.param(p_regid);
-               // Not directly connected, so we don't care how we contact the 
-               // edge proxy.
-               rec.mReceivedFrom.onlyUseExistingConnection=false;
-               DebugLog(<<"Set rec.mReceivedFrom: " << rec.mReceivedFrom);
                // Edge-proxy is directly connected to the client, and ready to 
                // send traffic down the "connection" (TCP connection, or NAT 
                // pinhole, or what-have-you).
@@ -462,14 +479,19 @@ ServerRegistration::tryFlow(ContactInstanceRecord& rec,
             }
          }
       }
-      // Record-Route flow token hack; use with caution
-      else if(InteropHelper::getRRTokenHackEnabled())
+
+      // Record-Route flow token hack, or client NAT detect hack; use with caution
+      if(msg.header(h_Vias).size() == 1)
       {
-         if(msg.header(h_Vias).size() == 1)
+         if(InteropHelper::getRRTokenHackEnabled() || 
+            flowTokenNeededForTls(rec) || 
+            flowTokenNeededForSigcomp(rec) ||
+            (InteropHelper::getClientNATDetectionMode() != InteropHelper::ClientNATDetectionDisabled &&
+             Helper::isSenderBehindNAT(msg, InteropHelper::getClientNATDetectionMode() == InteropHelper::ClientNATDetectionPrivateToPublicOnly)))
          {
-            rec.mReceivedFrom=msg.getSource();
-            rec.mReceivedFrom.onlyUseExistingConnection=false;
-            return true;
+               rec.mReceivedFrom=msg.getSource();
+               rec.mReceivedFrom.onlyUseExistingConnection=false;
+               return true;
          }
       }
    }
@@ -484,38 +506,6 @@ ServerRegistration::testFlowRequirements(ContactInstanceRecord &rec,
                                           bool hasFlow) const
 {
    const resip::NameAddr& contact(rec.mContact);
-   if(DnsUtil::isIpAddress(contact.uri().host()))
-   {
-      // IP address in host-part.
-      if(contact.uri().scheme()=="sips")
-      {
-         // sips: and IP-address in contact. This will probably not work anyway.
-         if(!hasFlow)
-         {
-            SharedPtr<SipMessage> failure(new SipMessage);
-            mDum.makeResponse(*failure, msg, 400, "Trying to use TLS with an IP-address in your Contact header won't work if you don't have a flow. Consider implementing outbound, or putting an FQDN in your contact header.");
-            mDum.send(failure);
-            return false;
-         }
-      }
-      
-      if(contact.uri().exists(p_transport))
-      {
-         TransportType type = toTransportType(contact.uri().param(p_transport));
-         if(type==TLS || type == DTLS)
-         {
-            // secure transport and IP-address. Almost certainly won't work, but
-            // we'll try anyway.
-            if(!hasFlow)
-            {
-               SharedPtr<SipMessage> failure(new SipMessage);
-               mDum.makeResponse(*failure, msg, 400, "Trying to use TLS with an IP-address in your Contact header won't work if you don't have a flow. Consider implementing outbound, or putting an FQDN in your contact header.");
-               mDum.send(failure);
-               return false;
-            }
-         }
-      }
-   }
 
    if(contact.exists(p_Instance) && contact.exists(p_regid))
    {
@@ -530,23 +520,68 @@ ServerRegistration::testFlowRequirements(ContactInstanceRecord &rec,
       }
    }
 
+   if(!hasFlow && flowTokenNeededForTls(rec))
+   {
+      SharedPtr<SipMessage> failure(new SipMessage);
+      mDum.makeResponse(*failure, msg, 400, "Trying to use TLS with an IP-address in your Contact header won't work if you don't have a flow. Consider implementing outbound, or putting an FQDN in your contact header.");
+      mDum.send(failure);
+      return false;
+   }
+
+   if(!hasFlow && flowTokenNeededForSigcomp(rec))
+   {
+      SharedPtr<SipMessage> failure(new SipMessage);
+      mDum.makeResponse(*failure, msg, 400, "Trying to use sigcomp on a connection-oriented protocol won't work if you don't have a flow. Consider implementing outbound, or using UDP/DTLS for this case.");
+      mDum.send(failure);
+      return false;
+   }
+
+   return true;
+}
+
+bool 
+ServerRegistration::flowTokenNeededForTls(const ContactInstanceRecord &rec) const
+{
+   const resip::NameAddr& contact(rec.mContact);
+   if(DnsUtil::isIpAddress(contact.uri().host()))
+   {
+      // IP address in host-part.
+      if(contact.uri().scheme()=="sips")
+      {
+         // sips: and IP-address in contact. This will probably not work anyway.
+         return true;
+      }
+
+      if(contact.uri().exists(p_transport))
+      {
+         TransportType type = Tuple::toTransport(contact.uri().param(p_transport));
+         if(type==TLS || type == DTLS)
+         {
+            // secure transport and IP-address. Almost certainly won't work, but
+            // we'll try anyway.
+            return true;
+         }
+      }
+   }
+   return false;
+}
+
+bool 
+ServerRegistration::flowTokenNeededForSigcomp(const ContactInstanceRecord &rec) const
+{
+   const resip::NameAddr& contact(rec.mContact);
+
    if(contact.uri().exists(p_sigcompId))
    {
       if(contact.uri().exists(p_transport))
       {
-         TransportType type = toTransportType(contact.uri().param(p_transport));
+         TransportType type = Tuple::toTransport(contact.uri().param(p_transport));
          if(type == TLS || type == TCP)
          {
             // Client is using sigcomp on the first hop using a connection-
             // oriented transport. For this to work, that connection has to be
             // reused for all traffic.
-            if(!hasFlow)
-            {
-               SharedPtr<SipMessage> failure(new SipMessage);
-               mDum.makeResponse(*failure, msg, 400, "Trying to use sigcomp on a connection-oriented protocol won't work if you don't have a flow. Consider implementing outbound, or using UDP/DTLS for this case.");
-               mDum.send(failure);
-               return false;
-            }
+            return true;
          }
       }
       else
@@ -560,9 +595,9 @@ ServerRegistration::testFlowRequirements(ContactInstanceRecord &rec,
                      );
       }
    }
-
-   return true;
+   return false;
 }
+
 
 void
 ServerRegistration::asyncProcessFinalOkMsg(SipMessage &msg, ContactPtrList &contacts)
@@ -603,6 +638,8 @@ ServerRegistration::asyncProcessFinalOkMsg(SipMessage &msg, ContactPtrList &cont
       if (expired.get() && expired->size() > 0)
       {
          mDum.mServerRegistrationHandler->asyncRemoveExpired(getHandle(),mAor,expired);
+         //!WARN! Must not access this object beyond this point. The client my call reject() or accept(), deleting this object.  Also, watch out for local objects that are still in scope and access this object on destruction.
+         return;
       }
    }
 }
@@ -694,10 +731,6 @@ ServerRegistration::AsyncLocalStore::create(std::auto_ptr<ContactPtrList> origin
 {
    mModifiedContacts = originalContacts;
    mLog = std::auto_ptr<ContactRecordTransactionLog>(new ContactRecordTransactionLog());
-   if (originalContacts.get())
-   {
-      mLog->resize(originalContacts->size());
-   }
 }
 
 void

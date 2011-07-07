@@ -15,6 +15,7 @@
 #include "repro/Proxy.hxx"
 #include "repro/ResponseContext.hxx"
 #include "repro/RequestContext.hxx"
+#include "repro/RRDecorator.hxx"
 #include "repro/Ack200DoneMessage.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
@@ -27,7 +28,8 @@ using namespace std;
 ResponseContext::ResponseContext(RequestContext& context) : 
    mRequestContext(context),
    mBestPriority(50),
-   mSecure(false) //context.getOriginalRequest().header(h_RequestLine).uri().scheme() == Symbols::Sips)
+   mSecure(false), //context.getOriginalRequest().header(h_RequestLine).uri().scheme() == Symbols::Sips)
+   mIsSenderBehindNAT(false)
 {
 }
 
@@ -540,156 +542,144 @@ ResponseContext::isDuplicate(const repro::Target* target) const
 void
 ResponseContext::beginClientTransaction(repro::Target* target)
 {
-      // .bwc. This is a private function, and if anything calls this with a
-      // target in an invalid state, it is a bug.
-      assert(target->status() == Target::Candidate);
+   // .bwc. This is a private function, and if anything calls this with a
+   // target in an invalid state, it is a bug.
+   assert(target->status() == Target::Candidate);
 
-      SipMessage& orig=mRequestContext.getOriginalRequest();
-      SipMessage request(orig);
+   SipMessage& orig=mRequestContext.getOriginalRequest();
+   SipMessage request(orig);
       
-      request.header(h_RequestLine).uri() = target->uri(); 
+   request.header(h_RequestLine).uri() = target->uri(); 
 
-      // .bwc. Proxy checks whether this is valid, and rejects if not.
-      request.header(h_MaxForwards).value()--;
-      
-      bool inDialog=false;
-      
-      try
-      {
-         inDialog=request.header(h_To).exists(p_tag);
-      }
-      catch(resip::ParseException&)
-      {
-         // ?bwc? Do we ignore this and just say this is a dialog-creating
-         // request?
-      }
-      
-      // Potential source Record-Route addition only for new dialogs
-      // !bwc! It looks like we really ought to be record-routing in-dialog
-      // stuff.
-      if ( !inDialog &&  // only for dialog-creating request
-           (request.method() == INVITE ||
-            request.method() == SUBSCRIBE ) &&
-           !mRequestContext.mProxy.getRecordRoute().uri().host().empty())  // only add record route if configured to do so
+   // .bwc. Proxy checks whether this is valid, and rejects if not.
+   request.header(h_MaxForwards).value()--;
+   
+   bool inDialog=false;
+   
+   try
+   {
+      inDialog=request.header(h_To).exists(p_tag);
+   }
+   catch(resip::ParseException&)
+   {
+      // ?bwc? Do we ignore this and just say this is a dialog-creating
+      // request?
+   }
+   
+   // Potential source Record-Route addition only for new dialogs
+   // !bwc! It looks like we really ought to be record-routing in-dialog
+   // stuff.
+
+   // only add record route if configured to do so
+   if(!mRequestContext.mProxy.getRecordRoute(orig.getReceivedTransport()).uri().host().empty())
+   {
+      if (!inDialog &&  // only for dialog-creating request
+          (request.method() == INVITE ||
+           request.method() == SUBSCRIBE ||
+           request.method() == REFER))
       {
          insertRecordRoute(request,
-                           orig.getReceivedTransport()->getTuple(),
+                           orig.getReceivedTransport(),
                            target);
       }
       else if(request.method()==REGISTER)
       {
-         // .bwc. Edge-proxy stuff for outbound.
-         if(request.header(h_Vias).size() == 1 
-            && resip::InteropHelper::getOutboundSupported()
-            && !request.empty(h_Contacts)
-            && request.header(h_Contacts).front().exists(p_regid))
-         {
-            resip::NameAddr rt;
-            if(orig.getReceivedTransport()->transport()==resip::TLS ||
-               orig.getReceivedTransport()->transport()==resip::DTLS )
-            {
-               // Use FQDN
-               rt = mRequestContext.mProxy.getRecordRoute();
-               rt.uri().scheme() = "sips";
-            }
-            else
-            {
-               rt.uri().host()=orig.getReceivedTransport()->interfaceName();
-               rt.uri().port()=orig.getReceivedTransport()->port();
-               rt.uri().param(resip::p_transport)=resip::Tuple::toData(orig.getReceivedTransport()->transport());
-            }
-            resip::Helper::massageRoute(request,rt);
-            resip::Data binaryFlowToken;
-            Tuple::writeBinaryToken(orig.getSource(),binaryFlowToken);
-            
-            // !bwc! TODO encrypt this binary token to self.
-            rt.uri().user()=binaryFlowToken.base64encode();
-            rt.param(p_ob);
-            request.header(h_Paths).push_front(rt);
-            InfoLog (<< "Added Path: " << rt);
-            request.header(h_Supporteds).push_back(Token("path"));
-         }
+         insertRecordRoute(request,
+                           orig.getReceivedTransport(),
+                           target,
+                           true /* do Path instead */);
       }
+   }
       
-      if( (resip::InteropHelper::getOutboundSupported() ||
-          resip::InteropHelper::getRRTokenHackEnabled()) 
-          && target->rec().mReceivedFrom.mFlowKey)
-      {
-         // .bwc. We only override the destination if we are sending to an
-         // outbound contact. If this is not an outbound contact, but the
-         // endpoint has given us a Contact with the correct ip-address and 
-         // port, we might be able to find the connection they formed when they
-         // registered earlier, but that will happen down in TransportSelector.
-         request.setDestination(target->rec().mReceivedFrom);
-      }
+   if((resip::InteropHelper::getOutboundSupported() ||
+       resip::InteropHelper::getRRTokenHackEnabled() ||
+       mIsSenderBehindNAT)
+       && target->rec().mReceivedFrom.mFlowKey)
+   {
+      // .bwc. We only override the destination if we are sending to an
+      // outbound contact. If this is not an outbound contact, but the
+      // endpoint has given us a Contact with the correct ip-address and 
+      // port, we might be able to find the connection they formed when they
+      // registered earlier, but that will happen down in TransportSelector.
+      request.setDestination(target->rec().mReceivedFrom);
+   }
 
-      DebugLog(<<"Set tuple dest: " << request.getDestination());
+   DebugLog(<<"Set tuple dest: " << request.getDestination());
 
-      // .bwc. Path header addition.
-      if(!target->rec().mSipPath.empty())
-      {
-         request.header(h_Routes).append(target->rec().mSipPath);
-      }
+   // .bwc. Path header addition.
+   if(!target->rec().mSipPath.empty())
+   {
+      request.header(h_Routes).append(target->rec().mSipPath);
+   }
 
-      // !jf! unleash the baboons here
-      // a baboon might adorn the message, record call logs or CDRs, might
-      // insert loose routes on the way to the next hop
-      
-      Helper::processStrictRoute(request);
-      
-      //This is where the request acquires the tid of the Target. The tids 
-      //should be the same from here on out.
-      request.header(h_Vias).push_front(target->via());
+   // !jf! unleash the baboons here
+   // a baboon might adorn the message, record call logs or CDRs, might
+   // insert loose routes on the way to the next hop
+   
+   Helper::processStrictRoute(request);
+   
+   //This is where the request acquires the tid of the Target. The tids 
+   //should be the same from here on out.
+   request.header(h_Vias).push_front(target->via());
 
-      if(!mRequestContext.mInitialTimerCSet)
-      {
-         mRequestContext.mInitialTimerCSet=true;
-         mRequestContext.updateTimerC();
-      }
-      
-      // the rest of 16.6 is implemented by the transaction layer of resip
-      // - determining the next hop (tuple)
-      // - adding a content-length if needed
-      // - sending the request
-      sendRequest(request); 
+   if(!mRequestContext.mInitialTimerCSet &&
+      mRequestContext.getOriginalRequest().method()==INVITE)
+   {
+      mRequestContext.mInitialTimerCSet=true;
+      mRequestContext.updateTimerC();
+   }
+   
+   // the rest of 16.6 is implemented by the transaction layer of resip
+   // - determining the next hop (tuple)
+   // - adding a content-length if needed
+   // - sending the request
+   sendRequest(request); 
 
-      target->status() = Target::Started;
+   target->status() = Target::Started;
 }
 
 void
-ResponseContext::insertRecordRoute(resip::SipMessage& outgoing,
-                                    const Tuple& receivedTransport,
-                                    Target* target)
+ResponseContext::insertRecordRoute(SipMessage& outgoing,
+                                   const Transport* receivedTransport,
+                                   Target* target,
+                                   bool doPathInstead)
 {
-   resip::Data inboundFlowToken=getInboundFlowToken();
+   resip::Data inboundFlowToken=getInboundFlowToken(doPathInstead);
    bool needsOutboundFlowToken=outboundFlowTokenNeeded(target);
-
+   bool recordRouted=false;
    // .bwc. If we have a flow-token we need to insert, we need to record-route.
    // Also, we might record-route if we are configured to do so.
    if( !inboundFlowToken.empty() 
       || needsOutboundFlowToken 
-      || mRequestContext.mProxy.getRecordRouteEnabled() )
+      || mRequestContext.mProxy.getRecordRouteForced() )
    {
       resip::NameAddr rt;
       if(inboundFlowToken.empty())
       {
-         rt=mRequestContext.mProxy.getRecordRoute();
+         rt=mRequestContext.mProxy.getRecordRoute(receivedTransport);
       }
       else
       {
-         if(receivedTransport.getType()==TLS || 
-            receivedTransport.getType()==DTLS)
+         if(receivedTransport->getTuple().getType()==TLS || 
+            receivedTransport->getTuple().getType()==DTLS)
          {
             // .bwc. Debatable. Should we be willing to reuse a TLS connection
             // at the behest of a Route header with no hostname in it?
-            rt=mRequestContext.mProxy.getRecordRoute();
+            rt=mRequestContext.mProxy.getRecordRoute(receivedTransport);
             rt.uri().scheme() = "sips";
          }
          else
          {
-            rt.uri().host()=resip::Tuple::inet_ntop(receivedTransport);
-            rt.uri().port()=receivedTransport.getPort();
-            rt.uri().param(resip::p_transport)=resip::Tuple::toData(receivedTransport.getType());
+            if(receivedTransport->getTuple().isAnyInterface())
+            {
+               rt=mRequestContext.mProxy.getRecordRoute(receivedTransport);
+            }
+            else
+            {
+               rt.uri().host()=resip::Tuple::inet_ntop(receivedTransport->getTuple());
+            }
+            rt.uri().port()=receivedTransport->getTuple().getPort();
+            rt.uri().param(resip::p_transport)=resip::Tuple::toDataLower(receivedTransport->getTuple().getType());
          }
          rt.uri().user()=inboundFlowToken;
       }
@@ -704,52 +694,112 @@ ResponseContext::insertRecordRoute(resip::SipMessage& outgoing,
       }
 #endif
 
-      outgoing.header(h_RecordRoutes).push_front(rt);
-      InfoLog (<< "Added Record-Route: " << rt);
+      recordRouted=true;
+      if(doPathInstead)
+      {
+         if(!inboundFlowToken.empty())
+         {
+            // Only add ;ob parameter if client really supports outbound (ie. not for NAT detection mode or flow token hack)
+            if(!mRequestContext.getOriginalRequest().empty(h_Supporteds) &&
+               mRequestContext.getOriginalRequest().header(h_Supporteds).find(Token(Symbols::Outbound)))
+            {
+               rt.uri().param(p_ob);
+            }
+         }
+         outgoing.header(h_Paths).push_front(rt);
+         if(!outgoing.header(h_Supporteds).find(Token("path")))
+         {
+            outgoing.header(h_Supporteds).push_back(Token("path"));
+         }
+         InfoLog (<< "Added Path: " << rt);
+      }
+      else
+      {
+         outgoing.header(h_RecordRoutes).push_front(rt);
+         InfoLog (<< "Added Record-Route: " << rt);
+      }
    }
 
-   // .bwc. We only double record-route if we are putting in a flow-token.
-   // (if we are configured to always record-route, we will have already record-
-   // routed once above, no sense in putting a second, identical RR in.)
-   // !bwc! TODO some logic or config to allow double record-routing in other
-   // circumstances (on transport switch, for instance)
-   if(!inboundFlowToken.empty() || needsOutboundFlowToken)
+   // .bwc. We always need to add this, since we never know if a transport 
+   // switch is going to happen. (Except for Path headers; we don't care about 
+   // transport switches on REGISTER requests. If we already put a Path header 
+   // in, we do care though.)
+   if(!doPathInstead || recordRouted)
    {
-      outgoing.addOutboundDecorator(mRequestContext.mProxy.makeRRDecorator());
+      std::auto_ptr<resip::MessageDecorator> rrDecorator(
+                                 new RRDecorator(mRequestContext.mProxy,
+                                                receivedTransport,
+                                                recordRouted,
+                                                !inboundFlowToken.empty(),
+                                                mRequestContext.mProxy.getRecordRouteForced(),
+                                                doPathInstead,
+                                                mIsSenderBehindNAT));
+      outgoing.addOutboundDecorator(rrDecorator);
    }
 }
 
 resip::Data
-ResponseContext::getInboundFlowToken()
+ResponseContext::getInboundFlowToken(bool doPathInstead)
 {
    resip::Data flowToken=resip::Data::Empty;
    resip::SipMessage& orig=mRequestContext.getOriginalRequest();
-   
+   if(orig.empty(h_Contacts) || !orig.header(h_Contacts).front().isWellFormed())
+   {
+      return flowToken;
+   }
+
+   const resip::NameAddr& contact(orig.header(h_Contacts).front());
+
    if(InteropHelper::getOutboundSupported() && 
-      orig.header(h_Contacts).front().uri().exists(p_ob) &&
-      orig.header(h_Vias).size()==1)
+      (contact.uri().exists(p_ob) || contact.exists(p_regid)))
    {
-      // This arrived over an outbound flow (or so the endpoint claims)
-      // (See outbound-09 Sec 4.3 para 3)
-      resip::Data binaryFlowToken;
-      Tuple::writeBinaryToken(orig.getSource(),binaryFlowToken);
-      // !bwc! TODO encrypt to self
-      flowToken = binaryFlowToken.base64encode();
+      if(orig.header(h_Vias).size()==1)
+      {
+         // This arrived over an outbound flow (or so the endpoint claims)
+         // (See outbound-09 Sec 4.3 para 3)
+         resip::Data binaryFlowToken;
+         resip::Tuple source(orig.getSource());
+         source.onlyUseExistingConnection=true;
+         Tuple::writeBinaryToken(source, binaryFlowToken, Proxy::FlowTokenSalt);
+         flowToken = binaryFlowToken.base64encode();
+      }
+      else if(doPathInstead)
+      {
+         // Need to try to detect Path failures
+         if(orig.empty(h_Paths) || !orig.header(h_Paths).back().uri().exists(p_ob))
+         {
+            // Yikes! Client is trying to use outbound, but edge-proxy did not
+            // support it. The registrar will either reject this (if it supports 
+            // outbound), or will not indicate outbound support (which should 
+            // let the client know that the flow setup failed)
+            WarningLog(<<"Client asked for outbound processing, but the edge "
+                     "proxy did not support it. There's nothing we can do to "
+                     "salvage this. The registrar might end up rejecting the "
+                     "registration (if is supports outbound), or it might just "
+                     "fail to add a Supported: outbound. In either case, the "
+                     "client should know what's up, so we just let it all "
+                     "happen.");
+         }
+      }
    }
-   else if(resip::InteropHelper::getRRTokenHackEnabled()
-      && !selfAlreadyRecordRouted() )
+
+   if(flowToken.empty() && orig.header(h_Vias).size()==1)
    {
-      // !bwc! TODO remove this when flow-token hack is no longer needed.
-      // Poor-man's outbound. Shouldn't be our default behavior, because it
-      // breaks target-refreshes (once a flow-token is in the Route-Set, the 
-      // flow-token cannot be changed, and will override any update to the 
-      // Contact)
-      resip::Data binaryFlowToken;
-      Tuple::writeBinaryToken(orig.getSource(),binaryFlowToken);
-      // !bwc! TODO encrypt to self
-      flowToken = binaryFlowToken.base64encode();
+      if(resip::InteropHelper::getRRTokenHackEnabled() ||
+         mIsSenderBehindNAT ||
+         needsFlowTokenToWork(contact))
+      {
+         // !bwc! TODO remove this when flow-token hack is no longer needed.
+         // Poor-man's outbound. Shouldn't be our default behavior, because it
+         // breaks target-refreshes (once a flow-token is in the Route-Set, the 
+         // flow-token cannot be changed, and will override any update to the 
+         // Contact)
+         resip::Data binaryFlowToken;
+         Tuple::writeBinaryToken(orig.getSource(), binaryFlowToken, Proxy::FlowTokenSalt);
+         flowToken = binaryFlowToken.base64encode();
+      }
    }
-   
+
    return flowToken;
 }
 
@@ -762,23 +812,57 @@ ResponseContext::outboundFlowTokenNeeded(Target* target)
       return false;
    }
 
-   if(target->rec().mReceivedFrom.onlyUseExistingConnection
-      || resip::InteropHelper::getRRTokenHackEnabled())
+   if(target->rec().mReceivedFrom.mFlowKey
+      || resip::InteropHelper::getRRTokenHackEnabled()
+      || mIsSenderBehindNAT)
    {
+      target->rec().mReceivedFrom.onlyUseExistingConnection=true;
       return true;
    }
 
    return false;
 }
 
-bool
-ResponseContext::selfAlreadyRecordRouted()
+bool 
+ResponseContext::needsFlowTokenToWork(const resip::NameAddr& contact) const
 {
-   resip::SipMessage& orig=mRequestContext.getOriginalRequest();
-   return (!orig.empty(h_RecordRoutes) 
-            && orig.header(h_RecordRoutes).front().isWellFormed()
-            && mRequestContext.mProxy.isMyUri(
-                        orig.header(h_RecordRoutes).front().uri()));
+   if(DnsUtil::isIpAddress(contact.uri().host()))
+   {
+      // IP address in host-part.
+      if(contact.uri().scheme()=="sips")
+      {
+         // TLS with no FQDN. Impossible without flow-token fixup, even if no 
+         // NAT is involved.
+         return true;
+      }
+
+      if(contact.uri().exists(p_transport))
+      {
+         TransportType type = toTransportType(contact.uri().param(p_transport));
+         if(type==TLS || type == DTLS)
+         {
+            // TLS with no FQDN. Impossible without flow-token fixup, even if no 
+            // NAT is involved.
+            return true;
+         }
+      }
+   }
+
+   if(contact.uri().exists(p_sigcompId))
+   {
+      if(contact.uri().exists(p_transport))
+      {
+         TransportType type = toTransportType(contact.uri().param(p_transport));
+         if(type == TLS || type == TCP)
+         {
+            // Client is using sigcomp on the first hop using a connection-
+            // oriented transport. For this to work, that connection has to be
+            // reused for all traffic.
+            return true;
+         }
+      }
+   }
+   return false;
 }
 
 bool
@@ -876,19 +960,29 @@ ResponseContext::processResponse(SipMessage& response)
       }
       else if (response.header(h_StatusLine).statusCode() > 199)
       {
-         InfoLog( << "Received final response, but can't forward as there are no more Vias: " << response.brief() );
+         InfoLog( << "Received final response, but can't forward as there are "
+                        "no more Vias. Considering this branch failed. " 
+                        << response.brief() );
          // .bwc. Treat as server error.
          terminateClientTransaction(mCurrentResponseTid);
          return;
       }
       else if(response.header(h_StatusLine).statusCode() != 100)
       {
-         InfoLog( << "Received response, but can't forward as there are no more Vias: " << response.brief() );
+         InfoLog( << "Received provisional response, but can't forward as there"
+                     " are no more Vias. Ignoring. " << response.brief() );
          return;
       }
    }
-   else
+   else // We have a second Via
    {
+      if(!mRequestContext.getOriginalRequest().getRFC2543TransactionId().empty())
+      {
+         // .bwc. Original request had an RFC 2543 transaction-id. Set in 
+         // response.
+         response.setRFC2543TransactionId(mRequestContext.getOriginalRequest().getRFC2543TransactionId());
+      }
+
       const Via& via = response.header(h_Vias).front();
 
       if(!via.isWellFormed())
@@ -897,6 +991,24 @@ ResponseContext::processResponse(SipMessage& response)
          // transaction if not.
          DebugLog(<<"Some endpoint has corrupted one of our Vias"
             " in their response. (Via is malformed) This is not fixable.");
+         if(response.header(h_StatusLine).statusCode() > 199)
+         {
+            terminateClientTransaction(mCurrentResponseTid);
+         }
+         
+         return;
+      }
+
+      const Via& origVia = mRequestContext.getOriginalRequest().header(h_Vias).front();
+      const Data& branch=(via.exists(p_branch) ? via.param(p_branch).getTransactionId() : Data::Empty);
+      const Data& origBranch=(origVia.exists(p_branch) ? origVia.param(p_branch).getTransactionId() : Data::Empty);
+
+      if(!isEqualNoCase(branch,origBranch))
+      {
+         // .bwc. Someone altered our branch. Ignore if provisional, terminate 
+         // transaction otherwise.
+         DebugLog(<<"Some endpoint has altered one of our Vias"
+            " in their response. (branch is different) This is not fixable.");
          if(response.header(h_StatusLine).statusCode() > 199)
          {
             terminateClientTransaction(mCurrentResponseTid);
@@ -940,7 +1052,10 @@ ResponseContext::processResponse(SipMessage& response)
    switch (code / 100)
    {
       case 1:
-         mRequestContext.updateTimerC();
+         if(mRequestContext.getOriginalRequest().method()==INVITE)
+         {
+            mRequestContext.updateTimerC();
+         }
 
          if  (!mRequestContext.mHaveSentFinalResponse)
          {
@@ -949,7 +1064,8 @@ ResponseContext::processResponse(SipMessage& response)
                return;  // stop processing 100 responses
             }
                
-            mRequestContext.sendResponse(response);            
+            mRequestContext.sendResponse(response);
+            return;            
          }
          break;
          
@@ -969,6 +1085,20 @@ ResponseContext::processResponse(SipMessage& response)
             mRequestContext.mHaveSentFinalResponse = true;
             mBestResponse.header(h_StatusLine).statusCode()=
                response.header(h_StatusLine).statusCode();
+
+            // If this is a registration response and we have flow timers enabled, and
+            // we are doing outbound for this registration and there is no FlowTimer
+            // header present already, then add a FlowTimer header
+            if(response.method() == REGISTER &&
+               InteropHelper::getFlowTimerSeconds() > 0 &&
+               response.empty(h_FlowTimer) &&
+               ((!response.empty(h_Paths) && response.header(h_Paths).back().uri().exists(p_ob)) ||
+                (!response.empty(h_Requires) && response.header(h_Requires).find(Token(Symbols::Outbound)))))
+            {
+               response.header(h_FlowTimer).value() = InteropHelper::getFlowTimerSeconds();
+               mRequestContext.getProxy().getStack().enableFlowTimer(mRequestContext.getOriginalRequest().getSource());
+            }
+
             mRequestContext.sendResponse(response);            
          }
          break;
@@ -1086,7 +1216,7 @@ ResponseContext::cancelClientTransaction(repro::Target* target)
    if (target->status() == Target::Started)
    {
       InfoLog (<< "Cancel client transaction: " << target);
-      mRequestContext.getProxy().getStack().cancelClientInviteTransaction(target->via().param(p_branch).getTransactionId());
+      mRequestContext.cancelClientTransaction(target->via().param(p_branch).getTransactionId());
 
       DebugLog(<< "Canceling a transaction with uri: " 
                << resip::Data::from(target->uri()) << " , to host: " 
@@ -1296,9 +1426,10 @@ ResponseContext::forwardBestResponse()
    if(mBestResponse.header(h_StatusLine).statusCode() == 408 &&
       mBestResponse.method()!=INVITE)
    {
-      // We don't forward back NIT 408; we just silently abandon the transaction
+      // We don't forward back NIT 408; we just silently abandon the transaction - RFC4321 - section 1.4 408 for non-INVITE is not useful
       DebugLog(<< "Got NIT 408, abandoning: "<<mRequestContext.getTransactionId());
       mRequestContext.getProxy().getStack().abandonServerTransaction(mRequestContext.getTransactionId());
+      mRequestContext.mHaveSentFinalResponse = true;  // To avoid Request context from sending a response
    }
    else
    {

@@ -417,9 +417,9 @@ ConversationManager::removeParticipant(ConversationHandle convHandle, Participan
 }
 
 void
-ConversationManager::moveParticipant(ParticipantHandle partHandle, ConversationHandle sourceConvHandle, ConversationHandle destConvHandle)
+ConversationManager::moveParticipant(ParticipantHandle partHandle, ConversationHandle sourceConvHandle, ConversationHandle destConvHandle, bool bTriggerHold )
 {
-   mDum->post(new MoveParticipantCmd(this, partHandle, sourceConvHandle, destConvHandle));
+   mDum->post(new MoveParticipantCmd(this, partHandle, sourceConvHandle, destConvHandle, bTriggerHold ));
 }
 
 void 
@@ -735,9 +735,10 @@ ConversationManager::buildSessionCapabilities(bool includeAudio, bool includeVid
    // Create Session Capabilities 
    // Note:  port, sessionId and version will be replaced in actual offer/answer
    // Build s=, o=, t=, and c= lines
-   SdpContents::Session::Origin origin("-", 0 /* sessionId */, 0 /* version */, SdpContents::IP4, ipaddress);   // o=   
+   SdpContents::AddrType addrType = (ipaddress.find(":") == Data::npos ? SdpContents::IP4 : SdpContents::IP6);
+   SdpContents::Session::Origin origin("-", 0 /* sessionId */, 0 /* version */, addrType, ipaddress);   // o=   
    SdpContents::Session session(0, origin, sessionName /* s= */);
-   session.connection() = SdpContents::Session::Connection(SdpContents::IP4, ipaddress);  // c=
+   session.connection() = SdpContents::Session::Connection(addrType, ipaddress);  // c=
    session.addTime(SdpContents::Session::Time(0, 0));
 
    sdpcontainer::SdpMediaLine::CodecList codecs;
@@ -1119,15 +1120,25 @@ ConversationManager::onNewSubscriptionFromRefer(ServerSubscriptionHandle ss, con
             }
          }
 
-         // Create new Participant
-         RemoteParticipantDialogSet *participantDialogSet = new RemoteParticipantDialogSet(*this);
-         RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(getNewParticipantHandle());  
+         // application level policy
+         if (isOutOfDialogReferSupported())
+         {
+            ss->send(ss->accept(202));
 
-         // Set pending OOD info in Participant - causes accept or reject to be called later
-         participant->setPendingOODReferInfo(ss, msg);
+            // Create new Participant
+            RemoteParticipantDialogSet *participantDialogSet = new RemoteParticipantDialogSet(*this);
+            RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(getNewParticipantHandle());  
 
-         // Notify application
-         onRequestOutgoingParticipant(participant->getParticipantHandle(), msg);
+            // Set pending OOD info in Participant - call to be triggered by app
+            participant->setPendingOODReferInfo(ss, msg);
+
+            // Notify application
+            onRequestOutgoingParticipant(participant->getParticipantHandle(), msg);
+         }
+         else
+         {
+            ss->send(ss->reject(403));
+         }
       }
       else
       {
@@ -1146,9 +1157,15 @@ ConversationManager::onNewSubscriptionFromRefer(ServerSubscriptionHandle ss, con
 }
 
 void 
-ConversationManager::onRefresh(ServerSubscriptionHandle, const SipMessage& msg)
+ConversationManager::onRefresh(ServerSubscriptionHandle h, const SipMessage& msg)
 {
    InfoLog(<< "onRefresh(ServerSubscriptionHandle): " << msg.brief());
+   if (resip::isEqualNoCase(h->getEventType(), "refer"))
+   {
+      // .jjg. always accept for 'refer' subscriptions
+      h->send(h->accept(200));
+      h->send(h->neutralNotify());
+   }
 }
 
 void 
@@ -1239,10 +1256,10 @@ ConversationManager::onReceivedRequest(ServerOutOfDialogReqHandle ood, const Sip
          }
          if (acceptsSdp)
          {
-      // Attach an offer to the options request
-      SdpContents sdp;
-      buildSdpOffer(getIncomingConversationProfile(msg).get(), sdp);
-      optionsAnswer->setContents(&sdp);
+            // Attach an offer to the options request
+            SdpContents sdp;
+            buildSdpOffer(getIncomingConversationProfile(msg).get(), sdp);
+            optionsAnswer->setContents(&sdp);
          }
       }
       ood->send(optionsAnswer);
@@ -1272,15 +1289,25 @@ ConversationManager::onReceivedRequest(ServerOutOfDialogReqHandle ood, const Sip
                }
             }
 
-            // Create new Participant 
-            RemoteParticipantDialogSet *participantDialogSet = new RemoteParticipantDialogSet(*this);
-            RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(getNewParticipantHandle());  
+            // application level policy
+            if (isOutOfDialogReferSupported())
+            {
+               ood->send(ood->accept(202));
 
-            // Set pending OOD info in Participant - causes accept or reject to be called later
-            participant->setPendingOODReferInfo(ood, msg);
+               // Create new Participant 
+               RemoteParticipantDialogSet *participantDialogSet = new RemoteParticipantDialogSet(*this);
+               RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(getNewParticipantHandle());  
 
-            // Notify application
-            onRequestOutgoingParticipant(participant->getParticipantHandle(), msg);
+               // Set pending OOD info in Participant - application can choose to continue with accept or reject
+               participant->setPendingOODReferInfo(ood, msg);
+
+               // Notify application
+               onRequestOutgoingParticipant(participant->getParticipantHandle(), msg);
+            }
+            else
+            {
+               ood->send(ood->reject(403));
+            }
          }
          else
          {
@@ -1329,6 +1356,12 @@ ConversationManager::onTryingNextTarget(AppDialogSetHandle, const SipMessage& ms
    return true;
 }
 
+
+bool
+ConversationManager::isOutOfDialogReferSupported() const
+{
+   return true;
+}
 
 /* ====================================================================
 

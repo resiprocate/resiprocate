@@ -1,7 +1,9 @@
 #include "resip/stack/KeepAliveMessage.hxx"
+#include "resip/stack/InteropHelper.hxx"
 #include "resip/dum/KeepAliveManager.hxx"
 #include "resip/dum/KeepAliveTimeout.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
+#include "resip/stack/Helper.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/SipStack.hxx"
 
@@ -10,71 +12,149 @@
 using namespace resip;
 using namespace std;
 
-void KeepAliveManager::add(const Tuple& target, int keepAliveInterval)
+int KeepAliveManager::mKeepAlivePongTimeoutMs = 10000;  // Defaults to 10000ms (10s) as specified in RFC5626 section 4.4.1
+
+void 
+KeepAliveManager::add(const Tuple& target, int keepAliveInterval, bool targetSupportsOutbound)
 {
    assert(mDum);
    NetworkAssociationMap::iterator it = mNetworkAssociations.find(target);
    if (it == mNetworkAssociations.end())
    {
-      DebugLog( << "First keep alive for: " << target );
-      DebugLog( << "Keepalive interval " << keepAliveInterval << " seconds" );
-      DebugLog( << "Keepalive id " << mCurrentId );
+      DebugLog(<< "First keep alive for id=" << mCurrentId << ": " << target << ", interval=" 
+               << keepAliveInterval << "s, supportsOutbound=" << (targetSupportsOutbound ? "true" : "false"));
 
       NetworkAssociationInfo info;
       info.refCount = 1;
       info.keepAliveInterval = keepAliveInterval;
       info.id = mCurrentId;
+      info.supportsOutbound = targetSupportsOutbound;
+      info.pongReceivedForLastPing = false;
       mNetworkAssociations.insert(NetworkAssociationMap::value_type(target, info));
       KeepAliveTimeout t(target, mCurrentId);
       SipStack &stack = mDum->getSipStack();
-      stack.post(t, keepAliveInterval, mDum);
+      if(targetSupportsOutbound)
+      {
+         // Used randomized timeout between 80% and 100% of keepalivetime
+         stack.post(t, Helper::jitterValue(keepAliveInterval, 80, 100), mDum);
+      }
+      else
+      {
+         stack.post(t, keepAliveInterval, mDum);
+      }
       ++mCurrentId;
    }
    else
    {
-      (*it).second.refCount++;
-      if(keepAliveInterval < (*it).second.keepAliveInterval)
+      it->second.refCount++;
+      if(keepAliveInterval < it->second.keepAliveInterval || targetSupportsOutbound)  // if targetSupportsOutbound, then always update the interval, as value may be from Flow-Timer header
       {
-          (*it).second.keepAliveInterval = keepAliveInterval;  // ?slg? only allow value to be shortened???  What if 2 different profiles with different keepAliveTime settings are sharing this network association?
+         // ?slg? only allow value to be shortened???  What if 2 different profiles 
+         // with different keepAliveTime settings are sharing this network association?         
+         it->second.keepAliveInterval = keepAliveInterval;  
       }
-      DebugLog(<< "Association added for " << target);
+      if(targetSupportsOutbound)
+      {
+         // allow this to be updated to true only.  If any usage get's an indication of 
+         // outbound support on this flow, then we accept it
+         it->second.supportsOutbound = targetSupportsOutbound;  
+      }
+      DebugLog(<< "Association added for keep alive id=" << it->second.id << ": " << target 
+               << ", interval=" << it->second.keepAliveInterval << "s, supportsOutbound=" 
+               << (it->second.supportsOutbound ? "true" : "false") 
+               << ", refCount=" << it->second.refCount);
    }
 }
 
-void KeepAliveManager::remove(const Tuple& target)
+void 
+KeepAliveManager::remove(const Tuple& target)
 {
    NetworkAssociationMap::iterator it = mNetworkAssociations.find(target);
    if (it != mNetworkAssociations.end())
    {
-      DebugLog(<< "Association removed for " << target);
-      
-      if (0 == --(*it).second.refCount)
+      if (0 == --it->second.refCount)
       {
-         DebugLog(<< "Keepalive " << it->second.id << " removed");
-         DebugLog(<< "No more association for " << target);
-         mNetworkAssociations.erase(target);
+         DebugLog(<< "Last association removed for keep alive id=" << it->second.id << ": " << target);
+         mNetworkAssociations.erase(it);
+      }
+      else
+      {
+         DebugLog(<< "Association removed for keep alive id=" << it->second.id << ": " << target << ", refCount=" << it->second.refCount);
       }
    }
 }
 
-void KeepAliveManager::process(KeepAliveTimeout& timeout)
+void 
+KeepAliveManager::process(KeepAliveTimeout& timeout)
 {
    assert(mDum);
    static KeepAliveMessage msg;
    NetworkAssociationMap::iterator it = mNetworkAssociations.find(timeout.target());
    if (it != mNetworkAssociations.end() && timeout.id() == it->second.id)
    {
-      DebugLog( << "Refreshing keepalive for " << timeout.target() );
-      DebugLog( << "Keepalive interval " << it->second.keepAliveInterval << " seconds");
-      DebugLog( << "Keepalive id " << it->second.id << ")" );
-
       SipStack &stack = mDum->getSipStack();
+      DebugLog(<< "Refreshing keepalive for id=" << it->second.id << ": " << it->first
+               << ", interval=" << it->second.keepAliveInterval << "s, supportsOutbound=" 
+               << (it->second.supportsOutbound ? "true" : "false") 
+               << ", refCount=" << it->second.refCount);
+
+      if(InteropHelper::getOutboundVersion()>=8 && it->second.supportsOutbound && mKeepAlivePongTimeoutMs > 0)
+      {
+         // Assert if keep alive interval is too short in order to properly detect
+         // missing pong responses - ie. interval must be greater than 10s
+         assert((it->second.keepAliveInterval*1000) > mKeepAlivePongTimeoutMs);
+
+         // Start pong timeout if transport is TCP based (note: pong processing of Stun messaging is currently not implemented)
+         if(it->first.getType() == TCP || it->first.getType() == TLS)
+         {
+            DebugLog( << "Starting pong timeout for keepalive id " << it->second.id);
+            KeepAlivePongTimeout t(it->first, it->second.id);
+            stack.postMS(t, mKeepAlivePongTimeoutMs, mDum);
+         }
+      }
+      it->second.pongReceivedForLastPing = false;  // reset flag
+
       stack.sendTo(msg, timeout.target(), mDum);
       KeepAliveTimeout t(it->first, it->second.id);
-      stack.post(t, it->second.keepAliveInterval, mDum);
-
+      if(it->second.supportsOutbound)
+      {
+         // Used randomized timeout between 80% and 100% of keepalivetime
+         stack.post(t, Helper::jitterValue(it->second.keepAliveInterval, 80, 100), mDum);
+      }
+      else
+      {
+         stack.post(t, it->second.keepAliveInterval, mDum);
+      }
    }
 }
+
+void 
+KeepAliveManager::process(KeepAlivePongTimeout& timeout)
+{
+   assert(mDum);
+   NetworkAssociationMap::iterator it = mNetworkAssociations.find(timeout.target());
+   if (it != mNetworkAssociations.end() && timeout.id() == it->second.id)
+   {
+      if(!it->second.pongReceivedForLastPing)
+      {
+         // Timeout expecting pong response
+         InfoLog(<< "Timed out expecting pong response for keep alive id=" << it->second.id << ": " << it->first);
+         mDum->getSipStack().terminateFlow(it->first);
+      }
+   }
+}
+
+void 
+KeepAliveManager::receivedPong(const Tuple& flow)
+{
+   NetworkAssociationMap::iterator it = mNetworkAssociations.find(flow);
+   if (it != mNetworkAssociations.end())
+   {
+      DebugLog(<< "Received pong response for keep alive id=" << it->second.id << ": " << it->first);
+      it->second.pongReceivedForLastPing = true;
+   }
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

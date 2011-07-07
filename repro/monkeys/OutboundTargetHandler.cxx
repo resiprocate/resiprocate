@@ -11,7 +11,7 @@
 
 namespace repro
 {
-OutboundTargetHandler::OutboundTargetHandler()
+   OutboundTargetHandler::OutboundTargetHandler(resip::RegistrationPersistenceManager& store) : mRegStore(store)
 {
 
 }
@@ -42,20 +42,30 @@ OutboundTargetHandler::process(RequestContext & rc)
       OutboundTarget* ot = dynamic_cast<OutboundTarget*>(target);
       if(ot)
       {
-         std::auto_ptr<Target> newTarget(ot->nextInstance());
-         if(newTarget.get())
+         int flowDeadCode;
+         if(resip::InteropHelper::getOutboundVersion() >= 5)
          {
-            int flowDeadCode;
-            if(resip::InteropHelper::getOutboundVersion() >= 5)
-            {
-               flowDeadCode=430;
-            }
-            else
-            {
-               flowDeadCode=410;
-            }
+            flowDeadCode=430;
+         }
+         else
+         {
+            flowDeadCode=410;
+         }
+         if(sip->header(resip::h_StatusLine).responseCode()==flowDeadCode ||  // Remote or locally(stack) generate 430
+            (sip->getReceivedTransport() == 0 &&
+             (sip->header(resip::h_StatusLine).responseCode()==408 ||         // Locally (stack) generated 408 or 503
+              sip->header(resip::h_StatusLine).responseCode()==503)))
+         {
+            // Flow is dead remove contact from Location Database
+            resip::Uri inputUri = rc.getOriginalRequest().header(resip::h_RequestLine).uri().getAorAsUri(rc.getOriginalRequest().getSource().getType());
 
-            if(sip->header(resip::h_StatusLine).responseCode()==flowDeadCode)
+            //!RjS! This doesn't look exception safe - need guards
+            mRegStore.lockRecord(inputUri);
+            mRegStore.removeContact(inputUri,ot->rec());
+            mRegStore.unlockRecord(inputUri);
+
+            std::auto_ptr<Target> newTarget(ot->nextInstance());
+            if(newTarget.get())
             {
                // Try next reg-id
                rsp.addTarget(newTarget);

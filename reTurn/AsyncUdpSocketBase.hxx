@@ -17,7 +17,7 @@ public:
    virtual unsigned int getSocketDescriptor();
 
    virtual asio::error_code bind(const asio::ip::address& address, unsigned short port);
-   virtual void connect(const std::string& address, unsigned short port);  
+   virtual void connect(const std::string& address, unsigned short port, bool is_v6);  
 
    virtual void transportReceive();
    virtual void transportFramedReceive();
@@ -26,12 +26,6 @@ public:
 
    virtual const asio::ip::address getSenderEndpointAddress();
    virtual unsigned short getSenderEndpointPort();
-
-   virtual bool setDSCP(ULONG ulInDSCPValue);
-   virtual bool setServiceType(
-      const asio::ip::udp::endpoint &tInDestinationIPAddress,
-      EQOSServiceTypes eInServiceType,
-      ULONG ulInBandwidthInBitsPerSecond);
 
 protected:
    asio::ip::udp::socket mSocket;

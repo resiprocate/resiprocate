@@ -5,6 +5,7 @@
 #include "rutil/Timer.hxx"
 
 #include "TestSubsystemLogLevel.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 #ifdef WIN32
 #define usleep(x) Sleep(x/1000)
@@ -31,6 +32,7 @@ class LogThread : public ThreadIf
       {
          Log::setThreadSetting(mSetting);
          int reval = Log::setThreadLocalLogger(mId);
+         (void)reval;	// make gcc4 happy
 //         InfoLog(<< "setThreadLocalLogger(" << mId << ") returned " << reval);
          while(!waitForShutdown(1000))
          {
@@ -131,6 +133,10 @@ testThreadLocalLoggers(const char *appname)
 int
 main(int argc, char* argv[])
 {
+#if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
+   FindMemoryLeaks fml;
+#endif
+
    CritLog(<< "logging before initializing is ok");
 
    Log::initialize(Log::Cout, Log::Info, argv[0]);

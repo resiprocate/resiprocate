@@ -8,7 +8,6 @@
 #include "AsyncSocketBaseHandler.hxx"
 #include <rutil/Logger.hxx>
 #include "ReTurnSubsystem.hxx"
-#include "QosSocketManager.hxx"
 
 #define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
@@ -49,7 +48,7 @@ AsyncTlsSocketBase::bind(const asio::ip::address& address, unsigned short port)
 }
 
 void 
-AsyncTlsSocketBase::connect(const std::string& address, unsigned short port)
+AsyncTlsSocketBase::connect(const std::string& address, unsigned short port, bool is_v6)
 {
    mHostname = address;
 
@@ -153,7 +152,7 @@ AsyncTlsSocketBase::validateServerCertificateHostname()
    bool valid = false;
 
    // print session info
-   SSL_CIPHER *ciph;
+   const SSL_CIPHER *ciph;
    ciph=SSL_get_current_cipher(mSocket.impl()->ssl);
    InfoLog( << "TLS session set up with " 
       <<  SSL_get_version(mSocket.impl()->ssl) << " "
@@ -304,7 +303,10 @@ AsyncTlsSocketBase::transportFramedReceive()
 void 
 AsyncTlsSocketBase::transportClose()
 {
-   QosSocketManager::SocketClose(mSocket.lowest_layer().native());
+   if (mOnBeforeSocketCloseFp)
+   {
+      mOnBeforeSocketCloseFp(mSocket.lowest_layer().native());
+   }
 
    asio::error_code ec;
    //mSocket.shutdown(ec);  // ?slg? Should we use async_shutdown? !slg! note: this fn gives a stack overflow since ASIO 1.0.0 for some reason
@@ -354,23 +356,6 @@ AsyncTlsSocketBase::handleReadHeader(const asio::error_code& e)
       }
       close();
    }
-}
-
-bool 
-AsyncTlsSocketBase::setDSCP(ULONG ulInDSCPValue)
-{
-   return QosSocketManager::SocketSetDSCP(mSocket.lowest_layer().native(), ulInDSCPValue, false);
-}
-
-bool 
-AsyncTlsSocketBase::setServiceType(
-   const asio::ip::udp::endpoint &tInDestinationIPAddress,
-   EQOSServiceTypes eInServiceType,
-   ULONG ulInBandwidthInBitsPerSecond
-)
-{
-   return QosSocketManager::SocketSetServiceType(mSocket.lowest_layer().native(), 
-      tInDestinationIPAddress, eInServiceType, ulInBandwidthInBitsPerSecond, false);
 }
 
 }

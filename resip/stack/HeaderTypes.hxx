@@ -86,6 +86,7 @@ class Headers
          defineMultiHeader(ProxyAuthorization, "Proxy-Authorization", Auth, "RFC 3261"),
          defineHeader(ReplyTo, "Reply-To", NameAddr, "RFC 3261"),
          defineHeader(RetryAfter, "Retry-After", UInt32Category, "RFC 3261"),
+         defineHeader(FlowTimer, "Flow-Timer", UInt32Category, "RFC 5626"),
          defineHeader(Server, "Server", StringCategory, "RFC 3261"),
          defineHeader(SIPETag, "SIP-ETag", Token, "RFC 3903"),
          defineHeader(SIPIfMatch, "SIP-If-Match", Token, "RFC 3903"),
@@ -123,8 +124,8 @@ class Headers
 
          defineHeader(ContentLength, "Content-Length", UInt32Category, "RFC 3261"),
          defineHeader(ReferSub, "Refer-Sub", Token, "RFC 4488"),
-         defineHeader(AnswerMode, "Answer-Mode", Token, "draft-ietf-answermode-01"),
-         defineHeader(PrivAnswerMode, "Priv-Answer-Mode", Token, "draft-ietf-answermode-01"),
+         defineHeader(AnswerMode, "Answer-Mode", Token, "RFC 5373"),
+         defineHeader(PrivAnswerMode, "Priv-Answer-Mode", Token, "RFC 5373"),
          defineMultiHeader(RemotePartyId, "Remote-Party-ID", NameAddr, "draft-ietf-sip-privacy-04"), // ?bwc? Not in 3323, should we keep?
          defineMultiHeader(HistoryInfo, "History-Info", NameAddr, "RFC 4244"),
 

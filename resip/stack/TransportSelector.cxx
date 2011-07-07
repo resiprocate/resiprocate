@@ -3,8 +3,8 @@
 #endif
 
 #ifdef WIN32
-#include <winsock2.h> 
-#include <ws2tcpip.h> 
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #include <wspiapi.h>   // Required for freeaddrinfo implementation in Windows 2000, NT, Me/95/98
 #else
 #include <sys/types.h>
@@ -33,6 +33,7 @@
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Socket.hxx"
+#include "rutil/FdPoll.hxx"
 #include "rutil/WinLeakCheck.hxx"
 #include "rutil/dns/DnsStub.hxx"
 
@@ -68,7 +69,8 @@ TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* s
    mSocket( INVALID_SOCKET ),
    mSocket6( INVALID_SOCKET ),
    mCompression(compression),
-   mSigcompStack (0)
+   mSigcompStack (0),
+   mPollGrp(0)
 {
    memset(&mUnspecified.v4Address, 0, sizeof(sockaddr_in));
    mUnspecified.v4Address.sin_family = AF_UNSPEC;
@@ -94,7 +96,40 @@ TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* s
 #endif
 }
 
-template<class T> void 
+
+TransportSelector::~TransportSelector()
+{
+   deleteTransports();
+#ifdef USE_SIGCOMP
+   delete mSigcompStack;
+#endif
+
+    if ( mSocket != INVALID_SOCKET )
+        closeSocket( mSocket );
+    if ( mSocket6 != INVALID_SOCKET )
+        closeSocket( mSocket6 );
+
+}
+
+void
+TransportSelector::shutdown()
+{
+    //!dcm! repeat shutdown template pattern in all loop over all transport functions, refactor to functor?
+    for (ExactTupleMap::iterator i=mExactTransports.begin(); i!=mExactTransports.end(); ++i)
+   {
+      i->second->shutdown();
+   }
+   for (AnyInterfaceTupleMap::iterator i=mAnyInterfaceTransports.begin(); i!=mAnyInterfaceTransports.end(); ++i)
+   {
+      i->second->shutdown();
+   }
+   for (TlsTransportMap::iterator i=mTlsTransports.begin(); i!=mTlsTransports.end(); ++i)
+   {
+      i->second->shutdown();
+   }
+}
+
+template<class T> void
 deleteMap(T& m)
 {
    for (typename T::iterator it = m.begin(); it != m.end(); it++)
@@ -104,33 +139,15 @@ deleteMap(T& m)
    m.clear();
 }
 
-TransportSelector::~TransportSelector()
+void
+TransportSelector::deleteTransports()
 {
    mConnectionlessMap.clear();
+   mSharedProcessTransports.clear();
+   mHasOwnProcessTransports.clear();
    deleteMap(mExactTransports);
    deleteMap(mAnyInterfaceTransports);
    deleteMap(mTlsTransports);
-#ifdef USE_SIGCOMP
-   delete mSigcompStack;
-#endif
-
-    closeSocket( mSocket );
-    closeSocket( mSocket6 );
-
-}
-
-void
-TransportSelector::shutdown()
-{
-    //!dcm! repeat shutodwn template pattern in all loop over all tranport functions, refactor to functor?
-    for (ExactTupleMap::iterator i=mExactTransports.begin(); i!=mExactTransports.end(); ++i)
-   {
-      i->second->shutdown();
-   }
-   for (AnyInterfaceTupleMap::iterator i=mAnyInterfaceTransports.begin(); i!=mAnyInterfaceTransports.end(); ++i)
-   {
-      i->second->shutdown();
-   }
 }
 
 bool
@@ -141,6 +158,10 @@ TransportSelector::isFinished() const
       if (!i->second->isFinished()) return false;
    }
    for (AnyInterfaceTupleMap::const_iterator i=mAnyInterfaceTransports.begin(); i!=mAnyInterfaceTransports.end(); ++i)
+   {
+      if (!i->second->isFinished()) return false;
+   }
+   for (TlsTransportMap::const_iterator i=mTlsTransports.begin(); i!=mTlsTransports.end(); ++i)
    {
       if (!i->second->isFinished()) return false;
    }
@@ -180,11 +201,11 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport)
    {
       assert(0);
    }
-   
-   Tuple tuple(transport->interfaceName(), transport->port(), 
-                   transport->ipVersion(), transport->transport());
+
+   Tuple tuple(transport->interfaceName(), transport->port(),
+               transport->ipVersion(), transport->transport());
    mTypeToTransportMap.insert(std::make_pair(tuple,transport));
-   
+
    switch (transport->transport())
    {
       case UDP:
@@ -194,11 +215,12 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport)
                 mAnyInterfaceTransports.find(tuple) == mAnyInterfaceTransports.end());
 
          DebugLog (<< "Adding transport: " << tuple);
-         
+
          // Store the transport in the ANY interface maps if the tuple specifies ANY
          // interface. Store the transport in the specific interface maps if the tuple
          // specifies an interface. See TransportSelector::findTransport.
          if (transport->interfaceName().empty() ||
+             transport->getTuple().isAnyInterface() ||
              transport->hasSpecificContact() )
          {
             mAnyInterfaceTransports[tuple] = transport;
@@ -217,7 +239,7 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport)
          TlsTransportKey key(transport->tlsDomain(),transport->transport(),transport->ipVersion());
          mTlsTransports[key]=transport;
       }
-         break;
+      break;
       default:
          assert(0);
          break;
@@ -230,6 +252,10 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport)
 
    if (transport->shareStackProcessAndSelect())
    {
+      if ( mPollGrp )
+      {
+         transport->setPollGrp(mPollGrp);
+      }
       mSharedProcessTransports.push_back(transport);
    }
    else
@@ -238,11 +264,20 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport)
       mHasOwnProcessTransports.back()->startOwnProcessing();
    }
 }
-  
+
+void
+TransportSelector::setPollGrp(FdPollGrp *grp)
+{
+   assert( mSharedProcessTransports.size() == 0 );
+   assert( mPollGrp==NULL );
+   mPollGrp = grp;
+}
+
 void
 TransportSelector::buildFdSet(FdSet& fdset)
 {
-   for(TransportList::iterator it = mSharedProcessTransports.begin(); 
+   assert( mPollGrp==NULL );
+   for(TransportList::iterator it = mSharedProcessTransports.begin();
        it != mSharedProcessTransports.end(); it++)
    {
       (*it)->buildFdSet(fdset);
@@ -252,7 +287,8 @@ TransportSelector::buildFdSet(FdSet& fdset)
 void
 TransportSelector::process(FdSet& fdset)
 {
-   for(TransportList::iterator it = mSharedProcessTransports.begin(); 
+   assert( mPollGrp==NULL );
+   for(TransportList::iterator it = mSharedProcessTransports.begin();
        it != mSharedProcessTransports.end(); it++)
    {
       try
@@ -264,6 +300,7 @@ TransportSelector::process(FdSet& fdset)
          ErrLog (<< "Exception thrown from Transport::process: " << e);
       }
    }
+
 }
 
 bool
@@ -307,18 +344,18 @@ TransportSelector::dnsResolve(DnsResult* result,
          //DebugLog(<< "!ah! RESOLVING request with force target : " << msg->getForceTarget() );
          mDns.lookup(result, msg->getForceTarget());
       }
-      else if (msg->exists(h_Routes) && !msg->header(h_Routes).empty())
+      else if (msg->exists(h_Routes) && !msg->const_header(h_Routes).empty())
       {
          // put this into the target, in case the send later fails, so we don't
          // lose the target
-         msg->setForceTarget(msg->header(h_Routes).front().uri());
+         msg->setForceTarget(msg->const_header(h_Routes).front().uri());
          DebugLog (<< "Looking up dns entries (from route) for " << msg->getForceTarget());
          mDns.lookup(result, msg->getForceTarget());
       }
       else
       {
-         DebugLog (<< "Looking up dns entries for " << msg->header(h_RequestLine).uri());
-         mDns.lookup(result, msg->header(h_RequestLine).uri());
+         DebugLog (<< "Looking up dns entries for " << msg->const_header(h_RequestLine).uri());
+         mDns.lookup(result, msg->const_header(h_RequestLine).uri());
       }
    }
    else if (msg->isResponse())
@@ -409,9 +446,61 @@ TransportSelector::getFirstInterface(bool is_v4, TransportType type)
       InfoLog(<<"Additional address " << addr);
    }
    freeaddrinfo(results);
-   
+
    return source;
 #endif
+}
+
+
+/**
+   Check the msg's top Via header for a source host&port that indicates
+   a particular Transport.
+   Do NOT do this for a response, as it would allow malicious downstream
+   to insert bogus host in via header that we would then use.
+**/
+Transport*
+TransportSelector::findTransportByVia(SipMessage* msg, const Tuple& target,
+  Tuple& source) const
+{
+   assert(msg->exists(h_Vias));
+   assert(!msg->const_header(h_Vias).empty());
+   const Via& via = msg->const_header(h_Vias).front();
+
+   if (via.sentHost().empty())
+   {
+      return NULL;
+   }
+
+   // XXX: Is there better way to do below (without the copy)?
+   source = Tuple(via.sentHost(), via.sentPort(), target.ipVersion(), target.getType());
+
+   if ( target.mFlowKey!=0 && (source.getPort()==0 || source.isAnyInterface()) )
+   {
+      WarningLog(<< "Sending request with incomplete Via header and FlowKey."
+        <<" This code no smart enough to pick the correct Transport."
+        <<" Via=" << via);
+      assert(0);
+   }
+   if ( source.isAnyInterface() )
+   {
+      // INADDR_ANY cannot go out on the wire, so remove it from
+      // via header now.
+      // transmit() will later use determineSourceInterface() to
+      // get the actual interface to populate the Contact & Via headers.
+      // Not sure if we should support this case or just assert.
+      msg->header(h_Vias).front().sentHost().clear();
+   }
+
+   Transport *trans;
+   if ( (trans = findTransportBySource(source)) == NULL )
+   {
+      return NULL;
+   }
+   if(source.getPort()==0)
+   {
+      source.setPort(trans->port());
+   }
+   return trans;
 }
 
 Tuple
@@ -421,13 +510,9 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
    assert(!msg->header(h_Vias).empty());
    const Via& via = msg->header(h_Vias).front();
 
-   if (msg->isRequest() && !via.sentHost().empty())
-      // hint provided in sent-by of via by application
-   {
-      DebugLog( << "hint provided by app: " <<  msg->header(h_Vias).front());      
-      return Tuple(via.sentHost(), via.sentPort(), target.ipVersion(), target.getType());
-   }
-   else
+   // this case should be handled already for UDP and TCP targets
+   assert( (!(msg->isRequest() && !via.sentHost().empty())) || (target.getType() == TLS || target.getType() == DTLS) );
+   if (1)
    {
       Tuple source(target);
 #if defined(WIN32) && !defined(NO_IPHLPAPI)
@@ -448,7 +533,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
       // 2. Might not work under unspecified condition on Windows,
       //    search "getsockname" in MSDN library.
       // 3. We've experienced this issue on our production software.
-      
+
       // this process will determine which interface the kernel would use to
       // send a packet to the target by making a connect call on a udp socket.
       Socket tmp = INVALID_SOCKET;
@@ -502,7 +587,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
       else  // IPv6
       {
 //should never reach here in WIN32 w/ V6 support
-#if defined(USE_IPV6) && !defined(WIN32) 
+#if defined(USE_IPV6) && !defined(WIN32)
          if (source.isAnyInterface())  //!dcm! -- when could this happen?
          {
             source = getFirstInterface(false, target.getType());
@@ -544,8 +629,8 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
          }
       }
 #endif
-      
-      // This is the port that the request will get sent out from. By default, 
+
+      // This is the port that the request will get sent out from. By default,
       // this value will be 0, since the Helper that creates the request will not
       // assign it. In this case, the stack will pick an arbitrary (but appropriate)
       // transport. If it is non-zero, it will only match transports that are bound to
@@ -559,12 +644,12 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
       {
          source.setPort(0);
       }
- 
+
       DebugLog (<< "Looked up source for destination: " << target
                 << " -> " << source
                 << " sent-by=" << via.sentHost()
                 << " sent-port=" << via.sentPort());
-      
+
       return source;
    }
 }
@@ -583,6 +668,8 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
 
    try
    {
+      TransportFailure::FailureReason transportFailureReason = TransportFailure::NoTransport;
+
       // !ah! You NEED to do this for responses too -- the transport doesn't
       // !ah! know it's IP addres(es) in all cases, AND it's function of the dest.
       // (imagine a synthetic message...)
@@ -607,9 +694,9 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          fails, we must resort to the connected UDP trick to fill out source,
          which in turn is used to look up a matching transport.
 
-         Given the transport, it is always possible to get the port/protocol, 
+         Given the transport, it is always possible to get the port/protocol,
          and usually possible to get the host (if it is bound to INADDR_ANY, we
-         can't tell). However, if we had to fill out source in order to find 
+         can't tell). However, if we had to fill out source in order to find
          the transport in the first place, this is not an issue.
       */
 
@@ -619,16 +706,24 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
       {
          Transport* transport=0;
 
-         transport = findTransportByDest(msg,target);
+         transport = findTransportByVia(msg, target, source);
+         if (!transport)
+         {
+            if ((transport = findTransportByDest(msg,target)) != NULL)
+            {
+               source = transport->getTuple();
+            }
+         }
          
          if(!transport && target.mFlowKey && target.onlyUseExistingConnection)
          {
-            // .bwc. Connection info was specified, and use of this connection 
+            // .bwc. Connection info was specified, and use of this connection
             // was mandatory, but connection is no longer around. We fail.
+            transportFailureReason = TransportFailure::TransportNoExistConn;
          }
          else if (transport)// .bwc. Here we use transport to find source.
          {
-            source = transport->getTuple();
+            assert( source.getType()!=0 );
 
             // .bwc. If the transport has an ambiguous interface, we need to
             //look a little closer.
@@ -642,7 +737,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                         source.getType()==temp.getType());
                source=temp;
 
-               /* determineSourceInterface might return an arbitrary port 
+               /* determineSourceInterface might return an arbitrary port
                   here, so use the port specified in target.transport->port().
                */
                if(source.getPort()==0)
@@ -656,16 +751,16 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          {
             source = determineSourceInterface(msg, target);
             transport = findTransportBySource(source);
-            
+
             // .bwc. determineSourceInterface might give us a port
             if(transport && source.getPort()==0)
             {
                source.setPort(transport->port());
             }
          }
-                  
+
          target.transport=transport;
-         
+
          // .bwc. Topmost Via is only filled out in the request case. Also, if
          // we don't have a transport at this point, we're going to fail,
          // so don't bother doing the work.
@@ -681,11 +776,11 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             }
             if (!topVia.sentHost().size())
             {
-               msg->header(h_Vias).front().sentHost() = Tuple::inet_ntop(source);
+               topVia.sentHost() = Tuple::inet_ntop(source);
             }
             if (!topVia.sentPort())
             {
-               msg->header(h_Vias).front().sentPort() = source.getPort();
+               topVia.sentPort() = source.getPort();
             }
 
             if (mCompression.isEnabled())
@@ -708,14 +803,14 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                // if you are.
                Uri destination;// (*reinterpret_cast<Uri*>(0)); // !bwc! What?
 
-               if(msg->exists(h_Routes) && 
-                  !msg->header(h_Routes).empty())
+               if(msg->exists(h_Routes) &&
+                  !msg->const_header(h_Routes).empty())
                {
-                  destination = msg->header(h_Routes).front().uri();
+                  destination = msg->const_header(h_Routes).front().uri();
                }
                else
                {
-                  destination = msg->header(h_RequestLine).uri();
+                  destination = msg->const_header(h_RequestLine).uri();
                }
 
                if (destination.exists(p_comp) &&
@@ -736,7 +831,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                topVia.param(p_branch).setSigcompCompartment(remoteSigcompId);
             }
          }
-         
+
       }
       else if (msg->isResponse())
       {
@@ -744,7 +839,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          // know the transport that the corresponding request was received on
          // and this has been copied by TransactionState::sendToWire into target.transport
          assert(target.transport);
-         
+
          source = target.transport->getTuple();
 
          // .bwc. If the transport has an ambiguous interface, we need to
@@ -807,19 +902,20 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          {
             for (NameAddrs::iterator i=msg->header(h_Contacts).begin(); i != msg->header(h_Contacts).end(); i++)
             {
+               const NameAddr& c_contact = *i;
                NameAddr& contact = *i;
                // No host specified, so use the ip address and port of the
                // transport used. Otherwise, leave it as is.
-               if (contact.uri().host().empty())
+               if (c_contact.uri().host().empty())
                {
-                  contact.uri().host() = (target.transport->hasSpecificContact() ? 
-                                          target.transport->interfaceName() : 
+                  contact.uri().host() = (target.transport->hasSpecificContact() ?
+                                          target.transport->interfaceName() :
                                           Tuple::inet_ntop(source) );
                   contact.uri().port() = target.transport->port();
 
                   if (target.transport->transport() != UDP && !contact.uri().exists(p_gr))
                   {
-                     contact.uri().param(p_transport) = Tuple::toData(target.transport->transport());
+                     contact.uri().param(p_transport) = Tuple::toDataLower(target.transport->transport());
                   }
 
                   // Add comp=sigcomp to contact URI
@@ -834,18 +930,18 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                      if (!contact.exists(p_Instance) &&
                          !contact.uri().exists(p_sigcompId))
                      {
-                        contact.uri().param(p_sigcompId) 
+                        contact.uri().param(p_sigcompId)
                           = mCompression.getSigcompId();
                      }
                   }
-               } 
+               }
                else
                {
-                  if (contact.uri().exists(p_addTransport))
+                  if (c_contact.uri().exists(p_addTransport))
                   {
                      if (target.getType() != UDP)
                      {
-                        contact.uri().param(p_transport) = Tuple::toData(target.getType());
+                        contact.uri().param(p_transport) = Tuple::toDataLower(target.getType());
                      }
                      contact.uri().remove(p_addTransport);
                   }
@@ -856,10 +952,10 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
 
          // Fix the Referred-By header if no host specified.
          // If malformed, leave it alone.
-         if (msg->exists(h_ReferredBy) 
-               && msg->header(h_ReferredBy).isWellFormed())
+         if (msg->exists(h_ReferredBy)
+               && msg->const_header(h_ReferredBy).isWellFormed())
          {
-            if (msg->header(h_ReferredBy).uri().host().empty())
+            if (msg->const_header(h_ReferredBy).uri().host().empty())
             {
                msg->header(h_ReferredBy).uri().host() = Tuple::inet_ntop(source);
                msg->header(h_ReferredBy).uri().port() = target.transport->port();
@@ -871,19 +967,20 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          // whether it came from something the TU synthesized or from the wire.
          // We shouldn't touch it. Frankly, I take issue with the method we have
          // chosen to signal to the stack that we want it to fill out various
-         // header-field-values. 
-         if (msg->exists(h_RecordRoutes) 
-               && !msg->header(h_RecordRoutes).empty() 
-               && msg->header(h_RecordRoutes).front().isWellFormed())
+         // header-field-values.
+         if (msg->exists(h_RecordRoutes)
+               && !msg->const_header(h_RecordRoutes).empty() 
+               && msg->const_header(h_RecordRoutes).front().isWellFormed())
          {
+            const NameAddr& c_rr = msg->const_header(h_RecordRoutes).front();
             NameAddr& rr = msg->header(h_RecordRoutes).front();
-            if (rr.uri().host().empty())
+            if (c_rr.uri().host().empty())
             {
                rr.uri().host() = Tuple::inet_ntop(source);
                rr.uri().port() = target.transport->port();
                if (target.getType() != UDP && !rr.uri().exists(p_transport))
                {
-                  rr.uri().param(p_transport) = Tuple::toData(target.getType());
+                  rr.uri().param(p_transport) = Tuple::toDataLower(target.getType());
                }
                // Add comp=sigcomp and sigcomp-id="<urn>" to Record-Route
                // XXX This isn't quite right -- should be set only
@@ -902,16 +999,16 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                }
             }
          }
-         
+
          // See draft-ietf-sip-identity
-         if (mSecurity && msg->exists(h_Identity) && msg->header(h_Identity).value().empty())
+         if (mSecurity && msg->exists(h_Identity) && msg->const_header(h_Identity).value().empty())
          {
             DateCategory now;
             msg->header(h_Date) = now;
 #if defined(USE_SSL)
             try
             {
-               const Data& domain = msg->header(h_From).uri().host();
+               const Data& domain = msg->const_header(h_From).uri().host();
                msg->header(h_Identity).value() = mSecurity->computeIdentity( domain,
                                                                              msg->getCanonicalIdentityString());
             }
@@ -919,10 +1016,10 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             {
                InfoLog (<< "Couldn't add identity header: " << e);
                msg->remove(h_Identity);
-               if (msg->exists(h_IdentityInfo)) 
+               if (msg->exists(h_IdentityInfo))
                {
                   msg->remove(h_IdentityInfo);
-               }                  
+               }
             }
 #endif
          }
@@ -936,13 +1033,13 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          msg->encode(encodeStream);
          encodeStream.flush();
          msg->getCompartmentId() = remoteSigcompId;
-         
+
          assert(!msg->getEncoded().empty());
          DebugLog (<< "Transmitting to " << target
                    << " tlsDomain=" << msg->getTlsDomain()
                    << " via " << source
-				   << std::endl << std::endl << encoded.escaped()
-				   << "sigcomp id=" << remoteSigcompId);
+                   << std::endl << std::endl << encoded.escaped()
+                   << "sigcomp id=" << remoteSigcompId);
 
          target.transport->send(target, encoded, msg->getTransactionId(),
                                 remoteSigcompId);
@@ -950,7 +1047,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
       else
       {
          InfoLog (<< "tid=" << msg->getTransactionId() << " failed to find a transport to " << target);
-         mStateMacFifo.add(new TransportFailure(msg->getTransactionId(), TransportFailure::NoTransport));
+         mStateMacFifo.add(new TransportFailure(msg->getTransactionId(), transportFailureReason));
       }
 
    }
@@ -1029,7 +1126,27 @@ TransportSelector::connectionAlive(const Tuple& target) const
    return (findConnection(target)!=0);
 }
 
-const Connection*
+void 
+TransportSelector::terminateFlow(const resip::Tuple& flow)
+{
+   Connection* connection = findConnection(flow);
+   if(connection)
+   {
+      delete connection;
+   }
+}
+
+void 
+TransportSelector::enableFlowTimer(const resip::Tuple& flow)
+{
+   Connection* connection = findConnection(flow);
+   if(connection)
+   {
+      connection->enableFlowTimer();
+   }
+}
+
+Connection*
 TransportSelector::findConnection(const Tuple& target) const
 {
    // !bwc! If we can find a match in the ConnectionManager, we can
@@ -1052,7 +1169,7 @@ TransportSelector::findConnection(const Tuple& target) const
          }
       }
    }
-   
+
    return 0;
 }
 
@@ -1078,7 +1195,7 @@ TransportSelector::findTransportByDest(SipMessage* msg, Tuple& target)
          // .bwc. We might find a match by the cid, or maybe using the
          // tuple itself.
          const Connection* conn = findConnection(target);
-         
+
          if(conn) // .bwc. Woohoo! Home free!
          {
             return conn->transport();
@@ -1089,13 +1206,13 @@ TransportSelector::findTransportByDest(SipMessage* msg, Tuple& target)
             return 0;
          }
       }
-      
+
       // !bwc! No luck finding with a FlowKey.
       if(target.getType()==TLS || target.getType()==DTLS)
       {
          return findTlsTransport(msg->getTlsDomain(),target.getType(),target.ipVersion());
       }
-            
+
    }
    else // .bwc. Easy as pie.
    {
@@ -1103,51 +1220,65 @@ TransportSelector::findTransportByDest(SipMessage* msg, Tuple& target)
    }
 
    // .bwc. No luck here. Maybe findTransportBySource will end up working.
-   return 0; 
+   return 0;
+}
+
+
+/**
+   Search for Transport on any loopback interface matching {search}.
+   WATCHOUT: This is O(N) walk thru (nearly) all transports.
+**/
+Transport*
+TransportSelector::findLoopbackTransportBySource(bool ignorePort, Tuple& search)
+  const
+{
+   //When we are sending to a loopback address, the kernel makes an
+   //(effectively) arbitrary choice of which loopback address to send
+   //from. (Since any loopback address can be used to send to any other
+   //loopback address) This choice may not agree with our idea of what
+   //address we should be sending from, so we need to just choose the
+   //loopback address we like, and ignore what the kernel told us to do.
+   ExactTupleMap::const_iterator i;
+   for (i=mExactTransports.begin();i != mExactTransports.end();i++)
+   {
+      DebugLog(<<"search: " << search << " elem: " << i->first);
+      if(i->first.ipVersion()==V4)
+      {
+         //Compare only the first byte (the 127)
+         if(i->first.isEqualWithMask(search,8,false))
+         {
+            search=i->first;
+            DebugLog(<<"Match!");
+            return i->second;
+         }
+      }
+#ifdef USE_IPV6
+      else if(i->first.ipVersion()==V6)
+      {
+         //What to do?
+      }
+#endif
+      else
+      {
+         assert(0);
+      }
+   }
+   return NULL;
 }
 
 Transport*
-TransportSelector::findTransportBySource(Tuple& search)
+TransportSelector::findTransportBySource(Tuple& search) const
 {
+   if(search.getType() == TLS || search.getType() == DTLS)
+   {
+      // TLS or DTLS transports cannot be found by Source
+      return 0;
+   }
+
    DebugLog(<< "findTransportBySource(" << search << ")");
 
    if (search.getPort() != 0)
    {
-      //0. When we are sending to a loopback address, the kernel makes an
-      //(effectively) arbitrary choice of which loopback address to send
-      //from. (Since any loopback address can be used to send to any other
-      //loopback address) This choice may not agree with our idea of what
-      //address we should be sending from, so we need to just choose the
-      //loopback address we like, and ignore what the kernel told us to do.
-      if( search.isLoopback() )
-      {
-         ExactTupleMap::const_iterator i;
-         for (i=mExactTransports.begin();i != mExactTransports.end();i++)
-         {
-            DebugLog(<<"search: " << search << " elem: " << i->first);
-            if(i->first.ipVersion()==V4)
-            {
-               //Compare only the first byte (the 127)
-               if(i->first.isEqualWithMask(search,8,false))
-               {
-                  search=i->first;
-                  DebugLog(<<"Match!");
-                  return i->second;
-               }
-            }
-#ifdef USE_IPV6
-            else if(i->first.ipVersion()==V6)
-            {
-               //What to do?
-            }
-#endif
-            else
-            {
-               assert(0);
-            }
-         }
-      }
-
       // 1. search for matching port on a specific interface
       {
          ExactTupleMap::const_iterator i = mExactTransports.find(search);
@@ -1158,7 +1289,17 @@ TransportSelector::findTransportBySource(Tuple& search)
          }
       }
 
-      // 2. search for specific port on ANY interface
+      // 2. search for matching port on any loopback interface
+      if (search.isLoopback())
+      {
+         Transport *trans = 0;
+         if ( (trans=findLoopbackTransportBySource( /*ignorePort*/false, search)) != NULL )
+         {
+            return trans;
+         }
+      }
+
+      // 3. search for specific port on ANY interface
       {
          AnyInterfaceTupleMap::const_iterator i = mAnyInterfaceTransports.find(search);
          if (i != mAnyInterfaceTransports.end())
@@ -1170,41 +1311,6 @@ TransportSelector::findTransportBySource(Tuple& search)
    }
    else
    {
-      //0. When we are sending to a loopback address, the kernel makes an
-      //(effectively) arbitrary choice of which loopback address to send
-      //from. (Since any loopback address can be used to send to any other
-      //loopback address) This choice may not agree with our idea of what
-      //address we should be sending from, so we need to just choose the
-      //loopback address we like, and ignore what the kernel told us to do.
-      if( search.isLoopback() )
-      {
-         ExactTupleMap::const_iterator i;
-         for (i=mExactTransports.begin();i != mExactTransports.end();i++)
-         {
-            DebugLog(<<"search: " << search << " elem: " << i->first);
-            if(i->first.ipVersion()==V4)
-            {
-               //Compare only the first byte (the 127)
-               if(i->first.isEqualWithMask(search,8,true))
-               {
-                  search=i->first;
-                  DebugLog(<<"Match!");
-                  return i->second;
-               }
-            }
-#ifdef USE_IPV6
-            else if(i->first.ipVersion()==V6)
-            {
-               //What to do?
-            }
-#endif
-            else
-            {
-               assert(0);
-            }
-         }
-      }
-
       // 1. search for ANY port on specific interface
       {
          AnyPortTupleMap::const_iterator i = mAnyPortTransports.find(search);
@@ -1215,7 +1321,17 @@ TransportSelector::findTransportBySource(Tuple& search)
          }
       }
 
-      // 2. search for ANY port on ANY interface
+      // 2. search for ANY port on any loopback interface
+      if (search.isLoopback())
+      {
+         Transport *trans = 0;
+         if ( (trans=findLoopbackTransportBySource( /*ignorePort*/true, search)) != NULL )
+         {
+            return trans;
+         }
+      }
+
+      // 3. search for ANY port on ANY interface
       {
          //CerrLog(<< "Trying AnyPortAnyInterfaceTupleMap " << mAnyPortAnyInterfaceTransports.size());
          AnyPortAnyInterfaceTupleMap::const_iterator i = mAnyPortAnyInterfaceTransports.find(search);
@@ -1241,7 +1357,7 @@ Transport*
 TransportSelector::findTlsTransport(const Data& domainname,resip::TransportType type,resip::IpVersion version)
 {
    assert(type==TLS || type==DTLS);
-   DebugLog (<< "Searching for " << ((type==TLS) ? "TLS" : "DTLS") << " transport for domain='" 
+   DebugLog (<< "Searching for " << ((type==TLS) ? "TLS" : "DTLS") << " transport for domain='"
                   << domainname << "'" << " have " << mTlsTransports.size());
 
    if (domainname == Data::Empty)
@@ -1259,24 +1375,24 @@ TransportSelector::findTlsTransport(const Data& domainname,resip::TransportType 
    else
    {
       TlsTransportKey key(domainname,type,version);
-   
+
       TlsTransportMap::iterator i=mTlsTransports.find(key);
-      
+
       if(i!=mTlsTransports.end())
       {
          DebugLog(<< "Found a transport.");
          return i->second;
       }
    }
-   
+
    DebugLog(<<"No transport found.");
    return 0;
 }
 
-unsigned int 
+unsigned int
 TransportSelector::getTimeTillNextProcessMS()
 {
-   return INT_MAX;
+   return (mPollGrp==NULL&&hasDataToSend()) ? 0 : INT_MAX;
 }
 
 void
@@ -1339,4 +1455,5 @@ void TransportSelector::unregisterMarkListener(MarkListener* listener)
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */

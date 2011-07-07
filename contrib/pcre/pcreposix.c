@@ -277,9 +277,9 @@ if (nmatch > 0)
   }
 
 rc = pcre_exec((const pcre *)preg->re_pcre, NULL, string, (int)strlen(string),
-  0, options, ovector, nmatch * 3);
+  0, options, ovector, (int)nmatch * 3);
 
-if (rc == 0) rc = nmatch;    /* All captured slots were filled in */
+if (rc == 0) rc = (int)nmatch;    /* All captured slots were filled in */
 
 if (rc >= 0)
   {

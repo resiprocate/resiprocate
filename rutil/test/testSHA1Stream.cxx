@@ -1,9 +1,11 @@
 #include <assert.h>
 
+#ifdef USE_SSL
 #include "rutil/ssl/SHA1Stream.hxx"
 
 using namespace resip;
 using namespace std;
+#endif
 
 
 int

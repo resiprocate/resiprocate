@@ -347,6 +347,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\FdPoll.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\FileSystem.cxx"
 				>
 			</File>
@@ -606,6 +610,10 @@
 			</File>
 			<File
 				RelativePath=".\dns\ExternalDnsFactory.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\FdPoll.hxx"
 				>
 			</File>
 			<File

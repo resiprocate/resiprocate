@@ -101,7 +101,7 @@ TurnAsyncSocket::doSetUsernameAndPassword(Data* username, Data* password, bool s
    delete password;
 }
 
-void 
+void
 TurnAsyncSocket::setLocalPassword(const char* password)
 {
    mIOService.post(weak_bind<AsyncSocketBase, void()>( mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::doSetLocalPassword, this, new Data(password))));
@@ -152,11 +152,13 @@ TurnAsyncSocket::doConnectivityCheck(StunTuple* targetAddr, UInt32 peerRflxPrior
    if (setIceControlling)
    {
       request->setIceControlling();
+      request->setIceUseCandidate();
    }
    else if (setIceControlled)
    {
       request->setIceControlled();
    }
+   request->mHasFingerprint = true;
 
    sendStunMessage(request, false, numRetransmits, targetAddr);
    delete targetAddr;
@@ -515,11 +517,11 @@ TurnAsyncSocket::handleStunMessage(StunMessage& stunMessage)
       if(stunMessage.mClass == StunMessage::StunClassSuccessResponse ||
          stunMessage.mClass == StunMessage::StunClassErrorResponse)
       {
-      if(!stunMessage.checkMessageIntegrity(mHmacKey))
-      {
-         WarningLog(<< "TurnAsyncSocket::handleStunMessage: Stun message integrity is bad!");
-         return asio::error_code(reTurn::BadMessageIntegrity, asio::error::misc_category);
-      }
+         if(!stunMessage.checkMessageIntegrity(mHmacKey))
+         {
+            WarningLog(<< "TurnAsyncSocket::handleStunMessage: Stun message integrity is bad!");
+            return asio::error_code(reTurn::BadMessageIntegrity, asio::error::misc_category);
+         }
       }
       else
       {
@@ -820,6 +822,11 @@ TurnAsyncSocket::handleBindRequest(StunMessage& stunMessage)
       response->mHmacKey = mLocalHmacKey;
    }
 
+   if (stunMessage.mHasIceControlled || stunMessage.mHasIceControlling || stunMessage.mHasIcePriority)
+   {
+      response->mHasFingerprint = true;
+   }
+
    // send bindResponse to local client
    sendStunMessage(response, false, UDP_MAX_RETRANSMITS, &(stunMessage.mRemoteTuple));
    
@@ -1071,9 +1078,9 @@ TurnAsyncSocket::sendTo(RemotePeer& remotePeer, boost::shared_ptr<DataBuffer>& d
 }
 
 void
-TurnAsyncSocket::connect(const std::string& address, unsigned short port)
+TurnAsyncSocket::connect(const std::string& address, unsigned short port, bool is_v6)
 {
-   mAsyncSocketBase.connect(address,port);
+   mAsyncSocketBase.connect(address, port, is_v6);
 }
 
 void
@@ -1320,21 +1327,10 @@ TurnAsyncSocket::channelBindingTimerExpired(const asio::error_code& e, unsigned 
    }
 }
 
-bool 
-TurnAsyncSocket::setDSCP(ULONG ulInDSCPValue)
+void 
+TurnAsyncSocket::setOnBeforeSocketClosedFp(boost::function<void(unsigned int)> fp)
 {
-   return mAsyncSocketBase.setDSCP(ulInDSCPValue);
-}
-
-bool 
-TurnAsyncSocket::setServiceType(
-   const asio::ip::udp::endpoint &tInDestinationIPAddress,
-   EQOSServiceTypes eInServiceType,
-   ULONG ulInBandwidthInBitsPerSecond
-)
-{
-   return mAsyncSocketBase.setServiceType(
-      tInDestinationIPAddress, eInServiceType, ulInBandwidthInBitsPerSecond);
+   mAsyncSocketBase.setOnBeforeSocketClosedFp(fp);
 }
 
 } // namespace

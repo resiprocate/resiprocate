@@ -71,7 +71,7 @@ main(int argc, char* argv[])
        modified.uri().user() = "alphabet-soup";
 
        Data gruuData ( Data::from(modified.uri())) ;
-       msg->header(h_Contacts).back().param(p_gr) = gruuData;
+       msg->header(h_Contacts).back().param(p_pubGruu) = gruuData;
 
 
        cout << *msg << endl;
@@ -98,7 +98,6 @@ main(int argc, char* argv[])
 
        Uri s6("sip:bob@example.com");
        s6.host();
-       s6.param(p_q) = 1000;  // 1.0
 
        Uri s7("sip:testproxy.example.com");
 	   assert (s7.user().empty());
@@ -648,8 +647,32 @@ main(int argc, char* argv[])
       uri = Uri("sip:1234#00442031111111@lvdx.com");
       //cout << "Non Encoded # for compatibility: " << uri << endl;
       assert(Data::from(uri) == "sip:1234#00442031111111@lvdx.com");
+      Uri::setUriUserEncoding('#', true);
    }
 
+   {
+      Uri uri = Uri("sip:1234#00442031111111;phone-context=+89@lvdx.com");
+      assert(uri.userIsTelephoneSubscriber());
+      Token telSub(uri.getUserAsTelephoneSubscriber());
+      assert(telSub.value()=="1234#00442031111111");
+      static ExtensionParameter p_phoneContext("phone-context");
+      assert(telSub.exists(p_phoneContext));
+      assert(telSub.param(p_phoneContext)=="+89");
+      telSub.param(p_phoneContext)="+98";
+      uri.setUserAsTelephoneSubscriber(telSub);
+      assert(Data::from(uri) == "sip:1234%2300442031111111;phone-context=+98@lvdx.com");
+   }
+
+   {
+      Uri uri = Uri("sip:+1-(234)-00442031111111@lvdx.com");
+      assert(uri.userIsTelephoneSubscriber());
+      Token telSub(uri.getUserAsTelephoneSubscriber());
+      assert(telSub.value()=="+1-(234)-00442031111111");
+      assert(!telSub.exists(p_extension));
+      telSub.param(p_extension)="4545";
+      uri.setUserAsTelephoneSubscriber(telSub);
+      assert(Data::from(uri) == "sip:+1-(234)-00442031111111;ext=4545@lvdx.com");
+   }
    cerr << endl << "All OK" << endl;
    return 0;
 }

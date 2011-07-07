@@ -13,6 +13,93 @@
 using namespace resip;
 using namespace std;
 
+class ClientAuthDecorator : public MessageDecorator
+{
+public:
+   ClientAuthDecorator(bool isProxyCredential, const Auth& auth, const UserProfile::DigestCredential& credential, const Data& authQop, const Data& nonceCountString) :
+      mIsProxyCredential(isProxyCredential), mAuth(auth), mCredential(credential), mAuthQop(authQop), mNonceCountString(nonceCountString) {}
+   virtual ~ClientAuthDecorator() {}
+   virtual void decorateMessage(SipMessage &msg, 
+                                const Tuple &source,
+                                const Tuple &destination,
+                                const Data& sigcompId)
+   {
+      Data cnonce = Random::getCryptoRandomHex(16);
+
+      Auths & target = mIsProxyCredential ? msg.header(h_ProxyAuthorizations) : msg.header(h_Authorizations);
+   
+      DebugLog( << " Add auth, " << this << " in response to: " << mAuth);
+      Auth auth;
+      if (ClientAuthExtension::instance().algorithmAndQopSupported(mAuth))
+      {
+         DebugLog(<<"Using extension to make auth response");
+      
+         if(mCredential.isPasswordA1Hash)
+         {
+            ClientAuthExtension::instance().makeChallengeResponseAuthWithA1(msg,
+                                                            mCredential.user,
+                                                            mCredential.password,
+                                                            mAuth, 
+                                                            cnonce,
+                                                            mAuthQop, 
+                                                            mNonceCountString,
+                                                            auth);      
+         }
+         else
+         {
+            ClientAuthExtension::instance().makeChallengeResponseAuth(msg,
+                                                            mCredential.user,
+                                                            mCredential.password,
+                                                            mAuth, 
+                                                            cnonce,
+                                                            mAuthQop, 
+                                                            mNonceCountString,
+                                                            auth);      
+         }
+      }
+      else
+      {
+         if(mCredential.isPasswordA1Hash)
+         {
+            Helper::makeChallengeResponseAuthWithA1(msg, 
+                                           mCredential.user, 
+                                           mCredential.password, 
+                                           mAuth, 
+                                           cnonce, 
+                                           mAuthQop, 
+                                           mNonceCountString, 
+                                           auth);
+         }
+         else
+         {
+            Helper::makeChallengeResponseAuth(msg, 
+                                           mCredential.user, 
+                                           mCredential.password, 
+                                           mAuth, 
+                                           cnonce, 
+                                           mAuthQop, 
+                                           mNonceCountString, 
+                                           auth);
+         }
+      }
+      target.push_back(auth);
+   
+      DebugLog(<<"ClientAuthDecorator, proxy: " << mIsProxyCredential << " " << target.back());
+   }
+   virtual void rollbackMessage(SipMessage& msg) 
+   {
+      Auths & target = mIsProxyCredential ? msg.header(h_ProxyAuthorizations) : msg.header(h_Authorizations);
+      target.pop_back();
+   }  
+   virtual MessageDecorator* clone() const { return new ClientAuthDecorator(mIsProxyCredential, mAuth, mCredential, mAuthQop, mNonceCountString); }
+private:
+    bool mIsProxyCredential;
+    Auth mAuth;
+    UserProfile::DigestCredential mCredential;
+    Data mAuthQop;
+    Data mNonceCountString;
+};
+
 ClientAuthManager::ClientAuthManager() 
 {
 }
@@ -178,7 +265,8 @@ ClientAuthManager::AuthState::addAuthentication(SipMessage& request)
 ClientAuthManager::RealmState::RealmState() :
    mIsProxyCredential(false),
    mState(Invalid),
-   mNonceCount(0)
+   mNonceCount(0),
+   mAuthPtr(NULL)
 {
 }
 
@@ -316,37 +404,17 @@ ClientAuthManager::RealmState::addAuthentication(SipMessage& request)
    assert(mState != Failed);
    if (mState == Failed) return;
 
-   Data cnonce = Random::getCryptoRandomHex(16);
-
-   Auths & target = mIsProxyCredential ? request.header(h_ProxyAuthorizations) : request.header(h_Authorizations);
    Data nonceCountString;
-   
-   DebugLog( << " Add auth, " << this << " in response to: " << mAuth);
-   if (ClientAuthExtension::instance().algorithmAndQopSupported(mAuth))
+   Data authQop = Helper::qopOption(mAuth);
+   if(!authQop.empty())
    {
-      DebugLog(<<"Using extension to make auth response");
-      
-      target.push_back(ClientAuthExtension::instance().makeChallengeResponseAuth(request,
-                                                         mCredential.user,
-                                                         mCredential.password,
-                                                         mAuth, 
-                                                         cnonce,
-                                                         mNonceCount, 
-                                                         nonceCountString));
-      
-   }
-   else
-   {
-      target.push_back(Helper::makeChallengeResponseAuth(request,
-                                                         mCredential.user,
-                                                         mCredential.password,
-                                                         mAuth, 
-                                                         cnonce,
-                                                         mNonceCount, 
-                                                         nonceCountString));
+       Helper::updateNonceCount(mNonceCount, nonceCountString);
    }
    
-   DebugLog(<<"ClientAuthManager::RealmState::addAuthentication, proxy: " << mIsProxyCredential << " " << target.back());
+   // Add client auth decorator so that we ensure any body hashes are calcuated after user defined outbound decorators that
+   // may be modifying the message body
+   std::auto_ptr<MessageDecorator> clientAuthDecorator(new ClientAuthDecorator(mIsProxyCredential, mAuth, mCredential, authQop, nonceCountString));
+   request.addOutboundDecorator(clientAuthDecorator);
 }
 
 void ClientAuthManager::dialogSetDestroyed(const DialogSetId& id)

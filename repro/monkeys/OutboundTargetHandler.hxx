@@ -2,6 +2,7 @@
 #define OUTBOUND_TARGET_HANDLER 1
 
 #include "repro/Processor.hxx"
+#include "resip/dum/RegistrationPersistenceManager.hxx"
 
 namespace repro
 {
@@ -9,12 +10,14 @@ namespace repro
 class OutboundTargetHandler : public Processor
 {
    public:
-      OutboundTargetHandler();
+      OutboundTargetHandler(resip::RegistrationPersistenceManager& store);
       virtual ~OutboundTargetHandler();
       
       virtual processor_action_t process(RequestContext &);
       virtual void dump(EncodeStream &os) const;
 
+    private:
+      resip::RegistrationPersistenceManager& mRegStore;
 };
 
 }

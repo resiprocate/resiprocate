@@ -8,31 +8,46 @@ namespace resip
 {
 
 class KeepAliveTimeout;
+class KeepAlivePongTimeout;
 class DialogUsageManager;
 
 class KeepAliveManager
 {
    public:
+      // Defaults to 10000ms (10s) as specified in RFC5626 section 4.4.1 
+      static int mKeepAlivePongTimeoutMs;  // ?slg? move to Profile setting?
+
       struct NetworkAssociationInfo
       {
             int refCount;
             int keepAliveInterval;  // In seconds
             int id;
+            bool supportsOutbound;
+            bool pongReceivedForLastPing;
       };
-      typedef std::map<Tuple, NetworkAssociationInfo> NetworkAssociationMap;
+
+      // .slg.  We track unique Network Associations per transport transport type, transport family, 
+      //        target ip addr, target port, and source/transport flow key
+      //        This means that if we have two different TCP connections to the same destination, 
+      //        each originating from a different NIC, then we will send keepalives on each separately.
+      //        For UDP, this is not currently the case, when the transport is bound to any interface
+      //        (ie. 0.0.0.0), as the flow key will be same regardless of the source interface used to
+      //        send the UDP message - fixing this for UDP remains an outstanding item.
+      typedef std::map<Tuple, NetworkAssociationInfo, Tuple::FlowKeyCompare> NetworkAssociationMap;
 
       KeepAliveManager() : mCurrentId(0) {}
       virtual ~KeepAliveManager() {}
       void setDialogUsageManager(DialogUsageManager* dum) { mDum = dum; }
-      virtual void add(const Tuple& target, int keepAliveInterval);
+      virtual void add(const Tuple& target, int keepAliveInterval, bool targetSupportsOutbound);
       virtual void remove(const Tuple& target);
       virtual void process(KeepAliveTimeout& timeout);
+      virtual void process(KeepAlivePongTimeout& timeout);
+      virtual void receivedPong(const Tuple& flow);
 
    protected:
       DialogUsageManager* mDum;
       NetworkAssociationMap mNetworkAssociations;
       unsigned int mCurrentId;
-      
 };
 
 }

@@ -39,7 +39,8 @@ class ServerInviteSession: public InviteSession
           the state. */
       virtual void provideAnswer(const Contents& answer);
 
-      /** Makes the specific dialog end. Will send a BYE (not a CANCEL) */
+      /** Makes the specific dialog end. Will send a 480. */
+      virtual void end(const Data& userReason);
       virtual void end(EndReason reason);
       virtual void end();
 

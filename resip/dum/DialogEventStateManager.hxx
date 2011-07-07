@@ -76,6 +76,9 @@ private:
    friend class InviteSession;
    friend class DialogSet;
 
+   // disabled
+   DialogEventStateManager(const DialogEventStateManager& orig);
+
    // .jjg. we'll only have the DialogSetId if we aren't yet in the 'early' state;
    // once we get to early, we'll remove the DialogSetId in favour of the DialogId.
    // The comparator/key of the map must have an ordering so that a key can be

@@ -6,6 +6,7 @@
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/TransactionUserMessage.hxx"
 #include "resip/stack/ConnectionTerminated.hxx"
+#include "resip/stack/KeepAlivePong.hxx"
 #include "resip/dum/AppDialog.hxx"
 #include "resip/dum/AppDialogSet.hxx"
 #include "resip/dum/AppDialogSetFactory.hxx"
@@ -39,6 +40,7 @@
 #include "resip/dum/RedirectManager.hxx"
 #include "resip/dum/RegistrationCreator.hxx"
 #include "resip/dum/RemoteCertStore.hxx"
+#include "resip/dum/RequestValidationHandler.hxx"
 #include "resip/dum/ServerAuthManager.hxx"
 #include "resip/dum/ServerInviteSession.hxx"
 #include "resip/dum/ServerPublication.hxx"
@@ -70,14 +72,31 @@
 using namespace resip;
 using namespace std;
 
+#ifdef RESIP_DUM_THREAD_DEBUG
+#define threadCheck()                                                   \
+   do                                                                   \
+   {                                                                    \
+      if(mThreadDebugKey)                                               \
+      {                                                                 \
+         assert(ThreadIf::tlsGetValue(mThreadDebugKey));                \
+      }                                                                 \
+   } while (false)
+#else
+#define threadCheck() void()
+#endif
+
+
 DialogUsageManager::DialogUsageManager(SipStack& stack, bool createDefaultFeatures) :
-   TransactionUser(TransactionUser::DoNotRegisterForTransactionTermination, TransactionUser::RegisterForConnectionTermination),
+   TransactionUser(TransactionUser::DoNotRegisterForTransactionTermination, 
+                   TransactionUser::RegisterForConnectionTermination,
+                   TransactionUser::RegisterForKeepAlivePongs),
    mRedirectManager(new RedirectManager()),
    mInviteSessionHandler(0),
    mClientRegistrationHandler(0),
    mServerRegistrationHandler(0),
    mRedirectHandler(0),
    mDialogSetHandler(0),
+   mRequestValidationHandler(0),
    mRegistrationPersistenceManager(0),
    mIsDefaultServerReferHandler(true),
    mClientPagerMessageHandler(0),
@@ -86,7 +105,9 @@ DialogUsageManager::DialogUsageManager(SipStack& stack, bool createDefaultFeatur
    mAppDialogSetFactory(new AppDialogSetFactory()),
    mStack(stack),
    mDumShutdownHandler(0),
-   mShutdownState(Running)
+   mShutdownState(Running),
+   mThreadDebugKey(0),
+   mHiddenThreadDebugKey(0)
 {
    //TODO -- create default features
    mStack.registerTransactionUser(*this);
@@ -179,14 +200,22 @@ DialogUsageManager::addTransport( TransportType protocol,
                                   const Data& ipInterface,
                                   const Data& sipDomainname, // only used
                                   const Data& privateKeyPassPhrase,
-                                  SecurityTypes::SSLType sslType)
+                                  SecurityTypes::SSLType sslType,
+                                  unsigned transportFlags)
 {
    mStack.addTransport(protocol, port, version, StunDisabled, ipInterface,
-                       sipDomainname, privateKeyPassPhrase, sslType);
+                       sipDomainname, privateKeyPassPhrase, sslType,
+                       transportFlags);
 }
 
 SipStack& 
 DialogUsageManager::getSipStack()
+{
+   return mStack;
+}
+
+const SipStack& 
+DialogUsageManager::getSipStack() const
 {
    return mStack;
 }
@@ -343,6 +372,13 @@ DialogUsageManager::setInviteSessionHandler(InviteSessionHandler* handler)
 }
 
 void
+DialogUsageManager::setRequestValidationHandler(RequestValidationHandler* handler)
+{
+   assert(!mRequestValidationHandler);
+   mRequestValidationHandler = handler;
+}
+
+void
 DialogUsageManager::setRegistrationPersistenceManager(RegistrationPersistenceManager* manager)
 {
    assert(!mRegistrationPersistenceManager);
@@ -461,6 +497,7 @@ DialogUsageManager::clearExternalMessageHandler()
 DialogSet*
 DialogUsageManager::makeUacDialogSet(BaseCreator* creator, AppDialogSet* appDs)
 {
+   threadCheck();
    if (mDumShutdownHandler)
    {
       throw DumException("Cannot create new sessions when DUM is shutting down.", __FILE__, __LINE__);
@@ -539,6 +576,75 @@ DialogUsageManager::makeInviteSession(const NameAddr& target,
                                       AppDialogSet* appDs)
 {
    return makeInviteSession(target, getMasterUserProfile(), initialOffer, level, alternative, appDs);
+}
+
+SharedPtr<SipMessage> 
+DialogUsageManager::makeInviteSession(const NameAddr& target, 
+                                      InviteSessionHandle sessionToReplace, 
+                                      const SharedPtr<UserProfile>& userProfile, 
+                                      const Contents* initialOffer, 
+                                      AppDialogSet* ads)
+{
+   SharedPtr<SipMessage> inv = makeInviteSession(target, userProfile, initialOffer, ads);
+   // add replaces header
+   assert(sessionToReplace.isValid());
+   if(sessionToReplace.isValid())
+   {
+      CallId replaces;
+      DialogId id = sessionToReplace->getDialogId();
+      replaces.value() = id.getCallId();
+      replaces.param(p_toTag) = id.getRemoteTag();
+      replaces.param(p_fromTag) = id.getLocalTag();
+      inv->header(h_Replaces) = replaces;
+   }
+   return inv;
+}
+
+SharedPtr<SipMessage> 
+DialogUsageManager::makeInviteSession(const NameAddr& target, 
+                                      InviteSessionHandle sessionToReplace, 
+                                      const SharedPtr<UserProfile>& userProfile, 
+                                      const Contents* initialOffer, 
+                                      EncryptionLevel level, 
+                                      const Contents* alternative, 
+                                      AppDialogSet* ads)
+{
+   SharedPtr<SipMessage> inv = makeInviteSession(target, userProfile, initialOffer, level, alternative, ads);
+   // add replaces header
+   assert(sessionToReplace.isValid());
+   if(sessionToReplace.isValid())
+   {
+      CallId replaces;
+      DialogId id = sessionToReplace->getDialogId();
+      replaces.value() = id.getCallId();
+      replaces.param(p_toTag) = id.getRemoteTag();
+      replaces.param(p_fromTag) = id.getLocalTag();
+      inv->header(h_Replaces) = replaces;
+   }
+   return inv;
+}
+
+SharedPtr<SipMessage> 
+DialogUsageManager::makeInviteSession(const NameAddr& target, 
+                                      InviteSessionHandle sessionToReplace, 
+                                      const Contents* initialOffer, 
+                                      EncryptionLevel level, 
+                                      const Contents* alternative , 
+                                      AppDialogSet* ads)
+{
+   SharedPtr<SipMessage> inv = makeInviteSession(target, initialOffer, level, alternative, ads);
+   // add replaces header
+   assert(sessionToReplace.isValid());
+   if(sessionToReplace.isValid())
+   {
+      CallId replaces;
+      DialogId id = sessionToReplace->getDialogId();
+      replaces.value() = id.getCallId();
+      replaces.param(p_toTag) = id.getRemoteTag();
+      replaces.param(p_fromTag) = id.getLocalTag();
+      inv->header(h_Replaces) = replaces;
+   }
+   return inv;
 }
 
 SharedPtr<SipMessage>
@@ -795,6 +901,25 @@ DialogUsageManager::send(SharedPtr<SipMessage> msg)
       msg->header(h_ProxyRequires) = userProfile->getProxyRequires();
    }
    
+   // .bwc. This is to avoid leaving extra copies of the decorator in msg,
+   // when the caller of this function holds onto the reference (and this
+   // happens quite often in DUM). I would prefer to refactor such that we
+   // are operating on a copy in this function, but this would require a lot
+   // of work on the DumFeatureChain stuff (or, require an extra copy on top 
+   // of the one we're doing when we send the message to the stack, which
+   // would chew up a lot of extra cycles).
+   msg->clearOutboundDecorators();
+
+   // Add outbound decorator from userprofile - note:  it is important that this is
+   // done before the call to mClientAuthManager->addAuthentication, since the ClientAuthManager
+   // will install outbound decorators and we want these to run after the user provided ones, in
+   // case a user provided decorator modifes the message body used in auth.
+   SharedPtr<MessageDecorator> outboundDecorator = userProfile->getOutboundDecorator();
+   if (outboundDecorator.get())
+   {
+      msg->addOutboundDecorator(std::auto_ptr<MessageDecorator>(outboundDecorator->clone()));
+   }
+
    if (msg->isRequest())
    {
       // We may not need to call reset() if makeRequest is always used.
@@ -848,27 +973,19 @@ DialogUsageManager::send(SharedPtr<SipMessage> msg)
       }
    }
 
-   // !bwc! This is to avoid leaving extra copies of the decorator in msg,
-   // when the caller of this function holds onto the reference (and this
-   // happens quite often in DUM). I would prefer to refactor such that we
-   // are operating on a copy in this function, but this would require a lot
-   // of work on the DumFeatureChain stuff (or, require an extra copy on top 
-   // of the one we're doing when we send the message to the stack, which
-   // would chew up a lot of extra cycles).
-   msg->clearOutboundDecorators();
-
-   // Add outbound decorator from userprofile
-   SharedPtr<MessageDecorator> outboundDecorator = userProfile->getOutboundDecorator();
-   if (outboundDecorator.get())
-   {
-      msg->addOutboundDecorator(std::auto_ptr<MessageDecorator>(outboundDecorator->clone()));
-   }
-
    DebugLog (<< "SEND: " << std::endl << std::endl << *msg);
 
    OutgoingEvent* event = new OutgoingEvent(msg);
    outgoingProcess(auto_ptr<Message>(event));
 }
+
+void 
+DialogUsageManager::sendCommand(SharedPtr<SipMessage> request)
+{
+   SendCommand* s=new SendCommand(request, *this);
+   post(s);
+}
+
 
 void DialogUsageManager::outgoingProcess(auto_ptr<Message> message)
 {
@@ -946,7 +1063,7 @@ void DialogUsageManager::outgoingProcess(auto_ptr<Message> message)
          assert(userProfile);
 
          //!dcm! -- unique SharedPtr to auto_ptr conversion prob. a worthwhile
-         //optimzation here. SharedPtr would ahve to be changed; would
+         //optimzation here. SharedPtr would have to be changed; would
          //throw/assert if not unique.
          std::auto_ptr<SipMessage> toSend(static_cast<SipMessage*>(event->message()->clone()));
 
@@ -989,17 +1106,43 @@ DialogUsageManager::sendUsingOutboundIfAppropriate(UserProfile& userProfile, aut
       {
          // prepend the outbound proxy to the service route
          msg->header(h_Routes).push_front(NameAddr(userProfile.getOutboundProxy().uri()));
-         mStack.send(msg, this);
+         if(userProfile.clientOutboundEnabled() && userProfile.mClientOutboundFlowTuple.mFlowKey != 0)
+         {
+            DebugLog ( << "Sending with client outbound flow tuple to express outbound" );
+            DebugLog ( << "Flow Tuple: " << userProfile.mClientOutboundFlowTuple << " and key: " << userProfile.mClientOutboundFlowTuple.mFlowKey);
+            mStack.sendTo(msg, userProfile.mClientOutboundFlowTuple, this);
+         }
+         else
+         {
+            DebugLog ( << "Sending to express outbound w/o flow tuple");
+            mStack.send(msg, this);
+         }
       }
       else
       {
-         mStack.sendTo(msg, userProfile.getOutboundProxy().uri(), this);
+         if(userProfile.clientOutboundEnabled() && userProfile.mClientOutboundFlowTuple.mFlowKey != 0)
+         {
+            DebugLog ( << "Sending to outbound (no express) with flow tuple");
+            mStack.sendTo(msg, userProfile.mClientOutboundFlowTuple, this);
+         }
+         else
+         {
+            DebugLog ( << "Sending to outbound uri");
+            mStack.sendTo(msg, userProfile.getOutboundProxy().uri(), this);
+         }
       }
    }
    else
    {
       DebugLog (<< "Send: " << msg->brief());
-      mStack.send(msg, this);
+      if(userProfile.clientOutboundEnabled() && userProfile.mClientOutboundFlowTuple.mFlowKey != 0)
+      {
+         mStack.sendTo(msg, userProfile.mClientOutboundFlowTuple, this);
+      }
+      else
+      {
+         mStack.send(msg, this);
+      }
    }
 }
 
@@ -1130,6 +1273,29 @@ DialogUsageManager::findInviteSession(CallId replaces)
 void
 DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
 {
+#ifdef RESIP_DUM_THREAD_DEBUG
+   if(!mThreadDebugKey)
+   {
+      // .bwc. Probably means multiple threads are trying to give DUM cycles 
+      // simultaneously.
+      assert(!mHiddenThreadDebugKey);
+      // No d'tor needed, since we're just going to use a pointer to this.
+      if(!ThreadIf::tlsKeyCreate(mThreadDebugKey, 0))
+      {
+         // .bwc. We really could pass anything here, but for the sake of 
+         // passing a valid pointer, I have (completely arbitrarily) chosen a 
+         // pointer to the DUM. All that matters is that this value is non-null
+         ThreadIf::tlsSetValue(mThreadDebugKey, this);
+      }
+      else
+      {
+         ErrLog(<< "ThreadIf::tlsKeyCreate() failed!");
+      }
+   }
+#endif
+
+   threadCheck();
+
    // After a Stack ShutdownMessage has been received, don't do anything else in dum
    if (mShutdownState == Shutdown)
    {
@@ -1153,6 +1319,19 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       }
    }
    
+   {
+      KeepAlivePong* pong = dynamic_cast<KeepAlivePong*>(msg.get());
+      if (pong)
+      {
+         DebugLog(<< "keepalive pong received from " << pong->getFlow());
+         if (mKeepAliveManager.get())
+         {
+            mKeepAliveManager->receivedPong(pong->getFlow());
+         }
+         return;
+      }
+   }
+
    {
       DestroyUsage* destroyUsage = dynamic_cast<DestroyUsage*>(msg.get());
       if (destroyUsage)
@@ -1191,9 +1370,51 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
    }
 
    {
+      KeepAlivePongTimeout* keepAlivePongMsg = dynamic_cast<KeepAlivePongTimeout*>(msg.get());
+      if (keepAlivePongMsg)
+      {
+         //DebugLog(<< "Keep Alive Pong Message" );
+         if (mKeepAliveManager.get())
+         {
+            mKeepAliveManager->process(*keepAlivePongMsg);
+         }
+         return;      
+      }
+   }
+
+   {
       ConnectionTerminated* terminated = dynamic_cast<ConnectionTerminated*>(msg.get());
       if (terminated)
       {
+         // Notify all dialogSets, in case they need to react (ie. client outbound support)
+         // First find all applicable dialogsets, since flow token in user profile will 
+         // be cleared by first dialogset we notify, then notify all dialogset's
+         std::list<DialogSet*> dialogSetsToNotify;
+         DialogSetMap::iterator it =  mDialogSetMap.begin();
+         for(; it != mDialogSetMap.end(); it++)
+         {
+            if(it->second->mUserProfile->clientOutboundEnabled() && 
+               it->second->mUserProfile->getClientOutboundFlowTuple().mFlowKey == terminated->getFlow().mFlowKey &&  // Flow key is not part of Tuple operator=, check it first
+               it->second->mUserProfile->getClientOutboundFlowTuple() == terminated->getFlow())
+            {
+               if(it->second->getClientRegistration().isValid())
+               {
+                   // ensure client registrations are notified first
+                   dialogSetsToNotify.push_front(it->second);
+               }
+               else
+               {
+                  dialogSetsToNotify.push_back(it->second);
+               }
+            }
+         }
+         // Now dispatch notification to all dialogsets found above
+         std::list<DialogSet*>::iterator it2 = dialogSetsToNotify.begin();
+         for(; it2 != dialogSetsToNotify.end();it2++)
+         {
+            (*it2)->flowTerminated(terminated->getFlow());
+         }
+
          DebugLog(<< "connection terminated message");
          if (mConnectionTerminatedEventDispatcher.dispatch(msg.get()))
          {
@@ -1418,15 +1639,21 @@ DialogUsageManager::process(resip::Lockable* mutex)
 {
    if (mFifo.messageAvailable())
    {
-      if (mutex)
-      {
-         resip::Lock lock(*mutex); 
-         internalProcess(std::auto_ptr<Message>(mFifo.getNext()));
-      }
-      else
-      {
-         internalProcess(std::auto_ptr<Message>(mFifo.getNext()));
-      }
+      resip::PtrLock lock(mutex);
+#ifdef RESIP_DUM_THREAD_DEBUG
+      mThreadDebugKey=mHiddenThreadDebugKey;
+#endif
+      internalProcess(std::auto_ptr<Message>(mFifo.getNext()));
+#ifdef RESIP_DUM_THREAD_DEBUG
+      // .bwc. Thread checking is disabled if mThreadDebugKey is 0; if the app 
+      // is using this mutex-locked process() call, we only enable thread-
+      // checking while the mutex is locked. Accesses from another thread while 
+      // the mutex is not locked are probably intentional. However, if the app 
+      // accesses the DUM inappropriately anyway, we'll probably detect it if 
+      // it happens during the internalProcess() call.
+      mHiddenThreadDebugKey=mThreadDebugKey;
+      mThreadDebugKey=0;
+#endif
    }
    return mFifo.messageAvailable();
 }
@@ -1446,15 +1673,21 @@ DialogUsageManager::process(int timeoutMs, resip::Lockable* mutex)
    }
    if (message.get())
    {
-      if (mutex)
-      {
-         resip::Lock lock(*mutex); 
-         internalProcess(message);
-      }
-      else
-      {
-         internalProcess(message);
-      }
+      resip::PtrLock lock(mutex);
+#ifdef RESIP_DUM_THREAD_DEBUG
+      mThreadDebugKey=mHiddenThreadDebugKey;
+#endif
+      internalProcess(message);
+#ifdef RESIP_DUM_THREAD_DEBUG
+      // .bwc. Thread checking is disabled if mThreadDebugKey is 0; if the app 
+      // is using this mutex-locked process() call, we only enable thread-
+      // checking while the mutex is locked. Accesses from another thread while 
+      // the mutex is not locked are probably intentional. However, if the app 
+      // accesses the DUM inappropriately anyway, we'll probably detect it if 
+      // it happens during the internalProcess() call.
+      mHiddenThreadDebugKey=mThreadDebugKey;
+      mThreadDebugKey=0;
+#endif
    }
    return mFifo.messageAvailable();
 }
@@ -1472,6 +1705,9 @@ DialogUsageManager::validateRequestURI(const SipMessage& request)
       failure.header(h_Allows) = getMasterProfile()->getAllowedMethods();
       sendResponse(failure);
 
+      if(mRequestValidationHandler)
+         mRequestValidationHandler->onInvalidMethod(request);
+
       return false;
    }
 
@@ -1482,8 +1718,11 @@ DialogUsageManager::validateRequestURI(const SipMessage& request)
       SipMessage failure;
       makeResponse(failure, request, 416);
       sendResponse(failure);
+      
+      if(mRequestValidationHandler)
+         mRequestValidationHandler->onInvalidScheme(request);
 
-	  return false;
+      return false;
    }
 
    return true;
@@ -1499,17 +1738,20 @@ DialogUsageManager::validateRequiredOptions(const SipMessage& request)
        request.header(h_RequestLine).getMethod() != CANCEL))
    {
       Tokens unsupported = getMasterProfile()->getUnsupportedOptionsTags(request.header(h_Requires));
-	  if (!unsupported.empty())
-	  {
-	     InfoLog (<< "Received an unsupported option tag(s): " << request.brief());
+      if (!unsupported.empty())
+      {
+         InfoLog (<< "Received an unsupported option tag(s): " << request.brief());
 
          SipMessage failure;
          makeResponse(failure, request, 420);
          failure.header(h_Unsupporteds) = unsupported;
          sendResponse(failure);
+      
+         if(mRequestValidationHandler)
+            mRequestValidationHandler->onInvalidRequiredOptions(request);
 
          return false;
-	  }
+      }
    }
 
    return true;
@@ -1523,13 +1765,17 @@ DialogUsageManager::validate100RelSuport(const SipMessage& request)
    {
       if (getMasterProfile()->getUasReliableProvisionalMode() == MasterProfile::Required)
       {
-         if (!(request.exists(h_Requires) && request.header(h_Requires).find(Token(Symbols::C100rel))
-               || request.exists(h_Supporteds) && request.header(h_Supporteds).find(Token(Symbols::C100rel))))
+         if (!((request.exists(h_Requires) && request.header(h_Requires).find(Token(Symbols::C100rel)))
+               || (request.exists(h_Supporteds) && request.header(h_Supporteds).find(Token(Symbols::C100rel)))))
          {
             SipMessage failure;
             makeResponse(failure, request, 421);
             failure.header(h_Requires).push_back(Token(Symbols::C100rel));
             sendResponse(failure);
+      
+            if(mRequestValidationHandler)
+               mRequestValidationHandler->on100RelNotSupportedByRemote(request);
+
             return false;
          }
       }
@@ -1555,6 +1801,9 @@ DialogUsageManager::validateContent(const SipMessage& request)
          makeResponse(failure, request, 415);
          failure.header(h_Accepts) = getMasterProfile()->getSupportedMimeTypes(request.header(h_RequestLine).method());
          sendResponse(failure);
+            
+         if(mRequestValidationHandler)
+            mRequestValidationHandler->onInvalidContentType(request);
 
          return false;
       }
@@ -1566,6 +1815,9 @@ DialogUsageManager::validateContent(const SipMessage& request)
          makeResponse(failure, request, 415);
          failure.header(h_AcceptEncodings) = getMasterProfile()->getSupportedEncodings();
          sendResponse(failure);
+         
+         if(mRequestValidationHandler)
+            mRequestValidationHandler->onInvalidContentEncoding(request);
 
          return false;
       }
@@ -1579,6 +1831,9 @@ DialogUsageManager::validateContent(const SipMessage& request)
          makeResponse(failure, request, 415);
          failure.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
          sendResponse(failure);
+         
+         if(mRequestValidationHandler)
+            mRequestValidationHandler->onInvalidContentLanguage(request);
 
          return false;
       }
@@ -1625,6 +1880,10 @@ DialogUsageManager::validateAccept(const SipMessage& request)
    makeResponse(failure, request, 406);
    failure.header(h_Accepts) = getMasterProfile()->getSupportedMimeTypes(method);
    sendResponse(failure);
+
+   if(mRequestValidationHandler)
+      mRequestValidationHandler->onInvalidAccept(request);
+
    return false;
 }
 
@@ -1756,6 +2015,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
          }
          case PUBLISH:
             assert(false);
+	    return;
          case SUBSCRIBE:
             if (!checkEventPackage(request))
             {
@@ -1763,6 +2023,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
                         << request.brief());
                return;
             }
+	    /*FALLTHRU*/
          case NOTIFY : // handle unsolicited (illegal) NOTIFYs
          case INVITE:   // new INVITE
          case REFER:    // out-of-dialog REFER
@@ -1958,6 +2219,7 @@ DialogUsageManager::checkEventPackage(const SipMessage& request)
 DialogSet*
 DialogUsageManager::findDialogSet(const DialogSetId& id)
 {
+   threadCheck();
    StackLog ( << "Looking for dialogSet: " << id << " in map:" );
    StackLog ( << Inserter(mDialogSetMap) );
    DialogSetMap::const_iterator it = mDialogSetMap.find(id);
@@ -2171,8 +2433,16 @@ DialogUsageManager::dumOutgoingTarget()
 DialogEventStateManager* 
 DialogUsageManager::createDialogEventStateManager(DialogEventHandler* handler)
 {
-   mDialogEventStateManager = new DialogEventStateManager();
-   mDialogEventStateManager->mDialogEventHandler = handler;
+   if(handler)
+   {
+      mDialogEventStateManager = new DialogEventStateManager();
+      mDialogEventStateManager->mDialogEventHandler = handler;
+   }
+   else
+   {
+      delete mDialogEventStateManager;
+      mDialogEventStateManager=0;
+   }
    return mDialogEventStateManager;
 }
 

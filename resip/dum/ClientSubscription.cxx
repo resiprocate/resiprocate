@@ -23,7 +23,8 @@ ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog,
    : BaseSubscription(dum, dialog, request),
      mOnNewSubscriptionCalled(mEventType == "refer"),  // don't call onNewSubscription for Refer subscriptions
      mEnded(false),
-     mExpires(0),
+     mNextRefreshSecs(0),
+     mLastSubSecs(Timer::getTimeSecs()), // Not exactly, but more forgiving
      mDefaultExpires(defaultSubExpiration),
      mRefreshing(false),
      mHaveQueuedRefresh(false),
@@ -34,12 +35,16 @@ ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog,
    if(request.method() == SUBSCRIBE)
    {
       *mLastRequest = request;
+      if (defaultSubExpiration > 0)
+      {
+         mLastRequest->header(h_Expires).value() = defaultSubExpiration;
+      }
    }
    else
    {
-	   // If a NOTIFY request is use to make this ClientSubscription, then create the implied SUBSCRIBE 
-	   // request as the mLastRequest
-	   mDialog.makeRequest(*mLastRequest, SUBSCRIBE);
+      // If a NOTIFY request is use to make this ClientSubscription, then create the implied SUBSCRIBE 
+      // request as the mLastRequest
+      mDialog.makeRequest(*mLastRequest, SUBSCRIBE);
    }
 }
 
@@ -77,7 +82,6 @@ ClientSubscription::dispatch(const SipMessage& msg)
    {
       assert( msg.header(h_RequestLine).getMethod() == NOTIFY );
       mRefreshing = false;
-
 
       // !dlb! 481 NOTIFY iff state is dead?
 
@@ -132,8 +136,9 @@ ClientSubscription::processResponse(const SipMessage& msg)
    assert(handler);
 
    mRefreshing = false;
+   int statusCode = msg.header(h_StatusLine).statusCode();
 
-   if (msg.header(h_StatusLine).statusCode() >= 200 && msg.header(h_StatusLine).statusCode() <300)
+   if (statusCode >= 200 && statusCode <300)
    {
       if (msg.exists(h_Expires))
       {
@@ -160,43 +165,37 @@ ClientSubscription::processResponse(const SipMessage& msg)
       sendQueuedRefreshRequest();
    }
    else if (!mEnded &&
-            msg.header(h_StatusLine).statusCode() == 481 &&
+            statusCode == 481 &&
             msg.exists(h_Expires) && msg.header(h_Expires).value() > 0)
    {
       InfoLog (<< "Received 481 to SUBSCRIBE, reSUBSCRIBEing (presence server probably restarted) "
                << mLastRequest->header(h_To));
 
-      SharedPtr<SipMessage> sub = mDum.makeSubscription(mLastRequest->header(h_To), getUserProfile(), getEventType(), getAppDialogSet()->reuse());
-      mDum.send(sub);
-
-      delete this;
+      reSubscribe();  // will delete "this"
       return;
    }
    else if (!mEnded &&
-            (msg.header(h_StatusLine).statusCode() == 408 ||
-            ((msg.header(h_StatusLine).statusCode() == 413 ||
-              msg.header(h_StatusLine).statusCode() == 480 ||
-              msg.header(h_StatusLine).statusCode() == 486 ||
-              msg.header(h_StatusLine).statusCode() == 500 ||
-              msg.header(h_StatusLine).statusCode() == 503 ||
-              msg.header(h_StatusLine).statusCode() == 600 ||
-              msg.header(h_StatusLine).statusCode() == 603) &&
-             msg.exists(h_RetryAfter))))
+            (statusCode == 408 ||
+             (statusCode == 503 && msg.getReceivedTransport() == 0) ||
+             ((statusCode == 413 ||
+               statusCode == 480 ||
+               statusCode == 486 ||
+               statusCode == 500 ||
+               statusCode == 503 ||
+               statusCode == 600 ||
+               statusCode == 603) &&
+              msg.exists(h_RetryAfter))))
    {
       int retry;
+      int retryAfter = 0;
+      if(msg.exists(h_RetryAfter))
+      {
+         retryAfter = msg.header(h_RetryAfter).value();
+      }
 
-      if (msg.header(h_StatusLine).statusCode() == 408)
-      {
-         InfoLog (<< "Received 408 to SUBSCRIBE "
-                  << mLastRequest->header(h_To));
-         retry = handler->onRequestRetry(getHandle(), 0, msg);
-      }
-      else
-      {
-         InfoLog (<< "Received non-408 retriable to SUBSCRIBE "
-                  << mLastRequest->header(h_To));
-         retry = handler->onRequestRetry(getHandle(), msg.header(h_RetryAfter).value(), msg);
-      }
+      InfoLog (<< "Received " << statusCode << " to SUBSCRIBE "
+               << mLastRequest->header(h_To));
+      retry = handler->onRequestRetry(getHandle(), retryAfter, msg);
 
       if (retry < 0)
       {
@@ -217,9 +216,7 @@ ClientSubscription::processResponse(const SipMessage& msg)
          }
          else
          {
-            SharedPtr<SipMessage> sub = mDum.makeSubscription(mLastRequest->header(h_To), getUserProfile(), getEventType(), getAppDialogSet()->reuse());
-            mDum.send(sub);
-            delete this;
+            reSubscribe();  // will delete "this"
             return;
          }
       }
@@ -269,6 +266,7 @@ ClientSubscription::processNextNotify()
    assert(handler);
 
    unsigned long refreshInterval = 0;
+   bool setRefreshTimer=false; 
    if (!qn->outOfOrder())
    {
       UInt32 expires = 0;
@@ -301,12 +299,19 @@ ClientSubscription::processNextNotify()
          DebugLog(<< "No expires header in last request, set to " << expires);
          mLastRequest->header(h_Expires).value() = expires;
       }
-      UInt64 now = Timer::getTimeSecs();
-      
-      if (mExpires == 0 || now + expires < mExpires)
+
+      if(!qn->notify().exists(h_SubscriptionState) || 
+         !isEqualNoCase(qn->notify().header(h_SubscriptionState).value(), Symbols::Terminated))
       {
-         refreshInterval = Helper::aBitSmallerThan((unsigned long)expires);
-         mExpires = now + refreshInterval;
+         // Don't do this stuff for a NOTIFY terminated.
+         UInt64 now = Timer::getTimeSecs();
+         refreshInterval = Helper::aBitSmallerThan((signed long)expires);
+         
+         if (mNextRefreshSecs == 0 || now + refreshInterval < mNextRefreshSecs)
+         {
+            mNextRefreshSecs = now + refreshInterval;
+            setRefreshTimer = true;
+         }
       }
    }
    //if no subscription state header, treat as an extension. Only allow for
@@ -363,27 +368,52 @@ ClientSubscription::processNextNotify()
 
    if (!mEnded && isEqualNoCase(qn->notify().header(h_SubscriptionState).value(), Symbols::Active))
    {
-      if (refreshInterval)
+      if (setRefreshTimer)
       {
-         mDum.addTimer(DumTimeout::Subscription, refreshInterval, getBaseHandle(), ++mTimerSeq);
-         InfoLog (<< "[ClientSubscription] reSUBSCRIBE in " << refreshInterval);
+         scheduleRefresh(refreshInterval);
       }
          
       handler->onUpdateActive(getHandle(), qn->notify(), qn->outOfOrder());
    }
    else if (!mEnded && isEqualNoCase(qn->notify().header(h_SubscriptionState).value(), Symbols::Pending))
    {
-      if (refreshInterval)
+      if (setRefreshTimer)
       {
-         mDum.addTimer(DumTimeout::Subscription, refreshInterval, getBaseHandle(), ++mTimerSeq);
-         InfoLog (<< "[ClientSubscription] reSUBSCRIBE in " << refreshInterval);
+         scheduleRefresh(refreshInterval);
       }
 
       handler->onUpdatePending(getHandle(), qn->notify(), qn->outOfOrder());
    }
    else if (isEqualNoCase(qn->notify().header(h_SubscriptionState).value(), Symbols::Terminated))
    {
-      acceptUpdate();
+      if(mLastRequest->header(h_Expires).value()!=0 &&
+         isEqualNoCase(qn->notify().header(h_SubscriptionState).param(p_reason), "timeout"))
+      {
+         // Unexpected timeout of some sort. Look closer.
+         if(mNextRefreshSecs==0)
+         {
+            // No refresh scheduled; maybe we are trying to avoid a tight SUB/
+            // NOT loop here?
+            if(Helper::aBitSmallerThan((signed long)(Timer::getTimeSecs() - mLastSubSecs)) < 2)
+            {
+               acceptUpdate(200, "I just sent a refresh, what more do you want "
+                                 "from me?");
+            }
+            else
+            {
+               acceptUpdate(200, "Why didn't I refresh here?");
+            }
+         }
+         else
+         {
+            acceptUpdate(200, "You terminated my subscription early! What "
+                              "gives?");
+         }
+      }
+      else
+      {
+         acceptUpdate();
+      }
       mEnded = true;
       handler->onTerminated(getHandle(), &qn->notify());
       DebugLog (<< "[ClientSubscription] " << mLastRequest->header(h_To) << "[ClientSubscription] Terminated");                   
@@ -393,6 +423,23 @@ ClientSubscription::processNextNotify()
    else if (!mEnded)
    {
       handler->onUpdateExtension(getHandle(), qn->notify(), qn->outOfOrder());
+   }
+   else if (mEnded)
+   {
+      // We received a NOTIFY message when we thought the subscription was
+      // ended. This can happen, for example, when a previously sent NOTIFY gets
+      // resent while we (ClientSubscription) are trying to terminate the
+      // subscription. If we don't accept/reject this NOTIFY, it will stay into
+      // the mQueuedNotifies queue and we'll never terminate the subscription
+      // even if the server sends a NOTIFY/terminated. All received NOTIFY would
+      // get piled up on mQueuedNotifies and they will never get processed.
+      //
+      // Note that if that NOTIFY is in fact the terminated one, it will get
+      // caught by another if statement above and acted upon appropriately.
+      //
+      //!fjoanis! Is 481 a proper error code in this case?
+      InfoLog(<< "[ClientSubscription] received NOTIFY when subscription was ended, rejecting it...");
+      rejectUpdate(481);
    }
 }
 
@@ -426,13 +473,11 @@ ClientSubscription::dispatch(const DumTimeout& timer)
          else
          {
             InfoLog(<< "ClientSubscription: application retry new request");
-  
-            SharedPtr<SipMessage> sub = mDum.makeSubscription(mLastRequest->header(h_To), getUserProfile(), getEventType(), getAppDialogSet()->reuse());
-            mDum.send(sub);            
-            delete this;
+            reSubscribe();  // will delete "this"
+            return;
          }
       }
-	  else if(timer.type() == DumTimeout::Subscription)
+      else if(timer.type() == DumTimeout::Subscription)
       {
          requestRefresh();
       }
@@ -464,9 +509,10 @@ ClientSubscription::requestRefresh(UInt32 expires)
       {
          mLastRequest->header(h_Expires).value() = expires;
       }
-      mExpires = 0;
+      mNextRefreshSecs = 0;
       InfoLog (<< "Refresh subscription: " << mLastRequest->header(h_Contacts).front());
       mRefreshing = true;
+      mLastSubSecs = Timer::getTimeSecs();
       send(mLastRequest);
       // Timer for reSUB NOTIFY.
       mDum.addTimer(DumTimeout::WaitForNotify, 
@@ -553,7 +599,7 @@ ClientSubscription::endCommand()
 }
 
 void 
-ClientSubscription::acceptUpdate(int statusCode)
+ClientSubscription::acceptUpdate(int statusCode, const char* reason)
 {
    assert(!mQueuedNotifies.empty());
    if (mQueuedNotifies.empty())
@@ -566,22 +612,27 @@ ClientSubscription::acceptUpdate(int statusCode)
    mQueuedNotifies.pop_front();
    mDustbin.push_back(qn);
    mDialog.makeResponse(*mLastResponse, qn->notify(), statusCode);
+   if(reason)
+   {
+      mLastResponse->header(h_StatusLine).reason()=reason;
+   }
    send(mLastResponse);
 }
 
 class ClientSubscriptionAcceptUpdateCommand : public DumCommandAdapter
 {
 public:
-   ClientSubscriptionAcceptUpdateCommand(ClientSubscription& clientSubscription, int statusCode)
+   ClientSubscriptionAcceptUpdateCommand(ClientSubscription& clientSubscription, int statusCode, const char* reason)
       : mClientSubscription(clientSubscription),
-        mStatusCode(statusCode)
+        mStatusCode(statusCode),
+        mReason(reason ? Data(reason) : Data::Empty)
    {
 
    }
 
    virtual void executeCommand()
    {
-      mClientSubscription.acceptUpdate(mStatusCode);
+      mClientSubscription.acceptUpdate(mStatusCode, mReason.c_str());
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -591,12 +642,24 @@ public:
 private:
    ClientSubscription& mClientSubscription;
    int mStatusCode;
+   Data mReason;
 };
 
 void 
-ClientSubscription::acceptUpdateCommand(int statusCode)
+ClientSubscription::acceptUpdateCommand(int statusCode, const char* reason)
 {
-   mDum.post(new ClientSubscriptionAcceptUpdateCommand(*this, statusCode));
+   mDum.post(new ClientSubscriptionAcceptUpdateCommand(*this, statusCode, reason));
+}
+
+void
+ClientSubscription::reSubscribe()
+{
+   NameAddr target(mLastRequest->header(h_To));
+   target.remove(p_tag);  // ensure To tag is removed
+   SharedPtr<SipMessage> sub = mDum.makeSubscription(target, getUserProfile(), getEventType(), getAppDialogSet()->reuse());
+   mDum.send(sub);
+
+   delete this;
 }
 
 void 
@@ -706,11 +769,21 @@ ClientSubscription::dump(EncodeStream& strm) const
    return strm;
 }
 
-void ClientSubscription::onReadyToSend(SipMessage& msg)
+void 
+ClientSubscription::onReadyToSend(SipMessage& msg)
 {
    ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
    assert(handler);
    handler->onReadyToSend(getHandle(), msg);
+}
+
+void
+ClientSubscription::flowTerminated()
+{
+   // notify handler
+   ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
+   assert(handler);
+   handler->onFlowTerminated(getHandle());
 }
 
 void
@@ -737,6 +810,35 @@ ClientSubscription::clearDustbin()
    mDustbin.clear();
 
 }
+
+void 
+ClientSubscription::scheduleRefresh(unsigned long refreshInterval)
+{
+   if(mNextRefreshSecs-mLastSubSecs < 2)
+   {
+      // Server is using an unreasonably short expiry; we sent a SUB
+      // very recently, and the server has told us to refresh almost 
+      // immediately. By the time our refresh timer pops, less than two 
+      // seconds will have elapsed since our last SUBSCRIBE. This is 
+      // unacceptable. Just let the subscription end.
+      // It is also possible that our refresh SUB has crossed an update NOTIFY 
+      // on the wire; in this case, the right thing to do is to wait until a 
+      // NOTIFY for our refresh SUB comes in, which is exactly what this code 
+      // ends up doing in this case.
+      // ?bwc? Make this minimum inter-SUBSCRIBE time configurable?
+      WarningLog(<< "Server is using an unacceptably short expiry. "
+                  "Letting the subscription end so we don't get in a"
+                  " tight SUB/NOT loop.");
+      mNextRefreshSecs=0;
+   }
+   else
+   {
+      mDum.addTimer(DumTimeout::Subscription, refreshInterval, getBaseHandle(), ++mTimerSeq);
+      InfoLog (<< "[ClientSubscription] reSUBSCRIBE in " << refreshInterval);
+   }
+}
+
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0

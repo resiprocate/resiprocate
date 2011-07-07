@@ -7,6 +7,7 @@
 
 #include <srtp.h>
 #include <boost/shared_ptr.hpp>
+//include <boost/date_time/posix_time/posix_time.hpp>
 
 #include "client/TurnAsyncUdpSocket.hxx"
 #include "client/TurnAsyncTcpSocket.hxx"
@@ -80,6 +81,10 @@ public:
    
    unsigned int getSocketDescriptor();  // returns the real socket descriptor - used to correlate callbacks
 
+   // this can also be obtained from the FlowManager, but is here as well for convenience
+   // for apps that need to do operations on the socket (setting options, setting Qos options, etc.)
+   asio::io_service& getIOService() { return mIOService; }
+
    /// Turn Send Methods
    /// WARNING - if using Secure media, then there must be room at the 
    ///           end of the passed in buffer for the SRTP HMAC code to be appended
@@ -120,25 +125,7 @@ public:
 #endif
 #endif
 
-   enum EQOSDirection
-   {
-      EQOSDirection_Sending,                 // QOS refering to the direction of sending out packets
-      EQOSDirection_Receiving                // QOS refering to the direction of receiving packets
-   };
-
-   bool setDSCP(ULONG ulInDSCPValue);
-   bool setServiceType(
-      const asio::ip::udp::endpoint &tInDestinationIPAddress,
-      EQOSServiceTypes eInServiceType,
-      ULONG ulInBandwidthInBitsPerSecond);
-   void setBandwidthQOS(
-      VOID* tInQOSUserParam,
-      EQOSDirection eInFlowDirection,
-      const asio::ip::udp::endpoint &tInDestinationIPAddress,
-      ULONG ulInBitsPerSecondToReserve);
-   ULONG getBandwidthQOS(
-      EQOSDirection eInFlowDirection,
-      const asio::ip::udp::endpoint &tInDestinationIPAddress);
+   void setOnBeforeSocketClosedFp(boost::function<void(unsigned int)> fp);
 
    const StunTuple& getLocalTuple();
    StunTuple getSessionTuple();  // returns either local, reflexive, or relay tuple depending on NatTraversalMode
@@ -154,14 +141,11 @@ private:
    void scheduleConnectivityChecks();
    void onConnectivityCheckTimer(const asio::error_code& error);
 
-   FlowHandler* mHandler;
    asio::io_service& mIOService;
    asio::deadline_timer mConnectivityCheckTimer;
 #ifdef USE_SSL
    asio::ssl::context& mSslContext;
 #endif
-   asio::deadline_timer mIcmpRetryTimer;
-   int mIcmpRetryCount;
 
    enum IceRole
    {
@@ -194,6 +178,8 @@ private:
    resip::Condition mShutdown;
    StunTuple mReflexiveTuple;
    StunTuple mRelayTuple;
+   FlowHandler* mHandler;
+
    resip::Data mRemoteSDPFingerprint;
    bool mIceComplete;
    resip::Data mOutgoingIceUsername;

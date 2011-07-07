@@ -14,6 +14,7 @@ class ApplicationMessage;
 class StatisticsManager;
 class SipStack;
 class Compression;
+class FdPollGrp;
 
 class TransactionController
 {
@@ -22,15 +23,19 @@ class TransactionController
       static unsigned int MaxTUFifoSize;
       static unsigned int MaxTUFifoTimeDepthSecs;
 
-      TransactionController(SipStack& stack);
+      TransactionController(SipStack& stack, FdPollGrp *pollGrp);
       ~TransactionController();
 
       void process(FdSet& fdset);
+      void processTimers();
       unsigned int getTimeTillNextProcessMS();
       void buildFdSet(FdSet& fdset);
-      
+
       // graceful shutdown (eventually)
       void shutdown();
+
+      // kill transports (after shutdown, before destructor)
+      void deleteTransports();
 
       TransportSelector& transportSelector() { return mTransportSelector; }
       const TransportSelector& transportSelector() const { return mTransportSelector; }
@@ -67,10 +72,12 @@ class TransactionController
       }
 
       void abandonServerTransaction(const Data& tid);
-
       void cancelClientInviteTransaction(const Data& tid);
+      void terminateFlow(const resip::Tuple& flow);
+      void enableFlowTimer(const resip::Tuple& flow);
 
    private:
+      void processEverything(FdSet* fdset);
       TransactionController(const TransactionController& rhs);
       TransactionController& operator=(const TransactionController& rhs);
       SipStack& mStack;
@@ -170,4 +177,5 @@ class TransactionController
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */

@@ -1,6 +1,7 @@
 #ifndef __RTPPORTALLOCATOR_HXX__
 #define __RTPPORTALLOCATOR_HXX__
 
+#include <asio.hpp>
 #include <set>
 
 namespace asio
@@ -27,13 +28,13 @@ namespace recon
       RTPPortAllocator(asio::io_service& ioService, resip::SharedPtr<UserAgentMasterProfile> uamp);
       virtual ~RTPPortAllocator();
 
-      virtual bool allocateUDPPort(unsigned int& port);
+      //virtual bool allocateUDPPortV4(unsigned int& port);
       virtual void freeUDPPort(unsigned int& port);
 
-      virtual bool allocateTCPPort(unsigned int& port);
+      //virtual bool allocateTCPPort(unsigned int& port);
       virtual void freeTCPPort(unsigned int& port);
 
-      virtual bool allocateRTPPort(unsigned int& rtpPort, unsigned int& rtcpPort);
+      virtual bool allocateRTPPort(const asio::ip::udp::socket::protocol_type& proto, unsigned int& rtpPort, unsigned int& rtcpPort);
       virtual void freeRTPPort(unsigned int& rtpPort, unsigned int& rtcpPort);
 
       /**
@@ -43,7 +44,8 @@ namespace recon
       virtual void freeRTPPort(unsigned int& rtpPort);
 
    private:
-      bool allocateRTPPortFromRange(unsigned int minPort, unsigned int maxPort, unsigned int& ulOutRTPPort, unsigned int& ulOutRTCPPort);
+      bool allocateRTPPortFromRange(unsigned int minPort, unsigned int maxPort, const asio::ip::udp::socket::protocol_type& proto, unsigned int& ulOutRTPPort, unsigned int& ulOutRTCPPort);
+      bool testUDPPort(unsigned int testPort, const asio::ip::udp::socket::protocol_type& proto);
 
    private:
       asio::io_service& mIOService;

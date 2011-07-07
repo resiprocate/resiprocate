@@ -33,6 +33,7 @@ class SipMessage;
 class TransactionController;
 class Security;
 class Compression;
+class FdPollGrp;
 
 /**
   TransportSelector has two distinct roles.  The first is transmit on the best
@@ -45,7 +46,7 @@ shareStackProcessAndSelect(), TransportSelector will call startOwnProcessing
 on Transport add.
 
 */
-class TransportSelector 
+class TransportSelector
 {
    public:
       TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub, Compression &compression);
@@ -55,20 +56,26 @@ class TransportSelector
 	    @retval false	No transport in the transport list has data to send
 	  */
       bool hasDataToSend() const;
-      
+
       /**
 		Shuts down all transports.
 	  */
       void shutdown();
-      
+
       /// Returns true if all Transports have their buffers cleared, false otherwise.
       bool isFinished() const;
-      
-      /// Calls process on all suitable transports and the DNSInterface
+
+      /// Configure a PollGrp to use (instead of buildFdSet/process)
+      /// Must be called before adding any transports
+      void setPollGrp(FdPollGrp *pollGrp);
+
+      /// Calls process on all suitable transports
+      /// NOTE that TransportSelector no longer handles DNSInterface
+      /// NOTE not used with pollGrp
       void process(FdSet& fdset);
-      /// Builds an FdSet comprised of all FDs from all suitable Transports and the DNSInterface
+      /// Builds an FdSet comprised of all FDs from all suitable Transports
       void buildFdSet(FdSet& fdset);
-     
+
       void addTransport( std::auto_ptr<Transport> transport);
 
       DnsResult* createDnsResult(DnsHandler* handler);
@@ -81,10 +88,10 @@ class TransportSelector
        message to be encoded and via updated
 	  */
       void transmit( SipMessage* msg, Tuple& target );
-      
+
       /// Resend to the same transport as last time
       void retransmit(SipMessage* msg, Tuple& target );
-      
+
       unsigned int sumTransportFifoSizes() const;
 
       unsigned int getTimeTillNextProcessMS();
@@ -96,36 +103,45 @@ class TransportSelector
 
       static Tuple getFirstInterface(bool is_v4, TransportType type);
       bool connectionAlive(const Tuple& dest) const;
-      
+      void terminateFlow(const resip::Tuple& flow);
+      void enableFlowTimer(const resip::Tuple& flow);
+
+      /// delete all known transports (including external)
+      void deleteTransports();
+
    private:
-      const Connection* findConnection(const Tuple& dest) const;
-      Transport* findTransportBySource(Tuple& src);
+      Connection* findConnection(const Tuple& dest) const;
+      Transport* findTransportBySource(Tuple& src) const;
+      Transport* findLoopbackTransportBySource(bool ignorePort, Tuple& src) const;
       Transport* findTransportByDest(SipMessage* msg, Tuple& dest);
+      Transport* findTransportByVia(SipMessage* msg, const Tuple& dest,
+        Tuple& src) const;
       Transport* findTlsTransport(const Data& domain,TransportType type,IpVersion ipv);
       Tuple determineSourceInterface(SipMessage* msg, const Tuple& dest) const;
+
 
       DnsInterface mDns;
       Fifo<TransactionMessage>& mStateMacFifo;
       Security* mSecurity;// for computing identity header
 
       // specific port and interface
-      typedef std::map<Tuple, Transport*> ExactTupleMap;
-      ExactTupleMap mExactTransports;
+      typedef std::map<Tuple, Transport*> ExactTupleMap;  
+      ExactTupleMap mExactTransports;  // owns transport pointers
 
       // specific port, ANY interface
       typedef std::map<Tuple, Transport*, Tuple::AnyInterfaceCompare> AnyInterfaceTupleMap;
-      AnyInterfaceTupleMap mAnyInterfaceTransports;
+      AnyInterfaceTupleMap mAnyInterfaceTransports;  // owns transport pointers
 
       // ANY port, specific interface
       typedef std::map<Tuple, Transport*, Tuple::AnyPortCompare> AnyPortTupleMap;
-      AnyPortTupleMap mAnyPortTransports;
+      AnyPortTupleMap mAnyPortTransports;   // references transport pointers owened by mExactTransports
 
       // ANY port, ANY interface
       typedef std::map<Tuple, Transport*, Tuple::AnyPortAnyInterfaceCompare> AnyPortAnyInterfaceTupleMap;
-      AnyPortAnyInterfaceTupleMap mAnyPortAnyInterfaceTransports;
+      AnyPortAnyInterfaceTupleMap mAnyPortAnyInterfaceTransports;    // references transport pointers owened by mAnyInterfaceTransports
 
-      std::map<FlowKey,Transport*> mConnectionlessMap;
-      
+      std::map<FlowKey,Transport*> mConnectionlessMap;   // references transport pointers owned by mExactTransports, mAnyInterfaceTransports, or mTlsTransports
+
       class TlsTransportKey
       {
          public:
@@ -134,14 +150,14 @@ class TransportSelector
                mType(type),
                mVersion(version)
             {}
-            
+
             TlsTransportKey(const TlsTransportKey& orig)
             {
                mDomain=orig.mDomain;
                mType=orig.mType;
                mVersion=orig.mVersion;
             }
-            
+
             ~TlsTransportKey(){}
             bool operator<(const TlsTransportKey& rhs) const
             {
@@ -162,22 +178,22 @@ class TransportSelector
                }
                return false;
             }
-            
+
             resip::Data mDomain;
             resip::TransportType mType;
             resip::IpVersion mVersion;
-         
+
          private:
             TlsTransportKey();
       };
-      
-      typedef std::map<TlsTransportKey, Transport*> TlsTransportMap ;
-      
+
+      typedef std::map<TlsTransportKey, Transport*> TlsTransportMap ;  // owns transport pointers
+
       TlsTransportMap mTlsTransports;
 
       typedef std::vector<Transport*> TransportList;
-      TransportList mSharedProcessTransports;
-      TransportList mHasOwnProcessTransports;
+      TransportList mSharedProcessTransports;   // references transport pointers owned by mExactTransports, mAnyInterfaceTransports, or mTlsTransports
+      TransportList mHasOwnProcessTransports;   // references transport pointers owned by mExactTransports, mAnyInterfaceTransports, or mTlsTransports
 
       typedef std::multimap<Tuple, Transport*, Tuple::AnyPortAnyInterfaceCompare> TypeToTransportMap;
       TypeToTransportMap mTypeToTransportMap;
@@ -185,7 +201,7 @@ class TransportSelector
       // fake socket for connect() and route table lookups
       mutable Socket mSocket;
       mutable Socket mSocket6;
-      
+
       // An AF_UNSPEC addr_in for rapid unconnect
       GenericIPAddress mUnspecified;
       GenericIPAddress mUnspecified6;
@@ -193,6 +209,9 @@ class TransportSelector
       /// SigComp configuration object
       Compression &mCompression;
       osc::Stack  *mSigcompStack;
+
+      // epoll support, for sharedprocess transports
+      FdPollGrp* mPollGrp;
 
       friend class TestTransportSelector;
       friend class SipStack; // for debug only
@@ -203,22 +222,22 @@ class TransportSelector
 #endif
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -228,7 +247,7 @@ class TransportSelector
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -242,12 +261,13 @@ class TransportSelector
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */

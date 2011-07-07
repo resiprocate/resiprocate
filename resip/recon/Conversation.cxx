@@ -108,11 +108,18 @@ Conversation::modifyParticipantContribution(Participant* participant, unsigned i
 
 bool 
 Conversation::shouldHold() 
-{ 
-   // We should be offering a hold SDP if there is no LocalParticipant 
-   // in the conversation and there are no other remote participants     or
-   // there are no remote participants at all
-   return (mNumLocalParticipants == 0 && (mNumRemoteParticipants+mNumMediaParticipants) <= 1) || mNumRemoteParticipants == 0; 
+{
+   // Hold if there are no remote participants, or if there are
+   // no local participants.
+   if( mNumRemoteParticipants == 0 || mNumLocalParticipants == 0 )
+      return true;
+
+   // Otherwise, don't hold. Note that this totally disregards the
+   // media participants, the reason is because media participants may be
+   // used to stream locally generated music-on-hold to the remote party,
+   // and therefore need to be in the conversation with remote parties
+   // (and this is considered to be "hold")
+   return false;
 }  
 
 void

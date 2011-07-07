@@ -57,7 +57,7 @@ RemoteParticipantDialogSet::RemoteParticipantDialogSet(ConversationManager& conv
    mSecureMediaRequired(false),
    mMediaConnectionId(0),
    mConnectionPortOnBridge(-1),
-   mAudioDirection(ConversationManager::MediaDirection_SendReceive),
+   mAudioDirection(ConversationManager::MediaDirection_None),
    mVideoDirection(ConversationManager::MediaDirection_None)
 {
    mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_NONE ]        = 0;
@@ -181,7 +181,7 @@ RemoteParticipantDialogSet::selectUASUserProfile(const SipMessage& msg)
 }
 
 unsigned int
-RemoteParticipantDialogSet::getLocalRTPPort( const sdpcontainer::SdpMediaLine::SdpMediaType& mediaType, ConversationProfile* profile /* = NULL */ )
+RemoteParticipantDialogSet::getLocalRTPPort(const sdpcontainer::SdpMediaLine::SdpMediaType& mediaType, bool v6, ConversationProfile* profile /* = NULL */)
 {
    if(mLocalRTPPortMap[ mediaType ] == 0)
    {
@@ -189,14 +189,14 @@ RemoteParticipantDialogSet::getLocalRTPPort( const sdpcontainer::SdpMediaLine::S
       bool isUAC = false;
 
       unsigned int ulRTPPort = 0, ulRTCPPort = 0;
-      if( !rtpAllocator->allocateRTPPort( ulRTPPort, ulRTCPPort ))
+      if (!rtpAllocator->allocateRTPPort((v6 ? asio::ip::udp::v6() : asio::ip::udp::v4()), ulRTPPort, ulRTCPPort))
       {
          WarningLog(<< "Could not allocate a free RTP port for RemoteParticipantDialogSet!");
          return 0;
       }
 
-      mLocalRTPPortMap[ mediaType ] = ulRTPPort;
-      InfoLog(<< "Port allocated: " << mLocalRTPPortMap[ mediaType ]);
+      mLocalRTPPortMap[mediaType] = ulRTPPort;
+      InfoLog(<< "Port allocated: " << mLocalRTPPortMap[mediaType]);
 
       // UAS Dialogs should have a user profile at this point - for UAC to get default outgoing
       if ( profile == NULL )
@@ -240,7 +240,10 @@ RemoteParticipantDialogSet::getLocalRTPPort( const sdpcontainer::SdpMediaLine::S
       }
 
       // Set other Srtp properties
-      mLocalSrtpSessionKey = Random::getCryptoRandom(SRTP_MASTER_KEY_LEN);
+      if (mLocalSrtpSessionKey.empty())
+      {
+         mLocalSrtpSessionKey = Random::getCryptoRandom(SRTP_MASTER_KEY_LEN);
+      }
 
 #ifdef DISABLE_FLOWMANAGER_IF_NO_NAT_TRAVERSAL
       if(mNatTraversalMode != MediaStream::NoNatTraversal)
@@ -277,6 +280,21 @@ RemoteParticipantDialogSet::getLocalRTPPort( const sdpcontainer::SdpMediaLine::S
    }
 
    return mLocalRTPPortMap[ mediaType ];
+}
+
+void 
+RemoteParticipantDialogSet::freeLocalRTPPort(const sdpcontainer::SdpMediaLine::SdpMediaType& mediaType)
+{
+   if (mLocalRTPPortMap[mediaType] != 0)
+   {
+      RTPPortAllocator* rtpAllocator = mConversationManager.mRTPAllocator;
+      rtpAllocator->freeRTPPort(mLocalRTPPortMap[mediaType]);
+      mLocalRTPPortMap[mediaType] = 0;
+      mRtpStreamMap.erase(mediaType);
+      mRtpTupleMap.erase(mediaType);
+      mRtcpTupleMap.erase(mediaType);
+      mMediaStreamMap.erase(mediaType);
+   }
 }
 
 sdpcontainer::SdpMediaLine::SdpMediaType
@@ -761,7 +779,7 @@ RemoteParticipantDialogSet::setActiveDestination(sdpcontainer::SdpMediaLine::Sdp
    {
       ms->getRtpFlow()->setActiveDestination(address, rtpPort, rtpCandidates);
    }
-   if(ms && ms->getRtcpFlow())
+   if(ms && ms->getRtcpFlow() && (rtcpPort > 0))
    {
       ms->getRtcpFlow()->setActiveDestination(address, rtcpPort, rtcpCandidates);
    }
@@ -806,6 +824,16 @@ RemoteParticipantDialogSet::setRemoteSDPFingerprint(const resip::Data& fingerpri
    }
 }
 #endif // USE_DTLS
+
+void
+RemoteParticipantDialogSet::setSrtpEnabled(sdpcontainer::SdpMediaLine::SdpMediaType mediaType, bool enabled)
+{
+   flowmanager::MediaStream* ms = mMediaStreamMap[mediaType];
+   if(ms)
+   {
+      ms->setSRTPEnabled(enabled);
+   }
+}
 
 bool
 RemoteParticipantDialogSet::createSRTPSession(sdpcontainer::SdpMediaLine::SdpMediaType mediaType, flowmanager::MediaStream::SrtpCryptoSuite cryptoSuite, const char* remoteKey, unsigned int remoteKeyLen)
@@ -963,6 +991,8 @@ RemoteParticipantDialogSet::isStaleFork(const DialogId& dialogId)
 void
 RemoteParticipantDialogSet::removeDialog(const DialogId& dialogId)
 {
+   // !jjg! is DUM still alive?
+
    std::map<DialogId, RemoteParticipant*>::iterator it = mDialogs.find(dialogId);
    if(it == mDialogs.end())
    {
@@ -979,7 +1009,7 @@ RemoteParticipantDialogSet::removeDialog(const DialogId& dialogId)
    }
 
    // If we have no more dialogs and we never went connected - make sure we cancel the Invite transaction
-   if(mDialogs.size() == 0 && !isUACConnected() && !isUACRedirected())
+   if(mDialogs.size() == 0 && !isUACConnected() && !isUACRedirected() && !isDumDeleted())
    {
       end();
    }

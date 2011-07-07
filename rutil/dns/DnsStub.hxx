@@ -23,6 +23,7 @@
 
 namespace resip
 {
+class FdPollGrp;
 
 template<typename T>
 class DNSResult
@@ -116,7 +117,8 @@ class DnsStub : public ExternalDnsHandler
 
       DnsStub(const NameserverList& additional = EmptyNameserverList,
               AfterSocketCreationFuncPtr socketFunc = 0,
-              AsyncProcessHandler* asyncProcessHandler = 0);
+              AsyncProcessHandler* asyncProcessHandler = 0,
+              FdPollGrp *pollGrp = 0);
       ~DnsStub();
 
       // call this method before you create SipStack if you'd like to change the
@@ -134,7 +136,10 @@ class DnsStub : public ExternalDnsHandler
       const std::vector<Data>& getEnumSuffixes() const;
       void clearDnsCache();
       void logDnsCache();
+      void setDnsCacheTTL(int ttl);
+      void setDnsCacheSize(int size);
       bool checkDnsChange();
+      bool supportedType(int);
 
       template<class QueryType> void lookup(const Data& target, DnsResultSink* sink)
       {
@@ -157,12 +162,16 @@ class DnsStub : public ExternalDnsHandler
          }
       }
 
+      virtual void handleDnsRaw(ExternalDnsRawResult);
+
       void process(FdSet& fdset);
-      bool requiresProcess();
+      unsigned int getTimeTillNextProcessMS();
       void buildFdSet(FdSet& fdset);
 
-      virtual void handleDnsRaw(ExternalDnsRawResult);
-      
+      void processTimers();
+  private:
+      void processFifo();
+
    protected:
       void cache(const Data& key, in_addr addr);
       void cache(const Data& key, const unsigned char* abuf, int alen);
@@ -350,7 +359,6 @@ class DnsStub : public ExternalDnsHandler
       const unsigned char* skipDNSQuestion(const unsigned char *aptr,
                                            const unsigned char *abuf,
                                            int alen);
-      bool supportedType(int);
       const unsigned char* createOverlay(const unsigned char* abuf, 
                                          const int alen, 
                                          const unsigned char* aptr, 
@@ -372,6 +380,9 @@ class DnsStub : public ExternalDnsHandler
 
       /// if this object exists, it gets notified when ApplicationMessage's get posted
       AsyncProcessHandler* mAsyncProcessHandler;
+
+      /// Dns Cache
+      RRCache mRRCache;
 };
 
 typedef DnsStub::Protocol Protocol;

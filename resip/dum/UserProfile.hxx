@@ -5,6 +5,7 @@
 #include <set>
 #include "resip/stack/Headers.hxx"
 #include "resip/stack/MethodTypes.hxx"
+#include "resip/stack/Tuple.hxx"
 #include "resip/dum/Profile.hxx"
 
 namespace resip
@@ -22,32 +23,18 @@ class UserProfile : public Profile
       virtual void setDefaultFrom(const NameAddr& from);
       virtual NameAddr& getDefaultFrom();
 
-      virtual void setServiceRoute( const NameAddrs& sRoute);
+      virtual void setServiceRoute(const NameAddrs& sRoute);
       virtual NameAddrs& getServiceRoute();
       
-      virtual void setImsAuthUser( const Data& userName, const Data& host )
-      {
-         mImsAuthUserName = userName;
-		 mImsAuthHost = host;
-      }
-      
-      virtual Data& getImsAuthUserName()
-      {
-         return mImsAuthUserName;
-      }
-      
-      virtual Data& getImsAuthHost()
-      {
-         return mImsAuthHost;
-      }
+      virtual void setImsAuthUser(const Data& userName, const Data& host) { mImsAuthUserName = userName; mImsAuthHost = host; }      
+      virtual Data& getImsAuthUserName() { return mImsAuthUserName; }      
+      virtual Data& getImsAuthHost() { return mImsAuthHost; }
 
       // Returns a UserProfile that will return a UserProfile that can be used
       // to send requests according to RFC 3323 and RFC 3325
-      virtual SharedPtr<UserProfile> getAnonymousUserProfile() const;
-      
+      virtual SharedPtr<UserProfile> getAnonymousUserProfile() const;      
       bool isAnonymous() const;
       
-
       // !cj! - this GRUU stuff looks very suspect
       // !dcm! -- yep, I don't think you can adda gruu..and disabling is weird.
       //Anon should be on a per-call level...all of these will prob. go away.
@@ -60,7 +47,7 @@ class UserProfile : public Profile
       virtual NameAddr& getGruu(const Data& aor);
       virtual NameAddr& getGruu(const Data& aor, const NameAddr& contact);
 
-      //should do Supported wrangling--but what if rquired is desired? Same as 100rel?
+      //should do Supported wrangling--but what if required is desired? Same as 100rel?
       virtual bool& gruuEnabled() { return mGruuEnabled; }
       virtual bool gruuEnabled() const { return mGruuEnabled; }
 
@@ -71,35 +58,64 @@ class UserProfile : public Profile
       virtual bool hasTempGruu() const { return !mTempGruu.host().empty(); }
       virtual const Uri& getTempGruu() { return mTempGruu; }
       virtual void setTempGruu(const Uri& gruu) { mTempGruu = gruu; }
-
-      virtual bool hasInstanceId();
-      virtual void setInstanceId(const Data& id);
-      virtual const Data& getInstanceId() const;
       
       struct DigestCredential
       {
             DigestCredential(); 
             DigestCredential(const Data& realm, 
                              const Data& username, 
-                             const Data& pwd);
+                             const Data& pwd,
+                             bool isPasswordA1Hash);
             DigestCredential(const Data& realm);
                              
             Data realm;
             Data user;
-//            Data passwordHashA1;
             Data password;            
+            bool isPasswordA1Hash;
 
             bool operator<(const DigestCredential& rhs) const;
       };
       
       /// The following functions deal with clearing, setting and getting of digest credentals 
       virtual void clearDigestCredentials();
+      /// For the password you may either provide the plain text password (isPasswordA1Hash = false)
+      /// or the Digest A1 MD5 Hash (isPasswordA1Hash = true).  Note:  If the A1 hash is provided
+      /// then the realm MUST match the realm in the challenge or authentication will fail.  If the
+      /// plain text password is provided, then we will form the A1 hash using the realm from
+      /// the challenge.
       virtual void setDigestCredential( const Data& realm, 
                                         const Data& user, 
-                                        const Data& password);
+                                        const Data& password,
+                                        bool isPasswordA1Hash=false);
       virtual const DigestCredential& getDigestCredential( const Data& realm  );
+
+      // Enable this to enable RFC5626 support in DUM - adds regId to registrations, and 
+      // ;ob parameter to Path, Route, and Contact headers
+      // Warning:  You MUST set an instanceId, a regId and an outbound proxy if you enable 
+      // clientOutbound support.  You MUST also ensure that you add the following Supported
+      // options:
+      // profile->addSupportedOptionTag(Token(Symbols::Outbound));  // RFC 5626 - outbound
+      // profile->addSupportedOptionTag(Token(Symbols::Path));      // RFC 3327 - path
+      virtual bool& clientOutboundEnabled() { return mClientOutboundEnabled; }
+      virtual bool clientOutboundEnabled() const { return mClientOutboundEnabled; }
+
+      // Outbound (RFC5626) instanceId used in contact headers
+      virtual bool hasInstanceId();
+      virtual void setInstanceId(const Data& id);
+      virtual const Data& getInstanceId() const;
+
+      // Outbound (RFC5626) regId used in registrations
+      virtual void setRegId(int regId) { mRegId = regId; }
+      virtual int getRegId() { return mRegId; }
+
+      // Returns the current Flow Tuple that is being used for communication on usages
+      // that use this profile
+      const Tuple& getClientOutboundFlowTuple() const { return mClientOutboundFlowTuple; }
+      void clearClientOutboundFlowTuple() { mClientOutboundFlowTuple = Tuple(); }
+
    protected:
       virtual UserProfile* clone() const;
+
    private:
       NameAddr mDefaultFrom;
       Data mInstanceId;
@@ -109,7 +125,14 @@ class UserProfile : public Profile
       bool mGruuEnabled;
       Uri mPubGruu;
       Uri mTempGruu;
-      bool mIsAnonymous;
+      const static NameAddr mAnonymous;
+
+      int mRegId;
+      bool mClientOutboundEnabled;
+      friend class DialogUsageManager;  // Give DialogUsageManager, ClientRegistration, and Dialog access to mClientOutboundFlowKey
+      friend class ClientRegistration;
+      friend class Dialog;
+      Tuple mClientOutboundFlowTuple;
       
       typedef std::set<DigestCredential> DigestCredentials;
       DigestCredentials mDigestCredentials;

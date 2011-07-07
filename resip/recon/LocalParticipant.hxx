@@ -10,8 +10,8 @@ class ConversationManager;
 
 /**
   This class represents a local participant.
-  A local participant is a representation of the local source (speaker) 
-  and sink (microphone).  The local participant is generally only 
+  A local participant is a representation of the local source (speaker),
+  sink (microphone), and source (video). The local participant is generally only 
   created once and is added to conversations in which the local speaker 
   and/or microphone should be involved. 
 
@@ -28,7 +28,9 @@ class LocalParticipant : public Participant
       virtual int getConnectionPortOnBridge();
       virtual void destroyParticipant(const resip::Data& appDefinedReason = resip::Data::Empty);
 
-   protected:     
+      virtual void addToConversation(Conversation* conversation, unsigned int inputGain = 100, unsigned int outputGain = 100);
+      virtual void removeFromConversation(Conversation* conversation, bool bTriggeredHold );
+
    private:
       int mLocalPortOnBridge;
 };

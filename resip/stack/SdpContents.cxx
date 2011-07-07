@@ -79,7 +79,7 @@ AttributeHelper::operator=(const AttributeHelper& rhs)
 }
 
 bool
-AttributeHelper::exists(const Data& key, bool bCheckMediaLine, bool bCheckSession) const
+AttributeHelper::exists(const Data& key) const
 {
    return mAttributes.find(key) != mAttributes.end();
 }
@@ -1312,6 +1312,7 @@ SdpContents::Session::Medium::parse(ParseBuffer& pb)
    pb.skipToOneOf(Symbols::SPACE, Symbols::CRLF);
    pb.data(mProtocol, anchor);
 
+   mFormats.clear();
    while (*pb.position() != Symbols::CR[0] &&
           *pb.position() != Symbols::LF[0])
    {
@@ -1350,7 +1351,7 @@ SdpContents::Session::Medium::parse(ParseBuffer& pb)
 
          Connection& con = mConnections.back();
          const Data& addr = con.getAddress();
-         int i = addr.size() - 1;
+         size_t i = addr.size() - 1;
          for (; i; i--)
          {
             if (addr[i] == '.' || addr[i] == ':') // ipv4 or ipv6
@@ -1545,16 +1546,19 @@ SdpContents::Session::Medium::getConnections() const
 }
 
 bool
-SdpContents::Session::Medium::exists(const Data& key, bool bCheckMediaLine, bool bCheckSession ) const
+SdpContents::Session::Medium::exists(const Data& key) const
 {
-   bool result = false;
-   if( bCheckMediaLine )
-      result = mAttributeHelper.exists( key );
+   if (mAttributeHelper.exists(key))
+   {
+      return true;
+   }
+   return mSession && mSession->exists(key);
+}
 
-   if( bCheckSession && mSession )
-      result |= mSession->exists( key );
-
-   return result;
+bool
+SdpContents::Session::Medium::existsInMedium(const Data& key) const
+{
+   return mAttributeHelper.exists(key);
 }
 
 const list<Data>&
@@ -1668,7 +1672,7 @@ SdpContents::Session::Medium::codecs()
       }
 
       // don't store twice
-      mFormats.clear();
+      //mFormats.clear();
       mAttributeHelper.clearAttribute(rtpmap);
       mAttributeHelper.clearAttribute(fmtp);  // parsed out in codec.parse
    }
@@ -1677,11 +1681,11 @@ SdpContents::Session::Medium::codecs()
    return mCodecs;
 }
 
+static Codec emptyCodec;
 const Codec& 
 SdpContents::Session::Medium::findFirstMatchingCodecs(const CodecContainer& codecList, Codec* pMatchingCodec) const
 {
    const CodecContainer& internalCodecList = codecs();
-   static Codec emptyCodec;
    resip::SdpContents::Session::Medium::CodecContainer::const_iterator sIter;
    resip::SdpContents::Session::Medium::CodecContainer::const_iterator sEnd = internalCodecList.end();
    resip::SdpContents::Session::Medium::CodecContainer::const_iterator eIter;

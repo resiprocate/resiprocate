@@ -45,6 +45,7 @@
 #include "ares_private.h"
 
 #if defined(__APPLE__) || defined(__MACH__)
+#include <TargetConditionals.h>
 #define __CF_USE_FRAMEWORK_INCLUDES__
 #include <SystemConfiguration/SystemConfiguration.h>
 #endif
@@ -145,6 +146,8 @@ int ares_init_options_with_socket_function(ares_channel *channelptr, struct ares
    * been set yet.
    */
   channel->socket_function = socketFunc;  
+  channel->poll_cb_func = NULL;
+  channel->poll_cb_data = NULL;
   channel->flags = -1;
   channel->timeout = -1;
   channel->tries = -1;
@@ -238,31 +241,33 @@ static int init_by_options(ares_channel channel, struct ares_options *options,
      channel->tcp_port = options->tcp_port;
 
   /* Copy the servers, if given. */
-  if ((optmask & ARES_OPT_SERVERS) && channel->nservers == -1)
+  if ((optmask & ARES_OPT_SERVERS) && channel->nservers == -1 && options->nservers>0 )
   {
      channel->servers =
         malloc(options->nservers * sizeof(struct server_state));
-     if (!channel->servers && options->nservers != 0)
+     if (channel->servers == NULL)
         return ARES_ENOMEM;
      memset(channel->servers, '\0', options->nservers * sizeof(struct server_state));
      for (i = 0; i < options->nservers; i++)
      {
 #ifdef USE_IPV6
-		channel->servers[i].family = options->servers[i].family;
-		if (options->servers[i].family == AF_INET6)
-		{
-		  channel->servers[i].addr6 = options->servers[i].addr6;
-		}
-		else
-		{
-		  channel->servers[i].addr = options->servers[i].addr;
-		}
+	channel->servers[i].family = options->servers[i].family;
+	if (options->servers[i].family == AF_INET6)
+	{
+	  channel->servers[i].addr6 = options->servers[i].addr6;
+	}
+	else
+	{
+	  assert( channel->servers[i].family == AF_INET );
+	  channel->servers[i].addr = options->servers[i].addr;
+	}
 #else	  
-		channel->servers[i].addr = options->servers[i];
+	channel->servers[i].addr = options->servers[i];
 #endif
+	// .kw. why is this inside the loop?
         channel->nservers = options->nservers;
-	  }
-    }
+     }
+  }
 
   /* Copy the domains, if given.  Keep channel->ndomains consistent so
    * we can clean up in case of error.
@@ -390,9 +395,13 @@ static int init_by_resolv_conf(ares_channel channel)
 static void init_by_defaults_systemconfiguration(ares_channel channel)
 {
   SCDynamicStoreContext context = {0, NULL, NULL, NULL, NULL};
-  SCDynamicStoreRef store = SCDynamicStoreCreate(NULL, CFSTR("init_by_defaults_systemconfiguration"), NULL, &context);
+  SCDynamicStoreRef store = 0;
   
   channel->nservers = 0;
+  // .amr. iPhone/iOS SDK's don't support SCDynamicStoreCreate so in that case fall back
+  // to the nservers=0 case.
+#ifndef TARGET_OS_IPHONE
+  store = SCDynamicStoreCreate(NULL, CFSTR("init_by_defaults_systemconfiguration"), NULL, &context);
 
   if (store)
   {
@@ -429,21 +438,23 @@ static void init_by_defaults_systemconfiguration(ares_channel channel)
       CFRelease(dnsDict);
     }
 
-    /* If no specified servers, try a local named. */
-    if (channel->nservers == 0)
-    {
-      channel->servers = malloc(sizeof(struct server_state));
-      memset(channel->servers, '\0', sizeof(struct server_state));
-
-#ifdef USE_IPV6			 
-      channel->servers[0].family = AF_INET;
-#endif
-
-      channel->servers[0].addr.s_addr = htonl(INADDR_LOOPBACK);
-      channel->nservers = 1;
-    }
-
     CFRelease(store);
+  }
+#endif // TARGET_OS_IPHONE
+
+  /* If no specified servers, try a local named. */
+  if (channel->nservers == 0)
+  {
+    channel->servers = malloc(sizeof(struct server_state));
+    memset(channel->servers, '\0', sizeof(struct server_state));
+		
+#ifdef USE_IPV6			 
+    channel->servers[0].family = AF_INET;
+#endif
+		
+    channel->servers[0].addr.s_addr = htonl(INADDR_LOOPBACK);
+    channel->servers[0].default_localhost_server = 1;
+    channel->nservers = 1;
   }
 }
 #endif
@@ -577,6 +588,7 @@ static int init_by_defaults(ares_channel channel)
 #endif
 
 		   channel->servers[0].addr.s_addr = htonl(INADDR_LOOPBACK);
+           channel->servers[0].default_localhost_server = 1;
 		   channel->nservers = 1;
         }
 
@@ -595,6 +607,8 @@ static int init_by_defaults(ares_channel channel)
 		// need a way to test here if v4 or v6 is running
 		// if v4 is running...
 		channel->servers[0].addr.s_addr = htonl(INADDR_LOOPBACK);
+        channel->servers[0].default_localhost_server = 1;
+
 		// if v6 is running...
         //	channel->servers[0].addr6.s_addr = htonl6(IN6ADDR_LOOPBACK_INIT);
 		// hard to decide if there is one server or two here
@@ -737,7 +751,7 @@ static int config_sortlist(struct apattern **sortlist, int *nsort,
       q = str;
       while (*q && *q != '/' && *q != ';' && !isspace((unsigned char)*q))
 	q++;
-      if (ip_addr(str, q - str, &pat.addr) == 0)
+      if (ip_addr(str, (int)(q - str), &pat.addr) == 0)
 	{
 	  /* We have a pattern address; now determine the mask. */
 	  if (*q == '/')
@@ -745,7 +759,7 @@ static int config_sortlist(struct apattern **sortlist, int *nsort,
 	      str = q + 1;
 	      while (*q && *q != ';' && !isspace((unsigned char)*q))
 		q++;
-	      if (ip_addr(str, q - str, &pat.mask) != 0)
+	      if (ip_addr(str, (int)(q - str), &pat.mask) != 0)
 		natural_mask(&pat);
 	    }
 	  else
@@ -848,7 +862,7 @@ static char *try_config(char *s, char *opt)
 {
   int len;
 
-  len = strlen(opt);
+  len = (int)strlen(opt);
   if (strncmp(s, opt, len) != 0 || !isspace((unsigned char)s[len]))
     return NULL;
   s += len;
@@ -861,7 +875,7 @@ static const char *try_option(const char *p, const char *q, const char *opt)
 {
   int len;
 
-  len = strlen(opt);
+  len = (int)strlen(opt);
   return (q - p > len && strncmp(p, opt, len) == 0) ? p + len : NULL;
 }
 
@@ -1102,7 +1116,7 @@ inet_pton6(const char *src, u_char *dst)
        * Since some memmove()'s erroneously fail to handle
        * overlapping regions, we'll do the shift by hand.
        */
-      const int n = tp - colonp;
+      const int n = (int)(tp - colonp);
       int i;
 
       for (i = 1; i <= n; i++) {
@@ -1143,7 +1157,7 @@ inet_pton4(const char *src, u_char *dst)
       const char *pch;
 
       if ((pch = strchr(digits, ch)) != NULL) {
-         u_int newVal = *tp * 10 + (pch - digits);
+         u_int newVal = (u_int)(*tp * 10 + (pch - digits));
 
          if (newVal > 255)
             return (0);
@@ -1167,3 +1181,7 @@ inet_pton4(const char *src, u_char *dst)
    memcpy(dst, tmp, NS_INADDRSZ);
    return (1);
 }
+
+/*
+ * vi: set shiftwidth=3 expandtab:
+ */

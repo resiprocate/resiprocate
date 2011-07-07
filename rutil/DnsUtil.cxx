@@ -339,7 +339,7 @@ DnsUtil::canonicalizeIpV6Address(const Data& ipV6Address)
 #else
    // assert(0);
 
-   return Data::Empty;
+   return ipV6Address;
 #endif
 }
 
@@ -360,6 +360,7 @@ DnsUtil::getInterfaces(const Data& matching)
    struct ifconf ifc;
 
    int s = socket( AF_INET, SOCK_DGRAM, 0 );
+   assert( s != INVALID_SOCKET );	// can run out of file descs
    const int len = 100 * sizeof(struct ifreq);
    int maxRet = 40;
 
@@ -508,7 +509,7 @@ const char* inet_ntop4(const u_char *src, char *dst, size_t size);
 #ifdef USE_IPV6
 const char * inet_ntop6(const u_char *src, char *dst, size_t size);
 #endif
-//adapted from freebsd inet_ntop.c(1.12) and inet_pton.c(1.5) for windows(non-compliant snprinf workardound)
+//adapted from freebsd inet_ntop.c(1.12) and inet_pton.c(1.5) for windows(non-compliant snprinf workaround)
 /* const char *
  * inet_ntop4(src, dst, size)
  *	format an IPv4 address, more or less like inet_ntoa()
@@ -711,7 +712,7 @@ inet_pton4(const char *src, u_char *dst)
       const char *pch;
 
       if ((pch = strchr(digits, ch)) != NULL) {
-         u_int newVal = *tp * 10 + (pch - digits);
+         u_int newVal = u_int(*tp * 10 + (pch - digits));
 
          if (newVal > 255)
             return (0);
@@ -819,7 +820,7 @@ inet_pton6(const char *src, u_char *dst)
        * Since some memmove()'s erroneously fail to handle
        * overlapping regions, we'll do the shift by hand.
        */
-      const int n = tp - colonp;
+      const int n = int(tp - colonp);
       int i;
 
       for (i = 1; i <= n; i++) {

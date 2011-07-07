@@ -4,7 +4,6 @@
 #include "AsyncSocketBaseHandler.hxx"
 #include <rutil/Logger.hxx>
 #include "ReTurnSubsystem.hxx"
-#include "QosSocketManager.hxx"
 
 #define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
@@ -44,7 +43,7 @@ AsyncTcpSocketBase::bind(const asio::ip::address& address, unsigned short port)
 }
 
 void 
-AsyncTcpSocketBase::connect(const std::string& address, unsigned short port)
+AsyncTcpSocketBase::connect(const std::string& address, unsigned short port, bool is_v6)
 {
    // Start an asynchronous resolve to translate the address
    // into a list of endpoints.
@@ -194,26 +193,12 @@ AsyncTcpSocketBase::handleReadHeader(const asio::error_code& e)
 void 
 AsyncTcpSocketBase::transportClose()
 {
-   QosSocketManager::SocketClose(mSocket.native());
+   if (mOnBeforeSocketCloseFp)
+   {
+      mOnBeforeSocketCloseFp(mSocket.native());
+   }
 
    mSocket.close();
-}
-
-bool 
-AsyncTcpSocketBase::setDSCP(ULONG ulInDSCPValue)
-{
-   return QosSocketManager::SocketSetDSCP(mSocket.native(), ulInDSCPValue, false);
-}
-
-bool 
-AsyncTcpSocketBase::setServiceType(
-   const asio::ip::udp::endpoint &tInDestinationIPAddress,
-   EQOSServiceTypes eInServiceType,
-   ULONG ulInBandwidthInBitsPerSecond
-)
-{
-   return QosSocketManager::SocketSetServiceType(mSocket.native(), 
-      tInDestinationIPAddress, eInServiceType, ulInBandwidthInBitsPerSecond, false);
 }
 
 }

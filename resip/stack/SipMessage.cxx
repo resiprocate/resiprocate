@@ -225,7 +225,7 @@ SipMessage::make(const Data& data,  bool isExternal)
    msgHeaderScanner.prepareForMessage(msg);
    
    char *unprocessedCharPtr;
-   if (msgHeaderScanner.scanChunk(buffer, len, &unprocessedCharPtr) != MsgHeaderScanner::scrEnd)
+   if (msgHeaderScanner.scanChunk(buffer, (unsigned int)len, &unprocessedCharPtr) != MsgHeaderScanner::scrEnd)
    {
       DebugLog(<<"Scanner rejecting buffer as unparsable / fragmented.");
       DebugLog(<< data);
@@ -235,7 +235,7 @@ SipMessage::make(const Data& data,  bool isExternal)
    }
 
    // no pp error
-   unsigned int used = unprocessedCharPtr - buffer;
+   unsigned int used = (unsigned int)(unprocessedCharPtr - buffer);
 
    if (used < len)
    {
@@ -246,7 +246,7 @@ SipMessage::make(const Data& data,  bool isExternal)
       // it doesn't need a new buffer in UDP b/c there
       // will only be one datagram per buffer. (1:1 strict)
 
-      msg->setBody(buffer+used,len-used);
+      msg->setBody(buffer+used,UInt32(len-used));
       //DebugLog(<<"added " << len-used << " byte body");
    }
 
@@ -560,22 +560,52 @@ SipMessage::method() const
    return res;
 }
 
+const Data&
+SipMessage::methodStr() const
+{
+   if(method()!=UNKNOWN)
+   {
+      return getMethodName(method());
+   }
+   else
+   {
+      try
+      {
+         if(isRequest())
+         {
+            return header(h_RequestLine).unknownMethodName();
+         }
+         else if(isResponse())
+         {
+            return header(h_CSeq).unknownMethodName();
+         }
+         else
+         {
+            assert(0);
+         }
+      }
+      catch(resip::ParseException&)
+      {
+      }
+   }
+   return Data::Empty;
+}
+
+static const Data requestEB("SipReq:  ");
+static const Data responseEB("SipResp: ");
+static const Data tidEB(" tid=");
+static const Data contactEB(" contact=");
+static const Data cseqEB(" cseq=");
+static const Data slashEB(" / ");
+static const Data wireEB(" from(wire)");
+static const Data ftuEB(" from(tu)");
+static const Data tlsdEB(" tlsd=");
 EncodeStream&
 SipMessage::encodeBrief(EncodeStream& str) const
 {
-   static const Data  request("SipReq:  ");
-   static const Data response("SipResp: ");
-   static const Data tid(" tid=");
-   static const Data contact(" contact=");
-   static const Data cseq(" cseq=");
-   static const Data slash(" / ");
-   static const Data wire(" from(wire)");
-   static const Data ftu(" from(tu)");
-   static const Data tlsd(" tlsd=");
-
    if (isRequest()) 
    {
-      str << request;
+      str << requestEB;
       MethodTypes meth = header(h_RequestLine).getMethod();
       if (meth != UNKNOWN)
       {
@@ -591,12 +621,12 @@ SipMessage::encodeBrief(EncodeStream& str) const
    }
    else if (isResponse())
    {
-      str << response;
+      str << responseEB;
       str << header(h_StatusLine).responseCode();
    }
    if (!empty(h_Vias))
    {
-      str << tid;
+      str << tidEB;
       try
       {
          str << getTransactionId();
@@ -611,21 +641,14 @@ SipMessage::encodeBrief(EncodeStream& str) const
       str << " NO-VIAS ";
    }
 
-   str << cseq;
-   if (header(h_CSeq).method() != UNKNOWN)
-   {
-      str << getMethodName(header(h_CSeq).method());
-   }
-   else
-   {
-      str << header(h_CSeq).unknownMethodName();
-   }
+   str << cseqEB;
+   str << header(h_CSeq);
 
    try
    {
       if (!empty(h_Contacts))
       {
-         str << contact;
+         str << contactEB;
          str << header(h_Contacts).front().uri().getAor();
       }
    }
@@ -634,12 +657,12 @@ SipMessage::encodeBrief(EncodeStream& str) const
       str << " MALFORMED CONTACT ";
    }
    
-   str << slash;
+   str << slashEB;
    str << header(h_CSeq).sequence();
-   str << (mIsExternal ? wire : ftu);
+   str << (mIsExternal ? wireEB : ftuEB);
    if (!mTlsDomain.empty())
    {
-      str << tlsd << mTlsDomain;
+      str << tlsdEB << mTlsDomain;
    }
    
    return str;
@@ -682,9 +705,14 @@ SipMessage::encode(EncodeStream& str, bool isSipFrag) const
    }
    else if (mContentsHfv != 0)
    {
+#if 0
       // !bwc! This causes an additional copy; sure would be nice to have a way
       // to get a data to take on a buffer with Data::Share _after_ construction
       contents.append(mContentsHfv->mField, mContentsHfv->mFieldLength);
+#else
+      // .kw. Your wish is granted
+      mContentsHfv->toShareData(contents);
+#endif
    }
 
 
@@ -756,7 +784,7 @@ SipMessage::encodeEmbedded(EncodeStream& str) const
       i->second->encodeEmbedded(i->first, str);
    }
 
-   if (mContents != 0)
+   if (mContents != 0 || mContentsHfv != 0)
    {
       if (first)
       {
@@ -768,33 +796,26 @@ SipMessage::encodeEmbedded(EncodeStream& str) const
       }
       str << "body=";
       // !dlb! encode escaped for characters
+      // .kw. what does that mean? what needs to be escaped?
       Data contents;
+      if (mContents != 0)
       {
          DataStream s(contents);
          mContents->encode(s);
       }
-      str << Embedded::encode(contents);
-   }
-   else if (mContentsHfv != 0)
-   {
-      if (first)
-      {
-         str << Symbols::QUESTION;
-      }
       else
       {
-         str << Symbols::AMPERSAND;
-      }
-      str << "body=";
-      // !dlb! encode escaped for characters
-      Data contents;
-      {
-         DataStream s(contents);
-         mContentsHfv->encode(str);
+	 // .kw. Early code did:
+         // DataStream s(contents);
+         // mContentsHfv->encode(str);
+         // str << Embedded::encode(contents);
+	 // .kw. which I think is buggy b/c Hfv was written directly
+	 // to str and skipped the encode step via contents
+	  mContentsHfv->toShareData(contents);
       }
       str << Embedded::encode(contents);
    }
-   
+
    return str;
 }
 
@@ -861,7 +882,7 @@ SipMessage::setBody(const char* start, UInt32 len)
       {
          try
          {
-            header(h_ContentLength).checkParsed();
+            const_header(h_ContentLength).checkParsed();
          }
          catch(resip::ParseException& e)
          {
@@ -876,7 +897,7 @@ SipMessage::setBody(const char* start, UInt32 len)
             header(h_ContentLength).value()=len;
          }
          
-         UInt32 contentLength=header(h_ContentLength).value();
+         UInt32 contentLength=const_header(h_ContentLength).value();
          
          if(len > contentLength)
          {
@@ -912,6 +933,17 @@ SipMessage::setBody(const char* start, UInt32 len)
       mContentsHfv = new HeaderFieldValue(start,len);
    }
 }
+
+void
+SipMessage::setRawBody(const HeaderFieldValue* body)
+{
+   setContents(0);
+   if ( body && body->mFieldLength > 0 )
+   {
+      mContentsHfv = new HeaderFieldValue(*body);
+   }
+}
+
 
 void
 SipMessage::setContents(auto_ptr<Contents> contents)
@@ -979,48 +1011,48 @@ SipMessage::getContents() const
    if (mContents == 0 && mContentsHfv != 0)
    {
       if (empty(h_ContentType) ||
-            !header(h_ContentType).isWellFormed())
+            !const_header(h_ContentType).isWellFormed())
       {
          StackLog(<< "SipMessage::getContents: ContentType header does not exist - implies no contents");
          return 0;
       }
       DebugLog(<< "SipMessage::getContents: " 
-               << header(h_ContentType).type()
+               << const_header(h_ContentType).type()
                << "/"
-               << header(h_ContentType).subType());
+               << const_header(h_ContentType).subType());
 
-      if ( ContentsFactoryBase::getFactoryMap().find(header(h_ContentType)) == ContentsFactoryBase::getFactoryMap().end() )
+      if ( ContentsFactoryBase::getFactoryMap().find(const_header(h_ContentType)) == ContentsFactoryBase::getFactoryMap().end() )
       {
          InfoLog(<< "SipMessage::getContents: got content type ("
-                 << header(h_ContentType).type()
+                 << const_header(h_ContentType).type()
                  << "/"
-                 << header(h_ContentType).subType()
+                 << const_header(h_ContentType).subType()
                  << ") that is not known, "
                  << "returning as opaque application/octet-stream");
          mContents = ContentsFactoryBase::getFactoryMap()[OctetContents::getStaticType()]->create(mContentsHfv, OctetContents::getStaticType());
       }
       else
       {
-         mContents = ContentsFactoryBase::getFactoryMap()[header(h_ContentType)]->create(mContentsHfv, header(h_ContentType));
+         mContents = ContentsFactoryBase::getFactoryMap()[const_header(h_ContentType)]->create(mContentsHfv, const_header(h_ContentType));
       }
       assert( mContents );
       
       // copy contents headers into the contents
       if (!empty(h_ContentDisposition))
       {
-         mContents->header(h_ContentDisposition) = header(h_ContentDisposition);
+         mContents->header(h_ContentDisposition) = const_header(h_ContentDisposition);
       }
       if (!empty(h_ContentTransferEncoding))
       {
-         mContents->header(h_ContentTransferEncoding) = header(h_ContentTransferEncoding);
+         mContents->header(h_ContentTransferEncoding) = const_header(h_ContentTransferEncoding);
       }
       if (!empty(h_ContentLanguages))
       {
-         mContents->header(h_ContentLanguages) = header(h_ContentLanguages);
+         mContents->header(h_ContentLanguages) = const_header(h_ContentLanguages);
       }
       if (!empty(h_ContentType))
       {
-         mContents->header(h_ContentType) = header(h_ContentType);
+         mContents->header(h_ContentType) = const_header(h_ContentType);
       }
       // !dlb! Content-Transfer-Encoding?
    }
@@ -1030,19 +1062,15 @@ SipMessage::getContents() const
 auto_ptr<Contents>
 SipMessage::releaseContents()
 {
+   Contents* c=getContents();
    // .bwc. auto_ptr owns the Contents. No other references allowed!
-   auto_ptr<Contents> ret(getContents());
-   mContents = 0;
+   auto_ptr<Contents> ret(c ? c->clone() : 0);
+   setContents(std::auto_ptr<Contents>(0));
 
    if (ret.get() != 0 && !ret->isWellFormed())
    {
       ret.reset(0);
    }
-
-   // .bwc. At this point, the Contents object has been parsed, so we don't need
-   // this anymore.
-   delete mContentsHfv;
-   mContentsHfv=0;
 
    return ret;
 }
@@ -1051,7 +1079,7 @@ SipMessage::releaseContents()
 const StringCategories& 
 SipMessage::header(const ExtensionHeader& headerName) const
 {
-   for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
+   for (UnknownHeaders::const_iterator i = mUnknownHeaders.begin();
         i != mUnknownHeaders.end(); i++)
    {
       // !dlb! case sensitive?
@@ -1099,7 +1127,7 @@ SipMessage::header(const ExtensionHeader& headerName)
 bool
 SipMessage::exists(const ExtensionHeader& symbol) const
 {
-   for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
+   for (UnknownHeaders::const_iterator i = mUnknownHeaders.begin();
         i != mUnknownHeaders.end(); i++)
    {
       if (i->first == symbol.getName())
@@ -1282,7 +1310,7 @@ SipMessage::ensureHeaders(Headers::Type type, bool single)
       }
    }
 
-   return hfvs;
+   return const_cast<HeaderFieldValueList*>(hfvs);
 }
 
 HeaderFieldValueList* 
@@ -1312,7 +1340,7 @@ SipMessage::ensureHeaders(Headers::Type type, bool single) const
       }
    }
 
-   return hfvs;
+   return const_cast<HeaderFieldValueList*>(hfvs);
 }
 
 // type safe header accessors
@@ -1454,6 +1482,7 @@ defineHeader(RSeq, "RSeq", UInt32Category, "RFC 3261");
 
 // !dlb! this one is not quite right -- can have (comment) after field value
 defineHeader(RetryAfter, "Retry-After", UInt32Category, "RFC 3261");
+defineHeader(FlowTimer, "Flow-Timer", UInt32Category, "RFC 5626");
 
 defineHeader(Expires, "Expires", ExpiresCategory, "RFC 3261");
 defineHeader(SessionExpires, "Session-Expires", ExpiresCategory, "RFC 4028");
@@ -1604,7 +1633,7 @@ SipMessage::mergeUri(const Uri& source)
 }
 
 void 
-SipMessage::setSecurityAttributes(auto_ptr<SecurityAttributes> sec) const
+SipMessage::setSecurityAttributes(auto_ptr<SecurityAttributes> sec)
 {
    mSecurityAttributes = sec;
 }
@@ -1649,6 +1678,33 @@ SipMessage::rollbackOutboundDecorators()
    mIsDecorated = false;
 }
 
+void 
+SipMessage::copyOutboundDecoratorsToStackCancel(SipMessage& cancel)
+{
+  std::vector<MessageDecorator*>::iterator i;
+  for (i = mOutboundDecorators.begin();
+       i != mOutboundDecorators.end(); i++)
+  {
+     if((*i)->copyToStackCancels())
+     {
+        cancel.addOutboundDecorator(*(new auto_ptr<MessageDecorator>((*i)->clone())));
+     }    
+  }
+}
+
+void 
+SipMessage::copyOutboundDecoratorsToStackFailureAck(SipMessage& ack)
+{
+  std::vector<MessageDecorator*>::iterator i;
+  for (i = mOutboundDecorators.begin();
+       i != mOutboundDecorators.end(); i++)
+  {
+     if((*i)->copyToStackFailureAcks())
+     {
+        ack.addOutboundDecorator(*(new auto_ptr<MessageDecorator>((*i)->clone())));
+     }    
+  }
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -1698,4 +1754,5 @@ SipMessage::rollbackOutboundDecorators()
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */

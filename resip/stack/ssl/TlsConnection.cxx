@@ -5,6 +5,7 @@
 #if defined(USE_SSL)
 
 #include "resip/stack/ssl/TlsConnection.hxx"
+#include "resip/stack/ssl/TlsTransport.hxx"
 #include "resip/stack/ssl/Security.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/Uri.hxx"
@@ -57,17 +58,9 @@ TlsConnection::TlsConnection( Transport* transport, const Tuple& tuple,
    {
       DebugLog( << "Trying to form TLS connection - acting as client" );
    }
-
    assert( mSecurity );
-   SSL_CTX* ctx=NULL;
-   if ( mSslType ==  SecurityTypes::SSLv23 )
-   {
-      ctx = mSecurity->getSslCtx();
-   }
-   else
-   {
-      ctx = mSecurity->getTlsCtx();
-   }   
+
+   SSL_CTX* ctx=dynamic_cast<TlsTransport*>(transport)->getCtx();
    assert(ctx);
    
    mSsl = SSL_new(ctx);
@@ -75,54 +68,13 @@ TlsConnection::TlsConnection( Transport* transport, const Tuple& tuple,
 
    assert( mSecurity );
 
-   if(!mDomain.empty())
-   {
-      X509* cert = mSecurity->getDomainCert(mDomain); //mDomainCerts[mDomain];
-      if (!cert)
-      {
-         if(mServer)
-         {
-            ErrLog(<< "Don't have certificate for domain " << mDomain );
-            throw Security::Exception("getDomainCert failed",
-                                      __FILE__,__LINE__);
-         }
-      }
-      else
-      {      
-         if( !SSL_use_certificate(mSsl, cert) )
-         {
-            throw Security::Exception("SSL_use_certificate failed",
-                                      __FILE__,__LINE__);
-         }
-      }
-      
-      EVP_PKEY* pKey = mSecurity->getDomainKey(mDomain); //mDomainPrivateKeys[mDomain];
-      if (!pKey)
-      {
-         if(mServer)
-         {
-            ErrLog(<< "Don't have private key for domain " << mDomain );
-            throw Security::Exception("getDomainKey failed.",
-                                      __FILE__,__LINE__);
-         }
-      }
-      else
-      {
-         if ( !SSL_use_PrivateKey(mSsl, pKey) )
-         {
-            throw Security::Exception("SSL_use_PrivateKey failed.",
-                                      __FILE__,__LINE__);
-         }
-      }
-   }
-
    if(mServer)
    {
       // clear SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE set in SSL_CTX if we are a server
       SSL_set_verify(mSsl, 0, 0);
    }
 
-   mBio = BIO_new_socket(fd,0/*close flag*/);
+   mBio = BIO_new_socket((int)fd,0/*close flag*/);
    assert( mBio );
    
    SSL_set_bio( mSsl, mBio, mBio );
@@ -280,24 +232,11 @@ TlsConnection::checkState()
       bool matches = false;
       for(std::list<BaseSecurity::PeerName>::iterator it = mPeerNames.begin(); it != mPeerNames.end(); it++)
       {
-         if(it->mType == BaseSecurity::CommonName)
-         {
-            //allow wildcard match for subdomain name (RFC 2459)
-            if(BaseSecurity::matchHostName(it->mName, who().getTargetDomain()))
-            {
-               matches=true;
-               break;
-            }
-         }
-         else //it->mType == SubjectAltName
-      {
-            //no wildcards for SubjectAltName
-            if(isEqualNoCase(it->mName, who().getTargetDomain()))
+         if(BaseSecurity::matchHostName(it->mName, who().getTargetDomain()))
          {
              matches=true;
              break;
          }
-      }
       }
       if(!matches)
       {
@@ -316,7 +255,7 @@ TlsConnection::checkState()
    mTlsState = Up;
    if (!mOutstandingSends.empty())
    {
-   ensureWritable();
+      ensureWritable();
    }
 #endif // USE_SSL   
    return mTlsState;
@@ -619,7 +558,7 @@ TlsConnection::computePeerName()
    }
 
    // print session infor       
-   SSL_CIPHER *ciph;
+   const SSL_CIPHER *ciph;
    ciph=SSL_get_current_cipher(mSsl);
    InfoLog( << "TLS sessions set up with " 
             <<  SSL_get_version(mSsl) << " "

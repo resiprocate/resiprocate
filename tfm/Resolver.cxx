@@ -68,7 +68,8 @@ Resolver::Resolver(const Uri& uri) :
    {
       if (1) // !jf! uri.portSpecified())
       {
-         lookupARecords();
+         
+         lookupAandAAAARecords();
          // do an A or AAAA DNS lookup
          
       }
@@ -100,8 +101,8 @@ Resolver::Resolver(const resip::Data& host, int port, TransportType transport)
    {
       if (1) // !jf! uri.portSpecified())
       {
-         lookupARecords();
-         // do an A or AAAA DNS lookup
+         lookupAandAAAARecords();
+
          
       }
       else
@@ -126,10 +127,12 @@ void
 Resolver::lookupARecords()
 {
    struct hostent hostbuf; 
+   (void)hostbuf;
    struct hostent* result;
 
    int herrno=0;
    char buffer[8192];
+   (void)buffer;
 #ifdef __QNX__
    result = gethostbyname_r (mHost.c_str(), &hostbuf, buffer, sizeof(buffer), &herrno);
    if (result == 0)
@@ -198,6 +201,83 @@ Resolver::lookupARecords()
          mNextHops.push_back(tuple);
       }
    }
+}
+
+void
+Resolver::lookupAandAAAARecords()
+{
+   int ret=0;
+   struct addrinfo* result;
+   
+
+#if defined(__linux__) || defined(__APPLE__)   
+
+   bool ignoreV6=false;
+
+   if(mHost=="localhost")
+   {
+      ignoreV6=true;
+   }
+   
+   ret = getaddrinfo(mHost.c_str(),NULL,NULL,&result);
+
+   if(ret!=0)
+   {
+      InfoLog(<< "Error resolving " << mHost << ", error code " << ret
+               << ": " << gai_strerror(ret));
+   }
+   else
+   {
+      struct addrinfo* iter=result;
+      while(iter!=NULL)
+      {
+         if(iter->ai_family==PF_INET6)
+         {
+#ifdef USE_IPV6
+            if(!ignoreV6)
+            {            
+               struct sockaddr* addr=iter->ai_addr;
+               assert(addr->sa_family == AF_INET6);
+               
+               struct sockaddr_in6* theAddr=(sockaddr_in6*)addr;
+               struct in6_addr theAddrReally = theAddr->sin6_addr;
+               
+               Tuple tuple(theAddrReally,mPort,mTransport);
+               mNextHops.push_back(tuple);
+            }
+#else
+            InfoLog(<< mHost << " resolved to a V6 address, but V6 is not enabled in this stack");
+#endif
+         }
+         else if(iter->ai_family==PF_INET)
+         {
+         
+            struct sockaddr* addr=iter->ai_addr;
+            assert(addr->sa_family == AF_INET);
+            
+            struct sockaddr_in* theAddr=(sockaddr_in*)addr;
+            struct in_addr theAddrReally = theAddr->sin_addr;
+            
+            Tuple tuple(theAddrReally,mPort,mTransport);
+            mNextHops.push_back(tuple);
+         }
+         
+         else
+         {
+            assert(0);
+         }
+         
+         iter=iter->ai_next;
+      }
+      
+      freeaddrinfo(result);
+   }
+   
+#else
+   //No guarantee this will work, but this function probably works on more
+   //platforms
+   lookupARecords();
+#endif
 }
 
 bool

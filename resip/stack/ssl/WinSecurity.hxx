@@ -6,6 +6,13 @@
 
 namespace resip
 {
+
+/**
+   WARNING - This class is only appropriate for client TLS connections, as it 
+   only loads root certs.  There is currently no logic to load domain or 
+   user certificates.
+*/
+
 class WinSecurity : public Security
 {
    public:

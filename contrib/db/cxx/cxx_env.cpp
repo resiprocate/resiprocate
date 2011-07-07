@@ -374,7 +374,7 @@ DBENV_METHOD_ERR(lock_vec,
     DbEnv::runtime_error_lock_get(this, "DbEnv::lock_vec", ret,
 	(*elist_returned)->op, (*elist_returned)->mode,
 	Dbt::get_Dbt((*elist_returned)->obj), DbLock((*elist_returned)->lock),
-	(*elist_returned) - list, error_policy()))
+	(int)((*elist_returned) - list), error_policy()))
 // log methods
 DBENV_METHOD(log_archive, (char **list[], u_int32_t flags),
     (dbenv, list, flags))

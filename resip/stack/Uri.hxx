@@ -5,9 +5,11 @@
 #include <cassert>
 
 #include "resip/stack/ParserCategory.hxx"
+#include "resip/stack/Token.hxx"
+#include "rutil/TransportType.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 
-#define URI_ENCODING_TABLE_SIZE 128
+#define URI_ENCODING_TABLE_SIZE 256
 
 namespace resip
 {
@@ -19,6 +21,7 @@ class Uri : public ParserCategory
       RESIP_HeapCount(Uri);
       
       Uri();
+      Uri(HeaderFieldValue* hfv, Headers::Type type);
       Uri(const Uri&);
       explicit Uri(const Data& data);
 
@@ -37,14 +40,91 @@ class Uri : public ParserCategory
       Data& opaque() {checkParsed(); return mHost;}
       const Data& opaque() const {checkParsed(); return mHost;}
 
+      // Returns user@host[:port] (no scheme)
       const Data& getAor() const;
+      // Returns user@host (no scheme or port)
       const Data getAorNoPort() const;
 
-      // Actually returns the AOR; <scheme>:<user>@<host>
+      // Actually returns the AOR; <scheme>:<user>@<host>[:<port>]
       Data getAorNoReally() const;
-      //strips all paramters
-      Uri getAorAsUri() const;
+      //strips all paramters - if transport type is specified (ie. not UNKNOWN_TRANSPORT),
+      //and the default port for the transport is on the Aor, then it is removed
+      Uri getAorAsUri(TransportType transportTypeToRemoveDefaultPort = UNKNOWN_TRANSPORT) const;
       
+
+      /**
+         Returns true if the user appears to fit the BNF for the 
+         'telephone-subscriber' element in the RFC 3261 (and by extension, RFC 
+         3966) grammar. This is important because 'telephone-subscriber' can 
+         have parameters, which you could then access easily through the
+         getUserAsTelephoneSubscriber() and setUserAsTelephoneSubscriber() 
+         calls.
+      */
+      bool userIsTelephoneSubscriber() const;
+
+      /**
+         Returns the user-part as a 'telephone-subscriber' grammar element (in 
+         other words, this parses the user-part into a dial string and 
+         parameters, with the dial-string accessible with Token::value(), and 
+         the parameters accessible with the various Token::param() and 
+         Token::exists() interfaces). 
+         
+         For example, suppose the following is in the Request-URI:
+         
+         sip:5555551234;phone-context=+86\@example.com;user=dialstring
+         
+         The user-part of this SIP URI is "5555551234;phone-context=+86", and it
+         fits the BNF for the 'telephone-subscriber' grammar element. To access 
+         the 'phone-context' parameter, do something like the following:
+
+         @code
+            Uri& reqUri(sip.header(h_RequestLine).uri());
+
+            // !bwc! May add native support for this param later
+            static ExtensionParameter p_phoneContext("phone-context");
+            Data phoneContextValue;
+
+            if(reqUri.isWellFormed())
+            {
+               if(reqUri.exists(p_phoneContext))
+               {
+                  // Phone context as URI param
+                  phoneContextValue=reqUri.param(p_phoneContext);
+               }
+               else if(reqUri.scheme()=="sip" || reqUri.scheme()=="sips")
+               {
+                  // Might have phone-context as a user param (only happens 
+                  // in a sip or sips URI)
+                  // Technically, this userIsTelephoneSubscriber() check is 
+                  // required: 
+                  // sip:bob;phone-context=+86@example.com doesn't have a 
+                  // phone-context param according to the BNF in 3261. But, 
+                  // interop may require you to parse this as if it did have 
+                  // such a param.
+                  if(reqUri.userIsTelephoneSubscriber())
+                  {
+                     Token telSub(reqUri.getUserAsTelephoneSubscriber());
+                     if(telSub.isWellFormed() && telSub.exists(p_phoneContext))
+                     {
+                        // Phone context as user param
+                        phoneContextValue=telSub.param(p_phoneContext);
+                     }
+                  }
+               }
+            }
+         @endcode
+      */
+      Token getUserAsTelephoneSubscriber() const;
+
+      /**
+         Sets the user-part of this URI using the dial-string and parameters 
+         stored in telephoneSubscriber.
+         @param telephoneSubscriber The user-part, as a 'telephone-subscriber'
+            grammar element.
+      */
+      void setUserAsTelephoneSubscriber(const Token& telephoneSubscriber);
+
+
       Data& scheme() {checkParsed(); return mScheme;}
       const Data& scheme() const {checkParsed(); return mScheme;}
       int& port() {checkParsed(); return mPort;}
@@ -62,8 +142,8 @@ class Uri : public ParserCategory
       std::vector<Data> getEnumLookups(const std::vector<Data>& suffixes) const;
 
       /** Modifies the default URI encoding character sets */
-      static void setUriUserEncoding(char c, bool encode);
-      static void setUriPasswordEncoding(char c, bool encode);
+      static void setUriUserEncoding(unsigned char c, bool encode);
+      static void setUriPasswordEncoding(unsigned char c, bool encode);
       
       bool hasEmbedded() const;
       SipMessage& embedded();
@@ -84,14 +164,46 @@ class Uri : public ParserCategory
       bool operator!=(const Uri& other) const;
       bool operator<(const Uri& other) const;
       
+      // Inform the compiler that overloads of these may be found in
+      // ParserCategory, too.
+      using ParserCategory::exists;
+      using ParserCategory::remove;
+      using ParserCategory::param;
+
+      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators);
+      bool exists(const Param<Uri>& paramType) const;
+      void remove(const Param<Uri>& paramType);
+
+#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \
+      const _enum##_Param::DType& param(const _enum##_Param& paramType) const;  \
+      _enum##_Param::DType& param(const _enum##_Param& paramType); \
+      friend class _enum##_Param
+
+      defineParam(ob,"ob",ExistsParameter,"RFC 5626");
+      defineParam(gr, "gr", ExistsOrDataParameter, "RFC 5627");
+      defineParam(comp, "comp", DataParameter, "RFC 3486");
+      defineParam(duration, "duration", UInt32Parameter, "RFC 4240");
+      defineParam(lr, "lr", ExistsParameter, "RFC 3261");
+      defineParam(maddr, "maddr", DataParameter, "RFC 3261");
+      defineParam(method, "method", DataParameter, "RFC 3261");
+      defineParam(transport, "transport", DataParameter, "RFC 3261");
+      defineParam(ttl, "ttl", UInt32Parameter, "RFC 3261");
+      defineParam(user, "user", DataParameter, "RFC 3261, 4967");
+      defineParam(extension, "ext", DataParameter, "RFC 3966"); // Token is used when ext is a user-parameter
+      defineParam(sigcompId, "sigcomp-id", QuotedDataParameter, "RFC 5049");
+      defineParam(rinstance, "rinstance", DataParameter, "proprietary (resip)");
+      defineParam(addTransport, "addTransport", ExistsParameter, "RESIP INTERNAL");
+
+#undef defineParam
+
    protected:
-      mutable Data mScheme;
-      mutable Data mHost;
-      mutable Data mUser;
-      mutable Data mUserParameters;
-      mutable int mPort;
+      Data mScheme;
+      Data mHost;
+      Data mUser;
+      Data mUserParameters;
+      int mPort;
       mutable Data mAor;
-      mutable Data mPassword;
+      Data mPassword;
 
       // cache for aor
       mutable Data mOldScheme;
@@ -104,20 +216,26 @@ class Uri : public ParserCategory
 
       static bool mEncodingReady;
       // characters listed in these strings should not be URI encoded
-      static Data mUriNonEncodingUserChars;
-      static Data mUriNonEncodingPasswordChars;
+      static const Data mUriNonEncodingUserChars;
+      static const Data mUriNonEncodingPasswordChars;
+      static const Data mLocalNumberChars;
+      static const Data mGlobalNumberChars;
       typedef std::bitset<URI_ENCODING_TABLE_SIZE> EncodingTable;
       // if a bit is set/true, the corresponding character should be encoded
       static EncodingTable mUriEncodingUserTable;
       static EncodingTable mUriEncodingPasswordTable;
+      static EncodingTable mLocalNumberTable;
+      static EncodingTable mGlobalNumberTable;
 
       static void initialiseEncodingTables();
-      static inline bool shouldEscapeUserChar(char c);
-      static inline bool shouldEscapePasswordChar(char c);
+      static inline bool shouldEscapeUserChar(unsigned char c);
+      static inline bool shouldEscapePasswordChar(unsigned char c);
 
    private:
       Data mEmbeddedHeadersText;
       SipMessage* mEmbeddedHeaders;
+
+      static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
 };
 
 }

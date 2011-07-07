@@ -43,7 +43,7 @@ OpenSSLInit::OpenSSLInit()
 #if defined(_POSIX_THREADS)
 	CRYPTO_set_id_callback(::resip_OpenSSLInit_threadIdFunction);
 #else
-#error Can't set OpenSSL up to be threadsafe!
+#error Cannot set OpenSSL up to be threadsafe!
 #endif
 #endif
 

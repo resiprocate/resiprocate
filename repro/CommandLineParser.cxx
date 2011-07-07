@@ -6,12 +6,13 @@
 #include <popt.h>
 #endif
 
-#include "CommandLineParser.hxx"
+#include "repro/CommandLineParser.hxx"
 #include "repro/ReproVersion.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/ParseException.hxx"
 #include "resip/stack/InteropHelper.hxx"
+#include "resip/stack/ConnectionManager.hxx"
 
 using namespace resip;
 using namespace std;
@@ -24,6 +25,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    const char* logLevel = "INFO";
    char* tlsDomain = 0;
    int forceRecordRoute = 0;
+   int assumePath = 0;
    char* recordRouteUri = 0;
    int udpPort = 5060;
    int tcpPort = 5060;
@@ -40,7 +42,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* routeSet = 0;
    char certPathBuf[256];
    char* certPath = certPathBuf;
-   char* dbPath = "./";
+   const char* dbPath = "./";
    int noChallenge = false;
    int noAuthIntChallenge = false;
    int rejectBadNonces = false;
@@ -72,11 +74,18 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int outboundDisabled=0;
    int outboundVersion=11;
    int rrTokenHackEnabled=0;
+   const char* clientNATDetectionMode="DISABLED";
+   int outboundFlowTimer=0;
    
    mHttpHostname = DnsUtil::getLocalHostName();
 
    char *regSyncPeerAddress = 0;
    int xmlRpcPort = 0;
+
+   const char* serverText = 0;
+   int useInternalEPoll = 0;
+   int useEventThread = 0;
+   int overrideT1 = 0;
 
 #ifdef WIN32
 #ifndef HAVE_POPT_H
@@ -90,11 +99,12 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
 
 #ifdef HAVE_POPT_H
    struct poptOption table[] = {
-      {"log-type",         'l',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logType,        0, "where to send logging messages", "syslog|cerr|cout"},
-      {"log-level",        'v',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logLevel,       0, "specify the default log level", "STACK|DEBUG|INFO|WARNING|ALERT"},
+      {"log-type",         'l',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logType,        0, "where to send logging messages", "syslog|cerr|cout|file"},
+      {"log-level",        'v',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logLevel,       0, "specify the default log level", "STACK|DEBUG|INFO|WARNING|ERR|NONE"},
       {"db-path",           0,   POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,&dbPath,         0, "path to databases", 0},
       {"record-route",     'r',  POPT_ARG_STRING,                            &recordRouteUri,    0, "specify uri to use as Record-Route", "sip:example.com"},
       {"force-record-route", 0,  POPT_ARG_NONE | POPT_ARGFLAG_SHOW_DEFAULT,  &forceRecordRoute,0,"force record-routing", 0},
+      {"assume-path",         0,  POPT_ARG_NONE | POPT_ARGFLAG_SHOW_DEFAULT,  &assumePath,       0,"assume path option", 0},
 #if defined(USE_MYSQL)
       {"mysqlServer",      'x',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &mySqlServer,    0, "enable MySQL and provide name of server", "localhost"},
 #endif
@@ -134,23 +144,34 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"q-value-ms-before-cancel",0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,&msBeforeCancel, 0, "msec to wait before cancelling parallel fork groups", 0},
       {"enum-suffix",     'e',   POPT_ARG_STRING,                            &enumSuffix,     0, "specify enum suffix to search", "e164.arpa"},
       {"allow-bad-reg",   'b',   POPT_ARG_NONE,                              &allowBadReg,    0, "allow To tag in registrations", 0},
-      {"parallel-fork-static-routes",'p',POPT_ARG_NONE,                      &parallelForkStaticRoutes, 0, "paralled fork to all matching static routes and (first batch) registrations", 0},
+      {"parallel-fork-static-routes",'p',POPT_ARG_NONE,                      &parallelForkStaticRoutes, 0, "parallel fork to all matching static routes and (first batch) registrations", 0},
       {"timer-C",         0,     POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,                               &timerC,         0, "specify length of timer C in sec (0 or negative will disable timer C)", 0},
       {"admin-password",  'a',   POPT_ARG_STRING  | POPT_ARGFLAG_SHOW_DEFAULT,&adminPassword, 0, "set web administrator password", 0},
-      {"disable-outbound",  0,   POPT_ARG_NONE,                              &outboundDisabled,0,"disable outbound support (draft-ietf-sip-outbound)", 0},
-      {"outbound-version",  0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &outboundVersion,0, "set the version of outbound to support", 0},
+      {"disable-outbound",  0,   POPT_ARG_NONE,                              &outboundDisabled,0,"disable outbound support (RFC5626)", 0},
+      {"outbound-version",  0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &outboundVersion,0, "set the draft version of outbound to support", 0},
       {"enable-flow-tokens",0,   POPT_ARG_NONE,                              &rrTokenHackEnabled,0,"enable use of flow-tokens in non-outbound cases (This is a workaround, and it is broken. Only use it if you have to.)", 0},
+      {"nat-detection-mode",0,   POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,&clientNATDetectionMode,0,"enable use of flow-tokens in non-outbound cases for clients detected to be behind a NAT (This is a workaround, and it is broken. Only use it if you have to.): DISABLED, ENABLED, PRIVATE_TO_PUBLIC", 0},
+      {"flow-timer",        0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &outboundFlowTimer,0, "set to greater than 0 to enable addition of Flow-Timer header to REGISTER responses if outbound is enabled", 0},
       {"xmlrpcport",        0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &xmlRpcPort,     0, "port on which to listen for and send XML RPC messaging (used for registration sync) - 0 to disable", 0},
-      {"regsyncpeer",       0,   POPT_ARG_STRING,                            &regSyncPeerAddress,0,"hostname/ip address of another instance of repro to syncronize registrations with (note xmlrpcport must also be specified)", 0},
-      {"version",         'V',   POPT_ARG_NONE,                              &showVersion,     0, "show the version number and exit", 0},
+      {"regsyncpeer",       0,   POPT_ARG_STRING,                            &regSyncPeerAddress,0,"hostname/ip address of another instance of repro to synchronize registrations with (note xmlrpcport must also be specified)", 0},
+      {"server-text",       0,   POPT_ARG_STRING,                            &serverText,     0,"Value of server header for local UAS responses", 0},
+#if defined(HAVE_EPOLL)
+      {"internalepoll",     0,   POPT_ARG_NONE,                              &useInternalEPoll,0, "use internal epoll", 0},
+      {"eventthread",       0,   POPT_ARG_NONE,                              &useEventThread, 0, "use event thread for stack", 0},
+#endif
+      {"override-T1", 0, POPT_ARG_INT,   &overrideT1,  0, "Override the default value of T1 (you probably should not do this)" },
+      {"version",         'V',   POPT_ARG_NONE,                              &showVersion,    0, "show the version number and exit", 0},
       POPT_AUTOHELP 
       { NULL, 0, 0, NULL, 0 }
    };
    
    poptContext context = poptGetContext(NULL, argc, const_cast<const char**>(argv), table, 0);
-   if (poptGetNextOpt(context) < -1)
+   int rc;
+   if ((rc=poptGetNextOpt(context)) < -1)
    {
-      cerr << "Bad command line argument entered" << endl;
+      cerr << "Bad command line argument entered: "
+        << poptBadOption(context, 0)
+         << ": " << poptStrerror(rc) << endl;
       poptPrintHelp(context, stderr, 0);
       exit(-1);
    }
@@ -166,12 +187,15 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
      exit(0);
    }
    
+   mOverrideT1=overrideT1;
+
    if (tlsDomain) 
    {
       mTlsDomain = tlsDomain;
    }
 
    mForceRecordRoute = (forceRecordRoute!=0);
+   mAssumePath = (assumePath!=0);
 
    if (recordRouteUri) 
    {
@@ -245,26 +269,33 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    InteropHelper::setOutboundVersion(outboundVersion);
    InteropHelper::setOutboundSupported(outboundDisabled ? false : true);
    InteropHelper::setRRTokenHackEnabled((rrTokenHackEnabled==0) ? false : true);
-   
-   if((InteropHelper::getOutboundSupported() 
-         || InteropHelper::getRRTokenHackEnabled()
-         || mForceRecordRoute
-      )
-      && !recordRouteUri)
+   if(isEqualNoCase(clientNATDetectionMode, "ENABLED"))
    {
-      CritLog(<< "In order for outbound support, the Record-Route flow-token"
-      " hack, or force-record-route to work, you MUST specify a Record-Route URI. Launching "
-      "without...");
-      InteropHelper::setOutboundSupported(false);
-      InteropHelper::setRRTokenHackEnabled(false);
-      mForceRecordRoute=false;
+      InteropHelper::setClientNATDetectionMode(InteropHelper::ClientNATDetectionEnabled);
    }
-
+   else if(isEqualNoCase(clientNATDetectionMode, "PRIVATE_TO_PUBLIC"))
+   {
+      InteropHelper::setClientNATDetectionMode(InteropHelper::ClientNATDetectionPrivateToPublicOnly);
+   }
+   if(outboundFlowTimer > 0)
+   {
+      InteropHelper::setFlowTimerSeconds(outboundFlowTimer);
+      ConnectionManager::MinimumGcAge = 7200000; // Timeout connections not related to a flow timer after 2 hours
+      ConnectionManager::EnableAgressiveGc = true;
+   }
+   
    mXmlRpcPort = xmlRpcPort;
    if(regSyncPeerAddress)
    {
        mRegSyncPeerAddress = regSyncPeerAddress;
    }
+
+   if (serverText && serverText[0])
+   {
+      mServerText = resip::Data(serverText);
+   }
+   mUseInternalEPoll = useInternalEPoll?true:false;
+   mUseEventThread = useEventThread?true:false;
 
 #ifdef HAVE_POPT_H
    poptFreeContext(context);
@@ -328,3 +359,54 @@ CommandLineParser::toVector(const char* input, const char* description)
    return domains;
 }
    
+/* ====================================================================
+ * The Vovida Software License, Version 1.0 
+ * 
+ * Copyright (c) 2000
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ * 
+ * 3. The names "VOCAL", "Vovida Open Communication Application Library",
+ *    and "Vovida Open Communication Application Library (VOCAL)" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact vocal@vovida.org.
+ *
+ * 4. Products derived from this software may not be called "VOCAL", nor
+ *    may "VOCAL" appear in their name, without prior written
+ *    permission of Vovida Networks, Inc.
+ * 
+ * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
+ * NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA
+ * NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
+ * IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+ * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ * 
+ * ====================================================================
+ * 
+ * This software consists of voluntary contributions made by Vovida
+ * Networks, Inc. and many individuals on behalf of Vovida Networks,
+ * Inc.  For more information on Vovida Networks, Inc., please see
+ * <http://www.vovida.org/>.
+ *
+ * vi: set shiftwidth=3 expandtab:
+ */
+

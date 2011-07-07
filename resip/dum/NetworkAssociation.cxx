@@ -1,4 +1,4 @@
-
+#include "rutil/Logger.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/NetworkAssociation.hxx"
@@ -6,17 +6,40 @@
 
 using namespace resip;
 
-void 
-NetworkAssociation::update(const SipMessage& msg, int keepAliveInterval)
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
+
+bool
+NetworkAssociation::update(const SipMessage& msg, int keepAliveInterval, bool targetSupportsOutbound)
 {
    if (mDum && mDum->mKeepAliveManager.get())
    {
-      if (msg.getSource().getType() != 0 && !(msg.getSource() == mTarget))
+      const Tuple& source = msg.getSource();
+      if(source.getType() != 0 &&                              // if source is populated in message
+         (!(source == mTarget) ||                              // and (target is different from current
+          source.mFlowKey != mTarget.mFlowKey ||               // or flow key is different
+          mTargetSupportsOutbound != targetSupportsOutbound || // or outbound support flag is different 
+          mKeepAliveInterval != keepAliveInterval))            // or keepaliveinterval is different) -> add to keepalivemanager
       {
          mDum->mKeepAliveManager->remove(mTarget);
-         mTarget = msg.getSource();
-         mDum->mKeepAliveManager->add(mTarget, keepAliveInterval);
+         mTarget = source;
+         mTarget.onlyUseExistingConnection = true;  // Ensure that keepalives never open up a new connection
+         mTargetSupportsOutbound = targetSupportsOutbound;
+         mDum->mKeepAliveManager->add(mTarget, keepAliveInterval, targetSupportsOutbound);
+         return true;
       }
+   }
+   return false;
+}
+
+void
+NetworkAssociation::clear()
+{
+   if (mDum && mDum->mKeepAliveManager.get())
+   {
+      mDum->mKeepAliveManager->remove(mTarget);
+      mTarget = Tuple();
+      mTargetSupportsOutbound = false;
+      mKeepAliveInterval = 0;
    }
 }
 

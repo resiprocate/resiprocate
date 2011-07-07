@@ -45,28 +45,27 @@ DnsInterface::~DnsInterface()
 {
 }
 
+static Data UdpNAPTRType("SIP+D2U");
+static Data TcpNAPTRType("SIP+D2T");
+static Data TlsNAPTRType("SIPS+D2T");
+static Data DtlsNAPTRType("SIPS+D2U");
 void 
 DnsInterface::addTransportType(TransportType type, IpVersion version)
 {
-   static Data Udp("SIP+D2U");
-   static Data Tcp("SIP+D2T");
-   static Data Tls("SIPS+D2T");
-   static Data Dtls("SIPS+D2U");
-
    mSupportedTransports.push_back(std::make_pair(type, version));
    switch (type)
    {
       case UDP:
-         mSupportedNaptrs.insert(Udp);
+         mSupportedNaptrs.insert(UdpNAPTRType);
          break;
       case TCP:
-         mSupportedNaptrs.insert(Tcp);
+         mSupportedNaptrs.insert(TcpNAPTRType);
          break;
       case TLS:
-         mSupportedNaptrs.insert(Tls);
+         mSupportedNaptrs.insert(TlsNAPTRType);
          break;
       case DTLS:
-         mSupportedNaptrs.insert(Dtls);
+         mSupportedNaptrs.insert(DtlsNAPTRType);
          break;         
       default:
          assert(0);
@@ -101,7 +100,7 @@ DnsInterface::isSupportedProtocol(TransportType t)
 
 int DnsInterface::supportedProtocols()
 {
-   return mSupportedTransports.size();
+   return (int)mSupportedTransports.size();
 }
 
 

@@ -103,20 +103,20 @@ class MasterProfile : public UserProfile
       
       ///enable/disable content validation
       virtual bool& validateContentEnabled();
-      virtual const bool validateContentEnabled() const;
+      virtual bool validateContentEnabled() const;
 
       ///enable/disable content language validation
       virtual bool& validateContentLanguageEnabled();
-      virtual const bool validateContentLanguageEnabled() const;
+      virtual bool validateContentLanguageEnabled() const;
 
       ///enable/disable Accept header validation
       virtual bool& validateAcceptEnabled();
-      virtual const bool validateAcceptEnabled() const;
+      virtual bool validateAcceptEnabled() const;
 
       ///Set this to allow the Registration Server to accept registration requests that contain 
       ///a To Tag.
       virtual bool& allowBadRegistrationEnabled();
-      virtual const bool allowBadRegistrationEnabled() const;  
+      virtual bool allowBadRegistrationEnabled() const;  
 
            
       ///
@@ -149,7 +149,7 @@ class MasterProfile : public UserProfile
       ///If you want them all to ring, set it to true.
       
       virtual bool& checkReqUriInMergeDetectionEnabled();
-      virtual const bool checkReqUriInMergeDetectionEnabled() const;
+      virtual bool checkReqUriInMergeDetectionEnabled() const;
 
    private:
       virtual UserProfile* clone() const;

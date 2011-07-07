@@ -16,6 +16,7 @@ MasterProfile::MasterProfile() :
    mValidateContentLanguageEnabled(false),
    mValidateAcceptEnabled(false),
    mAllowBadRegistrationEnabled(false),
+   mHasServerRegistrationMinExpires(false),
    mCheckReqUriInMergeDetectionEnabled(false),
    mUacReliableProvisionalMode(Never),
    mUasReliableProvisionalMode(Never),
@@ -333,7 +334,7 @@ MasterProfile::validateContentEnabled()
    return mValidateContentEnabled;   
 }
 
-const bool 
+bool 
 MasterProfile::validateContentEnabled() const
 {
    return mValidateContentEnabled;   
@@ -345,7 +346,7 @@ MasterProfile::validateContentLanguageEnabled()
    return mValidateContentLanguageEnabled;   
 }
 
-const bool 
+bool 
 MasterProfile::validateContentLanguageEnabled() const
 {
    return mValidateContentLanguageEnabled;   
@@ -357,13 +358,13 @@ MasterProfile::validateAcceptEnabled()
    return mValidateAcceptEnabled;   
 }
 
-const bool 
+bool 
 MasterProfile::validateAcceptEnabled() const
 {
    return mValidateAcceptEnabled;   
 }
 
-const bool 
+bool 
 MasterProfile::allowBadRegistrationEnabled() const
 {
    return mAllowBadRegistrationEnabled;   
@@ -412,7 +413,7 @@ MasterProfile::serverRegistrationDefaultExpiresTime(void) const
    return mServerRegistrationDefaultExpires;
 }
 
-const bool 
+bool 
 MasterProfile::checkReqUriInMergeDetectionEnabled() const
 {
    return mCheckReqUriInMergeDetectionEnabled;   

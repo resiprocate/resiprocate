@@ -151,7 +151,7 @@ class BaseSecurity
       Data computeIdentity( const Data& signerDomain, const Data& in ) const;
       bool checkIdentity( const Data& signerDomain, const Data& in, const Data& sig, X509* cert=NULL ) const;
 
-      void checkAndSetIdentity( const SipMessage& msg, const Data& derCert=Data::Empty ) const;
+      void checkAndSetIdentity(SipMessage& msg, const Data& derCert=Data::Empty ) const;
 
       // returns NULL if it fails
       Contents* decrypt( const Data& decryptorAor, const Pkcs7Contents* );
@@ -167,11 +167,15 @@ class BaseSecurity
 
       static bool isSelfSigned(const X509* cert);
 
-      // match with wildcards
       static int matchHostName(const Data& certificateName, const Data& domainName);
 
       // allow particular classes to acces the functions below 
       // friend class TlsConnection;
+
+      // Allow overriding of RFC 5922 rules on certificate matching.
+      static void setAllowWildcardCertificates(bool bEnable) { mAllowWildcardCertificates = bEnable; }
+      static bool allowWildcardCertificates() { return mAllowWildcardCertificates; }
+
    public:
       SSL_CTX*       getTlsCtx ();
       SSL_CTX*       getSslCtx ();
@@ -183,6 +187,7 @@ class BaseSecurity
 
       // map of name to certificates
       typedef std::map<Data,X509*>     X509Map;
+      typedef std::list<X509*>         X509List;
       typedef std::map<Data,EVP_PKEY*> PrivateKeyMap;
       typedef std::map<Data,Data>      PassPhraseMap;
 
@@ -191,31 +196,38 @@ class BaseSecurity
       SSL_CTX*       mSslCtx;
       static void dumpAsn(char*, Data);
 
+      CipherList mCipherList;
+
       // root cert list
-      mutable X509_STORE*    mRootTlsCerts;
-      mutable X509_STORE*    mRootSslCerts;
+      X509List       mRootCerts;
+      X509_STORE*    mRootTlsCerts;
+      X509_STORE*    mRootSslCerts;
 
-      mutable X509Map        mDomainCerts;
-      mutable PrivateKeyMap  mDomainPrivateKeys;
+      X509Map        mDomainCerts;
+      PrivateKeyMap  mDomainPrivateKeys;
 
-      mutable X509Map        mUserCerts;
-      mutable PassPhraseMap  mUserPassPhrases;
-      mutable PrivateKeyMap  mUserPrivateKeys;
+      X509Map        mUserCerts;
+      PassPhraseMap  mUserPassPhrases;
+      PrivateKeyMap  mUserPrivateKeys;
 
-      void addCertPEM (PEMType type, const Data& name, const Data& certPEM, bool write) const;
-      void addCertDER (PEMType type, const Data& name, const Data& certDER, bool write) const;
+      void addCertPEM (PEMType type, const Data& name, const Data& certPEM, bool write);
+      void addCertDER (PEMType type, const Data& name, const Data& certDER, bool write);
       bool hasCert    (PEMType type, const Data& name) const;
       void removeCert (PEMType type, const Data& name);
       Data getCertDER (PEMType type, const Data& name) const;
-      void addCertX509(PEMType type, const Data& name, X509* cert, bool write) const;
+      void addCertX509(PEMType type, const Data& name, X509* cert, bool write);
 
-      void addPrivateKeyPEM (PEMType type, const Data& name, const Data& privateKeyPEM, bool write) const;
-      void addPrivateKeyDER (PEMType type, const Data& name, const Data& privateKeyDER, bool write) const;
+      void addPrivateKeyPEM (PEMType type, const Data& name, const Data& privateKeyPEM, bool write);
+      void addPrivateKeyDER (PEMType type, const Data& name, const Data& privateKeyDER, bool write);
       bool hasPrivateKey    (PEMType type, const Data& name) const;
       void removePrivateKey (PEMType type, const Data& name);
       Data getPrivateKeyPEM (PEMType type, const Data& name) const;
       Data getPrivateKeyDER (PEMType type, const Data& name) const;
-      void addPrivateKeyPKEY(PEMType type, const Data& name, EVP_PKEY* pKey, bool write) const;
+      void addPrivateKeyPKEY(PEMType type, const Data& name, EVP_PKEY* pKey, bool write);
+
+      // match with wildcards
+      static int matchHostNameWithWildcards(const Data& certificateName, const Data& domainName);
+      static bool mAllowWildcardCertificates;
 };
 
 class Security : public BaseSecurity
@@ -225,6 +237,7 @@ class Security : public BaseSecurity
       Security(const CipherList& = ExportableSuite);
 
       virtual void preload();
+      virtual SSL_CTX* createDomainCtx(const SSL_METHOD* method, const Data& domain);
 
       virtual void onReadPEM(const Data& name, PEMType type, Data& buffer) const;
       virtual void onWritePEM(const Data& name, PEMType type, const Data& buffer) const;

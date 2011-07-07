@@ -73,6 +73,18 @@ public:
      @return true if the recording was stopped, false otherwise
     */
    virtual bool stopRecording() = 0;
+
+   /**
+    These method allows the local participant to add devices which
+    will be locally mixed. Note that it should be impossible to add
+    the same device multiple times.
+    */
+   virtual void addLocalDevices() = 0;
+
+   /**
+    Removes the local devices from the mix.
+    */
+   virtual void removeLocalDevices() = 0;
 };
 }
 

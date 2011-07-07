@@ -3,7 +3,8 @@
 	ProjectType="Visual C++"
 	Version="9.00"
 	Name="db_static"
-	ProjectGUID="{9E5A7645-1502-4467-91F8-BCF2EB06EF72}"
+	ProjectGUID="{FD7075B0-7C44-4631-B356-39B42D7908CC}"
+	RootNamespace="db_static"
 	Keyword="MFCProj"
 	TargetFrameworkVersion="131072"
 	>
@@ -42,6 +43,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				Optimization="0"
 				AdditionalIncludeDirectories=".,.."
 				PreprocessorDefinitions="CONFIG_TEST,WIN32,_DEBUG,_WINDOWS;_CRT_SECURE_NO_WARNINGS"
@@ -115,6 +117,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories=".,.."
 				PreprocessorDefinitions="WIN32,NDEBUG,_WINDOWS;_CRT_SECURE_NO_WARNINGS"

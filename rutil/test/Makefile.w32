@@ -2,10 +2,10 @@
 
 CFLAGS=/Od /I "../../" /I "../../../" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "USE_ARES" /D "_MBCS" /Gm /EHsc /RTC1 /MDd /GS /GR /W3 /c /Wp64 /Zi /TP
 RESIPLIBS=..\Debug\rutil.lib 
-LFLAGS=/INCREMENTAL /NOLOGO /DEBUG /SUBSYSTEM:CONSOLE /MACHINE:X86 Ws2_32.lib Iphlpapi.lib Dnsapi.lib  kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib $(RESIPLIBS)
+LFLAGS=/INCREMENTAL /NOLOGO /DEBUG /SUBSYSTEM:CONSOLE /MACHINE:X86 Ws2_32.lib Iphlpapi.lib Dnsapi.lib winmm.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib $(RESIPLIBS)
 
 all: \
-	testCoders.obj testCoders.exe \
+	testCoders.obj testSubsystemLogLevel.obj testCoders.exe \
 	testCountStream.obj testCountStream.exe \
 	testData.obj testData.exe \
 	testDataPerformance.obj testDataPerformance.exe \
@@ -28,7 +28,7 @@ all: \
 	cl $(CFLAGS) $<
 
 .obj.exe:
-	link /out:$@ $< $(LFLAGS)	
+	link /out:$@ $< testSubsystemLogLevel.obj $(LFLAGS)	
 
 run: 
 	testCoders.exe
@@ -41,7 +41,7 @@ run:
 	testFileSystem.exe
 	testInserter.exe
 	testIntrusiveList.exe
-#	testLogger.exe    - Win32 log threading is not implemented
+	testLogger.exe   
 	testMD5Stream.exe
 	testRandomHex.exe
 	testSHA1Stream.exe

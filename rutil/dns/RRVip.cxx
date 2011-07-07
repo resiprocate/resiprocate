@@ -221,7 +221,8 @@ void RRVip::SrvTransform::transform(RRVector& src,
    }
 }
 
-RRVip::MapKey::MapKey()
+RRVip::MapKey::MapKey() 
+  : mRRType(0)		// .kw. what is reasonable default?
 {
 }
 

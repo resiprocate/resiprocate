@@ -7,6 +7,7 @@
 
 namespace resip
 {
+class FdPollGrp;
 
 /**
    Collection of Connection per Transport. Maintains round-robin
@@ -19,9 +20,13 @@ class ConnectionManager
 {
       friend class Connection;
    public:
-      /** connection must older than this value to be removed to make room for
-          another connection. */
-      static const UInt64 MinimumGcAge;
+      /** connection must have no inbound traffic for greater than this 
+          time (in ms) before it is garbage collected */
+      static UInt64 MinimumGcAge;
+      /** Enable Agressive Connection Garbage Collection to have resip
+          perform garbage collection on every new connection.  If disabled
+          then garbage collection is only performed if we run out of Fd's */
+      static bool EnableAgressiveGc;
 
       ConnectionManager();
       ~ConnectionManager();
@@ -31,15 +36,13 @@ class ConnectionManager
       const Connection* findConnection(const Tuple& tuple) const;
 
       /// populate the fdset againt the read and write lists
+      void setPollGrp(FdPollGrp *grp);
       void buildFdSet(FdSet& fdset);
-      void process(FdSet& fdset, Fifo<TransactionMessage>& fifo);
+      void process(FdSet& fdset);
 
    private:
       void addToWritable(Connection* conn); // add the specified conn to end
       void removeFromWritable(Connection* conn); // remove the current mWriteMark
-
-      /// release excessively old connections (free up file descriptors)
-      void gc(UInt64 threshhold);
 
       typedef std::map<Tuple, Connection*> AddrMap;
       typedef std::map<Socket, Connection*> IdMap;
@@ -47,8 +50,13 @@ class ConnectionManager
       void addConnection(Connection* connection);
       void removeConnection(Connection* connection);
 
+      /// release excessively old connections (free up file descriptors)
+      /// set maxToRemove to 0 for no-max
+      void gc(UInt64 threshold, unsigned int maxToRemove);
+
       /// move to youngest 
       void touch(Connection* connection);
+      void moveToFlowTimerLru(Connection *connection);
       
       AddrMap mAddrMap;
       IdMap mIdMap;
@@ -62,6 +70,11 @@ class ConnectionManager
       ConnectionReadList* mReadHead;
       /// least recently used list
       ConnectionLruList* mLRUHead;
+      /// least recently used list for flow timer enabled connections
+      FlowTimerLruList* mFlowTimerLRUHead;
+
+      /// collection for epoll
+      FdPollGrp* mPollGrp;
       //<<---------------------------------
 
       friend class TcpBaseTransport;

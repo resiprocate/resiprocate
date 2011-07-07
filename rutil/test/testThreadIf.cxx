@@ -120,7 +120,7 @@ int main()
         UInt64 j = Timer::getTimeMs();
         cerr << j - t << endl;
         
-        assert(j - t < 10);
+        assert(j - t < 20);
     }
     //this should not cause problems(signal is being called on a condition with
     //no waiting threads).

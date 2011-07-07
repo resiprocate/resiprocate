@@ -33,8 +33,30 @@ class ExpiresCategory : public ParserCategory
       UInt32& value();
       UInt32 value() const;
 
+      // Inform the compiler that overloads of these may be found in
+      // ParserCategory, too.
+      using ParserCategory::exists;
+      using ParserCategory::remove;
+      using ParserCategory::param;
+
+      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators);
+      // .bwc, This is an awful lot for one lousy param type.
+      bool exists(const Param<ExpiresCategory>& paramType) const;
+      void remove(const Param<ExpiresCategory>& paramType);
+
+#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \
+      const _enum##_Param::DType& param(const _enum##_Param& paramType) const;  \
+      _enum##_Param::DType& param(const _enum##_Param& paramType); \
+      friend class _enum##_Param
+
+defineParam(refresher, "refresher", DataParameter, "RFC 4028");
+
+#undef defineParam
+
    private:
-      mutable UInt32 mValue;
+      UInt32 mValue;
+
+      static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
 };
  
 }

@@ -18,6 +18,7 @@
 namespace resip
 {
 class SipMessage;
+class Transport;
 }
 
 namespace repro
@@ -54,7 +55,8 @@ class ResponseContext
          
          @param target The Target to add.
 
-         @param beginImmediately Whether to immediately start a transaction for this target.
+         @param beginImmediately Whether to immediately start a transaction 
+            for this target.
 
          @returns If beginImmediately=false, true iff the Target was
          successfully added (could happen if a final response has already
@@ -63,7 +65,8 @@ class ResponseContext
          presence of a duplicate contact, or when a final response has
          already been forwarded.)
          
-         @note Targets are not checked for duplicate uris until an attempt is made to begin them.
+         @note Targets are not checked for duplicate uris until an attempt 
+            is made to start them.
       */
       bool addTarget(std::auto_ptr<repro::Target> target, bool beginImmediately=false, bool addToFirstBatch=false);
 
@@ -250,11 +253,12 @@ class ResponseContext
       //a branch is very simple. The guts can be found in the API functions.
       
       void insertRecordRoute(resip::SipMessage& outgoing,
-                              const resip::Tuple& receivedTransport,
-                              Target* target);
-      resip::Data getInboundFlowToken();
+                             const resip::Transport* receivedTransport,
+                             Target* target,
+                             bool doPathInstead=false);
+      resip::Data getInboundFlowToken(bool doPathInstead);
       bool outboundFlowTokenNeeded(Target* target);
-      bool selfAlreadyRecordRouted();
+      bool needsFlowTokenToWork(const resip::NameAddr& contact) const;
       bool sendingToSelf(Target* target);
 
       void sendRequest(resip::SipMessage& request);
@@ -273,6 +277,7 @@ class ResponseContext
       resip::SipMessage mBestResponse;
       int mBestPriority;
       bool mSecure;
+      bool mIsSenderBehindNAT;  // Only set if InteropHelper::getClientNATDetectionEnabled() is true
 
       void forwardBestResponse();
 

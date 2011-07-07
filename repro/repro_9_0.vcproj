@@ -42,10 +42,11 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../resip/stack&quot;;&quot;$(ProjectDir)../contrib/db/build_win32&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;;&quot;$(ProjectDir)../contrib/popt/win32/include&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;HAVE_POPT_H;USE_IPV6"
-				MinimalRebuild="true"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;HAVE_POPT_H;USE_IPV6;LEAK_CHECK"
+				MinimalRebuild="false"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				RuntimeTypeInfo="true"
@@ -123,8 +124,10 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../resip/stack&quot;;&quot;$(ProjectDir)../contrib/db/build_win32&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;;&quot;$(ProjectDir)../contrib/popt/win32/include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;HAVE_POPT_H;USE_IPV6"
+				MinimalRebuild="false"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
 				UsePrecompiledHeader="0"
@@ -202,10 +205,11 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../resip/stack&quot;;&quot;$(ProjectDir)../contrib/db/build_win32&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;;&quot;$(ProjectDir)../contrib/popt/win32/include&quot;;&quot;$(ProjectDir)../contrib/openssl/include&quot;;&quot;$(ProjectDir)../contrib/openssl/inc32&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;HAVE_POPT_H;USE_SSL;USE_IPV6"
-				MinimalRebuild="true"
+				MinimalRebuild="false"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				RuntimeTypeInfo="true"
@@ -283,8 +287,10 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../resip/stack&quot;;&quot;$(ProjectDir)../contrib/db/build_win32&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;;&quot;$(ProjectDir)../contrib/popt/win32/include&quot;;&quot;$(ProjectDir)../contrib/openssl/include&quot;;&quot;$(ProjectDir)../contrib/openssl/inc32&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;HAVE_POPT_H;USE_SSL;USE_IPV6"
+				MinimalRebuild="false"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
 				UsePrecompiledHeader="0"

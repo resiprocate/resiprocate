@@ -14,7 +14,6 @@ ExtensionParameter::ExtensionParameter(const Data& name)
    : mName(name)
 {
    assert(!mName.empty());
-   assert(ParameterTypes::getType(mName.data(), mName.size()) == ParameterTypes::UNKNOWN);
 }
 
 const Data& 

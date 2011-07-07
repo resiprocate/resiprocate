@@ -10,6 +10,7 @@
 #include "repro/monkeys/QValueTargetHandler.hxx"
 #include "repro/monkeys/SimpleTargetHandler.hxx"
 #include "rutil/Logger.hxx"
+#include "resip/stack/InteropHelper.hxx"
 #include "tfm/repro/TestRepro.hxx"
 
 #ifdef USE_SSL
@@ -27,18 +28,17 @@ static ProcessorChain&
 makeRequestProcessorChain(ProcessorChain& chain, 
                           Store& store,
                           RegistrationPersistenceManager& regData,
-                          resip::SipStack* stack)
+                          SipStack* stack)
 {
    // Either the chainName is default or we don't know about it
    // Use default if we don't recognize the name
    // Should log about it.
    ProcessorChain* locators = new ProcessorChain();
    
-   StrictRouteFixup* srf = new StrictRouteFixup;
-   locators->addProcessor(std::auto_ptr<Processor>(srf));
-
+   ProcessorChain* authenticators = new ProcessorChain();
+   
    IsTrustedNode* isTrusted = new IsTrustedNode(store.mAclStore);
-   locators->addProcessor(std::auto_ptr<Processor>(isTrusted));
+   authenticators->addProcessor(std::auto_ptr<Processor>(isTrusted));
 
    DigestAuthenticator* da = new DigestAuthenticator(store.mUserStore,
                                                       stack,
@@ -47,7 +47,10 @@ makeRequestProcessorChain(ProcessorChain& chain,
                                                       5080,
                                                       true,
                                                       false);
-   locators->addProcessor(std::auto_ptr<Processor>(da)); 
+   authenticators->addProcessor(std::auto_ptr<Processor>(da)); 
+
+   StrictRouteFixup* srf = new StrictRouteFixup;
+   locators->addProcessor(std::auto_ptr<Processor>(srf));
 
    AmIResponsible* isme = new AmIResponsible;
    locators->addProcessor(std::auto_ptr<Processor>(isme));
@@ -58,17 +61,19 @@ makeRequestProcessorChain(ProcessorChain& chain,
    LocationServer* ls = new LocationServer(regData, true);
    locators->addProcessor(std::auto_ptr<Processor>(ls));
  
+   chain.addProcessor(std::auto_ptr<Processor>(authenticators));
    chain.addProcessor(std::auto_ptr<Processor>(locators));
    chain.setChainType(Processor::REQUEST_CHAIN);
    return chain;
 }
 
 static ProcessorChain&  
-makeResponseProcessorChain(ProcessorChain& chain) 
+makeResponseProcessorChain(ProcessorChain& chain,
+                          RegistrationPersistenceManager& regData) 
 {
    ProcessorChain* lemurs = new ProcessorChain;
 
-   OutboundTargetHandler* ob = new OutboundTargetHandler;
+   OutboundTargetHandler* ob = new OutboundTargetHandler(regData);
    lemurs->addProcessor(std::auto_ptr<Processor>(ob));
 
    chain.addProcessor(std::auto_ptr<Processor>(lemurs));
@@ -77,11 +82,11 @@ makeResponseProcessorChain(ProcessorChain& chain)
 }
 
 static ProcessorChain&  
-makeTargetProcessorChain(ProcessorChain& chain) 
+makeTargetProcessorChain(ProcessorChain& chain,const CommandLineParser& args) 
 {
    ProcessorChain* baboons = new ProcessorChain;
-   
-   QValueTargetHandler* qval=
+
+   QValueTargetHandler* qval = 
       new QValueTargetHandler(QValueTargetHandler::EQUAL_Q_PARALLEL,
                               true, //Cancel btw fork groups?
                               true, //Wait for termination btw fork groups?
@@ -89,7 +94,7 @@ makeTargetProcessorChain(ProcessorChain& chain)
                               2000 //ms before cancel
                               );
    baboons->addProcessor(std::auto_ptr<Processor>(qval));
-
+   
    SimpleTargetHandler* smpl = new SimpleTargetHandler;
    baboons->addProcessor(std::auto_ptr<Processor>(smpl));
    
@@ -114,11 +119,10 @@ makeUri(const resip::Data& domain, int port)
 
 TestRepro::TestRepro(const resip::Data& name,
                      const resip::Data& host, 
-                     int port, 
+                     const CommandLineParser& args, 
                      const resip::Data& nwInterface,
-                     bool forceRecordRoute,
                      Security* security) : 
-   TestProxy(name, host, port, nwInterface),
+   TestProxy(name, host, args.mUdpPorts, args.mTcpPorts, args.mTlsPorts, args.mDtlsPorts, nwInterface),
 #ifdef USE_SIGCOMP
    mStack(security,
             DnsStub::EmptyNameserverList,
@@ -137,23 +141,102 @@ TestRepro::TestRepro(const resip::Data& name,
    mRequestProcessors(),
    mRegData(),
    mProxy(mStack, 
-          makeUri(host, port),
-          forceRecordRoute, //<- Enable record-route
+          makeUri(host, *args.mUdpPorts.begin()),
+          args.mForceRecordRoute, //<- Enable record-route
           makeRequestProcessorChain(mRequestProcessors, mStore, mRegData,&mStack),
-          makeResponseProcessorChain(mResponseProcessors),
-          makeTargetProcessorChain(mTargetProcessors),
+          makeResponseProcessorChain(mResponseProcessors,mRegData),
+          makeTargetProcessorChain(mTargetProcessors,args),
           mStore.mUserStore,
           180),
    mDum(mStack),
    mDumThread(mDum)
 {
-   mStack.addTransport(UDP, port, V4);
-   mStack.addTransport(TCP, port, V4);
+   resip::InteropHelper::setRRTokenHackEnabled(args.mEnableFlowTokenHack);
+   resip::InteropHelper::setOutboundSupported(true);
+   resip::InteropHelper::setOutboundVersion(5626); // RFC 5626
+
+   mProxy.addDomain("localhost");
+
+   // !bwc! TODO Once we have something we _do_ support, put that here.
+   mProxy.addSupportedOption("p-fakeoption");
+   mStack.addAlias("localhost",5060);
+   mStack.addAlias("localhost",5061);
+
+   std::list<resip::Data> domains;
+   domains.push_back("127.0.0.1");
+   domains.push_back("localhost");
+   
+   try
+   {
+      mStack.addTransport(UDP, 
+                           5060, 
+                           V4,
+                           StunDisabled,
+                           nwInterface,
+                           resip::Data::Empty,
+                           resip::Data::Empty,
+                           resip::SecurityTypes::TLSv1,
+                           0);
+   }
+   catch(...)
+   {}
+
+   try
+   {
+      mStack.addTransport(TCP, 
+                           5060, 
+                           V4,
+                           StunDisabled,
+                           nwInterface,
+                           resip::Data::Empty,
+                           resip::Data::Empty,
+                           resip::SecurityTypes::TLSv1,
+                           0);
+   }
+   catch(...)
+   {}
+
+#ifdef RESIP_USE_SCTP
+   try
+   {
+      mStack.addTransport(SCTP, 
+                           5060, 
+                           V4,
+                           StunDisabled,
+                           "0.0.0.0",// multihomed
+                           resip::Data::Empty,
+                           resip::Data::Empty,
+                           resip::SecurityTypes::TLSv1,
+                           0);
+   }
+   catch(...)
+   {}
+#endif
+
 #ifdef USE_SSL
-   mStack.addTransport(TLS, port+1, V4, StunDisabled, Data::Empty, host );
+   std::list<resip::Data> localhost;
+   localhost.push_back("localhost");
+   
+   try
+   {
+      mStack.addTransport(TLS, 
+                           5061, 
+                           V4, 
+                           StunDisabled, 
+                           nwInterface, 
+                           "localhost",
+                           resip::Data::Empty,
+                           resip::SecurityTypes::TLSv1,
+                           0);
+   }
+   catch(...)
+   {}
 #endif
    mProxy.addDomain(host);
    
+   std::vector<Data> enumSuffixes;
+   enumSuffixes.push_back(args.mEnumSuffix);
+   mStack.setEnumSuffixes(enumSuffixes);
 
    mProxy.addSupportedOption("outbound");
    mProxy.addSupportedOption("p-fakeoption");

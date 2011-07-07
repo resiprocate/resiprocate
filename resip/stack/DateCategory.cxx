@@ -184,11 +184,13 @@ dayofweek_hash (register const char *str, register unsigned int len)
 
   switch (hval)
     {
-      default:
+      default: /*FALLTHRU*/
       case 3:
         hval += asso_values[(unsigned char)str[2]];
+        /*FALLTHRU*/
       case 2:
         hval += asso_values[(unsigned char)str[1]];
+        /*FALLTHRU*/
       case 1:
         hval += asso_values[(unsigned char)str[0]];
         break;
@@ -263,7 +265,7 @@ DateCategory::DayOfWeekFromData(const Data& dow)
 
    if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
    {
-      register int key = dayofweek_hash (str, len);
+      register int key = dayofweek_hash (str, (unsigned int)len);
       
       if (key <= MAX_HASH_VALUE && key >= 0)
       {
@@ -327,11 +329,13 @@ month_hash (register const char *str, register unsigned int len)
 
    switch (hval)
    {
-      default:
+      default: /*FALLTHRU*/
       case 3:
          hval += asso_values[(unsigned char)str[2]];
+         /*FALLTHRU*/
       case 2:
          hval += asso_values[(unsigned char)str[1]];
+         /*FALLTHRU*/
       case 1:
          hval += asso_values[(unsigned char)str[0]];
          break;
@@ -374,7 +378,7 @@ DateCategory::MonthFromData(const Data& mon)
 
    if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
    {
-      register int key = month_hash (str, len);
+      register int key = month_hash (str, (unsigned int)len);
 
       if (key <= MAX_HASH_VALUE && key >= 0)
       {

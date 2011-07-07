@@ -63,8 +63,6 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
    mLastRequest->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    mLastRequest->header(h_CallId).value() = Helper::computeCallId();
 
-   NameAddr contact; // if no GRUU, let the stack fill in the contact 
-
    assert(mUserProfile.get());
    if (!mUserProfile->getImsAuthUserName().empty())
    {
@@ -77,6 +75,13 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
       auth.param(p_response) = Data::Empty;
       mLastRequest->header(h_Authorizations).push_back(auth);
       DebugLog ( << "Adding auth header to inital reg for IMS: " << auth);
+   }
+
+   NameAddr contact; // if no GRUU, let the stack fill in the contact 
+
+   if(mUserProfile->hasUserAgentCapabilities())
+   {
+      contact = mUserProfile->getUserAgentCapabilities();
    }
 
    //.dcm. If we want to use userprofiles oacross multiple registration we will
@@ -121,6 +126,12 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
             mLastRequest->header(h_Routes) = sRoute;
          }
       }
+   }
+
+   if(mUserProfile->clientOutboundEnabled() && method != REGISTER)
+   {
+      // Add ;ob parm to non-register requests - RFC5626 pg17
+      mLastRequest->header(h_Contacts).front().uri().param(p_ob);
    }
       
    Via via;

@@ -18,13 +18,14 @@
 
 using namespace flowmanager;
 using namespace resip;
+#ifdef USE_DTLS
 using namespace dtls;
+#endif
 using namespace std;
 
 #define MAX_RECEIVE_FIFO_DURATION 10 // seconds
 #define MAX_RECEIVE_FIFO_SIZE (100 * MAX_RECEIVE_FIFO_DURATION)  // 1000 = 1 message every 10 ms for 10 seconds - appropriate for RTP
-#define ICMP_RETRY_COUNT 10
-#define ICMP_RETRY_PERIOD_MS 200 // milliseconds
+#define ICMP_GRACE_PERIOD_SECONDS 5 // allow ICMP errors for this many seconds before onReceiveFailure
 #define CONNECTIVITY_CHECK_MAX_RETRANSMITS 7 // 7 is the default for Rc spec'd in RFC 5389
 
 #define RESIPROCATE_SUBSYSTEM FlowManagerSubsystem::FLOWMANAGER
@@ -125,8 +126,6 @@ Flow::Flow(asio::io_service& ioService,
 #ifdef USE_SSL
     mSslContext(sslContext),
 #endif
-    mIcmpRetryTimer(ioService),
-    mIcmpRetryCount(0),
     mComponentId(componentId),
     mLocalBinding(localBinding), 
     mMediaStream(mediaStream),
@@ -201,7 +200,6 @@ Flow::shutdownImpl()
    Lock lock(mMutex);
    if (mTurnSocket.get())
    {
-      mIcmpRetryTimer.cancel();
       mTurnSocket->disableTurnAsyncHandler();
       mTurnSocket->close();
    }
@@ -244,7 +242,8 @@ Flow::activateFlow(UInt8 allocationProps)
       {
          changeFlowState(ConnectingServer);
          mTurnSocket->connect(mMediaStream.mNatTraversalServerHostname.c_str(), 
-                              mMediaStream.mNatTraversalServerPort);
+                              mMediaStream.mNatTraversalServerPort,
+                              mLocalBinding.getAddress().is_v6());
       }
       else if (mMediaStream.mNatTraversalMode != MediaStream::NoNatTraversal &&
          mMediaStream.mNatTraversalServerHostname.empty())
@@ -536,9 +535,6 @@ Flow::setIceRole(bool controlling)
 void 
 Flow::setActiveDestination(const char* address, unsigned short port, const std::vector<reTurn::IceCandidate>& candidates)
 {
-   mIcmpRetryCount = 0;
-   mIcmpRetryTimer.cancel();
-
    if(mTurnSocket.get())
    {
       if(mMediaStream.mNatTraversalMode != MediaStream::TurnAllocation)
@@ -547,55 +543,55 @@ Flow::setActiveDestination(const char* address, unsigned short port, const std::
          {
             if (!mIceComplete)
             {
-            bool isRtpFlow = (mMediaStream.getRtpFlow() == this);
+               bool isRtpFlow = (mMediaStream.getRtpFlow() == this);
 
-            std::vector<reTurn::IceCandidate>::const_iterator candIt = candidates.begin();
-            for (; candIt != candidates.end(); ++candIt)
-            {
-               // first attempt to find and update any candidates that we may have inserted due to receiving
-               // BIND requests before receiving the SDP answer
-               bool alreadyInCheckList = false;
-               std::vector<IceCandidatePair>::iterator candPairIt = mIceCheckList.begin();
-               for (; candPairIt != mIceCheckList.end(); ++candPairIt)
+               std::vector<reTurn::IceCandidate>::const_iterator candIt = candidates.begin();
+               for (; candIt != candidates.end(); ++candIt)
                {
-                  if (candPairIt->mRemoteCandidate.getTransportAddr() == candIt->getTransportAddr())
+                  // first attempt to find and update any candidates that we may have inserted due to receiving
+                  // BIND requests before receiving the SDP answer
+                  bool alreadyInCheckList = false;
+                  std::vector<IceCandidatePair>::iterator candPairIt = mIceCheckList.begin();
+                  for (; candPairIt != mIceCheckList.end(); ++candPairIt)
                   {
-                     alreadyInCheckList = true;
-                     candPairIt->mRemoteCandidate = *candIt;
-                     candPairIt->mState = IceCandidatePair::Waiting;
-                     break;
+                     if (candPairIt->mRemoteCandidate.getTransportAddr() == candIt->getTransportAddr())
+                     {
+                        alreadyInCheckList = true;
+                        candPairIt->mRemoteCandidate = *candIt;
+                        candPairIt->mState = IceCandidatePair::Waiting;
+                        break;
+                     }
+                  }
+
+                  if (!alreadyInCheckList)
+                  {
+                     DebugLog(<< "adding ice candidate pair for remote candidate " << candIt->getTransportAddr() << " to ICE check list");
+                     IceCandidatePair candidatePair;
+                     candidatePair.mLocalCandidate = IceCandidate(mLocalBinding, IceCandidate::CandidateType_Host, 0, Data::Empty, mComponentId, StunTuple());
+                     candidatePair.mRemoteCandidate = *candIt;
+                     candidatePair.mState = (isRtpFlow? IceCandidatePair::Waiting : IceCandidatePair::Frozen);
+                     mIceCheckList.push_back(candidatePair);
                   }
                }
 
-               if (!alreadyInCheckList)
+               if (mFlowState == Ready)
                {
-                  DebugLog(<< "adding ice candidate pair for remote candidate " << candIt->getTransportAddr() << " to ICE check list");
-                  IceCandidatePair candidatePair;
-                  candidatePair.mLocalCandidate = IceCandidate(mLocalBinding, IceCandidate::CandidateType_Host, 0, Data::Empty, mComponentId, StunTuple());
-                  candidatePair.mRemoteCandidate = *candIt;
-                  candidatePair.mState = (isRtpFlow? IceCandidatePair::Waiting : IceCandidatePair::Frozen);
-                  mIceCheckList.push_back(candidatePair);
+                  // ?jjg? is this the right spot to do this?
+                  DebugLog(<< "scheduling initial ICE connectivity checks");
+                  changeFlowState(CheckingConnectivity);
+                  scheduleConnectivityChecks();
+               }
+               else
+               {
+                  DebugLog(<< "delaying ICE connectivity checks until flow state is Ready; current state is " << flowStateToString(mFlowState));
+                  mConnectivityChecksPending = true;
                }
             }
-
-            if (mFlowState == Ready)
-            {
-               // ?jjg? is this the right spot to do this?
-               DebugLog(<< "scheduling initial ICE connectivity checks");
-               changeFlowState(CheckingConnectivity);
-               scheduleConnectivityChecks();
-            }
-            else
-            {
-               DebugLog(<< "delaying ICE connectivity checks until flow state is Ready; current state is " << flowStateToString(mFlowState));
-               mConnectivityChecksPending = true;
-            }
-         }
          }
          else
          {
             changeFlowState(Connecting);
-            mTurnSocket->connect(address, port);
+            mTurnSocket->connect(address, port, mLocalBinding.getAddress().is_v6());
          }
       }
       else
@@ -720,79 +716,15 @@ Flow::getRemoteSDPFingerprint()
 #endif // USE_DTLS
 #endif // USE_SSL
 
-bool Flow::setDSCP(
-   ULONG ulInDSCPValue
-)
+
+void Flow::setOnBeforeSocketClosedFp(boost::function<void(unsigned int)> fp)
 {
    Lock lock(mMutex);
 
    if(!mTurnSocket.get())
-      return false;
+      return;
 
-   bool bSuccess = mTurnSocket->setDSCP(ulInDSCPValue);
-   if (!bSuccess)
-   {
-      InfoLog(<< "Transport does not support DSCP packet marking  ComponentId=" << mComponentId);
-      return false;
-   }
-
-   return true;
-}
-
-bool Flow::setServiceType(
-   const asio::ip::udp::endpoint &tInDestinationIPAddress,
-   EQOSServiceTypes eInServiceType,
-   ULONG ulInBandwidthInBitsPerSecond
-)
-{
-   Lock lock(mMutex);
-
-   if(!mTurnSocket.get())
-      return false;
-
-   bool bSuccess = mTurnSocket->setServiceType(tInDestinationIPAddress,
-      eInServiceType, ulInBandwidthInBitsPerSecond);
-   if (!bSuccess)
-   {
-      InfoLog(<< "Transport does not support Service Type packet marking  ComponentId=" << mComponentId);
-      return false;
-   }
-
-   return true;
-}
-
-void Flow::setBandwidthQOS(
-   VOID* tInQOSUserParam,
-   EQOSDirection eInFlowDirection,
-   const asio::ip::udp::endpoint &tInDestinationIPAddress,
-   ULONG ulInBitsPerSecondToReserve
-)
-{
-/* DRL FIXIT! The original code was firing an event here... not sure what interface we should be using!
-   FIRST
-   {
-      Lock lock(mMutex);
-
-      m_ipSink->OnUDPSetBandwidthQOSResult(
-         m_tUserData,
-         tInQOSUserParam,
-         false,
-         false
-      );
-   }
-   FINALLY
-   {
-   }
-*/
-}
-
-ULONG Flow::getBandwidthQOS(
-   EQOSDirection eInFlowDirection,
-   const asio::ip::udp::endpoint &tInDestinationIPAddress
-)
-{
-   assert(0);
-   return 0;
+   mTurnSocket->setOnBeforeSocketClosedFp(fp);
 }
 
 const StunTuple& 
@@ -922,7 +854,7 @@ Flow::onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, co
       if (nominatedCandidatePair != 0)
       {
          changeFlowState(Connecting);
-         mTurnSocket->connect(stunServerTuple.getAddress().to_string(), stunServerTuple.getPort());
+         mTurnSocket->connect(stunServerTuple.getAddress().to_string(), stunServerTuple.getPort(), mLocalBinding.getAddress().is_v6());
          DebugLog(<< "connecting RTP flow to " << stunServerTuple.getAddress().to_string() << ":" << stunServerTuple.getPort());
          mIceRole = IceRole_Unknown;
          mIceComplete = true;
@@ -968,7 +900,7 @@ Flow::onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, co
       if (nominatedCandidatePair != 0)
       {
          changeFlowState(Connecting);
-         mTurnSocket->connect(stunServerTuple.getAddress().to_string(), stunServerTuple.getPort());
+         mTurnSocket->connect(stunServerTuple.getAddress().to_string(), stunServerTuple.getPort(), mLocalBinding.getAddress().is_v6());
          DebugLog(<< "connecting RTCP flow to " << stunServerTuple.getAddress().to_string() << ":" << stunServerTuple.getPort());
          mIceRole = IceRole_Unknown;
          mIceComplete = true;
@@ -1187,9 +1119,7 @@ void
 Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, boost::shared_ptr<reTurn::DataBuffer>& data)
 {
    StackLog(<< "Flow::onReceiveSuccess: socketDesc=" << socketDesc << ", fromAddress=" << address.to_string() << ", fromPort=" << port << ", size=" << data->size() << ", componentId=" << mComponentId);
-   mIcmpRetryCount = 0;
-   mIcmpRetryTimer.cancel();
-
+   
 #ifdef USE_SSL
 #ifdef USE_DTLS
    // Check if packet is a dtls packet - if so then process it
@@ -1236,6 +1166,13 @@ Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address
             data.swap(newBuf);
          }
       }
+      else if (mMediaStream.mSRTPEnabled && !mMediaStream.mSRTPSessionInCreated)
+      {
+         // we haven't processed the remote party's answer yet, so we haven't
+         // setup our inbound SRTP session and can't decode this data; toss it
+         WarningLog(<< "discarding incoming SRTP since we don't have an inbound SRTP session yet");
+         return;
+      }
 
       if (!errorCode)
       {
@@ -1267,17 +1204,12 @@ Flow::onReceiveFailure(unsigned int socketDesc, const asio::error_code& e)
    if ((e.value() == asio::error::connection_refused || e.value() == asio::error::connection_reset)
        && mLocalBinding.getTransportType() == StunTuple::UDP)
    {
-      if (mIcmpRetryCount < ICMP_RETRY_COUNT)
-      {
-         asio::deadline_timer::duration_type d = mIcmpRetryTimer.expires_from_now();
-         if (d.is_special() || d.is_negative() || d.total_milliseconds() == 0)
-         {
-         mIcmpRetryTimer.expires_from_now(boost::posix_time::milliseconds(ICMP_RETRY_PERIOD_MS));
-         mIcmpRetryTimer.async_wait(boost::bind(&TurnAsyncSocket::turnReceive, mTurnSocket));
-         mIcmpRetryCount++;
-         }
-         return;
-      }
+      // .jjg. keep receiving -- after endless support tickets where ICMP errors were leading to Bria
+      // hanging up (even with a grace period), I've decided it's better to just let 'er keep trucking along
+      // as though nothing is wrong ...  BUT we'll still call the onReceiveFailure callback so that apps can 
+      // customize their behaviour in this regard
+      mTurnSocket->turnReceive();
+
    }
 
    Lock lock(mMutex);

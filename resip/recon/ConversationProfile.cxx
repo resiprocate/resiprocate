@@ -49,7 +49,7 @@ ConversationProfile::ConversationProfile(SharedPtr<UserProfile> baseProfile) :
 {
 }
 
-ConversationProfile::ConversationProfile( const ConversationProfile& thatProfile ) :
+ConversationProfile::ConversationProfile(const ConversationProfile& thatProfile) :
    UserProfile(thatProfile),
    mSessionCaps(thatProfile.mSessionCaps),
    mAllowAutoAnswer(thatProfile.mAllowAutoAnswer),
@@ -75,7 +75,6 @@ ConversationProfile::ConversationProfile( const ConversationProfile& thatProfile
 {
    // Initializer does it all
 }
-
 
 UserProfile* ConversationProfile::clone() const
 {

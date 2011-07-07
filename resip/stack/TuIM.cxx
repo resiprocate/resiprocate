@@ -467,7 +467,7 @@ TuIM::processRegisterRequest(SipMessage* msg)
    {
       ParserContainer<NameAddr> &providedContacts(msg->header(h_Contacts));
 
-      int multipleContacts = providedContacts.size();
+      int multipleContacts = (int)providedContacts.size();
 
       DebugLog ( << multipleContacts << " contacts were in received message." );   
 
@@ -581,11 +581,10 @@ TuIM::processMessageRequest(SipMessage* msg)
    if ( !contents )
    {
       InfoLog(<< "Received Message message with no contents" );
-      delete msg; msg=0;
+      // .kw. NO: delete msg; msg=0; // our caller owns msg
       return;
    }
 
-   assert( contents );
    Mime mime = contents->getType();
    DebugLog ( << "got body of type  " << mime.type() << "/" << mime.subType() );
 
@@ -1416,20 +1415,7 @@ TuIM::setOutbound( SipMessage& msg )
    {
       if ( ! msg.header(h_RequestLine).uri().exists(p_transport) )
       {
-         switch ( mDefaultProtocol )
-         {
-            case UDP:
-               msg.header(h_RequestLine).uri().param(p_transport) = Symbols::UDP;
-               break;
-            case TCP:
-               msg.header(h_RequestLine).uri().param(p_transport) = Symbols::TCP;
-               break;
-            case TLS:
-               msg.header(h_RequestLine).uri().param(p_transport) = Symbols::TLS;
-               break;
-            default:
-               assert(0);
-         }
+         msg.header(h_RequestLine).uri().param(p_transport) = Tuple::toDataLower(mDefaultProtocol);
       }
    }
 }

@@ -111,6 +111,7 @@ RemoteParticipant::RemoteParticipant(ConversationManager& conversationManager,
 
 RemoteParticipant::~RemoteParticipant()
 {
+   // !jjg! is DUM still alive?
    if(!mDialogId.getCallId().empty())
    {
       mDialogSet.removeDialog(mDialogId);
@@ -131,10 +132,10 @@ RemoteParticipant::~RemoteParticipant()
          const RemoteParticipantDialogSet::RtpStreamMap& streams = mDialogSet.getRtpStreams();
          RemoteParticipantDialogSet::RtpStreamMap::const_iterator iter = streams.begin();
          while(iter != streams.end())
-      {
+         {
             it->second->getMixer()->removeRtpStream(iter->second);
-         ++iter;
-      }
+            ++iter;
+         }
       }
 
       it->second->unregisterParticipant(this);
@@ -165,23 +166,23 @@ RemoteParticipant::isHolding()
       return false;
    }
 
-   // if any of the media are not on hold, then overall we are NOT on hold;
+   // if any of the media are on hold, return true
    MediaHoldStateMap::const_iterator it = mMediaHoldStates.begin();
    for (; it != mMediaHoldStates.end(); ++it)
    {
-      if (!it->second)
+      if (it->second)
       {
-         return false;
+         return true;
       }
    }
-   return true;
+   return false;
 }
 
 unsigned int
-RemoteParticipant::getLocalRTPPort( const sdpcontainer::SdpMediaLine::SdpMediaType& mediaType, ConversationProfile* profile /* = NULL */ )
+RemoteParticipant::getLocalRTPPort(const sdpcontainer::SdpMediaLine::SdpMediaType& mediaType, bool v6, ConversationProfile* profile /* = NULL */)
 {
    boost::shared_ptr<RtpStream> rtpStream = getRtpStream(mediaType);
-   unsigned int port = mDialogSet.getLocalRTPPort( mediaType, profile );
+   unsigned int port = mDialogSet.getLocalRTPPort(mediaType, v6, profile);
    if (!rtpStream)
    {
       // the stream may have just been created by the call to getLocalRTPPort(..)
@@ -279,21 +280,30 @@ RemoteParticipant::initiateRemoteCall(resip::SharedPtr<ConversationProfile> prof
       invitemsg->header(h_AnswerMode).value() = "Auto";
    }
 
-   if (callAttributes.replacesDialogId.getCallId().size() > 0 &&
-       callAttributes.replacesDialogId.getLocalTag().size() > 0 &&
-       callAttributes.replacesDialogId.getRemoteTag().size() > 0)
+   if (callAttributes.replacesDialogId.getCallId().size() > 0)
    {
       invitemsg->header(h_Replaces).value() = callAttributes.replacesDialogId.getCallId();
-      invitemsg->header(h_Replaces).param(p_toTag) = callAttributes.replacesDialogId.getLocalTag();
-      invitemsg->header(h_Replaces).param(p_fromTag) = callAttributes.replacesDialogId.getRemoteTag();
+      if (callAttributes.replacesDialogId.getLocalTag().size() > 0)
+      {
+         invitemsg->header(h_Replaces).param(p_toTag) = callAttributes.replacesDialogId.getLocalTag();
+      }
+      if (callAttributes.replacesDialogId.getRemoteTag().size() > 0)
+      {
+         invitemsg->header(h_Replaces).param(p_fromTag) = callAttributes.replacesDialogId.getRemoteTag();
+      }
    }
-   if (callAttributes.joinDialogId.getCallId().size() > 0 &&
-       callAttributes.joinDialogId.getLocalTag().size() > 0 &&
-       callAttributes.joinDialogId.getRemoteTag().size() > 0)
+
+   if (callAttributes.joinDialogId.getCallId().size() > 0)
    {
       invitemsg->header(h_Join).value() = callAttributes.joinDialogId.getCallId();
-      invitemsg->header(h_Join).param(p_toTag) = callAttributes.joinDialogId.getLocalTag();
-      invitemsg->header(h_Join).param(p_fromTag) = callAttributes.joinDialogId.getRemoteTag();
+      if (callAttributes.joinDialogId.getLocalTag().size() > 0)
+      {
+         invitemsg->header(h_Join).param(p_toTag) = callAttributes.joinDialogId.getLocalTag();
+      }
+      if (callAttributes.joinDialogId.getRemoteTag().size() > 0)
+      {
+         invitemsg->header(h_Join).param(p_fromTag) = callAttributes.joinDialogId.getRemoteTag();
+      }
    }
 
    // we are ICE controlling if we sent the offer that kicks off the offer/answer exchange
@@ -347,12 +357,36 @@ RemoteParticipant::destroyParticipant(const resip::Data& appDefinedReason)
          stateTransition(Terminating);
          if(mInviteSessionHandle.isValid())
          {
-            InviteSession::EndReason endReason = (appDefinedReason.size() > 0 ? InviteSession::AppDefined : InviteSession::NotSpecified);
-            mInviteSessionHandle->end(endReason, appDefinedReason);
+            if (appDefinedReason.empty())
+            {
+               mInviteSessionHandle->end();
+            }
+            else
+            {
+               mInviteSessionHandle->end(appDefinedReason);
+            }
          }
          else
          {
             mDialogSet.end();
+         }
+
+         // 3261 says we MUST consider the session terminated when we send the BYE,
+         // (but of course we only do this if the rtp streams are not shared among
+         // multiple dialogs (due to forking))
+         if (mDialogSet.getDialogCount() == 1)
+         {
+            const RemoteParticipantDialogSet::RtpStreamMap& rtpStreams = mDialogSet.getRtpStreams();
+            RemoteParticipantDialogSet::RtpStreamMap::const_iterator it = rtpStreams.begin();
+            for (; it != rtpStreams.end(); ++it)
+            {
+               const boost::shared_ptr<RtpStream>& rtpStream = it->second;
+               if (rtpStream.get())
+               {
+                  rtpStream->stopRtpSend();
+                  rtpStream->stopRtpReceive();
+               }
+            }
          }
       }
    }
@@ -399,7 +433,7 @@ RemoteParticipant::addToConversation(Conversation* conversation, unsigned int in
          {
             m_onRtpStreamClosedConns[streamIt->first] = rtpStream->onClosed().connect(boost::bind(&RemoteParticipant::onRtpStreamClosed, this, streamIt->first, _1, _2));
          }
-   }
+      }
    }
 }
 
@@ -462,12 +496,12 @@ RemoteParticipant::updateMedia(ConversationManager::MediaAttributes mediaAttribu
       // set security-related params
       if(mediaAttributes.secureMediaMode == ConversationManager::SrtpDtls &&
          profile->natTraversalMode() == flowmanager::MediaStream::TurnAllocation)
-   {
+      {
          WarningLog(<< "You cannot use SrtpDtls and a Turn allocation at the same time - disabling SrtpDtls!");
          mDialogSet.setSecureMediaMode(ConversationManager::NoSecureMedia);
-   }
+      }
       else
-   {
+      {
          mDialogSet.setSecureMediaMode(mediaAttributes.secureMediaMode);
       }
    }
@@ -548,6 +582,8 @@ RemoteParticipant::stateTransition(State state)
 ConversationManager::MediaDirection
 getDirectionForMediaType(const resip::Data& mediaType, const resip::SdpContents& sdp)
 {
+   bool oldStyleHoldRequested = isEqualNoCase(sdp.session().connection().getAddress(), "0.0.0.0");
+
    std::list<resip::SdpContents::Session::Medium>::const_iterator it = sdp.session().media().begin();
    for (; it != sdp.session().media().end(); ++it)
    {
@@ -555,7 +591,7 @@ getDirectionForMediaType(const resip::Data& mediaType, const resip::SdpContents&
       {
          if (it->exists("inactive"))
             return ConversationManager::MediaDirection_Inactive;
-         else if (it->exists("sendonly"))
+         else if (it->exists("sendonly") || oldStyleHoldRequested)
             return ConversationManager::MediaDirection_SendOnly;
          else if (it->exists("recvonly"))
             return ConversationManager::MediaDirection_ReceiveOnly;
@@ -583,9 +619,12 @@ RemoteParticipant::accept(ConversationManager::MediaAttributes mediaAttributes)
             {
                mPendingRequest.mType = None;
             }
+
             if(mOfferRequired)
             {
                mDialogSet.setIceRole(true);
+               mDialogSet.audioDirection() = mediaAttributes.audioDirection;
+               mDialogSet.videoDirection() = mediaAttributes.videoDirection;
                provideOffer(true /* postOfferAccept */);
             }
             else if(mPendingOffer.get() != 0)
@@ -596,8 +635,7 @@ RemoteParticipant::accept(ConversationManager::MediaAttributes mediaAttributes)
                ConversationManager::MediaDirection remoteAudioDirection = getDirectionForMediaType("audio",*mPendingOffer.get());
                ConversationManager::MediaDirection remoteVideoDirection = getDirectionForMediaType("video",*mPendingOffer.get());
 
-               if (remoteAudioDirection == ConversationManager::MediaDirection_None ||
-                   remoteAudioDirection == ConversationManager::MediaDirection_Inactive)
+               if (remoteAudioDirection == ConversationManager::MediaDirection_None)
                {
                   mDialogSet.audioDirection() = remoteAudioDirection;
                }
@@ -606,8 +644,7 @@ RemoteParticipant::accept(ConversationManager::MediaAttributes mediaAttributes)
                   mDialogSet.audioDirection() = mediaAttributes.audioDirection;
                }
 
-               if (remoteVideoDirection == ConversationManager::MediaDirection_None ||
-                   remoteVideoDirection == ConversationManager::MediaDirection_Inactive)
+               if (remoteVideoDirection == ConversationManager::MediaDirection_None)
                {
                   mDialogSet.videoDirection() = remoteVideoDirection;
                }
@@ -665,8 +702,7 @@ RemoteParticipant::accept(ConversationManager::MediaAttributes mediaAttributes)
             ConversationManager::MediaDirection remoteAudioDirection = getDirectionForMediaType("audio",*mPendingOffer.get());
             ConversationManager::MediaDirection remoteVideoDirection = getDirectionForMediaType("video",*mPendingOffer.get());
 
-            if (remoteAudioDirection == ConversationManager::MediaDirection_None ||
-                remoteAudioDirection == ConversationManager::MediaDirection_Inactive)
+            if (remoteAudioDirection == ConversationManager::MediaDirection_None)
             {
                mDialogSet.audioDirection() = remoteAudioDirection;
             }
@@ -675,8 +711,7 @@ RemoteParticipant::accept(ConversationManager::MediaAttributes mediaAttributes)
                mDialogSet.audioDirection() = mediaAttributes.audioDirection;
             }
 
-            if (remoteVideoDirection == ConversationManager::MediaDirection_None ||
-                remoteVideoDirection == ConversationManager::MediaDirection_Inactive)
+            if (remoteVideoDirection == ConversationManager::MediaDirection_None)
             {
                mDialogSet.videoDirection() = remoteVideoDirection;
             }
@@ -778,7 +813,9 @@ RemoteParticipant::reject(unsigned int rejectCode)
          ServerInviteSession* sis = dynamic_cast<ServerInviteSession*>(mInviteSessionHandle.get());
          if(sis && !sis->isAccepted())
          {
+            InfoLog( <<"Reject with code: " << rejectCode);
             sis->reject(rejectCode);
+            mPendingOffer.release();
          }
       }
       // Reject Pending OOD Refer request if required
@@ -789,7 +826,9 @@ RemoteParticipant::reject(unsigned int rejectCode)
       else if(mState == Connected)
       {
          // reject a re-INVITE
+         InfoLog( <<"Reject with code: " << rejectCode);
          mInviteSessionHandle->reject(rejectCode);
+         mPendingOffer.release();
       }
       else
       {
@@ -927,7 +966,12 @@ RemoteParticipant::hold()
    RemoteParticipantDialogSet::RtpStreamMap::const_iterator it = streams.begin();
    for (; it != streams.end(); ++it)
    {
-      mMediaHoldStates[it->first] = true;
+      if (mDialogSet.isMediaActive(it->first))
+      {
+         // .jjg. only set the hold state to true if this media line is currently 'active',
+         // since we don't want to enable or change the directionality when we unhold if it is disabled/inactive
+         mMediaHoldStates[it->first] = true;
+      }
    }
 
    try
@@ -971,13 +1015,22 @@ RemoteParticipant::hold()
 void
 RemoteParticipant::unhold()
 {
+   InfoLog(<< "RemoteParticipant::unhold request: handle=" << mHandle);
+
+   if (mDialogSet.audioEnabled() && mMediaHoldStates[SdpMediaLine::MEDIA_TYPE_AUDIO])
+   {
+      mDialogSet.audioDirection() = ConversationManager::MediaDirection_SendReceive;
+   }
+   if (mDialogSet.videoEnabled() && mMediaHoldStates[SdpMediaLine::MEDIA_TYPE_VIDEO])
+   {
+      mDialogSet.videoDirection() = ConversationManager::MediaDirection_SendReceive;
+   }
+
    MediaHoldStateMap::iterator it = mMediaHoldStates.begin();
    for (; it != mMediaHoldStates.end(); ++it)
    {
       it->second = false;
    }
-
-   InfoLog(<< "RemoteParticipant::unhold request: handle=" << mHandle);
 
    try
    {
@@ -1033,81 +1086,80 @@ RemoteParticipant::setPendingOODReferInfo(ServerSubscriptionHandle ss, const Sip
    mPendingOODReferSubHandle = ss;
 }
 
+// !jjg! is this potentially harmful?  19.1.5 in 3261 hints that you aren't supposed
+// to send the request AT ALL if you don't understand some of the extensions that are used ...
+// however there are platforms (sipX) that expect the client to pass along these unknown headers
+void
+RemoteParticipant::mergeUnknownHeaders(const resip::Uri& uriSource, resip::SharedPtr<resip::SipMessage>& msgDest)
+{
+   std::auto_ptr<resip::SipMessage> embeddedMsg(new resip::SipMessage(uriSource.embedded()));
+   SipMessage::UnknownHeaders userHeaders = embeddedMsg->getRawUnknownHeaders();
+   SipMessage::UnknownHeaders::const_iterator itUserHdrs = userHeaders.begin();
+   for (; itUserHdrs != userHeaders.end(); ++itUserHdrs)
+   {
+      ExtensionHeader h_Ext(itUserHdrs->first);
+      msgDest->header(h_Ext) = embeddedMsg->header(h_Ext);
+   }
+}
+
 void
 RemoteParticipant::acceptPendingOODRefer(ConversationManager::MediaAttributes mediaAttribs)
 {
    if(mState == PendingOODRefer)
    {
-      bool accepted = false;
-      if(mPendingOODReferNoSubHandle.isValid())
-      {
-         mPendingOODReferNoSubHandle->send(mPendingOODReferNoSubHandle->accept(202));  // Accept OOD Refer
-         accepted = true;
-      }
-      else if(mPendingOODReferSubHandle.isValid())
-      {
-         mPendingOODReferSubHandle->send(mPendingOODReferSubHandle->accept(202));  // Accept OOD Refer
-         accepted = true;
-      }
-      if(accepted)
-      {
-         // Create offer
-         SdpContents offer;
+      // Create offer
+      SdpContents offer;
 
-         resip::SharedPtr<ConversationProfile> convProfile;
-         ConversationMap::const_iterator convIt = mConversations.begin();
-         for (; convIt != mConversations.end(); ++convIt)
+      resip::SharedPtr<ConversationProfile> convProfile;
+      ConversationMap::const_iterator convIt = mConversations.begin();
+      for (; convIt != mConversations.end(); ++convIt)
+      {
+         if (convIt->second)
          {
-            if (convIt->second)
+            if (convIt->second->getNumLocalParticipants() > 0)
             {
-               if (convIt->second->getNumLocalParticipants() > 0)
-               {
-                  convProfile = convIt->second->getProfile();
-               }
+               convProfile = convIt->second->getProfile();
             }
          }
+      }
 
-         mDialogSet.audioDirection() = mediaAttribs.audioDirection;
-         mDialogSet.videoDirection() = mediaAttribs.videoDirection;
+      mDialogSet.audioDirection() = mediaAttribs.audioDirection;
+      mDialogSet.videoDirection() = mediaAttribs.videoDirection;
 
-         // set security-related params
-         if(mediaAttribs.secureMediaMode == ConversationManager::SrtpDtls &&
-            convProfile->natTraversalMode() == flowmanager::MediaStream::TurnAllocation)
-         {
-            WarningLog(<< "You cannot use SrtpDtls and a Turn allocation at the same time - disabling SrtpDtls!");
-            mDialogSet.setSecureMediaMode(ConversationManager::NoSecureMedia);
-         }
-         else
-         {
-            mDialogSet.setSecureMediaMode(mediaAttribs.secureMediaMode);
-         }
-
-         mDialogSet.setSecureMediaRequired(mediaAttribs.secureMediaRequired);
-         mDialogSet.setSrtpCryptoSuite(mediaAttribs.secureMediaDefaultCryptoSuite);
-
-         buildSdpOffer(convProfile.get(), mMediaHoldStates, offer);
-
-         // Build the Invite
-         //SharedPtr<SipMessage> invitemsg = mDum.makeInviteSessionFromRefer(mPendingOODReferMsg,
-         //                                                                  mDialogSet.getUserProfile(),
-         //                                                                  &offer,
-         //                                                                  &mDialogSet);
-         SharedPtr<SipMessage> invitemsg = mDum.makeInviteSessionFromRefer(mPendingOODReferMsg,
-                                                                           mPendingOODReferSubHandle,
-                                                                           &offer,
-                                                                           &mDialogSet);
-         mDialogSet.sendInvite(invitemsg);
-
-         adjustRTPStreams(true);
-
-         stateTransition(Connecting);
+      // set security-related params
+      if(mediaAttribs.secureMediaMode == ConversationManager::SrtpDtls &&
+         convProfile->natTraversalMode() == flowmanager::MediaStream::TurnAllocation)
+      {
+         WarningLog(<< "You cannot use SrtpDtls and a Turn allocation at the same time - disabling SrtpDtls!");
+         mDialogSet.setSecureMediaMode(ConversationManager::NoSecureMedia);
       }
       else
       {
-         WarningLog(<< "acceptPendingOODRefer - no valid handles");
-         mConversationManager.onParticipantTerminated(mHandle, 500, resip::InviteSessionHandler::Error, NULL);
-         delete this;
+         mDialogSet.setSecureMediaMode(mediaAttribs.secureMediaMode);
       }
+
+      mDialogSet.setSecureMediaRequired(mediaAttribs.secureMediaRequired);
+      mDialogSet.setSrtpCryptoSuite(mediaAttribs.secureMediaDefaultCryptoSuite);
+
+      buildSdpOffer(convProfile.get(), mMediaHoldStates, offer);
+
+      // Build the Invite
+      //SharedPtr<SipMessage> invitemsg = mDum.makeInviteSessionFromRefer(mPendingOODReferMsg,
+      //                                                                  mDialogSet.getUserProfile(),
+      //                                                                  &offer,
+      //                                                                  &mDialogSet);
+      SharedPtr<SipMessage> invitemsg = mDum.makeInviteSessionFromRefer(mPendingOODReferMsg,
+                                                                        mPendingOODReferSubHandle,
+                                                                        &offer,
+                                                                        &mDialogSet);
+      mergeUnknownHeaders(mPendingOODReferMsg.header(h_ReferTo).uri(), invitemsg);
+
+      mDialogSet.setIceRole(true);
+      mDialogSet.sendInvite(invitemsg);
+
+      adjustRTPStreams(true);
+
+      stateTransition(Connecting);
    }
 }
 
@@ -1116,21 +1168,7 @@ RemoteParticipant::rejectPendingOODRefer(unsigned int statusCode)
 {
    if(mState == PendingOODRefer)
    {
-      if(mPendingOODReferNoSubHandle.isValid())
-      {
-         mPendingOODReferNoSubHandle->send(mPendingOODReferNoSubHandle->reject(statusCode));
-         mConversationManager.onParticipantTerminated(mHandle, statusCode, InviteSessionHandler::Rejected, NULL);
-      }
-      else if(mPendingOODReferSubHandle.isValid())
-      {
-         mPendingOODReferSubHandle->send(mPendingOODReferSubHandle->reject(statusCode));
-         mConversationManager.onParticipantTerminated(mHandle, statusCode, InviteSessionHandler::Rejected, NULL);
-      }
-      else
-      {
-         WarningLog(<< "rejectPendingOODRefer - no valid handles");
-         mConversationManager.onParticipantTerminated(mHandle, 500, InviteSessionHandler::Error, NULL);
-      }
+      mConversationManager.onParticipantTerminated(mHandle, statusCode, InviteSessionHandler::Rejected, NULL);
       delete this;
    }
 }
@@ -1138,7 +1176,7 @@ RemoteParticipant::rejectPendingOODRefer(unsigned int statusCode)
 void
 RemoteParticipant::processReferNotify(const SipMessage& notify)
 {
-   unsigned int code = 400;  // Bad Request - default if for some reason a valid sipfrag is not present
+   unsigned int code = 0;  // a sipfrag might not be present if we get a neutral NOTIFY due to a requestRefresh
    resip::Data reasonPhrase(resip::Data::Empty);
 
    SipFrag* frag  = dynamic_cast<SipFrag*>(notify.getContents());
@@ -1153,7 +1191,11 @@ RemoteParticipant::processReferNotify(const SipMessage& notify)
    }
 
    // Check if success or failure response code was in SipFrag
-   if(code < 200)
+   if(code == 0)
+   {
+      // ignore
+   }
+   else if(code < 200)
    {
       if(mState == Redirecting)
       {
@@ -1220,6 +1262,16 @@ RemoteParticipant::provideAnswer(const SdpContents& offer, bool postAnswerAccept
    return answerOk;
 }
 
+sdpcontainer::SdpMediaLine::SdpMediaType
+mediaTypeFromName(const resip::Data& name)
+{
+   if (resip::isEqualNoCase(name, "audio"))
+      return sdpcontainer::SdpMediaLine::MEDIA_TYPE_AUDIO;
+   if (resip::isEqualNoCase(name, "video"))
+      return sdpcontainer::SdpMediaLine::MEDIA_TYPE_VIDEO;
+   return sdpcontainer::SdpMediaLine::MEDIA_TYPE_UNKNOWN;
+}
+
 void
 RemoteParticipant::buildSdpOffer(ConversationProfile* profile, MediaHoldStateMap holdStates, SdpContents& offer, std::set<sdpcontainer::SdpMediaLine::SdpMediaType> existingMediaTypes)
 {
@@ -1241,10 +1293,17 @@ RemoteParticipant::buildSdpOffer(ConversationProfile* profile, MediaHoldStateMap
       std::list<SdpContents::Session::Medium>::iterator offerIt = offer.session().media().begin();
       for (; offerIt !=  offer.session().media().end() ; ++offerIt )
       {
-         if ( isEqualNoCase( "audio", offerIt->name() ) && !mDialogSet.audioEnabled() )
+         SdpMediaLine::SdpMediaType mt_itm = SdpMediaLine::getMediaTypeFromString(offerIt->name().c_str());
+         if (mDialogSet.isMediaEnabled(mt_itm))
+         {
+            // always re-fetch the port, since it's possible that this media stream
+            // was disabled (closing the port) but will now be re-enabled in our offer
+            offerIt->port() = getLocalRTPPort(mt_itm, (offerIt->getConnections().front().getAddressType() == SdpContents::IP6), profile);
+         }
+         else
+         {
             offerIt->port() = 0;
-         else if ( isEqualNoCase( "video", offerIt->name() ) && !mDialogSet.videoEnabled() )
-            offerIt->port() = 0;
+         }
       }
 
       // Set sessionid and version for this sdp
@@ -1359,8 +1418,9 @@ RemoteParticipant::buildSdpOffer(ConversationProfile* profile, MediaHoldStateMap
             {
                if (isEqualNoCase(mediaIt->name(), scapsMedium->name()))
                {
+                  bool mediaConnIsV6 = (mediaIt->getConnections().size() > 0 ? mediaIt->getConnections().front().getAddressType() == SdpContents::IP6 : false);
                   addedMedium.reset(new SdpContents::Session::Medium(*mediaIt));
-                  addedMedium->port() = getLocalRTPPort( SdpMediaLine::getMediaTypeFromString( addedMedium->name().c_str()), profile );
+                  addedMedium->port() = getLocalRTPPort(SdpMediaLine::getMediaTypeFromString(addedMedium->name().c_str()), mediaConnIsV6, profile);
                }
             }
 
@@ -1412,7 +1472,7 @@ RemoteParticipant::buildSdpOffer(ConversationProfile* profile, MediaHoldStateMap
             continue;
          }
          offerMedium = &(*mediaIt);
-         offerMedium->port() = getLocalRTPPort( SdpMediaLine::getMediaTypeFromString( offerMedium->name().c_str()), profile);
+         offerMedium->port() = getLocalRTPPort(SdpMediaLine::getMediaTypeFromString(offerMedium->name().c_str()), offerMedium->getConnections().front().getAddressType() == SdpContents::IP6, profile);
          mediaIt++;
       }
    }
@@ -1460,6 +1520,7 @@ RemoteParticipant::buildSdpOffer(ConversationProfile* profile, MediaHoldStateMap
          if(mDialogSet.getSecureMediaRequired())
          {
             offerMedium->protocol() = Symbols::RTP_SAVP;
+            mDialogSet.setSrtpEnabled(mediaTypeFromName(offerMedium->name()), true);
          }
          else
          {
@@ -1592,7 +1653,7 @@ RemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessionCap
       sdpMediaLine.getConnections().size() != 0 &&
       sdpMediaLine.getConnections().front().getPort() != 0)
    {
-      SdpContents::Session::Medium medium( sdpMediaLine.getMediaTypeString(), getLocalRTPPort( sdpMediaLine.getMediaType(), profile ), 1, protocol );
+      SdpContents::Session::Medium medium(sdpMediaLine.getMediaTypeString(), getLocalRTPPort(sdpMediaLine.getMediaType(), sdpMediaLine.getConnections().front().getAddressType() == Sdp::ADDRESS_TYPE_IP6, profile), 1, protocol);
       medium.encodeAttribsForStaticPLs() = false;
 
       // Check secure media properties and requirements
@@ -1601,6 +1662,7 @@ RemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessionCap
       if(mDialogSet.getSecureMediaMode() == ConversationManager::Srtp ||
          isEqualNoCase( protocol, "RTP/SAVP"))  // allow accepting of SAVP profiles, even if SRTP is not enabled as a SecureMedia mode
       {
+         mDialogSet.setSrtpEnabled(sdpMediaLine.getMediaType(), true);
          bool supportedCryptoSuite = false;
          SdpMediaLine::CryptoList::const_iterator itCrypto = sdpMediaLine.getCryptos().begin();
          for(; !supportedCryptoSuite && itCrypto!=sdpMediaLine.getCryptos().end(); ++itCrypto)
@@ -1785,15 +1847,17 @@ RemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessionCap
 
          // Check requested direction
          unsigned int remoteRtpPort = sdpMediaLine.getConnections().front().getPort();
+         bool oldStyleHoldRequested = resip::isEqualNoCase(sdpMediaLine.getConnections().front().getAddress(), "0.0.0.0");
          bool mediaHoldState = mMediaHoldStates[sdpMediaLine.getMediaType()];
          if(sdpMediaLine.getMediaType() == SdpMediaLine::MEDIA_TYPE_AUDIO && !mDialogSet.audioActive() ||
             sdpMediaLine.getMediaType() == SdpMediaLine::MEDIA_TYPE_VIDEO && !mDialogSet.videoActive() ||
             sdpMediaLine.getDirection() == SdpMediaLine::DIRECTION_TYPE_INACTIVE ||
-           (mediaHoldState && (sdpMediaLine.getDirection() == SdpMediaLine::DIRECTION_TYPE_SENDONLY || remoteRtpPort == 0)))  // If remote inactive or both sides are holding
+            (oldStyleHoldRequested && mediaHoldState) ||
+            (mediaHoldState && (sdpMediaLine.getDirection() == SdpMediaLine::DIRECTION_TYPE_SENDONLY || remoteRtpPort == 0)))  // If remote inactive or both sides are holding
          {
             medium.addAttribute("inactive");
          }
-         else if(sdpMediaLine.getDirection() == SdpMediaLine::DIRECTION_TYPE_SENDONLY || remoteRtpPort == 0 /* old RFC 2543 hold */)
+         else if(sdpMediaLine.getDirection() == SdpMediaLine::DIRECTION_TYPE_SENDONLY || (oldStyleHoldRequested && !mediaHoldState) || remoteRtpPort == 0 /* old RFC 2543 hold */)
          {
             medium.addAttribute("recvonly");
          }
@@ -1859,6 +1923,12 @@ RemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& answer)
       Sdp::MediaLineList::const_iterator itMediaLine;
       std::list<SdpContents::Session::Medium>::const_iterator itOldMediaLine;
 
+      if (offer.session().media().size() == 0)
+      {
+         // RFC 3725 flow IV
+         valid = true;
+      }
+
       for( itMediaLine = remoteSdp->getMediaLines().begin(), itOldMediaLine = offer.session().media().begin() ;
            itMediaLine != remoteSdp->getMediaLines().end() ;
            ++itMediaLine, ++itOldMediaLine )
@@ -1871,12 +1941,12 @@ RemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& answer)
 
             if ((*itMediaLine)->getMediaType() == SdpMediaLine::MEDIA_TYPE_AUDIO && !profile->audioSupported())
             {
-               DebugLog(<< "buildSdpAnswer - audio not supported");
+               InfoLog(<< "buildSdpAnswer - audio not supported");
                continue;
             }
             if ((*itMediaLine)->getMediaType() == SdpMediaLine::MEDIA_TYPE_VIDEO && !profile->videoSupported())
             {
-               DebugLog(<< "buildSdpAnswer - video not supported");
+               InfoLog(<< "buildSdpAnswer - video not supported");
                continue;
             }
 
@@ -1915,7 +1985,7 @@ RemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& answer)
 
             rejmedium.mRtpMapDone = true;
             answer.session().addMedium(rejmedium);
-            DebugLog(<< "rejecting medium " << rejmedium.name());
+            InfoLog(<< "rejecting medium " << rejmedium.name());
          }
          else
          {
@@ -2176,7 +2246,7 @@ toMediaState(sdpcontainer::SdpMediaLine::SdpDirectionType direction)
    return ConversationManager::MediaDirection_None;
 }
 
-void
+void 
 RemoteParticipant::checkRemoteIceAttribs(const resip::SdpContents& remoteSdp)
 {
    if (remoteSdp.session().exists("ice-ufrag"))
@@ -2203,9 +2273,6 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer, const resip::SipMessage* 
    Sdp *remoteSdp = sendingOffer ? 0 : mRemoteSdp;
    const SdpMediaLine::CodecList* localCodecs = NULL;
    const SdpMediaLine::CodecList* remoteCodecs = NULL;
-   bool supportedCryptoSuite = false;
-   bool supportedFingerprint = false;
-
    assert(localSdp);
 
    // Iterate over all the supported medias. For now, voice and video.
@@ -2225,6 +2292,12 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer, const resip::SipMessage* 
 
    for( int i = 0 ; i < ( sizeof( supportedMedias ) / sizeof( SdpMediaLine::SdpMediaType )) ; ++i )
    {
+      bool bOldStyleHoldRequested = false;
+      bool supportedCryptoSuite = false;
+      bool supportedFingerprint = false;
+
+      bool mlineSupported = false;
+
       unsigned int remoteRtpPort=0;
       unsigned int remoteRtcpPort=0;
 
@@ -2274,9 +2347,13 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer, const resip::SipMessage* 
                (*itRemMediaLine)->getConnections().front().getPort() != 0)
             {
                //InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", found media line in remote sdp");
+               mlineSupported = true;
                remoteMediaDirection[i] = (*itRemMediaLine)->getDirection();
                remoteRtpPort = (*itRemMediaLine)->getConnections().front().getPort();
-               remoteRtcpPort = (*itRemMediaLine)->getRtcpConnections().front().getPort();
+               if ((*itRemMediaLine)->getRtcpConnections().size() > 0)
+               {
+                  remoteRtcpPort = (*itRemMediaLine)->getRtcpConnections().front().getPort();
+               }
                remoteIPAddress = (*itRemMediaLine)->getConnections().front().getAddress();
                remoteCodecs = &(*itRemMediaLine)->getCodecs();
                candidates = (*itRemMediaLine)->getCandidates();
@@ -2288,17 +2365,18 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer, const resip::SipMessage* 
                }
                icePassword = (*itRemMediaLine)->getIcePassword();
 
-               // Check if they are using "old-style" hold. If so, we need to
-               // try to fetch a better remote IP address. Be careful, as it
-               // still might not exist if the first INVITE contained the
-               // 0.0.0.0 address.
-               if(!remoteIPAddress.empty() && isEqualNoCase( remoteIPAddress, "0.0.0.0" ))
+               // Check if they are using "old-style" hold.
+               if( !remoteIPAddress.empty() && isEqualNoCase( remoteIPAddress, "0.0.0.0" ))
                {
-                  if (!mLastRemoteIPAddr.empty())
-                  {
-                     remoteIPAddress = mLastRemoteIPAddr;
-                  }
+                  bOldStyleHoldRequested = true;
+                  remoteMediaDirection[i] = SdpMediaLine::DIRECTION_TYPE_SENDONLY;
                }
+               
+               // If so, we need to try to fetch a better remote IP address.
+               // Be careful, as it still might not exist if the first INVITE
+               // contained the 0.0.0.0 address.
+               if( bOldStyleHoldRequested && !mLastRemoteIPAddr.empty())
+                  remoteIPAddress = mLastRemoteIPAddr;
 
                // Process Crypto settings (if required) - createSRTPSession using remote key
                // Note:  Top crypto in remote sdp will always be the correct suite/key
@@ -2407,7 +2485,7 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer, const resip::SipMessage* 
          mediaDirection[i] = localMediaDirection[i];
       }
 
-      if(remoteSdp && mDialogSet.getSecureMediaRequired() && !supportedCryptoSuite && !supportedFingerprint)
+      if(remoteSdp && mDialogSet.getSecureMediaRequired() && mlineSupported && !supportedCryptoSuite && !supportedFingerprint)
       {
          InfoLog(<< "Secure media is required and no valid support found in remote sdp - ending call.");
          destroyParticipant("secure media required");
@@ -2491,16 +2569,17 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer, const resip::SipMessage* 
                // .jjg. NOTE that the media stack is required to keep track of the fact that pause
                //       has been called, and do the right thing when startRtpSend(..) gets called below
                //       (this typically means sending keepalive packets)
-               rtpStream->pauseRtpSend();
+               rtpStream->pauseRtpSend( bOldStyleHoldRequested );
             }
             else
             {
-            if (rtpStream->isPausing())
-            {
+               if (rtpStream->isPausing())
+               {
                   rtpStream->resumeRtpSend();
                }
             }
-            if (!rtpStream->isSendingRtp())
+            // .jjg. allow calling startRtpSend(..) even while sending so that we can update the codecs
+            //if (!rtpStream->isSendingRtp())
             {
                // .jjg. ALWAYS start sending, because we need firewall keepalives (be they RTP packets with an
                //       unused pltype, or STUN packets) need to flow no matter what media direction gets negotiated
@@ -2512,13 +2591,33 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer, const resip::SipMessage* 
             WarningLog(<< "adjustRTPStreams: handle=" << mHandle << ", something went wrong during SDP negotiations, no common codec found.");
          }
       }
+      else if (remoteSdp && remoteRtpPort == 0 && rtpStream.get())
+      {
+         InviteSessionHandle hInvSess = getInviteSession();
+         bool isEarly = false;
+         if (hInvSess.isValid())
+         {
+            isEarly = hInvSess->isEarly();
+         }
+         if (!isEarly)
+         {
+            rtpStream->stopRtpSend();
+            rtpStream->stopRtpReceive();
+            mDialogSet.freeLocalRTPPort(supportedMedias[i]);
+            m_onRtpStreamClosedConns[supportedMedias[i]].disconnect();
+            m_onRtpStreamClosedConns.erase(supportedMedias[i]);
+         }
+      }
 
       // .jjg. note that all media directions are specified here
       // because the port is allocated, and we need keep-alives
       // to flow, so we'd better get our RTP stack listening
       if(rtpStream.get())
       {
-         if (!rtpStream->isReceivingRtp() && localCodecs)
+         // .jjg. we now require calling startRtpReceive() even if we are already receiving
+         // because we might need to update the list of codecs that were negotiated (this set can
+         // change if, e.g., we get an INVITE with no body during a call)
+         if (/*!rtpStream->isReceivingRtp() &&*/ localCodecs)
          {
             // !SLG! - we could make this better, no need to recalculate this every time
             // We are always willing to receive any of our locally supported codecs
@@ -2557,7 +2656,7 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer, const resip::SipMessage* 
    }
 }
 
-void 
+void
 RemoteParticipant::replaceWithParticipant(RemoteParticipant* replacingParticipant)
 {
     // Copy our local hold setting to the replacing participant to replace us
@@ -2598,7 +2697,7 @@ RemoteParticipant::onNewSession(ServerInviteSessionHandle h, InviteSession::Offe
    // !jjg! removed, because we don't know how many/what types of media streams we will have yet
    //getLocalRTPPort(sdpcontainer::SdpMediaLine::MEDIA_TYPE_AUDIO);  // Allocate a port now - since it will be required as soon as we add this participant to a conversation
 
-   mInviteSessionHandle = h->getSessionHandle();         
+   mInviteSessionHandle = h->getSessionHandle();
    mDialogId = getDialogId();
 
    // First check if this INVITE is to replace an existing session
@@ -2804,7 +2903,6 @@ RemoteParticipant::onTerminated(InviteSessionHandle h, InviteSessionHandler::Ter
    if(mHandle && mReferringAppDialog.isValid())
    {
       RemoteParticipant* participant = (RemoteParticipant*)mReferringAppDialog.get();
-
       replaceWithParticipant(participant);      // adjust conversation mappings
       if(participant->getParticipantHandle())
       {
@@ -2876,12 +2974,18 @@ RemoteParticipant::onOffer(InviteSessionHandle h, const SipMessage& msg, const S
    for( std::list<SdpContents::Session::Medium>::const_iterator iter = offer.session().media().begin() ;
         iter != offer.session().media().end() ; ++iter )
    {
-      SdpMediaLine::SdpMediaType mt = SdpMediaLine::getMediaTypeFromString( iter->name().c_str() );
-      if ( getLocalRTPPort( mt ) == 0 )
+      SdpMediaLine::SdpMediaType mt = SdpMediaLine::getMediaTypeFromString(iter->name().c_str());
+      if (mt == SdpMediaLine::MEDIA_TYPE_UNKNOWN)
+      {
          ++nBadPorts;
+      }
+      else if (getLocalRTPPort(mt, (iter->getConnections().front().getAddressType() == SdpContents::IP6)) == 0)
+      {
+         ++nBadPorts;
+      }
    }
 
-   if ( nBadPorts >= offer.session().media().size() )
+   if ((offer.session().media().size() > 0) && (nBadPorts >= offer.session().media().size()))
    {
       // "Not Acceptable Here", we can't match anything
       h->reject(488);
@@ -2896,10 +3000,15 @@ RemoteParticipant::onOffer(InviteSessionHandle h, const SipMessage& msg, const S
          mPendingOffer = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(offer.clone()));
 
          // Check if there is a valid connection IP address for this session.
-         // If there is, remember it for later (to support RTCP timers during an
-         // "old-style" hold
-         if (!isEqualNoCase(offer.session().connection().getAddress(), "0.0.0.0"))
+         bool oldStyleHoldRequested = false;
+         if (isEqualNoCase(offer.session().connection().getAddress(), "0.0.0.0"))
          {
+            oldStyleHoldRequested = true;
+         }
+         else
+         {
+            // If there is, remember it for later (to support RTCP timers during an
+            // "old-style" hold
             mLastRemoteIPAddr = offer.session().connection().getAddress();
          }
 
@@ -2920,7 +3029,7 @@ RemoteParticipant::onOffer(InviteSessionHandle h, const SipMessage& msg, const S
             const SdpContents::Session::Medium& m = *mediaIt;
             if (resip::isEqualNoCase("audio", m.name()) && m.port() != 0)
             {
-               if (m.exists("sendonly"))
+               if (m.exists("sendonly") || oldStyleHoldRequested)
                {
                   requestedAudioState = ConversationManager::MediaDirection_SendOnly;
                }
@@ -2939,7 +3048,7 @@ RemoteParticipant::onOffer(InviteSessionHandle h, const SipMessage& msg, const S
             }
             else if (resip::isEqualNoCase("video", m.name()) && m.port() != 0)
             {
-               if (m.exists("sendonly"))
+               if (m.exists("sendonly") || oldStyleHoldRequested)
                {
                   requestedVideoState = ConversationManager::MediaDirection_SendOnly;
                }
@@ -2970,45 +3079,18 @@ RemoteParticipant::onOfferRequired(InviteSessionHandle h, const SipMessage& msg)
 {
    InfoLog(<< "onOfferRequired: handle=" << mHandle << ", " << msg.brief());
 
-   // !ds! This area is still under review and could change in the future.
-   // We still need to find a way to do per-conversation settings.
-
-   // Check to make sure we have *at least* one valid port open for accepting
-   // media. If not, we must reject the entire request. Since at this point
-   // we are supposed to create the offer from scratch, check the session
-   // caps first.
-   SdpContents& sessionCaps = dynamic_cast<ConversationProfile*>(mDialogSet.getUserProfile().get())->sessionCaps();
-
-   unsigned int nBadPorts = 0;
-   for( std::list<SdpContents::Session::Medium>::const_iterator iter = sessionCaps.session().media().begin() ;
-      iter != sessionCaps.session().media().end() ; ++iter )
+   if(mState == Connecting && !h->isAccepted())
    {
-      SdpMediaLine::SdpMediaType mt = SdpMediaLine::getMediaTypeFromString( iter->name().c_str() );
-      if ( getLocalRTPPort( mt ) == 0 )
-         ++nBadPorts;
-   }
-
-   if ( nBadPorts >= sessionCaps.session().media().size() )
-   {
-      // "Not Acceptable Here", we can't match anything
-      h->reject(488);
+      // If we haven't accepted yet - delay providing the offer until accept is called (this allows time
+      // for a localParticipant to be added before generating the offer)
+      mOfferRequired = true;
    }
    else
    {
-      // We can accept at least one media. Proceed.
-      if(mState == Connecting && !h->isAccepted())
+      provideOffer(mState == Replacing /* postOfferAccept */);
+      if(mState == Replacing)
       {
-         // If we haven't accepted yet - delay providing the offer until accept is called (this allows time
-         // for a localParticipant to be added before generating the offer)
-         mOfferRequired = true;
-      }
-      else
-      {
-         provideOffer(mState == Replacing /* postOfferAccept */);
-         if(mState == Replacing)
-         {
-            stateTransition(Connecting);
-         }
+         stateTransition(Connecting);
       }
    }
 }
@@ -3119,6 +3201,8 @@ RemoteParticipant::onRefer(InviteSessionHandle is, ServerSubscriptionHandle ss, 
       // Set pending OOD info in Participant - causes accept or reject to be called later
       participant->setPendingOODReferInfo(ss, msg);
 
+      ss->send(ss->accept(202));
+
       // Notify application
       mConversationManager.onRequestOutgoingParticipant(participant->getParticipantHandle(), mHandle, msg);
 
@@ -3176,6 +3260,7 @@ RemoteParticipant::doReferNoSub(const SipMessage& msg)
 
    // Build the Invite
    SharedPtr<SipMessage> NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, mDialogSet.getUserProfile(), &offer, participantDialogSet);
+   mergeUnknownHeaders(msg.header(h_ReferTo).uri(), NewInviteMsg);
    participantDialogSet->sendInvite(NewInviteMsg); 
 
    // Set RTP stack to listen
@@ -3222,9 +3307,10 @@ RemoteParticipant::onReferRejected(InviteSessionHandle, const SipMessage& msg)
 }
 
 void
-RemoteParticipant::onMessage(InviteSessionHandle, const SipMessage& msg)
+RemoteParticipant::onMessage(InviteSessionHandle h, const SipMessage& msg)
 {
    InfoLog(<< "onMessage: handle=" << mHandle << ", " << msg.brief());
+   h->acceptNIT();
 }
 
 void
@@ -3347,7 +3433,7 @@ RemoteParticipant::onRtpStreamClosed(sdpcontainer::SdpMediaLine::SdpMediaType me
       virtual void executeCommand()
       {
          mRemoteParticipant->handleRtpStreamClosed(mMediaType, mReason, mEc);
-   }
+      }
    private:
       RemoteParticipant* mRemoteParticipant;
       sdpcontainer::SdpMediaLine::SdpMediaType mMediaType;
@@ -3369,9 +3455,15 @@ RemoteParticipant::handleRtpStreamClosed(sdpcontainer::SdpMediaLine::SdpMediaTyp
          ds << "; error_code=" << ec.value();
       }
    }
-   mConversationManager.destroyParticipant(mHandle, reasonStr);
+   if (reason == RtpStream::ClosedReason_UserRequest)
+   {
+      InfoLog(<< "RTP stream closed by request (likely m= line with port==0): " << reasonStr);
+   }
+   else
+   {
+      mConversationManager.destroyParticipant(mHandle, reasonStr);
+   }
 }
-
 
 /* ====================================================================
 

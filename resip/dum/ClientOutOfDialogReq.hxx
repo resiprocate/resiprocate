@@ -16,6 +16,7 @@ class ClientOutOfDialogReq : public NonDialogUsage
       ClientOutOfDialogReqHandle getHandle();
 
       bool matches(const SipMessage& msg) const;
+      const SipMessage& getRequest() const;
 
       virtual void end();
       virtual void dispatch(const SipMessage& msg);
@@ -29,7 +30,7 @@ class ClientOutOfDialogReq : public NonDialogUsage
    private:
       friend class DialogSet;
       CSeqCategory mCSeq;
-	  SipMessage mRequest;
+      SipMessage mRequest;
       
       // disabled
       ClientOutOfDialogReq(const ClientOutOfDialogReq&);

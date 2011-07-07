@@ -14,15 +14,15 @@
 #include "resip/stack/StackThread.hxx"
 #include "rutil/SharedPtr.hxx"
 #include "tfm/TestProxy.hxx"
+#include "tfm/repro/CommandLineParser.hxx"
 
 class TestRepro : public TestProxy
 {
    public:
       TestRepro(const resip::Data& name,
                 const resip::Data& host, 
-                int port, 
+                const CommandLineParser& args, 
                 const resip::Data& nwInterface = resip::Data::Empty,
-                bool forceRecordRoute=false,
                 resip::Security* security=0);
       ~TestRepro();
 

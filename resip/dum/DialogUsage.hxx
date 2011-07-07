@@ -3,6 +3,7 @@
 
 #include "rutil/BaseException.hxx"
 #include "rutil/SharedPtr.hxx"
+#include "resip/dum/DumCommand.hxx"
 #include "resip/dum/UserProfile.hxx"
 #include "resip/dum/BaseUsage.hxx"
 #include "resip/dum/Handles.hxx"
@@ -41,9 +42,35 @@ class DialogUsage : public BaseUsage
    protected:
       friend class DialogSet;
       friend class DialogUsageManager;
+      friend class DialogUsageSendCommand;
+
+      class DialogUsageSendCommand : public DumCommandAdapter
+      {
+      public:
+         DialogUsageSendCommand(DialogUsage& usage, SharedPtr<SipMessage> msg)
+            : mDialogUsage(usage),
+              mMessage(msg)
+         {
+         }
+      
+         virtual void executeCommand()
+         {
+            mDialogUsage.send(mMessage);
+         }
+      
+         virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+         {
+            return strm << "DialogUsageSendCommand";
+         }
+      private:
+         DialogUsage& mDialogUsage;
+         SharedPtr<SipMessage> mMessage;
+      };
+      
 
       //virtual void send(SipMessage& msg);
       virtual void send(SharedPtr<SipMessage> msg);      
+      virtual void sendCommand(SharedPtr<SipMessage> msg);
 
       // any usage that wants to give app a chance to adorn the message
       // should override this method.

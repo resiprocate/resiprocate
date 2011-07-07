@@ -221,10 +221,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ReTurnConfig.cxx"
-				>
-			</File>
-			<File
 				RelativePath=".\reTurnServer.cxx"
 				>
 			</File>
@@ -328,10 +324,6 @@
 			</File>
 			<File
 				RelativePath=".\RequestHandler.hxx"
-				>
-			</File>
-			<File
-				RelativePath=".\ReTurnConfig.hxx"
 				>
 			</File>
 			<File
@@ -1001,10 +993,6 @@
 				</Filter>
 			</Filter>
 		</Filter>
-		<File
-			RelativePath=".\README.txt"
-			>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>

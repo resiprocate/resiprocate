@@ -70,10 +70,10 @@ LocalDns::makeRawResult(void *arg, int status, unsigned char *abuf, int alen)
    }
 }
       
-bool 
-LocalDns::requiresProcess()
+unsigned int
+LocalDns::getTimeTillNextProcessMS()
 {
-   return true; 
+   return 20; 
 }
 
 void 

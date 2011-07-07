@@ -4,6 +4,7 @@
 #include "repro/ProcessorMessage.hxx"
 #include "resip/stack/NameAddr.hxx"
 #include "rutil/Data.hxx"
+#include "rutil/Inserter.hxx"
 
 namespace repro
 {
@@ -43,7 +44,14 @@ class ForkControlMessage : public ProcessorMessage
          return new ForkControlMessage(*this);
       }
       
-      virtual EncodeStream& encode(EncodeStream& ostr) const { ostr << "ForkControlMessage("<<mTid<<") "; return ostr; }
+      virtual EncodeStream& encode(EncodeStream& ostr) const 
+      { 
+         ostr << "ForkControlMessage("<<mTid<<") " << std::endl;
+         ostr << "Transactions to process: " << resip::Inserter(mTransactionsToProcess) << std::endl;
+         ostr << "Transactions to cancel: " << resip::Inserter(mTransactionsToCancel) << std::endl;
+         ostr << "Should cancel all: " << mShouldCancelAll;
+         return ostr; 
+      }
       virtual EncodeStream& encodeBrief(EncodeStream& ostr) const { return encode(ostr);}
 
       std::vector<resip::Data> mTransactionsToProcess;

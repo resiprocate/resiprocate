@@ -14,6 +14,13 @@
 #include "rutil/Mutex.hxx"
 #include "rutil/Timer.hxx"
 
+#ifdef _RESIP_MONOTONIC_CLOCK
+#ifdef __APPLE__
+#undef _RESIP_MONOTONIC_CLOCK
+#warning Mac OS X does not support POSIX monotonic timers.
+#endif
+#endif
+
 using namespace resip;
 
 Condition::Condition()
@@ -79,6 +86,7 @@ Condition::Condition()
    pthread_condattr_destroy( &attr );
 #endif
    int  rc =  pthread_cond_init(&mId,0);
+   (void)rc;
    assert( rc == 0 );
 #endif
 }
@@ -175,7 +183,7 @@ Condition::wait (Mutex& mutex)
 
       if (was_waiting == 1)
       {
-         for (/**/ ; was_gone; --was_gone)
+         for (/* */ ; was_gone; --was_gone)
          {
             // better now than spurious later
             res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue),
@@ -199,6 +207,7 @@ Condition::wait (Mutex& mutex)
 #   endif
 #else
    int ret = pthread_cond_wait(&mId, mutex.getId());
+   (void)ret;
    assert( ret == 0 );
 #endif
 }
@@ -303,7 +312,7 @@ Condition::wait(Mutex& mutex,
 
    if (was_waiting == 1)
    {
-      for (/**/ ; was_gone; --was_gone)
+      for (/* */ ; was_gone; --was_gone)
       {
          // better now than spurious later
          res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue), INFINITE);
@@ -362,7 +371,7 @@ Condition::wait(Mutex& mutex,
    assert(ret != WAIT_FAILED);
    return (ret == WAIT_OBJECT_0);
 #   endif
-#else
+#else	// WIN32
    UInt64 expires64 = Timer::getTimeMs() + ms;
    timespec expiresTS;
    expiresTS.tv_sec = expires64 / 1000;
@@ -380,10 +389,11 @@ Condition::wait(Mutex& mutex,
    else
    {
       //std::cerr << this << " pthread_cond_timedwait failed " << ret << " mutex=" << mutex << std::endl;
+      (void)ret;
       assert( ret == 0 );
       return true;
    }
-#endif
+#endif	// not WIN32
 }
 
 bool
@@ -453,7 +463,8 @@ Condition::signal ()
 #  endif
 #else
    int ret = pthread_cond_signal(&mId);
-   assert( ret == 0);
+   (void)ret;
+   assert( ret == 0 );
 #endif
 }
 

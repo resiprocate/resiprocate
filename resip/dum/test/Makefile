@@ -8,7 +8,7 @@ PACKAGES += DUM RESIP RUTIL OPENSSL ARES PTHREAD POPT RADIUSCLIENTNG
 TARGET_LIBRARY = 
 
 #testDumTimer.cxx
-TESTPROGRAMS += basicRegister.cxx BasicCall.cxx basicMessage.cxx
+TESTPROGRAMS += basicRegister.cxx BasicCall.cxx basicMessage.cxx basicClient.cxx testRequestValidationHandler.cxx
 
 TESTPROGRAMS += treg.cxx
 
@@ -17,9 +17,8 @@ TESTPROGRAMS += testSMIMEMessage.cxx testSMIMEInvite.cxx
 TESTPROGRAMS += limpc.cxx
 endif
 
-SRC = CommandLineParser.cxx UserAgent.cxx
-
-SRC += RegEventClient.cxx
+SRC = CommandLineParser.cxx UserAgent.cxx RegEventClient.cxx 
+SRC += basicClientCall.cxx basicClientCmdLineParser.cxx basicClientUserAgent.cxx
 
 ifeq ($(USE_CURL),yes)
 TESTPROGRAMS += testIdentity.cxx
@@ -27,6 +26,10 @@ PACKAGES += CURL
 SRC += curlHttp/CurlHttpProvider.cxx
 CODE_SUBDIRS += curlHttp
 endif
+
+# Strip -DNDEBUG out of CFLAGS and CXXFLAGS, since these are test programs
+CFLAGS := $(shell echo "${CFLAGS}" | sed s/-DNDEBUG//g)
+CXXFLAGS := $(shell echo "${CXXFLAGS}" | sed s/-DNDEBUG//g)
 
 include $(BUILD)/Makefile.post
 

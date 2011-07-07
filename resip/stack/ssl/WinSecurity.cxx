@@ -53,15 +53,14 @@ WinSecurity::onRemovePEM(const Data& name, PEMType type) const
    return;
 }
 
+static const Data storeRootCA("Root");
+static const Data storeCA("CA");
+static const Data storePrivate("My");
+static const Data storeUsers("DOMAIN_USERS");
+static const Data storeUnknown("UNKNOWN_STORE");
 static const Data 
 certStoreTypes(  WinSecurity::MsCertStoreType pType )
 {
-   static const Data storeRootCA("Root");
-   static const Data storeCA("CA");
-   static const Data storePrivate("My");
-   static const Data storeUsers("DOMAIN_USERS");
-   static const Data storeUnknown("UNKNOWN_STORE");
-
    switch (pType)
    {
       case  WinSecurity::ROOT_CA_STORE:         return storeRootCA;

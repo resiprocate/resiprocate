@@ -40,16 +40,20 @@ NameAddr::NameAddr(const NameAddr& rhs)
 {}
 
 static const Data parseContext("NameAddr constructor");
-NameAddr::NameAddr(const Data& unparsed)
+NameAddr::NameAddr(const Data& unparsed, bool preCacheAor)
    : ParserCategory(),
      mAllContacts(false),
      mDisplayName()
 {
+   HeaderFieldValue hfv(unparsed.data(), unparsed.size());
    // must copy because parse creates overlays
-   NameAddr tmp;
-   ParseBuffer pb(unparsed, parseContext);
-   tmp.parse(pb);
+   NameAddr tmp(&hfv, Headers::UNKNOWN);
+   tmp.checkParsed();
    *this = tmp;
+   if(preCacheAor)
+   {
+      mUri.getAor();
+   }
 }
 
 NameAddr::NameAddr(const Uri& uri)
@@ -214,34 +218,23 @@ NameAddr::parse(ParseBuffer& pb)
       }
       else
       {
-         // deal with Uri/NameAddr parameter ambiguity
-         // heuristically assign Uri parameters to the Uri
-         swap(mParameters, mUri.mParameters);
-         swap(mUnknownParameters, mUri.mUnknownParameters);
-         for (ParameterList::iterator it = mParameters.begin(); 
-              it != mParameters.end();)
+         Data temp;
          {
-            switch ((*it)->getType())
+            oDataStream str(temp);
+            // deal with Uri/NameAddr parameter ambiguity
+            // heuristically assign Uri parameters to the Uri
+            for (ParameterList::iterator it = mUri.mUnknownParameters.begin(); 
+                 it != mUri.mUnknownParameters.end(); ++it)
             {
-               case ParameterTypes::comp:             
-               case ParameterTypes::lr:
-               case ParameterTypes::maddr:
-               case ParameterTypes::method: 
-               case ParameterTypes::transport:
-               case ParameterTypes::ttl:
-               case ParameterTypes::user:
-               {
-                  mUri.mParameters.push_back(*it);
-                  it = mParameters.erase(it);
-                  break;
-               }
-               default:
-               {
-                  it++;
-               }
+               // We're just going to assume all unknown (to Uri) params really
+               // belong on the header. This is not necessarily the case.
+               str << ";";
+               (*it)->encode(str);
             }
-            // fall through to parse any parameters left which are not Uri parameters
+            mUri.clearUnknownParameters();
          }
+         ParseBuffer pb2(temp);
+         parseParameters(pb2);
       }
    }
    parseParameters(pb);
@@ -392,6 +385,89 @@ NameAddr::mustQuoteDisplayName() const
    }
    return false;
 }
+
+ParameterTypes::Factory NameAddr::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
+
+Parameter* 
+NameAddr::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+{
+   if(ParameterFactories[type])
+   {
+      return ParameterFactories[type](type, pb, terminators);
+   }
+   return 0;
+}
+
+bool 
+NameAddr::exists(const Param<NameAddr>& paramType) const
+{
+    checkParsed();
+    bool ret = getParameterByEnum(paramType.getTypeNum()) != NULL;
+    return ret;
+}
+
+void 
+NameAddr::remove(const Param<NameAddr>& paramType)
+{
+    checkParsed();
+    removeParameterByEnum(paramType.getTypeNum());
+}
+
+#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                                                      \
+_enum##_Param::DType&                                                                                           \
+NameAddr::param(const _enum##_Param& paramType)                                                           \
+{                                                                                                               \
+   checkParsed();                                                                                               \
+   _enum##_Param::Type* p =                                                                                     \
+      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                            \
+   if (!p)                                                                                                      \
+   {                                                                                                            \
+      p = new _enum##_Param::Type(paramType.getTypeNum());                                                      \
+      mParameters.push_back(p);                                                                                 \
+   }                                                                                                            \
+   return p->value();                                                                                           \
+}                                                                                                               \
+                                                                                                                \
+const _enum##_Param::DType&                                                                                     \
+NameAddr::param(const _enum##_Param& paramType) const                                                     \
+{                                                                                                               \
+   checkParsed();                                                                                               \
+   _enum##_Param::Type* p =                                                                                     \
+      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                            \
+   if (!p)                                                                                                      \
+   {                                                                                                            \
+      InfoLog(<< "Missing parameter " _name " " << ParameterTypes::ParameterNames[paramType.getTypeNum()]);     \
+      DebugLog(<< *this);                                                                                       \
+      throw Exception("Missing parameter " _name, __FILE__, __LINE__);                                          \
+   }                                                                                                            \
+   return p->value();                                                                                           \
+}
+
+defineParam(data, "data", ExistsParameter, "RFC 3840");
+defineParam(control, "control", ExistsParameter, "RFC 3840");
+defineParam(mobility, "mobility", QuotedDataParameter, "RFC 3840"); // mobile|fixed
+defineParam(description, "description", QuotedDataParameter, "RFC 3840"); // <> quoted
+defineParam(events, "events", QuotedDataParameter, "RFC 3840"); // list
+defineParam(priority, "priority", QuotedDataParameter, "RFC 3840"); // non-urgent|normal|urgent|emergency
+defineParam(methods, "methods", QuotedDataParameter, "RFC 3840"); // list
+defineParam(schemes, "schemes", QuotedDataParameter, "RFC 3840"); // list
+defineParam(application, "application", ExistsParameter, "RFC 3840");
+defineParam(video, "video", ExistsParameter, "RFC 3840");
+defineParam(language, "language", QuotedDataParameter, "RFC 3840"); // list
+defineParam(type, "type", QuotedDataParameter, "RFC 3840"); // list
+defineParam(isFocus, "isfocus", ExistsParameter, "RFC 3840");
+defineParam(actor, "actor", QuotedDataParameter, "RFC 3840"); // principal|msg-taker|attendant|information
+defineParam(text, "text", ExistsOrDataParameter, "RFC 3840");
+defineParam(extensions, "extensions", QuotedDataParameter, "RFC 3840"); //list
+defineParam(Instance, "+sip.instance", QuotedDataParameter, "RFC 5626");  // <> quoted
+defineParam(regid, "reg-id", UInt32Parameter, "RFC 5626");
+defineParam(pubGruu, "pub-gruu", QuotedDataParameter, "RFC 5627");
+defineParam(tempGruu, "temp-gruu", QuotedDataParameter, "RFC 5627");
+defineParam(expires, "expires", UInt32Parameter, "RFC 3261");
+defineParam(q, "q", QValueParameter, "RFC 3261");
+defineParam(tag, "tag", DataParameter, "RFC 3261");
+
+#undef defineParam
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

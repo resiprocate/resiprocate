@@ -6,17 +6,17 @@ TARGET_LIBRARY = libreflow
 CODE_SUBDIRS = dtls_wrapper
 
 SRC += \
+	dtls_wrapper/bf_dwrap.c \
+	dtls_wrapper/DtlsFactory.cxx \
+	dtls_wrapper/DtlsSocket.cxx \
+	dtls_wrapper/DtlsTimer.cxx \
         FakeSelectSocketDescriptor.cxx \
         Flow.cxx \
         FlowDtlsSocketContext.cxx \
         FlowDtlsTimerContext.cxx \
         FlowManager.cxx \
         FlowManagerSubsystem.cxx \
-        MediaStream.cxx \
-        dtls_wrapper/DtlsTimer.cxx \
-        dtls_wrapper/DtlsSocket.cxx \
-        dtls_wrapper/DtlsFactory.cxx \
-        dtls_wrapper/bf_dwrap.c
+	MediaStream.cxx
 
 include $(BUILD)/Makefile.post
 

@@ -27,9 +27,13 @@ ServerSubscription::ServerSubscription(DialogUsageManager& dum,
      mExpires(60),
      mAbsoluteExpiry(0)
 {
+   if (req.header(h_RequestLine).method() == REFER && req.header(h_To).exists(p_tag))
+   {
+      // If this is an in-dialog REFER, then use a subscription id
+      mSubscriptionId = Data(req.header(h_CSeq).sequence());
+   }   
    Data key = getEventType() + getDocumentKey();
    mDum.mServerSubscriptions.insert(DialogUsageManager::ServerSubscriptions::value_type(key, this));
-   //mDum.mServerSubscriptions.insert(std::make_pair(key, this));
 }
 
 ServerSubscription::~ServerSubscription()
@@ -56,7 +60,7 @@ UInt32
 ServerSubscription::getTimeLeft()
 {
    UInt32 timeleft =  UInt32(mAbsoluteExpiry - Timer::getTimeSecs());
-   if (timeleft < 0)
+   if (timeleft < 0) // .kw. this can NEVER happen since unsigned!
    {
       return 0;
    }
@@ -77,9 +81,9 @@ ServerSubscription::accept(int statusCode)
 SharedPtr<SipMessage>
 ServerSubscription::reject(int statusCode)
 {
-   if (statusCode < 400)
+   if (statusCode < 300)
    {
-      throw UsageUseException("Must reject with a 4xx", __FILE__, __LINE__);
+      throw UsageUseException("Must reject with a code greater than or equal to 300", __FILE__, __LINE__);
    }
    mDialog.makeResponse(*mLastResponse, mLastSubscribe, statusCode);
    return mLastResponse;
@@ -105,7 +109,7 @@ ServerSubscription::send(SharedPtr<SipMessage> msg)
             mDum.addTimer(DumTimeout::Subscription, msg->header(h_Expires).value(), getBaseHandle(), ++mTimerSeq);
             DialogUsage::send(msg);
             mAbsoluteExpiry = Timer::getTimeSecs() + msg->header(h_Expires).value();            
-            mState = Established;            
+            mSubDlgState = SubDlgEstablished;            
          }
          else
          {
@@ -149,14 +153,14 @@ bool
 ServerSubscription::shouldDestroyAfterSendingFailure(const SipMessage& msg)
 {
    int code = msg.header(h_StatusLine).statusCode();
-   switch(mState)
+   switch(mSubDlgState)
    {
-      case Initial:
+      case SubDlgInitial:
          return true;
-      case Terminated: //terminated state not using in ServerSubscription
+      case SubDlgTerminating: //terminated state not using in ServerSubscription
          assert(0);
          return true;
-      case Established:
+      case SubDlgEstablished:
       {
          if (code == 405)
          {
@@ -182,6 +186,7 @@ ServerSubscription::shouldDestroyAfterSendingFailure(const SipMessage& msg)
          }
       }
       default: // !jf!
+         assert(0);
          break;
          
    }
@@ -255,7 +260,8 @@ ServerSubscription::dispatch(const SipMessage& msg)
          mDialog.makeResponse(*mLastResponse, mLastSubscribe, 200);
          mLastResponse->header(h_Expires).value() = mExpires;
          send(mLastResponse);
-         end(Timeout);
+
+         send(mLastRequest);  // Send Notify Expires
          return;
       }
       if (mSubscriptionState == Invalid)
@@ -407,11 +413,21 @@ ServerSubscription::dialogDestroyed(const SipMessage& msg)
    delete this;
 }
 
-void ServerSubscription::onReadyToSend(SipMessage& msg)
+void 
+ServerSubscription::onReadyToSend(SipMessage& msg)
 {
    ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
    assert(handler);
    handler->onReadyToSend(getHandle(), msg);
+}
+
+void
+ServerSubscription::flowTerminated()
+{
+   // notify handler
+   ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
+   assert(handler);
+   handler->onFlowTerminated(getHandle());
 }
 
 EncodeStream& 

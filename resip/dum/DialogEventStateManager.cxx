@@ -8,6 +8,7 @@ namespace resip
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 DialogEventStateManager::DialogEventStateManager()
+   : mDialogEventHandler(0)
 {
 }
 
@@ -27,7 +28,7 @@ DialogEventStateManager::onTryingUas(Dialog& dialog, const SipMessage& invite)
    eventInfo->mInviteSession = InviteSessionHandle::NotValid();
    eventInfo->mRemoteOfferAnswer = (invite.getContents() != NULL ? std::auto_ptr<Contents>(invite.getContents()->clone()) : std::auto_ptr<Contents>());
    eventInfo->mLocalIdentity = dialog.getLocalNameAddr();
-   eventInfo->mLocalTarget = dialog.getLocalContact().uri();
+   eventInfo->mLocalTarget = dialog.getLocalContact().uri();  // !slg! TODO - fix me - the Dialog stored local contact has an empty hostname so that the stack will fill it in
    eventInfo->mRemoteIdentity = dialog.getRemoteNameAddr();
    eventInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(dialog.getRemoteTarget().uri()));
    eventInfo->mRouteSet = dialog.getRouteSet();
@@ -160,7 +161,7 @@ DialogEventStateManager::onEarly(const Dialog& dialog, InviteSessionHandle is)
       eventInfo->mInviteSession = is;
 
       // local or remote target might change due to an UPDATE or re-INVITE
-      eventInfo->mLocalTarget = dialog.getLocalContact().uri();
+      eventInfo->mLocalTarget = dialog.getLocalContact().uri();   // !slg! TODO - fix me - the Dialog stored local contact has an empty hostname so that the stack will fill it in
       eventInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(dialog.getRemoteTarget().uri()));
 
       EarlyDialogEvent evt(*eventInfo);
@@ -181,7 +182,7 @@ DialogEventStateManager::onConfirmed(const Dialog& dialog, InviteSessionHandle i
       eventInfo->mState = DialogEventInfo::Confirmed;
 
       // local or remote target might change due to an UPDATE or re-INVITE
-      eventInfo->mLocalTarget = dialog.getLocalContact().uri();
+      eventInfo->mLocalTarget = dialog.getLocalContact().uri();   // !slg! TODO - fix me - the Dialog stored local contact has an empty hostname so that the stack will fill it in
       eventInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(dialog.getRemoteTarget().uri()));
 
       // for the dialog that got the 200 OK
@@ -382,31 +383,31 @@ DialogEventStateManager::findOrCreateDialogInfo(const Dialog& dialog)
       // either we have a dialog set id with an empty remote tag, or we have other dialog(s) with different
       // remote tag(s)
       DialogId fakeId(dialog.getId().getDialogSetId(), Data::Empty);
-      std::map<DialogId, DialogEventInfo*, DialogIdComparator>::iterator it = mDialogIdToEventInfo.lower_bound(fakeId);
+      it = mDialogIdToEventInfo.lower_bound(fakeId);
 
       if (it != mDialogIdToEventInfo.end() && 
             it->first.getDialogSetId() == dialog.getId().getDialogSetId())
       {
          if (it->first.getRemoteTag().empty())
-      {
-         // convert this bad boy into a full on Dialog
-         eventInfo = it->second;
-         mDialogIdToEventInfo.erase(it);
-         eventInfo->mDialogId = dialog.getId();
+         {
+            // convert this bad boy into a full on Dialog
+            eventInfo = it->second;
+            mDialogIdToEventInfo.erase(it);
+            eventInfo->mDialogId = dialog.getId();
+         }
+         else
+         {
+            // clone this fellow member dialog, initializing it with a new id and creation time 
+            DialogEventInfo* newForkInfo = new DialogEventInfo(*(it->second));
+            newForkInfo->mDialogEventId = Random::getVersion4UuidUrn();
+               newForkInfo->mCreationTimeSeconds = Timer::getTimeSecs();
+            newForkInfo->mDialogId = dialog.getId();
+            newForkInfo->mRemoteIdentity = dialog.getRemoteNameAddr();
+            newForkInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(dialog.getRemoteTarget().uri()));
+            newForkInfo->mRouteSet = dialog.getRouteSet();
+            eventInfo = newForkInfo;
+         }
       }
-      else
-      {
-         // clone this fellow member dialog, initializing it with a new id and creation time 
-         DialogEventInfo* newForkInfo = new DialogEventInfo(*(it->second));
-         newForkInfo->mDialogEventId = Random::getVersion4UuidUrn();
-            newForkInfo->mCreationTimeSeconds = Timer::getTimeSecs();
-         newForkInfo->mDialogId = dialog.getId();
-         newForkInfo->mRemoteIdentity = dialog.getRemoteNameAddr();
-         newForkInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(dialog.getRemoteTarget().uri()));
-         newForkInfo->mRouteSet = dialog.getRouteSet();
-         eventInfo = newForkInfo;
-      }
-   }
       else
       {
          // .jjg. this can happen if onTryingUax(..) wasn't called yet for this dialog (set) id

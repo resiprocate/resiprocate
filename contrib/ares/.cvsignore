@@ -1,4 +1,6 @@
 .DS_Store
+Debug
+Release
 Makefile
 adig
 ahost
@@ -10,3 +12,4 @@ config.cache
 config.log
 config.status
 libares.a
+*.user

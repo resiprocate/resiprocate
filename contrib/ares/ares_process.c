@@ -43,10 +43,14 @@ static int getErrno() { return WSAGetLastError(); }
 static int getErrno() { return errno; }
 #endif
 
-static void write_tcp_data(ares_channel channel, fd_set *write_fds,
+static void write_tcp_data_core(ares_channel channel, int server_idx,
 			   time_t now);
-static void read_tcp_data(ares_channel channel, fd_set *read_fds, time_t now);
-static void read_udp_packets(ares_channel channel, fd_set *read_fds,
+static void write_tcp_data(ares_channel channel,
+			   fd_set *write_fds, time_t now);
+static void read_tcp_data(ares_channel channel, int server_idx,
+			 fd_set *read_fds, time_t now);
+static void read_udp_packets(ares_channel channel, int server_idx,
+			fd_set *read_fds,
 			     time_t now);
 static void process_timeouts(ares_channel channel, time_t now);
 static void process_answer(ares_channel channel, unsigned char *abuf,
@@ -60,6 +64,7 @@ static int same_questions(const unsigned char *qbuf, int qlen,
 			  const unsigned char *abuf, int alen);
 static void end_query(ares_channel channel, struct query *query, int status,
 		      unsigned char *abuf, int alen);
+static int make_socket_non_blocking(int s);
 
 /* Something interesting happened on the wire, or there was a timeout.
  * See what's up and respond accordingly.
@@ -70,8 +75,8 @@ void ares_process(ares_channel channel, fd_set *read_fds, fd_set *write_fds)
 
   time(&now);
   write_tcp_data(channel, write_fds, now);
-  read_tcp_data(channel, read_fds, now);
-  read_udp_packets(channel, read_fds, now);
+  read_tcp_data(channel, -1, read_fds, now);
+  read_udp_packets(channel, -1, read_fds, now);
   process_timeouts(channel, now);
 
   /* See if our local pseudo-db has any results. */
@@ -79,10 +84,32 @@ void ares_process(ares_channel channel, fd_set *read_fds, fd_set *write_fds)
   ares_local_process_requests();
 }
 
+/* Something happened on wire or there was a timeout. This interface
+ * is called for poll()-like systems.
+ */
+void ares_process_poll(ares_channel channel, int server_idx,
+	int rdFd, int wrFd, time_t now) {
+  if ( server_idx!= -1 ) {
+      assert( rdFd!=-1 || wrFd!=-1 );	// at least one active
+      if ( wrFd!=-1 && channel->servers[server_idx].tcp_socket==wrFd ) {
+          write_tcp_data_core(channel, server_idx, now);
+      }
+      // writes can only be for TCP (we don't ask for UDP writable events)
+      if ( rdFd!=-1 && channel->servers[server_idx].tcp_socket == rdFd )
+              read_tcp_data(channel, server_idx, NULL, now);
+      if ( rdFd!=-1 && channel->servers[server_idx].udp_socket == rdFd )
+              read_udp_packets(channel, server_idx, NULL, now);
+  } else {
+      process_timeouts(channel, now);
+      ares_local_process_requests();
+  }
+}
+
 /* If any TCP sockets select true for writing, write out queued data
  * we have for them.
  */
-static void write_tcp_data(ares_channel channel, fd_set *write_fds, time_t now)
+static void write_tcp_data_core(ares_channel channel, int server_idx,
+	time_t now)
 {
   struct server_state *server;
   struct send_request *sendreq;
@@ -91,122 +118,144 @@ static void write_tcp_data(ares_channel channel, fd_set *write_fds, time_t now)
 #else
   struct iovec *vec;
 #endif
-  int i, n, count;
+  int n, count;
 
-  for (i = 0; i < channel->nservers; i++)
-    {
-      /* Make sure server has data to send and is selected in write_fds. */
-      server = &channel->servers[i];
-      if (!server->qhead || server->tcp_socket == -1
-	  || !FD_ISSET(server->tcp_socket, write_fds))
-	continue;
+  server = &channel->servers[server_idx];
+  if (!server->qhead || server->tcp_socket == -1 )
+    return;
 
-      /* Count the number of send queue items. */
-      n = 0;
-      for (sendreq = server->qhead; sendreq; sendreq = sendreq->next)
-	n++;
+  /* Count the number of send queue items. */
+  n = 0;
+  for (sendreq = server->qhead; sendreq; sendreq = sendreq->next)
+    n++;
 
 #ifdef WIN32
-      /* Allocate iovecs so we can send all our data at once. */
-      vec = malloc(n * sizeof(WSABUF));
-      if (vec)
+  /* Allocate iovecs so we can send all our data at once. */
+  vec = malloc(n * sizeof(WSABUF));
+  if (vec)
+    {
+	    int err;
+      /* Fill in the iovecs and send. */
+      n = 0;
+      for (sendreq = server->qhead; sendreq; sendreq = sendreq->next)
 	{
-		int err;
-	  /* Fill in the iovecs and send. */
-	  n = 0;
-	  for (sendreq = server->qhead; sendreq; sendreq = sendreq->next)
-	    {
-	      vec[n].buf = (char *) sendreq->data;
-	      vec[n].len = sendreq->len;
-	      n++;
-	    }
-	  err = WSASend(server->tcp_socket, vec, n, &count,0,0,0 );
-	  if ( err == SOCKET_ERROR )
-	  {
-		  count =-1;
-	  }
-	  free(vec);
-#else
-	     /* Allocate iovecs so we can send all our data at once. */
-      vec = malloc(n * sizeof(struct iovec));
-      if (vec)
-	{
-			// int err;
-	  /* Fill in the iovecs and send. */
-	  n = 0;
-	  for (sendreq = server->qhead; sendreq; sendreq = sendreq->next)
-	    {
-	      vec[n].iov_base = (char *) sendreq->data;
-	      vec[n].iov_len = sendreq->len;
-	      n++;
-	    }
-	  count = writev(server->tcp_socket, vec, n);
-	  free(vec);
-#endif
-
-	  if (count < 0)
-	    {
-	      handle_error(channel, i, now);
-	      continue;
-	    }
-
-	  /* Advance the send queue by as many bytes as we sent. */
-	  while (count)
-	    {
-	      sendreq = server->qhead;
-	      if (count >= sendreq->len)
-		{
-		  count -= sendreq->len;
-		  server->qhead = sendreq->next;
-		  if (server->qhead == NULL)
-		    server->qtail = NULL;
-		  free(sendreq);
-		}
-	      else
-		{
-		  sendreq->data += count;
-		  sendreq->len -= count;
-		  break;
-		}
-	    }
+	  vec[n].buf = (char *) sendreq->data;
+	  vec[n].len = sendreq->len;
+	  n++;
 	}
-      else
-	{
-	  /* Can't allocate iovecs; just send the first request. */
-	  sendreq = server->qhead;
-#ifndef UNDER_CE
-	  count = write(server->tcp_socket, sendreq->data, sendreq->len);
+      err = WSASend(server->tcp_socket, vec, n, &count,0,0,0 );
+      if ( err == SOCKET_ERROR )
+      {
+	      count =-1;
+      }
+      free(vec);
 #else
-          count = send(server->tcp_socket, sendreq->data, sendreq->len,0);
+	 /* Allocate iovecs so we can send all our data at once. */
+  vec = malloc(n * sizeof(struct iovec));
+  if (vec)
+    {
+		    // int err;
+      /* Fill in the iovecs and send. */
+      n = 0;
+      for (sendreq = server->qhead; sendreq; sendreq = sendreq->next)
+	{
+	  vec[n].iov_base = (char *) sendreq->data;
+	  vec[n].iov_len = sendreq->len;
+	  n++;
+	}
+      count = writev(server->tcp_socket, vec, n);
+      free(vec);
 #endif
-	  if (count < 0)
-	    {
-	      handle_error(channel, i, now);
-	      continue;
-	    }
 
-	  /* Advance the send queue by as many bytes as we sent. */
-	  if (count == sendreq->len)
+      if (count < 0)
+	{
+	  handle_error(channel, server_idx, now);
+	  return;
+	}
+
+      /* Advance the send queue by as many bytes as we sent. */
+      while (count)
+	{
+	  sendreq = server->qhead;
+	  if (count >= sendreq->len)
 	    {
+	      count -= sendreq->len;
 	      server->qhead = sendreq->next;
-	      if (server->qhead == NULL)
-		server->qtail = NULL;
 	      free(sendreq);
+	      if (server->qhead == NULL)
+	      {
+		server->qtail = NULL;
+		assert(count==0);
+		break;
+	      }
 	    }
 	  else
 	    {
 	      sendreq->data += count;
 	      sendreq->len -= count;
+	      break;
 	    }
 	}
     }
+  else
+    {
+      /* Can't allocate iovecs; just send the first request. */
+      sendreq = server->qhead;
+#ifndef UNDER_CE
+      count = write(server->tcp_socket, sendreq->data, sendreq->len);
+#else
+      count = send(server->tcp_socket, sendreq->data, sendreq->len,0);
+#endif
+      if (count < 0)
+	{
+	  handle_error(channel, server_idx, now);
+	  return;
+	}
+
+      /* Advance the send queue by as many bytes as we sent. */
+      if (count == sendreq->len)
+	{
+	  server->qhead = sendreq->next;
+	  if (server->qhead == NULL)
+	    server->qtail = NULL;
+	  free(sendreq);
+	}
+      else
+	{
+	  sendreq->data += count;
+	  sendreq->len -= count;
+	}
+    }
+    if ( server->qhead==NULL && channel->poll_cb_func ) {
+        (*(channel->poll_cb_func))( channel->poll_cb_data, channel, server_idx,
+	  server->tcp_socket, ARES_POLLACTION_WRITEOFF);
+    }
+}
+
+
+static void write_tcp_data(ares_channel channel, fd_set *write_fds, time_t now)
+{
+  struct server_state *server;
+  int i;
+
+  for (i = 0; i < channel->nservers; i++)
+    {
+      /* Make sure server has data to send and is selected in write_fds. */
+      server = &channel->servers[i];
+      if (!server->qhead || server->tcp_socket == -1 )
+        continue;
+      if ( write_fds && !FD_ISSET(server->tcp_socket, write_fds))
+	continue;
+
+     write_tcp_data_core(channel, i, now);
+  }
 }
 
 /* If any TCP socket selects true for reading, read some data,
  * allocate a buffer if we finish reading the length word, and process
  * a packet if we finish reading one.
  */
-static void read_tcp_data(ares_channel channel, fd_set *read_fds, time_t now)
+static void read_tcp_data(ares_channel channel, int server_idx, fd_set *read_fds, time_t now)
 {
   struct server_state *server;
   int i, count;
@@ -214,8 +263,12 @@ static void read_tcp_data(ares_channel channel, fd_set *read_fds, time_t now)
   for (i = 0; i < channel->nservers; i++)
     {
       /* Make sure the server has a socket and is selected in read_fds. */
+      if ( server_idx>=0 && i != server_idx )
+         continue;
       server = &channel->servers[i];
-      if (server->tcp_socket == -1 || !FD_ISSET(server->tcp_socket, read_fds))
+      if (server->tcp_socket == -1 )
+        continue;
+      if (!FD_ISSET(server->tcp_socket, read_fds))
 	continue;
 
       if (server->tcp_lenbuf_pos != 2)
@@ -288,8 +341,8 @@ static void read_tcp_data(ares_channel channel, fd_set *read_fds, time_t now)
 }
 
 /* If any UDP sockets select true for reading, process them. */
-static void read_udp_packets(ares_channel channel, fd_set *read_fds,
-			     time_t now)
+static void read_udp_packets(ares_channel channel, int server_idx,
+			fd_set *read_fds, time_t now)
 {
   struct server_state *server;
   int i, count;
@@ -297,12 +350,14 @@ static void read_udp_packets(ares_channel channel, fd_set *read_fds,
 
   for (i = 0; i < channel->nservers; i++)
     {
+      if ( server_idx>=0 && i != server_idx )
+          continue;
       /* Make sure the server has a socket and is selected in read_fds. */
       server = &channel->servers[i];
-      if ( (server->udp_socket == -1) || (!FD_ISSET(server->udp_socket, read_fds) ))
-	  {
-	     continue;
-	  }
+      if ( (server->udp_socket == -1) )
+          continue;
+      if ( read_fds && !FD_ISSET(server->udp_socket, read_fds) )
+	  continue;
 
 	  assert( server->udp_socket != -1 );
 	  
@@ -315,13 +370,18 @@ static void read_udp_packets(ares_channel channel, fd_set *read_fds,
 		//err = errno;
 		switch (getErrno())
 		{
-			case WSAEWOULDBLOCK: 
-               FD_CLR(server->udp_socket, read_fds);
-               continue;
-			case WSAECONNABORTED:
-				break;
-			case WSAECONNRESET: // got an ICMP error on a previous send 
-				break;
+		    case WSAEWOULDBLOCK:
+			    if ( read_fds ) {
+			       // read_fds is only null when using epoll
+			       // which shouldn't happen under windows
+			       // don't know why CLR is here anyways
+			       FD_CLR(server->udp_socket, read_fds);
+			    }
+			    continue;
+		    case WSAECONNABORTED:
+			    break;
+		    case WSAECONNRESET: // got an ICMP error on a previous send
+			    break;
 		}
 #endif
 		handle_error(channel, i, now);
@@ -343,6 +403,7 @@ static void process_timeouts(ares_channel channel, time_t now)
       next = query->next;
       if (query->timeout != 0 && now >= query->timeout)
 	{
+	  //fprintf(stderr, "kennard:ares:process_timeouts: got timeout\n");
 	  query->error_status = ARES_ETIMEOUT;
 	  next_server(channel, query, now);
 	}
@@ -433,6 +494,8 @@ static void handle_error(ares_channel channel, int whichserver, time_t now)
   struct query *query;
 
   /* Reset communications with this server. */
+  //fprintf(stderr,"kennard:ares:handle_error: ...\n");
+  ares__close_poll(channel, whichserver);
   ares__close_sockets(&channel->servers[whichserver]);
 
   /* Tell all queries talking to this server to move on and not try
@@ -473,6 +536,7 @@ static void next_server(ares_channel channel, struct query *query, time_t now)
       if (query->using_tcp)
 	break;
     }
+  //fprintf(stderr, "kennard:ares:next_server: ran out of servers: code %d\n", query->error_status);
   end_query(channel, query, query->error_status, NULL, 0);
 }
 
@@ -527,6 +591,7 @@ void ares__send_query(ares_channel channel, struct query *query, time_t now)
   server = &channel->servers[query->server];
   if (query->using_tcp)
     {
+      int tryWrite = 0;
       /* Make sure the TCP socket for this server is set up and queue
        * a send request.
        */
@@ -538,6 +603,11 @@ void ares__send_query(ares_channel channel, struct query *query, time_t now)
 	      next_server(channel, query, now);
 	      return;
 	    }
+	  if ( channel->poll_cb_func ) {
+	      // printf("ares_send_q: pollopen tcp fd=%d\n", server->tcp_socket);
+	      (*(channel->poll_cb_func))( channel->poll_cb_data, channel,
+		query->server, server->tcp_socket, ARES_POLLACTION_OPEN);
+	  }
 	}
       sendreq = malloc(sizeof(struct send_request));
       if (!sendreq)
@@ -545,12 +615,28 @@ void ares__send_query(ares_channel channel, struct query *query, time_t now)
       sendreq->data = query->tcpbuf;
       sendreq->len = query->tcplen;
       sendreq->next = NULL;
-      if (server->qtail)
-	server->qtail->next = sendreq;
-      else
-	server->qhead = sendreq;
+      if (server->qtail) {
+	  server->qtail->next = sendreq;
+      } else {
+	  server->qhead = sendreq;
+          tryWrite = 1;
+      }
       server->qtail = sendreq;
       query->timeout = 0;
+      if ( tryWrite )
+        {
+#if 0
+	  time_t now;
+	  time(&now);
+	  write_tcp_data(channel, query->server, now);
+	  /* XXX: the write code doesn't seem to handle EAGAIN properly! */
+#else
+	  if ( channel->poll_cb_func )
+              (*(channel->poll_cb_func))( channel->poll_cb_data,
+	        channel, query->server,
+		server->tcp_socket, ARES_POLLACTION_WRITEON);
+#endif
+        }
     }
   else
     {
@@ -558,13 +644,20 @@ void ares__send_query(ares_channel channel, struct query *query, time_t now)
 	{
 	  if (open_udp_socket(channel, server) == -1)
 	    {
+	      //fprintf(stderr,"kennard:ares:send_query:open_udp failed\n");
 	      query->skip_server[query->server] = 1;
 	      next_server(channel, query, now);
 	      return;
 	    }
+	  if ( channel->poll_cb_func ) {
+	      // printf("ares_send_q: pollopen udp fd=%d\n", server->udp_socket);
+	      (*(channel->poll_cb_func))( channel->poll_cb_data, channel,
+	      	query->server, server->udp_socket, ARES_POLLACTION_OPEN);
+	  }
 	}
       if (send(server->udp_socket, query->qbuf, query->qlen, 0) == -1)
 	{
+	  //fprintf(stderr,"kennard:ares:send_query:send_udp failed\n");
 	  query->skip_server[query->server] = 1;
 	  next_server(channel, query, now);
 	  return;
@@ -586,39 +679,18 @@ static int open_tcp_socket(ares_channel channel, struct server_state *server)
   /* Acquire a socket. */
 #ifdef USE_IPV6
   assert(server->family == AF_INET || server->family == AF_INET6);
-  s = socket(server->family, SOCK_STREAM, 0);
+  s = (int)socket(server->family, SOCK_STREAM, 0);
 #else
-  s = socket(AF_INET, SOCK_STREAM, 0);
+  s = (int)socket(AF_INET, SOCK_STREAM, 0);
 #endif
   if (s == -1)
     return -1;
 
-  /* Set the socket non-blocking. */
-#ifdef WIN32
+  if (make_socket_non_blocking(s))
   {
-	unsigned long noBlock = 1;
-	int errNoBlock = ioctlsocket( s, FIONBIO , &noBlock );
-	if ( errNoBlock != 0 )
-	{
-		return -1;
-	}
+    ares__kill_socket(s);
+	return -1;
   }
-#else
-  {
-	  int flags;
-  if (fcntl(s, F_GETFL, &flags) == -1)
-    {
-      ares__kill_socket(s);
-      return -1;
-    }
-  flags |= O_NONBLOCK; // Fixed evil but here - used to be &=
-  if (fcntl(s, F_SETFL, flags) == -1)
-    {
-      ares__kill_socket(s);
-      return -1;
-    }
-}
-#endif
 
 #ifdef WIN32
 #define PORTABLE_INPROGRESS_ERR WSAEWOULDBLOCK
@@ -676,36 +748,60 @@ static int open_tcp_socket(ares_channel channel, struct server_state *server)
   return 0;
 }
 
+static int connect_udp_ipv4(int s, ares_channel channel, struct server_state *server) {
+  struct sockaddr_in sin;
+
+  /* Connect to the server. */
+  memset(&sin, 0, sizeof(sin));
+  sin.sin_family = AF_INET;
+  sin.sin_addr = server->addr;
+  sin.sin_port = channel->udp_port;
+
+  if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) == -1)
+    {
+      //fprintf(stderr,"kennard:ares:open_udp:ipv4: connect error %d: %s\n", errno, strerror(errno));
+      ares__kill_socket(s);
+      return -1;
+    }
+  return 0;
+}
+
 static int open_udp_socket(ares_channel channel, struct server_state *server)
 {
+  u_int8_t family;
   int s;
+
+#ifdef USE_IPV6
+  family = server->family;
+  assert(family == AF_INET || family == AF_INET6);
+#else
+  family = AF_INET;
+#endif
+
+  /* Acquire a socket. */
+  s = (int)socket(family, SOCK_DGRAM, 0);
+
+  if (s == -1) {
+    //fprintf(stderr,"kennard:ares:open_udp: no socket %d: %s\n", errno, strerror(errno));
+    return -1;
+  }
+
+  if (make_socket_non_blocking(s))
+  {
+    //fprintf(stderr,"kennard:ares:open_udp: nonblocking failed %d: %s\n", errno, strerror(errno));
+    ares__kill_socket(s);
+    return -1;
+  }
 
 #ifdef USE_IPV6
   // added by Rohan 7-Sept-2004
   // should really replace sockaddr_in6 with sockaddr_storage
-  struct sockaddr_in6 sin6;
-  struct sockaddr_in sin;
 
-
-  /* Acquire a socket. */
-  assert(server->family == AF_INET || server->family == AF_INET6);
-  s = socket(server->family, SOCK_DGRAM, 0);
-#ifdef WIN32
-  {   
-	 unsigned long errNoBlock = 1;
-     errNoBlock = ioctlsocket( s, FIONBIO , &errNoBlock );
-     if ( errNoBlock != 0 )
-     {
-        return -1;
-     }
-  }
-#endif
-  if (s == -1)
-    return -1;
 
   /* Connect to the server. */
   if (server->family == AF_INET6)
   {
+    struct sockaddr_in6 sin6;
     memset(&sin6, 0, sizeof(sin6));
     sin6.sin6_family = AF_INET6;
     sin6.sin6_addr = server->addr6;
@@ -722,44 +818,21 @@ static int open_udp_socket(ares_channel channel, struct server_state *server)
   }
   else // IPv4 DNS server
   {
-    memset(&sin, 0, sizeof(sin));
-    sin.sin_family = AF_INET;
-    sin.sin_addr = server->addr;
-    sin.sin_port = channel->udp_port;
-
-    if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) == -1)
-    {
-      ares__kill_socket(s);
-      return -1;
-    }
+      if ( connect_udp_ipv4(s, channel, server)==-1 )
+          return -1;
   }
 
 #else
-  struct sockaddr_in sin;
 
-  /* Acquire a socket. */
-  s = socket(AF_INET, SOCK_DGRAM, 0);
-
-  if (s == -1)
+  if ( connect_udp_ipv4(s, channel, server)==-1 )
     return -1;
 
-  /* Connect to the server. */
-  memset(&sin, 0, sizeof(sin));
-  sin.sin_family = AF_INET;
-  sin.sin_addr = server->addr;
-  sin.sin_port = channel->udp_port;
-
-  if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) == -1)
-    {
-      ares__kill_socket(s);
-      return -1;
-    }
 #endif
   if(channel->socket_function)
   {
      channel->socket_function(s, 0, __FILE__, __LINE__);
   }
-    
+
   server->udp_socket = s;
   return 0;
 }
@@ -771,7 +844,7 @@ static int same_questions(const unsigned char *qbuf, int qlen,
     const unsigned char *p;
     int qdcount;
     char *name;
-    int namelen;
+    long int namelen;
     int type;
     int dnsclass;
   } q, a;
@@ -866,7 +939,11 @@ static void end_query(ares_channel channel, struct query *query, int status,
   if (!channel->queries && !(channel->flags & ARES_FLAG_STAYOPEN))
     {
       for (i = 0; i < channel->nservers; i++)
-	ares__close_sockets(&channel->servers[i]);
+        {
+	  //printf("end_query: closing...\n");
+	  ares__close_poll(channel, i);
+	  ares__close_sockets(&channel->servers[i]);
+        }
     }
 }
 
@@ -877,5 +954,35 @@ void ares__kill_socket(int s)
 #else
    close(s);
 #endif
+   s = -1;	// otherwise we will try using it again!
 }
 
+int make_socket_non_blocking(int s)
+{
+#ifdef WIN32
+  unsigned long noBlock = 1;
+  int errNoBlock = ioctlsocket( s, FIONBIO , &noBlock );
+  if ( errNoBlock != 0 )
+  {
+    return -1;
+  }
+#else
+  int flags;
+  // WATCHOUT: F_GETTL returns the flags, it doesn't use the argument!
+  if ((flags=fcntl(s, F_GETFL, 0)) == -1)
+  {
+    return -1;
+  }
+  flags |= O_NONBLOCK; // Fixed evil but here - used to be &=
+  if (fcntl(s, F_SETFL, flags) == -1)
+  {
+    return -1;
+  }
+#endif
+  return 0;
+}
+
+void ares_process_set_poll_cb(ares_channel channel, ares_poll_cb_func *cbf, void *cbd) {
+  channel->poll_cb_func = cbf;
+  channel->poll_cb_data = cbd;
+}

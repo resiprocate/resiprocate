@@ -22,6 +22,7 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/GenericIPAddress.hxx"
 #include "rutil/HashMap.hxx"
+#include "rutil/MD5Stream.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/Transport.hxx"
 
@@ -210,7 +211,7 @@ Tuple::setSockaddr(const GenericIPAddress& addr)
 }
 
 void
-Tuple::writeBinaryToken(const resip::Tuple& tuple,resip::Data& container)
+Tuple::writeBinaryToken(const resip::Tuple& tuple, resip::Data& container, const Data& salt)
 {
    // .bwc. Maybe should just write the raw sockaddr into a buffer, and tack
    // on the flowid and onlyUseExistingConnection flag. Would require 10 extra
@@ -246,16 +247,26 @@ Tuple::writeBinaryToken(const resip::Tuple& tuple,resip::Data& container)
    {
       rawToken[1] += 0x00000010;
    }
-   
+
    container.clear();
+   container.reserve(((tuple.ipVersion()==V6) ? 24 : 12) + (salt.empty() ? 0 : 32));
    container.append((char*)&rawToken[0],(tuple.ipVersion()==V6) ? 24 : 12);
 
+   if(!salt.empty())
+   {
+      // TODO - potentially use SHA1 HMAC if USE_SSL is defined for stronger encryption
+      MD5Stream ms;
+      ms << container << salt;
+      container += ms.getHex();
+   }
 }
 
 
 Tuple
-Tuple::makeTuple(const resip::Data& binaryFlowToken)
+Tuple::makeTupleFromBinaryToken(const resip::Data& binaryFlowToken, const Data& salt)
 {
+   // To check if size is valid, we first need the IP version, so make sure the token is at least
+   // the size of an IPv4 token
    if(binaryFlowToken.size()<12)
    {
       // !bwc! Should not assert here, since this sort of thing
@@ -268,14 +279,31 @@ Tuple::makeTuple(const resip::Data& binaryFlowToken)
    const UInt32* rawToken=reinterpret_cast<const UInt32*>(binaryFlowToken.data());
 
    Socket mFlowKey=rawToken[0];
-
    IpVersion version = (rawToken[1] & 0x00000001 ? V6 : V4);
-   
-   if(!((version==V4 && binaryFlowToken.size()==12) ||
-         (version==V6 && binaryFlowToken.size()==24)))
+
+   // Now that we have the version we can do a more accurate check on the size
+   if(!((version==V4 && salt.empty() && binaryFlowToken.size()==12) ||
+        (version==V4 && !salt.empty() && binaryFlowToken.size()==44) ||
+        (version==V6 && salt.empty() && binaryFlowToken.size()==24) ||
+        (version==V6 && !salt.empty() && binaryFlowToken.size()==56)))
    {
       DebugLog(<<"Binary flow token is the wrong size for its IP version.");
       return Tuple();
+   }
+
+   // If salt is specified, validate HMAC
+   if(!salt.empty())
+   {
+      unsigned int tokenSizeLessHMAC = version == V4 ? 12 : 24;
+      Data flowTokenLessHMAC(Data::Share, binaryFlowToken.data(), tokenSizeLessHMAC);
+      Data flowTokenHMAC(Data::Share, binaryFlowToken.data()+tokenSizeLessHMAC, 32);
+      MD5Stream ms;
+      ms << flowTokenLessHMAC << salt;
+      if(ms.getHex() != flowTokenHMAC)
+      {
+         DebugLog(<<"Binary flow token has invalid HMAC, not our token");
+         return Tuple();
+      }
    }
 
    bool isRealFlow = (rawToken[1] & 0x00000010 ? true : false);
@@ -302,7 +330,7 @@ Tuple::makeTuple(const resip::Data& binaryFlowToken)
 #else
       Tuple result(resip::Data::Empty, port, type);
 #endif
-      result.mFlowKey=mFlowKey;
+      result.mFlowKey=(FlowKey)mFlowKey;
       result.onlyUseExistingConnection=isRealFlow;
       return result;
    }
@@ -312,7 +340,7 @@ Tuple::makeTuple(const resip::Data& binaryFlowToken)
       assert(sizeof(address)==4);
       memcpy(&address,&rawToken[2],4);
       Tuple result(address,port,type);
-      result.mFlowKey=mFlowKey;
+      result.mFlowKey=(FlowKey)mFlowKey;
       result.onlyUseExistingConnection=isRealFlow;
       return result;
    }
@@ -401,13 +429,12 @@ Tuple::isAnyInterface() const
 #endif
 }
 
+static Tuple loopbackv4("127.0.0.1",0,UNKNOWN_TRANSPORT);
 bool
 Tuple::isLoopback() const
 {
-   
    if(ipVersion()==V4)
    {
-      static Tuple loopbackv4("127.0.0.1",0,UNKNOWN_TRANSPORT);
       return isEqualWithMask(loopbackv4,8,true,true);
    }
    else if (ipVersion()==V6)
@@ -441,6 +468,40 @@ IpVersion
 Tuple::ipVersion() const
 {
    return mSockaddr.sa_family == AF_INET ? V4 : V6;
+}
+
+static Tuple v4privateaddrbase1("10.0.0.0",0,UNKNOWN_TRANSPORT);
+static Tuple v4privateaddrbase2("172.16.0.0",0,UNKNOWN_TRANSPORT);
+static Tuple v4privateaddrbase3("192.168.0.0",0,UNKNOWN_TRANSPORT);
+
+#ifdef USE_IPV6
+static Tuple v6privateaddrbase("fc00::",0,UNKNOWN_TRANSPORT);
+#endif
+
+bool 
+Tuple::isPrivateAddress() const
+{
+   if(ipVersion()==V4)
+   {
+      // RFC 1918
+      return isEqualWithMask(v4privateaddrbase1,8,true,true) ||  // 10.0.0.0        -   10.255.255.255  (10/8 prefix)
+             isEqualWithMask(v4privateaddrbase2,12,true,true) || // 172.16.0.0      -   172.31.255.255  (172.16/12 prefix)
+             isEqualWithMask(v4privateaddrbase3,16,true,true);   // 192.168.0.0     -   192.168.255.255 (192.168/16 prefix)
+   }
+#ifdef USE_IPV6
+   else if (ipVersion()==V6)
+   {
+      // RFC 4193
+      // ?slg? should we look specifically for ipv4 mapped/compatible address and apply V4 rules to them?
+      return isEqualWithMask(v6privateaddrbase,7,true,true);  // fc00::/7
+   }
+#endif
+   else
+   {
+      assert(0);
+   }
+   
+   return false;
 }
 
 socklen_t
@@ -628,36 +689,22 @@ Tuple::hash() const
 
 HashValueImp(resip::Tuple, data.hash());
 
-static const Data transportNames[MAX_TRANSPORT] =
-{
-   Data("UNKNOWN_TRANSPORT"),
-   Data("TLS"),
-   Data("TCP"),
-   Data("UDP"),
-   Data("SCTP"),
-   Data("DCCP"),
-   Data("DTLS")
-};
-
 TransportType
-Tuple::toTransport(const Data& type)
+Tuple::toTransport(const Data& transportName)
 {
-   for (TransportType i = UNKNOWN_TRANSPORT; i < MAX_TRANSPORT; 
-        i = static_cast<TransportType>(i + 1))
-   {
-      if (isEqualNoCase(type, transportNames[i]))
-      {
-         return i;
-      }
-   }
-   return UNKNOWN_TRANSPORT;
+   return resip::toTransportType(transportName); // TransportTypes.hxx
 };
 
 const Data&
 Tuple::toData(TransportType type)
 {
-   assert(type >= UNKNOWN_TRANSPORT && type < MAX_TRANSPORT);
-   return transportNames[type];
+   return resip::toData(type);  // TransportTypes.hxx
+}
+
+const Data&
+Tuple::toDataLower(TransportType type)
+{
+   return resip::toDataLower(type);  // TransportTypes.hxx
 }
 
 Data
@@ -864,6 +911,17 @@ Tuple::AnyPortCompare::operator()(const Tuple& lhs,
 
    return false;
 }
+
+bool
+Tuple::FlowKeyCompare::operator()(const Tuple& lhs,
+                                  const Tuple& rhs) const
+{
+   if (lhs == rhs)
+   {
+      return lhs.mFlowKey < rhs.mFlowKey;
+   }
+   return lhs < rhs;
+};
 
 GenericIPAddress 
 Tuple::toGenericIPAddress() const

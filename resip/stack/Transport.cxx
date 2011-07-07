@@ -14,6 +14,7 @@
 #include "rutil/ParseBuffer.hxx"
 
 #include "resip/stack/ConnectionTerminated.hxx"
+#include "resip/stack/KeepAlivePong.hxx"
 #include "resip/stack/Transport.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TransportFailure.hxx"
@@ -36,29 +37,34 @@ Transport::Transport(Fifo<TransactionMessage>& rxFifo,
                      AfterSocketCreationFuncPtr socketFunc,
                      Compression &compression) :
    mTuple(address),
+   mHasRecordRoute(false),
    mStateMachineFifo(rxFifo),
    mShuttingDown(false),
    mTlsDomain(tlsDomain),
    mSocketFunc(socketFunc),
-   mCompression(compression)
+   mCompression(compression),
+   mTransportFlags(0)
 {
    mInterface = Tuple::inet_ntop(mTuple);
 }
 
 Transport::Transport(Fifo<TransactionMessage>& rxFifo,
-                     int portNum, 
+                     int portNum,
                      IpVersion version,
                      const Data& intfc,
                      const Data& tlsDomain,
                      AfterSocketCreationFuncPtr socketFunc,
-                     Compression &compression) :
+                     Compression &compression,
+                     unsigned transportFlags) :
    mInterface(intfc),
    mTuple(intfc, portNum, version),
+   mHasRecordRoute(false),
    mStateMachineFifo(rxFifo),
    mShuttingDown(false),
    mTlsDomain(tlsDomain),
    mSocketFunc(socketFunc),
-   mCompression(compression)
+   mCompression(compression),
+   mTransportFlags(transportFlags)
 {
 }
 
@@ -91,26 +97,26 @@ Transport::error(int e)
          break;
 
 #if defined(WIN32)
-      case WSAENETDOWN: 
+      case WSAENETDOWN:
          InfoLog (<<" The network subsystem has failed.  ");
          break;
       case WSAEFAULT:
          InfoLog (<<" The buf or from parameters are not part of the user address space, "
                    "or the fromlen parameter is too small to accommodate the peer address.  ");
          break;
-      case WSAEINTR: 
+      case WSAEINTR:
          InfoLog (<<" The (blocking) call was canceled through WSACancelBlockingCall.  ");
          break;
-      case WSAEINPROGRESS: 
+      case WSAEINPROGRESS:
          InfoLog (<<" A blocking Windows Sockets 1.1 call is in progress, or the "
                    "service provider is still processing a callback function.  ");
          break;
-      case WSAEINVAL: 
+      case WSAEINVAL:
          InfoLog (<<" The socket has not been bound with bind, or an unknown flag was specified, "
                    "or MSG_OOB was specified for a socket with SO_OOBINLINE enabled, "
                    "or (for byte stream-style sockets only) len was zero or negative.  ");
          break;
-      case WSAEISCONN : 
+      case WSAEISCONN :
          InfoLog (<<"The socket is connected. This function is not permitted with a connected socket, "
                   "whether the socket is connection-oriented or connectionless.  ");
          break;
@@ -133,15 +139,15 @@ Transport::error(int e)
       case WSAEMSGSIZE:
          InfoLog (<<" The message was too large to fit into the specified buffer and was truncated.  ");
          break;
-      case WSAETIMEDOUT: 
+      case WSAETIMEDOUT:
          InfoLog (<<" The connection has been dropped, because of a network failure or because the "
                   "system on the other end went down without notice.  ");
          break;
-      case WSAECONNRESET : 
+      case WSAECONNRESET :
          InfoLog (<<"Connection reset ");
          break;
 
-	   case WSAEWOULDBLOCK:
+      case WSAEWOULDBLOCK:
          DebugLog (<<"Would Block ");
          break;
 
@@ -195,23 +201,29 @@ Transport::flowTerminated(const Tuple& flow)
 {
    mStateMachineFifo.add(new ConnectionTerminated(flow));
 }
-   
+
 void
-Transport::fail(const Data& tid, TransportFailure::FailureReason reason)
+Transport::keepAlivePong(const Tuple& flow)
+{
+   mStateMachineFifo.add(new KeepAlivePong(flow));
+}
+
+void
+Transport::fail(const Data& tid, TransportFailure::FailureReason reason, int subCode)
 {
    if (!tid.empty())
    {
-      mStateMachineFifo.add(new TransportFailure(tid, reason));
+      mStateMachineFifo.add(new TransportFailure(tid, reason, subCode));
    }
 }
 
-/// @todo unify w/ tramsit
-void 
+/// @todo unify w/ transmit
+void
 Transport::send( const Tuple& dest, const Data& d, const Data& tid, const Data &sigcompId)
 {
    assert(dest.getPort() != -1);
    DebugLog (<< "Adding message to tx buffer to: " << dest); // << " " << d.escaped());
-   transmit(dest, d, tid, sigcompId); 
+   transmit(dest, d, tid, sigcompId);
 }
 
 void
@@ -223,10 +235,10 @@ Transport::makeFailedResponse(const SipMessage& msg,
 
   const Tuple& dest = msg.getSource();
 
-  std::auto_ptr<SipMessage> errMsg(Helper::makeResponse(msg, 
-                                                        responseCode, 
+  std::auto_ptr<SipMessage> errMsg(Helper::makeResponse(msg,
+                                                        responseCode,
                                                         warning ? warning : "Original request had no Vias"));
-  
+
   // make send data here w/ blank tid and blast it out.
   // encode message
   Data encoded;
@@ -242,7 +254,7 @@ Transport::makeFailedResponse(const SipMessage& msg,
   Data remoteSigcompId;
   if (mCompression.isEnabled())
   {
-    Via &topVia(errMsg->header(h_Vias).front());
+     const Via &topVia(errMsg->const_header(h_Vias).front());
 
     if(topVia.exists(p_comp) && topVia.param(p_comp) == "sigcomp")
     {
@@ -270,16 +282,16 @@ void
 Transport::stampReceived(SipMessage* message)
 {
    // set the received= and rport= parameters in the message if necessary !jf!
-   if (message->isRequest() && message->exists(h_Vias) && !message->header(h_Vias).empty())
+   if (message->isRequest() && message->exists(h_Vias) && !message->const_header(h_Vias).empty())
    {
       const Tuple& tuple = message->getSource();
-	  Data received = Tuple::inet_ntop(tuple);
-	  if(message->header(h_Vias).front().sentHost() != received)  // only add if received address is different from sent-by in Via
-	  {
+      Data received = Tuple::inet_ntop(tuple);
+	  if(message->const_header(h_Vias).front().sentHost() != received)  // only add if received address is different from sent-by in Via
+      {
          message->header(h_Vias).front().param(p_received) = received;
-	  }
+      }
       //message->header(h_Vias).front().param(p_received) = Tuple::inet_ntop(tuple);
-      if (message->header(h_Vias).front().exists(p_rport))
+      if (message->const_header(h_Vias).front().exists(p_rport))
       {
          message->header(h_Vias).front().param(p_rport).port() = tuple.getPort();
       }
@@ -326,15 +338,31 @@ Transport::basicCheck(const SipMessage& msg)
    return true;
 }
 
-bool 
+void
+Transport::callSocketFunc(Socket sock)
+{
+   if (mSocketFunc)
+   {
+      mSocketFunc(sock, transport(), __FILE__, __LINE__);
+   }
+}
+
+void
+Transport::pushRxMsgUp(TransactionMessage* msg)
+{
+   mStateMachineFifo.add(msg);
+}
+
+
+bool
 Transport::operator==(const Transport& rhs) const
 {
    return ( ( mTuple.isV4() == rhs.isV4()) &&
             ( port() == rhs.port()) &&
             ( memcmp(&boundInterface(),&rhs.boundInterface(),mTuple.length()) == 0) );
 }
-    
-EncodeStream& 
+
+EncodeStream&
 resip::operator<<(EncodeStream& strm, const resip::Transport& rhs)
 {
    strm << "Transport: " << rhs.mTuple;
@@ -343,22 +371,22 @@ resip::operator<<(EncodeStream& strm, const resip::Transport& rhs)
 }
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -368,7 +396,7 @@ resip::operator<<(EncodeStream& strm, const resip::Transport& rhs)
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -382,12 +410,13 @@ resip::operator<<(EncodeStream& strm, const resip::Transport& rhs)
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */

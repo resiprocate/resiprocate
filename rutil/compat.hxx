@@ -46,7 +46,12 @@
 #endif // UNDER_CE
 #endif
 
-#if defined(__APPLE__) 
+#if defined(__APPLE__)
+   // .amr. If you get linker or type conflicts around UInt32, then use this define
+#  if defined(RESIP_APPLE_USE_SYSTEM_TYPES)
+#     include <TargetConditionals.h>
+#     include <CoreServices/CoreServices.h>
+#  endif
 #  if !defined(MAC_OS_X_VERSION_MIN_REQUIRED) || MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_2
       // you don't include the SDK or you're running 10.3 or above
       // note: this will fail on 10.2 if you don't include the SDK
@@ -119,9 +124,9 @@ resipMax(const _Tp& __a, const _Tp& __b)
 
 }
 
-// Mac OS X: UInt32 definition conflicts with the Mac OS SDK.
-// If you've included the SDK then TARGET_OS_MAC will be defined.
-#ifndef TARGET_OS_MAC
+// Mac OS X: UInt32 definition conflicts with the Mac OS or iPhone OS SDK.
+// If you've included either SDK then these will be defined.
+#if !defined(TARGET_OS_MAC) && !defined(TARGET_OS_IPHONE)
 typedef unsigned char  UInt8;
 typedef unsigned short UInt16;
 typedef unsigned int   UInt32;
@@ -166,6 +171,18 @@ typedef unsigned int   UInt32;
 // #undef USE_IPV6
 #endif
 #endif
+#endif
+
+// !bwc! Some poking around seems to indicate that icc supports gcc's function 
+// attributes, at least as far back as version 8. I have no idea what support is 
+// like prior to that. As for SUNPRO, it uses gcc's frontend, so I would expect 
+// gnu-c function attributes to work, but does it define __GNUC__?
+#if defined(__GNUC__) || (__INTEL_COMPILER > 800)
+#define RESIP_DEPRECATED __attribute__ ((deprecated))
+#elif defined(_MSC_VER)
+#define RESIP_DEPRECATED __declspec(deprecated)
+#else
+#define RESIP_DEPRECATED
 #endif
 
 #endif

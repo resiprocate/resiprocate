@@ -12,14 +12,26 @@ class ServerRegistration: public NonDialogUsage
 {
    public:
       ServerRegistrationHandle getHandle();
-      
-      /// accept a SIP registration with a specific response
+
+      /** Accept a SIP registration with a specific response.  Any contacts in this message will be deleted and replaced with the list created during REGISTER processing.
+
+         !Warning! After calling this function from a ServerRegistrationHandle, do not access the handle as this function
+         may delete this object. Use ServerRegistrationHandle::isValidHandle() to test if it's deleted.
+      */
       void accept(SipMessage& ok);
 
-      /// accept a SIP registration with the contacts known to the DUM
+      /** Accept a SIP registration.
+
+        !Warning! After calling this function from a ServerRegistrationHandle, do not access the handle as this function
+        may delete this object. Use ServerRegistrationHandle::isValidHandle() to test if it's deleted.
+     */
       void accept(int statusCode = 200);
 
-      /// reject a SIP registration 
+      /** Reject a SIP registration.  
+  
+        !Warning! After calling this function from a ServerRegistrationHandle, do not access the handle as this function
+        may delete this object. Use ServerRegistrationHandle::isValidHandle() to test if it's deleted.
+      */
       void reject(int statusCode);
 
       virtual void end();
@@ -47,6 +59,8 @@ class ServerRegistration: public NonDialogUsage
 
       bool tryFlow(ContactInstanceRecord& rec,
                      const resip::SipMessage& msg);
+      bool flowTokenNeededForTls(const ContactInstanceRecord &rec) const;
+      bool flowTokenNeededForSigcomp(const ContactInstanceRecord &rec) const;
       bool testFlowRequirements(ContactInstanceRecord &rec,
                                  const resip::SipMessage& msg,
                                  bool hasFlow) const;
@@ -160,7 +174,7 @@ class ServerRegistration: public NonDialogUsage
                modifiedContacts = mModifiedContacts;
             }
 
-            unsigned int numContacts() { if(mModifiedContacts.get()) return mModifiedContacts->size(); return 0; }
+            unsigned int numContacts() { if(mModifiedContacts.get()) return (unsigned int)mModifiedContacts->size(); return 0; }
          private:
             std::auto_ptr<ContactRecordTransactionLog> mLog;
             std::auto_ptr<ContactPtrList> mModifiedContacts;

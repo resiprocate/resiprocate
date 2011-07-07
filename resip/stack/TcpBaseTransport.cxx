@@ -14,6 +14,7 @@
 using namespace std;
 using namespace resip;
 
+
 const size_t TcpBaseTransport::MaxWriteSize = 4096;
 const size_t TcpBaseTransport::MaxReadSize = 4096;
 
@@ -21,34 +22,44 @@ TcpBaseTransport::TcpBaseTransport(Fifo<TransactionMessage>& fifo,
                                    int portNum, IpVersion version,
                                    const Data& pinterface,
                                    AfterSocketCreationFuncPtr socketFunc,
-                                   Compression &compression)
-   : InternalTransport(fifo, portNum, version, pinterface, socketFunc, compression)
+                                   Compression &compression,
+                                   unsigned transportFlags)
+   : InternalTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags)
 {
-   mFd = InternalTransport::socket(TCP, version);
+   if ( (mTransportFlags & RESIP_TRANSPORT_FLAG_NOBIND)==0 )
+   {
+      mFd = InternalTransport::socket(TCP, version);
+   }
 }
 
 
 TcpBaseTransport::~TcpBaseTransport()
 {
-   //DebugLog (<< "Shutting down TCP Transport " << this << " " << mFd << " " << mInterface << ":" << port()); 
-   
-   // !jf! this is not right. should drain the sends before 
-   while (mTxFifo.messageAvailable()) 
+   //DebugLog (<< "Shutting down TCP Transport " << this << " " << mFd << " " << mInterface << ":" << port());
+
+   // !jf! this is not right. should drain the sends before
+   while (mTxFifo.messageAvailable())
    {
       SendData* data = mTxFifo.getNext();
       InfoLog (<< "Throwing away queued data for " << data->destination);
-      
-      fail(data->transactionId);
+
+      fail(data->transactionId, TransportFailure::TransportShutdown);
       delete data;
    }
    DebugLog (<< "Shutting down " << mTuple);
    //mSendRoundRobin.clear(); // clear before we delete the connections
 }
 
+// called from constructor of TcpTransport
 void
 TcpBaseTransport::init()
 {
-   //DebugLog (<< "Opening TCP " << mFd << " : " << this);   
+   if ( (mTransportFlags & RESIP_TRANSPORT_FLAG_NOBIND)!=0 )
+   {
+      return;
+   }
+
+   //DebugLog (<< "Opening TCP " << mFd << " : " << this);
 
    int on = 1;
 #if !defined(WIN32)
@@ -57,7 +68,7 @@ TcpBaseTransport::init()
    if ( ::setsockopt ( mFd, SOL_SOCKET, SO_REUSEADDR, (const char*)&on, sizeof(on)) )
 #endif
    {
-	   int e = getErrno();
+       int e = getErrno();
        InfoLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << strerror(e));
        error(e);
        throw Exception("Failed setsockopt", __FILE__,__LINE__);
@@ -65,7 +76,7 @@ TcpBaseTransport::init()
 
    bind();
    makeSocketNonBlocking(mFd);
-   
+
    // do the listen, seting the maximum queue size for compeletly established
    // sockets -- on linux, tcp_max_syn_backlog should be used for the incomplete
    // queue size(see man listen)
@@ -77,21 +88,43 @@ TcpBaseTransport::init()
       InfoLog (<< "Failed listen " << strerror(e));
       error(e);
       // !cj! deal with errors
-	  throw Transport::Exception("Address already in use", __FILE__,__LINE__);
+      throw Transport::Exception("Address already in use", __FILE__,__LINE__);
    }
+}
+
+// ?kw?: when should this be called relative to init() above? merge?
+void
+TcpBaseTransport::setPollGrp(FdPollGrp *grp)
+{
+   assert(mPollGrp==NULL && grp!=NULL);
+   if ( mFd!=INVALID_SOCKET )
+   {
+      mPollItemHandle = grp->addPollItem(mFd, FPEM_Read|FPEM_Edge, this);
+      // above released by InternalTransport destructor
+   }
+   mPollGrp = grp;
+   mConnectionManager.setPollGrp(grp);
 }
 
 void
 TcpBaseTransport::buildFdSet( FdSet& fdset)
 {
+   assert( mPollGrp==NULL );
    mConnectionManager.buildFdSet(fdset);
-   fdset.setRead(mFd); // for the transport itself
+   if ( mFd!=INVALID_SOCKET )
+   {
+      fdset.setRead(mFd); // for the transport itself (accept)
+   }
 }
 
-void
-TcpBaseTransport::processListen(FdSet& fdset)
+/**
+    Returns 1 if created new connection, -1 if "bad" error,
+    and 0 if nothing to do (EWOULDBLOCK)
+**/
+int
+TcpBaseTransport::processListen()
 {
-   if (fdset.readyToRead(mFd))
+   if (1)
    {
       Tuple tuple(mTuple);
       struct sockaddr& peer = tuple.getMutableSockaddr();
@@ -103,15 +136,16 @@ TcpBaseTransport::processListen(FdSet& fdset)
          switch (e)
          {
             case EWOULDBLOCK:
-               // !jf! this can not be ready in some cases 
-               return;
+               // !jf! this can not be ready in some cases
+               // !kw! this will happen every epoll cycle
+               return 0;
             default:
                Transport::error(e);
          }
-         return;
+         return -1;
       }
       makeSocketNonBlocking(sock);
-            
+
       DebugLog (<< "Received TCP connection from: " << tuple << " as fd=" << sock);
 
       if (mSocketFunc)
@@ -130,95 +164,113 @@ TcpBaseTransport::processListen(FdSet& fdset)
          closeSocket(sock);
       }
    }
+   return 1;
+}
+
+Connection*
+TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
+      TransportFailure::FailureReason &failReason, int &failSubCode)
+{
+   // attempt to open
+   Socket sock = InternalTransport::socket( TCP, ipVersion());
+   // fdset.clear(sock); !kw! removed as part of epoll impl
+
+   if ( sock == INVALID_SOCKET ) // no socket found - try to free one up and try again
+   {
+      int err = getErrno();
+      InfoLog (<< "Failed to create a socket " << strerror(err));
+      error(err);
+      mConnectionManager.gc(ConnectionManager::MinimumGcAge, 1); // free one up
+
+      sock = InternalTransport::socket( TCP, ipVersion());
+      if ( sock == INVALID_SOCKET )
+      {
+         err = getErrno();
+         WarningLog( << "Error in finding free filedescriptor to use. " << strerror(err));
+         error(err);
+         failReason = TransportFailure::TransportNoSocket;
+         failSubCode = err;
+         return NULL;
+      }
+   }
+
+   assert(sock != INVALID_SOCKET);
+
+   DebugLog (<<"Opening new connection to " << dest);
+   makeSocketNonBlocking(sock);
+   if (mSocketFunc)
+   {
+      mSocketFunc(sock, transport(), __FILE__, __LINE__);
+   }
+   const sockaddr& servaddr = dest.getSockaddr();
+   int ret = connect( sock, &servaddr, dest.length() );
+
+   // See Chapter 15.3 of Stevens, Unix Network Programming Vol. 1 2nd Edition
+   if (ret == SOCKET_ERROR)
+   {
+      int err = getErrno();
+
+      switch (err)
+      {
+         case EINPROGRESS:
+         case EWOULDBLOCK:
+            break;
+         default:
+         {
+            // !jf! this has failed
+            InfoLog( << "Error on TCP connect to " <<  dest << ", err=" << err << ": " << strerror(err));
+            error(err);
+            //fdset.clear(sock);
+            closeSocket(sock);
+            failReason = TransportFailure::TransportBadConnect;
+            failSubCode = err;
+            return NULL;
+         }
+      }
+   }
+
+   // This will add the connection to the manager
+   Connection *conn = createConnection(dest, sock, false);
+   assert(conn);
+   conn->mRequestPostConnectSocketFuncCall = true;
+   return conn;
 }
 
 void
-TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
+TcpBaseTransport::processAllWriteRequests()
 {
    while (mTxFifo.messageAvailable())
    {
       SendData* data = mTxFifo.getNext();
       DebugLog (<< "Processing write for " << data->destination);
-      
+
       // this will check by connectionId first, then by address
       Connection* conn = mConnectionManager.findConnection(data->destination);
-            
+
       //DebugLog (<< "TcpBaseTransport::processAllWriteRequests() using " << conn);
-      
+
       // There is no connection yet, so make a client connection
       if (conn == 0 && !data->destination.onlyUseExistingConnection)
       {
-         // attempt to open
-         Socket sock = InternalTransport::socket( TCP, ipVersion());
-         fdset.clear(sock);
-         
-         if ( sock == INVALID_SOCKET ) // no socket found - try to free one up and try again
+         TransportFailure::FailureReason failCode = TransportFailure::Failure;
+         int subCode = 0;
+         if((conn=makeOutgoingConnection(data->destination, failCode, subCode)) == NULL)
          {
-            int e = getErrno();
-            InfoLog (<< "Failed to create a socket " << strerror(e));
-            error(e);
-            mConnectionManager.gc(ConnectionManager::MinimumGcAge); // free one up
-
-            sock = InternalTransport::socket( TCP, ipVersion());
-            if ( sock == INVALID_SOCKET )
-            {
-               int e = getErrno();
-               WarningLog( << "Error in finding free filedescriptor to use. " << strerror(e));
-               error(e);
-               fail(data->transactionId);
-               delete data;
-               return;
-            }
+            fail(data->transactionId, failCode, subCode);
+            delete data;
+            return;	// .kw. WHY? What about messages left in queue?
          }
-
-         assert(sock != INVALID_SOCKET);
-         const sockaddr& servaddr = data->destination.getSockaddr(); 
-         
-         DebugLog (<<"Opening new connection to " << data->destination);
-         makeSocketNonBlocking(sock);         
-         if (mSocketFunc)
-         {
-            mSocketFunc(sock, transport(), __FILE__, __LINE__);
-         }
-         int e = connect( sock, &servaddr, data->destination.length() );
-
-         // See Chapter 15.3 of Stevens, Unix Network Programming Vol. 1 2nd Edition
-         if (e == INVALID_SOCKET)
-         {
-            int err = getErrno();
-            
-            switch (err)
-            {
-               case EINPROGRESS:
-               case EWOULDBLOCK:
-                  break;
-               default:	
-               {
-                  // !jf! this has failed
-                  InfoLog( << "Error on TCP connect to " <<  data->destination << ": " << strerror(err));
-                  error(e);
-                  fdset.clear(sock);
-                  closeSocket(sock);
-                  fail(data->transactionId);
-                  delete data;
-                  return;
-               }
-            }
-         }
-
-         // This will add the connection to the manager
-         conn = createConnection(data->destination, sock, false);
-
-         assert(conn);
-         assert(conn->getSocket() >= 0);
+         assert(conn->getSocket() != INVALID_SOCKET);
+         // .kw. why do below? We already have the conn, who uses key?
          data->destination.mFlowKey = conn->getSocket(); // !jf!
       }
-   
+
       if (conn == 0)
       {
          DebugLog (<< "Failed to create/get connection: " << data->destination);
-         fail(data->transactionId);
+         fail(data->transactionId, TransportFailure::TransportNoExistConn, 0);
          delete data;
+         // NOTE: We fail this one but don't give up on others in queue
       }
       else // have a connection
       {
@@ -228,15 +280,51 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
 }
 
 void
+TcpBaseTransport::checkTransmitQueue()
+{
+   // called within SipStack's thread. There is some risk of
+   // recursion here if connection starts doing anything fancy.
+   // For backward-compat when not-epoll, don't handle transmit synchronously
+   // now, but rather wait for the process() call
+   if (mPollGrp)
+   {
+      processAllWriteRequests();
+   }
+}
+
+void
 TcpBaseTransport::process(FdSet& fdSet)
 {
-   processAllWriteRequests(fdSet);
+   assert( mPollGrp==NULL );
+
+   processAllWriteRequests();
 
    // process the connections in ConnectionManager
-   mConnectionManager.process(fdSet, mStateMachineFifo);
+   mConnectionManager.process(fdSet);
 
-   processListen(fdSet);
+   // process our own listen/accept socket for incoming connections
+   if (mFd!=INVALID_SOCKET && fdSet.readyToRead(mFd))
+   {
+      processListen();
+   }
 }
+
+void
+TcpBaseTransport::processPollEvent(FdPollEventMask mask) {
+   if ( mask & FPEM_Read )
+   {
+      while ( processListen() > 0 )
+         ;
+   }
+}
+
+void
+TcpBaseTransport::setRcvBufLen(int buflen)
+{
+   assert(0);	// not implemented yet
+   // need to store away the length and use when setting up new connections
+}
+
 
 
 /* ====================================================================
@@ -287,6 +375,5 @@ TcpBaseTransport::process(FdSet& fdSet)
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */
-
-

@@ -59,9 +59,9 @@ class BranchParameter : public Parameter
       BranchParameter& operator=(const BranchParameter& other);
       bool operator==(const BranchParameter& other);
 
-   private:
-      friend class ParserCategory;
       Type& value() {return *this;}
+
+   private:
       
       bool mHasMagicCookie;
       bool mIsMyBranch;

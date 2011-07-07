@@ -1,4 +1,4 @@
-/* C++ code produced by gperf version 3.0.3 */
+/* C++ code produced by gperf version 3.0.1 */
 /* Command-line: gperf -D -E -L C++ -t -k '*' --compare-strncmp -Z HeaderHash HeaderHash.gperf  */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
@@ -39,7 +39,7 @@ namespace resip
 using namespace std;
 #line 10 "HeaderHash.gperf"
 struct headers { const char *name; Headers::Type type; };
-/* maximum key range = 430, duplicates = 4 */
+/* maximum key range = 430, duplicates = 0 */
 
 class HeaderHash
 {
@@ -64,9 +64,9 @@ HeaderHash::hash (register const char *str, register unsigned int len)
       431, 431, 431, 431, 431, 431, 431, 431, 431, 431,
       431, 431, 431, 431, 431, 431, 431, 431, 431, 431,
       431, 431, 431, 431, 431, 431, 431,   0,  55,  15,
-        0,  30,  35,  10,   0,  25,   5,  70,  40,  75,
-        0,   5,   0,  25,  10,  50,   0,  10,  45,  15,
-       60,  20,  25, 431, 431, 431, 431, 431, 431, 431,
+        0,  30,  35,  10,   5,  25,   5,  70,  40,  75,
+        0,   5,   0,  25,  10,  50,   0,  10,  45,   0,
+       60,  20,  50, 431, 431, 431, 431, 431, 431, 431,
       431, 431, 431, 431, 431, 431, 431, 431, 431, 431,
       431, 431, 431, 431, 431, 431, 431, 431, 431, 431,
       431, 431, 431, 431, 431, 431, 431, 431, 431, 431,
@@ -169,7 +169,7 @@ HeaderHash::in_word_set (register const char *str, register unsigned int len)
 {
   enum
     {
-      TOTAL_KEYWORDS = 104,
+      TOTAL_KEYWORDS = 101,
       MIN_WORD_LENGTH = 1,
       MAX_WORD_LENGTH = 25,
       MIN_HASH_VALUE = 1,
@@ -180,12 +180,12 @@ HeaderHash::in_word_set (register const char *str, register unsigned int len)
     {
 #line 20 "HeaderHash.gperf"
       {"t", Headers::To},
-#line 91 "HeaderHash.gperf"
-      {"path", Headers::Path},
 #line 26 "HeaderHash.gperf"
       {"o", Headers::Event},
 #line 36 "HeaderHash.gperf"
       {"to", Headers::To},
+#line 92 "HeaderHash.gperf"
+      {"path", Headers::Path},
 #line 22 "HeaderHash.gperf"
       {"r", Headers::ReferTo},
 #line 16 "HeaderHash.gperf"
@@ -200,9 +200,7 @@ HeaderHash::in_word_set (register const char *str, register unsigned int len)
       {"date", Headers::Date},
 #line 17 "HeaderHash.gperf"
       {"f", Headers::From},
-#line 85 "HeaderHash.gperf"
-      {"join", Headers::Join},
-#line 92 "HeaderHash.gperf"
+#line 86 "HeaderHash.gperf"
       {"join", Headers::Join},
 #line 15 "HeaderHash.gperf"
       {"l", Headers::ContentLength},
@@ -212,18 +210,18 @@ HeaderHash::in_word_set (register const char *str, register unsigned int len)
       {"v", Headers::Via},
 #line 18 "HeaderHash.gperf"
       {"s", Headers::Subject},
+#line 76 "HeaderHash.gperf"
+      {"warning", Headers::Warning},
 #line 23 "HeaderHash.gperf"
       {"b", Headers::ReferredBy},
-#line 82 "HeaderHash.gperf"
-      {"hide", Headers::UNKNOWN},
 #line 34 "HeaderHash.gperf"
       {"route", Headers::Route},
 #line 24 "HeaderHash.gperf"
       {"x", Headers::SessionExpires},
+#line 83 "HeaderHash.gperf"
+      {"hide", Headers::UNKNOWN},
 #line 38 "HeaderHash.gperf"
       {"accept", Headers::Accept},
-#line 75 "HeaderHash.gperf"
-      {"warning", Headers::Warning},
 #line 19 "HeaderHash.gperf"
       {"k", Headers::Supported},
 #line 37 "HeaderHash.gperf"
@@ -232,41 +230,37 @@ HeaderHash::in_word_set (register const char *str, register unsigned int len)
       {"m", Headers::Contact},
 #line 47 "HeaderHash.gperf"
       {"content-id", Headers::ContentId},
+#line 43 "HeaderHash.gperf"
+      {"allow", Headers::Allow},
 #line 95 "HeaderHash.gperf"
       {"rack", Headers::RAck},
 #line 96 "HeaderHash.gperf"
       {"reason", Headers::Reason},
 #line 58 "HeaderHash.gperf"
       {"priority", Headers::Priority},
-#line 43 "HeaderHash.gperf"
-      {"allow", Headers::Allow},
-#line 83 "HeaderHash.gperf"
+#line 84 "HeaderHash.gperf"
       {"identity", Headers::Identity},
 #line 39 "HeaderHash.gperf"
       {"accept-contact", Headers::AcceptContact},
-#line 81 "HeaderHash.gperf"
+#line 82 "HeaderHash.gperf"
       {"event", Headers::Event},
 #line 50 "HeaderHash.gperf"
       {"content-type", Headers::ContentType},
 #line 63 "HeaderHash.gperf"
       {"reply-to", Headers::ReplyTo},
-#line 69 "HeaderHash.gperf"
+#line 70 "HeaderHash.gperf"
       {"supported", Headers::Supported},
-#line 80 "HeaderHash.gperf"
+#line 81 "HeaderHash.gperf"
       {"encryption", Headers::UNKNOWN},
-#line 57 "HeaderHash.gperf"
-      {"organization", Headers::Organization},
-#line 78 "HeaderHash.gperf"
-      {"authorization", Headers::Authorization},
-#line 106 "HeaderHash.gperf"
+#line 103 "HeaderHash.gperf"
       {"rseq", Headers::RSeq},
 #line 94 "HeaderHash.gperf"
       {"privacy", Headers::Privacy},
-#line 67 "HeaderHash.gperf"
+#line 68 "HeaderHash.gperf"
       {"sip-etag", Headers::SIPETag},
 #line 27 "HeaderHash.gperf"
       {"cseq", Headers::CSeq},
-#line 73 "HeaderHash.gperf"
+#line 74 "HeaderHash.gperf"
       {"unsupported", Headers::Unsupported},
 #line 28 "HeaderHash.gperf"
       {"call-id", Headers::CallID},
@@ -274,6 +268,8 @@ HeaderHash::in_word_set (register const char *str, register unsigned int len)
       {"refer-to",Headers::ReferTo},
 #line 32 "HeaderHash.gperf"
       {"from", Headers::From},
+#line 77 "HeaderHash.gperf"
+      {"www-authenticate",Headers::WWWAuthenticate},
 #line 62 "HeaderHash.gperf"
       {"record-route", Headers::RecordRoute},
 #line 100 "HeaderHash.gperf"
@@ -282,13 +278,17 @@ HeaderHash::in_word_set (register const char *str, register unsigned int len)
       {"error-info", Headers::ErrorInfo},
 #line 54 "HeaderHash.gperf"
       {"in-reply-to", Headers::InReplyTo},
+#line 57 "HeaderHash.gperf"
+      {"organization", Headers::Organization},
 #line 93 "HeaderHash.gperf"
       {"target-dialog", Headers::TargetDialog},
-#line 30 "HeaderHash.gperf"
-      {"content-length", Headers::ContentLength},
 #line 64 "HeaderHash.gperf"
       {"require", Headers::Require},
-#line 74 "HeaderHash.gperf"
+#line 79 "HeaderHash.gperf"
+      {"authorization", Headers::Authorization},
+#line 30 "HeaderHash.gperf"
+      {"content-length", Headers::ContentLength},
+#line 75 "HeaderHash.gperf"
       {"user-agent", Headers::UserAgent},
 #line 48 "HeaderHash.gperf"
       {"content-encoding", Headers::ContentEncoding},
@@ -302,148 +302,132 @@ HeaderHash::in_word_set (register const char *str, register unsigned int len)
       {"content-language", Headers::ContentLanguage},
 #line 45 "HeaderHash.gperf"
       {"call-info", Headers::CallInfo},
-#line 76 "HeaderHash.gperf"
-      {"www-authenticate",Headers::WWWAuthenticate},
 #line 35 "HeaderHash.gperf"
       {"subject", Headers::Subject},
 #line 41 "HeaderHash.gperf"
       {"accept-language", Headers::AcceptLanguage},
-#line 84 "HeaderHash.gperf"
+#line 85 "HeaderHash.gperf"
       {"identity-info", Headers::IdentityInfo},
-#line 66 "HeaderHash.gperf"
+#line 67 "HeaderHash.gperf"
       {"server", Headers::Server},
 #line 99 "HeaderHash.gperf"
       {"replaces",Headers::Replaces},
-#line 112 "HeaderHash.gperf"
+#line 109 "HeaderHash.gperf"
       {"min-se", Headers::MinSE},
-#line 115 "HeaderHash.gperf"
+#line 112 "HeaderHash.gperf"
       {"history-info", Headers::HistoryInfo},
+#line 89 "HeaderHash.gperf"
+      {"p-called-party-id", Headers::PCalledPartyId},
 #line 44 "HeaderHash.gperf"
       {"authentication-info", Headers::AuthenticationInfo},
-#line 88 "HeaderHash.gperf"
-      {"p-called-party-id", Headers::PCalledPartyId},
-#line 101 "HeaderHash.gperf"
-      {"p-called-party-id", Headers::PCalledPartyId},
+#line 72 "HeaderHash.gperf"
+      {"answer-mode", Headers::AnswerMode},
 #line 31 "HeaderHash.gperf"
       {"expires", Headers::Expires},
-#line 60 "HeaderHash.gperf"
-      {"proxy-authorization", Headers::ProxyAuthorization},
-#line 114 "HeaderHash.gperf"
+#line 111 "HeaderHash.gperf"
       {"remote-party-id", Headers::RemotePartyId},
 #line 59 "HeaderHash.gperf"
       {"proxy-authenticate", Headers::ProxyAuthenticate},
-#line 71 "HeaderHash.gperf"
-      {"answer-mode", Headers::AnswerMode},
-#line 87 "HeaderHash.gperf"
+#line 66 "HeaderHash.gperf"
+      {"flow-timer", Headers::FlowTimer},
+#line 88 "HeaderHash.gperf"
       {"p-associated-uri", Headers::PAssociatedUri},
-#line 102 "HeaderHash.gperf"
-      {"p-associated-uri", Headers::PAssociatedUri},
-#line 68 "HeaderHash.gperf"
-      {"sip-if-match", Headers::SIPIfMatch},
-#line 113 "HeaderHash.gperf"
+#line 110 "HeaderHash.gperf"
       {"refer-sub", Headers::ReferSub},
 #line 98 "HeaderHash.gperf"
       {"referred-by",Headers::ReferredBy},
+#line 69 "HeaderHash.gperf"
+      {"sip-if-match", Headers::SIPIfMatch},
 #line 61 "HeaderHash.gperf"
       {"proxy-require", Headers::ProxyRequire},
+#line 60 "HeaderHash.gperf"
+      {"proxy-authorization", Headers::ProxyAuthorization},
+#line 80 "HeaderHash.gperf"
+      {"allow-events", Headers::AllowEvents},
 #line 46 "HeaderHash.gperf"
       {"content-disposition", Headers::ContentDisposition},
-#line 89 "HeaderHash.gperf"
-      {"p-media-authorization", Headers::PMediaAuthorization},
-#line 70 "HeaderHash.gperf"
-      {"timestamp", Headers::Timestamp},
-#line 79 "HeaderHash.gperf"
-      {"allow-events", Headers::AllowEvents},
 #line 33 "HeaderHash.gperf"
       {"max-forwards", Headers::MaxForwards},
-#line 103 "HeaderHash.gperf"
-      {"service-route", Headers::ServiceRoute},
-#line 110 "HeaderHash.gperf"
-      {"service-route", Headers::ServiceRoute},
-#line 90 "HeaderHash.gperf"
-      {"p-preferred-identity", Headers::PPreferredIdentity},
+#line 71 "HeaderHash.gperf"
+      {"timestamp", Headers::Timestamp},
 #line 107 "HeaderHash.gperf"
+      {"service-route", Headers::ServiceRoute},
+#line 91 "HeaderHash.gperf"
+      {"p-preferred-identity", Headers::PPreferredIdentity},
+#line 104 "HeaderHash.gperf"
       {"security-client", Headers::SecurityClient},
-#line 86 "HeaderHash.gperf"
+#line 90 "HeaderHash.gperf"
+      {"p-media-authorization", Headers::PMediaAuthorization},
+#line 87 "HeaderHash.gperf"
       {"p-asserted-identity", Headers::PAssertedIdentity},
 #line 51 "HeaderHash.gperf"
       {"content-transfer-encoding", Headers::ContentTransferEncoding},
-#line 105 "HeaderHash.gperf"
-      {"response-key", Headers::UNKNOWN},
-#line 72 "HeaderHash.gperf"
+#line 73 "HeaderHash.gperf"
       {"priv-answer-mode", Headers::PrivAnswerMode},
+#line 102 "HeaderHash.gperf"
+      {"response-key", Headers::UNKNOWN},
 #line 55 "HeaderHash.gperf"
       {"min-expires", Headers::MinExpires},
-#line 109 "HeaderHash.gperf"
+#line 106 "HeaderHash.gperf"
       {"security-verify", Headers::SecurityVerify},
-#line 77 "HeaderHash.gperf"
+#line 78 "HeaderHash.gperf"
       {"subscription-state",Headers::SubscriptionState},
-#line 108 "HeaderHash.gperf"
+#line 105 "HeaderHash.gperf"
       {"security-server", Headers::SecurityServer},
-#line 104 "HeaderHash.gperf"
+#line 101 "HeaderHash.gperf"
       {"request-disposition", Headers::RequestDisposition},
 #line 56 "HeaderHash.gperf"
       {"mime-version", Headers::MIMEVersion},
-#line 111 "HeaderHash.gperf"
+#line 108 "HeaderHash.gperf"
       {"session-expires", Headers::SessionExpires}
     };
 
-  static short lookup[] =
+  static signed char lookup[] =
     {
-        -1,    0,   -1,   -1,    1,   -1,    2,    3,
-        -1,   -1,   -1,    4,   -1,   -1,   -1,   -1,
-         5,   -1,   -1,   -1,   -1,    6,   -1,   -1,
-        -1,   -1,    7,   -1,   -1,   -1,   -1,    8,
-        -1,   -1,    9,   -1,   10,   -1,   -1, -148,
-        -1,   13,   14,  -93,   -2,   -1,   15,   -1,
-        -1,   -1,   -1,   16,   -1,   -1,   -1,   -1,
-        17,   -1,   -1,   18,   19,   20,   -1,   -1,
-        -1,   -1,   21,   22,   -1,   -1,   -1,   23,
-        -1,   24,   -1,   -1,   25,   -1,   -1,   -1,
-        -1,   -1,   -1,   -1,   -1,   26,   -1,   -1,
-        -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-        -1,   -1,   -1,   27,   -1,   28,   -1,   29,
-        -1,   30,   -1,   -1,   31,   32,   33,   -1,
-        34,   35,   36,   37,   -1,   38,   39,   40,
-        -1,   -1,   41,   42,   43,   -1,   44,   45,
-        46,   47,   -1,   -1,   -1,   -1,   -1,   -1,
-        -1,   48,   -1,   49,   50,   51,   -1,   52,
-        53,   -1,   -1,   54,   -1,   -1,   55,   56,
-        -1,   -1,   -1,   57,   58,   -1,   -1,   -1,
-        59,   -1,   -1,   -1,   -1,   -1,   60,   -1,
-        -1,   61,   -1,   62,   63,   -1,   -1,   64,
-        -1,   -1,   65,   -1,   -1,   66,   -1,   67,
-        -1,   -1,   68,   69,   -1,   -1,   -1,   -1,
-        -1,   -1,   70,   -1,   -1, -303,  -33,   -2,
-        -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-        -1,   -1,   -1,   -1,   73,   -1,   -1,   -1,
-        -1,   -1,   -1,   74,   75,   -1,   -1,   76,
-        -1,   -1,   77,   -1,   -1,   -1,   -1,   -1,
-        -1,   -1,   -1,   -1, -347,   80,   -1,   81,
-        -1,   82,  -26,   -2,   -1,   -1,   -1,   -1,
-        83,   -1,   -1,   -1,   -1,   -1,   84,   -1,
-        85,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-        86,   -1,   -1,   87,   -1,   -1,   -1,   -1,
-        88, -381,   -1,   91,  -15,   -2,   -1,   -1,
-        -1,   -1,   -1,   -1,   -1,   92,   -1,   -1,
-        -1,   93,   -1,   -1,   -1,   -1,   -1,   94,
-        -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-        -1,   -1,   -1,   95,   -1,   -1,   -1,   96,
-        -1,   -1,   -1,   -1,   97,   -1,   -1,   -1,
-        -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-        -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-        -1,   -1,   -1,   -1,   98,   -1,   -1,   99,
-        -1,   -1,   -1,   -1,   -1,   -1,  100,   -1,
-        -1,   -1,   -1,   -1,   -1,   -1,   -1,  101,
-        -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-        -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-        -1,   -1,   -1,   -1,   -1,   -1,  102,   -1,
-        -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-        -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-        -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-        -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-        -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-        -1,   -1,   -1,   -1,   -1,   -1,  103
+       -1,   0,  -1,  -1,  -1,  -1,   1,   2,  -1,   3,
+       -1,   4,  -1,  -1,  -1,  -1,   5,  -1,  -1,  -1,
+       -1,   6,  -1,  -1,  -1,  -1,   7,  -1,  -1,  -1,
+       -1,   8,  -1,  -1,   9,  -1,  10,  -1,  -1,  11,
+       -1,  12,  13,  -1,  -1,  -1,  14,  -1,  -1,  -1,
+       -1,  15,  16,  -1,  -1,  -1,  17,  -1,  -1,  -1,
+       18,  19,  -1,  -1,  20,  -1,  21,  -1,  -1,  -1,
+       -1,  22,  -1,  23,  -1,  -1,  24,  -1,  -1,  -1,
+       -1,  -1,  -1,  -1,  -1,  25,  -1,  -1,  -1,  -1,
+       26,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  27,
+       -1,  28,  -1,  29,  -1,  -1,  -1,  -1,  30,  31,
+       32,  -1,  33,  34,  35,  36,  -1,  -1,  -1,  37,
+       -1,  -1,  38,  39,  40,  -1,  41,  42,  43,  44,
+       -1,  45,  -1,  -1,  -1,  -1,  -1,  46,  -1,  47,
+       48,  49,  50,  51,  -1,  -1,  -1,  52,  53,  54,
+       55,  56,  -1,  -1,  -1,  57,  58,  -1,  -1,  -1,
+       59,  -1,  -1,  -1,  -1,  -1,  60,  -1,  -1,  61,
+       -1,  -1,  62,  -1,  -1,  63,  -1,  -1,  64,  -1,
+       -1,  65,  -1,  66,  -1,  -1,  67,  -1,  -1,  -1,
+       -1,  -1,  68,  -1,  -1,  -1,  -1,  69,  -1,  70,
+       -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+       -1,  71,  72,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+       73,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  74,  -1,
+       75,  -1,  -1,  -1,  -1,  -1,  76,  -1,  -1,  77,
+       -1,  78,  79,  -1,  -1,  -1,  -1,  -1,  80,  81,
+       -1,  -1,  82,  -1,  83,  -1,  -1,  84,  -1,  -1,
+       -1,  -1,  -1,  -1,  85,  -1,  -1,  -1,  -1,  -1,
+       -1,  -1,  -1,  86,  -1,  87,  -1,  -1,  -1,  -1,
+       -1,  -1,  -1,  -1,  -1,  88,  89,  -1,  -1,  90,
+       -1,  -1,  -1,  -1,  -1,  91,  92,  -1,  -1,  -1,
+       -1,  -1,  -1,  -1,  -1,  -1,  -1,  93,  -1,  -1,
+       -1,  -1,  -1,  -1,  -1,  -1,  94,  -1,  -1,  -1,
+       -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+       -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+       95,  -1,  -1,  96,  -1,  -1,  -1,  -1,  -1,  -1,
+       97,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  98,
+       -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+       -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+       -1,  -1,  99,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+       -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+       -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+       -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+       -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+      100
     };
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
@@ -461,25 +445,10 @@ HeaderHash::in_word_set (register const char *str, register unsigned int len)
               if (tolower(*str) == *s && !strncasecmp (str + 1, s + 1, len - 1) && s[len] == '\0')
                 return &wordlist[index];
             }
-          else if (index < -TOTAL_KEYWORDS)
-            {
-              register int offset = - 1 - TOTAL_KEYWORDS - index;
-              register struct headers *wordptr = &wordlist[TOTAL_KEYWORDS + lookup[offset]];
-              register struct headers *wordendptr = wordptr + -lookup[offset + 1];
-
-              while (wordptr < wordendptr)
-                {
-                  register const char *s = wordptr->name;
-
-                  if (tolower(*str) == *s && !strncasecmp (str + 1, s + 1, len - 1) && s[len] == '\0')
-                    return wordptr;
-                  wordptr++;
-                }
-            }
         }
     }
   return 0;
 }
-#line 116 "HeaderHash.gperf"
+#line 113 "HeaderHash.gperf"
 
 }

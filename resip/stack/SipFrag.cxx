@@ -187,7 +187,7 @@ SipFrag::parse(ParseBuffer& pb)
 
 
    MsgHeaderScanner msgHeaderScanner;
-   msgHeaderScanner.prepareForFrag(mMessage, hasStartLine(buffer, size));
+   msgHeaderScanner.prepareForFrag(mMessage, hasStartLine(buffer, (int)size));
    enum { sentinelLength = 4 };  // Two carriage return / line feed pairs.
    //char saveTermCharArray[sentinelLength];
    static const char* sentinel="\r\n\r\n";
@@ -207,7 +207,7 @@ SipFrag::parse(ParseBuffer& pb)
    char *scanTermCharPtr;
    MsgHeaderScanner::ScanChunkResult scanChunkResult =
        msgHeaderScanner.scanChunk(buffer,
-                                  size + sentinelLength,
+                                  (unsigned int)(size + sentinelLength),
                                   &scanTermCharPtr);
    
    memcpy(termCharArray,scratchpad,4);

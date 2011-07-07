@@ -52,7 +52,7 @@ public:
    virtual ~RemoteParticipant();
 
    virtual resip::InviteSessionHandle& getInviteSessionHandle() { return mInviteSessionHandle; }
-   virtual unsigned int getLocalRTPPort( const sdpcontainer::SdpMediaLine::SdpMediaType& mediaType, ConversationProfile* profile = NULL );
+   virtual unsigned int getLocalRTPPort(const sdpcontainer::SdpMediaLine::SdpMediaType& mediaType, bool v6, ConversationProfile* profile = NULL);
    typedef std::map<sdpcontainer::SdpMediaLine::SdpMediaType, bool> MediaHoldStateMap;
    void buildSdpOffer(ConversationProfile* profile, MediaHoldStateMap holdStates, resip::SdpContents& offer, std::set<sdpcontainer::SdpMediaLine::SdpMediaType> existingMediaTypes=std::set<sdpcontainer::SdpMediaLine::SdpMediaType>());
    virtual bool isHolding();
@@ -141,6 +141,7 @@ private:
    void onRtpStreamClosed(sdpcontainer::SdpMediaLine::SdpMediaType mediaType, RtpStream::ClosedReason reason, const asio::error_code& ec);
    void handleRtpStreamClosed(sdpcontainer::SdpMediaLine::SdpMediaType mediaType, RtpStream::ClosedReason reason, const asio::error_code& ec);
    virtual void replaceWithParticipant(RemoteParticipant* replacingParticipant);
+   void mergeUnknownHeaders(const resip::Uri& uriSource, resip::SharedPtr<resip::SipMessage>& msgDest);
 
    typedef std::map<sdpcontainer::SdpMediaLine::SdpMediaType, boost::signals::connection> MapMediaTypeToConnection;
    MapMediaTypeToConnection m_onRtpStreamClosedConns;

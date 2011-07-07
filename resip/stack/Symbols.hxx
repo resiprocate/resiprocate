@@ -102,6 +102,8 @@ class Symbols
       static const char* NoReferSub;
       static const char* AnswerMode;
       static const char* TargetDialog;
+      static const char* Path;
+      static const char* Outbound;
       static const char* Undefined;
 
       static const char* Pending;

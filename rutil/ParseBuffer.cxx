@@ -14,7 +14,7 @@ const char* ParseBuffer::ParamTerm = ";?"; // maybe include "@>,"?
 const char* ParseBuffer::Whitespace = " \t\r\n";
 const Data ParseBuffer::Pointer::msg("dereferenced ParseBuffer eof");
 
-ParseBuffer::ParseBuffer(const char* buff, unsigned int len, 
+ParseBuffer::ParseBuffer(const char* buff, size_t len, 
                          const Data& errorContext)
    : mBuff(buff),
      mPosition(buff),
@@ -275,7 +275,7 @@ ParseBuffer::Pointer
 ParseBuffer::skipToChars(const char* cs)
 {
    assert(cs);
-   unsigned int l = strlen(cs);
+   unsigned int l = (unsigned int)strlen(cs);
 
    const char* rpos;
    const char* cpos;
@@ -302,7 +302,11 @@ ParseBuffer::skipToChars(const Data& sub)
 {
    const char* begSub = sub.mBuf;
    const char* endSub = sub.mBuf + sub.mSize;
-   assert(begSub != endSub);
+   if(begSub == endSub)
+   {
+      fail(__FILE__, __LINE__, "ParseBuffer::skipToChars() called with an "
+                                 "empty string. Don't do this!");
+   }
 
    while (true)
    {
@@ -426,6 +430,40 @@ ParseBuffer::skipToOneOf(const Data& cs1,
       }
    }
    return Pointer(*this, mPosition, true);
+}
+
+ParseBuffer&
+ParseBuffer::skipChars(const std::bitset<256>& cs)
+{
+   while (mPosition < mEnd)
+   {
+      if (cs.test((unsigned char)(*mPosition)))
+      {
+         mPosition++;
+      }
+      else
+      {
+         return *this;
+      }
+   }
+   return *this;
+}
+
+ParseBuffer&
+ParseBuffer::skipToOneOf(const std::bitset<256>& cs)
+{
+   while (mPosition < mEnd)
+   {
+      if (cs.test((unsigned char)(*mPosition)))
+      {
+         return *this;
+      }
+      else
+      {
+         mPosition++;
+      }
+   }
+   return *this;
 }
 
 const char*
@@ -752,7 +790,7 @@ ParseBuffer::integer()
    {
       last=num;
       num = num*10 + (*mPosition-'0');
-      if(signum*last > signum*num)
+      if(last > num)
       {
          fail(__FILE__, __LINE__,"Overflow detected.");
       }
@@ -886,7 +924,7 @@ ParseBuffer::floatVal()
          skipChar();
          const char* pos = mPosition;
          mant = float(integer());
-         int s = mPosition - pos;
+         int s = int(mPosition - pos);
          while (s--)
          {
             mant /= 10.0;
@@ -978,7 +1016,7 @@ spaces(unsigned int numSpaces)
 
 Data 
 escapeAndAnnotate(const char* buffer, 
-                  unsigned int size,
+                  Data::size_type size,
                   const char* position)
 { 
    Data ret(2*size+16, Data::Preallocate);

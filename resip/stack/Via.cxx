@@ -228,6 +228,73 @@ Via::encodeParsed(EncodeStream& str) const
    return str;
 }
 
+ParameterTypes::Factory Via::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
+
+Parameter* 
+Via::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+{
+   if(ParameterFactories[type])
+   {
+      return ParameterFactories[type](type, pb, terminators);
+   }
+   return 0;
+}
+
+bool 
+Via::exists(const Param<Via>& paramType) const
+{
+    checkParsed();
+    bool ret = getParameterByEnum(paramType.getTypeNum()) != NULL;
+    return ret;
+}
+
+void 
+Via::remove(const Param<Via>& paramType)
+{
+    checkParsed();
+    removeParameterByEnum(paramType.getTypeNum());
+}
+
+#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                                                      \
+_enum##_Param::DType&                                                                                           \
+Via::param(const _enum##_Param& paramType)                                                           \
+{                                                                                                               \
+   checkParsed();                                                                                               \
+   _enum##_Param::Type* p =                                                                                     \
+      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                            \
+   if (!p)                                                                                                      \
+   {                                                                                                            \
+      p = new _enum##_Param::Type(paramType.getTypeNum());                                                      \
+      mParameters.push_back(p);                                                                                 \
+   }                                                                                                            \
+   return p->value();                                                                                           \
+}                                                                                                               \
+                                                                                                                \
+const _enum##_Param::DType&                                                                                     \
+Via::param(const _enum##_Param& paramType) const                                                     \
+{                                                                                                               \
+   checkParsed();                                                                                               \
+   _enum##_Param::Type* p =                                                                                     \
+      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                            \
+   if (!p)                                                                                                      \
+   {                                                                                                            \
+      InfoLog(<< "Missing parameter " _name " " << ParameterTypes::ParameterNames[paramType.getTypeNum()]);     \
+      DebugLog(<< *this);                                                                                       \
+      throw Exception("Missing parameter " _name, __FILE__, __LINE__);                                          \
+   }                                                                                                            \
+   return p->value();                                                                                           \
+}
+
+defineParam(branch, "branch", BranchParameter, "RFC 3261");
+defineParam(comp, "comp", DataParameter, "RFC 3486");
+defineParam(received, "received", DataParameter, "RFC 3261");
+defineParam(rport, "rport", RportParameter, "RFC 3581");
+defineParam(ttl, "ttl", UInt32Parameter, "RFC 3261");
+defineParam(sigcompId, "sigcomp-id", QuotedDataParameter, "RFC 5049");
+defineParam(maddr, "maddr", DataParameter, "RFC 3261");
+
+#undef defineParam
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

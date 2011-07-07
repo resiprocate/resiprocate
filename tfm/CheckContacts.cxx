@@ -10,7 +10,7 @@ using namespace std;
 using namespace resip;
 
 CheckContacts::CheckContacts(const std::set<resip::NameAddr>& contacts,
-                             int expiresHeader)
+                             unsigned int expiresHeader)
    : _contacts(contacts),
      _expiresHeader(expiresHeader)
 {}
@@ -41,7 +41,7 @@ CheckContacts::operator()(boost::shared_ptr<Event> event)
    for (NameAddrs::iterator it = msg->header(h_Contacts).begin();
         it != msg->header(h_Contacts).end(); it++)
    {
-      DebugLog(<< *it << " " << it->param(p_expires));
+      DebugLog(<< *it);
       msgContacts.insert(*it);
    }
 
@@ -71,8 +71,9 @@ CheckContacts::operator()(boost::shared_ptr<Event> event)
        uCon++, msgCon++)
    {
       if ( !(compareContacts(*uCon, *msgCon)) ||
+           (uCon->exists(p_expires) && !msgCon->exists(p_expires)) ||
            (uCon->exists(p_expires) && (msgCon->param(p_expires) > uCon->param(p_expires))) ||
-           (!uCon->exists(p_expires) && (msgCon->param(p_expires) > _expiresHeader )))
+           (!uCon->exists(p_expires) && _expiresHeader && (!msgCon->exists(p_expires) || msgCon->param(p_expires) > _expiresHeader )))
            
          //(uCon->exists(p_expires) && (uCon->param(p_expires) != msgCon->param(p_expires))) ||
          //(!uCon->exists(p_expires) && (_expiresHeader != msgCon->param(p_expires))))

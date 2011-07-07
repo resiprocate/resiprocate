@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="findme.c">
+      <Filter>Source file</Filter>
+    </ClCompile>
+    <ClCompile Include="poptparse.c">
+      <Filter>Source file</Filter>
+    </ClCompile>
+    <ClCompile Include="popthelp.c">
+      <Filter>Source file</Filter>
+    </ClCompile>
+    <ClCompile Include="popt.c">
+      <Filter>Source file</Filter>
+    </ClCompile>
+    <ClCompile Include="poptconfig.c">
+      <Filter>Source file</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="config.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="findme.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="popt.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="poptint.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="system.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header files">
+      <UniqueIdentifier>{52504673-6430-4a17-8f41-f4b213943915}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc</Extensions>
+    </Filter>
+    <Filter Include="Source file">
+      <UniqueIdentifier>{10dd506f-8f8b-458f-ab2b-caff4546a7af}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;def;odl;idl;hpj;bat;asm</Extensions>
+    </Filter>
+    <Filter Include="Resource files">
+      <UniqueIdentifier>{1da12c0c-e947-4c3a-8265-0d9262418e1c}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
+    </Filter>
+  </ItemGroup>
+</Project>

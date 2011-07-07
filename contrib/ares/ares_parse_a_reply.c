@@ -35,7 +35,8 @@ int ares_parse_a_reply(const unsigned char *abuf, int alen,
 		       struct hostent **host)
 {
   unsigned int qdcount, ancount;
-  int status, i, len, rr_type, rr_class, rr_len, naddrs;
+  int status, i, rr_type, rr_class, rr_len, naddrs;
+  long int len;
   int naliases;
   const unsigned char *aptr;
   char *hostname, *rr_name, *rr_data, **aliases;
@@ -94,6 +95,7 @@ int ares_parse_a_reply(const unsigned char *abuf, int alen,
       aptr += len;
       if (aptr + RRFIXEDSZ > abuf + alen)
 	{
+	  free(rr_name);
 	  status = ARES_EBADRESP;
 	  break;
 	}

@@ -16,6 +16,19 @@ class InteropHelper
       static void setOutboundVersion(int version) {theOutboundVersion=version;}
       static bool getOutboundSupported() {return isOutboundSupported;}
       static void setOutboundSupported(bool supported) {isOutboundSupported=supported;}
+
+      // If this value is set, then DUM/repro will populate a Flow-Timer header in a 
+      // successful registration reponse
+      static unsigned int getFlowTimerSeconds() {return flowTimerSeconds;}
+      static void setFlowTimerSeconds(unsigned int seconds) {flowTimerSeconds=seconds;}
+
+      // Only relevant if setFlowTimerSeconds is set to value greater than 0.
+      // Specifies the amount of time beyond the FlowTimer time, before the stack
+      // will consider any Flow-Timer based connection to be in a bad state.  This
+      // is used by the ConnectionManager garbage collection logic to cleanup
+      // flow-timer based connections for which we are no-longer receiving keepalives.
+      static unsigned int getFlowTimerGracePeriodSeconds() {return flowTimerGracePeriodSeconds;}
+      static void setFlowTimerGracePeriodSeconds(unsigned int seconds) {flowTimerGracePeriodSeconds=seconds;}
       
       // .bwc. If this is enabled, we will record-route with flow tokens 
       // whenever possible. This will make things work with endpoints that don't
@@ -27,13 +40,33 @@ class InteropHelper
       static bool getRRTokenHackEnabled(){return useRRTokenHack;}
       static void setRRTokenHackEnabled(bool enabled) {useRRTokenHack=enabled;}
       
+      enum ClientNATDetectionMode
+      {
+         ClientNATDetectionDisabled,
+         ClientNATDetectionEnabled,
+         ClientNATDetectionPrivateToPublicOnly
+      };
+
+      // If this is enabled, and we have clients not explicitly supporting outbound
+      // that we detect to be behind a NAT device, we will record-route with flow tokens 
+      // whenever possible. However, this will break several things:
+      // 1) Target-refreshes won't work.
+      // 2) Proxies that do not record-route may be implicitly included in the
+      //    route-set by this proxy, because a flow token may point to them.
+      // 3) Third-party registrations won't work.
+      static InteropHelper::ClientNATDetectionMode getClientNATDetectionMode(){return clientNATDetection;}
+      static void setClientNATDetectionMode(InteropHelper::ClientNATDetectionMode mode) {clientNATDetection=mode;}
+
    private:
       InteropHelper();
       ~InteropHelper();
       
       static int theOutboundVersion;
       static bool isOutboundSupported;
+      static unsigned int flowTimerSeconds;
+      static unsigned int flowTimerGracePeriodSeconds;
       static bool useRRTokenHack;
+      static ClientNATDetectionMode clientNATDetection;
 };
 }
 
