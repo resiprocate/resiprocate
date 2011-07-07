@@ -22,14 +22,21 @@
 
 using namespace resip;
 
+volatile bool Connection::mEnablePostConnectSocketFuncCall = false;
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 Connection::Connection(Transport* transport,const Tuple& who, Socket socket,
                        Compression &compression)
    : ConnectionBase(transport,who,compression),
-     mInWritable(false)
+     mRequestPostConnectSocketFuncCall(false),
+     mInWritable(false),
+     mFlowTimerEnabled(false),
+     mPollItemHandle(0)
 {
-   mWho.mFlowKey=socket;
+   mWho.mFlowKey=(FlowKey)socket;
+   InfoLog (<< "Connection::Connection: new connection created to who: " << mWho);
+
    if(mWho.mFlowKey && ConnectionBase::transport())
    {
       getConnectionManager().addConnection(this);
@@ -40,8 +47,9 @@ Connection::~Connection()
 {
    if(mWho.mFlowKey && ConnectionBase::transport())
    {
-      closeSocket(mWho.mFlowKey);
       getConnectionManager().removeConnection(this);
+      // remove first then close, since conn manager may need socket
+      closeSocket(mWho.mFlowKey);
    }
 }
 
@@ -110,9 +118,16 @@ Connection::performWrite()
    }
 #endif
 
+   if(mEnablePostConnectSocketFuncCall && mRequestPostConnectSocketFuncCall)
+   {
+       // Note:  The first time the socket is available for write, is when the TCP connect call is completed
+      mRequestPostConnectSocketFuncCall = false;
+      mTransport->callSocketFunc(getSocket());
+   }
+
    const Data& data = mOutstandingSends.front()->data;
 
-   int nBytes = write(data.data() + mSendPos,data.size() - mSendPos);
+   int nBytes = write(data.data() + mSendPos,int(data.size() - mSendPos));
 
    //DebugLog (<< "Tried to send " << data.size() - mSendPos << " bytes, sent " << nBytes << " bytes");
 
@@ -169,7 +184,7 @@ resip::operator<<(EncodeStream& strm, const resip::Connection& c)
 }
 
 int
-Connection::read(Fifo<TransactionMessage>& fifo)
+Connection::read()
 {
    std::pair<char*, size_t> writePair = getWriteBuffer();
    size_t bytesToRead = resipMin(writePair.second, 
@@ -177,11 +192,14 @@ Connection::read(Fifo<TransactionMessage>& fifo)
          
    assert(bytesToRead > 0);
 
-   int bytesRead = read(writePair.first, bytesToRead);
+   int bytesRead = read(writePair.first, (int)bytesToRead);
    if (bytesRead <= 0)
    {
       return bytesRead;
    }  
+   // mBuffer might have been reallocated inside read()
+   writePair = getCurrentWriteBuffer();
+
    getConnectionManager().touch(this);
 
 #ifdef USE_SIGCOMP
@@ -207,14 +225,26 @@ Connection::read(Fifo<TransactionMessage>& fifo)
 
    if (mReceivingTransmissionFormat == Compressed)
    {
-     decompressNewBytes(bytesRead, fifo);
+     decompressNewBytes(bytesRead);
    }
    else
 #endif
    {
-     preparseNewBytes(bytesRead, fifo); //.dcm. may delete this   
+     preparseNewBytes(bytesRead); //.dcm. may delete this
    }
    return bytesRead;
+}
+
+void
+Connection::enableFlowTimer()
+{
+   if(!mFlowTimerEnabled)
+   {
+      mFlowTimerEnabled = true;
+
+      // ensure connection is in a FlowTimer LRU list on the connection manager
+      getConnectionManager().moveToFlowTimerLru(this);
+   }
 }
 
 void
@@ -227,6 +257,13 @@ Connection::onDoubleCRLF()
       DebugLog(<<"Sending response CRLF (aka pong).");
       requestWrite(new SendData(mWho,Symbols::CRLF,Data::Empty,Data::Empty));
    }
+}
+
+void
+Connection::onSingleCRLF()
+{
+   DebugLog(<<"Received response CRLF (aka pong).");
+   mTransport->keepAlivePong(mWho);
 }
 
 bool 
@@ -245,6 +282,39 @@ bool
 Connection::isWritable()
 {
    return true;
+}
+
+/**
+    Virtual function of FdPollItemIf, called to process io events
+**/
+void
+Connection::processPollEvent(FdPollEventMask mask) {
+   /* The original code in ConnectionManager.cxx didn't check
+    * for error events unless no writable event. (e.g., writable
+    * masked error. Why?)
+    */
+   if ( mask & FPEM_Error ) 
+   {
+      Socket fd = getSocket();
+      int errNum = getSocketError(fd);
+      InfoLog(<< "Exception on socket " << fd << " code: " << errNum << "; closing connection");
+      setFailureReason(TransportFailure::ConnectionException, errNum);
+      delete this;
+      return;
+   }
+   if ( mask & FPEM_Write ) 
+   {
+      performWrite();
+   }
+   if ( mask & FPEM_Read ) 
+   {
+      int bytesRead = read();
+      if ( bytesRead < 0 ) 
+      {
+         delete this;
+         return;
+      }
+   }
 }
 
 /* ====================================================================
@@ -295,4 +365,5 @@ Connection::isWritable()
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */

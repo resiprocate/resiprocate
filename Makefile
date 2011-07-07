@@ -22,7 +22,7 @@ ifeq ($(BUILD_RETURN_SERVER),yes)
 DEFAULTS += return-server
 endif
 ifeq ($(BUILD_TFM),yes)
-DEFAULTS += tfm
+DEFAULTS += tfm repro_harness dum_harness
 endif
 
 default: $(DEFAULTS)
@@ -30,7 +30,7 @@ default: $(DEFAULTS)
 
 stack: dum tests
 
-all: repro dum tests tfm apps recon
+all: repro dum tests tfm repro_harness dum_harness apps recon
 
 tfm: tfmcontrib
 	$(MAKE) -C tfm
@@ -113,6 +113,12 @@ tfm/contrib/cppunit/Makefile:
 cppunit: configure_cppunit
 	$(MAKE) -C tfm/contrib/cppunit/src/cppunit libcppunit.la
 
+repro_harness: repro tfm
+	$(MAKE) -C tfm/repro
+
+dum_harness: dum tfm
+	$(MAKE) -C tfm/tfdum
+
 contrib/srtp/Makefile:
 	cd contrib/srtp && ./configure ${CONFIGURE_ARGS}
 
@@ -123,7 +129,7 @@ srtp: configure_srtp
 
 ifneq ($(SSL_LOCATION),)
 $(SSL_LOCATION)/Makefile:
-	cd $(SSL_LOCATION) && ./Configure linux-generic32 --openssldir=/usr enable-tlsext ${CONFIGURE_ARGS} && $(MAKE) depend
+	cd $(SSL_LOCATION) && ./Configure $(OPEN_SSL_CONFIG) --openssldir=/usr enable-tlsext ${CONFIGURE_ARGS} && $(MAKE) depend
 
 configure_dtls-srtp-openssl: $(SSL_LOCATION)/Makefile
 
@@ -153,7 +159,7 @@ endif
 contrib/ares-build.$(OS_ARCH)/Makefile:
 	mkdir -p contrib/ares-build.$(OS_ARCH)
 	cd contrib/ares-build.$(OS_ARCH) && \
-	  ../ares/configure ${ARES_IPV6} ${ARES_PREFIX_ARG} ${CONFIGURE_ARGS}
+	  ../ares/configure ${ARES_IPV6} ${ARES_PREFIX_ARG} ${ARES_CONFIGURE_ARGS}
 
 configure_ares: contrib/ares-build.$(OS_ARCH)/Makefile
 
@@ -176,7 +182,7 @@ clean-ares:
 ###########################################################################
 # Various clean targets
 CLEANDIRS := resip/stack resip/dum resip/dum/test resip/stack/test presSvr \
-             repro rutil rutil/test tfm apps reTurn reTurn/client \
+             repro rutil rutil/test tfm tfm/repro tfm/tfdum apps reTurn reTurn/client \
              reTurn/client/test p2p p2p/s2c/s2c reflow resip/recon resip/recon/test
 
 

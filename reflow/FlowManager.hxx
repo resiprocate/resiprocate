@@ -57,7 +57,6 @@ public:
 #endif //USE_SSL   
 
    asio::io_service& getIOService() { return mIOService; }
-
 protected: 
 
 private:

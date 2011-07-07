@@ -11,8 +11,10 @@ namespace resip
 {
 
 class ConnectionTerminated;
+class KeepAlivePong;
 class Message;
 class TransactionUser;
+class AsyncProcessHandler;
 
 class TuSelector
 {
@@ -22,6 +24,7 @@ class TuSelector
       
       void add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage);
       void add(ConnectionTerminated* term);
+      void add(KeepAlivePong* pong);
       
       unsigned int size() const;      
       bool wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const;
@@ -35,6 +38,9 @@ class TuSelector
       unsigned int getTimeTillNextProcessMS();
       bool isTransactionUserStillRegistered(const TransactionUser* ) const;
 
+      // Handler is notified when a message is posted
+      // to the default application receive queue.
+      void setFallbackPostNotify(AsyncProcessHandler *handler);
       
    private:
       void remove(TransactionUser* tu);
@@ -53,6 +59,7 @@ class TuSelector
       typedef std::vector<Item> TuList;
       TuList mTuList;
       TimeLimitFifo<Message>& mFallBackFifo;
+      AsyncProcessHandler *mFallbackPostNotify;
       Fifo<TransactionUserMessage> mShutdownFifo;
       bool mTuSelectorMode;
       StatisticsMessage::Payload mStatsPayload;

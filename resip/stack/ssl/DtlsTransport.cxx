@@ -70,6 +70,9 @@
 using namespace std;
 using namespace resip;
 
+// .slg. Note that DTLS handshakes were really broken in older versions of OpenSSL 0.9.8
+//       You should use at least version 0.9.8g for both client and server.
+
 DtlsTransport::DtlsTransport(Fifo<TransactionMessage>& fifo,
                              int portNum,
                              IpVersion version,
@@ -78,21 +81,21 @@ DtlsTransport::DtlsTransport(Fifo<TransactionMessage>& fifo,
                              const Data& sipDomain,
                              AfterSocketCreationFuncPtr socketFunc,
                              Compression& compression)
-                             : UdpTransport( fifo, portNum, version, 
-                                 StunDisabled, interfaceObj, socketFunc, compression ),
-                               mTimer( mHandshakePending ),
-                               mSecurity( &security ),
-                               mDomain(sipDomain)
+ : UdpTransport( fifo, portNum, version,
+   StunDisabled, interfaceObj, socketFunc, compression ),
+   mTimer( mHandshakePending ),
+   mSecurity( &security ),
+   mDomain(sipDomain)
 {
-   setTlsDomain(sipDomain);   
-   InfoLog ( << "Creating DTLS transport host=" << interfaceObj 
+   setTlsDomain(sipDomain);
+   InfoLog ( << "Creating DTLS transport host=" << interfaceObj
              << " port=" << mTuple.getPort()
              << " ipv4=" << version ) ;
 
    mTuple.setType( transport() );
 
-   mClientCtx = SSL_CTX_new( DTLSv1_client_method() ) ;
-   mServerCtx = SSL_CTX_new( DTLSv1_server_method() ) ;
+   mClientCtx = mSecurity->createDomainCtx(DTLSv1_client_method(), Data::Empty) ;
+   mServerCtx = mSecurity->createDomainCtx(DTLSv1_server_method(), sipDomain) ;
    assert( mClientCtx ) ;
    assert( mServerCtx ) ;
 
@@ -100,6 +103,13 @@ DtlsTransport::DtlsTransport(Fifo<TransactionMessage>& fifo,
    assert( mDummyBio ) ;
 
    mSendData = NULL ;
+
+   /* DTLS: partial reads end up discarding unread UDP bytes :-(
+    * Setting read ahead solves this problem.
+    * Source of this comment is: apps/s_client.c from OpenSSL source
+    */
+   SSL_CTX_set_read_ahead(mClientCtx, 1);
+   SSL_CTX_set_read_ahead(mServerCtx, 1);
 
    /* trying to read from this BIO always returns retry */
    BIO_set_mem_eof_return( mDummyBio, -1 ) ;
@@ -112,9 +122,9 @@ DtlsTransport::~DtlsTransport()
    while(mDtlsConnections.begin() != mDtlsConnections.end())
    {
        _cleanupConnectionState(mDtlsConnections.begin()->second, mDtlsConnections.begin()->first);
-   }       
-   SSL_CTX_free(mClientCtx);mClientCtx=0;  
-   SSL_CTX_free(mServerCtx);mServerCtx=0;  
+   }
+   SSL_CTX_free(mClientCtx);mClientCtx=0;
+   SSL_CTX_free(mServerCtx);mServerCtx=0;
 
    BIO_free( mDummyBio) ;
 }
@@ -135,8 +145,8 @@ DtlsTransport::_read( FdSet& fdset )
    SSL *ssl ;
    BIO *rbio ;
    BIO *wbio ;
-   
-   // !jf! how do we tell if it discarded bytes 
+
+   // !jf! how do we tell if it discarded bytes
    // !ah! we use the len-1 trick :-(
    Tuple tuple(mTuple) ;
    socklen_t slen = tuple.length() ;
@@ -144,7 +154,7 @@ DtlsTransport::_read( FdSet& fdset )
                        buffer,
                        UdpTransport::MaxBufferSize,
                        0 /*flags */,
-                       &tuple.getMutableSockaddr(), 
+                       &tuple.getMutableSockaddr(),
                        &slen ) ;
    if ( len == SOCKET_ERROR )
    {
@@ -154,10 +164,10 @@ DtlsTransport::_read( FdSet& fdset )
          error( err ) ;
       }
    }
-   
+
    if (len == 0 || len == SOCKET_ERROR)
    {
-      delete [] buffer ; 
+      delete [] buffer ;
       buffer = 0 ;
       return ;
    }
@@ -171,13 +181,13 @@ DtlsTransport::_read( FdSet& fdset )
 
    //DebugLog ( << "UDP Rcv : " << len << " b" );
    //DebugLog ( << Data(buffer, len).escaped().c_str());
-   
+
    /* begin SSL stuff */
    struct sockaddr peer = tuple.getMutableSockaddr() ;
 
    ssl = mDtlsConnections[ *((struct sockaddr_in *)&peer) ] ;
 
-   /* 
+   /*
     * If we don't have a binding for this peer,
     * then we're a server.
     */
@@ -186,39 +196,14 @@ DtlsTransport::_read( FdSet& fdset )
       ssl = SSL_new( mServerCtx ) ;
       assert( ssl ) ;
 
+      // clear SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE set in SSL_CTX if we are a server
+      SSL_set_verify(ssl, 0, 0);
+
+      InfoLog( << "DTLS handshake starting (Server mode)" );
+
       SSL_set_accept_state( ssl ) ;
 
-      X509 *cert = mSecurity->getDomainCert( mDomain ) ;
-      EVP_PKEY *pkey = mSecurity->getDomainKey( mDomain ) ;
-
-      if( !cert )
-      {
-         Data error = Data("Could not load certifiacte for domain: ") 
-             + mDomain;
-         throw Security::Exception( error,__FILE__, __LINE__ ) ;
-      }
-
-      if( !pkey )
-      {
-         Data error = Data("Could not load private key for domain: ") 
-             + mDomain;
-         throw Security::Exception( error,__FILE__, __LINE__ ) ;
-      }
-
-      assert( cert ) ;
-      assert( pkey ) ;
-
-      if( ! SSL_use_certificate( ssl, cert ) )
-      {
-         throw Security::Exception( "SSL_use_certificate failed",
-                                   __FILE__, __LINE__ ) ;
-      }
-
-      if ( ! SSL_use_PrivateKey( ssl, pkey ) )
-         throw Security::Exception( "SSL_use_PrivateKey failed.",
-                                   __FILE__, __LINE__ ) ;
-
-      wbio = BIO_new_dgram( mFd, BIO_NOCLOSE ) ;
+      wbio = BIO_new_dgram( (int)mFd, BIO_NOCLOSE ) ;
       assert( wbio ) ;
 
       BIO_dgram_set_peer( wbio, &peer ) ;
@@ -245,21 +230,45 @@ DtlsTransport::_read( FdSet& fdset )
 
    if ( len <= 0 )
    {
+      char errorString[1024];
+
       switch( err )
       {
          case SSL_ERROR_NONE:
             break ;
          case SSL_ERROR_SSL:
+            {
+               ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
+               DebugLog( << "Got DTLS read condition SSL_ERROR_SSL on"
+                         << " addr = " << inet_ntoa(((struct sockaddr_in *)&peer)->sin_addr)
+                         << " port = " << ntohs(((struct sockaddr_in *)&peer)->sin_port)
+                         << " error = " << errorString );
+            }
             break ;
          case SSL_ERROR_WANT_READ:
             break ;
          case SSL_ERROR_WANT_WRITE:
             break ;
          case SSL_ERROR_SYSCALL:
+            {
+               ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
+               DebugLog( << "Got DTLS read condition SSL_ERROR_SYSCALL on"
+                         << " addr = " << inet_ntoa(((struct sockaddr_in *)&peer)->sin_addr)
+                         << " port = " << ntohs(((struct sockaddr_in *)&peer)->sin_port)
+                         << " error = " << errorString );
+            }
             break ;
             /* connection closed */
          case SSL_ERROR_ZERO_RETURN:
-            _cleanupConnectionState( ssl, *((struct sockaddr_in *)&peer) ) ;
+            {
+               ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
+               DebugLog( << "Got DTLS read condition SSL_ERROR_ZERO_RETURN on"
+                         << " addr = " << inet_ntoa(((struct sockaddr_in *)&peer)->sin_addr)
+                         << " port = " << ntohs(((struct sockaddr_in *)&peer)->sin_port)
+                         << " error = " << errorString );
+
+               _cleanupConnectionState( ssl, *((struct sockaddr_in *)&peer) ) ;
+            }
             break ;
          case SSL_ERROR_WANT_CONNECT:
             break ;
@@ -296,7 +305,7 @@ DtlsTransport::_read( FdSet& fdset )
                                          sc);
 
       DebugLog (<< "Unompressed message from "
-                << len << " bytes to " 
+                << len << " bytes to "
                 << uncompressedLength << " bytes");
 
       osc::SigcompMessage *nack = mSigcompStack->getNack();
@@ -320,40 +329,39 @@ DtlsTransport::_read( FdSet& fdset )
    }
 
    SipMessage* message = new SipMessage(this);
-   
+
    // set the received from information into the received= parameter in the
    // via
-   
+
    // It is presumed that UDP Datagrams are arriving atomically and that
    // each one is a unique SIP message
-   
-   
+
    // Save all the info where this message came from
    tuple.transport = this ;
    message->setSource( tuple ) ;
    //DebugLog (<< "Received from: " << tuple);
-   
+
    // Tell the SipMessage about this datagram buffer.
    message->addBuffer( (char *)pt ) ;
-   
+
    mMsgHeaderScanner.prepareForMessage( message ) ;
-   
+
    char *unprocessedCharPtr ;
    if (mMsgHeaderScanner.scanChunk( (char *)pt,
                                     len,
                                     &unprocessedCharPtr ) !=
        MsgHeaderScanner::scrEnd)
    {
-      DebugLog( << "Scanner rejecting datagram as unparsable / fragmented from " 
+      DebugLog( << "Scanner rejecting datagram as unparsable / fragmented from "
                 << tuple ) ;
       DebugLog( << Data( pt, len ) ) ;
       delete message ;
       message = 0 ;
       return ;
    }
-   
+
    // no pp error
-   int used = unprocessedCharPtr - (char *)pt ;
+   int used = int(unprocessedCharPtr - (char *)pt);
 
    if ( used < len )
    {
@@ -363,11 +371,11 @@ DtlsTransport::_read( FdSet& fdset )
       // will be contiguous (of course).
       // it doesn't need a new buffer in UDP b/c there
       // will only be one datagram per buffer. (1:1 strict)
-      
+
       message->setBody( (char *)pt + used, len - used ) ;
       //DebugLog(<<"added " << len-used << " byte body");
    }
-   
+
    if ( ! basicCheck( *message ) )
    {
       delete message ; // cannot use it, so, punt on it...
@@ -375,7 +383,7 @@ DtlsTransport::_read( FdSet& fdset )
       message = 0 ;
       return ;
    }
-   
+
    stampReceived( message) ;
 
 #ifdef USE_SIGCOMP
@@ -413,7 +421,7 @@ DtlsTransport::_read( FdSet& fdset )
 
       }
 #endif
-   
+
    mStateMachineFifo.add( message ) ;
 }
 
@@ -431,12 +439,12 @@ void DtlsTransport::_write( FdSet& fdset )
 
    //DebugLog (<< "Sent: " <<  sendData->data);
    //DebugLog (<< "Sending message on udp.");
-   
+
    assert( &(*sendData) );
    assert( sendData->destination.getPort() != 0 );
-   
+
    sockaddr peer = sendData->destination.getSockaddr();
-   
+
    ssl = mDtlsConnections[ *((struct sockaddr_in *)&peer) ] ;
 
    /* If we don't have a binding, then we're a client */
@@ -445,17 +453,20 @@ void DtlsTransport::_write( FdSet& fdset )
       ssl = SSL_new( mClientCtx ) ;
       assert( ssl ) ;
 
+
+      InfoLog( << "DTLS handshake starting (client mode)" );
+
       SSL_set_connect_state( ssl ) ;
 
-      wBio = BIO_new_dgram( mFd, BIO_NOCLOSE ) ;
+      wBio = BIO_new_dgram( (int)mFd, BIO_NOCLOSE ) ;
       assert( wBio ) ;
-      
+
       BIO_dgram_set_peer( wBio, &peer) ;
 
       /* the real rbio will be set by _read */
       SSL_set_bio( ssl, mDummyBio, wBio ) ;
 
-      /* we should be ready to take this out if the 
+      /* we should be ready to take this out if the
        * connection fails later */
       mDtlsConnections [ *((struct sockaddr_in *)&peer) ] = ssl ;
    }
@@ -475,7 +486,7 @@ void DtlsTransport::_write( FdSet& fdset )
           isReliable());
 
        DebugLog (<< "Compressed message from "
-                 << sendData->data.size() << " bytes to " 
+                 << sendData->data.size() << " bytes to "
                  << sm->getDatagramLength() << " bytes");
 
        expected = sm->getDatagramLength();
@@ -488,33 +499,42 @@ void DtlsTransport::_write( FdSet& fdset )
    else
 #endif
    {
-      expected = sendData->data.size();
+      expected = (int)sendData->data.size();
 
-      count = SSL_write(ssl, sendData->data.data(), 
-                        sendData->data.size());
+      count = SSL_write(ssl, sendData->data.data(),
+                        (int)sendData->data.size());
    }
 
-   /* 
-    * all reads go through _read, so the most likely result during a handshake 
-    * will be SSL_ERROR_WANT_READ 
+   /*
+    * all reads go through _read, so the most likely result during a handshake
+    * will be SSL_ERROR_WANT_READ
     */
 
    if ( count <= 0 )
    {
       /* cache unqueued data */
-      mSendData = sendData ; 
+      mSendData = sendData ;
 
       int err = SSL_get_error( ssl, count ) ;
+
+      char errorString[1024];
+
       switch( err )
       {
          case SSL_ERROR_NONE:
             break;
          case SSL_ERROR_SSL:
+            {
+               ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
+               DebugLog( << "Got DTLS write condition SSL_ERROR_SSL on "
+                         << sendData->destination
+                         << " error = " << errorString );
+            }
             break;
          case SSL_ERROR_WANT_READ:
             retry = 1 ;
             break;
-         case SSL_ERROR_WANT_WRITE:         
+         case SSL_ERROR_WANT_WRITE:
              retry = 1 ;
              fdset.setWrite(mFd);
             break;
@@ -522,13 +542,25 @@ void DtlsTransport::_write( FdSet& fdset )
             {
                int e = getErrno();
                error(e);
-               InfoLog (<< "Failed (" << e << ") sending to " 
-                        << sendData->destination);
+
+               ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
+               DebugLog( << "Got DTLS write condition SSL_ERROR_SYSCALL "
+                         << "Failed (" << e << ") sending to "
+                         << sendData->destination
+                         << " error = " << errorString );
+
                fail(sendData->transactionId);
-               break;
             }
+            break;
          case SSL_ERROR_ZERO_RETURN:
-            _cleanupConnectionState( ssl, *((struct sockaddr_in *)&peer) ) ;
+            {
+               ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
+               DebugLog( << "Got DTLS write condition SSL_ERROR_ZERO_RETURN on "
+                         << sendData->destination
+                         << " error = " << errorString );
+
+               _cleanupConnectionState( ssl, *((struct sockaddr_in *)&peer) ) ;
+            }
             break ;
          case SSL_ERROR_WANT_CONNECT:
             break;
@@ -543,11 +575,11 @@ void DtlsTransport::_write( FdSet& fdset )
       mSendData = NULL ;
    }
 
-   /* 
-    * ngm: is sendData deleted by a higher layer?  Seems to be the case after 
+   /*
+    * ngm: is sendData deleted by a higher layer?  Seems to be the case after
     * checking with UdpTransport
     */
-   
+
    if ( ! retry && count != int(sendData->data.size()) )
    {
       ErrLog (<< "UDPTransport - send buffer full" );
@@ -563,21 +595,43 @@ DtlsTransport::_doHandshake( void )
 
    delete msg ;
 
+   ERR_clear_error();
+
    int ret = SSL_do_handshake( ssl ) ;
 
-   switch( ret )
-   {
-     case SSL_ERROR_NONE:
+   if (ret <= 0) {
+      int err = SSL_get_error(ssl, ret);
+
+      char errorString[1024];
+
+      switch (err)
+      {
+         case SSL_ERROR_NONE:
             break;
          case SSL_ERROR_SSL:
+            {
+               ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
+               DebugLog( << "Got DTLS handshake code SSL_ERROR_SSL"
+                         << " error = " << errorString );
+            }
             break;
          case SSL_ERROR_WANT_READ:
             break;
-         case SSL_ERROR_WANT_WRITE:         
+         case SSL_ERROR_WANT_WRITE:
             break;
          case SSL_ERROR_SYSCALL:
+            {
+               ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
+               DebugLog( << "Got DTLS handshake code SSL_ERROR_SYSCALL"
+                         << " error = " << errorString );
+            }
             break;
          case SSL_ERROR_ZERO_RETURN:
+            {
+               ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
+               DebugLog( << "Got DTLS handshake code SSL_ERROR_ZERO_RETURN"
+                         << " error = " << errorString );
+            }
             break;
          case SSL_ERROR_WANT_CONNECT:
             break;
@@ -585,10 +639,11 @@ DtlsTransport::_doHandshake( void )
             break;
          default:
             break ;
+      }
    }
 }
 
-void 
+void
 DtlsTransport::process(FdSet& fdset)
 {
    // pull buffers to send out of TxFifo
@@ -603,18 +658,18 @@ DtlsTransport::process(FdSet& fdset)
    if ( ( mSendData != NULL || mTxFifo.messageAvailable() )
        && fdset.readyToWrite( mFd ) )
       _write( fdset ) ;
-   
+
    // !jf! this may have to change - when we read a message that is too big
    if ( fdset.readyToRead(mFd) )
       _read( fdset ) ;
 }
 
 
-void 
+void
 DtlsTransport::buildFdSet( FdSet& fdset )
 {
    fdset.setRead(mFd);
-    
+
    if ( mSendData != NULL || mTxFifo.messageAvailable() )
    {
      fdset.setWrite(mFd);
@@ -624,13 +679,14 @@ DtlsTransport::buildFdSet( FdSet& fdset )
 void
 DtlsTransport::_cleanupConnectionState( SSL *ssl, struct sockaddr_in peer )
 {
-   /* 
+   /*
     * SSL_free decrements the ref-count for mDummyBio by 1, so
     * add 1 to the ref-count to make sure it does not get free'd
     */
-   CRYPTO_add( &mDummyBio->references, 1, CRYPTO_LOCK_BIO ) ;
-   SSL_free( ssl ) ;
-   mDtlsConnections.erase( peer ) ;
+   CRYPTO_add(&mDummyBio->references, 1, CRYPTO_LOCK_BIO);
+   SSL_shutdown(ssl);
+   SSL_free(ssl) ;
+   mDtlsConnections.erase(peer) ;
 }
 
 void
@@ -643,7 +699,7 @@ DtlsTransport::_mapDebug( const char *where, const char *action, SSL *ssl )
 void
 DtlsTransport::_printSock( const struct sockaddr_in *sock )
 {
-   fprintf( stderr, "addr = %s\t port = %d\n", inet_ntoa( sock->sin_addr ), 
+   fprintf( stderr, "addr = %s\t port = %d\n", inet_ntoa( sock->sin_addr ),
             ntohs( sock->sin_port ) ) ;
 }
 
@@ -651,22 +707,22 @@ DtlsTransport::_printSock( const struct sockaddr_in *sock )
 #endif /* USE_SSL */
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -676,7 +732,7 @@ DtlsTransport::_printSock( const struct sockaddr_in *sock )
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -690,9 +746,9 @@ DtlsTransport::_printSock( const struct sockaddr_in *sock )
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see

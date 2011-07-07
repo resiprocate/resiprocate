@@ -1,3 +1,5 @@
+#include "media/Mixer.hxx"
+
 #include "BridgeMixer.hxx"
 #include "ConversationManager.hxx"
 #include "Conversation.hxx"
@@ -40,6 +42,40 @@ int
 LocalParticipant::getConnectionPortOnBridge()
 {
    return mLocalPortOnBridge;
+}
+
+void
+LocalParticipant::addToConversation( Conversation* conversation, unsigned int inputGain, unsigned int outputGain )
+{
+   Participant::addToConversation( conversation, inputGain, outputGain );
+
+   // When we are added to a conversation, go to the mixer and make sure our
+   // audio and video devices have been added.
+   if( conversation == NULL )
+      return;
+
+   boost::shared_ptr< Mixer > pMixer = conversation->getMixer();
+   if( pMixer.get() == NULL )
+      return;
+
+   // Add the local (capture) devices
+   pMixer->addLocalDevices();
+}
+
+void
+LocalParticipant::removeFromConversation( Conversation* conversation, bool bTriggeredHold )
+{
+   // Before we're removed, remove our audio and video devices from the mixer
+   if( conversation != NULL )
+   {
+      boost::shared_ptr< Mixer > pMixer = conversation->getMixer();
+      if( pMixer.get() != NULL )
+      {
+         // Remove the local (capture) devices
+         pMixer->removeLocalDevices();
+      }
+   }
+   Participant::removeFromConversation( conversation, bTriggeredHold );
 }
 
 void

@@ -53,6 +53,8 @@ Profile::reset()
    unsetRinstanceEnabled();
    unsetOutboundDecorator();
    unsetMethodsParamEnabled();
+   unsetUserAgentCapabilities();
+   unsetExtraHeadersInReferNotifySipFragEnabled();
 }
 
 void
@@ -407,23 +409,16 @@ Profile::getOverrideHostAndPort() const
 void
 Profile::unsetOverrideHostAndPort()
 {
-   if(mBaseProfile.get()) 
-   {
-      mHasOverrideHostPort = false;
-   }
-   else // No Base profile - so return to default setting
-   {
-      mHasOverrideHostPort = false;
-   }
+   mHasOverrideHostPort = false;
 }
 
 void 
 Profile::addAdvertisedCapability(const Headers::Type header)
 {
    assert(header == Headers::Allow ||
-		  header == Headers::AcceptEncoding ||
-		  header == Headers::AcceptLanguage ||
-		  header == Headers::Supported);
+   header == Headers::AcceptEncoding ||
+   header == Headers::AcceptLanguage ||
+   header == Headers::Supported);
 
    mAdvertisedCapabilities.insert(header);
    mHasAdvertisedCapabilities = true;
@@ -497,14 +492,7 @@ Profile::hasOutboundProxy() const
 void
 Profile::unsetOutboundProxy()
 {
-   if(mBaseProfile.get()) 
-   {
-      mHasOutboundProxy = false;
-   }
-   else // No Base profile - so return to default setting
-   {
-      mHasOutboundProxy = false;
-   }
+   mHasOutboundProxy = false;
 }
 
 void 
@@ -636,14 +624,7 @@ Profile::hasUserAgent() const
 void
 Profile::unsetUserAgent()
 {
-   if(mBaseProfile.get()) 
-   {
-      mHasUserAgent = false;
-   }
-   else // No Base profile - so return to default setting
-   {
-      mHasUserAgent = false;
-   }
+   mHasUserAgent = false;
 }
 
 void 
@@ -679,14 +660,7 @@ Profile::hasProxyRequires() const
 void
 Profile::unsetProxyRequires()
 {
-   if(mBaseProfile.get()) 
-   {
-      mHasProxyRequires = false;
-   }
-   else // No Base profile - so return to default setting
-   {
-      mHasProxyRequires = false;   
-   }
+   mHasProxyRequires = false;
 }
 
 void 
@@ -882,7 +856,6 @@ Profile::unsetOutboundDecorator()
    }
 
    mHasOutboundDecorator = false;
-
 }
 
 void 
@@ -914,6 +887,74 @@ Profile::unsetMethodsParamEnabled()
    {
       mHasMethodsParamEnabled = true;
       mMethodsParamEnabled = false;
+   }
+}
+
+void 
+Profile::setUserAgentCapabilities(const NameAddr& capabilities)
+{
+   mUserAgentCapabilities = capabilities;
+   mHasUserAgentCapabilities = true;
+}
+
+const NameAddr&
+Profile::getUserAgentCapabilities() const
+{
+   // Fall through seting (if required)
+   if(!mHasUserAgentCapabilities && mBaseProfile.get())
+   {
+       return mBaseProfile->getUserAgentCapabilities();
+   }
+   assert(mHasUserAgentCapabilities);
+   return mUserAgentCapabilities;
+}
+
+bool
+Profile::hasUserAgentCapabilities() const
+{
+   // Fall through seting (if required)
+   if(!mHasUserAgentCapabilities && mBaseProfile.get())
+   {
+       return mBaseProfile->hasUserAgentCapabilities();
+   }
+   return mHasUserAgentCapabilities;
+}
+
+void
+Profile::unsetUserAgentCapabilities()
+{
+   mHasUserAgentCapabilities = false;
+}
+
+void 
+Profile::setExtraHeadersInReferNotifySipFragEnabled(bool enabled)
+{
+   mExtraHeadersInReferNotifySipFragEnabled = enabled;
+   mHasExtraHeadersInReferNotifySipFragEnabled = true;
+}
+
+bool 
+Profile::getExtraHeadersInReferNotifySipFragEnabled() const
+{
+   // Fall through seting (if required)
+   if(!mHasExtraHeadersInReferNotifySipFragEnabled && mBaseProfile.get())
+   {
+       return mBaseProfile->getExtraHeadersInReferNotifySipFragEnabled();
+   }
+   return mExtraHeadersInReferNotifySipFragEnabled;
+}
+
+void
+Profile::unsetExtraHeadersInReferNotifySipFragEnabled()
+{
+   if(mBaseProfile.get()) 
+   {
+      mHasExtraHeadersInReferNotifySipFragEnabled = false;
+   }
+   else
+   {
+      mHasExtraHeadersInReferNotifySipFragEnabled = true;
+      mExtraHeadersInReferNotifySipFragEnabled = false;
    }
 }
 

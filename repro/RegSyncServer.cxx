@@ -9,6 +9,7 @@
 #include <rutil/ParseBuffer.hxx>
 #include <rutil/Socket.hxx>
 #include <rutil/TransportType.hxx>
+#include <rutil/Timer.hxx>
 
 #include "repro/XmlRpcServerBase.hxx"
 #include "repro/XmlRpcConnection.hxx"
@@ -116,17 +117,49 @@ RegSyncServer::handleInitialSyncRequest(unsigned int connectionId, unsigned int 
 {
    InfoLog(<< "RegSyncServer::handleInitialSyncRequest");
 
-   mRegDb->initialSync(connectionId);
-   sendResponse(connectionId, requestId, Data::Empty, 200, "Initial Sync Completed.");
+   // Check for Version 2
+   unsigned int version = 0;
+   if(xml.firstChild())
+   {
+      if(isEqualNoCase(xml.getTag(), "request"))
+      {
+         if(xml.firstChild())
+         {
+            if(isEqualNoCase(xml.getTag(), "version"))
+            {
+               if(xml.firstChild())
+               {
+                  version = xml.getValue().convertUnsignedLong();
+                  xml.parent();
+               }
+            }
+            xml.parent();
+         }
+      }
+      xml.parent();
+   }
+
+   if(version == 2)
+   {
+      mRegDb->initialSync(connectionId);
+      sendResponse(connectionId, requestId, Data::Empty, 200, "Initial Sync Completed.");
+   }
+   else
+   {
+      sendResponse(connectionId, requestId, Data::Empty, 505, "Version not supported.");
+   }
 }
 
 void 
 RegSyncServer::streamContactInstanceRecord(std::stringstream& ss, const ContactInstanceRecord& rec)
 {
+    UInt64 now = Timer::getTimeSecs();
+
     ss << "   <contactinfo>" << Symbols::CRLF;
     ss << "      <contacturi>" << Data::from(rec.mContact.uri()).xmlCharDataEncode() << "</contacturi>" << Symbols::CRLF;
-    ss << "      <expires>" << rec.mRegExpires << "</expires>" << Symbols::CRLF;
-    ss << "      <lastupdate>" << rec.mLastUpdated << "</lastupdate>" << Symbols::CRLF;
+    // If contact is expired or removed, then pass expires time as 0, otherwise send number of seconds until expirey
+    ss << "      <expires>" << (((rec.mRegExpires == 0) || (rec.mRegExpires <= now)) ? 0 : (rec.mRegExpires-now)) << "</expires>" << Symbols::CRLF;
+    ss << "      <lastupdate>" << now-rec.mLastUpdated << "</lastupdate>" << Symbols::CRLF;
     if(rec.mReceivedFrom.getPort() != 0)
     {
         resip::Data binaryFlowToken;

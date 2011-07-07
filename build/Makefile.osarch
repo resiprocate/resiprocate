@@ -19,6 +19,17 @@ ifeq ($(OSTYPE),FreeBSD)
     USE_LIBGETOPT = 1
     USE_R_WRAPPER = 1
 
+    INCDIRS  += /usr/local/include
+    LIBDIRS  += /usr/local/lib
+
+    ifeq ($(LARCH),ia32)
+        OPEN_SSL_CONFIG := BSD-x86
+    endif
+    ifeq ($(ARCH),x86_64)
+        OPEN_SSL_CONFIG := BSD-x86_64
+    endif
+    # TODO -- need OPEN_SSL_CONFIG for ia64, sparc64, sparcv8.
+
 endif
 
 ############################## NetBSD ##############################
@@ -43,6 +54,13 @@ ifeq ($(OSTYPE),NetBSD)
 	CXXFLAGS += $(CPUFLAGS)
 	CFLAGS   += $(CPUFLAGS)
 
+ifeq ($(LARCH),ia32)
+	OPEN_SSL_CONFIG := BSD-x86
+endif
+ifeq ($(ARCH),x86_64)
+	OPEN_SSL_CONFIG := BSD-x86_64
+endif
+
 endif
 
 ############################## Linux ##############################
@@ -51,18 +69,36 @@ ifeq ($(OSTYPE),Linux)
 
 ifeq ($(ARCH),i686)
 	CXXFLAGS += -march=i686
+	OPEN_SSL_CONFIG := linux-generic32
 endif
 ifeq ($(ARCH),i486)
 	CXXFLAGS += -march=i486
+	OPEN_SSL_CONFIG := linux-generic32
 endif
 ifeq ($(ARCH),i386)
 	CXXFLAGS += -march=i386
+	OPEN_SSL_CONFIG := linux-generic32
 endif
 ifeq ($(ARCH),x86_64)
 	CXXFLAGS += -march=x86-64
+	OPEN_SSL_CONFIG := linux-x86_64
 ifeq ($(BUILD_SHARED_LIBS),yes)
 	CXXFLAGS += -fPIC
 	CFLAGS   += -fPIC
+else ifeq ($(DISABLE_PIC),no)
+	# If a static-lib is later linked into a shared lib, then
+	# the code in it needs to be compiled PIC (Position Indep. Code)
+	CXXFLAGS += -fPIC
+	CFLAGS   += -fPIC
+	# resip-ares configure doesn't support PIC directly, hack it here
+	# This only work with GNU tool chain
+	ARES_CFLAGS += -fPIC -g -O2 -Wall
+	ifeq ($(VOCAL_COMPILE_TYPE),prof)
+	    # resip-ares configure doesn't seem to have support for
+	    # prof, so we hack it in here.
+	    ARES_CFLAGS += -pg -DNDEBUG
+	endif
+	ARES_CONFIGURE_ARGS += "CFLAGS=$(ARES_CFLAGS)"
 endif
 endif
 #       LDFLAGS += -frepo
@@ -71,7 +107,7 @@ endif
 	CFLAGS   += -D_REENTRANT 
 
 ifeq ($(USE_GOOGLE_MALLOC),yes)
-LDLIBS_LAST += -ltcmalloc
+   LDLIBS_LAST += -ltcmalloc_minimal
 endif
 
 ifeq ($(USE_GOOGLE_CPUPERF),yes)
@@ -79,6 +115,14 @@ LDLIBS_LAST += -lprofiler
 endif
 
 LDLIBS_LAST += -lrt
+
+ifeq ($(USE_DEBUG_MALLOC),yes)
+   LDLIBS_LAST += -ldmallocthcxx
+endif
+
+ifeq ($(USE_EFENCE),yes)
+   LDLIBS_LAST += -lefence
+endif
 
 endif
 
@@ -90,6 +134,7 @@ ifeq ($(OSTYPE),QNX)
     CFLAGS   += -D_REENTRANT
     LDLIBS_LAST   += -lsocket -lstdc++ 
     USE_SSL = no
+    OPEN_SSL_CONFIG := QNX6
 endif
 
 
@@ -115,6 +160,22 @@ ifeq ($(OSTYPE),SunOS)
     ifeq ($(ARCH),sparc)
         CXXFLAGS += -dalign
     endif
+
+    ifeq ($(LARCH),ia32)
+      ifeq ($(VOCAL_TOOLCHAIN_TYPE),gnu)
+        OPEN_SSL_CONFIG := solaris-x86-gcc
+      else
+        OPEN_SSL_CONFIG := solaris-x86-cc
+      endif
+    endif
+    ifeq ($(ARCH),x86_64)
+      ifeq ($(VOCAL_TOOLCHAIN_TYPE),gnu)
+        OPEN_SSL_CONFIG := solaris64-x86_64-gcc
+      else
+        OPEN_SSL_CONFIG := solaris64-x86_64-cc
+      endif
+    endif
+    # TODO -- need OPEN_SSL_CONFIG for ia64, sparc64, sparcv{7,8,9}.
 endif
 
 
@@ -142,6 +203,20 @@ ifeq ($(OSTYPE),Darwin)
     USE_LIBGETOPT = 1
     USE_R_WRAPPER = 1
 
+ifeq ($(USE_GOOGLE_MALLOC),yes)
+   LDLIBS_LAST += -ltcmalloc_minimal
+endif
+
+    ifeq ($(LARCH),ia32)
+      OPEN_SSL_CONFIG := darwin-i386-cc
+    endif
+    ifeq ($(ARCH),x86_64)
+      OPEN_SSL_CONFIG := darwin64-x86_64-cc
+    endif
+    ifeq ($(ARCH),powermac)
+      OPEN_SSL_CONFIG := darwin-ppc-cc
+    endif
+    # TODO -- need darwin64-ppc-cc (?!?)
 endif
 
 
@@ -151,6 +226,13 @@ ifeq ($(OSTYPE),MinGW)
     CFLAGS      += -D_WIN32_WINNT=0x0501
     LDFLAGS     += -mconsole
     LDLIBS_LAST += -lws2_32 -lIphlpapi
+
+    ifeq ($(LARCH),ia32)
+      OPEN_SSL_CONFIG := mingw
+    endif
+    ifeq ($(ARCH),x86_64)
+      OPEN_SSL_CONFIG := mingw64
+    endif
 
 #    We probably want to add these and remove the -lIphlpapi flag
 #    from above at some point. See rutil/WinCompat.cxx for details.
@@ -166,9 +248,11 @@ ifeq ($(OSTYPE),cygwin)
 
     USE_LIBGETOPT = 1
     INCDIRS += $(ROOT)/contrib/win32/mingw/include $(ROOT)/contrib/win32/pthreads
+    OPEN_SSL_CONFIG := Cygwin
 
 endif
 
+######################################################################
 
 ifeq ($(VOCAL_PROCESSOR_OPTS),1)
     ifeq ($(ARCH),i686)
@@ -234,6 +318,8 @@ CFLAGS += $(COMPILE_SMALL_FLAG)
 endif
 
 ifeq ($(VOCAL_COMPILE_TYPE),nodebug)
+CXXFLAGS += -DNDEBUG
+CFLAGS   += -DNDEBUG
 endif
 
 ifeq ($(VOCAL_COMPILE_TYPE),debug)
@@ -248,8 +334,8 @@ LDFLAGS  += -fprofile-arcs -ftest-coverage
 endif
 
 ifeq ($(VOCAL_COMPILE_TYPE),opt)
-CXXFLAGS += $(OPTFLAGS) #-DNDEBUG
-CFLAGS += $(OPTFLAGS) #-DNDEBUG
+CXXFLAGS += $(OPTFLAGS) -DNDEBUG
+CFLAGS += $(OPTFLAGS) -DNDEBUG
 endif
 
 ifeq ($(VOCAL_COMPILE_TYPE),gopt)
@@ -309,6 +395,10 @@ LDFLAGS  += -L/usr/local/lib/gcc-lib/sh-wrs-vxworks/2.95.1/m2
 LDLIBS_LAST   +=  -lstdc++ -lgcc
 OSCLASS = VXWORKS
 
+endif
+
+ifndef OPEN_SSL_CONFIG
+    OPEN_SSL_CONFIG := gcc
 endif
 
 OS_ARCH  := $(OSTYPE).$(ARCH)

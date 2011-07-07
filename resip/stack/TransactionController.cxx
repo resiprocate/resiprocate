@@ -5,6 +5,8 @@
 #include "resip/stack/AbandonServerTransaction.hxx"
 #include "resip/stack/ApplicationMessage.hxx"
 #include "resip/stack/CancelClientInviteTransaction.hxx"
+#include "resip/stack/TerminateFlow.hxx"
+#include "resip/stack/EnableFlowTimer.hxx"
 #include "resip/stack/ShutdownMessage.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TransactionController.hxx"
@@ -27,7 +29,7 @@ using namespace resip;
 unsigned int TransactionController::MaxTUFifoSize = 0;
 unsigned int TransactionController::MaxTUFifoTimeDepthSecs = 0;
 
-TransactionController::TransactionController(SipStack& stack) :
+TransactionController::TransactionController(SipStack& stack, FdPollGrp *pollGrp) :
    mStack(stack),
    mDiscardStrayResponses(true),
    mFixBadDialogIdentifiers(true),
@@ -42,6 +44,7 @@ TransactionController::TransactionController(SipStack& stack) :
    mShuttingDown(false),
    mStatsManager(stack.mStatsManager)
 {
+   mTransportSelector.setPollGrp(pollGrp);
 }
 
 #if defined(WIN32) && !defined(__GNUC__)
@@ -67,7 +70,13 @@ TransactionController::shutdown()
 }
 
 void
-TransactionController::process(FdSet& fdset)
+TransactionController::deleteTransports()
+{
+   mTransportSelector.deleteTransports();
+}
+
+void
+TransactionController::processEverything(FdSet* fdset)
 {
    if (mShuttingDown && 
        //mTimers.empty() && 
@@ -82,7 +91,11 @@ TransactionController::process(FdSet& fdset)
    }
    else
    {
-      mTransportSelector.process(fdset);
+      if ( fdset ) 
+      {
+         mTransportSelector.process(*fdset);
+      }
+
       mTimers.process();
 
       while (mStateMacFifo.messageAvailable())
@@ -92,6 +105,19 @@ TransactionController::process(FdSet& fdset)
    }
 }
 
+void
+TransactionController::processTimers()
+{
+   // we consider fifos a special case of Timers
+   processEverything(NULL);
+}
+
+void
+TransactionController::process(FdSet& fdset)
+{
+   processEverything(&fdset);
+}
+
 unsigned int 
 TransactionController::getTimeTillNextProcessMS()
 {
@@ -99,11 +125,6 @@ TransactionController::getTimeTillNextProcessMS()
    {
       return 0;
    }
-   else if ( mTransportSelector.hasDataToSend() )
-   {
-      return 0;
-   }
-
    return resipMin(mTimers.msTillNextTimer(), mTransportSelector.getTimeTillNextProcessMS());   
 } 
    
@@ -179,6 +200,17 @@ TransactionController::cancelClientInviteTransaction(const Data& tid)
    mStateMacFifo.add(new CancelClientInviteTransaction(tid));
 }
 
+void
+TransactionController::terminateFlow(const resip::Tuple& flow)
+{
+   mStateMacFifo.add(new TerminateFlow(flow));
+}
+
+void
+TransactionController::enableFlowTimer(const resip::Tuple& flow)
+{
+   mStateMacFifo.add(new EnableFlowTimer(flow));
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -228,4 +260,5 @@ TransactionController::cancelClientInviteTransaction(const Data& tid)
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */

@@ -467,7 +467,144 @@ class IntrusiveListElement2
       mutable P mNext;
       mutable P mPrev;
 };
- 
+
+template <class P>
+class IntrusiveListElement3
+{
+   public:
+      IntrusiveListElement3() 
+         : mNext(0),
+           mPrev(0)
+      {}
+
+      virtual ~IntrusiveListElement3() 
+      {
+         remove();
+      }
+
+      // make this element an empty list
+      static P makeList(P elem)
+      {
+         assert(!elem->IntrusiveListElement3<P>::mNext);
+
+         elem->IntrusiveListElement3<P>::mPrev = elem;
+         elem->IntrusiveListElement3<P>::mNext = elem;
+
+         return elem;
+      }
+
+      bool empty() const
+      {
+         assert(mPrev);
+         assert(mNext);
+
+         return static_cast<const IntrusiveListElement3<P>*>(mNext) == static_cast<const IntrusiveListElement3<P>*>(this);
+      }
+
+      // .dlb. add reverse_iterator?
+
+      class iterator
+      {
+         public:
+            explicit iterator(const P start)
+               : mPos(start)
+            {}
+
+            iterator& operator=(const iterator& rhs)
+            {
+               mPos = rhs.mPos;
+               return *this;
+            }
+
+            iterator& operator++()
+            {
+               mPos = mPos->IntrusiveListElement3<P>::mNext;
+               return *this;
+            }
+
+            bool operator==(const iterator& rhs)
+            {
+               return mPos == rhs.mPos;
+            }
+
+            bool operator!=(const iterator& rhs)
+            {
+               return mPos != rhs.mPos;
+            }
+
+            P operator*()
+            {
+               return mPos;
+            }
+
+         private:
+            P mPos;
+      };
+
+      iterator begin()
+      {
+         assert(mPrev);
+         assert(mNext);
+         return iterator(mNext);
+      }
+
+      iterator end()
+      {
+         assert(mPrev);
+         assert(mNext);
+         return iterator(static_cast<P>(this));
+      }
+
+      friend class iterator;
+
+      // pushing an element onto the same list twice is undefined
+      void push_front(P elem)
+      {
+         assert(mPrev);
+         assert(mNext);
+
+         elem->IntrusiveListElement3<P>::mNext = mNext;
+         elem->IntrusiveListElement3<P>::mPrev = static_cast<P>(this);
+         
+         elem->IntrusiveListElement3<P>::mNext->IntrusiveListElement3<P>::mPrev = elem;
+         elem->IntrusiveListElement3<P>::mPrev->IntrusiveListElement3<P>::mNext = elem;
+      }
+
+      // putting an element onto the same list twice is undefined
+      void push_back(P elem)
+      {
+         assert(mPrev);
+         assert(mNext);
+
+         elem->IntrusiveListElement3<P>::mPrev = mPrev;
+         elem->IntrusiveListElement3<P>::mNext = static_cast<P>(this);
+         
+         elem->IntrusiveListElement3<P>::mPrev->IntrusiveListElement3<P>::mNext = elem;
+         elem->IntrusiveListElement3<P>::mNext->IntrusiveListElement3<P>::mPrev = elem;
+      }
+
+      void remove()
+      {
+         if (mNext)
+         {
+            // prev  -> this -> next
+            //       <-      <-
+            //
+            // prev -> next
+            //      <-
+            mNext->IntrusiveListElement3<P>::mPrev = mPrev;
+            mPrev->IntrusiveListElement3<P>::mNext = mNext;
+         }
+
+         mNext = 0;
+         mPrev = 0;
+      }
+
+   protected:
+      mutable P mNext;
+      mutable P mPrev;
+};
+
 }
 
 #endif

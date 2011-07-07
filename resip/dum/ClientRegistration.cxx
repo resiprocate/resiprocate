@@ -35,7 +35,7 @@ ClientRegistration::ClientRegistration(DialogUsageManager& dum,
      mState(mLastRequest->exists(h_Contacts) ? Adding : Querying),
      mEndWhenDone(false),
      mUserRefresh(false),
-      mRegistrationTime(mDialogSet.getUserProfile()->getDefaultRegistrationTime()),
+     mRegistrationTime(mDialogSet.mUserProfile->getDefaultRegistrationTime()),
      mExpires(0),
      mQueuedState(None),
      mQueuedRequest(new SipMessage)
@@ -61,13 +61,13 @@ ClientRegistration::~ClientRegistration()
    mDialogSet.mClientRegistration = 0;
 
    // !dcm! Will not interact well with multiple registrations from the same AOR
-   getUserProfile()->setServiceRoute(NameAddrs());
+   mDialogSet.mUserProfile->setServiceRoute(NameAddrs());
 }
 
 void
 ClientRegistration::addBinding(const NameAddr& contact)
 {
-   addBinding(contact, mDialogSet.getUserProfile()->getDefaultRegistrationTime());
+   addBinding(contact, mDialogSet.mUserProfile->getDefaultRegistrationTime());
 }
 
 SharedPtr<SipMessage>
@@ -105,11 +105,7 @@ ClientRegistration::addBinding(const NameAddr& contact, UInt32 registrationTime)
 {
    SharedPtr<SipMessage> next = tryModification(Adding);
    mMyContacts.push_back(contact);
-
-   if(mDialogSet.getUserProfile()->getRinstanceEnabled())
-   {
-      mMyContacts.back().uri().param(p_rinstance) = Random::getCryptoRandomHex(8);  // .slg. poor mans instance id so that we can tell which contacts are ours - to be replaced by gruu someday
-   }
+   tagContact(mMyContacts.back());
 
    next->header(h_Contacts) = mMyContacts;
    mRegistrationTime = registrationTime;
@@ -272,14 +268,19 @@ ClientRegistration::requestRefresh(UInt32 expires)
 void
 ClientRegistration::internalRequestRefresh(UInt32 expires)
 {
-   if (mState == Refreshing)
+   if(mState == RetryAdding && mState == RetryRefreshing)
    {
+      // disable retry time and try refresh immediately
+      ++mTimerSeq;
+   }
+   else if (mState != Registered)
+   {
+      InfoLog (<< "a request is already in progress, no need to refresh " << *this);
       return;
    }
 
    InfoLog (<< "requesting refresh of " << *this);
    
-   assert (mState == Registered);
    mState = Refreshing;
    mLastRequest->header(h_CSeq).sequence()++;
    mLastRequest->header(h_Contacts)=mMyContacts;
@@ -361,29 +362,60 @@ ClientRegistration::dispatch(const SipMessage& msg)
    {
       // !jf! there may be repairable errors that we can handle here
       assert(msg.isResponse());
+      const int& code = msg.header(h_StatusLine).statusCode();
+      bool nextHopSupportsOutbound = false;
+      int keepAliveTime = 0;
+
+      // If registration was successful - look for next hop indicating support for outbound
+      if(mDialogSet.mUserProfile->clientOutboundEnabled() && msg.isExternal() && code >= 200 && code < 300)
+      {
+         // If ClientOutbound support is enabled and the registration response contains 
+         // Requires: outbound or a Path with outbound then outbound is supported by the 
+         // server, so store the flow key in the UserProfile 
+         // and use it for sending all messages (DialogUsageManager::sendUsingOutboundIfAppropriate)
+         try
+         {
+            if((!msg.empty(h_Paths) && msg.header(h_Paths).back().uri().exists(p_ob)) ||
+               (!msg.empty(h_Requires) && msg.header(h_Requires).find(Token(Symbols::Outbound))))
+            {
+               mDialogSet.mUserProfile->mClientOutboundFlowTuple = msg.getSource();
+               mDialogSet.mUserProfile->mClientOutboundFlowTuple.onlyUseExistingConnection = true;
+               nextHopSupportsOutbound = true;
+               if(!msg.empty(h_FlowTimer))
+               {
+                  keepAliveTime = msg.header(h_FlowTimer).value();
+               }
+            }
+         }
+         catch(BaseException&e)
+         {
+            ErrLog(<<"Error parsing Path or Requires:" << e);
+         }
+      }
 
       if(msg.isExternal())
       {
          const Data& receivedTransport = msg.header(h_Vias).front().transport();
-         int keepAliveTime = 0;
-         if(receivedTransport == Symbols::TCP ||
-            receivedTransport == Symbols::TLS ||
-            receivedTransport == Symbols::SCTP)
+         if(keepAliveTime == 0)
          {
-            keepAliveTime = mDialogSet.getUserProfile()->getKeepAliveTimeForStream();
-         }
-         else
-         {
-            keepAliveTime = mDialogSet.getUserProfile()->getKeepAliveTimeForDatagram();
+            if(receivedTransport == Symbols::TCP ||
+               receivedTransport == Symbols::TLS ||
+               receivedTransport == Symbols::SCTP)
+            {
+               keepAliveTime = mDialogSet.mUserProfile->getKeepAliveTimeForStream();
+            }
+            else
+            {
+               keepAliveTime = mDialogSet.mUserProfile->getKeepAliveTimeForDatagram();
+            }
          }
 
          if(keepAliveTime > 0)
          {
-            mNetworkAssociation.update(msg, keepAliveTime);
+            mNetworkAssociation.update(msg, keepAliveTime, nextHopSupportsOutbound);
          }
       }
 
-      const int& code = msg.header(h_StatusLine).statusCode();
       if (code < 200)
       {
          // throw it away
@@ -396,36 +428,36 @@ ClientRegistration::dispatch(const SipMessage& msg)
             if (msg.exists(h_ServiceRoutes))
             {
                InfoLog(<< "Updating service route: " << Inserter(msg.header(h_ServiceRoutes)));
-               getUserProfile()->setServiceRoute(msg.header(h_ServiceRoutes));
+               mDialogSet.mUserProfile->setServiceRoute(msg.header(h_ServiceRoutes));
             }
             else
             {
                DebugLog(<< "Clearing service route (" << Inserter(getUserProfile()->getServiceRoute()) << ")");
-               getUserProfile()->setServiceRoute(NameAddrs());
+               mDialogSet.mUserProfile->setServiceRoute(NameAddrs());
             }
          }
          catch(BaseException &e)
          {
-            InfoLog(<< "Error Parsing Service Route:" << e);
+            ErrLog(<< "Error Parsing Service Route:" << e);
          }    
 
          //gruu update, should be optimized
          try
          {
-            if(getUserProfile()->gruuEnabled() && msg.exists(h_Contacts))
+            if(mDialogSet.mUserProfile->gruuEnabled() && msg.exists(h_Contacts))
             {
                for (NameAddrs::const_iterator it = msg.header(h_Contacts).begin(); 
                     it != msg.header(h_Contacts).end(); it++)
                {
-                  if (it->exists(p_Instance) && it->param(p_Instance) == getUserProfile()->getInstanceId())
+                  if (it->exists(p_Instance) && it->param(p_Instance) == mDialogSet.mUserProfile->getInstanceId())
                   {
                      if(it->exists(p_pubGruu))
                      {
-                        getUserProfile()->setPublicGruu(Uri(it->param(p_pubGruu)));
+                        mDialogSet.mUserProfile->setPublicGruu(Uri(it->param(p_pubGruu)));
                      }
                      if(it->exists(p_tempGruu))
                      {
-                        getUserProfile()->setTempGruu(Uri(it->param(p_tempGruu)));
+                        mDialogSet.mUserProfile->setTempGruu(Uri(it->param(p_tempGruu)));
                      }
                      break;
                    }
@@ -434,93 +466,42 @@ ClientRegistration::dispatch(const SipMessage& msg)
          }
          catch(BaseException&e)
          {
-            InfoLog(<<"Error parsing GRUU:" << e);
+            ErrLog(<<"Error parsing GRUU:" << e);
          }
          
          // !jf! consider what to do if no contacts
          // !ah! take list of ctcs and push into mMy or mOther as required.
 
          // make timers to re-register
-         UInt32 expiry = UINT_MAX;
-         if (msg.exists(h_Contacts))
+         UInt32 expiry = calculateExpiry(msg);
+         if(msg.exists(h_Contacts))
          {
             mAllContacts = msg.header(h_Contacts);
+         }
+         else
+         {
+            mAllContacts.clear();
+         }
 
-            //!dcm! -- should do set intersection with my bindings and walk that
-            //small size, n^2, don't care
-            if (mDialogSet.getUserProfile()->getRinstanceEnabled())
+         if (expiry != 0 && expiry != UINT_MAX)
+         {
+            if(expiry>=7)
             {
-               UInt32 fallbackExpiry = UINT_MAX;  // Used if no contacts found with our rinstance - this can happen if proxies do not echo back the rinstance property correctly
-               for (NameAddrs::iterator itMy = mMyContacts.begin(); itMy != mMyContacts.end(); itMy++)
-               {
-                  for (NameAddrs::const_iterator it = msg.header(h_Contacts).begin(); it != msg.header(h_Contacts).end(); it++)
-                  {
-                     try
-                     {
-                        if(it->exists(p_expires))
-                        {
-                           // rinstace parameter is added to contacts created by this client, so we can 
-                           // use it to determine which contacts in the 200 response are ours.  This
-                           // should eventually be replaced by gruu stuff.
-                           if (it->uri().exists(p_rinstance) && 
-                               it->uri().param(p_rinstance) == itMy->uri().param(p_rinstance))
-                           {
-                              expiry = resipMin((UInt32)it->param(p_expires), expiry);
-                           }
-                           else
-                           {
-                              fallbackExpiry = resipMin((UInt32)it->param(p_expires), fallbackExpiry);
-                           }
-                        }
-                     }
-                     catch(ParseException& e)
-                     {
-                        DebugLog(<< "Ignoring unparsable contact in REG/200: " << e);
-                     }
-                  }
-                  if(expiry == UINT_MAX)  // if we didn't find a contact with our rinstance, then use the fallbackExpiry
-                  {
-                     expiry = fallbackExpiry;
-                  }
-               }
+               int exp = Helper::aBitSmallerThan(expiry);
+               mExpires = exp + Timer::getTimeSecs();
+               mDum.addTimer(DumTimeout::Registration,
+                             exp,
+                             getBaseHandle(),
+                             ++mTimerSeq);
             }
             else
             {
-               for (NameAddrs::const_iterator it = msg.header(h_Contacts).begin();
-                    it != msg.header(h_Contacts).end(); it++)
-               {
-                  //add to boolean exp. but needs testing
-                  //std::find(myContacts().begin(), myContacts().end(), *it) != myContacts().end()
-                  if (it->exists(p_expires))
-                  {
-                     try
-                     {
-                        expiry = resipMin((UInt32)it->param(p_expires), expiry);
-                     }
-                     catch(ParseException& e)
-                     {
-                        DebugLog(<< "Ignoring unparsable contact in REG/200: " << e);
-                     }
-                  }
-               }
-            }            
-         }
-
-         if (expiry == UINT_MAX)
-         {
-            if (msg.exists(h_Expires))
-            {
-               expiry = msg.header(h_Expires).value();
+               WarningLog(<< "Server is using an unreasonably low expiry: " 
+                           << expiry 
+                           << " We're just going to end this registration.");
+               end();
+               return;
             }
-         }
-         if (expiry != 0 && expiry != UINT_MAX)
-         {
-            int exp = Helper::aBitSmallerThan(expiry);
-            mExpires = exp + Timer::getTimeSecs();
-            mDum.addTimer(DumTimeout::Registration,
-                          exp,
-                          getBaseHandle(),
-                          ++mTimerSeq);
          }
 
          switch (mState)
@@ -591,7 +572,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
          {
             if (code == 423) // interval too short
             {
-               UInt32 maxRegistrationTime = mDialogSet.getUserProfile()->getDefaultMaxRegistrationTime();
+               UInt32 maxRegistrationTime = mDialogSet.mUserProfile->getDefaultMaxRegistrationTime();
                if (msg.exists(h_MinExpires) && 
                    (maxRegistrationTime == 0 || msg.header(h_MinExpires).value() < maxRegistrationTime)) // If maxRegistrationTime is enabled, then check it
                {
@@ -602,7 +583,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                   return;
                }
             }
-            else if (code == 408)
+            else if (code == 408 || (code == 503 && msg.getReceivedTransport() == 0))
             {
                int retry = mDum.mClientRegistrationHandler->onRequestRetry(getHandle(), 0, msg);
             
@@ -612,7 +593,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                }
                else if (retry == 0)
                {
-                  DebugLog(<< "Application requested immediate retry on 408");
+                  DebugLog(<< "Application requested immediate retry on 408 or internal 503");
                
                   mLastRequest->header(h_CSeq).sequence()++;
                   send(mLastRequest);
@@ -621,7 +602,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                }
                else
                {
-                  DebugLog(<< "Application requested delayed retry on 408: " << retry);
+                  DebugLog(<< "Application requested delayed retry on 408 or internal 503: " << retry);
                   mExpires = 0;
                   switch(mState)
                   {
@@ -673,15 +654,199 @@ ClientRegistration::dispatch(const SipMessage& msg)
    }
 }
 
+void 
+ClientRegistration::tagContact(NameAddr& contact) const
+{
+   tagContact(contact, mDum, mDialogSet.mUserProfile);
+}
+
+void 
+ClientRegistration::tagContact(NameAddr& contact, DialogUsageManager& dum, SharedPtr<UserProfile>& userProfile)
+{
+   if(contact.uri().host().empty() || 
+      dum.getSipStack().isMyDomain(contact.uri().host(), contact.uri().port()))
+   {
+      // Contact points at us; it is appropriate to add a +sip.instance to 
+      // this Contact. We don't need to have full gruu support enabled to add
+      // a +sip.instance either...
+      if(userProfile->hasInstanceId())
+      {
+         contact.param(p_Instance) = userProfile->getInstanceId();
+         if(userProfile->getRegId() != 0)
+         {
+            contact.param(p_regid) = userProfile->getRegId();
+         }
+      }
+      else if(userProfile->getRinstanceEnabled())
+      {
+         // !slg! poor mans instance id so that we can tell which contacts 
+         // are ours - to be replaced by gruu someday.
+         InfoLog(<< "You really should consider setting an instance id in"
+                     " the UserProfile (see UserProfile::setInstanceId())."
+                     " This is really easy, and makes this class much less "
+                     "likely to clash with another endpoint registering at "
+                     "the same AOR.");
+         contact.uri().param(p_rinstance) = Random::getCryptoRandomHex(8);  
+      }
+      else if(!contact.uri().user().empty())
+      {
+         WarningLog(<< "Ok, not only have you not specified an instance id, "
+                  "you have disabled the rinstance hack (ie; resip's \"poor"
+                  " man's +sip.instance\"). We will try to match Contacts"
+                  " based on what you've put in the user-part of your "
+                  "Contact, but this can be dicey, especially if you've put"
+                  " something there that another endpoint is likely to "
+                  "use.");
+      }
+      else
+      {
+         ErrLog(<< "Ok, not only have you not specified an instance id, "
+                  "you have disabled the rinstance hack (ie; resip's \"poor"
+                  " man's +sip.instance\"), _and_ you haven't put anything"
+                  " in the user-part of your Contact. This is asking for "
+                  "confusion later. We'll do our best to try to match things"
+                  " up later when the response comes in...");
+      }
+   }
+   else
+   {
+      // Looks like a third-party registration. +sip.instance is out of the 
+      // question, but we can still use rinstance.
+      if(userProfile->getRinstanceEnabled())
+      {
+         // !slg! poor mans instance id so that we can tell which contacts 
+         // are ours - to be replaced by gruu someday.
+         contact.uri().param(p_rinstance) = Random::getCryptoRandomHex(8);  
+      }
+      else if(!contact.uri().user().empty())
+      {
+         WarningLog(<< "You're trying to do a third-party registration, but "
+                  "you have disabled the rinstance hack (ie; resip's \"poor"
+                  " man's +sip.instance\"). We will try to match Contacts"
+                  " based on what you've put in the user-part of your "
+                  "Contact, but this can be dicey, especially if you've put"
+                  " something there that another endpoint is likely to "
+                  "use.");
+      }
+      else
+      {
+         ErrLog(<< "You're trying to do a third-party registration,  and "
+                  "not only have you disabled the rinstance hack (ie; "
+                  "resip's \"poor man's +sip.instance\"), you haven't"
+                  " put anything in the user-part of your Contact. This is "
+                  "asking for confusion later. We'll do our best to try to "
+                  "match things up later when the response comes in...");
+      }
+   }
+   
+   if (userProfile->getMethodsParamEnabled())
+   {
+      contact.param(p_methods) = dum.getMasterProfile()->getAllowedMethodsData();
+   }
+
+   // ?bwc? Host and port override?
+}
+
+unsigned long 
+ClientRegistration::calculateExpiry(const SipMessage& reg200) const
+{
+   unsigned long expiry=mRegistrationTime;
+   if(reg200.exists(h_Expires) &&
+      reg200.header(h_Expires).isWellFormed() &&
+      reg200.header(h_Expires).value() < expiry)
+   {
+      expiry=reg200.header(h_Expires).value();
+   }
+
+   if(!reg200.exists(h_Contacts))
+   {
+      return expiry;
+   }
+
+   const NameAddrs& contacts(reg200.header(h_Contacts));
+
+   for(NameAddrs::const_iterator c=contacts.begin();c!=contacts.end();++c)
+   {
+      // Our expiry is never going to increase if we find one of our contacts, 
+      // so if the expiry is not lower, we just ignore it. For registrars that
+      // leave our requested expiry alone, this code ends up being pretty quick,
+      // especially if there aren't contacts from other endpoints laying around.
+      if(c->isWellFormed() &&
+         c->exists(p_expires) && 
+         c->param(p_expires) < expiry &&
+         contactIsMine(*c))
+      {
+         expiry=c->param(p_expires);
+      }
+   }
+   return expiry;
+}
+
+bool 
+ClientRegistration::contactIsMine(const NameAddr& contact) const
+{
+   // Try to find this contact in mMyContacts
+   if(mDialogSet.mUserProfile->hasInstanceId() && 
+      contact.exists(p_Instance))
+   {
+      return contact.param(p_Instance)==mDialogSet.mUserProfile->getInstanceId();
+   }
+   else if(mDialogSet.mUserProfile->getRinstanceEnabled() &&
+            contact.uri().exists(p_rinstance))
+   {
+      return rinstanceIsMine(contact.uri().param(p_rinstance));
+   }
+   else
+   {
+      return searchByUri(contact.uri());
+   }
+}
+
+bool 
+ClientRegistration::rinstanceIsMine(const Data& rinstance) const
+{
+   // !bwc! This could be made faster if we used a single rinstance...
+   for(NameAddrs::const_iterator m=mMyContacts.begin(); m!=mMyContacts.end(); ++m)
+   {
+      if(m->uri().exists(p_rinstance) && m->uri().param(p_rinstance)==rinstance)
+      {
+         return true;
+      }
+   }
+   return false;
+}
+
+bool 
+ClientRegistration::searchByUri(const Uri& cUri) const
+{
+   for(NameAddrs::const_iterator m=mMyContacts.begin(); m!=mMyContacts.end(); ++m)
+   {
+      if(m->uri()==cUri)
+      {
+         return true;
+      }
+      else if(m->uri().host().empty() && 
+               m->uri().user()==cUri.user() &&
+               m->uri().scheme()==cUri.scheme() &&
+               mDum.getSipStack().isMyDomain(cUri.host(), cUri.port()))
+      {
+         // Empty host-part in our contact; this means we're relying on the 
+         // stack to fill out this Contact header. Also, the user-part matches.
+         return true;
+      }
+   }
+   return false;
+}
+
 unsigned int 
 ClientRegistration::checkProfileRetry(const SipMessage& msg)
 {
-   if (mDialogSet.getUserProfile()->getDefaultRegistrationRetryTime() > 0 &&
+   unsigned int retryInterval = mDialogSet.mUserProfile->getDefaultRegistrationRetryTime();
+   if (retryInterval > 0 &&
       (mState == Adding || mState == Refreshing) &&
       !mEndWhenDone)
    {
-      unsigned int retryInterval = mDialogSet.getUserProfile()->getDefaultRegistrationRetryTime();
-      if (msg.exists(h_RetryAfter))
+      if (msg.exists(h_RetryAfter) && msg.header(h_RetryAfter).value() > 0)
       {
          // Use retry interval from error response
          retryInterval = msg.header(h_RetryAfter).value();
@@ -753,6 +918,17 @@ ClientRegistration::dispatch(const DumTimeout& timer)
       default:
          break;
    }
+}
+
+void 
+ClientRegistration::flowTerminated()
+{
+   // Clear the network association
+   mNetworkAssociation.clear();
+
+   // Notify application - not default handler implementation is to immediately attempt
+   // a re-registration in order to form a new flow
+   mDum.mClientRegistrationHandler->onFlowTerminated(getHandle());
 }
 
 

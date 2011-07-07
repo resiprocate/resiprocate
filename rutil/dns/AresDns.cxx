@@ -1,6 +1,7 @@
 #if !defined(WIN32)
 #include <sys/types.h>
 #endif
+#include <time.h>
 
 #include "rutil/dns/AresDns.hxx"
 #include "rutil/GenericIPAddress.hxx"
@@ -13,6 +14,7 @@
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/WinLeakCheck.hxx"
+#include "rutil/FdPoll.hxx"
 
 #if !defined(WIN32)
 #if !defined(__CYGWIN__)
@@ -24,7 +26,121 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
-int 
+/**********************************************************************
+ *
+ *		class AresDnsPollItem
+ *
+ * This is callback class used for epoll-based systems.
+ *
+ **********************************************************************/
+
+#ifndef USE_CARES
+namespace resip
+{
+
+class AresDnsPollItem : public FdPollItemBase
+{
+  public:
+   AresDnsPollItem(FdPollGrp *grp, int fd, AresDns& aresObj,
+     ares_channel chan, int server_idx)
+     : FdPollItemBase(grp, fd, FPEM_Read), mAres(aresObj),
+       mChannel(chan), mServerIdx(server_idx)
+   {
+   }
+
+   virtual void	processPollEvent(FdPollEventMask mask);
+
+   AresDns&	mAres;
+   ares_channel	mChannel;
+   int mServerIdx;
+
+   static void socket_poll_cb(void *cb_data,
+                              ares_channel channel, int server_idx,
+	                      int fd, ares_poll_action_t act);
+};
+
+};
+
+void
+AresDnsPollItem::processPollEvent(FdPollEventMask mask)
+{
+   assert( (mask&(FPEM_Read|FPEM_Write))!= 0 );
+
+   time_t nowSecs;
+   time(&nowSecs);	/// maybe nice if this was passed into us?
+
+   ares_process_poll(mChannel, mServerIdx,
+     (mask&FPEM_Read)?(int)mPollSocket:-1, (mask&FPEM_Write)?(int)mPollSocket:-1,
+     nowSecs);
+}
+
+/**
+   C-function called by ares whenever it opens, closes or changes
+   interest in writability.
+**/
+
+void
+AresDnsPollItem::socket_poll_cb(void *cb_data,
+  	ares_channel channel, int server_idx,
+  	int fd, ares_poll_action_t act)
+{
+   AresDns *ares = static_cast<AresDns*>(cb_data);
+   //assert( ares );
+   FdPollGrp *grp = ares->mPollGrp;
+   //assert( grp );
+   AresDnsPollItem *olditem = ares->mPollItems.at(server_idx);
+   if ( olditem )
+   {
+      assert( olditem->mChannel==channel );
+      assert( olditem->mServerIdx==server_idx );
+   }
+   switch ( act )
+   {
+   case ARES_POLLACTION_OPEN:
+      assert( olditem==NULL );
+      assert( fd!=INVALID_SOCKET );
+      ares->mPollItems[server_idx] = new AresDnsPollItem( grp, fd, *ares, channel, server_idx);
+      break;
+   case ARES_POLLACTION_CLOSE:
+      assert( olditem );
+      ares->mPollItems[server_idx] = NULL;
+      delete olditem;	// destructor removes from poll
+      break;
+   case ARES_POLLACTION_WRITEON:
+      assert( olditem );
+      grp->modPollItem(olditem->mPollHandle, FPEM_Read|FPEM_Write);
+      break;
+   case ARES_POLLACTION_WRITEOFF:
+      assert( olditem );
+      grp->modPollItem(olditem->mPollHandle, FPEM_Read);
+      break;
+   default:
+      assert( 0 );
+   }
+}
+
+#endif
+
+/**********************************************************************
+ *
+ *		class AresDns
+ *
+ **********************************************************************/
+
+volatile bool AresDns::mHostFileLookupOnlyMode = false;
+
+void
+AresDns::setPollGrp(FdPollGrp *grp)
+{
+#ifdef USE_CARES
+   assert(0);
+#else
+   assert( mPollGrp == NULL );
+   mPollGrp = grp;
+#endif
+}
+
+int
 AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers,
               AfterSocketCreationFuncPtr socketfunc,
               int timeout,
@@ -33,7 +149,7 @@ AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers,
 {
    mAdditionalNameservers = additionalNameservers;
    mFeatures = features;
-   
+
    int ret = internalInit(additionalNameservers,
                           socketfunc,
                           features,
@@ -44,10 +160,28 @@ AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers,
    if (ret != Success)
       return ret;
 
-   return Success;      
+#ifdef WIN32
+      // For windows OSs it is uncommon to run a local DNS server.  Therefor if there
+      // are no defined DNS servers in windows networking and ARES just returned the
+      // loopback address (ie. default localhost server / named)
+      // then put resip DNS resolution into hostfile lookup only mode
+      if(mChannel->nservers == 1 &&
+         mChannel->servers[0].default_localhost_server)
+      {
+         // enable hostfile only lookup mode
+         mHostFileLookupOnlyMode = true;
+      }
+      else
+      {
+         // disable hostfile only lookup mode
+         mHostFileLookupOnlyMode = false;
+      }
+#endif
+
+   return Success;
 }
 
-int 
+int
 AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers,
                       AfterSocketCreationFuncPtr socketfunc,
                       unsigned int features,
@@ -81,10 +215,10 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
    if (cap != requiredCap)
    {
       ErrLog (<< "Build mismatch (ipv4/ipv6) problem in ares library"); // !dcm!
-      return BuildMismatch;      
+      return BuildMismatch;
    }
 #endif
-   
+
    int status;
    ares_options opt;
    int optmask = 0;
@@ -114,7 +248,7 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
       optmask |= ARES_OPT_TRIES;
    }
 #endif
-   
+
    if (additionalNameservers.empty())
    {
 #if defined(USE_ARES)
@@ -125,10 +259,10 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
 #endif
    }
    else
-   { 
+   {
       optmask |= ARES_OPT_SERVERS;
-      opt.nservers = additionalNameservers.size();
-      
+      opt.nservers = (int)additionalNameservers.size();
+
 #if defined(USE_IPV6) && defined(USE_ARES)
       // With contrib/ares, you can configure IPv6 addresses for the
       // nameservers themselves.
@@ -137,14 +271,14 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
       {
          if (additionalNameservers[i].isVersion4())
          {
-            opt.servers[i].family = AF_INET;            
+            opt.servers[i].family = AF_INET;
             opt.servers[i].addr = additionalNameservers[i].v4Address.sin_addr;
          }
          else
          {
-            opt.servers[i].family = AF_INET6;            
+            opt.servers[i].family = AF_INET6;
             opt.servers[i].addr6 = additionalNameservers[i].v6Address.sin6_addr;
-         }                  
+         }
       }
 #else
       // If we're only supporting IPv4 or we are using c-ares, we can't
@@ -152,7 +286,7 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
       opt.servers = new in_addr[additionalNameservers.size()];
       for (size_t i =0; i < additionalNameservers.size(); i++)
       {
-         if(additionalNameservers[i].isVersion4()) 
+         if(additionalNameservers[i].isVersion4())
          {
             opt.servers[i] = additionalNameservers[i].v4Address.sin_addr;
          }
@@ -173,7 +307,7 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
       // TODO: Does the socket function matter?
       status = ares_init_options(channel, &opt, optmask);
 #endif
-      
+
       delete [] opt.servers;
       opt.servers = 0;
    }
@@ -186,23 +320,33 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
    {
 
 #if defined(USE_ARES)
-      
+
       InfoLog(<< "DNS initialization: found  " << (*channel)->nservers << " name servers");
       for (int i = 0; i < (*channel)->nservers; ++i)
       {
          InfoLog(<< " name server: " << DnsUtil::inet_ntop((*channel)->servers[i].addr));
-      } 
+      }
 
       // In ares, we must manipulate these directly
       if (timeout > 0)
       {
          mChannel->timeout = timeout;
       }
-      
+
       if (tries > 0)
       {
          mChannel->tries = tries;
       }
+
+#ifndef USE_CARES
+      if ( mPollGrp )
+      {
+         // expand vector to hold {nservers} and init to NULL
+         mPollItems.insert( mPollItems.end(), (*channel)->nservers, (AresDnsPollItem*)0);
+         // tell ares to let us know when things change
+         ares_process_set_poll_cb(mChannel, AresDnsPollItem::socket_poll_cb, this);
+      }
+#endif
 
 #elif defined(USE_CARES)
       {
@@ -218,7 +362,7 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
          {
             InfoLog(<< "DNS initialization: found "
                     << options.nservers << " name servers");
-            
+
             // Log them all
             for (int i = 0; i < options.nservers; ++i)
             {
@@ -229,8 +373,8 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
          }
       }
 #endif
-      
-      return Success;      
+
+      return Success;
    }
 }
 
@@ -268,20 +412,20 @@ bool AresDns::checkDnsChange()
             }
          }
       }
- 
+
       // Destroy the secondary configuration we read
       ares_destroy_suppress_callbacks(channel);
    }
 #elif defined(USE_CARES)
    {
       // Get the options, including the server list, from the old and the
-      // current (i.e. just read) configuration.  
+      // current (i.e. just read) configuration.
       struct ares_options old;
       struct ares_options updated;
       std::memset(&old, 0, sizeof(old));
       std::memset(&updated, 0, sizeof(updated));
       int ignored;
-      
+
       // Can we get the configuration?
       if(ares_save_options(mChannel, &old, &ignored) != ARES_SUCCESS
          || ares_save_options(channel, &updated, &ignored) != ARES_SUCCESS)
@@ -314,7 +458,7 @@ bool AresDns::checkDnsChange()
          ares_destroy_options(&old);
          ares_destroy_options(&updated);
       }
-      
+
       // Destroy the secondary configuration we read
       ares_destroy(channel);
    }
@@ -349,7 +493,7 @@ bool AresDns::hostFileLookup(const char* target, in_addr &addr)
    hostent *hostdata = 0;
 
    // Look this up
-   int status = 
+   int status =
 #if defined(USE_ARES)
      hostfile_lookup(target, &hostdata)
 #elif defined(USE_CARES)
@@ -359,6 +503,7 @@ bool AresDns::hostFileLookup(const char* target, in_addr &addr)
 
    if (status != ARES_SUCCESS)
    {
+      DebugLog(<< "hostFileLookup failed for " << target);
       return false;
    }
    sockaddr_in saddr;
@@ -366,11 +511,16 @@ bool AresDns::hostFileLookup(const char* target, in_addr &addr)
    saddr.sin_family = AF_INET;
    memcpy((char *)&(saddr.sin_addr.s_addr),(char *)hostdata->h_addr_list[0], (size_t)hostdata->h_length);
    addr = saddr.sin_addr;
-   
+#if defined(USE_ARES)
+   // for resip-ares, the hostdata (and its contents) is dynamically allocated
+   ares_free_hostent(hostdata);
+#endif
+
+   DebugLog(<< "hostFileLookup succeeded for " << target);
    return true;
 }
 
-ExternalDnsHandler* 
+ExternalDnsHandler*
 AresDns::getHandler(void* arg)
 {
    Payload* p = reinterpret_cast<Payload*>(arg);
@@ -378,12 +528,12 @@ AresDns::getHandler(void* arg)
    return thisp;
 }
 
-ExternalDnsRawResult 
+ExternalDnsRawResult
 AresDns::makeRawResult(void *arg, int status, unsigned char *abuf, int alen)
 {
    Payload* p = reinterpret_cast<Payload*>(arg);
    void* userArg = reinterpret_cast<void*>(p->second);
-   
+
    if (status != ARES_SUCCESS)
    {
       return ExternalDnsRawResult(status, abuf, alen, userArg);
@@ -393,16 +543,19 @@ AresDns::makeRawResult(void *arg, int status, unsigned char *abuf, int alen)
       return ExternalDnsRawResult(abuf, alen, userArg);
    }
 }
-      
-bool 
-AresDns::requiresProcess()
+
+unsigned int
+AresDns::getTimeTillNextProcessMS()
 {
-   return true; 
+   struct timeval tv;
+   ares_timeout(mChannel, NULL, &tv);
+   return tv.tv_sec*1000 + tv.tv_usec / 1000;
 }
 
-void 
+void
 AresDns::buildFdSet(fd_set& read, fd_set& write, int& size)
 {
+   assert( mPollGrp==0 );
    int newsize = ares_fds(mChannel, &read, &write);
    if ( newsize > size )
    {
@@ -410,18 +563,42 @@ AresDns::buildFdSet(fd_set& read, fd_set& write, int& size)
    }
 }
 
-void 
+bool 
+AresDns::isPollSupported() const
+{
+#ifdef USE_CARES
+   return false;
+#else
+   return true;
+#endif
+}
+
+void
+AresDns::processTimers()
+{
+#ifdef USE_CARES
+   assert(0);
+#else
+   assert( mPollGrp!=0 );
+   time_t timeSecs;
+   time(&timeSecs);
+   ares_process_poll(mChannel, /*server*/-1, /*rd*/-1, /*wr*/-1, timeSecs);
+#endif
+}
+
+void
 AresDns::process(fd_set& read, fd_set& write)
 {
+   assert( mPollGrp==0 );
    ares_process(mChannel, &read, &write);
 }
 
-char* 
+char*
 AresDns::errorMessage(long errorCode)
 {
    const char* aresMsg = ares_strerror(errorCode);
 
-   int len = strlen(aresMsg);
+   size_t len = strlen(aresMsg);
    char* errorString = new char[len+1];
 
    strncpy(errorString, aresMsg, len);
@@ -451,7 +628,7 @@ resip_AresDns_aresCallback(void *arg, int status, unsigned char *abuf, int alen)
       return;
    }
 #endif
-   
+
    resip::AresDns::getHandler(arg)->handleDnsRaw(resip::AresDns::makeRawResult(arg, status, abuf, alen));
    resip::AresDns::Payload* p = reinterpret_cast<resip::AresDns::Payload*>(arg);
    delete p;
@@ -466,22 +643,22 @@ resip_AresDns_caresCallback(void *arg, int status, int timeouts,
 }
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -491,7 +668,7 @@ resip_AresDns_caresCallback(void *arg, int status, int timeouts,
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -505,12 +682,13 @@ resip_AresDns_caresCallback(void *arg, int status, int timeouts,
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: shiftwidth=3 expandtab:
  */

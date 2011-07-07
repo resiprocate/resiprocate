@@ -38,18 +38,21 @@ typedef enum
     @return the enum value for that transport
 **/
 TransportType getTransportTypeFromName(const std::string & transportName);
+TransportType toTransportType(const resip::Data & transportName);
 
 /**
     Function which translates a transport enum value to its corrisponding name.
     @param transportNum the enum value of the transport
     @return the transport name
+
+    @note Data version is more efficient and doesn't involve a copy
 **/
 std::string getTransportNameFromType(const TransportType typeEnum);
+std::string getTransportNameFromTypeLower(const TransportType typeEnum);
+const resip::Data& toData(const TransportType typeEnum);
+const resip::Data& toDataLower(const TransportType typeEnum);
 
-resip::Data toData(const TransportType typeEnum);
-
-TransportType toTransportType(const resip::Data & transportName);
-
+/// Returns true if passed in transport type is a reliable transport protocol
 bool isReliable(TransportType type);
 
 // Indicate whether or not to run a stun server on a Transport

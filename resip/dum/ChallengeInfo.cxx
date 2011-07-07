@@ -24,13 +24,13 @@ ChallengeInfo::~ChallengeInfo()
 {
 }
 
-const bool
+bool
 ChallengeInfo::isFailed() const
 {
    return mFailed;
 }
 
-const bool
+bool
 ChallengeInfo::isChallengeRequired() const
 {
    return mChallengeRequired;

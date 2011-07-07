@@ -66,7 +66,7 @@ void MyInviteSessionHandler::onConnected(ClientInviteSessionHandle cis, const Si
 {
    mDialInstance.onConnected(cis);
 
-   SdpContents *sdp = (SdpContents*)msg.getContents();
+   Contents *sdp = (Contents*)msg.getContents();
    cis->provideAnswer(*sdp);
 }
 

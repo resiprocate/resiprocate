@@ -23,7 +23,7 @@ MD5Buffer::sync()
    size_t len = pptr() - pbase();
    if (len > 0) 
    {
-      MD5Update(&mContext, reinterpret_cast <unsigned const char*>(pbase()), len);
+      MD5Update(&mContext, reinterpret_cast <unsigned const char*>(pbase()), (unsigned int)len);
       // reset the put buffer
       setp(mBuf, mBuf + sizeof(mBuf));
    }

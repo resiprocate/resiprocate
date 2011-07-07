@@ -55,7 +55,10 @@ main(int arc, char** argv)
 {
    Log::initialize(Log::Cout, Log::Debug, argv[0]);
 
-
+   static ExtensionParameter p_mobility_ext("mobility");
+   static ExtensionParameter p_lr_ext("lr");
+   static ExtensionParameter p_tag_ext("tag");
+   static ExtensionParameter p_ttl_ext("ttl");
 
    {
       TR _tr("Test poorly formed NameAddr by construction");
@@ -107,6 +110,24 @@ main(int arc, char** argv)
       assert(nameAddrs.size() == 2);
 
       assert(nameAddrs.begin()->uri().user() == "third");
+   }
+
+   {
+      TR _tr("Test NameAddr encode from underlying after read-only parse");
+
+      resip::Data raw("<sip:jason_AT_example.com@10.0.0.1:5060;opaque=blah>");
+      HeaderFieldValue hfv(raw.data(), raw.size());
+      NameAddr test(&hfv, Headers::UNKNOWN);
+      const NameAddr& c_test(test);
+      // We should be calling the const version of uri() here, since we don't 
+      // need to modify anything.
+      static ExtensionParameter p_opaque_ext("opaque");
+      resip::Data opaque(c_test.uri().param(p_opaque_ext));
+      cerr << test << endl;
+      NameAddr copy = test;
+      cerr << copy << endl;
+      assert(resip::Data::from(test)==raw);
+      assert(resip::Data::from(copy)==raw);
    }
 
    {
@@ -277,7 +298,7 @@ main(int arc, char** argv)
 #ifdef USE_IPV6
    {
       TR _tr("Test cleverly malformed V6 addr in Uri");
-      char* buf="sip:foo@[:x]";
+      const char* buf="sip:foo@[:x]";
       HeaderFieldValue hfv(buf, strlen(buf));
       NameAddr nameaddr(&hfv, Headers::UNKNOWN);
       assert(!nameaddr.isWellFormed());
@@ -370,22 +391,107 @@ main(int arc, char** argv)
       cout << "original : ->" << original << "<-"<< endl;
       assert(Data::from(original) == Data::from(newna));
    }
+
+   {
+      TR _tr("Test @ in params for Uri");
+      Uri uri(Data("sip:example.com;lr;foo=\"@haha\""));
+      assert(uri.user().empty());
+      assert(uri.host()=="example.com");
+      assert(uri.port()==0);
+   }
+
+   {
+      TR _tr("Test unquoted @ in params for Uri");
+      // This is actually not an ambiguous case; '@' is not valid in either a 
+      // param name or value, and ';' is legal in a userpart
+      Uri uri(Data("sip:example.com;lr;foo=fooba@haha"));
+      assert(uri.user()=="example.com;lr;foo=fooba");
+      assert(uri.host()=="haha");
+      assert(uri.port()==0);
+   }
+
+   {
+      TR _tr("Test : in params for Uri");
+      Uri uri(Data("sip:example.com;lr;foo=\":lol\""));
+      assert(uri.user().empty());
+      assert(uri.host()=="example.com");
+      assert(uri.port()==0);
+   }
+
+   {
+      TR _tr("Test unquoted : in params for Uri");
+      Uri uri(Data("sip:example.com;lr;foo=:lol"));
+      assert(uri.user().empty());
+      assert(uri.host()=="example.com");
+      assert(uri.port()==0);
+   }
+
+   {
+      TR _tr("Test unquoted : in params for Uri (2)");
+      Uri uri(Data("sip:example.com;lr;:foo=:lol"));
+      assert(uri.user().empty());
+      assert(uri.host()=="example.com");
+      assert(uri.port()==0);
+   }
+
+   {
+      TR _tr("Test @ in headers for Uri");
+      Uri uri(Data("sip:example.com?foo=\"@haha\""));
+      assert(uri.user().empty());
+      assert(uri.host()=="example.com");
+      assert(uri.port()==0);
+   }
+
+   {
+      TR _tr("Test unquoted @ in headers for Uri");
+      // This is actually not an ambiguous case; '@' is not valid in either an 
+      // embedded header name or value, and '?' is legal in a userpart
+      Uri uri(Data("sip:example.com?foo=fooba@haha"));
+      assert(uri.user()=="example.com?foo=fooba");
+      assert(uri.host()=="haha");
+      assert(uri.port()==0);
+   }
+
+   {
+      TR _tr("Test : in headers for Uri");
+      Uri uri(Data("sip:example.com?foo=\":lol\""));
+      assert(uri.user().empty());
+      assert(uri.host()=="example.com");
+      assert(uri.port()==0);
+   }
+
+   {
+      TR _tr("Test unquoted : in headers for Uri");
+      Uri uri(Data("sip:example.com?foo=:lol"));
+      assert(uri.user().empty());
+      assert(uri.host()=="example.com");
+      assert(uri.port()==0);
+   }
+
+   {
+      TR _tr("Test unquoted : in headers for Uri (2)");
+      Uri uri(Data("sip:example.com?:foo=:lol"));
+      assert(uri.user().empty());
+      assert(uri.host()=="example.com");
+      assert(uri.port()==0);
+   }
+
    {
       TR _tr("Test typeless parameter copy");
       Token s = Token("jason");
       s.value() = "value";
       s.param(p_expires) = 17;
-      s.param(p_lr);
+      s.param(p_lr_ext);
       s.param(UnknownParameterType("foobie")) = "quux";
 
       Token s1;
       s1.value() = "other";
-      s1.param(p_ttl) = 21;
+      s1.param(p_retryAfter) = 21;
 
-      s.setParameter(s1.getParameterByEnum(ParameterTypes::ttl));
+      s.setParameter(s1.getParameterByEnum(ParameterTypes::retryAfter));
       assert(s.value() == "value");
-      assert(s.param(p_ttl) == 21);
-      assert(s.param(p_lr));
+      assert(s.param(p_retryAfter) == 21);
+      assert(s.exists(p_lr_ext));
       assert(s.param(UnknownParameterType("foobie")) == "quux");
    }
 
@@ -394,18 +500,18 @@ main(int arc, char** argv)
       Token s;
       s.value() = "value";
       s.param(p_expires) = 17;
-      s.param(p_ttl) = 12;
-      s.param(p_lr);
+      s.param(p_retryAfter) = 12;
+      s.param(p_lr_ext);
       s.param(UnknownParameterType("foobie")) = "quux";
 
       Token s1;
       s1.value() = "other";
-      s1.param(p_ttl) = 21;
+      s1.param(p_retryAfter) = 21;
 
-      s.setParameter(s1.getParameterByEnum(ParameterTypes::ttl));
+      s.setParameter(s1.getParameterByEnum(ParameterTypes::retryAfter));
       assert(s.value() == "value");
-      assert(s.param(p_ttl) == 21);
-      assert(s.param(p_lr));
+      assert(s.param(p_retryAfter) == 21);
+      assert(s.exists(p_lr_ext));
       assert(s.param(UnknownParameterType("foobie")) == "quux");
 
       s.encode(resipCerr);
@@ -654,12 +760,13 @@ main(int arc, char** argv)
 
    {
       TR _tr( "Token + parameters parse test");
-      const char *org = "WuggaWuggaFoo;ttl=2";
+      const char *org = "WuggaWuggaFoo;ttl=2;retry-after=3";
       
       HeaderFieldValue hfv(org, strlen(org));
       Token tok(&hfv, Headers::UNKNOWN);
       assert(tok.value() == "WuggaWuggaFoo");
-      assert(tok.param(p_ttl) == 2);
+      assert(tok.param(p_ttl_ext) == "2");
+      assert(tok.param(p_retryAfter) == 3);
    }
 
    {
@@ -684,7 +791,7 @@ main(int arc, char** argv)
 #ifdef USE_IPV6
    {
       TR _tr( "Via assert bug with malformed IPV6 addr [boom]" );
-      char* viaString = "SIP/2.0/UDP [boom]:5060;branch=z9hG4bKblah";
+      const char* viaString = "SIP/2.0/UDP [boom]:5060;branch=z9hG4bKblah";
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv, Headers::UNKNOWN);
       assert(!via.isWellFormed());
@@ -692,7 +799,7 @@ main(int arc, char** argv)
 
    {
       TR _tr( "Via assert bug with malformed IPV6 addr [:z]" );
-      char* viaString = "SIP/2.0/UDP [:z]:5060;branch=z9hG4bKblah";
+      const char* viaString = "SIP/2.0/UDP [:z]:5060;branch=z9hG4bKblah";
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv, Headers::UNKNOWN);
       assert(!via.isWellFormed());
@@ -777,7 +884,7 @@ main(int arc, char** argv)
    {
       TR _tr( "full on via parse, IPV6");
       // !dlb! deal with maddr=[5f1b:df00:ce3e:e200:20:800:2b37:6426]
-      char *viaString = /* Via: */ " SIP/2.0/UDP [5f1b:df00:ce3e:e200:20:800:2b37:6426]:5000;ttl=3;maddr=1.2.3.4;received=foo.com";
+      const char *viaString = /* Via: */ " SIP/2.0/UDP [5f1b:df00:ce3e:e200:20:800:2b37:6426]:5000;ttl=3;maddr=1.2.3.4;received=foo.com";
       
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv, Headers::UNKNOWN);
@@ -1095,8 +1202,8 @@ main(int arc, char** argv)
       assert(nameAddr.param(p_tag) == "456248");
       assert(nameAddr.param(p_mobility) == "hobble");
 
-      assert(nameAddr.uri().exists(p_tag) == false);
-      assert(nameAddr.uri().exists(p_mobility) == false);
+      assert(nameAddr.uri().exists(p_tag_ext) == false);
+      assert(nameAddr.uri().exists(p_mobility_ext) == false);
    }
    {
       TR _tr( "NameAddr parse, quoted displayname, parameterMove");
@@ -1118,8 +1225,8 @@ main(int arc, char** argv)
       assert(nameAddr.param(p_tag) == "456248");
       assert(nameAddr.param(p_mobility) == "hobble");
 
-      assert(nameAddr.uri().exists(p_tag) == false);
-      assert(nameAddr.uri().exists(p_mobility) == false);
+      assert(nameAddr.uri().exists(p_tag_ext) == false);
+      assert(nameAddr.uri().exists(p_mobility_ext) == false);
    }
    {
       TR _tr( "NameAddr parse, unquoted displayname, paramterMove");
@@ -1137,8 +1244,8 @@ main(int arc, char** argv)
       nameAddr.uri().encodeParameters(resipCerr) << endl;
       cerr << "Header params: ";
       nameAddr.encodeParameters(resipCerr) << endl;
-      assert(nameAddr.uri().param(p_tag) == "456248");
-      assert(nameAddr.uri().param(p_mobility) == "hobble");
+      assert(nameAddr.uri().param(p_tag_ext) == "456248");
+      assert(nameAddr.uri().param(p_mobility_ext) == "hobble");
 
       assert(nameAddr.exists(p_tag) == false);
       assert(nameAddr.exists(p_mobility) == false);
@@ -1159,8 +1266,8 @@ main(int arc, char** argv)
       nameAddr.uri().encodeParameters(resipCerr) << endl;
       cerr << "Header params: ";
       nameAddr.encodeParameters(resipCerr) << endl;
-      assert(nameAddr.uri().param(p_mobility) == "hobb;le");
-      assert(nameAddr.uri().param(p_tag) == "true;false");
+      assert(nameAddr.uri().param(p_mobility_ext) == "hobb;le");
+      assert(nameAddr.uri().param(p_tag_ext) == "true;false");
       //      assert("true;false" == nameAddr.uri().param(Data("useless")));
 
       assert(nameAddr.exists(p_mobility) == false);

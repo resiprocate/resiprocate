@@ -26,7 +26,7 @@ MediaStream::MediaStream(asio::io_service& ioService,
 #ifdef USE_SSL
 #ifdef USE_DTLS
                          DtlsFactory* dtlsFactory,
-#endif 
+#endif
 #endif 
                          NatTraversalMode natTraversalMode,
                          const char* natTraversalServerHostname, 
@@ -36,10 +36,11 @@ MediaStream::MediaStream(asio::io_service& ioService,
 #ifdef USE_SSL
 #ifdef USE_DTLS
    mDtlsFactory(dtlsFactory),
-#endif  
+#endif
 #endif  
    mSRTPSessionInCreated(false),
    mSRTPSessionOutCreated(false),
+   mSRTPEnabled(false),
    mNatTraversalMode(natTraversalMode),
    mNatTraversalServerHostname(natTraversalServerHostname),
    mNatTraversalServerPort(natTraversalServerPort),
@@ -283,7 +284,7 @@ MediaStream::srtpUnprotect(void* data, int* size, bool rtcp)
    return status;
 }
 
-void 
+void
 MediaStream::setOutgoingIceUsernameAndPassword(const resip::Data& username, const resip::Data& password)
 {
    Lock lock(mMutex);
@@ -338,7 +339,31 @@ MediaStream::onFlowReady(unsigned int componentId)
 void 
 MediaStream::onFlowError(unsigned int componentId, unsigned int errorCode)
 {
-   mMediaStreamHandler.onMediaStreamError(this, errorCode);  // TODO assign real error code
+   if ((errorCode == asio::error::host_not_found || errorCode == 8008) && mNatTraversalMode == Ice)
+   {
+      // .jjg. ignore this error if ICE is in use, since there's a chance media will still flow
+      if (mRtpFlow && mRtcpFlow)
+      {
+         if (componentId == RTCP_COMPONENT_ID)
+         {
+            mNatTraversalServerHostname = resip::Data::Empty;
+            mRtpFlow->activateFlow();
+            mRtcpFlow->activateFlow();
+         }
+      }
+      else if (mRtpFlow)
+      {
+         if (componentId == RTP_COMPONENT_ID)
+         {
+            mNatTraversalServerHostname = resip::Data::Empty;
+            mRtpFlow->activateFlow();
+         }
+      }
+   }
+   else
+   {
+      mMediaStreamHandler.onMediaStreamError(this, errorCode);  // TODO assign real error code
+   }
 }
 
 

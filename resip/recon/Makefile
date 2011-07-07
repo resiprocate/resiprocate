@@ -1,11 +1,13 @@
 BUILD := ../../build
 include $(BUILD)/Makefile.pre
 
-PACKAGES += ASIO RUTIL ARES OPENSSL SRTP RETURNCLIENT REFLOW SIPX BOOST PTHREAD
+PACKAGES += RECON ASIO RUTIL ARES OPENSSL SRTP RETURNCLIENT REFLOW SIPX BOOST PTHREAD
 TARGET_LIBRARY = librecon
 CODE_SUBDIRS = sdp
 
 SRC += \
+	ApplicationTimers.cxx \
+	BasicUserAgent.cxx \
         BridgeMixer.cxx \
         Conversation.cxx \
         ConversationManager.cxx \
@@ -13,17 +15,18 @@ SRC += \
         ConversationProfile.cxx \
         DefaultDialogSet.cxx \
         DtmfEvent.cxx \
-        FlowManagerSipXSocket.cxx \
         LocalParticipant.cxx \
         MediaEvent.cxx \
-        MediaResourceParticipant.cxx \
         MediaResourceCache.cxx \
+        MediaResourceParticipant.cxx \
         MediaStreamEvent.cxx \
         Participant.cxx \
         ReconSubsystem.cxx \
+	RegistrationManager.cxx \
         RelatedConversationSet.cxx \
         RemoteParticipant.cxx \
         RemoteParticipantDialogSet.cxx \
+	RTPPortAllocator.cxx \
         UserAgent.cxx \
         UserAgentClientSubscription.cxx \
         UserAgentDialogSetFactory.cxx \

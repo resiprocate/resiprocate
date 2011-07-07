@@ -22,11 +22,12 @@ using resip::RecursiveMutex;
 // with the use of recursive mutexes. The need for this exception should
 // be re-verified and documented here.
 
-// .abr. OS X 10.2 is OS_MAJOR_VER 6. Prior to this, OS X did not support
-// recursive mutexes.
+// .abr. .amr. OS X 10.2 is 1020. Prior to this, OS X did not support
+// recursive mutexes. The iPhone Macro will be defined for all iPhone SDK based
+// compiles which properly supports recursive mutexes
 
-#if (defined( __APPLE__ ) && OS_MAJOR_VER < 6) || defined (__INTEL_COMPILER)
-// !cj! need to write apple/intel mutex stuff 
+#if (defined( __APPLE__ ) && (defined(MAC_OS_X_VERSION_MIN_REQUIRED) && (MAC_OS_X_VERSION_MIN_REQUIRED < 1020) && !defined(TARGET_OS_IPHONE))) || defined (__INTEL_COMPILER)
+// !cj! need to write intel mutex stuff 
 
 #warning "RecursiveMutex is not available on this platform yet."
 
@@ -100,6 +101,7 @@ RecursiveMutex::lock()
 {
 #ifndef WIN32
     int  rc = pthread_mutex_lock(&mId);
+    (void)rc;
     assert( rc != EINVAL );
     assert( rc != EDEADLK );
     assert( rc == 0 );
@@ -113,6 +115,7 @@ RecursiveMutex::unlock()
 {
 #ifndef WIN32
     int  rc = pthread_mutex_unlock(&mId);
+    (void)rc;
     assert( rc != EINVAL );
     assert( rc != EPERM );
     assert( rc == 0 );

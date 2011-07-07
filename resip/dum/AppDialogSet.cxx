@@ -10,7 +10,8 @@ AppDialogSet::AppDialogSet(DialogUsageManager& dum) :
    Handled(dum),
    mDum(dum),
    mDialogSet(0),
-   mIsReUsed(false)
+   mIsReUsed(false),
+   mDumDeleted(false)
 {}
 
 AppDialogSet::~AppDialogSet()

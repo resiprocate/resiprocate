@@ -235,6 +235,7 @@ defineHeader(RSeq, "RSeq", UInt32Category, "RFC 3261");
 
 // !dlb! this one is not quite right -- can have (comment) after field value
 defineHeader(RetryAfter, "Retry-After", UInt32Category, "RFC 3261");
+defineHeader(FlowTimer, "Flow-Timer", UInt32Category, "RFC 5626");
 
 //====================
 // CallId:

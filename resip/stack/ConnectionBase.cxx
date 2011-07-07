@@ -32,11 +32,12 @@ ConnectionBase::ConnectionBase(Transport* transport, const Tuple& who, Compressi
      mTransport(transport),
      mWho(who),
      mFailureReason(TransportFailure::None),
+     mFailureSubCode(0),
      mCompression(compression),
-#ifdef USE_SIGCOMP
+// NO: #ifdef USE_SIGCOMP // class def doesn't decl members conditionally
      mSigcompStack(0),
      mSigcompFramer(0),
-#endif
+// NO: #endif
      mSendingTransmissionFormat(Unknown),
      mReceivingTransmissionFormat(Unknown),
      mMessage(0),
@@ -75,8 +76,9 @@ ConnectionBase::~ConnectionBase()
    while (!mOutstandingSends.empty())
    {
       SendData* sendData = mOutstandingSends.front();
-      mTransport->fail(sendData->transactionId, mFailureReason);
-      
+      mTransport->fail(sendData->transactionId,
+         mFailureReason ? mFailureReason : TransportFailure::ConnectionUnknown,
+         mFailureSubCode);
       delete sendData;
       mOutstandingSends.pop_front();
    }
@@ -89,6 +91,16 @@ ConnectionBase::~ConnectionBase()
    DebugLog (<< "ConnectionBase::~ConnectionBase " << this);
 }
 
+void
+ConnectionBase::setFailureReason(TransportFailure::FailureReason failReason, int subCode)
+{
+   if ( failReason > mFailureReason )
+   {
+      mFailureReason = failReason;
+      mFailureSubCode = subCode;
+   }
+}
+
 FlowKey
 ConnectionBase::getFlowKey() const
 {
@@ -96,11 +108,9 @@ ConnectionBase::getFlowKey() const
 }
 
 void
-ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
+ConnectionBase::preparseNewBytes(int bytesRead)
 {
-
    DebugLog(<< "In State: " << connectionStates[mConnState]);
-   //getConnectionManager().touch(this); -- !dcm!
    
   start:   // If there is an overhang come back here, effectively recursing
    
@@ -110,7 +120,6 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
       {
          if (strncmp(mBuffer + mBufferPos, Symbols::CRLFCRLF, 4) == 0)
          {
-            StackLog(<<"Throwing away incoming firewall keep-alive");
             DebugLog(<< "Got incoming double-CRLF keepalive (aka ping).");
             mBufferPos += 4;
             bytesRead -= 4;
@@ -126,6 +135,24 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                return;
             }
          }
+         else if (strncmp(mBuffer + mBufferPos, Symbols::CRLF, 2) == 0)
+         {
+            //DebugLog(<< "Got incoming CRLF keepalive response (aka pong).");
+            mBufferPos += 2;
+            bytesRead -= 2;
+            onSingleCRLF();
+            if (bytesRead)
+            {
+               goto start;
+            }
+            else
+            {
+               delete [] mBuffer;
+               mBuffer = 0;
+               return;
+            }
+         }
+
          assert(mTransport);
          mMessage = new SipMessage(mTransport);
          
@@ -148,7 +175,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
       }
       case ReadingHeaders:
       {
-         unsigned int chunkLength = mBufferPos + bytesRead;
+         unsigned int chunkLength = (unsigned int)mBufferPos + bytesRead;
          char *unprocessedCharPtr;
          MsgHeaderScanner::ScanChunkResult scanChunkResult =
             mMsgHeaderScanner.scanChunk(mBuffer,
@@ -162,13 +189,39 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
             mBuffer = 0;
             delete mMessage;
             mMessage = 0;
-            //.jacob. Shouldn't the state also be set here?
+            mConnState=NewMessage;
             delete this;
             return;
          }
 
-         unsigned int numUnprocessedChars =
-            (mBuffer + chunkLength) - unprocessedCharPtr;
+         if (mMsgHeaderScanner.getHeaderCount() > 256)
+         {
+            WarningLog(<< "Discarding preparse; too many headers");
+            delete [] mBuffer;
+            mBuffer = 0;
+            delete mMessage;
+            mMessage = 0;
+            mConnState=NewMessage;
+            delete this;
+            return;
+         }
+
+         unsigned int numUnprocessedChars = 
+            (unsigned int)((mBuffer + chunkLength) - unprocessedCharPtr);
+
+         if(numUnprocessedChars > 2048 &&
+            scanChunkResult == MsgHeaderScanner::scrNextChunk)
+         {
+            WarningLog(<< "Discarding preparse; header-field-value (or "
+                        "header name) too long");
+            delete [] mBuffer;
+            mBuffer = 0;
+            delete mMessage;
+            mMessage = 0;
+            mConnState=NewMessage;
+            delete this;
+            return;
+         }
 
          if(numUnprocessedChars==chunkLength)
          {
@@ -182,7 +235,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
             char* newBuffer = 0;
             try
             {
-               newBuffer=MsgHeaderScanner::allocateBuffer(size);
+               newBuffer=MsgHeaderScanner::allocateBuffer((int)size);
             }
             catch(std::bad_alloc&)
             {
@@ -234,7 +287,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                char* newBuffer = 0;
                try
                {
-                  newBuffer = MsgHeaderScanner::allocateBuffer(size);
+                  newBuffer = MsgHeaderScanner::allocateBuffer((int)size);
                }
                catch(std::bad_alloc&)
                {
@@ -256,7 +309,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
             try
             {
                // The message header is complete.
-               contentLength=mMessage->header(h_ContentLength).value();
+               contentLength=mMessage->const_header(h_ContentLength).value();
             }
             catch(resip::ParseException& e)
             {
@@ -293,10 +346,10 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
             {
                // The message body is incomplete.
                DebugLog(<< "partial body received");
-               int newSize=resipMin(resipMax((size_t)numUnprocessedChars*3/2,
+               size_t newSize=resipMin(resipMax((size_t)numUnprocessedChars*3/2,
                                              (size_t)ConnectionBase::ChunkSize),
                                     contentLength);
-               char* newBuffer = MsgHeaderScanner::allocateBuffer(newSize);
+               char* newBuffer = MsgHeaderScanner::allocateBuffer((int)newSize);
                memcpy(newBuffer, unprocessedCharPtr, numUnprocessedChars);
                mBufferPos = numUnprocessedChars;
                mBufferSize = newSize;
@@ -309,7 +362,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                // Do this stuff BEFORE we kick the message out the door.
                // Remember, deleting or passing mMessage on invalidates our
                // buffer!
-               int overHang = numUnprocessedChars - contentLength;
+               int overHang = numUnprocessedChars - (int)contentLength;
 
                mConnState = NewMessage;
                mBuffer = 0;
@@ -321,7 +374,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                   {
                      size = ConnectionBase::ChunkSize;
                   }
-                  char* newBuffer = MsgHeaderScanner::allocateBuffer(size);
+                  char* newBuffer = MsgHeaderScanner::allocateBuffer((int)size);
                   memcpy(newBuffer,
                          unprocessedCharPtr + contentLength,
                          overHang);
@@ -336,7 +389,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                }
 
                // The message body is complete.
-               mMessage->setBody(unprocessedCharPtr, contentLength);
+               mMessage->setBody(unprocessedCharPtr, (UInt32)contentLength);
                if (!transport()->basicCheck(*mMessage))
                {
                   delete mMessage;
@@ -346,7 +399,8 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                {
                   Transport::stampReceived(mMessage);
                   DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
-                  fifo.add(mMessage);
+                  assert( mTransport );
+                  mTransport->pushRxMsgUp(mMessage);
                   mMessage = 0;
                }
 
@@ -364,7 +418,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
 
          try
          {
-             contentLength = mMessage->header(h_ContentLength).value();
+             contentLength = mMessage->const_header(h_ContentLength).value();
          }
          catch(resip::ParseException& e)
          {
@@ -384,7 +438,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
          if (mBufferPos == contentLength)
          {
             mMessage->addBuffer(mBuffer);
-            mMessage->setBody(mBuffer, contentLength);
+            mMessage->setBody(mBuffer, (UInt32)contentLength);
             mBuffer = 0;
             if (!transport()->basicCheck(*mMessage))
             {
@@ -396,7 +450,8 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                DebugLog(<< "##ConnectionBase: " << *this << " received: " << *mMessage);
 
                Transport::stampReceived(mMessage);
-               fifo.add(mMessage);
+               assert( mTransport );
+               mTransport->pushRxMsgUp(mMessage);
                mMessage = 0;
             }
             mConnState = NewMessage;
@@ -404,7 +459,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
          else if (mBufferPos == mBufferSize)
          {
             // .bwc. We've filled our buffer; go ahead and make more room.
-            int newSize = resipMin(mBufferSize*3/2, contentLength);
+            size_t newSize = resipMin(mBufferSize*3/2, contentLength);
             char* newBuffer = 0;
             try
             {
@@ -430,8 +485,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
 
 #ifdef USE_SIGCOMP
 void
-ConnectionBase::decompressNewBytes(int bytesRead,
-                                   Fifo<TransactionMessage>& fifo)
+ConnectionBase::decompressNewBytes(int bytesRead)
 {
   mConnState = SigComp;
 
@@ -486,7 +540,7 @@ ConnectionBase::decompressNewBytes(int bytesRead,
       Transport::stampReceived(mMessage);
       // If the message made it this far, we should let it store
       // SigComp state: extract the compartment ID.
-      const Via &via = mMessage->header(h_Vias).front();
+      const Via &via = mMessage->const_header(h_Vias).front();
       if (mMessage->isRequest())
       {
         // For requests, the compartment ID is read out of the
@@ -494,7 +548,7 @@ ConnectionBase::decompressNewBytes(int bytesRead,
         // TCP connection for identification purposes.
         if (via.exists(p_sigcompId))
         {
-                Data compId = via.param(p_sigcompId);
+            Data compId = via.param(p_sigcompId);
             if(!compId.empty())
             {
                 mSigcompStack->provideCompartmentId(sc, compId.data(), compId.size());
@@ -517,10 +571,11 @@ ConnectionBase::decompressNewBytes(int bytesRead,
         Data compId = via.param(p_branch).getSigcompCompartment();
         if(!compId.empty())
         {
-         mSigcompStack->provideCompartmentId(sc, compId.data(), compId.size());
+           mSigcompStack->provideCompartmentId(sc, compId.data(), compId.size());
         }
       }
-      fifo.add(mMessage);
+      assert( mTransport );
+      mTransport->pushRxMsgUp(mMessage);
       mMessage = 0;
       sc = 0;
     }
@@ -569,6 +624,12 @@ ConnectionBase::getWriteBuffer()
       mBufferSize = ConnectionBase::ChunkSize;
       mBufferPos = 0;
    }
+   return getCurrentWriteBuffer();
+}
+
+std::pair<char*, size_t> 
+ConnectionBase::getCurrentWriteBuffer()
+{
    return std::make_pair(mBuffer + mBufferPos, mBufferSize - mBufferPos);
 }
 
@@ -577,7 +638,7 @@ ConnectionBase::getWriteBufferForExtraBytes(int extraBytes)
 {
    if (extraBytes > 0)
    {
-      char* buffer = MsgHeaderScanner::allocateBuffer(mBufferSize + extraBytes);
+      char* buffer = MsgHeaderScanner::allocateBuffer((int)mBufferSize + extraBytes);
       memcpy(buffer, mBuffer, mBufferSize);
       delete [] mBuffer;
       mBuffer = buffer;
@@ -664,5 +725,6 @@ resip::operator<<(EncodeStream& strm,
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */
 

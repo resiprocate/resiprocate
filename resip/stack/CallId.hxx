@@ -32,8 +32,31 @@ class CallID : public ParserCategory
       virtual ParserCategory* clone() const;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
 
+      // Inform the compiler that overloads of these may be found in
+      // ParserCategory, too.
+      using ParserCategory::exists;
+      using ParserCategory::remove;
+      using ParserCategory::param;
+
+      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators);
+      bool exists(const Param<CallID>& paramType) const;
+      void remove(const Param<CallID>& paramType);
+
+#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \
+      const _enum##_Param::DType& param(const _enum##_Param& paramType) const;  \
+      _enum##_Param::DType& param(const _enum##_Param& paramType); \
+      friend class _enum##_Param
+
+defineParam(fromTag, "from-tag", DataParameter, "RFC 3891 (not in IANA, apparently)");
+defineParam(toTag, "to-tag", DataParameter, "RFC 3891 (not in IANA, apparently)");
+defineParam(earlyOnly, "early-only", ExistsParameter, "RFC 3891 (not in IANA, apparently)");
+
+#undef defineParam
+
    private:
-      mutable Data mValue;
+      Data mValue;
+
+      static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
 };
 typedef ParserContainer<CallID> CallIDs;
 typedef CallID CallId; // code convention compatible

@@ -25,7 +25,7 @@ using namespace resip;
 #ifdef USE_SSL 
 #ifdef USE_DTLS
 using namespace dtls;
-#endif 
+#endif
 #endif
 using namespace std;
 
@@ -67,7 +67,7 @@ FlowManager::FlowManager()
 
 #ifdef USE_SSL
    // Setup SSL context
-   asio::error_code ec; 
+   asio::error_code ec;
    mSslContext.set_verify_mode(asio::ssl::context::verify_peer | 
                                asio::ssl::context::verify_fail_if_no_peer_cert);
 #define VERIFY_FILE "ca.pem"
@@ -78,23 +78,28 @@ FlowManager::FlowManager()
    }
 #endif 
 
-   // Initialize SRTP 
+   // Initialize SRTP
    err_status_t status = srtp_init();
    if(status && status != err_status_bad_param)  // Note: err_status_bad_param happens if srtp_init is called twice - we allow this for test programs
    {
       ErrLog(<< "Unable to initialize SRTP engine, error code=" << status);
       throw FlowManagerException("Unable to initialize SRTP engine", __FILE__, __LINE__);
    }
-   status = srtp_install_event_handler(FlowManager::srtpEventHandler);   
+   status = srtp_install_event_handler(FlowManager::srtpEventHandler);
 }
-  
 
 FlowManager::~FlowManager()
 {
-   delete mIOServiceWork;
+   if( mIOServiceWork != NULL )
+   {
+      mIOServiceWork->get_io_service().stop();
+      delete mIOServiceWork;
+      mIOServiceWork = NULL;
+   }
+
    mIOServiceThread->join();
    delete mIOServiceThread;
- 
+
  #ifdef USE_SSL
  #ifdef USE_DTLS
    if(mDtlsFactory) delete mDtlsFactory;
@@ -125,9 +130,9 @@ FlowManager::initializeDtlsFactory(const char* certAor)
    else
    {
       ErrLog(<< "Unable to create a client cert, cannot use Dtls-Srtp.");    
-   }   
+   }
 }
-#endif 
+#endif
 #endif
 
 void
@@ -150,7 +155,7 @@ FlowManager::srtpEventHandler(srtp_event_data_t *data)
      WarningLog(<< "SRTP unknown event reported to handler");
    }
  }
- 
+
 MediaStream* 
 FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                const StunTuple& localBinding, 
@@ -165,44 +170,44 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
    if(rtcpEnabled)
    {
       StunTuple localRtcpBinding(localBinding.getTransportType(), localBinding.getAddress(), localBinding.getPort() + 1);
-      newMediaStream = new MediaStream(mIOService,
+      newMediaStream = new MediaStream(mIOService, 
 #ifdef USE_SSL
-                                       mSslContext,
+         mSslContext, 
 #endif
-                                       mediaStreamHandler,
-                                       localBinding,
-                                       localRtcpBinding,
+         mediaStreamHandler, 
+         localBinding, 
+         localRtcpBinding, 
 #ifdef USE_SSL
 #ifdef USE_DTLS
-                                       mDtlsFactory,
-#endif 
+         mDtlsFactory,
 #endif
-                                       natTraversalMode,
-                                       natTraversalServerHostname, 
-                                       natTraversalServerPort, 
-                                       stunUsername, 
-                                       stunPassword);
+#endif
+         natTraversalMode, 
+         natTraversalServerHostname, 
+         natTraversalServerPort, 
+         stunUsername, 
+         stunPassword);
    }
    else
    {
       StunTuple rtcpDisabled;  // Default constructor sets transport type to None - this signals Rtcp is disabled
-      newMediaStream = new MediaStream(mIOService,
+      newMediaStream = new MediaStream(mIOService, 
 #ifdef USE_SSL
-                                       mSslContext, 
+         mSslContext, 
 #endif
-                                       mediaStreamHandler, 
-                                       localBinding, 
-                                       rtcpDisabled, 
+         mediaStreamHandler, 
+         localBinding, 
+         rtcpDisabled, 
 #ifdef USE_SSL
 #ifdef USE_DTLS
-                                       mDtlsFactory,
-#endif 
+         mDtlsFactory,
 #endif
-                                       natTraversalMode, 
-                                       natTraversalServerHostname, 
-                                       natTraversalServerPort, 
-                                       stunUsername, 
-                                       stunPassword);
+#endif
+         natTraversalMode, 
+         natTraversalServerHostname, 
+         natTraversalServerPort, 
+         stunUsername, 
+         stunPassword);
    }
    return newMediaStream;
 }

@@ -112,6 +112,17 @@ extern "C" {
 
 #define ARES_CAP_IPV6 		(1 << 0)
 
+typedef enum ares_poll_action {
+  ARES_POLLACTION_NULL=		(0),
+  ARES_POLLACTION_OPEN=		(1),	// ares just opened this
+  ARES_POLLACTION_CLOSE=	(2),	// ares just closed this
+  ARES_POLLACTION_WRITEON=	(3),	// tell ares when writable
+  ARES_POLLACTION_WRITEOFF=	(4)	// don't tell ares when writable
+} ares_poll_action_t;
+struct ares_channeldata;
+typedef void (ares_poll_cb_func)(void *cb_data, struct ares_channeldata* chan, int sockidx,
+  int fd, ares_poll_action_t act);
+
 #if defined(WIN32) || defined(sun)
 typedef unsigned char u_int8_t;
 #endif
@@ -161,7 +172,6 @@ extern 	int ares_init_options(ares_channel *channelptr, struct ares_options *opt
 
 extern 	int ares_init_options_with_socket_function(ares_channel *channelptr, struct ares_options *options,
                                                    int optmask, socket_function_ptr);
-
 extern 	void ares_destroy(ares_channel channel);
 extern 	void ares_destroy_suppress_callbacks(ares_channel channel);
 
@@ -183,6 +193,10 @@ extern 	int ares_fds(ares_channel channel, fd_set *read_fds, fd_set *write_fds);
 extern 	struct timeval *ares_timeout(ares_channel channel, struct timeval *maxtv,
 					struct timeval *tv);
 extern 	void ares_process(ares_channel channel, fd_set *read_fds, fd_set *write_fds);
+extern void ares_process_set_poll_cb(ares_channel channel, ares_poll_cb_func* cb_func, void *cb_data);
+extern void ares_process_poll(ares_channel channel, int server_idx,
+        int rdFd, int wrFd, time_t now);
+
 
 extern 	int ares_mkquery(const char *name, int dnsclass, int type, unsigned short id,
 			int rd, unsigned char **buf, int *buflen);

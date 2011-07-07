@@ -266,29 +266,49 @@ MediaResourceParticipant::startPlay()
       break;
       case File:
       {
-         Data filepath = mMediaUrl.host().urlDecoded();
-         if(filepath.size() > 3 && filepath.substr(0, 3) == Data("///")) filepath = filepath.substr(2);
-         else if(filepath.size() > 2 && filepath.substr(0, 2) == Data("//")) filepath = filepath.substr(1);
+         // Assume that the file:// URL will point to a single file which can be rendered using platform
+         // specific tools etc. i.e. it will either be an audio file like a WAV, MP3, OGG, etc. Or otherwise
+         // it will point to a media container format like AVI, MKV etc, which might contain video.
+         // It is up to the concrete implementation of RtpStream to decide what is supported and how to
+         // parse it, etc.
+         //
+         // If the file contains video, then video should also be sent in the RTP stream.
+         //
+         // recon divides its RtpStreams along media type lines. Therefore the file will be "played"
+         // on all video or audio streams at the same time. Note that this approach might lose lip-sync
+         // for the time being.
+         //
+         Data filePath = mMediaUrl.host().urlDecoded();
+         if( filePath.size() > 2 && filePath.substr( 0, 2 ) == Data( "//" ))
+            filePath = filePath.substr( 2 ); // Remove the "//" from the front
          
-         filepath.replace("|", ":");  // For Windows filepath processing - convert | to :
+#ifdef WIN32
+         filePath.replace("|", ":");  // For Windows filePath processing - convert | to :
+         filePath.replace("/", "\\"); // Also replace "/" with "\"
+#endif
 
-         InfoLog(<< "MediaResourceParticipant playing, handle=" << mHandle << " filepath=" << filepath);
+         InfoLog(<< "MediaResourceParticipant playing, handle=" << mHandle << " filePath=" << filePath);
 
-         // !jjg! fixme
-         //OsStatus status = mConversationManager.getMediaInterface()->playAudio(filepath.c_str(), 
-         //                                                                      mRepeat ? TRUE: FALSE /* repeast? */,
-         //                                                                      mRemoteOnly ? FALSE : TRUE /* local */, 
-         //                                                                      mLocalOnly ? FALSE : TRUE /* remote */,
-         //                                                                      FALSE /* mixWithMic */,
-         //                                                                      100 /* downScaling */);
-         //if(status == OS_SUCCESS)
-         //{
-         //   mPlaying = true;
-         //}
-         //else
-         //{
-         //   WarningLog(<< "MediaResourceParticipant::startPlay error calling playAudio: " << status);
-         //}
+         ConversationMap::const_iterator convIter = getConversations().begin();
+         for (; convIter != getConversations().end(); ++convIter)
+         {
+            Conversation* conv = convIter->second;
+            const Mixer::RtpStreams& streams = conv->getMixer()->rtpStreams();
+            Mixer::RtpStreams::const_iterator it = streams.begin();
+            for (; it != streams.end(); ++it)
+            {
+               const boost::shared_ptr<RtpStream>& stream = *it;
+               MediaStack::MediaType mtype = stream->mediaType();
+               if( mtype == MediaStack::MediaType_Audio || mtype == MediaStack::MediaType_Video )
+               {
+                  // NB: file might not be appropriate, it's up to the stream
+                  // to figure out whether there is audio or video which can
+                  // be played.
+                  stream->playFile( filePath, mRepeat );
+               }
+            }
+         }
+         mPlaying = true;
       }
       break;
       case Cache:
@@ -452,6 +472,24 @@ MediaResourceParticipant::destroyParticipant(const resip::Data&)
          }
          break;
       case File:
+         {
+            ConversationMap::const_iterator convIter = getConversations().begin();
+            for (; convIter != getConversations().end(); ++convIter)
+            {
+               Conversation* conv = convIter->second;
+               const Mixer::RtpStreams& streams = conv->getMixer()->rtpStreams();
+               Mixer::RtpStreams::const_iterator it = streams.begin();
+               for (; it != streams.end(); ++it)
+               {
+                  const boost::shared_ptr<RtpStream>& stream = *it;
+                  MediaStack::MediaType mtype( stream->mediaType() );
+
+                  if( mtype == MediaStack::MediaType_Audio || mtype == MediaStack::MediaType_Video )
+                     stream->stopFile();
+               }
+            }
+         }
+         break;
       case Cache:
          {
             //OsStatus status = mConversationManager.getMediaInterface()->stopAudio();

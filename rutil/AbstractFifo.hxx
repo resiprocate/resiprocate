@@ -10,6 +10,7 @@
 namespace resip
 {
 
+
 /// for statistics gathering
 class FifoStatsInterface
 {
@@ -18,6 +19,19 @@ class FifoStatsInterface
       virtual size_t getCountDepth() const = 0;
       virtual time_t getTimeDepth() const = 0;
 };
+
+/**
+  * The getNext() method takes an argument {ms} that normally
+  * the number of milliseconds to wait. There are two special values:
+  * NOWAIT
+  *     Don't wait/block/sleep. If no message to retrieve, return NULL.
+  * FOREVER
+  *     Wait forever until a message is available.
+  * Note that the encoding (0 vs -1) is the oppositive convention
+  * of standard APIs such as epoll_wait(). This is for historical reasons.
+  */
+#define RESIP_FIFO_NOWAIT	-1
+#define RESIP_FIFO_FOREVER	0
 
 /**
    @brief The base class from which various templated Fifo classes are derived.

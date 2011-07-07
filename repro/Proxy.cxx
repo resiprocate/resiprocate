@@ -4,7 +4,6 @@
 
 #include "repro/ProcessorChain.hxx"
 #include "repro/Proxy.hxx"
-#include "repro/RRDecorator.hxx"
 #include "repro/Ack200DoneMessage.hxx"
 #include "repro/UserStore.hxx"
 #include "repro/Dispatcher.hxx"
@@ -14,6 +13,7 @@
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/InteropHelper.hxx"
+#include "rutil/Random.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -23,6 +23,8 @@
 using namespace resip;
 using namespace repro;
 using namespace std;
+
+resip::Data repro::Proxy::FlowTokenSalt;
 
 RequestContext* 
 RequestContextFactory::createRequestContext(Proxy& proxy,
@@ -35,7 +37,7 @@ RequestContextFactory::createRequestContext(Proxy& proxy,
 
 Proxy::Proxy(SipStack& stack, 
              const Uri& recordRoute,
-             bool enableRecordRoute,
+             bool forceRecordRoute,
              ProcessorChain& requestP, 
              ProcessorChain& responseP, 
              ProcessorChain& targetP, 
@@ -44,19 +46,17 @@ Proxy::Proxy(SipStack& stack,
    : TransactionUser(TransactionUser::RegisterForTransactionTermination),
      mStack(stack), 
      mRecordRoute(recordRoute),
-     mRecordRouteEnabled(enableRecordRoute),
+     mRecordRouteForced(forceRecordRoute),
+     mAssumePath(false),
      mRequestProcessorChain(requestP), 
      mResponseProcessorChain(responseP),
      mTargetProcessorChain(targetP),
      mUserStore(userStore),
-     mRequestContextFactory(new RequestContextFactory),
-     mOptionsHandler(0)
+     mOptionsHandler(0),
+     mRequestContextFactory(new RequestContextFactory)
 {
    mTimerC=timerC;
-   if (!mRecordRoute.uri().host().empty())
-   {
-      mRecordRoute.uri().param(p_lr);
-   }
+   FlowTokenSalt = Random::getCryptoRandom(20);   // 20-octet Crypto Random Key for Salting Flow Token HMACs
 }
 
 
@@ -115,9 +115,10 @@ Proxy::thread()
          
             if (sip)
             {
+               Data tid(sip->getTransactionId());
+               tid.lowercase();
                if (sip->isRequest())
                {
-                  resip::Data tid(sip->getTransactionId());
                   // Verify that the request has all the mandatory headers
                   // (To, From, Call-ID, CSeq)  Via is already checked by stack.  
                   // See RFC 3261 Section 16.3 Step 1
@@ -232,7 +233,7 @@ Proxy::thread()
                   
                   if (sip->method() == CANCEL)
                   {
-                     HashMap<Data,RequestContext*>::iterator i = mServerRequestContexts.find(sip->getTransactionId());
+                     HashMap<Data,RequestContext*>::iterator i = mServerRequestContexts.find(tid);
 
                      if(i == mServerRequestContexts.end())
                      {
@@ -261,8 +262,6 @@ Proxy::thread()
                   }
                   else if (sip->method() == ACK)
                   {
-                     Data tid = sip->getTransactionId();
-
                      // .bwc. This is going to be treated as a new transaction.
                      // The stack is maintaining no state whatsoever for this.
                      // We should treat this exactly like a new transaction.
@@ -307,17 +306,18 @@ Proxy::thread()
                   else
                   {
                      // This is a new request, so create a Request Context for it
-                     InfoLog (<< "New RequestContext tid=" << sip->getTransactionId() << " : " << sip->brief());
+                     InfoLog (<< "New RequestContext tid=" << tid << " : " << sip->brief());
                      
 
-                     if(mServerRequestContexts.count(sip->getTransactionId()) == 0)
+                     if(mServerRequestContexts.count(tid) == 0)
                      {
                         RequestContext* context = mRequestContextFactory->createRequestContext(*this,
                                                                      mRequestProcessorChain, 
                                                                      mResponseProcessorChain, 
                                                                      mTargetProcessorChain);
-                        InfoLog (<< "Inserting new RequestContext tid=" << sip->getTransactionId() << " -> " << *context);
-                        mServerRequestContexts[sip->getTransactionId()] = context;
+                        InfoLog (<< "Inserting new RequestContext tid=" << tid
+                                  << " -> " << *context);
+                        mServerRequestContexts[tid] = context;
                         DebugLog (<< "RequestContexts: " << Inserter(mServerRequestContexts));
                         try
                         {
@@ -350,10 +350,10 @@ Proxy::thread()
                }
                else if (sip->isResponse())
                {
-                  InfoLog (<< "Looking up RequestContext tid=" << sip->getTransactionId());
+                  InfoLog (<< "Looking up RequestContext tid=" << tid);
                
                   // TODO  is there a problem with a stray 200?
-                  HashMap<Data,RequestContext*>::iterator i = mClientRequestContexts.find(sip->getTransactionId());
+                  HashMap<Data,RequestContext*>::iterator i = mClientRequestContexts.find(tid);
                   if (i != mClientRequestContexts.end())
                   {
                      try
@@ -376,8 +376,10 @@ Proxy::thread()
             }
             else if (app)
             {
+               Data tid(app->getTransactionId());
+               tid.lowercase();
                DebugLog(<< "Trying to dispatch : " << *app );
-               HashMap<Data,RequestContext*>::iterator i=mServerRequestContexts.find(app->getTransactionId());
+               HashMap<Data,RequestContext*>::iterator i=mServerRequestContexts.find(tid);
                // the underlying RequestContext may not exist
                if (i != mServerRequestContexts.end())
                {
@@ -409,9 +411,11 @@ Proxy::thread()
             }
             else if (term)
             {
+               Data tid(term->getTransactionId());
+               tid.lowercase();
                if (term->isClientTransaction())
                {
-                  HashMap<Data,RequestContext*>::iterator i=mClientRequestContexts.find(term->getTransactionId());
+                  HashMap<Data,RequestContext*>::iterator i=mClientRequestContexts.find(tid);
                   if (i != mClientRequestContexts.end())
                   {
                      try
@@ -431,7 +435,7 @@ Proxy::thread()
                }
                else 
                {
-                  HashMap<Data,RequestContext*>::iterator i=mServerRequestContexts.find(term->getTransactionId());
+                  HashMap<Data,RequestContext*>::iterator i=mServerRequestContexts.find(tid);
                   if (i != mServerRequestContexts.end())
                   {
                      try
@@ -538,21 +542,21 @@ Proxy::isMyUri(const Uri& uri) const
 }
 
 const resip::NameAddr& 
-Proxy::getRecordRoute() const
+Proxy::getRecordRoute(const Transport* transport) const
 {
+   assert(transport);
+   if(transport->hasRecordRoute())
+   {
+      // Transport specific record-route found
+      return transport->getRecordRoute();
+   }
    return mRecordRoute;
 }
 
 bool
-Proxy::getRecordRouteEnabled() const
+Proxy::getRecordRouteForced() const
 {
-   return mRecordRouteEnabled;
-}
-
-std::auto_ptr<resip::MessageDecorator> 
-Proxy::makeRRDecorator() const
-{
-   return std::auto_ptr<resip::MessageDecorator>(new RRDecorator(*this));
+   return mRecordRouteForced;
 }
 
 bool 

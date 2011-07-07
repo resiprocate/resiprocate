@@ -185,6 +185,13 @@ ClientInviteSession::end()
 }
 
 void
+ClientInviteSession::end(const Data& userReason)
+{
+   mUserEndReason = userReason;
+   end(InviteSession::UserSpecified);
+}
+
+void
 ClientInviteSession::end(EndReason reason)
 {
    InfoLog (<< toData(mState) << ": end");
@@ -205,9 +212,9 @@ ClientInviteSession::end(EndReason reason)
       case UAC_QueuedUpdate:
       case UAC_Cancelled: // !jf! possibly incorrect to always BYE in UAC_Cancelled
       {
-         sendBye();
+         SharedPtr<SipMessage> msg = sendBye();
          transition(Terminated);
-         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye); 
+         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get()); 
          break;
       }
 
@@ -248,14 +255,15 @@ ClientInviteSession::reject (int statusCode, WarningCategory *warning)
          break;
       }
 
-      case UAC_Answered:
+      case UAC_Answered:{
          // We received an offer in a 2xx response, and we want to reject it
          // ACK with no body, then send bye
          sendAck();
-         sendBye();
+         SharedPtr<SipMessage> msg = sendBye();
          transition(Terminated);
-         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye); 
+         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get()); 
          break;
+      }
 
       case UAC_Start:
       case UAC_Early:
@@ -356,6 +364,15 @@ ClientInviteSession::sendSipFrag(const SipMessage& msg)
          {
             SipFrag contents;
             contents.message().header(h_StatusLine) = msg.header(h_StatusLine);
+            if(mDialog.mDialogSet.getUserProfile()->getExtraHeadersInReferNotifySipFragEnabled())
+            {
+               contents.message().header(h_Vias) = msg.header(h_Vias);
+               contents.message().header(h_From) = msg.header(h_From);
+               contents.message().header(h_To) = msg.header(h_To);
+               contents.message().header(h_CallId) = msg.header(h_CallId);
+               contents.message().header(h_CSeq) = msg.header(h_CSeq);
+               contents.message().header(h_Contacts) = msg.header(h_Contacts);
+            }
             if (code < 200)
             {
                mServerSub->send(mServerSub->update(&contents));
@@ -525,10 +542,9 @@ ClientInviteSession::handleProvisional(const SipMessage& msg)
       InfoLog (<< "Failure:  CSeq doesn't match invite: " << msg.brief());
       onFailureAspect(getHandle(), msg);
       end(NotSpecified);
+      return;
    }
-   //!dcm! this should never happen, the invite will have 100rel in the
-   //required header.  Keep for interop?
-   else if (mDum.getMasterProfile()->getUacReliableProvisionalMode() == MasterProfile::Required)
+   else if (isReliable(msg))
    {
       if (!msg.exists(h_RSeq))
       {

@@ -371,12 +371,15 @@ class MoveParticipantCmd : public DumCommandStub
       MoveParticipantCmd(ConversationManager* conversationManager, 
                          ParticipantHandle partHandle,
                          ConversationHandle sourceConvHandle,
-                         ConversationHandle destConvHandle) 
+                         ConversationHandle destConvHandle,
+                         bool bTriggerHold = false ) 
          : DumCommandStub("RemoveParticipantCmd"),
            mConversationManager(conversationManager),
            mPartHandle(partHandle),
            mSourceConvHandle(sourceConvHandle),
-           mDestConvHandle(destConvHandle) {}
+           mDestConvHandle(destConvHandle),
+           mbTriggerHold(bTriggerHold) {}
+
       virtual void executeCommand()
       {
          Participant* participant = mConversationManager->getParticipant(mPartHandle);
@@ -385,7 +388,7 @@ class MoveParticipantCmd : public DumCommandStub
          if(participant && sourceConversation && destConversation)
          {
             // remove has to happen before add, since there could only be one mixer (optionally)
-            sourceConversation->removeParticipant(participant, false);
+            sourceConversation->removeParticipant(participant, mbTriggerHold);
             destConversation->addParticipant(participant);
          }
       }
@@ -394,6 +397,7 @@ class MoveParticipantCmd : public DumCommandStub
       ParticipantHandle mPartHandle;
       ConversationHandle mSourceConvHandle;
       ConversationHandle mDestConvHandle;
+      bool mbTriggerHold;
 };
 
 class ModifyParticipantContributionCmd : public DumCommandStub

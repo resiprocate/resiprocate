@@ -34,6 +34,10 @@ class ServerSubscription : public BaseSubscription
 
       virtual void end();
       virtual void send(SharedPtr<SipMessage> msg);
+      virtual void sendCommand(SharedPtr<SipMessage> msg)
+      {
+         BaseSubscription::sendCommand(msg);
+      }
 
 //      void setTerminationState(TerminateReason reason);
 //      void setCurrentEventDocument(const Contents* document);
@@ -47,6 +51,7 @@ class ServerSubscription : public BaseSubscription
       virtual ~ServerSubscription();
       virtual void dialogDestroyed(const SipMessage& msg);           
       void onReadyToSend(SipMessage& msg);
+      virtual void flowTerminated();
       
    private:
       friend class Dialog;

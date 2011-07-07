@@ -37,7 +37,7 @@ public:
    /**
      Send only keep-alive packets.
    */
-	virtual void pauseRtpSend() = 0;
+	virtual void pauseRtpSend( bool bAlsoPauseRTCP = false ) = 0;
 
    /**
      Resume sending media after pausing.
@@ -68,6 +68,12 @@ public:
 	virtual void stopTone() = 0;
 
    /**
+     Plays the file on this RTP stream, sending to the remote side.
+   */
+   virtual void playFile( const resip::Data& fileName, bool repeat ) = 0;
+   virtual void stopFile() = 0;
+
+   /**
      The media type of this media stream.
    */
    virtual MediaStack::MediaType mediaType() = 0;
@@ -80,13 +86,14 @@ public:
       ClosedReason_Inactivity,
       ClosedReason_UnknownError
    };
+
    /**
      Signalled by the media stack to indicate that the RTP stream has closed.
      Used by recon to destroy the RemoteParticipant associated with this RtpStream.
    */
    virtual boost::signal<void (ClosedReason, asio::error_code)>& onClosed() = 0;
 
-	// TODO: playStream, playMemory, playFile, playUrl ...
+	// TODO: playStream, playMemory, playUrl ...
 
 };
 }

@@ -7,7 +7,10 @@
 #endif
 #include <srtp.h>
 
+#ifdef USE_DTLS
 #include "dtls_wrapper/DtlsFactory.hxx"
+#endif
+
 #include "Flow.hxx"
 
 using namespace reTurn;
@@ -62,7 +65,7 @@ public:
  #ifdef USE_SSL
  #ifdef USE_DTLS
                dtls::DtlsFactory* dtlsFactory = 0,
- #endif 
+ #endif
  #endif 
                NatTraversalMode natTraversalMode = NoNatTraversal,
                const char* natTraversalServerHostname = 0, 
@@ -75,6 +78,7 @@ public:
    Flow* getRtcpFlow() { return mRtcpFlow; }
 
    // SRTP methods - should be called before sending or receiving on RTP or RTCP flows
+   void setSRTPEnabled(bool enabled) { mSRTPEnabled = enabled; }
    bool createOutboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen);
    bool createInboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen);
 
@@ -92,6 +96,7 @@ protected:
 #endif
    volatile bool mSRTPSessionInCreated;
    volatile bool mSRTPSessionOutCreated;
+   volatile bool mSRTPEnabled;
    resip::Mutex mMutex;
    SrtpCryptoSuite mCryptoSuiteIn;
    SrtpCryptoSuite mCryptoSuiteOut;

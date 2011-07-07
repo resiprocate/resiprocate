@@ -57,7 +57,7 @@ public:
    // Sets the local HmacKey, used to check the integrity of incoming STUN messages
    void setLocalPassword(const char* password);
 
-   void connect(const std::string& address, unsigned short port);
+   void connect(const std::string& address, unsigned short port, bool is_v6);
 
    // Stun Binding Method - use getReflexiveTuple() to get binding info
    void bindRequest();
@@ -92,11 +92,7 @@ public:
    virtual void close();
    virtual void turnReceive();
 
-   virtual bool setDSCP(ULONG ulInDSCPValue);
-   virtual bool setServiceType(
-      const asio::ip::udp::endpoint &tInDestinationIPAddress,
-      EQOSServiceTypes eInServiceType,
-      ULONG ulInBandwidthInBitsPerSecond);
+   virtual void setOnBeforeSocketClosedFp(boost::function<void(unsigned int)> fp);
 
 protected:
 

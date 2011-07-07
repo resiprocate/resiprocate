@@ -339,6 +339,7 @@ XMLCursor::getTag() const
 //<foo attr = 'value'   attr="value" >
 //
 //<foo attr = 'value'   attr="value" />
+static const Data RA_QUOTE_SLASH(">/");
 const XMLCursor::AttributeMap&
 XMLCursor::getAttributes() const
 {
@@ -354,8 +355,7 @@ XMLCursor::getAttributes() const
       Data attribute;
       Data value;
 
-      static const Data term(">/");
-      pb.skipToOneOf(ParseBuffer::Whitespace, term);
+      pb.skipToOneOf(ParseBuffer::Whitespace, RA_QUOTE_SLASH);
 
       while (!pb.eof() && 
              *pb.position() != Symbols::RA_QUOTE[0] &&
@@ -461,12 +461,12 @@ XMLCursor::Node::~Node()
 // end:
 //<foo >
 //      ^
+static Data SLASH_RA_QUOTE("/>");
 bool
 XMLCursor::Node::extractTag()
 {
    ParseBuffer pb(mPb);
    const char* anchor = pb.skipChar();
-   static Data SLASH_RA_QUOTE("/>");
    pb.skipToOneOf(ParseBuffer::Whitespace, SLASH_RA_QUOTE);
    pb.assertNotEof();
    pb.data(mTag, anchor);

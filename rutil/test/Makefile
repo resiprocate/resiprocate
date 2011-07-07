@@ -25,6 +25,7 @@ TESTPROGRAMS += \
 	testMD5Stream.cxx \
 	testParseBuffer.cxx \
 	testRandomHex.cxx \
+	testRandomThread.cxx \
 	testThreadIf.cxx \
 #	testDigestStream.cxx \
 
@@ -35,6 +36,10 @@ TESTPROGRAMS += \
 	testSHA1Stream.cxx
 PACKAGES += OPENSSL
 endif
+
+# Strip -DNDEBUG out of CFLAGS and CXXFLAGS, since these are test programs
+CFLAGS := $(shell echo "${CFLAGS}" | sed s/-DNDEBUG//g)
+CXXFLAGS := $(shell echo "${CXXFLAGS}" | sed s/-DNDEBUG//g)
 
 include $(BUILD)/Makefile.post
 

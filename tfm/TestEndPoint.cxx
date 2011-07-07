@@ -132,7 +132,7 @@ TestEndPoint::Note::operator()()
 }
 
 void 
-TestEndPoint::Note::operator()(shared_ptr<Event> event)
+TestEndPoint::Note::operator()(boost::shared_ptr<Event> event)
 {
    InfoLog(<<"##Note: " << mEndPoint->getName() << " " << mMessage << ", " << event->briefString());
 }
@@ -166,7 +166,7 @@ TestEndPoint::Execute::Execute(TestEndPoint* from,
 }
 
 void
-TestEndPoint::Execute::operator()(shared_ptr<Event> event)
+TestEndPoint::Execute::operator()(boost::shared_ptr<Event> event)
 {
    mExec(event);
 }
@@ -217,21 +217,21 @@ TestEndPoint::And::setSequenceSet(boost::shared_ptr<SequenceSet> set)
 }
 
 bool
-TestEndPoint::And::isMatch(shared_ptr<Event> event) const
+TestEndPoint::And::isMatch(boost::shared_ptr<Event> event) const
 {
    assert(0);
    return false;   
 }
 
 resip::Data
-TestEndPoint::And::explainMismatch(shared_ptr<Event> event) const
+TestEndPoint::And::explainMismatch(boost::shared_ptr<Event> event) const
 {
    assert(0);
    return Data::Empty;   
 }
 
 void
-TestEndPoint::And::onEvent(TestEndPoint& user, shared_ptr<Event> event)
+TestEndPoint::And::onEvent(TestEndPoint& user, boost::shared_ptr<Event> event)
 {
    assert(0);
 }
@@ -292,12 +292,12 @@ TestEndPoint::Pause::Pause(int msec, TestEndPoint* endPoint)
 {
 }
 
-void TestEndPoint::Pause::exec(shared_ptr<Event> event)
+void TestEndPoint::Pause::exec(boost::shared_ptr<Event> event)
 {
    assert(mNext);
    boost::shared_ptr<SequenceSet> sset(mEndPoint->getSequenceSet());
    assert(sset.get());
-   sset->enqueue(shared_ptr<Event>(new ExpectActionEvent(mNext, event)), mMsec);
+   sset->enqueue(boost::shared_ptr<Event>(new ExpectActionEvent(mNext, event)), mMsec);
 }
 
 void TestEndPoint::Pause::exec()
@@ -305,7 +305,7 @@ void TestEndPoint::Pause::exec()
    assert(mNext);
    boost::shared_ptr<SequenceSet> sset(mEndPoint->getSequenceSet());
    assert(sset.get());
-   sset->enqueue(shared_ptr<Event>(new ExpectActionEvent(mNext, mEndPoint)), mMsec);
+   sset->enqueue(boost::shared_ptr<Event>(new ExpectActionEvent(mNext, mEndPoint)), mMsec);
 }
 
 resip::Data
@@ -403,7 +403,7 @@ TestEndPoint::Assert::Assert(TestEndPoint* from,
 }
 
 void
-TestEndPoint::Assert::operator()(shared_ptr<Event> event)
+TestEndPoint::Assert::operator()(boost::shared_ptr<Event> event)
 {
    if (!mPredicate(event))
    {

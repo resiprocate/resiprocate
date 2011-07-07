@@ -25,7 +25,7 @@ class AttributeHelper
       AttributeHelper(const AttributeHelper& rhs);
       AttributeHelper& operator=(const AttributeHelper& rhs);
 
-      bool exists(const Data& key, bool bCheckMediaLine = true, bool bCheckSession = true ) const;
+      bool exists(const Data& key) const;
       const std::list<Data>& getValues(const Data& key) const;
       EncodeStream& encode(EncodeStream& s) const;
       void parse(ParseBuffer& pb);
@@ -400,7 +400,8 @@ class SdpContents : public Contents
                   const Encryption& getEncryption() const {return mEncryption;}
                   const Encryption& encryption() const {return mEncryption;}
                   Encryption& encryption() {return mEncryption;}
-                  bool exists(const Data& key, bool bCheckMediaLine = true, bool bCheckSession = true) const;
+                  bool exists(const Data& key) const; // would be better named 'existsOverall' since this looks at the medium and the session
+                  bool existsInMedium(const Data& key) const; // looks at the medium alone
                   const std::list<Data>& getValues(const Data& key) const;
                   void clearAttribute(const Data& key);
 

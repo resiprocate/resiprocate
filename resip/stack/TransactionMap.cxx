@@ -76,7 +76,7 @@ TransactionMap::erase(const Data& tid )
 int
 TransactionMap::size() const
 {
-   return mMap.size();
+   return (int)mMap.size();
 }
 
 

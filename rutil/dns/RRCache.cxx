@@ -46,8 +46,6 @@
 using namespace resip;
 using namespace std;
 
-std::auto_ptr<RRCache> RRCache::mInstance(new RRCache);
-
 RRCache::RRCache() 
    : mHead(),
      mLruHead(LruListType::makeList(&mHead)),
@@ -68,12 +66,8 @@ RRCache::~RRCache()
    cleanup();
 }
 
-RRCache* RRCache::instance()
-{
-   return mInstance.get();
-}
-
-void RRCache::updateCacheFromHostFile(const DnsHostRecord &record)
+void 
+RRCache::updateCacheFromHostFile(const DnsHostRecord &record)
 {
    //FactoryMap::iterator it = mFactoryMap.find(T_A);
    RRList* key = new RRList(record, 3600);         
@@ -94,10 +88,11 @@ void RRCache::updateCacheFromHostFile(const DnsHostRecord &record)
    delete key;
 }
 
-void RRCache::updateCache(const Data& target,
-                          const int rrType,
-                          Itr begin, 
-                          Itr end)
+void 
+RRCache::updateCache(const Data& target,
+                     const int rrType,
+                     Itr begin, 
+                     Itr end)
 {
    Data domain = (*begin).domain();
    FactoryMap::iterator it = mFactoryMap.find(rrType);
@@ -120,10 +115,11 @@ void RRCache::updateCache(const Data& target,
    delete key;
 }
 
-void RRCache::cacheTTL(const Data& target,
-                       const int rrType,
-                       const int status,
-                       RROverlay overlay)
+void 
+RRCache::cacheTTL(const Data& target,
+                  const int rrType,
+                  const int status,
+                  RROverlay overlay)
 {
    int ttl = getTTL(overlay);
 
@@ -150,11 +146,12 @@ void RRCache::cacheTTL(const Data& target,
    purge();
 }
 
-bool RRCache::lookup(const Data& target, 
-                     const int type, 
-                     const int protocol,
-                     Result& records, 
-                     int& status)
+bool 
+RRCache::lookup(const Data& target, 
+                const int type, 
+                const int protocol,
+                Result& records, 
+                int& status)
 {
    records.empty();
    status = 0;
@@ -189,13 +186,15 @@ RRCache::clearCache()
     cleanup();
 }
 
-void RRCache::touch(RRList* node)
+void 
+RRCache::touch(RRList* node)
 {
    node->remove();
    mLruHead->push_back(node);
 }
 
-void RRCache::cleanup()
+void 
+RRCache::cleanup()
 {
    for (std::set<RRList*, CompareT>::iterator it = mRRSet.begin(); it != mRRSet.end(); it++)
    {
@@ -205,23 +204,27 @@ void RRCache::cleanup()
    mRRSet.clear();
 }
 
-int RRCache::getTTL(const RROverlay& overlay)
+int 
+RRCache::getTTL(const RROverlay& overlay)
 {
    // overlay is a soa answer.
    if (overlay.type() != T_SOA) return -1;
    char* name = 0;
    long len = 0;
-   ares_expand_name(overlay.data(), overlay.msg(), overlay.msgLength(), &name, &len);
+   int status = ares_expand_name(overlay.data(), overlay.msg(), overlay.msgLength(), &name, &len);
+   assert( status == ARES_SUCCESS );
    const unsigned char* pPos = overlay.data() + len;
-   free(name);
-   ares_expand_name(pPos, overlay.msg(), overlay.msgLength(), &name, &len);
+   free(name); name = 0;
+   status = ares_expand_name(pPos, overlay.msg(), overlay.msgLength(), &name, &len);
+   assert( status == ARES_SUCCESS );
    free(name);
    pPos += len;
    pPos += 16; // skip four 32 bit entities.
    return DNS__32BIT(pPos);         
 }
 
-void RRCache::purge()
+void 
+RRCache::purge()
 {
    if (mRRSet.size() < mSize) return;
    RRList* lst = *(mLruHead->begin());
@@ -232,7 +235,8 @@ void RRCache::purge()
    mRRSet.erase(it);
 }
 
-void RRCache::logCache()
+void 
+RRCache::logCache()
 {
    for (std::set<RRList*, CompareT>::iterator it = mRRSet.begin(); it != mRRSet.end(); it++)
    {

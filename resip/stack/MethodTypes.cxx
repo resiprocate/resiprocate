@@ -53,7 +53,7 @@ MethodTypes
 resip::getMethodType(const Data& name)
 {
    // note: use data to prevent copying shared data
-   return getMethodType(name.data(), name.size());
+   return getMethodType(name.data(), (int)name.size());
 }
 
 MethodTypes

@@ -41,13 +41,13 @@ class ParameterTypes
          defineParam(text, "text", ExistsOrDataParameter, "RFC 3840"), // using ExistsOrDataParameter so this parameter is compatible with both RFC3840 and RFC3326
          defineParam(extensions, "extensions", QuotedDataParameter, "RFC 3840"), //list
 
-         defineParam(Instance, "+sip.instance", QuotedDataParameter, "gruu"),  // <> quoted
-         defineParam(regid, "reg-id", UInt32Parameter, "outbound"),  
-         defineParam(ob,"ob",ExistsParameter,"outbound-05"),
+         defineParam(Instance, "+sip.instance", QuotedDataParameter, "RFC 5626"),  // <> quoted
+         defineParam(regid, "reg-id", UInt32Parameter, "RFC 5626"),  
+         defineParam(ob,"ob",ExistsParameter, "RFC 5626"),
 
-         defineParam(pubGruu, "pub-gruu", QuotedDataParameter, "gruu"),
-         defineParam(tempGruu, "temp-gruu", QuotedDataParameter, "gruu"),
-         defineParam(gr, "gr", ExistsOrDataParameter, "gruu"),
+         defineParam(pubGruu, "pub-gruu", QuotedDataParameter, "RFC 5627"),
+         defineParam(tempGruu, "temp-gruu", QuotedDataParameter, "RFC 5627"),
+         defineParam(gr, "gr", ExistsOrDataParameter, "RFC 5627"),
 
          defineParam(accessType, "access-type", DataParameter, "RFC 2046"),
          defineParam(algorithm, "algorithm", DataParameter, "RFC ????"),
@@ -85,6 +85,7 @@ class ParameterTypes
          defineParam(realm, "realm", QuotedDataParameter, "RFC ????"),
          defineParam(reason, "reason", DataParameter, "RFC ????"),
          defineParam(received, "received", DataParameter, "RFC ????"),
+         defineParam(require, "require", DataParameter, "RFC 5373"),
          defineParam(response, "response", QuotedDataParameter, "RFC ????"),
          defineParam(retryAfter, "retry-after", UInt32Parameter, "RFC ????"),
          defineParam(rinstance, "rinstance", DataParameter, ""),

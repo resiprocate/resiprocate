@@ -21,19 +21,19 @@ class ClientSubscription: public BaseSubscription
       ClientSubscriptionHandle getHandle();
       
       //.dcm. no adornment for ease of use, can add if there is a use case
-      void acceptUpdate(int statusCode = 200);
+      void acceptUpdate(int statusCode = 200, const char* reason=0);
       void rejectUpdate(int statusCode = 400, const Data& reasonPhrase = Data::Empty);
       void requestRefresh(UInt32 expires = 0);  // 0 defaults to using original expires value (to remove call end() instead)
       virtual void end();
+      virtual void reSubscribe();  // forms a new Subscription dialog - reusing the same target and AppDialogSet
       
       /**
        * Provide asynchronous method access by using command
        */
-      void acceptUpdateCommand(int statusCode = 200);
+      void acceptUpdateCommand(int statusCode = 200, const char* reason=0);
       void rejectUpdateCommand(int statusCode = 400, const Data& reasonPhrase = Data::Empty);
       void requestRefreshCommand(UInt32 expires = 0);  // 0 defaults to using original expires value (to remove call endCommand() instead)
       virtual void endCommand();
-
 
       virtual EncodeStream& dump(EncodeStream& strm) const;
 
@@ -42,6 +42,7 @@ class ClientSubscription: public BaseSubscription
       virtual void dialogDestroyed(const SipMessage& msg);
       virtual void onReadyToSend(SipMessage& msg);
       virtual void send(SharedPtr<SipMessage> msg);
+      virtual void flowTerminated();
 
    private:
       friend class Dialog;
@@ -70,7 +71,10 @@ class ClientSubscription: public BaseSubscription
       bool mOnNewSubscriptionCalled;
       //SipMessage mLastNotify;      
       bool mEnded;
-      UInt64 mExpires;  // Absolute Expiration Time
+      // .bwc. This is when our next reSUB is scheduled to happen.
+      UInt64 mNextRefreshSecs;
+      UInt64 mLastSubSecs;
+
       // this is the expires value from the 2xx coming from the SUB message
       UInt32 mDefaultExpires;
 
@@ -87,6 +91,7 @@ class ClientSubscription: public BaseSubscription
       void processNextNotify();
       void processResponse(const SipMessage& response);
       void clearDustbin();
+      void scheduleRefresh(unsigned long refreshInterval);
       
       // disabled
       ClientSubscription(const ClientSubscription&);

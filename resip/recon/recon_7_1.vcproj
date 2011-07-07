@@ -19,7 +19,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)/../../&quot;;&quot;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/sipXmediaMediaProcessing/include&quot;;&quot;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/interface&quot;;&quot;$(ProjectDir)/../../../sipXtapi/sipXPortLib/include&quot;;&quot;$(ProjectDir)/../../../sipXtapi/sipXtackLib/include&quot;;&quot;$(ProjectDir)/../../../sipXtapi/sipXsdpLib/include&quot;;&quot;$(ProjectDir)/../../../sipXtapi/sipXMediaLib/include&quot;;&quot;$(ProjectDir)/../../reTurn&quot;;&quot;$(ProjectDir)/../../contrib/asio&quot;;&quot;$(ProjectDir)/../../contrib/boost_1_34_1&quot;;&quot;$(ProjectDir)/../../contrib/openssl/inc32&quot;;&quot;$(ProjectDir)/../../contrib/srtp/include&quot;;&quot;$(ProjectDir)/../../contrib/srtp/crypto/include&quot;;&quot;$(ProjectDir)/../../reflow&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)/../../&quot;;&quot;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/sipXmediaMediaProcessing/include&quot;;&quot;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/interface&quot;;&quot;$(ProjectDir)/../../../sipXtapi/sipXPortLib/include&quot;;&quot;$(ProjectDir)/../../../sipXtapi/sipXtackLib/include&quot;;&quot;$(ProjectDir)/../../../sipXtapi/sipXsdpLib/include&quot;;&quot;$(ProjectDir)/../../../sipXtapi/sipXMediaLib/include&quot;;&quot;$(ProjectDir)/../../reTurn&quot;;&quot;$(ProjectDir)/../../contrib/asio&quot;;&quot;$(ProjectDir)/../../contrib/boost_1_34_1&quot;;&quot;$(ProjectDir)/../../contrib/openssl/inc32&quot;;&quot;$(ProjectDir)/../../contrib/srtp/include&quot;;&quot;$(ProjectDir)/../../contrib/srtp/crypto/include&quot;;&quot;$(ProjectDir)/../../reflow&quot;;&quot;$(ProjectDir)/../../contrib/pcre&quot;"
 				PreprocessorDefinitions="WIN32;_WIN32_WINNT=0x0501;_DEBUG;_CONSOLE;USE_IPV6;USE_ARES;DEFAULT_BRIDGE_MAX_IN_OUTPUTS=10;BOOST_ALL_NO_LIB;USE_SSL;LEAK_CHECK;ASIO_ENABLE_CANCELIO"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -68,7 +68,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="TRUE"
 				OptimizeForProcessor="2"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)/../../&quot;;&quot;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/sipXmediaMediaProcessing/include&quot;;&quot;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/interface&quot;;&quot;$(ProjectDir)/../../../sipXtapi/sipXPortLib/include&quot;;&quot;$(ProjectDir)/../../../sipXtapi/sipXtackLib/include&quot;;&quot;$(ProjectDir)/../../../sipXtapi/sipXsdpLib/include&quot;;&quot;$(ProjectDir)/../../../sipXtapi/sipXMediaLib/include&quot;;&quot;$(ProjectDir)/../../reTurn&quot;;&quot;$(ProjectDir)/../../contrib/asio&quot;;&quot;$(ProjectDir)/../../contrib/boost_1_34_1&quot;;&quot;$(ProjectDir)/../../contrib/openssl/inc32&quot;;&quot;$(ProjectDir)/../../contrib/srtp/include&quot;;&quot;$(ProjectDir)/../../contrib/srtp/crypto/include&quot;;&quot;$(ProjectDir)/../../reflow&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)/../../&quot;;&quot;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/sipXmediaMediaProcessing/include&quot;;&quot;$(ProjectDir)/../../../sipXtapi/sipXMediaAdapterLib/interface&quot;;&quot;$(ProjectDir)/../../../sipXtapi/sipXPortLib/include&quot;;&quot;$(ProjectDir)/../../../sipXtapi/sipXtackLib/include&quot;;&quot;$(ProjectDir)/../../../sipXtapi/sipXsdpLib/include&quot;;&quot;$(ProjectDir)/../../../sipXtapi/sipXMediaLib/include&quot;;&quot;$(ProjectDir)/../../reTurn&quot;;&quot;$(ProjectDir)/../../contrib/asio&quot;;&quot;$(ProjectDir)/../../contrib/boost_1_34_1&quot;;&quot;$(ProjectDir)/../../contrib/openssl/inc32&quot;;&quot;$(ProjectDir)/../../contrib/srtp/include&quot;;&quot;$(ProjectDir)/../../contrib/srtp/crypto/include&quot;;&quot;$(ProjectDir)/../../reflow&quot;;&quot;$(ProjectDir)/../../contrib/pcre&quot;"
 				PreprocessorDefinitions="WIN32;_WIN32_WINNT=0x0501;NDEBUG;_CONSOLE;USE_ARES;DEFAULT_BRIDGE_MAX_IN_OUTPUTS=10;BOOST_ALL_NO_LIB;USE_SSL;ASIO_ENABLE_CANCELIO"
 				StringPooling="TRUE"
 				RuntimeLibrary="2"
@@ -110,6 +110,9 @@
 		<Filter
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm">
+			<File
+				RelativePath=".\ApplicationTimers.cxx">
+			</File>
 			<File
 				RelativePath=".\BridgeMixer.cxx">
 			</File>
@@ -156,6 +159,9 @@
 				RelativePath=".\ReconSubsystem.cxx">
 			</File>
 			<File
+				RelativePath=".\RegistrationManager.cxx">
+			</File>
+			<File
 				RelativePath=".\RelatedConversationSet.cxx">
 			</File>
 			<File
@@ -163,6 +169,9 @@
 			</File>
 			<File
 				RelativePath=".\RemoteParticipantDialogSet.cxx">
+			</File>
+			<File
+				RelativePath=".\RTPPortAllocator.cxx">
 			</File>
 			<File
 				RelativePath=".\sdp\Sdp.cxx">
@@ -204,6 +213,12 @@
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc">
+			<File
+				RelativePath=".\ApplicationTimer.hxx">
+			</File>
+			<File
+				RelativePath=".\ApplicationTimers.hxx">
+			</File>
 			<File
 				RelativePath=".\BridgeMixer.hxx">
 			</File>
@@ -253,6 +268,9 @@
 				RelativePath=".\ReconSubsystem.hxx">
 			</File>
 			<File
+				RelativePath=".\RegistrationManager.hxx">
+			</File>
+			<File
 				RelativePath=".\RelatedConversationSet.hxx">
 			</File>
 			<File
@@ -260,6 +278,9 @@
 			</File>
 			<File
 				RelativePath=".\RemoteParticipantDialogSet.hxx">
+			</File>
+			<File
+				RelativePath=".\RTPPortAllocator.hxx">
 			</File>
 			<File
 				RelativePath=".\sdp\Sdp.hxx">
@@ -272,9 +293,6 @@
 			</File>
 			<File
 				RelativePath=".\sdp\SdpCodec.hxx">
-			</File>
-			<File
-				RelativePath=".\SdpHelperResip.hxx">
 			</File>
 			<File
 				RelativePath=".\sdp\SdpHelperResip.hxx">

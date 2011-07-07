@@ -2,15 +2,39 @@
 #include "resip/dum/ServerSubscription.hxx"
 #include "resip/dum/ClientSubscription.hxx"
 #include "resip/stack/SecurityAttributes.hxx"
+#include "rutil/Logger.hxx"
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 
 static Mimes empty;
 
+void 
+ClientSubscriptionHandler::onReadyToSend(ClientSubscriptionHandle h, SipMessage& msg)
+{
+   // default is to do nothing. this is for adornment
+}
+
+void 
+ClientSubscriptionHandler::onNotifyNotReceived(ClientSubscriptionHandle h)
+{
+   // By default, tear down the sub.
+   h->end();
+}
+
+void 
+ClientSubscriptionHandler::onFlowTerminated(ClientSubscriptionHandle h)
+{
+   // re-Subscribe
+   InfoLog(<< "ClientSubscriptionHandler::onFlowTerminated");
+   h->reSubscribe();
+}
+
 const Mimes& 
 ServerSubscriptionHandler::getSupportedMimeTypes() const
 {
-   return empty;   
+   return empty;
 }
 
 void 
@@ -116,20 +140,6 @@ ServerSubscriptionHandler::onNotifyRejected(ServerSubscriptionHandle h, const Si
 }
 
 void 
-ClientSubscriptionHandler::onReadyToSend(ClientSubscriptionHandle h, SipMessage& msg)
-{
-   // default is to do nothing. this is for adornment
-}
-
-void 
-ClientSubscriptionHandler::onNotifyNotReceived(ClientSubscriptionHandle h)
-{
-   // By default, tear down the sub.
-   h->end();
-}
-
-
-void 
 ServerSubscriptionHandler::onReadyToSend(ServerSubscriptionHandle h, SipMessage& msg)
 {
    // default is to do nothing. this is for adornment   
@@ -140,6 +150,13 @@ ServerSubscriptionHandler::onNewSubscriptionFromRefer(ServerSubscriptionHandle, 
 {
 }
 
+void 
+ServerSubscriptionHandler::onFlowTerminated(ServerSubscriptionHandle h)
+{
+   InfoLog(<< "ServerSubscriptionHandler::onFlowTerminated");
+   // By default, tear down the sub.
+   h->end();
+}
 
 
 

@@ -12,7 +12,7 @@
 #include <list>
 
 #include "rutil/Timer.hxx"
-#include "rutil/Fifo.hxx"
+// #include "rutil/Fifo.hxx"
 #include "resip/stack/Transport.hxx"
 #include "resip/stack/MsgHeaderScanner.hxx"
 #include "resip/stack/SendData.hxx"
@@ -43,6 +43,7 @@ class ConnectionBase
 
       Tuple& who() { return mWho; }
       const UInt64& whenLastUsed() { return mLastUsed; }
+      void resetLastUsed() { mLastUsed = Timer::getTimeMs(); }
 
       enum { ChunkSize = 2048 }; // !jf! what is the optimal size here?
 
@@ -64,9 +65,10 @@ class ConnectionBase
       } TransmissionFormat;
 
       ConnState getCurrentState() const { return mConnState; }
-      void preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo);
-      void decompressNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo);
+      void preparseNewBytes(int bytesRead);
+      void decompressNewBytes(int bytesRead);
       std::pair<char*, size_t> getWriteBuffer();
+      std::pair<char*, size_t> getCurrentWriteBuffer();
       char* getWriteBufferForExtraBytes(int extraBytes);
       
       // for avoiding copies in external transports--not used in core resip
@@ -74,6 +76,8 @@ class ConnectionBase
 
       Data::size_type mSendPos;
       std::list<SendData*> mOutstandingSends; // !jacob! intrusive queue?
+
+      void setFailureReason(TransportFailure::FailureReason failReason, int subCode);
 
       virtual ~ConnectionBase();
       // no value semantics
@@ -83,9 +87,11 @@ class ConnectionBase
       ConnectionBase& operator=(const Connection&);
    protected:
       virtual void onDoubleCRLF(){}
+      virtual void onSingleCRLF(){}
       Transport* mTransport;
       Tuple mWho;
       TransportFailure::FailureReason mFailureReason;      
+      int mFailureSubCode;
       Compression &mCompression;
       osc::Stack *mSigcompStack;
       osc::TcpStream *mSigcompFramer;

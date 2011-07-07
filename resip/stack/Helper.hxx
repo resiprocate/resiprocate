@@ -428,6 +428,8 @@ class Helper
                                        bool stale = false,
                                        bool proxy = false);
 
+      static Data qopOption(const Auth& challenge);
+      static void updateNonceCount(unsigned int& nonceCount, Data& nonceCountString);
       static bool algorithmAndQopSupported(const Auth& challenge);
       
 
@@ -440,13 +442,22 @@ class Helper
                                           const Data& cnonce,
                                           unsigned int& nonceCount);
 
-      static Auth makeChallengeResponseAuth(SipMessage& request,
+      static Auth makeChallengeResponseAuth(const SipMessage& request,
                                             const Data& username,
                                             const Data& password,
                                             const Auth& challenge,
                                             const Data& cnonce,
                                             unsigned int& nonceCount,
                                             Data& nonceCountString);      
+
+      static void makeChallengeResponseAuth(const SipMessage& request,
+                                            const Data& username,
+                                            const Data& password,
+                                            const Auth& challenge,
+                                            const Data& cnonce,
+                                            const Data& authQop,
+                                            const Data& nonceCountString,
+                                            Auth& auth);
 
       static Auth makeChallengeResponseAuthWithA1(const SipMessage& request,
                                                   const Data& username,
@@ -455,6 +466,15 @@ class Helper
                                                   const Data& cnonce,
                                                   unsigned int& nonceCount,
                                                   Data& nonceCountString);      
+
+      static void makeChallengeResponseAuthWithA1(const SipMessage& request,
+                                                  const Data& username,
+                                                  const Data& passwordHashA1,
+                                                  const Auth& challenge,
+                                                  const Data& cnonce,
+                                                  const Data& authQop,
+                                                  const Data& nonceCountString,
+                                                  Auth& auth);
 
       static Data makeResponseMD5WithA1(const Data& a1,
                                         const Data& method, const Data& digestUri, const Data& nonce,
@@ -521,8 +541,21 @@ class Helper
       // the tree.
       static std::auto_ptr<SdpContents> getSdp(Contents* tree);
 
+      /** Looks at SIP headers and message source for a mismatch to make an
+          assumption that the sender is behind a NAT device.
+
+          @param request Request message that we use for checking.
+
+          @privateToPublicOnly If enabled then we ensure that the via is private
+                               address and that the source was a public address.
+                               This allows us to ignore cases of private-private NAT'ing
+                               or false detections, when a server behind a load balancer
+                               is sending us requests and using the load balancer address
+                               in the Via, instead of the real of the adapter.
+      */
+      static bool isSenderBehindNAT(const SipMessage& request, bool privateToPublicOnly=true);
+
    private:
-      static Data qopOption(const Auth& challenge);
       class NonceHelperPtr
       {
          public:

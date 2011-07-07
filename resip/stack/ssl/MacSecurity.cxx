@@ -1,7 +1,5 @@
 #ifdef USE_SSL
-#include "resip/stack/ssl/MacSecurity.hxx"
-#include "rutil/Logger.hxx"
-
+// .amr. Must include Apple headers first, otherwise conflicts with rutil/compat.hxx happen due to SDK type differences
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
 #include <Security/Security.h>
@@ -16,6 +14,9 @@
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 #include <openssl/ssl.h>
+
+#include "resip/stack/ssl/MacSecurity.hxx"
+#include "rutil/Logger.hxx"
 
 using namespace resip;
 using namespace std;

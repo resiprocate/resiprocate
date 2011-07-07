@@ -30,6 +30,7 @@ class Resolver
 
    private:
       void lookupARecords();
+      void lookupAandAAAARecords();
       TransportType mTransport;
       Data mHost;
       int mPort;

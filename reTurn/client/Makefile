@@ -15,6 +15,7 @@ SRC += \
 	../ReTurnSubsystem.cxx \
 	../StunMessage.cxx \
 	../StunTuple.cxx \
+	../QosSocketManager_Linux.cxx \
 	TurnAsyncSocket.cxx \
  	TurnAsyncSocketHandler.cxx \
 	TurnAsyncTcpSocket.cxx \
@@ -24,7 +25,6 @@ SRC += \
 	TurnTcpSocket.cxx \
 	TurnTlsSocket.cxx \
 	TurnUdpSocket.cxx
-
 
 include $(BUILD)/Makefile.post
 

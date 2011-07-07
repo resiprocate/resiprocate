@@ -17,6 +17,7 @@
 #include "resip/dum/ServerSubscription.hxx"
 #include "rutil/BaseException.hxx"
 #include "rutil/SharedPtr.hxx"
+#include "rutil/ThreadIf.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/TransactionUser.hxx"
 #include "resip/dum/DumFeature.hxx"
@@ -51,6 +52,7 @@ class ServerPagerMessageHandler;
 class OutOfDialogHandler;
 class RedirectHandler;
 class DialogSetHandler;
+class RequestValidationHandler;
 
 class Dialog;
 class InviteSessionCreator;
@@ -117,9 +119,11 @@ class DialogUsageManager : public HandleManager, public TransactionUser
                                                                   // for TLS
                                                                   // based stuff 
                          const Data& privateKeyPassPhrase = Data::Empty,
-                         SecurityTypes::SSLType sslType = SecurityTypes::TLSv1 );
+                         SecurityTypes::SSLType sslType = SecurityTypes::TLSv1,
+                         unsigned transportFlags = 0);
 
       SipStack& getSipStack();
+      const SipStack& getSipStack() const;
       Security* getSecurity();
       
       Data getHostAddress();
@@ -170,6 +174,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       
       void addOutOfDialogHandler(MethodTypes, OutOfDialogHandler*);
 
+      void setRequestValidationHandler(RequestValidationHandler*);
+
       void setClientPagerMessageHandler(ClientPagerMessageHandler*);
       void setServerPagerMessageHandler(ServerPagerMessageHandler*);
 
@@ -188,14 +194,14 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       // the future. If the caller wants to keep it, it should make a copy. The
       // memory will exist at least up until the point where the application
       // calls DialogUsageManager::send(msg);
-      SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, 
-                                              const SharedPtr<UserProfile>& userProfile, 
-                                              const Contents* initialOffer, 
-                                              AppDialogSet* ads = 0);
+      SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Contents* initialOffer, AppDialogSet* ads = 0);
       SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, const Contents* initialOffer, AppDialogSet* ads = 0);
       SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Contents* initialOffer, EncryptionLevel level, const Contents* alternative = 0, AppDialogSet* ads = 0);
       SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, const Contents* initialOffer, EncryptionLevel level, const Contents* alternative = 0, AppDialogSet* ads = 0);
-
+      // Versions that add a replaces header
+      SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, InviteSessionHandle sessionToReplace, const SharedPtr<UserProfile>& userProfile, const Contents* initialOffer, AppDialogSet* ads = 0);
+      SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, InviteSessionHandle sessionToReplace, const SharedPtr<UserProfile>& userProfile, const Contents* initialOffer, EncryptionLevel level = None, const Contents* alternative = 0, AppDialogSet* ads = 0);
+      SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, InviteSessionHandle sessionToReplace, const Contents* initialOffer, EncryptionLevel level = None, const Contents* alternative = 0, AppDialogSet* ads = 0);
       
       //will send a Notify(100)...currently can be decorated through the
       //OnReadyToSend callback.  Probably will change it's own callback/handler soon
@@ -204,9 +210,9 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       SharedPtr<SipMessage> makeInviteSessionFromRefer(const SipMessage& refer, const SharedPtr<UserProfile>& userProfile, 
                                                        const Contents* initialOffer, AppDialogSet* appDs = 0);
       SharedPtr<SipMessage> makeInviteSessionFromRefer(const SipMessage& refer, ServerSubscriptionHandle, 
-                                                       const Contents* initialOffer, EncryptionLevel level, const Contents* alternative, AppDialogSet* = 0);
+                                                       const Contents* initialOffer, EncryptionLevel level = None, const Contents* alternative = 0, AppDialogSet* = 0);
       SharedPtr<SipMessage> makeInviteSessionFromRefer(const SipMessage& refer, const SharedPtr<UserProfile>& userProfile, ServerSubscriptionHandle, 
-                                                       const Contents* initialOffer, EncryptionLevel level, const Contents* alternative, AppDialogSet* = 0);
+                                                       const Contents* initialOffer, EncryptionLevel level = None, const Contents* alternative = 0, AppDialogSet* = 0);
       
       SharedPtr<SipMessage> makeSubscription(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Data& eventType, AppDialogSet* = 0);
       SharedPtr<SipMessage> makeSubscription(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Data& eventType, 
@@ -247,6 +253,34 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       
       void end(DialogSetId invSessionId);
       void send(SharedPtr<SipMessage> request);
+      void sendCommand(SharedPtr<SipMessage> request);
+
+      class SendCommand : public DumCommandAdapter
+      {
+         public:
+            SendCommand(SharedPtr<SipMessage> request,
+                        DialogUsageManager& dum):
+               mRequest(request),
+               mDum(dum)
+            {}
+            
+            virtual ~SendCommand(){}
+
+            virtual void executeCommand()
+            {
+               mDum.send(mRequest);
+            }
+
+            virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+            {
+               return strm << "DialogUsageManager::SendCommand" << std::endl;
+            }
+
+         protected:
+            SharedPtr<SipMessage> mRequest;
+            DialogUsageManager& mDum;
+      };
+
       //void send(SipMessage& request, EncryptionLevel level);
       
       // give dum an opportunity to handle its events. If process() returns true
@@ -258,15 +292,6 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       InviteSessionHandle findInviteSession(DialogId id);
       //if the handle is inValid, int represents the errorcode
       std::pair<InviteSessionHandle, int> findInviteSession(CallId replaces);
-
-      std::vector<ClientSubscriptionHandle> findClientSubscriptions(DialogId id);
-      std::vector<ClientSubscriptionHandle> findClientSubscriptions(DialogSetId id);
-      std::vector<ClientSubscriptionHandle> findClientSubscriptions(DialogSetId id, const Data& eventType, const Data& subId);
-      ServerSubscriptionHandle findServerSubscription(DialogId id);
-      ClientPublicationHandle findClientPublication(DialogId id);
-      ServerPublicationHandle findServerPublication(DialogId id);
-      std::vector<ClientOutOfDialogReqHandle> findClientOutOfDialog(DialogId id);
-      ServerOutOfDialogReqHandle findServerOutOfDialog(DialogId id);
 
       ClientPublicationHandler* getClientPublicationHandler(const Data& eventType);
       ServerPublicationHandler* getServerPublicationHandler(const Data& eventType);
@@ -476,10 +501,11 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       ServerRegistrationHandler* mServerRegistrationHandler;      
       RedirectHandler* mRedirectHandler;
       DialogSetHandler* mDialogSetHandler;      
+      RequestValidationHandler* mRequestValidationHandler;
 
       RegistrationPersistenceManager *mRegistrationPersistenceManager;
 
-	  OutOfDialogHandler* getOutOfDialogHandler(const MethodTypes type);
+      OutOfDialogHandler* getOutOfDialogHandler(const MethodTypes type);
 
       std::map<Data, ClientSubscriptionHandler*> mClientSubscriptionHandlers;
       std::map<Data, ServerSubscriptionHandler*> mServerSubscriptionHandlers;
@@ -523,6 +549,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 
       IncomingTarget* mIncomingTarget;
       OutgoingTarget* mOutgoingTarget;
+      ThreadIf::TlsKey mThreadDebugKey;
+      ThreadIf::TlsKey mHiddenThreadDebugKey;
 
       EventDispatcher<ConnectionTerminated> mConnectionTerminatedEventDispatcher;
 };

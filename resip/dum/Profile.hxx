@@ -41,7 +41,7 @@ class Profile
       virtual UInt32 getDefaultRegistrationTime() const;
       virtual void unsetDefaultRegistrationTime();  
 
-      /// If a registration gets rejected with a 423, then we with the MinExpires value - if it is less than this
+      /// If a registration gets rejected with a 423, then we ensure the MinExpires value is less than this before re-registering
       /// Set to 0 to disable this check and accept any time suggested by the server.
       virtual void setDefaultMaxRegistrationTime(UInt32 secs);
       virtual UInt32 getDefaultMaxRegistrationTime() const;
@@ -198,15 +198,38 @@ class Profile
       virtual bool getRinstanceEnabled() const;
       virtual void unsetRinstanceEnabled();
 
-	  //If set then dum will add this MessageDecorator to all outbound messages
-	  virtual void setOutboundDecorator(SharedPtr<MessageDecorator> outboundDecorator);
-	  virtual SharedPtr<MessageDecorator> getOutboundDecorator();
-	  virtual void unsetOutboundDecorator();
+      //If set then dum will add this MessageDecorator to all outbound messages
+      virtual void setOutboundDecorator(SharedPtr<MessageDecorator> outboundDecorator);
+      virtual SharedPtr<MessageDecorator> getOutboundDecorator();
+      virtual void unsetOutboundDecorator();
 
       ///If enabled then methods parameter is added to contacts.
       virtual void setMethodsParamEnabled(bool enabled) ;
       virtual bool getMethodsParamEnabled() const;
-      virtual void unsetMethodsParamEnabled();      
+      virtual void unsetMethodsParamEnabled();
+
+      ///If set, the parameters on the provided NameAddr are used in the contact header
+      ///Example: 
+      ///  #include <resip/stack/ExtensionParameter.hxx>
+      ///  static const resip::ExtensionParameter p_automaton("automaton");
+      ///  static const resip::ExtensionParameter p_byeless("+sip.byeless");
+      ///  static const resip::ExtensionParameter p_rendering("+sip.rendering");
+      ///  ...
+      ///  NameAddr capabilities;
+      ///  capabilities.param(p_automaton); 
+      ///  capabilities.param(p_byeless);
+      ///  capabilities.param(p_rendering) = "\"no\"";
+      ///  profile->setUserAgentCapabilities(capabilities);
+      virtual void setUserAgentCapabilities(const NameAddr& capabilities) ;
+      virtual bool hasUserAgentCapabilities() const;
+      virtual const NameAddr& getUserAgentCapabilities() const;
+      virtual void unsetUserAgentCapabilities();
+
+      ///If enabled then dialog identifying headers are added to SipFrag bodies 
+      ///that are generated in an InviteSession
+      virtual void setExtraHeadersInReferNotifySipFragEnabled(bool enabled) ;
+      virtual bool getExtraHeadersInReferNotifySipFragEnabled() const;
+      virtual void unsetExtraHeadersInReferNotifySipFragEnabled();
 
    private:
       bool mHasDefaultRegistrationExpires;
@@ -283,6 +306,12 @@ class Profile
       
       bool mHasMethodsParamEnabled;
       bool mMethodsParamEnabled;
+
+      bool mHasUserAgentCapabilities;
+      NameAddr mUserAgentCapabilities;
+
+      bool mHasExtraHeadersInReferNotifySipFragEnabled;
+      bool mExtraHeadersInReferNotifySipFragEnabled;
 
       SharedPtr<Profile> mBaseProfile;  // All non-set settings will fall through to this Profile (if set)
 };

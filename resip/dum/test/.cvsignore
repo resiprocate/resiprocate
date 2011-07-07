@@ -29,3 +29,7 @@ testTransactionFSM
 obj.debug.Darwin.Power_Macintosh
 bin.debug.Darwin.Power_Macintosh
 .gdb_history
+Debug
+Release
+SSL-Debug
+SSL-Release

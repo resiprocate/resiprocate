@@ -101,6 +101,8 @@ const char* Symbols::Timer        = "timer";
 const char* Symbols::NoReferSub   = "norefersub";
 const char* Symbols::AnswerMode   = "answermode";
 const char* Symbols::TargetDialog = "tdialog";
+const char* Symbols::Path         = "path";
+const char* Symbols::Outbound     = "outbound";
 const char* Symbols::Undefined    = "UNDEFINED";
 
 const char* Symbols::Pending = "pending";

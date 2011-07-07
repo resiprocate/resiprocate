@@ -125,7 +125,7 @@ RequestLine::parse(ParseBuffer& pb)
    const char* start;
    start = pb.skipWhitespace();
    pb.skipNonWhitespace();
-   mMethod = getMethodType(start, pb.position() - start);
+   mMethod = getMethodType(start, int(pb.position() - start));
    // for backward compatibility, set the method name even if the method is known
    pb.data(mUnknownMethodName, start);
    pb.skipWhitespace();

@@ -8,7 +8,7 @@ using namespace resip;
 
 BaseSubscription::BaseSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request) :
    DialogUsage(dum, dialog),
-   mState(Initial),
+   mSubDlgState(SubDlgInitial),
    mLastRequest(new SipMessage),
    mLastResponse(new SipMessage),
    mDocumentKey(request.header(h_RequestLine).uri().getAor()),
@@ -52,7 +52,8 @@ BaseSubscription::matches(const SipMessage& msg)
       }
       else
       {
-         return mEventType == "refer";
+         return (mEventType == "refer" && 
+                 Data(msg.header(h_CSeq).sequence()) == mSubscriptionId);      
       }
    }
 }

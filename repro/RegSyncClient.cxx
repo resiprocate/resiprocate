@@ -9,6 +9,7 @@
 #include <rutil/ParseBuffer.hxx>
 #include <rutil/Socket.hxx>
 #include <rutil/TransportType.hxx>
+#include <rutil/Timer.hxx>
 
 #include "repro/RegSyncClient.hxx"
 
@@ -62,24 +63,33 @@ void
 RegSyncClient::thread()
 {
    int rc;
-   struct sockaddr_in localAddr, servAddr;
-   struct hostent *h;
 
-   h = gethostbyname(mAddress.c_str());
-   if(h==0) 
+   addrinfo* results;
+   addrinfo hint;
+   memset(&hint, 0, sizeof(hint));
+   hint.ai_family    = AF_UNSPEC;
+   hint.ai_flags     = AI_PASSIVE;
+   hint.ai_socktype  = SOCK_STREAM;
+
+   rc = getaddrinfo(mAddress.c_str(), 0, &hint, &results);
+   if(rc != 0)
    {
       ErrLog(<< "RegSyncClient: unknown host " << mAddress);
       return;
    }
 
-   servAddr.sin_family = h->h_addrtype;
-   memcpy((char *) &servAddr.sin_addr.s_addr, h->h_addr_list[0], h->h_length);
-   servAddr.sin_port = htons(mPort);
+   // Use first address resolved if there are more than one.
+   Tuple servAddr(*results->ai_addr, TCP);
+   servAddr.setPort(mPort);
+   Tuple localAddr(Data::Empty /* all interfaces */, 0, servAddr.ipVersion(), TCP);
+   //InfoLog(<< "**********" << servAddr << " " << localAddr << " " << localAddr.isAnyInterface());
+
+   freeaddrinfo(results);
 
    while(!mShutdown)
    {
       // Create TCP Socket
-      mSocketDesc = socket(servAddr.sin_family, SOCK_STREAM, 0);
+      mSocketDesc = (int)socket(servAddr.ipVersion() == V6 ? PF_INET6 : PF_INET , SOCK_STREAM, 0);
       if(mSocketDesc < 0) 
       {
          ErrLog(<< "RegSyncClient: cannot open socket");
@@ -88,11 +98,7 @@ RegSyncClient::thread()
       }
 
       // bind to any local interface/port
-      localAddr.sin_family = servAddr.sin_family;
-      localAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-      localAddr.sin_port = 0;
-
-      rc = ::bind(mSocketDesc, (struct sockaddr *) &localAddr, sizeof(localAddr));
+      rc = ::bind(mSocketDesc, &localAddr.getMutableSockaddr(), localAddr.length());
       if(rc < 0) 
       {
          ErrLog(<<"RegSyncClient: error binding locally");
@@ -102,7 +108,7 @@ RegSyncClient::thread()
       }
 
       // Connect to server
-      rc = ::connect(mSocketDesc, (struct sockaddr *) &servAddr, sizeof(servAddr));
+      rc = ::connect(mSocketDesc, &servAddr.getMutableSockaddr(), servAddr.length());
       if(rc < 0) 
       {
          if(!mShutdown) ErrLog(<< "RegSyncClient: error connecting to " << mAddress << ":" << mPort);
@@ -115,10 +121,10 @@ RegSyncClient::thread()
       Data request(
          "<InitialSync>\r\n"
          "  <Request>\r\n"
-         "     <Version>1</Version>\r\n"   // For future use in detecting if client/server are a compatible version
+         "     <Version>2</Version>\r\n"   // For use in detecting if client/server are a compatible version
          "  </Request>\r\n"
          "</InitialSync>\r\n");   
-      rc = ::send(mSocketDesc, request.c_str(), request.size(), 0);
+      rc = ::send(mSocketDesc, request.c_str(), (int)request.size(), 0);
       if(rc < 0) 
       {
          if(!mShutdown) ErrLog(<< "RegSyncClient: error sending");
@@ -169,7 +175,7 @@ RegSyncClient::tryParse()
          pb.skipToChars("</" + initialTag + ">");
          if (!pb.eof())
          {
-            pb.skipN(initialTag.size() + 3);  // Skip past </InitialTag>            
+            pb.skipN((int)initialTag.size() + 3);  // Skip past </InitialTag>            
             handleXml(pb.data(start));
 
             // Remove processed data from RxBuffer
@@ -231,9 +237,10 @@ RegSyncClient::handleXml(const Data& xmlData)
 void 
 RegSyncClient::handleRegInfoEvent(resip::XMLCursor& xml)
 {
-   DebugLog(<< "RegSyncClient::handleRegInfoEvent");
+   UInt64 now = Timer::getTimeSecs();
    Uri aor;
    ContactList contacts;
+   DebugLog(<< "RegSyncClient::handleRegInfoEvent");
    if(xml.firstChild())
    {
       do
@@ -268,7 +275,8 @@ RegSyncClient::handleRegInfoEvent(resip::XMLCursor& xml)
                         if(xml.firstChild())
                         {
                            //InfoLog(<< "RegSyncClient::handleRegInfoEvent: expires=" << xml.getValue());
-                           rec.mRegExpires = xml.getValue().convertUInt64();
+                           UInt64 expires = xml.getValue().convertUInt64();
+                           rec.mRegExpires = (expires == 0 ? 0 : now+expires);
                            xml.parent();
                         }
                      }
@@ -277,7 +285,7 @@ RegSyncClient::handleRegInfoEvent(resip::XMLCursor& xml)
                         if(xml.firstChild())
                         {
                            //InfoLog(<< "RegSyncClient::handleRegInfoEvent: lastupdate=" << xml.getValue());
-                           rec.mLastUpdated = xml.getValue().convertUInt64();
+                           rec.mLastUpdated = now-xml.getValue().convertUInt64();
                            xml.parent();
                         }
                      }
@@ -285,7 +293,7 @@ RegSyncClient::handleRegInfoEvent(resip::XMLCursor& xml)
                      {
                         if(xml.firstChild())
                         {
-                           rec.mReceivedFrom = Tuple::makeTuple(xml.getValue().base64decode());
+                           rec.mReceivedFrom = Tuple::makeTupleFromBinaryToken(xml.getValue().base64decode());
                            //InfoLog(<< "RegSyncClient::handleRegInfoEvent: receivedfrom=" << xml.getValue() << " tuple=" << rec.mReceivedFrom);
                            xml.parent();
                         }

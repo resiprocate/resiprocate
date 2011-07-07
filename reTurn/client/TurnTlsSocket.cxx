@@ -98,7 +98,7 @@ TurnTlsSocket::validateServerCertificateHostname(const std::string& hostname)
    // Validate that hostname in cert matches connection hostname
 
    // print session info
-   SSL_CIPHER *ciph;
+   const SSL_CIPHER *ciph;
    ciph=SSL_get_current_cipher(mSocket.impl()->ssl);
    InfoLog( << "TLS session set up with " 
       <<  SSL_get_version(mSocket.impl()->ssl) << " "

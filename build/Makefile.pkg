@@ -146,11 +146,11 @@ endif
 
 ifeq ($(OSTYPE),Darwin)
 # Darwin ports uses these directors, fink does not 
-  ifneq ($(wildcard /opt/local/lib/libdb-4.3.*),)
-    DB4CXX_LIBDIRS += /opt/local/lib
-    DB4CXX_INCLUDEDIRS += /opt/local/include
-    DB42_LIBNAME := db-4.3
-    DB4CXX_LIBNAME := db_cxx-4.3
+  ifneq ($(wildcard /opt/local/lib/db44/libdb-4.4.*),)
+    DB4CXX_LIBDIRS += /opt/local/lib/db44
+    DB4CXX_INCLUDEDIRS += /opt/local/include/db44
+    DB42_LIBNAME := db-4.4
+    DB4CXX_LIBNAME := db_cxx-4.4
   else
     DB4CXX_LIBDIRS += /opt/local/lib/db42
     DB4CXX_INCLUDEDIRS += /opt/local/include
@@ -195,7 +195,7 @@ CURL_DEFINES := USE_CURL
 endif
 
 RUTIL_INCLUDEDIRS := $(ROOT)
-RUTIL_LIBDIRS := $(ROOT)/rutil/obj.$(TARGET_NAME) 
+RUTIL_LIBDIRS := $(ROOT)/rutil/obj.$(TARGET_NAME)
 RUTIL_LIBNAME := rutil
 RUTIL_DEPENDS := $(ROOT)/rutil/obj.$(TARGET_NAME)/librutil.$(LIBSUFFIX)
 $(RUTIL_DEPENDS): 
@@ -228,6 +228,13 @@ TFM_LIBNAME := tfm
 TFM_DEPENDS := $(ROOT)/tfm/obj.$(TARGET_NAME)/libtfm.$(LIBSUFFIX)
 $(TFM_DEPENDS): 
 	$(MAKE) -C $(ROOT)/tfm 
+
+TFMREPRO_INCLUDEDIRS := $(ROOT)
+TFMREPRO_LIBDIRS := $(ROOT)/tfm/repro/obj.$(TARGET_NAME) 
+TFMREPRO_LIBNAME := tfmrepro
+TFMREPRO_DEPENDS := $(ROOT)/tfm/repro/obj.$(TARGET_NAME)/libtfmrepro.$(LIBSUFFIX)
+$(TFMREPRO_DEPENDS): 
+	$(MAKE) -C $(ROOT)/tfm/repro
 
 RETURNCLIENT_INCLUDEDIRS := $(ROOT)/reTurn
 RETURNCLIENT_LIBDIRS := $(ROOT)/reTurn/client/obj.$(TARGET_NAME)
@@ -262,6 +269,14 @@ ifeq ($(USE_IPV6),yes)
 DEFINES += USE_IPV6
 endif
 
+ifeq ($(HAVE_EPOLL),yes)
+DEFINES += HAVE_EPOLL
+endif
+
+ifeq ($(USE_RANDOM_THREAD_LOCAL),yes)
+DEFINES += RESIP_RANDOM_THREAD_LOCAL
+endif
+
 ifeq ($(USE_POPT),yes)
   POPT_DEFINES := HAVE_POPT_H
   POPT_LIBNAME := popt
@@ -279,6 +294,10 @@ endif
 
 ifeq ($(PEDANTIC_STACK),yes)
 DEFINES += PEDANTIC_STACK
+endif
+
+ifeq ($(RESIP_DUM_THREAD_DEBUG),yes)
+DEFINES += RESIP_DUM_THREAD_DEBUG
 endif
 
 TFMLIBS_INCLUDEDIRS := $(ROOT)/tfm/contrib/Netxx-0.3.2/include $(ROOT)/tfm/contrib $(ROOT)/tfm/contrib/cppunit/include

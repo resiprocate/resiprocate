@@ -54,73 +54,88 @@ RTPPortAllocator::~RTPPortAllocator()
    mTCPPorts.clear();
 }
 
-bool RTPPortAllocator::allocateUDPPort(unsigned int& ulOutPort)
+//bool RTPPortAllocator::allocateUDPPortV4(unsigned int& ulOutPort)
+//{
+//   ulOutPort = 0;
+//   asio::error_code ec;
+//
+//   for( unsigned int curPort = mMinPort ; curPort <= mMaxPort ; ++curPort )
+//   {
+//      // This is an O^2 loop, but the number of allocated ports at any time
+//      // should be very small (i.e. at most 10)
+//      if (mUDPPorts.find(curPort) != mUDPPorts.end())
+//         continue;
+//
+//      // !ds! will have to be changed to get ipv6 going
+//      udp::socket testSocket(mIOService);
+//      udp::endpoint testEndpoint(udp::v4(), curPort);
+//      testSocket.open(udp::v4());
+//      testSocket.bind(testEndpoint, ec);
+//      testSocket.close();
+//      if (!ec)
+//      {
+//         // There was no error, so the socket must be ok. Close it and return
+//         // this value.
+//         ulOutPort = testEndpoint.port();
+//         mUDPPorts.insert(ulOutPort);
+//         return true;
+//      }
+//   }
+//
+//   // Couldn't find an appropriate port
+//   return false;
+//}
+
+//bool RTPPortAllocator::allocateTCPPort(unsigned int& ulOutPort)
+//{
+//   ulOutPort = 0;
+//   asio::error_code ec;
+//
+//   for( unsigned int curPort = mMinPort ; curPort <= mMaxPort ; ++curPort )
+//   {
+//      // This is an O^2 loop, but the number of allocated ports at any time
+//      // should be very small (i.e. at most 10)
+//      if (mTCPPorts.find(curPort) != mTCPPorts.end())
+//         continue;
+//
+//      // !ds! will have to be changed to get ipv6 going
+//      tcp::socket testSocket(mIOService);
+//      tcp::endpoint testEndpoint(tcp::v4(), curPort);
+//      testSocket.open(tcp::v4());
+//      testSocket.bind(testEndpoint, ec);
+//      testSocket.close();
+//      if (!ec)
+//      {
+//         // There was no error, so the endpoint/port must be ok. Make sure
+//         // the socket is closed (because it will be re-opened shortly) and
+//         // return the current value. There is a race condition here, but it's
+//         // better than nothing.
+//         ulOutPort = testEndpoint.port();
+//         mTCPPorts.insert(ulOutPort);
+//         return true;
+//      }
+//   }
+//
+//   // Couldn't find an appropriate port
+//   return false;
+//}
+
+bool RTPPortAllocator::testUDPPort(unsigned int testPort, const udp::socket::protocol_type& proto)
 {
-   ulOutPort = 0;
    asio::error_code ec;
-
-   for( unsigned int curPort = mMinPort ; curPort <= mMaxPort ; ++curPort )
+   udp::socket testRTPSocket(mIOService);
+   udp::endpoint testRTPEndpoint(proto, testPort);
+   testRTPSocket.open(proto);
+   testRTPSocket.bind(testRTPEndpoint, ec);
+   testRTPSocket.close();
+   if (!ec)
    {
-      // This is an O^2 loop, but the number of allocated ports at any time
-      // should be very small (i.e. at most 10)
-      if (mUDPPorts.find(curPort) != mUDPPorts.end())
-         continue;
-
-      // !ds! will have to be changed to get ipv6 going
-      udp::socket testSocket(mIOService);
-      udp::endpoint testEndpoint(udp::v4(), curPort);
-      testSocket.open(udp::v4());
-      testSocket.bind(testEndpoint, ec);
-      testSocket.close();
-      if (!ec)
-      {
-         // There was no error, so the socket must be ok. Close it and return
-         // this value.
-         ulOutPort = testEndpoint.port();
-         mUDPPorts.insert(ulOutPort);
-         return true;
-      }
+      return true;
    }
-
-   // Couldn't find an appropriate port
    return false;
 }
 
-bool RTPPortAllocator::allocateTCPPort(unsigned int& ulOutPort)
-{
-   ulOutPort = 0;
-   asio::error_code ec;
-
-   for( unsigned int curPort = mMinPort ; curPort <= mMaxPort ; ++curPort )
-   {
-      // This is an O^2 loop, but the number of allocated ports at any time
-      // should be very small (i.e. at most 10)
-      if (mTCPPorts.find(curPort) != mTCPPorts.end())
-         continue;
-
-      // !ds! will have to be changed to get ipv6 going
-      tcp::socket testSocket(mIOService);
-      tcp::endpoint testEndpoint(tcp::v4(), curPort);
-      testSocket.open(tcp::v4());
-      testSocket.bind(testEndpoint, ec);
-      testSocket.close();
-      if (!ec)
-      {
-         // There was no error, so the endpoint/port must be ok. Make sure
-         // the socket is closed (because it will be re-opened shortly) and
-         // return the current value. There is a race condition here, but it's
-         // better than nothing.
-         ulOutPort = testEndpoint.port();
-         mTCPPorts.insert(ulOutPort);
-         return true;
-      }
-   }
-
-   // Couldn't find an appropriate port
-   return false;
-}
-
-bool RTPPortAllocator::allocateRTPPortFromRange(unsigned int minPort, unsigned int maxPort, unsigned int& ulOutRTPPort, unsigned int& ulOutRTCPPort)
+bool RTPPortAllocator::allocateRTPPortFromRange(unsigned int minPort, unsigned int maxPort, const udp::socket::protocol_type& proto, unsigned int& ulOutRTPPort, unsigned int& ulOutRTCPPort)
 {
    // Allocate 2 UDP ports in succession (one for RTP, the other for RTCP).
    // They should be in sequence (RTCP == RTP + 1)
@@ -142,17 +157,11 @@ bool RTPPortAllocator::allocateRTPPortFromRange(unsigned int minPort, unsigned i
       if (mUDPPorts.find(testRTPPort) != mUDPPorts.end())
          continue;
 
-      // !ds! will have to be changed to get ipv6 going
-      tcp::socket testRTPSocket(mIOService);
-      tcp::endpoint testRTPEndpoint(tcp::v4(), testRTPPort);
-      testRTPSocket.open(tcp::v4());
-      testRTPSocket.bind(testRTPEndpoint, ec);
-      testRTPSocket.close();
-      if (!ec)
+      if (testUDPPort(testRTPPort, proto))
       {
          // There was no error, so the endpoint/port must be ok. Now check
          // the adjacent port
-         unsigned int testRTCPPort = testRTPEndpoint.port() + 1;
+         unsigned int testRTCPPort = testRTPPort + 1;
          if ( testRTCPPort > maxPort )
             return false;
 
@@ -160,17 +169,12 @@ bool RTPPortAllocator::allocateRTPPortFromRange(unsigned int minPort, unsigned i
          if (mUDPPorts.find(testRTCPPort) != mUDPPorts.end())
             continue;
 
-         tcp::socket testRTCPSocket(mIOService);
-         tcp::endpoint testRTCPEndpoint(tcp::v4(), testRTCPPort);
-         testRTCPSocket.open(tcp::v4());
-         testRTCPSocket.bind(testRTCPEndpoint, ec);
-         testRTCPSocket.close();
-         if (!ec)
+         if (testUDPPort(testRTCPPort, proto))
          {
             // At this point, we were able to reserve two adjacent UDP ports,
             // so we return them as the selected RTP and RTCP.
-            ulOutRTPPort  = testRTPEndpoint.port();
-            ulOutRTCPPort = testRTCPEndpoint.port();
+            ulOutRTPPort  = testRTPPort;
+            ulOutRTCPPort = testRTCPPort;
             mUDPPorts.insert(ulOutRTPPort);
             mUDPPorts.insert(ulOutRTCPPort);
             return true;
@@ -181,11 +185,11 @@ bool RTPPortAllocator::allocateRTPPortFromRange(unsigned int minPort, unsigned i
    return false;
 }
 
-bool RTPPortAllocator::allocateRTPPort(unsigned int& ulOutRTPPort, unsigned int& ulOutRTCPPort)
+bool RTPPortAllocator::allocateRTPPort(const udp::socket::protocol_type& proto, unsigned int& ulOutRTPPort, unsigned int& ulOutRTCPPort)
 {
-   if (!allocateRTPPortFromRange(mMinPort, mMaxPort, ulOutRTPPort, ulOutRTCPPort))
+   if (!allocateRTPPortFromRange(mMinPort, mMaxPort, proto, ulOutRTPPort, ulOutRTCPPort))
    {
-      return allocateRTPPortFromRange(MIN_DYNAMIC_PORT, MAX_DYNAMIC_PORT, ulOutRTPPort, ulOutRTCPPort);
+      return allocateRTPPortFromRange(MIN_DYNAMIC_PORT, MAX_DYNAMIC_PORT, proto, ulOutRTPPort, ulOutRTCPPort);
    }
    return true;
 }

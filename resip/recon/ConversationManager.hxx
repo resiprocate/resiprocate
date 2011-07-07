@@ -402,8 +402,9 @@ public:
      @param partHandle Handle of the participant to move
      @param sourceConvHandle Handle of the conversation to move from
      @param destConvHandle   Handle of the conversation to move to
+     @param bTriggerHold true, if a hold should be triggered
    */
-   virtual void moveParticipant(ParticipantHandle partHandle, ConversationHandle sourceConvHandle, ConversationHandle destConvHandle);
+   virtual void moveParticipant(ParticipantHandle partHandle, ConversationHandle sourceConvHandle, ConversationHandle destConvHandle, bool bTriggerHold = false);
 
    /**
      Modifies how the participant contributes to the particular conversation.
@@ -753,6 +754,16 @@ public:
     */
    virtual void stopRecording(const ConversationHandle& convHandle);
 
+   /**
+     Returns a handle to the mixer object associated with a specific
+     conversation.
+
+     @param convHandle the handle to the conversation
+     @return a shared pointer to the mixer object, or a null shared
+             pointer if the object doesn't exist.
+    */
+   boost::shared_ptr<Mixer> getConversationMixer(ConversationHandle convHandle);
+
 protected:
 
    // Invite Session Handler /////////////////////////////////////////////////////
@@ -818,6 +829,8 @@ protected:
    virtual void onRedirectReceived(resip::AppDialogSetHandle, const resip::SipMessage& response);
    virtual bool onTryingNextTarget(resip::AppDialogSetHandle, const resip::SipMessage& request);
 
+   virtual bool isOutOfDialogReferSupported() const;
+
    /**
      Retrieve a shared pointer to the actual conversation profile, using
      the handle as a key. This should normally not be used except for
@@ -842,19 +855,10 @@ protected:
     */
    Conversation* getConversation(ConversationHandle convHandle);
 
-   /**
-     Returns a handle to the mixer object associated with a specific
-     conversation.
-
-     @param convHandle the handle to the conversation
-     @return a shared pointer to the mixer object, or a null shared
-             pointer if the object doesn't exist.
-    */
-   boost::shared_ptr<Mixer> getConversationMixer(ConversationHandle convHandle);
-
-
 protected:
-      resip::DialogUsageManager* mDum;
+   resip::DialogUsageManager* mDum;
+
+   MediaStack* getMediaStack() { return mMediaStack; }
 
 private:
    friend class DefaultDialogSet;
@@ -891,8 +895,6 @@ private:
    friend class MediaResourceParticipant;
    friend class LocalParticipant;
    friend class BridgeMixer;
-   MediaStack* getMediaStack() { return mMediaStack; }
-
 
    flowmanager::FlowManager& getFlowManager() { return mFlowManager; }
 

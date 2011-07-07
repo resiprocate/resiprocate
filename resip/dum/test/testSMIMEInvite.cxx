@@ -251,13 +251,13 @@ main (int argc, char** argv)
    SipStack clientStack(security);
    DialogUsageManager clientDum(clientStack);
    srand(time(NULL));
-   clientDum.addTransport(UDP, 10000 + rand()&0x7fff, V4);
-   clientDum.addTransport(TCP, 10000 + rand()&0x7fff, V4);
-   clientDum.addTransport(TLS, 10000 + rand()&0x7fff, V4);
+   clientDum.addTransport(UDP, 0, V4);
+   clientDum.addTransport(TCP, 0, V4);
+   clientDum.addTransport(TLS, 0, V4);
 #ifdef USE_IPV6
-   clientDum.addTransport(UDP, 10000 + rand()&0x7fff, V6);
-   clientDum.addTransport(TCP, 10000 + rand()&0x7fff, V6);
-   clientDum.addTransport(TLS, 10000 + rand()&0x7fff, V6);
+   clientDum.addTransport(UDP, 0, V6);
+   clientDum.addTransport(TCP, 0, V6);
+   clientDum.addTransport(TLS, 0, V6);
 #endif
 
    SharedPtr<MasterProfile> clientProfile(new MasterProfile);   
@@ -279,9 +279,9 @@ main (int argc, char** argv)
    //set up UAS
    SipStack serverStack(security);
    DialogUsageManager serverDum(serverStack);
-   //serverDum.addTransport(UDP, 10000 + rand()&0x7fff, V4);
-   serverDum.addTransport(TCP, 10000 + rand()&0x7fff, V4);
-   //serverDum.addTransport(TLS, 10000 + rand()&0x7fff, V4);
+   //serverDum.addTransport(UDP, 0, V4);
+   serverDum.addTransport(TCP, 0, V4);
+   //serverDum.addTransport(TLS, 0, V4);
 
    SharedPtr<MasterProfile> serverProfile(new MasterProfile);
    std::auto_ptr<ClientAuthManager> serverAuth(new ClientAuthManager);
@@ -309,7 +309,7 @@ main (int argc, char** argv)
          ShuttingDown,
          Finished
       } state;
-   time_t endTime;
+   time_t endTime=0;
 
    // register client and server
    SharedPtr<SipMessage> clientRegMessage = clientDum.makeRegistration(clientAor);

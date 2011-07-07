@@ -1,6 +1,6 @@
-//	WINCE -- stl headers have to be defined before standard c headers because of 
+//	WINCE -- stl headers have to be defined before standard c headers because of
 //	MS non-consistent declaration of time_t. we defined _USE_32BIT_TIME_T
-//	in all projects and that solved the issue with beta compiler, however 
+//	in all projects and that solved the issue with beta compiler, however
 //	release version messes time_t definition again
 #include <set>
 #include <vector>
@@ -76,24 +76,29 @@ DnsResultSink::onLogDnsResult(const DNSResult<DnsCnameRecord>& rr)
 
 DnsStub::DnsStub(const NameserverList& additional,
                  AfterSocketCreationFuncPtr socketFunc,
-                 AsyncProcessHandler* asyncProcessHandler) :
+                 AsyncProcessHandler* asyncProcessHandler,
+                 FdPollGrp *pollGrp) :
    mTransform(0),
    mDnsProvider(ExternalDnsFactory::createExternalDns()),
    mAsyncProcessHandler(asyncProcessHandler)
 {
+   if ( pollGrp && mDnsProvider->isPollSupported())
+   {
+      mDnsProvider->setPollGrp(pollGrp);
+   }
    int retCode = mDnsProvider->init(additional, socketFunc, mDnsTimeout, mDnsTries, mDnsFeatures);
    if (retCode != ExternalDns::Success)
    {
       if (retCode == ExternalDns::BuildMismatch)
       {
          assert(0);
-         throw DnsStubException("Library was not build w/ required capabilities(probably USE_IPV6 resip/ares mismatch", 
+         throw DnsStubException("Library was not build w/ required capabilities(probably USE_IPV6 resip/ares mismatch",
                                 __FILE__,__LINE__);
       }
-      
+
       Data err(Data::Take, mDnsProvider->errorMessage(retCode));
       ErrLog (<< "Failed to initialize async dns library: " << err);
-      
+
       throw DnsStubException("Failed to initialize async dns library " + err, __FILE__,__LINE__);
    }
 }
@@ -108,19 +113,21 @@ DnsStub::~DnsStub()
    delete mDnsProvider;
 }
 
-bool 
-DnsStub::requiresProcess()
+unsigned int
+DnsStub::getTimeTillNextProcessMS()
 {
-   return (mCommandFifo.size() > 0) || (mQueries.size() > 0);
+    if(mCommandFifo.size() > 0) return 0;
+    return mDnsProvider->getTimeTillNextProcessMS();
 }
 
-void 
+void
 DnsStub::buildFdSet(FdSet& fdset)
 {
    mDnsProvider->buildFdSet(fdset.read, fdset.write, fdset.size);
 }
 
-void DnsStub::process(FdSet& fdset)
+void
+DnsStub::processFifo()
 {
    while (mCommandFifo.messageAvailable())
    {
@@ -128,19 +135,38 @@ void DnsStub::process(FdSet& fdset)
       command->execute();
       delete command;
    }
+}
+
+void
+DnsStub::process(FdSet& fdset)
+{
+   processFifo();
    mDnsProvider->process(fdset.read, fdset.write);
 }
 
-void DnsStub::cache(const Data& key,
-                    in_addr addr)
+void
+DnsStub::processTimers()
 {
-   DnsHostRecord record(key, addr);
-   RRCache::instance()->updateCacheFromHostFile(record);
+   // the fifo is captures as a timer within getTimeTill... above
+   processFifo();
+   if(mDnsProvider->isPollSupported())
+   {
+      mDnsProvider->processTimers();
+   }
 }
 
-void DnsStub::cache(const Data& key,
-                    const unsigned char* abuf, 
-                    int alen)
+void
+DnsStub::cache(const Data& key,
+               in_addr addr)
+{
+   DnsHostRecord record(key, addr);
+   mRRCache.updateCacheFromHostFile(record);
+}
+
+void
+DnsStub::cache(const Data& key,
+               const unsigned char* abuf,
+               int alen)
 {
 
    vector<RROverlay> overlays;
@@ -160,7 +186,7 @@ void DnsStub::cache(const Data& key,
    {
       aptr = createOverlay(abuf, alen, aptr, overlays);
    }
-   
+
    // name server records.
    int nscount = DNS_HEADER_NSCOUNT(abuf);
    for (int i = 0; i < nscount; i++)
@@ -182,7 +208,7 @@ void DnsStub::cache(const Data& key,
    vector<RROverlay>::iterator itHigh = upper_bound(overlays.begin(), overlays.end(), *overlays.begin());
    while (itLow != overlays.end())
    {
-      RRCache::instance()->updateCache(key, (*itLow).type(), itLow, itHigh);
+      mRRCache.updateCache(key, (*itLow).type(), itLow, itHigh);
       itLow = itHigh;
       if (itHigh != overlays.end())
       {
@@ -191,11 +217,12 @@ void DnsStub::cache(const Data& key,
    }
 }
 
-void DnsStub::cacheTTL(const Data& key,
-                       int rrType,
-                       int status,
-                       const unsigned char* abuf, 
-                       int alen)
+void
+DnsStub::cacheTTL(const Data& key,
+                  int rrType,
+                  int status,
+                  const unsigned char* abuf,
+                  int alen)
 {
    // skip header
    const unsigned char* aptr = abuf + HFIXEDSZ;
@@ -211,7 +238,7 @@ void DnsStub::cacheTTL(const Data& key,
    // answers.
    int ancount = DNS_HEADER_ANCOUNT(abuf);
    if (ancount != 0) return;
-   
+
    // name server records.
    int nscount = DNS_HEADER_NSCOUNT(abuf);
    if (nscount == 0) return;
@@ -222,10 +249,10 @@ void DnsStub::cacheTTL(const Data& key,
       return;
    }
 
-   RRCache::instance()->cacheTTL(key, rrType, status, soa[0]);
+   mRRCache.cacheTTL(key, rrType, status, soa[0]);
 }
 
-const unsigned char* 
+const unsigned char*
 DnsStub::skipDNSQuestion(const unsigned char *aptr,
                          const unsigned char *abuf,
                          int alen)
@@ -233,8 +260,8 @@ DnsStub::skipDNSQuestion(const unsigned char *aptr,
    char *name=0;
    int status=0;
    long len = 0;
-   
-   // Parse the question name. 
+
+   // Parse the question name.
    status = ares_expand_name(aptr, abuf, alen, &name, &len);
    if (status != ARES_SUCCESS)
    {
@@ -250,7 +277,7 @@ DnsStub::skipDNSQuestion(const unsigned char *aptr,
       throw DnsStubException("Failed DNS preparse", __FILE__, __LINE__);
    }
 
-   aptr += QFIXEDSZ;  
+   aptr += QFIXEDSZ;
    free(name);
    return aptr;
 }
@@ -264,6 +291,10 @@ DnsStub::checkDnsChange()
 bool
 DnsStub::supportedType(int type)
 {
+   if(mDnsProvider && mDnsProvider->hostFileLookupLookupOnlyMode())
+   {
+      return (T_A == type);
+   }
 #ifdef USE_IPV6
    return (T_A == type ||
            T_AAAA == type ||
@@ -283,14 +314,14 @@ DnsStub::supportedType(int type)
 const unsigned char*
 DnsStub::createOverlay(const unsigned char* abuf,
                        const int alen,
-                       const unsigned char* aptr, 
+                       const unsigned char* aptr,
                        vector<RROverlay>& overlays,
                        bool discard)
 {
    const unsigned char* rptr = aptr;
    char* name = 0;
    long len = 0;
-   
+
    int status = ares_expand_name(aptr, abuf, alen, &name, &len);
    if (ARES_SUCCESS != status)
    {
@@ -300,7 +331,7 @@ DnsStub::createOverlay(const unsigned char* abuf,
    aptr += len;
    int type = DNS_RR_TYPE(aptr);
    int dlen = DNS_RR_LEN(aptr);
-   if (!supportedType(type)) 
+   if (!supportedType(type))
    {
       aptr += RRFIXEDSZ;
       aptr += dlen;
@@ -326,21 +357,23 @@ DnsStub::removeQuery(Query* query)
    }
 }
 
-void DnsStub::setResultTransform(ResultTransform* transform)
+void
+DnsStub::setResultTransform(ResultTransform* transform)
 {
    mTransform = transform;
 }
 
-void DnsStub::removeResultTransform()
+void
+DnsStub::removeResultTransform()
 {
    mTransform = 0;
 }
 
-DnsStub::Query::Query(DnsStub& stub, ResultTransform* transform, ResultConverter* resultConv, 
-                      const Data& target, int rrType, 
+DnsStub::Query::Query(DnsStub& stub, ResultTransform* transform, ResultConverter* resultConv,
+                      const Data& target, int rrType,
                       bool followCname, int proto, DnsResultSink* s)
    : mRRType(rrType),
-     mStub(stub), 
+     mStub(stub),
      mTransform(transform),
      mResultConverter(resultConv),
      mTarget(target),
@@ -349,15 +382,15 @@ DnsStub::Query::Query(DnsStub& stub, ResultTransform* transform, ResultConverter
      mSink(s),
      mFollowCname(followCname)
 {
-   assert(s);               
+   assert(s);
 }
 
-DnsStub::Query::~Query() 
+DnsStub::Query::~Query()
 {
    delete mResultConverter; //.dcm. flyweight?
 }
 
-static Data 
+static Data
 typeToData(int rr)
 {
    // !dcm! fix this
@@ -389,7 +422,7 @@ typeToData(int rr)
    }
 }
 
-void 
+void
 DnsStub::Query::go()
 {
    StackLog(<< "DNS query of:" << mTarget << " " << typeToData(mRRType));
@@ -398,7 +431,7 @@ DnsStub::Query::go()
    int status = 0;
    bool cached = false;
    Data targetToQuery = mTarget;
-   cached = RRCache::instance()->lookup(mTarget, mRRType, mProto, records, status);
+   cached = mStub.mRRCache.lookup(mTarget, mRRType, mProto, records, status);
 
    if (!cached)
    {
@@ -407,8 +440,8 @@ DnsStub::Query::go()
          do
          {
             DnsResourceRecordsByPtr cnames;
-            cached = RRCache::instance()->lookup(targetToQuery, T_CNAME, mProto, cnames, status);
-            if (cached) 
+            cached = mStub.mRRCache.lookup(targetToQuery, T_CNAME, mProto, cnames, status);
+            if (cached)
             {
                targetToQuery = (dynamic_cast<DnsCnameRecord*>(cnames[0]))->cname();
             }
@@ -419,13 +452,44 @@ DnsStub::Query::go()
    if (targetToQuery != mTarget)
    {
       StackLog(<< mTarget << " mapped to CNAME " << targetToQuery);
-      cached = RRCache::instance()->lookup(targetToQuery, mRRType, mProto, records, status);
+      cached = mStub.mRRCache.lookup(targetToQuery, mRRType, mProto, records, status);
    }
-   
+
    if (!cached)
    {
-      StackLog (<< targetToQuery << " not cached. Doing external dns lookup");
-      mStub.lookupRecords(targetToQuery, mRRType, this);
+      if(mStub.mDnsProvider && mStub.mDnsProvider->hostFileLookupLookupOnlyMode())
+      {
+         assert(mRRType == T_A);
+         StackLog (<< targetToQuery << " not cached. Doing hostfile lookup");
+         in_addr address;
+         if (mStub.mDnsProvider->hostFileLookup(targetToQuery.c_str(), address))
+         {
+            mStub.cache(mTarget, address);
+            DnsResourceRecordsByPtr result;
+            int queryStatus = 0;
+
+            mStub.mRRCache.lookup(mTarget, mRRType, mProto, result, queryStatus);
+            if (mTransform)
+            {
+                mTransform->transform(mTarget, mRRType, result);
+            }
+            mResultConverter->notifyUser(mTarget, queryStatus, mStub.errorMessage(queryStatus), result, mSink);
+         }
+         else
+         {
+            // Not in hosts file - return error - or.. we could fallback to doing the lookupRecords call on the local named
+            mResultConverter->notifyUser(mTarget, ARES_ENOTFOUND, mStub.errorMessage(ARES_ENOTFOUND), Empty, mSink);
+         }
+         mReQuery = 0;
+         mStub.removeQuery(this);
+         delete this;
+         return;
+      }
+      else
+      {
+         StackLog (<< targetToQuery << " not cached. Doing external dns lookup");
+         mStub.lookupRecords(targetToQuery, mRRType, this);
+      }
    }
    else // is cached
    {
@@ -433,14 +497,14 @@ DnsStub::Query::go()
       {
          mTransform->transform(mTarget, mRRType, records);
       }
-      mResultConverter->notifyUser(mTarget, status, mStub.errorMessage(status), records, mSink); 
+      mResultConverter->notifyUser(mTarget, status, mStub.errorMessage(status), records, mSink);
 
       mStub.removeQuery(this);
       delete this;
    }
 }
 
-void 
+void
 DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
 {
    if (status != 0)
@@ -455,7 +519,7 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
          case ARES_EREFUSED:
             if(mRRType == T_A)
             {
-               in_addr address;  
+               in_addr address;
                if (mStub.mDnsProvider->hostFileLookup(mTarget.c_str(), address))
                {
                   mStub.cache(mTarget, address);
@@ -463,8 +527,8 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
                   DnsResourceRecordsByPtr result;
                   int queryStatus = 0;
 
-                  RRCache::instance()->lookup(mTarget, mRRType, mProto, result, queryStatus);
-                  if (mTransform) 
+                  mStub.mRRCache.lookup(mTarget, mRRType, mProto, result, queryStatus);
+                  if (mTransform)
                   {
                      mTransform->transform(mTarget, mRRType, result);
                   }
@@ -481,7 +545,7 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
             catch (BaseException& e)
             {
                // if the response isn't parsable, we might want to consider caching
-               // TTL anyways to delay the query attempt for this record. 
+               // TTL anyways to delay the query attempt for this record.
                ErrLog(<< "Couldn't parse failure response to lookup for " << mTarget);
                InfoLog(<< e.getMessage());
             }
@@ -520,7 +584,7 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
       }
 
       // For other error status values, we may also want to cacheTTL to delay
-      // requeries. Especially if the server refuses. 
+      // requeries. Especially if the server refuses.
       mResultConverter->notifyUser(mTarget, status, mStub.errorMessage(status), Empty, mSink);
       mReQuery = 0;
       mStub.removeQuery(this);
@@ -543,7 +607,7 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
       catch (BaseException& e)
       {
          ErrLog(<< "Error parsing DNS record for " << mTarget << ": " << e.getMessage());
-         mResultConverter->notifyUser(mTarget, ARES_EFORMERR, e.getMessage(), Empty, mSink); 
+         mResultConverter->notifyUser(mTarget, ARES_EFORMERR, e.getMessage(), Empty, mSink);
          mStub.removeQuery(this);
          delete this;
          return;
@@ -553,7 +617,7 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
    int ancount = DNS_HEADER_ANCOUNT(abuf);
    if (ancount == 0)
    {
-      mResultConverter->notifyUser(mTarget, 0, mStub.errorMessage(0), Empty, mSink); 
+      mResultConverter->notifyUser(mTarget, 0, mStub.errorMessage(0), Empty, mSink);
    }
    else
    {
@@ -568,29 +632,29 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
          int queryStatus = 0;
 
          if (mTarget != targetToQuery) DebugLog (<< mTarget << " mapped to " << targetToQuery << " and returned result");
-         RRCache::instance()->lookup(targetToQuery, mRRType, mProto, result, queryStatus);
-         if (mTransform) 
+         mStub.mRRCache.lookup(targetToQuery, mRRType, mProto, result, queryStatus);
+         if (mTransform)
          {
             mTransform->transform(mTarget, mRRType, result);
          }
          mResultConverter->notifyUser(mTarget, queryStatus, mStub.errorMessage(queryStatus), result, mSink);
       }
    }
-               
-   if (bDeleteThis) 
+
+   if (bDeleteThis)
    {
       mStub.removeQuery(this);
       delete this;
    }
 }
 
-void 
+void
 DnsStub::Query::onDnsRaw(int status, const unsigned char* abuf, int alen)
 {
    process(status, abuf, alen);
 }
 
-void 
+void
 DnsStub::Query::followCname(const unsigned char* aptr, const unsigned char*abuf, const int alen, bool& bGotAnswers, bool& bDeleteThis, Data& targetToQuery)
 {
    bGotAnswers = true;
@@ -602,7 +666,7 @@ DnsStub::Query::followCname(const unsigned char* aptr, const unsigned char*abuf,
    if (ARES_SUCCESS != ares_expand_name(aptr, abuf, alen, &name, &len))
    {
       ErrLog(<< "Failed DNS preparse for " << targetToQuery);
-      mResultConverter->notifyUser(mTarget, ARES_EFORMERR, "Failed DNS preparse", Empty, mSink); 
+      mResultConverter->notifyUser(mTarget, ARES_EFORMERR, "Failed DNS preparse", Empty, mSink);
       bGotAnswers = false;
       return;
    }
@@ -617,7 +681,7 @@ DnsStub::Query::followCname(const unsigned char* aptr, const unsigned char*abuf,
    catch (BaseException& e)
    {
       ErrLog(<< "Failed to cache result for " << targetToQuery << ": " << e.getMessage());
-      mResultConverter->notifyUser(mTarget, ARES_EFORMERR, e.getMessage(), Empty, mSink); 
+      mResultConverter->notifyUser(mTarget, ARES_EFORMERR, e.getMessage(), Empty, mSink);
       bGotAnswers = false;
       return;
    }
@@ -635,8 +699,8 @@ DnsStub::Query::followCname(const unsigned char* aptr, const unsigned char*abuf,
             do
             {
                DnsResourceRecordsByPtr cnames;
-               cached = RRCache::instance()->lookup(targetToQuery, T_CNAME, mProto, cnames, status);
-               if (cached) 
+               cached = mStub.mRRCache.lookup(targetToQuery, T_CNAME, mProto, cnames, status);
+               if (cached)
                {
                   ++mReQuery;
                   targetToQuery = (dynamic_cast<DnsCnameRecord*>(cnames[0]))->cname();
@@ -644,7 +708,7 @@ DnsStub::Query::followCname(const unsigned char* aptr, const unsigned char*abuf,
             } while(mReQuery < MAX_REQUERIES && cached);
 
             DnsResourceRecordsByPtr result;
-            if (!RRCache::instance()->lookup(targetToQuery, mRRType, mProto, result, status))
+            if (!mStub.mRRCache.lookup(targetToQuery, mRRType, mProto, result, status))
             {
                mStub.lookupRecords(targetToQuery, mRRType, this);
                bDeleteThis = false;
@@ -663,18 +727,19 @@ DnsStub::Query::followCname(const unsigned char* aptr, const unsigned char*abuf,
    free(name);
 }
 
-Data 
+Data
 DnsStub::errorMessage(int status)
 {
    return Data(Data::Take, mDnsProvider->errorMessage(status));
 }
 
-void DnsStub::lookupRecords(const Data& target, unsigned short type, DnsRawSink* sink)
+void
+DnsStub::lookupRecords(const Data& target, unsigned short type, DnsRawSink* sink)
 {
    mDnsProvider->lookup(target.c_str(), type, this, sink);
 }
 
-void 
+void
 DnsStub::handleDnsRaw(ExternalDnsRawResult res)
 {
    reinterpret_cast<DnsRawSink*>(res.userData)->onDnsRaw(res.errorCode(), res.abuf, res.alen);
@@ -693,7 +758,7 @@ DnsStub::setEnumSuffixes(const std::vector<Data>& suffixes)
    }
 }
 
-const std::vector<Data>& 
+const std::vector<Data>&
 DnsStub::getEnumSuffixes() const
 {
    return mEnumSuffixes;
@@ -720,7 +785,7 @@ DnsStub::clearDnsCache()
 void
 DnsStub::doClearDnsCache()
 {
-    RRCache::instance()->clearCache();
+    mRRCache.clearCache();
 }
 
 void
@@ -738,5 +803,17 @@ DnsStub::logDnsCache()
 void
 DnsStub::doLogDnsCache()
 {
-    RRCache::instance()->logCache();
+    mRRCache.logCache();
+}
+
+void
+DnsStub::setDnsCacheTTL(int ttl)
+{
+   mRRCache.setTTL(ttl);
+}
+
+void
+DnsStub::setDnsCacheSize(int size)
+{
+   mRRCache.setSize(size);
 }

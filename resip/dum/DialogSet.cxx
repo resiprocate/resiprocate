@@ -25,7 +25,6 @@
 #include "rutil/Inserter.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
-
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
@@ -240,9 +239,9 @@ bool
 DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
 {
    if (msg.isResponse() && !(mState == Terminating || 
-	                         mState == WaitingToEnd || 
-							 mState == Destroying || 
-							 mState == Cancelling))
+                             mState == WaitingToEnd || 
+                             mState == Destroying || 
+                             mState == Cancelling))
    {
       // !dcm! -- multiple usage grief...only one of each method type allowed
       if (getCreator() &&
@@ -564,18 +563,22 @@ DialogSet::dispatch(const SipMessage& msg)
                DebugLog(<< "in dialog refer request");
                break; // in dialog
             }
-            else if (!request.exists(h_ReferSub) || request.header(h_ReferSub).value() == "true")
-            {
-               DebugLog(<< "out of dialog refer request with refer sub");
-               break; // dialog creating
-            }
-            else // out of dialog & noReferSub=true
+            else if((request.exists(h_ReferSub) && 
+                     request.header(h_ReferSub).isWellFormed() &&
+                     request.header(h_ReferSub).value()=="false") ||
+                     (request.exists(h_Requires) &&
+                     request.header(h_Requires).find(Token("norefersub"))))// out of dialog & noReferSub=true
             {
                DebugLog(<< "out of dialog refer request with norefersub");
                assert(mServerOutOfDialogRequest == 0);
                mServerOutOfDialogRequest = makeServerOutOfDialog(request);
                mServerOutOfDialogRequest->dispatch(request);
                return;
+            }
+            else
+            {
+               DebugLog(<< "out of dialog refer request with refer sub");
+               break; // dialog creating
             }
             break;            
          case NOTIFY:
@@ -993,7 +996,7 @@ DialogSet::end()
          break;
       }
       case Terminating:
-	  case Cancelling:
+      case Cancelling:
       case Destroying:
          DebugLog (<< "DialogSet::end() called on a DialogSet that is already Terminating");
          //assert(0);
@@ -1107,7 +1110,7 @@ void DialogSet::dispatchToAllDialogs(const SipMessage& msg)
 }
 
 SharedPtr<UserProfile>
-DialogSet::getUserProfile()
+DialogSet::getUserProfile() const
 {
    if(mUserProfile.get())
    {
@@ -1125,6 +1128,27 @@ DialogSet::setUserProfile(SharedPtr<UserProfile> userProfile)
 {
    assert(userProfile.get());
    mUserProfile = userProfile;
+}
+
+void 
+DialogSet::flowTerminated(const Tuple& flow)
+{
+   // The flow has failed - clear the flow key/tuple in the UserProfile
+   mUserProfile->clearClientOutboundFlowTuple();
+
+   // If this profile is configured for client outbound and the connectionTerminated
+   // matches the connection stored in the profile, then notify the client registration
+   // and all dialogs in this dialogset that the flow has terminated
+   // Check other usage types that we send requests on
+   if(mClientRegistration)
+   {
+      mClientRegistration->flowTerminated();
+   }
+
+   for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
+   {
+      it->second->flowTerminated();
+   }
 }
 
 

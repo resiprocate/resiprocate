@@ -3,6 +3,7 @@
 #endif
 
 #include "resip/stack/ConnectionManager.hxx"
+#include "resip/stack/InteropHelper.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
 
@@ -13,13 +14,16 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-const UInt64 ConnectionManager::MinimumGcAge = 1;
+UInt64 ConnectionManager::MinimumGcAge = 1;  // in milliseconds
+bool ConnectionManager::EnableAgressiveGc = false;
 
 ConnectionManager::ConnectionManager() : 
    mHead(0,Tuple(),0,Compression::Disabled),
    mWriteHead(ConnectionWriteList::makeList(&mHead)),
    mReadHead(ConnectionReadList::makeList(&mHead)),
-   mLRUHead(ConnectionLruList::makeList(&mHead))
+   mLRUHead(ConnectionLruList::makeList(&mHead)),
+   mFlowTimerLRUHead(FlowTimerLruList::makeList(&mHead)),
+   mPollGrp(0)
 {
    DebugLog(<<"ConnectionManager::ConnectionManager() called ");
 }
@@ -33,6 +37,7 @@ ConnectionManager::~ConnectionManager()
    assert(mReadHead->empty());
    assert(mWriteHead->empty());
    assert(mLRUHead->empty());
+   assert(mFlowTimerLRUHead->empty());
 }
 
 Connection*
@@ -119,6 +124,9 @@ ConnectionManager::findConnection(const Tuple& addr) const
 void
 ConnectionManager::buildFdSet(FdSet& fdset)
 {
+   // If using PollGrp, caller shouldn't call this
+   assert( mPollGrp==0 );
+
    for (ConnectionReadList::iterator i = mReadHead->begin(); 
         i != mReadHead->end(); ++i)
    {
@@ -137,14 +145,28 @@ ConnectionManager::buildFdSet(FdSet& fdset)
 void
 ConnectionManager::addToWritable(Connection* conn)
 {
-   mWriteHead->push_back(conn);
+   if ( mPollGrp ) 
+   {
+      mPollGrp->modPollItem(conn->mPollItemHandle, FPEM_Read|FPEM_Write);
+   } 
+   else 
+   {
+      mWriteHead->push_back(conn);
+   }
 }
 
 void
 ConnectionManager::removeFromWritable(Connection* conn)
 {
-   assert(!mWriteHead->empty());
-   conn->ConnectionWriteList::remove();
+   if ( mPollGrp ) 
+   {
+      mPollGrp->modPollItem(conn->mPollItemHandle, FPEM_Read);
+   }
+   else
+   {
+      assert(!mWriteHead->empty());
+      conn->ConnectionWriteList::remove();
+   }
 }
 
 void
@@ -158,8 +180,22 @@ ConnectionManager::addConnection(Connection* connection)
    mAddrMap[connection->who()] = connection;
    mIdMap[connection->who().mFlowKey] = connection;
 
-   mReadHead->push_back(connection);
+   if ( mPollGrp ) 
+   {
+      connection->mPollItemHandle = mPollGrp->addPollItem(
+         connection->getSocket(), FPEM_Read, connection);
+   }
+   else 
+   {
+      mReadHead->push_back(connection);
+   }
    mLRUHead->push_back(connection);
+
+   // Garbage collect old connections if agressive is enabled
+   if(EnableAgressiveGc)
+   {
+      gc(MinimumGcAge, 0);  // cleanup all connections that haven't seen data in last x ms
+   }
 
    //DebugLog (<< "count=" << mAddrMap.count(connection->who()) << "who=" << connection->who() << " mAddrMap=" << Inserter(mAddrMap));
    //assert(mAddrMap.begin()->first == connection->who());
@@ -171,38 +207,80 @@ ConnectionManager::removeConnection(Connection* connection)
 {
    //DebugLog (<< "ConnectionManager::removeConnection()");
 
-   assert(!mReadHead->empty());
-
-
    mIdMap.erase(connection->mWho.mFlowKey);
    mAddrMap.erase(connection->mWho);
 
-   connection->ConnectionReadList::remove();
-   connection->ConnectionWriteList::remove();
-   connection->ConnectionLruList::remove();
+   if ( mPollGrp ) 
+   {
+      mPollGrp->delPollItem(connection->mPollItemHandle);
+   }
+   else
+   {
+      assert(!mReadHead->empty());
+      connection->ConnectionReadList::remove();
+      connection->ConnectionWriteList::remove();
+      if(connection->isFlowTimerEnabled())
+      {
+         connection->FlowTimerLruList::remove();
+      }
+      else
+      {
+         connection->ConnectionLruList::remove();
+      }
+   }
 }
 
 // release excessively old connections (free up file descriptors)
 void
-ConnectionManager::gc(UInt64 relThreshhold)
+ConnectionManager::gc(UInt64 relThreshold, unsigned int maxToRemove)
 {
-   UInt64 threshhold = Timer::getTimeMs() - relThreshhold;
-   InfoLog(<< "recycling connections older than " << relThreshhold/1000.0 << " seconds");
+   UInt64 curTimeMs = Timer::getTimeMs();
+   UInt64 threshold = curTimeMs - relThreshold;
+   DebugLog(<< "recycling connections not used in last " << relThreshold/1000.0 << " seconds");
 
+   // Look through non-flow-timer connections and close those using the passed in relThreshold
+   unsigned int numRemoved = 0;
    for (ConnectionLruList::iterator i = mLRUHead->begin();
-        i != mLRUHead->end();)
+        i != mLRUHead->end() &&
+        (maxToRemove == 0 || numRemoved != maxToRemove);)
    {
-      if ((*i)->whenLastUsed() < threshhold)
+      if ((*i)->whenLastUsed() < threshold)
       {
          Connection* discard = *i;
          InfoLog(<< "recycling connection: " << discard << " " << discard->getSocket());
          // iterate before removing
          ++i;
          delete discard;
+         numRemoved++;
       }
       else
       {
          break;
+      }
+   }
+
+   // Look through flow-timer connections and close those using the configured FlowTimer 
+   // value + the configured grace period as a threshold
+   if(mFlowTimerLRUHead->begin() != mFlowTimerLRUHead->end())
+   {
+      threshold = curTimeMs - ((InteropHelper::getFlowTimerSeconds() + InteropHelper::getFlowTimerGracePeriodSeconds()) * 1000);
+      for (FlowTimerLruList::iterator i2 = mFlowTimerLRUHead->begin();
+         i2 != mFlowTimerLRUHead->end() &&
+         (maxToRemove == 0 || numRemoved != maxToRemove);)
+      {  
+         if ((*i2)->whenLastUsed() < threshold)
+         {
+            Connection* discard = *i2;
+            InfoLog(<< "recycling flow-timer enabled connection: " << discard << " " << discard->getSocket());
+            // iterate before removing
+            ++i2;
+            delete discard;
+            numRemoved++;
+         }
+         else
+         {
+            break;
+         }
       }
    }
 }
@@ -211,16 +289,34 @@ ConnectionManager::gc(UInt64 relThreshhold)
 void
 ConnectionManager::touch(Connection* connection)
 {
+   connection->resetLastUsed();
+   if(connection->isFlowTimerEnabled())
+   {
+      connection->FlowTimerLruList::remove();
+      mFlowTimerLRUHead->push_back(connection);
+   }
+   else
+   {
+      connection->ConnectionLruList::remove();
+      mLRUHead->push_back(connection);
+   }
+}
+
+void 
+ConnectionManager::moveToFlowTimerLru(Connection *connection)
+{
    connection->ConnectionLruList::remove();
-   mLRUHead->push_back(connection);
+   mFlowTimerLRUHead->push_back(connection);
 }
 
 void
-ConnectionManager::process(FdSet& fdset, Fifo<TransactionMessage>& fifo)
+ConnectionManager::process(FdSet& fdset)
 {
+   assert( mPollGrp==NULL );	// owner shouldn't call this if polling
+
    // process the write list
    for (ConnectionWriteList::iterator writeIter = mWriteHead->begin();
-	writeIter != mWriteHead->end(); )
+        writeIter != mWriteHead->end(); )
    {
       Connection* currConnection = *writeIter;
 
@@ -229,25 +325,25 @@ ConnectionManager::process(FdSet& fdset, Fifo<TransactionMessage>& fifo)
       ++writeIter;
 
       if (!currConnection)
-	 continue;
+         continue;
 
       if (fdset.readyToWrite(currConnection->getSocket()))
       {
-	 currConnection->performWrite();
+         currConnection->performWrite();
       }
       else if (fdset.hasException(currConnection->getSocket()))
       {
-	 int errNum = 0;
-	 int errNumSize = sizeof(errNum);
-	 getsockopt(currConnection->getSocket(), SOL_SOCKET, SO_ERROR, (char *)&errNum, (socklen_t *)&errNumSize);
-	 InfoLog(<< "Exception writing to socket " << currConnection->getSocket() << " code: " << errNum << "; closing connection");
-	 delete currConnection;
+         int errNum = 0;
+         int errNumSize = sizeof(errNum);
+         getsockopt(currConnection->getSocket(), SOL_SOCKET, SO_ERROR, (char *)&errNum, (socklen_t *)&errNumSize);
+         InfoLog(<< "Exception writing to socket " << currConnection->getSocket() << " code: " << errNum << "; closing connection");
+         delete currConnection;
       }
    }
 
    // process the read list
    for (ConnectionReadList::iterator readIter = mReadHead->begin();
-	readIter != mReadHead->end(); )
+        readIter != mReadHead->end(); )
    {
       Connection* currConnection = *readIter; 
 
@@ -256,14 +352,14 @@ ConnectionManager::process(FdSet& fdset, Fifo<TransactionMessage>& fifo)
       ++readIter;
 
       if (!currConnection)
-	 continue;
+         continue;
 
       if ( fdset.readyToRead(currConnection->getSocket()) ||
-	   currConnection->hasDataToRead() )
+           currConnection->hasDataToRead() )
       {
-	 fdset.clear(currConnection->getSocket());
+         fdset.clear(currConnection->getSocket());
          
-         int bytesRead = currConnection->read(fifo);
+         int bytesRead = currConnection->read();
          DebugLog(<< "ConnectionManager::process() " << " read=" << bytesRead);
          if (bytesRead < 0)
          {
@@ -273,13 +369,20 @@ ConnectionManager::process(FdSet& fdset, Fifo<TransactionMessage>& fifo)
       }
       else if (fdset.hasException(currConnection->getSocket()))
       {
-	 int errNum = 0;
-	 int errNumSize = sizeof(errNum);
-	 getsockopt(currConnection->getSocket(), SOL_SOCKET, SO_ERROR, (char *)&errNum, (socklen_t *)&errNumSize);
-	 InfoLog(<< "Exception reading from socket " << currConnection->getSocket() << " code: " << errNum << "; closing connection");
-	 delete currConnection;
+         int errNum = 0;
+         int errNumSize = sizeof(errNum);
+         getsockopt(currConnection->getSocket(), SOL_SOCKET, SO_ERROR, (char *)&errNum, (socklen_t *)&errNumSize);
+         InfoLog(<< "Exception reading from socket " << currConnection->getSocket() << " code: " << errNum << "; closing connection");
+         delete currConnection;
       }
    }
+}
+
+void
+ConnectionManager::setPollGrp(FdPollGrp *grp) 
+{
+    assert( mPollGrp == NULL );
+    mPollGrp = grp;
 }
 
 /* ====================================================================

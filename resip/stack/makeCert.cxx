@@ -1,3 +1,4 @@
+#if defined(USE_SSL)
 #include <openssl/ssl.h>
 #include <openssl/pem.h>
 #include <openssl/ossl_typ.h>
@@ -118,6 +119,7 @@ int makeSelfCert(X509 **cert, EVP_PKEY *privkey)   // should include a Uri type 
 
   return true; 
 }
+#endif 
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

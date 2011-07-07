@@ -92,7 +92,7 @@ static void next_lookup(struct addr_query *aquery)
 	{
 	case 'b':
 	  addr = ntohl(aquery->addr.s_addr);
-	  a1 = addr >> 24;
+	  a1 = (addr >> 24) & 0xff;	// .kw. in case signed-ness changes
 	  a2 = (addr >> 16) & 0xff;
 	  a3 = (addr >> 8) & 0xff;
 	  a4 = addr & 0xff;

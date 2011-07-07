@@ -30,6 +30,7 @@ class TransactionUser
       void setMessageFilterRuleList(MessageFilterRuleList &rules);
       bool isRegisteredForTransactionTermination() const;
       bool isRegisteredForConnectionTermination() const;
+      bool isRegisteredForKeepAlivePongs() const;
       
    protected:
       enum TransactionTermination 
@@ -43,12 +44,20 @@ class TransactionUser
          RegisterForConnectionTermination,
          DoNotRegisterForConnectionTermination
       };
-         
+
+      enum KeepAlivePongs 
+      {
+         RegisterForKeepAlivePongs,
+         DoNotRegisterForKeepAlivePongs
+      };
+
       TransactionUser(TransactionTermination t=DoNotRegisterForTransactionTermination,
-                      ConnectionTermination c=DoNotRegisterForConnectionTermination);
+                      ConnectionTermination c=DoNotRegisterForConnectionTermination,
+                      KeepAlivePongs k=DoNotRegisterForKeepAlivePongs);
       TransactionUser(MessageFilterRuleList &rules, 
                       TransactionTermination t=DoNotRegisterForTransactionTermination,
-                      ConnectionTermination c=DoNotRegisterForConnectionTermination);
+                      ConnectionTermination c=DoNotRegisterForConnectionTermination,
+                      KeepAlivePongs k=DoNotRegisterForKeepAlivePongs);
 
       virtual ~TransactionUser()=0;
       virtual bool isForMe(const SipMessage& msg) const;
@@ -66,6 +75,7 @@ class TransactionUser
       DomainList mDomainList;
       bool mRegisteredForTransactionTermination;
       bool mRegisteredForConnectionTermination;
+      bool mRegisteredForKeepAlivePongs;
       friend class TuSelector;      
 };
 

@@ -3,7 +3,40 @@
 
 #include "rutil/Mutex.hxx"
 #include "rutil/Data.hxx"
+#include "rutil/ThreadIf.hxx"     // for ThreadLocalStorage
 #include <cassert>
+struct random_data;
+
+/**
+ * Define below to enable "RtlGenRandom" (aka SystemFunction036) on
+ * Windows platform. See Random.cxx for details.
+ */
+// #define RESIP_RANDOM_WIN32_RTL 1
+
+/**
+ * Define below to use common random number generator sate for all resip
+ * threads, but private from other parts of app.
+ * This makes use of random_r() and friends with mutex protection.
+ */
+// #define RESIP_RANDOM_THREAD_MUTEX 1
+
+/**
+ * Define below to use independent random number generator state
+ * for each thread. This makes use of random_r() and friends
+ * with TheadIf::tls (thread-local-storage).
+ */
+// #define RESIP_RANDOM_THREAD_LOCAL 1
+
+/**
+ * By default, on POSIX, the standard srandom() and random()
+ * functions will be used. This shares the generator state with
+ * others libraries running in the same application. Under Linux
+ * random() obtains a mutex so is threadsafe.
+ * NOTE: See http://evanjones.ca/random-thread-safe.html for some good info.
+ * WATCHOUT: Some other library can call srandom() in a stupid way,
+ * causing duplicate callids and such.
+ */
+
 
 namespace resip
 {
@@ -15,6 +48,7 @@ namespace resip
 class Random
 {
    public:
+      static unsigned getSimpleSeed();
       static void initialize();
 
       enum {maxLength = 512};
@@ -40,8 +74,14 @@ class Random
       */
       static Data getVersion4UuidUrn();
 
+      /**
+          Returns a postive integer (31 bits) of randomness. Implementation
+          is platform dependent.
+      **/
       static int  getRandom();
       static int  getCryptoRandom();
+
+      static const char* getImplName();
 
    private:
       static Mutex mMutex;
@@ -61,8 +101,18 @@ class Random
             DWORD mThreadStorage;
       };
       static Initializer mInitializer;
+
+#ifdef RESIP_RANDOM_WIN32_RTL
+      static BOOLEAN (APIENTRY *RtlGenRandom)(void*, ULONG);
 #endif
-      
+#endif  // WIN32
+#ifdef RESIP_RANDOM_THREAD_LOCAL
+      static ThreadIf::TlsKey sRandomStateKey;
+#endif
+#ifdef RESIP_RANDOM_THREAD_MUTEX
+      static struct random_data* sRandomState;
+      // we re-use the initialization mutex
+#endif
 };
  
 }
@@ -117,4 +167,5 @@ class Random
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */

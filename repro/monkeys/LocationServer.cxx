@@ -28,8 +28,7 @@ LocationServer::process(RequestContext& context)
 {
    DebugLog(<< "Monkey handling request: " << *this << "; reqcontext = " << context);
 
-   const resip::Uri& inputUri
-      = context.getOriginalRequest().header(h_RequestLine).uri();
+   resip::Uri inputUri = context.getOriginalRequest().header(h_RequestLine).uri().getAorAsUri(context.getOriginalRequest().getSource().getType());
 
    //!RjS! This doesn't look exception safe - need guards
    mStore.lockRecord(inputUri);
@@ -55,16 +54,9 @@ LocationServer::process(RequestContext& context)
                QValueTarget* target = new QValueTarget(contact);
                batch.push_back(target);
             }
-            else if(!contact.mReceivedFrom.onlyUseExistingConnection ||
-               context.getProxy().getStack().isFlowAlive(contact.mReceivedFrom))
-            {
-               outboundBatch[contact.mInstance].push_back(contact);
-            }
             else
             {
-               // !bwc! If our direct flow to the endpoint has failed, we remove 
-               // the contact.
-               mStore.removeContact(inputUri,contact);
+               outboundBatch[contact.mInstance].push_back(contact);
             }
          }
          else

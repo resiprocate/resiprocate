@@ -316,9 +316,14 @@ install: all
 	$(INSTALL) -d $(DESTDIR)$(INSTALL_PREFIX)/lib
 	$(INSTALL) $(OBJ)/$(TARGET_LIBRARY).$(LIBSUFFIX) $(INSTALL_LIBDIR)/$(TARGET_LIBRARY).$(LIBSUFFIX)
 	$(INSTALL) -d $(INSTALL_INCDIR)
-	$(INSTALL) -m 644 *.h* $(INSTALL_INCDIR)
+	$(INSTALL) -m 644 *.h $(INSTALL_INCDIR) || true;
+	$(INSTALL) -m 644 *.h?? $(INSTALL_INCDIR) || true;
 ifdef CODE_SUBDIRS
-	@ for subdir in $(CODE_SUBDIRS) ;  do ( $(INSTALL) -d $(INSTALL_INCDIR)/$$subdir ; $(INSTALL) -m 644 $$subdir/*.h* $(INSTALL_INCDIR)/$$subdir) ; done 
+	@ for subdir in $(CODE_SUBDIRS) ;  do ( \
+	$(INSTALL) -d $(INSTALL_INCDIR)/$$subdir ; \
+	$(INSTALL) -m 644 $$subdir/*.h $(INSTALL_INCDIR)/$$subdir  || true; \
+	$(INSTALL) -m 644 $$subdir/*.h?? $(INSTALL_INCDIR)/$$subdir  || true; \
+	) ; done 
 endif
 endif
 endif

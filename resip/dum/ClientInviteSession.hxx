@@ -34,6 +34,7 @@ class ClientInviteSession : public InviteSession
       virtual void provideAnswer (const Contents& answer);
 
       /** Makes the specific dialog end. Will send a BYE (not a CANCEL) */
+      virtual void end(const Data& userReason);
       virtual void end(EndReason reason);
       virtual void end();
 

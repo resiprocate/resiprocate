@@ -175,7 +175,7 @@ MultipartMixedContents::parse(ParseBuffer& pb)
    boundaryNoCRLF += boundaryToken;
 
    pb.skipToChars(boundaryNoCRLF);
-   pb.skipN(boundaryNoCRLF.size());
+   pb.skipN((int)boundaryNoCRLF.size());
    pb.assertNotEof();
 
    do
@@ -241,7 +241,7 @@ MultipartMixedContents::parse(ParseBuffer& pb)
       ParseBuffer headersPb(headerStart, bodyStart-4-headerStart);
       mContents.back()->preParseHeaders(headersPb);
 
-      pb.skipN(boundary.size());
+      pb.skipN((int)boundary.size());
 
       const char* loc = pb.position();
       pb.skipChar();

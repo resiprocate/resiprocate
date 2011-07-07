@@ -18,7 +18,7 @@ public:
        mRemoveLingerSecs(removeLingerSecs) {}
     bool operator () (const ContactInstanceRecord& rec)
     {
-       if(rec.mRegExpires == 0 && (mNow - rec.mLastUpdated) > mRemoveLingerSecs) 
+       if((rec.mRegExpires <= mNow) && ((mNow - rec.mLastUpdated) > mRemoveLingerSecs)) 
        {
           DebugLog(<< "ContactInstanceRecord removed after linger: " << rec.mContact);
           return true;

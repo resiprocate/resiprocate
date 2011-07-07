@@ -45,6 +45,8 @@ DnsNaptrRecord::RegExp::RegExp(const Data& data)
       pb.skipToChar(delim);
       pb.data(mReplacement, start);
       start = pb.skipChar(delim);
+      // .kw. start above is not used -- what is going on here?
+      // should above code be in #if block below?
       
 #if 0
       //pb.data(mFlags, start);

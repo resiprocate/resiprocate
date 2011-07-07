@@ -9,12 +9,20 @@
 using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
-UserProfile::UserProfile() : Profile(), mGruuEnabled(false)
+const resip::NameAddr UserProfile::mAnonymous("\"Anonymous\" <sip:anonymous@anonymous.invalid>", true /* preCacheAor */);
+
+UserProfile::UserProfile() : Profile(), 
+   mGruuEnabled(false),
+   mRegId(0),
+   mClientOutboundEnabled(false)
 {
     //InfoLog (<< "************ UserProfile created (no base)!: " << *this);
 }
 
-UserProfile::UserProfile(SharedPtr<Profile> baseProfile) : Profile(baseProfile), mGruuEnabled(false)
+UserProfile::UserProfile(SharedPtr<Profile> baseProfile) : Profile(baseProfile), 
+   mGruuEnabled(false),
+   mRegId(0),
+   mClientOutboundEnabled(false)
 {
     //InfoLog (<< "************ UserProfile created (with base)!: " << *this);
 }
@@ -24,13 +32,11 @@ UserProfile::~UserProfile()
     //InfoLog (<< "************ UserProfile destroyed!: " << *this);
 }
 
-static NameAddr anonymous("\"Anonymous\" <sip:anonymous@anonymous.invalid>");
-
 SharedPtr<UserProfile> 
 UserProfile::getAnonymousUserProfile() const
 {
    SharedPtr<UserProfile> anon(this->clone());
-   anon->setDefaultFrom(anonymous);
+   anon->setDefaultFrom(mAnonymous);
    return anon;
 }
 
@@ -43,7 +49,7 @@ UserProfile::clone() const
 bool
 UserProfile::isAnonymous() const
 {
-   return (mDefaultFrom.uri().getAor() == anonymous.uri().getAor());
+   return (mDefaultFrom.uri().getAor() == mAnonymous.uri().getAor());
 }
 
 void
@@ -128,23 +134,23 @@ UserProfile::clearDigestCredentials()
 }
 
 void 
-UserProfile::setDigestCredential( const Data& realm, const Data& user, const Data& password)
+UserProfile::setDigestCredential( const Data& realm, const Data& user, const Data& password, bool isPasswordA1Hash)
 {
-   DigestCredential cred( realm, user, password );
+   DigestCredential cred(realm, user, password, isPasswordA1Hash);
 
    DebugLog (<< "Adding credential: " << cred);
    mDigestCredentials.erase(cred);
    mDigestCredentials.insert(cred);
 }
      
+static const UserProfile::DigestCredential emptyDigestCredential;
 const UserProfile::DigestCredential&
 UserProfile::getDigestCredential( const Data& realm  )
 {
    if(mDigestCredentials.empty())
    {
       // !jf! why not just throw here? 
-      static const DigestCredential empty;
-      return empty;
+      return emptyDigestCredential;
    }
 
    DigestCredentials::const_iterator it = mDigestCredentials.find(DigestCredential(realm));
@@ -160,31 +166,27 @@ UserProfile::getDigestCredential( const Data& realm  )
    }
 }
 
-UserProfile::DigestCredential::DigestCredential(const Data& r, const Data& u, const Data& pwd) :
+UserProfile::DigestCredential::DigestCredential(const Data& r, const Data& u, const Data& pwd, bool pwdA1Hash) :
    realm(r),
    user(u),
-   password(pwd)
+   password(pwd),
+   isPasswordA1Hash(pwdA1Hash)
 {  
-//    MD5Stream a1;
-//    a1 << user
-//       << Symbols::COLON
-//       << realm
-//       << Symbols::COLON
-//       << password;
-//    passwordHashA1 = a1.getHex();
 }
 
 UserProfile::DigestCredential::DigestCredential() : 
    realm(Data::Empty),
    user(Data::Empty),
-   password(Data::Empty)
+   password(Data::Empty),
+   isPasswordA1Hash(false)
 {
 }  
 
 UserProfile::DigestCredential::DigestCredential(const Data& pRealm) : 
    realm(pRealm),
    user(Data::Empty),
-   password(Data::Empty) 
+   password(Data::Empty),
+   isPasswordA1Hash(false)
 {
 }  
 

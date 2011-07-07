@@ -45,12 +45,15 @@ class AppDialogSet : public Handled
       // an userProfile other than the MasterProfile
       virtual SharedPtr<UserProfile> selectUASUserProfile(const SipMessage&); 
 
+      bool isDumDeleted() const { return mDumDeleted; }
+
    private:
       /// Prepare for association with a different dialog set id.  Need this
       /// when the initial message changes (408/Retry-After) but the application
       /// doesn't want to know.
       AppDialogSet* reuse();
       bool isReUsed() const;
+      void setDumDeleted() { mDumDeleted = true; }
       
       friend class DialogUsageManager;
       friend class AppDialogSetFactory;
@@ -58,6 +61,7 @@ class AppDialogSet : public Handled
 
       DialogSet* mDialogSet;
       bool mIsReUsed;
+      bool mDumDeleted;
 };
 
 }

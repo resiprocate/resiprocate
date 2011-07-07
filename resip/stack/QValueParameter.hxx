@@ -29,11 +29,10 @@ namespace resip
       virtual Parameter* clone() const;
       virtual EncodeStream& encode(EncodeStream& stream) const;
 
-   private:
-      friend class ParserCategory;
       Type& value() {return mValue;}
       int qval() const {return mValue.getValue();}
 
+   private:
       Type mValue;
    };
 

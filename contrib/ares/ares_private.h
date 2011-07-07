@@ -60,6 +60,7 @@ struct server_state {
   struct in_addr addr;
   unsigned char physical_addr[MAX_ADAPTER_ADDRESS_LENGTH];
   int physical_addr_len;
+  int default_localhost_server;
 
   int udp_socket;
   int tcp_socket;
@@ -136,10 +137,14 @@ struct ares_channeldata {
 
   /* post socket creation function pointer */
   socket_function_ptr socket_function;
-      
+
+  /* poll() system support */
+  ares_poll_cb_func *poll_cb_func;
+  void* poll_cb_data;
 };
 
 void ares__send_query(ares_channel channel, struct query *query, time_t now);
+void ares__close_poll(ares_channel channel, int server_idx);
 void ares__close_sockets(struct server_state *server);
 int ares__get_hostent(FILE *fp, struct hostent **host);
 int ares__read_line(FILE *fp, char **buf, int *bufsize);

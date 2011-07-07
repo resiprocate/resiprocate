@@ -55,16 +55,16 @@ using namespace std;
 
 static const Data PEM(".pem");
 
+static const Data rootCert("root_cert_");
+static const Data domainCert("domain_cert_");
+static const Data domainKey("domain_key_");
+static const Data userCert("user_cert_");
+static const Data userKey("user_key_");
+static const Data unknownKey("user_key_");
+
 static const Data 
 pemTypePrefixes(  Security::PEMType pType )
 {
-   static const Data rootCert("root_cert_");
-   static const Data domainCert("domain_cert_");
-   static const Data domainKey("domain_key_");
-   static const Data userCert("user_cert_");
-   static const Data userKey("user_key_");
-   static const Data unknownKey("user_key_");
-
    switch (pType)
    {
       case  Security::RootCert:         return rootCert;
@@ -102,7 +102,7 @@ readIntoData(const Data& filename)
    // get length of file:
 #if !defined(__MSL_CPP__) || (__MSL_CPP_ >= 0x00012000)
    is.seekg (0, ios::end);
-   length = is.tellg();
+   length = (int)is.tellg();
    is.seekg (0, ios::beg);
 #else
    // this is a work around for a bug in CodeWarrior 9's implementation of seekg.
@@ -171,6 +171,8 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
  
 }
 
+// .amr. RFC 5922 mandates exact match only on certificates, so this is the default, but RFC 2459 and RFC 3261 don't prevent wildcards, so enable if you want that mode.
+bool BaseSecurity::mAllowWildcardCertificates = false;
 BaseSecurity::CipherList BaseSecurity::ExportableSuite("!SSLv2:aRSA+AES:aDSS+AES:@STRENGTH:aRSA+3DES:aDSS+3DES:aRSA+RC4+MEDIUM:aDSS+RC4+MEDIUM:aRSA+DES:aDSS+DES:aRSA+RC4:aDSS+RC4");
 BaseSecurity::CipherList BaseSecurity::StrongestSuite("!SSLv2:aRSA+AES:aDSS+AES:@STRENGTH:aRSA+3DES:aDSS+3DES");
 
@@ -261,6 +263,57 @@ Security::preload()
    }
 }
 
+SSL_CTX* 
+Security::createDomainCtx(const SSL_METHOD* method, const Data& domain)
+{
+#if (OPENSSL_VERSION_NUMBER >= 0x1000000fL )
+   SSL_CTX* ctx = SSL_CTX_new(method);
+#else
+   SSL_CTX* ctx = SSL_CTX_new((SSL_METHOD*)method);
+#endif
+   assert(ctx);
+
+   X509_STORE* x509Store = X509_STORE_new();
+   assert(x509Store);
+
+   // Load root certs into store
+   X509List::iterator it;
+   for(it = mRootCerts.begin(); it != mRootCerts.end(); it++)
+   {
+      X509_STORE_add_cert(x509Store,*it);
+   }
+   SSL_CTX_set_cert_store(ctx, x509Store);
+
+   // Load domain cert chain and private key
+   if(!domain.empty())
+   {
+      Data certFilename(mPath + pemTypePrefixes(DomainCert) + domain + PEM);
+      if(SSL_CTX_use_certificate_chain_file(ctx, certFilename.c_str()) != 1)
+      {
+         ErrLog (<< "Error reading domain chain file " << certFilename);
+         SSL_CTX_free(ctx);
+         throw BaseSecurity::Exception("Failed opening PEM chain file", __FILE__,__LINE__);
+      }
+      Data keyFilename(mPath + pemTypePrefixes(DomainPrivateKey) + domain + PEM);
+      if(SSL_CTX_use_PrivateKey_file(ctx, keyFilename.c_str(), SSL_FILETYPE_PEM) != 1)
+      {
+         ErrLog (<< "Error reading domain private key file " << keyFilename);
+         SSL_CTX_free(ctx);
+         throw BaseSecurity::Exception("Failed opening PEM private key file", __FILE__,__LINE__);
+      }
+      if (!SSL_CTX_check_private_key(ctx))
+      {
+         ErrLog (<< "Invalid domain private key from file: " << keyFilename);
+         SSL_CTX_free(ctx);
+         throw BaseSecurity::Exception("Invalid domain private key", __FILE__,__LINE__);
+      }
+   }
+
+   SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE, verifyCallback);
+   SSL_CTX_set_cipher_list(ctx, mCipherList.cipherList().c_str());
+
+   return ctx;
+}
 
 void
 Security::onReadPEM(const Data& name, PEMType type, Data& buffer) const
@@ -308,9 +361,13 @@ void
 BaseSecurity::addCertDER (PEMType type, 
                           const Data& key, 
                           const Data& certDER, 
-                          bool write) const
+                          bool write)
 {
-   assert( !certDER.empty() );
+   if( certDER.empty() )
+   {
+      ErrLog(<< "File is empty. Skipping.");
+      return;
+   }
 
    X509* cert = 0;
 
@@ -320,7 +377,7 @@ BaseSecurity::addCertDER (PEMType type,
    unsigned const char* in = (unsigned const char*)certDER.data();
 #endif
 
-   if (d2i_X509(&cert,&in,certDER.size()) == 0)
+   if (d2i_X509(&cert,&in,(long)certDER.size()) == 0)
    {
       ErrLog(<< "Could not read DER certificate from " << certDER );
       throw BaseSecurity::Exception("Could not read DER certificate ", 
@@ -334,9 +391,13 @@ void
 BaseSecurity::addCertPEM (PEMType type, 
                           const Data& name, 
                           const Data& certPEM, 
-                          bool write) const
+                          bool write)
 {
-   assert( !certPEM.empty() );
+   if( certPEM.empty() )
+   {
+      ErrLog(<< name << " is empty. Skipping.");
+      return;
+   }
    X509* cert=NULL;
    
    BIO* in = BIO_new_mem_buf(const_cast<char*>(certPEM.c_str()), -1);
@@ -348,9 +409,9 @@ BaseSecurity::addCertPEM (PEMType type,
    cert = PEM_read_bio_X509(in,0,0,0);
    if (cert == NULL)
    {
-	   ErrLog( << "Could not load X509 cert from '" << certPEM << "'" );
-	   BIO_free(in); 
-	   throw Exception("Could not load X509 cert from BIO buffer", __FILE__,__LINE__);
+      ErrLog( << "Could not load X509 cert from '" << certPEM << "'" );
+      BIO_free(in); 
+      throw Exception("Could not load X509 cert from BIO buffer", __FILE__,__LINE__);
    }
    
    addCertX509(type,name,cert,write);
@@ -360,7 +421,7 @@ BaseSecurity::addCertPEM (PEMType type,
 
 
 void
-BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write) const
+BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write)
 {
    switch (type)
    {
@@ -376,9 +437,9 @@ BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write)
       break;
       case RootCert:
       {
+         mRootCerts.push_back(cert);
          X509_STORE_add_cert(mRootTlsCerts,cert);
          X509_STORE_add_cert(mRootSslCerts,cert);
-         X509_free(cert);
       }
       break;
       default:
@@ -391,27 +452,46 @@ BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write)
    {
       // creates a read/write BIO buffer.
       BIO *out = BIO_new(BIO_s_mem());
-      assert(out);
+      if(!out)
+      {
+         ErrLog(<< "Failed to create BIO: this cert will not be added.");
+         assert(0);
+         return;
+      }
+
       try
       {
          int ret = PEM_write_bio_X509(out, cert);
-         assert(ret);
+         if(!ret)
+         {
+            assert(0);
+            throw Exception("PEM_write_bio_X509 failed: this cert will not be "
+                              "added.", __FILE__,__LINE__);
+         }
          
-         BIO_flush(out);
+         (void)BIO_flush(out);
          // get content in BIO buffer to our buffer.
          char* p = 0;
          size_t len = BIO_get_mem_data(out,&p);
-         assert(p);
-         assert(len);
+         if(!p || !len)
+         {
+            assert(0);
+            throw Exception("BIO_get_mem_data failed: this cert will not be "
+                              "added.", __FILE__,__LINE__);
+         }
          Data  buf(Data::Borrow, p, len);
          
          this->onWritePEM(key, type, buf);
       }
-      catch(...)
+      catch(Exception& e)
       {
-         ErrLog(<<"Caught exception: ");
+         ErrLog(<<"Caught exception: " << e);
+      }
+      catch(std::exception& e)
+      {
+         ErrLog(<<"Caught unknown exception, rethrowing");
          BIO_free(out);
-         throw;
+         throw e;
       }
       BIO_free(out);
    }
@@ -422,9 +502,9 @@ bool
 BaseSecurity::hasCert (PEMType type, const Data& aor) const
 {
    assert( !aor.empty() );
-   X509Map& certs = (type == DomainCert ? mDomainCerts : mUserCerts);
+   const X509Map& certs = (type == DomainCert ? mDomainCerts : mUserCerts);
 
-   X509Map::iterator where = certs.find(aor);
+   X509Map::const_iterator where = certs.find(aor);
    if (where != certs.end())
    {
       return true;
@@ -488,8 +568,8 @@ BaseSecurity::getCertDER (PEMType type, const Data& key) const
       throw BaseSecurity::Exception("Could not find certificate", __FILE__,__LINE__);
    }
 
-   X509Map& certs = (type == DomainCert ? mDomainCerts : mUserCerts);
-   BaseSecurity::X509Map::iterator where = certs.find(key);
+   const X509Map& certs = (type == DomainCert ? mDomainCerts : mUserCerts);
+   BaseSecurity::X509Map::const_iterator where = certs.find(key);
    if (where == certs.end())
    {
       // not supposed to happen,
@@ -523,7 +603,7 @@ void
 BaseSecurity::addPrivateKeyPKEY(PEMType type, 
                                 const Data& name, 
                                 EVP_PKEY* pKey, 
-                                bool write) const 
+                                bool write)
 { 
    PrivateKeyMap& privateKeys = (type == DomainPrivateKey ? 
                                  mDomainPrivateKeys : mUserPrivateKeys);
@@ -552,12 +632,17 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type,
          if(iter != mUserPassPhrases.end())
          {
             kstr = (char*)iter->second.c_str(); 
-            klen = iter->second.size();
+            klen = (int)iter->second.size();
          }
       }
 
       BIO *bio = BIO_new(BIO_s_mem());
-      assert(bio);
+      if(!bio)
+      {
+         ErrLog(<< "BIO_new failed: cannot add private key.");
+         assert(0);
+      }
+
       try
       {
          assert( EVP_des_ede3_cbc() );
@@ -575,21 +660,34 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type,
                                                  kstr, klen,
                                                  NULL, NULL);
 #endif
-         assert(ret);
-         
-         BIO_flush(bio);
+         if(!ret)
+         {
+            assert(0);
+            throw Exception("PEM_write_bio_PKCS8PrivateKey failed: cannot add"
+                              " private key.", __FILE__, __LINE__);
+         }
+
+         (void)BIO_flush(bio);
          char* p = 0;
          size_t len = BIO_get_mem_data(bio,&p);
-         assert(p);
-         assert(len);
+         if(!p || !len)
+         {
+            assert(0);
+            throw Exception("BIO_get_mem_data failed: cannot add"
+                              " private key.", __FILE__, __LINE__);
+         }
          Data  pem(Data::Borrow, p, len);
          onWritePEM(name, type, pem );
       }
-      catch(...)
+      catch(Exception& e)
       {
-         ErrLog(<<"Caught exception: ");
+         ErrLog( << "Caught exception: " << e);
+      }
+      catch(std::exception& e)
+      {
+         ErrLog(<<"Caught unknown exception, rethrowing: " << e.what());
          BIO_free(bio);
-         throw;
+         throw e;
       }
       BIO_free(bio);
    }
@@ -600,10 +698,14 @@ void
 BaseSecurity::addPrivateKeyDER( PEMType type,
                                 const Data& name,
                                 const Data& privateKeyDER,
-                                bool write ) const
+                                bool write )
 {
    assert( !name.empty() );
-   assert( !privateKeyDER.empty() );
+   if( privateKeyDER.empty() )
+   {
+      ErrLog(<< name << " is empty. Skipping.");
+      return;
+   }
 
    char* passPhrase = 0;
    if (type != DomainPrivateKey)
@@ -634,11 +736,11 @@ BaseSecurity::addPrivateKeyDER( PEMType type,
       
       addPrivateKeyPKEY(type,name,privateKey,write);
    }
-   catch(...)
+   catch(std::exception& e)
    {
       ErrLog(<<"Caught exception: ");
       BIO_free(in);
-      throw;
+      throw e;
    }
    
    BIO_free(in);
@@ -649,10 +751,14 @@ void
 BaseSecurity::addPrivateKeyPEM( PEMType type,
                                 const Data& name,
                                 const Data& privateKeyPEM,
-                                bool write ) const 
+                                bool write )
 {
    assert( !name.empty() );
-   assert( !privateKeyPEM.empty() );
+   if( privateKeyPEM.empty() )
+   {
+      ErrLog(<< name << " is empty. Skipping.");
+      return;
+   }
 
    BIO* in = BIO_new_mem_buf(const_cast<char*>(privateKeyPEM.c_str()), -1);
    if ( !in )
@@ -682,11 +788,11 @@ BaseSecurity::addPrivateKeyPEM( PEMType type,
       
       addPrivateKeyPKEY(type,name,privateKey,write);
    }
-   catch(...)
+   catch(std::exception& e)
    {
       ErrLog(<<"Caught exception: ");
       BIO_free(in);
-      throw;
+      throw e;
    }
 
    BIO_free(in);
@@ -699,7 +805,7 @@ BaseSecurity::hasPrivateKey( PEMType type,
 {
    assert( !key.empty() );
 
-   PrivateKeyMap& privateKeys = (type == DomainPrivateKey 
+   const PrivateKeyMap& privateKeys = (type == DomainPrivateKey 
                                  ? mDomainPrivateKeys : mUserPrivateKeys);
 
    PrivateKeyMap::const_iterator where = privateKeys.find(key);
@@ -715,14 +821,14 @@ BaseSecurity::hasPrivateKey( PEMType type,
       BaseSecurity* mutable_this = const_cast<BaseSecurity*>(this);
       mutable_this->addPrivateKeyPEM(type, key, privateKeyPEM, false);
    }
-   catch (Exception& e)
+   catch(std::exception& e)
    {
-      ErrLog(<<"Caught exception: " << e);
+      ErrLog(<<"Caught exception: " << e.what());
       return   false;
    }
    catch(...)
    {
-      ErrLog(<<"Caught exception: ");
+      ErrLog(<<"Caught unknown class!");
       return   false;
    }
 
@@ -742,7 +848,7 @@ BaseSecurity::getPrivateKeyPEM( PEMType type,
       throw Exception("Could not find private key", __FILE__,__LINE__);
    }
 
-   PrivateKeyMap& privateKeys = (type == DomainPrivateKey ? mDomainPrivateKeys : mUserPrivateKeys);
+   const PrivateKeyMap& privateKeys = (type == DomainPrivateKey ? mDomainPrivateKeys : mUserPrivateKeys);
 
    PrivateKeyMap::const_iterator where = privateKeys.find(key);
    char* p = 0;
@@ -767,11 +873,12 @@ BaseSecurity::getPrivateKeyPEM( PEMType type,
    // write pk to out using key phrase p, with no cipher.
    int ret = PEM_write_bio_PrivateKey(out, pk, 0, 0, 0, 0, p);  // paraters
                                                                 // are in the wrong order
+   (void)ret;
    assert(ret == 1);
 
    // get content in BIO buffer to our buffer.
    // hand our buffer to a Data object.
-   BIO_flush(out);
+   (void)BIO_flush(out);
    char* buf = 0;
    int len = BIO_get_mem_data(out, &buf);
    Data retVal(Data::Borrow, buf, len);
@@ -794,7 +901,7 @@ BaseSecurity::getPrivateKeyDER( PEMType type,
       throw Exception("Could not find private key", __FILE__,__LINE__);
    }
 
-   PrivateKeyMap& privateKeys = (type == DomainPrivateKey ? mDomainPrivateKeys : mUserPrivateKeys);
+   const PrivateKeyMap& privateKeys = (type == DomainPrivateKey ? mDomainPrivateKeys : mUserPrivateKeys);
 
    PrivateKeyMap::const_iterator where = privateKeys.find(key);
    char* p = 0;
@@ -818,11 +925,12 @@ BaseSecurity::getPrivateKeyDER( PEMType type,
 
    // write pk to out using key phrase p, with no cipher.
    int ret = i2d_PKCS8PrivateKey_bio(out, pk, 0, 0, 0, 0, p);
+   (void)ret;
    assert(ret == 1);
 
    // get content in BIO buffer to our buffer.
    // hand our buffer to a Data object.
-   BIO_flush(out);
+   (void)BIO_flush(out);
    char* buf = 0;
    int len = BIO_get_mem_data(out, &buf);
    Data retVal(Data::Borrow, buf, len);
@@ -861,6 +969,7 @@ Security::Exception::Exception(const Data& msg, const Data& file, const int line
 BaseSecurity::BaseSecurity (const CipherList& cipherSuite) :
    mTlsCtx(0),
    mSslCtx(0),
+   mCipherList(cipherSuite),
    mRootTlsCerts(0),                    
    mRootSslCerts(0)
 { 
@@ -909,29 +1018,29 @@ void clearMap(T& m, Func& clearFunc)
    }
    m.clear();
 }
-         
+
+template<class T, class Func> 
+void clearList(T& m, Func& clearFunc)
+{
+   for (typename T::iterator it = m.begin(); it != m.end(); it++)
+   {
+      clearFunc(*it);
+   }
+   m.clear();
+}
+
 BaseSecurity::~BaseSecurity ()
 {
    DebugLog(<< "BaseSecurity::~BaseSecurity");
 
    // cleanup certificates
+   clearList(mRootCerts, X509_free);
    clearMap(mDomainCerts, X509_free);
    clearMap(mUserCerts, X509_free);
 
    // cleanup private keys
    clearMap(mDomainPrivateKeys, EVP_PKEY_free);
    clearMap(mUserPrivateKeys, EVP_PKEY_free);
-
-/*
-// !abr! This intentional memory leak appears to be unnecessary. Derek to verify.
-// !dcm! - still crashses...I think if there were no certs to load. 
-
-   // sailesh@counterpath.com : this code leaks memory but it's necessary on
-   // mac and windows. if we don't have this code then SSL_CTX_new( TLSv1_method() )
-   // returns NULL when BaseSecurity::BaseSecurity() is called the second time.
-   X509_STORE_free(mRootTlsCerts);
-   X509_STORE_free(mRootSslCerts);
-*/
 
    // cleanup SSL_CTXes
    if (mTlsCtx)
@@ -1252,11 +1361,11 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    ASN1_INTEGER_set(X509_get_serialNumber(cert),serial);
    
    ret = X509_NAME_add_entry_by_txt( subject, "O",  MBSTRING_ASC, 
-                                     (unsigned char *) domain.data(), domain.size(), 
+                                     (unsigned char *) domain.data(), (int)domain.size(), 
                                      -1, 0);
    assert(ret);
    ret = X509_NAME_add_entry_by_txt( subject, "CN", MBSTRING_ASC, 
-                                     (unsigned char *) aor.data(), aor.size(), 
+                                     (unsigned char *) aor.data(), (int)aor.size(), 
                                      -1, 0);
    assert(ret);
    
@@ -1295,7 +1404,6 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    addPrivateKeyPKEY( UserPrivateKey, aor, privkey, true /* write */ );
 }
 
-
 MultipartSignedContents*
 BaseSecurity::sign(const Data& senderAor, Contents* contents)
 {
@@ -1320,7 +1428,7 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
    //Security::dumpAsn("resip-sign-out-data",bodyData);
 
    const char* p = bodyData.data();
-   int s = bodyData.size();
+   int s = (int)bodyData.size();
    BIO* in=BIO_new_mem_buf( (void*)p,s);
    assert(in);
    DebugLog( << "created in BIO");
@@ -1347,7 +1455,14 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
    EVP_PKEY* privateKey = mUserPrivateKeys[senderAor];
 
    int rv = X509_check_private_key(publicCert, privateKey);
-   assert(rv);
+   if(!rv)
+   {
+      BIO_free(in);
+      BIO_free(out);
+      sk_X509_free(chain);
+      ErrLog (<< "X509_check_private_key failed for " << senderAor);
+      return 0;
+   }
 
    // compute the signature
    int flags = 0;
@@ -1375,7 +1490,7 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
    DebugLog( << "created PKCS7 signature object " );
 
    i2d_PKCS7_bio(out,pkcs7);
-   BIO_flush(out);
+   (void)BIO_flush(out);
 
    char* outBuf=0;
    long size = BIO_get_mem_data(out,&outBuf);
@@ -1401,6 +1516,7 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
    BIO_free(in);
    BIO_free(out);
    sk_X509_free(chain);
+   PKCS7_free(pkcs7);
 
    return multi;
 }
@@ -1424,7 +1540,7 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
    InfoLog( << "body data to encrypt is <" << bodyData.escaped() << ">" );
 
    const char* p = bodyData.data();
-   int s = bodyData.size();
+   int s = (int)bodyData.size();
 
    BIO* in = BIO_new_mem_buf( (void*)p,s);
    assert(in);
@@ -1480,7 +1596,7 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
 
    i2d_PKCS7_bio(out,pkcs7);
 
-   BIO_flush(out);
+   (void)BIO_flush(out);
 
    char* outBuf=0;
    long size = BIO_get_mem_data(out,&outBuf);
@@ -1508,6 +1624,7 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
    BIO_free(in);
    BIO_free(out);
    sk_X509_free(certs);
+   PKCS7_free(pkcs7);
 
    return outBody;
 }
@@ -1527,13 +1644,14 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
 {
    DebugLog( << "Compute identity for " << in );
 
-   if (mDomainPrivateKeys.count(signerDomain) == 0)
+   PrivateKeyMap::const_iterator k(mDomainPrivateKeys.find(signerDomain));
+   if (k == mDomainPrivateKeys.end())
    {
       InfoLog( << "No private key for " << signerDomain );
       throw Exception("Missing private key when computing identity",__FILE__,__LINE__);
    }
 
-   EVP_PKEY* pKey = mDomainPrivateKeys[signerDomain];
+   EVP_PKEY* pKey = k->second;
    assert( pKey );
  
    if ( pKey->type !=  EVP_PKEY_RSA )
@@ -1556,10 +1674,15 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
    DebugLog( << "hash of string is 0x" << hashRes.hex() );
 
 #if 1
-   int r = RSA_sign(NID_sha1, (unsigned char *)hashRes.data(), hashRes.size(),
+   int r = RSA_sign(NID_sha1, (unsigned char *)hashRes.data(), (unsigned int)hashRes.size(),
                     result, (unsigned int*)( &resultSize ),
             rsa);
-   assert( r == 1 );
+   if( r != 1 )
+   {
+      ErrLog(<< "RSA_sign failed with return " << r);
+      assert(0);
+      return Data::Empty;
+   }
 #else
    resultSize = RSA_private_encrypt(hashResLen, hashRes,
                                     result, rsa, RSA_PKCS1_PADDING);
@@ -1612,12 +1735,13 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
    X509* cert =  pCert;
    if (!cert)
    {
-      if (mDomainCerts.count(signerDomain) == 0)
+      X509Map::const_iterator x=mDomainCerts.find(signerDomain);
+      if (x == mDomainCerts.end())
       {
          ErrLog( << "No public key for " << signerDomain );
          throw Exception("Missing public key when verifying identity",__FILE__,__LINE__);
       }
-      cert = mDomainCerts[signerDomain];
+      cert = x->second;
    }
    
    DebugLog( << "Check identity for " << in );
@@ -1639,7 +1763,7 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
 
 #if 1
    int ret = RSA_verify(NID_sha1, (unsigned char *)hashRes.data(),
-                        hashRes.size(), (unsigned char*)sig.data(), sig.size(),
+                        (unsigned int)hashRes.size(), (unsigned char*)sig.data(), (unsigned int)sig.size(),
                         rsa);
 #else
    unsigned char result[4096];
@@ -1673,7 +1797,7 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
 
 
 void
-BaseSecurity::checkAndSetIdentity( const SipMessage& msg, const Data& certDer) const
+BaseSecurity::checkAndSetIdentity(SipMessage& msg, const Data& certDer) const
 {
    auto_ptr<SecurityAttributes> sec(new SecurityAttributes);
    X509* cert=NULL;
@@ -1687,7 +1811,7 @@ BaseSecurity::checkAndSetIdentity( const SipMessage& msg, const Data& certDer) c
 #else
          unsigned const char* in = (unsigned const char*)certDer.data();
 #endif
-         if (d2i_X509(&cert,&in,certDer.size()) == 0)
+         if (d2i_X509(&cert,&in,(long)certDer.size()) == 0)
          {
             DebugLog(<< "Could not read DER certificate from " << certDer );
             cert = NULL;
@@ -1695,30 +1819,30 @@ BaseSecurity::checkAndSetIdentity( const SipMessage& msg, const Data& certDer) c
       }
       if ( certDer.empty() || cert )
       {
-         if ( checkIdentity(msg.header(h_From).uri().host(),
+         if ( checkIdentity(msg.const_header(h_From).uri().host(),
                             msg.getCanonicalIdentityString(),
-                            msg.header(h_Identity).value(),
+                            msg.const_header(h_Identity).value(),
                             cert ) )
          {
-            sec->setIdentity(msg.header(h_From).uri().getAor());
+            sec->setIdentity(msg.const_header(h_From).uri().getAor());
             sec->setIdentityStrength(SecurityAttributes::Identity);
          }
          else
          {
-            sec->setIdentity(msg.header(h_From).uri().getAor());
+            sec->setIdentity(msg.const_header(h_From).uri().getAor());
             sec->setIdentityStrength(SecurityAttributes::FailedIdentity);
          }
       }
       else
       {
-         sec->setIdentity(msg.header(h_From).uri().getAor());
+         sec->setIdentity(msg.const_header(h_From).uri().getAor());
          sec->setIdentityStrength(SecurityAttributes::FailedIdentity);
       }
    }
    catch (BaseException& e)
    {
       ErrLog(<<"Caught exception: "<< e);
-      sec->setIdentity(msg.header(h_From).uri().getAor());
+      sec->setIdentity(msg.const_header(h_From).uri().getAor());
       sec->setIdentityStrength(SecurityAttributes::FailedIdentity);
    }
    msg.setSecurityAttributes(sec);
@@ -1744,7 +1868,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
    static char RESIP_ASN_DECRYPT[] = "resip-asn-decrypt";
    Security::dumpAsn(RESIP_ASN_DECRYPT, text );
 
-   BIO* in = BIO_new_mem_buf( (void*)text.c_str(), text.size());
+   BIO* in = BIO_new_mem_buf( (void*)text.c_str(), (int)text.size());
    assert(in);
    InfoLog( << "created in BIO");
 
@@ -1780,7 +1904,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
 
       return 0;
    }
-   BIO_flush(in);
+   (void)BIO_flush(in);
 
    int type=OBJ_obj2nid(pkcs7->type);
    switch (type)
@@ -1822,6 +1946,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
          BIO_free(in);
          BIO_free(out);
          sk_X509_free(certs);
+         PKCS7_free(pkcs7);
          throw Exception("Signed and enveloped is not supported", __FILE__, __LINE__);
       }
       break;
@@ -1833,6 +1958,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
             BIO_free(in);
             BIO_free(out);
             sk_X509_free(certs);
+            PKCS7_free(pkcs7);
             InfoLog( << "Don't have a private key for " << decryptorAor << " for  PKCS7_decrypt" );
             throw Exception("Missing private key", __FILE__, __LINE__);
          }
@@ -1841,6 +1967,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
             BIO_free(in);
             BIO_free(out);
             sk_X509_free(certs);
+            PKCS7_free(pkcs7);
             InfoLog( << "Don't have a public cert for " << decryptorAor << " for  PKCS7_decrypt" );
             throw Exception("Missing cert", __FILE__, __LINE__);
          }
@@ -1871,6 +1998,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
             BIO_free(in);
             BIO_free(out);
             sk_X509_free(certs);
+            PKCS7_free(pkcs7);
             return 0;
          }
       }
@@ -1880,11 +2008,12 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
          BIO_free(in);
          BIO_free(out);
          sk_X509_free(certs);
+         PKCS7_free(pkcs7);
          ErrLog(<< "Got PKCS7 data that could not be handled type=" << type );
          throw Exception("Unsupported PKCS7 data type", __FILE__, __LINE__);
    }
 
-   BIO_flush(out);   
+   (void)BIO_flush(out);   
    BUF_MEM* bufMem;
    BIO_get_mem_ptr(out, &bufMem);
 
@@ -1892,10 +2021,11 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
    char* buffer = new char[len];
    memcpy(buffer, bufMem->data, len);
 
-   BIO_set_close(out, BIO_CLOSE);
+   (void)BIO_set_close(out, BIO_CLOSE);
    BIO_free(in);
    BIO_free(out);
    sk_X509_free(certs);
+   PKCS7_free(pkcs7);
 
    // parse out the header information and form new body.
    // TODO !jf! this is a really crappy parser - shoudl do proper mime stuff 
@@ -1999,7 +2129,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    Security::dumpAsn( RESIP_ASN_UNCODE_SIGNED_TEXT, textData );
    Security::dumpAsn( RESIP_ASN_UNCODE_SIGNED_SIG, sigData );
 
-   BIO* in = BIO_new_mem_buf( (void*)sigData.data(),sigData.size());
+   BIO* in = BIO_new_mem_buf( (void*)sigData.data(),(int)sigData.size());
    assert(in);
    InfoLog( << "created in BIO");
 
@@ -2007,7 +2137,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    assert(out);
    InfoLog( << "created out BIO" );
 
-   BIO* pkcs7Bio = BIO_new_mem_buf( (void*) textData.data(),textData.size());
+   BIO* pkcs7Bio = BIO_new_mem_buf( (void*) textData.data(),(int)textData.size());
    assert(pkcs7Bio);
    InfoLog( << "created pkcs7 BIO");
 
@@ -2039,7 +2169,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
 
       return first;
    }
-   BIO_flush(in);
+   (void)BIO_flush(in);
 
    int type=OBJ_obj2nid(pkcs7->type);
    switch (type)
@@ -2141,6 +2271,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
       BIO_free(out);
       BIO_free(pkcs7Bio);
       sk_X509_free(certs);
+      PKCS7_free(pkcs7);
       *sigStat = SignatureIsBad;
       InfoLog(<< "No valid signers of this messages" );
       return first;
@@ -2215,6 +2346,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
             BIO_free(out);
             BIO_free(pkcs7Bio);
             sk_X509_free(certs);
+            PKCS7_free(pkcs7);
             return first;
          }
          if ( sigStat )
@@ -2254,11 +2386,12 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
          BIO_free(out);
          BIO_free(pkcs7Bio);
          sk_X509_free(certs);
+         PKCS7_free(pkcs7);
          ErrLog(<< "Got PKCS7 data that could not be handled type=" << type );
          return 0;
    }
 
-   BIO_flush(out);
+   (void)BIO_flush(out);
    char* outBuf=0;
    long size = BIO_get_mem_data(out,&outBuf);
    assert( size >= 0 );
@@ -2270,6 +2403,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    BIO_free(out);
    BIO_free(pkcs7Bio);
    sk_X509_free(certs);
+   PKCS7_free(pkcs7);
    return first;
 }
 
@@ -2434,11 +2568,21 @@ BaseSecurity::getCertName(X509 *cert)
    return Data::Empty;
 }
 /**
-   Matchtes subjectAltName and cnames 
-   @todo    looks incomplete, make better
+   Applies the certificate and domain name matching rules
 */
 int 
 BaseSecurity::matchHostName(const Data& certificateName, const Data& domainName)
+{
+   if(mAllowWildcardCertificates)
+      return matchHostNameWithWildcards(certificateName,domainName);
+   return isEqualNoCase(certificateName,domainName);
+}
+/**
+   Does a wildcard match on domain and certificate name
+   @todo    looks incomplete, make better
+*/
+int 
+BaseSecurity::matchHostNameWithWildcards(const Data& certificateName, const Data& domainName)
 {
    const char *dot = NULL;
 

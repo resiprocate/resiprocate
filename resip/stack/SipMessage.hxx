@@ -116,6 +116,7 @@ class SipMessage : public TransactionMessage
          mIsExternal = true;
       }
       
+      // Note:  use getReceivedTransport() != 0 in order to tell if the message is from the wire or not
       bool isExternal() const
       {
          return mIsExternal;
@@ -136,6 +137,8 @@ class SipMessage : public TransactionMessage
       bool isInvalid() const{return mInvalid;}
       
       resip::MethodTypes method() const;
+      /// Returns a string containing the SIP method for the message
+      const Data& methodStr() const;
       
       const resip::Data& getReason() const{return mReason;}
       
@@ -145,11 +148,23 @@ class SipMessage : public TransactionMessage
       RequestLine& 
       header(const RequestLineType& l);
 
+      inline const RequestLine& 
+      const_header(const RequestLineType& l) const
+      {
+         return header(l);
+      }
+
       const StatusLine& 
       header(const StatusLineType& l) const;
 
       StatusLine& 
       header(const StatusLineType& l);
+
+      inline const StatusLine& 
+      const_header(const StatusLineType& l) const
+      {
+         return header(l);
+      }
 
       bool exists(const HeaderBase& headerType) const;
       bool empty(const HeaderBase& headerType) const;
@@ -157,11 +172,20 @@ class SipMessage : public TransactionMessage
 
 #define defineHeader(_header, _name, _type, _rfc)                       \
       const H_##_header::Type& header(const H_##_header& headerType) const; \
-            H_##_header::Type& header(const H_##_header& headerType)
+            H_##_header::Type& header(const H_##_header& headerType); \
+      inline const H_##_header::Type& const_header(const H_##_header& headerType) const \
+      {\
+         return header(headerType);\
+      }
+
       
 #define defineMultiHeader(_header, _name, _type, _rfc)                  \
       const H_##_header##s::Type& header(const H_##_header##s& headerType) const; \
-            H_##_header##s::Type& header(const H_##_header##s& headerType)
+            H_##_header##s::Type& header(const H_##_header##s& headerType); \
+      inline const H_##_header##s::Type& const_header(const H_##_header##s& headerType) const \
+      {\
+         return header(headerType);\
+      }
       
       defineHeader(ContentDisposition, "Content-Disposition", Token, "RFC 3261");
       defineHeader(ContentEncoding, "Content-Encoding", Token, "RFC 3261");
@@ -234,6 +258,7 @@ class SipMessage : public TransactionMessage
 
 // !dlb! this one is not quite right -- can have (comment) after field value
       defineHeader(RetryAfter, "Retry-After", UInt32Category, "RFC 3261");
+      defineHeader(FlowTimer, "Flow-Timer", UInt32Category, "RFC 5626");
 
       defineHeader(Expires, "Expires", ExpiresCategory, "RFC 3261");
       defineHeader(SessionExpires, "Session-Expires", ExpiresCategory, "RFC 4028");
@@ -267,6 +292,24 @@ class SipMessage : public TransactionMessage
       const HeaderFieldValueList* getRawHeader(Headers::Type headerType) const;
       void setRawHeader(const HeaderFieldValueList* hfvs, Headers::Type headerType);
       const UnknownHeaders& getRawUnknownHeaders() const {return mUnknownHeaders;}
+      /**
+	 Return the raw body string (if it exists). The returned HFV
+	 and its underlying memory is owned by the SipMessage, and may
+	 be released when this SipMessage is manipulated.
+
+         This is a low-level interface; see getContents() for higher level.
+      **/
+      const HeaderFieldValue* getRawBody() const {return mContentsHfv;}
+
+      /**
+         Remove any existing body/contents, and (if non-empty)
+         set the body to {body}. It makes full copy of the body
+         to stored within the SipMessage (since lifetime of
+         the message is unpredictable).
+
+         This is a low-level interface; see setContents() for higher level.
+      **/
+      void setRawBody(const HeaderFieldValue* body);
 
       Contents* getContents() const;
       // removes the contents from the message
@@ -329,7 +372,7 @@ class SipMessage : public TransactionMessage
       
       SipMessage& mergeUri(const Uri& source);      
 
-      void setSecurityAttributes(std::auto_ptr<SecurityAttributes>) const;
+      void setSecurityAttributes(std::auto_ptr<SecurityAttributes>);
       const SecurityAttributes* getSecurityAttributes() const { return mSecurityAttributes.get(); }
 
       void addOutboundDecorator(std::auto_ptr<MessageDecorator> md){mOutboundDecorators.push_back(md.release());}
@@ -338,6 +381,8 @@ class SipMessage : public TransactionMessage
                                     const Tuple &dest,
                                     const Data& sigcompId);
       void rollbackOutboundDecorators();
+      void copyOutboundDecoratorsToStackCancel(SipMessage& cancel);
+      void copyOutboundDecoratorsToStackFailureAck(SipMessage& ack);
       bool mIsDecorated;
 
       bool mIsBadAck200;
@@ -360,10 +405,10 @@ class SipMessage : public TransactionMessage
       bool mIsExternal;
       
       // raw text corresponding to each typed header (not yet parsed)
-      mutable HeaderFieldValueList* mHeaders[Headers::MAX_HEADERS];
+      HeaderFieldValueList* mHeaders[Headers::MAX_HEADERS];
 
       // raw text corresponding to each unknown header
-      mutable UnknownHeaders mUnknownHeaders;
+      UnknownHeaders mUnknownHeaders;
   
       // !jf!
       const Transport* mTransport;
@@ -379,10 +424,10 @@ class SipMessage : public TransactionMessage
       std::vector<char*> mBufferList;
 
       // special case for the first line of message
-      mutable HeaderFieldValueList* mStartLine;
+      HeaderFieldValueList* mStartLine;
 
       // raw text for the contents (all of them)
-      mutable HeaderFieldValue* mContentsHfv;
+      HeaderFieldValue* mContentsHfv;
 
       // lazy parser for the contents
       mutable Contents* mContents;
@@ -392,8 +437,8 @@ class SipMessage : public TransactionMessage
       mutable Data mRFC2543TransactionId;
 
       // is a request or response
-      mutable bool mRequest;
-      mutable bool mResponse;
+      bool mRequest;
+      bool mResponse;
 
       bool mInvalid;
       resip::Data mReason;
@@ -412,7 +457,7 @@ class SipMessage : public TransactionMessage
       // peers domain associate with this message (MTLS)
       std::list<Data> mTlsPeerNames; 
 
-      mutable std::auto_ptr<SecurityAttributes> mSecurityAttributes;
+      std::auto_ptr<SecurityAttributes> mSecurityAttributes;
 
       std::vector<MessageDecorator*> mOutboundDecorators;
 
@@ -477,4 +522,5 @@ class SipMessage : public TransactionMessage
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */

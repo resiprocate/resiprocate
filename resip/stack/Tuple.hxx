@@ -98,17 +98,23 @@ class Tuple
       bool isAnyInterface() const;
       socklen_t length() const; // of sockaddr
       bool isLoopback() const;
+      bool isPrivateAddress() const;  // Return boolean based on definitions in RFC1918(v4) and RFC4193(v6)
       
       bool operator<(const Tuple& rhs) const;
       bool operator==(const Tuple& rhs) const;
            
       Data presentationFormat() const;
       
-      static TransportType toTransport( const Data& );
-      static const Data& toData( TransportType );
+      static TransportType toTransport(const Data& transportName);
+      static const Data& toData(TransportType type);
+      static const Data& toDataLower(TransportType type);
       static Data inet_ntop(const Tuple& tuple);
-      static void writeBinaryToken(const Tuple& tuple,Data& container);
-      static Tuple makeTuple(const Data& binaryToken);
+
+      // Creates a binary token from the provided Tuple - if salt is provided, then an HMAC is appended
+      // to the end of the token
+      static void writeBinaryToken(const Tuple& tuple, Data& container, const Data& salt=Data::Empty);
+      // Creates a Tuple from the provided binary token - if salt is provided, then an HMAC is checked
+      static Tuple makeTupleFromBinaryToken(const Data& binaryToken, const Data& salt=Data::Empty);
 
       GenericIPAddress toGenericIPAddress() const;
 
@@ -152,6 +158,14 @@ class Tuple
                             const Tuple& y) const;
       };
       friend class AnyPortAnyInterfaceCompare;
+
+      class FlowKeyCompare
+      {
+         public:
+            bool operator()(const Tuple& x,
+                            const Tuple& y) const;
+      };
+      friend class FlowKeyCompare;
 
       void setTargetDomain(const Data& target)
       {

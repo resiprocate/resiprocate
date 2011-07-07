@@ -29,12 +29,12 @@ resip::Compression::Compression(resip::Compression::Algorithm algorithm,
 
     if (sigcompId == Data::Empty)
     {
-      sigcompId = "<";
-      sigcompId += Random::getVersion4UuidUrn();
-      sigcompId += ">";
+      mSigcompId = "<";
+      mSigcompId += Random::getVersion4UuidUrn();
+      mSigcompId += ">";
     }
   }
-  DebugLog (<< "Set SigcompId to " << sigcompId);
+  DebugLog (<< "Set SigcompId to " << mSigcompId);
 #else
   mAlgorithm = NONE;
   DebugLog (<< "COMPRESSION SUPPORT NOT COMPILED IN");

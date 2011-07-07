@@ -114,7 +114,7 @@ stunParseAtrChangeRequest( char* body, unsigned int hdrLen,  StunAtrChangeReques
 static bool 
 stunParseAtrError( char* body, unsigned int hdrLen,  StunAtrError& result )
 {
-   if ( hdrLen >= sizeof(result) )
+   if ( hdrLen >= (sizeof(result)-sizeof(result.sizeReason)) ) // Note: result.sizeReason is extra info in StunAtrError that is not on the wire
    {
       //clog << "head on Error too large" << endl;
       return false;
@@ -539,7 +539,7 @@ static char*
 encodeTurnData(char *ptr, const resip::Data* td)
 {
    ptr = encode16(ptr, TurnData);
-   ptr = encode16(ptr, td->size());
+   ptr = encode16(ptr, (UInt16)td->size());
    memcpy(ptr, td->data(), td->size());
    ptr += td->size();
    
@@ -778,7 +778,7 @@ stunEncodeMessage( const StunMessage& msg,
       StunAtrIntegrity integrity;
       // pad with zeros prior to calculating message integrity attribute	   
       int padding = 0;
-      int len = ptrMessageIntegrity - buf;
+      int len = int(ptrMessageIntegrity - buf);
       if (len % 64)
       {
          padding = 64 - (len % 64);
@@ -806,7 +806,7 @@ stunRand()
       UInt64 tick;
 		
 #if defined(WIN32) 
-#if !defined(UNDER_CE) && !defined(__GNUC__)
+#if !defined(UNDER_CE) && !defined(__GNUC__) && !defined(_WIN64)
       volatile unsigned int lowtick=0,hightick=0;
       __asm
          {
@@ -940,14 +940,14 @@ stunCreateUserName(const StunAddress4& source, StunAtrString* username)
 	
    char hmac[20];
    char key[] = "Jason";
-   computeHmac(hmac, buffer, strlen(buffer), key, strlen(key) );
+   computeHmac(hmac, buffer, (int)strlen(buffer), key, (int)strlen(key) );
    char hmacHex[41];
    toHex(hmac, 20, hmacHex );
    hmacHex[40] =0;
 	
    strcat(buffer,hmacHex);
 	
-   int l = strlen(buffer);
+   int l = (int)strlen(buffer);
    assert( l+1 < STUN_MAX_STRING );
    assert( l%4 == 0 );
    
@@ -964,7 +964,7 @@ stunCreatePassword(const StunAtrString& username, StunAtrString* password)
    char hmac[20];
    char key[] = "Fluffy";
    //char buffer[STUN_MAX_STRING];
-   computeHmac(hmac, username.value, strlen(username.value), key, strlen(key));
+   computeHmac(hmac, username.value, (int)strlen(username.value), key, (int)strlen(key));
    toHex(hmac, 20, password->value);
    password->sizeValue = 40;
    password->value[40]=0;
@@ -1200,7 +1200,7 @@ stunCreateErrorResponse(StunMessage& response, int cl, int number, const char* m
    response.errorCode.errorClass = cl;
    response.errorCode.number = number;
    strcpy(response.errorCode.reason, msg);
-   response.errorCode.sizeReason = strlen(msg);
+   response.errorCode.sizeReason = (UInt16)strlen(msg);
 }
 
 #if 0
@@ -1624,7 +1624,7 @@ stunServerProcess(StunServerInfo& info, bool verbose)
    tv.tv_sec = 0;
    tv.tv_usec = 1000;
 	
-   int e = select( maxFd, &fdSet, NULL,NULL, &tv );
+   int e = (int)select( (int)maxFd, &fdSet, NULL,NULL, &tv );
    if (e < 0)
    {
       int err = getErrno();
@@ -1728,7 +1728,7 @@ stunServerProcess(StunServerInfo& info, bool verbose)
                {
                   if ( verbose ) clog << "Open relay port " << relay->relayPort << endl;
                   
-                  relay->fd = openPort(relay->relayPort, info.myAddr.addr, verbose);
+                  relay->fd = (int)openPort(relay->relayPort, info.myAddr.addr, verbose);
                   relay->destination.addr = from.addr;
                   relay->destination.port = from.port;
                   relay->expireTime = time(0) + MEDIA_RELAY_TIMEOUT;
@@ -2172,13 +2172,14 @@ stunNatType( StunAddress4& dest,
       struct timeval tv;
       fd_set fdSet; 
 #ifdef WIN32
-      unsigned int fdSetSize;
+      typedef unsigned int FdSetSize;
 #else
-      int fdSetSize;
+      typedef int FdSetSize;
 #endif
+      FdSetSize fdSetSize;
       FD_ZERO(&fdSet); fdSetSize=0;
-      FD_SET(myFd1,&fdSet); fdSetSize = (myFd1+1>fdSetSize) ? myFd1+1 : fdSetSize;
-      FD_SET(myFd2,&fdSet); fdSetSize = (myFd2+1>fdSetSize) ? myFd2+1 : fdSetSize;
+      FD_SET(myFd1,&fdSet); fdSetSize = ((FdSetSize)myFd1+1>fdSetSize) ? (FdSetSize)myFd1+1 : fdSetSize;
+      FD_SET(myFd2,&fdSet); fdSetSize = ((FdSetSize)myFd2+1>fdSetSize) ? (FdSetSize)myFd2+1 : fdSetSize;
       tv.tv_sec=0;
       tv.tv_usec=150*1000; // 150 ms 
       if ( count == 0 ) tv.tv_usec=0;
@@ -2498,7 +2499,7 @@ stunOpenSocket( StunAddress4& dest, StunAddress4* mapAddr,
    resip::Socket myFd = openPort(port,interfaceIp,verbose);
    if (myFd == INVALID_SOCKET)
    {
-      return myFd;
+      return (int)myFd;
    }
    
    char msg[STUN_MAX_MESSAGE_SIZE];
@@ -2539,7 +2540,7 @@ stunOpenSocket( StunAddress4& dest, StunAddress4* mapAddr,
 	
    *mapAddr = mappedAddr;
 	
-   return myFd;
+   return (int)myFd;
 }
 
 
@@ -2578,7 +2579,7 @@ stunOpenSocketPair( StunAddress4& dest, StunAddress4* mapAddr,
 
    for( i=0; i<NUM; i++)
    {
-      fd[i] = openPort( (port == 0) ? 0 : (port + i), 
+      fd[i] = (int)openPort( (port == 0) ? 0 : (port + i), 
                         interfaceIp, verbose);
       if (fd[i] < 0) 
       {

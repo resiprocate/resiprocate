@@ -31,11 +31,12 @@ class RequestContext
                      ProcessorChain& targetP); // baboons
       virtual ~RequestContext();
 
-      void process(resip::TransactionTerminated& msg);
-      void process(std::auto_ptr<resip::SipMessage> sip);
-      void process(std::auto_ptr<resip::ApplicationMessage> app);
+      virtual void process(resip::TransactionTerminated& msg);
+      virtual void process(std::auto_ptr<resip::SipMessage> sip);
+      virtual void process(std::auto_ptr<resip::ApplicationMessage> app);
       
       virtual void handleSelfAimedStrayAck(resip::SipMessage* sip);
+      virtual void cancelClientTransaction(const resip::Data& tid);
 
       /// Returns the SipMessage associated with the server transaction
       resip::SipMessage& getOriginalRequest();
@@ -59,7 +60,8 @@ class RequestContext
       void sendResponse(resip::SipMessage& response);
 
       void forwardAck200(const resip::SipMessage& ack);
-
+      void postAck200Done();
+      
       void updateTimerC();
       bool mInitialTimerCSet;
 
@@ -77,6 +79,15 @@ class RequestContext
       ProcessorChain& mResponseProcessorChain; // lemurs
       ProcessorChain& mTargetProcessorChain; // baboons
 
+      bool processRequestInviteTransaction(resip::SipMessage* msg,bool original);
+      bool processRequestNonInviteTransaction(resip::SipMessage* msg,bool original);
+      void processRequestAckTransaction(resip::SipMessage* msg,bool original);
+      void doPostRequestProcessing(resip::SipMessage* msg, bool original);
+      bool processResponseInviteTransaction(resip::SipMessage* msg);
+      bool processResponseNonInviteTransaction(resip::SipMessage* msg);
+      void processResponseAckTransaction(resip::SipMessage* msg);
+      void doPostResponseProcessing(resip::SipMessage* msg);
+      
       resip::Data mDigestIdentity;
       int mTransactionCount;
       Proxy& mProxy;

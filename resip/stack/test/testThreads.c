@@ -3,7 +3,8 @@
 
 pthread_mutex_t rmutex;
 
-void *pfunc(void *arg) {
+void *pfunc(void *arg) 
+{
   int lcount=(int)arg;
   pthread_mutex_lock(&rmutex);
   printf("Loop [%d]\n",lcount--);
@@ -12,7 +13,8 @@ void *pfunc(void *arg) {
   pthread_mutex_unlock(&rmutex);
 }
 
-int main(int argc) {
+int main(int argc, char *argv[]) 
+{
   pthread_t thread;
   pthread_mutexattr_t mutexattr;
   pthread_mutexattr_init(&mutexattr);

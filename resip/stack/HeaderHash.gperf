@@ -63,6 +63,7 @@ record-route, Headers::RecordRoute
 reply-to, Headers::ReplyTo
 require, Headers::Require
 retry-after, Headers::RetryAfter
+flow-timer, Headers::FlowTimer
 server, Headers::Server
 sip-etag, Headers::SIPETag
 sip-if-match, Headers::SIPIfMatch
@@ -89,7 +90,6 @@ p-called-party-id, Headers::PCalledPartyId
 p-media-authorization, Headers::PMediaAuthorization
 p-preferred-identity, Headers::PPreferredIdentity
 path, Headers::Path
-join, Headers::Join
 target-dialog, Headers::TargetDialog
 privacy, Headers::Privacy
 rack, Headers::RAck
@@ -98,9 +98,6 @@ refer-to,Headers::ReferTo
 referred-by,Headers::ReferredBy
 replaces,Headers::Replaces
 reject-contact, Headers::RejectContact
-p-called-party-id, Headers::PCalledPartyId
-p-associated-uri, Headers::PAssociatedUri
-service-route, Headers::ServiceRoute
 request-disposition, Headers::RequestDisposition
 response-key, Headers::UNKNOWN
 rseq, Headers::RSeq

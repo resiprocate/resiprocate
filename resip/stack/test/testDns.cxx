@@ -282,7 +282,7 @@ class TestDns : public DnsInterface, public ThreadIf
          {
             FdSet fdset;
             mStub.buildFdSet(fdset);
-            fdset.selectMilliSeconds(1);
+            fdset.selectMilliSeconds(mStub.getTimeTillNextProcessMS());
             mStub.process(fdset);
          }
       }
@@ -813,7 +813,6 @@ main(int argc, const char** argv)
    }
 
    assert(queries.empty());
-   assert(!stub->requiresProcess());
 
    std::map<resip::Tuple,unsigned int> ipAddrToNum;
    ipAddrToNum[Tuple("127.0.0.1",5060,V4,TCP)]=0;
@@ -848,7 +847,7 @@ main(int argc, const char** argv)
             // DNS to death. (Odds are good that we have hit every NAPTR at
             // least once by now)
             sleep(2);
-            RRCache::instance()->logCache();
+            stub->logDnsCache();
          }
       }
       
@@ -904,7 +903,6 @@ main(int argc, const char** argv)
       }
       
       assert(queries.empty());
-      assert(!stub->requiresProcess());
       
       std::cout << "Tabulated results:" << std::endl;
       for(unsigned int i=0;i<numSRV;++i)

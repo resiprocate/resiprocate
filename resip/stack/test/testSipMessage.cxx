@@ -28,6 +28,7 @@ int
 main(int argc, char** argv)
 {
    Log::initialize(Log::Cout, Log::Debug, argv[0]);
+   static ExtensionParameter p_tag_ext("tag");
 #
    Data txt(
       "SIP/2.0 401 Unauthorized\r\n"
@@ -800,7 +801,7 @@ main(int argc, char** argv)
      assert(response->header(h_AllowEvents).size() == 0);
 
      resipCerr << response->brief() << endl;
-     assert(Data::from(response->brief()) == "SipResp: 489 tid=899769382 cseq=SUBSCRIBE / 1 from(wire)");
+     assert(Data::from(response->brief()) == "SipResp: 489 tid=899769382 cseq=1 SUBSCRIBE / 1 from(wire)");
      
      const char * txt2 = ("SIP/2.0 489 Bad Event" CRLF
                     "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK" RESIP_COOKIE "899769382-1--" RESIP_COOKIE "" CRLF
@@ -832,7 +833,7 @@ main(int argc, char** argv)
      assert(r3->header(h_AllowEvents).size() == 2);
      assert(r3->header(h_AllowEvents).front().value() == "foo");
      resipCerr << r3->brief() << endl;
-     assert(Data::from(r3->brief()) == "SipResp: 489 tid=899769382 cseq=SUBSCRIBE / 1 from(tu)");
+     assert(Data::from(r3->brief()) == "SipResp: 489 tid=899769382 cseq=1 SUBSCRIBE / 1 from(tu)");
 
      const char * txt4 = ("SIP/2.0 489 Bad Event" CRLF
                     "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK" RESIP_COOKIE "899769382-1--" RESIP_COOKIE "" CRLF
@@ -896,7 +897,7 @@ main(int argc, char** argv)
       assert(message->header(h_To) < message->header(h_From));
 
       resipCerr << message->brief() << endl;
-      assert(Data::from(message->brief()) == "SipReq:  INVITE ext101@192.168.2.220:5064 tid=11111 cseq=INVITE contact=ext103@192.168.2.220:5068 / 1 from(tu)");
+      assert(Data::from(message->brief()) == "SipReq:  INVITE ext101@192.168.2.220:5064 tid=11111 cseq=1 INVITE contact=ext103@192.168.2.220:5068 / 1 from(tu)");
    }
    
    {
@@ -1880,7 +1881,7 @@ main(int argc, char** argv)
       assert(message->exists(h_To));
       assert(message->header(h_To).uri().user() == "user");
       assert(message->header(h_To).uri().host() == "company.com");
-      assert(message->header(h_To).uri().exists(p_tag) == false);
+      assert(message->header(h_To).uri().exists(p_tag_ext) == false);
 
       assert(message->exists(h_From));
       assert(message->header(h_From).uri().user() == "user");
@@ -1889,7 +1890,7 @@ main(int argc, char** argv)
 
       assert(message->exists(h_MaxForwards));
       assert(message->header(h_MaxForwards).value() == 8);
-      assert(message->header(h_MaxForwards).exists(p_tag) == false);
+      assert(message->header(h_MaxForwards).exists(p_tag_ext) == false);
 
       assert(message->exists(h_Contacts));
       assert(message->header(h_Contacts).empty() == false);

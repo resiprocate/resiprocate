@@ -26,10 +26,19 @@ using namespace resip;
 bool Uri::mEncodingReady = false;
 // class static variables listing the default characters not to encode
 // in user and password strings respectively
-Data Uri::mUriNonEncodingUserChars = Data("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*\\()&=+$,;?/");
-Data Uri::mUriNonEncodingPasswordChars = Data("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*\\()&=+$");
+const Data Uri::mUriNonEncodingUserChars = Data("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*\\()&=+$,;?/");
+const Data Uri::mUriNonEncodingPasswordChars = Data("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*\\()&=+$");
+
+// ?bwc? 'p' and 'w' are allowed in 2806, but have been removed in 3966. Should
+// we support these or not?
+const Data Uri::mLocalNumberChars = Data("*#-.()0123456789ABCDEFpw");
+const Data Uri::mGlobalNumberChars = Data("-.()0123456789");
+
+
 Uri::EncodingTable Uri::mUriEncodingUserTable;
 Uri::EncodingTable Uri::mUriEncodingPasswordTable;
+Uri::EncodingTable Uri::mLocalNumberTable(Data::toBitset(mLocalNumberChars));
+Uri::EncodingTable Uri::mGlobalNumberTable(Data::toBitset(mGlobalNumberChars));
 
 Uri::Uri() 
    : ParserCategory(),
@@ -40,6 +49,14 @@ Uri::Uri()
 {
 }
 
+Uri::Uri(HeaderFieldValue* hfv, Headers::Type type) :
+   ParserCategory(hfv, type),
+   mPort(0),
+   mOldPort(0),
+   mEmbeddedHeaders(0)
+{}
+
+
 static const Data parseContext("Uri constructor");
 Uri::Uri(const Data& data)
    : ParserCategory(), 
@@ -48,10 +65,10 @@ Uri::Uri(const Data& data)
      mOldPort(0),
      mEmbeddedHeaders(0)
 {
+   HeaderFieldValue hfv(data.data(), data.size());
    // must copy because parse creates overlays
-   Uri tmp;
-   ParseBuffer pb(data, parseContext);
-   tmp.parse(pb);
+   Uri tmp(&hfv, Headers::UNKNOWN);
+   tmp.checkParsed();
    *this = tmp;
 }
 
@@ -187,7 +204,7 @@ Uri::fromTel(const Uri& tel, const Uri& hostUri)
          Data param = pb.data(anchor);
          // !dlb! not supposed to lowercase extension parameters
          param.lowercase();
-         totalSize += param.size() + 1;
+         totalSize += (int)param.size() + 1;
 
          if (param.prefix(Symbols::Isub))
          {
@@ -243,7 +260,8 @@ Uri::fromTel(const Uri& tel, const Uri& hostUri)
 bool
 Uri::isEnumSearchable() const
 {
-   return (!user().empty() && user().size() >= 2 && user()[0] == '+');
+   checkParsed();
+   return (!mUser.empty() && mUser.size() >= 2 && mUser[0] == '+');
 }
 
 std::vector<Data> 
@@ -281,6 +299,7 @@ Uri::hasEmbedded() const
 void 
 Uri::removeEmbedded()
 {
+   checkParsed();
    delete mEmbeddedHeaders;
    mEmbeddedHeaders = 0;
    mEmbeddedHeadersText = Data::Empty;   
@@ -374,7 +393,7 @@ Uri::operator==(const Uri& other) const
        mPassword == other.mPassword &&
        mPort == other.mPort)
    {
-      for (ParameterList::iterator it = mParameters.begin(); it != mParameters.end(); ++it)
+      for (ParameterList::const_iterator it = mParameters.begin(); it != mParameters.end(); ++it)
       {
          Parameter* otherParam = other.getParameterByEnum((*it)->getType());
 
@@ -402,13 +421,18 @@ Uri::operator==(const Uri& other) const
             }
             case ParameterTypes::method:
             {
-               // this should possilby be case sensitive, but is allowed to be
+               // this should possibly be case sensitive, but is allowed to be
                // case insensitive for robustness.  
                
                if (otherParam)
                {
                   DataParameter* dp1 = dynamic_cast<DataParameter*>(*it);
                   DataParameter* dp2 = dynamic_cast<DataParameter*>(otherParam);
+                  (void)dp1;
+                  (void)dp2;
+                  // ?bwc? It looks like we're just assuming the dynamic_cast 
+                  // will succeed everywhere else; why are we bothering to 
+                  // assert()?
                   assert(dp1);
                   assert(dp2);
                }
@@ -451,7 +475,7 @@ Uri::operator==(const Uri& other) const
       }         
 
       // now check the other way, sigh
-      for (ParameterList::iterator it = other.mParameters.begin(); it != other.mParameters.end(); ++it)
+      for (ParameterList::const_iterator it = other.mParameters.begin(); it != other.mParameters.end(); ++it)
       {
          Parameter* param = getParameterByEnum((*it)->getType());
          switch ((*it)->getType())
@@ -534,12 +558,12 @@ Uri::operator==(const Uri& other) const
    typedef std::set<Parameter*, OrderUnknownParameters> ParameterSet;
    ParameterSet unA, unB;
 
-   for (ParameterList::iterator i = mUnknownParameters.begin();
+   for (ParameterList::const_iterator i = mUnknownParameters.begin();
         i != mUnknownParameters.end(); ++i)
    {
       unA.insert(*i);
    }
-   for (ParameterList::iterator i = other.mUnknownParameters.begin();
+   for (ParameterList::const_iterator i = other.mUnknownParameters.begin();
         i != other.mUnknownParameters.end(); ++i)
    {
       unB.insert(*i);
@@ -626,6 +650,85 @@ Uri::operator<(const Uri& other) const
    }
 
    return mPort < other.mPort;
+}
+
+bool 
+Uri::userIsTelephoneSubscriber() const
+{
+   try
+   {
+      ParseBuffer pb(mUser);
+      pb.assertNotEof();
+      const char* anchor=pb.position();
+      bool local=false;
+      if(*pb.position()=='+')
+      {
+         // Might be a global phone number
+         pb.skipChar();
+         pb.skipChars(mGlobalNumberTable);
+      }
+      else
+      {
+         pb.skipChars(mLocalNumberTable);
+         local=true;
+      }
+
+      Data dialString(pb.data(anchor));
+      if(dialString.empty())
+      {
+         pb.fail(__FILE__, __LINE__, "Dial string is empty.");
+      }
+
+      // ?bwc? More dial-string checking? For instance, +/ (or simply /) is not 
+      // a valid dial-string according to the BNF; the string must contain at 
+      // least one actual digit (or in the local number case, one hex digit or 
+      // '*' or '#'. Interestingly, this means that stuff like ///*/// is 
+      // valid)
+
+      // Dial string looks ok so far; now look for params (there must be a 
+      // phone-context param if this is a local number, otherwise there might 
+      // or might not be one)
+      if(local || !pb.eof())
+      {
+         // The only thing that can be here is a ';'. If it does, we're going 
+         // to say it is good enough for us. If something in the parameter 
+         // string is malformed, it'll get caught when/if 
+         // getUserAsTelephoneSubscriber() is called.
+         pb.skipChar(';');
+      }
+
+      return true;
+   }
+   catch(ParseException& e)
+   {
+      return false;
+   }
+}
+
+Token 
+Uri::getUserAsTelephoneSubscriber() const
+{
+   // !bwc! Ugly. Someday, refactor all this lazy-parser stuff and make it 
+   // possible to control ownership explicitly.
+   // Set this up as lazy-parsed, to prevent exceptions from being thrown.
+   HeaderFieldValue temp(mUser.data(), mUser.size());
+   Token tempToken(&temp, Headers::NONE);
+   // tempToken does not own the HeaderFieldValue temp, and temp does not own 
+   // its buffer.
+
+   // Here's the voodoo; invoking operator= makes a deep copy of the stuff in
+   // tempToken, with result owning the memory, and result is in the unparsed 
+   // state.
+   Token result = tempToken;
+   return result;
+}
+
+void 
+Uri::setUserAsTelephoneSubscriber(const Token& telephoneSubscriber)
+{
+   mUser.clear();
+   oDataStream str(mUser);
+   str << telephoneSubscriber;
 }
 
 const Data
@@ -722,7 +825,7 @@ Uri::getAorNoReally() const
 }
 
 Uri 
-Uri::getAorAsUri() const
+Uri::getAorAsUri(TransportType transportTypeToRemoveDefaultPort) const
 {   
    //.dcm. -- tel conversion?
    checkParsed();
@@ -730,8 +833,29 @@ Uri::getAorAsUri() const
    ret.scheme() = mScheme;   
    ret.user() = mUser;
    ret.host() = mHost;
-   ret.port() = mPort;
-   
+
+   // Remove any default ports (if required)
+   if(transportTypeToRemoveDefaultPort == UDP || 
+       transportTypeToRemoveDefaultPort == TCP)
+   {
+      if(mPort != Symbols::DefaultSipPort)
+      {
+         ret.port() = mPort;
+      }
+   }
+   else if (transportTypeToRemoveDefaultPort == TLS || 
+            transportTypeToRemoveDefaultPort == DTLS)
+   {
+      if(mPort != Symbols::DefaultSipsPort)
+      {
+         ret.port() = mPort;
+      }
+   }
+   else
+   {
+      ret.port() = mPort;
+   }
+
    return ret;
 }
 
@@ -763,28 +887,53 @@ Uri::parse(ParseBuffer& pb)
    }
    
    start = pb.position();
-   pb.skipToChar(Symbols::AT_SIGN[0]);
+   // stop at double-quote to prevent matching an '@' in a quoted string param. 
+   pb.skipToOneOf("@:\"");
    if (!pb.eof())
    {
-      pb.reset(start);
-      start = pb.position();
-      pb.skipToOneOf(":@");
-#ifdef HANDLE_CHARACTER_ESCAPING
-      pb.dataUnescaped(mUser, start);
-#else
-      pb.data(mUser, start);
-#endif
-      if (!pb.eof() && *pb.position() == Symbols::COLON[0])
+      const char* atSign=0;
+      if (*pb.position() == Symbols::COLON[0])
       {
-         start = pb.skipChar();
-         pb.skipToChar(Symbols::AT_SIGN[0]);
+         // Either a password, or a port
+         const char* afterColon = pb.skipChar();
+         pb.skipToOneOf("@\"");
+         if(!pb.eof() && *pb.position() == Symbols::AT_SIGN[0])
+         {
+            atSign=pb.position();
+            // password
 #ifdef HANDLE_CHARACTER_ESCAPING
-         pb.dataUnescaped(mPassword, start);
+            pb.dataUnescaped(mPassword, afterColon);
 #else
-         pb.data(mPassword, start);
+            pb.data(mPassword, afterColon);
 #endif
+            pb.reset(afterColon-1);
+         }
+         else
+         {
+            // port. No user part.
+            pb.reset(start);
+         }
       }
-      start = pb.skipChar();
+      else if(*pb.position() == Symbols::AT_SIGN[0])
+      {
+         atSign=pb.position();
+      }
+      else
+      {
+         // Only a hostpart
+         pb.reset(start);
+      }
+
+      if(atSign)
+      {
+#ifdef HANDLE_CHARACTER_ESCAPING
+         pb.dataUnescaped(mUser, start);
+#else
+         pb.data(mUser, start);
+#endif
+         pb.reset(atSign);
+         start = pb.skipChar();
+      }
    }
    else
    {
@@ -843,37 +992,25 @@ Uri::clone() const
    return new Uri(*this);
 }
 
-void Uri::setUriUserEncoding(char c, bool encode) 
+void Uri::setUriUserEncoding(unsigned char c, bool encode) 
 {
    if(!mEncodingReady)
    {
       // if we don't init first, the changes we make will be lost when
       // init is invoked
       initialiseEncodingTables();
-   }
-
-   if(c < 0)
-   {
-      ErrLog(<< "unable to change encoding for character '" << c << "', table size = " << URI_ENCODING_TABLE_SIZE);
-      return;
    }
 
    mUriEncodingUserTable[c] = encode; 
 }
 
-void Uri::setUriPasswordEncoding(char c, bool encode)
+void Uri::setUriPasswordEncoding(unsigned char c, bool encode)
 {
    if(!mEncodingReady)
    {
       // if we don't init first, the changes we make will be lost when
       // init is invoked
       initialiseEncodingTables();
-   }
-
-   if(c < 0)
-   {
-      ErrLog(<< "unable to change encoding for character '" << c << "', table size = " << URI_ENCODING_TABLE_SIZE);
-      return;
    }
 
    mUriEncodingPasswordTable[c] = encode;
@@ -882,56 +1019,28 @@ void Uri::setUriPasswordEncoding(char c, bool encode)
 void Uri::initialiseEncodingTables() {
 
    // set all bits
-   mUriEncodingUserTable.set();
-   mUriEncodingPasswordTable.set();
-
-   for(Data::size_type i = 0; i < mUriNonEncodingUserChars.size(); i++) 
-   {
-      char& c = mUriNonEncodingUserChars.at(i);
-      if(c >= 0)
-      {
-         mUriEncodingUserTable[c] = false;
-      }
-   }
-   for(Data::size_type i = 0; i < mUriNonEncodingPasswordChars.size(); i++) 
-   {
-      char& c = mUriNonEncodingPasswordChars.at(i);
-      if(c >= 0)
-      {
-         mUriEncodingPasswordTable[c] = false; 
-      }
-   }
-
+   mUriEncodingUserTable=Data::toBitset(mUriNonEncodingUserChars).flip();
+   mUriEncodingPasswordTable=Data::toBitset(mUriNonEncodingPasswordChars).flip();
    mEncodingReady = true;
 }
 
 inline bool 
-Uri::shouldEscapeUserChar(char c)
+Uri::shouldEscapeUserChar(unsigned char c)
 {
    if(!mEncodingReady)
    {
       initialiseEncodingTables();
-   }
-
-   if(c < 0)
-   {
-      return false;
    }
 
    return mUriEncodingUserTable[c];
 }
 
 inline bool 
-Uri::shouldEscapePasswordChar(char c)
+Uri::shouldEscapePasswordChar(unsigned char c)
 {
    if(!mEncodingReady)
    {
       initialiseEncodingTables();
-   }
-
-   if(c < 0)
-   {
-      return false;
    }
 
    return mUriEncodingPasswordTable[c];
@@ -1012,6 +1121,7 @@ Uri::embedded() const
    return ncthis->embedded();
 }
 
+static const Data bodyData("Body");
 void
 Uri::parseEmbeddedHeaders(ParseBuffer& pb)
 {
@@ -1050,16 +1160,15 @@ Uri::parseEmbeddedHeaders(ParseBuffer& pb)
       char* decodedContents = Embedded::decode(headerContents, len);
       mEmbeddedHeaders->addBuffer(decodedContents);
 
-      static const Data body("Body");
-      if (isEqualNoCase(body, headerName))
+      if (isEqualNoCase(bodyData, headerName))
       {
          mEmbeddedHeaders->setBody(decodedContents, len); 
       }
       else
       {
          DebugLog(<< "Uri::parseEmbeddedHeaders(" << headerName << ", " << Data(decodedContents, len) << ")");
-         mEmbeddedHeaders->addHeader(Headers::getType(headerName.data(), headerName.size()),
-                                     headerName.data(), headerName.size(),
+         mEmbeddedHeaders->addHeader(Headers::getType(headerName.data(), (int)headerName.size()),
+                                     headerName.data(), (int)headerName.size(),
                                      decodedContents, len);
       }
    }
@@ -1090,6 +1199,80 @@ Uri::toString() const
    }
    return out;
 }
+
+ParameterTypes::Factory Uri::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
+
+Parameter* 
+Uri::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+{
+   if(ParameterFactories[type])
+   {
+      return ParameterFactories[type](type, pb, terminators);
+   }
+   return 0;
+}
+
+bool 
+Uri::exists(const Param<Uri>& paramType) const
+{
+    checkParsed();
+    bool ret = getParameterByEnum(paramType.getTypeNum()) != NULL;
+    return ret;
+}
+
+void 
+Uri::remove(const Param<Uri>& paramType)
+{
+    checkParsed();
+    removeParameterByEnum(paramType.getTypeNum());
+}
+
+#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                                                      \
+_enum##_Param::DType&                                                                                           \
+Uri::param(const _enum##_Param& paramType)                                                           \
+{                                                                                                               \
+   checkParsed();                                                                                               \
+   _enum##_Param::Type* p =                                                                                     \
+      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                            \
+   if (!p)                                                                                                      \
+   {                                                                                                            \
+      p = new _enum##_Param::Type(paramType.getTypeNum());                                                      \
+      mParameters.push_back(p);                                                                                 \
+   }                                                                                                            \
+   return p->value();                                                                                           \
+}                                                                                                               \
+                                                                                                                \
+const _enum##_Param::DType&                                                                                     \
+Uri::param(const _enum##_Param& paramType) const                                                     \
+{                                                                                                               \
+   checkParsed();                                                                                               \
+   _enum##_Param::Type* p =                                                                                     \
+      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                            \
+   if (!p)                                                                                                      \
+   {                                                                                                            \
+      InfoLog(<< "Missing parameter " _name " " << ParameterTypes::ParameterNames[paramType.getTypeNum()]);     \
+      DebugLog(<< *this);                                                                                       \
+      throw Exception("Missing parameter " _name, __FILE__, __LINE__);                                          \
+   }                                                                                                            \
+   return p->value();                                                                                           \
+}
+
+defineParam(ob,"ob",ExistsParameter,"RFC 5626");
+defineParam(gr, "gr", ExistsOrDataParameter, "RFC 5627");
+defineParam(comp, "comp", DataParameter, "RFC 3486");
+defineParam(duration, "duration", UInt32Parameter, "RFC 4240");
+defineParam(lr, "lr", ExistsParameter, "RFC 3261");
+defineParam(maddr, "maddr", DataParameter, "RFC 3261");
+defineParam(method, "method", DataParameter, "RFC 3261");
+defineParam(transport, "transport", DataParameter, "RFC 3261");
+defineParam(ttl, "ttl", UInt32Parameter, "RFC 3261");
+defineParam(user, "user", DataParameter, "RFC 3261, 4967");
+defineParam(extension, "ext", DataParameter, "RFC 3966"); // Token is used when ext is a user-parameter
+defineParam(sigcompId, "sigcomp-id", QuotedDataParameter, "RFC 5049");
+defineParam(rinstance, "rinstance", DataParameter, "proprietary (resip)");
+defineParam(addTransport, "addTransport", ExistsParameter, "RESIP INTERNAL");
+
+#undef defineParam
 
 HashValueImp(resip::Uri, resip::Data::from(data).hash());
 

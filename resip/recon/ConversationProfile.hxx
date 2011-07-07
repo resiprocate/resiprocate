@@ -47,7 +47,7 @@ public:
     * This is used primarily by the "clone" method below. The clone method
     * is required for proper anonymous calling support.
     */
-   ConversationProfile( const ConversationProfile& thatProfile );
+   ConversationProfile(const ConversationProfile& thatProfile);
 
    /**
      Get/Set the session capabilities.  Session capabilities are expressed

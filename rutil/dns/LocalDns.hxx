@@ -20,7 +20,7 @@ class LocalDns : public ExternalDns
       virtual ~LocalDns();
 
       virtual int init(); 
-      virtual bool requiresProcess();
+      virtual unsigned int getTimeTillNextProcessMS();
       virtual void buildFdSet(fd_set& read, fd_set& write, int& size);
       virtual void process(fd_set& read, fd_set& write);
 
@@ -37,7 +37,7 @@ class LocalDns : public ExternalDns
       {
          const char* msg = "Local Dns";
 
-         int len = strlen(msg);
+         int len = (int)strlen(msg);
          char* errorString = new char[len+1];
 
          strncpy(errorString, msg, len);

@@ -6,3 +6,8 @@ obj.*
 bin.*
 .gdb_history
 Makefile.in
+Release
+Debug
+SSL-Release
+SSL-Debug
+*.user

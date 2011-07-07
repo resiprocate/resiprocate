@@ -56,7 +56,8 @@ public:
    virtual resip::AppDialog* createAppDialog(const resip::SipMessage& msg);
 
    // Returns the port in use for a specific media type.
-   virtual unsigned int getLocalRTPPort( const sdpcontainer::SdpMediaLine::SdpMediaType& mediaType, ConversationProfile* profile );
+   virtual unsigned int getLocalRTPPort(const sdpcontainer::SdpMediaLine::SdpMediaType& mediaType, bool v6,  ConversationProfile* profile);
+   virtual void freeLocalRTPPort(const sdpcontainer::SdpMediaLine::SdpMediaType& mediaType);
 
    virtual void setProposedSdp(ParticipantHandle handle, const resip::SdpContents& sdp);
    virtual sdpcontainer::Sdp* getProposedSdp() { return mProposedSdp; }
@@ -92,6 +93,7 @@ public:
    void startDtlsClient(const char* address, unsigned short rtpPort, unsigned short rtcpPort);
    void setRemoteSDPFingerprint(const resip::Data& fingerprint);
 #endif // USE_DTLS
+   void setSrtpEnabled(sdpcontainer::SdpMediaLine::SdpMediaType mediaType, bool enabled);
    bool createSRTPSession(sdpcontainer::SdpMediaLine::SdpMediaType mediaType, flowmanager::MediaStream::SrtpCryptoSuite cryptoSuite, const char* remoteKey, unsigned int remoteKeyLen);
 
    // Media Stream Processing
@@ -130,8 +132,24 @@ public:
                                       mAudioDirection != ConversationManager::MediaDirection_Inactive); }
    bool videoActive() const { return (mVideoDirection != ConversationManager::MediaDirection_None &&
                                       mVideoDirection != ConversationManager::MediaDirection_Inactive); }
+   bool isMediaActive(sdpcontainer::SdpMediaLine::SdpMediaType mt) const
+   {
+      if (mt == sdpcontainer::SdpMediaLine::MEDIA_TYPE_AUDIO)
+         return audioActive();
+      if (mt == sdpcontainer::SdpMediaLine::MEDIA_TYPE_VIDEO)
+         return videoActive();
+      return false;
+   }
    bool audioEnabled() const { return (mAudioDirection != ConversationManager::MediaDirection_None); }
    bool videoEnabled() const { return (mVideoDirection != ConversationManager::MediaDirection_None); }
+   bool isMediaEnabled(sdpcontainer::SdpMediaLine::SdpMediaType mt) const
+   {
+      if (mt == sdpcontainer::SdpMediaLine::MEDIA_TYPE_AUDIO)
+         return audioEnabled();
+      if (mt == sdpcontainer::SdpMediaLine::MEDIA_TYPE_VIDEO)
+         return videoEnabled();
+      return false;
+   }
 
    const resip::Data& getLocalSrtpSessionKey() { return mLocalSrtpSessionKey; }
 

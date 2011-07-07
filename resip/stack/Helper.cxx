@@ -22,8 +22,6 @@
 #include "rutil/compat.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "resip/stack/SipMessage.hxx"
-//#include "resip/stack/SecurityAttributes.hxx"
-//#include "resip/stack/Contents.hxx"
 #include "resip/stack/Pkcs7Contents.hxx"
 #include "resip/stack/MultipartSignedContents.hxx"
 #include "resip/stack/MultipartMixedContents.hxx"
@@ -118,7 +116,7 @@ unsigned int Helper::hex2integer(const char* _s)
 SipMessage*
 Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr& contact, MethodTypes method)
 {
-   SipMessage* request = new SipMessage;
+   std::auto_ptr<SipMessage> request(new SipMessage);
    RequestLine rLine(method);
    rLine.uri() = target.uri();
    request->header(h_To) = target;
@@ -135,7 +133,7 @@ Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr
    Via via;
    request->header(h_Vias).push_back(via);
    
-   return request;
+   return request.release();
 }
 
 SipMessage*
@@ -155,7 +153,7 @@ Helper::makeRegister(const NameAddr& to, const NameAddr& from)
 SipMessage*
 Helper::makeRegister(const NameAddr& to, const NameAddr& from, const NameAddr& contact)
 {
-   SipMessage* request = new SipMessage;
+   std::auto_ptr<SipMessage> request(new SipMessage);
    RequestLine rLine(REGISTER);
 
    rLine.uri().scheme() = to.uri().scheme();
@@ -180,7 +178,7 @@ Helper::makeRegister(const NameAddr& to, const NameAddr& from, const NameAddr& c
    Via via;
    request->header(h_Vias).push_back(via);
    
-   return request;
+   return request.release();
 }
 
 SipMessage*
@@ -194,7 +192,7 @@ Helper::makeRegister(const NameAddr& to,const Data& transport)
 SipMessage*
 Helper::makeRegister(const NameAddr& to, const Data& transport, const NameAddr& contact)
 {
-   SipMessage* request = new SipMessage;
+   std::auto_ptr<SipMessage> request(new SipMessage);
    RequestLine rLine(REGISTER);
 
    rLine.uri().scheme() = to.uri().scheme();
@@ -219,7 +217,7 @@ Helper::makeRegister(const NameAddr& to, const Data& transport, const NameAddr& 
    Via via;
    request->header(h_Vias).push_back(via);
    
-   return request;
+   return request.release();
 }
 
 
@@ -233,7 +231,7 @@ Helper::makePublish(const NameAddr& target, const NameAddr& from)
 SipMessage*
 Helper::makePublish(const NameAddr& target, const NameAddr& from, const NameAddr& contact)
 {
-   SipMessage* request = new SipMessage;
+   std::auto_ptr<SipMessage> request(new SipMessage);
    RequestLine rLine(PUBLISH);
    rLine.uri() = target.uri();
 
@@ -250,7 +248,7 @@ Helper::makePublish(const NameAddr& target, const NameAddr& from, const NameAddr
    Via via;
    request->header(h_Vias).push_back(via);
    
-   return request;
+   return request.release();
 }
 
 SipMessage*
@@ -263,7 +261,7 @@ Helper::makeMessage(const NameAddr& target, const NameAddr& from)
 SipMessage*
 Helper::makeMessage(const NameAddr& target, const NameAddr& from, const NameAddr& contact)
 {
-   SipMessage* request = new SipMessage;
+   std::auto_ptr<SipMessage> request(new SipMessage);
    RequestLine rLine(MESSAGE);
    rLine.uri() = target.uri();
 
@@ -280,7 +278,7 @@ Helper::makeMessage(const NameAddr& target, const NameAddr& from, const NameAddr
    Via via;
    request->header(h_Vias).push_back(via);
    
-   return request;
+   return request.release();
 }
 
 
@@ -294,7 +292,7 @@ Helper::makeSubscribe(const NameAddr& target, const NameAddr& from)
 SipMessage*
 Helper::makeSubscribe(const NameAddr& target, const NameAddr& from, const NameAddr& contact)
 {
-   SipMessage* request = new SipMessage;
+   std::auto_ptr<SipMessage> request(new SipMessage);
    RequestLine rLine(SUBSCRIBE);
    rLine.uri() = target.uri();
 
@@ -311,7 +309,7 @@ Helper::makeSubscribe(const NameAddr& target, const NameAddr& from, const NameAd
    Via via;
    request->header(h_Vias).push_front(via);
    
-   return request;
+   return request.release();
 }
 
 int
@@ -390,8 +388,8 @@ Helper::makeResponse(SipMessage& response,
    }
 
    if(responseCode > 100 &&
-      response.header(h_To).isWellFormed() &&
-      !response.header(h_To).exists(p_tag))
+      response.const_header(h_To).isWellFormed() &&
+      !response.const_header(h_To).exists(p_tag))
    {
       // Only generate a To: tag if one doesn't exist.  Think Re-INVITE.   
       // No totag for failure responses or 100s   
@@ -416,7 +414,7 @@ Helper::makeResponse(SipMessage& response,
    // thing twice, see LazyParser::checkParsed())
    if (responseCode/100 == 2 &&
          !response.exists(h_Contacts) &&
-         !(response.header(h_CSeq).method()==CANCEL) )
+         !(response.const_header(h_CSeq).method()==CANCEL) )
    {
       // in general, this should not create a Contact header since only requests
       // that create a dialog (or REGISTER requests) should produce a response with
@@ -552,7 +550,7 @@ Helper::makeCancel(const SipMessage& request)
 {
    assert(request.isRequest());
    assert(request.header(h_RequestLine).getMethod() == INVITE);
-   SipMessage* cancel = new SipMessage;
+   std::auto_ptr<SipMessage> cancel(new SipMessage);
 
    RequestLine rLine(CANCEL, request.header(h_RequestLine).getSipVersion());
    rLine.uri() = request.header(h_RequestLine).uri();
@@ -579,7 +577,7 @@ Helper::makeCancel(const SipMessage& request)
    cancel->header(h_CSeq).method() = CANCEL;
    cancel->header(h_Vias).push_back(request.header(h_Vias).front());
 
-   return cancel;
+   return cancel.release();
 }
 
 
@@ -589,7 +587,7 @@ Helper::makeFailureAck(const SipMessage& request, const SipMessage& response)
    assert (request.header(h_Vias).size() >= 1);
    assert (request.header(h_RequestLine).getMethod() == INVITE);
    
-   SipMessage* ack = new SipMessage;
+   std::auto_ptr<SipMessage> ack(new SipMessage);
 
    RequestLine rLine(ACK, request.header(h_RequestLine).getSipVersion());
    rLine.uri() = request.header(h_RequestLine).uri();
@@ -606,7 +604,7 @@ Helper::makeFailureAck(const SipMessage& request, const SipMessage& response)
       ack->header(h_Routes) = request.header(h_Routes);
    }
    
-   return ack;
+   return ack.release();
 }
 
 
@@ -1284,7 +1282,8 @@ Helper::makeChallenge(const SipMessage& request, const Data& realm, bool useAuth
    return response;
 }
 
-void updateNonceCount(unsigned int& nonceCount, Data& nonceCountString)
+void 
+Helper::updateNonceCount(unsigned int& nonceCount, Data& nonceCountString)
 {
    if (!nonceCountString.empty())
    {
@@ -1310,7 +1309,7 @@ void updateNonceCount(unsigned int& nonceCount, Data& nonceCountString)
 
 
 Auth 
-Helper::makeChallengeResponseAuth(SipMessage& request,
+Helper::makeChallengeResponseAuth(const SipMessage& request,
                                   const Data& username,
                                   const Data& password,
                                   const Auth& challenge,
@@ -1319,6 +1318,25 @@ Helper::makeChallengeResponseAuth(SipMessage& request,
                                   Data& nonceCountString)
 {
    Auth auth;
+   Data authQop = qopOption(challenge);
+   if(!authQop.empty())
+   {
+       updateNonceCount(nonceCount, nonceCountString);
+   }
+   makeChallengeResponseAuth(request, username, password, challenge, cnonce, authQop, nonceCountString, auth);
+   return auth;
+}
+
+void
+Helper::makeChallengeResponseAuth(const SipMessage& request,
+                                  const Data& username,
+                                  const Data& password,
+                                  const Auth& challenge,
+                                  const Data& cnonce,
+                                  const Data& authQop,
+                                  const Data& nonceCountString,
+                                  Auth& auth)
+{
    auth.scheme() = Symbols::Digest;
    auth.param(p_username) = username;
    assert(challenge.exists(p_realm));
@@ -1333,10 +1351,8 @@ Helper::makeChallengeResponseAuth(SipMessage& request,
    }
    auth.param(p_uri) = digestUri;
 
-   Data authQop = qopOption(challenge);
    if (!authQop.empty())
    {
-      updateNonceCount(nonceCount, nonceCountString);
       auth.param(p_response) = Helper::makeResponseMD5(username, 
                                                        password,
                                                        challenge.param(p_realm), 
@@ -1375,8 +1391,6 @@ Helper::makeChallengeResponseAuth(SipMessage& request,
    {
       auth.param(p_opaque) = challenge.param(p_opaque);
    }
-   
-   return auth;
 }
 
 // priority-order list of preferred qop tokens
@@ -1429,13 +1443,32 @@ Helper::qopOption(const Auth& challenge)
 Auth 
 Helper::makeChallengeResponseAuthWithA1(const SipMessage& request,
                                         const Data& username,
-                                        const Data& a1,
+                                        const Data& passwordHashA1,
                                         const Auth& challenge,
                                         const Data& cnonce,
                                         unsigned int& nonceCount,
                                         Data& nonceCountString)
 {
    Auth auth;
+   Data authQop = qopOption(challenge);
+   if(!authQop.empty())
+   {
+       updateNonceCount(nonceCount, nonceCountString);
+   }
+   makeChallengeResponseAuthWithA1(request, username, passwordHashA1, challenge, cnonce, authQop, nonceCountString, auth);
+   return auth;
+}
+
+void
+Helper::makeChallengeResponseAuthWithA1(const SipMessage& request,
+                                        const Data& username,
+                                        const Data& passwordHashA1,
+                                        const Auth& challenge,
+                                        const Data& cnonce,
+                                        const Data& authQop,
+                                        const Data& nonceCountString,
+                                        Auth& auth)
+{
    auth.scheme() = Symbols::Digest;
    auth.param(p_username) = username;
    assert(challenge.exists(p_realm));
@@ -1445,16 +1478,14 @@ Helper::makeChallengeResponseAuthWithA1(const SipMessage& request,
    Data digestUri;
    {
       DataStream s(digestUri);
-      //s << request.header(h_RequestLine).uri().host(); // wrong 
-      s << request.header(h_RequestLine).uri(); // right 
+      //s << request.const_header(h_RequestLine).uri().host(); // wrong 
+      s << request.const_header(h_RequestLine).uri(); // right 
    }
    auth.param(p_uri) = digestUri;
 
-   Data authQop = qopOption(challenge);
    if (!authQop.empty())
    {
-      updateNonceCount(nonceCount, nonceCountString);
-      auth.param(p_response) = Helper::makeResponseMD5WithA1(a1,
+      auth.param(p_response) = Helper::makeResponseMD5WithA1(passwordHashA1,
                                                              getMethodName(request.header(h_RequestLine).getMethod()), 
                                                              digestUri, 
                                                              challenge.param(p_nonce),
@@ -1469,7 +1500,7 @@ Helper::makeChallengeResponseAuthWithA1(const SipMessage& request,
    else
    {
       assert(challenge.exists(p_realm));
-      auth.param(p_response) = Helper::makeResponseMD5WithA1(a1,
+      auth.param(p_response) = Helper::makeResponseMD5WithA1(passwordHashA1,
                                                              getMethodName(request.header(h_RequestLine).getMethod()),
                                                              digestUri, 
                                                              challenge.param(p_nonce));
@@ -1488,8 +1519,6 @@ Helper::makeChallengeResponseAuthWithA1(const SipMessage& request,
    {
       auth.param(p_opaque) = challenge.param(p_opaque);
    }
-   
-   return auth;
 }
    
 //.dcm. all the auth stuff should be yanked out of helper and
@@ -1501,8 +1530,8 @@ Helper::algorithmAndQopSupported(const Auth& challenge)
    {
       return false;
    }
-   return (!challenge.exists(p_algorithm) 
-           || isEqualNoCase(challenge.param(p_algorithm), "MD5")
+   return ((!challenge.exists(p_algorithm) 
+            || isEqualNoCase(challenge.param(p_algorithm), "MD5"))
            && (!challenge.exists(p_qop) 
                || isEqualNoCase(challenge.param(p_qop), Symbols::auth)
                || isEqualNoCase(challenge.param(p_qop), Symbols::authInt)));
@@ -1563,17 +1592,17 @@ void
 Helper::processStrictRoute(SipMessage& request)
 {
    if (request.exists(h_Routes) && 
-       !request.header(h_Routes).empty() &&
-       !request.header(h_Routes).front().uri().exists(p_lr))
+       !request.const_header(h_Routes).empty() &&
+       !request.const_header(h_Routes).front().uri().exists(p_lr))
    {
       // The next hop is a strict router.  Move the next hop into the
       // Request-URI and move the ultimate destination to the end of the
       // route list.  Force the message target to be the next hop router.
-      request.header(h_Routes).push_back(NameAddr(request.header(h_RequestLine).uri()));
-      request.header(h_RequestLine).uri() = request.header(h_Routes).front().uri();
+      request.header(h_Routes).push_back(NameAddr(request.const_header(h_RequestLine).uri()));
+      request.header(h_RequestLine).uri() = request.const_header(h_Routes).front().uri();
       request.header(h_Routes).pop_front(); // !jf!
       assert(!request.hasForceTarget());
-      request.setForceTarget(request.header(h_RequestLine).uri());
+      request.setForceTarget(request.const_header(h_RequestLine).uri());
    }
 }
 
@@ -1604,33 +1633,33 @@ Helper::getPortForReply(SipMessage& request)
 {
    assert(request.isRequest());
    int port = 0;
-   if(request.header(h_Vias).front().transport() == Symbols::TCP ||
-      request.header(h_Vias).front().transport() == Symbols::TLS)
+   if(request.const_header(h_Vias).front().transport() == Symbols::TCP ||
+      request.const_header(h_Vias).front().transport() == Symbols::TLS)
    {
       // 18.2.2 - bullet 1 and 2 
       port = request.getSource().getPort();
       if(port == 0) // .slg. not sure if it makes sense for sourcePort to be 0
       {
-         port = request.header(h_Vias).front().sentPort();
+         port = request.const_header(h_Vias).front().sentPort();
       }
    }
    else   // unreliable transport 18.2.2 bullets 3 and 4
    {
-      if (request.header(h_Vias).front().exists(p_rport))
+      if (request.const_header(h_Vias).front().exists(p_rport))
       {
          port = request.getSource().getPort();
       }
       else
       {
-         port = request.header(h_Vias).front().sentPort();
+         port = request.const_header(h_Vias).front().sentPort();
       }
    }
 
    // If we haven't got a valid port yet, then use the default
    if (port <= 0 || port > 65535) 
    {
-      if(request.header(h_Vias).front().transport() == Symbols::TLS ||
-         request.header(h_Vias).front().transport() == Symbols::DTLS)
+      if(request.const_header(h_Vias).front().transport() == Symbols::TLS ||
+         request.const_header(h_Vias).front().transport() == Symbols::DTLS)
       {
          port = Symbols::DefaultSipsPort;
       }
@@ -1734,7 +1763,7 @@ Helper::gruuUserPart(const Data& instanceId,
    ivec[7] = '\x51';
 
    BF_KEY fish;
-   BF_set_key(&fish, key.size(), (const unsigned char*)key.data());
+   BF_set_key(&fish, (int)key.size(), (const unsigned char*)key.data());
 
    const Data salt(resip::Random::getRandomHex(saltBytes));
 
@@ -1747,7 +1776,7 @@ Helper::gruuUserPart(const Data& instanceId,
    auto_ptr <unsigned char> out(new unsigned char[token.size()]);
    BF_cbc_encrypt((const unsigned char*)token.data(),
                   out.get(),
-                  token.size(),
+                  (long)token.size(),
                   &fish,
                   ivec, 
                   BF_ENCRYPT);
@@ -1780,14 +1809,14 @@ Helper::fromGruuUserPart(const Data& gruuUserPart,
    const Data gruu = gruuUserPart.substr(GRUU.size());
 
    BF_KEY fish;
-   BF_set_key(&fish, key.size(), (const unsigned char*)key.data());
+   BF_set_key(&fish, (int)key.size(), (const unsigned char*)key.data());
 
    const Data decoded = gruu.base64decode();
 
    auto_ptr <unsigned char> out(new unsigned char[gruuUserPart.size()+1]);
    BF_cbc_encrypt((const unsigned char*)decoded.data(),
                   out.get(),
-                  decoded.size(),
+                  (long)decoded.size(),
                   &fish,
                   ivec, 
                   BF_DECRYPT);
@@ -1814,6 +1843,8 @@ Helper::ContentsSecAttrs::ContentsSecAttrs(std::auto_ptr<Contents> contents,
      mAttributes(attributes)
 {}
 
+// !!bwc!! Yikes! Destructive copy c'tor! Are we _sure_ this is the 
+// intended behavior?
 Helper::ContentsSecAttrs::ContentsSecAttrs(const ContentsSecAttrs& rhs)
    : mContents(rhs.mContents),
      mAttributes(rhs.mAttributes)
@@ -1824,6 +1855,8 @@ Helper::ContentsSecAttrs::operator=(const ContentsSecAttrs& rhs)
 {
    if (&rhs != this)
    {
+      // !!bwc!! Yikes! Destructive assignment operator! Are we _sure_ this is 
+      // the intended behavior?
       mContents = rhs.mContents;
       mAttributes = rhs.mAttributes;
    }
@@ -2117,6 +2150,33 @@ auto_ptr<SdpContents> Helper::getSdp(Contents* tree)
 
    //DebugLog(<< "No sdp" << endl);
    return emptysdp;
+}
+
+bool 
+Helper::isSenderBehindNAT(const SipMessage& request, bool privateToPublicOnly)
+{
+   assert(request.isRequest());
+   assert(!request.header(h_Vias).empty());
+
+   // If received parameter is on top Via, then the source of the message doesn't match
+   // the address provided in the via.  Assume this is because the sender is behind a NAT.
+   if(request.header(h_Vias).front().exists(p_received))
+   {
+      if(privateToPublicOnly)
+      {
+         if(Tuple(request.header(h_Vias).front().sentHost(), 0, UNKNOWN_TRANSPORT).isPrivateAddress() &&
+            !Tuple(request.header(h_Vias).front().param(p_received), 0, UNKNOWN_TRANSPORT).isPrivateAddress())
+         {
+            return true;
+         }
+         else
+         {
+            return false;
+         }
+      }
+      return true;
+   }
+   return false;
 }
 
 
