@@ -123,13 +123,7 @@ main (int argc, char** argv)
    int n = 0;
    while ( !clientHandler.done )
    {
-      FdSet fdset;
-
-      stack.buildFdSet(fdset);
-      int err = fdset.selectMilliSeconds(100);
-      assert ( err != -1 );
-
-      stack.process(fdset);
+      stack.process(100);
       while(clientDum.process());
 
       if (n == 1000) clientHandler.done = true;

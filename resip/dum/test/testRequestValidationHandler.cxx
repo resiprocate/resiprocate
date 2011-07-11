@@ -327,19 +327,11 @@ main (int argc, char** argv)
    for(int i=0;i<10;i++)
    {
      {
-        FdSet fdset;
-        stackUac.buildFdSet(fdset);
-        int err = fdset.selectMilliSeconds(resipMin((int)stackUac.getTimeTillNextProcessMS(), 50));
-        assert ( err != -1 );
-        stackUac.process(fdset);
+        stackUac.process(50);
         while(dumUac->process());
      }
      {
-        FdSet fdset;
-        stackUas.buildFdSet(fdset);
-        int err = fdset.selectMilliSeconds(resipMin((int)stackUas.getTimeTillNextProcessMS(), 50));
-        assert ( err != -1 );
-        stackUas.process(fdset);
+        stackUas.process(50);
         while(dumUas->process());
      }
    }

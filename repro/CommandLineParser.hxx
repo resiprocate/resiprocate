@@ -58,8 +58,6 @@ class CommandLineParser
       Data mRegSyncPeerAddress;
       int mXmlRpcPort;
       Data mServerText;
-      bool mUseInternalEPoll;
-      bool mUseEventThread;
       int mOverrideT1;
 };
  

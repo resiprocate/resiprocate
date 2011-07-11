@@ -63,6 +63,8 @@ class FdPollItemBase : public FdPollItemIf
       FdPollItemHandle  mPollHandle;
 };
 
+class FdSetIOObserver;
+
 class FdPollGrp
 {
    public:
@@ -81,6 +83,9 @@ class FdPollGrp
       virtual void modPollItem(FdPollItemHandle handle, FdPollEventMask newMask) = 0;
       virtual void delPollItem(FdPollItemHandle handle) = 0;
 
+      virtual void registerFdSetIOObserver(FdSetIOObserver& observer) = 0;
+      virtual void unregisterFdSetIOObserver(FdSetIOObserver& observer) = 0;
+
       /// Wait at most {ms} milliseconds. If any file activity has
       /// already occurs or occurs before {ms} expires, then
       /// FdPollItem will be informed (via cb method) and this method will
@@ -94,14 +99,8 @@ class FdPollGrp
       /// is not enabled.
       virtual int       getEPollFd() const;
 
-      /// Add our epoll-fd into the fdSet (for hierarchical selects)
-      /// Does nothing if epoll not enabled.
-      void buildFdSet(FdSet& fdSet) const;
-      void buildFdSet(fd_set& readfds) const;
-      /// process epoll queue if epoll-fd is readable in fdset
-      /// Does nothing if epoll not enabled.
-      void processFdSet(FdSet& fdset);
-      void processFdSet(fd_set& readfds);
+      virtual void buildFdSet(FdSet& fdSet)=0;
+      virtual bool processFdSet(FdSet& fdset)=0;
 
    protected:
       void processItem(FdPollItemIf *item, FdPollEventMask mask);

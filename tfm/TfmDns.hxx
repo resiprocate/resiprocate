@@ -48,8 +48,7 @@ class TfmDns : public ExternalDns
                        unsigned int features = 0);
       virtual bool requiresProcess();
       virtual unsigned int getTimeTillNextProcessMS(void) { return 0; }
-      virtual bool isPollSupported() const{return false;}
-      virtual void setPollGrp(resip::FdPollGrp *) {}
+      virtual bool setPollGrp(resip::FdPollGrp *) {return false;}
       virtual void processTimers(void) {}
       virtual bool hostFileLookupLookupOnlyMode(void) { return false; }
       virtual bool checkDnsChange() { return false; }

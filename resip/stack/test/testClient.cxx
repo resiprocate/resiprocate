@@ -37,14 +37,9 @@ class Client
          mStack.send(*message);
       }
 
-      void buildFdSet(FdSet& fdset)
+      void process(unsigned int timeoutMs)
       {
-         mStack.buildFdSet(fdset);
-      }
-      
-      void process(FdSet& fdset)
-      {
-         mStack.process(fdset);
+         mStack.process(timeoutMs);
          
          SipMessage* received = mStack.receive();
          if (received)
@@ -131,10 +126,7 @@ main(int argc, char* argv[])
 
    while (true)
    {
-      FdSet fdset;
-      c.buildFdSet(fdset);
-      fdset.selectMilliSeconds(0);
-      c.process(fdset);
+      c.process(0);
    }
 }
 /* ====================================================================

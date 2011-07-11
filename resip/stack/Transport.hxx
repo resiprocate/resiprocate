@@ -3,6 +3,7 @@
 
 #include "rutil/BaseException.hxx"
 #include "rutil/Data.hxx"
+#include "rutil/FdSetIOObserver.hxx"
 #include "rutil/Fifo.hxx"
 #include "resip/stack/TransportFailure.hxx"
 #include "resip/stack/Tuple.hxx"
@@ -53,7 +54,7 @@ class FdPollGrp;
 #define RESIP_TRANSPORT_FLAG_KEEP_BUFFER (1<<3)
 #define RESIP_TRANSPORT_FLAG_TXNOW       (1<<4)
 
-class Transport
+class Transport : public FdSetIOObserver
 {
    public:
 
@@ -162,6 +163,9 @@ class Transport
          write sets as applicable.
       */
       virtual void buildFdSet( FdSet& fdset) =0;
+
+      virtual unsigned int getTimeTillNextProcessMS(){return UINT_MAX;}
+
       virtual void setPollGrp(FdPollGrp *grp) = 0;
 
       /**

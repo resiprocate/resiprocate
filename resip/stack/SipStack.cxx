@@ -67,8 +67,8 @@ SipStack::SipStack(Security* pSecurity,
                    Compression *compression,
                    FdPollGrp *pollGrp
    ) :
-   mUseInternalPoll(pollGrp?0:mDefaultUseInternalPoll),
-   mPollGrp(pollGrp?pollGrp:(mUseInternalPoll ? FdPollGrp::create() : 0)),
+   mPollGrp(pollGrp?pollGrp:FdPollGrp::create()),
+   mPollGrpIsMine(!pollGrp),
 #ifdef USE_SSL
    mSecurity( pSecurity ? pSecurity : new Security()),
 #else
@@ -133,16 +133,15 @@ SipStack::init(const SipStackOptions& options)
    Random::initialize();
    initNetwork();
 
-   mUseInternalPoll = false;
-   mPollGrp = 0;
+   mPollGrpIsMine=false;
    if ( options.mPollGrp )
    {
       mPollGrp = options.mPollGrp;
    }
-   else if ( mDefaultUseInternalPoll )
+   else
    {
-      mUseInternalPoll = true;
       mPollGrp = FdPollGrp::create();
+      mPollGrpIsMine=true;
    }
 
 #ifdef USE_SSL
@@ -179,10 +178,11 @@ SipStack::~SipStack()
 #endif
    delete mCompression;
    delete mDnsStub;
-   if (mPollGrp && mUseInternalPoll)
+   if (mPollGrpIsMine)
    {
       // delete pollGrp after deleting DNS
       delete mPollGrp;
+      mPollGrp=0;
    }
 
 }
@@ -707,31 +707,16 @@ SipStack::processTimers()
 void
 SipStack::process(FdSet& fdset)
 {
-   if(!mShuttingDown && mStatisticsManagerEnabled)
-   {
-      mStatsManager.process();
-   }
-   if (mPollGrp)
-   {
-      mPollGrp->processFdSet(fdset);
-      mTransactionController->processTimers();
-   }
-   else
-   {
-      mTransactionController->process(fdset);
-   }
-   mTuSelector.process();
-   if (mPollGrp)
-   {
-      mDnsStub->processTimers();
-   }
-   else
-   {
-      mDnsStub->process(fdset);
-   }
+   mPollGrp->processFdSet(fdset);
+   processTimers();
+}
 
-   Lock lock(mAppTimerMutex);
-   mAppTimers.process();
+bool 
+SipStack::process(unsigned int timeoutMs)
+{
+   bool result=mPollGrp->waitAndProcess(resipMin(timeoutMs, getTimeTillNextProcessMS()));
+   processTimers();
+   return result;
 }
 
 /// returns time in milliseconds when process next needs to be called
@@ -749,15 +734,7 @@ SipStack::getTimeTillNextProcessMS()
 void
 SipStack::buildFdSet(FdSet& fdset)
 {
-   if (mPollGrp)
-   {
-      mPollGrp->buildFdSet(fdset);
-   }
-   else
-   {
-      mTransactionController->buildFdSet(fdset);
-      mDnsStub->buildFdSet(fdset);
-   }
+   mPollGrp->buildFdSet(fdset);
 }
 
 Security*
@@ -877,14 +854,6 @@ SipStack::enableFlowTimer(const resip::Tuple& flow)
 {
    mTransactionController->enableFlowTimer(flow);
    checkAsyncProcessHandler();
-}
-
-bool SipStack::mDefaultUseInternalPoll = false;
-
-void
-SipStack::setDefaultUseInternalPoll(bool useInternal)
-{
-   mDefaultUseInternalPoll = useInternal;
 }
 
 /* ====================================================================
