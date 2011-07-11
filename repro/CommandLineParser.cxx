@@ -83,8 +83,6 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int xmlRpcPort = 0;
 
    const char* serverText = 0;
-   int useInternalEPoll = 0;
-   int useEventThread = 0;
    int overrideT1 = 0;
 
 #ifdef WIN32
@@ -155,10 +153,6 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"xmlrpcport",        0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &xmlRpcPort,     0, "port on which to listen for and send XML RPC messaging (used for registration sync) - 0 to disable", 0},
       {"regsyncpeer",       0,   POPT_ARG_STRING,                            &regSyncPeerAddress,0,"hostname/ip address of another instance of repro to synchronize registrations with (note xmlrpcport must also be specified)", 0},
       {"server-text",       0,   POPT_ARG_STRING,                            &serverText,     0,"Value of server header for local UAS responses", 0},
-#if defined(HAVE_EPOLL)
-      {"internalepoll",     0,   POPT_ARG_NONE,                              &useInternalEPoll,0, "use internal epoll", 0},
-      {"eventthread",       0,   POPT_ARG_NONE,                              &useEventThread, 0, "use event thread for stack", 0},
-#endif
       {"override-T1", 0, POPT_ARG_INT,   &overrideT1,  0, "Override the default value of T1 (you probably should not do this)" },
       {"version",         'V',   POPT_ARG_NONE,                              &showVersion,    0, "show the version number and exit", 0},
       POPT_AUTOHELP 
@@ -294,8 +288,6 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    {
       mServerText = resip::Data(serverText);
    }
-   mUseInternalEPoll = useInternalEPoll?true:false;
-   mUseEventThread = useEventThread?true:false;
 
 #ifdef HAVE_POPT_H
    poptFreeContext(context);

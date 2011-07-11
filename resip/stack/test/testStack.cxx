@@ -89,12 +89,6 @@ using namespace std;
     fdset       Like "event", but specifically uses the FdSet/select
                 implmentation.
 
-    In addition to the above thread modes, the flag --intepoll turns on
-    internal epoll mode. This allows any of the above thread modes to be
-    used (including select-based) but internally uses the epoll system
-    call in hierarchical mode. This is largely obsolete at this point
-    but is useful for differential profiling.
-
   ===============
   Option: --bind
   The test application creates two stack and sends messages (requests
@@ -549,7 +543,6 @@ main(int argc, char* argv[])
    int seltime = 0;
    int v6 = 0;
    int invite=0;
-   int useInternalEPollMode = 0;
    int numPorts = 1;
    int portBase = 0;
    const char* threadType = "event";
@@ -574,9 +567,6 @@ main(int argc, char* argv[])
       {"verbose",     0,   POPT_ARG_INT,    &verbose,   0, "verbose", 0},
       {"v6",          '6', POPT_ARG_NONE,   &v6     ,   0, "ipv6", 0},
       {"invite",      'i', POPT_ARG_NONE,   &invite ,   0, "send INVITE/BYE instead of REGISTER", 0},
-#if defined(HAVE_EPOLL)
-      {"intepoll",    0,   POPT_ARG_INT,    &useInternalEPollMode,0, "use internal epoll mode", 0},
-#endif
       {"port",        0,   POPT_ARG_INT,    &portBase,  0, "first port to use", 0},
       {"numports",    'n', POPT_ARG_INT,    &numPorts,  0, "number of parallel sessions(ports)", 0},
       {"thread-type", 't', POPT_ARG_STRING, &threadType,0, "stack thread type", threadTypeDesc},
@@ -605,14 +595,10 @@ main(int argc, char* argv[])
      <<" proto="<<proto
      <<" numports="<<numPorts
      <<" thread="<<threadType
-     <<" intepoll="<<useInternalEPollMode
      <<" bindIf="<<bindIfAddr
      <<" listen="<<doListen
      <<" tf="<<tpFlags
      <<"." << endl;
-
-   // must occur before creating stacks
-   SipStack::setDefaultUseInternalPoll(useInternalEPollMode?true:false);
 
    const char *eachThreadType = threadType;
    SelectInterruptor *commonIntr = NULL;

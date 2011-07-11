@@ -183,15 +183,6 @@ main(int argc, char** argv)
    compression = new Compression(Compression::DEFLATE);
 #endif
 
-   if ( args.mUseInternalEPoll ) {
-#if defined(RESIP_SIPSTACK_HAVE_FDPOLL)
-      SipStack::setDefaultUseInternalPoll(args.mUseInternalEPoll);
-#else
-      cerr << "Poll not supported by SipStack" << endl;
-      exit(1);
-#endif
-   }
-
    std::auto_ptr<FdPollGrp> pollGrp(NULL);
    std::auto_ptr<SelectInterruptor> threadInterruptor(NULL);
 #if defined(HAVE_EPOLL)
@@ -369,17 +360,9 @@ main(int argc, char** argv)
    }
 
    std::auto_ptr<ThreadIf> stackThread(NULL);
-#if defined(HAVE_EPOLL)
-   if ( args.mUseEventThread )
-   {
-      stackThread.reset(new EventStackThread(stack,
-               *dynamic_cast<EventThreadInterruptor*>(threadInterruptor.get()),
-               *pollGrp));
-   }
-   else
-#endif
-
-   stackThread.reset(new InterruptableStackThread(stack, *threadInterruptor));
+   stackThread.reset(new EventStackThread(stack,
+            *dynamic_cast<EventThreadInterruptor*>(threadInterruptor.get()),
+            *pollGrp));
 
    Registrar registrar;
    // We only need removed records to linger if we have reg sync enabled

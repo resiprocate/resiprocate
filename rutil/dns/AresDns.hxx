@@ -40,8 +40,7 @@ class AresDns : public ExternalDns
       virtual void buildFdSet(fd_set& read, fd_set& write, int& size);
       virtual void process(fd_set& read, fd_set& write);
 
-      virtual bool isPollSupported() const;
-      virtual void setPollGrp(FdPollGrp *pollGrp);
+      virtual bool setPollGrp(FdPollGrp *pollGrp);
       virtual void processTimers();
 
       //?dcm?  I believe these need to do nothing in the ARES case.

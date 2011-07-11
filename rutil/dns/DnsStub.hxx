@@ -6,6 +6,7 @@
 #include <map>
 #include <set>
 
+#include "rutil/FdSetIOObserver.hxx"
 #include "rutil/Fifo.hxx"
 #include "rutil/GenericIPAddress.hxx"
 #include "rutil/Socket.hxx"
@@ -87,7 +88,7 @@ class DnsRawSink
       virtual void onDnsRaw(int statuts, const unsigned char* abuf, int len) = 0;
 };
 
-class DnsStub : public ExternalDnsHandler
+class DnsStub : public ExternalDnsHandler, public FdSetIOObserver
 {
    public:
       typedef RRCache::Protocol Protocol;
@@ -164,9 +165,9 @@ class DnsStub : public ExternalDnsHandler
 
       virtual void handleDnsRaw(ExternalDnsRawResult);
 
-      void process(FdSet& fdset);
-      unsigned int getTimeTillNextProcessMS();
-      void buildFdSet(FdSet& fdset);
+      virtual void process(FdSet& fdset);
+      virtual unsigned int getTimeTillNextProcessMS();
+      virtual void buildFdSet(FdSet& fdset);
 
       void processTimers();
   private:

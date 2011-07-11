@@ -129,14 +129,15 @@ AresDnsPollItem::socket_poll_cb(void *cb_data,
 
 volatile bool AresDns::mHostFileLookupOnlyMode = false;
 
-void
+bool
 AresDns::setPollGrp(FdPollGrp *grp)
 {
 #ifdef USE_CARES
-   assert(0);
+   return false;
 #else
    assert( mPollGrp == NULL );
    mPollGrp = grp;
+   return true;
 #endif
 }
 
@@ -563,21 +564,11 @@ AresDns::buildFdSet(fd_set& read, fd_set& write, int& size)
    }
 }
 
-bool 
-AresDns::isPollSupported() const
-{
-#ifdef USE_CARES
-   return false;
-#else
-   return true;
-#endif
-}
-
 void
 AresDns::processTimers()
 {
 #ifdef USE_CARES
-   assert(0);
+   return;
 #else
    assert( mPollGrp!=0 );
    time_t timeSecs;

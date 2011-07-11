@@ -14,6 +14,7 @@
 #endif
 #endif
 
+#include "rutil/FdPoll.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/compat.hxx"
@@ -82,10 +83,14 @@ DnsStub::DnsStub(const NameserverList& additional,
    mDnsProvider(ExternalDnsFactory::createExternalDns()),
    mAsyncProcessHandler(asyncProcessHandler)
 {
-   if ( pollGrp && mDnsProvider->isPollSupported())
+   if ( pollGrp && !mDnsProvider->setPollGrp(pollGrp))
    {
-      mDnsProvider->setPollGrp(pollGrp);
+      // We have a poll group, but the DnsProvider doesn't know how to use it.
+      // Register ourselves as an FdSetIOObserver as a fallback, so we will get 
+      // the old-style buildFdSet()/process() calls.
+      pollGrp->registerFdSetIOObserver(*this);
    }
+
    int retCode = mDnsProvider->init(additional, socketFunc, mDnsTimeout, mDnsTries, mDnsFeatures);
    if (retCode != ExternalDns::Success)
    {
@@ -149,10 +154,7 @@ DnsStub::processTimers()
 {
    // the fifo is captures as a timer within getTimeTill... above
    processFifo();
-   if(mDnsProvider->isPollSupported())
-   {
-      mDnsProvider->processTimers();
-   }
+   mDnsProvider->processTimers();
 }
 
 void

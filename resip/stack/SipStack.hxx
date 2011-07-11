@@ -4,6 +4,7 @@
 #include <set>
 #include <iosfwd>
 
+#include "rutil/FdSetIOObserver.hxx"
 #include "rutil/TimeLimitFifo.hxx"
 #include "rutil/Mutex.hxx"
 #include "rutil/TransportType.hxx"
@@ -106,12 +107,31 @@ class SipStackOptions
 
 
 /**
-   @ingroup resip_crit
    @brief This is the primary point of interaction between the app-layer and the
       stack.
 
+   @details For a SipStack to be usable, transports must be added by calling
+   the addTransport() method.
+
+   The useful work done by SipStack occurs when
+   SipStack::process(unsigned int) is called.  A separate thread (such 
+   as EventStackThread) can be dedicated to this task, or it can be called
+   from within a loop in the main thread of the executable.
+
+   Graceful shutdown is accomplished by advising the SipStack to begin
+   shutdown procedures via the shutdown() method.  The SipStack should
+   continue to be serviced through the process(unsigned int) method until the
+   Transaction User is informed by receiving a ShutdownMessage that
+   the requested shutdown is complete.
+
+   @note Previously, buildFdSet(FdSet&), FdSet::select(), and process(FdSet&) 
+      were the canonical way of giving the SipStack cycles. Because of 
+      shortcomings of the fd_set approach, these have been deprecated.
+
+   @ingroup resip_crit
+   @ingroup resip_config
 */
-class SipStack
+class SipStack : public FdSetIOObserver
 {
    public:
       /**
@@ -122,7 +142,6 @@ class SipStack
          copy each individual value, and takes ownership of several
          of the objects.
       **/
-
       SipStack(const SipStackOptions& options);
 
       /**
@@ -160,7 +179,9 @@ class SipStack
                              SigComp. If set to 0, then SigComp compression
                              will be disabled.
 
-          @param pollGrp     Polling group to support file-io callbacks for epoll.
+          @param pollGrp     Polling group to support file-io callbacks; if one 
+                              is not passed, one will be created. Ownership is 
+                              not taken.
       */
       SipStack(Security* security=0,
                const DnsStub::NameserverList& additional = DnsStub::EmptyNameserverList,
@@ -506,28 +527,104 @@ class SipStack
       void setFallbackPostNotify(AsyncProcessHandler *handler);
 
       /**
-          Build the FD set to use in a select to find out when process must be
-          called again. This must be called prior to calling process.
-          Note:  select must also be called on the fdset prior to process.
+          Build the FD set to use in a select to find out when process(FdSet&) 
+          must be called again. This must be called prior to calling process.
+          Note:  select() must also be called on the fdset prior to process.
 
           @param fdset an empty or partially populated fdset, fd's are added
                        to the fdset on return
+          @deprecated Because of serious shortcomings in fd_set (most notably 
+            the inability to store FDs whose value exceeds a relatively small 
+            number; ~1000), we are deprecating the FdSet-based process loop. 
+            @see EventStackThread for an alternative, or if you wish to drive 
+            the SipStack yourself, @see process(unsigned int). On platforms that 
+            do not support epoll, fd_set ends up being used anyway since there 
+            is no other choice, but this is hidden from the app.
       */
-      virtual void buildFdSet(FdSet& fdset);
-	
+      RESIP_DEPRECATED virtual void buildFdSet(FdSet& fdset);
+
       /**
           This allows the executive to give processing time to stack components.
           Must call buildFdSet and select before calling this.
 
           @param fdset a populated and 'select'ed fdset
+          @deprecated Because of serious shortcomings in fd_set (most notably 
+            the inability to store FDs whose value exceeds a relatively small 
+            number; ~1000), we are deprecating the FdSet-based process loop. 
+            @see EventStackThread for an alternative, or if you wish to drive 
+            the SipStack yourself, @see process(unsigned int). On platforms that 
+            do not support epoll, fd_set ends up being used anyway since there 
+            is no other choice, but this is hidden from the app.
       */
-      virtual void process(FdSet& fdset);
+      RESIP_DEPRECATED virtual void process(FdSet& fdset);
 
-      /// check all timers (called based upon getTimeTillNextProcessMS())
+      /**
+         @brief Give processing time to the SipStack components, when operating 
+            in single-threaded mode.
+
+         This call will allow all the components in the SipStack a chance to 
+         perform processing. This includes:
+
+         - Transaction processing (handling of SIP messages and timers)
+         - DNS processing (includes DNS network IO and 3263 logic)
+         - Transport processing (network IO for raw SIP traffic)
+         - Application timers
+
+         To give the SipStack cycles, it is sufficient to simply call this 
+         function repeatedly.
+
+         @param timeoutMs The maximum time, in milliseconds, we will wait for IO 
+            in this call. We will not necessarily wait this long if no IO 
+            occurs; if timers are scheduled to fire before this duration 
+            elapses, our timeout value will be adjusted accordingly. Similarly, 
+            if there is work waiting in fifos when this call is made, no timeout 
+            will be used. Lower values will cause higher CPU utilization when 
+            idle, higher values may result in processing delays of messages from 
+            the TU sent during the call to process(unsigned int) (eg; you call 
+            process(50), then immediately schedule an app timer to fire in 25ms, 
+            or send a SipMessage to the stack, it could be 50ms before either of 
+            these are processed). You can work around these caveats by creating 
+            a SelectInterruptor, adding its FD to the SipStack's FdPollGrp, and 
+            calling SelectInterruptor::interrupt() to cause 
+            process(unsigned int) to be interrupted. The best approach will 
+            vary, based on your performance needs.
+
+         @note If you wish to add an FD that will interrupt this call if it 
+            becomes ready (either because it has IO you are interested in, or 
+            merely to interrupt this call to carry out some unrelated task, see 
+            getPollGrp())
+
+         @return Whether any work was done as a result of this call.
+      */
+      bool process(unsigned int timeoutMs);
+
+      inline FdPollGrp* getPollGrp() {return mPollGrp;} 
+
+      /** 
+         @brief Returns time in milliseconds when process next needs to be 
+            called.
+
+         @return The maximum time in ms that whatever is giving the 
+         SipStack processing cycles should wait before calling either 
+         process(unsigned int) or process(FdSet&). In most circumstances, this 
+         is simply when the next timer (either an app timer, or a SIP 
+         transaction timer) is scheduled to fire. However, in cases where there 
+         is processing work to be done (in the form of messages in a fifo 
+         somewhere), this will return 0.
+      */
+      virtual unsigned int getTimeTillNextProcessMS();
+
+      /** 
+         @brief Check all timers
+
+         @note If you are driving this SipStack's IO using its FdPollGrp 
+         directly (because you have more than one stack sharing the FdPollGrp, 
+         for example), you need to call this periodically (see impl of 
+         EventStackThread for an example of this). process(unsigned int) does 
+         this for you.
+      */
       virtual void processTimers();
 
-      /// returns time in milliseconds when process next needs to be called
-      virtual unsigned int getTimeTillNextProcessMS();
 
       /// Sets the interval that determines the time between Statistics messages
       void setStatisticsInterval(unsigned long seconds);
@@ -639,14 +736,6 @@ class SipStack
       void terminateFlow(const resip::Tuple& flow);
       void enableFlowTimer(const resip::Tuple& flow);
 
-      /* Indicate if should use "InternalPoll" system; see mUseInternalPoll.
-       * This sets a global default and must be called prior to creating
-       * the SipStack to have any effect. This is called "default"
-       * because someday the SipStack constructor may have argument
-       * to control this on per-stack basis.
-       */
-      static void setDefaultUseInternalPoll(bool useInternal);
-
    private:
       /// Performs bulk of work of constructor.
       // WATCHOUT: can only be called once (just like constructor)
@@ -655,10 +744,8 @@ class SipStack
       /// Notify an async process handler - if one has been registered
       void checkAsyncProcessHandler();
 
-      // Use internal epoll handlers, and only expose the fd of the
-      // epoll itself thru the fdset interface
-      bool mUseInternalPoll;
       FdPollGrp* mPollGrp;
+      bool mPollGrpIsMine;
 
       /// if this object exists, it manages advanced security featues
       Security* mSecurity;
@@ -715,8 +802,6 @@ class SipStack
 
 
       AfterSocketCreationFuncPtr mSocketFunc;
-
-      static bool mDefaultUseInternalPoll;
 
       friend class Executive;
       friend class StatelessHandler;
