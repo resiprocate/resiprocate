@@ -429,11 +429,11 @@ FdPollImplFdSet::processFdSet(FdSet& fdset)
          FdPollEventMask usrMask = 0;
          assert(info.mSocketFd!=INVALID_SOCKET);
          if ( fdset.readyToRead(info.mSocketFd) )
-            usrMask = FPEM_Read;
+            usrMask |= FPEM_Read;
          if ( fdset.readyToWrite(info.mSocketFd) )
-            usrMask = FPEM_Write;
+            usrMask |= FPEM_Write;
          if ( fdset.hasException(info.mSocketFd) )
-            usrMask = FPEM_Error;
+            usrMask |= FPEM_Error;
 
          // items's mask may have changed since select occured, so mask it again
          usrMask &= info.mEvMask;
@@ -726,7 +726,8 @@ FdPollImplEpoll::waitAndProcess(int ms)
 
       // Warning; big fat hack. This is likely to be a tad inefficient, and this 
       // is why we want to move away from FdSetIOObserver, at least in 
-      // conjunction with stuff that uses epoll.
+      // conjunction with stuff that uses epoll. The only holdout right now is
+      // the cares DNS code.
       // Also, a fair bit of duplicated code here. 
 
       FdSet fdset;
