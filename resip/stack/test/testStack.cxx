@@ -22,7 +22,7 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/StackThread.hxx"
-#include "resip/stack/SelectInterruptor.hxx"
+#include "rutil/SelectInterruptor.hxx"
 #include "resip/stack/TransportThread.hxx"
 #include "resip/stack/InterruptableStackThread.hxx"
 #include "resip/stack/EventStackThread.hxx"
