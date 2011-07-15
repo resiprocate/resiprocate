@@ -762,15 +762,15 @@ FdPollImplEpoll::waitAndProcess(int ms)
       if ( numReady==0 )
          return false;     // timer expired
 
-      didsomething |= processFdSet(fdset);
+      didSomething |= processFdSet(fdset);
    }
 
-   didsomething |= epollWait(waitMs);
+   didSomething |= epollWait(waitMs);
    return didSomething;
 }
 
 void
-FdPollImplEpoll::buildFdSet(FdSet& fdset) const
+FdPollImplEpoll::buildFdSet(FdSet& fdset)
 {
    int fd = getEPollFd();
    if (fd != -1)
@@ -801,16 +801,18 @@ FdPollImplEpoll::processFdSet(FdSet& fdset)
    }
 
    int fd = getEPollFd();
-   if (fd !=- 1 && FD_ISSET(fd, &readfds))
+   if (fd !=- 1 && fdset.readyToRead(fd))
    {
       epollWait(0);
    }
+   return didsomething;
 }
 
 bool 
 FdPollImplEpoll::epollWait(int waitMs)
 {
    bool maybeMore;
+   bool didsomething=false;
    do
    {
       int nfds = epoll_wait(mEPollFd, &mEvCache.front(), mEvCache.size(), waitMs);
@@ -852,7 +854,7 @@ FdPollImplEpoll::epollWait(int waitMs)
          mEvCacheCur = ne;  // for killCache()
          processItem(item, CvtSysToUsrMask(sysEvtMask));
          item = NULL; // WATCHOUT: item may not exist anymore
-         didSomething = true;
+         didsomething = true;
       }
       mEvCacheLen = 0;
    } while (maybeMore);
