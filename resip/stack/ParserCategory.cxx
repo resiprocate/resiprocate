@@ -198,8 +198,9 @@ ParserCategory::parseParameters(ParseBuffer& pb)
          {
             ParameterTypes::Type type = ParameterTypes::getType(keyStart, (unsigned int)(keyEnd - keyStart));
             static std::bitset<256> terminators2 = Data::toBitset(" \t\r\n;?>");
-            Parameter* p=createParam(type, pb, terminators2);
-            if (!p)
+            Parameter* p;
+            if (type == ParameterTypes::UNKNOWN || 
+               !(p=createParam(type, pb, terminators2)))
             {
                mUnknownParameters.push_back(new UnknownParameter(keyStart, 
                                                                  int((keyEnd - keyStart)), pb, terminators2));
