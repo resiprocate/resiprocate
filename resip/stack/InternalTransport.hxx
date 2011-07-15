@@ -13,6 +13,7 @@
 #include "resip/stack/Tuple.hxx"
 #include "resip/stack/SendData.hxx"
 #include "resip/stack/Compression.hxx"
+#include "rutil/SelectInterruptor.hxx"
 
 namespace resip
 {
@@ -43,7 +44,12 @@ class InternalTransport : public Transport
       virtual bool isFinished() const;
       virtual bool hasDataToSend() const;
 
-      virtual bool shareStackProcessAndSelect() const { return true; }
+      virtual bool shareStackProcessAndSelect() const 
+      { return !(mTransportFlags & RESIP_TRANSPORT_FLAG_OWNTHREAD); }
+
+      // No-op, even if this Transport is marked as having its own thread. It is the
+      // responsibility of the app-writer to ensure that a TransportThread is 
+      // created for this Transport, and run it.
       virtual void startOwnProcessing() {}
 
       // shared by UDP, TCP, and TLS
@@ -56,17 +62,19 @@ class InternalTransport : public Transport
       // used for statistics
       virtual unsigned int getFifoSize() const;
       virtual void send(std::auto_ptr<SendData> data);
-
+      virtual void poke();
    protected:
       friend class SipStack;
 
-      // Whenever a message is added to queue by transmit(), it invokes this
-      // function synchronously.
-      // Can be used to setup any required callbacks to later drain the
-      // queue. Be careful to avoid unwanted recursion within this function.
-      virtual void checkTransmitQueue() { };
-
       Socket mFd; // this is a unix file descriptor or a windows SOCKET
+
+      // .bwc. We use this to interrupt the select call when our tx fifo goes
+      // from empty to non-empty; if the fifo is empty when we build our fd set, 
+      // we will add the read end of this pipe to the fd set, and when a message
+      // is added, we will write something to the write end.
+      SelectInterruptor mSelectInterruptor;
+      FdPollItemHandle mInterruptorHandle;
+
       Fifo<SendData> mTxFifo; // owned by the transport
       FdPollGrp *mPollGrp;      // not owned by transport, just used
       // FdPollItemIf *mPollItem;	// owned by the transport

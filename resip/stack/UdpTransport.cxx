@@ -90,15 +90,28 @@ UdpTransport::~UdpTransport()
    {
       delete[] mRxBuffer;
    }
+   setPollGrp(0);
 }
 
 void
 UdpTransport::setPollGrp(FdPollGrp *grp)
 {
-   assert(mPollGrp==NULL && grp!=NULL);
-   mPollGrp = grp;
-   mPollItemHandle = mPollGrp->addPollItem(mFd, FPEM_Read, this);
-   // above released by InternalTransport destructor
+   if(mPollGrp)
+   {
+      mPollGrp->delPollItem(mPollItemHandle);
+      mPollItemHandle=0;
+   }
+
+   if(mFd!=INVALID_SOCKET && grp)
+   {
+      mPollItemHandle = grp->addPollItem(mFd, FPEM_Read, this);
+      // above released by InternalTransport destructor
+      // ?bwc? Is this really a good idea? If the InternalTransport d'tor is
+      // freeing this, shouldn't InternalTransport::setPollGrp() handle 
+      // creating it?
+   }
+
+   InternalTransport::setPollGrp(grp);
 }
 
 
@@ -106,7 +119,7 @@ UdpTransport::setPollGrp(FdPollGrp *grp)
  * Called after a message is added. Could try writing it now.
  */
 void
-UdpTransport::checkTransmitQueue() {
+UdpTransport::process() {
    if ( (mTransportFlags & RESIP_TRANSPORT_FLAG_TXNOW)!= 0 )
    {
        processTxAll();

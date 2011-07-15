@@ -109,7 +109,7 @@ ConnectionBase::getFlowKey() const
    return mWho.mFlowKey;
 }
 
-void
+bool
 ConnectionBase::preparseNewBytes(int bytesRead)
 {
    DebugLog(<< "In State: " << connectionStates[mConnState]);
@@ -134,7 +134,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             {
                delete [] mBuffer;
                mBuffer = 0;
-               return;
+               return true;
             }
          }
          else if (strncmp(mBuffer + mBufferPos, Symbols::CRLF, 2) == 0)
@@ -151,7 +151,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             {
                delete [] mBuffer;
                mBuffer = 0;
-               return;
+               return true;
             }
          }
 
@@ -192,8 +192,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             delete mMessage;
             mMessage = 0;
             mConnState=NewMessage;
-            delete this;
-            return;
+            return false;
          }
 
          if (mMsgHeaderScanner.getHeaderCount() > 256)
@@ -204,8 +203,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             delete mMessage;
             mMessage = 0;
             mConnState=NewMessage;
-            delete this;
-            return;
+            return false;
          }
 
          unsigned int numUnprocessedChars = 
@@ -221,8 +219,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             delete mMessage;
             mMessage = 0;
             mConnState=NewMessage;
-            delete this;
-            return;
+            return false;
          }
 
          if(numUnprocessedChars==chunkLength)
@@ -241,9 +238,8 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             }
             catch(std::bad_alloc&)
             {
-               delete this; // d'tor deletes mBuffer and mMessage
                ErrLog(<<"Failed to alloc a buffer during preparse!");
-               return;
+               return false;
             }
             memcpy(newBuffer, unprocessedCharPtr, numUnprocessedChars);
             delete [] mBuffer;
@@ -251,7 +247,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             mBufferPos = numUnprocessedChars;
             mBufferSize = size;
             mConnState = ReadingHeaders;
-            return;
+            return true;
          }
 
          mMessage->addBuffer(mBuffer);
@@ -271,9 +267,8 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                }
                catch(std::bad_alloc&)
                {
-                  delete this;  // d'tor deletes stuff
                   ErrLog(<<"Failed to alloc a buffer during preparse!");
-                  return;
+                  return false;
                }
                mBufferPos = 0;
                mBufferSize = ChunkSize;
@@ -293,9 +288,8 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                }
                catch(std::bad_alloc&)
                {
-                  delete this;  // d'tor deletes stuff
                   ErrLog(<<"Failed to alloc a buffer during preparse!");
-                  return;
+                  return false;
                }
                memcpy(newBuffer, unprocessedCharPtr, numUnprocessedChars);
                mBuffer = newBuffer;
@@ -324,8 +318,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                // .bwc. mMessage just took ownership of mBuffer, so we don't
                // delete it here. We do zero it though, for completeness.
                //.jacob. Shouldn't the state also be set here?
-               delete this;
-               return;
+               return false;
             }
             
             if(contentLength > 10485760 || contentLength < 0)
@@ -340,8 +333,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                // .bwc. mMessage just took ownership of mBuffer, so we don't
                // delete it here. We do zero it though, for completeness.
                //.jacob. Shouldn't the state also be set here?
-               delete this;
-               return;
+               return false;
             }
 
             if (numUnprocessedChars < contentLength)
@@ -432,8 +424,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             delete mMessage;
             mMessage = 0;
             //.jacob. Shouldn't the state also be set here?
-            delete this;
-            return;
+            return false;
          }
 
          mBufferPos += bytesRead;
@@ -469,9 +460,8 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             }
             catch(std::bad_alloc&)
             {
-               delete this; // d'tor deletes mBuffer and mMessage
                ErrLog(<<"Failed to alloc a buffer while receiving body!");
-               return;
+               return false;
             }
             memcpy(newBuffer, mBuffer, mBufferSize);
             mBufferSize=newSize;
@@ -483,6 +473,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
       default:
          assert(0);
    }
+   return true;
 }
 
 #ifdef USE_SIGCOMP
@@ -595,6 +586,8 @@ ConnectionBase::decompressNewBytes(int bytesRead)
   {
     if (mSendingTransmissionFormat == Compressed)
     {
+      // !bwc! We are not telling anyone that we're interested in having our
+      // FD put in the writable set...
       mOutstandingSends.push_back(new SendData(
                    who(),
                    Data(nack->getStreamMessage(), nack->getStreamLength()),
@@ -615,15 +608,13 @@ ConnectionBase::getWriteBuffer()
 {
    if (mConnState == NewMessage)
    {
-      if (mBuffer)
+      if (!mBuffer)
       {
-         delete [] mBuffer;
+         DebugLog (<< "Creating buffer for " << *this);
+
+         mBuffer = MsgHeaderScanner::allocateBuffer(ConnectionBase::ChunkSize);
+         mBufferSize = ConnectionBase::ChunkSize;
       }
-
-      DebugLog (<< "Creating buffer for " << *this);
-
-      mBuffer = MsgHeaderScanner::allocateBuffer(ConnectionBase::ChunkSize);
-      mBufferSize = ConnectionBase::ChunkSize;
       mBufferPos = 0;
    }
    return getCurrentWriteBuffer();

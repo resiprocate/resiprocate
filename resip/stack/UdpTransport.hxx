@@ -71,6 +71,7 @@ public:
    virtual bool isDatagram() const { return true; }
 
    virtual void process(FdSet& fdset);
+   virtual void process();
    virtual bool hasDataToSend() const;
    virtual void buildFdSet( FdSet& fdset);
    virtual void setPollGrp(FdPollGrp *grp);
@@ -90,7 +91,6 @@ public:
    void setExternalUnknownDatagramHandler(ExternalUnknownDatagramHandler *handler);
 
 protected:
-   virtual void checkTransmitQueue();
 
    void processRxAll();
    int processRxRecv(char*& buffer, Tuple& sender);

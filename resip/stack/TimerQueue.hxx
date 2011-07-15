@@ -183,11 +183,11 @@ class TuSelectorTimerQueue : public TimerQueue<TimerWithPayload>
 class TransactionTimerQueue : public TimerQueue<TransactionTimer>
 {
    public:
-      TransactionTimerQueue(Fifo<TransactionMessage>& fifo);
+      TransactionTimerQueue(Fifo<TimerMessage>& fifo);
       UInt64 add(Timer::Type type, const Data& transactionId, unsigned long msOffset);
       virtual void processTimer(const TransactionTimer& timer);
    private:
-      Fifo<TransactionMessage>& mFifo;
+      Fifo<TimerMessage>& mFifo;
 };
 
 #ifdef USE_DTLS

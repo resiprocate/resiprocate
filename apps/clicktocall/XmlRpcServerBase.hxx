@@ -7,7 +7,7 @@
 #include <rutil/TransportType.hxx>
 #include <rutil/Fifo.hxx>
 #include <resip/stack/Tuple.hxx>
-#include <resip/stack/SelectInterruptor.hxx>
+#include <rutil/SelectInterruptor.hxx>
 
 namespace clicktocall
 {

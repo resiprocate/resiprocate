@@ -642,6 +642,10 @@ main(int argc, char** argv)
    }
 
    /* Make it all go */
+   if(args.mThreadedStack)
+   {
+      stack.run();
+   }
    stackThread->run();
    proxy.run();
    if ( adminThread )
@@ -683,6 +687,11 @@ main(int argc, char** argv)
    if(regSyncClient)
    {
       regSyncClient->shutdown();
+   }
+   
+   if(args.mThreadedStack)
+   {
+      stack.shutdownAndJoinThreads();
    }
 
    proxy.join();

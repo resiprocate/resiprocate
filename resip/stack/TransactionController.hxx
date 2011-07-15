@@ -24,19 +24,15 @@ class TransactionController
       static unsigned int MaxTUFifoSize;
       static unsigned int MaxTUFifoTimeDepthSecs;
 
-      TransactionController(SipStack& stack, FdPollGrp *pollGrp);
+      TransactionController(SipStack& stack, 
+                              AsyncProcessHandler* handler);
       ~TransactionController();
 
-      void process(FdSet& fdset);
-      void processTimers();
+      void process(int timeout=0);
       unsigned int getTimeTillNextProcessMS();
-      void buildFdSet(FdSet& fdset);
 
       // graceful shutdown (eventually)
       void shutdown();
-
-      // kill transports (after shutdown, before destructor)
-      void deleteTransports();
 
       TransportSelector& transportSelector() { return mTransportSelector; }
       const TransportSelector& transportSelector() const { return mTransportSelector; }
@@ -77,8 +73,8 @@ class TransactionController
       void terminateFlow(const resip::Tuple& flow);
       void enableFlowTimer(const resip::Tuple& flow);
 
+      void setInterruptor(AsyncProcessHandler* handler);
    private:
-      void processEverything(FdSet* fdset);
       TransactionController(const TransactionController& rhs);
       TransactionController& operator=(const TransactionController& rhs);
       SipStack& mStack;
@@ -97,6 +93,13 @@ class TransactionController
       // asynchronous dns responses, transport errors from the underlying
       // transports, etc. 
       Fifo<TransactionMessage> mStateMacFifo;
+
+      //This needs to be separate from mStateMacFifo, because timer messages
+      //need to be processed before other work. (If timers start getting behind
+      //all kinds of nastiness occurs. We can tolerate some SipMessage traffic
+      //getting behind, but processing timers late can cripple the entire
+      //system with state-bloat.)
+      Fifo<TimerMessage> mTimerFifo;
 
       // from the sipstack (for convenience)
       TuSelector& mTuSelector;

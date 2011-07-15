@@ -13,6 +13,7 @@
 #include "rutil/GenericIPAddress.hxx"
 #include "resip/stack/Transport.hxx"
 #include "resip/stack/DnsInterface.hxx"
+#include "rutil/SelectInterruptor.hxx"
 
 
 #include "resip/stack/SecurityTypes.hxx"
@@ -71,13 +72,22 @@ class TransportSelector
       /// Must be called before adding any transports
       void setPollGrp(FdPollGrp *pollGrp);
 
+      /// Called when the TransportSelector will be running in a different 
+      // thread than the TransactionController; this will allow the thread to be 
+      // interrupted when poke() is called.
+      void createSelectInterruptor();
+
       /// Calls process on all suitable transports
       /// NOTE that TransportSelector no longer handles DNSInterface
       /// NOTE not used with pollGrp
       void process(FdSet& fdset);
+      void process();
       /// Builds an FdSet comprised of all FDs from all suitable Transports
       void buildFdSet(FdSet& fdset);
 
+      /// Causes transport process loops to be interrupted if there is stuff in
+      /// their transmit fifos.
+      void poke();
       void addTransport( std::auto_ptr<Transport> transport, bool immediate);
 
       DnsResult* createDnsResult(DnsHandler* handler);
@@ -109,11 +119,9 @@ class TransportSelector
       void terminateFlow(const resip::Tuple& flow);
       void enableFlowTimer(const resip::Tuple& flow);
 
-      /// delete all known transports (including external)
-      void deleteTransports();
-
    private:
       void addTransportInternal( std::auto_ptr<Transport> transport);
+      void checkTransportAddQueue();
       Connection* findConnection(const Tuple& dest) const;
       Transport* findTransportBySource(Tuple& src, const SipMessage* msg) const;
       Transport* findLoopbackTransportBySource(bool ignorePort, Tuple& src) const;
@@ -221,6 +229,8 @@ class TransportSelector
 
       int mAvgBufferSize;
       Fifo<Transport> mTransportsToAdd;
+      std::auto_ptr<SelectInterruptor> mSelectInterruptor;
+      FdPollItemHandle mInterruptorHandle;
 
       friend class TestTransportSelector;
       friend class SipStack; // for debug only

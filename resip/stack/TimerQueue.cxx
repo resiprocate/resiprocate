@@ -19,7 +19,7 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
-TransactionTimerQueue::TransactionTimerQueue(Fifo<TransactionMessage>& fifo)
+TransactionTimerQueue::TransactionTimerQueue(Fifo<TimerMessage>& fifo)
    : mFifo(fifo)
 {
 }

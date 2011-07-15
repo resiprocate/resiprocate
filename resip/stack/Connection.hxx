@@ -66,7 +66,17 @@ class Connection : public ConnectionBase,
       void requestWrite(SendData* sendData);
 
       /// send some or all of a queued data; remove from writable if completely written
-      void performWrite();
+      int performWrite();
+
+      /** Call performWrite() repeatedly, until either the send queue is 
+            exhausted, the write() call fails (probably because the fd is no 
+            longer ready to write), or a set number of writes has been 
+            performed. 
+         @param max The maximum number of writes to perform. 0 indicates that
+            there is no limit.
+         @return false iff this connection has deleted itself.
+      */
+      bool performWrites(unsigned int max=0);
 
       /// ensure that we are on the writeable list if required
       void ensureWritable();
@@ -76,6 +86,14 @@ class Connection : public ConnectionBase,
           it is delivered via mTransport->pushRxMsgUp()
           which generally puts it on a fifo */
       int read();
+
+      /** Call read() repeatedly, until an error occurs (because the fd is not 
+            ready to read, most likely).
+         @param max The maximum number of reads to perform. 0 indicates that
+            there is no limit.
+         @return false iff this connection has deleted itself.
+      */
+      bool performReads(unsigned int max=0);
 
       /// Ensures this connection is in the FlowTimer LRU list in the connection manager
       void enableFlowTimer();

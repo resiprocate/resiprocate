@@ -29,6 +29,7 @@ class TcpBaseTransport : public InternalTransport, public FdPollItemIf
       virtual void buildFdSet( FdSet& fdset);
       virtual bool isReliable() const { return true; }
       virtual bool isDatagram() const { return false; }
+      virtual void process();
       virtual void setPollGrp(FdPollGrp *grp);
       virtual void setRcvBufLen(int buflen);
 
@@ -40,8 +41,6 @@ class TcpBaseTransport : public InternalTransport, public FdPollItemIf
        *  functions specified by derived classes.  Derived classes
           should call this in their constructors.  */
       virtual void init();
-
-      virtual void checkTransmitQueue();
 
       /** Makes new Connection using provided socket. */
       virtual Connection* createConnection(const Tuple& who, Socket fd, bool server=false)=0;

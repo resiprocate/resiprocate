@@ -30,14 +30,18 @@ InternalTransport::InternalTransport(Fifo<TransactionMessage>& rxFifo,
                                      unsigned transportFlags) :
    Transport(rxFifo, portNum, version, interfaceObj, Data::Empty,
              socketFunc, compression, transportFlags),
-   mFd(INVALID_SOCKET), mPollGrp(NULL), mPollItemHandle(NULL)
-{
-}
+   mFd(INVALID_SOCKET),
+   mInterruptorHandle(0),
+   mPollGrp(NULL),
+   mPollItemHandle(NULL)
+{}
 
 InternalTransport::~InternalTransport()
 {
    if (mPollItemHandle)
       mPollGrp->delPollItem(mPollItemHandle);
+   if (mInterruptorHandle)
+      mPollGrp->delPollItem(mInterruptorHandle);
 
    if  (mFd != INVALID_SOCKET)
    {
@@ -45,6 +49,10 @@ InternalTransport::~InternalTransport()
       closeSocket(mFd);
    }
    mFd = -2;
+   if(!mTxFifo.empty())
+   {
+      WarningLog(<< "TX Fifo non-empty in ~InternalTransport! Has " << mTxFifo.size() << " messages.");
+   }
 }
 
 bool
@@ -155,17 +163,48 @@ void
 InternalTransport::send(std::auto_ptr<SendData> data)
 {
    mTxFifo.add(data.release());
-   /* For InternalTransport, this func should only be called in the single
-    * sipstack thread context. Thus safe to do stuff here. Would nice
-    * nice to assert() that fact here, but I don't know how.
-    */
-   checkTransmitQueue();
 }
 
 void
 InternalTransport::setPollGrp(FdPollGrp *grp)
 {
-    assert(0);
+   if(!shareStackProcessAndSelect())
+   {
+      // If this transport does not have its own thread, it does not need to
+      // register its SelectInterruptor because the TransportSelector will take
+      // care of interrupting the select()/epoll() loop when necessary.
+      if(mPollGrp && mInterruptorHandle)
+      {
+         mPollGrp->delPollItem(mInterruptorHandle);
+         mInterruptorHandle=0;
+      }
+
+      if (grp)
+      {
+         mInterruptorHandle = grp->addPollItem(mSelectInterruptor.getReadSocket(), FPEM_Read, &mSelectInterruptor);
+      }
+   }
+
+   mPollGrp = grp;
+}
+
+void 
+InternalTransport::poke()
+{
+   // !bwc! I have tried installing mSelectInterruptor in mTxFifo, but it 
+   // hampers performance. This seems to be because we get a significant 
+   // performance boost from having multiple messages added to mTxFifo before 
+   // mSelectInterruptor is invoked (this is what the TransactionController 
+   // does; it processes at most 16 TransactionMessages, and then pokes the 
+   // Transports). Once we have buffered producer queues in place, this 
+   // performance concern will be rendered moot, and we'll be able to install 
+   // the interruptor in mTxFifo.
+   if(mTxFifo.messageAvailable())
+   {
+      // This will interrupt the select statement and cause processing of 
+      // this new outgoing message.
+      mSelectInterruptor.handleProcessNotification();
+   }
 }
 
 

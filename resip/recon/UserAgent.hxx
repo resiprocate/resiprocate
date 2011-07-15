@@ -7,7 +7,7 @@
 #include "HandleTypes.hxx"
 
 #include <resip/stack/InterruptableStackThread.hxx>
-#include <resip/stack/SelectInterruptor.hxx>
+#include <rutil/SelectInterruptor.hxx>
 //#include <resip/dum/DumThread.hxx>
 #include <resip/dum/MasterProfile.hxx>
 #include <resip/dum/RegistrationHandler.hxx>

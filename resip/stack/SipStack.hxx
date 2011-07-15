@@ -26,12 +26,15 @@ namespace resip
 
 class ApplicationMessage;
 class Data;
+class DnsThread;
 class Message;
 class Security;
 class SipMessage;
 class StatisticsManager;
 class Tuple;
 class Uri;
+class TransactionControllerThread;
+class TransportSelectorThread;
 class TransactionUser;
 class AsyncProcessHandler;
 class Compression;
@@ -194,18 +197,61 @@ class SipStack : public FdSetIOObserver
       virtual ~SipStack();
 
       /**
-         Inform the transaction state machine processor that it should not
+         @brief Causes this SipStack object to create and run threads for carrying
+         out processing. 
+
+         This includes a thread for DNS lookups, a thread for
+         transaction processing, and a thread for transport processing 
+         (individual Transport objects may be registered as having their own 
+         thread; these are not serviced by the thread spawned by this call). 
+         This function is intended to be used in addition to the normal method/s
+         of giving the SipStack cycles (eg; EventStackThread, StackThread, etc);
+         these are still necessary to give the SipStack cycles for handling 
+         application timers, statistics logging, and shutdown logic.
+      */
+      void run();
+
+      /** 
+         @brief perform orderly shutdown
+         @details Inform the transaction state machine processor that it should not
          create any new transactions and to perform an orderly shutdown. When
-         the transactions are all terminated, return a ShutdownMessage to the TU
+         the transactions are all terminated, return a ShutdownMessage to the TU.
+         @note If the SipStack is running in multithreaded mode, this function 
+            DOES NOT shut down the threads. This is what 
+            shutdownAndJoinThreads() is for. (Shutting down threads in this call
+            would prevent orderly shutdown from working; outstanding 
+            transactions would be dropped on the floor)
       */
       void shutdown();
 
+      /**
+         @brief Shutdown and join any threads that the SipStack is running.
+      */
+      void shutdownAndJoinThreads();
+
+      /**
+        @brief thrown when the stack is unable to function.
+        @details For instance, the stack cannot process messages because
+        there are no transports associated with the stack.
+      */
       class Exception : public BaseException
       {
          public:
+            /**
+              @brief constructor
+              @param msg The message to be put in the exception
+              @param file The source code file where the exception got thrown
+              @param line The line number in the file where the exception
+               got thrown
+              @note Used thus in SipStack.cxx:
+               throw Exception("exception message", __FILE__, __LINE__);
+              */
             Exception(const Data& msg, const Data& file, const int line)
                : BaseException(msg, file, line) {}
 
+            /**
+              @brief what gets called instead of the pure virtual in the base
+              */
             const char* name() const { return "SipStack::Exception"; }
       };
 
@@ -222,8 +268,13 @@ class SipStack : public FdSetIOObserver
 
          @param version               Protocol Version:  V4 or V6
 
+		 @param stun                  Specifies whether STUN is enabled.
+
          @param ipInterface           Specifies which ethernet interface to bind to. If set to
-                                      Data::Empty, bind to all interfaces.  Note:  Interfaces
+                                      Data::Empty, bind to all interfaces. Binding to all 
+                                      interfaces can impose a performance penalty, however, so it is 
+                                      recommended that you bind to specific interfaces when using in 
+                                      high-throughput deployments.  Note:  Interfaces
                                       must be identified via IP address.
 
          @param sipDomainname         Only allow messages to
@@ -266,13 +317,16 @@ class SipStack : public FdSetIOObserver
       Fifo<TransactionMessage>& stateMacFifo();
 
       /**
-          Used to add an alias for this sip element. e.g. foobar.com and boo.com
-          are both handled by this proxy.  Not threadsafe.  Alias is added to
-          internal list of Domains and can be checked with isMyDomain.
+          @brief add an alias for this sip element
+          
+          @details Used to add an alias for this sip element. e.g. foobar.com and boo.com
+          are both handled by this stack.  Not threadsafe.  Alias is added 
+          to internal list of Domains and can be checked with isMyDomain.
 
           @param domain   Domain name that this stack is responsible for.
 
           @param port     Port for domain that this stack is responsible for.
+          @ingroup resip_config
       */
       void addAlias(const Data& domain, int port);
 
@@ -312,8 +366,9 @@ class SipStack : public FdSetIOObserver
       */
       const Uri& getUri() const;
 
-      /**
-          Interface for the TU to send a message.  Makes a copy of the
+      /** 
+          @brief allows a TU to send a message
+          @details Interface for the TU to send a message.  Makes a copy of the
           SipMessage.  Caller is responsible for deleting the memory and may do
           so as soon as it returns.  Loose Routing processing as per RFC3261 must
           be done before calling send by the TU. See Helper::processStrictRoute
@@ -321,20 +376,23 @@ class SipStack : public FdSetIOObserver
           @param msg SipMessage to send.
 
           @param tu  TransactionUser to send from.
+          
+          @sa TransactionUser
       */
       void send(const SipMessage& msg, TransactionUser* tu=0);
 
       void send(std::auto_ptr<SipMessage> msg, TransactionUser* tu = 0);
-
-      /** this is only if you want to send to a destination not in the route. You
-          probably don't want to use it. */
+      
+      /** @brief this is only if you want to send to a destination not in the route.
+          @note You probably don't want to use it. */
       void sendTo(std::auto_ptr<SipMessage> msg, const Uri& uri, TransactionUser* tu=0);
-      /** this is only if you want to send to a destination not in the route. You
-          probably don't want to use it. */
+      /** @brief this is only if you want to send to a destination not in the route.
+          @note You probably don't want to use it. */
       void sendTo(std::auto_ptr<SipMessage> msg, const Tuple& tuple, TransactionUser* tu=0);
 
       /**
-          This is only if you want to send to a destination not in the route.
+          @brief send a message to a destination not in the route
+          @details This is only if you want to send to a destination not in the route.
           Useful for implementing Outbound Proxy use.  Makes a copy of the
           SipMessage.  Caller is responsible for deleting the memory and may
           do so as soon as it returns.
@@ -348,7 +406,8 @@ class SipStack : public FdSetIOObserver
       void sendTo(const SipMessage& msg, const Uri& uri, TransactionUser* tu=0);
 
       /**
-          This is only if you want to send to a destination not in the route.
+          @brief send a message to a destination not in the route      
+          @details This is only if you want to send to a destination not in the route. 
           Useful for implementing Outbound Proxy use.  Makes a copy of the
           SipMessage.  Caller is responsible for deleting the memory and may
           do so as soon as it returns.
@@ -363,9 +422,13 @@ class SipStack : public FdSetIOObserver
                   TransactionUser* tu=0);
 
       /**
-          This is only if you want to force the stack to only send over an existing
-          connection.  If there is no connection, then a 430 is sent to the TU.  Makes
-          a copy of the SipMessage.
+          @brief force the a message out over an existing connection
+
+          @details This is only if you want to force send to only send over an existing 
+          connection.  If there is no connection, then it will try the next tuple.  
+          If there are no more Tuples to try, then a 503 is sent to the TU.  Makes 
+          a copy of the SipMessage.  Caller is responsible for deleting the memory 
+          and may  do so as soon as it returns.
 
           @param msg   SipMessage to send.
 
@@ -378,10 +441,11 @@ class SipStack : public FdSetIOObserver
                                       TransactionUser* tu=0);
 
       /**
-          Makes the message available to the TU at some later time - specified in
-          seconds.
-          Note:  TranasctionUser subclasses can just post to themselves.
-
+          @brief Makes the message available to the TU at some later time, specified in
+          seconds.  
+          
+          @note  TransactionUser subclasses can just post to themselves.
+          
           @param message ApplicationMessage to post
 
           @param secondsLater Number of seconds before message is to be posted.
@@ -393,10 +457,11 @@ class SipStack : public FdSetIOObserver
                 TransactionUser* tu=0);
 
       /**
-          Makes the message available to the TU at some later time - specified in
-          milli-seconds.
-          Note: TranasctionUser subclasses can just post to themselves.
-
+          @brief Makes the message available to the TU at some later time, specified in
+          milli-seconds.  
+          
+          @note TransactionUser subclasses can just post to themselves.
+          
           @param message ApplicationMessage to post
 
           @param ms      Number of milli-seconds before message is to be posted.
@@ -408,14 +473,16 @@ class SipStack : public FdSetIOObserver
                   TransactionUser* tu=0);
 
       /**
-          Makes the message available to the TU later.  Makes a copy of the
-          Message.  Caller is responsible for deleting the memory and may
-          do so as soon as it returns.  Since the addition of TransactionUsers,
-          this method is deprecated.  Calling this will cause the TuSelector to
-          post to the old TuFifo that is not associated with any
-          TransactionUser.
+          @brief Makes the message available to the TU later
+          
+          @note Makes a copy of the Message.  Caller is responsible for deleting
+          the memory and may  do so as soon as it returns.  
 
-          Note:  TranasctionUser subclasses can just post to themselves.
+          @note  TranasctionUser subclasses can just post to themselves.
+          
+          @deprecated Since the addition of TransactionUsers, 
+          this method is deprecated.  Calling this will cause the TuSelector to 
+          post to the old TuFifo that is not associated with any  TransactionUser.
 
           @deprecated
 
@@ -424,12 +491,15 @@ class SipStack : public FdSetIOObserver
       void post(const ApplicationMessage& message);
 
       /**
-          Makes the message available to the TU at some later time - specified in
-          seconds.  Makes a copy of the ApplicationMessage.  Caller is responsible
-          for deleting the memory and may do so as soon as it returns.
-          Note:  TranasctionUser subclasses can just post to themselves.
+          @brief Makes the message available to the TU at some later time, specified in
+          seconds.
+          
+          @note Makes a copy of the ApplicationMessage.  Caller is responsible 
+          for deleting the memory and may do so as soon as it returns.  
 
-          @param message ApplicationMessage to post
+          @note TranasctionUser subclasses can just post to themselves.
+          
+          @param message ApplicationMessage to post.
 
           @param secondsLater Number of seconds before message is to be posted.
 
@@ -439,11 +509,14 @@ class SipStack : public FdSetIOObserver
                 TransactionUser* tu=0);
 
       /**
-          Makes the message available to the TU at some later time - specified in
-          milli-seconds.  Makes a copy of the ApplicationMessage.  Caller is
-          responsible for deleting the memory and may do so as soon as it returns.
-          Note:  TranasctionUser subclasses can just post to themselves.
+          @brief Makes the message available to the TU at some later time, specified in
+          milli-seconds. 
+          
+          @note Makes a copy of the ApplicationMessage.  Caller is responsible for deleting
+          the memory and may do so as soon as it returns.  
 
+          @note TranasctionUser subclasses can just post to themselves.
+          
           @param message ApplicationMessage to post
 
           @param ms      Number of milli-seconds before message is to be posted.
@@ -478,45 +551,50 @@ class SipStack : public FdSetIOObserver
       void cancelClientInviteTransaction(const Data& tid, std::auto_ptr<MessageDecorator> messageDecorator=std::auto_ptr<MessageDecorator>(0));
 
       /**
-          Return true if the stack has new messages for the TU.  Since the addition
-          of TransactionUsers, this method is deprecated.  This only looks into the
-          old TuFifo that is not associated with any TransactionUser.
-
-          @deprecated
+          @brief does the stack have new messages for the TU?
+          @return return true if the stack has new messages for the TU.
+          
+          @deprecated Since the addition of TransactionUsers, this method is deprecated. 
+          This only looks into the old TuFifo that is not associated with any TransactionUser.
+          
       */
       bool hasMessage() const;
-
-      /**
-          Retrieve a SipMessage off the old TuFifo.  Caller now owns the memory.  Returns
-          0 if nothing there.  Since the addition of TransactionUsers, this method
-          is deprecated.  This only looks into the old TuFifo that is not associated
+      
+      /** 
+          @brief retrieve a SipMessage off the old TuFifo
+          
+          @details Retrieve a SipMessage off the old TuFifo.  Caller now owns the memory.  Returns 
+          0 if nothing there.  Since the addition of TransactionUsers, this method 
+          is deprecated.  This only looks into the old TuFifo that is not associated 
           with any TransactionUser.
 
-          Note:  Applications posting non-sip messages must use receive any.  If non
+          @note  Applications posting non-sip messages must use receive any.  If non 
                  SipMessages are on the Fifo, then they are just deleted.
-
+                    
           @deprecated
 
           @returns pointer to received SipMessage, 0 if nothing there.
       */
-      SipMessage* receive();
+      SipMessage* receive(); 
 
-      /**
-          Retrieve a Message off the old TuFifo.  Caller now owns the memory.  Returns
-          0 if nothing there.  Since the addition of TransactionUsers, this method
-          is deprecated.  This only looks into the old TuFifo that is not associated
+      /** 
+          @brief retrieve a message off the old TuFifo
+          
+          Retrieve a Message off the old TuFifo.  Caller now owns the memory.  Returns 
+          0 if nothing there.  Since the addition of TransactionUsers, this method 
+          is deprecated.  This only looks into the old TuFifo that is not associated 
           with any TransactionUser.
 
-          Note:  Applications posting non-sip messages must use receive any.  If non
+          @note Applications posting non-sip messages must use receive any.  If non 
                  SipMessages are on the Fifo, then they are just deleted.
-
+                    
           @deprecated
 
-          @returns pointer to received Message, 0 if nothing there.  May return
-                   TransactionTerminated*, TimerMessage*, SipMessage* or derived
-                   ApplicationMessage*
+          @returns pointer to received Message, 0 if nothing there.  May return 
+                   TransactionTerminated*, TimerMessage*, SipMessage* or derived 
+                   ApplicationMessage* 
       */
-      Message* receiveAny();
+      Message* receiveAny(); 
 
       /*
        * Handler is notified when a message is posted to the default
@@ -528,11 +606,14 @@ class SipStack : public FdSetIOObserver
 
       /**
           Build the FD set to use in a select to find out when process(FdSet&) 
-          must be called again. This must be called prior to calling process.
-          Note:  select() must also be called on the fdset prior to process.
+          must be called again. 
 
           @param fdset an empty or partially populated fdset, fd's are added
                        to the fdset on return
+
+          @note This must be called prior to calling process.
+          @note select() must also be called on the fdset prior to process.
+
           @deprecated Because of serious shortcomings in fd_set (most notably 
             the inability to store FDs whose value exceeds a relatively small 
             number; ~1000), we are deprecating the FdSet-based process loop. 
@@ -545,7 +626,9 @@ class SipStack : public FdSetIOObserver
 
       /**
           This allows the executive to give processing time to stack components.
-          Must call buildFdSet and select before calling this.
+
+          @note Must call buildFdSet and select before calling this.
+          @note The transports are serviced, and then timers are serviced.
 
           @param fdset a populated and 'select'ed fdset
           @deprecated Because of serious shortcomings in fd_set (most notably 
@@ -626,7 +709,10 @@ class SipStack : public FdSetIOObserver
       virtual void processTimers();
 
 
-      /// Sets the interval that determines the time between Statistics messages
+      /**
+         @brief Sets the interval that determines the time between Statistics messages
+         @ingroup resip_config
+      */
       void setStatisticsInterval(unsigned long seconds);
 
       /** Installs a handler for the stacks internal StatisticsManager.  This handler is called before the
@@ -637,81 +723,111 @@ class SipStack : public FdSetIOObserver
          mStatsManager.setExternalStatsHandler(handler);
       }
 
-      /// output current state of the stack - for debug
+      /** @brief output current state of the stack - for debug **/
       EncodeStream& dump(EncodeStream& strm) const;
 
-      /// Returns a pointer to the embedded Security object, 0 if not set
+      /** @brief Returns a pointer to the embedded Security object, 0 if not set **/
       Security* getSecurity() const;
 
-      /**
-          Adds a TU to the TU selection chain.  Tu's do not call receive or
+      /** 
+          @brief add a TU to the TU selection chain
+          
+          @details Adds a TU to the TU selection chain.  Tu's do not call receive or
           receiveAny, the SipStack will call postToTu on the appropriate
           Tu. Messages not associated with a registered TU go into SipStack::mTuFifo.
       */
       void registerTransactionUser(TransactionUser&);
 
-      /// Queue a shutdown request to the specified TU
+      /** @brief Queue a shutdown request to the specified TU **/
       void requestTransactionUserShutdown(TransactionUser&);
 
-      /// Removes a TU from the TU selection chain
+      /** @brief Removes a TU from the TU selection chain **/
       void unregisterTransactionUser(TransactionUser&);
 
       /**
           Register a handler with the DNS Interface for notifications of when a Dns
           Resource Record has been blacklisted.
 
-          @param rrType Resource Record type you are interested in receiving
-                        notifications for
-
-          @param BlackListListener Class implementing the onBlacklisted callback
-                                   event sink defined in BlackListListener
+          @param listener Class implementing the onMark() callback 
+                                   event sink defined in MarkListener
+          @ingroup resip_config
       */
-      void registerMarkListener(MarkListener*);
+      void registerMarkListener(MarkListener* listener);
 
       /**
           Removed a registered BlacklistListener handler from the DNS Interface
           for a particualr Resource Record type and handler pointer.
 
-          @param rrType Resource Record type
+          @param listener Class implementing the onMark() callback 
+                                   event sink defined in MarkListener
 
-          @param BlackListListener Pointer to the class implementing the
-                                   BlackListListener event sink
+          @ingroup resip_config
       */
-      void unregisterMarkListener(MarkListener*);
+      void unregisterMarkListener(MarkListener* listener);
 
       DnsStub& getDnsStub() const;
 
-      /**
-          Specify which enum domains will be searched when sending to URIs that
+      /** 
+          @brief Specify which enum domains will be searched when sending
+          
+          @details Specify which enum domains will be searched when sending to URIs that
           return true to Uri::isEnumSearchable(). An enum query will be done for
           each suffix in parallel.
+          
+          @ingroup resip_config
       */
       void setEnumSuffixes(const std::vector<Data>& suffixes);
 
       /**
-          Clear the DNS Cache
+          @brief Clear the DNS Cache
       */
       void clearDnsCache();
 
       /**
-          Log the DNS Cache to WarningLog for Debugging
+          @brief Log the DNS Cache to WarningLog for Debugging
       */
       void logDnsCache();
 
       /**
-          Enable Statistics Manager.  SIP Statistics will be collected and
-          dispatched periodically via a StatisticsMessage.  Note:  By default
-          the Statistics Manager is enabled.
+          @todo is this documented correctly? [!]
+          @brief Enable Statistics Manager
+          @details Enable Statistics Manager.  SIP Statistics will be collected and 
+          dispatched periodically via a StatisticsMessage.
+          @note By default the Statistics Manager is enabled.
+
+          @ingroup resip_config
       */
       volatile bool& statisticsManagerEnabled();
       const bool statisticsManagerEnabled() const;
 
-      bool getFixBadDialogIdentifiers() const
+      /**
+         Returns whether the stack is fixing corrupted/changed dialog 
+         identifiers (ie, Call-Id and tags) in responses from the wire.
+
+         @return Denotes whether the stack is fixing corrupted/changed dialog 
+            identifiers.
+         @see getFixBadDialogIdentifiers()
+         @ingroup resip_config
+      */
+      bool getFixBadDialogIdentifiers() const 
       {
          return mTransactionController->mFixBadDialogIdentifiers;
       }
 
-      void setFixBadDialogIdentifiers(bool pFixBadDialogIdentifiers)
+      /**
+         Specify whether the stack should fix corrupted/changed dialog 
+         identifiers (ie, Call-Id and tags) in responses from the wire. This is
+         intended to help TransactionUsers that assume responses will come back
+         with the same dialog identifiers that the request had (excepting of 
+         course the remote tag for dialog-forming requests).
+
+         @param pFixBadDialogIdentifiers Denotes whether the stack should fix
+            corrupted/changed dialog identifiers.
+         @note This is enabled by default, and is recommended for 
+            dialog-stateful TransactionUsers.
+         @ingroup resip_config
+      */
+      void setFixBadDialogIdentifiers(bool pFixBadDialogIdentifiers) 
       {
          mTransactionController->mFixBadDialogIdentifiers = pFixBadDialogIdentifiers;
       }
@@ -726,6 +842,22 @@ class SipStack : public FdSetIOObserver
          mTransactionController->setFixBadCSeqNumbers(pFixBadCSeqNumbers);
       }
 
+      /**
+         @todo should this be fixed to work with other applicable transports? []
+         @brief Used to enable/disable content-length checking on datagram-based 
+         transports.
+         @details Used to enable/disable content-length checking on datagram-based 
+         transports. If disabled, the stack will ignore the
+         value of the Content-Length header, and assume that the end of the 
+         payload is at the end of the datagram (and not before). If enabled, it
+         will take the Content-Length seriously, log a warning if the 
+         Content-Length is too short, and reject the message if the 
+         Content-Length is too long.
+         @param check Denotes whether we should check Content-Length.
+         @note By default, Content-Length checking is enabled.
+         @note only works on UDP at this time
+         @ingroup resip_config
+      */
       void setContentLengthChecking(bool check)
       {
          SipMessage::checkContentLength=check;
@@ -741,54 +873,67 @@ class SipStack : public FdSetIOObserver
       // WATCHOUT: can only be called once (just like constructor)
       void init(const SipStackOptions& options);
 
-      /// Notify an async process handler - if one has been registered
+      /** @brief Notify an async process handler - if one has been registered **/
       void checkAsyncProcessHandler();
 
       FdPollGrp* mPollGrp;
       bool mPollGrpIsMine;
 
-      /// if this object exists, it manages advanced security featues
+      /** @brief if this object exists, it manages advanced security featues **/
       Security* mSecurity;
 
       DnsStub* mDnsStub;
+      DnsThread* mDnsThread;
 
-      /// If this object exists, it manages compression parameters
+      /** @brief If this object exists, it manages compression parameters **/
       Compression* mCompression;
 
-      /// if this object exists, it gets notified when ApplicationMessage's get posted
+      /** 
+         @brief if this object exists, it gets notified when messages are posted 
+            to any of the various fifos in the stack. 
+         @note When running in multithreaded mode, this is only invoked when 
+            either app timers are scheduled, shutdown has been requested, or a 
+            TransactionUser has unregistered. The other fifos in the system are 
+            associated with their own AsyncProcessHandlers, since they are being 
+            processed by different threads.
+      **/
       AsyncProcessHandler* mAsyncProcessHandler;
+      bool mInterruptorIsMine;
 
-      /// Disallow copy, by not implementing
+      /** @brief Disallow copy, by not implementing **/
       SipStack(const SipStack& copy);
 
-      /// Disallow assignment, by not implementing
-      SipStack& operator=(const SipStack& rhs);
-
-      /** fifo used to communicate between the TU (Transaction User) and stack
-          Note:  since the introduction of multiple TU's this Fifo should no
+      /** @brief Disallow assignment, by not implementing **/
+      SipStack& operator=(const SipStack& rhs);         
+      
+      /** @brief fifo used to communicate between the TU (TransactionUser) and stack 
+          @note since the introduction of multiple TU's this Fifo should no 
           longer be used by most applications - each TU now owns it's own Fifo. */
       TimeLimitFifo<Message> mTUFifo;
 
       /// Responsible for routing messages to the correct TU based on installed rules
       TuSelector mTuSelector;
 
-      /// Protection for AppTimerQueue
+      /** @brief Protection for AppTimerQueue **/
       mutable Mutex mAppTimerMutex;
-
-      /** timers associated with the application. When a timer fires, it is
+      
+      /** @details timers associated with the application. When a timer fires, it is
           placed in the mTUFifo (if there is not associated TU), or it is placed
           on the fifo of the appropriate TU */
       TuSelectorTimerQueue  mAppTimers;
 
-      /// Used to Track stack statistics
+      /** @brief Used to Track stack statistics **/
       StatisticsManager mStatsManager;
 
-      /// All aspects of the Transaction State Machine / DNS resolver
+      /** @brief All aspects of the Transaction State Machine / DNS resolver **/
       TransactionController* mTransactionController;
 
-
-      /** store all domains that this stack is responsible for. Controlled by
-          addAlias and addTransport interfaces and checks can be made with isMyDomain() */
+      TransactionControllerThread* mTransactionControllerThread;
+      TransportSelectorThread* mTransportSelectorThread;
+      bool mRunning;
+      /** @brief store all domains that this stack is responsible for.
+          @note Controlled by addAlias and addTransport interface
+          and checks can be made with isMyDomain() */
       std::set<Data> mDomains;
 
       /** store all ports that this stack is lisenting on.  Controlled by addTransport

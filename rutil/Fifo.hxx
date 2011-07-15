@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include "rutil/AbstractFifo.hxx"
+#include "rutil/SelectInterruptor.hxx"
 
 namespace resip
 {
@@ -14,7 +15,7 @@ template < class Msg >
 class Fifo : public AbstractFifo
 {
    public:
-      Fifo();
+      Fifo(AsyncProcessHandler* interruptor=0);
       virtual ~Fifo();
       
       /// Add a message to the fifo.
@@ -40,16 +41,19 @@ class Fifo : public AbstractFifo
 
       /// delete all elements in the queue
       virtual void clear();
+      void setInterruptor(AsyncProcessHandler* interruptor);
 
    private:
+      AsyncProcessHandler* mInterruptor;
       Fifo(const Fifo& rhs);
       Fifo& operator=(const Fifo& rhs);
 };
 
 
 template <class Msg>
-Fifo<Msg>::Fifo() : 
-   AbstractFifo(0)
+Fifo<Msg>::Fifo(AsyncProcessHandler* interruptor) : 
+   AbstractFifo(0),
+   mInterruptor(interruptor)
 {
 }
 
@@ -58,6 +62,15 @@ Fifo<Msg>::~Fifo()
 {
    clear();
 }
+
+template <class Msg>
+void 
+Fifo<Msg>::setInterruptor(AsyncProcessHandler* interruptor)
+{
+   Lock lock(mMutex); (void)lock;
+   mInterruptor=interruptor;
+}
+
 
 template <class Msg>
 void
@@ -80,6 +93,11 @@ Fifo<Msg>::add(Msg* msg)
 {
    Lock lock(mMutex); (void)lock;
    mFifo.push_back(msg);
+   if(mSize==0 && mInterruptor)
+   {
+      // Only do this when the queue goes from empty to not empty.
+      mInterruptor->handleProcessNotification();
+   }
    mSize++;
    mCondition.signal();
 }

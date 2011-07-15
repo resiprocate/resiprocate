@@ -65,7 +65,7 @@ class ConnectionBase
       } TransmissionFormat;
 
       ConnState getCurrentState() const { return mConnState; }
-      void preparseNewBytes(int bytesRead);
+      bool preparseNewBytes(int bytesRead);
       void decompressNewBytes(int bytesRead);
       std::pair<char*, size_t> getWriteBuffer();
       std::pair<char*, size_t> getCurrentWriteBuffer();

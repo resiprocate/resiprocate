@@ -30,14 +30,20 @@ ConnectionManager::ConnectionManager() :
 
 ConnectionManager::~ConnectionManager()
 {
-   while (!mAddrMap.empty())
-   {
-      delete mAddrMap.begin()->second;
-   }
+   closeConnections();
    assert(mReadHead->empty());
    assert(mWriteHead->empty());
    assert(mLRUHead->empty());
    assert(mFlowTimerLRUHead->empty());
+}
+
+void 
+ConnectionManager::closeConnections()
+{
+   while (!mAddrMap.empty())
+   {
+      delete mAddrMap.begin()->second;
+   }
 }
 
 Connection*
@@ -329,7 +335,7 @@ ConnectionManager::process(FdSet& fdset)
 
       if (fdset.readyToWrite(currConnection->getSocket()))
       {
-         currConnection->performWrite();
+         currConnection->performWrites();
       }
       else if (fdset.hasException(currConnection->getSocket()))
       {
@@ -358,14 +364,7 @@ ConnectionManager::process(FdSet& fdset)
            currConnection->hasDataToRead() )
       {
          fdset.clear(currConnection->getSocket());
-         
-         int bytesRead = currConnection->read();
-         DebugLog(<< "ConnectionManager::process() " << " read=" << bytesRead);
-         if (bytesRead < 0)
-         {
-            DebugLog(<< "Closing connection bytesRead=" << bytesRead);
-            delete currConnection;
-         }
+         currConnection->performReads();
       }
       else if (fdset.hasException(currConnection->getSocket()))
       {
@@ -381,7 +380,10 @@ ConnectionManager::process(FdSet& fdset)
 void
 ConnectionManager::setPollGrp(FdPollGrp *grp) 
 {
-    assert( mPollGrp == NULL );
+    // .bwc. We could have all the connections detach and re-attach, but the 
+    // only place we call this when connections exist is when tearing down 
+    // anyway.
+    closeConnections();
     mPollGrp = grp;
 }
 

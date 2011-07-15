@@ -63,7 +63,7 @@ Connection::requestWrite(SendData* sendData)
    }
 }
 
-void
+int
 Connection::performWrite()
 {
    if(transportWrite())
@@ -71,15 +71,14 @@ Connection::performWrite()
       assert(mInWritable);
       getConnectionManager().removeFromWritable(this);
       mInWritable = false;
-      return;
+      return 0; // What does this transportWrite() mean?
    }
 
    assert(!mOutstandingSends.empty());
    if(mOutstandingSends.front()->eof)
    {
       // .bwc. Close this connection.
-      delete this;
-      return;
+      return -1;
    }
 
    const Data& sigcompId = mOutstandingSends.front()->sigcompId;
@@ -139,9 +138,16 @@ Connection::performWrite()
 
    if (nBytes < 0)
    {
-      //fail(data.transactionId);
-      InfoLog(<< "Write failed on socket: " << this->getSocket() << ", closing connection");
-      delete this;
+      if(errno!=EAGAIN)
+      {
+         //fail(data.transactionId);
+         InfoLog(<< "Write failed on socket: " << this->getSocket() << ", closing connection");
+         return -1;
+      }
+      else
+      {
+         return 0;
+      }
    }
    else
    {
@@ -161,14 +167,33 @@ Connection::performWrite()
             mInWritable = false;
          }
       }
+      return bytesWritten;
    }
 }
-    
+
+
+bool 
+Connection::performWrites(unsigned int max)
+{
+   int res;
+   // if max==0, we will overflow into UINT_MAX. This is intentional.
+   while((res=performWrite())>0 && !mOutstandingSends.empty() && --max!=0)
+   {;}
+
+   if(res<0)
+   {
+      delete this;
+      return false;
+   }
+   return true;
+}
+
 void 
 Connection::ensureWritable()
 {
    if(!mInWritable)
    {
+      assert(!mOutstandingSends.empty());
       getConnectionManager().addToWritable(this);
       mInWritable = true;
    }
@@ -236,9 +261,34 @@ Connection::read()
    else
 #endif
    {
-     preparseNewBytes(bytesRead); //.dcm. may delete this
+     if(!preparseNewBytes(bytesRead))
+     {
+        // Iffy; only way we have right now to indicate that this connection has
+        // gone away.
+        bytesRead=-1;
+     }
    }
    return bytesRead;
+}
+
+bool 
+Connection::performReads(unsigned int max)
+{
+   int bytesRead;
+
+   // if max==0, we will overflow into UINT_MAX. This is intentional.
+   while((bytesRead = read())>0 && --max!=0)
+   {
+      DebugLog(<< "Connection::performReads() " << " read=" << bytesRead);
+   }
+
+   if ( bytesRead < 0 ) 
+   {
+      DebugLog(<< "Closing connection bytesRead=" << bytesRead);
+      delete this;
+      return false;
+   }
+   return true;
 }
 
 void
@@ -310,16 +360,15 @@ Connection::processPollEvent(FdPollEventMask mask) {
    }
    if ( mask & FPEM_Write ) 
    {
-      performWrite();
+      if(!performWrites())
+      {
+         // Just deleted self
+         return;
+      }
    }
    if ( mask & FPEM_Read ) 
    {
-      int bytesRead = read();
-      if ( bytesRead < 0 ) 
-      {
-         delete this;
-         return;
-      }
+      performReads();
    }
 }
 

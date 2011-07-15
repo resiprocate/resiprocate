@@ -5,7 +5,6 @@
 #include <memory>
 #include "rutil/dns/DnsHandler.hxx"
 #include "resip/stack/MethodTypes.hxx"
-#include "resip/stack/SendData.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Transport.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
@@ -15,6 +14,8 @@ namespace resip
 
 class DnsResult;
 class TransactionMessage;
+class TimerMessage;
+class SendData;
 class TransactionMap;
 class TransactionController;
 class TransactionUser;
@@ -29,7 +30,10 @@ class TransactionState : public DnsHandler
 {
    public:
       RESIP_HeapCount(TransactionState);
-      static void process(TransactionController& controller); 
+      static void process(TransactionController& controller,
+                           TransactionMessage* message); 
+      static void processTimer(TransactionController& controller,
+                                 TimerMessage* timer); 
       ~TransactionState();
      
    private:
@@ -65,7 +69,8 @@ class TransactionState : public DnsHandler
       
       void rewriteRequest(const Uri& rewrite);
       void handle(DnsResult*);
-
+      void handleSync(DnsResult*);
+      
       void processStateless(TransactionMessage* msg);
       void processClientNonInvite(TransactionMessage* msg);
       void processClientInvite(TransactionMessage* msg);

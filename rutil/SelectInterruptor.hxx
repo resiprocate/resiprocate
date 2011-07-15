@@ -2,6 +2,7 @@
 #define RESIP_SelectInterruptor_HXX
 
 #include "rutil/AsyncProcessHandler.hxx"
+#include "rutil/FdPoll.hxx"
 #include "rutil/Socket.hxx"
 
 #if 0
@@ -18,7 +19,7 @@ namespace resip
 /**
     Used to 'artificially' interrupt a select call
 */
-class SelectInterruptor : public AsyncProcessHandler
+class SelectInterruptor : public AsyncProcessHandler, public FdPollItemIf
 {
    public:
       SelectInterruptor();
@@ -46,12 +47,16 @@ class SelectInterruptor : public AsyncProcessHandler
           cleanup signalled fd
       */
       void process(FdSet& fdset);
-   protected:
+
+      virtual void processPollEvent(FdPollEventMask mask);
+
       /* Get fd of read-side, for use within PollInterruptor,
        * Declared as Socket for easier cross-platform even though pipe fd
        * under linux.
        */
       Socket getReadSocket() const { return mReadThing; }
+
+   protected:
 
       /* Cleanup the read side of the interruptor
        * If fdset is provided, it will only try cleaning up if our pipe

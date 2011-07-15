@@ -47,13 +47,28 @@ class FdPollGrp;
  *    immediately try sending it. This should have less latency
  *    and less overhead with select/poll stuff, but will have deeper
  *    call stacks.
+ * OWNTHREAD:
+ *    Specifies whether this Transport object has its own thread (ie; if
+ *    set, the TransportSelector should not run the select/poll loop for
+ *    this transport, since that is another thread's job)
  */
 #define RESIP_TRANSPORT_FLAG_NOBIND      (1<<0)
 #define RESIP_TRANSPORT_FLAG_RXALL       (1<<1)
 #define RESIP_TRANSPORT_FLAG_TXALL       (1<<2)
 #define RESIP_TRANSPORT_FLAG_KEEP_BUFFER (1<<3)
 #define RESIP_TRANSPORT_FLAG_TXNOW       (1<<4)
+#define RESIP_TRANSPORT_FLAG_OWNTHREAD   (1<<5)
 
+/**
+   @brief The base class for Transport classes.
+
+   A Transport presents layer 4 of the OSI model, the transport layer.
+   For IP-based protocols, this means that a Transport object has an
+   IP address (v4 or v6), a transport layer protocol (UDP or TCP/TLS),
+   and a port number.  These are managed through the Transport's Tuple
+   member.
+
+*/
 class Transport : public FdSetIOObserver
 {
    public:
@@ -142,6 +157,15 @@ class Transport : public FdSetIOObserver
       virtual void send(std::auto_ptr<SendData> data)=0;
 
       /**
+         Called when a writer is done adding messages to the TxFifo; this is
+         used to interrupt the select call if the Transport is running in its
+         own thread. This does nothing if select is not currently blocking, so
+         don't bother calling this from the same thread that selects on this
+         Transport's fds. Default impl is a no-op.
+      */
+      virtual void poke(){};
+
+      /**
          If there is work to do, this is the method that does it. If
          the socket is readable, it is read.  If the socket is
          writable and there are outgoing messages to be sent, they are
@@ -165,6 +189,12 @@ class Transport : public FdSetIOObserver
       virtual void buildFdSet( FdSet& fdset) =0;
 
       virtual unsigned int getTimeTillNextProcessMS(){return UINT_MAX;}
+
+      /**
+         Version of process to be invoked periodically when using callback-based 
+         IO (via FdPollGrp).
+      */
+      virtual void process() = 0;
 
       virtual void setPollGrp(FdPollGrp *grp) = 0;
 

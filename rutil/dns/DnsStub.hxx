@@ -6,9 +6,10 @@
 #include <map>
 #include <set>
 
-#include "rutil/FdSetIOObserver.hxx"
+#include "rutil/FdPoll.hxx"
 #include "rutil/Fifo.hxx"
 #include "rutil/GenericIPAddress.hxx"
+#include "rutil/SelectInterruptor.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/dns/DnsResourceRecord.hxx"
 #include "rutil/dns/DnsAAAARecord.hxx"
@@ -88,7 +89,7 @@ class DnsRawSink
       virtual void onDnsRaw(int statuts, const unsigned char* abuf, int len) = 0;
 };
 
-class DnsStub : public ExternalDnsHandler, public FdSetIOObserver
+class DnsStub : public ExternalDnsHandler
 {
    public:
       typedef RRCache::Protocol Protocol;
@@ -168,6 +169,7 @@ class DnsStub : public ExternalDnsHandler, public FdSetIOObserver
       virtual void process(FdSet& fdset);
       virtual unsigned int getTimeTillNextProcessMS();
       virtual void buildFdSet(FdSet& fdset);
+      void setPollGrp(FdPollGrp* pollGrp);
 
       void processTimers();
   private:
@@ -355,6 +357,9 @@ class DnsStub : public ExternalDnsHandler, public FdSetIOObserver
             DnsStub& mStub;
       };
 
+      SelectInterruptor mSelectInterruptor;
+      FdPollItemHandle mInterruptorHandle;
+
       resip::Fifo<Command> mCommandFifo;
 
       const unsigned char* skipDNSQuestion(const unsigned char *aptr,
@@ -371,6 +376,7 @@ class DnsStub : public ExternalDnsHandler, public FdSetIOObserver
 
       ResultTransform* mTransform;
       ExternalDns* mDnsProvider;
+      FdPollGrp* mPollGrp;
       std::set<Query*> mQueries;
 
       std::vector<Data> mEnumSuffixes; // where to do enum lookups
