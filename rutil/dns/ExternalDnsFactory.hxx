@@ -10,6 +10,7 @@ class ExternalDns;
 class ExternalDnsCreator
 {
 public:
+    virtual ~ExternalDnsCreator(){}
     virtual ExternalDns* createExternalDns() = 0;
 };
 
