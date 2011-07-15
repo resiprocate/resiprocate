@@ -558,7 +558,7 @@ TlsConnection::computePeerName()
    }
 
    // print session infor       
-   const SSL_CIPHER *ciph;
+   SSL_CIPHER *ciph;
    ciph=SSL_get_current_cipher(mSsl);
    InfoLog( << "TLS sessions set up with " 
             <<  SSL_get_version(mSsl) << " "
