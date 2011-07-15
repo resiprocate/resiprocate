@@ -19,6 +19,7 @@
 #include "rutil/Timer.hxx"
 #include "rutil/FdPoll.hxx"
 
+#include "rutil/dns/DnsThread.hxx"
 #include "resip/stack/Message.hxx"
 #include "resip/stack/ShutdownMessage.hxx"
 #include "resip/stack/SipMessage.hxx"
@@ -31,6 +32,8 @@
 #include "resip/stack/UdpTransport.hxx"
 #include "resip/stack/TransactionUser.hxx"
 #include "resip/stack/TransactionUserMessage.hxx"
+#include "resip/stack/TransactionControllerThread.hxx"
+#include "resip/stack/TransportSelectorThread.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 #ifdef USE_SSL
@@ -75,14 +78,19 @@ SipStack::SipStack(Security* pSecurity,
    mSecurity(0),
 #endif
    mDnsStub(new DnsStub(additional, socketFunc, handler, mPollGrp)),
+   mDnsThread(0),
    mCompression(compression ? compression : new Compression(Compression::NONE)),
-   mAsyncProcessHandler(handler),
+   mAsyncProcessHandler(handler ? handler : new SelectInterruptor),
+   mInterruptorIsMine(!handler),
    mTUFifo(TransactionController::MaxTUFifoTimeDepthSecs,
            TransactionController::MaxTUFifoSize),
    mTuSelector(mTUFifo),
    mAppTimers(mTuSelector),
    mStatsManager(*this),
-   mTransactionController(new TransactionController(*this, mPollGrp)),
+   mTransactionController(new TransactionController(*this, mAsyncProcessHandler)),
+   mTransactionControllerThread(0),
+   mTransportSelectorThread(0),
+   mRunning(false),
    mShuttingDown(false),
    mStatisticsManagerEnabled(true),
    mSocketFunc(socketFunc)
@@ -126,7 +134,18 @@ SipStack::init(const SipStackOptions& options)
    mShuttingDown = false;
    mStatisticsManagerEnabled = true;
    mSocketFunc = options.mSocketFunc;
+
+   if(mInterruptorIsMine)
+   {
+      delete mAsyncProcessHandler;
+      mAsyncProcessHandler=0;
+   }
    mAsyncProcessHandler = options.mAsyncProcessHandler;
+   if(!mAsyncProcessHandler)
+   {
+      mInterruptorIsMine = true;
+      mAsyncProcessHandler = new SelectInterruptor;
+   }
 
    // .kw. note that stats manager has already called getTimeMs()
    Timer::getTimeMs(); // initalize time offsets
@@ -163,7 +182,8 @@ SipStack::init(const SipStackOptions& options)
 
    // WATCHOUT: the transaction controller constructor will
    // grab the security, DnsStub, compression and statsManager
-   mTransactionController = new TransactionController(*this, mPollGrp);
+   mTransactionController = new TransactionController(*this, mAsyncProcessHandler);
+   mTransactionController->transportSelector().setPollGrp(mPollGrp);
 
    assert(!mShuttingDown);
 }
@@ -171,12 +191,14 @@ SipStack::init(const SipStackOptions& options)
 SipStack::~SipStack()
 {
    DebugLog (<< "SipStack::~SipStack()");
-   mTransactionController->deleteTransports();
+   shutdownAndJoinThreads();
+
    delete mTransactionController;
 #ifdef USE_SSL
    delete mSecurity;
 #endif
    delete mCompression;
+
    delete mDnsStub;
    if (mPollGrpIsMine)
    {
@@ -185,6 +207,40 @@ SipStack::~SipStack()
       mPollGrp=0;
    }
 
+   if(mInterruptorIsMine)
+   {
+      delete mAsyncProcessHandler;
+      mAsyncProcessHandler=0;
+   }
+
+   delete mDnsThread;
+   mDnsThread=0;
+   delete mTransactionControllerThread;
+   mTransactionControllerThread=0;
+   delete mTransportSelectorThread;
+   mTransportSelectorThread=0;
+}
+
+void 
+SipStack::run()
+{
+   if(mRunning)
+   {
+      return;
+   }
+
+   mRunning=true;
+   delete mDnsThread;
+   mDnsThread=new DnsThread(*mDnsStub);
+   mDnsThread->run();
+
+   delete mTransactionControllerThread;
+   mTransactionControllerThread=new TransactionControllerThread(*mTransactionController);
+   mTransactionControllerThread->run();
+
+   delete mTransportSelectorThread;
+   mTransportSelectorThread=new TransportSelectorThread(mTransactionController->transportSelector());
+   mTransportSelectorThread->run();
 }
 
 void
@@ -199,6 +255,29 @@ SipStack::shutdown()
    }
 
    mTransactionController->shutdown();
+}
+
+void 
+SipStack::shutdownAndJoinThreads()
+{
+   if(mDnsThread)
+   {
+      mDnsThread->shutdown();
+      mDnsThread->join();
+   }
+
+   if(mTransactionControllerThread)
+   {
+      mTransactionControllerThread->shutdown();
+      mTransactionControllerThread->join();
+   }
+
+   if(mTransportSelectorThread)
+   {
+      mTransportSelectorThread->shutdown();
+      mTransportSelectorThread->join();
+   }
+   mRunning=false;
 }
 
 Transport*
@@ -471,7 +550,6 @@ SipStack::send(const SipMessage& msg, TransactionUser* tu)
    toSend->setFromTU();
 
    mTransactionController->send(toSend);
-   checkAsyncProcessHandler();
 }
 
 void
@@ -486,7 +564,6 @@ SipStack::send(std::auto_ptr<SipMessage> msg, TransactionUser* tu)
    msg->setFromTU();
 
    mTransactionController->send(msg.release());
-   checkAsyncProcessHandler();
 }
 
 void
@@ -497,7 +574,6 @@ SipStack::sendTo(std::auto_ptr<SipMessage> msg, const Uri& uri, TransactionUser*
    msg->setFromTU();
 
    mTransactionController->send(msg.release());
-   checkAsyncProcessHandler();
 }
 
 void
@@ -510,7 +586,6 @@ SipStack::sendTo(std::auto_ptr<SipMessage> msg, const Tuple& destination, Transa
    msg->setFromTU();
 
    mTransactionController->send(msg.release());
-   checkAsyncProcessHandler();
 }
 
 // this is only if you want to send to a destination not in the route. You
@@ -526,7 +601,6 @@ SipStack::sendTo(const SipMessage& msg, const Uri& uri, TransactionUser* tu)
    toSend->setFromTU();
 
    mTransactionController->send(toSend);
-   checkAsyncProcessHandler();
 }
 
 // this is only if you want to send to a destination not in the route. You
@@ -542,7 +616,6 @@ SipStack::sendTo(const SipMessage& msg, const Tuple& destination, TransactionUse
    toSend->setFromTU();
 
    mTransactionController->send(toSend);
-   checkAsyncProcessHandler();
 }
 
 void
@@ -613,14 +686,12 @@ void
 SipStack::abandonServerTransaction(const Data& tid)
 {
    mTransactionController->abandonServerTransaction(tid);
-   checkAsyncProcessHandler();
 }
 
 void
 SipStack::cancelClientInviteTransaction(const Data& tid, std::auto_ptr<MessageDecorator> messageDecorator)
 {
    mTransactionController->cancelClientInviteTransaction(tid, messageDecorator);
-   checkAsyncProcessHandler();
 }
 
 
@@ -696,8 +767,22 @@ SipStack::processTimers()
    {
       mStatsManager.process();
    }
-   mTransactionController->processTimers();
-   mDnsStub->processTimers();
+
+   if(!mTransactionControllerThread)
+   {
+      mTransactionController->process();
+   }
+
+   if(!mDnsThread)
+   {
+      mDnsStub->processTimers();
+   }
+
+   if(!mTransportSelectorThread)
+   {
+      mTransactionController->transportSelector().process();
+   }
+
    mTuSelector.process();
    Lock lock(mAppTimerMutex);
    mAppTimers.process();
@@ -714,8 +799,11 @@ SipStack::process(FdSet& fdset)
 bool 
 SipStack::process(unsigned int timeoutMs)
 {
-   bool result=mPollGrp->waitAndProcess(resipMin(timeoutMs, getTimeTillNextProcessMS()));
+   // Go ahead and do this first. Should cut down on how frequently we call 
+   // waitAndProcess() with a timeout of 0, which should improve efficiency 
+   // somewhat.
    processTimers();
+   bool result=mPollGrp->waitAndProcess(resipMin(timeoutMs, getTimeTillNextProcessMS()));
    return result;
 }
 
@@ -725,10 +813,17 @@ SipStack::getTimeTillNextProcessMS()
 {
    Lock lock(mAppTimerMutex);
 
+   unsigned int dnsNextProcess = (mDnsThread ? 
+                           INT_MAX : mDnsStub->getTimeTillNextProcessMS());
+   unsigned int tcNextProcess = mTransactionControllerThread ? INT_MAX : 
+                           mTransactionController->getTimeTillNextProcessMS();
+   unsigned int tsNextProcess = mTransportSelectorThread ? INT_MAX : mTransactionController->transportSelector().getTimeTillNextProcessMS();
+
    return resipMin(Timer::getMaxSystemTimeWaitMs(),
-                  resipMin(mDnsStub->getTimeTillNextProcessMS(),
-                           resipMin(mTransactionController->getTimeTillNextProcessMS(),
-                                    resipMin(mTuSelector.getTimeTillNextProcessMS(), mAppTimers.msTillNextTimer()))));
+            resipMin(dnsNextProcess,
+               resipMin(tcNextProcess,
+                  resipMin(tsNextProcess,
+                     resipMin(mTuSelector.getTimeTillNextProcessMS(), mAppTimers.msTillNextTimer())))));
 }
 
 void
@@ -846,14 +941,12 @@ void
 SipStack::terminateFlow(const resip::Tuple& flow)
 {
    mTransactionController->terminateFlow(flow);
-   checkAsyncProcessHandler();
 }
 
 void 
 SipStack::enableFlowTimer(const resip::Tuple& flow)
 {
    mTransactionController->enableFlowTimer(flow);
-   checkAsyncProcessHandler();
 }
 
 /* ====================================================================

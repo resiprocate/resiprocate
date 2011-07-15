@@ -29,23 +29,22 @@ using namespace resip;
 unsigned int TransactionController::MaxTUFifoSize = 0;
 unsigned int TransactionController::MaxTUFifoTimeDepthSecs = 0;
 
-TransactionController::TransactionController(SipStack& stack, FdPollGrp *pollGrp) :
+TransactionController::TransactionController(SipStack& stack, 
+                                                AsyncProcessHandler* handler) :
    mStack(stack),
    mDiscardStrayResponses(true),
    mFixBadDialogIdentifiers(true),
    mFixBadCSeqNumbers(true),
-   mStateMacFifo(),
+   mStateMacFifo(handler),
    mTuSelector(stack.mTuSelector),
    mTransportSelector(mStateMacFifo,
                       stack.getSecurity(),
                       stack.getDnsStub(),
                       stack.getCompression()),
-   mTimers(mStateMacFifo),
+   mTimers(mTimerFifo),
    mShuttingDown(false),
    mStatsManager(stack.mStatsManager)
-{
-   mTransportSelector.setPollGrp(pollGrp);
-}
+{}
 
 #if defined(WIN32) && !defined(__GNUC__)
 #pragma warning( default : 4355 )
@@ -53,6 +52,15 @@ TransactionController::TransactionController(SipStack& stack, FdPollGrp *pollGrp
 
 TransactionController::~TransactionController()
 {
+   if(mClientTransactionMap.size())
+   {
+      WarningLog(<< "On shutdown, there are Client TransactionStates remaining!");
+   }
+
+   if(mServerTransactionMap.size())
+   {
+      WarningLog(<< "On shutdown, there are Server TransactionStates remaining!");
+   }
 }
 
 
@@ -70,13 +78,7 @@ TransactionController::shutdown()
 }
 
 void
-TransactionController::deleteTransports()
-{
-   mTransportSelector.deleteTransports();
-}
-
-void
-TransactionController::processEverything(FdSet* fdset)
+TransactionController::process(int timeout)
 {
    if (mShuttingDown && 
        //mTimers.empty() && 
@@ -91,31 +93,52 @@ TransactionController::processEverything(FdSet* fdset)
    }
    else
    {
-      if ( fdset ) 
+      unsigned int nextTimer(mTimers.msTillNextTimer());
+      timeout=resipMin((int)nextTimer, timeout);
+      if(timeout==0)
       {
-         mTransportSelector.process(*fdset);
+         // *sigh*
+         timeout=-1;
       }
 
-      mTimers.process();
+      // If non-zero is passed for timeout, we understand that the caller is ok
+      // with us waiting up to that long on this call. A non-zero timeout is
+      // passed by TransactionControllerThread, for example. This gets us 
+      // something approximating a blocking wait on both the state machine fifo 
+      // and the timer queue.
+      TransactionMessage* message=mStateMacFifo.getNext(timeout);
 
-      while (mStateMacFifo.messageAvailable())
+      // If we either had timers ready to go at the beginning of this call, or
+      // the getNext() call above timed out, our timer queue is likely ready to 
+      // be serviced.
+      if(!message || nextTimer==0)
       {
-         TransactionState::process(*this);
+         mTimers.process();
+         TimerMessage* timer;
+         while ((timer=mTimerFifo.getNext(-1)))
+         {
+            TransactionState::processTimer(*this,timer);
+         }
+      }
+
+      if(message)
+      {
+         // Only do 16 at a time; don't let the timer queue (or other 
+         // processing) starve.
+         int runs=16;
+         while(message)
+         {
+            TransactionState::process(*this, message);
+            if(--runs==0)
+            {
+               break;
+            }
+            message = mStateMacFifo.getNext(-1);
+         }
+
+         mTransportSelector.poke();
       }
    }
-}
-
-void
-TransactionController::processTimers()
-{
-   // we consider fifos a special case of Timers
-   processEverything(NULL);
-}
-
-void
-TransactionController::process(FdSet& fdset)
-{
-   processEverything(&fdset);
 }
 
 unsigned int 
@@ -125,14 +148,8 @@ TransactionController::getTimeTillNextProcessMS()
    {
       return 0;
    }
-   return resipMin(mTimers.msTillNextTimer(), mTransportSelector.getTimeTillNextProcessMS());   
+   return mTimers.msTillNextTimer();
 } 
-   
-void 
-TransactionController::buildFdSet( FdSet& fdset)
-{
-   mTransportSelector.buildFdSet( fdset );
-}
 
 void
 TransactionController::send(SipMessage* msg)
@@ -210,6 +227,12 @@ void
 TransactionController::enableFlowTimer(const resip::Tuple& flow)
 {
    mStateMacFifo.add(new EnableFlowTimer(flow));
+}
+
+void 
+TransactionController::setInterruptor(AsyncProcessHandler* handler)
+{
+   mStateMacFifo.setInterruptor(handler);
 }
 
 /* ====================================================================

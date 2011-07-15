@@ -71,7 +71,8 @@ TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* s
    mCompression(compression),
    mSigcompStack (0),
    mPollGrp(0),
-   mAvgBufferSize(1024)
+   mAvgBufferSize(1024),
+   mInterruptorHandle(0)
 {
    memset(&mUnspecified.v4Address, 0, sizeof(sockaddr_in));
    mUnspecified.v4Address.sin_family = AF_UNSPEC;
@@ -99,7 +100,19 @@ TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* s
 
 TransportSelector::~TransportSelector()
 {
-   deleteTransports();
+   mExactTransports.clear();
+   mAnyInterfaceTransports.clear();
+   mAnyPortTransports.clear();
+   mAnyPortAnyInterfaceTransports.clear();
+   mTlsTransports.clear();
+   mSharedProcessTransports.clear();
+   mHasOwnProcessTransports.clear();
+   mTypeToTransportMap.clear();
+   while(!mTransports.empty())
+   {
+      delete mTransports.back();
+      mTransports.pop_back();
+   }
 #ifdef USE_SIGCOMP
    delete mSigcompStack;
 #endif
@@ -109,6 +122,7 @@ TransportSelector::~TransportSelector()
     if ( mSocket6 != INVALID_SOCKET )
         closeSocket( mSocket6 );
 
+   setPollGrp(0);
 }
 
 void
@@ -126,24 +140,6 @@ TransportSelector::shutdown()
    for (TlsTransportMap::iterator i=mTlsTransports.begin(); i!=mTlsTransports.end(); ++i)
    {
       i->second->shutdown();
-   }
-}
-
-void
-TransportSelector::deleteTransports()
-{
-   mExactTransports.clear();
-   mAnyInterfaceTransports.clear();
-   mAnyPortTransports.clear();
-   mAnyPortAnyInterfaceTransports.clear();
-   mTlsTransports.clear();
-   mSharedProcessTransports.clear();
-   mHasOwnProcessTransports.clear();
-   mTypeToTransportMap.clear();
-   while(!mTransports.empty())
-   {
-      delete mTransports.back();
-      mTransports.pop_back();
    }
 }
 
@@ -276,32 +272,58 @@ TransportSelector::addTransportInternal(std::auto_ptr<Transport> autoTransport)
 void
 TransportSelector::setPollGrp(FdPollGrp *grp)
 {
-   assert( mSharedProcessTransports.size() == 0 );
-   assert( mPollGrp==NULL );
+   if(mPollGrp && mInterruptorHandle)
+   {
+      // unregister our select interruptor
+      mPollGrp->delPollItem(mInterruptorHandle);
+      mInterruptorHandle=0;
+   }
+
    mPollGrp = grp;
+
+   if(mPollGrp && mSelectInterruptor.get())
+   {
+      mInterruptorHandle = mPollGrp->addPollItem(mSelectInterruptor->getReadSocket(), FPEM_Read, mSelectInterruptor.get());
+   }
+
+   for(TransportList::iterator t=mSharedProcessTransports.begin(); 
+         t!=mSharedProcessTransports.end(); ++t)
+   {
+      (*t)->setPollGrp(mPollGrp);
+   }
+}
+
+void 
+TransportSelector::createSelectInterruptor()
+{
+   if(!mSelectInterruptor.get())
+   {
+      mSelectInterruptor.reset(new SelectInterruptor);
+      if(mPollGrp)
+      {
+         mInterruptorHandle = mPollGrp->addPollItem(mSelectInterruptor->getReadSocket(), FPEM_Read, mSelectInterruptor.get());
+      }
+   }
 }
 
 void
 TransportSelector::buildFdSet(FdSet& fdset)
 {
-   assert( mPollGrp==NULL );
    for(TransportList::iterator it = mSharedProcessTransports.begin();
        it != mSharedProcessTransports.end(); it++)
    {
       (*it)->buildFdSet(fdset);
+   }
+   if(mSelectInterruptor.get())
+   {
+      mSelectInterruptor->buildFdSet(fdset);
    }
 }
 
 void
 TransportSelector::process(FdSet& fdset)
 {
-   assert( mPollGrp==NULL );
-   std::auto_ptr<Transport> t(mTransportsToAdd.getNext(-1));
-   while(t.get())
-   {
-      addTransportInternal(t);
-      t.reset(mTransportsToAdd.getNext(0));
-   }
+   checkTransportAddQueue();
 
    for(TransportList::iterator it = mSharedProcessTransports.begin(); 
        it != mSharedProcessTransports.end(); it++)
@@ -316,6 +338,64 @@ TransportSelector::process(FdSet& fdset)
       }
    }
 
+   if(mSelectInterruptor.get())
+   {
+      mSelectInterruptor->process(fdset);
+   }
+}
+
+void 
+TransportSelector::process()
+{
+   // This function will only be sufficient if these Transports are hooked into
+   // a FdPollGrp.
+   checkTransportAddQueue();
+
+   for(TransportList::iterator it = mSharedProcessTransports.begin(); 
+       it != mSharedProcessTransports.end(); it++)
+   {
+      try
+      {
+         (*it)->process();
+      }
+      catch (BaseException& e)
+      {
+         ErrLog (<< "Exception thrown from Transport::process: " << e);
+      }
+   }
+}
+
+void
+TransportSelector::checkTransportAddQueue()
+{
+   std::auto_ptr<Transport> t(mTransportsToAdd.getNext(-1));
+   while(t.get())
+   {
+      addTransportInternal(t);
+      t.reset(mTransportsToAdd.getNext(0));
+   }
+}
+
+void 
+TransportSelector::poke()
+{
+   for(TransportList::iterator it = mHasOwnProcessTransports.begin(); 
+       it != mHasOwnProcessTransports.end(); it++)
+   {
+      try
+      {
+         (*it)->poke();
+      }
+      catch (BaseException& e)
+      {
+         ErrLog (<< "Exception thrown from Transport::process: " << e);
+      }
+   }
+
+   if(mSelectInterruptor.get() && hasDataToSend())
+   {
+      mSelectInterruptor->handleProcessNotification();
+   }
 }
 
 bool
@@ -1426,7 +1506,7 @@ TransportSelector::findTlsTransport(const Data& domainname,resip::TransportType 
 unsigned int
 TransportSelector::getTimeTillNextProcessMS()
 {
-   return (mPollGrp==NULL&&hasDataToSend()) ? 0 : INT_MAX;
+   return hasDataToSend() ? 0 : INT_MAX;
 }
 
 void

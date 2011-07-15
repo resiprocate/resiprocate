@@ -28,6 +28,7 @@ class CommandLineParser
       int mDtlsPort;
       bool mUseV4;
       bool mUseV6;
+      bool mThreadedStack;
       std::vector<Data> mDomains;
       std::vector<Data> mInterfaces;
       std::vector<Data> mRouteSet;

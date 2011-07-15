@@ -34,6 +34,7 @@ SRC = \
 	Random.cxx \
 	RecursiveMutex.cxx \
 	resipfaststreams.cxx \
+	SelectInterruptor.cxx \
 	Socket.cxx \
 	Subsystem.cxx \
 	SysLogBuf.cxx \
@@ -52,6 +53,7 @@ SRC = \
 	dns/DnsResourceRecord.cxx \
 	dns/DnsSrvRecord.cxx \
 	dns/DnsStub.cxx \
+	dns/DnsThread.cxx \
 	dns/ExternalDnsFactory.cxx \
 	dns/RRCache.cxx \
 	dns/RRList.cxx \

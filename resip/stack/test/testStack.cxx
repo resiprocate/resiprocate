@@ -23,6 +23,7 @@
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/StackThread.hxx"
 #include "resip/stack/SelectInterruptor.hxx"
+#include "resip/stack/TransportThread.hxx"
 #include "resip/stack/InterruptableStackThread.hxx"
 #include "resip/stack/EventStackThread.hxx"
 #include "resip/stack/Uri.hxx"
@@ -164,9 +165,20 @@ class SipStackAndThread
       SipStack&         operator*() const { assert(mStack); return *mStack; }
       SipStack*         operator->() const { return mStack; }
 
-      void              run() { if ( mThread ) mThread->run(); }
-      void              shutdown() { if ( mThread ) mThread->shutdown(); }
-      void              join() { if ( mThread ) mThread->join(); }
+      void              run() 
+      {
+         if ( mThread ) mThread->run();
+         if ( mMultiThreadedStack ) mStack->run();
+      }
+      void              shutdown()
+      {
+         if ( mThread ) mThread->shutdown();
+      }
+      void              join()
+      {
+         if ( mThread ) mThread->join();
+         if ( mMultiThreadedStack ) mStack->shutdownAndJoinThreads();
+      }
 
       void              destroy();
 
@@ -180,12 +192,18 @@ class SipStackAndThread
       SelectInterruptor *mSelIntr;
       FdPollGrp         *mPollGrp;
       EventThreadInterruptor    *mEventIntr;
+      bool mMultiThreadedStack;
 };
 
 
 SipStackAndThread::SipStackAndThread(const char *tType,
  AsyncProcessHandler *notifyDn, AsyncProcessHandler *notifyUp)
-  : mStack(0), mThread(0), mSelIntr(0), mPollGrp(0), mEventIntr(0)
+  : mStack(0), 
+      mThread(0), 
+      mSelIntr(0), 
+      mPollGrp(0), 
+      mEventIntr(0), 
+      mMultiThreadedStack(false)
 {
    bool doStd = false;
 
@@ -208,7 +226,13 @@ SipStackAndThread::SipStackAndThread(const char *tType,
    } 
    else if ( strcmp(tType,"none")==0 ) 
    {
-   } 
+   }
+   else if ( strcmp(tType,"multithreadedstack")==0 )
+   {
+      mMultiThreadedStack=true;
+      mPollGrp = FdPollGrp::create("event");
+      mEventIntr = new EventThreadInterruptor(*mPollGrp);
+   }
    else 
    {
       CritLog(<<"Bad thread-type: "<<tType);
@@ -552,7 +576,7 @@ main(int argc, char* argv[])
 #if defined(HAVE_POPT_H)
 
    char threadTypeDesc[200];
-   strcpy(threadTypeDesc, "none|common|std|intr|");
+   strcpy(threadTypeDesc, "none|common|std|intr|multithreadedstack|");
    strcat(threadTypeDesc, FdPollGrp::getImplList());
 
    struct poptOption table[] = {
@@ -637,9 +661,10 @@ main(int argc, char* argv[])
 
    // estimate number of sockets we need:
    // 2x for sender and receiver
-   // 1 for UDP + 2 for TCP (listen + connection)
-   // ~30 for misc (DNS)
-   int needFds = numPorts * 6 + 30;
+   // 3 for UDP (listen + select interruptor) 
+   // 4 for TCP (listen + connection + select interruptor)
+   // ~30 for misc (DNS, SelectInterruptors)
+   int needFds = numPorts * 14 + 30;
    increaseLimitFds(needFds);
 
    /* On linux, the client TCP connection port range is controll by
@@ -655,9 +680,10 @@ main(int argc, char* argv[])
    int registrarPort = senderPort + numPorts;
 
    int idx;
+   std::vector<Transport*> transports;
    for (idx=0; idx < numPorts; idx++)
    {
-      sender->addTransport(UDP, 
+      transports.push_back(sender->addTransport(UDP, 
                            senderPort+idx, 
                            version, 
                            StunDisabled, 
@@ -665,10 +691,10 @@ main(int argc, char* argv[])
                            /*sipDomain*/Data::Empty, 
                            /*keypass*/Data::Empty, 
                            SecurityTypes::TLSv1,
-                           tpFlags);
+                           tpFlags));
 
       // NOBIND doesn't make sense for UDP
-      sender->addTransport(TCP, 
+      transports.push_back(sender->addTransport(TCP, 
                            senderPort+idx, 
                            version, 
                            StunDisabled, 
@@ -676,11 +702,11 @@ main(int argc, char* argv[])
                            /*sipDomain*/Data::Empty, 
                            /*keypass*/Data::Empty, 
                            SecurityTypes::TLSv1,
-                           tpFlags|(doListen?0:RESIP_TRANSPORT_FLAG_NOBIND));
+                           tpFlags|(doListen?0:RESIP_TRANSPORT_FLAG_NOBIND)));
 
       // NOTE: we could also bind receive to bindIfAddr, but existing code
       // doesn't do this. Responses are sent from here, so why don't we?
-      receiver->addTransport(UDP, 
+      transports.push_back(receiver->addTransport(UDP, 
                              registrarPort+idx, 
                              version, 
                              StunDisabled,
@@ -688,9 +714,9 @@ main(int argc, char* argv[])
                              /*sipDomain*/Data::Empty, 
                              /*keypass*/Data::Empty, 
                              SecurityTypes::TLSv1,
-                             tpFlags);
+                             tpFlags));
 
-      receiver->addTransport(TCP, 
+      transports.push_back(receiver->addTransport(TCP, 
                              registrarPort+idx, 
                              version, 
                              StunDisabled,
@@ -698,7 +724,18 @@ main(int argc, char* argv[])
                              /*sipDomain*/Data::Empty, 
                              /*keypass*/Data::Empty, 
                              SecurityTypes::TLSv1,
-                             tpFlags);
+                             tpFlags));
+   }
+
+   std::vector<TransportThread*> transportThreads;
+   if(tpFlags & RESIP_TRANSPORT_FLAG_OWNTHREAD)
+   {
+      while(!transports.empty())
+      {
+         transportThreads.push_back(new TransportThread(*transports.back()));
+         transportThreads.back()->run();
+         transports.pop_back();
+      }
    }
 
    sender.run();
@@ -718,6 +755,17 @@ main(int argc, char* argv[])
 
    sender.join();
    receiver.join();
+
+   if(tpFlags&RESIP_TRANSPORT_FLAG_OWNTHREAD)
+   {
+      while(!transportThreads.empty())
+      {
+         transportThreads.back()->shutdown();
+         transportThreads.back()->join();
+         delete transportThreads.back();
+         transportThreads.pop_back();
+      }
+   }
 
    sender.destroy();
    receiver.destroy();

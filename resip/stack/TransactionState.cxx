@@ -9,6 +9,7 @@
 #include "resip/stack/ConnectionTerminated.hxx"
 #include "resip/stack/KeepAlivePong.hxx"
 #include "resip/stack/DnsInterface.hxx"
+#include "resip/stack/DnsResultMessage.hxx"
 #include "resip/stack/DnsResult.hxx"
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/MethodTypes.hxx"
@@ -385,9 +386,9 @@ TransactionState::processSipMessageAsNew(SipMessage* sip, TransactionController&
 }
 
 void
-TransactionState::process(TransactionController& controller)
+TransactionState::process(TransactionController& controller, 
+                           TransactionMessage* message)
 {
-   TransactionMessage* message = controller.mStateMacFifo.getNext();
    {
       KeepAliveMessage* keepAlive = dynamic_cast<KeepAliveMessage*>(message);
       if (keepAlive)
@@ -401,7 +402,15 @@ TransactionState::process(TransactionController& controller)
       ConnectionTerminated* term = dynamic_cast<ConnectionTerminated*>(message);
       if (term)
       {
-         controller.mTuSelector.add(term);
+         if(term->hasTransactionUser())
+         {
+            controller.mTuSelector.add(term);
+         }
+         else
+         {
+            // .bwc. This means we are using this message to close a connection.
+            controller.mTransportSelector.closeConnection(term->getFlow());
+         }
          delete term;
          return;
       }
@@ -727,6 +736,56 @@ TransactionState::process(TransactionController& controller)
 }
 
 void
+TransactionState::processTimer(TransactionController& controller,
+                                 TimerMessage* message)
+{
+   Data tid = message->getTransactionId();
+
+   TransactionState* state = 0;
+   if (message->isClientTransaction()) state = controller.mClientTransactionMap.find(tid);
+   else state = controller.mServerTransactionMap.find(tid);
+   
+   if (state) // found transaction for timer
+   {
+      StackLog (<< "Found matching transaction for " << message->brief() << " -> " << *state);
+
+      switch (state->mMachine)
+      {
+         case ClientNonInvite:
+            state->processClientNonInvite(message);
+            break;
+         case ClientInvite:
+            state->processClientInvite(message);
+            break;
+         case ServerNonInvite:
+            state->processServerNonInvite(message);
+            break;
+         case ServerInvite:
+            state->processServerInvite(message);
+            break;
+         case Stateless:
+            state->processStateless(message);
+            break;
+         case ClientStale:
+            state->processClientStale(message);
+            break;
+         case ServerStale:
+            state->processServerStale(message);
+            break;
+         default:
+            CritLog(<<"internal state error");
+            assert(0);
+            return;
+      }
+   }
+   else
+   {
+      delete message;
+   }
+
+}
+
+void
 TransactionState::startServerNonInviteTimerTrying(SipMessage& sip, const Data& tid)
 {
    unsigned int duration = 3500;
@@ -781,6 +840,16 @@ TransactionState::processStateless(TransactionMessage* message)
          delete timer;
          assert(0);
       }
+   }
+   else if(dynamic_cast<DnsResultMessage*>(message))
+   {
+      handleSync(mDnsResult);
+      delete message;
+   }
+   else if (isAbandonServerTransaction(message))
+   {
+      // ?
+      delete message;
    }
    else
    {
@@ -973,6 +1042,16 @@ TransactionState::processClientNonInvite(TransactionMessage* msg)
    else if (isTransportError(msg))
    {
       processTransportFailure(msg);
+      delete msg;
+   }
+   else if(dynamic_cast<DnsResultMessage*>(msg))
+   {
+      handleSync(mDnsResult);
+      delete msg;
+   }
+   else if (isAbandonServerTransaction(msg))
+   {
+      // ?
       delete msg;
    }
    else
@@ -1282,6 +1361,11 @@ TransactionState::processClientInvite(TransactionMessage* msg)
       }
       delete msg;
    }
+   else if(dynamic_cast<DnsResultMessage*>(msg))
+   {
+      handleSync(mDnsResult);
+      delete msg;
+   }
    else
    {
       //StackLog ( << "TransactionState::processClientInvite: message unhandled");
@@ -1454,6 +1538,11 @@ TransactionState::processServerNonInvite(TransactionMessage* msg)
             mController.mTimers.add(Timer::TimerJ, mId, 64*Timer::T1 );
          }
       }
+      delete msg;
+   }
+   else if(dynamic_cast<DnsResultMessage*>(msg))
+   {
+      handleSync(mDnsResult);
       delete msg;
    }
    else
@@ -1769,6 +1858,11 @@ TransactionState::processServerInvite(TransactionMessage* msg)
       }
       delete msg;
    }
+   else if(dynamic_cast<DnsResultMessage*>(msg))
+   {
+      handleSync(mDnsResult);
+      delete msg;
+   }
    else
    {
       //StackLog (<< "TransactionState::processServerInvite: message unhandled");
@@ -1803,21 +1897,33 @@ TransactionState::processClientStale(TransactionMessage* msg)
       processTransportFailure(msg);
       delete msg;
    }
+   else if(isResponse(msg, 200, 299))
+   {
+      assert(isFromWire(msg));
+      sendToTU(msg);
+   }
+   else if(dynamic_cast<DnsResultMessage*>(msg))
+   {
+      handleSync(mDnsResult);
+      delete msg;
+   }
+   else if (isAbandonServerTransaction(msg))
+   {
+      // ?
+      delete msg;
+   }
+   else if (isCancelClientTransaction(msg))
+   {
+      // ?
+      delete msg;
+   }
    else
    {
-      if(isResponse(msg, 200, 299))
-      {
-         assert(isFromWire(msg));
-         sendToTU(msg);
-      }
-      else
-      {
-         // might have received some other response because a downstream UAS is
-         // misbehaving. For instance, sending a 487/INVITE after already
-         // sending a 200/INVITE. It could also be some other message type.
-         StackLog (<< "Discarding extra message: " << *msg);
-         delete msg;
-      }
+      // might have received some other response because a downstream UAS is
+      // misbehaving. For instance, sending a 487/INVITE after already
+      // sending a 200/INVITE. It could also be some other message type.
+      StackLog (<< "Discarding extra message: " << *msg);
+      delete msg;
    }
 }
 
@@ -1868,6 +1974,16 @@ TransactionState::processServerStale(TransactionMessage* msg)
    {
       resetNextTransmission(sip);
       sendCurrentToWire(); 
+   }
+   else if(dynamic_cast<DnsResultMessage*>(msg))
+   {
+      handleSync(mDnsResult);
+      delete msg;
+   }
+   else if (isAbandonServerTransaction(msg))
+   {
+      // ?
+      delete msg;
    }
    else
    {
@@ -2136,15 +2252,15 @@ TransactionState::rewriteRequest(const Uri& rewrite)
 void
 TransactionState::handle(DnsResult* result)
 {
-   // !bwc! TODO We need to address the race-conditions caused by callbacks
-   // into a class whose thread-safety is accomplished through message-passing.
-   // This function could very easily be called while other processing is
-   // taking place due to a message from the state-machine fifo. In the end, I
-   // imagine that we will need to have the callback place a message onto the
-   // queue, and move all the code below into a function that handles that
-   // message.
+   // ?bwc? Maybe optmize this to use handleSync() directly when running in
+   // single-threaded mode?
+   DnsResultMessage* dns = new DnsResultMessage(mId,isClient());
+   mController.mStateMacFifo.add(static_cast<TransactionMessage*>(dns));
+}
 
-   // got a DNS response, so send the current message
+void
+TransactionState::handleSync(DnsResult* result)
+{
    StackLog (<< *this << " got DNS result: " << *result);
    
    // .bwc. Were we expecting something from mDnsResult?

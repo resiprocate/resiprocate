@@ -93,7 +93,6 @@ SRC = \
 	SdpContents.cxx \
 	SecurityAttributes.cxx \
 	Compression.cxx \
-	SelectInterruptor.cxx \
 	SipFrag.cxx \
 	SipMessage.cxx \
 	SipStack.cxx \
@@ -119,6 +118,7 @@ SRC = \
 	TransactionMap.cxx \
 	TransactionState.cxx \
 	Transport.cxx \
+	TransportThread.cxx \
 	TransportFailure.cxx \
 	TransportSelector.cxx \
 	TuIM.cxx \

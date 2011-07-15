@@ -39,6 +39,7 @@ class FakeTransport :  public Transport
       virtual TransportType transport() const { return TCP; }
       virtual bool isFinished() const { assert(0); return true; }
       virtual void process(FdSet& fdset) { assert(0); }
+      virtual void process() { assert(0); }
       virtual void processTransmitQueue() { assert(0); }
       virtual void buildFdSet( FdSet& fdset) { assert(0); }
 

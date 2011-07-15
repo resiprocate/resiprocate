@@ -48,6 +48,11 @@ TcpBaseTransport::~TcpBaseTransport()
    }
    DebugLog (<< "Shutting down " << mTuple);
    //mSendRoundRobin.clear(); // clear before we delete the connections
+   if(mPollGrp && mPollItemHandle)
+   {
+      mPollGrp->delPollItem(mPollItemHandle);
+      mPollItemHandle=0;
+   }
 }
 
 // called from constructor of TcpTransport
@@ -96,14 +101,23 @@ TcpBaseTransport::init()
 void
 TcpBaseTransport::setPollGrp(FdPollGrp *grp)
 {
-   assert(mPollGrp==NULL && grp!=NULL);
-   if ( mFd!=INVALID_SOCKET )
+   if(mPollGrp && mPollItemHandle)
+   {
+      mPollGrp->delPollItem(mPollItemHandle);
+      mPollItemHandle=0;
+   }
+
+   if ( mFd!=INVALID_SOCKET && grp)
    {
       mPollItemHandle = grp->addPollItem(mFd, FPEM_Read|FPEM_Edge, this);
       // above released by InternalTransport destructor
+      // ?bwc? Is this really a good idea? If the InternalTransport d'tor is
+      // freeing this, shouldn't InternalTransport::setPollGrp() handle 
+      // creating it?
    }
-   mPollGrp = grp;
    mConnectionManager.setPollGrp(grp);
+
+   InternalTransport::setPollGrp(grp);
 }
 
 void
@@ -114,6 +128,10 @@ TcpBaseTransport::buildFdSet( FdSet& fdset)
    if ( mFd!=INVALID_SOCKET )
    {
       fdset.setRead(mFd); // for the transport itself (accept)
+   }
+   if(!shareStackProcessAndSelect())
+   {
+      mSelectInterruptor.buildFdSet(fdset);
    }
 }
 
@@ -282,7 +300,7 @@ TcpBaseTransport::processAllWriteRequests()
 }
 
 void
-TcpBaseTransport::checkTransmitQueue()
+TcpBaseTransport::process()
 {
    // called within SipStack's thread. There is some risk of
    // recursion here if connection starts doing anything fancy.

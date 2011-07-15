@@ -31,7 +31,7 @@ main()
 {
 
    TimeLimitFifo<Message> f(0, 0);
-   Fifo<TransactionMessage> r;
+   Fifo<TimerMessage> r;
    
    TransactionTimerQueue timer(r);
    TimeLimitTimerQueue timer2(f);

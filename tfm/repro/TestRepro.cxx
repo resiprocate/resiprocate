@@ -265,6 +265,11 @@ TestRepro::TestRepro(const resip::Data& name,
 
    mStack.registerTransactionUser(mProxy);
 
+   if(args.mThreadedStack)
+   {
+      mStack.run();
+   }
+
    mStackThread.run();
    mProxy.run();
    mDumThread.run();
@@ -276,6 +281,7 @@ TestRepro::~TestRepro()
    mDumThread.join();
    mStackThread.shutdown();
    mStackThread.join();
+   mStack.shutdownAndJoinThreads();
 }
 
 void

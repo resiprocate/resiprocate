@@ -44,14 +44,21 @@ class AresDnsPollItem : public FdPollItemBase
    AresDnsPollItem(FdPollGrp *grp, int fd, AresDns& aresObj,
      ares_channel chan, int server_idx)
      : FdPollItemBase(grp, fd, FPEM_Read), mAres(aresObj),
-       mChannel(chan), mServerIdx(server_idx)
+       mChannel(chan), mFd(fd), mServerIdx(server_idx)
    {
    }
 
    virtual void	processPollEvent(FdPollEventMask mask);
+   void resetPollGrp(FdPollGrp *grp)
+   {
+      mPollGrp->delPollItem(mPollHandle);
+      mPollGrp = grp;
+      mPollHandle = mPollGrp->addPollItem(mFd, FPEM_Read, this);
+   }
 
    AresDns&	mAres;
    ares_channel	mChannel;
+   int mFd;
    int mServerIdx;
 
    static void socket_poll_cb(void *cb_data,
@@ -129,15 +136,29 @@ AresDnsPollItem::socket_poll_cb(void *cb_data,
 
 volatile bool AresDns::mHostFileLookupOnlyMode = false;
 
-bool
+void
 AresDns::setPollGrp(FdPollGrp *grp)
 {
 #ifdef USE_CARES
-   return false;
+   if(mPollGrp)
+   {
+      mPollGrp->unregisterFdSetIOObserver(*this);
+   }
+   mPollGrp=grp;
+   if(mPollGrp)
+   {
+      mPollGrp->registerFdSetIOObserver(*this);
+   }
 #else
-   assert( mPollGrp == NULL );
+   for(std::vector<AresDnsPollItem*>::iterator i=mPollItems.begin();
+         i!=mPollItems.end(); ++i)
+   {
+      if(*i)
+      {
+         (*i)->resetPollGrp(grp);
+      }
+   }
    mPollGrp = grp;
-   return true;
 #endif
 }
 
@@ -556,7 +577,6 @@ AresDns::getTimeTillNextProcessMS()
 void
 AresDns::buildFdSet(fd_set& read, fd_set& write, int& size)
 {
-   assert( mPollGrp==0 );
    int newsize = ares_fds(mChannel, &read, &write);
    if ( newsize > size )
    {
@@ -577,10 +597,21 @@ AresDns::processTimers()
 #endif
 }
 
+void 
+AresDns::process(FdSet& fdset)
+{
+   process(fdset.read, fdset.write);
+}
+
+void 
+AresDns::buildFdSet(FdSet& fdset)
+{
+   buildFdSet(fdset.read, fdset.write, fdset.size);
+}
+
 void
 AresDns::process(fd_set& read, fd_set& write)
 {
-   assert( mPollGrp==0 );
    ares_process(mChannel, &read, &write);
 }
 
