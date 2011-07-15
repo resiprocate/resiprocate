@@ -740,7 +740,7 @@ ParseBuffer::uInt32()
          {
             break;
          }
-         else if(*begin=='4' && num >= 4000000000)
+         else if(*begin=='4' && num >= 4000000000UL)
          {
             break;
          }
@@ -787,7 +787,7 @@ ParseBuffer::uInt64()
       case 19:
          break;
       case 20:
-         if(*begin=='1' && num >= 10000000000000000000UL)
+         if(*begin=='1' && num >= 10000000000000000000ULL)
          {
             break;
          }
