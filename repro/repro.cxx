@@ -185,15 +185,8 @@ main(int argc, char** argv)
 
    std::auto_ptr<FdPollGrp> pollGrp(NULL);
    std::auto_ptr<SelectInterruptor> threadInterruptor(NULL);
-#if defined(HAVE_EPOLL)
-   if (args.mUseEventThread)
-   {
-      pollGrp.reset(FdPollGrp::create());
-      threadInterruptor.reset(new EventThreadInterruptor(*pollGrp));
-   }
-   else
-#endif
-   threadInterruptor.reset(new SelectInterruptor());
+   pollGrp.reset(FdPollGrp::create());
+   threadInterruptor.reset(new EventThreadInterruptor(*pollGrp));
 
    SipStack stack(security,DnsStub::EmptyNameserverList,
                   threadInterruptor.get(),
