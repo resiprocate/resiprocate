@@ -193,6 +193,13 @@ SipStack::~SipStack()
    DebugLog (<< "SipStack::~SipStack()");
    shutdownAndJoinThreads();
 
+   delete mDnsThread;
+   mDnsThread=0;
+   delete mTransactionControllerThread;
+   mTransactionControllerThread=0;
+   delete mTransportSelectorThread;
+   mTransportSelectorThread=0;
+
    delete mTransactionController;
 #ifdef USE_SSL
    delete mSecurity;
@@ -213,12 +220,6 @@ SipStack::~SipStack()
       mAsyncProcessHandler=0;
    }
 
-   delete mDnsThread;
-   mDnsThread=0;
-   delete mTransactionControllerThread;
-   mTransactionControllerThread=0;
-   delete mTransportSelectorThread;
-   mTransportSelectorThread=0;
 }
 
 void 
