@@ -31,7 +31,6 @@ class CommandLineParser
       bool mThreadedStack;
 
       resip::Data mCertPath;
-      bool mForceRecordRoute;
       bool mEnableFlowTokenHack;
       bool mNoChallenge;
       bool mNoWebChallenge;
