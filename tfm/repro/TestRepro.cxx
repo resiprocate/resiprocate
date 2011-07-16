@@ -142,7 +142,7 @@ TestRepro::TestRepro(const resip::Data& name,
    mRegData(),
    mProxy(mStack, 
           makeUri(host, *args.mUdpPorts.begin()),
-          args.mForceRecordRoute, //<- Enable record-route
+          false, //<- Force record-route
           makeRequestProcessorChain(mRequestProcessors, mStore, mRegData,&mStack),
           makeResponseProcessorChain(mResponseProcessors,mRegData),
           makeTargetProcessorChain(mTargetProcessors,args),
