@@ -18,7 +18,9 @@ DnsThread::DnsThread(DnsStub& dns) :
 }
 
 DnsThread::~DnsThread()
-{}
+{
+   mDnsStub.setPollGrp(0);
+}
 
 void 
 DnsThread::thread()
