@@ -282,6 +282,7 @@ TestRepro::~TestRepro()
    mStackThread.shutdown();
    mStackThread.join();
    mStack.shutdownAndJoinThreads();
+   delete mDb;
 }
 
 void
