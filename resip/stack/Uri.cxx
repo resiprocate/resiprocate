@@ -13,6 +13,7 @@
 #include "resip/stack/Uri.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/DnsUtil.hxx"
+#include "rutil/Lock.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -23,7 +24,8 @@ using namespace resip;
 #define HANDLE_CHARACTER_ESCAPING //undef for old behaviour
 
 // Set to true only after the tables are initialised
-bool Uri::mEncodingReady = false;
+volatile bool Uri::mEncodingReady = false;
+resip::Mutex Uri::mMutexEncodingTables;
 // class static variables listing the default characters not to encode
 // in user and password strings respectively
 const Data Uri::mUriNonEncodingUserChars = Data("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*\\()&=+$,;?/");
@@ -1016,12 +1018,17 @@ void Uri::setUriPasswordEncoding(unsigned char c, bool encode)
    mUriEncodingPasswordTable[c] = encode;
 }
 
-void Uri::initialiseEncodingTables() {
+void Uri::initialiseEncodingTables()
+{
+   Lock lock(Uri::mMutexEncodingTables);
 
-   // set all bits
-   mUriEncodingUserTable=Data::toBitset(mUriNonEncodingUserChars).flip();
-   mUriEncodingPasswordTable=Data::toBitset(mUriNonEncodingPasswordChars).flip();
-   mEncodingReady = true;
+   if(mEncodingReady == false)
+   {
+      // set all bits
+      mUriEncodingUserTable=Data::toBitset(mUriNonEncodingUserChars).flip();
+      mUriEncodingPasswordTable=Data::toBitset(mUriNonEncodingPasswordChars).flip();
+      mEncodingReady = true;
+   }
 }
 
 inline bool 
