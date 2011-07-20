@@ -6,10 +6,9 @@
 
 #include "resip/stack/ParserCategory.hxx"
 #include "resip/stack/Token.hxx"
+#include "rutil/Mutex.hxx"
 #include "rutil/TransportType.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
-
-#define URI_ENCODING_TABLE_SIZE 256
 
 namespace resip
 {
@@ -19,6 +18,8 @@ class Uri : public ParserCategory
 {
    public:
       RESIP_HeapCount(Uri);
+
+      static const size_t uriEncodingTableSize = 256;
       
       Uri();
       Uri(HeaderFieldValue* hfv, Headers::Type type);
@@ -214,13 +215,14 @@ class Uri : public ParserCategory
       // cache for IPV6 host comparison
       mutable Data mCanonicalHost;
 
-      static bool mEncodingReady;
+      static Mutex mMutexEncodingTables;
+      static volatile bool mEncodingReady;
       // characters listed in these strings should not be URI encoded
       static const Data mUriNonEncodingUserChars;
       static const Data mUriNonEncodingPasswordChars;
       static const Data mLocalNumberChars;
       static const Data mGlobalNumberChars;
-      typedef std::bitset<URI_ENCODING_TABLE_SIZE> EncodingTable;
+      typedef std::bitset<Uri::uriEncodingTableSize> EncodingTable;
       // if a bit is set/true, the corresponding character should be encoded
       static EncodingTable mUriEncodingUserTable;
       static EncodingTable mUriEncodingPasswordTable;
