@@ -1,11 +1,15 @@
 #ifndef RESIP_AbstractFifo_hxx
 #define RESIP_AbstractFifo_hxx 
 
+#include <cassert>
 #include <deque>
 
 #include "rutil/Mutex.hxx"
 #include "rutil/Condition.hxx"
 #include "rutil/Lock.hxx"
+
+#include "rutil/compat.hxx"
+#include "rutil/Timer.hxx"
 
 namespace resip
 {
@@ -41,67 +45,272 @@ class FifoStatsInterface
    define any put operations (these are defined in subclasses).
    @note Users of the resip stack will not need to interact with this class 
       directly in most cases. Look at Fifo and TimeLimitFifo instead.
+
+   @ingroup message_passing
  */
+template <typename T>
 class AbstractFifo : public FifoStatsInterface
 {
    public:
-	  /** 
-	   * Constructor : 
-	   * @param maxSize (int value to specify a max number of messages to keep)
-	   **/
-      AbstractFifo(unsigned int maxSize);
-      virtual ~AbstractFifo();
+     /** 
+      * @brief Constructor
+      * @param maxSize max number of messages to keep
+      **/
+      AbstractFifo()
+         : FifoStatsInterface()
+      {}
+
+      virtual ~AbstractFifo()
+      {
+      }
 
       /** 
-       * @retval bool (Check if the queue of messages is empty ?)                   
+         @brief is the queue empty?
+         @return true if the queue is empty and false otherwise
        **/
-      bool empty() const;
-            
-      /** Get the current size of the fifo. Note you should not use this function
-       *  to determine whether a call to getNext() will block or not.
-       *  Use messageAvailable() instead.
-       */
-      unsigned int size() const;
+      bool empty() const
+      {
+         Lock lock(mMutex); (void)lock;
+         return mFifo.empty();
+      }
 
-      /** @retval true (is a message is available ?)
+      /**
+        @brief get the current size of the fifo.
+        @note Note you should not use this function to determine
+        whether a call to getNext() will block or not. Use
+        messageAvailable() instead.
+        @return the number of messages in the queue
        */
-      bool messageAvailable() const;
+      virtual unsigned int size() const
+      {
+         Lock lock(mMutex); (void)lock;
+         return mFifo.size();
+      }
 
-      /// defaults to zero, overridden by TimeLimitFifo<T>
-      virtual time_t timeDepth() const;
+      /**
+      @brief is a message available?
+      @retval true if a message is available and false otherwise
+       */
+       
+      bool messageAvailable() const
+      {
+         Lock lock(mMutex); (void)lock;
+         return !mFifo.empty();
+      }
+
+      virtual size_t getCountDepth() const
+      {
+         return mFifo.size();
+      }
+
+      virtual time_t getTimeDepth() const
+      {
+         return 0;
+      }
 
       /// remove all elements in the queue (or not)
       virtual void clear() {};
 
-      virtual size_t getCountDepth() const;
-      virtual time_t getTimeDepth() const;
-
    protected:
-      /** Returns the first message available. It will wait if no
-       *  messages are available. If a signal interrupts the wait,
-       *  it will retry the wait. Signals can therefore not be caught
-       *  via getNext. If you need to detect a signal, use block
-       *  prior to calling getNext.
+      /** 
+          @brief Returns the first message available.
+          @details Returns the first message available. It will wait if no
+          messages are available. If a signal interrupts the wait,
+          it will retry the wait. Signals can therefore not be caught
+          via getNext. If you need to detect a signal, use block
+          prior to calling getNext.
+          @return the first message available
        */
-      void* getNext();
+      T getNext()
+      {
+         Lock lock(mMutex); (void)lock;
 
 
-      /** Returns the next message available. Will wait up to
-       *  ms milliseconds if no information is available. If
-       *  the specified time passes or a signal interrupts the
-       *  wait, this method returns 0. This interface provides
-       *  no mechanism to distinguish between timeout and
-       *  interrupt.
+         // Wait util there are messages available.
+         while (mFifo.empty())
+         {
+            mCondition.wait(mMutex);
+         }
+
+         // Return the first message on the fifo.
+         //
+         T firstMessage(mFifo.front());
+         mFifo.pop_front();
+         return firstMessage;
+      }
+
+
+      /**
+        @brief Returns the next message available.
+        @details Returns the next message available. Will wait up to
+        ms milliseconds if no information is available. If
+        the specified time passes or a signal interrupts the
+        wait, this method returns 0. This interface provides
+        no mechanism to distinguish between timeout and
+        interrupt.
        */
-      void* getNext(int ms);
+      bool getNext(int ms, T& toReturn)
+      {
+         if(ms == 0) 
+         {
+            toReturn = getNext();
+            return true;
+         }
 
-      enum {NoSize = 0UL -1};
+         if(ms < 0)
+         {
+            Lock lock(mMutex); (void)lock;
+            if (mFifo.empty())	// WATCHOUT: Do not test mSize instead
+              return false;
+            toReturn = mFifo.front();
+            mFifo.pop_front();
+            return true;
+         }
 
-      std::deque<void*> mFifo;
-      unsigned long mSize;
-      unsigned long mMaxSize;
+         const UInt64 begin(Timer::getTimeMs());
+         const UInt64 end(begin + (unsigned int)(ms)); // !kh! ms should've been unsigned :(
+         Lock lock(mMutex); (void)lock;
       
+         // Wait until there are messages available
+         while (mFifo.empty())
+         {
+            if(ms==0)
+            {
+               return false;
+            }
+            const UInt64 now(Timer::getTimeMs());
+            if(now >= end)
+            {
+                return false;
+            }
+      
+            unsigned int timeout((unsigned int)(end - now));
+                    
+            // bail if total wait time exceeds limit
+            bool signaled = mCondition.wait(mMutex, timeout);
+            if (!signaled)
+            {
+               return false;
+            }
+         }
+      
+         // Return the first message on the fifo.
+         //
+         toReturn=mFifo.front();
+         mFifo.pop_front();
+         return true;
+      }
+
+      typedef std::deque<T> Messages;
+
+      void getMultiple(Messages& other, unsigned int max)
+      {
+         Lock lock(mMutex); (void)lock;
+         assert(other.empty());
+         while (mFifo.empty())
+         {
+            mCondition.wait(mMutex);
+         }
+
+         if(mFifo.size() <= max)
+         {
+            std::swap(mFifo, other);
+         }
+         else
+         {
+            while( 0 != max-- && !mFifo.empty() )
+            {
+               other.push_back(mFifo.front());
+               mFifo.pop_front();
+            }
+         }
+      }
+
+      bool getMultiple(int ms, Messages& other, unsigned int max)
+      {
+         if(ms==0)
+         {
+            getMultiple(other,max);
+            return true;
+         }
+
+         assert(other.empty());
+         const UInt64 begin(Timer::getTimeMs());
+         const UInt64 end(begin + (unsigned int)(ms)); // !kh! ms should've been unsigned :(
+         Lock lock(mMutex); (void)lock;
+
+         // Wait until there are messages available
+         while (mFifo.empty())
+         {
+            if(ms < 0)
+            {
+               return false;
+            }
+            const UInt64 now(Timer::getTimeMs());
+            if(now >= end)
+            {
+                return false;
+            }
+
+            unsigned int timeout((unsigned int)(end - now));
+                    
+            // bail if total wait time exceeds limit
+            bool signaled = mCondition.wait(mMutex, timeout);
+            if (!signaled)
+            {
+               return false;
+            }
+         }
+
+         if(mFifo.size() <= max)
+         {
+            std::swap(mFifo, other);
+         }
+         else
+         {
+            while( 0 != max-- && !mFifo.empty() )
+            {
+               other.push_back(mFifo.front());
+               mFifo.pop_front();
+            }
+         }
+         return true;
+      }
+
+      size_t add(const T& item)
+      {
+         Lock lock(mMutex); (void)lock;
+         mFifo.push_back(item);
+         mCondition.signal();
+         return mFifo.size();
+      }
+
+      size_t addMultiple(Messages& items)
+      {
+         Lock lock(mMutex); (void)lock;
+         if(mFifo.empty())
+         {
+            std::swap(mFifo, items);
+         }
+         else
+         {
+            // I suppose it is possible to optimize this as a push_front() from
+            // mFifo to items, and then do a swap, if items is larger.
+            while(!items.empty())
+            {
+               mFifo.push_back(items.front());
+               items.pop_front();
+            }
+         }
+         mCondition.signal();
+         return mFifo.size();
+      }
+
+      /** @brief container for FIFO items */
+      Messages mFifo;
+      /** @brief access serialization lock */
       mutable Mutex mMutex;
+      /** @brief condition for waiting on new queue items */
       Condition mCondition;
 
    private:

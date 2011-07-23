@@ -927,6 +927,7 @@ class SipStack : public FdSetIOObserver
 
       /** @brief All aspects of the Transaction State Machine / DNS resolver **/
       TransactionController* mTransactionController;
+      std::auto_ptr<ProducerFifoBuffer<TransactionMessage> > mStateMacFifoBuffer;
 
       TransactionControllerThread* mTransactionControllerThread;
       TransportSelectorThread* mTransportSelectorThread;

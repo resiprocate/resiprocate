@@ -120,6 +120,7 @@ UdpTransport::setPollGrp(FdPollGrp *grp)
  */
 void
 UdpTransport::process() {
+   mStateMachineFifo.flush();
    if ( (mTransportFlags & RESIP_TRANSPORT_FLAG_TXNOW)!= 0 )
    {
        processTxAll();
@@ -135,7 +136,7 @@ void
 UdpTransport::updateEvents()
 {
    //assert( mPollGrp );
-   bool haveMsg = mTxFifo.messageAvailable();
+   bool haveMsg = mTxFifoOutBuffer.messageAvailable();
    if ( !mInWritable && haveMsg )
    {
       mPollGrp->modPollItem(mPollItemHandle, FPEM_Read|FPEM_Write);
@@ -184,7 +185,7 @@ UdpTransport::buildFdSet( FdSet& fdset )
 {
    fdset.setRead(mFd);
 
-   if (mTxFifo.messageAvailable())
+   if (mTxFifoOutBuffer.messageAvailable())
    {
       fdset.setWrite(mFd);
    }
@@ -206,6 +207,7 @@ UdpTransport::process(FdSet& fdset)
    {
       processRxAll();
    }
+   mStateMachineFifo.flush();
 }
 
 /**
@@ -218,7 +220,7 @@ UdpTransport::processTxAll()
 {
    SendData *msg;
    ++mTxTryCnt;
-   while ( (msg=mTxFifo.getNext(RESIP_FIFO_NOWAIT)) != NULL )
+   while ( (msg=mTxFifoOutBuffer.getNext(RESIP_FIFO_NOWAIT)) != NULL )
    {
       processTxOne(msg);
       // With UDP we don't need to worry about write blocking (I hope)

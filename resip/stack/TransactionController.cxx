@@ -36,6 +36,7 @@ TransactionController::TransactionController(SipStack& stack,
    mFixBadDialogIdentifiers(true),
    mFixBadCSeqNumbers(true),
    mStateMacFifo(handler),
+   mStateMacFifoOutBuffer(mStateMacFifo),
    mTuSelector(stack.mTuSelector),
    mTransportSelector(mStateMacFifo,
                       stack.getSecurity(),
@@ -82,7 +83,7 @@ TransactionController::process(int timeout)
 {
    if (mShuttingDown && 
        //mTimers.empty() && 
-       !mStateMacFifo.messageAvailable() && // !dcm! -- see below 
+       !mStateMacFifoOutBuffer.messageAvailable() && // !dcm! -- see below 
        !mStack.mTUFifo.messageAvailable() &&
        mTransportSelector.isFinished())
 // !dcm! -- why would one wait for the Tu's fifo to be empty before delivering a
@@ -106,7 +107,7 @@ TransactionController::process(int timeout)
       // passed by TransactionControllerThread, for example. This gets us 
       // something approximating a blocking wait on both the state machine fifo 
       // and the timer queue.
-      TransactionMessage* message=mStateMacFifo.getNext(timeout);
+      TransactionMessage* message=mStateMacFifoOutBuffer.getNext(timeout);
 
       // If we either had timers ready to go at the beginning of this call, or
       // the getNext() call above timed out, our timer queue is likely ready to 
@@ -133,7 +134,7 @@ TransactionController::process(int timeout)
             {
                break;
             }
-            message = mStateMacFifo.getNext(-1);
+            message = mStateMacFifoOutBuffer.getNext(-1);
          }
 
          mTransportSelector.poke();
@@ -144,7 +145,7 @@ TransactionController::process(int timeout)
 unsigned int 
 TransactionController::getTimeTillNextProcessMS()
 {
-   if ( mStateMacFifo.messageAvailable() ) 
+   if ( mStateMacFifoOutBuffer.messageAvailable() ) 
    {
       return 0;
    }
@@ -173,6 +174,8 @@ TransactionController::sumTransportFifoSizes() const
 unsigned int 
 TransactionController::getTransactionFifoSize() const
 {
+   // Should we include the stuff in mStateMacFifoOutBuffer here too? This is
+   // likely to be called from other threads...
    return mStateMacFifo.size();
 }
 
