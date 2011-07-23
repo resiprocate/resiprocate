@@ -32,6 +32,7 @@ InternalTransport::InternalTransport(Fifo<TransactionMessage>& rxFifo,
              socketFunc, compression, transportFlags),
    mFd(INVALID_SOCKET),
    mInterruptorHandle(0),
+   mTxFifoOutBuffer(mTxFifo),
    mPollGrp(NULL),
    mPollItemHandle(NULL)
 {}
@@ -58,7 +59,7 @@ InternalTransport::~InternalTransport()
 bool
 InternalTransport::isFinished() const
 {
-   return !mTxFifo.messageAvailable();
+   return !mTxFifoOutBuffer.messageAvailable();
 }
 
 Socket
@@ -156,7 +157,7 @@ InternalTransport::getFifoSize() const
 bool
 InternalTransport::hasDataToSend() const
 {
-   return mTxFifo.messageAvailable();
+   return mTxFifoOutBuffer.messageAvailable();
 }
 
 void
@@ -199,7 +200,7 @@ InternalTransport::poke()
    // Transports). Once we have buffered producer queues in place, this 
    // performance concern will be rendered moot, and we'll be able to install 
    // the interruptor in mTxFifo.
-   if(mTxFifo.messageAvailable())
+   if(mTxFifoOutBuffer.messageAvailable())
    {
       // This will interrupt the select statement and cause processing of 
       // this new outgoing message.

@@ -52,6 +52,7 @@ class FakeTransport :  public Transport
       virtual unsigned int getFifoSize() const { assert(0); return 0; }
 
       virtual void send(std::auto_ptr<SendData> data) { assert(0); }
+      void flush() {mStateMachineFifo.flush();}
 };
 
 class TestConnection : public ConnectionBase
@@ -145,6 +146,7 @@ main(int argc, char** argv)
       if (maxChunk < minChunk) swap(maxChunk, minChunk);
       while(cBase.read(minChunk, maxChunk));      
    }
+   fake.flush();
    assert(testRxFifo.size() == runs * 3);
 
    cerr << "\nTEST OK" << endl;

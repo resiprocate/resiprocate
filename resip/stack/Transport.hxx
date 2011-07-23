@@ -4,7 +4,7 @@
 #include "rutil/BaseException.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/FdSetIOObserver.hxx"
-#include "rutil/Fifo.hxx"
+#include "rutil/ProducerFifoBuffer.hxx"
 #include "resip/stack/TransportFailure.hxx"
 #include "resip/stack/Tuple.hxx"
 #include "resip/stack/NameAddr.hxx"
@@ -342,7 +342,7 @@ class Transport : public FdSetIOObserver
       bool mHasRecordRoute;
       unsigned int mKey;
 
-      Fifo<TransactionMessage>& mStateMachineFifo; // passed in
+      ProducerFifoBuffer<TransactionMessage> mStateMachineFifo; // passed in
       bool mShuttingDown;
 
       void setTlsDomain(const Data& domain) { mTlsDomain = domain; }

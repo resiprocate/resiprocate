@@ -38,9 +38,9 @@ TcpBaseTransport::~TcpBaseTransport()
    //DebugLog (<< "Shutting down TCP Transport " << this << " " << mFd << " " << mInterface << ":" << port());
 
    // !jf! this is not right. should drain the sends before
-   while (mTxFifo.messageAvailable())
+   while (mTxFifoOutBuffer.messageAvailable())
    {
-      SendData* data = mTxFifo.getNext();
+      SendData* data = mTxFifoOutBuffer.getNext();
       InfoLog (<< "Throwing away queued data for " << data->destination);
 
       fail(data->transactionId, TransportFailure::TransportShutdown);
@@ -257,9 +257,9 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
 void
 TcpBaseTransport::processAllWriteRequests()
 {
-   while (mTxFifo.messageAvailable())
+   while (mTxFifoOutBuffer.messageAvailable())
    {
-      SendData* data = mTxFifo.getNext();
+      SendData* data = mTxFifoOutBuffer.getNext();
       DebugLog (<< "Processing write for " << data->destination);
 
       // this will check by connectionId first, then by address
@@ -302,6 +302,8 @@ TcpBaseTransport::processAllWriteRequests()
 void
 TcpBaseTransport::process()
 {
+   mStateMachineFifo.flush();
+
    // called within SipStack's thread. There is some risk of
    // recursion here if connection starts doing anything fancy.
    // For backward-compat when not-epoll, don't handle transmit synchronously
@@ -321,6 +323,8 @@ TcpBaseTransport::process(FdSet& fdSet)
 
    // process the connections in ConnectionManager
    mConnectionManager.process(fdSet);
+
+   mStateMachineFifo.flush();
 
    // process our own listen/accept socket for incoming connections
    if (mFd!=INVALID_SOCKET && fdSet.readyToRead(mFd))

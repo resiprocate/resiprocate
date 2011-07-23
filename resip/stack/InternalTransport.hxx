@@ -4,6 +4,7 @@
 #include <exception>
 
 #include "rutil/BaseException.hxx"
+#include "rutil/ConsumerFifoBuffer.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/Fifo.hxx"
 #include "rutil/Socket.hxx"
@@ -76,6 +77,7 @@ class InternalTransport : public Transport
       FdPollItemHandle mInterruptorHandle;
 
       Fifo<SendData> mTxFifo; // owned by the transport
+      ConsumerFifoBuffer<SendData> mTxFifoOutBuffer;
       FdPollGrp *mPollGrp;      // not owned by transport, just used
       // FdPollItemIf *mPollItem;	// owned by the transport
       FdPollItemHandle mPollItemHandle; // owned by the transport

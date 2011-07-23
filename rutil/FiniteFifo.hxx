@@ -12,14 +12,23 @@ namespace resip
 
 /**
    @brief A templated, threadsafe message-queue class with a fixed size.
+   @ingroup message_passing
+   @deprecated
+   @todo remove class
 */
 template < class Msg >
-class FiniteFifo : public AbstractFifo
+class FiniteFifo : public AbstractFifo<Msg*>
 {
    public:
       FiniteFifo(unsigned int maxSize);
       virtual ~FiniteFifo();
-      
+
+      using AbstractFifo<Msg*>::mFifo;
+      using AbstractFifo<Msg*>::mMutex;
+      using AbstractFifo<Msg*>::mCondition;
+      using AbstractFifo<Msg*>::empty;
+      using AbstractFifo<Msg*>::size;
+
       // Add a message to the fifo.
       // return true if succeed, false if full
       bool add(Msg* msg);
@@ -31,11 +40,23 @@ class FiniteFifo : public AbstractFifo
        *  prior to calling getNext.
        */
       Msg* getNext();
+
+      /** Returns the next message available. Will wait up to
+       *  ms milliseconds if no information is available. If
+       *  the specified time passes or a signal interrupts the
+       *  wait, this method returns 0. This interface provides
+       *  no mechanism to distinguish between timeout and
+       *  interrupt.
+       */
+      Msg* getNext(int ms);
+   private:
+      unsigned int mMaxSize;
 };
 
 template <class Msg>
 FiniteFifo<Msg>::FiniteFifo(unsigned int maxSize)
-   : AbstractFifo(maxSize)
+   : AbstractFifo<Msg*>(),
+   mMaxSize(maxSize)
 {
 }
 
@@ -45,10 +66,9 @@ FiniteFifo<Msg>::~FiniteFifo()
    Lock lock(mMutex); (void)lock;
    while ( ! mFifo.empty() )
    {
-      delete static_cast<Msg*>(mFifo.front());
+      delete mFifo.front();
       mFifo.pop_front();
    }
-   mSize = NoSize;
 }
 
 template <class Msg>
@@ -56,15 +76,13 @@ bool
 FiniteFifo<Msg>::add(Msg* msg)
 {
    Lock lock(mMutex); (void)lock;
-   if (mMaxSize != NoSize &&
-       mSize >= mMaxSize)
+   if (mFifo.size() >= mMaxSize)
    {
       return false;
    }
    else
    {
       mFifo.push_back(msg);
-      mSize++;
       mCondition.signal();
       return true;
    }
@@ -74,7 +92,16 @@ template <class Msg>
 Msg*
 FiniteFifo<Msg> ::getNext()
 {
-   return static_cast<Msg*>(AbstractFifo::getNext());
+   return AbstractFifo<Msg*>::getNext();
+}
+
+template <class Msg>
+Msg*
+FiniteFifo<Msg> ::getNext(int ms)
+{
+   Msg* result(0);
+   AbstractFifo<Msg*>::getNext(ms, result);
+   return result;
 }
 
 } // namespace resip

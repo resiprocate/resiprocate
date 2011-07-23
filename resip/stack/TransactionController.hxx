@@ -6,6 +6,8 @@
 #include "resip/stack/TransportSelector.hxx"
 #include "resip/stack/TimerQueue.hxx"
 
+#include "rutil/ConsumerFifoBuffer.hxx"
+
 namespace resip
 {
 
@@ -93,12 +95,15 @@ class TransactionController
       // asynchronous dns responses, transport errors from the underlying
       // transports, etc. 
       Fifo<TransactionMessage> mStateMacFifo;
+      ConsumerFifoBuffer<TransactionMessage> mStateMacFifoOutBuffer;
 
       //This needs to be separate from mStateMacFifo, because timer messages
       //need to be processed before other work. (If timers start getting behind
       //all kinds of nastiness occurs. We can tolerate some SipMessage traffic
       //getting behind, but processing timers late can cripple the entire
       //system with state-bloat.)
+      // !bwc! This thing does not need to be threadsafe; it is both populated 
+      // and consumed from the same thread.
       Fifo<TimerMessage> mTimerFifo;
 
       // from the sipstack (for convenience)
