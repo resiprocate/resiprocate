@@ -2,6 +2,8 @@
 AC_INIT(resiprocate,1.8)
 AC_CONFIG_SRCDIR(repro/repro.cxx)
 
+AC_CONFIG_AUX_DIR([build-aux])
+AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
 
 AC_CANONICAL_HOST
