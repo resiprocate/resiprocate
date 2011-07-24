@@ -1,47 +1,16 @@
-# $Id: Makefile,v 1.70 2004/05/12 01:14:30 jason Exp $
+# $Id$
 
-BUILD = ../../build
-CONTRIB = ../../../contrib
+AM_CXXFLAGS = -DUSE_ARES -DUSE_SSL
 
-include $(BUILD)/Makefile.pre
+LIBS = ../librutil.la
+LIBS += ../../contrib/ares/libares.a
+LIBS += -lssl -lpthread
 
-PACKAGES += RUTIL ARES PTHREAD POPT RADIUSCLIENTNG OPENSSL
+TESTS = \
+	testCoders
 
-SRC = \
-	TestSubsystemLogLevel.cxx
-
-TESTPROGRAMS += \
-	testCoders.cxx \
-	testCountStream.cxx \
-	testData.cxx \
-	testDataPerformance.cxx \
-	testDataStream.cxx \
-	testDnsUtil.cxx \
-	testFifo.cxx \
-	testFileSystem.cxx \
-	testInserter.cxx \
-	testIntrusiveList.cxx \
-	testLogger.cxx \
-	testMD5Stream.cxx \
-	testParseBuffer.cxx \
-	testRandomHex.cxx \
-	testRandomThread.cxx \
-	testThreadIf.cxx \
-#	testDigestStream.cxx \
-
-#SRC = 	TestSupport.cxx
-
-ifeq ($(USE_SSL),yes)
-TESTPROGRAMS += \
-	testSHA1Stream.cxx
-PACKAGES += OPENSSL
-endif
-
-# Strip -DNDEBUG out of CFLAGS and CXXFLAGS, since these are test programs
-CFLAGS := $(shell echo "${CFLAGS}" | sed s/-DNDEBUG//g)
-CXXFLAGS := $(shell echo "${CXXFLAGS}" | sed s/-DNDEBUG//g)
-
-include $(BUILD)/Makefile.post
+bin_PROGRAMS = testCoders
+testCoders_SOURCES = testCoders.cxx
 
 ##############################################################################
 # 

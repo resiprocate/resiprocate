@@ -31,6 +31,7 @@ AH_TEMPLATE([DB_HEADER], [Name of header for libdb])
 
 AC_OUTPUT(Makefile \
 	rutil/Makefile \
+	rutil/test/Makefile \
 	resip/Makefile \
 	resip/stack/Makefile \
 	resip/dum/Makefile \
