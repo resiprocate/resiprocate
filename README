@@ -21,7 +21,6 @@ e.g. CXXFLAGS += -DMYSPECIALDEFINE
 e.g. LDFLAGS += -L/usr/local/myspeciallibdir
 e.g. LDLIBS += -lmyspeciallib
 
-
 Creating an application based on the stack: 
 
 Option 1:  (Using the resip build system)
