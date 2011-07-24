@@ -1,39 +1,23 @@
-# $Id: Makefile,v 1.9 2004/05/10 01:12:46 jason Exp $
-VERSION:=$(shell cat VERSION)
-REPRO_USER?=repro
+# $Id$
 
-# repro is not GPL so if you want to link in MySQL, you needs a 
-# a comercial license for MySQL that is not GPL 
-USE_MYSQL = false
+AM_CXXFLAGS = -DUSE_ARES -DUSE_SSL
 
-BUILD = ../build
-include $(BUILD)/Makefile.pre
+AM_LDFLAGS = -lssl
 
-CXXFLAGS += -I.. 
-ifneq ($(DB_HEADERS),/usr/include)
-CXXFLAGS += -I$(DB_HEADERS)
-endif
-PACKAGES += DUM RESIP RUTIL OPENSSL ARES DB4CXX PTHREAD POPT OPENSIGCOMP RADIUSCLIENTNG
+sbin_PROGRAMS = repro
+repro_SOURCES = repro.cxx
+repro_LDADD = librepro.la
+repro_LDADD += ../resip/dum/libdum.la
+repro_LDADD += ../resip/stack/libresip.la ../rutil/librutil.la
+repro_LDADD += ../contrib/ares/libares.a
+#repro_LDADD += -L../contrib/ares -lares
+repro_LDADD += -lssl -lpthread -ldb_cxx-4.8
 
-ifeq ($(OSTYPE),MinGW)
-PACKAGES += PCRE
-endif
+lib_LTLIBRARIES = librepro.la
 
-ifeq ($(USE_MYSQL),yes)
-PACKAGES += MYSQL
-SRC += MySqlDb.cxx
-endif
+librepro_la_LDFLAGS = -version-info 0:0:0 -release 1 -export-dynamic
 
-CODE_SUBDIRS = monkeys
-TARGET_LIBRARY = librepro
-TARGET_BINARY = repro
-
-TESTPROGRAMS = \
-#	repro.cxx \
-#	genUsers.cxx \
-#	userAdmin.cxx 
-
-SRC 	+=   \
+librepro_la_SOURCES = \
 	RouteStore.cxx \
 	UserStore.cxx \
 	ConfigStore.cxx \
@@ -78,98 +62,23 @@ SRC 	+=   \
 	monkeys/RecursiveRedirect.cxx \
 	monkeys/SimpleStaticRoute.cxx \
 	monkeys/StaticRoute.cxx \
-	monkeys/StrictRouteFixup.cxx \
 	monkeys/QValueTargetHandler.cxx \
 	monkeys/SimpleTargetHandler.cxx \
 	\
-
-
-ifeq ($(USE_SSL), yes)
-SRC +=	stateAgents/CertServer.cxx \
+	MySqlDb.cxx \
+	stateAgents/CertServer.cxx \
 	stateAgents/CertPublicationHandler.cxx \
 	stateAgents/CertSubscriptionHandler.cxx \
 	stateAgents/PrivateKeyPublicationHandler.cxx \
 	stateAgents/PrivateKeySubscriptionHandler.cxx
-CODE_SUBDIRS += stateAgents
-endif
 
-reproSvnVersion=$(shell cat ../SVN-VERSION)
-reproBuildHost=$(shell hostname)
-
-
-reproInfo.hxx: ../SVN-VERSION VERSION
-	@echo "#define REPRO_BUILD_REV \"$(reproSvnVersion)\"" >  reproInfo.hxx
-	@echo "#define REPRO_BUILD_HOST \"$(reproBuildHost)\"" >> reproInfo.hxx
-	@echo "#define REPRO_RELEASE_VERSION \"$(VERSION)\"" >> reproInfo.hxx
+# reproInfo.hxx is created manually be other build systems
+# but here we just delegate to the autoconf generated config.h
+reproInfo.hxx:
+	@echo "#include \"config.h\"" >  reproInfo.hxx
 	cat reproInfo.hxx
 
 ReproVersion.cxx: reproInfo.hxx
-
-../SVN-VERSION: 
-	$(MAKE) -C .. SVN-VERSION
-
-include $(BUILD)/Makefile.post
-
-#####################################################################
-# Redhat-esque system configuration install target 
-# (Should work with fairly recent versions of Redhat, RHEL, FC)
-#
-#   Create configuration file: /etc/repro.conf
-#   Create rc file: /etc/rc.d/init.d
-#   Create db files directory: /var/lib/repro
-#
-
-install-rh-config: \
-	$(DESTDIR)/etc/repro.conf \
-	$(DESTDIR)/etc/init.d/repro \
-	$(DESTDIR)/var/lib/repro \
-	$(DESTDIR)/var/run/repro \
-	$(DESTDIR)$(INSTALL_PREFIX)/share/man/man8/repro.8
-
-$(DESTDIR)/etc/repro.conf:  etc/repro.conf.inst
-	if [ -e $@ ]; \
-	then \
-		echo " Using existing $@"; \
-		install -D etc/repro.conf.inst $(DESTDIR)/etc/repro.conf.NEW; \
-	else \
-		install -D etc/repro.conf.inst $(DESTDIR)/etc/repro.conf; \
-	fi
-
-$(DESTDIR)/etc/init.d/repro: etc/init.d/repro.inst
-	install -D etc/init.d/repro.inst $(DESTDIR)/etc/init.d/repro
-
-localize = sed \
-	-e 's,@REPROUSER@,$(REPRO_USER),g' \
-	-e 's,@REPRO_INSTALL@,$(INSTALL_PREFIX),g' \
-	-e 's,@REPRO_RUNDIR@,/var/run/repro,g' \
-	-e 's,@REPRO_CONFDIR@,/etc,g' \
-	-e 's,@REPRO_CWD@,/var/lib/repro,g' \
-	-e 's,@bindir@,$(INSTALL_PREFIX)/sbin,g' \
-	-e 's,@VERSION@,$(VERSION),g' \
-
-%.inst: %
-	$(localize) < $< > $@
-
-$(DESTDIR)/var/run/repro:
-	install -d $(DESTDIR)/var/run/repro
-
-$(DESTDIR)/var/lib/repro:
-	install -d $(DESTDIR)/var/lib/repro
-
-$(DESTDIR)$(INSTALL_PREFIX)/share/man/man8/repro.8: doc/repro.8
-	install -D $< $@
-
-clean: clean-inst clean-build
-
-clean-build:
-	rm -f reproInfo.hxx
-
-clean-inst:
-	rm -f etc/init.d/repro.inst etc/repro.conf.inst
-
-
-testVersion: ReproVersion.cxx ReproVersion.hxx
-	g++ -I.. -DTESTDRIVER ReproVersion.cxx -o testVersion
 
 ##############################################################################
 # 
