@@ -16,8 +16,15 @@ AC_PROG_INSTALL
 
 AC_PROG_LIBTOOL
 
+AC_PROG_SED
+
+AM_MISSING_PROG([GPERF], [gperf])
+
 AC_OUTPUT(Makefile \
 	rutil/Makefile \
+	resip/Makefile \
+	resip/stack/Makefile \
+	resip/dum/Makefile \
 	)
 
 
