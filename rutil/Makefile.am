@@ -1,6 +1,6 @@
 # $Id$
 
-#SUBDIRS = dns stun ssl
+SUBDIRS = test
 
 AM_CXXFLAGS = -DUSE_ARES -DUSE_SSL
 
