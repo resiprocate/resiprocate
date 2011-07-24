@@ -20,11 +20,21 @@ AC_PROG_SED
 
 AM_MISSING_PROG([GPERF], [gperf])
 
+AC_DEFINE(REPRO_BUILD_REV, PACKAGE_VERSION, REPRO_BUILD_REV)
+AH_TEMPLATE([REPRO_BUILD_REV], [SVN revsion])
+AC_DEFINE_UNQUOTED(REPRO_BUILD_HOST, "`hostname`", REPRO_BUILD_HOST)
+AH_TEMPLATE([REPRO_BUILD_HOST], [Host where package was configured])
+AC_DEFINE(REPRO_RELEASE_VERSION, PACKAGE_VERSION, REPRO_RELEASE_VERSION)
+AH_TEMPLATE([REPRO_RELEASE_VERSION], [Package version])
+AC_DEFINE_UNQUOTED(DB_HEADER, "db_cxx.h", DB_HEADER)
+AH_TEMPLATE([DB_HEADER], [Name of header for libdb])
+
 AC_OUTPUT(Makefile \
 	rutil/Makefile \
 	resip/Makefile \
 	resip/stack/Makefile \
 	resip/dum/Makefile \
+	repro/Makefile \
 	)
 
 

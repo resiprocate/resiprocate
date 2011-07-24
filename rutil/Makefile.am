@@ -4,11 +4,9 @@
 
 AM_CXXFLAGS = -DUSE_ARES -DUSE_SSL
 
-AM_LDFLAGS = -lssl
-
 lib_LTLIBRARIES = librutil.la
 
-#librutil_la_LIBADD = 
+librutil_la_LIBADD = -lssl -lrt
 librutil_la_LDFLAGS = -version-info 0:0:0 -release 1 -export-dynamic
 
 librutil_la_SOURCES = \
@@ -61,8 +59,7 @@ librutil_la_SOURCES = \
 	dns/RROverlay.cxx \
 	\
 	stun/Stun.cxx \
-	stun/Udp.cxx
-#	DigestStream.cxx \
+	stun/Udp.cxx \
 	ssl/OpenSSLInit.cxx \
 	ssl/SHA1Stream.cxx
 
