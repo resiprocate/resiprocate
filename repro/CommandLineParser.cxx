@@ -1,5 +1,5 @@
 #ifdef HAVE_CONFIG_H
-#include <config.hxx>
+#include "config.h"
 #endif
 
 #if HAVE_POPT_H
