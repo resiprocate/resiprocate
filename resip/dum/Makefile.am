@@ -1,15 +1,15 @@
 # $Id$
 
-BUILD = ../../build
-include $(BUILD)/Makefile.pre
+AM_CXXFLAGS = -DUSE_ARES -DUSE_SSL
 
-PACKAGES += RESIP ARES PTHREAD
+AM_LDFLAGS = -lssl
 
-TARGET_LIBRARY = libdum
+lib_LTLIBRARIES = libdum.la
 
-TESTPROGRAMS = 
+#libdum_la_LIBADD =
+libdum_la_LDFLAGS = -version-info 0:0:0 -release 1 -export-dynamic
 
-SRC =   \
+libdum_la_SOURCES =   \
 	AppDialog.cxx \
 	AppDialogSet.cxx \
 	AppDialogSetFactory.cxx \
@@ -84,18 +84,8 @@ SRC =   \
 	HttpProvider.cxx \
 	HttpGetMessage.cxx \
 	DumHelper.cxx \
-	MergedRequestRemovalCommand.cxx
-
-ifeq ($(USE_SSL),yes)
-SRC += \
-	ssl/EncryptionManager.cxx 
-PACKAGES += OPENSSL
-CODE_SUBDIRS += ssl
-endif
-
-
-include $(BUILD)/Makefile.post
-INSTALL_INCDIR := $(DESTDIR)$(INSTALL_PREFIX)/include/resip/dum
+	MergedRequestRemovalCommand.cxx \
+	ssl/EncryptionManager.cxx
 
 ##############################################################################
 # 

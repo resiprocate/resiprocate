@@ -1,16 +1,14 @@
-# $Id: Makefile,v 1.144 2004/05/18 01:40:48 jason Exp $
+# $Id$
 
-BUILD = ../../build
-include $(BUILD)/Makefile.pre
+AM_CXXFLAGS = -DUSE_ARES -DUSE_SSL
 
-PACKAGES += RESIP RUTIL ARES PTHREAD OPENSIGCOMP
+#AM_LDFLAGS = -lssl
 
-CXXFLAGS += -I../..
-CODE_SUBDIRS = 
-TARGET_LIBRARY = libresip
-TESTPROGRAMS =
+lib_LTLIBRARIES = libresip.la
 
-SRC = \
+libresip_la_LDFLAGS = -version-info 0:0:0 -release 1 -export-dynamic
+
+libresip_la_SOURCES = \
 	Auth.cxx \
 	CSeqCategory.cxx \
 	CallId.cxx \
@@ -130,31 +128,15 @@ SRC = \
 	XMLCursor.cxx \
 	KeepAliveMessage.cxx \
 	StatelessHandler.cxx \
-	InvalidContents.cxx
-
-ifeq ($(USE_SSL),yes)
-SRC += \
+	InvalidContents.cxx \
 	ssl/DtlsTransport.cxx \
 	ssl/Security.cxx \
 	ssl/TlsConnection.cxx \
 	ssl/TlsTransport.cxx
-PACKAGES += OPENSSL
-CODE_SUBDIRS += ssl
-endif
 
-SUFFIXES += .gperf .cxx
+SUFFIXES = .gperf .cxx
 GPERFOPTS = -D -E -L C++ -t -k '*' --compare-strncmp
 #GPERFVER="GNU gperf 2.7.2"
-
-code *Hash.cxx: .firstrun
-
-.firstrun:
-	touch .firstrun MethodHash.cxx *Hash.cxx
-
-clean: cleancruft 
-
-cleancruft:
-	-rm -r .firstrun
 
 # rule for case sensitive sorts of hash
 MethodHash.cxx: MethodHash.gperf
@@ -169,9 +151,6 @@ MethodHash.cxx: MethodHash.gperf
 	sed -e 's/\*str ==/tolower(*str) ==/' | \
 	sed -e 's/\!strncmp/\!strncasecmp/' > $@ || \
 	echo "gperf not installed, touching $@" && touch $@
-
-include $(BUILD)/Makefile.post
-INSTALL_INCDIR := $(DESTDIR)$(INSTALL_PREFIX)/include/resip/stack
 
 
 ##############################################################################

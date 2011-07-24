@@ -1,7 +1,8 @@
+# $Id$
 
 #SUBDIRS = dns stun ssl
 
-AM_CXXFLAGS = -DUSE_ARES
+AM_CXXFLAGS = -DUSE_ARES -DUSE_SSL
 
 AM_LDFLAGS = -lssl
 
