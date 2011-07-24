@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "rutil/config.hxx"
+#include "config.h"
 #endif
 
 #include "AresCompat.hxx"
