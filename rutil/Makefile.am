@@ -1,8 +1,8 @@
 # $Id$
 
-SUBDIRS = test
+SUBDIRS = . test
 
-AM_CXXFLAGS = -DUSE_ARES -DUSE_SSL
+AM_CXXFLAGS = -I../contrib/ares -DUSE_ARES -DUSE_SSL
 
 lib_LTLIBRARIES = librutil.la
 
