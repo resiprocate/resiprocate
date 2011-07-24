@@ -1,6 +1,8 @@
 
 #SUBDIRS = dns stun ssl
 
+AM_CXXFLAGS = -DUSE_ARES
+
 AM_LDFLAGS = -lssl
 
 lib_LTLIBRARIES = librutil.la
