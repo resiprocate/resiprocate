@@ -1,0 +1,21 @@
+
+AC_INIT(resiprocate,1.8)
+AC_CONFIG_SRCDIR(repro/repro.cxx)
+
+AM_INIT_AUTOMAKE
+
+AC_CANONICAL_HOST
+AM_CONFIG_HEADER(config.h)
+
+AC_PROG_CC
+AC_PROG_CXX
+
+AC_PROG_INSTALL
+
+AC_PROG_LIBTOOL
+
+AC_OUTPUT(Makefile \
+	rutil/Makefile \
+	)
+
+
