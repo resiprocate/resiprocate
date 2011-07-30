@@ -67,6 +67,7 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
 #else
    DebugLog (<< "No compression library available: " << *this);
 #endif
+   mTxFifo.setDescription("UdpTransport::mTxFifo");
 }
 
 UdpTransport::~UdpTransport()
@@ -609,6 +610,32 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
 
       message->setBody(buffer+used,len-used);
       //DebugLog(<<"added " << len-used << " byte body");
+   }
+
+   // .bwc. basicCheck takes up substantial CPU. Don't bother doing it
+   // if we're overloaded.
+   CongestionManager::RejectionBehavior behavior=getRejectionBehaviorForIncoming();
+   if (behavior==CongestionManager::REJECTING_NON_ESSENTIAL
+         || (behavior==CongestionManager::REJECTING_NEW_WORK
+            && message->isRequest()))
+   {
+      // .bwc. If this fifo is REJECTING_NEW_WORK, we will drop
+      // requests but not responses ( ?bwc? is this right for ACK?). 
+      // If we are REJECTING_NON_ESSENTIAL, 
+      // we reject all incoming work, since losing something from the 
+      // wire will not cause instability or leaks (see 
+      // CongestionManager.hxx)
+
+      // .bwc. This handles all appropriate checking for whether
+      // this is a response or an ACK.
+      std::auto_ptr<SendData> tryLater(make503(*message, getExpectedWaitForIncoming()/1000));
+      if(tryLater.get())
+      {
+         send(tryLater);
+      }
+     delete message; // dropping message due to congestion
+     message = 0;
+     return origBufferConsumed;
    }
 
    if (!basicCheck(*message))

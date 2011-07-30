@@ -745,6 +745,16 @@ SipMessage::encode(EncodeStream& str, bool isSipFrag) const
    return str;
 }
 
+EncodeStream&
+SipMessage::encodeSingleHeader(Headers::Type type, EncodeStream& str) const
+{
+   if (mHeaders[type] != 0)
+   {
+      mHeaders[type]->encode(type, str);
+   }
+   return str;
+}
+
 EncodeStream& 
 SipMessage::encodeEmbedded(EncodeStream& str) const
 {

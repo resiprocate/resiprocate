@@ -71,6 +71,13 @@ StatisticsManager::poll()
       // let the app do what it wants with it
       mStack.post(msg);
    }
+   
+   // !bwc! TODO maybe change this? Or is a flexible implementation of 
+   // CongestionManager::logCurrentState() enough?
+   if(mStack.mCongestionManager)
+   {
+      mStack.mCongestionManager->logCurrentState();
+   }
 }
 
 void 

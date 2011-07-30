@@ -131,6 +131,7 @@ class SipMessage : public TransactionMessage
       EncodeStream& encodeEmbedded(EncodeStream& str) const;
       
       virtual EncodeStream& encodeBrief(EncodeStream& str) const;
+      EncodeStream& encodeSingleHeader(Headers::Type type, EncodeStream& str) const;
 
       bool isRequest() const;
       bool isResponse() const;

@@ -243,6 +243,11 @@ class Helper
                                       const Data& hostname = Data::Empty,
                                       const Data& warning=Data::Empty);
 
+      static void makeRawResponse(Data& rawBuffer,
+                                    const SipMessage& request, 
+                                    int responseCode,
+                                    const Data& additionalHeaders=Data::Empty,
+                                    const Data& body=Data::Empty);
 
       /**
           Make a 405 response to a provided request.  Allows header is added

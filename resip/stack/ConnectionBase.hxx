@@ -1,14 +1,7 @@
 #ifndef RESIP_ConnectionBase_hxx
 #define RESIP_ConnectionBase_hxx
 
-/**
-   Abstracts some of the connection functionality. Managed connections (@see
-   ConnectionManager) derive from Connection. Non-managed connections may be
-   derived from ConnectionBase.
-
-   @todo check id connectionId makes sense here
-*/
-
+#include <deque>
 #include <list>
 
 #include "rutil/Timer.hxx"
@@ -29,6 +22,16 @@ namespace resip
 class TransactionMessage;
 class Compression;
 
+/**
+   @internal
+
+   @brief Abstracts some of the connection functionality. 
+   
+   Managed connections (see ConnectionManager) derive from Connection. 
+   Non-managed connections may be derived from ConnectionBase.
+
+   @todo check id connectionId makes sense here
+*/
 class ConnectionBase
 {
       friend EncodeStream& operator<<(EncodeStream& strm, const resip::ConnectionBase& c);

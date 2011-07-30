@@ -64,6 +64,21 @@ class InternalTransport : public Transport
       virtual unsigned int getFifoSize() const;
       virtual void send(std::auto_ptr<SendData> data);
       virtual void poke();
+      
+      // .bwc. This needs to be overridden if this transport runs in its own
+      // thread to be threadsafe.
+      virtual void setCongestionManager(CongestionManager* manager)
+      {
+         if(mCongestionManager)
+         {
+            mCongestionManager->unregisterFifo(&mTxFifo);
+         }
+         Transport::setCongestionManager(manager);
+         if(mCongestionManager)
+         {
+            mCongestionManager->registerFifo(&mTxFifo);
+         }
+      }
    protected:
       friend class SipStack;
 

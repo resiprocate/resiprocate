@@ -104,6 +104,7 @@ class TimeLimitFifo : public AbstractFifo< Timestamped<Msg*> >
       using AbstractFifo< Timestamped<Msg*> >::mCondition;
       using AbstractFifo< Timestamped<Msg*> >::empty;
       using AbstractFifo< Timestamped<Msg*> >::size;
+      using AbstractFifo< Timestamped<Msg*> >::onMessagePushed;
 
       /// @brief Add a message to the fifo.
       /// return true iff succeeds
@@ -243,6 +244,7 @@ TimeLimitFifo<Msg>::add(Msg* msg,
    {
       time_t n = time(0);
       mFifo.push_back(Timestamped<Msg*>(msg, n));
+      onMessagePushed(1);
       mCondition.signal();
       return true;
    }

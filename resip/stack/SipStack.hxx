@@ -4,6 +4,7 @@
 #include <set>
 #include <iosfwd>
 
+#include "rutil/CongestionManager.hxx"
 #include "rutil/FdSetIOObserver.hxx"
 #include "rutil/TimeLimitFifo.hxx"
 #include "rutil/Mutex.hxx"
@@ -863,6 +864,70 @@ class SipStack : public FdSetIOObserver
          SipMessage::checkContentLength=check;
       }
 
+      /**
+         Sets the CongestionManager used by the stack.
+         In order to use a congestion-manager, you will need to create one and 
+         pass it to the SipStack, like so:
+
+         @code
+          MyCongestionManager* mCM = new MyCongestionManager;
+          mStack.setCongestionManager(mCM);
+         @endcode
+
+         This will cause the SipStack to register all its fifos with the 
+         congestion manager, and will also call 
+         TransactionUser::setCongestionManager() for every currently registered 
+         TransactionUser. This means that, if you are working with 
+         such a TransactionUser, you must have registered the TransactionUser 
+         with the SipStack before making this call.
+         
+         If you are using the SipStack directly by implementing your own 
+         subclass of TransactionUser, you can override 
+         TransactionUser::setCongestionManager() to register additional fifos 
+         (the default implementation registers TransactionUser::mFifo), like so
+         
+         @code
+         MyTransactionUser::setCongestionManager(CongestionManager* cm)
+         {
+          TransactionUser::setCongestionManager(cm);
+          if(mCongestionManager)
+          {
+             mCongestionManager->unregisterFifo(&mExtraFifo);
+          }
+          mCongestionManager=cm;
+          if(mCongestionManager)
+          {
+             mCongestionManager->registerFifo(&mExtraFifo);
+          }
+         }
+         @endcode
+         
+         @param manager The CongestionManager to use. Ownership is not taken.
+         @ingroup resip_config
+      */
+      void setCongestionManager ( CongestionManager *manager )
+      {
+         mTransactionController->setCongestionManager(manager);
+         mTuSelector.setCongestionManager(manager);
+         if(mCongestionManager)
+         {
+            mCongestionManager->unregisterFifo(&mTUFifo);
+         }
+         mCongestionManager=manager;
+         if(mCongestionManager)
+         {
+            mCongestionManager->registerFifo(&mTUFifo);
+         }
+      }
+
+      /**
+         @brief Accessor for the Compression object the stack is using.
+         @return The Compression object being used.
+         @note If no Compression object was set on construction, this will be 
+            initialized to a null-implementation, so this function will be safe 
+            to call.
+         @ingroup resip_config
+      */
       Compression &getCompression() { return *mCompression; }
 
       void terminateFlow(const resip::Tuple& flow);
@@ -910,6 +975,7 @@ class SipStack : public FdSetIOObserver
           @note since the introduction of multiple TU's this Fifo should no 
           longer be used by most applications - each TU now owns it's own Fifo. */
       TimeLimitFifo<Message> mTUFifo;
+      CongestionManager* mCongestionManager;
 
       /// Responsible for routing messages to the correct TU based on installed rules
       TuSelector mTuSelector;

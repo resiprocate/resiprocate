@@ -38,6 +38,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int disableV4 = false;
    int enableV6 = false;
    int threadedStack = 0;
+   int useCongestionManager = 0;
    char* domains = 0;
    char* interfaces = 0;
    char* routeSet = 0;
@@ -123,6 +124,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"enable-v6",         0,   POPT_ARG_NONE,                              &enableV6,       0, "enable IPV6", 0},
       {"disable-v4",        0,   POPT_ARG_NONE,                              &disableV4,      0, "disable IPV4", 0},
       {"threaded-stack",   0,   POPT_ARG_NONE, &threadedStack, 0, "enable multithreaded stack", 0},
+      {"use-congestion-manager",   0,   POPT_ARG_NONE, &useCongestionManager, 0, "enable congestion manager", 0},
       {"disable-auth",      0,   POPT_ARG_NONE,                              &noChallenge,    0, "disable DIGEST challenges", 0},
       {"disable-auth-int",  0,   POPT_ARG_NONE,                              &noAuthIntChallenge,0, "disable auth-int DIGEST challenges", 0},
       {"reject-bad-nonces",  0,   POPT_ARG_NONE,                              &rejectBadNonces,0, "Send 403 if a client sends a bad nonce in their credentials (will send a new challenge otherwise)", 0},
@@ -214,6 +216,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mUseV4 = !disableV4;
    mUseV6 = enableV6?true:false;
    mThreadedStack = threadedStack;
+   mUseCongestionManager = useCongestionManager;
    mInterfaces = toVector(interfaces, "interfaces"); 
    mDomains = toVector(domains, "domains"); 
    mRouteSet = toVector(routeSet, "routeSet"); 

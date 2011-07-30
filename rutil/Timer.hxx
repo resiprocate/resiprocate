@@ -271,8 +271,6 @@ Timer K  T4 for UDP       Section 17.1.2.2     Wait time for
 
 #endif
 
-/* Copyright 2007 Estacado Systems */
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

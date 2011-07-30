@@ -299,7 +299,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             mConnState = ReadingHeaders;
          }
          else
-         {         
+         {
             size_t contentLength = 0;
             
             try
@@ -384,7 +384,30 @@ ConnectionBase::preparseNewBytes(int bytesRead)
 
                // The message body is complete.
                mMessage->setBody(unprocessedCharPtr, (UInt32)contentLength);
-               if (!transport()->basicCheck(*mMessage))
+               CongestionManager::RejectionBehavior b=mTransport->getRejectionBehaviorForIncoming();
+               if (b==CongestionManager::REJECTING_NON_ESSENTIAL
+                     || (b==CongestionManager::REJECTING_NEW_WORK
+                        && mMessage->isRequest()))
+               {
+                  uint32_t expectedWait(mTransport->getExpectedWaitForIncoming());
+                  // .bwc. If this fifo is REJECTING_NEW_WORK, we will drop
+                  // requests but not responses ( ?bwc? is this right for ACK?). 
+                  // If we are REJECTING_NON_ESSENTIAL, 
+                  // we reject all incoming work, since losing something from the 
+                  // wire will not cause instability or leaks (see 
+                  // CongestionManager.hxx)
+                  
+                  // .bwc. This handles all appropriate checking for whether
+                  // this is a response or an ACK.
+                  std::auto_ptr<SendData> tryLater(transport()->make503(*mMessage, expectedWait/1000));
+                  if(tryLater.get())
+                  {
+                     transport()->send(tryLater);
+                  }
+                  delete mMessage; // dropping message due to congestion
+                  mMessage = 0;
+               }
+               else if (!transport()->basicCheck(*mMessage))
                {
                   delete mMessage;
                   mMessage = 0;
@@ -432,8 +455,33 @@ ConnectionBase::preparseNewBytes(int bytesRead)
          {
             mMessage->addBuffer(mBuffer);
             mMessage->setBody(mBuffer, (UInt32)contentLength);
-            mBuffer = 0;
-            if (!transport()->basicCheck(*mMessage))
+            mBuffer=0;
+            // .bwc. basicCheck takes up substantial CPU. Don't bother doing it
+            // if we're overloaded.
+            CongestionManager::RejectionBehavior b=mTransport->getRejectionBehaviorForIncoming();
+            if (b==CongestionManager::REJECTING_NON_ESSENTIAL
+                  || (b==CongestionManager::REJECTING_NEW_WORK
+                     && mMessage->isRequest()))
+            {
+               uint32_t expectedWait(mTransport->getExpectedWaitForIncoming());
+               // .bwc. If this fifo is REJECTING_NEW_WORK, we will drop
+               // requests but not responses ( ?bwc? is this right for ACK?). 
+               // If we are REJECTING_NON_ESSENTIAL, 
+               // we reject all incoming work, since losing something from the 
+               // wire will not cause instability or leaks (see 
+               // CongestionManager.hxx)
+               
+               // .bwc. This handles all appropriate checking for whether
+               // this is a response or an ACK.
+               std::auto_ptr<SendData> tryLater = transport()->make503(*mMessage, expectedWait/1000);
+               if(tryLater.get())
+               {
+                  transport()->send(tryLater);
+               }
+               delete mMessage; // dropping message due to congestion
+               mMessage = 0;
+            }
+            else if (!transport()->basicCheck(*mMessage))
             {
                delete mMessage;
                mMessage = 0;

@@ -42,6 +42,10 @@ class TuSelector
       // to the default application receive queue.
       void setFallbackPostNotify(AsyncProcessHandler *handler);
       
+      void setCongestionManager(CongestionManager* manager);
+      CongestionManager::RejectionBehavior getRejectionBehavior(TransactionUser* tu) const;
+      uint32_t getExpectedWait(TransactionUser* tu) const;
+
    private:
       void remove(TransactionUser* tu);
       void markShuttingDown(TransactionUser* tu);
@@ -59,6 +63,7 @@ class TuSelector
       typedef std::vector<Item> TuList;
       TuList mTuList;
       TimeLimitFifo<Message>& mFallBackFifo;
+      CongestionManager* mCongestionManager;
       AsyncProcessHandler *mFallbackPostNotify;
       Fifo<TransactionUserMessage> mShutdownFifo;
       bool mTuSelectorMode;
