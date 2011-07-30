@@ -2155,7 +2155,7 @@ TransactionState::processTransportFailure(TransactionMessage* msg)
       //?dcm? insepct failure enum?
       SipMessage* response = Helper::makeResponse(*mNextTransmission, 503);
       WarningCategory warning;
-      warning.hostname() = DnsUtil::getLocalHostName();
+      warning.hostname() = mController.mHostname;
       warning.code() = 399;
       warning.text() = "Failed to deliver CANCEL using the same transport as the INVITE was used";
       response->header(h_Warnings).push_back(warning);
