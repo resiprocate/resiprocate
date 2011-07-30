@@ -263,7 +263,10 @@ class Transport : public FdSetIOObserver
       void makeFailedResponse(const SipMessage& msg,
                               int responseCode = 400,
                               const char * warning = 0);
+      std::auto_ptr<SendData> make503(SipMessage& msg,
+                                      UInt16 retryAfter);
 
+      std::auto_ptr<SendData> make100(SipMessage& msg);
       void setRemoteSigcompId(SipMessage&msg, Data& id);
       // mark the received= and rport parameters if necessary
       static void stampReceived(SipMessage* request);
@@ -319,6 +322,25 @@ class Transport : public FdSetIOObserver
 
       void callSocketFunc(Socket sock);
 
+      virtual void setCongestionManager(CongestionManager* manager)
+      {
+         mCongestionManager=manager;
+      }
+
+      CongestionManager::RejectionBehavior getRejectionBehaviorForIncoming() const
+      {
+         if(mCongestionManager)
+         {
+            return mCongestionManager->getRejectionBehavior(&mStateMachineFifo.getFifo());
+         }
+         return CongestionManager::NORMAL;
+      }
+
+      uint32_t getExpectedWaitForIncoming() const
+      {
+         return mStateMachineFifo.getFifo().expectedWaitTimeMilliSec()/1000;
+      }
+
       // called by Connection to deliver a received message
       virtual void pushRxMsgUp(TransactionMessage* msg);
 
@@ -342,6 +364,7 @@ class Transport : public FdSetIOObserver
       bool mHasRecordRoute;
       unsigned int mKey;
 
+      CongestionManager* mCongestionManager;
       ProducerFifoBuffer<TransactionMessage> mStateMachineFifo; // passed in
       bool mShuttingDown;
 

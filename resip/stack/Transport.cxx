@@ -40,6 +40,7 @@ Transport::Transport(Fifo<TransactionMessage>& rxFifo,
    mTuple(address),
    mHasRecordRoute(false),
    mKey(0),
+   mCongestionManager(0),
    mStateMachineFifo(rxFifo, 8),
    mShuttingDown(false),
    mTlsDomain(tlsDomain),
@@ -62,6 +63,7 @@ Transport::Transport(Fifo<TransactionMessage>& rxFifo,
    mTuple(intfc, portNum, version),
    mHasRecordRoute(false),
    mKey(0),
+   mCongestionManager(0),
    mStateMachineFifo(rxFifo,8),
    mShuttingDown(false),
    mTlsDomain(tlsDomain),
@@ -258,6 +260,71 @@ Transport::makeFailedResponse(const SipMessage& msg,
   send(std::auto_ptr<SendData>(makeSendData(dest, encoded, Data::Empty, remoteSigcompId)));
 }
 
+std::auto_ptr<SendData>
+Transport::make503(SipMessage& msg, UInt16 retryAfter)
+{
+  std::auto_ptr<SendData> result;
+  if (msg.isResponse()) return result;
+
+   try
+   {
+      if(msg.method()==ACK)
+      {
+         return result;
+      }
+   }
+   catch(BaseException&)
+   {
+      // .bwc. Parse failed on the start-line. Stop.
+      return result;
+   }
+   
+  const Tuple& dest = msg.getSource();
+
+   // Calculate compartment ID for outbound message
+   Data remoteSigcompId;
+   setRemoteSigcompId(msg,remoteSigcompId);
+
+   // .bwc. msg is completely unverified. Handle with caution.
+   result=makeSendData(dest, Data::Empty, Data::Empty, remoteSigcompId);
+   static const Data retryAfterHeader("Retry-After: ");
+   Data value(retryAfter);
+   Helper::makeRawResponse(result->data, msg, 503, retryAfterHeader+value+"\r\n");
+
+  return result;
+}
+
+std::auto_ptr<SendData>
+Transport::make100(SipMessage& msg)
+{
+  std::auto_ptr<SendData> result;
+  if (msg.isResponse()) return result;
+
+   try
+   {
+      if(msg.method()==ACK)
+      {
+         return result;
+      }
+   }
+   catch(BaseException&)
+   {
+      // .bwc. Parse failed on the start-line. Stop.
+      return result;
+   }
+   
+  const Tuple& dest = msg.getSource();
+
+   // Calculate compartment ID for outbound message
+   Data remoteSigcompId;
+   setRemoteSigcompId(msg,remoteSigcompId);
+
+   // .bwc. msg is completely unverified. Handle with caution.
+   result=makeSendData(dest, Data::Empty, Data::Empty, remoteSigcompId);
+   Helper::makeRawResponse(result->data, msg, 100);
+
+   return result;
+}
 
 void
 Transport::setRemoteSigcompId(SipMessage& msg, Data& remoteSigcompId)

@@ -481,6 +481,30 @@ Helper::makeResponse(const SipMessage& request,
    return response.release();
 }
 
+void
+Helper::makeRawResponse(Data& raw,
+                        const SipMessage& msg, 
+                        int responseCode,
+                        const Data& additionalHeaders,
+                        const Data& body)
+{
+   raw.reserve(256);
+   {
+      DataStream encodeStream(raw);
+      encodeStream << "SIP/2.0 " << responseCode << " ";
+      Data reason;
+      getResponseCodeReason(responseCode, reason);
+      encodeStream << reason;
+      msg.encodeSingleHeader(Headers::Via,encodeStream);
+      msg.encodeSingleHeader(Headers::To,encodeStream);
+      msg.encodeSingleHeader(Headers::From,encodeStream);
+      msg.encodeSingleHeader(Headers::CallID,encodeStream);
+      msg.encodeSingleHeader(Headers::CSeq,encodeStream);
+      encodeStream << additionalHeaders;
+      encodeStream << "Content-Length: " << body.size() << "\r\n\r\n";
+   }
+}
+
 void   
 Helper::getResponseCodeReason(int responseCode, Data& reason)
 {

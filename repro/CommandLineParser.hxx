@@ -29,6 +29,7 @@ class CommandLineParser
       bool mUseV4;
       bool mUseV6;
       bool mThreadedStack;
+      bool mUseCongestionManager;
       std::vector<Data> mDomains;
       std::vector<Data> mInterfaces;
       std::vector<Data> mRouteSet;

@@ -14,6 +14,7 @@
 #include <iostream>
 #include <memory>
 
+#include "rutil/GeneralCongestionManager.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
@@ -164,6 +165,11 @@ class SipStackAndThread
       // I don't know if these are such a good idea
       SipStack&         operator*() const { assert(mStack); return *mStack; }
       SipStack*         operator->() const { return mStack; }
+
+      void setCongestionManager(CongestionManager* cm)
+      {
+         mStack->setCongestionManager(cm);
+      }
 
       void              run() 
       {
@@ -341,6 +347,11 @@ struct StackThreadPair
 
 bool
 StackThreadPair::wait(int& thisseltime) {
+   if(mReceiver.getStack().hasMessage() || mSender.getStack().hasMessage())
+   {
+      return false;
+   }
+
    thisseltime = mSeltime;
    bool isStrange = false;
    if ( mNoStackThread )
@@ -393,7 +404,7 @@ performTest(int verbose, int runs, int window, int invite,
       //InfoLog (<< "count=" << count << " messages=" << messages.size());
 
       // load up the send window
-      while (sent < runs && outstanding < window)
+      for (int i=0; i<64 && sent < runs && outstanding < window; ++i)
       {
          DebugLog (<< "Sending " << count << " / " << runs << " (" << outstanding << ")");
          target.uri().port() = registrarPort + (sent%numPorts);
@@ -439,7 +450,7 @@ performTest(int verbose, int runs, int window, int invite,
              <<endl;
       }
 
-      for (;;)
+      for (int i=0;i<64;++i)
       {
          static NameAddr contact;
 
@@ -481,7 +492,7 @@ performTest(int verbose, int runs, int window, int invite,
          delete request;
       }
 
-      for (;;)
+      for (int i=0;i<64;++i)
       {
          ++rxRspTryCnt;
          SipMessage* response = pair.mSender->receive();
@@ -493,7 +504,14 @@ performTest(int verbose, int runs, int window, int invite,
          {
             case REGISTER:
                outstanding--;
-               count++;
+               if (response->header(h_StatusLine).statusCode() == 200)
+               {
+                  count++;
+               }
+               else
+               {
+                  --sent;
+               }
                break;
 
             case INVITE:
@@ -572,6 +590,8 @@ main(int argc, char* argv[])
    const char* threadType = "event";
    int tpFlags = 0;
    int sendSleepUs = 0;
+   int cManager=0;
+   int statisticsInterval=60;
 
 #if defined(HAVE_POPT_H)
 
@@ -596,6 +616,8 @@ main(int argc, char* argv[])
       {"thread-type", 't', POPT_ARG_STRING, &threadType,0, "stack thread type", threadTypeDesc},
       {"tf",          0,   POPT_ARG_INT,    &tpFlags,   0, "bit encoding of transportFlags", 0},
       {"sleep",       0,   POPT_ARG_INT,    &sendSleepUs,0, "time (us) to sleep after each sent request", 0},
+      {"use-congestion-manager",0, POPT_ARG_NONE, &cManager ,   0, "use a CongestionManager", 0},
+      {"statistics-interval",       0,   POPT_ARG_INT,    &statisticsInterval,0, "time in seconds between statistics logging", 0},
       POPT_AUTOHELP
       { NULL, 0, 0, NULL, 0 }
    };
@@ -656,6 +678,8 @@ main(int argc, char* argv[])
    }
    SipStackAndThread receiver(eachThreadType, commonIntr, notifyUp);
    SipStackAndThread sender(eachThreadType, commonIntr, notifyUp);
+   receiver.getStack().setStatisticsInterval(statisticsInterval);
+   sender.getStack().setStatisticsInterval(statisticsInterval);
 
    IpVersion version = (v6 ? V6 : V4);
 
@@ -727,6 +751,20 @@ main(int argc, char* argv[])
                              tpFlags));
    }
 
+   std::auto_ptr<CongestionManager> senderCongestionManager;
+   std::auto_ptr<CongestionManager> receiverCongestionManager;
+   if(cManager)
+   {
+      senderCongestionManager.reset(new GeneralCongestionManager(
+                                    GeneralCongestionManager::WAIT_TIME,
+                                    200));
+      receiverCongestionManager.reset(new GeneralCongestionManager(
+                                    GeneralCongestionManager::WAIT_TIME,
+                                    200));
+      sender.setCongestionManager(senderCongestionManager.get());
+      receiver.setCongestionManager(receiverCongestionManager.get());
+   }
+
    std::vector<TransportThread*> transportThreads;
    if(tpFlags & RESIP_TRANSPORT_FLAG_OWNTHREAD)
    {
@@ -755,6 +793,9 @@ main(int argc, char* argv[])
 
    sender.join();
    receiver.join();
+
+   sender.setCongestionManager(0);
+   receiver.setCongestionManager(0);
 
    if(tpFlags&RESIP_TRANSPORT_FLAG_OWNTHREAD)
    {

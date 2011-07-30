@@ -54,11 +54,13 @@ SipStack::SipStack(const SipStackOptions& options)
    :
         mTUFifo(TransactionController::MaxTUFifoTimeDepthSecs,
                 TransactionController::MaxTUFifoSize),
+        mCongestionManager(0),
         mTuSelector(mTUFifo),
         mAppTimers(mTuSelector),
         mStatsManager(*this)
 {
    init(options);
+   mTUFifo.setDescription("SipStack::mTUFifo");
 }
 
 
@@ -84,6 +86,7 @@ SipStack::SipStack(Security* pSecurity,
    mInterruptorIsMine(!handler),
    mTUFifo(TransactionController::MaxTUFifoTimeDepthSecs,
            TransactionController::MaxTUFifoSize),
+   mCongestionManager(0),
    mTuSelector(mTUFifo),
    mAppTimers(mTuSelector),
    mStatsManager(*this),
@@ -107,6 +110,9 @@ SipStack::SipStack(Security* pSecurity,
 #endif
    }
    assert(!mShuttingDown);
+   
+   mTUFifo.setDescription("SipStack::mTUFifo");
+
 #if 0
   // .kw. originally tried to share common init() for the two
   // constructors, but too much risk for changing sequencing,

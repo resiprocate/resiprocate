@@ -469,17 +469,29 @@ TransactionState::process(TransactionController& controller,
       // .bwc. Check for error conditions we can respond to.
       if(sip->isRequest() && method != ACK)
       {
-         if(sip->isExternal() && controller.isTUOverloaded())
+         // .bwc. If we are going to statelessly send a 503, we should do it
+         // in the transport, before we do expensive stuff like basicCheck and
+         // stampReceived. If the TU fifo is backed up, we should send a 
+         // _stateful_ 503 below. (And only if the specific TU that can handle
+         // this message is backed up; if other TUs are congested, we should let 
+         // it pass.)
+         /*
+         if(sip->isExternal() && (controller.isTUOverloaded() || controller.mStateMacFifo.isRejecting()))
          {
             SipMessage* tryLater = Helper::makeResponse(*sip, 503);
-            tryLater->header(h_RetryAfter).value() = 32 + (Random::getRandom() % 32);
-            tryLater->header(h_RetryAfter).comment() = "Server busy TRANS";
+            if( controller.mStateMacFifo.isRejecting() )
+              tryLater->header(h_RetryAfter).value() = controller.mStateMacFifo.getRetryAfter();
+            else
+              tryLater->header(h_RetryAfter).value() = 32 + (Random::getRandom() % 32);
+              
+            //tryLater->header(h_RetryAfter).comment() = "Server busy TRANS";
             Tuple target(sip->getSource());
             delete sip;
             controller.mTransportSelector.transmit(tryLater, target);
             delete tryLater;
             return;
          }
+         */
          
          if(sip->isInvalid())
          {
@@ -740,6 +752,38 @@ TransactionState::processTimer(TransactionController& controller,
                                  TimerMessage* message)
 {
    Data tid = message->getTransactionId();
+
+   if(controller.getRejectionBehavior()==CongestionManager::REJECTING_NON_ESSENTIAL)
+   {
+      // .bwc. State machine fifo is backed up; we probably should not be 
+      // retransmitting anything right now. If we have a retransmit timer, 
+      // reschedule for later, but don't retransmit.
+      switch(message->getType())
+      {
+         case Timer::TimerA: // doubling
+            controller.mTimers.add(Timer::TimerA, 
+                                    tid, 
+                                    message->getDuration()*2);
+            delete message;
+            return;
+         case Timer::TimerE1:// doubling, until T2
+         case Timer::TimerG: // doubling, until T2
+            controller.mTimers.add(message->getType(), 
+                                    tid, 
+                                    resipMin(message->getDuration()*2,
+                                             Timer::T2));
+            delete message;
+            return;
+         case Timer::TimerE2:// just reset
+            controller.mTimers.add(Timer::TimerE2, 
+                                    tid, 
+                                    Timer::T2);
+            delete message;
+            return;
+         default:
+            ; // let it through
+      }
+   }
 
    TransactionState* state = 0;
    if (message->isClientTransaction()) state = controller.mClientTransactionMap.find(tid);
@@ -2012,7 +2056,7 @@ TransactionState::processNoDnsResults()
 
    WarningCategory warning;
    SipMessage* response = Helper::makeResponse(*mNextTransmission, 503);
-   warning.hostname() = DnsUtil::getLocalHostName();
+   warning.hostname() = mController.mHostname;
    warning.code() = 399;
    warning.text().reserve(100);
 
@@ -2519,7 +2563,7 @@ TransactionState::sendCurrentToWire()
 }
 
 void
-TransactionState::sendToTU(TransactionMessage* msg) const
+TransactionState::sendToTU(TransactionMessage* msg)
 {
    SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg);
    if (sipMsg && sipMsg->isResponse() && mDnsResult)
@@ -2536,7 +2580,10 @@ TransactionState::sendToTU(TransactionMessage* msg) const
             {
                unsigned int relativeExpiry= sipMsg->const_header(resip::h_RetryAfter).value();
                
-               mDnsResult->blacklistLast(resip::Timer::getTimeMs()+relativeExpiry*1000);
+               if(relativeExpiry!=0)
+               {
+                  mDnsResult->blacklistLast(resip::Timer::getTimeMs()+relativeExpiry*1000);
+               }
             }
             
             break;
@@ -2557,6 +2604,70 @@ TransactionState::sendToTU(TransactionMessage* msg) const
             break;
       }
    }
+
+   CongestionManager::RejectionBehavior behavior=CongestionManager::NORMAL;
+   behavior=mController.mTuSelector.getRejectionBehavior(mTransactionUser);
+
+   if(behavior!=CongestionManager::NORMAL)
+   {
+      if(sipMsg)
+      {
+         assert(sipMsg->isExternal());
+         if(sipMsg->isRequest())
+         {
+            // .bwc. This could be an initial request, or an ACK/200.
+            if(sipMsg->method()==ACK)
+            {
+               // ACK/200 is a continuation of old work. We only reject if
+               // we're really hosed.
+               if(behavior==CongestionManager::REJECTING_NON_ESSENTIAL)
+               {
+                  delete msg;
+                  return;
+               }
+            }
+            else
+            {
+               // .bwc. This is new work. Reject.
+               SipMessage* response(Helper::makeResponse(*sipMsg, 503));
+               delete sipMsg;
+               
+               UInt16 retryAfter=mController.mTuSelector.getExpectedWait(mTransactionUser);
+               response->header(h_RetryAfter).value()=retryAfter;
+               response->setFromTU();
+               if(mMethod==INVITE)
+               {
+                  processServerInvite(response);
+               }
+               else
+               {
+                  processServerNonInvite(response);
+               }
+               return;
+            }
+         }
+         else
+         {
+            // .bwc. This could be a response from the wire, or an internally
+            // generated pseudo-response. This is always a continuation of
+            // old work.
+            if(behavior==CongestionManager::REJECTING_NON_ESSENTIAL &&
+               mTransactionUser &&
+               !mTransactionUser->responsesMandatory())
+            {
+               delete sipMsg;
+               return;
+            }
+         }
+      }
+      else
+      {
+         // .bwc. This is some sort of timer, or other message. If we don't know 
+         // any better, we need to assume this is essential for the safe
+         // operation of the TU.
+      }
+   }
+   
    TransactionState::sendToTU(mTransactionUser, mController, msg);
 }
 

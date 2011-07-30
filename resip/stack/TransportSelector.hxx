@@ -119,6 +119,21 @@ class TransportSelector
       void terminateFlow(const resip::Tuple& flow);
       void enableFlowTimer(const resip::Tuple& flow);
 
+      void setCongestionManager(CongestionManager* manager)
+      {
+         for(TransportList::iterator i=mSharedProcessTransports.begin();
+               i!=mSharedProcessTransports.end();++i)
+         {
+            (*i)->setCongestionManager(manager);
+         }
+
+         for(TransportList::iterator i=mHasOwnProcessTransports.begin();
+               i!=mHasOwnProcessTransports.end();++i)
+         {
+            (*i)->setCongestionManager(manager);
+         }
+      }
+
    private:
       void addTransportInternal( std::auto_ptr<Transport> transport);
       void checkTransportAddQueue();

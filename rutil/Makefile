@@ -20,6 +20,7 @@ SRC = \
 	DataStream.cxx \
 	DnsUtil.cxx \
 	FileSystem.cxx \
+	GeneralCongestionManager.cxx \
 	HeapInstanceCounter.cxx \
 	Lock.cxx \
 	Log.cxx \

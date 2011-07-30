@@ -5,6 +5,7 @@
 #include "resip/stack/AbandonServerTransaction.hxx"
 #include "resip/stack/ApplicationMessage.hxx"
 #include "resip/stack/CancelClientInviteTransaction.hxx"
+#include "resip/stack/Helper.hxx"
 #include "resip/stack/TerminateFlow.hxx"
 #include "resip/stack/EnableFlowTimer.hxx"
 #include "resip/stack/ShutdownMessage.hxx"
@@ -14,6 +15,8 @@
 #ifdef USE_SSL
 #include "resip/stack/ssl/Security.hxx"
 #endif
+#include "rutil/CongestionManager.hxx"
+#include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -37,6 +40,7 @@ TransactionController::TransactionController(SipStack& stack,
    mFixBadCSeqNumbers(true),
    mStateMacFifo(handler),
    mStateMacFifoOutBuffer(mStateMacFifo),
+   mCongestionManager(0),
    mTuSelector(stack.mTuSelector),
    mTransportSelector(mStateMacFifo,
                       stack.getSecurity(),
@@ -44,8 +48,11 @@ TransactionController::TransactionController(SipStack& stack,
                       stack.getCompression()),
    mTimers(mTimerFifo),
    mShuttingDown(false),
-   mStatsManager(stack.mStatsManager)
-{}
+   mStatsManager(stack.mStatsManager),
+   mHostname(DnsUtil::getLocalHostName())
+{
+   mStateMacFifo.setDescription("TransactionController::mStateMacFifo");
+}
 
 #if defined(WIN32) && !defined(__GNUC__)
 #pragma warning( default : 4355 )
@@ -155,6 +162,18 @@ TransactionController::getTimeTillNextProcessMS()
 void
 TransactionController::send(SipMessage* msg)
 {
+   if(msg->isRequest() && 
+      msg->method() != ACK && 
+      getRejectionBehavior()!=CongestionManager::NORMAL)
+   {
+      // Need to 503 this.
+      SipMessage* resp(Helper::makeResponse(*msg, 503));
+      resp->header(h_RetryAfter).value()=mStateMacFifo.expectedWaitTimeMilliSec()/1000;
+      resp->setTransactionUser(msg->getTransactionUser());
+      mTuSelector.add(resp, TimeLimitFifo<Message>::InternalElement);
+      delete msg;
+      return;
+   }
    mStateMacFifo.add(msg);
 }
 

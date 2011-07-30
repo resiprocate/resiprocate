@@ -28,6 +28,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int noV4 = 0;
    int noV6 = 0;
    int threadedStack = 0;
+   int useCongestionManager = 0;
    const char* certPath = 0;
    int noChallenge = 0;
    int noWebChallenge =0;
@@ -78,6 +79,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"disable-v6",   0,   POPT_ARG_NONE, &noV6, 0, "disable IPV6", 0},
       {"disable-v4",   0,   POPT_ARG_NONE, &noV4, 0, "disable IPV4", 0},
       {"threaded-stack",   0,   POPT_ARG_NONE, &threadedStack, 0, "enable multithreaded stack", 0},
+      {"use-congestion-manager",   0,   POPT_ARG_NONE, &useCongestionManager, 0, "enable congestion manager", 0},
       {"disable-auth",   0,  POPT_ARG_NONE,   &noChallenge, 0, "disable DIGEST challenges", 0},
       {"disable-web-auth",0, POPT_ARG_NONE,   &noWebChallenge, 0, "disable HTTP challenges", 0},
       {"disable-reg",  0,    POPT_ARG_NONE,   &noRegistrar, 0, "disable registrar", 0},
@@ -143,6 +145,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mNoV4 = noV4;
    mNoV6 = noV6;
    mThreadedStack = threadedStack;
+   mUseCongestionManager = useCongestionManager;
    if (certPath) mCertPath = certPath;
    else mCertPath = basePath + "/.sipCerts";
    mNoChallenge = noChallenge != 0;
@@ -287,8 +290,6 @@ CommandLineParser::toDataVector(const char* input, const char* description)
    return datas;
 }
 
-
-/* Copyright 2007 Estacado Systems */
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

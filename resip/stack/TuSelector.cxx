@@ -18,6 +18,7 @@ TuSelector::TuSelector(TimeLimitFifo<Message>& fallBackFifo) :
    mTuSelectorMode(false),
    mStatsPayload()
 {
+   mShutdownFifo.setDescription("TuSelector::mShutdownFifo");
 }
 
 TuSelector::~TuSelector()
@@ -264,6 +265,57 @@ TuSelector::isTransactionUserStillRegistered(const TransactionUser* tu) const
    }
    return false;
 }
+
+void 
+TuSelector::setCongestionManager(CongestionManager* manager)
+{
+   for(TuList::iterator i=mTuList.begin(); i!=mTuList.end();++i)
+   {
+      i->tu->setCongestionManager(manager);
+   }
+   
+
+   if(mCongestionManager)
+   {
+      mCongestionManager->unregisterFifo(&mFallBackFifo);
+   }
+   mCongestionManager=manager;
+   if(mCongestionManager)
+   {
+      mCongestionManager->registerFifo(&mFallBackFifo);
+   }
+   // ?bwc? Do we need to congestion-manage mFallbackFifo or mShutdownFifo?
+
+}
+
+CongestionManager::RejectionBehavior 
+TuSelector::getRejectionBehavior(TransactionUser* tu) const
+{
+   if(!mCongestionManager)
+   {
+      return CongestionManager::NORMAL;
+   }
+
+   if(tu)
+   {
+      return tu->getRejectionBehavior();
+   }
+
+   return mCongestionManager->getRejectionBehavior(&mFallBackFifo);
+}
+
+uint32_t 
+TuSelector::getExpectedWait(TransactionUser* tu) const
+{
+   if(tu)
+   {
+      return tu->getExpectedWait();
+   }
+
+   return mFallBackFifo.expectedWaitTimeMilliSec();
+}
+
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

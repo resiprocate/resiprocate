@@ -7,21 +7,94 @@
 #include "rutil/Mutex.hxx"
 #include "rutil/Condition.hxx"
 #include "rutil/Lock.hxx"
+#include "rutil/CongestionManager.hxx"
 
 #include "rutil/compat.hxx"
 #include "rutil/Timer.hxx"
 
 namespace resip
 {
-
-
-/// for statistics gathering
+/**
+  @brief Interface for providing metrics on FIFOs, primarily used by 
+   CongestionManager.
+   Provides four different types of metrics:
+      - size : The number of elements in the queue
+      - time-depth : The age of the oldest item in the queue (ie, the front)
+      - expected wait-time : A heuristic estimating the amount of time a message
+         would take to be serviced if it were added to the queue.
+      - average service time : The average time it takes to service a single
+         element from the queue (this is helpful in congestion control, but is
+         mostly intended for logging).
+*/
 class FifoStatsInterface
 {
    public:
-      virtual ~FifoStatsInterface() {}
-      virtual size_t getCountDepth() const = 0;
+         
+     FifoStatsInterface();
+     virtual ~FifoStatsInterface();
+     
+     /**
+         Returns the expected time it will take to service all messages 
+         currently in the queue (in milli-seconds)
+     */
+     virtual time_t expectedWaitTimeMilliSec() const =0;
+
+     /**
+         Returns the difference in time between the youngest and oldest item in 
+         the FIFO in seconds
+      */
       virtual time_t getTimeDepth() const = 0;
+     
+     /**
+         Returns the number of elements in the FIFO
+      */
+      virtual size_t getCountDepth() const = 0;
+
+     /**
+         Returns the average time it takes for individual messages to be 
+         serviced (in micro-seconds)
+     */
+     virtual time_t averageServiceTimeMicroSec() const = 0;
+
+      /**
+         @internal
+         Return this fifo's role-number. The meaning of the return is defined on
+         a per-application basis, and will have special meaning to the 
+         CongestionManager implementation specific to that app. For instance, 
+         1 might be understood to represent the main state machine fifo in 
+         resip, 2 might indicate a transport fifo (of which there may be 
+         several), 3 might indicate a particular TU's fifo, etc.
+         These are intended for use by CongestionManager only.
+      */
+      inline UInt8 getRole() const {return mRole;}
+
+      /**
+         @internal
+         Set this fifo's role-number.
+         @see getRole()
+      */
+      inline void setRole(UInt8 role) {mRole=role;}
+
+      /**
+         Sets the description for this fifo. This is used in the logging for
+         this fifo's statistics, and can also be used by the CongestionManager 
+         to assign a role-number.
+         @param description The description for this fifo.
+      */
+      inline void setDescription(const resip::Data& description)
+      {
+         mDescription=description;
+      }
+
+      /**
+         Gets the description for this fifo.
+         @see setDescription()
+      */
+      virtual const resip::Data& getDescription() const {return mDescription;}
+
+   protected:
+      Data mDescription;
+      UInt8 mRole;
 };
 
 /**
@@ -57,7 +130,10 @@ class AbstractFifo : public FifoStatsInterface
       * @param maxSize max number of messages to keep
       **/
       AbstractFifo()
-         : FifoStatsInterface()
+         : FifoStatsInterface(),
+            mLastSampleTakenMicroSec(0),
+            mCounter(0),
+            mAverageServiceTimeMicroSec(0)
       {}
 
       virtual ~AbstractFifo()
@@ -98,14 +174,29 @@ class AbstractFifo : public FifoStatsInterface
          return !mFifo.empty();
       }
 
-      virtual size_t getCountDepth() const
-      {
-         return mFifo.size();
-      }
-
+      /**
+      @brief computes the time delta between the oldest and newest queue members
+      @note defaults to zero, overridden by TimeLimitFifo<T>
+      @return the time delta between the oldest and newest queue members
+      */
       virtual time_t getTimeDepth() const
       {
          return 0;
+      }
+
+      virtual size_t getCountDepth() const
+      {
+         return mSize;
+      }
+
+      virtual time_t expectedWaitTimeMilliSec() const
+      {
+         return ((mAverageServiceTimeMicroSec*mSize)+500)/1000;
+      }
+
+      virtual time_t averageServiceTimeMicroSec() const
+      {
+         return mAverageServiceTimeMicroSec;
       }
 
       /// remove all elements in the queue (or not)
@@ -124,7 +215,7 @@ class AbstractFifo : public FifoStatsInterface
       T getNext()
       {
          Lock lock(mMutex); (void)lock;
-
+         onFifoPolled();
 
          // Wait util there are messages available.
          while (mFifo.empty())
@@ -136,6 +227,7 @@ class AbstractFifo : public FifoStatsInterface
          //
          T firstMessage(mFifo.front());
          mFifo.pop_front();
+         onMessagePopped();
          return firstMessage;
       }
 
@@ -160,6 +252,7 @@ class AbstractFifo : public FifoStatsInterface
          if(ms < 0)
          {
             Lock lock(mMutex); (void)lock;
+            onFifoPolled();
             if (mFifo.empty())	// WATCHOUT: Do not test mSize instead
               return false;
             toReturn = mFifo.front();
@@ -170,7 +263,8 @@ class AbstractFifo : public FifoStatsInterface
          const UInt64 begin(Timer::getTimeMs());
          const UInt64 end(begin + (unsigned int)(ms)); // !kh! ms should've been unsigned :(
          Lock lock(mMutex); (void)lock;
-      
+         onFifoPolled();
+
          // Wait until there are messages available
          while (mFifo.empty())
          {
@@ -198,6 +292,7 @@ class AbstractFifo : public FifoStatsInterface
          //
          toReturn=mFifo.front();
          mFifo.pop_front();
+         onMessagePopped();
          return true;
       }
 
@@ -206,6 +301,7 @@ class AbstractFifo : public FifoStatsInterface
       void getMultiple(Messages& other, unsigned int max)
       {
          Lock lock(mMutex); (void)lock;
+         onFifoPolled();
          assert(other.empty());
          while (mFifo.empty())
          {
@@ -215,14 +311,17 @@ class AbstractFifo : public FifoStatsInterface
          if(mFifo.size() <= max)
          {
             std::swap(mFifo, other);
+            onMessagePopped(mSize);
          }
          else
          {
-            while( 0 != max-- && !mFifo.empty() )
+            size_t num=max;
+            while( 0 != max-- )
             {
                other.push_back(mFifo.front());
                mFifo.pop_front();
             }
+            onMessagePopped(num);
          }
       }
 
@@ -238,6 +337,7 @@ class AbstractFifo : public FifoStatsInterface
          const UInt64 begin(Timer::getTimeMs());
          const UInt64 end(begin + (unsigned int)(ms)); // !kh! ms should've been unsigned :(
          Lock lock(mMutex); (void)lock;
+         onFifoPolled();
 
          // Wait until there are messages available
          while (mFifo.empty())
@@ -265,14 +365,17 @@ class AbstractFifo : public FifoStatsInterface
          if(mFifo.size() <= max)
          {
             std::swap(mFifo, other);
+            onMessagePopped(mSize);
          }
          else
          {
-            while( 0 != max-- && !mFifo.empty() )
+            size_t num=max;
+            while( 0 != max-- )
             {
                other.push_back(mFifo.front());
                mFifo.pop_front();
             }
+            onMessagePopped(num);
          }
          return true;
       }
@@ -282,12 +385,14 @@ class AbstractFifo : public FifoStatsInterface
          Lock lock(mMutex); (void)lock;
          mFifo.push_back(item);
          mCondition.signal();
+         onMessagePushed(1);
          return mFifo.size();
       }
 
       size_t addMultiple(Messages& items)
       {
          Lock lock(mMutex); (void)lock;
+         int size=items.size();
          if(mFifo.empty())
          {
             std::swap(mFifo, items);
@@ -303,6 +408,7 @@ class AbstractFifo : public FifoStatsInterface
             }
          }
          mCondition.signal();
+         onMessagePushed(size);
          return mFifo.size();
       }
 
@@ -313,6 +419,68 @@ class AbstractFifo : public FifoStatsInterface
       /** @brief condition for waiting on new queue items */
       Condition mCondition;
 
+      mutable UInt64 mLastSampleTakenMicroSec;
+      mutable UInt32 mCounter;
+      mutable UInt32 mAverageServiceTimeMicroSec;
+      // std::deque has to perform some amount of traversal to calculate its 
+      // size; we maintain this count so that it can be queried without locking, 
+      // in situations where it being off by a small amount is ok.
+      UInt32 mSize;
+
+      virtual void onFifoPolled()
+      {
+         // !bwc! TODO allow this sampling frequency to be tweaked
+         if(mLastSampleTakenMicroSec &&
+            mCounter &&
+            (mCounter >= 64 || mFifo.empty()))
+         {
+            UInt64 now(Timer::getTimeMicroSec());
+            UInt64 diff = now-mLastSampleTakenMicroSec;
+
+            if(mCounter >= 4096)
+            {
+               mAverageServiceTimeMicroSec=resipIntDiv(diff, mCounter);
+            }
+            else // fifo got emptied; merge into a rolling average
+            {
+               // .bwc. This is a moving average with period 64, round to 
+               // nearest int.
+               mAverageServiceTimeMicroSec=resipIntDiv(
+                     diff+((4096-mCounter)*mAverageServiceTimeMicroSec),
+                     4096U);
+            }
+            mCounter=0;
+            if(mFifo.empty())
+            {
+               mLastSampleTakenMicroSec=0;
+            }
+            else
+            {
+               mLastSampleTakenMicroSec=now;
+            }
+         }
+      }
+
+      /**
+         Called when a message (or messages) are removed from this fifo. Used to
+         drive service time calculations.
+      */
+      virtual void onMessagePopped(unsigned int num=1)
+      {
+         mCounter+=num;
+         mSize-=num;
+      }
+
+      virtual void onMessagePushed(int num)
+      {
+         if(mSize==0)
+         {
+            // Fifo went from empty to non-empty. Take a timestamp, and record
+            // how long it takes to process some messages.
+            mLastSampleTakenMicroSec=Timer::getTimeMicroSec();
+         }
+         mSize+=num;
+      }
    private:
       // no value semantics
       AbstractFifo(const AbstractFifo&);

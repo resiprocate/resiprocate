@@ -100,7 +100,7 @@ class TransactionState : public DnsHandler
       bool isSentIndication(TransactionMessage* msg) const;
       bool isAbandonServerTransaction(TransactionMessage* msg) const;
       bool isCancelClientTransaction(TransactionMessage* msg) const;
-      void sendToTU(TransactionMessage* msg) const;
+      void sendToTU(TransactionMessage* msg);
       static void sendToTU(TransactionUser* tu, TransactionController& controller, TransactionMessage* msg);
       void sendCurrentToWire();
       SipMessage* make100(SipMessage* request) const;

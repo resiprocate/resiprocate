@@ -10,6 +10,7 @@
 #include "resip/dum/DumThread.hxx"
 #include "resip/dum/InMemoryRegistrationDatabase.hxx"
 #include "rutil/DnsUtil.hxx"
+#include "rutil/GeneralCongestionManager.hxx"
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
@@ -634,6 +635,15 @@ main(int argc, char** argv)
       }
    }
 
+   std::auto_ptr<CongestionManager> congestionManager;
+   if(args.mUseCongestionManager)
+   {
+      congestionManager.reset(new GeneralCongestionManager(
+                                          GeneralCongestionManager::WAIT_TIME, 
+                                          200));
+      stack.setCongestionManager(congestionManager.get());
+   }
+
    /* Make it all go */
    if(args.mThreadedStack)
    {
@@ -711,6 +721,8 @@ main(int argc, char** argv)
       regSyncClient->join();
       delete regSyncClient;
    }
+
+   stack.setCongestionManager(0);
 
    if(regSyncServerV4)
    {

@@ -29,6 +29,7 @@ class CommandLineParser
       bool mNoV4;
       bool mNoV6;
       bool mThreadedStack;
+      bool mUseCongestionManager;
 
       resip::Data mCertPath;
       bool mEnableFlowTokenHack;

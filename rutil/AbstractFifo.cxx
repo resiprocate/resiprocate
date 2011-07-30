@@ -1,6 +1,17 @@
 #include <cassert>
 #include "rutil/AbstractFifo.hxx"
 
+using namespace resip;
+
+FifoStatsInterface::FifoStatsInterface() :
+   mRole(0)
+{
+}
+
+FifoStatsInterface::~FifoStatsInterface()
+{
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

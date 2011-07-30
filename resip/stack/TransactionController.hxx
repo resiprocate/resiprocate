@@ -5,6 +5,7 @@
 #include "resip/stack/TransactionMap.hxx"
 #include "resip/stack/TransportSelector.hxx"
 #include "resip/stack/TimerQueue.hxx"
+#include "rutil/CongestionManager.hxx"
 
 #include "rutil/ConsumerFifoBuffer.hxx"
 
@@ -50,6 +51,29 @@ class TransactionController
       unsigned int getNumServerTransactions() const;
       unsigned int getTimerQueueSize() const;
       //void setStatisticsInterval(unsigned long seconds) const;
+      
+      void setCongestionManager( CongestionManager *manager ) 
+      { 
+         mTransportSelector.setCongestionManager(manager);
+         if(mCongestionManager)
+         {
+            mCongestionManager->unregisterFifo(&mStateMacFifo);
+         }
+         mCongestionManager=manager;
+         if(mCongestionManager)
+         {
+            mCongestionManager->registerFifo(&mStateMacFifo);
+         }
+      }
+
+      CongestionManager::RejectionBehavior getRejectionBehavior() const
+      {
+         if(mCongestionManager)
+         {
+            return mCongestionManager->getRejectionBehavior(&mStateMacFifo);
+         }
+         return CongestionManager::NORMAL;
+      }
 
       void registerMarkListener(MarkListener* listener);
       void unregisterMarkListener(MarkListener* listener);
@@ -96,6 +120,7 @@ class TransactionController
       // transports, etc. 
       Fifo<TransactionMessage> mStateMacFifo;
       ConsumerFifoBuffer<TransactionMessage> mStateMacFifoOutBuffer;
+      CongestionManager* mCongestionManager;
 
       //This needs to be separate from mStateMacFifo, because timer messages
       //need to be processed before other work. (If timers start getting behind
@@ -123,7 +148,9 @@ class TransactionController
       bool mShuttingDown;
       
       StatisticsManager& mStatsManager;
-
+      
+      Data mHostname;
+      
       friend class SipStack; // for debug only
       friend class StatelessHandler;
       friend class TransactionState;
