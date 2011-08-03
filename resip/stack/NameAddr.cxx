@@ -25,17 +25,20 @@ NameAddr::NameAddr() :
    mDisplayName()
 {}
 
-NameAddr::NameAddr(HeaderFieldValue* hfv,
-                   Headers::Type type)
-   : ParserCategory(hfv, type), 
+NameAddr::NameAddr(const HeaderFieldValue& hfv,
+                   Headers::Type type,
+                   PoolBase* pool)
+   : ParserCategory(hfv, type, pool), 
      mAllContacts(false),
+     mUri(pool),
      mDisplayName()
 {}
 
-NameAddr::NameAddr(const NameAddr& rhs)
-   : ParserCategory(rhs),
+NameAddr::NameAddr(const NameAddr& rhs,
+                   PoolBase* pool)
+   : ParserCategory(rhs, pool),
      mAllContacts(rhs.mAllContacts),
-     mUri(rhs.mUri),
+     mUri(rhs.mUri, pool),
      mDisplayName(rhs.mDisplayName)
 {}
 
@@ -47,7 +50,7 @@ NameAddr::NameAddr(const Data& unparsed, bool preCacheAor)
 {
    HeaderFieldValue hfv(unparsed.data(), unparsed.size());
    // must copy because parse creates overlays
-   NameAddr tmp(&hfv, Headers::UNKNOWN);
+   NameAddr tmp(hfv, Headers::UNKNOWN);
    tmp.checkParsed();
    *this = tmp;
    if(preCacheAor)
@@ -97,6 +100,18 @@ ParserCategory *
 NameAddr::clone() const
 {
    return new NameAddr(*this);
+}
+
+ParserCategory *
+NameAddr::clone(void* location) const
+{
+   return new (location) NameAddr(*this);
+}
+
+ParserCategory* 
+NameAddr::clone(PoolBase* pool) const
+{
+   return new (pool) NameAddr(*this, pool);
 }
 
 const Uri&
@@ -390,11 +405,11 @@ NameAddr::mustQuoteDisplayName() const
 ParameterTypes::Factory NameAddr::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
 
 Parameter* 
-NameAddr::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators)
+NameAddr::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool)
 {
    if(ParameterFactories[type])
    {
-      return ParameterFactories[type](type, pb, terminators);
+      return ParameterFactories[type](type, pb, terminators, pool);
    }
    return 0;
 }

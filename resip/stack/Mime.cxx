@@ -29,14 +29,17 @@ Mime::Mime(const Data& type, const Data& subType)
      mSubType(subType) 
 {}
 
-Mime::Mime(HeaderFieldValue* hfv, Headers::Type type)
-   : ParserCategory(hfv, type),
+Mime::Mime(const HeaderFieldValue& hfv, 
+            Headers::Type type,
+            PoolBase* pool)
+   : ParserCategory(hfv, type, pool),
      mType(), 
      mSubType()
 {}
 
-Mime::Mime(const Mime& rhs)
-   : ParserCategory(rhs),
+Mime::Mime(const Mime& rhs,
+            PoolBase* pool)
+   : ParserCategory(rhs, pool),
      mType(rhs.mType),
      mSubType(rhs.mSubType)
 {}
@@ -139,6 +142,18 @@ Mime::clone() const
    return new Mime(*this);
 }
 
+ParserCategory* 
+Mime::clone(void* location) const
+{
+   return new (location) Mime(*this);
+}
+
+ParserCategory* 
+Mime::clone(PoolBase* pool) const
+{
+   return new (pool) Mime(*this, pool);
+}
+
 EncodeStream&
 Mime::encodeParsed(EncodeStream& str) const
 {
@@ -150,11 +165,11 @@ Mime::encodeParsed(EncodeStream& str) const
 ParameterTypes::Factory Mime::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
 
 Parameter* 
-Mime::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators)
+Mime::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool)
 {
    if(ParameterFactories[type])
    {
-      return ParameterFactories[type](type, pb, terminators);
+      return ParameterFactories[type](type, pb, terminators, pool);
    }
    return 0;
 }

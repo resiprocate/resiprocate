@@ -43,7 +43,7 @@ Pkcs8Contents::Pkcs8Contents(const Data& txt, const Mime& contentsType)
 {
 }
  
-Pkcs8Contents::Pkcs8Contents(HeaderFieldValue* hfv, const Mime& contentsType)
+Pkcs8Contents::Pkcs8Contents(const HeaderFieldValue& hfv, const Mime& contentsType)
    : Contents(hfv, contentsType),
      mText()
 {

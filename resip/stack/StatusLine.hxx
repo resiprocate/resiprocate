@@ -3,7 +3,7 @@
 
 #include <iosfwd>
 #include "rutil/Data.hxx"
-#include "resip/stack/ParserCategory.hxx"
+#include "resip/stack/StartLine.hxx"
 
 namespace resip
 {
@@ -12,11 +12,12 @@ namespace resip
    @ingroup sip_grammar
    @brief Represents the "Status-Line" element in the RFC 3261 grammar.
 */
-class StatusLine : public ParserCategory
+class StatusLine : public StartLine
 {
    public:
       StatusLine();
-      StatusLine(HeaderFieldValue* hfv, Headers::Type type);
+      StatusLine(const HeaderFieldValue& hfv);
+      StatusLine(const char* buf, int length);
       StatusLine(const StatusLine&);
       StatusLine& operator=(const StatusLine&);
 
@@ -29,8 +30,10 @@ class StatusLine : public ParserCategory
       const Data& reason() const;
 
       virtual void parse(ParseBuffer& pb);
-      virtual ParserCategory* clone() const;
+      virtual StartLine* clone() const;
+      virtual StartLine* clone(void* location) const;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
+      virtual const Data& errorContext() const;
 
    private:
       int mResponseCode;

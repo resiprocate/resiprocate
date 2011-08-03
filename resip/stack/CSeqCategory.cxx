@@ -19,8 +19,10 @@ using namespace std;
 //====================
 // CSeqCategory:
 //====================
-CSeqCategory::CSeqCategory(HeaderFieldValue* hfv, Headers::Type type)
-   : ParserCategory(hfv, type), mMethod(UNKNOWN), mSequence(0) 
+CSeqCategory::CSeqCategory(const HeaderFieldValue& hfv, 
+                           Headers::Type type,
+                           PoolBase* pool)
+   : ParserCategory(hfv, type, pool), mMethod(UNKNOWN), mSequence(0) 
 {}
 
 CSeqCategory::CSeqCategory() 
@@ -30,8 +32,8 @@ CSeqCategory::CSeqCategory()
      mSequence(0) 
 {}
 
-CSeqCategory::CSeqCategory(const CSeqCategory& rhs)
-   : ParserCategory(rhs),
+CSeqCategory::CSeqCategory(const CSeqCategory& rhs, PoolBase* pool)
+   : ParserCategory(rhs, pool),
      mMethod(rhs.mMethod),
      mUnknownMethodName(rhs.mUnknownMethodName),
      mSequence(rhs.mSequence)
@@ -78,6 +80,18 @@ ParserCategory*
 CSeqCategory::clone() const
 {
    return new CSeqCategory(*this);
+}
+
+ParserCategory* 
+CSeqCategory::clone(void* location) const
+{
+   return new (location) CSeqCategory(*this);
+}
+
+ParserCategory* 
+CSeqCategory::clone(PoolBase* pool) const
+{
+   return new (pool) CSeqCategory(*this, pool);
 }
 
 MethodTypes& 

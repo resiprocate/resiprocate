@@ -3,6 +3,7 @@
 
 #include "resip/stack/ParameterTypeEnums.hxx"
 #include "resip/stack/Parameter.hxx"
+#include "rutil/PoolBase.hxx"
 #include <iosfwd>
 
 namespace resip
@@ -26,9 +27,10 @@ class IntegerParameter : public Parameter
       
       static Parameter* decode(ParameterTypes::Type type, 
                                  ParseBuffer& pb, 
-                                 const std::bitset<256>& terminators)
+                                 const std::bitset<256>& terminators,
+                                 PoolBase* pool)
       {
-         return new IntegerParameter(type, pb, terminators);
+         return new (pool) IntegerParameter(type, pb, terminators);
       }
 
       virtual EncodeStream& encode(EncodeStream& stream) const;

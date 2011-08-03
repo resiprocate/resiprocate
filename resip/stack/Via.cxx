@@ -30,8 +30,10 @@ Via::Via()
    this->param(p_rport); // add the rport parameter by default as per rfc 3581
 }
 
-Via::Via(HeaderFieldValue* hfv, Headers::Type type) 
-   : ParserCategory(hfv, type),
+Via::Via(const HeaderFieldValue& hfv, 
+         Headers::Type type,
+         PoolBase* pool) 
+   : ParserCategory(hfv, type, pool),
      mProtocolName(Data::Share,Symbols::ProtocolName),
      mProtocolVersion(Data::Share,Symbols::ProtocolVersion),
      mTransport(Data::Share,Symbols::UDP), // !jf! 
@@ -39,8 +41,9 @@ Via::Via(HeaderFieldValue* hfv, Headers::Type type)
      mSentPort(-1) 
 {}
 
-Via::Via(const Via& rhs)
-   : ParserCategory(rhs),
+Via::Via(const Via& rhs,
+         PoolBase* pool)
+   : ParserCategory(rhs, pool),
      mProtocolName(rhs.mProtocolName),
      mProtocolVersion(rhs.mProtocolVersion),
      mTransport(rhs.mTransport),
@@ -68,6 +71,18 @@ ParserCategory *
 Via::clone() const
 {
    return new Via(*this);
+}
+
+ParserCategory *
+Via::clone(void* location) const
+{
+   return new (location) Via(*this);
+}
+
+ParserCategory* 
+Via::clone(PoolBase* pool) const
+{
+   return new (pool) Via(*this, pool);
 }
 
 Data& 
@@ -234,11 +249,11 @@ Via::encodeParsed(EncodeStream& str) const
 ParameterTypes::Factory Via::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
 
 Parameter* 
-Via::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators)
+Via::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool)
 {
    if(ParameterFactories[type])
    {
-      return ParameterFactories[type](type, pb, terminators);
+      return ParameterFactories[type](type, pb, terminators, pool);
    }
    return 0;
 }

@@ -14,14 +14,24 @@ class ParserCategory;
 class UnknownParameter;
 class ParseBuffer;
 
+/**
+   @internal
+*/
 class HeaderFieldValue
 {
    public:
-      enum CopyPaddingEnum      
+      static const HeaderFieldValue Empty;
+      
+      enum CopyPaddingEnum
       {
          CopyPadding
       };
-         
+
+      enum NoOwnershipEnum
+      {
+         NoOwnership
+      };
+
       HeaderFieldValue()
          : mField(0), //this must be initialized to 0 or ParserCategory will parse
            mFieldLength(0),
@@ -30,28 +40,56 @@ class HeaderFieldValue
       HeaderFieldValue(const char* field, unsigned int fieldLength);
       HeaderFieldValue(const HeaderFieldValue& hfv);
       HeaderFieldValue(const HeaderFieldValue& hfv, CopyPaddingEnum);
+      HeaderFieldValue(const HeaderFieldValue& hfv, NoOwnershipEnum);
+      HeaderFieldValue& operator=(const HeaderFieldValue&);
+      HeaderFieldValue& copyWithPadding(const HeaderFieldValue& rhs);
 
       ~HeaderFieldValue();
 
       EncodeStream& encode(EncodeStream& str) const;
 
-      void toShareData(Data& data)
+      inline void init(const char* field, size_t length, bool own)
+      {
+         if(mMine)
+         {
+            delete [] mField;
+         }
+         
+         mField=field;
+         mFieldLength=length;
+         mMine=own;
+      }
+      
+      inline const char* getBuffer() const {return mField;}
+      inline unsigned int getLength() const {return mFieldLength;}
+      inline void clear()
+      {
+         if (mMine)
+         {
+           delete[] mField;
+           mMine=false;
+         }
+        mField=0;
+        mFieldLength=0;
+      }
+
+      // const because Data::Share implies read-only access
+      void toShareData(Data& data) const
       {
          data.setBuf(Data::Share, mField, mFieldLength);
       }
 
-      void toBorrowData(Data& data) const
+      // not const because Data::Borrow implies read/write access
+      void toBorrowData(Data& data)
       {
          data.setBuf(Data::Borrow, mField, mFieldLength);
       }
-      
-      const char* mField;
-      const unsigned int mFieldLength;
 
    private:
-      HeaderFieldValue& operator=(const HeaderFieldValue&);
       
-      const bool mMine;
+      const char* mField;
+      unsigned int mFieldLength;
+      bool mMine;
 
       friend EncodeStream& operator<<(EncodeStream&, HeaderFieldValue&);
 };

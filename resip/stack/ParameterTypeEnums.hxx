@@ -22,6 +22,7 @@ namespace resip
 
 class Parameter;
 class ParseBuffer;
+class PoolBase;
 
  /**
    @ingroup sip_grammar
@@ -160,7 +161,7 @@ class ParameterTypes
          @param terminators The terminator characters to use
          @return ParameterTypes::Type.decode() defined in each class type. 
         */
-      typedef Parameter* (*Factory)(ParameterTypes::Type, ParseBuffer&, const std::bitset<256>& terminators);
+      typedef Parameter* (*Factory)(ParameterTypes::Type, ParseBuffer&, const std::bitset<256>& terminators, PoolBase* pool);
 
       /**
         @brief static array of Factorys indexed by the 2nd element 

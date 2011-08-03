@@ -36,16 +36,17 @@ ExistsOrDataParameter::ExistsOrDataParameter(ParameterTypes::Type type)
 Parameter* 
 ExistsOrDataParameter::decode(ParameterTypes::Type type, 
                               ParseBuffer& pb, 
-                              const std::bitset<256>& terminators)
+                              const std::bitset<256>& terminators,
+                              PoolBase* pool)
 {
    pb.skipWhitespace();
    if (pb.eof() || terminators[*pb.position()])
    {
-      return new ExistsOrDataParameter(type);
+      return new (pool) ExistsOrDataParameter(type);
    }
    else
    {
-      return new ExistsOrDataParameter(type, pb, terminators);
+      return new (pool) ExistsOrDataParameter(type, pb, terminators);
    }
 }
 

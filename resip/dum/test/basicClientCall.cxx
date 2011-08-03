@@ -140,7 +140,7 @@ BasicClientCall::makeOffer(SdpContents& offer)
 
    static HeaderFieldValue hfv(txt.data(), txt.size());
    static Mime type("application", "sdp");
-   static SdpContents offerSdp(&hfv, type);
+   static SdpContents offerSdp(hfv, type);
 
    offer = offerSdp;
 

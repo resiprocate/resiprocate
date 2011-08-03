@@ -33,16 +33,16 @@ static bool initAllTables()
 
 const bool Uri::tablesMightBeInitialized(initAllTables());
 
-Uri::Uri() 
-   : ParserCategory(),
+Uri::Uri(PoolBase* pool) 
+   : ParserCategory(pool),
      mScheme(Data::Share, Symbols::DefaultSipScheme),
      mPort(0),
      mHostCanonicalized(false)
 {
 }
 
-Uri::Uri(HeaderFieldValue* hfv, Headers::Type type) :
-   ParserCategory(hfv, type),
+Uri::Uri(const HeaderFieldValue& hfv, Headers::Type type, PoolBase* pool) :
+   ParserCategory(hfv, type, pool),
    mPort(0),
    mHostCanonicalized(false)
 {}
@@ -57,13 +57,14 @@ Uri::Uri(const Data& data)
 {
    HeaderFieldValue hfv(data.data(), data.size());
    // must copy because parse creates overlays
-   Uri tmp(&hfv, Headers::UNKNOWN);
+   Uri tmp(hfv, Headers::UNKNOWN);
    tmp.checkParsed();
    *this = tmp;
 }
 
-Uri::Uri(const Uri& rhs)
-   : ParserCategory(rhs),
+Uri::Uri(const Uri& rhs,
+         PoolBase* pool)
+   : ParserCategory(rhs, pool),
      mScheme(rhs.mScheme),
      mHost(rhs.mHost),
      mUser(rhs.mUser),
@@ -865,7 +866,7 @@ Uri::getUserAsTelephoneSubscriber() const
    // possible to control ownership explicitly.
    // Set this up as lazy-parsed, to prevent exceptions from being thrown.
    HeaderFieldValue temp(mUser.data(), mUser.size());
-   Token tempToken(&temp, Headers::NONE);
+   Token tempToken(temp, Headers::NONE);
    // tempToken does not own the HeaderFieldValue temp, and temp does not own 
    // its buffer.
 
@@ -1072,6 +1073,18 @@ Uri::clone() const
    return new Uri(*this);
 }
 
+ParserCategory*
+Uri::clone(void* location) const
+{
+   return new (location) Uri(*this);
+}
+
+ParserCategory*
+Uri::clone(PoolBase* pool) const
+{
+   return new (pool) Uri(*this);
+}
+
 void Uri::setUriUserEncoding(unsigned char c, bool encode) 
 {
    getUserEncodingTable()[c] = encode; 
@@ -1239,11 +1252,11 @@ Uri::toString() const
 ParameterTypes::Factory Uri::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
 
 Parameter* 
-Uri::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators)
+Uri::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool)
 {
    if(ParameterFactories[type])
    {
-      return ParameterFactories[type](type, pb, terminators);
+      return ParameterFactories[type](type, pb, terminators, pool);
    }
    return 0;
 }

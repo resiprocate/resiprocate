@@ -20,12 +20,15 @@ ExpiresCategory:: ExpiresCategory()
      mValue(0) 
 {}
 
-ExpiresCategory::ExpiresCategory(HeaderFieldValue* hfv, Headers::Type type)
-   : ParserCategory(hfv, type), mValue(0)
+ExpiresCategory::ExpiresCategory(const HeaderFieldValue& hfv, 
+                                 Headers::Type type,
+                                 PoolBase* pool)
+   : ParserCategory(hfv, type, pool), mValue(0)
 {}
 
-ExpiresCategory::ExpiresCategory(const ExpiresCategory& rhs)
-   : ParserCategory(rhs),
+ExpiresCategory::ExpiresCategory(const ExpiresCategory& rhs,
+                                 PoolBase* pool)
+   : ParserCategory(rhs, pool),
      mValue(rhs.mValue)
 {}
 
@@ -45,6 +48,16 @@ ParserCategory* ExpiresCategory::clone() const
    return new ExpiresCategory(*this);
 }
 
+ParserCategory* ExpiresCategory::clone(void* location) const
+{
+   return new (location) ExpiresCategory(*this);
+}
+
+ParserCategory* 
+ExpiresCategory::clone(PoolBase* pool) const
+{
+   return new (pool) ExpiresCategory(*this, pool);
+}
 
 UInt32& 
 ExpiresCategory::value() 
@@ -88,11 +101,11 @@ ExpiresCategory::encodeParsed(EncodeStream& str) const
 ParameterTypes::Factory ExpiresCategory::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
 
 Parameter* 
-ExpiresCategory::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators)
+ExpiresCategory::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool)
 {
    if(ParameterFactories[type])
    {
-      return ParameterFactories[type](type, pb, terminators);
+      return ParameterFactories[type](type, pb, terminators, pool);
    }
    return 0;
 }

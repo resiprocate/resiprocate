@@ -7,6 +7,10 @@
 namespace resip
 {
 
+/**
+   @ingroup sip_payload
+   @brief SIP body type for holding PKCS7 contents (MIME content-type application/pkcs7-mime).
+*/
 class Pkcs7Contents : public Contents
 {
    public:
@@ -14,12 +18,15 @@ class Pkcs7Contents : public Contents
 
       Pkcs7Contents();
       Pkcs7Contents(const Data& text);
-      Pkcs7Contents(HeaderFieldValue* hfv, const Mime& contentType);
+      Pkcs7Contents(const HeaderFieldValue& hfv, const Mime& contentType);
       Pkcs7Contents(const Data& data, const Mime& contentType);
       Pkcs7Contents(const Pkcs7Contents& rhs);
       virtual ~Pkcs7Contents();
       Pkcs7Contents& operator=(const Pkcs7Contents& rhs);
 
+      /** @brief duplicate an Pkcs7Contents object
+          @return pointer to a new Pkcs7Contents object  
+        **/
       virtual Contents* clone() const;
 
       static const Mime& getStaticType() ;
@@ -37,6 +44,10 @@ class Pkcs7Contents : public Contents
 
 static bool invokePkcs7ContentsInit = Pkcs7Contents::init();
 
+/**
+   @ingroup sip_payload
+   @brief SIP body type for holding PKCS7 Signed contents (MIME content-type application/pkcs7-signature).
+*/
 class Pkcs7SignedContents : public Pkcs7Contents
 {
    public:  
@@ -44,7 +55,7 @@ class Pkcs7SignedContents : public Pkcs7Contents
       
       Pkcs7SignedContents();
       Pkcs7SignedContents(const Data& text);
-      Pkcs7SignedContents(HeaderFieldValue* hfv, const Mime& contentType);
+      Pkcs7SignedContents(const HeaderFieldValue& hfv, const Mime& contentType);
       Pkcs7SignedContents(const Data& data, const Mime& contentType);
       Pkcs7SignedContents(const Pkcs7SignedContents& rhs);
 
@@ -53,6 +64,10 @@ class Pkcs7SignedContents : public Pkcs7Contents
       Pkcs7SignedContents& operator=(const Pkcs7SignedContents& rhs);
 
       static const Mime& getStaticType() ;
+
+      /** @brief duplicate an Pkcs7SignedContents object
+          @return pointer to a new Pkcs7SignedContents object  
+        **/
       virtual Contents* clone() const;
 
       static bool init();

@@ -21,14 +21,17 @@ IntegerCategory::IntegerCategory()
      mComment() 
 {}
 
-IntegerCategory::IntegerCategory(HeaderFieldValue* hfv, Headers::Type type)
-   : ParserCategory(hfv, type), 
+IntegerCategory::IntegerCategory(const HeaderFieldValue& hfv, 
+                                 Headers::Type type,
+                                 PoolBase* pool)
+   : ParserCategory(hfv, type, pool), 
      mValue(0), 
      mComment() 
 {}
 
-IntegerCategory::IntegerCategory(const IntegerCategory& rhs)
-   : ParserCategory(rhs),
+IntegerCategory::IntegerCategory(const IntegerCategory& rhs,
+                                 PoolBase* pool)
+   : ParserCategory(rhs, pool),
      mValue(rhs.mValue),
      mComment(rhs.mComment)
 {}
@@ -48,6 +51,17 @@ IntegerCategory::operator=(const IntegerCategory& rhs)
 ParserCategory* IntegerCategory::clone() const
 {
    return new IntegerCategory(*this);
+}
+
+ParserCategory* IntegerCategory::clone(void* location) const
+{
+   return new (location) IntegerCategory(*this);
+}
+
+ParserCategory* 
+IntegerCategory::clone(PoolBase* pool) const
+{
+   return new (pool) IntegerCategory(*this, pool);
 }
 
 int IntegerCategory::value() const 

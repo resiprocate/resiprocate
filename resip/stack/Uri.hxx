@@ -25,9 +25,10 @@ class Uri : public ParserCategory
    public:
       RESIP_HeapCount(Uri);
       
-      Uri();
-      Uri(HeaderFieldValue* hfv, Headers::Type type);
-      Uri(const Uri&);
+      Uri(PoolBase* pool=0);
+      Uri(const HeaderFieldValue& hfv, Headers::Type type, PoolBase* pool=0);
+      Uri(const Uri& orig,
+         PoolBase* pool=0);
       explicit Uri(const Data& data);
 
       ~Uri();
@@ -165,6 +166,8 @@ class Uri : public ParserCategory
 
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
+      virtual ParserCategory* clone(void* location) const;
+      virtual ParserCategory* clone(PoolBase* pool) const;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
       
       // parse the headers into this as SipMessage
@@ -222,7 +225,7 @@ class Uri : public ParserCategory
       using ParserCategory::remove;
       using ParserCategory::param;
 
-      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators);
+      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool);
       bool exists(const Param<Uri>& paramType) const;
       void remove(const Param<Uri>& paramType);
 

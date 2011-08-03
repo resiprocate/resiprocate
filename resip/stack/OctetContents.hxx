@@ -7,6 +7,10 @@
 namespace resip
 {
 
+/**
+   @ingroup sip_payload
+   @brief SIP body type for holding Octet contents (MIME content-type application/octet-stream).
+*/
 class OctetContents : public Contents
 {
    public:
@@ -14,12 +18,15 @@ class OctetContents : public Contents
 
       OctetContents();
       OctetContents(const Data& octets);
-      OctetContents(HeaderFieldValue* hfv, const Mime& contentType);
+      OctetContents(const HeaderFieldValue& hfv, const Mime& contentType);
       OctetContents(const Data& data, const Mime& contentType);
       OctetContents(const OctetContents& rhs);
       virtual ~OctetContents();
       OctetContents& operator=(const OctetContents& rhs);
 
+      /** @brief duplicate an OctetContents object
+          @return pointer to a new OctetContents object  
+        **/
       virtual Contents* clone() const;
 
       //virtual 

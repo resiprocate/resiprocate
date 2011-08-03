@@ -29,6 +29,7 @@ SRC = \
 	ParseBuffer.cxx \
 	ParseException.cxx \
 	Poll.cxx \
+	PoolBase.cxx \
 	FdPoll.cxx \
 	RADIUSDigestAuthenticator.cxx \
 	RWMutex.cxx \

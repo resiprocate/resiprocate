@@ -23,8 +23,11 @@ class Mime : public ParserCategory
 
       Mime();
       Mime(const Data& type, const Data& subType);
-      Mime(HeaderFieldValue* hfv, Headers::Type type);
-      Mime(const Mime&);
+      Mime(const HeaderFieldValue& hfv, 
+            Headers::Type type,
+            PoolBase* pool=0);
+      Mime(const Mime& orig,
+            PoolBase* pool=0);
       Mime& operator=(const Mime&);
       bool operator<(const Mime& rhs) const;
       bool isEqual(const Mime& rhs) const;
@@ -38,6 +41,9 @@ class Mime : public ParserCategory
          
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
+      virtual ParserCategory* clone(void* location) const;
+      virtual ParserCategory* clone(PoolBase* pool) const;
+
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
 
       // Inform the compiler that overloads of these may be found in
@@ -46,7 +52,7 @@ class Mime : public ParserCategory
       using ParserCategory::remove;
       using ParserCategory::param;
 
-      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators);
+      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool);
       bool exists(const Param<Mime>& paramType) const;
       void remove(const Param<Mime>& paramType);
 

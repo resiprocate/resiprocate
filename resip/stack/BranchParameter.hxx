@@ -6,6 +6,7 @@
 #include "resip/stack/Parameter.hxx"
 #include "resip/stack/ParameterTypeEnums.hxx"
 #include "rutil/Data.hxx"
+#include "rutil/PoolBase.hxx"
 
 namespace resip
 {
@@ -55,9 +56,10 @@ class BranchParameter : public Parameter
 
       static Parameter* decode(ParameterTypes::Type type, 
                                  ParseBuffer& pb, 
-                                 const std::bitset<256>& terminators)
+                                 const std::bitset<256>& terminators,
+                                 PoolBase* pool)
       {
-         return new BranchParameter(type, pb, terminators);
+         return new (pool) BranchParameter(type, pb, terminators);
       }
       
       virtual Parameter* clone() const;
@@ -70,11 +72,10 @@ class BranchParameter : public Parameter
       Type& value() {return *this;}
 
    private:
-      
       bool mHasMagicCookie;
       bool mIsMyBranch;
       Data mTransactionId;
-      unsigned long mTransportSeq;
+      unsigned int mTransportSeq;
       Data mClientData;
       //magic cookie for interop; if case is different some proxies will treat this as a different tid
       const Data* mInteropMagicCookie; 
