@@ -163,7 +163,7 @@ SdpContents::SdpContents() : Contents(getStaticType())
 {
 }
 
-SdpContents::SdpContents(HeaderFieldValue* hfv, const Mime& contentTypes)
+SdpContents::SdpContents(const HeaderFieldValue& hfv, const Mime& contentTypes)
    : Contents(hfv, contentTypes)
 {
 }

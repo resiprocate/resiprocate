@@ -19,12 +19,15 @@ WarningCategory::WarningCategory()
    : ParserCategory() 
 {}
 
-WarningCategory::WarningCategory(HeaderFieldValue* hfv, Headers::Type type)
-   : ParserCategory(hfv, type) 
+WarningCategory::WarningCategory(const HeaderFieldValue& hfv, 
+                                 Headers::Type type,
+                                 PoolBase* pool)
+   : ParserCategory(hfv, type, pool) 
 {}
 
-WarningCategory::WarningCategory(const WarningCategory& rhs)
-   : ParserCategory(rhs),
+WarningCategory::WarningCategory(const WarningCategory& rhs,
+                                 PoolBase* pool)
+   : ParserCategory(rhs, pool),
      mCode(rhs.mCode),
      mHostname(rhs.mHostname),
      mText(rhs.mText)
@@ -70,6 +73,18 @@ ParserCategory*
 WarningCategory::clone() const
 {
    return new WarningCategory(*this);
+}
+
+ParserCategory* 
+WarningCategory::clone(void* location) const
+{
+   return new (location) WarningCategory(*this);
+}
+
+ParserCategory* 
+WarningCategory::clone(PoolBase* pool) const
+{
+   return new (pool) WarningCategory(*this, pool);
 }
 
 int&

@@ -1,39 +1,41 @@
 #include <cassert>
 
-#include "ParserContainerBase.hxx"
+#include "resip/stack/ParserContainerBase.hxx"
 #include "resip/stack/Embedded.hxx"
 
 using namespace resip;
 using namespace std;;
+
+const ParserContainerBase::HeaderKit ParserContainerBase::HeaderKit::Empty;
 
 ParserContainerBase::ParserContainerBase(Headers::Type type)
    : mType(type)
 {}
 
 ParserContainerBase::ParserContainerBase(const ParserContainerBase& rhs)
-   : mType(rhs.mType)
+   : mType(rhs.mType),
+      mParsers()
 {
-   for (std::vector<ParserCategory*>::const_iterator i = rhs.mParsers.begin(); 
-        i != rhs.mParsers.end(); ++i)
-   {
-      mParsers.push_back((*i)->clone());
-   }
+   copyParsers(rhs.mParsers);
+}
+
+ParserContainerBase::ParserContainerBase(Headers::Type type,
+                                          PoolBase& pool)
+   : mType(type),
+   mParsers(StlPoolAllocator<HeaderKit, PoolBase>(&pool))
+{}
+
+ParserContainerBase::ParserContainerBase(const ParserContainerBase& rhs,
+                                          PoolBase& pool)
+   : mType(rhs.mType),
+      mParsers(StlPoolAllocator<HeaderKit, PoolBase>(&pool))
+{
+   copyParsers(rhs.mParsers);
 }
 
 ParserContainerBase::~ParserContainerBase()
 {
-   clear();
-}
-
-void 
-ParserContainerBase::clear()
-{
-   for (std::vector<ParserCategory*>::const_iterator i = mParsers.begin(); 
-        i != mParsers.end(); i++)
-   {
-      delete *i;
-   }
-   mParsers.clear();
+   freeParsers();
 }
 
 ParserContainerBase&
@@ -41,56 +43,33 @@ ParserContainerBase::operator=(const ParserContainerBase& rhs)
 {
    if (this != &rhs)
    {
-      clear();
-      for (std::vector<ParserCategory*>::const_iterator i = rhs.mParsers.begin(); 
-           i != rhs.mParsers.end(); ++i)
-      {
-         mParsers.push_back((*i)->clone());
-      }
+      freeParsers();
+      mParsers.clear();
+      copyParsers(rhs.mParsers);
    }
    return *this;
-}
-
-bool 
-ParserContainerBase::empty() const 
-{ 
-   return mParsers.empty(); 
-}
-
-size_t
-ParserContainerBase::size() const 
-{
-   return mParsers.size(); 
-}
-
-ParserCategory* 
-ParserContainerBase::front()
-{
-   return mParsers.front();
 }
 
 void
 ParserContainerBase::pop_front() 
 {
-   delete mParsers.front(); 
-   mParsers.erase(mParsers.begin()); 
+   assert(!mParsers.empty());
+   freeParser(mParsers.front());
+   mParsers.erase(mParsers.begin());
 }
  
 void
 ParserContainerBase::pop_back() 
 {
-   delete mParsers.back();
+   assert(!mParsers.empty());
+   freeParser(mParsers.back());
    mParsers.pop_back(); 
 }
 
 void
 ParserContainerBase::append(const ParserContainerBase& source) 
 {
-   for (std::vector<ParserCategory*>::const_iterator i = source.mParsers.begin(); 
-        i != source.mParsers.end(); ++i)
-   {
-      mParsers.push_back((*i)->clone());
-   }
+   copyParsers(source.mParsers);
 }
 
 EncodeStream& 
@@ -107,7 +86,7 @@ ParserContainerBase::encode(const Data& headerName,
          str << headerName << Symbols::COLON[0] << Symbols::SPACE[0];
       }
          
-      for (std::vector<ParserCategory*>::const_iterator i = mParsers.begin(); 
+      for (Parsers::const_iterator i = mParsers.begin(); 
            i != mParsers.end(); ++i)
       {
          if (i != mParsers.begin())
@@ -122,7 +101,7 @@ ParserContainerBase::encode(const Data& headerName,
             }
          }
 
-         (*i)->encode(str);
+         i->encode(str);
       }
 
       str << Symbols::CRLF;
@@ -141,7 +120,7 @@ ParserContainerBase::encodeEmbedded(const Data& headerName,
    {
 
       bool first = true;
-      for (std::vector<ParserCategory*>::const_iterator i = mParsers.begin(); 
+      for (Parsers::const_iterator i = mParsers.begin(); 
            i != mParsers.end(); ++i)
       {
          if (first)
@@ -157,13 +136,38 @@ ParserContainerBase::encodeEmbedded(const Data& headerName,
          Data buf;
          {
             DataStream s(buf);
-            (*i)->encode(s);
+            i->encode(s);
          }
          str << Embedded::encode(buf);
       }
    }
    return str;
 }
+
+void 
+ParserContainerBase::copyParsers(const Parsers& parsers)
+{
+   mParsers.reserve(mParsers.size() + parsers.size());
+   for(Parsers::const_iterator p=parsers.begin(); p!=parsers.end(); ++p)
+   {
+      mParsers.push_back(*p);
+      HeaderKit& kit(mParsers.back());
+      if(kit.pc)
+      {
+         kit.pc = makeParser(*kit.pc);
+      }
+   }
+}
+
+void 
+ParserContainerBase::freeParsers()
+{
+   for(Parsers::iterator p=mParsers.begin(); p!=mParsers.end(); ++p)
+   {
+      freeParser(*p);
+   }
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

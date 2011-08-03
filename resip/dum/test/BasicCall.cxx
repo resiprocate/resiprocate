@@ -309,7 +309,7 @@ class TestUac : public TestInviteSessionHandler
          
          hfv = new HeaderFieldValue(txt->data(), (unsigned int)txt->size());
          Mime type("application", "sdp");
-         mSdp = new SdpContents(hfv, type);
+         mSdp = new SdpContents(*hfv, type);
       }
 
       virtual ~TestUac()
@@ -425,7 +425,7 @@ class TestUas : public TestInviteSessionHandler
          
          hfv = new HeaderFieldValue(txt->data(), (unsigned int)txt->size());
          Mime type("application", "sdp");
-         mSdp = new SdpContents(hfv, type);
+         mSdp = new SdpContents(*hfv, type);
       }
 
       ~TestUas()

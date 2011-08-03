@@ -20,8 +20,11 @@ class CallID : public ParserCategory
       enum {commaHandling = NoCommaTokenizing};
 
       CallID();
-      CallID(HeaderFieldValue* hfv, Headers::Type type);
-      CallID(const CallID&);
+      CallID(const HeaderFieldValue& hfv, 
+               Headers::Type type,
+               PoolBase* pool=0);
+      CallID(const CallID& orig,
+               PoolBase* pool=0);
       CallID& operator=(const CallID&);
       bool operator==(const CallID&) const;
       
@@ -30,6 +33,8 @@ class CallID : public ParserCategory
 
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
+      virtual ParserCategory* clone(void* location) const;
+      virtual ParserCategory* clone(PoolBase* pool) const;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
 
       // Inform the compiler that overloads of these may be found in
@@ -40,7 +45,8 @@ class CallID : public ParserCategory
 
       virtual Parameter* createParam(ParameterTypes::Type type, 
 										ParseBuffer& pb, 
-										const std::bitset<256>& terminators);
+										const std::bitset<256>& terminators,
+                                        PoolBase* pool);
       bool exists(const Param<CallID>& paramType) const;
       void remove(const Param<CallID>& paramType);
 

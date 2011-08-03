@@ -20,12 +20,17 @@ class WarningCategory : public ParserCategory
       enum {commaHandling = CommasAllowedOutputCommas};
 
       WarningCategory();
-      WarningCategory(HeaderFieldValue* hfv, Headers::Type type);
-      WarningCategory(const WarningCategory&);
+      WarningCategory(const HeaderFieldValue& hfv, 
+                        Headers::Type type,
+                        PoolBase* pool=0);
+      WarningCategory(const WarningCategory& orig,
+                        PoolBase* pool=0);
       WarningCategory& operator=(const WarningCategory&);
 
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
+      virtual ParserCategory* clone(void* location) const;
+      virtual ParserCategory* clone(PoolBase* pool) const;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
 
       int& code();

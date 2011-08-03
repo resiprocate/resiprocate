@@ -22,13 +22,18 @@ class ExpiresCategory : public ParserCategory
       enum {commaHandling = NoCommaTokenizing};
 
       ExpiresCategory();
-      ExpiresCategory(HeaderFieldValue* hfv, Headers::Type type);
-      ExpiresCategory(const ExpiresCategory&);
+      ExpiresCategory(const HeaderFieldValue& hfv, 
+                        Headers::Type type,
+                        PoolBase* pool=0);
+      ExpiresCategory(const ExpiresCategory& orig,
+                        PoolBase* pool=0);
       ExpiresCategory& operator=(const ExpiresCategory&);
 
       virtual void parse(ParseBuffer& pb);
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
       virtual ParserCategory* clone() const;
+      virtual ParserCategory* clone(void* location) const;
+      virtual ParserCategory* clone(PoolBase* pool) const;
 
       UInt32& value();
       UInt32 value() const;
@@ -39,7 +44,7 @@ class ExpiresCategory : public ParserCategory
       using ParserCategory::remove;
       using ParserCategory::param;
 
-      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators);
+      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool);
       // .bwc, This is an awful lot for one lousy param type.
       bool exists(const Param<ExpiresCategory>& paramType) const;
       void remove(const Param<ExpiresCategory>& paramType);

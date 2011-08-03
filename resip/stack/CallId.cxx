@@ -24,13 +24,15 @@ CallID::CallID()
      mValue() 
 {}
 
-CallID::CallID(HeaderFieldValue* hfv, 
-               Headers::Type type) 
-   : ParserCategory(hfv, type), mValue()
+CallID::CallID(const HeaderFieldValue& hfv, 
+               Headers::Type type,
+               PoolBase* pool) 
+   : ParserCategory(hfv, type, pool), mValue()
 {}
 
-CallID::CallID(const CallID& rhs)
-   : ParserCategory(rhs),
+CallID::CallID(const CallID& rhs,
+               PoolBase* pool)
+   : ParserCategory(rhs, pool),
      mValue(rhs.mValue)
 {}
 
@@ -55,6 +57,18 @@ ParserCategory *
 CallID::clone() const
 {
    return new CallID(*this);
+}
+
+ParserCategory *
+CallID::clone(void* location) const
+{
+   return new (location) CallID(*this);
+}
+
+ParserCategory* 
+CallID::clone(PoolBase* pool) const
+{
+   return new (pool) CallID(*this, pool);
 }
 
 Data& 
@@ -93,11 +107,11 @@ CallID::encodeParsed(EncodeStream& str) const
 ParameterTypes::Factory CallID::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
 
 Parameter* 
-CallID::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators)
+CallID::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool)
 {
    if(ParameterFactories[type])
    {
-      return ParameterFactories[type](type, pb, terminators);
+      return ParameterFactories[type](type, pb, terminators, pool);
    }
    return 0;
 }

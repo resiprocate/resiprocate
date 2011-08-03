@@ -1750,7 +1750,7 @@ TestSipEndPoint::publish(const Uri& url, const Token& eventPackage,
    WHAT NOW NEEDS TO BE DONE INSTEAD..
    */
    Data* text = new Data(publishBody);
-   HeaderFieldValue* hfv = new HeaderFieldValue(text->data(), text->size());
+   HeaderFieldValue hfv(text->data(), text->size());
    Mime type("application", "pidf+xml");
    Pidf* pc = new Pidf(hfv, type);
    boost::shared_ptr<resip::Pidf> body(pc);
@@ -1773,7 +1773,7 @@ TestSipEndPoint::publish(const resip::NameAddr& target, const resip::Data& text)
 {
    HeaderFieldValue hfv(text.data(), text.size());
    Mime type("application", "pidf+xml");
-   Pidf pc(&hfv, type);
+   Pidf pc(hfv, type);
 
 
    boost::shared_ptr<resip::Contents> body(&pc);

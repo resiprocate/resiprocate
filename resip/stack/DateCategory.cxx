@@ -104,8 +104,10 @@ DateCategory::DateCategory()
              << " " << mHour << ":" << mMin << ":" << mSec);
 }
 
-DateCategory::DateCategory(HeaderFieldValue* hfv, Headers::Type type)
-   : ParserCategory(hfv, type),
+DateCategory::DateCategory(const HeaderFieldValue& hfv, 
+                           Headers::Type type,
+                           PoolBase* pool)
+   : ParserCategory(hfv, type, pool),
      mDayOfWeek(Sun),
      mDayOfMonth(),
      mMonth(Jan),
@@ -115,8 +117,9 @@ DateCategory::DateCategory(HeaderFieldValue* hfv, Headers::Type type)
      mSec(0)
 {}
 
-DateCategory::DateCategory(const DateCategory& rhs)
-   : ParserCategory(rhs),
+DateCategory::DateCategory(const DateCategory& rhs,
+                           PoolBase* pool)
+   : ParserCategory(rhs, pool),
      mDayOfWeek(rhs.mDayOfWeek),
      mDayOfMonth(rhs.mDayOfMonth),
      mMonth(rhs.mMonth),
@@ -543,6 +546,18 @@ ParserCategory*
 DateCategory::clone() const
 {
    return new DateCategory(*this);
+}
+
+ParserCategory* 
+DateCategory::clone(void* location) const
+{
+   return new (location) DateCategory(*this);
+}
+
+ParserCategory* 
+DateCategory::clone(PoolBase* pool) const
+{
+   return new (pool) DateCategory(*this, pool);
 }
 
 static void pad2(const int x, EncodeStream& str)

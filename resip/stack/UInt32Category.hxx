@@ -20,13 +20,18 @@ class UInt32Category : public ParserCategory
       enum {commaHandling = NoCommaTokenizing};
 
       UInt32Category();
-      UInt32Category(HeaderFieldValue* hfv, Headers::Type type);
-      UInt32Category(const UInt32Category&);
+      UInt32Category(const HeaderFieldValue& hfv, 
+                     Headers::Type type,
+                     PoolBase* pool=0);
+      UInt32Category(const UInt32Category& orig,
+                     PoolBase* pool=0);
       UInt32Category& operator=(const UInt32Category&);
 
       virtual void parse(ParseBuffer& pb);
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
       virtual ParserCategory* clone() const;
+      virtual ParserCategory* clone(void* location) const;
+      virtual ParserCategory* clone(PoolBase* pool) const;
 
       const UInt32& value() const;
       const Data& comment() const;
@@ -39,7 +44,7 @@ class UInt32Category : public ParserCategory
       using ParserCategory::remove;
       using ParserCategory::param;
 
-      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators);
+      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool);
       // .bwc, This is an awful lot for one lousy param type.
       bool exists(const Param<UInt32Category>& paramType) const;
       void remove(const Param<UInt32Category>& paramType);

@@ -5,6 +5,7 @@
 
 #include "resip/stack/ParameterTypeEnums.hxx"
 #include "resip/stack/Parameter.hxx"
+#include "rutil/PoolBase.hxx"
 #include <iosfwd>
 
 namespace resip
@@ -28,9 +29,10 @@ class UInt32Parameter : public Parameter
       
       static Parameter* decode(ParameterTypes::Type type, 
                                  ParseBuffer& pb, 
-                                 const std::bitset<256>& terminators)
+                                 const std::bitset<256>& terminators,
+                                 PoolBase* pool)
       {
-         return new UInt32Parameter(type, pb, terminators);
+         return new (pool) UInt32Parameter(type, pb, terminators);
       }
 
       virtual EncodeStream& encode(EncodeStream& stream) const;

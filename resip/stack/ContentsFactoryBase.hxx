@@ -9,14 +9,16 @@ namespace resip
 
 class Contents;
 /**
-   Hoist for template mapping from Mime to derived content.
+   @internal
+
+   @brief Hoist for template mapping from Mime to derived content.
 */
 class ContentsFactoryBase
 {
    public:
       ContentsFactoryBase(const Mime& contentType);
       virtual ~ContentsFactoryBase();
-      virtual Contents* create(HeaderFieldValue* hfv, 
+      virtual Contents* create(const HeaderFieldValue& hfv, 
                                const Mime& contentType) const = 0;
       virtual Contents* convert(Contents* c) const = 0;
 

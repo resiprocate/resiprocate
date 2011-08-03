@@ -18,21 +18,28 @@ using namespace std;
 // StatusLine:
 //====================
 StatusLine::StatusLine() 
-   : ParserCategory(), 
+   : StartLine(), 
      mResponseCode(-1),
      mSipVersion(Data::Share,Symbols::DefaultSipVersion), 
      mReason()
 {}
 
-StatusLine::StatusLine(HeaderFieldValue* hfv, Headers::Type type)
-   : ParserCategory(hfv, type), 
+StatusLine::StatusLine(const HeaderFieldValue& hfv)
+   : StartLine(hfv), 
      mResponseCode(-1), 
      mSipVersion(Data::Share,Symbols::DefaultSipVersion), 
      mReason() 
 {}
 
+StatusLine::StatusLine(const char* buf, int length) :
+   StartLine(buf, length),
+   mResponseCode(-1), 
+   mSipVersion(Data::Share,Symbols::DefaultSipVersion), 
+   mReason() 
+{}
+
 StatusLine::StatusLine(const StatusLine& rhs)
-   : ParserCategory(rhs),
+   : StartLine(rhs),
      mResponseCode(rhs.mResponseCode),
      mSipVersion(rhs.mSipVersion),
      mReason(rhs.mReason)
@@ -43,7 +50,7 @@ StatusLine::operator=(const StatusLine& rhs)
 {
    if (this != &rhs)
    {
-      ParserCategory::operator=(rhs);
+      StartLine::operator=(rhs);
       mResponseCode = rhs.mResponseCode;
       mSipVersion = rhs.mSipVersion;
       mReason = rhs.mReason;
@@ -51,10 +58,16 @@ StatusLine::operator=(const StatusLine& rhs)
    return *this;
 }
 
-ParserCategory *
+StartLine *
 StatusLine::clone() const
 {
    return new StatusLine(*this);
+}
+
+StartLine *
+StatusLine::clone(void* location) const
+{
+   return new (location) StatusLine(*this);
 }
 
 int&
@@ -127,6 +140,13 @@ StatusLine::encodeParsed(EncodeStream& str) const
        << mResponseCode << Symbols::SPACE
        << mReason;
    return str;
+}
+
+const Data& 
+StatusLine::errorContext() const
+{
+   static const Data statLine("Status Line");
+   return statLine;
 }
 
 /* ====================================================================

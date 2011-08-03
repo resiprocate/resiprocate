@@ -21,13 +21,18 @@ class StringCategory : public ParserCategory
 
       StringCategory();
       explicit StringCategory(const Data& value);
-      StringCategory(HeaderFieldValue* hfv, Headers::Type type);
-      StringCategory(const StringCategory&);
+      StringCategory(const HeaderFieldValue& hfv, 
+                     Headers::Type type,
+                     PoolBase* pool=0);
+      StringCategory(const StringCategory& orig,
+                     PoolBase* pool=0);
       StringCategory& operator=(const StringCategory&);
 
       virtual void parse(ParseBuffer& pb);
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
       virtual ParserCategory* clone() const;
+      virtual ParserCategory* clone(void* location) const;
+      virtual ParserCategory* clone(PoolBase* pool) const;
 
       const Data& value() const;
       Data& value();

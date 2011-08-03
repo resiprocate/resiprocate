@@ -36,6 +36,15 @@ class AttributeHelper
       HashMap< Data, std::list<Data> > mAttributes;
 };
 
+/**
+   @ingroup sip_payload
+   @brief  Provides an interface to process and generate SDP bodies (MIME content-type application/sdp). 
+  * 
+  * This class performs both the parsing and generation of SDP.  Most 
+  * interaction with the SDP will be through the Session object, 
+  * accessible through the session() method.
+  *
+  **/
 class SdpContents : public Contents
 {
    public:
@@ -44,17 +53,45 @@ class SdpContents : public Contents
       static const SdpContents Empty;
 
       class Session;
-
+      
+      /** @brief  Provides an interface to read and modify SDP
+        * bodies.
+        * 
+        **/
       class Session
       {
          public:
             class Medium;
 
+            /** @brief  parameters for a specific codec are stored in this class.
+              * 
+              **/
             class Codec
             {
                public:
                   Codec() : mName(), mRate(0), mPayloadType(-1) {}
+                  
+                  /** @brief full constructor for a Codec.
+                    * 
+                    *   This constructor allows a rate and optional parameters to be specified.
+                    * 
+                    * @param name a string identifying the codec
+                    * @param rate number of samples/sec
+                    * @param parameters optional list of parameters for the codec
+                    * @param encodingParameters optional encoding parameters for the codec
+                    * 
+                    **/
                   Codec(const Data& name, unsigned long rate, const Data& parameters = Data::Empty, const Data& encodingParameters = Data::Empty);
+                  
+                  /** @brief constructor for a Codec
+                    * 
+                    *   This constructor allows for payload type and rate parameters to be specified.
+                    * 
+                    * @param name a string identifying the codec
+                    * @param payloadType RTP payload type to associate with this codec
+                    * @param rate sample rate of this codec
+                    * 
+                    **/
                   Codec(const Data& name, int payloadType, int rate=8000);
                   Codec(const Codec& rhs);
                   Codec& operator=(const Codec& codec);
@@ -64,16 +101,40 @@ class SdpContents : public Contents
                              int payLoadType);
                   void assignFormatParameters(const SdpContents::Session::Medium& medium);
 
+                  /** @brief returns the name of the codec.
+                    *  @return name of the codec
+                    **/
                   const Data& getName() const;
+                  /** @brief returns the name of the codec.
+                    *  @return name of the codec
+                    **/
                   int getRate() const;
 
+                  /** @brief returns the RTP payload type associated with this codec.
+                    * @return RTP payload type
+                    **/
                   int payloadType() const {return mPayloadType;}
+                  /** @brief returns the RTP payload type associated with this codec.
+                    * @return RTP payload type
+                    **/
                   int& payloadType() {return mPayloadType;}
-
+                  
+                  /** @brief returns the parameters associated with this codec
+                    * @return codec parameters
+                    **/
                   const Data& parameters() const {return mParameters;}
+                  /** @brief returns the parameters associated with this codec
+                    * @return codec parameters
+                    **/
                   Data& parameters() {return mParameters;}
-
+                  
+                  /** @brief returns the encoding parameters associated with this codec
+                    * @return encoding parameters
+                    **/
                   const Data& encodingParameters() const {return mEncodingParameters;}
+                  /** @brief returns the encoding parameters associated with this codec
+                    * @return encoding parameters
+                    **/
                   Data& encodingParameters() {return mEncodingParameters;}
 
                   static const Codec ULaw_8000;
@@ -104,9 +165,20 @@ class SdpContents : public Contents
                   friend EncodeStream& operator<<(EncodeStream&, const Codec&);
             };
 
+            /** @brief  processes o= lines in SDP
+              **/
             class Origin
             {
                public:
+                  /** @brief constructor for origin line
+                    * 
+                    * @param user session user
+                    * @param sessionId session ID
+                    * @param version session version
+                    * @param addr session address type (IP4 or IP6)
+                    * @param address IP address of the session
+                    * 
+                    **/
                   Origin(const Data& user,
                          const UInt64& sessionId,
                          const UInt64& version,
@@ -118,15 +190,48 @@ class SdpContents : public Contents
                   void parse(ParseBuffer& pb);
                   EncodeStream& encode(EncodeStream&) const;
 
+                  /** @brief returns the session ID
+                    * @return session ID
+                    **/
                   const UInt64& getSessionId() const {return mSessionId;}
+                  /** @brief returns the session ID
+                    * @return session ID
+                    **/
                   UInt64& getSessionId() { return mSessionId; }
-
+                  
+                  /** @brief returns the session version
+                    * @return session version
+                    **/
                   const UInt64& getVersion() const {return mVersion;}
+                  /** @brief returns the session version
+                    * @return session version
+                    **/
                   UInt64& getVersion() { return mVersion; }
+                  /** @brief returns the user string for the session
+                    * @return user string
+                    **/
                   const Data& user() const {return mUser;}
+                  /** @brief returns the user string for the session
+                    * @return user string
+                    **/
                   Data& user() {return mUser;}
+                  
+                  /** @brief returns the session address type
+                    * 
+                    * @return address type (IP4 or IP6)
+                    **/
                   AddrType getAddressType() const {return mAddrType;}
+                  /** @brief returns the session address type
+                    * 
+                    * @return address type (IP4 or IP6)
+                    **/
                   const Data& getAddress() const {return mAddress;}
+                  
+                  /** @brief set the address for the session
+                    * 
+                    * @param host IP address to associate with the session
+					* @param type type of addressing
+                    **/
                   void setAddress(const Data& host, AddrType type = IP4);
 
                private:
@@ -141,9 +246,18 @@ class SdpContents : public Contents
                   friend class Session;
             };
 
+            /** @brief  process e= (email) lines in the SDP
+              * 
+              **/
             class Email
             {
                public:
+                  /** @brief constructor
+                    * 
+                    * @param address email address
+                    * @param freeText string describing the email address
+                    * 
+                    **/
                   Email(const Data& address,
                         const Data& freeText);
 
@@ -153,7 +267,15 @@ class SdpContents : public Contents
                   void parse(ParseBuffer& pb);
                   EncodeStream& encode(EncodeStream&) const;
 
+                  /** @brief returns the email address
+                    * 
+                    * @return email address
+                    **/
                   const Data& getAddress() const {return mAddress;}
+                  /** @brief returns the string describing the email address
+                    * 
+                    * @return string
+                    **/
                   const Data& getFreeText() const {return mFreeText;}
 
                private:
@@ -164,10 +286,19 @@ class SdpContents : public Contents
 
                   friend class Session;
             };
-
+            
+            /** @brief  process p= (phone number) lines in the SDP
+              * 
+              **/
             class Phone
             {
                public:
+                  /** @brief constructor
+                    * 
+                    * @param number phone number
+                    * @param freeText text string describing the phone number
+                    * 
+                    **/
                   Phone(const Data& number,
                         const Data& freeText);
                   Phone(const Phone& rhs);
@@ -176,7 +307,16 @@ class SdpContents : public Contents
                   void parse(ParseBuffer& pb);
                   EncodeStream& encode(EncodeStream&) const;
 
+                  
+                  /** @brief return the phone number
+                    * 
+                    * @return phone number
+                    **/
                   const Data& getNumber() const {return mNumber;}
+                  /** @brief return text string describing the phone number
+                    * 
+                    * @return text string describing the phone number
+                    **/
                   const Data& getFreeText() const {return mFreeText;}
 
                private:
@@ -188,9 +328,21 @@ class SdpContents : public Contents
                   friend class Session;
             };
 
+            /** @brief  Process c= (connection) lines in SDP
+              * 
+              * This line specifies the IP address and address type used in the session
+              * 
+              **/
             class Connection
             {
                public:
+                  /** @brief constructor
+                    * 
+                    * @param addType address type (IP4 or IP6)
+                    * @param address IP address
+					* @param ttl time to live
+                    * 
+                    **/
                   Connection(AddrType addType,
                              const Data& address,
                              unsigned long ttl = 0);
@@ -200,8 +352,23 @@ class SdpContents : public Contents
                   void parse(ParseBuffer& pb);
                   EncodeStream& encode(EncodeStream&) const;
 
+                  /** @brief returns the connection address type
+                    * 
+                    * @return address type (IP4 or IP6)
+                    **/
                   AddrType getAddressType() const {return mAddrType;}
+                  
+                  /** @brief returns the connection address
+                    * 
+                    * @return IP address
+                    **/
                   const Data& getAddress() const {return mAddress;}
+                  
+                  /** @brief set the address for the connection
+                    * 
+                    * @param host IP address to associate with the connection
+					* @param type type of addressing
+                    **/
                   void setAddress(const Data& host, AddrType type = IP4);
                   unsigned long ttl() const {return mTTL;}
                   unsigned long& ttl() {return mTTL;}
@@ -217,9 +384,18 @@ class SdpContents : public Contents
                   friend class Medium;
             };
 
+            /** @brief  Process optional b= (bandwidth) lines in SDP
+              * 
+              **/
             class Bandwidth
             {
                public:
+                  /** @brief Constructor
+                    * 
+                    * @param modifier alphanumeric word giving the meaning of the bandwidth figure
+                    * @param kbPerSecond number of kilobits per second
+                    * 
+                    **/
                   Bandwidth(const Data& modifier,
                             unsigned long kbPerSecond);
                   Bandwidth(const Bandwidth& rhs);
@@ -228,9 +404,25 @@ class SdpContents : public Contents
                   void parse(ParseBuffer& pb);
                   EncodeStream& encode(EncodeStream&) const;
 
+                  /** @brief returns the modifier string
+                    * 
+                    * @return modifier string
+                    **/
                   const Data& modifier() const {return mModifier;}
+                  /** @brief returns the modifier string
+                    * 
+                    * @return modifier string
+                    **/
                   Data modifier() {return mModifier;}
+                  /** @brief returns the number of kilobits/second maximum bandwidth
+                    * 
+                    * @return maximum bandwidth in kilobits/second
+                    **/
                   unsigned long kbPerSecond() const {return mKbPerSecond;}
+                  /** @brief returns the number of kilobits/second maximum bandwidth
+                    * 
+                    * @return maximum bandwidth in kilobits/second
+                    **/
                   unsigned long& kbPerSecond() {return mKbPerSecond;}
 
                private:
@@ -242,9 +434,21 @@ class SdpContents : public Contents
                   friend class Medium;
             };
 
+            /** @brief  Process t= (start/stop time) lines in SDP
+              * 
+              **/
             class Time
             {
                public:
+                  /** @brief Constructor
+                    * 
+                    *   The times given are the decimal part of an NTP timestamp.  To convert these values to UNIX time,
+                    * subtract decimal 2208988800 from the value.
+                    * 
+                    * @param start start time
+                    * @param stop stop time
+                    * 
+                    **/
                   Time(unsigned long start,
                        unsigned long stop);
                   Time(const Time& rhs);
@@ -253,6 +457,9 @@ class SdpContents : public Contents
                   void parse(ParseBuffer& pb);
                   EncodeStream& encode(EncodeStream&) const;
 
+                  /** @brief  Repeat time.  Not used for SIP
+                    * 
+                    **/
                   class Repeat
                   {
                      public:
@@ -277,7 +484,15 @@ class SdpContents : public Contents
 
                   void addRepeat(const Repeat& repeat);
 
+                  /** @brief return the start time
+                    * 
+                    * @return start time
+                    **/
                   unsigned long getStart() const {return mStart;}
+                  /** @brief return the stop time
+                    * 
+                    * @return stop time
+                    **/
                   unsigned long getStop() const {return mStop;}
                   const std::list<Repeat>& getRepeats() const {return mRepeats;}
 
@@ -289,10 +504,18 @@ class SdpContents : public Contents
 
                   friend class Session;
             };
-
+            
+            /** @brief  process z= (timezone) lines
+              * 
+              * Not used in SIP
+              * 
+              **/
             class Timezones
             {
                public:
+                  /** @brief  specify the time at which a timezone shift will occur and the offset, in seconds
+                      @deprecated Unused
+                  */
                   class Adjustment
                   {
                      public:
@@ -318,6 +541,9 @@ class SdpContents : public Contents
                   std::list<Adjustment> mAdjustments;
             };
 
+            /** @brief  process k= (encryption key) line
+              * 
+              **/
             class Encryption
             {
                public:
@@ -344,11 +570,24 @@ class SdpContents : public Contents
                   Data mKey;
             };
 
+            /** @brief  process m= (media announcement) blocks
+              * 
+              **/
             class Medium
             {
                public:
                   Medium();
                   Medium(const Medium& rhs);
+                  /** @brief Constructor
+                    * 
+                    * @param name media type (audio, video, application, data, etc.)
+                    * @param port UDP port that will receive RTP
+                    * @param multicast a misnomer.  If multicast > 1, the next (multicast)
+                    *   even ports will convey RTP and the next (multicast) odd ports will
+                    *   convey corresponding RTCP
+                    * @param protocol the transport used to convey the media.  Usually "RTP/AVP" for SIP.
+                    * 
+                    **/
                   Medium(const Data& name,
                          unsigned long port,
                          unsigned long multicast,
@@ -358,50 +597,163 @@ class SdpContents : public Contents
                   void parse(ParseBuffer& pb);
                   EncodeStream& encode(EncodeStream&) const;
 
+                  /** @brief add a format identifier to the m= line
+                    * 
+                    *   This will need to be called for each codec used in the SDP.
+                    * 
+                    * @param format format identifier
+                    *
+                    **/
                   void addFormat(const Data& format);
+                  /** @brief set the media connection line.  Optional if main SDP has c= line.
+                    * 
+                    * @param connection connection line to use
+                    **/
                   void setConnection(const Connection& connection);
+                  /** @brief add a media connection line.  Optional if main SDP has c= line.
+                    * 
+                    * @param connection connection line to use
+                    **/                  
                   void addConnection(const Connection& connection);
                   void setBandwidth(const Bandwidth& bandwidth);
                   void addBandwidth(const Bandwidth& bandwidth);
+                  /** @brief add a media attribute line
+                    * 
+                    * @param key attribute key
+                    * @param value attribute value
+                    * 
+                    **/
                   void addAttribute(const Data& key, const Data& value = Data::Empty);
-
+                  
+                  /** @brief return the media type
+                    * 
+                    * @return media type  
+                    **/
                   const Data& name() const {return mName;}
+                  /** @brief return the media type
+                    * 
+                    * @return media type  
+                    **/                  
                   Data& name() {return mName;}
-
+                  /** @brief return the base port
+                    * 
+                    * @return base port  
+                    **/
                   int port() const {return mPort;}
+                  /** @brief return the base port
+                    * 
+                    * @return base port  
+                    **/
                   unsigned long& port() {return mPort;}
-                 void setPort(int port);
+                  /** @brief change the base port
+                    * 
+                    * @param port new base port
+                    *  
+                    **/
+                  void setPort(int port);
+                  /** @brief get the number of transport port pairs
+                    * 
+                    * @return number of transport port pairs  
+                    **/
                   int multicast() const {return mMulticast;}
+                  /** @brief get the number of transport port pairs
+                    * 
+                    * @return number of transport port pairs  
+                    **/
                   unsigned long& multicast() {return mMulticast;}
+                  /** @brief return the transport protocol
+                    * 
+                    * @return transport protocol name  
+                    **/
                   const Data& protocol() const {return mProtocol;}
+                  /** @brief return the transport protocol
+                    * 
+                    * @return transport protocol name  
+                    **/
                   Data& protocol() {return mProtocol;}
 
                   // preferred codec/format interface
                   typedef std::list<Codec> CodecContainer;
-                  // Note:  internal storage of formats, rtpmap attributes, and ftmp attributes are cleared out after 
-                  //        codecs() is called, since they get converted internally as Codec objects
+                  /** preferred codec/format interface
+                     @note internal storage of formats, rtpmap attributes, and 
+                        ftmp attributes are cleared out after codecs() is 
+                        called, since they get converted internally as Codec 
+                        objects
+                  */
                   const CodecContainer& codecs() const;
                   CodecContainer& codecs();
+                  
+                  /** @brief remove all codecs from SDP **/
                   void clearCodecs();
+                  /** @brief add a codec to the m= line
+                    * 
+                    * @param codec codec to add
+                    *  
+                    **/
                   void addCodec(const Codec& codec);
 
-                  // Note: formats are clear out and converted in codec objects when codecs() is called
+                  /** @brief return a list of codec formats
+                    * 
+                    *   These formats correspond to RTP payload type identifiers
+                    * 
+                    * @note formats are cleared out and converted in codec 
+                    *   objects when codecs() is called
+                    * @return list of codec formats  
+                    **/
                   const std::list<Data>& getFormats() const {return mFormats;}
+                  
+                  /** @brief get optional i= (information) line contents
+                    * 
+                    * @return contents  
+                    **/
                   const Data& information() const {return mInformation;}
+                  /** @brief get optional i= (information) line contents
+                    * 
+                    * @return contents  
+                    **/
                   Data& information() {return mInformation;}
+                  /** @brief get a list of bandwidth lines
+                    * 
+                    * @return list of Bandwidth objects  
+                    **/
                   const std::list<Bandwidth>& bandwidths() const {return mBandwidths;}
                   std::list<Bandwidth>& bandwidths() {return mBandwidths;}
 
-                  // from session if empty
+                  /** @brief get a list of Connection objects, including the Session's c= line.
+                    * 
+                    *   If the media's c= line is empty, use the Session's c= line.
+                    * 
+                    * @return list of connections  
+                    **/
                   const std::list<Connection> getConnections() const;
-                  // does not include session connections
+                  /** @brief get a list of Connection objects from the m= section.  Does not include session c= line.
+                    * 
+                    * @return list of connections  
+                    **/
                   const std::list<Connection>& getMediumConnections() const {return mConnections;}
                   std::list<Connection>& getMediumConnections() {return mConnections;}
                   const Encryption& getEncryption() const {return mEncryption;}
                   const Encryption& encryption() const {return mEncryption;}
                   Encryption& encryption() {return mEncryption;}
+                  /** @brief tests if an a= key is present in the media section
+                    * 
+                    * @param key key to check
+                    *
+                    * @return true if key exists, false otherwise  
+                    **/
                   bool exists(const Data& key) const;
+                  /** @brief get the attribute values corresponding to the key
+                    * 
+                    * @param key key to check
+                    *
+                    * @return list of values for given key
+                    **/
                   const std::list<Data>& getValues(const Data& key) const;
+                  /** @brief erase all attributes for a given key
+                    * 
+                    * @param key key to clear
+                    *  
+                    **/
                   void clearAttribute(const Data& key);
 
                   // Search through this mediums codecs to find and return the first match from the passed in list
@@ -413,6 +765,10 @@ class SdpContents : public Contents
                   //        via pMatchingCodec if a non-NULL pointer is passed in.  The codec returned if from this medium.
                   const Codec& findFirstMatchingCodecs(const Medium& medium, Codec* pMatchingCodec = 0) const;
 
+                  /** @brief finds the telephone-event payload type
+                    * 
+                    * @return payload type of telephone-event "codec"  
+                    **/
                   int findTelephoneEventPayloadType() const;
 
                private:
@@ -439,6 +795,15 @@ class SdpContents : public Contents
                   friend class Session;
             };
 
+            /** @brief session constructor
+              * 
+              *   Create a new session from origin line, version, and session anme
+              * 
+              * @param version session version
+              * @param origin Origin line
+              * @param name session name
+              * 
+              **/
             Session(int version,
                     const Origin& origin,
                     const Data& name);
@@ -450,42 +815,177 @@ class SdpContents : public Contents
             void parse(ParseBuffer& pb);
             EncodeStream& encode(EncodeStream&) const;
 
+            /** @brief return session version
+              * 
+              * @return session version  
+              **/
             int version() const {return mVersion;}
+            /** @brief return session version
+              * 
+              * @return session version  
+              **/
             int& version() {return mVersion;}
+            /** @brief return session Origin line
+              * 
+              * @return Origin line  
+              **/
             const Origin& origin() const {return mOrigin;}
+            /** @brief return session Origin line
+              * 
+              * @return Origin line  
+              **/
             Origin& origin() {return mOrigin;}
+            /** @brief return session name
+              *
+              * @return name  
+              **/
             const Data& name() const {return mName;}
+            /** @brief return session name
+              *
+              * @return name  
+              **/
             Data& name() {return mName;}
+            /** @brief return session Information
+              *
+              * @return Information line  
+              **/
             const Data& information() const {return mInformation;}
+            /** @brief return session Information
+              *
+              * @return Information line  
+              **/
             Data& information() {return mInformation;}
+            /** @brief return session Uri
+              *
+              * @return Uri line  
+              **/
             const Uri& uri() const {return mUri;}
+            /** @brief return session Uri
+              *
+              * @return Uri line  
+              **/
             Uri& uri() {return mUri;}
+            /** @brief return session Email list
+              *
+              * @return Email list  
+              **/
             const std::list<Email>& getEmails() const {return mEmails;}
+            /** @brief return session Phone number list
+              *
+              * @return Phone number list  
+              **/
             const std::list<Phone>& getPhones() const {return mPhones;}
+            /** @brief return session Connection
+              *
+              * @return Connection line  
+              **/
             const Connection& connection() const {return mConnection;}
+            /** @brief return session Connection
+              *
+              * @return Connection line  
+              **/
             Connection& connection() {return mConnection;} // !dlb! optional?
+            /** @brief check if a c= line is present for the session
+              * 
+              * @return true if c= line is present  
+              **/
             bool isConnection() const { return mConnection.mAddress != Data::Empty; }
+            /** @brief return session Bandwidth lines
+              *
+              * @return Bandwidth lines  
+              **/
             const std::list<Bandwidth>& bandwidths() const {return mBandwidths;}
+            /** @brief return session Bandwidth lines
+              *
+              * @return Bandwidth lines  
+              **/
             std::list<Bandwidth>& bandwidths() {return mBandwidths;}
+            /** @brief return session Time lines
+              *
+              * @return Time lines  
+              **/
             const std::list<Time>& getTimes() const {return mTimes;}
+            /** @brief return session Time lines
+              *
+              * @return Time lines  
+              **/
             std::list<Time>& getTimes() {return mTimes;}
             const Timezones& getTimezones() const {return mTimezones;}
             const Encryption& getEncryption() const {return mEncryption;}
             const Encryption& encryption() const {return mEncryption;}
             Encryption& encryption() {return mEncryption;}
             typedef std::list<Medium> MediumContainer;
+            /** @brief return session Media lines
+              *
+              * @return Media lines  
+              **/
             const MediumContainer& media() const {return mMedia;}
+            /** @brief return session Media lines
+              *
+              * @return Media lines  
+              **/
             MediumContainer& media() {return mMedia;}
 
+            /** @brief add an e= (email) line to session
+              * 
+              * @param email Email line to add
+              *  
+              **/
             void addEmail(const Email& email);
+            /** @brief add a p= (phone number) line to session
+              * 
+              * @param phone Phone line to add
+              *  
+              **/
             void addPhone(const Phone& phone);
+            /** @brief add a b= (Bandwidth) line to session
+              * 
+              * @param bandwidth Bandwidth line to add
+              *  
+              **/
             void addBandwidth(const Bandwidth& bandwidth);
+            /** @brief add a t= (Time) line to session
+              * 
+              * @param t Time line to add
+              *  
+              **/
             void addTime(const Time& t);
+            /** @brief add an m= (Medium) section to session
+              * 
+              * @param medium Medium section to add
+              *  
+              **/
             void addMedium(const Medium& medium);
+            /** @brief remove all Medium sections from session
+              *   
+              **/
             void clearMedium() {  mMedia.clear(); }
+            /** @brief erase all attributes for a given key
+              * 
+              * @param key key to clear
+              *  
+              **/
             void clearAttribute(const Data& key);
+            /** @brief add a session attribute line
+              * 
+              * @param key attribute key
+              * @param value attribute value
+              * 
+              **/
             void addAttribute(const Data& key, const Data& value = Data::Empty);
+            /** @brief tests if an a= key is present in the session
+              * 
+              * @param key key to check
+              *
+              * @return true if key exists, false otherwise  
+              **/
             bool exists(const Data& key) const;
+            /** @brief get the attribute values corresponding to the key
+              * 
+              * @param key key to check
+              *
+              * @return list of values for given key
+              **/
             const std::list<Data>& getValues(const Data& key) const;
 
          private:
@@ -510,15 +1010,23 @@ class SdpContents : public Contents
       };
 
       SdpContents();
-      SdpContents(HeaderFieldValue* hfv, const Mime& contentTypes);
+      SdpContents(const HeaderFieldValue& hfv, const Mime& contentTypes);
       virtual ~SdpContents();
 
       // !nash! there is no need for overriding copy ctor as every members gets copied
       //SdpContents(const SdpContents& rhs);
       SdpContents& operator=(const SdpContents& rhs);
 
+      /** @brief duplicate an SdpContents object
+        * 
+        * @return pointer to a new SdpContents object  
+        **/
       virtual Contents* clone() const;
 
+      /** @brief get the parsed SDP
+        * 
+        * @return parsed SDP object  
+        **/
       Session& session() {checkParsed(); return mSession;}
       const Session& session() const {checkParsed(); return mSession;}
 

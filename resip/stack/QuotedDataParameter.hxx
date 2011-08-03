@@ -4,6 +4,7 @@
 #include "resip/stack/Parameter.hxx"
 #include "resip/stack/ParameterTypeEnums.hxx"
 #include "resip/stack/DataParameter.hxx"
+#include "rutil/PoolBase.hxx"
 #include <iosfwd>
 
 namespace resip
@@ -25,9 +26,10 @@ class QuotedDataParameter : public DataParameter
 
       static Parameter* decode(ParameterTypes::Type type, 
                                  ParseBuffer& pb, 
-                                 const std::bitset<256>& terminators)
+                                 const std::bitset<256>& terminators,
+                                 PoolBase* pool)
       {
-         return new QuotedDataParameter(type, pb, terminators);
+         return new (pool) QuotedDataParameter(type, pb, terminators);
       }
 
       virtual Parameter* clone() const;

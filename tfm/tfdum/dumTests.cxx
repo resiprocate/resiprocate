@@ -1545,7 +1545,7 @@ class DumTestCase : public DumFixture
                   "Message-Account: sip:derek@mail.sipfoundry.org\r\n"
                   "Voice-Message: 2/8 (0/2)\r\n");
          HeaderFieldValue hfv(txt.begin(), txt.size());
-         boost::shared_ptr<Contents> mwc = boost::shared_ptr<Contents>(new MessageWaitingContents(&hfv, Mime("application", "simple-message-summary")));
+         boost::shared_ptr<Contents> mwc = boost::shared_ptr<Contents>(new MessageWaitingContents(hfv, Mime("application", "simple-message-summary")));
 
          TestClientSubscription clientSub(derek);
 
@@ -1632,7 +1632,7 @@ class DumTestCase : public DumFixture
                   "Voice-Message: 2/8 (0/2)\r\n");
          HeaderFieldValue hfv(txt.begin(), txt.size());
          boost::shared_ptr<resip::Contents> mwc = 
-            boost::shared_ptr<resip::Contents>(new MessageWaitingContents(&hfv, Mime("application", "simple-message-summary")));
+            boost::shared_ptr<resip::Contents>(new MessageWaitingContents(hfv, Mime("application", "simple-message-summary")));
 
          TestClientSubscription clientSub(jason);
          TestServerSubscription serverSub(derek);
@@ -1944,7 +1944,7 @@ class DumTestCase : public DumFixture
        
          Mime type("application", "sdp");
          HeaderFieldValue hfv(ipChange.data(), ipChange.size());
-         SdpContents sdpIpChange(&hfv, type);
+         SdpContents sdpIpChange(hfv, type);
 
          TestClientInviteSession uacDerek(derek);
          TestServerInviteSession uasJason(jason);
@@ -2058,7 +2058,7 @@ class DumTestCase : public DumFixture
                   "Voice-Message: 2/8 (0/2)\r\n");
          HeaderFieldValue hfv(txt.begin(), txt.size());
          boost::shared_ptr<Contents> mwc = 
-            boost::shared_ptr<Contents>(new MessageWaitingContents(&hfv, Mime("application", "simple-message-summary")));
+            boost::shared_ptr<Contents>(new MessageWaitingContents(hfv, Mime("application", "simple-message-summary")));
 
          TestClientSubscription clientSub(jason);
          TestServerSubscription serverSub(derek);
@@ -2100,7 +2100,7 @@ class DumTestCase : public DumFixture
                   "Voice-Message: 2/8 (0/2)\r\n");
          HeaderFieldValue hfv(txt.begin(), txt.size());
          boost::shared_ptr<Contents> mwc = 
-            boost::shared_ptr<Contents>(new MessageWaitingContents(&hfv, Mime("application", "simple-message-summary")));
+            boost::shared_ptr<Contents>(new MessageWaitingContents(hfv, Mime("application", "simple-message-summary")));
 
          TestServerSubscription srvSubJason(jason);
          TestClientSubscription clientSubDerek(derek);
@@ -2669,10 +2669,10 @@ class DumTestCase : public DumFixture
 
          HeaderFieldValue hfv(offer.data(), offer.size());
          Mime type("application", "sdp");
-         SdpContents sdpOffer(&hfv, type);
+         SdpContents sdpOffer(hfv, type);
 
          HeaderFieldValue hfv1(answer.data(), answer.size());
-         SdpContents sdpAnswer(&hfv1, type);
+         SdpContents sdpAnswer(hfv1, type);
 
          TestClientInviteSession invBob(&bob);
          TestServerInviteSession invSean(&sean);
@@ -2893,10 +2893,10 @@ class DumTestCase : public DumFixture
 
          HeaderFieldValue hfv(offer.data(), offer.size());
          Mime type("application", "sdp");
-         SdpContents sdpOffer(&hfv, type);
+         SdpContents sdpOffer(hfv, type);
 
          HeaderFieldValue hfv1(answer.data(), answer.size());
-         SdpContents sdpAnswer(&hfv1, type);
+         SdpContents sdpAnswer(hfv1, type);
 
          TestClientInviteSession invDerek(derek);
          TestServerInviteSession invScott(scott);

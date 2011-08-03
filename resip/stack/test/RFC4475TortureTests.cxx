@@ -141,8 +141,6 @@ a=rtpmap:31 LPC
    // Request Line
    tassert(msg->header(resip::h_RequestLine).method()==resip::INVITE);
    tassert(msg->header(resip::h_RequestLine).unknownMethodName()=="INVITE");
-   tassert(msg->header(resip::h_RequestLine).numKnownParams()==0);
-   tassert(msg->header(resip::h_RequestLine).numUnknownParams()==0);
    tassert(msg->header(resip::h_RequestLine).uri().scheme()=="sip");
    tassert(msg->header(resip::h_RequestLine).uri().user()=="vivekg");
    tassert(msg->header(resip::h_RequestLine).uri().host()=="chair-dnrc.example.com");
@@ -442,8 +440,6 @@ Content-Length: 0
    // Request Line
    tassert(msg->header(resip::h_RequestLine).method()==resip::UNKNOWN);
    tassert(msg->header(resip::h_RequestLine).unknownMethodName()=="!interesting-Method0123456789_*+`.%indeed'~");
-   tassert(msg->header(resip::h_RequestLine).numKnownParams()==0);
-   tassert(msg->header(resip::h_RequestLine).numUnknownParams()==0);
    tassert(msg->header(resip::h_RequestLine).uri().scheme()=="sip");
    tassert(msg->header(resip::h_RequestLine).uri().user()=="1_unusual.URI~(to-be!sure)&isn't+it$/crazy?,/;;*");
    tassert(msg->header(resip::h_RequestLine).uri().password()=="&it+has=1,weird!*pas$wo~d_too.(doesn't-it)");
@@ -690,8 +686,6 @@ a=rtpmap:31 LPC
    // Request Line
    tassert(msg->header(resip::h_RequestLine).method()==resip::INVITE);
    tassert(msg->header(resip::h_RequestLine).unknownMethodName()=="INVITE");
-   tassert(msg->header(resip::h_RequestLine).numKnownParams()==0);
-   tassert(msg->header(resip::h_RequestLine).numUnknownParams()==0);
    tassert(msg->header(resip::h_RequestLine).uri().scheme()=="sip");
    // ?bwc? Is it appropriate to use a one-size-fits-all approach to unescaping
    // parsed components? ('@' is not legal in a userpart, but the internal
@@ -904,8 +898,6 @@ L:0
    //REGISTER sip:example.com SIP/2.0
    tassert(msg->header(resip::h_RequestLine).method()==resip::REGISTER);
    tassert(msg->header(resip::h_RequestLine).unknownMethodName()=="REGISTER");
-   tassert(msg->header(resip::h_RequestLine).numKnownParams()==0);
-   tassert(msg->header(resip::h_RequestLine).numUnknownParams()==0);
    tassert(msg->header(resip::h_RequestLine).uri().scheme()=="sip");
    tassert(msg->header(resip::h_RequestLine).uri().user()=="");
    tassert(msg->header(resip::h_RequestLine).uri().password().empty());
@@ -1115,8 +1107,6 @@ l: 0
    //RE%47IST%45R sip:registrar.example.com SIP/2.0
    tassert(msg->header(resip::h_RequestLine).method()==resip::UNKNOWN);
    tassert(msg->header(resip::h_RequestLine).unknownMethodName()=="RE%47IST%45R");
-   tassert(msg->header(resip::h_RequestLine).numKnownParams()==0);
-   tassert(msg->header(resip::h_RequestLine).numUnknownParams()==0);
    tassert(msg->header(resip::h_RequestLine).uri().scheme()=="sip");
    tassert(msg->header(resip::h_RequestLine).uri().user()=="");
    tassert(msg->header(resip::h_RequestLine).uri().password().empty());
@@ -1316,8 +1306,6 @@ l: 0
    //OPTIONS sip:user@example.com SIP/2.0
    tassert(msg->header(resip::h_RequestLine).method()==resip::OPTIONS);
    tassert(msg->header(resip::h_RequestLine).unknownMethodName()=="OPTIONS");
-   tassert(msg->header(resip::h_RequestLine).numKnownParams()==0);
-   tassert(msg->header(resip::h_RequestLine).numUnknownParams()==0);
    tassert(msg->header(resip::h_RequestLine).uri().scheme()=="sip");
    tassert(msg->header(resip::h_RequestLine).uri().user()=="user");
    tassert(msg->header(resip::h_RequestLine).uri().password().empty());
@@ -1525,8 +1513,6 @@ a=rtpmap:31 LPC
    //INVITE sip:user@example.com SIP/2.0
    tassert(msg->header(resip::h_RequestLine).method()==resip::INVITE);
    tassert(msg->header(resip::h_RequestLine).unknownMethodName()=="INVITE");
-   tassert(msg->header(resip::h_RequestLine).numKnownParams()==0);
-   tassert(msg->header(resip::h_RequestLine).numUnknownParams()==0);
    tassert(msg->header(resip::h_RequestLine).uri().scheme()=="sip");
    tassert(msg->header(resip::h_RequestLine).uri().user()=="user");
    tassert(msg->header(resip::h_RequestLine).uri().password().empty());
@@ -1827,8 +1813,6 @@ a=rtpmap:31 LPC
    //REGISTER sip:example.com SIP/2.0
    tassert(msg->header(resip::h_RequestLine).method()==resip::REGISTER);
    tassert(msg->header(resip::h_RequestLine).unknownMethodName()=="REGISTER");
-   tassert(msg->header(resip::h_RequestLine).numKnownParams()==0);
-   tassert(msg->header(resip::h_RequestLine).numUnknownParams()==0);
    tassert(msg->header(resip::h_RequestLine).uri().scheme()=="sip");
    tassert(msg->header(resip::h_RequestLine).uri().user()=="");
    tassert(msg->header(resip::h_RequestLine).uri().password().empty());
@@ -2011,8 +1995,6 @@ l: 0
    //OPTIONS sip:user;par=u%40example.net@example.com SIP/2.0
    tassert(msg->header(resip::h_RequestLine).method()==resip::OPTIONS);
    tassert(msg->header(resip::h_RequestLine).unknownMethodName()=="OPTIONS");
-   tassert(msg->header(resip::h_RequestLine).numKnownParams()==0);
-   tassert(msg->header(resip::h_RequestLine).numUnknownParams()==0);
    tassert(msg->header(resip::h_RequestLine).uri().scheme()=="sip");
    // ?bwc? Need to determine how escaped stuff should be represented internally
    tassert(msg->header(resip::h_RequestLine).uri().user()=="user;par=u%40example.net");
@@ -2223,8 +2205,6 @@ l: 0
    //OPTIONS sip:user@example.com SIP/2.0
    tassert(msg->header(resip::h_RequestLine).method()==resip::OPTIONS);
    tassert(msg->header(resip::h_RequestLine).unknownMethodName()=="OPTIONS");
-   tassert(msg->header(resip::h_RequestLine).numKnownParams()==0);
-   tassert(msg->header(resip::h_RequestLine).numUnknownParams()==0);
    tassert(msg->header(resip::h_RequestLine).uri().scheme()=="sip");
    tassert(msg->header(resip::h_RequestLine).uri().user()=="user");
    tassert_reset();
@@ -2490,8 +2470,6 @@ hÎÿ®<½+ÿuİÕdY=ÖG(òb ÷éAt3
    //MESSAGE sip:kumiko@example.org SIP/2.0
    tassert(msg->header(resip::h_RequestLine).method()==resip::MESSAGE);
    tassert(msg->header(resip::h_RequestLine).unknownMethodName()=="MESSAGE");
-   tassert(msg->header(resip::h_RequestLine).numKnownParams()==0);
-   tassert(msg->header(resip::h_RequestLine).numUnknownParams()==0);
    tassert(msg->header(resip::h_RequestLine).uri().scheme()=="sip");
    tassert(msg->header(resip::h_RequestLine).uri().user()=="kumiko");
    tassert(msg->header(resip::h_RequestLine).uri().password().empty());
@@ -2816,8 +2794,6 @@ a=rtpmap:31 LPC
    binaryReason+=(char)0xD0;
    binaryReason+=(char)0xB5;   
    tassert(msg->header(resip::h_StatusLine).reason()==binaryReason);
-   tassert(msg->header(resip::h_StatusLine).numKnownParams()==0);
-   tassert(msg->header(resip::h_StatusLine).numUnknownParams()==0);
    
    //Vias
    tassert(msg->exists(resip::h_Vias));
@@ -2991,8 +2967,6 @@ Contact: <sip:user@host105.example.com>
    tassert(msg->header(resip::h_StatusLine).responseCode()==100);
    tassert(msg->header(resip::h_StatusLine).getSipVersion()=="SIP/2.0");
    tassert(msg->header(resip::h_StatusLine).reason()=="");
-   tassert(msg->header(resip::h_StatusLine).numKnownParams()==0);
-   tassert(msg->header(resip::h_StatusLine).numUnknownParams()==0);
 
    //Vias
    tassert(msg->exists(resip::h_Vias));
@@ -4617,8 +4591,6 @@ l: 0
    //OPTIONS sip:user@example.com SIP/2.0
    tassert(msg->header(resip::h_RequestLine).method()==resip::OPTIONS);
    tassert(msg->header(resip::h_RequestLine).unknownMethodName()=="OPTIONS");
-   tassert(msg->header(resip::h_RequestLine).numKnownParams()==0);
-   tassert(msg->header(resip::h_RequestLine).numUnknownParams()==0);
    tassert(msg->header(resip::h_RequestLine).uri().scheme()=="sip");
    tassert(msg->header(resip::h_RequestLine).uri().user()=="user");
    tassert(msg->header(resip::h_RequestLine).uri().password().empty());

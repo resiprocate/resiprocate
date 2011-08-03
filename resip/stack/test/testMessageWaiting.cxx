@@ -32,7 +32,7 @@ main()
 
       HeaderFieldValue hfv(txt.data(), txt.size());
       Mime type("text", "data");
-      MessageWaitingContents mwb(&hfv, type);
+      MessageWaitingContents mwb(hfv, type);
 
       MessageWaitingContents* mwb2 =
          dynamic_cast<MessageWaitingContents*>(mwb.clone());
@@ -46,7 +46,7 @@ main()
 
       HeaderFieldValue hfv(txt.data(), txt.size());
       Mime type("application", "simple-message-summary");
-      MessageWaitingContents mwb(&hfv, type);
+      MessageWaitingContents mwb(hfv, type);
       
       assert(mwb.hasMessages() == true);      
    }
@@ -56,7 +56,7 @@ main()
 
       HeaderFieldValue hfv(txt.data(), txt.size());
       Mime type("application", "simple-message-summary");
-      MessageWaitingContents mwb(&hfv, type);
+      MessageWaitingContents mwb(hfv, type);
       
       assert(mwb.hasMessages() == false);      
    }
@@ -68,7 +68,7 @@ main()
 
       HeaderFieldValue hfv(txt.data(), txt.size());
       Mime type("application", "simple-message-summary");
-      MessageWaitingContents mwb(&hfv, type);
+      MessageWaitingContents mwb(hfv, type);
 
       assert(mwb.header(mw_account).scheme() == "sip");
       assert(mwb.header(mw_account).user() == "alice");
@@ -94,7 +94,7 @@ main()
 
       HeaderFieldValue hfv(txt.data(), txt.size());
       Mime type("application", "simple-message-summary");
-      MessageWaitingContents mwb(&hfv, type);
+      MessageWaitingContents mwb(hfv, type);
 
       assert(mwb.header(mw_account).scheme() == "sip");
       assert(mwb.header(mw_account).user() == "alice");

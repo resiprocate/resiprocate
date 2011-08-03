@@ -9,6 +9,8 @@
 #include "resip/stack/ParameterTypes.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/BaseException.hxx"
+#include "rutil/StlPoolAllocator.hxx"
+#include "rutil/PoolBase.hxx"
 
 #include "rutil/resipfaststreams.hxx"
 
@@ -91,15 +93,67 @@ class ParserCategory : public LazyParser
       //                            and will always output with commas when
       //                            parsed.  
       enum {NoCommaTokenizing = 0, CommasAllowedOutputMulti = 1, CommasAllowedOutputCommas = 3};
-      
-      ParserCategory(HeaderFieldValue* headerFieldValue, Headers::Type type);
-      ParserCategory(const ParserCategory& rhs);
+
+      /**
+         @internal
+         @brief Constructor used by SipMessage. Unless you _really_ know what
+            you're doing, don't touch this.
+      */
+      ParserCategory(const HeaderFieldValue& headerFieldValue, 
+                     Headers::Type type,
+                     PoolBase* pool=0);
+
+      /**
+         @internal
+         @brief Constructor used by SipMessage. Unless you _really_ know what
+            you're doing, don't touch this.
+      */
+      ParserCategory(const char* buf, 
+                     int length, 
+                     Headers::Type type,
+                     PoolBase* pool=0);
+
+      /**
+         @internal
+         @brief Copy c'tor.
+      */
+      ParserCategory(const ParserCategory& rhs,
+                     PoolBase* pool=0);
+
+      /**
+         @internal
+         @brief Assignment operator.
+      */
       ParserCategory& operator=(const ParserCategory& rhs);
 
       virtual ~ParserCategory();
 
       virtual ParserCategory* clone() const = 0;
-      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators);
+      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool);
+
+      // Do a placement new
+      virtual ParserCategory* clone(void* location) const = 0;
+
+      // Do a pool allocated new
+      virtual ParserCategory* clone(PoolBase* pool) const = 0;
+
+      /**
+         @brief Checks for the existence of a natively supported parameter.
+         @param paramType The accessor token for the parameter.
+         @return true iff the parameter is present.
+      */
+      inline bool exists(const ParamBase& paramType) const
+      {
+          checkParsed();
+          return (getParameterByEnum(paramType.getTypeNum()) != NULL);
+      }
+
+      /**
+         @brief Removes a natively supported parameter, if the parameter is 
+            present.
+         @param paramType The accessor token for the parameter.
+      */
+      void remove(const ParamBase& paramType);
 
       // !dlb! causes compiler error in windows -- change template to const T*
       /**
@@ -210,14 +264,27 @@ class ParserCategory : public LazyParser
       int numUnknownParams() const {return (int)mUnknownParameters.size();};
 
    protected:
-      ParserCategory();
+      ParserCategory(PoolBase* pool=0);
 
       Parameter* getParameterByData(const Data& data) const;
       void removeParameterByData(const Data& data);
+      inline PoolBase* getPool()
+      {
+         return mParameters.get_allocator().mPool;
+      }
+
+      inline void freeParameter(Parameter* p)
+      {
+         if(p)
+         {
+            p->~Parameter();
+            mParameters.get_allocator().deallocate_raw(p);
+         }
+      }
 
       virtual const Data& errorContext() const;
 
-      typedef std::vector<Parameter*> ParameterList; 
+      typedef std::vector<Parameter*, StlPoolAllocator<Parameter*, PoolBase> > ParameterList; 
       ParameterList mParameters;
       ParameterList mUnknownParameters;
       Headers::Type mHeaderType;

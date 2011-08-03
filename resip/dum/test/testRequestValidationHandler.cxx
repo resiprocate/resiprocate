@@ -259,7 +259,7 @@ main (int argc, char** argv)
 
    hfv = new HeaderFieldValue(txt->data(), (unsigned int)txt->size());
    Mime type("application", "sdp");
-   dummySdp = new SdpContents(hfv, type);
+   dummySdp = new SdpContents(*hfv, type);
 
    //set up UAC
    SipStack stackUac;

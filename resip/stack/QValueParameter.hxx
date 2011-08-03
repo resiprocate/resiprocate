@@ -6,6 +6,7 @@
 #include "resip/stack/Parameter.hxx"
 #include "resip/stack/ParameterTypeEnums.hxx"
 #include "resip/stack/QValue.hxx"
+#include "rutil/PoolBase.hxx"
 #include <iosfwd>
 
 namespace resip
@@ -89,9 +90,10 @@ namespace resip
         */
       static Parameter* decode(ParameterTypes::Type type, 
                                  ParseBuffer& pb, 
-                                 const std::bitset<256>& terminators)
+                                 const std::bitset<256>& terminators,
+                                 PoolBase* pool)
       {
-         return new QValueParameter(type, pb, terminators);
+         return new (pool) QValueParameter(type, pb, terminators);
       }
 
       /**

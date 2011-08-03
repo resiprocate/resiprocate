@@ -26,23 +26,39 @@ using namespace std;
 const ParserCategory::ParameterTypeSet 
 ParserCategory::EmptyParameterTypeSet; 
 
-ParserCategory::ParserCategory(HeaderFieldValue* headerFieldValue,
-                               Headers::Type headerType)
+ParserCategory::ParserCategory(const HeaderFieldValue& headerFieldValue,
+                               Headers::Type headerType,
+                               PoolBase* pool)
     : LazyParser(headerFieldValue),
-      mParameters(),
-      mUnknownParameters(),
+      mParameters(StlPoolAllocator<Parameter*, PoolBase>(pool)),
+      mUnknownParameters(StlPoolAllocator<Parameter*, PoolBase>(pool)),
       mHeaderType(headerType)
 {
 }
 
-ParserCategory::ParserCategory()
+ParserCategory::ParserCategory(const char* buf, 
+                                 int length, 
+                                 Headers::Type type,
+                                 PoolBase* pool):
+   LazyParser(buf, length),
+   mParameters(StlPoolAllocator<Parameter*, PoolBase>(pool)),
+   mUnknownParameters(StlPoolAllocator<Parameter*, PoolBase>(pool)),
+   mHeaderType(type)
+{}
+
+ParserCategory::ParserCategory(PoolBase* pool)
    : LazyParser(),
+     mParameters(StlPoolAllocator<Parameter*, PoolBase>(pool)),
+     mUnknownParameters(StlPoolAllocator<Parameter*, PoolBase>(pool)),
      mHeaderType(Headers::NONE)
 {
 }
 
-ParserCategory::ParserCategory(const ParserCategory& rhs)
+ParserCategory::ParserCategory(const ParserCategory& rhs,
+                                 PoolBase* pool)
    : LazyParser(rhs),
+     mParameters(StlPoolAllocator<Parameter*, PoolBase>(pool)),
+     mUnknownParameters(StlPoolAllocator<Parameter*, PoolBase>(pool)),
      mHeaderType(rhs.mHeaderType)
 {
    if (isParsed())
@@ -73,24 +89,25 @@ ParserCategory::clear()
    //DebugLog(<<"ParserCategory::clear");
    LazyParser::clear();
 
-   for (ParameterList::iterator it = mParameters.begin();
-        it != mParameters.end(); it++)
+   while(!mParameters.empty())
    {
-      delete *it;
+      freeParameter(mParameters.back());
+      mParameters.pop_back();
    }
-   mParameters.clear();
 
-   for (ParameterList::iterator it = mUnknownParameters.begin();
-        it != mUnknownParameters.end(); it++)
+   while(!mUnknownParameters.empty())
    {
-      delete *it;
-   }   
-   mUnknownParameters.clear();
+      freeParameter(mUnknownParameters.back());
+      mUnknownParameters.pop_back();
+   }
 }
 
 void 
 ParserCategory::copyParametersFrom(const ParserCategory& other)
 {
+   mParameters.reserve(other.mParameters.size());
+   mUnknownParameters.reserve(other.mUnknownParameters.size());
+   
    for (ParameterList::const_iterator it = other.mParameters.begin();
         it != other.mParameters.end(); it++)
    {
@@ -134,6 +151,14 @@ ParserCategory::param(const ExtensionParameter& param)
    return static_cast<UnknownParameter*>(p)->value();
 }
 
+// removing non-present parameter is allowed      
+void
+ParserCategory::remove(const ParamBase& paramType)
+{
+    checkParsed();
+    removeParameterByEnum(paramType.getTypeNum());
+}
+
 void 
 ParserCategory::remove(const ExtensionParameter& param)
 {
@@ -157,7 +182,7 @@ ParserCategory::removeParametersExcept(const ParameterTypeSet& set)
    {
       if (set.find((*it)->getType()) == set.end())
       {
-         delete *it;
+         freeParameter(*it);
          it = mParameters.erase(it);
       }
       else
@@ -173,7 +198,7 @@ ParserCategory::clearUnknownParameters()
    for (ParameterList::iterator it = mUnknownParameters.begin();
         it != mUnknownParameters.end(); it++)
    {
-      delete *it;
+      freeParameter(*it);
    }   
    mUnknownParameters.clear();
 }
@@ -200,9 +225,9 @@ ParserCategory::parseParameters(ParseBuffer& pb)
             static std::bitset<256> terminators2 = Data::toBitset(" \t\r\n;?>");
             Parameter* p;
             if (type == ParameterTypes::UNKNOWN || 
-               !(p=createParam(type, pb, terminators2)))
+               !(p=createParam(type, pb, terminators2,getPool())))
             {
-               mUnknownParameters.push_back(new UnknownParameter(keyStart, 
+               mUnknownParameters.push_back(new (getPool()) UnknownParameter(keyStart, 
                                                                  int((keyEnd - keyStart)), pb, terminators2));
             }
             else
@@ -221,7 +246,7 @@ ParserCategory::parseParameters(ParseBuffer& pb)
 }      
 
 Parameter* 
-ParserCategory::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators)
+ParserCategory::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool)
 {
    return 0;
 }
@@ -325,7 +350,7 @@ ParserCategory::setParameter(const Parameter* parameter)
    {
       if ((*it)->getType() == parameter->getType())
       {
-         delete *it;
+         freeParameter(*it);
          mParameters.erase(it);
          mParameters.push_back(parameter->clone());
          return;
@@ -346,7 +371,7 @@ ParserCategory::removeParameterByEnum(ParameterTypes::Type type)
    {
       if ((*it)->getType() == type)
       {
-         delete *it;
+         freeParameter(*it);
          it = mParameters.erase(it);
       }
       else
@@ -379,7 +404,7 @@ ParserCategory::removeParameterByData(const Data& data)
    {
       if ((*it)->getName() == data)
       {
-         delete *it;
+         freeParameter(*it);
          it = mUnknownParameters.erase(it);
       }
       else
@@ -423,15 +448,7 @@ ParserCategory::commutativeParameterHash() const
 const Data&
 ParserCategory::errorContext() const
 {
-   if (mHeaderType == Headers::NONE)
-   {
-      static const Data reqLine("Request/Status line");
-      return reqLine;
-   }
-   else
-   {
-      return Headers::getHeaderName(mHeaderType);
-   }
+   return Headers::getHeaderName(mHeaderType);
 }
 
 /* ====================================================================

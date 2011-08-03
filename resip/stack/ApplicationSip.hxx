@@ -6,20 +6,29 @@
 namespace resip
 {
 
-// Note: Applications may need to explicitly mention this type to induce static
-// registration. Applications that mention only SipFrag may not be able to
-// determine the content instance for content-type: application/sip
+/**
+   @ingroup sip_payload
+   @brief SIP body type to represent contents with an Content-Type application/sip.
 
-// map content-type application/sip to the same parser as message/sip
-// some Cisco gateways send NOTIFY with content-type application/sip
+   @note Applications may need to explicitly mention this type to induce static
+   registration. Applications that mention only SipFrag may not be able to
+   determine the content instance for content-type: application/sip
+   
+   map content-type application/sip to the same parser as message/sip
+   some Cisco gateways send NOTIFY with content-type application/sip
+*/
 class ApplicationSip : public SipFrag
 {
    public:
       ApplicationSip(const Mime& contentsType = getStaticType());
-      ApplicationSip(HeaderFieldValue* hfv, const Mime& contentsType);
+      ApplicationSip(const HeaderFieldValue& hfv, const Mime& contentsType);
       ApplicationSip(const Data& data, const Mime& contentsType);
       ApplicationSip(const ApplicationSip& rhs);
       ApplicationSip& operator=(const ApplicationSip& rhs);
+
+      /** @brief duplicate an ApplicationSip object
+          @return pointer to a new ApplicationSip object  
+        **/
       virtual Contents* clone() const;
       static const Mime& getStaticType();
 

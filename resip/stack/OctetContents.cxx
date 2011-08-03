@@ -34,7 +34,7 @@ OctetContents::OctetContents(const Data& octets)
      mOctets(octets)
 {}
 
-OctetContents::OctetContents(HeaderFieldValue* hfv, const Mime& contentsType)
+OctetContents::OctetContents(const HeaderFieldValue& hfv, const Mime& contentsType)
    : Contents(hfv, contentsType),
      mOctets()
 {

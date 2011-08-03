@@ -7,18 +7,25 @@
 namespace resip
 {
 
-// Note: not added to ContentsFactory
+/**
+   @ingroup sip_payload
+   @brief SIP body type for holding generic contents.
+   @note not added to ContentsFactory
+*/
 class GenericContents : public PlainContents
 {
    public:
       GenericContents();
       GenericContents(const Data& text);
-      GenericContents(HeaderFieldValue* hfv, const Mime& contentType);
+      GenericContents(const HeaderFieldValue& hfv, const Mime& contentType);
       GenericContents(const Data& data, const Mime& contentType);
       GenericContents(const GenericContents& rhs);
       virtual ~GenericContents();
       GenericContents& operator=(const GenericContents& rhs);
 
+      /** @brief duplicate an GenericContents object
+          @return pointer to a new GenericContents object  
+        **/
       virtual Contents* clone() const;
 };
 

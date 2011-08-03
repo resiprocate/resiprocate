@@ -88,7 +88,6 @@ class TestSMIMEInviteHandler : public TestClientRegistrationHandler,
 
       SdpContents* generateBody()
       {
-         HeaderFieldValue* hfv;      
          Data* txt = new Data("v=0\r\n"
                               "o=1900 369696545 369696545 IN IP4 192.168.2.15\r\n"
                               "s=X-Lite\r\n"
@@ -100,7 +99,7 @@ class TestSMIMEInviteHandler : public TestClientRegistrationHandler,
                               "a=rtpmap:101 telephone-event/8000\r\n"
                               "a=fmtp:101 0-15\r\n");
          
-         hfv = new HeaderFieldValue(txt->data(), txt->size());
+         HeaderFieldValue hfv(txt->data(), txt->size());
          SdpContents *sdp = new SdpContents(hfv, Mime("application", "sdp"));
          return sdp;
       }

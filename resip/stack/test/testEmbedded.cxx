@@ -190,7 +190,7 @@ main(int argc, char** argv)
       
       Data nad("INVITE sips:bob@foo.com?CSeq=314159%20ACK SIP/2.0");
       HeaderFieldValue hfv(nad.data(), nad.size());
-      RequestLine na(&hfv, Headers::NONE); 
+      RequestLine na(hfv); 
 
       assert(na.uri().hasEmbedded());
       assert(na.uri().embedded().exists(h_CSeq));
@@ -203,7 +203,7 @@ main(int argc, char** argv)
       
       Data nad("INVITE sips:bob@foo.com;ttl=134?CSeq=314159%20ACK SIP/2.0");
       HeaderFieldValue hfv(nad.data(), nad.size());
-      RequestLine na(&hfv, Headers::NONE); 
+      RequestLine na(hfv); 
 
       assert(na.uri().hasEmbedded());
       assert(na.uri().embedded().exists(h_CSeq));
@@ -217,7 +217,7 @@ main(int argc, char** argv)
       
       Data nad("INVITE sip:speedy@cathaynetworks.com?Via=SIP/2.0/TLS%20cathay.com:5066%3Bbranch%3Dz9hG4bKfobbieBletch-1&Via=SIP/2.0/TCP%20ixolib.com:5067%3Bbranch%3Dz9hG4bKbletchieFoo-1&CSeq=4178%20ACK SIP/2.0");
       HeaderFieldValue hfv(nad.data(), nad.size());
-      RequestLine na(&hfv, Headers::NONE); 
+      RequestLine na(hfv); 
 
       assert(na.uri().hasEmbedded());
       assert(na.uri().embedded().exists(h_Vias));

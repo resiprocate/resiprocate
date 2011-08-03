@@ -43,7 +43,7 @@ Pidf::Pidf(const Mime& contentType)
 {
 }
 
-Pidf::Pidf(HeaderFieldValue* hfv, const Mime& contentsType)
+Pidf::Pidf(const HeaderFieldValue& hfv, const Mime& contentsType)
    : Contents(hfv, contentsType),
      mNote()
 {

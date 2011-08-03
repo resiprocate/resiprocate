@@ -23,7 +23,7 @@ ApplicationSip::ApplicationSip(const Mime& contentsType)
    : SipFrag(contentsType)
 {}
 
-ApplicationSip::ApplicationSip(HeaderFieldValue* hfv, const Mime& contentsType)
+ApplicationSip::ApplicationSip(const HeaderFieldValue& hfv, const Mime& contentsType)
    : SipFrag(hfv, contentsType)
 {
 }

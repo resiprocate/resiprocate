@@ -26,7 +26,7 @@ main(int argc, char** argv)
       {
          HeaderFieldValue hfv(txt.data(), txt.size());
          Mime type("application", "pidf+xml");
-         Pidf pc(&hfv, type);
+         Pidf pc(hfv, type);
          assert(pc.getNumTuples() == 1);
          assert(false);
       }
@@ -57,7 +57,7 @@ main(int argc, char** argv)
 
       HeaderFieldValue hfv(txt.data(), txt.size());
       Mime type("application", "pidf+xml");
-      Pidf pc(&hfv, type);
+      Pidf pc(hfv, type);
       assert(pc.getNumTuples() == 1);
    }
 
@@ -77,7 +77,7 @@ main(int argc, char** argv)
 
       HeaderFieldValue hfv(txt.data(), txt.size());
       Mime type("application", "pidf+xml");
-      Pidf pc(&hfv, type);
+      Pidf pc(hfv, type);
       pc.checkParsed();
       assert(pc.getNumTuples() == 1);
    }
@@ -111,7 +111,7 @@ main(int argc, char** argv)
 
       HeaderFieldValue hfv(txt.data(), txt.size());
       Mime type("application", "pidf+xml");
-      Pidf pc(&hfv, type);
+      Pidf pc(hfv, type);
 
       cerr << "!! " << pc.getEntity() << endl;
       assert(pc.getEntity() == Uri("pres:someone@example.com"));
@@ -163,7 +163,7 @@ main(int argc, char** argv)
       Mime type("application", "pidf+xml");
 
       HeaderFieldValue hfv1(txt1.data(), txt1.size());
-      Pidf pc1(&hfv1, type);
+      Pidf pc1(hfv1, type);
 
       const Data txt2("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" CRLF
                       "<presence xmlns=\"urn:ietf:params:xml:ns:cpim-pidf:\"" CRLF
@@ -191,7 +191,7 @@ main(int argc, char** argv)
                       "</presence>");
 
       HeaderFieldValue hfv2(txt2.data(), txt2.size());
-      Pidf pc2(&hfv2, type);
+      Pidf pc2(hfv2, type);
 
       Pidf* n = new Pidf;
 

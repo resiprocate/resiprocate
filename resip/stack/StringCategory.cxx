@@ -25,13 +25,16 @@ StringCategory::StringCategory(const Data& value)
      mValue(value)
 {}
 
-StringCategory::StringCategory(HeaderFieldValue* hfv, Headers::Type type)
-   : ParserCategory(hfv, type),
+StringCategory::StringCategory(const HeaderFieldValue& hfv, 
+                                 Headers::Type type,
+                                 PoolBase* pool)
+   : ParserCategory(hfv, type, pool),
      mValue()
 {}
 
-StringCategory::StringCategory(const StringCategory& rhs)
-   : ParserCategory(rhs),
+StringCategory::StringCategory(const StringCategory& rhs,
+                                 PoolBase* pool)
+   : ParserCategory(rhs, pool),
      mValue(rhs.mValue)
 {}
 
@@ -49,6 +52,18 @@ ParserCategory*
 StringCategory::clone() const
 {
    return new StringCategory(*this);
+}
+
+ParserCategory* 
+StringCategory::clone(void* location) const
+{
+   return new (location) StringCategory(*this);
+}
+
+ParserCategory* 
+StringCategory::clone(PoolBase* pool) const
+{
+   return new (pool) StringCategory(*this, pool);
 }
 
 void 

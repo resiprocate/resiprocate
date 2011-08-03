@@ -22,12 +22,12 @@ Auth::Auth() :
    ParserCategory() 
 {}
 
-Auth::Auth(HeaderFieldValue* hfv, Headers::Type type) 
-   : ParserCategory(hfv, type) 
+Auth::Auth(const HeaderFieldValue& hfv, Headers::Type type, PoolBase* pool) 
+   : ParserCategory(hfv, type, pool) 
 {}
 
-Auth::Auth(const Auth& rhs)
-   : ParserCategory(rhs),
+Auth::Auth(const Auth& rhs, PoolBase* pool)
+   : ParserCategory(rhs, pool),
    mScheme(rhs.mScheme)
 {}
 
@@ -100,6 +100,18 @@ Auth::clone() const
    return new Auth(*this);
 }
 
+ParserCategory* 
+Auth::clone(void* location) const
+{
+   return new (location) Auth(*this);
+}
+
+ParserCategory* 
+Auth::clone(PoolBase* pool) const
+{
+   return new (pool) Auth(*this, pool);
+}
+
 void
 Auth::parseAuthParameters(ParseBuffer& pb)
 {
@@ -112,7 +124,7 @@ Auth::parseAuthParameters(ParseBuffer& pb)
       if((int)(keyEnd-keyStart) != 0)
       {
          ParameterTypes::Type type = ParameterTypes::getType(keyStart, (unsigned int)(keyEnd - keyStart));
-         Parameter* p=createParam(type, pb, terminators);
+         Parameter* p=createParam(type, pb, terminators, getPool());
          if (!p)
          {
             mUnknownParameters.push_back(new UnknownParameter(keyStart, 
@@ -166,7 +178,7 @@ Auth::encodeAuthParameters(EncodeStream& str) const
 ParameterTypes::Factory Auth::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
 
 Parameter* 
-Auth::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators)
+Auth::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool)
 {
    if(type==ParameterTypes::qop)
    {
@@ -175,14 +187,14 @@ Auth::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<
       {
          case Headers::ProxyAuthenticate:
          case Headers::WWWAuthenticate:
-            qop = new DataParameter(ParameterTypes::qopOptions,pb,terminators);
+            qop = new (pool) DataParameter(ParameterTypes::qopOptions,pb,terminators);
             qop->setQuoted(true);
             break;
          case Headers::ProxyAuthorization:
          case Headers::Authorization:
          case Headers::AuthenticationInfo:
          default:
-            qop = new DataParameter(ParameterTypes::qop,pb,terminators);
+            qop = new (pool) DataParameter(ParameterTypes::qop,pb,terminators);
             qop->setQuoted(false);
       }
       return qop;
@@ -190,7 +202,7 @@ Auth::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<
 
    if(ParameterFactories[type])
    {
-      return ParameterFactories[type](type, pb, terminators);
+      return ParameterFactories[type](type, pb, terminators, pool);
    }
    return 0;
 }
