@@ -79,6 +79,13 @@ StaticRoute::process(RequestContext& context)
       for ( RouteStore::UriList::const_iterator i = targets.begin();
             i != targets.end(); i++ )
       {
+         if(i->exists(p_lr))
+         {
+            InfoLog(<< "Adding loose route target, route to " << *i << " with target " << msg.header(h_RequestLine).uri());
+            msg.header(h_Routes).push_front(NameAddr(*i));
+            context.getResponseContext().addTarget(NameAddr(msg.header(h_RequestLine).uri()));
+            return Processor::SkipThisChain;
+         }
          //Targets are only added after authentication
          InfoLog(<< "Adding target " << *i );
          // .slg. adding StaticRoutes as QValueTargets allows them to be processed before the QValueTargets
@@ -90,7 +97,6 @@ StaticRoute::process(RequestContext& context)
          context.getResponseContext().addTarget(target, false /* beginImmediately */, mParallelForkStaticRoutes /* addToFirstBatch */);
          //context.addTarget(NameAddr(*i));
       }
-
    }
    
    return Processor::Continue;

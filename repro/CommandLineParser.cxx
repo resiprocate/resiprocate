@@ -52,7 +52,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int noIdentityHeaders = false;
    int certServer = false;
 
-   const char* reqChainName = "default";
+   //const char* reqChainName = "default";
    char* mySqlServer = 0;
    char* httpHostname = 0;
    int httpPort = 5080;
@@ -132,7 +132,9 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"interfaces",      'i',   POPT_ARG_STRING,                            &interfaces,     0, "specify interfaces to add transports to", "sip:10.1.1.1:5065;transport=tls;tls=tlsdomain.com"},
       {"domains",         'd',   POPT_ARG_STRING,                            &domains,        0, "specify domains that this proxy is authorative", "example.com,foo.com"},
       {"route",           'R',   POPT_ARG_STRING,                            &routeSet,       0, "specify where to route requests that are in this proxy's domain", "sip:p1.example.com,sip:p2.example.com"},
+#if 0
       {"reqChainName",      0,   POPT_ARG_STRING,                            &reqChainName,   0, "name of request chain (default: default)", 0},
+#endif
       {"http",              0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &httpPort,       0, "run HTTP server on specified port", 0},
       {"http-hostname",     0,   POPT_ARG_STRING,                            &httpHostname,   0, "http hostname for this server (used in Identity headers)", 0},
       {"recursive-redirect",0,   POPT_ARG_NONE,                              &recursiveRedirect, 0, "Handle 3xx responses in the proxy", 0},
@@ -228,7 +230,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mNoRegistrar = noRegistrar != 0 ;
    mNoIdentityHeaders = noIdentityHeaders != 0;
    mCertServer = certServer !=0 ;
-   mRequestProcessorChainName=reqChainName;
+   //mRequestProcessorChainName=reqChainName;
    mRecursiveRedirect = recursiveRedirect?true:false;
    mDoQValue = doQValue?true:false;
    mForkBehavior=forkBehavior;

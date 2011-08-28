@@ -40,7 +40,7 @@ class CommandLineParser
       bool mNoRegistrar;
       bool mNoIdentityHeaders;
       bool mCertServer;
-      Data mRequestProcessorChainName;
+      //Data mRequestProcessorChainName;
       Data mMySqlServer;
       Data mHttpHostname;
       int mHttpPort;
