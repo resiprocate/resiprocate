@@ -18,9 +18,6 @@
     <ClCompile Include="BerkeleyDb.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CommandLineParser.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="HttpBase.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -44,9 +41,6 @@
     <ClInclude Include="BerkeleyDb.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CommandLineParser.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="HttpBase.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -66,5 +60,6 @@
   <ItemGroup>
     <None Include="webadmin\pageOutlinePost.ixx" />
     <None Include="webadmin\pageOutlinePre.ixx" />
+    <None Include="repro.config" />
   </ItemGroup>
 </Project>

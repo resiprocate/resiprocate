@@ -138,6 +138,9 @@
     <ClCompile Include="XmlRpcServerBase.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ProxyConfig.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDb.hxx">
@@ -276,6 +279,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="RegSyncServerThread.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ProxyConfig.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
