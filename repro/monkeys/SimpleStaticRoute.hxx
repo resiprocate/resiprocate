@@ -7,11 +7,12 @@ namespace repro
 {
 class NameAddrs;
 class RouteStore;
+class ProxyConfig;
 
 class SimpleStaticRoute: public Processor
 {
    public:
-      SimpleStaticRoute(const resip::NameAddrs& routeSet);
+      SimpleStaticRoute(ProxyConfig& config);
       virtual ~SimpleStaticRoute();
       
       virtual processor_action_t process(RequestContext &);

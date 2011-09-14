@@ -7,11 +7,12 @@
 namespace repro
 {
   class AclStore;
+  class ProxyConfig;
 
   class IsTrustedNode: public Processor
   {
     public:
-      IsTrustedNode(AclStore& store);
+      IsTrustedNode(ProxyConfig& config);
       virtual ~IsTrustedNode();
 
       virtual processor_action_t process(RequestContext &);

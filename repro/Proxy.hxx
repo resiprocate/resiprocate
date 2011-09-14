@@ -9,6 +9,7 @@
 #include "rutil/ThreadIf.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/TimerCMessage.hxx"
+#include "repro/ProxyConfig.hxx"
 
 namespace resip
 {
@@ -46,13 +47,10 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
 {
    public:
       Proxy(resip::SipStack&,
-            const resip::Uri& recordRoute, 
-            bool forceRecordRoute,
+            ProxyConfig& config,
             ProcessorChain& requestP, 
             ProcessorChain& responseP,
-            ProcessorChain& targetP,
-            UserStore& ,
-            int timerC);
+            ProcessorChain& targetP);
       virtual ~Proxy();
 
       // Crypto Random Key for Salting Flow Token HMACs
@@ -81,8 +79,6 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
 
       void postMS(std::auto_ptr<resip::ApplicationMessage> msg, int msec);
 
-      int mTimerC;
-      
       bool compressionEnabled() const;
 
       void addSupportedOption(const resip::Data& option);
@@ -99,6 +95,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       bool mRecordRouteForced;
       bool mAssumePath;
       resip::Data mServerText;
+      int mTimerC;
       
       // needs to be a reference since parent owns it
       ProcessorChain& mRequestProcessorChain;
