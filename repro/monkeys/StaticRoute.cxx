@@ -11,26 +11,21 @@
 #include "rutil/Logger.hxx"
 #include "repro/RouteStore.hxx"
 
-
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
-
 
 using namespace resip;
 using namespace repro;
 using namespace std;
 
-
-StaticRoute::StaticRoute(RouteStore& store, bool noChallenge, bool parallelForkStaticRoutes, bool useAuthInt) :
-   mRouteStore(store),
-   mNoChallenge(noChallenge),
-   mParallelForkStaticRoutes(parallelForkStaticRoutes),
-   mUseAuthInt(useAuthInt)
+StaticRoute::StaticRoute(ProxyConfig& config) :
+   mRouteStore(config.getDataStore()->mRouteStore),
+   mNoChallenge(config.getConfigBool("DisableAuth", false)),
+   mParallelForkStaticRoutes(config.getConfigBool("ParallelForkStaticRoutes", false)),
+   mUseAuthInt(!config.getConfigBool("DisableAuthInt", false))
 {}
-
 
 StaticRoute::~StaticRoute()
 {}
-
 
 Processor::processor_action_t
 StaticRoute::process(RequestContext& context)

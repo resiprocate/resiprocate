@@ -1,66 +1,53 @@
-#if !defined(DUM_CommandLineParser_hxx)
-#define DUM_CommandLineParser_hxx
+#if !defined(ProxyConfig_hxx)
+#define ProxyConfig_hxx
 
-#include <vector>
-#include "resip/stack/Uri.hxx"
-#include "rutil/Data.hxx"
+#include <map>
+#include "repro/Store.hxx"
+#include <resip/stack/Uri.hxx>
+#include <rutil/Data.hxx>
 
-namespace resip
+namespace repro
 {
 
-class CommandLineParser
+class ProxyConfig 
 {
-   public:
-      CommandLineParser(int argc, char** argv);
-      static resip::Uri toUri(const char* input, const char* description);
-      static std::vector<resip::Data> toVector(const char* input, const char* description);
-      
-      Data mLogType;
-      Data mLogLevel;
-      Data mTlsDomain;
-      Data mEnumSuffix;
-      bool mForceRecordRoute;
-      bool mAssumePath;
-      resip::Uri mRecordRoute;
-      int mUdpPort;
-      int mTcpPort;
-      int mTlsPort;
-      int mDtlsPort;
-      bool mUseV4;
-      bool mUseV6;
-      std::vector<Data> mDomains;
-      std::vector<Data> mInterfaces;
-      std::vector<Data> mRouteSet;
-      Data mCertPath;
-      Data mDbPath;
-      bool mNoChallenge;
-      bool mNoAuthIntChallenge;
-      bool mRejectBadNonces;
-      bool mNoWebChallenge;
-      bool mNoRegistrar;
-      bool mNoIdentityHeaders;
-      bool mCertServer;
-      //Data mRequestProcessorChainName;
-      Data mMySqlServer;
-      Data mHttpHostname;
-      int mHttpPort;
-      bool mRecursiveRedirect;
-      bool mDoQValue;
-      Data mForkBehavior;
-      bool mCancelBetweenForkGroups;
-      bool mWaitForTerminate;
-      int mMsBetweenForkGroups;
-      int mMsBeforeCancel;
-      bool mAllowBadReg;
-      bool mParallelForkStaticRoutes;
-      int mTimerC;
-      Data mAdminPassword;
-      Data mRegSyncPeerAddress;
-      int mXmlRpcPort;
-      Data mServerText;
-      bool mUseInternalEPoll;
-      bool mUseEventThread;
-      int mOverrideT1;
+public:
+   ProxyConfig();
+   ProxyConfig(int argc, char** argv, const resip::Data& defaultConfigFilename);
+   virtual ~ProxyConfig();
+
+   void parseCommandLine(int argc, char** argv);
+   void parseConfigFile(const resip::Data& filename);
+
+   void createDataStore(AbstractDb* db);
+   Store* getDataStore() { return mStore; }
+
+   bool getConfigValue(const resip::Data& name, resip::Data &value);
+   resip::Data getConfigData(const resip::Data& name, const resip::Data& defaultValue, bool useDefaultIfEmpty=false);
+
+   bool getConfigValue(const resip::Data& name, bool &value);
+   bool getConfigBool(const resip::Data& name, bool defaultValue);
+   
+   bool getConfigValue(const resip::Data& name, unsigned long &value);
+   unsigned long getConfigUnsignedLong(const resip::Data& name, unsigned long defaultValue);
+
+   bool getConfigValue(const resip::Data& name, int &value);
+   int getConfigInt(const resip::Data& name, int defaultValue);
+
+   bool getConfigValue(const resip::Data& name, resip::Uri &value);
+   resip::Uri getConfigUri(const resip::Data& name, const resip::Uri defaultValue, bool useDefaultIfEmpty=false);
+
+   bool getConfigValue(const resip::Data& name, std::vector<resip::Data> &value);
+   
+private:
+   typedef std::multimap<resip::Data, resip::Data> ConfigValuesMap;
+   ConfigValuesMap mConfigValues;
+
+   // Config filename from command line
+   resip::Data mCmdLineConfigFilename;
+
+   // Database Store
+   Store* mStore;
 };
  
 }
@@ -70,7 +57,7 @@ class CommandLineParser
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -115,6 +102,4 @@ class CommandLineParser
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
- * vi: set shiftwidth=3 expandtab:
  */
-

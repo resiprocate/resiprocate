@@ -1,6 +1,7 @@
 #if !defined(RESIP_LOCATIONSSERVER_REQUEST_PROCESSOR_HXX)
 #define RESIP_LOCATIONSERVER_REQUEST_PROCESSOR_HXX 
 #include "repro/Processor.hxx"
+#include "repro/ProxyConfig.hxx"
 #include "resip/dum/RegistrationPersistenceManager.hxx"
 
 namespace repro
@@ -9,8 +10,8 @@ namespace repro
   class LocationServer: public Processor
   {
     public:
-      LocationServer(resip::RegistrationPersistenceManager& store, bool parallelForkStaticRoutes)
-       :mStore(store),mParallelForkStaticRoutes(parallelForkStaticRoutes){};
+      LocationServer(ProxyConfig& config, resip::RegistrationPersistenceManager& store)
+       :mStore(store),mParallelForkStaticRoutes(config.getConfigBool("ParallelForkStaticRoutes", false)){};
 
       virtual ~LocationServer(){};
 

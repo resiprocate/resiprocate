@@ -457,6 +457,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ProxyConfig.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\QValueTarget.cxx"
 				>
 			</File>
@@ -632,6 +636,10 @@
 			</File>
 			<File
 				RelativePath=".\Proxy.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ProxyConfig.hxx"
 				>
 			</File>
 			<File

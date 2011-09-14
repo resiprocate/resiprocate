@@ -13,7 +13,7 @@ CXXFLAGS += -I..
 ifneq ($(DB_HEADERS),/usr/include)
 CXXFLAGS += -I$(DB_HEADERS)
 endif
-PACKAGES += DUM RESIP RUTIL OPENSSL ARES DB4CXX PTHREAD POPT OPENSIGCOMP RADIUSCLIENTNG
+PACKAGES += DUM RESIP RUTIL OPENSSL ARES DB4CXX PTHREAD OPENSIGCOMP RADIUSCLIENTNG
 
 ifeq ($(OSTYPE),MinGW)
 PACKAGES += PCRE
@@ -42,7 +42,7 @@ SRC 	+=   \
 	AbstractDb.cxx \
 	BerkeleyDb.cxx \
 	\
-	CommandLineParser.cxx \
+	ProxyConfig.cxx \
 	ReproVersion.cxx \
 	HttpBase.cxx \
 	HttpConnection.cxx \
