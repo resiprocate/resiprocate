@@ -18,11 +18,16 @@
 #ifdef WIN32
 int ffsl(int mask) 
 {
-   int bit;     
-   if (mask == 0)         
-      return(0);      
-   for (bit=1; !(mask & 1); bit++) 
+   int bit;
+   if (mask == 0)
+   {
+      return(0);
+   }
+   
+   for (bit=1; !(mask & 1); bit++)
+   {
       mask >>= 1;
+   }
    return(bit);
 }
 #endif
@@ -118,36 +123,35 @@ int ffsl(int mask)
     into arrays. Doable, but gets expensive.
 
     Another option would be to allocate huge table:
-    	pidfStatus[fromAcct][fromRpt][toAcct][toRpt]
-	fromAcct is watcher (subscriber)
-	fromRpt is number of SUB repeats
-	toAcct is watchee (publisher) (presentity index)
-	toRpt is the number of PUB repeats
+       pidfStatus[fromAcct][fromRpt][toAcct][toRpt]
+       fromAcct is watcher (subscriber)
+       fromRpt is number of SUB repeats
+       toAcct is watchee (publisher) (presentity index)
+       toRpt is the number of PUB repeats
 
-	The value is a single bit: PIDF is up-to-date
+    The value is a single bit: PIDF is up-to-date
 
     A given PUB dlg has fixed (fromAcct,fromRpt)
     A given SUB dlg has fixed (fromAcct,toAcct,toRpt) (but fromRpt is free)
 
     On publish, would increment PUB SN, and:
-    	pidfStatus[*][*][toAcct][toRpt] = 0
+       pidfStatus[*][*][toAcct][toRpt] = 0
     On NOTIFY, would extract the tuples from the PIDF
-        getting set {(fromRpt,fromSN)} for fixed (fromAcct,toAcct,toRpt)
-	Each can be checked check for up-to-date-ness, and:
-	foreach fromRpt that is valid:
-    	    pidfStatus[fromAcct][fromRpt][toAcct][toRpt] = 0
+       getting set {(fromRpt,fromSN)} for fixed (fromAcct,toAcct,toRpt)
+    Each can be checked check for up-to-date-ness, and:
+       foreach fromRpt that is valid:
+           pidfStatus[fromAcct][fromRpt][toAcct][toRpt] = 0
     A PUB is complete when:
-    	    min(pidfStatus[fromAcct][fromRpt][*][*]) = 1
+           min(pidfStatus[fromAcct][fromRpt][*][*]) = 1
 
     Note that an optimization is possible if #SUB rpts is less than 32.
     Then the toRpt index drops out and the computations above are easier.
 
     Another optimization is to not check the PIDF for validity,
     but to simple assume good and on each NOTIFY:
-    	    pidfStatus[fromAcct][*][toAcct][toRpt] = 1
+           pidfStatus[fromAcct][*][toAcct][toRpt] = 1
     Above can be done for each fromRpt in the PIDF, or just accross the
     board.
-
 
     It isn't entirely clear the best place to keep PUBLISH state
     such as the current serial number and the existence of the publish.
@@ -227,18 +231,17 @@ int ffsl(int mask)
     With same conventions as below, with [fromRpt] treated as bitmask
 
     mPidfReady[] = conceptually
-   	ready[toAcct][toRpt][fromAcct][fromRpt] = bool
+      ready[toAcct][toRpt][fromAcct][fromRpt] = bool
     where 
-    	fromAcct = is watcher (subscriber)
-    	fromRpt = is repeat of that watcher (another client)
-    	toAcct = is watchee (publisher)
-    	toRpt = is repeat of that watchee (another client)
+       fromAcct = is watcher (subscriber)
+       fromRpt = is repeat of that watcher (another client)
+       toAcct = is watchee (publisher)
+       toRpt = is repeat of that watchee (another client)
     We limit the number of subscriber repeats to be < 32,
     and store the [fromRpt] dimension of the array as a bitmask.
 
     mPubPosture[] 
        posture[pubAcct][pubRpt] = (SN, exp)
-
 **/
 
 
@@ -246,230 +249,241 @@ int ffsl(int mask)
  * It is widely published on web. It seems to be the fastest
  * non-lookup table approach.
  */
-static inline unsigned rendPopcount(UInt32 val) {
-    UInt32 tmp = val - ((val >> 1) & 033333333333) - ((val >> 2) & 011111111111);
-    return ((tmp + (tmp >> 3)) & 030707070707) % 63;
+static inline unsigned rendPopcount(UInt32 val)
+{
+   UInt32 tmp = val - ((val >> 1) & 033333333333) - ((val >> 2) & 011111111111);
+   return ((tmp + (tmp >> 3)) & 030707070707) % 63;
 }
 
-struct RendEventPubPosture {
-    RendEventPubPosture() : mWatchable(false), mPidfSn(0), 
+struct RendEventPubPosture 
+{
+   RendEventPubPosture() : mWatchable(false), mPidfSn(0), 
       mExpireAbsSecs(0), mSessionIdx(0), 
       mAbsPubTime(0), mPendCnt(-1) { }
-    bool	mWatchable;
-    unsigned	mPidfSn;
-    UInt32	mExpireAbsSecs;	// absolute time, 0 if not active
-    unsigned	mSessionIdx;	// kind of like callback data
-    RendTimeUs	mAbsPubTime;	// Used for timing server latency
-    int		mPendCnt;
+   bool mWatchable;
+   unsigned mPidfSn;
+   UInt32 mExpireAbsSecs; // absolute time, 0 if not active
+   unsigned mSessionIdx; // kind of like callback data
+   RendTimeUs mAbsPubTime; // Used for timing server latency
+   int mPendCnt;
 };
 
 
-struct RendTupDetail {
-    unsigned	mPubAcctIdx;
-    unsigned	mPubRptIdx;
-    int		mPubExpireSecs;	// remaining time
-    unsigned	mPubPidfSn;
-    unsigned	mSubAcctIdx;
-    unsigned	mSubRptIdx;
-    UInt32	mWatchMask;
-    UInt32	mReadyMask;
-    UInt32	mPendMask;
+struct RendTupDetail 
+{
+   unsigned mPubAcctIdx;
+   unsigned mPubRptIdx;
+   int mPubExpireSecs; // remaining time
+   unsigned mPubPidfSn;
+   unsigned mSubAcctIdx;
+   unsigned mSubRptIdx;
+   UInt32 mWatchMask;
+   UInt32 mReadyMask;
+   UInt32 mPendMask;
 
-    // Total number of subscriptions (incl repleats) to this presentity
-    unsigned	mWatchCnt;
-    // Total number of pending subscriptions (incl repeats) to this presentity
-    unsigned	mPendCnt;
+   // Total number of subscriptions (incl repleats) to this presentity
+   unsigned mWatchCnt;
+   // Total number of pending subscriptions (incl repeats) to this presentity
+   unsigned mPendCnt;
 
-    EncodeStream& fmt(EncodeStream& os) const;
-    RendDlgAcctKey	toPubKey() const {
-	// TBD: add asserts?
-	// should from be zero?
-        return RendDlgAcctKey(REND_DlgCat_Sub, mPubAcctIdx, mPubAcctIdx, mPubRptIdx);
-    }
-    RendDlgAcctKey	toSubKey() const {
-	// TBD: add asserts?
-        return RendDlgAcctKey(REND_DlgCat_Sub, mPubAcctIdx, mSubAcctIdx, mSubRptIdx);
-    }
+   EncodeStream& fmt(EncodeStream& os) const;
+   RendDlgAcctKey toPubKey() const 
+   {
+      // TBD: add asserts?
+      // should from be zero?
+      return RendDlgAcctKey(REND_DlgCat_Sub, mPubAcctIdx, mPubAcctIdx, mPubRptIdx);
+   }
+   RendDlgAcctKey	toSubKey() const
+   {
+      // TBD: add asserts?
+      return RendDlgAcctKey(REND_DlgCat_Sub, mPubAcctIdx, mSubAcctIdx, mSubRptIdx);
+   }
 };
 
-static inline EncodeStream& operator<<(EncodeStream& os, const RendTupDetail& detail) {
-    return detail.fmt(os);
+static inline EncodeStream& operator<<(EncodeStream& os, const RendTupDetail& detail) 
+{
+   return detail.fmt(os);
 }
 
 
-class RendEventNotifyIf {
-  public:
-    virtual void	handleNotifyDone(RendTimeUs now, unsigned sessionIdx,
-	    		  RendTimeUs absPubTime, bool isNotify) = 0;
+class RendEventNotifyIf
+{
+public:
+   virtual void handleNotifyDone(RendTimeUs now, unsigned sessionIdx, RendTimeUs absPubTime, bool isNotify) = 0;
 };
 
-class RendPubSubEvent {
-  public:
-    RendPubSubEvent(resip::Data evName, resip::Mime contentType)
-	: mEventName(evName), mContentType(contentType), 
-	mTuplePrefix(resip::Random::getRandomBase64(4)), // should be 6 char long
-	mPosture(0),
-	mWatching(0),
-	mPidfReady(0),
-    	mNotifyObj(0) {
-	}
-    ~RendPubSubEvent();
+class RendPubSubEvent
+{
+public:
+   RendPubSubEvent(resip::Data evName, resip::Mime contentType)
+      : mEventName(evName), mContentType(contentType), 
+        mTuplePrefix(resip::Random::getRandomBase64(4)), // should be 6 char long
+        mPosture(0),
+        mWatching(0),
+        mPidfReady(0),
+        mNotifyObj(0) 
+   {
+   }
+   ~RendPubSubEvent();
 
-    const resip::Data&	getEventName() const { return mEventName; }
-    const resip::Mime&	getContentType() const { return mContentType; }
-    const resip::Data&	getTuplePrefix() const { return mTuplePrefix; }
+   const resip::Data& getEventName() const { return mEventName; }
+   const resip::Mime& getContentType() const { return mContentType; }
+   const resip::Data& getTuplePrefix() const { return mTuplePrefix; }
 
-    void		setNotifyObj(RendEventNotifyIf *notObj) {
-	mNotifyObj = notObj;
-    }
+   void setNotifyObj(RendEventNotifyIf *notObj) 
+   {
+      mNotifyObj = notObj;
+   }
 
-    unsigned 		getPidfSn(unsigned pubAcct, unsigned pubRpt) const;
+   unsigned getPidfSn(unsigned pubAcct, unsigned pubRpt) const;
 
-    void		setWatchable(unsigned pubAcctIdx, unsigned pubRptIdx,
-			  bool isWatchable);
+   void setWatchable(unsigned pubAcctIdx, unsigned pubRptIdx, bool isWatchable);
 
-    unsigned 		getNextPidfSn(unsigned pubAcct, unsigned pubRpt, 
-	    		  RendTimeUs absPubTime, RendTimeUs absExpTime, 
-			  int sessionIdx);
+   unsigned getNextPidfSn(unsigned pubAcct, unsigned pubRpt, 
+                          RendTimeUs absPubTime, RendTimeUs absExpTime, 
+                          int sessionIdx);
 
-    void		setSize(unsigned numAcct, 
-	    		  unsigned numPubRpt, unsigned numSubRpt);
+   void setSize(unsigned numAcct, unsigned numPubRpt, unsigned numSubRpt);
 
-    /**
-      * Get/Set {subAcctIdx/subAcctRpt} to be watching {pubAcctIdx}.
-      */
-    bool		getWatching(unsigned pubAcctIdx, unsigned subAcctIdx,
-	    		  unsigned subRptIdx);
-    void		setWatching(RendTimeUs now, 
-	    		  unsigned pubAcctIdx, unsigned subAcctIdx,
-	    		  unsigned subRptIdx, bool isWatching,
-			  bool notifyPub = true);
-    /**
-     * Count number of watchers of {pubAcctIdx}. Note that all repeats
-     * of the pub have same number of watchers (since any sub watches
-     * all pub repeats.
-     */
-    unsigned		countWatchers(unsigned pubAcctIdx);
+   /**
+   * Get/Set {subAcctIdx/subAcctRpt} to be watching {pubAcctIdx}.
+   */
+   bool getWatching(unsigned pubAcctIdx, unsigned subAcctIdx, unsigned subRptIdx);
+   void setWatching(RendTimeUs now, 
+                    unsigned pubAcctIdx, unsigned subAcctIdx,
+                    unsigned subRptIdx, bool isWatching,
+                    bool notifyPub = true);
+   /**
+   * Count number of watchers of {pubAcctIdx}. Note that all repeats
+   * of the pub have same number of watchers (since any sub watches
+   * all pub repeats.
+   */
+   unsigned countWatchers(unsigned pubAcctIdx);
 
-    /*
-     * Record that a new PUBLISH has occured, and that we expect to 
-     * receive new NOTIFYs for all subcriptions to that account.
-     */
-    void		recordPublish(unsigned pubAcct, unsigned pubRpt);
+   /*
+   * Record that a new PUBLISH has occured, and that we expect to 
+   * receive new NOTIFYs for all subcriptions to that account.
+   */
+   void recordPublish(unsigned pubAcct, unsigned pubRpt);
 
-    /*
-     * Check to see if all expect NOTIFYs have been received for given
-     * publish. Likely need to extend to return more info about
-     * which subscriptions are not ready.
-     * Returns true if all subscriptions ready to go.
-     */
-    bool		checkPublish(unsigned pubAcct, unsigned pubRpt);
+   /*
+   * Check to see if all expect NOTIFYs have been received for given
+   * publish. Likely need to extend to return more info about
+   * which subscriptions are not ready.
+   * Returns true if all subscriptions ready to go.
+   */
+   bool checkPublish(unsigned pubAcct, unsigned pubRpt);
 
-    int			checkPublishDetail(RendTimeUs now, unsigned pubAcctIdx, 
-	    		  unsigned pubRptIdx, RendTupDetail& detail);
+   int checkPublishDetail(RendTimeUs now, unsigned pubAcctIdx, unsigned pubRptIdx, RendTupDetail& detail);
 
-    void		recordNotifyTup(RendTimeUs now,
-	    		  unsigned pubAcct, unsigned pubRpt,
-	    		  unsigned subAcct, unsigned subRpt, 
-			  unsigned pubPidfSn);
+   void recordNotifyTup(RendTimeUs now,
+                        unsigned pubAcct, unsigned pubRpt,
+                        unsigned subAcct, unsigned subRpt, 
+                        unsigned pubPidfSn);
 
-    void		recordNotifyMask(RendTimeUs now,
-	    		  unsigned pubAcct, UInt32 pubRptMask,
-	    		  unsigned subAcct, unsigned subRpt);
+   void recordNotifyMask(RendTimeUs now,
+                         unsigned pubAcct, UInt32 pubRptMask,
+                         unsigned subAcct, unsigned subRpt);
 
-    void		dumpPub(unsigned pubAcctIdx, unsigned pubRptIdx) const;
+   void dumpPub(unsigned pubAcctIdx, unsigned pubRptIdx) const;
 
-    unsigned		getPendingTuples(unsigned pubAcctIdx, unsigned pubRptIdx);
-    unsigned		countPendingTuplesCore(unsigned pubAcctIdx, unsigned pubRptIdx) const;
-    unsigned		countPendingTuples();
+   unsigned getPendingTuples(unsigned pubAcctIdx, unsigned pubRptIdx);
+   unsigned countPendingTuplesCore(unsigned pubAcctIdx, unsigned pubRptIdx) const;
+   unsigned countPendingTuples();
 
-    // std::ostream&	fmtTupDetail(std::ostream& os, const RendTupDetail& detail);
+   // std::ostream& fmtTupDetail(std::ostream& os, const RendTupDetail& detail);
 
-  protected:
-    resip::Data		mEventName;
-    resip::Mime		mContentType;
-    int			mContentMode;
+protected:
+   resip::Data mEventName;
+   resip::Mime mContentType;
+   int mContentMode;
 
-    resip::Data		mTuplePrefix;
+   resip::Data mTuplePrefix;
 
-    unsigned		mNumPubAccts;
-    unsigned		mNumPubRpts;
-    unsigned		mNumSubAccts;
-    unsigned		mNumSubRpts;
-    RendEventPubPosture*mPosture;
-    UInt32*		mWatching;
-    UInt32*		mPidfReady;
+   unsigned mNumPubAccts;
+   unsigned mNumPubRpts;
+   unsigned mNumSubAccts;
+   unsigned mNumSubRpts;
+   RendEventPubPosture* mPosture;
+   UInt32* mWatching;
+   UInt32* mPidfReady;
 
-    RendEventNotifyIf*	mNotifyObj;
+   RendEventNotifyIf* mNotifyObj;
 
-    void		release();
+   void release();
 
-    RendEventPubPosture*
-			getPosture(unsigned pubAcctIdx, unsigned pubRptIdx) const;
+   RendEventPubPosture* getPosture(unsigned pubAcctIdx, unsigned pubRptIdx) const;
 
 };
 
-RendPubSubEvent::~RendPubSubEvent() {
-    release();
-}
-
-void
-RendPubSubEvent::release() {
-    if ( mPosture ) {
-	delete[] mPosture; mPosture = NULL;
-    }
-    if ( mWatching ) {
-	delete[] mWatching; mWatching = NULL;
-    }
-    if ( mPidfReady ) {
-	delete[] mPidfReady; mPidfReady = NULL;
-    }
+RendPubSubEvent::~RendPubSubEvent()
+{
+   release();
 }
 
 void
-RendPubSubEvent::setSize(unsigned numAcct, 
-	    		  unsigned numPubRpt, unsigned numSubRpt) {
+RendPubSubEvent::release()
+{
+   if ( mPosture ) 
+   {
+      delete[] mPosture; mPosture = NULL;
+   }
+   if ( mWatching ) 
+   {
+      delete[] mWatching; mWatching = NULL;
+   }
+   if ( mPidfReady ) 
+   {
+      delete[] mPidfReady; mPidfReady = NULL;
+   }
+}
 
-    assert( numAcct >= 1 );
-    assert( numPubRpt >= 1 );
-    assert( numSubRpt >= 1 );
-    assert( numSubRpt < 32 );
+void
+RendPubSubEvent::setSize(unsigned numAcct, unsigned numPubRpt, unsigned numSubRpt) 
+{
+   assert( numAcct >= 1 );
+   assert( numPubRpt >= 1 );
+   assert( numSubRpt >= 1 );
+   assert( numSubRpt < 32 );
 
-    mNumPubAccts = mNumSubAccts = numAcct;
-    mNumPubRpts = numPubRpt;
-    mNumSubRpts = numSubRpt;
+   mNumPubAccts = mNumSubAccts = numAcct;
+   mNumPubRpts = numPubRpt;
+   mNumSubRpts = numSubRpt;
 
-    release();
+   release();
 
-    unsigned v;
-    // posture[pubAcct][pubRpt] = ()
-    mPosture = new RendEventPubPosture[mNumPubAccts*mNumPubRpts];
-    // watch[pubAcct][subAcct][subRpt] = bool
-    v = mNumPubAccts*mNumSubAccts;
-    mWatching = new UInt32[v];
-    memset(mWatching, 0, sizeof(UInt32)*v);
-    // ready[pubAcct][pubRpt][subAcct][subRpt] = bool
-    v = mNumPubAccts*mNumPubRpts*mNumSubAccts;
-    mPidfReady = new UInt32[v];
-    memset(mPidfReady, 0, sizeof(UInt32)*v);
+   unsigned v;
+   // posture[pubAcct][pubRpt] = ()
+   mPosture = new RendEventPubPosture[mNumPubAccts*mNumPubRpts];
+   // watch[pubAcct][subAcct][subRpt] = bool
+   v = mNumPubAccts*mNumSubAccts;
+
+   mWatching = new UInt32[v];
+   memset(mWatching, 0, sizeof(UInt32)*v);
+   // ready[pubAcct][pubRpt][subAcct][subRpt] = bool
+
+   v = mNumPubAccts*mNumPubRpts*mNumSubAccts;
+   mPidfReady = new UInt32[v];
+   memset(mPidfReady, 0, sizeof(UInt32)*v);
 }
 
 inline RendEventPubPosture*
-RendPubSubEvent::getPosture(unsigned pubAcctIdx, unsigned pubRptIdx) const {
-    assert( pubAcctIdx < mNumPubAccts );
-    assert( pubRptIdx < mNumPubRpts );
-    RendEventPubPosture *posture = &mPosture[pubAcctIdx*mNumPubRpts+pubRptIdx];
-    return posture;
+RendPubSubEvent::getPosture(unsigned pubAcctIdx, unsigned pubRptIdx) const
+{
+   assert( pubAcctIdx < mNumPubAccts );
+   assert( pubRptIdx < mNumPubRpts );
+   RendEventPubPosture *posture = &mPosture[pubAcctIdx*mNumPubRpts+pubRptIdx];
+   return posture;
 }
 
-
 unsigned
-RendPubSubEvent::getPidfSn(unsigned pubAcctIdx, unsigned pubRptIdx) const {
-    assert( pubAcctIdx < mNumPubAccts );
-    assert( pubRptIdx < mNumPubRpts );
-    RendEventPubPosture *posture = &mPosture[pubAcctIdx*mNumPubRpts+pubRptIdx];
-    // TBD: could check to see if expired
-    return posture->mExpireAbsSecs==0 ? 0 : posture->mPidfSn;
+RendPubSubEvent::getPidfSn(unsigned pubAcctIdx, unsigned pubRptIdx) const 
+{
+   assert( pubAcctIdx < mNumPubAccts );
+   assert( pubRptIdx < mNumPubRpts );
+   RendEventPubPosture *posture = &mPosture[pubAcctIdx*mNumPubRpts+pubRptIdx];
+   // TBD: could check to see if expired
+   return posture->mExpireAbsSecs==0 ? 0 : posture->mPidfSn;
 }
 
 void
@@ -713,31 +727,37 @@ RendPubSubEvent::recordNotifyTup(RendTimeUs now,
 void
 RendPubSubEvent::recordNotifyMask(RendTimeUs now, 
                                   unsigned pubAcctIdx, UInt32 pubRptMask,
-                                  unsigned subAcctIdx, unsigned subRptIdx) {
+                                  unsigned subAcctIdx, unsigned subRptIdx)
+{
 
-                                     UInt32 subRptMask = 1 << subRptIdx;
-                                     unsigned pubRptIdx;
-                                     for ( pubRptIdx=0; pubRptIdx < mNumPubRpts; pubRptIdx++) {
-                                        if ( (pubRptMask & (1<<pubRptIdx))!=0 )
-                                           continue;	// got tup in NOTIFY, so unPUB didn't work yet
-                                        RendEventPubPosture *posture = &mPosture[pubAcctIdx*mNumPubRpts+pubRptIdx];
-                                        if ( posture->mExpireAbsSecs > 0 )
-                                           continue;	// PUB not expired
-                                        UInt32 *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
-                                        if ( (readyBase[subAcctIdx] & subRptMask)!=0 )
-                                           continue;	// already ready
+   UInt32 subRptMask = 1 << subRptIdx;
+   unsigned pubRptIdx;
+   for ( pubRptIdx=0; pubRptIdx < mNumPubRpts; pubRptIdx++) 
+   {
+      if ( (pubRptMask & (1<<pubRptIdx))!=0 )
+         continue; // got tup in NOTIFY, so unPUB didn't work yet
 
-                                        readyBase[subAcctIdx] |= subRptMask;
-                                        posture->mPendCnt = -1;
-                                        if ( mNotifyObj && checkPublish(pubAcctIdx, pubRptIdx) ) {
-                                           mNotifyObj->handleNotifyDone(now, posture->mSessionIdx,
-                                              posture->mAbsPubTime, /*isNotify*/true);
-                                        }
-                                     }
+      RendEventPubPosture *posture = &mPosture[pubAcctIdx*mNumPubRpts+pubRptIdx];
+      if ( posture->mExpireAbsSecs > 0 )
+         continue; // PUB not expired
+
+      UInt32 *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
+      if ( (readyBase[subAcctIdx] & subRptMask)!=0 )
+         continue; // already ready
+
+      readyBase[subAcctIdx] |= subRptMask;
+      posture->mPendCnt = -1;
+      if ( mNotifyObj && checkPublish(pubAcctIdx, pubRptIdx) )
+      {
+         mNotifyObj->handleNotifyDone(now, posture->mSessionIdx,
+            posture->mAbsPubTime, /*isNotify*/true);
+      }
+   }
 }
 
 void
-RendPubSubEvent::dumpPub(unsigned pubAcctIdx, unsigned pubRptIdx) const {
+RendPubSubEvent::dumpPub(unsigned pubAcctIdx, unsigned pubRptIdx) const 
+{
    UInt32 *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
    UInt32 *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
 
@@ -746,27 +766,28 @@ RendPubSubEvent::dumpPub(unsigned pubAcctIdx, unsigned pubRptIdx) const {
    unsigned pendCnt = 0;
 
    unsigned subIdx;
-   for (subIdx=0; subIdx < mNumSubAccts; subIdx++) {
+   for (subIdx=0; subIdx < mNumSubAccts; subIdx++)
+   {
       unsigned watchX = rendPopcount(watchBase[subIdx]);
       UInt32 pendBits = (watchBase[subIdx] & ~readyBase[subIdx]);
       unsigned pendX = rendPopcount(pendBits);
-      if ( watchBase[subIdx] || readyBase[subIdx] ) {
+      if ( watchBase[subIdx] || readyBase[subIdx] )
+      {
          ErrLog(<<"    Sub "<<subIdx<<" of "<<mNumSubAccts<<":"
-            <<std::hex<<std::setw(4)<<std::setfill('0')
-            <<" W="<<watchBase[subIdx]
-         <<" R="<<readyBase[subIdx]
-         <<" P="<<pendBits
-            <<std::dec
-            <<" #w="<<watchX
-            <<" #p="<<pendX
-            );
+                <<std::hex<<std::setw(4)<<std::setfill('0')
+                <<" W="<<watchBase[subIdx]
+                <<" R="<<readyBase[subIdx]
+                <<" P="<<pendBits
+                <<std::dec
+                <<" #w="<<watchX
+                <<" #p="<<pendX);
       }
       watchCnt += watchX;
       pendCnt += pendX;
    }
    ErrLog(<<"EventDb: Dump complete:"
-      <<" #w="<<watchCnt
-      <<" #p="<<pendCnt);
+          <<" #w="<<watchCnt
+          <<" #p="<<pendCnt);
 }
 
 /**
@@ -776,13 +797,15 @@ NOTE that this doesn't worry about the pub being expired or not:
 caller must handle that.
 **/
 inline unsigned
-RendPubSubEvent::countPendingTuplesCore(unsigned pubAcctIdx, unsigned pubRptIdx) const {
+RendPubSubEvent::countPendingTuplesCore(unsigned pubAcctIdx, unsigned pubRptIdx) const
+{
    unsigned pendCnt = 0;
    UInt32 *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
    UInt32 *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
 
    unsigned subIdx;
-   for (subIdx=0; subIdx < mNumSubAccts; subIdx++) {
+   for (subIdx=0; subIdx < mNumSubAccts; subIdx++)
+   {
       UInt32 pendBits = (watchBase[subIdx] & ~readyBase[subIdx]);
       unsigned pendX = rendPopcount(pendBits);
       pendCnt += pendX;
@@ -791,11 +814,13 @@ RendPubSubEvent::countPendingTuplesCore(unsigned pubAcctIdx, unsigned pubRptIdx)
 }
 
 unsigned
-RendPubSubEvent::getPendingTuples(unsigned pubAcctIdx, unsigned pubRptIdx) {
+RendPubSubEvent::getPendingTuples(unsigned pubAcctIdx, unsigned pubRptIdx)
+{
    // TBD: asserts on the args
    RendEventPubPosture *posture = &mPosture[pubAcctIdx*mNumPubRpts+pubRptIdx];
    if ( posture->mPendCnt < 0 )
       posture->mPendCnt = countPendingTuplesCore(pubAcctIdx, pubRptIdx);
+
    return posture->mPendCnt;
 }
 
@@ -804,28 +829,36 @@ Count number of tuples that are pending. This means the tuple
 is both watched (we are subscribed) and stale (not ready).
 **/
 unsigned
-RendPubSubEvent::countPendingTuples() {
+RendPubSubEvent::countPendingTuples()
+{
    unsigned pendCnt = 0;
    // ready[pubAcct][pubRpt][subAcct][subRpt] = bool
    // watch[pubAcct][subAcct][subRpt] = bool
    unsigned pubAcctIdx;
-   for ( pubAcctIdx=0; pubAcctIdx < mNumPubAccts; pubAcctIdx++) {
+   for ( pubAcctIdx=0; pubAcctIdx < mNumPubAccts; pubAcctIdx++)
+   {
       unsigned pubRptIdx;
-      for ( pubRptIdx=0; pubRptIdx < mNumPubRpts; pubRptIdx++) {
+      for ( pubRptIdx=0; pubRptIdx < mNumPubRpts; pubRptIdx++)
+      {
          RendEventPubPosture *posture = &mPosture[pubAcctIdx*mNumPubRpts+pubRptIdx];
+         
          if ( ! posture->mWatchable )
             continue;
+         
          if ( posture->mExpireAbsSecs==0 )
             continue;
+
          int cachePend = posture->mPendCnt;
-         if ( cachePend < 0 ) {
+         if ( cachePend < 0 )
+         {
             posture->mPendCnt = countPendingTuplesCore(pubAcctIdx, pubRptIdx);
          }
 #if 0		// we haven't had issues for while, so probably ok now
-         if ( cachePend >= 0 && cachePend != posture->mPendCnt ) {
+         if ( cachePend >= 0 && cachePend != posture->mPendCnt )
+         {
             ErrLog(<<"EventDb Consistency Error: pending count mismatch: "
-               <<" cachePend="<<cachePend
-               <<" countPend="<<posture->mPendCnt);
+                   <<" cachePend="<<cachePend
+                   <<" countPend="<<posture->mPendCnt);
             dumpPub(pubAcctIdx, pubRptIdx);
             assert(0);
          }
@@ -843,70 +876,66 @@ RendPubSubEvent::countPendingTuples() {
 ********************************************************************/
 class RendPubDlg;
 
-class RendPubTroop : public RendTroopBase, public RendEventNotifyIf {
+class RendPubTroop : public RendTroopBase, public RendEventNotifyIf
+{
 public:
-   RendPubTroop(RendTimeUs now, RendTu& tu, RendCntMgr& cntMgr, 
-      RendPubSubEvent& evInfo)
-      : RendTroopBase(now, tu, REND_DlgCat_Pub, cntMgr),
-      mEventInfo(evInfo) {
-   }
+   RendPubTroop(RendTimeUs now, RendTu& tu, RendCntMgr& cntMgr, RendPubSubEvent& evInfo)
+      : RendTroopBase(now, tu, REND_DlgCat_Pub, cntMgr), mEventInfo(evInfo) 
+   {}
    virtual RendTroopDlg*createNewDlg(const RendDlgAcctKey& key);
-   virtual int		startDlgCmd(RendTimeUs now, RendSession& sess,
-      RendTroopDlg *dlg, int expSecs, 
-      RendPendReason pendReason);
-   virtual void	handleNotifyDone(RendTimeUs now, unsigned sessionIdx,
-      RendTimeUs absPubTime, bool isNotify);
-   virtual RendSessionMood
-      checkGoalMood(RendHandleMoodCxt& cxt);
+   virtual int startDlgCmd(RendTimeUs now, RendSession& sess,
+                           RendTroopDlg *dlg, int expSecs, 
+                           RendPendReason pendReason);
+   virtual void handleNotifyDone(RendTimeUs now, unsigned sessionIdx,
+                                 RendTimeUs absPubTime, bool isNotify);
+   virtual RendSessionMood checkGoalMood(RendHandleMoodCxt& cxt);
 
-   RendPubDlg*		getPubDlg(const RendSession& sess) const;
+   RendPubDlg* getPubDlg(const RendSession& sess) const;
 
-   void		updateWorkStats(unsigned subPerPub, bool clearB);
+   void updateWorkStats(unsigned subPerPub, bool clearB);
 
-   RendPubSubEvent&	mEventInfo;
+   RendPubSubEvent& mEventInfo;
 
    // Number of tuples in the wave queue, 
    // doesn't include PendReq or PendNot queues
-   // int			mWaveCurTupRemCnt;
-   unsigned 		mPendTupCurCnt;
-   unsigned		mPendTupMostCnt;
-   unsigned		mRemainTupCurCnt;
-   unsigned		mRemainTupTotCnt;
+   // int mWaveCurTupRemCnt;
+   unsigned mPendTupCurCnt;
+   unsigned mPendTupMostCnt;
+   unsigned mRemainTupCurCnt;
+   unsigned mRemainTupTotCnt;
 };
 
 
-class RendPubDlg : public RendTroopDlg {
+class RendPubDlg : public RendTroopDlg 
+{
 public:
-   RendPubDlg(RendPubTroop& troop, RendTu& tu, RendAcctIdx acctIdx, 
-      int rptIdx) 
-      : RendTroopDlg(tu, acctIdx, acctIdx), mTroop(troop),
-      mRepeatIdx(rptIdx)
+   RendPubDlg(RendPubTroop& troop, RendTu& tu, RendAcctIdx acctIdx, int rptIdx) 
+      : RendTroopDlg(tu, acctIdx, acctIdx), mTroop(troop), mRepeatIdx(rptIdx)
    { 
       assert(acctIdx>=0); 
       mFlags |= REND_DlgF_ETagDlg;
    }
-   virtual RendTroopBase&	getTroop() { return mTroop; }
-   virtual resip::SipMessage*	makeNextReq();
-   virtual RendSessionMood	getPostRspMood(RendTimeUs now, 
-      RendSession& sess, bool isGood);
+   virtual RendTroopBase& getTroop() { return mTroop; }
+   virtual resip::SipMessage* makeNextReq();
+   virtual RendSessionMood getPostRspMood(RendTimeUs now, RendSession& sess, bool isGood);
 
-   RendPubTroop&	mTroop;
-   int			mRepeatIdx;
-   int			mPidfSn;
-
+   RendPubTroop& mTroop;
+   int mRepeatIdx;
+   int mPidfSn;
 
 protected:
 };
 
-inline 
-RendPubDlg*		
-RendPubTroop::getPubDlg(const RendSession& sess) const {
+inline RendPubDlg*
+RendPubTroop::getPubDlg(const RendSession& sess) const 
+{
    return static_cast<RendPubDlg*>(sess.getDlg());
 }
 
 
 RendSessionMood
-RendPubTroop::checkGoalMood(RendHandleMoodCxt& cxt) {
+RendPubTroop::checkGoalMood(RendHandleMoodCxt& cxt)
+{
    RendSession& sess = *cxt.mSess;
 
    assert(mOpenToIdxBase >= 0 && mOpenToIdxLen >= 0);
@@ -915,7 +944,8 @@ RendPubTroop::checkGoalMood(RendHandleMoodCxt& cxt) {
    int idx = (cxt.mKey.mToIdx - mOpenToIdxBase + ndlgs) % ndlgs;
    bool doPub = idx >= 0 && idx < mOpenToIdxLen;
 
-   if ( doPub && sess.mMood==REND_SM_Idle ) {
+   if ( doPub && sess.mMood==REND_SM_Idle )
+   {
       // below increments SN so that we know stale even though
       // we haven't sent PUB yet (so we don't mark ready prematurely)
       // mEventInfo.getNextPidfSn(key.mToIdx, key.mRepeatIdx, now, 0, -1);
@@ -924,7 +954,8 @@ RendPubTroop::checkGoalMood(RendHandleMoodCxt& cxt) {
       return REND_SM_Wave;
    }
 
-   if ( doPub && sess.mMood==REND_SM_Open ) {
+   if ( doPub && sess.mMood==REND_SM_Open )
+   {
       // see comment above
       //mEventInfo.getNextPidfSn(key.mToIdx, key.mRepeatIdx, now, 0, -1);
       // mWaveCurTupRemCnt += mEventInfo.countWatchers(key.mToIdx);
@@ -934,15 +965,18 @@ RendPubTroop::checkGoalMood(RendHandleMoodCxt& cxt) {
 #if 0
    // this is unreached unless we modify above to be more selective
    if ( doPub && sess.mMood==REND_SM_Open 
-      && sess.mRenewAbsTime!=0 && now > sess.mRenewAbsTime ) {
-         pr = REND_PR_Renew;
-         return REND_SM_Wave;
+       && sess.mRenewAbsTime!=0 && now > sess.mRenewAbsTime ) 
+   {
+      pr = REND_PR_Renew;
+      return REND_SM_Wave;
    }
 #endif
-   if ( doPub ) {
+   if ( doPub ) 
+   {
       WarningLog(<<"Want to pub, but in strange mood="<<sess.mMood);
    }
-   if ( !doPub && sess.mMood!=REND_SM_Idle ) {
+   if ( !doPub && sess.mMood!=REND_SM_Idle ) 
+   {
       // I don't think we need to bump the PIDF SN, since we're 
       // really looking for absense, not the SN. When we send
       // the actual unPUB we'll update the DB entry
@@ -953,16 +987,19 @@ RendPubTroop::checkGoalMood(RendHandleMoodCxt& cxt) {
 }
 
 void
-RendPubTroop::updateWorkStats(unsigned subPerPub, bool clearB) {
+RendPubTroop::updateWorkStats(unsigned subPerPub, bool clearB) 
+{
    unsigned pubWave = getSessionMoodCnt(REND_SM_Wave);
-   if ( clearB ) {
+   if ( clearB ) 
+   {
       mPendTupCurCnt = mPendTupMostCnt = 0;
       mRemainTupTotCnt = pubWave * subPerPub;
-   } else {
+   } 
+   else 
+   {
       int pubReq = getSessionMoodCnt(REND_SM_PendReq);
       int pubNot = getSessionMoodCnt(REND_SM_PendNotify);
-      mPendTupCurCnt = (pubReq+pubNot==0) ? 0
-         : mEventInfo.countPendingTuples();
+      mPendTupCurCnt = (pubReq+pubNot==0) ? 0 : mEventInfo.countPendingTuples();
 
       if ( mPendTupCurCnt > mPendTupMostCnt )
          mPendTupMostCnt = mPendTupCurCnt;
@@ -978,26 +1015,31 @@ RendPubTroop::updateWorkStats(unsigned subPerPub, bool clearB) {
 
 
 RendTroopDlg*
-RendPubTroop::createNewDlg(const RendDlgAcctKey& key) {
+RendPubTroop::createNewDlg(const RendDlgAcctKey& key)
+{
    // what about key.mRepeatIdx?
    return new RendPubDlg(*this, mTu, key.mToIdx, key.mRepeatIdx);
 }
 
 int
 RendPubTroop::startDlgCmd(RendTimeUs now, RendSession& sess,
-                          RendTroopDlg *dlg, int expSecs, RendPendReason pendReason) {
-                             RendPubDlg *pdlg = static_cast<RendPubDlg*>(dlg);
-                             if ( pendReason==REND_PR_Renew ) {
-                                pdlg->mPidfSn = 0;
-                             } else {
-                                //InfoLog(<<"PubStartCmd pub="<<pdlg->mToAcctIdx<<"."<<pdlg->mRepeatIdx
-                                //		<<" exp="<<expSecs);
-                                RendTimeUs expTime = expSecs<=0 ? 0 : now+REND_S2US(expSecs);
-                                pdlg->mPidfSn = mEventInfo.getNextPidfSn(pdlg->mToAcctIdx, 
-                                   pdlg->mRepeatIdx, now, expTime,
-                                   pdlg->mTroopSessionIdx);
-                             }
-                             return RendTroopBase::startDlgCmd(now, sess, dlg, expSecs, pendReason);
+                          RendTroopDlg *dlg, int expSecs, RendPendReason pendReason) 
+{
+   RendPubDlg *pdlg = static_cast<RendPubDlg*>(dlg);
+   if ( pendReason==REND_PR_Renew )
+   {
+      pdlg->mPidfSn = 0;
+   } 
+   else 
+   {
+      //InfoLog(<<"PubStartCmd pub="<<pdlg->mToAcctIdx<<"."<<pdlg->mRepeatIdx
+      //		<<" exp="<<expSecs);
+      RendTimeUs expTime = expSecs<=0 ? 0 : now+REND_S2US(expSecs);
+      pdlg->mPidfSn = mEventInfo.getNextPidfSn(pdlg->mToAcctIdx, 
+         pdlg->mRepeatIdx, now, expTime,
+         pdlg->mTroopSessionIdx);
+   }
+   return RendTroopBase::startDlgCmd(now, sess, dlg, expSecs, pendReason);
 }
 
 /**
@@ -1008,23 +1050,29 @@ For now, think of {sessionIdx} as callback data.
 **/
 void
 RendPubTroop::handleNotifyDone(RendTimeUs now, unsigned sessionIdx,
-                               RendTimeUs absPubTime, bool isNotify) {
-                                  RendSession* sess = getSession(sessionIdx);
-                                  assert( sess );
-                                  if ( sess->mMood != REND_SM_PendNotify )
-                                     return;	// we don't care any right now
-                                  if ( isNotify )
-                                     addMoodDur(sess->mMood, now - absPubTime);
-                                  setSessionMood(now, *sess, REND_SM_GROUP_ByPendReason);
+                               RendTimeUs absPubTime, bool isNotify) 
+{
+   RendSession* sess = getSession(sessionIdx);
+   assert( sess );
+
+   if ( sess->mMood != REND_SM_PendNotify )
+      return; // we don't care any right now
+
+   if ( isNotify )
+      addMoodDur(sess->mMood, now - absPubTime);
+
+   setSessionMood(now, *sess, REND_SM_GROUP_ByPendReason);
 }
 
 resip::SipMessage*
-RendPubDlg::makeNextReq() {
+RendPubDlg::makeNextReq()
+{
    resip::SipMessage *req = makeRequest(resip::PUBLISH);
    req->header(resip::h_Event).value() = mTroop.mEventInfo.getEventName();
    // req->header(h_Accepts).push_back( resip::Mime( "application", "pidf+xml") );
 
-   if ( mPidfSn > 0 ) {
+   if ( mPidfSn > 0 ) 
+   {
       resip::Data entityAor = getAcctMgr().getAorNoPort(mFromAcctIdx);
       const resip::Data& tupPre = mTroop.mEventInfo.getTuplePrefix();
       const char *basicStatus = "open";
@@ -1076,21 +1124,24 @@ really looking for absense of info. I think for now we just look
 to see that we got any message at all.
 **/
 RendSessionMood
-RendPubDlg::getPostRspMood(RendTimeUs now, RendSession& sess, bool isGood) {
+RendPubDlg::getPostRspMood(RendTimeUs now, RendSession& sess, bool isGood)
+{
    assert( sess.mMood == REND_SM_PendReq );
    assert( sess.getPendReason() != 0 );
-   if ( isGood ) {
-      if ( ! mTroop.mEventInfo.checkPublish(mToAcctIdx, mRepeatIdx) ) {
+   if ( isGood ) 
+   {
+      if ( ! mTroop.mEventInfo.checkPublish(mToAcctIdx, mRepeatIdx) ) 
+      {
          return REND_SM_PendNotify;
       }
-      if ( sess.getPendReason()!=REND_PR_Close ) {
+      if ( sess.getPendReason()!=REND_PR_Close ) 
+      {
          return REND_SM_Open;
       }
    }
    // If good close or any failure, unset watchable so we
    // don't wait for notifies.
-   mTroop.mEventInfo.setWatchable(mToAcctIdx, mRepeatIdx, 
-      /*isWatchable*/false);
+   mTroop.mEventInfo.setWatchable(mToAcctIdx, mRepeatIdx, /*isWatchable*/false);
    return REND_SM_Recycle;
 }
 
@@ -1104,29 +1155,31 @@ RendPubDlg::getPostRspMood(RendTimeUs now, RendSession& sess, bool isGood) {
 
 class RendSubDlg;
 
-class RendSubTroop : public RendTroopBase {
+class RendSubTroop : public RendTroopBase
+{
 public:
-   RendSubTroop(RendTimeUs now, RendTu& tu, RendCntMgr &cntMgr,
-      RendPubSubEvent& evInfo) 
+   RendSubTroop(RendTimeUs now, RendTu& tu, RendCntMgr &cntMgr, RendPubSubEvent& evInfo) 
       : RendTroopBase(now, tu, REND_DlgCat_Sub, cntMgr),
-      mEventInfo(evInfo) {
-         // disable level-seeking logic
-         mTgtOpenDlgs = -1;
+        mEventInfo(evInfo) 
+   {
+      // disable level-seeking logic
+      mTgtOpenDlgs = -1;
    }
-   virtual RendTroopDlg*	createNewDlg(const RendDlgAcctKey& key);
-   virtual RendSessionMood	checkGoalMood(RendHandleMoodCxt& cxt);
+   virtual RendTroopDlg* createNewDlg(const RendDlgAcctKey& key);
+   virtual RendSessionMood checkGoalMood(RendHandleMoodCxt& cxt);
 
-   RendSubDlg*			getSubDlg(const RendSession& sess) const;
+   RendSubDlg* getSubDlg(const RendSession& sess) const;
 
-   RendPubSubEvent&	mEventInfo;
+   RendPubSubEvent& mEventInfo;
 };
 
 
-class RendSubDlg : public RendTroopDlg {
+class RendSubDlg : public RendTroopDlg 
+{
 public:
    RendSubDlg(RendSubTroop& troop, RendTu& tu, 
-      RendAcctIdx fromIdx, RendAcctIdx toIdx,
-      int rptIdx) 
+              RendAcctIdx fromIdx, RendAcctIdx toIdx,
+              int rptIdx) 
       : RendTroopDlg(tu, fromIdx, toIdx), mTroop(troop), mRepeatIdx(rptIdx)
    { 
       assert(toIdx>=0); 	// why is this here
@@ -1134,30 +1187,27 @@ public:
       mGotNotify = false;
       mTryRenew = false;
    }
-   virtual RendTroopBase&	getTroop() { return mTroop; }
-   virtual resip::SipMessage*	makeNextReq();
+   virtual RendTroopBase& getTroop() { return mTroop; }
+   virtual resip::SipMessage* makeNextReq();
 
-   virtual RendSessionMood	getPostRspMood(RendTimeUs now, RendSession& sess, bool isGood);
+   virtual RendSessionMood getPostRspMood(RendTimeUs now, RendSession& sess, bool isGood);
 
-   virtual int			handleRequest(RendReqCxt& cxt);
-   int				handleNotifyReq(RendReqCxt& cxt, RendSession& ses);
+   virtual int handleRequest(RendReqCxt& cxt);
+   int handleNotifyReq(RendReqCxt& cxt, RendSession& ses);
 
-   void			handleNotifyTuple(RendReqCxt& cxt,
-      unsigned pubAcctIdx, 
-      unsigned pubRptIdx, unsigned pubPidfSn);
+   void handleNotifyTuple(RendReqCxt& cxt, unsigned pubAcctIdx, unsigned pubRptIdx, unsigned pubPidfSn);
 
-
-   RendSubTroop&	mTroop;
-   int			mRepeatIdx;
-   bool		mGotNotify;
-   bool		mTryRenew;
+   RendSubTroop& mTroop;
+   int mRepeatIdx;
+   bool mGotNotify;
+   bool mTryRenew;
 
 protected:
 };
 
-inline 
-RendSubDlg*		
-RendSubTroop::getSubDlg(const RendSession& sess) const {
+inline RendSubDlg*
+RendSubTroop::getSubDlg(const RendSession& sess) const 
+{
    return static_cast<RendSubDlg*>(sess.getDlg());
 }
 
@@ -1166,7 +1216,8 @@ Callback for adjustAllDlgs(), call one at a time for every possible
 session.
 **/
 RendSessionMood
-RendSubTroop::checkGoalMood(RendHandleMoodCxt& cxt) {
+RendSubTroop::checkGoalMood(RendHandleMoodCxt& cxt)
+{
    RendSession& sess= *cxt.mSess;
    bool doWatch = mEventInfo.getWatching(/*pub*/cxt.mKey.mToIdx, 
       /*sub*/cxt.mKey.mFromIdx, cxt.mKey.mRepeatIdx);
@@ -1175,24 +1226,29 @@ RendSubTroop::checkGoalMood(RendHandleMoodCxt& cxt) {
    //	    <<" watch="<<doWatch);
    // return doWatch ? REND_SM_Open : REND_SM_Idle;
 
-   if ( doWatch && sess.mMood==REND_SM_Idle ) {
+   if ( doWatch && sess.mMood==REND_SM_Idle )
+   {
       cxt.mNewPendReason = REND_PR_Open;
       return REND_SM_Wave;
    }
-   if ( doWatch && sess.mMood==REND_SM_Open ) {
+   if ( doWatch && sess.mMood==REND_SM_Open )
+   {
       // renew up to 1min early so that expire tracker doesn't kick in
-      if ( sess.mRenewAbsTime!=0 && cxt.mNow+60 > sess.mRenewAbsTime ) {
+      if ( sess.mRenewAbsTime!=0 && cxt.mNow+60 > sess.mRenewAbsTime )
+      {
          cxt.mNewPendReason = REND_PR_Renew;
          return REND_SM_Wave;
       }
       RendSubDlg *sdlg = getSubDlg(sess);
       assert(sdlg);
-      if ( sdlg->mTryRenew ) {
+      if ( sdlg->mTryRenew )
+      {
          cxt.mNewPendReason = REND_PR_Renew;
          return REND_SM_Wave;
       }
    }
-   if ( !doWatch && sess.mMood!=REND_SM_Idle ) {
+   if ( !doWatch && sess.mMood!=REND_SM_Idle )
+   {
       cxt.mNewPendReason = REND_PR_Close;
       return REND_SM_Wave;
    }
@@ -1200,14 +1256,16 @@ RendSubTroop::checkGoalMood(RendHandleMoodCxt& cxt) {
 }
 
 RendTroopDlg*
-RendSubTroop::createNewDlg(const RendDlgAcctKey& key) {
+RendSubTroop::createNewDlg(const RendDlgAcctKey& key) 
+{
    // what about key.mRepeatIdx?
    return new RendSubDlg(*this, mTu, key.mFromIdx, key.mToIdx, key.mRepeatIdx);
 }
 
 
 resip::SipMessage*
-RendSubDlg::makeNextReq() {
+RendSubDlg::makeNextReq()
+{
    resip::SipMessage *req = makeRequest(resip::SUBSCRIBE);
    req->header(resip::h_Event).value() = mTroop.mEventInfo.getEventName();
    // req->header(h_Accepts).push_back( resip::Mime( "application", "pidf+xml") );
@@ -1222,42 +1280,50 @@ RendSubDlg::makeNextReq() {
 
 
 RendSessionMood
-RendSubDlg::getPostRspMood(RendTimeUs now, RendSession& sess, bool isGood) {
-   if ( isGood ) {
+RendSubDlg::getPostRspMood(RendTimeUs now, RendSession& sess, bool isGood)
+{
+   if ( isGood )
+   {
       assert( sess.mMood == REND_SM_PendReq );
-      if ( sess.getPendReason()==REND_PR_Close ) {
+      if ( sess.getPendReason()==REND_PR_Close ) 
+      {
          // unset watchable so PUBs don't wait for NOTIFYs
-         mTroop.mEventInfo.setWatching(now, 
-            /*pub*/mFromAcctIdx, /*sub*/mToAcctIdx, 
-            mRepeatIdx, /*doWatching*/false);
+         mTroop.mEventInfo.setWatching(now, /*pub*/mFromAcctIdx, /*sub*/mToAcctIdx, mRepeatIdx, /*doWatching*/false);
       }
       if ( ! mGotNotify )
          return REND_SM_PendNotify;
+
       return sess.getPendReason()==REND_PR_Close ? REND_SM_Recycle : REND_SM_Open;
    }
-   mTroop.mEventInfo.setWatching(now, /*pub*/mFromAcctIdx, /*sub*/mToAcctIdx, 
-      mRepeatIdx, /*doWatching*/false);
+
+   mTroop.mEventInfo.setWatching(now, /*pub*/mFromAcctIdx, /*sub*/mToAcctIdx, mRepeatIdx, /*doWatching*/false);
    return REND_SM_Recycle;
 }
 
 void
 RendSubDlg::handleNotifyTuple(RendReqCxt& cxt,
                               unsigned pubAcctIdx, unsigned pubRptIdx, 
-                              unsigned pubPidfSn) {
-                                 if ( pubAcctIdx != (unsigned)mToAcctIdx ) {
-                                    WarningLog(<<"Got wrong pub acct index.");
-                                    return;
-                                 }
-                                 mTroop.mEventInfo.recordNotifyTup(cxt.mRxTimeUs,
-                                    pubAcctIdx, pubRptIdx, mFromAcctIdx, mRepeatIdx, pubPidfSn);
+                              unsigned pubPidfSn) 
+{
+   if ( pubAcctIdx != (unsigned)mToAcctIdx )
+   {
+      WarningLog(<<"Got wrong pub acct index.");
+      return;
+   }
+
+   mTroop.mEventInfo.recordNotifyTup(cxt.mRxTimeUs,
+      pubAcctIdx, pubRptIdx, mFromAcctIdx, mRepeatIdx, pubPidfSn);
 }
 
 int
-RendSubDlg::handleNotifyReq(RendReqCxt& cxt, RendSession& sess) {
+RendSubDlg::handleNotifyReq(RendReqCxt& cxt, RendSession& sess)
+{
    RendTimeUs now = cxt.mRxTimeUs;
    if ( cxt.mOutOfOrder )
       return 200;
-   if ( ! cxt.mMsg->exists(resip::h_SubscriptionState) ) {
+
+   if ( ! cxt.mMsg->exists(resip::h_SubscriptionState) ) 
+   {
       ErrLog(<<"NOTIFY missing subscription state");
       return 400;
    }
@@ -1268,15 +1334,18 @@ RendSubDlg::handleNotifyReq(RendReqCxt& cxt, RendSession& sess) {
 
    mGotNotify = true;
 
-   if ( sss==resip::Symbols::Terminated ) {
+   if ( sss==resip::Symbols::Terminated ) 
+   {
       const resip::Data& ssr = ss.param(resip::p_reason);
       // deactiviated, probation, rejected, timeout, giveup, noresource
-      if ( isPend && sess.getPendReason()==REND_PR_Close ) {
+      if ( isPend && sess.getPendReason()==REND_PR_Close )
+      {
          // this is normal unSUB, already setWatchable false
          // NOTE: If SUB expired, then maybe no body, but if
          // unSUB, should have body (to support polling). We dont
          // process body in either case
-         if ( sess.mMood==REND_SM_PendNotify ) {
+         if ( sess.mMood==REND_SM_PendNotify )
+         {
             mTroop.setSessionMood(cxt.mRxTimeUs, sess, REND_SM_Recycle,
                REND_PR_NotifyTermClose);
          }
@@ -1285,25 +1354,25 @@ RendSubDlg::handleNotifyReq(RendReqCxt& cxt, RendSession& sess) {
       }
       RendSessionFmtr subFmtr(now, sess);
       ErrLog(<<"Got NOTIFY terminated reason="<<ssr
-         <<" sub=["
-         <<" f="<<mFromAcctIdx
-         <<" t="<<mToAcctIdx<<"."<<mRepeatIdx
-         <<" sess="<<subFmtr
-         <<"]");
+             <<" sub=["
+             <<" f="<<mFromAcctIdx
+             <<" t="<<mToAcctIdx<<"."<<mRepeatIdx
+             <<" sess="<<subFmtr
+             <<"]");
+
       // Could try sending reSUB or unSUB, but seems best just to drop it
-      mTroop.mEventInfo.setWatching(now, 
-         /*pub*/mFromAcctIdx, /*sub*/mToAcctIdx, 
-         mRepeatIdx, /*doWatching*/false);
+      mTroop.mEventInfo.setWatching(now, /*pub*/mFromAcctIdx, /*sub*/mToAcctIdx, mRepeatIdx, /*doWatching*/false);
       mTroop.mCntMgr.inc( REND_CntCode_NotifyTerm, REND_DlgCat_Sub);
-      mTroop.setSessionMood(cxt.mRxTimeUs, sess, REND_SM_Recycle,
-         REND_PR_NotifyTermSuprise);
+      mTroop.setSessionMood(cxt.mRxTimeUs, sess, REND_SM_Recycle, REND_PR_NotifyTermSuprise);
       return 200;
    }
-   if ( bodyHfv==NULL ) {
+   if ( bodyHfv==NULL ) 
+   {
       WarningLog(<<"NOTIFY missing content");
       return 200;
    }
-   if ( isPend ) {
+   if ( isPend ) 
+   {
       // server could send us multiple NOTIFYs (e.g., while we are 
       // waiting for response). We count them all.
       mTroop.addMoodDur(REND_SM_PendNotify, cxt.mRxTimeUs - mReqSendTime);
@@ -1318,35 +1387,42 @@ RendSubDlg::handleNotifyReq(RendReqCxt& cxt, RendSession& sess) {
    unsigned ofs = 0;
    const unsigned siglen = 8+1+tupPre.size()+1+10+1+5+1+10+1+8;
    UInt32 gotPubMask = 0;
-   while ( (ofs = body.find(tag, ofs)) != resip::Data::npos ) {
+   while ( (ofs = body.find(tag, ofs)) != resip::Data::npos )
+   {
       // RENDNOTE.tupPrefix.pubAcctIdx.pubRptIdx.pidfSn.rendnote
       // 8       1   ?     1    10    1   5     1  10  1   8
       unsigned long pubAcctIdx, pubAcctRpt, pubPidfSn;
       unsigned signext = ofs + siglen;
+
       if ( signext > body.size() )
-         break;	// not error, just false positive
-      ofs += 8+1;	// skip lead tag
+         break; // not error, just false positive
+
+      ofs += 8+1; // skip lead tag
+
       if ( memcmp(body.data()+ofs, tupPre.data(), tupPre.size())!=0 )
-         continue;	// not error, probably stale
-      ofs += tupPre.size()+1;	// skip prefix tag
+         continue; // not error, probably stale
+
+      ofs += tupPre.size()+1; // skip prefix tag
       pubAcctIdx = strtoul(body.data()+ofs, NULL, 10);
-      ofs += 10+1;	// skip acct
+      ofs += 10+1; // skip acct
       pubAcctRpt = strtoul(body.data()+ofs, NULL, 10);
-      ofs += 5+1;	// skip rpt
+      ofs += 5+1; // skip rpt
       pubPidfSn = strtoul(body.data()+ofs, NULL, 10);
       ofs += 10+1+8; // skip SN & tail tag
       assert( signext == ofs );
-      if ( pubAcctIdx==0 || pubAcctRpt==0 || pubPidfSn==0 ) {
+
+      if ( pubAcctIdx==0 || pubAcctRpt==0 || pubPidfSn==0 ) 
+      {
          WarningLog(<<"NOTIFY malform PIDF note");
          continue;
       }
       handleNotifyTuple(cxt, pubAcctIdx-1, pubAcctRpt-1, pubPidfSn-1);
       gotPubMask |= 1<<(pubAcctRpt-1);
    }
-   mTroop.mEventInfo.recordNotifyMask(cxt.mRxTimeUs,
-      mToAcctIdx, gotPubMask, mFromAcctIdx, mRepeatIdx);
+   mTroop.mEventInfo.recordNotifyMask(cxt.mRxTimeUs, mToAcctIdx, gotPubMask, mFromAcctIdx, mRepeatIdx);
 
-   if ( sess.mMood==REND_SM_PendNotify ) {
+   if ( sess.mMood==REND_SM_PendNotify ) 
+   {
       mTroop.setSessionMood(cxt.mRxTimeUs, sess, REND_SM_GROUP_ByPendReason);
    }
 
@@ -1358,9 +1434,11 @@ RendSubDlg::handleNotifyReq(RendReqCxt& cxt, RendSession& sess) {
 Process in-dialog request from the wire.
 **/
 int
-RendSubDlg::handleRequest(RendReqCxt& cxt) {
+RendSubDlg::handleRequest(RendReqCxt& cxt)
+{
    RendSession *sess = mTroop.getSession(mTroopSessionIdx);
-   if ( cxt.mMethod == resip::NOTIFY ) {
+   if ( cxt.mMethod == resip::NOTIFY )
+   {
       if ( sess==NULL )
          return 481;
       return handleNotifyReq(cxt, *sess);
@@ -1374,103 +1452,102 @@ RendSubDlg::handleRequest(RendReqCxt& cxt) {
 *
 ********************************************************************/
 
-#define REND_SKETCH_WS_LOOP_START	101
+#define REND_SKETCH_WS_LOOP_START 101
 
-#define REND_SKETCH_WS_SUB_START	110
-#define REND_SKETCH_WS_SUB_1		112
-#define REND_SKETCH_WS_SUB_2		113
-#define REND_SKETCH_WS_SUB_3		114
-#define REND_SKETCH_WS_SUB_4		115
-#define REND_SKETCH_WS_SUB_5		116
-#define REND_SKETCH_WS_SUB_DONE		119
+#define REND_SKETCH_WS_SUB_START 110
+#define REND_SKETCH_WS_SUB_1     112
+#define REND_SKETCH_WS_SUB_2     113
+#define REND_SKETCH_WS_SUB_3     114
+#define REND_SKETCH_WS_SUB_4     115
+#define REND_SKETCH_WS_SUB_5     116
+#define REND_SKETCH_WS_SUB_DONE  119
 
-#define REND_SKETCH_WS_PUB_START	120
-#define REND_SKETCH_WS_PUB_1		121
-#define REND_SKETCH_WS_PUB_2		122
-#define REND_SKETCH_WS_PUB_3		123
-#define REND_SKETCH_WS_PUB_4		124
-#define REND_SKETCH_WS_PUB_5		125
-#define REND_SKETCH_WS_PUB_DONE		129
+#define REND_SKETCH_WS_PUB_START 120
+#define REND_SKETCH_WS_PUB_1     121
+#define REND_SKETCH_WS_PUB_2     122
+#define REND_SKETCH_WS_PUB_3     123
+#define REND_SKETCH_WS_PUB_4     124
+#define REND_SKETCH_WS_PUB_5     125
+#define REND_SKETCH_WS_PUB_DONE  129
 
-#define	REND_SKETCH_WS_LOOP_PAUSE	131
+#define	REND_SKETCH_WS_LOOP_PAUSE 131
 
-class RendPres1Sketch : public RendSketchBase {
+class RendPres1Sketch : public RendSketchBase
+{
 public:
-   RendPres1Sketch(RendTu& tu, RendCntMgr& cntMgr, RendPubSubEvent& evInfo,
-      RendPubTroop& pubTr, RendSubTroop& subTr) 
-      : RendSketchBase(tu, cntMgr),
-      mEventInfo(evInfo), mPubTroop(pubTr), mSubTroop(subTr) {
-         mWorkState = REND_SKETCH_WS_LOOP_START;
-         mNextWorkState = 0;
-         mTroopList.push_back(&pubTr);
-         mTroopList.push_back(&subTr);
-         mWaveCnt = 0;
-         mChunkCnt = 0;
-         mMaxSubPerPub = 0;
-         mBigDurStart = 0;
-         mBigDurWhich = 0;
-         mWaveLastPubDur = 0;
-         mWaveLastSubDur = 0;
+   RendPres1Sketch(RendTu& tu, RendCntMgr& cntMgr, RendPubSubEvent& evInfo, RendPubTroop& pubTr, RendSubTroop& subTr) 
+      : RendSketchBase(tu, cntMgr), mEventInfo(evInfo), mPubTroop(pubTr), mSubTroop(subTr) 
+   {
+      mWorkState = REND_SKETCH_WS_LOOP_START;
+      mNextWorkState = 0;
+      mTroopList.push_back(&pubTr);
+      mTroopList.push_back(&subTr);
+      mWaveCnt = 0;
+      mChunkCnt = 0;
+      mMaxSubPerPub = 0;
+      mBigDurStart = 0;
+      mBigDurWhich = 0;
+      mWaveLastPubDur = 0;
+      mWaveLastSubDur = 0;
 
-         mCurWaveReqTotCnt = 0;
-         mCurWaveTupTotCnt = 0;
+      mCurWaveReqTotCnt = 0;
+      mCurWaveTupTotCnt = 0;
    }
    virtual ~RendPres1Sketch();
-   // virtual const char*	getName() const { return "Pres1"; }
 
-   // virtual void	setWorkVolume(RendWorkVolume& vol);
+   // virtual const char* getName() const { return "Pres1"; }
+   // virtual void setWorkVolume(RendWorkVolume& vol);
+   // virtual void cleanup();
 
-   // virtual void	cleanup();
+   virtual void setWorkLevel(int level);
+   // int doTroopWork(RendTimeUs now, int minWork, int maxWork);
+   virtual int doWorkChunk(RendTimeUs now, int minWork, int maxWork);
+   virtual void printStatus(const RendTroopReport& rpt);
+   virtual void getTroopReportCore(RendTimeUs now, RendTroopReport& rpt);
+   virtual void getPendCnts(int& pendReqCnt, int& pendNotCnt) const;
+   virtual void checkStale(RendTimeUs now);
 
-   virtual void	setWorkLevel(int level);
-   // int			doTroopWork(RendTimeUs now, int minWork, int maxWork);
-   virtual int		doWorkChunk(RendTimeUs now, int minWork, int maxWork);
-   virtual void	printStatus(const RendTroopReport& rpt);
-   virtual void	getTroopReportCore(RendTimeUs now, RendTroopReport& rpt);
-   virtual void	getPendCnts(int& pendReqCnt, int& pendNotCnt) const;
-   virtual void	checkStale(RendTimeUs now);
+   void setSubShape(RendTimeUs now);
 
-
-   void		setSubShape(RendTimeUs now);
-
-   RendSessionMood	handleTooOld3(RendHandleMoodCxt& cxt);
+   RendSessionMood handleTooOld3(RendHandleMoodCxt& cxt);
 
    /**
    MaxSubPerPub is an app-configured limit. Set zero to allow full
    matrix.
    **/
-   int			mMaxSubPerPub;
+   int mMaxSubPerPub;
 
-   RendPubSubEvent&	mEventInfo;
-   RendPubTroop&	mPubTroop;
-   RendSubTroop&	mSubTroop;
+   RendPubSubEvent& mEventInfo;
+   RendPubTroop& mPubTroop;
+   RendSubTroop& mSubTroop;
 
-   int			mWorkState;
-   int			mNextWorkState;
-   int			mWaveCnt;
-   int			mChunkCnt;
-   RendTimeUs		mWaveStateStartTime;
+   int mWorkState;
+   int mNextWorkState;
+   int mWaveCnt;
+   int mChunkCnt;
+   RendTimeUs mWaveStateStartTime;
 
-   RendTimeUs		*mBigDurWhich;
-   RendTimeUs		mBigDurStart;
-   RendTimeUs		mWaveLastPubDur;
-   RendTimeUs		mWaveLastSubDur;
+   RendTimeUs *mBigDurWhich;
+   RendTimeUs mBigDurStart;
+   RendTimeUs mWaveLastPubDur;
+   RendTimeUs mWaveLastSubDur;
 
-   int			mCurWaveReqTotCnt;
-   int	    		mCurWaveTupTotCnt;
+   int mCurWaveReqTotCnt;
+   int mCurWaveTupTotCnt;
 
    /**
    MostSubPerPub is the current actual limit. It should never
    be larger than the Max value, but might be smaller.
    **/
-   int			mMostSubPerPub;
-   // int			mMostPubPendReq;
-   // int			mMostPubPendNot;
-   // int			mMostSubPendReq;
-   // int			mMostSubPendNot;
+   int mMostSubPerPub;
+   // int mMostPubPendReq;
+   // int mMostPubPendNot;
+   // int mMostSubPendReq;
+   // int mMostSubPendNot;
 };
 
-RendPres1Sketch::~RendPres1Sketch() {
+RendPres1Sketch::~RendPres1Sketch() 
+{
    InfoLog(<<"Destructing Sketch Pres1...");
    deleteTroops();
    // mPubTroop and mSubTroop are now bad refs
@@ -1480,12 +1557,14 @@ RendPres1Sketch::~RendPres1Sketch() {
 
 // NOTE that below is internal function only; not mutex protected
 void
-RendPres1Sketch::setWorkLevel(int level) {
+RendPres1Sketch::setWorkLevel(int level) 
+{
    mPubTroop.setOpenToIdxRange(0, level>=0 ? level : 0);
 }
 
 void
-RendPres1Sketch::printStatus(const RendTroopReport& rpt) {
+RendPres1Sketch::printStatus(const RendTroopReport& rpt) 
+{
    int totgood = rpt.mOpenGoodCnt + rpt.mRenewGoodCnt + rpt.mCloseGoodCnt;
    int totfail = rpt.mOpenFailCnt + rpt.mRenewFailCnt + rpt.mCloseFailCnt;
    printf("tick wave=%d rs=%d ws=%d idle=%d open=%d preq=%d pnot=%d wave=%d totgood=%d totfail=%d\n",
@@ -1497,11 +1576,11 @@ RendPres1Sketch::printStatus(const RendTroopReport& rpt) {
       rpt.mMoodPendNotifyCnt,
       rpt.mMoodWaveCnt,
       totgood, totfail);
-
 }
 
 void
-RendPres1Sketch::getTroopReportCore(RendTimeUs now, RendTroopReport& rpt) {
+RendPres1Sketch::getTroopReportCore(RendTimeUs now, RendTroopReport& rpt) 
+{
    RendSketchBase::getTroopReportCore(now, rpt);
    rpt.mWaveCnt = mWaveCnt;
    rpt.mWaveStateSecs = REND_US2S(now - mWaveStateStartTime);
@@ -1509,26 +1588,27 @@ RendPres1Sketch::getTroopReportCore(RendTimeUs now, RendTroopReport& rpt) {
    const char *nm = "?";
 
    rpt.mWaveState = mWorkState;
-   switch ( mWorkState ) {
-    case REND_SKETCH_WS_LOOP_START:	nm = "top";	break;
-    case REND_SKETCH_WS_SUB_START: 	nm = "sub0";	break;
-    case REND_SKETCH_WS_SUB_1:		nm = "sub1";	break;
-    case REND_SKETCH_WS_SUB_2:		nm = "sub2";	break;
-    case REND_SKETCH_WS_SUB_3:		nm = "sub3";	break;
-    case REND_SKETCH_WS_SUB_4:		nm = "sub4";	break;
-    case REND_SKETCH_WS_SUB_5:		nm = "sub5";	break;
-    case REND_SKETCH_WS_SUB_DONE:	nm = "subX";	break;
-    case REND_SKETCH_WS_PUB_START:	nm = "pub0";	break;
-    case REND_SKETCH_WS_PUB_1:		nm = "pub1";	break;
-    case REND_SKETCH_WS_PUB_2:		nm = "pub2";	break;
-    case REND_SKETCH_WS_PUB_3:		nm = "pub3";	break;
-    case REND_SKETCH_WS_PUB_4:		nm = "pub4";	break;
-    case REND_SKETCH_WS_PUB_5:		nm = "pub5";	break;
-    case REND_SKETCH_WS_PUB_DONE:	nm = "pubX";	break;
-    case REND_SKETCH_WS_LOOP_PAUSE:	nm = "pause";	break;
-    default: 
-       CritLog(<<"Bogus work state="<<mWorkState);
-       assert(0);
+   switch ( mWorkState ) 
+   {
+   case REND_SKETCH_WS_LOOP_START: nm = "top";	break;
+   case REND_SKETCH_WS_SUB_START:  nm = "sub0";	break;
+   case REND_SKETCH_WS_SUB_1:      nm = "sub1";	break;
+   case REND_SKETCH_WS_SUB_2:      nm = "sub2";	break;
+   case REND_SKETCH_WS_SUB_3:      nm = "sub3";	break;
+   case REND_SKETCH_WS_SUB_4:      nm = "sub4";	break;
+   case REND_SKETCH_WS_SUB_5:      nm = "sub5";	break;
+   case REND_SKETCH_WS_SUB_DONE:   nm = "subX";	break;
+   case REND_SKETCH_WS_PUB_START:  nm = "pub0";	break;
+   case REND_SKETCH_WS_PUB_1:      nm = "pub1";	break;
+   case REND_SKETCH_WS_PUB_2:      nm = "pub2";	break;
+   case REND_SKETCH_WS_PUB_3:      nm = "pub3";	break;
+   case REND_SKETCH_WS_PUB_4:      nm = "pub4";	break;
+   case REND_SKETCH_WS_PUB_5:      nm = "pub5";	break;
+   case REND_SKETCH_WS_PUB_DONE:   nm = "pubX";	break;
+   case REND_SKETCH_WS_LOOP_PAUSE: nm = "pause";	break;
+   default: 
+      CritLog(<<"Bogus work state="<<mWorkState);
+      assert(0);
    }
    rpt.mWaveStateStr = nm;
 
@@ -1544,13 +1624,18 @@ RendPres1Sketch::getTroopReportCore(RendTimeUs now, RendTroopReport& rpt) {
       + mPubTroop.getSessionMoodCnt(REND_SM_PendReq)
       + mSubTroop.getSessionMoodCnt(REND_SM_Wave)
       + mSubTroop.getSessionMoodCnt(REND_SM_PendReq);
+
    rpt.mWaveCurTupTotCnt = mCurWaveTupTotCnt;
-   if ( mWorkState==REND_SKETCH_WS_PUB_3 ) {
+
+   if ( mWorkState==REND_SKETCH_WS_PUB_3 ) 
+   {
       rpt.mWaveCurTupRemCnt = mPubTroop.mRemainTupCurCnt;
-   } else {
-      rpt.mWaveCurTupRemCnt = rpt.mWaveCurReqRemCnt 
-         + mSubTroop.getSessionMoodCnt(REND_SM_PendNotify);
+   } 
+   else 
+   {
+      rpt.mWaveCurTupRemCnt = rpt.mWaveCurReqRemCnt + mSubTroop.getSessionMoodCnt(REND_SM_PendNotify);
    }
+
    rpt.mWaveCurTupPendCnt = mPubTroop.mPendTupCurCnt;
    // add sub pend tups into above?
 
@@ -1563,7 +1648,6 @@ RendPres1Sketch::getTroopReportCore(RendTimeUs now, RendTroopReport& rpt) {
    rpt.mWaveSubReqMaxDur = REND_US2MS(mSubTroop.getMoodDur(REND_SM_PendReq).mMax);
    rpt.mWaveSubNotAvgDur = REND_US2MS(mSubTroop.getMoodDur(REND_SM_PendNotify).avg());
    rpt.mWaveSubNotMaxDur = REND_US2MS(mSubTroop.getMoodDur(REND_SM_PendNotify).mMax);
-
 }
 
 
@@ -1582,48 +1666,55 @@ more deterministic.
 disabling SUBs.
 **/
 void
-RendPres1Sketch::setSubShape(RendTimeUs now) {
+RendPres1Sketch::setSubShape(RendTimeUs now)
+{
    unsigned pubIdx, subIdx, rptIdx;
    unsigned totSubCnt = 0;
    unsigned maxPerCnt = 0;
-   for (pubIdx=0; pubIdx < mSubTroop.getNumToAccts(); pubIdx++) {
+   for (pubIdx=0; pubIdx < mSubTroop.getNumToAccts(); pubIdx++)
+   {
       // just look at first PUB repeat
-      unsigned pidfSn = mEventInfo.getPidfSn(pubIdx, 
-         mPubTroop.getRepeatBase());
+      unsigned pidfSn = mEventInfo.getPidfSn(pubIdx, mPubTroop.getRepeatBase());
       unsigned subPerPubCnt = 0;
-      for (subIdx=0; subIdx < mSubTroop.getNumFromAccts(); subIdx++) {
+      for (subIdx=0; subIdx < mSubTroop.getNumFromAccts(); subIdx++) 
+      {
          for (rptIdx=mSubTroop.getRepeatBase(); 
-            rptIdx < mSubTroop.getRepeatMax(); rptIdx++) {
-               bool doWatch = pidfSn!=0;
-               if ( mMaxSubPerPub > 0 
-                  && subPerPubCnt >= (unsigned)mMaxSubPerPub )
-                  doWatch = false;
-               if ( mWorkVol.mWorkLevel >= 0 
-                  && subIdx >= (unsigned)mWorkVol.mWorkLevel )
-                  doWatch = false;
-               //InfoLog(<<"SetSubShape pub="<<pubIdx
-               //	<<" sub="<<subIdx<<"."<<rptIdx
-               //	<<" watch="<<doWatch);
-               mEventInfo.setWatching(now, pubIdx, subIdx, rptIdx, doWatch,
-                  /*notifyPub*/false);
-               if ( doWatch ) {
-                  ++subPerPubCnt;
-                  ++totSubCnt;
-               }
+            rptIdx < mSubTroop.getRepeatMax(); rptIdx++) 
+         {
+            bool doWatch = pidfSn!=0;
+
+            if ( mMaxSubPerPub > 0 && subPerPubCnt >= (unsigned)mMaxSubPerPub )
+               doWatch = false;
+
+            if ( mWorkVol.mWorkLevel >= 0 && subIdx >= (unsigned)mWorkVol.mWorkLevel )
+               doWatch = false;
+
+            //InfoLog(<<"SetSubShape pub="<<pubIdx
+            // <<" sub="<<subIdx<<"."<<rptIdx
+            // <<" watch="<<doWatch);
+            mEventInfo.setWatching(now, pubIdx, subIdx, rptIdx, doWatch, /*notifyPub*/false);
+
+            if ( doWatch ) 
+            {
+               ++subPerPubCnt;
+               ++totSubCnt;
+            }
          }
       }
+
       if ( subPerPubCnt > maxPerCnt )
          maxPerCnt = subPerPubCnt;
    }
    mMostSubPerPub = maxPerCnt;
    InfoLog(<<"SetSubShape done:"
-      <<" workVol="<<mWorkVol.mWorkLevel
-      <<" totSubs="<<totSubCnt
-      <<" maxSubPerPubCnt="<<maxPerCnt);
+           <<" workVol="<<mWorkVol.mWorkLevel
+           <<" totSubs="<<totSubCnt
+           <<" maxSubPerPubCnt="<<maxPerCnt);
 }
 
 void
-RendPres1Sketch::getPendCnts(int& pendReqCnt, int& pendNotCnt) const {
+RendPres1Sketch::getPendCnts(int& pendReqCnt, int& pendNotCnt) const 
+{
    int pubReq = mPubTroop.getSessionMoodCnt(REND_SM_PendReq);
    int subReq = mSubTroop.getSessionMoodCnt(REND_SM_PendReq);
    pendReqCnt = pubReq + subReq;
@@ -1642,29 +1733,32 @@ RendPres1Sketch::getPendCnts(int& pendReqCnt, int& pendNotCnt) const {
 }
 
 RendSessionMood
-RendPres1Sketch::handleTooOld3(RendHandleMoodCxt &cxt) {
+RendPres1Sketch::handleTooOld3(RendHandleMoodCxt &cxt)
+{
    RendSession& sess = *cxt.mSess;
-   if (cxt.mCat==REND_DlgCat_Pub ) {
-      if (sess.mMood==REND_SM_PendNotify) {
+   if (cxt.mCat==REND_DlgCat_Pub ) 
+   {
+      if (sess.mMood==REND_SM_PendNotify) 
+      {
          RendPubDlg* pdlg = mPubTroop.getPubDlg(sess);
          assert( pdlg );
-         bool readyB = mEventInfo.checkPublish(
-            pdlg->mToAcctIdx, pdlg->mRepeatIdx);
-         if ( readyB ) {
+         bool readyB = mEventInfo.checkPublish(pdlg->mToAcctIdx, pdlg->mRepeatIdx);
+         if ( readyB ) 
+         {
             // something went wrong: this shouldn't be pending!
             ErrLog(<<"PubCheckPend: Lost NOTIFY tracking: pending PUB shouldn't be pending:"<<cxt.mKey);
             assert(0);
             return REND_SM_GROUP_ByPendReason;
          }
          RendTupDetail detail;
-         mEventInfo.checkPublishDetail(cxt.mNow,
-            pdlg->mToAcctIdx, pdlg->mRepeatIdx, detail);
+         mEventInfo.checkPublishDetail(cxt.mNow, pdlg->mToAcctIdx, pdlg->mRepeatIdx, detail);
          assert( detail.mPendCnt > 0 );
          mCntMgr.inc(REND_CntCode_ReqStaleNot, REND_DlgCat_Pub);
          mCntMgr.add(REND_CntCode_TupStaleNot, REND_DlgCat_Pub, detail.mPendCnt);
          RendDlgAcctKey subKey = detail.toSubKey();
          RendSession* subSess = mSubTroop.getSession(subKey);
-         if ( subSess==NULL ) {
+         if ( subSess==NULL ) 
+         {
             CritLog(<<"Missing NOTIFY for PUB: No session:"
                <<" key="<<cxt.mKey
                <<" tup="<<detail
@@ -1675,23 +1769,24 @@ RendPres1Sketch::handleTooOld3(RendHandleMoodCxt &cxt) {
          RendSessionFmtr pubFmtr(cxt.mNow, sess);
          RendSessionFmtr subFmtr(cxt.mNow, *subSess);
          WarningLog(<<"PubCheckPend: Stale PUB: never got NOTIFY:"
-            <<" key="<<cxt.mKey
-            <<" age="<<cxt.mAge
-            <<" pub="<<pubFmtr
-            <<" tup="<<detail
-            <<" sub="<<subFmtr
-            );
+                    <<" key="<<cxt.mKey
+                    <<" age="<<cxt.mAge
+                    <<" pub="<<pubFmtr
+                    <<" tup="<<detail
+                    <<" sub="<<subFmtr);
          RendSubDlg* sdlg = mSubTroop.getSubDlg(*subSess);
-         if ( sdlg ) {
+         if ( sdlg ) 
+         {
             WarningLog(<<"PubCheckPend: Stale PUB: has SUB dlg: "
-               <<" f="<<sdlg->mFromAcctIdx
-               <<" t="<<sdlg->mToAcctIdx<<"."<<sdlg->mRepeatIdx
-               <<" lastRspC="<<sdlg->mLastRspCode
-               <<" lastRspR="<<sdlg->mLastRspReason
-               <<" lastRspW="<<sdlg->mLastRspWarnings
-               );
+                       <<" f="<<sdlg->mFromAcctIdx
+                       <<" t="<<sdlg->mToAcctIdx<<"."<<sdlg->mRepeatIdx
+                       <<" lastRspC="<<sdlg->mLastRspCode
+                       <<" lastRspR="<<sdlg->mLastRspReason
+                       <<" lastRspW="<<sdlg->mLastRspWarnings);
             sdlg->mTryRenew = true;
-         } else {
+         } 
+         else 
+         {
             // while the dialog must have existed at one point,
             // it may have been released already. That said,
             // I cannot fine the code that actually releases the shared
@@ -1712,9 +1807,9 @@ RendPres1Sketch::handleTooOld3(RendHandleMoodCxt &cxt) {
             // state of the PUB, which may really mess up the
             // iterator used by checkAge(). Thus must disable this.
             mEventInfo.setWatching(cxt.mNow, 
-               /*pub*/subKey.mFromIdx, /*sub*/subKey.mToIdx, 
-               subKey.mRepeatIdx, /*doWatching*/false,
-               /*notifyPub*/false);
+                                   /*pub*/subKey.mFromIdx, /*sub*/subKey.mToIdx, 
+                                   subKey.mRepeatIdx, /*doWatching*/false,
+                                   /*notifyPub*/false);
             // assert(0);
             // we have SUB session, so maybe recycle it?
             return REND_SM_GROUP_ByPendReason;
@@ -1724,20 +1819,23 @@ RendPres1Sketch::handleTooOld3(RendHandleMoodCxt &cxt) {
          // assert( subSess->isOpenish() );
          return REND_SM_GROUP_ByPendReason;
       }
+
       assert(sess.mMood==REND_SM_PendReq);
       mCntMgr.inc(REND_CntCode_ReqStaleRsp, REND_DlgCat_Pub);
       cxt.mNewPendReason = REND_PR_CheckAge;
       return REND_SM_Recycle;
    }
-   if (cxt.mTroop->getDlgCat()==REND_DlgCat_Sub ) {
+
+   if (cxt.mTroop->getDlgCat()==REND_DlgCat_Sub )
+   {
       RendSubDlg* sdlg = mSubTroop.getSubDlg(sess);
       assert(sdlg);
       WarningLog(<<"Stale SUB "
-         <<(sess.mMood==REND_SM_PendNotify?"NOTIFY":"request")
-         <<": giving up:"
-         <<" key="<<cxt.mKey
-         <<" f="<<sdlg->mFromAcctIdx
-         <<" t="<<sdlg->mToAcctIdx<<"."<<sdlg->mRepeatIdx);
+                 <<(sess.mMood==REND_SM_PendNotify?"NOTIFY":"request")
+                 <<": giving up:"
+                 <<" key="<<cxt.mKey
+                 <<" f="<<sdlg->mFromAcctIdx
+                 <<" t="<<sdlg->mToAcctIdx<<"."<<sdlg->mRepeatIdx);
       mEventInfo.setWatching(cxt.mNow, 
          /*pub*/sdlg->mFromAcctIdx, /*sub*/sdlg->mToAcctIdx, 
          sdlg->mRepeatIdx, /*doWatching*/false);
@@ -1751,33 +1849,31 @@ RendPres1Sketch::handleTooOld3(RendHandleMoodCxt &cxt) {
 }
 
 void
-RendPres1Sketch::checkStale(RendTimeUs now) {
+RendPres1Sketch::checkStale(RendTimeUs now) 
+{
    bool failAll = false;
    int maxAgePR=-1, maxAgePN=-1, maxAgeSR=-1, maxAgeSN=-1; // returned by checkAge()
-   int numOldPR = mPubTroop.checkAge(now, 
-      boost::bind(&RendPres1Sketch::handleTooOld3, this, _1), 
-      REND_SM_PendReq, mFailAge, failAll, maxAgePR);
-   int numOldPN = mPubTroop.checkAge(now, 
-      boost::bind(&RendPres1Sketch::handleTooOld3, this, _1), 
-      REND_SM_PendNotify, mFailAge, failAll, maxAgePN);
-   int numOldSR = mSubTroop.checkAge(now, 
-      boost::bind(&RendPres1Sketch::handleTooOld3, this, _1), 
-      REND_SM_PendReq, mFailAge, failAll, maxAgeSR);
-   int numOldSN = mSubTroop.checkAge(now, 
-      boost::bind(&RendPres1Sketch::handleTooOld3, this, _1), 
-      REND_SM_PendNotify, mFailAge, failAll, maxAgeSN);
+   int numOldPR = mPubTroop.checkAge(now, boost::bind(&RendPres1Sketch::handleTooOld3, this, _1), 
+                                     REND_SM_PendReq, mFailAge, failAll, maxAgePR);
+   int numOldPN = mPubTroop.checkAge(now, boost::bind(&RendPres1Sketch::handleTooOld3, this, _1), 
+                                     REND_SM_PendNotify, mFailAge, failAll, maxAgePN);
+   int numOldSR = mSubTroop.checkAge(now, boost::bind(&RendPres1Sketch::handleTooOld3, this, _1), 
+                                     REND_SM_PendReq, mFailAge, failAll, maxAgeSR);
+   int numOldSN = mSubTroop.checkAge(now, boost::bind(&RendPres1Sketch::handleTooOld3, this, _1), 
+                                     REND_SM_PendNotify, mFailAge, failAll, maxAgeSN);
 
-   if ( numOldPR>0 || numOldPN>0 || numOldSR>0 || numOldSN>0 ) {
+   if ( numOldPR>0 || numOldPN>0 || numOldSR>0 || numOldSN>0 )
+   {
       WarningLog(<<"Stale dialogs:"
-         <<" PubReq[cnt="<<numOldPR<<" age="<<maxAgePR<<"]"
-         <<" PubNot[cnt="<<numOldPN<<" age="<<maxAgePN<<"]"
-         <<" SubReq[cnt="<<numOldSR<<" age="<<maxAgeSR<<"]"
-         <<" SubNot[cnt="<<numOldSN<<" age="<<maxAgeSN<<"]"
-         );
+                 <<" PubReq[cnt="<<numOldPR<<" age="<<maxAgePR<<"]"
+                 <<" PubNot[cnt="<<numOldPN<<" age="<<maxAgePN<<"]"
+                 <<" SubReq[cnt="<<numOldSR<<" age="<<maxAgeSR<<"]"
+                 <<" SubNot[cnt="<<numOldSN<<" age="<<maxAgeSN<<"]");
    }
 }
 
-struct RendFmtMoodStat {
+struct RendFmtMoodStat 
+{
    RendFmtMoodStat(const RendTroopBase& tr, RendSessionMood mood) 
       : mTroop(tr), mMood(mood) { }
    const RendTroopBase& mTroop;
@@ -1785,62 +1881,79 @@ struct RendFmtMoodStat {
 };
 
 std::ostream&
-operator<<(std::ostream& os, const RendFmtMoodStat stat) {
+operator<<(std::ostream& os, const RendFmtMoodStat stat)
+{
    const RendStatAcc& dur = stat.mTroop.getMoodDur(stat.mMood);
    os<<"[";
-   if ( dur.mCnt==0 ) {
+   if ( dur.mCnt==0 ) 
+   {
       os << "0";
-   } else {
+   } 
+   else 
+   {
       char buf1[50];
       os<<"Most="<<stat.mTroop.getMostMoodCnt(stat.mMood)
          <<" Dur="<<dur.fmt1(buf1, sizeof(buf1), .001, 3)
          <<"ms";
    }
-   if ( stat.mMood==REND_SM_PendReq ) {
+   if ( stat.mMood==REND_SM_PendReq ) 
+   {
       unsigned cntFail = stat.mTroop.mCntMgr.get(REND_CntPeriod_Current,REND_CntCode_ReqFailRsp,stat.mTroop.getDlgCat());
       if ( cntFail )
          os<<" Fail="<<cntFail;
    }
 
    unsigned cntStale = 0;
-   if ( stat.mMood==REND_SM_PendReq ) {
+   if ( stat.mMood==REND_SM_PendReq ) 
+   {
       cntStale = stat.mTroop.mCntMgr.get(REND_CntPeriod_Current,REND_CntCode_ReqStaleRsp,stat.mTroop.getDlgCat());
-   } else if ( stat.mMood==REND_SM_PendNotify ) {
+   } 
+   else if ( stat.mMood==REND_SM_PendNotify ) 
+   {
       cntStale = stat.mTroop.mCntMgr.get(REND_CntPeriod_Current,REND_CntCode_ReqStaleNot,stat.mTroop.getDlgCat());
    }
+
    if ( cntStale )
       os<<" Stale="<<cntStale;
+
    os<<"]";
+
    return os;
 }
 
 int
-RendPres1Sketch::doWorkChunk(RendTimeUs now, int minWork, int maxWork) {
+RendPres1Sketch::doWorkChunk(RendTimeUs now, int minWork, int maxWork) 
+{
    //int origMinWork = minWork;
    //int origMaxWork = maxWork;
    int totWork = 0;
    // char buf1[50], buf2[50];
 
    ++mChunkCnt;
-   if ( mRunState==REND_SKETCH_RS_STOPPING ) {
+   if ( mRunState==REND_SKETCH_RS_STOPPING ) 
+   {
       mPubTroop.setTgtOpenDlgs(0);
       mSubTroop.setTgtOpenDlgs(0);
       return doTroopWork(now, minWork, maxWork);
    }
-   for (;;) {
+   for (;;) 
+   {
       int numWork = 0;
       int nextState = 0;
       int doneB = false;
       // bool doneB = false;
 
-      if ( mNextWorkState ) {
+      if ( mNextWorkState ) 
+      {
          assert( mWorkState != mNextWorkState );
          int curPend = getSessionMoodCnt(REND_SM_GROUP_Pend);
-         if ( curPend > 0 ) {
+         if ( curPend > 0 ) 
+         {
             mStallWhy = "stfini";
             break;
          }
-         if ( mBigDurWhich && mBigDurStart!=0 ) {
+         if ( mBigDurWhich && mBigDurStart!=0 ) 
+         {
             *mBigDurWhich = now - mBigDurStart;
          }
          mBigDurWhich = 0;
@@ -1848,172 +1961,196 @@ RendPres1Sketch::doWorkChunk(RendTimeUs now, int minWork, int maxWork) {
          mWorkState = mNextWorkState;
          mNextWorkState = 0;
       }
-      if ( maxWork <= 0 ) {
+      if ( maxWork <= 0 ) 
+      {
          break;
       }
       int curState = mWorkState;
-      switch (mWorkState) {
-   case REND_SKETCH_WS_LOOP_START:
-      // nothing special to do here
-      // XXX: increment counter? soft exit?
-      ++mWaveCnt;
-      nextState = REND_SKETCH_WS_SUB_START;
-      break;
-   case REND_SKETCH_WS_SUB_START:
-      mBigDurStart = now;
-      setSubShape(now);
-      // mMostSubPendReq = 0;
-      // mMostSubPendNot = 0;
-      mSubTroop.updateWorkStats(/*clearB*/true);
-      mSubTroop.adjustAllDlgs(0, 0, 0);	// restart adjust loop
-      nextState = REND_SKETCH_WS_SUB_1;
-      break;
-   case REND_SKETCH_WS_SUB_1:
-      if ( (numWork=mSubTroop.adjustAllDlgs(now, 
-         boost::bind(&RendSubTroop::checkGoalMood, &mSubTroop, _1), 
-         maxWork)) == 0) {
+      switch (mWorkState) 
+      {
+      case REND_SKETCH_WS_LOOP_START:
+         // nothing special to do here
+         // XXX: increment counter? soft exit?
+         ++mWaveCnt;
+         nextState = REND_SKETCH_WS_SUB_START;
+         break;
+
+      case REND_SKETCH_WS_SUB_START:
+         mBigDurStart = now;
+         setSubShape(now);
+         // mMostSubPendReq = 0;
+         // mMostSubPendNot = 0;
+         mSubTroop.updateWorkStats(/*clearB*/true);
+         mSubTroop.adjustAllDlgs(0, 0, 0); // restart adjust loop
+         nextState = REND_SKETCH_WS_SUB_1;
+         break;
+
+      case REND_SKETCH_WS_SUB_1:
+         if ((numWork=mSubTroop.adjustAllDlgs(now, 
+                                              boost::bind(&RendSubTroop::checkGoalMood, &mSubTroop, _1), 
+                                              maxWork)) == 0) 
+         {
             nextState = REND_SKETCH_WS_SUB_2;
-      }
-      break;
-   case REND_SKETCH_WS_SUB_2:
-      mCurWaveReqTotCnt = mSubTroop.getSessionMoodCnt(REND_SM_Wave);
-      mCurWaveTupTotCnt = mCurWaveReqTotCnt;
-      nextState = REND_SKETCH_WS_SUB_3;
-      break;
-   case REND_SKETCH_WS_SUB_3:
-      {
-         // every SUB (new, renew or close) triggers rsp and notify
-         int doDlgs = (maxWork+1) / 2;
-         numWork = 2 * mSubTroop.changeDlgCnt( now, doDlgs, 
-            REND_SM_Wave, REND_SM_GROUP_ByPendReason);
-         if ( numWork==0 ) {
-            nextState = REND_SKETCH_WS_SUB_4;
          }
-      }
-      break;
-   case REND_SKETCH_WS_SUB_4:
-      if ( (numWork=mSubTroop.renewDlgCnt(now, maxWork)) == 0) {
-         nextState = REND_SKETCH_WS_SUB_5;
-      } else {
-         // Renews should have happened in the adjust phase. But
-         // if adjust takes long time, some might not have been
-         // ready for the adjust phase but now are.
-         WarningLog(<<"Sub expire tracker triggered -- shouldn't happen"
-            <<" num="<<numWork);
-      }
-      break;
-   case REND_SKETCH_WS_SUB_5:
-      // triggers stall for pending & stats
-      mBigDurWhich = &mWaveLastSubDur;
-      nextState = REND_SKETCH_WS_SUB_DONE;
-      break;
-   case REND_SKETCH_WS_SUB_DONE:
-      {
-         RendFmtMoodStat fmtPendReq(mSubTroop,REND_SM_PendReq);
-         RendFmtMoodStat fmtPendNot(mSubTroop,REND_SM_PendNotify);
-         InfoLog(<<"SubComplete: SN="<<mWaveCnt
-            <<" TotSub="<<mSubTroop.getSessionMoodCnt(REND_SM_Open)
-            <<" TotReq="<<mCurWaveReqTotCnt
-            <<" DurSecs="<<REND_US2S(mWaveLastSubDur)
-            <<" MostSubPerPub="<<mMostSubPerPub
-            <<" SubPendReq="<<fmtPendReq
-            <<" SubPendNot="<<fmtPendNot
-            );
-      }
-      nextState = REND_SKETCH_WS_PUB_START;
-      break;
+         break;
 
-   case REND_SKETCH_WS_PUB_START:
-      mBigDurStart = now;
-      // mPubTroop.mWaveCurTupRemCnt = 0;
-      mPubTroop.adjustAllDlgs(0, 0, 0);	// restart adjust loop
-      nextState = REND_SKETCH_WS_PUB_1;
-      break;
+      case REND_SKETCH_WS_SUB_2:
+         mCurWaveReqTotCnt = mSubTroop.getSessionMoodCnt(REND_SM_Wave);
+         mCurWaveTupTotCnt = mCurWaveReqTotCnt;
+         nextState = REND_SKETCH_WS_SUB_3;
+         break;
 
-   case REND_SKETCH_WS_PUB_1:
-      // With current PubTroop, this should never do work
-      // (It move stuff to Wave mood, not doesn't start any dlgs)
-      if ( (numWork=mPubTroop.adjustAllDlgs(now, 
-         boost::bind(&RendPubTroop::checkGoalMood, &mPubTroop, _1), 
-         maxWork)) == 0) {
+      case REND_SKETCH_WS_SUB_3:
+         {
+            // every SUB (new, renew or close) triggers rsp and notify
+            int doDlgs = (maxWork+1) / 2;
+            numWork = 2 * mSubTroop.changeDlgCnt( now, doDlgs, REND_SM_Wave, REND_SM_GROUP_ByPendReason);
+            if ( numWork==0 ) 
+            {
+               nextState = REND_SKETCH_WS_SUB_4;
+            }
+         }
+         break;
+
+      case REND_SKETCH_WS_SUB_4:
+         if ( (numWork=mSubTroop.renewDlgCnt(now, maxWork)) == 0) 
+         {
+            nextState = REND_SKETCH_WS_SUB_5;
+         } 
+         else 
+         {
+            // Renews should have happened in the adjust phase. But
+            // if adjust takes long time, some might not have been
+            // ready for the adjust phase but now are.
+            WarningLog(<<"Sub expire tracker triggered -- shouldn't happen"
+               <<" num="<<numWork);
+         }
+         break;
+
+      case REND_SKETCH_WS_SUB_5:
+         // triggers stall for pending & stats
+         mBigDurWhich = &mWaveLastSubDur;
+         nextState = REND_SKETCH_WS_SUB_DONE;
+         break;
+
+      case REND_SKETCH_WS_SUB_DONE:
+         {
+            RendFmtMoodStat fmtPendReq(mSubTroop,REND_SM_PendReq);
+            RendFmtMoodStat fmtPendNot(mSubTroop,REND_SM_PendNotify);
+            InfoLog(<<"SubComplete: SN="<<mWaveCnt
+               <<" TotSub="<<mSubTroop.getSessionMoodCnt(REND_SM_Open)
+               <<" TotReq="<<mCurWaveReqTotCnt
+               <<" DurSecs="<<REND_US2S(mWaveLastSubDur)
+               <<" MostSubPerPub="<<mMostSubPerPub
+               <<" SubPendReq="<<fmtPendReq
+               <<" SubPendNot="<<fmtPendNot
+               );
+         }
+         nextState = REND_SKETCH_WS_PUB_START;
+         break;
+
+      case REND_SKETCH_WS_PUB_START:
+         mBigDurStart = now;
+         // mPubTroop.mWaveCurTupRemCnt = 0;
+         mPubTroop.adjustAllDlgs(0, 0, 0); // restart adjust loop
+         nextState = REND_SKETCH_WS_PUB_1;
+         break;
+
+      case REND_SKETCH_WS_PUB_1:
+         // With current PubTroop, this should never do work
+         // (It move stuff to Wave mood, not doesn't start any dlgs)
+         if ( (numWork=mPubTroop.adjustAllDlgs(now, 
+            boost::bind(&RendPubTroop::checkGoalMood, &mPubTroop, _1), 
+            maxWork)) == 0) 
+         {
             nextState = REND_SKETCH_WS_PUB_2;
-      }
-      break;
-
-   case REND_SKETCH_WS_PUB_2:
-      mCurWaveReqTotCnt = mPubTroop.getSessionMoodCnt(REND_SM_Wave);
-      mCurWaveTupTotCnt = mCurWaveReqTotCnt * mMostSubPerPub;
-      //mCurWaveTupTotCnt = mPubTroop.mWaveCurTupRemCnt;
-      // mMostPubPendReq = 0;
-      // mMostPubPendNot = 0;
-      mPubTroop.updateWorkStats(mMostSubPerPub, /*clear*/true);
-      nextState = REND_SKETCH_WS_PUB_3;
-      break;
-   case REND_SKETCH_WS_PUB_3:
-      {
-         int spp = mMostSubPerPub > 1 ? mMostSubPerPub : 1;
-         int doDlgs = (maxWork+spp-1) / spp;
-         numWork = spp * mPubTroop.changeDlgCnt( now, doDlgs, 
-            REND_SM_Wave, REND_SM_GROUP_ByPendReason);
-         if ( numWork==0 ) {
-            nextState = REND_SKETCH_WS_PUB_4;
          }
-      }
-      break;
+         break;
 
-   case REND_SKETCH_WS_PUB_4:
-      if ( (numWork=mPubTroop.renewDlgCnt(now, maxWork)) == 0) {
-         nextState = REND_SKETCH_WS_PUB_5;
-      } else {
-         WarningLog(<<"Pub expire tracker triggered -- shouldn't happen");
-      }
-      break;
-   case REND_SKETCH_WS_PUB_5:
-      mBigDurWhich = &mWaveLastPubDur;
-      nextState = REND_SKETCH_WS_PUB_DONE;
-      break;
+      case REND_SKETCH_WS_PUB_2:
+         mCurWaveReqTotCnt = mPubTroop.getSessionMoodCnt(REND_SM_Wave);
+         mCurWaveTupTotCnt = mCurWaveReqTotCnt * mMostSubPerPub;
+         //mCurWaveTupTotCnt = mPubTroop.mWaveCurTupRemCnt;
+         // mMostPubPendReq = 0;
+         // mMostPubPendNot = 0;
+         mPubTroop.updateWorkStats(mMostSubPerPub, /*clear*/true);
+         nextState = REND_SKETCH_WS_PUB_3;
+         break;
 
-   case REND_SKETCH_WS_PUB_DONE:
-      {
-         RendFmtMoodStat fmtPendReq(mPubTroop,REND_SM_PendReq);
-         RendFmtMoodStat fmtPendNot(mPubTroop,REND_SM_PendNotify);
-         InfoLog(<<"PubComplete:  SN="<<mWaveCnt
-            <<" TotPubs="<<mCurWaveReqTotCnt
-            <<" TotTups="<<mCurWaveTupTotCnt
-            <<" TotSecs="<<REND_US2S(mWaveLastPubDur)
-            <<" Most/MaxSubPerPub="<<mMostSubPerPub<<"/"<<mMaxSubPerPub
-            <<" PubPendReq="<<fmtPendReq
-            <<" PubPendNot="<<fmtPendNot
-            <<" PubPendTupMost="<<mPubTroop.mPendTupMostCnt
-            <<" TupStale="<<mCntMgr.get(REND_CntPeriod_Current,REND_CntCode_TupStaleNot,REND_DlgCat_Pub)
-            );
-      }
-      nextState = REND_SKETCH_WS_LOOP_PAUSE;
-      break;
+      case REND_SKETCH_WS_PUB_3:
+         {
+            int spp = mMostSubPerPub > 1 ? mMostSubPerPub : 1;
+            int doDlgs = (maxWork+spp-1) / spp;
+            numWork = spp * mPubTroop.changeDlgCnt( now, doDlgs, 
+               REND_SM_Wave, REND_SM_GROUP_ByPendReason);
 
-   case REND_SKETCH_WS_LOOP_PAUSE:
-      if ( REND_US2S(now-mWaveStateStartTime) >= 1 ) {
-         mCntMgr.endwave();
-         nextState = REND_SKETCH_WS_LOOP_START;
-      }
-      doneB = true;
-      break;
-   default:
-      assert(0);
+            if ( numWork==0 ) 
+            {
+               nextState = REND_SKETCH_WS_PUB_4;
+            }
+         }
+         break;
+
+      case REND_SKETCH_WS_PUB_4:
+         if ( (numWork=mPubTroop.renewDlgCnt(now, maxWork)) == 0) 
+         {
+            nextState = REND_SKETCH_WS_PUB_5;
+         } 
+         else 
+         {
+            WarningLog(<<"Pub expire tracker triggered -- shouldn't happen");
+         }
+         break;
+
+      case REND_SKETCH_WS_PUB_5:
+         mBigDurWhich = &mWaveLastPubDur;
+         nextState = REND_SKETCH_WS_PUB_DONE;
+         break;
+
+      case REND_SKETCH_WS_PUB_DONE:
+         {
+            RendFmtMoodStat fmtPendReq(mPubTroop,REND_SM_PendReq);
+            RendFmtMoodStat fmtPendNot(mPubTroop,REND_SM_PendNotify);
+            InfoLog(<<"PubComplete:  SN="<<mWaveCnt
+               <<" TotPubs="<<mCurWaveReqTotCnt
+               <<" TotTups="<<mCurWaveTupTotCnt
+               <<" TotSecs="<<REND_US2S(mWaveLastPubDur)
+               <<" Most/MaxSubPerPub="<<mMostSubPerPub<<"/"<<mMaxSubPerPub
+               <<" PubPendReq="<<fmtPendReq
+               <<" PubPendNot="<<fmtPendNot
+               <<" PubPendTupMost="<<mPubTroop.mPendTupMostCnt
+               <<" TupStale="<<mCntMgr.get(REND_CntPeriod_Current,REND_CntCode_TupStaleNot,REND_DlgCat_Pub)
+               );
+         }
+         nextState = REND_SKETCH_WS_LOOP_PAUSE;
+         break;
+
+      case REND_SKETCH_WS_LOOP_PAUSE:
+         if ( REND_US2S(now-mWaveStateStartTime) >= 1 ) 
+         {
+            mCntMgr.endwave();
+            nextState = REND_SKETCH_WS_LOOP_START;
+         }
+         doneB = true;
+         break;
+
+      default:
+         assert(0);
       }
       assert( curState == mWorkState );
 
-      minWork -= numWork;	// not used?
+      minWork -= numWork; // not used?
       maxWork -= numWork;
       totWork += numWork;
 
       //InfoLog(<<"ChunkWork: cc="<<mChunkCnt
-      //	<<" last="<<mWorkState
-      //	<<" cnts=("<<numWork<<":"<<origMinWork<<"/"<<origMaxWork
-      //	<<".."<<totWork<<".."<<minWork<<"/"<<maxWork
-      //	<<") next="<<nextState);
+      // <<" last="<<mWorkState
+      // <<" cnts=("<<numWork<<":"<<origMinWork<<"/"<<origMaxWork
+      // <<".."<<totWork<<".."<<minWork<<"/"<<maxWork
+      // <<") next="<<nextState);
 
-      if ( nextState!=0 && nextState != mWorkState ) {
+      if ( nextState!=0 && nextState != mWorkState ) 
+      {
          mNextWorkState = nextState;
          if ( ! doneB )
             continue;
@@ -2029,9 +2166,11 @@ RendPres1Sketch::doWorkChunk(RendTimeUs now, int minWork, int maxWork) {
 extern struct poptOption ThePres1OptTbl[];
 // above, not really extern but otherwise compiler wants to know size
 
-class RendPres1Options : public RendOptsBase {
+class RendPres1Options : public RendOptsBase 
+{
 public:
-   RendPres1Options() : mWorkVol(1, 0.0, 1.0, 10) {
+   RendPres1Options() : mWorkVol(1, 0.0, 1.0, 10) 
+   {
       // mAcctBase = 0;
       // mAcctLen = 0;	// default to all available in AcctMgr
       // mAcctStride = 1;
@@ -2053,23 +2192,23 @@ public:
    virtual struct poptOption* getPoptTbl() { return ThePres1OptTbl; }
    virtual const char*		getPoptDesc() { return "Pres1Options"; };
 
-   //int		mAcctBase;
-   //int		mAcctLen;
-   //int		mAcctStride;
-   int		mPubRepeatBase;
-   int		mPubRepeatLen;
-   int		mPubExpireSecs;
+   //int mAcctBase;
+   //int mAcctLen;
+   //int mAcctStride;
+   int mPubRepeatBase;
+   int mPubRepeatLen;
+   int mPubExpireSecs;
 
-   int		mSubRepeatBase;
-   int		mSubRepeatLen;
-   int		mSubExpireSecs;
+   int mSubRepeatBase;
+   int mSubRepeatLen;
+   int mSubExpireSecs;
 
-   //int		mWorkPendCntMax;
-   int		mWorkPendAgeMax;	// seconds
+   //int mWorkPendCntMax;
+   int mWorkPendAgeMax;	// seconds
 
-   int		mMaxSubPerPub;
+   int mMaxSubPerPub;
 
-   int		mFailAge;
+   int mFailAge;
 
    /*
    * Below here can be changed dynamically
@@ -2078,47 +2217,42 @@ public:
 };
 
 
-class RendPres1SketchFactory : public RendSketchFactory {
+class RendPres1SketchFactory : public RendSketchFactory 
+{
 public:
    RendPres1SketchFactory() { };
-   virtual const char*	getName() const { return "Pres1"; }
+   virtual const char* getName() const { return "Pres1"; }
    virtual RendOptsBase* getOpts() { return &mOpts; }
    virtual RendSketchBase* makeSketch(RendTu& tu, RendCntMgr& cntMgr);
 
-   // virtual void	setWorkVolume(RendWorkVolume& vol);
-   // void		setWorkLevel(int level);
+   // virtual void setWorkVolume(RendWorkVolume& vol);
+   // void setWorkLevel(int level);
 
-   RendPres1Options	mOpts;
+   RendPres1Options mOpts;
 };
 
 static RendPres1SketchFactory ThePres1SketchFactory;
 RendSketchFactory* TheRendPres1SketchFacPtr = &ThePres1SketchFactory;
 
 RendSketchBase* 
-RendPres1SketchFactory::makeSketch(RendTu& tu, RendCntMgr& cntMgr) { 
+RendPres1SketchFactory::makeSketch(RendTu& tu, RendCntMgr& cntMgr) 
+{ 
    RendTimeUs now = RendGetTimeUsRel();
 
-   RendPubSubEvent* evInfo = new RendPubSubEvent( resip::Data("presence"),
-      resip::Mime( "application", "pidf+xml") );
+   RendPubSubEvent* evInfo = new RendPubSubEvent( resip::Data("presence"), resip::Mime( "application", "pidf+xml") );
 
-   //    int numDlgs = mOpts.mAcctLen>0 ? mOpts.mAcctLen
-   //	: tu.getAcctMgr().getNumAccts();
+   // int numDlgs = mOpts.mAcctLen>0 ? mOpts.mAcctLen : tu.getAcctMgr().getNumAccts();
    int numDlgs = tu.getAcctMgr().getNumAccts();
 
    RendPubTroop* pubTr = new RendPubTroop(now, tu, cntMgr, *evInfo);
-   pubTr->setVectorDlgs(numDlgs, 
-      /*base*/0, numDlgs, /*stride*/1,
-      mOpts.mPubRepeatBase, mOpts.mPubRepeatLen);
+   pubTr->setVectorDlgs(numDlgs, /*base*/0, numDlgs, /*stride*/1, mOpts.mPubRepeatBase, mOpts.mPubRepeatLen);
    pubTr->setExpires(mOpts.mPubExpireSecs);
 
-
    RendSubTroop* subTr = new RendSubTroop(now, tu, cntMgr, *evInfo);
-   subTr->setMatrixDlgs(numDlgs, numDlgs, 
-      mOpts.mSubRepeatBase, mOpts.mSubRepeatLen);
+   subTr->setMatrixDlgs(numDlgs, numDlgs, mOpts.mSubRepeatBase, mOpts.mSubRepeatLen);
    subTr->setExpires(mOpts.mSubExpireSecs);
 
-   evInfo->setSize(numDlgs, mOpts.mPubRepeatBase+mOpts.mPubRepeatLen, 
-      mOpts.mSubRepeatBase+mOpts.mSubRepeatLen);
+   evInfo->setSize(numDlgs, mOpts.mPubRepeatBase+mOpts.mPubRepeatLen, mOpts.mSubRepeatBase+mOpts.mSubRepeatLen);
    evInfo->setNotifyObj(pubTr);
 
    RendPres1Sketch* sketch = new RendPres1Sketch(tu, cntMgr, *evInfo, *pubTr, *subTr);
@@ -2132,37 +2266,24 @@ RendPres1SketchFactory::makeSketch(RendTu& tu, RendCntMgr& cntMgr) {
 
 
 #define OPTOBJ (ThePres1SketchFactory.mOpts)
-struct poptOption ThePres1OptTbl[] = {
+struct poptOption ThePres1OptTbl[] = 
+{
 #if 0
-   { "regacctbase", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mAcctBase, 0, 
-   "First account index" },
-   { "regacctlen", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mAcctLen, 0, 
-   "Number of accounts" },
-   { "regrepeatbase", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mRegRepeatLen, 0, 
-   "Repeat base"},
+   { "regacctbase", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mAcctBase, 0,  "First account index" },
+   { "regacctlen", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mAcctLen, 0, "Number of accounts" },
+   { "regrepeatbase", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mRegRepeatLen, 0, "Repeat base"},
 #endif
-   { "pubrepeat", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mPubRepeatLen, 0, 
-   "PUBLISH repeat factor"},
-   { "subrepeat", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mSubRepeatLen, 0, 
-   "SUBSCRIBE repeat factor"},
-   { "level", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mWorkVol.mWorkLevel, 0, 
-   "Target number of open PUBLISH dialogs"},
-   { "pubexpire", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mPubExpireSecs, 0, 
-   "PUBLISH Expires"},
-   { "subexpire", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mSubExpireSecs, 0, 
-   "SUBSCRIBE Expires"},
-   { "minrate", 'r', POPT_ARG_FLOAT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mWorkVol.mWorkRateMin, 0, 
-   "Target minimum change rate"},
-   { "maxrate", 'R', POPT_ARG_FLOAT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mWorkVol.mWorkRateMax, 0, 
-   "Target maximum change rate"},
-   { "maxpend", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mWorkVol.mWorkPendCntMax, 0, 
-   "Maximum count of pending work"},
-   { "maxage", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mWorkPendAgeMax, 0, 
-   "Maximum age (secs) of pending work"},
-   { "failage", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mFailAge, 0, 
-   "Age (secs) at which to give up on request/notify"},
-   { "maxsubperpub", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mMaxSubPerPub, 0, 
-   "Maximum SUB per presentity"},
+   { "pubrepeat", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mPubRepeatLen, 0,  "PUBLISH repeat factor"},
+   { "subrepeat", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mSubRepeatLen, 0, "SUBSCRIBE repeat factor"},
+   { "level", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mWorkVol.mWorkLevel, 0, "Target number of open PUBLISH dialogs"},
+   { "pubexpire", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mPubExpireSecs, 0, "PUBLISH Expires"},
+   { "subexpire", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mSubExpireSecs, 0, "SUBSCRIBE Expires"},
+   { "minrate", 'r', POPT_ARG_FLOAT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mWorkVol.mWorkRateMin, 0, "Target minimum change rate"},
+   { "maxrate", 'R', POPT_ARG_FLOAT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mWorkVol.mWorkRateMax, 0, "Target maximum change rate"},
+   { "maxpend", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mWorkVol.mWorkPendCntMax, 0, "Maximum count of pending work"},
+   { "maxage", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mWorkPendAgeMax, 0, "Maximum age (secs) of pending work"},
+   { "failage", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mFailAge, 0, "Age (secs) at which to give up on request/notify"},
+   { "maxsubperpub", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mMaxSubPerPub, 0, "Maximum SUB per presentity"},
    { NULL, 0, 0, NULL, 0 }
 };
 

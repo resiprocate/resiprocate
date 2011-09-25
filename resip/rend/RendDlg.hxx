@@ -41,13 +41,13 @@ typedef int RendDlgFlags;
 // comments from UAC-perspective.
 enum RendDlgState 
 {
-    REND_DS_None,
-    REND_DS_Bound,       /* dialog bound into Tu */
-    REND_DS_Opening,     /* dialog-forming request sent */
-    REND_DS_Established, /* dialog-forming response received */
-    REND_DS_Closing,     /* dialog-ending request sent */
-    REND_DS_Closed,      /* dialog-ending reply received */
-    REND_DS_MAX
+   REND_DS_None,
+   REND_DS_Bound,       /* dialog bound into Tu */
+   REND_DS_Opening,     /* dialog-forming request sent */
+   REND_DS_Established, /* dialog-forming response received */
+   REND_DS_Closing,     /* dialog-ending request sent */
+   REND_DS_Closed,      /* dialog-ending reply received */
+   REND_DS_MAX
 };
 
 typedef std::list<resip::Data> RendDataList;
@@ -150,13 +150,13 @@ public:
    * when dialog is recycled.
    */
    resip::Transport* mTransport;
-   resip::Tuple mRemoteTarget;	// of first hop
+   resip::Tuple mRemoteTarget; // of first hop
    RendLocalKey mLocalKeyIdx;
    // resip::NameAddr mLocalContact;
    resip::Data mCallId;
    resip::Data mLocalTag;
    RendLocalKey mKeepAliveKey;
-   resip::Data mRemoteETag;	// for PUBLISH
+   resip::Data mRemoteETag; // for PUBLISH
    /* Below here fixed for dialog, but changes when recycled,
    * and is only used by StdDlgs (SUBSCRIBE&INVITE)
    */
@@ -176,12 +176,12 @@ public:
    unsigned long mRemoteCSeq;
    bool mRemoteCSeqFull;
    int mCntAuthFail;
-   int mLastRspCode;		// to last local request
-   resip::Data mLastRspReason;		// to last local request
-   resip::Data mLastRspWarnings;	// to last local request
-   resip::MethodTypes mLastReqMethod;		// of last local request
-   RendTimeUs mReqSendTime;	// for mLocalCSeqReq
-   RendTimeUs mRspRecvTime;	// for matching 2xx response
+   int mLastRspCode; // to last local request
+   resip::Data mLastRspReason; // to last local request
+   resip::Data mLastRspWarnings; // to last local request
+   resip::MethodTypes mLastReqMethod; // of last local request
+   RendTimeUs mReqSendTime; // for mLocalCSeqReq
+   RendTimeUs mRspRecvTime; // for matching 2xx response
 
    int mCmdRetryCnt;
 
@@ -226,61 +226,61 @@ class RendKaMgrIf;
 
 class RendTu : public resip::TransactionUser 
 {
-  public:
-    RendTu(resip::SipStack& stack, RendAcctMgrIf& acctMgr, int keepAliveIvalSecs);
-    virtual ~RendTu();
-    virtual const resip::Data& name() const { return mName; };
+public:
+   RendTu(resip::SipStack& stack, RendAcctMgrIf& acctMgr, int keepAliveIvalSecs);
+   virtual ~RendTu();
+   virtual const resip::Data& name() const { return mName; };
 
-    //  takes ownership of the message (deletes when done)
-    void processMsg(RendTimeUs now, resip::Message *msg);
-    bool processAll(int ms);
-    int processTimers(RendTimeUs now);
+   //  takes ownership of the message (deletes when done)
+   void processMsg(RendTimeUs now, resip::Message *msg);
+   bool processAll(int ms);
+   int processTimers(RendTimeUs now);
 
-    RendAcctMgrIf& getAcctMgr() { return mAcctMgr; };
+   RendAcctMgrIf& getAcctMgr() { return mAcctMgr; };
 
-    RendLocalKey buildLocalKey( resip::Data& localTag);
-    void registerDlg(RendLocalKey localKey, RendDlgSharedPtr& dlg);
-    void unregisterDlg(RendLocalKey localKey);
-    RendDlgSharedPtr lookupDlg(RendLocalKey localKey);
-    RendDlgSharedPtr lookupDlg(const resip::Data& localTag, const char **badDetail);
+   RendLocalKey buildLocalKey( resip::Data& localTag);
+   void registerDlg(RendLocalKey localKey, RendDlgSharedPtr& dlg);
+   void unregisterDlg(RendLocalKey localKey);
+   RendDlgSharedPtr lookupDlg(RendLocalKey localKey);
+   RendDlgSharedPtr lookupDlg(const resip::Data& localTag, const char **badDetail);
 
-    void sendMsg(std::auto_ptr<resip::SipMessage> msg, RendDlg *dlg = NULL);
+   void sendMsg(std::auto_ptr<resip::SipMessage> msg, RendDlg *dlg = NULL);
 
-    int processRequest(RendTimeUs now, const resip::SipMessage *rsp);
-    int processResponse(RendTimeUs now, const resip::SipMessage *rsp);
-    void processConnTerm(RendTimeUs now, const resip::Tuple& flow);
+   int processRequest(RendTimeUs now, const resip::SipMessage *rsp);
+   int processResponse(RendTimeUs now, const resip::SipMessage *rsp);
+   void processConnTerm(RendTimeUs now, const resip::Tuple& flow);
 
-    int badRequest(const resip::SipMessage *req, int rspCode, const char *reason, 
-                   const char *whyDetail, const char *why2=NULL);
-    int badResponse( const resip::SipMessage *rsp, const char *why, const char *why2=NULL);
+   int badRequest(const resip::SipMessage *req, int rspCode, const char *reason, 
+                  const char *whyDetail, const char *why2=NULL);
+   int badResponse( const resip::SipMessage *rsp, const char *why, const char *why2=NULL);
 
-    void addTransportVec(resip::TransportType proto, resip::IpVersion vers,
-                         const resip::Data& ipInterface, 
-                         resip::StunSetting stun, int transportFlags,
-                         int portBase, int numPorts);
-    resip::Transport* getNextTransport();
+   void addTransportVec(resip::TransportType proto, resip::IpVersion vers,
+                        const resip::Data& ipInterface, 
+                        resip::StunSetting stun, int transportFlags,
+                        int portBase, int numPorts);
+   resip::Transport* getNextTransport();
 
-    void setProxy(const resip::Uri &uri);
+   void setProxy(const resip::Uri &uri);
 
-    resip::Data mName;
-    resip::SipStack& mStack;
-    RendAcctMgrIf& mAcctMgr;
+   resip::Data mName;
+   resip::SipStack& mStack;
+   RendAcctMgrIf& mAcctMgr;
 
-    RendLocalKey mDlgTagSeq;
-    resip::Data mLocalTagSuffix;
+   RendLocalKey mDlgTagSeq;
+   resip::Data mLocalTagSuffix;
 
-    RendDialogMap mDialogMap;
-    RendTimerQueue* mTimers;
+   RendDialogMap mDialogMap;
+   RendTimerQueue* mTimers;
 
-    resip::Uri mOutboundProxy;
-    bool mOutboundMode;
-    RendTransportList mTransports;
-    int mCurTransportIdx;
+   resip::Uri mOutboundProxy;
+   bool mOutboundMode;
+   RendTransportList mTransports;
+   int mCurTransportIdx;
 
-    RendKaMgrIf* mKeepAliveMgr;
+   RendKaMgrIf* mKeepAliveMgr;
 
-    void processTuStatsTimeout(RendTimeUs now);
-    RendTuStats mStats;
+   void processTuStatsTimeout(RendTimeUs now);
+   RendTuStats mStats;
 };
 
 extern RendOptsBase* TheRendTuOptsPtr;

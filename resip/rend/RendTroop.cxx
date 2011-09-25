@@ -25,21 +25,20 @@
 static const char *RendSessionMoodNameTbl[] = { REND_SessionMoodNameInitializer };
 
 const char*
-RendSessionMoodFmt(RendSessionMood mood) {
-    return ((unsigned)mood) < REND_NELTS(RendSessionMoodNameTbl)
-	? RendSessionMoodNameTbl[mood] : "????";
+RendSessionMoodFmt(RendSessionMood mood) 
+{
+    return ((unsigned)mood) < REND_NELTS(RendSessionMoodNameTbl) ? RendSessionMoodNameTbl[mood] : "????";
 }
-
 
 std::ostream&
 RendSession::fmt(RendTimeUs now, std::ostream& os) const {
     os<<"["<<RendSessionMoodFmt(mMood)
-	<<" pr="<<getPendReason()
-	<<" idx="<<mSessionIdx
-	<<" E="<<(getExpireSecs(now))
-	<<" re="<<(getRenewSecs(now))
-        <<" last="<<(getLastMoodSecs(now))
-	<<"]";
+      <<" pr="<<getPendReason()
+      <<" idx="<<mSessionIdx
+      <<" E="<<(getExpireSecs(now))
+      <<" re="<<(getRenewSecs(now))
+      <<" last="<<(getLastMoodSecs(now))
+      <<"]";
     return os;
 }
 
@@ -50,137 +49,151 @@ RendSession::fmt(RendTimeUs now, std::ostream& os) const {
  *
  ***********************************************************************/
 
-typedef boost::intrusive::list<
-	RendSession, 
-	boost::intrusive::member_hook<RendSession, 
-		RendExpireHook,
-        	&RendSession::mExpireLink>,
-	boost::intrusive::constant_time_size<false> 
-	> RendDlgExpireChain;
+typedef boost::intrusive::list<RendSession, 
+                               boost::intrusive::member_hook<RendSession, 
+                                                             RendExpireHook,
+                                                             &RendSession::mExpireLink>,
+                               boost::intrusive::constant_time_size<false> 
+                              > RendDlgExpireChain;
 
 
-class RendExpireBucket {
-  public:
-    RendExpireBucket() { }
-    ~RendExpireBucket() { 
-	// below should happen automatically, but make more explicit!
-	// purpose is to unlink all the children so they get NULL pointers
-	mChain.clear(); 
-    }
-    RendDlgExpireChain	mChain;
+class RendExpireBucket 
+{
+public:
+   RendExpireBucket() { }
+   ~RendExpireBucket() 
+   { 
+      // below should happen automatically, but make more explicit!
+      // purpose is to unlink all the children so they get NULL pointers
+      mChain.clear(); 
+   }
+
+   RendDlgExpireChain	mChain;
 };
 
 /**
     Roughly, 
-    	now ~= mHeadIdx*mSecsPerBucket
-	future > (mHeadIdx+mNumBuckets)*mSecsPerBuckets
-	far-future > (mHeadIdx+2*mNumBuckets)*mSecsPerBuckets
+      now ~= mHeadIdx*mSecsPerBucket
+      future > (mHeadIdx+mNumBuckets)*mSecsPerBuckets
+      far-future > (mHeadIdx+2*mNumBuckets)*mSecsPerBuckets
 **/
-class RendExpireTracker {
+class RendExpireTracker 
+{
   public:
-    RendExpireTracker(RendTimeUs now, resip::Data desc,
-	    		  unsigned secsPerBucket, unsigned numBuckets);
+    RendExpireTracker(RendTimeUs now, resip::Data desc, unsigned secsPerBucket, unsigned numBuckets);
     ~RendExpireTracker();
 
-    resip::Data		mDesc;
+    resip::Data mDesc;
 
-    unsigned		mSecsPerBucket;
-
+    unsigned mSecsPerBucket;
 
     /* The number of buckets.
      * assert( mBuckets.size() == mNumBuckets )
      */
-    unsigned		mNumBuckets;
+    unsigned mNumBuckets;
 
     /*
      * The (non-modulo) index corresponding to latest idea of "now"
      * In generally, mHeadIdx is much graater than mNumBuckets.
      */
-    unsigned		mHeadIdx;
+    unsigned mHeadIdx;
 
     /*
      * The start of epoch; all times are relative to this (and must be
      * after). Strictly, we don't need this, but it helps avoid
      * big numbers which makes debugging easier
      */
-    RendTimeUs		mEpoch;
+    RendTimeUs mEpoch;
 
-    RendDlgExpireChain	mPastChain;
-    RendExpireBucket*	mBuckets;
-    RendDlgExpireChain	mFutureChain;
+    RendDlgExpireChain mPastChain;
+    RendExpireBucket*  mBuckets;
+    RendDlgExpireChain mFutureChain;
 
-    void		pushDlg(RendSession& sess, RendTimeUs when);
-    RendSession*	popDlg(RendTimeUs now);
+    void pushDlg(RendSession& sess, RendTimeUs when);
+    RendSession* popDlg(RendTimeUs now);
 };
 
 RendExpireTracker::RendExpireTracker(RendTimeUs now, resip::Data desc,
-	unsigned secsPerBucket, unsigned numBuckets) :
-		mDesc(desc) {
-    assert( secsPerBucket >= 1 );
-    assert( numBuckets >= 1 );
-    mSecsPerBucket = secsPerBucket;
-    mNumBuckets = numBuckets;
-    mEpoch = now;
-    mHeadIdx = 0;
-    mBuckets = new RendExpireBucket[numBuckets];
+                                     unsigned secsPerBucket, unsigned numBuckets) :
+   mDesc(desc) 
+{
+   assert( secsPerBucket >= 1 );
+   assert( numBuckets >= 1 );
+   mSecsPerBucket = secsPerBucket;
+   mNumBuckets = numBuckets;
+   mEpoch = now;
+   mHeadIdx = 0;
+   mBuckets = new RendExpireBucket[numBuckets];
 }
 
-RendExpireTracker::~RendExpireTracker() {
-    InfoLog(<<"Destructing Tracker "<<mDesc<<" ...");
-    delete [] mBuckets; mBuckets = NULL;
-    InfoLog(<<"Destructed Tracker "<<mDesc<<" .");
+RendExpireTracker::~RendExpireTracker() 
+{
+   InfoLog(<<"Destructing Tracker "<<mDesc<<" ...");
+   delete [] mBuckets; mBuckets = NULL;
+   InfoLog(<<"Destructed Tracker "<<mDesc<<" .");
 }
 
 void
-RendExpireTracker::pushDlg(RendSession& sess, RendTimeUs when_abs) {
-    assert( when_abs >= mEpoch );
-    RendTimeUs when = when_abs - mEpoch;
-    unsigned bIdx = REND_US2S(when) / mSecsPerBucket;
-    if ( bIdx < mHeadIdx ) {
-	WarningLog(<<"Tracker "<<mDesc<<": Got time that is early.");
-	bIdx = mHeadIdx;
-    }
-    if ( bIdx >= mHeadIdx+mNumBuckets ) {
-	WarningLog(<<"Tracker "<<mDesc<<": Got time that is too far in future"
-		<<" per="<<mSecsPerBucket
-		<<" num="<<mNumBuckets
-		<<" head="<<mHeadIdx
-		<<" when="<<bIdx);
-    } else {
-	unsigned bmIdx = bIdx % mNumBuckets;
-	mBuckets[bmIdx].mChain.push_back(sess);
-	// Above depends upon auto-unlinking from existing chain!
-    }
+RendExpireTracker::pushDlg(RendSession& sess, RendTimeUs when_abs) 
+{
+   assert( when_abs >= mEpoch );
+   RendTimeUs when = when_abs - mEpoch;
+   unsigned bIdx = REND_US2S(when) / mSecsPerBucket;
+   if ( bIdx < mHeadIdx ) 
+   {
+      WarningLog(<<"Tracker "<<mDesc<<": Got time that is early.");
+      bIdx = mHeadIdx;
+   }
+   if ( bIdx >= mHeadIdx+mNumBuckets ) 
+   {
+      WarningLog(<<"Tracker "<<mDesc<<": Got time that is too far in future"
+         <<" per="<<mSecsPerBucket
+         <<" num="<<mNumBuckets
+         <<" head="<<mHeadIdx
+         <<" when="<<bIdx);
+   } 
+   else 
+   {
+      unsigned bmIdx = bIdx % mNumBuckets;
+      mBuckets[bmIdx].mChain.push_back(sess);
+      // Above depends upon auto-unlinking from existing chain!
+   }
 }
 
 RendSession*
-RendExpireTracker::popDlg(RendTimeUs now_abs) {
-    assert( now_abs >= mEpoch );
-    RendTimeUs now = now_abs - mEpoch;
-    unsigned nowIdx = REND_US2S(now) / mSecsPerBucket;
-    if ( nowIdx < mHeadIdx ) {
-	ErrLog(<<"NOW jumped backwards. Ignoring.");
-	return NULL;
-    }
-    if ( nowIdx > mHeadIdx+mNumBuckets ) {
-	ErrLog(<<"NOW jumped far forwards:"
-		<<" now="<<now
-		<<" nowIdx="<<nowIdx
-		<<" headIdx="<<mHeadIdx
-		<<" numBuck="<<mNumBuckets
-		<<". Ignoring.");
-    }
-    for ( ; mHeadIdx < nowIdx; mHeadIdx++) {
-	unsigned bmIdx = mHeadIdx % mNumBuckets;
-	RendDlgExpireChain& chain = mBuckets[bmIdx].mChain;
-        mPastChain.splice( mPastChain.end(), chain);
-    }
-    if ( !mPastChain.empty() ) {
-	RendSession& dlg = mPastChain.front();
-	mPastChain.pop_front();
-	return &dlg;
-    }
-    return NULL;
+RendExpireTracker::popDlg(RendTimeUs now_abs)
+{
+   assert( now_abs >= mEpoch );
+   RendTimeUs now = now_abs - mEpoch;
+   unsigned nowIdx = REND_US2S(now) / mSecsPerBucket;
+   if ( nowIdx < mHeadIdx ) 
+   {
+      ErrLog(<<"NOW jumped backwards. Ignoring.");
+      return NULL;
+   }
+   if ( nowIdx > mHeadIdx+mNumBuckets ) 
+   {
+      ErrLog(<<"NOW jumped far forwards:"
+         <<" now="<<now
+         <<" nowIdx="<<nowIdx
+         <<" headIdx="<<mHeadIdx
+         <<" numBuck="<<mNumBuckets
+         <<". Ignoring.");
+   }
+   for ( ; mHeadIdx < nowIdx; mHeadIdx++) 
+   {
+      unsigned bmIdx = mHeadIdx % mNumBuckets;
+      RendDlgExpireChain& chain = mBuckets[bmIdx].mChain;
+      mPastChain.splice( mPastChain.end(), chain);
+   }
+
+   if ( !mPastChain.empty() ) 
+   {
+      RendSession& dlg = mPastChain.front();
+      mPastChain.pop_front();
+      return &dlg;
+   }
+   return NULL;
 }
 
 
@@ -189,7 +202,6 @@ RendExpireTracker::popDlg(RendTimeUs now_abs) {
  * RendTroopBase
  *
  ***********************************************************************/
-
 
 // Renew MUCH before expiration, because otherwise everything breaks 
 #define REND_TROOP_RENEW_EARLY_SECS	(4*60)
@@ -200,350 +212,403 @@ RendExpireTracker::popDlg(RendTimeUs now_abs) {
 #define EXPIRE_SECS_PER_BUCKET 15
 #define EXPIRE_MAX_SECS (60*60)
 
-RendTroopBase::RendTroopBase(RendTimeUs now, RendTu& tu, RendDlgCat cat,
-	RendCntMgr& cntMgr) 
-  : mCntMgr(cntMgr), mTu(tu), mCat(cat) {
-    mMaxSessions = 0;
-    mTgtOpenDlgs = -1;
-    mOpenToIdxBase = -1;
-    mOpenToIdxLen = -1;
-    setExpires(60*60);
-    mDesc = RendDlgAcctKey::CatFmt(cat);
-    mTracker = new RendExpireTracker(now, mDesc,
-	    EXPIRE_SECS_PER_BUCKET,
-	      EXPIRE_MAX_SECS/EXPIRE_SECS_PER_BUCKET);
-
+RendTroopBase::RendTroopBase(RendTimeUs now, RendTu& tu, RendDlgCat cat, RendCntMgr& cntMgr) 
+  : mCntMgr(cntMgr), mTu(tu), mCat(cat) 
+{
+   mMaxSessions = 0;
+   mTgtOpenDlgs = -1;
+   mOpenToIdxBase = -1;
+   mOpenToIdxLen = -1;
+   setExpires(60*60);
+   mDesc = RendDlgAcctKey::CatFmt(cat);
+   mTracker = new RendExpireTracker(now, mDesc,
+      EXPIRE_SECS_PER_BUCKET,
+      EXPIRE_MAX_SECS/EXPIRE_SECS_PER_BUCKET);
 }
 
-RendTroopBase::~RendTroopBase() {
-    InfoLog(<<"Destructing Troop foo...");
-    if ( mTracker ) {
-        delete mTracker; mTracker = NULL;
-    }
-    releaseDlgs();
+RendTroopBase::~RendTroopBase()
+{
+   InfoLog(<<"Destructing Troop foo...");
+   if ( mTracker ) 
+   {
+      delete mTracker; mTracker = NULL;
+   }
+   releaseDlgs();
 
-    // below would happen automatically, but do it explicit now so
-    // can control timing
-    mDlgVec.clear();
-    InfoLog(<<"Destructed Troop.");
-}
-
-
-void
-RendTroopBase::releaseDlgs() {
-    unsigned didx;
-    for (didx=0; didx < mDlgVec.size(); didx++) {
-	RendSession& sess = mDlgVec[didx];
-	if ( sess.mMood!=REND_SM_None ) {
-	    // below takes it out of linked lists
-	    setSessionMood(/*now*/0, sess, REND_SM_None);
-	    // maybe should call release on it first?
-	    RendDlg *dlg = sess.getDlg();
-	    if ( dlg ) {
-		dlg->relDlgState();
-	        sess.mDlgPtr.reset();
-	    }
-	}
-    }
-
-    unsigned moodIdx=1;
-    for ( ; moodIdx < REND_SM_MAX; moodIdx++) {
-        RendSessionMoodChain& chain = mMoods[moodIdx].mChain;
-	assert( chain.size()==0 );
-    }
+   // below would happen automatically, but do it explicit now so
+   // can control timing
+   mDlgVec.clear();
+   InfoLog(<<"Destructed Troop.");
 }
 
 void
-RendTroopBase::updateWorkStats(bool clearB) {
-    int mood = REND_SM_None+1;
-    for ( ; mood < REND_SM_MAX; mood++) {
-	if ( clearB ) {
-	    mMoods[mood].clearStats();
-	} else {
-            unsigned cnt = getSessionMoodCnt((RendSessionMood)mood);
-            if ( cnt > mMoods[mood].mMostCnt ) 
-	        mMoods[mood].mMostCnt = cnt;
-	}
-    }
+RendTroopBase::releaseDlgs()
+{
+   unsigned didx;
+   for (didx=0; didx < mDlgVec.size(); didx++) 
+   {
+      RendSession& sess = mDlgVec[didx];
+      if ( sess.mMood!=REND_SM_None ) 
+      {
+         // below takes it out of linked lists
+         setSessionMood(/*now*/0, sess, REND_SM_None);
+         // maybe should call release on it first?
+         RendDlg *dlg = sess.getDlg();
+         if ( dlg ) 
+         {
+            dlg->relDlgState();
+            sess.mDlgPtr.reset();
+         }
+      }
+   }
+
+   unsigned moodIdx=1;
+   for ( ; moodIdx < REND_SM_MAX; moodIdx++) 
+   {
+      RendSessionMoodChain& chain = mMoods[moodIdx].mChain;
+      assert( chain.size()==0 );
+   }
 }
 
 void
-RendTroopBase::addTroopReport(RendTroopReport& rpt) {
+RendTroopBase::updateWorkStats(bool clearB) 
+{
+   int mood = REND_SM_None+1;
+   for ( ; mood < REND_SM_MAX; mood++) 
+   {
+      if ( clearB ) 
+      {
+         mMoods[mood].clearStats();
+      } 
+      else 
+      {
+         unsigned cnt = getSessionMoodCnt((RendSessionMood)mood);
+         if ( cnt > mMoods[mood].mMostCnt ) 
+            mMoods[mood].mMostCnt = cnt;
+      }
+   }
+}
+
+void
+RendTroopBase::addTroopReport(RendTroopReport& rpt) 
+{
 #if 0
-    for (idx=0; idx < REND_SM_MAX; idx++) {
-	rpt.mMoodCnts[idx] = mMoodChains[idx].size();
-    }
+   for (idx=0; idx < REND_SM_MAX; idx++) 
+   {
+      rpt.mMoodCnts[idx] = mMoodChains[idx].size();
+   }
 #else
-    rpt.add(mRpt);
-    rpt.mMoodIdleCnt += mMoods[REND_SM_Idle].mChain.size();
-    rpt.mMoodOpenCnt += mMoods[REND_SM_Open].mChain.size();
-    rpt.mMoodPendReqCnt += mMoods[REND_SM_PendReq].mChain.size();
-    rpt.mMoodPendNotifyCnt += mMoods[REND_SM_PendNotify].mChain.size();
-    rpt.mMoodWaveCnt += mMoods[REND_SM_Wave].mChain.size();
+   rpt.add(mRpt);
+   rpt.mMoodIdleCnt += mMoods[REND_SM_Idle].mChain.size();
+   rpt.mMoodOpenCnt += mMoods[REND_SM_Open].mChain.size();
+   rpt.mMoodPendReqCnt += mMoods[REND_SM_PendReq].mChain.size();
+   rpt.mMoodPendNotifyCnt += mMoods[REND_SM_PendNotify].mChain.size();
+   rpt.mMoodWaveCnt += mMoods[REND_SM_Wave].mChain.size();
 #endif
 }
-
 
 #if 0
 #define TROOP_SCATTER_BASE (1<<16)
 void
-RendTroopBase::setRenewParams(float scatterLo, float scatterHi, unsigned minSecs) {
-    mRenewScatterLoFix = scatterLo * TROOP_SCATTER_BASE;
-    mRenewScatterRngFix = (scatterHi-scatterLo) * TROOP_SCATTER_BASE;
-    mRenewMinSecs = minSecs;
+RendTroopBase::setRenewParams(float scatterLo, float scatterHi, unsigned minSecs) 
+{
+   mRenewScatterLoFix = scatterLo * TROOP_SCATTER_BASE;
+   mRenewScatterRngFix = (scatterHi-scatterLo) * TROOP_SCATTER_BASE;
+   mRenewMinSecs = minSecs;
 }
 #endif
 
 #define RV_FRACBITS 12
 #define RV_FRACVAL (1<<RV_FRACBITS)
 int
-RendTroopBase::getScatterExpires() {
-    unsigned long rv = resip::Random::getRandom();
-    long rvPct = (rv&(RV_FRACVAL-1)) * mExpireScatterRngPct  + (mExpireScatterLoPct<<RV_FRACBITS);
-    int expSecs = ((rvPct * mExpireSecs)/100) >> RV_FRACBITS;
-    return rendMAX(expSecs, REND_TROOP_EXPIRE_MIN);
+RendTroopBase::getScatterExpires() 
+{
+   unsigned long rv = resip::Random::getRandom();
+   long rvPct = (rv&(RV_FRACVAL-1)) * mExpireScatterRngPct  + (mExpireScatterLoPct<<RV_FRACBITS);
+   int expSecs = ((rvPct * mExpireSecs)/100) >> RV_FRACBITS;
+   return rendMAX(expSecs, REND_TROOP_EXPIRE_MIN);
 }
 
 void
-RendTroopBase::scheduleRenew(RendTimeUs now, RendSession& sess, 
-	int expireSecs) {
-    // WATCHOUT: unlink() requires link_mode=auto_unlink
-    sess.mExpireLink.unlink();
-    if ( expireSecs <= 0 ) {
-        sess.mExpireAbsTime = 0;
-        sess.mRenewAbsTime = 0;
-	return;
-    }
+RendTroopBase::scheduleRenew(RendTimeUs now, RendSession& sess, int expireSecs) 
+{
+   // WATCHOUT: unlink() requires link_mode=auto_unlink
+   sess.mExpireLink.unlink();
+   if ( expireSecs <= 0 ) 
+   {
+      sess.mExpireAbsTime = 0;
+      sess.mRenewAbsTime = 0;
+      return;
+   }
 #if 0
-    unsigned long rv = resip::Random::getRandom();
-    rv = (rv%TROOP_SCATTER_BASE)*mRenewScatterRngFix + mRenewScatterLoFix;
-    rv = (rv*expireSecs)/TROOP_SCATTER_BASE;
-    if ( rv < mRenewMinSecs )
-	rv = mRenewMinSecs;
+   unsigned long rv = resip::Random::getRandom();
+   rv = (rv%TROOP_SCATTER_BASE)*mRenewScatterRngFix + mRenewScatterLoFix;
+   rv = (rv*expireSecs)/TROOP_SCATTER_BASE;
+   if ( rv < mRenewMinSecs )
+      rv = mRenewMinSecs;
 #endif
-    sess.mExpireAbsTime = now + REND_S2US(expireSecs);
-    int renewSecs = rendMAX(expireSecs - REND_TROOP_RENEW_EARLY_SECS,
+   sess.mExpireAbsTime = now + REND_S2US(expireSecs);
+   int renewSecs = rendMAX(expireSecs - REND_TROOP_RENEW_EARLY_SECS,
       int(expireSecs * REND_TROOP_RENEW_EARLY_FRAC));
-    renewSecs = rendMAX(renewSecs, REND_TROOP_RENEW_MIN_SECS);
-    DebugLog(<<"schedRenew idx="<<sess.mSessionIdx<<" exp="<<expireSecs<<" renew="<<renewSecs);
-    RendTimeUs renewWhen = now + REND_S2US(renewSecs);
-    sess.mRenewAbsTime = renewWhen;
-    mTracker->pushDlg(sess, renewWhen);
+   renewSecs = rendMAX(renewSecs, REND_TROOP_RENEW_MIN_SECS);
+   DebugLog(<<"schedRenew idx="<<sess.mSessionIdx<<" exp="<<expireSecs<<" renew="<<renewSecs);
+   RendTimeUs renewWhen = now + REND_S2US(renewSecs);
+   sess.mRenewAbsTime = renewWhen;
+   mTracker->pushDlg(sess, renewWhen);
 }
 
 void
 RendTroopBase::setSessionMood(RendTimeUs now, RendSession& sess, 
-	RendSessionMood mood,
-	RendPendReason pendReason) {
+                              RendSessionMood mood,
+                              RendPendReason pendReason) 
+{
+   if ( mood==sess.mMood )
+      return;
 
-    if ( mood==sess.mMood )
-	return;
-    if ( mood==REND_SM_GROUP_ByPendReason ) {
-	if ( sess.mPendReason==REND_PR_None ) {
-	    RendSessionFmtr fmtr(now, sess);
-	    WarningLog(<<"setMood ByPendReason that is None: "
-		    <<" cat="<<mCat
-	    	    <<" sess="<<fmtr
-		    <<" newpr="<<pendReason);
-	    assert( 0 );
-	}
-	mood = sess.mPendReason==REND_PR_Close 
-	    	?  REND_SM_Recycle : REND_SM_Open;
-    }
+   if ( mood==REND_SM_GROUP_ByPendReason ) 
+   {
+      if ( sess.mPendReason==REND_PR_None ) 
+      {
+         RendSessionFmtr fmtr(now, sess);
+         WarningLog(<<"setMood ByPendReason that is None: "
+            <<" cat="<<mCat
+            <<" sess="<<fmtr
+            <<" newpr="<<pendReason);
+         assert( 0 );
+      }
+      mood = sess.mPendReason==REND_PR_Close 
+         ?  REND_SM_Recycle : REND_SM_Open;
+   }
 
-    DebugLog(<<"setMood"
-	    <<" idx="<<sess.mSessionIdx
-	    <<" cur="<<sess.mMood
-	    <<" new="<<mood);
-    if ( sess.mMood != REND_SM_None ) {
-        RendSessionMoodChain& chain = mMoods[sess.mMood].mChain;
-        RendSessionMoodChain::iterator it = chain.iterator_to(sess);
-    	chain.erase(it);
-    }
-    if ( mood == REND_SM_PendNotify ) {
-	assert(sess.mPendReason!=0);	// must have reason from before
-    } else {
-        sess.mPendReason = pendReason;
-    }
-    sess.mMood = mood;
-    sess.mLastMoodTime = now;
-    if ( mood!=REND_SM_None ) {
-        mMoods[mood].mChain.push_back(sess);
-    }
-    if ( mood==REND_SM_Idle || mood==REND_SM_Recycle ) {
-	scheduleRenew(now, sess, 0);	// remove from tracker
-    }
+   DebugLog(<<"setMood"
+      <<" idx="<<sess.mSessionIdx
+      <<" cur="<<sess.mMood
+      <<" new="<<mood);
+
+   if ( sess.mMood != REND_SM_None ) 
+   {
+      RendSessionMoodChain& chain = mMoods[sess.mMood].mChain;
+      RendSessionMoodChain::iterator it = chain.iterator_to(sess);
+      chain.erase(it);
+   }
+
+   if ( mood == REND_SM_PendNotify ) 
+   {
+      assert(sess.mPendReason!=0);	// must have reason from before
+   } 
+   else 
+   {
+      sess.mPendReason = pendReason;
+   }
+
+   sess.mMood = mood;
+   sess.mLastMoodTime = now;
+   
+   if ( mood!=REND_SM_None ) 
+   {
+      mMoods[mood].mChain.push_back(sess);
+   }
+
+   if ( mood==REND_SM_Idle || mood==REND_SM_Recycle ) 
+   {
+      scheduleRenew(now, sess, 0);	// remove from tracker
+   }
 }
 
 void
 RendTroopBase::spliceMoodList(RendTimeUs now, RendSessionMood fromMood,
-	RendSessionMood toMood, RendPendReason pendReason) {
-
-    assert(toMood!=REND_SM_None);
-    assert(fromMood!=REND_SM_None);
-    assert(toMood!=fromMood);
-    RendSessionMoodChain& chain = mMoods[fromMood].mChain;
-    RendSessionMoodChain::iterator it = chain.begin();
-    for ( ; it != chain.end(); ++it) {
-	RendSession& sess = *it;
-	sess.mMood = toMood;
-	sess.mPendReason = pendReason;
-        sess.mLastMoodTime = now;
-    }
-    RendSessionMoodChain& toChain = mMoods[toMood].mChain;
-    toChain.splice( toChain.end(), chain);
-    validate(now);	// XXX
+                              RendSessionMood toMood, RendPendReason pendReason) 
+{
+   assert(toMood!=REND_SM_None);
+   assert(fromMood!=REND_SM_None);
+   assert(toMood!=fromMood);
+   RendSessionMoodChain& chain = mMoods[fromMood].mChain;
+   RendSessionMoodChain::iterator it = chain.begin();
+   for ( ; it != chain.end(); ++it) 
+   {
+      RendSession& sess = *it;
+      sess.mMood = toMood;
+      sess.mPendReason = pendReason;
+      sess.mLastMoodTime = now;
+   }
+   RendSessionMoodChain& toChain = mMoods[toMood].mChain;
+   toChain.splice( toChain.end(), chain);
+   validate(now); // XXX
 }
 
 int
-RendTroopBase::startMoodChange(RendTimeUs now, RendSession& sess,
-   RendSessionMood toMood) {
+RendTroopBase::startMoodChange(RendTimeUs now, RendSession& sess, RendSessionMood toMood) 
+{
+   int cnt = 0;
+   RendSessionMood fromMood = sess.mMood;
+   RendDlg *dlg = sess.mDlgPtr.get();
 
-    int cnt = 0;
-    RendSessionMood fromMood = sess.mMood;
-    RendDlg *dlg = sess.mDlgPtr.get();
+   if ( toMood==REND_SM_GROUP_ByPendReason ) 
+   {
+      // special value outside enum
+      switch ( sess.getPendReason() ) 
+      {
+      case REND_PR_Open:
+      case REND_PR_Modify:
+      case REND_PR_OpenOrModify:
+      case REND_PR_Renew:
+         cnt = startDlgOpen(now, sess, sess.getPendReason()); 
+         break;
+      case REND_PR_Close:
+         cnt = startDlgClose(now, sess); 
+         break;
+      default: assert(0);
+      }
+      return cnt;
+   }
+   if ( toMood==REND_SM_GROUP_ByDlgState ) 
+   {
+      // put it into either Open or Closed depending upon underlying state
+      if ( dlg==NULL || dlg->mState==REND_DS_None ) 
+      {
+         setSessionMood(now, sess, REND_SM_Idle);
+      } 
+      else if ( dlg->mState==REND_DS_Established ) 
+      {
+         setSessionMood(now, sess, REND_SM_Open);
+      } 
+      else 
+      {
+         assert(0);
+      }
+      return 0;
+   }
+   switch ( toMood ) 
+   {
+   case REND_SM_Open: 
+      cnt = startDlgOpen(now, sess, REND_PR_OpenOrModify); 
+      break;
 
-    if ( toMood==REND_SM_GROUP_ByPendReason ) {
-	// special value outside enum
-	switch ( sess.getPendReason() ) {
-	case REND_PR_Open:
-	case REND_PR_Modify:
-	case REND_PR_OpenOrModify:
-	case REND_PR_Renew:
-	    cnt = startDlgOpen(now, sess, sess.getPendReason()); 
-	    break;
-	case REND_PR_Close:
-	    cnt = startDlgClose(now, sess); 
-	    break;
-	default: assert(0);
-        }
-	return cnt;
-    }
-    if ( toMood==REND_SM_GROUP_ByDlgState ) {
-	// put it into either Open or Closed depending upon underlying state
-	if ( dlg==NULL || dlg->mState==REND_DS_None ) {
-	    setSessionMood(now, sess, REND_SM_Idle);
-	} else if ( dlg->mState==REND_DS_Established ) {
-	    setSessionMood(now, sess, REND_SM_Open);
-	} else {
-	    assert(0);
-	}
-	return 0;
-    }
-    switch ( toMood ) {
-    case REND_SM_Open: 
-	cnt = startDlgOpen(now, sess, REND_PR_OpenOrModify); 
-	break;
-    case REND_SM_Idle:
-	if ( fromMood==REND_SM_Recycle ) {
-	    assert(dlg);
-	    dlg->relDlgState();
-	    // wondering if something with SharedPtr logic is messed up
-	    // and we are killing dialog object, not just clearing state
-    	    assert( dlg == sess.mDlgPtr.get() );
-	    setSessionMood(now, sess, REND_SM_Idle);
-	} else {
-	    cnt = startDlgClose(now, sess); 
-	}
-       break;
-    default:
-       CritLog(<<"Illegal session mood change:"
-	       <<" fromMood="<<RendSessionMoodFmt(fromMood)<<"."<<fromMood
-	       <<" toMood="<<RendSessionMoodFmt(toMood)<<"."<<toMood
-	      );
-       assert(0);
-    }
-    return cnt;
+   case REND_SM_Idle:
+      if ( fromMood==REND_SM_Recycle ) 
+      {
+         assert(dlg);
+         dlg->relDlgState();
+         // wondering if something with SharedPtr logic is messed up
+         // and we are killing dialog object, not just clearing state
+         assert( dlg == sess.mDlgPtr.get() );
+         setSessionMood(now, sess, REND_SM_Idle);
+      } 
+      else 
+      {
+         cnt = startDlgClose(now, sess); 
+      }
+      break;
+
+   default:
+      CritLog(<<"Illegal session mood change:"
+              <<" fromMood="<<RendSessionMoodFmt(fromMood)<<"."<<fromMood
+              <<" toMood="<<RendSessionMoodFmt(toMood)<<"."<<toMood);
+      assert(0);
+   }
+   return cnt;
 }
 
 /**
     Open {numDlgs} that are currently Closed. XXX
 **/
 int
-RendTroopBase::changeDlgCnt(RendTimeUs now, int numDlgs, 
-	RendSessionMood fromMood, RendSessionMood toMood) {
-    if ( numDlgs <= 0 )
-	return 0;
-    int loopcnt = 0;
-    int dcnt = 0;
-    RendSessionMoodChain& chain = mMoods[fromMood].mChain;
-    RendSessionMoodChain::iterator it = chain.begin();
-    for ( ; it != chain.end() && dcnt < numDlgs; loopcnt++) {
-	assert( loopcnt < 100000 );
-	RendSession& sess = *it;
-	assert( sess.mMood == fromMood );
-	++it; // do it now before sess moves lists
-	DebugLog(<<"ChangeDlg"
-		<<" idx="<<sess.mSessionIdx
-		<<" from="<<fromMood
-		<<" to="<<toMood);
-	int cnt = startMoodChange(now, sess, toMood);
-	if ( cnt > 0 )
-	    ++dcnt;
-    }
-    return dcnt;
+RendTroopBase::changeDlgCnt(RendTimeUs now, int numDlgs, RendSessionMood fromMood, RendSessionMood toMood) 
+{
+   if ( numDlgs <= 0 )
+      return 0;
+
+   int loopcnt = 0;
+   int dcnt = 0;
+   RendSessionMoodChain& chain = mMoods[fromMood].mChain;
+   RendSessionMoodChain::iterator it = chain.begin();
+   for ( ; it != chain.end() && dcnt < numDlgs; loopcnt++) 
+   {
+      assert( loopcnt < 100000 );
+      RendSession& sess = *it;
+      assert( sess.mMood == fromMood );
+      ++it; // do it now before sess moves lists
+      DebugLog(<<"ChangeDlg"
+         <<" idx="<<sess.mSessionIdx
+         <<" from="<<fromMood
+         <<" to="<<toMood);
+      int cnt = startMoodChange(now, sess, toMood);
+      if ( cnt > 0 )
+         ++dcnt;
+   }
+   return dcnt;
 }
 
 int
-RendTroopBase::renewDlgCnt(RendTimeUs now, int numDlgs) {
-    int workDone = 0;
-    for (; workDone < numDlgs; workDone++) {
-	RendSession* sess = mTracker->popDlg(now);
-	if ( sess==NULL )
-	    break;
-	// better be open and ready to expire 
-	// (should have been removed from tracker when closed)
-	assert( sess->mExpireAbsTime != 0 );
-	assert( sess->mMood != REND_SM_Idle );
-	RendSessionFmtr fmtr(now, *sess);
-	InfoLog(<<"RenewDlg sess="<<fmtr);
-	startDlgOpen(now, *sess, REND_PR_Renew);
-    }
-    return workDone;
+RendTroopBase::renewDlgCnt(RendTimeUs now, int numDlgs) 
+{
+   int workDone = 0;
+   for (; workDone < numDlgs; workDone++) 
+   {
+      RendSession* sess = mTracker->popDlg(now);
+      if ( sess==NULL )
+         break;
+      // better be open and ready to expire 
+      // (should have been removed from tracker when closed)
+      assert( sess->mExpireAbsTime != 0 );
+      assert( sess->mMood != REND_SM_Idle );
+      RendSessionFmtr fmtr(now, *sess);
+      InfoLog(<<"RenewDlg sess="<<fmtr);
+      startDlgOpen(now, *sess, REND_PR_Renew);
+   }
+   return workDone;
 }
 
 int
-RendTroopBase::checkAge(RendTimeUs now, RendHandleMoodFnc handler,
-	RendSessionMood mood, int failAge, bool failAll,
-	int &maxAgeRet) {
-    RendHandleMoodCxt cxt(now, mCat, this);
-    // assert below is critical, but reflects current usage
-    assert( mood==REND_SM_PendReq || mood==REND_SM_PendNotify );
-    RendSessionMoodChain& chain = mMoods[mood].mChain;
-    RendSessionMoodChain::iterator it = chain.begin();
-    int maxAge = 0;
-    int totCnt = 0;
-    int oldCnt = 0;
-    for ( ; it != chain.end(); ) {
-        RendSession& sess = *it;
-	++it; // increment now before we change session list
-	// RendDlgAcctKey key = cvtIdxToKey(sess.mSessionIdx);
-	++totCnt;
-	int age = sess.getLastMoodSecs(now);
-	assert( age >= 0 );
-	if ( age > maxAge )
-	    maxAge = age;
-	if ( failAll || age > failAge ) {
-	    ++oldCnt;
-	    // RendPubDlg* pdlg = getPubDlg(sess);
-	    // assert( pdlg );
-	    cxt.mSess = &sess;
-	    cxt.mAge = age;
-	    cxt.mKey = cvtIdxToKey(sess.mSessionIdx);
-	    cxt.mNewPendReason = 0;
-	    RendSessionMood newMood = handler(cxt);
-	    if ( newMood != REND_SM_None ) {
-        	setSessionMood(now, sess, newMood, cxt.mNewPendReason);
-	    }
-	}
-    }
-    if ( totCnt > 0 ) {
-        WarningLog(<<"checkAge: #pend="<<totCnt
-	    <<" #old="<<oldCnt
-	    <<" maxage="<<maxAge);
-    }
-    maxAgeRet = maxAge;
-    return oldCnt;
+RendTroopBase::checkAge(RendTimeUs now, RendHandleMoodFnc handler, 
+                        RendSessionMood mood, int failAge, bool failAll,
+                        int &maxAgeRet) 
+{
+   RendHandleMoodCxt cxt(now, mCat, this);
+   // assert below is critical, but reflects current usage
+   assert( mood==REND_SM_PendReq || mood==REND_SM_PendNotify );
+   RendSessionMoodChain& chain = mMoods[mood].mChain;
+   RendSessionMoodChain::iterator it = chain.begin();
+   int maxAge = 0;
+   int totCnt = 0;
+   int oldCnt = 0;
+   for ( ; it != chain.end(); ) 
+   {
+      RendSession& sess = *it;
+      ++it; // increment now before we change session list
+      // RendDlgAcctKey key = cvtIdxToKey(sess.mSessionIdx);
+      ++totCnt;
+      int age = sess.getLastMoodSecs(now);
+      assert( age >= 0 );
+
+      if ( age > maxAge )
+         maxAge = age;
+
+      if ( failAll || age > failAge ) 
+      {
+         ++oldCnt;
+         // RendPubDlg* pdlg = getPubDlg(sess);
+         // assert( pdlg );
+         cxt.mSess = &sess;
+         cxt.mAge = age;
+         cxt.mKey = cvtIdxToKey(sess.mSessionIdx);
+         cxt.mNewPendReason = 0;
+         RendSessionMood newMood = handler(cxt);
+         if ( newMood != REND_SM_None ) 
+         {
+            setSessionMood(now, sess, newMood, cxt.mNewPendReason);
+         }
+      }
+   }
+
+   if ( totCnt > 0 ) 
+   {
+      WarningLog(<<"checkAge: #pend="<<totCnt
+                 <<" #old="<<oldCnt
+                 <<" maxage="<<maxAge);
+   }
+   maxAgeRet = maxAge;
+   return oldCnt;
 }
 
 /**
@@ -671,12 +736,13 @@ RendTroopBase::checkGoalMood(RendTimeUs now, RendSession& sess, const RendDlgAcc
 
 
 void
-RendTroopBase::sessionError(RendTimeUs now, RendSession& sess, const char *msg) {
-    RendDlgAcctKey key = cvtIdxToKey(sess.mSessionIdx);
-    RendSessionFmtr fmtr(now, sess);
-    ErrLog(<<"Session error: (" <<" key=" << key <<" sess=" << fmtr <<"): "<< msg << ".  Recycling.");
-    setSessionMood(now, sess, REND_SM_Recycle, REND_PR_SessionError);
-    // XXX: increment error cnt
+RendTroopBase::sessionError(RendTimeUs now, RendSession& sess, const char *msg)
+{
+   RendDlgAcctKey key = cvtIdxToKey(sess.mSessionIdx);
+   RendSessionFmtr fmtr(now, sess);
+   ErrLog(<<"Session error: (" <<" key=" << key <<" sess=" << fmtr <<"): "<< msg << ".  Recycling.");
+   setSessionMood(now, sess, REND_SM_Recycle, REND_PR_SessionError);
+   // XXX: increment error cnt
 }
 
 void
@@ -702,6 +768,7 @@ RendTroopBase::validate(RendTimeUs now)
             continue;
          }
          break;
+
       case REND_SM_Open:
          if ( dlg && dlg->mState!=REND_DS_Established ) 
          {
@@ -709,6 +776,7 @@ RendTroopBase::validate(RendTimeUs now)
             continue;
          }
          break;
+
       case REND_SM_PendReq:
       case REND_SM_PendNotify:
          // if pending on NOTIFY, might want to wait much longer!
@@ -718,11 +786,14 @@ RendTroopBase::validate(RendTimeUs now)
             continue;
          }
          break;
+
       case REND_SM_Recycle:
          // should check to make sure not stuck!
          break;
+
       case REND_SM_Wave:
          break;
+
       default:
          assert(0);
       }
@@ -732,8 +803,10 @@ RendTroopBase::validate(RendTimeUs now)
    for ( ; moodIdx < REND_SM_MAX; moodIdx++) 
    {
       RendSessionMood mood = (RendSessionMood)moodIdx;
+
       if ( mood==REND_SM_None )
          continue;
+
       RendSessionMoodChain& chain = mMoods[mood].mChain;
       RendSessionMoodChain::iterator it = chain.begin();
       unsigned cnt = 0;
@@ -935,8 +1008,10 @@ RendTroopBase::doSimpleAction(RendTimeUs now, RendSimpleAction act)
    {
    case REND_SA_Ping:
       return 1;
+
    case REND_SA_SkipPendNotify:
       return checkPendNotify(now, /*skipNow*/true);
+
    default:
       ;
    }
@@ -1099,6 +1174,7 @@ RendTroopDlg::handleConnTerm(RendTimeUs now)
    RendSession *sess = troop.getSession(mTroopSessionIdx);
    if ( sess==NULL )
       return;
+
    RendDlg *boundDlg = sess->getDlg();
    if ( boundDlg != this )
       return;
@@ -1108,25 +1184,31 @@ RendTroopDlg::handleConnTerm(RendTimeUs now)
     case REND_SM_Recycle:
        // some error (probably 408/503 response) kick us out already
        return;
+
     case REND_SM_Open:
        // this is "normal" case for this error
        // really? maybe at end?
        WarningLog(<<"Got ConnTerm in Open; need to clean up");
        break;
+
     case REND_SM_Wave:
        // this is "normal" case for this error
        // really? maybe at end?
        WarningLog(<<"Got ConnTerm in Wave; need to clean up");
        break;
+
     case REND_SM_PendReq:
        WarningLog(<<"Got ConnTerm in PendReq (what happened to local 503?)");
        break;
+
     case REND_SM_PendNotify:
        WarningLog(<<"Got ConnTerm in PendNot (what happened to local 503?)");
        break;
+
     case REND_SM_Idle:
        WarningLog(<<"Got ConnTerm in Idle (why?)");
        break;
+
     default:
        WarningLog(<<"Got ConnTerm in stange state");
    }

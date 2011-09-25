@@ -175,20 +175,14 @@ RendRunner::setArgs(const char *appName, int argc, char **argv)
 
    struct poptOption appOptTbl[] = 
    {
-      { 0, 0, POPT_ARG_INCLUDE_TABLE, runnerOpts->getPoptTbl(), 0,
-        runnerOpts->getPoptDesc() },
-      { 0, 0, POPT_ARG_INCLUDE_TABLE, acctOpts->getPoptTbl(), 0,
-        acctOpts->getPoptDesc() },
-      { 0, 0, POPT_ARG_INCLUDE_TABLE, tuOpts->getPoptTbl(), 0,
-        tuOpts->getPoptDesc() },
+      { 0, 0, POPT_ARG_INCLUDE_TABLE, runnerOpts->getPoptTbl(), 0, runnerOpts->getPoptDesc() },
+      { 0, 0, POPT_ARG_INCLUDE_TABLE, acctOpts->getPoptTbl(), 0, acctOpts->getPoptDesc() },
+      { 0, 0, POPT_ARG_INCLUDE_TABLE, tuOpts->getPoptTbl(), 0, tuOpts->getPoptDesc() },
 #if 0
-      { 0, 0, POPT_ARG_INCLUDE_TABLE, waveOpts->getPoptTbl(), 0,
-        waveOpts->getPoptDesc() },
-      { 0, 0, POPT_ARG_INCLUDE_TABLE, testOpts->getPoptTbl(), 0,
-        testOpts->getPoptDesc() },
+      { 0, 0, POPT_ARG_INCLUDE_TABLE, waveOpts->getPoptTbl(), 0, waveOpts->getPoptDesc() },
+      { 0, 0, POPT_ARG_INCLUDE_TABLE, testOpts->getPoptTbl(), 0, testOpts->getPoptDesc() },
 #endif
-      { 0, 0, POPT_ARG_INCLUDE_TABLE, sketchOpts->getPoptTbl(), 0,
-        sketchOpts->getPoptDesc() },
+      { 0, 0, POPT_ARG_INCLUDE_TABLE, sketchOpts->getPoptTbl(), 0, sketchOpts->getPoptDesc() },
       POPT_AUTOHELP
       { NULL, 0, 0, NULL, 0 }
    };
@@ -469,19 +463,15 @@ poptContext
 RendParseOpts(const char *appName, int argc, char *argv[],
               RendOptsBase *testOpts) 
 {
-   RendRunnerOpts 	*runnerOpts = &TheRendRunnerOpts;
-   RendAcctOptsSimple	*acctOpts = &TheRendAcctOptsSimple;
-   // RendWavePresOpts	*waveOpts = &TheRendWavePresOpts;
+   RendRunnerOpts  *runnerOpts = &TheRendRunnerOpts;
+   RendAcctOptsSimple *acctOpts = &TheRendAcctOptsSimple;
+   // RendWavePresOpts *waveOpts = &TheRendWavePresOpts;
 
    struct poptOption appOptTbl[] = {
-      { 0, 0, POPT_ARG_INCLUDE_TABLE, runnerOpts->getPoptTbl(), 0,
-        runnerOpts->getPoptDesc() },
-      { 0, 0, POPT_ARG_INCLUDE_TABLE, acctOpts->getPoptTbl(), 0,
-        acctOpts->getPoptDesc() },
-      { 0, 0, POPT_ARG_INCLUDE_TABLE, waveOpts->getPoptTbl(), 0,
-        waveOpts->getPoptDesc() },
-      { 0, 0, POPT_ARG_INCLUDE_TABLE, testOpts->getPoptTbl(), 0,
-        testOpts->getPoptDesc() },
+      { 0, 0, POPT_ARG_INCLUDE_TABLE, runnerOpts->getPoptTbl(), 0, runnerOpts->getPoptDesc() },
+      { 0, 0, POPT_ARG_INCLUDE_TABLE, acctOpts->getPoptTbl(), 0, acctOpts->getPoptDesc() },
+      { 0, 0, POPT_ARG_INCLUDE_TABLE, waveOpts->getPoptTbl(), 0, waveOpts->getPoptDesc() },
+      { 0, 0, POPT_ARG_INCLUDE_TABLE, testOpts->getPoptTbl(), 0, testOpts->getPoptDesc() },
       POPT_AUTOHELP
       { NULL, 0, 0, NULL, 0 }
    };
