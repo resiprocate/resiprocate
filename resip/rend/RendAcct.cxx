@@ -64,13 +64,13 @@ RendAcctOptsSimple TheRendAcctOptsSimple;
 
 static struct poptOption RendAcctOptsSimpleTbl[] = 
 {
-   { "acctnum", 0, POPT_ARG_INT, &OPT.mNumAccts, 0, "Number of sequential accounts", "NUM" },
-   { "acctbase", 0, POPT_ARG_INT, &OPT.mAcctBase, 0, "Starting account index", "BASE" },
-   { "acctuserpre", 0, POPT_ARG_STRING, &OPT.mUserPrefix, 0, "Prefix for account user names", "PRE" },
-   { "acctusersuf", 0, POPT_ARG_STRING, &OPT.mUserSuffix, 0, "Suffix for account user names", "SUF" },
-   { "acctpass", 0, POPT_ARG_STRING, &OPT.mPassPrefix, 0, "Prefix for account passwords", "PASS" },
-   { "acctsuflen", 0, POPT_ARG_INT, &OPT.mNumericLen, 0, "Length of numeric middle portion", "LEN" },
-   { "acctdomain", 0, POPT_ARG_STRING, &OPT.mDomain, 0, "Domain and realm for accounts", "DOM" },
+   { "acctnum", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPT.mNumAccts, 0, "Number of sequential accounts", "NUM" },
+   { "acctbase", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPT.mAcctBase, 0, "Starting account index", "BASE" },
+   { "acctuserpre", 0, POPT_ARG_STRING|POPT_ARGFLAG_SHOW_DEFAULT, &OPT.mUserPrefix, 0, "Prefix for account user names", "PRE" },
+   { "acctusersuf", 0, POPT_ARG_STRING|POPT_ARGFLAG_SHOW_DEFAULT, &OPT.mUserSuffix, 0, "Suffix for account user names", "SUF" },
+   { "acctpass", 0, POPT_ARG_STRING|POPT_ARGFLAG_SHOW_DEFAULT, &OPT.mPassPrefix, 0, "Prefix for account passwords", "PASS" },
+   { "acctsuflen", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPT.mNumericLen, 0, "Length of numeric middle portion", "LEN" },
+   { "acctdomain", 0, POPT_ARG_STRING|POPT_ARGFLAG_SHOW_DEFAULT, &OPT.mDomain, 0, "Domain and realm for accounts", "DOM" },
    { NULL, 0, 0, NULL, 0 }
 };
 

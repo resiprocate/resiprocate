@@ -1246,11 +1246,11 @@ RendOptsBase* TheRendTuOptsPtr = &TheRendTuOpts;
 static struct poptOption RendTuOptsTbl[] = 
 {
    /* these should be Tu params */
-   { "proxy", 0, POPT_ARG_STRING, &OPT.mProxy, 0, "Outbound proxy URI" },
-   { "localuri", 0, POPT_ARG_STRING, &OPT.mLocalTransportUri, 0, "Local URI (transports)" },
-   { "localports", 0, POPT_ARG_INT, &OPT.mLocalNumPorts, 0, "Number of local ports (transports)" },
-   { "localbind", 0, POPT_ARG_INT, &OPT.mLocalBind, 0, "Bind local ports" },
-   { "kasecs", 0, POPT_ARG_INT, &OPT.mKeepAliveIvalSecs, 0, "Keep alive interval (secs)" },
+   { "proxy", 0, POPT_ARG_STRING|POPT_ARGFLAG_SHOW_DEFAULT, &OPT.mProxy, 0, "Outbound proxy URI" },
+   { "localuri", 0, POPT_ARG_STRING|POPT_ARGFLAG_SHOW_DEFAULT, &OPT.mLocalTransportUri, 0, "Local URI (transports)" },
+   { "localports", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPT.mLocalNumPorts, 0, "Number of local ports (transports)" },
+   { "localbind", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPT.mLocalBind, 0, "Bind local ports" },
+   { "kasecs", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPT.mKeepAliveIvalSecs, 0, "Keep alive interval (secs)" },
    { NULL, 0, 0, NULL, 0 }
 };
 

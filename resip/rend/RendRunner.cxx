@@ -86,16 +86,16 @@ static RendRunnerOpts TheRendRunnerOpts;
 
 struct poptOption TheRunnerOptTbl[] = 
 {
-   { "log-type", 0, POPT_ARG_STRING, &OPTOBJ.mLogTypeStr, 0, "Where to send log message", "cout|cerr|file|syslog"},
-   { "log-level", 0, POPT_ARG_STRING, &OPTOBJ.mLogLevelStr, 0, "Log level", "DEBUG|INFO|NOTICE|WARNING|ERR|ALERT"},
-   { "stacklog-level", 0, POPT_ARG_STRING, &OPTOBJ.mStackLogLevelStr, 0, "SIP Stack Log level", "DEBUG|INFO|NOTICE|WARNING|ERR|ALERT"},
-   { "log-file", 0, POPT_ARG_STRING, &OPTOBJ.mLogFileStr, 0, "Name of file for log-type=file", 0},
-   { "numfds", 0, POPT_ARG_INT, &OPTOBJ.mNumFds, 0, "Number of fds to ask for (setrlimit)" },
-   { "anyaddrport", 0, POPT_ARG_INT, &OPTOBJ.mAnyAddrPort, 0, "Create transports on this port (0.0.0.0)" },
-   { "sketchthread", 0, POPT_ARG_INT, &OPTOBJ.mUseSketchThread, 0, "Run sketch thread in own process" },
-   { "sketchtick", 0, POPT_ARG_INT, &OPTOBJ.mSketchTickPeriodUs, 0, "Polling interval (us) for sketch" },
-   { "tlsrootcert", 0, POPT_ARG_STRING, &OPTOBJ.mRootCertFn, 0, "Filename of root certificate for TLS", 0},
-   { "stackevent", 0, POPT_ARG_STRING, &OPTOBJ.mStackEventImpl, 0, "Type of event loop for SipStack thread" },
+   { "log-type", 0, POPT_ARG_STRING|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mLogTypeStr, 0, "Where to send log message", "cout|cerr|file|syslog"},
+   { "log-level", 0, POPT_ARG_STRING|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mLogLevelStr, 0, "Log level", "DEBUG|INFO|NOTICE|WARNING|ERR|ALERT"},
+   { "stacklog-level", 0, POPT_ARG_STRING|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mStackLogLevelStr, 0, "SIP Stack Log level", "DEBUG|INFO|NOTICE|WARNING|ERR|ALERT"},
+   { "log-file", 0, POPT_ARG_STRING|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mLogFileStr, 0, "Name of file for log-type=file", 0},
+   { "numfds", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mNumFds, 0, "Number of fds to ask for (setrlimit)" },
+   { "anyaddrport", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mAnyAddrPort, 0, "Create transports on this port (0.0.0.0)" },
+   { "sketchthread", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mUseSketchThread, 0, "Run sketch thread in own process" },
+   { "sketchtick", 0, POPT_ARG_INT|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mSketchTickPeriodUs, 0, "Polling interval (us) for sketch" },
+   { "tlsrootcert", 0, POPT_ARG_STRING|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mRootCertFn, 0, "Filename of root certificate for TLS", 0},
+   { "stackevent", 0, POPT_ARG_STRING|POPT_ARGFLAG_SHOW_DEFAULT, &OPTOBJ.mStackEventImpl, 0, "Type of event loop for SipStack thread" },
    { NULL, 0, 0, NULL, 0 }
 };
 
