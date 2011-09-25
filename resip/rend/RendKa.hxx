@@ -6,25 +6,25 @@
 
 struct RendKaStats 
 {
-    RendKaStats() : mSentMsgCnt(0), mSessionCnt(0), 
-    mNumCurConn(0), mNumCurSession(0) { }
-    unsigned mSentMsgCnt;
-    unsigned mSessionCnt;
-    unsigned mNumCurConn; // requires calc
-    unsigned mNumCurSession;
+   RendKaStats() : mSentMsgCnt(0), mSessionCnt(0), 
+      mNumCurConn(0), mNumCurSession(0) { }
+   unsigned mSentMsgCnt;
+   unsigned mSessionCnt;
+   unsigned mNumCurConn; // requires calc
+   unsigned mNumCurSession;
 };
 
 class RendKaMgrIf 
 {
-  public:
-    virtual ~RendKaMgrIf() { };
+public:
+   virtual ~RendKaMgrIf() { };
 
-    static RendKaMgrIf* createMgr(resip::SipStack& stack, int ivalSecs);
+   static RendKaMgrIf* createMgr(resip::SipStack& stack, int ivalSecs);
 
-    virtual RendLocalKey addConn(RendTimeUs now, const resip::Tuple& target) = 0;
-    virtual void delConn(RendLocalKey key) = 0;
-    virtual RendTimeUs processTimers(RendTimeUs now) = 0;
-    virtual void getStats(RendKaStats& stats) = 0;
+   virtual RendLocalKey addConn(RendTimeUs now, const resip::Tuple& target) = 0;
+   virtual void delConn(RendLocalKey key) = 0;
+   virtual RendTimeUs processTimers(RendTimeUs now) = 0;
+   virtual void getStats(RendKaStats& stats) = 0;
 };
 
 #endif

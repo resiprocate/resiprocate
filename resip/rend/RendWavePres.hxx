@@ -89,8 +89,7 @@ void RendStopPresStack();
 
 #include "popt.h"
 extern poptContext
-RendParseOpts(const char *appName, int argc, char *argv[],
-  RendOptsBase *testOpts);
+RendParseOpts(const char *appName, int argc, char *argv[], RendOptsBase *testOpts);
 
 #endif
 

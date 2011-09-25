@@ -4,55 +4,60 @@
 #include "RendDlgAcct.hxx"
 
 const char*
-RendDlgAcctKey::CatFmt(RendDlgCat cat) {
-    switch ( cat ) {
-    case REND_DlgCat_Null: return "N";
-    case REND_DlgCat_Sub: return "S";
-    case REND_DlgCat_Pub: return "P";
-    case REND_DlgCat_Reg: return "R";
-    }
-    return "?";
+RendDlgAcctKey::CatFmt(RendDlgCat cat)
+{
+   switch ( cat ) 
+   {
+   case REND_DlgCat_Null: return "N";
+   case REND_DlgCat_Sub: return "S";
+   case REND_DlgCat_Pub: return "P";
+   case REND_DlgCat_Reg: return "R";
+   }
+   return "?";
 }
 
 std::ostream&
-operator<<(std::ostream& ostrm, const RendDlgAcctKey& key) {
-    static const char *DlgCatNames[] = { "Nul", "Sub", "Pub", "Reg" };
-    const char* catName = key.mCat >= 4 ? "Unk" : DlgCatNames[key.mCat];
+operator<<(std::ostream& ostrm, const RendDlgAcctKey& key)
+{
+   static const char *DlgCatNames[] = { "Nul", "Sub", "Pub", "Reg" };
+   const char* catName = key.mCat >= 4 ? "Unk" : DlgCatNames[key.mCat];
 
-    ostrm << "["<<catName
-      <<",f="<<key.mFromIdx<<",t="<<key.mToIdx<<",r="<<key.mRepeatIdx
-      <<"]";
-    return ostrm;
+   ostrm << "["<<catName <<",f="<<key.mFromIdx<<",t="<<key.mToIdx<<",r="<<key.mRepeatIdx <<"]";
+   return ostrm;
 }
 
-RendCntMgr::RendCntMgr() {
-    reset();
+RendCntMgr::RendCntMgr()
+{
+   reset();
 }
 
 #define CNTCHUNKSIZE (sizeof(unsigned)*REND_CntCode_MAX*REND_DlgCat_MAX)
 
 void
-RendCntMgr::reset() {
-    assert( CNTCHUNKSIZE* REND_CntPeriod_MAX == sizeof(mCnts) );
-    memset( mCnts, 0, sizeof(mCnts));
+RendCntMgr::reset() 
+{
+   assert( CNTCHUNKSIZE* REND_CntPeriod_MAX == sizeof(mCnts) );
+   memset( mCnts, 0, sizeof(mCnts));
 }
 
 void
-RendCntMgr::endwave() {
-    memcpy( mCnts[REND_CntPeriod_LastWave], mCnts[REND_CntPeriod_Current],
-	    CNTCHUNKSIZE);
-    memset( mCnts[REND_CntPeriod_Current], 0, CNTCHUNKSIZE);
+RendCntMgr::endwave() 
+{
+   memcpy( mCnts[REND_CntPeriod_LastWave], mCnts[REND_CntPeriod_Current], CNTCHUNKSIZE);
+   memset( mCnts[REND_CntPeriod_Current], 0, CNTCHUNKSIZE);
 }
 
 void
-RendCntMgr::add(RendCntCode code, RendDlgCat cat, unsigned cnt) {
-    (mCnts[REND_CntPeriod_Current][code][cat]) += cnt;
-    (mCnts[REND_CntPeriod_Forever][code][cat]) += cnt;
+RendCntMgr::add(RendCntCode code, RendDlgCat cat, unsigned cnt) 
+{
+   (mCnts[REND_CntPeriod_Current][code][cat]) += cnt;
+   (mCnts[REND_CntPeriod_Forever][code][cat]) += cnt;
 }
 
 unsigned
-RendCntMgr::get(RendCntPeriod per, RendCntCode code, RendDlgCat cat) {
-    return mCnts[per][code][cat];
+RendCntMgr::get(RendCntPeriod per, RendCntCode code, RendDlgCat cat)
+{
+   return mCnts[per][code][cat];
 }
 
 /* ====================================================================

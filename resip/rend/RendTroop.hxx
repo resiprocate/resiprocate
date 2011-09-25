@@ -436,7 +436,6 @@ protected:
    int mTgtOpenDlgs;
    int mOpenToIdxBase;
    int mOpenToIdxLen;
-
 };
 
 class RendTroopDlg : public RendDlg 

@@ -20,10 +20,10 @@
 **/
 enum RendDlgCat 
 {
-    REND_DlgCat_Null,
-    REND_DlgCat_Sub,
-    REND_DlgCat_Pub,
-    REND_DlgCat_Reg,
+   REND_DlgCat_Null,
+   REND_DlgCat_Sub,
+   REND_DlgCat_Pub,
+   REND_DlgCat_Reg,
 };
 #define REND_DlgCat_MAX REND_DlgCat_Reg
 

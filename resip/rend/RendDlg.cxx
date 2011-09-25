@@ -48,8 +48,6 @@
 
 // #define REND_UseForceTransport
 
-
-
 /*************************************************************************
  *
  * RendDlgTimer,RendTimerQueue
@@ -65,7 +63,8 @@ struct RendDlgTimer
    UInt64 mWhen;
 };
 
-bool operator<(const RendDlgTimer& a, const RendDlgTimer& b) {
+bool operator<(const RendDlgTimer& a, const RendDlgTimer& b)
+{
     return a.mWhen < b.mWhen;
 }
 
@@ -1247,21 +1246,19 @@ RendOptsBase* TheRendTuOptsPtr = &TheRendTuOpts;
 static struct poptOption RendTuOptsTbl[] = 
 {
    /* these should be Tu params */
-   { "proxy", 0, POPT_ARG_STRING, &OPT.mProxy, 0,
-     "Outbound proxy URI" },
-   { "localuri", 0, POPT_ARG_STRING, &OPT.mLocalTransportUri, 0,
-     "Local URI (transports)" },
-   { "localports", 0, POPT_ARG_INT, &OPT.mLocalNumPorts, 0,
-     "Number of local ports (transports)" },
-   { "localbind", 0, POPT_ARG_INT, &OPT.mLocalBind, 0,
-     "Bind local ports" },
-   { "kasecs", 0, POPT_ARG_INT, &OPT.mKeepAliveIvalSecs, 0,
-     "Keep alive interval (secs)" },
+   { "proxy", 0, POPT_ARG_STRING, &OPT.mProxy, 0, "Outbound proxy URI" },
+   { "localuri", 0, POPT_ARG_STRING, &OPT.mLocalTransportUri, 0, "Local URI (transports)" },
+   { "localports", 0, POPT_ARG_INT, &OPT.mLocalNumPorts, 0, "Number of local ports (transports)" },
+   { "localbind", 0, POPT_ARG_INT, &OPT.mLocalBind, 0, "Bind local ports" },
+   { "kasecs", 0, POPT_ARG_INT, &OPT.mKeepAliveIvalSecs, 0, "Keep alive interval (secs)" },
    { NULL, 0, 0, NULL, 0 }
 };
 
 struct poptOption*
-RendTuOpts::getPoptTbl() { return RendTuOptsTbl; }
+RendTuOpts::getPoptTbl() 
+{ 
+   return RendTuOptsTbl;
+}
 
 void
 RendTuOpts::configureTu(RendTu *tu) 
