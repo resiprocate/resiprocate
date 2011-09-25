@@ -222,7 +222,11 @@ main(int argc, char** argv)
    threadInterruptor.reset(new SelectInterruptor());
 
    bool useV4 = !config.getConfigBool("DisableIPv4", false);
-   bool useV6 = config.getConfigBool("EnableIPv6", false);
+#ifdef USE_IPV6
+   bool useV6 = config.getConfigBool("EnableIPv6", true);
+#else
+   bool useV6 = false;
+#endif
    if (useV4) InfoLog (<< "V4 enabled");
    if (useV6) InfoLog (<< "V6 enabled");
 
@@ -555,7 +559,6 @@ main(int argc, char** argv)
    
    // Add simple target handler baboon
    targetProcessors.addProcessor(std::auto_ptr<Processor>(new SimpleTargetHandler)); 
-
 
    // Create main Proxy class
    Proxy proxy(stack, 
