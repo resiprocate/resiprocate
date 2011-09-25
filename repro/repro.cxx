@@ -197,6 +197,7 @@ main(int argc, char** argv)
    compression = new Compression(Compression::DEFLATE);
 #endif
 
+#if defined(HAVE_EPOLL)
    if(config.getConfigBool("InternalEpoll", true)) 
    {
 #if defined(RESIP_SIPSTACK_HAVE_FDPOLL)
@@ -206,6 +207,7 @@ main(int argc, char** argv)
       exit(1);
 #endif
    }
+#endif
 
    std::auto_ptr<FdPollGrp> pollGrp(NULL);
    std::auto_ptr<SelectInterruptor> threadInterruptor(NULL);

@@ -307,10 +307,18 @@ ProxyConfig::parseCommandLine(int argc, char** argv)
 void
 ProxyConfig::parseConfigFile(const Data& filename)
 {
-   cout << "Reading configuraiton from: " << filename << endl;
 
    ifstream configFile(filename.c_str());
-    
+   
+   if(configFile)
+   {
+      cout << "Reading configuraiton from: " << filename << endl;
+   }
+   else
+   {
+      cout << "Error reading configuraiton from: " << filename << endl;
+   }
+
    string sline;                     
    while(getline(configFile, sline)) 
    {
