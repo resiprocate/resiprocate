@@ -29,11 +29,6 @@ Command Line Options:
 
 rendIt [optional-arguments] <sketch-name>      - where sketch-name can be "reg1" or "pres1"
 
-
-C:\MyProjects\resip-main\resip\rend>SSL-Debug\rend --help pres1
-INFO | 20110925-152609.285 |  | RESIP:DNS | 3244 | dnsutil.cxx:146 | local hostname does not contain a domain part spectrumq6600
-Usage: [OPTION...]
-
 Runner options
   --log-type=cout|cerr|file|syslog                         Where to send log
                                                            message (default:
@@ -170,7 +165,7 @@ Pres1Options
                                                            (default: 0)
 
 
-Note:  At a minimum the following command line options MUST be specified:
+WARNING:  At a minimum the following command line options MUST be specified:
   --localuri=STRING                                        Local URI
                                                            (transports)
                                                            (default: null)
