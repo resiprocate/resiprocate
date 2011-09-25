@@ -39,7 +39,9 @@ public:
 
    bool getConfigValue(const resip::Data& name, std::vector<resip::Data> &value);
    
-private:
+protected:
+   void insertConfigValue(const resip::Data& name, const resip::Data& value);
+
    typedef std::multimap<resip::Data, resip::Data> ConfigValuesMap;
    ConfigValuesMap mConfigValues;
 
