@@ -231,6 +231,14 @@ ProxyConfig::getConfigValue(const resip::Data& name, std::vector<resip::Data> &v
 }
 
 void 
+ProxyConfig::insertConfigValue(const resip::Data& name, const resip::Data& value)
+{
+   resip::Data lowerName(name);
+   lowerName.lowercase();
+   mConfigValues.insert(ConfigValuesMap::value_type(lowerName, value));
+}
+
+void 
 ProxyConfig::parseCommandLine(int argc, char** argv)
 {
    int startingArgForNameValuePairs = 1;
@@ -279,7 +287,7 @@ ProxyConfig::parseCommandLine(int argc, char** argv)
                pb.data(value, anchor);
 
                cout << "Command line Name='" << name << "' value='" << value << "'" << endl;
-               mConfigValues.insert(ConfigValuesMap::value_type(name.lowercase(), value));
+               insertConfigValue(name, value);
             }
             else
             {
@@ -348,7 +356,7 @@ ProxyConfig::parseConfigFile(const Data& filename)
             pb.data(value, anchor);
          }
          //cout << "Config file Name='" << name << "' value='" << value << "'" << endl;
-         mConfigValues.insert(ConfigValuesMap::value_type(name.lowercase(), value));
+         insertConfigValue(name, value);
       }
    }
 }
