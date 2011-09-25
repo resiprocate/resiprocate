@@ -222,7 +222,7 @@ main(int argc, char** argv)
    threadInterruptor.reset(new SelectInterruptor());
 
    bool useV4 = !config.getConfigBool("DisableIPv4", false);
-   bool useV6 = config.getConfigBool("EnableIPv6", true);
+   bool useV6 = config.getConfigBool("EnableIPv6", false);
    if (useV4) InfoLog (<< "V4 enabled");
    if (useV6) InfoLog (<< "V6 enabled");
 
