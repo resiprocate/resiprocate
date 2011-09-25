@@ -212,7 +212,7 @@ main(int argc, char** argv)
    std::auto_ptr<FdPollGrp> pollGrp(NULL);
    std::auto_ptr<SelectInterruptor> threadInterruptor(NULL);
 #if defined(HAVE_EPOLL)
-   if (args.mUseEventThread)
+   if (config.getConfigBool("EventThread", true))
    {
       pollGrp.reset(FdPollGrp::create());
       threadInterruptor.reset(new EventThreadInterruptor(*pollGrp));
@@ -435,7 +435,7 @@ main(int argc, char** argv)
 
    std::auto_ptr<ThreadIf> stackThread(NULL);
 #if defined(HAVE_EPOLL)
-   if ( args.mUseEventThread )
+   if(config.getConfigBool("EventThread", true))
    {
       stackThread.reset(new EventStackThread(stack,
                *dynamic_cast<EventThreadInterruptor*>(threadInterruptor.get()),
