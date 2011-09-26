@@ -6,6 +6,7 @@
 #include "resip/dum/DialogSet.hxx"
 #include "resip/dum/DialogSetId.hxx"
 #include "resip/dum/UserProfile.hxx"
+#include "resip/dum/DumCommand.hxx"
 
 namespace resip
 {
@@ -23,6 +24,9 @@ class AppDialogSet : public Handled
 
       virtual void end();
 
+      // Asynchronously calls end() through a DUM command
+      virtual void endCommand();
+      
       virtual SharedPtr<UserProfile> getUserProfile();
 
       virtual AppDialog* createAppDialog(const SipMessage&);
@@ -35,6 +39,30 @@ class AppDialogSet : public Handled
       virtual EncodeStream& dump(EncodeStream& strm) const;
 
    protected:
+
+      class AppDialogSetEndCommand : public DumCommandAdapter
+      {
+      public:
+         AppDialogSetEndCommand(AppDialogSetHandle& dialogSet)
+            : mAppDialogSet(dialogSet)
+         {
+         }
+      
+         virtual void executeCommand()
+         {
+            if(mAppDialogSet.isValid())
+            {
+               mAppDialogSet->end();
+            }
+         }
+      
+         virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+         {
+            return strm << "AppDialogSetEndCommand";
+         }
+      private:
+         AppDialogSetHandle mAppDialogSet;
+      };
 
       AppDialogSet(DialogUsageManager& dum);
 
