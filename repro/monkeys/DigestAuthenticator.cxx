@@ -22,20 +22,15 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
-DigestAuthenticator::DigestAuthenticator( UserStore& userStore, 
-                                          resip::SipStack* stack, 
-                                          bool noIdentityHeaders, 
-                                          const Data& httpHostname, 
-                                          int httpPort,
-                                          bool useAuthInt,
-                                          bool rejectBadNonces) :
-            mNoIdentityHeaders(noIdentityHeaders),
-            mHttpHostname(httpHostname),
-            mHttpPort(httpPort),
-            mUseAuthInt(useAuthInt),
-            mRejectBadNonces(rejectBadNonces)
+DigestAuthenticator::DigestAuthenticator(ProxyConfig& config,
+                                         resip::SipStack* stack) :
+   mNoIdentityHeaders(config.getConfigBool("DisableIdentity", false)),
+   mHttpHostname(config.getConfigData("HttpHostname", "")),
+   mHttpPort(config.getConfigInt("HttpPort", 5080)),
+   mUseAuthInt(!config.getConfigBool("DisableAuthInt", false)),
+   mRejectBadNonces(config.getConfigBool("RejectBadNonces", false))
 {
-   std::auto_ptr<Worker> grabber(new UserAuthGrabber(userStore));
+   std::auto_ptr<Worker> grabber(new UserAuthGrabber(config.getDataStore()->mUserStore));
    mAuthRequestDispatcher= new Dispatcher(grabber,stack);
 }
 

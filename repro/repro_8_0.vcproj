@@ -42,8 +42,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../resip/stack&quot;;&quot;$(ProjectDir)../contrib/db/build_win32&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;;&quot;$(ProjectDir)../contrib/popt/win32/include&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;HAVE_POPT_H;USE_IPV6;LEAK_CHECK"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../resip/stack&quot;;&quot;$(ProjectDir)../contrib/db/build_win32&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;USE_IPV6;LEAK_CHECK"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -64,7 +64,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib winmm.lib &quot;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib&quot;"
+				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib winmm.lib"
 				OutputFile="$(OutDir)/repro.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -123,8 +123,8 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../resip/stack&quot;;&quot;$(ProjectDir)../contrib/db/build_win32&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;;&quot;$(ProjectDir)../contrib/popt/win32/include&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;HAVE_POPT_H;USE_IPV6"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../resip/stack&quot;;&quot;$(ProjectDir)../contrib/db/build_win32&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;USE_IPV6"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
 				UsePrecompiledHeader="0"
@@ -143,7 +143,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib winmm.lib &quot;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib&quot;"
+				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib winmm.lib"
 				OutputFile="$(OutDir)/repro.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
@@ -204,8 +204,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../resip/stack&quot;;&quot;$(ProjectDir)../contrib/db/build_win32&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;;&quot;$(ProjectDir)../contrib/popt/win32/include&quot;;&quot;$(ProjectDir)../contrib/openssl/include&quot;;&quot;$(ProjectDir)../contrib/openssl/inc32&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;HAVE_POPT_H;USE_SSL;USE_IPV6;LEAK_CHECK"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../resip/stack&quot;;&quot;$(ProjectDir)../contrib/db/build_win32&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;;&quot;$(ProjectDir)../contrib/openssl/include&quot;;&quot;$(ProjectDir)../contrib/openssl/inc32&quot;"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;USE_SSL;USE_IPV6;LEAK_CHECK"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -226,7 +226,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib winmm.lib crypt32.lib &quot;$(ProjectDir)..\contrib\openssl\lib\vc\static\libeay32MDd.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\lib\vc\static\ssleay32MDd.lib&quot; &quot;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib&quot;"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib winmm.lib crypt32.lib &quot;$(ProjectDir)..\contrib\openssl\lib\vc\static\libeay32MDd.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\lib\vc\static\ssleay32MDd.lib&quot;"
 				OutputFile="$(OutDir)/repro.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -285,8 +285,8 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../resip/stack&quot;;&quot;$(ProjectDir)../contrib/db/build_win32&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;;&quot;$(ProjectDir)../contrib/popt/win32/include&quot;;&quot;$(ProjectDir)../contrib/openssl/include&quot;;&quot;$(ProjectDir)../contrib/openssl/inc32&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;HAVE_POPT_H;USE_SSL;USE_IPV6"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../resip/stack&quot;;&quot;$(ProjectDir)../contrib/db/build_win32&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;;&quot;$(ProjectDir)../contrib/openssl/include&quot;;&quot;$(ProjectDir)../contrib/openssl/inc32&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;USE_SSL;USE_IPV6"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
 				UsePrecompiledHeader="0"
@@ -305,7 +305,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib winmm.lib crypt32.lib &quot;$(ProjectDir)..\contrib\openssl\lib\vc\static\libeay32MD.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\lib\vc\static\ssleay32MD.lib&quot; &quot;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib&quot;"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib winmm.lib crypt32.lib &quot;$(ProjectDir)..\contrib\openssl\lib\vc\static\libeay32MD.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\lib\vc\static\ssleay32MD.lib&quot;"
 				OutputFile="$(OutDir)/repro.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
@@ -353,10 +353,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\CommandLineParser.cxx"
-				>
-			</File>
-			<File
 				RelativePath=".\HttpBase.cxx"
 				>
 			</File>
@@ -388,10 +384,6 @@
 			>
 			<File
 				RelativePath=".\BerkeleyDb.hxx"
-				>
-			</File>
-			<File
-				RelativePath=".\CommandLineParser.hxx"
 				>
 			</File>
 			<File
@@ -427,6 +419,10 @@
 		</File>
 		<File
 			RelativePath=".\webadmin\pageOutlinePre.ixx"
+			>
+		</File>
+		<File
+			RelativePath=".\repro.config"
 			>
 		</File>
 	</Files>

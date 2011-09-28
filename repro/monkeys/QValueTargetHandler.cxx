@@ -9,24 +9,31 @@
 
 #include "rutil/Data.hxx"
 #include "rutil/Logger.hxx"
+#include "repro/ProxyConfig.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
-
 namespace repro
 {
-QValueTargetHandler::QValueTargetHandler(ForkBehavior behavior,
-                                          bool cancelBetweenForkGroups,
-                                          bool waitForTerminate,
-                                          int delayBetweenForkGroupsMS,
-                                          int cancellationDelayMS)
+
+QValueTargetHandler::QValueTargetHandler(ProxyConfig& config)
 {
-   mForkBehavior=behavior;
-   mCancelBetweenForkGroups=cancelBetweenForkGroups;
-   mWaitForTerminate=waitForTerminate;
-   mDelayBetweenForkGroups=delayBetweenForkGroupsMS;
-   mCancellationDelay=cancellationDelayMS;
+   mForkBehavior=QValueTargetHandler::EQUAL_Q_PARALLEL;
+      
+   if(config.getConfigData("QValueBehavior", "") =="FULL_SEQUENTIAL")
+   {
+      mForkBehavior=QValueTargetHandler::FULL_SEQUENTIAL;
+   }
+   else if(config.getConfigData("QValueBehavior", "") == "FULL_PARALLEL")
+   {
+      mForkBehavior=QValueTargetHandler::FULL_PARALLEL;
+   }
+
+   mCancelBetweenForkGroups=config.getConfigBool("QValueCancelBetweenForkGroups", true);
+   mWaitForTerminate=config.getConfigBool("QValueWaitForTerminateBetweenForkGroups", true);
+   mDelayBetweenForkGroups=config.getConfigInt("QValueMsBetweenForkGroups", 3000);
+   mCancellationDelay=config.getConfigInt("QValueMsBeforeCancel", 3000);
 }
 
 
@@ -36,7 +43,6 @@ QValueTargetHandler::~QValueTargetHandler()
 Processor::processor_action_t
 QValueTargetHandler::process(RequestContext &rc)
 {
-
    std::vector<resip::Data> nextCancelTids;
    std::vector<resip::Data> nextBeginTids;
 
