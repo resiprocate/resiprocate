@@ -20,11 +20,40 @@ Sketch - a particular test pattern or message flow.  There are currently two tes
          Reg1 - a simple registration and refresh load test scenario.
          Pres1 - a presence load test scenario
 
-Troop - A troop is one instance of a sketch running.  For example, if 5 users are configured, then
-        the Reg1 sketch will dispatch 5 troops, one for each user account.
+Troop - A collection of users all doing the same thing. All users in a troop may not be doing things in 
+        exact lock step, but close. For example, in the simple register schetch, you might have 100 users 
+		in the troop. The entire troop will enter the "REGISTER" phase, but they cannot all send REGISTERs
+		at the same time. They will all send REGISTERs following each other subject to the rate limit 
+		constraints. The idea is that all users of a troop share a bunch of common state.  
 
-Wave - A wave is a complete run of a particular sketch, from start to finish.
+Wave - The concept of a wave evolved over time. The basic idea is that a sketch does a for(;;) { wave() }. 
+       That ignores the boundary cases and such, but the idea is that a wave is the work within the loop 
+	   of the sketch. In the case of presence, there are multiple (sequential) waves in the loop. The wave 
+	   is the current working set of stuff to do. So for example, for presence, we select the set of users 
+	   we want to "test" on a give wave, where test means send a PUB and expect to get a NOTIFY on 
+	   subscribed accounts. Those users selected into the test are part of the wave.  Statistics are 
+	   aggregated over a wave. E.g., how many lost messsages in a wave, what was the average response time 
+	   in a wave, etc.
 
+		
+Developer Notes:
+		
+Troop - With the existing sketches, there is 1-to-1 relationship between troop type and troop instance. So 
+        there is a troop type (C++ class) for registration. And "reg1" has single instance of it.  But one 
+		could image having two instances, each with different pools of users, each with different "rates". 
+		E.g., to simulate one pool of users that hold live registrations for long periods, and another pool 
+		that pops in and out of the network frequently. Or one pool of "normal" users and then another pool 
+		"bad" users that don't disconnect cleanly.
+
+Sketch - A sketch can have multiple troop instances. An example would be the above case of having two distinct 
+         registration pools. The pres1 sketch has two troop instances: one for PUBs and one for SUBs. In that 
+		 case, it is tied to needing two different troop types, because the troop type defines the behavior 
+		 of the troop (sending PUBs vs sending SUBs).
+
+Wave - The wave serves two purposes: from programming perspective, it is the current working set: when the 
+       wave is empty, we can move on. From user perspective, it counts how many iterations we've completed. 
+
+	   
 Command Line Options:
 
 rendIt [optional-arguments] <sketch-name>      - where sketch-name can be "reg1" or "pres1"
