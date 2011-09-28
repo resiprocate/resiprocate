@@ -70,6 +70,29 @@ signalHandler(int signo)
    finished = true;
 }
 
+class ReproLogger : public ExternalLogger
+{
+public:
+   virtual ~ReproLogger() {}
+   /** return true to also do default logging, false to supress default logging. */
+   virtual bool operator()(Log::Level level,
+                           const Subsystem& subsystem, 
+                           const Data& appName,
+                           const char* file,
+                           int line,
+                           const Data& message,
+                           const Data& messageWithHeaders)
+   {
+      // Log any errors to the screen 
+      if(level <= Log::Err)
+      {
+         resipCout << messageWithHeaders << endl;
+      }
+      return true;
+   }
+};
+ReproLogger g_ReproLogger;
+
 Data
 addDomains(TransactionUser& tu, ProxyConfig& config, bool log)
 {
@@ -162,10 +185,12 @@ main(int argc, char** argv)
    ProxyConfig config(argc, argv, configFilename);
 
    GenericLogImpl::MaxByteCount = config.getConfigUnsignedLong("LogFileMaxBytes", 5242880 /*5 Mb */);
-   Log::initialize(config.getConfigData("LoggingType", "cout", true), 
+   Data loggingType = config.getConfigData("LoggingType", "cout", true);
+   Log::initialize(loggingType, 
                    config.getConfigData("LogLevel", "INFO", true), 
                    argv[0], 
-                   config.getConfigData("LogFilename", "repro.log", true).c_str());
+                   config.getConfigData("LogFilename", "repro.log", true).c_str(),
+                   isEqualNoCase(loggingType, "file") ? &g_ReproLogger : 0); // if logging to file then write WARNINGS, and Errors to console still
 
    unsigned long overrideT1 = config.getConfigInt("TimerT1", 0);
    if(overrideT1)
@@ -261,41 +286,66 @@ main(int argc, char** argv)
    bool allTransportsSpecifyRecordRoute=false;
    try
    {
-      // An example of how to use this follows. This sets up 2 transports, 1 TLS
-      // and 1 UDP. TLS domain is bound to example.com. 
-      // repro -i "sip:192.168.1.200:5060;transport=tls;tls=example.com,sip:192.168.1.200:5060;transport=udp"
-      // Note: If you specify interfaces the other transport arguments have no effect
-      std::vector<Data> interfaces;
-      config.getConfigValue("Interfaces", interfaces);
-      if (!interfaces.empty())
+      // Check if advanced transport settings are provided
+      unsigned int transportNum = 1;
+      Data settingKeyBase("Transport" + Data(transportNum));
+      Data interfaceSettingKey(settingKeyBase + "Interface");
+      Data interfaceSettings = config.getConfigData(interfaceSettingKey, "", true);
+      if(!interfaceSettings.empty())
       {
-         allTransportsSpecifyRecordRoute = true;
-         for (std::vector<Data>::iterator i=interfaces.begin(); 
-              i != interfaces.end(); ++i)
-         {
-            try
-            {
-               Uri intf(*i);
-               if(!DnsUtil::isIpAddress(intf.host()))
-               {
-                  CritLog(<< "Malformed IP-address found in the --interfaces (-i) command-line option: " << intf.host());
-               }
-               TransportType tt = Tuple::toTransport(intf.param(p_transport));
-               ExtensionParameter p_rcvbuf("rcvbuf"); // SO_RCVBUF
-               int rcvBufLen = 0;
-               if (intf.exists(p_rcvbuf) && !intf.param(p_rcvbuf).empty())
-               {
-                  rcvBufLen = intf.param(p_rcvbuf).convertInt();
-               }
-               // maybe do transport-type dependent processing of buf?
+         // Sample config file format for advanced transport settings
+         // Transport1Interface = 192.168.1.106:5061
+         // Transport1Type = TLS
+         // Transprot1TlsDomain = sipdomain.com
+         // Transport1RecordRouteUri = sip:sipdomain.com;transport=TLS
+         // Transport1RcvBufLen = 2000
 
-               ExtensionParameter p_tls("tls"); // for specifying tls domain
+         allTransportsSpecifyRecordRoute = true;
+
+         const char *anchor;
+         while(!interfaceSettings.empty())
+         {
+            Data typeSettingKey(settingKeyBase + "Type");
+            Data tlsDomainSettingKey(settingKeyBase + "TlsDomain");
+            Data recordRouteUriSettingKey(settingKeyBase + "RecordRouteUri");
+            Data rcvBufSettingKey(settingKeyBase + "RcvBufLen");
+
+            // Parse out interface settings
+            ParseBuffer pb(interfaceSettings);
+            anchor = pb.position();
+            pb.skipToChar(':');
+            if(!pb.eof())
+            {
+               Data ipAddr;
+               Data portData;
+               pb.data(ipAddr, anchor);
+               pb.skipChar();
+               anchor = pb.position();
+               pb.skipToEnd();
+               pb.data(portData, anchor);
+               if(!DnsUtil::isIpAddress(ipAddr))
+               {
+                  CritLog(<< "Malformed IP-address found in " << interfaceSettingKey << " setting: " << ipAddr);
+               }
+               int port = portData.convertInt();
+               if(port == 0)
+               {
+                  CritLog(<< "Invalid port found in " << interfaceSettingKey << " setting: " << port);
+               }
+               TransportType tt = Tuple::toTransport(config.getConfigData(typeSettingKey, "UDP"));
+               if(tt == UNKNOWN_TRANSPORT)
+               {
+                  CritLog(<< "Unknown transport type found in " << typeSettingKey << " setting: " << config.getConfigData(typeSettingKey, "UDP"));
+               }
+               Data tlsDomain = config.getConfigData(tlsDomainSettingKey, "");
+               int rcvBufLen = config.getConfigInt(rcvBufSettingKey, 0);
                Transport *t = stack.addTransport(tt,
-                                 intf.port(),
-                                 DnsUtil::isIpV6Address(intf.host()) ? V6 : V4,
+                                 port,
+                                 DnsUtil::isIpV6Address(ipAddr) ? V6 : V4,
                                  StunEnabled, 
-                                 intf.host(), // interface to bind to
-                                 intf.param(p_tls));
+                                 ipAddr, // interface to bind to
+                                 tlsDomain);
+
                if (t && rcvBufLen>0 )
                {
 #if defined(RESIP_SIPSTACK_HAVE_FDPOLL)
@@ -306,20 +356,19 @@ main(int argc, char** argv)
                    assert(0);
 #endif
                }
-               ExtensionParameter p_rr("rr"); // for specifying transport specific record route
-               if(intf.exists(p_rr))
+
+               Data recordRouteUri = config.getConfigData(recordRouteUriSettingKey, "");
+               if(!recordRouteUri.empty())
                {
-                  // Note:  Any ';' in record-route must be escaped as %3b
-                  // repro -i "sip:192.168.1.200:5060;transport=tcp;rr=sip:example.com%3btransport=tcp,sip:192.168.1.200:5060;transport=udp;rr=sip:example.com%3btransport=udp"
                   try
                   {
-                     if(intf.param(p_rr).empty())
+                     if(isEqualNoCase(recordRouteUri, "auto")) // auto generated record route uri
                      {
                         if(tt == TLS || tt == DTLS)
                         {
                            NameAddr rr;
-                           rr.uri().host()=intf.param(p_tls);
-                           rr.uri().port()=intf.port();
+                           rr.uri().host()=tlsDomain;
+                           rr.uri().port()=port;
                            rr.uri().param(resip::p_transport)=resip::Tuple::toDataLower(tt);
                            t->setRecordRoute(rr);
                            InfoLog (<< "Transport specific record-route enabled (generated): " << rr);
@@ -327,8 +376,8 @@ main(int argc, char** argv)
                         else
                         {
                            NameAddr rr;
-                           rr.uri().host()=intf.host();
-                           rr.uri().port()=intf.port();
+                           rr.uri().host()=ipAddr;
+                           rr.uri().port()=port;
                            rr.uri().param(resip::p_transport)=resip::Tuple::toDataLower(tt);
                            t->setRecordRoute(rr);
                            InfoLog (<< "Transport specific record-route enabled (generated): " << rr);
@@ -336,14 +385,14 @@ main(int argc, char** argv)
                      }
                      else
                      {
-                        NameAddr rr(intf.param(p_rr).charUnencoded());
+                        NameAddr rr(recordRouteUri);
                         t->setRecordRoute(rr);
                         InfoLog (<< "Transport specific record-route enabled: " << rr);
                      }
                   }
                   catch(BaseException& e)
                   {
-                     ErrLog (<< "Invalid transport record-route uri provided (ignoring): " << e);
+                     ErrLog (<< "Invalid uri provided in " << recordRouteUriSettingKey << " setting (ignoring): " << e);
                      allTransportsSpecifyRecordRoute = false;
                   }
                }
@@ -352,10 +401,17 @@ main(int argc, char** argv)
                   allTransportsSpecifyRecordRoute = false;
                }
             }
-            catch(ParseException& e)
+            else
             {
-               ErrLog (<< "Invalid transport uri provided (ignoring): " << e);
+               CritLog(<< "Port not specified in " << interfaceSettingKey << " setting: expected format is <IPAddress>:<Port>");
+               exit(-1);
             }
+
+            // Check if there is another transport
+            transportNum++;
+            settingKeyBase = Data("Transport" + Data(transportNum));
+            interfaceSettingKey = Data(settingKeyBase + "Interface");
+            interfaceSettings = config.getConfigData(interfaceSettingKey, "", true);
          }
       }
       else
@@ -395,7 +451,7 @@ main(int argc, char** argv)
       exit(-1);
    }
    
-   InteropHelper::setOutboundVersion(config.getConfigInt("OutboundVersion", 11));
+   InteropHelper::setOutboundVersion(config.getConfigInt("OutboundVersion", 5626));
    InteropHelper::setOutboundSupported(config.getConfigBool("DisableOutbound", false) ? false : true);
    InteropHelper::setRRTokenHackEnabled(config.getConfigBool("EnableFlowTokens", false));
    Data clientNATDetectionMode = config.getConfigData("ClientNatDetectionMode", "DISABLED");
