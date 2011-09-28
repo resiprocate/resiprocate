@@ -40,7 +40,8 @@ AppDialogSet::end()
 void
 AppDialogSet::endCommand()
 {
-   mDum.post(new AppDialogSetEndCommand(getHandle()));
+   AppDialogSetHandle handle = getHandle();
+   mDum.post(new AppDialogSetEndCommand(handle));
 }
 
 SharedPtr<UserProfile>  
