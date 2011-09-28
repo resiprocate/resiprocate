@@ -1,24 +1,44 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="7.10"
+	Version="9.00"
 	Name="cppunit"
 	ProjectGUID="{D23D6465-7EA9-45FD-9784-54DBF8A1A5CE}"
-	SccProjectName=""
-	SccLocalPath="">
+	TargetFrameworkVersion="131072"
+	>
 	<Platforms>
 		<Platform
-			Name="Win32"/>
+			Name="Win32"
+		/>
 	</Platforms>
+	<ToolFiles>
+	</ToolFiles>
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory=".\Debug"
 			IntermediateDirectory=".\Debug"
 			ConfigurationType="4"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
-			ATLMinimizesCRunTimeLibraryUsage="FALSE"
-			CharacterSet="2">
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
@@ -26,100 +46,129 @@
 				PreprocessorDefinitions="_DEBUG;_LIB;WIN32"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				RuntimeTypeInfo="TRUE"
-				UsePrecompiledHeader="2"
+				RuntimeTypeInfo="true"
+				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile=".\Debug/cppunit.pch"
 				AssemblerListingLocation=".\Debug/"
 				ObjectFile=".\Debug/"
 				ProgramDataBaseFileName=".\Debug/"
 				WarningLevel="3"
-				SuppressStartupBanner="TRUE"
+				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
-				CompileAs="0"/>
+				CompileAs="0"
+			/>
 			<Tool
-				Name="VCCustomBuildTool"/>
-			<Tool
-				Name="VCLibrarianTool"
-				OutputFile="Debug\cppunitd.lib"
-				SuppressStartupBanner="TRUE"/>
-			<Tool
-				Name="VCMIDLTool"/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				Description="Copying target to lib/"
-				CommandLine="copy &quot;$(TargetPath)&quot; ..\..\lib\&quot;$(TargetName)&quot;.lib"/>
-			<Tool
-				Name="VCPreBuildEventTool"/>
-			<Tool
-				Name="VCPreLinkEventTool"/>
+				Name="VCManagedResourceCompilerTool"
+			/>
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG"
-				Culture="1036"/>
+				Culture="1036"
+			/>
 			<Tool
-				Name="VCWebServiceProxyGeneratorTool"/>
+				Name="VCPreLinkEventTool"
+			/>
 			<Tool
-				Name="VCXMLDataGeneratorTool"/>
+				Name="VCLibrarianTool"
+				OutputFile="Debug\cppunitd.lib"
+				SuppressStartupBanner="true"
+			/>
 			<Tool
-				Name="VCManagedWrapperGeneratorTool"/>
+				Name="VCALinkTool"
+			/>
 			<Tool
-				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				Description="Copying target to lib/"
+				CommandLine="copy &quot;$(TargetPath)&quot; ..\..\lib\&quot;$(TargetName)&quot;.lib"
+			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory=".\Release"
 			IntermediateDirectory=".\Release"
 			ConfigurationType="4"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
-			ATLMinimizesCRunTimeLibraryUsage="FALSE"
-			CharacterSet="2">
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="..\..\include"
 				PreprocessorDefinitions="NDEBUG;_LIB;WIN32"
-				StringPooling="TRUE"
+				StringPooling="true"
 				RuntimeLibrary="2"
-				EnableFunctionLevelLinking="TRUE"
-				RuntimeTypeInfo="TRUE"
-				UsePrecompiledHeader="2"
+				EnableFunctionLevelLinking="true"
+				RuntimeTypeInfo="true"
+				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile=".\Release/cppunit.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
 				WarningLevel="3"
-				SuppressStartupBanner="TRUE"
-				DebugInformationFormat="2"
-				CompileAs="0"/>
+				SuppressStartupBanner="true"
+				DebugInformationFormat="1"
+				CompileAs="0"
+			/>
 			<Tool
-				Name="VCCustomBuildTool"/>
-			<Tool
-				Name="VCLibrarianTool"
-				OutputFile=".\Release\cppunit.lib"
-				SuppressStartupBanner="TRUE"/>
-			<Tool
-				Name="VCMIDLTool"/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				Description="Copying target to lib/"
-				CommandLine="copy &quot;$(TargetPath)&quot; ..\..\lib\&quot;$(TargetName)&quot;.lib"/>
-			<Tool
-				Name="VCPreBuildEventTool"/>
-			<Tool
-				Name="VCPreLinkEventTool"/>
+				Name="VCManagedResourceCompilerTool"
+			/>
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
-				Culture="1036"/>
+				Culture="1036"
+			/>
 			<Tool
-				Name="VCWebServiceProxyGeneratorTool"/>
+				Name="VCPreLinkEventTool"
+			/>
 			<Tool
-				Name="VCXMLDataGeneratorTool"/>
+				Name="VCLibrarianTool"
+				OutputFile=".\Release\cppunit.lib"
+				SuppressStartupBanner="true"
+			/>
 			<Tool
-				Name="VCManagedWrapperGeneratorTool"/>
+				Name="VCALinkTool"
+			/>
 			<Tool
-				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				Description="Copying target to lib/"
+				CommandLine="copy &quot;$(TargetPath)&quot; ..\..\lib\&quot;$(TargetName)&quot;.lib"
+			/>
 		</Configuration>
 	</Configurations>
 	<References>
@@ -127,1294 +176,1628 @@
 	<Files>
 		<Filter
 			Name="documentation"
-			Filter="">
+			>
 			<File
-				RelativePath="..\..\ChangeLog">
+				RelativePath="..\..\ChangeLog"
+				>
 			</File>
 			<File
-				RelativePath="..\..\CodingGuideLines.txt">
+				RelativePath="..\..\CodingGuideLines.txt"
+				>
 			</File>
 			<File
-				RelativePath="..\..\doc\cookbook.dox">
+				RelativePath="..\..\doc\cookbook.dox"
+				>
 			</File>
 			<File
-				RelativePath="..\..\doc\FAQ">
+				RelativePath="..\..\doc\FAQ"
+				>
 			</File>
 			<File
-				RelativePath="..\..\INSTALL-unix">
+				RelativePath="..\..\INSTALL-unix"
+				>
 			</File>
 			<File
-				RelativePath="..\..\INSTALL-WIN32.txt">
+				RelativePath="..\..\INSTALL-WIN32.txt"
+				>
 			</File>
 			<File
-				RelativePath="..\..\doc\Money.dox">
+				RelativePath="..\..\doc\Money.dox"
+				>
 			</File>
 			<File
-				RelativePath="..\..\NEWS">
+				RelativePath="..\..\NEWS"
+				>
 			</File>
 			<File
-				RelativePath="..\..\doc\other_documentation.dox">
+				RelativePath="..\..\doc\other_documentation.dox"
+				>
 			</File>
 			<File
-				RelativePath="..\..\THANKS">
+				RelativePath="..\..\THANKS"
+				>
 			</File>
 			<File
-				RelativePath="..\..\TODO">
+				RelativePath="..\..\TODO"
+				>
 			</File>
 		</Filter>
 		<Filter
 			Name="listener"
-			Filter="">
+			>
 			<File
-				RelativePath="BriefTestProgressListener.cpp">
+				RelativePath="BriefTestProgressListener.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\BriefTestProgressListener.h">
+				RelativePath="..\..\include\cppunit\BriefTestProgressListener.h"
+				>
 			</File>
 			<File
-				RelativePath="TestResultCollector.cpp">
+				RelativePath="TestResultCollector.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\TestResultCollector.h">
+				RelativePath="..\..\include\cppunit\TestResultCollector.h"
+				>
 			</File>
 			<File
-				RelativePath="TestSuccessListener.cpp">
+				RelativePath="TestSuccessListener.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="TextTestProgressListener.cpp">
+				RelativePath="TextTestProgressListener.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\TextTestProgressListener.h">
+				RelativePath="..\..\include\cppunit\TextTestProgressListener.h"
+				>
 			</File>
 			<File
-				RelativePath="TextTestResult.cpp">
+				RelativePath="TextTestResult.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\TextTestResult.h">
+				RelativePath="..\..\include\cppunit\TextTestResult.h"
+				>
 			</File>
 		</Filter>
 		<Filter
 			Name="textui"
-			Filter="">
+			>
 			<File
-				RelativePath="..\..\include\cppunit\ui\text\TestRunner.h">
+				RelativePath="..\..\include\cppunit\ui\text\TestRunner.h"
+				>
 			</File>
 			<File
-				RelativePath="TextTestRunner.cpp">
+				RelativePath="TextTestRunner.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\ui\text\TextTestRunner.h">
+				RelativePath="..\..\include\cppunit\TextTestRunner.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\TextTestRunner.h">
+				RelativePath="..\..\include\cppunit\ui\text\TextTestRunner.h"
+				>
 			</File>
 		</Filter>
 		<Filter
 			Name="portability"
-			Filter="">
+			>
 			<File
-				RelativePath="..\..\include\cppunit\config\config-bcb5.h">
+				RelativePath="..\..\include\cppunit\config\config-bcb5.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\config\config-evc4.h">
+				RelativePath="..\..\include\cppunit\config\config-evc4.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\config\config-mac.h">
+				RelativePath="..\..\include\cppunit\config\config-mac.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\config\config-msvc6.h">
+				RelativePath="..\..\include\cppunit\config\config-msvc6.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\config\CppUnitApi.h">
+				RelativePath="..\..\include\cppunit\config\CppUnitApi.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\portability\CppUnitDeque.h">
+				RelativePath="..\..\include\cppunit\portability\CppUnitDeque.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\portability\CppUnitMap.h">
+				RelativePath="..\..\include\cppunit\portability\CppUnitMap.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\portability\CppUnitSet.h">
+				RelativePath="..\..\include\cppunit\portability\CppUnitSet.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\portability\CppUnitStack.h">
+				RelativePath="..\..\include\cppunit\portability\CppUnitStack.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\portability\CppUnitVector.h">
+				RelativePath="..\..\include\cppunit\portability\CppUnitVector.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\Portability.h">
+				RelativePath="..\..\include\cppunit\Portability.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\config\SelectDllLoader.h">
+				RelativePath="..\..\include\cppunit\config\SelectDllLoader.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\config\SourcePrefix.h">
+				RelativePath="..\..\include\cppunit\config\SourcePrefix.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\portability\Stream.h">
+				RelativePath="..\..\include\cppunit\portability\Stream.h"
+				>
 			</File>
 		</Filter>
 		<Filter
 			Name="output"
-			Filter="">
+			>
 			<File
-				RelativePath="CompilerOutputter.cpp">
+				RelativePath="CompilerOutputter.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\CompilerOutputter.h">
+				RelativePath="..\..\include\cppunit\CompilerOutputter.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\Outputter.h">
+				RelativePath="..\..\include\cppunit\Outputter.h"
+				>
 			</File>
 			<File
-				RelativePath="TextOutputter.cpp">
+				RelativePath="TextOutputter.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\TextOutputter.h">
+				RelativePath="..\..\include\cppunit\TextOutputter.h"
+				>
 			</File>
 			<File
-				RelativePath="XmlOutputter.cpp">
+				RelativePath="XmlOutputter.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\XmlOutputter.h">
+				RelativePath="..\..\include\cppunit\XmlOutputter.h"
+				>
 			</File>
 			<File
-				RelativePath="XmlOutputterHook.cpp">
+				RelativePath="XmlOutputterHook.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\XmlOutputterHook.h">
+				RelativePath="..\..\include\cppunit\XmlOutputterHook.h"
+				>
 			</File>
 		</Filter>
 		<Filter
 			Name="core"
-			Filter="">
+			>
 			<File
-				RelativePath="AdditionalMessage.cpp">
+				RelativePath="AdditionalMessage.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\AdditionalMessage.h">
+				RelativePath="..\..\include\cppunit\AdditionalMessage.h"
+				>
 			</File>
 			<File
-				RelativePath="Asserter.cpp">
+				RelativePath="Asserter.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\Asserter.h">
+				RelativePath="..\..\include\cppunit\Asserter.h"
+				>
 			</File>
 			<File
-				RelativePath="Exception.cpp">
+				RelativePath="Exception.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\Exception.h">
+				RelativePath="..\..\include\cppunit\Exception.h"
+				>
 			</File>
 			<File
-				RelativePath="Message.cpp">
+				RelativePath="Message.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\Message.h">
+				RelativePath="..\..\include\cppunit\Message.h"
+				>
 			</File>
 			<File
-				RelativePath="SourceLine.cpp">
+				RelativePath="SourceLine.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\SourceLine.h">
+				RelativePath="..\..\include\cppunit\SourceLine.h"
+				>
 			</File>
 			<File
-				RelativePath="SynchronizedObject.cpp">
+				RelativePath="SynchronizedObject.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\SynchronizedObject.h">
+				RelativePath="..\..\include\cppunit\SynchronizedObject.h"
+				>
 			</File>
 			<File
-				RelativePath="Test.cpp">
+				RelativePath="Test.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\Test.h">
+				RelativePath="..\..\include\cppunit\Test.h"
+				>
 			</File>
 			<File
-				RelativePath="TestAssert.cpp">
+				RelativePath="TestAssert.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\TestAssert.h">
+				RelativePath="..\..\include\cppunit\TestAssert.h"
+				>
 			</File>
 			<File
-				RelativePath="TestCase.cpp">
+				RelativePath="TestCase.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\TestCase.h">
+				RelativePath="..\..\include\cppunit\TestCase.h"
+				>
 			</File>
 			<File
-				RelativePath="TestComposite.cpp">
+				RelativePath="TestComposite.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\TestComposite.h">
+				RelativePath="..\..\include\cppunit\TestComposite.h"
+				>
 			</File>
 			<File
-				RelativePath="TestFailure.cpp">
+				RelativePath="TestFailure.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\TestFailure.h">
+				RelativePath="..\..\include\cppunit\TestFailure.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\TestFixture.h">
+				RelativePath="..\..\include\cppunit\TestFixture.h"
+				>
 			</File>
 			<File
-				RelativePath="TestLeaf.cpp">
+				RelativePath="TestLeaf.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\TestLeaf.h">
+				RelativePath="..\..\include\cppunit\TestLeaf.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\TestListener.h">
+				RelativePath="..\..\include\cppunit\TestListener.h"
+				>
 			</File>
 			<File
-				RelativePath="TestPath.cpp">
+				RelativePath="TestPath.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\TestPath.h">
+				RelativePath="..\..\include\cppunit\TestPath.h"
+				>
 			</File>
 			<File
-				RelativePath="TestResult.cpp">
+				RelativePath="TestResult.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\TestResult.h">
+				RelativePath="..\..\include\cppunit\TestResult.h"
+				>
 			</File>
 			<File
-				RelativePath="TestRunner.cpp">
+				RelativePath="TestRunner.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\TestRunner.h">
+				RelativePath="..\..\include\cppunit\TestRunner.h"
+				>
 			</File>
 			<File
-				RelativePath="TestSuite.cpp">
+				RelativePath="TestSuite.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\TestSuite.h">
+				RelativePath="..\..\include\cppunit\TestSuite.h"
+				>
 			</File>
 		</Filter>
 		<Filter
 			Name="helper"
-			Filter="">
+			>
 			<File
-				RelativePath="..\..\include\cppunit\extensions\AutoRegisterSuite.h">
+				RelativePath="..\..\include\cppunit\extensions\AutoRegisterSuite.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\extensions\HelperMacros.h">
+				RelativePath="..\..\include\cppunit\extensions\HelperMacros.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\TestCaller.h">
+				RelativePath="..\..\include\cppunit\TestCaller.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\extensions\TestFactory.h">
+				RelativePath="..\..\include\cppunit\extensions\TestFactory.h"
+				>
 			</File>
 			<File
-				RelativePath="TestFactoryRegistry.cpp">
+				RelativePath="TestFactoryRegistry.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\extensions\TestFactoryRegistry.h">
+				RelativePath="..\..\include\cppunit\extensions\TestFactoryRegistry.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\extensions\TestFixtureFactory.h">
+				RelativePath="..\..\include\cppunit\extensions\TestFixtureFactory.h"
+				>
 			</File>
 			<File
-				RelativePath="TestNamer.cpp">
+				RelativePath="TestNamer.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\extensions\TestNamer.h">
+				RelativePath="..\..\include\cppunit\extensions\TestNamer.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\extensions\TestSuiteBuilder.h">
+				RelativePath="..\..\include\cppunit\extensions\TestSuiteBuilder.h"
+				>
 			</File>
 			<File
-				RelativePath="TestSuiteBuilderContext.cpp">
+				RelativePath="TestSuiteBuilderContext.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\extensions\TestSuiteBuilderContext.h">
+				RelativePath="..\..\include\cppunit\extensions\TestSuiteBuilderContext.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\extensions\TestSuiteFactory.h">
+				RelativePath="..\..\include\cppunit\extensions\TestSuiteFactory.h"
+				>
 			</File>
 			<File
-				RelativePath="TypeInfoHelper.cpp">
+				RelativePath="TypeInfoHelper.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\extensions\TypeInfoHelper.h">
+				RelativePath="..\..\include\cppunit\extensions\TypeInfoHelper.h"
+				>
 			</File>
 		</Filter>
 		<Filter
 			Name="extension"
-			Filter="">
+			>
 			<File
-				RelativePath="..\..\include\cppunit\extensions\ExceptionTestCaseDecorator.h">
+				RelativePath="..\..\include\cppunit\extensions\ExceptionTestCaseDecorator.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\extensions\Orthodox.h">
+				RelativePath="..\..\include\cppunit\extensions\Orthodox.h"
+				>
 			</File>
 			<File
-				RelativePath="RepeatedTest.cpp">
+				RelativePath="RepeatedTest.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\extensions\RepeatedTest.h">
+				RelativePath="..\..\include\cppunit\extensions\RepeatedTest.h"
+				>
 			</File>
 			<File
-				RelativePath="TestCaseDecorator.cpp">
+				RelativePath="TestCaseDecorator.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\extensions\TestCaseDecorator.h">
+				RelativePath="..\..\include\cppunit\extensions\TestCaseDecorator.h"
+				>
 			</File>
 			<File
-				RelativePath="TestDecorator.cpp">
+				RelativePath="TestDecorator.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\extensions\TestDecorator.h">
+				RelativePath="..\..\include\cppunit\extensions\TestDecorator.h"
+				>
 			</File>
 			<File
-				RelativePath="TestSetUp.cpp">
+				RelativePath="TestSetUp.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\extensions\TestSetUp.h">
+				RelativePath="..\..\include\cppunit\extensions\TestSetUp.h"
+				>
 			</File>
 		</Filter>
 		<Filter
 			Name="plugin"
-			Filter="">
+			>
 			<File
-				RelativePath="BeOsDynamicLibraryManager.cpp">
+				RelativePath="BeOsDynamicLibraryManager.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="DynamicLibraryManager.cpp">
+				RelativePath="DynamicLibraryManager.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\plugin\DynamicLibraryManager.h">
+				RelativePath="..\..\include\cppunit\plugin\DynamicLibraryManager.h"
+				>
 			</File>
 			<File
-				RelativePath="DynamicLibraryManagerException.cpp">
+				RelativePath="DynamicLibraryManagerException.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\plugin\DynamicLibraryManagerException.h">
+				RelativePath="..\..\include\cppunit\plugin\DynamicLibraryManagerException.h"
+				>
 			</File>
 			<File
-				RelativePath="PlugInManager.cpp">
+				RelativePath="PlugInManager.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\plugin\PlugInManager.h">
+				RelativePath="..\..\include\cppunit\plugin\PlugInManager.h"
+				>
 			</File>
 			<File
-				RelativePath="PlugInParameters.cpp">
+				RelativePath="PlugInParameters.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\plugin\PlugInParameters.h">
+				RelativePath="..\..\include\cppunit\plugin\PlugInParameters.h"
+				>
 			</File>
 			<File
-				RelativePath="ShlDynamicLibraryManager.cpp">
+				RelativePath="ShlDynamicLibraryManager.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\plugin\TestPlugIn.h">
+				RelativePath="..\..\include\cppunit\plugin\TestPlugIn.h"
+				>
 			</File>
 			<File
-				RelativePath="TestPlugInDefaultImpl.cpp">
+				RelativePath="TestPlugInDefaultImpl.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\plugin\TestPlugInDefaultImpl.h">
+				RelativePath="..\..\include\cppunit\plugin\TestPlugInDefaultImpl.h"
+				>
 			</File>
 			<File
-				RelativePath="UnixDynamicLibraryManager.cpp">
+				RelativePath="UnixDynamicLibraryManager.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="Win32DynamicLibraryManager.cpp">
+				RelativePath="Win32DynamicLibraryManager.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter
 			Name="tools"
-			Filter="">
+			>
 			<File
-				RelativePath="..\..\include\cppunit\tools\Algorithm.h">
+				RelativePath="..\..\include\cppunit\tools\Algorithm.h"
+				>
 			</File>
 			<File
-				RelativePath="StringTools.cpp">
+				RelativePath="StringTools.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\tools\StringTools.h">
+				RelativePath="..\..\include\cppunit\tools\StringTools.h"
+				>
 			</File>
 			<File
-				RelativePath="XmlDocument.cpp">
+				RelativePath="XmlDocument.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\tools\XmlDocument.h">
+				RelativePath="..\..\include\cppunit\tools\XmlDocument.h"
+				>
 			</File>
 			<File
-				RelativePath="XmlElement.cpp">
+				RelativePath="XmlElement.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\tools\XmlElement.h">
+				RelativePath="..\..\include\cppunit\tools\XmlElement.h"
+				>
 			</File>
 		</Filter>
 		<Filter
 			Name="protector"
-			Filter="">
+			>
 			<File
-				RelativePath="DefaultProtector.cpp">
+				RelativePath="DefaultProtector.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="DefaultProtector.h">
+				RelativePath="DefaultProtector.h"
+				>
 			</File>
 			<File
-				RelativePath="Protector.cpp">
+				RelativePath="Protector.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\Protector.h">
+				RelativePath="..\..\include\cppunit\Protector.h"
+				>
 			</File>
 			<File
-				RelativePath="ProtectorChain.cpp">
+				RelativePath="ProtectorChain.cpp"
+				>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="ProtectorChain.h">
+				RelativePath="ProtectorChain.h"
+				>
 			</File>
 			<File
-				RelativePath="ProtectorContext.h">
+				RelativePath="ProtectorContext.h"
+				>
 			</File>
 		</Filter>
 		<File
-			RelativePath="..\..\configure.in">
+			RelativePath="..\..\configure.in"
+			>
 		</File>
 		<File
-			RelativePath="Makefile.am">
+			RelativePath="..\..\include\cppunit\Makefile.am"
+			>
 		</File>
 		<File
-			RelativePath="..\..\include\cppunit\Makefile.am">
+			RelativePath="Makefile.am"
+			>
 		</File>
 	</Files>
 	<Globals>

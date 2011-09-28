@@ -28,35 +28,38 @@ resip::Data repro::Proxy::FlowTokenSalt;
 
 RequestContext* 
 RequestContextFactory::createRequestContext(Proxy& proxy,
-                                                   ProcessorChain& requestP,  // monkeys
-                                                   ProcessorChain& responseP, // lemurs
-                                                   ProcessorChain& targetP)   // baboons
+                                            ProcessorChain& requestP,  // monkeys
+                                            ProcessorChain& responseP, // lemurs
+                                            ProcessorChain& targetP)   // baboons
 {
    return new RequestContext(proxy, requestP, responseP, targetP); 
 }
 
 Proxy::Proxy(SipStack& stack, 
-             const Uri& recordRoute,
-             bool forceRecordRoute,
+             ProxyConfig& config,
              ProcessorChain& requestP, 
              ProcessorChain& responseP, 
-             ProcessorChain& targetP, 
-             UserStore& userStore,
-             int timerC) 
+             ProcessorChain& targetP) 
    : TransactionUser(TransactionUser::RegisterForTransactionTermination),
      mStack(stack), 
-     mRecordRoute(recordRoute),
-     mRecordRouteForced(forceRecordRoute),
-     mAssumePath(false),
+     mRecordRoute(config.getConfigUri("RecordRouteUri", Uri())),
+     mRecordRouteForced(config.getConfigBool("ForceRecordRouting", false)),
+     mAssumePath(config.getConfigBool("AssumePath", false)),
+     mServerText(config.getConfigData("ServerText", "")),
+     mTimerC(config.getConfigInt("TimerC", 180)),
      mRequestProcessorChain(requestP), 
      mResponseProcessorChain(responseP),
      mTargetProcessorChain(targetP),
-     mUserStore(userStore),
+     mUserStore(config.getDataStore()->mUserStore),
      mOptionsHandler(0),
      mRequestContextFactory(new RequestContextFactory)
 {
-   mTimerC=timerC;
    FlowTokenSalt = Random::getCryptoRandom(20);   // 20-octet Crypto Random Key for Salting Flow Token HMACs
+
+   if(InteropHelper::getOutboundSupported())
+   {
+      addSupportedOption("outbound");
+   }
 }
 
 

@@ -13,7 +13,6 @@ Source:   %name-%version.tar.gz
 
 BuildRequires: openssl-devel >= 0.9.7
 BuildRequires: db4-devel
-BuildRequires: popt
 BuildRequires: boost-devel
 
 Requires: openssl >= 0.9.7
