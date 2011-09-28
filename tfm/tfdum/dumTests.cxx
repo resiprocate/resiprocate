@@ -1,6 +1,7 @@
 //#include "cppunit/TextTestRunner.h"
 //#include "cppunit/TextTestResult.h"
 
+#include <signal.h>
 #include <boost/bind.hpp>
 
 #include <cppunit/extensions/HelperMacros.h>
