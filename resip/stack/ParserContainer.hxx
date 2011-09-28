@@ -9,6 +9,7 @@
 
 namespace resip
 {
+using std::ptrdiff_t;
 
 /**
    @ingroup resip_crit
