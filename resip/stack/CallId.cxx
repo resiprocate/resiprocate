@@ -94,7 +94,7 @@ ParameterTypes::Factory CallID::ParameterFactories[ParameterTypes::MAX_PARAMETER
 Parameter* 
 CallID::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
 {
-   if(ParameterFactories[type])
+   if(type > ParameterTypes::UNKNOWN && type < ParameterTypes::MAX_PARAMETER && ParameterFactories[type])
    {
       return ParameterFactories[type](type, pb, terminators);
    }

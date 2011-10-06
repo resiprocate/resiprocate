@@ -1212,7 +1212,7 @@ ParameterTypes::Factory Uri::ParameterFactories[ParameterTypes::MAX_PARAMETER]={
 Parameter* 
 Uri::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
 {
-   if(ParameterFactories[type])
+   if(type > ParameterTypes::UNKNOWN && type < ParameterTypes::MAX_PARAMETER && ParameterFactories[type])
    {
       return ParameterFactories[type](type, pb, terminators);
    }

@@ -88,7 +88,7 @@ ParameterTypes::Factory GenericUri::ParameterFactories[ParameterTypes::MAX_PARAM
 Parameter* 
 GenericUri::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
 {
-   if(ParameterFactories[type])
+   if(type > ParameterTypes::UNKNOWN && type < ParameterTypes::MAX_PARAMETER && ParameterFactories[type])
    {
       return ParameterFactories[type](type, pb, terminators);
    }
