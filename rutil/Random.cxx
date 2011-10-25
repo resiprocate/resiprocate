@@ -133,6 +133,8 @@ Random::initialize()
       Lock lock(mMutex);      
       if (!Random::mInitializer.isInitialized())
       {
+	     Random::mInitializer.setInitialized();
+		 
          unsigned seed = getSimpleSeed();
          srand(seed);
 
