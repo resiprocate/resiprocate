@@ -1771,7 +1771,7 @@ Codec::parse(ParseBuffer& pb,
 {
    const char* anchor = pb.skipWhitespace();
    pb.skipToChar(Symbols::SLASH[0]);
-   pb.data(mName, anchor);
+   mName = pb.data(anchor);
    if(!pb.eof())
    {
       pb.skipChar(Symbols::SLASH[0]);
@@ -1782,7 +1782,7 @@ Codec::parse(ParseBuffer& pb,
    {
       anchor = pb.skipChar(Symbols::SLASH[0]);
       pb.skipToEnd();
-      pb.data(mEncodingParameters, anchor);
+      mEncodingParameters = pb.data(anchor);
    }
    mPayloadType = payloadType;
 
@@ -1806,7 +1806,7 @@ Codec::assignFormatParameters(const SdpContents::Session::Medium& medium)
             {
                const char* anchor = pb.skipWhitespace();
                pb.skipToEnd();
-               pb.data(mParameters, anchor);
+               mParameters = pb.data(anchor);
                break;
             }
          }
