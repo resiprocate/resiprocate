@@ -44,23 +44,36 @@ ClientPublication::~ClientPublication()
 void
 ClientPublication::end()
 {
+   end(false);
+}
+
+void
+ClientPublication::end(bool immediate)
+{
    InfoLog (<< "End client publication to " << mPublish->header(h_RequestLine).uri());
-   mPublish->header(h_Expires).value() = 0;
-   send(mPublish);
+   if(!immediate)
+   {
+      mPublish->header(h_Expires).value() = 0;
+      send(mPublish);
+   }
+   else
+   {
+      delete this;
+   }
 }
 
 class ClientPublicationEndCommand : public DumCommandAdapter
 {
 public:
-   ClientPublicationEndCommand(ClientPublication& clientPublication)
-      : mClientPublication(clientPublication)
+   ClientPublicationEndCommand(ClientPublication& clientPublication, bool immediate)
+      : mClientPublication(clientPublication), mImmediate(immediate)
    {
 
    }
 
    virtual void executeCommand()
    {
-      mClientPublication.end();
+      mClientPublication.end(mImmediate);
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -69,12 +82,13 @@ public:
    }
 private:
    ClientPublication& mClientPublication;
+   bool mImmediate;
 };
 
 void
-ClientPublication::endCommand()
+ClientPublication::endCommand(bool immediate)
 {
-   mDum.post(new ClientPublicationEndCommand(*this));
+   mDum.post(new ClientPublicationEndCommand(*this, immediate));
 }
 
 void 
