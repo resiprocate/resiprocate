@@ -554,34 +554,47 @@ ClientSubscription::requestRefreshCommand(UInt32 expires)
 void
 ClientSubscription::end()
 {
+    end(false /* immediate? */);
+}
+
+void
+ClientSubscription::end(bool immediate)
+{
    InfoLog (<< "End subscription: " << mLastRequest->header(h_RequestLine).uri());
 
    if (!mEnded)
    {
-      mDialog.makeRequest(*mLastRequest, SUBSCRIBE);
-      mLastRequest->header(h_Expires).value() = 0;
-      mEnded = true;
-      send(mLastRequest);
-      // Timer for NOTIFY terminated
-      mDum.addTimer(DumTimeout::WaitForNotify, 
-              64*Timer::T1, 
-              getBaseHandle(),
-              ++mTimerSeq);
+      if(!immediate)
+      {
+         mDialog.makeRequest(*mLastRequest, SUBSCRIBE);
+         mLastRequest->header(h_Expires).value() = 0;
+         mEnded = true;
+         send(mLastRequest);
+         // Timer for NOTIFY terminated
+         mDum.addTimer(DumTimeout::WaitForNotify, 
+                 64*Timer::T1, 
+                 getBaseHandle(),
+                 ++mTimerSeq);
+      }
+      else
+      {
+         delete this;
+      }
    }
 }
 
 class ClientSubscriptionEndCommand : public DumCommandAdapter
 {
 public:
-   ClientSubscriptionEndCommand(ClientSubscription& clientSubscription)
-      :mClientSubscription(clientSubscription)
+   ClientSubscriptionEndCommand(ClientSubscription& clientSubscription, bool immediate)
+      :mClientSubscription(clientSubscription), mImmediate(immediate)
    {
 
    }
 
    virtual void executeCommand()
    {
-      mClientSubscription.end();
+      mClientSubscription.end(mImmediate);
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -590,12 +603,13 @@ public:
    }
 private:
    ClientSubscription& mClientSubscription;
+   bool mImmediate;
 };
 
 void
-ClientSubscription::endCommand()
+ClientSubscription::endCommand(bool immediate)
 {
-   mDum.post(new ClientSubscriptionEndCommand(*this));
+   mDum.post(new ClientSubscriptionEndCommand(*this, immediate));
 }
 
 void 
