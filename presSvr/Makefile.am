@@ -17,7 +17,7 @@ presSvr_SOURCES = presSvr.cpp \
 
 #presSvr_LDADD += librepro.la
 #presSvr_LDADD += ../resip/dum/libdum.la
-presSvr_LDADD += ../resip/stack/libresip.la ../rutil/librutil.la
+presSvr_LDADD = ../resip/stack/libresip.la ../rutil/librutil.la
 presSvr_LDADD += ../contrib/ares/libares.a
 #presSvr_LDADD += -L../contrib/ares -lares
 presSvr_LDADD += -lssl -lpthread 
