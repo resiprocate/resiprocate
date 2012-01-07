@@ -75,7 +75,6 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	Fifo.hxx \
 	CircularBuffer.hxx \
 	FiniteFifo.hxx \
-	test/TestSubsystemLogLevel.hxx \
 	ParseBuffer.hxx \
 	Log.hxx \
 	ThreadIf.hxx \
