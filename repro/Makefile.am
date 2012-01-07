@@ -82,6 +82,8 @@ ReproVersion.cxx: reproInfo.hxx
 
 dist_man_MANS = doc/repro.8
 
+sysconf_DATA = etc/repro.conf
+
 ##############################################################################
 # 
 # The Vovida Software License, Version 1.0 
