@@ -49,6 +49,7 @@ AC_OUTPUT(Makefile \
 	reTurn/Makefile \
 	reTurn/client/Makefile \
 	presSvr/Makefile \
+	p2p/s2c/s2c/Makefile \
 	)
 
 
