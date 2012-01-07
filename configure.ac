@@ -45,6 +45,7 @@ AC_OUTPUT(Makefile \
 	resip/dum/Makefile \
 	repro/Makefile \
 	contrib/ares/Makefile \
+	resip.spec \
 	)
 
 
