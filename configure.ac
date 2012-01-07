@@ -48,7 +48,7 @@ AC_OUTPUT(Makefile \
 	resip.spec \
 	reTurn/Makefile \
 	reTurn/client/Makefile \
-	presSrv/Makefile \
+	presSvr/Makefile \
 	)
 
 

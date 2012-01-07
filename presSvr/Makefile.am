@@ -4,8 +4,8 @@ AM_CXXFLAGS = -DUSE_ARES -DUSE_SSL
 
 AM_LDFLAGS = -lssl
 
-sbin_PROGRAMS = presSrv
-presSrv_SOURCES = presSrv.cpp \
+sbin_PROGRAMS = presSvr
+presSvr_SOURCES = presSvr.cpp \
 	PresConfig.cpp \
 	TuPresSvr.cpp \
 	ResourceMgr.cpp \
@@ -15,12 +15,12 @@ presSrv_SOURCES = presSrv.cpp \
 	DialogSetMgr.cpp \
 	DialogState.cpp
 
-#presSrv_LDADD += librepro.la
-#presSrv_LDADD += ../resip/dum/libdum.la
-presSrv_LDADD += ../resip/stack/libresip.la ../rutil/librutil.la
-presSrv_LDADD += ../contrib/ares/libares.a
-#presSrv_LDADD += -L../contrib/ares -lares
-presSrv_LDADD += -lssl -lpthread 
+#presSvr_LDADD += librepro.la
+#presSvr_LDADD += ../resip/dum/libdum.la
+presSvr_LDADD += ../resip/stack/libresip.la ../rutil/librutil.la
+presSvr_LDADD += ../contrib/ares/libares.a
+#presSvr_LDADD += -L../contrib/ares -lares
+presSvr_LDADD += -lssl -lpthread 
 
 
 ##############################################################################
