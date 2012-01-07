@@ -2,6 +2,7 @@
 #define __P2P_Message_hxx
 
 #include <cassert>
+#include <memory>
 #include "rutil/Data.hxx"
 
 #include "p2p/Event.hxx"
