@@ -80,6 +80,8 @@ reproInfo.hxx:
 
 ReproVersion.cxx: reproInfo.hxx
 
+dist_man_MANS = doc/repro.8
+
 ##############################################################################
 # 
 # The Vovida Software License, Version 1.0 
