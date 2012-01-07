@@ -5,7 +5,8 @@ AM_CXXFLAGS = -DUSE_ARES -DUSE_SSL
 AM_LDFLAGS = -lssl
 
 sbin_PROGRAMS = reTurnServer
-reTurnServer_SOURCES = AsyncSocketBase.cxx \
+reTurnServer_SOURCES = reTurnServer.cxx \
+	AsyncSocketBase.cxx \
         AsyncUdpSocketBase.cxx \
         AsyncTcpSocketBase.cxx \
         AsyncTlsSocketBase.cxx \
@@ -31,7 +32,7 @@ reTurnServer_SOURCES = AsyncSocketBase.cxx \
         UdpServer.cxx
 
 #reTurnServer_LDADD = librepro.la
-reTurnServer_LDADD += ../resip/dum/libdum.la
+reTurnServer_LDADD = ../resip/dum/libdum.la
 reTurnServer_LDADD += ../resip/stack/libresip.la ../rutil/librutil.la
 reTurnServer_LDADD += ../contrib/ares/libares.a
 #reTurnServer_LDADD += -L../contrib/ares -lares
