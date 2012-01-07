@@ -63,6 +63,87 @@ librutil_la_SOURCES = \
 	ssl/OpenSSLInit.cxx \
 	ssl/SHA1Stream.cxx
 
+rutilincludedir = $(includedir)/rutil
+nobase_rutilinclude_HEADERS = compat.hxx \
+	FileSystem.hxx \
+	HashMap.hxx \
+	wince/WceCompat.hxx \
+	SysLogStream.hxx \
+	AsyncID.hxx \
+	HeapInstanceCounter.hxx \
+	SharedCount.hxx \
+	Fifo.hxx \
+	CircularBuffer.hxx \
+	FiniteFifo.hxx \
+	test/TestSubsystemLogLevel.hxx \
+	ParseBuffer.hxx \
+	Log.hxx \
+	ThreadIf.hxx \
+	WinLeakCheck.hxx \
+	Random.hxx \
+	RecursiveMutex.hxx \
+	AsyncProcessHandler.hxx \
+	RADIUSDigestAuthenticator.hxx \
+	RWMutex.hxx \
+	Subsystem.hxx \
+	Logger.hxx \
+	MD5Stream.hxx \
+	DnsUtil.hxx \
+	Timer.hxx \
+	DigestStream.hxx \
+	TransportType.hxx \
+	resipfaststreams.hxx \
+	Coders.hxx \
+	SharedPtr.hxx \
+	Socket.hxx \
+	dns/ExternalDnsFactory.hxx \
+	dns/DnsStub.hxx \
+	dns/DnsHostRecord.hxx \
+	dns/QueryTypes.hxx \
+	dns/RROverlay.hxx \
+	dns/AresCompat.hxx \
+	dns/ExternalDns.hxx \
+	dns/DnsNaptrRecord.hxx \
+	dns/RRList.hxx \
+	dns/LocalDns.hxx \
+	dns/RRFactory.hxx \
+	dns/DnsSrvRecord.hxx \
+	dns/DnsCnameRecord.hxx \
+	dns/AresDns.hxx \
+	dns/RRCache.hxx \
+	dns/DnsHandler.hxx \
+	dns/RRVip.hxx \
+	dns/DnsAAAARecord.hxx \
+	dns/DnsResourceRecord.hxx \
+	Condition.hxx \
+	WinCompat.hxx \
+	vthread.hxx \
+	Data.hxx \
+	Lock.hxx \
+	TimeLimitFifo.hxx \
+	Mutex.hxx \
+	GenericTimerQueue.hxx \
+	IntrusiveListElement.hxx \
+	ssl/SHA1Stream.hxx \
+	ssl/OpenSSLInit.hxx \
+	CountStream.hxx \
+	vmd5.hxx \
+	FdPoll.hxx \
+	Time.hxx \
+	Lockable.hxx \
+	stun/Udp.hxx \
+	stun/Stun.hxx \
+	SysLogBuf.hxx \
+	Inserter.hxx \
+	DataStream.hxx \
+	GenericIPAddress.hxx \
+	AbstractFifo.hxx \
+	ParseException.hxx \
+	BaseException.hxx \
+	DataException.hxx \
+	Poll.hxx
+
+
 ##############################################################################
 # 
 # The Vovida Software License, Version 1.0 
