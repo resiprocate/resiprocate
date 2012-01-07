@@ -1,22 +1,26 @@
-# This should be the path to the build directory of resip (in the sip subdirectory)
-BUILD = ../build
+# $Id$
 
-# Includes macros
-include $(BUILD)/Makefile.pre
+AM_CXXFLAGS = -DUSE_ARES -DUSE_SSL
 
-# All of these packages are prerequisites for resiprocate
-PACKAGES += RESIP RUTIL OPENSSL ARES PTHREAD
+AM_LDFLAGS = -lssl
 
-# Add an entry to TESTPROGRAMS for each target that has a main in it
-# On linux this will generate an executable in bin.debug.Linux.i686/main
-TESTPROGRAMS += presSvr.cpp
+sbin_PROGRAMS = presSrv
+presSrv_SOURCES = presSrv.cpp \
+	PresConfig.cpp \
+	TuPresSvr.cpp \
+	ResourceMgr.cpp \
+	SubDialogMgr.cpp \
+	SubDialog.cpp \
+	Resource.cpp \
+	DialogSetMgr.cpp \
+	DialogState.cpp
 
-# Add each of the C++ or C files that other than the main
-# Each main target (from TESTPROGRAMS) will be linked with all of the files in SRC
-SRC = 		PresConfig.cpp TuPresSvr.cpp ResourceMgr.cpp SubDialogMgr.cpp SubDialog.cpp Resource.cpp DialogSetMgr.cpp DialogState.cpp
-
-# Includes macros
-include $(BUILD)/Makefile.post
+#presSrv_LDADD += librepro.la
+#presSrv_LDADD += ../resip/dum/libdum.la
+presSrv_LDADD += ../resip/stack/libresip.la ../rutil/librutil.la
+presSrv_LDADD += ../contrib/ares/libares.a
+#presSrv_LDADD += -L../contrib/ares -lares
+presSrv_LDADD += -lssl -lpthread 
 
 
 ##############################################################################
