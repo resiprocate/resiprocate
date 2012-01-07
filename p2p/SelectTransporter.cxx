@@ -166,7 +166,7 @@ SelectTransporter::collectCandidatesImpl(UInt64 tid, NodeId nodeId, unsigned sho
      
      while(retry--)
      {
-#ifndef WIN32
+#ifdef HAVE_sockaddr_in_len
         addr.sin_len = sizeof(struct sockaddr_in);
 #endif
         addr.sin_family = AF_INET;
