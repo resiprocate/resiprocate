@@ -47,6 +47,7 @@ AC_OUTPUT(Makefile \
 	contrib/ares/Makefile \
 	resip.spec \
 	reTurn/Makefile \
+	reTurn/client/Makefile \
 	)
 
 
