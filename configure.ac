@@ -23,6 +23,10 @@ AC_PROG_RANLIB
 
 AM_MISSING_PROG([GPERF], [gperf])
 
+AH_TEMPLATE([HAVE_sockaddr_in_len], [Define if sockaddr_in.sin_len exists])
+AC_CHECK_MEMBER([struct sockaddr_in.sin_len], AC_DEFINE(HAVE_sockaddr_in_len),,
+ [#include <arpa/inet.h>])
+
 AC_DEFINE(REPRO_BUILD_REV, PACKAGE_VERSION, REPRO_BUILD_REV)
 AH_TEMPLATE([REPRO_BUILD_REV], [SVN revsion])
 AC_DEFINE_UNQUOTED(REPRO_BUILD_HOST, "`hostname`", REPRO_BUILD_HOST)
@@ -50,6 +54,7 @@ AC_OUTPUT(Makefile \
 	reTurn/client/Makefile \
 	presSvr/Makefile \
 	p2p/s2c/s2c/Makefile \
+	p2p/Makefile \
 	)
 
 
