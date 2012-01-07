@@ -1,6 +1,8 @@
 #ifndef P2P_MESSAGEHELPER_HXX
 #define P2P_MESSAGEHELPER_HXX
 
+#include <vector>
+
 #include "rutil/Data.hxx"
 
 namespace p2p

@@ -1,6 +1,7 @@
 #ifndef __P2P_TRANSPORTER_HXX
 #define __P2P_TRANSPORTER_HXX 1
 
+#include <memory>
 #include <vector>
 #include <map>
 
