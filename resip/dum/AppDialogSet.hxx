@@ -43,7 +43,7 @@ class AppDialogSet : public Handled
       class AppDialogSetEndCommand : public DumCommandAdapter
       {
       public:
-         AppDialogSetEndCommand(AppDialogSetHandle& dialogSet)
+         AppDialogSetEndCommand(const AppDialogSetHandle& dialogSet)
             : mAppDialogSet(dialogSet)
          {
          }
