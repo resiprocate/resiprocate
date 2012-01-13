@@ -851,7 +851,7 @@ myMain(int argc, char* argv[])
 #endif
       }
    }
-#if USE_SSL
+#ifdef USE_SSL
    if ( tlsPort != 0 )
    {
       if ( noTls != true )
@@ -863,7 +863,7 @@ myMain(int argc, char* argv[])
 	 //if (!noV6) sipStack.addTlsTransport(tlsPort,Data::Empty,Data::Empty,Data::Empty,V6);
       }
    }
-#if USE_DTLS
+#ifdef USE_DTLS
    if ( dtlsPort != 0 )
    {
       if ( noTls != true )
@@ -890,7 +890,7 @@ myMain(int argc, char* argv[])
       if (!haveContact)
       {
          contact.user() = aor.user();
-#if USE_SSL
+#ifdef USE_SSL
          if ( aor.scheme() == "sips" )
          {
             contact.scheme() = aor.scheme();
