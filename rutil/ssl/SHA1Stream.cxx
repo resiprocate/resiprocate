@@ -1,4 +1,9 @@
 #include <assert.h>
+
+#if defined(HAVE_CONFIG_H)
+  #include "config.h"
+#endif
+
 #include "rutil/Socket.hxx"  // for ntohl under windows
 #include "rutil/WinLeakCheck.hxx"
 

@@ -1,3 +1,8 @@
+
+#if defined(HAVE_CONFIG_H)
+  #include "config.h"
+#endif
+
 #if defined(USE_SSL)
 #include <openssl/ssl.h>
 #include <openssl/pem.h>

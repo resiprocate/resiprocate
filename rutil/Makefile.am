@@ -2,11 +2,11 @@
 
 SUBDIRS = . test
 
-AM_CXXFLAGS = -I../contrib/ares -DUSE_ARES -DUSE_SSL
+AM_CXXFLAGS = -I../contrib/ares -DUSE_ARES
 
 lib_LTLIBRARIES = librutil.la
 
-librutil_la_LIBADD = -lssl -lrt
+librutil_la_LIBADD = $(LIBSSL_LIBADD) -lrt
 librutil_la_LDFLAGS = -version-info 0:0:0 -release 1 -export-dynamic
 
 librutil_la_SOURCES = \
@@ -59,9 +59,13 @@ librutil_la_SOURCES = \
 	dns/RROverlay.cxx \
 	\
 	stun/Stun.cxx \
-	stun/Udp.cxx \
+	stun/Udp.cxx
+
+if USE_SSL
+librutil_la_SOURCES += \
 	ssl/OpenSSLInit.cxx \
 	ssl/SHA1Stream.cxx
+endif
 
 rutilincludedir = $(includedir)/rutil
 nobase_rutilinclude_HEADERS = compat.hxx \

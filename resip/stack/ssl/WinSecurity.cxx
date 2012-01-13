@@ -1,5 +1,10 @@
 #include <sys/types.h>
 
+#if defined(HAVE_CONFIG_H)
+  #include "config.h"
+#endif
+
+
 #ifdef USE_SSL
 #include "resip/stack/ssl/WinSecurity.hxx"
 #include <openssl/e_os2.h>

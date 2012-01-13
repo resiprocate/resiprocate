@@ -1,3 +1,8 @@
+
+#if defined(HAVE_CONFIG_H)
+  #include "config.h"
+#endif
+
 #ifdef USE_SSL
 #ifndef ASYNC_TLS_SOCKET_BASE_HXX
 #define ASYNC_TLS_SOCKET_BASE_HXX

@@ -1,3 +1,8 @@
+
+#if defined(HAVE_CONFIG_H)
+  #include "config.h"
+#endif
+
 #ifdef USE_SSL
 // .amr. Must include Apple headers first, otherwise conflicts with rutil/compat.hxx happen due to SDK type differences
 #include <CoreFoundation/CoreFoundation.h>

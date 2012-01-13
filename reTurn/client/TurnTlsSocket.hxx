@@ -1,3 +1,8 @@
+
+#if defined(HAVE_CONFIG_H)
+  #include "config.h"
+#endif
+
 #ifdef USE_SSL
 #ifndef TURNTLSSOCKET_HXX
 #define TURNTLSSOCKET_HXX

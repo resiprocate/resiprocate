@@ -1,8 +1,6 @@
 # $Id$
 
-AM_CXXFLAGS = -DUSE_ARES -DUSE_SSL
-
-AM_LDFLAGS = -lssl
+AM_CXXFLAGS = -DUSE_ARES
 
 sbin_PROGRAMS = presSvr
 presSvr_SOURCES = presSvr.cpp \
@@ -20,7 +18,7 @@ presSvr_SOURCES = presSvr.cpp \
 presSvr_LDADD = ../resip/stack/libresip.la ../rutil/librutil.la
 presSvr_LDADD += ../contrib/ares/libares.a
 #presSvr_LDADD += -L../contrib/ares -lares
-presSvr_LDADD += -lssl -lpthread 
+presSvr_LDADD += @LIBSSL_LIBADD@ -lpthread 
 
 
 ##############################################################################

@@ -36,6 +36,31 @@ AH_TEMPLATE([REPRO_RELEASE_VERSION], [Package version])
 AC_DEFINE_UNQUOTED(DB_HEADER, "db_cxx.h", DB_HEADER)
 AH_TEMPLATE([DB_HEADER], [Name of header for libdb])
 
+AM_CONDITIONAL(USE_SSL, false)
+AC_ARG_WITH(ssl, 
+[  --with-ssl              Link against OpenSSL libraries],
+ [AC_DEFINE_UNQUOTED(USE_SSL, , USE_SSL)
+ AC_SUBST(LIBSSL_LIBADD, "-lssl")
+ AM_CONDITIONAL(USE_SSL, true)],
+ [ AC_SUBST(LIBSSL_LIBADD, "")])
+
+AC_ARG_ENABLE(ipv6,
+[  --enable-ipv6           Enable IPv6 support],
+ AC_DEFINE_UNQUOTED(USE_IPV6, "yes", USE_IPV6), )
+
+AC_ARG_ENABLE(dtls,
+[  --enable-dtls           Enable DTLS support (requires OpenSSL)],
+ [AC_DEFINE_UNQUOTED(USE_DTLS, 1, USE_DTLS)],  )
+ 
+
+AC_ARG_WITH(mysql,
+[  --with-mysql            Link against MySQL client libraries],
+ AC_DEFINE_UNQUOTED(USE_MYSQL, "yes", USE_MYSQL), )
+
+AC_ARG_WITH(radius,
+[  --with-radius           Link against RADIUS client libraries],
+ AC_DEFINE_UNQUOTED(USE_RADIUS_CLIENT, "yes", USE_RADIUS_CLIENT), )
+
 AC_SEARCH_LIBS(gethostbyname, nsl)
 AC_SEARCH_LIBS(socket, socket)
 

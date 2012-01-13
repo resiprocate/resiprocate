@@ -1,8 +1,6 @@
 # $Id$
 
-AM_CXXFLAGS = -DUSE_ARES -DUSE_SSL
-
-AM_LDFLAGS = -lssl
+AM_CXXFLAGS = -DUSE_ARES
 
 sbin_PROGRAMS = reTurnServer
 reTurnServer_SOURCES = reTurnServer.cxx \
@@ -36,7 +34,7 @@ reTurnServer_LDADD = ../resip/dum/libdum.la
 reTurnServer_LDADD += ../resip/stack/libresip.la ../rutil/librutil.la
 reTurnServer_LDADD += ../contrib/ares/libares.a
 #reTurnServer_LDADD += -L../contrib/ares -lares
-reTurnServer_LDADD += -lssl -lpthread -ldb_cxx-4.8
+reTurnServer_LDADD += @LIBSSL_LIBADD@ -lpthread -ldb_cxx-4.8
 
 #lib_LTLIBRARIES = librepro.la
 

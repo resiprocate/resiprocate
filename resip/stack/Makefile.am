@@ -1,11 +1,10 @@
 # $Id$
 
-AM_CXXFLAGS = -I../../contrib/ares -DUSE_ARES -DUSE_SSL
-
-#AM_LDFLAGS = -lssl
+AM_CXXFLAGS = -I../../contrib/ares -DUSE_ARES
 
 lib_LTLIBRARIES = libresip.la
 
+libresip_la_LIBADD = @LIBSSL_LIBADD@
 libresip_la_LDFLAGS = -version-info 0:0:0 -release 1 -export-dynamic
 
 libresip_la_SOURCES = \
@@ -128,11 +127,15 @@ libresip_la_SOURCES = \
 	XMLCursor.cxx \
 	KeepAliveMessage.cxx \
 	StatelessHandler.cxx \
-	InvalidContents.cxx \
+	InvalidContents.cxx
+
+if USE_SSL
+libresip_la_SOURCES += \
 	ssl/DtlsTransport.cxx \
 	ssl/Security.cxx \
 	ssl/TlsConnection.cxx \
 	ssl/TlsTransport.cxx
+endif
 
 SUFFIXES = .gperf .cxx
 GPERFOPTS = -D -E -L C++ -t -k '*' --compare-strncmp

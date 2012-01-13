@@ -3,11 +3,11 @@
 SUBDIRS = .
 #SUBDIRS += test
 
-AM_CXXFLAGS =  -DUSE_SSL
+#AM_CXXFLAGS = 
 
 lib_LTLIBRARIES = libs2c.la
 
-libs2c_la_LIBADD = -lssl -lpthread -lrt 
+libs2c_la_LIBADD = @LIBSSL_LIBADD@ -lpthread -lrt 
 libs2c_la_LDFLAGS = -version-info 0:0:0 -release 1 -export-dynamic
 
 libs2c_la_SOURCES = s2c_native.cxx

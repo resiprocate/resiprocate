@@ -1,6 +1,10 @@
 #if !defined(RESIP_MACSECURITY_HXX)
 #define RESIP_MACSECURITY_HXX
 
+#if defined(HAVE_CONFIG_H)
+  #include "config.h"
+#endif
+
 #include "resip/stack/ssl/Security.hxx"
 
 namespace resip

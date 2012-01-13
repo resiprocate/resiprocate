@@ -1,3 +1,8 @@
+
+#if defined(HAVE_CONFIG_H)
+  #include "config.h"
+#endif
+
 #include "rutil/DnsUtil.hxx"
 #include "resip/stack/Message.hxx"
 #include "resip/stack/SipMessage.hxx"

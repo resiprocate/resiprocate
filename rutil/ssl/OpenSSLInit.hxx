@@ -1,6 +1,10 @@
 #if !defined(RESIP_OPENSSLINIT_HXX)
 #define RESIP_OPENSSLINIT_HXX 
 
+#if defined(HAVE_CONFIG_H)
+  #include "config.h"
+#endif
+
 #include "rutil/Mutex.hxx"
 #include "rutil/RWMutex.hxx"
 #include "rutil/Data.hxx"
