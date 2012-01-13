@@ -191,11 +191,13 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport)
    {
       assert(dynamic_cast<UdpTransport*>(transport));
    }
-#if USE_DTLS && USE_SSL
+#ifdef USE_DTLS
+#ifdef USE_SSL
    else if(transport->transport()==DTLS)
    {
       assert(dynamic_cast<DtlsTransport*>(transport));
    }
+#endif
 #endif
    else
    {
