@@ -1,8 +1,6 @@
 # $Id$
 
-AM_CXXFLAGS = -DUSE_ARES -DUSE_SSL
-
-AM_LDFLAGS = -lssl
+AM_CXXFLAGS = -DUSE_ARES
 
 sbin_PROGRAMS = repro
 repro_SOURCES = repro.cxx
@@ -11,7 +9,7 @@ repro_LDADD += ../resip/dum/libdum.la
 repro_LDADD += ../resip/stack/libresip.la ../rutil/librutil.la
 repro_LDADD += ../contrib/ares/libares.a
 #repro_LDADD += -L../contrib/ares -lares
-repro_LDADD += -lssl -lpthread -ldb_cxx-4.8
+repro_LDADD += @LIBSSL_LIBADD@ -lpthread -ldb_cxx-4.8
 
 lib_LTLIBRARIES = librepro.la
 
@@ -65,12 +63,16 @@ librepro_la_SOURCES = \
 	monkeys/QValueTargetHandler.cxx \
 	monkeys/SimpleTargetHandler.cxx \
 	\
-	MySqlDb.cxx \
+	MySqlDb.cxx
+
+if USE_SSL
+librepro_la_SOURCES += \
 	stateAgents/CertServer.cxx \
 	stateAgents/CertPublicationHandler.cxx \
 	stateAgents/CertSubscriptionHandler.cxx \
 	stateAgents/PrivateKeyPublicationHandler.cxx \
 	stateAgents/PrivateKeySubscriptionHandler.cxx
+endif
 
 # reproInfo.hxx is created manually be other build systems
 # but here we just delegate to the autoconf generated config.h

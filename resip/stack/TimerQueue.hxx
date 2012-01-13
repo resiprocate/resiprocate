@@ -1,6 +1,10 @@
 #if !defined(RESIP_TIMERQUEUE_HXX)
 #define RESIP_TIMERQUEUE_HXX 
 
+#if defined(HAVE_CONFIG_H)
+  #include "config.h"
+#endif
+
 #include <set>
 #include <iosfwd>
 #include "resip/stack/TransactionMessage.hxx"

@@ -1,10 +1,10 @@
 
-#ifdef USE_SSL
-#ifdef USE_DTLS
-
 #if defined(HAVE_CONFIG_H)
   #include "config.h"
 #endif
+
+#ifdef USE_SSL
+#ifdef USE_DTLS
 
 #include <memory>
 

@@ -2,6 +2,11 @@
 #define RESIP_ENCRYPTIONMANAGER_HXX
 
 #include <memory>
+
+#if defined(HAVE_CONFIG_H)
+  #include "config.h"
+#endif
+
 #include "rutil/SharedPtr.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/BaseException.hxx"

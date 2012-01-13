@@ -2,11 +2,11 @@
 
 SUBDIRS = . 
 
-AM_CXXFLAGS = -I../../contrib/ares -DUSE_ARES -DUSE_SSL
+AM_CXXFLAGS = -I../../contrib/ares -DUSE_ARES
 
 lib_LTLIBRARIES = libreTurnClient.la
 
-libreTurnClient_la_LIBADD = -lssl -lrt
+libreTurnClient_la_LIBADD = @LIBSSL_LIBADD@ -lrt
 libreTurnClient_la_LDFLAGS = -version-info 0:0:0 -release 1 -export-dynamic
 
 libreTurnClient_la_SOURCES = \

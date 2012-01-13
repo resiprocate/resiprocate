@@ -1,12 +1,10 @@
 # $Id$
 
-AM_CXXFLAGS = -DUSE_ARES -DUSE_SSL
-
-AM_LDFLAGS = -lssl
+AM_CXXFLAGS = -DUSE_ARES
 
 lib_LTLIBRARIES = libdum.la
 
-#libdum_la_LIBADD =
+libdum_la_LIBADD = @LIBSSL_LIBADD@
 libdum_la_LDFLAGS = -version-info 0:0:0 -release 1 -export-dynamic
 
 libdum_la_SOURCES =   \
@@ -84,8 +82,12 @@ libdum_la_SOURCES =   \
 	HttpProvider.cxx \
 	HttpGetMessage.cxx \
 	DumHelper.cxx \
-	MergedRequestRemovalCommand.cxx \
+	MergedRequestRemovalCommand.cxx
+
+if USE_SSL
+libdum_la_SOURCES += \
 	ssl/EncryptionManager.cxx
+endif
 
 dumincludedir = $(includedir)/resip/dum
 nobase_duminclude_HEADERS = AppDialog.hxx \

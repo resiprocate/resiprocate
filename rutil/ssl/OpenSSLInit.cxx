@@ -1,3 +1,7 @@
+#if defined(HAVE_CONFIG_H)
+  #include "config.h"
+#endif
+
 #include "rutil/Mutex.hxx"
 #include "rutil/Lock.hxx"
 #include "rutil/Logger.hxx"

@@ -1,13 +1,12 @@
 # $Id$
 
-AM_CXXFLAGS = -DUSE_ARES -DUSE_SSL -I./s2c
-
-AM_LDFLAGS = -lssl -lpthread
+AM_CXXFLAGS = -DUSE_ARES -I./s2c
 
 lib_LTLIBRARIES = libp2p.la
 
 libp2p_la_LIBADD = s2c/s2c/libs2c.la
 libp2p_la_LIBADD += ../rutil/librutil.la
+libp2p_la_LIBADD += @LIBSSL_LIBADD@ -lpthread
 libp2p_la_LDFLAGS = -version-info 0:0:0 -release 1 -export-dynamic
 
 libp2p_la_SOURCES =   \

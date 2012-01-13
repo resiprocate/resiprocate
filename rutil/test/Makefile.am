@@ -1,10 +1,10 @@
 # $Id$
 
-AM_CXXFLAGS = -DUSE_ARES -DUSE_SSL
+AM_CXXFLAGS = -DUSE_ARES
 
-LIBS = ../librutil.la
-LIBS += ../../contrib/ares/libares.a
-LIBS += -lssl -lpthread
+LDADD = ../librutil.la
+LDADD += ../../contrib/ares/libares.a
+LDADD += $(LIBSSL_LIBADD) -lpthread
 
 TESTS = \
 	testCoders
