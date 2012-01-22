@@ -1,35 +1,59 @@
-#if !defined(ProxyConfig_hxx)
-#define ProxyConfig_hxx
+#if !defined(ConfigParse_hxx)
+#define ConfigParse_hxx
 
 #include <map>
-#include "repro/Store.hxx"
-#include <resip/stack/Uri.hxx>
-#include <rutil/ConfigParse.hxx>
+#include <vector>
 #include <rutil/Data.hxx>
 
-namespace repro
+namespace resip
 {
 
-class ProxyConfig : public resip::ConfigParse
+class ConfigParse
 {
 public:
-   ProxyConfig();
-   ProxyConfig(int argc, char** argv, const resip::Data& defaultConfigFilename);
-   virtual ~ProxyConfig();
+   ConfigParse();
+   ConfigParse(int argc, char** argv, const resip::Data& defaultConfigFilename);
+   virtual ~ConfigParse();
 
-   virtual void printHelpText(int argc, char **argv);
+   virtual void printHelpText(int argc, char **argv) = 0;
 
-   void createDataStore(AbstractDb* db);
-   Store* getDataStore() { return mStore; }
+   void parseCommandLine(int argc, char** argv);
+   void parseConfigFile(const resip::Data& filename);
 
-   using resip::ConfigParse::getConfigValue;
-   bool getConfigValue(const resip::Data& name, resip::Uri &value);
-   resip::Uri getConfigUri(const resip::Data& name, const resip::Uri defaultValue, bool useDefaultIfEmpty=false);
+// subclass into repro
+//   void createDataStore(AbstractDb* db);
+//   Store* getDataStore() { return mStore; }
 
+   bool getConfigValue(const resip::Data& name, resip::Data &value);
+   resip::Data getConfigData(const resip::Data& name, const resip::Data& defaultValue, bool useDefaultIfEmpty=false);
+
+   bool getConfigValue(const resip::Data& name, bool &value);
+   bool getConfigBool(const resip::Data& name, bool defaultValue);
+   
+   bool getConfigValue(const resip::Data& name, unsigned long &value);
+   unsigned long getConfigUnsignedLong(const resip::Data& name, unsigned long defaultValue);
+
+   bool getConfigValue(const resip::Data& name, int &value);
+   int getConfigInt(const resip::Data& name, int defaultValue);
+
+// FIXME: subclass into resip
+//   bool getConfigValue(const resip::Data& name, resip::Uri &value);
+//   resip::Uri getConfigUri(const resip::Data& name, const resip::Uri defaultValue, bool useDefaultIfEmpty=false);
+
+   bool getConfigValue(const resip::Data& name, std::vector<resip::Data> &value);
+   
 protected:
+   void insertConfigValue(const resip::Data& name, const resip::Data& value);
+
+   typedef std::multimap<resip::Data, resip::Data> ConfigValuesMap;
+   ConfigValuesMap mConfigValues;
+
+   // Config filename from command line
+   resip::Data mCmdLineConfigFilename;
 
    // Database Store
-   Store* mStore;
+// subclass into repro
+//   Store* mStore;
 };
  
 }

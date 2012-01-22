@@ -19,17 +19,8 @@ using namespace std;
 namespace repro 
 {
 
-ProxyConfig::ProxyConfig(int argc, char** argv, const resip::Data& defaultConfigFilename) : mStore(0)
+ProxyConfig::ProxyConfig(int argc, char** argv, const resip::Data& defaultConfigFilename) : ConfigParse(argc, argv, defaultConfigFilename), mStore(0)
 {
-   parseCommandLine(argc, argv);  // will fill in mCmdLineConfigFilename if present
-   if(mCmdLineConfigFilename.empty())
-   {
-      parseConfigFile(defaultConfigFilename);
-   }
-   else
-   {
-      parseConfigFile(mCmdLineConfigFilename);
-   }
 }
 
 ProxyConfig::ProxyConfig() : mStore(0)
@@ -40,114 +31,6 @@ ProxyConfig::~ProxyConfig()
 {
    delete mStore; 
    mStore=0;
-}
-
-bool 
-ProxyConfig::getConfigValue(const resip::Data& name, resip::Data &value)
-{
-   Data lowerName(name);  lowerName.lowercase();
-   ConfigValuesMap::iterator it = mConfigValues.find(lowerName);
-   if(it != mConfigValues.end())
-   {
-      value = it->second;
-      return true;
-   }
-   // Not found
-   return false;
-}
-
-Data 
-ProxyConfig::getConfigData(const resip::Data& name, const resip::Data& defaultValue, bool useDefaultIfEmpty)
-{
-   Data ret(defaultValue);
-   if(getConfigValue(name, ret) && ret.empty() && useDefaultIfEmpty)
-   {
-      return defaultValue;
-   }
-   return ret;
-}
-
-bool 
-ProxyConfig::getConfigValue(const resip::Data& name, bool &value)
-{
-   Data lowerName(name);  lowerName.lowercase();
-   ConfigValuesMap::iterator it = mConfigValues.find(lowerName);
-   if(it != mConfigValues.end())
-   {
-      if(it->second == "1" || 
-         isEqualNoCase(it->second, "true") || 
-         isEqualNoCase(it->second, "on") || 
-         isEqualNoCase(it->second, "enable"))
-      {
-         value = true;
-         return true;
-      }
-      else if(it->second == "0" ||
-              isEqualNoCase(it->second, "false") || 
-              isEqualNoCase(it->second, "off") || 
-              isEqualNoCase(it->second, "disable"))
-      {
-         value = false;
-         return true;
-      }
-      cerr << "Invalid boolean setting:  " << name << " = " << it->second << ": Valid values are: 1,true,on,enable,0,false,off or disable" << endl;
-      return false;
-   }
-   // Not found
-   return false;
-}
-
-bool 
-ProxyConfig::getConfigBool(const resip::Data& name, bool defaultValue)
-{
-   bool ret = defaultValue;
-   getConfigValue(name, ret);
-   return ret;
-}
-
-bool 
-ProxyConfig::getConfigValue(const resip::Data& name, unsigned long &value)
-{
-   Data lowerName(name);  lowerName.lowercase();
-   ConfigValuesMap::iterator it = mConfigValues.find(lowerName);
-   if(it != mConfigValues.end())
-   {
-      value = it->second.convertUnsignedLong();
-      return true;
-   }
-   // Not found
-   return false;
-}
-
-unsigned long 
-ProxyConfig::getConfigUnsignedLong(const resip::Data& name, unsigned long defaultValue)
-{
-   unsigned long ret = defaultValue;
-   getConfigValue(name, ret);
-   return ret;
-}
-
-bool 
-ProxyConfig::getConfigValue(const resip::Data& name, int &value)
-{
-   Data lowerName(name);  lowerName.lowercase();
-   ConfigValuesMap::iterator it = mConfigValues.find(lowerName);
-   if(it != mConfigValues.end())
-   {
-      value = it->second.convertInt();
-      return true;
-   }
-   // Not found
-   return false;
-}
-
-
-int 
-ProxyConfig::getConfigInt(const resip::Data& name, int defaultValue)
-{
-   int ret = defaultValue;
-   getConfigValue(name, ret);
-   return ret;
 }
 
 bool 
@@ -202,163 +85,14 @@ ProxyConfig::getConfigUri(const resip::Data& name, const resip::Uri defaultValue
    return ret;
 }
 
-bool 
-ProxyConfig::getConfigValue(const resip::Data& name, std::vector<resip::Data> &value)
-{
-   Data lowerName(name);  lowerName.lowercase();
-   std::pair<ConfigValuesMap::iterator,ConfigValuesMap::iterator> valuesIts = mConfigValues.equal_range(lowerName);
-   bool found = false;
-   for (ConfigValuesMap::iterator it=valuesIts.first; it!=valuesIts.second; ++it)
-   {
-      found = true;
-      ParseBuffer pb(it->second);
-      Data item;
-      while(!it->second.empty() && !pb.eof())
-      {
-         pb.skipWhitespace();
-         const char *start = pb.position();
-         pb.skipToOneOf(ParseBuffer::Whitespace, ",");  // allow white space 
-         pb.data(item, start);
-         value.push_back(item);
-         if(!pb.eof())
-         {
-            pb.skipChar();
-         }
-      }
-   }
-
-   return found;
-}
-
-void 
-ProxyConfig::insertConfigValue(const resip::Data& name, const resip::Data& value)
-{
-   resip::Data lowerName(name);
-   lowerName.lowercase();
-   mConfigValues.insert(ConfigValuesMap::value_type(lowerName, value));
-}
-
-void 
-ProxyConfig::parseCommandLine(int argc, char** argv)
-{
-   int startingArgForNameValuePairs = 1;
-   // First argument is the configuration filename - it is optional and is never proceeded with a - or /
-   if(argc >= 2 && argv[1][0] != '-' && argv[1][0] != '/')
-   {
-      mCmdLineConfigFilename = argv[1];
-      startingArgForNameValuePairs = 2;
-   }
-
-   // Loop through command line arguments and process them
-   for(int i = startingArgForNameValuePairs; i < argc; i++)
-   {
-      Data argData(argv[i]);
-
-      // Process all commandNames that don't take values
-      if(isEqualNoCase(argData, "-?") || 
-         isEqualNoCase(argData, "--?") ||
-         isEqualNoCase(argData, "--help") ||
-         isEqualNoCase(argData, "/?"))
-      {
-         cout << "Command line format is:" << endl;
-         cout << "  " << argv[0] << " [<ConfigFilename>] [--<ConfigValueName>=<ConfigValue>] [--<ConfigValueName>=<ConfigValue>] ..." << endl;
-         cout << "Sample Command lines:" << endl;
-         cout << "  " << argv[0] << "repro.config --RecordRouteUri=sip:proxy.sipdomain.com --ForceRecordRouting=true" << endl;
-         cout << "  " << argv[0] << "repro.config /RecordRouteUri:sip:proxy.sipdomain.com /ForceRecordRouting:true" << endl;
-         exit(0);
-      }
-      else if(argData.at(0) == '-' || argData.at(0) == '/')
-      {
-         Data name;
-         Data value;
-         ParseBuffer pb(argData);
-
-         try
-         {
-            pb.skipChars(Data::toBitset("-/"));  // Skip any leading -'s or /'s
-            const char * anchor = pb.position();
-            pb.skipToOneOf("=:");
-            if(!pb.eof())
-            {
-               pb.data(name, anchor);
-               pb.skipChar();
-               anchor = pb.position();
-               pb.skipToEnd();
-               pb.data(value, anchor);
-
-               cout << "Command line Name='" << name << "' value='" << value << "'" << endl;
-               insertConfigValue(name, value);
-            }
-            else
-            {
-               cerr << "Invalid command line parameters:"  << endl;
-               cerr << " Name/Value pairs must contain an = or a : between the name and the value" << endl;
-               exit(-1);
-            }
-         }
-         catch(BaseException& ex)
-         {
-            cerr << "Invalid command line parameters:"  << endl;
-            cerr << " Exception parsing Name/Value pairs: " << ex << endl;
-            exit(-1);
-         }
-      }
-      else
-      {
-         cerr << "Invalid command line parameters:"  << endl;
-         cerr << " Name/Value pairs must be prefixed with either a -, --, or a /" << endl;
-         exit(-1);
-      }
-   }
-}
-
 void
-ProxyConfig::parseConfigFile(const Data& filename)
+ProxyConfig::printHelpText(int argc, char **argv)
 {
-
-   ifstream configFile(filename.c_str());
-   
-   if(configFile)
-   {
-      cout << "Reading configuraiton from: " << filename << endl;
-   }
-   else
-   {
-      cout << "Error reading configuraiton from: " << filename << endl;
-   }
-
-   string sline;                     
-   while(getline(configFile, sline)) 
-   {
-      Data line(sline);
-      Data name;
-      Data value;
-      ParseBuffer pb(line);
-
-      pb.skipWhitespace();
-      const char * anchor = pb.position();
-      if(pb.eof() || *anchor == '#') continue;  // if line is a comment or blank then skip it
-      // Look for =
-      pb.skipToOneOf("= \t");
-      if(!pb.eof())
-      {
-         pb.data(name,anchor);
-         if(*pb.position()!='=') 
-         {
-            pb.skipToChar('=');
-         }
-         pb.skipChar('=');
-         pb.skipWhitespace();
-         anchor = pb.position();
-         if(!pb.eof())
-         {
-            pb.skipToOneOf("\r\n");
-            pb.data(value, anchor);
-         }
-         //cout << "Config file Name='" << name << "' value='" << value << "'" << endl;
-         insertConfigValue(name, value);
-      }
-   }
+   cout << "Command line format is:" << endl;
+   cout << "  " << argv[0] << " [<ConfigFilename>] [--<ConfigValueName>=<ConfigValue>] [--<ConfigValueName>=<ConfigValue>] ..." << endl;
+   cout << "Sample Command lines:" << endl;
+   cout << "  " << argv[0] << "repro.config --RecordRouteUri=sip:proxy.sipdomain.com --ForceRecordRouting=true" << endl;
+   cout << "  " << argv[0] << "repro.config /RecordRouteUri:sip:proxy.sipdomain.com /ForceRecordRouting:true" << endl;
 }
 
 void 
