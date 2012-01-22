@@ -147,6 +147,29 @@ ConfigParse::getConfigInt(const resip::Data& name, int defaultValue)
    return ret;
 }
 
+bool
+ConfigParse::getConfigValue(const resip::Data& name, unsigned short &value)
+{
+   Data lowerName(name);  lowerName.lowercase();
+   ConfigValuesMap::iterator it = mConfigValues.find(lowerName);
+   if(it != mConfigValues.end())
+   {
+      value = it->second.convertInt();
+      return true;
+   }
+   // Not found
+   return false;
+}
+
+
+unsigned short
+ConfigParse::getConfigUnsignedShort(const resip::Data& name, int defaultValue)
+{
+   int ret = defaultValue;
+   getConfigValue(name, ret);
+   return ret;
+}
+
 bool 
 ConfigParse::getConfigValue(const resip::Data& name, std::vector<resip::Data> &value)
 {
