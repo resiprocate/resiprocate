@@ -15,6 +15,7 @@ SRC = \
 	BaseException.cxx \
 	Coders.cxx \
 	Condition.cxx \
+	ConfigParse.cxx \
 	CountStream.cxx \
 	Data.cxx \
 	DataStream.cxx \
