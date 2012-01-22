@@ -36,6 +36,9 @@ public:
    bool getConfigValue(const resip::Data& name, int &value);
    int getConfigInt(const resip::Data& name, int defaultValue);
 
+   bool getConfigValue(const resip::Data& name, unsigned short &value);
+   unsigned short getConfigUnsignedShort(const resip::Data& name, int defaultValue);
+
 // FIXME: subclass into resip
 //   bool getConfigValue(const resip::Data& name, resip::Uri &value);
 //   resip::Uri getConfigUri(const resip::Data& name, const resip::Uri defaultValue, bool useDefaultIfEmpty=false);
