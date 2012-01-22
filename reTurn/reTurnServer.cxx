@@ -44,27 +44,11 @@ int main(int argc, char* argv[])
    resip::FindMemoryLeaks fml;
 #endif
 
-   reTurn::ReTurnConfig reTurnConfig;
+   resip::Data defaultConfig("reTurnServer.config");
+   reTurn::ReTurnConfig reTurnConfig(argc, argv, defaultConfig);
 
    try
    {
-      // Check command line arguments.
-      if (argc != 1 && argc != 6)
-      {
-         std::cerr << "Usage: reTurnServer <address> <turnPort> <tlsPort> <altAddress> \n";
-         std::cerr << "                    <altPort>\n";
-         std::cerr << "  IPv4 Example (with RFC3489 support):\n";
-         std::cerr << "    reTurnServer 192.168.1.10 3478 5349 192.168.1.11 3479\n\n";
-         std::cerr << "  IPv6 Example (with RFC3489 support):\n";
-         std::cerr << "    reTurnServer 3ffe:0501:0008:0000:0260:97ff:fe40:efab 3478\n";
-         std::cerr << "                 5349 3ffe:0501:0008:0000:0260:97ff:fe40:efac 3479\n\n";
-         std::cerr << "  Note:  For RFC3489 legacy support define altPort as non-zero and\n";
-         std::cerr << "         ensure you don't use INADDR_ANY for the IP addresses.\n";
-         std::cerr << "         Both addresses should terminate on the machine running\n";
-         std::cerr << "         reTurn.";
-         return 1;
-      }
-
       // Initialize Logging
       resip::Log::initialize(reTurnConfig.mLoggingType, reTurnConfig.mLoggingLevel, "reTurnServer", reTurnConfig.mLoggingFilename.c_str());
       resip::GenericLogImpl::MaxLineCount = reTurnConfig.mLoggingFileMaxLineCount;
@@ -72,15 +56,6 @@ int main(int argc, char* argv[])
       // Initialize server.
       asio::io_service ioService;                                // The one and only ioService for the stunServer
       reTurn::TurnManager turnManager(ioService, reTurnConfig);  // The one and only Turn Manager
-
-      if(argc == 6)
-      {
-         reTurnConfig.mTurnPort = (unsigned short)resip::Data(argv[2]).convertUnsignedLong();
-         reTurnConfig.mTlsTurnPort = (unsigned short)resip::Data(argv[3]).convertUnsignedLong();
-         reTurnConfig.mAltStunPort = (unsigned short)resip::Data(argv[5]).convertUnsignedLong();
-         reTurnConfig.mTurnAddress = asio::ip::address::from_string(argv[1]);
-         reTurnConfig.mAltStunAddress = asio::ip::address::from_string(argv[4]);
-      }
 
       boost::shared_ptr<reTurn::UdpServer> udpTurnServer;  // also a1p1StunUdpServer
       boost::shared_ptr<reTurn::TcpServer> tcpTurnServer;

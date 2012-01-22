@@ -34,6 +34,56 @@ ReTurnConfig::ReTurnConfig() :
    mAuthenticationCredentials["test"] = "1234";
 }
 
+ReTurnConfig::ReTurnConfig(int argc, char** argv, const resip::Data& defaultConfigFilename) :
+   resip::ConfigParse(argc, argv, defaultConfigFilename),
+   mTurnPort(getConfigUnsignedShort("TurnPort", 3478)),
+   mTlsTurnPort(getConfigUnsignedShort("TlsTurnPort", 5349)),
+   mAltStunPort(getConfigUnsignedShort("AltStunPort", 0)),
+   mTurnAddress(asio::ip::address::from_string(
+      getConfigData("TurnAddress", "0.0.0.0").c_str())),
+   mAltStunAddress(asio::ip::address::from_string(
+      getConfigData("AltStunAddress", "0.0.0.0").c_str())),
+   mAuthenticationMode(LongTermPassword),
+   mAuthenticationRealm(getConfigData("AuthenticationRealm", "reTurn")),
+   mNonceLifetime(getConfigUnsignedLong("NonceLifetime", 3600)),
+   mAllocationPortRangeMin(getConfigUnsignedShort("AllocationPortRangeMin", 49152)),
+   mAllocationPortRangeMax(getConfigUnsignedShort("AllocationPortRangeMax", 65535)),
+   mDefaultAllocationLifetime(getConfigUnsignedLong("DefaultAllocationLifetime", 600)),
+   mMaxAllocationLifetime(getConfigUnsignedLong("MaxAllocationLifetime", 3600)),
+   mMaxAllocationsPerUser(getConfigUnsignedLong("MaxAllocationsPerUser", 0)),
+   mTlsServerCertificateFilename(getConfigData("TlsServerCertificateFilename", "server.pem")),
+   mTlsTempDhFilename(getConfigData("TlsTempDhFilename", "dh512.pem")),
+   mTlsPrivateKeyPassword(getConfigData("TlsPrivateKeyPassword", "")),
+   mLoggingType(resip::Log::Cout),
+   mLoggingLevel(resip::Log::Info),
+   mLoggingFilename(getConfigData("LogFilename", "reTurnServer.log")),
+   mLoggingFileMaxLineCount(getConfigUnsignedLong("LogFileMaxLines", 50000))
+{
+   Data user(getConfigData("LongTermAuthUsername", ""));
+   Data password(getConfigData("LongTermAuthPassword", ""));
+
+   if(user.size() == 0 || password.size() == 0)
+   {
+      std::cerr << "Missing or invalid credentials (LongTermAuthUsername/LongTermAuthPassword" << std::endl;
+      exit(1);
+   }
+
+   mAuthenticationCredentials[user] = password;
+}
+
+ReTurnConfig::~ReTurnConfig()
+{
+}
+
+void
+ReTurnConfig::printHelpText(int argc, char **argv)
+{
+   std::cerr << "Command line format is:" << std::endl;
+   std::cerr << "  " << argv[0] << " [<ConfigFilename>] [--<ConfigValueName>=<ConfigValue>] [--<ConfigValueName>=<ConfigValue>] ..." << std::endl;
+   std::cerr << "Sample Command lines:" << std::endl;
+   std::cerr << "  " << argv[0] << "reTurnServer.config --LogLevel=INFO" << std::endl;
+}
+
 bool 
 ReTurnConfig::isUserNameValid(const resip::Data& username) const
 {
