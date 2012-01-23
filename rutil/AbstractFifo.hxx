@@ -439,13 +439,13 @@ class AbstractFifo : public FifoStatsInterface
 
             if(mCounter >= 4096)
             {
-               mAverageServiceTimeMicroSec=resipIntDiv(diff, mCounter);
+               mAverageServiceTimeMicroSec=(UInt32)resipIntDiv(diff, mCounter);
             }
             else // fifo got emptied; merge into a rolling average
             {
                // .bwc. This is a moving average with period 64, round to 
                // nearest int.
-               mAverageServiceTimeMicroSec=resipIntDiv(
+               mAverageServiceTimeMicroSec=(UInt32)resipIntDiv(
                      diff+((4096-mCounter)*mAverageServiceTimeMicroSec),
                      4096U);
             }
