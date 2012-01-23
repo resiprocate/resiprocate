@@ -51,7 +51,7 @@ TlsConnection::stop()
 {
   asio::error_code ec;
   //mSocket.shutdown(ec);  // !slg! note: this fn gives a stack overflow since ASIO 1.0.0 for some reason
-  mSocket.lowest_layer().close();
+  mSocket.lowest_layer().close(ec);
   if(ec)
   {
      WarningLog(<< "TlsConnection shutdown, error=" << ec.value() << "-" << ec.message());

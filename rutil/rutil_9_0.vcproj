@@ -308,6 +308,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ConfigParse.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\CountStream.cxx"
 				>
 			</File>
@@ -563,6 +567,10 @@
 			</File>
 			<File
 				RelativePath=".\Condition.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ConfigParse.hxx"
 				>
 			</File>
 			<File
