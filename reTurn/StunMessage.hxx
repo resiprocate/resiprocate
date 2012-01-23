@@ -102,7 +102,7 @@ public:
    const static UInt16 BindMethod                  = 0x001;
    const static UInt16 SharedSecretMethod          = 0x002;  // deprecated by RFC5389 (used for backwards compatibility to RFC3489 only)
 
-   // define types for a turn message - per behave-turn-12
+   // define types for a turn message - per RFC5766
    const static UInt16 TurnAllocateMethod          = 0x003;
    const static UInt16 TurnRefreshMethod           = 0x004;
    const static UInt16 TurnSendMethod              = 0x006;  // indication only
