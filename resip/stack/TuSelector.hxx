@@ -1,6 +1,8 @@
 #if !defined(RESIP_TuSelector_HXX)
 #define RESIP_TuSelector_HXX 
 
+#include <stdint.h>
+
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/StatisticsMessage.hxx"
 #include "resip/stack/TransactionUserMessage.hxx"

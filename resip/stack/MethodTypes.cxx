@@ -59,7 +59,7 @@ resip::getMethodType(const Data& name)
 MethodTypes
 resip::getMethodType(const char* name, int len)
 {
-   struct methods* m = MethodHash::in_word_set(name, len);
+   const struct methods* m = MethodHash::in_word_set(name, len);
    return m ? m->type : UNKNOWN;
 }
 

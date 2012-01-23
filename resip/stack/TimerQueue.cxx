@@ -111,7 +111,7 @@ TuSelectorTimerQueue::processTimer(const TimerWithPayload& timer)
 void
 DtlsTimerQueue::processTimer(const TimerWithPayload& timer)
 {
-   mFifo.add( (DtlsMessage *)t->getMessage() ) ;
+   mFifo.add( (DtlsMessage *)timer.getMessage() ) ;
 }
 
 #endif

@@ -168,7 +168,7 @@ TransactionController::send(SipMessage* msg)
    {
       // Need to 503 this.
       SipMessage* resp(Helper::makeResponse(*msg, 503));
-      resp->header(h_RetryAfter).value()=mStateMacFifo.expectedWaitTimeMilliSec()/1000;
+      resp->header(h_RetryAfter).value()=(UInt32)mStateMacFifo.expectedWaitTimeMilliSec()/1000;
       resp->setTransactionUser(msg->getTransactionUser());
       mTuSelector.add(resp, TimeLimitFifo<Message>::InternalElement);
       delete msg;

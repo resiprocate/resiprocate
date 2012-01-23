@@ -418,7 +418,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="SecurityAttributes.cxx" />
-    <ClCompile Include="SelectInterruptor.cxx" />
     <ClCompile Include="SERNonceHelper.cxx" />
     <ClCompile Include="SipFrag.cxx" />
     <ClCompile Include="SipMessage.cxx" />
@@ -458,6 +457,7 @@
     <ClCompile Include="Transport.cxx" />
     <ClCompile Include="TransportFailure.cxx" />
     <ClCompile Include="TransportSelector.cxx" />
+    <ClCompile Include="TransportThread.cxx" />
     <ClCompile Include="TuIM.cxx" />
     <ClCompile Include="Tuple.cxx" />
     <ClCompile Include="TupleMarkManager.cxx" />
@@ -504,6 +504,7 @@
     <ClInclude Include="DeprecatedDialog.hxx" />
     <ClInclude Include="DnsInterface.hxx" />
     <ClInclude Include="DnsResult.hxx" />
+    <ClInclude Include="DnsResultMessage.hxx" />
     <ClInclude Include="DtlsMessage.hxx" />
     <ClInclude Include="KeepAlivePong.hxx" />
     <ClInclude Include="ssl\DtlsTransport.hxx" />
@@ -570,7 +571,6 @@
     <ClInclude Include="ssl\Security.hxx" />
     <ClInclude Include="SecurityAttributes.hxx" />
     <ClInclude Include="SecurityTypes.hxx" />
-    <ClInclude Include="SelectInterruptor.hxx" />
     <ClInclude Include="SendData.hxx" />
     <ClInclude Include="SERNonceHelper.hxx" />
     <ClInclude Include="ShutdownMessage.hxx" />
@@ -578,6 +578,7 @@
     <ClInclude Include="SipMessage.hxx" />
     <ClInclude Include="SipStack.hxx" />
     <ClInclude Include="StackThread.hxx" />
+    <ClInclude Include="StartLine.hxx" />
     <ClInclude Include="StatelessHandler.hxx" />
     <ClInclude Include="StatisticsHandler.hxx" />
     <ClInclude Include="StatisticsManager.hxx" />
@@ -597,6 +598,7 @@
     <ClInclude Include="ssl\TlsTransport.hxx" />
     <ClInclude Include="Token.hxx" />
     <ClInclude Include="TransactionController.hxx" />
+    <ClInclude Include="TransactionControllerThread.hxx" />
     <ClInclude Include="TransactionMap.hxx" />
     <ClInclude Include="TransactionMessage.hxx" />
     <ClInclude Include="TransactionState.hxx" />
@@ -606,6 +608,8 @@
     <ClInclude Include="Transport.hxx" />
     <ClInclude Include="TransportFailure.hxx" />
     <ClInclude Include="TransportSelector.hxx" />
+    <ClInclude Include="TransportSelectorThread.hxx" />
+    <ClInclude Include="TransportThread.hxx" />
     <ClInclude Include="TuIM.hxx" />
     <ClInclude Include="Tuple.hxx" />
     <ClInclude Include="TupleMarkManager.hxx" />

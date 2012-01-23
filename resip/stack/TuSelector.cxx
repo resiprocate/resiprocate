@@ -14,7 +14,9 @@
 using namespace resip;
 
 TuSelector::TuSelector(TimeLimitFifo<Message>& fallBackFifo) :
-   mFallBackFifo(fallBackFifo) , mFallbackPostNotify(NULL),
+   mFallBackFifo(fallBackFifo), 
+   mCongestionManager(0),
+   mFallbackPostNotify(0),
    mTuSelectorMode(false),
    mStatsPayload()
 {
@@ -274,7 +276,6 @@ TuSelector::setCongestionManager(CongestionManager* manager)
       i->tu->setCongestionManager(manager);
    }
    
-
    if(mCongestionManager)
    {
       mCongestionManager->unregisterFifo(&mFallBackFifo);
@@ -312,7 +313,7 @@ TuSelector::getExpectedWait(TransactionUser* tu) const
       return tu->getExpectedWait();
    }
 
-   return mFallBackFifo.expectedWaitTimeMilliSec();
+   return (uint32_t)mFallBackFifo.expectedWaitTimeMilliSec();
 }
 
 

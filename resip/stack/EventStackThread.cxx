@@ -2,7 +2,7 @@
 
 #include "resip/stack/EventStackThread.hxx"
 #include "resip/stack/SipStack.hxx"
-// #include "resip/stack/SipMessage.hxx"
+//#include "resip/stack/SipMessage.hxx"
 //#include "rutil/SelectInterruptor.hxx"
 //#include "resip/stack/FdPoll.hxx"
 

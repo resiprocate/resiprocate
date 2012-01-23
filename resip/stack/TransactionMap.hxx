@@ -23,6 +23,26 @@ class TransactionMap
      
   private:
 
+#if  defined(__INTEL_COMPILER ) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310))  // !slg! not sure if this works on __INTEL_COMPILER 
+      /**
+         @internal
+      */
+      class BranchCompare
+      {
+         public:
+            enum { bucket_size = 4, min_buckets = 8 };
+
+            inline size_t operator()(const Data& branch) const
+            {
+               return branch.caseInsensitiveTokenHash();
+            }
+
+            inline bool operator()(const Data& branch1, const Data& branch2) const
+            {
+               return isLessThanNoCase(branch1,branch2);
+            }
+      };
+#elif defined(HASH_MAP_NAMESPACE)
       /**
          @internal
       */
@@ -46,7 +66,7 @@ class TransactionMap
                return isEqualNoCase(branch1,branch2);
             }
       };
-
+#else
       /**
          @internal
       */
@@ -58,11 +78,14 @@ class TransactionMap
                return isLessThanNoCase(branch1,branch2);
             }
       };
+#endif
 
       // .bwc. If rutil/HashMap.hxx fails to find a hash_map impl for the 
       // platform we're using, it will #define HashMap to a std::map, which
       // takes different template args. We try to compensate for this here.
-#ifdef HASH_MAP_NAMESPACE
+#if  defined(__INTEL_COMPILER ) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310))
+     typedef HashMap<Data, TransactionState*, BranchCompare> Map;
+#elif defined(HASH_MAP_NAMESPACE)
      typedef HashMap<Data, TransactionState*, BranchHasher, BranchEqual> Map;
 #else
      typedef std::map<Data, TransactionState*, BranchCompare> Map;

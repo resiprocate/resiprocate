@@ -17,8 +17,9 @@
 #include <cassert>
 
 #include "rutil/Logger.hxx"
+//#include "rutil/WinLeakCheck.hxx"  // not compatible with placement new used below
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
-#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

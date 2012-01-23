@@ -18,7 +18,7 @@
 #include "rutil/Random.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "resip/stack/MsgHeaderScanner.hxx"
-#include "rutil/WinLeakCheck.hxx"
+//#include "rutil/WinLeakCheck.hxx"  // not compatible with placement new used below
 
 using namespace resip;
 using namespace std;
@@ -81,7 +81,7 @@ SipMessage::clear(bool leaveResponseStuff)
 {
    if(!leaveResponseStuff)
    {
-      bzero(mHeaderIndices,sizeof(mHeaderIndices));
+      memset(mHeaderIndices,0,sizeof(mHeaderIndices));
       mHeaders.clear();
       
       // !bwc! The "invalid" 0 index.
@@ -119,7 +119,7 @@ SipMessage::init(const SipMessage& rhs)
    }
    else
    {
-      mReason = new Data(rhs.mReason);
+      mReason = new Data(*rhs.mReason);
    }
    mTlsDomain = rhs.mTlsDomain;
 
