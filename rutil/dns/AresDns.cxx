@@ -20,6 +20,8 @@
 #if !defined(__CYGWIN__)
 #include <arpa/nameser.h>
 #endif
+#else
+#undef write  // Note:  ares.h defines write to be _write for WIN32 - we don't want that here, since we use fdset.write
 #endif
 
 using namespace resip;

@@ -298,15 +298,19 @@
     <ClCompile Include="dns\DnsSrvRecord.cxx" />
     <ClCompile Include="dns\DnsStub.cxx" />
     <ClCompile Include="DnsUtil.cxx" />
+    <ClCompile Include="dns\DnsThread.cxx" />
     <ClCompile Include="dns\ExternalDnsFactory.cxx" />
     <ClCompile Include="FdPoll.cxx" />
     <ClCompile Include="FileSystem.cxx" />
+    <ClCompile Include="GeneralCongestionManager.cxx" />
     <ClCompile Include="HeapInstanceCounter.cxx" />
     <ClCompile Include="dns\LocalDns.cxx" />
     <ClCompile Include="Lock.cxx" />
     <ClCompile Include="Log.cxx" />
     <ClCompile Include="MD5Stream.cxx" />
     <ClCompile Include="Mutex.cxx" />
+    <ClCompile Include="PoolBase.cxx" />
+    <ClCompile Include="SelectInterruptor.cxx" />
     <ClCompile Include="ssl\OpenSSLInit.cxx">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -346,6 +350,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractFifo.hxx" />
+    <ClInclude Include="CongestionManager.hxx" />
+    <ClInclude Include="ConsumerFifoBuffer.hxx" />
+    <ClInclude Include="DinkyPool.hxx" />
     <ClInclude Include="dns\AresCompat.hxx" />
     <ClInclude Include="dns\AresDns.hxx" />
     <ClInclude Include="AsyncID.hxx" />
@@ -367,12 +374,15 @@
     <ClInclude Include="dns\DnsSrvRecord.hxx" />
     <ClInclude Include="dns\DnsStub.hxx" />
     <ClInclude Include="DnsUtil.hxx" />
+    <ClInclude Include="dns\DnsThread.hxx" />
     <ClInclude Include="dns\ExternalDns.hxx" />
     <ClInclude Include="dns\ExternalDnsFactory.hxx" />
     <ClInclude Include="FdPoll.hxx" />
+    <ClInclude Include="FdSetIOObserver.hxx" />
     <ClInclude Include="Fifo.hxx" />
     <ClInclude Include="FileSystem.hxx" />
     <ClInclude Include="FiniteFifo.hxx" />
+    <ClInclude Include="GeneralCongestionManager.hxx" />
     <ClInclude Include="GenericIPAddress.hxx" />
     <ClInclude Include="HashMap.hxx" />
     <ClInclude Include="HeapInstanceCounter.hxx" />
@@ -385,6 +395,9 @@
     <ClInclude Include="Logger.hxx" />
     <ClInclude Include="MD5Stream.hxx" />
     <ClInclude Include="Mutex.hxx" />
+    <ClInclude Include="PoolBase.hxx" />
+    <ClInclude Include="ProducerFifoBuffer.hxx" />
+    <ClInclude Include="SelectInterruptor.hxx" />
     <ClInclude Include="ssl\OpenSSLInit.hxx" />
     <ClInclude Include="ParseBuffer.hxx" />
     <ClInclude Include="ParseException.hxx" />
@@ -403,6 +416,7 @@
     <ClInclude Include="SharedCount.hxx" />
     <ClInclude Include="SharedPtr.hxx" />
     <ClInclude Include="Socket.hxx" />
+    <ClInclude Include="StlPoolAllocator.hxx" />
     <ClInclude Include="stun\Stun.hxx" />
     <ClInclude Include="Subsystem.hxx" />
     <ClInclude Include="SysLogBuf.hxx" />
