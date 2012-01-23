@@ -269,7 +269,7 @@ class SipStack : public FdSetIOObserver
 
          @param version               Protocol Version:  V4 or V6
 
-		 @param stun                  Specifies whether STUN is enabled.
+         @param stun                  Specifies whether STUN is enabled.
 
          @param ipInterface           Specifies which ethernet interface to bind to. If set to
                                       Data::Empty, bind to all interfaces. Binding to all 
