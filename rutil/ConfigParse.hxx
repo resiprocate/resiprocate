@@ -20,10 +20,6 @@ public:
    void parseCommandLine(int argc, char** argv);
    void parseConfigFile(const resip::Data& filename);
 
-// subclass into repro
-//   void createDataStore(AbstractDb* db);
-//   Store* getDataStore() { return mStore; }
-
    bool getConfigValue(const resip::Data& name, resip::Data &value);
    resip::Data getConfigData(const resip::Data& name, const resip::Data& defaultValue, bool useDefaultIfEmpty=false);
 
@@ -53,10 +49,6 @@ protected:
 
    // Config filename from command line
    resip::Data mCmdLineConfigFilename;
-
-   // Database Store
-// subclass into repro
-//   Store* mStore;
 };
  
 }
