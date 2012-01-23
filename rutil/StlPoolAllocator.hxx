@@ -11,6 +11,10 @@
 #define RESIP_HAS_STATEFUL_ALLOCATOR_SUPPORT
 #endif
 
+#ifdef max  // Max is defined under WIN32 and conflicts with std::numeric_limits<size_type>::max use below
+#undef max
+#endif
+
 namespace resip
 {
 /**

@@ -15,7 +15,7 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
-#include "rutil/WinLeakCheck.hxx"
+//#include "rutil/WinLeakCheck.hxx"  // not compatible with placement new used below
 
 using namespace resip;
 
@@ -853,7 +853,7 @@ Uri::userIsTelephoneSubscriber() const
 
       return true;
    }
-   catch(ParseException& e)
+   catch(ParseException& /*e*/)
    {
       return false;
    }

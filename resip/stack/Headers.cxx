@@ -322,7 +322,7 @@ StatusLineType resip::h_StatusLine;
 Headers::Type
 Headers::getType(const char* name, int len)
 {
-   struct headers* p;
+   const struct headers* p;
    p = HeaderHash::in_word_set(name, len);
    return p ? Headers::Type(p->type) : Headers::UNKNOWN;
 }

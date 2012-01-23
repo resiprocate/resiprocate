@@ -678,7 +678,9 @@ main(int argc, char** argv)
    proxy.shutdown();
    stackThread->shutdown();
    if ( adminThread )
+   {
        adminThread->shutdown();
+   }
    if (dumThread)
    {
        dumThread->shutdown();
@@ -699,12 +701,16 @@ main(int argc, char** argv)
 
    proxy.join();
    stackThread->join();
-   if ( adminThread ) {
+   if ( adminThread ) 
+   {
       adminThread->join();
-      delete adminThread; adminThread = NULL;
+      delete adminThread; 
+      adminThread = NULL;
    }
-   if ( admin ) {
-      delete admin; admin = NULL;
+   if ( admin ) 
+   {
+      delete admin; 
+      admin = NULL;
    }
    if (dumThread)
    {

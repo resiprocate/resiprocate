@@ -139,7 +139,7 @@ class TransactionUser
       
       virtual UInt16 getExpectedWait() const
       {
-         return mFifo.expectedWaitTimeMilliSec();
+         return (UInt16)mFifo.expectedWaitTimeMilliSec();
       }
       
       // .bwc. This specifies whether the TU can cope with dropped responses

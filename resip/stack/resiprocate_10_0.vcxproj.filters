@@ -248,9 +248,6 @@
     <ClCompile Include="SecurityAttributes.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SelectInterruptor.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="SERNonceHelper.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -387,6 +384,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="EventStackThread.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TransportThread.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -649,9 +649,6 @@
     <ClInclude Include="SecurityTypes.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SelectInterruptor.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="SendData.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -821,6 +818,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TerminateFlow.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DnsResultMessage.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StartLine.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TransactionControllerThread.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TransportSelectorThread.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TransportThread.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

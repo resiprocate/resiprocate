@@ -104,7 +104,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"db-path",           0,   POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,&dbPath,         0, "path to databases", 0},
       {"record-route",     'r',  POPT_ARG_STRING,                            &recordRouteUri,    0, "specify uri to use as Record-Route", "sip:example.com"},
       {"force-record-route", 0,  POPT_ARG_NONE | POPT_ARGFLAG_SHOW_DEFAULT,  &forceRecordRoute,0,"force record-routing", 0},
-      {"assume-path",         0,  POPT_ARG_NONE | POPT_ARGFLAG_SHOW_DEFAULT,  &assumePath,       0,"assume path option", 0},
+      {"assume-path",        0,  POPT_ARG_NONE | POPT_ARGFLAG_SHOW_DEFAULT,  &assumePath,       0,"assume path option", 0},
 #if defined(USE_MYSQL)
       {"mysqlServer",      'x',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &mySqlServer,    0, "enable MySQL and provide name of server", "localhost"},
 #endif
@@ -123,11 +123,11 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
 #endif
       {"enable-v6",         0,   POPT_ARG_NONE,                              &enableV6,       0, "enable IPV6", 0},
       {"disable-v4",        0,   POPT_ARG_NONE,                              &disableV4,      0, "disable IPV4", 0},
-      {"threaded-stack",   0,   POPT_ARG_NONE, &threadedStack, 0, "enable multithreaded stack", 0},
-      {"use-congestion-manager",   0,   POPT_ARG_NONE, &useCongestionManager, 0, "enable congestion manager", 0},
+      {"threaded-stack",    0,   POPT_ARG_NONE,                              &threadedStack,  0, "enable multithreaded stack", 0},
+      {"use-congestion-manager",0,POPT_ARG_NONE,                             &useCongestionManager, 0, "enable congestion manager", 0},
       {"disable-auth",      0,   POPT_ARG_NONE,                              &noChallenge,    0, "disable DIGEST challenges", 0},
       {"disable-auth-int",  0,   POPT_ARG_NONE,                              &noAuthIntChallenge,0, "disable auth-int DIGEST challenges", 0},
-      {"reject-bad-nonces",  0,   POPT_ARG_NONE,                              &rejectBadNonces,0, "Send 403 if a client sends a bad nonce in their credentials (will send a new challenge otherwise)", 0},
+      {"reject-bad-nonces", 0,   POPT_ARG_NONE,                              &rejectBadNonces,0, "Send 403 if a client sends a bad nonce in their credentials (will send a new challenge otherwise)", 0},
       {"disable-web-auth",  0,   POPT_ARG_NONE,                              &noWebChallenge, 0, "disable HTTP challenges", 0},
       {"disable-reg",       0,   POPT_ARG_NONE,                              &noRegistrar,    0, "disable registrar", 0},
       {"disable-identity",  0,   POPT_ARG_NONE,                              &noIdentityHeaders, 0, "disable adding identity headers", 0},
@@ -215,8 +215,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mDtlsPort = dtlsPort;
    mUseV4 = !disableV4;
    mUseV6 = enableV6?true:false;
-   mThreadedStack = threadedStack;
-   mUseCongestionManager = useCongestionManager;
+   mThreadedStack = threadedStack != 0;
+   mUseCongestionManager = useCongestionManager != 0;
    mInterfaces = toVector(interfaces, "interfaces"); 
    mDomains = toVector(domains, "domains"); 
    mRouteSet = toVector(routeSet, "routeSet"); 
