@@ -1,8 +1,6 @@
 #if !defined(RESIP_TuSelector_HXX)
 #define RESIP_TuSelector_HXX 
 
-#include <stdint.h>
-
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/StatisticsMessage.hxx"
 #include "resip/stack/TransactionUserMessage.hxx"
@@ -46,7 +44,7 @@ class TuSelector
       
       void setCongestionManager(CongestionManager* manager);
       CongestionManager::RejectionBehavior getRejectionBehavior(TransactionUser* tu) const;
-      uint32_t getExpectedWait(TransactionUser* tu) const;
+      unsigned int getExpectedWait(TransactionUser* tu) const;
 
    private:
       void remove(TransactionUser* tu);

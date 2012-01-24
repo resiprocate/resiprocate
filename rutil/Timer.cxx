@@ -115,7 +115,6 @@ TransactionTimer::TransactionTimer(unsigned long ms,
    mDuration(ms)
 {}
 
-#ifndef RESIP_USE_STL_STREAMS
 std::ostream& 
 TransactionTimer::encode(std::ostream& str) const
 {
@@ -132,8 +131,8 @@ TransactionTimer::encode(std::ostream& str) const
    str << "]";
    return str;
 }
-#endif
 
+#ifndef RESIP_USE_STL_STREAMS
 EncodeStream& 
 TransactionTimer::encode(EncodeStream& str) const
 {
@@ -150,6 +149,7 @@ TransactionTimer::encode(EncodeStream& str) const
    str << "]";
    return str;
 }
+#endif
 
 TimerWithPayload::TimerWithPayload(unsigned long ms, Message* message) :
    mWhen(ms + Timer::getTimeMs()),
@@ -158,7 +158,6 @@ TimerWithPayload::TimerWithPayload(unsigned long ms, Message* message) :
    assert(mMessage);
 }
 
-#ifndef RESIP_USE_STL_STREAMS
 std::ostream& 
 TimerWithPayload::encode(std::ostream& str) const
 {
@@ -175,8 +174,8 @@ TimerWithPayload::encode(std::ostream& str) const
    str << "]";
    return str;
 }
-#endif
 
+#ifndef RESIP_USE_STL_STREAMS
 EncodeStream& 
 TimerWithPayload::encode(EncodeStream& str) const
 {
@@ -193,6 +192,7 @@ TimerWithPayload::encode(EncodeStream& str) const
    str << "]";
    return str;
 }
+#endif
 
 
 /* ====================================================================
