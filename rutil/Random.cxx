@@ -362,28 +362,24 @@ Random::getCryptoRandom(unsigned int len)
 Data 
 Random::getRandomHex(unsigned int numBytes)
 {
-   initialize();
    return Random::getRandom(numBytes).hex();
 }
 
 Data 
 Random::getRandomBase64(unsigned int numBytes)
 {
-   initialize();
    return Random::getRandom(numBytes).base64encode();
 }
 
 Data 
 Random::getCryptoRandomHex(unsigned int numBytes)
 {
-   initialize();
    return Random::getCryptoRandom(numBytes).hex();
 }
 
 Data 
 Random::getCryptoRandomBase64(unsigned int numBytes)
 {
-   initialize();
    return Random::getCryptoRandom(numBytes).base64encode();
 }
 
@@ -447,10 +443,10 @@ Random::getVersion4UuidUrn()
 void 
 Random::getCryptoRandom(unsigned char* buf, unsigned int numBytes)
 {
-   initialize();
    assert(numBytes < Random::maxLength+1);
 
 #if USE_OPENSSL
+   initialize();
    int e = RAND_bytes( (unsigned char*)buf , numBytes );
    if ( e < 0 )
    {
@@ -465,9 +461,8 @@ Random::getCryptoRandom(unsigned char* buf, unsigned int numBytes)
    }
 #else
    // !bwc! Should optimize this.
-   Data temp(Data::Borrow, (char*)buf, numBytes);
-   temp.clear();
-   temp=Random::getRandom(numBytes);
+   Data temp=Random::getRandom(numBytes);
+   memcpy(buf, temp.data(), numBytes);
 #endif
 }
 
