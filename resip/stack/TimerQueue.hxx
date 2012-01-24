@@ -117,19 +117,19 @@ class TimerQueue
          return mTimers.empty();
       }
 
-#ifndef RESIP_USE_STL_STREAMS
       std::ostream& encode(std::ostream& str) const
       {
          return str << "TimerQueue[ size =" << mTimers.size() 
                << " top=" << mTimers.top() << "]" ;
       }
-#endif
 
+#ifndef RESIP_USE_STL_STREAMS
       EncodeStream& encode(EncodeStream& str) const
       {
          return str << "TimerQueue[ size =" << mTimers.size() 
                << " top=" << mTimers.top() << "]" ;
       }
+#endif
 
    protected:
       typedef std::vector<T, std::allocator<T> > TimerVector;
@@ -210,19 +210,19 @@ class DtlsTimerQueue : public TimerQueue<TimerWithPayload>
 
 #endif
 
-#ifndef RESIP_USE_STL_STREAMS
 template <class T>
 std::ostream& operator<<(std::ostream& str, const TimerQueue<T>& tq)
 {
    return tq.encode(str);
 }
-#endif
 
+#ifndef RESIP_USE_STL_STREAMS
 template <class T>
 EncodeStream& operator<<(EncodeStream& str, const TimerQueue<T>& tq)
 {
    return tq.encode(str);
 }
+#endif
 
 
 }

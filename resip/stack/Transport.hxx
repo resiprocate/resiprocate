@@ -1,8 +1,6 @@
 #if !defined(RESIP_TRANSPORT_HXX)
 #define RESIP_TRANSPORT_HXX
 
-#include <stdint.h>
-
 #include "rutil/BaseException.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/FdSetIOObserver.hxx"
@@ -338,9 +336,9 @@ class Transport : public FdSetIOObserver
          return CongestionManager::NORMAL;
       }
 
-      uint32_t getExpectedWaitForIncoming() const
+      UInt32 getExpectedWaitForIncoming() const
       {
-         return (uint32_t)mStateMachineFifo.getFifo().expectedWaitTimeMilliSec()/1000;
+         return (UInt32)mStateMachineFifo.getFifo().expectedWaitTimeMilliSec()/1000;
       }
 
       // called by Connection to deliver a received message

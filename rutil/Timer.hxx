@@ -142,9 +142,9 @@ class TransactionTimer
 
       UInt64 getWhen() const {return mWhen;}
 #ifndef RESIP_USE_STL_STREAMS
-      std::ostream& encode(std::ostream& str) const;
-#endif
       EncodeStream& encode(EncodeStream& str) const;
+#endif
+      std::ostream& encode(std::ostream& str) const;
 
       inline bool operator<(const TransactionTimer& rhs) const
       {
@@ -181,9 +181,9 @@ class TimerWithPayload
 
       UInt64 getWhen() const {return mWhen;}
 #ifndef RESIP_USE_STL_STREAMS
-      std::ostream& encode(std::ostream& str) const;
-#endif
       EncodeStream& encode(EncodeStream& str) const;
+#endif
+      std::ostream& encode(std::ostream& str) const;
 
       inline bool operator<(const TimerWithPayload& rhs) const
       {
@@ -205,7 +205,6 @@ class TimerWithPayload
 };
 
 
-#ifndef RESIP_USE_STL_STREAMS
 inline std::ostream& operator<<(std::ostream& str, const TransactionTimer& t)
 {
    return t.encode(str);
@@ -216,7 +215,7 @@ inline std::ostream& operator<<(std::ostream& str, const TimerWithPayload& t)
    return t.encode(str);
 }
 
-#endif
+#ifndef RESIP_USE_STL_STREAMS
 inline EncodeStream& operator<<(EncodeStream& str, const TransactionTimer& t)
 {
    return t.encode(str);
@@ -226,7 +225,7 @@ inline EncodeStream& operator<<(EncodeStream& str, const TimerWithPayload& t)
 {
    return t.encode(str);
 }
-
+#endif
 
 }
 

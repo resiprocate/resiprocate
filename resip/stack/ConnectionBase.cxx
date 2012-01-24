@@ -389,7 +389,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                      || (b==CongestionManager::REJECTING_NEW_WORK
                         && mMessage->isRequest()))
                {
-                  uint32_t expectedWait(mTransport->getExpectedWaitForIncoming());
+                  UInt32 expectedWait(mTransport->getExpectedWaitForIncoming());
                   // .bwc. If this fifo is REJECTING_NEW_WORK, we will drop
                   // requests but not responses ( ?bwc? is this right for ACK?). 
                   // If we are REJECTING_NON_ESSENTIAL, 
@@ -463,7 +463,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                   || (b==CongestionManager::REJECTING_NEW_WORK
                      && mMessage->isRequest()))
             {
-               uint32_t expectedWait(mTransport->getExpectedWaitForIncoming());
+               UInt32 expectedWait(mTransport->getExpectedWaitForIncoming());
                // .bwc. If this fifo is REJECTING_NEW_WORK, we will drop
                // requests but not responses ( ?bwc? is this right for ACK?). 
                // If we are REJECTING_NON_ESSENTIAL, 
