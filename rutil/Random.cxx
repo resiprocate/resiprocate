@@ -133,6 +133,8 @@ Random::initialize()
       Lock lock(mMutex);      
       if (!Random::mInitializer.isInitialized())
       {
+         Random::mInitializer.setInitialized();
+
          unsigned seed = getSimpleSeed();
          srand(seed);
 
@@ -299,7 +301,7 @@ Random::getRandom()
 #else
    // random returns [0,RAN_MAX]. On Linux, this is 31 bits and positive.
    // On some platforms it might be on 15 bits, and will need to do something.
-   assert( RAND_MAX == ((1<<31)-1) );
+   // assert( RAND_MAX == ((1<<31)-1) );  // ?slg? commented out assert since, RAND_MAX is not used in random(), it applies to rand() only
    return random(); 
 #endif  // THREAD_LOCAL
 #endif // WIN32

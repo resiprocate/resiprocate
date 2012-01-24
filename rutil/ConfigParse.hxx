@@ -1,66 +1,54 @@
-#if !defined(DUM_CommandLineParser_hxx)
-#define DUM_CommandLineParser_hxx
+#if !defined(ConfigParse_hxx)
+#define ConfigParse_hxx
 
+#include <map>
 #include <vector>
-#include "resip/stack/Uri.hxx"
-#include "rutil/Data.hxx"
+#include <rutil/Data.hxx>
 
 namespace resip
 {
 
-class CommandLineParser
+class ConfigParse
 {
-   public:
-      CommandLineParser(int argc, char** argv);
-      static resip::Uri toUri(const char* input, const char* description);
-      static std::vector<resip::Data> toVector(const char* input, const char* description);
-      
-      Data mLogType;
-      Data mLogLevel;
-      Data mTlsDomain;
-      Data mEnumSuffix;
-      bool mForceRecordRoute;
-      bool mAssumePath;
-      resip::Uri mRecordRoute;
-      int mUdpPort;
-      int mTcpPort;
-      int mTlsPort;
-      int mDtlsPort;
-      bool mUseV4;
-      bool mUseV6;
-      bool mThreadedStack;
-      bool mUseCongestionManager;
-      std::vector<Data> mDomains;
-      std::vector<Data> mInterfaces;
-      std::vector<Data> mRouteSet;
-      Data mCertPath;
-      Data mDbPath;
-      bool mNoChallenge;
-      bool mNoAuthIntChallenge;
-      bool mRejectBadNonces;
-      bool mNoWebChallenge;
-      bool mNoRegistrar;
-      bool mNoIdentityHeaders;
-      bool mCertServer;
-      Data mRequestProcessorChainName;
-      Data mMySqlServer;
-      Data mHttpHostname;
-      int mHttpPort;
-      bool mRecursiveRedirect;
-      bool mDoQValue;
-      Data mForkBehavior;
-      bool mCancelBetweenForkGroups;
-      bool mWaitForTerminate;
-      int mMsBetweenForkGroups;
-      int mMsBeforeCancel;
-      bool mAllowBadReg;
-      bool mParallelForkStaticRoutes;
-      int mTimerC;
-      Data mAdminPassword;
-      Data mRegSyncPeerAddress;
-      int mXmlRpcPort;
-      Data mServerText;
-      int mOverrideT1;
+public:
+   ConfigParse();
+   ConfigParse(int argc, char** argv, const resip::Data& defaultConfigFilename);
+   virtual ~ConfigParse();
+
+   virtual void printHelpText(int argc, char **argv) = 0;
+
+   void parseCommandLine(int argc, char** argv);
+   void parseConfigFile(const resip::Data& filename);
+
+   bool getConfigValue(const resip::Data& name, resip::Data &value);
+   resip::Data getConfigData(const resip::Data& name, const resip::Data& defaultValue, bool useDefaultIfEmpty=false);
+
+   bool getConfigValue(const resip::Data& name, bool &value);
+   bool getConfigBool(const resip::Data& name, bool defaultValue);
+   
+   bool getConfigValue(const resip::Data& name, unsigned long &value);
+   unsigned long getConfigUnsignedLong(const resip::Data& name, unsigned long defaultValue);
+
+   bool getConfigValue(const resip::Data& name, int &value);
+   int getConfigInt(const resip::Data& name, int defaultValue);
+
+   bool getConfigValue(const resip::Data& name, unsigned short &value);
+   unsigned short getConfigUnsignedShort(const resip::Data& name, int defaultValue);
+
+// FIXME: subclass into resip
+//   bool getConfigValue(const resip::Data& name, resip::Uri &value);
+//   resip::Uri getConfigUri(const resip::Data& name, const resip::Uri defaultValue, bool useDefaultIfEmpty=false);
+
+   bool getConfigValue(const resip::Data& name, std::vector<resip::Data> &value);
+   
+protected:
+   void insertConfigValue(const resip::Data& name, const resip::Data& value);
+
+   typedef std::multimap<resip::Data, resip::Data> ConfigValuesMap;
+   ConfigValuesMap mConfigValues;
+
+   // Config filename from command line
+   resip::Data mCmdLineConfigFilename;
 };
  
 }
@@ -70,7 +58,7 @@ class CommandLineParser
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -115,6 +103,4 @@ class CommandLineParser
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
- * vi: set shiftwidth=3 expandtab:
  */
-

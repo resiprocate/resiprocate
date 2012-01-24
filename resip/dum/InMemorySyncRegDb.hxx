@@ -15,6 +15,7 @@ namespace resip
 class InMemorySyncRegDbHandler
 {
 public:
+    virtual ~InMemorySyncRegDbHandler(){}
     virtual void onAorModified(const resip::Uri& aor, const ContactList& contacts) = 0;
     virtual void onInitialSyncAor(unsigned int connectionId, const resip::Uri& aor, const ContactList& contacts) = 0;
 };

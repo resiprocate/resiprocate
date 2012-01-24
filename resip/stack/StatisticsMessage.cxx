@@ -138,18 +138,33 @@ StatisticsMessage::logStats(const resip::Subsystem& subsystem,
               << " SUBo " << stats.requestsSentByMethod[SUBSCRIBE] << "/S" << stats.sum2xxIn(SUBSCRIBE) << "/F" << stats.sumErrIn(SUBSCRIBE)
               << " NOTi " << stats.requestsReceivedByMethod[NOTIFY] << "/S" << stats.sum2xxOut(NOTIFY) << "/F" << stats.sumErrOut(NOTIFY)
               << " NOTo " << stats.requestsSentByMethod[NOTIFY] << "/S" << stats.sum2xxIn(NOTIFY) << "/F" << stats.sumErrIn(NOTIFY)
+              << " REFi " << stats.requestsReceivedByMethod[REFER] << "/S" << stats.sum2xxOut(REFER) << "/F" << stats.sumErrOut(REFER)
+              << " REFo " << stats.requestsSentByMethod[REFER] << "/S" << stats.sum2xxIn(REFER) << "/F" << stats.sumErrIn(REFER)
+              << " INFi " << stats.requestsReceivedByMethod[INFO] << "/S" << stats.sum2xxOut(INFO) << "/F" << stats.sumErrOut(INFO)
+              << " INFo " << stats.requestsSentByMethod[INFO] << "/S" << stats.sum2xxIn(INFO) << "/F" << stats.sumErrIn(INFO)
+              << " PRAi " << stats.requestsReceivedByMethod[PRACK] << "/S" << stats.sum2xxOut(PRACK) << "/F" << stats.sumErrOut(PRACK)
+              << " PRAo " << stats.requestsSentByMethod[PRACK] << "/S" << stats.sum2xxIn(PRACK) << "/F" << stats.sumErrIn(PRACK)
+              << " SERi " << stats.requestsReceivedByMethod[SERVICE] << "/S" << stats.sum2xxOut(SERVICE) << "/F" << stats.sumErrOut(SERVICE)
+              << " SERo " << stats.requestsSentByMethod[SERVICE] << "/S" << stats.sum2xxIn(SERVICE) << "/F" << stats.sumErrIn(SERVICE)
+              << " UPDi " << stats.requestsReceivedByMethod[UPDATE] << "/S" << stats.sum2xxOut(UPDATE) << "/F" << stats.sumErrOut(UPDATE)
+              << " UPDo " << stats.requestsSentByMethod[UPDATE] << "/S" << stats.sum2xxIn(UPDATE) << "/F" << stats.sumErrIn(UPDATE)
               << std::endl
               << "Retransmissions: INVx " << stats.requestsRetransmittedByMethod[INVITE]
+              << " finx " << retriesFinal
+              << " nonx " << retriesNonFinal
               << " BYEx " << stats.requestsRetransmittedByMethod[BYE]
               << " CANx " << stats.requestsRetransmittedByMethod[CANCEL]
               << " MSGx " << stats.requestsRetransmittedByMethod[MESSAGE]
               << " OPTx " << stats.requestsRetransmittedByMethod[OPTIONS]
               << " REGx " << stats.requestsRetransmittedByMethod[REGISTER]
-              << " finx " << retriesFinal
-              << " nonx " << retriesNonFinal
               << " PUBx " << stats.requestsRetransmittedByMethod[PUBLISH]
               << " SUBx " << stats.requestsRetransmittedByMethod[SUBSCRIBE]
-              << " NOTx " << stats.requestsRetransmittedByMethod[NOTIFY]);
+              << " NOTx " << stats.requestsRetransmittedByMethod[NOTIFY]
+              << " REFx " << stats.requestsRetransmittedByMethod[REFER]
+              << " INFx " << stats.requestsRetransmittedByMethod[INFO]
+              << " PRAx " << stats.requestsRetransmittedByMethod[PRACK]
+              << " SERx " << stats.requestsRetransmittedByMethod[SERVICE]
+              << " UPDx " << stats.requestsRetransmittedByMethod[UPDATE]);
 }
 
 

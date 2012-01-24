@@ -1322,9 +1322,9 @@ Helper::updateNonceCount(unsigned int& nonceCount, Data& nonceCountString)
 	   *buf = 0;
 
 #if (defined(_MSC_VER) && _MSC_VER >= 1400)
-	   sprintf_s(buf,128,"%08X",nonceCount);
+	   sprintf_s(buf,128,"%08x",nonceCount);
 #else
-	   sprintf(buf,"%08X",nonceCount);
+	   sprintf(buf,"%08x",nonceCount);
 #endif
 	   nonceCountString = buf;
    }

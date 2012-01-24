@@ -128,7 +128,7 @@ ParameterTypes::Factory Token::ParameterFactories[ParameterTypes::MAX_PARAMETER]
 Parameter* 
 Token::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool)
 {
-   if(ParameterFactories[type])
+   if(type > ParameterTypes::UNKNOWN && type < ParameterTypes::MAX_PARAMETER && ParameterFactories[type])
    {
       return ParameterFactories[type](type, pb, terminators, pool);
    }

@@ -289,6 +289,9 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       bool process(Lockable* mutex = NULL);  // non-blocking
       bool process(int timeoutMs, Lockable* mutex = NULL);   // Specify -1 for infinte timeout
 
+      AppDialogHandle findAppDialog(const DialogId& id);
+      AppDialogSetHandle findAppDialogSet(const DialogSetId& id);
+
       InviteSessionHandle findInviteSession(DialogId id);
       //if the handle is inValid, int represents the errorcode
       std::pair<InviteSessionHandle, int> findInviteSession(CallId replaces);

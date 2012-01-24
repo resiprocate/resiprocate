@@ -44,7 +44,8 @@ TcpConnection::start()
 void 
 TcpConnection::stop()
 {
-  mSocket.close();
+   asio::error_code ec;
+   mSocket.close(ec);
 }
 
 void 

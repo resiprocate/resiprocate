@@ -3,6 +3,7 @@
 #endif
 
 #include "repro/Proxy.hxx"
+#include "repro/ProxyConfig.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/monkeys/SimpleStaticRoute.hxx"
 #include "resip/stack/Helper.hxx"
@@ -18,9 +19,25 @@ using namespace repro;
 using namespace std;
 
 
-SimpleStaticRoute::SimpleStaticRoute(const resip::NameAddrs& routes) :
-   mRouteSet(routes)
-{}
+SimpleStaticRoute::SimpleStaticRoute(ProxyConfig& config)
+{
+   std::vector<Data> routeSet;
+   config.getConfigValue("Routes", routeSet);
+
+   resip::NameAddrs routes;
+   for (std::vector<Data>::iterator i=routeSet.begin(); 
+        i != routeSet.end(); ++i)
+   {
+      try
+      {
+         mRouteSet.push_back(NameAddr(*i));
+      }
+      catch(BaseException& ex)
+      {
+         WarningLog(<< "SimpleStaticRoute: Skipping invalid route (" << *i << "): " << ex);
+      }
+   }
+}
 
 SimpleStaticRoute::~SimpleStaticRoute()
 {}

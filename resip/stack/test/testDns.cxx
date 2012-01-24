@@ -222,7 +222,7 @@ class TestMarkListener : public MarkListener
       {}
       virtual ~TestMarkListener(){}
       
-      virtual void onMark(const Tuple& tuple, TupleMarkManager::MarkType mark)
+      virtual void onMark(const Tuple& tuple, UInt64& expiry, TupleMarkManager::MarkType& mark)
       {
          if(mTuple == tuple)
          {

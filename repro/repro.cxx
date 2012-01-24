@@ -7,6 +7,7 @@
 #include "resip/stack/EventStackThread.hxx"
 #include "resip/stack/Tuple.hxx"
 #include "resip/stack/InteropHelper.hxx"
+#include "resip/stack/ConnectionManager.hxx"
 #include "resip/dum/DumThread.hxx"
 #include "resip/dum/InMemoryRegistrationDatabase.hxx"
 #include "rutil/DnsUtil.hxx"
@@ -16,7 +17,7 @@
 #include "rutil/Inserter.hxx"
 #include "rutil/FdPoll.hxx"
 
-#include "repro/CommandLineParser.hxx"
+#include "repro/ProxyConfig.hxx"
 #include "repro/Proxy.hxx"
 #include "repro/Registrar.hxx"
 #include "repro/ReproServerAuthManager.hxx"
@@ -70,27 +71,54 @@ signalHandler(int signo)
    finished = true;
 }
 
+class ReproLogger : public ExternalLogger
+{
+public:
+   virtual ~ReproLogger() {}
+   /** return true to also do default logging, false to supress default logging. */
+   virtual bool operator()(Log::Level level,
+                           const Subsystem& subsystem, 
+                           const Data& appName,
+                           const char* file,
+                           int line,
+                           const Data& message,
+                           const Data& messageWithHeaders)
+   {
+      // Log any errors to the screen 
+      if(level <= Log::Err)
+      {
+         resipCout << messageWithHeaders << endl;
+      }
+      return true;
+   }
+};
+ReproLogger g_ReproLogger;
+
 Data
-addDomains(TransactionUser& tu, CommandLineParser& args, Store& store)
+addDomains(TransactionUser& tu, ProxyConfig& config, bool log)
 {
    Data realm;
    
-   for (std::vector<Data>::const_iterator i=args.mDomains.begin(); 
-        i != args.mDomains.end(); ++i)
+   std::vector<Data> configDomains;
+   if(config.getConfigValue("Domains", configDomains))
    {
-      InfoLog (<< "Adding domain " << *i << " from command line");
-      tu.addDomain(*i);
-      if ( realm.empty() )
+      for (std::vector<Data>::const_iterator i=configDomains.begin(); 
+         i != configDomains.end(); ++i)
       {
-         realm = *i;
+         if(log) InfoLog (<< "Adding domain " << *i << " from command line");
+         tu.addDomain(*i);
+         if ( realm.empty() )
+         {
+            realm = *i;
+         }
       }
    }
 
-   const ConfigStore::ConfigData& dList = store.mConfigStore.getConfigs();
+   const ConfigStore::ConfigData& dList = config.getDataStore()->mConfigStore.getConfigs();
    for (  ConfigStore::ConfigData::const_iterator i=dList.begin(); 
            i != dList.end(); ++i)
    {
-      InfoLog (<< "Adding domain " << i->second.mDomain << " from config");
+      if(log) InfoLog (<< "Adding domain " << i->second.mDomain << " from config");
       tu.addDomain( i->second.mDomain );
       if ( realm.empty() )
       {
@@ -99,13 +127,14 @@ addDomains(TransactionUser& tu, CommandLineParser& args, Store& store)
    }
 
    Data localhostname(DnsUtil::getLocalHostName());
-   InfoLog (<< "Adding local hostname domain " << localhostname );
+   if(log) InfoLog (<< "Adding local hostname domain " << localhostname );
    tu.addDomain(localhostname);
    if ( realm.empty() )
    {
       realm = localhostname;
    }
 
+   if(log) InfoLog (<< "Adding localhost domain.");
    tu.addDomain("localhost");
    if ( realm.empty() )
    {
@@ -115,10 +144,11 @@ addDomains(TransactionUser& tu, CommandLineParser& args, Store& store)
    list<pair<Data,Data> > ips = DnsUtil::getInterfaces();
    for ( list<pair<Data,Data> >::const_iterator i=ips.begin(); i!=ips.end(); i++)
    {
-      InfoLog( << "Adding domain for IP " << i->second << " from interface " << i->first  );
+      if(log) InfoLog( << "Adding domain for IP " << i->second << " from interface " << i->first  );
       tu.addDomain(i->second);
    }
 
+   if(log) InfoLog (<< "Adding 127.0.0.1 domain.");
    tu.addDomain("127.0.0.1");
 
    return realm;
@@ -151,22 +181,24 @@ main(int argc, char** argv)
 
    /* Initialize a stack */
    initNetwork();
-   CommandLineParser args(argc, argv);
-   if(args.mLogType.lowercase() == "file")
-   {
-      GenericLogImpl::MaxLineCount = 50000; // 50000 about 5M size - should make this configurable
-      Log::initialize("file", args.mLogLevel, argv[0], "repro_log.txt");
-   }
-   else
-   {
-      Log::initialize(args.mLogType, args.mLogLevel, argv[0]);
-   }
 
-   if(args.mOverrideT1)
+   Data configFilename("repro.config");
+   ProxyConfig config(argc, argv, configFilename);
+
+   GenericLogImpl::MaxByteCount = config.getConfigUnsignedLong("LogFileMaxBytes", 5242880 /*5 Mb */);
+   Data loggingType = config.getConfigData("LoggingType", "cout", true);
+   Log::initialize(loggingType, 
+                   config.getConfigData("LogLevel", "INFO", true), 
+                   argv[0], 
+                   config.getConfigData("LogFilename", "repro.log", true).c_str(),
+                   isEqualNoCase(loggingType, "file") ? &g_ReproLogger : 0); // if logging to file then write WARNINGS, and Errors to console still
+
+   unsigned long overrideT1 = config.getConfigInt("TimerT1", 0);
+   if(overrideT1)
    {
       WarningLog(<< "Overriding T1! (new value is " << 
-               args.mOverrideT1 << ")");
-      resip::Timer::resetT1(args.mOverrideT1);
+               overrideT1 << ")");
+      resip::Timer::resetT1(overrideT1);
    }
 
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
@@ -177,7 +209,14 @@ main(int argc, char** argv)
    Compression* compression = 0;
 
 #ifdef USE_SSL
-   security = new Security(args.mCertPath);
+#ifdef WIN32
+   Data certPath("C:\\sipCerts");
+#else 
+   Data certPath(getenv("HOME"));
+   certPath += "/.sipCerts";
+#endif
+   config.getConfigValue("CertificatePath", certPath);
+   security = new Security(certPath);
 #endif
 
 #ifdef USE_SIGCOMP
@@ -188,8 +227,32 @@ main(int argc, char** argv)
    std::auto_ptr<SelectInterruptor> threadInterruptor(NULL);
    pollGrp.reset(FdPollGrp::create());
    threadInterruptor.reset(new EventThreadInterruptor(*pollGrp));
+   //threadInterruptor.reset(new SelectInterruptor());
 
-   SipStack stack(security,DnsStub::EmptyNameserverList,
+   bool useV4 = !config.getConfigBool("DisableIPv4", false);
+#ifdef USE_IPV6
+   bool useV6 = config.getConfigBool("EnableIPv6", true);
+#else
+   bool useV6 = false;
+#endif
+   if (useV4) InfoLog (<< "V4 enabled");
+   if (useV6) InfoLog (<< "V6 enabled");
+
+   // Build DNS Server list from config
+   DnsStub::NameserverList dnsServers;
+   std::vector<resip::Data> dnsServersConfig;
+   config.getConfigValue("DNSServers", dnsServersConfig);
+   for(std::vector<resip::Data>::iterator it = dnsServersConfig.begin(); it != dnsServersConfig.end(); it++)
+   {
+      if((useV4 && DnsUtil::isIpV4Address(*it)) || (useV6 && DnsUtil::isIpV6Address(*it)))
+      {
+         InfoLog(<< "Using DNS Server from config: " << *it);
+         dnsServers.push_back(Tuple(*it, 0, UNKNOWN_TRANSPORT).toGenericIPAddress());
+      }
+   }
+
+   SipStack stack(security,
+                  dnsServers,
                   threadInterruptor.get(),
                   /*stateless*/false,
                   /*socketFunc*/0,
@@ -197,48 +260,75 @@ main(int argc, char** argv)
                   pollGrp.get());
 
    std::vector<Data> enumSuffixes;
-   if (!args.mEnumSuffix.empty())
+   config.getConfigValue("EnumSuffixes", enumSuffixes);
+   if (enumSuffixes.size() > 0)
    {
-      enumSuffixes.push_back(args.mEnumSuffix);
       stack.setEnumSuffixes(enumSuffixes);
    }
 
    bool allTransportsSpecifyRecordRoute=false;
    try
    {
-      // An example of how to use this follows. This sets up 2 transports, 1 TLS
-      // and 1 UDP. TLS domain is bound to example.com. 
-      // repro -i "sip:192.168.1.200:5060;transport=tls;tls=example.com,sip:192.168.1.200:5060;transport=udp"
-      // Note: If you specify interfaces the other transport arguments have no effect
-      if (!args.mInterfaces.empty())
+      // Check if advanced transport settings are provided
+      unsigned int transportNum = 1;
+      Data settingKeyBase("Transport" + Data(transportNum));
+      Data interfaceSettingKey(settingKeyBase + "Interface");
+      Data interfaceSettings = config.getConfigData(interfaceSettingKey, "", true);
+      if(!interfaceSettings.empty())
       {
-         allTransportsSpecifyRecordRoute = true;
-         for (std::vector<Data>::iterator i=args.mInterfaces.begin(); 
-              i != args.mInterfaces.end(); ++i)
-         {
-            try
-            {
-               Uri intf(*i);
-               if(!DnsUtil::isIpAddress(intf.host()))
-               {
-                  CritLog(<< "Malformed IP-address found in the --interfaces (-i) command-line option: " << intf.host());
-               }
-               TransportType tt = Tuple::toTransport(intf.param(p_transport));
-               ExtensionParameter p_rcvbuf("rcvbuf"); // SO_RCVBUF
-               int rcvBufLen = 0;
-               if (intf.exists(p_rcvbuf) && !intf.param(p_rcvbuf).empty())
-               {
-                  rcvBufLen = intf.param(p_rcvbuf).convertInt();
-               }
-               // maybe do transport-type dependent processing of buf?
+         // Sample config file format for advanced transport settings
+         // Transport1Interface = 192.168.1.106:5061
+         // Transport1Type = TLS
+         // Transprot1TlsDomain = sipdomain.com
+         // Transport1RecordRouteUri = sip:sipdomain.com;transport=TLS
+         // Transport1RcvBufLen = 2000
 
-               ExtensionParameter p_tls("tls"); // for specifying tls domain
+         allTransportsSpecifyRecordRoute = true;
+
+         const char *anchor;
+         while(!interfaceSettings.empty())
+         {
+            Data typeSettingKey(settingKeyBase + "Type");
+            Data tlsDomainSettingKey(settingKeyBase + "TlsDomain");
+            Data recordRouteUriSettingKey(settingKeyBase + "RecordRouteUri");
+            Data rcvBufSettingKey(settingKeyBase + "RcvBufLen");
+
+            // Parse out interface settings
+            ParseBuffer pb(interfaceSettings);
+            anchor = pb.position();
+            pb.skipToChar(':');
+            if(!pb.eof())
+            {
+               Data ipAddr;
+               Data portData;
+               pb.data(ipAddr, anchor);
+               pb.skipChar();
+               anchor = pb.position();
+               pb.skipToEnd();
+               pb.data(portData, anchor);
+               if(!DnsUtil::isIpAddress(ipAddr))
+               {
+                  CritLog(<< "Malformed IP-address found in " << interfaceSettingKey << " setting: " << ipAddr);
+               }
+               int port = portData.convertInt();
+               if(port == 0)
+               {
+                  CritLog(<< "Invalid port found in " << interfaceSettingKey << " setting: " << port);
+               }
+               TransportType tt = Tuple::toTransport(config.getConfigData(typeSettingKey, "UDP"));
+               if(tt == UNKNOWN_TRANSPORT)
+               {
+                  CritLog(<< "Unknown transport type found in " << typeSettingKey << " setting: " << config.getConfigData(typeSettingKey, "UDP"));
+               }
+               Data tlsDomain = config.getConfigData(tlsDomainSettingKey, "");
+               int rcvBufLen = config.getConfigInt(rcvBufSettingKey, 0);
                Transport *t = stack.addTransport(tt,
-                                 intf.port(),
-                                 DnsUtil::isIpV6Address(intf.host()) ? V6 : V4,
+                                 port,
+                                 DnsUtil::isIpV6Address(ipAddr) ? V6 : V4,
                                  StunEnabled, 
-                                 intf.host(), // interface to bind to
-                                 intf.param(p_tls));
+                                 ipAddr, // interface to bind to
+                                 tlsDomain);
+
                if (t && rcvBufLen>0 )
                {
 #if defined(RESIP_SIPSTACK_HAVE_FDPOLL)
@@ -249,20 +339,19 @@ main(int argc, char** argv)
                    assert(0);
 #endif
                }
-               ExtensionParameter p_rr("rr"); // for specifying transport specific record route
-               if(intf.exists(p_rr))
+
+               Data recordRouteUri = config.getConfigData(recordRouteUriSettingKey, "");
+               if(!recordRouteUri.empty())
                {
-                  // Note:  Any ';' in record-route must be escaped as %3b
-                  // repro -i "sip:192.168.1.200:5060;transport=tcp;rr=sip:example.com%3btransport=tcp,sip:192.168.1.200:5060;transport=udp;rr=sip:example.com%3btransport=udp"
                   try
                   {
-                     if(intf.param(p_rr).empty())
+                     if(isEqualNoCase(recordRouteUri, "auto")) // auto generated record route uri
                      {
                         if(tt == TLS || tt == DTLS)
                         {
                            NameAddr rr;
-                           rr.uri().host()=intf.param(p_tls);
-                           rr.uri().port()=intf.port();
+                           rr.uri().host()=tlsDomain;
+                           rr.uri().port()=port;
                            rr.uri().param(resip::p_transport)=resip::Tuple::toDataLower(tt);
                            t->setRecordRoute(rr);
                            InfoLog (<< "Transport specific record-route enabled (generated): " << rr);
@@ -270,8 +359,8 @@ main(int argc, char** argv)
                         else
                         {
                            NameAddr rr;
-                           rr.uri().host()=intf.host();
-                           rr.uri().port()=intf.port();
+                           rr.uri().host()=ipAddr;
+                           rr.uri().port()=port;
                            rr.uri().param(resip::p_transport)=resip::Tuple::toDataLower(tt);
                            t->setRecordRoute(rr);
                            InfoLog (<< "Transport specific record-route enabled (generated): " << rr);
@@ -279,14 +368,14 @@ main(int argc, char** argv)
                      }
                      else
                      {
-                        NameAddr rr(intf.param(p_rr).charUnencoded());
+                        NameAddr rr(recordRouteUri);
                         t->setRecordRoute(rr);
                         InfoLog (<< "Transport specific record-route enabled: " << rr);
                      }
                   }
                   catch(BaseException& e)
                   {
-                     ErrLog (<< "Invalid transport record-route uri provided (ignoring): " << e);
+                     ErrLog (<< "Invalid uri provided in " << recordRouteUriSettingKey << " setting (ignoring): " << e);
                      allTransportsSpecifyRecordRoute = false;
                   }
                }
@@ -295,36 +384,46 @@ main(int argc, char** argv)
                   allTransportsSpecifyRecordRoute = false;
                }
             }
-            catch(ParseException& e)
+            else
             {
-               ErrLog (<< "Invalid transport uri provided (ignoring): " << e);
+               CritLog(<< "Port not specified in " << interfaceSettingKey << " setting: expected format is <IPAddress>:<Port>");
+               exit(-1);
             }
+
+            // Check if there is another transport
+            transportNum++;
+            settingKeyBase = Data("Transport" + Data(transportNum));
+            interfaceSettingKey = Data(settingKeyBase + "Interface");
+            interfaceSettings = config.getConfigData(interfaceSettingKey, "", true);
          }
       }
       else
       {
-         if (args.mUseV4) InfoLog (<< "V4 enabled");
-         if (args.mUseV6) InfoLog (<< "V6 enabled");         
+         int udpPort = config.getConfigInt("UDPPort", 5060);
+         int tcpPort = config.getConfigInt("TCPPort", 5060);
+         int tlsPort = config.getConfigInt("TLSPort", 5061);
+         int dtlsPort = config.getConfigInt("DTLSPort", 0);
+         Data tlsDomain = config.getConfigData("TLSDomainName", "");
 
-         if (args.mUdpPort)
+         if (udpPort)
          {
-            if (args.mUseV4) stack.addTransport(UDP, args.mUdpPort, V4, StunEnabled);
-            if (args.mUseV6) stack.addTransport(UDP, args.mUdpPort, V6, StunEnabled);
+            if (useV4) stack.addTransport(UDP, udpPort, V4, StunEnabled);
+            if (useV6) stack.addTransport(UDP, udpPort, V6, StunEnabled);
          }
-         if (args.mTcpPort)
+         if (tcpPort)
          {
-            if (args.mUseV4) stack.addTransport(TCP, args.mTcpPort, V4, StunEnabled);
-            if (args.mUseV6) stack.addTransport(TCP, args.mTcpPort, V6, StunEnabled);
+            if (useV4) stack.addTransport(TCP, tcpPort, V4, StunEnabled);
+            if (useV6) stack.addTransport(TCP, tcpPort, V6, StunEnabled);
          }
-         if (args.mTlsPort)
+         if (tlsPort)
          {
-            if (args.mUseV4) stack.addTransport(TLS, args.mTlsPort, V4, StunEnabled, Data::Empty, args.mTlsDomain);
-            if (args.mUseV6) stack.addTransport(TLS, args.mTlsPort, V6, StunEnabled, Data::Empty, args.mTlsDomain);
+            if (useV4) stack.addTransport(TLS, tlsPort, V4, StunEnabled, Data::Empty, tlsDomain);
+            if (useV6) stack.addTransport(TLS, tlsPort, V6, StunEnabled, Data::Empty, tlsDomain);
          }
-         if (args.mDtlsPort)
+         if (dtlsPort)
          {
-            if (args.mUseV4) stack.addTransport(DTLS, args.mDtlsPort, V4, StunEnabled, Data::Empty, args.mTlsDomain);
-            if (args.mUseV6) stack.addTransport(DTLS, args.mDtlsPort, V6, StunEnabled, Data::Empty, args.mTlsDomain);
+            if (useV4) stack.addTransport(DTLS, dtlsPort, V4, StunEnabled, Data::Empty, tlsDomain);
+            if (useV6) stack.addTransport(DTLS, dtlsPort, V6, StunEnabled, Data::Empty, tlsDomain);
          }
       }
    }
@@ -335,13 +434,37 @@ main(int argc, char** argv)
       exit(-1);
    }
    
+   InteropHelper::setOutboundVersion(config.getConfigInt("OutboundVersion", 5626));
+   InteropHelper::setOutboundSupported(config.getConfigBool("DisableOutbound", false) ? false : true);
+   InteropHelper::setRRTokenHackEnabled(config.getConfigBool("EnableFlowTokens", false));
+   Data clientNATDetectionMode = config.getConfigData("ClientNatDetectionMode", "DISABLED");
+   if(isEqualNoCase(clientNATDetectionMode, "ENABLED"))
+   {
+      InteropHelper::setClientNATDetectionMode(InteropHelper::ClientNATDetectionEnabled);
+   }
+   else if(isEqualNoCase(clientNATDetectionMode, "PRIVATE_TO_PUBLIC"))
+   {
+      InteropHelper::setClientNATDetectionMode(InteropHelper::ClientNATDetectionPrivateToPublicOnly);
+   }
+   unsigned long outboundFlowTimer = config.getConfigUnsignedLong("FlowTimer", 0);
+   if(outboundFlowTimer > 0)
+   {
+      InteropHelper::setFlowTimerSeconds(outboundFlowTimer);
+      ConnectionManager::MinimumGcAge = 7200000; // Timeout connections not related to a flow timer after 2 hours - TODO make configurable
+      ConnectionManager::EnableAgressiveGc = true;
+   }
+
+   bool assumePath = config.getConfigBool("AssumePath", false);
+   bool forceRecordRoute = config.getConfigBool("ForceRecordRouting", false);
+   Uri recordRouteUri;
+   config.getConfigValue("RecordRouteUri", recordRouteUri);
    if((InteropHelper::getOutboundSupported() 
          || InteropHelper::getRRTokenHackEnabled()
          || InteropHelper::getClientNATDetectionMode() != InteropHelper::ClientNATDetectionDisabled
-         || args.mAssumePath
-         || args.mForceRecordRoute
+         || assumePath
+         || forceRecordRoute
       )
-      && !(allTransportsSpecifyRecordRoute || !args.mRecordRoute.host().empty()))
+      && !(allTransportsSpecifyRecordRoute || !recordRouteUri.host().empty()))
    {
       CritLog(<< "In order for outbound support, the Record-Route flow-token"
       " hack, or force-record-route to work, you MUST specify a Record-Route URI. Launching "
@@ -349,8 +472,8 @@ main(int argc, char** argv)
       InteropHelper::setOutboundSupported(false);
       InteropHelper::setRRTokenHackEnabled(false);
       InteropHelper::setClientNATDetectionMode(InteropHelper::ClientNATDetectionDisabled);
-      args.mAssumePath = false;
-      args.mForceRecordRoute=false;
+      assumePath = false;
+      forceRecordRoute=false;
    }
 
    std::auto_ptr<ThreadIf> stackThread(NULL);
@@ -360,20 +483,22 @@ main(int argc, char** argv)
 
    Registrar registrar;
    // We only need removed records to linger if we have reg sync enabled
-   InMemorySyncRegDb regData(args.mXmlRpcPort ? 86400 /* 24 hours */ : 0 /* removeLingerSecs */);  // !slg! could make linger time a setting
+   int xmlRpcPort = config.getConfigInt("XmlRpcPort", 0);
+   InMemorySyncRegDb regData(xmlRpcPort ? 86400 /* 24 hours */ : 0 /* removeLingerSecs */);  // !slg! could make linger time a setting
    SharedPtr<MasterProfile> profile(new MasterProfile);
- 
 
    AbstractDb* db=NULL;
 #ifdef USE_MYSQL
-   if ( !args.mMySqlServer.empty() )
+   Data mySQLServer;
+   config.getConfigValue("MySQLServer", mySQLServer);
+   if ( !mySQLServer.empty() )
    {
-      db = new MySqlDb(args.mMySqlServer);
+      db = new MySqlDb(mySQLServer);
    }
 #endif
    if (!db)
    {
-      db = new BerkeleyDb(args.mDbPath);
+      db = new BerkeleyDb(config.getConfigData("DatabasePath", "./", true));
       if (!static_cast<BerkeleyDb*>(db)->isSane())
       {
         CritLog(<<"Failed to open configuration database");
@@ -381,7 +506,7 @@ main(int argc, char** argv)
       }
    }
    assert( db );
-   Store store(*db);
+   config.createDataStore(db);
 
    /* Initialize a proxy */
    
@@ -409,15 +534,11 @@ main(int argc, char** argv)
       requestProcessors.addProcessor(std::auto_ptr<Processor>(new StrictRouteFixup));      
 
       // Add is trusted node monkey
-      requestProcessors.addProcessor(std::auto_ptr<Processor>(new IsTrustedNode(store.mAclStore)));
-      if (!args.mNoChallenge)
+      requestProcessors.addProcessor(std::auto_ptr<Processor>(new IsTrustedNode(config)));
+      if (!config.getConfigBool("DisableAuth", false))
       {
-         DigestAuthenticator* da = new DigestAuthenticator(store.mUserStore,
-                                                           &stack,args.mNoIdentityHeaders,
-                                                           args.mHttpHostname,
-                                                           args.mHttpPort,
-                                                           !args.mNoAuthIntChallenge /*useAuthInt*/,
-                                                           args.mRejectBadNonces);
+         DigestAuthenticator* da = new DigestAuthenticator(config, &stack);
+
          // Add digest authenticator monkey
          requestProcessors.addProcessor(std::auto_ptr<Processor>(da)); 
       }
@@ -430,38 +551,30 @@ main(int argc, char** argv)
       // [TODO] support for Manipulating Tel URIs is on the roadmap.
       //        When added, the telUriMonkey will go here 
      
-      if (args.mRouteSet.empty())
+      std::vector<Data> routeSet;
+      config.getConfigValue("Routes", routeSet);
+      if (routeSet.empty())
       {
-         StaticRoute* sr = new StaticRoute(store.mRouteStore, 
-                                           args.mNoChallenge, 
-                                           args.mParallelForkStaticRoutes, 
-                                           !args.mNoAuthIntChallenge /*useAuthInt*/);
          // add static route monkey
-         requestProcessors.addProcessor(std::auto_ptr<Processor>(sr)); 
+         requestProcessors.addProcessor(std::auto_ptr<Processor>(new StaticRoute(config))); 
       }
       else
       {
-         resip::NameAddrs routes;
-         for (std::vector<Data>::iterator i=args.mRouteSet.begin(); 
-              i != args.mRouteSet.end(); ++i)
-         {
-            routes.push_back(NameAddr(*i));
-         }
-
          // add simple static route monkey
-         requestProcessors.addProcessor(std::auto_ptr<Processor>(new SimpleStaticRoute(routes))); 
+         requestProcessors.addProcessor(std::auto_ptr<Processor>(new SimpleStaticRoute(config))); 
       }
       
       // Add location server monkey
-      requestProcessors.addProcessor(std::auto_ptr<Processor>(new LocationServer(regData, 
-                                                                                 args.mParallelForkStaticRoutes))); 
+      requestProcessors.addProcessor(std::auto_ptr<Processor>(new LocationServer(config, regData)));
    }
 
    // Build Lemur Chain
    ProcessorChain responseProcessors(Processor::RESPONSE_CHAIN); // Lemurs
+
    // Add outbound target handler lemur
    responseProcessors.addProcessor(std::auto_ptr<Processor>(new OutboundTargetHandler(regData))); 
-   if (args.mRecursiveRedirect)
+
+   if (config.getConfigBool("RecursiveRedirect", false))
    {
       // Add recursive redirect lemur
       responseProcessors.addProcessor(std::auto_ptr<Processor>(new RecursiveRedirect)); 
@@ -469,55 +582,39 @@ main(int argc, char** argv)
 
    // Build Baboons Chain
    ProcessorChain targetProcessors(Processor::TARGET_CHAIN);     // Baboons   
-   if( args.mDoQValue)
+   if(config.getConfigBool("QValue", false))
    {
-      QValueTargetHandler::ForkBehavior behavior=QValueTargetHandler::EQUAL_Q_PARALLEL;
-      
-      if(args.mForkBehavior=="FULL_SEQUENTIAL")
-      {
-         behavior=QValueTargetHandler::FULL_SEQUENTIAL;
-      }
-      else if(args.mForkBehavior=="FULL_PARALLEL")
-      {
-         behavior=QValueTargetHandler::FULL_PARALLEL;
-      }
-      
-      QValueTargetHandler* qval = 
-         new QValueTargetHandler(behavior,
-                                 args.mCancelBetweenForkGroups, //Cancel btw fork groups?
-                                 args.mWaitForTerminate, //Wait for termination btw fork groups?
-                                 args.mMsBetweenForkGroups, //ms between fork groups, moot in this case
-                                 args.mMsBeforeCancel //ms before cancel
-                                 );
       // Add q value target handler baboon
-      targetProcessors.addProcessor(std::auto_ptr<Processor>(qval)); 
+      targetProcessors.addProcessor(std::auto_ptr<Processor>(new QValueTargetHandler(config))); 
    }
    
    // Add simple target handler baboon
    targetProcessors.addProcessor(std::auto_ptr<Processor>(new SimpleTargetHandler)); 
 
+   // Create main Proxy class
    Proxy proxy(stack, 
-               args.mRecordRoute, 
-               args.mForceRecordRoute,
+               config, 
                requestProcessors, 
                responseProcessors, 
-               targetProcessors, 
-               store.mUserStore,
-               args.mTimerC );
-   Data realm = addDomains(proxy, args, store);
+               targetProcessors);
+   Data realm = addDomains(proxy, config, true);
    
-   proxy.setAssumePath(args.mAssumePath);
-   proxy.addSupportedOption("outbound");
-   proxy.setServerText(args.mServerText);
-
    WebAdmin *admin = NULL;
    WebAdminThread *adminThread = NULL;
-   if ( args.mHttpPort ) {
+   int httpPort = config.getConfigInt("HttpPort", 5080);
+   if (httpPort) 
+   {
+      admin = new WebAdmin(*config.getDataStore(), 
+                           regData, 
 #ifdef USE_SSL
-      admin = new WebAdmin( store, regData, security, args.mNoWebChallenge, realm, args.mAdminPassword, args.mHttpPort  );
+                           security, 
 #else
-      admin = new WebAdmin( store, regData, NULL, args.mNoWebChallenge, realm, args.mAdminPassword, args.mHttpPort  );
+                           0, 
 #endif
+                           config.getConfigBool("DisableHttpAuth", false), 
+                           realm, 
+                           config.getConfigData("HttpAdminPassword", "admin"), 
+                           httpPort);
       if (!admin->isSane())
       {
          CritLog(<<"Failed to start the WebAdmin - exiting");
@@ -531,9 +628,12 @@ main(int argc, char** argv)
 #ifdef USE_SSL
    profile->addSupportedScheme(Symbols::Sips);
 #endif
-   profile->addSupportedOptionTag(Token(Symbols::Outbound));
+   if(InteropHelper::getOutboundSupported())
+   {
+      profile->addSupportedOptionTag(Token(Symbols::Outbound));
+   }
    profile->addSupportedOptionTag(Token(Symbols::Path));
-   if(args.mAllowBadReg)
+   if(config.getConfigBool("AllowBadReg", false))
    {
        profile->allowBadRegistrationEnabled() = true;
    }
@@ -542,14 +642,16 @@ main(int argc, char** argv)
    DumThread* dumThread = 0;
 
    resip::MessageFilterRuleList ruleList;
-   if (!args.mNoRegistrar || args.mCertServer)
+   bool registrarEnabled = !config.getConfigBool("DisableRegistrar", false);
+   bool certServerEnabled = config.getConfigBool("EnableCertServer", false);
+   if (registrarEnabled || certServerEnabled)
    {
       dum = new DialogUsageManager(stack);
       dum->setMasterProfile(profile);
-      addDomains(*dum, args, store);
+      addDomains(*dum, config, false /* log? already logged when adding to Proxy - no need to log again*/);
    }
 
-   if (!args.mNoRegistrar)
+   if (registrarEnabled)
    {   
       assert(dum);
       dum->setServerRegistrationHandler(&registrar);
@@ -566,7 +668,7 @@ main(int argc, char** argv)
 #if defined(USE_SSL)
    CertServer* certServer = 0;
 #endif
-   if (args.mCertServer)
+   if (certServerEnabled)
    {
 #if defined(USE_SSL)
       certServer = new CertServer(*dum);
@@ -587,14 +689,14 @@ main(int argc, char** argv)
 
    if (dum)
    {
-      if (!args.mNoChallenge)
+      if (!config.getConfigBool("DisableAuth", false))
       {
          SharedPtr<ServerAuthManager> 
             uasAuth( new ReproServerAuthManager(*dum,
-                                                store.mUserStore,
-                                                store.mAclStore,
-                                                !args.mNoAuthIntChallenge /*useAuthInt*/,
-                                                args.mRejectBadNonces));
+                                                config.getDataStore()->mUserStore,
+                                                config.getDataStore()->mAclStore,
+                                                !config.getConfigBool("DisableAuthInt", false) /*useAuthInt*/,
+                                                config.getConfigBool("RejectBadNonces", false)));
          dum->setServerAuthManager(uasAuth);
       }
       dum->setMessageFilterRuleList(ruleList);
@@ -612,31 +714,32 @@ main(int argc, char** argv)
    RegSyncServer* regSyncServerV4 = 0;
    RegSyncServer* regSyncServerV6 = 0;
    RegSyncServerThread* regSyncServerThread = 0;
-   if(args.mXmlRpcPort != 0)
+   if(xmlRpcPort != 0)
    {
       std::list<RegSyncServer*> regSyncServerList;
-      if(args.mUseV4) 
+      if(useV4) 
       {
-         regSyncServerV4 = new RegSyncServer(&regData, args.mXmlRpcPort, V4);
+         regSyncServerV4 = new RegSyncServer(&regData, xmlRpcPort, V4);
          regSyncServerList.push_back(regSyncServerV4);
       }
-      if(args.mUseV6) 
+      if(useV6) 
       {
-         regSyncServerV6 = new RegSyncServer(&regData, args.mXmlRpcPort, V6);
+         regSyncServerV6 = new RegSyncServer(&regData, xmlRpcPort, V6);
           regSyncServerList.push_back(regSyncServerV6);
       }
       if(!regSyncServerList.empty())
       {
          regSyncServerThread = new RegSyncServerThread(regSyncServerList);
       }
-      if(!args.mRegSyncPeerAddress.empty())
+      Data regSyncPeerAddress(config.getConfigData("RegSyncPeer", ""));
+      if(!regSyncPeerAddress.empty())
       {
-          regSyncClient = new RegSyncClient(&regData, args.mRegSyncPeerAddress, args.mXmlRpcPort);
+         regSyncClient = new RegSyncClient(&regData, regSyncPeerAddress, xmlRpcPort);
       }
    }
 
    std::auto_ptr<CongestionManager> congestionManager;
-   if(args.mUseCongestionManager)
+   if(config.getConfigBool("CongestionManagement", true))
    {
       congestionManager.reset(new GeneralCongestionManager(
                                           GeneralCongestionManager::WAIT_TIME, 
@@ -645,14 +748,17 @@ main(int argc, char** argv)
    }
 
    /* Make it all go */
-   if(args.mThreadedStack)
+   bool threadedStack = config.getConfigBool("ThreadedStack", true);
+   if(threadedStack)
    {
       stack.run();
    }
    stackThread->run();
    proxy.run();
-   if ( adminThread )
+   if(adminThread)
+   {
       adminThread->run();
+   }
    if(dumThread)
    {
       dumThread->run();
@@ -693,21 +799,20 @@ main(int argc, char** argv)
    {
       regSyncClient->shutdown();
    }
-   
-   if(args.mThreadedStack)
+   if(threadedStack)
    {
       stack.shutdownAndJoinThreads();
    }
 
    proxy.join();
    stackThread->join();
-   if ( adminThread ) 
+   if (adminThread) 
    {
       adminThread->join();
       delete adminThread; 
       adminThread = NULL;
    }
-   if ( admin ) 
+   if (admin) 
    {
       delete admin; 
       admin = NULL;

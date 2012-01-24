@@ -3,6 +3,7 @@
 
 #include "repro/AbstractDb.hxx"
 #include "repro/Proxy.hxx"
+#include "repro/ProxyConfig.hxx"
 #include "repro/Registrar.hxx"
 #include "repro/ProcessorChain.hxx"
 #include "repro/Store.hxx"
@@ -18,6 +19,12 @@
 #include "tfm/repro/CommandLineParser.hxx"
 
 #include <memory>
+
+class TfmProxyConfig : public repro::ProxyConfig
+{
+public:
+   TfmProxyConfig(repro::AbstractDb* db, const CommandLineParser& args);
+};
 
 class TestRepro : public TestProxy
 {
@@ -52,7 +59,7 @@ class TestRepro : public TestProxy
       repro::Registrar mRegistrar;
       resip::SharedPtr<resip::MasterProfile> mProfile;
       repro::AbstractDb* mDb;
-      repro::Store mStore;
+      TfmProxyConfig mConfig;
       repro::ProcessorChain mRequestProcessors;
       repro::ProcessorChain mResponseProcessors;
       repro::ProcessorChain mTargetProcessors;

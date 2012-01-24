@@ -11,26 +11,21 @@
 #include "rutil/Logger.hxx"
 #include "repro/RouteStore.hxx"
 
-
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
-
 
 using namespace resip;
 using namespace repro;
 using namespace std;
 
-
-StaticRoute::StaticRoute(RouteStore& store, bool noChallenge, bool parallelForkStaticRoutes, bool useAuthInt) :
-   mRouteStore(store),
-   mNoChallenge(noChallenge),
-   mParallelForkStaticRoutes(parallelForkStaticRoutes),
-   mUseAuthInt(useAuthInt)
+StaticRoute::StaticRoute(ProxyConfig& config) :
+   mRouteStore(config.getDataStore()->mRouteStore),
+   mNoChallenge(config.getConfigBool("DisableAuth", false)),
+   mParallelForkStaticRoutes(config.getConfigBool("ParallelForkStaticRoutes", false)),
+   mUseAuthInt(!config.getConfigBool("DisableAuthInt", false))
 {}
-
 
 StaticRoute::~StaticRoute()
 {}
-
 
 Processor::processor_action_t
 StaticRoute::process(RequestContext& context)
@@ -79,6 +74,13 @@ StaticRoute::process(RequestContext& context)
       for ( RouteStore::UriList::const_iterator i = targets.begin();
             i != targets.end(); i++ )
       {
+         if(i->exists(p_lr))
+         {
+            InfoLog(<< "Adding loose route target, route to " << *i << " with target " << msg.header(h_RequestLine).uri());
+            msg.header(h_Routes).push_front(NameAddr(*i));
+            context.getResponseContext().addTarget(NameAddr(msg.header(h_RequestLine).uri()));
+            return Processor::SkipThisChain;
+         }
          //Targets are only added after authentication
          InfoLog(<< "Adding target " << *i );
          // .slg. adding StaticRoutes as QValueTargets allows them to be processed before the QValueTargets
@@ -90,7 +92,6 @@ StaticRoute::process(RequestContext& context)
          context.getResponseContext().addTarget(target, false /* beginImmediately */, mParallelForkStaticRoutes /* addToFirstBatch */);
          //context.addTarget(NameAddr(*i));
       }
-
    }
    
    return Processor::Continue;

@@ -234,9 +234,9 @@ TransactionController::abandonServerTransaction(const Data& tid)
 }
 
 void 
-TransactionController::cancelClientInviteTransaction(const Data& tid, std::auto_ptr<MessageDecorator> messageDecorator)
+TransactionController::cancelClientInviteTransaction(const Data& tid)
 {
-   mStateMacFifo.add(new CancelClientInviteTransaction(tid, messageDecorator));
+   mStateMacFifo.add(new CancelClientInviteTransaction(tid));
 }
 
 void

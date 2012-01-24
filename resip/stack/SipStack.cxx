@@ -696,11 +696,10 @@ SipStack::abandonServerTransaction(const Data& tid)
 }
 
 void
-SipStack::cancelClientInviteTransaction(const Data& tid, std::auto_ptr<MessageDecorator> messageDecorator)
+SipStack::cancelClientInviteTransaction(const Data& tid)
 {
-   mTransactionController->cancelClientInviteTransaction(tid, messageDecorator);
+   mTransactionController->cancelClientInviteTransaction(tid);
 }
-
 
 bool
 SipStack::hasMessage() const

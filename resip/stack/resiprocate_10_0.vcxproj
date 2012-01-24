@@ -489,6 +489,7 @@
     <ClInclude Include="BranchParameter.hxx" />
     <ClInclude Include="CallId.hxx" />
     <ClInclude Include="CancelableTimerQueue.hxx" />
+    <ClInclude Include="CancelClientInviteTransaction.hxx" />
     <ClInclude Include="Compression.hxx" />
     <ClInclude Include="Connection.hxx" />
     <ClInclude Include="ConnectionBase.hxx" />
@@ -507,6 +508,7 @@
     <ClInclude Include="DnsResultMessage.hxx" />
     <ClInclude Include="DtlsMessage.hxx" />
     <ClInclude Include="KeepAlivePong.hxx" />
+    <ClInclude Include="MessageDecorator.hxx" />
     <ClInclude Include="ssl\DtlsTransport.hxx" />
     <ClInclude Include="Embedded.hxx" />
     <ClInclude Include="EventStackThread.hxx" />

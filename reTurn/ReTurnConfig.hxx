@@ -3,15 +3,21 @@
 
 #include <map>
 #include <asio.hpp>
+#include <rutil/ConfigParse.hxx>
 #include <rutil/Data.hxx>
 #include <rutil/Log.hxx>
 
 namespace reTurn {
 
-class ReTurnConfig
+class ReTurnConfig : public resip::ConfigParse
 {
 public:
    ReTurnConfig();
+   ReTurnConfig(int argc, char** argv, const resip::Data& defaultConfigFilename);
+   virtual ~ReTurnConfig();
+
+   void printHelpText(int argc, char **argv);
+   using resip::ConfigParse::getConfigValue;
 
    typedef enum
    {

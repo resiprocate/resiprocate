@@ -18,6 +18,17 @@ class MessageDecorator
                                   const Data& sigcompId) = 0;
       virtual void rollbackMessage(SipMessage& msg) = 0;
       virtual MessageDecorator* clone() const = 0;
+
+      /// If this decorator is applied to an INVITE request, and the stack
+      /// ends up needing to CANCEL it or to generate a failure ACK for it
+      /// then setting these returns to true will signal the stack to copy 
+      /// this Decorator from the INVITE message to the resulting CANCEL or ACK.  
+      /// Note:  This functionality was added so that it is possible to 
+      ///        decorate all request messaging on the wire.
+      /// Note:  If the CANCEL or ACK/200 is generated at the DUM layer, then 
+      ///        the normal profile decorators will be added to it.
+      virtual bool copyToStackCancels() const { return false; }
+      virtual bool copyToStackFailureAcks() const { return false; }
 };
 
 }

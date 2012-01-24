@@ -9,8 +9,6 @@
 #include "rutil/TransportType.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 
-#define URI_ENCODING_TABLE_SIZE 256
-
 namespace resip
 {
 class SipMessage;
@@ -25,6 +23,8 @@ class Uri : public ParserCategory
    public:
       RESIP_HeapCount(Uri);
       
+      static const size_t uriEncodingTableSize = 256;
+
       Uri(PoolBase* pool=0);
       Uri(const HeaderFieldValue& hfv, Headers::Type type, PoolBase* pool=0);
       Uri(const Uri& orig,
@@ -181,7 +181,7 @@ class Uri : public ParserCategory
       
       bool aorEqual(const Uri& rhs) const;
 
-      typedef std::bitset<URI_ENCODING_TABLE_SIZE> EncodingTable;
+      typedef std::bitset<Uri::uriEncodingTableSize> EncodingTable;
 
       static EncodingTable& getUserEncodingTable()
       {

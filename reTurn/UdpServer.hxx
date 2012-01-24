@@ -52,10 +52,10 @@ private:
    class ResponseEntry
    {
    public:
-      ResponseEntry(UdpServer* udpServer, asio::ip::udp::socket* responseSocket, StunMessage* responseMessage);
+      ResponseEntry(UdpServer* requestUdpServer, UdpServer* responseUdpServer, StunMessage* responseMessage);
       ~ResponseEntry();
 
-      asio::ip::udp::socket* mResponseSocket;
+      UdpServer* mResponseUdpServer;
       StunMessage* mResponseMessage;
       asio::deadline_timer mCleanupTimer;
    };
