@@ -477,7 +477,7 @@ Calculated digest == 575a9ecd3a6f1989a978748217b24a25
       assert(request->exists(h_ProxyAuthorizations));
       assert(request->header(h_ProxyAuthorizations).size() == 1);
       assert(request->header(h_ProxyAuthorizations).front().exists(p_qop));
-      assert(request->header(h_ProxyAuthorizations).front().param(p_nc) == "0000000A");
+      assert(request->header(h_ProxyAuthorizations).front().param(p_nc) == "0000000a");
 
       const Auth& auth = request->header(h_ProxyAuthorizations).front();
       
