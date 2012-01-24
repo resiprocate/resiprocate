@@ -1,6 +1,7 @@
 #ifndef DnsThread_Include_Guard
 #define DnsThread_Include_Guard
 
+#include <memory>
 #include "rutil/ThreadIf.hxx"
 
 namespace resip

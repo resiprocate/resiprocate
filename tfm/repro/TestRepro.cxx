@@ -41,7 +41,7 @@ TfmProxyConfig::TfmProxyConfig(AbstractDb* db, const CommandLineParser& args)
    insertConfigValue("QValueMsBetweenForkGroups", "2000");
    insertConfigValue("QValueMsBeforeCancel", "2000");
 
-   insertConfigValue("ForceRecordRouting", args.mForceRecordRoute ? "true" : "false");
+   insertConfigValue("ForceRecordRouting", "false");
    insertConfigValue("RecordRouteUri", resip::Data::from(args.mRecordRoute));
 }
 

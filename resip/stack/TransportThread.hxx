@@ -1,6 +1,7 @@
 #ifndef TransportThread_Include_Guard
 #define TransportThread_Include_Guard
 
+#include <memory>
 #include "rutil/ThreadIf.hxx"
 
 namespace resip
