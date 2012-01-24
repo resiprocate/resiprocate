@@ -319,6 +319,25 @@ BasicClientUserAgent::startup()
       InfoLog (<< "register for " << mAor);
       mDum->send(mDum->makeRegistration(NameAddr(mAor)));
    }
+   else
+   {
+      // If not registering then form subscription and/or call here.  If registering then we will start these
+      // after the registration is successful.
+
+      // Check if we should try to form a test subscription
+      if(!mSubscribeTarget.host().empty())
+      {
+         SharedPtr<SipMessage> sub = mDum->makeSubscription(NameAddr(mSubscribeTarget), mProfile, "basicClientTest");
+         mDum->send(sub);
+      }
+
+      // Check if we should try to form a test call
+      if(!mCallTarget.host().empty())
+      {
+         BasicClientCall* newCall = new BasicClientCall(*this);
+         newCall->initiateCall(mCallTarget, mProfile);
+      }
+   }
 }
 
 void

@@ -21,13 +21,33 @@
 using namespace resip;
 using namespace repro;
 
-
-
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
+
+TfmProxyConfig::TfmProxyConfig(AbstractDb* db, const CommandLineParser& args)
+{
+   createDataStore(db);
+
+   // Assign settings
+   insertConfigValue("HttpPort", "5080");
+   insertConfigValue("HttpHostname", "localhost");
+   insertConfigValue("DisableIdentity", "false");
+   insertConfigValue("DisableAuthInt", "false");
+   insertConfigValue("RejectBadNonces", "false");
+   insertConfigValue("ParallelForkStaticRoutes", "true");
+
+   insertConfigValue("QValueBehavior", "EQUAL_Q_PARALLEL");
+   insertConfigValue("QValueCancelBetweenForkGroups", "true");
+   insertConfigValue("QValueWaitForTerminateBetweenForkGroups", "true");
+   insertConfigValue("QValueMsBetweenForkGroups", "2000");
+   insertConfigValue("QValueMsBeforeCancel", "2000");
+
+   insertConfigValue("ForceRecordRouting", args.mForceRecordRoute ? "true" : "false");
+   insertConfigValue("RecordRouteUri", resip::Data::from(args.mRecordRoute));
+}
 
 static ProcessorChain&  
 makeRequestProcessorChain(ProcessorChain& chain, 
-                          Store& store,
+                          ProxyConfig& config,
                           RegistrationPersistenceManager& regData,
                           SipStack* stack)
 {
@@ -38,16 +58,10 @@ makeRequestProcessorChain(ProcessorChain& chain,
    
    ProcessorChain* authenticators = new ProcessorChain();
    
-   IsTrustedNode* isTrusted = new IsTrustedNode(store.mAclStore);
+   IsTrustedNode* isTrusted = new IsTrustedNode(config);
    authenticators->addProcessor(std::auto_ptr<Processor>(isTrusted));
 
-   DigestAuthenticator* da = new DigestAuthenticator(store.mUserStore,
-                                                      stack,
-                                                      false,
-                                                      "localhost",
-                                                      5080,
-                                                      true,
-                                                      false);
+   DigestAuthenticator* da = new DigestAuthenticator(config, stack);
    authenticators->addProcessor(std::auto_ptr<Processor>(da)); 
 
    StrictRouteFixup* srf = new StrictRouteFixup;
@@ -56,10 +70,10 @@ makeRequestProcessorChain(ProcessorChain& chain,
    AmIResponsible* isme = new AmIResponsible;
    locators->addProcessor(std::auto_ptr<Processor>(isme));
       
-   StaticRoute* sr = new StaticRoute(store.mRouteStore,true, true, true);
+   StaticRoute* sr = new StaticRoute(config);
    locators->addProcessor(std::auto_ptr<Processor>(sr));
  
-   LocationServer* ls = new LocationServer(regData, true);
+   LocationServer* ls = new LocationServer(config, regData);
    locators->addProcessor(std::auto_ptr<Processor>(ls));
  
    chain.addProcessor(std::auto_ptr<Processor>(authenticators));
@@ -83,17 +97,11 @@ makeResponseProcessorChain(ProcessorChain& chain,
 }
 
 static ProcessorChain&  
-makeTargetProcessorChain(ProcessorChain& chain,const CommandLineParser& args) 
+makeTargetProcessorChain(ProcessorChain& chain, ProxyConfig& config) 
 {
    ProcessorChain* baboons = new ProcessorChain;
 
-   QValueTargetHandler* qval = 
-      new QValueTargetHandler(QValueTargetHandler::EQUAL_Q_PARALLEL,
-                              true, //Cancel btw fork groups?
-                              true, //Wait for termination btw fork groups?
-                              2000, //ms between fork groups, moot in this case
-                              2000 //ms before cancel
-                              );
+   QValueTargetHandler* qval =  new QValueTargetHandler(config);
    baboons->addProcessor(std::auto_ptr<Processor>(qval));
    
    SimpleTargetHandler* smpl = new SimpleTargetHandler;
@@ -103,7 +111,6 @@ makeTargetProcessorChain(ProcessorChain& chain,const CommandLineParser& args)
    chain.setChainType(Processor::TARGET_CHAIN);
    return chain;
 }
-
 
 static Uri  
 makeUri(const resip::Data& domain, int port)
@@ -138,17 +145,14 @@ TestRepro::TestRepro(const resip::Data& name,
    mRegistrar(),
    mProfile(new MasterProfile),
    mDb(new BerkeleyDb),
-   mStore(*mDb),
+   mConfig(mDb, args),
    mRequestProcessors(),
    mRegData(),
    mProxy(mStack, 
-          makeUri(host, *args.mUdpPorts.begin()),
-          false, //<- Force record-route
-          makeRequestProcessorChain(mRequestProcessors, mStore, mRegData,&mStack),
+          mConfig,
+          makeRequestProcessorChain(mRequestProcessors, mConfig, mRegData,&mStack),
           makeResponseProcessorChain(mResponseProcessors,mRegData),
-          makeTargetProcessorChain(mTargetProcessors,args),
-          mStore.mUserStore,
-          180),
+          makeTargetProcessorChain(mTargetProcessors,mConfig)),
    mDum(mStack),
    mDumThread(mDum)
 {
@@ -261,7 +265,7 @@ TestRepro::TestRepro(const resip::Data& name,
                                         methodList) );
    mDum.setMessageFilterRuleList(ruleList);
     
-   SharedPtr<ServerAuthManager> authMgr(new ReproServerAuthManager(mDum, mStore.mUserStore, mStore.mAclStore, true, false));
+   SharedPtr<ServerAuthManager> authMgr(new ReproServerAuthManager(mDum, mConfig.getDataStore()->mUserStore, mConfig.getDataStore()->mAclStore, true, false));
    mDum.setServerAuthManager(authMgr);    
 
    mStack.registerTransactionUser(mProxy);
@@ -299,14 +303,14 @@ void
 TestRepro::addUser(const Data& userid, const Uri& aor, const Data& password)
 {
    InfoLog (<< "Repro::addUser: " << userid << " " << aor);
-   mStore.mUserStore.addUser(userid,aor.host(),aor.host(), password, true, Data::from(aor), Data::from(aor));
+   mConfig.getDataStore()->mUserStore.addUser(userid,aor.host(),aor.host(), password, true, Data::from(aor), Data::from(aor));
 }
 
 void
 TestRepro::deleteUser(const Data& userid, const Uri& aor)
 {
    //InfoLog (<< "Repro::delUser: " << userid);
-   mStore.mUserStore.eraseUser(userid);
+   mConfig.getDataStore()->mUserStore.eraseUser(userid);
    mRegData.removeAor(aor);
 }
 
@@ -325,7 +329,7 @@ TestRepro::addRoute(const resip::Data& matchingPattern,
                     int priority,
                     int weight) 
 {
-   mStore.mRouteStore.addRoute(method, event, matchingPattern, rewriteExpression, priority);
+   mConfig.getDataStore()->mRouteStore.addRoute(method, event, matchingPattern, rewriteExpression, priority);
 }
 
 void 
@@ -333,12 +337,12 @@ TestRepro::deleteRoute(const resip::Data& matchingPattern,
                        const resip::Data& method, 
                        const resip::Data& event)
 {
-   mStore.mRouteStore.eraseRoute(method, event, matchingPattern);
+   mConfig.getDataStore()->mRouteStore.eraseRoute(method, event, matchingPattern);
 }
 
 bool
 TestRepro::addTrustedHost(const resip::Data& host, resip::TransportType transport, short port)
 {
-   return mStore.mAclStore.addAcl(host, port, static_cast<const short&>(transport));
+   return mConfig.getDataStore()->mAclStore.addAcl(host, port, static_cast<const short&>(transport));
 }
 

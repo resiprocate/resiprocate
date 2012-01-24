@@ -28,7 +28,7 @@ typedef unsigned(__stdcall *RESIP_THREAD_START_ROUTINE)(void*);
 using namespace resip;
 
 #ifdef WIN32
-ThreadIf::TlsDestructor **ThreadIf::mTlsDestructors;
+ThreadIf::TlsDestructorMap *ThreadIf::mTlsDestructors;
 Mutex *ThreadIf::mTlsDestructorsMutex;
 #endif
 
@@ -69,11 +69,7 @@ TlsDestructorInitializer::TlsDestructorInitializer()
    if (mInstanceCounter++ == 0)
    {
       ThreadIf::mTlsDestructorsMutex = new Mutex();
-      ThreadIf::mTlsDestructors = new ThreadIf::TlsDestructor*[ThreadIf::TLS_MAX_KEYS];
-      for (int i=0; i<ThreadIf::TLS_MAX_KEYS; i++)
-      {
-         ThreadIf::mTlsDestructors[i] = NULL;
-      }
+      ThreadIf::mTlsDestructors = new ThreadIf::TlsDestructorMap;
    }
 }
 TlsDestructorInitializer::~TlsDestructorInitializer()
@@ -81,7 +77,8 @@ TlsDestructorInitializer::~TlsDestructorInitializer()
    if (--mInstanceCounter == 0)
    {
       delete ThreadIf::mTlsDestructorsMutex;
-      delete [] ThreadIf::mTlsDestructors;
+      ThreadIf::mTlsDestructors->clear();
+      delete ThreadIf::mTlsDestructors;
    }
 }
 #endif
@@ -231,7 +228,7 @@ ThreadIf::tlsKeyCreate(TlsKey &key, TlsDestructor *destructor)
    if (key!=TLS_OUT_OF_INDEXES)
    {
       Lock lock(*mTlsDestructorsMutex);
-      mTlsDestructors[key] = destructor;
+      (*mTlsDestructors)[key] = destructor;
       return 0;
    }
    else
@@ -250,7 +247,7 @@ ThreadIf::tlsKeyDelete(TlsKey key)
    if (TlsFree(key)>0)
    {
       Lock lock(*mTlsDestructorsMutex);
-      mTlsDestructors[key] = NULL;
+      mTlsDestructors->erase(key);
       return 0;
    }
    else
@@ -318,16 +315,15 @@ void
 ThreadIf::tlsDestroyAll()
 {
    Lock lock(*mTlsDestructorsMutex);
-   for (int i=0; i<TLS_MAX_KEYS; i++)
+   ThreadIf::TlsDestructorMap::const_iterator i = mTlsDestructors->begin();
+   while(i != mTlsDestructors->end())
    {
-      if (mTlsDestructors[i] != NULL)
+      void *val = TlsGetValue(i->first);
+      if (val != NULL)
       {
-         void *val = TlsGetValue(i);
-         if (val != NULL)
-         {
-            (*mTlsDestructors[i])(val);
-         }
+         (*(i->second))(val);
       }
+      i++;
    }
 }
 #endif

@@ -184,6 +184,7 @@ ServerSubscription::shouldDestroyAfterSendingFailure(const SipMessage& msg)
             case Helper::UsageTermination:
                return true;
          }
+         break;
       }
       default: // !jf!
          assert(0);

@@ -523,6 +523,8 @@ class SipMessage : public TransactionMessage
                                     const Tuple &dest,
                                     const Data& sigcompId);
       void rollbackOutboundDecorators();
+      void copyOutboundDecoratorsToStackCancel(SipMessage& cancel);
+      void copyOutboundDecoratorsToStackFailureAck(SipMessage& ack);
       bool mIsDecorated;
 
       bool mIsBadAck200;

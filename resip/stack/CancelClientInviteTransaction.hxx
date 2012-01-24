@@ -11,15 +11,13 @@ namespace resip
 class CancelClientInviteTransaction : public TransactionMessage
 {
    public:
-      explicit CancelClientInviteTransaction(const resip::Data& tid, std::auto_ptr<MessageDecorator> messageDecorator) :
-         mTid(tid), mMessageDecorator(messageDecorator.release()) {}
+      explicit CancelClientInviteTransaction(const resip::Data& tid) : mTid(tid) {}
       virtual ~CancelClientInviteTransaction(){}
 
 /////////////////// Must implement unless abstract ///
 
       virtual const Data& getTransactionId() const {return mTid;}
       virtual bool isClientTransaction() const {return true;}
-      virtual std::auto_ptr<MessageDecorator> getMessageDecorator() const { return std::auto_ptr<MessageDecorator>(mMessageDecorator); }
       virtual EncodeStream& encode(EncodeStream& strm) const
       {
          return strm << "CancelClientInviteTransaction: " << mTid;
@@ -38,8 +36,6 @@ class CancelClientInviteTransaction : public TransactionMessage
 
    protected:
       const resip::Data mTid;
-      MessageDecorator* mMessageDecorator;
-
 }; // class CancelClientInviteTransaction
 
 } // namespace resip

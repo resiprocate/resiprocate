@@ -457,6 +457,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ProxyConfig.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\QValueTarget.cxx"
 				>
 			</File>
@@ -635,6 +639,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ProxyConfig.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\QValueTarget.hxx"
 				>
 			</File>
@@ -660,6 +668,10 @@
 			</File>
 			<File
 				RelativePath=".\RegSyncServerThread.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\resip\rend\RendWavePres.hxx"
 				>
 			</File>
 			<File

@@ -27,6 +27,9 @@
     <ClCompile Include="Condition.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ConfigParse.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="CountStream.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -201,6 +204,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Condition.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ConfigParse.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CountStream.hxx">

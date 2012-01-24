@@ -288,6 +288,7 @@
     <ClCompile Include="BaseException.cxx" />
     <ClCompile Include="Coders.cxx" />
     <ClCompile Include="Condition.cxx" />
+    <ClCompile Include="ConfigParse.cxx" />
     <ClCompile Include="CountStream.cxx" />
     <ClCompile Include="Data.cxx" />
     <ClCompile Include="DataStream.cxx" />
@@ -362,6 +363,7 @@
     <ClInclude Include="Coders.hxx" />
     <ClInclude Include="compat.hxx" />
     <ClInclude Include="Condition.hxx" />
+    <ClInclude Include="ConfigParse.hxx" />
     <ClInclude Include="CountStream.hxx" />
     <ClInclude Include="Data.hxx" />
     <ClInclude Include="DataStream.hxx" />

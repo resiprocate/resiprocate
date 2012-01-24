@@ -25,7 +25,9 @@ TupleMarkManager::getMarkType(const Tuple& tuple)
       {
          mList.erase(i);
          // ?bwc? Should we do this?
-         notifyListeners(tuple,OK);
+         UInt64 expiry = 0;
+         MarkType mark = OK;
+         notifyListeners(tuple,expiry,mark);
       }
    }
    
@@ -34,10 +36,11 @@ TupleMarkManager::getMarkType(const Tuple& tuple)
 
 void TupleMarkManager::mark(const Tuple& tuple,UInt64 expiry,MarkType mark)
 {
+   // .amr. Notify listeners first so they can change the entry if they want
+   notifyListeners(tuple,expiry,mark);
    ListEntry entry(tuple,expiry);
    resip::Lock g(mListMutex);
    mList[entry]=mark;
-   notifyListeners(tuple,mark);
 }
 
 void TupleMarkManager::registerMarkListener(MarkListener* listener)
@@ -51,11 +54,11 @@ void TupleMarkManager::unregisterMarkListener(MarkListener* listener)
 }
 
 void
-TupleMarkManager::notifyListeners(const resip::Tuple& tuple, MarkType mark)
+TupleMarkManager::notifyListeners(const resip::Tuple& tuple, UInt64& expiry, MarkType& mark)
 {
    for(Listeners::iterator i = mListeners.begin(); i!=mListeners.end(); ++i)
    {
-      (*i)->onMark(tuple,mark);
+      (*i)->onMark(tuple,expiry,mark);
    }
 }
 

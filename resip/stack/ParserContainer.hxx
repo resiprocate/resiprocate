@@ -9,6 +9,7 @@
 
 namespace resip
 {
+using std::ptrdiff_t;
 /**
    @brief Container class for ParserCategory, used by SipMessage to represent
       multi-valued headers (Contact, Via, etc).

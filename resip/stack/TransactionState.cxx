@@ -1168,11 +1168,8 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                   if(mIsAbandoned)
                   {
                      SipMessage* cancel = Helper::makeCancel(*mNextTransmission);
-                     if(mAdandonedMessageDecorator.get() != 0)
-                     {
-                        // If decorator is specified then add it to the created cancel message
-                        cancel->addOutboundDecorator(mAdandonedMessageDecorator);
-                     }
+                     // Iterate through message decorators on the INVITE and see if any need to be copied to the CANCEL
+                     mNextTransmission->copyOutboundDecoratorsToStackCancel(*cancel);
                      handleInternalCancel(cancel, *this);
                      mIsAbandoned=false;
                   }
@@ -1226,7 +1223,9 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                   // Stack MUST pass the received response up to the TU, and the client
                   // transaction MUST generate an ACK request, even if the transport is
                   // reliable
-                  resetNextTransmission(Helper::makeFailureAck(*mNextTransmission, *sip));
+                  SipMessage* ack = Helper::makeFailureAck(*mNextTransmission, *sip);
+                  mNextTransmission->copyOutboundDecoratorsToStackFailureAck(*ack);
+                  resetNextTransmission(ack);
                   
                   // want to use the same transport as was selected for Invite
                   assert(mTarget.getType() != UNKNOWN_TRANSPORT);
@@ -1251,6 +1250,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                      mState = Completed;
                      mController.mTimers.add(Timer::TimerD, mId, Timer::TD );
                      SipMessage* ack = Helper::makeFailureAck(*mNextTransmission, *sip);
+                     mNextTransmission->copyOutboundDecoratorsToStackFailureAck(*ack);
                      resetNextTransmission(ack);
                      sendCurrentToWire();
                      if(mDnsResult)
@@ -1392,19 +1392,13 @@ TransactionState::processClientInvite(TransactionMessage* msg)
       {
          // We can send the CANCEL now.
          SipMessage* cancel=Helper::makeCancel(*mNextTransmission);
-         std::auto_ptr<MessageDecorator> messageDecorator = (dynamic_cast<CancelClientInviteTransaction*>(msg))->getMessageDecorator();
-         if(messageDecorator.get() != 0)
-         {
-            // If decorator is specified then add it to the created cancel message
-            cancel->addOutboundDecorator(messageDecorator);
-         }
+         mNextTransmission->copyOutboundDecoratorsToStackCancel(*cancel);
          TransactionState::handleInternalCancel(cancel, *this);
       }
       else if(mState==Calling)
       {
          // We can't send the CANCEL yet, remember to.
          mIsAbandoned = true;
-         mAdandonedMessageDecorator = (dynamic_cast<CancelClientInviteTransaction*>(msg))->getMessageDecorator();
       }
       delete msg;
    }

@@ -37,6 +37,13 @@ AppDialogSet::end()
    }
 }
 
+void
+AppDialogSet::endCommand()
+{
+   AppDialogSetHandle handle = getHandle();
+   mDum.post(new AppDialogSetEndCommand(handle));
+}
+
 SharedPtr<UserProfile>  
 AppDialogSet::selectUASUserProfile(const SipMessage&)
 {

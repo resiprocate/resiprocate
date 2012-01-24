@@ -546,10 +546,8 @@ class SipStack : public FdSetIOObserver
          the TU of the obligation to handle any INVITE/200 that come in (usually
          by sending an ACK to the 200, and then a BYE).
          @param tid The transaction identifier of the INVITE request sent.
-         @param messageDecorator Optional message decorator to apply to cancel 
-                                 messages created as a result of this call.
       */
-      void cancelClientInviteTransaction(const Data& tid, std::auto_ptr<MessageDecorator> messageDecorator=std::auto_ptr<MessageDecorator>(0));
+      void cancelClientInviteTransaction(const Data& tid);
 
       /**
           @brief does the stack have new messages for the TU?

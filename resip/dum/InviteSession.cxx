@@ -757,7 +757,16 @@ InviteSession::reject(int statusCode, WarningCategory *warning)
          send(response);
          break;
       }
-
+      // Sent a reINVITE no offer and received a 200-offer.
+      // Simply send an ACK without an answer and stay in Connected.
+      case SentReinviteAnswered:
+      {
+         InfoLog (<< "Not sending " << statusCode << " error since transaction"
+                     "already completed, sending answer-less ACK");
+         transition(Connected);
+         sendAck();
+         break;
+      }
       default:
          assert(0);
          break;

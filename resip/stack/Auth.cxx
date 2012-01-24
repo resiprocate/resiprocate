@@ -200,7 +200,7 @@ Auth::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<
       return qop;
    }
 
-   if(ParameterFactories[type])
+   if(type > ParameterTypes::UNKNOWN && type < ParameterTypes::MAX_PARAMETER && ParameterFactories[type])
    {
       return ParameterFactories[type](type, pb, terminators, pool);
    }
