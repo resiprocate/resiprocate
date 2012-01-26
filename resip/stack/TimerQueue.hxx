@@ -117,17 +117,32 @@ class TimerQueue
          return mTimers.empty();
       }
 
+
       std::ostream& encode(std::ostream& str) const
       {
-         return str << "TimerQueue[ size =" << mTimers.size() 
-               << " top=" << mTimers.top() << "]" ;
+         if(mTimers.size() > 0)
+         {
+            return str << "TimerQueue[ size =" << mTimers.size() 
+                       << " top=" << mTimers.top() << "]" ;
+         }
+         else
+         {
+            return str << "TimerQueue[ size = 0 ]";
+         }
       }
 
 #ifndef RESIP_USE_STL_STREAMS
       EncodeStream& encode(EncodeStream& str) const
       {
-         return str << "TimerQueue[ size =" << mTimers.size() 
-               << " top=" << mTimers.top() << "]" ;
+         if(mTimers.size() > 0)
+         {
+            return str << "TimerQueue[ size =" << mTimers.size() 
+                       << " top=" << mTimers.top() << "]" ;
+         }
+         else
+         {
+            return str << "TimerQueue[ size = 0 ]";
+         }
       }
 #endif
 
