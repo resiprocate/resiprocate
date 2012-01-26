@@ -22,7 +22,8 @@ using namespace std;
 NameAddr::NameAddr() : 
    ParserCategory(),
    mAllContacts(false),
-   mDisplayName()
+   mDisplayName(),
+   mUnknownUriParametersBuffer(0)
 {}
 
 NameAddr::NameAddr(const HeaderFieldValue& hfv,
@@ -31,7 +32,8 @@ NameAddr::NameAddr(const HeaderFieldValue& hfv,
    : ParserCategory(hfv, type, pool), 
      mAllContacts(false),
      mUri(pool),
-     mDisplayName()
+     mDisplayName(),
+     mUnknownUriParametersBuffer(0)
 {}
 
 NameAddr::NameAddr(const NameAddr& rhs,
@@ -39,14 +41,16 @@ NameAddr::NameAddr(const NameAddr& rhs,
    : ParserCategory(rhs, pool),
      mAllContacts(rhs.mAllContacts),
      mUri(rhs.mUri, pool),
-     mDisplayName(rhs.mDisplayName)
+     mDisplayName(rhs.mDisplayName),
+     mUnknownUriParametersBuffer(0)
 {}
 
 static const Data parseContext("NameAddr constructor");
 NameAddr::NameAddr(const Data& unparsed, bool preCacheAor)
    : ParserCategory(),
      mAllContacts(false),
-     mDisplayName()
+     mDisplayName(),
+     mUnknownUriParametersBuffer(0)
 {
    HeaderFieldValue hfv(unparsed.data(), unparsed.size());
    // must copy because parse creates overlays
@@ -63,11 +67,17 @@ NameAddr::NameAddr(const Uri& uri)
    : ParserCategory(),
      mAllContacts(false),
      mUri(uri),
-     mDisplayName()
+     mDisplayName(),
+     mUnknownUriParametersBuffer(0)
 {}
 
 NameAddr::~NameAddr()
-{}
+{
+   if(mUnknownUriParametersBuffer) 
+   {          
+      delete mUnknownUriParametersBuffer;
+   }
+}
 
 NameAddr&
 NameAddr::operator=(const NameAddr& rhs)
@@ -234,23 +244,27 @@ NameAddr::parse(ParseBuffer& pb)
       }
       else
       {
-         Data temp;
+         if(mUri.mUnknownParameters.size() > 0)
          {
-            oDataStream str(temp);
-            // deal with Uri/NameAddr parameter ambiguity
-            // heuristically assign Uri parameters to the Uri
-            for (ParameterList::iterator it = mUri.mUnknownParameters.begin(); 
-                 it != mUri.mUnknownParameters.end(); ++it)
-            {
-               // We're just going to assume all unknown (to Uri) params really
-               // belong on the header. This is not necessarily the case.
-               str << ";";
-               (*it)->encode(str);
+            assert(!mUnknownUriParametersBuffer);
+            mUnknownUriParametersBuffer = new Data;
+            {  // Scope stream
+               oDataStream str(*mUnknownUriParametersBuffer);
+               // deal with Uri/NameAddr parameter ambiguity
+               // heuristically assign Uri parameters to the Uri
+               for (ParameterList::iterator it = mUri.mUnknownParameters.begin(); 
+                  it != mUri.mUnknownParameters.end(); ++it)
+               {
+                  // We're just going to assume all unknown (to Uri) params really
+                  // belong on the header. This is not necessarily the case.
+                  str << ";";
+                  (*it)->encode(str);
+               }
             }
             mUri.clearUnknownParameters();
+            ParseBuffer pb2(*mUnknownUriParametersBuffer);
+            parseParameters(pb2);
          }
-         ParseBuffer pb2(temp);
-         parseParameters(pb2);
       }
    }
    parseParameters(pb);

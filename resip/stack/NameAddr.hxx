@@ -96,6 +96,7 @@ class NameAddr : public ParserCategory
       bool mAllContacts;
       Uri mUri;
       Data mDisplayName;
+      Data* mUnknownUriParametersBuffer;
 
    private:
 
