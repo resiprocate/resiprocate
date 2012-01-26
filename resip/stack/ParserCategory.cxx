@@ -33,6 +33,7 @@ ParserCategory::ParserCategory(const HeaderFieldValue& headerFieldValue,
     : LazyParser(headerFieldValue),
       mParameters(StlPoolAllocator<Parameter*, PoolBase>(pool)),
       mUnknownParameters(StlPoolAllocator<Parameter*, PoolBase>(pool)),
+      mPool(pool),
       mHeaderType(headerType)
 {
 }
@@ -44,6 +45,7 @@ ParserCategory::ParserCategory(const char* buf,
    LazyParser(buf, length),
    mParameters(StlPoolAllocator<Parameter*, PoolBase>(pool)),
    mUnknownParameters(StlPoolAllocator<Parameter*, PoolBase>(pool)),
+   mPool(pool),
    mHeaderType(type)
 {}
 
@@ -51,15 +53,17 @@ ParserCategory::ParserCategory(PoolBase* pool)
    : LazyParser(),
      mParameters(StlPoolAllocator<Parameter*, PoolBase>(pool)),
      mUnknownParameters(StlPoolAllocator<Parameter*, PoolBase>(pool)),
+     mPool(pool),
      mHeaderType(Headers::NONE)
 {
 }
 
 ParserCategory::ParserCategory(const ParserCategory& rhs,
-                                 PoolBase* pool)
+                               PoolBase* pool)
    : LazyParser(rhs),
      mParameters(StlPoolAllocator<Parameter*, PoolBase>(pool)),
      mUnknownParameters(StlPoolAllocator<Parameter*, PoolBase>(pool)),
+     mPool(pool),
      mHeaderType(rhs.mHeaderType)
 {
    if (isParsed())

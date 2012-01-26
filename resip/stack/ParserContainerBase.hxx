@@ -173,6 +173,7 @@ class ParserContainerBase
         @brief the actual list (vector) of parsers on which encoding is done
         */
       Parsers mParsers;
+      PoolBase* mPool;
       
       /**
         @brief copy header kits
@@ -189,14 +190,21 @@ class ParserContainerBase
          if(kit.pc)
          {
             kit.pc->~ParserCategory();
-            mParsers.get_allocator().deallocate_raw(kit.pc);
+            if(mPool)
+            {
+               mPool->deallocate(kit.pc);
+            }
+            else
+            {
+               ::operator delete(kit.pc);
+            }
             kit.pc=0;
          }
       }
 
       inline ParserCategory* makeParser(const ParserCategory& orig)
       {
-         return orig.clone(mParsers.get_allocator().mPool);
+         return orig.clone(mPool);
       }
 };
  

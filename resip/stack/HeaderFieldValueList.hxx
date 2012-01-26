@@ -24,11 +24,13 @@ class HeaderFieldValueList
 
       HeaderFieldValueList()
          : mHeaders(), 
+           mPool(0),
            mParserContainer(0)
       {}
 
       HeaderFieldValueList(PoolBase& pool)
-         : mHeaders(StlPoolAllocator<HeaderFieldValue, PoolBase>(&pool)), 
+         : mHeaders(StlPoolAllocator<HeaderFieldValue, PoolBase>(&pool)),
+           mPool(&pool),
            mParserContainer(0)
       {}
 
@@ -93,6 +95,7 @@ class HeaderFieldValueList
 
    private:
       ListImpl mHeaders;
+      PoolBase* mPool;
       ParserContainerBase* mParserContainer;
 
       void freeParserContainer();

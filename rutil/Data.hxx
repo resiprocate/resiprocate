@@ -328,7 +328,7 @@ class Data
       **/
       Data& setBuf(ShareEnum se, const char *str)
       {
-         return setBuf(se, str, strlen(str));
+         return setBuf(se, str, (size_type)strlen(str));
       };
 
 
@@ -413,7 +413,7 @@ class Data
       */
       Data& operator=(const char* str)
       {
-         return copy(str, strlen(str));
+         return copy(str, (size_type)strlen(str));
       }
 
       /**
@@ -452,7 +452,7 @@ class Data
       inline Data& operator+=(const char* str)
       {
          assert(str);
-         return append(str, strlen(str));
+         return append(str, (size_type)strlen(str));
       }
 
 

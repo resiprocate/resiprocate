@@ -22,6 +22,7 @@ HeaderFieldValueList::~HeaderFieldValueList()
 
 HeaderFieldValueList::HeaderFieldValueList(const HeaderFieldValueList& rhs)
    : mHeaders(),
+     mPool(0),
      mParserContainer(0)
 {
    if (rhs.mParserContainer)
@@ -36,6 +37,7 @@ HeaderFieldValueList::HeaderFieldValueList(const HeaderFieldValueList& rhs)
 
 HeaderFieldValueList::HeaderFieldValueList(const HeaderFieldValueList& rhs, PoolBase& pool)
    : mHeaders(StlPoolAllocator<HeaderFieldValue, PoolBase>(&pool)),
+     mPool(&pool),
      mParserContainer(0)
 {
    if (rhs.mParserContainer)
@@ -198,7 +200,14 @@ HeaderFieldValueList::freeParserContainer()
       mParserContainer->~ParserContainerBase();
       // The allocator will check whether this belongs to it, and if not, fall 
       // back to global operator delete.
-      mHeaders.get_allocator().deallocate_raw(mParserContainer);
+      if(mPool)
+      {
+         mPool->deallocate(mParserContainer);
+      }
+      else
+      {
+         ::operator delete(mParserContainer);
+      }
       mParserContainer=0;
    }
 }

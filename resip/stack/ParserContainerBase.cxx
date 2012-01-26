@@ -9,12 +9,14 @@ using namespace std;;
 const ParserContainerBase::HeaderKit ParserContainerBase::HeaderKit::Empty;
 
 ParserContainerBase::ParserContainerBase(Headers::Type type)
-   : mType(type)
+   : mType(type),
+     mPool(0)
 {}
 
 ParserContainerBase::ParserContainerBase(const ParserContainerBase& rhs)
    : mType(rhs.mType),
-      mParsers()
+     mParsers(),
+     mPool(0)
 {
    copyParsers(rhs.mParsers);
 }
@@ -22,13 +24,15 @@ ParserContainerBase::ParserContainerBase(const ParserContainerBase& rhs)
 ParserContainerBase::ParserContainerBase(Headers::Type type,
                                           PoolBase& pool)
    : mType(type),
-   mParsers(StlPoolAllocator<HeaderKit, PoolBase>(&pool))
+     mParsers(StlPoolAllocator<HeaderKit, PoolBase>(&pool)),
+     mPool(&pool)
 {}
 
 ParserContainerBase::ParserContainerBase(const ParserContainerBase& rhs,
                                           PoolBase& pool)
    : mType(rhs.mType),
-      mParsers(StlPoolAllocator<HeaderKit, PoolBase>(&pool))
+     mParsers(StlPoolAllocator<HeaderKit, PoolBase>(&pool)),
+     mPool(&pool)
 {
    copyParsers(rhs.mParsers);
 }

@@ -22,7 +22,6 @@ Message::Brief::Brief(const Message& source) :
    mSource(source)
 {}
 
-#ifndef  RESIP_USE_STL_STREAMS
 std::ostream& 
 resip::operator<<(std::ostream& strm, 
                   const resip::Message& msg)
@@ -32,25 +31,26 @@ resip::operator<<(std::ostream& strm,
 
 std::ostream& 
 resip::operator<<(std::ostream& strm, 
+                  const resip::Message::Brief& brief)
+{
+   return brief.mSource.encodeBrief(strm);
+}
+
+#ifndef RESIP_USE_STL_STREAMS
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, 
+                  const resip::Message& msg)
+{
+   return msg.encode(strm);
+}
+
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, 
                   const resip::Message::Brief& brief)
 {
    return brief.mSource.encodeBrief(strm);
 }
 #endif
-
-EncodeStream& 
-resip::operator<<(EncodeStream& strm, 
-                  const resip::Message& msg)
-{
-   return msg.encode(strm);
-}
-
-EncodeStream& 
-resip::operator<<(EncodeStream& strm, 
-                  const resip::Message::Brief& brief)
-{
-   return brief.mSource.encodeBrief(strm);
-}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
