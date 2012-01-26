@@ -270,7 +270,7 @@ class ParserCategory : public LazyParser
       void removeParameterByData(const Data& data);
       inline PoolBase* getPool()
       {
-         return mParameters.get_allocator().mPool;
+         return mPool;
       }
 
       inline void freeParameter(Parameter* p)
@@ -278,7 +278,12 @@ class ParserCategory : public LazyParser
          if(p)
          {
             p->~Parameter();
-            mParameters.get_allocator().deallocate_raw(p);
+            if(mPool)
+            {
+               mPool->deallocate(p);
+               return;
+            }
+            ::operator delete(p);
          }
       }
 
@@ -287,6 +292,7 @@ class ParserCategory : public LazyParser
       typedef std::vector<Parameter*, StlPoolAllocator<Parameter*, PoolBase> > ParameterList; 
       ParameterList mParameters;
       ParameterList mUnknownParameters;
+      PoolBase* mPool;
       Headers::Type mHeaderType;
    private:
       void clear();

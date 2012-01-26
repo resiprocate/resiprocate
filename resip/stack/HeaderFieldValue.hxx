@@ -56,7 +56,7 @@ class HeaderFieldValue
          }
          
          mField=field;
-         mFieldLength=length;
+         mFieldLength=(unsigned int)length;
          mMine=own;
       }
       

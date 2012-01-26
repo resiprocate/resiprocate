@@ -160,7 +160,7 @@ class AbstractFifo : public FifoStatsInterface
       virtual unsigned int size() const
       {
          Lock lock(mMutex); (void)lock;
-         return mFifo.size();
+         return (unsigned int)mFifo.size();
       }
 
       /**

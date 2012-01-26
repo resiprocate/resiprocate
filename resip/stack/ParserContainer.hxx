@@ -320,7 +320,7 @@ class ParserContainer : public ParserContainerBase
          {
             if(ref)
             {
-               PoolBase* pool(ref->mParsers.get_allocator().mPool);
+               PoolBase* pool(ref->mPool);
                kit.pc=new (pool) T(kit.hfv, ref->mType, pool);
             }
             else
@@ -340,7 +340,7 @@ class ParserContainer : public ParserContainerBase
             if(ref)
             {
                ParserContainer* nc_ref(const_cast<ParserContainer*>(ref));
-               PoolBase* pool(nc_ref->mParsers.get_allocator().mPool);
+               PoolBase* pool(nc_ref->mPool);
                nc_kit.pc=new (pool) T(kit.hfv, ref->mType, pool);
             }
             else
