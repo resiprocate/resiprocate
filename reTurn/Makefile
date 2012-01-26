@@ -28,7 +28,8 @@ SRC += \
         TurnManager.cxx \
         TurnPermission.cxx \
         UdpRelayServer.cxx \
-        UdpServer.cxx
+        UdpServer.cxx \
+	UserAuthData.cxx
 
 include $(BUILD)/Makefile.post
 

@@ -32,6 +32,7 @@ ReTurnConfig::ReTurnConfig() :
    mLoggingFileMaxLineCount(50000)  // 50000 about 5M size
 {
    mAuthenticationCredentials["test"] = "1234";
+   calcUserAuthData();
 }
 
 ReTurnConfig::ReTurnConfig(int argc, char** argv, const resip::Data& defaultConfigFilename) :
@@ -69,10 +70,26 @@ ReTurnConfig::ReTurnConfig(int argc, char** argv, const resip::Data& defaultConf
    }
 
    mAuthenticationCredentials[user] = password;
+   calcUserAuthData();
 }
 
 ReTurnConfig::~ReTurnConfig()
 {
+}
+
+void
+ReTurnConfig::calcUserAuthData()
+{
+   RealmUsers& realmUsers(mUsers[mAuthenticationRealm]);
+   std::map<resip::Data,resip::Data>::const_iterator it = mAuthenticationCredentials.begin();
+   while(it != mAuthenticationCredentials.end())
+   {
+      UserAuthData newUser(UserAuthData::createFromPassword(
+            it->first,
+            mAuthenticationRealm,
+            it->second));
+      realmUsers.insert(pair<resip::Data,UserAuthData>(it->first,  newUser));
+   }
 }
 
 void
@@ -103,6 +120,21 @@ ReTurnConfig::getPasswordForUsername(const Data& username) const
    {
       return Data::Empty;
    }
+}
+
+const UserAuthData*
+ReTurnConfig::getUser(const resip::Data& userName, const resip::Data& realm) const
+{
+   std::map<resip::Data,RealmUsers>::const_iterator it = mUsers.find(realm);
+   if(it == mUsers.end())
+      return NULL;
+
+   RealmUsers realmUsers = it->second;
+   RealmUsers::const_iterator it2 = realmUsers.find(userName);
+   if(it2 == realmUsers.end())
+      return NULL;
+
+   return &(it2->second);
 }
 
 
