@@ -1022,7 +1022,7 @@ Data&
 Data::append(const char* str, size_type len)
 {
    assert(str);
-   if (mCapacity < mSize + len)
+   if (mCapacity <= mSize + len)  // append null terminates, thus the equality
    {
       // .dlb. pad for future growth?
       resize(((mSize + len +16)*3)/2, true);
