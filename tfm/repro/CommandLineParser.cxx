@@ -19,7 +19,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    const char* proxyHostName=0;
    const char* userIPAddr=0;
    const char* multihomedAddrs=0;
-   const char* recordRoute = 0;
+   const char* recordRoute = "sip:127.0.0.1";
    int flowTokens = 0;
    const char* udpPorts = "5060";
    const char* tcpPorts = "5060";
