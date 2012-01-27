@@ -67,7 +67,7 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>winmm.lib;$(ProjectDir)..\contrib\openssl\out32.dbg\libeay32.lib;$(ProjectDir)..\contrib\openssl\out32.dbg\ssleay32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>winmm.lib;$(ProjectDir)..\contrib\openssl\lib\vc\static\libeay32MDd.lib;$(ProjectDir)..\contrib\openssl\lib\vc\static\ssleay32MDd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)reTurnServer.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)reTurnServer.pdb</ProgramDatabaseFile>

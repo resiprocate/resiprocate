@@ -7,7 +7,11 @@
 #include <rutil/Data.hxx>
 #include <rutil/Log.hxx>
 
+#include <reTurn/UserAuthData.hxx>
+
 namespace reTurn {
+
+typedef std::map<resip::Data,reTurn::UserAuthData> RealmUsers;
 
 class ReTurnConfig : public resip::ConfigParse
 {
@@ -35,6 +39,7 @@ public:
    AuthenticationMode mAuthenticationMode;
    resip::Data mAuthenticationRealm;
    std::map<resip::Data,resip::Data> mAuthenticationCredentials;
+   std::map<resip::Data,RealmUsers> mUsers;
    unsigned long mNonceLifetime;
 
    unsigned short mAllocationPortRangeMin;
@@ -54,6 +59,10 @@ public:
 
    bool isUserNameValid(const resip::Data& username) const;
    const resip::Data& getPasswordForUsername(const resip::Data& username) const;
+   const UserAuthData* getUser(const resip::Data& userName, const resip::Data& realm) const;
+
+protected:
+   void calcUserAuthData();
 };
 
 } // namespace
