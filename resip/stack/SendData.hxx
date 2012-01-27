@@ -13,7 +13,14 @@ namespace resip
 class SendData
 {
    public:
-      SendData() : isAlreadyCompressed(false), eof(false)
+      enum SendDataCommand
+      {
+         NoCommand,
+         CloseConnection,
+         EnableFlowTimer
+      };
+
+      SendData() : isAlreadyCompressed(false), command(NoCommand)
       {}
 
       SendData(const Tuple& dest,
@@ -26,7 +33,7 @@ class SendData
          transactionId(tid),
          sigcompId(scid),
          isAlreadyCompressed(isCompressed),
-         eof(false)
+         command(NoCommand)
       {
       }
 
@@ -37,7 +44,7 @@ class SendData
          transactionId(Data::Empty),
          sigcompId(Data::Empty),
          isAlreadyCompressed(false),
-         eof(false)
+         command(NoCommand)
       {
       }
 
@@ -61,8 +68,9 @@ class SendData
       Data transactionId;
       Data sigcompId;
       bool isAlreadyCompressed;
-      // .bwc. Used to close connections
-      bool eof;
+
+      // .bwc. Used for special commands: ie. to close connections, and enable flow timers
+      SendDataCommand command;
 };
 
 }

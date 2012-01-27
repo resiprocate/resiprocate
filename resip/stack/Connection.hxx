@@ -116,6 +116,7 @@ class Connection : public ConnectionBase,
 
    private:
       ConnectionManager& getConnectionManager() const;
+      void removeFrontOutstandingSend();
       bool mInWritable;
       bool mFlowTimerEnabled;
       FdPollItemHandle mPollItemHandle;
