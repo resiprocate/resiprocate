@@ -50,15 +50,14 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-SipStack::SipStack(const SipStackOptions& options)
-   :
+SipStack::SipStack(const SipStackOptions& options) :
         mTUFifo(TransactionController::MaxTUFifoTimeDepthSecs,
                 TransactionController::MaxTUFifoSize),
-        mCongestionManager(0),
         mTuSelector(mTUFifo),
         mAppTimers(mTuSelector),
         mStatsManager(*this)
 {
+   // WARNING - don't forget to add new member initialization to the init() method
    init(options);
    mTUFifo.setDescription("SipStack::mTUFifo");
 }
@@ -70,8 +69,7 @@ SipStack::SipStack(Security* pSecurity,
                    bool stateless,
                    AfterSocketCreationFuncPtr socketFunc,
                    Compression *compression,
-                   FdPollGrp *pollGrp
-   ) :
+                   FdPollGrp *pollGrp) :
    mPollGrp(pollGrp?pollGrp:FdPollGrp::create()),
    mPollGrpIsMine(!pollGrp),
 #ifdef USE_SSL
@@ -109,9 +107,9 @@ SipStack::SipStack(Security* pSecurity,
       assert(0);
 #endif
    }
-   assert(!mShuttingDown);
    
    mTUFifo.setDescription("SipStack::mTUFifo");
+   mTransactionController->transportSelector().setPollGrp(mPollGrp);
 
 #if 0
   // .kw. originally tried to share common init() for the two
@@ -137,27 +135,6 @@ SipStack::SipStack(Security* pSecurity,
 void
 SipStack::init(const SipStackOptions& options)
 {
-   mShuttingDown = false;
-   mStatisticsManagerEnabled = true;
-   mSocketFunc = options.mSocketFunc;
-
-   if(mInterruptorIsMine)
-   {
-      delete mAsyncProcessHandler;
-      mAsyncProcessHandler=0;
-   }
-   mAsyncProcessHandler = options.mAsyncProcessHandler;
-   if(!mAsyncProcessHandler)
-   {
-      mInterruptorIsMine = true;
-      mAsyncProcessHandler = new SelectInterruptor;
-   }
-
-   // .kw. note that stats manager has already called getTimeMs()
-   Timer::getTimeMs(); // initalize time offsets
-   Random::initialize();
-   initNetwork();
-
    mPollGrpIsMine=false;
    if ( options.mPollGrp )
    {
@@ -177,21 +154,46 @@ SipStack::init(const SipStackOptions& options)
    assert(options.mSecurity==0);
 #endif
 
+   if(options.mAsyncProcessHandler)
+   {
+      mAsyncProcessHandler = options.mAsyncProcessHandler;
+      mInterruptorIsMine = false;
+   }
+   else
+   {
+      mInterruptorIsMine = true;
+      mAsyncProcessHandler = new SelectInterruptor;
+   }
+
    mDnsStub = new DnsStub(
          options.mExtraNameserverList
                 ? *options.mExtraNameserverList : DnsStub::EmptyNameserverList,
          options.mSocketFunc,
          mAsyncProcessHandler,
          mPollGrp);
+   mDnsThread = 0;
+
    mCompression = options.mCompression
          ? options.mCompression : new Compression(Compression::NONE);
+
+   mCongestionManager = 0;
 
    // WATCHOUT: the transaction controller constructor will
    // grab the security, DnsStub, compression and statsManager
    mTransactionController = new TransactionController(*this, mAsyncProcessHandler);
    mTransactionController->transportSelector().setPollGrp(mPollGrp);
+   mTransactionControllerThread = 0;
+   mTransportSelectorThread = 0;
 
-   assert(!mShuttingDown);
+   mRunning = false;
+   mShuttingDown = false;
+   mStatisticsManagerEnabled = true;
+   mSocketFunc = options.mSocketFunc;
+
+   // .kw. note that stats manager has already called getTimeMs()
+   Timer::getTimeMs(); // initalize time offsets
+   Random::initialize();
+   initNetwork();
 }
 
 SipStack::~SipStack()
