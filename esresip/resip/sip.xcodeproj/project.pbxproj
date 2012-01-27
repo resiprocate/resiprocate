@@ -1,0 +1,1611 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		12F79733086CBA1E00AF4EDF /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08FB77AAFE841565C02AAC07 /* Carbon.framework */; };
+		6C9BC2790A4C446E00A69EFA /* ares_timeout.c in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2610A4C446E00A69EFA /* ares_timeout.c */; };
+		6C9BC27A0A4C446E00A69EFA /* ares_strerror.c in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2620A4C446E00A69EFA /* ares_strerror.c */; };
+		6C9BC27B0A4C446E00A69EFA /* ares_send.c in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2630A4C446E00A69EFA /* ares_send.c */; };
+		6C9BC27C0A4C446E00A69EFA /* ares_search.c in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2640A4C446E00A69EFA /* ares_search.c */; };
+		6C9BC27D0A4C446E00A69EFA /* ares_query.c in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2650A4C446E00A69EFA /* ares_query.c */; };
+		6C9BC27E0A4C446E00A69EFA /* ares_process.c in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2660A4C446E00A69EFA /* ares_process.c */; };
+		6C9BC27F0A4C446E00A69EFA /* ares_parse_ptr_reply.c in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2670A4C446E00A69EFA /* ares_parse_ptr_reply.c */; };
+		6C9BC2800A4C446E00A69EFA /* ares_parse_a_reply.c in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2680A4C446E00A69EFA /* ares_parse_a_reply.c */; };
+		6C9BC2810A4C446E00A69EFA /* ares_mkquery.c in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2690A4C446E00A69EFA /* ares_mkquery.c */; };
+		6C9BC2820A4C446E00A69EFA /* ares_local.c in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC26A0A4C446E00A69EFA /* ares_local.c */; };
+		6C9BC2830A4C446E00A69EFA /* ares_init.c in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC26B0A4C446E00A69EFA /* ares_init.c */; };
+		6C9BC2840A4C446E00A69EFA /* ares_gethostbyname.c in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC26C0A4C446E00A69EFA /* ares_gethostbyname.c */; };
+		6C9BC2850A4C446E00A69EFA /* ares_gethostbyaddr.c in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC26D0A4C446E00A69EFA /* ares_gethostbyaddr.c */; };
+		6C9BC2860A4C446E00A69EFA /* ares_free_string.c in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC26E0A4C446E00A69EFA /* ares_free_string.c */; };
+		6C9BC2870A4C446E00A69EFA /* ares_free_hostent.c in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC26F0A4C446E00A69EFA /* ares_free_hostent.c */; };
+		6C9BC2880A4C446E00A69EFA /* ares_free_errmem.c in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2700A4C446E00A69EFA /* ares_free_errmem.c */; };
+		6C9BC2890A4C446E00A69EFA /* ares_fds.c in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2710A4C446E00A69EFA /* ares_fds.c */; };
+		6C9BC28A0A4C446E00A69EFA /* ares_expand_name.c in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2720A4C446E00A69EFA /* ares_expand_name.c */; };
+		6C9BC28B0A4C446E00A69EFA /* ares_destroy.c in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2730A4C446E00A69EFA /* ares_destroy.c */; };
+		6C9BC28C0A4C446E00A69EFA /* ares__close_sockets.c in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2740A4C446E00A69EFA /* ares__close_sockets.c */; };
+		6C9BC28D0A4C446E00A69EFA /* ares__read_line.c in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2750A4C446E00A69EFA /* ares__read_line.c */; };
+		6C9BC2900A4C446E00A69EFA /* ares__get_hostent.c in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2780A4C446E00A69EFA /* ares__get_hostent.c */; };
+		6C9BC35A0A4C4AF500A69EFA /* vmd5.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2E00A4C49BE00A69EFA /* vmd5.cxx */; };
+		6C9BC35B0A4C4AF500A69EFA /* SimpleXMLElement.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2E10A4C49BE00A69EFA /* SimpleXMLElement.cxx */; };
+		6C9BC35C0A4C4AF500A69EFA /* Random.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2E20A4C49BE00A69EFA /* Random.cxx */; };
+		6C9BC35D0A4C4AF500A69EFA /* Subsystem.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2E30A4C49BE00A69EFA /* Subsystem.cxx */; };
+		6C9BC35E0A4C4AF500A69EFA /* SysLogBuf.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2E40A4C49BE00A69EFA /* SysLogBuf.cxx */; };
+		6C9BC35F0A4C4AF500A69EFA /* SHA1Stream.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2E50A4C49BE00A69EFA /* SHA1Stream.cxx */; };
+		6C9BC3600A4C4AF500A69EFA /* BaseException.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2E60A4C49BE00A69EFA /* BaseException.cxx */; };
+		6C9BC3610A4C4AF500A69EFA /* RWMutex.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2E70A4C49BE00A69EFA /* RWMutex.cxx */; };
+		6C9BC3620A4C4AF500A69EFA /* SysLogStream.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2E80A4C49BE00A69EFA /* SysLogStream.cxx */; };
+		6C9BC3630A4C4AF500A69EFA /* Logger.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2E90A4C49BE00A69EFA /* Logger.cxx */; };
+		6C9BC3640A4C4AF500A69EFA /* Poll.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2EA0A4C49BE00A69EFA /* Poll.cxx */; };
+		6C9BC3650A4C4AF500A69EFA /* Condition.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2EB0A4C49BE00A69EFA /* Condition.cxx */; };
+		6C9BC3660A4C4AF500A69EFA /* FileSystem.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2EC0A4C49BE00A69EFA /* FileSystem.cxx */; };
+		6C9BC3670A4C4AF500A69EFA /* SelectInterruptor.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2ED0A4C49BE00A69EFA /* SelectInterruptor.cxx */; };
+		6C9BC3680A4C4AF500A69EFA /* Log.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2EE0A4C49BE00A69EFA /* Log.cxx */; };
+		6C9BC3690A4C4AF500A69EFA /* FifoMonitor.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2EF0A4C49BE00A69EFA /* FifoMonitor.cxx */; };
+		6C9BC36A0A4C4AF500A69EFA /* ResipLogAdapter.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2F00A4C49BE00A69EFA /* ResipLogAdapter.cxx */; };
+		6C9BC36B0A4C4AF500A69EFA /* AbstractFifo.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2F10A4C49BE00A69EFA /* AbstractFifo.cxx */; };
+		6C9BC36C0A4C4AF500A69EFA /* Timer.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2F20A4C49BE00A69EFA /* Timer.cxx */; };
+		6C9BC36D0A4C4AF500A69EFA /* Socket.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2F30A4C49BE00A69EFA /* Socket.cxx */; };
+		6C9BC36E0A4C4AF500A69EFA /* CountStream.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2F40A4C49BE00A69EFA /* CountStream.cxx */; };
+		6C9BC36F0A4C4AF500A69EFA /* DataStream.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2F50A4C49BE00A69EFA /* DataStream.cxx */; };
+		6C9BC3700A4C4AF500A69EFA /* HeapInstanceCounter.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2F60A4C49BE00A69EFA /* HeapInstanceCounter.cxx */; };
+		6C9BC3710A4C4AF500A69EFA /* MD5Stream.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2F70A4C49BE00A69EFA /* MD5Stream.cxx */; };
+		6C9BC3720A4C4AF500A69EFA /* XMLLayout.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2F80A4C49BE00A69EFA /* XMLLayout.cxx */; };
+		6C9BC3730A4C4AF500A69EFA /* DnsUtil.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2F90A4C49BE00A69EFA /* DnsUtil.cxx */; };
+		6C9BC3740A4C4AF500A69EFA /* EsLogger.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2FA0A4C49BE00A69EFA /* EsLogger.cxx */; };
+		6C9BC3750A4C4AF500A69EFA /* Mutex.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2FB0A4C49BE00A69EFA /* Mutex.cxx */; };
+		6C9BC3760A4C4AF500A69EFA /* TransportType.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2FC0A4C49BE00A69EFA /* TransportType.cxx */; };
+		6C9BC3770A4C4AF500A69EFA /* Data.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2FD0A4C49BE00A69EFA /* Data.cxx */; };
+		6C9BC3780A4C4AF500A69EFA /* Coders.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2FE0A4C49BE00A69EFA /* Coders.cxx */; };
+		6C9BC3790A4C4AF500A69EFA /* RecursiveMutex.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC2FF0A4C49BE00A69EFA /* RecursiveMutex.cxx */; };
+		6C9BC37A0A4C4AF500A69EFA /* ParseBuffer.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3000A4C49BE00A69EFA /* ParseBuffer.cxx */; };
+		6C9BC37B0A4C4AF500A69EFA /* OpenSSLInit.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3010A4C49BE00A69EFA /* OpenSSLInit.cxx */; };
+		6C9BC37C0A4C4AF500A69EFA /* ThreadIf.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3020A4C49BE00A69EFA /* ThreadIf.cxx */; };
+		6C9BC37E0A4C4AF500A69EFA /* Lock.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3040A4C49BE00A69EFA /* Lock.cxx */; };
+		6C9BC3F30A4C4E3000A69EFA /* AppDialogSetFactory.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3AB0A4C4E3000A69EFA /* AppDialogSetFactory.cxx */; };
+		6C9BC3F40A4C4E3000A69EFA /* AppDialogSet.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3AC0A4C4E3000A69EFA /* AppDialogSet.cxx */; };
+		6C9BC3F50A4C4E3000A69EFA /* AppDialog.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3AD0A4C4E3000A69EFA /* AppDialog.cxx */; };
+		6C9BC3F60A4C4E3000A69EFA /* UserProfile.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3AE0A4C4E3000A69EFA /* UserProfile.cxx */; };
+		6C9BC3F70A4C4E3000A69EFA /* ClientOutOfDialogReq.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3AF0A4C4E3000A69EFA /* ClientOutOfDialogReq.cxx */; };
+		6C9BC3F80A4C4E3000A69EFA /* ClientInviteSession.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3B00A4C4E3000A69EFA /* ClientInviteSession.cxx */; };
+		6C9BC3F90A4C4E3000A69EFA /* ClientAuthManager.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3B10A4C4E3000A69EFA /* ClientAuthManager.cxx */; };
+		6C9BC3FA0A4C4E3000A69EFA /* ChallengeInfo.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3B20A4C4E3000A69EFA /* ChallengeInfo.cxx */; };
+		6C9BC3FB0A4C4E3000A69EFA /* ServerPagerMessage.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3B30A4C4E3000A69EFA /* ServerPagerMessage.cxx */; };
+		6C9BC3FC0A4C4E3000A69EFA /* RegistrationCreator.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3B40A4C4E3000A69EFA /* RegistrationCreator.cxx */; };
+		6C9BC3FD0A4C4E3000A69EFA /* RedirectManager.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3B50A4C4E3000A69EFA /* RedirectManager.cxx */; };
+		6C9BC3FE0A4C4E3000A69EFA /* PublicationCreator.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3B60A4C4E3000A69EFA /* PublicationCreator.cxx */; };
+		6C9BC3FF0A4C4E3000A69EFA /* Profile.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3B70A4C4E3000A69EFA /* Profile.cxx */; };
+		6C9BC4000A4C4E3000A69EFA /* PagerMessageCreator.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3B80A4C4E3000A69EFA /* PagerMessageCreator.cxx */; };
+		6C9BC4010A4C4E3000A69EFA /* OutOfDialogReqCreator.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3B90A4C4E3000A69EFA /* OutOfDialogReqCreator.cxx */; };
+		6C9BC4020A4C4E3000A69EFA /* OutgoingEvent.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3BA0A4C4E3000A69EFA /* OutgoingEvent.cxx */; };
+		6C9BC4030A4C4E3000A69EFA /* NonDialogUsage.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3BB0A4C4E3000A69EFA /* NonDialogUsage.cxx */; };
+		6C9BC4040A4C4E3000A69EFA /* NetworkAssociation.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3BC0A4C4E3000A69EFA /* NetworkAssociation.cxx */; };
+		6C9BC4050A4C4E3000A69EFA /* MergedRequestRemovalCommand.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3BD0A4C4E3000A69EFA /* MergedRequestRemovalCommand.cxx */; };
+		6C9BC4060A4C4E3000A69EFA /* MergedRequestKey.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3BE0A4C4E3000A69EFA /* MergedRequestKey.cxx */; };
+		6C9BC4070A4C4E3000A69EFA /* MasterProfile.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3BF0A4C4E3000A69EFA /* MasterProfile.cxx */; };
+		6C9BC4080A4C4E3000A69EFA /* KeepAliveTimeout.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3C00A4C4E3000A69EFA /* KeepAliveTimeout.cxx */; };
+		6C9BC4090A4C4E3000A69EFA /* KeepAliveManager.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3C10A4C4E3000A69EFA /* KeepAliveManager.cxx */; };
+		6C9BC40A0A4C4E3000A69EFA /* InviteSessionHandler.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3C20A4C4E3000A69EFA /* InviteSessionHandler.cxx */; };
+		6C9BC40B0A4C4E3000A69EFA /* InviteSessionCreator.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3C30A4C4E3000A69EFA /* InviteSessionCreator.cxx */; };
+		6C9BC40C0A4C4E3000A69EFA /* InviteSession.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3C40A4C4E3000A69EFA /* InviteSession.cxx */; };
+		6C9BC40D0A4C4E3000A69EFA /* InMemoryRegistrationDatabase.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3C50A4C4E3000A69EFA /* InMemoryRegistrationDatabase.cxx */; };
+		6C9BC40E0A4C4E3000A69EFA /* IdentityHandler.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3C60A4C4E3000A69EFA /* IdentityHandler.cxx */; };
+		6C9BC40F0A4C4E3000A69EFA /* HttpProvider.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3C70A4C4E3000A69EFA /* HttpProvider.cxx */; };
+		6C9BC4100A4C4E3000A69EFA /* HttpGetMessage.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3C80A4C4E3000A69EFA /* HttpGetMessage.cxx */; };
+		6C9BC4110A4C4E3000A69EFA /* HandleManager.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3C90A4C4E3000A69EFA /* HandleManager.cxx */; };
+		6C9BC4120A4C4E3000A69EFA /* HandleException.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3CA0A4C4E3000A69EFA /* HandleException.cxx */; };
+		6C9BC4130A4C4E3000A69EFA /* Handled.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3CB0A4C4E3000A69EFA /* Handled.cxx */; };
+		6C9BC4140A4C4E3000A69EFA /* Handle.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3CC0A4C4E3000A69EFA /* Handle.cxx */; };
+		6C9BC4150A4C4E3000A69EFA /* EncryptionRequest.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3CD0A4C4E3000A69EFA /* EncryptionRequest.cxx */; };
+		6C9BC4160A4C4E3000A69EFA /* EncryptionManager.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3CE0A4C4E3000A69EFA /* EncryptionManager.cxx */; };
+		6C9BC4170A4C4E3000A69EFA /* DumTimeout.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3CF0A4C4E3000A69EFA /* DumTimeout.cxx */; };
+		6C9BC4180A4C4E3000A69EFA /* DumThread.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3D00A4C4E3000A69EFA /* DumThread.cxx */; };
+		6C9BC4190A4C4E3000A69EFA /* DumProcessHandler.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3D10A4C4E3000A69EFA /* DumProcessHandler.cxx */; };
+		6C9BC41A0A4C4E3000A69EFA /* DumHelper.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3D20A4C4E3000A69EFA /* DumHelper.cxx */; };
+		6C9BC41B0A4C4E3000A69EFA /* DumFeatureChain.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3D30A4C4E3000A69EFA /* DumFeatureChain.cxx */; };
+		6C9BC41C0A4C4E3000A69EFA /* DumFeature.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3D40A4C4E3000A69EFA /* DumFeature.cxx */; };
+		6C9BC41D0A4C4E3000A69EFA /* DumDecrypted.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3D50A4C4E3000A69EFA /* DumDecrypted.cxx */; };
+		6C9BC41E0A4C4E3000A69EFA /* UserAuthInfo.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3D60A4C4E3000A69EFA /* UserAuthInfo.cxx */; };
+		6C9BC41F0A4C4E3000A69EFA /* TargetCommand.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3D70A4C4E3000A69EFA /* TargetCommand.cxx */; };
+		6C9BC4200A4C4E3000A69EFA /* SubscriptionState.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3D80A4C4E3000A69EFA /* SubscriptionState.cxx */; };
+		6C9BC4210A4C4E3000A69EFA /* SubscriptionHandler.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3D90A4C4E3000A69EFA /* SubscriptionHandler.cxx */; };
+		6C9BC4220A4C4E3000A69EFA /* SubscriptionCreator.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3DA0A4C4E3000A69EFA /* SubscriptionCreator.cxx */; };
+		6C9BC4230A4C4E3000A69EFA /* ServerSubscription.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3DB0A4C4E3000A69EFA /* ServerSubscription.cxx */; };
+		6C9BC4240A4C4E3000A69EFA /* ServerRegistration.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3DC0A4C4E3000A69EFA /* ServerRegistration.cxx */; };
+		6C9BC4250A4C4E3000A69EFA /* ServerPublication.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3DD0A4C4E3000A69EFA /* ServerPublication.cxx */; };
+		6C9BC4260A4C4E3000A69EFA /* CertMessage.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3DE0A4C4E3000A69EFA /* CertMessage.cxx */; };
+		6C9BC4270A4C4E3000A69EFA /* BaseUsage.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3DF0A4C4E3000A69EFA /* BaseUsage.cxx */; };
+		6C9BC4280A4C4E3000A69EFA /* BaseSubscription.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3E00A4C4E3000A69EFA /* BaseSubscription.cxx */; };
+		6C9BC4290A4C4E3000A69EFA /* BaseCreator.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3E10A4C4E3000A69EFA /* BaseCreator.cxx */; };
+		6C9BC42A0A4C4E3000A69EFA /* ClientPublication.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3E20A4C4E3000A69EFA /* ClientPublication.cxx */; };
+		6C9BC42B0A4C4E3000A69EFA /* ClientPagerMessage.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3E30A4C4E3000A69EFA /* ClientPagerMessage.cxx */; };
+		6C9BC42C0A4C4E3000A69EFA /* ServerOutOfDialogReq.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3E40A4C4E3000A69EFA /* ServerOutOfDialogReq.cxx */; };
+		6C9BC42D0A4C4E3000A69EFA /* ServerInviteSession.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3E50A4C4E3000A69EFA /* ServerInviteSession.cxx */; };
+		6C9BC42E0A4C4E3000A69EFA /* ServerAuthManager.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3E60A4C4E3000A69EFA /* ServerAuthManager.cxx */; };
+		6C9BC42F0A4C4E3000A69EFA /* DialogUsageManager.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3E70A4C4E3000A69EFA /* DialogUsageManager.cxx */; };
+		6C9BC4300A4C4E3000A69EFA /* DialogUsage.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3E80A4C4E3000A69EFA /* DialogUsage.cxx */; };
+		6C9BC4310A4C4E3000A69EFA /* DialogSetId.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3E90A4C4E3000A69EFA /* DialogSetId.cxx */; };
+		6C9BC4320A4C4E3000A69EFA /* DialogSet.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3EA0A4C4E3000A69EFA /* DialogSet.cxx */; };
+		6C9BC4330A4C4E3000A69EFA /* DialogId.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3EB0A4C4E3000A69EFA /* DialogId.cxx */; };
+		6C9BC4340A4C4E3000A69EFA /* Dialog.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3EC0A4C4E3000A69EFA /* Dialog.cxx */; };
+		6C9BC4350A4C4E3000A69EFA /* DestroyUsage.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3ED0A4C4E3000A69EFA /* DestroyUsage.cxx */; };
+		6C9BC4360A4C4E3000A69EFA /* DefaultServerReferHandler.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3EE0A4C4E3000A69EFA /* DefaultServerReferHandler.cxx */; };
+		6C9BC4370A4C4E3000A69EFA /* ContactInstanceRecord.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3EF0A4C4E3000A69EFA /* ContactInstanceRecord.cxx */; };
+		6C9BC4380A4C4E3000A69EFA /* DumFeatureMessage.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3F00A4C4E3000A69EFA /* DumFeatureMessage.cxx */; };
+		6C9BC4390A4C4E3000A69EFA /* ClientSubscription.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3F10A4C4E3000A69EFA /* ClientSubscription.cxx */; };
+		6C9BC43A0A4C4E3000A69EFA /* ClientRegistration.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC3F20A4C4E3000A69EFA /* ClientRegistration.cxx */; };
+		6C9BC4B60A4C510E00A69EFA /* ContentsFactoryBase.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4400A4C510D00A69EFA /* ContentsFactoryBase.cxx */; };
+		6C9BC4B70A4C510E00A69EFA /* XMLCursor.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4410A4C510D00A69EFA /* XMLCursor.cxx */; };
+		6C9BC4B80A4C510E00A69EFA /* X509Contents.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4420A4C510D00A69EFA /* X509Contents.cxx */; };
+		6C9BC4BA0A4C510E00A69EFA /* WarningCategory.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4440A4C510D00A69EFA /* WarningCategory.cxx */; };
+		6C9BC4BB0A4C510E00A69EFA /* Via.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4450A4C510D00A69EFA /* Via.cxx */; };
+		6C9BC4BC0A4C510E00A69EFA /* Uri.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4460A4C510D00A69EFA /* Uri.cxx */; };
+		6C9BC4BD0A4C510E00A69EFA /* UnknownParameter.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4470A4C510D00A69EFA /* UnknownParameter.cxx */; };
+		6C9BC4BE0A4C510E00A69EFA /* UdpTransport.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4480A4C510D00A69EFA /* UdpTransport.cxx */; };
+		6C9BC4BF0A4C510E00A69EFA /* TuSelector.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4490A4C510D00A69EFA /* TuSelector.cxx */; };
+		6C9BC4C00A4C510E00A69EFA /* Tuple.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC44A0A4C510D00A69EFA /* Tuple.cxx */; };
+		6C9BC4C10A4C510E00A69EFA /* TuIM.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC44B0A4C510D00A69EFA /* TuIM.cxx */; };
+		6C9BC4C20A4C510E00A69EFA /* TransactionState.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC44C0A4C510D00A69EFA /* TransactionState.cxx */; };
+		6C9BC4C30A4C510E00A69EFA /* StatusLine.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC44D0A4C510D00A69EFA /* StatusLine.cxx */; };
+		6C9BC4C40A4C510E00A69EFA /* ParserCategories.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC44E0A4C510D00A69EFA /* ParserCategories.cxx */; };
+		6C9BC4C50A4C510E00A69EFA /* StackThread.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC44F0A4C510D00A69EFA /* StackThread.cxx */; };
+		6C9BC4C60A4C510E00A69EFA /* ConnectionManager.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4500A4C510E00A69EFA /* ConnectionManager.cxx */; };
+		6C9BC4C70A4C510E00A69EFA /* TlsConnection.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4510A4C510E00A69EFA /* TlsConnection.cxx */; };
+		6C9BC4C80A4C510E00A69EFA /* Security.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4520A4C510E00A69EFA /* Security.cxx */; };
+		6C9BC4C90A4C510E00A69EFA /* OctetContents.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4530A4C510E00A69EFA /* OctetContents.cxx */; };
+		6C9BC4CA0A4C510E00A69EFA /* CSeqCategory.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4540A4C510E00A69EFA /* CSeqCategory.cxx */; };
+		6C9BC4CB0A4C510E00A69EFA /* TransactionController.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4550A4C510E00A69EFA /* TransactionController.cxx */; };
+		6C9BC4CC0A4C510E00A69EFA /* Token.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4560A4C510E00A69EFA /* Token.cxx */; };
+		6C9BC4CD0A4C510E00A69EFA /* SipFrag.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4570A4C510E00A69EFA /* SipFrag.cxx */; };
+		6C9BC4CE0A4C510E00A69EFA /* HeaderFieldValueList.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4580A4C510E00A69EFA /* HeaderFieldValueList.cxx */; };
+		6C9BC4CF0A4C510E00A69EFA /* Rlmi.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4590A4C510E00A69EFA /* Rlmi.cxx */; };
+		6C9BC4D00A4C510E00A69EFA /* SipMessage.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC45A0A4C510E00A69EFA /* SipMessage.cxx */; };
+		6C9BC4D10A4C510E00A69EFA /* Connection.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC45B0A4C510E00A69EFA /* Connection.cxx */; };
+		6C9BC4D20A4C510E00A69EFA /* SdpContents.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC45C0A4C510E00A69EFA /* SdpContents.cxx */; };
+		6C9BC4D30A4C510E00A69EFA /* MacSecurity.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC45D0A4C510E00A69EFA /* MacSecurity.cxx */; };
+		6C9BC4D40A4C510E00A69EFA /* MethodTypes.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC45E0A4C510E00A69EFA /* MethodTypes.cxx */; };
+		6C9BC4D50A4C510E00A69EFA /* TimerQueue.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC45F0A4C510E00A69EFA /* TimerQueue.cxx */; };
+		6C9BC4D60A4C510E00A69EFA /* SecurityAttributes.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4600A4C510E00A69EFA /* SecurityAttributes.cxx */; };
+		6C9BC4D70A4C510E00A69EFA /* TlsTransport.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4610A4C510E00A69EFA /* TlsTransport.cxx */; };
+		6C9BC4D80A4C510E00A69EFA /* RportParameter.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4620A4C510E00A69EFA /* RportParameter.cxx */; };
+		6C9BC4D90A4C510E00A69EFA /* StringCategory.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4630A4C510E00A69EFA /* StringCategory.cxx */; };
+		6C9BC4DA0A4C510E00A69EFA /* RAckCategory.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4640A4C510E00A69EFA /* RAckCategory.cxx */; };
+		6C9BC4DB0A4C510E00A69EFA /* PlainContents.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4650A4C510E00A69EFA /* PlainContents.cxx */; };
+		6C9BC4DC0A4C510E00A69EFA /* TransactionMap.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4660A4C510E00A69EFA /* TransactionMap.cxx */; };
+		6C9BC4DD0A4C510E00A69EFA /* QopParameter.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4670A4C510E00A69EFA /* QopParameter.cxx */; };
+		6C9BC4DE0A4C510E00A69EFA /* DataParameter.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4680A4C510E00A69EFA /* DataParameter.cxx */; };
+		6C9BC4DF0A4C510E00A69EFA /* SERNonceHelper.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4690A4C510E00A69EFA /* SERNonceHelper.cxx */; };
+		6C9BC4E00A4C510E00A69EFA /* ApiCheck.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC46A0A4C510E00A69EFA /* ApiCheck.cxx */; };
+		6C9BC4E10A4C510E00A69EFA /* TcpConnection.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC46B0A4C510E00A69EFA /* TcpConnection.cxx */; };
+		6C9BC4E20A4C510E00A69EFA /* GenericContents.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC46C0A4C510E00A69EFA /* GenericContents.cxx */; };
+		6C9BC4E30A4C510E00A69EFA /* NonceHelper.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC46D0A4C510E00A69EFA /* NonceHelper.cxx */; };
+		6C9BC4E40A4C510E00A69EFA /* MsgHeaderScanner.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC46E0A4C510E00A69EFA /* MsgHeaderScanner.cxx */; };
+		6C9BC4E50A4C510E00A69EFA /* FlowId.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC46F0A4C510E00A69EFA /* FlowId.cxx */; };
+		6C9BC4E60A4C510E00A69EFA /* ExtensionHeader.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4700A4C510E00A69EFA /* ExtensionHeader.cxx */; };
+		6C9BC4E70A4C510E00A69EFA /* MultipartAlternativeContents.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4710A4C510E00A69EFA /* MultipartAlternativeContents.cxx */; };
+		6C9BC4E80A4C510E00A69EFA /* Pkcs7Contents.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4720A4C510E00A69EFA /* Pkcs7Contents.cxx */; };
+		6C9BC4E90A4C510E00A69EFA /* FloatParameter.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4730A4C510E00A69EFA /* FloatParameter.cxx */; };
+		6C9BC4EA0A4C510E00A69EFA /* DtlsTransport.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4740A4C510E00A69EFA /* DtlsTransport.cxx */; };
+		6C9BC4EB0A4C510E00A69EFA /* ExternalBodyContents.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4750A4C510E00A69EFA /* ExternalBodyContents.cxx */; };
+		6C9BC4EC0A4C510E00A69EFA /* LazyParser.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4760A4C510E00A69EFA /* LazyParser.cxx */; };
+		6C9BC4ED0A4C510E00A69EFA /* MultipartMixedContents.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4770A4C510E00A69EFA /* MultipartMixedContents.cxx */; };
+		6C9BC4EE0A4C510E00A69EFA /* InterruptableStackThread.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4780A4C510E00A69EFA /* InterruptableStackThread.cxx */; };
+		6C9BC4EF0A4C510E00A69EFA /* Parameter.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4790A4C510E00A69EFA /* Parameter.cxx */; };
+		6C9BC4F00A4C510E00A69EFA /* MultipartSignedContents.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC47A0A4C510E00A69EFA /* MultipartSignedContents.cxx */; };
+		6C9BC4F10A4C510E00A69EFA /* Pidf.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC47B0A4C510E00A69EFA /* Pidf.cxx */; };
+		6C9BC4F30A4C510E00A69EFA /* ParserContainerBase.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC47D0A4C510E00A69EFA /* ParserContainerBase.cxx */; };
+		6C9BC4F40A4C510E00A69EFA /* NameAddr.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC47E0A4C510E00A69EFA /* NameAddr.cxx */; };
+		6C9BC4F50A4C510E00A69EFA /* ExtensionParameter.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC47F0A4C510E00A69EFA /* ExtensionParameter.cxx */; };
+		6C9BC4F60A4C510E00A69EFA /* DeprecatedDialog.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4800A4C510E00A69EFA /* DeprecatedDialog.cxx */; };
+		6C9BC4F70A4C510E00A69EFA /* Mime.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4810A4C510E00A69EFA /* Mime.cxx */; };
+		6C9BC4F80A4C510E00A69EFA /* TcpBaseTransport.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4820A4C510E00A69EFA /* TcpBaseTransport.cxx */; };
+		6C9BC4F90A4C510E00A69EFA /* ExpiresCategory.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4830A4C510E00A69EFA /* ExpiresCategory.cxx */; };
+		6C9BC4FA0A4C510E00A69EFA /* MessageWaitingContents.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4840A4C510E00A69EFA /* MessageWaitingContents.cxx */; };
+		6C9BC4FB0A4C510E00A69EFA /* ExistsParameter.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4850A4C510E00A69EFA /* ExistsParameter.cxx */; };
+		6C9BC4FC0A4C510E00A69EFA /* Embedded.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4860A4C510E00A69EFA /* Embedded.cxx */; };
+		6C9BC4FD0A4C510E00A69EFA /* Helper.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4870A4C510E00A69EFA /* Helper.cxx */; };
+		6C9BC4FE0A4C510E00A69EFA /* IntegerCategory.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4880A4C510E00A69EFA /* IntegerCategory.cxx */; };
+		6C9BC4FF0A4C510E00A69EFA /* Headers.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4890A4C510E00A69EFA /* Headers.cxx */; };
+		6C9BC5000A4C510E00A69EFA /* Pkcs8Contents.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC48A0A4C510E00A69EFA /* Pkcs8Contents.cxx */; };
+		6C9BC5010A4C510E00A69EFA /* MultipartRelatedContents.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC48B0A4C510E00A69EFA /* MultipartRelatedContents.cxx */; };
+		6C9BC5020A4C510E00A69EFA /* HeaderTypes.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC48C0A4C510E00A69EFA /* HeaderTypes.cxx */; };
+		6C9BC5030A4C510E00A69EFA /* InvalidContents.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC48D0A4C510E00A69EFA /* InvalidContents.cxx */; };
+		6C9BC5040A4C510E00A69EFA /* InternalTransport.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC48E0A4C510E00A69EFA /* InternalTransport.cxx */; };
+		6C9BC5050A4C510E00A69EFA /* ParameterHash.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC48F0A4C510E00A69EFA /* ParameterHash.cxx */; };
+		6C9BC5060A4C510E00A69EFA /* DnsResult.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4900A4C510E00A69EFA /* DnsResult.cxx */; };
+		6C9BC5070A4C510E00A69EFA /* CallId.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4910A4C510E00A69EFA /* CallId.cxx */; };
+		6C9BC5080A4C510E00A69EFA /* ParameterTypes.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4920A4C510E00A69EFA /* ParameterTypes.cxx */; };
+		6C9BC5090A4C510E00A69EFA /* Auth.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4930A4C510E00A69EFA /* Auth.cxx */; };
+		6C9BC50A0A4C510E00A69EFA /* TransactionUserMessage.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4940A4C510E00A69EFA /* TransactionUserMessage.cxx */; };
+		6C9BC50B0A4C510E00A69EFA /* TransactionUser.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4950A4C510E00A69EFA /* TransactionUser.cxx */; };
+		6C9BC50C0A4C510E00A69EFA /* TransportSelector.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4960A4C510E00A69EFA /* TransportSelector.cxx */; };
+		6C9BC50D0A4C510E00A69EFA /* TransportFailure.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4970A4C510E00A69EFA /* TransportFailure.cxx */; };
+		6C9BC50E0A4C510E00A69EFA /* Transport.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4980A4C510E00A69EFA /* Transport.cxx */; };
+		6C9BC50F0A4C510E00A69EFA /* ConnectionBase.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4990A4C510E00A69EFA /* ConnectionBase.cxx */; };
+		6C9BC5100A4C510E00A69EFA /* GenericUri.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC49A0A4C510E00A69EFA /* GenericUri.cxx */; };
+		6C9BC5110A4C510E00A69EFA /* IntegerParameter.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC49B0A4C510E00A69EFA /* IntegerParameter.cxx */; };
+		6C9BC5120A4C510E00A69EFA /* Aor.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC49C0A4C510E00A69EFA /* Aor.cxx */; };
+		6C9BC5130A4C510E00A69EFA /* HeaderFieldValue.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC49D0A4C510E00A69EFA /* HeaderFieldValue.cxx */; };
+		6C9BC5140A4C510E00A69EFA /* Contents.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC49E0A4C510E00A69EFA /* Contents.cxx */; };
+		6C9BC5150A4C510E00A69EFA /* StatisticsMessage.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC49F0A4C510E00A69EFA /* StatisticsMessage.cxx */; };
+		6C9BC5160A4C510E00A69EFA /* BranchParameter.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4A00A4C510E00A69EFA /* BranchParameter.cxx */; };
+		6C9BC5170A4C510E00A69EFA /* BasicNonceHelper.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4A10A4C510E00A69EFA /* BasicNonceHelper.cxx */; };
+		6C9BC5180A4C510E00A69EFA /* SipStack.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4A20A4C510E00A69EFA /* SipStack.cxx */; };
+		6C9BC5190A4C510E00A69EFA /* TimeAccumulate.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4A30A4C510E00A69EFA /* TimeAccumulate.cxx */; };
+		6C9BC51A0A4C510E00A69EFA /* StatisticsManager.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4A40A4C510E00A69EFA /* StatisticsManager.cxx */; };
+		6C9BC51B0A4C510E00A69EFA /* TimerMessage.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4A50A4C510E00A69EFA /* TimerMessage.cxx */; };
+		6C9BC51C0A4C510E00A69EFA /* StatelessHandler.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4A60A4C510E00A69EFA /* StatelessHandler.cxx */; };
+		6C9BC51D0A4C510E00A69EFA /* DateCategory.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4A70A4C510E00A69EFA /* DateCategory.cxx */; };
+		6C9BC51E0A4C510E00A69EFA /* TcpTransport.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4A80A4C510E00A69EFA /* TcpTransport.cxx */; };
+		6C9BC51F0A4C510E00A69EFA /* Symbols.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4A90A4C510E00A69EFA /* Symbols.cxx */; };
+		6C9BC5200A4C510E00A69EFA /* RequestLine.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4AA0A4C510E00A69EFA /* RequestLine.cxx */; };
+		6C9BC5210A4C510E00A69EFA /* Message.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4AB0A4C510E00A69EFA /* Message.cxx */; };
+		6C9BC5220A4C510E00A69EFA /* QuotedDataParameter.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4AC0A4C510E00A69EFA /* QuotedDataParameter.cxx */; };
+		6C9BC5230A4C510E00A69EFA /* CpimContents.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4AD0A4C510E00A69EFA /* CpimContents.cxx */; };
+		6C9BC5240A4C510E00A69EFA /* DtlsMessage.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4AE0A4C510E00A69EFA /* DtlsMessage.cxx */; };
+		6C9BC5250A4C510E00A69EFA /* MessageFilterRule.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4AF0A4C510E00A69EFA /* MessageFilterRule.cxx */; };
+		6C9BC5260A4C510E00A69EFA /* ApplicationSip.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4B00A4C510E00A69EFA /* ApplicationSip.cxx */; };
+		6C9BC5270A4C510E00A69EFA /* HeaderHash.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4B10A4C510E00A69EFA /* HeaderHash.cxx */; };
+		6C9BC5280A4C510E00A69EFA /* DnsInterface.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4B20A4C510E00A69EFA /* DnsInterface.cxx */; };
+		6C9BC5290A4C510E00A69EFA /* ParserCategory.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4B30A4C510E00A69EFA /* ParserCategory.cxx */; };
+		6C9BC52A0A4C510E00A69EFA /* KeepAliveMessage.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4B40A4C510E00A69EFA /* KeepAliveMessage.cxx */; };
+		6C9BC52B0A4C510E00A69EFA /* MethodHash.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC4B50A4C510E00A69EFA /* MethodHash.cxx */; };
+		6C9BC5760A4C5E9E00A69EFA /* AresDns.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC5560A4C5E9E00A69EFA /* AresDns.cxx */; };
+		6C9BC5770A4C5E9E00A69EFA /* AresDns.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 6C9BC5570A4C5E9E00A69EFA /* AresDns.hxx */; };
+		6C9BC5780A4C5E9E00A69EFA /* DnsAAAARecord.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC5580A4C5E9E00A69EFA /* DnsAAAARecord.cxx */; };
+		6C9BC5790A4C5E9E00A69EFA /* DnsAAAARecord.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 6C9BC5590A4C5E9E00A69EFA /* DnsAAAARecord.hxx */; };
+		6C9BC57A0A4C5E9E00A69EFA /* DnsCnameRecord.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC55A0A4C5E9E00A69EFA /* DnsCnameRecord.cxx */; };
+		6C9BC57B0A4C5E9E00A69EFA /* DnsCnameRecord.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 6C9BC55B0A4C5E9E00A69EFA /* DnsCnameRecord.hxx */; };
+		6C9BC57C0A4C5E9E00A69EFA /* DnsHandler.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 6C9BC55C0A4C5E9E00A69EFA /* DnsHandler.hxx */; };
+		6C9BC57D0A4C5E9E00A69EFA /* DnsHostRecord.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC55D0A4C5E9E00A69EFA /* DnsHostRecord.cxx */; };
+		6C9BC57E0A4C5E9E00A69EFA /* DnsHostRecord.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 6C9BC55E0A4C5E9E00A69EFA /* DnsHostRecord.hxx */; };
+		6C9BC57F0A4C5E9E00A69EFA /* DnsNaptrRecord.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC55F0A4C5E9E00A69EFA /* DnsNaptrRecord.cxx */; };
+		6C9BC5800A4C5E9E00A69EFA /* DnsNaptrRecord.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 6C9BC5600A4C5E9E00A69EFA /* DnsNaptrRecord.hxx */; };
+		6C9BC5810A4C5E9E00A69EFA /* DnsResourceRecord.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 6C9BC5610A4C5E9E00A69EFA /* DnsResourceRecord.hxx */; };
+		6C9BC5820A4C5E9E00A69EFA /* DnsSrvRecord.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC5620A4C5E9E00A69EFA /* DnsSrvRecord.cxx */; };
+		6C9BC5830A4C5E9E00A69EFA /* DnsSrvRecord.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 6C9BC5630A4C5E9E00A69EFA /* DnsSrvRecord.hxx */; };
+		6C9BC5840A4C5E9E00A69EFA /* DnsStub.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC5640A4C5E9E00A69EFA /* DnsStub.cxx */; };
+		6C9BC5850A4C5E9E00A69EFA /* DnsStub.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 6C9BC5650A4C5E9E00A69EFA /* DnsStub.hxx */; };
+		6C9BC5860A4C5E9E00A69EFA /* ExternalDns.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 6C9BC5660A4C5E9E00A69EFA /* ExternalDns.hxx */; };
+		6C9BC5870A4C5E9E00A69EFA /* ExternalDnsFactory.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC5670A4C5E9E00A69EFA /* ExternalDnsFactory.cxx */; };
+		6C9BC5880A4C5E9E00A69EFA /* ExternalDnsFactory.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 6C9BC5680A4C5E9E00A69EFA /* ExternalDnsFactory.hxx */; };
+		6C9BC5890A4C5E9E00A69EFA /* LocalDns.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC5690A4C5E9E00A69EFA /* LocalDns.cxx */; };
+		6C9BC58A0A4C5E9E00A69EFA /* LocalDns.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 6C9BC56A0A4C5E9E00A69EFA /* LocalDns.hxx */; };
+		6C9BC58B0A4C5E9E00A69EFA /* QueryTypes.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC56B0A4C5E9E00A69EFA /* QueryTypes.cxx */; };
+		6C9BC58C0A4C5E9E00A69EFA /* QueryTypes.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 6C9BC56C0A4C5E9E00A69EFA /* QueryTypes.hxx */; };
+		6C9BC58D0A4C5E9E00A69EFA /* RRCache.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC56D0A4C5E9E00A69EFA /* RRCache.cxx */; };
+		6C9BC58E0A4C5E9E00A69EFA /* RRCache.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 6C9BC56E0A4C5E9E00A69EFA /* RRCache.hxx */; };
+		6C9BC58F0A4C5E9E00A69EFA /* RRFactory.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 6C9BC56F0A4C5E9E00A69EFA /* RRFactory.hxx */; };
+		6C9BC5900A4C5E9E00A69EFA /* RRList.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC5700A4C5E9E00A69EFA /* RRList.cxx */; };
+		6C9BC5910A4C5E9E00A69EFA /* RRList.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 6C9BC5710A4C5E9E00A69EFA /* RRList.hxx */; };
+		6C9BC5920A4C5E9E00A69EFA /* RROverlay.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC5720A4C5E9E00A69EFA /* RROverlay.cxx */; };
+		6C9BC5930A4C5E9E00A69EFA /* RROverlay.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 6C9BC5730A4C5E9E00A69EFA /* RROverlay.hxx */; };
+		6C9BC5940A4C5E9E00A69EFA /* RRVip.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC5740A4C5E9E00A69EFA /* RRVip.cxx */; };
+		6C9BC5950A4C5E9E00A69EFA /* RRVip.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 6C9BC5750A4C5E9E00A69EFA /* RRVip.hxx */; };
+		6C9BC5A30A4C61A400A69EFA /* Stun.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC59F0A4C61A400A69EFA /* Stun.cxx */; };
+		6C9BC5A40A4C61A400A69EFA /* Stun.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 6C9BC5A00A4C61A400A69EFA /* Stun.hxx */; };
+		6C9BC5A50A4C61A400A69EFA /* Udp.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6C9BC5A10A4C61A400A69EFA /* Udp.cxx */; };
+		6C9BC5A60A4C61A400A69EFA /* Udp.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 6C9BC5A20A4C61A400A69EFA /* Udp.hxx */; };
+		6CD351390A825A6500A5B7F3 /* SqliteKVDb.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6CD351380A825A6500A5B7F3 /* SqliteKVDb.cxx */; };
+		6CD351860A82643700A5B7F3 /* QValueParameter.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6CD351840A82643700A5B7F3 /* QValueParameter.cxx */; };
+		6CD351870A82643700A5B7F3 /* QValue.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 6CD351850A82643700A5B7F3 /* QValue.cxx */; };
+		D2AAC0700554677100DB518D /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08FB77AAFE841565C02AAC07 /* Carbon.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		6C9BC5370A4C531C00A69EFA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0867D690FE84028FC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6C9BC2D60A4C496400A69EFA;
+			remoteInfo = rutil;
+		};
+		6C9BC5390A4C531C00A69EFA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0867D690FE84028FC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6C9BC3A30A4C4DAA00A69EFA;
+			remoteInfo = dum;
+		};
+		6CE8EEF70A5466F6007BE74A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0867D690FE84028FC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D2AAC06E0554671400DB518D;
+			remoteInfo = ares;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		08FB77AAFE841565C02AAC07 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
+		12F79738086CBA1E00AF4EDF /* libresip.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libresip.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		32BAE0B70371A74B00C91783 /* sip_MacPrefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sip_MacPrefix.pch; sourceTree = "<group>"; };
+		6C9BC2610A4C446E00A69EFA /* ares_timeout.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ares_timeout.c; path = ../contrib/ares/ares_timeout.c; sourceTree = SOURCE_ROOT; };
+		6C9BC2620A4C446E00A69EFA /* ares_strerror.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ares_strerror.c; path = ../contrib/ares/ares_strerror.c; sourceTree = SOURCE_ROOT; };
+		6C9BC2630A4C446E00A69EFA /* ares_send.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ares_send.c; path = ../contrib/ares/ares_send.c; sourceTree = SOURCE_ROOT; };
+		6C9BC2640A4C446E00A69EFA /* ares_search.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ares_search.c; path = ../contrib/ares/ares_search.c; sourceTree = SOURCE_ROOT; };
+		6C9BC2650A4C446E00A69EFA /* ares_query.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ares_query.c; path = ../contrib/ares/ares_query.c; sourceTree = SOURCE_ROOT; };
+		6C9BC2660A4C446E00A69EFA /* ares_process.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ares_process.c; path = ../contrib/ares/ares_process.c; sourceTree = SOURCE_ROOT; };
+		6C9BC2670A4C446E00A69EFA /* ares_parse_ptr_reply.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ares_parse_ptr_reply.c; path = ../contrib/ares/ares_parse_ptr_reply.c; sourceTree = SOURCE_ROOT; };
+		6C9BC2680A4C446E00A69EFA /* ares_parse_a_reply.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ares_parse_a_reply.c; path = ../contrib/ares/ares_parse_a_reply.c; sourceTree = SOURCE_ROOT; };
+		6C9BC2690A4C446E00A69EFA /* ares_mkquery.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ares_mkquery.c; path = ../contrib/ares/ares_mkquery.c; sourceTree = SOURCE_ROOT; };
+		6C9BC26A0A4C446E00A69EFA /* ares_local.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ares_local.c; path = ../contrib/ares/ares_local.c; sourceTree = SOURCE_ROOT; };
+		6C9BC26B0A4C446E00A69EFA /* ares_init.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ares_init.c; path = ../contrib/ares/ares_init.c; sourceTree = SOURCE_ROOT; };
+		6C9BC26C0A4C446E00A69EFA /* ares_gethostbyname.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ares_gethostbyname.c; path = ../contrib/ares/ares_gethostbyname.c; sourceTree = SOURCE_ROOT; };
+		6C9BC26D0A4C446E00A69EFA /* ares_gethostbyaddr.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ares_gethostbyaddr.c; path = ../contrib/ares/ares_gethostbyaddr.c; sourceTree = SOURCE_ROOT; };
+		6C9BC26E0A4C446E00A69EFA /* ares_free_string.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ares_free_string.c; path = ../contrib/ares/ares_free_string.c; sourceTree = SOURCE_ROOT; };
+		6C9BC26F0A4C446E00A69EFA /* ares_free_hostent.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ares_free_hostent.c; path = ../contrib/ares/ares_free_hostent.c; sourceTree = SOURCE_ROOT; };
+		6C9BC2700A4C446E00A69EFA /* ares_free_errmem.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ares_free_errmem.c; path = ../contrib/ares/ares_free_errmem.c; sourceTree = SOURCE_ROOT; };
+		6C9BC2710A4C446E00A69EFA /* ares_fds.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ares_fds.c; path = ../contrib/ares/ares_fds.c; sourceTree = SOURCE_ROOT; };
+		6C9BC2720A4C446E00A69EFA /* ares_expand_name.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ares_expand_name.c; path = ../contrib/ares/ares_expand_name.c; sourceTree = SOURCE_ROOT; };
+		6C9BC2730A4C446E00A69EFA /* ares_destroy.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ares_destroy.c; path = ../contrib/ares/ares_destroy.c; sourceTree = SOURCE_ROOT; };
+		6C9BC2740A4C446E00A69EFA /* ares__close_sockets.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ares__close_sockets.c; path = ../contrib/ares/ares__close_sockets.c; sourceTree = SOURCE_ROOT; };
+		6C9BC2750A4C446E00A69EFA /* ares__read_line.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ares__read_line.c; path = ../contrib/ares/ares__read_line.c; sourceTree = SOURCE_ROOT; };
+		6C9BC2770A4C446E00A69EFA /* ahost.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ahost.c; path = ../contrib/ares/ahost.c; sourceTree = SOURCE_ROOT; };
+		6C9BC2780A4C446E00A69EFA /* ares__get_hostent.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ares__get_hostent.c; path = ../contrib/ares/ares__get_hostent.c; sourceTree = SOURCE_ROOT; };
+		6C9BC2920A4C455E00A69EFA /* adig.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = adig.c; path = ../contrib/ares/adig.c; sourceTree = SOURCE_ROOT; };
+		6C9BC2D70A4C496400A69EFA /* librutil.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = librutil.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		6C9BC2E00A4C49BE00A69EFA /* vmd5.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = vmd5.cxx; path = ../rutil/vmd5.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2E10A4C49BE00A69EFA /* SimpleXMLElement.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SimpleXMLElement.cxx; path = ../rutil/SimpleXMLElement.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2E20A4C49BE00A69EFA /* Random.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Random.cxx; path = ../rutil/Random.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2E30A4C49BE00A69EFA /* Subsystem.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Subsystem.cxx; path = ../rutil/Subsystem.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2E40A4C49BE00A69EFA /* SysLogBuf.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SysLogBuf.cxx; path = ../rutil/SysLogBuf.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2E50A4C49BE00A69EFA /* SHA1Stream.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SHA1Stream.cxx; path = ../rutil/ssl/SHA1Stream.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2E60A4C49BE00A69EFA /* BaseException.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = BaseException.cxx; path = ../rutil/BaseException.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2E70A4C49BE00A69EFA /* RWMutex.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = RWMutex.cxx; path = ../rutil/RWMutex.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2E80A4C49BE00A69EFA /* SysLogStream.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SysLogStream.cxx; path = ../rutil/SysLogStream.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2E90A4C49BE00A69EFA /* Logger.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Logger.cxx; path = ../rutil/Logger.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2EA0A4C49BE00A69EFA /* Poll.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Poll.cxx; path = ../rutil/Poll.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2EB0A4C49BE00A69EFA /* Condition.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Condition.cxx; path = ../rutil/Condition.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2EC0A4C49BE00A69EFA /* FileSystem.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = FileSystem.cxx; path = ../rutil/FileSystem.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2ED0A4C49BE00A69EFA /* SelectInterruptor.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SelectInterruptor.cxx; path = ../rutil/SelectInterruptor.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2EE0A4C49BE00A69EFA /* Log.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Log.cxx; path = ../rutil/Log.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2EF0A4C49BE00A69EFA /* FifoMonitor.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = FifoMonitor.cxx; path = ../rutil/FifoMonitor.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2F00A4C49BE00A69EFA /* ResipLogAdapter.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ResipLogAdapter.cxx; path = ../rutil/ResipLogAdapter.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2F10A4C49BE00A69EFA /* AbstractFifo.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = AbstractFifo.cxx; path = ../rutil/AbstractFifo.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2F20A4C49BE00A69EFA /* Timer.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Timer.cxx; path = ../rutil/Timer.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2F30A4C49BE00A69EFA /* Socket.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Socket.cxx; path = ../rutil/Socket.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2F40A4C49BE00A69EFA /* CountStream.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = CountStream.cxx; path = ../rutil/CountStream.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2F50A4C49BE00A69EFA /* DataStream.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DataStream.cxx; path = ../rutil/DataStream.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2F60A4C49BE00A69EFA /* HeapInstanceCounter.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = HeapInstanceCounter.cxx; path = ../rutil/HeapInstanceCounter.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2F70A4C49BE00A69EFA /* MD5Stream.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MD5Stream.cxx; path = ../rutil/MD5Stream.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2F80A4C49BE00A69EFA /* XMLLayout.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = XMLLayout.cxx; path = ../rutil/XMLLayout.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2F90A4C49BE00A69EFA /* DnsUtil.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DnsUtil.cxx; path = ../rutil/DnsUtil.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2FA0A4C49BE00A69EFA /* EsLogger.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = EsLogger.cxx; path = ../rutil/EsLogger.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2FB0A4C49BE00A69EFA /* Mutex.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Mutex.cxx; path = ../rutil/Mutex.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2FC0A4C49BE00A69EFA /* TransportType.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TransportType.cxx; path = ../rutil/TransportType.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2FD0A4C49BE00A69EFA /* Data.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Data.cxx; path = ../rutil/Data.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2FE0A4C49BE00A69EFA /* Coders.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Coders.cxx; path = ../rutil/Coders.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC2FF0A4C49BE00A69EFA /* RecursiveMutex.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = RecursiveMutex.cxx; path = ../rutil/RecursiveMutex.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC3000A4C49BE00A69EFA /* ParseBuffer.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ParseBuffer.cxx; path = ../rutil/ParseBuffer.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC3010A4C49BE00A69EFA /* OpenSSLInit.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = OpenSSLInit.cxx; path = ../rutil/ssl/OpenSSLInit.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC3020A4C49BE00A69EFA /* ThreadIf.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ThreadIf.cxx; path = ../rutil/ThreadIf.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC3030A4C49BE00A69EFA /* WinCompat.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = WinCompat.cxx; path = ../rutil/WinCompat.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC3040A4C49BE00A69EFA /* Lock.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Lock.cxx; path = ../rutil/Lock.cxx; sourceTree = SOURCE_ROOT; };
+		6C9BC3A40A4C4DAA00A69EFA /* libdum.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libdum.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		6C9BC3AB0A4C4E3000A69EFA /* AppDialogSetFactory.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = AppDialogSetFactory.cxx; path = dum/AppDialogSetFactory.cxx; sourceTree = "<group>"; };
+		6C9BC3AC0A4C4E3000A69EFA /* AppDialogSet.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = AppDialogSet.cxx; path = dum/AppDialogSet.cxx; sourceTree = "<group>"; };
+		6C9BC3AD0A4C4E3000A69EFA /* AppDialog.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = AppDialog.cxx; path = dum/AppDialog.cxx; sourceTree = "<group>"; };
+		6C9BC3AE0A4C4E3000A69EFA /* UserProfile.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = UserProfile.cxx; path = dum/UserProfile.cxx; sourceTree = "<group>"; };
+		6C9BC3AF0A4C4E3000A69EFA /* ClientOutOfDialogReq.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ClientOutOfDialogReq.cxx; path = dum/ClientOutOfDialogReq.cxx; sourceTree = "<group>"; };
+		6C9BC3B00A4C4E3000A69EFA /* ClientInviteSession.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ClientInviteSession.cxx; path = dum/ClientInviteSession.cxx; sourceTree = "<group>"; };
+		6C9BC3B10A4C4E3000A69EFA /* ClientAuthManager.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ClientAuthManager.cxx; path = dum/ClientAuthManager.cxx; sourceTree = "<group>"; };
+		6C9BC3B20A4C4E3000A69EFA /* ChallengeInfo.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ChallengeInfo.cxx; path = dum/ChallengeInfo.cxx; sourceTree = "<group>"; };
+		6C9BC3B30A4C4E3000A69EFA /* ServerPagerMessage.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ServerPagerMessage.cxx; path = dum/ServerPagerMessage.cxx; sourceTree = "<group>"; };
+		6C9BC3B40A4C4E3000A69EFA /* RegistrationCreator.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = RegistrationCreator.cxx; path = dum/RegistrationCreator.cxx; sourceTree = "<group>"; };
+		6C9BC3B50A4C4E3000A69EFA /* RedirectManager.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = RedirectManager.cxx; path = dum/RedirectManager.cxx; sourceTree = "<group>"; };
+		6C9BC3B60A4C4E3000A69EFA /* PublicationCreator.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = PublicationCreator.cxx; path = dum/PublicationCreator.cxx; sourceTree = "<group>"; };
+		6C9BC3B70A4C4E3000A69EFA /* Profile.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Profile.cxx; path = dum/Profile.cxx; sourceTree = "<group>"; };
+		6C9BC3B80A4C4E3000A69EFA /* PagerMessageCreator.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = PagerMessageCreator.cxx; path = dum/PagerMessageCreator.cxx; sourceTree = "<group>"; };
+		6C9BC3B90A4C4E3000A69EFA /* OutOfDialogReqCreator.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = OutOfDialogReqCreator.cxx; path = dum/OutOfDialogReqCreator.cxx; sourceTree = "<group>"; };
+		6C9BC3BA0A4C4E3000A69EFA /* OutgoingEvent.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = OutgoingEvent.cxx; path = dum/OutgoingEvent.cxx; sourceTree = "<group>"; };
+		6C9BC3BB0A4C4E3000A69EFA /* NonDialogUsage.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = NonDialogUsage.cxx; path = dum/NonDialogUsage.cxx; sourceTree = "<group>"; };
+		6C9BC3BC0A4C4E3000A69EFA /* NetworkAssociation.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = NetworkAssociation.cxx; path = dum/NetworkAssociation.cxx; sourceTree = "<group>"; };
+		6C9BC3BD0A4C4E3000A69EFA /* MergedRequestRemovalCommand.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MergedRequestRemovalCommand.cxx; path = dum/MergedRequestRemovalCommand.cxx; sourceTree = "<group>"; };
+		6C9BC3BE0A4C4E3000A69EFA /* MergedRequestKey.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MergedRequestKey.cxx; path = dum/MergedRequestKey.cxx; sourceTree = "<group>"; };
+		6C9BC3BF0A4C4E3000A69EFA /* MasterProfile.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MasterProfile.cxx; path = dum/MasterProfile.cxx; sourceTree = "<group>"; };
+		6C9BC3C00A4C4E3000A69EFA /* KeepAliveTimeout.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = KeepAliveTimeout.cxx; path = dum/KeepAliveTimeout.cxx; sourceTree = "<group>"; };
+		6C9BC3C10A4C4E3000A69EFA /* KeepAliveManager.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = KeepAliveManager.cxx; path = dum/KeepAliveManager.cxx; sourceTree = "<group>"; };
+		6C9BC3C20A4C4E3000A69EFA /* InviteSessionHandler.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = InviteSessionHandler.cxx; path = dum/InviteSessionHandler.cxx; sourceTree = "<group>"; };
+		6C9BC3C30A4C4E3000A69EFA /* InviteSessionCreator.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = InviteSessionCreator.cxx; path = dum/InviteSessionCreator.cxx; sourceTree = "<group>"; };
+		6C9BC3C40A4C4E3000A69EFA /* InviteSession.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = InviteSession.cxx; path = dum/InviteSession.cxx; sourceTree = "<group>"; };
+		6C9BC3C50A4C4E3000A69EFA /* InMemoryRegistrationDatabase.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = InMemoryRegistrationDatabase.cxx; path = dum/InMemoryRegistrationDatabase.cxx; sourceTree = "<group>"; };
+		6C9BC3C60A4C4E3000A69EFA /* IdentityHandler.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = IdentityHandler.cxx; path = dum/IdentityHandler.cxx; sourceTree = "<group>"; };
+		6C9BC3C70A4C4E3000A69EFA /* HttpProvider.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = HttpProvider.cxx; path = dum/HttpProvider.cxx; sourceTree = "<group>"; };
+		6C9BC3C80A4C4E3000A69EFA /* HttpGetMessage.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = HttpGetMessage.cxx; path = dum/HttpGetMessage.cxx; sourceTree = "<group>"; };
+		6C9BC3C90A4C4E3000A69EFA /* HandleManager.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = HandleManager.cxx; path = dum/HandleManager.cxx; sourceTree = "<group>"; };
+		6C9BC3CA0A4C4E3000A69EFA /* HandleException.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = HandleException.cxx; path = dum/HandleException.cxx; sourceTree = "<group>"; };
+		6C9BC3CB0A4C4E3000A69EFA /* Handled.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Handled.cxx; path = dum/Handled.cxx; sourceTree = "<group>"; };
+		6C9BC3CC0A4C4E3000A69EFA /* Handle.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Handle.cxx; path = dum/Handle.cxx; sourceTree = "<group>"; };
+		6C9BC3CD0A4C4E3000A69EFA /* EncryptionRequest.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = EncryptionRequest.cxx; path = dum/EncryptionRequest.cxx; sourceTree = "<group>"; };
+		6C9BC3CE0A4C4E3000A69EFA /* EncryptionManager.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = EncryptionManager.cxx; path = dum/EncryptionManager.cxx; sourceTree = "<group>"; };
+		6C9BC3CF0A4C4E3000A69EFA /* DumTimeout.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DumTimeout.cxx; path = dum/DumTimeout.cxx; sourceTree = "<group>"; };
+		6C9BC3D00A4C4E3000A69EFA /* DumThread.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DumThread.cxx; path = dum/DumThread.cxx; sourceTree = "<group>"; };
+		6C9BC3D10A4C4E3000A69EFA /* DumProcessHandler.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DumProcessHandler.cxx; path = dum/DumProcessHandler.cxx; sourceTree = "<group>"; };
+		6C9BC3D20A4C4E3000A69EFA /* DumHelper.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DumHelper.cxx; path = dum/DumHelper.cxx; sourceTree = "<group>"; };
+		6C9BC3D30A4C4E3000A69EFA /* DumFeatureChain.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DumFeatureChain.cxx; path = dum/DumFeatureChain.cxx; sourceTree = "<group>"; };
+		6C9BC3D40A4C4E3000A69EFA /* DumFeature.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DumFeature.cxx; path = dum/DumFeature.cxx; sourceTree = "<group>"; };
+		6C9BC3D50A4C4E3000A69EFA /* DumDecrypted.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DumDecrypted.cxx; path = dum/DumDecrypted.cxx; sourceTree = "<group>"; };
+		6C9BC3D60A4C4E3000A69EFA /* UserAuthInfo.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = UserAuthInfo.cxx; path = dum/UserAuthInfo.cxx; sourceTree = "<group>"; };
+		6C9BC3D70A4C4E3000A69EFA /* TargetCommand.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TargetCommand.cxx; path = dum/TargetCommand.cxx; sourceTree = "<group>"; };
+		6C9BC3D80A4C4E3000A69EFA /* SubscriptionState.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SubscriptionState.cxx; path = dum/SubscriptionState.cxx; sourceTree = "<group>"; };
+		6C9BC3D90A4C4E3000A69EFA /* SubscriptionHandler.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SubscriptionHandler.cxx; path = dum/SubscriptionHandler.cxx; sourceTree = "<group>"; };
+		6C9BC3DA0A4C4E3000A69EFA /* SubscriptionCreator.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SubscriptionCreator.cxx; path = dum/SubscriptionCreator.cxx; sourceTree = "<group>"; };
+		6C9BC3DB0A4C4E3000A69EFA /* ServerSubscription.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ServerSubscription.cxx; path = dum/ServerSubscription.cxx; sourceTree = "<group>"; };
+		6C9BC3DC0A4C4E3000A69EFA /* ServerRegistration.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ServerRegistration.cxx; path = dum/ServerRegistration.cxx; sourceTree = "<group>"; };
+		6C9BC3DD0A4C4E3000A69EFA /* ServerPublication.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ServerPublication.cxx; path = dum/ServerPublication.cxx; sourceTree = "<group>"; };
+		6C9BC3DE0A4C4E3000A69EFA /* CertMessage.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = CertMessage.cxx; path = dum/CertMessage.cxx; sourceTree = "<group>"; };
+		6C9BC3DF0A4C4E3000A69EFA /* BaseUsage.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = BaseUsage.cxx; path = dum/BaseUsage.cxx; sourceTree = "<group>"; };
+		6C9BC3E00A4C4E3000A69EFA /* BaseSubscription.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = BaseSubscription.cxx; path = dum/BaseSubscription.cxx; sourceTree = "<group>"; };
+		6C9BC3E10A4C4E3000A69EFA /* BaseCreator.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = BaseCreator.cxx; path = dum/BaseCreator.cxx; sourceTree = "<group>"; };
+		6C9BC3E20A4C4E3000A69EFA /* ClientPublication.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ClientPublication.cxx; path = dum/ClientPublication.cxx; sourceTree = "<group>"; };
+		6C9BC3E30A4C4E3000A69EFA /* ClientPagerMessage.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ClientPagerMessage.cxx; path = dum/ClientPagerMessage.cxx; sourceTree = "<group>"; };
+		6C9BC3E40A4C4E3000A69EFA /* ServerOutOfDialogReq.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ServerOutOfDialogReq.cxx; path = dum/ServerOutOfDialogReq.cxx; sourceTree = "<group>"; };
+		6C9BC3E50A4C4E3000A69EFA /* ServerInviteSession.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ServerInviteSession.cxx; path = dum/ServerInviteSession.cxx; sourceTree = "<group>"; };
+		6C9BC3E60A4C4E3000A69EFA /* ServerAuthManager.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ServerAuthManager.cxx; path = dum/ServerAuthManager.cxx; sourceTree = "<group>"; };
+		6C9BC3E70A4C4E3000A69EFA /* DialogUsageManager.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DialogUsageManager.cxx; path = dum/DialogUsageManager.cxx; sourceTree = "<group>"; };
+		6C9BC3E80A4C4E3000A69EFA /* DialogUsage.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DialogUsage.cxx; path = dum/DialogUsage.cxx; sourceTree = "<group>"; };
+		6C9BC3E90A4C4E3000A69EFA /* DialogSetId.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DialogSetId.cxx; path = dum/DialogSetId.cxx; sourceTree = "<group>"; };
+		6C9BC3EA0A4C4E3000A69EFA /* DialogSet.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DialogSet.cxx; path = dum/DialogSet.cxx; sourceTree = "<group>"; };
+		6C9BC3EB0A4C4E3000A69EFA /* DialogId.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DialogId.cxx; path = dum/DialogId.cxx; sourceTree = "<group>"; };
+		6C9BC3EC0A4C4E3000A69EFA /* Dialog.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Dialog.cxx; path = dum/Dialog.cxx; sourceTree = "<group>"; };
+		6C9BC3ED0A4C4E3000A69EFA /* DestroyUsage.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DestroyUsage.cxx; path = dum/DestroyUsage.cxx; sourceTree = "<group>"; };
+		6C9BC3EE0A4C4E3000A69EFA /* DefaultServerReferHandler.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DefaultServerReferHandler.cxx; path = dum/DefaultServerReferHandler.cxx; sourceTree = "<group>"; };
+		6C9BC3EF0A4C4E3000A69EFA /* ContactInstanceRecord.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ContactInstanceRecord.cxx; path = dum/ContactInstanceRecord.cxx; sourceTree = "<group>"; };
+		6C9BC3F00A4C4E3000A69EFA /* DumFeatureMessage.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DumFeatureMessage.cxx; path = dum/DumFeatureMessage.cxx; sourceTree = "<group>"; };
+		6C9BC3F10A4C4E3000A69EFA /* ClientSubscription.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ClientSubscription.cxx; path = dum/ClientSubscription.cxx; sourceTree = "<group>"; };
+		6C9BC3F20A4C4E3000A69EFA /* ClientRegistration.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ClientRegistration.cxx; path = dum/ClientRegistration.cxx; sourceTree = "<group>"; };
+		6C9BC4400A4C510D00A69EFA /* ContentsFactoryBase.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ContentsFactoryBase.cxx; path = stack/ContentsFactoryBase.cxx; sourceTree = "<group>"; };
+		6C9BC4410A4C510D00A69EFA /* XMLCursor.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = XMLCursor.cxx; path = stack/XMLCursor.cxx; sourceTree = "<group>"; };
+		6C9BC4420A4C510D00A69EFA /* X509Contents.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = X509Contents.cxx; path = stack/X509Contents.cxx; sourceTree = "<group>"; };
+		6C9BC4430A4C510D00A69EFA /* WinSecurity.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = WinSecurity.cxx; path = stack/WinSecurity.cxx; sourceTree = "<group>"; };
+		6C9BC4440A4C510D00A69EFA /* WarningCategory.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = WarningCategory.cxx; path = stack/WarningCategory.cxx; sourceTree = "<group>"; };
+		6C9BC4450A4C510D00A69EFA /* Via.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Via.cxx; path = stack/Via.cxx; sourceTree = "<group>"; };
+		6C9BC4460A4C510D00A69EFA /* Uri.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Uri.cxx; path = stack/Uri.cxx; sourceTree = "<group>"; };
+		6C9BC4470A4C510D00A69EFA /* UnknownParameter.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = UnknownParameter.cxx; path = stack/UnknownParameter.cxx; sourceTree = "<group>"; };
+		6C9BC4480A4C510D00A69EFA /* UdpTransport.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = UdpTransport.cxx; path = stack/UdpTransport.cxx; sourceTree = "<group>"; };
+		6C9BC4490A4C510D00A69EFA /* TuSelector.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TuSelector.cxx; path = stack/TuSelector.cxx; sourceTree = "<group>"; };
+		6C9BC44A0A4C510D00A69EFA /* Tuple.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Tuple.cxx; path = stack/Tuple.cxx; sourceTree = "<group>"; };
+		6C9BC44B0A4C510D00A69EFA /* TuIM.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TuIM.cxx; path = stack/TuIM.cxx; sourceTree = "<group>"; };
+		6C9BC44C0A4C510D00A69EFA /* TransactionState.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TransactionState.cxx; path = stack/TransactionState.cxx; sourceTree = "<group>"; };
+		6C9BC44D0A4C510D00A69EFA /* StatusLine.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = StatusLine.cxx; path = stack/StatusLine.cxx; sourceTree = "<group>"; };
+		6C9BC44E0A4C510D00A69EFA /* ParserCategories.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ParserCategories.cxx; path = stack/ParserCategories.cxx; sourceTree = "<group>"; };
+		6C9BC44F0A4C510D00A69EFA /* StackThread.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = StackThread.cxx; path = stack/StackThread.cxx; sourceTree = "<group>"; };
+		6C9BC4500A4C510E00A69EFA /* ConnectionManager.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ConnectionManager.cxx; path = stack/ConnectionManager.cxx; sourceTree = "<group>"; };
+		6C9BC4510A4C510E00A69EFA /* TlsConnection.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TlsConnection.cxx; path = stack/TlsConnection.cxx; sourceTree = "<group>"; };
+		6C9BC4520A4C510E00A69EFA /* Security.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Security.cxx; path = stack/Security.cxx; sourceTree = "<group>"; };
+		6C9BC4530A4C510E00A69EFA /* OctetContents.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = OctetContents.cxx; path = stack/OctetContents.cxx; sourceTree = "<group>"; };
+		6C9BC4540A4C510E00A69EFA /* CSeqCategory.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = CSeqCategory.cxx; path = stack/CSeqCategory.cxx; sourceTree = "<group>"; };
+		6C9BC4550A4C510E00A69EFA /* TransactionController.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TransactionController.cxx; path = stack/TransactionController.cxx; sourceTree = "<group>"; };
+		6C9BC4560A4C510E00A69EFA /* Token.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Token.cxx; path = stack/Token.cxx; sourceTree = "<group>"; };
+		6C9BC4570A4C510E00A69EFA /* SipFrag.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SipFrag.cxx; path = stack/SipFrag.cxx; sourceTree = "<group>"; };
+		6C9BC4580A4C510E00A69EFA /* HeaderFieldValueList.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = HeaderFieldValueList.cxx; path = stack/HeaderFieldValueList.cxx; sourceTree = "<group>"; };
+		6C9BC4590A4C510E00A69EFA /* Rlmi.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Rlmi.cxx; path = stack/Rlmi.cxx; sourceTree = "<group>"; };
+		6C9BC45A0A4C510E00A69EFA /* SipMessage.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SipMessage.cxx; path = stack/SipMessage.cxx; sourceTree = "<group>"; };
+		6C9BC45B0A4C510E00A69EFA /* Connection.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Connection.cxx; path = stack/Connection.cxx; sourceTree = "<group>"; };
+		6C9BC45C0A4C510E00A69EFA /* SdpContents.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SdpContents.cxx; path = stack/SdpContents.cxx; sourceTree = "<group>"; };
+		6C9BC45D0A4C510E00A69EFA /* MacSecurity.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MacSecurity.cxx; path = stack/MacSecurity.cxx; sourceTree = "<group>"; };
+		6C9BC45E0A4C510E00A69EFA /* MethodTypes.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MethodTypes.cxx; path = stack/MethodTypes.cxx; sourceTree = "<group>"; };
+		6C9BC45F0A4C510E00A69EFA /* TimerQueue.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TimerQueue.cxx; path = stack/TimerQueue.cxx; sourceTree = "<group>"; };
+		6C9BC4600A4C510E00A69EFA /* SecurityAttributes.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SecurityAttributes.cxx; path = stack/SecurityAttributes.cxx; sourceTree = "<group>"; };
+		6C9BC4610A4C510E00A69EFA /* TlsTransport.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TlsTransport.cxx; path = stack/TlsTransport.cxx; sourceTree = "<group>"; };
+		6C9BC4620A4C510E00A69EFA /* RportParameter.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = RportParameter.cxx; path = stack/RportParameter.cxx; sourceTree = "<group>"; };
+		6C9BC4630A4C510E00A69EFA /* StringCategory.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = StringCategory.cxx; path = stack/StringCategory.cxx; sourceTree = "<group>"; };
+		6C9BC4640A4C510E00A69EFA /* RAckCategory.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = RAckCategory.cxx; path = stack/RAckCategory.cxx; sourceTree = "<group>"; };
+		6C9BC4650A4C510E00A69EFA /* PlainContents.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = PlainContents.cxx; path = stack/PlainContents.cxx; sourceTree = "<group>"; };
+		6C9BC4660A4C510E00A69EFA /* TransactionMap.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TransactionMap.cxx; path = stack/TransactionMap.cxx; sourceTree = "<group>"; };
+		6C9BC4670A4C510E00A69EFA /* QopParameter.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = QopParameter.cxx; path = stack/QopParameter.cxx; sourceTree = "<group>"; };
+		6C9BC4680A4C510E00A69EFA /* DataParameter.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DataParameter.cxx; path = stack/DataParameter.cxx; sourceTree = "<group>"; };
+		6C9BC4690A4C510E00A69EFA /* SERNonceHelper.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SERNonceHelper.cxx; path = stack/SERNonceHelper.cxx; sourceTree = "<group>"; };
+		6C9BC46A0A4C510E00A69EFA /* ApiCheck.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ApiCheck.cxx; path = stack/ApiCheck.cxx; sourceTree = "<group>"; };
+		6C9BC46B0A4C510E00A69EFA /* TcpConnection.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TcpConnection.cxx; path = stack/TcpConnection.cxx; sourceTree = "<group>"; };
+		6C9BC46C0A4C510E00A69EFA /* GenericContents.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = GenericContents.cxx; path = stack/GenericContents.cxx; sourceTree = "<group>"; };
+		6C9BC46D0A4C510E00A69EFA /* NonceHelper.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = NonceHelper.cxx; path = stack/NonceHelper.cxx; sourceTree = "<group>"; };
+		6C9BC46E0A4C510E00A69EFA /* MsgHeaderScanner.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MsgHeaderScanner.cxx; path = stack/MsgHeaderScanner.cxx; sourceTree = "<group>"; };
+		6C9BC46F0A4C510E00A69EFA /* FlowId.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = FlowId.cxx; path = stack/FlowId.cxx; sourceTree = "<group>"; };
+		6C9BC4700A4C510E00A69EFA /* ExtensionHeader.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ExtensionHeader.cxx; path = stack/ExtensionHeader.cxx; sourceTree = "<group>"; };
+		6C9BC4710A4C510E00A69EFA /* MultipartAlternativeContents.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MultipartAlternativeContents.cxx; path = stack/MultipartAlternativeContents.cxx; sourceTree = "<group>"; };
+		6C9BC4720A4C510E00A69EFA /* Pkcs7Contents.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Pkcs7Contents.cxx; path = stack/Pkcs7Contents.cxx; sourceTree = "<group>"; };
+		6C9BC4730A4C510E00A69EFA /* FloatParameter.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = FloatParameter.cxx; path = stack/FloatParameter.cxx; sourceTree = "<group>"; };
+		6C9BC4740A4C510E00A69EFA /* DtlsTransport.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DtlsTransport.cxx; path = stack/DtlsTransport.cxx; sourceTree = "<group>"; };
+		6C9BC4750A4C510E00A69EFA /* ExternalBodyContents.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ExternalBodyContents.cxx; path = stack/ExternalBodyContents.cxx; sourceTree = "<group>"; };
+		6C9BC4760A4C510E00A69EFA /* LazyParser.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = LazyParser.cxx; path = stack/LazyParser.cxx; sourceTree = "<group>"; };
+		6C9BC4770A4C510E00A69EFA /* MultipartMixedContents.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MultipartMixedContents.cxx; path = stack/MultipartMixedContents.cxx; sourceTree = "<group>"; };
+		6C9BC4780A4C510E00A69EFA /* InterruptableStackThread.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = InterruptableStackThread.cxx; path = stack/InterruptableStackThread.cxx; sourceTree = "<group>"; };
+		6C9BC4790A4C510E00A69EFA /* Parameter.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Parameter.cxx; path = stack/Parameter.cxx; sourceTree = "<group>"; };
+		6C9BC47A0A4C510E00A69EFA /* MultipartSignedContents.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MultipartSignedContents.cxx; path = stack/MultipartSignedContents.cxx; sourceTree = "<group>"; };
+		6C9BC47B0A4C510E00A69EFA /* Pidf.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Pidf.cxx; path = stack/Pidf.cxx; sourceTree = "<group>"; };
+		6C9BC47C0A4C510E00A69EFA /* makeCert.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = makeCert.cxx; path = stack/makeCert.cxx; sourceTree = "<group>"; };
+		6C9BC47D0A4C510E00A69EFA /* ParserContainerBase.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ParserContainerBase.cxx; path = stack/ParserContainerBase.cxx; sourceTree = "<group>"; };
+		6C9BC47E0A4C510E00A69EFA /* NameAddr.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = NameAddr.cxx; path = stack/NameAddr.cxx; sourceTree = "<group>"; };
+		6C9BC47F0A4C510E00A69EFA /* ExtensionParameter.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ExtensionParameter.cxx; path = stack/ExtensionParameter.cxx; sourceTree = "<group>"; };
+		6C9BC4800A4C510E00A69EFA /* DeprecatedDialog.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DeprecatedDialog.cxx; path = stack/DeprecatedDialog.cxx; sourceTree = "<group>"; };
+		6C9BC4810A4C510E00A69EFA /* Mime.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Mime.cxx; path = stack/Mime.cxx; sourceTree = "<group>"; };
+		6C9BC4820A4C510E00A69EFA /* TcpBaseTransport.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TcpBaseTransport.cxx; path = stack/TcpBaseTransport.cxx; sourceTree = "<group>"; };
+		6C9BC4830A4C510E00A69EFA /* ExpiresCategory.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ExpiresCategory.cxx; path = stack/ExpiresCategory.cxx; sourceTree = "<group>"; };
+		6C9BC4840A4C510E00A69EFA /* MessageWaitingContents.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MessageWaitingContents.cxx; path = stack/MessageWaitingContents.cxx; sourceTree = "<group>"; };
+		6C9BC4850A4C510E00A69EFA /* ExistsParameter.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ExistsParameter.cxx; path = stack/ExistsParameter.cxx; sourceTree = "<group>"; };
+		6C9BC4860A4C510E00A69EFA /* Embedded.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Embedded.cxx; path = stack/Embedded.cxx; sourceTree = "<group>"; };
+		6C9BC4870A4C510E00A69EFA /* Helper.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Helper.cxx; path = stack/Helper.cxx; sourceTree = "<group>"; };
+		6C9BC4880A4C510E00A69EFA /* IntegerCategory.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = IntegerCategory.cxx; path = stack/IntegerCategory.cxx; sourceTree = "<group>"; };
+		6C9BC4890A4C510E00A69EFA /* Headers.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Headers.cxx; path = stack/Headers.cxx; sourceTree = "<group>"; };
+		6C9BC48A0A4C510E00A69EFA /* Pkcs8Contents.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Pkcs8Contents.cxx; path = stack/Pkcs8Contents.cxx; sourceTree = "<group>"; };
+		6C9BC48B0A4C510E00A69EFA /* MultipartRelatedContents.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MultipartRelatedContents.cxx; path = stack/MultipartRelatedContents.cxx; sourceTree = "<group>"; };
+		6C9BC48C0A4C510E00A69EFA /* HeaderTypes.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = HeaderTypes.cxx; path = stack/HeaderTypes.cxx; sourceTree = "<group>"; };
+		6C9BC48D0A4C510E00A69EFA /* InvalidContents.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = InvalidContents.cxx; path = stack/InvalidContents.cxx; sourceTree = "<group>"; };
+		6C9BC48E0A4C510E00A69EFA /* InternalTransport.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = InternalTransport.cxx; path = stack/InternalTransport.cxx; sourceTree = "<group>"; };
+		6C9BC48F0A4C510E00A69EFA /* ParameterHash.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ParameterHash.cxx; path = stack/ParameterHash.cxx; sourceTree = "<group>"; };
+		6C9BC4900A4C510E00A69EFA /* DnsResult.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DnsResult.cxx; path = stack/DnsResult.cxx; sourceTree = "<group>"; };
+		6C9BC4910A4C510E00A69EFA /* CallId.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = CallId.cxx; path = stack/CallId.cxx; sourceTree = "<group>"; };
+		6C9BC4920A4C510E00A69EFA /* ParameterTypes.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ParameterTypes.cxx; path = stack/ParameterTypes.cxx; sourceTree = "<group>"; };
+		6C9BC4930A4C510E00A69EFA /* Auth.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Auth.cxx; path = stack/Auth.cxx; sourceTree = "<group>"; };
+		6C9BC4940A4C510E00A69EFA /* TransactionUserMessage.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TransactionUserMessage.cxx; path = stack/TransactionUserMessage.cxx; sourceTree = "<group>"; };
+		6C9BC4950A4C510E00A69EFA /* TransactionUser.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TransactionUser.cxx; path = stack/TransactionUser.cxx; sourceTree = "<group>"; };
+		6C9BC4960A4C510E00A69EFA /* TransportSelector.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TransportSelector.cxx; path = stack/TransportSelector.cxx; sourceTree = "<group>"; };
+		6C9BC4970A4C510E00A69EFA /* TransportFailure.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TransportFailure.cxx; path = stack/TransportFailure.cxx; sourceTree = "<group>"; };
+		6C9BC4980A4C510E00A69EFA /* Transport.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Transport.cxx; path = stack/Transport.cxx; sourceTree = "<group>"; };
+		6C9BC4990A4C510E00A69EFA /* ConnectionBase.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ConnectionBase.cxx; path = stack/ConnectionBase.cxx; sourceTree = "<group>"; };
+		6C9BC49A0A4C510E00A69EFA /* GenericUri.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = GenericUri.cxx; path = stack/GenericUri.cxx; sourceTree = "<group>"; };
+		6C9BC49B0A4C510E00A69EFA /* IntegerParameter.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = IntegerParameter.cxx; path = stack/IntegerParameter.cxx; sourceTree = "<group>"; };
+		6C9BC49C0A4C510E00A69EFA /* Aor.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Aor.cxx; path = stack/Aor.cxx; sourceTree = "<group>"; };
+		6C9BC49D0A4C510E00A69EFA /* HeaderFieldValue.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = HeaderFieldValue.cxx; path = stack/HeaderFieldValue.cxx; sourceTree = "<group>"; };
+		6C9BC49E0A4C510E00A69EFA /* Contents.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Contents.cxx; path = stack/Contents.cxx; sourceTree = "<group>"; };
+		6C9BC49F0A4C510E00A69EFA /* StatisticsMessage.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = StatisticsMessage.cxx; path = stack/StatisticsMessage.cxx; sourceTree = "<group>"; };
+		6C9BC4A00A4C510E00A69EFA /* BranchParameter.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = BranchParameter.cxx; path = stack/BranchParameter.cxx; sourceTree = "<group>"; };
+		6C9BC4A10A4C510E00A69EFA /* BasicNonceHelper.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = BasicNonceHelper.cxx; path = stack/BasicNonceHelper.cxx; sourceTree = "<group>"; };
+		6C9BC4A20A4C510E00A69EFA /* SipStack.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SipStack.cxx; path = stack/SipStack.cxx; sourceTree = "<group>"; };
+		6C9BC4A30A4C510E00A69EFA /* TimeAccumulate.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TimeAccumulate.cxx; path = stack/TimeAccumulate.cxx; sourceTree = "<group>"; };
+		6C9BC4A40A4C510E00A69EFA /* StatisticsManager.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = StatisticsManager.cxx; path = stack/StatisticsManager.cxx; sourceTree = "<group>"; };
+		6C9BC4A50A4C510E00A69EFA /* TimerMessage.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TimerMessage.cxx; path = stack/TimerMessage.cxx; sourceTree = "<group>"; };
+		6C9BC4A60A4C510E00A69EFA /* StatelessHandler.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = StatelessHandler.cxx; path = stack/StatelessHandler.cxx; sourceTree = "<group>"; };
+		6C9BC4A70A4C510E00A69EFA /* DateCategory.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DateCategory.cxx; path = stack/DateCategory.cxx; sourceTree = "<group>"; };
+		6C9BC4A80A4C510E00A69EFA /* TcpTransport.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TcpTransport.cxx; path = stack/TcpTransport.cxx; sourceTree = "<group>"; };
+		6C9BC4A90A4C510E00A69EFA /* Symbols.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Symbols.cxx; path = stack/Symbols.cxx; sourceTree = "<group>"; };
+		6C9BC4AA0A4C510E00A69EFA /* RequestLine.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = RequestLine.cxx; path = stack/RequestLine.cxx; sourceTree = "<group>"; };
+		6C9BC4AB0A4C510E00A69EFA /* Message.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Message.cxx; path = stack/Message.cxx; sourceTree = "<group>"; };
+		6C9BC4AC0A4C510E00A69EFA /* QuotedDataParameter.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = QuotedDataParameter.cxx; path = stack/QuotedDataParameter.cxx; sourceTree = "<group>"; };
+		6C9BC4AD0A4C510E00A69EFA /* CpimContents.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = CpimContents.cxx; path = stack/CpimContents.cxx; sourceTree = "<group>"; };
+		6C9BC4AE0A4C510E00A69EFA /* DtlsMessage.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DtlsMessage.cxx; path = stack/DtlsMessage.cxx; sourceTree = "<group>"; };
+		6C9BC4AF0A4C510E00A69EFA /* MessageFilterRule.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MessageFilterRule.cxx; path = stack/MessageFilterRule.cxx; sourceTree = "<group>"; };
+		6C9BC4B00A4C510E00A69EFA /* ApplicationSip.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ApplicationSip.cxx; path = stack/ApplicationSip.cxx; sourceTree = "<group>"; };
+		6C9BC4B10A4C510E00A69EFA /* HeaderHash.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = HeaderHash.cxx; path = stack/HeaderHash.cxx; sourceTree = "<group>"; };
+		6C9BC4B20A4C510E00A69EFA /* DnsInterface.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DnsInterface.cxx; path = stack/DnsInterface.cxx; sourceTree = "<group>"; };
+		6C9BC4B30A4C510E00A69EFA /* ParserCategory.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ParserCategory.cxx; path = stack/ParserCategory.cxx; sourceTree = "<group>"; };
+		6C9BC4B40A4C510E00A69EFA /* KeepAliveMessage.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = KeepAliveMessage.cxx; path = stack/KeepAliveMessage.cxx; sourceTree = "<group>"; };
+		6C9BC4B50A4C510E00A69EFA /* MethodHash.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MethodHash.cxx; path = stack/MethodHash.cxx; sourceTree = "<group>"; };
+		6C9BC5560A4C5E9E00A69EFA /* AresDns.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = AresDns.cxx; sourceTree = "<group>"; };
+		6C9BC5570A4C5E9E00A69EFA /* AresDns.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = AresDns.hxx; sourceTree = "<group>"; };
+		6C9BC5580A4C5E9E00A69EFA /* DnsAAAARecord.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = DnsAAAARecord.cxx; sourceTree = "<group>"; };
+		6C9BC5590A4C5E9E00A69EFA /* DnsAAAARecord.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = DnsAAAARecord.hxx; sourceTree = "<group>"; };
+		6C9BC55A0A4C5E9E00A69EFA /* DnsCnameRecord.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = DnsCnameRecord.cxx; sourceTree = "<group>"; };
+		6C9BC55B0A4C5E9E00A69EFA /* DnsCnameRecord.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = DnsCnameRecord.hxx; sourceTree = "<group>"; };
+		6C9BC55C0A4C5E9E00A69EFA /* DnsHandler.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = DnsHandler.hxx; sourceTree = "<group>"; };
+		6C9BC55D0A4C5E9E00A69EFA /* DnsHostRecord.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = DnsHostRecord.cxx; sourceTree = "<group>"; };
+		6C9BC55E0A4C5E9E00A69EFA /* DnsHostRecord.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = DnsHostRecord.hxx; sourceTree = "<group>"; };
+		6C9BC55F0A4C5E9E00A69EFA /* DnsNaptrRecord.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = DnsNaptrRecord.cxx; sourceTree = "<group>"; };
+		6C9BC5600A4C5E9E00A69EFA /* DnsNaptrRecord.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = DnsNaptrRecord.hxx; sourceTree = "<group>"; };
+		6C9BC5610A4C5E9E00A69EFA /* DnsResourceRecord.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = DnsResourceRecord.hxx; sourceTree = "<group>"; };
+		6C9BC5620A4C5E9E00A69EFA /* DnsSrvRecord.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = DnsSrvRecord.cxx; sourceTree = "<group>"; };
+		6C9BC5630A4C5E9E00A69EFA /* DnsSrvRecord.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = DnsSrvRecord.hxx; sourceTree = "<group>"; };
+		6C9BC5640A4C5E9E00A69EFA /* DnsStub.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = DnsStub.cxx; sourceTree = "<group>"; };
+		6C9BC5650A4C5E9E00A69EFA /* DnsStub.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = DnsStub.hxx; sourceTree = "<group>"; };
+		6C9BC5660A4C5E9E00A69EFA /* ExternalDns.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ExternalDns.hxx; sourceTree = "<group>"; };
+		6C9BC5670A4C5E9E00A69EFA /* ExternalDnsFactory.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ExternalDnsFactory.cxx; sourceTree = "<group>"; };
+		6C9BC5680A4C5E9E00A69EFA /* ExternalDnsFactory.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = ExternalDnsFactory.hxx; sourceTree = "<group>"; };
+		6C9BC5690A4C5E9E00A69EFA /* LocalDns.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = LocalDns.cxx; sourceTree = "<group>"; };
+		6C9BC56A0A4C5E9E00A69EFA /* LocalDns.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = LocalDns.hxx; sourceTree = "<group>"; };
+		6C9BC56B0A4C5E9E00A69EFA /* QueryTypes.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = QueryTypes.cxx; sourceTree = "<group>"; };
+		6C9BC56C0A4C5E9E00A69EFA /* QueryTypes.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = QueryTypes.hxx; sourceTree = "<group>"; };
+		6C9BC56D0A4C5E9E00A69EFA /* RRCache.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = RRCache.cxx; sourceTree = "<group>"; };
+		6C9BC56E0A4C5E9E00A69EFA /* RRCache.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = RRCache.hxx; sourceTree = "<group>"; };
+		6C9BC56F0A4C5E9E00A69EFA /* RRFactory.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = RRFactory.hxx; sourceTree = "<group>"; };
+		6C9BC5700A4C5E9E00A69EFA /* RRList.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = RRList.cxx; sourceTree = "<group>"; };
+		6C9BC5710A4C5E9E00A69EFA /* RRList.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = RRList.hxx; sourceTree = "<group>"; };
+		6C9BC5720A4C5E9E00A69EFA /* RROverlay.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = RROverlay.cxx; sourceTree = "<group>"; };
+		6C9BC5730A4C5E9E00A69EFA /* RROverlay.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = RROverlay.hxx; sourceTree = "<group>"; };
+		6C9BC5740A4C5E9E00A69EFA /* RRVip.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = RRVip.cxx; sourceTree = "<group>"; };
+		6C9BC5750A4C5E9E00A69EFA /* RRVip.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = RRVip.hxx; sourceTree = "<group>"; };
+		6C9BC59F0A4C61A400A69EFA /* Stun.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = Stun.cxx; sourceTree = "<group>"; };
+		6C9BC5A00A4C61A400A69EFA /* Stun.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = Stun.hxx; sourceTree = "<group>"; };
+		6C9BC5A10A4C61A400A69EFA /* Udp.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = Udp.cxx; sourceTree = "<group>"; };
+		6C9BC5A20A4C61A400A69EFA /* Udp.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; path = Udp.hxx; sourceTree = "<group>"; };
+		6CD351380A825A6500A5B7F3 /* SqliteKVDb.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SqliteKVDb.cxx; path = ../rutil/SqliteKVDb.cxx; sourceTree = SOURCE_ROOT; };
+		6CD351840A82643700A5B7F3 /* QValueParameter.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = QValueParameter.cxx; path = stack/QValueParameter.cxx; sourceTree = "<group>"; };
+		6CD351850A82643700A5B7F3 /* QValue.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = QValue.cxx; path = stack/QValue.cxx; sourceTree = "<group>"; };
+		D2AAC06F0554671400DB518D /* libares.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libares.a; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		12F79732086CBA1E00AF4EDF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				12F79733086CBA1E00AF4EDF /* Carbon.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6C9BC2D50A4C496400A69EFA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6C9BC3A20A4C4DAA00A69EFA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D2AAC06D0554671400DB518D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D2AAC0700554677100DB518D /* Carbon.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		034768DDFF38A45A11DB9C8B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D2AAC06F0554671400DB518D /* libares.a */,
+				12F79738086CBA1E00AF4EDF /* libresip.a */,
+				6C9BC2D70A4C496400A69EFA /* librutil.a */,
+				6C9BC3A40A4C4DAA00A69EFA /* libdum.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		0867D691FE84028FC02AAC07 /* sip */ = {
+			isa = PBXGroup;
+			children = (
+				6C9BC3AA0A4C4DBB00A69EFA /* stack */,
+				6C9BC3A50A4C4DB200A69EFA /* dum */,
+				6C9BC2D80A4C498700A69EFA /* rutil */,
+				32BAE0B70371A74B00C91783 /* sip_MacPrefix.pch */,
+				08FB77ACFE841707C02AAC07 /* ares */,
+				0867D69AFE84028FC02AAC07 /* Libraries */,
+				034768DDFF38A45A11DB9C8B /* Products */,
+			);
+			name = sip;
+			sourceTree = "<group>";
+		};
+		0867D69AFE84028FC02AAC07 /* Libraries */ = {
+			isa = PBXGroup;
+			children = (
+				08FB77AAFE841565C02AAC07 /* Carbon.framework */,
+			);
+			name = Libraries;
+			sourceTree = "<group>";
+		};
+		08FB77ACFE841707C02AAC07 /* ares */ = {
+			isa = PBXGroup;
+			children = (
+				6C9BC2920A4C455E00A69EFA /* adig.c */,
+				6C9BC2610A4C446E00A69EFA /* ares_timeout.c */,
+				6C9BC2620A4C446E00A69EFA /* ares_strerror.c */,
+				6C9BC2630A4C446E00A69EFA /* ares_send.c */,
+				6C9BC2640A4C446E00A69EFA /* ares_search.c */,
+				6C9BC2650A4C446E00A69EFA /* ares_query.c */,
+				6C9BC2660A4C446E00A69EFA /* ares_process.c */,
+				6C9BC2670A4C446E00A69EFA /* ares_parse_ptr_reply.c */,
+				6C9BC2680A4C446E00A69EFA /* ares_parse_a_reply.c */,
+				6C9BC2690A4C446E00A69EFA /* ares_mkquery.c */,
+				6C9BC26A0A4C446E00A69EFA /* ares_local.c */,
+				6C9BC26B0A4C446E00A69EFA /* ares_init.c */,
+				6C9BC26C0A4C446E00A69EFA /* ares_gethostbyname.c */,
+				6C9BC26D0A4C446E00A69EFA /* ares_gethostbyaddr.c */,
+				6C9BC26E0A4C446E00A69EFA /* ares_free_string.c */,
+				6C9BC26F0A4C446E00A69EFA /* ares_free_hostent.c */,
+				6C9BC2700A4C446E00A69EFA /* ares_free_errmem.c */,
+				6C9BC2710A4C446E00A69EFA /* ares_fds.c */,
+				6C9BC2720A4C446E00A69EFA /* ares_expand_name.c */,
+				6C9BC2730A4C446E00A69EFA /* ares_destroy.c */,
+				6C9BC2740A4C446E00A69EFA /* ares__close_sockets.c */,
+				6C9BC2750A4C446E00A69EFA /* ares__read_line.c */,
+				6C9BC2770A4C446E00A69EFA /* ahost.c */,
+				6C9BC2780A4C446E00A69EFA /* ares__get_hostent.c */,
+			);
+			name = ares;
+			sourceTree = "<group>";
+		};
+		6C9BC2D80A4C498700A69EFA /* rutil */ = {
+			isa = PBXGroup;
+			children = (
+				6C9BC59E0A4C61A400A69EFA /* stun */,
+				6C9BC5550A4C5E9E00A69EFA /* dns */,
+				6C9BC2E00A4C49BE00A69EFA /* vmd5.cxx */,
+				6CD351380A825A6500A5B7F3 /* SqliteKVDb.cxx */,
+				6C9BC2E10A4C49BE00A69EFA /* SimpleXMLElement.cxx */,
+				6C9BC2E20A4C49BE00A69EFA /* Random.cxx */,
+				6C9BC2E30A4C49BE00A69EFA /* Subsystem.cxx */,
+				6C9BC2E40A4C49BE00A69EFA /* SysLogBuf.cxx */,
+				6C9BC2E50A4C49BE00A69EFA /* SHA1Stream.cxx */,
+				6C9BC2E60A4C49BE00A69EFA /* BaseException.cxx */,
+				6C9BC2E70A4C49BE00A69EFA /* RWMutex.cxx */,
+				6C9BC2E80A4C49BE00A69EFA /* SysLogStream.cxx */,
+				6C9BC2E90A4C49BE00A69EFA /* Logger.cxx */,
+				6C9BC2EA0A4C49BE00A69EFA /* Poll.cxx */,
+				6C9BC2EB0A4C49BE00A69EFA /* Condition.cxx */,
+				6C9BC2EC0A4C49BE00A69EFA /* FileSystem.cxx */,
+				6C9BC2ED0A4C49BE00A69EFA /* SelectInterruptor.cxx */,
+				6C9BC2EE0A4C49BE00A69EFA /* Log.cxx */,
+				6C9BC2EF0A4C49BE00A69EFA /* FifoMonitor.cxx */,
+				6C9BC2F00A4C49BE00A69EFA /* ResipLogAdapter.cxx */,
+				6C9BC2F10A4C49BE00A69EFA /* AbstractFifo.cxx */,
+				6C9BC2F20A4C49BE00A69EFA /* Timer.cxx */,
+				6C9BC2F30A4C49BE00A69EFA /* Socket.cxx */,
+				6C9BC2F40A4C49BE00A69EFA /* CountStream.cxx */,
+				6C9BC2F50A4C49BE00A69EFA /* DataStream.cxx */,
+				6C9BC2F60A4C49BE00A69EFA /* HeapInstanceCounter.cxx */,
+				6C9BC2F70A4C49BE00A69EFA /* MD5Stream.cxx */,
+				6C9BC2F80A4C49BE00A69EFA /* XMLLayout.cxx */,
+				6C9BC2F90A4C49BE00A69EFA /* DnsUtil.cxx */,
+				6C9BC2FA0A4C49BE00A69EFA /* EsLogger.cxx */,
+				6C9BC2FB0A4C49BE00A69EFA /* Mutex.cxx */,
+				6C9BC2FC0A4C49BE00A69EFA /* TransportType.cxx */,
+				6C9BC2FD0A4C49BE00A69EFA /* Data.cxx */,
+				6C9BC2FE0A4C49BE00A69EFA /* Coders.cxx */,
+				6C9BC2FF0A4C49BE00A69EFA /* RecursiveMutex.cxx */,
+				6C9BC3000A4C49BE00A69EFA /* ParseBuffer.cxx */,
+				6C9BC3010A4C49BE00A69EFA /* OpenSSLInit.cxx */,
+				6C9BC3020A4C49BE00A69EFA /* ThreadIf.cxx */,
+				6C9BC3030A4C49BE00A69EFA /* WinCompat.cxx */,
+				6C9BC3040A4C49BE00A69EFA /* Lock.cxx */,
+			);
+			name = rutil;
+			sourceTree = "<group>";
+		};
+		6C9BC3A50A4C4DB200A69EFA /* dum */ = {
+			isa = PBXGroup;
+			children = (
+				6C9BC3AB0A4C4E3000A69EFA /* AppDialogSetFactory.cxx */,
+				6C9BC3AC0A4C4E3000A69EFA /* AppDialogSet.cxx */,
+				6C9BC3AD0A4C4E3000A69EFA /* AppDialog.cxx */,
+				6C9BC3AE0A4C4E3000A69EFA /* UserProfile.cxx */,
+				6C9BC3AF0A4C4E3000A69EFA /* ClientOutOfDialogReq.cxx */,
+				6C9BC3B00A4C4E3000A69EFA /* ClientInviteSession.cxx */,
+				6C9BC3B10A4C4E3000A69EFA /* ClientAuthManager.cxx */,
+				6C9BC3B20A4C4E3000A69EFA /* ChallengeInfo.cxx */,
+				6C9BC3B30A4C4E3000A69EFA /* ServerPagerMessage.cxx */,
+				6C9BC3B40A4C4E3000A69EFA /* RegistrationCreator.cxx */,
+				6C9BC3B50A4C4E3000A69EFA /* RedirectManager.cxx */,
+				6C9BC3B60A4C4E3000A69EFA /* PublicationCreator.cxx */,
+				6C9BC3B70A4C4E3000A69EFA /* Profile.cxx */,
+				6C9BC3B80A4C4E3000A69EFA /* PagerMessageCreator.cxx */,
+				6C9BC3B90A4C4E3000A69EFA /* OutOfDialogReqCreator.cxx */,
+				6C9BC3BA0A4C4E3000A69EFA /* OutgoingEvent.cxx */,
+				6C9BC3BB0A4C4E3000A69EFA /* NonDialogUsage.cxx */,
+				6C9BC3BC0A4C4E3000A69EFA /* NetworkAssociation.cxx */,
+				6C9BC3BD0A4C4E3000A69EFA /* MergedRequestRemovalCommand.cxx */,
+				6C9BC3BE0A4C4E3000A69EFA /* MergedRequestKey.cxx */,
+				6C9BC3BF0A4C4E3000A69EFA /* MasterProfile.cxx */,
+				6C9BC3C00A4C4E3000A69EFA /* KeepAliveTimeout.cxx */,
+				6C9BC3C10A4C4E3000A69EFA /* KeepAliveManager.cxx */,
+				6C9BC3C20A4C4E3000A69EFA /* InviteSessionHandler.cxx */,
+				6C9BC3C30A4C4E3000A69EFA /* InviteSessionCreator.cxx */,
+				6C9BC3C40A4C4E3000A69EFA /* InviteSession.cxx */,
+				6C9BC3C50A4C4E3000A69EFA /* InMemoryRegistrationDatabase.cxx */,
+				6C9BC3C60A4C4E3000A69EFA /* IdentityHandler.cxx */,
+				6C9BC3C70A4C4E3000A69EFA /* HttpProvider.cxx */,
+				6C9BC3C80A4C4E3000A69EFA /* HttpGetMessage.cxx */,
+				6C9BC3C90A4C4E3000A69EFA /* HandleManager.cxx */,
+				6C9BC3CA0A4C4E3000A69EFA /* HandleException.cxx */,
+				6C9BC3CB0A4C4E3000A69EFA /* Handled.cxx */,
+				6C9BC3CC0A4C4E3000A69EFA /* Handle.cxx */,
+				6C9BC3CD0A4C4E3000A69EFA /* EncryptionRequest.cxx */,
+				6C9BC3CE0A4C4E3000A69EFA /* EncryptionManager.cxx */,
+				6C9BC3CF0A4C4E3000A69EFA /* DumTimeout.cxx */,
+				6C9BC3D00A4C4E3000A69EFA /* DumThread.cxx */,
+				6C9BC3D10A4C4E3000A69EFA /* DumProcessHandler.cxx */,
+				6C9BC3D20A4C4E3000A69EFA /* DumHelper.cxx */,
+				6C9BC3D30A4C4E3000A69EFA /* DumFeatureChain.cxx */,
+				6C9BC3D40A4C4E3000A69EFA /* DumFeature.cxx */,
+				6C9BC3D50A4C4E3000A69EFA /* DumDecrypted.cxx */,
+				6C9BC3D60A4C4E3000A69EFA /* UserAuthInfo.cxx */,
+				6C9BC3D70A4C4E3000A69EFA /* TargetCommand.cxx */,
+				6C9BC3D80A4C4E3000A69EFA /* SubscriptionState.cxx */,
+				6C9BC3D90A4C4E3000A69EFA /* SubscriptionHandler.cxx */,
+				6C9BC3DA0A4C4E3000A69EFA /* SubscriptionCreator.cxx */,
+				6C9BC3DB0A4C4E3000A69EFA /* ServerSubscription.cxx */,
+				6C9BC3DC0A4C4E3000A69EFA /* ServerRegistration.cxx */,
+				6C9BC3DD0A4C4E3000A69EFA /* ServerPublication.cxx */,
+				6C9BC3DE0A4C4E3000A69EFA /* CertMessage.cxx */,
+				6C9BC3DF0A4C4E3000A69EFA /* BaseUsage.cxx */,
+				6C9BC3E00A4C4E3000A69EFA /* BaseSubscription.cxx */,
+				6C9BC3E10A4C4E3000A69EFA /* BaseCreator.cxx */,
+				6C9BC3E20A4C4E3000A69EFA /* ClientPublication.cxx */,
+				6C9BC3E30A4C4E3000A69EFA /* ClientPagerMessage.cxx */,
+				6C9BC3E40A4C4E3000A69EFA /* ServerOutOfDialogReq.cxx */,
+				6C9BC3E50A4C4E3000A69EFA /* ServerInviteSession.cxx */,
+				6C9BC3E60A4C4E3000A69EFA /* ServerAuthManager.cxx */,
+				6C9BC3E70A4C4E3000A69EFA /* DialogUsageManager.cxx */,
+				6C9BC3E80A4C4E3000A69EFA /* DialogUsage.cxx */,
+				6C9BC3E90A4C4E3000A69EFA /* DialogSetId.cxx */,
+				6C9BC3EA0A4C4E3000A69EFA /* DialogSet.cxx */,
+				6C9BC3EB0A4C4E3000A69EFA /* DialogId.cxx */,
+				6C9BC3EC0A4C4E3000A69EFA /* Dialog.cxx */,
+				6C9BC3ED0A4C4E3000A69EFA /* DestroyUsage.cxx */,
+				6C9BC3EE0A4C4E3000A69EFA /* DefaultServerReferHandler.cxx */,
+				6C9BC3EF0A4C4E3000A69EFA /* ContactInstanceRecord.cxx */,
+				6C9BC3F00A4C4E3000A69EFA /* DumFeatureMessage.cxx */,
+				6C9BC3F10A4C4E3000A69EFA /* ClientSubscription.cxx */,
+				6C9BC3F20A4C4E3000A69EFA /* ClientRegistration.cxx */,
+			);
+			name = dum;
+			sourceTree = "<group>";
+		};
+		6C9BC3AA0A4C4DBB00A69EFA /* stack */ = {
+			isa = PBXGroup;
+			children = (
+				6CD351840A82643700A5B7F3 /* QValueParameter.cxx */,
+				6CD351850A82643700A5B7F3 /* QValue.cxx */,
+				6C9BC4400A4C510D00A69EFA /* ContentsFactoryBase.cxx */,
+				6C9BC4410A4C510D00A69EFA /* XMLCursor.cxx */,
+				6C9BC4420A4C510D00A69EFA /* X509Contents.cxx */,
+				6C9BC4430A4C510D00A69EFA /* WinSecurity.cxx */,
+				6C9BC4440A4C510D00A69EFA /* WarningCategory.cxx */,
+				6C9BC4450A4C510D00A69EFA /* Via.cxx */,
+				6C9BC4460A4C510D00A69EFA /* Uri.cxx */,
+				6C9BC4470A4C510D00A69EFA /* UnknownParameter.cxx */,
+				6C9BC4480A4C510D00A69EFA /* UdpTransport.cxx */,
+				6C9BC4490A4C510D00A69EFA /* TuSelector.cxx */,
+				6C9BC44A0A4C510D00A69EFA /* Tuple.cxx */,
+				6C9BC44B0A4C510D00A69EFA /* TuIM.cxx */,
+				6C9BC44C0A4C510D00A69EFA /* TransactionState.cxx */,
+				6C9BC44D0A4C510D00A69EFA /* StatusLine.cxx */,
+				6C9BC44E0A4C510D00A69EFA /* ParserCategories.cxx */,
+				6C9BC44F0A4C510D00A69EFA /* StackThread.cxx */,
+				6C9BC4500A4C510E00A69EFA /* ConnectionManager.cxx */,
+				6C9BC4510A4C510E00A69EFA /* TlsConnection.cxx */,
+				6C9BC4520A4C510E00A69EFA /* Security.cxx */,
+				6C9BC4530A4C510E00A69EFA /* OctetContents.cxx */,
+				6C9BC4540A4C510E00A69EFA /* CSeqCategory.cxx */,
+				6C9BC4550A4C510E00A69EFA /* TransactionController.cxx */,
+				6C9BC4560A4C510E00A69EFA /* Token.cxx */,
+				6C9BC4570A4C510E00A69EFA /* SipFrag.cxx */,
+				6C9BC4580A4C510E00A69EFA /* HeaderFieldValueList.cxx */,
+				6C9BC4590A4C510E00A69EFA /* Rlmi.cxx */,
+				6C9BC45A0A4C510E00A69EFA /* SipMessage.cxx */,
+				6C9BC45B0A4C510E00A69EFA /* Connection.cxx */,
+				6C9BC45C0A4C510E00A69EFA /* SdpContents.cxx */,
+				6C9BC45D0A4C510E00A69EFA /* MacSecurity.cxx */,
+				6C9BC45E0A4C510E00A69EFA /* MethodTypes.cxx */,
+				6C9BC45F0A4C510E00A69EFA /* TimerQueue.cxx */,
+				6C9BC4600A4C510E00A69EFA /* SecurityAttributes.cxx */,
+				6C9BC4610A4C510E00A69EFA /* TlsTransport.cxx */,
+				6C9BC4620A4C510E00A69EFA /* RportParameter.cxx */,
+				6C9BC4630A4C510E00A69EFA /* StringCategory.cxx */,
+				6C9BC4640A4C510E00A69EFA /* RAckCategory.cxx */,
+				6C9BC4650A4C510E00A69EFA /* PlainContents.cxx */,
+				6C9BC4660A4C510E00A69EFA /* TransactionMap.cxx */,
+				6C9BC4670A4C510E00A69EFA /* QopParameter.cxx */,
+				6C9BC4680A4C510E00A69EFA /* DataParameter.cxx */,
+				6C9BC4690A4C510E00A69EFA /* SERNonceHelper.cxx */,
+				6C9BC46A0A4C510E00A69EFA /* ApiCheck.cxx */,
+				6C9BC46B0A4C510E00A69EFA /* TcpConnection.cxx */,
+				6C9BC46C0A4C510E00A69EFA /* GenericContents.cxx */,
+				6C9BC46D0A4C510E00A69EFA /* NonceHelper.cxx */,
+				6C9BC46E0A4C510E00A69EFA /* MsgHeaderScanner.cxx */,
+				6C9BC46F0A4C510E00A69EFA /* FlowId.cxx */,
+				6C9BC4700A4C510E00A69EFA /* ExtensionHeader.cxx */,
+				6C9BC4710A4C510E00A69EFA /* MultipartAlternativeContents.cxx */,
+				6C9BC4720A4C510E00A69EFA /* Pkcs7Contents.cxx */,
+				6C9BC4730A4C510E00A69EFA /* FloatParameter.cxx */,
+				6C9BC4740A4C510E00A69EFA /* DtlsTransport.cxx */,
+				6C9BC4750A4C510E00A69EFA /* ExternalBodyContents.cxx */,
+				6C9BC4760A4C510E00A69EFA /* LazyParser.cxx */,
+				6C9BC4770A4C510E00A69EFA /* MultipartMixedContents.cxx */,
+				6C9BC4780A4C510E00A69EFA /* InterruptableStackThread.cxx */,
+				6C9BC4790A4C510E00A69EFA /* Parameter.cxx */,
+				6C9BC47A0A4C510E00A69EFA /* MultipartSignedContents.cxx */,
+				6C9BC47B0A4C510E00A69EFA /* Pidf.cxx */,
+				6C9BC47C0A4C510E00A69EFA /* makeCert.cxx */,
+				6C9BC47D0A4C510E00A69EFA /* ParserContainerBase.cxx */,
+				6C9BC47E0A4C510E00A69EFA /* NameAddr.cxx */,
+				6C9BC47F0A4C510E00A69EFA /* ExtensionParameter.cxx */,
+				6C9BC4800A4C510E00A69EFA /* DeprecatedDialog.cxx */,
+				6C9BC4810A4C510E00A69EFA /* Mime.cxx */,
+				6C9BC4820A4C510E00A69EFA /* TcpBaseTransport.cxx */,
+				6C9BC4830A4C510E00A69EFA /* ExpiresCategory.cxx */,
+				6C9BC4840A4C510E00A69EFA /* MessageWaitingContents.cxx */,
+				6C9BC4850A4C510E00A69EFA /* ExistsParameter.cxx */,
+				6C9BC4860A4C510E00A69EFA /* Embedded.cxx */,
+				6C9BC4870A4C510E00A69EFA /* Helper.cxx */,
+				6C9BC4880A4C510E00A69EFA /* IntegerCategory.cxx */,
+				6C9BC4890A4C510E00A69EFA /* Headers.cxx */,
+				6C9BC48A0A4C510E00A69EFA /* Pkcs8Contents.cxx */,
+				6C9BC48B0A4C510E00A69EFA /* MultipartRelatedContents.cxx */,
+				6C9BC48C0A4C510E00A69EFA /* HeaderTypes.cxx */,
+				6C9BC48D0A4C510E00A69EFA /* InvalidContents.cxx */,
+				6C9BC48E0A4C510E00A69EFA /* InternalTransport.cxx */,
+				6C9BC48F0A4C510E00A69EFA /* ParameterHash.cxx */,
+				6C9BC4900A4C510E00A69EFA /* DnsResult.cxx */,
+				6C9BC4910A4C510E00A69EFA /* CallId.cxx */,
+				6C9BC4920A4C510E00A69EFA /* ParameterTypes.cxx */,
+				6C9BC4930A4C510E00A69EFA /* Auth.cxx */,
+				6C9BC4940A4C510E00A69EFA /* TransactionUserMessage.cxx */,
+				6C9BC4950A4C510E00A69EFA /* TransactionUser.cxx */,
+				6C9BC4960A4C510E00A69EFA /* TransportSelector.cxx */,
+				6C9BC4970A4C510E00A69EFA /* TransportFailure.cxx */,
+				6C9BC4980A4C510E00A69EFA /* Transport.cxx */,
+				6C9BC4990A4C510E00A69EFA /* ConnectionBase.cxx */,
+				6C9BC49A0A4C510E00A69EFA /* GenericUri.cxx */,
+				6C9BC49B0A4C510E00A69EFA /* IntegerParameter.cxx */,
+				6C9BC49C0A4C510E00A69EFA /* Aor.cxx */,
+				6C9BC49D0A4C510E00A69EFA /* HeaderFieldValue.cxx */,
+				6C9BC49E0A4C510E00A69EFA /* Contents.cxx */,
+				6C9BC49F0A4C510E00A69EFA /* StatisticsMessage.cxx */,
+				6C9BC4A00A4C510E00A69EFA /* BranchParameter.cxx */,
+				6C9BC4A10A4C510E00A69EFA /* BasicNonceHelper.cxx */,
+				6C9BC4A20A4C510E00A69EFA /* SipStack.cxx */,
+				6C9BC4A30A4C510E00A69EFA /* TimeAccumulate.cxx */,
+				6C9BC4A40A4C510E00A69EFA /* StatisticsManager.cxx */,
+				6C9BC4A50A4C510E00A69EFA /* TimerMessage.cxx */,
+				6C9BC4A60A4C510E00A69EFA /* StatelessHandler.cxx */,
+				6C9BC4A70A4C510E00A69EFA /* DateCategory.cxx */,
+				6C9BC4A80A4C510E00A69EFA /* TcpTransport.cxx */,
+				6C9BC4A90A4C510E00A69EFA /* Symbols.cxx */,
+				6C9BC4AA0A4C510E00A69EFA /* RequestLine.cxx */,
+				6C9BC4AB0A4C510E00A69EFA /* Message.cxx */,
+				6C9BC4AC0A4C510E00A69EFA /* QuotedDataParameter.cxx */,
+				6C9BC4AD0A4C510E00A69EFA /* CpimContents.cxx */,
+				6C9BC4AE0A4C510E00A69EFA /* DtlsMessage.cxx */,
+				6C9BC4AF0A4C510E00A69EFA /* MessageFilterRule.cxx */,
+				6C9BC4B00A4C510E00A69EFA /* ApplicationSip.cxx */,
+				6C9BC4B10A4C510E00A69EFA /* HeaderHash.cxx */,
+				6C9BC4B20A4C510E00A69EFA /* DnsInterface.cxx */,
+				6C9BC4B30A4C510E00A69EFA /* ParserCategory.cxx */,
+				6C9BC4B40A4C510E00A69EFA /* KeepAliveMessage.cxx */,
+				6C9BC4B50A4C510E00A69EFA /* MethodHash.cxx */,
+			);
+			name = stack;
+			sourceTree = "<group>";
+		};
+		6C9BC5550A4C5E9E00A69EFA /* dns */ = {
+			isa = PBXGroup;
+			children = (
+				6C9BC5560A4C5E9E00A69EFA /* AresDns.cxx */,
+				6C9BC5570A4C5E9E00A69EFA /* AresDns.hxx */,
+				6C9BC5580A4C5E9E00A69EFA /* DnsAAAARecord.cxx */,
+				6C9BC5590A4C5E9E00A69EFA /* DnsAAAARecord.hxx */,
+				6C9BC55A0A4C5E9E00A69EFA /* DnsCnameRecord.cxx */,
+				6C9BC55B0A4C5E9E00A69EFA /* DnsCnameRecord.hxx */,
+				6C9BC55C0A4C5E9E00A69EFA /* DnsHandler.hxx */,
+				6C9BC55D0A4C5E9E00A69EFA /* DnsHostRecord.cxx */,
+				6C9BC55E0A4C5E9E00A69EFA /* DnsHostRecord.hxx */,
+				6C9BC55F0A4C5E9E00A69EFA /* DnsNaptrRecord.cxx */,
+				6C9BC5600A4C5E9E00A69EFA /* DnsNaptrRecord.hxx */,
+				6C9BC5610A4C5E9E00A69EFA /* DnsResourceRecord.hxx */,
+				6C9BC5620A4C5E9E00A69EFA /* DnsSrvRecord.cxx */,
+				6C9BC5630A4C5E9E00A69EFA /* DnsSrvRecord.hxx */,
+				6C9BC5640A4C5E9E00A69EFA /* DnsStub.cxx */,
+				6C9BC5650A4C5E9E00A69EFA /* DnsStub.hxx */,
+				6C9BC5660A4C5E9E00A69EFA /* ExternalDns.hxx */,
+				6C9BC5670A4C5E9E00A69EFA /* ExternalDnsFactory.cxx */,
+				6C9BC5680A4C5E9E00A69EFA /* ExternalDnsFactory.hxx */,
+				6C9BC5690A4C5E9E00A69EFA /* LocalDns.cxx */,
+				6C9BC56A0A4C5E9E00A69EFA /* LocalDns.hxx */,
+				6C9BC56B0A4C5E9E00A69EFA /* QueryTypes.cxx */,
+				6C9BC56C0A4C5E9E00A69EFA /* QueryTypes.hxx */,
+				6C9BC56D0A4C5E9E00A69EFA /* RRCache.cxx */,
+				6C9BC56E0A4C5E9E00A69EFA /* RRCache.hxx */,
+				6C9BC56F0A4C5E9E00A69EFA /* RRFactory.hxx */,
+				6C9BC5700A4C5E9E00A69EFA /* RRList.cxx */,
+				6C9BC5710A4C5E9E00A69EFA /* RRList.hxx */,
+				6C9BC5720A4C5E9E00A69EFA /* RROverlay.cxx */,
+				6C9BC5730A4C5E9E00A69EFA /* RROverlay.hxx */,
+				6C9BC5740A4C5E9E00A69EFA /* RRVip.cxx */,
+				6C9BC5750A4C5E9E00A69EFA /* RRVip.hxx */,
+			);
+			name = dns;
+			path = ../rutil/dns;
+			sourceTree = SOURCE_ROOT;
+		};
+		6C9BC59E0A4C61A400A69EFA /* stun */ = {
+			isa = PBXGroup;
+			children = (
+				6C9BC59F0A4C61A400A69EFA /* Stun.cxx */,
+				6C9BC5A00A4C61A400A69EFA /* Stun.hxx */,
+				6C9BC5A10A4C61A400A69EFA /* Udp.cxx */,
+				6C9BC5A20A4C61A400A69EFA /* Udp.hxx */,
+			);
+			name = stun;
+			path = ../rutil/stun;
+			sourceTree = SOURCE_ROOT;
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		12F79730086CBA1E00AF4EDF /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6C9BC2D30A4C496400A69EFA /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6C9BC5770A4C5E9E00A69EFA /* AresDns.hxx in Headers */,
+				6C9BC5790A4C5E9E00A69EFA /* DnsAAAARecord.hxx in Headers */,
+				6C9BC57B0A4C5E9E00A69EFA /* DnsCnameRecord.hxx in Headers */,
+				6C9BC57C0A4C5E9E00A69EFA /* DnsHandler.hxx in Headers */,
+				6C9BC57E0A4C5E9E00A69EFA /* DnsHostRecord.hxx in Headers */,
+				6C9BC5800A4C5E9E00A69EFA /* DnsNaptrRecord.hxx in Headers */,
+				6C9BC5810A4C5E9E00A69EFA /* DnsResourceRecord.hxx in Headers */,
+				6C9BC5830A4C5E9E00A69EFA /* DnsSrvRecord.hxx in Headers */,
+				6C9BC5850A4C5E9E00A69EFA /* DnsStub.hxx in Headers */,
+				6C9BC5860A4C5E9E00A69EFA /* ExternalDns.hxx in Headers */,
+				6C9BC5880A4C5E9E00A69EFA /* ExternalDnsFactory.hxx in Headers */,
+				6C9BC58A0A4C5E9E00A69EFA /* LocalDns.hxx in Headers */,
+				6C9BC58C0A4C5E9E00A69EFA /* QueryTypes.hxx in Headers */,
+				6C9BC58E0A4C5E9E00A69EFA /* RRCache.hxx in Headers */,
+				6C9BC58F0A4C5E9E00A69EFA /* RRFactory.hxx in Headers */,
+				6C9BC5910A4C5E9E00A69EFA /* RRList.hxx in Headers */,
+				6C9BC5930A4C5E9E00A69EFA /* RROverlay.hxx in Headers */,
+				6C9BC5950A4C5E9E00A69EFA /* RRVip.hxx in Headers */,
+				6C9BC5A40A4C61A400A69EFA /* Stun.hxx in Headers */,
+				6C9BC5A60A4C61A400A69EFA /* Udp.hxx in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6C9BC3A00A4C4DAA00A69EFA /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D2AAC06B0554671400DB518D /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		12F7972F086CBA1E00AF4EDF /* resip */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 12F79734086CBA1E00AF4EDF /* Build configuration list for PBXNativeTarget "resip" */;
+			buildPhases = (
+				12F79730086CBA1E00AF4EDF /* Headers */,
+				12F79731086CBA1E00AF4EDF /* Sources */,
+				12F79732086CBA1E00AF4EDF /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				6C9BC5380A4C531C00A69EFA /* PBXTargetDependency */,
+				6C9BC53A0A4C531C00A69EFA /* PBXTargetDependency */,
+				6CE8EEF80A5466F6007BE74A /* PBXTargetDependency */,
+			);
+			name = resip;
+			productName = sip;
+			productReference = 12F79738086CBA1E00AF4EDF /* libresip.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		6C9BC2D60A4C496400A69EFA /* rutil */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6C9BC2D90A4C498800A69EFA /* Build configuration list for PBXNativeTarget "rutil" */;
+			buildPhases = (
+				6C9BC2D30A4C496400A69EFA /* Headers */,
+				6C9BC2D40A4C496400A69EFA /* Sources */,
+				6C9BC2D50A4C496400A69EFA /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = rutil;
+			productName = rutil;
+			productReference = 6C9BC2D70A4C496400A69EFA /* librutil.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		6C9BC3A30A4C4DAA00A69EFA /* dum */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6C9BC3A60A4C4DB200A69EFA /* Build configuration list for PBXNativeTarget "dum" */;
+			buildPhases = (
+				6C9BC3A00A4C4DAA00A69EFA /* Headers */,
+				6C9BC3A10A4C4DAA00A69EFA /* Sources */,
+				6C9BC3A20A4C4DAA00A69EFA /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = dum;
+			productName = dum;
+			productReference = 6C9BC3A40A4C4DAA00A69EFA /* libdum.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		D2AAC06E0554671400DB518D /* ares */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 12F7971B086CB6D700AF4EDF /* Build configuration list for PBXNativeTarget "ares" */;
+			buildPhases = (
+				D2AAC06B0554671400DB518D /* Headers */,
+				D2AAC06C0554671400DB518D /* Sources */,
+				D2AAC06D0554671400DB518D /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ares;
+			productName = sip;
+			productReference = D2AAC06F0554671400DB518D /* libares.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		0867D690FE84028FC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 12F7971F086CB6D700AF4EDF /* Build configuration list for PBXProject "sip" */;
+			hasScannedForEncodings = 1;
+			mainGroup = 0867D691FE84028FC02AAC07 /* sip */;
+			productRefGroup = 034768DDFF38A45A11DB9C8B /* Products */;
+			projectDirPath = "";
+			targets = (
+				D2AAC06E0554671400DB518D /* ares */,
+				6C9BC2D60A4C496400A69EFA /* rutil */,
+				12F7972F086CBA1E00AF4EDF /* resip */,
+				6C9BC3A30A4C4DAA00A69EFA /* dum */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		12F79731086CBA1E00AF4EDF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6C9BC4B60A4C510E00A69EFA /* ContentsFactoryBase.cxx in Sources */,
+				6C9BC4B70A4C510E00A69EFA /* XMLCursor.cxx in Sources */,
+				6C9BC4B80A4C510E00A69EFA /* X509Contents.cxx in Sources */,
+				6C9BC4BA0A4C510E00A69EFA /* WarningCategory.cxx in Sources */,
+				6C9BC4BB0A4C510E00A69EFA /* Via.cxx in Sources */,
+				6C9BC4BC0A4C510E00A69EFA /* Uri.cxx in Sources */,
+				6C9BC4BD0A4C510E00A69EFA /* UnknownParameter.cxx in Sources */,
+				6C9BC4BE0A4C510E00A69EFA /* UdpTransport.cxx in Sources */,
+				6C9BC4BF0A4C510E00A69EFA /* TuSelector.cxx in Sources */,
+				6C9BC4C00A4C510E00A69EFA /* Tuple.cxx in Sources */,
+				6C9BC4C10A4C510E00A69EFA /* TuIM.cxx in Sources */,
+				6C9BC4C20A4C510E00A69EFA /* TransactionState.cxx in Sources */,
+				6C9BC4C30A4C510E00A69EFA /* StatusLine.cxx in Sources */,
+				6C9BC4C40A4C510E00A69EFA /* ParserCategories.cxx in Sources */,
+				6C9BC4C50A4C510E00A69EFA /* StackThread.cxx in Sources */,
+				6C9BC4C60A4C510E00A69EFA /* ConnectionManager.cxx in Sources */,
+				6C9BC4C70A4C510E00A69EFA /* TlsConnection.cxx in Sources */,
+				6C9BC4C80A4C510E00A69EFA /* Security.cxx in Sources */,
+				6C9BC4C90A4C510E00A69EFA /* OctetContents.cxx in Sources */,
+				6C9BC4CA0A4C510E00A69EFA /* CSeqCategory.cxx in Sources */,
+				6C9BC4CB0A4C510E00A69EFA /* TransactionController.cxx in Sources */,
+				6C9BC4CC0A4C510E00A69EFA /* Token.cxx in Sources */,
+				6C9BC4CD0A4C510E00A69EFA /* SipFrag.cxx in Sources */,
+				6C9BC4CE0A4C510E00A69EFA /* HeaderFieldValueList.cxx in Sources */,
+				6C9BC4CF0A4C510E00A69EFA /* Rlmi.cxx in Sources */,
+				6C9BC4D00A4C510E00A69EFA /* SipMessage.cxx in Sources */,
+				6C9BC4D10A4C510E00A69EFA /* Connection.cxx in Sources */,
+				6C9BC4D20A4C510E00A69EFA /* SdpContents.cxx in Sources */,
+				6C9BC4D30A4C510E00A69EFA /* MacSecurity.cxx in Sources */,
+				6C9BC4D40A4C510E00A69EFA /* MethodTypes.cxx in Sources */,
+				6C9BC4D50A4C510E00A69EFA /* TimerQueue.cxx in Sources */,
+				6C9BC4D60A4C510E00A69EFA /* SecurityAttributes.cxx in Sources */,
+				6C9BC4D70A4C510E00A69EFA /* TlsTransport.cxx in Sources */,
+				6C9BC4D80A4C510E00A69EFA /* RportParameter.cxx in Sources */,
+				6C9BC4D90A4C510E00A69EFA /* StringCategory.cxx in Sources */,
+				6C9BC4DA0A4C510E00A69EFA /* RAckCategory.cxx in Sources */,
+				6C9BC4DB0A4C510E00A69EFA /* PlainContents.cxx in Sources */,
+				6C9BC4DC0A4C510E00A69EFA /* TransactionMap.cxx in Sources */,
+				6C9BC4DD0A4C510E00A69EFA /* QopParameter.cxx in Sources */,
+				6C9BC4DE0A4C510E00A69EFA /* DataParameter.cxx in Sources */,
+				6C9BC4DF0A4C510E00A69EFA /* SERNonceHelper.cxx in Sources */,
+				6C9BC4E00A4C510E00A69EFA /* ApiCheck.cxx in Sources */,
+				6C9BC4E10A4C510E00A69EFA /* TcpConnection.cxx in Sources */,
+				6C9BC4E20A4C510E00A69EFA /* GenericContents.cxx in Sources */,
+				6C9BC4E30A4C510E00A69EFA /* NonceHelper.cxx in Sources */,
+				6C9BC4E40A4C510E00A69EFA /* MsgHeaderScanner.cxx in Sources */,
+				6C9BC4E50A4C510E00A69EFA /* FlowId.cxx in Sources */,
+				6C9BC4E60A4C510E00A69EFA /* ExtensionHeader.cxx in Sources */,
+				6C9BC4E70A4C510E00A69EFA /* MultipartAlternativeContents.cxx in Sources */,
+				6C9BC4E80A4C510E00A69EFA /* Pkcs7Contents.cxx in Sources */,
+				6C9BC4E90A4C510E00A69EFA /* FloatParameter.cxx in Sources */,
+				6C9BC4EA0A4C510E00A69EFA /* DtlsTransport.cxx in Sources */,
+				6C9BC4EB0A4C510E00A69EFA /* ExternalBodyContents.cxx in Sources */,
+				6C9BC4EC0A4C510E00A69EFA /* LazyParser.cxx in Sources */,
+				6C9BC4ED0A4C510E00A69EFA /* MultipartMixedContents.cxx in Sources */,
+				6C9BC4EE0A4C510E00A69EFA /* InterruptableStackThread.cxx in Sources */,
+				6C9BC4EF0A4C510E00A69EFA /* Parameter.cxx in Sources */,
+				6C9BC4F00A4C510E00A69EFA /* MultipartSignedContents.cxx in Sources */,
+				6C9BC4F10A4C510E00A69EFA /* Pidf.cxx in Sources */,
+				6C9BC4F30A4C510E00A69EFA /* ParserContainerBase.cxx in Sources */,
+				6C9BC4F40A4C510E00A69EFA /* NameAddr.cxx in Sources */,
+				6C9BC4F50A4C510E00A69EFA /* ExtensionParameter.cxx in Sources */,
+				6C9BC4F60A4C510E00A69EFA /* DeprecatedDialog.cxx in Sources */,
+				6C9BC4F70A4C510E00A69EFA /* Mime.cxx in Sources */,
+				6C9BC4F80A4C510E00A69EFA /* TcpBaseTransport.cxx in Sources */,
+				6C9BC4F90A4C510E00A69EFA /* ExpiresCategory.cxx in Sources */,
+				6C9BC4FA0A4C510E00A69EFA /* MessageWaitingContents.cxx in Sources */,
+				6C9BC4FB0A4C510E00A69EFA /* ExistsParameter.cxx in Sources */,
+				6C9BC4FC0A4C510E00A69EFA /* Embedded.cxx in Sources */,
+				6C9BC4FD0A4C510E00A69EFA /* Helper.cxx in Sources */,
+				6C9BC4FE0A4C510E00A69EFA /* IntegerCategory.cxx in Sources */,
+				6C9BC4FF0A4C510E00A69EFA /* Headers.cxx in Sources */,
+				6C9BC5000A4C510E00A69EFA /* Pkcs8Contents.cxx in Sources */,
+				6C9BC5010A4C510E00A69EFA /* MultipartRelatedContents.cxx in Sources */,
+				6C9BC5020A4C510E00A69EFA /* HeaderTypes.cxx in Sources */,
+				6C9BC5030A4C510E00A69EFA /* InvalidContents.cxx in Sources */,
+				6C9BC5040A4C510E00A69EFA /* InternalTransport.cxx in Sources */,
+				6C9BC5050A4C510E00A69EFA /* ParameterHash.cxx in Sources */,
+				6C9BC5060A4C510E00A69EFA /* DnsResult.cxx in Sources */,
+				6C9BC5070A4C510E00A69EFA /* CallId.cxx in Sources */,
+				6C9BC5080A4C510E00A69EFA /* ParameterTypes.cxx in Sources */,
+				6C9BC5090A4C510E00A69EFA /* Auth.cxx in Sources */,
+				6C9BC50A0A4C510E00A69EFA /* TransactionUserMessage.cxx in Sources */,
+				6C9BC50B0A4C510E00A69EFA /* TransactionUser.cxx in Sources */,
+				6C9BC50C0A4C510E00A69EFA /* TransportSelector.cxx in Sources */,
+				6C9BC50D0A4C510E00A69EFA /* TransportFailure.cxx in Sources */,
+				6C9BC50E0A4C510E00A69EFA /* Transport.cxx in Sources */,
+				6C9BC50F0A4C510E00A69EFA /* ConnectionBase.cxx in Sources */,
+				6C9BC5100A4C510E00A69EFA /* GenericUri.cxx in Sources */,
+				6C9BC5110A4C510E00A69EFA /* IntegerParameter.cxx in Sources */,
+				6C9BC5120A4C510E00A69EFA /* Aor.cxx in Sources */,
+				6C9BC5130A4C510E00A69EFA /* HeaderFieldValue.cxx in Sources */,
+				6C9BC5140A4C510E00A69EFA /* Contents.cxx in Sources */,
+				6C9BC5150A4C510E00A69EFA /* StatisticsMessage.cxx in Sources */,
+				6C9BC5160A4C510E00A69EFA /* BranchParameter.cxx in Sources */,
+				6C9BC5170A4C510E00A69EFA /* BasicNonceHelper.cxx in Sources */,
+				6C9BC5180A4C510E00A69EFA /* SipStack.cxx in Sources */,
+				6C9BC5190A4C510E00A69EFA /* TimeAccumulate.cxx in Sources */,
+				6C9BC51A0A4C510E00A69EFA /* StatisticsManager.cxx in Sources */,
+				6C9BC51B0A4C510E00A69EFA /* TimerMessage.cxx in Sources */,
+				6C9BC51C0A4C510E00A69EFA /* StatelessHandler.cxx in Sources */,
+				6C9BC51D0A4C510E00A69EFA /* DateCategory.cxx in Sources */,
+				6C9BC51E0A4C510E00A69EFA /* TcpTransport.cxx in Sources */,
+				6C9BC51F0A4C510E00A69EFA /* Symbols.cxx in Sources */,
+				6C9BC5200A4C510E00A69EFA /* RequestLine.cxx in Sources */,
+				6C9BC5210A4C510E00A69EFA /* Message.cxx in Sources */,
+				6C9BC5220A4C510E00A69EFA /* QuotedDataParameter.cxx in Sources */,
+				6C9BC5230A4C510E00A69EFA /* CpimContents.cxx in Sources */,
+				6C9BC5240A4C510E00A69EFA /* DtlsMessage.cxx in Sources */,
+				6C9BC5250A4C510E00A69EFA /* MessageFilterRule.cxx in Sources */,
+				6C9BC5260A4C510E00A69EFA /* ApplicationSip.cxx in Sources */,
+				6C9BC5270A4C510E00A69EFA /* HeaderHash.cxx in Sources */,
+				6C9BC5280A4C510E00A69EFA /* DnsInterface.cxx in Sources */,
+				6C9BC5290A4C510E00A69EFA /* ParserCategory.cxx in Sources */,
+				6C9BC52A0A4C510E00A69EFA /* KeepAliveMessage.cxx in Sources */,
+				6C9BC52B0A4C510E00A69EFA /* MethodHash.cxx in Sources */,
+				6CD351860A82643700A5B7F3 /* QValueParameter.cxx in Sources */,
+				6CD351870A82643700A5B7F3 /* QValue.cxx in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6C9BC2D40A4C496400A69EFA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6C9BC35A0A4C4AF500A69EFA /* vmd5.cxx in Sources */,
+				6C9BC35B0A4C4AF500A69EFA /* SimpleXMLElement.cxx in Sources */,
+				6C9BC35C0A4C4AF500A69EFA /* Random.cxx in Sources */,
+				6C9BC35D0A4C4AF500A69EFA /* Subsystem.cxx in Sources */,
+				6C9BC35E0A4C4AF500A69EFA /* SysLogBuf.cxx in Sources */,
+				6C9BC35F0A4C4AF500A69EFA /* SHA1Stream.cxx in Sources */,
+				6C9BC3600A4C4AF500A69EFA /* BaseException.cxx in Sources */,
+				6C9BC3610A4C4AF500A69EFA /* RWMutex.cxx in Sources */,
+				6C9BC3620A4C4AF500A69EFA /* SysLogStream.cxx in Sources */,
+				6C9BC3630A4C4AF500A69EFA /* Logger.cxx in Sources */,
+				6C9BC3640A4C4AF500A69EFA /* Poll.cxx in Sources */,
+				6C9BC3650A4C4AF500A69EFA /* Condition.cxx in Sources */,
+				6C9BC3660A4C4AF500A69EFA /* FileSystem.cxx in Sources */,
+				6C9BC3670A4C4AF500A69EFA /* SelectInterruptor.cxx in Sources */,
+				6C9BC3680A4C4AF500A69EFA /* Log.cxx in Sources */,
+				6C9BC3690A4C4AF500A69EFA /* FifoMonitor.cxx in Sources */,
+				6C9BC36A0A4C4AF500A69EFA /* ResipLogAdapter.cxx in Sources */,
+				6C9BC36B0A4C4AF500A69EFA /* AbstractFifo.cxx in Sources */,
+				6C9BC36C0A4C4AF500A69EFA /* Timer.cxx in Sources */,
+				6C9BC36D0A4C4AF500A69EFA /* Socket.cxx in Sources */,
+				6C9BC36E0A4C4AF500A69EFA /* CountStream.cxx in Sources */,
+				6C9BC36F0A4C4AF500A69EFA /* DataStream.cxx in Sources */,
+				6C9BC3700A4C4AF500A69EFA /* HeapInstanceCounter.cxx in Sources */,
+				6C9BC3710A4C4AF500A69EFA /* MD5Stream.cxx in Sources */,
+				6C9BC3720A4C4AF500A69EFA /* XMLLayout.cxx in Sources */,
+				6C9BC3730A4C4AF500A69EFA /* DnsUtil.cxx in Sources */,
+				6C9BC3740A4C4AF500A69EFA /* EsLogger.cxx in Sources */,
+				6C9BC3750A4C4AF500A69EFA /* Mutex.cxx in Sources */,
+				6C9BC3760A4C4AF500A69EFA /* TransportType.cxx in Sources */,
+				6C9BC3770A4C4AF500A69EFA /* Data.cxx in Sources */,
+				6C9BC3780A4C4AF500A69EFA /* Coders.cxx in Sources */,
+				6C9BC3790A4C4AF500A69EFA /* RecursiveMutex.cxx in Sources */,
+				6C9BC37A0A4C4AF500A69EFA /* ParseBuffer.cxx in Sources */,
+				6C9BC37B0A4C4AF500A69EFA /* OpenSSLInit.cxx in Sources */,
+				6C9BC37C0A4C4AF500A69EFA /* ThreadIf.cxx in Sources */,
+				6C9BC37E0A4C4AF500A69EFA /* Lock.cxx in Sources */,
+				6C9BC5760A4C5E9E00A69EFA /* AresDns.cxx in Sources */,
+				6C9BC5780A4C5E9E00A69EFA /* DnsAAAARecord.cxx in Sources */,
+				6C9BC57A0A4C5E9E00A69EFA /* DnsCnameRecord.cxx in Sources */,
+				6C9BC57D0A4C5E9E00A69EFA /* DnsHostRecord.cxx in Sources */,
+				6C9BC57F0A4C5E9E00A69EFA /* DnsNaptrRecord.cxx in Sources */,
+				6C9BC5820A4C5E9E00A69EFA /* DnsSrvRecord.cxx in Sources */,
+				6C9BC5840A4C5E9E00A69EFA /* DnsStub.cxx in Sources */,
+				6C9BC5870A4C5E9E00A69EFA /* ExternalDnsFactory.cxx in Sources */,
+				6C9BC5890A4C5E9E00A69EFA /* LocalDns.cxx in Sources */,
+				6C9BC58B0A4C5E9E00A69EFA /* QueryTypes.cxx in Sources */,
+				6C9BC58D0A4C5E9E00A69EFA /* RRCache.cxx in Sources */,
+				6C9BC5900A4C5E9E00A69EFA /* RRList.cxx in Sources */,
+				6C9BC5920A4C5E9E00A69EFA /* RROverlay.cxx in Sources */,
+				6C9BC5940A4C5E9E00A69EFA /* RRVip.cxx in Sources */,
+				6C9BC5A30A4C61A400A69EFA /* Stun.cxx in Sources */,
+				6C9BC5A50A4C61A400A69EFA /* Udp.cxx in Sources */,
+				6CD351390A825A6500A5B7F3 /* SqliteKVDb.cxx in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6C9BC3A10A4C4DAA00A69EFA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6C9BC3F30A4C4E3000A69EFA /* AppDialogSetFactory.cxx in Sources */,
+				6C9BC3F40A4C4E3000A69EFA /* AppDialogSet.cxx in Sources */,
+				6C9BC3F50A4C4E3000A69EFA /* AppDialog.cxx in Sources */,
+				6C9BC3F60A4C4E3000A69EFA /* UserProfile.cxx in Sources */,
+				6C9BC3F70A4C4E3000A69EFA /* ClientOutOfDialogReq.cxx in Sources */,
+				6C9BC3F80A4C4E3000A69EFA /* ClientInviteSession.cxx in Sources */,
+				6C9BC3F90A4C4E3000A69EFA /* ClientAuthManager.cxx in Sources */,
+				6C9BC3FA0A4C4E3000A69EFA /* ChallengeInfo.cxx in Sources */,
+				6C9BC3FB0A4C4E3000A69EFA /* ServerPagerMessage.cxx in Sources */,
+				6C9BC3FC0A4C4E3000A69EFA /* RegistrationCreator.cxx in Sources */,
+				6C9BC3FD0A4C4E3000A69EFA /* RedirectManager.cxx in Sources */,
+				6C9BC3FE0A4C4E3000A69EFA /* PublicationCreator.cxx in Sources */,
+				6C9BC3FF0A4C4E3000A69EFA /* Profile.cxx in Sources */,
+				6C9BC4000A4C4E3000A69EFA /* PagerMessageCreator.cxx in Sources */,
+				6C9BC4010A4C4E3000A69EFA /* OutOfDialogReqCreator.cxx in Sources */,
+				6C9BC4020A4C4E3000A69EFA /* OutgoingEvent.cxx in Sources */,
+				6C9BC4030A4C4E3000A69EFA /* NonDialogUsage.cxx in Sources */,
+				6C9BC4040A4C4E3000A69EFA /* NetworkAssociation.cxx in Sources */,
+				6C9BC4050A4C4E3000A69EFA /* MergedRequestRemovalCommand.cxx in Sources */,
+				6C9BC4060A4C4E3000A69EFA /* MergedRequestKey.cxx in Sources */,
+				6C9BC4070A4C4E3000A69EFA /* MasterProfile.cxx in Sources */,
+				6C9BC4080A4C4E3000A69EFA /* KeepAliveTimeout.cxx in Sources */,
+				6C9BC4090A4C4E3000A69EFA /* KeepAliveManager.cxx in Sources */,
+				6C9BC40A0A4C4E3000A69EFA /* InviteSessionHandler.cxx in Sources */,
+				6C9BC40B0A4C4E3000A69EFA /* InviteSessionCreator.cxx in Sources */,
+				6C9BC40C0A4C4E3000A69EFA /* InviteSession.cxx in Sources */,
+				6C9BC40D0A4C4E3000A69EFA /* InMemoryRegistrationDatabase.cxx in Sources */,
+				6C9BC40E0A4C4E3000A69EFA /* IdentityHandler.cxx in Sources */,
+				6C9BC40F0A4C4E3000A69EFA /* HttpProvider.cxx in Sources */,
+				6C9BC4100A4C4E3000A69EFA /* HttpGetMessage.cxx in Sources */,
+				6C9BC4110A4C4E3000A69EFA /* HandleManager.cxx in Sources */,
+				6C9BC4120A4C4E3000A69EFA /* HandleException.cxx in Sources */,
+				6C9BC4130A4C4E3000A69EFA /* Handled.cxx in Sources */,
+				6C9BC4140A4C4E3000A69EFA /* Handle.cxx in Sources */,
+				6C9BC4150A4C4E3000A69EFA /* EncryptionRequest.cxx in Sources */,
+				6C9BC4160A4C4E3000A69EFA /* EncryptionManager.cxx in Sources */,
+				6C9BC4170A4C4E3000A69EFA /* DumTimeout.cxx in Sources */,
+				6C9BC4180A4C4E3000A69EFA /* DumThread.cxx in Sources */,
+				6C9BC4190A4C4E3000A69EFA /* DumProcessHandler.cxx in Sources */,
+				6C9BC41A0A4C4E3000A69EFA /* DumHelper.cxx in Sources */,
+				6C9BC41B0A4C4E3000A69EFA /* DumFeatureChain.cxx in Sources */,
+				6C9BC41C0A4C4E3000A69EFA /* DumFeature.cxx in Sources */,
+				6C9BC41D0A4C4E3000A69EFA /* DumDecrypted.cxx in Sources */,
+				6C9BC41E0A4C4E3000A69EFA /* UserAuthInfo.cxx in Sources */,
+				6C9BC41F0A4C4E3000A69EFA /* TargetCommand.cxx in Sources */,
+				6C9BC4200A4C4E3000A69EFA /* SubscriptionState.cxx in Sources */,
+				6C9BC4210A4C4E3000A69EFA /* SubscriptionHandler.cxx in Sources */,
+				6C9BC4220A4C4E3000A69EFA /* SubscriptionCreator.cxx in Sources */,
+				6C9BC4230A4C4E3000A69EFA /* ServerSubscription.cxx in Sources */,
+				6C9BC4240A4C4E3000A69EFA /* ServerRegistration.cxx in Sources */,
+				6C9BC4250A4C4E3000A69EFA /* ServerPublication.cxx in Sources */,
+				6C9BC4260A4C4E3000A69EFA /* CertMessage.cxx in Sources */,
+				6C9BC4270A4C4E3000A69EFA /* BaseUsage.cxx in Sources */,
+				6C9BC4280A4C4E3000A69EFA /* BaseSubscription.cxx in Sources */,
+				6C9BC4290A4C4E3000A69EFA /* BaseCreator.cxx in Sources */,
+				6C9BC42A0A4C4E3000A69EFA /* ClientPublication.cxx in Sources */,
+				6C9BC42B0A4C4E3000A69EFA /* ClientPagerMessage.cxx in Sources */,
+				6C9BC42C0A4C4E3000A69EFA /* ServerOutOfDialogReq.cxx in Sources */,
+				6C9BC42D0A4C4E3000A69EFA /* ServerInviteSession.cxx in Sources */,
+				6C9BC42E0A4C4E3000A69EFA /* ServerAuthManager.cxx in Sources */,
+				6C9BC42F0A4C4E3000A69EFA /* DialogUsageManager.cxx in Sources */,
+				6C9BC4300A4C4E3000A69EFA /* DialogUsage.cxx in Sources */,
+				6C9BC4310A4C4E3000A69EFA /* DialogSetId.cxx in Sources */,
+				6C9BC4320A4C4E3000A69EFA /* DialogSet.cxx in Sources */,
+				6C9BC4330A4C4E3000A69EFA /* DialogId.cxx in Sources */,
+				6C9BC4340A4C4E3000A69EFA /* Dialog.cxx in Sources */,
+				6C9BC4350A4C4E3000A69EFA /* DestroyUsage.cxx in Sources */,
+				6C9BC4360A4C4E3000A69EFA /* DefaultServerReferHandler.cxx in Sources */,
+				6C9BC4370A4C4E3000A69EFA /* ContactInstanceRecord.cxx in Sources */,
+				6C9BC4380A4C4E3000A69EFA /* DumFeatureMessage.cxx in Sources */,
+				6C9BC4390A4C4E3000A69EFA /* ClientSubscription.cxx in Sources */,
+				6C9BC43A0A4C4E3000A69EFA /* ClientRegistration.cxx in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D2AAC06C0554671400DB518D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6C9BC2790A4C446E00A69EFA /* ares_timeout.c in Sources */,
+				6C9BC27A0A4C446E00A69EFA /* ares_strerror.c in Sources */,
+				6C9BC27B0A4C446E00A69EFA /* ares_send.c in Sources */,
+				6C9BC27C0A4C446E00A69EFA /* ares_search.c in Sources */,
+				6C9BC27D0A4C446E00A69EFA /* ares_query.c in Sources */,
+				6C9BC27E0A4C446E00A69EFA /* ares_process.c in Sources */,
+				6C9BC27F0A4C446E00A69EFA /* ares_parse_ptr_reply.c in Sources */,
+				6C9BC2800A4C446E00A69EFA /* ares_parse_a_reply.c in Sources */,
+				6C9BC2810A4C446E00A69EFA /* ares_mkquery.c in Sources */,
+				6C9BC2820A4C446E00A69EFA /* ares_local.c in Sources */,
+				6C9BC2830A4C446E00A69EFA /* ares_init.c in Sources */,
+				6C9BC2840A4C446E00A69EFA /* ares_gethostbyname.c in Sources */,
+				6C9BC2850A4C446E00A69EFA /* ares_gethostbyaddr.c in Sources */,
+				6C9BC2860A4C446E00A69EFA /* ares_free_string.c in Sources */,
+				6C9BC2870A4C446E00A69EFA /* ares_free_hostent.c in Sources */,
+				6C9BC2880A4C446E00A69EFA /* ares_free_errmem.c in Sources */,
+				6C9BC2890A4C446E00A69EFA /* ares_fds.c in Sources */,
+				6C9BC28A0A4C446E00A69EFA /* ares_expand_name.c in Sources */,
+				6C9BC28B0A4C446E00A69EFA /* ares_destroy.c in Sources */,
+				6C9BC28C0A4C446E00A69EFA /* ares__close_sockets.c in Sources */,
+				6C9BC28D0A4C446E00A69EFA /* ares__read_line.c in Sources */,
+				6C9BC2900A4C446E00A69EFA /* ares__get_hostent.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		6C9BC5380A4C531C00A69EFA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6C9BC2D60A4C496400A69EFA /* rutil */;
+			targetProxy = 6C9BC5370A4C531C00A69EFA /* PBXContainerItemProxy */;
+		};
+		6C9BC53A0A4C531C00A69EFA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6C9BC3A30A4C4DAA00A69EFA /* dum */;
+			targetProxy = 6C9BC5390A4C531C00A69EFA /* PBXContainerItemProxy */;
+		};
+		6CE8EEF80A5466F6007BE74A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D2AAC06E0554671400DB518D /* ares */;
+			targetProxy = 6CE8EEF70A5466F6007BE74A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		12F7971C086CB6D700AF4EDF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_DYNAMIC_NO_PIC = NO;
+				HEADER_SEARCH_PATHS = ../contrib/ares;
+				INSTALL_PATH = /usr/local/lib;
+				LIBRARY_STYLE = STATIC;
+				PREBINDING = NO;
+				PRODUCT_NAME = ares;
+			};
+			name = Debug;
+		};
+		12F79720086CB6D700AF4EDF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = sip_MacPrefix.pch;
+				MACOSX_DEPLOYMENT_TARGET = 10.3;
+				SDKROOT = /Developer/SDKs/MacOSX10.3.9.sdk;
+			};
+			name = Debug;
+		};
+		12F79735086CBA1E00AF4EDF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_DYNAMIC_NO_PIC = NO;
+				HEADER_SEARCH_PATHS = (
+					../contrib/ares,
+					..,
+					"../repro-deps/log4cplus-1.0.2/include",
+				);
+				INSTALL_PATH = /usr/local/lib;
+				LIBRARY_STYLE = STATIC;
+				PREBINDING = NO;
+				PRODUCT_NAME = resip;
+			};
+			name = Debug;
+		};
+		6C9BC2DA0A4C498800A69EFA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				HEADER_SEARCH_PATHS = (
+					../,
+					../contrib/ares,
+					"../repro-deps/log4cplus-1.0.2/include",
+					"../repro-deps/sqlite-3.3.5",
+				);
+				INSTALL_PATH = /usr/local/lib;
+				PREBINDING = NO;
+				PRODUCT_NAME = rutil;
+				ZERO_LINK = YES;
+			};
+			name = Debug;
+		};
+		6C9BC3A70A4C4DB200A69EFA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				HEADER_SEARCH_PATHS = ../;
+				INSTALL_PATH = /usr/local/lib;
+				PREBINDING = NO;
+				PRODUCT_NAME = dum;
+				ZERO_LINK = YES;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		12F7971B086CB6D700AF4EDF /* Build configuration list for PBXNativeTarget "ares" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				12F7971C086CB6D700AF4EDF /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		12F7971F086CB6D700AF4EDF /* Build configuration list for PBXProject "sip" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				12F79720086CB6D700AF4EDF /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		12F79734086CBA1E00AF4EDF /* Build configuration list for PBXNativeTarget "resip" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				12F79735086CBA1E00AF4EDF /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		6C9BC2D90A4C498800A69EFA /* Build configuration list for PBXNativeTarget "rutil" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6C9BC2DA0A4C498800A69EFA /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		6C9BC3A60A4C4DB200A69EFA /* Build configuration list for PBXNativeTarget "dum" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6C9BC3A70A4C4DB200A69EFA /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 0867D690FE84028FC02AAC07 /* Project object */;
+}

@@ -1,0 +1,721 @@
+/* ***********************************************************************
+   Copyright 2006-2007 Estacado Systems, LLC. All rights reserved.
+
+   Portions of this code are copyright Estacado Systems. Its use is
+   subject to the terms of the license agreement under which it has been
+   supplied.
+ *********************************************************************** */
+
+#if defined(HAVE_CONFIG_H)
+#include "resip/stack/config.hxx"
+#endif
+
+#include <memory>
+
+#include "resip/stack/Helper.hxx"
+#include "resip/stack/SendData.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/UdpTransport.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/EsLogger.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Timer.hxx"
+#include "rutil/WinLeakCheck.hxx"
+#include "rutil/compat.hxx"
+#include "rutil/stun/Stun.hxx"
+
+#ifdef RESIP_USE_SCTP
+#include <netinet/sctp.h>
+#endif
+
+#ifdef USE_SIGCOMP
+#include <osc/Stack.h>
+#include <osc/StateChanges.h>
+#include <osc/SigcompMessage.h>
+#endif
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
+
+using namespace std;
+using namespace resip;
+
+UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
+                           int portNum,  
+                           IpVersion version,
+                           StunSetting stun,
+                           const Data& pinterface,
+                           AfterSocketCreationFuncPtr socketFunc,
+                           Compression &compression, 
+                            bool hasOwnThread,
+                            bool doSctp) 
+   : InternalTransport(fifo, 
+      portNum, 
+      version, 
+      (pinterface.empty() && doSctp) ? DnsUtil::getLocalHostName() : pinterface , 
+      socketFunc, 
+      compression,
+      0,
+      hasOwnThread),
+     mSigcompStack(0),
+     mStunSuccess(false),
+     mExternalUnknownDatagramHandler(0),
+     mType(doSctp ? SCTP : UDP)
+{
+   mTuple.setType(transport());
+   mFd = InternalTransport::socket(transport(), version, mType==SCTP ? SOCK_SEQPACKET : 0);
+   mTuple.mFlowKey=(FlowKey)mFd;
+   bind();
+
+   InfoLog (<< "Creating UDP transport host=" << pinterface 
+            << " port=" << mTuple.getPort()
+            << " ipv4=" << bool(version==V4) );
+
+   if(mType==SCTP)
+   {
+      // Need to call listen; otherwise this functions just like a UDP socket
+      ::listen(mFd, 64);
+   }
+
+#ifdef USE_SIGCOMP
+   if (mCompression.isEnabled())
+   {
+      DebugLog (<< "Compression enabled for transport: " << *this);
+      mSigcompStack = new osc::Stack(mCompression.getStateHandler());
+      mCompression.addCompressorsToStack(mSigcompStack);
+   }
+   else
+   {
+      DebugLog (<< "Compression disabled for transport: " << *this);
+   }
+#else
+   DebugLog (<< "No compression library available: " << *this);
+#endif
+   mTxFifo.setDescription("UdpTransport::mTxFifo");
+}
+
+UdpTransport::~UdpTransport()
+{
+   InfoLog (<< "Shutting down " << mTuple);
+#ifdef USE_SIGCOMP
+   delete mSigcompStack;
+#endif
+}
+
+void 
+UdpTransport::process(FdSet& fdset)
+{
+   // pull buffers to send out of TxFifo
+   // receive datagrams from fd
+   // preparse and stuff into RxFifo
+
+   if(mHasOwnThread)
+   {
+      mSelectInterruptor.process(fdset);
+   }
+
+   if (mTxFifo.messageAvailable() && fdset.readyToWrite(mFd))
+   {
+      std::auto_ptr<SendData> sendData = std::auto_ptr<SendData>(mTxFifo.getNext());
+      //DebugLog (<< "Sent: " <<  sendData->data);
+      //DebugLog (<< "Sending message on udp.");
+
+      assert( &(*sendData) );
+      assert( sendData->destination.getPort() != 0 );
+      
+      const sockaddr& addr = sendData->destination.getSockaddr();
+      int expected;
+      int count=0;
+
+#ifdef USE_SIGCOMP
+      // If message needs to be compressed, compress it here.
+      if (mSigcompStack &&
+          sendData->sigcompId.size() > 0 &&
+          !sendData->isAlreadyCompressed )
+      {
+          osc::SigcompMessage *sm = mSigcompStack->compressMessage
+            (sendData->data.data(), sendData->data.size(),
+             sendData->sigcompId.data(), sendData->sigcompId.size(),
+             isReliable());
+
+          DebugLog (<< "Compressed message from "
+                    << sendData->data.size() << " bytes to " 
+                    << sm->getDatagramLength() << " bytes");
+
+          expected = sm->getDatagramLength();
+
+          if(mType==SCTP)
+          {
+#ifdef RESIP_USE_SCTP
+             // .bwc. We need to use unordered delivery for SIP. I cannot find 
+             // any answers on whether flags passed in a regular sendto call 
+             // will be interpreted as SCTP flags or not, so for the time being 
+             // we need additional code.
+             count = sctp_sendmsg(mFd, 
+                            sm->getDatagramMessage(),
+                            sm->getDatagramLength(),
+                            &(sendData->destination.getMutableSockaddr()), 
+                            sendData->destination.length(),
+                            0, // opaque
+                            SCTP_UNORDERED & SCTP_ADDR_OVER, // flags
+                            0, // stream number
+                            64*Timer::T1, // ttl; setting this to 64T1
+                            0 // opaque
+                            );
+#else
+             CritLog(<< "Attempting to send over SCTP, but SCTP is not "
+                        "supported in this stack. ");
+             assert(0);
+             fail(sendData->transactionId);
+#endif
+          }
+          else
+          {
+             count = sendto(mFd, 
+                            sm->getDatagramMessage(),
+                            sm->getDatagramLength(),
+                            0, // flags
+                            &addr, sendData->destination.length());
+          }
+          delete sm;
+      }
+      else
+#endif
+      {
+          expected = (int)sendData->data.size();
+
+          if(mType==SCTP)
+          {
+#ifdef RESIP_USE_SCTP
+             // .bwc. We need to use unordered delivery for SIP. I cannot find 
+             // any answers on whether flags passed in a regular sendto call 
+             // will be interpreted as SCTP flags or not, so for the time being 
+             // we need additional code.
+             count = sctp_sendmsg(mFd, 
+                            sendData->data.data(), 
+                            (int)sendData->data.size(),  
+                            &(sendData->destination.getMutableSockaddr()),
+                            (int)sendData->destination.length(),
+                            0, // opaque
+                            SCTP_UNORDERED & SCTP_ADDR_OVER, // flags
+                            0, // stream number
+                            64*Timer::T1, // ttl; setting this to 64T1
+                            0 // opaque
+                            );
+#else
+             CritLog(<< "Attempting to send over SCTP, but SCTP is not "
+                        "supported in this stack. ");
+             assert(0);
+             fail(sendData->transactionId);
+#endif
+          }
+          else
+          {
+             count = sendto(mFd, 
+                            sendData->data.data(), (int)sendData->data.size(),  
+                            0, // flags
+                            &addr, (int)sendData->destination.length());
+          }
+      }
+      
+      if ( count == SOCKET_ERROR )
+      {
+         int e = getErrno();
+         error(e);
+         InfoLog (<< "Failed (" << e << ") sending to " << sendData->destination);
+         fail(sendData->transactionId);
+      }
+      else
+      {
+         if (count != expected)
+         {
+            ErrLog (<< "UDPTransport - send buffer full" );
+            fail(sendData->transactionId);
+         }
+         else 
+         {
+            ES_INFO(estacado::SBF_SIPMESSAGES, "Sent To "
+                           << sendData->destination << " : " << std::endl 
+                           << sendData->data << std::endl << "-----------" 
+                           << std::endl );
+         }
+      }
+   }
+   
+   // !jf! this may have to change - when we read a message that is too big
+   if ( fdset.readyToRead(mFd) )
+   {
+      //should this buffer be allocated on the stack and then copied out, as it
+      //needs to be deleted every time EWOULDBLOCK is encountered
+      // .dlb. can we determine the size of the buffer before we allocate?
+      // something about MSG_PEEK|MSG_TRUNC in Stevens..
+      // .dlb. RFC3261 18.1.1 MUST accept 65K datagrams. would have to attempt to
+      // adjust the UDP buffer as well...
+
+      Tuple tuple(mTuple);
+      socklen_t slen = tuple.length();
+
+
+
+      // !jf! how do we tell if it discarded bytes 
+      // !ah! we use the len-1 trick :-(
+       int len = recvfrom( mFd,
+                          mStagingBuffer,
+                          StagingBufferSize,
+                          0 /*flags */,
+                          &tuple.getMutableSockaddr(), 
+                          &slen);
+      if ( len == SOCKET_ERROR )
+      {
+         int err = getErrno();
+         if ( err != EWOULDBLOCK  )
+         {
+            error( err );
+         }
+      }
+
+      if (len == 0 || len == SOCKET_ERROR)
+      {
+         return;
+      }
+
+      if (len+1 >= StagingBufferSize)
+      {
+         InfoLog(<<"Datagram exceeded max length "<<StagingBufferSize);
+         return;
+      }
+
+      //handle incoming CRLFCRLF keep-alive packets
+      if (len == 4 &&
+          strncmp(mStagingBuffer, Symbols::CRLFCRLF.data(), len) == 0)
+      {
+         StackLog(<<"Throwing away incoming firewall keep-alive");
+         return;
+      }
+
+      // this must be a STUN response (or garbage)
+      if (mStagingBuffer[0] == 1 && mStagingBuffer[1] == 1 && ipVersion() == V4)
+      {
+         resip::Lock lock(myMutex);
+         StunMessage resp;
+         memset(&resp, 0, sizeof(StunMessage));
+         
+         if (stunParseMessage(mStagingBuffer, len, resp, false))
+         {
+            in_addr sin_addr;
+            // Use XorMappedAddress if present - if not use MappedAddress
+            if(resp.hasXorMappedAddress)
+            {
+               UInt16 id16 = resp.msgHdr.id.octet[0]<<8 
+                             | resp.msgHdr.id.octet[1];
+               UInt32 id32 = resp.msgHdr.id.octet[0]<<24 
+                             | resp.msgHdr.id.octet[1]<<16 
+                             | resp.msgHdr.id.octet[2]<<8 
+                             | resp.msgHdr.id.octet[3];
+               resp.xorMappedAddress.ipv4.port = resp.xorMappedAddress.ipv4.port^id16;
+               resp.xorMappedAddress.ipv4.addr = resp.xorMappedAddress.ipv4.addr^id32;
+
+#if defined(WIN32)
+               sin_addr.S_un.S_addr = htonl(resp.xorMappedAddress.ipv4.addr);
+#else
+               sin_addr.s_addr = htonl(resp.xorMappedAddress.ipv4.addr);
+#endif
+               mStunMappedAddress = Tuple(sin_addr,resp.xorMappedAddress.ipv4.port, UDP);
+               mStunSuccess = true;
+            }
+            else if(resp.hasMappedAddress)
+            {
+#if defined(WIN32)
+            sin_addr.S_un.S_addr = htonl(resp.mappedAddress.ipv4.addr);
+#else
+            sin_addr.s_addr = htonl(resp.mappedAddress.ipv4.addr);
+#endif
+            mStunMappedAddress = Tuple(sin_addr,resp.mappedAddress.ipv4.port, UDP);
+            mStunSuccess = true;
+            }
+         }
+         return;
+      }
+
+      // this must be a STUN request (or garbage)
+      if ((mStagingBuffer[0] == 0 || mStagingBuffer[0] == 1) && ipVersion() == V4)
+      {
+         bool changePort = false;
+         bool changeIp = false;
+         
+         StunAddress4 myAddr;
+         const sockaddr_in& bi = (const sockaddr_in&)boundInterface();
+         myAddr.addr = ntohl(bi.sin_addr.s_addr);
+         myAddr.port = ntohs(bi.sin_port);
+         
+         StunAddress4 from; // packet source
+         const sockaddr_in& fi = (const sockaddr_in&)tuple.getSockaddr();
+         from.addr = ntohl(fi.sin_addr.s_addr);
+         from.port = ntohs(fi.sin_port);
+         
+         StunMessage resp;
+         StunAddress4 dest;
+         StunAtrString hmacPassword;  
+         hmacPassword.sizeValue = 0;
+         
+         StunAddress4 secondary;
+         secondary.port = 0;
+         secondary.addr = 0;
+         
+         bool ok = stunServerProcessMsg( mStagingBuffer, len, // input buffer
+                                         from,  // packet source
+                                         secondary, // not used
+                                         myAddr, // address to fill into response
+                                         myAddr, // not used
+                                         &resp, // stun response
+                                         &dest, // where to send response
+                                         &hmacPassword, // not used
+                                         &changePort, // not used
+                                         &changeIp, // not used
+                                         false ); // logging
+         
+         if (ok)
+         {
+            DebugLog(<<"Got UDP STUN keepalive. Sending response...");
+            char* response = new char[STUN_MAX_MESSAGE_SIZE];
+            int rlen = stunEncodeMessage( resp, 
+                                          response, 
+                                          STUN_MAX_MESSAGE_SIZE, 
+                                          hmacPassword,
+                                          false );
+            SendData* stunResponse = new SendData(tuple, response, rlen);
+            mTxFifo.add(stunResponse);
+         }
+         return;
+      }
+      
+      char* buffer = MsgHeaderScanner::allocateBuffer(len);
+
+      memcpy(buffer,mStagingBuffer,len);
+
+#ifdef USE_SIGCOMP
+      osc::StateChanges *sc = 0;
+#endif
+
+      // Attempt to decode SigComp message, if appropriate.
+      if ((buffer[0] & 0xf8) == 0xf8)
+      {
+        if (!mCompression.isEnabled())
+        {
+          InfoLog(<< "Discarding unexpected SigComp Message");
+          delete[] buffer;
+          buffer = 0;
+          return;
+        }
+#ifdef USE_SIGCOMP
+        char* newBuffer = MsgHeaderScanner::allocateBuffer(StagingBufferSize); 
+        size_t uncompressedLength =
+          mSigcompStack->uncompressMessage(buffer, len, 
+                                           newBuffer, StagingBufferSize, sc);
+
+       DebugLog (<< "Uncompressed message from "
+                 << len << " bytes to " 
+                 << uncompressedLength << " bytes");
+
+
+        osc::SigcompMessage *nack = mSigcompStack->getNack();
+
+        if (nack)
+        {
+          mTxFifo.add(new SendData(tuple, 
+                                   Data(nack->getDatagramMessage(),
+                                        nack->getDatagramLength()),
+                                   Data::Empty,
+                                   Data::Empty,
+                                   true)
+                     );
+          delete nack;
+        }
+
+        delete[] buffer;
+        buffer = newBuffer;
+        len = uncompressedLength;
+#endif
+      }
+
+      buffer[len]=0; // null terminate the buffer string just to make debug easier and reduce errors
+
+      //DebugLog ( << "UDP Rcv : " << len << " b" );
+      //DebugLog ( << Data(buffer, len).escaped().c_str());
+
+
+      ES_INFO(estacado::SBF_SIPMESSAGES, "Received From "
+                     << tuple << " : " << std::endl 
+                     << resip::Data(resip::Data::Borrow,buffer,len) << std::endl << "-----------" 
+                     << std::endl );
+                                    
+
+
+      SipMessage* message = new SipMessage(this);
+
+      // set the received from information into the received= parameter in the
+      // via
+
+      // It is presumed that UDP Datagrams are arriving atomically and that
+      // each one is a unique SIP message
+
+
+      // Save all the info where this message came from
+      tuple.transport = this;
+      tuple.transportKey = getKey();
+      tuple.mFlowKey=mTuple.mFlowKey;
+      message->setSource(tuple);   
+      //DebugLog (<< "Received from: " << tuple);
+   
+      // Tell the SipMessage about this datagram buffer.
+      message->addBuffer(buffer);
+
+      mMsgHeaderScanner.prepareForMessage(message);
+
+      char *unprocessedCharPtr;
+      if (mMsgHeaderScanner.scanChunk(buffer,
+                                      len,
+                                      &unprocessedCharPtr) !=
+          MsgHeaderScanner::scrEnd)
+      {
+         StackLog(<<"Scanner rejecting datagram as unparsable / fragmented from " << tuple);
+         StackLog(<< Data(Data::Borrow, buffer, len));
+         if(mExternalUnknownDatagramHandler)
+         {
+            auto_ptr<Data> datagram(new Data(buffer,len));
+            (*mExternalUnknownDatagramHandler)(this,tuple,datagram);
+         }
+
+         delete message; 
+         message=0; 
+         return;
+      }
+
+      // no pp error
+      int used = int(unprocessedCharPtr - buffer);
+
+      if (used < len)
+      {
+         // body is present .. add it up.
+         // NB. The Sip Message uses an overlay (again)
+         // for the body. It ALSO expects that the body
+         // will be contiguous (of course).
+         // it doesn't need a new buffer in UDP b/c there
+         // will only be one datagram per buffer. (1:1 strict)
+
+         message->setBody(buffer+used,len-used);
+         //DebugLog(<<"added " << len-used << " byte body");
+      }
+
+      // .bwc. basicCheck takes up substantial CPU. Don't bother doing it
+      // if we're overloaded.
+      CongestionManager::RejectionBehavior behavior=mStateMachineFifo.getRejectionBehavior();
+      if (behavior==CongestionManager::REJECTING_NON_ESSENTIAL
+            || (behavior==CongestionManager::REJECTING_NEW_WORK
+               && message->isRequest()))
+      {
+         // .bwc. If this fifo is REJECTING_NEW_WORK, we will drop
+         // requests but not responses ( ?bwc? is this right for ACK?). 
+         // If we are REJECTING_NON_ESSENTIAL, 
+         // we reject all incoming work, since losing something from the 
+         // wire will not cause instability or leaks (see 
+         // CongestionManager.hxx)
+
+         // .bwc. This handles all appropriate checking for whether
+         // this is a response or an ACK.
+         std::auto_ptr<SendData> tryLater(make503(*message, mStateMachineFifo.expectedWaitTimeMilliSec()/1000));
+         if(tryLater.get())
+         {
+            send(tryLater);
+         }
+        delete message; // dropping message due to congestion
+        message = 0;
+        return;
+      }
+      
+      if (!basicCheck(*message))
+      {
+         delete message; // cannot use it, so, punt on it...
+         // basicCheck queued any response required
+         message = 0;
+         return;
+      }
+
+      stampReceived(message);
+
+#ifdef USE_SIGCOMP
+      if (mCompression.isEnabled() && sc)
+      {
+        const Via &via = message->header(h_Vias).front();
+        if (message->isRequest())
+        {
+          // For requests, the compartment ID is read out of the
+          // top via header field; if not present, we use the
+          // TCP connection for identification purposes.
+          if (via.exists(p_sigcompId))
+          {
+            Data compId = via.param(p_sigcompId);
+            if(!compId.empty())
+            {
+               // .bwc. Crash was happening here. Why was there an empty sigcomp
+               // id?
+               mSigcompStack->provideCompartmentId(
+                                sc, compId.data(), compId.size());
+            }
+          }
+          else
+          {
+            mSigcompStack->provideCompartmentId(sc, this, sizeof(this));
+          }
+        }
+        else
+        {
+          // For responses, the compartment ID is supposed to be
+          // the same as the compartment ID of the request. We
+          // *could* dig down into the transaction layer to try to
+          // figure this out, but that's a royal pain, and a rather
+          // severe layer violation. In practice, we're going to ferret
+          // the ID out of the the Via header field, which is where we
+          // squirreled it away when we sent this request in the first place.
+          // !bwc! This probably shouldn't be going out over the wire.
+          Data compId = via.param(p_branch).getSigcompCompartment();
+          if(!compId.empty())
+          {
+            mSigcompStack->provideCompartmentId(sc, compId.data(), compId.size());
+          }
+        }
+  
+      }
+#endif
+
+      mStateMachineFifo.add(message);
+   }
+}
+
+
+void 
+UdpTransport::buildFdSet( FdSet& fdset )
+{
+   fdset.setRead(mFd);
+    
+   if (mTxFifo.messageAvailable())
+   {
+     fdset.setWrite(mFd);
+   }
+   else if(mHasOwnThread)
+   {
+      mSelectInterruptor.buildFdSet(fdset);
+   }
+}
+
+bool 
+UdpTransport::stunSendTest(const Tuple&  dest)
+{
+   bool changePort=false;
+   bool changeIP=false;
+
+   StunAtrString username;
+   StunAtrString password;
+
+   username.sizeValue = 0;
+   password.sizeValue = 0;
+
+   StunMessage req;
+   memset(&req, 0, sizeof(StunMessage));
+
+   stunBuildReqSimple(&req, username, changePort , changeIP , 1);
+
+   char* buf = new char[STUN_MAX_MESSAGE_SIZE];
+   int len = STUN_MAX_MESSAGE_SIZE;
+
+   int rlen = stunEncodeMessage(req, buf, len, password, false);
+
+   SendData* stunRequest = new SendData(dest, buf, rlen);
+   mTxFifo.add(stunRequest);
+
+   mStunSuccess = false;
+
+   return true;
+}
+
+bool
+UdpTransport::stunResult(Tuple& mappedAddress)
+{
+   resip::Lock lock(myMutex);
+
+   if (mStunSuccess)
+   {
+      mappedAddress = mStunMappedAddress;
+   }
+   return mStunSuccess;
+}
+
+void 
+UdpTransport::setExternalUnknownDatagramHandler(ExternalUnknownDatagramHandler *handler)
+{
+   mExternalUnknownDatagramHandler = handler;
+}
+
+/* Copyright 2007 Estacado Systems */
+
+/* ====================================================================
+ * 
+ * Portions of this file may fall under the following license. The
+ * portions to which the following text applies are available from:
+ * 
+ *   http://www.resiprocate.org/
+ * 
+ * Any portion of this code that is not freely available from the
+ * Resiprocate project webpages is COPYRIGHT ESTACADO SYSTEMS, LLC.
+ * All rights reserved.
+ * 
+ * ====================================================================
+ * The Vovida Software License, Version 1.0 
+ * 
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ * 
+ * 3. The names "VOCAL", "Vovida Open Communication Application Library",
+ *    and "Vovida Open Communication Application Library (VOCAL)" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact vocal@vovida.org.
+ *
+ * 4. Products derived from this software may not be called "VOCAL", nor
+ *    may "VOCAL" appear in their name, without prior written
+ *    permission of Vovida Networks, Inc.
+ * 
+ * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
+ * NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA
+ * NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
+ * IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+ * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ * 
+ * ====================================================================
+ * 
+ * This software consists of voluntary contributions made by Vovida
+ * Networks, Inc. and many individuals on behalf of Vovida Networks,
+ * Inc.  For more information on Vovida Networks, Inc., please see
+ * <http://www.vovida.org/>.
+ *
+ */

@@ -1,0 +1,64 @@
+namespace resip {
+/**
+@page Logging Logging
+@ingroup logging
+@section Brief Brief Exposition
+There are two logging systems in the SIP Basis Foundation SDK, the old resip
+logging system, and the new, log4cplus based logging system. Although the old 
+system has been adapted to hook into the new system, developers are encouraged
+to use the more feature rich, new logging system.
+
+@section OldLogging The Old Logging System
+The old logging system was inherited from the public resip tree and has been 
+altered to feed logging into the new logging system. It is recommended that 
+developers use the new logging system and treat the old as deprecated.
+
+@sa Logger.hxx
+@sa Log.hxx
+
+@section NewLogging The New Logging System
+The new logging system is based on log4cplus, a port of log4j to c++, which 
+brings with it flexible configuration and fast run-time execution. A number of
+logging macros have been provided allowing developers to add logging with 
+minimal effort. For information on configuring log4cplus and adding log4cplus
+loggers see the log4cplus documentation at
+http://log4cplus.sourceforge.net/docs/html/index.html .
+For log4cplus code examples see the log4cplus documentation at 
+http://log4cplus.sourceforge.net/codeexamples.html .
+
+@sa EsLogger.hxx
+
+@subsection LogLevels Log Levels
+    There are six log levels defined in the new logging system.
+    @li Level Name: trace  Macro: ES_TRACE()
+    @li Level Name: debug  Macro: ES_DEBUG()
+    @li Level Name: info   Macro: ES_INFO()
+    @li Level Name: warn   Macro: ES_WARN()
+    @li Level Name: error  Macro: ES_ERROR()
+    @li Level Name: fatal  Macro: ES_FATAL()
+
+    These log levels pass directly into the log4cplus log level
+    macros, e.g. ES_TRACE maps to LOG4CPLUS_TRACE.
+    For more details see EsLogger.hxx .
+    
+@subsection MethodTraceMacro Method Trace Macro
+    A special macro is provided for doing method
+    execution traces: ES_TRACE_METHOD(). When used
+    as the first line of a function it will produce
+    a logging statement immediately upon entering
+    the function upon execution and another upon
+    exiting.    
+
+@subsection LogStatements Writing Logging Statements Using The Logging Macros
+    The logging macros take two parameters, a string designating the log that
+    the statement is to be appended to and a statement in the form of a 
+    streamable expression.
+    @code
+    //Examples:
+    
+        ES_WARN("sipbasis.foundation.foo","Writing 1 to foo");
+        ES_WARN("sipbasis.foundation.foo","Writing "<<"1 "<<"to "<<"foo");
+        ES_WARN("sipbasis.foundation.foo","Writing "<<1<<" "<<"to "<<"foo");
+    @endcode
+*/
+}

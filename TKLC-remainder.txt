@@ -1,0 +1,480 @@
+Private fork of resiprocate:
+
+Slight API tweak to AbstractFifo::getNext(int ms)
+Files effected:
+rutil/AbstractFifo.cxx
+resip/stack/TransactionController.cxx
+resip/stack/TransportSelector.cxx
+
+Description: In public resip, calling getNext(0) is identical to calling getNext(); this will block indefinitely. There was consequently no way in public resip to poll a fifo. In our stack, getNext(0) does the proper thing, and polls the fifo. Since this change was made, a modification to public resip was made that allowed polling by passing a negative value. We may just want to revert this change, even though it is more "correct" technically, since merging it would break backward compatibility for people.
+
+
+Cleanup of asserts (better handling of exceptional conditions when asserts are disabled)
+Files effected:
+rutil/Condition.cxx
+rutil/Mutex.cxx
+rutil/ParseBuffer.cxx
+rutil/RecursiveMutex.cxx
+resip/stack/SelectInterruptor.cxx
+resip/stack/SipStack.cxx
+resip/stack/TransportSelector.cxx
+resip/stack/UdpTransport.cxx
+resip/stack/Uri.cxx
+resip/stack/ssl/Security.cxx
+resip/stack/ssl/Security.hxx
+
+Description: Public resip had a lot of places where no handling was attempted in cases where an assert() was not true, that would result in crashes if the assert was disabled.
+
+
+Removed a lot of instances of "throw;"
+Files effected:
+resip/stack/Contents.cxx
+resip/stack/SipStack.cxx
+resip/stack/ssl/Security.cxx
+rutil/RADIUSDigestAuthenticator.cxx
+rutil/RADIUSDigestAuthenticator.hxx
+rutil/SharedCount.hxx
+
+Description: "throw;" is horrible. This stuff needs to go into public regardless.
+
+
+Boatloads of doxygen
+Files effected:
+Almost every header file, and some impl files as well.
+
+Description: Our code is exhaustively documented with doxygen in the header files. This is a _huge_ obstacle to merging work from public resip.
+
+
+Remove gratuitous calls to DnsUtil::getLocalHostName()
+Files effected:
+resip/stack/TransactionState.cxx
+resip/stack/TransactionController.cxx
+resip/stack/TransactionController.hxx
+
+Description: When a DNS timeout occurs, TransactionState sends a 503 to the TU with a Warning header, which is populated using a call to DnsUtil::getLocalHostName(). Our code calls this function once when the TransactionController is created, and saves the return as a member. This doesn't help performance unless DNS is timing out frequently, but who cares.
+
+
+Inlined all functions in rutil/Lock
+Files effected:
+rutil/Lock.hxx
+rutil/Lock.cxx
+
+Description: Inlined all functions in rutil/Lock. This yielded a small performance improvement.
+
+
+Modification in Log::timestamp()
+Files effected:
+rutil/Log.cxx
+
+Description: This function was breaking Data's encapsulation in an alarming manner, and so was made less evil in our code. Public resip has introduced some API for Data that will let us have the best of both worlds here.
+
+
+Use openssl for MD5 hashing, if available
+Files effected:
+rutil/Makefile
+rutil/MD5Stream.cxx
+rutil/MD5Stream.hxx
+rutil/ssl/sslmd5.cxx (new file)
+rutil/ssl/sslmd5.hxx (new file)
+
+Description: If compiled with openssl support, MD5Stream uses openssl to handle the MD5 computation. This is more efficient, probably.
+
+
+Added the ability to set/get/ the thread priority on a ThreadIf
+Files effected:
+rutil/ThreadIf.cxx
+rutil/ThreadIf.hxx
+
+
+Added SCTP support to the stack
+Files effected:
+configure
+build/Makefile.pkg
+rutil/TransportType.cxx
+rutil/TransportType.hxx
+resip/stack/DnsInterface.cxx
+resip/stack/DnsInterface.hxx
+resip/stack/DnsResult.cxx
+resip/stack/Connection.cxx
+resip/stack/Connection.hxx
+resip/stack/ConnectionBase.cxx
+resip/stack/ConnectionBase.hxx
+resip/stack/ConnectionManager.cxx
+resip/stack/ConnectionManager.hxx
+resip/stack/DnsInterface.cxx
+resip/stack/InternalTransport.cxx
+resip/stack/InternalTransport.hxx
+resip/stack/Makefile
+resip/stack/SipStack.cxx
+resip/stack/TcpBaseTransport.cxx
+resip/stack/TcpBaseTransport.hxx
+resip/stack/TcpConnection.cxx
+resip/stack/TcpConnection.hxx
+resip/stack/TcpTransport.cxx
+resip/stack/TcpTransport.hxx
+resip/stack/test/Makefile
+resip/stack/TransportSelector.cxx
+resip/stack/UdpTransport.cxx
+resip/stack/UdpTransport.hxx
+
+Description: Added implementations for both the one-fd-per-association (ie; TCP-like) and one-fd-for-all-associations (ie; UDP-like) SCTP. Multihoming support is also included. Very fast. No support for SCTP-TLS, although SCTP-DTLS might work with a very small modification.
+
+
+Placement clone() in ParserCategory
+Files effected:
+resip/stack/Auth.cxx
+resip/stack/Auth.hxx
+resip/stack/CSeqCategory.cxx
+resip/stack/CSeqCategory.hxx
+resip/stack/CallId.cxx
+resip/stack/CallId.hxx
+resip/stack/DateCategory.cxx
+resip/stack/DateCategory.hxx
+resip/stack/ExpiresCategory.cxx
+resip/stack/ExpiresCategory.hxx
+resip/stack/GenericUri.cxx
+resip/stack/GenericUri.hxx
+resip/stack/IntegerCategory.cxx
+resip/stack/IntegerCategory.hxx
+resip/stack/UInt32Category.cxx
+resip/stack/UInt32Category.hxx
+resip/stack/Mime.cxx
+resip/stack/Mime.hxx
+resip/stack/NameAddr.cxx
+resip/stack/NameAddr.hxx
+resip/stack/ParserCategory.hxx
+resip/stack/PrivacyCategory.cxx
+resip/stack/PrivacyCategory.hxx
+resip/stack/RAckCategory.cxx
+resip/stack/RAckCategory.hxx
+resip/stack/RequestLine.cxx
+resip/stack/RequestLine.hxx
+resip/stack/SipMessage.cxx
+resip/stack/SipMessage.hxx
+resip/stack/StatusLine.cxx
+resip/stack/StatusLine.hxx
+resip/stack/StringCategory.cxx
+resip/stack/StringCategory.hxx
+resip/stack/Token.cxx
+resip/stack/Token.hxx
+resip/stack/Via.cxx
+resip/stack/Via.hxx
+resip/stack/WarningCategory.cxx
+resip/stack/WarningCategory.hxx
+
+Description: This modification was made some time ago, and while it is still being used in one place, it is not as used as it once was. In ParserCategory, a virtual ParserCategory* clone(void* location) const function was declared, that subclasses would implement to use placement new when cloning itself. The only place this is being used is in SipMessage::init(const SipMessage& rhs) (this implements the common logic used in both the copy c'tor and the assignment operator), to clone the start-line (the memory for the start line is a member buffer inside SipMessage, since SipMessage will always have one, and this removes a heap allocation). It is potentially useful for the other ParserCategories too, so I have not bothered moving the virtual function decl to a common base of RequestLine and StatusLine (honestly, these should not even be ParserCategories; they cannot have params. These ought to be based off of LazyParser directly).
+
+
+Minor optimization of BranchParameter::encode()
+Files effected:
+resip/stack/BranchParameter.cxx
+
+Description: Public resip does stream << getName() << Symbols::EQUALS;. We do stream << "branch="; *rolls eyes*
+
+
+Improve streaming performance when using stuff declared in Symbols.hxx
+Files effected:
+resip/stack/ConnectionBase.cxx
+
+Description: In public resip, the various string constants declared in Symbols.hxx are char*; these are often used in streaming, which means plenty of null-checks. In our code, these are Datas instead, so ostream::write() can be used.
+
+
+Reduce heap overhead associated with storing HeaderFieldValues
+Files effected:
+resip/stack/HeaderFieldValue.cxx
+resip/stack/HeaderFieldValue.hxx
+resip/stack/HeaderFieldValueList.cxx
+resip/stack/HeaderFieldValueList.hxx
+resip/stack/SipMessage.cxx
+resip/stack/SipMessage.hxx
+
+Description: In public resip, HeaderFieldValueList stores its HeaderFieldValues in a std::vector<HeaderFieldValue*>, to avoid copying. It turns out that this is actually a little more expensive than using a std::vector<HeaderFieldValue> and the occasional reserve() call, largely because single value headers never force the list's vector to realloc. We should take advantage of rvalue references for storing both HeaderFieldValues and HeaderFieldValueLists, since this would mean no copying, and consequently no char buffer reallocations inside HeaderFieldValue, without needing to make reserve calls.
+
+
+Improve efficiency of header-field-value delimiter encoding
+Files effected:
+resip/stack/HeaderFieldValueList.cxx
+resip/stack/Headers.cxx
+resip/stack/HeaderTypes.hxx
+resip/stack/ParserContainerBase.cxx
+
+Description: Public resip's header-field-value delimiter encoding looks like the following:
+
+str << headerName << Symbols::COLON[0] << Symbols::SPACE[0];
+or
+str << Symbols::COMMA[0] << Symbols::SPACE[0];
+then
+str << Symbols::CRLF;
+
+In the first case, we rope a leading CRLF, the header name, a colon, and a space into a single static const Data (this only applies for known header types), and encode in one go (and we omit a trailing CRLF for the start line, since we're encoding CRLF as leading instead of trailing). In the second case, the comma and space are also in a single static const Data. For unknown header types, we at least encode ", " instead of Symbols::COMMA[0] << Symbols::SPACE[0], and ": " instead of Symbols::COLON[0] << Symbols::SPACE[0].
+
+
+Inlined a number of functions declared in HeaderTypes.hxx and Headers.hxx
+Files effected:
+resip/stack/Headers.cxx
+resip/stack/Headers.hxx
+resip/stack/HeaderTypes.hxx
+
+Description: Headers.hxx and HeaderTypes.hxx both declare a number of extremely simple accessor functions (one of which is needlessly virtual) for information about each header type. These have been inlined.
+
+
+Added a few variants of Helper::makeResponse()
+Files effected:
+resip/stack/Helper.cxx
+resip/stack/Helper.hxx
+
+Description: These variants include a couple that, instead of taking a request, take all the components of the request that are needed to form the response. There is also a version that takes a non-const reference to the request, and transforms it into a response by dropping the unneeded headers, changing the start line, and a few other odds and ends. This is much faster than minting a new SipMessage, but is not used anywhere yet.
+
+
+Renaming AOR-related functions in Uri
+Files effected:
+resip/ReparteeManager/ClientPublication.cxx
+resip/ReparteeManager/ClientRegistration.cxx
+resip/ReparteeManager/ServerPublication.cxx
+resip/ReparteeManager/ServerSubscription.hxx
+resip/ReparteeManager/test/TestProtoClientSubscription.cxx
+resip/ReparteeManager/test/TestServerSubscriptionFactory.cxx
+resip/ReparteeManager/test/UserAgent.cxx
+resip/stack/Helper.cxx
+resip/stack/SipMessage.cxx
+resip/stack/ssl/Security.cxx
+resip/stack/test/limpc.cxx
+resip/stack/test/testParserCategories.cxx
+resip/stack/test/testSipMessage.cxx
+resip/stack/test/testUri.cxx
+resip/stack/TuIM.cxx
+resip/stack/Uri.cxx
+resip/stack/Uri.hxx
+tfm/CheckContacts.cxx
+tfm/CheckFetchedContacts.cxx
+tfm/TestSipEndPoint.cxx
+
+Description: The functions getAor() and getAorNoPort() are incorrectly named, since neither includes the scheme in their return (AORs include the scheme portion). They have been combined into a single call, getUserAtHost(bool addPort). A new call, getAOR(), actually returns the AOR (this is called getAorNoReally() in public). These changes were made to make the API less confusing, although merging back into public will probably require a period where the existing functions are marked as deprecated.
+
+
+Improve efficiency of setting the start-line in SipMessage
+Files effected:
+resip/stack/LazyParser.cxx
+resip/stack/LazyParser.hxx
+resip/stack/ParserCategory.cxx
+resip/stack/ParserCategory.hxx
+resip/stack/RequestLine.cxx
+resip/stack/RequestLine.hxx
+resip/stack/SipMessage.cxx
+resip/stack/SipMessage.hxx
+resip/stack/StatusLine.cxx
+resip/stack/StatusLine.hxx
+
+Description: Public resip stores a HeaderFieldValueList (and a ParserContainer!), with a single HeaderFieldValue, solely for the start-line, so the start-line can be lazily created. There is no reason to do this, since the start line will always be checked for well-formedness as soon as we're done preparsing. In our copy, we set aside a member buffer in SipMessage into which the start-line is constructed (using placement new), and use a single pointer into that buffer (which is null when no start-line exists). This saves a lot of memory and CPU cycles.
+
+
+Minor efficiency enhancements to the Parameter handling in ParserCategory
+Files effected:
+resip/stack/ParserCategory.cxx
+
+Description: Iterating over a std::vector<Parameter*>, deleting each entry, and finally emptying out the vector, takes slightly more operations than repeatedly checking empty(), deleting the back element, and calling pop_back() (this is especially true if the vector is often empty, and when not empty, fairly small). Public resip does the former, we do the latter. Also, in the assignment operator, we do a reserve() call before copying over the parameters. This doesn't really help when the set of parameters is very small (which is usually the case), but with large sets of parameters, it helps a little.
+
+
+Implemented lazy creation of ParserCategories
+Files effected: 
+resip/stack/ParserContainer.hxx
+resip/stack/ParserContainerBase.cxx
+resip/stack/ParserContainerBase.hxx
+
+Description: For multi-valued headers, accessing any header-field-value causes the entire set to be converted to the ParserCategory representation, at least on public resip (eg; calling msg.header(h_Vias).front() causes an unparsed Via object to be created for every Via header-field-value in the message). This wastes a lot of CPU and memory, especially when dealing with headers that typically have a large number of values, when we're only interested in one or two of them. Our code lazily creates the Via (or other ParserCategory) when we try to access it; either on dereference of an iterator, or a call to ParserContainer::front() or back().
+
+
+Minor efficiency enhancement to ParserContainer
+Files effected:
+resip/stack/ParserContainer.hxx
+
+Description: A case where we make a reserve() call on a vector before copying stuff into it.
+
+
+Allow connections to be closed administratively
+Files effected:
+reisp/stack/Connection.cxx
+resip/stack/SendData.cxx
+resip/stack/SendData.hxx
+resip/stack/SipStack.cxx
+resip/stack/SipStack.hxx
+resip/stack/TransactionController.cxx
+resip/stack/TransactionController.hxx
+
+Description: Added a bool eof; member to SendData. Setting this to true will cause teardown of the connection that ultimately tries to send it. Also added SipStack::closeConnection().
+
+
+Reduced heap overhead associated with storage of HeaderFieldValueLists in SipMessage
+Files effected:
+resip/stack/SipMessage.cxx
+resip/stack/SipMessage.hxx
+resip/stack/HeaderFieldValueList.cxx
+resip/stack/HeaderFieldValueList.hxx
+
+Description: Public resip uses an array of HeaderFieldValueList* for header-field-value storage. This requires a large number of heap allocations/deallocations. We instead use a std::vector<HeaderFieldValueList> (with a reserve() call to minimize reallocation/reinitialization overhead), and an array (of short) that maps header type to index within the vector. Since rvalue refs are becoming more supported, we'll eventually come to a point where the reserve() call loses a lot of its utility (it will continue to reduce the amount of buffer reallocation, though).
+
+
+Inlined some simple functions in SipMessage
+Files effected:
+resip/stack/SipMessage.cxx
+resip/stack/SipMessage.hxx
+
+Description: Inlined some simple accessor functions on SipMessage.
+
+
+Using static_cast in a few places where a dynamic_cast was immediately being dereferenced anyway (in SipMessage)
+Files effected:
+resip/stack/SipMessage.cxx
+
+
+Allow app to specify arbitrary transaction state
+Files effected:
+resip/stack/SipMessage.cxx
+resip/stack/SipMessage.hxx
+resip/stack/TransactionState.cxx
+resip/stack/TransactionState.hxx
+resip/stack/AppTransactionState.hxx (new file)
+resip/stack/StringArrayAppTransState.hxx (new file)
+
+Description: When sending a request to the stack, an app may attach one or more instances of AppTransactionState to the SipMessage. These will be placed in any responses forwarded to the TU.
+
+
+Allow app to specify additional state to be passed in TransactionTerminated messages
+Files effected:
+resip/stack/SipMessage.hxx
+resip/stack/TransactionState.cxx
+resip/stack/TransactionState.hxx
+resip/stack/TransactionTerminatedFactory.hxx (new file)
+
+Description: When sending a request to the stack, an app may attach an instance of TransactionTerminatedFactory to the SipMessage. The stack will use this factory to manufacture any TransactionTerminated messages. This allows TransactionTerminated messages to carry things like dialog-identifiers, for example.
+
+
+Pass original request to TU in (first) final response
+Files effected:
+resip/stack/SipMessage.hxx
+resip/stack/TransactionState.cxx
+resip/stack/TransactionState.hxx
+
+Description: For client transactions, the stack now passes the original request back to the TU along with the final response, if any. In cases where there is more than one final response (multiple INVITE/2xx), only the first response will carry the original request. This ends up being handy in some cases (for example, Event headers are not copied into responses, which makes it tricky to handle the multiple-event-package-subs-per-dialog case), and actually may help performance, since there are fewer cases of a heap allocation being made in one thread, and then deallocated in another (something that tends to degrade performance). We probably want to make this behavior configurable.
+
+
+Reduce memory usage associated with UdpTransport reads from wire
+Files effected:
+resip/stack/ssl/DtlsTransport.cxx
+resip/stack/ssl/DtlsTransport.hxx
+resip/stack/UdpTransport.cxx
+resip/stack/UdpTransport.hxx
+
+Description: When reading a UDP datagram from the wire, resip (by default) allocates an 8K buffer, reads the bits into it, and passes it on. Our code instead has a single 65K buffer that is reused for every read, and once the datagram is fully copied into this staging buffer, a new buffer is allocated with only the necessary amount of room (this allocation is going to be easier than the 8K allocation in all cases where 8K was sufficient), and then the bytes are copied into the new buffer (memcpy is very cheap, especially compared with the memory usage overhead associated with overallocating our buffers). Ultimately, we want to try using a MSG_PEEK|MSG_TRUNC trick to avoid even this overhead.
+
+
+Improved cert/key loading code in Security
+Files effected:
+resip/stack/ssl/Security.cxx
+resip/stack/ssl/Security.hxx
+
+Description: Public resip requires that the filenames of any cert or key files to be formatted in a very specific manner that describes the contents of the file, and can only handle a single cert or key in any given file. It also does not load CA files from the usual system cert store. Our code not only loads certs (including CA certs) and keys from the system cert/key directory (usually something along the lines of /etc/openssl), but also knows how to inspect the files to determine what certs/keys they contain, what identities they apply to (even as far as being able to handle certs/keys that have multiple identities in them), and what certs pair with what keys. The old loader code is still used for the path that is passed to the c'tor, for those that still want to use it.
+
+
+Minor efficiency improvement in StatisticsManager
+Files effected:
+resip/stack/StatisticsManager.cxx
+
+Description: On each call to StatisticsManager::process(), the current time was checked to see whether it was time to output statistics. This function is called at least every 25ms, and much more often when the system is under load (ie; every time SipStack::process() is called, which can easily be every 1-2ms just due to application timers). Our code only checks every 128th time process() is called, since we don't need statistics to be logged at ms accuracy. Really, it would be better to simply drive this using one of the TimerQueues that we're already checking very frequently.
+
+
+Make the automatic contact fillout logic configurable
+Files effected:
+resip/stack/SipStack.hxx
+resip/stack/TransactionController.hxx
+resip/stack/TransportSelector.cxx
+resip/stack/TransportSelector.hxx
+
+Description: In public, TransportSelector examines the Contact header in outgoing messages, and if the host-part is empty, fills out the Contact header with information based on the transport the message is about to be sent from. We have made this behavior configurable.
+
+
+Improve efficiency of automatic NIT provisionals
+Files effected:
+resip/stack/TransactionState.cxx
+resip/stack/TransactionState.hxx
+
+Description: When a server NIT begins, public resip creates a 100 response to the request, and schedules a timer that will cause it to be sent if no response comes back from the TU before 3.5 seconds elapses. Our code does not do any of this, and instead will create and send a 100 if/when the third retransmission arrives (which is really what the standard was getting at when specifying the 3.5 second wait). A 100 is not sent for transactions that use a reliable transport; this may result in us getting blacklisted if we do not provide a timely response. But if we are not providing timely responses, it is arguable that we _should_ be blacklisted, unless we are a proxy, and the delay is due to something downstream. I think it is reasonable to place the responsibility for sending these on the TU, by default, since it has a reference to the request (the stack does not). We may opt to have a configuration param that causes a 100 to be manufactured at the beginning of server NIT transactions using a reliable transport, like public resip does, but have the option disabled by default.
+
+
+Improve efficiency of creation of 100 Trying
+Files effected:
+resip/stack/SipMessage.cxx
+resip/stack/SipMessage.hxx
+resip/stack/TransactionState.cxx
+resip/stack/Transport.cxx
+resip/stack/Transport.hxx
+
+Description: Added a SipMessage::encodeSingleHeader() call, that can be used to manufacture simple responses (such as a 100 or 503) without ever needing to create a SipMessage; the request is used to stream headers into a buffer, which can then be sent on the wire.
+
+
+Reduce RTTI overhead in the transaction state machine
+Files effected:
+resip/stack/TransactionState.cxx
+
+Description: Refactored the code in TransactionState to make fewer gratuitous calls to dynamic_cast (ie; public is dynamic_casting the same message to the same type repeatedly using functions like isFromTU(), isFromWire(), isRequest(), isResponse(), isInvite(), isTimer(), etc)
+
+
+Reduce memory consumption associated with transport failover
+Files effected:
+resip/stack/TransactionState.cxx
+resip/stack/TransactionState.hxx
+
+Description: Since TransportSelector will automatically fill out parts of the topmost Via header, and the Contact header, depending on what transport is to be used, we must rollback these changes if we fail over to a different transport. Public resip accomplishes this by saving a copy of both the topmost Via and Contact headers. This turns out to be unnecessary, because automatic fillout is only done on a small number of parts, and only when those parts are empty to begin with. Therefore we need only remember which parts have been filled out, and which have not; rollback consists solely of clearing any parts we filled out so they are empty again.
+
+
+Added support for opening a transport while running
+Files effected:
+resip/stack/SipStack.cxx
+resip/stack/SipStack.hxx
+resip/stack/TransportSelector.cxx
+resip/stack/TransportSelector.hxx
+
+Description: Our stack is able to safely start up a new transport while processing traffic. Pretty simple. Shutting down a transport is still not supported though.
+
+
+Support automatic fillout of Contact headers with an FQDN
+Files effected:
+resip/stack/SipStack.hxx
+resip/stack/TransportSelector.cxx
+resip/stack/TransportSelector.hxx
+
+Description: Added a simple configurable TransportSelector::mFQDN that will be used to fill out Contact headers, if such fillout is enabled. This is useful for servers, especially ones that support TLS or DTLS.
+
+
+Reduce buffer reallocations when building send buffers
+Files effected:
+resip/stack/TransportSelector.cxx
+resip/stack/TransportSelector.hxx
+
+Description: Prior to calling SipMessage::encode(), we make a reserve() call on the Data that it will be encoding to, based on a moving average of previous message sizes. This minimizes the number of reallocations/memcpys that are performed while building the buffer.
+
+
+Reduced the memory footprint associated with storing URIs
+Files effected:
+resip/stack/Uri.cxx
+resip/stack/Uri.hxx
+
+Description: Uri in public resip contains a number of unnecessary members, in an attempt to cache the AOR representation of the Uri. These extra members drag performance down because they double the size of the object, and the cacheing operation/checking for staleness of cache is more expensive than it would be to regenerate the AOR from scratch every time. If someone needs cacheing of AORs in Uri, I'll be happy to implement it in an efficient manner.
+
+
+Reduced memory footprint associated with URIs that do not have embedded headers
+Files effected:
+resip/stack/Uri.cxx
+resip/stack/Uri.hxx
+
+Description: Changed Uri::mEmbeddedHeadersText from a Data to a Data*, since it is rarely used in any given Uri. This imposes a small performance penalty for Uris that do have embedded headers, but this is sufficiently rare that the net effect is beneficial.
+
+
+Changed the way params are stored for tel URIs
+Files effected:
+resip/stack/Uri.cxx
+resip/stack/Uri.hxx
+
+Description: Public resip places all parameters parsed on a tel URI in a single Data, Uri::mUserParameters. Our code stores them in the same way they would be for a SIP URI. However, we have not quite gotten this right; the implementation of fromTel() still looks for these parameters in mUserParameters (not to mention that mUserParameters still exists). However, fromTel() is deprecated; it may be that we want to remove it, remove mUserParameters and its accessors, and have people start using the getUserAsTelephoneSubscriber() and setUserAsTelephoneSubscriber() we've added. The difficulty is that when a tel URI is converted to a SIP uri, params are placed in mUserParameters, whereas if exactly the same SIP URI with user parameters is parsed, they are not. This inconsistency should be fixed, one way or another. This may prove somewhat difficult for backwards compatibility, so we may need to phase out fromTel() gradually (perhaps mark as deprecated, then have it log an error, then finally remove it).
+
+

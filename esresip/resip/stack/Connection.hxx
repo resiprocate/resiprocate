@@ -1,0 +1,182 @@
+/* ***********************************************************************
+   Copyright 2006-2007 Estacado Systems, LLC. All rights reserved.
+
+   Portions of this code are copyright Estacado Systems. Its use is
+   subject to the terms of the license agreement under which it has been
+   supplied.
+ *********************************************************************** */
+
+#ifndef RESIP_Connection_hxx
+#define RESIP_Connection_hxx
+
+#include <deque>
+#include <list>
+
+#include "resip/stack/ConnectionBase.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Timer.hxx"
+#include "resip/stack/Transport.hxx"
+#include "resip/stack/MsgHeaderScanner.hxx"
+#include "rutil/IntrusiveListElement.hxx"
+
+namespace resip
+{
+
+class Message;
+class TlsConnection;
+class ConnectionManager;
+class Connection;
+class Compression;
+
+/// three intrusive list types for in-place reference
+typedef IntrusiveListElement<Connection*> ConnectionLruList;
+typedef IntrusiveListElement1<Connection*> ConnectionReadList;
+typedef IntrusiveListElement2<Connection*> ConnectionWriteList;
+
+/** 
+   @internal
+   @brief implements, via sockets, ConnectionBase for managed
+    connections. 
+	
+	Connections are managed for approximate fairness and least
+    recently used garbage collection. Connection inherits three different 
+	instantiations of intrusive lists.
+   
+   @todo reads are a linear walk -- integrate with epoll 
+    */
+class Connection : public ConnectionBase, public ConnectionLruList, public ConnectionReadList, public ConnectionWriteList
+{
+      friend class ConnectionManager;
+      friend std::ostream& operator<<(std::ostream& strm, const resip::Connection& c);
+
+   public:
+      Connection(Transport* transport,const Tuple& who, Socket socket, Compression &compression);
+      virtual ~Connection();
+      
+      /*!
+         @note Right now, Connection is assumed to be a TCP connection.
+               This means that there is a 1-1 correspondence between
+               FD and Connection. If this changes down the line (say, if
+               we use this class to do SCTP connections), we can just remove
+               this function.
+      */
+      Socket getSocket() const {return who().mFlowKey;}
+
+      /// always true -- always add to fdset as read ready
+      virtual bool hasDataToRead();
+      /// has valid connection
+      virtual bool isGood(); 
+      virtual bool isWritable();
+      virtual bool transportWrite(){return false;}
+
+      /// queue data to write and add this to writable list
+      void requestWrite(SendData* sendData);
+
+      /// send some or all of a queued data; remove from writable if completely written
+      void performWrite();
+
+      /// ensure that we are on the writeable list if required
+      void ensureWritable();
+
+      /** @brief move data from the connection to the buffer; move this to front of
+          least recently used list. When the message is complete, send to fifo.
+		  
+          @todo store fifo rather than pass */
+      int read(std::deque<TransactionMessage*>& fifo,
+               CongestionManager::RejectionBehavior b,
+               time_t expectedWait);
+
+      bool hasPeer(const Tuple& peer, bool ignorePort=false) const;
+
+      bool mRequestPostConnectSocketFuncCall;
+      static volatile bool mEnablePostConnectSocketFuncCall;
+      static void setEnablePostConnectSocketFuncCall(bool enabled = true) { mEnablePostConnectSocketFuncCall = enabled; }
+
+   protected:
+      /// pure virtual, but need concrete Connection for book-ends of lists
+      virtual int read(char* /* buffer */, const int /* count */) { return 0; }
+      /// pure virtual, but need concrete Connection for book-ends of lists
+      virtual int write(const char* /* buffer */, const int /* count */) { return 0; }
+      virtual void onDoubleCRLF();
+      void addPeerAddress(const Tuple& peer);
+      void removePeerAddress(const Tuple& peer);
+
+
+   private:
+      ConnectionManager& getConnectionManager() const;
+      bool mInWritable;
+      
+      /// no default c'tor
+      Connection();
+
+      /// no value semantics
+      Connection(const Connection&);
+      Connection& operator=(const Connection&);
+};
+
+std::ostream& 
+operator<<(std::ostream& strm, const resip::Connection& c);
+
+}
+
+#endif
+/* ====================================================================
+ * 
+ * Portions of this file may fall under the following license. The
+ * portions to which the following text applies are available from:
+ * 
+ *   http://www.resiprocate.org/
+ * 
+ * Any portion of this code that is not freely available from the
+ * Resiprocate project webpages is COPYRIGHT ESTACADO SYSTEMS, LLC.
+ * All rights reserved.
+ * 
+ * ====================================================================
+ * The Vovida Software License, Version 1.0 
+ * 
+ * Copyright (c) 2000
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ * 
+ * 3. The names "VOCAL", "Vovida Open Communication Application Library",
+ *    and "Vovida Open Communication Application Library (VOCAL)" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact vocal@vovida.org.
+ *
+ * 4. Products derived from this software may not be called "VOCAL", nor
+ *    may "VOCAL" appear in their name, without prior written
+ *    permission of Vovida Networks, Inc.
+ * 
+ * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
+ * NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA
+ * NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
+ * IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+ * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ * 
+ * ====================================================================
+ * 
+ * This software consists of voluntary contributions made by Vovida
+ * Networks, Inc. and many individuals on behalf of Vovida Networks,
+ * Inc.  For more information on Vovida Networks, Inc., please see
+ * <http://www.vovida.org/>.
+ *
+ */

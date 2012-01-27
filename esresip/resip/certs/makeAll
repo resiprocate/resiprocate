@@ -1,0 +1,17 @@
+#!/bin/csh
+
+if ($#argv == 1) then
+	set hostfile=$1
+else
+	set hostfile="hosts.txt"
+endif
+
+set certs=` cat $hostfile `
+
+foreach nm ( $certs )
+        echo $nm
+        ./makeCert $nm
+end
+
+tar cvfz allCerts.tgz domain*pem *.p12
+

@@ -1,0 +1,7 @@
+ADD_SUBDIRECTORY(stack)
+
+IF(BUILD_DUM)
+  ADD_SUBDIRECTORY(dum)
+ENDIF(BUILD_DUM)
+
+# Copyright 2007 Estacado Systems

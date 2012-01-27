@@ -1,0 +1,130 @@
+namespace resip
+{
+
+/**
+   @mainpage The Estacado SIP Basis Foundation SDK
+
+
+   @section resip_quick_start Quick Start
+
+   @subsection resip_preface Before you start
+      For starters, I am going to recommend that you open the 
+      @ref resip_crit "Critically Important Classes" page right now in another 
+      window. You may also find it useful to open the modules page (see the tabs 
+      above). Then you can continue reading this page.
+
+   @subsection resip_fundamentals Fundamental Design of the Foundation SDK
+      The SIP Basis Foundation SDK provides UAC/UAS core functions, 
+      and the application plays the 
+      role of the @ref TransactionUser "Transaction User" (or TU), both 
+      as described in RFC 3261. For the unfamiliar, the TU sends and receives 
+      @ref SipMessage "SIP messages" from the core, 
+      while the core handles details like retransmissions, timeouts, and 
+      interactions with the transport layer. The UAS/UAC core can also inform 
+      the TU @ref TransactionTerminated "when transactions end", 
+      @ref ConnectionTerminated "when connections fail", 
+      and @ref StatisticsMessage "about statistics".
+
+   @subsection resip_responsibilities Foundation SDK's Other Responsibilities
+      In addition to UAS/UAC core functions, the Foundation SDK provides
+      additional functionality:
+
+      - @ref sip_parse "SIP message parsing" : the Foundation SDK supplies parse-code for all 
+      the core @ref sip_grammar "SIP grammar elements" (this parse code 
+      is fairly liberal, and does not do deep validation).
+      - @ref make_sip "SIP message construction" : the Foundation SDK supplies code for 
+      constructing SIP messages according to the rules in RFC 3261.
+      - RFC 3263 DNS logic : The the Foundation SDK carries out all RFC 3263 DNS lookup
+      logic for you (You're welcome).
+      - Other RFC support : Wherever possible, the Foundation SDK provides code that 
+      implements all MUST and SHOULD-level requirements from supported RFCs
+      (a lot of this code lives in Helper).
+
+   @subsection resip_big_picture The Big Picture
+      A SIP application running on top of the Foundation SDK has this basic anatomy:
+      - One or more subclasses of TransactionUser (the "app layer")
+      - A single instance of SipStack
+      - One or more subclasses of Transport.
+      
+      These are connected together through a combination of 
+      @ref message_passing_tu "message-passing",
+      and direct function calls(usually reserved for stuff like 
+      @ref resip_config "configuration").
+
+   @subsection resip_usage Usage
+      - Subclass TransactionUser : The part of TransactionUser
+      that is left up to the application writer is the code that reads messages out of
+      the TransactionUser's message-queue, and processes these messages.
+      What the TransactionUser does with these messages is very 
+      open-ended, but the stack expects that every request will get a final 
+      response.
+      - Initialize the logging system : See Log::initialize() (in Foundation Utilities)
+      for details.
+      - Create a SipStack : This part is pretty simple.
+      - Configure your SipStack
+         - Add some transports to the stack : Use 
+            SipStack::addTransport() to do this.
+         - Register your TransactionUser : This is done with 
+            SipStack::registerTransactionUser().
+         - Do any other @ref resip_config "configuration".
+      - Set up a process loop for SipStack : Typically this is done by
+      creating a StackThread, and running it (this will give SipStack a
+      thread of its own). If you want to run your app and the SipStack in the
+      same thread, use the code in StackThread as an example, and have it also
+      do processing for your TransactionUser.
+
+   @subsection resip_low_detail The Internals
+      The Foundation SDK can be broken down into the following large components:
+      - SipStack : This is the part that the TransactionUser 
+         (app-layer) talks to. It also is responsible for coordinating the rest
+         of the major components in its process loop.
+      - TransactionController : This is the part that manages all 
+         the transaction state for the stack.
+      - ExternalDns : This is the DNS resolver. By default, this is a
+         AresDns, but the app writer can override (not a very fun thing
+         to do, really).
+      - TransportSelector : This is the part that handles the preparatory
+         work for sending a SIP message out on the wire. This includes choosing
+         a transport to send on, filling in parts of the SIP message that can 
+         only be filled in when we know what transport we're sending on, and
+         writing the SIP message into a buffer for the transport layer.
+      - Transport : This is the base transport-layer class. Concrete
+         implementations of this include UdpTransport, 
+         TcpTransport, and TlsTransport. There may be any number 
+         of these.
+      - TuSelector : This is the part that determines which TU (there
+         may be several) a received SIP message should be sent to. It also 
+         decides how to route other message-passing from the stack (see 
+         TransactionTerminated and ConnectionTerminated)
+
+      Here's a description of the typical flow:
+         - SipStack's main process loop runs, eventually causing one of 
+         the Transport objects to read some bits off their fd. These bits
+         are run through a pre-parse (tokenizes the message into header field
+         values), and a basic validation (checks to see whether mandatory 
+         headers are present, and performs well-formedness checks on a very 
+         small number of headers). The SipMessage is then posted to the 
+         TransactionController's message queue.
+         - TransactionController gets the SipMessage, and creates
+         a TransactionState for it (supposing it is a new transaction). 
+         The transaction-state logic is carried out, until a determination is 
+         made on whether to send it to the TransactionUser (app-layer).
+         - The SipMessage is passed to the TuSelector, which 
+         posts it to the appropriate TransactionUser, using a 
+         chain-of-responsibility pattern.
+         - The TransactionUser gets the SipMessage, and does any 
+         processing it needs to. If the message was a request, the app-layer 
+         will (eventually) post a response to the SipStack, which will 
+         place the message in the TransactionController's message queue.
+         - TransactionController will get the SipMessage, perform
+         any core transaction-state processing, and figure out where the message
+         needs to go (back to the source; although if this were a request, it 
+         would consult the ExternalDns using an async call). Once a
+         target has been chosen, the SipMessage is passed on to the
+         TransportSelector.
+         - TransportSelector chooses what transport to send the message
+         on, fills out some stuff in the SipMessage, encodes it to a
+         buffer, and posts it to the chosen Transport.
+         - Transport throws the bits out on the wire.
+*/
+}

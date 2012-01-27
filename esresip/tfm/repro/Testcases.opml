@@ -1,0 +1,558 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="1.0">
+  <head>
+    <title>Testcases</title>
+    <expansionState>0,5,7,24,32,41,47,48,49,68,88,100,101,112,117,118,130,135,136,143,146,210,217,218,219,235,270,331,332,349,376,383,384,388</expansionState>
+  </head>
+  <body>
+    <outline text="Legend">
+      <outline text="Test is written"/>
+      <outline text="Test is not written, but supported by tfm and esrepro"/>
+      <outline text="Test is not written, and is not supported by tfm/repro"/>
+      <outline text="Test is written, but does not work due to lack of support"/>
+    </outline>
+    <outline text="Registrar functionality">
+      <outline text="Authentication off">
+        <outline text="new registration scenarios" description="A UAC attempts to register new contacts">
+          <outline text="Sunny day cases">
+            <outline text="Basic register" description="A UAC attempts to register a single new contact"/>
+            <outline text="Multi register" description="A UAC attempts to register multiple new contacts with one request"/>
+            <outline text="Multi register, different expirations" description="A UAC attempts to register multiple new contacts with one request, with different expiries for each contact"/>
+            <outline text="Third party registration" description="A UAC attempts to register a contact that does not point to itself"/>
+          </outline>
+          <outline text="Rainy Day cases">
+            <outline text="200 OK dropped" description="The first REGISTER/200 does not make it to the UAC"/>
+            <outline text="No user in contact" description="The supplied contact has no user"/>
+            <outline text="No user in aor" description="The supplied aor (the Request-Uri) has no user"/>
+            <outline text="Contact and aor identical" description="Contact and aor are the same uri, leading to a loop"/>
+            <outline text="Bad characters in contact" description="The contact contains characters that are not allowed in a uri"/>
+            <outline text="Bad characters in aor" description="The aor contains characters that are not allowed in a uri"/>
+            <outline text="Aor does not exist" description="The registrar is not responsible for the aor in the Request-Uri"/>
+            <outline text="Expiry too large" description="The register request contains an expiry value larger than 2^32 - 1"/>
+            <outline text="Oversize call id" description="The call id in the REGISTER is unreasonably large"/>
+            <outline text="Oversize contact" description="The contact is unreasonably large"/>
+          </outline>
+        </outline>
+        <outline text="refresh type scenarios" description="A UAC attempts to refresh contacts">
+          <outline text="Sunny day cases">
+            <outline text="Basic registration update" description="A UAC re-registers an existing contact"/>
+            <outline text="Multi-registration update" description="A UAC re-registers a set of existing contacts"/>
+            <outline text="Third party" description="Third party refresh"/>
+          </outline>
+          <outline text="Rainy day cases">
+            <outline text="Expiry too large"/>
+            <outline text="Out of sequence call id" description="The call ID for this REGISTER request is out of sequence when compared to the request that established the contact being refreshed"/>
+          </outline>
+        </outline>
+        <outline text="unregister type scenarios" description="A UAC attempts to unregister contacts">
+          <outline text="Sunny day">
+            <outline text="Basic unregister" description="A UAC attempts to unregister an existing contact"/>
+            <outline text="Multi unregister" description="A UAC attempts to unregister multiple existing contacts"/>
+            <outline text="Redundant unregister" description="A UAC attempts to unregister a non-existent contact"/>
+            <outline text="Unregister *" description="A UAC attempts to use * as the contact in an unregister request"/>
+          </outline>
+          <outline text="Rainy day">
+            <outline text="Unregister * with a non-zero Expires header"/>
+            <outline text="aor doesn't exist"/>
+          </outline>
+        </outline>
+        <outline text="fetch type scenarios" description="A UAC attempts to fetch contacts">
+          <outline text="Sunny day">
+            <outline text="Basic registration fetch" description="A UAC attempts to fetch the bindings of a given aor"/>
+          </outline>
+          <outline text="Rainy day">
+            <outline text="Aor doesn't exist"/>
+            <outline text="bad aor"/>
+          </outline>
+        </outline>
+      </outline>
+      <outline text="Authentication on">
+        <outline text="new registration scenarios" description="A UAC attempts to register new contacts">
+          <outline text="Sunny day cases">
+            <outline text="Basic register" description="A UAC attempts to register a single new contact" Status="Passing">
+              <outline text="testRegisterBasic in sanityTests.cxx"/>
+              <outline text="testRegisterBasic in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Multi register" description="A UAC attempts to register multiple new contacts with one request" Status="Passing">
+              <outline text="testMultiple1 in sanityTests.cxx"/>
+              <outline text="testMultiple1 in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Multi register, different expirations" description="A UAC attempts to register multiple new contacts with one request, with different expiries for each contact" Status="Passing">
+              <outline text="testMixedExpires in sanityTests.cxx"/>
+              <outline text="testMixedExpires in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Third party registration" description="A UAC attempts to register a contact that does not point to itself" Status="Passing">
+              <outline text="testThirdPartyRegistration in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Test whether registrar is paying attention to q-value" Status="Failing (esrepro doesn&apos;t handle q-value yet)">
+              <outline text="testDetailsQValue in sanityTests.cxx"/>
+              <outline text="testDetailsQValue in estacadoTests.cxx"/>
+              <outline text="q-value is optional, and not yet supported in esrepro"/>
+            </outline>
+            <outline text="Test if registrar is paying attention to expires parameter" Status="Passing">
+              <outline text="testDetailsExpires in estacadoTests.cxx"/>
+              <outline text="testDetailsExpires in sanityTests.cxx"/>
+            </outline>
+          </outline>
+          <outline text="Rainy Day cases">
+            <outline text="REGISTER/407 dropped" description="The auth challenge is dropped" Status="Passing">
+              <outline text="testRegister407Dropped in estacadoTests.cxx"/>
+            </outline>
+            <outline text="bogus credentials" description="the UAC supplies bad credentials" Status="Passing">
+              <outline text="testRegisterBogusAuth in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Late digest response" description="The UAC waits too long to respond to the challenge (the nonce expires)" Status="Not used">
+              <outline text="testRegisterLateDigestResponse in estacadoTests.cxx"/>
+            </outline>
+            <outline text="200 OK dropped" description="The first REGISTER/200 does not make it to the UAC" Status="Passing">
+              <outline text="testRegisterClientRetransmits in sanityTests.cxx ~172"/>
+              <outline text="testRegisterClientRetransmits in estacadoTests.cxx"/>
+            </outline>
+            <outline text="No user in aor (in To: header)" description="The supplied aor (the Request-Uri) has no user" Status="Failing">
+              <outline text="testRegisterNoUserInTo in estacadoTests.cxx"/>
+            </outline>
+            <outline text="User present in Request-Uri" description="This is forbidden in RFC 3261, page 56" Status="Failing">
+              <outline text="testRegisterUserInReqUri in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Bad characters in contact" description="The contact contains characters that are not allowed in a uri">
+              <outline text="Cannot construct garbage uris. Would need direct access to the message buffer."/>
+            </outline>
+            <outline text="Bad characters in aor" description="The aor contains characters that are not allowed in a uri">
+              <outline text="Cannot construct a garbage uri, would need direct access to the message's buffer."/>
+            </outline>
+            <outline text="Not responsible for host in AOR" description="The registrar is not responsible for the aor in the To header" Status="Failing">
+              <outline text="testRegisterUnknownAorHost in estacadoTests.cxx"/>
+            </outline>
+            <outline text="No such user" description="User part in AOR is unknown" Status="Failing">
+              <outline text="testRegisterUnknownAorUser in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Expiry too large" description="The register request contains an expiry value larger than 2^32 - 1">
+              <outline text="Would need direct access to message buffer for this."/>
+            </outline>
+            <outline text="Expiry malformed">
+              <outline text="Probably would require access to the message buffer. (Malformed expiry SHOULD be taken as 3600 as per 3261"/>
+            </outline>
+            <outline text="Oversize call id" description="The call id in the REGISTER is unreasonably large" Status="Failing (Sip stack drops the message it seems, check this out in ethereal)">
+              <outline text="testOversizeCallIdRegister in sanityTests.cxx"/>
+              <outline text="testOversizeCallIdRegister in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Oversize contact" description="The contact is unreasonably large" Status="Failing (SipStack drops the message it seems, check this out in ethereal)">
+              <outline text="testOversizeContactRegister in sanityTests.cxx"/>
+              <outline text="testOversizeContactRegister in estacadoTests.cxx"/>
+            </outline>
+          </outline>
+        </outline>
+        <outline text="refresh type scenarios" description="A UAC attempts to refresh contacts">
+          <outline text="Sunny day cases">
+            <outline text="Basic registration update" description="A UAC re-registers an existing contact" Status="Passing">
+              <outline text="testRefresh in sanityTests.cxx"/>
+              <outline text="testRefresh in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Multi-registration update" description="A UAC re-registers a set of existing contacts" Status="Passing">
+              <outline text="testRefreshMulti in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Third party" description="Third party refresh" Status="Passing">
+              <outline text="testRefreshThirdParty in estacadoTests.cxx"/>
+            </outline>
+            <outline text="q-value update" Status="Failing (esrepro doesn&apos;t handle q-value yet)">
+              <outline text="testChangeQValue in sanityTests.cxx"/>
+              <outline text="testChangeQValue in estacadoTests.cxx"/>
+            </outline>
+          </outline>
+          <outline text="Rainy day cases">
+            <outline text="Expiry too large"/>
+            <outline text="Out of sequence call id" description="The call ID for this REGISTER request is out of sequence when compared to the request that established the contact being refreshed" Status="Failing (esrepro apparently does not enforce call-id sequence)">
+              <outline text="testRegisterOutOfSequence in sanityTests.cxx"/>
+              <outline text="testRegisterOutOfSequence in estacadoTests.cxx"/>
+            </outline>
+          </outline>
+        </outline>
+        <outline text="unregister type scenarios" description="A UAC attempts to unregister contacts">
+          <outline text="Sunny day">
+            <outline text="Basic unregister" description="A UAC attempts to unregister an existing contact" Status="Passing">
+              <outline text="testSetThenRemoveSpecific in sanityTests.cxx"/>
+              <outline text="testSetThenRemoveSpecific in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Multi unregister" description="A UAC attempts to unregister multiple existing contacts" Status="Passing">
+              <outline text="testUnregisterMulti in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Redundant unregister" description="A UAC attempts to unregister a non-existent contact" Status="Passing">
+              <outline text="testUnregisterExpired in sanityTests.cxx"/>
+              <outline text="testUnregisterExpired in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Unregister *" description="A UAC attempts to use * as the contact in an unregister request" Status="Passing">
+              <outline text="testUnregisterAll in sanityTests.cxx"/>
+              <outline text="testUnregisterAll in estacadoTests.cxx"/>
+            </outline>
+          </outline>
+          <outline text="Rainy day">
+            <outline text="Unregister * with a non-zero Expires header" Status="Passing">
+              <outline text="testUnregisterAllBadExpires in estacadoTests.cxx"/>
+            </outline>
+            <outline text="aor doesn't exist" Status="Failing">
+              <outline text="testUnregisterNonExistent in estacadoTests.cxx"/>
+            </outline>
+          </outline>
+        </outline>
+        <outline text="fetch type scenarios" description="A UAC attempts to fetch contacts">
+          <outline text="Sunny day">
+            <outline text="Basic registration fetch" description="A UAC attempts to fetch the bindings of a given aor" Status="Passing">
+              <outline text="testFetch in sanityTests.cxx"/>
+              <outline text="testFetch in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Check whether registrations are expiring properly" Status="Passing">
+              <outline text="testExpiryCleanup in sanityTests.cxx"/>
+              <outline text="testExpiryCleanup in estacadoTests.cxx"/>
+            </outline>
+          </outline>
+          <outline text="Rainy day">
+            <outline text="Aor doesn't exist" Status="Failing">
+              <outline text="testFetchNonExistent in estacadoTests.cxx"/>
+            </outline>
+          </outline>
+        </outline>
+      </outline>
+    </outline>
+    <outline text="Proxy functionality: INVITE transactions">
+      <outline text="no auth">
+        <outline text="Non-forking INVITE scenarios" description="INVITE transaction with no forking">
+          <outline text="Sunny day">
+            <outline text="Basic INVITE" description="basic INVITE transaction, (no CANCEL, BYE, etc)"/>
+            <outline text="Basic INVITE with caller BYE" description="basic INVITE transaction, followed by the caller hanging up"/>
+            <outline text="Basic INVITE with callee BYE" description="basic INVITE, where callee hangs up"/>
+            <outline text="Basic INVITE with CANCEL" description="basic INVITE, where caller CANCELs"/>
+          </outline>
+          <outline text="Cloudy day">
+            <outline text="spiral test for basic INVITE"/>
+            <outline text="spiral test with CANCEL"/>
+            <outline text="No contacts found"/>
+            <outline text="UAS responds with 4xx class response"/>
+            <outline text="UAS responds with 5xx class response"/>
+            <outline text="UAS responds with 6xx class response"/>
+            <outline text="UAS spams 180s"/>
+          </outline>
+          <outline text="Rainy day">
+            <outline text="UAS does not respond (timer C test)"/>
+            <outline text="UAS spams 200s"/>
+            <outline text="UAS sends 200, then 180"/>
+            <outline text="UAC spams INVITEs"/>
+            <outline text="UAC spams ACKs"/>
+            <outline text="Contact is self"/>
+            <outline text="4xx response dropped on server-side"/>
+            <outline text="4xx response dropped on client side"/>
+            <outline text="5xx response dropped on server side"/>
+            <outline text="5xx response dropped on client side"/>
+            <outline text="6xx response dropped on server side"/>
+            <outline text="6xx response dropped on client side"/>
+            <outline text="No route to contact (DNS failure)"/>
+            <outline text="Transport down at contact"/>
+            <outline text="Client side connection fails after INVITE"/>
+            <outline text="Server side connection fails after INVITE arrives"/>
+            <outline text="Server side connection fails after INVITE/200 sent"/>
+            <outline text="loop test"/>
+            <outline text="loop test with CANCEL"/>
+          </outline>
+        </outline>
+        <outline text="Forking INVITE scenarios" description="INVITE transaction with forking">
+          <outline text="Sunny day">
+            <outline text="Basic forking INVITE, one 200 response">
+              <outline text="testInviteForkOneAnswers in sanityTests.cxx"/>
+            </outline>
+            <outline text="Forking INVITE, one 200 and rest busy (486)">
+              <outline text="testInviteForkOneBusy in sanityTests.cxx"/>
+            </outline>
+            <outline text="Forking INVITE, all busy">
+              <outline text="testInviteAllBusyContacts and testInviteForkBothBusy in sanityTests.cxx"/>
+            </outline>
+            <outline text="Forking INVITE, with CANCEL">
+              <outline text="testInviteForkThreeCallerCancels and testInviteForkCallerCancels in sanityTests.cxx"/>
+            </outline>
+            <outline text="Forking INVITE, caller sends  BYE"/>
+            <outline text="Forking INVITE, callee sends BYE"/>
+          </outline>
+          <outline text="Cloudy day">
+            <outline text="Forking invite with a spiral (spiral is after fork)"/>
+            <outline text="4xx class responses (other than 486)"/>
+            <outline text="One 4xx class response, one 200"/>
+            <outline text="5xx class responses"/>
+            <outline text="One 5xx, one 200"/>
+            <outline text="6xx class responses"/>
+            <outline text="One 6xx, one 200" description="What is supposed to happen here?"/>
+            <outline text="5xx and 4xx mixed"/>
+            <outline text="6xx and 5xx mixed"/>
+            <outline text="6xx and 4xx mixed"/>
+            <outline text="200, 4xx, 5xx, and 6xx mixed"/>
+            <outline text="Fork merges (ie, both ends of fork are directed at the same UAC)"/>
+            <outline text="All contacts answer"/>
+            <outline text="All contacts answer, without ringing">
+              <outline text="testInviteForBothAnswerNoProvisional in sanityTests.cxx"/>
+            </outline>
+          </outline>
+          <outline text="Rainy day">
+            <outline text="INVITE/200 dropped on client side">
+              <outline text="testForkedInviteClientLateAck in sanityTests.cxx"/>
+            </outline>
+            <outline text="Loop on one leg of fork"/>
+            <outline text="All contacts time out (Timer C)">
+              <outline text="testTimerCForked in sanityTests.cxx"/>
+            </outline>
+            <outline text="Forking spiral" description="Can tfm handle this?"/>
+          </outline>
+        </outline>
+      </outline>
+      <outline text="with auth">
+        <outline text="Non-forking INVITE scenarios" description="INVITE transaction with no forking">
+          <outline text="Sunny day">
+            <outline text="Basic INVITE" description="basic INVITE transaction, (no CANCEL, BYE, etc)" Status="Passing">
+              <outline text="testInviteBasic and testDigestInviteBasic in sanityTests.cxx"/>
+              <outline text="testInviteBasic in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Basic INVITE with caller BYE" description="basic INVITE transaction, followed by the caller hanging up" Status="Failing (BYE gets challenged)">
+              <outline text="testInviteCallerHangsUp in sanityTests.cxx"/>
+              <outline text="testInviteCallerHangsUp in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Basic INVITE with callee BYE" description="basic INVITE, where callee hangs up" Status="Failing (BYE gets challenged)">
+              <outline text="testInviteCalleeHangsUp in sanityTests.cxx"/>
+              <outline text="testInviteCalleeHangsUp in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Basic INVITE with CANCEL" description="basic INVITE, where caller CANCELs" Status="Passing">
+              <outline text="testInviteCallerCancels in sanityTests.cxx"/>
+              <outline text="testInviteCallerCancels in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Basic INVITE, contact busy" Status="Passing">
+              <outline text="in sanityTests.cxx"/>
+              <outline text="testInviteBusy in estacadoTests.cxx"/>
+            </outline>
+          </outline>
+          <outline text="Cloudy day">
+            <outline text="spiral test for basic INVITE" Status="Passing">
+              <outline text="testSpiral in sanityTests.cxx"/>
+              <outline text="testSpiral in estacadoTests.cxx"/>
+            </outline>
+            <outline text="spiral test with CANCEL" Status="Passing">
+              <outline text="testSpiralWithCancel in estacadoTests.cxx"/>
+            </outline>
+            <outline text="200 beats CANCEL on server side" Status="Passing">
+              <outline text="testInviteCallerCancelsWithRace in sanityTests.cxx"/>
+              <outline text="testInviteCallerCancelsWithRace in estacadoTests.cxx"/>
+            </outline>
+            <outline text="200 beats CANCEL on client side" Status="Passing">
+              <outline text="testInvite200BeatsCancelClientSide in estacadoTests.cxx"/>
+            </outline>
+            <outline text="4xx beats CANCEL on server side" Status="Passing">
+              <outline text="testInvite486BeatsCancelServerSide in estacadoTests.cxx"/>
+            </outline>
+            <outline text="4xx beats CANCEL on client side" Status="Passing">
+              <outline text="testInvite486BeatsCancelClientSide in estacadoTests.cxx"/>
+            </outline>
+            <outline text="5xx beats CANCEL on server side" Status="Passing">
+              <outline text="testInvite503BeatsCancelServerSide in estacadoTests.cxx"/>
+            </outline>
+            <outline text="5xx beats CANCEL on client side" Status="Passing">
+              <outline text="testInvite503BeatsCancelClientSide in estacadoTests.cxx"/>
+            </outline>
+            <outline text="No contacts found" Status="Passing">
+              <outline text="testInviteNotFound in sanityTests.cxx"/>
+              <outline text="testInviteNotFound in estacadoTests.cxx"/>
+            </outline>
+            <outline text="UAS responds with 4xx class response">
+              <outline text="testInvite488Response in estacadoTests.cxx"/>
+              <outline text="testInvite480Response in estacadoTests.cxx" Status="Passing"/>
+            </outline>
+            <outline text="UAS responds with 5xx class response">
+              <outline text="testInvite500Response in estacadoTests.cxx "/>
+              <outline text="testInvite503Response in estacadoTests.cxx " Status="Passing"/>
+            </outline>
+            <outline text="UAS responds with 6xx class response">
+              <outline text="testInvite600Response in estacadoTests.cxx "/>
+              <outline text="testInvite603Response in estacadoTests.cxx "/>
+            </outline>
+            <outline text="UAS spams 180s" Status="Passing">
+              <outline text="testInviteServerSpams180 in estacadoTests.cxx"/>
+            </outline>
+            <outline text="bad authentication" Status="Passing">
+              <outline text="testInviteBogusAuth in estacadoTests.cxx"/>
+            </outline>
+          </outline>
+          <outline text="Rainy day">
+            <outline text="407 is dropped (retransmit of INVITE)" Status="Passing">
+              <outline text="testInvite407Dropped in estacadoTests.cxx"/>
+            </outline>
+            <outline text="ACK/407 is dropped (retransmit of 407)" Status="Failing (tfm is ACKing the wrong thing when the 407 is retransmitted)">
+              <outline text="testInviteAck407Dropped in estacadoTests.cxx"/>
+            </outline>
+            <outline text="INVITE is dropped on server side" Status="Passing">
+              <outline text="testInviteClientRetransmissionsWithRecovery in sanityTests.cxx"/>
+              <outline text="testInviteClientRetransmissionsWithRecovery in estacadoTests.cxx"/>
+            </outline>
+            <outline text="200 is dropped on client side" Status="Passing">
+              <outline text="testInviteClientLateAck in sanityTests.cxx"/>
+              <outline text="testInviteClientLateAck in estacadoTests.cxx"/>
+            </outline>
+            <outline text="1xx dropped on client side, or ignored (prompts retransmit of INVITE)" Status="Passing">
+              <outline text="testInvite1xxDropped in estacadoTests.cxx"/>
+            </outline>
+            <outline text="1xx and 2xx dropped on client side " Status="Passing">
+              <outline text="testInviteClientRetransmitsAfter200 in sanityTests.cxx"/>
+              <outline text="testInviteClientRetransmitsAfter200 in estacadoTests.cxx"/>
+            </outline>
+            <outline text="ACK dropped on server side" Status="Passing">
+              <outline text="testInviteClientMissedAck in sanityTests.cxx"/>
+              <outline text="testInviteClientMissedAck in estacadoTests.cxx"/>
+            </outline>
+            <outline text="UAS does not respond (timer C test)" Status="Not using">
+              <outline text="testTimerC in sanityTests.cxx"/>
+              <outline text="testTimerC in estacadoTests.cxx"/>
+            </outline>
+            <outline text="UAS spams 200s" Status="Passing">
+              <outline text="testInviteServerSpams200 in estacadoTests.cxx"/>
+            </outline>
+            <outline text="UAS sends 200, then 180" Status="Passing">
+              <outline text="testInviteServerSends180After200 in estacadoTests.cxx"/>
+            </outline>
+            <outline text="UAC spams INVITE (fast retransmissions)" Status="Not sure how to get tfm to do this properly (tfm is asserting)">
+              <outline text="testInviteClientSpamsInvite in estacadoTests.cxx"/>
+            </outline>
+            <outline text="UAC spams ACK/407s" Status="Passing">
+              <outline text="testInviteClientSpamsAck407 in estacadoTests.cxx"/>
+            </outline>
+            <outline text="UAC spams ACK/200" Status="Failing (stray 407 is coming in)">
+              <outline text="testInviteClientSpamsAck200 in estacadoTests.cxx"/>
+            </outline>
+            <outline text="UAS does not send 487 after CANCEL/200" Status="Passing">
+              <outline text="testInviteCallerCancelsNo487 in sanityTests.cxx"/>
+              <outline text="testInviteCallerCancelsNo487 in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Server retransmits 4xx" Status="Passing">
+              <outline text="testInviteServerRetransmits486 in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Server retransmits 5xx" Status="Passing">
+              <outline text="testInviteServerRetransmits503 in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Server retransmits 6xx">
+              <outline text="testInviteServerRetransmits603"/>
+            </outline>
+            <outline text="No route to contact (DNS failure)" Status="Passing">
+              <outline text="testInviteNoDNS in sanityTests.cxx"/>
+              <outline text="testInviteNoDNS in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Transport down at contact" Status="tfm asserts here">
+              <outline text="testInviteTransportFailure in sanityTests.cxx"/>
+              <outline text="testInviteTransportFailure in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Client side dies after INVITE" Status="Passing">
+              <outline text="testInviteClientDiesAfterFirstInvite in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Client side dies after authenticated INVITE" Status="Failing (stray 407 from previous test)">
+              <outline text="testClientDiesAfterSecondInvite in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Server doesn't respond" Status="Passing">
+              <outline text="testInviteServerDead in estacadoTests.cxx"/>
+            </outline>
+            <outline text="loop test" Status="Failing (proxy hangs!)">
+              <outline text="testInviteLoop in estacadoTests.cxx"/>
+            </outline>
+            <outline text="loop test with CANCEL">
+              <outline text="tfm does not allow sending a CANCEL on an expect(INVITE/100,...)"/>
+            </outline>
+            <outline text="bad user part in From header" Status="Passing">
+              <outline text="testInviteForgedUserInFrom in estacadoTests.cxx"/>
+            </outline>
+            <outline text="bad host part in From header" Status="Failing (proxy doesn&apos;t challenge!)">
+              <outline text="testInviteForgedHostInFrom in estacadoTests.cxx"/>
+            </outline>
+          </outline>
+        </outline>
+        <outline text="Forking INVITE scenarios" description="INVITE transaction with forking">
+          <outline text="Sunny day">
+            <outline text="Basic forking INVITE, one 200 response" Status="Passing">
+              <outline text="testInviteForkOneAnswers in sanityTests.cxx"/>
+              <outline text="testInviteForkOneAnswers in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Forking INVITE, one 200 and rest busy (486)" Status="Passing">
+              <outline text="testInviteForkOneBusy in sanityTests.cxx"/>
+              <outline text="testInviteForkOneBusy in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Forking INVITE, all busy" Status="Passing">
+              <outline text="testInviteAllBusyContacts and testInviteForkBothBusy in sanityTests.cxx"/>
+              <outline text="testInviteAllBusyContacts in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Forking INVITE, with CANCEL" Status="Passing">
+              <outline text="testInviteForkThreeCallerCancels and testInviteForkCallerCancels in sanityTests.cxx"/>
+              <outline text="testInviteForkThreeCallerCancels in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Forking INVITE, caller sends  BYE" Status="Failing">
+              <outline text="testInviteForkCallerHangsUp in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Forking INVITE, callee sends BYE" Status="Failing">
+              <outline text="testInviteForkCalleeHangsUp in estacadoTests.cxx"/>
+            </outline>
+          </outline>
+          <outline text="Cloudy day">
+            <outline text="Forking invite with a spiral (spiral is after fork)" Status="Passing">
+              <outline text="testInviteForkThenSpiral in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Forking invite with a spiral before the fork" Status="Passing">
+              <outline text="testInviteSpiralThenFork in estacadoTests.cxx"/>
+            </outline>
+            <outline text="4xx class responses (other than 486)" Status="Passing">
+              <outline text="testInviteForkAll4xxResponses in estacadoTests.cxx"/>
+            </outline>
+            <outline text="One 200, rest 4xx" Status="Passing">
+              <outline text="testInviteFork200And4xx in estacadoTests.cxx"/>
+            </outline>
+            <outline text="5xx class responses" Status="Passing">
+              <outline text="testInviteForkAll5xxResponses in estacadoTests.cxx"/>
+            </outline>
+            <outline text="One 200, rest 5xx" Status="Passing">
+              <outline text="testInviteFork200and5xx in estacadoTests.cxx"/>
+            </outline>
+            <outline text="6xx class responses" Status="Failing (responses are not being forwarded)">
+              <outline text="testInviteForkAll6xxResponses in estacadoTets.cxx"/>
+            </outline>
+            <outline text="6xx beats 200" Status="Failing (6xx not being forwarded, 200 is)">
+              <outline text="testInviteFork6xxBeats200 in estacadoTests.cxx"/>
+            </outline>
+            <outline text="200 beats 6xx" Status="Failing(6xx not being forwarded)">
+              <outline text="testInviteFork200Beats6xx in estacadoTests.cxx"/>
+            </outline>
+            <outline text="5xx and 4xx mixed" Status="Passing">
+              <outline text="testInviteFork4xxAnd5xx in estacadoTests.cxx"/>
+            </outline>
+            <outline text="6xx, 5xx, 4xx mixed" Status="Failing (6xx not being forwarded, 404 is)">
+              <outline text="testInviteFork4xx5xx6xx in estacadoTests.cxx"/>
+            </outline>
+            <outline text="Fork merges (ie, both ends of fork are directed at the same UAC)" Status="Passing">
+              <outline text="testInviteForkMerges in estacadoTests.cxx"/>
+            </outline>
+            <outline text="All contacts answer, without ringing" Status="Failing (tfm seems to be screwing up the ack/200s)">
+              <outline text="testInviteForkAllAnswerNo1xx in estacadoTests.cxx"/>
+            </outline>
+          </outline>
+          <outline text="Rainy day">
+            <outline text="INVITE/200 dropped on client side">
+              <outline text="testForkedInviteClientLateAck in sanityTests.cxx"/>
+            </outline>
+            <outline text="Loop on one leg of fork"/>
+            <outline text="All contacts time out (Timer C)">
+              <outline text="testTimerCForked in sanityTests.cxx"/>
+            </outline>
+            <outline text="Forking spiral" description="Can tfm handle this?"/>
+          </outline>
+        </outline>
+      </outline>
+    </outline>
+    <outline text="Proxy functionality: non-INVITE transactions">
+      <outline text="no auth">
+        <outline text="Sunny day"/>
+        <outline text="Cloudy day"/>
+        <outline text="Rainy day"/>
+      </outline>
+      <outline text="with auth">
+        <outline text="Sunny day"/>
+        <outline text="Cloudy day"/>
+        <outline text="Rainy day"/>
+      </outline>
+    </outline>
+  </body>
+</opml>

@@ -1,0 +1,8 @@
+/** @defgroup resip_crit Critically Important Classes */
+/** @defgroup resip_config Configuration/Tweaks */
+/** @defgroup sip_grammar SIP Grammar Elements */
+/** @defgroup sip_payload SIP Payload Types */
+/** @defgroup message_passing_tu Message-Passing Classes (for TUs) */
+/** @defgroup make_sip SIP Message Generation Functions */
+/** @defgroup sip_parse SIP Parsing Infrastructure */
+/** @defgroup transports Transport Classes */
