@@ -45,8 +45,8 @@ class TR
       }
       
    public:
-      TR(Data  s,ostream& o = resipCerr ):os(o),label(s) { start(); }
-      TR(const char* l,ostream& o = resipCerr):os(o),label(l) { start(); }
+      TR(Data  s,ostream& o = cerr ):os(o),label(s) { start(); }
+      TR(const char* l,ostream& o = cerr):os(o),label(l) { start(); }
       ~TR() { end();}
 };
 
