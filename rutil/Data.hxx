@@ -1048,7 +1048,7 @@ Data::escapeToStream(EncodeStream& str, Predicate shouldEscape) const
          str.write((char*)p, 3);
          p+=3;
       }
-      else if (shouldEscape(*p))
+      else if (shouldEscape[*p])
       {
          int hi = (*p & 0xF0)>>4;
          int low = (*p & 0x0F);

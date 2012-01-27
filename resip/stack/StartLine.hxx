@@ -17,7 +17,7 @@ class StartLine : public LazyParser
       {}
       virtual ~StartLine(){}
 
-      virtual std::ostream& encodeParsed(std::ostream& str) const=0;
+      virtual EncodeStream& encodeParsed(EncodeStream& str) const=0;
       virtual void parse(ParseBuffer& pb)=0;
       virtual const Data& errorContext() const=0;
       virtual StartLine* clone() const=0;
