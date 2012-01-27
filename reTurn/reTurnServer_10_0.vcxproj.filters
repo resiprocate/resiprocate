@@ -111,6 +111,9 @@
     <ClCompile Include="UdpServer.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="UserAuthData.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AsyncSocketBase.hxx">
@@ -619,6 +622,9 @@
     </ClInclude>
     <ClInclude Include="..\contrib\asio\asio\ssl\detail\openssl_types.hpp">
       <Filter>ASIO Header Files\asio\ssl\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="UserAuthData.hxx">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
