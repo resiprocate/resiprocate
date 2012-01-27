@@ -1,0 +1,8 @@
+/**
+@mainpage SIP Basis Foundation Utilities (rutil)
+
+The SIP Basis Foundation Utilities (rutil) library provides various utility classes for use by the SIP Basis Foundation SDK and SIP Basis Session Manager. In some cases, these utility classes are used to provide cross-platform implementations of important system-level stuff (see resip::ThreadIf, resip::Mutex, resip::Lock, resip::Condition, resip::Random, and resip::Timer). In other cases, these classes are an alternative to commonly used classes defined in the stl (resip::Data being an alternative for a std::string). In addition, the DNS subsystem of SIP Basis Foundation SDK is part of rutil.
+
+Generally speaking, you will not find anything even tangentially related to SIP in rutil. For this, you need to look at the SIP Basis Foundation SDK or SIP Basis Session Manager.
+
+*/

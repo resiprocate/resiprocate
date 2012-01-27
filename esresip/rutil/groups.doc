@@ -1,0 +1,8 @@
+/** @defgroup data_structures Data Structures */
+/** @defgroup message_passing Message Passing/Fifos */
+/** @defgroup threading Threading Classes */
+/** @defgroup text_proc Text Processing Classes */
+/** @defgroup database_related Database-Related Classes */
+/** @defgroup network Network Classes */
+/** @defgroup logging Logging Classes */
+/** @defgroup crypto Cryptography */
