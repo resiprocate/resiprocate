@@ -270,7 +270,7 @@ TcpBaseTransport::processAllWriteRequests()
       // There is no connection yet, so make a client connection
       if (conn == 0 && 
             !data->destination.onlyUseExistingConnection &&
-            !data->eof)
+            data->command == 0)  // SendData commands (ie. close connection and enable flow timers) shouldn't cause new connections to form
       {
          TransportFailure::FailureReason failCode = TransportFailure::Failure;
          int subCode = 0;

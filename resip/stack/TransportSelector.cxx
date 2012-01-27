@@ -1229,7 +1229,7 @@ TransportSelector::closeConnection(const Tuple& peer)
                                     resip::Data::Empty,
                                     resip::Data::Empty,
                                     resip::Data::Empty);
-      close->eof=true;
+      close->command = SendData::CloseConnection;
       t->send(std::auto_ptr<SendData>(close));
    }
 }
@@ -1269,38 +1269,16 @@ TransportSelector::terminateFlow(const resip::Tuple& flow)
 void 
 TransportSelector::enableFlowTimer(const resip::Tuple& flow)
 {
-   // !bwc! Not threadsafe! Need to do this using message-passing.
-   Connection* connection = findConnection(flow);
-   if(connection)
+   Transport* t = findTransportByDest(flow);
+   if(t)
    {
-      connection->enableFlowTimer();
+      SendData* enableFlowTimer=new SendData(flow, 
+                                    resip::Data::Empty,
+                                    resip::Data::Empty,
+                                    resip::Data::Empty);
+      enableFlowTimer->command = SendData::EnableFlowTimer;
+      t->send(std::auto_ptr<SendData>(enableFlowTimer));
    }
-}
-
-Connection*
-TransportSelector::findConnection(const Tuple& target) const
-{
-   // !bwc! We need to remove this function once we get enableFlowTimer() 
-   // working without it, since it is not threadsafe.
-   if(target.getType()==TCP || target.getType()==TLS)
-   {
-      TcpBaseTransport* tcpb=0;
-      Connection* conn=0;
-      TypeToTransportMap::const_iterator i;
-      TypeToTransportMap::const_iterator l=mTypeToTransportMap.lower_bound(target);
-      TypeToTransportMap::const_iterator u=mTypeToTransportMap.upper_bound(target);
-      for(i=l;i!=u;++i)
-      {
-         tcpb=static_cast<TcpBaseTransport*>(i->second);
-         conn = tcpb->getConnectionManager().findConnection(target);
-         if(conn)
-         {
-            return conn;
-         }
-      }
-   }
-
-   return 0;
 }
 
 Transport*

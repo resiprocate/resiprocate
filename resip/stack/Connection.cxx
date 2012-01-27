@@ -63,6 +63,20 @@ Connection::requestWrite(SendData* sendData)
    }
 }
 
+void 
+Connection::removeFrontOutstandingSend()
+{
+   delete mOutstandingSends.front();
+   mOutstandingSends.pop_front();
+
+   if (mOutstandingSends.empty())
+   {
+      assert(mInWritable);
+      getConnectionManager().removeFromWritable(this);
+      mInWritable = false;
+   }
+}
+
 int
 Connection::performWrite()
 {
@@ -75,10 +89,20 @@ Connection::performWrite()
    }
 
    assert(!mOutstandingSends.empty());
-   if(mOutstandingSends.front()->eof)
+   switch(mOutstandingSends.front()->command)
    {
+   case SendData::CloseConnection:
       // .bwc. Close this connection.
       return -1;
+      break;
+   case SendData::EnableFlowTimer:
+      enableFlowTimer();
+      removeFrontOutstandingSend();
+      return 0;
+      break;
+   default:
+      // do nothing
+      break;
    }
 
    const Data& sigcompId = mOutstandingSends.front()->sigcompId;
@@ -157,15 +181,7 @@ Connection::performWrite()
       if (mSendPos == data.size())
       {
          mSendPos = 0;
-         delete mOutstandingSends.front();
-         mOutstandingSends.pop_front();
-
-         if (mOutstandingSends.empty())
-         {
-            assert(mInWritable);
-            getConnectionManager().removeFromWritable(this);
-            mInWritable = false;
-         }
+         removeFrontOutstandingSend();
       }
       return bytesWritten;
    }
