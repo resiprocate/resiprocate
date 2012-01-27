@@ -151,7 +151,7 @@ class ParserContainerBase
             ~HeaderKit()
             {}
             
-            std::ostream& encode(std::ostream& str) const
+            EncodeStream& encode(EncodeStream& str) const
             {
                if(pc)
                {

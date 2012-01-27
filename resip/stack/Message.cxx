@@ -22,35 +22,51 @@ Message::Brief::Brief(const Message& source) :
    mSource(source)
 {}
 
+#ifndef  RESIP_USE_STL_STREAMS
 std::ostream& 
 resip::operator<<(std::ostream& strm, 
                   const resip::Message& msg)
 {
-   return msg.encode(strm);
+	Data encoded;
+
+   DataStream encodeStream(encoded);
+   msg.encode(encodeStream);
+   encodeStream.flush();
+
+   strm << encoded.c_str();
+
+   return strm;
 }
 
 std::ostream& 
 resip::operator<<(std::ostream& strm, 
                   const resip::Message::Brief& brief)
 {
-   return brief.mSource.encodeBrief(strm);
-}
+	Data encoded;
 
-#ifndef RESIP_USE_STL_STREAMS
-EncodeStream& 
-resip::operator<<(EncodeStream& strm, 
-                  const resip::Message& msg)
-{
-   return msg.encode(strm);
-}
+   DataStream encodeStream(encoded);
+   brief.mSource.encodeBrief(encodeStream);
+   encodeStream.flush();
 
-EncodeStream& 
-resip::operator<<(EncodeStream& strm, 
-                  const resip::Message::Brief& brief)
-{
-   return brief.mSource.encodeBrief(strm);
+   strm << encoded.c_str();
+
+   return strm;
 }
 #endif
+
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, 
+                  const resip::Message& msg)
+{
+   return msg.encode(strm);
+}
+
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, 
+                  const resip::Message::Brief& brief)
+{
+   return brief.mSource.encodeBrief(strm);
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

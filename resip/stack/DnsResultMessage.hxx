@@ -27,14 +27,14 @@ class DnsResultMessage : public TransactionMessage
 
       virtual Message* clone() const {return new DnsResultMessage(*this);}
       /// output the entire message to stream
-      virtual std::ostream& encode(std::ostream& strm) const
+      virtual EncodeStream& encode(EncodeStream& strm) const
       {
          strm << (mIsClientTransaction ? Data("Client ") : Data("Server ") )
                << Data("DnsResultMessage: tid=") << mTid;
          return strm;
       }
       /// output a brief description to stream
-      virtual std::ostream& encodeBrief(std::ostream& strm) const
+      virtual EncodeStream& encodeBrief(EncodeStream& strm) const
       {
          strm << (mIsClientTransaction ? Data("Client ") : Data("Server ") )
                << Data("DnsResultMessage: tid=") << mTid;
