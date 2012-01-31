@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <iterator>
+#include <stdexcept>
 
 //#include <rutil/DnsUtil.hxx>
 #include <rutil/Log.hxx>
@@ -282,14 +283,8 @@ ConfigParse::parseConfigFile(const Data& filename)
 
    ifstream configFile(filename.c_str());
    
-   if(configFile)
-   {
-      cout << "Reading configuraiton from: " << filename << endl;
-   }
-   else
-   {
-      cout << "Error reading configuraiton from: " << filename << endl;
-   }
+   if(!configFile)
+      throw std::runtime_error("Error opening/reading configuraiton file");
 
    string sline;                     
    while(getline(configFile, sline)) 
