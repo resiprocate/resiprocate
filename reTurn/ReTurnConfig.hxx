@@ -25,9 +25,9 @@ public:
 
    typedef enum
    {
-      NoAuthentication,
-      ShortTermPassword,
-      LongTermPassword
+      NoAuthentication = 0,
+      ShortTermPassword = 1,
+      LongTermPassword = 2
    } AuthenticationMode;
 
    unsigned short mTurnPort;

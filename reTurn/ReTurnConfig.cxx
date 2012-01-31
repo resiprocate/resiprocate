@@ -60,6 +60,14 @@ ReTurnConfig::ReTurnConfig(int argc, char** argv, const resip::Data& defaultConf
    mLoggingFilename(getConfigData("LogFilename", "reTurnServer.log")),
    mLoggingFileMaxLineCount(getConfigUnsignedLong("LogFileMaxLines", 50000))
 {
+   int authMode = getConfigUnsignedShort("AuthenticationMode", 2);
+   switch(authMode)
+   {
+   case 0: mAuthenticationMode = NoAuthentication; break;
+   case 1: mAuthenticationMode = ShortTermPassword; break;
+   case 2: mAuthenticationMode = LongTermPassword; break;
+   default: throw; break;
+   }
    Data user(getConfigData("LongTermAuthUsername", ""));
    Data password(getConfigData("LongTermAuthPassword", ""));
 
