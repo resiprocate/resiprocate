@@ -26,8 +26,8 @@ ReTurnConfig::ReTurnConfig() :
    mTlsServerCertificateFilename("server.pem"),
    mTlsTempDhFilename("dh512.pem"),
    mTlsPrivateKeyPassword("password"),
-   mLoggingType(resip::Log::Cout),
-   mLoggingLevel(resip::Log::Info),
+   mLoggingType("cout"),
+   mLoggingLevel("INFO"),
    mLoggingFilename("reTurnServer.log"),
    mLoggingFileMaxLineCount(50000)  // 50000 about 5M size
 {
@@ -55,8 +55,8 @@ ReTurnConfig::ReTurnConfig(int argc, char** argv, const resip::Data& defaultConf
    mTlsServerCertificateFilename(getConfigData("TlsServerCertificateFilename", "server.pem")),
    mTlsTempDhFilename(getConfigData("TlsTempDhFilename", "dh512.pem")),
    mTlsPrivateKeyPassword(getConfigData("TlsPrivateKeyPassword", "")),
-   mLoggingType(resip::Log::Cout),
-   mLoggingLevel(resip::Log::Info),
+   mLoggingType(getConfigData("LoggingType", "cout")),
+   mLoggingLevel(getConfigData("LoggingLevel", "INFO")),
    mLoggingFilename(getConfigData("LogFilename", "reTurnServer.log")),
    mLoggingFileMaxLineCount(getConfigUnsignedLong("LogFileMaxLines", 50000))
 {

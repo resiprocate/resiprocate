@@ -52,8 +52,8 @@ public:
    resip::Data mTlsTempDhFilename;
    resip::Data mTlsPrivateKeyPassword;
 
-   resip::Log::Type mLoggingType;
-   resip::Log::Level mLoggingLevel;
+   resip::Data mLoggingType;
+   resip::Data mLoggingLevel;
    resip::Data mLoggingFilename;
    unsigned int mLoggingFileMaxLineCount;
 
