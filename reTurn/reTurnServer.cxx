@@ -47,6 +47,30 @@ int main(int argc, char* argv[])
    resip::Data defaultConfig("reTurnServer.config");
    reTurn::ReTurnConfig reTurnConfig(argc, argv, defaultConfig);
 
+#ifndef WIN32
+   // Daemonize if necessary
+   if(reTurnConfig.mDaemonize)
+   {
+      pid_t pid;
+      if ((pid = fork()) < 0) 
+      {
+         // fork() failed
+         throw std::runtime_error(strerror(errno));
+      }
+      else if (pid != 0)
+      {
+         // parent process done
+         exit(0);
+      }
+      if(chdir("/") < 0)
+         throw std::runtime_error(strerror(errno));
+      // Nothing should be writing to stdout/stderr after this
+      close(STDIN_FILENO);
+      close(STDOUT_FILENO);
+      close(STDERR_FILENO);
+   }
+#endif
+
    try
    {
       // Initialize Logging

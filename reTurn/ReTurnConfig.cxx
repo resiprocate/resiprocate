@@ -29,7 +29,8 @@ ReTurnConfig::ReTurnConfig() :
    mLoggingType("cout"),
    mLoggingLevel("INFO"),
    mLoggingFilename("reTurnServer.log"),
-   mLoggingFileMaxLineCount(50000)  // 50000 about 5M size
+   mLoggingFileMaxLineCount(50000),  // 50000 about 5M size
+   mDaemonize(false)
 {
    mAuthenticationCredentials["test"] = "1234";
    calcUserAuthData();
@@ -58,7 +59,8 @@ ReTurnConfig::ReTurnConfig(int argc, char** argv, const resip::Data& defaultConf
    mLoggingType(getConfigData("LoggingType", "cout")),
    mLoggingLevel(getConfigData("LoggingLevel", "INFO")),
    mLoggingFilename(getConfigData("LogFilename", "reTurnServer.log")),
-   mLoggingFileMaxLineCount(getConfigUnsignedLong("LogFileMaxLines", 50000))
+   mLoggingFileMaxLineCount(getConfigUnsignedLong("LogFileMaxLines", 50000)),
+   mDaemonize(getConfigBool("Daemonize", false))
 {
    int authMode = getConfigUnsignedShort("AuthenticationMode", 2);
    switch(authMode)
@@ -66,15 +68,24 @@ ReTurnConfig::ReTurnConfig(int argc, char** argv, const resip::Data& defaultConf
    case 0: mAuthenticationMode = NoAuthentication; break;
    case 1: mAuthenticationMode = ShortTermPassword; break;
    case 2: mAuthenticationMode = LongTermPassword; break;
-   default: throw; break;
+   default: 
+      throw std::runtime_error("Unsupported AuthenticationMode value in config");
    }
+
+   // fork is not possible on Windows
+#ifdef WIN32
+   if(mDaemonize)
+   {
+      throw std::runtime_error("Unable to fork/daemonize on Windows, please check the config");
+   }
+#endif
+
    Data user(getConfigData("LongTermAuthUsername", ""));
    Data password(getConfigData("LongTermAuthPassword", ""));
 
    if(user.size() == 0 || password.size() == 0)
    {
-      std::cerr << "Missing or invalid credentials (LongTermAuthUsername/LongTermAuthPassword" << std::endl;
-      exit(1);
+      throw std::runtime_error("Missing or invalid credentials (LongTermAuthUsername/LongTermAuthPassword");
    }
 
    mAuthenticationCredentials[user] = password;
