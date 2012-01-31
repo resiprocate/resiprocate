@@ -108,6 +108,7 @@ ReTurnConfig::calcUserAuthData()
             mAuthenticationRealm,
             it->second));
       realmUsers.insert(pair<resip::Data,UserAuthData>(it->first,  newUser));
+      it++;
    }
 }
 
