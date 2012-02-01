@@ -283,6 +283,10 @@
 				RelativePath=".\UdpServer.cxx"
 				>
 			</File>
+			<File
+				RelativePath=".\UserAuthData.cxx"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -387,6 +391,10 @@
 			</File>
 			<File
 				RelativePath=".\UdpServer.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\UserAuthData.hxx"
 				>
 			</File>
 		</Filter>
