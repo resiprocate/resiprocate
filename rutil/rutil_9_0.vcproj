@@ -348,7 +348,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\DnsUtil.cxx"
+				RelativePath=".\dns\DnsThread.cxx"
 				>
 			</File>
 			<File
@@ -396,14 +396,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\PoolBase.cxx"
-				>
-			</File>
-			<File
-				RelativePath=".\SelectInterruptor.cxx"
-				>
-			</File>
-			<File
 				RelativePath=".\ssl\OpenSSLInit.cxx"
 				>
 				<FileConfiguration
@@ -433,6 +425,10 @@
 			</File>
 			<File
 				RelativePath=".\Poll.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\PoolBase.cxx"
 				>
 			</File>
 			<File
@@ -469,6 +465,10 @@
 			</File>
 			<File
 				RelativePath=".\RWMutex.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\SelectInterruptor.cxx"
 				>
 			</File>
 			<File
@@ -550,18 +550,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\CongestionManager.hxx"
-				>
-			</File>
-			<File
-				RelativePath=".\ConsumerFifoBuffer.hxx"
-				>
-			</File>
-			<File
-				RelativePath=".\DinkyPool.hxx"
-				>
-			</File>
-			<File
 				RelativePath=".\dns\AresCompat.hxx"
 				>
 			</File>
@@ -602,6 +590,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\CongestionManager.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ConsumerFifoBuffer.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\CountStream.hxx"
 				>
 			</File>
@@ -611,6 +607,10 @@
 			</File>
 			<File
 				RelativePath=".\DataStream.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\DinkyPool.hxx"
 				>
 			</File>
 			<File
@@ -646,11 +646,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\DnsUtil.hxx"
+				RelativePath=".\dns\DnsThread.hxx"
 				>
 			</File>
 			<File
-				RelativePath=".\DnsThread.hxx"
+				RelativePath=".\DnsUtil.hxx"
 				>
 			</File>
 			<File
@@ -668,7 +668,7 @@
 			<File
 				RelativePath=".\FdSetIOObserver.hxx"
 				>
-			</File>			
+			</File>
 			<File
 				RelativePath=".\Fifo.hxx"
 				>
@@ -678,11 +678,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\GeneralCongestionManager.hxx"
+				RelativePath=".\FiniteFifo.hxx"
 				>
 			</File>
 			<File
-				RelativePath=".\FiniteFifo.hxx"
+				RelativePath=".\GeneralCongestionManager.hxx"
 				>
 			</File>
 			<File
@@ -734,18 +734,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\PoolBase.hxx"
-				>
-			</File>
-			<File
-				RelativePath=".\ProducerFifoBuffer.hxx"
-				>
-			</File>
-			<File
-				RelativePath=".\SelectInterruptor.hxx"
-				>
-			</File>
-			<File
 				RelativePath=".\ssl\OpenSSLInit.hxx"
 				>
 			</File>
@@ -759,6 +747,14 @@
 			</File>
 			<File
 				RelativePath=".\Poll.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\PoolBase.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ProducerFifoBuffer.hxx"
 				>
 			</File>
 			<File
@@ -799,6 +795,10 @@
 			</File>
 			<File
 				RelativePath=".\RWMutex.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\SelectInterruptor.hxx"
 				>
 			</File>
 			<File

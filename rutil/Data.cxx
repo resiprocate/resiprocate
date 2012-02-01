@@ -3,7 +3,6 @@
 #include <ctype.h>
 #include <math.h>
 #include <limits.h>
-#include <stdint.h>
 
 #if defined(HAVE_CONFIG_HXX)
 #include "resip/stack/config.hxx"
@@ -1971,18 +1970,18 @@ Data::rawCaseInsensitiveHash(const unsigned char* c, size_t size)
 #undef get16bits
 #if (defined(__GNUC__) && defined(__i386__)) || defined(__WATCOMC__) \
   || defined(_MSC_VER) || defined (__BORLANDC__) || defined (__TURBOC__)
-#define get16bits(d) (*((const uint16_t *) (d)))
+#define get16bits(d) (*((const UInt16 *) (d)))
 #endif
 
 #if !defined (get16bits)
-#define get16bits(d) ((((uint32_t)(((const uint8_t *)(d))[1])) << 8)\
-                       +(uint32_t)(((const uint8_t *)(d))[0]) )
+#define get16bits(d) ((((UInt32)(((const UInt8 *)(d))[1])) << 8)\
+                       +(UInt32)(((const UInt8 *)(d))[0]) )
 #endif
 
 #undef get32bits
 #if (defined(__GNUC__) && defined(__i386__)) || defined(__WATCOMC__) \
   || defined(_MSC_VER) || defined (__BORLANDC__) || defined (__TURBOC__)
-#define get32bits(d) (*((const uint32_t *) (d)))
+#define get32bits(d) (*((const UInt32 *) (d)))
 #endif
 
 #if !defined (get32bits)
@@ -2002,7 +2001,7 @@ Data::rawCaseInsensitiveTokenHash(const unsigned char* data, size_t len)
 {
    // .bwc. Hsieh hash, with some bitmasking to get the case-insensitive 
    // property (this is what all the "0x2020 |" business is about.)
-   uint32_t hash = len, tmp;
+   UInt32 hash = len, tmp;
    int rem;
 
     if (len <= 0 || data == NULL) return 0;
@@ -2012,26 +2011,28 @@ Data::rawCaseInsensitiveTokenHash(const unsigned char* data, size_t len)
 
     union 
     {
-          uint32_t masked;
+          UInt32 masked;
           unsigned char cccc[4];
     };
 
     /* Main loop */
-    for (;len > 0; len--) {
+    for (;len > 0; len--) 
+    {
         // mask out bit 6 for case-insensitivity
         masked = (0x20202020 | get32bits(data));
         hash  += get16bits(cccc);
         tmp    = (get16bits(cccc+2) << 11) ^ hash;
         hash   = (hash << 16) ^ tmp;
-        data  += 2*sizeof (uint16_t);
+        data  += 2*sizeof (UInt16);
         hash  += hash >> 11;
     }
 
     /* Handle end cases */
-    switch (rem) {
+    switch (rem) 
+    {
         case 3: hash += (0x2020 | get16bits (data));
                 hash ^= hash << 16;
-                hash ^= (0x20 | data[sizeof (uint16_t)]) << 18;
+                hash ^= (0x20 | data[sizeof (UInt16)]) << 18;
                 hash += hash >> 11;
                 break;
         case 2: hash += (0x2020 | get16bits (data));
@@ -2167,14 +2168,14 @@ Data::sizeEqualCaseInsensitiveTokenCompare(const Data& rhs) const
    compUnalignedRemainder(d1, d2, unalignedPrefix);
 
    // We are now on a 32-bit boundary with d1.
-   uint32_t* wd1((uint32_t*)(d1));
+   UInt32* wd1((UInt32*)(d1));
    size_t wordLen=(mSize-unalignedPrefix)>>2;
    int rem=(mSize-unalignedPrefix)&3;
 
    if((ptrdiff_t)(d2)%4==0)
    {
       // d2 is aligned too. Happy day!
-      uint32_t* wd2((uint32_t*)(d2));
+      UInt32* wd2((UInt32*)(d2));
       for (;wordLen > 0; wordLen--)
       {
          // bitwise xor is zero iff equal, but we only really care about bits 
@@ -2194,7 +2195,7 @@ Data::sizeEqualCaseInsensitiveTokenCompare(const Data& rhs) const
       {
          // bitwise xor is zero iff equal, but we only really care about bits 
          // other than bit 6, so we mask out bit 6 after the xor.
-         uint32_t test=get32bits(d2);
+         UInt32 test=get32bits(d2);
          if( (*wd1 ^ test) & 0xDFDFDFDF)
          {
             return false;
