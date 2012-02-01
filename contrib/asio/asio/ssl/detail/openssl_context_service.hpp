@@ -68,6 +68,8 @@ public:
   {
     switch (m)
     {
+
+#if (OPENSSL_VERSION_NUMBER < 0x10000000L) // OpenSSL versions 1 and above deprecated support for v2)
     case context_base::sslv2:
       impl = ::SSL_CTX_new(::SSLv2_method());
       break;
@@ -77,6 +79,7 @@ public:
     case context_base::sslv2_server:
       impl = ::SSL_CTX_new(::SSLv2_server_method());
       break;
+#endif
     case context_base::sslv3:
       impl = ::SSL_CTX_new(::SSLv3_method());
       break;
