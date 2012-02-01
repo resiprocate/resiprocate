@@ -49,6 +49,7 @@ class ConnectionManager
 
       void addConnection(Connection* connection);
       void removeConnection(Connection* connection);
+      void closeConnections();
 
       /// release excessively old connections (free up file descriptors)
       /// set maxToRemove to 0 for no-max

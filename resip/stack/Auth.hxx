@@ -20,13 +20,15 @@ class Auth : public ParserCategory
       enum {commaHandling = NoCommaTokenizing};
 
       Auth();
-      Auth(HeaderFieldValue* hfv, Headers::Type type);
-      Auth(const Auth&);
+      Auth(const HeaderFieldValue& hfv, Headers::Type type, PoolBase* pool=0);
+      Auth(const Auth& orig, PoolBase* pool=0);
       Auth& operator=(const Auth&);
 
       virtual void parse(ParseBuffer& pb);
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
       virtual ParserCategory* clone() const;
+      virtual ParserCategory* clone(void* location) const;
+      virtual ParserCategory* clone(PoolBase* pool) const;
 
       void parseAuthParameters(ParseBuffer& pb);
       EncodeStream& encodeAuthParameters(EncodeStream& str) const;
@@ -40,7 +42,7 @@ class Auth : public ParserCategory
       using ParserCategory::remove;
       using ParserCategory::param;
 
-      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators);
+      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool);
       bool exists(const Param<Auth>& paramType) const;
       void remove(const Param<Auth>& paramType);
 

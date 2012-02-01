@@ -19,7 +19,7 @@ using namespace std;
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
-#define RESIP_COOKIE "-d8754z-"
+#define RESIP_COOKIE "-524287-"
 
 class TR
 {
@@ -70,7 +70,7 @@ main(int arc, char** argv)
       }
       catch (ParseException& e)
       {
-         cerr << e << endl;
+         resipCerr << e << endl;
       }
    }
    
@@ -78,9 +78,9 @@ main(int arc, char** argv)
       TR _tr("Test copy transport param");
 
       NameAddr test("<sip:jason_AT_example.com@10.0.0.1:5060;transport=TCP>");
-      cerr << test << endl;
+      resipCerr << test << endl;
       NameAddr copy = test;
-      cerr << copy << endl;
+      resipCerr << copy << endl;
       assert(test.uri().exists(p_transport));
       assert(copy.uri().exists(p_transport));
       
@@ -117,15 +117,15 @@ main(int arc, char** argv)
 
       resip::Data raw("<sip:jason_AT_example.com@10.0.0.1:5060;opaque=blah>");
       HeaderFieldValue hfv(raw.data(), raw.size());
-      NameAddr test(&hfv, Headers::UNKNOWN);
+      NameAddr test(hfv, Headers::UNKNOWN);
       const NameAddr& c_test(test);
       // We should be calling the const version of uri() here, since we don't 
       // need to modify anything.
       static ExtensionParameter p_opaque_ext("opaque");
       resip::Data opaque(c_test.uri().param(p_opaque_ext));
-      cerr << test << endl;
+      resipCerr << test << endl;
       NameAddr copy = test;
-      cerr << copy << endl;
+      resipCerr << copy << endl;
       assert(resip::Data::from(test)==raw);
       assert(resip::Data::from(copy)==raw);
    }
@@ -182,7 +182,7 @@ main(int arc, char** argv)
                DataStream str(res);
                str << aor;
             }   
-            cerr << res << endl;
+            resipCerr << res << endl;
             
             assert(res == "sips:bob@foo.com");
          }
@@ -221,7 +221,7 @@ main(int arc, char** argv)
       assert(uri1.param(UnknownParameterType("xaudio")) == Data::Empty);
       
       Uri uri2("sip:a@b;a=b;xaudio");
-      cerr << uri2.param(UnknownParameterType("a")) << endl;
+      resipCerr << uri2.param(UnknownParameterType("a")) << endl;
       
       assert(uri2.exists(UnknownParameterType("xaudio")));
       assert(uri2.param(UnknownParameterType("xaudio")) == Data::Empty);
@@ -239,7 +239,7 @@ main(int arc, char** argv)
 
       assert(legal.uri().host() == "bell-tel.com");
 
-      cerr << "!!" << legal << endl;
+      resipCerr << "!!" << legal << endl;
 
       assert(legal.displayName() == "A. Bell");
    }
@@ -252,7 +252,7 @@ main(int arc, char** argv)
 
       assert(legal.uri().host() == "bell-tel.com");
 
-      cerr << "!!" << legal.displayName() << endl;
+      resipCerr << "!!" << legal.displayName() << endl;
 
       assert(legal.displayName() == "A. Bell");
    }
@@ -264,7 +264,7 @@ main(int arc, char** argv)
       NameAddr original(data);
       assert(original.uri().exists(p_user));
       
-      cerr << "!!" << original << endl;
+      resipCerr << "!!" << original << endl;
    }
 
    {
@@ -272,7 +272,7 @@ main(int arc, char** argv)
       Data data("tel:+14156268178;pOstd=pP2;isUb=1411");
       
       Uri original(data);
-      cerr << original.getAor() << endl;
+      resipCerr << original.getAor() << endl;
       
       assert(original.getAor() == "+14156268178");
    }
@@ -285,14 +285,14 @@ main(int arc, char** argv)
       Uri original(data);
       Uri original1(data1);
 
-      cerr << "!! " << original.getAor() << " " << original1.getAor() << endl;
+      resipCerr << "!! " << original.getAor() << " " << original1.getAor() << endl;
       assert(original.getAor() == original1.getAor());
    }
 
    {
       TR _tr("Test tel NameAddr");
       NameAddr n1("<tel:98267168>");
-      cerr << n1.uri().user() << endl;
+      resipCerr << n1.uri().user() << endl;
    }
 
 #ifdef USE_IPV6
@@ -300,7 +300,7 @@ main(int arc, char** argv)
       TR _tr("Test cleverly malformed V6 addr in Uri");
       const char* buf="sip:foo@[:x]";
       HeaderFieldValue hfv(buf, strlen(buf));
-      NameAddr nameaddr(&hfv, Headers::UNKNOWN);
+      NameAddr nameaddr(hfv, Headers::UNKNOWN);
       assert(!nameaddr.isWellFormed());
    }
 #endif
@@ -349,7 +349,7 @@ main(int arc, char** argv)
       TR _tr("Test parameter with spaces");
       Data txt("Digest username=\"Alice\", realm = \"atlanta.com\", nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\", reponse=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\"\r\n");
       HeaderFieldValue hfv(txt.data(), txt.size());
-      Auth auth(&hfv, Headers::Authorization);
+      Auth auth(hfv, Headers::Authorization);
       
       assert(auth.scheme() == "Digest");
       assert(auth.exists(p_realm));
@@ -360,9 +360,22 @@ main(int arc, char** argv)
       Data data("sip:kelowna.gloo.net");
       
       Uri original(data);
-      cerr << original << endl;
+      resipCerr << original << endl;
       
       assert(Data::from(original) == data);
+   }
+
+   {
+      TR _tr("Test uri with empty transport param");
+      Data data("sip:kelowna.gloo.net;transport=;udp");
+      
+      try
+      {
+         Uri original(data);
+         assert(0);
+      }
+      catch(...)
+      {}
    }
 
    {
@@ -515,7 +528,7 @@ main(int arc, char** argv)
       assert(s.param(UnknownParameterType("foobie")) == "quux");
 
       s.encode(resipCerr);
-      cerr << endl;
+      resipCerr << endl;
    }
 
    {
@@ -523,7 +536,7 @@ main(int arc, char** argv)
       Data stringString("Lame Agent");
       HeaderFieldValue hfv(stringString.data(), stringString.size());
       
-      StringCategory str(&hfv, Headers::UNKNOWN);
+      StringCategory str(hfv, Headers::UNKNOWN);
       assert(str.value() == stringString);
 
       Data buff;
@@ -531,7 +544,7 @@ main(int arc, char** argv)
          DataStream s(buff);
          str.encode(s);
       }
-      cerr << buff << endl;
+      resipCerr << buff << endl;
       assert(buff == stringString);
 
       StringCategory copy(str);
@@ -546,7 +559,7 @@ main(int arc, char** argv)
       Token state;
       state.value() = Data("active");
       state.param(p_expires) = 666;
-      cerr << state << endl;
+      resipCerr << state << endl;
    }
 
    {
@@ -554,9 +567,9 @@ main(int arc, char** argv)
       Data statusLineString("SIP/2.0 180 Ringing");
       HeaderFieldValue hfv(statusLineString.data(), statusLineString.size());
       
-      StatusLine statusLine(&hfv, Headers::UNKNOWN);
+      StatusLine statusLine(hfv);
       assert(statusLine.responseCode() == 180);
-      cerr << statusLine.reason() << endl;
+      resipCerr << statusLine.reason() << endl;
       assert(statusLine.reason() == "Ringing");
       assert(statusLine.getSipVersion() == "SIP/2.0");
 
@@ -571,7 +584,7 @@ main(int arc, char** argv)
       assert(foo.getAor().empty());
    }
 
-#define checkHeaderName(_name) cerr << Headers::_name << " " << Headers::getHeaderName(Headers::_name) << " = " << #_name << endl /*;assert(isEqualNoCase(Headers::getHeaderName(Headers::_name), #_name))*/
+#define checkHeaderName(_name) resipCerr << Headers::_name << " " << Headers::getHeaderName(Headers::_name) << " = " << #_name << endl /*;assert(isEqualNoCase(Headers::getHeaderName(Headers::_name), #_name))*/
    {
       // test header hash
       for (int i = Headers::CSeq; i < Headers::MAX_HEADERS; i++)
@@ -647,7 +660,7 @@ main(int arc, char** argv)
 
    }
 
-#define checkParameterName(_name) cerr << ParameterTypes::_name << " " << ParameterTypes::ParameterNames[ParameterTypes::_name] << " = " << #_name << endl/*;assert(isEqualNoCase(ParameterTypes::ParameterNames[ParameterTypes::_name], #_name))*/
+#define checkParameterName(_name) resipCerr << ParameterTypes::_name << " " << ParameterTypes::ParameterNames[ParameterTypes::_name] << " = " << #_name << endl/*;assert(isEqualNoCase(ParameterTypes::ParameterNames[ParameterTypes::_name], #_name))*/
    {
       checkParameterName(data);
       checkParameterName(control);
@@ -754,7 +767,7 @@ main(int arc, char** argv)
       const char *org = "WuggaWuggaFoo";
       
       HeaderFieldValue hfv(org, strlen(org));
-      Token tok(&hfv, Headers::UNKNOWN);
+      Token tok(hfv, Headers::UNKNOWN);
       assert(tok.value() == org);
    }
 
@@ -763,7 +776,7 @@ main(int arc, char** argv)
       const char *org = "WuggaWuggaFoo;ttl=2;retry-after=3";
       
       HeaderFieldValue hfv(org, strlen(org));
-      Token tok(&hfv, Headers::UNKNOWN);
+      Token tok(hfv, Headers::UNKNOWN);
       assert(tok.value() == "WuggaWuggaFoo");
       assert(tok.param(p_ttl_ext) == "2");
       assert(tok.param(p_retryAfter) == 3);
@@ -782,7 +795,7 @@ main(int arc, char** argv)
       const char *viaString = /* Via: */ " SIP/2.0/UDP a.b.c.com:5000;ttl=3;maddr=1.2.3.4;received=foo.com";
       
       HeaderFieldValue hfv(viaString, strlen(viaString));
-      Via via(&hfv, Headers::UNKNOWN);
+      Via via(hfv, Headers::UNKNOWN);
       assert(via.sentPort() == 5000);
       assert(via.sentHost() == "a.b.c.com");
       assert(via.param(p_maddr) == "1.2.3.4");
@@ -793,7 +806,7 @@ main(int arc, char** argv)
       TR _tr( "Via assert bug with malformed IPV6 addr [boom]" );
       const char* viaString = "SIP/2.0/UDP [boom]:5060;branch=z9hG4bKblah";
       HeaderFieldValue hfv(viaString, strlen(viaString));
-      Via via(&hfv, Headers::UNKNOWN);
+      Via via(hfv, Headers::UNKNOWN);
       assert(!via.isWellFormed());
    }
 
@@ -801,7 +814,7 @@ main(int arc, char** argv)
       TR _tr( "Via assert bug with malformed IPV6 addr [:z]" );
       const char* viaString = "SIP/2.0/UDP [:z]:5060;branch=z9hG4bKblah";
       HeaderFieldValue hfv(viaString, strlen(viaString));
-      Via via(&hfv, Headers::UNKNOWN);
+      Via via(hfv, Headers::UNKNOWN);
       assert(!via.isWellFormed());
    }
 #endif
@@ -814,13 +827,13 @@ main(int arc, char** argv)
       HeaderFieldValue hfv(viaString, strlen(viaString));
       try
       {
-         Via via(&hfv, Headers::UNKNOWN);
+         Via via(hfv, Headers::UNKNOWN);
          via.sentPort();
          assert(false);
       }
       catch (ParseException& e)
       {
-         cerr << "Caught parse exception for Via" << endl;
+         resipCerr << "Caught parse exception for Via" << endl;
       }
    }
 
@@ -832,7 +845,7 @@ main(int arc, char** argv)
       HeaderFieldValue hfv(viaString, strlen(viaString));
       try
       {
-         Via via(&hfv, Headers::UNKNOWN);
+         Via via(hfv, Headers::UNKNOWN);
          via.sentPort();
          UnknownParameterType p_foobar("foobar");
          via.exists(p_foobar);
@@ -840,7 +853,7 @@ main(int arc, char** argv)
       }
       catch (ParseException& e)
       {
-         cerr << "Caught parse exception for Via" << endl;
+         resipCerr << "Caught parse exception for Via" << endl;
       }
    }
 
@@ -852,13 +865,13 @@ main(int arc, char** argv)
       HeaderFieldValue hfv(viaString, strlen(viaString));
       try
       {
-         Via via(&hfv, Headers::UNKNOWN);
+         Via via(hfv, Headers::UNKNOWN);
          via.sentPort();
          assert(false);
       }
       catch (ParseException& e)
       {
-         cerr << "Caught parse exception for Via " << endl;
+         resipCerr << "Caught parse exception for Via " << endl;
       }
    }
 
@@ -870,13 +883,13 @@ main(int arc, char** argv)
       HeaderFieldValue hfv(viaString, strlen(viaString));
       try
       {
-         Via via(&hfv, Headers::UNKNOWN);
+         Via via(hfv, Headers::UNKNOWN);
          via.sentPort();
          assert(false);
       }
       catch (ParseException& e)
       {
-         cerr << "Caught parse exception for Via " << endl;
+         resipCerr << "Caught parse exception for Via " << endl;
       }
    }
 
@@ -887,7 +900,7 @@ main(int arc, char** argv)
       const char *viaString = /* Via: */ " SIP/2.0/UDP [5f1b:df00:ce3e:e200:20:800:2b37:6426]:5000;ttl=3;maddr=1.2.3.4;received=foo.com";
       
       HeaderFieldValue hfv(viaString, strlen(viaString));
-      Via via(&hfv, Headers::UNKNOWN);
+      Via via(hfv, Headers::UNKNOWN);
       assert(via.sentPort() == 5000);
       assert(via.sentHost() == "5f1b:df00:ce3e:e200:20:800:2b37:6426");
       assert(via.param(p_maddr) == "1.2.3.4");
@@ -900,7 +913,7 @@ main(int arc, char** argv)
       NameAddr to;
       to.parse(pb);
       Uri& uri = to.uri();
-      cerr << "!! " << to << endl;
+      resipCerr << "!! " << to << endl;
       assert(uri.scheme() == "sip");
       assert(uri.user() == "bob");
       assert(uri.host() == "foo.com");
@@ -962,7 +975,7 @@ main(int arc, char** argv)
       assert(uri.scheme() == "sips");
       assert(uri.user() == "bob;param=gargle");
       assert(uri.password() == "password");
-      cerr << "Uri:" << uri.host() << endl;
+      resipCerr << "Uri:" << uri.host() << endl;
       assert(uri.host() == "foo.com");
    }
 
@@ -978,7 +991,7 @@ main(int arc, char** argv)
       assert(uri.param(p_transport) == "udp");
    }
    
-   cerr << "URI comparison tests" << endl;
+   resipCerr << "URI comparison tests" << endl;
    {
       Data uriStringA("sip:carol@chicago.com");
       Data uriStringB("sip:carol@chicago.com;newparam=5");
@@ -1083,9 +1096,9 @@ main(int arc, char** argv)
       nB.parse(pb);
       Uri& uA = nA.uri();
       Uri& uB = nB.uri();
-      cerr << "A: " << uA << endl;
-      cerr << "B: " << uB << endl;
-      cerr << "A:exists(transport) " << uA.exists(p_transport) << endl;
+      resipCerr << "A: " << uA << endl;
+      resipCerr << "B: " << uB << endl;
+      resipCerr << "A:exists(transport) " << uA.exists(p_transport) << endl;
       assert(uA != uB);
    }
 
@@ -1106,10 +1119,10 @@ main(int arc, char** argv)
       Data requestLineString("INVITE sips:bob@foo.com SIP/2.0");
       HeaderFieldValue hfv(requestLineString.data(), requestLineString.size());
 
-      RequestLine requestLine(&hfv, Headers::UNKNOWN);
+      RequestLine requestLine(hfv);
       assert(requestLine.uri().scheme() == "sips");
       assert(requestLine.uri().user() == "bob");
-      cerr << requestLine.uri().host() << endl;
+      resipCerr << requestLine.uri().host() << endl;
       assert(requestLine.uri().host() == "foo.com");
       assert(requestLine.getMethod() == INVITE);
       assert(requestLine.getSipVersion() == "SIP/2.0");
@@ -1119,7 +1132,7 @@ main(int arc, char** argv)
       Data requestLineString("INVITE tel:4153331212 SIP/2.0");
       HeaderFieldValue hfv(requestLineString.data(), requestLineString.size());
 
-      RequestLine requestLine(&hfv, Headers::UNKNOWN);
+      RequestLine requestLine(hfv);
       assert(requestLine.uri().scheme() == "tel");
       assert(requestLine.uri().user() == "4153331212");
       assert(requestLine.getMethod() == INVITE);
@@ -1130,14 +1143,14 @@ main(int arc, char** argv)
       Data requestLineString("INVITE sips:bob@foo.com;maddr=1.2.3.4 SIP/2.0");
       HeaderFieldValue hfv(requestLineString.data(), requestLineString.size());
 
-      RequestLine requestLine(&hfv, Headers::UNKNOWN);
+      RequestLine requestLine(hfv);
       assert(requestLine.uri().scheme() == "sips");
       assert(requestLine.uri().user() == "bob");
-      cerr << requestLine.uri().host() << endl;
+      resipCerr << requestLine.uri().host() << endl;
       assert(requestLine.uri().host() == "foo.com");
       assert(requestLine.getMethod() == INVITE);
       assert(requestLine.uri().param(p_maddr) == "1.2.3.4");
-      cerr << requestLine.getSipVersion() << endl;
+      resipCerr << requestLine.getSipVersion() << endl;
       assert(requestLine.getSipVersion() == "SIP/2.0");
    }
    {
@@ -1145,7 +1158,7 @@ main(int arc, char** argv)
       Data nameAddrString("sips:bob@foo.com");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
-      NameAddr nameAddr(&hfv, Headers::UNKNOWN);
+      NameAddr nameAddr(hfv, Headers::UNKNOWN);
       assert(nameAddr.uri().scheme() == "sips");
       assert(nameAddr.uri().user() == "bob");
       assert(nameAddr.uri().host() == "foo.com");
@@ -1155,7 +1168,7 @@ main(int arc, char** argv)
       Data nameAddrString("Bob<sips:bob@foo.com>");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
-      NameAddr nameAddr(&hfv, Headers::UNKNOWN);
+      NameAddr nameAddr(hfv, Headers::UNKNOWN);
       assert(nameAddr.displayName() == "Bob");
       assert(nameAddr.uri().scheme() == "sips");
       assert(nameAddr.uri().user() == "bob");
@@ -1166,7 +1179,7 @@ main(int arc, char** argv)
       Data nameAddrString = "\"Bob\"<sips:bob@foo.com>";
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
-      NameAddr nameAddr(&hfv, Headers::UNKNOWN);
+      NameAddr nameAddr(hfv, Headers::UNKNOWN);
       assert(nameAddr.displayName() == "Bob");
       assert(nameAddr.uri().scheme() == "sips");
       assert(nameAddr.uri().user() == "bob");
@@ -1177,7 +1190,7 @@ main(int arc, char** argv)
       Data nameAddrString("\"Bob   \\\" asd   \"<sips:bob@foo.com>");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
-      NameAddr nameAddr(&hfv, Headers::UNKNOWN);
+      NameAddr nameAddr(hfv, Headers::UNKNOWN);
       assert(nameAddr.displayName() == "Bob   \\\" asd   ");
       assert(nameAddr.uri().scheme() == "sips");
       assert(nameAddr.uri().user() == "bob");
@@ -1188,16 +1201,16 @@ main(int arc, char** argv)
       Data nameAddrString("Bob<sips:bob@foo.com>;tag=456248;mobility=\"hobble\"");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
-      NameAddr nameAddr(&hfv, Headers::UNKNOWN);
+      NameAddr nameAddr(hfv, Headers::UNKNOWN);
       assert(nameAddr.displayName() == "Bob");
       assert(nameAddr.uri().scheme() == "sips");
       assert(nameAddr.uri().user() == "bob");
 
       assert(nameAddr.uri().host() == "foo.com");
       
-      cerr << "Uri params: ";
+      resipCerr << "Uri params: ";
       nameAddr.uri().encodeParameters(resipCerr) << endl;
-      cerr << "Header params: ";
+      resipCerr << "Header params: ";
       nameAddr.encodeParameters(resipCerr) << endl;
       assert(nameAddr.param(p_tag) == "456248");
       assert(nameAddr.param(p_mobility) == "hobble");
@@ -1210,16 +1223,16 @@ main(int arc, char** argv)
       Data nameAddrString("\"Bob\"<sips:bob@foo.com>;tag=456248;mobility=\"hobble\"");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
-      NameAddr nameAddr(&hfv, Headers::UNKNOWN);
+      NameAddr nameAddr(hfv, Headers::UNKNOWN);
       assert(nameAddr.displayName() == "Bob");
       assert(nameAddr.uri().scheme() == "sips");
       assert(nameAddr.uri().user() == "bob");
 
       assert(nameAddr.uri().host() == "foo.com");
       
-      cerr << "Uri params: ";
+      resipCerr << "Uri params: ";
       nameAddr.uri().encodeParameters(resipCerr) << endl;
-      cerr << "Header params: ";
+      resipCerr << "Header params: ";
       nameAddr.encodeParameters(resipCerr) << endl;
 
       assert(nameAddr.param(p_tag) == "456248");
@@ -1233,16 +1246,16 @@ main(int arc, char** argv)
       Data nameAddrString("Bob<sips:bob@foo.com;tag=456248;mobility=\"hobble\">");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
-      NameAddr nameAddr(&hfv, Headers::UNKNOWN);
+      NameAddr nameAddr(hfv, Headers::UNKNOWN);
       assert(nameAddr.displayName() == "Bob");
       assert(nameAddr.uri().scheme() == "sips");
       assert(nameAddr.uri().user() == "bob");
 
       assert(nameAddr.uri().host() == "foo.com");
       
-      cerr << "Uri params: ";
+      resipCerr << "Uri params: ";
       nameAddr.uri().encodeParameters(resipCerr) << endl;
-      cerr << "Header params: ";
+      resipCerr << "Header params: ";
       nameAddr.encodeParameters(resipCerr) << endl;
       assert(nameAddr.uri().param(p_tag_ext) == "456248");
       assert(nameAddr.uri().param(p_mobility_ext) == "hobble");
@@ -1255,16 +1268,16 @@ main(int arc, char** argv)
       Data nameAddrString("Bob<sips:bob@foo.com;mobility=\"hobb;le\";tag=\"true;false\">");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
-      NameAddr nameAddr(&hfv, Headers::UNKNOWN);
+      NameAddr nameAddr(hfv, Headers::UNKNOWN);
       assert(nameAddr.displayName() == "Bob");
       assert(nameAddr.uri().scheme() == "sips");
       assert(nameAddr.uri().user() == "bob");
 
       assert(nameAddr.uri().host() == "foo.com");
       
-      cerr << "Uri params: ";
+      resipCerr << "Uri params: ";
       nameAddr.uri().encodeParameters(resipCerr) << endl;
-      cerr << "Header params: ";
+      resipCerr << "Header params: ";
       nameAddr.encodeParameters(resipCerr) << endl;
       assert(nameAddr.uri().param(p_mobility_ext) == "hobb;le");
       assert(nameAddr.uri().param(p_tag_ext) == "true;false");
@@ -1277,7 +1290,7 @@ main(int arc, char** argv)
       Data nameAddrString("sip:101@localhost:5080;transport=UDP");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
       
-      NameAddr nameAddr(&hfv, Headers::UNKNOWN);
+      NameAddr nameAddr(hfv, Headers::UNKNOWN);
       assert(nameAddr.displayName() == "");
       assert(nameAddr.uri().scheme() == "sip");
       assert(nameAddr.uri().user() == "101");
@@ -1287,7 +1300,7 @@ main(int arc, char** argv)
       Data nameAddrString("sip:localhost:5070");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
       
-      NameAddr nameAddr(&hfv, Headers::UNKNOWN);
+      NameAddr nameAddr(hfv, Headers::UNKNOWN);
       assert(nameAddr.displayName() == "");
       assert(nameAddr.uri().scheme() == "sip");
       assert(nameAddr.uri().host() == "localhost");
@@ -1299,7 +1312,7 @@ main(int arc, char** argv)
       Data statusLineString("SIP/2.0 100 ");
       HeaderFieldValue hfv(statusLineString.data(), statusLineString.size());
       
-      StatusLine statusLine(&hfv, Headers::UNKNOWN);
+      StatusLine statusLine(hfv);
       assert(statusLine.responseCode() == 100);
       assert(statusLine.reason() == "");
       assert(statusLine.getSipVersion() == "SIP/2.0");
@@ -1309,7 +1322,7 @@ main(int arc, char** argv)
       Data statusLineString("SIP/2.0 100");
       HeaderFieldValue hfv(statusLineString.data(), statusLineString.size());
       
-      StatusLine statusLine(&hfv, Headers::UNKNOWN);
+      StatusLine statusLine(hfv);
       assert(statusLine.responseCode() == 100);
       assert(statusLine.reason() == "");
       assert(statusLine.getSipVersion() == "SIP/2.0");
@@ -1319,11 +1332,11 @@ main(int arc, char** argv)
       const char* authorizationString = "Digest realm=\"66.100.107.120\", username=\"1234\", nonce=\"1011235448\"   , uri=\"sip:66.100.107.120\"   , algorithm=MD5, response=\"8a5165b024fda362ed9c1e29a7af0ef2\"";
       HeaderFieldValue hfv(authorizationString, strlen(authorizationString));
       
-      Auth auth(&hfv, Headers::UNKNOWN);
+      Auth auth(hfv, Headers::UNKNOWN);
 
-      cerr << "Auth scheme: " <<  auth.scheme() << endl;
+      resipCerr << "Auth scheme: " <<  auth.scheme() << endl;
       assert(auth.scheme() == "Digest");
-      cerr << "   realm: " <<  auth.param(p_realm) << endl;
+      resipCerr << "   realm: " <<  auth.param(p_realm) << endl;
       assert(auth.param(p_realm) == "66.100.107.120"); 
       assert(auth.param(p_username) == "1234"); 
       assert(auth.param(p_nonce) == "1011235448"); 
@@ -1337,7 +1350,7 @@ main(int arc, char** argv)
          auth.encode(s);
       }
 
-      cerr << dsData.c_str() << endl;
+      resipCerr << dsData.c_str() << endl;
       
       assert(dsData == "Digest realm=\"66.100.107.120\",username=\"1234\",nonce=\"1011235448\",uri=\"sip:66.100.107.120\",algorithm=MD5,response=\"8a5165b024fda362ed9c1e29a7af0ef2\"");
    }
@@ -1347,11 +1360,11 @@ main(int arc, char** argv)
       const char* authorizationString = "realm=\"66.100.107.120\", username=\"1234\", nonce=\"1011235448\"   , uri=\"sip:66.100.107.120\"   , algorithm=MD5, response=\"8a5165b024fda362ed9c1e29a7af0ef2\"";
       HeaderFieldValue hfv(authorizationString, strlen(authorizationString));
       
-      Auth auth(&hfv, Headers::UNKNOWN);
+      Auth auth(hfv, Headers::UNKNOWN);
 
-      cerr << "Auth scheme: " <<  auth.scheme() << endl;
+      resipCerr << "Auth scheme: " <<  auth.scheme() << endl;
       assert(auth.scheme() == "");
-      cerr << "   realm: " <<  auth.param(p_realm) << endl;
+      resipCerr << "   realm: " <<  auth.param(p_realm) << endl;
       assert(auth.param(p_realm) == "66.100.107.120"); 
       assert(auth.param(p_username) == "1234"); 
       assert(auth.param(p_nonce) == "1011235448"); 
@@ -1365,7 +1378,7 @@ main(int arc, char** argv)
          auth.encode(s);
       }
 
-      cerr << dsData.c_str() << endl;
+      resipCerr << dsData.c_str() << endl;
       
       assert(dsData == "realm=\"66.100.107.120\",username=\"1234\",nonce=\"1011235448\",uri=\"sip:66.100.107.120\",algorithm=MD5,response=\"8a5165b024fda362ed9c1e29a7af0ef2\"");
    }
@@ -1377,11 +1390,11 @@ main(int arc, char** argv)
       HeaderFieldValue authenHfv(authenticationString, strlen(authenticationString));
       HeaderFieldValue authorHfv(authorizationString, strlen(authorizationString));
       
-      Auth wwwAuthen(&authenHfv, Headers::WWWAuthenticate);
-      Auth pAuthen(&authenHfv, Headers::ProxyAuthenticate);
-      Auth authInfo(&authorHfv, Headers::AuthenticationInfo);
-      Auth pAuthor(&authorHfv, Headers::ProxyAuthorization);
-      Auth author(&authorHfv, Headers::Authorization);
+      Auth wwwAuthen(authenHfv, Headers::WWWAuthenticate);
+      Auth pAuthen(authenHfv, Headers::ProxyAuthenticate);
+      Auth authInfo(authorHfv, Headers::AuthenticationInfo);
+      Auth pAuthor(authorHfv, Headers::ProxyAuthorization);
+      Auth author(authorHfv, Headers::Authorization);
 
       assert(wwwAuthen.exists(p_qopOptions));
       assert(!wwwAuthen.exists(p_qop));
@@ -1527,10 +1540,10 @@ main(int arc, char** argv)
       const char* genericString = "<http://www.google.com>;purpose=icon;fake=true";
       HeaderFieldValue hfv(genericString, strlen(genericString));
 
-      GenericUri generic(&hfv, Headers::UNKNOWN);
+      GenericUri generic(hfv, Headers::UNKNOWN);
 
       assert(generic.uri() == "http://www.google.com");
-      cerr << generic.param(p_purpose) << endl;
+      resipCerr << generic.param(p_purpose) << endl;
       assert(generic.param(p_purpose) == "icon");
       assert(generic.param(UnknownParameterType("fake")) == "true");
 
@@ -1540,7 +1553,7 @@ main(int arc, char** argv)
          generic.encode(s);
       }
 
-      cerr << dsData.c_str() << endl;
+      resipCerr << dsData.c_str() << endl;
       
       assert(dsData == "<http://www.google.com>;purpose=icon;fake=true");
    }
@@ -1550,7 +1563,7 @@ main(int arc, char** argv)
       const char *dateString = "Mon, 04 Nov 2002 17:34:15 GMT";
       HeaderFieldValue hfv(dateString, strlen(dateString));
       
-      DateCategory date(&hfv, Headers::UNKNOWN);
+      DateCategory date(hfv, Headers::UNKNOWN);
 
       assert(date.dayOfWeek() == Mon);
       assert(date.dayOfMonth() == 04);
@@ -1566,7 +1579,7 @@ main(int arc, char** argv)
          date.encode(s);
       }
 
-      cerr << dsData.c_str() << endl;
+      resipCerr << dsData.c_str() << endl;
 
       assert(dsData == dateString);
       
@@ -1579,10 +1592,10 @@ main(int arc, char** argv)
          DataStream s2(dsData);
          otherDate.encode(s2);
       }
-      cerr << "!! original date     : " << date << endl;
-      cerr << "!! original string   : " << dateString << endl;
-      cerr << "!! otherDate         : " << otherDate << endl;
-      cerr << "!! encoded otherDate : " <<  dsData.c_str() << endl;
+      resipCerr << "!! original date     : " << date << endl;
+      resipCerr << "!! original string   : " << dateString << endl;
+      resipCerr << "!! otherDate         : " << otherDate << endl;
+      resipCerr << "!! encoded otherDate : " <<  dsData.c_str() << endl;
       assert (dsData == dateString);
 
    }
@@ -1592,7 +1605,7 @@ main(int arc, char** argv)
       const char *dateString = "  Sun  , 14    Jan 2222 07:04:05   GMT    ";
       HeaderFieldValue hfv(dateString, strlen(dateString));
       
-      DateCategory date(&hfv, Headers::UNKNOWN);
+      DateCategory date(hfv, Headers::UNKNOWN);
 
       assert(date.dayOfWeek() == Sun);
       assert(date.dayOfMonth() == 14);
@@ -1617,7 +1630,7 @@ main(int arc, char** argv)
       const char* mimeString = "application/sdp";
       HeaderFieldValue hfv(mimeString, strlen(mimeString));
       
-      Mime mime(&hfv, Headers::UNKNOWN);
+      Mime mime(hfv, Headers::UNKNOWN);
 
       assert(mime.type() == "application");
       assert(mime.subType() == "sdp");
@@ -1636,7 +1649,7 @@ main(int arc, char** argv)
       const char* mimeString = "text/html ; charset=ISO-8859-4";
       HeaderFieldValue hfv(mimeString, strlen(mimeString));
       
-      Mime mime(&hfv, Headers::UNKNOWN);
+      Mime mime(hfv, Headers::UNKNOWN);
 
       assert(mime.type() == "text");
       assert(mime.subType() == "html");
@@ -1656,7 +1669,7 @@ main(int arc, char** argv)
       const char* mimeString = "    text   /     html        ;  charset=ISO-8859-4";
       HeaderFieldValue hfv(mimeString, strlen(mimeString));
       
-      Mime mime(&hfv, Headers::UNKNOWN);
+      Mime mime(hfv, Headers::UNKNOWN);
 
       assert(mime.type() == "text");
       assert(mime.subType() == "html");
@@ -1675,7 +1688,7 @@ main(int arc, char** argv)
 
       Via via;
       via.encode(resipCerr);
-      cerr << endl;
+      resipCerr << endl;
 
       assert (via.param(p_branch).hasMagicCookie());
    }
@@ -1685,7 +1698,7 @@ main(int arc, char** argv)
       
       const char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj";
       HeaderFieldValue hfv(viaString, strlen(viaString));
-      Via via(&hfv, Headers::UNKNOWN);
+      Via via(hfv, Headers::UNKNOWN);
       
       assert (via.param(p_branch).hasMagicCookie());
 
@@ -1694,7 +1707,7 @@ main(int arc, char** argv)
          DataStream s0(dsData);
          via.encode(s0);
       }
-      cerr << dsData.c_str() << endl;
+      resipCerr << dsData.c_str() << endl;
       assert(dsData == "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj");
       
       assert (via.param(p_branch).getTransactionId() == "wkl3lkjsdfjklsdjklfdsjlkdklj");
@@ -1714,7 +1727,7 @@ main(int arc, char** argv)
       }
       
       resipCerr << "!! " << dsData.c_str() << endl;
-      assert(dsData == "SIP/2.0/UDP ;branch=z9hG4bK" RESIP_COOKIE "jason-1--" RESIP_COOKIE "");
+      assert(dsData == "SIP/2.0/UDP ;branch=z9hG4bK" RESIP_COOKIE "1---jason");
       assert(via.param(p_branch).getTransactionId() == "jason");
    }
 
@@ -1722,7 +1735,7 @@ main(int arc, char** argv)
       TR _tr("Via 3");
       const char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70";
       HeaderFieldValue hfv(viaString, strlen(viaString));
-      Via via(&hfv, Headers::UNKNOWN);
+      Via via(hfv, Headers::UNKNOWN);
       
       assert (via.param(p_branch).hasMagicCookie());
       assert (via.param(p_branch).getTransactionId() == "wkl3lkjsdfjklsdjklfdsjlkdklj");
@@ -1733,7 +1746,7 @@ main(int arc, char** argv)
       TR _tr("Via 4");
       const char* viaString = "SIP/2.0/UDP ;branch=oldassbranch";
       HeaderFieldValue hfv(viaString, strlen(viaString));
-      Via via(&hfv, Headers::UNKNOWN);
+      Via via(hfv, Headers::UNKNOWN);
       
       assert (!via.param(p_branch).hasMagicCookie());
       assert (via.param(p_branch).getTransactionId() == "oldassbranch");
@@ -1748,7 +1761,7 @@ main(int arc, char** argv)
       dsData.clear();
       via.encode(s);
       s.flush();
-      assert(dsData == "SIP/2.0/UDP ;branch=z9hG4bK" RESIP_COOKIE "jason-1--" RESIP_COOKIE "");
+      assert(dsData == "SIP/2.0/UDP ;branch=z9hG4bK" RESIP_COOKIE "1---jason");
       assert(via.param(p_branch).getTransactionId() == "jason");
    }
 
@@ -1756,7 +1769,7 @@ main(int arc, char** argv)
       TR _tr("Via 5 assignment with unknown parameter");
       const char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70;stid=abcd.2";
       HeaderFieldValue hfv(viaString, strlen(viaString));
-      Via via(&hfv, Headers::UNKNOWN);
+      Via via(hfv, Headers::UNKNOWN);
       
       assert (via.param(p_branch).hasMagicCookie());
       assert (via.param(p_branch).getTransactionId() == "wkl3lkjsdfjklsdjklfdsjlkdklj");
@@ -1765,45 +1778,45 @@ main(int arc, char** argv)
       Via via1;
       via1 = via;
 
-      cerr << "!! "; via1.encode(resipCerr); cerr << endl;
+      resipCerr << "!! "; via1.encode(resipCerr); resipCerr << endl;
       assert(via1.param(UnknownParameterType("stid")) == "abcd.2");
    }
 
    {
       TR _tr("Via 6 parse with known parameter");
-      const char* viaString = "SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK" RESIP_COOKIE "ec1e.0-1--" RESIP_COOKIE ";ttl=4\r\n";
+      const char* viaString = "SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK" RESIP_COOKIE "1---ec1e.0;ttl=4\r\n";
       HeaderFieldValue hfv(viaString, strlen(viaString));
-      Via via(&hfv, Headers::UNKNOWN);
+      Via via(hfv, Headers::UNKNOWN);
       
       assert (via.param(p_branch).hasMagicCookie());
       assert (via.param(p_branch).getTransactionId() == "ec1e.0");
-      cerr << "!! "; via.encode(resipCerr); cerr << endl;
+      resipCerr << "!! "; via.encode(resipCerr); resipCerr << endl;
       assert(via.param(p_ttl) == 4);
    }
 
    {
       TR _tr("Via 7 parse with unknown parameter");
-      const char* viaString = "SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK" RESIP_COOKIE "ec1e.0-1--" RESIP_COOKIE ";stid=489573115\r\n";
+      const char* viaString = "SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK" RESIP_COOKIE "1---ec1e.0;stid=489573115\r\n";
       HeaderFieldValue hfv(viaString, strlen(viaString));
-      Via via(&hfv, Headers::UNKNOWN);
+      Via via(hfv, Headers::UNKNOWN);
       
       assert (via.param(p_branch).hasMagicCookie());
       assert (via.param(p_branch).getTransactionId() == "ec1e.0");
-      cerr << "!! "; via.encode(resipCerr); cerr << endl;
+      resipCerr << "!! "; via.encode(resipCerr); resipCerr << endl;
       assert(via.param(UnknownParameterType("stid")) == "489573115");
    }
 
    {
       TR _tr("Branch parameter 1");
       
-      Data txt("=z9hG4bK" RESIP_COOKIE "jason-1--" RESIP_COOKIE "");
+      Data txt("=z9hG4bK" RESIP_COOKIE "1---jason");
       ParseBuffer pb(txt.data(), txt.size());
-      BranchParameter bp(ParameterTypes::branch, pb, ";");
+      BranchParameter bp(ParameterTypes::branch, pb, Data::toBitset(";"));
       assert(bp.hasMagicCookie());
       assert(bp.getTransactionId() == "jason");
 
       bp.reset(bp.getTransactionId() + ".10");
-      bp.encode(resipCerr); cerr << endl;
+      bp.encode(resipCerr); resipCerr << endl;
       assert(bp.getTransactionId() == "jason.10");
 
       Data o;
@@ -1812,16 +1825,16 @@ main(int arc, char** argv)
          bp.encode(s);
       }
       resipCerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK" RESIP_COOKIE "jason.10-1--" RESIP_COOKIE "");
+      assert(o == "branch=z9hG4bK" RESIP_COOKIE "1---jason.10");
    }
 
       
    {
       TR _tr("Branch parameter 2");
-      Data txt("=z9hG4bK" RESIP_COOKIE "jason.1.2.3-14--" RESIP_COOKIE "");
+      Data txt("=z9hG4bK" RESIP_COOKIE "14---jason.1.2.3");
       ParseBuffer pb(txt.data(), txt.size());
 
-      BranchParameter bpc(ParameterTypes::branch, pb, ";");
+      BranchParameter bpc(ParameterTypes::branch, pb, Data::toBitset(";"));
       assert(bpc.hasMagicCookie());
       assert(bpc.getTransactionId() == "jason.1.2.3");
 
@@ -1831,17 +1844,17 @@ main(int arc, char** argv)
          bpc.encode(s);
       }
       resipCerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK" RESIP_COOKIE "jason.1.2.3-14--" RESIP_COOKIE "");
+      assert(o == "branch=z9hG4bK" RESIP_COOKIE "14---jason.1.2.3");
    }
 
    {
       TR _tr("Branch parameter 3");
-      Data txt("=z9hG4bK" RESIP_COOKIE "3e565-ef7w-17.1.2.3-14--" RESIP_COOKIE "foobie");
+      Data txt("=z9hG4bK" RESIP_COOKIE "14---3e565-ef7w-17.1.2.3foobie");
       ParseBuffer pb(txt.data(), txt.size());
 
-      BranchParameter bpcc(ParameterTypes::branch, pb, ";");
+      BranchParameter bpcc(ParameterTypes::branch, pb, Data::toBitset(";"));
       assert(bpcc.hasMagicCookie());
-      assert(bpcc.getTransactionId() == "" RESIP_COOKIE "3e565-ef7w-17.1.2.3-14--" RESIP_COOKIE "foobie");
+      assert(bpcc.getTransactionId() == "3e565-ef7w-17.1.2.3foobie");
 
       Data o;
       {
@@ -1849,7 +1862,7 @@ main(int arc, char** argv)
          bpcc.encode(s);
       }
       resipCerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK" RESIP_COOKIE "3e565-ef7w-17.1.2.3-14--" RESIP_COOKIE "foobie");
+      assert(o == "branch=z9hG4bK" RESIP_COOKIE "14---3e565-ef7w-17.1.2.3foobie");
 
       bpcc.reset("foobie");
 
@@ -1858,16 +1871,16 @@ main(int arc, char** argv)
          DataStream s(o);
          bpcc.encode(s);
       }
-      cerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK" RESIP_COOKIE "foobie-1--" RESIP_COOKIE "");
+      resipCerr << "!! " << o << endl;
+      assert(o == "branch=z9hG4bK" RESIP_COOKIE "1---foobie");
    }
 
    {
       TR _tr("Branch parameter 4");
-      Data txt("=z9hG4bK" RESIP_COOKIE "3e565-ef7w-17.1.2.3-14--" RESIP_COOKIE "");
+      Data txt("=z9hG4bK" RESIP_COOKIE "14---3e565-ef7w-17.1.2.3");
       ParseBuffer pb(txt.data(), txt.size());
 
-      BranchParameter bpcc(ParameterTypes::branch, pb, ";");
+      BranchParameter bpcc(ParameterTypes::branch, pb, Data::toBitset(";"));
       assert(bpcc.hasMagicCookie());
       assert(bpcc.getTransactionId() == "3e565-ef7w-17.1.2.3");
 
@@ -1877,51 +1890,15 @@ main(int arc, char** argv)
          bpcc.encode(s);
       }
       resipCerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK" RESIP_COOKIE "3e565-ef7w-17.1.2.3-14--" RESIP_COOKIE "");
-   }
-
-   {
-      TR _tr("Branch parameter 5 externally spiralled branch returns");
-      Data txt("=z9hG4bK" RESIP_COOKIE "" RESIP_COOKIE "3e565-ef7w-17.1.2.3-14" RESIP_COOKIE "foobie-1--" RESIP_COOKIE "");
-      ParseBuffer pb(txt.data(), txt.size());
-
-      BranchParameter bpcc(ParameterTypes::branch, pb, ";");
-      assert(bpcc.hasMagicCookie());
-      assert(bpcc.getTransactionId() == "" RESIP_COOKIE "3e565-ef7w-17.1.2.3-14" RESIP_COOKIE "foobie");
-
-      Data o;
-      {
-         DataStream s(o);
-         bpcc.encode(s);
-      }
-      resipCerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK" RESIP_COOKIE "" RESIP_COOKIE "3e565-ef7w-17.1.2.3-14" RESIP_COOKIE "foobie-1--" RESIP_COOKIE "");
-   }
-   
-   {
-      TR _tr("Branch parameter 6 not one of ours");
-      Data txt("=z9hG4bK" RESIP_COOKIE "");
-      ParseBuffer pb(txt.data(), txt.size());
-
-      BranchParameter bpcc(ParameterTypes::branch, pb, ";");
-      assert(bpcc.hasMagicCookie());
-      assert(bpcc.getTransactionId() == "" RESIP_COOKIE "");
-
-      Data o;
-      {
-         DataStream s(o);
-         bpcc.encode(s);
-      }
-      resipCerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK" RESIP_COOKIE "");
+      assert(o == "branch=z9hG4bK" RESIP_COOKIE "14---3e565-ef7w-17.1.2.3");
    }
 
    {
       TR _tr("Branch parameter 7 empty ours");
-      Data txt("=z9hG4bK" RESIP_COOKIE "-1--" RESIP_COOKIE "");
+      Data txt("=z9hG4bK" RESIP_COOKIE "1---");
       ParseBuffer pb(txt.data(), txt.size());
 
-      BranchParameter bpcc(ParameterTypes::branch, pb, ";");
+      BranchParameter bpcc(ParameterTypes::branch, pb, Data::toBitset(";"));
       assert(bpcc.hasMagicCookie());
       assert(bpcc.getTransactionId() == "");
 
@@ -1931,17 +1908,17 @@ main(int arc, char** argv)
          bpcc.encode(s);
       }
       resipCerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK" RESIP_COOKIE "-1--" RESIP_COOKIE "");
+      assert(o == "branch=z9hG4bK" RESIP_COOKIE "1---");
    }
 
    {
       TR _tr("Branch parameter 8 badly formed ours");
-      Data txt("=z9hG4bK" RESIP_COOKIE "------" RESIP_COOKIE "");
+      Data txt("=z9hG4bK" RESIP_COOKIE "------");
       ParseBuffer pb(txt.data(), txt.size());
 
       try
       {
-         BranchParameter bpcc(ParameterTypes::branch, pb, ";");
+         BranchParameter bpcc(ParameterTypes::branch, pb, Data::toBitset(";"));
          assert(bpcc.hasMagicCookie());
          bpcc.getTransactionId();
          assert(false);
@@ -1954,15 +1931,15 @@ main(int arc, char** argv)
    {
       TR _tr("Branch parameter 9");
 
-      Data txt("=z9hG4bK" RESIP_COOKIE "5b42cb698e8c6827790212ac5bdade1a-1-UEEzMjc2OA..-" RESIP_COOKIE ";rport;received=64.124.66.32");
+      Data txt("=z9hG4bK" RESIP_COOKIE "1-UEEzMjc2OA..--5b42cb698e8c6827790212ac5bdade1a;rport;received=64.124.66.32");
       ParseBuffer pb(txt.data(), txt.size());
-      BranchParameter bp(ParameterTypes::branch, pb, ";");
+      BranchParameter bp(ParameterTypes::branch, pb, Data::toBitset(";"));
       assert(bp.hasMagicCookie());
       assert(bp.getTransactionId() == "5b42cb698e8c6827790212ac5bdade1a");
       resipCerr << "!! " << bp.clientData() << endl;
       assert(bp.clientData() == "PA32768");
       
-      bp.encode(resipCerr); cerr << endl;
+      bp.encode(resipCerr); resipCerr << endl;
    }
 
    {
@@ -1970,7 +1947,7 @@ main(int arc, char** argv)
 
       Data txt("=z9hG4bk15775865934415"); //little k
       ParseBuffer pb(txt.data(), txt.size());
-      BranchParameter bp(ParameterTypes::branch, pb, ";");
+      BranchParameter bp(ParameterTypes::branch, pb, Data::toBitset(";"));
       assert(bp.hasMagicCookie());
       
       assert(bp.getTransactionId() == "15775865934415");
@@ -1996,7 +1973,7 @@ main(int arc, char** argv)
       Data txt2("=z9hG4bk1577234fhg8df");
       ParseBuffer pb2(txt2.data(), txt2.size());
 
-      BranchParameter bpAssignOp(ParameterTypes::branch, pb2, ";");      
+      BranchParameter bpAssignOp(ParameterTypes::branch, pb2, Data::toBitset(";"));
       bpAssignOp = bp;
       
       Data encAssignOp;
@@ -2013,7 +1990,7 @@ main(int arc, char** argv)
       TR _tr("Branch testing 1");
       const char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70";
       HeaderFieldValue hfv(viaString, strlen(viaString));
-      Via via(&hfv, Headers::UNKNOWN);
+      Via via(hfv, Headers::UNKNOWN);
       
       assert (via.param(p_branch).hasMagicCookie());
       assert (via.param(p_branch).getTransactionId() == "wkl3lkjsdfjklsdjklfdsjlkdklj");
@@ -2030,7 +2007,7 @@ main(int arc, char** argv)
       TR _tr("Branch testing 2");
       const char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70;rport";
       HeaderFieldValue hfv(viaString, strlen(viaString));
-      Via via(&hfv, Headers::UNKNOWN);
+      Via via(hfv, Headers::UNKNOWN);
       
       assert (via.param(p_branch).hasMagicCookie());
       assert (via.param(p_branch).getTransactionId() == "wkl3lkjsdfjklsdjklfdsjlkdklj");
@@ -2043,7 +2020,7 @@ main(int arc, char** argv)
       TR _tr("Branch testing 3");
       const char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70;rport=100";
       HeaderFieldValue hfv(viaString, strlen(viaString));
-      Via via(&hfv, Headers::UNKNOWN);
+      Via via(hfv, Headers::UNKNOWN);
       
       assert (via.param(p_branch).hasMagicCookie());
       assert (via.param(p_branch).getTransactionId() == "wkl3lkjsdfjklsdjklfdsjlkdklj");
@@ -2055,11 +2032,11 @@ main(int arc, char** argv)
 
    {
       TR _tr("Branch testing 4 with clientData");
-      Data txt("=z9hG4bK" RESIP_COOKIE "T-i-D-314-Q2xpZW50RGF0YQ..-" RESIP_COOKIE "");
+      Data txt("=z9hG4bK" RESIP_COOKIE "314-Q2xpZW50RGF0YQ..--T-i-D");
 
       ParseBuffer pb(txt.data(), txt.size());
 
-      BranchParameter bpcc(ParameterTypes::branch, pb, ";");
+      BranchParameter bpcc(ParameterTypes::branch, pb, Data::toBitset(";"));
       assert (bpcc.getTransactionId() == "T-i-D");
       assert (bpcc.clientData() == "ClientData");
 
@@ -2068,17 +2045,17 @@ main(int arc, char** argv)
          DataStream s(o);
          bpcc.encode(s);
       }
-      // cerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK" RESIP_COOKIE "T-i-D-314-Q2xpZW50RGF0YQ..-" RESIP_COOKIE "");
+      // resipCerr << "!! " << o << endl;
+      assert(o == "branch=z9hG4bK" RESIP_COOKIE "314-Q2xpZW50RGF0YQ..--T-i-D");
    }
 
    {
       TR _tr("Branch testing 5 with sigcomp ID");
-      Data txt("=z9hG4bK" RESIP_COOKIE "T-i-D-314--PHVybjp1dWlkOmZhMzNjNzJkLTEyMWYtNDdlOC00MmUyLTFlYjZlMjRhYmE2ND4." RESIP_COOKIE "");
+      Data txt("=z9hG4bK" RESIP_COOKIE "314--PHVybjp1dWlkOmZhMzNjNzJkLTEyMWYtNDdlOC00MmUyLTFlYjZlMjRhYmE2ND4.-T-i-D");
 
       ParseBuffer pb(txt.data(), txt.size());
 
-      BranchParameter bpcc(ParameterTypes::branch, pb, ";");
+      BranchParameter bpcc(ParameterTypes::branch, pb, Data::toBitset(";"));
       assert (bpcc.getTransactionId() == "T-i-D");
       assert (bpcc.clientData() == "");
       assert (bpcc.getSigcompCompartment() == "<urn:uuid:fa33c72d-121f-47e8-42e2-1eb6e24aba64>");
@@ -2090,17 +2067,17 @@ main(int arc, char** argv)
          DataStream s(o);
          bpcc.encode(s);
       }
-//      cerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK" RESIP_COOKIE "T-i-D-314--PHVybjp1dWlkOmZhMzNjNzJkLTEyMWYtNDdlOC00MmUyLTFlYjZlMjRhYmE2ND4." RESIP_COOKIE "");
+//      resipCerr << "!! " << o << endl;
+      assert(o == "branch=z9hG4bK" RESIP_COOKIE "314--PHVybjp1dWlkOmZhMzNjNzJkLTEyMWYtNDdlOC00MmUyLTFlYjZlMjRhYmE2ND4.-T-i-D");
    }
 
    {
       TR _tr("Branch testing 6 with sigcomp ID and Client Data");
-      Data txt("=z9hG4bK" RESIP_COOKIE "T-i-D-314-Q2xpZW50RGF0YQ..-PHVybjp1dWlkOmZhMzNjNzJkLTEyMWYtNDdlOC00MmUyLTFlYjZlMjRhYmE2ND4." RESIP_COOKIE "");
+      Data txt("=z9hG4bK" RESIP_COOKIE "314-Q2xpZW50RGF0YQ..-PHVybjp1dWlkOmZhMzNjNzJkLTEyMWYtNDdlOC00MmUyLTFlYjZlMjRhYmE2ND4.-T-i-D");
 
       ParseBuffer pb(txt.data(), txt.size());
 
-      BranchParameter bpcc(ParameterTypes::branch, pb, ";");
+      BranchParameter bpcc(ParameterTypes::branch, pb, Data::toBitset(";"));
       assert (bpcc.getTransactionId() == "T-i-D");
       assert (bpcc.clientData() == "ClientData");
       assert (bpcc.getSigcompCompartment() == "<urn:uuid:fa33c72d-121f-47e8-42e2-1eb6e24aba64>");
@@ -2112,8 +2089,8 @@ main(int arc, char** argv)
          DataStream s(o);
          bpcc.encode(s);
       }
-      // cerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK" RESIP_COOKIE "T-i-D-314-Q2xpZW50RGF0YQ..-PHVybjp1dWlkOmZhMzNjNzJkLTEyMWYtNDdlOC00MmUyLTFlYjZlMjRhYmE2ND4." RESIP_COOKIE "");
+      // resipCerr << "!! " << o << endl;
+      assert(o == "branch=z9hG4bK" RESIP_COOKIE "314-Q2xpZW50RGF0YQ..-PHVybjp1dWlkOmZhMzNjNzJkLTEyMWYtNDdlOC00MmUyLTFlYjZlMjRhYmE2ND4.-T-i-D");
    }
 
    //3329 tests
@@ -2122,7 +2099,7 @@ main(int arc, char** argv)
       const char *org = "digest;d-alg=md5";
       
       HeaderFieldValue hfv(org, strlen(org));
-      Token tok(&hfv, Headers::UNKNOWN);
+      Token tok(hfv, Headers::UNKNOWN);
       assert(tok.value() == "digest");
       assert(tok.param(p_dAlg) == "md5");
    }
@@ -2132,7 +2109,7 @@ main(int arc, char** argv)
       const char *org = "digest;d-qop=verify";
       
       HeaderFieldValue hfv(org, strlen(org));
-      Token tok(&hfv, Headers::UNKNOWN);
+      Token tok(hfv, Headers::UNKNOWN);
       assert(tok.value() == "digest");
       assert(tok.param(p_dQop) == "verify");
    }
@@ -2142,7 +2119,7 @@ main(int arc, char** argv)
       const char *org = "digest;d-ver=\"0000000000000000000000000000abcd\"";
       
       HeaderFieldValue hfv(org, strlen(org));
-      Token tok(&hfv, Headers::UNKNOWN);
+      Token tok(hfv, Headers::UNKNOWN);
       assert(tok.value() == "digest");
       assert(tok.param(p_dVer) == "0000000000000000000000000000abcd");
    }
@@ -2152,7 +2129,7 @@ main(int arc, char** argv)
       Data cseqString("1 INVITE");
       HeaderFieldValue hfv(cseqString.data(), cseqString.size());
       
-      CSeqCategory str(&hfv, Headers::UNKNOWN);
+      CSeqCategory str(hfv, Headers::UNKNOWN);
       assert(str.sequence() == 1);
       assert(str.method() == INVITE);
       assert(Data::from(str) == cseqString);
@@ -2163,7 +2140,7 @@ main(int arc, char** argv)
       Data cseqString("4294967295 INVITE");
       HeaderFieldValue hfv(cseqString.data(), cseqString.size());
       
-      CSeqCategory str(&hfv, Headers::UNKNOWN);
+      CSeqCategory str(hfv, Headers::UNKNOWN);
       assert(str.sequence() == 4294967295U);
       assert(str.method() == INVITE);
       assert(Data::from(str) == cseqString);
@@ -2174,7 +2151,7 @@ main(int arc, char** argv)
       Data rackString("1 2 INVITE");
       HeaderFieldValue hfv(rackString.data(), rackString.size());
       
-      RAckCategory str(&hfv, Headers::UNKNOWN);
+      RAckCategory str(hfv, Headers::UNKNOWN);
       assert(str.rSequence() == 1);
       assert(str.cSequence() == 2);
       assert(str.method() == INVITE);
@@ -2186,7 +2163,7 @@ main(int arc, char** argv)
       Data rackString("4294967294 4294967295 INVITE");
       HeaderFieldValue hfv(rackString.data(), rackString.size());
       
-      RAckCategory str(&hfv, Headers::UNKNOWN);
+      RAckCategory str(hfv, Headers::UNKNOWN);
       assert(str.rSequence() == 4294967294U);
       assert(str.cSequence() == 4294967295U);
       assert(str.method() == INVITE);
@@ -2198,7 +2175,7 @@ main(int arc, char** argv)
       Data privacy("user;session;critical");
       HeaderFieldValue hfv(privacy.data(), privacy.size());
       
-      PrivacyCategory test(&hfv, Headers::UNKNOWN);
+      PrivacyCategory test(hfv, Headers::UNKNOWN);
       assert(test.value().size()==3);
       assert(test.value().back()=="critical");
       test.value().pop_back();
@@ -2213,7 +2190,7 @@ main(int arc, char** argv)
       Data privacy("user; session;   critical  ");
       HeaderFieldValue hfv(privacy.data(), privacy.size());
       
-      PrivacyCategory test(&hfv, Headers::UNKNOWN);
+      PrivacyCategory test(hfv, Headers::UNKNOWN);
       assert(test.value().size()==3);
       assert(test.value().back()=="critical");
       test.value().pop_back();
@@ -2228,13 +2205,778 @@ main(int arc, char** argv)
       Data privacy("user");
       HeaderFieldValue hfv(privacy.data(), privacy.size());
       
-      PrivacyCategory test(&hfv, Headers::UNKNOWN);
+      PrivacyCategory test(hfv, Headers::UNKNOWN);
       assert(test.value().size()==1);
       assert(test.value().back()=="user");
       test.value().pop_back();
    }
 
-   cerr << "\nTEST OK" << endl;
+   // Performance tests
+
+   {
+      resip::Data test("Raw header-field-value creation/deletion");
+      cout << endl << test << endl;
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         HeaderFieldValue hfv(test.data(), test.size());
+//         (hfv, Headers::UNKNOWN);
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   // Auth
+   {
+      resip::Data test("Auth creation/deletion");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         Auth auth(hfv, Headers::UNKNOWN);
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("Digest nonce=\"1305231689:fed475e952ee1d3ecaf60b17bce12218\",algorithm=MD5,realm=\"localhost\",qop=\"auth,auth-int\"");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         Auth auth(hfv, Headers::UNKNOWN);
+         auth.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      Auth pc(hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("Digest username=\"derek\",realm=\"localhost\",nonce=\"1305231689:fed475e952ee1d3ecaf60b17bce12218\",uri=\"sip:jason@localhost\",response=\"88f519f04c2a09c500af88ff7bccdf52\",cnonce=\"foo\",nc=0000005D,qop=auth-int,algorithm=MD5");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         Auth auth(hfv, Headers::UNKNOWN);
+         auth.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      Auth pc(hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   // CSeq
+   {
+      resip::Data test("CSeq creation/deletion");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         CSeqCategory cseq(hfv, Headers::UNKNOWN);
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("9872643 INVITE");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         CSeqCategory cseq(hfv, Headers::UNKNOWN);
+         cseq.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      CSeqCategory pc(hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("1 INVITE");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         CSeqCategory cseq(hfv, Headers::UNKNOWN);
+         cseq.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      CSeqCategory pc(hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+
+   // CallId
+   {
+      resip::Data test("CallId creation/deletion");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         CallId callid(hfv, Headers::UNKNOWN);
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("NOIUYCEOGoIUBaocuwyVCopiuVAbcs");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         CallId callid(hfv, Headers::UNKNOWN);
+         callid.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      CallId pc(hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+
+   // Date
+   {
+      resip::Data test("Date creation/deletion");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         DateCategory date(hfv, Headers::UNKNOWN);
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("Thu, 21 Feb 2002 13:02:03 GMT");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         DateCategory date(hfv, Headers::UNKNOWN);
+         date.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      DateCategory pc(hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+
+   // Expires
+   {
+      resip::Data test("Expires creation/deletion");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         ExpiresCategory pc(hfv, Headers::UNKNOWN);
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("3600");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         ExpiresCategory pc(hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      ExpiresCategory pc(hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+
+   // Mime
+   {
+      resip::Data test("Mime creation/deletion");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         Mime pc(hfv, Headers::UNKNOWN);
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+   
+   {
+      resip::Data test("application/rlmi+xml");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         Mime pc(hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      Mime pc(hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+   
+   {
+      resip::Data test("application/sdp");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         Mime pc(hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      Mime pc(hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+   
+   
+   // NameAddr
+   {
+      resip::Data test("NameAddr creation/deletion");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         NameAddr pc(hfv, Headers::UNKNOWN);
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("<sip:rls.example.com>");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         NameAddr pc(hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      NameAddr pc(hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("<sip:rls.example.com;lr>");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         NameAddr pc(hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      NameAddr pc(hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("<sipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsip:rls.example.com;lr>");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         NameAddr pc(hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      NameAddr pc(hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data strangeUser("работающий");
+      strangeUser=strangeUser.charEncoded();
+      resip::Data test("<sip:" + strangeUser+ "@example.com;lr>");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         NameAddr pc(hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      NameAddr pc(hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test(" \"Derek\" <sip:derek@localhost>;tag=16d1246e");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         NameAddr pc(hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      NameAddr pc(hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("<sip:line1@192.0.2.2;transport=tcp>; reg-id=1;+sip.instance=\"<urn:uuid:00000000-0000-1000-8000-000A95A0E128>\"");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         NameAddr pc(hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      NameAddr pc(hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("<sip:line1@192.0.2.2:5060;transport=tcp>; reg-id=1;+sip.instance=\"<urn:uuid:00000000-0000-1000-8000-000A95A0E128>\"");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         NameAddr pc(hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      NameAddr pc(hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+
+   // RequestLine
+   {
+      resip::Data test("RequestLine creation/deletion");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         RequestLine pc(hfv);
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("INVITE sip:bob@example.com SIP/2.0");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         RequestLine pc(hfv);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      RequestLine pc(hfv);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("UNKNOWN sip:bob@example.com SIP/2.0");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         RequestLine pc(hfv);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      RequestLine pc(hfv);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+
+   // StatusLine
+   {
+      resip::Data test("StatusLine creation/deletion");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         StatusLine pc(hfv);
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("SIP/2.0 200 OK");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         StatusLine pc(hfv);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      StatusLine pc(hfv);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("SIP/2.0 200 OKokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokok");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         StatusLine pc(hfv);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      StatusLine pc(hfv);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("NOTSIP/2.0 200 OK");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         StatusLine pc(hfv);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      StatusLine pc(hfv);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+
+   // Via
+   {
+      resip::Data test("Via creation/deletion");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         Via pc(hfv, Headers::UNKNOWN);
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("SIP/2.0/TCP 127.0.0.1:5060;branch=z9hG4bK-524287-1---307cd5596615cb2e;rport");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         Via pc(hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      Via pc(hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+
+   {
+      resip::Data test("");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         Token pc(hfv, Headers::UNKNOWN);
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   {
+      resip::Data test("");
+      cout << endl << test << endl;
+      HeaderFieldValue hfv(test.data(), test.size());
+      UInt64 now(Timer::getTimeMicroSec());
+      for(int i=0; i<10000000; ++i)
+      {
+         Token pc(hfv, Headers::UNKNOWN);
+         pc.checkParsed();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+      cout << "encodes:" << endl;
+      Token pc(hfv, Headers::UNKNOWN);
+      pc.checkParsed();
+      Data buffer;
+      oDataStream str(buffer);
+      now=Timer::getTimeMicroSec();
+      for(int i=0; i<10000000; ++i)
+      {
+         pc.encode(str);
+         str.flush();
+         str.reset();
+      }
+      cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
+   }
+
+   resipCerr << "\nTEST OK" << endl;
 
    return 0;
 }

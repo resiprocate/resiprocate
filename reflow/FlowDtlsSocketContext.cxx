@@ -1,11 +1,11 @@
 #ifdef USE_SSL
+#include <rutil/Log.hxx>
+#include <rutil/Logger.hxx>
+#include <rutil/Timer.hxx>
 
 #include <asio.hpp>
 #include <boost/function.hpp>
 #include <iostream>
-
-#include <rutil/Log.hxx>
-#include <rutil/Logger.hxx>
 
 #include "FlowDtlsSocketContext.hxx"
 #include "FlowManagerSubsystem.hxx"

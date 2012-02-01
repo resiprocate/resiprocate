@@ -67,7 +67,7 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>winmm.lib;$(ProjectDir)..\contrib\openssl\out32.dbg\libeay32.lib;$(ProjectDir)..\contrib\openssl\out32.dbg\ssleay32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>winmm.lib;$(ProjectDir)..\contrib\openssl\lib\vc\static\libeay32MDd.lib;$(ProjectDir)..\contrib\openssl\lib\vc\static\ssleay32MDd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)reTurnServer.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)reTurnServer.pdb</ProgramDatabaseFile>
@@ -128,6 +128,7 @@
     <ClCompile Include="TurnPermission.cxx" />
     <ClCompile Include="UdpRelayServer.cxx" />
     <ClCompile Include="UdpServer.cxx" />
+    <ClCompile Include="UserAuthData.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AsyncSocketBase.hxx" />
@@ -299,6 +300,7 @@
     <ClInclude Include="..\contrib\asio\asio\ssl\detail\openssl_operation.hpp" />
     <ClInclude Include="..\contrib\asio\asio\ssl\detail\openssl_stream_service.hpp" />
     <ClInclude Include="..\contrib\asio\asio\ssl\detail\openssl_types.hpp" />
+    <ClInclude Include="UserAuthData.hxx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.txt" />

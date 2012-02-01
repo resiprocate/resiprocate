@@ -17,25 +17,79 @@ namespace resip
 {
 
 /**
+@brief wraps an object with a timestamp
+@internal
+*/
+template<typename Payload>
+class Timestamped
+{
+   public:
+      Timestamped(const Payload& msg, time_t n)
+         : mMsg(msg),
+           mTime(n)
+      {}
+
+      inline const Payload& getMsg() const { return mMsg;} 
+      inline void setMsg(const Payload& pMsg) { mMsg = pMsg;}
+      inline const time_t& getTime() const { return mTime;} 
+
+   private:
+      Payload mMsg;
+      time_t mTime;
+};
+
+/**
    @brief A templated, threadsafe message-queue class that enforces constraints
       on time-depth.
+   @ingroup data_structures
+   @example
+   @code
+      TimeLimitFifo<Foo> tlf(5, 10); // 5 seconds or 10 count limit
+      //
+      // where Foo is defined as:
+      // class Foo
+      // {
+      //    public:
+      //       Foo(const Data& val) : mVal(val) {}
+      //       Data mVal;
+      // };
+      //
+
+      assert(tlf.empty());
+      assert(tlf.size() == 0);
+      assert(tlf.timeDepth() == 0);
+
+      c = tlf.add(new Foo("first"), TimeLimitFifo<Foo>::EnforceTimeDepth);
+      assert(c);
+
+      // no longer empty
+      assert(!tlf.empty());
+      assert(tlf.size() == 1);
+      assert(tlf.timeDepth() == 0);
+
+      sleepMS(2000);
+
+      // still not empty
+      assert(!tlf.empty());
+      assert(tlf.size() == 1);
+      assert(tlf.timeDepth() > 1);
+
+      if (tlf.messageAvailable())
+        delete tlf.getNext();
+
+      // Foo* fp = tlf.getNext();
+      // assert (fp->mVal == "first")
+      // delete fp ;
+
+      // now its empty
+      assert(tlf.empty());
+      assert(tlf.size() == 0);
+      assert(tlf.timeDepth() == 0);
+   @endcode
 */
 template <class Msg>
-class TimeLimitFifo : public AbstractFifo
+class TimeLimitFifo : public AbstractFifo< Timestamped<Msg*> >
 {
-   private:
-      class Timestamped
-      {
-         public:
-            Timestamped(Msg* msg, time_t n)
-               : mMsg(msg),
-                 mTime(n)
-            {}
-
-            Msg* mMsg;
-            time_t mTime;
-      };
-
    public:
       typedef enum {EnforceTimeDepth, IgnoreTimeDepth, InternalElement} DepthUsage;
 
@@ -44,8 +98,15 @@ class TimeLimitFifo : public AbstractFifo
                     unsigned int maxSize);
 
       virtual ~TimeLimitFifo();
-      
-      /// Add a message to the fifo.
+
+      using AbstractFifo< Timestamped<Msg*> >::mFifo;
+      using AbstractFifo< Timestamped<Msg*> >::mMutex;
+      using AbstractFifo< Timestamped<Msg*> >::mCondition;
+      using AbstractFifo< Timestamped<Msg*> >::empty;
+      using AbstractFifo< Timestamped<Msg*> >::size;
+      using AbstractFifo< Timestamped<Msg*> >::onMessagePushed;
+
+      /// @brief Add a message to the fifo.
       /// return true iff succeeds
 	  /// @param Msg* 'Message pointer'
       /// @param DepthUsage : (Needs work...)
@@ -66,25 +127,84 @@ class TimeLimitFifo : public AbstractFifo
 	  ///
 	  bool add(Msg* msg, DepthUsage usage);
 
-      /** Returns the first message available. It will wait if no
-       *  messages are available. If a signal interrupts the wait,
-       *  it will retry the wait. Signals can therefore not be caught
-       *  via getNext. If you need to detect a signal, use block
-       *  prior to calling getNext.
+      /** 
+         @brief Returns the first message available. 
+
+         @note It will wait if no messages are available. If a signal interrupts 
+         the wait, it will retry the wait. Signals can therefore not be 
+         caught via getNext. If you need to detect a signal, use block
+         prior to calling getNext.
+         
+         @return the next message in the queue
        **/
       Msg* getNext();
+      /** 
+         @brief Returns the first message available within a time limit
+         @param ms the maximum amount of time to wait in milliseconds for a message
+         @note It will wait if no messages are available. If a signal interrupts 
+         the wait, it will retry the wait. Signals can therefore not be 
+         caught via getNext. If you need to detect a signal, use block
+         prior to calling getNext.
+         
+         @return the next message in the queue, or NULL if the time limit elapses
+       **/
       Msg* getNext(int ms);
       
-      /// Return the time depth of the queue. Zero if no depth.
+      /** 
+         @brief Return the time depth of the queue
+         @return the time delta between the youngest and oldest queue members
+      */
       virtual time_t timeDepth() const;
 
-      /// would an add called now work?
+      
+      /** 
+         @brief would an add called now work?
+         @param usage what depth policy should be used to determine if the call would work
+         @return true if an add called now would work
+         @sa DepthUsage
+      */
       bool wouldAccept(DepthUsage usage) const;
 
+      /**
+        @brief removes all items from the FIFO
+      */
       void clear();
 
+      /**
+        @brief gets the depth of the FIFO
+        @return the depth of the FIFO
+      */
       virtual size_t getCountDepth() const;
+      /** 
+         @brief Return the time depth of the queue
+         @return the time delta between the youngest and oldest queue members
+         @note equivalent to timeDepth()
+      */
       virtual time_t getTimeDepth() const;
+      /**
+      @brief returns the FIFO count depth tolerance
+      @return the FIFO count depth tolerance
+      */
+      virtual size_t getCountDepthTolerance() const;
+      /**
+      @brief returns the FIFO time depth tolerance
+      @return the FIFO time depth tolerance
+      */      
+      virtual time_t getTimeDepthTolerance() const;
+      /**
+      @brief set the count depth tolerance of the FIFO
+      @todo getCountDepthTolerance returns a size_t and this takes an
+      unsigned int, f.setCountDepthTolerance(f.getCountDepthTolerance())
+      will fail to compile on many systems [!]
+      @param max the new count depth tolerance of the FIFO
+      */
+      virtual void setCountDepthTolerance(unsigned int max);
+      /**
+      @brief set the time depth tolerance of the FIFO
+      @param maxSec the maximum time depth tolerance
+      @todo examine parallelism in units [!]
+      */
+      virtual void setTimeDepthTolerance(unsigned int maxSecs);
 
    private:
       time_t timeDepthInternal() const;
@@ -93,14 +213,16 @@ class TimeLimitFifo : public AbstractFifo
       TimeLimitFifo& operator=(const TimeLimitFifo& rhs);
 
       time_t mMaxDurationSecs;
+      unsigned int mMaxSize;
       unsigned int mUnreservedMaxSize;
 };
 
 template <class Msg>
 TimeLimitFifo<Msg>::TimeLimitFifo(unsigned int maxDurationSecs,
                                   unsigned int maxSize)
-   : AbstractFifo(maxSize),
+   : AbstractFifo< Timestamped<Msg*> >(),
      mMaxDurationSecs(maxDurationSecs),
+     mMaxSize(maxSize),
      mUnreservedMaxSize((int)((maxSize*8)/10)) // !dlb! random guess
 {}
 
@@ -109,7 +231,6 @@ TimeLimitFifo<Msg>::~TimeLimitFifo()
 {
    clear();
    assert(empty());
-   mSize = 0UL - 1;
 }
 
 template <class Msg>
@@ -122,8 +243,8 @@ TimeLimitFifo<Msg>::add(Msg* msg,
    if (wouldAcceptInteral(usage))
    {
       time_t n = time(0);
-      mFifo.push_back(new Timestamped(msg, n));
-      mSize++;
+      mFifo.push_back(Timestamped<Msg*>(msg, n));
+      onMessagePushed(1);
       mCondition.signal();
       return true;
    }
@@ -146,41 +267,40 @@ template <class Msg>
 Msg*
 TimeLimitFifo<Msg>::getNext()
 {
-   std::auto_ptr<Timestamped> tm(static_cast<Timestamped*>(AbstractFifo::getNext()));
-   return tm->mMsg;
+   Timestamped<Msg*> tm(AbstractFifo< Timestamped<Msg*> >::getNext());
+   return tm.getMsg();
 }
 
 template <class Msg>
 Msg*
 TimeLimitFifo<Msg>::getNext(int ms)
 {
-   std::auto_ptr<Timestamped> tm(static_cast<Timestamped*>(AbstractFifo::getNext(ms)));
-   if (tm.get())
+   Timestamped<Msg*> tm(0,0);
+   if(AbstractFifo< Timestamped<Msg*> >::getNext(ms, tm))
    {
-      return tm->mMsg;
+      return tm.getMsg();
    }
-   else
-   {
-      return 0;
-   }
+   return 0;
 }
 
 template <class Msg>
 time_t
 TimeLimitFifo<Msg>::timeDepthInternal() const
 {
-   assert(!mFifo.empty());
+   if(mFifo.empty())
+   {
+      return 0;
+   }
 
-   Timestamped* tm = static_cast<Timestamped*>(mFifo.front());
-   return time(0) - tm->mTime;
-}   
+   return time(0) - mFifo.front().getTime();
+}
 
 template <class Msg>
 bool
 TimeLimitFifo<Msg>::wouldAcceptInteral(DepthUsage usage) const
 {
    if ((mMaxSize != 0 &&
-        mSize >= mMaxSize))
+        mFifo.size() >= mMaxSize))
    {
       return false;
    }
@@ -191,7 +311,7 @@ TimeLimitFifo<Msg>::wouldAcceptInteral(DepthUsage usage) const
    }
 
    if (mUnreservedMaxSize != 0 &&
-       mSize >= mUnreservedMaxSize)
+       mFifo.size() >= mUnreservedMaxSize)
    {
       return false;
    }
@@ -203,7 +323,7 @@ TimeLimitFifo<Msg>::wouldAcceptInteral(DepthUsage usage) const
 
    assert(usage == EnforceTimeDepth);
 
-   if (mSize == 0 ||
+   if (mFifo.size() == 0 ||
        mMaxDurationSecs == 0 ||
        timeDepthInternal() < mMaxDurationSecs)
    {
@@ -218,15 +338,8 @@ time_t
 TimeLimitFifo<Msg>::timeDepth() const
 {
    Lock lock(mMutex); (void)lock;
-
-   if (mFifo.empty())
-   {
-      return 0;
-   }
-
-   Timestamped* tm = static_cast<Timestamped*>(mFifo.front());
-   return time(0) - tm->mTime;
-}   
+   return timeDepthInternal();
+}
 
 template <class Msg>
 void
@@ -236,14 +349,10 @@ TimeLimitFifo<Msg>::clear()
 
    while (!mFifo.empty())
    {
-      Timestamped* tm = static_cast<Timestamped*>(mFifo.front());
-      delete tm->mMsg;
-      delete tm;
-
+      delete mFifo.front().getMsg();
       mFifo.pop_front();
    }
-   mSize = 0;
-}   
+}
 
 template <class Msg>
 size_t
@@ -253,11 +362,43 @@ TimeLimitFifo<Msg>::getCountDepth() const
 }
 
 template <class Msg>
+size_t
+TimeLimitFifo<Msg>::getCountDepthTolerance() const
+{
+   return mUnreservedMaxSize;
+}
+
+template <class Msg>
 time_t 
 TimeLimitFifo<Msg>::getTimeDepth() const
 {
    return timeDepth();
 }
+
+template <class Msg>
+time_t
+TimeLimitFifo<Msg>::getTimeDepthTolerance() const
+{
+   return mMaxDurationSecs;
+}
+
+template <class Msg>
+void
+TimeLimitFifo<Msg>::setCountDepthTolerance(unsigned int maxCount)
+{
+   Lock lock(mMutex); (void)lock;
+   mUnreservedMaxSize=int(maxCount * 0.8);
+}
+
+template <class Msg>
+void
+TimeLimitFifo<Msg>::setTimeDepthTolerance(unsigned int maxSecs)
+{
+   Lock lock(mMutex); (void)lock;
+
+   mMaxDurationSecs=maxSecs;
+}
+
 
 } // namespace resip
 

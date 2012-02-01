@@ -6,8 +6,10 @@
 #include <map>
 #include <set>
 
+#include "rutil/FdPoll.hxx"
 #include "rutil/Fifo.hxx"
 #include "rutil/GenericIPAddress.hxx"
+#include "rutil/SelectInterruptor.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/dns/DnsResourceRecord.hxx"
 #include "rutil/dns/DnsAAAARecord.hxx"
@@ -164,9 +166,10 @@ class DnsStub : public ExternalDnsHandler
 
       virtual void handleDnsRaw(ExternalDnsRawResult);
 
-      void process(FdSet& fdset);
-      unsigned int getTimeTillNextProcessMS();
-      void buildFdSet(FdSet& fdset);
+      virtual void process(FdSet& fdset);
+      virtual unsigned int getTimeTillNextProcessMS();
+      virtual void buildFdSet(FdSet& fdset);
+      void setPollGrp(FdPollGrp* pollGrp);
 
       void processTimers();
   private:
@@ -354,6 +357,9 @@ class DnsStub : public ExternalDnsHandler
             DnsStub& mStub;
       };
 
+      SelectInterruptor mSelectInterruptor;
+      FdPollItemHandle mInterruptorHandle;
+
       resip::Fifo<Command> mCommandFifo;
 
       const unsigned char* skipDNSQuestion(const unsigned char *aptr,
@@ -370,6 +376,7 @@ class DnsStub : public ExternalDnsHandler
 
       ResultTransform* mTransform;
       ExternalDns* mDnsProvider;
+      FdPollGrp* mPollGrp;
       std::set<Query*> mQueries;
 
       std::vector<Data> mEnumSuffixes; // where to do enum lookups

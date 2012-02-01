@@ -5,24 +5,34 @@
 
 #include "resip/stack/ParameterTypeEnums.hxx"
 #include "resip/stack/Parameter.hxx"
+#include "rutil/PoolBase.hxx"
 
 namespace resip
 {
 
 class ParseBuffer;
 
+/**
+   @ingroup sip_grammar
+
+   @brief Represents the "response-port" element of the SIP grammar
+   (as extended in RFC 3581).
+*/
 class RportParameter : public Parameter
 {
    public:
       typedef RportParameter Type;
 
-      RportParameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);
+      RportParameter(ParameterTypes::Type, ParseBuffer& pb, const std::bitset<256>& terminators);
       RportParameter(ParameterTypes::Type type, int value);
       explicit RportParameter(ParameterTypes::Type type);
       
-      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+      static Parameter* decode(ParameterTypes::Type type, 
+                                 ParseBuffer& pb, 
+                                 const std::bitset<256>& terminators,
+                                 PoolBase* pool)
       {
-         return new RportParameter(type, pb, terminators);
+         return new (pool) RportParameter(type, pb, terminators);
       }
 
       int& port() {return mValue;}

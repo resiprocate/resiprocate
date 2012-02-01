@@ -21,8 +21,11 @@ class Token : public ParserCategory
 
       Token();
       explicit Token(const Data& d);
-      Token(HeaderFieldValue* hfv, Headers::Type type);
-      Token(const Token&);
+      Token(const HeaderFieldValue& hfv, 
+            Headers::Type type,
+            PoolBase* pool=0);
+      Token(const Token& orig,
+            PoolBase* pool=0);
       Token& operator=(const Token&);
       bool isEqual(const Token& rhs) const;
       bool operator==(const Token& rhs) const;
@@ -37,6 +40,9 @@ class Token : public ParserCategory
 
       virtual void parse(ParseBuffer& pb); // remember to call parseParameters()
       virtual ParserCategory* clone() const;
+      virtual ParserCategory* clone(void* location) const;
+      virtual ParserCategory* clone(PoolBase* pool) const;
+
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
 
       // Inform the compiler that overloads of these may be found in
@@ -45,7 +51,7 @@ class Token : public ParserCategory
       using ParserCategory::remove;
       using ParserCategory::param;
 
-      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators);
+      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool);
       bool exists(const Param<Token>& paramType) const;
       void remove(const Param<Token>& paramType);
 

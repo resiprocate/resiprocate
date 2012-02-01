@@ -209,14 +209,7 @@ int main(int argc, char *argv[])
       bool sent = false;
       while (!clientHandler.isEnded() || !clientHandler.isRcvd() )
       {
-         FdSet fdset;
-
-         clientStack.buildFdSet(fdset);
-
-         int err = fdset.selectMilliSeconds(100);
-         assert ( err != -1 );
-      
-         clientStack.process(fdset);
+         clientStack.process(100);
          while (clientDum.process());
 
          if (!sent && clientHandler.isRegistered())

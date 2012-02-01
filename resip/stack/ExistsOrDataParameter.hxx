@@ -4,6 +4,7 @@
 #include "resip/stack/Parameter.hxx"
 #include "resip/stack/ParameterTypeEnums.hxx"
 #include "resip/stack/QuotedDataParameter.hxx"
+#include "rutil/PoolBase.hxx"
 #include <iosfwd>
 
 namespace resip
@@ -17,11 +18,15 @@ class ExistsOrDataParameter : public DataParameter
       explicit ExistsOrDataParameter(ParameterTypes::Type);
       ExistsOrDataParameter(ParameterTypes::Type, bool);
 
-      ExistsOrDataParameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);
+      ExistsOrDataParameter(ParameterTypes::Type, ParseBuffer& pb, 
+                            const std::bitset<256>& terminators);
 
       virtual EncodeStream& encode(EncodeStream& stream) const;
 
-      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators);
+      static Parameter* decode(ParameterTypes::Type type, 
+                                 ParseBuffer& pb, 
+                                 const std::bitset<256>& terminators,
+                                 PoolBase* pool);
 
       virtual Parameter* clone() const;
       

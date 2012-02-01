@@ -281,7 +281,7 @@ UserAgent::onOfferRequired(InviteSessionHandle h, const SipMessage& msg)
 
    static HeaderFieldValue hfv(txt.data(), txt.size());
    static Mime type("application", "sdp");
-   static SdpContents sdp(&hfv, type);
+   static SdpContents sdp(hfv, type);
    h->provideOffer(sdp);
 }
 

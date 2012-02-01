@@ -67,6 +67,7 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
 #else
    DebugLog (<< "No compression library available: " << *this);
 #endif
+   mTxFifo.setDescription("UdpTransport::mTxFifo");
 }
 
 UdpTransport::~UdpTransport()
@@ -90,15 +91,28 @@ UdpTransport::~UdpTransport()
    {
       delete[] mRxBuffer;
    }
+   setPollGrp(0);
 }
 
 void
 UdpTransport::setPollGrp(FdPollGrp *grp)
 {
-   assert(mPollGrp==NULL && grp!=NULL);
-   mPollGrp = grp;
-   mPollItemHandle = mPollGrp->addPollItem(mFd, FPEM_Read, this);
-   // above released by InternalTransport destructor
+   if(mPollGrp)
+   {
+      mPollGrp->delPollItem(mPollItemHandle);
+      mPollItemHandle=0;
+   }
+
+   if(mFd!=INVALID_SOCKET && grp)
+   {
+      mPollItemHandle = grp->addPollItem(mFd, FPEM_Read, this);
+      // above released by InternalTransport destructor
+      // ?bwc? Is this really a good idea? If the InternalTransport d'tor is
+      // freeing this, shouldn't InternalTransport::setPollGrp() handle 
+      // creating it?
+   }
+
+   InternalTransport::setPollGrp(grp);
 }
 
 
@@ -106,7 +120,8 @@ UdpTransport::setPollGrp(FdPollGrp *grp)
  * Called after a message is added. Could try writing it now.
  */
 void
-UdpTransport::checkTransmitQueue() {
+UdpTransport::process() {
+   mStateMachineFifo.flush();
    if ( (mTransportFlags & RESIP_TRANSPORT_FLAG_TXNOW)!= 0 )
    {
        processTxAll();
@@ -122,7 +137,7 @@ void
 UdpTransport::updateEvents()
 {
    //assert( mPollGrp );
-   bool haveMsg = mTxFifo.messageAvailable();
+   bool haveMsg = mTxFifoOutBuffer.messageAvailable();
    if ( !mInWritable && haveMsg )
    {
       mPollGrp->modPollItem(mPollItemHandle, FPEM_Read|FPEM_Write);
@@ -171,7 +186,7 @@ UdpTransport::buildFdSet( FdSet& fdset )
 {
    fdset.setRead(mFd);
 
-   if (mTxFifo.messageAvailable())
+   if (mTxFifoOutBuffer.messageAvailable())
    {
       fdset.setWrite(mFd);
    }
@@ -193,6 +208,7 @@ UdpTransport::process(FdSet& fdset)
    {
       processRxAll();
    }
+   mStateMachineFifo.flush();
 }
 
 /**
@@ -205,7 +221,7 @@ UdpTransport::processTxAll()
 {
    SendData *msg;
    ++mTxTryCnt;
-   while ( (msg=mTxFifo.getNext(RESIP_FIFO_NOWAIT)) != NULL )
+   while ( (msg=mTxFifoOutBuffer.getNext(RESIP_FIFO_NOWAIT)) != NULL )
    {
       processTxOne(msg);
       // With UDP we don't need to worry about write blocking (I hope)
@@ -549,6 +565,7 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
 
    // Save all the info where this message came from
    sender.transport = this;
+   sender.transportKey = getKey();
    sender.mFlowKey=mTuple.mFlowKey;
    message->setSource(sender);
    //DebugLog (<< "Received from: " << sender);
@@ -593,6 +610,32 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
 
       message->setBody(buffer+used,len-used);
       //DebugLog(<<"added " << len-used << " byte body");
+   }
+
+   // .bwc. basicCheck takes up substantial CPU. Don't bother doing it
+   // if we're overloaded.
+   CongestionManager::RejectionBehavior behavior=getRejectionBehaviorForIncoming();
+   if (behavior==CongestionManager::REJECTING_NON_ESSENTIAL
+         || (behavior==CongestionManager::REJECTING_NEW_WORK
+            && message->isRequest()))
+   {
+      // .bwc. If this fifo is REJECTING_NEW_WORK, we will drop
+      // requests but not responses ( ?bwc? is this right for ACK?). 
+      // If we are REJECTING_NON_ESSENTIAL, 
+      // we reject all incoming work, since losing something from the 
+      // wire will not cause instability or leaks (see 
+      // CongestionManager.hxx)
+
+      // .bwc. This handles all appropriate checking for whether
+      // this is a response or an ACK.
+      std::auto_ptr<SendData> tryLater(make503(*message, getExpectedWaitForIncoming()/1000));
+      if(tryLater.get())
+      {
+         send(tryLater);
+      }
+     delete message; // dropping message due to congestion
+     message = 0;
+     return origBufferConsumed;
    }
 
    if (!basicCheck(*message))

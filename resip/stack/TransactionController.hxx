@@ -5,11 +5,15 @@
 #include "resip/stack/TransactionMap.hxx"
 #include "resip/stack/TransportSelector.hxx"
 #include "resip/stack/TimerQueue.hxx"
+#include "rutil/CongestionManager.hxx"
+
+#include "rutil/ConsumerFifoBuffer.hxx"
 
 namespace resip
 {
 
 class TransactionMessage;
+class TimerMessage;
 class ApplicationMessage;
 class StatisticsManager;
 class SipStack;
@@ -23,19 +27,15 @@ class TransactionController
       static unsigned int MaxTUFifoSize;
       static unsigned int MaxTUFifoTimeDepthSecs;
 
-      TransactionController(SipStack& stack, FdPollGrp *pollGrp);
+      TransactionController(SipStack& stack, 
+                              AsyncProcessHandler* handler);
       ~TransactionController();
 
-      void process(FdSet& fdset);
-      void processTimers();
+      void process(int timeout=0);
       unsigned int getTimeTillNextProcessMS();
-      void buildFdSet(FdSet& fdset);
 
       // graceful shutdown (eventually)
       void shutdown();
-
-      // kill transports (after shutdown, before destructor)
-      void deleteTransports();
 
       TransportSelector& transportSelector() { return mTransportSelector; }
       const TransportSelector& transportSelector() const { return mTransportSelector; }
@@ -51,6 +51,29 @@ class TransactionController
       unsigned int getNumServerTransactions() const;
       unsigned int getTimerQueueSize() const;
       //void setStatisticsInterval(unsigned long seconds) const;
+      
+      void setCongestionManager( CongestionManager *manager ) 
+      { 
+         mTransportSelector.setCongestionManager(manager);
+         if(mCongestionManager)
+         {
+            mCongestionManager->unregisterFifo(&mStateMacFifo);
+         }
+         mCongestionManager=manager;
+         if(mCongestionManager)
+         {
+            mCongestionManager->registerFifo(&mStateMacFifo);
+         }
+      }
+
+      CongestionManager::RejectionBehavior getRejectionBehavior() const
+      {
+         if(mCongestionManager)
+         {
+            return mCongestionManager->getRejectionBehavior(&mStateMacFifo);
+         }
+         return CongestionManager::NORMAL;
+      }
 
       void registerMarkListener(MarkListener* listener);
       void unregisterMarkListener(MarkListener* listener);
@@ -76,8 +99,8 @@ class TransactionController
       void terminateFlow(const resip::Tuple& flow);
       void enableFlowTimer(const resip::Tuple& flow);
 
+      void setInterruptor(AsyncProcessHandler* handler);
    private:
-      void processEverything(FdSet* fdset);
       TransactionController(const TransactionController& rhs);
       TransactionController& operator=(const TransactionController& rhs);
       SipStack& mStack;
@@ -96,6 +119,17 @@ class TransactionController
       // asynchronous dns responses, transport errors from the underlying
       // transports, etc. 
       Fifo<TransactionMessage> mStateMacFifo;
+      ConsumerFifoBuffer<TransactionMessage> mStateMacFifoOutBuffer;
+      CongestionManager* mCongestionManager;
+
+      //This needs to be separate from mStateMacFifo, because timer messages
+      //need to be processed before other work. (If timers start getting behind
+      //all kinds of nastiness occurs. We can tolerate some SipMessage traffic
+      //getting behind, but processing timers late can cripple the entire
+      //system with state-bloat.)
+      // !bwc! This thing does not need to be threadsafe; it is both populated 
+      // and consumed from the same thread.
+      Fifo<TimerMessage> mTimerFifo;
 
       // from the sipstack (for convenience)
       TuSelector& mTuSelector;
@@ -109,12 +143,14 @@ class TransactionController
 
       // timers associated with the transactions. When a timer fires, it is
       // placed in the mStateMacFifo
-      TimerQueue  mTimers;
+      TransactionTimerQueue  mTimers;
 
       bool mShuttingDown;
       
       StatisticsManager& mStatsManager;
-
+      
+      Data mHostname;
+      
       friend class SipStack; // for debug only
       friend class StatelessHandler;
       friend class TransactionState;

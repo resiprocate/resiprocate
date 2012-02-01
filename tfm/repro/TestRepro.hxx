@@ -13,9 +13,12 @@
 #include "resip/dum/MasterProfile.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/StackThread.hxx"
+#include "rutil/CongestionManager.hxx"
 #include "rutil/SharedPtr.hxx"
 #include "tfm/TestProxy.hxx"
 #include "tfm/repro/CommandLineParser.hxx"
+
+#include <memory>
 
 class TfmProxyConfig : public repro::ProxyConfig
 {
@@ -64,6 +67,7 @@ class TestRepro : public TestProxy
       repro::Proxy mProxy;
       resip::DialogUsageManager mDum;
       resip::DumThread mDumThread;
+      std::auto_ptr<resip::CongestionManager> mCongestionManager;
 };
 
 #endif

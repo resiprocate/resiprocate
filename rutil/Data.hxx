@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <bitset>
+#include <cassert>
 
 #include "rutil/compat.hxx"
 #include "rutil/DataStream.hxx"
@@ -19,6 +20,7 @@ namespace resip
 {
 
 /**
+   @internal
    This template is here to help diagnose API/ABI mismatches. Say you build
    librutil. A single Data::init(DataLocalSize<RESIP_DATA_LOCAL_SIZE>)
    function is implemented in Data.cxx, with the default
@@ -34,6 +36,9 @@ struct DataLocalSize
 {
       explicit DataLocalSize(size_t) {}
 };
+
+// .bwc. Pack class Data; has to come before doxygen block though.
+#pragma pack(4)
 
 /**
   @brief An alternative to std::string, encapsulates an arbitrary buffer of 
@@ -70,6 +75,8 @@ struct DataLocalSize
         class in the context of using realloc everywhere appropriate.
         (realloc is defined in ANSI C, SVID, and the OpenGroup "Single
         Unix Specification").
+
+   @ingroup text_proc
 */
 
 class Data 
@@ -77,15 +84,28 @@ class Data
    public:
       RESIP_HeapCount(Data);
 
-      typedef size_t size_type;
+      typedef UInt32 size_type;
 
-      Data();
+      inline Data()
+         : mBuf(mPreBuffer),
+           mSize(0),
+           mCapacity(LocalAlloc),
+           mShareEnum(Borrow)
+      {
+         mBuf[mSize] = 0;
+      }
 
+      /**
+      @internal
+      */
       class PreallocateType
       {
          friend class Data;
          explicit PreallocateType(int);
       };
+      /**
+      @brief used only to disambiguate constructors
+      */
       static const PreallocateType Preallocate;
 
       /**
@@ -233,19 +253,19 @@ class Data
             in buffer. It will modify its contents as necessary,
             but will not deallocate it.
         */
-        Share,
+        Borrow=0,
 
         /** The Data instance will use the buffer in a read-only mode.
             If any attempt is made to modify the contents of
             the Data, it will copy the buffer and modify it.
         */
-        Borrow,
+        Share=1,
 
         /** The Data instance takes complete ownership of the
             buffer. The buffer must have been allocate using
             "new char[]" so that it can be freed with "delete char[]".
         */
-        Take
+        Take=2
       };
 
       /**
@@ -276,12 +296,18 @@ class Data
 
         @todo This implementation has some confusing and conflicting
               comments. (e.g. is Borrow actually okay? Can there be some
-              way to use it with Take as long as you play with mMine
+              way to use it with Take as long as you play with mShareEnum
               correctly?)
       */
       Data(ShareEnum, const Data& staticData); // Cannot call with 'Take'
 
-      ~Data();
+      inline ~Data()
+      {
+         if (mShareEnum == Take)
+         {
+            delete[] mBuf;
+         }
+      }
 
       /**
         Set the Data to hold {buf} using share type {se}, which may be any
@@ -302,7 +328,7 @@ class Data
       **/
       Data& setBuf(ShareEnum se, const char *str)
       {
-         return setBuf(se, str, strlen(str));
+         return setBuf(se, str, (size_type)strlen(str));
       };
 
 
@@ -387,7 +413,7 @@ class Data
       */
       Data& operator=(const char* str)
       {
-         return copy(str, strlen(str));
+         return copy(str, (size_type)strlen(str));
       }
 
       /**
@@ -411,7 +437,10 @@ class Data
       /**
         Appends a data object to this one.
       */
-      Data& operator+=(const Data& rhs);
+      inline Data& operator+=(const Data& rhs)
+      {
+         return append(rhs.data(), rhs.size());
+      }
 
       /**
         Appends a null-terminated string to the end of the Data
@@ -420,13 +449,20 @@ class Data
         @warning Passing a non-null-terminated string to this
                  method would be a Really Bad Thing.
       */
-      Data& operator+=(const char* str);
+      inline Data& operator+=(const char* str)
+      {
+         assert(str);
+         return append(str, (size_type)strlen(str));
+      }
 
 
       /**
         Appends a single byte to the Data object.
       */
-      Data& operator+=(char c);
+      inline Data& operator+=(char c)
+      {
+         return append(&c, 1);
+      }
 
 
       /**
@@ -437,12 +473,25 @@ class Data
       */
       Data& operator^=(const Data& rhs);
 
+      /**
+        Returns the character at the specified position. Ensures that ownership of
+        the buffer is taken, since the character could be modified by the caller.
+      */
+      inline char& operator[](size_type p)
+      {
+         assert(p < mSize);
+         own();
+         return mBuf[p];
+      }
 
       /**
         Returns the character at the specified position.
       */
-      char& operator[](size_type p);
-      char operator[](size_type p) const;
+      inline char operator[](size_type p) const
+      {
+         assert(p < mSize);
+         return mBuf[p];
+      }
 
       /**
         Returns the character at the specified position.
@@ -504,7 +553,10 @@ class Data
 
         @note The value returned is NOT necessarily null-terminated.
       */
-      const char* data() const;
+      inline const char* data() const
+      {
+         return mBuf;
+      }
 
       /**
         Returns a null-terminated string representing 
@@ -523,19 +575,32 @@ class Data
       /**
         Returns a pointer to the beginning of the buffer used by the Data.
       */
-      const char* begin() const;
+      inline const char* begin() const
+      {
+         return mBuf;
+      }
 
       /**
         Returns a pointer to the end of the buffer used by the Data.
       */
-      const char* end() const;
+      inline const char* end() const
+      {
+         return mBuf + mSize;
+      }
+
+      typedef enum
+      {
+         BINARY,
+         BASE64,
+         HEX
+      } EncodingType;
 
       /**
         Computes the MD5 hash of the current data.
-
-        @return ASCII hexadecimal representation of the MD5 hash
+        @param type The encoding of the return (default is HEX)
+        @return The MD5 hash, in the encoding specified by type.
       */      
-      Data md5() const;
+      Data md5(EncodingType type=HEX) const;
 
       /**
         Converts this Data to lowercase.
@@ -550,6 +615,22 @@ class Data
         @note This is silly unless the contents are ASCII.
       */      
       Data& uppercase();
+
+      /**
+        Converts this Data to lowercase, assuming this Data only consists of 
+        scheme characters.
+
+        @note Assuming scheme contents allows the use of a bitmask instead of
+         tolower(), which is faster. Why, you ask? A bitmask is sufficient to 
+         perform a lowercase operation on alphabetical data, since 'a' and 'A' 
+         only differ on bit 6; it is set for 'a', but not for 'A'. Digits always 
+         have bit 6 set, so setting it is a no-op. The last three characters in 
+         the scheme character set are '+', '-', and '.'; all of these have bit 6 
+         set as well. Note that there is no corresponding efficient uppercase 
+         function; clearing bit 6 on either a digit or the the three remaining 
+         characters (+=.) will change them.
+      */
+      Data& schemeLowercase();
 
       /**
         Returns a hexadecimal representation of the contents of
@@ -719,10 +800,10 @@ class Data
       size_type find(const Data& match, size_type start = 0) const;
 
       /** 
-          Replaces all occurrences of the bytes match with
+          Replaces up to max occurrences of the bytes match with
           target. Returns the number of matches.
       */
-      int replace(const Data& match, const Data& target);
+      int replace(const Data& match, const Data& target, int max=INT_MAX);
       
       /**
         Constant that represents a zero-length data.
@@ -779,10 +860,40 @@ class Data
       static size_t rawCaseInsensitiveHash(const unsigned char* c, size_t size);
 
       /**
+        A faster version of rawCaseInsensitiveHash that has the same collision 
+        properties if this Data is made up of RFC 3261 token characters.
+
+        @param c Pointer to the buffer to hash
+        @param size Number of bytes to be hashed
+        @note This is not guaranteed to return the same value as 
+            rawCaseInsensitiveHash.
+      */
+      static size_t rawCaseInsensitiveTokenHash(const unsigned char* c, size_t size);
+
+      /**
         Creates a 32-bit hash based on the contents of this Data, after
         normalizing any alphabetic characters to lowercase.
       */
       size_t caseInsensitivehash() const;
+
+      /**
+        A faster version of caseInsensitiveHash that has the same collision 
+        properties if this Data is made up of RFC 3261 token characters.
+        @note This is not guaranteed to return the same value as 
+            rawCaseInsensitiveHash.
+      */
+      size_t caseInsensitiveTokenHash() const;
+
+      inline bool caseInsensitiveTokenCompare(const Data& rhs) const
+      {
+         if(mSize==rhs.mSize)
+         {
+            return sizeEqualCaseInsensitiveTokenCompare(rhs);
+         }
+         return false;
+      }
+
+      bool sizeEqualCaseInsensitiveTokenCompare(const Data& rhs) const;
 
       /**
          Creates a bitset reflecting the contents of this data (as a set)
@@ -809,11 +920,22 @@ class Data
           escapeToStream(EncodeStream& str, 
                          Predicate shouldEscape) const;
 
+      /**
+        Performs escaping of this Data according to a bitset.
+
+        @param str          A stream to which the escaped representation
+                            should be added.
+
+        @param shouldEscape A bitset representing which chars should be escaped.
+      */      
+      std::ostream& escapeToStream(std::ostream& str, 
+                                   const std::bitset<256>& shouldEscape) const;
+
    private:
       /**
         @deprecated use Data(ShareEnum ...)
       */
-      Data(const char* buffer, size_t length, bool);
+      Data(const char* buffer, size_type length, bool);
 
       /**
         Copies the contents of this data to a new buffer if the
@@ -832,14 +954,17 @@ class Data
           Larger LocalAlloc makes for larger objects that have Data members but
           bulk allocation/deallocation of Data  members. */
       enum {LocalAlloc = RESIP_DATA_LOCAL_SIZE };
-      char mPreBuffer[LocalAlloc+1];
 
-      size_type mSize;
       char* mBuf;
+      size_type mSize;
       size_type mCapacity;
-      ShareEnum mMine;
-      // The invariant for a Data with !mMine is mSize == mCapacity
-
+      char mPreBuffer[LocalAlloc];
+      // Null terminator for mPreBuffer when mSize==LocalAlloc lands here; this
+      // is ok, because Borrow==0.
+      // Note: we could use a char here, and expand mPreBuffer by 3 bytes, but 
+      // this imposes a performance penalty since it requires operating on a 
+      // memory location smaller than a word (requires masking and such).
+      size_type mShareEnum;
 
       friend std::ostream& operator<<(std::ostream& strm, const Data& d);
 #ifndef RESIP_USE_STL_STREAMS
@@ -851,8 +976,10 @@ class Data
       friend class oDataStream;
       friend class ::TestData;
       friend class MD5Buffer;
-      friend class Contents;
 };
+// reset alignment to default
+#pragma pack()
+
 
 class DataHelper {
    public:
@@ -870,6 +997,11 @@ inline bool isEqualNoCase(const Data& left, const Data& right)
 {
    return ( (left.size() == right.size()) &&
             (strncasecmp(left.data(), right.data(), left.size()) == 0) );
+}
+
+inline bool isTokenEqualNoCase(const Data& left, const Data& right)
+{
+   return left.caseInsensitiveTokenCompare(right);
 }
 
 inline bool isLessThanNoCase(const Data& left, const Data& right)
@@ -916,7 +1048,7 @@ Data::escapeToStream(EncodeStream& str, Predicate shouldEscape) const
          str.write((char*)p, 3);
          p+=3;
       }
-      else if (shouldEscape(*p))
+      else if (shouldEscape[*p])
       {
          int hi = (*p & 0xF0)>>4;
          int low = (*p & 0x0F);
@@ -948,7 +1080,11 @@ inline bool operator>=(const char* lhs, const Data& rhs) { return !(lhs < rhs); 
 #ifndef  RESIP_USE_STL_STREAMS
 EncodeStream& operator<<(EncodeStream& strm, const Data& d);
 #endif
-std::ostream& operator<<(std::ostream& strm, const Data& d);
+inline std::ostream& operator<<(std::ostream& strm, const Data& d)
+{
+   return strm.write(d.mBuf, d.mSize);
+}
+
 
 inline Data
 operator+(const char* c, const Data& d)

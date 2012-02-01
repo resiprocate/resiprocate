@@ -7,7 +7,7 @@
 #include <rutil/TransportType.hxx>
 #include <rutil/Fifo.hxx>
 #include <resip/stack/Tuple.hxx>
-#include <resip/stack/SelectInterruptor.hxx>
+#include <rutil/SelectInterruptor.hxx>
 
 /// This Class is used to implement a primitive form of RPC using loose XML formatting.
 /// The XML formatting used is specific to this implementation and is NOT currently intended to 

@@ -18,7 +18,7 @@ using namespace std;
 H_ContentID resip::h_ContentID;
 H_ContentDescription resip::h_ContentDescription;
 
-Contents::Contents(HeaderFieldValue* headerFieldValue,
+Contents::Contents(const HeaderFieldValue& headerFieldValue,
                    const Mime& contentType) 
    : LazyParser(headerFieldValue),
       mType(contentType)
@@ -43,6 +43,16 @@ Contents::Contents(const Contents& rhs,HeaderFieldValue::CopyPaddingEnum e)
 {
    init(rhs);
 }
+
+Contents::Contents(const HeaderFieldValue& headerFieldValue,
+                     HeaderFieldValue::CopyPaddingEnum e,
+                     const Mime& contentsType)
+    : LazyParser(headerFieldValue,e),
+    mType(contentsType)
+{
+   init();
+}
+
 
 Contents::~Contents()
 {
@@ -142,17 +152,25 @@ Contents::createContents(const Mime& contentType,
   // !ass! HFV is an overlay -- then setting c->mIsMine to true ?? dlb Q
   // .dlb. we are telling the content that it owns its HFV, not the data that it
   // .dlb. owns its memory
+  // .bwc. So, we are _violating_ _encapsulation_, to make an assertion that the 
+  // Data is an intermediate instead of owning the buffer itself? What do we 
+  // care how this buffer is owned? All we require is that the buffer doesn't 
+  // get dealloced/modified while we're still around. The assertion might mean 
+  // that the Data will not do either of these things, but it affords no 
+  // protection from the actual owner doing so. We are no more protected with 
+  // the assertion, so I am removing it.
+//   assert(!contents.mMine);
 
-   assert(!contents.mMine);
-   HeaderFieldValue *hfv = new HeaderFieldValue(contents.data(), (unsigned int)contents.size());
+   HeaderFieldValue hfv(contents.data(), (unsigned int)contents.size());
 
-   if(contentType.subType()=="sipfrag"||contentType.subType()=="external-body")
-   {
-      // .bwc. The parser for sipfrag requires padding at the end of the hfv.
-      HeaderFieldValue* temp = hfv;
-      hfv = new HeaderFieldValue(*temp,HeaderFieldValue::CopyPadding);
-      delete temp;
-   }
+// !bwc! This padding stuff is now the responsibility of the Contents class.
+//   if(contentType.subType()=="sipfrag"||contentType.subType()=="external-body")
+//   {
+//      // .bwc. The parser for sipfrag requires padding at the end of the hfv.
+//      HeaderFieldValue* temp = hfv;
+//      hfv = new HeaderFieldValue(*temp,HeaderFieldValue::CopyPadding);
+//      delete temp;
+//   }
    
    Contents* c;
    if (ContentsFactoryBase::getFactoryMap().find(contentType) != ContentsFactoryBase::getFactoryMap().end())
@@ -163,7 +181,6 @@ Contents::createContents(const Mime& contentType,
    {
       c = new OctetContents(hfv, contentType);
    }
-   c->mIsMine = true;
    return c;
 }
 

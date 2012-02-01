@@ -3,6 +3,7 @@
 #include <ctype.h>
 #include <math.h>
 #include <limits.h>
+#include <stdint.h>
 
 #if defined(HAVE_CONFIG_HXX)
 #include "resip/stack/config.hxx"
@@ -190,25 +191,16 @@ Data::init(DataLocalSize<RESIP_DATA_LOCAL_SIZE> arg)
    return true;
 }
 
-Data::Data() 
-   : mSize(0),
-     mBuf(mPreBuffer),
-     mCapacity(LocalAlloc),
-     mMine(Borrow)
-{
-   mBuf[mSize] = 0;
-}
-
 Data::Data(size_type capacity,
            const Data::PreallocateType&) 
-   : mSize(0),
-     mBuf(capacity > LocalAlloc 
+   : mBuf(capacity > LocalAlloc 
           ? new char[capacity + 1]
           : mPreBuffer),
+     mSize(0),
      mCapacity(capacity > LocalAlloc
                ? capacity
                : LocalAlloc),
-     mMine(capacity > LocalAlloc ? Take : Borrow)
+     mShareEnum(capacity > LocalAlloc ? Take : Borrow)
 {
    assert( capacity >= 0 );
    mBuf[mSize] = 0;
@@ -217,14 +209,14 @@ Data::Data(size_type capacity,
 #ifdef DEPRECATED_PREALLOC
 // pre-allocate capacity
 Data::Data(size_type capacity, bool) 
-   : mSize(0),
-     mBuf(capacity > LocalAlloc 
+   : mBuf(capacity > LocalAlloc 
           ? new char[capacity + 1]
           : mPreBuffer),
+     mSize(0),
      mCapacity(capacity > LocalAlloc
                ? capacity
                : LocalAlloc),
-     mMine(capacity > LocalAlloc ? Take : Borrow)
+     mShareEnum(capacity > LocalAlloc ? Take : Borrow)
 {
    assert( capacity >= 0 );
    mBuf[mSize] = 0;
@@ -232,14 +224,14 @@ Data::Data(size_type capacity, bool)
 #endif
 
 Data::Data(const char* str, size_type length) 
-   : mSize(length),
-     mBuf(mSize > LocalAlloc 
-          ? new char[mSize + 1]
+   : mBuf(length > LocalAlloc 
+          ? new char[length + 1]
           : mPreBuffer),
+     mSize(length),
      mCapacity(mSize > LocalAlloc
                ? mSize
                : LocalAlloc),
-     mMine(mSize > LocalAlloc ? Take : Borrow)
+     mShareEnum(mSize > LocalAlloc ? Take : Borrow)
 {
    if (mSize > 0)
    {
@@ -250,14 +242,14 @@ Data::Data(const char* str, size_type length)
 }
 
 Data::Data(const unsigned char* str, size_type length) 
-   : mSize(length),
-     mBuf(mSize > LocalAlloc 
-          ? new char[mSize + 1]
+   : mBuf(length > LocalAlloc 
+          ? new char[length + 1]
           : mPreBuffer),
+     mSize(length),
      mCapacity(mSize > LocalAlloc
                ? mSize
                : LocalAlloc),
-     mMine(mSize > LocalAlloc ? Take : Borrow)
+     mShareEnum(mSize > LocalAlloc ? Take : Borrow)
 {
    if (mSize > 0)
    {
@@ -271,55 +263,61 @@ Data::Data(const unsigned char* str, size_type length)
 // wears off on, c_str, operator=, operator+=, non-const
 // operator[], append, reserve
 Data::Data(const char* str, size_type length, bool) 
-   : mSize(length),
-     mBuf(const_cast<char*>(str)),
+   : mBuf(const_cast<char*>(str)),
+     mSize(length),
      mCapacity(mSize),
-     mMine(Share)
+     mShareEnum(Share)
 {
    assert(str);
 }
 
 Data::Data(ShareEnum se, const char* buffer, size_type length)
-   : mSize(length),
-     mBuf(const_cast<char*>(buffer)),
+   : mBuf(const_cast<char*>(buffer)),
+     mSize(length),
      mCapacity(mSize),
-     mMine(se)
+     mShareEnum(se)
 {
    assert(buffer);
 }
 
 Data::Data(ShareEnum se, const char* buffer)
-   : mSize(strlen(buffer)),
-     mBuf(const_cast<char*>(buffer)),
+   : mBuf(const_cast<char*>(buffer)),
+     mSize(strlen(buffer)),
      mCapacity(mSize),
-     mMine(se)
+     mShareEnum(se)
 {
    assert(buffer);
 }
 
 Data::Data(ShareEnum se, const Data& staticData)
-   : mSize(staticData.mSize),
-     mBuf(staticData.mBuf),
+   : mBuf(staticData.mBuf),
+     mSize(staticData.mSize),
      mCapacity(mSize),
-     mMine(Share)
+     mShareEnum(Share)
 {
    // !dlb! maybe:
-   // if you are trying to use Take, but make sure that you unset the mMine on
+   // if you are trying to use Take, but make sure that you unset the mShareEnum on
    // the staticData
    assert(se == Share); // makes no sense to call this with 'Take'.
 }
 //=============================================================================
 
-Data::Data(const char* str) 
+Data::Data(const char* str) // We need mSize to init mBuf; do in body
    : mSize(str ? strlen(str) : 0),
-     mBuf(mSize > LocalAlloc
-          ? new char[mSize + 1]
-          : mPreBuffer),
      mCapacity(mSize > LocalAlloc
                ? mSize
                : LocalAlloc),
-     mMine(mSize > LocalAlloc ? Take : Borrow)
+     mShareEnum(mSize > LocalAlloc ? Take : Borrow)
 {
+   if(mSize > LocalAlloc)
+   {
+      mBuf = new char[mSize+1];
+   }
+   else
+   {
+      mBuf = mPreBuffer;
+   }
+
    if (str)
    {
       memcpy(mBuf, str, mSize+1);
@@ -331,27 +329,27 @@ Data::Data(const char* str)
 }
 
 Data::Data(const string& str)
-   : mSize(str.size()),
-     mBuf(mSize > LocalAlloc
-          ? new char[mSize + 1]
+   : mBuf(str.size() > LocalAlloc
+          ? new char[str.size() + 1]
           : mPreBuffer),
+     mSize(str.size()),
      mCapacity(mSize > LocalAlloc
                ? mSize
                : LocalAlloc),
-     mMine(mSize > LocalAlloc ? Take : Borrow)
+     mShareEnum(mSize > LocalAlloc ? Take : Borrow)
 {
    memcpy(mBuf, str.c_str(), mSize + 1);
 }
 
 Data::Data(const Data& data) 
-   : mSize(data.mSize),
-     mBuf(mSize > LocalAlloc
-          ? new char[mSize + 1]
+   : mBuf(data.mSize > LocalAlloc
+          ? new char[data.mSize + 1]
           : mPreBuffer),
+     mSize(data.mSize),
      mCapacity(mSize > LocalAlloc
                ? mSize
                : LocalAlloc),
-     mMine(mSize > LocalAlloc ? Take : Borrow)
+     mShareEnum(mSize > LocalAlloc ? Take : Borrow)
 {
    if (mSize)
    {
@@ -362,7 +360,7 @@ Data::Data(const Data& data)
 
 #ifdef RESIP_HAS_RVALUE_REFS
 Data::Data(Data &&data)
-   : mSize(0),mBuf(mPreBuffer),mCapacity(LocalAlloc),mMine(Borrow)
+   : mBuf(mPreBuffer),mSize(0),mCapacity(LocalAlloc),mShareEnum(Borrow)
 {
    *this = std::move(data);
 }
@@ -372,14 +370,14 @@ Data::Data(Data &&data)
 static const int IntMaxSize = 12;
 
 Data::Data(int val)
-   : mSize(0),
-     mBuf(IntMaxSize > LocalAlloc 
+   : mBuf(IntMaxSize > LocalAlloc 
           ? new char[IntMaxSize + 1]
           : mPreBuffer),
+     mSize(0),
      mCapacity(IntMaxSize > LocalAlloc
                ? IntMaxSize
                : LocalAlloc),
-     mMine(IntMaxSize > LocalAlloc ? Take : Borrow)
+     mShareEnum(IntMaxSize > LocalAlloc ? Take : Borrow)
 {
    if (val == 0)
    {
@@ -428,14 +426,14 @@ Data::Data(int val)
 
 static const int MaxLongSize = (sizeof(unsigned long)/sizeof(int))*IntMaxSize;
 Data::Data(unsigned long value)
-   : mSize(0),
-     mBuf(MaxLongSize > LocalAlloc 
+   : mBuf(MaxLongSize > LocalAlloc 
           ? new char[MaxLongSize + 1]
           : mPreBuffer),
+     mSize(0),
      mCapacity(MaxLongSize > LocalAlloc
                ? MaxLongSize
                : LocalAlloc),
-     mMine(MaxLongSize > LocalAlloc ? Take : Borrow)
+     mShareEnum(MaxLongSize > LocalAlloc ? Take : Borrow)
 {
    if (value == 0)
    {
@@ -469,14 +467,14 @@ Data::Data(unsigned long value)
 static const int DoubleMaxSize = MaxLongSize + Data::MaxDigitPrecision;
 Data::Data(double value, 
            Data::DoubleDigitPrecision precision)
-   : mSize(0),
-     mBuf(DoubleMaxSize + precision > LocalAlloc 
+   : mBuf(DoubleMaxSize + precision > LocalAlloc 
           ? new char[DoubleMaxSize + precision + 1]
           : mPreBuffer),
+     mSize(0),
      mCapacity(DoubleMaxSize + precision > LocalAlloc
                ? DoubleMaxSize + precision
                : LocalAlloc),
-     mMine(DoubleMaxSize + precision > LocalAlloc ? Take : Borrow)
+     mShareEnum(DoubleMaxSize + precision > LocalAlloc ? Take : Borrow)
 {
    assert(precision >= 0);
    assert(precision < MaxDigitPrecision);
@@ -555,14 +553,14 @@ Data::Data(double value,
 #endif
 
 Data::Data(unsigned int value)
-   : mSize(0),
-     mBuf(IntMaxSize > LocalAlloc 
+   : mBuf(IntMaxSize > LocalAlloc 
           ? new char[IntMaxSize + 1]
           : mPreBuffer),
+     mSize(0),
      mCapacity(IntMaxSize > LocalAlloc
                ? IntMaxSize
                : LocalAlloc),
-     mMine(IntMaxSize > LocalAlloc ? Take : Borrow)
+     mShareEnum(IntMaxSize > LocalAlloc ? Take : Borrow)
 {
    if (value == 0)
    {
@@ -596,14 +594,14 @@ Data::Data(unsigned int value)
 static const int UInt64MaxSize = 20;
 
 Data::Data(UInt64 value)
-   : mSize(0),
-     mBuf(UInt64MaxSize > LocalAlloc 
+   : mBuf(UInt64MaxSize > LocalAlloc 
           ? new char[UInt64MaxSize + 1]
           : mPreBuffer),
+     mSize(0),
      mCapacity(UInt64MaxSize > LocalAlloc
                ? UInt64MaxSize
                : LocalAlloc),
-     mMine(UInt64MaxSize > LocalAlloc ? Take : Borrow)
+     mShareEnum(UInt64MaxSize > LocalAlloc ? Take : Borrow)
 {
    if (value == 0)
    {
@@ -635,45 +633,37 @@ Data::Data(UInt64 value)
 
 static const int CharMaxSize = 1;
 Data::Data(char c)
-   : mSize(1),
-     mBuf(CharMaxSize > LocalAlloc 
+   : mBuf(CharMaxSize > LocalAlloc 
           ? new char[CharMaxSize + 1]
           : mPreBuffer),
+     mSize(1),
      mCapacity(CharMaxSize > LocalAlloc
                ? CharMaxSize
                : LocalAlloc),
-     mMine(CharMaxSize > LocalAlloc ? Take : Borrow)
+     mShareEnum(CharMaxSize > LocalAlloc ? Take : Borrow)
 {
    mBuf[0] = c;
    mBuf[1] = 0;
 }
 
 Data::Data(bool value)
-   : mSize(value ? 4 : 5), 
-     mBuf(value ? const_cast<char*>("true") : const_cast<char*>("false")),
+   : mBuf(value ? const_cast<char*>("true") : const_cast<char*>("false")),
+     mSize(value ? 4 : 5), 
      mCapacity(value ? 4 : 5),
-     mMine(Borrow)
+     mShareEnum(Borrow)
 {}
-
-Data::~Data()
-{
-   if (mMine == Take)
-   {
-      delete[] mBuf;
-   }
-}
 
 Data&
 Data::setBuf(ShareEnum se, const char* buffer, size_type length)
 {
    assert(buffer);
-   if (mMine == Take)
+   if (mShareEnum == Take)
    {
       delete[] mBuf;
    }
    mBuf = const_cast<char*>(buffer);
    mCapacity = mSize = length;
-   mMine = se;
+   mShareEnum = se;
    return *this;
 }
 
@@ -683,7 +673,7 @@ Data::takeBuf(Data& other)
    if ( &other == this )
       return *this;
 
-   if (mMine == Data::Take)
+   if (mShareEnum == Data::Take)
       delete[] mBuf;
 
    if ( other.mBuf == other.mPreBuffer )
@@ -699,13 +689,13 @@ Data::takeBuf(Data& other)
    }
    mSize = other.mSize;
    mCapacity = other.mCapacity;
-   mMine = other.mMine;
+   mShareEnum = other.mShareEnum;
 
    // reset {other} to same state as the default Data() constructor
    // note that other.mBuf is set above
    other.mSize = 0;
    other.mCapacity = LocalAlloc;
-   other.mMine = Data::Borrow;
+   other.mShareEnum = Data::Borrow;
    other.mPreBuffer[0] = 0;
 
    return *this;
@@ -714,7 +704,7 @@ Data::takeBuf(Data& other)
 Data&
 Data::copy(const char *buf, size_type length)
 {
-   if (mMine == Data::Share || mCapacity < length+1)
+   if (mShareEnum == Data::Share || mCapacity < length+1)
    {
       // will alloc length+1, so the term NULL below is safe
       resize(length, false);
@@ -736,7 +726,7 @@ Data::copy(const char *buf, size_type length)
 char*
 Data::getBuf(size_type length)
 {
-   if (mMine == Data::Share || mCapacity < length)
+   if (mShareEnum == Data::Share || mCapacity < length)
    {
       // will alloc length+1, so the term NULL below is safe
       resize(length, false);
@@ -850,7 +840,7 @@ Data::operator=(const Data& data)
    
    if (&data != this)
    {
-      if (mMine == Share)
+      if (mShareEnum == Share)
       {
          resize(data.mSize, false);
       }
@@ -884,9 +874,9 @@ Data& Data::operator=(Data &&data)
          //data is not using the local buffer, take ownership of data.
          mBuf = data.mBuf;
          mCapacity = data.mCapacity;
-         mMine = data.mMine;
+         mShareEnum = data.mShareEnum;
          mSize = data.mSize;
-         data.mMine = Borrow; //don't delete the transferred buffer in data's destructor.
+         data.mShareEnum = Borrow; //don't delete the transferred buffer in data's destructor.
       }
       else
       {
@@ -934,19 +924,6 @@ Data::operator+(const Data& data) const
    return tmp;
 }
 
-Data& 
-Data::operator+=(const Data& data)
-{
-   return append(data.data(), data.size());
-}
-
-Data& 
-Data::operator+=(const char* str)
-{
-   assert(str);
-   return append(str, strlen(str));
-}
-
 Data&
 Data::operator^=(const Data& rhs)
 {
@@ -971,22 +948,6 @@ Data::operator^=(const Data& rhs)
    return *this;
 }
 
-Data&
-Data::operator+=(char c)
-{
-   return append(&c, 1);
-}
-
-
-char& 
-Data::operator[](size_type p)
-{
-   assert(p < mSize);
-   own();
-   return mBuf[p];
-}
-
-
 char& 
 Data::at(size_type p)
 {
@@ -1006,13 +967,6 @@ Data::at(size_type p)
    return mBuf[p];
 }
 
-char 
-Data::operator[](size_type p) const
-{
-   assert(p < mSize);
-   return mBuf[p];
-}
-
 #if 0
 // Moved to inline header as special case of copy()
 Data& 
@@ -1021,7 +975,7 @@ Data::operator=(const char* str)
    assert(str);
    size_type l = strlen(str);
 
-   if (mMine == Share)
+   if (mShareEnum == Share)
    {
       resize(l, false);
    }
@@ -1068,14 +1022,14 @@ Data&
 Data::append(const char* str, size_type len)
 {
    assert(str);
-   if (mCapacity < mSize + len)
+   if (mCapacity <= mSize + len)  // append null terminates, thus the equality
    {
       // .dlb. pad for future growth?
       resize(((mSize + len +16)*3)/2, true);
    }
    else
    {
-      if (mMine == Share)
+      if (mShareEnum == Share)
       {
          resize(mSize + len, true);
       }
@@ -1106,7 +1060,7 @@ Data::operator+(char c) const
 const char* 
 Data::c_str() const
 {
-   if (mMine == Data::Share || mSize == mCapacity)
+   if (mShareEnum == Data::Share || mSize == mCapacity)
    {
       const_cast<Data*>(this)->resize(mSize+1,true);
    }
@@ -1115,29 +1069,10 @@ Data::c_str() const
    return mBuf;
 }
 
-const char* 
-Data::data() const
-{
-   return mBuf;
-}
-
-const char* 
-Data::begin() const
-{
-   return mBuf;
-}
-
-const char* 
-Data::end() const
-{
-   return mBuf + mSize;
-}
-
-
 void
 Data::own() const
 {
-   if (mMine == Share)
+   if (mShareEnum == Share)
    {
       const_cast<Data*>(this)->resize(mSize, true);
    }
@@ -1148,25 +1083,38 @@ void
 Data::resize(size_type newCapacity, 
              bool copy)
 {
-   assert(newCapacity >= mCapacity || mMine == Data::Share);
+   assert(newCapacity >= mCapacity || mShareEnum == Data::Share);
 
    char *oldBuf = mBuf;
-   mBuf = new char[newCapacity+1];
+   bool needToDelete=(mShareEnum==Take);
+
+   if(newCapacity > LocalAlloc)
+   {
+      mBuf = new char[newCapacity+1];
+      mShareEnum = Take;
+   }
+   else
+   {
+      mBuf = mPreBuffer;
+      mShareEnum = Borrow;
+   }
+
    if (copy)
    {
       memcpy(mBuf, oldBuf, mSize);
       mBuf[mSize] = 0;
    }
-   if (mMine == Take)
+
+   if (needToDelete)
    {
       delete[] oldBuf;
    }
-   mMine = Take;
+
    mCapacity = newCapacity;
 }
 
 Data
-Data::md5() const
+Data::md5(EncodingType type) const
 {
    MD5Context context;
    MD5Init(&context);
@@ -1175,9 +1123,19 @@ Data::md5() const
    unsigned char digestBuf[16];
    MD5Final(digestBuf, &context);
    Data digest(digestBuf,16);
-   Data ret = digest.hex();
-   
-   return ret;
+
+   switch(type)
+   {
+      case BINARY:
+         return digest;
+      case BASE64:
+         return digest.base64encode(true);
+      case HEX:
+      default:
+         return digest.hex();
+   }
+   assert(0);
+   return digest.hex();
 }
 
 Data 
@@ -1546,7 +1504,7 @@ Data::xmlCharDataDecode(EncodeStream& s) const
 }
 
 Data
-Data::trunc(size_t s) const
+Data::trunc(size_type s) const
 {
    if (size() <= s)
    {
@@ -1601,6 +1559,19 @@ Data::uppercase()
    for (size_type i=0; i < mSize; ++i)
    {
       *p = toupper(*p);
+      ++p;
+   }
+   return *this;
+}
+
+Data& 
+Data::schemeLowercase()
+{
+   own();
+   char* p = mBuf;
+   for (size_type i=0; i < mSize; ++i)
+   {
+      *p |= ' ';
       ++p;
    }
    return *this;
@@ -1876,7 +1847,8 @@ Data::find(const Data& match,
 
 int
 Data::replace(const Data& match, 
-              const Data& replaceWith)
+              const Data& replaceWith,
+              int max)
 {
    assert(!match.empty());
 
@@ -1884,7 +1856,7 @@ Data::replace(const Data& match,
 
    const int incr = int(replaceWith.size() - match.size());
    for (size_type offset = find(match, 0); 
-        offset != Data::npos; 
+        count < max && offset != Data::npos; 
         offset = find(match, offset+replaceWith.size()))
    {
       if (mSize + incr >= mCapacity)
@@ -1914,12 +1886,6 @@ resip::operator<<(EncodeStream& strm, const Data& d)
    return strm.write(d.mBuf, d.mSize);
 }
 #endif
-
-std::ostream& 
-resip::operator<<(std::ostream& strm, const Data& d)
-{
-   return strm.write(d.mBuf, d.mSize);
-}
 
 // random permutation of 0..255
 static const unsigned char randomPermutation[256] = 
@@ -2002,6 +1968,124 @@ Data::rawCaseInsensitiveHash(const unsigned char* c, size_t size)
    return ntohl((u_long)st);
 }
 
+#undef get16bits
+#if (defined(__GNUC__) && defined(__i386__)) || defined(__WATCOMC__) \
+  || defined(_MSC_VER) || defined (__BORLANDC__) || defined (__TURBOC__)
+#define get16bits(d) (*((const uint16_t *) (d)))
+#endif
+
+#if !defined (get16bits)
+#define get16bits(d) ((((uint32_t)(((const uint8_t *)(d))[1])) << 8)\
+                       +(uint32_t)(((const uint8_t *)(d))[0]) )
+#endif
+
+#undef get32bits
+#if (defined(__GNUC__) && defined(__i386__)) || defined(__WATCOMC__) \
+  || defined(_MSC_VER) || defined (__BORLANDC__) || defined (__TURBOC__)
+#define get32bits(d) (*((const uint32_t *) (d)))
+#endif
+
+#if !defined (get32bits)
+#define get32bits(d) ((get16bits(d+2) << 16) + get16bits(d))
+#endif
+
+// This is intended to be a faster case-insensitive hash function that works
+// well when the buffer is a RFC 3261 token.
+// Having non-token characters will not prevent the hash from working, but it 
+// will increase the number of cases where a single char difference will result 
+// in a hash collision. The pairs of _printable_ characters that this hash will 
+// not distinguish between are @`, [{, \|, ]} and ^~
+// (Note that, for RFC 3261 tokens, this will not be a problem since @, [, {, \, 
+// |, ], } and ^ are not allowed in a token.)
+size_t
+Data::rawCaseInsensitiveTokenHash(const unsigned char* data, size_t len)
+{
+   // .bwc. Hsieh hash, with some bitmasking to get the case-insensitive 
+   // property (this is what all the "0x2020 |" business is about.)
+   uint32_t hash = len, tmp;
+   int rem;
+
+    if (len <= 0 || data == NULL) return 0;
+
+    rem = len & 3;
+    len >>= 2;
+
+    union 
+    {
+          uint32_t masked;
+          unsigned char cccc[4];
+    };
+
+    /* Main loop */
+    for (;len > 0; len--) {
+        // mask out bit 6 for case-insensitivity
+        masked = (0x20202020 | get32bits(data));
+        hash  += get16bits(cccc);
+        tmp    = (get16bits(cccc+2) << 11) ^ hash;
+        hash   = (hash << 16) ^ tmp;
+        data  += 2*sizeof (uint16_t);
+        hash  += hash >> 11;
+    }
+
+    /* Handle end cases */
+    switch (rem) {
+        case 3: hash += (0x2020 | get16bits (data));
+                hash ^= hash << 16;
+                hash ^= (0x20 | data[sizeof (uint16_t)]) << 18;
+                hash += hash >> 11;
+                break;
+        case 2: hash += (0x2020 | get16bits (data));
+                hash ^= hash << 11;
+                hash += hash >> 17;
+                break;
+        case 1: hash += (0x20 | *data);
+                hash ^= hash << 10;
+                hash += hash >> 1;
+    }
+
+    /* Force "avalanching" of final 127 bits */
+    hash ^= hash << 3;
+    hash += hash >> 5;
+    hash ^= hash << 4;
+    hash += hash >> 17;
+    hash ^= hash << 25;
+    hash += hash >> 6;
+
+    return hash;
+
+//   union 
+//   {
+//         size_t st;
+//         unsigned char bytes[4];
+//   };
+//   st = 0; // suppresses warnings about unused st
+//   bytes[0] = randomPermutation[0];
+//   bytes[1] = randomPermutation[1];
+//   bytes[2] = randomPermutation[2];
+//   bytes[3] = randomPermutation[3];
+//
+//   const unsigned char* end = c + size;
+//   for ( ; c != end; ++c)
+//   {
+//       union
+//       {
+//         UInt32 temp;
+//         UInt8 cccc[4];
+//       };
+//       // .bwc. Mask out bit 6, use a multiplication op to write the 
+//       // resulting byte to each of the 4 bytes in temp, and xor the whole 
+//       // thing with bytes/st.
+//      temp = ( (*c | ' ') * 16843009UL) ^ st;
+//      bytes[0] = randomPermutation[cccc[0]];
+//      bytes[1] = randomPermutation[cccc[1]];
+//      bytes[2] = randomPermutation[cccc[2]];
+//      bytes[3] = randomPermutation[cccc[3]];
+//   }
+//
+//   // convert from network to host byte order
+//   return ntohl((u_long)st);
+}
+
 Data
 bits(size_t v)
 {
@@ -2027,6 +2111,104 @@ Data::caseInsensitivehash() const
    return rawCaseInsensitiveHash((const unsigned char*)(this->data()), this->size());
 }
 
+size_t
+Data::caseInsensitiveTokenHash() const
+{
+   return rawCaseInsensitiveTokenHash((const unsigned char*)(this->data()), this->size());
+}
+
+#define compUnalignedRemainder(d1, d2, size) \
+switch(size) \
+{\
+   case 3:                                         \
+      if( (*d1 ^ *d2) & 0xDF)                      \
+      {                                            \
+         return false;                             \
+      }                                            \
+      d1++;                                        \
+      d2++;                                        \
+      /* fallthrough */                            \
+   case 2:                                         \
+      if((get16bits(d1) ^ get16bits(d2)) & 0xDFDF) \
+      {                                            \
+         return false;                             \
+      }                                            \
+      d1+=2;                                       \
+      d2+=2;                                       \
+      break;                                       \
+   case 1:                                         \
+      if( (*d1 ^ *d2) & 0xDF)                      \
+      {                                            \
+         return false;                             \
+      }                                            \
+      d1++;                                        \
+      d2++;                                        \
+      /* fallthrough */                            \
+   default:                                        \
+      ;                                            \
+}\
+
+bool 
+Data::sizeEqualCaseInsensitiveTokenCompare(const Data& rhs) const
+{
+   assert(mSize==rhs.mSize);
+   const char* d1(mBuf);
+   const char* d2(rhs.mBuf);
+
+   if(mSize < 4)
+   {
+      // No point in trying 32-bit ops.
+      compUnalignedRemainder(d1, d2, mSize);
+      return true;
+   }
+
+   int unalignedPrefix((ptrdiff_t)d1 & 3);
+
+   compUnalignedRemainder(d1, d2, unalignedPrefix);
+
+   // We are now on a 32-bit boundary with d1.
+   uint32_t* wd1((uint32_t*)(d1));
+   size_t wordLen=(mSize-unalignedPrefix)>>2;
+   int rem=(mSize-unalignedPrefix)&3;
+
+   if((ptrdiff_t)(d2)%4==0)
+   {
+      // d2 is aligned too. Happy day!
+      uint32_t* wd2((uint32_t*)(d2));
+      for (;wordLen > 0; wordLen--)
+      {
+         // bitwise xor is zero iff equal, but we only really care about bits 
+         // other than bit 6, so we mask out bit 6 after the xor.
+         if( (*wd1 ^ *wd2) & 0xDFDFDFDF)
+         {
+            return false;
+         }
+         wd1++;
+         wd2++;
+      }
+      d2=(const char*)wd2;
+   }
+   else
+   {
+      for (;wordLen > 0; wordLen--)
+      {
+         // bitwise xor is zero iff equal, but we only really care about bits 
+         // other than bit 6, so we mask out bit 6 after the xor.
+         uint32_t test=get32bits(d2);
+         if( (*wd1 ^ test) & 0xDFDFDFDF)
+         {
+            return false;
+         }
+         wd1++;
+         d2+=4;
+      }
+   }
+   d1=(const char*)wd1;
+
+   compUnalignedRemainder(d1, d2, rem);
+   return true;
+}
+
 std::bitset<256>
 Data::toBitset(const resip::Data& chars)
 {
@@ -2037,6 +2219,56 @@ Data::toBitset(const resip::Data& chars)
       result.set(*(unsigned char*)(chars.mBuf+i));
    }
    return result;
+}
+
+std::ostream& 
+Data::escapeToStream(std::ostream& str, 
+                     const std::bitset<256>& shouldEscape) const
+{
+   static char hex[] = "0123456789ABCDEF";
+
+   if (empty())
+   {
+      return str;
+   }
+   
+   const unsigned char* anchor = (unsigned char*)mBuf;
+   const unsigned char* p = (unsigned char*)mBuf;
+   const unsigned char* e = (unsigned char*)mBuf + mSize;
+
+   while (p < e)
+   {
+      // ?abr? Why is this special cased? Removing this code
+      // does not change the behavior of this method.
+      if (*p == '%' 
+          && e - p > 2 
+          && isHex(*(p+1)) 
+          && isHex(*(p+2)))
+      {
+         p+=3;
+      }
+      else if (shouldEscape[*p])
+      {
+         if(p > anchor)
+         {
+            str.write((char*)anchor, p-anchor);
+         }
+         int hi = (*p & 0xF0)>>4;
+         int low = (*p & 0x0F);
+	   
+         str << '%' << hex[hi] << hex[low];
+         anchor=++p;
+      }
+      else
+      {
+         ++p;
+      }
+   }
+   if(p > anchor)
+   {
+      str.write((char*)anchor, p-anchor);
+   }
+   return str;
 }
 
 HashValueImp(resip::Data, data.hash());

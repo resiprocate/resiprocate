@@ -13,30 +13,63 @@
 
 using namespace resip;
 
+const HeaderFieldValueList HeaderFieldValueList::Empty;
+
 HeaderFieldValueList::~HeaderFieldValueList()
 {
-   for (iterator i = begin(); i != end(); i++)
-   {
-      delete *i;
-   }
-   delete mParserContainer;
+   freeParserContainer();
 }
 
 HeaderFieldValueList::HeaderFieldValueList(const HeaderFieldValueList& rhs)
-   : mHeaders(0),
+   : mHeaders(),
+     mPool(0),
      mParserContainer(0)
 {
-   if (rhs.mParserContainer != 0)
+   if (rhs.mParserContainer)
    {
       mParserContainer = rhs.mParserContainer->clone();
    }
-   else
+   else if(rhs.mHeaders.size())
    {
-      for (const_iterator i = rhs.begin(); i != rhs.end(); i++)
+      mHeaders=rhs.mHeaders;
+   }
+}
+
+HeaderFieldValueList::HeaderFieldValueList(const HeaderFieldValueList& rhs, PoolBase& pool)
+   : mHeaders(StlPoolAllocator<HeaderFieldValue, PoolBase>(&pool)),
+     mPool(&pool),
+     mParserContainer(0)
+{
+   if (rhs.mParserContainer)
+   {
+      mParserContainer = rhs.mParserContainer->clone();
+   }
+   else if(rhs.mHeaders.size())
+   {
+      mHeaders=rhs.mHeaders;
+   }
+}
+
+HeaderFieldValueList&
+HeaderFieldValueList::operator=(const HeaderFieldValueList& rhs)
+{
+   if(this!=&rhs)
+   {
+      mHeaders.clear();
+
+      freeParserContainer();
+
+      if (rhs.mParserContainer != 0)
       {
-         push_back(new HeaderFieldValue(**i));
+         mParserContainer = rhs.mParserContainer->clone();
+      }
+      else
+      {
+         mHeaders=rhs.mHeaders;
       }
    }
+   
+   return *this;
 }
 
 EncodeStream&
@@ -69,7 +102,7 @@ HeaderFieldValueList::encode(int headerEnum, EncodeStream& str) const
                str << Symbols::CRLF << headerName << Symbols::COLON << Symbols::SPACE;
             }
          }
-         (*j)->encode(str);
+         j->encode(str);
       }
       str << Symbols::CRLF;
    }
@@ -96,7 +129,7 @@ HeaderFieldValueList::encode(const Data& headerName, EncodeStream& str) const
          {
             str << Symbols::COMMA[0] << Symbols::SPACE[0];
          }
-         (*j)->encode(str);
+         j->encode(str);
       }
       str << Symbols::CRLF;
    }
@@ -131,12 +164,19 @@ HeaderFieldValueList::encodeEmbedded(const Data& headerName, EncodeStream& str) 
          Data buf;
          {
             DataStream s(buf);
-            (*j)->encode(s);
+            j->encode(s);
          }
          str << Embedded::encode(buf);
       }
    }
    return str;
+}
+
+void 
+HeaderFieldValueList::clear()
+{
+   freeParserContainer();
+   mHeaders.clear();
 }
 
 bool
@@ -151,6 +191,27 @@ HeaderFieldValueList::parsedEmpty() const
       return mHeaders.empty();
    }
 }
+
+void 
+HeaderFieldValueList::freeParserContainer()
+{
+   if(mParserContainer)
+   {
+      mParserContainer->~ParserContainerBase();
+      // The allocator will check whether this belongs to it, and if not, fall 
+      // back to global operator delete.
+      if(mPool)
+      {
+         mPool->deallocate(mParserContainer);
+      }
+      else
+      {
+         ::operator delete(mParserContainer);
+      }
+      mParserContainer=0;
+   }
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

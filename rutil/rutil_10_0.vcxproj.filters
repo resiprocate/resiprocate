@@ -168,6 +168,18 @@
     <ClCompile Include="FdPoll.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dns\DnsThread.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneralCongestionManager.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PoolBase.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SelectInterruptor.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractFifo.hxx">
@@ -387,6 +399,36 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="FdPoll.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dns\DnsThread.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CongestionManager.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ConsumerFifoBuffer.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DinkyPool.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FdSetIOObserver.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneralCongestionManager.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PoolBase.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ProducerFifoBuffer.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SelectInterruptor.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StlPoolAllocator.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

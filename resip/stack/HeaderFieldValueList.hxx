@@ -4,6 +4,9 @@
 #include <iosfwd>
 #include <vector>
 
+#include "rutil/StlPoolAllocator.hxx"
+#include "rutil/PoolBase.hxx"
+
 namespace resip
 {
 
@@ -11,19 +14,33 @@ class Data;
 class ParserContainerBase;
 class HeaderFieldValue;
 
+/**
+   @internal
+*/
 class HeaderFieldValueList
 {
    public:
+      static const HeaderFieldValueList Empty;
+
       HeaderFieldValueList()
          : mHeaders(), 
+           mPool(0),
+           mParserContainer(0)
+      {}
+
+      HeaderFieldValueList(PoolBase& pool)
+         : mHeaders(StlPoolAllocator<HeaderFieldValue, PoolBase>(&pool)),
+           mPool(&pool),
            mParserContainer(0)
       {}
 
       ~HeaderFieldValueList();
       HeaderFieldValueList(const HeaderFieldValueList& rhs);
-
-      void setParserContainer(ParserContainerBase* parser) {mParserContainer = parser;}
-      ParserContainerBase* getParserContainer() const {return mParserContainer;}
+      HeaderFieldValueList(const HeaderFieldValueList& rhs, PoolBase& pool);
+      HeaderFieldValueList& operator=(const HeaderFieldValueList& rhs);
+      
+      inline void setParserContainer(ParserContainerBase* parser) {mParserContainer = parser;}
+      inline ParserContainerBase* getParserContainer() const {return mParserContainer;}
 
       EncodeStream& encode(int headerEnum, EncodeStream& str) const;
       EncodeStream& encode(const Data& headerName, EncodeStream& str) const;
@@ -31,18 +48,42 @@ class HeaderFieldValueList
 
       bool empty() const {return mHeaders.empty();}
       size_t size() const {return mHeaders.size();}
+      void clear();
       //void push_front(HeaderFieldValue* header) {mHeaders.push_front(header);}
-      void push_back(HeaderFieldValue* header) {mHeaders.push_back(header);}
+
+      /**
+         READ THIS CAREFULLY BEFORE USING THIS FUNCTION
+         @param own Specifies whether the created HeaderFieldValue will take 
+            ownership of the buffer passed. This will never make a copy 
+            of the buffer; if own==false, the HeaderFieldValue will retain the 
+            same reference that it would if own==true. The only difference is 
+            that if own==false, the buffer will not be deleted when the 
+            HeaderFieldValue goes away/releases its reference, while if 
+            own==true the buffer will be deleted. This means that no matter what 
+            you pass for this param, you must ensure that the buffer is not 
+            deleted during the lifetime of this HeaderFieldValueList.
+      */
+      void push_back(const char* buffer, size_t length, bool own) 
+      {
+         mHeaders.push_back(HeaderFieldValue::Empty); 
+         mHeaders.back().init(buffer,length,own);
+      }
+
       //void pop_front() {mHeaders.pop_front();}
       void pop_back() {mHeaders.pop_back();};
-      HeaderFieldValue* front() {return mHeaders.front();}
-      HeaderFieldValue* back() {return mHeaders.back();}
-      const HeaderFieldValue* front() const {return mHeaders.front();}
-      const HeaderFieldValue* back() const {return mHeaders.back();}
+      HeaderFieldValue* front() {return &mHeaders.front();}
+      HeaderFieldValue* back() {return &mHeaders.back();}
+      const HeaderFieldValue* front() const {return &mHeaders.front();}
+      const HeaderFieldValue* back() const {return &mHeaders.back();}
+
+      inline void reserve(size_t size)
+      {
+         mHeaders.reserve(size);
+      }
 
       bool parsedEmpty() const;
    private:
-      typedef std::vector<HeaderFieldValue*> ListImpl;
+      typedef std::vector<HeaderFieldValue, StlPoolAllocator<HeaderFieldValue, PoolBase > >  ListImpl;
    public:
       typedef ListImpl::iterator iterator;
       typedef ListImpl::const_iterator const_iterator;
@@ -53,8 +94,11 @@ class HeaderFieldValueList
       const_iterator end() const {return mHeaders.end();}
 
    private:
-      std::vector<HeaderFieldValue*> mHeaders;
+      ListImpl mHeaders;
+      PoolBase* mPool;
       ParserContainerBase* mParserContainer;
+
+      void freeParserContainer();
 };
 
 }

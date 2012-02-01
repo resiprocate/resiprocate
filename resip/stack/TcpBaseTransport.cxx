@@ -38,9 +38,9 @@ TcpBaseTransport::~TcpBaseTransport()
    //DebugLog (<< "Shutting down TCP Transport " << this << " " << mFd << " " << mInterface << ":" << port());
 
    // !jf! this is not right. should drain the sends before
-   while (mTxFifo.messageAvailable())
+   while (mTxFifoOutBuffer.messageAvailable())
    {
-      SendData* data = mTxFifo.getNext();
+      SendData* data = mTxFifoOutBuffer.getNext();
       InfoLog (<< "Throwing away queued data for " << data->destination);
 
       fail(data->transactionId, TransportFailure::TransportShutdown);
@@ -48,6 +48,11 @@ TcpBaseTransport::~TcpBaseTransport()
    }
    DebugLog (<< "Shutting down " << mTuple);
    //mSendRoundRobin.clear(); // clear before we delete the connections
+   if(mPollGrp && mPollItemHandle)
+   {
+      mPollGrp->delPollItem(mPollItemHandle);
+      mPollItemHandle=0;
+   }
 }
 
 // called from constructor of TcpTransport
@@ -96,14 +101,23 @@ TcpBaseTransport::init()
 void
 TcpBaseTransport::setPollGrp(FdPollGrp *grp)
 {
-   assert(mPollGrp==NULL && grp!=NULL);
-   if ( mFd!=INVALID_SOCKET )
+   if(mPollGrp && mPollItemHandle)
+   {
+      mPollGrp->delPollItem(mPollItemHandle);
+      mPollItemHandle=0;
+   }
+
+   if ( mFd!=INVALID_SOCKET && grp)
    {
       mPollItemHandle = grp->addPollItem(mFd, FPEM_Read|FPEM_Edge, this);
       // above released by InternalTransport destructor
+      // ?bwc? Is this really a good idea? If the InternalTransport d'tor is
+      // freeing this, shouldn't InternalTransport::setPollGrp() handle 
+      // creating it?
    }
-   mPollGrp = grp;
    mConnectionManager.setPollGrp(grp);
+
+   InternalTransport::setPollGrp(grp);
 }
 
 void
@@ -114,6 +128,10 @@ TcpBaseTransport::buildFdSet( FdSet& fdset)
    if ( mFd!=INVALID_SOCKET )
    {
       fdset.setRead(mFd); // for the transport itself (accept)
+   }
+   if(!shareStackProcessAndSelect())
+   {
+      mSelectInterruptor.buildFdSet(fdset);
    }
 }
 
@@ -239,9 +257,9 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
 void
 TcpBaseTransport::processAllWriteRequests()
 {
-   while (mTxFifo.messageAvailable())
+   while (mTxFifoOutBuffer.messageAvailable())
    {
-      SendData* data = mTxFifo.getNext();
+      SendData* data = mTxFifoOutBuffer.getNext();
       DebugLog (<< "Processing write for " << data->destination);
 
       // this will check by connectionId first, then by address
@@ -250,7 +268,9 @@ TcpBaseTransport::processAllWriteRequests()
       //DebugLog (<< "TcpBaseTransport::processAllWriteRequests() using " << conn);
 
       // There is no connection yet, so make a client connection
-      if (conn == 0 && !data->destination.onlyUseExistingConnection)
+      if (conn == 0 && 
+            !data->destination.onlyUseExistingConnection &&
+            data->command == 0)  // SendData commands (ie. close connection and enable flow timers) shouldn't cause new connections to form
       {
          TransportFailure::FailureReason failCode = TransportFailure::Failure;
          int subCode = 0;
@@ -280,8 +300,10 @@ TcpBaseTransport::processAllWriteRequests()
 }
 
 void
-TcpBaseTransport::checkTransmitQueue()
+TcpBaseTransport::process()
 {
+   mStateMachineFifo.flush();
+
    // called within SipStack's thread. There is some risk of
    // recursion here if connection starts doing anything fancy.
    // For backward-compat when not-epoll, don't handle transmit synchronously
@@ -301,6 +323,8 @@ TcpBaseTransport::process(FdSet& fdSet)
 
    // process the connections in ConnectionManager
    mConnectionManager.process(fdSet);
+
+   mStateMachineFifo.flush();
 
    // process our own listen/accept socket for incoming connections
    if (mFd!=INVALID_SOCKET && fdSet.readyToRead(mFd))

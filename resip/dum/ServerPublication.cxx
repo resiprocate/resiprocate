@@ -43,7 +43,7 @@ ServerPublication::getDocumentKey() const
    return mDocumentKey;
 }
 
-const Data& 
+Data
 ServerPublication::getPublisher() const
 {
    return mLastRequest.header(h_From).uri().getAor();

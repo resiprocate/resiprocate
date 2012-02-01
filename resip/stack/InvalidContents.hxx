@@ -6,27 +6,43 @@
 namespace resip
 {
 
+/**
+   @ingroup sip_payload
+   @brief SIP body type to represent an invalid content type (MIME content-type Invalid/Invalid).
+*/
 class InvalidContents : public Contents
 {
    public:
       InvalidContents();
       InvalidContents(const Data& text, const Mime& originalType);
-      InvalidContents(HeaderFieldValue* hfv, const Mime& contentType, const Mime& originalType);
+      InvalidContents(const HeaderFieldValue& hfv, const Mime& contentType, const Mime& originalType);
       InvalidContents(const Data& data, const Mime& contentType, const Mime& originalType);
       InvalidContents(const InvalidContents& rhs);
       virtual ~InvalidContents();
       InvalidContents& operator=(const InvalidContents& rhs);
 
+      /** @brief duplicate an InvalidContents object
+          @return pointer to a new InvalidContents object  
+        **/
       virtual Contents* clone() const;
 
       static const Mime& getStaticType();
 
+      /** @brief Gets the MIME content-type used in the constructor of InvalidContents.
+          @return Mime containing the MIME content-type.
+       **/
       const Mime& getOriginalType() const;
 
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
       virtual void parse(ParseBuffer& pb);
 
+      /** @brief Gets a const reference to the parsed text from invalid contents.
+          @return Data containing the parsed contents.
+       **/
       const Data& text() const {checkParsed(); return mText;}
+      /** @brief Gets the parsed text from invalid contents.
+          @return Data containing the parsed contents.
+       **/
       Data& text() {checkParsed(); return mText;}
 
    private:

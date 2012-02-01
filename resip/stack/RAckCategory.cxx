@@ -8,7 +8,7 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
-#include "rutil/WinLeakCheck.hxx"
+//#include "rutil/WinLeakCheck.hxx"  // not compatible with placement new used below
 
 using namespace resip;
 using namespace std;
@@ -18,8 +18,10 @@ using namespace std;
 //====================
 // RAckCategory:
 //====================
-RAckCategory::RAckCategory(HeaderFieldValue* hfv, Headers::Type type)
-   : ParserCategory(hfv, type), 
+RAckCategory::RAckCategory(const HeaderFieldValue& hfv, 
+                           Headers::Type type,
+                           PoolBase* pool)
+   : ParserCategory(hfv, type, pool), 
      mMethod(UNKNOWN), 
      mRSequence(0),
      mCSequence(0) 
@@ -33,8 +35,9 @@ RAckCategory::RAckCategory()
      mCSequence(0) 
 {}
 
-RAckCategory::RAckCategory(const RAckCategory& rhs)
-   : ParserCategory(rhs),
+RAckCategory::RAckCategory(const RAckCategory& rhs,
+                           PoolBase* pool)
+   : ParserCategory(rhs, pool),
      mMethod(rhs.mMethod),
      mUnknownMethodName(rhs.mUnknownMethodName),
      mRSequence(rhs.mRSequence),
@@ -68,6 +71,18 @@ ParserCategory*
 RAckCategory::clone() const
 {
    return new RAckCategory(*this);
+}
+
+ParserCategory* 
+RAckCategory::clone(void* location) const
+{
+   return new (location) RAckCategory(*this);
+}
+
+ParserCategory* 
+RAckCategory::clone(PoolBase* pool) const
+{
+   return new (pool) RAckCategory(*this, pool);
 }
 
 MethodTypes& 

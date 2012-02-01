@@ -72,6 +72,7 @@ void mvvline(...) {};
 #include <stdlib.h>
 #endif
 
+#include "rutil/FdPoll.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/SipStack.hxx"
@@ -119,164 +120,6 @@ displayPres()
    wrefresh(statusWin);  
 }
 
-
-class TestCallback: public TuIM::Callback
-{
-   public:
-      virtual void presenceUpdate(const Uri& dest, bool open, const Data& status );
-      virtual void receivedPage( const Data& msg, const Uri& from ,
-                                 const Data& signedBy,  SignatureStatus sigStatus,
-                                 bool wasEncryped  );
-      virtual void sendPageFailed( const Uri& dest,int respNumber );
-      virtual void registrationFailed(const resip::Uri&, int respNumber); 
-      virtual void registrationWorked(const Uri& dest );
-      virtual void receivePageFailed(const Uri& sender);
-};
-  
-
-void 
-TestCallback::presenceUpdate(const Uri& from, bool open, const Data& status )
-{
-   const char* stat = (open)?"online":"offline";
-   //cout << from << " set presence to " << stat << " " << status.c_str() << endl;
-
-   waddstr(textWin,"Status: ");
-   waddstr(textWin, from.getAor().c_str());
-   waddstr(textWin," is ");
-   waddstr(textWin,stat);
-   waddstr(textWin," ");
-   waddstr(textWin,status.c_str());
-   waddstr(textWin,"\n");
-
-   wrefresh(textWin);
-
-   displayPres();
-}
-
-void 
-TestCallback::receivedPage( const Data& msg, const Uri& from,
-                            const Data& signedBy,  SignatureStatus sigStatus,
-                            bool wasEncryped  )
-{  
-   //DebugLog(<< "In TestPageCallback");
-
-   if ( dest != from )
-   {
-      dest = from;
-      //cerr << "Set destination to <" << *mDest << ">" << endl;
-      waddstr(textWin,"Set destination to ");
-      waddstr(textWin, Data::from(dest).c_str());
-      waddstr(textWin,"\n");
-   }
-   
-   //cout << from;  
-
-   waddstr(textWin,"From: ");
-   waddstr(textWin,from.getAor().c_str());
-
-   if ( !wasEncryped )
-   {
-      //cout << " -NOT SECURE- ";
-      waddstr(textWin," -NOT SECURE-");
-   }
-   else
-   {
-      waddstr(textWin," -secure-");
-   }
-   switch ( sigStatus )
-   {
-      case  SignatureSelfSigned:
-         //cout << " -self signed signature (bad)- ";
-         waddstr(textWin,"bad signature");
-	 break;
-      case  SignatureIsBad:
-         //cout << " -bad signature- ";
-         waddstr(textWin,"bad signature");
-	 break;
-      case  SignatureNone:
-         //cout << " -no signature- ";
-         waddstr(textWin,"no signature");
-         break;
-      case  SignatureTrusted:
-         //cout << " <signed  " << signedBy << " > ";
-         waddstr(textWin,"signed ");
-         waddstr(textWin,signedBy.c_str());
-         break;
-      case  SignatureCATrusted:
-         //cout << " <ca signed  " << signedBy << " > ";
-         waddstr(textWin,"ca signed " );
-         waddstr(textWin,signedBy.c_str());
-         break;
-      case  SignatureNotTrusted:
-         //cout << " <signed  " << signedBy << " NOT TRUSTED > ";
-         waddstr(textWin,"untrusted signature ");
-         waddstr(textWin,signedBy.c_str());
-         break;
-   }
-   
-   //cout << " says:" << endl;
-   //cout << msg.escaped() << endl;  
-   waddstr(textWin, " says: ");
-   waddstr(textWin, msg.escaped().c_str() );
-   waddstr(textWin, "\n");
-   
-   wrefresh(textWin);
-}
-
-
-void 
-TestCallback::sendPageFailed( const Uri& target, int respNum )
-{
-   //InfoLog(<< "In TestErrCallback");  
-   // cerr << "Message to " << dest << " failed" << endl;  
-   Data num(respNum);
-   
-   waddstr(textWin,"Message to ");
-   waddstr(textWin, Data::from(target).c_str());
-   waddstr(textWin," failed (");
-   waddstr(textWin,num.c_str());
-   waddstr(textWin," response)\n");
-   wrefresh(textWin);
-}
-
-
-void 
-TestCallback::receivePageFailed( const Uri& target )
-{
-   //InfoLog(<< "In TestErrCallback");  
-   // cerr << "Message to " << dest << " failed" << endl;  
-
-   waddstr(textWin,"Can not understand messager from ");
-   waddstr(textWin, Data::from(target).c_str());
-   waddstr(textWin,"\n");
-   wrefresh(textWin);
-}
-
-
-void 
-TestCallback::registrationFailed(const resip::Uri& target, int respNum )
-{
-   Data num(respNum);
-   
-   waddstr(textWin,"Registration to ");
-   waddstr(textWin, Data::from(target).c_str());
-   waddstr(textWin," failed (");
-   waddstr(textWin,num.c_str());
-   waddstr(textWin," response)\n");
-   wrefresh(textWin);
-}
-  
-                              
-void 
-TestCallback::registrationWorked(const resip::Uri& target)
-{
-   waddstr(textWin,"Registration to ");
-   waddstr(textWin, Data::from(target).c_str());
-   waddstr(textWin," worked");
-   wrefresh(textWin);
-}
-  
-                              
 bool
 processStdin( Uri* dest, bool sign, bool encryp )
 {
@@ -439,7 +282,191 @@ processStdin( Uri* dest, bool sign, bool encryp )
    return true;
 }
 
+class StdInWatcher : public resip::FdPollItemIf
+{
+   public:
+      StdInWatcher(Uri* dest, bool sign, bool encrypt) :
+         mDest(dest),
+         mSign(sign),
+         mEncrypt(encrypt),
+         mKeepGoing(true)
+      {}
 
+      virtual ~StdInWatcher(){}
+
+      virtual void processPollEvent(FdPollEventMask mask)
+      {
+         mKeepGoing=processStdin(mDest, mSign, mEncrypt);
+      }
+
+      inline bool keepGoing() const {return mKeepGoing;} 
+
+   private:
+      Uri* mDest;
+      bool mSign;
+      bool mEncrypt;
+      bool mKeepGoing;
+
+}; // class StdInWatcher
+
+
+class TestCallback: public TuIM::Callback
+{
+   public:
+      virtual void presenceUpdate(const Uri& dest, bool open, const Data& status );
+      virtual void receivedPage( const Data& msg, const Uri& from ,
+                                 const Data& signedBy,  SignatureStatus sigStatus,
+                                 bool wasEncryped  );
+      virtual void sendPageFailed( const Uri& dest,int respNumber );
+      virtual void registrationFailed(const resip::Uri&, int respNumber); 
+      virtual void registrationWorked(const Uri& dest );
+      virtual void receivePageFailed(const Uri& sender);
+};
+  
+
+void 
+TestCallback::presenceUpdate(const Uri& from, bool open, const Data& status )
+{
+   const char* stat = (open)?"online":"offline";
+   //cout << from << " set presence to " << stat << " " << status.c_str() << endl;
+
+   waddstr(textWin,"Status: ");
+   waddstr(textWin, from.getAor().c_str());
+   waddstr(textWin," is ");
+   waddstr(textWin,stat);
+   waddstr(textWin," ");
+   waddstr(textWin,status.c_str());
+   waddstr(textWin,"\n");
+
+   wrefresh(textWin);
+
+   displayPres();
+}
+
+void 
+TestCallback::receivedPage( const Data& msg, const Uri& from,
+                            const Data& signedBy,  SignatureStatus sigStatus,
+                            bool wasEncryped  )
+{  
+   //DebugLog(<< "In TestPageCallback");
+
+   if ( dest != from )
+   {
+      dest = from;
+      //cerr << "Set destination to <" << *mDest << ">" << endl;
+      waddstr(textWin,"Set destination to ");
+      waddstr(textWin, Data::from(dest).c_str());
+      waddstr(textWin,"\n");
+   }
+   
+   //cout << from;  
+
+   waddstr(textWin,"From: ");
+   waddstr(textWin,from.getAor().c_str());
+
+   if ( !wasEncryped )
+   {
+      //cout << " -NOT SECURE- ";
+      waddstr(textWin," -NOT SECURE-");
+   }
+   else
+   {
+      waddstr(textWin," -secure-");
+   }
+   switch ( sigStatus )
+   {
+      case  SignatureSelfSigned:
+         //cout << " -self signed signature (bad)- ";
+         waddstr(textWin,"bad signature");
+	 break;
+      case  SignatureIsBad:
+         //cout << " -bad signature- ";
+         waddstr(textWin,"bad signature");
+	 break;
+      case  SignatureNone:
+         //cout << " -no signature- ";
+         waddstr(textWin,"no signature");
+         break;
+      case  SignatureTrusted:
+         //cout << " <signed  " << signedBy << " > ";
+         waddstr(textWin,"signed ");
+         waddstr(textWin,signedBy.c_str());
+         break;
+      case  SignatureCATrusted:
+         //cout << " <ca signed  " << signedBy << " > ";
+         waddstr(textWin,"ca signed " );
+         waddstr(textWin,signedBy.c_str());
+         break;
+      case  SignatureNotTrusted:
+         //cout << " <signed  " << signedBy << " NOT TRUSTED > ";
+         waddstr(textWin,"untrusted signature ");
+         waddstr(textWin,signedBy.c_str());
+         break;
+   }
+   
+   //cout << " says:" << endl;
+   //cout << msg.escaped() << endl;  
+   waddstr(textWin, " says: ");
+   waddstr(textWin, msg.escaped().c_str() );
+   waddstr(textWin, "\n");
+   
+   wrefresh(textWin);
+}
+
+
+void 
+TestCallback::sendPageFailed( const Uri& target, int respNum )
+{
+   //InfoLog(<< "In TestErrCallback");  
+   // cerr << "Message to " << dest << " failed" << endl;  
+   Data num(respNum);
+   
+   waddstr(textWin,"Message to ");
+   waddstr(textWin, Data::from(target).c_str());
+   waddstr(textWin," failed (");
+   waddstr(textWin,num.c_str());
+   waddstr(textWin," response)\n");
+   wrefresh(textWin);
+}
+
+
+void 
+TestCallback::receivePageFailed( const Uri& target )
+{
+   //InfoLog(<< "In TestErrCallback");  
+   // cerr << "Message to " << dest << " failed" << endl;  
+
+   waddstr(textWin,"Can not understand messager from ");
+   waddstr(textWin, Data::from(target).c_str());
+   waddstr(textWin,"\n");
+   wrefresh(textWin);
+}
+
+
+void 
+TestCallback::registrationFailed(const resip::Uri& target, int respNum )
+{
+   Data num(respNum);
+   
+   waddstr(textWin,"Registration to ");
+   waddstr(textWin, Data::from(target).c_str());
+   waddstr(textWin," failed (");
+   waddstr(textWin,num.c_str());
+   waddstr(textWin," response)\n");
+   wrefresh(textWin);
+}
+  
+                              
+void 
+TestCallback::registrationWorked(const resip::Uri& target)
+{
+   waddstr(textWin,"Registration to ");
+   waddstr(textWin, Data::from(target).c_str());
+   waddstr(textWin," worked");
+   wrefresh(textWin);
+}
+  
+                              
 int
 main(int argc, char* argv[])
 {
@@ -1004,69 +1031,37 @@ myMain(int argc, char* argv[])
          tuIM->sendPage( sendMsg , dest, sign , (encryp) ?
                          (dest.getAorNoPort()) : (Data::Empty) );
    }
-   
+
+   StdInWatcher watcher(&dest,sign,encryp);
+   FdPollItemHandle wh=sipStack.getPollGrp()->addPollItem(fileno(stdin), FPEM_Read, &watcher);
+
    while (1)
    {
-      FdSet fdset; 
-      sipStack.buildFdSet(fdset);
-      int time = sipStack.getTimeTillNextProcessMS();
-
-      fdset.setRead( fileno(stdin) );
-      
-      //cerr << time << endl;
-
-      int  err = fdset.selectMilliSeconds( time );
-      if ( err == -1 )
-      {
-         int e = errno;
-         switch (e)
-         {
-            case 0:
-               break;
-            default:
-               //InfoLog(<< "Error " << e << " " << strerror(e) << " in select");
-               break;
-         }
-      }
-      if ( err == 0 )
-      {
-         //cerr << "select timed out" << endl;
-      }
-      if ( err > 0 )
-      {
-         //cerr << "select has " << err << " fd ready" << endl;
-      }
-      
-      ////InfoLog(<< "Select returned");
-       
-      if ( fdset.readyToRead( fileno(stdin) ) )
-      {
-         bool keepGoing = processStdin(&dest,sign,encryp);
-         if (!keepGoing) 
-         {
-            break;
-         } 
-      }
-       
-      // //DebugLog ( << "Try TO PROCESS " );
       try
       {
-         sipStack.process(fdset);
+         sipStack.process( 50 );
       }
       catch (...)
       {
          ErrLog( << "Got a exception from sipStack::process" );
       }
-      
+
+      if(!watcher.keepGoing())
+      {
+         break;
+      }
+
       try
       {
-         tuIM->process();       
+         tuIM->process();
       }
       catch (...)
       {
          ErrLog( << "Got a exception passed from TuIM::process" );
       }
    }
+
+   sipStack.getPollGrp()->delPollItem(wh);
 
    return 0;
 }

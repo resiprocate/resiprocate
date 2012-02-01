@@ -7,7 +7,7 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
-#include "rutil/WinLeakCheck.hxx"
+//#include "rutil/WinLeakCheck.hxx"  // not compatible with placement new used below
 
 using namespace resip;
 using namespace std;
@@ -29,14 +29,17 @@ Mime::Mime(const Data& type, const Data& subType)
      mSubType(subType) 
 {}
 
-Mime::Mime(HeaderFieldValue* hfv, Headers::Type type)
-   : ParserCategory(hfv, type),
+Mime::Mime(const HeaderFieldValue& hfv, 
+            Headers::Type type,
+            PoolBase* pool)
+   : ParserCategory(hfv, type, pool),
      mType(), 
      mSubType()
 {}
 
-Mime::Mime(const Mime& rhs)
-   : ParserCategory(rhs),
+Mime::Mime(const Mime& rhs,
+            PoolBase* pool)
+   : ParserCategory(rhs, pool),
      mType(rhs.mType),
      mSubType(rhs.mSubType)
 {}
@@ -117,15 +120,16 @@ void
 Mime::parse(ParseBuffer& pb)
 {
    const char* anchor = pb.skipWhitespace();
-
-   pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SLASH);
+   static std::bitset<256> delimiter1=Data::toBitset("\r\n\t /");
+   pb.skipToOneOf(delimiter1);
    pb.data(mType, anchor);
 
    pb.skipWhitespace();
    pb.skipChar(Symbols::SLASH[0]);
 
    anchor = pb.skipWhitespace();
-   pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SEMI_COLON);
+   static std::bitset<256> delimiter2=Data::toBitset("\r\n\t ;");
+   pb.skipToOneOf(delimiter2);
    pb.data(mSubType, anchor);
 
    pb.skipWhitespace();
@@ -138,6 +142,18 @@ Mime::clone() const
    return new Mime(*this);
 }
 
+ParserCategory* 
+Mime::clone(void* location) const
+{
+   return new (location) Mime(*this);
+}
+
+ParserCategory* 
+Mime::clone(PoolBase* pool) const
+{
+   return new (pool) Mime(*this, pool);
+}
+
 EncodeStream&
 Mime::encodeParsed(EncodeStream& str) const
 {
@@ -146,16 +162,14 @@ Mime::encodeParsed(EncodeStream& str) const
    return str;
 }
 
-HashValueImp(resip::Mime, data.type().caseInsensitivehash() ^ data.subType().caseInsensitivehash());
-
 ParameterTypes::Factory Mime::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
 
 Parameter* 
-Mime::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+Mime::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool)
 {
    if(type > ParameterTypes::UNKNOWN && type < ParameterTypes::MAX_PARAMETER && ParameterFactories[type])
    {
-      return ParameterFactories[type](type, pb, terminators);
+      return ParameterFactories[type](type, pb, terminators, pool);
    }
    return 0;
 }
@@ -223,6 +237,8 @@ defineParam(smimeType, "smime-type", DataParameter, "RFC 2633");
 defineParam(url, "url", QuotedDataParameter, "RFC 4483");
 
 #undef defineParam
+
+HashValueImp(resip::Mime, data.type().caseInsensitiveTokenHash() ^ data.subType().caseInsensitiveTokenHash());
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

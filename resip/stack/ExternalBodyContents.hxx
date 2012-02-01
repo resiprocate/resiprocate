@@ -6,13 +6,21 @@
 namespace resip
 {
 
+/**
+   @ingroup sip_payload
+   @brief SIP body type to represent contents with an external body (MIME content-type message/external-body).
+*/
 class ExternalBodyContents : public SipFrag
 {
    public:
       ExternalBodyContents();
-      ExternalBodyContents(HeaderFieldValue* hfv, const Mime& contentType);
+      ExternalBodyContents(const HeaderFieldValue& hfv, const Mime& contentType);
       ExternalBodyContents(const ExternalBodyContents& rhs);
       ExternalBodyContents& operator=(const ExternalBodyContents& rhs);
+
+      /** @brief duplicate an ExternalBodyContents object
+          @return pointer to a new ExternalBodyContents object  
+        **/
       virtual Contents* clone() const;
 
       static const Mime& getStaticType() ;

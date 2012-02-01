@@ -9,6 +9,7 @@
 #include "repro/monkeys/OutboundTargetHandler.hxx"
 #include "repro/monkeys/QValueTargetHandler.hxx"
 #include "repro/monkeys/SimpleTargetHandler.hxx"
+#include "rutil/GeneralCongestionManager.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/InteropHelper.hxx"
 #include "tfm/repro/TestRepro.hxx"
@@ -40,7 +41,7 @@ TfmProxyConfig::TfmProxyConfig(AbstractDb* db, const CommandLineParser& args)
    insertConfigValue("QValueMsBetweenForkGroups", "2000");
    insertConfigValue("QValueMsBeforeCancel", "2000");
 
-   insertConfigValue("ForceRecordRouting", args.mForceRecordRoute ? "true" : "false");
+   insertConfigValue("ForceRecordRouting", "false");
    insertConfigValue("RecordRouteUri", resip::Data::from(args.mRecordRoute));
 }
 
@@ -269,6 +270,19 @@ TestRepro::TestRepro(const resip::Data& name,
 
    mStack.registerTransactionUser(mProxy);
 
+   if(args.mUseCongestionManager)
+   {
+      mCongestionManager.reset(new GeneralCongestionManager(
+                                          GeneralCongestionManager::WAIT_TIME, 
+                                          200));
+      mStack.setCongestionManager(mCongestionManager.get());
+   }
+
+   if(args.mThreadedStack)
+   {
+      mStack.run();
+   }
+
    mStackThread.run();
    mProxy.run();
    mDumThread.run();
@@ -280,6 +294,9 @@ TestRepro::~TestRepro()
    mDumThread.join();
    mStackThread.shutdown();
    mStackThread.join();
+   mStack.shutdownAndJoinThreads();
+   mStack.setCongestionManager(0);
+   delete mDb;
 }
 
 void

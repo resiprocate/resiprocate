@@ -114,6 +114,9 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       std::set<resip::Data> mSupportedOptions;
       OptionsHandler* mOptionsHandler;
       std::auto_ptr<RequestContextFactory> mRequestContextFactory;
+
+      // disabled
+      Proxy();
 };
 }
 #endif

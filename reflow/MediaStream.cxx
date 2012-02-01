@@ -1,5 +1,6 @@
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
+#include <rutil/Timer.hxx>
 
 #include "FlowManagerSubsystem.hxx"
 #include "FlowManager.hxx"

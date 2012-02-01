@@ -14,6 +14,7 @@
 #endif
 #endif
 
+#include "rutil/FdPoll.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/compat.hxx"
@@ -78,14 +79,15 @@ DnsStub::DnsStub(const NameserverList& additional,
                  AfterSocketCreationFuncPtr socketFunc,
                  AsyncProcessHandler* asyncProcessHandler,
                  FdPollGrp *pollGrp) :
+   mInterruptorHandle(0),
+   mCommandFifo(&mSelectInterruptor),
    mTransform(0),
    mDnsProvider(ExternalDnsFactory::createExternalDns()),
+   mPollGrp(0),
    mAsyncProcessHandler(asyncProcessHandler)
 {
-   if ( pollGrp && mDnsProvider->isPollSupported())
-   {
-      mDnsProvider->setPollGrp(pollGrp);
-   }
+   setPollGrp(pollGrp);
+
    int retCode = mDnsProvider->init(additional, socketFunc, mDnsTimeout, mDnsTries, mDnsFeatures);
    if (retCode != ExternalDns::Success)
    {
@@ -110,6 +112,7 @@ DnsStub::~DnsStub()
       delete *it;
    }
 
+   setPollGrp(0);
    delete mDnsProvider;
 }
 
@@ -124,6 +127,7 @@ void
 DnsStub::buildFdSet(FdSet& fdset)
 {
    mDnsProvider->buildFdSet(fdset.read, fdset.write, fdset.size);
+   mSelectInterruptor.buildFdSet(fdset);
 }
 
 void
@@ -140,6 +144,7 @@ DnsStub::processFifo()
 void
 DnsStub::process(FdSet& fdset)
 {
+   mSelectInterruptor.process(fdset);
    processFifo();
    mDnsProvider->process(fdset.read, fdset.write);
 }
@@ -149,10 +154,7 @@ DnsStub::processTimers()
 {
    // the fifo is captures as a timer within getTimeTill... above
    processFifo();
-   if(mDnsProvider->isPollSupported())
-   {
-      mDnsProvider->processTimers();
-   }
+   mDnsProvider->processTimers();
 }
 
 void
@@ -367,6 +369,26 @@ void
 DnsStub::removeResultTransform()
 {
    mTransform = 0;
+}
+
+void 
+DnsStub::setPollGrp(FdPollGrp* pollGrp)
+{
+   if(mPollGrp)
+   {
+      // unregister our select interruptor
+      mPollGrp->delPollItem(mInterruptorHandle);
+      mInterruptorHandle=0;
+   }
+
+   mPollGrp=pollGrp;
+
+   if (mPollGrp)
+   {
+      mInterruptorHandle = mPollGrp->addPollItem(mSelectInterruptor.getReadSocket(), FPEM_Read, &mSelectInterruptor);
+   }
+
+   mDnsProvider->setPollGrp(mPollGrp);
 }
 
 DnsStub::Query::Query(DnsStub& stub, ResultTransform* transform, ResultConverter* resultConv,

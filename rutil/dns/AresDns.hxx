@@ -1,6 +1,7 @@
 #if !defined(RESIP_ARES_DNS_HXX)
 #define RESIP_ARES_DNS_HXX
 
+#include "rutil/FdSetIOObserver.hxx"
 #include "rutil/GenericIPAddress.hxx"
 #include "rutil/dns/ExternalDns.hxx"
 
@@ -21,7 +22,7 @@ namespace resip
 class AresDnsPollItem;
 class FdPollGrp;
 
-class AresDns : public ExternalDns
+class AresDns : public ExternalDns, public FdSetIOObserver
 {
    friend class AresDnsPollItem;
    public:
@@ -37,10 +38,12 @@ class AresDns : public ExternalDns
       virtual bool checkDnsChange();
 
       virtual unsigned int getTimeTillNextProcessMS();
+      virtual void process(FdSet& fdset);
+      virtual void buildFdSet(FdSet& fdset);
+
       virtual void buildFdSet(fd_set& read, fd_set& write, int& size);
       virtual void process(fd_set& read, fd_set& write);
 
-      virtual bool isPollSupported() const;
       virtual void setPollGrp(FdPollGrp *pollGrp);
       virtual void processTimers();
 

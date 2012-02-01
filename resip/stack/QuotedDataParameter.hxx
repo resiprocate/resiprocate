@@ -4,6 +4,7 @@
 #include "resip/stack/Parameter.hxx"
 #include "resip/stack/ParameterTypeEnums.hxx"
 #include "resip/stack/DataParameter.hxx"
+#include "rutil/PoolBase.hxx"
 #include <iosfwd>
 
 namespace resip
@@ -11,15 +12,24 @@ namespace resip
 
 class ParseBuffer;
 
+/**
+   @ingroup sip_grammar
+
+   @brief Generically represents miscellaneous parameter data that is
+   encoded using double quotes.
+*/
 class QuotedDataParameter : public DataParameter
 {
    public:
-      QuotedDataParameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);
+      QuotedDataParameter(ParameterTypes::Type, ParseBuffer& pb, const std::bitset<256>& terminators);
       explicit QuotedDataParameter(ParameterTypes::Type);
 
-      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+      static Parameter* decode(ParameterTypes::Type type, 
+                                 ParseBuffer& pb, 
+                                 const std::bitset<256>& terminators,
+                                 PoolBase* pool)
       {
-         return new QuotedDataParameter(type, pb, terminators);
+         return new (pool) QuotedDataParameter(type, pb, terminators);
       }
 
       virtual Parameter* clone() const;

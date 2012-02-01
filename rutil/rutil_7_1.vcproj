@@ -284,6 +284,9 @@
 				RelativePath=".\DnsUtil.cxx">
 			</File>
 			<File
+				RelativePath=".\DnsThread.cxx">
+			</File>
+			<File
 				RelativePath=".\dns\ExternalDnsFactory.cxx">
 			</File>
 			<File
@@ -291,6 +294,9 @@
 			</File>
 			<File
 				RelativePath=".\FileSystem.cxx">
+			</File>
+			<File
+				RelativePath=".\GeneralCongestionManager.cxx">
 			</File>
 			<File
 				RelativePath=".\HeapInstanceCounter.cxx">
@@ -309,6 +315,12 @@
 			</File>
 			<File
 				RelativePath=".\Mutex.cxx">
+			</File>
+			<File
+				RelativePath=".\PoolBase.cxx">
+			</File>
+			<File
+				RelativePath=".\SelectInterruptor.cxx">
 			</File>
 			<File
 				RelativePath=".\ssl\OpenSSLInit.cxx">
@@ -421,6 +433,15 @@
 				RelativePath=".\AbstractFifo.hxx">
 			</File>
 			<File
+				RelativePath=".\CongestionManager.hxx">
+			</File>
+			<File
+				RelativePath=".\ConsumerFifoBuffer.hxx">
+			</File>
+			<File
+				RelativePath=".\DinkyPool.hxx">
+			</File>
+			<File
 				RelativePath=".\dns\AresDns.hxx">
 			</File>
 			<File
@@ -484,6 +505,9 @@
 				RelativePath=".\DnsUtil.hxx">
 			</File>
 			<File
+				RelativePath=".\DnsThread.hxx">
+			</File>
+			<File
 				RelativePath=".\dns\ExternalDns.hxx">
 			</File>
 			<File
@@ -493,6 +517,9 @@
 				RelativePath=".\FdPoll.hxx">
 			</File>
 			<File
+				RelativePath=".\FdSetIOObserver.hxx">
+			</File>			
+			<File
 				RelativePath=".\Fifo.hxx">
 			</File>
 			<File
@@ -501,6 +528,9 @@
 			<File
 				RelativePath=".\FiniteFifo.hxx">
 			</File>
+			<File
+				RelativePath=".\GeneralCongestionManager.hxx">
+			</File>			
 			<File
 				RelativePath=".\GenericIPAddress.hxx">
 			</File>
@@ -537,6 +567,16 @@
 			<File
 				RelativePath=".\Mutex.hxx">
 			</File>
+			<File
+				RelativePath=".\PoolBase.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ProducerFifoBuffer.hxx">
+			</File>
+			<File
+				RelativePath=".\SelectInterruptor.hxx">
+			</File>			
 			<File
 				RelativePath=".\ssl\OpenSSLInit.hxx">
 			</File>
@@ -591,6 +631,9 @@
 			<File
 				RelativePath=".\Socket.hxx">
 			</File>
+			<File
+				RelativePath=".\StlPoolAllocator.hxx">
+			</File>			
 			<File
 				RelativePath=".\stun\Stun.hxx">
 			</File>
