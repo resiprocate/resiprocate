@@ -1098,7 +1098,7 @@ RendPubDlg::makeNextReq()
       }
 
       resip::HeaderFieldValue bodyHfv(body.data(), body.size());
-      req->setRawBody(&bodyHfv);
+      req->setRawBody(bodyHfv);
       req->header(resip::h_ContentType) = mTroop.mEventInfo.getContentType();
 
 #if 0
@@ -1329,7 +1329,7 @@ RendSubDlg::handleNotifyReq(RendReqCxt& cxt, RendSession& sess)
    }
    const resip::Token& ss = cxt.mMsg->header(resip::h_SubscriptionState);
    const resip::Data& sss = ss.value(); // active, pending, terminated
-   const resip::HeaderFieldValue* bodyHfv = cxt.mMsg->getRawBody();
+   const resip::HeaderFieldValue& bodyHfv = cxt.mMsg->getRawBody();
    bool isPend = sess.isPendish();
 
    mGotNotify = true;
@@ -1366,7 +1366,7 @@ RendSubDlg::handleNotifyReq(RendReqCxt& cxt, RendSession& sess)
       mTroop.setSessionMood(cxt.mRxTimeUs, sess, REND_SM_Recycle, REND_PR_NotifyTermSuprise);
       return 200;
    }
-   if ( bodyHfv==NULL ) 
+   if ( bodyHfv.getLength()==0 ) 
    {
       WarningLog(<<"NOTIFY missing content");
       return 200;
@@ -1382,7 +1382,7 @@ RendSubDlg::handleNotifyReq(RendReqCxt& cxt, RendSession& sess)
 
    resip::Data tag("RENDNOTE");
    resip::Data body;
-   bodyHfv->toBorrowData(body);
+   bodyHfv.toShareData(body);
    const resip::Data& tupPre = mTroop.mEventInfo.getTuplePrefix();
    unsigned ofs = 0;
    const unsigned siglen = 8+1+tupPre.size()+1+10+1+5+1+10+1+8;

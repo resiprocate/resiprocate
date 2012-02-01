@@ -284,7 +284,7 @@
 				RelativePath=".\DnsUtil.cxx">
 			</File>
 			<File
-				RelativePath=".\DnsThread.cxx">
+				RelativePath=".\dns\DnsThread.cxx">
 			</File>
 			<File
 				RelativePath=".\dns\ExternalDnsFactory.cxx">
@@ -505,7 +505,7 @@
 				RelativePath=".\DnsUtil.hxx">
 			</File>
 			<File
-				RelativePath=".\DnsThread.hxx">
+				RelativePath=".\dns\DnsThread.hxx">
 			</File>
 			<File
 				RelativePath=".\dns\ExternalDns.hxx">

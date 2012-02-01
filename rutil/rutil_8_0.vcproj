@@ -343,7 +343,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\DnsUtil.cxx"
+				RelativePath=".\dns\DnsThread.cxx"
 				>
 			</File>
 			<File
@@ -641,7 +641,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\DnsThread.hxx"
+				RelativePath=".\dns\DnsThread.hxx"
 				>
 			</File>
 			<File
