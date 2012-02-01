@@ -212,7 +212,11 @@ ConfigParse::parseCommandLine(int argc, char** argv)
 {
    int startingArgForNameValuePairs = 1;
    // First argument is the configuration filename - it is optional and is never proceeded with a - or /
+#ifdef WIN32
    if(argc >= 2 && argv[1][0] != '-' && argv[1][0] != '/')
+#else
+   if(argc >= 2 && argv[1][0] != '-')
+#endif
    {
       mCmdLineConfigFilename = argv[1];
       startingArgForNameValuePairs = 2;
@@ -251,7 +255,7 @@ ConfigParse::parseCommandLine(int argc, char** argv)
                pb.skipToEnd();
                pb.data(value, anchor);
 
-               cout << "Command line Name='" << name << "' value='" << value << "'" << endl;
+               //cout << "Command line Name='" << name << "' value='" << value << "'" << endl;
                insertConfigValue(name, value);
             }
             else
