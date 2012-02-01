@@ -478,7 +478,7 @@ asio::error_code
 TurnSocket::send(const char* buffer, unsigned int size)
 {
    // Allow raw data to be sent if there is no allocation
-   if(!mHaveAllocation)
+   if(!mHaveAllocation && mConnected)
    {
       return rawWrite(buffer, size);
    }

@@ -1147,6 +1147,9 @@ operator<<(EncodeStream& os, const StunMessage::StunMsgHdr& h)
 		case StunMessage::TurnRefreshMethod:
             os << "Refresh";
 			break;
+		case StunMessage::TurnCreatePermissionMethod:
+			os << "CreatePermission";
+			break;
 		case StunMessage::TurnChannelBindMethod:
             os << "ChannelBind";
 			break;
@@ -1327,14 +1330,14 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
    assert(bufLen >= sizeof(StunMsgHdr));
    char* ptr = buf;
 
-   StackLog(<< "Encoding stun message: ");
-
    mHeader.msgType = mClass | mMethod;
 
    ptr = encode16(ptr, mHeader.msgType);
    char* lengthp = ptr;
    ptr = encode16(ptr, 0);
    ptr = encode(ptr, reinterpret_cast<const char*>(&mHeader.id), sizeof(mHeader.id));
+
+   StackLog(<< "Encoding stun message: " << mHeader);
 
    if (mHasMappedAddress)
    {
@@ -1489,10 +1492,8 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
 
    if (mHasMessageIntegrity)
    {
-      StackLog(<< "HMAC with key: " << mHmacKey);
-   
       int len = ptr - buf;
-      StackLog(<< "Adding message integrity: buffer size=" << len << ", hmacKey=" << mHmacKey);
+      StackLog(<< "Adding message integrity: buffer size=" << len << ", hmacKey=" << mHmacKey.hex());
       StunAtrIntegrity integrity;
       computeHmac(integrity.hash, buf, len, mHmacKey.c_str(), (int)mHmacKey.size());
 	   ptr = encodeAtrIntegrity(ptr, integrity);
@@ -1664,7 +1665,8 @@ StunMessage::calculateHmacKey(Data& hmacKey, const Data& username, const Data& r
    MD5Stream r;
    r << username << ":" << realm << ":" << longtermAuthenticationPassword;
    hmacKey = r.getBin();
-   DebugLog(<< "calculateHmacKey: '" << username << ":" << realm << ":" << longtermAuthenticationPassword << "' = " << hmacKey);
+  
+   DebugLog(<< "calculateHmacKey: '" << username << ":" << realm << ":" << longtermAuthenticationPassword << "' = '" << hmacKey.hex() << "'");
 }
 
 bool 
@@ -1685,7 +1687,7 @@ StunMessage::checkMessageIntegrity(const Data& hmacKey)
 
       // Calculate HMAC
       int iHMACBufferSize = mMessageIntegrityMsgLength - 24 /* MessageIntegrity size */ + sizeof(StunMsgHdr); // The entire message proceeding the message integrity attribute
-      StackLog(<< "Checking message integrity: length=" << mMessageIntegrityMsgLength << ", size=" << iHMACBufferSize << ", hmacKey=" << hmacKey);
+      StackLog(<< "Checking message integrity: length=" << mMessageIntegrityMsgLength << ", size=" << iHMACBufferSize << ", hmacKey=" << hmacKey.hex());
       computeHmac((char*)hmac, mBuffer.data(), iHMACBufferSize, hmacKey.c_str(), hmacKey.size());
 
       // Restore original stun message length in mBuffer
