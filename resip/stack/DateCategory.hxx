@@ -50,12 +50,17 @@ class DateCategory : public ParserCategory
       enum {commaHandling = NoCommaTokenizing};
 
       DateCategory();
-      DateCategory(HeaderFieldValue* hfv, Headers::Type type);
-      DateCategory(const DateCategory&);
+      DateCategory(const HeaderFieldValue& hfv, 
+                     Headers::Type type,
+                     PoolBase* pool=0);
+      DateCategory(const DateCategory& orig,
+                     PoolBase* pool=0);
       DateCategory& operator=(const DateCategory&);
 
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
+      virtual ParserCategory* clone(void* location) const;
+      virtual ParserCategory* clone(PoolBase* pool) const;
 
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
       

@@ -8,23 +8,93 @@ namespace resip
 {
   class TransactionState;
 
-  class TransactionMap 
-  {
-     public:
-        ~TransactionMap();
-        
-        TransactionState* find( const Data& transactionId ) const;
-        void add( const Data& transactionId, TransactionState* state  );
-        void erase( const Data& transactionId );
-        int size() const;
-        
-     private:
-        typedef HashMap<Data, TransactionState*> Map;
-        Map mMap;
+/**
+   @internal
+*/
+class TransactionMap 
+{
+  public:
+     ~TransactionMap();
+     
+     TransactionState* find( const Data& transactionId ) const;
+     void add( const Data& transactionId, TransactionState* state  );
+     void erase( const Data& transactionId );
+     int size() const;
+     
+  private:
 
-        typedef Map::iterator MapIterator;
-        typedef Map::const_iterator MapConstIterator;
-  };
+#if  defined(__INTEL_COMPILER ) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310))  // !slg! not sure if this works on __INTEL_COMPILER 
+      /**
+         @internal
+      */
+      class BranchCompare
+      {
+         public:
+            enum { bucket_size = 4, min_buckets = 8 };
+
+            inline size_t operator()(const Data& branch) const
+            {
+               return branch.caseInsensitiveTokenHash();
+            }
+
+            inline bool operator()(const Data& branch1, const Data& branch2) const
+            {
+               return isLessThanNoCase(branch1,branch2);
+            }
+      };
+#elif defined(HASH_MAP_NAMESPACE)
+      /**
+         @internal
+      */
+      class BranchHasher
+      {
+         public:
+            inline size_t operator()(const Data& branch) const
+            {
+               return branch.caseInsensitiveTokenHash();
+            }
+      };
+
+      /**
+         @internal
+      */
+      class BranchEqual
+      {
+         public:
+            inline bool operator()(const Data& branch1, const Data& branch2) const
+            {
+               return isEqualNoCase(branch1,branch2);
+            }
+      };
+#else
+      /**
+         @internal
+      */
+      class BranchCompare
+      {
+         public:
+            inline bool operator()(const Data& branch1, const Data& branch2) const
+            {
+               return isLessThanNoCase(branch1,branch2);
+            }
+      };
+#endif
+
+      // .bwc. If rutil/HashMap.hxx fails to find a hash_map impl for the 
+      // platform we're using, it will #define HashMap to a std::map, which
+      // takes different template args. We try to compensate for this here.
+#if  defined(__INTEL_COMPILER ) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310))
+     typedef HashMap<Data, TransactionState*, BranchCompare> Map;
+#elif defined(HASH_MAP_NAMESPACE)
+     typedef HashMap<Data, TransactionState*, BranchHasher, BranchEqual> Map;
+#else
+     typedef std::map<Data, TransactionState*, BranchCompare> Map;
+#endif
+
+     Map mMap;
+     typedef Map::iterator MapIterator;
+     typedef Map::const_iterator MapConstIterator;
+};
 }
 
 #endif

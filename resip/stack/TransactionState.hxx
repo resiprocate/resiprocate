@@ -5,6 +5,7 @@
 #include <memory>
 #include "rutil/dns/DnsHandler.hxx"
 #include "resip/stack/MethodTypes.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Transport.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 
@@ -13,7 +14,8 @@ namespace resip
 
 class DnsResult;
 class TransactionMessage;
-class SipMessage;
+class TimerMessage;
+class SendData;
 class TransactionMap;
 class TransactionController;
 class TransactionUser;
@@ -21,11 +23,17 @@ class NameAddr;
 class Via;
 class MessageDecorator;
 
+/**
+   @internal
+*/
 class TransactionState : public DnsHandler
 {
    public:
       RESIP_HeapCount(TransactionState);
-      static void process(TransactionController& controller); 
+      static void process(TransactionController& controller,
+                           TransactionMessage* message); 
+      static void processTimer(TransactionController& controller,
+                                 TimerMessage* timer); 
       ~TransactionState();
      
    private:
@@ -61,7 +69,8 @@ class TransactionState : public DnsHandler
       
       void rewriteRequest(const Uri& rewrite);
       void handle(DnsResult*);
-
+      void handleSync(DnsResult*);
+      
       void processStateless(TransactionMessage* msg);
       void processClientNonInvite(TransactionMessage* msg);
       void processClientInvite(TransactionMessage* msg);
@@ -91,9 +100,9 @@ class TransactionState : public DnsHandler
       bool isSentIndication(TransactionMessage* msg) const;
       bool isAbandonServerTransaction(TransactionMessage* msg) const;
       bool isCancelClientTransaction(TransactionMessage* msg) const;
-      void sendToTU(TransactionMessage* msg) const;
+      void sendToTU(TransactionMessage* msg);
       static void sendToTU(TransactionUser* tu, TransactionController& controller, TransactionMessage* msg);
-      void sendToWire(TransactionMessage* msg, bool retransmit=false);
+      void sendCurrentToWire();
       SipMessage* make100(SipMessage* request) const;
       void terminateClientTransaction(const Data& tid); 
       void terminateServerTransaction(const Data& tid); 
@@ -114,6 +123,12 @@ class TransactionState : public DnsHandler
 
       void saveOriginalContactAndVia(const SipMessage& msg);
       void restoreOriginalContactAndVia();
+      void resetNextTransmission(SipMessage* msg)
+      {
+         delete mNextTransmission;
+         mNextTransmission=msg;
+         mMsgToRetransmit.clear();
+      }
 
       static bool processSipMessageAsNew(resip::SipMessage* sip, 
                                          resip::TransactionController& controller,
@@ -129,8 +144,13 @@ class TransactionState : public DnsHandler
       // by the TransportSelector
       bool mIsReliable;
 
-      // !rk! The contract for this variable needs to be defined.
-      SipMessage* mMsgToRetransmit;
+      // !bwc! sendCurrentToWire() uses these to determine what it should put on
+      // the wire. If mMsgToRetransmit is non-empty, it goes on the wire 
+      // _regardless_ of what mNextTransmission is. If mMsgToRetransmit is 
+      // empty, but mNextTransmission is non-null, sendCurrentToWire() will try 
+      // to send it.
+      SipMessage* mNextTransmission;
+      SendData mMsgToRetransmit;
 
       // Handle to the dns results queried by the TransportSelector
       DnsResult* mDnsResult;
@@ -148,6 +168,11 @@ class TransactionState : public DnsHandler
       const Data mId;
       const MethodTypes mMethod;
       Data* mMethodText;
+
+      // These two apply to the message we're currently retransmitting.
+      MethodTypes mCurrentMethodType;
+      unsigned int mCurrentResponseCode;
+
       bool mAckIsValid;
       bool mWaitingForDnsResult;
       TransactionUser* mTransactionUser;

@@ -53,7 +53,7 @@ main()
       contentType.parse(pb);
 
       HeaderFieldValue hfv(txt.data(), txt.size());
-      MultipartRelatedContents mpc(&hfv, contentType);
+      MultipartRelatedContents mpc(hfv, contentType);
 
       assert(mpc.parts().size() == 2);
 

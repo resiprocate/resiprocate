@@ -8,7 +8,7 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
-#include "rutil/WinLeakCheck.hxx"
+//#include "rutil/WinLeakCheck.hxx"  // not compatible with placement new used below
 
 using namespace resip;
 using namespace std;
@@ -22,12 +22,12 @@ Auth::Auth() :
    ParserCategory() 
 {}
 
-Auth::Auth(HeaderFieldValue* hfv, Headers::Type type) 
-   : ParserCategory(hfv, type) 
+Auth::Auth(const HeaderFieldValue& hfv, Headers::Type type, PoolBase* pool) 
+   : ParserCategory(hfv, type, pool) 
 {}
 
-Auth::Auth(const Auth& rhs)
-   : ParserCategory(rhs),
+Auth::Auth(const Auth& rhs, PoolBase* pool)
+   : ParserCategory(rhs, pool),
    mScheme(rhs.mScheme)
 {}
 
@@ -61,7 +61,8 @@ Auth::parse(ParseBuffer& pb)
 {
    const char* start;
    start = pb.skipWhitespace();
-   pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::EQUALS);
+   static const std::bitset<256> schemeDelimiter(Data::toBitset("\r\n\t ="));
+   pb.skipToOneOf(schemeDelimiter);
 
    if (!pb.eof() && *pb.position() == Symbols::EQUALS[0])
    {
@@ -99,22 +100,36 @@ Auth::clone() const
    return new Auth(*this);
 }
 
+ParserCategory* 
+Auth::clone(void* location) const
+{
+   return new (location) Auth(*this);
+}
+
+ParserCategory* 
+Auth::clone(PoolBase* pool) const
+{
+   return new (pool) Auth(*this, pool);
+}
+
 void
 Auth::parseAuthParameters(ParseBuffer& pb)
 {
    while (!pb.eof())
    {
       const char* keyStart = pb.position();
-      const char* keyEnd = pb.skipToOneOf(" \t\r\n=");
+      static std::bitset<256> paramBegin=Data::toBitset(" \t\r\n=");
+      static std::bitset<256> terminators=Data::toBitset(" \t\r\n,");
+      const char* keyEnd = pb.skipToOneOf(paramBegin);
       if((int)(keyEnd-keyStart) != 0)
       {
          ParameterTypes::Type type = ParameterTypes::getType(keyStart, (unsigned int)(keyEnd - keyStart));
-         Parameter* p=createParam(type, pb, " \t\r\n,");
+         Parameter* p=createParam(type, pb, terminators, getPool());
          if (!p)
          {
             mUnknownParameters.push_back(new UnknownParameter(keyStart, 
                                                               int((keyEnd - keyStart)), pb, 
-                                                              " \t\r\n,"));
+                                                              terminators));
          }
          else
          {
@@ -163,7 +178,7 @@ Auth::encodeAuthParameters(EncodeStream& str) const
 ParameterTypes::Factory Auth::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
 
 Parameter* 
-Auth::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+Auth::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool)
 {
    if(type==ParameterTypes::qop)
    {
@@ -172,14 +187,14 @@ Auth::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* termin
       {
          case Headers::ProxyAuthenticate:
          case Headers::WWWAuthenticate:
-            qop = new DataParameter(ParameterTypes::qopOptions,pb," \t\r\n,");
+            qop = new (pool) DataParameter(ParameterTypes::qopOptions,pb,terminators);
             qop->setQuoted(true);
             break;
          case Headers::ProxyAuthorization:
          case Headers::Authorization:
          case Headers::AuthenticationInfo:
          default:
-            qop = new DataParameter(ParameterTypes::qop,pb," \t\r\n,");
+            qop = new (pool) DataParameter(ParameterTypes::qop,pb,terminators);
             qop->setQuoted(false);
       }
       return qop;
@@ -187,7 +202,7 @@ Auth::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* termin
 
    if(type > ParameterTypes::UNKNOWN && type < ParameterTypes::MAX_PARAMETER && ParameterFactories[type])
    {
-      return ParameterFactories[type](type, pb, terminators);
+      return ParameterFactories[type](type, pb, terminators, pool);
    }
    return 0;
 }

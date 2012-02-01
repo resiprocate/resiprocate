@@ -19,12 +19,17 @@ class GenericUri : public ParserCategory
       enum {commaHandling = CommasAllowedOutputMulti};
 
       GenericUri() : ParserCategory() {}
-      GenericUri(HeaderFieldValue* hfv, Headers::Type type);
-      GenericUri(const GenericUri&);
+      GenericUri(const HeaderFieldValue& hfv, 
+                  Headers::Type type,
+                  PoolBase* pool=0);
+      GenericUri(const GenericUri& orig,
+                  PoolBase* pool=0);
       GenericUri& operator=(const GenericUri&);
 
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
+      virtual ParserCategory* clone(void* location) const;
+      virtual ParserCategory* clone(PoolBase* pool) const;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
 
       Data& uri();
@@ -36,7 +41,7 @@ class GenericUri : public ParserCategory
       using ParserCategory::remove;
       using ParserCategory::param;
 
-      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators);
+      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool);
       // .bwc, This is an awful lot for one lousy param type.
       bool exists(const Param<GenericUri>& paramType) const;
       void remove(const Param<GenericUri>& paramType);

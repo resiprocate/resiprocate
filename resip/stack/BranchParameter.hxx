@@ -6,6 +6,7 @@
 #include "resip/stack/Parameter.hxx"
 #include "resip/stack/ParameterTypeEnums.hxx"
 #include "rutil/Data.hxx"
+#include "rutil/PoolBase.hxx"
 
 namespace resip
 {
@@ -16,12 +17,18 @@ class ParseBuffer;
 // rfc3261cookie-sip2cookie-tid-transportseq-clientdata-sip2cookie
 // Notably, the tid MAY contain dashes by the clientdata MUST NOT.
 //
+
+/**
+   @ingroup sip_grammar
+   @brief Represents the "via-branch" parameter of the RFC 3261 grammar.
+*/
+
 class BranchParameter : public Parameter
 {
    public:
       typedef BranchParameter Type;
       
-      BranchParameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);
+      BranchParameter(ParameterTypes::Type, ParseBuffer& pb, const std::bitset<256>& terminators);
       explicit BranchParameter(ParameterTypes::Type);
 
       ~BranchParameter();
@@ -47,9 +54,12 @@ class BranchParameter : public Parameter
       void setSigcompCompartment(const Data &);
       Data getSigcompCompartment() const;
 
-      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+      static Parameter* decode(ParameterTypes::Type type, 
+                                 ParseBuffer& pb, 
+                                 const std::bitset<256>& terminators,
+                                 PoolBase* pool)
       {
-         return new BranchParameter(type, pb, terminators);
+         return new (pool) BranchParameter(type, pb, terminators);
       }
       
       virtual Parameter* clone() const;
@@ -62,11 +72,10 @@ class BranchParameter : public Parameter
       Type& value() {return *this;}
 
    private:
-      
       bool mHasMagicCookie;
       bool mIsMyBranch;
       Data mTransactionId;
-      unsigned long mTransportSeq;
+      unsigned int mTransportSeq;
       Data mClientData;
       //magic cookie for interop; if case is different some proxies will treat this as a different tid
       const Data* mInteropMagicCookie; 

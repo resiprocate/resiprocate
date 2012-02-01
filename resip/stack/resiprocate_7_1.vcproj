@@ -520,9 +520,6 @@
 				RelativePath=".\SecurityAttributes.cxx">
 			</File>
 			<File
-				RelativePath=".\SelectInterruptor.cxx">
-			</File>
-			<File
 				RelativePath=".\SERNonceHelper.cxx">
 			</File>
 			<File
@@ -630,6 +627,9 @@
 			<File
 				RelativePath=".\TransportSelector.cxx">
 			</File>
+			<File
+				RelativePath=".\TransportThread.cxx">
+			</File>			
 			<File
 				RelativePath=".\TuIM.cxx">
 			</File>
@@ -759,6 +759,9 @@
 			</File>
 			<File
 				RelativePath=".\DnsResult.hxx">
+			</File>
+			<File
+				RelativePath=".\DnsResultMessage.hxx">
 			</File>
 			<File
 				RelativePath=".\DtlsMessage.hxx">
@@ -956,9 +959,6 @@
 				RelativePath=".\SecurityTypes.hxx">
 			</File>
 			<File
-				RelativePath=".\SelectInterruptor.hxx">
-			</File>
-			<File
 				RelativePath=".\SendData.hxx">
 			</File>
 			<File
@@ -979,6 +979,9 @@
 			<File
 				RelativePath=".\StackThread.hxx">
 			</File>
+			<File
+				RelativePath=".\StartLine.hxx">
+			</File>			
 			<File
 				RelativePath=".\StatisticsHandler.hxx">
 			</File>
@@ -1028,6 +1031,9 @@
 				RelativePath=".\TransactionController.hxx">
 			</File>
 			<File
+				RelativePath=".\TransactionControllerThread.hxx">
+			</File>			
+			<File
 				RelativePath=".\TransactionMap.hxx">
 			</File>
 			<File
@@ -1054,6 +1060,12 @@
 			<File
 				RelativePath=".\TransportSelector.hxx">
 			</File>
+			<File
+				RelativePath=".\TransportSelectorThread.hxx">
+			</File>
+			<File
+				RelativePath=".\TransportThread.hxx">
+			</File>			
 			<File
 				RelativePath=".\TuIM.hxx">
 			</File>

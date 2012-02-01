@@ -18,9 +18,6 @@
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 using namespace resip;
- 
-unsigned long
-resip::Timer::mTimerCount = 1L;
 
 unsigned long
 resip::Timer::T1 = 500;
@@ -109,113 +106,93 @@ Timer::toData(Type timer)
 }
 
 
-Timer::Timer(unsigned long tms, Timer::Type type, const Data& transactionId) :
-    mWhen(tms + getTimeMs()),
-    mId(++mTimerCount),
-    mType(type),
-    mTransactionId(transactionId),
-    mDuration(tms),
-    mMessage(0)
-{
-}
-
-Timer::Timer(unsigned long tms, Message* message) 
-   : mWhen(tms + getTimeMs()),
-     mId(++mTimerCount),
-     mType(Timer::ApplicationTimer),
-     mTransactionId(),
-     mDuration(tms),
-     mMessage(message)
-{
-   assert(mMessage);
-}
-
-Timer::Timer(unsigned long tms) :
-    mWhen(tms + getTimeMs()),
-    mId(0),
-    mType(ApplicationTimer),		// .kw. what is good default?
-    mDuration(tms),
-    mMessage(0)
-{
-}
-
-Timer::Timer(const Timer& other) : 
-    mWhen(other.mWhen),
-    mId(other.mTimerCount),
-    mType(other.mType),
-    mTransactionId(other.mTransactionId),
-    mDuration(other.mDuration),
-    mMessage(other.mMessage)
-{
-}
-
-Timer&
-Timer::operator=(const Timer& other)
-{
-    if (this != &other)
-    {
-        mWhen = other.mWhen;
-        mId = other.mTimerCount;
-        mType = other.mType;
-        mTransactionId = other.mTransactionId;
-        mDuration = other.mDuration;
-        mMessage = other.mMessage;
-    }
-    return *this;
-}
-
-Timer::~Timer() 
+TransactionTimer::TransactionTimer(unsigned long ms, 
+                                    Timer::Type type, 
+                                    const Data& transactionId) :
+   mWhen(ms + Timer::getTimeMs()),
+   mType(type),
+   mTransactionId(transactionId),
+   mDuration(ms)
 {}
 
-bool 
-resip::operator<(const Timer& t1, const Timer& t2)
-{
-    //std::cerr << "operator(<" << t1.mWhen << ", " << t2.mWhen << ") = " << (t1.mWhen < t2.mWhen) << std::endl;
-    return t1.mWhen < t2.mWhen;
-}
-
-bool 
-resip::operator>(const Timer& t1, const Timer& t2)
-{
-    return t1.mWhen > t2.mWhen;
-}
-
-#ifndef RESIP_USE_STL_STREAMS
 std::ostream& 
-resip::operator<<(std::ostream& str, const Timer& t)
+TransactionTimer::encode(std::ostream& str) const
 {
-   UInt64 now = Timer::getTimeMs();
-
-   str << "Timer[id=" << t.mId << " when=" << t.mWhen << " rel=";
-   if (t.mWhen < now)
+   UInt64 now(Timer::getTimeMs());
+   str << "TransactionTimer[ when=" << mWhen << " rel=";
+   if (mWhen < now)
    {
       str << "past";
    }
    else
    {
-      str << (t.mWhen - now);
+      str << (mWhen - now);
+   }
+   str << "]";
+   return str;
+}
+
+#ifndef RESIP_USE_STL_STREAMS
+EncodeStream& 
+TransactionTimer::encode(EncodeStream& str) const
+{
+   UInt64 now(Timer::getTimeMs());
+   str << "TransactionTimer[ when=" << mWhen << " rel=";
+   if (mWhen < now)
+   {
+      str << "past";
+   }
+   else
+   {
+      str << (mWhen - now);
    }
    str << "]";
    return str;
 }
 #endif
-EncodeStream& 
-resip::operator<<(EncodeStream& str, const Timer& t)
-{
-   UInt64 now = Timer::getTimeMs();
 
-   str << "Timer[id=" << t.mId << " when=" << t.mWhen << " rel=";
-   if (t.mWhen < now)
+TimerWithPayload::TimerWithPayload(unsigned long ms, Message* message) :
+   mWhen(ms + Timer::getTimeMs()),
+   mMessage(message)
+{
+   assert(mMessage);
+}
+
+std::ostream& 
+TimerWithPayload::encode(std::ostream& str) const
+{
+   UInt64 now(Timer::getTimeMs());
+   str << "TimerWithPayload[ when=" << mWhen << " rel=";
+   if (mWhen < now)
    {
       str << "past";
    }
    else
    {
-      str << (t.mWhen - now);
+      str << (mWhen - now);
    }
    str << "]";
    return str;
 }
+
+#ifndef RESIP_USE_STL_STREAMS
+EncodeStream& 
+TimerWithPayload::encode(EncodeStream& str) const
+{
+   UInt64 now(Timer::getTimeMs());
+   str << "TimerWithPayload[ when=" << mWhen << " rel=";
+   if (mWhen < now)
+   {
+      str << "past";
+   }
+   else
+   {
+      str << (mWhen - now);
+   }
+   str << "]";
+   return str;
+}
+#endif
 
 
 /* ====================================================================

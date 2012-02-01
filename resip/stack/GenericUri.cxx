@@ -5,7 +5,7 @@
 #include "resip/stack/GenericUri.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
-#include "rutil/WinLeakCheck.hxx"
+//#include "rutil/WinLeakCheck.hxx"  // not compatible with placement new used below
 
 using namespace resip;
 using namespace std;
@@ -16,13 +16,16 @@ using namespace std;
 //====================
 // GenericUri
 //====================
-GenericUri::GenericUri(const GenericUri& rhs)
-   : ParserCategory(rhs),
+GenericUri::GenericUri(const GenericUri& rhs,
+                        PoolBase* pool)
+   : ParserCategory(rhs, pool),
      mUri(rhs.mUri)
 {}
 
-GenericUri::GenericUri(HeaderFieldValue* hfv, Headers::Type type) 
-   : ParserCategory(hfv, type) 
+GenericUri::GenericUri(const HeaderFieldValue& hfv, 
+                        Headers::Type type,
+                        PoolBase* pool) 
+   : ParserCategory(hfv, type, pool) 
 {}
 
 GenericUri&
@@ -71,6 +74,18 @@ GenericUri::clone() const
    return new GenericUri(*this);
 }
 
+ParserCategory* 
+GenericUri::clone(void* location) const
+{
+   return new (location) GenericUri(*this);
+}
+
+ParserCategory* 
+GenericUri::clone(PoolBase* pool) const
+{
+   return new (pool) GenericUri(*this, pool);
+}
+
 EncodeStream& 
 GenericUri::encodeParsed(EncodeStream& str) const
 {
@@ -86,11 +101,11 @@ GenericUri::encodeParsed(EncodeStream& str) const
 ParameterTypes::Factory GenericUri::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
 
 Parameter* 
-GenericUri::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+GenericUri::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool)
 {
    if(type > ParameterTypes::UNKNOWN && type < ParameterTypes::MAX_PARAMETER && ParameterFactories[type])
    {
-      return ParameterFactories[type](type, pb, terminators);
+      return ParameterFactories[type](type, pb, terminators, pool);
    }
    return 0;
 }

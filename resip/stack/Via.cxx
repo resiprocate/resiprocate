@@ -6,7 +6,7 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
-#include "rutil/WinLeakCheck.hxx"
+//#include "rutil/WinLeakCheck.hxx"  // not compatible with placement new used below
 
 using namespace resip;
 using namespace std;
@@ -19,8 +19,8 @@ using namespace std;
 //====================
 Via::Via() 
    : ParserCategory(), 
-     mProtocolName(Symbols::ProtocolName),
-     mProtocolVersion(Symbols::ProtocolVersion),
+     mProtocolName(Data::Share,Symbols::ProtocolName),
+     mProtocolVersion(Data::Share,Symbols::ProtocolVersion),
      mTransport(),
      mSentHost(),
      mSentPort(0) 
@@ -30,17 +30,20 @@ Via::Via()
    this->param(p_rport); // add the rport parameter by default as per rfc 3581
 }
 
-Via::Via(HeaderFieldValue* hfv, Headers::Type type) 
-   : ParserCategory(hfv, type),
-     mProtocolName(Symbols::ProtocolName),
-     mProtocolVersion(Symbols::ProtocolVersion),
-     mTransport(Symbols::UDP), // !jf! 
+Via::Via(const HeaderFieldValue& hfv, 
+         Headers::Type type,
+         PoolBase* pool) 
+   : ParserCategory(hfv, type, pool),
+     mProtocolName(Data::Share,Symbols::ProtocolName),
+     mProtocolVersion(Data::Share,Symbols::ProtocolVersion),
+     mTransport(Data::Share,Symbols::UDP), // !jf! 
      mSentHost(),
      mSentPort(-1) 
 {}
 
-Via::Via(const Via& rhs)
-   : ParserCategory(rhs),
+Via::Via(const Via& rhs,
+         PoolBase* pool)
+   : ParserCategory(rhs, pool),
      mProtocolName(rhs.mProtocolName),
      mProtocolVersion(rhs.mProtocolVersion),
      mTransport(rhs.mTransport),
@@ -68,6 +71,18 @@ ParserCategory *
 Via::clone() const
 {
    return new Via(*this);
+}
+
+ParserCategory *
+Via::clone(void* location) const
+{
+   return new (location) Via(*this);
+}
+
+ParserCategory* 
+Via::clone(PoolBase* pool) const
+{
+   return new (pool) Via(*this, pool);
 }
 
 Data& 
@@ -145,12 +160,13 @@ Via::parse(ParseBuffer& pb)
 {
    const char* startMark;
    startMark = pb.skipWhitespace();
-   pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SLASH);
+   static std::bitset<256> wos=Data::toBitset("\r\n\t /");
+   pb.skipToOneOf(wos);
    pb.data(mProtocolName, startMark);
    pb.skipToChar('/');
    pb.skipChar();
    startMark = pb.skipWhitespace();
-   pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SLASH);
+   pb.skipToOneOf(wos);
    pb.data(mProtocolVersion, startMark);
 
    pb.skipToChar('/');
@@ -186,7 +202,8 @@ Via::parse(ParseBuffer& pb)
    else
    {
       // .bwc. If we hit whitespace, we have the host.
-      pb.skipToOneOf(";: \t\r\n");
+      static std::bitset<256> delimiter=Data::toBitset(";: \t\r\n");
+      pb.skipToOneOf(delimiter);
       pb.data(mSentHost, startMark);
    }
 
@@ -196,7 +213,8 @@ Via::parse(ParseBuffer& pb)
    {
       startMark = pb.skipChar(':');
       mSentPort = pb.integer();
-      pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SEMI_COLON);
+      static std::bitset<256> delimiter=Data::toBitset("; \t\r\n");
+      pb.skipToOneOf(delimiter);
    }
    else
    {
@@ -231,11 +249,11 @@ Via::encodeParsed(EncodeStream& str) const
 ParameterTypes::Factory Via::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
 
 Parameter* 
-Via::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+Via::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool)
 {
    if(type > ParameterTypes::UNKNOWN && type < ParameterTypes::MAX_PARAMETER && ParameterFactories[type])
    {
-      return ParameterFactories[type](type, pb, terminators);
+      return ParameterFactories[type](type, pb, terminators, pool);
    }
    return 0;
 }

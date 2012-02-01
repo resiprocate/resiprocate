@@ -85,7 +85,8 @@ ifeq ($(ARCH),x86_64)
 ifeq ($(BUILD_SHARED_LIBS),yes)
 	CXXFLAGS += -fPIC
 	CFLAGS   += -fPIC
-else ifeq ($(DISABLE_PIC),no)
+else 
+	ifeq ($(DISABLE_PIC),no)
 	# If a static-lib is later linked into a shared lib, then
 	# the code in it needs to be compiled PIC (Position Indep. Code)
 	CXXFLAGS += -fPIC
@@ -93,12 +94,13 @@ else ifeq ($(DISABLE_PIC),no)
 	# resip-ares configure doesn't support PIC directly, hack it here
 	# This only work with GNU tool chain
 	ARES_CFLAGS += -fPIC -g -O2 -Wall
-	ifeq ($(VOCAL_COMPILE_TYPE),prof)
-	    # resip-ares configure doesn't seem to have support for
-	    # prof, so we hack it in here.
-	    ARES_CFLAGS += -pg -DNDEBUG
-	endif
+		ifeq ($(VOCAL_COMPILE_TYPE),prof)
+	    	# resip-ares configure doesn't seem to have support for
+	    	# prof, so we hack it in here.
+	    	ARES_CFLAGS += -pg -DNDEBUG
+		endif
 	ARES_CONFIGURE_ARGS += "CFLAGS=$(ARES_CFLAGS)"
+	endif
 endif
 endif
 #       LDFLAGS += -frepo

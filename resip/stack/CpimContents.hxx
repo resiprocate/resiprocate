@@ -7,6 +7,11 @@
 namespace resip
 {
 
+/**
+   @ingroup sip_payload
+   @brief SIP body type for holding CPIM (Common Profile for Instant
+          Messaging) contents (MIME content-type message/cpim).
+*/
 class CpimContents : public Contents
 {
    public:
@@ -14,17 +19,24 @@ class CpimContents : public Contents
 
       CpimContents();
       CpimContents(const Data& text);
-      CpimContents(HeaderFieldValue* hfv, const Mime& contentType);
+      CpimContents(const HeaderFieldValue& hfv, const Mime& contentType);
       CpimContents(const Data& data, const Mime& contentType);
       CpimContents(const CpimContents& rhs);
       virtual ~CpimContents();
       CpimContents& operator=(const CpimContents& rhs);
 
+      /** @brief duplicate an CpimContents object
+          @return pointer to a new CpimContents object  
+        **/
       virtual Contents* clone() const;
       static const Mime& getStaticType() ;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
       virtual void parse(ParseBuffer& pb);
 
+
+      /** @brief Get the CPIM message text.
+          @return Data containing the CPIM message text.
+       **/
       Data& text() {checkParsed(); return mText;}
 
       static bool init();

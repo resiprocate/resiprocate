@@ -152,7 +152,7 @@ defineParam(addTransport, "addTransport", ExistsParameter, Uri, "RESIP INTERNAL"
 ParameterTypes::Type
 ParameterTypes::getType(const char* pname, unsigned int len)
 {
-   struct params* p;
+   const struct params* p;
    p = ParameterHash::in_word_set(pname, len);
    return p ? p->type : ParameterTypes::UNKNOWN;
    

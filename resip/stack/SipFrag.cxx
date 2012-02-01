@@ -27,8 +27,8 @@ SipFrag::SipFrag(const Mime& contentsType)
      mMessage(new SipMessage())
 {}
 
-SipFrag::SipFrag(HeaderFieldValue* hfv, const Mime& contentsType)
-   : Contents(hfv, contentsType),
+SipFrag::SipFrag(const HeaderFieldValue& hfv, const Mime& contentsType)
+   : Contents(hfv, HeaderFieldValue::CopyPadding, contentsType),
      mMessage(0)
 {
 }

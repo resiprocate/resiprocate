@@ -73,18 +73,8 @@ main(int argc, char* argv[])
 
       while (1)
       {
-         FdSet fdset; 
-         sipStack.buildFdSet(fdset);
-         int  err = fdset.selectMilliSeconds( sipStack.getTimeTillNextProcessMS());
-         int e = errno;
-         if ( err == -1 )
-         {
-            InfoLog(<< "Error " << e << " " << strerror(e) << " in select");
-         }
-     
-
          //DebugLog ( << "Try TO PROCESS " );
-         sipStack.process(fdset);
+         sipStack.process(25);
 
          //DebugLog ( << "Try TO receive " );
          msg = sipStack.receive();

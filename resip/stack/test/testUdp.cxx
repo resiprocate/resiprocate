@@ -121,7 +121,8 @@ main(int argc, char* argv[])
             next->encode(strm);
             outstanding++;
          }
-         sender->send(dest, encoded, Data(tid++), Data::Empty);
+         std::auto_ptr<SendData> toSend(sender->makeSendData(dest, encoded, Data(tid++), Data::Empty));
+         sender->send(toSend);
       }
 
       FdSet fdset; 

@@ -451,7 +451,7 @@ int main(int argc, char* argv[])
       { // Test resip helper
          HeaderFieldValue hfv(txt, sizeof(txt));
          Mime type("application", "sdp");
-         SdpContents resipSdp(&hfv, type);
+         SdpContents resipSdp(hfv, type);
 
          convSdp = SdpHelperResip::createSdpFromResipSdp(resipSdp);
          if(convSdp)

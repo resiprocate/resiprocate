@@ -7,6 +7,10 @@
 namespace resip
 {
 
+/**
+   @ingroup sip_payload
+   @brief SIP body type for holding X509 contents (MIME content-type application/pkix-cert).
+*/
 class X509Contents : public Contents
 {
    public:
@@ -14,12 +18,15 @@ class X509Contents : public Contents
 
       X509Contents();
       X509Contents(const Data& text);
-      X509Contents(HeaderFieldValue* hfv, const Mime& contentType);
+      X509Contents(const HeaderFieldValue& hfv, const Mime& contentType);
       X509Contents(const Data& data, const Mime& contentType);
       X509Contents(const X509Contents& rhs);
       virtual ~X509Contents();
       X509Contents& operator=(const X509Contents& rhs);
 
+      /** @brief duplicate an X509Contents object
+          @return pointer to a new X509Contents object  
+        **/
       virtual Contents* clone() const;
 
       static const Mime& getStaticType() ;

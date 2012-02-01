@@ -27,7 +27,7 @@ public:
          "\r\n");
       Data redirectResponseTxt(
          "SIP/2.0 302 Moved temporarily\r\n"
-         "Via: SIP/2.0/UDP 10.10.0.14:15060;branch=z9hG4bK-d8754z-ca637f133a902b1f-1---d8754z-;rport\r\n"
+         "Via: SIP/2.0/UDP 10.10.0.14:15060;branch=z9hG4bK-524287-1---ca637f133a902b1f;rport\r\n"
          "Contact: <sip:4086484899@10.12.0.129:5060;transport=udp;user=phone>;q=0.5\r\n"
          "Contact: <sip:4086484899@10.12.0.130:5060;transport=udp;user=phone>;q=0.33\r\n"
          "Contact: <sip:4086484899@10.12.0.127:5060;transport=udp;user=phone>\r\n"

@@ -12,6 +12,11 @@ class SipStack;
 class SipMessage;
 class TransactionController;
 
+/**
+   @brief Keeps track of various statistics on the stack's operation, and 
+      periodically issues a StatisticsMessage to the TransactionUser (or, if the
+      ExternalStatsHandler is set, it will be sent there).
+*/
 class StatisticsManager : public StatisticsMessage::Payload
 {
    public:
@@ -34,7 +39,12 @@ class StatisticsManager : public StatisticsMessage::Payload
       void process();
       // not stricly thread-safe; needs to be called through the fifo somehow
       void setInterval(unsigned long intvSecs);
-	  
+
+      /**
+         @ingroup resip_config
+         @brief Allows the application to set the ExternalStatsHandler for this
+            StatisticsManager.
+      */
       void setExternalStatsHandler(ExternalStatsHandler *handler)
       {
          mExternalHandler = handler;
@@ -42,7 +52,8 @@ class StatisticsManager : public StatisticsMessage::Payload
 
    private:
       friend class TransactionState;
-      bool sent(SipMessage* msg, bool retrans);
+      bool sent(SipMessage* msg);
+      bool retransmitted(MethodTypes type, bool request, unsigned int code);
       bool received(SipMessage* msg);
 
       void poll(); // force an update

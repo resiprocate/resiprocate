@@ -3,6 +3,7 @@
 
 #include "resip/stack/ParameterTypeEnums.hxx"
 #include "resip/stack/Parameter.hxx"
+#include "rutil/PoolBase.hxx"
 #include <iosfwd>
 
 namespace resip
@@ -10,17 +11,26 @@ namespace resip
 
 class ParseBuffer;
 
+/**
+   @ingroup sip_grammar
+
+   @brief Generically represents integer values conveyed by SIP
+   parameters.
+*/
 class IntegerParameter : public Parameter
 {
    public:
       typedef int Type;
 
-      IntegerParameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);
+      IntegerParameter(ParameterTypes::Type, ParseBuffer& pb, const std::bitset<256>& terminators);
       explicit IntegerParameter(ParameterTypes::Type type, int value = -666999666);
       
-      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+      static Parameter* decode(ParameterTypes::Type type, 
+                                 ParseBuffer& pb, 
+                                 const std::bitset<256>& terminators,
+                                 PoolBase* pool)
       {
-         return new IntegerParameter(type, pb, terminators);
+         return new (pool) IntegerParameter(type, pb, terminators);
       }
 
       virtual EncodeStream& encode(EncodeStream& stream) const;

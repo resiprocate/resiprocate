@@ -6,13 +6,21 @@
 namespace resip
 {
 
+/**
+   @ingroup sip_payload
+   @brief SIP body type for holding Multipart-Alternative body contents (MIME content-type multipart/alternative).
+*/
 class MultipartAlternativeContents : public MultipartMixedContents
 {
    public:
       MultipartAlternativeContents();
-      MultipartAlternativeContents(HeaderFieldValue* hfv, const Mime& contentType);
+      MultipartAlternativeContents(const HeaderFieldValue& hfv, const Mime& contentType);
       MultipartAlternativeContents(const MultipartAlternativeContents& rhs);
       MultipartAlternativeContents& operator=(const MultipartAlternativeContents& rhs);
+
+      /** @brief duplicate an MultipartAlternativeContents object
+          @return pointer to a new MultipartAlternativeContents object  
+        **/
       virtual Contents* clone() const;
 
       static const Mime& getStaticType() ;

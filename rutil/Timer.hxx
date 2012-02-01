@@ -12,8 +12,7 @@ namespace resip
 class Message;
 
 /**
-   @brief Instances of this class represent a SIP timer, while static functions
-      in this class are used to get the current system time.
+   @brief This class is used to get the current system time.
 
    @note Should we refactor this? It seems like the SIP-timer stuff should live
       in resip/stack somewhere.
@@ -22,7 +21,6 @@ class Timer
 {
    public:
       RESIP_HeapCount(Timer);
-      typedef unsigned long Id;
       typedef enum 
       {
          TimerA, // doubling
@@ -46,19 +44,6 @@ class Timer
       } Type;
       
       static Data toData(Type timer);
-
-      Timer(unsigned long ms, Type type, const Data& transactionId);
-      Timer(unsigned long ms, Message* message);
-      Timer(const Timer& t);
-      Timer& operator=(const Timer& t);
-
-      ~Timer();
-
-      // returns the unique identifier
-      Id getId() const { return mId; }
-      Type getType() const { return mType; }
-      // return the message to queue, possibly null
-      Message* getMessage() const { return mMessage;} 
 
       /** @deprecated.  Does not do anything at the moment.
       */
@@ -127,36 +112,120 @@ class Timer
       
       static unsigned long TD;
       static unsigned long TS;       
-      
-   private:
-      Timer(unsigned long ms); // for TimerQueue only - don't use
+};
 
-      UInt64 mWhen; // time when the timer "goes off" in MS 
-      Id mId;
-      Type mType;
+// !bwc! There is some duplicated code between TransactionTimer and 
+// TimerWithPayload. Should eventually create a single template class like the 
+// following, and use it with Payload=Message* and Payload=TransactionTimer
+// template <typename Payload>
+// class Timestamped
+// {
+//    // blah blah blah
+//    private:
+//       UInt64 mTimestamp;
+//       Payload mPayload;
+// };
+class TransactionTimer
+{
+   public:
+      RESIP_HeapCount(TransactionTimer);
+
+      TransactionTimer(unsigned long ms, 
+                        Timer::Type type, 
+                        const Data& transactionId);
+
+      ~TransactionTimer(){}
+
+      const Data& getTransactionId() const {return mTransactionId;}
+      Timer::Type getType() const { return mType; }
+      unsigned long getDuration() const { return mDuration;} 
+
+      UInt64 getWhen() const {return mWhen;}
+#ifndef RESIP_USE_STL_STREAMS
+      EncodeStream& encode(EncodeStream& str) const;
+#endif
+      std::ostream& encode(std::ostream& str) const;
+
+      inline bool operator<(const TransactionTimer& rhs) const
+      {
+         return mWhen < rhs.mWhen;
+      }
+
+      inline bool operator>(const TransactionTimer& rhs) const
+      {
+         return mWhen > rhs.mWhen;
+      }
+
+   protected:
+      UInt64 mWhen;
+      Timer::Type mType;
       Data mTransactionId;
       unsigned long mDuration; // duration of time in ms 
+
+   private:
+      // disabled
+      TransactionTimer();
+};
+
+class TimerWithPayload
+{
+   public:
+      RESIP_HeapCount(TimerWithPayload);
+
+      TimerWithPayload(unsigned long ms, Message* message);
+
+      ~TimerWithPayload(){}
+
+      // return the message to queue, possibly null
+      Message* getMessage() const { return mMessage;}
+
+      UInt64 getWhen() const {return mWhen;}
+#ifndef RESIP_USE_STL_STREAMS
+      EncodeStream& encode(EncodeStream& str) const;
+#endif
+      std::ostream& encode(std::ostream& str) const;
+
+      inline bool operator<(const TimerWithPayload& rhs) const
+      {
+         return mWhen < rhs.mWhen;
+      }
+
+      inline bool operator>(const TimerWithPayload& rhs) const
+      {
+         return mWhen > rhs.mWhen;
+      }
+
+   protected:
+      UInt64 mWhen;
       Message* mMessage; // message to queue on timeout
 
-      static unsigned long mTimerCount; // counter to genreate unique timers ids 
-
-      friend bool operator<(const Timer& t1, const Timer& t2);
-      friend bool operator>(const Timer& t1, const Timer& t2);
-#ifndef RESIP_USE_STL_STREAMS
-	  friend std::ostream& operator<<(std::ostream&, const Timer&);
-#endif
-      friend EncodeStream& operator<<(EncodeStream&, const Timer&);
-      friend class BaseTimeLimitTimerQueue;
-      friend class BaseTimerQueue;
-      friend class DtlsTimerQueue;
-      friend class TimeLimitTimerQueue;
-      friend class TimerQueue;
-      friend class TuSelectorTimerQueue;
+   private:
+      // disabled
+      TimerWithPayload();
 };
- 
-EncodeStream& operator<<(EncodeStream&, const Timer&);
-bool operator<(const Timer& t1, const Timer& t2);
-bool operator>(const Timer& t1, const Timer& t2);
+
+
+inline std::ostream& operator<<(std::ostream& str, const TransactionTimer& t)
+{
+   return t.encode(str);
+}
+
+inline std::ostream& operator<<(std::ostream& str, const TimerWithPayload& t)
+{
+   return t.encode(str);
+}
+
+#ifndef RESIP_USE_STL_STREAMS
+inline EncodeStream& operator<<(EncodeStream& str, const TransactionTimer& t)
+{
+   return t.encode(str);
+}
+
+inline EncodeStream& operator<<(EncodeStream& str, const TimerWithPayload& t)
+{
+   return t.encode(str);
+}
+#endif
 
 }
 

@@ -20,6 +20,7 @@
 #include "resip/stack/SecurityAttributes.hxx"
 #include "resip/stack/Helper.hxx"
 
+#include "rutil/FdPoll.hxx"
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
 
@@ -87,7 +88,6 @@ class TestSMIMEInviteHandler : public TestClientRegistrationHandler,
 
       SdpContents* generateBody()
       {
-         HeaderFieldValue* hfv;      
          Data* txt = new Data("v=0\r\n"
                               "o=1900 369696545 369696545 IN IP4 192.168.2.15\r\n"
                               "s=X-Lite\r\n"
@@ -99,7 +99,7 @@ class TestSMIMEInviteHandler : public TestClientRegistrationHandler,
                               "a=rtpmap:101 telephone-event/8000\r\n"
                               "a=fmtp:101 0-15\r\n");
          
-         hfv = new HeaderFieldValue(txt->data(), txt->size());
+         HeaderFieldValue hfv(txt->data(), txt->size());
          SdpContents *sdp = new SdpContents(hfv, Mime("application", "sdp"));
          return sdp;
       }
@@ -247,8 +247,17 @@ main (int argc, char** argv)
 
    TestSMIMEInviteHandler handler(security);
 
+   // Shared FdPollGrp
+   std::auto_ptr<FdPollGrp> pollGrp(FdPollGrp::create());
+
    // set up UAC
-   SipStack clientStack(security);
+   SipStack clientStack(security,
+                        DnsStub::EmptyNameserverList,
+                        0,
+                        false,
+                        0,
+                        0,
+                        pollGrp.get());
    DialogUsageManager clientDum(clientStack);
    srand(time(NULL));
    clientDum.addTransport(UDP, 0, V4);
@@ -277,7 +286,13 @@ main (int argc, char** argv)
    clientDum.setMasterProfile(clientProfile);
 
    //set up UAS
-   SipStack serverStack(security);
+   SipStack serverStack(security,
+                        DnsStub::EmptyNameserverList,
+                        0,
+                        false,
+                        0,
+                        0,
+                        pollGrp.get());
    DialogUsageManager serverDum(serverStack);
    //serverDum.addTransport(UDP, 0, V4);
    serverDum.addTransport(TCP, 0, V4);
@@ -320,16 +335,14 @@ main (int argc, char** argv)
 
    while (state != Finished)
    {
-      FdSet fdset;
+      // This waits on IO for both stacks; this is the canonical way to drive
+      // multiple stacks with the same thread. We could make two calls to 
+      // process(), but this requires more calls to epoll_wait/select.
+      pollGrp->waitAndProcess(resipMin(clientStack.getTimeTillNextProcessMS(),
+                                       serverStack.getTimeTillNextProcessMS()));
+      clientStack.processTimers();
+      serverStack.processTimers();
 
-      clientStack.buildFdSet(fdset);
-      serverStack.buildFdSet(fdset);
-      
-      int err = fdset.selectMilliSeconds(resipMin((int)clientStack.getTimeTillNextProcessMS(), 50));
-      assert ( err != -1 );
-
-      clientStack.process(fdset);
-      serverStack.process(fdset);
       while(clientDum.process() || serverDum.process());
 
       switch (state)

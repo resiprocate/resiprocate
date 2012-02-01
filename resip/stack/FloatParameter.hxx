@@ -10,6 +10,12 @@ namespace resip
 
 class ParseBuffer;
 
+/**
+   @ingroup sip_grammar
+
+   @brief Generically represents floating point values conveyed by SIP
+   parameters.
+*/
 class FloatParameter : public Parameter
 {
    public:

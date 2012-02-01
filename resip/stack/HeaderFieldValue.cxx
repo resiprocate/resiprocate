@@ -20,6 +20,8 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
+const HeaderFieldValue HeaderFieldValue::Empty;
+
 HeaderFieldValue::HeaderFieldValue(const char* field, unsigned int fieldLength)
    : mField(field),
      mFieldLength(fieldLength),
@@ -39,6 +41,52 @@ HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv)
    }
 }
 
+HeaderFieldValue&
+HeaderFieldValue::operator=(const HeaderFieldValue& rhs)
+{
+   if(this!=&rhs)
+   {
+      mFieldLength=rhs.mFieldLength;
+      if(mMine) delete [] mField;
+      mMine=true;
+      if(mFieldLength)
+      {
+         char* newField = new char[mFieldLength];
+         memcpy(newField, rhs.mField, mFieldLength);
+         mField=newField;
+      }
+      else
+      {
+         mField=0;
+      }
+   }
+   
+   return *this;
+}
+
+HeaderFieldValue& 
+HeaderFieldValue::copyWithPadding(const HeaderFieldValue& rhs)
+{
+   if(this!=&rhs)
+   {
+      mFieldLength=rhs.mFieldLength;
+      if(mMine) delete [] mField;
+      mMine=true;
+      if(mFieldLength)
+      {
+         char* newField = MsgHeaderScanner::allocateBuffer(mFieldLength);
+         memcpy(newField, rhs.mField, mFieldLength);
+         mField=newField;
+      }
+      else
+      {
+         mField=0;
+      }
+   }
+   
+   return *this;
+}
+
 HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv, CopyPaddingEnum e)
    : mField(0),
      mFieldLength(hfv.mFieldLength),
@@ -47,6 +95,14 @@ HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv, CopyPaddingEnum 
    char* newField = MsgHeaderScanner::allocateBuffer(mFieldLength);
    memcpy(newField, hfv.mField, mFieldLength);
    mField=newField;
+}
+
+HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv, NoOwnershipEnum n)
+   : mField(hfv.mField),
+     mFieldLength(hfv.mFieldLength),
+     mMine(false)
+{
+   // ?bwc? assert(!hfv.mMine); ?
 }
 
 HeaderFieldValue::~HeaderFieldValue()

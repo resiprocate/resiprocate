@@ -11,6 +11,7 @@
 #include "resip/dum/DumThread.hxx"
 #include "resip/dum/InMemoryRegistrationDatabase.hxx"
 #include "rutil/DnsUtil.hxx"
+#include "rutil/GeneralCongestionManager.hxx"
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
@@ -222,29 +223,11 @@ main(int argc, char** argv)
    compression = new Compression(Compression::DEFLATE);
 #endif
 
-#if defined(HAVE_EPOLL)
-   if(config.getConfigBool("InternalEpoll", true)) 
-   {
-#if defined(RESIP_SIPSTACK_HAVE_FDPOLL)
-      SipStack::setDefaultUseInternalPoll(true);
-#else
-      cerr << "Poll not supported by SipStack" << endl;
-      exit(1);
-#endif
-   }
-#endif
-
    std::auto_ptr<FdPollGrp> pollGrp(NULL);
    std::auto_ptr<SelectInterruptor> threadInterruptor(NULL);
-#if defined(HAVE_EPOLL)
-   if (config.getConfigBool("EventThread", true))
-   {
-      pollGrp.reset(FdPollGrp::create());
-      threadInterruptor.reset(new EventThreadInterruptor(*pollGrp));
-   }
-   else
-#endif
-   threadInterruptor.reset(new SelectInterruptor());
+   pollGrp.reset(FdPollGrp::create());
+   threadInterruptor.reset(new EventThreadInterruptor(*pollGrp));
+   //threadInterruptor.reset(new SelectInterruptor());
 
    bool useV4 = !config.getConfigBool("DisableIPv4", false);
 #ifdef USE_IPV6
@@ -494,17 +477,9 @@ main(int argc, char** argv)
    }
 
    std::auto_ptr<ThreadIf> stackThread(NULL);
-#if defined(HAVE_EPOLL)
-   if(config.getConfigBool("EventThread", true))
-   {
-      stackThread.reset(new EventStackThread(stack,
-               *dynamic_cast<EventThreadInterruptor*>(threadInterruptor.get()),
-               *pollGrp));
-   }
-   else
-#endif
-
-   stackThread.reset(new InterruptableStackThread(stack, *threadInterruptor));
+   stackThread.reset(new EventStackThread(stack,
+            *dynamic_cast<EventThreadInterruptor*>(threadInterruptor.get()),
+            *pollGrp));
 
    Registrar registrar;
    // We only need removed records to linger if we have reg sync enabled
@@ -763,7 +738,21 @@ main(int argc, char** argv)
       }
    }
 
+   std::auto_ptr<CongestionManager> congestionManager;
+   if(config.getConfigBool("CongestionManagement", true))
+   {
+      congestionManager.reset(new GeneralCongestionManager(
+                                          GeneralCongestionManager::WAIT_TIME, 
+                                          200));
+      stack.setCongestionManager(congestionManager.get());
+   }
+
    /* Make it all go */
+   bool threadedStack = config.getConfigBool("ThreadedStack", true);
+   if(threadedStack)
+   {
+      stack.run();
+   }
    stackThread->run();
    proxy.run();
    if(adminThread)
@@ -795,7 +784,9 @@ main(int argc, char** argv)
    proxy.shutdown();
    stackThread->shutdown();
    if ( adminThread )
+   {
        adminThread->shutdown();
+   }
    if (dumThread)
    {
        dumThread->shutdown();
@@ -808,15 +799,23 @@ main(int argc, char** argv)
    {
       regSyncClient->shutdown();
    }
+   if(threadedStack)
+   {
+      stack.shutdownAndJoinThreads();
+   }
 
    proxy.join();
    stackThread->join();
-   if ( adminThread ) {
+   if (adminThread) 
+   {
       adminThread->join();
-      delete adminThread; adminThread = NULL;
+      delete adminThread; 
+      adminThread = NULL;
    }
-   if ( admin ) {
-      delete admin; admin = NULL;
+   if (admin) 
+   {
+      delete admin; 
+      admin = NULL;
    }
    if (dumThread)
    {
@@ -833,6 +832,8 @@ main(int argc, char** argv)
       regSyncClient->join();
       delete regSyncClient;
    }
+
+   stack.setCongestionManager(0);
 
    if(regSyncServerV4)
    {

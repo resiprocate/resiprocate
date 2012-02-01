@@ -93,7 +93,6 @@ SRC = \
 	SdpContents.cxx \
 	SecurityAttributes.cxx \
 	Compression.cxx \
-	SelectInterruptor.cxx \
 	SipFrag.cxx \
 	SipMessage.cxx \
 	SipStack.cxx \
@@ -119,6 +118,7 @@ SRC = \
 	TransactionMap.cxx \
 	TransactionState.cxx \
 	Transport.cxx \
+	TransportThread.cxx \
 	TransportFailure.cxx \
 	TransportSelector.cxx \
 	TuIM.cxx \
@@ -143,7 +143,7 @@ CODE_SUBDIRS += ssl
 endif
 
 SUFFIXES += .gperf .cxx
-GPERFOPTS = -D -E -L C++ -t -k '*' --compare-strncmp
+GPERFOPTS = -C -D -E -L C++ -t -k '*' --compare-strncmp
 #GPERFVER="GNU gperf 2.7.2"
 
 code *Hash.cxx: .firstrun
@@ -163,11 +163,7 @@ MethodHash.cxx: MethodHash.gperf
 # rule for insensitive clods
 #${SRC}: ${@:%.cxx=%.gperf} -- more portable?
 %.cxx: %.gperf
-	gperf -v > /dev/null 2>&1 && gperf $(GPERFOPTS) -Z `echo $* | sed -e 's/.*\///'` $< | \
-	sed -e 's/str\[\([0-9][0-9]*\)\]/tolower(str[\1])/g' | \
-	sed -e 's/^\([	]*\)if *(\*\([a-z][a-z]*\) *== *\*\([a-z][a-z]*\) *\&\& *!strncmp *(\([^)]*\)).*/\1if (tolower(*\2) == *\3 \&\& !strncasecmp( \4 ))/g' | \
-	sed -e 's/\*str ==/tolower(*str) ==/' | \
-	sed -e 's/\!strncmp/\!strncasecmp/' > $@ || \
+	gperf -v > /dev/null 2>&1 && gperf $(GPERFOPTS) --ignore-case -Z $* $< > $@ || \
 	echo "gperf not installed, touching $@" && touch $@
 
 include $(BUILD)/Makefile.post

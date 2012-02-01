@@ -12,15 +12,23 @@ namespace resip
 class Mime;
 class ParseBuffer;
 
+/**
+   @ingroup sip_payload
+   @brief SIP body type for holding Multipart-Mixed body contents (MIME content-type multipart/mixed).
+*/
 class MultipartMixedContents : public Contents
 {
    public:
       MultipartMixedContents();
       explicit MultipartMixedContents(const Mime& contentType);
-      MultipartMixedContents(HeaderFieldValue* hfv, const Mime& contentType);
+      MultipartMixedContents(const HeaderFieldValue& hfv, const Mime& contentType);
       MultipartMixedContents(const MultipartMixedContents& rhs);
       virtual ~MultipartMixedContents();
       MultipartMixedContents& operator=(const MultipartMixedContents& rhs);
+
+      /** @brief duplicate an MultipartMixedContents object
+          @return pointer to a new MultipartMixedContents object  
+        **/
       virtual Contents* clone() const;
 
       static const Mime& getStaticType() ;
@@ -34,6 +42,10 @@ class MultipartMixedContents : public Contents
 
       void setBoundary(const Data& boundary);
 
+      /**
+      @brief Thrown when there is an error parsing a multi-part mixed contents envelope.
+      @sa resip::BaseException
+      */
       class Exception : public BaseException
       {
         public:

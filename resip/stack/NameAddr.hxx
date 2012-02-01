@@ -21,11 +21,14 @@ class NameAddr : public ParserCategory
       enum {commaHandling = CommasAllowedOutputMulti};
 
       NameAddr();
-      NameAddr(HeaderFieldValue* hfv, Headers::Type type);
-      explicit NameAddr(const Uri&);
+      NameAddr(const HeaderFieldValue& hfv, 
+               Headers::Type type,
+               PoolBase* pool=0);
+      explicit NameAddr(const Uri& orig);
       explicit NameAddr(const Data& unparsed, bool preCacheAor=false);
 
-      NameAddr(const NameAddr&);
+      NameAddr(const NameAddr& orig,
+               PoolBase* pool=0);
       NameAddr& operator=(const NameAddr&);
       bool operator==(const NameAddr& other) const;
 
@@ -40,6 +43,8 @@ class NameAddr : public ParserCategory
       
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
+      virtual ParserCategory* clone(void* location) const;
+      virtual ParserCategory* clone(PoolBase* pool) const;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
 
       bool operator<(const NameAddr& other) const;
@@ -52,7 +57,7 @@ class NameAddr : public ParserCategory
       using ParserCategory::remove;
       using ParserCategory::param;
 
-      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators);
+      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool);
       bool exists(const Param<NameAddr>& paramType) const;
       void remove(const Param<NameAddr>& paramType);
 
@@ -91,6 +96,7 @@ class NameAddr : public ParserCategory
       bool mAllContacts;
       Uri mUri;
       Data mDisplayName;
+      Data* mUnknownUriParametersBuffer;
 
    private:
 

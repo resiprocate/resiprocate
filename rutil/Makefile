@@ -21,6 +21,7 @@ SRC = \
 	DataStream.cxx \
 	DnsUtil.cxx \
 	FileSystem.cxx \
+	GeneralCongestionManager.cxx \
 	HeapInstanceCounter.cxx \
 	Lock.cxx \
 	Log.cxx \
@@ -29,12 +30,14 @@ SRC = \
 	ParseBuffer.cxx \
 	ParseException.cxx \
 	Poll.cxx \
+	PoolBase.cxx \
 	FdPoll.cxx \
 	RADIUSDigestAuthenticator.cxx \
 	RWMutex.cxx \
 	Random.cxx \
 	RecursiveMutex.cxx \
 	resipfaststreams.cxx \
+	SelectInterruptor.cxx \
 	Socket.cxx \
 	Subsystem.cxx \
 	SysLogBuf.cxx \
@@ -53,6 +56,7 @@ SRC = \
 	dns/DnsResourceRecord.cxx \
 	dns/DnsSrvRecord.cxx \
 	dns/DnsStub.cxx \
+	dns/DnsThread.cxx \
 	dns/ExternalDnsFactory.cxx \
 	dns/RRCache.cxx \
 	dns/RRList.cxx \

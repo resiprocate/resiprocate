@@ -40,7 +40,7 @@ MessageWaitingContents::MessageWaitingContents()
    }
 }
 
-MessageWaitingContents::MessageWaitingContents(HeaderFieldValue* hfv, const Mime& contentType)
+MessageWaitingContents::MessageWaitingContents(const HeaderFieldValue& hfv, const Mime& contentType)
    : Contents(hfv, contentType),
      mHasMessages(false),
      mAccountUri(0)
@@ -467,6 +467,10 @@ MessageWaitingContents::Header&
 MessageWaitingContents::header(HeaderType ht)
 {
    checkParsed();
+
+   /* this is a trick to allow a const method to update "this" with an empty
+      Header in case there wasn't a corresponding header line in the MessageWaiting doc
+    */
    if (mHeaders[ht] == 0)
    {
       mHeaders[ht] = new Header(0, 0);
@@ -518,6 +522,10 @@ Uri&
 MessageWaitingContents::header(const AccountHeader& ht)
 {
    checkParsed();
+
+   /* this is a trick to allow a const method to update "this" with an empty
+      Uri in case there wasn't a Message-Account line in the MessageWaiting doc
+    */
    if (mAccountUri == 0)
    {
       mAccountUri = new Uri();

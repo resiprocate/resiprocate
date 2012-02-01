@@ -51,7 +51,7 @@ main(int argc, char* argv[])
                 "a=silenceSupp:off - - - -\r\n");
        HeaderFieldValue hfv(txt.data(), txt.size());
        Mime type("application", "sdp");
-       SdpContents sdp(&hfv, type);
+       SdpContents sdp(hfv, type);
       
        assert(sdp.session().media().size() == 1);
 	   assert(sdp.session().media().front().codecs().size() == 1);
@@ -72,7 +72,7 @@ main(int argc, char* argv[])
 
        HeaderFieldValue hfv(txt.data(), txt.size());
        Mime type("application", "sdp");
-       SdpContents sdp(&hfv, type);
+       SdpContents sdp(hfv, type);
       
        assert(sdp.session().media().size() == 1);
        resip::SdpContents::Session::Codec testCodec("PCMU", 8000, "", "1");
@@ -101,7 +101,7 @@ main(int argc, char* argv[])
 
        HeaderFieldValue hfv(txt.data(), txt.size());
        Mime type("application", "sdp");
-       SdpContents sdp(&hfv, type);
+       SdpContents sdp(hfv, type);
        assert(sdp.session().getPhones().size() == 1);
        assert(sdp.session().getEmails().size() == 1);
 
@@ -132,7 +132,7 @@ main(int argc, char* argv[])
 
        HeaderFieldValue hfv(txt.data(), txt.size());
        Mime type("application", "sdp");
-       SdpContents sdp(&hfv, type);
+       SdpContents sdp(hfv, type);
        CritLog ( << sdp.session().media().size());       
        assert(sdp.session().media().size() == 2);
        
@@ -152,7 +152,7 @@ main(int argc, char* argv[])
 
        HeaderFieldValue hfv(txt.data(), txt.size());
        Mime type("application", "sdp");
-       SdpContents sdp(&hfv, type);
+       SdpContents sdp(hfv, type);
        assert(sdp.session().connection().getAddress() == "202.5.224.96");
        assert(sdp.session().media().front().port() == 12000);
        assert(sdp.session().media().front().getValues("fmtp").front() == "101 0-15");
@@ -179,7 +179,7 @@ main(int argc, char* argv[])
        
        HeaderFieldValue hfv(txt.data(), txt.size());
        Mime type("application", "sdp");
-       SdpContents sdp(&hfv, type);
+       SdpContents sdp(hfv, type);
        assert(sdp.session().connection().getAddress() == "64.124.66.33");
        assert(sdp.session().media().front().port() == 12004);
     }
@@ -200,7 +200,7 @@ main(int argc, char* argv[])
 
       HeaderFieldValue hfv(txt.data(), txt.size());
       Mime type("application", "sdp");
-      SdpContents sdp(&hfv, type);
+      SdpContents sdp(hfv, type);
 
       assert(sdp.session().media().front().codecs().size() == 5);
     }
@@ -215,10 +215,10 @@ main(int argc, char* argv[])
                "a=rtpmap:0 PCMU/8000\r\n");
       HeaderFieldValue hfv(txt.data(), txt.size());
       Mime type("application", "sdp");
-      SdpContents sdp(&hfv, type);
+      SdpContents sdp(hfv, type);
 
       HeaderFieldValue hfv2(txt.data(), txt.size());
-      SdpContents sdp2(&hfv2, type);
+      SdpContents sdp2(hfv2, type);
 
       sdp.session();
       sdp2.session();
@@ -243,7 +243,7 @@ main(int argc, char* argv[])
 
       HeaderFieldValue hfv(txt.data(), txt.size());
       Mime type("application", "sdp");
-      SdpContents sdp(&hfv, type);
+      SdpContents sdp(hfv, type);
 
       tassert_reset();
       
@@ -270,7 +270,7 @@ main(int argc, char* argv[])
 
       HeaderFieldValue hfv(txt, strlen(txt));
       Mime type("application", "sdp");
-      SdpContents sdp(&hfv, type);
+      SdpContents sdp(hfv, type);
       tassert_reset();
       tassert(sdp.session().version() == 0);
       tassert(sdp.session().origin().user() == "UserA");
@@ -313,7 +313,7 @@ main(int argc, char* argv[])
 
       HeaderFieldValue hfv(txt, strlen(txt));
       Mime type("application", "sdp");
-      SdpContents sdp(&hfv, type);
+      SdpContents sdp(hfv, type);
       tassert_reset();
       tassert(sdp.session().version() == 0);
       tassert(sdp.session().origin().user() == "CiscoSystemsSIP-GW-UserAgent");
@@ -409,7 +409,7 @@ main(int argc, char* argv[])
 
       HeaderFieldValue hfv(txt.data(), txt.size());
       Mime type("application", "sdp");
-      SdpContents sdp(&hfv, type);
+      SdpContents sdp(hfv, type);
 
       try
       {
@@ -453,7 +453,7 @@ main(int argc, char* argv[])
 
       HeaderFieldValue hfv(txt.data(), txt.size());
       Mime type("application", "sdp");
-      SdpContents sdp(&hfv, type);
+      SdpContents sdp(hfv, type);
 
       assert(sdp.session().information() == "eConf 4.0");
       assert(sdp.session().media().size() == 2);
@@ -472,7 +472,7 @@ main(int argc, char* argv[])
 
       HeaderFieldValue hfv(txt.data(), txt.size());
       Mime type("application", "sdp");
-      SdpContents sdp(&hfv, type);
+      SdpContents sdp(hfv, type);
 
       tassert(sdp.session().version() == 0);
       tassert(sdp.session().origin().user() == "alice");
@@ -498,7 +498,7 @@ main(int argc, char* argv[])
       
       HeaderFieldValue hfv(txt.data(), txt.size());
       Mime type("application", "sdp");
-      SdpContents sdp(&hfv, type);
+      SdpContents sdp(hfv, type);
 
       assert(sdp.session().media().size() == 2);
    }
@@ -516,7 +516,7 @@ main(int argc, char* argv[])
 
       HeaderFieldValue hfv(txt.data(), txt.size());
       Mime type("application", "sdp");
-      SdpContents sdp(&hfv, type);
+      SdpContents sdp(hfv, type);
 
       assert(sdp.session().media().front().codecs().size() == 2);
       assert(sdp.session().media().front().codecs().front().payloadType() == 9);
@@ -543,7 +543,7 @@ main(int argc, char* argv[])
 
        HeaderFieldValue hfv(txt.data(), txt.size());
        Mime type("application", "sdp");
-       SdpContents sdp(&hfv, type);
+       SdpContents sdp(hfv, type);
 
        assert(sdp.session().media().size() == 2);
        assert(sdp.session().media().front().getValues("fmtp").front() == "");

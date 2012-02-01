@@ -6,7 +6,6 @@
 
 #include "resip/stack/ParserCategory.hxx"
 #include "resip/stack/Token.hxx"
-#include "rutil/Mutex.hxx"
 #include "rutil/TransportType.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 
@@ -14,16 +13,22 @@ namespace resip
 {
 class SipMessage;
 
+/**
+   @ingroup sip_grammar
+   @brief Represents the "SIP-URI" and "SIPS-URI" elements in the RFC 3261 
+      grammar. Also can be made to represent other URI types (like tel URIs)
+*/
 class Uri : public ParserCategory
 {
    public:
       RESIP_HeapCount(Uri);
-
-      static const size_t uriEncodingTableSize = 256;
       
-      Uri();
-      Uri(HeaderFieldValue* hfv, Headers::Type type);
-      Uri(const Uri&);
+      static const size_t uriEncodingTableSize = 256;
+
+      Uri(PoolBase* pool=0);
+      Uri(const HeaderFieldValue& hfv, Headers::Type type, PoolBase* pool=0);
+      Uri(const Uri& orig,
+         PoolBase* pool=0);
       explicit Uri(const Data& data);
 
       ~Uri();
@@ -32,7 +37,7 @@ class Uri : public ParserCategory
       //static Uri fromTel(const Uri&, const Data& host);  // deprecate...
       static Uri fromTel(const Uri&, const Uri& hostUri);
 
-      Data& host() {checkParsed(); return mHost;}
+      Data& host() {checkParsed(); mHostCanonicalized=false; return mHost;}
       const Data& host() const {checkParsed(); return mHost;}
       Data& user() {checkParsed(); return mUser;}
       const Data& user() const {checkParsed(); return mUser;}
@@ -42,12 +47,19 @@ class Uri : public ParserCategory
       const Data& opaque() const {checkParsed(); return mHost;}
 
       // Returns user@host[:port] (no scheme)
-      const Data& getAor() const;
+      Data getAor() const;
       // Returns user@host (no scheme or port)
-      const Data getAorNoPort() const;
+      Data getAorNoPort() const;
 
-      // Actually returns the AOR; <scheme>:<user>@<host>[:<port>]
-      Data getAorNoReally() const;
+      // Actually returns the AOR; <scheme>:<user>@<host>
+      Data getAorNoReally() const
+      {
+         return getAOR(false);
+      }
+
+      // Returns the AOR, optionally adding the port
+      Data getAOR(bool addPort) const;
+
       //strips all paramters - if transport type is specified (ie. not UNKNOWN_TRANSPORT),
       //and the default port for the transport is on the Aor, then it is removed
       Uri getAorAsUri(TransportType transportTypeToRemoveDefaultPort = UNKNOWN_TRANSPORT) const;
@@ -154,6 +166,8 @@ class Uri : public ParserCategory
 
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
+      virtual ParserCategory* clone(void* location) const;
+      virtual ParserCategory* clone(PoolBase* pool) const;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
       
       // parse the headers into this as SipMessage
@@ -165,13 +179,53 @@ class Uri : public ParserCategory
       bool operator!=(const Uri& other) const;
       bool operator<(const Uri& other) const;
       
+      bool aorEqual(const Uri& rhs) const;
+
+      typedef std::bitset<Uri::uriEncodingTableSize> EncodingTable;
+
+      static EncodingTable& getUserEncodingTable()
+      {
+         static EncodingTable userEncodingTable(
+               Data::toBitset("abcdefghijklmnopqrstuvwxyz"
+                              "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                              "0123456789"
+                              "-_.!~*\\()&=+$,;?/").flip());
+         return userEncodingTable;
+      }
+
+      static EncodingTable& getPasswordEncodingTable()
+      {
+         static EncodingTable passwordEncodingTable(
+               Data::toBitset("abcdefghijklmnopqrstuvwxyz"
+                              "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                              "0123456789"
+                              "-_.!~*\\()&=+$").flip());
+         return passwordEncodingTable;
+      }
+
+      static EncodingTable& getLocalNumberTable()
+      {
+         // ?bwc? 'p' and 'w' are allowed in 2806, but have been removed in 
+         // 3966. Should we support these or not?
+         static EncodingTable localNumberTable(
+               Data::toBitset("*#-.()0123456789ABCDEFpw"));
+         return localNumberTable;
+      }
+
+      static EncodingTable& getGlobalNumberTable()
+      {
+         static EncodingTable globalNumberTable(
+               Data::toBitset("-.()0123456789"));
+         return globalNumberTable;
+      }
+
       // Inform the compiler that overloads of these may be found in
       // ParserCategory, too.
       using ParserCategory::exists;
       using ParserCategory::remove;
       using ParserCategory::param;
 
-      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators);
+      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool);
       bool exists(const Param<Uri>& paramType) const;
       void remove(const Param<Uri>& paramType);
 
@@ -199,45 +253,34 @@ class Uri : public ParserCategory
 
    protected:
       Data mScheme;
-      Data mHost;
+      // .bwc. I don't like this.
+      mutable Data mHost;
       Data mUser;
       Data mUserParameters;
       int mPort;
-      mutable Data mAor;
       Data mPassword;
 
-      // cache for aor
-      mutable Data mOldScheme;
-      mutable Data mOldHost;
-      mutable Data mOldUser;
-      mutable int mOldPort;
-
-      // cache for IPV6 host comparison
-      mutable Data mCanonicalHost;
-
-      static Mutex mMutexEncodingTables;
-      static volatile bool mEncodingReady;
-      // characters listed in these strings should not be URI encoded
-      static const Data mUriNonEncodingUserChars;
-      static const Data mUriNonEncodingPasswordChars;
-      static const Data mLocalNumberChars;
-      static const Data mGlobalNumberChars;
-      typedef std::bitset<Uri::uriEncodingTableSize> EncodingTable;
-      // if a bit is set/true, the corresponding character should be encoded
-      static EncodingTable mUriEncodingUserTable;
-      static EncodingTable mUriEncodingPasswordTable;
-      static EncodingTable mLocalNumberTable;
-      static EncodingTable mGlobalNumberTable;
-
-      static void initialiseEncodingTables();
-      static inline bool shouldEscapeUserChar(unsigned char c);
-      static inline bool shouldEscapePasswordChar(unsigned char c);
+      void getAorInternal(bool dropScheme, bool addPort, Data& aor) const;
+      mutable bool mHostCanonicalized;
 
    private:
-      Data mEmbeddedHeadersText;
-      SipMessage* mEmbeddedHeaders;
+      std::auto_ptr<Data> mEmbeddedHeadersText;
+      std::auto_ptr<SipMessage> mEmbeddedHeaders;
 
       static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
+
+      /** 
+         Dummy static initialization variable, for ensuring that the encoding 
+         tables are initialized sometime during static initialization, 
+         preventing the scenario where multiple threads try to runtime init the 
+         same table at the same time.
+         @note Prior to static initialization of this bool, it could be either 
+            true or false; you should not be using this variable to check 
+            whether the tables are initialized. Just call the getXTable() 
+            accessor function; it will init the table if it is not already.
+      */
+      static const bool tablesMightBeInitialized;
+
 };
 
 }

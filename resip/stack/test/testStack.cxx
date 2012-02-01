@@ -14,6 +14,7 @@
 #include <iostream>
 #include <memory>
 
+#include "rutil/GeneralCongestionManager.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
@@ -22,7 +23,8 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/StackThread.hxx"
-#include "resip/stack/SelectInterruptor.hxx"
+#include "rutil/SelectInterruptor.hxx"
+#include "resip/stack/TransportThread.hxx"
 #include "resip/stack/InterruptableStackThread.hxx"
 #include "resip/stack/EventStackThread.hxx"
 #include "resip/stack/Uri.hxx"
@@ -88,12 +90,6 @@ using namespace std;
 
     fdset       Like "event", but specifically uses the FdSet/select
                 implmentation.
-
-    In addition to the above thread modes, the flag --intepoll turns on
-    internal epoll mode. This allows any of the above thread modes to be
-    used (including select-based) but internally uses the epoll system
-    call in hierarchical mode. This is largely obsolete at this point
-    but is useful for differential profiling.
 
   ===============
   Option: --bind
@@ -170,9 +166,25 @@ class SipStackAndThread
       SipStack&         operator*() const { assert(mStack); return *mStack; }
       SipStack*         operator->() const { return mStack; }
 
-      void              run() { if ( mThread ) mThread->run(); }
-      void              shutdown() { if ( mThread ) mThread->shutdown(); }
-      void              join() { if ( mThread ) mThread->join(); }
+      void setCongestionManager(CongestionManager* cm)
+      {
+         mStack->setCongestionManager(cm);
+      }
+
+      void              run() 
+      {
+         if ( mThread ) mThread->run();
+         if ( mMultiThreadedStack ) mStack->run();
+      }
+      void              shutdown()
+      {
+         if ( mThread ) mThread->shutdown();
+      }
+      void              join()
+      {
+         if ( mThread ) mThread->join();
+         if ( mMultiThreadedStack ) mStack->shutdownAndJoinThreads();
+      }
 
       void              destroy();
 
@@ -186,12 +198,18 @@ class SipStackAndThread
       SelectInterruptor *mSelIntr;
       FdPollGrp         *mPollGrp;
       EventThreadInterruptor    *mEventIntr;
+      bool mMultiThreadedStack;
 };
 
 
 SipStackAndThread::SipStackAndThread(const char *tType,
  AsyncProcessHandler *notifyDn, AsyncProcessHandler *notifyUp)
-  : mStack(0), mThread(0), mSelIntr(0), mPollGrp(0), mEventIntr(0)
+  : mStack(0), 
+      mThread(0), 
+      mSelIntr(0), 
+      mPollGrp(0), 
+      mEventIntr(0), 
+      mMultiThreadedStack(false)
 {
    bool doStd = false;
 
@@ -214,7 +232,13 @@ SipStackAndThread::SipStackAndThread(const char *tType,
    } 
    else if ( strcmp(tType,"none")==0 ) 
    {
-   } 
+   }
+   else if ( strcmp(tType,"multithreadedstack")==0 )
+   {
+      mMultiThreadedStack=true;
+      mPollGrp = FdPollGrp::create("event");
+      mEventIntr = new EventThreadInterruptor(*mPollGrp);
+   }
    else 
    {
       CritLog(<<"Bad thread-type: "<<tType);
@@ -323,6 +347,11 @@ struct StackThreadPair
 
 bool
 StackThreadPair::wait(int& thisseltime) {
+   if(mReceiver.getStack().hasMessage() || mSender.getStack().hasMessage())
+   {
+      return false;
+   }
+
    thisseltime = mSeltime;
    bool isStrange = false;
    if ( mNoStackThread )
@@ -375,7 +404,7 @@ performTest(int verbose, int runs, int window, int invite,
       //InfoLog (<< "count=" << count << " messages=" << messages.size());
 
       // load up the send window
-      while (sent < runs && outstanding < window)
+      for (int i=0; i<64 && sent < runs && outstanding < window; ++i)
       {
          DebugLog (<< "Sending " << count << " / " << runs << " (" << outstanding << ")");
          target.uri().port() = registrarPort + (sent%numPorts);
@@ -421,7 +450,7 @@ performTest(int verbose, int runs, int window, int invite,
              <<endl;
       }
 
-      for (;;)
+      for (int i=0;i<64;++i)
       {
          static NameAddr contact;
 
@@ -463,7 +492,7 @@ performTest(int verbose, int runs, int window, int invite,
          delete request;
       }
 
-      for (;;)
+      for (int i=0;i<64;++i)
       {
          ++rxRspTryCnt;
          SipMessage* response = pair.mSender->receive();
@@ -475,7 +504,14 @@ performTest(int verbose, int runs, int window, int invite,
          {
             case REGISTER:
                outstanding--;
-               count++;
+               if (response->header(h_StatusLine).statusCode() == 200)
+               {
+                  count++;
+               }
+               else
+               {
+                  --sent;
+               }
                break;
 
             case INVITE:
@@ -549,17 +585,18 @@ main(int argc, char* argv[])
    int seltime = 0;
    int v6 = 0;
    int invite=0;
-   int useInternalEPollMode = 0;
    int numPorts = 1;
    int portBase = 0;
    const char* threadType = "event";
    int tpFlags = 0;
    int sendSleepUs = 0;
+   int cManager=0;
+   int statisticsInterval=60;
 
 #if defined(HAVE_POPT_H)
 
    char threadTypeDesc[200];
-   strcpy(threadTypeDesc, "none|common|std|intr|");
+   strcpy(threadTypeDesc, "none|common|std|intr|multithreadedstack|");
    strcat(threadTypeDesc, FdPollGrp::getImplList());
 
    struct poptOption table[] = {
@@ -574,14 +611,13 @@ main(int argc, char* argv[])
       {"verbose",     0,   POPT_ARG_INT,    &verbose,   0, "verbose", 0},
       {"v6",          '6', POPT_ARG_NONE,   &v6     ,   0, "ipv6", 0},
       {"invite",      'i', POPT_ARG_NONE,   &invite ,   0, "send INVITE/BYE instead of REGISTER", 0},
-#if defined(HAVE_EPOLL)
-      {"intepoll",    0,   POPT_ARG_INT,    &useInternalEPollMode,0, "use internal epoll mode", 0},
-#endif
       {"port",        0,   POPT_ARG_INT,    &portBase,  0, "first port to use", 0},
       {"numports",    'n', POPT_ARG_INT,    &numPorts,  0, "number of parallel sessions(ports)", 0},
       {"thread-type", 't', POPT_ARG_STRING, &threadType,0, "stack thread type", threadTypeDesc},
       {"tf",          0,   POPT_ARG_INT,    &tpFlags,   0, "bit encoding of transportFlags", 0},
       {"sleep",       0,   POPT_ARG_INT,    &sendSleepUs,0, "time (us) to sleep after each sent request", 0},
+      {"use-congestion-manager",0, POPT_ARG_NONE, &cManager ,   0, "use a CongestionManager", 0},
+      {"statistics-interval",       0,   POPT_ARG_INT,    &statisticsInterval,0, "time in seconds between statistics logging", 0},
       POPT_AUTOHELP
       { NULL, 0, 0, NULL, 0 }
    };
@@ -605,14 +641,10 @@ main(int argc, char* argv[])
      <<" proto="<<proto
      <<" numports="<<numPorts
      <<" thread="<<threadType
-     <<" intepoll="<<useInternalEPollMode
      <<" bindIf="<<bindIfAddr
      <<" listen="<<doListen
      <<" tf="<<tpFlags
      <<"." << endl;
-
-   // must occur before creating stacks
-   SipStack::setDefaultUseInternalPoll(useInternalEPollMode?true:false);
 
    const char *eachThreadType = threadType;
    SelectInterruptor *commonIntr = NULL;
@@ -646,14 +678,17 @@ main(int argc, char* argv[])
    }
    SipStackAndThread receiver(eachThreadType, commonIntr, notifyUp);
    SipStackAndThread sender(eachThreadType, commonIntr, notifyUp);
+   receiver.getStack().setStatisticsInterval(statisticsInterval);
+   sender.getStack().setStatisticsInterval(statisticsInterval);
 
    IpVersion version = (v6 ? V6 : V4);
 
    // estimate number of sockets we need:
    // 2x for sender and receiver
-   // 1 for UDP + 2 for TCP (listen + connection)
-   // ~30 for misc (DNS)
-   int needFds = numPorts * 6 + 30;
+   // 3 for UDP (listen + select interruptor) 
+   // 4 for TCP (listen + connection + select interruptor)
+   // ~30 for misc (DNS, SelectInterruptors)
+   int needFds = numPorts * 14 + 30;
    increaseLimitFds(needFds);
 
    /* On linux, the client TCP connection port range is controll by
@@ -669,9 +704,10 @@ main(int argc, char* argv[])
    int registrarPort = senderPort + numPorts;
 
    int idx;
+   std::vector<Transport*> transports;
    for (idx=0; idx < numPorts; idx++)
    {
-      sender->addTransport(UDP, 
+      transports.push_back(sender->addTransport(UDP, 
                            senderPort+idx, 
                            version, 
                            StunDisabled, 
@@ -679,10 +715,10 @@ main(int argc, char* argv[])
                            /*sipDomain*/Data::Empty, 
                            /*keypass*/Data::Empty, 
                            SecurityTypes::TLSv1,
-                           tpFlags);
+                           tpFlags));
 
       // NOBIND doesn't make sense for UDP
-      sender->addTransport(TCP, 
+      transports.push_back(sender->addTransport(TCP, 
                            senderPort+idx, 
                            version, 
                            StunDisabled, 
@@ -690,11 +726,11 @@ main(int argc, char* argv[])
                            /*sipDomain*/Data::Empty, 
                            /*keypass*/Data::Empty, 
                            SecurityTypes::TLSv1,
-                           tpFlags|(doListen?0:RESIP_TRANSPORT_FLAG_NOBIND));
+                           tpFlags|(doListen?0:RESIP_TRANSPORT_FLAG_NOBIND)));
 
       // NOTE: we could also bind receive to bindIfAddr, but existing code
       // doesn't do this. Responses are sent from here, so why don't we?
-      receiver->addTransport(UDP, 
+      transports.push_back(receiver->addTransport(UDP, 
                              registrarPort+idx, 
                              version, 
                              StunDisabled,
@@ -702,9 +738,9 @@ main(int argc, char* argv[])
                              /*sipDomain*/Data::Empty, 
                              /*keypass*/Data::Empty, 
                              SecurityTypes::TLSv1,
-                             tpFlags);
+                             tpFlags));
 
-      receiver->addTransport(TCP, 
+      transports.push_back(receiver->addTransport(TCP, 
                              registrarPort+idx, 
                              version, 
                              StunDisabled,
@@ -712,7 +748,32 @@ main(int argc, char* argv[])
                              /*sipDomain*/Data::Empty, 
                              /*keypass*/Data::Empty, 
                              SecurityTypes::TLSv1,
-                             tpFlags);
+                             tpFlags));
+   }
+
+   std::auto_ptr<CongestionManager> senderCongestionManager;
+   std::auto_ptr<CongestionManager> receiverCongestionManager;
+   if(cManager)
+   {
+      senderCongestionManager.reset(new GeneralCongestionManager(
+                                    GeneralCongestionManager::WAIT_TIME,
+                                    200));
+      receiverCongestionManager.reset(new GeneralCongestionManager(
+                                    GeneralCongestionManager::WAIT_TIME,
+                                    200));
+      sender.setCongestionManager(senderCongestionManager.get());
+      receiver.setCongestionManager(receiverCongestionManager.get());
+   }
+
+   std::vector<TransportThread*> transportThreads;
+   if(tpFlags & RESIP_TRANSPORT_FLAG_OWNTHREAD)
+   {
+      while(!transports.empty())
+      {
+         transportThreads.push_back(new TransportThread(*transports.back()));
+         transportThreads.back()->run();
+         transports.pop_back();
+      }
    }
 
    sender.run();
@@ -732,6 +793,20 @@ main(int argc, char* argv[])
 
    sender.join();
    receiver.join();
+
+   sender.setCongestionManager(0);
+   receiver.setCongestionManager(0);
+
+   if(tpFlags&RESIP_TRANSPORT_FLAG_OWNTHREAD)
+   {
+      while(!transportThreads.empty())
+      {
+         transportThreads.back()->shutdown();
+         transportThreads.back()->join();
+         delete transportThreads.back();
+         transportThreads.pop_back();
+      }
+   }
 
    sender.destroy();
    receiver.destroy();

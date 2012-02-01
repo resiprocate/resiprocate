@@ -36,7 +36,8 @@ class Message
       virtual EncodeStream& encodeBrief(EncodeStream& str) const = 0; 
 
    protected:
-      friend class TuSelector;      
+      friend class TuSelector;
+      friend class TransactionController;
       friend class TransactionState;
       friend class SipStack;
       bool hasTransactionUser() const { return tu != 0; }

@@ -12,18 +12,18 @@ using namespace std;
 
 UInt32Parameter::UInt32Parameter(ParameterTypes::Type type,
                                    ParseBuffer& pb, 
-                                   const char* terminators)
+                                   const std::bitset<256>& terminators)
    : Parameter(type),
      mValue(0)
 {
    pb.skipWhitespace();
    pb.skipChar(Symbols::EQUALS[0]);
    pb.skipWhitespace();
-   pb.assertNotEof();
    
    // hack to allow expires to have an 2543 style quoted Date
    if (type == ParameterTypes::expires)
    {
+      pb.assertNotEof();
       try
       {
          mValue = pb.uInt32();

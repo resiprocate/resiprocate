@@ -352,6 +352,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\DnsUtil.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\dns\ExternalDnsFactory.cxx"
 				>
 			</File>
@@ -361,6 +365,10 @@
 			</File>
 			<File
 				RelativePath=".\FileSystem.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\GeneralCongestionManager.cxx"
 				>
 			</File>
 			<File
@@ -385,6 +393,14 @@
 			</File>
 			<File
 				RelativePath=".\Mutex.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\PoolBase.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\SelectInterruptor.cxx"
 				>
 			</File>
 			<File
@@ -534,6 +550,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\CongestionManager.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ConsumerFifoBuffer.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\DinkyPool.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\dns\AresCompat.hxx"
 				>
 			</File>
@@ -622,6 +650,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\DnsThread.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\dns\ExternalDns.hxx"
 				>
 			</File>
@@ -634,11 +666,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\FdSetIOObserver.hxx"
+				>
+			</File>			
+			<File
 				RelativePath=".\Fifo.hxx"
 				>
 			</File>
 			<File
 				RelativePath=".\FileSystem.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\GeneralCongestionManager.hxx"
 				>
 			</File>
 			<File
@@ -691,6 +731,18 @@
 			</File>
 			<File
 				RelativePath=".\Mutex.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\PoolBase.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ProducerFifoBuffer.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\SelectInterruptor.hxx"
 				>
 			</File>
 			<File
@@ -763,6 +815,10 @@
 			</File>
 			<File
 				RelativePath=".\Socket.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\StlPoolAllocator.hxx"
 				>
 			</File>
 			<File

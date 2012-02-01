@@ -64,7 +64,7 @@ main(int argc, char** argv)
    cerr << "next timer = " << timer.msTillNextTimer() << endl;
    assert(timer.msTillNextTimer() == INT_MAX);
 
-   timer.add(Timer(1000, new AppMessage("first")));
+   timer.add(1000, new AppMessage("first"));
    cerr << timer;
    assert(f.size() == 0);
    timer.process();

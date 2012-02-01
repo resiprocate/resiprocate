@@ -7,7 +7,7 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
-#include "rutil/WinLeakCheck.hxx"
+//#include "rutil/WinLeakCheck.hxx"  // not compatible with placement new used below
 
 using namespace resip;
 using namespace std;
@@ -28,13 +28,13 @@ Token::Token(const Data& d)
      mValue(d) 
 {}
 
-Token::Token(HeaderFieldValue* hfv, Headers::Type type) 
-   : ParserCategory(hfv, type), 
+Token::Token(const HeaderFieldValue& hfv, Headers::Type type, PoolBase* pool) 
+   : ParserCategory(hfv, type, pool), 
      mValue() 
 {}
 
-Token::Token(const Token& rhs)
-   : ParserCategory(rhs),
+Token::Token(const Token& rhs, PoolBase* pool)
+   : ParserCategory(rhs, pool),
      mValue(rhs.mValue)
 {}
 
@@ -103,6 +103,18 @@ Token::clone() const
    return new Token(*this);
 }
 
+ParserCategory* 
+Token::clone(void* location) const
+{
+   return new (location) Token(*this);
+}
+
+ParserCategory* 
+Token::clone(PoolBase* pool) const
+{
+   return new (pool) Token(*this, pool);
+}
+
 EncodeStream& 
 Token::encodeParsed(EncodeStream& str) const
 {
@@ -114,11 +126,11 @@ Token::encodeParsed(EncodeStream& str) const
 ParameterTypes::Factory Token::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
 
 Parameter* 
-Token::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+Token::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool)
 {
    if(type > ParameterTypes::UNKNOWN && type < ParameterTypes::MAX_PARAMETER && ParameterFactories[type])
    {
-      return ParameterFactories[type](type, pb, terminators);
+      return ParameterFactories[type](type, pb, terminators, pool);
    }
    return 0;
 }

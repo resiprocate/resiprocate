@@ -15,18 +15,21 @@ PrivacyCategory::PrivacyCategory(const Data& d)
      mValue() 
 {
    HeaderFieldValue hfv(d.data(), d.size());
-   PrivacyCategory tmp(&hfv, Headers::UNKNOWN);
+   PrivacyCategory tmp(hfv, Headers::UNKNOWN);
    tmp.checkParsed();
    *this = tmp;
 }
 
-PrivacyCategory::PrivacyCategory(HeaderFieldValue* hfv, Headers::Type type) 
-   : ParserCategory(hfv, type), 
+PrivacyCategory::PrivacyCategory(const HeaderFieldValue& hfv, 
+                                 Headers::Type type,
+                                 PoolBase* pool) 
+   : ParserCategory(hfv, type, pool), 
      mValue() 
 {}
 
-PrivacyCategory::PrivacyCategory(const PrivacyCategory& rhs)
-   : ParserCategory(rhs),
+PrivacyCategory::PrivacyCategory(const PrivacyCategory& rhs,
+                                 PoolBase* pool)
+   : ParserCategory(rhs, pool),
      mValue(rhs.mValue)
 {}
 
@@ -85,6 +88,18 @@ ParserCategory*
 PrivacyCategory::clone() const
 {
    return new PrivacyCategory(*this);
+}
+
+ParserCategory* 
+PrivacyCategory::clone(void* location) const
+{
+   return new (location) PrivacyCategory(*this);
+}
+
+ParserCategory* 
+PrivacyCategory::clone(PoolBase* pool) const
+{
+   return new (pool) PrivacyCategory(*this, pool);
 }
 
 EncodeStream& 

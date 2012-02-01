@@ -6,13 +6,21 @@
 namespace resip
 {
 
+/**
+   @ingroup sip_payload
+   @brief SIP body type for holding Multipart-Related body contents (MIME content-type multipart/related).
+*/
 class MultipartRelatedContents : public MultipartMixedContents
 {
    public:
       MultipartRelatedContents();
-      MultipartRelatedContents(HeaderFieldValue* hfv, const Mime& contentType);
+      MultipartRelatedContents(const HeaderFieldValue& hfv, const Mime& contentType);
       MultipartRelatedContents(const MultipartRelatedContents& rhs);
       MultipartRelatedContents& operator=(const MultipartRelatedContents& rhs);
+
+      /** @brief duplicate an MultipartRelatedContents object
+          @return pointer to a new MultipartRelatedContents object  
+        **/
       virtual Contents* clone() const;
 
       static const Mime& getStaticType() ;
