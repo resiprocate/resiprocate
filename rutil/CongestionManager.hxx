@@ -23,11 +23,10 @@ class FifoStatsInterface;
    FifoStatsInterface::getDescription()), and assigning a role-number that 
    designates the role of this fifo (this means you only need to perform a 
    string comparison the first time getRejectionBehavior() is called for a 
-   particular fifo). Here are the the returns you will get from 
+   particular fifo). Here are the returns you will get from 
    FifoStatsInterface::getDescription() on a number of key fifos in the 
    resiprocate stack:
 
-   - ReparteeManager::mFifo
    - TransactionController::mStateMacFifo
    - TlsTransport::mTxFifo
    - TcpTransport::mTxFifo
