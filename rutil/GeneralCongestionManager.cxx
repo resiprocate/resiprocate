@@ -96,9 +96,9 @@ GeneralCongestionManager::logCurrentState() const
          const FifoStatsInterface& fifo=*(i->fifo);
          WarningLog(<<fifo.getDescription() <<" - "
                      " SIZE: " << fifo.getCountDepth()
-                     << " TIME DEPTH: " << fifo.getTimeDepth()  
-                     << " EXP WAIT: " << fifo.expectedWaitTimeMilliSec()
-                     << " AVG SERVICE TIME (micro-sec): "
+                     << " TIME DEPTH (sec): " << fifo.getTimeDepth()  
+                     << " EXP WAIT (msec): " << fifo.expectedWaitTimeMilliSec()
+                     << " AVG SERVICE TIME (usec): "
                      << fifo.averageServiceTimeMicroSec());
       }
    }

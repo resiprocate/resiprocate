@@ -133,7 +133,8 @@ class AbstractFifo : public FifoStatsInterface
          : FifoStatsInterface(),
             mLastSampleTakenMicroSec(0),
             mCounter(0),
-            mAverageServiceTimeMicroSec(0)
+            mAverageServiceTimeMicroSec(0),
+            mSize(0)
       {}
 
       virtual ~AbstractFifo()

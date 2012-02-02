@@ -56,6 +56,8 @@ Proxy::Proxy(SipStack& stack,
 {
    FlowTokenSalt = Random::getCryptoRandom(20);   // 20-octet Crypto Random Key for Salting Flow Token HMACs
 
+   mFifo.setDescription("Proxy::mFifo");
+
    if(InteropHelper::getOutboundSupported())
    {
       addSupportedOption("outbound");
