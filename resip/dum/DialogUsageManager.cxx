@@ -113,6 +113,8 @@ DialogUsageManager::DialogUsageManager(SipStack& stack, bool createDefaultFeatur
    mStack.registerTransactionUser(*this);
    addServerSubscriptionHandler("refer", new DefaultServerReferHandler());
 
+   mFifo.setDescription("DialogUsageManager::mFifo");
+
    mIncomingTarget = new IncomingTarget(*this);
    mOutgoingTarget = new OutgoingTarget(*this);
 

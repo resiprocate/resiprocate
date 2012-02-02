@@ -92,6 +92,8 @@ DtlsTransport::DtlsTransport(Fifo<TransactionMessage>& fifo,
              << " port=" << mTuple.getPort()
              << " ipv4=" << version ) ;
 
+   mTxFifo.setDescription("DtlsTransport::mTxFifo");
+
    mTuple.setType( transport() );
 
    mClientCtx = mSecurity->createDomainCtx(DTLSv1_client_method(), Data::Empty) ;

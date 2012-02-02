@@ -21,6 +21,10 @@ TransactionUser::TransactionUser(TransactionTermination t,
   // This creates a default message filter rule, which
   // handles all sip:, sips:, and tel: requests.
   mRuleList.push_back(MessageFilterRule());
+
+  // Set a default Fifo description - should be modified by override class to be
+  // more desriptive
+   mFifo.setDescription("TransactionUser::mFifo");
 }
 
 TransactionUser::TransactionUser(MessageFilterRuleList &mfrl, 
@@ -35,6 +39,9 @@ TransactionUser::TransactionUser(MessageFilterRuleList &mfrl,
    mRegisteredForConnectionTermination(c == RegisterForConnectionTermination),
    mRegisteredForKeepAlivePongs(k == RegisterForKeepAlivePongs)
 {
+  // Set a default Fifo description - should be modified by override class to be
+  // more desriptive
+   mFifo.setDescription("TransactionUser::mFifo");
 }
 
 TransactionUser::~TransactionUser()
