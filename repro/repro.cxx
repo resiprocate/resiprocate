@@ -741,9 +741,23 @@ main(int argc, char** argv)
    std::auto_ptr<CongestionManager> congestionManager;
    if(config.getConfigBool("CongestionManagement", true))
    {
+      Data metricData = config.getConfigData("CongestionManagementMetric", "WAIT_TIME", true);
+      GeneralCongestionManager::MetricType metric = GeneralCongestionManager::WAIT_TIME;
+      if(isEqualNoCase(metricData, "TIME_DEPTH"))
+      {
+         metric = GeneralCongestionManager::TIME_DEPTH;
+      }
+      else if(isEqualNoCase(metricData, "SIZE"))
+      {
+         metric = GeneralCongestionManager::SIZE;
+      }
+      else if(!isEqualNoCase(metricData, "TIME_DEPTH"))
+      {
+         WarningLog( << "CongestionManagementMetric specified as an unknown value (" << metricData << "), defaulting to TIME_DEPTH.");
+      }
       congestionManager.reset(new GeneralCongestionManager(
-                                          GeneralCongestionManager::WAIT_TIME, 
-                                          200));
+                                          metric, 
+                                          config.getConfigUnsignedLong("CongestionManagementTolerance", 200)));
       stack.setCongestionManager(congestionManager.get());
    }
 
