@@ -71,6 +71,14 @@ CommandServer::handleRequest(unsigned int connectionId, unsigned int requestId, 
       {
          handleGetStackInfoRequest(connectionId, requestId, xml);
       }
+      else if(isEqualNoCase(xml.getTag(), "GetStackStats"))
+      {
+         handleGetStackStatsRequest(connectionId, requestId, xml);
+      }
+      else if(isEqualNoCase(xml.getTag(), "ResetStackStats"))
+      {
+         handleResetStackStatsRequest(connectionId, requestId, xml);
+      }      
       else if(isEqualNoCase(xml.getTag(), "LogDnsCache"))
       {
          handleLogDnsCacheRequest(connectionId, requestId, xml);
@@ -90,10 +98,6 @@ CommandServer::handleRequest(unsigned int connectionId, unsigned int requestId, 
       else if(isEqualNoCase(xml.getTag(), "SetCongestionTolerance"))
       {
          handleSetCongestionToleranceRequest(connectionId, requestId, xml);
-      }
-      else if(isEqualNoCase(xml.getTag(), "GetStackStats"))
-      {
-         handleGetStackStatsRequest(connectionId, requestId, xml);
       }
       else 
       {
@@ -119,6 +123,34 @@ CommandServer::handleGetStackInfoRequest(unsigned int connectionId, unsigned int
    strm.flush();
 
    sendResponse(connectionId, requestId, buffer, 200, "Stack info retrieved.");
+}
+
+void 
+CommandServer::handleGetStackStatsRequest(unsigned int connectionId, unsigned int requestId, XMLCursor& xml)
+{
+   InfoLog(<< "CommandServer::handleGetStackStatsRequest");
+
+   if(mStatisitcsPayloadReceived)
+   {
+      Lock lock(mStatisticsPayloadMutex);
+      Data buffer;
+      DataStream strm(buffer);
+      strm << mStatisticsPayload << endl;
+      sendResponse(connectionId, requestId, buffer, 200, "Stack stats retrieved.");
+   }
+   else
+   {
+      sendResponse(connectionId, requestId, Data::Empty, 400, "Too early to query Stack statistics try again later.");
+   }
+}
+
+void 
+CommandServer::handleResetStackStatsRequest(unsigned int connectionId, unsigned int requestId, XMLCursor& xml)
+{
+   InfoLog(<< "CommandServer::handleResetStackStatsRequest");
+
+   mSipStack.zeroOutStatistics();
+   sendResponse(connectionId, requestId, Data::Empty, 200, "Stack stats reset.");
 }
 
 void 
@@ -278,26 +310,6 @@ CommandServer::operator()(resip::StatisticsMessage &statsMessage)
    statsMessage.loadOut(mStatisticsPayload);
    mStatisitcsPayloadReceived = true;
    return true;
-}
-
-void 
-CommandServer::handleGetStackStatsRequest(unsigned int connectionId, unsigned int requestId, XMLCursor& xml)
-{
-   InfoLog(<< "CommandServer::handleGetStackStatsRequest");
-
-   if(mStatisitcsPayloadReceived)
-   {
-      Lock lock(mStatisticsPayloadMutex);
-      Data buffer;
-      DataStream strm(buffer);
-//      StatisticsMessage::encodeStats(mStatisticsPayload, strm);
-      strm << mStatisticsPayload << endl;
-      sendResponse(connectionId, requestId, buffer, 200, "Stack stats retrieved.");
-   }
-   else
-   {
-      sendResponse(connectionId, requestId, Data::Empty, 400, "Too early to query Stack statistics try again later.");
-   }
 }
 
 /*

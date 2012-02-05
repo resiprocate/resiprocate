@@ -106,21 +106,27 @@ StatisticsMessage::clone() const
 }
 
 StatisticsMessage::Payload::Payload()
-   : tuFifoSize(0),
-     transportFifoSizeSum(0),
-     transactionFifoSize(0),
-     activeTimers(0),
-     openTcpConnections(0),
-     activeClientTransactions(0),
-     activeServerTransactions(0),
-     pendingDnsQueries(0),
-     requestsSent(0),
-     responsesSent(0),
-     requestsRetransmitted(0),
-     responsesRetransmitted(0),
-     requestsReceived(0),
-     responsesReceived(0)
 {
+   zeroOut();
+}
+
+void
+StatisticsMessage::Payload::zeroOut()
+{
+   tuFifoSize = 0;
+   transportFifoSizeSum = 0;
+   transactionFifoSize = 0;
+   activeTimers = 0;
+   openTcpConnections = 0;
+   activeClientTransactions = 0;
+   activeServerTransactions = 0;
+   pendingDnsQueries = 0;
+   requestsSent = 0;
+   responsesSent = 0;
+   requestsRetransmitted = 0;
+   responsesRetransmitted = 0;
+   requestsReceived = 0;
+   responsesReceived = 0;
    memset(responsesByCode, 0, sizeof(responsesByCode));
    memset(requestsSentByMethod, 0, sizeof(requestsSentByMethod));
    memset(requestsRetransmittedByMethod, 0, sizeof(requestsRetransmittedByMethod));

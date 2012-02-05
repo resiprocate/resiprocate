@@ -993,7 +993,7 @@
 			<File
 				RelativePath=".\DnsResultMessage.hxx"
 				>
-			</File>			
+			</File>
 			<File
 				RelativePath=".\DtlsMessage.hxx"
 				>
@@ -1293,7 +1293,7 @@
 			<File
 				RelativePath=".\StartLine.hxx"
 				>
-			</File>			
+			</File>
 			<File
 				RelativePath=".\StatelessHandler.hxx"
 				>
@@ -1484,6 +1484,10 @@
 			</File>
 			<File
 				RelativePath=".\XMLCursor.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ZeroOutStatistics.hxx"
 				>
 			</File>
 		</Filter>

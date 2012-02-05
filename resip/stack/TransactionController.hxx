@@ -50,7 +50,7 @@ class TransactionController
       unsigned int getNumClientTransactions() const;
       unsigned int getNumServerTransactions() const;
       unsigned int getTimerQueueSize() const;
-      //void setStatisticsInterval(unsigned long seconds) const;
+      void zeroOutStatistics();
       
       void setCongestionManager( CongestionManager *manager ) 
       { 
