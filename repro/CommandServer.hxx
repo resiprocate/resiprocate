@@ -47,12 +47,13 @@ protected:
 
 private: 
    void handleGetStackInfoRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
+   void handleGetStackStatsRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
+   void handleResetStackStatsRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
    void handleLogDnsCacheRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
    void handleClearDnsCacheRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
    void handleGetDnsCacheRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
    void handleGetCongestionStatsRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
    void handleSetCongestionToleranceRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
-   void handleGetStackStatsRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
    //void streamContactInstanceRecord(std::stringstream& ss, const resip::ContactInstanceRecord& rec);
 
    resip::SipStack& mSipStack;

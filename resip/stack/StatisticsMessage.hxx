@@ -60,6 +60,7 @@ class StatisticsMessage : public ApplicationMessage
             unsigned int sumErrIn(MethodTypes method) const;
             unsigned int sum2xxOut(MethodTypes method) const;
             unsigned int sumErrOut(MethodTypes method) const;
+            void zeroOut();
 
             Payload& operator=(const Payload& payload);
       };
