@@ -91,7 +91,7 @@ TuSelector::add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage)
          DebugLog(<< "Send to default TU: " << std::endl << std::endl << *msg);
          mFallBackFifo.add(msg, usage);
          if ( mFallbackPostNotify )
-	    mFallbackPostNotify->handleProcessNotification();
+            mFallbackPostNotify->handleProcessNotification();
       }
    }
 }
@@ -276,17 +276,11 @@ TuSelector::setCongestionManager(CongestionManager* manager)
       i->tu->setCongestionManager(manager);
    }
    
-   if(mCongestionManager)
-   {
-      mCongestionManager->unregisterFifo(&mFallBackFifo);
-   }
-   mCongestionManager=manager;
-   if(mCongestionManager)
-   {
-      mCongestionManager->registerFifo(&mFallBackFifo);
-   }
-   // ?bwc? Do we need to congestion-manage mFallbackFifo or mShutdownFifo?
-
+   // Note:  We are intentionally not registering the following Fifos
+   // mFallbackFifo - this is the same fifo as SipStack::TuFifo (passed in 
+   //                 constructor).
+   // mShutdownFifo - since it is only used at shutdown time, it doesn need
+   //                 congestion management
 }
 
 CongestionManager::RejectionBehavior 
