@@ -788,6 +788,16 @@ class SipStack : public FdSetIOObserver
       void logDnsCache();
 
       /**
+          @brief Get a string representation of the DNS Cache. 
+          @param key - a pair representing the request key, can be used
+                       by the callback handler to identify the originating
+                       request
+          @param handler - pointer to a class that implements the handler 
+                           method: onDnsCacheRetrieved
+      */
+      void getDnsCacheDump(std::pair<unsigned long, unsigned long> key, GetDnsCacheDumpHandler* handler);
+
+      /**
           @todo is this documented correctly? [!]
           @brief Enable Statistics Manager
           @details Enable Statistics Manager.  SIP Statistics will be collected and 
@@ -919,6 +929,15 @@ class SipStack : public FdSetIOObserver
       }
 
       /**
+         @brief Accessor for the CongestionManager object the stack is using.
+         @return The CongestionManager object being used.
+         @note If no Compression object was set on construction, this will 
+            return null.
+         @ingroup resip_config
+      */
+      CongestionManager* getCongestionManager() { return mCongestionManager; }
+
+      /**
          @brief Accessor for the Compression object the stack is using.
          @return The Compression object being used.
          @note If no Compression object was set on construction, this will be 
@@ -1009,7 +1028,6 @@ class SipStack : public FdSetIOObserver
       bool mShuttingDown;
       mutable Mutex mShutdownMutex;
       volatile bool mStatisticsManagerEnabled;
-
 
       AfterSocketCreationFuncPtr mSocketFunc;
 
