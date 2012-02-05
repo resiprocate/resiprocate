@@ -67,7 +67,6 @@ class StatisticsMessage : public ApplicationMessage
       void loadOut(Payload& payload) const;
       static void logStats(const Subsystem& subsystem, const Payload& stats);
 
-
       virtual EncodeStream& encode(EncodeStream& strm) const;
       virtual EncodeStream& encodeBrief(EncodeStream& str) const;
 
@@ -89,7 +88,10 @@ class StatisticsMessage : public ApplicationMessage
       
    private:
       const AtomicPayload& mPayload;
+      friend EncodeStream& operator<<(EncodeStream& strm, const StatisticsMessage::Payload& stats);
 };
+
+EncodeStream& operator<<(EncodeStream& strm, const StatisticsMessage::Payload& p);
 
 }
 
