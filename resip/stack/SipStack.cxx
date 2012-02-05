@@ -908,6 +908,12 @@ SipStack::logDnsCache()
    mDnsStub->logDnsCache();
 }
 
+void 
+SipStack::getDnsCacheDump(std::pair<unsigned long, unsigned long> key, GetDnsCacheDumpHandler* handler)
+{
+   mDnsStub->getDnsCacheDump(key, handler);
+}
+
 volatile bool&
 SipStack::statisticsManagerEnabled()
 {
