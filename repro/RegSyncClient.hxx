@@ -2,7 +2,7 @@
 #define RegSyncClient_hxx 
 
 #include <rutil/Data.hxx>
-#include <resip/stack/XMLCursor.hxx>
+#include <rutil/XMLCursor.hxx>
 #include <resip/dum/InMemorySyncRegDb.hxx>
 #include <rutil/ThreadIf.hxx>
 

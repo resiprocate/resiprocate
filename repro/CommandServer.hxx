@@ -4,7 +4,7 @@
 #include <rutil/Data.hxx>
 #include <rutil/dns/DnsStub.hxx>
 #include <rutil/TransportType.hxx>
-#include <resip/stack/XMLCursor.hxx>
+#include <rutil/XMLCursor.hxx>
 #include <resip/stack/StatisticsHandler.hxx>
 #include <resip/stack/StatisticsMessage.hxx>
 #include <resip/dum/InMemorySyncRegDb.hxx>

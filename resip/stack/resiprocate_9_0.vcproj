@@ -881,10 +881,6 @@
 				RelativePath=".\X509Contents.cxx"
 				>
 			</File>
-			<File
-				RelativePath=".\XMLCursor.cxx"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -1484,10 +1480,6 @@
 			</File>
 			<File
 				RelativePath=".\X509Contents.hxx"
-				>
-			</File>
-			<File
-				RelativePath=".\XMLCursor.hxx"
 				>
 			</File>
 			<File
