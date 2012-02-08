@@ -1215,6 +1215,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\PollStatistics.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\PrivacyCategory.hxx"
 				>
 			</File>

@@ -9,6 +9,7 @@
 #include "resip/stack/TerminateFlow.hxx"
 #include "resip/stack/EnableFlowTimer.hxx"
 #include "resip/stack/ZeroOutStatistics.hxx"
+#include "resip/stack/PollStatistics.hxx"
 #include "resip/stack/ShutdownMessage.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TransactionController.hxx"
@@ -221,6 +222,12 @@ void
 TransactionController::zeroOutStatistics()
 {
    mStateMacFifo.add(new ZeroOutStatistics());
+}
+
+void 
+TransactionController::pollStatistics()
+{
+   mStateMacFifo.add(new PollStatistics());
 }
 
 void

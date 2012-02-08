@@ -861,6 +861,17 @@ SipStack::zeroOutStatistics()
    }
 }
 
+bool
+SipStack::pollStatistics()
+{
+   if(statisticsManagerEnabled())
+   {
+      mTransactionController->pollStatistics();
+      return true;
+   }
+   return false;
+}
+
 void
 SipStack::registerTransactionUser(TransactionUser& tu)
 {

@@ -715,9 +715,16 @@ class SipStack : public FdSetIOObserver
       void setStatisticsInterval(unsigned long seconds);
 
       /**
-         @brief Resets all of the cumulative statistics counters
+         @brief Resets all of the cumulative statistics counters.
       */
       void zeroOutStatistics();
+
+      /**
+         @brief Immediately polls for statistics to be logged and sent to
+         external handlers, instead of waiting for next statistics interval.
+         Returns false if statistics manager is not enabled.
+      */
+      bool pollStatistics();
 
       /** Installs a handler for the stacks internal StatisticsManager.  This handler is called before the
         * default behavior.

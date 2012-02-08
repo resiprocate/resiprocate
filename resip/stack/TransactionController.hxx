@@ -51,6 +51,7 @@ class TransactionController
       unsigned int getNumServerTransactions() const;
       unsigned int getTimerQueueSize() const;
       void zeroOutStatistics();
+      void pollStatistics();
       
       void setCongestionManager( CongestionManager *manager ) 
       { 
