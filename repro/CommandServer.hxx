@@ -57,9 +57,9 @@ private:
    //void streamContactInstanceRecord(std::stringstream& ss, const resip::ContactInstanceRecord& rec);
 
    resip::SipStack& mSipStack;
-   bool mStatisitcsPayloadReceived;
-   resip::Mutex mStatisticsPayloadMutex;
-   resip::StatisticsMessage::Payload mStatisticsPayload;
+   resip::Mutex mStatisticsWaitersMutex;
+   typedef std::list<std::pair<unsigned int, unsigned int> > StatisticsWaitersList;
+   StatisticsWaitersList mStatisticsWaiters;
 };
 
 }

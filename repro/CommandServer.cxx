@@ -28,8 +28,7 @@ CommandServer::CommandServer(resip::SipStack& sipStack,
                              int port, 
                              IpVersion version) :
    XmlRpcServerBase(port, version),
-   mSipStack(sipStack),
-   mStatisitcsPayloadReceived(false)
+   mSipStack(sipStack)
 {
    mSipStack.setExternalStatsHandler(this);
 }
@@ -130,17 +129,12 @@ CommandServer::handleGetStackStatsRequest(unsigned int connectionId, unsigned in
 {
    InfoLog(<< "CommandServer::handleGetStackStatsRequest");
 
-   if(mStatisitcsPayloadReceived)
+   Lock lock(mStatisticsWaitersMutex);
+   mStatisticsWaiters.push_back(std::make_pair(connectionId, requestId));
+
+   if(!mSipStack.pollStatistics())
    {
-      Lock lock(mStatisticsPayloadMutex);
-      Data buffer;
-      DataStream strm(buffer);
-      strm << mStatisticsPayload << endl;
-      sendResponse(connectionId, requestId, buffer, 200, "Stack stats retrieved.");
-   }
-   else
-   {
-      sendResponse(connectionId, requestId, Data::Empty, 400, "Too early to query Stack statistics try again later.");
+      sendResponse(connectionId, requestId, Data::Empty, 400, "Statistics Manager is not enabled.");
    }
 }
 
@@ -306,9 +300,21 @@ CommandServer::handleSetCongestionToleranceRequest(unsigned int connectionId, un
 bool 
 CommandServer::operator()(resip::StatisticsMessage &statsMessage)
 {
-   Lock lock(mStatisticsPayloadMutex);
-   statsMessage.loadOut(mStatisticsPayload);
-   mStatisitcsPayloadReceived = true;
+   Lock lock(mStatisticsWaitersMutex);
+   if(mStatisticsWaiters.size() > 0)
+   {
+      Data buffer;
+      DataStream strm(buffer);
+      StatisticsMessage::Payload payload;
+      statsMessage.loadOut(payload);  // !slg! could optimize by providing stream operator on StatisticsMessage
+      strm << payload << endl;
+
+      StatisticsWaitersList::iterator it = mStatisticsWaiters.begin();
+      for(; it != mStatisticsWaiters.end(); it++)
+      {
+         sendResponse(it->first, it->second, buffer, 200, "Stack stats retrieved.");
+      }
+   }
    return true;
 }
 
