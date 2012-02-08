@@ -166,8 +166,6 @@ InMemorySyncRegDb::lockRecord(const Uri& aor)
 {
    Lock g2(mLockedRecordsMutex);
 
-   DebugLog(<< "InMemorySyncRegDb::lockRecord:  aor=" << aor << " threadid=" << GetCurrentThreadId());  // !slg! TODO - remove me!
-
    {
       Lock g1(mDatabaseMutex);
       // This forces insertion if the record does not yet exist.
@@ -186,8 +184,6 @@ void
 InMemorySyncRegDb::unlockRecord(const Uri& aor)
 {
    Lock g2(mLockedRecordsMutex);
-
-   DebugLog(<< "InMemorySyncRegDb::unlockRecord:  aor=" << aor << " threadid=" << GetCurrentThreadId());  // !slg! TODO - remove me!
 
    {
       Lock g1(mDatabaseMutex);
