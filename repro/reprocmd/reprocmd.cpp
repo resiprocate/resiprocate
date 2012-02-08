@@ -1,17 +1,13 @@
 // testXmlRpc.cpp : Defines the entry point for the console application.
 //
 
-#include <rutil/Log.hxx>
-#include <rutil/Logger.hxx>
 #include <rutil/DnsUtil.hxx>
 #include <rutil/BaseException.hxx>
-#include <resip/stack/XMLCursor.hxx>
+#include <rutil/XMLCursor.hxx>
 #include <rutil/WinLeakCheck.hxx>
 
 using namespace resip;
 using namespace std;
-
-#define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
 void sleepSeconds(unsigned int seconds)
 {
@@ -35,14 +31,24 @@ main (int argc, char** argv)
 
    if(argc < 4) 
    {
-      ErrLog(<< "usage: " << argv[0] <<" <server> <port> <command> [<parm>=<value>]");
+      cerr << "usage: " << argv[0] <<" <server> <port> <command> [<parm>=<value>]" << endl;
+      cerr << "  Valid Commands are:" << endl;
+      cerr << "  GetStackInfo - retrieves low level information about the stack state" << endl;
+      cerr << "  GetStackStats - retrieves a dump of the stack statistics" << endl;
+      cerr << "  ResetStackStats - resets all cummulative stack statistics to zero" << endl;
+      cerr << "  LogDnsCache - causes the DNS cache contents to be written to the resip logs" << endl;
+      cerr << "  ClearDnsCache - emptys the stacks DNS cache" << endl;
+      cerr << "  GetDnsCache - retrieves the DNS cache contents" << endl;
+      cerr << "  GetCongestionStats - retrieves the stacks congestion manager stats and state" << endl;
+      cerr << "  SetCongestionTolerance metric=<SIZE|WAIT_TIME|TIME_DEPTH> maxTolerance=<value>" << endl;
+      cerr << "                         [fifoDescription=<desc>] - sets congestion tolerances" << endl;
       exit(1);
    }
 
    h = gethostbyname(argv[1]);
    if(h==0) 
    {
-      ErrLog(<< "unknown host " << argv[1]);
+      cerr << "unknown host " << argv[1] << endl;
       exit(1);
    }
 
@@ -54,7 +60,7 @@ main (int argc, char** argv)
    sd = (int)socket(AF_INET, SOCK_STREAM, 0);
    if(sd < 0) 
    {
-      ErrLog(<< "cannot open socket");
+      cerr << "cannot open socket" << endl;
       exit(1);
    }
 
@@ -66,7 +72,7 @@ main (int argc, char** argv)
    rc = bind(sd, (struct sockaddr *) &localAddr, sizeof(localAddr));
    if(rc < 0) 
    {
-      ErrLog(<<"error binding locally");
+      cerr <<"error binding locally" << endl;
       exit(1);
    }
 
@@ -74,7 +80,7 @@ main (int argc, char** argv)
    rc = connect(sd, (struct sockaddr *) &servAddr, sizeof(servAddr));
    if(rc < 0) 
    {
-      ErrLog(<< "error connecting");
+      cerr << "error connecting" << endl;
       exit(1);
    }
 
@@ -111,12 +117,12 @@ main (int argc, char** argv)
    request += argv[3];
    request += ">\r\n";
 
-   InfoLog( << "Sending:\r\n" << request);
+   //cout << "Sending:\r\n" << request << endl;
 
    rc = send(sd, request.c_str(), request.size(), 0);
    if(rc < 0) 
    {
-      ErrLog(<< "error sending");
+      cerr << "error sending request on socket." << endl;
       closeSocket(sd);
       exit(1);
    }
@@ -127,7 +133,7 @@ main (int argc, char** argv)
       rc = recv(sd, (char*)&readBuffer, sizeof(readBuffer), 0);
       if(rc < 0) 
       {
-         ErrLog(<< "error receiving");
+         cerr << "error receiving response from socket." << endl;
          closeSocket(sd);
          exit(1);
       }
@@ -135,13 +141,62 @@ main (int argc, char** argv)
       if(rc > 0)
       {
          Data response(Data::Borrow, (const char*)&readBuffer, rc);
-         InfoLog(<< "Received response: \r\n" << response.xmlCharDataDecode());
+         //cout << "Received response: \r\n" << response.xmlCharDataDecode() << endl;
+
+         ParseBuffer pb(response);
+         XMLCursor xml(pb);
+         bool responseOK = false;
+         if(xml.firstChild() && xml.nextSibling() && xml.firstChild())  // Move to Response node
+         {
+            while(true)
+            {
+               if(isEqualNoCase(xml.getTag(), "Result"))
+               {
+                  unsigned int code=0;
+                  Data text;
+                  XMLCursor::AttributeMap::const_iterator it = xml.getAttributes().find("Code");
+                  if(it != xml.getAttributes().end())
+                  {
+                     code = it->second.convertUnsignedLong();
+                  }
+                  if(xml.firstChild())
+                  {
+                     text = xml.getValue();
+                     xml.parent();
+                  }
+                  if(code >= 200 && code < 300)
+                  {
+                     // Success
+                     cout << text << endl;
+                  }
+                  else
+                  {
+                     cout << "Error " << code << " processing request: " << text << endl;
+                  }
+                  responseOK = true;
+               }
+               else if(isEqualNoCase(xml.getTag(), "Data"))
+               {
+                  if(xml.firstChild())
+                  {
+                     cout << xml.getValue().xmlCharDataDecode() << endl;
+                     xml.parent();
+                  }
+               }
+               if(!xml.nextSibling())
+               {
+                  // break on no more sibilings
+                  break;
+               }
+            }
+         }
+         if(!responseOK)
+         {
+            cout << "Unable to parse response:" << endl << response << endl;
+         }
 
          closeSocket(sd); 
          break;
       }
    }
-
-   //sleepSeconds(5);
-   InfoLog(<< "reprocmd done.");
 }

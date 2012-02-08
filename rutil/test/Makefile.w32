@@ -21,6 +21,7 @@ all: \
 	testSHA1Stream.obj testSHA1Stream.exe \
 	testSharedPtr.obj testSharedPtr.exe \
 	testThreadIf.obj testThreadIf.exe \
+	testXMLCursor.obj testXMLCursor.exe \
 	run
 
 
@@ -36,7 +37,7 @@ run:
 	testData.exe 
 	testDataPerformance.exe 
 	testDataStream.exe 
-        testDnsUtil.exe
+    testDnsUtil.exe
 	testFifo.exe
 	testFileSystem.exe
 	testInserter.exe
@@ -47,6 +48,7 @@ run:
 	testSHA1Stream.exe
 	testSharedPtr.exe
 	testThreadIf.exe
+	testXMLCursor.exe
 
 clean:
 	@del *.exe

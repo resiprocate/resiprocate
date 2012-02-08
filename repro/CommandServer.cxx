@@ -177,7 +177,14 @@ CommandServer::handleGetDnsCacheRequest(unsigned int connectionId, unsigned int 
 void 
 CommandServer::onDnsCacheDumpRetrieved(std::pair<unsigned int, unsigned int> key, const Data& dnsCache)
 {
-   sendResponse(key.first, key.second, dnsCache, 200, "DNS cache retrieved.");
+   if(dnsCache.empty())
+   {
+      sendResponse(key.first, key.second, "empty\r\n", 200, "DNS cache retrieved.");
+   }
+   else
+   {
+      sendResponse(key.first, key.second, dnsCache, 200, "DNS cache retrieved.");
+   }
 }
 
 void 

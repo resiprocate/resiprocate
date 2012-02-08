@@ -64,8 +64,7 @@ testTransactionFSM.cxx \
 testTuple.cxx \
 testTypedef.cxx \
 testUdp.cxx \
-testUri.cxx \
-testXMLCursor.cxx 
+testUri.cxx
 
 #testTransportSelector.cxx
 

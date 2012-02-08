@@ -53,7 +53,6 @@ all: \
 	testTypedef.obj testTypedef.exe \
 	testUdp.obj testUdp.exe \
 	testUri.obj testUri.exe \
-	testXMLCursor.obj testXMLCursor.exe \
 	RFC4475TortureTests.obj RFC4475TortureTests.exe \
 	run
 
@@ -84,7 +83,7 @@ run:
 	testPlainContents.exe
 	testRlmi.exe
 	testSdp.exe
-        testSecurity.exe
+    testSecurity.exe
 	testSelectInterruptor.exe
 	testSipFrag.exe
 	testSipMessage.exe
@@ -95,12 +94,11 @@ run:
 	testTimer.exe	
 	testTuple.exe
 	testUri.exe
-	testXmlCursor.exe
 	RFC4475TortureTests.exe
 
 clean:
 	@del *.exe
-        @del *.obj
+    @del *.obj
 	@del *.ilk
 
 ##############################################################################
