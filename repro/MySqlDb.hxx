@@ -21,10 +21,12 @@ namespace repro
 class MySqlDb: public AbstractDb
 {
    public:
-      MySqlDb( const resip::Data& dbServer );
+      MySqlDb(const resip::Data& dbServer, const resip::Data& user, const resip::Data& password, const resip::Data& databaseName, unsigned int port);
       
       virtual ~MySqlDb();
-         
+      
+      virtual bool isSane() {return mSane;}
+
       virtual void addUser( const Key& key, const UserRecord& rec );
       virtual void eraseUser( const Key& key );
       virtual UserRecord getUser( const Key& key ) const;
@@ -47,6 +49,7 @@ class MySqlDb: public AbstractDb
                                                        // more  
       MYSQL* mConn;
       MYSQL_RES* mResult[4];
+      bool mSane;
 
       char* tableName( Table table ) const;
       resip::Data sqlWhere( const Key& key) const;

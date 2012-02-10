@@ -18,35 +18,41 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
-
-
-MySqlDb::MySqlDb( const Data& server )
+MySqlDb::MySqlDb(const Data& server, const Data& user, const Data& password, const Data& databaseName, unsigned int port)
 { 
    InfoLog( << "Using MySQL DB with server: " << server );
 
-   mConn = mysql_init(NULL);
-   assert(mConn);
+   mSane = true;
 
-   MYSQL* ret = mysql_real_connect(mConn,
-                                   server.c_str(), // hostname
-                                   "repro",//user
-                                   NULL,//password
-                                   "repro",//DB
-                                   0,//port
-                                   NULL,//opt
-                                   0 /*flags*/ );
-   if ( ret == NULL )
-   {
-      ErrLog( << "MySQL connect failed: " << mysql_error(mConn) );
-      mysql_close(mConn);
-
-      throw; /* !cj! TODO fix up */
-   }
- 
    assert( MaxTable <= 4 );
    for (int i=0;i<MaxTable;i++)
    {
       mResult[i]=NULL;
+   }
+
+   mConn = mysql_init(NULL);
+   if(mConn == NULL)
+   {
+      ErrLog( << "MySQL init failed: error=" << mysql_errno(mConn) << ": " << mysql_error(mConn));
+      mSane = false;
+   }
+   else
+   {
+      MYSQL* ret = mysql_real_connect(mConn,
+                                      server.c_str(),      // hostname
+                                      user.c_str(),        // user
+                                      password.c_str(),    // password
+                                      databaseName.c_str(),// DB
+                                      port,                // port
+                                      NULL,                // unix socket file
+                                      0);                  // client flags
+      if ( ret == NULL )
+      { 
+         ErrLog( << "MySQL connect failed: error=" << mysql_errno(mConn) << ": " << mysql_error(mConn));
+         mysql_close(mConn);
+
+         mSane = false;
+      }
    }
 }
 
@@ -61,7 +67,10 @@ MySqlDb::~MySqlDb()
       }
    }
    
-   mysql_close(mConn);
+   if(mSane)
+   {
+      mysql_close(mConn);
+   }
 }
 
 
