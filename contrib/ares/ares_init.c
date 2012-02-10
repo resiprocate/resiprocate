@@ -608,9 +608,15 @@ static int init_by_defaults(ares_channel channel)
 		// if v4 is running...
 		channel->servers[0].addr.s_addr = htonl(INADDR_LOOPBACK);
         channel->servers[0].default_localhost_server = 1;
-
+#ifdef USE_IPV6             
+        channel->servers[0].family = AF_INET;
+#endif
 		// if v6 is running...
         //	channel->servers[0].addr6.s_addr = htonl6(IN6ADDR_LOOPBACK_INIT);
+#ifdef USE_IPV6             
+        // channel->servers[0].family = AF_INET6;
+#endif
+
 		// hard to decide if there is one server or two here
 		channel->nservers = 1;
 #endif
