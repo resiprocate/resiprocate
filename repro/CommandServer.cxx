@@ -1,5 +1,6 @@
 #include <cassert>
 #include <sstream>
+#include <signal.h>
 
 #include <resip/stack/Symbols.hxx>
 #include <resip/stack/Tuple.hxx>
@@ -24,13 +25,13 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
 
-CommandServer::CommandServer(resip::SipStack& sipStack,
+CommandServer::CommandServer(Proxy& proxy,
                              int port, 
                              IpVersion version) :
    XmlRpcServerBase(port, version),
-   mSipStack(sipStack)
+   mProxy(proxy)
 {
-   mSipStack.setExternalStatsHandler(this);
+   mProxy.getStack().setExternalStatsHandler(this);
 }
 
 CommandServer::~CommandServer()
@@ -98,6 +99,14 @@ CommandServer::handleRequest(unsigned int connectionId, unsigned int requestId, 
       {
          handleSetCongestionToleranceRequest(connectionId, requestId, xml);
       }
+      else if(isEqualNoCase(xml.getTag(), "Shutdown"))
+      {
+         handleShutdownRequest(connectionId, requestId, xml);
+      }
+      else if(isEqualNoCase(xml.getTag(), "GetProxyConfig"))
+      {
+         handleGetProxyConfigRequest(connectionId, requestId, xml);
+      }
       else 
       {
          WarningLog(<< "CommandServer::handleRequest: Received XML message with unknown method: " << xml.getTag());
@@ -118,7 +127,7 @@ CommandServer::handleGetStackInfoRequest(unsigned int connectionId, unsigned int
 
    Data buffer;
    DataStream strm(buffer);
-   mSipStack.dump(strm);
+   mProxy.getStack().dump(strm);
    strm.flush();
 
    sendResponse(connectionId, requestId, buffer, 200, "Stack info retrieved.");
@@ -132,10 +141,31 @@ CommandServer::handleGetStackStatsRequest(unsigned int connectionId, unsigned in
    Lock lock(mStatisticsWaitersMutex);
    mStatisticsWaiters.push_back(std::make_pair(connectionId, requestId));
 
-   if(!mSipStack.pollStatistics())
+   if(!mProxy.getStack().pollStatistics())
    {
       sendResponse(connectionId, requestId, Data::Empty, 400, "Statistics Manager is not enabled.");
    }
+}
+
+bool 
+CommandServer::operator()(resip::StatisticsMessage &statsMessage)
+{
+   Lock lock(mStatisticsWaitersMutex);
+   if(mStatisticsWaiters.size() > 0)
+   {
+      Data buffer;
+      DataStream strm(buffer);
+      StatisticsMessage::Payload payload;
+      statsMessage.loadOut(payload);  // !slg! could optimize by providing stream operator on StatisticsMessage
+      strm << payload << endl;
+
+      StatisticsWaitersList::iterator it = mStatisticsWaiters.begin();
+      for(; it != mStatisticsWaiters.end(); it++)
+      {
+         sendResponse(it->first, it->second, buffer, 200, "Stack stats retrieved.");
+      }
+   }
+   return true;
 }
 
 void 
@@ -143,7 +173,7 @@ CommandServer::handleResetStackStatsRequest(unsigned int connectionId, unsigned 
 {
    InfoLog(<< "CommandServer::handleResetStackStatsRequest");
 
-   mSipStack.zeroOutStatistics();
+   mProxy.getStack().zeroOutStatistics();
    sendResponse(connectionId, requestId, Data::Empty, 200, "Stack stats reset.");
 }
 
@@ -152,7 +182,7 @@ CommandServer::handleLogDnsCacheRequest(unsigned int connectionId, unsigned int 
 {
    InfoLog(<< "CommandServer::handleLogDnsCacheRequest");
 
-   mSipStack.logDnsCache();
+   mProxy.getStack().logDnsCache();
    sendResponse(connectionId, requestId, Data::Empty, 200, "DNS cache logged.");
 }
 
@@ -161,7 +191,7 @@ CommandServer::handleClearDnsCacheRequest(unsigned int connectionId, unsigned in
 {
    InfoLog(<< "CommandServer::handleQueryDnsCacheRequest");
 
-   mSipStack.clearDnsCache();
+   mProxy.getStack().clearDnsCache();
    sendResponse(connectionId, requestId, Data::Empty, 200, "DNS cache cleared.");
 }
 
@@ -170,7 +200,7 @@ CommandServer::handleGetDnsCacheRequest(unsigned int connectionId, unsigned int 
 {
    InfoLog(<< "CommandServer::handleGetDnsCacheRequest");
 
-   mSipStack.getDnsCacheDump(make_pair(connectionId, requestId), this);
+   mProxy.getStack().getDnsCacheDump(make_pair(connectionId, requestId), this);
    // Note: Response will be sent when callback is invoked
 }
 
@@ -192,7 +222,7 @@ CommandServer::handleGetCongestionStatsRequest(unsigned int connectionId, unsign
 {
    InfoLog(<< "CommandServer::handleGetCongestionStatsRequest");
 
-   CongestionManager* congestionManager = mSipStack.getCongestionManager();
+   CongestionManager* congestionManager = mProxy.getStack().getCongestionManager();
    if(congestionManager != 0)
    {
       Data buffer;
@@ -217,7 +247,7 @@ CommandServer::handleSetCongestionToleranceRequest(unsigned int connectionId, un
    GeneralCongestionManager::MetricType metric;
    unsigned long maxTolerance=0;
 
-   GeneralCongestionManager* congestionManager = dynamic_cast<GeneralCongestionManager*>(mSipStack.getCongestionManager());
+   GeneralCongestionManager* congestionManager = dynamic_cast<GeneralCongestionManager*>(mProxy.getStack().getCongestionManager());
    if(congestionManager != 0)
    {
       // Check for Parameters
@@ -304,60 +334,26 @@ CommandServer::handleSetCongestionToleranceRequest(unsigned int connectionId, un
    }
 }
 
-bool 
-CommandServer::operator()(resip::StatisticsMessage &statsMessage)
+void 
+CommandServer::handleShutdownRequest(unsigned int connectionId, unsigned int requestId, XMLCursor& xml)
 {
-   Lock lock(mStatisticsWaitersMutex);
-   if(mStatisticsWaiters.size() > 0)
-   {
-      Data buffer;
-      DataStream strm(buffer);
-      StatisticsMessage::Payload payload;
-      statsMessage.loadOut(payload);  // !slg! could optimize by providing stream operator on StatisticsMessage
-      strm << payload << endl;
+   InfoLog(<< "CommandServer::handleShutdownRequest");
 
-      StatisticsWaitersList::iterator it = mStatisticsWaiters.begin();
-      for(; it != mStatisticsWaiters.end(); it++)
-      {
-         sendResponse(it->first, it->second, buffer, 200, "Stack stats retrieved.");
-      }
-   }
-   return true;
+   sendResponse(connectionId, requestId, Data::Empty, 200, "Shutdown initiated.");
+   raise(SIGTERM);
 }
 
-/*
 void 
-CommandServer::streamContactInstanceRecord(std::stringstream& ss, const ContactInstanceRecord& rec)
+CommandServer::handleGetProxyConfigRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml)
 {
-    UInt64 now = Timer::getTimeSecs();
+   InfoLog(<< "CommandServer::handleGetProxyConfigRequest");
 
-    ss << "   <contactinfo>" << Symbols::CRLF;
-    ss << "      <contacturi>" << Data::from(rec.mContact.uri()).xmlCharDataEncode() << "</contacturi>" << Symbols::CRLF;
-    // If contact is expired or removed, then pass expires time as 0, otherwise send number of seconds until expirey
-    ss << "      <expires>" << (((rec.mRegExpires == 0) || (rec.mRegExpires <= now)) ? 0 : (rec.mRegExpires-now)) << "</expires>" << Symbols::CRLF;
-    ss << "      <lastupdate>" << now-rec.mLastUpdated << "</lastupdate>" << Symbols::CRLF;
-    if(rec.mReceivedFrom.getPort() != 0)
-    {
-        resip::Data binaryFlowToken;
-        Tuple::writeBinaryToken(rec.mReceivedFrom,binaryFlowToken);            
-        ss << "      <receivedfrom>" << binaryFlowToken.base64encode() << "</receivedfrom>" << Symbols::CRLF;
-    }
-    NameAddrs::const_iterator naIt = rec.mSipPath.begin();
-    for(; naIt != rec.mSipPath.end(); naIt++)
-    {
-        ss << "      <sippath>" << Data::from(naIt->uri()).xmlCharDataEncode() << "</sippath>" << Symbols::CRLF;
-    }
-    if(!rec.mInstance.empty())
-    {
-        ss << "      <instance>" << rec.mInstance.xmlCharDataEncode() << "</instance>" << Symbols::CRLF;
-    }
-    if(rec.mRegId != 0)
-    {
-        ss << "      <regid>" << rec.mRegId << "</regid>" << Symbols::CRLF;
-    }
-    ss << "   </contactinfo>" << Symbols::CRLF;
-}*/
+   Data buffer;
+   DataStream strm(buffer);
+   strm << mProxy.getConfig();
 
+   sendResponse(connectionId, requestId, buffer, 200, "Proxy config retrieved.");
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

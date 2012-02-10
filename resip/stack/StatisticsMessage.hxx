@@ -92,7 +92,7 @@ class StatisticsMessage : public ApplicationMessage
       friend EncodeStream& operator<<(EncodeStream& strm, const StatisticsMessage::Payload& stats);
 };
 
-EncodeStream& operator<<(EncodeStream& strm, const StatisticsMessage::Payload& p);
+EncodeStream& operator<<(EncodeStream& strm, const StatisticsMessage::Payload& stats);
 
 }
 
