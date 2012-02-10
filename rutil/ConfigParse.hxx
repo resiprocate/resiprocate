@@ -49,7 +49,12 @@ protected:
 
    // Config filename from command line
    resip::Data mCmdLineConfigFilename;
+
+private:
+   friend EncodeStream& operator<<(EncodeStream& strm, const ConfigParse& config);
 };
+
+EncodeStream& operator<<(EncodeStream& strm, const ConfigParse& config);
  
 }
 

@@ -750,12 +750,12 @@ main(int argc, char** argv)
       std::list<CommandServer*> commandServerList;
       if(useV4) 
       {
-         commandServerV4 = new CommandServer(stack, commandPort, V4);
+         commandServerV4 = new CommandServer(proxy, commandPort, V4);
          commandServerList.push_back(commandServerV4);
       }
       if(useV6) 
       {
-         commandServerV6 = new CommandServer(stack, commandPort, V6);
+         commandServerV6 = new CommandServer(proxy, commandPort, V6);
          commandServerList.push_back(commandServerV6);
       }
       if(!commandServerList.empty())

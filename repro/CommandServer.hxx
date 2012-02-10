@@ -9,6 +9,7 @@
 #include <resip/stack/StatisticsMessage.hxx>
 #include <resip/dum/InMemorySyncRegDb.hxx>
 #include "repro/XmlRpcServerBase.hxx"
+#include "repro/Proxy.hxx"
 
 namespace resip
 {
@@ -17,14 +18,13 @@ class SipStack;
 
 namespace repro
 {
-class CommandServer;
 
 class CommandServer: public XmlRpcServerBase,
                      public resip::GetDnsCacheDumpHandler,
                      public resip::ExternalStatsHandler
 {
 public:
-   CommandServer(resip::SipStack& sipStack,
+   CommandServer(Proxy& proxy,
                  int port, 
                  resip::IpVersion version);
    virtual ~CommandServer();
@@ -54,9 +54,10 @@ private:
    void handleGetDnsCacheRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
    void handleGetCongestionStatsRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
    void handleSetCongestionToleranceRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
-   //void streamContactInstanceRecord(std::stringstream& ss, const resip::ContactInstanceRecord& rec);
+   void handleShutdownRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
+   void handleGetProxyConfigRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
 
-   resip::SipStack& mSipStack;
+   Proxy& mProxy;
    resip::Mutex mStatisticsWaitersMutex;
    typedef std::list<std::pair<unsigned int, unsigned int> > StatisticsWaitersList;
    StatisticsWaitersList mStatisticsWaiters;

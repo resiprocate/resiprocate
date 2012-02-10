@@ -324,6 +324,17 @@ ConfigParse::parseConfigFile(const Data& filename)
    }
 }
 
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, const ConfigParse& config)
+{
+   ConfigParse::ConfigValuesMap::const_iterator it = config.mConfigValues.begin();
+   for(; it != config.mConfigValues.end(); it++)
+   {
+      strm << it->first << " = " << it->second << endl;
+   }
+   return strm;
+}
+
 }
 
 /* ====================================================================

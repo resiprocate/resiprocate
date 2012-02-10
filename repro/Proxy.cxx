@@ -42,6 +42,7 @@ Proxy::Proxy(SipStack& stack,
              ProcessorChain& targetP) 
    : TransactionUser(TransactionUser::RegisterForTransactionTermination),
      mStack(stack), 
+     mConfig(config),
      mRecordRoute(config.getConfigUri("RecordRouteUri", Uri())),
      mRecordRouteForced(config.getConfigBool("ForceRecordRouting", false)),
      mAssumePath(config.getConfigBool("AssumePath", false)),
