@@ -777,9 +777,9 @@ main(int argc, char** argv)
       {
          metric = GeneralCongestionManager::SIZE;
       }
-      else if(!isEqualNoCase(metricData, "TIME_DEPTH"))
+      else if(!isEqualNoCase(metricData, "WAIT_TIME"))
       {
-         WarningLog( << "CongestionManagementMetric specified as an unknown value (" << metricData << "), defaulting to TIME_DEPTH.");
+         WarningLog( << "CongestionManagementMetric specified as an unknown value (" << metricData << "), defaulting to WAIT_TIME.");
       }
       congestionManager.reset(new GeneralCongestionManager(
                                           metric, 
