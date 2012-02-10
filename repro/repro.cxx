@@ -495,19 +495,24 @@ main(int argc, char** argv)
    config.getConfigValue("MySQLServer", mySQLServer);
    if ( !mySQLServer.empty() )
    {
-      db = new MySqlDb(mySQLServer);
+      db = new MySqlDb(mySQLServer, 
+                       config.getConfigData("MySQLUser", ""), 
+                       config.getConfigData("MySQLPassword", ""),
+                       config.getConfigData("MySQLDatabaseName", ""),
+                       config.getConfigUnsignedLong("MySQLPort", 0));
    }
 #endif
    if (!db)
    {
       db = new BerkeleyDb(config.getConfigData("DatabasePath", "./", true));
-      if (!static_cast<BerkeleyDb*>(db)->isSane())
-      {
-        CritLog(<<"Failed to open configuration database");
-        exit(-1);
-      }
    }
    assert( db );
+   if (!db->isSane())
+   {
+      CritLog(<<"Failed to open configuration database");
+      exit(-1);
+   }
+
    config.createDataStore(db);
 
    /* Initialize a proxy */
@@ -777,9 +782,9 @@ main(int argc, char** argv)
       {
          metric = GeneralCongestionManager::SIZE;
       }
-      else if(!isEqualNoCase(metricData, "TIME_DEPTH"))
+      else if(!isEqualNoCase(metricData, "WAIT_TIME"))
       {
-         WarningLog( << "CongestionManagementMetric specified as an unknown value (" << metricData << "), defaulting to TIME_DEPTH.");
+         WarningLog( << "CongestionManagementMetric specified as an unknown value (" << metricData << "), defaulting to WAIT_TIME.");
       }
       congestionManager.reset(new GeneralCongestionManager(
                                           metric, 
