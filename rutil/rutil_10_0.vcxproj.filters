@@ -165,6 +165,9 @@
     <ClCompile Include="WinCompat.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="XMLCursor.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>	
     <ClCompile Include="FdPoll.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -396,6 +399,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="WinLeakCheck.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="XMLCursor.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="FdPoll.hxx">

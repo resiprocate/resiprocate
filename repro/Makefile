@@ -42,6 +42,8 @@ SRC 	+=   \
 	AbstractDb.cxx \
 	BerkeleyDb.cxx \
 	\
+	CommandServer.cxx \
+	CommandServerThread.cxx \
 	ProxyConfig.cxx \
 	ReproVersion.cxx \
 	HttpBase.cxx \

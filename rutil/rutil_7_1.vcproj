@@ -424,6 +424,9 @@
 			<File
 				RelativePath=".\WinCompat.cxx">
 			</File>
+			<File
+				RelativePath=".\XMLCursor.cxx">
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -675,6 +678,9 @@
 			</File>
 			<File
 				RelativePath=".\WinLeakCheck.hxx">
+			</File>
+			<File
+				RelativePath=".\XMLCursor.hxx">
 			</File>
 		</Filter>
 		<Filter

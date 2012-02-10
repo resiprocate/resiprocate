@@ -6,6 +6,8 @@
 #include "resip/stack/CancelClientInviteTransaction.hxx"
 #include "resip/stack/TerminateFlow.hxx"
 #include "resip/stack/EnableFlowTimer.hxx"
+#include "resip/stack/ZeroOutStatistics.hxx"
+#include "resip/stack/PollStatistics.hxx"
 #include "resip/stack/ConnectionTerminated.hxx"
 #include "resip/stack/KeepAlivePong.hxx"
 #include "resip/stack/DnsInterface.hxx"
@@ -439,6 +441,22 @@ TransactionState::process(TransactionController& controller,
       {
          controller.mTransportSelector.enableFlowTimer(enableFlowTimer->getFlow());
          delete enableFlowTimer;
+         return;
+      }
+
+      ZeroOutStatistics* zeroOutStatistics = dynamic_cast<ZeroOutStatistics*>(message);
+      if(zeroOutStatistics)
+      {
+         controller.mStatsManager.zeroOut();
+         delete zeroOutStatistics;
+         return;
+      }
+
+      PollStatistics* pollStatistics = dynamic_cast<PollStatistics*>(message);
+      if(pollStatistics)
+      {
+         controller.mStatsManager.poll();
+         delete pollStatistics;
          return;
       }
    }

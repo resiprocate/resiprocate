@@ -51,6 +51,7 @@ b2bua: resiprocate
 
 repro: dum
 	$(MAKE) -C repro
+	$(MAKE) -C repro/reprocmd
 
 tests: resiprocate 
 	$(MAKE) -C rutil/test	

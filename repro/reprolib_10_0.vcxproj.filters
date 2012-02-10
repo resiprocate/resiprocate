@@ -21,6 +21,12 @@
     <ClCompile Include="AclStore.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CommandServer.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CommandServerThread.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="ConfigStore.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -153,6 +159,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ChainTraverser.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CommandServer.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CommandServerThread.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ConfigStore.hxx">
