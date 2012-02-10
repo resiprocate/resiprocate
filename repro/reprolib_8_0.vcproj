@@ -365,6 +365,14 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\CommandServer.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\CommandServerThread.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ConfigStore.cxx"
 				>
 			</File>
@@ -576,6 +584,14 @@
 			</File>
 			<File
 				RelativePath=".\ChainTraverser.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\CommandServer.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\CommandServerThread.hxx"
 				>
 			</File>
 			<File

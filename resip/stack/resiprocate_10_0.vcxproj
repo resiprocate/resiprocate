@@ -476,7 +476,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="X509Contents.cxx" />
-    <ClCompile Include="XMLCursor.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Aor.hxx" />
@@ -561,6 +560,7 @@
     <ClInclude Include="Pkcs7Contents.hxx" />
     <ClInclude Include="Pkcs8Contents.hxx" />
     <ClInclude Include="PlainContents.hxx" />
+    <ClInclude Include="PollStatistics.hxx" />
     <ClInclude Include="PrivacyCategory.hxx" />
     <ClInclude Include="QuotedDataParameter.hxx" />
     <ClInclude Include="QValue.hxx" />
@@ -628,7 +628,7 @@
     <ClInclude Include="WarningCategory.hxx" />
     <ClInclude Include="ssl\WinSecurity.hxx" />
     <ClInclude Include="X509Contents.hxx" />
-    <ClInclude Include="XMLCursor.hxx" />
+    <ClInclude Include="ZeroOutStatistics.hxx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="HeaderHash.gperf" />
