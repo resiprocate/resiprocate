@@ -1,84 +1,55 @@
-#ifndef RESIP_StatisticsManager_hxx
-#define RESIP_StatisticsManager_hxx
+#include <rutil/Socket.hxx>
+#include <rutil/Logger.hxx>
 
-#include "rutil/Timer.hxx"
-#include "rutil/Data.hxx"
-#include "resip/stack/StatisticsMessage.hxx"
-#include "resip/stack/StatisticsHandler.hxx"
+#include "repro/CommandServer.hxx"
+#include "repro/CommandServerThread.hxx"
 
-namespace resip
+#define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
+
+using namespace repro;
+using namespace resip;
+using namespace std;
+
+CommandServerThread::CommandServerThread(const std::list<CommandServer*>& commandServerList)
+   : mCommandServerList(commandServerList)
 {
-class SipStack;
-class SipMessage;
-class TransactionController;
-
-/**
-   @brief Keeps track of various statistics on the stack's operation, and 
-      periodically issues a StatisticsMessage to the TransactionUser (or, if the
-      ExternalStatsHandler is set, it will be sent there).
-*/
-class StatisticsManager : public StatisticsMessage::Payload
-{
-   public:
-      // not implemented
-      typedef enum
-      {
-         TransportFifoSize,
-         TUFifoSize,
-         ActiveTimers,
-         OpenTcpConnections,
-         ActiveClientTransactions,
-         ActiveServerTransactions,
-         PendingDnsQueries,
-         StatsMemUsed
-      } Measurement;
-      
-      StatisticsManager(SipStack& stack, unsigned long intervalSecs=60);
-      ~StatisticsManager();
-
-      void process();
-      // not stricly thread-safe; needs to be called through the fifo somehow
-      void setInterval(unsigned long intvSecs);
-
-      /**
-         @ingroup resip_config
-         @brief Allows the application to set the ExternalStatsHandler for this
-            StatisticsManager.
-      */
-      void setExternalStatsHandler(ExternalStatsHandler *handler)
-      {
-         mExternalHandler = handler;
-      }
-
-   private:
-      friend class TransactionState;
-      bool sent(SipMessage* msg);
-      bool retransmitted(MethodTypes type, bool request, unsigned int code);
-      bool received(SipMessage* msg);
-
-      void poll(); // force an update
-
-      SipStack& mStack;
-      UInt64 mInterval;
-      UInt64 mNextPoll;
-
-      ExternalStatsHandler *mExternalHandler;
-      //
-      // When statistics are published, a copy of values are made
-      // and copied into this member, and then reference to this is
-      // published thru both ExternalHandler and posted to stack as message.
-      // This payload is mutex protected.
-      StatisticsMessage::AtomicPayload *mPublicPayload;
-};
-
 }
 
-#endif
+void
+CommandServerThread::thread()
+{
+   while (!isShutdown())
+   {
+      try
+      {
+           FdSet fdset; 
+     
+           std::list<CommandServer*>::iterator it = mCommandServerList.begin();
+           for(;it!=mCommandServerList.end();it++)
+           {
+              (*it)->buildFdSet(fdset);
+           }
+           fdset.selectMilliSeconds( 2*1000 );
+           
+           it = mCommandServerList.begin();
+           for(;it!=mCommandServerList.end();it++)
+           {
+              (*it)->process(fdset);
+           }
+      }
+      catch (...)
+      {
+         ErrLog (<< "CommandServerThread::thread: Unhandled exception: " );
+      }
+   }
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2010 SIP Spectrum, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -124,3 +95,4 @@ class StatisticsManager : public StatisticsMessage::Payload
  * <http://www.vovida.org/>.
  *
  */
+

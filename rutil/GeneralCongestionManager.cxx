@@ -51,14 +51,15 @@ GeneralCongestionManager::updateFifoTolerances(
 {
    for(std::vector<FifoInfo>::iterator i=mFifos.begin(); i!=mFifos.end(); ++i)
    {
-      if(i->fifo->getDescription()==fifoDescription)
+      if(fifoDescription.empty() || isEqualNoCase(i->fifo->getDescription(), fifoDescription))
       {
+         i->maxTolerance=UINT_MAX;  // Set temporarily to UINT_MAX, so that we don't inadvertantly reject a request while the metric and tolerance are being changed.
          i->metric=metric;
          i->maxTolerance=maxTolerance;
-         return true;
+         if(!fifoDescription.empty()) return true;
       }
    }
-   return false;
+   return false || fifoDescription.empty();
 }
 
 CongestionManager::RejectionBehavior 
@@ -94,14 +95,29 @@ GeneralCongestionManager::logCurrentState() const
       if(i->fifo)
       {
          const FifoStatsInterface& fifo=*(i->fifo);
-         WarningLog(<<fifo.getDescription() <<" - "
-                     " SIZE: " << fifo.getCountDepth()
-                     << " TIME DEPTH (sec): " << fifo.getTimeDepth()  
-                     << " EXP WAIT (msec): " << fifo.expectedWaitTimeMilliSec()
-                     << " AVG SERVICE TIME (usec): "
-                     << fifo.averageServiceTimeMicroSec());
+         Data buffer;
+         DataStream strm(buffer);
+         encodeFifoStats(fifo, strm);
+         WarningLog(<< buffer);
       }
    }
+}
+
+EncodeStream& 
+GeneralCongestionManager::encodeCurrentState(EncodeStream& strm) const
+{
+   for(std::vector<FifoInfo>::const_iterator i=mFifos.begin();
+         i!=mFifos.end();++i)
+   {
+      if(i->fifo)
+      {
+         const FifoStatsInterface& fifo=*(i->fifo);
+         encodeFifoStats(fifo, strm);
+         strm << std::endl;
+      }
+   }
+   strm.flush();
+   return strm;
 }
 
 UInt16
@@ -128,6 +144,31 @@ GeneralCongestionManager::getCongestionPercent(const FifoStatsInterface* fifo) c
          return 0;
    }
    return 0;
+}
+
+EncodeStream&
+GeneralCongestionManager::encodeFifoStats(const FifoStatsInterface& fifoStats, EncodeStream& strm) const
+{
+   CongestionManager::RejectionBehavior behavior = getRejectionBehavior(&fifoStats);
+   const FifoInfo& info = mFifos[fifoStats.getRole()];
+   strm <<fifoStats.getDescription()
+      << ": Size=" << fifoStats.getCountDepth()
+      << " TimeDepth(sec)=" << fifoStats.getTimeDepth()  
+      << " ExpWait(msec)=" << fifoStats.expectedWaitTimeMilliSec()
+      << " AvgSvcTime(usec)="
+      << fifoStats.averageServiceTimeMicroSec()
+      << " Metric=" 
+      << (info.metric == WAIT_TIME ? "WAIT_TIME" :
+          info.metric == TIME_DEPTH ? "TIME_DEPTH" :
+                                      "SIZE")
+      << " MaxTolerance="
+      << info.maxTolerance
+      << " CurBehavior="
+      << (behavior == NORMAL ? "NORMAL" : 
+          behavior == REJECTING_NEW_WORK ? "REJECTING_NEW_WORK" : 
+                                           "REJECTING_NON_ESSENTIAL");
+   strm.flush();
+   return strm;
 }
 
 }

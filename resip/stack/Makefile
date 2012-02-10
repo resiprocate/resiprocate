@@ -127,7 +127,6 @@ SRC = \
 	UnknownParameter.cxx \
 	Uri.cxx \
 	X509Contents.cxx \
-	XMLCursor.cxx \
 	KeepAliveMessage.cxx \
 	StatelessHandler.cxx \
 	InvalidContents.cxx

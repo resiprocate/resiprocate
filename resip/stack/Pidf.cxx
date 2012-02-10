@@ -5,7 +5,7 @@
 #include "resip/stack/Pidf.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Symbols.hxx"
-#include "resip/stack/XMLCursor.hxx"
+#include "rutil/XMLCursor.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/WinLeakCheck.hxx"

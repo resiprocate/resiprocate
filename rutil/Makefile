@@ -47,6 +47,7 @@ SRC = \
 	Timer.cxx \
 	TransportType.cxx \
 	vmd5.cxx \
+	XMLCursor.cxx \
 	\
 	dns/AresDns.cxx \
 	dns/DnsCnameRecord.cxx \

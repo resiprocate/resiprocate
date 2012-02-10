@@ -853,6 +853,26 @@ SipStack::setStatisticsInterval(unsigned long seconds)
 }
 
 void
+SipStack::zeroOutStatistics()
+{
+   if(statisticsManagerEnabled())
+   {
+      mTransactionController->zeroOutStatistics();
+   }
+}
+
+bool
+SipStack::pollStatistics()
+{
+   if(statisticsManagerEnabled())
+   {
+      mTransactionController->pollStatistics();
+      return true;
+   }
+   return false;
+}
+
+void
 SipStack::registerTransactionUser(TransactionUser& tu)
 {
    mTuSelector.registerTransactionUser(tu);

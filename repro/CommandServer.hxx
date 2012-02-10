@@ -1,23 +1,33 @@
-#if !defined(RegSyncServer_hxx)
-#define RegSyncServer_hxx 
+#if !defined(CommandServer_hxx)
+#define CommandServer_hxx 
 
 #include <rutil/Data.hxx>
+#include <rutil/dns/DnsStub.hxx>
 #include <rutil/TransportType.hxx>
 #include <rutil/XMLCursor.hxx>
+#include <resip/stack/StatisticsHandler.hxx>
+#include <resip/stack/StatisticsMessage.hxx>
 #include <resip/dum/InMemorySyncRegDb.hxx>
 #include "repro/XmlRpcServerBase.hxx"
+#include "repro/Proxy.hxx"
+
+namespace resip
+{
+class SipStack;
+}
 
 namespace repro
 {
-class RegSyncServer;
 
-class RegSyncServer: public XmlRpcServerBase, public resip::InMemorySyncRegDbHandler
+class CommandServer: public XmlRpcServerBase,
+                     public resip::GetDnsCacheDumpHandler,
+                     public resip::ExternalStatsHandler
 {
 public:
-   RegSyncServer(resip::InMemorySyncRegDb* regDb,
+   CommandServer(Proxy& proxy,
                  int port, 
                  resip::IpVersion version);
-   virtual ~RegSyncServer();
+   virtual ~CommandServer();
 
    // thread safe
    virtual void sendResponse(unsigned int connectionId, 
@@ -25,23 +35,32 @@ public:
                              const resip::Data& responseData, 
                              unsigned int resultCode, 
                              const resip::Data& resultText);
-   // Use connectionId == 0 to send to all connections
-   virtual void sendRegistrationModifiedEvent(unsigned int connectionId, const resip::Uri& aor);
-   virtual void sendRegistrationModifiedEvent(unsigned int connectionId, const resip::Uri& aor, const resip::ContactList& contacts);
 
 protected:
    virtual void handleRequest(unsigned int connectionId, 
                               unsigned int requestId, 
                               const resip::Data& request); 
 
-   virtual void onAorModified(const resip::Uri& aor, const resip::ContactList& contacts);
-   virtual void onInitialSyncAor(unsigned int connectionId, const resip::Uri& aor, const resip::ContactList& contacts);
+   // Handlers
+   virtual void onDnsCacheDumpRetrieved(std::pair<unsigned int, unsigned int> key, const resip::Data& dnsEntryStrings);
+   virtual bool operator()(resip::StatisticsMessage &statsMessage);
 
 private: 
-   void handleInitialSyncRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
-   void streamContactInstanceRecord(std::stringstream& ss, const resip::ContactInstanceRecord& rec);
+   void handleGetStackInfoRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
+   void handleGetStackStatsRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
+   void handleResetStackStatsRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
+   void handleLogDnsCacheRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
+   void handleClearDnsCacheRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
+   void handleGetDnsCacheRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
+   void handleGetCongestionStatsRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
+   void handleSetCongestionToleranceRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
+   void handleShutdownRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
+   void handleGetProxyConfigRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
 
-   resip::InMemorySyncRegDb* mRegDb;
+   Proxy& mProxy;
+   resip::Mutex mStatisticsWaitersMutex;
+   typedef std::list<std::pair<unsigned int, unsigned int> > StatisticsWaitersList;
+   StatisticsWaitersList mStatisticsWaiters;
 };
 
 }

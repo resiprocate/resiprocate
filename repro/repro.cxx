@@ -30,6 +30,8 @@
 #include "repro/BerkeleyDb.hxx"
 #include "repro/WebAdmin.hxx"
 #include "repro/WebAdminThread.hxx"
+#include "repro/CommandServer.hxx"
+#include "repro/CommandServerThread.hxx"
 #include "repro/RegSyncClient.hxx"
 #include "repro/RegSyncServer.hxx"
 #include "repro/RegSyncServerThread.hxx"
@@ -483,8 +485,8 @@ main(int argc, char** argv)
 
    Registrar registrar;
    // We only need removed records to linger if we have reg sync enabled
-   int xmlRpcPort = config.getConfigInt("XmlRpcPort", 0);
-   InMemorySyncRegDb regData(xmlRpcPort ? 86400 /* 24 hours */ : 0 /* removeLingerSecs */);  // !slg! could make linger time a setting
+   int regSyncPort = config.getConfigInt("RegSyncPort", 0);
+   InMemorySyncRegDb regData(regSyncPort ? 86400 /* 24 hours */ : 0 /* removeLingerSecs */);  // !slg! could make linger time a setting
    SharedPtr<MasterProfile> profile(new MasterProfile);
 
    AbstractDb* db=NULL;
@@ -714,17 +716,17 @@ main(int argc, char** argv)
    RegSyncServer* regSyncServerV4 = 0;
    RegSyncServer* regSyncServerV6 = 0;
    RegSyncServerThread* regSyncServerThread = 0;
-   if(xmlRpcPort != 0)
+   if(regSyncPort != 0)
    {
       std::list<RegSyncServer*> regSyncServerList;
       if(useV4) 
       {
-         regSyncServerV4 = new RegSyncServer(&regData, xmlRpcPort, V4);
+         regSyncServerV4 = new RegSyncServer(&regData, regSyncPort, V4);
          regSyncServerList.push_back(regSyncServerV4);
       }
       if(useV6) 
       {
-         regSyncServerV6 = new RegSyncServer(&regData, xmlRpcPort, V6);
+         regSyncServerV6 = new RegSyncServer(&regData, regSyncPort, V6);
           regSyncServerList.push_back(regSyncServerV6);
       }
       if(!regSyncServerList.empty())
@@ -734,7 +736,31 @@ main(int argc, char** argv)
       Data regSyncPeerAddress(config.getConfigData("RegSyncPeer", ""));
       if(!regSyncPeerAddress.empty())
       {
-         regSyncClient = new RegSyncClient(&regData, regSyncPeerAddress, xmlRpcPort);
+         regSyncClient = new RegSyncClient(&regData, regSyncPeerAddress, regSyncPort);
+      }
+   }
+
+   // Create command server if required
+   CommandServer* commandServerV4 = 0;
+   CommandServer* commandServerV6 = 0;
+   CommandServerThread* commandServerThread = 0;
+   int commandPort = config.getConfigInt("CommandPort", 5081);
+   if(commandPort != 0)
+   {
+      std::list<CommandServer*> commandServerList;
+      if(useV4) 
+      {
+         commandServerV4 = new CommandServer(proxy, commandPort, V4);
+         commandServerList.push_back(commandServerV4);
+      }
+      if(useV6) 
+      {
+         commandServerV6 = new CommandServer(proxy, commandPort, V6);
+         commandServerList.push_back(commandServerV6);
+      }
+      if(!commandServerList.empty())
+      {
+         commandServerThread = new CommandServerThread(commandServerList);
       }
    }
 
@@ -777,6 +803,10 @@ main(int argc, char** argv)
    {
       dumThread->run();
    }
+   if(commandServerThread)
+   {
+      commandServerThread->run();
+   }
    if(regSyncServerThread)
    {
       regSyncServerThread->run();
@@ -804,6 +834,10 @@ main(int argc, char** argv)
    if (dumThread)
    {
        dumThread->shutdown();
+   }
+   if(commandServerThread)
+   {
+      commandServerThread->shutdown();
    }
    if(regSyncServerThread)
    {
@@ -836,6 +870,11 @@ main(int argc, char** argv)
       dumThread->join();
       delete dumThread;
    }
+   if(commandServerThread)
+   {
+      commandServerThread->join();
+      delete commandServerThread;
+   }
    if(regSyncServerThread)
    {
       regSyncServerThread->join();
@@ -848,6 +887,15 @@ main(int argc, char** argv)
    }
 
    stack.setCongestionManager(0);
+
+   if(commandServerV4)
+   {
+      delete commandServerV4;
+   }
+   if(commandServerV6)
+   {
+      delete commandServerV6;
+   }
 
    if(regSyncServerV4)
    {

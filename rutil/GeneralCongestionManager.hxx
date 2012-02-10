@@ -57,7 +57,8 @@ class GeneralCongestionManager : public CongestionManager
          Update the metric type and tolerances of a given fifo that the 
             GeneralCongestionManager is already aware of.
          @param fifoDescription The description of the fifo that we are 
-            modifying the tolerances of.
+            modifying the tolerances of.  Specify as empty to adjust all
+            registered fifos.
          @param metric The type of metric that will be used to define this 
             fifo's congestion state.
             - SIZE : Based solely on the number of messages in the fifo
@@ -133,17 +134,21 @@ class GeneralCongestionManager : public CongestionManager
       virtual RejectionBehavior getRejectionBehavior(const FifoStatsInterface *fifo) const;
 
       virtual void logCurrentState() const;
+      virtual EncodeStream& encodeCurrentState(EncodeStream& strm) const;
+
    private:
       /**
          @brief Returns the percent of maximum tolerances that this queue is at.
       */
       virtual UInt16 getCongestionPercent(const FifoStatsInterface* fifo) const;
 
+      virtual EncodeStream& encodeFifoStats(const FifoStatsInterface& fifoStats, EncodeStream& strm) const;
+
       typedef struct
       {
          FifoStatsInterface* fifo;
-         MetricType metric;
-         UInt32 maxTolerance;
+         volatile MetricType metric;
+         volatile UInt32 maxTolerance;
       } FifoInfo; // !bwc! TODO pick a better name
 
       std::vector<FifoInfo> mFifos;

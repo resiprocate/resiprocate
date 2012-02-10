@@ -2,8 +2,7 @@
 #include "resip/stack/config.hxx"
 #endif
 
-#include "resip/stack/XMLCursor.hxx"
-#include "resip/stack/Symbols.hxx"
+#include "rutil/XMLCursor.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
@@ -39,9 +38,16 @@ whitespace as non-significant.
 
 static char BANG[] = "!";
 static char HYPHEN[] = "-";
+static char LA_QUOTE[] = "<";
+static char RA_QUOTE[] = ">";
+static char SLASH[] = "/";
+static char EQUALS[] = "=";
+static char DOUBLE_QUOTE[] = "\"";
+static char SINGLE_QUOTE[] = "\'";
 //http://www.w3.org/TR/1998/REC-xml-19980210
 static const Data COMMENT_START("<!--");
 static const Data COMMENT_END("-->");
+static const Data QUESTION_RA_QUOTE("?>");
 
 // An alternative to stripping comments out in preparse
 // is to deal with them in the parse; ignore when after non-leaf element
@@ -110,14 +116,14 @@ XMLCursor::XMLCursor(const ParseBuffer& pb)
 
    //<top></top> // no children
    ParseBuffer pbtemp(mRoot->mPb);
-   pbtemp.skipToChar(Symbols::RA_QUOTE[0]);
+   pbtemp.skipToChar(RA_QUOTE[0]);
    pbtemp.skipChar();
    if (!WhitespaceSignificant)
    {
       pbtemp.skipWhitespace();
    }
-   if (*pbtemp.position() == Symbols::LA_QUOTE[0] &&
-       *(pbtemp.position()+1) == Symbols::SLASH[0])
+   if (*pbtemp.position() == LA_QUOTE[0] &&
+       *(pbtemp.position()+1) == SLASH[0])
    {
       pbtemp.skipChar();
       pbtemp.skipChar();
@@ -135,7 +141,6 @@ XMLCursor::~XMLCursor()
    delete mRoot;
 }
 
-static const Data QUESTION_RA_QUOTE("?>");
 void
 XMLCursor::skipProlog(ParseBuffer& pb)
 {
@@ -182,7 +187,7 @@ XMLCursor::parseNextRootChild()
    // skip self tag
    if (mRoot->mPb.position() == mRoot->mPb.start())
    {
-      mRoot->mPb.skipToChar(Symbols::RA_QUOTE[0]);
+      mRoot->mPb.skipToChar(RA_QUOTE[0]);
       mRoot->mPb.skipChar();
    }
 
@@ -192,12 +197,12 @@ XMLCursor::parseNextRootChild()
    }
 
    // root end tag?
-   if (*mRoot->mPb.position() == Symbols::LA_QUOTE[0])
+   if (*mRoot->mPb.position() == LA_QUOTE[0])
    {
       ParseBuffer pb(mRoot->mPb.position(), 
                      mRoot->mPb.end() - mRoot->mPb.position());
       pb.skipChar();
-      if (!pb.eof() && *pb.position() == Symbols::SLASH[0])
+      if (!pb.eof() && *pb.position() == SLASH[0])
       {
          pb.skipChar();
          // CodeWarrior isn't helpful enough to pick the "obvious" operator definition
@@ -219,10 +224,10 @@ XMLCursor::parseNextRootChild()
    }
 
    // leaf?
-   if (*mRoot->mPb.position() != Symbols::LA_QUOTE[0])
+   if (*mRoot->mPb.position() != LA_QUOTE[0])
    {
       const char* anchor = mRoot->mPb.position();
-      mRoot->mPb.skipToChar(Symbols::LA_QUOTE[0]);
+      mRoot->mPb.skipToChar(LA_QUOTE[0]);
       Node* leaf = new Node(ParseBuffer(anchor, mRoot->mPb.position() - anchor));
       leaf->mIsLeaf = true;
       mRoot->addChild(leaf);
@@ -358,42 +363,42 @@ XMLCursor::getAttributes() const
       pb.skipToOneOf(ParseBuffer::Whitespace, RA_QUOTE_SLASH);
 
       while (!pb.eof() && 
-             *pb.position() != Symbols::RA_QUOTE[0] &&
-             *pb.position() != Symbols::SLASH[0])
+             *pb.position() != RA_QUOTE[0] &&
+             *pb.position() != SLASH[0])
       {
          attribute.clear();
          value.clear();
 
          const char* anchor = pb.skipWhitespace();
-         pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::EQUALS);
+         pb.skipToOneOf(ParseBuffer::Whitespace, EQUALS);
          pb.data(attribute, anchor);
          XMLCursor::decodeName(attribute);
 
          StackLog(<< "attribute: " << attribute);
 
          pb.skipWhitespace();
-         pb.skipToChar(Symbols::EQUALS[0]);
+         pb.skipToChar(EQUALS[0]);
          pb.skipChar();
          pb.skipWhitespace();
-	 if (!pb.eof())
-	 {
-	    const char quote = *pb.position();
+         if (!pb.eof())
+         {
+            const char quote = *pb.position();
 
-	    StackLog(<< "quote is <" << quote << ">");
-	    
-	    if (quote != Symbols::DOUBLE_QUOTE[0] &&
-		quote != '\'')
-	    {
-	       InfoLog(<< "XML: badly quoted attribute value");
-	       pb.fail(__FILE__, __LINE__);
-	    }
-	    anchor = pb.skipChar();
-	    pb.skipToChar(quote);
-	    pb.data(value, anchor);
-	    XMLCursor::decode(value);
-	    pb.skipChar();
-	    mAttributes[attribute] = value;
-	 }
+            StackLog(<< "quote is <" << quote << ">");
+
+            if(quote != DOUBLE_QUOTE[0] &&
+               quote != SINGLE_QUOTE[0])
+            {
+               InfoLog(<< "XML: badly quoted attribute value");
+               pb.fail(__FILE__, __LINE__);
+            }
+            anchor = pb.skipChar();
+            pb.skipToChar(quote);
+            pb.data(value, anchor);
+            XMLCursor::decode(value);
+            pb.skipChar();
+            mAttributes[attribute] = value;
+         }
          pb.skipWhitespace();
       }
    }
@@ -471,7 +476,7 @@ XMLCursor::Node::extractTag()
    pb.assertNotEof();
    pb.data(mTag, anchor);
 
-   return !pb.eof() && *pb.position() == Symbols::SLASH[0];
+   return !pb.eof() && *pb.position() == SLASH[0];
 }
 
 void
@@ -500,8 +505,8 @@ XMLCursor::Node::skipToEndTag()
    //StackLog(<< "XMLCursor::Node::skipToEndTag(" << Data(mPb.position(), mPb.end() - mPb.position()) << ")");
 
    //<foo />
-   mPb.skipToChar(Symbols::RA_QUOTE[0]);
-   if (*(mPb.position()-1) == Symbols::SLASH[0])
+   mPb.skipToChar(RA_QUOTE[0]);
+   if (*(mPb.position()-1) == SLASH[0])
    {
       mPb.skipChar();
       mPb = ParseBuffer(mPb.start(), mPb.position() - mPb.start());
@@ -522,10 +527,10 @@ XMLCursor::Node::skipToEndTag()
 
       // Some text contents ...<
       // ^                     ^
-      if (*mPb.position() != Symbols::LA_QUOTE[0])
+      if (*mPb.position() != LA_QUOTE[0])
       {
          const char* anchor = mPb.position();
-         mPb.skipToChar(Symbols::LA_QUOTE[0]);
+         mPb.skipToChar(LA_QUOTE[0]);
          Node* leaf = new Node(ParseBuffer(anchor, mPb.position() - anchor));
          leaf->mIsLeaf = true;
          addChild(leaf);
@@ -539,7 +544,7 @@ XMLCursor::Node::skipToEndTag()
 
       // exit condition
       //</foo>
-      if (*mPb.position() == Symbols::SLASH[0])
+      if (*mPb.position() == SLASH[0])
       {
          mPb.skipChar();
          // CodeWarrior isn't helpful enough to pick the "obvious" operator definition
@@ -554,7 +559,7 @@ XMLCursor::Node::skipToEndTag()
 
          if (strncmp(mTag.data(), mPb.position(), mTag.size()) == 0)
          {
-            mPb.skipToChar(Symbols::RA_QUOTE[0]);
+            mPb.skipToChar(RA_QUOTE[0]);
             mPb.skipChar();
             mPb = ParseBuffer(mPb.start(), mPb.position() - mPb.start());
             return;
@@ -590,7 +595,7 @@ XMLCursor::Node::skipToEndTag()
 const char*
 XMLCursor::Node::skipComments(ParseBuffer& pb)
 {
-   while (*pb.position() == Symbols::LA_QUOTE[0] &&
+   while (*pb.position() == LA_QUOTE[0] &&
           *(pb.position()+1) == BANG[0] &&
           *(pb.position()+2) == HYPHEN[0] &&
           *(pb.position()+3) == HYPHEN[0])

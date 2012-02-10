@@ -681,9 +681,6 @@
 			<File
 				RelativePath=".\X509Contents.cxx">
 			</File>
-			<File
-				RelativePath=".\XMLCursor.cxx">
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -923,6 +920,9 @@
 				RelativePath=".\PlainContents.hxx">
 			</File>
 			<File
+				RelativePath=".\PollStatistics.hxx">
+			</File>
+			<File
 				RelativePath=".\PrivacyCategory.hxx">
 			</File>
 			<File
@@ -1115,7 +1115,7 @@
 				RelativePath=".\X509Contents.hxx">
 			</File>
 			<File
-				RelativePath=".\XMLCursor.hxx">
+				RelativePath=".\ZeroOutStatistics.hxx">
 			</File>
 		</Filter>
 		<Filter

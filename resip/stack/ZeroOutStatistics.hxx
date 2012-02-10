@@ -1,84 +1,41 @@
-#ifndef RESIP_StatisticsManager_hxx
-#define RESIP_StatisticsManager_hxx
+#ifndef ZeroOutStatistics_Include_Guard
+#define ZeroOutStatistics_Include_Guard
 
-#include "rutil/Timer.hxx"
-#include "rutil/Data.hxx"
-#include "resip/stack/StatisticsMessage.hxx"
-#include "resip/stack/StatisticsHandler.hxx"
+#include "resip/stack/TransactionMessage.hxx"
 
 namespace resip
 {
-class SipStack;
-class SipMessage;
-class TransactionController;
-
-/**
-   @brief Keeps track of various statistics on the stack's operation, and 
-      periodically issues a StatisticsMessage to the TransactionUser (or, if the
-      ExternalStatsHandler is set, it will be sent there).
-*/
-class StatisticsManager : public StatisticsMessage::Payload
+class ZeroOutStatistics : public TransactionMessage
 {
    public:
-      // not implemented
-      typedef enum
-      {
-         TransportFifoSize,
-         TUFifoSize,
-         ActiveTimers,
-         OpenTcpConnections,
-         ActiveClientTransactions,
-         ActiveServerTransactions,
-         PendingDnsQueries,
-         StatsMemUsed
-      } Measurement;
-      
-      StatisticsManager(SipStack& stack, unsigned long intervalSecs=60);
-      ~StatisticsManager();
+      explicit ZeroOutStatistics(){}
+      virtual ~ZeroOutStatistics(){}
 
-      void process();
-      // not stricly thread-safe; needs to be called through the fifo somehow
-      void setInterval(unsigned long intvSecs);
-
-      /**
-         @ingroup resip_config
-         @brief Allows the application to set the ExternalStatsHandler for this
-            StatisticsManager.
-      */
-      void setExternalStatsHandler(ExternalStatsHandler *handler)
+      virtual const Data& getTransactionId() const {return Data::Empty;}
+      virtual bool isClientTransaction() const {return true;}
+      virtual EncodeStream& encode(EncodeStream& strm) const
       {
-         mExternalHandler = handler;
+         return strm << "ZeroOutStatistics";
+      }
+      virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+      {
+         return strm << "ZeroOutStatistics";
       }
 
-   private:
-      friend class TransactionState;
-      bool sent(SipMessage* msg);
-      bool retransmitted(MethodTypes type, bool request, unsigned int code);
-      bool received(SipMessage* msg);
+      virtual Message* clone() const
+      {
+         return new ZeroOutStatistics(*this);
+      }
+}; // class ZeroOutStatistics
 
-      void poll(); // force an update
+} // namespace resip
 
-      SipStack& mStack;
-      UInt64 mInterval;
-      UInt64 mNextPoll;
-
-      ExternalStatsHandler *mExternalHandler;
-      //
-      // When statistics are published, a copy of values are made
-      // and copied into this member, and then reference to this is
-      // published thru both ExternalHandler and posted to stack as message.
-      // This payload is mutex protected.
-      StatisticsMessage::AtomicPayload *mPublicPayload;
-};
-
-}
-
-#endif
+#endif // include guard
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2004 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -123,4 +80,6 @@ class StatisticsManager : public StatisticsMessage::Payload
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
+ * vi: set shiftwidth=3 expandtab:
  */
+

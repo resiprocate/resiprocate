@@ -27,6 +27,7 @@ TESTPROGRAMS += \
 	testRandomHex.cxx \
 	testRandomThread.cxx \
 	testThreadIf.cxx \
+	testXMLCursor.cxx \
 #	testDigestStream.cxx \
 
 #SRC = 	TestSupport.cxx

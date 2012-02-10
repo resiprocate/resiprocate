@@ -72,6 +72,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       
       UserStore& getUserStore();
       resip::SipStack& getStack(){return mStack;}
+      ProxyConfig& getConfig(){return mConfig;}
       void send(const resip::SipMessage& msg);
       void addClientTransaction(const resip::Data& transactionId, RequestContext* rc);
 
@@ -91,6 +92,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
 
    private:
       resip::SipStack& mStack;
+      ProxyConfig& mConfig;
       resip::NameAddr mRecordRoute;
       bool mRecordRouteForced;
       bool mAssumePath;

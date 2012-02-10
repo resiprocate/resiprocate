@@ -881,10 +881,6 @@
 				RelativePath=".\X509Contents.cxx"
 				>
 			</File>
-			<File
-				RelativePath=".\XMLCursor.cxx"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -993,7 +989,7 @@
 			<File
 				RelativePath=".\DnsResultMessage.hxx"
 				>
-			</File>			
+			</File>
 			<File
 				RelativePath=".\DtlsMessage.hxx"
 				>
@@ -1215,6 +1211,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\PollStatistics.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\PrivacyCategory.hxx"
 				>
 			</File>
@@ -1293,7 +1293,7 @@
 			<File
 				RelativePath=".\StartLine.hxx"
 				>
-			</File>			
+			</File>
 			<File
 				RelativePath=".\StatelessHandler.hxx"
 				>
@@ -1483,7 +1483,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\XMLCursor.hxx"
+				RelativePath=".\ZeroOutStatistics.hxx"
 				>
 			</File>
 		</Filter>

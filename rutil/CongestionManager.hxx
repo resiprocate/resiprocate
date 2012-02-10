@@ -88,6 +88,12 @@ class CongestionManager
       Log the current state of all monitored fifos.
    */
    virtual void logCurrentState() const=0;
+
+   /**
+      Get the current state of all monitored fifos.to a stream
+   */
+   virtual EncodeStream& encodeCurrentState(EncodeStream& strm) const=0;
+
 };
 
 
