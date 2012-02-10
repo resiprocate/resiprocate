@@ -380,9 +380,6 @@
     <ClCompile Include="X509Contents.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="XMLCursor.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="EventStackThread.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -616,6 +613,9 @@
     <ClInclude Include="PlainContents.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PollStatistics.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="PrivacyCategory.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -805,7 +805,7 @@
     <ClInclude Include="X509Contents.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="XMLCursor.hxx">
+    <ClInclude Include="ZeroOutStatistics.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="EventStackThread.hxx">
