@@ -346,7 +346,16 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
       InfoLog(<< "DNS initialization: found  " << (*channel)->nservers << " name servers");
       for (int i = 0; i < (*channel)->nservers; ++i)
       {
-         InfoLog(<< " name server: " << DnsUtil::inet_ntop((*channel)->servers[i].addr));
+#ifdef USE_IPV6
+         if((*channel)->servers[i].family == AF_INET6) 
+         {
+            InfoLog(<< " name server: " << DnsUtil::inet_ntop((*channel)->servers[i].addr6));
+         } 
+         else
+#endif
+         {
+            InfoLog(<< " name server: " << DnsUtil::inet_ntop((*channel)->servers[i].addr));
+         }
       }
 
       // In ares, we must manipulate these directly
