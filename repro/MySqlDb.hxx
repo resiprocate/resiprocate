@@ -25,7 +25,7 @@ class MySqlDb: public AbstractDb
       
       virtual ~MySqlDb();
       
-      virtual bool isSane() {return mSane;}
+      virtual bool isSane() {return mConnected;}
 
       virtual void addUser( const Key& key, const UserRecord& rec );
       virtual void eraseUser( const Key& key );
@@ -47,12 +47,23 @@ class MySqlDb: public AbstractDb
       virtual resip::Data dbNextKey( const Table table, 
                                      bool first=true); // return empty if no
                                                        // more  
-      MYSQL* mConn;
-      MYSQL_RES* mResult[4];
-      bool mSane;
+
+      void disconnectFromDatabase() const;
+      int connectToDatabase() const;
+      int query(const resip::Data& queryCommand) const;
+
+      resip::Data mDBServer;
+      resip::Data mDBUser;
+      resip::Data mDBPassword;
+      resip::Data mDBName;
+      unsigned int mDBPort;
+
+      mutable MYSQL* mConn;
+      mutable MYSQL_RES* mResult[4];
+      mutable bool mConnected;
 
       char* tableName( Table table ) const;
-      resip::Data sqlWhere( const Key& key) const;
+      resip::Data userDomainWhere( const Key& key) const;
 };
 
 }
