@@ -3,6 +3,12 @@
 
 #ifdef USE_MYSQL
 
+#ifdef WIN32
+#include <errmsg.h>
+#else 
+#include <mysql/errmsg.h>
+#endif
+
 #include "rutil/Data.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/Logger.hxx"
@@ -18,61 +24,137 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
-MySqlDb::MySqlDb(const Data& server, const Data& user, const Data& password, const Data& databaseName, unsigned int port)
+MySqlDb::MySqlDb(const Data& server, const Data& user, const Data& password, const Data& databaseName, unsigned int port) :
+   mDBServer(server),
+   mDBUser(user),
+   mDBPassword(password),
+   mDBName(databaseName),
+   mDBPort(port),
+   mConn(0),
+   mConnected(false)
 { 
-   InfoLog( << "Using MySQL DB with server: " << server );
-
-   mSane = true;
+   InfoLog( << "Using MySQL DB with server=" << server << ", user=" << user << ", dbName=" << databaseName << ", port=" << port);
 
    assert( MaxTable <= 4 );
    for (int i=0;i<MaxTable;i++)
    {
-      mResult[i]=NULL;
+      mResult[i]=0;
    }
 
-   mConn = mysql_init(NULL);
-   if(mConn == NULL)
-   {
-      ErrLog( << "MySQL init failed: error=" << mysql_errno(mConn) << ": " << mysql_error(mConn));
-      mSane = false;
-   }
-   else
-   {
-      MYSQL* ret = mysql_real_connect(mConn,
-                                      server.c_str(),      // hostname
-                                      user.c_str(),        // user
-                                      password.c_str(),    // password
-                                      databaseName.c_str(),// DB
-                                      port,                // port
-                                      NULL,                // unix socket file
-                                      0);                  // client flags
-      if ( ret == NULL )
-      { 
-         ErrLog( << "MySQL connect failed: error=" << mysql_errno(mConn) << ": " << mysql_error(mConn));
-         mysql_close(mConn);
-
-         mSane = false;
-      }
-   }
+   connectToDatabase();
 }
 
 
 MySqlDb::~MySqlDb()
-{  
-   for (int i=0;i<MaxTable;i++)
+{
+   disconnectFromDatabase();
+}
+
+void
+MySqlDb::disconnectFromDatabase() const
+{
+   if(mConn)
    {
-      if ( mResult[i] )
-      {  
-         mysql_free_result( mResult[i] ); mResult[i]=0;
+      for (int i=0;i<MaxTable;i++)
+      {
+         if (mResult[i])
+         {  
+            mysql_free_result(mResult[i]); 
+            mResult[i]=0;
+         }
       }
-   }
    
-   if(mSane)
-   {
       mysql_close(mConn);
+      mConn = 0;
+      mConnected = false;
    }
 }
 
+int 
+MySqlDb::connectToDatabase() const
+{
+   // Disconnect from database first (if required)
+   disconnectFromDatabase();
+
+   // Now try to connect
+   assert(mConn == 0);
+   assert(mConnected == false);
+
+   mConn = mysql_init(0);
+   if(mConn == 0)
+   {
+      ErrLog( << "MySQL init failed: insufficient memory.");
+      return CR_OUT_OF_MEMORY;
+   }
+
+   MYSQL* ret = mysql_real_connect(mConn,
+                                   mDBServer.c_str(),   // hostname
+                                   mDBUser.c_str(),     // user
+                                   mDBPassword.c_str(), // password
+                                   mDBName.c_str(),     // DB
+                                   mDBPort,             // port
+                                   0,                   // unix socket file
+                                   0);                  // client flags
+   if (ret == 0)
+   { 
+      int rc = mysql_errno(mConn);
+      ErrLog( << "MySQL connect failed: error=" << rc << ": " << mysql_error(mConn));
+      mysql_close(mConn); 
+      mConn = 0;
+      mConnected = false;
+      return rc;
+   }
+   else
+   {
+      mConnected = true;
+      return 0;
+   }
+}
+
+int  
+MySqlDb::query(const Data& queryCommand) const
+{
+   int rc = 0;
+   if(mConn == 0 || !mConnected)
+   {
+      rc = connectToDatabase();
+   }
+   if(rc == 0)
+   {
+      assert(mConn!=0);
+      assert(mConnected);
+      rc = mysql_query(mConn,queryCommand.c_str());
+      if(rc != 0)
+      {
+         rc = mysql_errno(mConn);
+         if(rc == CR_SERVER_GONE_ERROR ||
+            rc == CR_SERVER_LOST)
+         {
+            // First failure is a connection error - try to re-connect and then try again
+            rc = connectToDatabase();
+            if(rc == 0)
+            {
+               // OK - we reconnected - try query again
+               rc = mysql_query(mConn,queryCommand.c_str());
+               if( rc != 0)
+               {
+                  ErrLog( << "MySQL query failed: error=" << mysql_errno(mConn) << ": " << mysql_error(mConn));
+               }
+            }
+         }
+         else
+         {
+            ErrLog( << "MySQL query failed: error=" << mysql_errno(mConn) << ": " << mysql_error(mConn));
+         }
+      }
+   }
+
+   if(rc != 0)
+   {
+      ErrLog( << " SQL Command was: " << queryCommand) ;
+   }
+   return rc;
+}
 
 void 
 MySqlDb::addUser( const AbstractDb::Key& key, const AbstractDb::UserRecord& rec )
@@ -85,30 +167,15 @@ MySqlDb::addUser( const AbstractDb::Key& key, const AbstractDb::UserRecord& rec 
       +"name='" + rec.name + "', "
       +"email='" + rec.email + "', "
       +"forwardAddress='" + rec.forwardAddress + "'";
-   
-   int r;
-   r = mysql_query(mConn,command.c_str());
-   if (r!= 0)
-   {
-      ErrLog( << "MySQL write record failed: " << mysql_error(mConn)  ) ;
-      ErrLog( << " SQL Command was: " << command  ) ;
-   }
+   query(command);
 }
 
 
 void 
 MySqlDb::eraseUser( const AbstractDb::Key& key )
 { 
-   Data command = Data("DELETE FROM users ") + sqlWhere(key);
-   
-   int r;
-   r = mysql_query(mConn,command.c_str());
-   if (r!= 0)
-   {
-      ErrLog( << "MySQL read failed: " << mysql_error(mConn) );
-      ErrLog( << " SQL Command was: " << command  ) ;
-      throw; /* !cj! TODO FIX */ 
-   }
+   Data command = Data("DELETE FROM users ") + userDomainWhere(key);   
+   query(command);
 }
 
 
@@ -119,36 +186,33 @@ MySqlDb::getUser( const AbstractDb::Key& key ) const
 
    Data command = Data("SELECT "
                        "user, domain, realm, passwordHash, name "
-                       "email, forwardAddress FROM users ") + sqlWhere(key);
+                       "email, forwardAddress FROM users ") + userDomainWhere(key);
    
-   int r;
-   r = mysql_query(mConn,command.c_str());
-   if (r!= 0)
+   if(query(command) != 0)
    {
-      ErrLog( << "MySQL read failed: " << mysql_error(mConn) );
-      ErrLog( << " SQL Command was: " << command  ) ;
-      throw; /* !cj! TODO FIX */ 
+      return ret;
    }
    
    MYSQL_RES* result = mysql_store_result(mConn);
-   if (result==NULL)
+   if (result==0)
    {
-      ErrLog( << "MySQL store result failed: " << mysql_error(mConn) );
-      throw; /* !cj! TODO FIX */ 
+      ErrLog( << "MySQL store result failed: error=" << mysql_errno(mConn) << ": " << mysql_error(mConn));
+      return ret;
    }
 
-   MYSQL_ROW row=mysql_fetch_row(result);
-   if ( row )
+   MYSQL_ROW row = mysql_fetch_row(result);
+   if (row)
    {
-      ret.user = Data( row[0] );
-      ret.domain = Data( row[1] );
-      ret.realm = Data( row[2] );
-      ret.passwordHash = Data( row[3] );
-      ret.name = Data( row[4] );
-      ret.email = Data( row[5] );
-      ret.forwardAddress = Data( row[6] );
+      ret.user           = Data(row[0]);
+      ret.domain         = Data(row[1]);
+      ret.realm          = Data(row[2]);
+      ret.passwordHash   = Data(row[3]);
+      ret.name           = Data(row[4]);
+      ret.email          = Data(row[5]);
+      ret.forwardAddress = Data(row[6]);
    }
-   mysql_free_result( result );
+
+   mysql_free_result(result);
 
    return ret;
 }
@@ -159,32 +223,28 @@ MySqlDb::getUserAuthInfo(  const AbstractDb::Key& key ) const
 { 
    Data ret;
 
-   Data command = Data("SELECT passwordHash FROM users ") + sqlWhere(key);
+   Data command = Data("SELECT passwordHash FROM users ") + userDomainWhere(key);
    
-   int r;
-   r = mysql_query(mConn,command.c_str());
-   if (r!= 0)
+   if(query(command) != 0)
    {
-      ErrLog( << "MySQL read failed: " << mysql_error(mConn) );
-      ErrLog( << " SQL Command was: " << command  ) ;
-      throw; /* !cj! TODO FIX */ 
+      return Data::Empty;
    }
    
    MYSQL_RES* result = mysql_store_result(mConn);
-   if (result==NULL)
+   if(result == 0)
    {
-      ErrLog( << "MySQL store result failed: " << mysql_error(mConn) );
-      throw; /* !cj! TODO FIX */ 
+      ErrLog( << "MySQL store result failed: error=" << mysql_errno(mConn) << ": " << mysql_error(mConn));
+      return ret;
    }
 
-   MYSQL_ROW row=mysql_fetch_row(result);
-   if ( row )
+   MYSQL_ROW row = mysql_fetch_row(result);
+   if(row)
    {
-      ret = Data( row[0] );
+      ret = Data(row[0]);
    }
-   mysql_free_result( result );
+   mysql_free_result(result);
 
-   DebugLog( << "Auth password is " << ret );
+   DebugLog( << "Auth password is " << ret);
    
    return ret;
 }
@@ -193,30 +253,25 @@ MySqlDb::getUserAuthInfo(  const AbstractDb::Key& key ) const
 AbstractDb::Key 
 MySqlDb::firstUserKey()
 {  
-   // free memory from previos search 
-   if ( mResult[UserTable] )
+   // free memory from previous search 
+   if (mResult[UserTable])
    {
-      mysql_free_result( mResult[UserTable] ); mResult[UserTable]=0;
+      mysql_free_result(mResult[UserTable]); 
+      mResult[UserTable] = 0;
    }
    
    Data command = Data("SELECT user, domain FROM users");
-   
-   int r;
-   r = mysql_query(mConn,command.c_str());
-   if (r!= 0)
+
+   if(query(command) != 0)
    {
-      ErrLog( << "MySQL read table failed: " << mysql_error(mConn) );
-      ErrLog( << " SQL Command was: " << command  ) ;
-      throw; /* !cj! TODO FIX */ 
+      return Data::Empty;
    }
-   else
+
+   mResult[UserTable] = mysql_store_result(mConn);
+   if(mResult[UserTable] == 0)
    {
-      mResult[UserTable] = mysql_store_result(mConn);
-      if (mResult[UserTable]==NULL)
-      {
-         ErrLog( << "MySQL store result failed: " << mysql_error(mConn) );
-         throw; /* !cj! TODO FIX */ 
-      }
+      ErrLog( << "MySQL store result failed: error=" << mysql_errno(mConn) << ": " << mysql_error(mConn));
+      return Data::Empty;
    }
    
    return nextUserKey();
@@ -226,19 +281,20 @@ MySqlDb::firstUserKey()
 AbstractDb::Key 
 MySqlDb::nextUserKey()
 { 
-   if ( mResult[UserTable] == NULL )
+   if(mResult[UserTable] == 0)
    { 
       return Data::Empty;
    }
    
-   MYSQL_ROW row=mysql_fetch_row( mResult[UserTable] );
-   if ( !row )
+   MYSQL_ROW row = mysql_fetch_row(mResult[UserTable]);
+   if (!row)
    {
-      mysql_free_result( mResult[UserTable]  ); mResult[UserTable]=0;
+      mysql_free_result(mResult[UserTable]); 
+      mResult[UserTable] = 0;
       return Data::Empty;
    }
-   Data user( row[0] );
-   Data domain( row[1] );
+   Data user(row[0]);
+   Data domain(row[1]);
    
    return user+"@"+domain;
 }
@@ -251,136 +307,108 @@ MySqlDb::dbWriteRecord( const Table table,
 {
    Data command = Data("REPLACE INTO ")+tableName(table)
       +" SET attr='" + pKey + "', value='" +pData.base64encode()+ "'";
-   
-   int r;
-   r = mysql_query(mConn,command.c_str());
-   if (r!= 0)
-   {
-      ErrLog( << "MySQL write record failed: " << mysql_error(mConn)  ) ;
-      ErrLog( << " SQL Command was: " << command  ) ;
-   }
+
+   query(command);
 }
 
 
 bool 
-MySqlDb::dbReadRecord( const Table table, 
-                         const resip::Data& pKey, 
-                         resip::Data& pData ) const
+MySqlDb::dbReadRecord(const Table table, 
+                      const resip::Data& pKey, 
+                      resip::Data& pData) const
 { 
    Data command = Data("SELECT value FROM ")+tableName(table)
       +" WHERE attr='" + pKey + "'";
-   
-   int r;
-   r = mysql_query(mConn,command.c_str());
-   if (r!= 0)
+
+   if(query(command) != 0)
    {
-      ErrLog( << "MySQL read failed: " << mysql_error(mConn) );
-      ErrLog( << " SQL Command was: " << command  ) ;
-      throw; /* !cj! TODO FIX */ 
+      return false;
+   }
+
+   MYSQL_RES* result = mysql_store_result(mConn);
+   if (result == 0)
+   {
+      ErrLog( << "MySQL store result failed: error=" << mysql_errno(mConn) << ": " << mysql_error(mConn));
+      return false;
    }
    else
    {
-      MYSQL_RES* result = mysql_store_result(mConn);
-      if (result==NULL)
+      bool success = false;
+      MYSQL_ROW row=mysql_fetch_row(result);
+      if(row)
       {
-         ErrLog( << "MySQL store result failed: " << mysql_error(mConn) );
-         throw; /* !cj! TODO FIX */ 
+         Data enc(row[0]);          
+         pData = enc.base64decode();
+         success = true;
       }
-      else
-      {
-         MYSQL_ROW row=mysql_fetch_row(result);
-         if ( !row )
-         {
-            pData = Data::Empty;
-         }
-         else
-         {
-            Data enc( row[0] );
-            
-            pData = enc.base64decode();
-            
-            return true;
-         }
-         mysql_free_result( result );
-      }
-   } 
-   return false;
+      mysql_free_result(result);
+      return success;
+   }
 }
 
 
 void 
 MySqlDb::dbEraseRecord( const Table table, 
-                          const resip::Data& pKey )
+                        const resip::Data& pKey )
 { 
-  Data command = Data("DELETE FROM ")+tableName(table)
-      +" WHERE attr='" + pKey + "'";
+   Data command = Data("DELETE FROM ") + tableName(table) +
+                       " WHERE attr='" + pKey + "'";
    
-   int r;
-   r = mysql_query(mConn,command.c_str());
-   if (r!= 0)
-   {
-      ErrLog( << "MySQL read failed: " << mysql_error(mConn) );
-      ErrLog( << " SQL Command was: " << command  ) ;
-      throw; /* !cj! TODO FIX */ 
-   }
+   query(command);
 }
 
 
 resip::Data 
-MySqlDb::dbNextKey( const Table table, 
-                      bool first)
+MySqlDb::dbNextKey(const Table table, bool first)
 { 
-   if (first)
+   if(first)
    {
-      // free memory from previos search 
-      if ( mResult[table] )
+      // free memory from previous search 
+      if (mResult[table])
       {
-         mysql_free_result( mResult[table] ); mResult[table]=0;
+         mysql_free_result(mResult[table]); 
+         mResult[table] = 0;
       }
       
       Data command = Data("SELECT attr FROM ")+tableName(table);
       
-      int r;
-      r = mysql_query(mConn,command.c_str());
-      if (r!= 0)
+      if(query(command) != 0)
       {
-         ErrLog( << "MySQL read table failed: " << mysql_error(mConn) );
-         ErrLog( << " SQL Command was: " << command  ) ;
-        throw; /* !cj! TODO FIX */ 
+         return Data::Empty;
       }
-      else
+
+      mResult[table] = mysql_store_result(mConn);
+      if (mResult[table] == 0)
       {
-         mResult[table] = mysql_store_result(mConn);
-         if (mResult[table]==NULL)
-         {
-            ErrLog( << "MySQL store result failed: " << mysql_error(mConn) );
-            throw; /* !cj! TODO FIX */ 
-         }
+         ErrLog( << "MySQL store result failed: error=" << mysql_errno(mConn) << ": " << mysql_error(mConn));
+         return Data::Empty;
       }
    }
    
-   if ( mResult[table] == NULL )
+   if (mResult[table] == 0)
    { 
       return Data::Empty;
    }
    
-   MYSQL_ROW row=mysql_fetch_row( mResult[table] );
-   if ( !row )
+   MYSQL_ROW row = mysql_fetch_row(mResult[table]);
+   if (!row)
    {
-      mysql_free_result( mResult[table]  ); mResult[table]=0;
+      mysql_free_result(mResult[table]); 
+      mResult[table] = 0;
       return Data::Empty;
    }
 
-   return Data( row[0] );
+   return Data(row[0]);
 }
 
 
 char*
-MySqlDb::tableName( Table table ) const
+MySqlDb::tableName(Table table) const
 {
    switch (table)
    {
       case UserTable:
+         assert(false);  // usersavp is not used!
          return "usersavp";
       case RouteTable:
          return "routesavp";
@@ -394,9 +422,8 @@ MySqlDb::tableName( Table table ) const
    return 0;
 }
 
-
 resip::Data 
-MySqlDb::sqlWhere( const AbstractDb::Key& key) const
+MySqlDb::userDomainWhere( const AbstractDb::Key& key) const
 { 
    Data user;
    Data domain;
@@ -412,7 +439,7 @@ MySqlDb::sqlWhere( const AbstractDb::Key& key) const
    ret += "user='" + user + "' ";
    ret += " AND domain='" + domain + "' ";
    
-   DebugLog( << "sqlWhere returing: << "<< ret );
+   DebugLog( << "userDomainWhere returing: << "<< ret );
    
    return ret;
 }

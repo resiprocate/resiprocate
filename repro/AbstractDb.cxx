@@ -29,8 +29,8 @@ encodeString( oDataStream& s, const Data& data )
 static Data
 decodeString( iDataStream& s)
 {
-	short len;
-	s.read( (char*)(&len), sizeof(len) ); 
+   short len;
+   s.read( (char*)(&len), sizeof(len) ); 
 
    // [TODO] This is probably OK for now, but we can do better than this.
    if (len > 8192)
@@ -39,11 +39,11 @@ decodeString( iDataStream& s)
       return Data::Empty;
    }
 
-	char buf[8192];
-	s.read( buf, len );
-       
-	Data data( buf, len );
-	return data;
+   char buf[8192];
+   s.read( buf, len );
+
+   Data data( buf, len );
+   return data;
 }
 
 
@@ -154,13 +154,13 @@ AbstractDb::getUser( const AbstractDb::Key& key ) const
    
    if ( version == 2 )
    {
-	   rec.user = decodeString( s );
-	   rec.domain  = decodeString( s );
-	   rec.realm = decodeString( s );
-	   rec.passwordHash = decodeString( s );
-	   rec.name = decodeString( s );
-	   rec.email = decodeString( s );
-	   rec.forwardAddress = decodeString( s );
+      rec.user = decodeString( s );
+      rec.domain  = decodeString( s );
+      rec.realm = decodeString( s );
+      rec.passwordHash = decodeString( s );
+      rec.name = decodeString( s );
+      rec.email = decodeString( s );
+      rec.forwardAddress = decodeString( s );
    }
    else
    {

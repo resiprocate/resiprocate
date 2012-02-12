@@ -116,7 +116,8 @@ BerkeleyDb::~BerkeleyDb()
       
       assert( mDb[i] );
       mDb[i]->close(0);
-      delete mDb[i]; mDb[i]=0;
+      delete mDb[i]; 
+      mDb[i] = 0;
    }
 }
 
