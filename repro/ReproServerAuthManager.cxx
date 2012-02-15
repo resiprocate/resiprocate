@@ -66,6 +66,7 @@ ReproServerAuthManager::requestCredential(const Data& user,
                                           const Auth& auth,
                                           const Data& transactionId )
 {
+   // !slg! TODO - request for user auth info should be farmed out to worker thread pool
    mUserDb.requestUserAuthInfo(user,realm,transactionId,mDum);
 }
  

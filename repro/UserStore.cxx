@@ -37,8 +37,7 @@ UserStore::requestUserAuthInfo( const resip::Data& user,
                                 const resip::Data& transactionToken,
                                 resip::TransactionUser& transactionUser ) const
 {
-   // TODO - this should put a message on a local queue then a thread should
-   // read that and then do the stuff in the rest of this fucntion
+   // Note - caller needs to be aware that this fn is blocking on db access
    
    resip::Data a1 = getUserAuthInfo(user, realm);
 

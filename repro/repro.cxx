@@ -499,7 +499,8 @@ main(int argc, char** argv)
                        config.getConfigData("MySQLUser", ""), 
                        config.getConfigData("MySQLPassword", ""),
                        config.getConfigData("MySQLDatabaseName", ""),
-                       config.getConfigUnsignedLong("MySQLPort", 0));
+                       config.getConfigUnsignedLong("MySQLPort", 0),
+                       config.getConfigData("MySQLCustomUserAuthQuery", ""));
    }
 #endif
    if (!db)

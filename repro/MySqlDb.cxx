@@ -24,13 +24,19 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
-MySqlDb::MySqlDb(const Data& server, const Data& user, const Data& password, const Data& databaseName, unsigned int port) :
+MySqlDb::MySqlDb(const Data& server, 
+                 const Data& user, 
+                 const Data& password, 
+                 const Data& databaseName, 
+                 unsigned int port, 
+                 const Data& customUserAuthQuery) :
    mDBServer(server),
    mDBUser(user),
    mDBPassword(password),
    mDBName(databaseName),
    mDBPort(port),
    mConn(0),
+   mCustomUserAuthQuery(customUserAuthQuery),
    mConnected(false)
 { 
    InfoLog( << "Using MySQL DB with server=" << server << ", user=" << user << ", dbName=" << databaseName << ", port=" << port);
@@ -115,6 +121,9 @@ int
 MySqlDb::query(const Data& queryCommand) const
 {
    int rc = 0;
+
+   DebugLog( << "MySqlDb::query: executing query: " << queryCommand);
+
    if(mConn == 0 || !mConnected)
    {
       rc = connectToDatabase();
@@ -157,24 +166,33 @@ MySqlDb::query(const Data& queryCommand) const
 }
 
 void 
-MySqlDb::addUser( const AbstractDb::Key& key, const AbstractDb::UserRecord& rec )
+MySqlDb::addUser(const AbstractDb::Key& key, const AbstractDb::UserRecord& rec)
 { 
-   Data command = Data("REPLACE INTO users SET ")
-      +"user='" + rec.user + "', "
-      +"domain='" + rec.domain + "', "
-      +"realm='" + rec.realm + "', "
-      +"passwordHash='" + rec.passwordHash + "', "
-      +"name='" + rec.name + "', "
-      +"email='" + rec.email + "', "
-      +"forwardAddress='" + rec.forwardAddress + "'";
+   Data command;
+   {
+      DataStream ds(command);
+      ds << "REPLACE INTO users SET user='" << rec.user 
+         << "', domain='" << rec.domain
+         << "', realm='" << rec.realm
+         << "', passwordHash='" << rec.passwordHash
+         << "', name='" << rec.name
+         << "', email='" << rec.email
+         << "', forwardAddress='" << rec.forwardAddress
+         << "'";
+   }
    query(command);
 }
 
 
 void 
-MySqlDb::eraseUser( const AbstractDb::Key& key )
+MySqlDb::eraseUser(const AbstractDb::Key& key )
 { 
-   Data command = Data("DELETE FROM users ") + userDomainWhere(key);   
+   Data command;
+   {
+      DataStream ds(command);
+      ds << "DELETE FROM users ";
+      userWhereClauseToDataStream(key, ds);
+   }
    query(command);
 }
 
@@ -184,9 +202,12 @@ MySqlDb::getUser( const AbstractDb::Key& key ) const
 {
    AbstractDb::UserRecord  ret;
 
-   Data command = Data("SELECT "
-                       "user, domain, realm, passwordHash, name "
-                       "email, forwardAddress FROM users ") + userDomainWhere(key);
+   Data command;
+   {
+      DataStream ds(command);
+      ds << "SELECT user, domain, realm, passwordHash, name, email, forwardAddress FROM users ";
+      userWhereClauseToDataStream(key, ds);
+   }
    
    if(query(command) != 0)
    {
@@ -223,8 +244,24 @@ MySqlDb::getUserAuthInfo(  const AbstractDb::Key& key ) const
 { 
    Data ret;
 
-   Data command = Data("SELECT passwordHash FROM users ") + userDomainWhere(key);
+   Data command;
+   {
+      DataStream ds(command);
+      Data user;
+      Data domain;
+      getUserAndDomainFromKey(key, user, domain);
+      ds << "SELECT passwordHash FROM users WHERE user = '" << user << "' AND domain = '" << domain << "' ";
    
+      // Note: domain is empty when querying for HTTP admin user - for this special user, 
+      // we will only check the repro db, by not adding the UNION statement below
+      if(!mCustomUserAuthQuery.empty() && !domain.empty())  
+      {
+         ds << " UNION " << mCustomUserAuthQuery;
+         ds.flush();
+         command.replace("<user>", user);
+         command.replace("<domain>", domain);
+      }
+   }
    if(query(command) != 0)
    {
       return Data::Empty;
@@ -260,7 +297,7 @@ MySqlDb::firstUserKey()
       mResult[UserTable] = 0;
    }
    
-   Data command = Data("SELECT user, domain FROM users");
+   Data command("SELECT user, domain FROM users");
 
    if(query(command) != 0)
    {
@@ -305,9 +342,14 @@ MySqlDb::dbWriteRecord( const Table table,
                           const resip::Data& pKey, 
                           const resip::Data& pData )
 {
-   Data command = Data("REPLACE INTO ")+tableName(table)
-      +" SET attr='" + pKey + "', value='" +pData.base64encode()+ "'";
-
+   Data command;
+   {
+      DataStream ds(command);
+      ds << "REPLACE INTO " << tableName(table) 
+         << " SET attr='" << pKey 
+         << "', value='"  << pData.base64encode()
+         << "'";
+   }
    query(command);
 }
 
@@ -317,8 +359,13 @@ MySqlDb::dbReadRecord(const Table table,
                       const resip::Data& pKey, 
                       resip::Data& pData) const
 { 
-   Data command = Data("SELECT value FROM ")+tableName(table)
-      +" WHERE attr='" + pKey + "'";
+   Data command;
+   {
+      DataStream ds(command);
+      ds << "SELECT value FROM " << tableName(table) 
+         << " WHERE attr='" << pKey 
+         << "'";
+   }
 
    if(query(command) != 0)
    {
@@ -351,9 +398,13 @@ void
 MySqlDb::dbEraseRecord( const Table table, 
                         const resip::Data& pKey )
 { 
-   Data command = Data("DELETE FROM ") + tableName(table) +
-                       " WHERE attr='" + pKey + "'";
-   
+   Data command;
+   {
+      DataStream ds(command);
+      ds << "DELETE FROM " << tableName(table) 
+         << " WHERE attr='" << pKey 
+         << "'";
+   }   
    query(command);
 }
 
@@ -370,7 +421,11 @@ MySqlDb::dbNextKey(const Table table, bool first)
          mResult[table] = 0;
       }
       
-      Data command = Data("SELECT attr FROM ")+tableName(table);
+      Data command;
+      {
+         DataStream ds(command);
+         ds << "SELECT attr FROM " << tableName(table);
+      }
       
       if(query(command) != 0)
       {
@@ -422,12 +477,20 @@ MySqlDb::tableName(Table table) const
    return 0;
 }
 
-resip::Data 
-MySqlDb::userDomainWhere( const AbstractDb::Key& key) const
-{ 
+void 
+MySqlDb::userWhereClauseToDataStream(const Key& key, DataStream& ds) const
+{
    Data user;
    Data domain;
+   getUserAndDomainFromKey(key, user, domain);
+   ds << " WHERE user='" << user
+      << "' AND domain='" << domain
+      << "'";      
+}
    
+void
+MySqlDb::getUserAndDomainFromKey(const Key& key, Data& user, Data& domain) const
+{
    ParseBuffer pb(key);
    const char* start = pb.position();
    pb.skipToOneOf("@");
@@ -435,13 +498,6 @@ MySqlDb::userDomainWhere( const AbstractDb::Key& key) const
    const char* anchor = pb.skipChar();
    pb.skipToEnd();
    pb.data(domain, anchor);
-   Data ret = "WHERE ";
-   ret += "user='" + user + "' ";
-   ret += " AND domain='" + domain + "' ";
-   
-   DebugLog( << "userDomainWhere returing: << "<< ret );
-   
-   return ret;
 }
 
 #endif // USE_MYSQL
