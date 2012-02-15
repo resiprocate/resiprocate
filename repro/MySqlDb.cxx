@@ -258,8 +258,8 @@ MySqlDb::getUserAuthInfo(  const AbstractDb::Key& key ) const
       {
          ds << " UNION " << mCustomUserAuthQuery;
          ds.flush();
-         command.replace("<user>", user);
-         command.replace("<domain>", domain);
+         command.replace("$user", user);
+         command.replace("$domain", domain);
       }
    }
    if(query(command) != 0)
