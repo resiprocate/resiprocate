@@ -31,7 +31,7 @@ DigestAuthenticator::DigestAuthenticator(ProxyConfig& config,
    mRejectBadNonces(config.getConfigBool("RejectBadNonces", false))
 {
    std::auto_ptr<Worker> grabber(new UserAuthGrabber(config.getDataStore()->mUserStore));
-   mAuthRequestDispatcher= new Dispatcher(grabber,stack);
+   mAuthRequestDispatcher= new Dispatcher(grabber,stack,config.getConfigInt("NumAuthGrabberWorkerThreads", 2));
 }
 
 DigestAuthenticator::~DigestAuthenticator()

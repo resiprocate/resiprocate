@@ -21,7 +21,12 @@ namespace repro
 class MySqlDb: public AbstractDb
 {
    public:
-      MySqlDb(const resip::Data& dbServer, const resip::Data& user, const resip::Data& password, const resip::Data& databaseName, unsigned int port);
+      MySqlDb(const resip::Data& dbServer, 
+              const resip::Data& user, 
+              const resip::Data& password, 
+              const resip::Data& databaseName, 
+              unsigned int port, 
+              const resip::Data& customUserAuthQuery);
       
       virtual ~MySqlDb();
       
@@ -45,8 +50,7 @@ class MySqlDb: public AbstractDb
       virtual void dbEraseRecord( const Table table, 
                                   const resip::Data& key );
       virtual resip::Data dbNextKey( const Table table, 
-                                     bool first=true); // return empty if no
-                                                       // more  
+                                     bool first=true); // return empty if no more
 
       void disconnectFromDatabase() const;
       int connectToDatabase() const;
@@ -57,13 +61,15 @@ class MySqlDb: public AbstractDb
       resip::Data mDBPassword;
       resip::Data mDBName;
       unsigned int mDBPort;
+      resip::Data mCustomUserAuthQuery;
 
       mutable MYSQL* mConn;
       mutable MYSQL_RES* mResult[4];
       mutable bool mConnected;
 
       char* tableName( Table table ) const;
-      resip::Data userDomainWhere( const Key& key) const;
+      void userWhereClauseToDataStream(const Key& key, resip::DataStream& ds) const;
+      void getUserAndDomainFromKey(const AbstractDb::Key& key, resip::Data& user, resip::Data& domain) const;
 };
 
 }

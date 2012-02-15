@@ -27,12 +27,13 @@ class UserAuthGrabber : public Worker
          repro::UserInfoMessage* uinf = dynamic_cast<UserInfoMessage*>(msg);
          if(uinf)
          {
-            AbstractDb::UserRecord rec=
-               mUserStore.getUserInfo(uinf->user()+"@"+uinf->realm());
-            if(rec.user==uinf->user() && rec.realm==uinf->realm())
-            {
-               uinf->mRec=rec;
-            }
+            //AbstractDb::UserRecord rec=
+            //   mUserStore.getUserInfo(uinf->user()+"@"+uinf->realm());
+            //if(rec.user==uinf->user() && rec.realm==uinf->realm())
+            //{
+            //   uinf->mRec=rec;
+            //}
+            uinf->mRec.passwordHash = mUserStore.getUserAuthInfo(uinf->user(), uinf->realm());
             DebugLog(<<"Grabbed user info for " 
                            << uinf->user() <<"@"<<uinf->realm()
                            << " : " << uinf->A1());
