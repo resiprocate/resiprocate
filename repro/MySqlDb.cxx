@@ -35,8 +35,8 @@ MySqlDb::MySqlDb(const Data& server,
    mDBPassword(password),
    mDBName(databaseName),
    mDBPort(port),
-   mConn(0),
    mCustomUserAuthQuery(customUserAuthQuery),
+   mConn(0),
    mConnected(false)
 { 
    InfoLog( << "Using MySQL DB with server=" << server << ", user=" << user << ", dbName=" << databaseName << ", port=" << port);
@@ -456,21 +456,25 @@ MySqlDb::dbNextKey(const Table table, bool first)
    return Data(row[0]);
 }
 
+static const char usersavp[] = "usersavp";
+static const char routesavp[] = "routesavp";
+static const char aclsavp[] = "aclsavp";
+static const char configsavp[] = "configsavp";
 
-char*
+const char*
 MySqlDb::tableName(Table table) const
 {
    switch (table)
    {
       case UserTable:
          assert(false);  // usersavp is not used!
-         return "usersavp";
+         return usersavp;
       case RouteTable:
-         return "routesavp";
+         return routesavp;
       case AclTable:
-         return "aclsavp"; 
+         return aclsavp; 
       case ConfigTable:
-         return "configsavp";
+         return configsavp;
       default:
          assert(0);
    }
