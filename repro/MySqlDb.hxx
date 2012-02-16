@@ -67,7 +67,7 @@ class MySqlDb: public AbstractDb
       mutable MYSQL_RES* mResult[4];
       mutable bool mConnected;
 
-      char* tableName( Table table ) const;
+      const char* tableName( Table table ) const;
       void userWhereClauseToDataStream(const Key& key, resip::DataStream& ds) const;
       void getUserAndDomainFromKey(const AbstractDb::Key& key, resip::Data& user, resip::Data& domain) const;
 };
