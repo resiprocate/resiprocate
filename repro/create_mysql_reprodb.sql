@@ -4,11 +4,11 @@ CREATE DATABASE repro;
 USE repro;
 
 --
--- Table structure for table `reprousers`
+-- Table structure for table `users`
 --
 
-DROP TABLE IF EXISTS `reprousers`;
-CREATE TABLE `reprousers` (
+DROP TABLE IF EXISTS `users`;
+CREATE TABLE `users` (
   `user` VARCHAR(64) NOT NULL,
   `domain` VARCHAR(253),
   `realm` VARCHAR(253),
@@ -19,45 +19,35 @@ CREATE TABLE `reprousers` (
   PRIMARY KEY (`user`, `domain`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+
 --
--- Table structure for table `reprousersavp`
+-- Table structure for table `routesavp`
 --
 
-DROP TABLE IF EXISTS `reprousersavp`;
-CREATE TABLE `reprousersavp` (
+DROP TABLE IF EXISTS `routesavp`;
+CREATE TABLE `routesavp` (
   `attr` VARCHAR(255) NOT NULL,
   `value` VARCHAR(1024),
   PRIMARY KEY (attr) 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure for table `reproroutesavp`
+-- Table structure for table `aclsavp`
 --
 
-DROP TABLE IF EXISTS `reproroutesavp`;
-CREATE TABLE `reproroutesavp` (
+DROP TABLE IF EXISTS `aclsavp`;
+CREATE TABLE `aclsavp` (
   `attr` VARCHAR(255) NOT NULL,
   `value` VARCHAR(1024),
   PRIMARY KEY (attr) 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure for table `reproaclsavp`
+-- Table structure for table `configsavp`
 --
 
-DROP TABLE IF EXISTS `reproaclsavp`;
-CREATE TABLE `reproaclsavp` (
-  `attr` VARCHAR(255) NOT NULL,
-  `value` VARCHAR(1024),
-  PRIMARY KEY (attr) 
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table structure for table `reproconfigsavp`
---
-
-DROP TABLE IF EXISTS `reproconfigsavp`;
-CREATE TABLE `reproconfigsavp` (
+DROP TABLE IF EXISTS `configsavp`;
+CREATE TABLE `configsavp` (
   `attr` VARCHAR(255) NOT NULL,
   `value` VARCHAR(1024),
   PRIMARY KEY (attr) 
