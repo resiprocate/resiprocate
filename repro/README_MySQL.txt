@@ -23,15 +23,15 @@ Start DB
 sudo /sw/bin/mysqld_safe &
 
 Remove REPRO DB with
-mysqladmin -u root DROP repro 
+mysqladmin -u root -p DROP repro 
 
 Create a user called repro that can use the DB
-mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO root@localhost WITH GRANT OPTION"
-mysql -u root -e "GRANT ALL PRIVILEGES ON repro.* TO repro@localhost"
-mysql -u root -e "FLUSH PRIVILEGES"
+mysql -u root -p -e "GRANT ALL PRIVILEGES ON *.* TO root@localhost WITH GRANT OPTION"
+mysql -u root -p -e "GRANT ALL PRIVILEGES ON repro.* TO repro@localhost"
+mysql -u root -p -e "FLUSH PRIVILEGES"
 
 you can view permissions with 
-mysqlaccess -U root \* \* repro --brief
+mysqlaccess -U root -P <pwd> \* \* repro --brief
 
 Can make sure all is flushed with 
-mysqladmin -u root refresh
+mysqladmin -u root -p refresh
