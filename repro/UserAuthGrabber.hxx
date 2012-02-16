@@ -6,6 +6,7 @@
 #include "repro/UserStore.hxx"
 #include "resip/stack/Message.hxx"
 #include "repro/UserInfoMessage.hxx"
+#include "resip/dum/UserAuthInfo.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
@@ -24,19 +25,25 @@ class UserAuthGrabber : public Worker
       
       virtual void process(resip::ApplicationMessage* msg)
       {
-         repro::UserInfoMessage* uinf = dynamic_cast<UserInfoMessage*>(msg);
+         repro::UserInfoMessage* uinf = dynamic_cast<UserInfoMessage*>(msg);    // auth for repro's DigestAuthenticator
+         resip::UserAuthInfo* uainf = dynamic_cast<resip::UserAuthInfo*>(msg);  // auth for DUM's ServerAuthManager
          if(uinf)
          {
-            //AbstractDb::UserRecord rec=
-            //   mUserStore.getUserInfo(uinf->user()+"@"+uinf->realm());
-            //if(rec.user==uinf->user() && rec.realm==uinf->realm())
-            //{
-            //   uinf->mRec=rec;
-            //}
             uinf->mRec.passwordHash = mUserStore.getUserAuthInfo(uinf->user(), uinf->realm());
             DebugLog(<<"Grabbed user info for " 
                            << uinf->user() <<"@"<<uinf->realm()
                            << " : " << uinf->A1());
+         }
+         else if(uainf)
+         {
+            uainf->setA1(mUserStore.getUserAuthInfo(uainf->getUser(), uainf->getRealm()));
+            if(uainf->getA1().empty())
+            {
+               uainf->setMode(resip::UserAuthInfo::UserUnknown);
+            }
+            DebugLog(<<"Grabbed user info for " 
+                           << uainf->getUser() <<"@"<<uainf->getRealm()
+                           << " : " << uainf->getA1());
          }
          else
          {
@@ -51,8 +58,6 @@ class UserAuthGrabber : public Worker
       
    protected:
       UserStore& mUserStore;
-
-
 };
 
 }

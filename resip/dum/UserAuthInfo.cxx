@@ -13,19 +13,18 @@ using namespace std;
 UserAuthInfo::UserAuthInfo(const Data& user,
                            const Data& realm,
                            InfoMode mode,
-                           const Data& transactionId ):
+                           const Data& transactionId):
    DumFeatureMessage(transactionId),
    mMode(mode),
    mUser(user),
-   mRealm(realm),
-   mA1(Data(""))
+   mRealm(realm)
 {
 }
 
 UserAuthInfo::UserAuthInfo(const Data& user, 
                            const Data& realm, 
                            const Data& a1, 
-                           const Data& transactionId ):
+                           const Data& transactionId):
    DumFeatureMessage(transactionId),
    mMode(RetrievedA1),
    mUser(user),
@@ -34,6 +33,17 @@ UserAuthInfo::UserAuthInfo(const Data& user,
 {
 }
 
+UserAuthInfo::UserAuthInfo( const resip::Data& user,
+                            const resip::Data& realm,
+                            const resip::Data& transactionId,
+                            resip::TransactionUser* transactionUser):
+   DumFeatureMessage(transactionId),
+   mMode(RetrievedA1),
+   mUser(user),
+   mRealm(realm)
+{
+   tu = transactionUser;
+}
 
 UserAuthInfo::~UserAuthInfo()
 {
@@ -63,6 +73,18 @@ const Data&
 UserAuthInfo::getUser() const
 {
    return mUser;
+}
+
+void 
+UserAuthInfo::setMode(InfoMode mode)
+{
+   mMode = mode;
+}
+      
+void 
+UserAuthInfo::setA1(const resip::Data& a1)
+{
+   mA1 = a1;
 }
 
 Data 

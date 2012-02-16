@@ -476,17 +476,20 @@ class SipStack : public FdSetIOObserver
       /**
           @brief Makes the message available to the TU later
           
+          @note  TranasctionUser subclasses can just post to themselves.
+          
+          @param message ApplicationMessage to post
+      */
+      void post(const std::auto_ptr<ApplicationMessage> message);
+
+      /**
+          @brief Makes the message available to the TU later
+          
           @note Makes a copy of the Message.  Caller is responsible for deleting
           the memory and may  do so as soon as it returns.  
 
           @note  TranasctionUser subclasses can just post to themselves.
           
-          @deprecated Since the addition of TransactionUsers, 
-          this method is deprecated.  Calling this will cause the TuSelector to 
-          post to the old TuFifo that is not associated with any  TransactionUser.
-
-          @deprecated
-
           @param message ApplicationMessage to post
       */
       void post(const ApplicationMessage& message);

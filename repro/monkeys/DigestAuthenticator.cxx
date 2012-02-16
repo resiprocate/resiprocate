@@ -11,7 +11,6 @@
 #include "repro/UserInfoMessage.hxx"
 #include "repro/UserStore.hxx"
 #include "repro/Dispatcher.hxx"
-#include "repro/UserAuthGrabber.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -23,20 +22,19 @@ using namespace repro;
 using namespace std;
 
 DigestAuthenticator::DigestAuthenticator(ProxyConfig& config,
+                                         Dispatcher* authRequestDispatcher,
                                          resip::SipStack* stack) :
+   mAuthRequestDispatcher(authRequestDispatcher),
    mNoIdentityHeaders(config.getConfigBool("DisableIdentity", false)),
    mHttpHostname(config.getConfigData("HttpHostname", "")),
    mHttpPort(config.getConfigInt("HttpPort", 5080)),
    mUseAuthInt(!config.getConfigBool("DisableAuthInt", false)),
    mRejectBadNonces(config.getConfigBool("RejectBadNonces", false))
 {
-   std::auto_ptr<Worker> grabber(new UserAuthGrabber(config.getDataStore()->mUserStore));
-   mAuthRequestDispatcher= new Dispatcher(grabber,stack,config.getConfigInt("NumAuthGrabberWorkerThreads", 2));
 }
 
 DigestAuthenticator::~DigestAuthenticator()
 {
-   delete mAuthRequestDispatcher;
 }
 
 repro::Processor::processor_action_t

@@ -3,6 +3,7 @@
 #include "resip/dum/DialogUsageManager.hxx"
 #include "repro/ReproServerAuthManager.hxx"
 #include "resip/dum/ServerAuthManager.hxx"
+#include "resip/dum/UserAuthInfo.hxx"
 #include "repro/UserStore.hxx"
 #include "repro/AclStore.hxx"
 
@@ -13,24 +14,22 @@ using namespace repro;
 
 
 ReproServerAuthManager::ReproServerAuthManager(DialogUsageManager& dum,
-                                               UserStore& userDb,
+                                               Dispatcher* authRequestDispatcher,
                                                AclStore& aclDb,
                                                bool useAuthInt,
                                                bool rejectBadNonces):
    ServerAuthManager(dum, dum.dumIncomingTarget()),
    mDum(dum),
-   mUserDb(userDb),
+   mAuthRequestDispatcher(authRequestDispatcher),
    mAclDb(aclDb),
    mUseAuthInt(useAuthInt),
    mRejectBadNonces(rejectBadNonces)
 {
 }
 
-
 ReproServerAuthManager::~ReproServerAuthManager()
 {
 }
-
 
 bool 
 ReproServerAuthManager::useAuthInt() const
@@ -58,7 +57,6 @@ ReproServerAuthManager::requiresChallenge(const SipMessage& msg)
    }
 }
 
-
 void 
 ReproServerAuthManager::requestCredential(const Data& user, 
                                           const Data& realm, 
@@ -66,8 +64,10 @@ ReproServerAuthManager::requestCredential(const Data& user,
                                           const Auth& auth,
                                           const Data& transactionId )
 {
-   // !slg! TODO - request for user auth info should be farmed out to worker thread pool
-   mUserDb.requestUserAuthInfo(user,realm,transactionId,mDum);
+   // Build a UserAuthInfo object and pass to UserAuthGrabber to have a1 password filled in
+   UserAuthInfo* async = new UserAuthInfo(user,realm,transactionId,&mDum);
+   std::auto_ptr<ApplicationMessage> app(async);
+   mAuthRequestDispatcher->post(app);
 }
  
 

@@ -4,7 +4,6 @@
 #include "rutil/Data.hxx"
 #include "repro/Processor.hxx"
 #include "repro/Dispatcher.hxx"
-#include "repro/UserStore.hxx"
 #include "repro/ProxyConfig.hxx"
 
 namespace resip
@@ -17,7 +16,7 @@ namespace repro
   class DigestAuthenticator : public Processor
   {
     public:
-      DigestAuthenticator(ProxyConfig& config, resip::SipStack* stack);
+      DigestAuthenticator(ProxyConfig& config, Dispatcher* authRequestDispatcher, resip::SipStack* stack);
       ~DigestAuthenticator();
 
       virtual processor_action_t process(RequestContext &);

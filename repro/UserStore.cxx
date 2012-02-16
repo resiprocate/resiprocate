@@ -31,31 +31,6 @@ UserStore::~UserStore()
 }
 
 
-void 
-UserStore::requestUserAuthInfo( const resip::Data& user, 
-                                const resip::Data& realm,
-                                const resip::Data& transactionToken,
-                                resip::TransactionUser& transactionUser ) const
-{
-   // Note - caller needs to be aware that this fn is blocking on db access
-   
-   resip::Data a1 = getUserAuthInfo(user, realm);
-
-   UserAuthInfo* msg=0;
-
-   if(a1.empty())
-   {
-      msg = new UserAuthInfo(user,realm,UserAuthInfo::UserUnknown,transactionToken);
-   }
-   else
-   {
-      msg = new UserAuthInfo(user,realm,a1,transactionToken);
-   }
-
-   transactionUser.post( msg );
-}
-
-
 AbstractDb::UserRecord
 UserStore::getUserInfo( const Key& key ) const
 {
