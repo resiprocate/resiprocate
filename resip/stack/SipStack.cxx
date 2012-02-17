@@ -636,13 +636,18 @@ SipStack::checkAsyncProcessHandler()
    }
 }
 
+void
+SipStack::post(std::auto_ptr<ApplicationMessage> message)
+{
+   assert(!mShuttingDown);
+   mTuSelector.add(message.release(), TimeLimitFifo<Message>::InternalElement);
+}
 
 void
 SipStack::post(const ApplicationMessage& message)
 {
    assert(!mShuttingDown);
    Message* toPost = message.clone();
-   //mTUFifo.add(toPost, TimeLimitFifo<Message>::InternalElement);
    mTuSelector.add(toPost, TimeLimitFifo<Message>::InternalElement);
 }
 
