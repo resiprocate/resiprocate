@@ -22,6 +22,8 @@
 #include "repro/Registrar.hxx"
 #include "repro/ReproServerAuthManager.hxx"
 #include "repro/ReproServerAuthManager.hxx"
+#include "repro/Dispatcher.hxx"
+#include "repro/UserAuthGrabber.hxx"
 #include "repro/ProcessorChain.hxx"
 #include "repro/Store.hxx"
 #include "repro/UserStore.hxx"
@@ -58,7 +60,7 @@
 #endif
 #include "rutil/WinLeakCheck.hxx"
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 using namespace repro;
 using namespace resip;
@@ -495,20 +497,35 @@ main(int argc, char** argv)
    config.getConfigValue("MySQLServer", mySQLServer);
    if ( !mySQLServer.empty() )
    {
-      db = new MySqlDb(mySQLServer);
+      db = new MySqlDb(mySQLServer, 
+                       config.getConfigData("MySQLUser", ""), 
+                       config.getConfigData("MySQLPassword", ""),
+                       config.getConfigData("MySQLDatabaseName", ""),
+                       config.getConfigUnsignedLong("MySQLPort", 0),
+                       config.getConfigData("MySQLCustomUserAuthQuery", ""));
    }
 #endif
    if (!db)
    {
       db = new BerkeleyDb(config.getConfigData("DatabasePath", "./", true));
-      if (!static_cast<BerkeleyDb*>(db)->isSane())
-      {
-        CritLog(<<"Failed to open configuration database");
-        exit(-1);
-      }
    }
    assert( db );
+   if (!db->isSane())
+   {
+      CritLog(<<"Failed to open configuration database");
+      exit(-1);
+   }
+
    config.createDataStore(db);
+
+   // Create UserAuthGrabber Worker Thread Pool if auth is enabled
+   bool sipAuthDisabled = config.getConfigBool("DisableAuth", false);
+   Dispatcher* authRequestDispatcher = 0;
+   if(!sipAuthDisabled)
+   {
+      std::auto_ptr<Worker> grabber(new UserAuthGrabber(config.getDataStore()->mUserStore));
+      authRequestDispatcher= new Dispatcher(grabber,&stack,config.getConfigInt("NumAuthGrabberWorkerThreads", 2));
+   }
 
    /* Initialize a proxy */
    
@@ -537,9 +554,10 @@ main(int argc, char** argv)
 
       // Add is trusted node monkey
       requestProcessors.addProcessor(std::auto_ptr<Processor>(new IsTrustedNode(config)));
-      if (!config.getConfigBool("DisableAuth", false))
+      if (!sipAuthDisabled)
       {
-         DigestAuthenticator* da = new DigestAuthenticator(config, &stack);
+         assert(authRequestDispatcher);
+         DigestAuthenticator* da = new DigestAuthenticator(config, authRequestDispatcher, &stack);
 
          // Add digest authenticator monkey
          requestProcessors.addProcessor(std::auto_ptr<Processor>(da)); 
@@ -691,11 +709,12 @@ main(int argc, char** argv)
 
    if (dum)
    {
-      if (!config.getConfigBool("DisableAuth", false))
+      if (!sipAuthDisabled)
       {
+         assert(authRequestDispatcher);
          SharedPtr<ServerAuthManager> 
             uasAuth( new ReproServerAuthManager(*dum,
-                                                config.getDataStore()->mUserStore,
+                                                authRequestDispatcher,
                                                 config.getDataStore()->mAclStore,
                                                 !config.getConfigBool("DisableAuthInt", false) /*useAuthInt*/,
                                                 config.getConfigBool("RejectBadNonces", false)));
@@ -869,6 +888,12 @@ main(int argc, char** argv)
    {
       dumThread->join();
       delete dumThread;
+   }
+   if(authRequestDispatcher)
+   {
+      // Both proxy and dum threads are down at this point, we can 
+      // destroy the authRequest dispatcher and associated threads now
+      delete authRequestDispatcher;
    }
    if(commandServerThread)
    {

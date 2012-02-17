@@ -37,15 +37,15 @@ WorkerThread::thread()
 
          if(mStack)
          {
-            //This clones msg.
-            mStack->post(*msg);
+            // Post to stack instead of directly to TU, since stack does
+            // some safety checks to ensure the TU still exists before posting
+            mStack->post(std::auto_ptr<resip::ApplicationMessage>(msg));
          }
          else
          {
             //ErrLog(<<"Stack pointer not set!");
+            delete msg;
          }
-
-         delete msg;
       }
    }
 }

@@ -59,7 +59,7 @@ BerkeleyDb::init( const Data& dbPath, const Data& dbName )
 
    InfoLog( << "Using BerkeleyDb prefixed with " << filePath );
 
-   sane = true;
+   mSane = true;
    
    assert( MaxTable <= 4 );
    
@@ -95,7 +95,7 @@ BerkeleyDb::init( const Data& dbPath, const Data& dbName )
       if ( ret!=0 )
       {
          ErrLog( <<"Could not open user database at " << fileName );
-         sane = false;
+         mSane = false;
          return;
       }
       DebugLog( << "Opened Berkeley DB: " << fileName );
@@ -116,7 +116,8 @@ BerkeleyDb::~BerkeleyDb()
       
       assert( mDb[i] );
       mDb[i]->close(0);
-      delete mDb[i]; mDb[i]=0;
+      delete mDb[i]; 
+      mDb[i] = 0;
    }
 }
 
@@ -209,13 +210,6 @@ BerkeleyDb::dbNextKey( const Table table,
    
    return d;
 }
-
-bool
-BerkeleyDb::isSane()
-{
-  return sane;
-}
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

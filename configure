@@ -32,8 +32,8 @@ DISABLE_PIC := no
 USE_DISTCC := no
 USE_CCACHE := no
 BUILD_REPRO := yes
-REPRO_DB := berkeley-db4
 DB_HEADERS := /usr/include/db4
+USE_MYSQL := no
 BUILD_RADIUS := no
 BUILD_TFM := no
 BUILD_RECON := no
@@ -220,20 +220,20 @@ $uname = `uname`;
     flag        => 'repro',
   },
   {
-    name        => "REPRO_DB",
-    description => "Which database should be used with Repro?",
-    default     => "berkeley-db4",
-    validate    => [@whichdb],
-    predicate   => "\$config{BUILD_REPRO} eq 'yes'",
-    option      => 'repro-db'
-  },
-  {
     name        => "DB_HEADERS",
-    description => "Where is db_cxx.h?",
+    description => "Where is the berkeley-db4 header file db_cxx.h located?",
     default     => "&findDb4",
     evaldefault => 1,
-    predicate   => "(\$config{BUILD_REPRO} eq 'yes') and (\$config{REPRO_DB} eq 'berkeley-db4')",
+    predicate   => "(\$config{BUILD_REPRO} eq 'yes')",
     option      => "db4-headers",
+  },
+  {
+    name        => "USE_MYSQL",
+    description => "Would you like to build MySQL database support into repro?",
+    default     => "no",
+    validate    => [@yesno],
+    predicate   => "\$config{BUILD_REPRO} eq 'yes'",
+    flag        => 'mysql',
   },
     {
     name        => "USE_RADIUS_CLIENT",

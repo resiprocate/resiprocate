@@ -42,6 +42,8 @@ main (int argc, char** argv)
       cerr << "  GetCongestionStats - retrieves the stacks congestion manager stats and state" << endl;
       cerr << "  SetCongestionTolerance metric=<SIZE|WAIT_TIME|TIME_DEPTH> maxTolerance=<value>" << endl;
       cerr << "                         [fifoDescription=<desc>] - sets congestion tolerances" << endl;
+      cerr << "  Shutdown - signal the proxy to shutdown." << endl;
+      cerr << "  GetProxyConfig - retrieves the all of configuration being used by the proxy" << endl;
       exit(1);
    }
 
