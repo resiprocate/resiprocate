@@ -221,7 +221,7 @@ $uname = `uname`;
   },
   {
     name        => "DB_HEADERS",
-    description => "Where is berkeley-db4 header file db_cxx.h located?",
+    description => "Where is the berkeley-db4 header file db_cxx.h located?",
     default     => "&findDb4",
     evaldefault => 1,
     predicate   => "(\$config{BUILD_REPRO} eq 'yes')",

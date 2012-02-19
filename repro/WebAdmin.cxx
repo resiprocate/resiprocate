@@ -4,6 +4,7 @@
 #include "resip/dum/RegistrationPersistenceManager.hxx"
 #include "resip/stack/Symbols.hxx"
 #include "resip/stack/Tuple.hxx"
+#include "resip/stack/SipStack.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
@@ -13,6 +14,7 @@
 #include "rutil/Timer.hxx"
 #include "rutil/TransportType.hxx"
 
+#include "repro/Proxy.hxx"
 #include "repro/HttpBase.hxx"
 #include "repro/HttpConnection.hxx"
 #include "repro/WebAdmin.hxx"
@@ -54,21 +56,19 @@ WebAdmin::RemoveKey::operator<(const RemoveKey& rhs) const
 
 // !cj! TODO - make all the removes on the web pages work 
 
-WebAdmin::WebAdmin(  Store& store,
+WebAdmin::WebAdmin(  Proxy& proxy,
                      RegistrationPersistenceManager& regDb,
-                     Security* security,
-                     bool noChal,  
                      const Data& realm, // this realm is used for http challenges
-                     const Data& adminPassword,
                      int port, 
                      IpVersion version ):
    HttpBase( port, version, realm ),
-   mStore(store),
+   mProxy(proxy),
+   mStore(*mProxy.getConfig().getDataStore()),
    mRegDb(regDb),
-   mSecurity(security),
-   mNoWebChallenges( noChal ) 
+   mNoWebChallenges(proxy.getConfig().getConfigBool("DisableHttpAuth", false)) 
 {
       const Data adminName("admin");
+      const Data adminPassword= proxy.getConfig().getConfigData("HttpAdminPassword", "admin");
 
       Data dbA1 = mStore.mUserStore.getUserAuthInfo( adminName, Data::Empty );
       
@@ -138,6 +138,7 @@ WebAdmin::buildPage( const Data& uri,
       ( pageName != Data("editRoute.html") ) &&
       ( pageName != Data("showRoutes.html") )&& 
       ( pageName != Data("registrations.html") ) &&  
+      ( pageName != Data("settings.html") ) &&  
       ( pageName != Data("user.html")  ) )
    { 
       setPage( resip::Data::Empty, pageNumber, 301 );
@@ -329,6 +330,7 @@ WebAdmin::buildPage( const Data& uri,
       if ( pageName == Data("showRoutes.html") ) buildShowRoutesSubPage(s);
       
       if ( pageName == Data("registrations.html")) buildRegistrationsSubPage(s);
+      if ( pageName == Data("settings.html"))    buildSettingsSubPage(s);
       
       buildPageOutlinePost(s);
       s.flush();
@@ -1236,13 +1238,40 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
 }
 
 
+void
+WebAdmin::buildSettingsSubPage(DataStream& s)
+{
+   s << "<pre>" << mProxy.getConfig() << "</pre>";
+
+   {
+      Data buffer;
+      DataStream strm(buffer);
+      mProxy.getStack().dump(strm);
+      strm.flush();
+      s << "<br>Stack Info<br>"
+        << "<pre>" <<  buffer << "</pre>"
+        << endl;
+   }
+
+   if(mProxy.getStack().getCongestionManager())
+   {
+      Data buffer;
+      DataStream strm(buffer);
+      mProxy.getStack().getCongestionManager()->encodeCurrentState(strm);
+      s << "<br>Congestion Manager Statistics<br>"
+        << "<pre>" <<  buffer << "</pre>"
+        << endl;
+   }
+}
+
+
 Data
 WebAdmin::buildCertPage(const Data& domain)
 {
 	assert(!domain.empty());
 #ifdef USE_SSL
-	assert( mSecurity );
-	return mSecurity->getDomainCertDER(domain);
+	assert( mProxy.getStack().getSecurity() );
+	return mProxy.getStack().getSecurity()->getDomainCertDER(domain);
 #else
 	ErrLog( << "Proxy not build with support for certificates" );
 	return Data::Empty;

@@ -624,16 +624,9 @@ main(int argc, char** argv)
    int httpPort = config.getConfigInt("HttpPort", 5080);
    if (httpPort) 
    {
-      admin = new WebAdmin(*config.getDataStore(), 
+      admin = new WebAdmin(proxy,
                            regData, 
-#ifdef USE_SSL
-                           security, 
-#else
-                           0, 
-#endif
-                           config.getConfigBool("DisableHttpAuth", false), 
                            realm, 
-                           config.getConfigData("HttpAdminPassword", "admin"), 
                            httpPort);
       if (!admin->isSane())
       {
@@ -729,6 +722,16 @@ main(int argc, char** argv)
    // stack, we'll need to rework things (maybe use two stacks).
    stack.setFixBadDialogIdentifiers(false);
    stack.setFixBadCSeqNumbers(false);
+   int statsLogInterval = config.getConfigInt("StatisticsLogInterval", 60);
+   if(statsLogInterval > 0)
+   {
+      stack.setStatisticsInterval(statsLogInterval);
+      stack.statisticsManagerEnabled() = true;
+   }
+   else
+   {
+      stack.statisticsManagerEnabled() = false;
+   }
 
    // Create reg sync components if required
    RegSyncClient* regSyncClient = 0;

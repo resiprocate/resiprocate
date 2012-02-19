@@ -2,11 +2,8 @@
 #define RESIP_WEBADMIN_HXX 
 
 #include "rutil/Data.hxx"
-//#include "rutil/Socket.hxx"
 #include "rutil/TransportType.hxx"
 #include "resip/stack/Tuple.hxx"
-
-//#include "repro/Store.hxx"
 #include "repro/HttpBase.hxx"
 
 #include <map>
@@ -25,17 +22,15 @@ class Store;
 class UserStore;
 class RouteStore;
 typedef std::map<resip::Data, resip::Data> Dictionary;
+class Proxy;
 
 class WebAdmin: public HttpBase
 {
    public:
-      WebAdmin( Store& store,
+      WebAdmin( Proxy& proxy,
                 resip::RegistrationPersistenceManager& regDb,
-                resip::Security* security,
-                bool noWebChallenges,
-                const resip::Data& realm,
-                const resip::Data& adminPassword,
-                int port=5080, 
+                const resip::Data& realm, // this realm is used for http challenges
+                int port=5080,
                 resip::IpVersion version=resip::V4 );
       
    protected:
@@ -60,13 +55,13 @@ class WebAdmin: public HttpBase
       void buildEditRouteSubPage(resip::DataStream& s);
       void buildShowRoutesSubPage(resip::DataStream& s);
       void buildRegistrationsSubPage(resip::DataStream& s);
-                                  
-      resip::Data buildCertPage(const resip::Data& domain);
-      
-      Store& mStore;
+      void buildSettingsSubPage(resip::DataStream& s);
 
+      resip::Data buildCertPage(const resip::Data& domain);
+
+      Proxy& mProxy;
+      Store& mStore;
       resip::RegistrationPersistenceManager& mRegDb;
-      resip::Security* mSecurity;
 
       bool mNoWebChallenges;
       
