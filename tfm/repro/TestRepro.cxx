@@ -13,7 +13,7 @@
 #include "rutil/Logger.hxx"
 #include "resip/stack/InteropHelper.hxx"
 #include "tfm/repro/TestRepro.hxx"
-
+#include "repro/UserAuthGrabber.hxx"
 #ifdef USE_SSL
 #include "resip/stack/ssl/Security.hxx"
 #endif
@@ -48,12 +48,10 @@ TfmProxyConfig::TfmProxyConfig(AbstractDb* db, const CommandLineParser& args)
 static ProcessorChain&  
 makeRequestProcessorChain(ProcessorChain& chain, 
                           ProxyConfig& config,
+                          Dispatcher* authRequestDispatcher,
                           RegistrationPersistenceManager& regData,
                           SipStack* stack)
 {
-   // Either the chainName is default or we don't know about it
-   // Use default if we don't recognize the name
-   // Should log about it.
    ProcessorChain* locators = new ProcessorChain();
    
    ProcessorChain* authenticators = new ProcessorChain();
@@ -61,7 +59,7 @@ makeRequestProcessorChain(ProcessorChain& chain,
    IsTrustedNode* isTrusted = new IsTrustedNode(config);
    authenticators->addProcessor(std::auto_ptr<Processor>(isTrusted));
 
-   DigestAuthenticator* da = new DigestAuthenticator(config, stack);
+   DigestAuthenticator* da = new DigestAuthenticator(config, authRequestDispatcher, stack);
    authenticators->addProcessor(std::auto_ptr<Processor>(da)); 
 
    StrictRouteFixup* srf = new StrictRouteFixup;
@@ -84,7 +82,7 @@ makeRequestProcessorChain(ProcessorChain& chain,
 
 static ProcessorChain&  
 makeResponseProcessorChain(ProcessorChain& chain,
-                          RegistrationPersistenceManager& regData) 
+                           RegistrationPersistenceManager& regData) 
 {
    ProcessorChain* lemurs = new ProcessorChain;
 
@@ -146,11 +144,13 @@ TestRepro::TestRepro(const resip::Data& name,
    mProfile(new MasterProfile),
    mDb(new BerkeleyDb),
    mConfig(mDb, args),
+   mAuthRequestDispatcher(new Dispatcher(std::auto_ptr<Worker>(new UserAuthGrabber(mConfig.getDataStore()->mUserStore)),
+                                         &mStack, 2)),
    mRequestProcessors(),
    mRegData(),
    mProxy(mStack, 
           mConfig,
-          makeRequestProcessorChain(mRequestProcessors, mConfig, mRegData,&mStack),
+          makeRequestProcessorChain(mRequestProcessors, mConfig, mAuthRequestDispatcher, mRegData,&mStack),
           makeResponseProcessorChain(mResponseProcessors,mRegData),
           makeTargetProcessorChain(mTargetProcessors,mConfig)),
    mDum(mStack),
@@ -265,7 +265,11 @@ TestRepro::TestRepro(const resip::Data& name,
                                         methodList) );
    mDum.setMessageFilterRuleList(ruleList);
     
-   SharedPtr<ServerAuthManager> authMgr(new ReproServerAuthManager(mDum, mConfig.getDataStore()->mUserStore, mConfig.getDataStore()->mAclStore, true, false));
+   SharedPtr<ServerAuthManager> authMgr(new ReproServerAuthManager(mDum, 
+                                                                   mAuthRequestDispatcher,
+                                                                   mConfig.getDataStore()->mAclStore, 
+                                                                   true, 
+                                                                   false));
    mDum.setServerAuthManager(authMgr);    
 
    mStack.registerTransactionUser(mProxy);
@@ -292,6 +296,7 @@ TestRepro::~TestRepro()
 {
    mDumThread.shutdown();
    mDumThread.join();
+   delete mAuthRequestDispatcher;
    mStackThread.shutdown();
    mStackThread.join();
    mStack.shutdownAndJoinThreads();
