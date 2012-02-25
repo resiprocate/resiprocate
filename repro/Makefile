@@ -56,12 +56,13 @@ SRC 	+=   \
 	RegSyncClient.cxx \
 	RegSyncServer.cxx \
 	RegSyncServerThread.cxx \
+	ReproRunner.cxx \
 	ReproServerAuthManager.cxx \
 	RequestContext.cxx \
 	ResponseContext.cxx \
 	RRDecorator.cxx \
-        Processor.cxx \
-        ProcessorChain.cxx \
+    Processor.cxx \
+    ProcessorChain.cxx \
 	Target.cxx \
 	WorkerThread.cxx \
 	XmlRpcConnection.cxx \
@@ -70,7 +71,7 @@ SRC 	+=   \
 	OutboundTarget.cxx \
 	QValueTarget.cxx \
 	\
-        monkeys/DigestAuthenticator.cxx \
+    monkeys/DigestAuthenticator.cxx \
 	monkeys/StrictRouteFixup.cxx \
 	monkeys/AmIResponsible.cxx \
 	monkeys/IsTrustedNode.cxx \

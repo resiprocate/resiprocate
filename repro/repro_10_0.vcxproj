@@ -511,6 +511,7 @@ endlocal
     <ClCompile Include="HttpBase.cxx" />
     <ClCompile Include="HttpConnection.cxx" />
     <ClCompile Include="repro.cxx" />
+    <ClCompile Include="ReproRunner.cxx" />
     <ClCompile Include="ReproVersion.cxx" />
     <ClCompile Include="WebAdmin.cxx" />
     <ClCompile Include="WebAdminThread.cxx" />
@@ -519,6 +520,7 @@ endlocal
     <ClInclude Include="BerkeleyDb.hxx" />
     <ClInclude Include="HttpBase.hxx" />
     <ClInclude Include="HttpConnection.hxx" />
+    <ClInclude Include="ReproRunner.hxx" />
     <ClInclude Include="ReproVersion.hxx" />
     <ClInclude Include="WebAdmin.hxx" />
     <ClInclude Include="WebAdminThread.hxx" />

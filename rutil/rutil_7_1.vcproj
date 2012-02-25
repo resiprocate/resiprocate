@@ -302,6 +302,9 @@
 				RelativePath=".\HeapInstanceCounter.cxx">
 			</File>
 			<File
+				RelativePath=".\KeyValueStore.cxx">
+			</File>			
+			<File
 				RelativePath=".\dns\LocalDns.cxx">
 			</File>
 			<File
@@ -543,6 +546,9 @@
 			<File
 				RelativePath=".\HeapInstanceCounter.hxx">
 			</File>
+			<File
+				RelativePath=".\KeyValueStore.hxx">
+			</File>			
 			<File
 				RelativePath=".\Inserter.hxx">
 			</File>

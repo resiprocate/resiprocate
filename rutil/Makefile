@@ -23,6 +23,7 @@ SRC = \
 	FileSystem.cxx \
 	GeneralCongestionManager.cxx \
 	HeapInstanceCounter.cxx \
+	KeyValueStore.cxx \
 	Lock.cxx \
 	Log.cxx \
 	MD5Stream.cxx \
