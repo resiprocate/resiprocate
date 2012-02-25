@@ -1,15 +1,13 @@
-#include "ConfigParse.hxx"
-
 #include <iostream>
 #include <fstream>
 #include <iterator>
 #include <stdexcept>
 
-//#include <rutil/DnsUtil.hxx>
-#include <rutil/Log.hxx>
-#include <rutil/Logger.hxx>
-#include <rutil/ParseBuffer.hxx>
-#include <rutil/WinLeakCheck.hxx>
+#include "rutil/ConfigParse.hxx"
+#include "rutil/Log.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

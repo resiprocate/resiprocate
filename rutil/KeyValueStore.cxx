@@ -1,59 +1,94 @@
-#if !defined(ConfigParse_hxx)
-#define ConfigParse_hxx
+#include "rutil/KeyValueStore.hxx"
+#include "rutil/Log.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
-#include "rutil/HashMap.hxx"
-#include "rutil/Data.hxx"
+using namespace resip;
+using namespace std;
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 namespace resip
 {
 
-class ConfigParse
+KeyValueStore::KeyValueStore()
 {
-public:
-   ConfigParse();
-   ConfigParse(int argc, char** argv, const resip::Data& defaultConfigFilename);
-   virtual ~ConfigParse();
-
-   virtual void printHelpText(int argc, char **argv) = 0;
-
-   void parseCommandLine(int argc, char** argv);
-   void parseConfigFile(const resip::Data& filename);
-
-   bool getConfigValue(const resip::Data& name, resip::Data &value);
-   resip::Data getConfigData(const resip::Data& name, const resip::Data& defaultValue, bool useDefaultIfEmpty=false);
-
-   bool getConfigValue(const resip::Data& name, bool &value);
-   bool getConfigBool(const resip::Data& name, bool defaultValue);
-   
-   bool getConfigValue(const resip::Data& name, unsigned long &value);
-   unsigned long getConfigUnsignedLong(const resip::Data& name, unsigned long defaultValue);
-
-   bool getConfigValue(const resip::Data& name, int &value);
-   int getConfigInt(const resip::Data& name, int defaultValue);
-
-   bool getConfigValue(const resip::Data& name, unsigned short &value);
-   unsigned short getConfigUnsignedShort(const resip::Data& name, int defaultValue);
-
-   bool getConfigValue(const resip::Data& name, std::vector<resip::Data> &value);
-   
-protected:
-   void insertConfigValue(const resip::Data& name, const resip::Data& value);
-
-   typedef HashMultiMap<resip::Data, resip::Data> ConfigValuesMap;
-   ConfigValuesMap mConfigValues;
-
-   // Config filename from command line
-   resip::Data mCmdLineConfigFilename;
-
-private:
-   friend EncodeStream& operator<<(EncodeStream& strm, const ConfigParse& config);
-};
-
-EncodeStream& operator<<(EncodeStream& strm, const ConfigParse& config);
- 
 }
 
-#endif
+KeyValueStore::KeyValueStore(const KeyValueStoreKeyAllocator& keyAllocator) :
+   mKeyAllocator(keyAllocator)
+{
+   if(mKeyAllocator.mNextKey > 1)  // Only resize if there are allocated keys
+   {
+      Value defaultValue;
+      defaultValue.dataValue = 0;
+      defaultValue.uint64Value = 0;  // largest member of union - will zero out all data
+      mKeyValueStore.resize(mKeyAllocator.mNextKey, defaultValue);
+   }
+}
+
+KeyValueStore::~KeyValueStore()
+{
+   KeyValueStoreContainer::iterator it = mKeyValueStore.begin();
+   for(; it != mKeyValueStore.end(); it++)
+   {
+      delete it->dataValue;
+   }
+}
+
+KeyValueStore::Key 
+KeyValueStore::allocateNewKey()
+{
+   Value defaultValue;
+   defaultValue.dataValue = 0;
+   defaultValue.uint64Value = 0;  // largest member of union - will zero out all data
+   Key key = mKeyAllocator.allocateNewKey();
+   mKeyValueStore.resize(key+1, defaultValue);
+   return key;
+}
+
+void 
+KeyValueStore::setDataValue(Key key, const Data& value) 
+{ 
+   if(mKeyValueStore[key].dataValue)
+   {
+      *mKeyValueStore[key].dataValue = value;
+   }
+   else
+   {
+      mKeyValueStore[key].dataValue = new Data(value);
+   }
+}
+
+const Data& 
+KeyValueStore::getDataValue(Key key) const 
+{
+   if(!mKeyValueStore[key].dataValue)
+   {
+      return Data::Empty;
+   }
+   return *mKeyValueStore[key].dataValue; 
+}
+
+Data& 
+KeyValueStore::getDataValue(Key key) 
+{ 
+   if(!mKeyValueStore[key].dataValue)
+   {
+      mKeyValueStore[key].dataValue = new Data();
+   }
+   return *mKeyValueStore[key].dataValue; 
+}
+
+EncodeStream& 
+operator<<(EncodeStream& strm, const KeyValueStore& store)
+{
+   strm << "[KeyValueStore]";
+   return strm;
+}
+
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
