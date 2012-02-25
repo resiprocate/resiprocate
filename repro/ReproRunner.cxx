@@ -22,7 +22,6 @@
 #include "repro/ReproRunner.hxx"
 #include "repro/Proxy.hxx"
 #include "repro/ProxyConfig.hxx"
-#include "repro/stateAgents/CertServer.hxx"
 #include "repro/BerkeleyDb.hxx"
 #include "repro/Dispatcher.hxx"
 #include "repro/UserAuthGrabber.hxx"
@@ -49,6 +48,7 @@
 #include "repro/monkeys/SimpleTargetHandler.hxx"
 
 #if defined(USE_SSL)
+#include "repro/stateAgents/CertServer.hxx"
 #include "resip/stack/ssl/Security.hxx"
 #endif
 
@@ -294,7 +294,9 @@ ReproRunner::cleanupObjects()
    delete mRegSyncServerV6; mRegSyncServerV6 = 0;
    delete mRegSyncServerV4; mRegSyncServerV4 = 0;
    delete mRegSyncClient; mRegSyncClient = 0;
+#if defined(USE_SSL)
    delete mCertServer; mCertServer = 0;
+#endif
    delete mDumThread; mDumThread = 0;
    delete mDum; mDum = 0;
    delete mRegistrar; mRegistrar = 0;
