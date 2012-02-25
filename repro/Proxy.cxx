@@ -24,7 +24,43 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
-resip::Data repro::Proxy::FlowTokenSalt;
+// Initialize statics
+Data Proxy::FlowTokenSalt;
+
+// Use Static fn with static local object to ensure KeyValueStoreKeyAllocator is created before
+// static calls to allocate new keys in the monkey classes
+KeyValueStore::KeyValueStoreKeyAllocator* Proxy::getGlobalKeyValueStoreKeyAllocator()
+{
+   static KeyValueStore::KeyValueStoreKeyAllocator* globalAllocator = new KeyValueStore::KeyValueStoreKeyAllocator();
+   return globalAllocator;
+}
+
+KeyValueStore::KeyValueStoreKeyAllocator* Proxy::getRequestKeyValueStoreKeyAllocator()
+{
+   static KeyValueStore::KeyValueStoreKeyAllocator* requestAllocator = new KeyValueStore::KeyValueStoreKeyAllocator();
+   return requestAllocator;
+}
+
+KeyValueStore::KeyValueStoreKeyAllocator* Proxy::getTargetKeyValueStoreKeyAllocator()
+{
+   static KeyValueStore::KeyValueStoreKeyAllocator* targetAllocator = new KeyValueStore::KeyValueStoreKeyAllocator();
+   return targetAllocator;
+}
+
+KeyValueStore::Key Proxy::allocateGlobalKeyValueStoreKey()
+{
+   return getGlobalKeyValueStoreKeyAllocator()->allocateNewKey();
+}
+
+KeyValueStore::Key Proxy::allocateRequestKeyValueStoreKey()
+{
+   return getRequestKeyValueStoreKeyAllocator()->allocateNewKey();
+}
+
+KeyValueStore::Key Proxy::allocateTargetKeyValueStoreKey()
+{
+   return getTargetKeyValueStoreKeyAllocator()->allocateNewKey();
+}
 
 RequestContext* 
 RequestContextFactory::createRequestContext(Proxy& proxy,
@@ -48,6 +84,7 @@ Proxy::Proxy(SipStack& stack,
      mAssumePath(config.getConfigBool("AssumePath", false)),
      mServerText(config.getConfigData("ServerText", "")),
      mTimerC(config.getConfigInt("TimerC", 180)),
+     mKeyValueStore(*Proxy::getGlobalKeyValueStoreKeyAllocator()),
      mRequestProcessorChain(requestP), 
      mResponseProcessorChain(responseP),
      mTargetProcessorChain(targetP),

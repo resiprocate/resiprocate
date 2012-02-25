@@ -3,6 +3,7 @@
 
 #include "resip/stack/ApplicationMessage.hxx"
 #include "resip/stack/TransactionUser.hxx"
+#include "repro/Processor.hxx"
 
 namespace repro
 {

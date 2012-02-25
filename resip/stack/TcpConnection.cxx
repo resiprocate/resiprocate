@@ -80,7 +80,7 @@ TcpConnection::read( char* buf, int count )
 int 
 TcpConnection::write( const char* buf, const int count )
 {
-   DebugLog (<< "Writing " << buf);
+   //DebugLog (<< "Writing " << buf);   // Note:  this can end up writing garbage to the logs following the message for non-null terminated buffers
 
    assert(buf);
    assert(count > 0);

@@ -10,6 +10,7 @@
 #include "repro/ResponseContext.hxx"
 #include "repro/TimerCMessage.hxx"
 #include "rutil/resipfaststreams.hxx"
+#include "rutil/KeyValueStore.hxx"
 
 namespace resip
 {
@@ -67,8 +68,8 @@ class RequestContext
 
       void postTimedMessage(std::auto_ptr<resip::ApplicationMessage> msg,int seconds);
 
-      void setFromTrustedNode();
-      bool fromTrustedNode() const;
+      // Accessor for per-requset extensible state storage for monkeys
+      resip::KeyValueStore& getKeyValueStore() { return mKeyValueStore; }
       
       bool mHaveSentFinalResponse;
    protected:
@@ -94,7 +95,8 @@ class RequestContext
       resip::NameAddr mTopRoute;
       ResponseContext mResponseContext;
       int mTCSerial;
-      bool mFromTrustedNode;
+      //bool mFromTrustedNode;
+      resip::KeyValueStore mKeyValueStore;
 
       typedef std::vector<ProcessorChain::Chain::iterator>
 
