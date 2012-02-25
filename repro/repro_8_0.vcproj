@@ -365,6 +365,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ReproRunner.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ReproVersion.cxx"
 				>
 			</File>
@@ -392,6 +396,10 @@
 			</File>
 			<File
 				RelativePath=".\HttpConnection.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ReproRunner.hxx"
 				>
 			</File>
 			<File

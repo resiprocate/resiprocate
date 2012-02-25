@@ -27,6 +27,9 @@
     <ClCompile Include="repro.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ReproRunner.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="ReproVersion.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -45,6 +48,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="HttpConnection.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ReproRunner.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ReproVersion.hxx">
