@@ -4,6 +4,7 @@
 #include "resip/stack/NameAddr.hxx"
 #include "rutil/Data.hxx"
 #include "resip/stack/Via.hxx"
+#include "repro/Proxy.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 namespace repro
@@ -12,13 +13,15 @@ namespace repro
 Target::Target()
    :mPriorityMetric(0),
    mShouldAutoProcess(true),
-   mStatus(Candidate)
+   mStatus(Candidate),
+   mKeyValueStore(*Proxy::getTargetKeyValueStoreKeyAllocator())
 {}
 
 Target::Target(const resip::Uri& uri)
    :mPriorityMetric(0),
    mShouldAutoProcess(true),
-   mStatus(Candidate)
+   mStatus(Candidate),
+   mKeyValueStore(*Proxy::getTargetKeyValueStoreKeyAllocator())
 {  
    mRec.mContact.uri()=uri;
 }
@@ -26,7 +29,8 @@ Target::Target(const resip::Uri& uri)
 Target::Target(const resip::NameAddr& target)
    :mPriorityMetric(0),
    mShouldAutoProcess(true),
-   mStatus(Candidate)
+   mStatus(Candidate),
+   mKeyValueStore(*Proxy::getTargetKeyValueStoreKeyAllocator())
 {
    mRec.mContact=target;
 }

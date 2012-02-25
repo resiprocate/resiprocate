@@ -5,6 +5,7 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Helper.hxx"
 #include "repro/monkeys/AmIResponsible.hxx"
+#include "repro/monkeys/IsTrustedNode.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/Proxy.hxx"
 #include <ostream>
@@ -75,7 +76,8 @@ AmIResponsible::process(RequestContext& context)
          // for now, just see if the sender claims to be from one of our domains
          // send a 403 if not on the list      
          // .slg. Allow trusted nodes to relay
-         if (!context.fromTrustedNode() && !context.getProxy().isMyUri(request.header(h_From).uri()))
+         if (!context.getKeyValueStore().getBoolValue(IsTrustedNode::mFromTrustedNodeKey) && 
+             !context.getProxy().isMyUri(request.header(h_From).uri()))
          {
             // make 403, send, dispose of memory
             InfoLog (<< *this << ": will not relay to " << uri << " from " 

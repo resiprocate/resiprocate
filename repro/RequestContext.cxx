@@ -46,7 +46,7 @@ RequestContext::RequestContext(Proxy& proxy,
    mProxy(proxy),
    mResponseContext(*this),
    mTCSerial(0),
-   mFromTrustedNode(false)
+   mKeyValueStore(*Proxy::getRequestKeyValueStoreKeyAllocator())
 {
    mInitialTimerCSet=false;
 }
@@ -1043,18 +1043,6 @@ NameAddr&
 RequestContext::getTopRoute()
 {
    return mTopRoute;
-}
-
-void 
-RequestContext::setFromTrustedNode()
-{
-   mFromTrustedNode = true;
-}
-
-bool 
-RequestContext::fromTrustedNode() const
-{
-   return mFromTrustedNode;
 }
 
 EncodeStream&

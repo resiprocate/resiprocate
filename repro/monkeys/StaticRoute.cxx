@@ -5,6 +5,7 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Helper.hxx"
 #include "repro/monkeys/StaticRoute.hxx"
+#include "repro/monkeys/IsTrustedNode.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/QValueTarget.hxx"
 
@@ -47,7 +48,7 @@ StaticRoute::process(RequestContext& context)
                                                     method,
                                                     event));
    bool requireAuth = false;
-   if(!context.fromTrustedNode() && 
+   if(!context.getKeyValueStore().getBoolValue(IsTrustedNode::mFromTrustedNodeKey) && 
       msg.method() != ACK && 
       msg.method() != BYE)
    {

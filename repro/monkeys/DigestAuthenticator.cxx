@@ -6,6 +6,7 @@
 #include "rutil/Logger.hxx"
 
 #include "repro/monkeys/DigestAuthenticator.hxx"
+#include "repro/monkeys/IsTrustedNode.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/Proxy.hxx"
 #include "repro/UserInfoMessage.hxx"
@@ -89,7 +90,7 @@ DigestAuthenticator::process(repro::RequestContext &rc)
       
       if (proxy.isMyDomain(sipMessage->header(h_From).uri().host()))
       {
-         if (!rc.fromTrustedNode())
+         if (!rc.getKeyValueStore().getBoolValue(IsTrustedNode::mFromTrustedNodeKey))
          {
                challengeRequest(rc, false);
                return SkipAllChains;
