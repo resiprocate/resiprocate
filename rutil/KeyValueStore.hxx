@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "rutil/Data.hxx"
-#include "rutil/Compat.hxx"
+#include "rutil/compat.hxx"
 
 namespace resip
 {
