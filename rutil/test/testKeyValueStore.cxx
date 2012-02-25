@@ -57,9 +57,9 @@ public:
       mStore.setUShortValue(mUShortValueKey, testUShort);
       int testInt = -80000;
       mStore.setIntValue(mIntValueKey, testInt);
-      unsigned int testUInt = 4294967295;
+      unsigned int testUInt = 4294967295UL;
       mStore.setUIntValue(mUIntValueKey, testUInt);
-      UInt64 testUInt64 = 18446744073709551615;
+      UInt64 testUInt64 = 18446744073709551615ULL;
       mStore.setUInt64Value(mUInt64ValueKey, testUInt64);
 
       assert(mStore.getDataValue(mDataValueKey) == "test");
@@ -84,8 +84,8 @@ public:
       assert(store.getShortValue(mShortValueKey) == -1000);
       assert(store.getUShortValue(mUShortValueKey) == 40000);
       assert(store.getIntValue(mIntValueKey) == -80000);
-      assert(store.getUIntValue(mUIntValueKey) == 4294967295);
-      assert(store.getUInt64Value(mUInt64ValueKey) == 18446744073709551615);
+      assert(store.getUIntValue(mUIntValueKey) == 4294967295UL);
+      assert(store.getUInt64Value(mUInt64ValueKey) == 18446744073709551615ULL);
    }
 
    void getModifyTest()
@@ -102,9 +102,9 @@ public:
       mStore.getUShortValue(mUShortValueKey) = testUShort;
       int testInt = -80001;
       mStore.getIntValue(mIntValueKey) = testInt;
-      unsigned int testUInt = 4294967294;
+      unsigned int testUInt = 4294967294UL;
       mStore.getUIntValue(mUIntValueKey) = testUInt;
-      UInt64 testUInt64 = 18446744073709551614;
+      UInt64 testUInt64 = 18446744073709551614ULL;
       mStore.getUInt64Value(mUInt64ValueKey) = testUInt64;
 
       assert(mStore.getDataValue(newDataValueKey) == "newDataValue");
