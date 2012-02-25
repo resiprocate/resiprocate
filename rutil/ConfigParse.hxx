@@ -1,6 +1,7 @@
 #if !defined(ConfigParse_hxx)
 #define ConfigParse_hxx
 
+#include <vector>
 #include "rutil/HashMap.hxx"
 #include "rutil/Data.hxx"
 
