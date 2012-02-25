@@ -95,7 +95,6 @@ class RequestContext
       resip::NameAddr mTopRoute;
       ResponseContext mResponseContext;
       int mTCSerial;
-      //bool mFromTrustedNode;
       resip::KeyValueStore mKeyValueStore;
 
       typedef std::vector<ProcessorChain::Chain::iterator>
