@@ -49,7 +49,7 @@ TestClientSubscription::requestRefresh(int expires)
 CommonAction* 
 TestClientSubscription::end()
 {
-   return new CommonAction(mUa, "end", boost::bind(&ClientSubscription::endCommand, boost::bind<ClientSubscription*>(&ClientSubscriptionHandle::get, boost::ref(mHandle))));
+   return new CommonAction(mUa, "end", boost::bind(&ClientSubscription::endCommand, boost::bind<ClientSubscription*>(&ClientSubscriptionHandle::get, boost::ref(mHandle)),false));
 }
 
 bool 
