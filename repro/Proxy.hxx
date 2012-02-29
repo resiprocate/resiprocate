@@ -76,6 +76,8 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
 
       void setAssumePath(bool f) { mAssumePath = f; }
       bool getAssumePath() const { return mAssumePath; }
+
+      bool isPAssertedIdentityProcessingEnabled() { return mPAssertedIdentityProcessing; }
       
       UserStore& getUserStore();
       resip::SipStack& getStack(){return mStack;}
@@ -107,6 +109,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       resip::NameAddr mRecordRoute;
       bool mRecordRouteForced;
       bool mAssumePath;
+      bool mPAssertedIdentityProcessing;
       resip::Data mServerText;
       int mTimerC;
       resip::KeyValueStore mKeyValueStore;
