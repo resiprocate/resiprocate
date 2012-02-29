@@ -159,52 +159,67 @@ DigestAuthenticator::process(repro::RequestContext &rc)
             {
                rc.setDigestIdentity(user);
 
-               // TODO Need a nerd knob to set PAI
-               if (sipMessage->exists(h_PPreferredIdentities))
+               if(rc.getProxy().isPAssertedIdentityProcessingEnabled())
                {
-                  // find the fist sip or sips P-Preferred-Identity header  and the first tel
-                  // bool haveSip = false;
-                  // bool haveTel = false;
-                  // for (;;)
-                  // {
-                  //    if ((i->uri().scheme() == Symbols::SIP) || (i->uri().scheme() == Symbols::SIPS))
-                  //    {
-                  //       if (haveSip)
-                  //       {
-                  //          continue;   // skip all but the first sip: or sips: URL
-                  //       }
-                  //       haveSip = true;
-                  //
-                  //       if (knownSipIdentity( user, realm, i->uri() )  // should be NameAddr?
-                  //       {
-                  //          sipMessage->header(h_PAssertedIdentities).push_back( i->uri() );
-                  //       }
-                  //       else
-                  //       {
-                  //          sipMessage->header(h_PAssertedIdentities).push_back(getDefaultIdentity(user, realm));
-                  //       }
-                  //    }
-                  //    else if ((i->uri().scheme() == Symbols::TEL))
-                  //    {
-                  //       if (haveTel)
-                  //       {
-                  //          continue;  // skip all but the first tel: URL
-                  //       }
-                  //       haveTel = true;
-                  //
-                  //       if (knownTelIdentity( user, realm, i->uri() ))
-                  //       {
-                  //          sipMessage->header(h_PAssertedIdentities).push_back( i->uri() );
-                  //       }
-                  //    }
-                  // }
-                  // sipMessage->header(h_PPreferredIdentities).erase();
-               }
-               else
-               {
-                  if (!sipMessage->exists(h_PAssertedIdentities))
+                  if (sipMessage->exists(h_PPreferredIdentities))
                   {
-                     // sipMessage->header(h_PAssertedIdentities).push_back(getDefaultIdentity(user, realm));
+                     // Ensure any P-AssertedIdentities present are removed (note: this is an illegal condidition)
+                     sipMessage->remove(h_PAssertedIdentities);
+
+                     // TODO - when we have a concept of multiple identities per user
+                     // find the first sip or sips P-Preferred-Identity header  and the first tel
+                     // bool haveSip = false;
+                     // bool haveTel = false;
+                     // for (;;)
+                     // {
+                     //    if ((i->uri().scheme() == Symbols::SIP) || (i->uri().scheme() == Symbols::SIPS))
+                     //    {
+                     //       if (haveSip)
+                     //       {
+                     //          continue;   // skip all but the first sip: or sips: URL
+                     //       }
+                     //       haveSip = true;
+                     //
+                     //       if (knownSipIdentity( user, realm, i->uri() )  // should be NameAddr?
+                     //       {
+                     //          sipMessage->header(h_PAssertedIdentities).push_back( i->uri() );
+                     //       }
+                     //       else
+                     //       {
+                     //          sipMessage->header(h_PAssertedIdentities).push_back(getDefaultIdentity(user, realm));
+                     //       }
+                     //    }
+                     //    else if ((i->uri().scheme() == Symbols::TEL))
+                     //    {
+                     //       if (haveTel)
+                     //       {
+                     //          continue;  // skip all but the first tel: URL
+                     //       }
+                     //       haveTel = true;
+                     //
+                     //       if (knownTelIdentity( user, realm, i->uri() ))
+                     //       {
+                     //          sipMessage->header(h_PAssertedIdentities).push_back( i->uri() );
+                     //       }
+                     //    }
+                     // }
+
+                     // We currently don't do anything special with the P-Peferred-Identity hint - just
+                     // add default identity
+                     sipMessage->header(h_PAssertedIdentities).push_back(getDefaultIdentity(user, realm, sipMessage->header(h_From)));
+
+                     // Remove the P-Preferered-Identity header
+                     sipMessage->remove(h_PPreferredIdentities);
+                  }
+                  else
+                  {
+                     if (!sipMessage->exists(h_PAssertedIdentities))
+                     {
+                        sipMessage->header(h_PAssertedIdentities).push_back(getDefaultIdentity(user, realm, sipMessage->header(h_From)));
+                     }
+                     // else  TODO
+                     //  - should implement guidlines in RFC5876 4.5 - whereby the proxy should remove 
+                     //        ignored URI's (ie. a 2nd SIP, SIPS or TEL URI, unknown scheme)
                   }
                }            
             
@@ -215,7 +230,7 @@ DigestAuthenticator::process(repro::RequestContext &rc)
                   // .bwc. Leave pre-existing Identity headers alone.
                   if(!sipMessage->exists(h_Identity))
                   {
-                     sipMessage->header(h_Identity).value() = Data::Empty;
+                     sipMessage->header(h_Identity).value() = Data::Empty;  // This is a signal to have the TransportSelector fill in the identity header
                      if(sipMessage->exists(h_IdentityInfo))
                      {
                         InfoLog(<<"Somebody sent us a"
@@ -282,6 +297,17 @@ DigestAuthenticator::authorizedForThisIdentity(const resip::Data &user, const re
       return ((fromUri.user() == user) || (fromUri.user() == "anonymous"));
    }
    return false;
+}
+
+NameAddr
+DigestAuthenticator::getDefaultIdentity(const resip::Data &user, const resip::Data &realm, resip::NameAddr &from)
+{
+   NameAddr defaultIdentity;
+   defaultIdentity.displayName() = from.displayName();
+   defaultIdentity.uri().scheme() = from.uri().scheme();
+   defaultIdentity.uri().user() = user;
+   defaultIdentity.uri().host() = realm;
+   return defaultIdentity;
 }
 
 void

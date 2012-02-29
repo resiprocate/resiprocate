@@ -24,6 +24,7 @@ namespace repro
 
     private:
       bool authorizedForThisIdentity(const resip::Data &user, const resip::Data &realm, resip::Uri &fromUri);
+      resip::NameAddr getDefaultIdentity(const resip::Data &user, const resip::Data &realm, resip::NameAddr &from);
       void challengeRequest(RequestContext &, bool stale = false);
       processor_action_t requestUserAuthInfo(RequestContext &, resip::Data & realm);
       virtual resip::Data getRealm(RequestContext &);
