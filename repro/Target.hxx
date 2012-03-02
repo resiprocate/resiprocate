@@ -54,7 +54,7 @@ class Target
       // Accessor for per-target extensible state storage for monkeys
       resip::KeyValueStore& getKeyValueStore() { return mKeyValueStore; }
 
-      static bool targetPtrCompare(const Target* lhs, const Target* rhs)
+      static bool priorityMetricCompare(const Target* lhs, const Target* rhs)
       {
          return lhs->mPriorityMetric > rhs->mPriorityMetric;
       }
@@ -70,7 +70,6 @@ class Target
       resip::Via mVia;
       resip::ContactInstanceRecord mRec;
       resip::KeyValueStore mKeyValueStore;
-      
 };// class Target
 
 }// namespace repro

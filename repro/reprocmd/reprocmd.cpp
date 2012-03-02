@@ -35,14 +35,14 @@ main (int argc, char** argv)
       cerr << "  Valid Commands are:" << endl;
       cerr << "  GetStackInfo - retrieves low level information about the stack state" << endl;
       cerr << "  GetStackStats - retrieves a dump of the stack statistics" << endl;
-      cerr << "  ResetStackStats - resets all cummulative stack statistics to zero" << endl;
+      cerr << "  ResetStackStats - resets all cumulative stack statistics to zero" << endl;
       cerr << "  LogDnsCache - causes the DNS cache contents to be written to the resip logs" << endl;
-      cerr << "  ClearDnsCache - emptys the stacks DNS cache" << endl;
+      cerr << "  ClearDnsCache - empties the stacks DNS cache" << endl;
       cerr << "  GetDnsCache - retrieves the DNS cache contents" << endl;
       cerr << "  GetCongestionStats - retrieves the stacks congestion manager stats and state" << endl;
       cerr << "  SetCongestionTolerance metric=<SIZE|WAIT_TIME|TIME_DEPTH> maxTolerance=<value>" << endl;
       cerr << "                         [fifoDescription=<desc>] - sets congestion tolerances" << endl;
-      cerr << "  Shutdown - signal the proxy to shutdown." << endl;
+      cerr << "  Shutdown - signal the proxy to shut down." << endl;
       cerr << "  GetProxyConfig - retrieves the all of configuration being used by the proxy" << endl;
       exit(1);
    }

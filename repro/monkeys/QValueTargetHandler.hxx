@@ -8,7 +8,6 @@
 #include "rutil/Data.hxx"
 #include <vector>
 
-
 namespace repro
 {
 
@@ -39,7 +38,6 @@ class QValueTargetHandler : public Processor
       
       virtual void removeTerminated(std::list<resip::Data>& queue,
                                     const ResponseContext& rsp) const;
-      
    
    protected:
       ForkBehavior mForkBehavior;
@@ -47,10 +45,8 @@ class QValueTargetHandler : public Processor
       bool mWaitForTerminate;
       int mDelayBetweenForkGroups;
       int mCancellationDelay;
-      
-
-
 };
+
 }
 
 #endif

@@ -40,20 +40,18 @@ Target::Target(const resip::ContactInstanceRecord& rec)
    mShouldAutoProcess(true),
    mStatus(Candidate),
    mRec(rec)
-{}
+{
+}
 
 Target::~Target()
 {
-   
 }
-
 
 const resip::Data&
 Target::tid() const
 {
    return mVia.param(resip::p_branch).getTransactionId();
 }
-
 
 Target::Status&
 Target::status()
@@ -114,6 +112,7 @@ Target::shouldAutoProcess() const
 {
    return mShouldAutoProcess;
 }
+
 } // namespace repro
 
 /* ====================================================================

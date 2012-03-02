@@ -52,8 +52,9 @@ DigestAuthenticator::process(repro::RequestContext &rc)
    if (sipMessage)
    {
       if (sipMessage->method() == ACK ||
-            sipMessage->method() == BYE)
+          sipMessage->method() == BYE)
       {
+         // Don't challenge ACK and BYE requests
          return Continue;
       }
 

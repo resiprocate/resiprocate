@@ -38,7 +38,7 @@ class ResponseContext
       ~ResponseContext();
 
       /**
-         Adds this Target to the collection of Targets.
+         Adds this Target as a SimpleTarget to the collection of Targets.
          
          @param target The NameAdder used to form the Target to add.
 
@@ -94,9 +94,7 @@ class ResponseContext
       bool addTargetBatch(std::list<Target*>& targets,
                            bool highPriority=false,
                            bool addToFirstBatch=false);
-      
-      bool addOutboundBatch(std::map<resip::Data, std::list<Target*> > batch);
-      
+            
       /**
          Begins all Candidate client transactions.
          
@@ -217,16 +215,9 @@ class ResponseContext
       //tightly coupled.
       RequestContext& mRequestContext;
       
-//      typedef std::list<resip::Data> TransactionQueue;
-
       std::list<std::list<resip::Data> > mTransactionQueueCollection;
+      resip::Data mCurrentResponseTid;
 
-      // !bwc! Map from instance-id to lists of tid
-      // (Each elem in list has identical instance id)
-      typedef std::map<resip::Data, std::list<resip::Data> > OutboundMap;
-
-      OutboundMap mOutboundMap;
-      resip::Data mCurrentResponseTid;      
    private:
       // only constructed by RequestContext
       ResponseContext(RequestContext& parent);
@@ -267,7 +258,6 @@ class ResponseContext
       TransactionMap mActiveTransactionMap; //Targets with status Trying, Proceeding, or WaitingToCancel.
       TransactionMap mTerminatedTransactionMap; //Targets with status Terminated.
 
-      
       //Maybe someday canonicalized Uris will go here, and checking for duplicates
       //will be much faster
       resip::ContactList mTargetList;
