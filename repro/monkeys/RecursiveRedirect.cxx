@@ -6,6 +6,7 @@
 #include "resip/stack/NameAddr.hxx"
 #include "repro/monkeys/RecursiveRedirect.hxx"
 #include "repro/RequestContext.hxx"
+#include "repro/QValueTarget.hxx"
 #include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
@@ -33,13 +34,22 @@ RecursiveRedirect::process(RequestContext& context)
        response->isResponse() && 
        response->header(h_StatusLine).statusCode() / 100 == 3)
    {
+      std::list<Target*> batch;
       for (NameAddrs::const_iterator i=response->header(h_Contacts).begin(); 
            i != response->header(h_Contacts).end(); ++i)
       {
          if(i->isWellFormed() && !i->isAllContacts())
          {
-            context.getResponseContext().addTarget(*i);
+            QValueTarget* target = new QValueTarget(*i);
+            batch.push_back(target);
          }
+      }
+      if(!batch.empty())
+      {
+         batch.sort(Target::priorityMetricCompare);
+         context.getResponseContext().addTargetBatch(batch);
+         //ResponseContext should be consuming the vector
+         assert(batch.empty());
       }
       return Processor::SkipAllChains;
    }
