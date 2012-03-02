@@ -31,6 +31,8 @@ AmIResponsible::process(RequestContext& context)
 
    resip::SipMessage& request = context.getOriginalRequest();
 
+   // There should be no Routes on the request at this point, if there was a route, then
+   // the StrictRouteFixup monkey would have routed to it already
    assert (!request.exists(h_Routes) || 
            request.header(h_Routes).empty());
   
@@ -59,56 +61,60 @@ AmIResponsible::process(RequestContext& context)
       if (!context.getProxy().isMyUri(uri))
       {
          // if this is not for a domain for which the proxy is responsible,
-         // check that we relay from this sender and send to the Request URI
-         
-         if(!request.header(h_From).isWellFormed())
+         // check that this sender is in our domain and send to the Request URI
+
+         // Ensure To header is well formed
+         if(!request.header(h_To).isWellFormed())
          {
-            InfoLog(<<"Garbage in From header: needed for relay check.");
             resip::SipMessage response;
-            Helper::makeResponse(response,context.getOriginalRequest(), 400, "Malformed From: header");
-            context.sendResponse(response);
-            return Processor::SkipThisChain;            
-         }
-         
-         // !rwm! verify the AuthenticatioInfo object here.
-         
-         // !rwm! TODO check some kind of relay list here
-         // for now, just see if the sender claims to be from one of our domains
-         // send a 403 if not on the list      
-         // .slg. Allow trusted nodes to relay
-         if (!context.getKeyValueStore().getBoolValue(IsTrustedNode::mFromTrustedNodeKey) && 
-             !context.getProxy().isMyUri(request.header(h_From).uri()))
-         {
-            // make 403, send, dispose of memory
-            InfoLog (<< *this << ": will not relay to " << uri << " from " 
-                     << request.header(h_From).uri() << ", send 403");
-            resip::SipMessage response;
-            Helper::makeResponse(response, context.getOriginalRequest(), 403, "Relaying Forbidden"); 
+            InfoLog(<<"Garbage in To header: needed for relay check.");
+            Helper::makeResponse(response,context.getOriginalRequest(), 400, "Malformed To: header");
             context.sendResponse(response);
             return Processor::SkipThisChain;
          }
 
          // only perform relay check for out-of-dialog requests
          // !bwc! Um, then all anyone has to do to get us to be their relay
-         // is throw in a spurious to-tag...
-         // This smells funny. I am commenting it out.
-/*         if (!request.header(h_To).exists(p_tag))
-         {         
+         //       is throw in a spurious to-tag...
+         //       This smells funny. I am commenting it out.
+         // .slg. Putting code back in and clarifying the funny smell.....
+         //       We only want to do this check for out of dialog requests, since 
+         //       mid-dialog requests could be 403'd otherwise.  Consider
+         //       an INVITE request from a repro domain user to a user in 
+         //       another domain.  The resulting ACK/200, BYE or any other
+         //       mid-dialog request coming from the remote domain, will contain
+         //       the repro users contact address in the RequestUri and a 
+         //       foreign domain in the from header.  We want to ensure these
+         //       requests are not 403'd.  Byron's comment about an endpoint getting
+         //       us to relay by placing a spurious to tag in the request still 
+         //       stands. Perhaps we ought to be checking the To header domain in 
+         //       this case - however that is also weak, since the To header is not
+         //       used in routing and easily be set to a URI in our domain to trick
+         //       repro into forwarding.  Note:  From header domain checking is
+         //       stronger than To header domain checking, since if the domain is 
+         //       ours, then it must pass Digest Authentication (at least for non 
+         //       ACK and BYE requests).
+         if (!request.header(h_To).exists(p_tag))
+         {
+            // Ensure From header is well formed
+            if(!request.header(h_From).isWellFormed())
+            {
+               resip::SipMessage response;
+               InfoLog(<<"Garbage in From header: needed for relay check.");
+               Helper::makeResponse(response,context.getOriginalRequest(), 400, "Malformed From: header");
+               context.sendResponse(response);
+               return Processor::SkipThisChain;
+            }
+
             // !rwm! verify the AuthenticatioInfo object here.
             
             // !rwm! TODO check some kind of relay list here
             // for now, just see if the sender claims to be from one of our domains
             // send a 403 if not on the list
-            if(!request.header(h_From).isWellFormed())
-            {
-               resip::SipMessage response;
-               InfoLog(<<"Garbage in From header: needed for relay check.");
-               Helper::makeResponse(response,context.getOriginalRequest(), 400, "Malformed From: header"));
-               context.sendResponse(response);
-               return Processor::SkipThisChain;
-            }
 
-            if (!context.fromTrustedNode() && !context.getProxy().isMyUri(request.header(h_From).uri()))
+            // .slg. Allow trusted nodes to relay
+            if (!context.getKeyValueStore().getBoolValue(IsTrustedNode::mFromTrustedNodeKey) && 
+                !context.getProxy().isMyUri(request.header(h_From).uri()))
             {
                // make 403, send, dispose of memory
                resip::SipMessage response;
@@ -118,7 +124,7 @@ AmIResponsible::process(RequestContext& context)
                context.sendResponse(response);
                return Processor::SkipThisChain;
             }
-         }*/
+         }
          
          std::auto_ptr<Target> target(new Target(request.header(h_RequestLine).uri()));
          context.getResponseContext().addTarget(target);
