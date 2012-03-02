@@ -36,9 +36,9 @@ QValueTargetHandler::QValueTargetHandler(ProxyConfig& config)
    mCancellationDelay=config.getConfigInt("QValueMsBeforeCancel", 3000);
 }
 
-
 QValueTargetHandler::~QValueTargetHandler()
-{}
+{
+}
 
 Processor::processor_action_t
 QValueTargetHandler::process(RequestContext &rc)
@@ -65,7 +65,6 @@ QValueTargetHandler::process(RequestContext &rc)
       if(fc)
       {
          shouldContinue=false;
-         
          std::vector<resip::Data>::iterator i;
          
          //Might we have scheduled cancellations? If so, is there anything else
@@ -81,7 +80,6 @@ QValueTargetHandler::process(RequestContext &rc)
                //beforehand.
                rsp.cancelClientTransaction(*i);
             }
-            
          }
          
          //Might we have scheduled some transactions to start?
@@ -138,7 +136,6 @@ QValueTargetHandler::process(RequestContext &rc)
             }
          }
 
-
          //If no active targets, we need to start some new ones.
          //(and schedule their cancellation if configured to)
          //However, calling beginClientTransaction does not guarantee that a
@@ -185,7 +182,6 @@ QValueTargetHandler::process(RequestContext &rc)
                   DebugLog(<<"None of these Targets were valid!"
                            << " Moving on to another group.");
                }
-               
             }
          }
             
@@ -203,10 +199,8 @@ QValueTargetHandler::process(RequestContext &rc)
             fillNextTargetGroup(nextBeginTids,*outer,rsp);
          }
          
-         
          //Clean up the queue we just tried
          removeTerminated(*outer,rsp);
-
       }
       
       if(outer->empty())
@@ -220,14 +214,14 @@ QValueTargetHandler::process(RequestContext &rc)
          outer++;
       }
    
-
       assert(activeTargets || !startedTargets);
    }
    
    //Do we have anything to schedule for later?
    if(!nextCancelTids.empty() || !nextBeginTids.empty())
    {
-      if(mCancellationDelay==mDelayBetweenForkGroups)
+      // If the delays are equal, then put both cancel and nextBeginTids in one ForkControlMessage
+      if(mCancellationDelay == mDelayBetweenForkGroups)  
       {
          ForkControlMessage* fork = new ForkControlMessage(*this,tid,proxy);
          fork->mTransactionsToProcess=nextBeginTids;
@@ -239,7 +233,7 @@ QValueTargetHandler::process(RequestContext &rc)
          proxy->postMS(std::auto_ptr<resip::ApplicationMessage>(app),
                               mDelayBetweenForkGroups);
       }
-      else
+      else // Issue two seperate ForkControlMessages
       {
          if(!nextCancelTids.empty())
          {
@@ -262,19 +256,16 @@ QValueTargetHandler::process(RequestContext &rc)
 
             proxy->postMS(std::auto_ptr<resip::ApplicationMessage>(app),
                                  mDelayBetweenForkGroups);
-         
          }
-      
       }
    }
-   
 
    //We should not pass control on to the rest of the chain until all
    //of the QValueTargets have been taken care of. Also, we should not
    //pass control to the rest of the chain if we received a 
    //ForkControlMessage explicitly intended for us.
    //(this could confuse the other Target Processors)
-   if(!activeTargets && shouldContinue )
+   if(!activeTargets && shouldContinue)
    {
       return Processor::Continue;
    }
@@ -282,9 +273,7 @@ QValueTargetHandler::process(RequestContext &rc)
    {
       return Processor::SkipAllChains;
    }
-   
 }
-
 
 void
 QValueTargetHandler::fillNextTargetGroup(std::vector<resip::Data>& fillHere,
@@ -299,19 +288,15 @@ QValueTargetHandler::fillNextTargetGroup(std::vector<resip::Data>& fillHere,
    std::list<resip::Data>::const_iterator i = queue.begin();
    int currentQ=0;
    
-
    //Find the first Candidate target in the queue.
    for(i=queue.begin();i!=queue.end();i++)
    {
-
       if(rsp.isCandidate(*i))
       {
          currentQ=rsp.getTarget(*i)->getPriority();
          break;
       }
-
    }
-
 
    switch(mForkBehavior)
    {
@@ -341,9 +326,7 @@ QValueTargetHandler::fillNextTargetGroup(std::vector<resip::Data>& fillHere,
       default:
          ErrLog(<<"mForkBehavior is not defined! How did this happen?");
    }
-
 }
-
 
 bool
 QValueTargetHandler::isMyType( Target* target) const
@@ -357,12 +340,11 @@ QValueTargetHandler::isMyType( Target* target) const
    {
       return false;
    }
-
 }
 
 void
 QValueTargetHandler::removeTerminated(std::list<resip::Data> & queue,
-                                       const ResponseContext& rsp) const
+                                      const ResponseContext& rsp) const
 {
    std::list<resip::Data>::iterator i = queue.begin();
 
@@ -381,14 +363,54 @@ QValueTargetHandler::removeTerminated(std::list<resip::Data> & queue,
    }
 }
 
-
 void 
 QValueTargetHandler::dump(EncodeStream &os) const
 {
   os << "QValueTargetHandler baboon" << std::endl;
 }
 
-
-
-
 }
+
+/* ====================================================================
+ * The Vovida Software License, Version 1.0 
+ * 
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ * 
+ * 3. The names "VOCAL", "Vovida Open Communication Application Library",
+ *    and "Vovida Open Communication Application Library (VOCAL)" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact vocal@vovida.org.
+ *
+ * 4. Products derived from this software may not be called "VOCAL", nor
+ *    may "VOCAL" appear in their name, without prior written
+ *    permission of Vovida Networks, Inc.
+ * 
+ * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
+ * NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA
+ * NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
+ * IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+ * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ * 
+ * ====================================================================
+ */

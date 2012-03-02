@@ -103,7 +103,7 @@ ResponseContext::addTarget(std::auto_ptr<repro::Target> target, bool beginImmedi
    }
    else
    {
-      if(target->mShouldAutoProcess)
+      if(target->mShouldAutoProcess)  // note: for base repro - this is always true
       {
          if(addToFirstBatch && !mTransactionQueueCollection.empty())
          {
@@ -126,8 +126,8 @@ ResponseContext::addTarget(std::auto_ptr<repro::Target> target, bool beginImmedi
 
 bool
 ResponseContext::addTargetBatch(std::list<Target*>& targets,
-                                 bool highPriority,
-                                 bool addToFirstBatch)
+                                bool highPriority,
+                                bool addToFirstBatch)
 {
    std::list<resip::Data> queue;
    Target* target=0;
@@ -144,7 +144,6 @@ ResponseContext::addTargetBatch(std::list<Target*>& targets,
       return false;
    }
 
-   
    for(it=targets.begin();it!=targets.end();it++)
    {
       target=*it;
@@ -186,7 +185,7 @@ ResponseContext::addTargetBatch(std::list<Target*>& targets,
    }
    else
    {
-      if(highPriority)
+      if(highPriority)  // note: for base repro - this is always false
       {
          mTransactionQueueCollection.push_front(queue);
       }
@@ -199,29 +198,9 @@ ResponseContext::addTargetBatch(std::list<Target*>& targets,
    return true;
 }
 
-bool
-ResponseContext::addOutboundBatch(std::map<resip::Data, std::list<Target*> > batch)
-{
-   std::map<resip::Data, std::list<Target*> >::iterator i;
-   for(i=batch.begin();i!=batch.end();++i)
-   {
-      std::list<resip::Data>& subList=mOutboundMap[i->first];
-      while(!i->second.empty())
-      {
-         Target* target = i->second.front();
-         mCandidateTransactionMap[target->tid()]=target;
-         i->second.pop_front();
-         subList.push_back(target->tid());
-      }
-   }
-   
-   return true;
-}
-
 bool 
 ResponseContext::beginClientTransactions()
 {
-   
    bool result=false;
    
    if(mCandidateTransactionMap.empty())
@@ -233,7 +212,7 @@ ResponseContext::beginClientTransactions()
    {
       if(!isDuplicate(i->second) && !mRequestContext.mHaveSentFinalResponse)
       {
-         mTargetList.push_back(i->second->rec());
+         mTargetList.push_back(i->second->rec());  // Add to Target list for future duplicate detection
          beginClientTransaction(i->second);
          result=true;
          // see rfc 3261 section 16.6
@@ -274,8 +253,8 @@ ResponseContext::beginClientTransaction(const resip::Data& tid)
       return false;
    }
    
-   mTargetList.push_back(i->second->rec());
-   
+   mTargetList.push_back(i->second->rec()); // Add to Target list for future duplicate detection
+
    beginClientTransaction(i->second);
    mActiveTransactionMap[i->second->tid()] = i->second;
    InfoLog(<< "Creating new client transaction " << i->second->tid() << " -> " << i->second->uri());
@@ -333,15 +312,7 @@ ResponseContext::cancelAllClientTransactions()
       }
    }
 
-   for (TransactionMap::iterator j = mCandidateTransactionMap.begin(); 
-        j != mCandidateTransactionMap.end();)
-   {
-      cancelClientTransaction(j->second);
-      mTerminatedTransactionMap[j->second->tid()] = j->second;
-      TransactionMap::iterator temp = j;
-      j++;
-      mCandidateTransactionMap.erase(temp);
-   }
+   clearCandidateTransactions();
    
    return true;
 
@@ -363,7 +334,6 @@ ResponseContext::clearCandidateTransactions()
    }
    
    return result;
-
 }
 
 bool 
@@ -548,8 +518,16 @@ ResponseContext::beginClientTransaction(repro::Target* target)
 
    SipMessage& orig=mRequestContext.getOriginalRequest();
    SipMessage request(orig);
-      
-   request.header(h_RequestLine).uri() = target->uri(); 
+
+   // If the target has a ;lr parameter, then perform loose routing
+   if(target->uri().exists(p_lr))
+   {
+      request.header(h_Routes).push_front(NameAddr(target->uri()));
+   }
+   else
+   {
+      request.header(h_RequestLine).uri() = target->uri();
+   }
 
    // .bwc. Proxy checks whether this is valid, and rejects if not.
    request.header(h_MaxForwards).value()--;
@@ -615,7 +593,6 @@ ResponseContext::beginClientTransaction(repro::Target* target)
    // !jf! unleash the baboons here
    // a baboon might adorn the message, record call logs or CDRs, might
    // insert loose routes on the way to the next hop
-   
    Helper::processStrictRoute(request);
    
    //This is where the request acquires the tid of the Target. The tids 
@@ -1263,7 +1240,6 @@ ResponseContext::cancelClientTransaction(repro::Target* target)
    {
       target->status() = Target::Terminated;
    }
-
 }
 
 void 
@@ -1451,7 +1427,6 @@ ResponseContext::forwardBestResponse()
    {
       cancelActiveClientTransactions();
    }
-   
    
    if(mBestResponse.header(h_StatusLine).statusCode() == 503)
    {

@@ -41,8 +41,7 @@ LocationServer::process(RequestContext& context)
       std::list<Target*> batch;
       std::map<resip::Data,resip::ContactList> outboundBatch;
       UInt64 now = Timer::getTimeSecs();
-      for ( resip::ContactList::iterator i  = contacts.begin()
-               ; i != contacts.end()    ; ++i)
+      for(resip::ContactList::iterator i  = contacts.begin(); i != contacts.end(); ++i)
       {
          resip::ContactInstanceRecord contact = *i;
          if (contact.mRegExpires > now)
@@ -70,7 +69,7 @@ LocationServer::process(RequestContext& context)
 
       std::map<resip::Data,resip::ContactList>::iterator o;
       
-      for(o=outboundBatch.begin();o!=outboundBatch.end();++o)
+      for(o=outboundBatch.begin(); o!=outboundBatch.end(); ++o)
       {
          o->second.sort(OutboundTarget::instanceCompare);
          OutboundTarget* ot = new OutboundTarget(o->first, o->second);
@@ -79,8 +78,10 @@ LocationServer::process(RequestContext& context)
       
       if(!batch.empty())
       {
-         batch.sort(Target::targetPtrCompare);
-         context.getResponseContext().addTargetBatch(batch, false /* high priority */, mParallelForkStaticRoutes /* addToFirstBatch */);
+         batch.sort(Target::priorityMetricCompare);
+         context.getResponseContext().addTargetBatch(batch, 
+                                                     false /* high priority */, 
+                                                     mParallelForkStaticRoutes /* addToFirstBatch */);
          //ResponseContext should be consuming the vector
          assert(batch.empty());
       }

@@ -18,8 +18,8 @@ signalHandler(int signo)
 }
 
 /*
-   Extending Repro by adding custom monkeys to the chain is as easy as overriding the 
-   ReproRunner class virutal methods makeRequestProcessorChain, makeResponseProcessorChain 
+   Extending Repro by adding custom processors to the chain is as easy as overriding the 
+   ReproRunner class virtual methods makeRequestProcessorChain, makeResponseProcessorChain 
    and/or makeTargetProcessorChain and adding your Processor to the chain.  Create
    an instance of your overridden ReproRunner class and call run to start everything 
    up.
@@ -58,7 +58,7 @@ signalHandler(int signo)
       virtual void makeRequestProcessorChain(repro::ProcessorChain& chain)
       {
          ReproRunner::makeRequestProcessorChain(chain);
-         chain.addProcessor(std::auto_ptr<Processor>(new RouteNotFound(*mProxyConfig))); 
+         chain.addProcessor(std::auto_ptr<Processor>(new MyCustomProcessor(*mProxyConfig))); 
       }
    };
 

@@ -49,17 +49,18 @@ StaticRoute::process(RequestContext& context)
                                                     event));
    bool requireAuth = false;
    if(!context.getKeyValueStore().getBoolValue(IsTrustedNode::mFromTrustedNodeKey) && 
-      msg.method() != ACK && 
+      msg.method() != ACK &&  // Don't challenge ACK and BYE requests
       msg.method() != BYE)
    {
-      for ( RouteStore::UriList::const_iterator i = targets.begin();
-            i != targets.end(); i++ )
-      {      
+      requireAuth = !mNoChallenge;
+      //for ( RouteStore::UriList::const_iterator i = targets.begin();
+      //      i != targets.end(); i++ )
+      //{      
          // !rwm! TODO would be useful to check if these targets require authentication
          // but for know we will just fail safe and assume that all routes require auth
          // if the sender is not trusted
-         requireAuth |= !mNoChallenge;
-      }
+      //   requireAuth |= !mNoChallenge;
+      //}
    }
 
    if (requireAuth && context.getDigestIdentity().empty())
@@ -72,26 +73,16 @@ StaticRoute::process(RequestContext& context)
    }
    else
    {
-      for ( RouteStore::UriList::const_iterator i = targets.begin();
-            i != targets.end(); i++ )
+      for (RouteStore::UriList::const_iterator i = targets.begin();
+           i != targets.end(); i++ )
       {
-         if(i->exists(p_lr))
-         {
-            InfoLog(<< "Adding loose route target, route to " << *i << " with target " << msg.header(h_RequestLine).uri());
-            msg.header(h_Routes).push_front(NameAddr(*i));
-            context.getResponseContext().addTarget(NameAddr(msg.header(h_RequestLine).uri()));
-            return Processor::SkipThisChain;
-         }
          //Targets are only added after authentication
          InfoLog(<< "Adding target " << *i );
+
          // .slg. adding StaticRoutes as QValueTargets allows them to be processed before the QValueTargets
          //       added in the LocationServer monkey - since all QValueTargets are processed before simple Targets
-         ContactInstanceRecord targetAddr;
-         targetAddr.mContact.uri() = *i;
-         targetAddr.mContact.param(p_q).setValue(1000);
-         std::auto_ptr<Target> target(new QValueTarget(targetAddr));
+         std::auto_ptr<Target> target(new QValueTarget(*i));
          context.getResponseContext().addTarget(target, false /* beginImmediately */, mParallelForkStaticRoutes /* addToFirstBatch */);
-         //context.addTarget(NameAddr(*i));
       }
    }
    
