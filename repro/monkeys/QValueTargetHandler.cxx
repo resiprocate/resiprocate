@@ -33,7 +33,7 @@ QValueTargetHandler::QValueTargetHandler(ProxyConfig& config)
    mCancelBetweenForkGroups=config.getConfigBool("QValueCancelBetweenForkGroups", true);
    mWaitForTerminate=config.getConfigBool("QValueWaitForTerminateBetweenForkGroups", true);
    mDelayBetweenForkGroups=config.getConfigInt("QValueMsBetweenForkGroups", 3000);
-   mCancellationDelay=config.getConfigInt("QValueMsBeforeCancel", 3000);
+   mCancellationDelay=config.getConfigInt("QValueMsBeforeCancel", 30000);
 }
 
 QValueTargetHandler::~QValueTargetHandler()

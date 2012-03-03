@@ -1049,7 +1049,7 @@ void  // Baboons
 ReproRunner::makeTargetProcessorChain(ProcessorChain& chain)
 {
    assert(mProxyConfig);
-   if(mProxyConfig->getConfigBool("QValue", false))
+   if(mProxyConfig->getConfigBool("QValue", true))
    {
       // Add q value target handler baboon
       chain.addProcessor(std::auto_ptr<Processor>(new QValueTargetHandler(*mProxyConfig))); 
