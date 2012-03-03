@@ -77,7 +77,7 @@ AmIResponsible::process(RequestContext& context)
          // !bwc! Um, then all anyone has to do to get us to be their relay
          //       is throw in a spurious to-tag...
          //       This smells funny. I am commenting it out.
-         // .slg. Putting code back in and clarifying the funny smell.....
+         // .slg. Putting the ood check back in and clarifying the funny smell...
          //       We only want to do this check for out of dialog requests, since 
          //       mid-dialog requests could be 403'd otherwise.  Consider
          //       an INVITE request from a repro domain user to a user in 
@@ -89,11 +89,15 @@ AmIResponsible::process(RequestContext& context)
          //       us to relay by placing a spurious to tag in the request still 
          //       stands. Perhaps we ought to be checking the To header domain in 
          //       this case - however that is also weak, since the To header is not
-         //       used in routing and easily be set to a URI in our domain to trick
-         //       repro into forwarding.  Note:  From header domain checking is
+         //       used in routing and can easily be set to a URI in our domain to
+         //       trick repro into forwarding.  Note:  From header domain checking is
          //       stronger than To header domain checking, since if the domain is 
          //       ours, then it must pass Digest Authentication (at least for non 
          //       ACK and BYE requests).
+         // .bwc. I think that the only real way to solve the 
+         //       I-don't-want-to-be-used-as-a-relay problem is crypto; specifically 
+         //       Record-Route with crypto that states "Yeah, I set up this dialog, 
+         //       let it through".
          if (!request.header(h_To).exists(p_tag))
          {
             // Ensure From header is well formed
