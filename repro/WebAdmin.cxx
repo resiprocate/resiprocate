@@ -791,20 +791,20 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
             }
             catch(resip::ParseBuffer::Exception& e)
             {
-               InfoLog(<< "Registration add: path " << regPath << " was malformed: " << e);
-               s << "<p>Error parsing: " << regPath << "</p>\n";
+               InfoLog(<< "Registration add: aor " << regAor << " was malformed: " << e);
+               s << "<p>Error parsing: AOR=" << regAor << "</p>\n";
             }  
          }
          catch(resip::ParseBuffer::Exception& e)
          {
-            InfoLog(<< "Registration add: aor " << regAor << " was malformed: " << e);
-            s << "<p>Error parsing: " << regAor << "</p>\n";
+            InfoLog(<< "Registration add: path " << regPath << " was malformed: " << e);
+            s << "<p>Error parsing: Path=" << regPath << "</p>\n";
          }
       }
       catch(resip::ParseBuffer::Exception& e)
       {
          InfoLog(<< "Registration add: contact " << regContact << " was malformed: " << e);
-         s << "<p>Error parsing: " << regContact << "</p>\n";
+         s << "<p>Error parsing: Contact=" << regContact << "</p>\n";
       }
    }   
    
