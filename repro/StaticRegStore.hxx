@@ -1,7 +1,7 @@
 #if !defined(REPRO_STATICREGSTORE_HXX)
 #define REPRO_STATICREGSTORE_HXX
 
-#include <list>
+#include <map>
 #include "rutil/Data.hxx"
 #include "rutil/RWMutex.hxx"
 #include "resip/stack/NameAddr.hxx"
