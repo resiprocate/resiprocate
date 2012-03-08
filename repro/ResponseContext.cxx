@@ -590,7 +590,6 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       request.header(h_Routes).append(target->rec().mSipPath);
    }
 
-   // !jf! unleash the baboons here
    // a baboon might adorn the message, record call logs or CDRs, might
    // insert loose routes on the way to the next hop
    Helper::processStrictRoute(request);
