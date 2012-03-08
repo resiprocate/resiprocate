@@ -47,6 +47,7 @@ protected:
 
    virtual bool createSipStack();
    virtual bool createProxy();
+   virtual void populateRegistrations();
    virtual bool createWebAdmin();
    virtual void createDialogUsageManager();
    virtual void createRegSync();

@@ -525,6 +525,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\StaticRegStore.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\monkeys\StaticRoute.cxx"
 				>
 			</File>
@@ -687,10 +691,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\resip\rend\RendWavePres.hxx"
-				>
-			</File>
-			<File
 				RelativePath=".\ReproServerAuthManager.hxx"
 				>
 			</File>
@@ -716,6 +716,10 @@
 			</File>
 			<File
 				RelativePath=".\monkeys\SimpleTargetHandler.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\StaticRegStore.hxx"
 				>
 			</File>
 			<File

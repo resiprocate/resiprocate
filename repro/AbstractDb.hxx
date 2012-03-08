@@ -61,10 +61,18 @@ class AbstractDb
             short mTlsPort;
       };
 
+      class StaticRegRecord
+      {
+         public:
+            resip::Data mAor;
+            resip::Data mContact;
+      };
+
       typedef resip::Data Key;
       typedef std::vector<RouteRecord> RouteRecordList;
       typedef std::vector<AclRecord> AclRecordList;
       typedef std::vector<ConfigRecord> ConfigRecordList;
+      typedef std::vector<StaticRegRecord> StaticRegRecordList;
 
       virtual bool isSane() = 0;
 
@@ -102,7 +110,14 @@ class AbstractDb
       virtual Key firstConfigKey();// return empty if no more
       virtual Key nextConfigKey(); // return empty if no more 
 
- 
+      // functions for StaticReg Records
+      virtual void addStaticReg( const Key& key, const StaticRegRecord& rec );
+      virtual void eraseStaticReg(  const Key& key );
+      virtual StaticRegRecordList getAllStaticRegs();
+      virtual StaticRegRecord getStaticReg( const Key& key) const;
+      virtual Key firstStaticRegKey();// return empty if no more
+      virtual Key nextStaticRegKey(); // return empty if no more 
+
    protected:
       typedef enum 
       {
@@ -110,6 +125,7 @@ class AbstractDb
          RouteTable,
          AclTable,
          ConfigTable,
+         StaticRegTable,
          MaxTable  // This one MUST be last 
       } Table;
       

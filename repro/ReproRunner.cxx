@@ -532,6 +532,9 @@ ReproRunner::createProxy()
    assert(!mRegistrationPersistenceManager);
    mRegistrationPersistenceManager = new InMemorySyncRegDb(mRegSyncPort ? 86400 /* 24 hours */ : 0 /* removeLingerSecs */);  // !slg! could make linger time a setting
 
+   // Copy contacts from the StaticRegStore to the RegistrationPersistanceManager
+   populateRegistrations();
+
    // Create UserAuthGrabber Worker Thread Pool if auth is enabled
    mSipAuthDisabled = mProxyConfig->getConfigBool("DisableAuth", false);
    assert(!mAuthRequestDispatcher);
@@ -571,6 +574,37 @@ ReproRunner::createProxy()
    mHttpRealm = addDomains(*mProxy, true);
 
    return true;
+}
+
+void 
+ReproRunner::populateRegistrations()
+{
+   assert(mRegistrationPersistenceManager);
+   assert(mProxyConfig);
+   assert(mProxyConfig->getDataStore());
+
+   // Copy contacts from the StaticRegStore to the RegistrationPersistanceManager
+   StaticRegStore::StaticRegRecordMap& staticRegList = mProxyConfig->getDataStore()->mStaticRegStore.getStaticRegList();
+   StaticRegStore::StaticRegRecordMap::iterator it = staticRegList.begin();
+   for(; it != staticRegList.end(); it++)
+   {
+      try
+      {
+         Uri aor(it->second.mAor);
+
+         ContactInstanceRecord rec;
+         rec.mContact = NameAddr(it->second.mContact);
+         rec.mRegExpires = NeverExpire;
+         rec.mSyncContact = true;  // Tag this permanent contact as being a syncronized contact so that it will
+                                    // be syncronized to a paired server (this is actually configuration information)
+         mRegistrationPersistenceManager->updateContact(aor, rec);
+      }
+      catch(resip::ParseBuffer::Exception& e)  
+      {
+         // This should never happen, since the format should be verified before writing to DB
+         ErrLog(<<"Failed to apply a static registration due to parse error: " << e);
+      }
+   }
 }
 
 bool
