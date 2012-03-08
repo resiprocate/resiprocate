@@ -58,17 +58,17 @@ ResponseContext::~ResponseContext()
 }
 
 resip::Data
-ResponseContext::addTarget(const NameAddr& addr, bool beginImmediately, bool addToFirstBatch)
+ResponseContext::addTarget(const NameAddr& addr, bool beginImmediately)
 {
    InfoLog (<< "Adding candidate " << addr);
    std::auto_ptr<Target> target(new Target(addr));
    Data tid=target->tid();
-   addTarget(target, beginImmediately, addToFirstBatch);
+   addTarget(target, beginImmediately);
    return tid;
 }
 
 bool
-ResponseContext::addTarget(std::auto_ptr<repro::Target> target, bool beginImmediately, bool addToFirstBatch)
+ResponseContext::addTarget(std::auto_ptr<repro::Target> target, bool beginImmediately)
 {
    if(mRequestContext.mHaveSentFinalResponse || !target.get())
    {
@@ -105,16 +105,9 @@ ResponseContext::addTarget(std::auto_ptr<repro::Target> target, bool beginImmedi
    {
       if(target->mShouldAutoProcess)  // note: for base repro - this is always true
       {
-         if(addToFirstBatch && !mTransactionQueueCollection.empty())
-         {
-            mTransactionQueueCollection.front().push_back(target->tid());
-         }
-         else
-         {
-            std::list<resip::Data> queue;
-            queue.push_back(target->tid());
-            mTransactionQueueCollection.push_back(queue);
-         }
+         std::list<resip::Data> queue;
+         queue.push_back(target->tid());
+         mTransactionQueueCollection.push_back(queue);
       }
 
       Target* toAdd=target.release();
@@ -126,8 +119,7 @@ ResponseContext::addTarget(std::auto_ptr<repro::Target> target, bool beginImmedi
 
 bool
 ResponseContext::addTargetBatch(std::list<Target*>& targets,
-                                bool highPriority,
-                                bool addToFirstBatch)
+                                bool highPriority)
 {
    std::list<resip::Data> queue;
    Target* target=0;
@@ -167,32 +159,13 @@ ResponseContext::addTargetBatch(std::list<Target*>& targets,
 
    targets.clear();
    
-   if(addToFirstBatch)
+   if(highPriority)  // note: for base repro - this is always false
    {
-      if(!mTransactionQueueCollection.empty())
-      {
-         //mTransactionQueueCollection.front().merge(queue); !slg! list merge requires that both lists first be sorted - implementing manual merge
-         std::list<resip::Data>::iterator it = queue.begin();
-         for(; it != queue.end(); it++)
-         {
-            mTransactionQueueCollection.front().push_back(*it);
-         }
-      }
-      else
-      {
-         mTransactionQueueCollection.push_back(queue);
-      }
+      mTransactionQueueCollection.push_front(queue);
    }
    else
    {
-      if(highPriority)  // note: for base repro - this is always false
-      {
-         mTransactionQueueCollection.push_front(queue);
-      }
-      else
-      {
-         mTransactionQueueCollection.push_back(queue);
-      }
+      mTransactionQueueCollection.push_back(queue);
    }
    
    return true;

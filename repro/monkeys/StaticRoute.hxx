@@ -21,6 +21,7 @@ class StaticRoute: public Processor
       RouteStore& mRouteStore;
       bool mNoChallenge;
       bool mParallelForkStaticRoutes;
+      bool mContinueProcessingAfterRoutesFound;
       bool mUseAuthInt;
       void challengeRequest(repro::RequestContext &rc, resip::Data &realm);
 };

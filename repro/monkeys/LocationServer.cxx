@@ -82,9 +82,7 @@ LocationServer::process(RequestContext& context)
          // above), however list::sort is stable, so it's safe to sort twice, as relative order 
          // of equal elements is preserved
          batch.sort(Target::priorityMetricCompare);  
-         context.getResponseContext().addTargetBatch(batch, 
-                                                     false /* high priority */, 
-                                                     mParallelForkStaticRoutes /* addToFirstBatch */);
+         context.getResponseContext().addTargetBatch(batch, false /* high priority */);
          //ResponseContext should be consuming the vector
          assert(batch.empty());
       }

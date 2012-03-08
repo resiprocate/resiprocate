@@ -11,7 +11,7 @@ namespace repro
   {
     public:
       LocationServer(ProxyConfig& config, resip::RegistrationPersistenceManager& store)
-       :mStore(store),mParallelForkStaticRoutes(config.getConfigBool("ParallelForkStaticRoutes", false)){};
+         : mStore(store)  {};
 
       virtual ~LocationServer(){};
 
@@ -20,7 +20,6 @@ namespace repro
 
     private:
       resip::RegistrationPersistenceManager& mStore;
-      bool mParallelForkStaticRoutes;
   };
 }
 #endif

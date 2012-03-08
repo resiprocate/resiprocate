@@ -48,7 +48,7 @@ class ResponseContext
          
          @note Targets are not checked for duplicate uris until an attempt is made to begin them.
       */
-      resip::Data addTarget(const resip::NameAddr& target, bool beginImmediately=false, bool addToFirstBatch=false);
+      resip::Data addTarget(const resip::NameAddr& target, bool beginImmediately=false);
 
       /**
          Adds this Target to the collection of Targets.
@@ -68,7 +68,7 @@ class ResponseContext
          @note Targets are not checked for duplicate uris until an attempt 
             is made to start them.
       */
-      bool addTarget(std::auto_ptr<repro::Target> target, bool beginImmediately=false, bool addToFirstBatch=false);
+      bool addTarget(std::auto_ptr<repro::Target> target, bool beginImmediately=false);
 
       /**
          Adds a batch of Targets. 
@@ -91,9 +91,7 @@ class ResponseContext
          will not break per se, but oddball target processing behavior might
          result.
       */
-      bool addTargetBatch(std::list<Target*>& targets,
-                           bool highPriority=false,
-                           bool addToFirstBatch=false);
+      bool addTargetBatch(std::list<Target*>& targets, bool highPriority=false);
             
       /**
          Begins all Candidate client transactions.
