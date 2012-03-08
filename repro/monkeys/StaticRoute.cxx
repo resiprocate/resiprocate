@@ -22,6 +22,7 @@ StaticRoute::StaticRoute(ProxyConfig& config) :
    mRouteStore(config.getDataStore()->mRouteStore),
    mNoChallenge(config.getConfigBool("DisableAuth", false)),
    mParallelForkStaticRoutes(config.getConfigBool("ParallelForkStaticRoutes", false)),
+   mContinueProcessingAfterRoutesFound(config.getConfigBool("ContinueProcessingAfterRoutesFound", false)),
    mUseAuthInt(!config.getConfigBool("DisableAuthInt", false))
 {}
 
@@ -73,16 +74,32 @@ StaticRoute::process(RequestContext& context)
    }
    else
    {
+      std::list<Target*> parallelBatch;
       for (RouteStore::UriList::const_iterator i = targets.begin();
            i != targets.end(); i++ )
       {
          //Targets are only added after authentication
          InfoLog(<< "Adding target " << *i );
 
-         // .slg. adding StaticRoutes as QValueTargets allows them to be processed before the QValueTargets
-         //       added in the LocationServer monkey - since all QValueTargets are processed before simple Targets
-         std::auto_ptr<Target> target(new QValueTarget(*i));
-         context.getResponseContext().addTarget(target, false /* beginImmediately */, mParallelForkStaticRoutes /* addToFirstBatch */);
+         if(mParallelForkStaticRoutes)
+         {
+            Target* target = new Target(*i);
+            parallelBatch.push_back(target);
+         }
+         else
+         {
+            // Add Simple Target
+            context.getResponseContext().addTarget(NameAddr(*i));
+         }
+      }
+      if(parallelBatch.size() > 0)
+      {
+         context.getResponseContext().addTargetBatch(parallelBatch, false /* highPriority */);
+      }
+
+      if(!mContinueProcessingAfterRoutesFound)
+      {
+         return Processor::SkipThisChain;
       }
    }
    
