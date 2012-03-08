@@ -53,4 +53,14 @@ CREATE TABLE `configsavp` (
   PRIMARY KEY (attr) 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+--
+-- Table structure for table `staticregsavp`
+--
+
+DROP TABLE IF EXISTS `staticregsavp`;
+CREATE TABLE `staticregsavp` (
+  `attr` VARCHAR(255) NOT NULL,
+  `value` VARCHAR(1024),
+  PRIMARY KEY (attr) 
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

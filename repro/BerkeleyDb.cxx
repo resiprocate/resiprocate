@@ -61,7 +61,7 @@ BerkeleyDb::init( const Data& dbPath, const Data& dbName )
 
    mSane = true;
    
-   assert( MaxTable <= 4 );
+   assert( MaxTable <= 5 );
    
    for (int i=0;i<MaxTable;i++)
    {
@@ -84,6 +84,8 @@ BerkeleyDb::init( const Data& dbPath, const Data& dbName )
             fileName += "_acl.db"; break;
          case ConfigTable:
             fileName += "_config.db"; break;
+         case StaticRegTable:
+            fileName += "_staticreg.db"; break;
          default:
             assert(0);
       }

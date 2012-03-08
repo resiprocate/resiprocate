@@ -264,6 +264,7 @@ AbstractDb::writeRoute( const Key& oldkey, const Key& newkey, const RouteRecord&
    dbWriteRecord(RouteTable,newkey,data);
 }
 
+
 AbstractDb::RouteRecord 
 AbstractDb::getRoute( const AbstractDb::Key& key) const
 { 
@@ -447,8 +448,6 @@ AbstractDb::nextAclKey()
 }
 
 
-
-
 void 
 AbstractDb::addConfig( const AbstractDb::Key& key, 
                  const AbstractDb::ConfigRecord& rec )
@@ -552,12 +551,105 @@ AbstractDb::nextConfigKey()
    return dbNextKey(ConfigTable);
 }
 
+void 
+AbstractDb::addStaticReg( const AbstractDb::Key& key, 
+                          const AbstractDb::StaticRegRecord& rec )
+{ 
+   assert( !key.empty() );
+   
+   Data data;
+   {
+      oDataStream s(data);
+      
+      short version=1;
+      assert( sizeof( version) == 2 );
+      s.write( (char*)(&version) , sizeof(version) );
+      
+      encodeString( s, rec.mAor );
+      encodeString( s, rec.mContact );
+
+      s.flush();
+   }
+   
+   dbWriteRecord( StaticRegTable, key, data );
+}
 
 
+void 
+AbstractDb::eraseStaticReg(  const AbstractDb::Key& key )
+{  
+   dbEraseRecord (StaticRegTable, key);
+}
 
 
+AbstractDb::StaticRegRecord 
+AbstractDb::getStaticReg( const AbstractDb::Key& key) const
+{ 
+   AbstractDb::StaticRegRecord rec;
+   Data data;
+   bool stat = dbReadRecord( StaticRegTable, key, data );
+   if ( !stat )
+   {
+      return rec;
+   }
+   if ( data.empty() )
+   {
+      return rec;
+   }
+
+   iDataStream s(data);
+
+   short version;
+   assert( sizeof(version) == 2 );
+   s.read( (char*)(&version), sizeof(version) );
+   
+   if ( version == 1 )
+   {
+      rec.mAor = decodeString( s );
+      rec.mContact = decodeString ( s );
+   }
+   else
+   {
+      // unkonwn version 
+      ErrLog( <<"Data in StaticReg database with unknown version " << version );
+      ErrLog( <<"record size is " << data.size() );
+   }
+      
+   return rec;
+}
 
 
+AbstractDb::StaticRegRecordList 
+AbstractDb::getAllStaticRegs()
+{
+   AbstractDb::StaticRegRecordList ret;
+   
+   AbstractDb::Key key = firstStaticRegKey();
+   while ( !key.empty() )
+   {
+      AbstractDb::StaticRegRecord rec = getStaticReg(key);
+      
+      ret.push_back(rec);
+            
+      key = nextStaticRegKey();
+   }
+   
+   return ret;
+}
+
+
+AbstractDb::Key 
+AbstractDb::firstStaticRegKey()
+{ 
+   return dbFirstKey(StaticRegTable);
+}
+
+
+AbstractDb::Key 
+AbstractDb::nextStaticRegKey()
+{ 
+   return dbNextKey(StaticRegTable);
+}
 
 
 /* ====================================================================

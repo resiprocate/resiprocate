@@ -1,51 +1,57 @@
-#if !defined(RESIP_REGISTRATIONPERSISTENCEMANAGER_HXX)
-#define RESIP_REGISTRATIONPERSISTENCEMANAGER_HXX
+#if !defined(REPRO_STATICREGSTORE_HXX)
+#define REPRO_STATICREGSTORE_HXX
 
 #include <list>
-#include "resip/stack/Uri.hxx"
-#include "resip/dum/ContactInstanceRecord.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/RWMutex.hxx"
+#include "resip/stack/NameAddr.hxx"
+#include "repro/AbstractDb.hxx"
 
-namespace resip
+namespace repro
 {
 
-/** Abstract interface of a datastore of all registered endpoints processed by DUM. Derived classes implement the
-    actual storage of AOR's mapped to contact information.  resip::InMemoryRegistrationDatabase is an example of a local datastore.
-  */
-class RegistrationPersistenceManager
+class StaticRegStore
 {
-  public:
-    typedef std::list<Uri> UriList;
+   public:
 
-    typedef enum
-    {
-      CONTACT_CREATED,
-      CONTACT_UPDATED
-    } update_status_t;
+      typedef resip::Data Key;
 
-    RegistrationPersistenceManager() {}
-    virtual ~RegistrationPersistenceManager() {}
+      class StaticRegRecord
+      {
+         public:
+            StaticRegRecord() {}
+            StaticRegRecord(const resip::Uri& aor, const resip::NameAddr& contact) : 
+               mAor(aor), mContact(contact) {}
+            resip::Uri mAor;
+            resip::NameAddr mContact;
+      };
+      // Note:  The map key takes the contact uri and not the full NameAddr
+      typedef std::map<std::pair<resip::Uri, resip::Uri>, StaticRegRecord> StaticRegRecordMap;
 
-    virtual void addAor(const Uri& aor, const ContactList& contacts) = 0;
-    virtual void removeAor(const Uri& aor) = 0;
-    virtual bool aorIsRegistered(const Uri& aor) = 0;
- 
-    virtual void lockRecord(const Uri& aor) = 0;
-    virtual void unlockRecord(const Uri& aor) = 0;
+      StaticRegStore(AbstractDb& db);
+      ~StaticRegStore();
+      
+      void addStaticReg(const resip::Uri& aor,
+                        const resip::NameAddr& contact);
 
-    virtual void getAors(UriList& container) = 0;
+      void eraseStaticReg(const resip::Uri& aor,
+                          const resip::NameAddr& contact);
 
-    virtual update_status_t updateContact(const Uri& aor,
-                                          const ContactInstanceRecord& rec) = 0;
+      // Not thread safe
+      StaticRegRecordMap& getStaticRegList() { return mStaticRegList; }
 
-    virtual void removeContact(const Uri& aor,
-                               const ContactInstanceRecord& rec) = 0;
+   private:
+      AbstractDb& mDb;  
+      
+      Key buildKey(const resip::Data& aor,
+                   const resip::Data& contact) const;
 
-    virtual void getContacts(const Uri& aor, ContactList& container) = 0;  
-
+      resip::RWMutex mMutex;
+      StaticRegRecordMap mStaticRegList;
 };
-}
 
-#endif
+}
+#endif  
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -89,10 +95,4 @@ class RegistrationPersistenceManager
  * DAMAGE.
  * 
  * ====================================================================
- * 
- * This software consists of voluntary contributions made by Vovida
- * Networks, Inc. and many individuals on behalf of Vovida Networks,
- * Inc.  For more information on Vovida Networks, Inc., please see
- * <http://www.vovida.org/>.
- *
  */

@@ -6,6 +6,7 @@
 #include "repro/RouteStore.hxx"
 #include "repro/AclStore.hxx"
 #include "repro/ConfigStore.hxx"
+#include "repro/StaticRegStore.hxx"
 
 
 namespace repro
@@ -24,6 +25,7 @@ class Store
       RouteStore mRouteStore; 
       AclStore mAclStore; 
       ConfigStore mConfigStore;
+      StaticRegStore mStaticRegStore;
     private:
 };
 

@@ -12,6 +12,8 @@
 
 namespace resip
 {
+static const UInt64 NeverExpire = 0xFFFFFFFFFFFFFFFFL;
+
 /** A single contact record, bound to an Aor during registration.
 */
 class ContactInstanceRecord 

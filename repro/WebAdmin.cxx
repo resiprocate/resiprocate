@@ -713,20 +713,32 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
          ContactInstanceRecord rec;
          size_t bar1 = i->mKey2.find("|");
          size_t bar2 = i->mKey2.find("|",bar1+1);
+         size_t bar3 = i->mKey2.find("|",bar2+1);
          
-         if(bar1==Data::npos || bar2 == Data::npos)
+         if(bar1==Data::npos || bar2 == Data::npos || bar3==Data::npos)
          {
             InfoLog(<< "Registration removal key was malformed: " << i->mKey2);
             continue;
          }
          
+         bool staticRegContact=false;
          try
          {
             resip::Data rawNameAddr = i->mKey2.substr(0,bar1).urlDecoded();
             rec.mContact = NameAddr(rawNameAddr);
             rec.mInstance = i->mKey2.substr(bar1+1,bar2-bar1-1).urlDecoded();
             rec.mRegId = i->mKey2.substr(bar2+1,Data::npos).convertInt();
+            staticRegContact = i->mKey2.substr(bar3+1,Data::npos).convertInt() == 1;
+
+            // Remove from RegistrationPersistanceManager
             mRegDb.removeContact(aor, rec);
+
+            if(staticRegContact)
+            {
+               // Remove from StateRegStore
+               mStore.mStaticRegStore.eraseStaticReg(aor, rec.mContact);
+            }
+
             ++j;
          }
          catch(resip::ParseBuffer::Exception& e)
@@ -734,15 +746,64 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
             InfoLog(<< "Registration removal key was malformed: " << e <<
                      " Key was: " << i->mKey2);
          }
-         
       }
       s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
    }
 
+   Dictionary::iterator pos = mHttpParams.find("regAor");
+   if (pos != mHttpParams.end() && (mHttpParams["action"] == "Add")) // found 
+   {
+      Data regAor = mHttpParams["regAor"];
+      Data regContact = mHttpParams["regContact"];
+      
+      ContactInstanceRecord rec;
+      try
+      {
+         rec.mContact = NameAddr(regContact);
+         try
+         {
+            rec.mRegExpires = NeverExpire;
+            rec.mSyncContact = true;  // Tag this permanent contact as being a syncronized contact so that it will
+                                      // be syncronized to a paired server (this is actually configuration information)
+
+            // Add to RegistrationPersistanceManager
+            Uri aor(regAor);
+            mRegDb.updateContact(aor, rec);
+
+            // Add to DB Store
+            mStore.mStaticRegStore.addStaticReg(aor, rec.mContact);
+
+            s << "<p><em>Added</em> permanent registered contact for: " << regAor << "</p>\n";
+         }
+         catch(resip::ParseBuffer::Exception& e)
+         {
+            InfoLog(<< "Registration add: aor " << regAor << " was malformed: " << e);
+            s << "<p>Error parsing: " << regAor << "</p>\n";
+         }
+      }
+      catch(resip::ParseBuffer::Exception& e)
+      {
+         InfoLog(<< "Registration add: contact " << regContact << " was malformed: " << e);
+         s << "<p>Error parsing: " << regContact << "</p>\n";
+      }
+   }   
+   
    s << 
        "<form id=\"showReg\" method=\"get\" action=\"registrations.html\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
       //"<button name=\"removeAllReg\" value=\"\" type=\"button\">Remove All</button>" << endl << 
       //"<hr/>" << endl << 
+
+      "<div class=space>" << endl <<
+      "</div>" << endl <<
+      "<table cellspacing=\"2\" cellpadding=\"0\">" << endl <<
+      "  <tr>" << endl <<
+      "    <td align=\"right\">AOR:</td>" << endl <<
+      "    <td><input type=\"text\" name=\"regAor\" size=\"24\"/></td>" << endl <<
+      "    <td align=\"right\">Contact:</td>" << endl <<
+      "    <td><input type=\"text\" name=\"regContact\" size=\"40\"/></td>" << endl <<
+      "    <td><input type=\"submit\" name=\"action\" value=\"Add\"/></td>" << endl <<
+      "  </tr>" << endl <<
+      "</table>" << endl <<
 
       "<table border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">" << endl << 
 
@@ -751,6 +812,7 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
       "  <td>Contact</td>" << endl << 
       "  <td>Instance ID</td>" << endl <<
       "  <td>Reg ID</td>" << endl <<
+      "  <td>QValue</td>" << endl <<
       "  <td>Path</td>" << endl <<
       "  <td>Expires In</td>" << endl << 
       "  <td><input type=\"submit\" value=\"Remove\"/></td>" << endl << 
@@ -791,15 +853,28 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
 
                s << contact.uri();
                s <<"</td>" << endl 
-                 << "<td> " << instanceId.xmlCharDataEncode() << "</td> <td>" << regId << "</td><td>";
+                 << "<td>" << instanceId.xmlCharDataEncode() 
+                 << "</td><td>" << regId 
+                 << "</td><td>"  << (contact.exists(p_q) ? contact.param(p_q).floatVal() : 1.0f) << "</td><td>";
                NameAddrs::const_iterator naIt = r.mSipPath.begin();
                for(;naIt != r.mSipPath.end(); naIt++)
                {
                   s << naIt->uri() << "<br>" << endl;
                }
-               s <<"</td><td>" << secondsRemaining << "s</td>" << endl
-                 << "  <td>"
-                 << "<input type=\"checkbox\" name=\"remove." << uri << "\" value=\"" << Data::from(contact.uri()).urlEncoded() << "|" << instanceId.urlEncoded() << "|" << regId
+               bool staticRegContact = r.mRegExpires == NeverExpire;
+               if(!staticRegContact)
+               {
+                  s <<"</td><td>" << secondsRemaining << "s</td>" << endl;
+               }
+               else
+               {
+                  s <<"</td><td>Never</td>" << endl;
+               }
+               s << "  <td>"
+                 << "<input type=\"checkbox\" name=\"remove." << uri << "\" value=\"" << Data::from(contact.uri()).urlEncoded() 
+                                                              << "|" << instanceId.urlEncoded() 
+                                                              << "|" << regId
+                                                              << "|" << (staticRegContact ? "1" : "0")
                  << "\"/></td>" << endl
                  << "</tr>" << endl;
             }

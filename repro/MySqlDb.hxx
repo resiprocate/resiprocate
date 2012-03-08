@@ -64,7 +64,7 @@ class MySqlDb: public AbstractDb
       resip::Data mCustomUserAuthQuery;
 
       mutable MYSQL* mConn;
-      mutable MYSQL_RES* mResult[4];
+      mutable MYSQL_RES* mResult[5];
       mutable bool mConnected;
 
       const char* tableName( Table table ) const;

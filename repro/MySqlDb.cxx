@@ -41,7 +41,7 @@ MySqlDb::MySqlDb(const Data& server,
 { 
    InfoLog( << "Using MySQL DB with server=" << server << ", user=" << user << ", dbName=" << databaseName << ", port=" << port);
 
-   assert( MaxTable <= 4 );
+   assert( MaxTable <= 5 );
    for (int i=0;i<MaxTable;i++)
    {
       mResult[i]=0;
@@ -460,6 +460,7 @@ static const char usersavp[] = "usersavp";
 static const char routesavp[] = "routesavp";
 static const char aclsavp[] = "aclsavp";
 static const char configsavp[] = "configsavp";
+static const char staticregsavp[] = "staticregsavp";
 
 const char*
 MySqlDb::tableName(Table table) const
@@ -475,6 +476,8 @@ MySqlDb::tableName(Table table) const
          return aclsavp; 
       case ConfigTable:
          return configsavp;
+      case StaticRegTable:
+         return staticregsavp;
       default:
          assert(0);
    }

@@ -71,14 +71,17 @@ LocationServer::process(RequestContext& context)
       
       for(o=outboundBatch.begin(); o!=outboundBatch.end(); ++o)
       {
-         o->second.sort(OutboundTarget::instanceCompare);
+         o->second.sort(OutboundTarget::instanceCompare);  // Orders records by lastUpdate time
          OutboundTarget* ot = new OutboundTarget(o->first, o->second);
          batch.push_back(ot);
       }
       
       if(!batch.empty())
       {
-         batch.sort(Target::priorityMetricCompare);
+         // Note: some elements of list are already in a sorted order (see outbound bactch sorting
+         // above), however list::sort is stable, so it's safe to sort twice, as relative order 
+         // of equal elements is preserved
+         batch.sort(Target::priorityMetricCompare);  
          context.getResponseContext().addTargetBatch(batch, 
                                                      false /* high priority */, 
                                                      mParallelForkStaticRoutes /* addToFirstBatch */);
