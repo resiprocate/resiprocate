@@ -66,6 +66,7 @@ class AbstractDb
          public:
             resip::Data mAor;
             resip::Data mContact;
+            resip::Data mPath;
       };
 
       typedef resip::Data Key;

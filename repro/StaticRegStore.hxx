@@ -20,10 +20,11 @@ class StaticRegStore
       {
          public:
             StaticRegRecord() {}
-            StaticRegRecord(const resip::Uri& aor, const resip::NameAddr& contact) : 
-               mAor(aor), mContact(contact) {}
+            StaticRegRecord(const resip::Uri& aor, const resip::NameAddr& contact, const resip::NameAddrs& path) : 
+               mAor(aor), mContact(contact), mPath(path) {}
             resip::Uri mAor;
             resip::NameAddr mContact;
+            resip::NameAddrs mPath;
       };
       // Note:  The map key takes the contact uri and not the full NameAddr
       typedef std::map<std::pair<resip::Uri, resip::Uri>, StaticRegRecord> StaticRegRecordMap;
@@ -32,7 +33,8 @@ class StaticRegStore
       ~StaticRegStore();
       
       void addStaticReg(const resip::Uri& aor,
-                        const resip::NameAddr& contact);
+                        const resip::NameAddr& contact,
+                        const resip::NameAddrs& path);
 
       void eraseStaticReg(const resip::Uri& aor,
                           const resip::NameAddr& contact);

@@ -352,6 +352,7 @@
     <ClCompile Include="RRDecorator.cxx" />
     <ClCompile Include="monkeys\SimpleStaticRoute.cxx" />
     <ClCompile Include="monkeys\SimpleTargetHandler.cxx" />
+    <ClCompile Include="StaticRegStore.cxx" />
     <ClCompile Include="monkeys\StaticRoute.cxx" />
     <ClCompile Include="Store.cxx" />
     <ClCompile Include="monkeys\StrictRouteFixup.cxx" />
@@ -400,6 +401,7 @@
     <ClInclude Include="RRDecorator.hxx" />
     <ClInclude Include="monkeys\SimpleStaticRoute.hxx" />
     <ClInclude Include="monkeys\SimpleTargetHandler.hxx" />
+    <ClCompile Include="StaticRegStore.hxx" />
     <ClInclude Include="monkeys\StaticRoute.hxx" />
     <ClInclude Include="Store.hxx" />
     <ClInclude Include="monkeys\StrictRouteFixup.hxx" />

@@ -755,25 +755,45 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
    {
       Data regAor = mHttpParams["regAor"];
       Data regContact = mHttpParams["regContact"];
-      
+      Data regPath = mHttpParams["regPath"];
+
       ContactInstanceRecord rec;
       try
       {
          rec.mContact = NameAddr(regContact);
          try
          {
-            rec.mRegExpires = NeverExpire;
-            rec.mSyncContact = true;  // Tag this permanent contact as being a syncronized contact so that it will
+            ParseBuffer pb(regPath);
+            Data path;
+            const char* anchor = pb.position();
+            while(!pb.eof())
+            {
+               pb.skipToChar(',');
+               pb.data(path, anchor);
+               rec.mSipPath.push_back(NameAddr(path));
+               if(!pb.eof()) pb.skipChar();  // skip over comma
+               anchor = pb.position();
+            }
+            try
+            {
+               rec.mRegExpires = NeverExpire;
+               rec.mSyncContact = true;  // Tag this permanent contact as being a syncronized contact so that it will
                                       // be syncronized to a paired server (this is actually configuration information)
 
-            // Add to RegistrationPersistanceManager
-            Uri aor(regAor);
-            mRegDb.updateContact(aor, rec);
+               // Add to RegistrationPersistanceManager
+               Uri aor(regAor);
+               mRegDb.updateContact(aor, rec);
 
-            // Add to DB Store
-            mStore.mStaticRegStore.addStaticReg(aor, rec.mContact);
-
-            s << "<p><em>Added</em> permanent registered contact for: " << regAor << "</p>\n";
+               // Add to DB Store
+               mStore.mStaticRegStore.addStaticReg(aor, rec.mContact, rec.mSipPath);
+   
+               s << "<p><em>Added</em> permanent registered contact for: " << regAor << "</p>\n";
+            }
+            catch(resip::ParseBuffer::Exception& e)
+            {
+               InfoLog(<< "Registration add: path " << regPath << " was malformed: " << e);
+               s << "<p>Error parsing: " << regPath << "</p>\n";
+            }  
          }
          catch(resip::ParseBuffer::Exception& e)
          {
@@ -798,10 +818,15 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
       "<table cellspacing=\"2\" cellpadding=\"0\">" << endl <<
       "  <tr>" << endl <<
       "    <td align=\"right\">AOR:</td>" << endl <<
-      "    <td><input type=\"text\" name=\"regAor\" size=\"24\"/></td>" << endl <<
+      "    <td><input type=\"text\" name=\"regAor\" size=\"40\"/></td>" << endl <<
       "    <td align=\"right\">Contact:</td>" << endl <<
       "    <td><input type=\"text\" name=\"regContact\" size=\"40\"/></td>" << endl <<
+      "  </tr>" << endl <<
+      "  <tr>" << endl <<
+      "    <td align=\"right\">Path:</td>" << endl <<
+      "    <td><input type=\"text\" name=\"regPath\" size=\"40\"/></td>" << endl <<
       "    <td><input type=\"submit\" name=\"action\" value=\"Add\"/></td>" << endl <<
+      "  </tr>" << endl <<
       "  </tr>" << endl <<
       "</table>" << endl <<
 

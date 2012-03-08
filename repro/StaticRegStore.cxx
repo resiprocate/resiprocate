@@ -24,7 +24,20 @@ StaticRegStore::StaticRegStore(AbstractDb& db):
       {
          Uri aor(rec.mAor);
          NameAddr contact(rec.mContact);
-         mStaticRegList[make_pair(aor, contact.uri())] = StaticRegRecord(aor, contact);
+         NameAddrs paths;
+         Data path;
+         ParseBuffer pb(rec.mPath);
+         const char* anchor = pb.position();
+         while(!pb.eof())
+         {
+            pb.skipToChar(',');
+            pb.data(path, anchor);
+            paths.push_back(NameAddr(path));
+            if(!pb.eof()) pb.skipChar();  // skip over comma
+            anchor = pb.position();
+         }
+
+         mStaticRegList[make_pair(aor, contact.uri())] = StaticRegRecord(aor, contact, paths);
       }
       catch(resip::ParseBuffer::Exception& e)  
       {
@@ -44,7 +57,8 @@ StaticRegStore::~StaticRegStore()
       
 void 
 StaticRegStore::addStaticReg(const resip::Uri& aor,
-                             const resip::NameAddr& contact)
+                             const resip::NameAddr& contact,
+                             const resip::NameAddrs& path)
 {
    Key removeKey;
    Data aorData(Data::from(aor));
@@ -61,10 +75,11 @@ StaticRegStore::addStaticReg(const resip::Uri& aor,
          // Update Map
          it->second.mAor = aor;
          it->second.mContact = contact;
+         it->second.mPath = path;
       }
       else
       {
-         mStaticRegList[mapKey] = StaticRegRecord(aor, contact);
+         mStaticRegList[mapKey] = StaticRegRecord(aor, contact, path);
       }
    }
 
@@ -80,6 +95,15 @@ StaticRegStore::addStaticReg(const resip::Uri& aor,
    AbstractDb::StaticRegRecord rec;
    rec.mAor = aorData;
    rec.mContact = contactData;
+   NameAddrs::const_iterator it = path.begin();
+   for(; it != path.end(); it++)
+   {
+      if(it != path.begin())
+      {
+         rec.mPath += ",";
+      }
+      rec.mPath += Data::from(*it);
+   }
    mDb.addStaticReg(addKey, rec);
 
    InfoLog( << "Add StaticReg: key=" << addKey);
