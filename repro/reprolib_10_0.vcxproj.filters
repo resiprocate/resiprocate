@@ -63,6 +63,9 @@
     <ClCompile Include="monkeys\SimpleTargetHandler.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="monkeys\StaticRegStore.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="monkeys\StaticRoute.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -201,6 +204,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="monkeys\SimpleTargetHandler.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="monkeys\StaticRegStore.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="monkeys\StaticRoute.hxx">

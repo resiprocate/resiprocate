@@ -38,6 +38,7 @@ SRC 	+=   \
 	UserStore.cxx \
 	ConfigStore.cxx \
 	AclStore.cxx \
+	StaticRegStore.cxx \
 	Store.cxx \
 	AbstractDb.cxx \
 	BerkeleyDb.cxx \

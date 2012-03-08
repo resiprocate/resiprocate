@@ -358,6 +358,9 @@
 				RelativePath=".\monkeys\SimpleTargetHandler.cxx">
 			</File>
 			<File
+				RelativePath=".\StaticRegStore.cxx">
+			</File>
+			<File
 				RelativePath=".\monkeys\StaticRoute.cxx">
 			</File>
 			<File
@@ -500,6 +503,9 @@
 			<File
 				RelativePath=".\monkeys\SimpleTargetHandler.hxx">
 			</File>
+			<File
+				RelativePath=".\StaticRegStore.hxx">
+			</File>			
 			<File
 				RelativePath=".\monkeys\StaticRoute.hxx">
 			</File>

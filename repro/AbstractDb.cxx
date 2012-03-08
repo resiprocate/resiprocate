@@ -29,8 +29,12 @@ encodeString( oDataStream& s, const Data& data )
 static Data
 decodeString( iDataStream& s)
 {
+   if(s.eof()) return Data::Empty;
+
    short len;
    s.read( (char*)(&len), sizeof(len) ); 
+
+   if(s.eof()) return Data::Empty;
 
    // [TODO] This is probably OK for now, but we can do better than this.
    if (len > 8192)
@@ -567,6 +571,7 @@ AbstractDb::addStaticReg( const AbstractDb::Key& key,
       
       encodeString( s, rec.mAor );
       encodeString( s, rec.mContact );
+      encodeString( s, rec.mPath );
 
       s.flush();
    }
@@ -607,6 +612,7 @@ AbstractDb::getStaticReg( const AbstractDb::Key& key) const
    {
       rec.mAor = decodeString( s );
       rec.mContact = decodeString ( s );
+      rec.mPath = decodeString ( s );
    }
    else
    {

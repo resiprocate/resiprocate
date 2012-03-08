@@ -594,6 +594,7 @@ ReproRunner::populateRegistrations()
 
          ContactInstanceRecord rec;
          rec.mContact = NameAddr(it->second.mContact);
+         rec.mSipPath = NameAddrs(it->second.mPath);
          rec.mRegExpires = NeverExpire;
          rec.mSyncContact = true;  // Tag this permanent contact as being a syncronized contact so that it will
                                     // be syncronized to a paired server (this is actually configuration information)

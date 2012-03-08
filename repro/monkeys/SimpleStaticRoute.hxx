@@ -5,7 +5,6 @@
 
 namespace repro
 {
-class NameAddrs;
 class RouteStore;
 class ProxyConfig;
 
