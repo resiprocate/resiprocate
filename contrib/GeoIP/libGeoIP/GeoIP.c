@@ -26,6 +26,32 @@ static geoipv6_t IPV6_NULL;
 #include <unistd.h>
 #include <netdb.h>
 #include <sys/mman.h>
+#else
+#define ssize_t SSIZE_T
+#include <io.h>
+#include <windows.h>
+
+ssize_t pread (int fd, void *buf, size_t count, off_t offset)
+{
+    HANDLE handle = (HANDLE)(intptr_t)_get_osfhandle (fd);
+
+    OVERLAPPED olap = { 0 }; 
+    DWORD written;
+
+    if (handle == INVALID_HANDLE_VALUE)
+        return -1;
+
+    olap.Offset = offset;
+    //olap.OffsetHigh = offset >> 32;
+
+    /* This braindead API will override the file pointer even if we specify
+     * an explicit read offset... So do not expect this to mix well with
+     * regular read() calls. */
+    if (ReadFile (handle, buf, count, &written, &olap))
+        return written;
+    return -1;
+}
+
 #endif /* !defined(_WIN32) */ 
 
 #include <errno.h>

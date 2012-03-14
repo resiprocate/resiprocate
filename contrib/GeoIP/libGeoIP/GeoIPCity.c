@@ -38,8 +38,8 @@
 static
 const int       FULL_RECORD_LENGTH = 50;
 
-static const int CITYCONFIDENCE_FIXED_RECORD = 4;
-static const int CITYCONFIDENCEDIST_FIXED_RECORD = 6;
+#define CITYCONFIDENCE_FIXED_RECORD 4
+#define CITYCONFIDENCEDIST_FIXED_RECORD 6
 
 
 static
@@ -55,6 +55,7 @@ _extract_record(GeoIP * gi, unsigned int seek_record, int *next_record_ptr)
   double          latitude = 0, longitude = 0;
   int             metroarea_combo = 0;
   int             bytes_read = 0;
+  int             t = 0;
   if (seek_record == gi->databaseSegments[0])
     return NULL;
 
@@ -93,11 +94,12 @@ _extract_record(GeoIP * gi, unsigned int seek_record, int *next_record_ptr)
       record->city_conf = tmp_fixed_record[2];
       record->postal_conf = tmp_fixed_record[3];
 
+      t = fixed_rec_size - gi->record_length;
+
       record->accuracy_radius =
 	gi->databaseType == GEOIP_CITYCONFIDENCEDIST_EDITION
 	? ((tmp_fixed_record[4] + (tmp_fixed_record[5] << 8)) & 0x3ff) : 0x3ff;
 
-      int             t = fixed_rec_size - gi->record_length;
       
     record_pointer = dseg + tmp_fixed_record[t] +
 	(tmp_fixed_record[t + 1] << 8) + (tmp_fixed_record[t + 2] << 16) ;
@@ -129,7 +131,7 @@ _extract_record(GeoIP * gi, unsigned int seek_record, int *next_record_ptr)
 	gi->databaseType == GEOIP_CITYCONFIDENCEDIST_EDITION
 	? ((record_buf[4] + (record_buf[5] << 8)) & 0x3ff) : 0x3ff;
 
-      int             t = fixed_rec_size - gi->record_length;
+      t = fixed_rec_size - gi->record_length;
 
         record_pointer = dseg + record_buf[t] +
 	(record_buf[t + 1] << 8) + (record_buf[t + 2] << 16) ;
