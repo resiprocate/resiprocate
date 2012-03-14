@@ -33,7 +33,7 @@ extern "C" {
 #else /* !defined(_WIN32) */ 
 #include <winsock2.h> 
 #include <ws2tcpip.h> 
-#include <wspiapi.h>
+//#include <wspiapi.h>
 #include <windows.h> 
 #define snprintf _snprintf 
 #define FILETIME_TO_USEC(ft) (((unsigned __int64) ft.dwHighDateTime << 32 | ft.dwLowDateTime) / 10) 
@@ -170,7 +170,7 @@ extern const char GeoIP_country_continent[254][3];
 #ifdef DLL
 #define GEOIP_API __declspec(dllexport)
 #else
-#define GEOIP_API
+#define GEOIP_API 
 #endif  /* DLL */
 
 GEOIP_API void GeoIP_setup_custom_directory(char *dir);

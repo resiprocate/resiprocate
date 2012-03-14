@@ -51,22 +51,23 @@ typedef struct GeoIPRecordTag {
         int accuracy_radius;
 } GeoIPRecord;
 
-GeoIPRecord * GeoIP_record_by_ipnum (GeoIP* gi, unsigned long ipnum);
-GeoIPRecord * GeoIP_record_by_addr (GeoIP* gi, const char *addr);
-GeoIPRecord * GeoIP_record_by_name (GeoIP* gi, const char *host);
 
-GeoIPRecord * GeoIP_record_by_ipnum_v6 (GeoIP* gi, geoipv6_t ipnum);
-GeoIPRecord * GeoIP_record_by_addr_v6 (GeoIP* gi, const char *addr);
-GeoIPRecord * GeoIP_record_by_name_v6 (GeoIP* gi, const char *host);
+GEOIP_API GeoIPRecord * GeoIP_record_by_ipnum (GeoIP* gi, unsigned long ipnum);
+GEOIP_API GeoIPRecord * GeoIP_record_by_addr (GeoIP* gi, const char *addr);
+GEOIP_API GeoIPRecord * GeoIP_record_by_name (GeoIP* gi, const char *host);
 
-int GeoIP_record_id_by_addr (GeoIP* gi, const char *addr);
-int GeoIP_record_id_by_addr_v6 (GeoIP* gi, const char *addr);
+GEOIP_API GeoIPRecord * GeoIP_record_by_ipnum_v6 (GeoIP* gi, geoipv6_t ipnum);
+GEOIP_API GeoIPRecord * GeoIP_record_by_addr_v6 (GeoIP* gi, const char *addr);
+GEOIP_API GeoIPRecord * GeoIP_record_by_name_v6 (GeoIP* gi, const char *host);
 
-int GeoIP_init_record_iter (GeoIP* gi);
+GEOIP_API int GeoIP_record_id_by_addr (GeoIP* gi, const char *addr);
+GEOIP_API int GeoIP_record_id_by_addr_v6 (GeoIP* gi, const char *addr);
+
+GEOIP_API int GeoIP_init_record_iter (GeoIP* gi);
 /* returns 0 on success, 1 on failure */
-int GeoIP_next_record (GeoIP* gi, GeoIPRecord **gir, int *record_iter);
+GEOIP_API int GeoIP_next_record (GeoIP* gi, GeoIPRecord **gir, int *record_iter);
 
-void GeoIPRecord_delete (GeoIPRecord *gir);
+GEOIP_API void GeoIPRecord_delete (GeoIPRecord *gir);
 
 /* NULL on failure otherwise a malloced string in utf8 */
 /* char * GeoIP_iso_8859_1__utf8(const char *); */
