@@ -101,8 +101,8 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
       assert(sip);
       mOriginalRequest=sip;
       original = true;
-      mResponseContext.mIsSenderBehindNAT = InteropHelper::getClientNATDetectionMode() != InteropHelper::ClientNATDetectionDisabled && 
-                                            Helper::isSenderBehindNAT(*sip, 
+      mResponseContext.mIsClientBehindNAT = InteropHelper::getClientNATDetectionMode() != InteropHelper::ClientNATDetectionDisabled && 
+                                            Helper::isClientBehindNAT(*sip, 
                                                   InteropHelper::getClientNATDetectionMode() == InteropHelper::ClientNATDetectionPrivateToPublicOnly);
      
       // RFC 3261 Section 16.4

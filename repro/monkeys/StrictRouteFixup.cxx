@@ -62,6 +62,7 @@ StrictRouteFixup::process(RequestContext& context)
          {
             // valid flow token
             target->rec().mReceivedFrom = source;
+            target->rec().mUseFlowRouting = true;
          }
       }
       context.getResponseContext().addTarget(target);

@@ -58,12 +58,12 @@ class ServerRegistration: public NonDialogUsage
       ServerRegistration(DialogUsageManager& dum, DialogSet& dialogSet, const SipMessage& request);
 
       bool tryFlow(ContactInstanceRecord& rec,
-                     const resip::SipMessage& msg);
+                   const resip::SipMessage& msg);
       bool flowTokenNeededForTls(const ContactInstanceRecord &rec) const;
       bool flowTokenNeededForSigcomp(const ContactInstanceRecord &rec) const;
       bool testFlowRequirements(ContactInstanceRecord &rec,
-                                 const resip::SipMessage& msg,
-                                 bool hasFlow) const;
+                                const resip::SipMessage& msg,
+                                bool hasFlow) const;
 
       SipMessage mRequest;
       Uri mAor;

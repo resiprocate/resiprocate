@@ -30,7 +30,7 @@ StaticRegStore::StaticRegStore(AbstractDb& db):
          const char* anchor = pb.position();
          while(!pb.eof())
          {
-            pb.skipToChar(',');
+            pb.skipToChar(Symbols::COMMA[0]);
             pb.data(path, anchor);
             paths.push_back(NameAddr(path));
             if(!pb.eof()) pb.skipChar();  // skip over comma

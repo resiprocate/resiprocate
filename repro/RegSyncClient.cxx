@@ -12,6 +12,7 @@
 #include <rutil/Timer.hxx>
 
 #include "repro/RegSyncClient.hxx"
+#include "repro/RegSyncServer.hxx"
 
 using namespace repro;
 using namespace resip;
@@ -121,7 +122,7 @@ RegSyncClient::thread()
       Data request(
          "<InitialSync>\r\n"
          "  <Request>\r\n"
-         "     <Version>2</Version>\r\n"   // For use in detecting if client/server are a compatible version
+         "     <Version>" + Data(REGSYNC_VERSION) + "</Version>\r\n"   // For use in detecting if client/server are a compatible version
          "  </Request>\r\n"
          "</InitialSync>\r\n");   
       rc = ::send(mSocketDesc, request.c_str(), (int)request.size(), 0);
@@ -295,6 +296,15 @@ RegSyncClient::handleRegInfoEvent(resip::XMLCursor& xml)
                         {
                            rec.mReceivedFrom = Tuple::makeTupleFromBinaryToken(xml.getValue().base64decode());
                            //InfoLog(<< "RegSyncClient::handleRegInfoEvent: receivedfrom=" << xml.getValue() << " tuple=" << rec.mReceivedFrom);
+                           xml.parent();
+                        }
+                     }
+                     else if(isEqualNoCase(xml.getTag(), "publicaddress"))
+                     {
+                        if(xml.firstChild())
+                        {
+                           rec.mPublicAddress = Tuple::makeTupleFromBinaryToken(xml.getValue().base64decode());
+                           //InfoLog(<< "RegSyncClient::handleRegInfoEvent: publicaddress=" << xml.getValue() << " tuple=" << rec.mPublicAddress);
                            xml.parent();
                         }
                      }

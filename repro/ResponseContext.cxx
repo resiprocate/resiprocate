@@ -29,7 +29,7 @@ ResponseContext::ResponseContext(RequestContext& context) :
    mRequestContext(context),
    mBestPriority(50),
    mSecure(false), //context.getOriginalRequest().header(h_RequestLine).uri().scheme() == Symbols::Sips)
-   mIsSenderBehindNAT(false)
+   mIsClientBehindNAT(false)
 {
 }
 
@@ -544,8 +544,9 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       
    if((resip::InteropHelper::getOutboundSupported() ||
        resip::InteropHelper::getRRTokenHackEnabled() ||
-       mIsSenderBehindNAT)
-       && target->rec().mReceivedFrom.mFlowKey)
+       mIsClientBehindNAT) &&
+      target->rec().mUseFlowRouting &&
+      target->rec().mReceivedFrom.mFlowKey)
    {
       // .bwc. We only override the destination if we are sending to an
       // outbound contact. If this is not an outbound contact, but the
@@ -682,7 +683,7 @@ ResponseContext::insertRecordRoute(SipMessage& outgoing,
                                                 !inboundFlowToken.empty(),
                                                 mRequestContext.mProxy.getRecordRouteForced(),
                                                 doPathInstead,
-                                                mIsSenderBehindNAT));
+                                                mIsClientBehindNAT));
       outgoing.addOutboundDecorator(rrDecorator);
    }
 }
@@ -735,7 +736,7 @@ ResponseContext::getInboundFlowToken(bool doPathInstead)
    if(flowToken.empty() && orig.header(h_Vias).size()==1)
    {
       if(resip::InteropHelper::getRRTokenHackEnabled() ||
-         mIsSenderBehindNAT ||
+         mIsClientBehindNAT ||
          needsFlowTokenToWork(contact))
       {
          // !bwc! TODO remove this when flow-token hack is no longer needed.
@@ -761,9 +762,10 @@ ResponseContext::outboundFlowTokenNeeded(Target* target)
       return false;
    }
 
-   if(target->rec().mReceivedFrom.mFlowKey
+   if((target->rec().mReceivedFrom.mFlowKey &&
+       target->rec().mUseFlowRouting)
       || resip::InteropHelper::getRRTokenHackEnabled()
-      || mIsSenderBehindNAT)
+      || mIsClientBehindNAT)
    {
       target->rec().mReceivedFrom.onlyUseExistingConnection=true;
       return true;

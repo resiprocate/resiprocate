@@ -86,7 +86,7 @@ MasterProfile::getAllowedMethodsData() const
    {
       if (i != mSupportedMethods.begin())
       {
-         result += ',';
+         result += Symbols::COMMA[0];
       }
       result += i->value();
    }

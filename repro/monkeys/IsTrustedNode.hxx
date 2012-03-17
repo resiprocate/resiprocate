@@ -13,13 +13,13 @@ namespace repro
   class IsTrustedNode: public Processor
   {
     public:
-      IsTrustedNode(ProxyConfig& config);
+      static resip::KeyValueStore::Key mFromTrustedNodeKey;
+
+       IsTrustedNode(ProxyConfig& config);
       virtual ~IsTrustedNode();
 
       virtual processor_action_t process(RequestContext &);
       virtual void dump(EncodeStream &os) const;
-
-      static resip::KeyValueStore::Key mFromTrustedNodeKey;
 
   private:
        AclStore& mAclStore;

@@ -117,7 +117,7 @@ RegSyncServer::handleInitialSyncRequest(unsigned int connectionId, unsigned int 
 {
    InfoLog(<< "RegSyncServer::handleInitialSyncRequest");
 
-   // Check for Version 2
+   // Check for correct Version
    unsigned int version = 0;
    if(xml.firstChild())
    {
@@ -139,7 +139,7 @@ RegSyncServer::handleInitialSyncRequest(unsigned int connectionId, unsigned int 
       xml.parent();
    }
 
-   if(version == 2)
+   if(version == REGSYNC_VERSION)
    {
       mRegDb->initialSync(connectionId);
       sendResponse(connectionId, requestId, Data::Empty, 200, "Initial Sync Completed.");
@@ -165,6 +165,12 @@ RegSyncServer::streamContactInstanceRecord(std::stringstream& ss, const ContactI
         resip::Data binaryFlowToken;
         Tuple::writeBinaryToken(rec.mReceivedFrom,binaryFlowToken);            
         ss << "      <receivedfrom>" << binaryFlowToken.base64encode() << "</receivedfrom>" << Symbols::CRLF;
+    }
+    if(rec.mPublicAddress.getType() != UNKNOWN_TRANSPORT)
+    {
+        resip::Data binaryFlowToken;
+        Tuple::writeBinaryToken(rec.mPublicAddress,binaryFlowToken);            
+        ss << "      <publicaddress>" << binaryFlowToken.base64encode() << "</publicaddress>" << Symbols::CRLF;
     }
     NameAddrs::const_iterator naIt = rec.mSipPath.begin();
     for(; naIt != rec.mSipPath.end(); naIt++)
