@@ -46,6 +46,7 @@
 #include "repro/monkeys/OutboundTargetHandler.hxx"
 #include "repro/monkeys/QValueTargetHandler.hxx"
 #include "repro/monkeys/SimpleTargetHandler.hxx"
+#include "repro/monkeys/GeoProximityTargetSorter.hxx"
 
 #if defined(USE_SSL)
 #include "repro/stateAgents/CertServer.hxx"
@@ -1084,6 +1085,14 @@ void  // Baboons
 ReproRunner::makeTargetProcessorChain(ProcessorChain& chain)
 {
    assert(mProxyConfig);
+
+#ifndef RESIP_FIXED_POINT
+   if(mProxyConfig->getConfigBool("GeoProximityTargetSorting", false))
+   {
+      chain.addProcessor(std::auto_ptr<Processor>(new GeoProximityTargetSorter(*mProxyConfig)));
+   }
+#endif
+
    if(mProxyConfig->getConfigBool("QValue", true))
    {
       // Add q value target handler baboon
@@ -1093,7 +1102,6 @@ ReproRunner::makeTargetProcessorChain(ProcessorChain& chain)
    // Add simple target handler baboon
    chain.addProcessor(std::auto_ptr<Processor>(new SimpleTargetHandler)); 
 }
-
 
 
 /* ====================================================================
