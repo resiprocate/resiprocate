@@ -338,6 +338,8 @@ ServerRegistration::processRegistration(const SipMessage& msg)
       }
 
       rec.mLastUpdated=now;
+      rec.mReceivedFrom=msg.getSource();
+      rec.mPublicAddress=Helper::getClientPublicAddress(msg);
 
       bool hasFlow = tryFlow(rec,msg);
       
@@ -445,7 +447,7 @@ ServerRegistration::dump(EncodeStream& strm) const
 
 bool 
 ServerRegistration::tryFlow(ContactInstanceRecord& rec,
-                              const resip::SipMessage& msg)
+                            const resip::SipMessage& msg)
 {
    // .bwc. ie. Can we assure that the connection the client is using on the
    // first hop can be re-used later?
@@ -472,7 +474,7 @@ ServerRegistration::tryFlow(ContactInstanceRecord& rec,
                // We are directly connected to the client.
                // .bwc. In the outbound case, we should fail if the connection 
                // is gone. No recovery should be attempted by the server.
-               rec.mReceivedFrom=msg.getSource();
+               rec.mUseFlowRouting = true;
                rec.mReceivedFrom.onlyUseExistingConnection=true;
                mDidOutbound=true;
                return true;
@@ -481,15 +483,15 @@ ServerRegistration::tryFlow(ContactInstanceRecord& rec,
       }
 
       // Record-Route flow token hack, or client NAT detect hack; use with caution
-      if(msg.header(h_Vias).size() == 1)
+      if(msg.header(h_Vias).size() == 1)  // client is directly connected to this server
       {
          if(InteropHelper::getRRTokenHackEnabled() || 
             flowTokenNeededForTls(rec) || 
             flowTokenNeededForSigcomp(rec) ||
             (InteropHelper::getClientNATDetectionMode() != InteropHelper::ClientNATDetectionDisabled &&
-             Helper::isSenderBehindNAT(msg, InteropHelper::getClientNATDetectionMode() == InteropHelper::ClientNATDetectionPrivateToPublicOnly)))
+             Helper::isClientBehindNAT(msg, InteropHelper::getClientNATDetectionMode() == InteropHelper::ClientNATDetectionPrivateToPublicOnly)))
          {
-               rec.mReceivedFrom=msg.getSource();
+               rec.mUseFlowRouting = true;
                rec.mReceivedFrom.onlyUseExistingConnection=false;
                return true;
          }

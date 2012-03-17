@@ -768,7 +768,7 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
             const char* anchor = pb.position();
             while(!pb.eof())
             {
-               pb.skipToChar(',');
+               pb.skipToChar(Symbols::COMMA[0]);
                pb.data(path, anchor);
                rec.mSipPath.push_back(NameAddr(path));
                if(!pb.eof()) pb.skipChar();  // skip over comma

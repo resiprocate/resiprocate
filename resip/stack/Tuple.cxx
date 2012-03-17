@@ -492,14 +492,16 @@ Tuple::isPrivateAddress() const
       // RFC 1918
       return isEqualWithMask(v4privateaddrbase1,8,true,true) ||  // 10.0.0.0        -   10.255.255.255  (10/8 prefix)
              isEqualWithMask(v4privateaddrbase2,12,true,true) || // 172.16.0.0      -   172.31.255.255  (172.16/12 prefix)
-             isEqualWithMask(v4privateaddrbase3,16,true,true);   // 192.168.0.0     -   192.168.255.255 (192.168/16 prefix)
+             isEqualWithMask(v4privateaddrbase3,16,true,true) || // 192.168.0.0     -   192.168.255.255 (192.168/16 prefix)
+             isLoopback();
    }
 #ifdef USE_IPV6
    else if (ipVersion()==V6)
    {
       // RFC 4193
       // ?slg? should we look specifically for ipv4 mapped/compatible address and apply V4 rules to them?
-      return isEqualWithMask(v6privateaddrbase,7,true,true);  // fc00::/7
+      return isEqualWithMask(v6privateaddrbase,7,true,true) ||  // fc00::/7
+             isLoopback();
    }
 #endif
    else

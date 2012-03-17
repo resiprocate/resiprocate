@@ -183,8 +183,6 @@ class ResponseContext
 
       bool hasTargets() const;
       
-      int targetCount() const;
-      
       /**
          @returns true iff this target is in state Candidate
       */
@@ -265,7 +263,7 @@ class ResponseContext
       resip::SipMessage mBestResponse;
       int mBestPriority;
       bool mSecure;
-      bool mIsSenderBehindNAT;  // Only set if InteropHelper::getClientNATDetectionEnabled() is true
+      bool mIsClientBehindNAT;  // Only set if InteropHelper::getClientNATDetectionEnabled() is true
 
       void forwardBestResponse();
 

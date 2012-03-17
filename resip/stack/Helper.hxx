@@ -558,7 +558,17 @@ class Helper
                                is sending us requests and using the load balancer address
                                in the Via, instead of the real of the adapter.
       */
-      static bool isSenderBehindNAT(const SipMessage& request, bool privateToPublicOnly=true);
+      static bool isClientBehindNAT(const SipMessage& request, bool privateToPublicOnly=true);
+
+      /** Look at Via headers, and find the first public IP address closest to the sending
+          client.
+
+          @param request Request message that we use for checking.
+
+          @note If no public IP's are found, then an empty Tuple is returned.  This
+                can be tested by checking if Tuple::getType() returns UNKNOWN_TRANSPORT.
+      */
+      static Tuple getClientPublicAddress(const SipMessage& request);
 
    private:
       class NonceHelperPtr

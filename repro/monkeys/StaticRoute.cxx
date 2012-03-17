@@ -97,7 +97,7 @@ StaticRoute::process(RequestContext& context)
          context.getResponseContext().addTargetBatch(parallelBatch, false /* highPriority */);
       }
 
-      if(!mContinueProcessingAfterRoutesFound)
+      if(!targets.empty() && !mContinueProcessingAfterRoutesFound)
       {
          return Processor::SkipThisChain;
       }

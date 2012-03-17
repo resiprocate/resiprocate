@@ -7,6 +7,8 @@
 #include <resip/dum/InMemorySyncRegDb.hxx>
 #include "repro/XmlRpcServerBase.hxx"
 
+#define REGSYNC_VERSION 3
+
 namespace repro
 {
 class RegSyncServer;

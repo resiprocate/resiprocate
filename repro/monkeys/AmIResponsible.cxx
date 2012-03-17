@@ -45,6 +45,7 @@ AmIResponsible::process(RequestContext& context)
          // .bwc. Valid flow token
          std::auto_ptr<Target> target(new Target(request.header(h_RequestLine).uri()));
          target->rec().mReceivedFrom = dest;
+         target->rec().mUseFlowRouting = true;
          context.getResponseContext().addTarget(target);
          return SkipThisChain;
       }
