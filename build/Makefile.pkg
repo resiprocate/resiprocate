@@ -85,6 +85,13 @@ MYSQL_LIBNAME :=  mysqlclient z m
 MYSQL_DEFINES += USE_MYSQL
 endif
 
+ifeq ($(USE_MAXMIND_GEOIP),yes)
+MAXMINDGEOIP_LIBDIRS := $(ROOT)/contrib/GeoIP/libGeoIP/.libs
+MAXMINDGEOIP_LIBNAME := GeoIP
+MAXMINDGEOIP_INCLUDEDIRS := $(ROOT)/contrib/GeoIP/libGeoIP
+MAXMINDGEOIP_DEFINES += USE_MAXMIND_GEOIP
+endif
+
 # We can only use one of CARES or ARES, and to avoid mucking up all the
 # packaging stuff, let's just swap one in for another since they are almost
 # interchangeable anyway.  
