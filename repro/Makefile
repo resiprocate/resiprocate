@@ -24,6 +24,10 @@ PACKAGES += MYSQL
 SRC += MySqlDb.cxx
 endif
 
+ifeq ($(USE_MAXMIND_GEOIP),yes)
+PACKAGES += MAXMINDGEOIP
+endif
+
 CODE_SUBDIRS = monkeys
 TARGET_LIBRARY = librepro
 TARGET_BINARY = repro
@@ -62,8 +66,8 @@ SRC 	+=   \
 	RequestContext.cxx \
 	ResponseContext.cxx \
 	RRDecorator.cxx \
-    Processor.cxx \
-    ProcessorChain.cxx \
+	Processor.cxx \
+	ProcessorChain.cxx \
 	Target.cxx \
 	WorkerThread.cxx \
 	XmlRpcConnection.cxx \
@@ -72,7 +76,7 @@ SRC 	+=   \
 	OutboundTarget.cxx \
 	QValueTarget.cxx \
 	\
-    monkeys/DigestAuthenticator.cxx \
+ 	monkeys/DigestAuthenticator.cxx \
 	monkeys/StrictRouteFixup.cxx \
 	monkeys/AmIResponsible.cxx \
 	monkeys/IsTrustedNode.cxx \
@@ -85,6 +89,7 @@ SRC 	+=   \
 	monkeys/StrictRouteFixup.cxx \
 	monkeys/QValueTargetHandler.cxx \
 	monkeys/SimpleTargetHandler.cxx \
+	monkeys/GeoProximityTargetSorter.cxx \
 	\
 
 
