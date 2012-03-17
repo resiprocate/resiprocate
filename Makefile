@@ -49,7 +49,7 @@ dum: resiprocate
 b2bua: resiprocate
 	$(MAKE) -C b2bua
 
-repro: dum
+repro: dum GeoIP
 	$(MAKE) -C repro
 	$(MAKE) -C repro/reprocmd
 
@@ -128,6 +128,18 @@ configure_srtp: contrib/srtp/Makefile
 srtp: configure_srtp
 	$(MAKE) -C contrib/srtp 
 
+ifeq ($(USE_MAXMIND_GEOIP),yes)
+contrib/GeoIP/Makefile:
+	cd contrib/GeoIP && ./configure $(CONFIGURE_ARGS)
+
+configure_GeoIP: contrib/GeoIP/Makefile
+
+GeoIP: configure_GeoIP
+	$(MAKE) -C contrib/GeoIP
+else
+GeoIP:
+endif
+
 ifneq ($(SSL_LOCATION),)
 $(SSL_LOCATION)/Makefile:
 	cd $(SSL_LOCATION) && ./Configure $(OPEN_SSL_CONFIG) --openssldir=/usr enable-tlsext ${CONFIGURE_ARGS} && $(MAKE) depend
@@ -195,6 +207,7 @@ cleancontrib: clean-ares
 	-$(MAKE) -C contrib/srtp/crypto superclean
 	-$(MAKE) -C contrib/srtp/doc superclean
 	-$(MAKE) -C contrib/openssl clean
+	-$(MAKE) -C contrib/GeoIP clean
 
 clean: cleanpkg
 	for dir in $(CLEANDIRS); do $(MAKE) -C $$dir clean; done ; true
@@ -301,7 +314,7 @@ cleanpkg:
 $(BUILD)/Makefile.conf:
 	./configure -y
 
-.PHONY: resiprocate tests contrib ares srtp dtls-srtp-openssl
+.PHONY: resiprocate tests contrib ares srtp GeoIP dtls-srtp-openssl
 .PHONY: install install-ares install-rutil install-resip install-repro install-dum install-reflow install-returnclient install-recon
 .PHONY: SVN-VERSION repro-rpm repro-dist cleanpkg rpmbuild-area
 .PHONY: repro dum tests tfm tfmcontrib contrib rutil check presSvr

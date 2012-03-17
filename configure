@@ -34,6 +34,7 @@ USE_CCACHE := no
 BUILD_REPRO := yes
 DB_HEADERS := /usr/include/db4
 USE_MYSQL := no
+USE_MAXMIND_GEOIP := no
 BUILD_RADIUS := no
 BUILD_TFM := no
 BUILD_RECON := no
@@ -235,7 +236,15 @@ $uname = `uname`;
     predicate   => "\$config{BUILD_REPRO} eq 'yes'",
     flag        => 'mysql',
   },
-    {
+  {
+    name        => "USE_MAXMIND_GEOIP",
+    description => "Would you like to build MaxMind GeoIP LPGL library support into repro for geo proximity routing?",
+    default     => "no",
+    validate    => [@yesno],
+    predicate   => "\$config{BUILD_REPRO} eq 'yes'",
+    flag        => 'maxmind_geoip',
+  },
+  {
     name        => "USE_RADIUS_CLIENT",
     description => "Build the RADIUS authentication module? (requires radiusclient-ng)",
     default     => "no",
