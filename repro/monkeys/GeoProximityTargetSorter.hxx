@@ -31,6 +31,50 @@ namespace repro
 
 class RequestContext;
 
+/*
+  If enabled, then this baboon can post-process the target list.  
+  This includes targets from the StaticRoute monkey and/or targets
+  from the LocationServer monkey.  Requests that meet the filter 
+  criteria will have their Target list, flatened (serialized) and
+  ordered based on the proximity of the target to the client sending
+  the request.  Proximity is determined by looking for a 
+  x-repro-geolocation="<latitude>,<longitude>" parameter on the Contact
+  header of a received request, or the Contact headers of Registration
+  requests.  If this parameter is not found, then this processor will
+  attempt to determine the public IP address closest to the client or
+  target and use the MaxMind Geo IP library to lookup the geo location.
+
+  There are several requirements for using this Processor/Baboon:
+  1.  RESIP_FIXED_POINT preprocessor define is required to allow floating
+      point operations required for distance calculations.
+  2.  USE_MAXMIND_GEOIP preprocessor define is required to allow linking
+      with the MaxMind Geo IP library for looking up lat/long information
+      for an IP address.
+  3.  A copy of the GeoIP City database is required for looking up lat/long
+      information for an IP address.  A free version of the database can 
+      be downloaded from here:
+      http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
+      For a more accurate database, please see the details here:
+      http://www.maxmind.com/app/city
+      The location of this file is specifed in the following setting:
+      GeoProximityCityDatabaseFile
+  4.  A request URI filter must be defined in the repro configuration.  This
+      filter uses a PCRE compliant regular expression to attempt
+      to match against the request URI of inbound requests.  Any requests
+      matching this expression, will have its Targets sorted as described
+      above.
+      ie: GeoProximityRequestUriFilter = ^sip:mediaserver.*@mydomain.com$
+
+   Some additional settings are:
+   GeoProximityDefaultDistance - The distance (in Kilometers) to use for 
+      proximity sorting, when the Geo Location of a target cannot be 
+      determined. 
+
+   LoadBalanceEqualDistantTargets - If enabled, then targets that are 
+      determined to be of equal distance from the client, will be placed in 
+      a random order.
+*/
+
 class GeoProximityTargetSorter : public Processor
 {
    public:

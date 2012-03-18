@@ -79,7 +79,7 @@ GeoProximityTargetSorter::GeoProximityTargetSorter(ProxyConfig& config) :
 
 #ifdef USE_MAXMIND_GEOIP
    // Initialize GeoIP library - load data
-   Data geoIPDatabase = config.getConfigData("GeoProximityCityDatabaseFilepath", "GeoLiteCity.dat");
+   Data geoIPDatabase = config.getConfigData("GeoProximityCityDatabaseFile", "GeoLiteCity.dat");
    mGeoIP = GeoIP_open(geoIPDatabase.c_str(), GEOIP_MEMORY_CACHE);  // Cache entire DB in memory - could make this configurable
    if(mGeoIP != 0)
    {
