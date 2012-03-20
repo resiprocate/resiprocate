@@ -1,6 +1,12 @@
 #ifndef RESIP_FIXED_POINT
 #include <algorithm>
 
+#ifdef USE_MAXMIND_GEOIP
+// MaxMind GeoIP header
+#include <GeoIP.h>
+#include <GeoIPCity.h>
+#endif
+
 #include "repro/monkeys/GeoProximityTargetSorter.hxx"
 
 #include "repro/RequestContext.hxx"
@@ -36,6 +42,7 @@ public:
    GeoProximityTargetContainer(double distance, Target* target) : mDistance(distance), mTarget(target) {}
    ~GeoProximityTargetContainer() {} 
 
+    // Sort targets by distance from client
     static bool instanceCompare(const GeoProximityTargetContainer& lhs, 
                                 const GeoProximityTargetContainer& rhs)
     {
@@ -52,11 +59,11 @@ private:
 
 GeoProximityTargetSorter::GeoProximityTargetSorter(ProxyConfig& config) :
    mRUriRegularExpressionData(config.getConfigData("GeoProximityRequestUriFilter", "")),
+   mRUriRegularExpression(0),
    mDefaultDistance(config.getConfigUnsignedLong("GeoProximityDefaultDistance", 0)),
-   mLoadBalanceEqualDistantTargets(config.getConfigBool("LoadBalanceEqualDistantTargets", true))
-#ifdef USE_MAXMIND_GEOIP
-   , mGeoIP(0)
-#endif
+   mLoadBalanceEqualDistantTargets(config.getConfigBool("LoadBalanceEqualDistantTargets", true)),
+   mGeoIPv4(0),
+   mGeoIPv6(0)
 {
    int flags = REG_EXTENDED | REG_NOSUB;
 
@@ -79,27 +86,66 @@ GeoProximityTargetSorter::GeoProximityTargetSorter(ProxyConfig& config) :
 
 #ifdef USE_MAXMIND_GEOIP
    // Initialize GeoIP library - load data
-   Data geoIPDatabase = config.getConfigData("GeoProximityCityDatabaseFile", "GeoLiteCity.dat");
-   mGeoIP = GeoIP_open(geoIPDatabase.c_str(), GEOIP_MEMORY_CACHE);  // Cache entire DB in memory - could make this configurable
-   if(mGeoIP != 0)
+   Data geoIPv4Database = config.getConfigData("GeoProximityIPv4CityDatabaseFile", "GeoLiteCity.dat", false);
+   if(!geoIPv4Database.empty())
    {
-      int i = GeoIP_database_edition(mGeoIP);
-
-      if(i != GEOIP_CITY_EDITION_REV0 /* 6 */ &&
-         i != GEOIP_CITY_EDITION_REV1  /* 2 */ &&
-         i != GEOIP_CITYCONFIDENCE_EDITION /* 15 */ &&
-         i != GEOIP_CITYCONFIDENCEDIST_EDITION /* 16 */)
+      mGeoIPv4 = (GeoIP*)GeoIP_open(geoIPv4Database.c_str(), GEOIP_MEMORY_CACHE);  // Cache entire DB in memory - could make this configurable
+      if(mGeoIPv4 != 0)
       {
-         // Wrong DB Type
-         ErrLog(<< "GeoProximityTargetSorter: GeoIP database is not of the correct type, geo lookups will not take place.");
-         GeoIP_delete(mGeoIP);
-         mGeoIP = 0;
+         int i = GeoIP_database_edition((GeoIP*)mGeoIPv4);
+   
+         if(i != GEOIP_CITY_EDITION_REV0 /* 6 */ &&
+            i != GEOIP_CITY_EDITION_REV1  /* 2 */ &&
+            i != GEOIP_CITYCONFIDENCE_EDITION /* 15 */ &&
+            i != GEOIP_CITYCONFIDENCEDIST_EDITION /* 16 */)
+         {
+            // Wrong DB Type
+            ErrLog(<< "GeoProximityTargetSorter: IPv4 GeoIP database is not of the correct type, IPv4 geo lookups will not take place.");
+            GeoIP_delete((GeoIP*)mGeoIPv4);
+            mGeoIPv4 = 0;
+         }
+      }
+      else
+      {
+         ErrLog(<< "GeoProximityTargetSorter: Failed to open IPv4 GeoIP database, IPv4 geo lookups will not take place: " << geoIPv4Database);
       }
    }
    else
    {
-      ErrLog(<< "GeoProximityTargetSorter: Failed to open GeoIP database, geo lookups will not take place: " << geoIPDatabase);
+      InfoLog(<< "GeoProximityTargetSorter: No IPv4 GeoIP database specified, IPv4 geo lookups will not take place.");
    }
+
+#if USE_IPV6
+   Data geoIPv6Database = config.getConfigData("GeoProximityIPv6CityDatabaseFile", "GeoLiteCityv6.dat", false);
+   if(!geoIPv6Database.empty())
+   {
+      mGeoIPv6 = (GeoIP*)GeoIP_open(geoIPv6Database.c_str(), GEOIP_MEMORY_CACHE);  // Cache entire DB in memory - could make this configurable
+      if(mGeoIPv6 != 0)
+      {
+         int i = GeoIP_database_edition((GeoIP*)mGeoIPv6);
+
+         if(i != GEOIP_CITY_EDITION_REV1_V6 /* 30 */ &&
+            i != GEOIP_CITY_EDITION_REV0_V6  /* 31 */)
+         {
+            // Wrong DB Type
+            ErrLog(<< "GeoProximityTargetSorter: IPv6 GeoIP database is not of the correct type, IPv6 geo lookups will not take place.");
+            GeoIP_delete((GeoIP*)mGeoIPv6);
+            mGeoIPv6 = 0;
+         }
+      }  
+      else
+      {
+         ErrLog(<< "GeoProximityTargetSorter: Failed to open IPv6 GeoIP database, IPv6 geo lookups will not take place: " << geoIPv6Database);
+      }
+   }
+   else
+   {
+      InfoLog(<< "GeoProximityTargetSorter: No IPv6 GeoIP database specified, IPv6 geo lookups will not take place.");
+   }
+#else
+   mGeoIPv6 = 0;
+#endif
+
 #endif
 }
 
@@ -112,10 +158,15 @@ GeoProximityTargetSorter::~GeoProximityTargetSorter()
       mRUriRegularExpression = 0;
    }
 #ifdef USE_MAXMIND_GEOIP
-   if(mGeoIP)
+   if(mGeoIPv4)
    {
-      GeoIP_delete(mGeoIP);
-      mGeoIP = 0;
+      GeoIP_delete((GeoIP*)mGeoIPv4);
+      mGeoIPv4 = 0;
+   }
+   if(mGeoIPv6)
+   {
+      GeoIP_delete((GeoIP*)mGeoIPv6);
+      mGeoIPv6 = 0;
    }
 #endif
 }
@@ -193,7 +244,7 @@ GeoProximityTargetSorter::process(RequestContext &rc)
          
                   DebugLog(<< "GeoProximityTargetSorter: TransactionQueueCollection[" << outerCounter << "]: Target=" << rec.mContact 
                            << ", PublicAddress=" << rec.mPublicAddress
-                           << ", Distance=" << distance);
+                           << ", DistanceFromClient=" << distance);
    
                   // Flatten batches - since we will be serial routing
                   flatTargetList.push_back(GeoProximityTargetContainer(distance, target));
@@ -228,8 +279,8 @@ GeoProximityTargetSorter::process(RequestContext &rc)
             queue.push_back(it->getTarget()->tid());
             targetCollection.push_back(queue);
 
-            DebugLog(<< "GeoProximityTargetSorter: NEW TransactionQueueCollection[" << outerCounter << "]: Target=" << it->getTarget()->rec().mContact 
-                    << ", Distance=" << it->getDistance());
+            DebugLog(<< "GeoProximityTargetSorter: Processed TransactionQueueCollection[" << outerCounter << "]: Target=" << it->getTarget()->rec().mContact 
+                    << ", DistanceFromClient=" << it->getDistance());
          }
       }
    }
@@ -259,7 +310,7 @@ GeoProximityTargetSorter::getClientGeoLocation(const SipMessage& request, double
    {
       // Do a MaxMind GeoIP lookup to determine latitude and longitude
       geoIPLookup(publicAddress, latitude, longitude);
-      // TODO - cache locally??
+      // ?slg? - cache locally?  or is GeoIP library performance good enough?
    }
    else
    {
@@ -279,12 +330,12 @@ GeoProximityTargetSorter::getTargetGeoLocation(const Target& target, double& lat
       return;
    }
 
-   // Next - see if stored a public IP of the client at registration time
+   // Next - see if we stored a public IP of the client at registration time
    if(target.rec().mPublicAddress.getType() != UNKNOWN_TRANSPORT)
    {
       // Do a MaxMind GeoIP lookup to determine latitude and longitude
       geoIPLookup(target.rec().mPublicAddress, latitude, longitude);
-      // TODO - cache locally??
+      // ?slg? - cache locally?  or is GeoIP library performance good enough?
    }
    else
    {
@@ -294,7 +345,7 @@ GeoProximityTargetSorter::getTargetGeoLocation(const Target& target, double& lat
       {
          // Do a MaxMind GeoIP lookup to determine latitude and longitude
          geoIPLookup(contactAddress, latitude, longitude);
-         // TODO - cache locally??
+         // ?slg? - cache locally?  or is GeoIP library performance good enough?
       }
       else
       {
@@ -376,33 +427,38 @@ bool
 GeoProximityTargetSorter::geoIPLookup(const Tuple& address, double& latitude, double& longitude)
 {
 #ifdef USE_MAXMIND_GEOIP
-   if(mGeoIP)
+   GeoIPRecord *gir = 0;
+   if(address.ipVersion() == V6)
    {
-      GeoIPRecord *gir;
-      if(address.ipVersion() == V6)
+      if(mGeoIPv6)
       {
-         gir = GeoIP_record_by_ipnum_v6(mGeoIP, reinterpret_cast<const sockaddr_in6&>(address.getSockaddr()).sin6_addr);
-      }
-      else
-      {
-         gir = GeoIP_record_by_ipnum(mGeoIP, reinterpret_cast<const sockaddr_in&>(address.getSockaddr()).sin_addr.s_addr);
-      }
-      if(gir != 0)
-      {
-         latitude = gir->latitude;
-         longitude = gir->longitude;
-
-         DebugLog(<< "GeoProximityTargetSorter::geoIPLookup: Tuple=" << address 
-                  << ", Country=" << Data(gir->country_code)
-                  << ", Region=" << Data(gir->region)
-                  << ", City=" << Data(gir->city)
-                  << ", Lat/Long=" << latitude << "/" << longitude);
-
-         GeoIPRecord_delete(gir);
-         return true;
+         gir = GeoIP_record_by_ipnum_v6((GeoIP*)mGeoIPv6, reinterpret_cast<const sockaddr_in6&>(address.getSockaddr()).sin6_addr);
       }
    }
+   else
+   {
+      if(mGeoIPv4)
+      {
+         gir = GeoIP_record_by_ipnum((GeoIP*)mGeoIPv4, reinterpret_cast<const sockaddr_in&>(address.getSockaddr()).sin_addr.s_addr);
+      }
+   }
+   
+   if(gir != 0)
+   {
+      latitude = gir->latitude;
+      longitude = gir->longitude;
+
+      DebugLog(<< "GeoProximityTargetSorter::geoIPLookup: Tuple=" << address 
+               << ", Country=" << Data(gir->country_code)
+               << ", Region=" << Data(gir->region)
+               << ", City=" << Data(gir->city)
+               << ", Lat/Long=" << latitude << "/" << longitude);
+
+      GeoIPRecord_delete(gir);
+      return true;
+   }
 #endif
+
    latitude = 0;
    longitude = 0;
    return false;
