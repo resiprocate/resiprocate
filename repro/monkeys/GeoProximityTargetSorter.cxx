@@ -197,23 +197,22 @@ GeoProximityTargetSorter::process(RequestContext &rc)
                !rsp.hasTerminatedTransactions());
 
          // Check if request meets filter criteria
-         if(mRUriRegularExpression)
+         if(!mRUriRegularExpressionData.empty())  // If empty we consider all URI's matched
          {
-            if(regexec(mRUriRegularExpression, Data::from(rc.getOriginalRequest().header(h_RequestLine).uri()).c_str(), 0 /*ignored*/, 0 /*ignored*/, 0/*eflags*/) != 0)
+            if(mRUriRegularExpression)
             {
-               // did not match 
-               DebugLog( << "GeoProximityTargetSorter: Skipped - request URI "<< rc.getOriginalRequest().header(h_RequestLine).uri() << " did not match.");
-               return Processor::Continue;
+               if(regexec(mRUriRegularExpression, Data::from(rc.getOriginalRequest().header(h_RequestLine).uri()).c_str(), 0 /*ignored*/, 0 /*ignored*/, 0/*eflags*/) != 0)
+               {
+                  // did not match 
+                  DebugLog( << "GeoProximityTargetSorter: Skipped - request URI "<< rc.getOriginalRequest().header(h_RequestLine).uri() << " did not match.");
+                  return Processor::Continue;
+               }
             }
-         }
-         else
-         {
-            if(!mRUriRegularExpressionData.empty())
+            else
             {
                // Regular expression provided is bad - error was logged at startup time
                return Processor::Continue;
             }
-            // else mRUriRegularExpressionData is empty - match all requests
          }
 
          SipMessage& request = rc.getOriginalRequest();
