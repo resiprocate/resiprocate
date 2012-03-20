@@ -9,12 +9,6 @@
 #include <regex.h>
 #endif
 
-#ifdef USE_MAXMIND_GEOIP
-// MaxMind GeoIP header
-#include <GeoIP.h>
-#include <GeoIPCity.h>
-#endif
-
 #include "repro/Processor.hxx"
 #include "repro/ResponseContext.hxx"
 #include "repro/ProxyConfig.hxx"
@@ -51,13 +45,15 @@ class RequestContext;
       with the MaxMind Geo IP library for looking up lat/long information
       for an IP address.
   3.  A copy of the GeoIP City database is required for looking up lat/long
-      information for an IP address.  A free version of the database can 
+      information for an IP address.  A free version of the databases can 
       be downloaded from here:
       http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
+      and here (v6):
+      http://geolite.maxmind.com/download/geoip/database/GeoLiteCityv6-beta/
       For a more accurate database, please see the details here:
       http://www.maxmind.com/app/city
-      The location of this file is specifed in the following setting:
-      GeoProximityCityDatabaseFile
+      The location of these files are specifed in the following setting2:
+      GeoProximityIPv4CityDatabaseFile and GeoProximityIPv6CityDatabaseFile
   4.  A request URI filter must be defined in the repro configuration.  This
       filter uses a PCRE compliant regular expression to attempt
       to match against the request URI of inbound requests.  Any requests
@@ -74,6 +70,7 @@ class RequestContext;
       determined to be of equal distance from the client, will be placed in 
       a random order.
 */
+
 
 class GeoProximityTargetSorter : public Processor
 {
@@ -96,13 +93,12 @@ class GeoProximityTargetSorter : public Processor
       bool geoIPLookup(const resip::Tuple& address, double& latitude, double& longitude);
 
       resip::Data mRUriRegularExpressionData;
-      regex_t *mRUriRegularExpression;
+      regex_t* mRUriRegularExpression;
 
       unsigned long mDefaultDistance;
       bool mLoadBalanceEqualDistantTargets;
-#ifdef USE_MAXMIND_GEOIP
-      GeoIP *mGeoIP;
-#endif
+      void* mGeoIPv4;
+      void* mGeoIPv6;
 };
 
 }
