@@ -309,7 +309,6 @@ GeoProximityTargetSorter::getClientGeoLocation(const SipMessage& request, double
    {
       // Do a MaxMind GeoIP lookup to determine latitude and longitude
       geoIPLookup(publicAddress, latitude, longitude);
-      // ?slg? - cache locally?  or is GeoIP library performance good enough?
    }
    else
    {
@@ -334,7 +333,6 @@ GeoProximityTargetSorter::getTargetGeoLocation(const Target& target, double& lat
    {
       // Do a MaxMind GeoIP lookup to determine latitude and longitude
       geoIPLookup(target.rec().mPublicAddress, latitude, longitude);
-      // ?slg? - cache locally?  or is GeoIP library performance good enough?
    }
    else
    {
@@ -344,7 +342,6 @@ GeoProximityTargetSorter::getTargetGeoLocation(const Target& target, double& lat
       {
          // Do a MaxMind GeoIP lookup to determine latitude and longitude
          geoIPLookup(contactAddress, latitude, longitude);
-         // ?slg? - cache locally?  or is GeoIP library performance good enough?
       }
       else
       {
@@ -427,6 +424,7 @@ GeoProximityTargetSorter::geoIPLookup(const Tuple& address, double& latitude, do
 {
 #ifdef USE_MAXMIND_GEOIP
    GeoIPRecord *gir = 0;
+   // ?slg? - should we introduce a local cache?  or is GeoIP library performance good enough?
    if(address.ipVersion() == V6)
    {
       if(mGeoIPv6)
