@@ -184,8 +184,6 @@ GeoProximityTargetSorter::process(RequestContext &rc)
    //        RecursiveRedirect is enabled).
    if(!rc.getKeyValueStore().getBoolValue(mGeoTargetSortingDoneKey))
    {
-      DebugLog(<< "Baboon handling request: " << *this << "; reqcontext = " << context);
-
       rc.getKeyValueStore().setBoolValue(mGeoTargetSortingDoneKey, true);
    
       ResponseContext& rsp=rc.getResponseContext();
@@ -243,9 +241,17 @@ GeoProximityTargetSorter::process(RequestContext &rc)
                   resip::ContactInstanceRecord& rec = target->rec();
                   double distance = getTargetDistance(*target, clientLatitude, clientLongitude);
          
-                  DebugLog(<< "GeoProximityTargetSorter: TransactionQueueCollection[" << outerCounter << "]: Target=" << rec.mContact 
-                           << ", PublicAddress=" << rec.mPublicAddress
-                           << ", DistanceFromClient=" << distance);
+                  if(rec.mPublicAddress.getType() != UNKNOWN_TRANSPORT)
+                  {
+                     DebugLog(<< "GeoProximityTargetSorter: TransactionQueueCollection[" << outerCounter << "]: Target=" << rec.mContact 
+                              << ", PublicAddress=" << rec.mPublicAddress
+                              << ", DistanceFromClient=" << distance);
+                  }
+                  else
+                  {
+                     DebugLog(<< "GeoProximityTargetSorter: TransactionQueueCollection[" << outerCounter << "]: Target=" << rec.mContact 
+                              << ", DistanceFromClient=" << distance);
+                  }
    
                   // Flatten batches - since we will be serial routing
                   flatTargetList.push_back(GeoProximityTargetContainer(distance, target));
@@ -283,6 +289,10 @@ GeoProximityTargetSorter::process(RequestContext &rc)
             DebugLog(<< "GeoProximityTargetSorter: Processed TransactionQueueCollection[" << outerCounter << "]: Target=" << it->getTarget()->rec().mContact 
                     << ", DistanceFromClient=" << it->getDistance());
          }
+      }
+      else
+      {
+         DebugLog( << "GeoProximityTargetSorter: Skipped since only one target for request URI "<< rc.getOriginalRequest().header(h_RequestLine).uri());
       }
    }
 
