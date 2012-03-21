@@ -6,17 +6,17 @@
 using namespace resip;
 
 DumTimeout::DumTimeout(Type type, 
-					   unsigned long duration, 
-					   BaseUsageHandle targetBu, 
-					   unsigned int seq, 
-					   unsigned int altSeq,
-					   const Data &transactionId)
+                       unsigned long duration, 
+                       BaseUsageHandle targetBu, 
+                       unsigned int seq, 
+                       unsigned int altSeq,
+                       const Data &transactionId)
     : mType(type),
       mDuration(duration),
       mUsageHandle(targetBu),
       mSeq(seq),
       mSecondarySeq(altSeq),
-	   mTransactionId(transactionId)
+      mTransactionId(transactionId)
 {}
 
 DumTimeout::DumTimeout(const DumTimeout& source)
@@ -134,14 +134,16 @@ DumTimeout::encode(EncodeStream& strm) const
          strm <<"SendNextNotify";
          break;
    }
-   if (mUsageHandle.isValid()) 
-   {
-      strm << " " << *mUsageHandle;
-   }
-   else 
-   {
-      strm << " defunct";
-   }
+   // Accessing mUsageHandle is not threadsafe, and this encode method is used outside
+   // the dum thread, in the stack thread via the TuSelector::add method for logging.
+   //if (mUsageHandle.isValid()) 
+   //{
+   //   strm << " " << *mUsageHandle;
+   //}
+   //else 
+   //{
+   //   strm << " defunct";
+   //}
    
    strm << ": duration=" << mDuration << " seq=" << mSeq;
    return strm;
