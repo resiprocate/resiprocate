@@ -286,7 +286,7 @@ GeoProximityTargetSorter::process(RequestContext &rc)
             queue.push_back(it->getTarget()->tid());
             targetCollection.push_back(queue);
 
-            DebugLog(<< "GeoProximityTargetSorter: Processed TransactionQueueCollection[" << outerCounter << "]: Target=" << it->getTarget()->rec().mContact 
+            DebugLog(<< "GeoProximityTargetSorter: Sorted TransactionQueueCollection[" << outerCounter << "]: Target=" << it->getTarget()->rec().mContact 
                     << ", DistanceFromClient=" << it->getDistance());
          }
       }
@@ -390,26 +390,23 @@ GeoProximityTargetSorter::parseGeoLocationParameter(const Data& parameter, doubl
    latitude = 0.0;
    longitude = 0.0;
    Data token;
-   pb.skipToChar(Symbols::DOUBLE_QUOTE[0]);
+   const char* anchor = pb.position();
+   pb.skipToChar(Symbols::COMMA[0]);
+   pb.data(token, anchor);
+   latitude = token.convertDouble();
    if(!pb.eof())
    {
       pb.skipChar();
-      const char* anchor = pb.position();
-      pb.skipToChar(Symbols::COMMA[0]);
-      pb.data(token, anchor);
-      latitude = token.convertDouble();
       if(!pb.eof())
       {
-         pb.skipChar();
-         if(!pb.eof())
-         {
-            anchor = pb.position();
-            pb.skipToOneOf(",\"");  // Skip to comma or end double quote - be tolerant of altitude being specified
-            pb.data(token, anchor);
-            longitude = token.convertDouble();
-         }
+         anchor = pb.position();
+         pb.skipToOneOf(",\"");  // Skip to comma or end double quote - be tolerant of altitude being specified
+         pb.data(token, anchor);
+         longitude = token.convertDouble();
+         return;
       }
    }
+   DebugLog(<< "GeoProximityTargetSorter: parseGeoLocationParameter - invalid parameter format: " << parameter);
 }
 
 static const double DEG_TO_RAD = 0.017453292519943295769236907684886;
@@ -448,7 +445,7 @@ GeoProximityTargetSorter::geoIPLookup(const Tuple& address, double& latitude, do
    {
       if(mGeoIPv4)
       {
-         gir = GeoIP_record_by_ipnum((GeoIP*)mGeoIPv4, reinterpret_cast<const sockaddr_in&>(address.getSockaddr()).sin_addr.s_addr);
+         gir = GeoIP_record_by_ipnum((GeoIP*)mGeoIPv4, ntohl(reinterpret_cast<const sockaddr_in&>(address.getSockaddr()).sin_addr.s_addr));
       }
    }
    
@@ -465,6 +462,10 @@ GeoProximityTargetSorter::geoIPLookup(const Tuple& address, double& latitude, do
 
       GeoIPRecord_delete(gir);
       return true;
+   }
+   else
+   {
+      DebugLog(<< "GeoProximityTargetSorter::geoIPLookup: no geo location information found for Tuple=" << address);
    }
 #endif
 
