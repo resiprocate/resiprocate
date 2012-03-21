@@ -535,6 +535,14 @@ endlocal
       <Project>{9e5a7645-1502-4467-91f8-bcf2eb06ef72}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="..\contrib\GeoIP\GeoIP_10_0.vcxproj">
+      <Project>{6527d843-ee53-4f1e-b0a9-12abba8e75cc}</Project>
+      <Private>true</Private>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+    </ProjectReference>
     <ProjectReference Include="..\contrib\pcre\pcre_10_0.vcxproj">
       <Project>{b933f895-8efb-4fdd-a46d-09b8c00d1d26}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>

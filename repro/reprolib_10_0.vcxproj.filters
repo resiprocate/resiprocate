@@ -63,9 +63,6 @@
     <ClCompile Include="monkeys\SimpleTargetHandler.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="monkeys\StaticRegStore.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="monkeys\StaticRoute.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -150,6 +147,12 @@
     <ClCompile Include="ProxyConfig.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="StaticRegStore.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="monkeys\GeoProximityTargetSorter.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDb.hxx">
@@ -204,9 +207,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="monkeys\SimpleTargetHandler.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="monkeys\StaticRegStore.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="monkeys\StaticRoute.hxx">
@@ -300,6 +300,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ProxyConfig.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StaticRegStore.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="monkeys\GeoProximityTargetSorter.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

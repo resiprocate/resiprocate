@@ -262,6 +262,9 @@
 				RelativePath=".\Dispatcher.cxx">
 			</File>
 			<File
+				RelativePath=".\monkeys\GeoProximityTargetSorter.cxx">
+			</File>
+			<File
 				RelativePath=".\monkeys\IsTrustedNode.cxx">
 			</File>
 			<File
@@ -430,6 +433,9 @@
 			</File>
 			<File
 				RelativePath=".\Dispatcher.hxx">
+			</File>
+			<File
+				RelativePath=".\monkeys\GeoProximityTargetSorter.hxx">
 			</File>
 			<File
 				RelativePath=".\monkeys\IsTrustedNode.hxx">
