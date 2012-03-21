@@ -184,6 +184,8 @@ GeoProximityTargetSorter::process(RequestContext &rc)
    //        RecursiveRedirect is enabled).
    if(!rc.getKeyValueStore().getBoolValue(mGeoTargetSortingDoneKey))
    {
+      DebugLog(<< "Baboon handling request: " << *this << "; reqcontext = " << context);
+
       rc.getKeyValueStore().setBoolValue(mGeoTargetSortingDoneKey, true);
    
       ResponseContext& rsp=rc.getResponseContext();
