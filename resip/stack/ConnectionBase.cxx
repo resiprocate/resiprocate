@@ -307,7 +307,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                // The message header is complete.
                contentLength=mMessage->const_header(h_ContentLength).value();
             }
-            catch(resip::ParseException& e)
+            catch(resip::BaseException& e)  // Could be SipMessage::Exception or ParseException
             {
                WarningLog(<<"Malformed Content-Length in connection-based transport"
                            ". Not much we can do to fix this.  " << e);
@@ -437,7 +437,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
          {
              contentLength = mMessage->const_header(h_ContentLength).value();
          }
-         catch(resip::ParseException& e)
+         catch(resip::BaseException& e)  // Could be SipMessage::Exception or ParseException
          {
             WarningLog(<<"Malformed Content-Length in connection-based transport"
                         ". Not much we can do to fix this. " << e);
