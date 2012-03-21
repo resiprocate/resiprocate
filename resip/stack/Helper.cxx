@@ -2220,7 +2220,7 @@ Helper::getClientPublicAddress(const SipMessage& request)
       it--;
       if(it->exists(p_received))
       {
-         // Get IP from received parameter
+         // Check IP from received parameter
          Tuple address(it->param(p_received), 0, UNKNOWN_TRANSPORT);
          if(!address.isPrivateAddress())
          {
@@ -2229,16 +2229,14 @@ Helper::getClientPublicAddress(const SipMessage& request)
             return address;
          }
       }
-      else
+
+      // Check IP from Via sentHost
+      Tuple address(it->sentHost(), 0, UNKNOWN_TRANSPORT);
+      if(!address.isPrivateAddress())
       {
-         // Get IP from Via sentHost
-         Tuple address(it->sentHost(), 0, UNKNOWN_TRANSPORT);
-         if(!address.isPrivateAddress())
-         {
-            address.setPort(it->exists(p_rport) ? it->param(p_rport).port() : it->sentPort());
-            address.setType(Tuple::toTransport(it->transport()));
-            return address;
-         }
+         address.setPort(it->exists(p_rport) ? it->param(p_rport).port() : it->sentPort());
+         address.setType(Tuple::toTransport(it->transport()));
+         return address;
       }
 
       if(it == request.header(h_Vias).begin()) break;
