@@ -66,8 +66,10 @@ class ServerRegistrationHandler
       ///@param returnCode If the REGISTER should be rejected, use this return code.  A value of 423 will result in
       ///the Min-Expires header added to the response.
       ///
-      virtual void getGlobalExpires(const SipMessage& msg, SharedPtr<MasterProfile> masterProfile, 
-         UInt32 &expires, UInt32 &returnCode);
+      virtual void getGlobalExpires(const SipMessage& msg, 
+                                    SharedPtr<MasterProfile> masterProfile, 
+                                    UInt32 &expires, 
+                                    UInt32 &returnCode);
 
       /// When processing a REGISTER request, return the desired expires value by processing this contact's expires
       /// parameter.  If the expires value is not modified in this function the global expires will be used.
@@ -75,8 +77,10 @@ class ServerRegistrationHandler
       /// @param returnCode If the REGISTER should be rejected, use this return code.  A value of 423 will result in
       ///   the Min-Expires header added to the response.
       ///
-      virtual void getContactExpires(const NameAddr &contact, SharedPtr<MasterProfile> masterProfile, 
-         UInt32 &expires, UInt32 &returnCode);
+      virtual void getContactExpires(const NameAddr &contact, 
+                                     SharedPtr<MasterProfile> masterProfile, 
+                                     UInt32 &expires, 
+                                     UInt32 &returnCode);
 
        /** If true, the registration processing will use the async* functions here and will not use the RegistrationPersistenceManager.
         */
@@ -88,23 +92,29 @@ class ServerRegistrationHandler
       /** Called when a REGISTER is first received to retrieve the current list.  This list is then updated by the
           registration logic in DUM.  When the list is ready, call asyncProvideContacts() on the specified ServerRegistration.
           */
-      virtual void asyncGetContacts(ServerRegistrationHandle,const Uri& aor)
-      {}
+      virtual void asyncGetContacts(ServerRegistrationHandle, const Uri& aor)
+      {
+      }
 
       /** Notifies the handler to update the current contact list for the AOR to the specified list that has been updated by
           DUM's registration processing.  This is normally called after the REGISTER has been processed and accepted by the user
           (ServerRegistration::accept())
        */
-      virtual void asyncUpdateContacts(ServerRegistrationHandle,const Uri& aor,
-		  std::auto_ptr<ContactPtrList> modifiedContactList, std::auto_ptr<ContactRecordTransactionLog> transactionLog)
-      {}
+      virtual void asyncUpdateContacts(ServerRegistrationHandle,
+                                       const Uri& aor,
+                                       std::auto_ptr<ContactPtrList> modifiedContactList, 
+                                       std::auto_ptr<ContactRecordTransactionLog> transactionLog)
+      {
+      }
 
       /** Notifies the handler to remove the entries specified in the contacts parameter.
           No further processing is required after receiving this message.
       */
-	  virtual void asyncRemoveExpired(ServerRegistrationHandle,const resip::Uri& aor,
-										std::auto_ptr<resip::ContactPtrList> contacts)
-      {}
+      virtual void asyncRemoveExpired(ServerRegistrationHandle, 
+                                      const resip::Uri& aor,
+                                      std::auto_ptr<resip::ContactPtrList> contacts)
+      {
+      }
 };
 
 }
