@@ -39,6 +39,8 @@ class MySqlDb: public AbstractDb
       virtual Key firstUserKey();// return empty if no more
       virtual Key nextUserKey(); // return empty if no more 
 
+      virtual int singleResultQuery(const resip::Data& queryCommand, resip::Data& resultData) const;
+
    private:
       // Db manipulation routines
       virtual void dbWriteRecord( const Table table, 
