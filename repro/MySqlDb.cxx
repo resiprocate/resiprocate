@@ -165,6 +165,38 @@ MySqlDb::query(const Data& queryCommand) const
    return rc;
 }
 
+
+int
+MySqlDb::singleResultQuery(const Data& queryCommand, Data& resultData) const
+{
+   int rc = query(queryCommand);
+      
+   if(rc == 0)
+   {
+      MYSQL_RES* result = mysql_store_result(mConn);
+      if(result == 0)
+      {
+         rc = mysql_errno(mConn);
+         ErrLog( << "MySQL store result failed: error=" << rc << ": " << mysql_error(mConn));
+         return rc;
+      }
+
+      MYSQL_ROW row = mysql_fetch_row(result);
+      if(row)
+      {
+         resultData = Data(row[0]);
+      }
+      else
+      {
+         rc = mysql_errno(mConn);
+         ErrLog( << "MySQL fetch row failed: error=" << rc << ": " << mysql_error(mConn));
+      }
+      mysql_free_result(result);
+   }
+   return rc;
+}
+
+
 void 
 MySqlDb::addUser(const AbstractDb::Key& key, const AbstractDb::UserRecord& rec)
 { 
@@ -262,25 +294,12 @@ MySqlDb::getUserAuthInfo(  const AbstractDb::Key& key ) const
          command.replace("$domain", domain);
       }
    }
-   if(query(command) != 0)
+
+   if(singleResultQuery(command, ret) != 0)
    {
       return Data::Empty;
    }
    
-   MYSQL_RES* result = mysql_store_result(mConn);
-   if(result == 0)
-   {
-      ErrLog( << "MySQL store result failed: error=" << mysql_errno(mConn) << ": " << mysql_error(mConn));
-      return ret;
-   }
-
-   MYSQL_ROW row = mysql_fetch_row(result);
-   if(row)
-   {
-      ret = Data(row[0]);
-   }
-   mysql_free_result(result);
-
    DebugLog( << "Auth password is " << ret);
    
    return ret;
