@@ -554,16 +554,19 @@ ReproRunner::createProxy()
    assert(!mMonkeys);
    mMonkeys = new ProcessorChain(Processor::REQUEST_CHAIN);
    makeRequestProcessorChain(*mMonkeys);
+   InfoLog(<< mMonkeys);
 
    // Make Lemurs
    assert(!mLemurs);
    mLemurs = new ProcessorChain(Processor::RESPONSE_CHAIN);
    makeResponseProcessorChain(*mLemurs);
+   InfoLog(<< mLemurs);
 
    // Make Baboons
    assert(!mBaboons);
    mBaboons = new ProcessorChain(Processor::TARGET_CHAIN);
    makeTargetProcessorChain(*mBaboons);
+   InfoLog(<< mBaboons);
 
    // Create main Proxy class
    assert(!mProxy);

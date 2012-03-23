@@ -15,7 +15,6 @@ class StaticRoute: public Processor
       virtual ~StaticRoute();
       
       virtual processor_action_t process(RequestContext &);
-      virtual void dump(EncodeStream &os) const;
       
    private:
       RouteStore& mRouteStore;

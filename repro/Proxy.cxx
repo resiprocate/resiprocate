@@ -362,7 +362,7 @@ Proxy::thread()
                         InfoLog (<< "Inserting new RequestContext tid=" << tid
                                   << " -> " << *context);
                         mServerRequestContexts[tid] = context;
-                        DebugLog (<< "RequestContexts: " << Inserter(mServerRequestContexts));
+                        DebugLog (<< "RequestContexts: " << InserterP(mServerRequestContexts));
                         try
                         {
                            context->process(std::auto_ptr<resip::SipMessage>(sip));

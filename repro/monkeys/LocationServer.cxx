@@ -101,12 +101,6 @@ LocationServer::process(RequestContext& context)
    return Processor::Continue;
 }
 
-void
-LocationServer::dump(EncodeStream &os) const
-{
-   os << "LocationServer monkey" << std::endl;
-}
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

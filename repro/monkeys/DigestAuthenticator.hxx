@@ -20,7 +20,6 @@ namespace repro
       ~DigestAuthenticator();
 
       virtual processor_action_t process(RequestContext &);
-      virtual void dump(EncodeStream &os) const;
 
     private:
       bool authorizedForThisIdentity(const resip::Data &user, const resip::Data &realm, resip::Uri &fromUri);

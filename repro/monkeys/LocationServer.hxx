@@ -10,13 +10,14 @@ namespace repro
   class LocationServer: public Processor
   {
     public:
-      LocationServer(ProxyConfig& config, resip::RegistrationPersistenceManager& store)
-         : mStore(store)  {};
+      LocationServer(ProxyConfig& config, resip::RegistrationPersistenceManager& store) : 
+         Processor("LocationServer"), 
+         mStore(store)  
+      {};
 
-      virtual ~LocationServer(){};
+      virtual ~LocationServer() {};
 
       virtual processor_action_t process(RequestContext &);
-      virtual void dump(EncodeStream &os) const;
 
     private:
       resip::RegistrationPersistenceManager& mStore;

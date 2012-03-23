@@ -19,10 +19,26 @@ using namespace repro;
 using namespace std;
 
 
-repro::ProcessorChain::ProcessorChain(Processor::ChainType type)
+ProcessorChain::ProcessorChain(Processor::ChainType type) : 
+   Processor(Data::Empty, type)
 {
-   DebugLog(<< "Instantiating new monkey chain " << this );
-   mType=type;
+   switch(type)
+   {
+   case REQUEST_CHAIN:
+      setName("RequestProcessor");
+      break;
+   case RESPONSE_CHAIN:
+      setName("ResponseProcessor");
+      break;
+   case TARGET_CHAIN:
+      setName("TargetProcessor");
+      break;
+   case NO_TYPE:
+   default:
+      setName("UnknownProcessor");
+      break;
+   }
+   DebugLog(<< "Instantiating new " << mName << " chain");
 }
 
 repro::ProcessorChain::~ProcessorChain()
@@ -39,7 +55,7 @@ repro::ProcessorChain::~ProcessorChain()
 void
 repro::ProcessorChain::addProcessor(auto_ptr<Processor> rp)
 {
-   DebugLog(<< "Adding new monkey to chain: " << *(rp.get()));
+   DebugLog(<< "Adding new " << mName << " to chain: " << *(rp.get()));
    rp->pushAddress((short)mChain.size());
    rp->pushAddress(mAddress);
    rp->setChainType(mType);
@@ -49,7 +65,7 @@ repro::ProcessorChain::addProcessor(auto_ptr<Processor> rp)
 repro::Processor::processor_action_t
 repro::ProcessorChain::process(RequestContext &rc)
 {
-   //DebugLog(<< "Monkey handling request: " << *this << "; reqcontext = " << rc);
+   //DebugLog(<< mName << " handling request: " << *this << "; reqcontext = " << rc);
 
    processor_action_t action;
    unsigned int position=0;
@@ -68,25 +84,25 @@ repro::ProcessorChain::process(RequestContext &rc)
    
    for (; (position >=0 && position < mChain.size()); ++position)
    {
-      DebugLog(<< "Chain invoking monkey: " << *(mChain[position]));
+      DebugLog(<< "Chain invoking " << mName << ": " << *(mChain[position]));
 
       action = mChain[position]->process(rc);
 
       if (action == SkipAllChains)
       {
-         DebugLog(<< "Monkey aborted all chains: " << *(mChain[position]));
+         DebugLog(<< mName << " aborted all chains: " << *(mChain[position]));
          return SkipAllChains;
       }
 
       if (action == WaitingForEvent)
       {
-         DebugLog(<< "Monkey waiting for async response: " << *(mChain[position]));
+         DebugLog(<< mName << " waiting for async response: " << *(mChain[position]));
          return WaitingForEvent;
       }
 
       if (action == SkipThisChain)
       {
-         DebugLog(<< "Monkey skipping current chain: " << *(mChain[position]));
+         DebugLog(<< mName << " skipping current chain: " << *(mChain[position]));
          return Continue;
       }
 
@@ -127,11 +143,13 @@ ProcessorChain::setChainType(ChainType type)
    }
 }
 
-void
-ProcessorChain::dump(EncodeStream &os) const
+EncodeStream &
+repro::operator << (EncodeStream &os, const repro::ProcessorChain &pc)
 {
-   os << "Monkey Chain!" << Inserter(mChain);
+   os << pc.getName() << " chain: " << InserterP(pc.mChain);
+   return os;
 }
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

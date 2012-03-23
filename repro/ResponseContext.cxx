@@ -1005,7 +1005,7 @@ ResponseContext::processResponse(SipMessage& response)
       }
    }
    
-   InfoLog (<< "Search for " << mCurrentResponseTid << " in " << Inserter(mActiveTransactionMap));
+   DebugLog (<< "Search for " << mCurrentResponseTid << " in " << InserterP(mActiveTransactionMap));
 
    TransactionMap::iterator i = mActiveTransactionMap.find(mCurrentResponseTid);
 
@@ -1094,7 +1094,7 @@ ResponseContext::processResponse(SipMessage& response)
       case 4:
       case 5:
          DebugLog (<< "forwardedFinal=" << mRequestContext.mHaveSentFinalResponse 
-                   << " outstanding client transactions: " << Inserter(mActiveTransactionMap));
+                   << " outstanding client transactions: " << InserterP(mActiveTransactionMap));
          terminateClientTransaction(mCurrentResponseTid);
          if (!mRequestContext.mHaveSentFinalResponse)
          {
@@ -1225,7 +1225,7 @@ ResponseContext::terminateClientTransaction(const resip::Data& tid)
    TransactionMap::iterator i = mActiveTransactionMap.find(tid);
    if(i != mActiveTransactionMap.end())
    {
-      InfoLog (<< "client transactions: " << Inserter(mActiveTransactionMap));
+      InfoLog (<< "client transactions: " << InserterP(mActiveTransactionMap));
       i->second->status() = Target::Terminated;
       mTerminatedTransactionMap[tid] = i->second;
       mActiveTransactionMap.erase(i);
@@ -1235,7 +1235,7 @@ ResponseContext::terminateClientTransaction(const resip::Data& tid)
    TransactionMap::iterator j = mCandidateTransactionMap.find(tid);
    if(j != mCandidateTransactionMap.end())
    {
-      InfoLog (<< "client transactions: " << Inserter(mCandidateTransactionMap));
+      InfoLog (<< "client transactions: " << InserterP(mCandidateTransactionMap));
       j->second->status() = Target::Terminated;
       mTerminatedTransactionMap[tid] = j->second;
       mCandidateTransactionMap.erase(j);
@@ -1422,15 +1422,6 @@ ResponseContext::forwardBestResponse()
    }
 }
 
-
-EncodeStream& 
-repro::operator<<(EncodeStream& strm, const repro::Target* t)
-{
-   strm << "Target: " << t->uri() << " " <<" status=" << t->status();
-   return strm;
-}
-
-
 EncodeStream&
 repro::operator<<(EncodeStream& strm, const ResponseContext& rc)
 {
@@ -1438,11 +1429,9 @@ repro::operator<<(EncodeStream& strm, const ResponseContext& rc)
         << " identity=" << rc.mRequestContext.getDigestIdentity()
         << " best=" << rc.mBestPriority << " " << rc.mBestResponse.brief()
         << " forwarded=" << rc.mRequestContext.mHaveSentFinalResponse
-        << " pending=" << Inserter(rc.mCandidateTransactionMap)
-        << " active=" << Inserter(rc.mActiveTransactionMap)
-        << " terminated=" << Inserter(rc.mTerminatedTransactionMap);
-      //<< " targets=" << Inserter(rc.mTargetSet)
-      //<< " clients=" << Inserter(rc.mClientTransactions);
+        << " pending=" << InserterP(rc.mCandidateTransactionMap)
+        << " active=" << InserterP(rc.mActiveTransactionMap)
+        << " terminated=" << InserterP(rc.mTerminatedTransactionMap);
 
    return strm;
 }

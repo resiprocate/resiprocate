@@ -274,9 +274,6 @@ class ResponseContext
 EncodeStream&
 operator<<(EncodeStream& strm, const repro::ResponseContext& rc);
 
-EncodeStream& 
-operator<<(EncodeStream& strm, const repro::Target* t);
-
 }
 #endif
 

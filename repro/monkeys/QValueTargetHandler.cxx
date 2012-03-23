@@ -17,7 +17,8 @@
 namespace repro
 {
 
-QValueTargetHandler::QValueTargetHandler(ProxyConfig& config)
+QValueTargetHandler::QValueTargetHandler(ProxyConfig& config) : 
+   Processor("QValueTargetHandler")
 {
    mForkBehavior=QValueTargetHandler::EQUAL_Q_PARALLEL;
       
@@ -361,12 +362,6 @@ QValueTargetHandler::removeTerminated(std::list<resip::Data> & queue,
          i++;
       }
    }
-}
-
-void 
-QValueTargetHandler::dump(EncodeStream &os) const
-{
-  os << "QValueTargetHandler baboon" << std::endl;
 }
 
 }

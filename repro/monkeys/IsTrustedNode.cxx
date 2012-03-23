@@ -22,6 +22,7 @@ using namespace std;
 KeyValueStore::Key IsTrustedNode::mFromTrustedNodeKey = Proxy::allocateRequestKeyValueStoreKey();
 
 IsTrustedNode::IsTrustedNode(ProxyConfig& config) :
+   Processor("IsTrustedNode"),
    mAclStore(config.getDataStore()->mAclStore)
 {}
 
@@ -52,12 +53,6 @@ IsTrustedNode::process(RequestContext& context)
    }
       
    return Processor::Continue;
-}
-
-void
-IsTrustedNode::dump(EncodeStream &os) const
-{
-  os << "IsTrustedNode monkey" << std::endl;
 }
 
 

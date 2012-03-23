@@ -29,7 +29,7 @@ signalHandler(int signo)
    class MyCustomProcessor : public Processor
    {
       public:
-         MyCustomProcessor(ProxyConfig& config) {}
+         MyCustomProcessor(ProxyConfig& config) : Processor("MyCustomProcessor") {}
          virtual ~MyCustomProcessor() {}
       
          virtual processor_action_t process(RequestContext &context)
@@ -40,11 +40,6 @@ signalHandler(int signo)
 
             return Processor::Continue;
          }
-      }
-       
-      virtual void dump(EncodeStream &os) const
-      {
-         os << "MyCustomProcessor Monkey" << std::endl;
       }
    };
 

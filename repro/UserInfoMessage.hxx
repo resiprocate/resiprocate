@@ -41,8 +41,8 @@ class UserInfoMessage : public ProcessorMessage
       virtual UserInfoMessage* clone() const {return new UserInfoMessage(*this);};
       virtual const resip::Data& getTransactionId() const {return mTid;};
 
-      virtual EncodeStream& encode(EncodeStream& ostr) const { ostr << "UserInfoMessage("<<mTid<<") "; return ostr; };
-      virtual EncodeStream& encodeBrief(EncodeStream& ostr) const{ ostr << "UserInfoMessage("<<mTid<<") "; return ostr; };
+      virtual EncodeStream& encode(EncodeStream& ostr) const { ostr << "UserInfoMessage(tid="<<mTid<<")"; return ostr; };
+      virtual EncodeStream& encodeBrief(EncodeStream& ostr) const{ ostr << "UserInfoMessage(tid="<<mTid<<")"; return ostr; };
       
       AbstractDb::UserRecord mRec;
       

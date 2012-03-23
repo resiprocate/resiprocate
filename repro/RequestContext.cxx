@@ -1043,12 +1043,10 @@ RequestContext::getTopRoute()
 EncodeStream&
 repro::operator<<(EncodeStream& strm, const RequestContext& rc)
 {
-   strm << "RequestContext: "
-        << " identity=" << rc.mDigestIdentity
-        << " count=" << rc.mTransactionCount
+   strm << "numtrans=" << rc.mTransactionCount
         << " final=" << rc.mHaveSentFinalResponse;
-
-   if (rc.mOriginalRequest) strm << " orig requri=" << rc.mOriginalRequest->brief();
+   if(!rc.mDigestIdentity.empty()) strm << " identity=" << rc.mDigestIdentity;
+   if (rc.mOriginalRequest) strm << " req=" << rc.mOriginalRequest->brief();
    //if (rc.mCurrentEvent) strm << " current=" << rc.mCurrentEvent->brief();
    return strm;
 }

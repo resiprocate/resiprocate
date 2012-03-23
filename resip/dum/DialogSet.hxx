@@ -122,8 +122,13 @@ class DialogSet
       ClientPagerMessage* mClientPagerMessage;
       ServerPagerMessage* mServerPagerMessage;
       SharedPtr<UserProfile> mUserProfile;
+
+      friend EncodeStream& operator<<(EncodeStream& strm, const DialogSet& ds);
 };
- 
+
+EncodeStream& 
+operator<<(EncodeStream& strm, const DialogSet& ds);
+
 }
 
 #endif
