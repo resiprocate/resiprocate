@@ -49,9 +49,11 @@ main(int argc, char** argv)
 namespace resip
 {
 
+static const char* leftanglebracket("<");
+static const char* rightanglebracket(">");
 static const char* leftsqbracket("[");
 static const char* rightsqbracket("]");
-static const char* arrow(" -> ");
+static const char* sparrowsp(" -> ");
 static const char* commaspace(", ");
 
 /// Completely generic insert function
@@ -71,7 +73,7 @@ template <class T>
 EncodeStream&
 insert(EncodeStream& s, const std::vector <T>& c)
 {
-   s << "[";
+   s << leftsqbracket;
    for (typename std::vector <T>::const_iterator i = c.begin();
         i != c.end(); i++) 
    {
@@ -82,7 +84,7 @@ insert(EncodeStream& s, const std::vector <T>& c)
       // recurse
       insert(s, *i);
    }
-   s << "]";
+   s << rightsqbracket;
    return s;
 }
 
@@ -90,18 +92,18 @@ template <class T>
 EncodeStream&
 insert(EncodeStream& s, const std::deque<T>& c)
 {
-   s << "[";
+   s << leftsqbracket;
    for (typename std::deque <T>::const_iterator i = c.begin();
         i != c.end(); i++) 
    {
       if (i != c.begin()) 
       {
-         s << ", ";
+         s << commaspace;
       }
       // recurse
       insert(s, *i);
    }
-   s << "]";
+   s << rightsqbracket;
    return s;
 }
 
@@ -109,18 +111,18 @@ template <class T>
 EncodeStream&
 insert(EncodeStream& s, const std::list <T>& c)
 {
-   s << "[";
+   s << leftsqbracket;
    for (typename std::list <T>::const_iterator i = c.begin();
         i != c.end(); i++) 
    {
       if (i != c.begin()) 
       {
-         s << ", ";
+         s << commaspace;
       }
       // recurse
       insert(s, *i);
    }
-   s << "]";
+   s << rightsqbracket;
    return s;
 }
 
@@ -129,17 +131,17 @@ template <class K, class C>
 EncodeStream&
 insert(EncodeStream& s, const std::set <K, C>& c)
 {
-   s << "[";
+   s << leftsqbracket;
    for (typename std::set <K, C>::const_iterator i = c.begin();
         i != c.end(); i++) 
    {
       if (i != c.begin()) 
       {
-         s << ", ";
+         s << commaspace;
       }
       insert(s, *i);
    }
-   s << "]";
+   s << rightsqbracket;
    return s;
 }
 #endif
@@ -149,17 +151,17 @@ template <class K, class C>
 EncodeStream&
 insert(EncodeStream& s, const std::multiset <K, C>& c)
 {
-   s << "[";
+   s << leftsqbracket;
    for (typename std::multiset <K, C>::const_iterator i = c.begin();
         i != c.end(); i++) 
    {
       if (i != c.begin()) 
       {
-         s << ", ";
+         s << commaspace;
       }
       insert(s, *i);
    }
-   s << "]";
+   s << rightsqbracket;
    return s;
 }
 #endif
@@ -170,19 +172,19 @@ template <class K, class V, class H>
 EncodeStream&
 insert(EncodeStream& s, const HashMap<K,V,H>& c)
 {
-   s << "[";
+   s << leftsqbracket;
    for (typename HashMap<K,V,H>::const_iterator i = c.begin();
         i != c.end(); i++) 
    {
       if (i != c.begin()) 
       {
-         s << ", ";
+         s << commaspace;
       }
       insert(s, i->first);
-      s << arrow;
+      s << sparrowsp;
       insert(s, i->second);      
    }
-   s << "]";
+   s << rightsqbracket;
    return s;
 }
 #endif
@@ -192,17 +194,17 @@ template <class V, class H>
 EncodeStream&
 insert(EncodeStream& s, const HashSet<V,H>& c)
 {
-   s << "[";
+   s << leftsqbracket;
    for (typename HashSet<V,H>::const_iterator i = c.begin();
         i != c.end(); i++) 
    {
       if (i != c.begin()) 
       {
-         s << ", ";
+         s << commaspace;
       }
       insert(s, *i);
    }
-   s << "]";
+   s << rightsqbracket;
    return s;
 }
 #endif
@@ -212,19 +214,19 @@ template <class K, class V, class H>
 EncodeStream&
 insert(EncodeStream& s, const std::map <K, V, H>& c)
 {
-   s << "[";
+   s << leftsqbracket;
    for (typename std::map<K,V, H>::const_iterator i = c.begin();
         i != c.end(); i++) 
    {
       if (i != c.begin()) 
       {
-         s << ", ";
+         s << commaspace;
       }
       insert(s, i->first);
-      s << arrow;
+      s << sparrowsp;
       insert(s, i->second);  
    }
-   s << "]";
+   s << rightsqbracket;
    return s;
 }
 
@@ -244,7 +246,7 @@ EncodeStream&
 insert(EncodeStream& s, const std::pair<T, U>& p)
 {
    // use native <<
-   s << "<" << p.first << ", " << p.second << ">";
+   s << leftanglebracket << p.first << commaspace << p.second << rightanglebracket;
    return s;
 }
 
@@ -324,18 +326,18 @@ template <class T>
 EncodeStream&
 insertP(EncodeStream& s, const std::vector <T>& c)
 {
-   s << "[";
+   s << leftsqbracket;
    for (typename std::vector <T>::const_iterator i = c.begin();
         i != c.end(); i++) 
    {
       if (i != c.begin()) 
       {
-         s << ", ";
+         s << commaspace;
       }
       // recurse
       insert(s, *(*i));
    }
-   s << "]";
+   s << rightsqbracket;
    return s;
 }
 
@@ -343,18 +345,18 @@ template <class T>
 EncodeStream&
 insertP(EncodeStream& s, const std::deque<T>& c)
 {
-   s << "[";
+   s << leftsqbracket;
    for (typename std::deque <T>::const_iterator i = c.begin();
         i != c.end(); i++) 
    {
       if (i != c.begin()) 
       {
-         s << ", ";
+         s << commaspace;
       }
       // recurse
       insert(s, *(*i));
    }
-   s << "]";
+   s << rightsqbracket;
    return s;
 }
 
@@ -362,18 +364,18 @@ template <class T>
 EncodeStream&
 insertP(EncodeStream& s, const std::list <T>& c)
 {
-   s << "[";
+   s << leftsqbracket;
    for (typename std::list <T>::const_iterator i = c.begin();
         i != c.end(); i++) 
    {
       if (i != c.begin()) 
       {
-         s << ", ";
+         s << commaspace;
       }
       // recurse
       insert(s, *(*i));
    }
-   s << "]";
+   s << rightsqbracket;
    return s;
 }
 
@@ -382,17 +384,17 @@ template <class K, class C>
 EncodeStream&
 insertP(EncodeStream& s, const std::set <K, C>& c)
 {
-   s << "[";
+   s << leftsqbracket;
    for (typename std::set <K, C>::const_iterator i = c.begin();
         i != c.end(); i++) 
    {
       if (i != c.begin()) 
       {
-         s << ", ";
+         s << commaspace;
       }
       insert(s, *(*i));
    }
-   s << "]";
+   s << rightsqbracket;
    return s;
 }
 #endif
@@ -402,17 +404,17 @@ template <class K, class C>
 EncodeStream&
 insertP(EncodeStream& s, const std::multiset <K, C>& c)
 {
-   s << "[";
+   s << leftsqbracket;
    for (typename std::multiset <K, C>::const_iterator i = c.begin();
         i != c.end(); i++) 
    {
       if (i != c.begin()) 
       {
-         s << ", ";
+         s << commaspace;
       }
       insert(s, *(*i));
    }
-   s << "]";
+   s << rightsqbracket;
    return s;
 }
 #endif
@@ -423,19 +425,19 @@ template <class K, class V, class H>
 EncodeStream&
 insertP(EncodeStream& s, const HashMap<K,V,H>& c)
 {
-   s << "[";
+   s << leftsqbracket;
    for (typename HashMap<K,V,H>::const_iterator i = c.begin();
         i != c.end(); i++) 
    {
       if (i != c.begin()) 
       {
-         s << ", ";
+         s << commaspace;
       }
       insert(s, i->first);
-      s << " -> ";
+      s << sparrowsp;
       insert(s, *i->second);      
    }
-   s << "]";
+   s << rightsqbracket;
    return s;
 }
 #endif
@@ -445,17 +447,17 @@ template <class V, class H>
 EncodeStream&
 insertP(EncodeStream& s, const HashSet<V,H>& c)
 {
-   s << "[";
+   s << leftsqbracket;
    for (typename HashSet<V,H>::const_iterator i = c.begin();
         i != c.end(); i++) 
    {
       if (i != c.begin()) 
       {
-         s << ", ";
+         s << commaspace;
       }
       insert(s, *(*i));
    }
-   s << "]";
+   s << rightsqbracket;
    return s;
 }
 #endif
@@ -465,19 +467,19 @@ template <class K, class V, class H>
 EncodeStream&
 insertP(EncodeStream& s, const std::map <K, V, H>& c)
 {
-   s << "[";
+   s << leftsqbracket;
    for (typename std::map<K,V, H>::const_iterator i = c.begin();
         i != c.end(); i++) 
    {
       if (i != c.begin()) 
       {
-         s << ", ";
+         s << commaspace;
       }
       insert(s, i->first);
-      s << arrow;
+      s << sparrowsp;
       insert(s, *i->second);  
    }
-   s << "]";
+   s << rightsqbracket;
    return s;
 }
 
@@ -497,7 +499,7 @@ EncodeStream&
 insertP(EncodeStream& s, const std::pair<T, U>& p)
 {
    // use native <<
-   s << "<" << *p.first << ", " << *p.second << ">";
+   s << leftanglebracket << *p.first << commaspace << *p.second << rightanglebracket;
    return s;
 }
 
