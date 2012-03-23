@@ -58,6 +58,7 @@ private:
 };
 
 GeoProximityTargetSorter::GeoProximityTargetSorter(ProxyConfig& config) :
+   Processor("GeoProximityTargetHandler"),
    mRUriRegularExpressionData(config.getConfigData("GeoProximityRequestUriFilter", "")),
    mRUriRegularExpression(0),
    mDefaultDistance(config.getConfigUnsignedLong("GeoProximityDefaultDistance", 0)),
@@ -472,12 +473,6 @@ GeoProximityTargetSorter::geoIPLookup(const Tuple& address, double& latitude, do
    latitude = 0;
    longitude = 0;
    return false;
-}
-
-void 
-GeoProximityTargetSorter::dump(EncodeStream &os) const
-{
-  os << "GeoProximityTargetSorter baboon" << std::endl;
 }
 
 

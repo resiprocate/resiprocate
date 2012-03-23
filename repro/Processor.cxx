@@ -10,9 +10,10 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
-Processor::Processor(ChainType type)
+Processor::Processor(const resip::Data& name, ChainType type) :
+   mType(type),
+   mName(name)
 {
-   mType=type;
 }
 
 Processor::~Processor()
@@ -26,7 +27,6 @@ Processor::pushAddress(const std::vector<short>& address)
    {
       mAddress.push_back(*i);
    }
-
 }
 
 void
@@ -47,6 +47,18 @@ Processor::getChainType() const
    return mType;
 }
 
+void 
+Processor::setName(const resip::Data& name)
+{
+   mName = name;
+}
+
+const resip::Data& 
+Processor::getName() const
+{
+   return mName;
+}
+
 const std::vector<short>&
 Processor::getAddress() const
 {
@@ -56,8 +68,8 @@ Processor::getAddress() const
 EncodeStream &
 repro::operator << (EncodeStream &os, const repro::Processor &rp)
 {
-  rp.dump(os);
-  return os;
+   os << rp.getName();
+   return os;
 }
 
 

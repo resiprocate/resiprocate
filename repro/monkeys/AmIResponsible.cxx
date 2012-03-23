@@ -17,7 +17,8 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
-AmIResponsible::AmIResponsible()
+AmIResponsible::AmIResponsible() : 
+   Processor("AmIResponsible")
 {}
 
 AmIResponsible::~AmIResponsible()
@@ -140,12 +141,6 @@ AmIResponsible::process(RequestContext& context)
       }
    }
    return Processor::Continue;
-}
-
-void
-AmIResponsible::dump(EncodeStream &os) const
-{
-  os << "AmIResponsible monkey" << std::endl;
 }
 
 

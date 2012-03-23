@@ -82,7 +82,6 @@ class GeoProximityTargetSorter : public Processor
       virtual ~GeoProximityTargetSorter();
       
       virtual processor_action_t process(RequestContext &);
-      virtual void dump(EncodeStream &os) const;
          
    protected:
       void getClientGeoLocation(const resip::SipMessage& request, double& latitude, double& longitude);

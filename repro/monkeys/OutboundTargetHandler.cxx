@@ -13,6 +13,7 @@ namespace repro
 {
 
 OutboundTargetHandler::OutboundTargetHandler(resip::RegistrationPersistenceManager& store) : 
+   Processor("OutboundTargetHandler"),
    mRegStore(store)
 {
 }
@@ -76,12 +77,6 @@ OutboundTargetHandler::process(RequestContext & rc)
    }
 
    return Processor::Continue;
-}
-
-void 
-OutboundTargetHandler::dump(EncodeStream &os) const
-{
-   os << "OutboundTargetHandler baboon";
 }
 
 }

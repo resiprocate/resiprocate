@@ -19,7 +19,6 @@ namespace repro
       virtual ~IsTrustedNode();
 
       virtual processor_action_t process(RequestContext &);
-      virtual void dump(EncodeStream &os) const;
 
   private:
        AclStore& mAclStore;

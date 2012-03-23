@@ -72,6 +72,9 @@ class Target
       resip::KeyValueStore mKeyValueStore;
 };// class Target
 
+EncodeStream& 
+operator<<(EncodeStream& strm, const repro::Target& t);
+
 }// namespace repro
 
 #endif

@@ -6,7 +6,8 @@
 namespace repro
 {
 
-SimpleTargetHandler::SimpleTargetHandler()
+SimpleTargetHandler::SimpleTargetHandler() :
+   Processor("SimpleTargetHandler")
 {
 }
 
@@ -44,12 +45,6 @@ SimpleTargetHandler::process(RequestContext &rc)
       rsp.beginClientTransactions();
       return Processor::Continue;
    }
-}
-
-void 
-SimpleTargetHandler::dump(EncodeStream &os) const
-{
-   os << "SimpleTargetHandler baboon" << std::endl;
 }
 
 }

@@ -15,7 +15,8 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
-RecursiveRedirect::RecursiveRedirect()
+RecursiveRedirect::RecursiveRedirect() :
+   Processor("RecursiveRedirectHandler")
 {}
 
 
@@ -54,12 +55,6 @@ RecursiveRedirect::process(RequestContext& context)
       return Processor::SkipAllChains;
    }
    return Processor::Continue;   
-}
-
-void
-RecursiveRedirect::dump(EncodeStream &os) const
-{
-   os << "Recursive Redirect Lemur" << std::endl;
 }
 
 

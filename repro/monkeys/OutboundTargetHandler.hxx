@@ -14,7 +14,6 @@ class OutboundTargetHandler : public Processor
       virtual ~OutboundTargetHandler();
       
       virtual processor_action_t process(RequestContext &);
-      virtual void dump(EncodeStream &os) const;
 
     private:
       resip::RegistrationPersistenceManager& mRegStore;

@@ -19,7 +19,8 @@ using namespace repro;
 using namespace std;
 
 
-SimpleStaticRoute::SimpleStaticRoute(ProxyConfig& config)
+SimpleStaticRoute::SimpleStaticRoute(ProxyConfig& config) :
+   Processor("SimpleStaticRoute")
 {
    std::vector<Data> routeSet;
    config.getConfigValue("Routes", routeSet);
@@ -66,12 +67,6 @@ SimpleStaticRoute::process(RequestContext& context)
    }
 
    return Processor::Continue;
-}
-
-void
-SimpleStaticRoute::dump(EncodeStream &os) const
-{
-   os << "Simple Static Route Monkey" << std::endl;
 }
 
 

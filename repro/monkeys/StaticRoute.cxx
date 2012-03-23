@@ -19,6 +19,7 @@ using namespace repro;
 using namespace std;
 
 StaticRoute::StaticRoute(ProxyConfig& config) :
+   Processor("StaticRoute"),
    mRouteStore(config.getDataStore()->mRouteStore),
    mNoChallenge(config.getConfigBool("DisableAuth", false)),
    mParallelForkStaticRoutes(config.getConfigBool("ParallelForkStaticRoutes", false)),
@@ -117,12 +118,6 @@ StaticRoute::challengeRequest(repro::RequestContext &rc, resip::Data &realm)
    rc.sendResponse(*challenge);
 
    delete challenge;
-}
-
-void
-StaticRoute::dump(EncodeStream &os) const
-{
-   os << "Static Route Monkey" << std::endl;
 }
 
 

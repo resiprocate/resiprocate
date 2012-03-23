@@ -15,7 +15,7 @@ class Ack200DoneMessage : public resip::ApplicationMessage
 
       virtual const resip::Data& getTransactionId() const { return mTid; }
       virtual Ack200DoneMessage* clone() const {return new Ack200DoneMessage(mTid);}
-      virtual EncodeStream& encode(EncodeStream& ostr) const { ostr << "Ack200DoneMessage("<<mTid<<") "; return ostr; }
+      virtual EncodeStream& encode(EncodeStream& ostr) const { ostr << "Ack200DoneMessage(tid="<<mTid<<")"; return ostr; }
       virtual EncodeStream& encodeBrief(EncodeStream& ostr) const { return encode(ostr);}
    private:
       resip::Data mTid;

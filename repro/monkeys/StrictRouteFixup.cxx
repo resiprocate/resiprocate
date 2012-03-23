@@ -17,7 +17,8 @@ using namespace repro;
 using namespace std;
 
 
-StrictRouteFixup::StrictRouteFixup()
+StrictRouteFixup::StrictRouteFixup() :
+   Processor("StrictRouteFixup")
 {}
 
 StrictRouteFixup::~StrictRouteFixup()
@@ -70,12 +71,6 @@ StrictRouteFixup::process(RequestContext& context)
    }
   
    return Processor::Continue;
-}
-
-void
-StrictRouteFixup::dump(EncodeStream &os) const
-{
-   os << "StrictRouteFixup monkey" << std::endl;
 }
 
 

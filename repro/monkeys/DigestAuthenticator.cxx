@@ -25,6 +25,7 @@ using namespace std;
 DigestAuthenticator::DigestAuthenticator(ProxyConfig& config,
                                          Dispatcher* authRequestDispatcher,
                                          resip::SipStack* stack) :
+   Processor("DigestAuthenticator"),
    mAuthRequestDispatcher(authRequestDispatcher),
    mNoIdentityHeaders(config.getConfigBool("DisableIdentity", false)),
    mHttpHostname(config.getConfigData("HttpHostname", "")),
@@ -416,12 +417,6 @@ DigestAuthenticator::getRealm(RequestContext &rc)
 
    // (4) Punt: Use Request URI
    return sipMessage.header(h_RequestLine).uri().host();
-}
-
-void
-DigestAuthenticator::dump(EncodeStream &os) const
-{
-   os << "DigestAuthentication monkey" << std::endl;
 }
 
 

@@ -514,10 +514,10 @@ DialogUsageManager::makeUacDialogSet(BaseCreator* creator, AppDialogSet* appDs)
    appDs->mDialogSet = ds;
    ds->mAppDialogSet = appDs;
 
-   StackLog ( << "************* Adding DialogSet ***************" );
-   StackLog ( << "Before: " << Inserter(mDialogSetMap) );
+   StackLog ( << "************* Adding DialogSet ***************: " << ds->getId());
+   //StackLog ( << "Before: " << InserterP(mDialogSetMap) );
    mDialogSetMap[ds->getId()] = ds;
-   StackLog ( << "After: " << Inserter(mDialogSetMap) );
+   StackLog ( << "DialogSetMap: " << InserterP(mDialogSetMap) );
    return ds;
 }
 
@@ -2087,16 +2087,16 @@ DialogUsageManager::processRequest(const SipMessage& request)
             {
                DialogSet* dset =  new DialogSet(request, *this);
 
-               StackLog ( << "*********** Calling AppDialogSetFactory *************"  );
+               StackLog ( << "*********** Calling AppDialogSetFactory *************: " << dset->getId());
                AppDialogSet* appDs = mAppDialogSetFactory->createAppDialogSet(*this, request);
                appDs->mDialogSet = dset;
                dset->setUserProfile(appDs->selectUASUserProfile(request));
                dset->mAppDialogSet = appDs;
 
-               StackLog ( << "************* Adding DialogSet ***************" );
-               StackLog ( << "Before: " << Inserter(mDialogSetMap) );
+               StackLog ( << "************* Adding DialogSet ***************: " << dset->getId());
+               //StackLog ( << "Before: " << Inserter(mDialogSetMap) );
                mDialogSetMap[dset->getId()] = dset;
-               StackLog ( << "After: Req" << Inserter(mDialogSetMap) );
+               StackLog ( << "DialogSetMap: " << InserterP(mDialogSetMap) );
 
                dset->dispatch(request);
             }
@@ -2248,8 +2248,8 @@ DialogSet*
 DialogUsageManager::findDialogSet(const DialogSetId& id)
 {
    threadCheck();
-   StackLog ( << "Looking for dialogSet: " << id << " in map:" );
-   StackLog ( << Inserter(mDialogSetMap) );
+   StackLog ( << "Looking for dialogSet: " << id << " in map:");
+   StackLog ( << "DialogSetMap: " << InserterP(mDialogSetMap) );
    DialogSetMap::const_iterator it = mDialogSetMap.find(id);
 
    if (it == mDialogSetMap.end())
@@ -2286,10 +2286,10 @@ DialogUsageManager::findCreator(const DialogId& id)
 void
 DialogUsageManager::removeDialogSet(const DialogSetId& dsId)
 {
-   StackLog ( << "************* Removing DialogSet ***************" );
-   StackLog ( << "Before: " << Inserter(mDialogSetMap) );
+   StackLog ( << "************* Removing DialogSet ***************: " << dsId);
+   //StackLog ( << "Before: " << Inserter(mDialogSetMap) );
    mDialogSetMap.erase(dsId);
-   StackLog ( << "After: " << Inserter(mDialogSetMap) );
+   StackLog ( << "DialogSetMap: " << InserterP(mDialogSetMap) );
    if (mRedirectManager.get())
    {
       mRedirectManager->removeDialogSet(dsId);
