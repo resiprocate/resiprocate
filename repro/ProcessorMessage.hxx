@@ -13,8 +13,8 @@ class ProcessorMessage : public resip::ApplicationMessage
    public:
    
       ProcessorMessage(const Processor& proc,
-                        const resip::Data& tid,
-                        resip::TransactionUser* tupassed):
+                       const resip::Data& tid,
+                       resip::TransactionUser* tupassed):
          mTid(tid)
       {
          tu=tupassed;

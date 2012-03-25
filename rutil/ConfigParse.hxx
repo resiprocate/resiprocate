@@ -2,6 +2,7 @@
 #define ConfigParse_hxx
 
 #include <vector>
+#include "rutil/BaseException.hxx"
 #include "rutil/HashMap.hxx"
 #include "rutil/Data.hxx"
 
@@ -11,6 +12,17 @@ namespace resip
 class ConfigParse
 {
 public:
+   class Exception : public BaseException
+   {
+      public:
+         Exception(const Data& msg,
+                   const Data& file,
+                   const int line)
+            : BaseException(msg, file, line) {}            
+      protected:
+         virtual const char* name() const { return "ConfigParse::Exception"; }
+   };
+
    ConfigParse();
    ConfigParse(int argc, char** argv, const resip::Data& defaultConfigFilename);
    virtual ~ConfigParse();

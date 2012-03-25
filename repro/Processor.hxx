@@ -50,7 +50,6 @@ class Processor
       std::vector<short> mAddress;
       ChainType mType;
       resip::Data mName;
-
 };
 
 EncodeStream &operator<<(EncodeStream &os, const repro::Processor &rp);

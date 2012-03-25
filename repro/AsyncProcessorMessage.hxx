@@ -1,21 +1,38 @@
-#ifndef WORKER_HXX
-#define WORKER_HXX 1
+#ifndef ASYNCPROCESSOR_MESSAGE_HXX
+#define ASYNCPROCESSOR_MESSAGE_HXX 1
 
-#include "resip/stack/ApplicationMessage.hxx"
-#include <cassert>
+#include "repro/ProcessorMessage.hxx"
+#include "repro/AsyncProcessor.hxx"
 
 namespace repro
 {
 
-class Worker
+class AsyncProcessorMessage : public ProcessorMessage
 {
-   public:
-      Worker(){};
-      virtual ~Worker(){};
-      
-      virtual void process(resip::ApplicationMessage* msg)=0;
-      virtual Worker* clone() const=0;
+public:
+   AsyncProcessorMessage(AsyncProcessor& proc,
+                         const resip::Data& tid,
+                         resip::TransactionUser* passedtu):
+      ProcessorMessage(proc,tid,passedtu),
+      mAsyncProcessor(proc)
+   {
+   }
+
+   AsyncProcessorMessage(const AsyncProcessorMessage& orig):
+      ProcessorMessage(orig),
+      mAsyncProcessor(orig.mAsyncProcessor)
+   {
+   }
+
+   virtual Message* clone() const = 0;
+   virtual EncodeStream& encode(EncodeStream& strm) const { strm << "AsyncProcessorMessage(tid="<<mTid<<")"; return strm; }
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm);}
+
+   virtual AsyncProcessor& getAsyncProcessor() { return mAsyncProcessor; }
+protected:
+   AsyncProcessor& mAsyncProcessor;
 };
+
 }
 #endif
 

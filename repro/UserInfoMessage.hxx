@@ -14,17 +14,15 @@ class UserInfoMessage : public ProcessorMessage
                      const resip::Data& tid,
                      resip::TransactionUser* passedtu):
          ProcessorMessage(proc,tid,passedtu)
-      {}
-      
+      {
+      }
       
       UserInfoMessage(const UserInfoMessage& orig):
          ProcessorMessage(orig)
       {
          mRec=orig.mRec;
       }
-      
-      resip::Data& tid(){return mTid;}
-      
+
       const resip::Data& user() const{return mRec.user;}
       resip::Data& user(){return mRec.user;}
       
@@ -37,15 +35,12 @@ class UserInfoMessage : public ProcessorMessage
       const resip::Data& A1() const{return mRec.passwordHash;}
       resip::Data& A1(){return mRec.passwordHash;}
       
-      
       virtual UserInfoMessage* clone() const {return new UserInfoMessage(*this);};
-      virtual const resip::Data& getTransactionId() const {return mTid;};
 
       virtual EncodeStream& encode(EncodeStream& ostr) const { ostr << "UserInfoMessage(tid="<<mTid<<")"; return ostr; };
-      virtual EncodeStream& encodeBrief(EncodeStream& ostr) const{ ostr << "UserInfoMessage(tid="<<mTid<<")"; return ostr; };
+      virtual EncodeStream& encodeBrief(EncodeStream& ostr) const { return encode(ostr);}
       
       AbstractDb::UserRecord mRec;
-      
 };
 
 }
