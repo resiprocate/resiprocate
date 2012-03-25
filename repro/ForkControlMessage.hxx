@@ -11,7 +11,6 @@ namespace repro
 
 class ForkControlMessage : public ProcessorMessage
 {
-
    public:
       ForkControlMessage( const repro::Processor& proc,
                            const resip::Data& tid,
@@ -32,13 +31,6 @@ class ForkControlMessage : public ProcessorMessage
       
       virtual ~ForkControlMessage(){}
 
-            
-      //The transaction that this message will return to.
-      virtual const resip::Data& getTransactionId() const
-      {
-         return mTid;
-      }
-      
       virtual ForkControlMessage* clone() const 
       {
          return new ForkControlMessage(*this);
@@ -46,10 +38,10 @@ class ForkControlMessage : public ProcessorMessage
       
       virtual EncodeStream& encode(EncodeStream& ostr) const 
       { 
-         ostr << "ForkControlMessage("<<mTid<<") " << std::endl;
-         ostr << "Transactions to process: " << resip::Inserter(mTransactionsToProcess) << std::endl;
-         ostr << "Transactions to cancel: " << resip::Inserter(mTransactionsToCancel) << std::endl;
-         ostr << "Should cancel all: " << mShouldCancelAll;
+         ostr << "ForkControlMessage(tid="<<mTid<<"): " << 
+         ostr << " newTrans=" << resip::Inserter(mTransactionsToProcess) <<
+         ostr << " cancelTrans=" << resip::Inserter(mTransactionsToCancel) <<
+         ostr << " cancelAll=" << mShouldCancelAll;
          return ostr; 
       }
       virtual EncodeStream& encodeBrief(EncodeStream& ostr) const { return encode(ostr);}
@@ -57,7 +49,6 @@ class ForkControlMessage : public ProcessorMessage
       std::vector<resip::Data> mTransactionsToProcess;
       std::vector<resip::Data> mTransactionsToCancel;
       bool mShouldCancelAll;
-
 }; //class
 
 } //namespace repro 

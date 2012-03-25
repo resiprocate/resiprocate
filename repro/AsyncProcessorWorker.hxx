@@ -1,21 +1,35 @@
-#ifndef WORKER_HXX
-#define WORKER_HXX 1
+#ifndef ASYNCPROCESSOR_WORKER_HXX
+#define ASYNCPROCESSOR_WORKER_HXX 1
 
-#include "resip/stack/ApplicationMessage.hxx"
-#include <cassert>
+#include "repro/Worker.hxx"
+#include "repro/AsyncProcessor.hxx"
+#include "repro/AsyncProcessorMessage.hxx"
 
 namespace repro
 {
 
-class Worker
+class AsyncProcessorWorker : public Worker
 {
-   public:
-      Worker(){};
-      virtual ~Worker(){};
-      
-      virtual void process(resip::ApplicationMessage* msg)=0;
-      virtual Worker* clone() const=0;
+public:
+   AsyncProcessorWorker() {}
+   virtual ~AsyncProcessorWorker() {}
+
+   virtual void process(resip::ApplicationMessage* msg)
+   {
+      AsyncProcessorMessage* pmsg = dynamic_cast<AsyncProcessorMessage*>(msg);
+      if(pmsg)
+      {
+         pmsg->getAsyncProcessor().asyncProcess(pmsg);
+         return;
+      }
+      assert(false);  // unexpected message type
+   }
+   virtual Worker* clone() const
+   {
+      return new AsyncProcessorWorker();
+   }
 };
+
 }
 #endif
 

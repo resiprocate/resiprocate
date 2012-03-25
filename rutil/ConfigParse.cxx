@@ -282,13 +282,15 @@ ConfigParse::parseCommandLine(int argc, char** argv)
 void
 ConfigParse::parseConfigFile(const Data& filename)
 {
-
    ifstream configFile(filename.c_str());
    
    if(!configFile)
-      throw std::runtime_error("Error opening/reading configuraiton file");
+   {
+      throw Exception("Error opening/reading configuration file", __FILE__, __LINE__);
+   }
 
-   string sline;                     
+   string sline;
+   const char * anchor;
    while(getline(configFile, sline)) 
    {
       Data line(sline);
@@ -297,28 +299,26 @@ ConfigParse::parseConfigFile(const Data& filename)
       ParseBuffer pb(line);
 
       pb.skipWhitespace();
-      const char * anchor = pb.position();
+      anchor = pb.position();
       if(pb.eof() || *anchor == '#') continue;  // if line is a comment or blank then skip it
-      // Look for =
+
+      // Look for end of name
       pb.skipToOneOf("= \t");
+      pb.data(name,anchor);
+      if(*pb.position()!='=') 
+      {
+         pb.skipToChar('=');
+      }
+      pb.skipChar('=');
+      pb.skipWhitespace();
+      anchor = pb.position();
       if(!pb.eof())
       {
-         pb.data(name,anchor);
-         if(*pb.position()!='=') 
-         {
-            pb.skipToChar('=');
-         }
-         pb.skipChar('=');
-         pb.skipWhitespace();
-         anchor = pb.position();
-         if(!pb.eof())
-         {
-            pb.skipToOneOf("\r\n");
-            pb.data(value, anchor);
-         }
-         //cout << "Config file Name='" << name << "' value='" << value << "'" << endl;
-         insertConfigValue(name, value);
+         pb.skipToOneOf("\r\n");
+         pb.data(value, anchor);
       }
+      //cout << "Config file Name='" << name << "' value='" << value << "'" << endl;
+      insertConfigValue(name, value);
    }
 }
 
