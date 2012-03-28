@@ -114,7 +114,7 @@ Target::shouldAutoProcess() const
 }
 
 EncodeStream& 
-repro::operator<<(EncodeStream& strm, const repro::Target& t)
+operator<<(EncodeStream& strm, const repro::Target& t)
 {
    strm << "Target: " << t.uri() << " status=" << t.status();
    return strm;
