@@ -166,7 +166,7 @@ InMemorySyncRegDb::lockRecord(const Uri& aor)
 {
    Lock g2(mLockedRecordsMutex);
 
-   DebugLog(<< "InMemorySyncRegDb::lockRecord:  aor=" << aor << " threadid=" << GetCurrentThreadId());  // !slg! TODO - remove me!
+   DebugLog(<< "InMemorySyncRegDb::lockRecord:  aor=" << aor << " threadid=" << ThreadIf::selfId());
 
    {
       Lock g1(mDatabaseMutex);
@@ -187,7 +187,7 @@ InMemorySyncRegDb::unlockRecord(const Uri& aor)
 {
    Lock g2(mLockedRecordsMutex);
 
-   DebugLog(<< "InMemorySyncRegDb::unlockRecord:  aor=" << aor << " threadid=" << GetCurrentThreadId());  // !slg! TODO - remove me!
+   DebugLog(<< "InMemorySyncRegDb::unlockRecord:  aor=" << aor << " threadid=" << ThreadIf::selfId());
 
    {
       Lock g1(mDatabaseMutex);
