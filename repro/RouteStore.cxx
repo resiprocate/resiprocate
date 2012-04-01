@@ -280,8 +280,10 @@ RouteStore::process(const resip::Uri& ruri,
                     const resip::Data& method, 
                     const resip::Data& event )
 {
-   ReadLock lock(mMutex);
    RouteStore::UriList targetSet;
+   if(mRouteOperators.empty()) return targetSet;  // If there are no routes bail early to save a few cycles (size check is atomic enough, we don't need a lock)
+
+   ReadLock lock(mMutex);
 
    for (RouteOpList::iterator it = mRouteOperators.begin();
         it != mRouteOperators.end(); it++)

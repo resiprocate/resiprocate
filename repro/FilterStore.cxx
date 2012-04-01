@@ -422,6 +422,8 @@ FilterStore::process(const SipMessage& request,
                      short& action,
                      Data& actionData)
 {
+   if(mFilterOperators.empty()) return false;  // If there are no filters bail early to save a few cycles (size check is atomic enough, we don't need a lock)
+
    ReadLock lock(mMutex);
 
    Data method(request.methodStr());
