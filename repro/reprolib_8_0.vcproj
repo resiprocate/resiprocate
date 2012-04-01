@@ -389,9 +389,13 @@
 				>
 			</File>
 			<File
+				RelativePath=".\FilterStore.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\monkeys\GeoProximityTargetSorter.cxx"
 				>
-			</File>			
+			</File>
 			<File
 				RelativePath=".\monkeys\IsTrustedNode.cxx"
 				>
@@ -501,6 +505,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\monkeys\RequestFilter.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ResponseContext.cxx"
 				>
 			</File>
@@ -579,6 +587,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\AsyncProcessor.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\AsyncProcessorMessage.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\AsyncProcessorWorker.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\stateAgents\CertPublicationHandler.hxx"
 				>
 			</File>
@@ -616,6 +636,14 @@
 			</File>
 			<File
 				RelativePath=".\Dispatcher.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\FilterStore.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ForkControlMessage.hxx"
 				>
 			</File>
 			<File
@@ -699,6 +727,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\monkeys\RequestFilter.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ResponseContext.hxx"
 				>
 			</File>
@@ -721,7 +753,7 @@
 			<File
 				RelativePath=".\StaticRegStore.hxx"
 				>
-			</File>			
+			</File>
 			<File
 				RelativePath=".\monkeys\StaticRoute.hxx"
 				>

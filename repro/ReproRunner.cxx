@@ -27,6 +27,7 @@
 #include "repro/Dispatcher.hxx"
 #include "repro/UserAuthGrabber.hxx"
 #include "repro/ProcessorChain.hxx"
+#include "repro/ReproVersion.hxx"
 #include "repro/WebAdmin.hxx"
 #include "repro/WebAdminThread.hxx"
 #include "repro/Registrar.hxx"
@@ -157,6 +158,8 @@ ReproRunner::run(int argc, char** argv)
                    argv[0], 
                    mProxyConfig->getConfigData("LogFilename", "repro.log", true).c_str(),
                    isEqualNoCase(loggingType, "file") ? &g_ReproLogger : 0); // if logging to file then write WARNINGS, and Errors to console still
+
+   InfoLog( << "Starting repro version " << VersionUtils::instance().releaseVersion() << "...");
 
    // Create SipStack and associated objects
    if(!createSipStack())

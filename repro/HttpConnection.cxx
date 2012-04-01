@@ -182,8 +182,8 @@ HttpConnection::setPage(const Data& pPage,int response,const Mime& pType)
    mTxBuffer += Symbols::CRLF;
  
    mTxBuffer += "Server: Repro Proxy " ; 
-    mTxBuffer += Data(VersionUtils::instance().displayVersion());
-    mTxBuffer += Symbols::CRLF;
+   mTxBuffer += Data(VersionUtils::instance().displayVersion());
+   mTxBuffer += Symbols::CRLF;
    mTxBuffer += "Mime-version: 1.0 " ; mTxBuffer += Symbols::CRLF;
    mTxBuffer += "Pragma: no-cache " ; mTxBuffer += Symbols::CRLF;
    mTxBuffer += "Content-Length: "; mTxBuffer += len; mTxBuffer += Symbols::CRLF;

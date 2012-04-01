@@ -14,6 +14,7 @@
 #include "rutil/Timer.hxx"
 #include "rutil/TransportType.hxx"
 
+#include "repro/ReproVersion.hxx"
 #include "repro/Proxy.hxx"
 #include "repro/HttpBase.hxx"
 #include "repro/HttpConnection.hxx"
@@ -68,10 +69,19 @@ WebAdmin::WebAdmin(  Proxy& proxy,
    mProxy(proxy),
    mStore(*mProxy.getConfig().getDataStore()),
    mRegDb(regDb),
-   mNoWebChallenges(proxy.getConfig().getConfigBool("DisableHttpAuth", false)) 
+   mNoWebChallenges(proxy.getConfig().getConfigBool("DisableHttpAuth", false)),
+   mPageOutlinePre(
+#include "repro/webadmin/pageOutlinePre.ixx"
+   ),
+   mPageOutlinePost(
+#include "repro/webadmin/pageOutlinePost.ixx"
+   )
 {
       const Data adminName("admin");
       const Data adminPassword= proxy.getConfig().getConfigData("HttpAdminPassword", "admin");
+
+      // Place repro version into PageOutlinePre
+      mPageOutlinePre.replace("VERSION", VersionUtils::instance().releaseVersion().c_str());
 
       Data dbA1 = mStore.mUserStore.getUserAuthInfo( adminName, Data::Empty );
       
@@ -319,7 +329,7 @@ WebAdmin::buildPage( const Data& uri,
    if ( authenticatedUser == Data("admin") )
    {
       DataStream s(page);
-      buildPageOutlinePre(s);
+      s << mPageOutlinePre;
       
       // admin only pages 
       if ( pageName == Data("user.html")    ) {}; /* do nothing */ 
@@ -341,8 +351,8 @@ WebAdmin::buildPage( const Data& uri,
       
       if ( pageName == Data("registrations.html")) buildRegistrationsSubPage(s);
       if ( pageName == Data("settings.html"))    buildSettingsSubPage(s);
-      
-      buildPageOutlinePost(s);
+
+      s << mPageOutlinePost;
       s.flush();
 
       if ( pageName == Data("userTest.html")   ) page=buildUserPage();
@@ -1826,24 +1836,6 @@ WebAdmin::buildDefaultPage()
       s.flush();
    }
    return ret;
-}
-
-
-void
-WebAdmin::buildPageOutlinePre(DataStream& s)
-{
-   s << 
-#include "repro/webadmin/pageOutlinePre.ixx"
-   ;
-}
-
-
-void
-WebAdmin::buildPageOutlinePost(DataStream& s)
-{
-   s << 
-#include "repro/webadmin/pageOutlinePost.ixx"   
-   ;
 }
 
 

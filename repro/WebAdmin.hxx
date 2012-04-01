@@ -43,9 +43,6 @@ class WebAdmin: public HttpBase
       resip::Data buildDefaultPage();
       resip::Data buildUserPage();
       
-      void buildPageOutlinePre(resip::DataStream& s);
-      void buildPageOutlinePost(resip::DataStream& s);
-      
       void buildDomainsSubPage(resip::DataStream& s);
       void buildAclsSubPage(resip::DataStream& s);
 
@@ -84,6 +81,9 @@ class WebAdmin: public HttpBase
          resip::Data mKey2;
       };
       std::set<RemoveKey> mRemoveSet;
+
+      resip::Data mPageOutlinePre;
+      resip::Data mPageOutlinePost;
 };
 
 

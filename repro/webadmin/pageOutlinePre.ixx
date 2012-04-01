@@ -25,7 +25,7 @@
 "  <body>\n"
 "\n"
 "    <div class=\"title\" >\n"
-"      <h1>Repro</h1>\n"
+"      <table width=\"100%\"><tr><td><h1>Repro</h1></td><td align=\"right\"><small><i>vVERSION</i></small></td></tr></table>\n"
 "    </div>\n"
 "    <div class=\"space\">\n"
 "      <br />\n"

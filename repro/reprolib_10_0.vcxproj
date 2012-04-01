@@ -293,8 +293,10 @@
   <ItemGroup>
     <ClCompile Include="AbstractDb.cxx" />
     <ClCompile Include="AclStore.cxx" />
+    <ClCompile Include="FilterStore.cxx" />
     <ClCompile Include="monkeys\AmIResponsible.cxx" />
     <ClCompile Include="monkeys\GeoProximityTargetSorter.cxx" />
+    <ClCompile Include="monkeys\RequestFilter.cxx" />
     <ClCompile Include="ProxyConfig.cxx" />
     <ClCompile Include="stateAgents\CertPublicationHandler.cxx">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -367,8 +369,14 @@
     <ClInclude Include="AbstractDb.hxx" />
     <ClInclude Include="Ack200DoneMessage.hxx" />
     <ClInclude Include="AclStore.hxx" />
+    <ClInclude Include="AsyncProcessor.hxx" />
+    <ClInclude Include="AsyncProcessorMessage.hxx" />
+    <ClInclude Include="AsyncProcessorWorker.hxx" />
+    <ClInclude Include="FilterStore.hxx" />
+    <ClInclude Include="ForkControlMessage.hxx" />
     <ClInclude Include="monkeys\AmIResponsible.hxx" />
     <ClInclude Include="monkeys\GeoProximityTargetSorter.hxx" />
+    <ClInclude Include="monkeys\RequestFilter.hxx" />
     <ClInclude Include="ProxyConfig.hxx" />
     <ClInclude Include="stateAgents\CertPublicationHandler.hxx" />
     <ClInclude Include="stateAgents\CertServer.hxx" />

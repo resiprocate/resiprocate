@@ -153,6 +153,12 @@
     <ClCompile Include="monkeys\GeoProximityTargetSorter.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="monkeys\RequestFilter.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FilterStore.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDb.hxx">
@@ -306,6 +312,24 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="monkeys\GeoProximityTargetSorter.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="monkeys\RequestFilter.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ForkControlMessage.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AsyncProcessor.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AsyncProcessorMessage.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AsyncProcessorWorker.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FilterStore.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
