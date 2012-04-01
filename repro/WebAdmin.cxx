@@ -986,22 +986,22 @@ WebAdmin::buildEditFilterSubPage(DataStream& s)
 
       "<tr>" << endl << 
       "  <td align=\"right\" valign=\"middle\">Condition1 Header:</td>" << endl << 
-      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond1header\" size=\"40\" value=\"" << rec.mCondition1Header << "\"/></td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond1header\" size=\"40\" value=\"" << rec.mCondition1Header.xmlCharDataEncode() << "\"/></td>" << endl << 
       "</tr>" << endl << 
 
       "<tr>" << endl << 
       "  <td align=\"right\" valign=\"middle\">Condition1 Regex:</td>" << endl << 
-      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond1regex\" size=\"40\" value=\"" << rec.mCondition1Regex << "\"/></td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond1regex\" size=\"40\" value=\"" << rec.mCondition1Regex.xmlCharDataEncode() << "\"/></td>" << endl << 
       "</tr>" << endl << 
 
       "<tr>" << endl << 
       "  <td align=\"right\" valign=\"middle\">Condition2 Header:</td>" << endl << 
-      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond2header\" size=\"40\" value=\"" << rec.mCondition2Header << "\"/></td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond2header\" size=\"40\" value=\"" << rec.mCondition2Header.xmlCharDataEncode() << "\"/></td>" << endl << 
       "</tr>" << endl << 
 
       "<tr>" << endl << 
       "  <td align=\"right\" valign=\"middle\">Condition2 Regex:</td>" << endl << 
-      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond2regex\" size=\"40\" value=\"" << rec.mCondition2Regex << "\"/></td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond2regex\" size=\"40\" value=\"" << rec.mCondition2Regex.xmlCharDataEncode() << "\"/></td>" << endl << 
       "</tr>" << endl << 
 
       "<tr>" << endl << 
@@ -1029,7 +1029,7 @@ WebAdmin::buildEditFilterSubPage(DataStream& s)
 
       "<tr>" << endl << 
       "  <td align=\"right\" valign=\"middle\">Action Data:</td>" << endl << 
-      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"actiondata\" size=\"40\" value=\"" << rec.mActionData << "\"/></td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"actiondata\" size=\"40\" value=\"" << rec.mActionData.xmlCharDataEncode() << "\"/></td>" << endl << 
       "</tr>" << endl << 
 
       "<tr>" << endl << 
