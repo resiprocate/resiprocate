@@ -48,12 +48,19 @@ class WebAdmin: public HttpBase
       
       void buildDomainsSubPage(resip::DataStream& s);
       void buildAclsSubPage(resip::DataStream& s);
+
       void buildAddUserSubPage(resip::DataStream& s);
       void buildEditUserSubPage(resip::DataStream& s);
       void buildShowUsersSubPage(resip::DataStream& s);
+
+      void buildAddFilterSubPage(resip::DataStream& s);
+      void buildEditFilterSubPage(resip::DataStream& s);
+      void buildShowFiltersSubPage(resip::DataStream& s);
+
       void buildAddRouteSubPage(resip::DataStream& s);
       void buildEditRouteSubPage(resip::DataStream& s);
       void buildShowRoutesSubPage(resip::DataStream& s);
+
       void buildRegistrationsSubPage(resip::DataStream& s);
       void buildSettingsSubPage(resip::DataStream& s);
 

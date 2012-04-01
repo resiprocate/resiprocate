@@ -19,6 +19,7 @@
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/DumThread.hxx"
 
+#include "repro/AsyncProcessorWorker.hxx"
 #include "repro/ReproRunner.hxx"
 #include "repro/Proxy.hxx"
 #include "repro/ProxyConfig.hxx"
@@ -47,6 +48,7 @@
 #include "repro/monkeys/QValueTargetHandler.hxx"
 #include "repro/monkeys/SimpleTargetHandler.hxx"
 #include "repro/monkeys/GeoProximityTargetSorter.hxx"
+#include "repro/monkeys/RequestFilter.hxx"
 
 #if defined(USE_SSL)
 #include "repro/stateAgents/CertServer.hxx"
@@ -103,6 +105,7 @@ ReproRunner::ReproRunner()
    , mAbstractDb(0)
    , mRegistrationPersistenceManager(0)
    , mAuthRequestDispatcher(0)
+   , mAsyncProcessorDispatcher(0)
    , mMonkeys(0)
    , mLemurs(0)
    , mBaboons(0)
@@ -137,7 +140,15 @@ ReproRunner::run(int argc, char** argv)
    // Parse command line and configuration file
    assert(!mProxyConfig);
    Data defaultConfigFilename("repro.config");
-   mProxyConfig = new ProxyConfig(argc, argv, defaultConfigFilename);
+   try
+   {
+      mProxyConfig = new ProxyConfig(argc, argv, defaultConfigFilename);
+   }
+   catch(BaseException& ex)
+   {
+      std::cerr << "Error parsing configuration: " << ex << std::endl;
+      return false;
+   }
 
    GenericLogImpl::MaxByteCount = mProxyConfig->getConfigUnsignedLong("LogFileMaxBytes", 5242880 /*5 Mb */);
    Data loggingType = mProxyConfig->getConfigData("LoggingType", "cout", true);
@@ -265,6 +276,13 @@ ReproRunner::shutdown()
       delete mAuthRequestDispatcher;
       mAuthRequestDispatcher = 0;
    }
+   if(mAsyncProcessorDispatcher)
+   {
+      // Both proxy and dum threads are down at this point, we can 
+      // destroy the async processor dispatcher and associated threads now
+      delete mAsyncProcessorDispatcher;
+      mAsyncProcessorDispatcher = 0;
+   }
    if(mCommandServerThread)
    {
       mCommandServerThread->join();
@@ -308,6 +326,7 @@ ReproRunner::cleanupObjects()
    delete mLemurs; mLemurs = 0;
    delete mMonkeys; mMonkeys = 0;
    delete mAuthRequestDispatcher; mAuthRequestDispatcher = 0;
+   delete mAsyncProcessorDispatcher; mAsyncProcessorDispatcher = 0;
    delete mRegistrationPersistenceManager; mRegistrationPersistenceManager = 0;
    delete mAbstractDb; mAbstractDb = 0;
    delete mStackThread; mStackThread = 0;
@@ -554,19 +573,19 @@ ReproRunner::createProxy()
    assert(!mMonkeys);
    mMonkeys = new ProcessorChain(Processor::REQUEST_CHAIN);
    makeRequestProcessorChain(*mMonkeys);
-   InfoLog(<< mMonkeys);
+   InfoLog(<< *mMonkeys);
 
    // Make Lemurs
    assert(!mLemurs);
    mLemurs = new ProcessorChain(Processor::RESPONSE_CHAIN);
    makeResponseProcessorChain(*mLemurs);
-   InfoLog(<< mLemurs);
+   InfoLog(<< *mLemurs);
 
    // Make Baboons
    assert(!mBaboons);
    mBaboons = new ProcessorChain(Processor::TARGET_CHAIN);
    makeTargetProcessorChain(*mBaboons);
-   InfoLog(<< mBaboons);
+   InfoLog(<< *mBaboons);
 
    // Create main Proxy class
    assert(!mProxy);
@@ -1046,12 +1065,19 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
 
    // Add am I responsible monkey
    chain.addProcessor(std::auto_ptr<Processor>(new AmIResponsible)); 
-      
+
+   // Add RequestFilter monkey
+   assert(!mAsyncProcessorDispatcher);
+   mAsyncProcessorDispatcher = new Dispatcher(std::auto_ptr<AsyncProcessorWorker>(new AsyncProcessorWorker), 
+                                              mSipStack, 
+                                              mProxyConfig->getConfigInt("NumAsyncProcessorWorkerThreads", 2));
+   chain.addProcessor(std::auto_ptr<Processor>(new RequestFilter(*mProxyConfig, mAsyncProcessorDispatcher)));
+
    // [TODO] support for GRUU is on roadmap.  When it is added the GruuMonkey will go here
       
    // [TODO] support for Manipulating Tel URIs is on the roadmap.
    //        When added, the telUriMonkey will go here 
-     
+
    std::vector<Data> routeSet;
    mProxyConfig->getConfigValue("Routes", routeSet);
    if (routeSet.empty())

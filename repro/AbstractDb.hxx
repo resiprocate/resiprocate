@@ -69,11 +69,26 @@ class AbstractDb
             resip::Data mPath;
       };
 
+      class FilterRecord
+      {
+         public:
+            resip::Data mCondition1Header;
+            resip::Data mCondition1Regex;
+            resip::Data mCondition2Header;
+            resip::Data mCondition2Regex;
+            resip::Data mMethod;
+            resip::Data mEvent;
+            short mAction;  // 0 - Accept, 1 - Reject, 2 - SQL Query
+            resip::Data mActionData;
+            short mOrder;
+      };
+
       typedef resip::Data Key;
       typedef std::vector<RouteRecord> RouteRecordList;
       typedef std::vector<AclRecord> AclRecordList;
       typedef std::vector<ConfigRecord> ConfigRecordList;
       typedef std::vector<StaticRegRecord> StaticRegRecordList;
+      typedef std::vector<FilterRecord> FilterRecordList;
 
       virtual bool isSane() = 0;
 
@@ -119,6 +134,15 @@ class AbstractDb
       virtual Key firstStaticRegKey();// return empty if no more
       virtual Key nextStaticRegKey(); // return empty if no more 
 
+      // functions for Filter Records
+      virtual void addFilter( const Key& key, const FilterRecord& rec );
+      virtual void eraseFilter(  const Key& key );
+      virtual void writeFilter( const Key& oldkey, const Key& newkey, const FilterRecord& rec );
+      virtual FilterRecord getFilter( const Key& key) const;
+      virtual FilterRecordList getAllFilters();
+      virtual Key firstFilterKey();// return empty if no more
+      virtual Key nextFilterKey(); // return empty if no more 
+
    protected:
       typedef enum 
       {
@@ -127,6 +151,7 @@ class AbstractDb
          AclTable,
          ConfigTable,
          StaticRegTable,
+         FilterTable,
          MaxTable  // This one MUST be last 
       } Table;
       
@@ -142,7 +167,11 @@ class AbstractDb
                                  const resip::Data& key ) =0;
       virtual resip::Data dbFirstKey(const Table table);
       virtual resip::Data dbNextKey(const Table table, 
-                                    bool first=false) =0; // return empty if no more  
+                                    bool first=false) =0; // return empty if no more
+
+      virtual void encodeUser(const UserRecord& rec, resip::Data& buffer);
+      virtual void encodeRoute(const RouteRecord& rec, resip::Data& buffer);
+      virtual void encodeFilter(const FilterRecord& rec, resip::Data& buffer);
 };
 
 }
