@@ -43,6 +43,7 @@ SRC 	+=   \
 	ConfigStore.cxx \
 	AclStore.cxx \
 	StaticRegStore.cxx \
+	FilterStore.cxx \
 	Store.cxx \
 	AbstractDb.cxx \
 	BerkeleyDb.cxx \
@@ -84,6 +85,7 @@ SRC 	+=   \
 	monkeys/LocationServer.cxx \
 	monkeys/OutboundTargetHandler.cxx \
 	monkeys/RecursiveRedirect.cxx \
+	monkeys/RequestProcessor.cxx \
 	monkeys/SimpleStaticRoute.cxx \
 	monkeys/StaticRoute.cxx \
 	monkeys/StrictRouteFixup.cxx \
