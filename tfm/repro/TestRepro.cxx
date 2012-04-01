@@ -52,9 +52,9 @@ makeRequestProcessorChain(ProcessorChain& chain,
                           RegistrationPersistenceManager& regData,
                           SipStack* stack)
 {
-   ProcessorChain* locators = new ProcessorChain();
+   ProcessorChain* locators = new ProcessorChain(Processor::REQUEST_CHAIN);
    
-   ProcessorChain* authenticators = new ProcessorChain();
+   ProcessorChain* authenticators = new ProcessorChain(Processor::REQUEST_CHAIN);
    
    IsTrustedNode* isTrusted = new IsTrustedNode(config);
    authenticators->addProcessor(std::auto_ptr<Processor>(isTrusted));
@@ -76,7 +76,6 @@ makeRequestProcessorChain(ProcessorChain& chain,
  
    chain.addProcessor(std::auto_ptr<Processor>(authenticators));
    chain.addProcessor(std::auto_ptr<Processor>(locators));
-   chain.setChainType(Processor::REQUEST_CHAIN);
    return chain;
 }
 
@@ -84,20 +83,19 @@ static ProcessorChain&
 makeResponseProcessorChain(ProcessorChain& chain,
                            RegistrationPersistenceManager& regData) 
 {
-   ProcessorChain* lemurs = new ProcessorChain;
+   ProcessorChain* lemurs = new ProcessorChain(Processor::RESPONSE_CHAIN);
 
    OutboundTargetHandler* ob = new OutboundTargetHandler(regData);
    lemurs->addProcessor(std::auto_ptr<Processor>(ob));
 
    chain.addProcessor(std::auto_ptr<Processor>(lemurs));
-   chain.setChainType(Processor::RESPONSE_CHAIN);
    return chain;
 }
 
 static ProcessorChain&  
 makeTargetProcessorChain(ProcessorChain& chain, ProxyConfig& config) 
 {
-   ProcessorChain* baboons = new ProcessorChain;
+   ProcessorChain* baboons = new ProcessorChain(Processor::TARGET_CHAIN);
 
    QValueTargetHandler* qval =  new QValueTargetHandler(config);
    baboons->addProcessor(std::auto_ptr<Processor>(qval));
@@ -106,7 +104,6 @@ makeTargetProcessorChain(ProcessorChain& chain, ProxyConfig& config)
    baboons->addProcessor(std::auto_ptr<Processor>(smpl));
    
    chain.addProcessor(std::auto_ptr<Processor>(baboons));
-   chain.setChainType(Processor::TARGET_CHAIN);
    return chain;
 }
 
@@ -146,7 +143,9 @@ TestRepro::TestRepro(const resip::Data& name,
    mConfig(mDb, args),
    mAuthRequestDispatcher(new Dispatcher(std::auto_ptr<Worker>(new UserAuthGrabber(mConfig.getDataStore()->mUserStore)),
                                          &mStack, 2)),
-   mRequestProcessors(),
+   mRequestProcessors(Processor::REQUEST_CHAIN),
+   mResponseProcessors(Processor::RESPONSE_CHAIN),
+   mTargetProcessors(Processor::TARGET_CHAIN),
    mRegData(),
    mProxy(mStack, 
           mConfig,
