@@ -69,27 +69,31 @@ AbstractDb::~AbstractDb()
 
 
 void 
+AbstractDb::encodeUser(const UserRecord& rec, resip::Data& data)
+{
+   oDataStream s(data);
+      
+   short version=2;
+   assert( sizeof( version) == 2 );
+   s.write( (char*)(&version) , sizeof(version) );
+      
+   encodeString( s, rec.user );
+   encodeString( s, rec.domain);
+   encodeString( s, rec.realm);
+   encodeString( s, rec.passwordHash);
+   encodeString( s, rec.name);
+   encodeString( s, rec.email);
+   encodeString( s, rec.forwardAddress);
+   s.flush();
+}
+
+void 
 AbstractDb::addUser( const AbstractDb::Key& key, const AbstractDb::UserRecord& rec )
 {  
    assert( !key.empty() );
    
    Data data;
-   {
-      oDataStream s(data);
-      
-      short version=2;
-      assert( sizeof( version) == 2 );
-      s.write( (char*)(&version) , sizeof(version) );
-      
-      encodeString( s, rec.user );
-      encodeString( s, rec.domain);
-      encodeString( s, rec.realm);
-      encodeString( s, rec.passwordHash);
-      encodeString( s, rec.name);
-      encodeString( s, rec.email);
-      encodeString( s, rec.forwardAddress);
-      s.flush();
-   }
+   encodeUser(rec, data);
    
    dbWriteRecord(UserTable,key,data);
 }
@@ -109,22 +113,7 @@ AbstractDb::writeUser( const AbstractDb::Key& oldkey, const AbstractDb::Key& new
    assert( !newkey.empty() );
    
    Data data;
-   {
-      oDataStream s(data);
-      
-      short version=2;
-      assert( sizeof( version) == 2 );
-      s.write( (char*)(&version) , sizeof(version) );
-      
-      encodeString( s, rec.user );
-      encodeString( s, rec.domain);
-      encodeString( s, rec.realm);
-      encodeString( s, rec.passwordHash);
-      encodeString( s, rec.name);
-      encodeString( s, rec.email);
-      encodeString( s, rec.forwardAddress);
-      s.flush();
-   }
+   encodeUser(rec, data);
    
    if (oldkey != newkey)   // the domain or user (or both) changed, so the key has changed
    {
@@ -201,30 +190,35 @@ AbstractDb::nextUserKey()
  
 
 void 
+AbstractDb::encodeRoute(const RouteRecord& rec, resip::Data& data)
+{
+   oDataStream s(data);
+      
+   short version=1;
+   assert( sizeof( version) == 2 );
+   s.write( (char*)(&version) , sizeof(version) );
+      
+   encodeString( s, rec.mMethod );
+   encodeString( s, rec.mEvent );
+   encodeString( s, rec.mMatchingPattern );
+   encodeString( s, rec.mRewriteExpression );
+   s.write( (char*)(&rec.mOrder) , sizeof( rec.mOrder ) );
+   assert( sizeof( rec.mOrder) == 2 );
+  
+   //!cj! TODO - add the extra local use only flag 
+
+   s.flush();
+}
+
+
+void 
 AbstractDb::addRoute( const AbstractDb::Key& key, 
                  const AbstractDb::RouteRecord& rec )
 { 
    assert( !key.empty() );
    
    Data data;
-   {
-      oDataStream s(data);
-      
-      short version=1;
-      assert( sizeof( version) == 2 );
-      s.write( (char*)(&version) , sizeof(version) );
-      
-      encodeString( s, rec.mMethod );
-      encodeString( s, rec.mEvent );
-      encodeString( s, rec.mMatchingPattern );
-      encodeString( s, rec.mRewriteExpression );
-      s.write( (char*)(&rec.mOrder) , sizeof( rec.mOrder ) );
-      assert( sizeof( rec.mOrder) == 2 );
-  
-      //!cj! TODO - add the extra local use only flag 
-
-      s.flush();
-   }
+   encodeRoute(rec, data);
    
    dbWriteRecord( RouteTable, key, data );
 }
@@ -244,21 +238,7 @@ AbstractDb::writeRoute( const Key& oldkey, const Key& newkey, const RouteRecord&
    assert( !newkey.empty() );
    
    Data data;
-   {
-      oDataStream s(data);
-      
-      short version=1;
-      assert( sizeof( version) == 2 );
-      s.write( (char*)(&version) , sizeof(version) );
-      
-      encodeString( s, rec.mMethod );
-      encodeString( s, rec.mEvent );
-      encodeString( s, rec.mMatchingPattern );
-      encodeString( s, rec.mRewriteExpression );
-      s.write( (char*)(&rec.mOrder) , sizeof( rec.mOrder ) );
-      assert( sizeof( rec.mOrder) == 2 );
-      s.flush();
-   }
+   encodeRoute(rec, data);
    
    if (oldkey != newkey)   // the domain or user (or both) changed, so the key has changed
    {
@@ -655,6 +635,147 @@ AbstractDb::Key
 AbstractDb::nextStaticRegKey()
 { 
    return dbNextKey(StaticRegTable);
+}
+
+
+void 
+AbstractDb::encodeFilter(const FilterRecord& rec, resip::Data& data)
+{
+   oDataStream s(data);
+
+   short version=1;
+   assert(sizeof( version) == 2);
+   s.write((char*)(&version) , sizeof(version));
+      
+   encodeString(s, rec.mCondition1Header);
+   encodeString(s, rec.mCondition1Regex);
+   encodeString(s, rec.mCondition2Header);
+   encodeString(s, rec.mCondition2Regex);
+   encodeString(s, rec.mMethod);
+   encodeString(s, rec.mEvent);
+   s.write((char*)(&rec.mAction), sizeof (rec.mAction));
+   assert(sizeof(rec.mAction) == 2);
+   encodeString(s, rec.mActionData);
+   s.write((char*)(&rec.mOrder), sizeof(rec.mOrder));
+   assert(sizeof(rec.mOrder) == 2);
+
+   s.flush();
+}
+
+
+void 
+AbstractDb::addFilter(const AbstractDb::Key& key, 
+                      const AbstractDb::FilterRecord& rec)
+{ 
+   assert( !key.empty() );
+   
+   Data data;
+   encodeFilter(rec, data);
+   dbWriteRecord(FilterTable, key, data);
+}
+
+
+void 
+AbstractDb::eraseFilter(const AbstractDb::Key& key)
+{  
+   dbEraseRecord(FilterTable, key);
+}
+
+
+void
+AbstractDb::writeFilter(const Key& oldkey, const Key& newkey, const FilterRecord& rec)
+{
+   assert(!oldkey.empty());
+   assert(!newkey.empty());
+   
+   Data data;
+   encodeFilter(rec, data);
+   
+   if (oldkey != newkey)   // the key has changed - remove old key
+   {
+      dbEraseRecord( FilterTable, oldkey);
+   }
+   
+   dbWriteRecord(FilterTable,newkey,data);
+}
+
+
+AbstractDb::FilterRecord 
+AbstractDb::getFilter( const AbstractDb::Key& key) const
+{ 
+   AbstractDb::FilterRecord rec;
+   Data data;
+   bool stat = dbReadRecord(FilterTable, key, data);
+   if (!stat)
+   {
+      return rec;
+   }
+   if (data.empty())
+   {
+      return rec;
+   }
+
+   iDataStream s(data);
+
+   short version;
+   assert(sizeof(version) == 2);
+   s.read((char*)(&version), sizeof(version));
+   
+   if (version == 1)
+   {
+      rec.mCondition1Header = decodeString(s);
+      rec.mCondition1Regex = decodeString(s);
+      rec.mCondition2Header = decodeString(s);
+      rec.mCondition2Regex = decodeString(s);
+      rec.mMethod = decodeString(s);
+      rec.mEvent  = decodeString(s);
+      s.read((char*)(&rec.mAction), sizeof(rec.mAction)); 
+      assert(sizeof(rec.mAction) == 2);
+      rec.mActionData = decodeString(s);
+      s.read((char*)(&rec.mOrder), sizeof(rec.mOrder)); 
+      assert(sizeof(rec.mOrder) == 2);
+   }
+   else
+   {
+      // unkonwn version 
+      ErrLog( <<"Data in filter database with unknown version " << version );
+      ErrLog( <<"record size is " << data.size() );
+   }
+      
+   return rec;
+}
+
+
+AbstractDb::FilterRecordList 
+AbstractDb::getAllFilters()
+{
+   AbstractDb::FilterRecordList ret;
+   
+   AbstractDb::Key key = firstFilterKey();
+   while ( !key.empty() )
+   {
+      AbstractDb::FilterRecord rec = getFilter(key);
+      
+      ret.push_back(rec);
+            
+      key = nextFilterKey();
+   }
+   
+   return ret;
+}
+
+
+AbstractDb::Key 
+AbstractDb::firstFilterKey()
+{ 
+   return dbFirstKey(FilterTable);
+}
+
+
+AbstractDb::Key 
+AbstractDb::nextFilterKey()
+{ 
+   return dbNextKey(FilterTable);
 }
 
 

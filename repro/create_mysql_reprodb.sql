@@ -64,3 +64,13 @@ CREATE TABLE `staticregsavp` (
   PRIMARY KEY (attr) 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+--
+-- Table structure for table `filtersavp`
+--
+
+DROP TABLE IF EXISTS `filtersavp`;
+CREATE TABLE `filtersavp` (
+  `attr` VARCHAR(255) NOT NULL,
+  `value` VARCHAR(1024),
+  PRIMARY KEY (attr) 
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

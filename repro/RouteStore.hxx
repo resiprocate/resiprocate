@@ -29,7 +29,7 @@ class RouteStore
       RouteStore(AbstractDb& db);
       ~RouteStore();
       
-      void addRoute(const resip::Data& method,
+      bool addRoute(const resip::Data& method,
                     const resip::Data& event,
                     const resip::Data& matchingPattern,
                     const resip::Data& rewriteExpression,
@@ -47,11 +47,7 @@ class RouteStore
                         const resip::Data& rewriteExpression,
                         const int order );
       
-      resip::Data getRouteMethod( const resip::Data& key );
-      resip::Data getRouteEvent( const resip::Data& key );
-      resip::Data getRoutePattern( const resip::Data& key );
-      resip::Data getRouteRewrite( const resip::Data& key );
-      int         getRouteOrder( const resip::Data& key );
+      AbstractDb::RouteRecord getRouteRecord(const resip::Data& key);
       
       Key getFirstKey();// return empty if no more
       Key getNextKey(Key& key); // return empty if no more 

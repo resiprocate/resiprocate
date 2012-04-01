@@ -7,6 +7,7 @@
 #include "repro/AclStore.hxx"
 #include "repro/ConfigStore.hxx"
 #include "repro/StaticRegStore.hxx"
+#include "repro/FilterStore.hxx"
 
 
 namespace repro
@@ -26,6 +27,7 @@ class Store
       AclStore mAclStore; 
       ConfigStore mConfigStore;
       StaticRegStore mStaticRegStore;
+      FilterStore mFilterStore;
     private:
 };
 

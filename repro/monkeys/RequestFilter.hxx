@@ -1,34 +1,44 @@
-#include <cassert>
+#if !defined(RESIP_REQUESTFILTER_HXX)
+#define RESIP_REQUESTFILTER_HXX 
 
-#include "rutil/Logger.hxx"
+#include "rutil/Data.hxx"
+#include "repro/AsyncProcessor.hxx"
+#include "repro/ProxyConfig.hxx"
 
-#include "repro/Store.hxx"
-#include "repro/AbstractDb.hxx"
-
-
-using namespace resip;
-using namespace repro;
-using namespace std;
-
-#define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
-
-
-Store::Store( AbstractDb& db ):
-   mUserStore(db),
-   mRouteStore(db),
-   mAclStore(db),
-   mConfigStore(db),
-   mStaticRegStore(db),
-   mFilterStore(db)
+namespace resip
 {
+   class SipStack;
 }
 
-
-Store::~Store()
+namespace repro
 {
+class MySqlDb;
+class FilterStore;
+
+class RequestFilter : public AsyncProcessor
+{
+   public:
+      RequestFilter(ProxyConfig& config, Dispatcher* asyncDispatcher);
+      ~RequestFilter();
+
+      // Processor virutal method
+      virtual processor_action_t process(RequestContext &);
+
+      // Virtual method called from WorkerThreads
+      virtual void asyncProcess(AsyncProcessorMessage* msg);
+
+   private:
+      short parseActionResult(const resip::Data& result, resip::Data& rejectReason);
+      processor_action_t applyActionResult(RequestContext &rc, const resip::Data& actionResult);
+
+      FilterStore& mFilterStore;
+      MySqlDb* mMySqlDb;
+      resip::Data mDefaultNoMatchBehavior;
+      resip::Data mDefaultDBErrorBehavior;
+};
+
 }
-
-
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

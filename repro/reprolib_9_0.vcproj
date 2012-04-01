@@ -174,8 +174,8 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../resip/stack&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;;&quot;$(ProjectDir)../contrib/openssl/include&quot;;&quot;$(ProjectDir)../contrib/openssl/inc32&quot;;&quot;$(ProjectDir)../contrib/GeoIP/libGeoIP&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;USE_ARES;LEAK_CHECK;USE_IPV6;USE_SSL;USE_MAXMIND_GEOIP"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../resip/stack&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;;&quot;$(ProjectDir)../contrib/openssl/include&quot;;&quot;$(ProjectDir)../contrib/openssl/inc32&quot;;&quot;$(ProjectDir)../contrib/GeoIP/libGeoIP&quot;;&quot;C:\Program Files\MySQL\Connector C 6.0.2\include&quot;"
+				PreprocessorDefinitions="WIN32;_DEBUG;USE_ARES;LEAK_CHECK;USE_IPV6;USE_SSL;USE_MYSQL;USE_MAXMIND_GEOIP"
 				MinimalRebuild="false"
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="3"
@@ -397,6 +397,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\FilterStore.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\monkeys\GeoProximityTargetSorter.cxx"
 				>
 			</File>
@@ -509,6 +513,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\monkeys\RequestFilter.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ResponseContext.cxx"
 				>
 			</File>
@@ -587,6 +595,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\AsyncProcessor.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\AsyncProcessorMessage.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\AsyncProcessorWorker.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\stateAgents\CertPublicationHandler.hxx"
 				>
 			</File>
@@ -624,6 +644,14 @@
 			</File>
 			<File
 				RelativePath=".\Dispatcher.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\FilterStore.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ForkControlMessage.hxx"
 				>
 			</File>
 			<File
@@ -704,6 +732,10 @@
 			</File>
 			<File
 				RelativePath=".\RequestContext.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\monkeys\RequestFilter.hxx"
 				>
 			</File>
 			<File

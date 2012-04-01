@@ -74,6 +74,7 @@ protected:
    repro::AbstractDb* mAbstractDb;
    resip::RegistrationPersistenceManager* mRegistrationPersistenceManager;
    repro::Dispatcher* mAuthRequestDispatcher;
+   repro::Dispatcher* mAsyncProcessorDispatcher;
    repro::ProcessorChain* mMonkeys;
    repro::ProcessorChain* mLemurs;
    repro::ProcessorChain* mBaboons;

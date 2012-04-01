@@ -20,6 +20,7 @@
 #include "repro/WebAdmin.hxx"
 #include "repro/RouteStore.hxx"
 #include "repro/UserStore.hxx"
+#include "repro/FilterStore.hxx"
 #include "repro/Store.hxx"
 
 #ifdef USE_SSL
@@ -32,6 +33,8 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
+#define REPRO_BORDERLESS_TABLE_PROPS " border=\"0\" cellspacing=\"2\" cellpadding=\"0\""
+#define REPRO_BORDERED_TABLE_PROPS " border=\"1\" cellspacing=\"1\" cellpadding=\"1\" bgcolor=\"#ffffff\""
 
 WebAdmin::RemoveKey::RemoveKey(const Data &key1, const Data &key2) : mKey1(key1), mKey2(key2) 
 {
@@ -134,6 +137,9 @@ WebAdmin::buildPage( const Data& uri,
       ( pageName != Data("addUser.html") ) && 
       ( pageName != Data("editUser.html") ) &&
       ( pageName != Data("showUsers.html")  ) &&
+      ( pageName != Data("addFilter.html") ) && 
+      ( pageName != Data("editFilter.html") ) &&
+      ( pageName != Data("showFilters.html") )&& 
       ( pageName != Data("addRoute.html") ) && 
       ( pageName != Data("editRoute.html") ) &&
       ( pageName != Data("showRoutes.html") )&& 
@@ -316,7 +322,7 @@ WebAdmin::buildPage( const Data& uri,
       buildPageOutlinePre(s);
       
       // admin only pages 
-	  if ( pageName == Data("user.html")    ) {}; /* do nothing */ 
+      if ( pageName == Data("user.html")    ) {}; /* do nothing */ 
       //if ( pageName == Data("input")    ) ; /* do nothing */ 
       if ( pageName == Data("domains.html")    ) buildDomainsSubPage(s);
       if ( pageName == Data("acls.html")       ) buildAclsSubPage(s);
@@ -325,6 +331,10 @@ WebAdmin::buildPage( const Data& uri,
       if ( pageName == Data("editUser.html")   ) buildEditUserSubPage(s);
       if ( pageName == Data("showUsers.html")  ) buildShowUsersSubPage(s);
       
+      if ( pageName == Data("addFilter.html")   ) buildAddFilterSubPage(s);
+      if ( pageName == Data("editFilter.html")  ) buildEditFilterSubPage(s);
+      if ( pageName == Data("showFilters.html") ) buildShowFiltersSubPage(s);
+
       if ( pageName == Data("addRoute.html")   ) buildAddRouteSubPage(s);
       if ( pageName == Data("editRoute.html")  ) buildEditRouteSubPage(s);
       if ( pageName == Data("showRoutes.html") ) buildShowRoutesSubPage(s);
@@ -349,7 +359,77 @@ WebAdmin::buildPage( const Data& uri,
    
    setPage( page, pageNumber,200 );
 }
-  
+
+
+void
+WebAdmin::buildDomainsSubPage(DataStream& s)
+{ 
+   Data domainUri;
+   int domainTlsPort;
+
+  if (!mRemoveSet.empty() && (mHttpParams["action"] == "Remove"))
+   {
+      int j = 0;
+      for (set<RemoveKey>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
+      {
+         mStore.mConfigStore.eraseDomain(i->mKey1);
+         ++j;
+      }
+      s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
+   }
+   
+   Dictionary::iterator pos = mHttpParams.find("domainUri");
+   if (pos != mHttpParams.end() && (mHttpParams["action"] == "Add")) // found domainUri key
+   {
+      domainUri = pos->second;
+      domainTlsPort = mHttpParams["domainTlsPort"].convertInt();
+      mStore.mConfigStore.addDomain(domainUri,domainTlsPort);
+      s << "<p><em>Added</em> domain: " << domainUri << "</p>" << endl;
+   }   
+
+   s <<
+      "     <h2>Domains</h2>" << endl <<
+      "     <form id=\"domainForm\" method=\"get\" action=\"domains.html\" name=\"domainForm\">" << endl <<
+      "        <table" REPRO_BORDERLESS_TABLE_PROPS ">" << endl <<
+      "          <tr>" << endl <<
+      "            <td align=\"right\">New Domain:</td>" << endl <<
+      "            <td><input type=\"text\" name=\"domainUri\" size=\"24\"/></td>" << endl <<
+      "            <td><input type=\"text\" name=\"domainTlsPort\" size=\"4\"/></td>" << endl <<
+      "            <td><input type=\"submit\" name=\"action\" value=\"Add\"/></td>" << endl <<
+      "          </tr>" << endl <<
+      "        </table>" << endl <<
+      "      <div class=space>" << endl <<
+      "        <br>" << endl <<
+      "      </div>" << endl <<
+      "      <table" REPRO_BORDERED_TABLE_PROPS ">" << endl <<
+      "        <thead>" << endl <<
+      "          <tr>" << endl <<
+      "            <td>Domain</td>" << endl <<
+      "            <td align=\"center\">TLS Port</td>" << endl <<
+      "            <td><input type=\"submit\" name=\"action\" value=\"Remove\"/></td>" << endl << 
+      "          </tr>" << endl <<
+      "        </thead>" << endl <<
+      "        <tbody>" << endl;
+   
+   const ConfigStore::ConfigData& configs = mStore.mConfigStore.getConfigs();
+   for ( ConfigStore::ConfigData::const_iterator i = configs.begin();
+        i != configs.end(); i++ )
+   {
+      s << 
+         "          <tr>" << endl <<
+         "            <td>" << i->second.mDomain << "</td>" << endl <<
+         "            <td align=\"center\">" << i->second.mTlsPort << "</td>" << endl <<
+         "            <td><input type=\"checkbox\" name=\"remove." << i->second.mDomain << "\"/></td>" << endl <<
+         "          </tr>" << endl;
+   }
+   
+   s <<
+      "        </tbody>" << endl <<
+      "      </table>" << endl <<
+      "     </form>" << endl <<
+      "<p><em>WARNING:</em>  You must restart repro after adding domains.</p>" << endl;
+}
+
 
 void
 WebAdmin::buildAclsSubPage(DataStream& s)
@@ -381,10 +461,11 @@ WebAdmin::buildAclsSubPage(DataStream& s)
    }   
    
    s << 
+      "     <h2>ACLs</h2>" << endl <<
       "      <form id=\"aclsForm\" method=\"get\" action=\"acls.html\" name=\"aclsForm\">" << endl <<
       "      <div class=space>" << endl <<
       "      </div>" << endl <<
-      "        <table cellspacing=\"2\" cellpadding=\"0\">" << endl <<
+      "        <table" REPRO_BORDERLESS_TABLE_PROPS ">" << endl <<
       "          <tr>" << endl <<
       "            <td align=\"right\">Host or IP:</td>" << endl <<
       "            <td><input type=\"text\" name=\"aclUri\" size=\"24\"/></td>" << endl <<
@@ -402,7 +483,8 @@ WebAdmin::buildAclsSubPage(DataStream& s)
       "            <td><input type=\"submit\" name=\"action\" value=\"Add\"/></td>" << endl <<
       "          </tr>" << endl <<
       "        </table>" << endl <<
-      "      <table border=\"1\" cellspacing=\"2\" cellpadding=\"2\">" << endl <<
+      "      <br>" << endl <<
+      "      <table" REPRO_BORDERED_TABLE_PROPS ">" << endl <<
       "        <thead>" << endl <<
       "          <tr>" << endl <<
       "            <td>Host Address or Peer Name</td>" << endl <<
@@ -465,154 +547,6 @@ WebAdmin::buildAclsSubPage(DataStream& s)
 
 
 void
-WebAdmin::buildDomainsSubPage(DataStream& s)
-{ 
-   Data domainUri;
-   int domainTlsPort;
-
-  if (!mRemoveSet.empty() && (mHttpParams["action"] == "Remove"))
-   {
-      int j = 0;
-      for (set<RemoveKey>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
-      {
-         mStore.mConfigStore.eraseDomain(i->mKey1);
-         ++j;
-      }
-      s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
-   }
-   
-   Dictionary::iterator pos = mHttpParams.find("domainUri");
-   if (pos != mHttpParams.end() && (mHttpParams["action"] == "Add")) // found domainUri key
-   {
-      domainUri = pos->second;
-      domainTlsPort = mHttpParams["domainTlsPort"].convertInt();
-      mStore.mConfigStore.addDomain(domainUri,domainTlsPort);
-      
-      s << "<p><em>Added</em> domain: " << domainUri << "</p>" << endl;
-   }   
-
-   
-   // TODO !cj! - make a web page after you add a domain that tells people they
-   // have to restart the proxy 
-
-   s <<
-      "     <form id=\"domainForm\" method=\"get\" action=\"domains.html\" name=\"domainForm\">" << endl <<
-      "        <table cellspacing=\"2\" cellpadding=\"0\">" << endl <<
-      "          <tr>" << endl <<
-      "            <td align=\"right\">New Domain:</td>" << endl <<
-      "            <td><input type=\"text\" name=\"domainUri\" size=\"24\"/></td>" << endl <<
-      "            <td><input type=\"text\" name=\"domainTlsPort\" size=\"4\"/></td>" << endl <<
-      "            <td><input type=\"submit\" name=\"action\" value=\"Add\"/></td>" << endl <<
-      "          </tr>" << endl <<
-      "        </table>" << endl <<
-      "      <div class=space>" << endl <<
-      "        <br>" << endl <<
-      "      </div>" << endl <<
-      "      <table border=\"1\" cellspacing=\"2\" cellpadding=\"2\">" << endl <<
-      "        <thead>" << endl <<
-      "          <tr>" << endl <<
-      "            <td>Domain</td>" << endl <<
-      "            <td align=\"center\">TLS Port</td>" << endl <<
-      "            <td><input type=\"submit\" name=\"action\" value=\"Remove\"/></td>" << endl << 
-      "          </tr>" << endl <<
-      "        </thead>" << endl <<
-      "        <tbody>" << endl;
-   
-   const ConfigStore::ConfigData& configs = mStore.mConfigStore.getConfigs();
-   for ( ConfigStore::ConfigData::const_iterator i = configs.begin();
-        i != configs.end(); i++ )
-   {
-      s << 
-         "          <tr>" << endl <<
-         "            <td>" << i->second.mDomain << "</td>" << endl <<
-         "            <td align=\"center\">" << i->second.mTlsPort << "</td>" << endl <<
-         "            <td><input type=\"checkbox\" name=\"remove." << i->second.mDomain << "\"/></td>" << endl <<
-         "          </tr>" << endl;
-   }
-   
-   s <<
-      "        </tbody>" << endl <<
-      "      </table>" << endl <<
-      "     </form>" << endl;
-}
-
-void
-WebAdmin::buildAddRouteSubPage(DataStream& s)
-{
-   Dictionary::iterator pos;
-
-   pos = mHttpParams.find("routeUri");
-   if (pos != mHttpParams.end())
-   {
-      Data routeUri = mHttpParams["routeUri"];
-      Data routeDestination = mHttpParams["routeDestination"];
-      
-      if (!routeDestination.empty())
-      {
-         mStore.mRouteStore.addRoute(mHttpParams["routeMethod"], 
-                                     mHttpParams["routeEvent"], 
-                                     routeUri,
-                                     routeDestination,
-                                     mHttpParams["routeOrder"].convertInt());
-         
-         // check if successful
-         // {
-               s << "<p><em>Added</em> route for: " << routeUri << "</p>\n";
-         // }
-      }
-   }
-   
-   s << 
-      "<form id=\"addRouteFrom\" method=\"get\" action=\"addRoute.html\" name=\"addRouteForm\">" << endl << 
-      "<table border=\"1\" cellspacing=\"2\" cellpadding=\"0\">" << endl << 
-
-      "<tr>" << endl << 
-      "<td>URI</td>" << endl << 
-      "<td><input type=\"text\" name=\"routeUri\" size=\"40\"/></td>" << endl << 
-      "</tr>" << endl << 
-
-      "<tr>" << endl << 
-      "<td>Method</td>" << endl << 
-      "<td><input type=\"text\" name=\"routeMethod\" size=\"40\"/></td>" << endl << 
-      "</tr>" << endl << 
-      
-      "<tr>" << endl << 
-      "<td>Event</td>" << endl << 
-      "<td><input type=\"text\" name=\"routeEvent\" size=\"40\"/></td>" << endl << 
-      "</tr>" << endl << 
-      
-      "<tr>" << endl << 
-      "<td>Destination</td>" << endl << 
-      "<td><input type=\"text\" name=\"routeDestination\" size=\"40\"/></td>" << endl << 
-      "</tr>" << endl << 
-      
-      "<tr>" << endl << 
-      "<td>Order</td>" << endl << 
-      "<td><input type=\"text\" name=\"routeOrder\" size=\"4\"/></td>" << endl << 
-      "</tr>" << endl << 
-
-      "<tr>" << endl << 
-      "  <td colspan=\"2\" align=\"right\" valign=\"middle\">" << endl << 
-      "    <input type=\"reset\"  value=\"Cancel\"/>" << endl << 
-      "    <input type=\"submit\" name=\"routeAdd\" value=\"Add\"/>" << endl << 
-      "  </td>" << endl << 
-      "</tr>" << endl << 
-
-      "</table>" << endl << 
-      "</form>" << endl <<
-
-      "<pre>" << endl <<
-      "Static routes use (POSIX-standard) regular expression to match" << endl <<
-      "and rewrite SIP URIs.  The following is an example of sending" << endl <<
-      "all requests that consist of only digits in the userpart of the" << endl <<
-      "SIP URI to a gateway:" << endl << endl <<
-      "   URI:         ^sip:([0-9]+)@example\\.com" << endl <<
-      "   Destination: sip:$1@gateway.example.com" << endl <<
-      "</pre>" << endl;
-}
-
-
-void
 WebAdmin::buildAddUserSubPage( DataStream& s)
 {
    Dictionary::iterator pos;
@@ -639,8 +573,9 @@ WebAdmin::buildAddUserSubPage( DataStream& s)
    }
 
       s << 
+         "<h2>Add User</h2>" << endl <<
          "<form id=\"addUserForm\" action=\"addUser.html\"  method=\"get\" name=\"addUserForm\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
-         "<table border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">" << endl << 
+         "<table" REPRO_BORDERLESS_TABLE_PROPS ">" << endl << 
          "<tr>" << endl << 
          "  <td align=\"right\" valign=\"middle\">User Name:</td>" << endl << 
          "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"user\" size=\"40\"/></td>" << endl << 
@@ -698,6 +633,880 @@ WebAdmin::buildAddUserSubPage( DataStream& s)
          "</table>" << endl << 
          "</form>" << endl
          ;
+}
+
+
+void
+WebAdmin::buildEditUserSubPage( DataStream& s)
+{
+   Dictionary::iterator pos;
+   pos = mHttpParams.find("key");
+   if (pos != mHttpParams.end()) 
+   {
+      Data key = pos->second;
+      AbstractDb::UserRecord rec = mStore.mUserStore.getUserInfo(key);
+      // !rwm! TODO check to see if we actually found a record corresponding to the key.  how do we do that?
+      
+      s << "<h2>Edit User</h2>" << endl <<
+           "<p>Editing Record with key: " << key << "</p>" << endl <<
+           "<p>Note:  If the username is not modified and you leave the password field empty the users current password will not be reset.</p>" << endl;
+      
+      s << 
+         "<form id=\"editUserForm\" action=\"showUsers.html\"  method=\"get\" name=\"editUserForm\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
+         "<table" REPRO_BORDERLESS_TABLE_PROPS ">" << endl << 
+         "<input type=\"hidden\" name=\"key\" value=\"" << key << "\"/>" << endl << 
+         "<tr>" << endl << 
+         "  <td align=\"right\" valign=\"middle\">User Name:</td>" << endl << 
+         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"user\" value=\"" << rec.user << "\" size=\"40\"/></td>" << endl << 
+         "</tr>" << endl << 
+         
+         //"<tr>" << endl << 
+         //"<td align=\"right\" valign=\"middle\" >Realm:</td>" << endl << 
+         //"<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"realm\" size=\"40\"/></td>" << endl << 
+         //"</tr>" << endl << 
+
+         "<tr>" << endl << 
+         "  <td align=\"right\" valign=\"middle\" >Domain:</td>" << endl << 
+         "  <td align=\"left\" valign=\"middle\"><select name=\"domain\">" << endl
+         ; 
+      
+      // for each domain, add an option in the pulldown      
+      const ConfigStore::ConfigData& list = mStore.mConfigStore.getConfigs();      
+      for ( ConfigStore::ConfigData::const_iterator i = list.begin();
+            i != list.end(); i++ )
+      {
+         s << "            <option";
+         
+         if ( i->second.mDomain == rec.domain)
+         {
+            s << " selected=\"true\""; 
+         }
+         
+         s << ">" << i->second.mDomain << "</option>" << endl;
+      }
+      
+      s <<
+         "</select></td></tr>" << endl <<
+         "<tr>" << endl << 
+         "  <td align=\"right\" valign=\"middle\" >Password:</td>" << endl << 
+         "  <td align=\"left\" valign=\"middle\"><input type=\"password\" name=\"password\" size=\"40\"/></td>" << endl << 
+         "</tr>" << endl << 
+         // Note that the UserStore only stores a passwordHash, so we will collect a password.  If one is provided in the
+         // edit page, we will use it to generate a new passwordHash, otherwise we will leave the hash alone.
+         
+         "<tr>" << endl << 
+         "  <td align=\"right\" valign=\"middle\" >Full Name:</td>" << endl << 
+         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"name\" value=\"" << rec.name << 
+         "\" size=\"40\"/></td>" << endl << 
+         "</tr>" << endl << 
+
+         "<tr>" << endl << 
+         "  <td align=\"right\" valign=\"middle\" >Email:</td>" << endl << 
+         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"email\" value=\"" << rec.email <<
+         "\" size=\"40\"/></td>" << endl << 
+         "</tr>" << endl << 
+
+         "<tr>" << endl << 
+         "  <td colspan=\"2\" align=\"right\" valign=\"middle\">" << endl << 
+         "    <input type=\"submit\" name=\"submit\" value=\"Update\"/>" << endl << 
+         "  </td>" << endl << 
+         "</tr>" << endl << 
+         
+         "</table>" << endl <<
+         "</form>" << endl
+         ;
+   }
+   else
+   {
+      // go back to show users page
+   }
+}
+
+
+void 
+WebAdmin::buildShowUsersSubPage(DataStream& s)
+{
+   Dictionary::iterator pos;
+   Data key;
+   AbstractDb::UserRecord rec;
+
+   if (!mRemoveSet.empty())
+   {
+      int j = 0;
+      for (set<RemoveKey>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
+      {
+         mStore.mUserStore.eraseUser(i->mKey1);
+         ++j;
+      }
+      s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
+   }
+   
+   pos = mHttpParams.find("key");
+   if (pos != mHttpParams.end())  // check if the user parameter exists, if so, use as a key to update the record
+   {
+      key = pos->second;
+      rec = mStore.mUserStore.getUserInfo(key);
+      // check to see if we actually found a record corresponding to the key
+      if (!rec.user.empty())
+      {
+         Data user = mHttpParams["user"];
+         Data domain = mHttpParams["domain"];                  
+         Data realm = mHttpParams["domain"];   // eventually sort out realms
+         Data password = mHttpParams["password"];
+         Data name = mHttpParams["name"];
+         Data email = mHttpParams["email"];
+         bool applyA1HashToPassword = true;
+         
+         // if no password was specified, then leave current password untouched
+         if(password == "" && user == rec.user && realm == rec.realm) 
+         {
+            password = rec.passwordHash;
+            applyA1HashToPassword = false;
+         }
+         // write out the updated record to the database now
+         mStore.mUserStore.updateUser(key, user, domain, realm, password, applyA1HashToPassword, name, email );
+         
+         s << "<p><em>Updated:</em> " << key << "</p>" << endl; 
+      }
+   }
+   
+      
+      s << 
+         "<h2>Users</h2>" << endl <<
+         "<form id=\"showUsers\" method=\"get\" action=\"showUsers.html\" name=\"showUsers\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
+         "<table" REPRO_BORDERED_TABLE_PROPS ">" << endl << 
+         "<tr>" << endl << 
+         "  <td>User@Domain</td>" << endl << 
+         //  "  <td>Realm</td>" << endl << 
+         "  <td>Name</td>" << endl << 
+         "  <td>Email</td>" << endl << 
+         "  <td><input type=\"submit\" value=\"Remove\"/></td>" << endl << 
+         "</tr>" << endl;
+      
+      s << endl;
+      
+      int count =0;
+      
+      key = mStore.mUserStore.getFirstKey();
+      while ( !key.empty() )
+      {
+         rec = mStore.mUserStore.getUserInfo(key);
+
+         if ((rec.domain == Data::Empty) && (rec.user == "admin"))
+         {
+            key = mStore.mUserStore.getNextKey();
+            continue;   // skip the row for the admin web user
+         }
+      
+         s << "<tr>" << endl 
+           << "  <td><a href=\"editUser.html?key=";
+         key.urlEncode(s);
+         s << "\">" << rec.user << "@" << rec.domain << "</a></td>" << endl
+           << "  <td>" << rec.name << "</td>" << endl
+           << "  <td>" << rec.email << "</td>" << endl
+           << "  <td><input type=\"checkbox\" name=\"remove." << key << "\"/></td>" << endl
+           << "</tr>" << endl;
+         
+         key = mStore.mUserStore.getNextKey();
+
+         // make a limit to how many users are displayed 
+         if ( ++count > 1000 )
+         {
+            break;
+         }
+      }
+      
+      if ( !key.empty() )
+      {
+         s << "<tr><td>Only first 1000 users were displayed<td></tr>" << endl;
+      }
+      
+      s << 
+         "</table>" << endl << 
+         "</form>" << endl;
+}
+
+
+void
+WebAdmin::buildAddFilterSubPage(DataStream& s)
+{
+   Dictionary::iterator pos;
+
+   pos = mHttpParams.find("cond1header");
+   if (pos != mHttpParams.end())
+   {
+      Data action = mHttpParams["action"];
+      Data actionData = mHttpParams["actiondata"];
+      
+      if (action != "Accept" && actionData.empty())
+      {
+         s << "<p><em>Error</em> adding request filter.  You must provide appropriate Action Data for non-Accept action.</p>\n";
+      }
+      else
+      {
+         short actionShort = 0;  // 0 - Accept, 1 - Reject, 2 - SQL Query
+         if(action == "Reject") actionShort = 1;
+         else if(action == "SQL Query") actionShort = 2;
+
+         if(mStore.mFilterStore.addFilter(mHttpParams["cond1header"],
+                                          mHttpParams["cond1regex"],
+                                          mHttpParams["cond2header"],
+                                          mHttpParams["cond2regex"],
+                                          mHttpParams["method"], 
+                                          mHttpParams["event"],
+                                          actionShort,
+                                          actionData,
+                                          mHttpParams["order"].convertInt()))
+         {
+            s << "<p><em>Added</em> request filter: " << mHttpParams["cond1header"] << "=" << mHttpParams["cond1regex"] << ", "
+                                                      << mHttpParams["cond2header"] << "=" << mHttpParams["cond2regex"] << "</p>\n";
+         }
+         else
+         {
+            s << "<p><em>Error</em> adding request filter, likely duplicate found.</p>\n";
+         }
+      }
+   }
+
+   s << 
+      "<h2>Add Request Filter</h2>" << endl <<
+      "<form id=\"addFilterForm\" method=\"get\" action=\"addFilter.html\" name=\"addFilterForm\">" << endl << 
+      "<table" REPRO_BORDERLESS_TABLE_PROPS ">" << endl << 
+
+      "<tr>" << endl << 
+      "  <td align=\"right\" valign=\"middle\">Condition1 Header:</td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond1header\" size=\"40\" value=\"From\"/></td>" << endl << 
+      "</tr>" << endl << 
+
+      "<tr>" << endl << 
+      "  <td align=\"right\" valign=\"middle\">Condition1 Regex:</td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond1regex\" size=\"40\"/></td>" << endl << 
+      "</tr>" << endl << 
+
+      "<tr>" << endl << 
+      "  <td align=\"right\" valign=\"middle\">Condition2 Header:</td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond2header\" size=\"40\" value=\"To\"/></td>" << endl << 
+      "</tr>" << endl << 
+
+      "<tr>" << endl << 
+      "  <td align=\"right\" valign=\"middle\">Condition2 Regex:</td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond2regex\" size=\"40\"/></td>" << endl << 
+      "</tr>" << endl << 
+
+      "<tr>" << endl << 
+      "  <td align=\"right\" valign=\"middle\">Method:</td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"method\" size=\"40\"/></td>" << endl << 
+      "</tr>" << endl << 
+
+      "<tr>" << endl << 
+      "  <td align=\"right\" valign=\"middle\">Event:</td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"event\" size=\"40\"/></td>" << endl << 
+      "</tr>" << endl << 
+      
+      "<tr>" << endl << 
+      "  <td align=\"right\" valign=\"middle\">Action:</td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\">" << endl <<
+      "    <select name=\"action\">" << endl <<
+      "      <option>Reject</option>" << endl << 
+      "      <option>Accept</option>" << endl << 
+#ifdef USE_MYSQL
+      "      <option>SQL Query</option>" << endl << 
+#endif
+      "    </select>" << endl <<
+      "  </td>" << endl <<
+      "</tr>" << endl <<
+
+      "<tr>" << endl << 
+      "  <td align=\"right\" valign=\"middle\">Action Data:</td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"actiondata\" size=\"40\" value=\"403, Request Blocked\"/></td>" << endl << 
+      "</tr>" << endl << 
+
+      "<tr>" << endl << 
+      "  <td align=\"right\" valign=\"middle\">Order:</td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"order\" size=\"4\" value=\"0\"/></td>" << endl << 
+      "</tr>" << endl << 
+
+      "<tr>" << endl << 
+      "  <td colspan=\"2\" align=\"right\" valign=\"middle\">" << endl << 
+      "    <input type=\"reset\"  value=\"Cancel\"/>" << endl << 
+      "    <input type=\"submit\" name=\"filterAdd\" value=\"Add\"/>" << endl << 
+      "  </td>" << endl << 
+      "</tr>" << endl << 
+
+      "</table>" << endl << 
+      "</form>" << endl <<
+
+      "<pre>" << endl <<
+      "If Action is Accept, then Action Data is ignored." << endl <<
+      "If Action is Reject, then Action Data should be set to: SIPRejectionCode[, SIPReason]"  << endl <<
+#ifdef USE_MYSQL
+      "If Action is SQL Query, then Action Data should be set to the SQL Query to execute." << endl <<
+      "Replacement strings from the Regex's above can be used in the query, and the query" << endl <<
+      "must return a string that is formated similar to Action Data when the action is" << endl <<
+      "Reject.  Alternatively it can return a string with status code of 0 to accept the" << endl <<
+      "request." << endl <<
+#endif
+      "</pre>" << endl;
+}
+
+
+void
+WebAdmin::buildEditFilterSubPage(DataStream& s)
+{
+   Dictionary::iterator pos;
+   pos = mHttpParams.find("key");
+   if (pos != mHttpParams.end()) 
+   {
+      Data key = pos->second;
+
+      // !rwm! TODO check to see if we actually found a record corresponding to the key.  how do we do that?
+      DebugLog( << "Creating page to edit filter " << key );
+      
+      AbstractDb::FilterRecord rec = mStore.mFilterStore.getFilterRecord(key);
+
+      s <<"<h2>Edit Request Filter</h2>" << endl <<
+         "<p>Editing Record with conditions: " << rec.mCondition1Header << "=" << rec.mCondition1Regex << ", "
+                                               << rec.mCondition2Header << "=" << rec.mCondition2Regex << "</p>" << endl;
+
+      s << 
+      "<form id=\"editFilterForm\" method=\"get\" action=\"showFilters.html\" name=\"editFilterForm\">" << endl << 
+      "<table" REPRO_BORDERLESS_TABLE_PROPS ">" << endl << 
+      "<input type=\"hidden\" name=\"key\" value=\"" << key << "\"/>" << endl << 
+      "<tr>" << endl << 
+
+      "<tr>" << endl << 
+      "  <td align=\"right\" valign=\"middle\">Condition1 Header:</td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond1header\" size=\"40\" value=\"" << rec.mCondition1Header << "\"/></td>" << endl << 
+      "</tr>" << endl << 
+
+      "<tr>" << endl << 
+      "  <td align=\"right\" valign=\"middle\">Condition1 Regex:</td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond1regex\" size=\"40\" value=\"" << rec.mCondition1Regex << "\"/></td>" << endl << 
+      "</tr>" << endl << 
+
+      "<tr>" << endl << 
+      "  <td align=\"right\" valign=\"middle\">Condition2 Header:</td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond2header\" size=\"40\" value=\"" << rec.mCondition2Header << "\"/></td>" << endl << 
+      "</tr>" << endl << 
+
+      "<tr>" << endl << 
+      "  <td align=\"right\" valign=\"middle\">Condition2 Regex:</td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"cond2regex\" size=\"40\" value=\"" << rec.mCondition2Regex << "\"/></td>" << endl << 
+      "</tr>" << endl << 
+
+      "<tr>" << endl << 
+      "  <td align=\"right\" valign=\"middle\">Method:</td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"method\" size=\"40\" value=\"" << rec.mMethod << "\"/></td>" << endl << 
+      "</tr>" << endl << 
+
+      "<tr>" << endl << 
+      "  <td align=\"right\" valign=\"middle\">Event:</td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"event\" size=\"40\" value=\"" << rec.mEvent << "\"/></td>" << endl << 
+      "</tr>" << endl << 
+      
+      "<tr>" << endl << 
+      "  <td align=\"right\" valign=\"middle\">Action:</td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\">" << endl <<
+      "    <select name=\"action\">" << endl <<
+      "      <option" << (rec.mAction == FilterStore::Reject ? " selected=\"selected\"" : "") << ">Reject</option>" << endl << 
+      "      <option" << (rec.mAction == FilterStore::Accept ? " selected=\"selected\"" : "") << ">Accept</option>" << endl << 
+#ifdef USE_MYSQL
+      "      <option" << (rec.mAction == FilterStore::SQLQuery ? " selected=\"selected\"" : "") << ">SQL Query</option>" << endl << 
+#endif
+      "    </select>" << endl <<
+      "  </td>" << endl <<
+      "</tr>" << endl <<
+
+      "<tr>" << endl << 
+      "  <td align=\"right\" valign=\"middle\">Action Data:</td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"actiondata\" size=\"40\" value=\"" << rec.mActionData << "\"/></td>" << endl << 
+      "</tr>" << endl << 
+
+      "<tr>" << endl << 
+      "  <td align=\"right\" valign=\"middle\">Order:</td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"order\" size=\"4\" value=\"" << rec.mOrder << "\"/></td>" << endl << 
+      "</tr>" << endl << 
+
+      "<tr>" << endl << 
+      "  <td colspan=\"2\" align=\"right\" valign=\"middle\">" << endl << 
+      "    <input type=\"submit\" name=\"routeEdit\" value=\"Update\"/>" << endl << 
+      "  </td>" << endl << 
+      "</tr>" << endl << 
+
+      "</table>" << endl << 
+      "</form>" << endl;
+   }
+   else
+   {
+      // go back to show filter page
+   }
+}
+
+
+void
+WebAdmin::buildShowFiltersSubPage(DataStream& s)
+{
+   Dictionary::iterator pos;
+   Data key;
+   AbstractDb::RouteRecord rec;
+
+   if (!mRemoveSet.empty())
+   {
+      int j = 0;
+      for (set<RemoveKey>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
+      {
+         mStore.mFilterStore.eraseFilter(i->mKey1);
+         ++j;
+      }
+      s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
+   }
+   
+   pos = mHttpParams.find("key");
+   if (pos != mHttpParams.end())   // if a key parameter exists, use the key to update the record
+   {
+      key = pos->second;
+
+      // !rwm! TODO check to see if we actually found a record corresponding to the key.  how do we do that?
+      if (1)
+      {
+         Data action = mHttpParams["action"];
+         Data actionData = mHttpParams["actiondata"];
+      
+         if (action != "Accept" && actionData.empty())
+         {
+            s << "<p><em>Error</em> updating request filter.  You must provide appropriate Action Data for non-Accept action.</p>\n";
+         }
+         else
+         {
+            short actionShort = 0;  // 0 - Accept, 1 - Reject, 2 - SQL Query
+            if(action == "Reject") actionShort = 1;
+            else if(action == "SQL Query") actionShort = 2;
+
+            mStore.mFilterStore.updateFilter(key,
+                                             mHttpParams["cond1header"],
+                                             mHttpParams["cond1regex"],
+                                             mHttpParams["cond2header"],
+                                             mHttpParams["cond2regex"],
+                                             mHttpParams["method"], 
+                                             mHttpParams["event"],
+                                             actionShort,
+                                             actionData,
+                                             mHttpParams["order"].convertInt());
+
+            s << "<p><em>Updated</em> request filter: " << mHttpParams["cond1header"] << "=" << mHttpParams["cond1regex"] << ", "
+                                                        << mHttpParams["cond2header"] << "=" << mHttpParams["cond2regex"] << "</p>\n";
+         }
+      }
+   }
+
+   s <<
+      "<h2>Request Filters</h2>" << endl <<
+      "<form id=\"showFilters\" action=\"showFilters.html\" method=\"get\" name=\"showFilters\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
+      // "            <button name=\"removeAllRoute\" value=\"\" type=\"submit\">Remove All</button>" << endl << 
+      "<table" REPRO_BORDERED_TABLE_PROPS ">" << endl << 
+      "<thead><tr>" << endl << 
+      "  <td>Condition 1</td>" << endl << 
+      "  <td>Condition 2</td>" << endl << 
+      "  <td>Method</td>" << endl << 
+      "  <td>Event</td>" << endl << 
+      "  <td>Action</td>" << endl << 
+      "  <td>Action Data</td>" << endl << 
+      "  <td>Order</td>" << endl << 
+      "  <td><input type=\"submit\" value=\"Remove\"/></td>" << endl << 
+      "</tr></thead>" << endl << 
+      "<tbody>" << endl;
+
+   for(FilterStore::Key key = mStore.mFilterStore.getFirstKey();
+       !key.empty();
+        key = mStore.mFilterStore.getNextKey(key))
+   {
+      AbstractDb::FilterRecord rec = mStore.mFilterStore.getFilterRecord(key);
+      Data action("Accept");
+      if(rec.mAction == FilterStore::Reject)
+      {
+         action = "Reject";
+      }
+      else if(rec.mAction == FilterStore::SQLQuery)
+      {
+         action = "SQL Query";
+      }
+      s <<  "<tr>" << endl << 
+         "<td><a href=\"editFilter.html?key=";
+            key.urlEncode(s); 
+      s << 
+         "\">" << rec.mCondition1Header << "=" << rec.mCondition1Regex << "</a></td>" << endl << 
+         "<td>" << rec.mCondition2Header << "=" << rec.mCondition2Regex << "</td>" << endl << 
+         "<td>" << rec.mMethod << "</td>" << endl << 
+         "<td>" << rec.mEvent << "</td>" << endl << 
+         "<td>" << action << "</td>" << endl << 
+         "<td>" << rec.mActionData << "</td>" << endl << 
+         "<td>" << rec.mOrder << "</td>" << endl << 
+         "<td><input type=\"checkbox\" name=\"remove." <<  key << "\"/></td>" << endl << 
+         "</tr>" << endl;
+   }
+
+   s << 
+      "</tbody>" << endl << 
+      "</table>" << endl << 
+      "</form>" << endl;
+
+   Data cond1TestHeader;
+   pos = mHttpParams.find("cond1TestHeader");
+   if (pos != mHttpParams.end()) // found it
+   {
+      cond1TestHeader = pos->second;
+   }
+   Data cond2TestHeader;
+   pos = mHttpParams.find("cond2TestHeader");
+   if (pos != mHttpParams.end()) // found it
+   {
+      cond2TestHeader = pos->second;
+   }
+
+   s << 
+      "<br><form id=\"testFilter\" action=\"showFilters.html\" method=\"get\" name=\"testFilter\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
+      "<table" REPRO_BORDERLESS_TABLE_PROPS ">" << endl << 
+      "<tr>" << endl << 
+      "  <td align=\"right\">Condition 1 Header:</td>" << endl << 
+      "  <td><input type=\"text\" name=\"cond1TestHeader\" value=\"" << cond1TestHeader.xmlCharDataEncode() << "\" size=\"40\"/></td>" << endl << 
+      "</tr>" << endl <<
+      "<tr>" << endl << 
+      "  <td align=\"right\">Condition 2 Header:</td>" << endl << 
+      "  <td><input type=\"text\" name=\"cond2TestHeader\" value=\"" << cond2TestHeader.xmlCharDataEncode() << "\" size=\"40\"/></td>" << endl << 
+      "  <td><input type=\"submit\" name=\"testFilter\" value=\"Test Filters\"/></td>" << endl << 
+      "</tr>" << endl <<
+      "</table>" << endl << 
+      "</form>" << endl <<
+      "<br>" << endl;
+   
+   if(!cond1TestHeader.empty())
+   {
+      s << "<em>Test Result: </em>";
+      short action;
+      Data actionData;
+      if(mStore.mFilterStore.test(cond1TestHeader, cond2TestHeader, action, actionData))
+      {
+         switch(action)
+         {
+         case FilterStore::Reject:
+            s << "Match found, action=Reject " << actionData << endl;
+            break;
+         case FilterStore::SQLQuery:
+            s << "Match found, action=SQL Query '" << actionData << "'" << endl;
+            break;
+         case FilterStore::Accept:
+         default:
+            s << "Match found, action=Accept" << endl;
+            break;
+         }
+      }
+      else
+      {
+         s << "No Match";
+      }
+   }
+}
+
+
+void
+WebAdmin::buildAddRouteSubPage(DataStream& s)
+{
+   Dictionary::iterator pos;
+
+   pos = mHttpParams.find("routeUri");
+   if (pos != mHttpParams.end())
+   {
+      Data routeUri = mHttpParams["routeUri"];
+      Data routeDestination = mHttpParams["routeDestination"];
+      
+      if (!routeUri.empty() && !routeDestination.empty())
+      {
+         if(mStore.mRouteStore.addRoute(mHttpParams["routeMethod"], 
+                                        mHttpParams["routeEvent"], 
+                                        routeUri,
+                                        routeDestination,
+                                        mHttpParams["routeOrder"].convertInt()))
+         {
+            s << "<p><em>Added</em> route for: " << routeUri << "</p>\n";
+         }
+         else
+         {
+            s << "<p><em>Error</em> adding route, likely duplicate found.</p>\n";
+         }
+      }
+      else
+      {
+         s << "<p><em>Error</em> adding route.  You must provide a URI and a route destination.</p>\n";
+      }
+   }
+
+   s << 
+      "<h2>Add Route</h2>" << endl <<
+      "<form id=\"addRouteForm\" method=\"get\" action=\"addRoute.html\" name=\"addRouteForm\">" << endl << 
+      "<table" REPRO_BORDERLESS_TABLE_PROPS ">" << endl << 
+
+      "<tr>" << endl << 
+      "  <td align=\"right\" valign=\"middle\">URI:</td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeUri\" size=\"40\"/></td>" << endl << 
+      "</tr>" << endl << 
+
+      "<tr>" << endl << 
+      "  <td align=\"right\" valign=\"middle\">Method:</td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeMethod\" size=\"40\"/></td>" << endl << 
+      "</tr>" << endl << 
+      
+      "<tr>" << endl << 
+      "  <td align=\"right\" valign=\"middle\">Event:</td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeEvent\" size=\"40\"/></td>" << endl << 
+      "</tr>" << endl << 
+      
+      "<tr>" << endl << 
+      "  <td align=\"right\" valign=\"middle\">Destination:</td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeDestination\" size=\"40\"/></td>" << endl << 
+      "</tr>" << endl << 
+      
+      "<tr>" << endl << 
+      "  <td align=\"right\" valign=\"middle\">Order:</td>" << endl << 
+      "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeOrder\" size=\"4\"/></td>" << endl << 
+      "</tr>" << endl << 
+
+      "<tr>" << endl << 
+      "  <td colspan=\"2\" align=\"right\" valign=\"middle\">" << endl << 
+      "    <input type=\"reset\"  value=\"Cancel\"/>" << endl << 
+      "    <input type=\"submit\" name=\"routeAdd\" value=\"Add\"/>" << endl << 
+      "  </td>" << endl << 
+      "</tr>" << endl << 
+
+      "</table>" << endl << 
+      "</form>" << endl <<
+
+      "<pre>" << endl <<
+      "Static routes use (POSIX-standard) regular expression to match" << endl <<
+      "and rewrite SIP URIs.  The following is an example of sending" << endl <<
+      "all requests that consist of only digits in the userpart of the" << endl <<
+      "SIP URI to a gateway:" << endl << endl <<
+      "   URI:         ^sip:([0-9]+)@example\\.com" << endl <<
+      "   Destination: sip:$1@gateway.example.com" << endl <<
+      "</pre>" << endl;
+}
+
+
+void
+WebAdmin::buildEditRouteSubPage(DataStream& s)
+{
+   Dictionary::iterator pos;
+   pos = mHttpParams.find("key");
+   if (pos != mHttpParams.end()) 
+   {
+      Data key = pos->second;
+
+      // !rwm! TODO check to see if we actually found a record corresponding to the key.  how do we do that?
+      DebugLog( << "Creating page to edit route " << key );
+      
+      AbstractDb::RouteRecord rec = mStore.mRouteStore.getRouteRecord(key);
+
+      s <<"<h2>Edit Route</h2>" << endl <<
+          "<p>Editing Record with matching pattern: " << rec.mMatchingPattern << "</p>" << endl;      
+
+      s << 
+      "<form id=\"editRouteForm\" method=\"get\" action=\"showRoutes.html\" name=\"editRouteForm\">" << endl << 
+      "<table" REPRO_BORDERLESS_TABLE_PROPS ">" << endl << 
+      "<input type=\"hidden\" name=\"key\" value=\"" << key << "\"/>" << endl << 
+      "<tr>" << endl << 
+      "<td align=\"right\" valign=\"middle\">URI:</td>" << endl << 
+      "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeUri\" value=\"" <<  rec.mMatchingPattern << "\" size=\"40\"/></td>" << endl << 
+      "</tr>" << endl << 
+
+      "<tr>" << endl << 
+      "<td align=\"right\" valign=\"middle\">Method:</td>" << endl << 
+      "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeMethod\" value=\"" <<  rec.mMethod  << "\" size=\"40\"/></td>" << endl << 
+      "</tr>" << endl << 
+      
+      "<tr>" << endl << 
+      "<td align=\"right\" valign=\"middle\">Event:</td>" << endl << 
+      "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeEvent\" value=\"" << rec.mEvent  << "\" size=\"40\"/></td>" << endl << 
+      "</tr>" << endl << 
+      
+      "<tr>" << endl << 
+      "<td align=\"right\" valign=\"middle\">Destination:</td>" << endl << 
+      "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeDestination\" value=\"" << rec.mRewriteExpression <<
+                            "\" size=\"40\"/></td>" << endl << 
+      "</tr>" << endl << 
+      
+      "<tr>" << endl << 
+      "<td align=\"right\" valign=\"middle\">Order:</td>" << endl << 
+      "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"routeOrder\" value=\"" << rec.mOrder  <<
+                            "\" size=\"4\"/></td>" << endl << 
+      "</tr>" << endl << 
+
+      "<tr>" << endl << 
+      "  <td colspan=\"2\" align=\"right\" valign=\"middle\">" << endl << 
+      "    <input type=\"submit\" name=\"routeEdit\" value=\"Update\"/>" << endl << 
+      "  </td>" << endl << 
+      "</tr>" << endl << 
+
+      "</table>" << endl << 
+      "</form>" << endl;
+   }
+   else
+   {
+      // go back to show route page
+   }
+}
+
+
+void
+WebAdmin::buildShowRoutesSubPage(DataStream& s)
+{
+   Dictionary::iterator pos;
+   Data key;
+   AbstractDb::RouteRecord rec;
+
+   if (!mRemoveSet.empty())
+   {
+      int j = 0;
+      for (set<RemoveKey>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
+      {
+         mStore.mRouteStore.eraseRoute(i->mKey1);
+         ++j;
+      }
+      s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
+   }
+   
+   pos = mHttpParams.find("key");
+   if (pos != mHttpParams.end())   // if a key parameter exists, use the key to update the record
+   {
+      key = pos->second;
+
+      // !rwm! TODO check to see if we actually found a record corresponding to the key.  how do we do that?
+      if (1)
+      {
+         Data method = mHttpParams["routeMethod"]; 
+         Data event = mHttpParams["routeEvent"]; 
+         Data matchingPattern = mHttpParams["routeUri"];
+         Data rewriteExpression = mHttpParams["routeDestination"];
+         int  order = mHttpParams["routeOrder"].convertInt();
+         
+         if (!matchingPattern.empty() && !rewriteExpression.empty())
+         {
+            // write out the updated record to the database now
+            mStore.mRouteStore.updateRoute(key, method,event,matchingPattern,rewriteExpression,order  );
+         
+            s << "<p><em>Updated:</em> " << rec.mMatchingPattern << "</p>" << endl; 
+         }
+         else
+         {
+            s << "<p><em>Error</em> updating route.  You must provide a URI and a route destination.</p>\n";
+         }
+      }
+   }
+
+   s <<
+      "<h2>Routes</h2>" << endl <<
+      "<form id=\"showRoutes\" action=\"showRoutes.html\" method=\"get\" name=\"showRoutes\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
+      // "            <button name=\"removeAllRoute\" value=\"\" type=\"submit\">Remove All</button>" << endl << 
+      "<table" REPRO_BORDERED_TABLE_PROPS ">" << endl << 
+      "<thead><tr>" << endl << 
+      "  <td>URI</td>" << endl << 
+      "  <td>Method</td>" << endl << 
+      "  <td>Event</td>" << endl << 
+      "  <td>Destination</td>" << endl << 
+      "  <td>Order</td>" << endl << 
+      "  <td><input type=\"submit\" value=\"Remove\"/></td>" << endl << 
+      "</tr></thead>" << endl << 
+      "<tbody>" << endl;
+   
+   for ( RouteStore::Key key = mStore.mRouteStore.getFirstKey();
+         !key.empty();
+         key = mStore.mRouteStore.getNextKey(key) )
+   {
+      AbstractDb::RouteRecord rec = mStore.mRouteStore.getRouteRecord(key);
+
+      s <<  "<tr>" << endl << 
+         "<td><a href=\"editRoute.html?key=";
+            key.urlEncode(s); 
+      s << 
+         "\">" << rec.mMatchingPattern << "</a></td>" << endl << 
+         "<td>" << rec.mMethod << "</td>" << endl << 
+         "<td>" << rec.mEvent << "</td>" << endl << 
+         "<td>" << rec.mRewriteExpression << "</td>" << endl << 
+         "<td>" << rec.mOrder << "</td>" << endl << 
+         "<td><input type=\"checkbox\" name=\"remove." <<  key << "\"/></td>" << endl << 
+         "</tr>" << endl;
+   }
+   
+   s << 
+      "</tbody>" << endl << 
+      "</table>" << endl << 
+      "</form>" << endl;
+
+   int badUri = true;
+   Uri uri;
+   Data routeTestUri;
+   
+   pos = mHttpParams.find("routeTestUri");
+   if (pos != mHttpParams.end()) // found it
+   {
+      routeTestUri = pos->second;
+      if ( routeTestUri  != "sip:" )
+      {
+         try 
+         {
+            uri = Uri(routeTestUri);
+            badUri=false;
+         }
+         catch( BaseException&  )
+         {
+            try 
+            {
+               uri = Uri( Data("sip:")+routeTestUri );
+               badUri=false;
+            }
+            catch( BaseException&  )
+            {
+            }
+         }
+      }
+   }
+      
+   // !cj! - TODO - should input method and event type to test 
+   RouteStore::UriList routeList;
+   if (!badUri)
+   {
+      routeList = mStore.mRouteStore.process(uri, Data("INVITE"), Data::Empty);
+   }
+   
+   s << 
+      "<br><form id=\"testRoute\" action=\"showRoutes.html\" method=\"get\" name=\"testRoute\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
+      "<table" REPRO_BORDERLESS_TABLE_PROPS ">" << endl << 
+      "<tr>" << endl << 
+      " <td align=\"right\">Input:</td>" << endl << 
+      " <td><input type=\"text\" name=\"routeTestUri\" value=\"" << uri << "\" size=\"40\"/></td>" << endl << 
+      " <td><input type=\"submit\" name=\"testRoute\" value=\"Test Routes\"/></td>" << endl << 
+      "</tr>" << endl;
+   
+   bool first=true;
+   for ( RouteStore::UriList::const_iterator i=routeList.begin();
+         i != routeList.end(); i++)
+   {
+      s<<"              <tr>" << endl;
+      if (first)
+      {
+         first=false;
+         s<<"             <td align=\"right\">Targets:</td>" << endl;
+      }
+      else
+      {
+         s<<"             <td align=\"right\"></td>" << endl;
+      }
+      s<<"                <td><label>" << *i << "</label></td>" << endl;
+      s<<"                <td></td>" << endl;
+      s<<"              </tr>" << endl;
+   }
+   
+   s<<
+      "</table>" << endl << 
+      "</form>" << endl;
 }
 
 
@@ -809,13 +1618,14 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
    }   
    
    s << 
+      "<h2>Registrations</h2>" << endl <<
        "<form id=\"showReg\" method=\"get\" action=\"registrations.html\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
       //"<button name=\"removeAllReg\" value=\"\" type=\"button\">Remove All</button>" << endl << 
       //"<hr/>" << endl << 
 
       "<div class=space>" << endl <<
       "</div>" << endl <<
-      "<table cellspacing=\"2\" cellpadding=\"0\">" << endl <<
+      "<table" REPRO_BORDERLESS_TABLE_PROPS ">" << endl <<
       "  <tr>" << endl <<
       "    <td align=\"right\">AOR:</td>" << endl <<
       "    <td><input type=\"text\" name=\"regAor\" size=\"40\"/></td>" << endl <<
@@ -825,12 +1635,14 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
       "  <tr>" << endl <<
       "    <td align=\"right\">Path:</td>" << endl <<
       "    <td><input type=\"text\" name=\"regPath\" size=\"40\"/></td>" << endl <<
-      "    <td><input type=\"submit\" name=\"action\" value=\"Add\"/></td>" << endl <<
+      "    <td></td>" << endl <<
+      "    <td align=\"right\"><input type=\"submit\" name=\"action\" value=\"Add\"/></td>" << endl <<
       "  </tr>" << endl <<
       "  </tr>" << endl <<
       "</table>" << endl <<
+      "<br>" << endl <<
 
-      "<table border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">" << endl << 
+      "<table" REPRO_BORDERED_TABLE_PROPS ">" << endl << 
 
       "<tr>" << endl << 
       "  <td>AOR</td>" << endl << 
@@ -917,431 +1729,10 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
 
 
 void
-WebAdmin::buildEditUserSubPage( DataStream& s)
-{
-   Dictionary::iterator pos;
-   pos = mHttpParams.find("key");
-   if (pos != mHttpParams.end()) 
-   {
-      Data key = pos->second;
-      AbstractDb::UserRecord rec = mStore.mUserStore.getUserInfo(key);
-      // !rwm! TODO check to see if we actually found a record corresponding to the key.  how do we do that?
-      
-      s << "<p>Editing Record with key: " << key << "</p>" << endl <<
-           "<p>Note:  If the username is not modified and you leave the password field empty the users current password will not be reset.</p>" << endl;
-      
-      s << 
-         "<form id=\"editUserForm\" action=\"showUsers.html\"  method=\"get\" name=\"editUserForm\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
-         "<table border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">" << endl << 
-         "<input type=\"hidden\" name=\"key\" value=\"" << key << "\"/>" << endl << 
-         "<tr>" << endl << 
-         "  <td align=\"right\" valign=\"middle\">User Name:</td>" << endl << 
-         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"user\" value=\"" << rec.user << "\" size=\"40\"/></td>" << endl << 
-         "</tr>" << endl << 
-         
-         //"<tr>" << endl << 
-         //"<td align=\"right\" valign=\"middle\" >Realm:</td>" << endl << 
-         //"<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"realm\" size=\"40\"/></td>" << endl << 
-         //"</tr>" << endl << 
-
-         "<tr>" << endl << 
-         "  <td align=\"right\" valign=\"middle\" >Domain:</td>" << endl << 
-         "  <td align=\"left\" valign=\"middle\"><select name=\"domain\">" << endl
-         ; 
-      
-      // for each domain, add an option in the pulldown      
-      const ConfigStore::ConfigData& list = mStore.mConfigStore.getConfigs();      
-      for ( ConfigStore::ConfigData::const_iterator i = list.begin();
-            i != list.end(); i++ )
-      {
-         s << "            <option";
-         
-         if ( i->second.mDomain == rec.domain)
-         {
-            s << " selected=\"true\""; 
-         }
-         
-         s << ">" << i->second.mDomain << "</option>" << endl;
-      }
-      
-      s <<
-         "</select></td></tr>" << endl <<
-         "<tr>" << endl << 
-         "  <td align=\"right\" valign=\"middle\" >Password:</td>" << endl << 
-         "  <td align=\"left\" valign=\"middle\"><input type=\"password\" name=\"password\" size=\"40\"/></td>" << endl << 
-         "</tr>" << endl << 
-         // Note that the UserStore only stores a passwordHash, so we will collect a password.  If one is provided in the
-         // edit page, we will use it to generate a new passwordHash, otherwise we will leave the hash alone.
-         
-         "<tr>" << endl << 
-         "  <td align=\"right\" valign=\"middle\" >Full Name:</td>" << endl << 
-         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"name\" value=\"" << rec.name << 
-         "\" size=\"40\"/></td>" << endl << 
-         "</tr>" << endl << 
-
-         "<tr>" << endl << 
-         "  <td align=\"right\" valign=\"middle\" >Email:</td>" << endl << 
-         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"email\" value=\"" << rec.email <<
-         "\" size=\"40\"/></td>" << endl << 
-         "</tr>" << endl << 
-
-         "<tr>" << endl << 
-         "  <td colspan=\"2\" align=\"right\" valign=\"middle\">" << endl << 
-         "    <input type=\"submit\" name=\"submit\" value=\"Update\"/>" << endl << 
-         "  </td>" << endl << 
-         "</tr>" << endl << 
-         
-         "</table>" << endl <<
-         "</form>" << endl
-         ;
-   }
-   else
-   {
-      // go back to show users page
-   }
-}
-
-
-void
-WebAdmin::buildEditRouteSubPage(DataStream& s)
-{
-   Dictionary::iterator pos;
-   pos = mHttpParams.find("key");
-   if (pos != mHttpParams.end()) 
-   {
-      Data key = pos->second;
-
-      // !rwm! TODO check to see if we actually found a record corresponding to the key.  how do we do that?
-      DebugLog( << "Creating page to edit route " << key );
-      
-      s << "<p>Editing Record with matching pattern: " << mStore.mRouteStore.getRoutePattern(key) << "</p>" << endl;      
-
-      s << 
-      "<form id=\"editRouteForm\" method=\"get\" action=\"showRoutes.html\" name=\"editRouteForm\">" << endl << 
-      "<table border=\"1\" cellspacing=\"2\" cellpadding=\"0\">" << endl << 
-      "<input type=\"hidden\" name=\"key\" value=\"" << key << "\"/>" << endl << 
-      "<tr>" << endl << 
-      "<td>URI</td>" << endl << 
-      "<td><input type=\"text\" name=\"routeUri\" value=\"" <<  mStore.mRouteStore.getRoutePattern(key) << "\" size=\"40\"/></td>" << endl << 
-      "</tr>" << endl << 
-
-      "<tr>" << endl << 
-      "<td>Method</td>" << endl << 
-      "<td><input type=\"text\" name=\"routeMethod\" value=\"" <<  mStore.mRouteStore.getRouteMethod(key)  << "\" size=\"40\"/></td>" << endl << 
-      "</tr>" << endl << 
-      
-      "<tr>" << endl << 
-      "<td>Event</td>" << endl << 
-      "<td><input type=\"text\" name=\"routeEvent\" value=\"" << mStore.mRouteStore.getRouteEvent(key)  << "\" size=\"40\"/></td>" << endl << 
-      "</tr>" << endl << 
-      
-      "<tr>" << endl << 
-      "<td>Destination</td>" << endl << 
-      "<td><input type=\"text\" name=\"routeDestination\" value=\"" << mStore.mRouteStore.getRouteRewrite(key)  <<
-                            "\" size=\"40\"/></td>" << endl << 
-      "</tr>" << endl << 
-      
-      "<tr>" << endl << 
-      "<td>Order</td>" << endl << 
-      "<td><input type=\"text\" name=\"routeOrder\" value=\"" << mStore.mRouteStore.getRouteOrder(key)  <<
-                            "\" size=\"4\"/></td>" << endl << 
-      "</tr>" << endl << 
-
-      "<tr>" << endl << 
-      "  <td colspan=\"2\" align=\"right\" valign=\"middle\">" << endl << 
-      "    <input type=\"submit\" name=\"routeEdit\" value=\"Update\"/>" << endl << 
-      "  </td>" << endl << 
-      "</tr>" << endl << 
-
-      "</table>" << endl << 
-      "</form>" << endl;
-   }
-   else
-   {
-      // go back to show users page
-   }
-
-}
-
-
-void 
-WebAdmin::buildShowUsersSubPage(DataStream& s)
-{
-   Dictionary::iterator pos;
-   Data key;
-   AbstractDb::UserRecord rec;
-
-   if (!mRemoveSet.empty())
-   {
-      int j = 0;
-      for (set<RemoveKey>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
-      {
-         mStore.mUserStore.eraseUser(i->mKey1);
-         ++j;
-      }
-      s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
-   }
-   
-   pos = mHttpParams.find("key");
-   if (pos != mHttpParams.end())  // check if the user parameter exists, if so, use as a key to update the record
-   {
-      key = pos->second;
-      rec = mStore.mUserStore.getUserInfo(key);
-      // check to see if we actually found a record corresponding to the key
-      if (!rec.user.empty())
-      {
-         Data user = mHttpParams["user"];
-         Data domain = mHttpParams["domain"];                  
-         Data realm = mHttpParams["domain"];   // eventually sort out realms
-         Data password = mHttpParams["password"];
-         Data name = mHttpParams["name"];
-         Data email = mHttpParams["email"];
-         bool applyA1HashToPassword = true;
-         
-         // if no password was specified, then leave current password untouched
-         if(password == "" && user == rec.user && realm == rec.realm) 
-         {
-            password = rec.passwordHash;
-            applyA1HashToPassword = false;
-         }
-         // write out the updated record to the database now
-         mStore.mUserStore.updateUser(key, user, domain, realm, password, applyA1HashToPassword, name, email );
-         
-         s << "<p><em>Updated:</em> " << key << "</p>" << endl; 
-      }
-   }
-   
-      
-      s << 
-         //"<h1>Users</h1>" << endl << 
-         "<form id=\"showUsers\" method=\"get\" action=\"showUsers.html\" name=\"showUsers\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
-         "<table border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">" << endl << 
-         "<tr>" << endl << 
-         "  <td>User@Domain</td>" << endl << 
-         //  "  <td>Realm</td>" << endl << 
-         "  <td>Name</td>" << endl << 
-         "  <td>Email</td>" << endl << 
-         "  <td><input type=\"submit\" value=\"Remove\"/></td>" << endl << 
-         "</tr>" << endl;
-      
-      s << endl;
-      
-      int count =0;
-      
-      key = mStore.mUserStore.getFirstKey();
-      while ( !key.empty() )
-      {
-         rec = mStore.mUserStore.getUserInfo(key);
-
-         if ((rec.domain == Data::Empty) && (rec.user == "admin"))
-         {
-            key = mStore.mUserStore.getNextKey();
-            continue;   // skip the row for the admin web user
-         }
-      
-         s << "<tr>" << endl 
-           << "  <td><a href=\"editUser.html?key=";
-         key.urlEncode(s);
-         s << "\">" << rec.user << "@" << rec.domain << "</a></td>" << endl
-           << "  <td>" << rec.name << "</td>" << endl
-           << "  <td>" << rec.email << "</td>" << endl
-           << "  <td><input type=\"checkbox\" name=\"remove." << key << "\"/></td>" << endl
-           << "</tr>" << endl;
-         
-         key = mStore.mUserStore.getNextKey();
-
-         // make a limit to how many users are displayed 
-         if ( ++count > 1000 )
-         {
-            break;
-         }
-      }
-      
-      if ( !key.empty() )
-      {
-         s << "<tr><td>Only first 1000 users were displayed<td></tr>" << endl;
-      }
-      
-      s << 
-         "</table>" << endl << 
-         "</form>" << endl;
-}
-
-
-void
-WebAdmin::buildShowRoutesSubPage(DataStream& s)
-{
-   Dictionary::iterator pos;
-   Data key;
-   AbstractDb::RouteRecord rec;
-
-   if (!mRemoveSet.empty())
-   {
-      int j = 0;
-      for (set<RemoveKey>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
-      {
-         mStore.mRouteStore.eraseRoute(i->mKey1);
-         ++j;
-      }
-      s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
-   }
-   
-   pos = mHttpParams.find("key");
-   if (pos != mHttpParams.end())   // if a key parameter exists, use the key to update the record
-   {
-      key = pos->second;
-
-      // !rwm! TODO check to see if we actually found a record corresponding to the key.  how do we do that?
-      if (1)
-      {
-         Data method = mHttpParams["routeMethod"]; 
-         Data event = mHttpParams["routeEvent"]; 
-         Data matchingPattern = mHttpParams["routeUri"];
-         Data rewriteExpression = mHttpParams["routeDestination"];
-         int  order = mHttpParams["routeOrder"].convertInt();
-         
-         if (!matchingPattern.empty() && !rewriteExpression.empty())
-         {
-            // write out the updated record to the database now
-            mStore.mRouteStore.updateRoute(key, method,event,matchingPattern,rewriteExpression,order  );
-         
-            s << "<p><em>Updated:</em> " << rec.mMatchingPattern << "</p>" << endl; 
-         }
-      }
-   }
-
-   s <<
-      "    <table border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">" << endl << 
-      //"      <tr>" << endl << 
-      // "        <td>" << endl << 
-      //"          <h1>Routes</h1>" << endl << 
-      //"        </td>" << endl << 
-      //"      </tr>" << endl <<  
-      "      <tr>" << endl << 
-      "        <td>" << endl <<  
-      "          <form id=\"showRoutes\" action=\"showRoutes.html\" method=\"get\" name=\"showRoutes\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
-      // "            <button name=\"removeAllRoute\" value=\"\" type=\"submit\">Remove All</button>" << endl << 
-      "            <hr/>" << endl << 
-      "            <table border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">" << endl << 
-      "              <thead><tr>" << endl << 
-      "                <td>URI</td>" << endl << 
-      "                <td>Method</td>" << endl << 
-      "                <td>Event</td>" << endl << 
-      "                <td>Destination</td>" << endl << 
-      "                <td>Order</td>" << endl << 
-      "                <td><input type=\"submit\" value=\"Remove\"/></td>" << endl << 
-      "              </tr></thead>" << endl << 
-      "              <tbody>" << endl;
-   
-   for ( RouteStore::Key key = mStore.mRouteStore.getFirstKey();
-         !key.empty();
-         key = mStore.mRouteStore.getNextKey(key) )
-   {
-      s <<  "<tr>" << endl << 
-         "<td><a href=\"editRoute.html?key=";
-            key.urlEncode(s); 
-      s << 
-         "\">" << mStore.mRouteStore.getRoutePattern(key) << "</a></td>" << endl << 
-         "<td>" << mStore.mRouteStore.getRouteMethod(key) << "</td>" << endl << 
-         "<td>" << mStore.mRouteStore.getRouteEvent(key) << "</td>" << endl << 
-         "<td>" << mStore.mRouteStore.getRouteRewrite(key) << "</td>" << endl << 
-         "<td>" << mStore.mRouteStore.getRouteOrder(key) << "</td>" << endl << 
-         "<td><input type=\"checkbox\" name=\"remove." <<  key << "\"/></td>" << endl << 
-         "</tr>" << endl;
-   }
-   
-   s << 
-      "              </tbody>" << endl << 
-      "            </table>" << endl << 
-      "          </form>" << endl << 
-      "        </td>" << endl << 
-      "      </tr>" << endl << 
-      "      <tr><td>" << endl << 
-      "          <hr noshade=\"noshade\"/>" << endl << 
-      "          <br>" << endl << 
-      "        </td></tr>" << endl;
-
-   int badUri = true;
-   Uri uri;
-   Data routeTestUri;
-   
-   pos = mHttpParams.find("routeTestUri");
-   if (pos != mHttpParams.end()) // found it
-   {
-      routeTestUri = pos->second;
-      if ( routeTestUri  != "sip:" )
-      {
-         try 
-         {
-            uri = Uri(routeTestUri);
-            badUri=false;
-         }
-         catch( BaseException&  )
-         {
-            try 
-            {
-               uri = Uri( Data("sip:")+routeTestUri );
-               badUri=false;
-            }
-            catch( BaseException&  )
-            {
-            }
-         }
-      }
-   }
-      
-   // !cj! - TODO - should input method and event type to test 
-   RouteStore::UriList routeList;
-   if ( !badUri )
-   {
-      routeList = mStore.mRouteStore.process( uri, Data("INVITE"), Data::Empty);
-   }
-   
-   s << 
-      "      <tr>" << endl << 
-      "        <td>" << endl << 
-      "          <form id=\"testRoute\" action=\"showRoutes.html\" method=\"get\" name=\"testRoute\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
-      "            <table border=\"0\" cellspacing=\"2\" cellpadding=\"0\">" << endl << 
-      "              "
-      "              <tr>" << endl << 
-      "                <td align=\"right\">Input:</td>" << endl << 
-      "                <td><input type=\"text\" name=\"routeTestUri\" value=\"" << uri << "\" size=\"40\"/></td>" << endl << 
-      "                <td><input type=\"submit\" name=\"testRoute\" value=\"Test Route\"/></td>" << endl << 
-      "              </tr>" << endl;
-   
-   bool first=true;
-   for ( RouteStore::UriList::const_iterator i=routeList.begin();
-         i != routeList.end(); i++)
-   {
-      s<<"              <tr>" << endl;
-      if (first)
-      {
-         first=false;
-         s<<"             <td align=\"right\">Targets:</td>" << endl;
-      }
-      else
-      {
-         s<<"             <td align=\"right\"></td>" << endl;
-      }
-      s<<"                <td><label>" << *i << "</label></td>" << endl;
-      s<<"                <td></td>" << endl;
-      s<<"              </tr>" << endl;
-   }
-   
-   s<<
-      "            </table>" << endl << 
-      "          </form>" << endl << 
-      "        </td>" << endl << 
-      "      </tr>" << endl << 
-      "    </table>" << endl;      
- 
-}
-
-
-void
 WebAdmin::buildSettingsSubPage(DataStream& s)
 {
-   s << "<pre>" << mProxy.getConfig() << "</pre>";
+   s << "<h2>Settings</h2>" << endl <<
+        "<pre>" << mProxy.getConfig() << "</pre>";
 
    {
       Data buffer;
@@ -1362,6 +1753,37 @@ WebAdmin::buildSettingsSubPage(DataStream& s)
         << "<pre>" <<  buffer << "</pre>"
         << endl;
    }
+}
+
+
+Data 
+WebAdmin::buildUserPage()
+{ 
+   Data ret;
+   {
+      DataStream s(ret);
+      
+      s <<  "<?xml version=\"1.0\" encoding=\"utf-8\"?>" << endl
+        <<    "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">" << endl
+        <<    "" << endl
+        <<    "<html xmlns=\"http://www.w3.org/1999/xhtml\">" << endl
+        <<    "" << endl
+        <<    "<head>" << endl
+        <<    "<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />" << endl
+        <<    "<title>Repro Proxy</title>" << endl
+        <<    "</head>" << endl
+        <<    "" << endl
+        <<    "<body bgcolor=\"#ffffff\">" << endl;
+      
+      //buildAddUserSubPage(s); // !cj! TODO - should do beter page here 
+      
+      s <<    "</body>" << endl
+        <<    "" << endl
+        <<    "</html>" << endl;
+            
+      s.flush();
+   }
+   return ret;
 }
 
 
@@ -1423,38 +1845,6 @@ WebAdmin::buildPageOutlinePost(DataStream& s)
 #include "repro/webadmin/pageOutlinePost.ixx"   
    ;
 }
-
-
-Data 
-WebAdmin::buildUserPage()
-{ 
-   Data ret;
-   {
-      DataStream s(ret);
-      
-      s <<  "<?xml version=\"1.0\" encoding=\"utf-8\"?>" << endl
-        <<    "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">" << endl
-        <<    "" << endl
-        <<    "<html xmlns=\"http://www.w3.org/1999/xhtml\">" << endl
-        <<    "" << endl
-        <<    "<head>" << endl
-        <<    "<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />" << endl
-        <<    "<title>Repro Proxy</title>" << endl
-        <<    "</head>" << endl
-        <<    "" << endl
-        <<    "<body bgcolor=\"#ffffff\">" << endl;
-      
-      //buildAddUserSubPage(s); // !cj! TODO - should do beter page here 
-      
-      s <<    "</body>" << endl
-        <<    "" << endl
-        <<    "</html>" << endl;
-            
-      s.flush();
-   }
-   return ret;
-}
-
 
 
 /* ====================================================================
