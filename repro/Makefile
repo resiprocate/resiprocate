@@ -85,7 +85,7 @@ SRC 	+=   \
 	monkeys/LocationServer.cxx \
 	monkeys/OutboundTargetHandler.cxx \
 	monkeys/RecursiveRedirect.cxx \
-	monkeys/RequestProcessor.cxx \
+	monkeys/RequestFilter.cxx \
 	monkeys/SimpleStaticRoute.cxx \
 	monkeys/StaticRoute.cxx \
 	monkeys/StrictRouteFixup.cxx \

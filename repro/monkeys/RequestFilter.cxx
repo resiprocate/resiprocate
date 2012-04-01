@@ -168,8 +168,8 @@ RequestFilter::process(RequestContext &rc)
             if(mMySqlDb)
             {
                // Dispatch async
-               RequestFilterAsyncMessage* async = new RequestFilterAsyncMessage(*this, rc.getTransactionId(), &rc.getProxy(), actionData);
-               mAsyncDispatcher->post(std::auto_ptr<ApplicationMessage>(async));
+               std::auto_ptr<ApplicationMessage> async(new RequestFilterAsyncMessage(*this, rc.getTransactionId(), &rc.getProxy(), actionData));
+               mAsyncDispatcher->post(async);
                return WaitingForEvent;
             }
             else
