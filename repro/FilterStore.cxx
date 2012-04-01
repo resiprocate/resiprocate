@@ -465,11 +465,12 @@ FilterStore::process(const SipMessage& request,
          for(; hit != condition1Headers.end() && match == false; hit++)
          {
             match = applyRegex(1, *hit, rec.mCondition1Regex, it->pcond1, actionData);
+            DebugLog( << "  Cond1 HeaderName=" << rec.mCondition1Header << ", Value=" << *hit << ", Regex=" << rec.mCondition1Regex << ", match=" << match);
          }
          if(!match)
          {
-             DebugLog( << "  Skipped - request "<< request.brief() << " did not match first condition." << match );
-             continue;
+            DebugLog( << "  Skipped - request did not match first condition: " << request.brief());
+            continue;
          }
       }
       if(!rec.mCondition2Header.empty() && it->pcond2)
@@ -482,11 +483,12 @@ FilterStore::process(const SipMessage& request,
          for(; hit != condition2Headers.end() && match == false; hit++)
          {
             match = applyRegex(2, *hit, rec.mCondition2Regex, it->pcond2, actionData);
+            DebugLog( << "  Cond2 HeaderName=" << rec.mCondition2Header << ", Value=" << *hit << ", Regex=" << rec.mCondition2Regex << ", match=" << match);
          }
          if(!match)
          {
-             DebugLog( << "  Skipped - request "<< request.brief() << " did not match second condition." << match );
-             continue;
+            DebugLog( << "  Skipped - request did not match second condition: " << request.brief());
+            continue;
          }
       }
       // If we make it here Method, Event and both conditions matched - return configured action
@@ -514,7 +516,7 @@ FilterStore::test(const resip::Data& cond1Header,
       actionData = rec.mActionData;
 
       // Check condition 1 regex
-      if(!cond1Header.empty() && it->pcond1)
+      if(!rec.mCondition1Header.empty() && it->pcond1)
       {
          if(!applyRegex(1, cond1Header, rec.mCondition1Regex, it->pcond1, actionData))
          {
@@ -523,7 +525,7 @@ FilterStore::test(const resip::Data& cond1Header,
       }
 
       // Check condition 2 regex
-      if(!cond2Header.empty() && it->pcond2)
+      if(!rec.mCondition2Header.empty() && it->pcond2)
       {
          if(!applyRegex(2, cond2Header, rec.mCondition2Regex, it->pcond2, actionData))
          {
