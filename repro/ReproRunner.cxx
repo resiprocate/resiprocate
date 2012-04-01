@@ -1071,7 +1071,7 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
 
    // Add RequestFilter monkey
    assert(!mAsyncProcessorDispatcher);
-   mAsyncProcessorDispatcher = new Dispatcher(std::auto_ptr<AsyncProcessorWorker>(new AsyncProcessorWorker), 
+   mAsyncProcessorDispatcher = new Dispatcher(std::auto_ptr<Worker>(new AsyncProcessorWorker), 
                                               mSipStack, 
                                               mProxyConfig->getConfigInt("NumAsyncProcessorWorkerThreads", 2));
    chain.addProcessor(std::auto_ptr<Processor>(new RequestFilter(*mProxyConfig, mAsyncProcessorDispatcher)));
