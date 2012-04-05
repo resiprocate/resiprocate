@@ -375,7 +375,7 @@ ServerRegistration::processRegistration(const SipMessage& msg)
       {
          RegistrationPersistenceManager::update_status_t status;
          InfoLog(<< "Adding " << mAor << " -> " << *i);
-         DebugLog(<< "Contact has tuple " << rec.mReceivedFrom);
+         DebugLog(<< "Contact has tuple " << rec.mReceivedFrom << " and detected public address " << rec.mPublicAddress);
 
          if (!async)
          {
