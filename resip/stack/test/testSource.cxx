@@ -1,5 +1,5 @@
-#ifdef HAVE_CONFIG_H
-# include "resiprocate/config.hxx"
+#if defined(HAVE_CONFIG_H)
+#include "config.h"
 #endif
 #include <sys/types.h>
 #include <sys/socket.h>
