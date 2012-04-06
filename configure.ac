@@ -79,6 +79,7 @@ AC_OUTPUT(Makefile \
 	contrib/ares/Makefile \
 	resip.spec \
 	reTurn/Makefile \
+	reTurn/test/Makefile \
 	reTurn/client/Makefile \
 	presSvr/Makefile \
 	p2p/s2c/s2c/Makefile \
