@@ -1,5 +1,7 @@
 # $Id$
 
+SUBDIRS = . test
+
 AM_CXXFLAGS = -I../../contrib/ares -DUSE_ARES
 
 lib_LTLIBRARIES = libresip.la

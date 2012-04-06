@@ -71,6 +71,7 @@ AC_OUTPUT(Makefile \
 	rutil/test/Makefile \
 	resip/Makefile \
 	resip/stack/Makefile \
+	resip/stack/test/Makefile \
 	resip/dum/Makefile \
 	repro/Makefile \
 	contrib/ares/Makefile \
