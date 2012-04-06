@@ -7,10 +7,58 @@ LDADD += ../../contrib/ares/libares.a
 LDADD += $(LIBSSL_LIBADD) -lpthread
 
 TESTS = \
-	testCoders
+	testCoders \
+	testCountStream \
+	testData \
+	testDataPerformance \
+	testDataStream \
+	testDnsUtil \
+	testFifo \
+	testFileSystem \
+	testInserter \
+	testIntrusiveList \
+	testLogger \
+	testMD5Stream \
+	testParseBuffer \
+	testRandomHex \
+	testRandomThread \
+	testThreadIf
 
-bin_PROGRAMS = testCoders
+check_PROGRAMS = \
+	testCoders \
+	testCountStream \
+	testData \
+	testDataPerformance \
+	testDataStream \
+	testDnsUtil \
+	testFifo \
+	testFileSystem \
+	testInserter \
+	testIntrusiveList \
+	testLogger \
+	testMD5Stream \
+	testParseBuffer \
+	testRandomHex \
+	testRandomThread \
+	testThreadIf
+
 testCoders_SOURCES = testCoders.cxx
+testCountStream_SOURCES = testCountStream.cxx
+testData_SOURCES = testData.cxx
+testDataPerformance_SOURCES = testDataPerformance.cxx
+testDataStream_SOURCES = testDataStream.cxx
+testDnsUtil_SOURCES = testDnsUtil.cxx
+testFifo_SOURCES = testFifo.cxx
+testFileSystem_SOURCES = testFileSystem.cxx
+testInserter_SOURCES = testInserter.cxx
+testIntrusiveList_SOURCES = testIntrusiveList.cxx
+testLogger_SOURCES = testLogger.cxx TestSubsystemLogLevel.cxx
+testMD5Stream_SOURCES = testMD5Stream.cxx
+testParseBuffer_SOURCES = testParseBuffer.cxx
+testRandomHex_SOURCES = testRandomHex.cxx
+testRandomThread_SOURCES = testRandomThread.cxx
+testThreadIf_SOURCES = testThreadIf.cxx
+
 
 ##############################################################################
 # 
