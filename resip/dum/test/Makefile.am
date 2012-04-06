@@ -1,37 +1,34 @@
-# $Id: Makefile,v 1.9 2004/05/10 01:12:46 jason Exp $
+# $Id$
 
-BUILD = ../../../build
-include $(BUILD)/Makefile.pre
+AM_CXXFLAGS = -DUSE_ARES
 
-PACKAGES += DUM RESIP RUTIL OPENSSL ARES PTHREAD POPT RADIUSCLIENTNG
+LDADD = ../libdum.la
+LDADD += ../../stack/libresip.la
+LDADD += ../../../rutil/librutil.la
+LDADD += ../../../contrib/ares/libares.a
+LDADD += $(LIBSSL_LIBADD) -lpthread
 
-TARGET_LIBRARY = 
+TESTS = \
+	basicRegister \
+	BasicCall \
+	basicMessage \
+	basicClient \
+	testRequestValidationHandler
 
-#testDumTimer.cxx
-TESTPROGRAMS += basicRegister.cxx BasicCall.cxx basicMessage.cxx basicClient.cxx testRequestValidationHandler.cxx
+check_PROGRAMS = \
+	basicRegister \
+	BasicCall \
+	basicMessage \
+	basicClient \
+	testRequestValidationHandler
 
-TESTPROGRAMS += treg.cxx
+SHARED_SRCS = CommandLineParser.cxx UserAgent.cxx RegEventClient.cxx basicClientCall.cxx basicClientCmdLineParser.cxx basicClientUserAgent.cxx
 
-ifeq ($(USE_SSL),yes)
-TESTPROGRAMS += testSMIMEMessage.cxx testSMIMEInvite.cxx
-TESTPROGRAMS += limpc.cxx
-endif
-
-SRC = CommandLineParser.cxx UserAgent.cxx RegEventClient.cxx 
-SRC += basicClientCall.cxx basicClientCmdLineParser.cxx basicClientUserAgent.cxx
-
-ifeq ($(USE_CURL),yes)
-TESTPROGRAMS += testIdentity.cxx
-PACKAGES += CURL
-SRC += curlHttp/CurlHttpProvider.cxx
-CODE_SUBDIRS += curlHttp
-endif
-
-# Strip -DNDEBUG out of CFLAGS and CXXFLAGS, since these are test programs
-CFLAGS := $(shell echo "${CFLAGS}" | sed s/-DNDEBUG//g)
-CXXFLAGS := $(shell echo "${CXXFLAGS}" | sed s/-DNDEBUG//g)
-
-include $(BUILD)/Makefile.post
+basicRegister_SOURCES = basicRegister.cxx $(SHARED_SRCS)
+BasicCall_SOURCES = BasicCall.cxx $(SHARED_SRCS)
+basicMessage_SOURCES = basicMessage.cxx $(SHARED_SRCS)
+basicClient_SOURCES = basicClient.cxx $(SHARED_SRCS)
+testRequestValidationHandler_SOURCES = testRequestValidationHandler.cxx $(SHARED_SRCS)
 
 ##############################################################################
 # 
@@ -82,3 +79,4 @@ include $(BUILD)/Makefile.post
 # <http://www.vovida.org/>.
 # 
 ##############################################################################
+
