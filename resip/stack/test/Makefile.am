@@ -8,24 +8,15 @@ LDADD += ../../../contrib/ares/libares.a
 LDADD += $(LIBSSL_LIBADD) -lpthread
 
 TESTS = \
-	UAS \
-	testEmptyHfv \
-	RFC4475TortureTests \
-	limpc \
-	test503Generator \
 	testAppTimer \
 	testApplicationSip \
-	testClient \
 	testConnectionBase \
 	testCorruption \
 	testDigestAuthentication \
-	testDtlsTransport \
-	testDns \
 	testEmbedded \
 	testEmptyHeader \
 	testExternalLogger \
 	testIM \
-	testLockStep \
 	testMessageWaiting \
 	testMultipartMixedContents \
 	testMultipartRelated \
@@ -33,27 +24,19 @@ TESTS = \
 	testPidf \
 	testPksc7 \
 	testPlainContents \
-	testResponses \
 	testRlmi \
 	testSdp \
-	testSelect \
 	testSelectInterruptor \
-	testServer \
 	testSipFrag \
 	testSipMessage \
-	testSipMessageEncode \
 	testSipMessageMemory \
-	testSipStack1 \
 	testStack \
 	testTcp \
 	testTime \
 	testTimer \
-	testTransactionFSM \
 	testTuple \
-	testTypedef \
-	testUdp \
-	testUri \
-	testXMLCursor
+	testUri
+
 check_PROGRAMS = \
 	UAS \
 	testEmptyHfv \
