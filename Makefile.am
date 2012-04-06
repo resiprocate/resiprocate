@@ -14,4 +14,14 @@ SUBDIRS += presSvr
 SUBDIRS += p2p/s2c/s2c p2p
 endif
 
+EXTRA_DIST = build-contrib.sh
+
+EXTRA_DIST += reSIProcate_10_0.sln
+EXTRA_DIST += reSIProcate_7_1.sln
+EXTRA_DIST += reSIProcate_8_0.sln
+EXTRA_DIST += reSIProcate_9_0.sln
+
+EXTRA_DIST += resip.spec
+
+EXTRA_DIST += RELEASE-PROCESS.txt
 

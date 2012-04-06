@@ -1,5 +1,11 @@
 # $Id$
 
+EXTRA_DIST = dh512.pem server.pem
+EXTRA_DIST += README.txt
+EXTRA_DIST += *.sln
+EXTRA_DIST += *.vcproj
+EXTRA_DIST += reTurnServer_10_0.vcxproj reTurnServer_10_0.vcxproj.filters
+
 SUBDIRS = . test
 
 #AM_CXXFLAGS = -DUSE_ARES

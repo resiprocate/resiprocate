@@ -1,5 +1,30 @@
 # $Id$
 
+EXTRA_DIST = *.dat
+EXTRA_DIST += dumpasn1.cfg dumpasn1.c
+EXTRA_DIST += host.dns
+EXTRA_DIST += *.sh
+EXTRA_DIST += Mac
+EXTRA_DIST += Makefile-nossl.w32
+EXTRA_DIST += Makefile.w32
+EXTRA_DIST += make-nossl_w32.bat
+EXTRA_DIST += make_w32.bat
+EXTRA_DIST += msgHeaderDiagram-4858.dot
+EXTRA_DIST += openldap.srv
+EXTRA_DIST += raw-tests.txt
+EXTRA_DIST += RSP-2 RSP-3
+EXTRA_DIST += runtests.sh
+EXTRA_DIST += test_10_0.vcxproj test_10_0.vcxproj.filters
+EXTRA_DIST += *.vcproj
+EXTRA_DIST += test.rc
+EXTRA_DIST += *.py
+EXTRA_DIST += torture-test.txt
+EXTRA_DIST += yahoo.dns
+EXTRA_DIST += testTFSM-clientinvite
+EXTRA_DIST += testTFSM-clientnoninvite
+EXTRA_DIST += testTFSM-serverinvite
+EXTRA_DIST += testTFSM-servernoninvite
+
 #AM_CXXFLAGS = -DUSE_ARES
 
 LDADD = ../libresip.la

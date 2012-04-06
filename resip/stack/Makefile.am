@@ -1,6 +1,29 @@
 # $Id$
 
+EXTRA_DIST = dayofweek.gperf
+EXTRA_DIST += Doxyfile
+EXTRA_DIST += FAQ
+EXTRA_DIST += gperfNotes.txt
+EXTRA_DIST += gperf_w32.bat
+EXTRA_DIST += groups.doc
+EXTRA_DIST += HeaderHash.gperf
+EXTRA_DIST += mainpage.doc
+EXTRA_DIST += MethodHash.gperf
+EXTRA_DIST += month.gperf
+EXTRA_DIST += ParameterHash.gperf
+EXTRA_DIST += parametersA.gperf
+EXTRA_DIST += Readme-Compliance.txt
+EXTRA_DIST += resiprocate_10_0.vcxproj resiprocate_10_0.vcxproj.filters
+EXTRA_DIST += *.vcproj
+
 SUBDIRS = . test
+
+# 
+# make chokes on the filenames under doc/ because some of them have spaces
+# in them.  The content needs to be reviewed and renamed appropriately
+# before it can be distributed by `make dist'
+#
+#SUBDIRS += doc
 
 #AM_CXXFLAGS = -I../../contrib/ares -DUSE_ARES
 
