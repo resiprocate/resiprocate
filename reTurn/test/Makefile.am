@@ -1,44 +1,28 @@
 # $Id$
 
-SUBDIRS = . test
-
 AM_CXXFLAGS = -DUSE_ARES
 
-sbin_PROGRAMS = reTurnServer
-reTurnServer_SOURCES = reTurnServer.cxx \
-	AsyncSocketBase.cxx \
-        AsyncUdpSocketBase.cxx \
-        AsyncTcpSocketBase.cxx \
-        AsyncTlsSocketBase.cxx \
-        ChannelManager.cxx \
-        ConnectionManager.cxx \
-        DataBuffer.cxx \
-        RemotePeer.cxx \
-        RequestHandler.cxx \
-        ReTurnConfig.cxx \
-        ReTurnSubsystem.cxx \
-        StunAuth.cxx \
-        StunMessage.cxx \
-        StunTuple.cxx \
-        TcpConnection.cxx \
-        TcpServer.cxx \
-        TlsConnection.cxx \
-        TlsServer.cxx \
-        TurnAllocation.cxx \
-        TurnAllocationKey.cxx \
-        TurnManager.cxx \
-        TurnPermission.cxx \
-        UdpRelayServer.cxx \
-        UdpServer.cxx
+LDADD = ../../rutil/librutil.la
+LDADD += ../../contrib/ares/libares.a
+LDADD += $(LIBSSL_LIBADD) -lpthread
 
-#reTurnServer_LDADD = librepro.la
-reTurnServer_LDADD = ../resip/dum/libdum.la
-reTurnServer_LDADD += ../resip/stack/libresip.la ../rutil/librutil.la
-reTurnServer_LDADD += ../contrib/ares/libares.a
-#reTurnServer_LDADD += -L../contrib/ares -lares
-reTurnServer_LDADD += @LIBSSL_LIBADD@ -lpthread -ldb_cxx-4.8
+#
+# This doesn't work because the Stun classes for reTurn are built
+# into a binary rather than a library.
+#
+# Strategy:
+# - take common classes for reTurn client and server, make a library for
+#   out of them
+# - use the library for building the client and server
+# - use the library for building this test case again
+#
+#TESTS = \
+#	stunTestVectors
 
-#lib_LTLIBRARIES = librepro.la
+#check_PROGRAMS = \
+#	stunTestVectors
+
+#stunTestVectors_SOURCES = stunTestVectors.cxx
 
 ##############################################################################
 # 
