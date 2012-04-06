@@ -2,7 +2,7 @@
 
 SUBDIRS = . test
 
-AM_CXXFLAGS = -DUSE_ARES
+#AM_CXXFLAGS = -DUSE_ARES
 
 sbin_PROGRAMS = reTurnServer
 reTurnServer_SOURCES = reTurnServer.cxx \
@@ -34,7 +34,7 @@ reTurnServer_SOURCES = reTurnServer.cxx \
 #reTurnServer_LDADD = librepro.la
 reTurnServer_LDADD = ../resip/dum/libdum.la
 reTurnServer_LDADD += ../resip/stack/libresip.la ../rutil/librutil.la
-reTurnServer_LDADD += ../contrib/ares/libares.a
+#reTurnServer_LDADD += ../contrib/ares/libares.a
 #reTurnServer_LDADD += -L../contrib/ares -lares
 reTurnServer_LDADD += @LIBSSL_LIBADD@ -lpthread -ldb_cxx-4.8
 
