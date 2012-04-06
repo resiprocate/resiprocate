@@ -56,7 +56,7 @@ it should be discussed on the mailing list and noted in this document.
 Make a tarball
 --------------
 
-  ./configure && make dist
+  ./configure --with-ssl && make dist
 
 Sanity check on tarball
 -----------------------
