@@ -1,5 +1,8 @@
 # $Id$
 
+EXTRA_DIST = stunTestVectors_10_0.vcxproj stunTestVectors_10_0.vcxproj.filters
+EXTRA_DIST += *.vcproj
+
 #AM_CXXFLAGS = -DUSE_ARES
 
 LDADD = ../../rutil/librutil.la

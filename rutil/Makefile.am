@@ -2,6 +2,11 @@
 
 SUBDIRS = . test
 
+EXTRA_DIST = fixupGperf
+EXTRA_DIST += mainpage.doc
+EXTRA_DIST += rutil_10_0.vcxproj rutil_10_0.vcxproj.filters
+EXTRA_DIST += *.vcproj
+
 #AM_CXXFLAGS = -I../contrib/ares -DUSE_ARES
 
 lib_LTLIBRARIES = librutil.la

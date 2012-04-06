@@ -1,5 +1,9 @@
 # $Id$
 
+EXTRA_DIST = *.vcxproj *.vcxproj.filters
+EXTRA_DIST += *.vcproj
+EXTRA_DIST += fullHeaders.bytes
+
 #AM_CXXFLAGS = -DUSE_ARES
 
 LDADD = ../libdum.la

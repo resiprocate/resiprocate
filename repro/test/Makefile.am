@@ -1,5 +1,7 @@
 # $Id$
 
+EXTRA_DIST = reg.py
+
 #AM_CXXFLAGS = -DUSE_ARES
 
 LDADD = ../librepro.la

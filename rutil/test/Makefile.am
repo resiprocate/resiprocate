@@ -1,5 +1,9 @@
 # $Id$
 
+EXTRA_DIST = Makefile.w32 make_w32.bat
+EXTRA_DIST += runtests.sh
+EXTRA_DIST += sweepRandom.sh
+
 #AM_CXXFLAGS = -DUSE_ARES
 
 LDADD = ../librutil.la
