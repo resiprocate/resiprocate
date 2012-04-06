@@ -18,7 +18,7 @@ InvalidContents::InvalidContents(const Data& txt, const Mime& originalType)
      mText(txt)
 {}
 
-InvalidContents::InvalidContents(HeaderFieldValue* hfv, const Mime& contentsType, const Mime& originalType)
+InvalidContents::InvalidContents(const HeaderFieldValue& hfv, const Mime& contentsType, const Mime& originalType)
    : Contents(hfv, contentsType),
      mOriginalType(originalType),
      mText()

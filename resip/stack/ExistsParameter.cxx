@@ -10,7 +10,7 @@
 using namespace resip;
 using namespace std;
 
-ExistsParameter::ExistsParameter(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+ExistsParameter::ExistsParameter(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators)
    : Parameter(type),
      mValue(true)
 {

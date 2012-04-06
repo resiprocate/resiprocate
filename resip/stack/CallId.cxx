@@ -8,7 +8,7 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
-#include "rutil/WinLeakCheck.hxx"
+//#include "rutil/WinLeakCheck.hxx"  // not compatible with placement new used below
 
 using namespace resip;
 using namespace std;
@@ -24,13 +24,15 @@ CallID::CallID()
      mValue() 
 {}
 
-CallID::CallID(HeaderFieldValue* hfv, 
-               Headers::Type type) 
-   : ParserCategory(hfv, type), mValue()
+CallID::CallID(const HeaderFieldValue& hfv, 
+               Headers::Type type,
+               PoolBase* pool) 
+   : ParserCategory(hfv, type, pool), mValue()
 {}
 
-CallID::CallID(const CallID& rhs)
-   : ParserCategory(rhs),
+CallID::CallID(const CallID& rhs,
+               PoolBase* pool)
+   : ParserCategory(rhs, pool),
      mValue(rhs.mValue)
 {}
 
@@ -57,6 +59,18 @@ CallID::clone() const
    return new CallID(*this);
 }
 
+ParserCategory *
+CallID::clone(void* location) const
+{
+   return new (location) CallID(*this);
+}
+
+ParserCategory* 
+CallID::clone(PoolBase* pool) const
+{
+   return new (pool) CallID(*this, pool);
+}
+
 Data& 
 CallID::value() 
 {
@@ -75,7 +89,8 @@ void
 CallID::parse(ParseBuffer& pb)
 {
    const char* start = pb.skipWhitespace();
-   pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SEMI_COLON);
+   static const std::bitset<256> wsOrSemi(Data::toBitset(ParseBuffer::Whitespace).set(Symbols::SEMI_COLON[0]));
+   pb.skipToOneOf(wsOrSemi);
    pb.data(mValue, start);
 
    parseParameters(pb);
@@ -92,11 +107,11 @@ CallID::encodeParsed(EncodeStream& str) const
 ParameterTypes::Factory CallID::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
 
 Parameter* 
-CallID::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+CallID::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool)
 {
-   if(ParameterFactories[type])
+   if(type > ParameterTypes::UNKNOWN && type < ParameterTypes::MAX_PARAMETER && ParameterFactories[type])
    {
-      return ParameterFactories[type](type, pb, terminators);
+      return ParameterFactories[type](type, pb, terminators, pool);
    }
    return 0;
 }

@@ -14,10 +14,13 @@
 using namespace resip;
 
 TuSelector::TuSelector(TimeLimitFifo<Message>& fallBackFifo) :
-   mFallBackFifo(fallBackFifo) , mFallbackPostNotify(NULL),
+   mFallBackFifo(fallBackFifo), 
+   mCongestionManager(0),
+   mFallbackPostNotify(0),
    mTuSelectorMode(false),
    mStatsPayload()
 {
+   mShutdownFifo.setDescription("TuSelector::mShutdownFifo");
 }
 
 TuSelector::~TuSelector()
@@ -88,7 +91,7 @@ TuSelector::add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage)
          DebugLog(<< "Send to default TU: " << std::endl << std::endl << *msg);
          mFallBackFifo.add(msg, usage);
          if ( mFallbackPostNotify )
-	    mFallbackPostNotify->handleProcessNotification();
+            mFallbackPostNotify->handleProcessNotification();
       }
    }
 }
@@ -264,6 +267,50 @@ TuSelector::isTransactionUserStillRegistered(const TransactionUser* tu) const
    }
    return false;
 }
+
+void 
+TuSelector::setCongestionManager(CongestionManager* manager)
+{
+   for(TuList::iterator i=mTuList.begin(); i!=mTuList.end();++i)
+   {
+      i->tu->setCongestionManager(manager);
+   }
+   
+   // Note:  We are intentionally not registering the following Fifos
+   // mFallbackFifo - this is the same fifo as SipStack::TuFifo (passed in 
+   //                 constructor).
+   // mShutdownFifo - since it is only used at shutdown time, it doesn need
+   //                 congestion management
+}
+
+CongestionManager::RejectionBehavior 
+TuSelector::getRejectionBehavior(TransactionUser* tu) const
+{
+   if(!mCongestionManager)
+   {
+      return CongestionManager::NORMAL;
+   }
+
+   if(tu)
+   {
+      return tu->getRejectionBehavior();
+   }
+
+   return mCongestionManager->getRejectionBehavior(&mFallBackFifo);
+}
+
+UInt32 
+TuSelector::getExpectedWait(TransactionUser* tu) const
+{
+   if(tu)
+   {
+      return tu->getExpectedWait();
+   }
+
+   return (UInt32)mFallBackFifo.expectedWaitTimeMilliSec();
+}
+
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

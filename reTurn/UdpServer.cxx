@@ -19,9 +19,15 @@ UdpServer::UdpServer(asio::io_service& ioService, RequestHandler& requestHandler
   mAlternateIpUdpServer(0),
   mAlternateIpPortUdpServer(0)
 {
-   InfoLog(<< "UdpServer started.  Listening on " << address.to_string() << ":" << port);
-
-   bind(address, port);
+   asio::error_code ec = bind(address, port);
+   if(ec)
+   {
+      ErrLog(<< "Unable to start UdpServer listening on " << address.to_string() << ":" << port << ", error=" << ec.value() << " - " << ec.message());
+   }
+   else
+   {
+      InfoLog(<< "UdpServer started.  Listening on " << address.to_string() << ":" << port);
+   }
 }
 
 UdpServer::~UdpServer()

@@ -18,13 +18,18 @@ class IntegerCategory : public ParserCategory
       enum {commaHandling = NoCommaTokenizing};
 
       IntegerCategory();
-      IntegerCategory(HeaderFieldValue* hfv, Headers::Type type);
-      IntegerCategory(const IntegerCategory&);
+      IntegerCategory(const HeaderFieldValue& hfv, 
+                        Headers::Type type,
+                        PoolBase* pool=0);
+      IntegerCategory(const IntegerCategory& orig,
+                        PoolBase* pool=0);
       IntegerCategory& operator=(const IntegerCategory&);
 
       virtual void parse(ParseBuffer& pb);
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
       virtual ParserCategory* clone() const;
+      virtual ParserCategory* clone(void* location) const;
+      virtual ParserCategory* clone(PoolBase* pool) const;
 
       int value() const;
       int& value();

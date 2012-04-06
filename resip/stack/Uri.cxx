@@ -13,49 +13,38 @@
 #include "resip/stack/Uri.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/DnsUtil.hxx"
-#include "rutil/Lock.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
-#include "rutil/WinLeakCheck.hxx"
+//#include "rutil/WinLeakCheck.hxx"  // not compatible with placement new used below
 
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 #define HANDLE_CHARACTER_ESCAPING //undef for old behaviour
 
-// Set to true only after the tables are initialised
-volatile bool Uri::mEncodingReady = false;
-resip::Mutex Uri::mMutexEncodingTables;
-// class static variables listing the default characters not to encode
-// in user and password strings respectively
-const Data Uri::mUriNonEncodingUserChars = Data("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*\\()&=+$,;?/");
-const Data Uri::mUriNonEncodingPasswordChars = Data("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*\\()&=+$");
+static bool initAllTables()
+{
+   Uri::getUserEncodingTable();
+   Uri::getPasswordEncodingTable();
+   Uri::getLocalNumberTable();
+   Uri::getGlobalNumberTable();
+   return true;
+}
 
-// ?bwc? 'p' and 'w' are allowed in 2806, but have been removed in 3966. Should
-// we support these or not?
-const Data Uri::mLocalNumberChars = Data("*#-.()0123456789ABCDEFpw");
-const Data Uri::mGlobalNumberChars = Data("-.()0123456789");
+const bool Uri::tablesMightBeInitialized(initAllTables());
 
-
-Uri::EncodingTable Uri::mUriEncodingUserTable;
-Uri::EncodingTable Uri::mUriEncodingPasswordTable;
-Uri::EncodingTable Uri::mLocalNumberTable(Data::toBitset(mLocalNumberChars));
-Uri::EncodingTable Uri::mGlobalNumberTable(Data::toBitset(mGlobalNumberChars));
-
-Uri::Uri() 
-   : ParserCategory(),
+Uri::Uri(PoolBase* pool) 
+   : ParserCategory(pool),
      mScheme(Data::Share, Symbols::DefaultSipScheme),
      mPort(0),
-     mOldPort(0),
-     mEmbeddedHeaders(0)
+     mHostCanonicalized(false)
 {
 }
 
-Uri::Uri(HeaderFieldValue* hfv, Headers::Type type) :
-   ParserCategory(hfv, type),
+Uri::Uri(const HeaderFieldValue& hfv, Headers::Type type, PoolBase* pool) :
+   ParserCategory(hfv, type, pool),
    mPort(0),
-   mOldPort(0),
-   mEmbeddedHeaders(0)
+   mHostCanonicalized(false)
 {}
 
 
@@ -64,34 +53,32 @@ Uri::Uri(const Data& data)
    : ParserCategory(), 
      mScheme(Symbols::DefaultSipScheme),
      mPort(0),
-     mOldPort(0),
-     mEmbeddedHeaders(0)
+     mHostCanonicalized(false)
 {
    HeaderFieldValue hfv(data.data(), data.size());
    // must copy because parse creates overlays
-   Uri tmp(&hfv, Headers::UNKNOWN);
+   Uri tmp(hfv, Headers::UNKNOWN);
    tmp.checkParsed();
    *this = tmp;
 }
 
-Uri::Uri(const Uri& rhs)
-   : ParserCategory(rhs),
+Uri::Uri(const Uri& rhs,
+         PoolBase* pool)
+   : ParserCategory(rhs, pool),
      mScheme(rhs.mScheme),
      mHost(rhs.mHost),
      mUser(rhs.mUser),
      mUserParameters(rhs.mUserParameters),
      mPort(rhs.mPort),
      mPassword(rhs.mPassword),
-     mOldPort(0),
-     mEmbeddedHeadersText(rhs.mEmbeddedHeadersText),
-     mEmbeddedHeaders(rhs.mEmbeddedHeaders ? new SipMessage(*rhs.mEmbeddedHeaders) : 0)
+     mHostCanonicalized(rhs.mHostCanonicalized),
+     mEmbeddedHeadersText(rhs.mEmbeddedHeadersText.get() ? new Data(*rhs.mEmbeddedHeadersText) : 0),
+     mEmbeddedHeaders(rhs.mEmbeddedHeaders.get() ? new SipMessage(*rhs.mEmbeddedHeaders) : 0)
 {}
 
 
 Uri::~Uri()
-{
-   delete mEmbeddedHeaders;
-}
+{}
 
 // RFC 3261 19.1.6
 #if 0  // deprecated
@@ -295,16 +282,15 @@ bool
 Uri::hasEmbedded() const
 {
    checkParsed(); 
-   return !mEmbeddedHeadersText.empty() || mEmbeddedHeaders != 0;
+   return (mEmbeddedHeadersText.get() && !mEmbeddedHeadersText->empty()) || mEmbeddedHeaders.get() != 0;
 }
 
 void 
 Uri::removeEmbedded()
 {
    checkParsed();
-   delete mEmbeddedHeaders;
-   mEmbeddedHeaders = 0;
-   mEmbeddedHeadersText = Data::Empty;   
+   mEmbeddedHeaders.reset();
+   mEmbeddedHeadersText.reset();
 }
 
 
@@ -317,29 +303,56 @@ Uri::operator=(const Uri& rhs)
       ParserCategory::operator=(rhs);
       mScheme = rhs.mScheme;
       mHost = rhs.mHost;
+      mHostCanonicalized=rhs.mHostCanonicalized;
       mUser = rhs.mUser;
       mUserParameters = rhs.mUserParameters;
       mPort = rhs.mPort;
       mPassword = rhs.mPassword;
-      if (rhs.mEmbeddedHeaders != 0)
+      if (rhs.mEmbeddedHeaders.get() != 0)
       {
-         delete mEmbeddedHeaders;
-         mEmbeddedHeaders = new SipMessage(*rhs.mEmbeddedHeaders);
+         mEmbeddedHeaders.reset(new SipMessage(*rhs.mEmbeddedHeaders));
       }
-      else
+      else if(rhs.mEmbeddedHeadersText.get() != 0)
       {
-         mEmbeddedHeadersText = rhs.mEmbeddedHeadersText;
+         if(!mEmbeddedHeadersText.get())
+         {
+            mEmbeddedHeadersText.reset(new Data(*rhs.mEmbeddedHeadersText));
+         }
+         else
+         {
+            // !bwc! Data::operator= is smart enough to handle this safely.
+            *mEmbeddedHeadersText = *rhs.mEmbeddedHeadersText;
+         }
       }
    }
    return *this;
 }
 
+/**
+  @class OrderUnknownParameters
+  @brief used as a comparator for sorting purposes
+  */
 class OrderUnknownParameters
 {
    public:
+      /**
+        @brief constructor ; never called explicitly
+        */
       OrderUnknownParameters() { notUsed=false; };
+
+      /**
+        @brief empty destructor
+        */
       ~OrderUnknownParameters() {};
 
+      /**
+        @brief used as a comparator for sorting purposes
+         This does a straight Data comparison for name and returns true/false
+        @param p1 pointer to parameter 1
+        @param p2 pointer to parameter 2
+        @return true if p1->getName() is less than p2->getName() 
+         else return false
+        */
       bool operator()(const Parameter* p1, const Parameter* p2) const
       {
          return dynamic_cast<const UnknownParameter*>(p1)->getName() < dynamic_cast<const UnknownParameter*>(p2)->getName();
@@ -363,20 +376,20 @@ Uri::operator==(const Uri& other) const
       // compare canonicalized IPV6 addresses
 
       // update canonicalized if host changed
-      if (mOldHost != mHost)
+      if (!mHostCanonicalized)
       {
-         mOldHost = mHost;
-         mCanonicalHost = DnsUtil::canonicalizeIpV6Address(mHost);
+         mHost = DnsUtil::canonicalizeIpV6Address(mHost);
+         mHostCanonicalized=true;
       }
 
-      // update canonicalized if host changed      
-      if (other.mOldHost != other.mHost)
+      // update canonicalized if host changed
+      if (!other.mHostCanonicalized)
       {
-         other.mOldHost = other.mHost;
-         other.mCanonicalHost = DnsUtil::canonicalizeIpV6Address(other.mHost);
+         other.mHost = DnsUtil::canonicalizeIpV6Address(other.mHost);
+         other.mHostCanonicalized=true;
       }
 
-      if (mCanonicalHost != other.mCanonicalHost)
+      if (mHost != other.mHost)
       {
          return false;
       }
@@ -641,6 +654,33 @@ Uri::operator<(const Uri& other) const
       return false;
    }
 
+   // !bwc! Canonicalize before we compare! Jeez...
+   if (!mHostCanonicalized)
+   {
+      if(DnsUtil::isIpV6Address(mHost))
+      {
+         mHost = DnsUtil::canonicalizeIpV6Address(mHost);
+      }
+      else
+      {
+         mHost.lowercase();
+      }
+      mHostCanonicalized=true;
+   }
+   
+   if (!other.mHostCanonicalized)
+   {
+      if(DnsUtil::isIpV6Address(other.mHost))
+      {
+         other.mHost = DnsUtil::canonicalizeIpV6Address(other.mHost);
+      }
+      else
+      {
+         other.mHost.lowercase();
+      }
+      other.mHostCanonicalized=true;
+   }
+
    if (mHost < other.mHost)
    {
       return true;
@@ -652,6 +692,118 @@ Uri::operator<(const Uri& other) const
    }
 
    return mPort < other.mPort;
+}
+
+bool
+Uri::aorEqual(const resip::Uri& rhs) const
+{
+   checkParsed();
+   rhs.checkParsed();
+
+   if (!mHostCanonicalized)
+   {
+      if(DnsUtil::isIpV6Address(mHost))
+      {
+         mHost = DnsUtil::canonicalizeIpV6Address(mHost);
+      }
+      else
+      {
+         mHost.lowercase();
+      }
+      mHostCanonicalized=true;
+   }
+   
+   if (!rhs.mHostCanonicalized)
+   {
+      if(DnsUtil::isIpV6Address(rhs.mHost))
+      {
+         rhs.mHost = DnsUtil::canonicalizeIpV6Address(rhs.mHost);
+      }
+      else
+      {
+         rhs.mHost.lowercase();
+      }
+      rhs.mHostCanonicalized=true;
+   }
+   
+   return (mUser==rhs.mUser) && (mHost==rhs.mHost) && (mPort==rhs.mPort) && 
+            (isEqualNoCase(mScheme,rhs.mScheme));
+}
+
+void 
+Uri::getAorInternal(bool dropScheme, bool addPort, Data& aor) const
+{
+   checkParsed();
+   // canonicalize host
+
+   addPort = addPort && mPort!=0;
+
+   bool hostIsIpV6Address = false;
+   if(!mHostCanonicalized)
+   {
+      if (DnsUtil::isIpV6Address(mHost))
+      {
+         mHost = DnsUtil::canonicalizeIpV6Address(mHost);
+         hostIsIpV6Address = true;
+      }
+      else
+      {
+         mHost.lowercase();
+      }
+   }
+
+   // !bwc! Maybe reintroduce caching of aor. (Would use a bool instead of the
+   // mOldX cruft)
+   //                                                  @:10000
+   aor.clear();
+   aor.reserve((dropScheme ? 0 : mScheme.size()+1)
+               + mUser.size() + mHost.size() + 7);
+   if(!dropScheme)
+   {
+      aor += mScheme;
+      aor += ':';
+   }
+
+   if (!mUser.empty())
+   {
+#ifdef HANDLE_CHARACTER_ESCAPING
+      {
+         oDataStream str(aor);
+         mUser.escapeToStream(str, getUserEncodingTable()); 
+      }
+#else
+      aor += mUser;
+#endif
+      if(!mHost.empty())
+      {
+         aor += Symbols::AT_SIGN;
+      }
+   }
+
+   if(hostIsIpV6Address && addPort)
+   {
+      aor += Symbols::LS_BRACKET;
+      aor += mHost;
+      aor += Symbols::RS_BRACKET;
+   }
+   else
+   {
+      aor += mHost;
+   }
+
+   if(addPort)
+   {
+      aor += Symbols::COLON;
+      aor += Data(mPort);
+   }
+}
+
+Data 
+Uri::getAOR(bool addPort) const
+{
+   Data result;
+   getAorInternal(false, addPort, result);
+   return result;
 }
 
 bool 
@@ -667,11 +819,11 @@ Uri::userIsTelephoneSubscriber() const
       {
          // Might be a global phone number
          pb.skipChar();
-         pb.skipChars(mGlobalNumberTable);
+         pb.skipChars(getGlobalNumberTable());
       }
       else
       {
-         pb.skipChars(mLocalNumberTable);
+         pb.skipChars(getLocalNumberTable());
          local=true;
       }
 
@@ -701,7 +853,7 @@ Uri::userIsTelephoneSubscriber() const
 
       return true;
    }
-   catch(ParseException& e)
+   catch(ParseException& /*e*/)
    {
       return false;
    }
@@ -714,7 +866,7 @@ Uri::getUserAsTelephoneSubscriber() const
    // possible to control ownership explicitly.
    // Set this up as lazy-parsed, to prevent exceptions from being thrown.
    HeaderFieldValue temp(mUser.data(), mUser.size());
-   Token tempToken(&temp, Headers::NONE);
+   Token tempToken(temp, Headers::NONE);
    // tempToken does not own the HeaderFieldValue temp, and temp does not own 
    // its buffer.
 
@@ -733,97 +885,20 @@ Uri::setUserAsTelephoneSubscriber(const Token& telephoneSubscriber)
    str << telephoneSubscriber;
 }
 
-const Data
+Data
 Uri::getAorNoPort() const
 {
-   // CJ - TODO - check this in inline with the getAor code (see v6 stuff)
-
-   checkParsed();
-   getAor();
-
-   Data aor;
-   aor.reserve(mUser.size() + mCanonicalHost.size() + 2 /* for @ */ );
-   
-   if (mUser.empty())
-   {
-      aor += mCanonicalHost;
-   }
-   else
-   {
-      aor += mUser;
-      if (!mCanonicalHost.empty())
-      {
-         aor += Symbols::AT_SIGN;
-         aor += mCanonicalHost;
-      }
-   }
-   
-   return aor;
+   Data result;
+   getAorInternal(true, false, result);
+   return result;
 }
 
-const Data&
+Data
 Uri::getAor() const
 {
-   checkParsed();
-   // did anything change?
-   if (mOldUser != mUser ||
-       mOldHost != mHost ||
-       mOldPort != mPort)
-   {
-      bool hostIsIpV6Address = false;
-      mOldHost = mHost;
-      // canonicalize host
-      if (DnsUtil::isIpV6Address(mOldHost))
-      {
-         mCanonicalHost = DnsUtil::canonicalizeIpV6Address(mHost);
-         hostIsIpV6Address = true;
-      }
-      else
-      {
-         mCanonicalHost = mHost;
-         mCanonicalHost.lowercase();
-      }
-
-      mOldUser = mUser;
-      mOldPort = mPort;
-      mAor.clear();
-
-      //                                                  @:10000
-      mAor.reserve(mUser.size() + mCanonicalHost.size() + 10);
-      if (mOldUser.empty())
-      {
-         mAor += mCanonicalHost;
-      }
-      else
-      {
-         mAor += mOldUser;
-         if (!mCanonicalHost.empty())
-         {
-            mAor += Symbols::AT_SIGN;
-            if (hostIsIpV6Address && mPort != 0)
-            {
-               mAor += Symbols::LS_BRACKET + mCanonicalHost + Symbols::RS_BRACKET;
-            }
-            else
-            {
-               mAor += mCanonicalHost;
-            }
-         }
-      }
-
-      if (mPort != 0)
-      {
-         mAor += Symbols::COLON;
-         mAor += Data(mPort);
-      }
-   }
-   return mAor;
-}
-
-Data 
-Uri::getAorNoReally() const
-{
-   return mScheme + ':' + getAorNoPort();
+   Data result;
+   getAorInternal(true, true, result);
+   return result;
 }
 
 Uri 
@@ -866,18 +941,19 @@ Uri::parse(ParseBuffer& pb)
 {
    pb.skipWhitespace();
    const char* start = pb.position();
-   pb.skipToOneOf(":@"); // make sure the colon precedes
+   pb.skipToOneOf(":@");
 
    pb.assertNotEof();
 
    pb.data(mScheme, start);
    pb.skipChar(Symbols::COLON[0]);
-   mScheme.lowercase();
+   mScheme.schemeLowercase();
 
-   if (isEqualNoCase(mScheme, Symbols::Tel))
+   if (mScheme==Symbols::Tel)
    {
       const char* anchor = pb.position();
-      pb.skipToOneOf(ParseBuffer::Whitespace, ";>");
+      static std::bitset<256> delimiter=Data::toBitset("\r\n\t ;>");
+      pb.skipToOneOf(delimiter);
       pb.data(mUser, anchor);
       if (!pb.eof() && *pb.position() == Symbols::SEMI_COLON[0])
       {
@@ -889,8 +965,9 @@ Uri::parse(ParseBuffer& pb)
    }
    
    start = pb.position();
+   static std::bitset<256> userPortOrPasswordDelim(Data::toBitset("@:\""));
    // stop at double-quote to prevent matching an '@' in a quoted string param. 
-   pb.skipToOneOf("@:\"");
+   pb.skipToOneOf(userPortOrPasswordDelim);
    if (!pb.eof())
    {
       const char* atSign=0;
@@ -941,7 +1018,9 @@ Uri::parse(ParseBuffer& pb)
    {
       pb.reset(start);
    }
-   
+
+   mHostCanonicalized=false;
+   static std::bitset<256> hostDelimiter(Data::toBitset("\r\n\t :;?>"));
    if (*start == '[')
    {
       start = pb.skipChar();
@@ -959,32 +1038,32 @@ Uri::parse(ParseBuffer& pb)
                                        __LINE__);
       }
       pb.skipChar();
+      pb.skipToOneOf(hostDelimiter);
    }
    else
    {
-      pb.skipToOneOf(ParseBuffer::Whitespace, ":;?>");
+      pb.skipToOneOf(hostDelimiter);
       pb.data(mHost, start);
    }
 
-   pb.skipToOneOf(ParseBuffer::Whitespace, ":;?>");
    if (!pb.eof() && *pb.position() == ':')
    {
       start = pb.skipChar();
-      mPort = pb.integer();
-      pb.skipToOneOf(ParseBuffer::Whitespace, ";?>");
+      mPort = pb.uInt32();
    }
    else
    {
       mPort = 0;
    }
-   
+
    parseParameters(pb);
 
    if (!pb.eof() && *pb.position() == Symbols::QUESTION[0])
    {
       const char* anchor = pb.position();
       pb.skipToOneOf(">;", ParseBuffer::Whitespace);
-      pb.data(mEmbeddedHeadersText, anchor);
+      if(!mEmbeddedHeadersText.get()) mEmbeddedHeadersText.reset(new Data);
+      pb.data(*mEmbeddedHeadersText, anchor);
    }
 }
 
@@ -994,65 +1073,28 @@ Uri::clone() const
    return new Uri(*this);
 }
 
+ParserCategory*
+Uri::clone(void* location) const
+{
+   return new (location) Uri(*this);
+}
+
+ParserCategory*
+Uri::clone(PoolBase* pool) const
+{
+   return new (pool) Uri(*this);
+}
+
 void Uri::setUriUserEncoding(unsigned char c, bool encode) 
 {
-   if(!mEncodingReady)
-   {
-      // if we don't init first, the changes we make will be lost when
-      // init is invoked
-      initialiseEncodingTables();
-   }
-
-   mUriEncodingUserTable[c] = encode; 
+   getUserEncodingTable()[c] = encode; 
 }
 
 void Uri::setUriPasswordEncoding(unsigned char c, bool encode)
 {
-   if(!mEncodingReady)
-   {
-      // if we don't init first, the changes we make will be lost when
-      // init is invoked
-      initialiseEncodingTables();
-   }
-
-   mUriEncodingPasswordTable[c] = encode;
+   getPasswordEncodingTable()[c] = encode;
 }
 
-void Uri::initialiseEncodingTables()
-{
-   Lock lock(Uri::mMutexEncodingTables);
-
-   if(mEncodingReady == false)
-   {
-      // set all bits
-      mUriEncodingUserTable=Data::toBitset(mUriNonEncodingUserChars).flip();
-      mUriEncodingPasswordTable=Data::toBitset(mUriNonEncodingPasswordChars).flip();
-      mEncodingReady = true;
-   }
-}
-
-inline bool 
-Uri::shouldEscapeUserChar(unsigned char c)
-{
-   if(!mEncodingReady)
-   {
-      initialiseEncodingTables();
-   }
-
-   return mUriEncodingUserTable[c];
-}
-
-inline bool 
-Uri::shouldEscapePasswordChar(unsigned char c)
-{
-   if(!mEncodingReady)
-   {
-      initialiseEncodingTables();
-   }
-
-   return mUriEncodingPasswordTable[c];
-}
- 
 // should not encode user parameters unless its a tel?
 EncodeStream& 
 Uri::encodeParsed(EncodeStream& str) const
@@ -1061,7 +1103,7 @@ Uri::encodeParsed(EncodeStream& str) const
    if (!mUser.empty())
    {
 #ifdef HANDLE_CHARACTER_ESCAPING
-      mUser.escapeToStream(str, shouldEscapeUserChar); 
+      mUser.escapeToStream(str, getUserEncodingTable()); 
 #else
       str << mUser;
 #endif
@@ -1073,7 +1115,7 @@ Uri::encodeParsed(EncodeStream& str) const
       {
          str << Symbols::COLON;
 #ifdef HANDLE_CHARACTER_ESCAPING
-         mPassword.escapeToStream(str, shouldEscapePasswordChar);
+         mPassword.escapeToStream(str, getPasswordEncodingTable());
 #else
          str << mPassword;
 #endif
@@ -1108,12 +1150,12 @@ SipMessage&
 Uri::embedded()
 {
    checkParsed();
-   if (mEmbeddedHeaders == 0)
+   if (mEmbeddedHeaders.get() == 0)
    {
-      this->mEmbeddedHeaders = new SipMessage();
-      if (!mEmbeddedHeadersText.empty())
+      this->mEmbeddedHeaders.reset(new SipMessage());
+      if (mEmbeddedHeadersText.get() && !mEmbeddedHeadersText->empty())
       {
-         ParseBuffer pb(mEmbeddedHeadersText.data(), mEmbeddedHeadersText.size());
+         ParseBuffer pb(mEmbeddedHeadersText->data(), mEmbeddedHeadersText->size());
          this->parseEmbeddedHeaders(pb);
       }
    }
@@ -1184,14 +1226,14 @@ Uri::parseEmbeddedHeaders(ParseBuffer& pb)
 EncodeStream& 
 Uri::encodeEmbeddedHeaders(EncodeStream& str) const
 {
-   if (mEmbeddedHeaders)
+   if (mEmbeddedHeaders.get())
    {
       mEmbeddedHeaders->encodeEmbedded(str);
    }
-   else
+   else if(mEmbeddedHeadersText.get())
    {
       // never decoded
-      str << mEmbeddedHeadersText;
+      str << *mEmbeddedHeadersText;
    }
    return str;
 }
@@ -1210,11 +1252,11 @@ Uri::toString() const
 ParameterTypes::Factory Uri::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
 
 Parameter* 
-Uri::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+Uri::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool)
 {
-   if(ParameterFactories[type])
+   if(type > ParameterTypes::UNKNOWN && type < ParameterTypes::MAX_PARAMETER && ParameterFactories[type])
    {
-      return ParameterFactories[type](type, pb, terminators);
+      return ParameterFactories[type](type, pb, terminators, pool);
    }
    return 0;
 }

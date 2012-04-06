@@ -26,7 +26,7 @@ MultipartSignedContents::MultipartSignedContents()
    : MultipartMixedContents(getStaticType())
 {}
 
-MultipartSignedContents::MultipartSignedContents(HeaderFieldValue* hfv, const Mime& contentsType)
+MultipartSignedContents::MultipartSignedContents(const HeaderFieldValue& hfv, const Mime& contentsType)
    : MultipartMixedContents(hfv, contentsType)
 {
 }

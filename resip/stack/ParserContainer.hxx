@@ -9,12 +9,14 @@
 
 namespace resip
 {
-
+using std::ptrdiff_t;
 /**
-   @ingroup resip_crit
-   @brief Container class for ParserCategory, used by SipMessage.
+   @brief Container class for ParserCategory, used by SipMessage to represent
+      multi-valued headers (Contact, Via, etc).
 
-   Multi-value headers (Contact, Via, etc) are represented as one of these.
+   This has an interface that is similar to stl containers, but not as complete.
+
+   @ingroup resip_crit
 */
 template<class T>
 class ParserContainer : public ParserContainerBase
@@ -27,42 +29,129 @@ class ParserContainer : public ParserContainerBase
       typedef const value_type& const_reference;
       typedef ptrdiff_t difference_type;
 
+      /**
+         @brief Default c'tor.
+      */
       ParserContainer()
          : ParserContainerBase(Headers::UNKNOWN)
       {}
       
-      // private to SipMessage (using this carries a high risk of blowing your
-      // feet off)
+      ParserContainer(PoolBase& pool)
+         : ParserContainerBase(Headers::UNKNOWN,pool)
+      {}
+      
+      /** 
+         @internal
+         @brief Used by SipMessage (using this carries a high risk of blowing 
+            your feet off).
+      */
       ParserContainer(HeaderFieldValueList* hfvs,
                       Headers::Type type = Headers::UNKNOWN)
          : ParserContainerBase(type)
       {
+         mParsers.reserve(hfvs->size());
          for (HeaderFieldValueList::iterator i = hfvs->begin();
               i != hfvs->end(); i++)
          {
             // create, store without copying -- 
             // keeps the HeaderFieldValue from reallocating its buffer
-            mParsers.push_back(new T(*i, type));
+            mParsers.push_back(HeaderKit::Empty);
+            mParsers.back().hfv.init(i->getBuffer(),i->getLength(),false);
          }
       }
 
+      ParserContainer(HeaderFieldValueList* hfvs,
+                      Headers::Type type,
+                      PoolBase& pool)
+         : ParserContainerBase(type,pool)
+      {
+         mParsers.reserve(hfvs->size());
+         for (HeaderFieldValueList::iterator i = hfvs->begin();
+              i != hfvs->end(); i++)
+         {
+            // create, store without copying -- 
+            // keeps the HeaderFieldValue from reallocating its buffer
+            mParsers.push_back(HeaderKit::Empty);
+            mParsers.back().hfv.init(i->getBuffer(),i->getLength(),false);
+         }
+      }
+
+      /**
+         @brief Copy c'tor.
+      */
       ParserContainer(const ParserContainer& other)
          : ParserContainerBase(other)
       {}
 
+      /**
+         @brief Copy c'tor.
+      */
+      ParserContainer(const ParserContainer& other, PoolBase& pool)
+         : ParserContainerBase(other, pool)
+      {}
+
+      /**
+         @brief Assignment operator.
+      */
       ParserContainer& operator=(const ParserContainer& other)
       {
          return static_cast<ParserContainer&>(ParserContainerBase::operator=(other));
       }
+
+      /**
+         @brief Returns the first header field value in this container.
+      */
+      T& front() 
+      {
+         return ensureInitialized(mParsers.front(),this);
+      }
       
-      T& front() { return *static_cast<T*>(mParsers.front());}
-      T& back() { return *static_cast<T*>(mParsers.back());}
-      const T& front() const { return *static_cast<T*>(mParsers.front());}
-      const T& back() const { return *static_cast<T*>(mParsers.back());}
+      /**
+         @brief Returns the last header field value in this container.
+      */
+      T& back() 
+      { 
+         return ensureInitialized(mParsers.back(),this);
+      }
       
-      void push_front(const T & t) { mParsers.insert(mParsers.begin(), new T(t)); }
-      void push_back(const T & t) { mParsers.push_back(new T(t)); }
+      /**
+         @brief Returns the first header field value in this container.
+      */
+      const T& front() const 
+      { 
+         return ensureInitialized(mParsers.front(),this);
+      }
+      
+      /**
+         @brief Returns the last header field value in this container.
+      */
+      const T& back() const 
+      { 
+         return ensureInitialized(mParsers.back(),this);
+      }
+      
+      /**
+         @brief Inserts a header field value at the front of this container.
+      */
+      void push_front(const T & t) 
+      { 
+         mParsers.insert(mParsers.begin(), HeaderKit::Empty);
+         mParsers.front().pc=makeParser(t);
+      }
+
+      /**
+         @brief Inserts a header field value at the back of this container.
+      */
+      void push_back(const T & t) 
+      { 
+         mParsers.push_back(HeaderKit::Empty);
+         mParsers.back().pc=makeParser(t);
+      }
             
+      /**
+         @brief Returns a copy of this ParserContainer, in reverse order.
+         @todo !bwc! optimize this (we are copying each ParserContainer twice)
+      */
       ParserContainer reverse() const
       {
          ParserContainer tmp(*this);
@@ -70,71 +159,113 @@ class ParserContainer : public ParserContainerBase
          return tmp;
       }
 
+      typedef ParserContainerBase::Parsers Parsers;
       // .dlb. these can be partially hoisted as well
       class const_iterator;
       
+      /**
+         @brief An iterator class, derived from std::iterator (bidirectional)
+      */
       class iterator : public std::iterator<std::bidirectional_iterator_tag, T>
       {
          public:
-            iterator(typename std::vector<ParserCategory*>::iterator i) : mIt(i){}
-            iterator() {}
+            iterator(typename Parsers::iterator i,ParserContainer* ref) : mIt(i),mRef(ref){}
+            iterator() : mRef(0) {}
+            iterator(const iterator& orig) : mIt(orig.mIt), mRef(orig.mRef) {}
 
-            iterator operator++() {iterator it(++mIt); return it;}
-            iterator operator++(int) {iterator it(mIt++); return it;}
-            iterator operator--() {iterator it(--mIt); return it;}
-            iterator operator--(int) {iterator it(mIt--); return it;}
+            iterator operator++() {iterator it(++mIt,mRef); return it;}
+            iterator operator++(int) {iterator it(mIt++,mRef); return it;}
+            iterator operator--() {iterator it(--mIt,mRef); return it;}
+            iterator operator--(int) {iterator it(mIt--,mRef); return it;}
             bool operator!=(const iterator& rhs) { return mIt != rhs.mIt; }
             bool operator==(const iterator& rhs) { return mIt == rhs.mIt; }
             bool operator!=(const const_iterator& rhs) { return mIt != rhs.mIt; }
             bool operator==(const const_iterator& rhs) { return mIt == rhs.mIt; }
-            iterator& operator=(const iterator& rhs) { mIt = rhs.mIt; return *this;}
-            T& operator*() {return *static_cast<T*>(*mIt);}
-            T* operator->() {return static_cast<T*>(*mIt);}
+            iterator& operator=(const iterator& rhs) 
+            {
+               mIt = rhs.mIt; 
+               mRef = rhs.mRef;
+               return *this;
+            }
+            T& operator*() {return ensureInitialized(*mIt,mRef);}
+            T* operator->() {return &ensureInitialized(*mIt,mRef);}
          private:
-            typename std::vector<ParserCategory*>::iterator mIt;
+            typename Parsers::iterator mIt;
+            ParserContainer* mRef;
             friend class const_iterator;
             friend class ParserContainer;
       };
 
+      /**
+         @brief A const_iterator class, derived from std::iterator 
+            (bidirectional)
+      */
       class const_iterator : public std::iterator<std::bidirectional_iterator_tag, T>
       {
          public:
-            const_iterator(std::vector<ParserCategory*>::const_iterator i) : mIt(i) {}
-            const_iterator() {}
+            const_iterator(Parsers::const_iterator i,const ParserContainer* ref) : mIt(i),mRef(ref){}
+            const_iterator(const const_iterator& orig) : mIt(orig.mIt), mRef(orig.mRef) {}
+            const_iterator(const iterator& orig) : mIt(orig.mIt), mRef(orig.mRef) {}
+            const_iterator() : mRef(0) {}
 
-            const_iterator operator++() {const_iterator it(++mIt); return it;}
-            const_iterator operator++(int) {const_iterator it(mIt++); return it;}
-            const_iterator operator--() {const_iterator it(--mIt); return it;}
-            const_iterator operator--(int) {const_iterator it(mIt--); return it;}
+            const_iterator operator++() {const_iterator it(++mIt,mRef); return it;}
+            const_iterator operator++(int) {const_iterator it(mIt++,mRef); return it;}
+            const_iterator operator--() {const_iterator it(--mIt,mRef); return it;}
+            const_iterator operator--(int) {const_iterator it(mIt--,mRef); return it;}
             bool operator!=(const const_iterator& rhs) { return mIt != rhs.mIt; }
             bool operator==(const const_iterator& rhs) { return mIt == rhs.mIt; }
             bool operator!=(const iterator& rhs) { return mIt != rhs.mIt; }
             bool operator==(const iterator& rhs) { return mIt == rhs.mIt; }
-            const_iterator& operator=(const const_iterator& rhs) { mIt = rhs.mIt; return *this;}
-            const_iterator& operator=(const iterator& rhs) { mIt = rhs.mIt; return *this;}
-            const T& operator*() {return *static_cast<T*>(*mIt);}
-            const T* operator->() {return static_cast<T*>(*mIt);}
+            const_iterator& operator=(const const_iterator& rhs) 
+            {
+               mIt = rhs.mIt;
+               mRef = rhs.mRef;
+               return *this;
+            }
+            const_iterator& operator=(const iterator& rhs) 
+            {
+               mIt = rhs.mIt; 
+               mRef = rhs.mRef;
+               return *this;
+            }
+            const T& operator*() {return ensureInitialized(*mIt,mRef);}
+            const T* operator->() {return &ensureInitialized(*mIt,mRef);}
          private:
             friend class iterator;
-            typename std::vector<ParserCategory*>::const_iterator mIt;
+            typename Parsers::const_iterator mIt;
+            const ParserContainer* mRef;
       };
-      
-      iterator begin() { return iterator(mParsers.begin()); }
-      iterator end() { return iterator(mParsers.end()); }
 
+      /**
+         @brief Returns an iterator pointing to the first header field value.
+      */
+      iterator begin() { return iterator(mParsers.begin(),this); }
+
+      /**
+         @brief Returns an iterator pointing to the last header field value.
+      */
+      iterator end() { return iterator(mParsers.end(),this); }
+
+      /**
+         @brief Erases the header field value pointed to by i. Invalidates all
+            existing iterators.
+      */
       iterator erase(iterator i)
       {
-         delete *i.mIt;
-         return iterator(mParsers.erase(i.mIt));
+         freeParser(*i.mIt);
+         return iterator(mParsers.erase(i.mIt),this);
       }
 
+      /**
+         @brief Finds the first header field value that matches rhs.
+      */
       bool find(const T& rhs) const
       {
-         for (typename std::vector<ParserCategory*>::const_iterator i = mParsers.begin();
+         for (typename Parsers::const_iterator i = mParsers.begin();
               i != mParsers.end(); ++i)
          {
             // operator== defined by default, but often not usefully
-            if (rhs.isEqual(*static_cast<T*>(*i)))
+            if (rhs.isEqual(ensureInitialized(*i,this)))
             {
                return true;
             }
@@ -143,21 +274,81 @@ class ParserContainer : public ParserContainerBase
          return false;
       }
 
+      /**
+         @brief Triggers a parse of all contained header field values.
+         @throw ParseException if any header field value is malformed.
+      */
       virtual void parseAll()
       {
-         for (typename std::vector<ParserCategory*>::const_iterator i = mParsers.begin();
+         for (typename Parsers::const_iterator i = mParsers.begin();
               i != mParsers.end(); ++i)
          {
-            (*i)->checkParsed();
+            ensureInitialized(*i,this).checkParsed();
          }
       }
 
-      const_iterator begin() const { return const_iterator(mParsers.begin()); }
-      const_iterator end() const { return const_iterator(mParsers.end()); }
+      /**
+         @brief Returns a const_iterator pointing to the first header field 
+            value.
+      */
+      const_iterator begin() const { return const_iterator(mParsers.begin(),this); }
 
+      /**
+         @brief Returns a const_iterator pointing to the first header field 
+            value.
+      */
+      const_iterator end() const { return const_iterator(mParsers.end(),this); }
+
+      /**
+         @brief Clones this container, and all contained header field values.
+      */
       virtual ParserContainerBase* clone() const
       {
          return new ParserContainer(*this);
+      }
+
+   private:
+      friend class ParserContainer<T>::iterator;
+      friend class ParserContainer<T>::const_iterator;
+
+      /**
+         @internal
+      */
+      static T& ensureInitialized(HeaderKit& kit, ParserContainer* ref)
+      {
+         if(!kit.pc)
+         {
+            if(ref)
+            {
+               PoolBase* pool(ref->mPool);
+               kit.pc=new (pool) T(kit.hfv, ref->mType, pool);
+            }
+            else
+            {
+               kit.pc=new T(kit.hfv, Headers::NONE);
+            }
+         }
+         return *static_cast<T*>(kit.pc);
+      }
+
+      static const T& ensureInitialized(const HeaderKit& kit, 
+                                 const ParserContainer* ref)
+      {
+         if(!kit.pc)
+         {
+            HeaderKit& nc_kit(const_cast<HeaderKit&>(kit));
+            if(ref)
+            {
+               ParserContainer* nc_ref(const_cast<ParserContainer*>(ref));
+               PoolBase* pool(nc_ref->mPool);
+               nc_kit.pc=new (pool) T(kit.hfv, ref->mType, pool);
+            }
+            else
+            {
+               nc_kit.pc=new T(kit.hfv, Headers::NONE);
+            }
+         }
+         return *static_cast<T*>(kit.pc);
       }
 };
 

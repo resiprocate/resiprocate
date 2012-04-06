@@ -107,8 +107,7 @@ check_PROGRAMS = \
 	testTuple \
 	testTypedef \
 	testUdp \
-	testUri \
-	testXMLCursor
+	testUri
 
 
 UAS_SOURCES = UAS.cxx

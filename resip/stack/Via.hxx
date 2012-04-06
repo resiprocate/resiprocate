@@ -8,6 +8,7 @@
 
 namespace resip
 {
+class PoolBase;
 
 /**
    @ingroup sip_grammar
@@ -19,8 +20,11 @@ class Via : public ParserCategory
       enum {commaHandling = CommasAllowedOutputMulti};
 
       Via();
-      Via(HeaderFieldValue* hfv, Headers::Type type);
-      Via(const Via&);
+      Via(const HeaderFieldValue& hfv, 
+            Headers::Type type,
+            PoolBase* pool=0);
+      Via(const Via& orig,
+            PoolBase* pool=0);
       Via& operator=(const Via&);
 
       Data& protocolName();
@@ -36,6 +40,8 @@ class Via : public ParserCategory
 
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
+      virtual ParserCategory* clone(void* location) const;
+      virtual ParserCategory* clone(PoolBase* pool) const;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
 
       // Inform the compiler that overloads of these may be found in
@@ -44,7 +50,7 @@ class Via : public ParserCategory
       using ParserCategory::remove;
       using ParserCategory::param;
 
-      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators);
+      virtual Parameter* createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool);
       bool exists(const Param<Via>& paramType) const;
       void remove(const Param<Via>& paramType);
 

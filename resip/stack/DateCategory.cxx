@@ -11,7 +11,7 @@
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/Socket.hxx"
-#include "rutil/WinLeakCheck.hxx"
+//#include "rutil/WinLeakCheck.hxx"  // not compatible with placement new used below
 
 using namespace resip;
 using namespace std;
@@ -104,8 +104,10 @@ DateCategory::DateCategory()
              << " " << mHour << ":" << mMin << ":" << mSec);
 }
 
-DateCategory::DateCategory(HeaderFieldValue* hfv, Headers::Type type)
-   : ParserCategory(hfv, type),
+DateCategory::DateCategory(const HeaderFieldValue& hfv, 
+                           Headers::Type type,
+                           PoolBase* pool)
+   : ParserCategory(hfv, type, pool),
      mDayOfWeek(Sun),
      mDayOfMonth(),
      mMonth(Jan),
@@ -115,10 +117,17 @@ DateCategory::DateCategory(HeaderFieldValue* hfv, Headers::Type type)
      mSec(0)
 {}
 
-DateCategory::DateCategory(const DateCategory& rhs)
-{
-   *this = rhs;
-}
+DateCategory::DateCategory(const DateCategory& rhs,
+                           PoolBase* pool)
+   : ParserCategory(rhs, pool),
+     mDayOfWeek(rhs.mDayOfWeek),
+     mDayOfMonth(rhs.mDayOfMonth),
+     mMonth(rhs.mMonth),
+     mYear(rhs.mYear),
+     mHour(rhs.mHour),
+     mMin(rhs.mMin),
+     mSec(rhs.mSec)
+{}
 
 DateCategory&
 DateCategory::operator=(const DateCategory& rhs)
@@ -139,6 +148,9 @@ DateCategory::operator=(const DateCategory& rhs)
 
 /* ANSI-C code produced by gperf version 2.7.2 */
 /* Command-line: gperf -L ANSI-C -t -k '*' dayofweek.gperf  */
+/**
+   @internal
+*/
 struct days { char name[32]; DayOfWeek day; };
 
 #ifdef __GNUC__
@@ -282,6 +294,9 @@ DateCategory::DayOfWeekFromData(const Data& dow)
 
 /* ANSI-C code produced by gperf version 2.7.2 */
 /* Command-line: gperf -L ANSI-C -t -k '*' month.gperf  */
+/**
+   @internal
+*/
 struct months { char name[32]; Month type; };
 
 /* maximum key range = 31, duplicates = 0 */
@@ -531,6 +546,18 @@ ParserCategory*
 DateCategory::clone() const
 {
    return new DateCategory(*this);
+}
+
+ParserCategory* 
+DateCategory::clone(void* location) const
+{
+   return new (location) DateCategory(*this);
+}
+
+ParserCategory* 
+DateCategory::clone(PoolBase* pool) const
+{
+   return new (pool) DateCategory(*this, pool);
 }
 
 static void pad2(const int x, EncodeStream& str)

@@ -36,7 +36,7 @@ PlainContents::PlainContents(const Data& txt)
      mText(txt)
 {}
 
-PlainContents::PlainContents(HeaderFieldValue* hfv, const Mime& contentsType)
+PlainContents::PlainContents(const HeaderFieldValue& hfv, const Mime& contentsType)
    : Contents(hfv, contentsType),
      mText()
 {

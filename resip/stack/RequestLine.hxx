@@ -3,7 +3,7 @@
 
 #include <iosfwd>
 #include "rutil/Data.hxx"
-#include "resip/stack/ParserCategory.hxx"
+#include "resip/stack/StartLine.hxx"
 #include "resip/stack/MethodTypes.hxx"
 #include "resip/stack/Uri.hxx"
 
@@ -14,11 +14,13 @@ namespace resip
    @ingroup sip_grammar
    @brief Represents the "Request-Line" element in the RFC 3261 grammar.
 */
-class RequestLine : public ParserCategory
+class RequestLine : public StartLine
 {
    public:
+      RequestLine();
       RequestLine(MethodTypes method, const Data& sipVersion = Symbols::DefaultSipVersion);
-      RequestLine(HeaderFieldValue* hfv, Headers::Type type);
+      RequestLine(const HeaderFieldValue& hfv);
+      RequestLine(const char* buf, int len);
       RequestLine(const RequestLine&);
       RequestLine& operator=(const RequestLine&);
 
@@ -36,8 +38,10 @@ class RequestLine : public ParserCategory
       const Data& getSipVersion() const;
 
       virtual void parse(ParseBuffer& pb);
-      virtual ParserCategory* clone() const;
+      virtual StartLine* clone() const;
+      virtual StartLine* clone(void* location) const;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
+      virtual const Data& errorContext() const;
 
    private:
       Uri mUri;

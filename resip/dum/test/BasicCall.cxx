@@ -309,7 +309,7 @@ class TestUac : public TestInviteSessionHandler
          
          hfv = new HeaderFieldValue(txt->data(), (unsigned int)txt->size());
          Mime type("application", "sdp");
-         mSdp = new SdpContents(hfv, type);
+         mSdp = new SdpContents(*hfv, type);
       }
 
       virtual ~TestUac()
@@ -425,7 +425,7 @@ class TestUas : public TestInviteSessionHandler
          
          hfv = new HeaderFieldValue(txt->data(), (unsigned int)txt->size());
          Mime type("application", "sdp");
-         mSdp = new SdpContents(hfv, type);
+         mSdp = new SdpContents(*hfv, type);
       }
 
       ~TestUas()
@@ -700,20 +700,12 @@ main (int argc, char** argv)
    {
      if (!uacShutdownHandler.dumShutDown)
      {
-        FdSet fdset;
-        stackUac.buildFdSet(fdset);
-        int err = fdset.selectMilliSeconds(resipMin((int)stackUac.getTimeTillNextProcessMS(), 50));
-        assert ( err != -1 );
-        stackUac.process(fdset);
+        stackUac.process(50);
         while(dumUac->process());
      }
      if (!uasShutdownHandler.dumShutDown)
      {
-        FdSet fdset;
-        stackUas.buildFdSet(fdset);
-        int err = fdset.selectMilliSeconds(resipMin((int)stackUas.getTimeTillNextProcessMS(), 50));
-        assert ( err != -1 );
-        stackUas.process(fdset);
+        stackUas.process(50);
         while(dumUas->process());
      }
 

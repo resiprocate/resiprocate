@@ -43,7 +43,7 @@ X509Contents::X509Contents(const Data& txt, const Mime& contentsType)
 {
 }
  
-X509Contents::X509Contents(HeaderFieldValue* hfv, const Mime& contentsType)
+X509Contents::X509Contents(const HeaderFieldValue& hfv, const Mime& contentsType)
    : Contents(hfv, contentsType),
      mText()
 {

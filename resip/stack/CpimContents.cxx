@@ -34,7 +34,7 @@ CpimContents::CpimContents(const Data& txt)
      mText(txt)
 {}
 
-CpimContents::CpimContents(HeaderFieldValue* hfv, const Mime& contentsType)
+CpimContents::CpimContents(const HeaderFieldValue& hfv, const Mime& contentsType)
    : Contents(hfv, contentsType),
      mText()
 {

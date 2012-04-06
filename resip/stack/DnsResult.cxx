@@ -32,7 +32,7 @@
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/Random.hxx"
 #include "rutil/compat.hxx"
-#include "rutil/WinLeakCheck.hxx"
+#include "rutil/Timer.hxx"
 #include "rutil/dns/DnsHandler.hxx"
 #include "rutil/dns/QueryTypes.hxx"
 #include "rutil/dns/DnsStub.hxx"
@@ -42,9 +42,7 @@
 #include "resip/stack/TupleMarkManager.hxx"
 #include "resip/stack/Tuple.hxx"
 #include "resip/stack/Uri.hxx"
-#include "rutil/WinLeakCheck.hxx"
-
-#include "rutil/Timer.hxx"
+#include "rutil/WinLeakCheck.hxx"  // not compatible with placement new used below
 
 using namespace resip;
 using namespace std;

@@ -303,6 +303,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ConfigParse.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\CountStream.cxx"
 				>
 			</File>
@@ -339,6 +343,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\dns\DnsThread.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\DnsUtil.cxx"
 				>
 			</File>
@@ -352,6 +360,10 @@
 			</File>
 			<File
 				RelativePath=".\FileSystem.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\GeneralCongestionManager.cxx"
 				>
 			</File>
 			<File
@@ -376,6 +388,14 @@
 			</File>
 			<File
 				RelativePath=".\Mutex.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\PoolBase.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\SelectInterruptor.cxx"
 				>
 			</File>
 			<File
@@ -514,6 +534,10 @@
 				RelativePath=".\WinCompat.cxx"
 				>
 			</File>
+			<File
+				RelativePath=".\XMLCursor.cxx"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -522,6 +546,18 @@
 			>
 			<File
 				RelativePath=".\AbstractFifo.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\CongestionManager.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ConsumerFifoBuffer.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\DinkyPool.hxx"
 				>
 			</File>
 			<File
@@ -554,6 +590,10 @@
 			</File>
 			<File
 				RelativePath=".\Condition.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ConfigParse.hxx"
 				>
 			</File>
 			<File
@@ -605,6 +645,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\dns\DnsThread.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\dns\ExternalDns.hxx"
 				>
 			</File>
@@ -617,6 +661,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\FdSetIOObserver.hxx"
+				>
+			</File>			
+			<File
 				RelativePath=".\Fifo.hxx"
 				>
 			</File>
@@ -628,6 +676,10 @@
 				RelativePath=".\FiniteFifo.hxx"
 				>
 			</File>
+			<File
+				RelativePath=".\GeneralCongestionManager.hxx"
+				>
+			</File>			
 			<File
 				RelativePath=".\GenericIPAddress.hxx"
 				>
@@ -676,6 +728,18 @@
 				RelativePath=".\Mutex.hxx"
 				>
 			</File>
+			<File
+				RelativePath=".\PoolBase.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ProducerFifoBuffer.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\SelectInterruptor.hxx"
+				>
+			</File>			
 			<File
 				RelativePath=".\ssl\OpenSSLInit.hxx"
 				>
@@ -749,6 +813,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\StlPoolAllocator.hxx"
+				>
+			</File>			
+			<File
 				RelativePath=".\stun\Stun.hxx"
 				>
 			</File>
@@ -804,6 +872,10 @@
 				RelativePath=".\WinLeakCheck.hxx"
 				>
 			</File>
+			<File
+				RelativePath=".\XMLCursor.hxx"
+				>
+			</File>			
 		</Filter>
 		<Filter
 			Name="Resource Files"

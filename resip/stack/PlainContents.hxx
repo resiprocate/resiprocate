@@ -6,6 +6,10 @@
 namespace resip
 {
 
+/**
+   @ingroup sip_payload
+   @brief SIP body type for holding plain contents (MIME content-type text/plain).
+*/
 class PlainContents : public Contents
 {
    public:
@@ -13,12 +17,15 @@ class PlainContents : public Contents
 
       PlainContents();
       PlainContents(const Data& text);
-      PlainContents(HeaderFieldValue* hfv, const Mime& contentType);
+      PlainContents(const HeaderFieldValue& hfv, const Mime& contentType);
       PlainContents(const Data& data, const Mime& contentType);
       PlainContents(const PlainContents& rhs);
       virtual ~PlainContents();
       PlainContents& operator=(const PlainContents& rhs);
 
+      /** @brief duplicate an PlainContents object
+          @return pointer to a new PlainContents object  
+        **/
       virtual Contents* clone() const;
 
       static const Mime& getStaticType() ;

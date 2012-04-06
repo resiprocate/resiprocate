@@ -14,7 +14,11 @@
 namespace resip
 {
 
-/// Distinct from resip::Fifo; by value and has cancellable timers.
+/**
+   @internal
+
+   Distinct from resip::Fifo; by value and has cancellable timers.
+*/
 template <class T>
 class ValueFifo : public resip::FifoStatsInterface
 {
@@ -146,6 +150,16 @@ class ValueFifo : public resip::FifoStatsInterface
       virtual time_t getTimeDepth() const
       {
          return 0;
+      }
+
+      virtual time_t expectedWaitTimeMilliSec() const
+      {
+         return 0;
+      }
+      
+      virtual time_t averageServiceTimeMicroSec() const
+      {
+         return 1;
       }
 
    private:

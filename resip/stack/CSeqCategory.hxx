@@ -21,8 +21,10 @@ class CSeqCategory : public ParserCategory
       enum {commaHandling = NoCommaTokenizing};
       
       CSeqCategory();
-      CSeqCategory(HeaderFieldValue* hfv, Headers::Type type);
-      CSeqCategory(const CSeqCategory&);
+      CSeqCategory(const HeaderFieldValue& hfv, 
+                     Headers::Type type, 
+                     PoolBase* pool=0);
+      CSeqCategory(const CSeqCategory& orig, PoolBase* pool=0);
       CSeqCategory& operator=(const CSeqCategory&);
 
       MethodTypes& method();
@@ -37,6 +39,8 @@ class CSeqCategory : public ParserCategory
       
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
+      virtual ParserCategory* clone(void* location) const;
+      virtual ParserCategory* clone(PoolBase* pool) const;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
 
    private:

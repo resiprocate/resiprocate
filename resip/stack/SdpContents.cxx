@@ -163,7 +163,7 @@ SdpContents::SdpContents() : Contents(getStaticType())
 {
 }
 
-SdpContents::SdpContents(HeaderFieldValue* hfv, const Mime& contentTypes)
+SdpContents::SdpContents(const HeaderFieldValue& hfv, const Mime& contentTypes)
    : Contents(hfv, contentTypes)
 {
 }
@@ -219,7 +219,7 @@ SdpContents::getStaticType()
 static Data nullOrigin("0.0.0.0");
 
 SdpContents::Session::Origin::Origin()
-   : mUser(Data::Empty),
+   : mUser(),
      mSessionId(0),
      mVersion(0),
      mAddrType(IP4),
@@ -487,7 +487,7 @@ SdpContents::Session::Connection::Connection(AddrType addType,
 
 SdpContents::Session::Connection::Connection()
    : mAddrType(IP4),
-     mAddress(Data::Empty),
+     mAddress(),
      mTTL(0)
 {}
 
@@ -858,7 +858,7 @@ SdpContents::Session::Timezones::addAdjustment(const Adjustment& adjust)
 
 SdpContents::Session::Encryption::Encryption()
    : mMethod(NoEncryption),
-     mKey(Data::Empty)
+     mKey()
 {}
 
 SdpContents::Session::Encryption::Encryption(const KeyType& method,
@@ -1771,7 +1771,7 @@ Codec::parse(ParseBuffer& pb,
 {
    const char* anchor = pb.skipWhitespace();
    pb.skipToChar(Symbols::SLASH[0]);
-   pb.data(mName, anchor);
+   mName = pb.data(anchor);
    if(!pb.eof())
    {
       pb.skipChar(Symbols::SLASH[0]);
@@ -1782,7 +1782,7 @@ Codec::parse(ParseBuffer& pb,
    {
       anchor = pb.skipChar(Symbols::SLASH[0]);
       pb.skipToEnd();
-      pb.data(mEncodingParameters, anchor);
+      mEncodingParameters = pb.data(anchor);
    }
    mPayloadType = payloadType;
 
@@ -1806,7 +1806,7 @@ Codec::assignFormatParameters(const SdpContents::Session::Medium& medium)
             {
                const char* anchor = pb.skipWhitespace();
                pb.skipToEnd();
-               pb.data(mParameters, anchor);
+               mParameters = pb.data(anchor);
                break;
             }
          }

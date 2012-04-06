@@ -22,7 +22,7 @@ MultipartAlternativeContents::MultipartAlternativeContents()
    : MultipartMixedContents(getStaticType())
 {}
 
-MultipartAlternativeContents::MultipartAlternativeContents(HeaderFieldValue* hfv, const Mime& contentsType)
+MultipartAlternativeContents::MultipartAlternativeContents(const HeaderFieldValue& hfv, const Mime& contentsType)
    : MultipartMixedContents(hfv, contentsType)
 {}
 

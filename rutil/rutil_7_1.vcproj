@@ -248,6 +248,9 @@
 				RelativePath=".\Condition.cxx">
 			</File>
 			<File
+				RelativePath=".\ConfigParse.cxx">
+			</File>
+			<File
 				RelativePath=".\CountStream.cxx">
 			</File>
 			<File
@@ -281,6 +284,9 @@
 				RelativePath=".\DnsUtil.cxx">
 			</File>
 			<File
+				RelativePath=".\dns\DnsThread.cxx">
+			</File>
+			<File
 				RelativePath=".\dns\ExternalDnsFactory.cxx">
 			</File>
 			<File
@@ -288,6 +294,9 @@
 			</File>
 			<File
 				RelativePath=".\FileSystem.cxx">
+			</File>
+			<File
+				RelativePath=".\GeneralCongestionManager.cxx">
 			</File>
 			<File
 				RelativePath=".\HeapInstanceCounter.cxx">
@@ -306,6 +315,12 @@
 			</File>
 			<File
 				RelativePath=".\Mutex.cxx">
+			</File>
+			<File
+				RelativePath=".\PoolBase.cxx">
+			</File>
+			<File
+				RelativePath=".\SelectInterruptor.cxx">
 			</File>
 			<File
 				RelativePath=".\ssl\OpenSSLInit.cxx">
@@ -409,6 +424,9 @@
 			<File
 				RelativePath=".\WinCompat.cxx">
 			</File>
+			<File
+				RelativePath=".\XMLCursor.cxx">
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -416,6 +434,15 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
 			<File
 				RelativePath=".\AbstractFifo.hxx">
+			</File>
+			<File
+				RelativePath=".\CongestionManager.hxx">
+			</File>
+			<File
+				RelativePath=".\ConsumerFifoBuffer.hxx">
+			</File>
+			<File
+				RelativePath=".\DinkyPool.hxx">
 			</File>
 			<File
 				RelativePath=".\dns\AresDns.hxx">
@@ -440,6 +467,9 @@
 			</File>
 			<File
 				RelativePath=".\Condition.hxx">
+			</File>
+			<File
+				RelativePath=".\ConfigParse.hxx">
 			</File>
 			<File
 				RelativePath=".\CountStream.hxx">
@@ -478,6 +508,9 @@
 				RelativePath=".\DnsUtil.hxx">
 			</File>
 			<File
+				RelativePath=".\dns\DnsThread.hxx">
+			</File>
+			<File
 				RelativePath=".\dns\ExternalDns.hxx">
 			</File>
 			<File
@@ -487,6 +520,9 @@
 				RelativePath=".\FdPoll.hxx">
 			</File>
 			<File
+				RelativePath=".\FdSetIOObserver.hxx">
+			</File>			
+			<File
 				RelativePath=".\Fifo.hxx">
 			</File>
 			<File
@@ -495,6 +531,9 @@
 			<File
 				RelativePath=".\FiniteFifo.hxx">
 			</File>
+			<File
+				RelativePath=".\GeneralCongestionManager.hxx">
+			</File>			
 			<File
 				RelativePath=".\GenericIPAddress.hxx">
 			</File>
@@ -531,6 +570,16 @@
 			<File
 				RelativePath=".\Mutex.hxx">
 			</File>
+			<File
+				RelativePath=".\PoolBase.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ProducerFifoBuffer.hxx">
+			</File>
+			<File
+				RelativePath=".\SelectInterruptor.hxx">
+			</File>			
 			<File
 				RelativePath=".\ssl\OpenSSLInit.hxx">
 			</File>
@@ -586,6 +635,9 @@
 				RelativePath=".\Socket.hxx">
 			</File>
 			<File
+				RelativePath=".\StlPoolAllocator.hxx">
+			</File>			
+			<File
 				RelativePath=".\stun\Stun.hxx">
 			</File>
 			<File
@@ -626,6 +678,9 @@
 			</File>
 			<File
 				RelativePath=".\WinLeakCheck.hxx">
+			</File>
+			<File
+				RelativePath=".\XMLCursor.hxx">
 			</File>
 		</Filter>
 		<Filter

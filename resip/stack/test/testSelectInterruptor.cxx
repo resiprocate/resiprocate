@@ -12,7 +12,7 @@
 #endif
 #endif
 
-#include "resip/stack/SelectInterruptor.hxx"
+#include "rutil/SelectInterruptor.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/ThreadIf.hxx"

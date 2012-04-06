@@ -59,13 +59,13 @@ Pkcs7Contents::Pkcs7Contents(const Data& txt, const Mime& contentsType)
 {
 }
  
-Pkcs7Contents::Pkcs7Contents(HeaderFieldValue* hfv, const Mime& contentsType)
+Pkcs7Contents::Pkcs7Contents(const HeaderFieldValue& hfv, const Mime& contentsType)
    : Contents(hfv, contentsType),
      mText()
 {
 }
  
-Pkcs7SignedContents::Pkcs7SignedContents(HeaderFieldValue* hfv, const Mime& contentsType)
+Pkcs7SignedContents::Pkcs7SignedContents(const HeaderFieldValue& hfv, const Mime& contentsType)
    : Pkcs7Contents(hfv, contentsType)
 {
 }

@@ -294,6 +294,7 @@
     <ClCompile Include="AbstractDb.cxx" />
     <ClCompile Include="AclStore.cxx" />
     <ClCompile Include="monkeys\AmIResponsible.cxx" />
+    <ClCompile Include="ProxyConfig.cxx" />
     <ClCompile Include="stateAgents\CertPublicationHandler.cxx">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -312,6 +313,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="CommandServer.cxx" />
+    <ClCompile Include="CommandServerThread.cxx" />
     <ClCompile Include="ConfigStore.cxx" />
     <ClCompile Include="monkeys\ConstantLocationMonkey.cxx" />
     <ClCompile Include="monkeys\DigestAuthenticator.cxx" />
@@ -363,10 +366,13 @@
     <ClInclude Include="Ack200DoneMessage.hxx" />
     <ClInclude Include="AclStore.hxx" />
     <ClInclude Include="monkeys\AmIResponsible.hxx" />
+    <ClInclude Include="ProxyConfig.hxx" />
     <ClInclude Include="stateAgents\CertPublicationHandler.hxx" />
     <ClInclude Include="stateAgents\CertServer.hxx" />
     <ClInclude Include="stateAgents\CertSubscriptionHandler.hxx" />
     <ClInclude Include="ChainTraverser.hxx" />
+    <ClInclude Include="CommandServer.hxx" />
+    <ClInclude Include="CommandServerThread.hxx" />
     <ClInclude Include="ConfigStore.hxx" />
     <ClInclude Include="monkeys\ConstantLocationMonkey.hxx" />
     <ClInclude Include="monkeys\DigestAuthenticator.hxx" />

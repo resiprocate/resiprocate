@@ -20,8 +20,11 @@ class RAckCategory : public ParserCategory
       enum {commaHandling = NoCommaTokenizing};
       
       RAckCategory();
-      RAckCategory(HeaderFieldValue* hfv, Headers::Type type);
-      RAckCategory(const RAckCategory&);
+      RAckCategory(const HeaderFieldValue& hfv, 
+                     Headers::Type type,
+                     PoolBase* pool=0);
+      RAckCategory(const RAckCategory& orig,
+                     PoolBase* pool=0);
       RAckCategory& operator=(const RAckCategory&);
 
       MethodTypes& method();
@@ -37,6 +40,8 @@ class RAckCategory : public ParserCategory
 
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
+      virtual ParserCategory* clone(void* location) const;
+      virtual ParserCategory* clone(PoolBase* pool) const;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
 
    private:

@@ -30,7 +30,7 @@ StackThread::thread()
                                                      getTimeTillNextProcessMS()));
          if (ret >= 0)
          {
-            // .dlb. use return value to peak at the message to see if it is a
+            // .dlb. use return value to peek at the message to see if it is a
             // shutdown, and call shutdown if it is
             beforeProcess();
             mStack.process(fdset);

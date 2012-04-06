@@ -30,6 +30,8 @@ TcpTransport::TcpTransport(Fifo<TransactionMessage>& fifo, int portNum,
    InfoLog (<< "Creating TCP transport host=" << pinterface
             << " port=" << mTuple.getPort()
             << " ipv4=" << bool(version==V4) );
+            
+   mTxFifo.setDescription("TcpTransport::mTxFifo");
 }
 
 TcpTransport::~TcpTransport()

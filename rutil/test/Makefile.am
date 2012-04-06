@@ -26,7 +26,8 @@ TESTS = \
 	testParseBuffer \
 	testRandomHex \
 	testRandomThread \
-	testThreadIf
+	testThreadIf \
+	testXMLCursor
 
 check_PROGRAMS = \
 	testCoders \
@@ -44,7 +45,8 @@ check_PROGRAMS = \
 	testParseBuffer \
 	testRandomHex \
 	testRandomThread \
-	testThreadIf
+	testThreadIf \
+	testXMLCursor
 
 testCoders_SOURCES = testCoders.cxx
 testCountStream_SOURCES = testCountStream.cxx
@@ -62,6 +64,7 @@ testParseBuffer_SOURCES = testParseBuffer.cxx
 testRandomHex_SOURCES = testRandomHex.cxx
 testRandomThread_SOURCES = testRandomThread.cxx
 testThreadIf_SOURCES = testThreadIf.cxx
+testXMLCursor_SOURCES = testXMLCursor.cxx
 
 noinst_HEADERS = TestSubsystemLogLevel.hxx
 

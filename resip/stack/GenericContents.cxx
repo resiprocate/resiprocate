@@ -15,7 +15,7 @@ GenericContents::GenericContents(const Data& text)
    : PlainContents(text)
 {}
 
-GenericContents::GenericContents(HeaderFieldValue* hfv, const Mime& contentType)
+GenericContents::GenericContents(const HeaderFieldValue& hfv, const Mime& contentType)
    : PlainContents(hfv, contentType)
 {}
 

@@ -35,8 +35,8 @@ AsyncTcpSocketBase::bind(const asio::ip::address& address, unsigned short port)
    mSocket.open(address.is_v6() ? asio::ip::tcp::v6() : asio::ip::tcp::v4(), errorCode);
    if(!errorCode)
    {
-      mSocket.set_option(asio::ip::tcp::no_delay(true)); // ?slg? do we want this?
-      mSocket.set_option(asio::ip::tcp::socket::reuse_address(true));
+      mSocket.set_option(asio::ip::tcp::no_delay(true), errorCode); // ?slg? do we want this?
+      mSocket.set_option(asio::ip::tcp::socket::reuse_address(true), errorCode);
       mSocket.bind(asio::ip::tcp::endpoint(address, port), errorCode);
    }   
    return errorCode;
@@ -90,7 +90,8 @@ AsyncTcpSocketBase::handleConnect(const asio::error_code& ec,
    else if (++endpoint_iterator != asio::ip::tcp::resolver::iterator())
    {
       // The connection failed. Try the next endpoint in the list.
-      mSocket.close();
+      asio::error_code ec;
+      mSocket.close(ec);
       mSocket.async_connect(endpoint_iterator->endpoint(),
                             boost::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
                             asio::placeholders::error, endpoint_iterator));
@@ -104,8 +105,9 @@ AsyncTcpSocketBase::handleConnect(const asio::error_code& ec,
 void
 AsyncTcpSocketBase::setConnectedAddressAndPort()
 {
-   mConnectedAddress = mSocket.remote_endpoint().address();
-   mConnectedPort = mSocket.remote_endpoint().port();
+   asio::error_code ec;
+   mConnectedAddress = mSocket.remote_endpoint(ec).address();
+   mConnectedPort = mSocket.remote_endpoint(ec).port();
 }
 
 const asio::ip::address 
@@ -178,7 +180,11 @@ AsyncTcpSocketBase::handleReadHeader(const asio::error_code& e)
    }
    else if (e != asio::error::operation_aborted)
    {
-      if(e != asio::error::eof && e != asio::error::connection_reset)
+      if(e != asio::error::eof && 
+#ifdef _WIN32
+         e.value() != ERROR_CONNECTION_ABORTED &&  // This happens on Windows 7 when closing the socket
+#endif
+         e != asio::error::connection_reset)
       {
          WarningLog(<< "Read header error: " << e.value() << "-" << e.message());
       }
@@ -189,7 +195,8 @@ AsyncTcpSocketBase::handleReadHeader(const asio::error_code& e)
 void 
 AsyncTcpSocketBase::transportClose()
 {
-   mSocket.close();
+   asio::error_code ec;
+   mSocket.close(ec);
 }
 
 }

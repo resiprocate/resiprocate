@@ -3,18 +3,29 @@
 
 #include "repro/AbstractDb.hxx"
 #include "repro/Proxy.hxx"
+#include "repro/ProxyConfig.hxx"
 #include "repro/Registrar.hxx"
 #include "repro/ProcessorChain.hxx"
 #include "repro/Store.hxx"
+#include "repro/Dispatcher.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/DumThread.hxx"
 #include "resip/dum/InMemoryRegistrationDatabase.hxx"
 #include "resip/dum/MasterProfile.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/StackThread.hxx"
+#include "rutil/CongestionManager.hxx"
 #include "rutil/SharedPtr.hxx"
 #include "tfm/TestProxy.hxx"
 #include "tfm/repro/CommandLineParser.hxx"
+
+#include <memory>
+
+class TfmProxyConfig : public repro::ProxyConfig
+{
+public:
+   TfmProxyConfig(repro::AbstractDb* db, const CommandLineParser& args);
+};
 
 class TestRepro : public TestProxy
 {
@@ -49,7 +60,8 @@ class TestRepro : public TestProxy
       repro::Registrar mRegistrar;
       resip::SharedPtr<resip::MasterProfile> mProfile;
       repro::AbstractDb* mDb;
-      repro::Store mStore;
+      TfmProxyConfig mConfig;
+      repro::Dispatcher* mAuthRequestDispatcher;
       repro::ProcessorChain mRequestProcessors;
       repro::ProcessorChain mResponseProcessors;
       repro::ProcessorChain mTargetProcessors;
@@ -57,6 +69,7 @@ class TestRepro : public TestProxy
       repro::Proxy mProxy;
       resip::DialogUsageManager mDum;
       resip::DumThread mDumThread;
+      std::auto_ptr<resip::CongestionManager> mCongestionManager;
 };
 
 #endif

@@ -98,6 +98,7 @@ class H_##_enum##s : public HeaderBase                          \
       RESIP_HeapCount(H_##_enum##s);                            \
       enum {Single = false};                                    \
       typedef ParserContainer<_type> Type;                      \
+      typedef _type ContainedType;                      \
       MultiUnusedChecking(_enum);                               \
       static Type& knownReturn(ParserContainerBase* container); \
       virtual ParserContainerBase* makeContainer(HeaderFieldValueList* hfvs) const;       \

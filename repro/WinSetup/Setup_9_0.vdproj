@@ -15,6 +15,12 @@
     {
         "Entry"
         {
+        "MsmKey" = "8:_17BFBAF1568F100317046F05370F22AB"
+        "OwnerKey" = "8:_449747DB7BDE448E8557B9834BB2A62D"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_449747DB7BDE448E8557B9834BB2A62D"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -33,14 +39,8 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_6288C29BB5B24D208BB744EE4D85C24F"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_990315E3271741AE9EA6C02E529B9B47"
-        "OwnerKey" = "8:_UNDEFINED"
+        "MsmKey" = "8:_9A4C6DCFD3464B148BCE79DAF32AAD7D"
+        "OwnerKey" = "8:_B49DDB23E8C74D7BB0287CE8DA175BDE"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -51,20 +51,8 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_E19EEC60728F49C4A0638BC9CF97C8A4"
+        "MsmKey" = "8:_B49DDB23E8C74D7BB0287CE8DA175BDE"
         "OwnerKey" = "8:_449747DB7BDE448E8557B9834BB2A62D"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_E20953FB537240289197E79D01548577"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_E8AD766DE1164CF19A0216B43CB80911"
-        "OwnerKey" = "8:_E19EEC60728F49C4A0638BC9CF97C8A4"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -144,6 +132,26 @@
         }
         "File"
         {
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_17BFBAF1568F100317046F05370F22AB"
+            {
+            "SourcePath" = "8:popt1.dll"
+            "TargetName" = "8:popt1.dll"
+            "Tag" = "8:"
+            "Folder" = "8:_96F138CFF79546568B8B0A6277D34A78"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_5752D824D4BA4CC4AE9A4129533CC084"
             {
             "SourcePath" = "8:readme.txt"
@@ -166,7 +174,7 @@
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_589E4F8781B6EFF5018F0646F96CD14B"
             {
-            "SourcePath" = "8:iphlpapi.dll"
+            "SourcePath" = "8:IPHLPAPI.DLL"
             "TargetName" = "8:iphlpapi.dll"
             "Tag" = "8:"
             "Folder" = "8:_96F138CFF79546568B8B0A6277D34A78"
@@ -184,70 +192,10 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_6288C29BB5B24D208BB744EE4D85C24F"
-            {
-            "SourcePath" = "8:..\\..\\contrib\\popt\\win32\\libintl-2.dll"
-            "TargetName" = "8:libintl-2.dll"
-            "Tag" = "8:"
-            "Folder" = "8:_96F138CFF79546568B8B0A6277D34A78"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_990315E3271741AE9EA6C02E529B9B47"
-            {
-            "SourcePath" = "8:..\\..\\contrib\\popt\\win32\\libiconv-2.dll"
-            "TargetName" = "8:libiconv-2.dll"
-            "Tag" = "8:"
-            "Folder" = "8:_96F138CFF79546568B8B0A6277D34A78"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_B0B648F097BA49E5AF24FE8FAAAA3E44"
             {
             "SourcePath" = "8:..\\VERSION"
             "TargetName" = "8:VERSION"
-            "Tag" = "8:"
-            "Folder" = "8:_96F138CFF79546568B8B0A6277D34A78"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E20953FB537240289197E79D01548577"
-            {
-            "SourcePath" = "8:..\\..\\contrib\\popt\\win32\\popt1.dll"
-            "TargetName" = "8:popt1.dll"
             "Tag" = "8:"
             "Folder" = "8:_96F138CFF79546568B8B0A6277D34A78"
             "Condition" = "8:"
@@ -325,6 +273,7 @@
         "MsiBootstrapper"
         {
         "LangId" = "3:1033"
+        "RequiresElevation" = "11:FALSE"
         }
         "Product"
         {
@@ -888,11 +837,11 @@
         }
         "MergeModule"
         {
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_E19EEC60728F49C4A0638BC9CF97C8A4"
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_9A4C6DCFD3464B148BCE79DAF32AAD7D"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:TRUE"
-            "SourcePath" = "8:Microsoft_VC80_DebugCRT_x86.msm"
+            "SourcePath" = "8:microsoft_vc90_debugcrt_x86.msm"
                 "Properties"
                 {
                 }
@@ -902,11 +851,11 @@
             "Feature" = "8:"
             "IsolateTo" = "8:"
             }
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_E8AD766DE1164CF19A0216B43CB80911"
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_B49DDB23E8C74D7BB0287CE8DA175BDE"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:TRUE"
-            "SourcePath" = "8:policy_8_0_microsoft_vc80_debugcrt_x86.msm"
+            "SourcePath" = "8:policy_9_0_Microsoft_VC90_DebugCRT_x86.msm"
                 "Properties"
                 {
                 }
@@ -947,9 +896,6 @@
                 {
                 }
             }
-        }
-        "VJSharpPlugin"
-        {
         }
     }
 }

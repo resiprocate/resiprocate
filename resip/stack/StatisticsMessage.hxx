@@ -32,8 +32,8 @@ class StatisticsMessage : public ApplicationMessage
             unsigned int transactionFifoSize;
             unsigned int activeTimers;
             unsigned int openTcpConnections; // .dlb. not implemented
-            unsigned int activeClientTransactions; // .dlb. not implemented
-            unsigned int activeServerTransactions; // .dlb. not implemented
+            unsigned int activeClientTransactions;
+            unsigned int activeServerTransactions;
             unsigned int pendingDnsQueries; // .dlb. not implemented
 
             unsigned int requestsSent; // includes retransmissions
@@ -60,13 +60,13 @@ class StatisticsMessage : public ApplicationMessage
             unsigned int sumErrIn(MethodTypes method) const;
             unsigned int sum2xxOut(MethodTypes method) const;
             unsigned int sumErrOut(MethodTypes method) const;
+            void zeroOut();
 
             Payload& operator=(const Payload& payload);
       };
 
       void loadOut(Payload& payload) const;
       static void logStats(const Subsystem& subsystem, const Payload& stats);
-
 
       virtual EncodeStream& encode(EncodeStream& strm) const;
       virtual EncodeStream& encodeBrief(EncodeStream& str) const;
@@ -89,7 +89,10 @@ class StatisticsMessage : public ApplicationMessage
       
    private:
       const AtomicPayload& mPayload;
+      friend EncodeStream& operator<<(EncodeStream& strm, const StatisticsMessage::Payload& stats);
 };
+
+EncodeStream& operator<<(EncodeStream& strm, const StatisticsMessage::Payload& stats);
 
 }
 

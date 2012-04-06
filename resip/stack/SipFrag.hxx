@@ -14,16 +14,23 @@ class SipMessage;
 
 // Mostly works -- 
 // Preparse insists on a start line while SIP frag may not have one.
+/**
+   @ingroup sip_payload
+   @brief SIP body type for holding SipFrag contents (MIME content-type message/sipfrag).
+*/
 class SipFrag : public Contents
 {
    public:
       SipFrag(const Mime& contentsType = getStaticType());
-      SipFrag(HeaderFieldValue* hfv, const Mime& contentsType);
+      SipFrag(const HeaderFieldValue& hfv, const Mime& contentsType);
       SipFrag(const Data& data, const Mime& contentsType);
       SipFrag(const SipFrag& rhs);
       virtual ~SipFrag();
       SipFrag& operator=(const SipFrag& rhs);
 
+      /** @brief duplicate an SipFrag object
+          @return pointer to a new SipFrag object  
+        **/
       virtual Contents* clone() const;
 
       static const Mime& getStaticType() ;

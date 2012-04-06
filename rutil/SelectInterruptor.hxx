@@ -1,89 +1,101 @@
-#if !defined(DUM_CommandLineParser_hxx)
-#define DUM_CommandLineParser_hxx
+#ifndef RESIP_SelectInterruptor_HXX
+#define RESIP_SelectInterruptor_HXX
 
-#include <vector>
-#include "resip/stack/Uri.hxx"
-#include "rutil/Data.hxx"
+#include "rutil/AsyncProcessHandler.hxx"
+#include "rutil/FdPoll.hxx"
+#include "rutil/Socket.hxx"
+
+#if 0
+#if defined(WIN32)
+#include <Ws2tcpip.h>
+#else
+#include <netinet/in.h>
+#endif
+#endif
 
 namespace resip
 {
 
-class CommandLineParser
+/**
+    Used to 'artificially' interrupt a select call
+*/
+class SelectInterruptor : public AsyncProcessHandler, public FdPollItemIf
 {
    public:
-      CommandLineParser(int argc, char** argv);
-      static resip::Uri toUri(const char* input, const char* description);
-      static std::vector<resip::Data> toVector(const char* input, const char* description);
-      
-      Data mLogType;
-      Data mLogLevel;
-      Data mTlsDomain;
-      Data mEnumSuffix;
-      bool mForceRecordRoute;
-      bool mAssumePath;
-      resip::Uri mRecordRoute;
-      int mUdpPort;
-      int mTcpPort;
-      int mTlsPort;
-      int mDtlsPort;
-      bool mUseV4;
-      bool mUseV6;
-      std::vector<Data> mDomains;
-      std::vector<Data> mInterfaces;
-      std::vector<Data> mRouteSet;
-      Data mCertPath;
-      Data mDbPath;
-      bool mNoChallenge;
-      bool mNoAuthIntChallenge;
-      bool mRejectBadNonces;
-      bool mNoWebChallenge;
-      bool mNoRegistrar;
-      bool mNoIdentityHeaders;
-      bool mCertServer;
-      Data mRequestProcessorChainName;
-      Data mMySqlServer;
-      Data mHttpHostname;
-      int mHttpPort;
-      bool mRecursiveRedirect;
-      bool mDoQValue;
-      Data mForkBehavior;
-      bool mCancelBetweenForkGroups;
-      bool mWaitForTerminate;
-      int mMsBetweenForkGroups;
-      int mMsBeforeCancel;
-      bool mAllowBadReg;
-      bool mParallelForkStaticRoutes;
-      int mTimerC;
-      Data mAdminPassword;
-      Data mRegSyncPeerAddress;
-      int mXmlRpcPort;
-      Data mServerText;
-      bool mUseInternalEPoll;
-      bool mUseEventThread;
-      int mOverrideT1;
+      SelectInterruptor();
+      virtual ~SelectInterruptor();
+
+      /**
+          Called by the stack when messages are posted to it.
+          Calls interrupt.
+      */
+      virtual void handleProcessNotification();
+
+      /**
+          cause the 'artificial' fd to signal
+      */
+      void interrupt();
+
+      /**
+          Used to add the 'artificial' fd to the fdset that
+          will be responsible for interrupting a subsequent select
+          call.
+      */
+      void buildFdSet(FdSet& fdset);
+
+      /**
+          cleanup signalled fd
+      */
+      void process(FdSet& fdset);
+
+      virtual void processPollEvent(FdPollEventMask mask);
+
+      /* Get fd of read-side, for use within PollInterruptor,
+       * Declared as Socket for easier cross-platform even though pipe fd
+       * under linux.
+       */
+      Socket getReadSocket() const { return mReadThing; }
+
+   protected:
+
+      /* Cleanup the read side of the interruptor
+       * If fdset is provided, it will only try cleaning up if our pipe
+       * is ready in fdset. If NULL, it will unconditionally try reading.
+       * This last feature is for use within PollInterruptor.
+       */
+      void processCleanup();
+   private:
+#ifndef WIN32
+      int mPipe[2];
+#else
+      Socket mSocket;
+      sockaddr mWakeupAddr;
+#endif
+      // either mPipe[0] or mSocket
+      Socket mReadThing;
 };
- 
+
 }
 
 #endif
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
- * Copyright (c) 2000
- * 
+ * The Vovida Software License, Version 1.0
+ *
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -93,7 +105,7 @@ class CommandLineParser
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -107,9 +119,9 @@ class CommandLineParser
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see
@@ -117,4 +129,3 @@ class CommandLineParser
  *
  * vi: set shiftwidth=3 expandtab:
  */
-

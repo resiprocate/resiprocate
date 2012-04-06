@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include "rutil/AbstractFifo.hxx"
+#include "rutil/SelectInterruptor.hxx"
 
 namespace resip
 {
@@ -11,14 +12,23 @@ namespace resip
    @brief A templated, threadsafe message-queue class.
 */
 template < class Msg >
-class Fifo : public AbstractFifo
+class Fifo : public AbstractFifo<Msg*>
 {
    public:
-      Fifo();
+      Fifo(AsyncProcessHandler* interruptor=0);
       virtual ~Fifo();
       
+      using AbstractFifo<Msg*>::mFifo;
+      using AbstractFifo<Msg*>::mMutex;
+      using AbstractFifo<Msg*>::mCondition;
+      using AbstractFifo<Msg*>::empty;
+      using AbstractFifo<Msg*>::size;
+
       /// Add a message to the fifo.
-      void add(Msg* msg);
+      size_t add(Msg* msg);
+
+      typedef typename AbstractFifo<Msg*>::Messages Messages;
+      size_t addMultiple(Messages& msgs);
 
       /** Returns the first message available. It will wait if no
        *  messages are available. If a signal interrupts the wait,
@@ -38,18 +48,24 @@ class Fifo : public AbstractFifo
        */
       Msg* getNext(int ms);
 
+      void getMultiple(Messages& other, unsigned int max);
+      bool getMultiple(int ms, Messages& other, unsigned int max);
+
       /// delete all elements in the queue
       virtual void clear();
+      void setInterruptor(AsyncProcessHandler* interruptor);
 
    private:
+      AsyncProcessHandler* mInterruptor;
       Fifo(const Fifo& rhs);
       Fifo& operator=(const Fifo& rhs);
 };
 
 
 template <class Msg>
-Fifo<Msg>::Fifo() : 
-   AbstractFifo(0)
+Fifo<Msg>::Fifo(AsyncProcessHandler* interruptor) : 
+   AbstractFifo<Msg*>(),
+   mInterruptor(interruptor)
 {
 }
 
@@ -60,44 +76,83 @@ Fifo<Msg>::~Fifo()
 }
 
 template <class Msg>
+void 
+Fifo<Msg>::setInterruptor(AsyncProcessHandler* interruptor)
+{
+   Lock lock(mMutex); (void)lock;
+   mInterruptor=interruptor;
+}
+
+
+template <class Msg>
 void
 Fifo<Msg>::clear()
 {
    Lock lock(mMutex); (void)lock;
    while ( ! mFifo.empty() )
    {
-      Msg* msg = static_cast<Msg*>(mFifo.front());
+      delete mFifo.front();
       mFifo.pop_front();
-      delete msg;
    }
    assert(mFifo.empty());
-   mSize = 0UL -1;
 }
 
 template <class Msg>
-void
+size_t
 Fifo<Msg>::add(Msg* msg)
 {
-   Lock lock(mMutex); (void)lock;
-   mFifo.push_back(msg);
-   mSize++;
-   mCondition.signal();
+   size_t size = AbstractFifo<Msg*>::add(msg);
+   if(size==1 && mInterruptor)
+   {
+      // Only do this when the queue goes from empty to not empty.
+      mInterruptor->handleProcessNotification();
+   }
+   return size;
+}
+
+template <class Msg>
+size_t
+Fifo<Msg>::addMultiple(Messages& msgs)
+{
+   size_t inSize = msgs.size();
+   size_t size = AbstractFifo<Msg*>::addMultiple(msgs);
+   if(size==inSize && mInterruptor)
+   {
+      // Only do this when the queue goes from empty to not empty.
+      mInterruptor->handleProcessNotification();
+   }
+   return size;
 }
 
 template <class Msg>
 Msg*
 Fifo<Msg> ::getNext()
 {
-   return static_cast<Msg*>(AbstractFifo::getNext());
+   return AbstractFifo<Msg*>::getNext();
 }
 
 template <class Msg>
 Msg*
 Fifo<Msg> ::getNext(int ms)
 {
-   return static_cast<Msg*>(AbstractFifo::getNext(ms));
+   Msg* result(0);
+   AbstractFifo<Msg*>::getNext(ms, result);
+   return result;
 }
 
+template <class Msg>
+void
+Fifo<Msg>::getMultiple(Messages& other, unsigned int max)
+{
+   AbstractFifo<Msg*>::getMultiple(other, max);
+}
+
+template <class Msg>
+bool
+Fifo<Msg>::getMultiple(int ms, Messages& other, unsigned int max)
+{
+   return AbstractFifo<Msg*>::getMultiple(ms, other, max);
+}
 } // namespace resip
 
 #endif

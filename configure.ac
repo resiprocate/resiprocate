@@ -80,6 +80,7 @@ AC_OUTPUT(Makefile \
 	resip/dum/test/Makefile \
 	resip/certs/Makefile \
 	repro/Makefile \
+	repro/reprocmd/Makefile \
 	repro/test/Makefile \
 	resip.spec \
 	reTurn/Makefile \

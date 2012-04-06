@@ -57,9 +57,7 @@ class TupleMarkManager
       typedef std::set<MarkListener*> Listeners;
       Listeners mListeners;
       
-      void notifyListeners(const resip::Tuple& tuple, MarkType mark);
-
-
+      void notifyListeners(const resip::Tuple& tuple, UInt64& expiry, MarkType& mark);
 };
 
 }

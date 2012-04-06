@@ -31,7 +31,7 @@ class BerkeleyDb: public AbstractDb
       
       virtual ~BerkeleyDb();
 
-      bool isSane();
+      virtual bool isSane() {return mSane; }
       
    private:
       void init(const resip::Data& dbPath, const resip::Data& dbName);
@@ -40,7 +40,7 @@ class BerkeleyDb: public AbstractDb
       Db*   mDb[4];
       Dbc*  mCursor[4];
       
-      bool sane;
+      bool mSane;
       
       // Db manipulation routines
       virtual void dbWriteRecord( const Table table, 

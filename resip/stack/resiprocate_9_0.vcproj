@@ -662,10 +662,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\SelectInterruptor.cxx"
-				>
-			</File>
-			<File
 				RelativePath=".\SERNonceHelper.cxx"
 				>
 			</File>
@@ -814,6 +810,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\TransportThread.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\TuIM.cxx"
 				>
 			</File>
@@ -879,10 +879,6 @@
 			</File>
 			<File
 				RelativePath=".\X509Contents.cxx"
-				>
-			</File>
-			<File
-				RelativePath=".\XMLCursor.cxx"
 				>
 			</File>
 		</Filter>
@@ -988,6 +984,10 @@
 			</File>
 			<File
 				RelativePath=".\DnsResult.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\DnsResultMessage.hxx"
 				>
 			</File>
 			<File
@@ -1211,6 +1211,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\PollStatistics.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\PrivacyCategory.hxx"
 				>
 			</File>
@@ -1259,10 +1263,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\SelectInterruptor.hxx"
-				>
-			</File>
-			<File
 				RelativePath=".\SendData.hxx"
 				>
 			</File>
@@ -1288,6 +1288,10 @@
 			</File>
 			<File
 				RelativePath=".\StackThread.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\StartLine.hxx"
 				>
 			</File>
 			<File
@@ -1367,6 +1371,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\TransactionControllerThread.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\TransactionMap.hxx"
 				>
 			</File>
@@ -1400,6 +1408,14 @@
 			</File>
 			<File
 				RelativePath=".\TransportSelector.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\TransportSelectorThread.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\TransportThread.hxx"
 				>
 			</File>
 			<File
@@ -1467,7 +1483,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\XMLCursor.hxx"
+				RelativePath=".\ZeroOutStatistics.hxx"
 				>
 			</File>
 		</Filter>

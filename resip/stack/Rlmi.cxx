@@ -26,7 +26,7 @@ Rlmi::Rlmi()
    : Contents(getStaticType())
 {}
 
-Rlmi::Rlmi(HeaderFieldValue* hfv, const Mime& contentsType)
+Rlmi::Rlmi(const HeaderFieldValue& hfv, const Mime& contentsType)
    : Contents(hfv, contentsType)
 {
 }

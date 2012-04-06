@@ -20,13 +20,14 @@ class ClientPublication : public NonDialogUsage
       void refresh(unsigned int expiration=0);
       void update(const Contents* body);
       virtual void end();
+      void end(bool immediate); // If immediate is true then usage is destroyed with no further messaging
 
       /**
        * Provide asynchronous method access by using command
        */
       void updateCommand(const Contents* body);
       void refreshCommand(unsigned int expiration=0);
-      virtual void endCommand();
+      virtual void endCommand(bool immediate=false);  // If immediate is true then usage is destroyed with no further messaging
 
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);

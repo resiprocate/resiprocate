@@ -2,6 +2,7 @@
 #define RESIP_STATICROUTE_HXX 
 
 #include "repro/Processor.hxx"
+#include "repro/ProxyConfig.hxx"
 
 namespace repro
 {
@@ -10,7 +11,7 @@ class RouteStore;
 class StaticRoute: public Processor
 {
    public:
-      StaticRoute(RouteStore& store, bool noChallenge, bool parallelForkStaticRoutes, bool useAuthInt);
+      StaticRoute(ProxyConfig& config);
       virtual ~StaticRoute();
       
       virtual processor_action_t process(RequestContext &);

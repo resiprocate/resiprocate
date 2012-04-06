@@ -5,7 +5,7 @@
 
 #include <resip/stack/TransactionUser.hxx>
 #include <resip/stack/InterruptableStackThread.hxx>
-#include <resip/stack/SelectInterruptor.hxx>
+#include <rutil/SelectInterruptor.hxx>
 #include <resip/stack/UdpTransport.hxx>
 #include <resip/dum/MasterProfile.hxx>
 #include <resip/dum/DumShutdownHandler.hxx>

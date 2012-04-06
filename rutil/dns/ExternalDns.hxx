@@ -54,13 +54,6 @@ class ExternalDns
       virtual void buildFdSet(fd_set& read, fd_set& write, int& size) = 0;
       virtual void process(fd_set& read, fd_set& write) = 0;
 
-      // Returns true iff epoll() support exists in this class. Do not use
-      // setPollGroup() or processTimers() if this returns false.
-      virtual bool isPollSupported() const = 0;
-
-      // call prior to init() to enable internal epoll() functionality
-      // When enabled, only the fd of the epoll itself will be exposed
-      // thru the fd set.
       virtual void setPollGrp(FdPollGrp *grp) = 0;
 
       // called by DnsStub to process timers requested by getTimeTillNext...()

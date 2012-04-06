@@ -1,5 +1,5 @@
 /* C++ code produced by gperf version 3.0.4 */
-/* Command-line: gperf -D -E -L C++ -t -k '*' --compare-strncmp -Z ParameterHash ParameterHash.gperf  */
+/* Command-line: gperf -C -D -E -L C++ -t -k '*' --compare-strncmp --ignore-case -Z ParameterHash ParameterHash.gperf  */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
       && ('%' == 37) && ('&' == 38) && ('\'' == 39) && ('(' == 40) \
@@ -39,18 +39,63 @@ using namespace std;
 struct params { const char *name; ParameterTypes::Type type; };
 /* maximum key range = 266, duplicates = 0 */
 
+#ifndef GPERF_DOWNCASE
+#define GPERF_DOWNCASE 1
+static unsigned char gperf_downcase[256] =
+  {
+      0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,
+     15,  16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,
+     30,  31,  32,  33,  34,  35,  36,  37,  38,  39,  40,  41,  42,  43,  44,
+     45,  46,  47,  48,  49,  50,  51,  52,  53,  54,  55,  56,  57,  58,  59,
+     60,  61,  62,  63,  64,  97,  98,  99, 100, 101, 102, 103, 104, 105, 106,
+    107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121,
+    122,  91,  92,  93,  94,  95,  96,  97,  98,  99, 100, 101, 102, 103, 104,
+    105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119,
+    120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134,
+    135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149,
+    150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164,
+    165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179,
+    180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194,
+    195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209,
+    210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224,
+    225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239,
+    240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254,
+    255
+  };
+#endif
+
+#ifndef GPERF_CASE_STRNCMP
+#define GPERF_CASE_STRNCMP 1
+static int
+gperf_case_strncmp (register const char *s1, register const char *s2, register unsigned int n)
+{
+  for (; n > 0;)
+    {
+      unsigned char c1 = gperf_downcase[(unsigned char)*s1++];
+      unsigned char c2 = gperf_downcase[(unsigned char)*s2++];
+      if (c1 != 0 && c1 == c2)
+        {
+          n--;
+          continue;
+        }
+      return (int)c1 - (int)c2;
+    }
+  return 0;
+}
+#endif
+
 class ParameterHash
 {
 private:
   static inline unsigned int hash (const char *str, unsigned int len);
 public:
-  static struct params *in_word_set (const char *str, unsigned int len);
+  static const struct params *in_word_set (const char *str, unsigned int len);
 };
 
 inline unsigned int
 ParameterHash::hash (register const char *str, register unsigned int len)
 {
-  static unsigned short asso_values[] =
+  static const unsigned short asso_values[] =
     {
       268, 268, 268, 268, 268, 268, 268, 268, 268, 268,
       268, 268, 268, 268, 268, 268, 268, 268, 268, 268,
@@ -58,10 +103,10 @@ ParameterHash::hash (register const char *str, register unsigned int len)
       268, 268, 268, 268, 268, 268, 268, 268, 268, 268,
       268, 268, 268,   0, 268,  40,   0, 268, 268, 268,
       268, 268, 268, 268, 268, 268, 268, 268, 268, 268,
-      268, 268, 268, 268, 268, 268, 268, 268, 268, 268,
-      268, 268, 268, 268, 268, 268, 268, 268, 268, 268,
-      268, 268, 268, 268, 268, 268, 268, 268, 268, 268,
-      268, 268, 268, 268, 268, 268, 268,   0,  25,   0,
+      268, 268, 268, 268, 268,   0,  25,   0,  15,   0,
+       15,  35,  75,  10, 268,  10,   0,  25,   5,   5,
+        5,  45,   0,   0,   0,  40,  85,   5,  65,  65,
+       40, 268, 268, 268, 268, 268, 268,   0,  25,   0,
        15,   0,  15,  35,  75,  10, 268,  10,   0,  25,
         5,   5,   5,  45,   0,   0,   0,  40,  85,   5,
        65,  65,  40, 268, 268, 268, 268, 268, 268, 268,
@@ -84,49 +129,49 @@ ParameterHash::hash (register const char *str, register unsigned int len)
   switch (hval)
     {
       default:
-        hval += asso_values[(unsigned char)tolower(str[12])];
+        hval += asso_values[(unsigned char)str[12]];
       /*FALLTHROUGH*/
       case 12:
-        hval += asso_values[(unsigned char)tolower(str[11])];
+        hval += asso_values[(unsigned char)str[11]];
       /*FALLTHROUGH*/
       case 11:
-        hval += asso_values[(unsigned char)tolower(str[10])];
+        hval += asso_values[(unsigned char)str[10]];
       /*FALLTHROUGH*/
       case 10:
-        hval += asso_values[(unsigned char)tolower(str[9])];
+        hval += asso_values[(unsigned char)str[9]];
       /*FALLTHROUGH*/
       case 9:
-        hval += asso_values[(unsigned char)tolower(str[8])];
+        hval += asso_values[(unsigned char)str[8]];
       /*FALLTHROUGH*/
       case 8:
-        hval += asso_values[(unsigned char)tolower(str[7])];
+        hval += asso_values[(unsigned char)str[7]];
       /*FALLTHROUGH*/
       case 7:
-        hval += asso_values[(unsigned char)tolower(str[6])];
+        hval += asso_values[(unsigned char)str[6]];
       /*FALLTHROUGH*/
       case 6:
-        hval += asso_values[(unsigned char)tolower(str[5])];
+        hval += asso_values[(unsigned char)str[5]];
       /*FALLTHROUGH*/
       case 5:
-        hval += asso_values[(unsigned char)tolower(str[4])];
+        hval += asso_values[(unsigned char)str[4]];
       /*FALLTHROUGH*/
       case 4:
-        hval += asso_values[(unsigned char)tolower(str[3])];
+        hval += asso_values[(unsigned char)str[3]];
       /*FALLTHROUGH*/
       case 3:
-        hval += asso_values[(unsigned char)tolower(str[2])];
+        hval += asso_values[(unsigned char)str[2]];
       /*FALLTHROUGH*/
       case 2:
-        hval += asso_values[(unsigned char)tolower(str[1])];
+        hval += asso_values[(unsigned char)str[1]];
       /*FALLTHROUGH*/
       case 1:
-        hval += asso_values[(unsigned char)tolower(str[0])];
+        hval += asso_values[(unsigned char)str[0]];
         break;
     }
   return hval;
 }
 
-struct params *
+const struct params *
 ParameterHash::in_word_set (register const char *str, register unsigned int len)
 {
   enum
@@ -138,7 +183,7 @@ ParameterHash::in_word_set (register const char *str, register unsigned int len)
       MAX_HASH_VALUE = 267
     };
 
-  static struct params wordlist[] =
+  static const struct params wordlist[] =
     {
 #line 39 "ParameterHash.gperf"
       {"lr", ParameterTypes::lr},
@@ -320,7 +365,7 @@ ParameterHash::in_word_set (register const char *str, register unsigned int len)
       {"effective-by", ParameterTypes::effectiveBy}
     };
 
-  static signed char lookup[] =
+  static const signed char lookup[] =
     {
       -1, -1,  0,  1, -1,  2, -1,  3, -1, -1,  4, -1, -1, -1,
        5,  6,  7, -1, -1,  8,  9, 10, 11, 12, 13, -1, -1, 14,
@@ -356,7 +401,7 @@ ParameterHash::in_word_set (register const char *str, register unsigned int len)
             {
               register const char *s = wordlist[index].name;
 
-              if (tolower(*str) == *s && !strncasecmp (str + 1, s + 1, len - 1) && s[len] == '\0')
+              if ((((unsigned char)*str ^ (unsigned char)*s) & ~32) == 0 && !gperf_case_strncmp (str, s, len) && s[len] == '\0')
                 return &wordlist[index];
             }
         }

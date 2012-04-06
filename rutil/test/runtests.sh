@@ -24,7 +24,8 @@ for i in \
 	testRandomHex \
 	testSHA1Stream \
 	testParseBuffer \
-	testThreadIf;
+	testThreadIf \
+	testXMLCursor;
 do
     if test ! -x $i; then
         echo "$i: test does not exist" >&2;

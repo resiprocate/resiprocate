@@ -28,9 +28,10 @@ class CommandLineParser
       std::set<int> mDtlsPorts;
       bool mNoV4;
       bool mNoV6;
+      bool mThreadedStack;
+      bool mUseCongestionManager;
 
       resip::Data mCertPath;
-      bool mForceRecordRoute;
       bool mEnableFlowTokenHack;
       bool mNoChallenge;
       bool mNoWebChallenge;

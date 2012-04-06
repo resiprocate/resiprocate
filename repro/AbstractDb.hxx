@@ -66,6 +66,8 @@ class AbstractDb
       typedef std::vector<AclRecord> AclRecordList;
       typedef std::vector<ConfigRecord> ConfigRecordList;
 
+      virtual bool isSane() = 0;
+
       // functions for User Records 
       virtual void addUser( const Key& key, const UserRecord& rec );
       virtual void eraseUser( const Key& key );

@@ -39,6 +39,7 @@ class FakeTransport :  public Transport
       virtual TransportType transport() const { return TCP; }
       virtual bool isFinished() const { assert(0); return true; }
       virtual void process(FdSet& fdset) { assert(0); }
+      virtual void process() { assert(0); }
       virtual void processTransmitQueue() { assert(0); }
       virtual void buildFdSet( FdSet& fdset) { assert(0); }
 
@@ -50,7 +51,8 @@ class FakeTransport :  public Transport
       virtual void setPollGrp(FdPollGrp* grp) { assert(0); }
       virtual unsigned int getFifoSize() const { assert(0); return 0; }
 
-      virtual void transmit(const Tuple& dest, const Data& pdata, const Data& tid, const Data &sigcompCompartment) { assert(0); }
+      virtual void send(std::auto_ptr<SendData> data) { assert(0); }
+      void flush() {mStateMachineFifo.flush();}
 };
 
 class TestConnection : public ConnectionBase
@@ -144,6 +146,7 @@ main(int argc, char** argv)
       if (maxChunk < minChunk) swap(maxChunk, minChunk);
       while(cBase.read(minChunk, maxChunk));      
    }
+   fake.flush();
    assert(testRxFifo.size() == runs * 3);
 
    cerr << "\nTEST OK" << endl;

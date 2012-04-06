@@ -205,9 +205,9 @@ static int trySetRcvBuf(Socket fd, int buflen)
 #else
       if (::setsockopt (fd, SOL_SOCKET, SO_RCVBUF, (const char*)&wbuflen, sizeof(wbuflen)) == -1)
 #endif
-	  {
-	     return -1;
-	  }
+      {
+         return -1;
+      }
    }
    int rbuflen = 0;
    unsigned optlen = sizeof(rbuflen);
@@ -237,12 +237,12 @@ int resip::setSocketRcvBufLen(Socket fd, int buflen)
    for (; ; trylen /= 2)
    {
       if (trylen < 1024)
-	  {
-	     ErrLog(<<"setsockopt(SO_RCVBUF) failed");
-	     return -1;
+      {
+        ErrLog(<<"setsockopt(SO_RCVBUF) failed");
+        return -1;
       }
       if ((sts=trySetRcvBuf(fd, trylen)) >= 0)
-	  {
+      {
          lastgoodset = trylen;
          lastgoodget = sts;
          break;
@@ -254,9 +254,9 @@ int resip::setSocketRcvBufLen(Socket fd, int buflen)
    for ( ; trylen<goal; trylen+=step)
    {
       if ((sts=trySetRcvBuf(fd,trylen)) < 0)
-	  {
+      {
          break;
-	  }
+      }
       lastgoodset = trylen;
       lastgoodget = sts;
    }

@@ -21,6 +21,12 @@
     <ClCompile Include="AclStore.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CommandServer.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CommandServerThread.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="ConfigStore.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -138,6 +144,9 @@
     <ClCompile Include="XmlRpcServerBase.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ProxyConfig.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDb.hxx">
@@ -150,6 +159,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ChainTraverser.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CommandServer.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CommandServerThread.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ConfigStore.hxx">
@@ -276,6 +291,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="RegSyncServerThread.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ProxyConfig.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

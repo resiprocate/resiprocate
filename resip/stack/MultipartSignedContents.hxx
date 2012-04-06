@@ -11,15 +11,22 @@ namespace resip
 class Mime;
 class ParseBuffer;
 
+/**
+   @ingroup sip_payload
+   @brief SIP body type for holding Multipart-Signed body contents (MIME content-type multipart/signed).
+*/
 class MultipartSignedContents : public MultipartMixedContents
 {
    public:
       MultipartSignedContents();
-      MultipartSignedContents(HeaderFieldValue* hfv, const Mime& contentType);
+      MultipartSignedContents(const HeaderFieldValue& hfv, const Mime& contentType);
       MultipartSignedContents(const MultipartSignedContents& rhs);
       virtual ~MultipartSignedContents();
       MultipartSignedContents& operator=(const MultipartSignedContents& rhs);
 
+      /** @brief duplicate an MultipartSignedContents object
+          @return pointer to a new MultipartSignedContents object  
+        **/
       virtual Contents* clone() const;
 
       static const Mime& getStaticType();

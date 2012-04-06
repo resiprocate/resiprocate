@@ -9,6 +9,10 @@
 
 using namespace std;
 
+#if defined(WIN32) && !defined(__GNUC__)
+#pragma warning( disable : 4355 )
+#endif
+
 namespace reTurn {
 
 TurnAsyncTlsSocket::TurnAsyncTlsSocket(asio::io_service& ioService,

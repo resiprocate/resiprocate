@@ -35,7 +35,7 @@ AsyncUdpSocketBase::bind(const asio::ip::address& address, unsigned short port)
    mSocket.open(address.is_v6() ? asio::ip::udp::v6() : asio::ip::udp::v4(), errorCode);
    if(!errorCode)
    {
-      mSocket.set_option(asio::ip::udp::socket::reuse_address(true));
+      mSocket.set_option(asio::ip::udp::socket::reuse_address(true), errorCode);
       mSocket.bind(asio::ip::udp::endpoint(address, port), errorCode);
    }
    return errorCode;
@@ -112,7 +112,8 @@ AsyncUdpSocketBase::transportFramedReceive()
 void 
 AsyncUdpSocketBase::transportClose()
 {
-   mSocket.close();
+   asio::error_code ec;
+   mSocket.close(ec);
 }
 
 }

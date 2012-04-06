@@ -47,11 +47,11 @@ leakCheck(bool verbose)
           Mime type("text", "plain");
 
           HeaderFieldValue ohfv(original.data(), original.size());
-          PlainContents originalContents(&ohfv, type);
+          PlainContents originalContents(ohfv, type);
           setContentsHeaders(originalContents);
 
           HeaderFieldValue ahfv(alternate.data(),alternate.size());
-          PlainContents alternateContents(&ahfv, type);
+          PlainContents alternateContents(ahfv, type);
           setContentsHeaders(alternateContents);
 
 #ifndef WIN32
@@ -85,7 +85,7 @@ main(int argc, char *argv[])
 
       HeaderFieldValue hfv(txt.data(), txt.size());
       Mime type("text", "plain");
-      PlainContents pc(&hfv, type);
+      PlainContents pc(hfv, type);
 
       cerr << pc.text() << endl;
 

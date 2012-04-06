@@ -7,13 +7,12 @@
 #include "HandleTypes.hxx"
 
 #include <resip/stack/InterruptableStackThread.hxx>
-#include <resip/stack/SelectInterruptor.hxx>
-//#include <resip/dum/DumThread.hxx>
 #include <resip/dum/MasterProfile.hxx>
 #include <resip/dum/RegistrationHandler.hxx>
 #include <resip/dum/SubscriptionHandler.hxx>
 #include <resip/dum/DumShutdownHandler.hxx>
 #include <resip/dum/DialogUsageManager.hxx>
+#include <rutil/SelectInterruptor.hxx>
 #include <rutil/Log.hxx>
 #include <rutil/SharedPtr.hxx>
 #include <rutil/Mutex.hxx>

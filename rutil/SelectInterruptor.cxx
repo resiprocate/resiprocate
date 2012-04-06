@@ -1,4 +1,4 @@
-#include "resip/stack/SelectInterruptor.hxx"
+#include "rutil/SelectInterruptor.hxx"
 
 #include <cassert>
 #include "rutil/Logger.hxx"
@@ -96,6 +96,16 @@ SelectInterruptor::process(FdSet& fdset)
    if (fdset.readyToRead(mReadThing))
       processCleanup();
 }
+
+void 
+SelectInterruptor::processPollEvent(FdPollEventMask mask)
+{
+   if(mask & FPEM_Read)
+   {
+      processCleanup();
+   }
+}
+
 
 void
 SelectInterruptor::interrupt()

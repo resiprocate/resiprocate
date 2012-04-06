@@ -22,7 +22,7 @@ ExternalBodyContents::ExternalBodyContents()
    : SipFrag(getStaticType())
 {}
 
-ExternalBodyContents::ExternalBodyContents(HeaderFieldValue* hfv, const Mime& contentsType)
+ExternalBodyContents::ExternalBodyContents(const HeaderFieldValue& hfv, const Mime& contentsType)
    : SipFrag(hfv, contentsType)
 {}
 

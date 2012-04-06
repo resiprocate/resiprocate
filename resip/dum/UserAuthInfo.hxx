@@ -24,12 +24,17 @@ class UserAuthInfo : public resip::DumFeatureMessage
       UserAuthInfo( const resip::Data& user,
                     const resip::Data& realm,
                     InfoMode mode,
-                    const resip::Data& transactionID);
+                    const resip::Data& transactionId);
 
       UserAuthInfo( const resip::Data& user,
                     const resip::Data& realm,
                     const resip::Data& a1,
-                    const resip::Data& transactionID);
+                    const resip::Data& transactionId);
+
+      UserAuthInfo( const resip::Data& user,
+                    const resip::Data& realm,
+                    const resip::Data& transactionId,
+                    resip::TransactionUser* transactionUser);
       ~UserAuthInfo();
          
       InfoMode getMode() const;
@@ -38,6 +43,9 @@ class UserAuthInfo : public resip::DumFeatureMessage
       const resip::Data& getA1() const;
       const resip::Data& getRealm() const;
       const resip::Data& getUser() const;
+
+      void setMode(InfoMode mode);
+      void setA1(const resip::Data& a1);
 
       virtual resip::Data brief() const;
       virtual resip::Message* clone() const;

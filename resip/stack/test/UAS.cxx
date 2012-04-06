@@ -100,12 +100,9 @@ main(int argc, char* argv[])
    while (!finished)
    {
 
-      FdSet fdset; 
-      receiver.buildFdSet(fdset);
-      fdset.selectMilliSeconds(seltime); 
       try
       {
-         receiver.process(fdset);
+         receiver.process(seltime);
       }
       catch(BaseException& e)
       {
