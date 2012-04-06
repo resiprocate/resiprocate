@@ -7,7 +7,7 @@ AM_CXXFLAGS = -DUSE_ARES
 lib_LTLIBRARIES = libdum.la
 
 libdum_la_LIBADD = @LIBSSL_LIBADD@
-libdum_la_LDFLAGS = -version-info 0:0:0 -release 1 -export-dynamic
+libdum_la_LDFLAGS = -version-info 0:0:0 -release @ABIVERSION@ -export-dynamic
 
 libdum_la_SOURCES =   \
 	AppDialog.cxx \

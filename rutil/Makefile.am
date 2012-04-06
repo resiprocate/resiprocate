@@ -7,7 +7,7 @@ AM_CXXFLAGS = -I../contrib/ares -DUSE_ARES
 lib_LTLIBRARIES = librutil.la
 
 librutil_la_LIBADD = $(LIBSSL_LIBADD) -lrt
-librutil_la_LDFLAGS = -version-info 0:0:0 -release 1 -export-dynamic
+librutil_la_LDFLAGS = -version-info 0:0:0 -release @ABIVERSION@ -export-dynamic
 
 librutil_la_SOURCES = \
 	AbstractFifo.cxx \
