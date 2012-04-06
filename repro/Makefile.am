@@ -82,6 +82,66 @@ librepro_la_SOURCES = \
 	\
 	MySqlDb.cxx
 
+reproincludedir = $(includedir)/repro
+nobase_reproinclude_HEADERS = AbstractDb.hxx \
+	Ack200DoneMessage.hxx \
+	AclStore.hxx \
+	BerkeleyDb.hxx \
+	CommandLineParser.hxx \
+	ConfigStore.hxx \
+	Dispatcher.hxx \
+	ForkControlMessage.hxx \
+	HttpBase.hxx \
+	HttpConnection.hxx \
+	monkeys/AmIResponsible.hxx \
+	monkeys/ConstantLocationMonkey.hxx \
+	monkeys/DigestAuthenticator.hxx \
+	monkeys/GruuMonkey.hxx \
+	monkeys/IsTrustedNode.hxx \
+	monkeys/LocationServer.hxx \
+	monkeys/OutboundTargetHandler.hxx \
+	monkeys/QValueTargetHandler.hxx \
+	monkeys/RecursiveRedirect.hxx \
+	monkeys/SimpleStaticRoute.hxx \
+	monkeys/SimpleTargetHandler.hxx \
+	monkeys/StaticRoute.hxx \
+	monkeys/StrictRouteFixup.hxx \
+	MySqlDb.hxx \
+	OutboundTarget.hxx \
+	ProcessorChain.hxx \
+	Processor.hxx \
+	ProcessorMessage.hxx \
+	Proxy.hxx \
+	QValueTarget.hxx \
+	Registrar.hxx \
+	RegSyncClient.hxx \
+	RegSyncServer.hxx \
+	RegSyncServerThread.hxx \
+	reproInfo.hxx \
+	ReproServerAuthManager.hxx \
+	ReproVersion.hxx \
+	RequestContext.hxx \
+	ResponseContext.hxx \
+	RouteStore.hxx \
+	RRDecorator.hxx \
+	stateAgents/CertPublicationHandler.hxx \
+	stateAgents/CertServer.hxx \
+	stateAgents/CertSubscriptionHandler.hxx \
+	stateAgents/PrivateKeyPublicationHandler.hxx \
+	stateAgents/PrivateKeySubscriptionHandler.hxx \
+	Store.hxx \
+	Target.hxx \
+	TimerCMessage.hxx \
+	UserAuthGrabber.hxx \
+	UserInfoMessage.hxx \
+	UserStore.hxx \
+	WebAdmin.hxx \
+	WebAdminThread.hxx \
+	Worker.hxx \
+	WorkerThread.hxx \
+	XmlRpcConnection.hxx \
+	XmlRpcServerBase.hxx
+
 if USE_SSL
 librepro_la_SOURCES += \
 	stateAgents/CertServer.cxx \
