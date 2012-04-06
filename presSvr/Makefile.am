@@ -13,6 +13,16 @@ presSvr_SOURCES = presSvr.cpp \
 	DialogSetMgr.cpp \
 	DialogState.cpp
 
+noinst_HEADERS = DialogSetMgr.h \
+	DialogState.h \
+	PresConfig.h \
+	Resource.h \
+	ResourceMgr.h \
+	SubDialog.h \
+	SubDialogMgr.h \
+	SubscriptionState.h \
+	TuPresSvr.h
+
 #presSvr_LDADD += librepro.la
 #presSvr_LDADD += ../resip/dum/libdum.la
 presSvr_LDADD = ../resip/stack/libresip.la ../rutil/librutil.la

@@ -12,6 +12,8 @@ libs2c_la_LDFLAGS = -version-info 0:0:0 -release 1 -export-dynamic
 
 libs2c_la_SOURCES = s2c_native.cxx
 
+noinst_HEADERS = s2c_native.hxx
+
 
 ##############################################################################
 # 

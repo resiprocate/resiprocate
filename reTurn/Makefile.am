@@ -37,6 +37,33 @@ reTurnServer_SOURCES = reTurnServer.cxx \
         UdpRelayServer.cxx \
         UdpServer.cxx
 
+#reTurnServerincludedir = $(includedir)/reTurnServer
+noinst_HEADERS = AsyncSocketBaseHandler.hxx \
+	AsyncSocketBase.hxx \
+	AsyncTcpSocketBase.hxx \
+	AsyncTlsSocketBase.hxx \
+	AsyncUdpSocketBase.hxx \
+	ChannelManager.hxx \
+	ConnectionManager.hxx \
+	DataBuffer.hxx \
+	RemotePeer.hxx \
+	RequestHandler.hxx \
+	ReTurnConfig.hxx \
+	ReTurnSubsystem.hxx \
+	StunAuth.hxx \
+	StunMessage.hxx \
+	StunTuple.hxx \
+	TcpConnection.hxx \
+	TcpServer.hxx \
+	TlsConnection.hxx \
+	TlsServer.hxx \
+	TurnAllocation.hxx \
+	TurnAllocationKey.hxx \
+	TurnManager.hxx \
+	TurnPermission.hxx \
+	UdpRelayServer.hxx \
+	UdpServer.hxx
+
 #reTurnServer_LDADD = librepro.la
 reTurnServer_LDADD = ../resip/dum/libdum.la
 reTurnServer_LDADD += ../resip/stack/libresip.la ../rutil/librutil.la

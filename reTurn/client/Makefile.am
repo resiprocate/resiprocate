@@ -30,6 +30,18 @@ libreTurnClient_la_SOURCES = \
         TurnTlsSocket.cxx \
         TurnUdpSocket.cxx
 
+libreTurnClientincludedir = $(includedir)/reTurnClient
+nobase_libreTurnClientinclude_HEADERS = ErrorCode.hxx \
+	TurnAsyncSocketHandler.hxx \
+	TurnAsyncSocket.hxx \
+	TurnAsyncTcpSocket.hxx \
+	TurnAsyncTlsSocket.hxx \
+	TurnAsyncUdpSocket.hxx \
+	TurnSocket.hxx \
+	TurnTcpSocket.hxx \
+	TurnTlsSocket.hxx \
+	TurnUdpSocket.hxx
+
 ##############################################################################
 # 
 # The Vovida Software License, Version 1.0 

@@ -63,6 +63,7 @@ testRandomHex_SOURCES = testRandomHex.cxx
 testRandomThread_SOURCES = testRandomThread.cxx
 testThreadIf_SOURCES = testThreadIf.cxx
 
+noinst_HEADERS = TestSubsystemLogLevel.hxx
 
 ##############################################################################
 # 

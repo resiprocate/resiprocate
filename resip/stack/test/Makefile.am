@@ -158,6 +158,17 @@ testUdp_SOURCES = testUdp.cxx
 testUri_SOURCES = testUri.cxx TestSupport.cxx
 testXMLCursor_SOURCES = testXMLCursor.cxx
 
+noinst_HEADERS = digcalc.hxx \
+	InviteClient.hxx \
+	InviteServer.hxx \
+	md5.hxx \
+	Register.hxx \
+	Registrar.hxx \
+	Resolver.hxx \
+	testIM.hxx \
+	TestSupport.hxx \
+	Transceiver.hxx \
+	tassert.h
 
 ##############################################################################
 # 

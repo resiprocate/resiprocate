@@ -39,6 +39,59 @@ libp2p_la_SOURCES =   \
         Update.cxx \
         BatchMessages.cxx
 
+noinst_HEADERS = AbstractValue.hxx \
+	ArrayValue.hxx \
+	BatchMessages.hxx \
+	Candidate.hxx \
+	CertDoneEvent.hxx \
+	ChordTopology.hxx \
+	ChordUpdate.hxx \
+	ConnectBase.hxx \
+	Connect.hxx \
+	DataSpecifier.hxx \
+	DestinationId.hxx \
+	DictionaryValue.hxx \
+	Dispatcher.hxx \
+	EventConsumerBase.hxx \
+	EventConsumer.hxx \
+	Event.hxx \
+	EventWrapper.hxx \
+	FetchAns.hxx \
+	FetchKind.hxx \
+	FetchReq.hxx \
+	Find.hxx \
+	FlowId.hxx \
+	ForwardingLayer.hxx \
+	Join.hxx \
+	Leave.hxx \
+	MessageHelper.hxx \
+	Message.hxx \
+	MessageStructsGen.hxx \
+	NodeId.hxx \
+	p2p.hxx \
+	P2PStack.hxx \
+	P2PSubsystem.hxx \
+	Postable.hxx \
+	Profile.hxx \
+	ResourceId.hxx \
+	SelectTransporter.hxx \
+	Signable.hxx \
+	SignatureContext.hxx \
+	SingleValue.hxx \
+	StoreAns.hxx \
+	StoreReq.hxx \
+	StoreSet.hxx \
+	tmp/ForwardingGen.hxx \
+	tmp/fwding.hxx \
+	TopologyAPI.hxx \
+	TransactionController.hxx \
+	TransactionState.hxx \
+	TransApi.hxx \
+	Transporter.hxx \
+	TransporterMessage.hxx \
+	Update.hxx \
+	UserName.hxx
+
 
 ##############################################################################
 # 

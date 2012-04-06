@@ -34,6 +34,15 @@ basicMessage_SOURCES = basicMessage.cxx $(SHARED_SRCS)
 basicClient_SOURCES = basicClient.cxx $(SHARED_SRCS)
 testRequestValidationHandler_SOURCES = testRequestValidationHandler.cxx $(SHARED_SRCS)
 
+noinst_HEADERS = basicClientCall.hxx \
+	basicClientCmdLineParser.hxx \
+	basicClientUserAgent.hxx \
+	CommandLineParser.hxx \
+	curlHttp/CurlHttpProvider.hxx \
+	RegEventClient.hxx \
+	TestDumHandlers.hxx \
+	UserAgent.hxx
+
 ##############################################################################
 # 
 # The Vovida Software License, Version 1.0 
