@@ -76,8 +76,6 @@ AC_OUTPUT(Makefile \
 	resip/Makefile \
 	resip/stack/Makefile \
 	resip/stack/test/Makefile \
-	resip/stack/doc/Makefile \
-	resip/stack/doc/static/Makefile \
 	resip/dum/Makefile \
 	resip/dum/test/Makefile \
 	resip/certs/Makefile \
