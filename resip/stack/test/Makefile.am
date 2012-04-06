@@ -1,10 +1,10 @@
 # $Id$
 
-AM_CXXFLAGS = -DUSE_ARES
+#AM_CXXFLAGS = -DUSE_ARES
 
 LDADD = ../libresip.la
 LDADD += ../../../rutil/librutil.la
-LDADD += ../../../contrib/ares/libares.a
+#LDADD += ../../../contrib/ares/libares.a
 LDADD += $(LIBSSL_LIBADD) -lpthread
 
 TESTS = \
