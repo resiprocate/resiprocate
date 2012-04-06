@@ -1,5 +1,7 @@
 # $Id$
 
+SUBDIRS = . test
+
 AM_CXXFLAGS = -DUSE_ARES
 
 sbin_PROGRAMS = repro

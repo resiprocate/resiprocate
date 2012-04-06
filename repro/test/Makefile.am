@@ -1,20 +1,25 @@
-# $Id: Makefile,v 1.70 2006/02/02 11:09 bcampen Exp $
+# $Id$
 
-BUILD = ../../build
-CONTRIB = ../../contrib
+AM_CXXFLAGS = -DUSE_ARES
 
-include $(BUILD)/Makefile.pre
+LDADD = ../librepro.la
+LDADD += ../../resip/dum/libdum.la
+LDADD += ../../resip/stack/libresip.la
+LDADD += ../../rutil/librutil.la
+LDADD += ../../contrib/ares/libares.a
+LDADD += $(LIBSSL_LIBADD) -lpthread
 
-PACKAGES += REPRO RESIP RUTIL ARES OPENSSL PTHREAD POPT RADIUSCLIENTNG
+#
+# this test case doesn't appear to be up to date so it has been commented
+# out during the migration to autotools
+#
+#TESTS = \
+#	testDispatcher
 
+#check_PROGRAMS = \
+#	testDispatcher
 
-TESTPROGRAMS += testDispatcher.cxx
-
-# Strip -DNDEBUG out of CFLAGS and CXXFLAGS, since these are test programs
-CFLAGS := $(shell echo "${CFLAGS}" | sed s/-DNDEBUG//g)
-CXXFLAGS := $(shell echo "${CXXFLAGS}" | sed s/-DNDEBUG//g)
-
-include $(BUILD)/Makefile.post
+#testDispatcher_SOURCES = testDispatcher.cxx
 
 ##############################################################################
 # 
