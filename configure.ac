@@ -1,6 +1,8 @@
 
-AC_INIT(resiprocate,1.8)
+AC_INIT(resiprocate,1.8.0)
 AC_CONFIG_SRCDIR(repro/repro.cxx)
+
+ABIVERSION=1.8
 
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
@@ -65,6 +67,8 @@ AC_SEARCH_LIBS(gethostbyname, nsl)
 AC_SEARCH_LIBS(socket, socket)
 
 AM_MAINTAINER_MODE
+
+AC_SUBST(ABIVERSION)
 
 AC_OUTPUT(Makefile \
 	rutil/Makefile \

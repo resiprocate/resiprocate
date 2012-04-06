@@ -15,7 +15,7 @@ repro_LDADD += @LIBSSL_LIBADD@ -lpthread -ldb_cxx-4.8
 
 lib_LTLIBRARIES = librepro.la
 
-librepro_la_LDFLAGS = -version-info 0:0:0 -release 1 -export-dynamic
+librepro_la_LDFLAGS = -version-info 0:0:0 -release @ABIVERSION@ -export-dynamic
 
 librepro_la_SOURCES = \
 	RouteStore.cxx \

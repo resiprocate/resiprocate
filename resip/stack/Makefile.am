@@ -7,7 +7,7 @@ AM_CXXFLAGS = -I../../contrib/ares -DUSE_ARES
 lib_LTLIBRARIES = libresip.la
 
 libresip_la_LIBADD = @LIBSSL_LIBADD@
-libresip_la_LDFLAGS = -version-info 0:0:0 -release 1 -export-dynamic
+libresip_la_LDFLAGS = -version-info 0:0:0 -release @ABIVERSION@ -export-dynamic
 
 libresip_la_SOURCES = \
 	Auth.cxx \
