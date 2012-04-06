@@ -507,12 +507,23 @@ ConversationManager::buildSessionCapabilities(const resip::Data& ipaddress, unsi
 {
    sessionCaps = SdpContents::Empty;  // clear out passed in SdpContents
 
+   // Check if ipaddress is V4 or V6
+   bool v6 = false;
+   if(!ipaddress.empty())
+   {
+      Tuple testTuple(ipaddress, 0, UDP);
+      if(testTuple.ipVersion() == V6)
+      {
+         v6 = true;
+      }
+   }
+
    // Create Session Capabilities 
    // Note:  port, sessionId and version will be replaced in actual offer/answer
    // Build s=, o=, t=, and c= lines
-   SdpContents::Session::Origin origin("-", 0 /* sessionId */, 0 /* version */, SdpContents::IP4, ipaddress.empty() ? "0.0.0.0" : ipaddress);   // o=   
+   SdpContents::Session::Origin origin("-", 0 /* sessionId */, 0 /* version */, v6 ? SdpContents::IP6 : SdpContents::IP4, ipaddress.empty() ? "0.0.0.0" : ipaddress);   // o=   
    SdpContents::Session session(0, origin, "-" /* s= */);
-   session.connection() = SdpContents::Session::Connection(SdpContents::IP4, ipaddress.empty() ? "0.0.0.0" : ipaddress);  // c=
+   session.connection() = SdpContents::Session::Connection(v6 ? SdpContents::IP6 : SdpContents::IP4, ipaddress.empty() ? "0.0.0.0" : ipaddress);  // c=
    session.addTime(SdpContents::Session::Time(0, 0));
 
    MpCodecFactory *pCodecFactory = MpCodecFactory::getMpCodecFactory();

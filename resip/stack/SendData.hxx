@@ -7,9 +7,22 @@
 namespace resip
 {
 
+/**
+   @internal
+*/
 class SendData
 {
    public:
+      enum SendDataCommand
+      {
+         NoCommand,
+         CloseConnection,
+         EnableFlowTimer
+      };
+
+      SendData() : isAlreadyCompressed(false), command(NoCommand)
+      {}
+
       SendData(const Tuple& dest,
                const Data& pdata,
                const Data& tid,
@@ -19,7 +32,8 @@ class SendData
          data(pdata),
          transactionId(tid),
          sigcompId(scid),
-         isAlreadyCompressed(isCompressed)
+         isAlreadyCompressed(isCompressed),
+         command(NoCommand)
       {
       }
 
@@ -29,16 +43,34 @@ class SendData
          data(Data::Take, buffer, length),
          transactionId(Data::Empty),
          sigcompId(Data::Empty),
-         isAlreadyCompressed(false)
+         isAlreadyCompressed(false),
+         command(NoCommand)
       {
       }
-      
-      
+
+      SendData* clone() const
+      {
+         return new SendData(*this);
+      }
+
+      void clear()
+      {
+         data.clear();
+      }
+
+      bool empty() const
+      {
+         return data.empty();
+      }
+
       Tuple destination;
-      const Data data;
-      const Data transactionId;
-      const Data sigcompId;
+      Data data;
+      Data transactionId;
+      Data sigcompId;
       bool isAlreadyCompressed;
+
+      // .bwc. Used for special commands: ie. to close connections, and enable flow timers
+      SendDataCommand command;
 };
 
 }

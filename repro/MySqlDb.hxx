@@ -21,10 +21,17 @@ namespace repro
 class MySqlDb: public AbstractDb
 {
    public:
-      MySqlDb( const resip::Data& dbServer );
+      MySqlDb(const resip::Data& dbServer, 
+              const resip::Data& user, 
+              const resip::Data& password, 
+              const resip::Data& databaseName, 
+              unsigned int port, 
+              const resip::Data& customUserAuthQuery);
       
       virtual ~MySqlDb();
-         
+      
+      virtual bool isSane() {return mConnected;}
+
       virtual void addUser( const Key& key, const UserRecord& rec );
       virtual void eraseUser( const Key& key );
       virtual UserRecord getUser( const Key& key ) const;
@@ -43,13 +50,26 @@ class MySqlDb: public AbstractDb
       virtual void dbEraseRecord( const Table table, 
                                   const resip::Data& key );
       virtual resip::Data dbNextKey( const Table table, 
-                                     bool first=true); // return empty if no
-                                                       // more  
-      MYSQL* mConn;
-      MYSQL_RES* mResult[4];
+                                     bool first=true); // return empty if no more
 
-      char* tableName( Table table ) const;
-      resip::Data sqlWhere( const Key& key) const;
+      void disconnectFromDatabase() const;
+      int connectToDatabase() const;
+      int query(const resip::Data& queryCommand) const;
+
+      resip::Data mDBServer;
+      resip::Data mDBUser;
+      resip::Data mDBPassword;
+      resip::Data mDBName;
+      unsigned int mDBPort;
+      resip::Data mCustomUserAuthQuery;
+
+      mutable MYSQL* mConn;
+      mutable MYSQL_RES* mResult[4];
+      mutable bool mConnected;
+
+      const char* tableName( Table table ) const;
+      void userWhereClauseToDataStream(const Key& key, resip::DataStream& ds) const;
+      void getUserAndDomainFromKey(const AbstractDb::Key& key, resip::Data& user, resip::Data& domain) const;
 };
 
 }

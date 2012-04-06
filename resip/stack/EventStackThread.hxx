@@ -5,7 +5,7 @@
 
 #include "rutil/ThreadIf.hxx"
 #include "rutil/FdPoll.hxx"
-#include "resip/stack/SelectInterruptor.hxx"
+#include "rutil/SelectInterruptor.hxx"
 
 namespace resip
 {
@@ -77,15 +77,11 @@ class EventStackThread : public ThreadIf
 
 
 
-class EventThreadInterruptor : public SelectInterruptor, public FdPollItemIf
+class EventThreadInterruptor : public SelectInterruptor
 {
    public:
       EventThreadInterruptor(FdPollGrp& pollGrp);
       virtual ~EventThreadInterruptor();
-      /*
-       * Interface for FdPollItemIf
-       */
-      virtual void processPollEvent(FdPollEventMask mask) { processCleanup(); }
    protected:
       FdPollGrp& mPollGrp;      // used just to remove ourselves
       FdPollItemHandle mPollItemHandle;

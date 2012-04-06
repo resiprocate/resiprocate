@@ -3,6 +3,7 @@
 
 #include "repro/Processor.hxx"
 #include "repro/ResponseContext.hxx"
+#include "repro/ProxyConfig.hxx"
 
 #include "rutil/Data.hxx"
 #include <vector>
@@ -24,12 +25,7 @@ class QValueTargetHandler : public Processor
          FULL_PARALLEL
       } ForkBehavior;
 
-
-      QValueTargetHandler(ForkBehavior behavior,
-                           bool cancelBetweenForkGroups=true,
-                           bool waitForTerminate=true,
-                           int delayBetweenForkGroupsMS=5000,
-                           int cancellationDelayMS=5000);
+      QValueTargetHandler(ProxyConfig& config);
       virtual ~QValueTargetHandler();
       
       virtual processor_action_t process(RequestContext &);

@@ -115,7 +115,6 @@ libresip_la_SOURCES = \
 	SdpContents.cxx \
 	SecurityAttributes.cxx \
 	Compression.cxx \
-	SelectInterruptor.cxx \
 	SipFrag.cxx \
 	SipMessage.cxx \
 	SipStack.cxx \
@@ -141,6 +140,7 @@ libresip_la_SOURCES = \
 	TransactionMap.cxx \
 	TransactionState.cxx \
 	Transport.cxx \
+	TransportThread.cxx \
 	TransportFailure.cxx \
 	TransportSelector.cxx \
 	TuIM.cxx \
@@ -149,7 +149,6 @@ libresip_la_SOURCES = \
 	UnknownParameter.cxx \
 	Uri.cxx \
 	X509Contents.cxx \
-	XMLCursor.cxx \
 	KeepAliveMessage.cxx \
 	StatelessHandler.cxx \
 	InvalidContents.cxx
@@ -163,7 +162,7 @@ libresip_la_SOURCES += \
 endif
 
 SUFFIXES = .gperf .cxx
-GPERFOPTS = -D -E -L C++ -t -k '*' --compare-strncmp
+GPERFOPTS = -C -D -E -L C++ -t -k '*' --compare-strncmp
 #GPERFVER="GNU gperf 2.7.2"
 
 # rule for case sensitive sorts of hash
@@ -173,11 +172,7 @@ MethodHash.cxx: MethodHash.gperf
 # rule for insensitive clods
 #${SRC}: ${@:%.cxx=%.gperf} -- more portable?
 %.cxx: %.gperf
-	gperf -v > /dev/null 2>&1 && gperf $(GPERFOPTS) -Z `echo $* | sed -e 's/.*\///'` $< | \
-	sed -e 's/str\[\([0-9][0-9]*\)\]/tolower(str[\1])/g' | \
-	sed -e 's/^\([	]*\)if *(\*\([a-z][a-z]*\) *== *\*\([a-z][a-z]*\) *\&\& *!strncmp *(\([^)]*\)).*/\1if (tolower(*\2) == *\3 \&\& !strncasecmp( \4 ))/g' | \
-	sed -e 's/\*str ==/tolower(*str) ==/' | \
-	sed -e 's/\!strncmp/\!strncasecmp/' > $@ || \
+	gperf -v > /dev/null 2>&1 && gperf $(GPERFOPTS) --ignore-case -Z $* $< > $@ || \
 	echo "gperf not installed, touching $@" && touch $@
 
 

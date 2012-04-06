@@ -73,7 +73,7 @@ LocationServer::process(RequestContext& context)
       for(o=outboundBatch.begin();o!=outboundBatch.end();++o)
       {
          o->second.sort(OutboundTarget::instanceCompare);
-         OutboundTarget* ot = new OutboundTarget(o->second);
+         OutboundTarget* ot = new OutboundTarget(o->first, o->second);
          batch.push_back(ot);
       }
       

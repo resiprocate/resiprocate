@@ -3,21 +3,31 @@
 
 #include <map>
 #include <asio.hpp>
+#include <rutil/ConfigParse.hxx>
 #include <rutil/Data.hxx>
 #include <rutil/Log.hxx>
 
+#include <reTurn/UserAuthData.hxx>
+
 namespace reTurn {
 
-class ReTurnConfig
+typedef std::map<resip::Data,reTurn::UserAuthData> RealmUsers;
+
+class ReTurnConfig : public resip::ConfigParse
 {
 public:
    ReTurnConfig();
+   ReTurnConfig(int argc, char** argv, const resip::Data& defaultConfigFilename);
+   virtual ~ReTurnConfig();
+
+   void printHelpText(int argc, char **argv);
+   using resip::ConfigParse::getConfigValue;
 
    typedef enum
    {
-      NoAuthentication,
-      ShortTermPassword,
-      LongTermPassword
+      NoAuthentication = 0,
+      ShortTermPassword = 1,
+      LongTermPassword = 2
    } AuthenticationMode;
 
    unsigned short mTurnPort;
@@ -29,6 +39,7 @@ public:
    AuthenticationMode mAuthenticationMode;
    resip::Data mAuthenticationRealm;
    std::map<resip::Data,resip::Data> mAuthenticationCredentials;
+   std::map<resip::Data,RealmUsers> mUsers;
    unsigned long mNonceLifetime;
 
    unsigned short mAllocationPortRangeMin;
@@ -41,13 +52,18 @@ public:
    resip::Data mTlsTempDhFilename;
    resip::Data mTlsPrivateKeyPassword;
 
-   resip::Log::Type mLoggingType;
-   resip::Log::Level mLoggingLevel;
+   resip::Data mLoggingType;
+   resip::Data mLoggingLevel;
    resip::Data mLoggingFilename;
    unsigned int mLoggingFileMaxLineCount;
+   bool mDaemonize;
 
    bool isUserNameValid(const resip::Data& username) const;
    const resip::Data& getPasswordForUsername(const resip::Data& username) const;
+   const UserAuthData* getUser(const resip::Data& userName, const resip::Data& realm) const;
+
+protected:
+   void calcUserAuthData();
 };
 
 } // namespace

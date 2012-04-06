@@ -8,7 +8,7 @@
 #include "resip/stack/Symbols.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
-#include "rutil/WinLeakCheck.hxx"
+//#include "rutil/WinLeakCheck.hxx"  // not compatible with placement new used below
 
 namespace resip
 {
@@ -22,8 +22,8 @@ ExistsOrDataParameter::ExistsOrDataParameter(ParameterTypes::Type type, bool) :
 }
 
 ExistsOrDataParameter::ExistsOrDataParameter(ParameterTypes::Type type,
-                                                 ParseBuffer& pb,
-                                                 const char* terminators)
+                                              ParseBuffer& pb, 
+                                              const std::bitset<256>& terminators)
    : DataParameter(type, pb, terminators)
 {
 }
@@ -33,30 +33,20 @@ ExistsOrDataParameter::ExistsOrDataParameter(ParameterTypes::Type type)
 {
 }
 
-// !dcm! stole from parsebuffer.cxx -- clean up, did't want to recomplie the world
-bool oneOf2(char c, const Data& cs)
-{
-   for (Data::size_type i = 0; i < cs.size(); i++)
-   {
-      if (c == cs[i])
-      {
-         return true;
-      }
-   }
-   return false;
-}   
-
 Parameter* 
-ExistsOrDataParameter::decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+ExistsOrDataParameter::decode(ParameterTypes::Type type, 
+                              ParseBuffer& pb, 
+                              const std::bitset<256>& terminators,
+                              PoolBase* pool)
 {
    pb.skipWhitespace();
-   if (pb.eof() || oneOf2(*pb.position(), terminators))
+   if (pb.eof() || terminators[*pb.position()])
    {
-      return new ExistsOrDataParameter(type);
+      return new (pool) ExistsOrDataParameter(type);
    }
    else
    {
-      return new ExistsOrDataParameter(type, pb, terminators);
+      return new (pool) ExistsOrDataParameter(type, pb, terminators);
    }
 }
 

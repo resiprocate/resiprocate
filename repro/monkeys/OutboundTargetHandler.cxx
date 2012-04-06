@@ -69,6 +69,7 @@ OutboundTargetHandler::process(RequestContext & rc)
             {
                // Try next reg-id
                rsp.addTarget(newTarget);
+               mRegStore.removeContact(resip::Uri(ot->getAor()), ot->rec());
                return Processor::SkipAllChains;
             }
          }

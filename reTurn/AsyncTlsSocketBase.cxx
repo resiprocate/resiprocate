@@ -46,8 +46,8 @@ AsyncTlsSocketBase::bind(const asio::ip::address& address, unsigned short port)
    mSocket.lowest_layer().open(address.is_v6() ? asio::ip::tcp::v6() : asio::ip::tcp::v4(), errorCode);
    if(!errorCode)
    {
-      mSocket.lowest_layer().set_option(asio::ip::tcp::socket::reuse_address(true));
-      mSocket.lowest_layer().set_option(asio::ip::tcp::no_delay(true)); // ?slg? do we want this?
+      mSocket.lowest_layer().set_option(asio::ip::tcp::socket::reuse_address(true), errorCode);
+      mSocket.lowest_layer().set_option(asio::ip::tcp::no_delay(true), errorCode); // ?slg? do we want this?
       mSocket.lowest_layer().bind(asio::ip::tcp::endpoint(address, port), errorCode);
    }
    return errorCode;
@@ -101,7 +101,8 @@ AsyncTlsSocketBase::handleConnect(const asio::error_code& ec,
    else if (++endpoint_iterator != asio::ip::tcp::resolver::iterator())
    {
       // The connection failed. Try the next endpoint in the list.
-      mSocket.lowest_layer().close();
+      asio::error_code ec;
+      mSocket.lowest_layer().close(ec);
       mSocket.lowest_layer().async_connect(endpoint_iterator->endpoint(),
                             boost::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
                             asio::placeholders::error, endpoint_iterator));
@@ -137,7 +138,8 @@ AsyncTlsSocketBase::handleClientHandshake(const asio::error_code& ec,
    else if (++endpoint_iterator != asio::ip::tcp::resolver::iterator())
    {
       // The handshake failed. Try the next endpoint in the list.
-      mSocket.lowest_layer().close();
+      asio::error_code ec;
+      mSocket.lowest_layer().close(ec);
       mSocket.lowest_layer().async_connect(endpoint_iterator->endpoint(),
                             boost::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
                             asio::placeholders::error, endpoint_iterator));
@@ -260,8 +262,9 @@ AsyncTlsSocketBase::handleServerHandshake(const asio::error_code& e)
    }
    else
    {
-      mConnectedAddress = mSocket.lowest_layer().remote_endpoint().address();
-      mConnectedPort = mSocket.lowest_layer().remote_endpoint().port();
+      asio::error_code ec;
+      mConnectedAddress = mSocket.lowest_layer().remote_endpoint(ec).address();
+      mConnectedPort = mSocket.lowest_layer().remote_endpoint(ec).port();
 
       onServerHandshakeSuccess();
    }
@@ -307,7 +310,7 @@ AsyncTlsSocketBase::transportClose()
 {
    asio::error_code ec;
    //mSocket.shutdown(ec);  // ?slg? Should we use async_shutdown? !slg! note: this fn gives a stack overflow since ASIO 1.0.0 for some reason
-   mSocket.lowest_layer().close();
+   mSocket.lowest_layer().close(ec);
 }
 
 void 

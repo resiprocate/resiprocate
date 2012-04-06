@@ -146,7 +146,8 @@ main(int argc, char* argv[])
             outstanding++;
             delete next;
          }
-         sender->send(dest, encoded, Data(tid++), Data::Empty);
+         std::auto_ptr<SendData> toSend(sender->makeSendData(dest, encoded, Data(tid++), Data::Empty));
+         sender->send(toSend);
       }
 
       FdSet fdset; 
@@ -288,7 +289,8 @@ main(int argc, char* argv[])
       }
 
       ++type;
-      sender->send(dest, encoded, Data(tid++), Data::Empty);
+      std::auto_ptr<SendData> toSend(sender->makeSendData(dest, encoded, Data(tid++), Data::Empty));
+      sender->send(toSend);
 
       FdSet fdset; 
       if (receiver) receiver->buildFdSet(fdset);

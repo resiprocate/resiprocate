@@ -13,6 +13,7 @@
 #include "rutil/GenericIPAddress.hxx"
 #include "resip/stack/Transport.hxx"
 #include "resip/stack/DnsInterface.hxx"
+#include "rutil/SelectInterruptor.hxx"
 
 
 #include "resip/stack/SecurityTypes.hxx"
@@ -36,6 +37,8 @@ class Compression;
 class FdPollGrp;
 
 /**
+   @internal
+
   TransportSelector has two distinct roles.  The first is transmit on the best
 outgoing Transport for a given SipMessage based on the target's TransportType
 and the hints present in the topmost Via in the SipMessage.  The second role
@@ -69,14 +72,23 @@ class TransportSelector
       /// Must be called before adding any transports
       void setPollGrp(FdPollGrp *pollGrp);
 
+      /// Called when the TransportSelector will be running in a different 
+      // thread than the TransactionController; this will allow the thread to be 
+      // interrupted when poke() is called.
+      void createSelectInterruptor();
+
       /// Calls process on all suitable transports
       /// NOTE that TransportSelector no longer handles DNSInterface
       /// NOTE not used with pollGrp
       void process(FdSet& fdset);
+      void process();
       /// Builds an FdSet comprised of all FDs from all suitable Transports
       void buildFdSet(FdSet& fdset);
 
-      void addTransport( std::auto_ptr<Transport> transport);
+      /// Causes transport process loops to be interrupted if there is stuff in
+      /// their transmit fifos.
+      void poke();
+      void addTransport( std::auto_ptr<Transport> transport, bool immediate);
 
       DnsResult* createDnsResult(DnsHandler* handler);
 
@@ -87,10 +99,12 @@ class TransportSelector
        kick off dns resolution or to pick the next tuple and will cause the
        message to be encoded and via updated
 	  */
-      void transmit( SipMessage* msg, Tuple& target );
+      bool transmit( SipMessage* msg, Tuple& target, SendData* sendData=0 );
 
       /// Resend to the same transport as last time
-      void retransmit(SipMessage* msg, Tuple& target );
+      void retransmit(const SendData& msg);
+
+      void closeConnection(const Tuple& peer);
 
       unsigned int sumTransportFifoSizes() const;
 
@@ -102,46 +116,61 @@ class TransportSelector
       void setEnumSuffixes(const std::vector<Data>& suffixes);
 
       static Tuple getFirstInterface(bool is_v4, TransportType type);
-      bool connectionAlive(const Tuple& dest) const;
       void terminateFlow(const resip::Tuple& flow);
       void enableFlowTimer(const resip::Tuple& flow);
 
-      /// delete all known transports (including external)
-      void deleteTransports();
+      void setCongestionManager(CongestionManager* manager)
+      {
+         for(TransportList::iterator i=mSharedProcessTransports.begin();
+               i!=mSharedProcessTransports.end();++i)
+         {
+            (*i)->setCongestionManager(manager);
+         }
+
+         for(TransportList::iterator i=mHasOwnProcessTransports.begin();
+               i!=mHasOwnProcessTransports.end();++i)
+         {
+            (*i)->setCongestionManager(manager);
+         }
+      }
 
    private:
+      void addTransportInternal( std::auto_ptr<Transport> transport);
+      void checkTransportAddQueue();
       Connection* findConnection(const Tuple& dest) const;
-      Transport* findTransportBySource(Tuple& src) const;
+      Transport* findTransportBySource(Tuple& src, const SipMessage* msg) const;
       Transport* findLoopbackTransportBySource(bool ignorePort, Tuple& src) const;
-      Transport* findTransportByDest(SipMessage* msg, Tuple& dest);
+      Transport* findTransportByDest(const Tuple& dest);
       Transport* findTransportByVia(SipMessage* msg, const Tuple& dest,
         Tuple& src) const;
-      Transport* findTlsTransport(const Data& domain,TransportType type,IpVersion ipv);
+      Transport* findTlsTransport(const Data& domain,TransportType type,IpVersion ipv) const;
       Tuple determineSourceInterface(SipMessage* msg, const Tuple& dest) const;
-
 
       DnsInterface mDns;
       Fifo<TransactionMessage>& mStateMacFifo;
       Security* mSecurity;// for computing identity header
 
       // specific port and interface
-      typedef std::map<Tuple, Transport*> ExactTupleMap;  
-      ExactTupleMap mExactTransports;  // owns transport pointers
+      typedef std::map<Tuple, Transport*> ExactTupleMap;
+      ExactTupleMap mExactTransports;
 
       // specific port, ANY interface
       typedef std::map<Tuple, Transport*, Tuple::AnyInterfaceCompare> AnyInterfaceTupleMap;
-      AnyInterfaceTupleMap mAnyInterfaceTransports;  // owns transport pointers
+      AnyInterfaceTupleMap mAnyInterfaceTransports;
 
       // ANY port, specific interface
       typedef std::map<Tuple, Transport*, Tuple::AnyPortCompare> AnyPortTupleMap;
-      AnyPortTupleMap mAnyPortTransports;   // references transport pointers owened by mExactTransports
+      AnyPortTupleMap mAnyPortTransports;
 
       // ANY port, ANY interface
       typedef std::map<Tuple, Transport*, Tuple::AnyPortAnyInterfaceCompare> AnyPortAnyInterfaceTupleMap;
-      AnyPortAnyInterfaceTupleMap mAnyPortAnyInterfaceTransports;    // references transport pointers owened by mAnyInterfaceTransports
+      AnyPortAnyInterfaceTupleMap mAnyPortAnyInterfaceTransports;
 
-      std::map<FlowKey,Transport*> mConnectionlessMap;   // references transport pointers owned by mExactTransports, mAnyInterfaceTransports, or mTlsTransports
+      std::vector<Transport*> mTransports; // owns all Transports
 
+      /**
+         @internal
+      */
       class TlsTransportKey
       {
          public:
@@ -186,14 +215,14 @@ class TransportSelector
          private:
             TlsTransportKey();
       };
-
-      typedef std::map<TlsTransportKey, Transport*> TlsTransportMap ;  // owns transport pointers
-
+      
+      typedef std::map<TlsTransportKey, Transport*> TlsTransportMap ;
+      
       TlsTransportMap mTlsTransports;
 
       typedef std::vector<Transport*> TransportList;
-      TransportList mSharedProcessTransports;   // references transport pointers owned by mExactTransports, mAnyInterfaceTransports, or mTlsTransports
-      TransportList mHasOwnProcessTransports;   // references transport pointers owned by mExactTransports, mAnyInterfaceTransports, or mTlsTransports
+      TransportList mSharedProcessTransports;
+      TransportList mHasOwnProcessTransports;
 
       typedef std::multimap<Tuple, Transport*, Tuple::AnyPortAnyInterfaceCompare> TypeToTransportMap;
       TypeToTransportMap mTypeToTransportMap;
@@ -212,6 +241,11 @@ class TransportSelector
 
       // epoll support, for sharedprocess transports
       FdPollGrp* mPollGrp;
+
+      int mAvgBufferSize;
+      Fifo<Transport> mTransportsToAdd;
+      std::auto_ptr<SelectInterruptor> mSelectInterruptor;
+      FdPollItemHandle mInterruptorHandle;
 
       friend class TestTransportSelector;
       friend class SipStack; // for debug only

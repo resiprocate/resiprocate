@@ -122,6 +122,19 @@ resipMax(const _Tp& __a, const _Tp& __b)
    if (__a < __b) return __b; return __a;
 }
 
+template<typename _Tp1, typename _Tp2>
+inline const _Tp1
+resipIntDiv(const _Tp1& __a, const _Tp2& __b)
+{
+   // .bwc. Divide-round-nearest without using any floating-point.
+   if(__a%__b > __b/2)
+   {
+      return __a/__b+1;
+   }
+
+   return __a/__b;
+}
+
 }
 
 // Mac OS X: UInt32 definition conflicts with the Mac OS or iPhone OS SDK.

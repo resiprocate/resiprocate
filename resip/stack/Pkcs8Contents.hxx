@@ -7,6 +7,10 @@
 namespace resip
 {
 
+/**
+   @ingroup sip_payload
+   @brief SIP body type for holding PKCS8 contents (MIME content-type application/pkcs8).
+*/
 class Pkcs8Contents : public Contents
 {
    public:
@@ -14,12 +18,15 @@ class Pkcs8Contents : public Contents
 
       Pkcs8Contents();
       Pkcs8Contents(const Data& text);
-      Pkcs8Contents(HeaderFieldValue* hfv, const Mime& contentType);
+      Pkcs8Contents(const HeaderFieldValue& hfv, const Mime& contentType);
       Pkcs8Contents(const Data& data, const Mime& contentType);
       Pkcs8Contents(const Pkcs8Contents& rhs);
       virtual ~Pkcs8Contents();
       Pkcs8Contents& operator=(const Pkcs8Contents& rhs);
 
+      /** @brief duplicate an Pkcs8Contents object
+          @return pointer to a new Pkcs8Contents object  
+        **/
       virtual Contents* clone() const;
 
       static const Mime& getStaticType() ;

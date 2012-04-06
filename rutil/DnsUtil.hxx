@@ -23,6 +23,7 @@ class Tuple;
    @brief Provides a collection of utility functions for
    manipulating DNS names and IP addresses and discovering
    details about the local interfaces
+   @ingroup network
   */
 class DnsUtil
 {
@@ -63,21 +64,74 @@ class DnsUtil
       static std::list<std::pair<Data,Data> > getInterfaces(const Data& matchingInterface=Data::Empty);
 
       // wrappers for the not so ubiquitous inet_pton, inet_ntop (e.g. WIN32)
+
+      /// Converts from the network format to presentation
+      /// format. That is, it converts from struct in_addr to
+      /// character representation of the IPv4 address.
       static Data inet_ntop(const struct in_addr& addr);
+
+      /// Converts from the network format to presentation
+      /// format.  Converts from struct sockaddr to character
+      /// representation of the IPv4 address.
       static Data inet_ntop(const struct sockaddr& addr);
+
+      /// Convert from the presentation format of the IPv4 address to
+      /// struct in_addr.
       static int inet_pton(const Data& printableIp, struct in_addr& dst);
       
       static bool isIpAddress(const Data& ipAddress);
       static bool isIpV4Address(const Data& ipAddress);
+      /**
+        @brief based on RFC 1884
+        @example
+        @code
+         Data addr("5f1b:df00:ce3e:e200:20:800:2b37:6426");
+         cerr << "!! "<< addr << endl;
+         assert(DnsUtil::isIpV6Address(addr));
+        @endcode
+        */
       static bool isIpV6Address(const Data& ipAddress);
 
 #ifdef IPPROTO_IPV6
+      /// Converts from the network format to presentation
+      /// format. That is, it converts from struct in_addr6 to
+      /// character representation of the IPv6 address.
       static Data inet_ntop(const struct in6_addr& addr);
+
+      /// Convert from the presentation format of the IPv6 address to
+      /// struct in_addr6.
       static int inet_pton(const Data& printableIp, struct in6_addr& dst);
 #endif
 
       //pass-throughs when supported, actual implemenation in the WIN32 case
+
+      /// Converts from the network format to presentation
+      /// format.
+      ///
+      /// @param af  the address family (AF_INET, AF_INET6)
+      /// 
+      /// @param src the address of the networking representation to
+      /// be converted (often of type  struct in_addr *)
+      ///
+      /// @param dst the address where presentation format will be stored
+      ///
+      /// @size the size of the dst
       static const char * inet_ntop(int af, const void* src, char* dst, size_t size);      
+
+#ifdef __APPLE__
+      static const Data UInt8ToStr[256];
+#endif // __APPLE__
+
+      /// Converts from the presentation format to network
+      /// format.
+      ///
+      /// @param af  the address family (AF_INET, AF_INET6)
+      /// 
+      /// @param src the address of the presentation representation to
+      /// be converted
+      ///
+      /// @param dst the address where presentation format will be
+      /// stored (struct in_addr *, or struct in_addr6 *)
       static int inet_pton(int af, const char * src, void * dst);
       
 

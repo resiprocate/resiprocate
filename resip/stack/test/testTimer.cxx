@@ -31,9 +31,9 @@ main()
 {
 
    TimeLimitFifo<Message> f(0, 0);
-   Fifo<TransactionMessage> r;
+   Fifo<TimerMessage> r;
    
-   TimerQueue timer(r);
+   TransactionTimerQueue timer(r);
    TimeLimitTimerQueue timer2(f);
 
    cerr << "Before Fifo size: " << f.size() << endl;

@@ -8,7 +8,8 @@ namespace repro
 class OutboundTarget : public QValueTarget
 {
    public:
-      explicit OutboundTarget(const resip::ContactList& recs);
+      OutboundTarget(const resip::Data& aor, 
+                     const resip::ContactList& recs);
       virtual ~OutboundTarget();
 
       OutboundTarget* nextInstance();
@@ -21,7 +22,10 @@ class OutboundTarget : public QValueTarget
          return lhs.mLastUpdated > rhs.mLastUpdated;
       }
 
+      inline const resip::Data& getAor() const { return mAor;} 
+
    protected:
+      resip::Data mAor;
       resip::ContactList mList;
 }; // class OutboundTarget
 

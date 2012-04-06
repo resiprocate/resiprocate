@@ -14,6 +14,7 @@
 #endif
 #endif
 
+#include "rutil/FdPoll.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/compat.hxx"
@@ -78,14 +79,15 @@ DnsStub::DnsStub(const NameserverList& additional,
                  AfterSocketCreationFuncPtr socketFunc,
                  AsyncProcessHandler* asyncProcessHandler,
                  FdPollGrp *pollGrp) :
+   mInterruptorHandle(0),
+   mCommandFifo(&mSelectInterruptor),
    mTransform(0),
    mDnsProvider(ExternalDnsFactory::createExternalDns()),
+   mPollGrp(0),
    mAsyncProcessHandler(asyncProcessHandler)
 {
-   if ( pollGrp && mDnsProvider->isPollSupported())
-   {
-      mDnsProvider->setPollGrp(pollGrp);
-   }
+   setPollGrp(pollGrp);
+
    int retCode = mDnsProvider->init(additional, socketFunc, mDnsTimeout, mDnsTries, mDnsFeatures);
    if (retCode != ExternalDns::Success)
    {
@@ -110,6 +112,7 @@ DnsStub::~DnsStub()
       delete *it;
    }
 
+   setPollGrp(0);
    delete mDnsProvider;
 }
 
@@ -124,6 +127,7 @@ void
 DnsStub::buildFdSet(FdSet& fdset)
 {
    mDnsProvider->buildFdSet(fdset.read, fdset.write, fdset.size);
+   mSelectInterruptor.buildFdSet(fdset);
 }
 
 void
@@ -140,6 +144,7 @@ DnsStub::processFifo()
 void
 DnsStub::process(FdSet& fdset)
 {
+   mSelectInterruptor.process(fdset);
    processFifo();
    mDnsProvider->process(fdset.read, fdset.write);
 }
@@ -149,10 +154,7 @@ DnsStub::processTimers()
 {
    // the fifo is captures as a timer within getTimeTill... above
    processFifo();
-   if(mDnsProvider->isPollSupported())
-   {
-      mDnsProvider->processTimers();
-   }
+   mDnsProvider->processTimers();
 }
 
 void
@@ -367,6 +369,26 @@ void
 DnsStub::removeResultTransform()
 {
    mTransform = 0;
+}
+
+void 
+DnsStub::setPollGrp(FdPollGrp* pollGrp)
+{
+   if(mPollGrp)
+   {
+      // unregister our select interruptor
+      mPollGrp->delPollItem(mInterruptorHandle);
+      mInterruptorHandle=0;
+   }
+
+   mPollGrp=pollGrp;
+
+   if (mPollGrp)
+   {
+      mInterruptorHandle = mPollGrp->addPollItem(mSelectInterruptor.getReadSocket(), FPEM_Read, &mSelectInterruptor);
+   }
+
+   mDnsProvider->setPollGrp(mPollGrp);
 }
 
 DnsStub::Query::Query(DnsStub& stub, ResultTransform* transform, ResultConverter* resultConv,
@@ -785,7 +807,7 @@ DnsStub::clearDnsCache()
 void
 DnsStub::doClearDnsCache()
 {
-    mRRCache.clearCache();
+   mRRCache.clearCache();
 }
 
 void
@@ -803,7 +825,28 @@ DnsStub::logDnsCache()
 void
 DnsStub::doLogDnsCache()
 {
-    mRRCache.logCache();
+   mRRCache.logCache();
+}
+
+void 
+DnsStub::getDnsCacheDump(std::pair<unsigned long, unsigned long> key, GetDnsCacheDumpHandler* handler)
+{
+   GetDnsCacheDumpCommand* command = new GetDnsCacheDumpCommand(*this, key, handler);
+   mCommandFifo.add(command);
+
+   if (mAsyncProcessHandler)
+   {
+      mAsyncProcessHandler->handleProcessNotification();
+   }
+}
+
+void 
+DnsStub::doGetDnsCacheDump(std::pair<unsigned long, unsigned long> key, GetDnsCacheDumpHandler* handler)
+{
+   assert(handler != 0);
+   Data dnsCacheDump;
+   mRRCache.getCacheDump(dnsCacheDump);
+   handler->onDnsCacheDumpRetrieved(key, dnsCacheDump);
 }
 
 void
@@ -817,3 +860,54 @@ DnsStub::setDnsCacheSize(int size)
 {
    mRRCache.setSize(size);
 }
+
+/* ====================================================================
+ * The Vovida Software License, Version 1.0 
+ * 
+ * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ * 
+ * 3. The names "VOCAL", "Vovida Open Communication Application Library",
+ *    and "Vovida Open Communication Application Library (VOCAL)" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact vocal@vovida.org.
+ *
+ * 4. Products derived from this software may not be called "VOCAL", nor
+ *    may "VOCAL" appear in their name, without prior written
+ *    permission of Vovida Networks, Inc.
+ * 
+ * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
+ * NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA
+ * NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
+ * IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+ * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ * 
+ * ====================================================================
+ * 
+ * This software consists of voluntary contributions made by Vovida
+ * Networks, Inc. and many individuals on behalf of Vovida Networks,
+ * Inc.  For more information on Vovida Networks, Inc., please see
+ * <http://www.vovida.org/>.
+ *
+ */
+ 

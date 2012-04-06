@@ -5,8 +5,11 @@
 #include "resip/stack/AbandonServerTransaction.hxx"
 #include "resip/stack/ApplicationMessage.hxx"
 #include "resip/stack/CancelClientInviteTransaction.hxx"
+#include "resip/stack/Helper.hxx"
 #include "resip/stack/TerminateFlow.hxx"
 #include "resip/stack/EnableFlowTimer.hxx"
+#include "resip/stack/ZeroOutStatistics.hxx"
+#include "resip/stack/PollStatistics.hxx"
 #include "resip/stack/ShutdownMessage.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TransactionController.hxx"
@@ -14,6 +17,8 @@
 #ifdef USE_SSL
 #include "resip/stack/ssl/Security.hxx"
 #endif
+#include "rutil/CongestionManager.hxx"
+#include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -29,22 +34,26 @@ using namespace resip;
 unsigned int TransactionController::MaxTUFifoSize = 0;
 unsigned int TransactionController::MaxTUFifoTimeDepthSecs = 0;
 
-TransactionController::TransactionController(SipStack& stack, FdPollGrp *pollGrp) :
+TransactionController::TransactionController(SipStack& stack, 
+                                                AsyncProcessHandler* handler) :
    mStack(stack),
    mDiscardStrayResponses(true),
    mFixBadDialogIdentifiers(true),
    mFixBadCSeqNumbers(true),
-   mStateMacFifo(),
+   mStateMacFifo(handler),
+   mStateMacFifoOutBuffer(mStateMacFifo),
+   mCongestionManager(0),
    mTuSelector(stack.mTuSelector),
    mTransportSelector(mStateMacFifo,
                       stack.getSecurity(),
                       stack.getDnsStub(),
                       stack.getCompression()),
-   mTimers(mStateMacFifo),
+   mTimers(mTimerFifo),
    mShuttingDown(false),
-   mStatsManager(stack.mStatsManager)
+   mStatsManager(stack.mStatsManager),
+   mHostname(DnsUtil::getLocalHostName())
 {
-   mTransportSelector.setPollGrp(pollGrp);
+   mStateMacFifo.setDescription("TransactionController::mStateMacFifo");
 }
 
 #if defined(WIN32) && !defined(__GNUC__)
@@ -53,6 +62,15 @@ TransactionController::TransactionController(SipStack& stack, FdPollGrp *pollGrp
 
 TransactionController::~TransactionController()
 {
+   if(mClientTransactionMap.size())
+   {
+      WarningLog(<< "On shutdown, there are Client TransactionStates remaining!");
+   }
+
+   if(mServerTransactionMap.size())
+   {
+      WarningLog(<< "On shutdown, there are Server TransactionStates remaining!");
+   }
 }
 
 
@@ -70,17 +88,11 @@ TransactionController::shutdown()
 }
 
 void
-TransactionController::deleteTransports()
-{
-   mTransportSelector.deleteTransports();
-}
-
-void
-TransactionController::processEverything(FdSet* fdset)
+TransactionController::process(int timeout)
 {
    if (mShuttingDown && 
        //mTimers.empty() && 
-       !mStateMacFifo.messageAvailable() && // !dcm! -- see below 
+       !mStateMacFifoOutBuffer.messageAvailable() && // !dcm! -- see below 
        !mStack.mTUFifo.messageAvailable() &&
        mTransportSelector.isFinished())
 // !dcm! -- why would one wait for the Tu's fifo to be empty before delivering a
@@ -91,52 +103,79 @@ TransactionController::processEverything(FdSet* fdset)
    }
    else
    {
-      if ( fdset ) 
+      unsigned int nextTimer(mTimers.msTillNextTimer());
+      timeout=resipMin((int)nextTimer, timeout);
+      if(timeout==0)
       {
-         mTransportSelector.process(*fdset);
+         // *sigh*
+         timeout=-1;
       }
 
-      mTimers.process();
+      // If non-zero is passed for timeout, we understand that the caller is ok
+      // with us waiting up to that long on this call. A non-zero timeout is
+      // passed by TransactionControllerThread, for example. This gets us 
+      // something approximating a blocking wait on both the state machine fifo 
+      // and the timer queue.
+      TransactionMessage* message=mStateMacFifoOutBuffer.getNext(timeout);
 
-      while (mStateMacFifo.messageAvailable())
+      // If we either had timers ready to go at the beginning of this call, or
+      // the getNext() call above timed out, our timer queue is likely ready to 
+      // be serviced.
+      if(!message || nextTimer==0)
       {
-         TransactionState::process(*this);
+         mTimers.process();
+         TimerMessage* timer;
+         while ((timer=mTimerFifo.getNext(-1)))
+         {
+            TransactionState::processTimer(*this,timer);
+         }
+      }
+
+      if(message)
+      {
+         // Only do 16 at a time; don't let the timer queue (or other 
+         // processing) starve.
+         int runs=16;
+         while(message)
+         {
+            TransactionState::process(*this, message);
+            if(--runs==0)
+            {
+               break;
+            }
+            message = mStateMacFifoOutBuffer.getNext(-1);
+         }
+
+         mTransportSelector.poke();
       }
    }
-}
-
-void
-TransactionController::processTimers()
-{
-   // we consider fifos a special case of Timers
-   processEverything(NULL);
-}
-
-void
-TransactionController::process(FdSet& fdset)
-{
-   processEverything(&fdset);
 }
 
 unsigned int 
 TransactionController::getTimeTillNextProcessMS()
 {
-   if ( mStateMacFifo.messageAvailable() ) 
+   if ( mStateMacFifoOutBuffer.messageAvailable() ) 
    {
       return 0;
    }
-   return resipMin(mTimers.msTillNextTimer(), mTransportSelector.getTimeTillNextProcessMS());   
+   return mTimers.msTillNextTimer();
 } 
-   
-void 
-TransactionController::buildFdSet( FdSet& fdset)
-{
-   mTransportSelector.buildFdSet( fdset );
-}
 
 void
 TransactionController::send(SipMessage* msg)
 {
+   if(msg->isRequest() && 
+      msg->method() != ACK && 
+      getRejectionBehavior()!=CongestionManager::NORMAL)
+   {
+      // Need to 503 this.
+      SipMessage* resp(Helper::makeResponse(*msg, 503));
+      resp->header(h_RetryAfter).value()=(UInt32)mStateMacFifo.expectedWaitTimeMilliSec()/1000;
+      resp->setTransactionUser(msg->getTransactionUser());
+      mTuSelector.add(resp, TimeLimitFifo<Message>::InternalElement);
+      delete msg;
+      return;
+   }
    mStateMacFifo.add(msg);
 }
 
@@ -156,6 +195,8 @@ TransactionController::sumTransportFifoSizes() const
 unsigned int 
 TransactionController::getTransactionFifoSize() const
 {
+   // Should we include the stuff in mStateMacFifoOutBuffer here too? This is
+   // likely to be called from other threads...
    return mStateMacFifo.size();
 }
 
@@ -175,6 +216,18 @@ unsigned int
 TransactionController::getTimerQueueSize() const
 {
    return mTimers.size();
+}
+
+void 
+TransactionController::zeroOutStatistics()
+{
+   mStateMacFifo.add(new ZeroOutStatistics());
+}
+
+void 
+TransactionController::pollStatistics()
+{
+   mStateMacFifo.add(new PollStatistics());
 }
 
 void
@@ -210,6 +263,12 @@ void
 TransactionController::enableFlowTimer(const resip::Tuple& flow)
 {
    mStateMacFifo.add(new EnableFlowTimer(flow));
+}
+
+void 
+TransactionController::setInterruptor(AsyncProcessHandler* handler)
+{
+   mStateMacFifo.setInterruptor(handler);
 }
 
 /* ====================================================================

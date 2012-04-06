@@ -28,7 +28,7 @@ class ServerPublication : public BaseUsage
 
       void send(SharedPtr<SipMessage> response);      
 
-      const Data& getPublisher() const; // aor of From
+      Data getPublisher() const; // aor of From
       virtual EncodeStream& dump(EncodeStream& strm) const;
       
    protected:

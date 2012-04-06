@@ -12,35 +12,115 @@ class ParseBuffer;
 class Data;
 
 /**
-   @ingroup resip_crit
-   @ingroup sip_parse
    @brief The base-class for all lazily-parsed SIP grammar elements.
 
    Subclasses of this are parse-on-access; the parse will be carried out (if
    it hasn't already) the first time one of the members is accessed. Right now,
-   all header-field-values and SIP bodies are lazily parsed.
+   all header field values and SIP bodies are lazily parsed.
+
+   Application writers are expected to make consistent use of isWellFormed() in
+   order to determine whether an element is parseable. Using a try/catch block
+   around accesses will not work as expected, since an exception will only be
+   thrown the _first_ time an access is made, and it is determined that the 
+   element isn't parseable.
+
+   @ingroup resip_crit
+   @ingroup sip_parse
 */
 class LazyParser
 {
    public:
-      LazyParser(HeaderFieldValue* headerFieldValue);
+      /**
+         @internal
+      */
+      explicit LazyParser(const HeaderFieldValue& headerFieldValue);
+
+      /**
+         @internal
+      */
+      LazyParser(const char* buf, int length);
+
+      /**
+         @internal
+      */
+      LazyParser(const HeaderFieldValue& headerFieldValue,
+                  HeaderFieldValue::CopyPaddingEnum e);
+
+      /**
+         @internal
+      */
       LazyParser(const LazyParser& rhs);
+
+      /**
+         @internal
+      */
       LazyParser(const LazyParser& rhs,HeaderFieldValue::CopyPaddingEnum e);
+
+      /**
+         @internal
+      */
       LazyParser& operator=(const LazyParser& rhs);
       virtual ~LazyParser();
 
+      /**
+         @internal
+      */
       virtual EncodeStream& encodeParsed(EncodeStream& str) const = 0;
+
+      /**
+         @internal
+      */
       virtual void parse(ParseBuffer& pb) = 0;
 
+      /**
+         @brief Encodes this element to a stream, in the fashion it should be 
+            represented on the wire.
+         @param str The ostream to encode to.
+         @return A reference to str.
+      */
       EncodeStream& encode(EncodeStream& str) const;
+
+      /**
+         @brief Returns true iff a parse has been attempted.
+         @note This means that this will return true if a parse failed earlier.
+      */
       bool isParsed() const {return (mState!=NOT_PARSED);}
 
-      HeaderFieldValue& getHeaderField() { return *mHeaderField; }
+      /**
+         @internal
+      */
+      HeaderFieldValue& getHeaderField() { return mHeaderField; }
 
       // call (internally) before every access 
-      void checkParsed() const;
-      void checkParsed();
+      /**
+         @internal
+      */
+      void checkParsed() const
+      {
+         if (mState==NOT_PARSED)
+         {
+            doParse();
+         }
+      }
+      void checkParsed()
+      {
+         const LazyParser* constThis = const_cast<const LazyParser*>(this);
+         constThis->checkParsed();
+         mState=DIRTY;
+      }
+      void doParse() const;
+      inline void markDirty() const {mState=DIRTY;}
       
+      /**
+         @brief Returns true iff this element was parsed successfully, according
+            to the implementation of parse().
+
+         App writers are expected to use this extensively, since a failure in
+         the parse-on-access will throw an exception the _first_ time access is
+         made, but nothing will happen on subsequent accesses. (Writing a 
+         try/catch block when you try to inspect the members of a subclass will 
+         only work as intended if the subclass hasn't been accessed before.)
+      */
       bool isWellFormed() const;
    protected:
       LazyParser();
@@ -55,7 +135,7 @@ class LazyParser
       // !dlb! bit of a hack until the dust settles
       friend class Contents;
 
-      HeaderFieldValue* mHeaderField;
+      HeaderFieldValue mHeaderField;
 
       typedef enum
       {
@@ -64,8 +144,7 @@ class LazyParser
          MALFORMED, // Parsed, malformed, underlying buffer is still valid
          DIRTY // Well-formed, and underlying buffer is invalid
       } ParseState;
-      ParseState mState;
-      bool mIsMine;
+      mutable ParseState mState;
 };
 
 #ifndef  RESIP_USE_STL_STREAMS

@@ -5,6 +5,7 @@ EXTRA_DIST += README.txt
 EXTRA_DIST += *.sln
 EXTRA_DIST += *.vcproj
 EXTRA_DIST += reTurnServer_10_0.vcxproj reTurnServer_10_0.vcxproj.filters
+EXTRA_DIST += reTurnServer.config
 
 SUBDIRS = . test
 
@@ -24,6 +25,7 @@ reTurnServer_SOURCES = reTurnServer.cxx \
         ReTurnConfig.cxx \
         ReTurnSubsystem.cxx \
         StunAuth.cxx \
+	StunCredential.cxx \
         StunMessage.cxx \
         StunTuple.cxx \
         TcpConnection.cxx \
@@ -35,7 +37,8 @@ reTurnServer_SOURCES = reTurnServer.cxx \
         TurnManager.cxx \
         TurnPermission.cxx \
         UdpRelayServer.cxx \
-        UdpServer.cxx
+        UdpServer.cxx \
+	UserAuthData.cxx
 
 #reTurnServerincludedir = $(includedir)/reTurnServer
 noinst_HEADERS = AsyncSocketBaseHandler.hxx \
@@ -51,6 +54,7 @@ noinst_HEADERS = AsyncSocketBaseHandler.hxx \
 	ReTurnConfig.hxx \
 	ReTurnSubsystem.hxx \
 	StunAuth.hxx \
+	StunCredential.hxx \
 	StunMessage.hxx \
 	StunTuple.hxx \
 	TcpConnection.hxx \
@@ -62,7 +66,8 @@ noinst_HEADERS = AsyncSocketBaseHandler.hxx \
 	TurnManager.hxx \
 	TurnPermission.hxx \
 	UdpRelayServer.hxx \
-	UdpServer.hxx
+	UdpServer.hxx \
+	UserAuthData.hxx
 
 #reTurnServer_LDADD = librepro.la
 reTurnServer_LDADD = ../resip/dum/libdum.la

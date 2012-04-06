@@ -6,39 +6,206 @@
 #include "resip/stack/HeaderTypes.hxx"
 #include <vector>
 
+#include "rutil/StlPoolAllocator.hxx"
+#include "rutil/PoolBase.hxx"
+
 namespace resip
 {
 
 class HeaderFieldValueList;
+class PoolBase;
 
+/**
+  @class ParserContainerBase
+  @brief Abstract Base class implemented in derived class ParserContainer
+  */
 class ParserContainerBase
 {
    public:
       typedef size_t size_type;
 
+      /**
+        @brief constructor; sets the type only
+        */
       ParserContainerBase(Headers::Type type = Headers::UNKNOWN);
+
+      /**
+        @brief constructor; sets the type only
+        */
+      ParserContainerBase(Headers::Type type,
+                           PoolBase& pool);
+
+      /**
+        @brief copy constructor copies the mType and the mParsers from the rhs
+        @note this is a shallow copy
+        */
       ParserContainerBase(const ParserContainerBase& rhs);
+
+      ParserContainerBase(const ParserContainerBase& rhs,
+                           PoolBase& pool);
+
+      /**
+        @brief assignment operator copies the mParsers from the rhs
+        @note this is a shallow copy
+        */
       ParserContainerBase& operator=(const ParserContainerBase& rhs);
+
+      /**
+        @brief virtual destructor - empty in this class
+        */
       virtual ~ParserContainerBase();
 
-      void clear();
+      /**
+        @brief clear the mParsers vector
+        */
+      inline void clear() {mParsers.clear();}
+
+      /**
+        @brief pure virtual function to be implemented in derived classes 
+         with the intention of cloning this object
+        */
       virtual ParserContainerBase* clone() const = 0;
-      size_t size() const;
-      bool empty() const;
+
+      /**
+        @brief return the size of the mParsers vector
+        */
+      inline size_t size() const {return mParsers.size();}
+
+      /**
+        @brief return true or false indicating whether the mParsers vector is
+         empty or not
+        */
+      inline bool empty() const {return mParsers.empty();}
+
+      /**
+        @internal 
+        @brief the actual mechanics of parsing
+        @todo add support for headers that are allowed to be empty like 
+         Supported, Accept-Encoding, Allow-Events, Allow, Accept, 
+         Accept-Language
+        */
       EncodeStream& encode(const Data& headerName, EncodeStream& str) const;
+
+      /**
+        @internal
+        @brief the actual mechanics of parsing
+        */
+      std::ostream& encode(Headers::Type type,std::ostream& str) const;
+
+      /**
+        @internal
+        @brief the actual mechanics of parsing
+        */
       EncodeStream& encodeEmbedded(const Data& headerName, EncodeStream& str) const;
 
-      ParserCategory* front();
+      /**
+        @brief if mParsers vector is not empty, erase the first element
+        */
       void pop_front();
+
+      /**
+        @brief if mParsers vector is not empty, erase the first element
+        */
       void pop_back();
 
+      /**
+        @brief append the vector to the mParsers vector held locally
+        @param rhs is the vector whose elements will be added to the 
+         local mParsers vector
+        */
       void append(const ParserContainerBase& rhs);
 
-
+      /**
+        @brief pure virtual function to be implemented in derived classes
+         The intention is to provide an ability to parse all elements 
+         in the mParsers vector.
+        */
       virtual void parseAll()=0;
    protected:
       const Headers::Type mType;
-      std::vector<ParserCategory*> mParsers;
+
+      /**
+         @internal
+      */
+      class HeaderKit
+      {
+         public:
+            static const HeaderKit Empty;
+
+            HeaderKit(): pc(0){}
+            HeaderKit(const HeaderKit& orig) 
+            : pc(orig.pc),
+               hfv(orig.hfv)
+            {}
+
+            HeaderKit& operator=(const HeaderKit& rhs)
+            {
+               if(this!=&rhs)
+               {
+                  pc=rhs.pc;
+                  hfv=rhs.hfv;
+               }
+               return *this;
+            }
+            
+            ~HeaderKit()
+            {}
+            
+            EncodeStream& encode(EncodeStream& str) const
+            {
+               if(pc)
+               {
+                  pc->encode(str);
+               }
+               else
+               {
+                  hfv.encode(str);
+               }
+               return str;
+            }
+            
+            ParserCategory* pc;
+            HeaderFieldValue hfv;
+      };
+
+      typedef std::vector<HeaderKit, StlPoolAllocator<HeaderKit, PoolBase> > Parsers;
+      /**
+        @brief the actual list (vector) of parsers on which encoding is done
+        */
+      Parsers mParsers;
+      PoolBase* mPool;
+      
+      /**
+        @brief copy header kits
+        */
+      void copyParsers(const Parsers& parsers);
+
+      /**
+        @brief free parser containers
+        */
+      void freeParsers();
+      
+      inline void freeParser(HeaderKit& kit)
+      {
+         if(kit.pc)
+         {
+            kit.pc->~ParserCategory();
+            if(mPool)
+            {
+               mPool->deallocate(kit.pc);
+            }
+            else
+            {
+               ::operator delete(kit.pc);
+            }
+            kit.pc=0;
+         }
+      }
+
+      inline ParserCategory* makeParser(const ParserCategory& orig)
+      {
+         return orig.clone(mPool);
+      }
 };
  
 }

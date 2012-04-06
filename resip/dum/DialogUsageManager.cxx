@@ -118,6 +118,8 @@ DialogUsageManager::DialogUsageManager(SipStack& stack, bool createDefaultFeatur
    mStack.registerTransactionUser(*this);
    addServerSubscriptionHandler("refer", new DefaultServerReferHandler());
 
+   mFifo.setDescription("DialogUsageManager::mFifo");
+
    mIncomingTarget = new IncomingTarget(*this);
    mOutgoingTarget = new OutgoingTarget(*this);
 
@@ -1273,6 +1275,32 @@ DialogUsageManager::findInviteSession(CallId replaces)
       }
    }
    return make_pair(is, ErrorStatusCode);
+}
+
+AppDialogHandle DialogUsageManager::findAppDialog(const DialogId& id)
+{
+   Dialog* pDialog = findDialog(id);
+
+   if(pDialog && pDialog->mAppDialog)
+   {
+      return pDialog->mAppDialog->getHandle();
+   }
+
+   // Return an invalid handle
+   return AppDialogHandle();
+}
+
+AppDialogSetHandle DialogUsageManager::findAppDialogSet(const DialogSetId& id)
+{
+   DialogSet* pDialogSet = findDialogSet(id);
+
+   if(pDialogSet && pDialogSet->mAppDialogSet)
+   {
+      return pDialogSet->mAppDialogSet->getHandle();
+   }
+
+   // Return an invalid handle
+   return AppDialogSetHandle();
 }
 
 void

@@ -109,7 +109,7 @@ XmlRpcConnection::processSomeReads()
    }
    else if(bytesRead == 0)
    {
-      InfoLog (<< "XmlRpcConnection::processSomeReads: Connection closed by remote");
+      DebugLog (<< "XmlRpcConnection::processSomeReads: Connection closed by remote");
       return false;
    }
 

@@ -8,6 +8,9 @@ namespace resip
 
 class Contents;
 
+/**
+   @internal
+*/
 template<class T>
 class ContentsFactory : public ContentsFactoryBase
 {
@@ -21,7 +24,7 @@ class ContentsFactory : public ContentsFactoryBase
       {}
 
       // pass Mime instance for parameters
-      virtual Contents* create(HeaderFieldValue* hfv, const Mime& contentType) const
+      virtual Contents* create(const HeaderFieldValue& hfv, const Mime& contentType) const
       {
          return new T(hfv, contentType);
       }

@@ -19,11 +19,13 @@ librutil_la_SOURCES = \
 	BaseException.cxx \
 	Coders.cxx \
 	Condition.cxx \
+	ConfigParse.cxx \
 	CountStream.cxx \
 	Data.cxx \
 	DataStream.cxx \
 	DnsUtil.cxx \
 	FileSystem.cxx \
+	GeneralCongestionManager.cxx \
 	HeapInstanceCounter.cxx \
 	Lock.cxx \
 	Log.cxx \
@@ -32,12 +34,14 @@ librutil_la_SOURCES = \
 	ParseBuffer.cxx \
 	ParseException.cxx \
 	Poll.cxx \
+	PoolBase.cxx \
 	FdPoll.cxx \
 	RADIUSDigestAuthenticator.cxx \
 	RWMutex.cxx \
 	Random.cxx \
 	RecursiveMutex.cxx \
 	resipfaststreams.cxx \
+	SelectInterruptor.cxx \
 	Socket.cxx \
 	Subsystem.cxx \
 	SysLogBuf.cxx \
@@ -47,6 +51,7 @@ librutil_la_SOURCES = \
 	Timer.cxx \
 	TransportType.cxx \
 	vmd5.cxx \
+	XMLCursor.cxx \
 	\
 	dns/AresDns.cxx \
 	dns/DnsCnameRecord.cxx \
@@ -54,8 +59,10 @@ librutil_la_SOURCES = \
 	dns/DnsHostRecord.cxx \
 	dns/DnsNaptrRecord.cxx \
 	dns/DnsResourceRecord.cxx \
+	dns/DnsThread.hxx \
 	dns/DnsSrvRecord.cxx \
 	dns/DnsStub.cxx \
+	dns/DnsThread.cxx \
 	dns/ExternalDnsFactory.cxx \
 	dns/RRCache.cxx \
 	dns/RRList.cxx \
@@ -79,6 +86,8 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	wince/WceCompat.hxx \
 	SysLogStream.hxx \
 	AsyncID.hxx \
+	ConfigParse.hxx \
+	GeneralCongestionManager.hxx \
 	HeapInstanceCounter.hxx \
 	SharedCount.hxx \
 	Fifo.hxx \
@@ -103,6 +112,7 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	resipfaststreams.hxx \
 	Coders.hxx \
 	SharedPtr.hxx \
+	SelectInterruptor.hxx \
 	Socket.hxx \
 	dns/ExternalDnsFactory.hxx \
 	dns/DnsStub.hxx \
@@ -136,6 +146,8 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	ssl/OpenSSLInit.hxx \
 	CountStream.hxx \
 	vmd5.hxx \
+	XMLCursor.hxx \
+	PoolBase.hxx \
 	FdPoll.hxx \
 	Time.hxx \
 	Lockable.hxx \

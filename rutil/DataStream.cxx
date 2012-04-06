@@ -136,7 +136,7 @@ oDataStream::oDataStream(Data& str)
    EncodeStream(this)
 {
    // don't call this with a read-only buffer!
-   assert(str.mMine != Data::Share);
+   assert(str.mShareEnum != Data::Share);
 }
 
 oDataStream::~oDataStream()
@@ -166,7 +166,7 @@ DataStream::DataStream(Data& str)
 #endif
 {
    // don't call this with a read-only buffer!
-   assert(str.mMine != Data::Share);
+   assert(str.mShareEnum != Data::Share);
 }
 
 DataStream::~DataStream()

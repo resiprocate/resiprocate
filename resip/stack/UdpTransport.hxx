@@ -28,13 +28,34 @@ public:
    virtual void operator()(UdpTransport* transport, const Tuple& source, std::auto_ptr<Data> unknownDatagram) = 0;
 };
 
+/**
+   @ingroup transports
+
+   @brief A Transport based on UDP.
+
+   @internal Used in test cases, TransportSelector (which is itself
+   internal), DtlsTransport as a base class and in
+   SipStack::addTransport(...).  Not expected to be used in an API.
+*/
 class UdpTransport : public InternalTransport, public FdPollItemIf
 {
 public:
    RESIP_HeapCount(UdpTransport);
-   // Specify which udp port to use for send and receive
-   // interface can be an ip address or dns name. If it is an ip address,
-   // only bind to that interface.
+      /**
+         @param fifo the TransactionMessage Fifo that will receive
+         any ConnectionTerminated or TransportFailure messages.
+      
+         @param interfaceObj a "presentation format" representation
+         of the IP address of this transport
+         @see Tuple::inet_ntop() for information about "presentation
+         format"
+      
+         @param portNum is the port to receive and/or send on
+      
+         @param socketFunc Functor (defined in rutil/Socket.hxx) that is called 
+               when a socket is created; allows app to log fd creation, tweak 
+               sockopts, and so forth.
+      */
    UdpTransport(Fifo<TransactionMessage>& fifo,
                 int portNum,
                 IpVersion version,
@@ -50,6 +71,7 @@ public:
    virtual bool isDatagram() const { return true; }
 
    virtual void process(FdSet& fdset);
+   virtual void process();
    virtual bool hasDataToSend() const;
    virtual void buildFdSet( FdSet& fdset);
    virtual void setPollGrp(FdPollGrp *grp);
@@ -69,7 +91,6 @@ public:
    void setExternalUnknownDatagramHandler(ExternalUnknownDatagramHandler *handler);
 
 protected:
-   virtual void checkTransmitQueue();
 
    void processRxAll();
    int processRxRecv(char*& buffer, Tuple& sender);

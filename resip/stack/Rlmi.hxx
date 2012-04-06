@@ -9,15 +9,22 @@
 namespace resip
 {
 
+/**
+   @ingroup sip_payload
+   @brief SIP body type for holding RLMI contents (MIME content-type application/rlmi+xml).
+*/
 class Rlmi : public Contents
 {
    public:
       Rlmi();
-      Rlmi(HeaderFieldValue* hfv, const Mime& contentType);
+      Rlmi(const HeaderFieldValue& hfv, const Mime& contentType);
       Rlmi(const Rlmi& rhs);
       virtual ~Rlmi();
       Rlmi& operator=(const Rlmi& rhs);
 
+      /** @brief duplicate an Rlmi object
+          @return pointer to a new Rlmi object  
+        **/
       virtual Contents* clone() const;
 
       static const Mime& getStaticType() ;

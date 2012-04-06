@@ -723,7 +723,7 @@ bool EncryptionManager::Decrypt::decrypt(Helper::ContentsSecAttrs& csa)
 
    if (!dynamic_cast<Pkcs7Contents*>(mMsgToDecrypt->getContents()))
    {
-      mOriginalMsgContents = Data(mMsgToDecrypt->getContents()->getHeaderField().mField, mMsgToDecrypt->getContents()->getHeaderField().mFieldLength);
+      mOriginalMsgContents = Data(mMsgToDecrypt->getContents()->getHeaderField().getBuffer(), mMsgToDecrypt->getContents()->getHeaderField().getLength());
       mOriginalMsgContentsType = mMsgToDecrypt->getContents()->getType();
    }
    else
@@ -1005,7 +1005,7 @@ bool EncryptionManager::Decrypt::isSignedRecurse(Contents** contents,
       {
          if (*contents == mMsgToDecrypt->getContents())
          {
-            mOriginalMsgContents = Data(decrypted->getHeaderField().mField, decrypted->getHeaderField().mFieldLength);
+            mOriginalMsgContents = Data(decrypted->getHeaderField().getBuffer(), decrypted->getHeaderField().getLength());
             mOriginalMsgContentsType = decrypted->getType();
          }
          
@@ -1156,7 +1156,7 @@ Contents* EncryptionManager::Decrypt::getContentsRecurse(Contents** tree,
       {
          if (*tree == mMsgToDecrypt->getContents())
          {
-            mOriginalMsgContents = Data(contents->getHeaderField().mField, contents->getHeaderField().mFieldLength);
+            mOriginalMsgContents = Data(contents->getHeaderField().getBuffer(), contents->getHeaderField().getLength());
             mOriginalMsgContentsType = contents->getType();
          }
 
@@ -1318,7 +1318,7 @@ Contents* EncryptionManager::Decrypt::getContentsRecurse(Contents** tree,
 InvalidContents*
 EncryptionManager::Decrypt::createInvalidContents(Contents* orig)
 {
-   Data original(orig->getHeaderField().mField, orig->getHeaderField().mFieldLength);
+   Data original(orig->getHeaderField().getBuffer(), orig->getHeaderField().getLength());
    return new InvalidContents(original, orig->getType());
 }
 

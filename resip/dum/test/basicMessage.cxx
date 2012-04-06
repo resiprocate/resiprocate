@@ -162,14 +162,7 @@ int main(int argc, char *argv[]) {
 	while(true) // (!cmh->isEnded() || !smh->isRcvd() )
 
 	{
-		FdSet fdset;
-
-		// Should these be buildFdSet on the DUM?
-		clientStack.buildFdSet(fdset);
-		int err = fdset.selectMilliSeconds(100);
-		assert ( err != -1 );
-		
-		clientStack.process(fdset);
+		clientStack.process(100);
         while(clientDum.process());
 		//if (!(n++ % 10)) cerr << "|/-\\"[(n/10)%4] << '\b';
 		

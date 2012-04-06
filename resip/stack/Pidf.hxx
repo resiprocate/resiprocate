@@ -13,6 +13,12 @@
 namespace resip
 {
 
+/**
+   @deprecated
+   @brief Deprecated
+   
+   SIP body type for holding PIDF contents (MIME content-type application/pidf+xml).
+*/
 class Pidf : public Contents
 {
    public:
@@ -25,11 +31,15 @@ class Pidf : public Contents
 // end of - only for Pidf (not for CpimContents)
       Pidf();
       Pidf(const Data& txt);
-      Pidf(HeaderFieldValue* hfv, const Mime& contentType);
+      Pidf(const HeaderFieldValue& hfv, const Mime& contentType);
       Pidf(const Data& txt, const Mime& contentType);
       Pidf(const Pidf& rhs);
       virtual ~Pidf();
       Pidf& operator=(const Pidf& rhs);
+
+      /** @brief duplicate an Pidf object
+          @return pointer to a new Pidf object  
+        **/
       virtual Contents* clone() const;
       static const Mime& getStaticType() ;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
@@ -48,7 +58,11 @@ class Pidf : public Contents
 
       static bool init();   
    
-      // only for Pidf (not for CpimContents)
+      
+// only for Pidf (not for CpimContents)
+      /** @deprecated
+	      @brief Deprecated
+	  */
       class Tuple
       {
          public:

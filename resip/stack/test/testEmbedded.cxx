@@ -9,7 +9,7 @@
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
-#define RESIP_COOKIE "-d8754z-"
+#define RESIP_COOKIE "-524287-"
 
 using namespace std;
 using namespace resip;
@@ -126,7 +126,7 @@ main(int argc, char** argv)
 
       cerr << buf << endl;
 
-      assert(buf == "sip:speedy@cathaynetworks.com?Via=SIP%2F2.0%2FTLS%20cathay.com:5066%3Bbranch%3Dz9hG4bK" RESIP_COOKIE "fobbieBletch-1--" RESIP_COOKIE "%3Brport&Via=SIP%2F2.0%2FTCP%20ixolib.com:5067%3Bbranch%3Dz9hG4bK" RESIP_COOKIE "bletchieFoo-1--" RESIP_COOKIE "%3Brport&Route=%3Csip:flibble%40gronk.example.com%3E&CSeq=4178%20ACK");
+      assert(buf == "sip:speedy@cathaynetworks.com?Via=SIP%2F2.0%2FTLS%20cathay.com:5066%3Bbranch%3Dz9hG4bK" RESIP_COOKIE "1---fobbieBletch%3Brport&Via=SIP%2F2.0%2FTCP%20ixolib.com:5067%3Bbranch%3Dz9hG4bK" RESIP_COOKIE "1---bletchieFoo%3Brport&Route=%3Csip:flibble%40gronk.example.com%3E&CSeq=4178%20ACK");
    }
 
    {
@@ -171,7 +171,7 @@ main(int argc, char** argv)
    {
       cerr << "Parse Uri with multiple headers" << endl;
       
-      Data nad("sip:speedy@cathaynetworks.com?Via=SIP/2.0/TLS%20cathay.com:5066%3Bbranch%3Dz9hG4bK" RESIP_COOKIE "fobbieBletch-" RESIP_COOKIE "1&Via=SIP/2.0/TCP%20ixolib.com:5067%3Bbranch%3Dz9hG4bK" RESIP_COOKIE "bletchieFoo-" RESIP_COOKIE "1&CSeq=4178%20ACK");
+      Data nad("sip:speedy@cathaynetworks.com?Via=SIP/2.0/TLS%20cathay.com:5066%3Bbranch%3Dz9hG4bKfobbieBletch-1&Via=SIP/2.0/TCP%20ixolib.com:5067%3Bbranch%3Dz9hG4bKbletchieFoo-1&CSeq=4178%20ACK");
       NameAddr na(nad);
 
       assert(na.uri().hasEmbedded());
@@ -190,7 +190,7 @@ main(int argc, char** argv)
       
       Data nad("INVITE sips:bob@foo.com?CSeq=314159%20ACK SIP/2.0");
       HeaderFieldValue hfv(nad.data(), nad.size());
-      RequestLine na(&hfv, Headers::NONE); 
+      RequestLine na(hfv); 
 
       assert(na.uri().hasEmbedded());
       assert(na.uri().embedded().exists(h_CSeq));
@@ -203,7 +203,7 @@ main(int argc, char** argv)
       
       Data nad("INVITE sips:bob@foo.com;ttl=134?CSeq=314159%20ACK SIP/2.0");
       HeaderFieldValue hfv(nad.data(), nad.size());
-      RequestLine na(&hfv, Headers::NONE); 
+      RequestLine na(hfv); 
 
       assert(na.uri().hasEmbedded());
       assert(na.uri().embedded().exists(h_CSeq));
@@ -215,9 +215,9 @@ main(int argc, char** argv)
    {
       cerr << "Parse Request-Line with multiple headers" << endl;
       
-      Data nad("INVITE sip:speedy@cathaynetworks.com?Via=SIP/2.0/TLS%20cathay.com:5066%3Bbranch%3Dz9hG4bK" RESIP_COOKIE "fobbieBletch-" RESIP_COOKIE "1&Via=SIP/2.0/TCP%20ixolib.com:5067%3Bbranch%3Dz9hG4bK" RESIP_COOKIE "bletchieFoo-" RESIP_COOKIE "1&CSeq=4178%20ACK SIP/2.0");
+      Data nad("INVITE sip:speedy@cathaynetworks.com?Via=SIP/2.0/TLS%20cathay.com:5066%3Bbranch%3Dz9hG4bKfobbieBletch-1&Via=SIP/2.0/TCP%20ixolib.com:5067%3Bbranch%3Dz9hG4bKbletchieFoo-1&CSeq=4178%20ACK SIP/2.0");
       HeaderFieldValue hfv(nad.data(), nad.size());
-      RequestLine na(&hfv, Headers::NONE); 
+      RequestLine na(hfv); 
 
       assert(na.uri().hasEmbedded());
       assert(na.uri().embedded().exists(h_Vias));

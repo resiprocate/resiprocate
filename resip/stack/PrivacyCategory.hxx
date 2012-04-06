@@ -21,8 +21,11 @@ class PrivacyCategory : public ParserCategory
 
       PrivacyCategory();
       explicit PrivacyCategory(const Data& d);
-      PrivacyCategory(HeaderFieldValue* hfv, Headers::Type type);
-      PrivacyCategory(const PrivacyCategory&);
+      PrivacyCategory(const HeaderFieldValue& hfv, 
+                        Headers::Type type,
+                        PoolBase* pool=0);
+      PrivacyCategory(const PrivacyCategory& orig,
+                        PoolBase* pool=0);
       PrivacyCategory& operator=(const PrivacyCategory&);
 
       const std::vector<Data>& value() const;
@@ -30,6 +33,8 @@ class PrivacyCategory : public ParserCategory
 
       virtual void parse(ParseBuffer& pb); // remember to call parseParameters()
       virtual ParserCategory* clone() const;
+      virtual ParserCategory* clone(void* location) const;
+      virtual ParserCategory* clone(PoolBase* pool) const;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
    private:
       std::vector<Data> mValue;

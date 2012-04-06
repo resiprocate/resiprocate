@@ -11,7 +11,7 @@
 #include "rutil/ParseBuffer.hxx"
 
 #include "resip/stack/UnknownParameterType.hxx"
-#include "resip/stack/XMLCursor.hxx"
+#include "rutil/XMLCursor.hxx"
 
 using namespace resip;
 using namespace std;

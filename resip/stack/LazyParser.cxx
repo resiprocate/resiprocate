@@ -13,42 +13,38 @@
 
 using namespace resip;
 
-LazyParser::LazyParser(HeaderFieldValue* headerFieldValue)
-   : mHeaderField(headerFieldValue),
-      mState(mHeaderField->mField == 0 ? DIRTY : NOT_PARSED),
-      mIsMine(false)
+LazyParser::LazyParser(const HeaderFieldValue& headerFieldValue)
+   : mHeaderField(headerFieldValue, HeaderFieldValue::NoOwnership),
+      mState(mHeaderField.getBuffer() == 0 ? DIRTY : NOT_PARSED)
 {
 }
-  
+
+LazyParser::LazyParser(const HeaderFieldValue& headerFieldValue,
+                        HeaderFieldValue::CopyPaddingEnum e)
+   : mHeaderField(headerFieldValue, e), // Causes ownership to be taken. Oh well
+      mState(mHeaderField.getBuffer() == 0 ? DIRTY : NOT_PARSED)
+{}
+
+LazyParser::LazyParser(const char* buf, int length) :
+   mHeaderField(buf, length),
+   mState(buf == 0 ? DIRTY : NOT_PARSED)
+{}
+
 LazyParser::LazyParser()
-   : mHeaderField(0),
-      mState(DIRTY),
-     mIsMine(true)
+   : mHeaderField(),
+      mState(DIRTY)
 {
 }
 
 LazyParser::LazyParser(const LazyParser& rhs)
-   : mHeaderField(0),
-      mState(rhs.mState),
-     mIsMine(true)
-{
-   if (rhs.mState!=DIRTY && rhs.mHeaderField)
-   {
-      mHeaderField = new HeaderFieldValue(*rhs.mHeaderField);
-   }
-}
+   : mHeaderField((rhs.mState==DIRTY ? HeaderFieldValue::Empty : rhs.mHeaderField)), // Pretty cheap when rhs is DIRTY
+      mState(rhs.mState)
+{}
 
 LazyParser::LazyParser(const LazyParser& rhs,HeaderFieldValue::CopyPaddingEnum e)
-   :  mHeaderField(0),
-      mState(rhs.mState),
-      mIsMine(true)
-{
-   if (rhs.mState!=DIRTY && rhs.mHeaderField)
-   {
-      mHeaderField = new HeaderFieldValue(*rhs.mHeaderField,e);
-   }
-
-}
+   :  mHeaderField((rhs.mState==DIRTY ? HeaderFieldValue::Empty : rhs.mHeaderField), e), // Pretty cheap when rhs is DIRTY
+      mState(rhs.mState)
+{}
 
 
 LazyParser::~LazyParser()
@@ -65,42 +61,24 @@ LazyParser::operator=(const LazyParser& rhs)
    {
       clear();
       mState = rhs.mState;
-      if (rhs.mState==DIRTY)
+      if (rhs.mState!=DIRTY)
       {
-         mHeaderField = 0;
-         mIsMine = false;
-      }
-      else
-      {
-         mHeaderField = new HeaderFieldValue(*rhs.mHeaderField);
-         mIsMine = true;
+         mHeaderField=rhs.mHeaderField;
       }
    }
    return *this;
 }
 
 void
-LazyParser::checkParsed() const
+LazyParser::doParse() const
 {
-   if (mState==NOT_PARSED)
-   {
-      LazyParser* ncThis = const_cast<LazyParser*>(this);
-      // .bwc. We assume the worst, and if the parse succeeds, we update.
-      ncThis->mState = MALFORMED;
-      assert(mHeaderField);
-      ParseBuffer pb(mHeaderField->mField, mHeaderField->mFieldLength, errorContext());
-      ncThis->parse(pb);
-      // .bwc. If we get this far without throwing, the parse has succeeded.
-      ncThis->mState = WELL_FORMED;
-   }
-}
-
-void
-LazyParser::checkParsed()
-{
-   const LazyParser* constThis = const_cast<const LazyParser*>(this);
-   constThis->checkParsed();
-   mState=DIRTY;
+   LazyParser* ncThis = const_cast<LazyParser*>(this);
+   // .bwc. We assume the worst, and if the parse succeeds, we update.
+   ncThis->mState = MALFORMED;
+   ParseBuffer pb(mHeaderField.getBuffer(), mHeaderField.getLength(), errorContext());
+   ncThis->parse(pb);
+   // .bwc. If we get this far without throwing, the parse has succeeded.
+   ncThis->mState = WELL_FORMED;
 }
 
 bool
@@ -120,11 +98,7 @@ LazyParser::isWellFormed() const
 void
 LazyParser::clear()
 {
-   if (mIsMine)
-   {
-      delete mHeaderField;
-      mHeaderField = 0;
-   }
+   mHeaderField.clear();
 }
 
 EncodeStream&
@@ -136,8 +110,7 @@ LazyParser::encode(EncodeStream& str) const
    }
    else
    {
-      assert(mHeaderField);
-      mHeaderField->encode(str);
+      mHeaderField.encode(str);
       return str;
    }
 }

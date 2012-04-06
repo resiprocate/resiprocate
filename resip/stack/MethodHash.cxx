@@ -1,5 +1,5 @@
-/* C++ code produced by gperf version 3.0.3 */
-/* Command-line: gperf -D -E -L C++ -t -k '*' --compare-strncmp -Z MethodHash MethodHash.gperf  */
+/* C++ code produced by gperf version 3.0.4 */
+/* Command-line: gperf -C -D -E -L C++ -t -k '*' --compare-strncmp -Z MethodHash MethodHash.gperf  */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
       && ('%' == 37) && ('&' == 38) && ('\'' == 39) && ('(' == 40) \
@@ -45,13 +45,13 @@ class MethodHash
 private:
   static inline unsigned int hash (const char *str, unsigned int len);
 public:
-  static struct methods *in_word_set (const char *str, unsigned int len);
+  static const struct methods *in_word_set (const char *str, unsigned int len);
 };
 
 inline unsigned int
 MethodHash::hash (register const char *str, register unsigned int len)
 {
-  static unsigned char asso_values[] =
+  static const unsigned char asso_values[] =
     {
       35, 35, 35, 35, 35, 35, 35, 35, 35, 35,
       35, 35, 35, 35, 35, 35, 35, 35, 35, 35,
@@ -115,7 +115,7 @@ MethodHash::hash (register const char *str, register unsigned int len)
   return hval;
 }
 
-struct methods *
+const struct methods *
 MethodHash::in_word_set (register const char *str, register unsigned int len)
 {
   enum
@@ -127,7 +127,7 @@ MethodHash::in_word_set (register const char *str, register unsigned int len)
       MAX_HASH_VALUE = 34
     };
 
-  static struct methods wordlist[] =
+  static const struct methods wordlist[] =
     {
 #line 24 "MethodHash.gperf"
       {"INFO", INFO},
@@ -163,7 +163,7 @@ MethodHash::in_word_set (register const char *str, register unsigned int len)
       {"SUBSCRIBE", SUBSCRIBE}
     };
 
-  static signed char lookup[] =
+  static const signed char lookup[] =
     {
       -1, -1, -1, -1,  0,  1,  2,  3,  4, -1, -1,  5,  6,  7,
       -1,  8,  9, 10, 11, -1, -1, 12, -1, 13, -1, -1, -1, 14,

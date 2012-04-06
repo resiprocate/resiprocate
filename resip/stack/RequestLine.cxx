@@ -8,7 +8,7 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
-#include "rutil/WinLeakCheck.hxx"
+//#include "rutil/WinLeakCheck.hxx"  // not compatible with placement new used below
 
 using namespace resip;
 using namespace std;
@@ -18,6 +18,13 @@ using namespace std;
 //====================
 // RequestLine:
 //====================
+RequestLine::RequestLine()
+   : StartLine(),
+     mMethod(UNKNOWN),
+     mUnknownMethodName(Data::Share,getMethodName(UNKNOWN)),
+     mSipVersion(Data::Share,Symbols::DefaultSipVersion)
+{}
+
 RequestLine::RequestLine(MethodTypes method, 
                          const Data& sipVersion)
    : mMethod(method),
@@ -25,15 +32,22 @@ RequestLine::RequestLine(MethodTypes method,
      mSipVersion(sipVersion)
 {}
 
-RequestLine::RequestLine(HeaderFieldValue* hfv, Headers::Type type) 
-   : ParserCategory(hfv, type),
+RequestLine::RequestLine(const HeaderFieldValue& hfv) 
+   : StartLine(hfv),
      mMethod(UNKNOWN),
-     mUnknownMethodName(getMethodName(UNKNOWN)),
-     mSipVersion(Symbols::DefaultSipVersion)
+     mUnknownMethodName(Data::Share,getMethodName(UNKNOWN)),
+     mSipVersion(Data::Share,Symbols::DefaultSipVersion)
 {}
-      
+
+RequestLine::RequestLine(const char* buf, int len) :
+   StartLine(buf, len),
+   mMethod(UNKNOWN),
+   mUnknownMethodName(Data::Share,getMethodName(UNKNOWN)),
+   mSipVersion(Data::Share,Symbols::DefaultSipVersion)
+{}
+
 RequestLine::RequestLine(const RequestLine& rhs)
-   : ParserCategory(rhs),
+   : StartLine(rhs),
      mUri(rhs.mUri),
      mMethod(rhs.mMethod),
      mUnknownMethodName(rhs.mUnknownMethodName),
@@ -45,7 +59,7 @@ RequestLine::operator=(const RequestLine& rhs)
 {
    if (this != &rhs)
    {
-      ParserCategory::operator=(rhs);
+      StartLine::operator=(rhs);
       mUri = rhs.mUri;
       mMethod = rhs.mMethod;
       mUnknownMethodName = rhs.mUnknownMethodName;
@@ -57,10 +71,16 @@ RequestLine::operator=(const RequestLine& rhs)
 RequestLine::~RequestLine()
 {}
 
-ParserCategory *
+StartLine *
 RequestLine::clone() const
 {
    return new RequestLine(*this);
+}
+
+StartLine *
+RequestLine::clone(void* location) const
+{
+   return new (location) RequestLine(*this);
 }
 
 const Uri&
@@ -144,6 +164,12 @@ RequestLine::encodeParsed(EncodeStream& str) const
    return str;
 }
 
+const Data& 
+RequestLine::errorContext() const
+{
+   static const Data reqLine("Request Line");
+   return reqLine;
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

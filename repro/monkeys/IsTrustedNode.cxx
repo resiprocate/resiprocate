@@ -8,6 +8,7 @@
 #include "repro/monkeys/IsTrustedNode.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/Proxy.hxx"
+#include "repro/ProxyConfig.hxx"
 #include "repro/AclStore.hxx"
 #include <ostream>
 
@@ -18,8 +19,8 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
-IsTrustedNode::IsTrustedNode(AclStore& store) :
-   mAclStore(store)
+IsTrustedNode::IsTrustedNode(ProxyConfig& config) :
+   mAclStore(config.getDataStore()->mAclStore)
 {}
 
 IsTrustedNode::~IsTrustedNode()

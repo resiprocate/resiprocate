@@ -32,10 +32,7 @@ main(int argc, char* argv[])
 
    while(true)
    {
-      FdSet fdset; 
-      stack.buildFdSet(fdset);
-      fdset.selectMilliSeconds(1000); 
-      stack.process(fdset);
+      stack.process(1000);
       SipMessage* msg = stack.receive();
       if (msg && msg->isRequest())
       {

@@ -26,12 +26,99 @@ ReTurnConfig::ReTurnConfig() :
    mTlsServerCertificateFilename("server.pem"),
    mTlsTempDhFilename("dh512.pem"),
    mTlsPrivateKeyPassword("password"),
-   mLoggingType(resip::Log::Cout),
-   mLoggingLevel(resip::Log::Info),
+   mLoggingType("cout"),
+   mLoggingLevel("INFO"),
    mLoggingFilename("reTurnServer.log"),
-   mLoggingFileMaxLineCount(50000)  // 50000 about 5M size
+   mLoggingFileMaxLineCount(50000),  // 50000 about 5M size
+   mDaemonize(false)
 {
    mAuthenticationCredentials["test"] = "1234";
+   calcUserAuthData();
+}
+
+ReTurnConfig::ReTurnConfig(int argc, char** argv, const resip::Data& defaultConfigFilename) :
+   resip::ConfigParse(argc, argv, defaultConfigFilename),
+   mTurnPort(getConfigUnsignedShort("TurnPort", 3478)),
+   mTlsTurnPort(getConfigUnsignedShort("TlsTurnPort", 5349)),
+   mAltStunPort(getConfigUnsignedShort("AltStunPort", 0)),
+   mTurnAddress(asio::ip::address::from_string(
+      getConfigData("TurnAddress", "0.0.0.0").c_str())),
+   mAltStunAddress(asio::ip::address::from_string(
+      getConfigData("AltStunAddress", "0.0.0.0").c_str())),
+   mAuthenticationMode(LongTermPassword),
+   mAuthenticationRealm(getConfigData("AuthenticationRealm", "reTurn")),
+   mNonceLifetime(getConfigUnsignedLong("NonceLifetime", 3600)),
+   mAllocationPortRangeMin(getConfigUnsignedShort("AllocationPortRangeMin", 49152)),
+   mAllocationPortRangeMax(getConfigUnsignedShort("AllocationPortRangeMax", 65535)),
+   mDefaultAllocationLifetime(getConfigUnsignedLong("DefaultAllocationLifetime", 600)),
+   mMaxAllocationLifetime(getConfigUnsignedLong("MaxAllocationLifetime", 3600)),
+   mMaxAllocationsPerUser(getConfigUnsignedLong("MaxAllocationsPerUser", 0)),
+   mTlsServerCertificateFilename(getConfigData("TlsServerCertificateFilename", "server.pem")),
+   mTlsTempDhFilename(getConfigData("TlsTempDhFilename", "dh512.pem")),
+   mTlsPrivateKeyPassword(getConfigData("TlsPrivateKeyPassword", "")),
+   mLoggingType(getConfigData("LoggingType", "cout")),
+   mLoggingLevel(getConfigData("LoggingLevel", "INFO")),
+   mLoggingFilename(getConfigData("LogFilename", "reTurnServer.log")),
+   mLoggingFileMaxLineCount(getConfigUnsignedLong("LogFileMaxLines", 50000)),
+   mDaemonize(getConfigBool("Daemonize", false))
+{
+   int authMode = getConfigUnsignedShort("AuthenticationMode", 2);
+   switch(authMode)
+   {
+   case 0: mAuthenticationMode = NoAuthentication; break;
+   case 1: mAuthenticationMode = ShortTermPassword; break;
+   case 2: mAuthenticationMode = LongTermPassword; break;
+   default: 
+      throw std::runtime_error("Unsupported AuthenticationMode value in config");
+   }
+
+   // fork is not possible on Windows
+#ifdef WIN32
+   if(mDaemonize)
+   {
+      throw std::runtime_error("Unable to fork/daemonize on Windows, please check the config");
+   }
+#endif
+
+   Data user(getConfigData("LongTermAuthUsername", ""));
+   Data password(getConfigData("LongTermAuthPassword", ""));
+
+   if(user.size() == 0 || password.size() == 0)
+   {
+      throw std::runtime_error("Missing or invalid credentials (LongTermAuthUsername/LongTermAuthPassword");
+   }
+
+   mAuthenticationCredentials[user] = password;
+   calcUserAuthData();
+}
+
+ReTurnConfig::~ReTurnConfig()
+{
+}
+
+void
+ReTurnConfig::calcUserAuthData()
+{
+   RealmUsers& realmUsers(mUsers[mAuthenticationRealm]);
+   std::map<resip::Data,resip::Data>::const_iterator it = mAuthenticationCredentials.begin();
+   while(it != mAuthenticationCredentials.end())
+   {
+      UserAuthData newUser(UserAuthData::createFromPassword(
+            it->first,
+            mAuthenticationRealm,
+            it->second));
+      realmUsers.insert(pair<resip::Data,UserAuthData>(it->first,  newUser));
+      it++;
+   }
+}
+
+void
+ReTurnConfig::printHelpText(int argc, char **argv)
+{
+   std::cerr << "Command line format is:" << std::endl;
+   std::cerr << "  " << argv[0] << " [<ConfigFilename>] [--<ConfigValueName>=<ConfigValue>] [--<ConfigValueName>=<ConfigValue>] ..." << std::endl;
+   std::cerr << "Sample Command lines:" << std::endl;
+   std::cerr << "  " << argv[0] << "reTurnServer.config --LogLevel=INFO" << std::endl;
 }
 
 bool 
@@ -53,6 +140,21 @@ ReTurnConfig::getPasswordForUsername(const Data& username) const
    {
       return Data::Empty;
    }
+}
+
+const UserAuthData*
+ReTurnConfig::getUser(const resip::Data& userName, const resip::Data& realm) const
+{
+   std::map<resip::Data,RealmUsers>::const_iterator it = mUsers.find(realm);
+   if(it == mUsers.end())
+      return NULL;
+
+   RealmUsers realmUsers = it->second;
+   RealmUsers::const_iterator it2 = realmUsers.find(userName);
+   if(it2 == realmUsers.end())
+      return NULL;
+
+   return &(it2->second);
 }
 
 

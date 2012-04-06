@@ -3,7 +3,7 @@
 
 #include <rutil/Data.hxx>
 #include <rutil/TransportType.hxx>
-#include <resip/stack/XMLCursor.hxx>
+#include <rutil/XMLCursor.hxx>
 #include <resip/dum/InMemorySyncRegDb.hxx>
 #include "repro/XmlRpcServerBase.hxx"
 

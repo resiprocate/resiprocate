@@ -481,6 +481,30 @@ Helper::makeResponse(const SipMessage& request,
    return response.release();
 }
 
+void
+Helper::makeRawResponse(Data& raw,
+                        const SipMessage& msg, 
+                        int responseCode,
+                        const Data& additionalHeaders,
+                        const Data& body)
+{
+   raw.reserve(256);
+   {
+      DataStream encodeStream(raw);
+      encodeStream << "SIP/2.0 " << responseCode << " ";
+      Data reason;
+      getResponseCodeReason(responseCode, reason);
+      encodeStream << reason;
+      msg.encodeSingleHeader(Headers::Via,encodeStream);
+      msg.encodeSingleHeader(Headers::To,encodeStream);
+      msg.encodeSingleHeader(Headers::From,encodeStream);
+      msg.encodeSingleHeader(Headers::CallID,encodeStream);
+      msg.encodeSingleHeader(Headers::CSeq,encodeStream);
+      encodeStream << additionalHeaders;
+      encodeStream << "Content-Length: " << body.size() << "\r\n\r\n";
+   }
+}
+
 void   
 Helper::getResponseCodeReason(int responseCode, Data& reason)
 {
@@ -642,7 +666,7 @@ Helper::computeCallId()
    hostAndSalt.append((char*)&threadId,sizeof(threadId));
 #endif
 #endif // of USE_SSL
-   return hostAndSalt.md5().base64encode(true);
+   return hostAndSalt.md5(Data::BASE64);
 }
 
 Data
@@ -1298,9 +1322,9 @@ Helper::updateNonceCount(unsigned int& nonceCount, Data& nonceCountString)
 	   *buf = 0;
 
 #if (defined(_MSC_VER) && _MSC_VER >= 1400)
-	   sprintf_s(buf,128,"%08X",nonceCount);
+	   sprintf_s(buf,128,"%08x",nonceCount);
 #else
-	   sprintf(buf,"%08X",nonceCount);
+	   sprintf(buf,"%08x",nonceCount);
 #endif
 	   nonceCountString = buf;
    }

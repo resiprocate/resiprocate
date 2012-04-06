@@ -57,6 +57,8 @@ TlsTransport::TlsTransport(Fifo<TransactionMessage>& fifo,
    InfoLog (<< "Creating TLS transport for domain " 
             << sipDomain << " interface=" << interfaceObj 
             << " port=" << mTuple.getPort());
+
+   mTxFifo.setDescription("TlsTransport::mTxFifo");
 }
 
 

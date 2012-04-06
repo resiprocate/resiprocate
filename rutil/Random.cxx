@@ -301,7 +301,7 @@ Random::getRandom()
 #else
    // random returns [0,RAN_MAX]. On Linux, this is 31 bits and positive.
    // On some platforms it might be on 15 bits, and will need to do something.
-   assert( RAND_MAX == ((1<<31)-1) );
+   // assert( RAND_MAX == ((1<<31)-1) );  // ?slg? commented out assert since, RAND_MAX is not used in random(), it applies to rand() only
    return random(); 
 #endif  // THREAD_LOCAL
 #endif // WIN32
@@ -354,47 +354,32 @@ Random::getRandom(unsigned int len)
 Data 
 Random::getCryptoRandom(unsigned int len)
 {
-   initialize();
-   assert(len < Random::maxLength+1);
-   
-   union 
-   {
-         char cbuf[Random::maxLength+1];
-         unsigned int  ibuf[(Random::maxLength+1)/sizeof(int)];
-   };
-   
-   for (unsigned int count=0; count<(len+sizeof(int)-1)/sizeof(int); ++count)
-   {
-      ibuf[count] = Random::getCryptoRandom();
-   }
-   return Data(cbuf, len);
+   unsigned char* buf = new unsigned char[len];
+   getCryptoRandom(buf, len); // USE_SSL check is in here
+   return Data(Data::Take, (char*)buf, len);
 }
 
 Data 
 Random::getRandomHex(unsigned int numBytes)
 {
-   initialize();
    return Random::getRandom(numBytes).hex();
 }
 
 Data 
 Random::getRandomBase64(unsigned int numBytes)
 {
-   initialize();
    return Random::getRandom(numBytes).base64encode();
 }
 
 Data 
 Random::getCryptoRandomHex(unsigned int numBytes)
 {
-   initialize();
    return Random::getCryptoRandom(numBytes).hex();
 }
 
 Data 
 Random::getCryptoRandomBase64(unsigned int numBytes)
 {
-   initialize();
    return Random::getCryptoRandom(numBytes).base64encode();
 }
 
@@ -453,6 +438,32 @@ Random::getVersion4UuidUrn()
   urn += "-";
   urn += getCryptoRandomHex(6); // node
   return urn;
+}
+
+void 
+Random::getCryptoRandom(unsigned char* buf, unsigned int numBytes)
+{
+   assert(numBytes < Random::maxLength+1);
+
+#if USE_OPENSSL
+   initialize();
+   int e = RAND_bytes( (unsigned char*)buf , numBytes );
+   if ( e < 0 )
+   {
+      // error of some type - likely not enough rendomness to dod this 
+      long err = ERR_get_error();
+      
+      char buf[1024];
+      ERR_error_string_n(err,buf,sizeof(buf));
+      
+      ErrLog( << buf );
+      assert(0);
+   }
+#else
+   // !bwc! Should optimize this.
+   Data temp=Random::getRandom(numBytes);
+   memcpy(buf, temp.data(), numBytes);
+#endif
 }
 
 #ifdef WIN32

@@ -5,7 +5,7 @@
 #include "resip/stack/UInt32Category.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
-#include "rutil/WinLeakCheck.hxx"
+//#include "rutil/WinLeakCheck.hxx"  // not compatible with placement new used below
 
 using namespace resip;
 using namespace std;
@@ -21,14 +21,17 @@ UInt32Category::UInt32Category()
      mComment() 
 {}
 
-UInt32Category::UInt32Category(HeaderFieldValue* hfv, Headers::Type type)
-   : ParserCategory(hfv, type), 
+UInt32Category::UInt32Category(const HeaderFieldValue& hfv, 
+                                 Headers::Type type,
+                                 PoolBase* pool)
+   : ParserCategory(hfv, type, pool), 
      mValue(0), 
      mComment() 
 {}
 
-UInt32Category::UInt32Category(const UInt32Category& rhs)
-   : ParserCategory(rhs),
+UInt32Category::UInt32Category(const UInt32Category& rhs,
+                                 PoolBase* pool)
+   : ParserCategory(rhs, pool),
      mValue(rhs.mValue),
      mComment(rhs.mComment)
 {}
@@ -48,6 +51,17 @@ UInt32Category::operator=(const UInt32Category& rhs)
 ParserCategory* UInt32Category::clone() const
 {
    return new UInt32Category(*this);
+}
+
+ParserCategory* UInt32Category::clone(void* location) const
+{
+   return new (location) UInt32Category(*this);
+}
+
+ParserCategory* 
+UInt32Category::clone(PoolBase* pool) const
+{
+   return new (pool) UInt32Category(*this, pool);
 }
 
 const UInt32& 
@@ -117,11 +131,11 @@ UInt32Category::encodeParsed(EncodeStream& str) const
 ParameterTypes::Factory UInt32Category::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
 
 Parameter* 
-UInt32Category::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+UInt32Category::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool)
 {
-   if(ParameterFactories[type])
+   if(type > ParameterTypes::UNKNOWN && type < ParameterTypes::MAX_PARAMETER && ParameterFactories[type])
    {
-      return ParameterFactories[type](type, pb, terminators);
+      return ParameterFactories[type](type, pb, terminators, pool);
    }
    return 0;
 }

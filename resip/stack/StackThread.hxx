@@ -15,13 +15,17 @@ class SipStack;
 
    The thread provides cycles to the SipStack by calling process.  Process
    is called at least every 25ms, or sooner if select returns a signaled
-   file descriptor.  This is also the canonical example code for how to run
-   SipStack's process-loop, if you want to do it yourself.
+   file descriptor. 
+
+   @deprecated This is a deprecated method of giving the SipStack cycles.
+      The current canonical example is EventStackThread.
 */
 class StackThread : public ThreadIf
 {
    public:
-      StackThread(SipStack& stack);
+      // *sigh* doesn't end up yielding a very good warning, but at least you 
+      // get a line number.
+      RESIP_DEPRECATED StackThread(SipStack& stack);
       virtual ~StackThread();
       
       virtual void thread();

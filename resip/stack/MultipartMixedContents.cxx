@@ -40,7 +40,7 @@ MultipartMixedContents::MultipartMixedContents(const Mime& contentsType)
    }
 }
 
-MultipartMixedContents::MultipartMixedContents(HeaderFieldValue* hfv, const Mime& contentsType)
+MultipartMixedContents::MultipartMixedContents(const HeaderFieldValue& hfv, const Mime& contentsType)
    : Contents(hfv, contentsType),
      mContents()
 {

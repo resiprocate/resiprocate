@@ -307,12 +307,12 @@ TurnAsyncSocket::doSetActiveDestination(const asio::ip::address& address, unsign
    }
    else
    {
-      // No channel binding yet (ie. not data sent or received from remote peer) - so create one
+      // No channel binding yet (ie. no data sent or received from remote peer) - so create one
       mActiveDestination = mChannelManager.createChannelBinding(remoteTuple);
       assert(mActiveDestination);
       doChannelBinding(*mActiveDestination);
    }
-   DebugLog(<< "TurnAsyncSocket::doSetActiveDestination: Active Destination set to: " << remoteTuple);
+   DebugLog(<< "TurnAsyncSocket::doSetActiveDestination: Active Destination set to: " << remoteTuple << ", channel=" << mActiveDestination->getChannel());
    if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSetActiveDestinationSuccess(getSocketDescriptor());
 }
 
@@ -389,7 +389,7 @@ TurnAsyncSocket::createNewStunMessage(UInt16 stunclass, UInt16 method, bool addA
 void
 TurnAsyncSocket::sendStunMessage(StunMessage* message, bool reTransmission)
 {
-#define REQUEST_BUFFER_SIZE 1024
+#define REQUEST_BUFFER_SIZE 2048
    boost::shared_ptr<DataBuffer> buffer = AsyncSocketBase::allocateBuffer(REQUEST_BUFFER_SIZE);
    unsigned int bufferSize;
    bufferSize = message->stunEncodeMessage((char*)buffer->data(), REQUEST_BUFFER_SIZE);
@@ -588,65 +588,59 @@ TurnAsyncSocket::handleStunMessage(StunMessage& stunMessage)
             // Stray response - dropping
             return asio::error_code(reTurn::StrayResponse, asio::error::misc_category);
          }
-         else
+
+         boost::shared_ptr<RequestEntry> requestEntry = it->second;
+         mActiveRequestMap.erase(it);
+         requestEntry->stopTimer();
+
+         // If a realm and nonce attributes are present and the response is a 401 or 438 (Nonce Expired), 
+         // then re-issue request with new auth attributes
+         if(stunMessage.mHasRealm &&
+            stunMessage.mHasNonce &&
+            stunMessage.mHasErrorCode && 
+            stunMessage.mErrorCode.errorClass == 4 &&
+            ((stunMessage.mErrorCode.number == 1 && mHmacKey.empty()) ||  // Note if 401 error then ensure we haven't already tried once - if we've tried then mHmacKey will be populated
+            stunMessage.mErrorCode.number == 38))
          {
-            it->second->stopTimer();
+            mNonce = *stunMessage.mNonce;
+            mRealm = *stunMessage.mRealm;
+            stunMessage.calculateHmacKey(mHmacKey, mUsername, mRealm, mPassword);
 
-            // If a realm and nonce attributes are present and the response is a 401 or 438 (Nonce Expired), 
-            // then re-issue request with new auth attributes
-            if(stunMessage.mHasRealm &&
-               stunMessage.mHasNonce &&
-               stunMessage.mHasErrorCode && 
-               stunMessage.mErrorCode.errorClass == 4 &&
-               ((stunMessage.mErrorCode.number == 1 && mHmacKey.empty()) ||  // Note if 401 error then ensure we haven't already tried once - if we've tried then mHmacKey will be populated
-               stunMessage.mErrorCode.number == 38))
-            {
-               mNonce = *stunMessage.mNonce;
-               mRealm = *stunMessage.mRealm;
-               stunMessage.calculateHmacKey(mHmacKey, mUsername, mRealm, mPassword);
+            // Create a new transaction - by starting with old request
+            StunMessage* newRequest = requestEntry->mRequestMessage;
+            requestEntry->mRequestMessage = 0;  // clear out pointer in mActiveRequestMap so that it will not be deleted
 
-               // Create a new transaction - by starting with old request
-               StunMessage* newRequest = it->second->mRequestMessage;
-               it->second->mRequestMessage = 0;  // clear out pointer in mActiveRequestMap so that it will not be deleted
-               mActiveRequestMap.erase(it);
-
-               newRequest->createHeader(newRequest->mClass, newRequest->mMethod);  // updates TID
-               newRequest->mHasMessageIntegrity = true;
-               newRequest->setUsername(mUsername.c_str()); 
-               newRequest->mHmacKey = mHmacKey;
-               newRequest->setRealm(mRealm.c_str());
-               newRequest->setNonce(mNonce.c_str());
-               sendStunMessage(newRequest);
-               return errorCode;
-            }          
-         }
+            newRequest->createHeader(newRequest->mClass, newRequest->mMethod);  // updates TID
+            newRequest->mHasMessageIntegrity = true;
+            newRequest->setUsername(mUsername.c_str()); 
+            newRequest->mHmacKey = mHmacKey;
+            newRequest->setRealm(mRealm.c_str());
+            newRequest->setNonce(mNonce.c_str());
+            sendStunMessage(newRequest);
+            return errorCode;
+         }          
 
          switch (stunMessage.mMethod) 
          {
          case StunMessage::BindMethod:
-            errorCode = handleBindResponse(*it->second->mRequestMessage, stunMessage);
+            errorCode = handleBindResponse(*requestEntry->mRequestMessage, stunMessage);
             break;
          case StunMessage::SharedSecretMethod:
-            errorCode = handleSharedSecretResponse(*it->second->mRequestMessage, stunMessage);
+            errorCode = handleSharedSecretResponse(*requestEntry->mRequestMessage, stunMessage);
             break;
          case StunMessage::TurnAllocateMethod:
-            errorCode = handleAllocateResponse(*it->second->mRequestMessage, stunMessage);
+            errorCode = handleAllocateResponse(*requestEntry->mRequestMessage, stunMessage);
             break;
          case StunMessage::TurnRefreshMethod:
-            errorCode = handleRefreshResponse(*it->second->mRequestMessage, stunMessage);
+            errorCode = handleRefreshResponse(*requestEntry->mRequestMessage, stunMessage);
             break;
          case StunMessage::TurnChannelBindMethod:
-            errorCode = handleChannelBindResponse(*it->second->mRequestMessage, stunMessage);
+            errorCode = handleChannelBindResponse(*requestEntry->mRequestMessage, stunMessage);
             break;
          default:
             // Unknown method - just ignore
             break;
          }
-
-         // Remove request from map if we haven't already cleared the map above;
-         // (the handlers may have cleared the ActiveRequestMap when trying to close the connection)
-		 if (!mActiveRequestMap.empty())
-			mActiveRequestMap.erase(it);
       }
       break;
 
@@ -1136,6 +1130,7 @@ TurnAsyncSocket::RequestEntry::stopTimer()
 TurnAsyncSocket::RequestEntry::~RequestEntry() 
 { 
    delete mRequestMessage; 
+   stopTimer();
 }
 
 void 
@@ -1172,7 +1167,10 @@ TurnAsyncSocket::requestTimeout(UInt128 tid)
    RequestMap::iterator it = mActiveRequestMap.find(tid);
    if(it != mActiveRequestMap.end())
    {
-      switch(it->second->mRequestMessage->mMethod)
+      boost::shared_ptr<RequestEntry> requestEntry = it->second;
+      mActiveRequestMap.erase(it);
+
+      switch(requestEntry->mRequestMessage->mMethod)
       {
       case StunMessage::BindMethod:
          if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onBindFailure(getSocketDescriptor(), asio::error_code(reTurn::ResponseTimeout, asio::error::misc_category));
@@ -1194,11 +1192,6 @@ TurnAsyncSocket::requestTimeout(UInt128 tid)
       default:
          assert(false);
       }
-
-	  // Remove request from map if we haven't already cleared the map above
-	  // (the handlers may have cleared the ActiveRequestMap when trying to close the connection)
-	  if (!mActiveRequestMap.empty())
-	      mActiveRequestMap.erase(it);
    }
 }
 

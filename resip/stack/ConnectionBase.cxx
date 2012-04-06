@@ -63,7 +63,9 @@ ConnectionBase::ConnectionBase(Transport* transport, const Tuple& who, Compressi
    DebugLog (<< "No compression library available: " << this);
 #endif
 
+   // deprecated; stop doing this eventually
    mWho.transport=mTransport;
+   mWho.transportKey=mTransport ? mTransport->getKey() : 0;
 }
 
 ConnectionBase::~ConnectionBase()
@@ -107,7 +109,7 @@ ConnectionBase::getFlowKey() const
    return mWho.mFlowKey;
 }
 
-void
+bool
 ConnectionBase::preparseNewBytes(int bytesRead)
 {
    DebugLog(<< "In State: " << connectionStates[mConnState]);
@@ -132,7 +134,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             {
                delete [] mBuffer;
                mBuffer = 0;
-               return;
+               return true;
             }
          }
          else if (strncmp(mBuffer + mBufferPos, Symbols::CRLF, 2) == 0)
@@ -149,7 +151,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             {
                delete [] mBuffer;
                mBuffer = 0;
-               return;
+               return true;
             }
          }
 
@@ -190,8 +192,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             delete mMessage;
             mMessage = 0;
             mConnState=NewMessage;
-            delete this;
-            return;
+            return false;
          }
 
          if (mMsgHeaderScanner.getHeaderCount() > 256)
@@ -202,8 +203,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             delete mMessage;
             mMessage = 0;
             mConnState=NewMessage;
-            delete this;
-            return;
+            return false;
          }
 
          unsigned int numUnprocessedChars = 
@@ -219,8 +219,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             delete mMessage;
             mMessage = 0;
             mConnState=NewMessage;
-            delete this;
-            return;
+            return false;
          }
 
          if(numUnprocessedChars==chunkLength)
@@ -239,9 +238,8 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             }
             catch(std::bad_alloc&)
             {
-               delete this; // d'tor deletes mBuffer and mMessage
                ErrLog(<<"Failed to alloc a buffer during preparse!");
-               return;
+               return false;
             }
             memcpy(newBuffer, unprocessedCharPtr, numUnprocessedChars);
             delete [] mBuffer;
@@ -249,7 +247,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             mBufferPos = numUnprocessedChars;
             mBufferSize = size;
             mConnState = ReadingHeaders;
-            return;
+            return true;
          }
 
          mMessage->addBuffer(mBuffer);
@@ -269,9 +267,8 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                }
                catch(std::bad_alloc&)
                {
-                  delete this;  // d'tor deletes stuff
                   ErrLog(<<"Failed to alloc a buffer during preparse!");
-                  return;
+                  return false;
                }
                mBufferPos = 0;
                mBufferSize = ChunkSize;
@@ -291,9 +288,8 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                }
                catch(std::bad_alloc&)
                {
-                  delete this;  // d'tor deletes stuff
                   ErrLog(<<"Failed to alloc a buffer during preparse!");
-                  return;
+                  return false;
                }
                memcpy(newBuffer, unprocessedCharPtr, numUnprocessedChars);
                mBuffer = newBuffer;
@@ -303,7 +299,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             mConnState = ReadingHeaders;
          }
          else
-         {         
+         {
             size_t contentLength = 0;
             
             try
@@ -311,7 +307,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                // The message header is complete.
                contentLength=mMessage->const_header(h_ContentLength).value();
             }
-            catch(resip::ParseException& e)
+            catch(resip::BaseException& e)  // Could be SipMessage::Exception or ParseException
             {
                WarningLog(<<"Malformed Content-Length in connection-based transport"
                            ". Not much we can do to fix this.  " << e);
@@ -322,8 +318,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                // .bwc. mMessage just took ownership of mBuffer, so we don't
                // delete it here. We do zero it though, for completeness.
                //.jacob. Shouldn't the state also be set here?
-               delete this;
-               return;
+               return false;
             }
             
             if(contentLength > 10485760 || contentLength < 0)
@@ -338,8 +333,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                // .bwc. mMessage just took ownership of mBuffer, so we don't
                // delete it here. We do zero it though, for completeness.
                //.jacob. Shouldn't the state also be set here?
-               delete this;
-               return;
+               return false;
             }
 
             if (numUnprocessedChars < contentLength)
@@ -390,7 +384,30 @@ ConnectionBase::preparseNewBytes(int bytesRead)
 
                // The message body is complete.
                mMessage->setBody(unprocessedCharPtr, (UInt32)contentLength);
-               if (!transport()->basicCheck(*mMessage))
+               CongestionManager::RejectionBehavior b=mTransport->getRejectionBehaviorForIncoming();
+               if (b==CongestionManager::REJECTING_NON_ESSENTIAL
+                     || (b==CongestionManager::REJECTING_NEW_WORK
+                        && mMessage->isRequest()))
+               {
+                  UInt32 expectedWait(mTransport->getExpectedWaitForIncoming());
+                  // .bwc. If this fifo is REJECTING_NEW_WORK, we will drop
+                  // requests but not responses ( ?bwc? is this right for ACK?). 
+                  // If we are REJECTING_NON_ESSENTIAL, 
+                  // we reject all incoming work, since losing something from the 
+                  // wire will not cause instability or leaks (see 
+                  // CongestionManager.hxx)
+                  
+                  // .bwc. This handles all appropriate checking for whether
+                  // this is a response or an ACK.
+                  std::auto_ptr<SendData> tryLater(transport()->make503(*mMessage, expectedWait/1000));
+                  if(tryLater.get())
+                  {
+                     transport()->send(tryLater);
+                  }
+                  delete mMessage; // dropping message due to congestion
+                  mMessage = 0;
+               }
+               else if (!transport()->basicCheck(*mMessage))
                {
                   delete mMessage;
                   mMessage = 0;
@@ -420,7 +437,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
          {
              contentLength = mMessage->const_header(h_ContentLength).value();
          }
-         catch(resip::ParseException& e)
+         catch(resip::BaseException& e)  // Could be SipMessage::Exception or ParseException
          {
             WarningLog(<<"Malformed Content-Length in connection-based transport"
                         ". Not much we can do to fix this. " << e);
@@ -430,8 +447,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             delete mMessage;
             mMessage = 0;
             //.jacob. Shouldn't the state also be set here?
-            delete this;
-            return;
+            return false;
          }
 
          mBufferPos += bytesRead;
@@ -439,8 +455,33 @@ ConnectionBase::preparseNewBytes(int bytesRead)
          {
             mMessage->addBuffer(mBuffer);
             mMessage->setBody(mBuffer, (UInt32)contentLength);
-            mBuffer = 0;
-            if (!transport()->basicCheck(*mMessage))
+            mBuffer=0;
+            // .bwc. basicCheck takes up substantial CPU. Don't bother doing it
+            // if we're overloaded.
+            CongestionManager::RejectionBehavior b=mTransport->getRejectionBehaviorForIncoming();
+            if (b==CongestionManager::REJECTING_NON_ESSENTIAL
+                  || (b==CongestionManager::REJECTING_NEW_WORK
+                     && mMessage->isRequest()))
+            {
+               UInt32 expectedWait(mTransport->getExpectedWaitForIncoming());
+               // .bwc. If this fifo is REJECTING_NEW_WORK, we will drop
+               // requests but not responses ( ?bwc? is this right for ACK?). 
+               // If we are REJECTING_NON_ESSENTIAL, 
+               // we reject all incoming work, since losing something from the 
+               // wire will not cause instability or leaks (see 
+               // CongestionManager.hxx)
+               
+               // .bwc. This handles all appropriate checking for whether
+               // this is a response or an ACK.
+               std::auto_ptr<SendData> tryLater = transport()->make503(*mMessage, expectedWait/1000);
+               if(tryLater.get())
+               {
+                  transport()->send(tryLater);
+               }
+               delete mMessage; // dropping message due to congestion
+               mMessage = 0;
+            }
+            else if (!transport()->basicCheck(*mMessage))
             {
                delete mMessage;
                mMessage = 0;
@@ -467,9 +508,8 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             }
             catch(std::bad_alloc&)
             {
-               delete this; // d'tor deletes mBuffer and mMessage
                ErrLog(<<"Failed to alloc a buffer while receiving body!");
-               return;
+               return false;
             }
             memcpy(newBuffer, mBuffer, mBufferSize);
             mBufferSize=newSize;
@@ -481,6 +521,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
       default:
          assert(0);
    }
+   return true;
 }
 
 #ifdef USE_SIGCOMP
@@ -593,6 +634,8 @@ ConnectionBase::decompressNewBytes(int bytesRead)
   {
     if (mSendingTransmissionFormat == Compressed)
     {
+      // !bwc! We are not telling anyone that we're interested in having our
+      // FD put in the writable set...
       mOutstandingSends.push_back(new SendData(
                    who(),
                    Data(nack->getStreamMessage(), nack->getStreamLength()),
@@ -613,15 +656,13 @@ ConnectionBase::getWriteBuffer()
 {
    if (mConnState == NewMessage)
    {
-      if (mBuffer)
+      if (!mBuffer)
       {
-         delete [] mBuffer;
+         DebugLog (<< "Creating buffer for " << *this);
+
+         mBuffer = MsgHeaderScanner::allocateBuffer(ConnectionBase::ChunkSize);
+         mBufferSize = ConnectionBase::ChunkSize;
       }
-
-      DebugLog (<< "Creating buffer for " << *this);
-
-      mBuffer = MsgHeaderScanner::allocateBuffer(ConnectionBase::ChunkSize);
-      mBufferSize = ConnectionBase::ChunkSize;
       mBufferPos = 0;
    }
    return getCurrentWriteBuffer();

@@ -418,7 +418,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="SecurityAttributes.cxx" />
-    <ClCompile Include="SelectInterruptor.cxx" />
     <ClCompile Include="SERNonceHelper.cxx" />
     <ClCompile Include="SipFrag.cxx" />
     <ClCompile Include="SipMessage.cxx" />
@@ -458,6 +457,7 @@
     <ClCompile Include="Transport.cxx" />
     <ClCompile Include="TransportFailure.cxx" />
     <ClCompile Include="TransportSelector.cxx" />
+    <ClCompile Include="TransportThread.cxx" />
     <ClCompile Include="TuIM.cxx" />
     <ClCompile Include="Tuple.cxx" />
     <ClCompile Include="TupleMarkManager.cxx" />
@@ -476,7 +476,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="X509Contents.cxx" />
-    <ClCompile Include="XMLCursor.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Aor.hxx" />
@@ -489,6 +488,7 @@
     <ClInclude Include="BranchParameter.hxx" />
     <ClInclude Include="CallId.hxx" />
     <ClInclude Include="CancelableTimerQueue.hxx" />
+    <ClInclude Include="CancelClientInviteTransaction.hxx" />
     <ClInclude Include="Compression.hxx" />
     <ClInclude Include="Connection.hxx" />
     <ClInclude Include="ConnectionBase.hxx" />
@@ -504,8 +504,10 @@
     <ClInclude Include="DeprecatedDialog.hxx" />
     <ClInclude Include="DnsInterface.hxx" />
     <ClInclude Include="DnsResult.hxx" />
+    <ClInclude Include="DnsResultMessage.hxx" />
     <ClInclude Include="DtlsMessage.hxx" />
     <ClInclude Include="KeepAlivePong.hxx" />
+    <ClInclude Include="MessageDecorator.hxx" />
     <ClInclude Include="ssl\DtlsTransport.hxx" />
     <ClInclude Include="Embedded.hxx" />
     <ClInclude Include="EventStackThread.hxx" />
@@ -558,6 +560,7 @@
     <ClInclude Include="Pkcs7Contents.hxx" />
     <ClInclude Include="Pkcs8Contents.hxx" />
     <ClInclude Include="PlainContents.hxx" />
+    <ClInclude Include="PollStatistics.hxx" />
     <ClInclude Include="PrivacyCategory.hxx" />
     <ClInclude Include="QuotedDataParameter.hxx" />
     <ClInclude Include="QValue.hxx" />
@@ -570,7 +573,6 @@
     <ClInclude Include="ssl\Security.hxx" />
     <ClInclude Include="SecurityAttributes.hxx" />
     <ClInclude Include="SecurityTypes.hxx" />
-    <ClInclude Include="SelectInterruptor.hxx" />
     <ClInclude Include="SendData.hxx" />
     <ClInclude Include="SERNonceHelper.hxx" />
     <ClInclude Include="ShutdownMessage.hxx" />
@@ -578,6 +580,7 @@
     <ClInclude Include="SipMessage.hxx" />
     <ClInclude Include="SipStack.hxx" />
     <ClInclude Include="StackThread.hxx" />
+    <ClInclude Include="StartLine.hxx" />
     <ClInclude Include="StatelessHandler.hxx" />
     <ClInclude Include="StatisticsHandler.hxx" />
     <ClInclude Include="StatisticsManager.hxx" />
@@ -597,6 +600,7 @@
     <ClInclude Include="ssl\TlsTransport.hxx" />
     <ClInclude Include="Token.hxx" />
     <ClInclude Include="TransactionController.hxx" />
+    <ClInclude Include="TransactionControllerThread.hxx" />
     <ClInclude Include="TransactionMap.hxx" />
     <ClInclude Include="TransactionMessage.hxx" />
     <ClInclude Include="TransactionState.hxx" />
@@ -606,6 +610,8 @@
     <ClInclude Include="Transport.hxx" />
     <ClInclude Include="TransportFailure.hxx" />
     <ClInclude Include="TransportSelector.hxx" />
+    <ClInclude Include="TransportSelectorThread.hxx" />
+    <ClInclude Include="TransportThread.hxx" />
     <ClInclude Include="TuIM.hxx" />
     <ClInclude Include="Tuple.hxx" />
     <ClInclude Include="TupleMarkManager.hxx" />
@@ -622,7 +628,7 @@
     <ClInclude Include="WarningCategory.hxx" />
     <ClInclude Include="ssl\WinSecurity.hxx" />
     <ClInclude Include="X509Contents.hxx" />
-    <ClInclude Include="XMLCursor.hxx" />
+    <ClInclude Include="ZeroOutStatistics.hxx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="HeaderHash.gperf" />

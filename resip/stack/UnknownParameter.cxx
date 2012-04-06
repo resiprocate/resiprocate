@@ -13,7 +13,7 @@ using namespace std;
 UnknownParameter::UnknownParameter(const char* startName, 
                                    unsigned int nameSize,
                                    ParseBuffer& pb, 
-                                   const char* terminators)
+                                   const std::bitset<256>& terminators)
    : Parameter(ParameterTypes::UNKNOWN),
      mName(startName, nameSize),
      mValue(),

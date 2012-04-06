@@ -2,6 +2,7 @@
 #define RESIP_EXISTSPARAMETER_HXX 
 
 #include "resip/stack/Parameter.hxx"
+#include "rutil/PoolBase.hxx"
 #include <iosfwd>
 
 namespace resip
@@ -9,17 +10,26 @@ namespace resip
 
 class ParseBuffer;
 
+/**
+   @ingroup sip_grammar 
+
+   @brief Represents various parameters that are indicated to be in
+   effect merely by being present, e.g. ";lr"
+*/
 class ExistsParameter : public Parameter
 {
    public:
       typedef bool Type;
       
-      ExistsParameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);
+      ExistsParameter(ParameterTypes::Type, ParseBuffer& pb, const std::bitset<256>& terminators);
       explicit ExistsParameter(ParameterTypes::Type type);
 
-      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+      static Parameter* decode(ParameterTypes::Type type, 
+                                 ParseBuffer& pb, 
+                                 const std::bitset<256>& terminators,
+                                 PoolBase* pool)
       {
-         return new ExistsParameter(type, pb, terminators);
+         return new (pool) ExistsParameter(type, pb, terminators);
       }
 
       virtual Parameter* clone() const;

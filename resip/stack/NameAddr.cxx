@@ -9,7 +9,7 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
-#include "rutil/WinLeakCheck.hxx"
+//#include "rutil/WinLeakCheck.hxx"  // not compatible with placement new used below
 
 using namespace resip;
 using namespace std;
@@ -22,32 +22,39 @@ using namespace std;
 NameAddr::NameAddr() : 
    ParserCategory(),
    mAllContacts(false),
-   mDisplayName()
+   mDisplayName(),
+   mUnknownUriParametersBuffer(0)
 {}
 
-NameAddr::NameAddr(HeaderFieldValue* hfv,
-                   Headers::Type type)
-   : ParserCategory(hfv, type), 
+NameAddr::NameAddr(const HeaderFieldValue& hfv,
+                   Headers::Type type,
+                   PoolBase* pool)
+   : ParserCategory(hfv, type, pool), 
      mAllContacts(false),
-     mDisplayName()
+     mUri(pool),
+     mDisplayName(),
+     mUnknownUriParametersBuffer(0)
 {}
 
-NameAddr::NameAddr(const NameAddr& rhs)
-   : ParserCategory(rhs),
+NameAddr::NameAddr(const NameAddr& rhs,
+                   PoolBase* pool)
+   : ParserCategory(rhs, pool),
      mAllContacts(rhs.mAllContacts),
-     mUri(rhs.mUri),
-     mDisplayName(rhs.mDisplayName)
+     mUri(rhs.mUri, pool),
+     mDisplayName(rhs.mDisplayName),
+     mUnknownUriParametersBuffer(0)
 {}
 
 static const Data parseContext("NameAddr constructor");
 NameAddr::NameAddr(const Data& unparsed, bool preCacheAor)
    : ParserCategory(),
      mAllContacts(false),
-     mDisplayName()
+     mDisplayName(),
+     mUnknownUriParametersBuffer(0)
 {
    HeaderFieldValue hfv(unparsed.data(), unparsed.size());
    // must copy because parse creates overlays
-   NameAddr tmp(&hfv, Headers::UNKNOWN);
+   NameAddr tmp(hfv, Headers::UNKNOWN);
    tmp.checkParsed();
    *this = tmp;
    if(preCacheAor)
@@ -60,11 +67,17 @@ NameAddr::NameAddr(const Uri& uri)
    : ParserCategory(),
      mAllContacts(false),
      mUri(uri),
-     mDisplayName()
+     mDisplayName(),
+     mUnknownUriParametersBuffer(0)
 {}
 
 NameAddr::~NameAddr()
-{}
+{
+   if(mUnknownUriParametersBuffer) 
+   {          
+      delete mUnknownUriParametersBuffer;
+   }
+}
 
 NameAddr&
 NameAddr::operator=(const NameAddr& rhs)
@@ -97,6 +110,18 @@ ParserCategory *
 NameAddr::clone() const
 {
    return new NameAddr(*this);
+}
+
+ParserCategory *
+NameAddr::clone(void* location) const
+{
+   return new (location) NameAddr(*this);
+}
+
+ParserCategory* 
+NameAddr::clone(PoolBase* pool) const
+{
+   return new (pool) NameAddr(*this, pool);
 }
 
 const Uri&
@@ -145,10 +170,11 @@ NameAddr::parse(ParseBuffer& pb)
 {
    const char* start;
    start = pb.skipWhitespace();
+   pb.assertNotEof();
    bool laQuote = false;
    bool starContact = false;
    
-   if (!pb.eof() && *pb.position() == Symbols::STAR[0])
+   if (*pb.position() == Symbols::STAR[0])
    {
       pb.skipChar(Symbols::STAR[0]);
       pb.skipWhitespace();
@@ -166,7 +192,7 @@ NameAddr::parse(ParseBuffer& pb)
    else
    {
       pb.reset(start);
-      if (!pb.eof() && *pb.position() == Symbols::DOUBLE_QUOTE[0])
+      if (*pb.position() == Symbols::DOUBLE_QUOTE[0])
       {
          start = pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
          pb.skipToEndQuote();
@@ -186,7 +212,7 @@ NameAddr::parse(ParseBuffer& pb)
             pb.skipChar(Symbols::LA_QUOTE[0]);
          }
       }
-      else if (!pb.eof() && *pb.position() == Symbols::LA_QUOTE[0])
+      else if (*pb.position() == Symbols::LA_QUOTE[0])
       {
          pb.skipChar(Symbols::LA_QUOTE[0]);
          laQuote = true;
@@ -218,23 +244,27 @@ NameAddr::parse(ParseBuffer& pb)
       }
       else
       {
-         Data temp;
+         if(mUri.mUnknownParameters.size() > 0)
          {
-            oDataStream str(temp);
-            // deal with Uri/NameAddr parameter ambiguity
-            // heuristically assign Uri parameters to the Uri
-            for (ParameterList::iterator it = mUri.mUnknownParameters.begin(); 
-                 it != mUri.mUnknownParameters.end(); ++it)
-            {
-               // We're just going to assume all unknown (to Uri) params really
-               // belong on the header. This is not necessarily the case.
-               str << ";";
-               (*it)->encode(str);
+            assert(!mUnknownUriParametersBuffer);
+            mUnknownUriParametersBuffer = new Data;
+            {  // Scope stream
+               oDataStream str(*mUnknownUriParametersBuffer);
+               // deal with Uri/NameAddr parameter ambiguity
+               // heuristically assign Uri parameters to the Uri
+               for (ParameterList::iterator it = mUri.mUnknownParameters.begin(); 
+                  it != mUri.mUnknownParameters.end(); ++it)
+               {
+                  // We're just going to assume all unknown (to Uri) params really
+                  // belong on the header. This is not necessarily the case.
+                  str << ";";
+                  (*it)->encode(str);
+               }
             }
             mUri.clearUnknownParameters();
+            ParseBuffer pb2(*mUnknownUriParametersBuffer);
+            parseParameters(pb2);
          }
-         ParseBuffer pb2(temp);
-         parseParameters(pb2);
       }
    }
    parseParameters(pb);
@@ -389,11 +419,11 @@ NameAddr::mustQuoteDisplayName() const
 ParameterTypes::Factory NameAddr::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
 
 Parameter* 
-NameAddr::createParam(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+NameAddr::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool)
 {
-   if(ParameterFactories[type])
+   if(type > ParameterTypes::UNKNOWN && type < ParameterTypes::MAX_PARAMETER && ParameterFactories[type])
    {
-      return ParameterFactories[type](type, pb, terminators);
+      return ParameterFactories[type](type, pb, terminators, pool);
    }
    return 0;
 }

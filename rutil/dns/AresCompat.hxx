@@ -1,9 +1,12 @@
 #if !defined(RESIP_ARES_COMPAT_HXX)
 #define RESIP_ARES_COMPAT_HXX
 
-#  include "ares.h"
-#  include "ares_dns.h"
-#  include "ares_version.h"
+#include "ares.h"
+#include "ares_dns.h"
+#include "ares_version.h"
+#ifdef WIN32
+#undef write  // Note:  ares.h defines write to be _write for WIN32 - we don't want that here, since we use fdset.write and stream write
+#endif
 
 #ifdef ARES_VERSION_MAJOR
 // c-ares

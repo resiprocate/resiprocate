@@ -19,6 +19,8 @@
 #include "resip/stack/MessageDecorator.hxx"
 #include "rutil/BaseException.hxx"
 #include "rutil/Data.hxx"
+#include "rutil/DinkyPool.hxx"
+#include "rutil/StlPoolAllocator.hxx"
 #include "rutil/Timer.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 
@@ -32,6 +34,7 @@ class Transport;
 
 /**
    @ingroup resip_crit
+   @ingroup message_passing_tu
    @brief Represents a SIP message.
 
    This is the class that your app will spend the most time working with. This
@@ -50,80 +53,192 @@ class Transport;
    At this point, it may become useful to examine the start-line of the message.
 
    If the message is a request, you can get the Request-Line (represented by a 
-   RequestLine&) by calling
+   RequestLine&) by calling SipMessage::header(const RequestLineType&)
    @code
       RequestLine& rLine = sip.header(h_RequestLine);
    @endcode
 
-   If the message is a response, you can get the Status-Line (represented by a StatusLine&) by calling
+   If the message is a response, you can get the Status-Line (represented by a StatusLine&) by calling SipMessage::header(const StatusLineType&)
    @code
       StatusLine& sLine = sip.header(h_StatusLine);
    @endcode
 
-   From here, examination of the various headers is in order. Each header type
-   has an associated h_HeaderName access token that we use to retrieve the 
-   value/values of that header. Generally speaking, the access token 
-   h_HeaderName is named in a predictable fashion; all non-alphanumeric 
-   characters are omitted, the first letter of each word is capitalized, and the 
-   name is pluralized if the header is multi-valued. Examples include h_To, 
-   h_From, h_CSeq, h_CallId, h_Routes, h_Contacts, h_RecordRoutes, etc.
+   From here, examination of the various headers is in order. The way the 
+   underlying code works is very complicated, but fortunately relatively 
+   painless to use. For each header type, there is a subclass of HeaderBase, and 
+   a SipMessage::header() function that takes a reference to this subclass. On 
+   top of this, there is a static instance of each of these subclasses. Examples 
+   include h_To, h_From, h_CSeq, h_CallId, h_Routes, h_Contacts, h_RecordRoutes, 
+   etc.
+
+   @code
+      NameAddr& to = sip.header(h_To);
+      NameAddr& from = sip.header(h_From);
+      CSeqCategory& cseq = sip.header(h_CSeq);
+      CallId& callId = sip.header(h_CallId);
+      ParserContainer<NameAddr>& routes = sip.header(h_Routes);
+      ParserContainer<NameAddr>& contacts = sip.header(h_Contacts);
+      ParserContainer<NameAddr>& rRoutes = sip.header(h_RecordRoutes);
+   @endcode
+
+   Generally speaking, the access token is named in a predictable fashion; all 
+   non-alphanumeric characters are omitted, the first letter of each word is 
+   capitalized, and the name is pluralized if the header is multi-valued (since 
+   this stuff is all macro-generated, sometimes this pluralization isn't quite 
+   right; h_AllowEventss, h_PAssertedIdentitys).
+
+   When accessing a single-value header, you need to check whether it 
+   exists first (unless you want it to be created implicitly). Also, since all
+   header field values are lazily parsed (see LazyParser), you'll want to make 
+   sure it is well-formed before attempting to access any portion of it.
+
+   @code
+      if(sip.exists(h_Event))
+      {
+         Token& event = sip.header(h_Event);
+         if(event.isWellFormed())
+         {
+            // do stuff with event.
+         }
+         else
+         {
+            // complain bitterly
+         }
+      }
+   @endcode
+
+   When accessing a multi-value header, it is important to keep in mind that 
+   it can be empty, even if it exists (for example, "Supported: " has a meaning 
+   that is distinct from the lack of a Supported header).
+
+   @code
+      if(sip.exists(h_Contacts))
+      {
+         ParserContainer<NameAddr>& contacts = sip.header(h_Contacts);
+         if(!contacts.empty())
+         {
+            NameAddr& frontContact = contacts.front();
+            if(frontContact.isWellFormed())
+            {
+               // do stuff with frontContact
+            }
+            else
+            {
+               // complain bitterly
+            }
+         }
+         else
+         {
+            // complain bitterly
+         }
+      }
+   @endcode
+
+   In some cases, you will need to access header-types that are not natively 
+   supported by the stack (ie, don't have an access-token). ExtensionHeader will
+   allow you to construct an access-token at runtime that will retrieve the
+   header field value as a ParserContainer<StringCategory>. Here's an example:
+
+   @code
+      // We need to access the FooBar header field value here.
+      static ExtensionHeader h_FooBar("FooBar");
+      if(sip.exists(h_FooBar))
+      {
+         ParserContainer<StringCategory>& fooBars = sip.header(h_FooBar);
+      }
+   @endcode
 
 */
 class SipMessage : public TransactionMessage
 {
    public:
       RESIP_HeapCount(SipMessage);
-      typedef std::list< std::pair<Data, HeaderFieldValueList*> > UnknownHeaders;
+      typedef std::list< std::pair<Data, HeaderFieldValueList*>, StlPoolAllocator<std::pair<Data, HeaderFieldValueList*>, PoolBase > > UnknownHeaders;
 
       explicit SipMessage(const Transport* fromWire = 0);
-      // .dlb. public, allows pass by value to compile.
+      /// @todo .dlb. public, allows pass by value to compile.
       SipMessage(const SipMessage& message);
 
-      // .dlb. sure would be nice to have overloaded return value here..
+      /// @todo .dlb. sure would be nice to have overloaded return value here..
       virtual Message* clone() const;
 
       SipMessage& operator=(const SipMessage& rhs);
       
-      // returns the transaction id from the branch or if 2543, the computed hash
+      /// Returns the transaction id from the branch or if 2543, the computed hash.
       virtual const Data& getTransactionId() const;
 
+      /**
+         @brief Calculates an MD5 hash over the Request-URI, To tag (for
+         non-INVITE transactions), From tag, Call-ID, CSeq (including
+         the method), and top Via header.  The hash is used for
+         transaction matching.
+      */
       const Data& getRFC2543TransactionId() const;
       void setRFC2543TransactionId(const Data& tid);
       
       virtual ~SipMessage();
 
+      /** @brief Construct a SipMessage object from a string containing a SIP request
+          or response.
+          
+          @param buffer a buffer containing a SIP message
+          @param isExternal true for a message generated externally, false otherwise.
+          @return constructed SipMessage object
+      */
       static SipMessage* make(const Data& buffer, bool isExternal = false);
       void parseAllHeaders();
       
       static bool checkContentLength;
 
+      /**
+      @brief Base exception for SipMessage related exceptions
+      */
       class Exception : public BaseException
       {
          public:
+            /**
+            @brief constructor that records an exception message, the file and the line
+            that the exception occured in.
+            */
             Exception(const Data& msg, const Data& file, const int line)
                : BaseException(msg, file, line) {}
-
+            /**
+            @brief returns the class name of the exception instance
+            @return the class name of the instance
+            */
             const char* name() const { return "SipMessage::Exception"; }
       };
 
-      void setFromTU() 
+      /// Mark message as internally generated
+      inline void setFromTU() 
       {
          mIsExternal = false;
       }
 
-      void setFromExternal()
+      /// Mark message as externally generated
+      inline void setFromExternal()
       {
          mIsExternal = true;
       }
       
-      // Note:  use getReceivedTransport() != 0 in order to tell if the message is from the wire or not
-      bool isExternal() const
+      /** @brief Check if SipMessage came off the wire.
+      
+      @return true if the message came from an IP interface, false otherwise.
+      */
+      inline bool isExternal() const
       {
          return mIsExternal;
       }
-
+      
+      /// @brief Check if SipMessage is a client transaction
+      /// @return true if the message is external and is a response or
+      /// an internally-generated request.
       virtual bool isClientTransaction() const;
       
+      /** @brief Generate a string from the SipMessage object
+      
+      @return string representation of a SIP message.
+      */
       virtual EncodeStream& encode(EncodeStream& str) const;      
       //sipfrags will not output Content Length if there is no body--introduce
       //friendship to hide this?
@@ -131,20 +246,29 @@ class SipMessage : public TransactionMessage
       EncodeStream& encodeEmbedded(EncodeStream& str) const;
       
       virtual EncodeStream& encodeBrief(EncodeStream& str) const;
+      EncodeStream& encodeSingleHeader(Headers::Type type, EncodeStream& str) const;
 
-      bool isRequest() const;
-      bool isResponse() const;
-      bool isInvalid() const{return mInvalid;}
+      /// Returns true if message is a request, false otherwise
+      inline bool isRequest() const {return mRequest;}
+      /// Returns true if message is a response, false otherwise
+      inline bool isResponse() const {return mResponse;}
+      /// Returns true if message failed to parse, false otherwise      
+      inline bool isInvalid() const{return mInvalid;}
       
+      /// @brief returns the method type of the message
+      /// @see MethodTypes
       resip::MethodTypes method() const;
       /// Returns a string containing the SIP method for the message
       const Data& methodStr() const;
       
-      const resip::Data& getReason() const{return mReason;}
+      /// Returns a string containing the response reason text
+      const resip::Data* getReason() const{return mReason;}
       
+      /// Returns the RequestLine.  This is only valid for request messages.
       const RequestLine& 
       header(const RequestLineType& l) const;
 
+      /// Returns the RequestLine.  This is only valid for request messages.
       RequestLine& 
       header(const RequestLineType& l);
 
@@ -154,9 +278,11 @@ class SipMessage : public TransactionMessage
          return header(l);
       }
 
+      /// Returns the StatusLine.  This is only valid for response messages.
       const StatusLine& 
       header(const StatusLineType& l) const;
 
+      /// Returns the StatusLine.  This is only valid for response messages.
       StatusLine& 
       header(const StatusLineType& l);
 
@@ -166,9 +292,19 @@ class SipMessage : public TransactionMessage
          return header(l);
       }
 
+      /// Returns true if the given header field is present, false otherwise
       bool exists(const HeaderBase& headerType) const;
+      /// Returns true if the header field is present and non-empty, false otherwise
       bool empty(const HeaderBase& headerType) const;
-      void remove(const HeaderBase& headerType);
+      /// @brief Prevents a header field from being present when the message is prepared
+      /// for sending to a transport.  This does not free the memory that was 
+      /// used by the header.
+      inline void remove(const HeaderBase& headerType)
+      {
+         remove(headerType.getTypeNum());
+      }
+
+      void remove(Headers::Type type);
 
 #define defineHeader(_header, _name, _type, _rfc)                       \
       const H_##_header::Type& header(const H_##_header& headerType) const; \
@@ -214,8 +350,8 @@ class SipMessage : public TransactionMessage
       defineMultiHeader(Privacy, "Privacy", PrivacyCategory, "RFC 3323");
       defineMultiHeader(PMediaAuthorization, "P-Media-Authorization", Token, "RFC 3313");
       defineHeader(ReferSub, "Refer-Sub", Token, "RFC 4488");
-      defineHeader(AnswerMode, "Answer-Mode", Token, "draft-ietf-answermode-01");
-      defineHeader(PrivAnswerMode, "Priv-Answer-Mode", Token, "draft-ietf-answermode-01");
+      defineHeader(AnswerMode, "Answer-Mode", Token, "draft-ietf-answermode-04");
+      defineHeader(PrivAnswerMode, "Priv-Answer-Mode", Token, "draft-ietf-answermode-04");
 
       defineMultiHeader(Accept, "Accept", Mime, "RFC 3261");
       defineHeader(ContentType, "Content-Type", Mime, "RFC 3261");
@@ -244,7 +380,7 @@ class SipMessage : public TransactionMessage
       defineMultiHeader(RemotePartyId, "Remote-Party-ID", NameAddr, "draft-ietf-sip-privacy-04"); // ?bwc? Not in 3323, should we keep?
       defineMultiHeader(HistoryInfo, "History-Info", NameAddr, "RFC 4244");
 
-      defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", StringCategory, "RFC ?");
+      defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", StringCategory, "RFC 1521");
       defineHeader(Organization, "Organization", StringCategory, "RFC 3261");
       defineHeader(Server, "Server", StringCategory, "RFC 3261");
       defineHeader(Subject, "Subject", StringCategory, "RFC 3261");
@@ -256,7 +392,7 @@ class SipMessage : public TransactionMessage
       defineHeader(MinExpires, "Min-Expires", UInt32Category, "RFC 3261");
       defineHeader(RSeq, "RSeq", UInt32Category, "RFC 3261");
 
-// !dlb! this one is not quite right -- can have (comment) after field value
+/// @todo !dlb! this one is not quite right -- can have (comment) after field value
       defineHeader(RetryAfter, "Retry-After", UInt32Category, "RFC 3261");
       defineHeader(FlowTimer, "Flow-Timer", UInt32Category, "RFC 5626");
 
@@ -282,13 +418,13 @@ class SipMessage : public TransactionMessage
       defineMultiHeader(Via, "Via", Via, "RFC 3261");
       defineHeader(RAck, "RAck", RAckCategory, "RFC 3262");
 
-      // unknown header interface
+      /// unknown header interface
       const StringCategories& header(const ExtensionHeader& symbol) const;
       StringCategories& header(const ExtensionHeader& symbol);
       bool exists(const ExtensionHeader& symbol) const;
       void remove(const ExtensionHeader& symbol);
 
-      // typeless header interface
+      /// typeless header interface
       const HeaderFieldValueList* getRawHeader(Headers::Type headerType) const;
       void setRawHeader(const HeaderFieldValueList* hfvs, Headers::Type headerType);
       const UnknownHeaders& getRawUnknownHeaders() const {return mUnknownHeaders;}
@@ -299,7 +435,7 @@ class SipMessage : public TransactionMessage
 
          This is a low-level interface; see getContents() for higher level.
       **/
-      const HeaderFieldValue* getRawBody() const {return mContentsHfv;}
+      const HeaderFieldValue& getRawBody() const {return mContentsHfv;}
 
       /**
          Remove any existing body/contents, and (if non-empty)
@@ -309,54 +445,58 @@ class SipMessage : public TransactionMessage
 
          This is a low-level interface; see setContents() for higher level.
       **/
-      void setRawBody(const HeaderFieldValue* body);
+      void setRawBody(const HeaderFieldValue& body);
 
+      /** @brief Retrieves the body of a SIP message.
+        * 
+        *   In the case of an INVITE request containing SDP, the body would 
+        *   be an SdpContents.  For a MESSAGE request, the body may be PlainContents,
+        *   CpimContents, or another subclass of Contents.
+        * 
+        * @return pointer to the contents of the SIP message
+        **/
       Contents* getContents() const;
-      // removes the contents from the message
+      /// Removes the contents from the message
       std::auto_ptr<Contents> releaseContents();
 
+      /// @brief Set the contents of the message
+      /// @param contents to store in the message
       void setContents(const Contents* contents);
+      /// @brief Set the contents of the message
+      /// @param contents to store in the message
       void setContents(std::auto_ptr<Contents> contents);
 
-      // transport interface
+      /// @internal transport interface
       void setStartLine(const char* start, int len); 
 
       void setBody(const char* start, UInt32 len); 
       
-      // add HeaderFieldValue given enum, header name, pointer start, content length
+      /// Add HeaderFieldValue given enum, header name, pointer start, content length
       void addHeader(Headers::Type header,
                      const char* headerName, int headerLen, 
                      const char* start, int len);
 
-      // Interface used to determine which Transport was used to receive a
-      // particular SipMessage. If the SipMessage was not received from the
-      // wire, getReceivedTransport() returns 0. Set in constructor
+      /// @brief Interface used to determine which Transport was used to receive a
+      /// particular SipMessage. If the SipMessage was not received from the
+      /// wire, getReceivedTransport() returns 0. Set in constructor
       const Transport* getReceivedTransport() const { return mTransport; }
 
       // Returns the source tuple that the message was received from
       // only makes sense for messages received from the wire
       void setSource(const Tuple& tuple) { mSource = tuple; }
+      /// @brief Returns the source tuple that the message was received from
+      /// only makes sense for messages received from the wire
       const Tuple& getSource() const { return mSource; }
       
-      // Used by the stateless interface to specify where to send a request/response
+      /// Used by the stateless interface to specify where to send a request/response
       void setDestination(const Tuple& tuple) { mDestination = tuple; }
       Tuple& getDestination() { return mDestination; }
 
       void addBuffer(char* buf);
 
-      // returns the encoded buffer which was encoded by
-      // TransportSelector::transmit()
-      // !!! should only be called by the TransportSelector !!!
-      Data& getEncoded();
-
-      // returns the compartment ID which was computed by
-      // TransportSelector::transmit()
-      // !!! should only be called by the TransportSelector !!!
-      Data& getCompartmentId();
-
       UInt64 getCreatedTimeMicroSec() {return mCreatedTime;}
 
-      // deal with a notion of an "out-of-band" forced target for SIP routing
+      /// deal with a notion of an "out-of-band" forced target for SIP routing
       void setForceTarget(const Uri& uri);
       void clearForceTarget();
       const Uri& getForceTarget() const;
@@ -375,6 +515,8 @@ class SipMessage : public TransactionMessage
       void setSecurityAttributes(std::auto_ptr<SecurityAttributes>);
       const SecurityAttributes* getSecurityAttributes() const { return mSecurityAttributes.get(); }
 
+      /// @brief Call a MessageDecorator to process the message before it is
+      /// sent to the transport
       void addOutboundDecorator(std::auto_ptr<MessageDecorator> md){mOutboundDecorators.push_back(md.release());}
       void clearOutboundDecorators();
       void callOutboundDecorators(const Tuple &src, 
@@ -388,7 +530,15 @@ class SipMessage : public TransactionMessage
       bool mIsBadAck200;
 
    protected:
-      void cleanUp();
+      // !bwc! Removes or zeros all pointers to heap-allocated memory this
+      // class owns.
+      void clear(bool leaveResponseStuff=false);
+      // !bwc! Frees all heap-allocated memory owned.
+      void freeMem(bool leaveResponseStuff=false);
+      
+      // !bwc! Initializes members. Will not free heap-allocated memory.
+      // Will begin by calling clear().
+      void init(const SipMessage& rhs);
    
    private:
       void compute2543TransactionHash() const;
@@ -398,14 +548,81 @@ class SipMessage : public TransactionMessage
 
       void copyFrom(const SipMessage& message);
 
-      HeaderFieldValueList* ensureHeaders(Headers::Type type, bool single);
-      HeaderFieldValueList* ensureHeaders(Headers::Type type, bool single) const; // throws if not present
+      HeaderFieldValueList* ensureHeaders(Headers::Type type);
+      inline HeaderFieldValueList* ensureHeaders(Headers::Type type) const // throws if not present
+      {
+         if(mHeaderIndices[type]>0)
+         {
+            return mHeaders[mHeaderIndices[type]];
+         }
+         throwHeaderMissing(type);
+         return 0;
+      }
+
+      HeaderFieldValueList* ensureHeader(Headers::Type type);
+      inline HeaderFieldValueList* ensureHeader(Headers::Type type) const // throws if not present
+      {
+         if(mHeaderIndices[type]>0)
+         {
+            return mHeaders[mHeaderIndices[type]];
+         }
+         throwHeaderMissing(type);
+         return 0;
+      }
+
+      void throwHeaderMissing(Headers::Type type) const;
+
+      inline HeaderFieldValueList* getEmptyHfvl()
+      {
+         void* ptr(mPool.allocate(sizeof(HeaderFieldValueList)));
+         return new (ptr) HeaderFieldValueList(mPool);
+      }
+
+      inline HeaderFieldValueList* getCopyHfvl(const HeaderFieldValueList& hfvl)
+      {
+         void* ptr(mPool.allocate(sizeof(HeaderFieldValueList)));
+         return new (ptr) HeaderFieldValueList(hfvl, mPool);
+      }
+
+      inline void freeHfvl(HeaderFieldValueList* hfvl)
+      {
+         if(hfvl)
+         {
+            hfvl->~HeaderFieldValueList();
+            mPool.deallocate(hfvl);
+         }
+      }
+
+      template<class T>
+      ParserContainer<T>* makeParserContainer()
+      {
+         void* ptr(mPool.allocate(sizeof(ParserContainer<T>)));
+         return new (ptr) ParserContainer<T>(mPool);
+      }
+
+      template<class T>
+      ParserContainer<T>* makeParserContainer(HeaderFieldValueList* hfvs,
+                                             Headers::Type type = Headers::UNKNOWN)
+      {
+         void* ptr(mPool.allocate(sizeof(ParserContainer<T>)));
+         return new (ptr) ParserContainer<T>(hfvs, type, mPool);
+      }
 
       // indicates this message came from the wire, set by the Transport
       bool mIsExternal;
-      
+
+      // !bwc! Would be nice to tweak this to automatically make SipMessage 4KB,
+      // but I don't know how ugly it would be.
+      DinkyPool<2968> mPool;
+
+      typedef std::vector<HeaderFieldValueList*, 
+                           StlPoolAllocator<HeaderFieldValueList*, 
+                                          PoolBase > > TypedHeaders;
       // raw text corresponding to each typed header (not yet parsed)
-      HeaderFieldValueList* mHeaders[Headers::MAX_HEADERS];
+      TypedHeaders mHeaders;
+      
+      // !bwc! Indices into mHeaders
+      short mHeaderIndices[Headers::MAX_HEADERS];
 
       // raw text corresponding to each unknown header
       UnknownHeaders mUnknownHeaders;
@@ -424,10 +641,11 @@ class SipMessage : public TransactionMessage
       std::vector<char*> mBufferList;
 
       // special case for the first line of message
-      HeaderFieldValueList* mStartLine;
+      StartLine* mStartLine;
+      char mStartLineMem[sizeof(RequestLine) > sizeof(StatusLine) ? sizeof(RequestLine) : sizeof(StatusLine)];
 
       // raw text for the contents (all of them)
-      HeaderFieldValue* mContentsHfv;
+      HeaderFieldValue mContentsHfv;
 
       // lazy parser for the contents
       mutable Contents* mContents;
@@ -441,10 +659,8 @@ class SipMessage : public TransactionMessage
       bool mResponse;
 
       bool mInvalid;
-      resip::Data mReason;
+      resip::Data* mReason;
       
-      Data mEncoded; // to be retransmitted
-      Data mCompartmentId; // for retransmissions
       UInt64 mCreatedTime;
 
       // used when next element is a strict router OR 

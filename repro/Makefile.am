@@ -14,8 +14,10 @@ EXTRA_DIST += repro.spec
 EXTRA_DIST += USING VERSION
 EXTRA_DIST += webadmin
 EXTRA_DIST += WinSetup WinSetupx64
+EXTRA_DIST += repro.config
+EXTRA_DIST += create_mysql_reprodb.sql
 
-SUBDIRS = . test
+SUBDIRS = . test reprocmd
 
 #AM_CXXFLAGS = -DUSE_ARES
 
@@ -41,7 +43,9 @@ librepro_la_SOURCES = \
 	AbstractDb.cxx \
 	BerkeleyDb.cxx \
 	\
-	CommandLineParser.cxx \
+	CommandServer.cxx \
+	CommandServerThread.cxx \
+	ProxyConfig.cxx \
 	ReproVersion.cxx \
 	HttpBase.cxx \
 	HttpConnection.cxx \
@@ -87,7 +91,8 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	Ack200DoneMessage.hxx \
 	AclStore.hxx \
 	BerkeleyDb.hxx \
-	CommandLineParser.hxx \
+	CommandServer.hxx \
+	CommandServerThread.hxx \
 	ConfigStore.hxx \
 	Dispatcher.hxx \
 	ForkControlMessage.hxx \
@@ -112,6 +117,7 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	Processor.hxx \
 	ProcessorMessage.hxx \
 	Proxy.hxx \
+	ProxyConfig.hxx \
 	QValueTarget.hxx \
 	Registrar.hxx \
 	RegSyncClient.hxx \

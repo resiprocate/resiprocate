@@ -19,97 +19,79 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 BranchParameter::BranchParameter(ParameterTypes::Type type,
-                                 ParseBuffer& pb, const char* terminators)
+                                 ParseBuffer& pb, 
+                                 const std::bitset<256>& terminators)
    : Parameter(type), 
      mHasMagicCookie(false),
      mIsMyBranch(false),
-     mTransactionId(Random::getRandomHex(8)),
+     mTransactionId(),
      mTransportSeq(1),
      mClientData(),
      mInteropMagicCookie(0),
-     mSigcompCompartment(Data::Empty)
+     mSigcompCompartment()
 {
-   pb.skipWhitespace();
-   pb.skipChar(Symbols::EQUALS[0]);
-   pb.skipWhitespace();
-   if (strncasecmp(pb.position(), Symbols::MagicCookie, 7) == 0)
+   try
    {
-      mHasMagicCookie = true;
-      if (strncmp(pb.position(), Symbols::MagicCookie, 7) != 0)
+      pb.skipWhitespace();
+      pb.skipChar(Symbols::EQUALS[0]);
+      pb.skipWhitespace();
+      if(memcmp(pb.position(), Symbols::MagicCookie, 7) == 0)
       {
-         mInteropMagicCookie = new Data(pb.position(), 7);         
+         mHasMagicCookie=true;
+         pb.skipN(7);
       }
-      pb.skipN(7);
-   }
-
-   const char* start = pb.position();
-   const char* end = pb.skipToOneOf(ParseBuffer::Whitespace, ";=?>"); // !dlb! add to ParseBuffer as terminator set
-
-   if (mHasMagicCookie &&
-       (end - start > 2*8) &&
-       // look for prefix cookie
-       (strncasecmp(start, Symbols::resipCookie, 8) == 0) &&
-       // look for postfix cookie
-       (strncasecmp(end - 8, Symbols::resipCookie, 8) == 0))
-   {
-      mIsMyBranch = true;
-      start += 8;
-
-      // s = start, e = end, S = anchorStart, E = anchorEnd, ^ = pb.position
-      // rfc3261cookie-sip2cookie-tid-transportseq-clientdata-scid-sip2cookie
-      //                          s                                          e
-      //                                                                     ^
-
-      pb.skipBackN(8);
-
-      // Parse out SigComp Compartment Id
-      const char* anchorEnd = pb.position();
-      pb.skipBackToChar(Symbols::DASH[0]);
-      const char* anchorStart = pb.position();
-      // rfc3261cookie-sip2cookie-tid-transportseq-clientdata-scid-sip2cookie
-      //                          s                           S   E          e
-      //                                                      ^ 
-      if ((anchorEnd - anchorStart) > 1)
+      // !bwc! This no-case comparison is expensive; only do it if the case-
+      // sensitive comparison fails.
+      else if(strncasecmp(pb.position(), Symbols::MagicCookie, 7) == 0)
       {
-         pb.reset(anchorEnd);
-         Data encoded;
-         pb.data(encoded, anchorStart);
-         mSigcompCompartment = encoded.base64decode();
-         pb.reset(anchorStart);
-      }
-      pb.skipBackChar(Symbols::DASH[0]);
-
-      // Parse out Client Data
-      anchorEnd = pb.position();
-      pb.skipBackToChar(Symbols::DASH[0]);
-      anchorStart = pb.position();
-      // rfc3261cookie-sip2cookie-tid-transportseq-clientdata-scid-sip2cookie
-      //                          s                S         E               e
-      //                                           ^
-
-      if ((anchorEnd - anchorStart) > 1)
-      {
-         pb.reset(anchorEnd);
-         Data encoded;
-         pb.data(encoded, anchorStart);
-         mClientData = encoded.base64decode();
-         pb.reset(anchorStart);
+         mHasMagicCookie=true;
+         mInteropMagicCookie = new Data(pb.position(), 7);
+         pb.skipN(7);
       }
       
-      pb.skipBackChar(Symbols::DASH[0]);
-      pb.skipBackToChar(Symbols::DASH[0]);
-      pb.skipBackChar(Symbols::DASH[0]);
-      // rfc3261cookie-sip2cookie-tid-transportseq-clientdata-scid-sip2cookie
-      //                          s  ^             S         E               e
+      const char* start = pb.position();
+      static std::bitset<256> delimiter=Data::toBitset("\r\n\t ;=?>");
 
+      if (mHasMagicCookie &&
+          (pb.end() - start > 8) &&
+          // look for prefix cookie (maybe make this bigger?)
+          memcmp(start, Symbols::resipCookie, 8) == 0)
+      {
+         // ?bwc? Wrap this stuff in try/catch, just in case of false positives?
+         const char* curr=start;
+         mIsMyBranch = true;
+         pb.skipN(8);
+
+         mTransportSeq=pb.uInt32();
+
+         curr=pb.skipChar('-');
+         pb.skipToChar('-');
+         Data encoded;
+         pb.data(encoded, curr);
+         if(!encoded.empty())
+         {
+            // !bwc! Expensive! Also, Base64 isn't case-insensitive.
+            mClientData = encoded.base64decode();
+         }
+
+         curr=pb.skipChar('-');
+         pb.skipToChar('-');
+         pb.data(encoded,curr);
+         if(!encoded.empty())
+         {
+            // !bwc! Expensive! Also, Base64 isn't case-insensitive.
+            mSigcompCompartment = encoded.base64decode();
+         }
+
+         start=pb.skipChar('-');
+      }
+      pb.skipToOneOf(delimiter);
       pb.data(mTransactionId, start);
-      pb.skipChar();
-      mTransportSeq = pb.integer();
-      pb.reset(end);
    }
-   else
+   catch(resip::ParseException& e)
    {
-      pb.data(mTransactionId, start);
+      mTransactionId=Random::getRandomHex(8);
+      throw e;
    }
 }
 
@@ -120,7 +102,7 @@ BranchParameter::BranchParameter(ParameterTypes::Type type)
      mTransactionId(Random::getRandomHex(8)),
      mTransportSeq(1),
      mInteropMagicCookie(0),
-     mSigcompCompartment(Data::Empty)
+     mSigcompCompartment()
 {
 }
 
@@ -289,20 +271,25 @@ BranchParameter::encode(EncodeStream& stream) const
    }
    if (mIsMyBranch)
    {
-      stream << Symbols::resipCookie 
-             << mTransactionId 
-             << Symbols::DASH[0]
-             << mTransportSeq
-             << Symbols::DASH[0]
-             << mClientData.base64encode(true/*safe URL*/)
-             << Symbols::DASH[0]
-             << mSigcompCompartment.base64encode(true)
-             << Symbols::resipCookie;
+      stream << Symbols::resipCookie;
+      stream << mTransportSeq;
+      stream << Symbols::DASH;
+      if(!mClientData.empty()) // base64encode() makes copies
+      {
+         // !bwc! We should be using hex encoding; branch params are supposed to
+         // be case-insensitive.
+         stream << mClientData.base64encode(true/*safe URL*/);
+      }
+      stream << Symbols::DASH;
+      if(!mSigcompCompartment.empty()) // base64encode() makes copies
+      {
+         // !bwc! We should be using hex encoding; branch params are supposed to
+         // be case-insensitive.
+         stream << mSigcompCompartment.base64encode(true);
+      }
+      stream << Symbols::DASH;
    }
-   else
-   {
-      stream << mTransactionId;
-   }
+   stream << mTransactionId;
       
    return stream;
 }

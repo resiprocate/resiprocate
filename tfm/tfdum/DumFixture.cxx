@@ -151,11 +151,11 @@ DumFixture::initialize(int argc, char** argv)
       HeaderFieldValue hfv(offer.data(), offer.size());
       Mime type("application", "sdp");
 
-      SdpContents o(&hfv, type);
+      SdpContents o(hfv, type);
       standardOffer = new SdpContents(o);      
    
       HeaderFieldValue hfv1(answer.data(), answer.size());
-      SdpContents a(&hfv1, type);
+      SdpContents a(hfv1, type);
       standardAnswer = new SdpContents(a);
 
       Data answerAudio("v=0\r\n"
@@ -177,11 +177,11 @@ DumFixture::initialize(int argc, char** argv)
                       "a=rtpmap:103 AMR-WB/16000\r\n");
 
       HeaderFieldValue hfv2(offerAudio.data(), offerAudio.size());
-      SdpContents b(&hfv2, type);
+      SdpContents b(hfv2, type);
       standardOfferAudio = new SdpContents(b);
 
       HeaderFieldValue hfv3(answerAudio.data(), answerAudio.size());
-      SdpContents c(&hfv3, type);
+      SdpContents c(hfv3, type);
       standardAnswerAudio = new SdpContents(c);
    }
 
