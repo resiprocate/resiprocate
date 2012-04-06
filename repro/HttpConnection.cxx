@@ -266,6 +266,15 @@ HttpConnection::tryParse()
    
    ParseBuffer pb(mRxBuffer);
    
+   // See if we have the entire message
+   pb.skipToChars(Symbols::CRLFCRLF);
+   if(pb.eof())
+   {
+      // End of message not found - keep reading
+      return;
+   }
+   pb.reset(pb.start());
+
    pb.skipToChar(Symbols::SPACE[0]);
    const char* start = pb.skipWhitespace();
    pb.skipToChar(Symbols::SPACE[0]);
@@ -288,8 +297,8 @@ HttpConnection::tryParse()
 
    try
    {
-      pb.skipToChars( "Authorization" );
-      if ( !pb.eof() )
+      pb.skipToChars("Authorization");
+      if (!pb.eof())
       {
          if ( pb.eof() ) DebugLog( << "Did not find Authorization header" );
          pb.skipToChars( "Basic" ); pb.skipN(6);
