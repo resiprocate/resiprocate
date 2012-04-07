@@ -4,6 +4,8 @@
 #endif
 
 #include <signal.h>
+#include <stdexcept>
+
 #include "resip/stack/MessageFilterRule.hxx"
 #include "resip/stack/Compression.hxx"
 #include "resip/stack/ExtensionParameter.hxx"
@@ -193,6 +195,32 @@ main(int argc, char** argv)
 
    Data configFilename("repro.config");
    ProxyConfig config(argc, argv, configFilename);
+   bool daemonize = config.getConfigBool("Daemonize", false);
+   if(daemonize)
+   {
+#ifdef WIN32
+      // fork is not possible on Windows
+      throw std::runtime_error("Unable to fork/daemonize on Windows, please check the config");
+#else
+      pid_t pid;
+      if ((pid = fork()) < 0) 
+      {
+         // fork() failed
+         throw std::runtime_error(strerror(errno));
+      }
+      else if (pid != 0)
+      {
+         // parent process done
+         exit(0);
+      }
+      if(chdir("/") < 0)
+         throw std::runtime_error(strerror(errno));
+      // Nothing should be writing to stdout/stderr after this
+      close(STDIN_FILENO);
+      close(STDOUT_FILENO);
+      close(STDERR_FILENO);
+#endif
+   }
 
    GenericLogImpl::MaxByteCount = config.getConfigUnsignedLong("LogFileMaxBytes", 5242880 /*5 Mb */);
    Data loggingType = config.getConfigData("LoggingType", "cout", true);
