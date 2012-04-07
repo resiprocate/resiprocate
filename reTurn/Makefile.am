@@ -7,6 +7,8 @@ EXTRA_DIST += *.vcproj
 EXTRA_DIST += reTurnServer_10_0.vcxproj reTurnServer_10_0.vcxproj.filters
 EXTRA_DIST += reTurnServer.config
 
+dist_man_MANS = reTurnServer.8
+
 SUBDIRS = . test
 
 #AM_CXXFLAGS = -DUSE_ARES
