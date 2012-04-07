@@ -5,6 +5,11 @@
 #include <vector>
 #include <list>
 
+#if defined(HAVE_CONFIG_H)
+  #include "config.h"
+#endif
+
+
 #include "rutil/Socket.hxx"
 #include "rutil/BaseException.hxx"
 #include "resip/stack/SecurityTypes.hxx"

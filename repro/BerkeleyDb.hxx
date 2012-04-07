@@ -4,7 +4,7 @@
 #ifdef WIN32
 #include <db_cxx.h>
 #elif HAVE_CONFIG_H
-#include "config.hxx"
+#include "config.h"
 #include DB_HEADER
 //#elif defined(__APPLE__) 
 //#include <db42/db_cxx.h>
