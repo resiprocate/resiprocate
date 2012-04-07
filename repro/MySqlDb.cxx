@@ -1,6 +1,10 @@
 #include <cassert>
 #include <fcntl.h>
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #ifdef USE_MYSQL
 
 #ifdef WIN32

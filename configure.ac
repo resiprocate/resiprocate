@@ -54,10 +54,13 @@ AC_ARG_ENABLE(dtls,
 [  --enable-dtls           Enable DTLS support (requires OpenSSL)],
  [AC_DEFINE_UNQUOTED(USE_DTLS, 1, USE_DTLS)],  )
  
-
+AM_CONDITIONAL(USE_MYSQL, false)
 AC_ARG_WITH(mysql,
 [  --with-mysql            Link against MySQL client libraries],
- AC_DEFINE_UNQUOTED(USE_MYSQL, "yes", USE_MYSQL), )
+ [AC_DEFINE_UNQUOTED(USE_MYSQL, "yes", USE_MYSQL)
+ AC_SUBST(LIBMYSQL_LIBADD, "-lmysqlclient")
+ AM_CONDITIONAL(USE_MYSQL, true)], 
+ [ AC_SUBST(LIBMYSQL_LIBADD, "")])
 
 AC_ARG_WITH(radius,
 [  --with-radius           Link against RADIUS client libraries],
