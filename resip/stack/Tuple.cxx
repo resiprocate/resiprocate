@@ -716,7 +716,7 @@ Tuple::toDataLower(TransportType type)
 Data
 Tuple::inet_ntop(const Tuple& tuple)
 {
-#if USE_IPV6
+#ifdef USE_IPV6
    if (!tuple.isV4())
    {
       const sockaddr_in6& addr = reinterpret_cast<const sockaddr_in6&>(tuple.getSockaddr());
