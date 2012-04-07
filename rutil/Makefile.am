@@ -87,9 +87,11 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	SysLogStream.hxx \
 	AsyncID.hxx \
 	ConfigParse.hxx \
+	CongestionManager.hxx \
 	GeneralCongestionManager.hxx \
 	HeapInstanceCounter.hxx \
 	SharedCount.hxx \
+	FdSetIOObserver.hxx \
 	Fifo.hxx \
 	CircularBuffer.hxx \
 	FiniteFifo.hxx \
@@ -161,7 +163,11 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	ParseException.hxx \
 	BaseException.hxx \
 	DataException.hxx \
-	Poll.hxx
+	Poll.hxx \
+	StlPoolAllocator.hxx \
+	ProducerFifoBuffer.hxx \
+	DinkyPool.hxx \
+	ConsumerFifoBuffer.hxx
 
 
 ##############################################################################
