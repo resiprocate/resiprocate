@@ -204,6 +204,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	DeprecatedDialog.hxx \
 	DnsInterface.hxx \
 	DnsResult.hxx \
+	DnsResultMessage.hxx \
 	DtlsMessage.hxx \
 	Embedded.hxx \
 	EnableFlowTimer.hxx \
@@ -260,6 +261,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	Pkcs7Contents.hxx \
 	Pkcs8Contents.hxx \
 	PlainContents.hxx \
+	PollStatistics.hxx \
 	PrivacyCategory.hxx \
 	QuotedDataParameter.hxx \
 	QValue.hxx \
@@ -284,6 +286,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	ssl/TlsTransport.hxx \
 	ssl/WinSecurity.hxx \
 	StackThread.hxx \
+	StartLine.hxx \
 	StatelessHandler.hxx \
 	StatisticsHandler.hxx \
 	StatisticsManager.hxx \
@@ -300,8 +303,10 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	TimerQueue.hxx \
 	Token.hxx \
 	TransactionController.hxx \
+	TransactionControllerThread.hxx \
 	TransactionMap.hxx \
 	TransactionMessage.hxx \
+	TransportSelectorThread.hxx \
 	TransactionState.hxx \
 	TransactionTerminated.hxx \
 	TransactionUser.hxx \
@@ -309,6 +314,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	TransportFailure.hxx \
 	Transport.hxx \
 	TransportSelector.hxx \
+	TransportThread.hxx \
 	TuIM.hxx \
 	Tuple.hxx \
 	TupleMarkManager.hxx \
@@ -323,7 +329,8 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	ValueFifo.hxx \
 	Via.hxx \
 	WarningCategory.hxx \
-	X509Contents.hxx
+	X509Contents.hxx \
+	ZeroOutStatistics.hxx
 
 ##############################################################################
 # 
