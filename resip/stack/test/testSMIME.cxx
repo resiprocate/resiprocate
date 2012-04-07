@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "resip/stack/MultipartSignedContents.hxx"
 #include "resip/stack/Pkcs7Contents.hxx"
 #include "resip/stack/PlainContents.hxx"

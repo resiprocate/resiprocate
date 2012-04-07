@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #if defined (HAVE_POPT_H)
 #include <popt.h>
 #endif

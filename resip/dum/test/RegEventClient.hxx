@@ -1,6 +1,10 @@
 #if !defined(RESIP_RegEventClient_hxx)
 #define RESIP_RegEventClient_hxx
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "resip/dum/SubscriptionHandler.hxx"
 #include "resip/dum/RegistrationHandler.hxx"
 #include "resip/dum/Handles.hxx"

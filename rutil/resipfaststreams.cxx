@@ -1,5 +1,9 @@
 #include "resipfaststreams.hxx"
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #ifndef RESIP_USE_STL_STREAMS
 resip::ResipStdCOStream resip::resipFastCerr(resip::ResipStdBuf::stdCerr);
 resip::ResipStdCOStream resip::resipFastCout(resip::ResipStdBuf::stdCout);

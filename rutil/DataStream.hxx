@@ -1,6 +1,10 @@
 #ifndef RESIP_DataStream_hxx
 #define RESIP_DataStream_hxx
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <iostream>
 #include "resipfaststreams.hxx"
 
