@@ -33,6 +33,7 @@ repro_LDADD += @LIBSSL_LIBADD@ -lpthread -ldb_cxx-4.8
 lib_LTLIBRARIES = librepro.la
 
 librepro_la_LDFLAGS = -version-info 0:0:0 -release @ABIVERSION@ -export-dynamic
+librepro_la_LIBADD = 
 
 librepro_la_SOURCES = \
 	RouteStore.cxx \
@@ -82,9 +83,7 @@ librepro_la_SOURCES = \
 	monkeys/SimpleStaticRoute.cxx \
 	monkeys/StaticRoute.cxx \
 	monkeys/QValueTargetHandler.cxx \
-	monkeys/SimpleTargetHandler.cxx \
-	\
-	MySqlDb.cxx
+	monkeys/SimpleTargetHandler.cxx
 
 reproincludedir = $(includedir)/repro
 nobase_reproinclude_HEADERS = AbstractDb.hxx \
@@ -155,6 +154,11 @@ librepro_la_SOURCES += \
 	stateAgents/CertSubscriptionHandler.cxx \
 	stateAgents/PrivateKeyPublicationHandler.cxx \
 	stateAgents/PrivateKeySubscriptionHandler.cxx
+endif
+
+if USE_MYSQL
+librepro_la_SOURCES += MySqlDb.cxx
+librepro_la_LIBADD += @LIBMYSQL_LIBADD@
 endif
 
 # reproInfo.hxx is created manually be other build systems
