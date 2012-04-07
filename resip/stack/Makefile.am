@@ -271,7 +271,6 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	SdpContents.hxx \
 	SecurityAttributes.hxx \
 	SecurityTypes.hxx \
-	SelectInterruptor.hxx \
 	SendData.hxx \
 	SERNonceHelper.hxx \
 	ShutdownMessage.hxx \
@@ -324,8 +323,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	ValueFifo.hxx \
 	Via.hxx \
 	WarningCategory.hxx \
-	X509Contents.hxx \
-	XMLCursor.hxx
+	X509Contents.hxx
 
 ##############################################################################
 # 
