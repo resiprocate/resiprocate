@@ -1,0 +1,58 @@
+Source: resiprocate
+Section: devel
+Priority: optional
+Maintainer: Daniel Pocock <daniel@pocock.com.au>
+Build-Depends: cdbs, debhelper (>= 7.0.0), 
+Homepage: http://www.resiprocate.org/
+Standards-Version: 3.9.2
+DM-Upload-Allowed: yes
+
+Package: librutil0
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: reSIProcate SIP stack - support library
+ reSIProcate is a library that aims to fully implement the SIP protocol
+ in first class C++.  It is intended for use in other applications,
+ such as the repro SIP proxy.
+ .
+ The rutil library provides some of the low level classes for
+ threading and data storage used by higher level components in the
+ SIP stack.
+
+Package: libresip0
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: reSIProcate SIP stack - SIP library
+ reSIProcate is a library that aims to fully implement the SIP protocol
+ in first class C++.  It is intended for use in other applications,
+ such as the repro SIP proxy.
+ .
+ The resip library provides the data types and basic functionality of
+ the SIP protocol.
+
+Package: libdum0
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: reSIProcate SIP stack - Dialog Usage Manager library
+ reSIProcate is a library that aims to fully implement the SIP protocol
+ in first class C++.  It is intended for use in other applications,
+ such as the repro SIP proxy.
+ .
+ The dum library provides the classes used to manage a SIP dialog
+ (call) from start to finish.
+
+Package: repro
+Section: net
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: reSIProcate SIP stack - Dialog Usage Manager library
+ reSIProcate is a library that aims to fully implement the SIP protocol
+ in first class C++.  It is intended for use in other applications,
+ such as the repro SIP proxy.
+ .
+ repro is the SIP proxy developed as part of the reSIProcate project.
+ It provides a high-quality, low maintenance solution for serving
+ small and large IP telephony installations.

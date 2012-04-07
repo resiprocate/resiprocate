@@ -1,3 +1,8 @@
+
+#if defined(HAVE_CONFIG_H)
+  #include "config.h"
+#endif
+
 #include "resip/stack/SecurityAttributes.hxx"
 #include "resip/stack/ShutdownMessage.hxx"
 #include "resip/stack/SipFrag.hxx"

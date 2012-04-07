@@ -1,3 +1,8 @@
+
+#if defined(HAVE_CONFIG_H)
+  #include "config.h"
+#endif
+
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/MethodTypes.hxx"
 #include "resip/stack/TransactionUser.hxx"
