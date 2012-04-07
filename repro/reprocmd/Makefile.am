@@ -6,7 +6,7 @@ EXTRA_DIST += *.vcproj
 #AM_CXXFLAGS = -DUSE_ARES
 
 sbin_PROGRAMS = reprocmd
-reprocmd_SOURCES = reprocmd.cxx
+reprocmd_SOURCES = reprocmd.cpp
 reprocmd_LDADD = ../librepro.la
 reprocmd_LDADD += ../../resip/dum/libdum.la
 reprocmd_LDADD += ../../resip/stack/libresip.la ../../rutil/librutil.la
