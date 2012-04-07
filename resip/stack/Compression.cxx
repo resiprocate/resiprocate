@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "rutil/Logger.hxx"
 #include "rutil/Random.hxx"
 #include "resip/stack/Compression.hxx"

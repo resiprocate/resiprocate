@@ -2,6 +2,10 @@
 #ifndef __RADIUSDigestAuthenticator_h
 #define __RADIUSDigestAuthenticator_h
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #ifdef USE_RADIUS_CLIENT
 
 #include <radiusclient-ng.h>
