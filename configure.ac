@@ -48,7 +48,7 @@ AC_ARG_WITH(ssl,
 
 AC_ARG_ENABLE(ipv6,
 [  --enable-ipv6           Enable IPv6 support],
- AC_DEFINE_UNQUOTED(USE_IPV6, "yes", USE_IPV6), )
+ AC_DEFINE_UNQUOTED(USE_IPV6, , USE_IPV6), )
 
 AC_ARG_ENABLE(dtls,
 [  --enable-dtls           Enable DTLS support (requires OpenSSL)],
@@ -57,7 +57,7 @@ AC_ARG_ENABLE(dtls,
 AM_CONDITIONAL(USE_MYSQL, false)
 AC_ARG_WITH(mysql,
 [  --with-mysql            Link against MySQL client libraries],
- [AC_DEFINE_UNQUOTED(USE_MYSQL, "yes", USE_MYSQL)
+ [AC_DEFINE_UNQUOTED(USE_MYSQL, , USE_MYSQL)
  AC_SUBST(LIBMYSQL_LIBADD, "-lmysqlclient")
  AM_CONDITIONAL(USE_MYSQL, true)], 
  [ AC_SUBST(LIBMYSQL_LIBADD, "")])

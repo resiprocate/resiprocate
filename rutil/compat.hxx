@@ -1,6 +1,11 @@
 #if !defined(RESIP_COMPAT_HXX)
 #define RESIP_COMPAT_HXX 
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+
 /**
    @file
    This file is used to handle compatibility fixes/tweaks so reSIProcate can 

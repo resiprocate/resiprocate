@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #if !defined(WIN32)
 #if defined(__SUNPRO_CC) || defined (__sun__)
 #define BSD_COMP /* !rk! needed to enable SIOCGIFCONF */

@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/ClientRegistration.hxx"
 #include "resip/dum/ClientInviteSession.hxx"
