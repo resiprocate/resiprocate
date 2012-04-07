@@ -25,7 +25,6 @@ reTurnServer_SOURCES = reTurnServer.cxx \
         ReTurnConfig.cxx \
         ReTurnSubsystem.cxx \
         StunAuth.cxx \
-	StunCredential.cxx \
         StunMessage.cxx \
         StunTuple.cxx \
         TcpConnection.cxx \
@@ -54,7 +53,6 @@ noinst_HEADERS = AsyncSocketBaseHandler.hxx \
 	ReTurnConfig.hxx \
 	ReTurnSubsystem.hxx \
 	StunAuth.hxx \
-	StunCredential.hxx \
 	StunMessage.hxx \
 	StunTuple.hxx \
 	TcpConnection.hxx \

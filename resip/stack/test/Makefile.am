@@ -155,7 +155,6 @@ testTuple_SOURCES = testTuple.cxx
 testTypedef_SOURCES = testTypedef.cxx
 testUdp_SOURCES = testUdp.cxx
 testUri_SOURCES = testUri.cxx TestSupport.cxx
-testXMLCursor_SOURCES = testXMLCursor.cxx
 
 noinst_HEADERS = digcalc.hxx \
 	InviteClient.hxx \
