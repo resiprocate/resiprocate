@@ -998,7 +998,7 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
                   WarningLog(<< "invalid attribute length for DontFragment attribute");
                   return false;
                }
-               StackLog(<< "Turn Dont Fragement = <exists>");
+               StackLog(<< "Turn DontFragement = <exists>");
             }
             else
             {
