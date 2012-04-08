@@ -170,29 +170,6 @@ addDomains(TransactionUser& tu, ProxyConfig& config, bool log)
 int
 main(int argc, char** argv)
 {
-#ifndef _WIN32
-   if ( signal( SIGPIPE, SIG_IGN) == SIG_ERR)
-   {
-      cerr << "Couldn't install signal handler for SIGPIPE" << endl;
-      exit(-1);
-   }
-#endif
-
-   if ( signal( SIGINT, signalHandler ) == SIG_ERR )
-   {
-      cerr << "Couldn't install signal handler for SIGINT" << endl;
-      exit( -1 );
-   }
-
-   if ( signal( SIGTERM, signalHandler ) == SIG_ERR )
-   {
-      cerr << "Couldn't install signal handler for SIGTERM" << endl;
-      exit( -1 );
-   }
-
-   /* Initialize a stack */
-   initNetwork();
-
    Data configFilename("repro.config");
    ProxyConfig config(argc, argv, configFilename);
    bool daemonize = config.getConfigBool("Daemonize", false);
@@ -221,6 +198,29 @@ main(int argc, char** argv)
       close(STDERR_FILENO);
 #endif
    }
+
+#ifndef _WIN32
+   if ( signal( SIGPIPE, SIG_IGN) == SIG_ERR)
+   {
+      cerr << "Couldn't install signal handler for SIGPIPE" << endl;
+      exit(-1);
+   }
+#endif
+
+   if ( signal( SIGINT, signalHandler ) == SIG_ERR )
+   {
+      cerr << "Couldn't install signal handler for SIGINT" << endl;
+      exit( -1 );
+   }
+
+   if ( signal( SIGTERM, signalHandler ) == SIG_ERR )
+   {
+      cerr << "Couldn't install signal handler for SIGTERM" << endl;
+      exit( -1 );
+   }
+
+   /* Initialize a stack */
+   initNetwork();
 
    GenericLogImpl::MaxByteCount = config.getConfigUnsignedLong("LogFileMaxBytes", 5242880 /*5 Mb */);
    Data loggingType = config.getConfigData("LoggingType", "cout", true);
