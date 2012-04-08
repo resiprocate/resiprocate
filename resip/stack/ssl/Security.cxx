@@ -257,7 +257,7 @@ Security::preload()
          
          if(attemptedToLoad)
          {
-            InfoLog(<<"Sucessfully loaded " << fileName );
+            InfoLog(<<"Successfully loaded " << fileName );
          }
       }
    }
@@ -1928,7 +1928,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
          InfoLog( << "data is pkcs7 digest" );
          break;
       default:
-         InfoLog( << "Unkown pkcs7 type" );
+         InfoLog( << "Unknown pkcs7 type" );
          break;
    }
 
