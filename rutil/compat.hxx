@@ -13,7 +13,7 @@
 */
 
 #if defined(__INTEL_COMPILER ) && defined( __OPTIMIZE__ )
-#  undef __OPTIMIZE__ // wierd intel bug with ntohs and htons macros
+#  undef __OPTIMIZE__ // weird intel bug with ntohs and htons macros
 #endif
 
 //#if defined(HAVE_SYS_INT_TYPES_H)
