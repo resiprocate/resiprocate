@@ -1323,7 +1323,7 @@
 2003-08-18 15:41  jason
 
 	* Headers.cxx, ParserCategories.hxx, ParserCategory.hxx: rename
-	wierd comma enums fix bug in output of multi headers on separate
+	weird comma enums fix bug in output of multi headers on separate
 	lines
 
 2003-08-18 07:48  ryker
@@ -3614,7 +3614,7 @@
 
 2003-02-06 18:49  jason
 
-	* os/: Data.cxx, Data.hxx: wierd order of initialization bug fix
+	* os/: Data.cxx, Data.hxx: weird order of initialization bug fix
 
 2003-02-06 18:48  jason
 

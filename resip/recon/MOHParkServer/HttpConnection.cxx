@@ -292,7 +292,7 @@ HttpConnection::tryParse()
          pb.skipToChars( "Basic" ); pb.skipN(6);
          if ( pb.eof() ) DebugLog( << "Did not find Authorization basic " );
          pb.skipWhitespace();
-         if ( pb.eof() ) DebugLog( << "Something wierd in Auhtorization header " );
+         if ( pb.eof() ) DebugLog( << "Something weird in Auhtorization header " );
          if ( !pb.eof() )
          {
             const char* a = pb.position();
