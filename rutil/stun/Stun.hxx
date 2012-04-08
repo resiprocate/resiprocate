@@ -159,10 +159,10 @@ typedef struct
 
 enum StunHmacStatus
 {
-   HmacUnkown=0,
+   HmacUnknown=0,
    HmacOK,
    HmacBadUserName,
-   HmacUnkownUserName,
+   HmacUnknownUserName,
    HmacFailed
 };
 

@@ -74,7 +74,7 @@ certStoreTypes(  WinSecurity::MsCertStoreType pType )
       case  WinSecurity::USERS_STORE:           return storeUsers;
       default:
       {
-         ErrLog( << "Some unkown certificate store type requested" << (int)(pType) );
+         ErrLog( << "Some unknown certificate store type requested" << (int)(pType) );
          assert(0);
       }
    }

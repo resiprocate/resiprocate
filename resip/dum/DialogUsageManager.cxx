@@ -1623,7 +1623,7 @@ DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
                }
                if( !validate100RelSuport(*sipMsg) )
                {
-                  DebugLog (<< "Remote party does not suport 100rel " << *sipMsg);
+                  DebugLog (<< "Remote party does not support 100rel " << *sipMsg);
                   return;
                }
                if( getMasterProfile()->validateContentEnabled() && !validateContent(*sipMsg) )
