@@ -6,6 +6,8 @@ EXTRA_DIST = fixupGperf
 EXTRA_DIST += mainpage.doc
 EXTRA_DIST += rutil_10_0.vcxproj rutil_10_0.vcxproj.filters
 EXTRA_DIST += *.vcproj
+EXTRA_DIST += WinCompat.cxx
+EXTRA_DIST += dns/LocalDns.cxx
 
 #AM_CXXFLAGS = -I../contrib/ares -DUSE_ARES
 
