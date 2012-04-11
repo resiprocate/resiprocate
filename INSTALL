@@ -29,10 +29,10 @@ b) Run configure:
        --with-ssl --with-mysql --with-radius --with-tfm \
        --enable-ipv6 \
        CXXFLAGS="-DUSE_CARES -I`pwd`/tfm/contrib/Netxx-0.3.2/include" \
-       LDFLAGS="-L`pwd`/tfm/contrib/Netxx-0.3.2/src -lNetxx -lcares"
+       LDFLAGS="-L`pwd`/tfm/contrib/Netxx-0.3.2/src -lcares"
 
-     (hint: if it fails to link against libNetxx.so, delete libNetxx.so
-            and it should link against libNetxx.a)
+     (hint: if it fails to link against libNetxx.so, create a symlink, or 
+            delete libNetxx.so and it should link against libNetxx.a)
 
 c) Build everything:
 
