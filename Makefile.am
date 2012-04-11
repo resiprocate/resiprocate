@@ -6,6 +6,9 @@ ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = rutil
 SUBDIRS += resip
 SUBDIRS += repro
+if BUILD_TFM
+SUBDIRS += tfm
+endif
 
 # The Makefiles for these don't separate SSL stuff yet...
 if USE_SSL
