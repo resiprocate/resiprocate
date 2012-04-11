@@ -45,8 +45,10 @@ libdum_la_SOURCES =   \
 	DumProcessHandler.cxx \
 	DumThread.cxx \
 	DumTimeout.cxx \
+	EncryptionRequest.cxx \
 	HandleException.cxx \
 	HandleManager.cxx \
+	Handle.cxx \
 	Handled.cxx \
 	InMemoryRegistrationDatabase.cxx \
 	InMemorySyncRegDb.cxx \

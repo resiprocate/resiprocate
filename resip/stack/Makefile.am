@@ -15,6 +15,7 @@ EXTRA_DIST += parametersA.gperf
 EXTRA_DIST += Readme-Compliance.txt
 EXTRA_DIST += resiprocate_10_0.vcxproj resiprocate_10_0.vcxproj.filters
 EXTRA_DIST += *.vcproj
+EXTRA_DIST += ssl/WinSecurity.cxx
 
 SUBDIRS = . test
 
@@ -44,6 +45,7 @@ libresip_la_SOURCES = \
 	UInt32Category.cxx \
 	Mime.cxx \
 	NameAddr.cxx \
+	ParserCategories.cxx \
 	RequestLine.cxx \
 	StatusLine.cxx \
 	StringCategory.cxx \
