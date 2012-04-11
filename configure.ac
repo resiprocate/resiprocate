@@ -70,6 +70,12 @@ AC_ARG_WITH(radius,
  AM_CONDITIONAL(USE_RADIUS_CLIENT, true)],
  [ AC_SUBST(LIBRADIUS_LIBADD, "")])
 
+AM_CONDITIONAL(BUILD_TFM, false)
+AC_ARG_WITH(tfm,
+[  --with-tfm              Build TFM, links against Netxx and cppunit],
+ [AC_DEFINE_UNQUOTED(BUILD_TFM, , BUILD_TFM)
+ AM_CONDITIONAL(BUILD_TFM, true)], )
+
 AC_SEARCH_LIBS(gethostbyname, nsl)
 AC_SEARCH_LIBS(socket, socket)
 
@@ -89,6 +95,8 @@ AC_OUTPUT(Makefile \
 	repro/Makefile \
 	repro/reprocmd/Makefile \
 	repro/test/Makefile \
+	tfm/Makefile \
+	tfm/tfdum/Makefile \
 	resip.spec \
 	reTurn/Makefile \
 	reTurn/test/Makefile \

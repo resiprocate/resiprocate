@@ -23,6 +23,17 @@ b) Run configure:
    NOTE: some things (e.g. reTurnServer) will ONLY build if you
          specify --with-ssl to link against SSL libraries
 
+   A more complete example, with tfm:
+
+     ./configure \
+       --with-ssl --with-mysql --with-radius --with-tfm \
+       --enable-ipv6 \
+       CXXFLAGS="-DUSE_CARES -I`pwd`/tfm/contrib/Netxx-0.3.2/include" \
+       LDFLAGS="-L`pwd`/tfm/contrib/Netxx-0.3.2/src -lNetxx -lcares"
+
+     (hint: if it fails to link against libNetxx.so, delete libNetxx.so
+            and it should link against libNetxx.a)
+
 c) Build everything:
 
      make
