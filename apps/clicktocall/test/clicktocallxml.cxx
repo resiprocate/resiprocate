@@ -2,7 +2,7 @@
 #include <rutil/Logger.hxx>
 #include <rutil/DnsUtil.hxx>
 #include <rutil/BaseException.hxx>
-#include <resip/stack/XMLCursor.hxx>
+#include <rutil/XMLCursor.hxx>
 #include <rutil/WinLeakCheck.hxx>
 
 using namespace resip;

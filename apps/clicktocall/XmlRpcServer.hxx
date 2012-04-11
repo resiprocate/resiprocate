@@ -4,7 +4,7 @@
 #include <rutil/Data.hxx>
 #include <rutil/TransportType.hxx>
 #include <resip/stack/Tuple.hxx>
-#include <resip/stack/XMLCursor.hxx>
+#include <rutil/XMLCursor.hxx>
 
 #include "XmlRpcServerBase.hxx"
 
