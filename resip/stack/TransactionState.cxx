@@ -2148,7 +2148,6 @@ TransactionState::processTransportFailure(TransactionMessage* msg)
    TransportFailure* failure = dynamic_cast<TransportFailure*>(msg);
    assert(failure);
    assert(mState!=Bogus);
-   assert(mNextTransmission);
 
    // Store failure reasons
    if (failure->getFailureReason() > mFailureReason)
@@ -2157,8 +2156,11 @@ TransactionState::processTransportFailure(TransactionMessage* msg)
       mFailureSubCode = failure->getFailureSubCode();
    }
 
-   if (mNextTransmission->isRequest() && mNextTransmission->method() == CANCEL &&
-       mState != Completed && mState != Terminated)
+   if (mNextTransmission &&  // Note:  If we just transmitted an ACK then mNextTransmission is cleared, so this check is necessary
+       mNextTransmission->isRequest() && 
+       mNextTransmission->method() == CANCEL &&
+       mState != Completed && 
+       mState != Terminated)
    {
       WarningLog (<< "Failed to deliver a CANCEL request");
       StackLog (<< *this);
