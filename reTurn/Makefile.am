@@ -76,7 +76,7 @@ reTurnServer_LDADD = ../resip/dum/libdum.la
 reTurnServer_LDADD += ../resip/stack/libresip.la ../rutil/librutil.la
 #reTurnServer_LDADD += ../contrib/ares/libares.a
 #reTurnServer_LDADD += -L../contrib/ares -lares
-reTurnServer_LDADD += @LIBSSL_LIBADD@ -lpthread -ldb_cxx-4.8
+reTurnServer_LDADD += @LIBSSL_LIBADD@ -lpthread
 
 #lib_LTLIBRARIES = librepro.la
 
