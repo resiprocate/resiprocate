@@ -25,6 +25,48 @@ AC_PROG_RANLIB
 
 AM_MISSING_PROG([GPERF], [gperf])
 
+AC_MSG_CHECKING([ for GNU warning flags])
+if test "${GXX}"x = yesx; then
+  CXXFLAGS="${CXXFLAGS} -Wall -Wno-deprecated"
+  CFLAGS="${CFLAGS} -Wall -Wno-deprecated"
+  AC_MSG_RESULT([yes])
+else
+  AC_MSG_RESULT([no])
+fi
+
+OSVER=`uname -r | tr '()/' " " | cut -f1 -d-`.0.0.0
+OS_MAJOR_VER=`echo $OSVER | cut -f1 -d.`
+OS_MINOR_VER=`echo $OSVER | cut -f2 -d.`
+OS_POINT_VER=`echo $OSVER | cut -f3 -d.`
+OS_PATCH_VER=`echo $OSVER | cut -f4 -d.`
+AC_DEFINE_UNQUOTED(OS_MAJOR_VER, $OS_MAJOR_VER)
+AH_TEMPLATE([OS_MAJOR_VER], [Major OS version])
+AC_DEFINE_UNQUOTED(OS_MINOR_VER, $OS_MINOR_VER)
+AH_TEMPLATE([OS_MINOR_VER], [Minor OS version])
+AC_DEFINE_UNQUOTED(OS_POINT_VER, $OS_POINT_VER)
+AH_TEMPLATE([OS_POINT_VER], [Point OS version])
+AC_DEFINE_UNQUOTED(OS_PATCH_VER, $OS_PATCH_VER)
+AH_TEMPLATE([OS_PATCH_VER], [Patch OS version])
+
+case $host_cpu in
+x86_64)
+  LARCH=IA64
+  ;;
+i?86)
+  LARCH=IA32
+  ;;
+*)
+  echo "Unsupported host CPU: $host_cpu"
+  exit 1
+esac
+ARCH=`echo $host_cpu | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'`
+ARCH_CFLAGS="-DRESIP_OSTYPE_LINUX -DRESIP_ARCH_${ARCH} -DRESIP_LARCH_${LARCH} -D_REENTRANT"
+
+TOOLCHAIN_CFLAGS="-DRESIP_TOOLCHAIN_GNU"
+
+CXXFLAGS="${CXXFLAGS} ${ARCH_CFLAGS} ${TOOLCHAIN_CFLAGS}"
+CFLAGS="${CFLAGS} ${ARCH_CFLAGS} ${TOOLCHAIN_CFLAGS}"
+
 AH_TEMPLATE([HAVE_sockaddr_in_len], [Define if sockaddr_in.sin_len exists])
 AC_CHECK_MEMBER([struct sockaddr_in.sin_len], AC_DEFINE(HAVE_sockaddr_in_len),,
  [#include <arpa/inet.h>])

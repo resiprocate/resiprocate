@@ -18,7 +18,9 @@ b) Run configure:
 
    e.g. on a Debian system:
 
-     ./configure --with-ssl CXXFLAGS="-DUSE_CARES" LDFLAGS="-lcares"
+     ./configure --with-ssl --with-mysql \
+               CXXFLAGS="-DUSE_CARES -DHAVE_EPOLL -DRESIP_FIXED_POINT" \
+               LDFLAGS="-lcares"
 
    NOTE: some things (e.g. reTurnServer) will ONLY build if you
          specify --with-ssl to link against SSL libraries
