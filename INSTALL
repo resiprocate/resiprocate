@@ -31,8 +31,16 @@ b) Run configure:
        CXXFLAGS="-DUSE_CARES -I`pwd`/tfm/contrib/Netxx-0.3.2/include" \
        LDFLAGS="-L`pwd`/tfm/contrib/Netxx-0.3.2/src -lcares"
 
-     (hint: if it fails to link against libNetxx.so, create a symlink, or 
+     (hint: if it fails to link against libNetxx.so, create a symlink, or
             delete libNetxx.so and it should link against libNetxx.a)
+
+     OR (using contrib/ares - be sure to run ./build-contrib.sh first)
+
+     ./configure \
+       --with-ssl --with-mysql --enable-ipv6 \
+       CXXFLAGS="-DUSE_ARES -I`pwd`/contrib/ares" \
+       LDFLAGS="-L`pwd`/contrib/ares/ -lares"
+
 
 c) Build everything:
 
