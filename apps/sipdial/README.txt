@@ -68,7 +68,7 @@ Use the shell scipt/commands below to register the dialer with gconf.
 gconf aware applications like Mozilla will then be able to use the dialer
 to handle sip: and tel: URIs
 
-for scheme in tel sip;
+for scheme in tel sip sips;
 do
   gconftool-2 -t string \
    -s /desktop/gnome/url-handlers/$scheme/command "/usr/local/bin/sipdialer %s"
