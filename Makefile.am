@@ -13,6 +13,7 @@ endif
 # The Makefiles for these don't separate SSL stuff yet...
 if USE_SSL
 SUBDIRS += reTurn reTurn/client
+SUBDIRS += reflow
 SUBDIRS += presSvr
 if BUILD_P2P
 SUBDIRS += p2p/s2c/s2c p2p
