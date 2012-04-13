@@ -6,6 +6,7 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/Uri.hxx"
+#include "resip/stack/ssl/Security.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/SharedPtr.hxx"
 
@@ -25,12 +26,18 @@ DialInstance::DialInstance(const DialerConfiguration& dialerConfiguration, const
 
 DialInstance::DialResult DialInstance::execute()
 {
-  
+
    prepareAddress();
 
-   mSipStack = new SipStack();
+   Security* security = 0;
+   Data certPath(getenv("HOME"));
+   certPath += "/.sipdial/certs";
+   security = new Security(certPath);
+
+   mSipStack = new SipStack(security);
    mDum = new DialogUsageManager(*mSipStack);
-   mDum->addTransport(UDP, 5067, V4);
+   //mDum->addTransport(UDP, 5067, V4);
+   mDum->addTransport(TLS, 5067, V4);
    SharedPtr<MasterProfile> masterProfile = SharedPtr<MasterProfile>(new MasterProfile);
    mDum->setMasterProfile(masterProfile);
    auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager);
