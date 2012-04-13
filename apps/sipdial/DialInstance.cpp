@@ -114,11 +114,11 @@ void DialInstance::sendInvite()
       break;
    case DialerConfiguration::LinksysSPA941:
       hfv = new HeaderFieldValue("\\;answer-after=0", 16);
-      msg->header(h_CallInfos).push_back(GenericUri(hfv, Headers::CallInfo));
+      msg->header(h_CallInfos).push_back(GenericUri(*hfv, Headers::CallInfo));
       break;
    case DialerConfiguration::PolycomIP501:
       hfv = new HeaderFieldValue("AA", 2);
-      msg->header(h_AlertInfos).push_back(GenericUri(hfv, Headers::AlertInfo));
+      msg->header(h_AlertInfos).push_back(GenericUri(*hfv, Headers::AlertInfo));
       break;
    case DialerConfiguration::Cisco7940:
       break;

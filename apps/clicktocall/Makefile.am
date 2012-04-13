@@ -1,17 +1,54 @@
-BUILD := ../../build
-include $(BUILD)/Makefile.pre
+# $Id$
 
-PACKAGES += DUM RESIP RUTIL ARES OPENSSL PTHREAD POPT DB4CXX
-TARGET_LIBRARY = libsipdial
-TARGET_BINARY = sipdialer
-CXXFLAGS += -I./include/sipdial
+EXTRA_DIST = clicktocall.config
+EXTRA_DIST += doc
+EXTRA_DIST += *.sln
+EXTRA_DIST += *.vcproj
 
-SRC += \
-	DialInstance.cpp \
-	MyInviteSessionHandler.cpp \
-	DialerConfiguration.cpp
+SUBDIRS = .
+#SUBDIRS += test
 
-include $(BUILD)/Makefile.post
+#AM_CXXFLAGS = -DUSE_ARES
+
+sbin_PROGRAMS = clicktocall
+clicktocall_LDADD = ../../resip/dum/libdum.la
+clicktocall_LDADD += ../../resip/stack/libresip.la ../../rutil/librutil.la
+clicktocall_LDADD += @LIBSSL_LIBADD@ -lpcre -lpthread
+
+clicktocall_SOURCES = \
+        AddressTranslator.cxx \
+        AppSubsystem.cxx \
+        B2BSession.cxx \
+        clicktocall.cxx \
+        ConfigParser.cxx \
+        HttpBase.cxx \
+        HttpConnection.cxx \
+        Server.cxx \
+        WebAdmin.cxx \
+        WebAdminThread.cxx \
+        XmlRpcConnection.cxx \
+        XmlRpcServerBase.cxx \
+        XmlRpcServer.cxx \
+        XmlRpcServerThread.cxx
+
+
+clicktocallincludedir = $(includedir)/clicktocall
+nobase_clicktocallinclude_HEADERS = ConfigParser.hxx \
+        Version.hxx \
+        WebAdminThread.hxx \
+        XmlRpcServerBase.hxx \
+        HttpBase.hxx \
+        XmlRpcConnection.hxx \
+        AppSubsystem.hxx \
+        XmlRpcServerThread.hxx \
+        B2BSession.hxx \
+        AddressTranslator.hxx \
+        WebAdmin.hxx \
+        XmlRpcServer.hxx \
+        HttpConnection.hxx \
+        Server.hxx \
+        ClickToCallCmds.hxx
+
 
 ##############################################################################
 # 

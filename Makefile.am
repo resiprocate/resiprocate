@@ -10,6 +10,10 @@ if BUILD_TFM
 SUBDIRS += tfm
 endif
 
+if BUILD_APPS
+SUBDIRS += apps
+endif
+
 # The Makefiles for these don't separate SSL stuff yet...
 if USE_SSL
 SUBDIRS += reTurn reTurn/client

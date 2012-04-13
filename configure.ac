@@ -118,6 +118,12 @@ AC_ARG_WITH(tfm,
  [AC_DEFINE_UNQUOTED(BUILD_TFM, , BUILD_TFM)
  AM_CONDITIONAL(BUILD_TFM, true)], )
 
+AM_CONDITIONAL(BUILD_APPS, false)
+AC_ARG_WITH(apps,
+[  --with-apps             Build apps, links against various things],
+ [AC_DEFINE_UNQUOTED(BUILD_APPS, , BUILD_APPS)
+ AM_CONDITIONAL(BUILD_APPS, true)], )
+
 AM_CONDITIONAL(BUILD_RECON, false)
 AC_ARG_WITH(recon,
 [  --with-recon            Build recon, links against sipX],
@@ -151,6 +157,9 @@ AC_OUTPUT(Makefile \
 	repro/test/Makefile \
 	tfm/Makefile \
 	tfm/tfdum/Makefile \
+	apps/Makefile \
+	apps/clicktocall/Makefile \
+	apps/sipdial/Makefile \
 	resip.spec \
 	reTurn/Makefile \
 	reTurn/test/Makefile \
