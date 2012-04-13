@@ -1,8 +1,35 @@
-all:
-	$(MAKE) -C sipdial
+# $Id$
 
-clean cleanall distclean:
-	$(MAKE) -C sipdial $@
+EXTRA_DIST = README.txt
+EXTRA_DIST += test.html
+EXTRA_DIST += sipdial.cfg
+EXTRA_DIST += todo.txt
+EXTRA_DIST += MacOS
+
+SUBDIRS = .
+
+#AM_CXXFLAGS = -DUSE_ARES
+
+lib_LTLIBRARIES = libsipdial.la
+libsipdial_la_LIBADD = ../../resip/dum/libdum.la
+libsipdial_la_LIBADD += ../../resip/stack/libresip.la ../../rutil/librutil.la
+libsipdial_la_LIBADD += @LIBSSL_LIBADD@ -lpthread
+
+bin_PROGRAMS = sipdialer
+sipdialer_LDADD = libsipdial.la
+
+libsipdial_la_SOURCES = \
+        DialInstance.cpp \
+        MyInviteSessionHandler.cpp \
+        DialerConfiguration.cpp
+
+sipdialer_SOURCES = sipdialer.cpp
+
+sipdialincludedir = $(includedir)/sipdial
+nobase_sipdialinclude_HEADERS = DialerConfiguration.hxx \
+	DialInstance.hxx \
+	MyInviteSessionHandler.hxx
+
 
 ##############################################################################
 # 
