@@ -1,5 +1,5 @@
 
 SUBDIRS = clicktocall
 SUBDIRS += sipdial
-#SUBDIRS += ichat-gw
+SUBDIRS += ichat-gw
 
