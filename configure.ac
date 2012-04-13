@@ -118,6 +118,12 @@ AC_ARG_WITH(tfm,
  [AC_DEFINE_UNQUOTED(BUILD_TFM, , BUILD_TFM)
  AM_CONDITIONAL(BUILD_TFM, true)], )
 
+AM_CONDITIONAL(BUILD_P2P, false)
+AC_ARG_WITH(p2p,
+[  --with-p2p              Build P2P, links against S2C and SSL, unfinished],
+ [AC_DEFINE_UNQUOTED(BUILD_P2P, , BUILD_P2P)
+ AM_CONDITIONAL(BUILD_P2P, true)], )
+
 AC_SEARCH_LIBS(gethostbyname, nsl)
 AC_SEARCH_LIBS(socket, socket)
 
