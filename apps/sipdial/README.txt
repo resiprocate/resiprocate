@@ -22,6 +22,19 @@ The configuration file:
 
   You can copy the the example file included in the source
 
+  The parameter callerUserAgentVariety describes the type of phone
+  that will make the outgoing call.  Each VoIP phone implements 
+  support for click-to-dial in a different way.  These phones are
+  supported, and the same mechanisms may work with other phones
+  from the same manufacturer:
+
+  PolycomIP501:  adds the header field "AlertInfo: AA"
+  LinksysSPA941: adds the attribute answer-after=0 to header Callinfo
+  Cisco7940:     same as generic
+  Generic:       adds no special header fields
+
+  In all cases, sipdialer sends a SIP REFER message to the phone.
+
 Install in gconf:
 -----------------
   
