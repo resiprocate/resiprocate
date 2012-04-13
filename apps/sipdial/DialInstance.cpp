@@ -82,7 +82,8 @@ DialInstance::DialResult DialInstance::execute()
 
 void DialInstance::prepareAddress() 
 {
-   if(mTargetUri.scheme() == Symbols::Sip) {
+   if(mTargetUri.scheme() == Symbols::Sip ||
+      mTargetUri.scheme() == Symbols::Sips) {
       mFullTarget = mTargetUri;
       return;
    }
