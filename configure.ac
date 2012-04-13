@@ -118,6 +118,12 @@ AC_ARG_WITH(tfm,
  [AC_DEFINE_UNQUOTED(BUILD_TFM, , BUILD_TFM)
  AM_CONDITIONAL(BUILD_TFM, true)], )
 
+AM_CONDITIONAL(BUILD_RECON, false)
+AC_ARG_WITH(recon,
+[  --with-recon            Build recon, links against sipX],
+ [AC_DEFINE_UNQUOTED(BUILD_RECON, , BUILD_RECON)
+ AM_CONDITIONAL(BUILD_RECON, true)], )
+
 AM_CONDITIONAL(BUILD_P2P, false)
 AC_ARG_WITH(p2p,
 [  --with-p2p              Build P2P, links against S2C and SSL, unfinished],
@@ -150,6 +156,7 @@ AC_OUTPUT(Makefile \
 	reTurn/test/Makefile \
 	reTurn/client/Makefile \
 	reflow/Makefile \
+	resip/recon/Makefile \
 	presSvr/Makefile \
 	p2p/s2c/s2c/Makefile \
 	p2p/Makefile \
