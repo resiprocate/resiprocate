@@ -28,12 +28,12 @@ repro_LDADD += ../resip/dum/libdum.la
 repro_LDADD += ../resip/stack/libresip.la ../rutil/librutil.la
 #repro_LDADD += ../contrib/ares/libares.a
 #repro_LDADD += -L../contrib/ares -lares
-repro_LDADD += @LIBSSL_LIBADD@ -lpthread -ldb_cxx
+repro_LDADD += @LIBSSL_LIBADD@ -lpthread
 
 lib_LTLIBRARIES = librepro.la
 
 librepro_la_LDFLAGS = -version-info 0:0:0 -release @ABIVERSION@ -export-dynamic
-librepro_la_LIBADD = 
+librepro_la_LIBADD = -ldb_cxx
 
 librepro_la_SOURCES = \
 	RouteStore.cxx \
