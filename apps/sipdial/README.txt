@@ -35,6 +35,32 @@ The configuration file:
 
   In all cases, sipdialer sends a SIP REFER message to the phone.
 
+Using TLS
+---------
+
+  sipdial expects to use TLS to security the exchange of
+  SIP REFER messages.
+
+  sipdial expects to find CA root certificates in files matching
+  the pattern ~/.sipdial/certs/root_cert_*.pem
+
+  If multiple certificates are concatenated in a PEM file, it will only
+  load the first.
+
+  To symlink all the standard root certs on a Debian system, you
+  can do the following:
+
+    mkdir -p ~/.sipdial/certs && \
+      cd /etc/ssl/certs && \
+      for i in *.pem ;
+        do ln -s /etc/ssl/certs/$i ~/.sipdial/certs/root_cert_${i}
+      done
+
+  In ~/.sipdial/sipdial.cfg, the callerUserAgentAddress must use
+  a sips URI:
+
+    callerUserAgentAddress sips:mydeskphone@example.org
+
 Install in gconf:
 -----------------
   
