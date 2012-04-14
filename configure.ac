@@ -143,6 +143,9 @@ AM_MAINTAINER_MODE
 
 AC_SUBST(ABIVERSION)
 
+# this is temporarily removed:
+#  apps/ichat-gw/jabberconnector/Makefile
+# until it is tested with autotools
 AC_OUTPUT(Makefile \
 	rutil/Makefile \
 	rutil/test/Makefile \
@@ -160,7 +163,6 @@ AC_OUTPUT(Makefile \
 	apps/Makefile \
 	apps/clicktocall/Makefile \
 	apps/ichat-gw/Makefile \
-	apps/ichat-gw/jabberconnector/Makefile \
 	apps/sipdial/Makefile \
 	resip.spec \
 	reTurn/Makefile \
