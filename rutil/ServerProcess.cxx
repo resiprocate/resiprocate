@@ -3,6 +3,11 @@
   #include "config.h"
 #endif
 
+#include <sys/types.h>
+#include <unistd.h>
+
+#include <iostream>
+#include <fstream>
 #include <signal.h>
 #include <stdexcept>
 
@@ -15,7 +20,7 @@
 using namespace resip;
 using namespace std;
 
-ServerProcess::ServerProcess()
+ServerProcess::ServerProcess() : mPidFile("")
 {
 }
 
@@ -53,7 +58,20 @@ ServerProcess::daemonize()
    close(STDIN_FILENO);
    close(STDOUT_FILENO);
    close(STDERR_FILENO);
+
+   if(mPidFile.size() > 0)
+   {
+      std::ofstream _pid(mPidFile.c_str(), std::ios_base::out | std::ios_base::trunc);
+      _pid << getpid();
+      _pid.close();
+   }
 #endif
+}
+
+void
+ServerProcess::setPidFile(const Data& pidFile)
+{
+   mPidFile = pidFile;
 }
 
 /* ====================================================================
