@@ -3,6 +3,8 @@
   #include "config.h"
 #endif
 
+#include "rutil/Data.hxx"
+
 namespace resip
 {
 
@@ -22,6 +24,12 @@ protected:
    /* The main subclass can call daemonize() if and
       when it wants to become a daemon */
    void daemonize();
+
+   /* Filename of PID file, or empty string for no PID file */
+   void setPidFile(const Data& pidFile);
+
+private:
+   Data mPidFile;
 };
 
 }
