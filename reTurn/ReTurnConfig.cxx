@@ -30,7 +30,8 @@ ReTurnConfig::ReTurnConfig() :
    mLoggingLevel("INFO"),
    mLoggingFilename("reTurnServer.log"),
    mLoggingFileMaxLineCount(50000),  // 50000 about 5M size
-   mDaemonize(false)
+   mDaemonize(false),
+   mPidFile("")
 {
    mAuthenticationCredentials["test"] = "1234";
    calcUserAuthData();
@@ -60,7 +61,8 @@ ReTurnConfig::ReTurnConfig(int argc, char** argv, const resip::Data& defaultConf
    mLoggingLevel(getConfigData("LoggingLevel", "INFO")),
    mLoggingFilename(getConfigData("LogFilename", "reTurnServer.log")),
    mLoggingFileMaxLineCount(getConfigUnsignedLong("LogFileMaxLines", 50000)),
-   mDaemonize(getConfigBool("Daemonize", false))
+   mDaemonize(getConfigBool("Daemonize", false)),
+   mPidFile(getConfigData("PidFile", ""))
 {
    int authMode = getConfigUnsignedShort("AuthenticationMode", 2);
    switch(authMode)
