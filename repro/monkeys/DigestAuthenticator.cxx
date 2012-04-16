@@ -283,8 +283,18 @@ DigestAuthenticator::authorizedForThisIdentity(const resip::Data &user, const re
    // combinations of user/realm combos are authorized for an identity
    if (fromUri.host() == realm)
    {
-      return ((fromUri.user() == user) || (fromUri.user() == "anonymous"));
+      if ((fromUri.user() == user) || (fromUri.user() == "anonymous"));
+         return true;
+
+      // Now try the form where the username parameter in the auth
+      // header is the full fromUri, e.g.
+      //    Proxy-Authorization: Digest username="user@domain" ...
+      //
+      if (fromUri.getAorNoPort() == user)
+         return true;
    }
+
+   // catch-all: access denied
    return false;
 }
 
