@@ -63,6 +63,7 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
    resip::Data defaultConfig("reTurnServer.config");
    reTurn::ReTurnConfig reTurnConfig(argc, argv, defaultConfig);
 
+   setPidFile(reTurnConfig.mPidFile);
    // Daemonize if necessary
    if(reTurnConfig.mDaemonize)
       daemonize();
