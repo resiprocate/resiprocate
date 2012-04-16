@@ -69,7 +69,8 @@ noinst_HEADERS = AsyncSocketBaseHandler.hxx \
 	TurnPermission.hxx \
 	UdpRelayServer.hxx \
 	UdpServer.hxx \
-	UserAuthData.hxx
+	UserAuthData.hxx \
+	reTurnServer.hxx
 
 #reTurnServer_LDADD = librepro.la
 reTurnServer_LDADD = ../resip/dum/libdum.la
