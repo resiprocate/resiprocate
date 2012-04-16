@@ -1,25 +1,17 @@
 
-
+Ensure that app does not keep running
+Generalise config options (e.g. PolycomIP501 rename to AlertInfo)
 Configurable protocol selection (UDP, TCP or TLS)
-
 Configurable cert dir location
-
 Better cert loading algorithm (also fix for repro)
-
 UDP: Must pick random SIP port
-
 Look in /etc/sipdial for 
    - global config settings, overlay with local settings
    - certs
-
 Specify config file on command line or environment variable
-
 Support comments in config file (using rutil/ConfigParse class)
-
-Correct SDP generation
-
+Correct SDP generation (some phones don't work well without any SDP)
 Remove FIXMEs
-
 Create a namespace
 
 
