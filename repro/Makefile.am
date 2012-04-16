@@ -145,7 +145,8 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	Worker.hxx \
 	WorkerThread.hxx \
 	XmlRpcConnection.hxx \
-	XmlRpcServerBase.hxx
+	XmlRpcServerBase.hxx \
+	repro.hxx
 
 if USE_SSL
 librepro_la_SOURCES += \
