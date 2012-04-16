@@ -24,6 +24,7 @@
 #include "rutil/Inserter.hxx"
 #include "rutil/FdPoll.hxx"
 
+#include "repro/repro.hxx"
 #include "repro/ProxyConfig.hxx"
 #include "repro/Proxy.hxx"
 #include "repro/Registrar.hxx"
@@ -165,39 +166,21 @@ addDomains(TransactionUser& tu, ProxyConfig& config, bool log)
    return realm;
 }
 
-
+ReproProcess::ReproProcess()
+{
+}
+ReproProcess::~ReproProcess()
+{
+}
 
 int
-main(int argc, char** argv)
+ReproProcess::main(int argc, char** argv)
 {
    Data configFilename("repro.config");
    ProxyConfig config(argc, argv, configFilename);
-   bool daemonize = config.getConfigBool("Daemonize", false);
-   if(daemonize)
-   {
-#ifdef WIN32
-      // fork is not possible on Windows
-      throw std::runtime_error("Unable to fork/daemonize on Windows, please check the config");
-#else
-      pid_t pid;
-      if ((pid = fork()) < 0) 
-      {
-         // fork() failed
-         throw std::runtime_error(strerror(errno));
-      }
-      else if (pid != 0)
-      {
-         // parent process done
-         exit(0);
-      }
-      if(chdir("/") < 0)
-         throw std::runtime_error(strerror(errno));
-      // Nothing should be writing to stdout/stderr after this
-      close(STDIN_FILENO);
-      close(STDOUT_FILENO);
-      close(STDERR_FILENO);
-#endif
-   }
+   bool _daemonize = config.getConfigBool("Daemonize", false);
+   if(_daemonize)
+      daemonize();
 
 #ifndef _WIN32
    if ( signal( SIGPIPE, SIG_IGN) == SIG_ERR)
@@ -980,6 +963,14 @@ main(int argc, char** argv)
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
    }
 #endif
+   return 0;
+}
+
+int
+main(int argc, char** argv)
+{
+   ReproProcess proc;
+   return proc.run(argc, argv);
 }
 
 /*
