@@ -23,6 +23,7 @@ librutil_la_SOURCES = \
 	Condition.cxx \
 	ConfigParse.cxx \
 	CountStream.cxx \
+	ServerProcess.cxx \
 	Data.cxx \
 	DataStream.cxx \
 	DnsUtil.cxx \
@@ -140,6 +141,7 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	Condition.hxx \
 	WinCompat.hxx \
 	vthread.hxx \
+	ServerProcess.hxx \
 	Data.hxx \
 	Lock.hxx \
 	TimeLimitFifo.hxx \
