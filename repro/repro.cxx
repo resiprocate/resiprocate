@@ -178,6 +178,7 @@ ReproProcess::main(int argc, char** argv)
 {
    Data configFilename("repro.config");
    ProxyConfig config(argc, argv, configFilename);
+   setPidFile(config.getConfigData("PidFile", "", true));
    bool _daemonize = config.getConfigBool("Daemonize", false);
    if(_daemonize)
       daemonize();
