@@ -1,10 +1,13 @@
 # $Id$
 
+man_MANS = sipdialer.1
+
 EXTRA_DIST = README.txt
 EXTRA_DIST += test.html
 EXTRA_DIST += sipdial.cfg
 EXTRA_DIST += todo.txt
 EXTRA_DIST += MacOS
+EXTRA_DIST += man_MANS
 
 SUBDIRS = .
 
@@ -14,6 +17,8 @@ lib_LTLIBRARIES = libsipdial.la
 libsipdial_la_LIBADD = ../../resip/dum/libdum.la
 libsipdial_la_LIBADD += ../../resip/stack/libresip.la ../../rutil/librutil.la
 libsipdial_la_LIBADD += @LIBSSL_LIBADD@ -lpthread
+libsipdial_la_LDFLAGS = -version-info 0:0:0 -release @ABIVERSION@
+libsipdial_la_LDFLAGS += -export-dynamic
 
 bin_PROGRAMS = sipdialer
 sipdialer_LDADD = libsipdial.la
