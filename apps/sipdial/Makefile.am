@@ -7,7 +7,7 @@ EXTRA_DIST += test.html
 EXTRA_DIST += sipdial.cfg
 EXTRA_DIST += todo.txt
 EXTRA_DIST += MacOS
-EXTRA_DIST += man_MANS
+EXTRA_DIST += $(man_MANS)
 
 SUBDIRS = .
 
