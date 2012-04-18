@@ -84,6 +84,19 @@ AH_TEMPLATE([REPRO_RELEASE_VERSION], [Package version])
 AC_DEFINE_UNQUOTED(DB_HEADER, "db_cxx.h", DB_HEADER)
 AH_TEMPLATE([DB_HEADER], [Name of header for libdb])
 
+AM_CONDITIONAL(USE_ARES, true)
+AM_CONDITIONAL(USE_CARES, false)
+AC_ARG_WITH(c-ares,
+[  --with-c-ares           Link against libc-ares (rather than contrib/ares)],
+ [AC_DEFINE_UNQUOTED(USE_CARES, , USE_CARES)
+ AC_SUBST(LIBARES_LIBADD, "-lcares")
+ AM_CONDITIONAL(USE_ARES, false)
+ AM_CONDITIONAL(USE_CARES, true)],
+ [ AC_DEFINE_UNQUOTED(USE_ARES, , USE_ARES)
+   CXXFLAGS="$CXXFLAGS -I`pwd`/contrib/ares"
+   LDFLAGS="$LDFLAGS -L`pwd`/contrib/ares"
+   AC_SUBST(LIBARES_LIBADD, "-lares")])
+
 AM_CONDITIONAL(USE_SSL, false)
 AC_ARG_WITH(ssl, 
 [  --with-ssl              Link against OpenSSL libraries],
