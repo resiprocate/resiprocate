@@ -56,10 +56,10 @@ i?86)
   LARCH=IA32
   ;;
 *)
-  echo "Unsupported host CPU: $host_cpu"
+  echo "WARNING: Possibly unsupported host CPU: $host_cpu"
   echo "Please review the CPU-specific settings in configure.ac"
-  echo "and then re-run autoreconf --install"
-  exit 1
+#  echo "and then re-run autoreconf --install"
+#  exit 1
 esac
 ARCH=`echo $host_cpu | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'`
 ARCH_CFLAGS="-DRESIP_OSTYPE_LINUX -DRESIP_ARCH_${ARCH} -DRESIP_LARCH_${LARCH} -D_REENTRANT"
