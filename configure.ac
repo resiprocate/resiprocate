@@ -48,14 +48,16 @@ AH_TEMPLATE([OS_POINT_VER], [Point OS version])
 AC_DEFINE_UNQUOTED(OS_PATCH_VER, $OS_PATCH_VER)
 AH_TEMPLATE([OS_PATCH_VER], [Patch OS version])
 
+
 case $host_cpu in
 x86_64)
-  LARCH=IA64
+#  LARCH=IA64
   ;;
 i?86)
   LARCH=IA32
   ;;
 *)
+  LARCH="$host_cpu"
   echo "WARNING: Possibly unsupported host CPU: $host_cpu"
   echo "Please review the CPU-specific settings in configure.ac"
 #  echo "and then re-run autoreconf --install"
