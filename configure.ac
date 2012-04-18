@@ -57,6 +57,8 @@ i?86)
   ;;
 *)
   echo "Unsupported host CPU: $host_cpu"
+  echo "Please review the CPU-specific settings in configure.ac"
+  echo "and then re-run autoreconf --install"
   exit 1
 esac
 ARCH=`echo $host_cpu | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'`
