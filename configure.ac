@@ -48,16 +48,46 @@ AH_TEMPLATE([OS_POINT_VER], [Point OS version])
 AC_DEFINE_UNQUOTED(OS_PATCH_VER, $OS_PATCH_VER)
 AH_TEMPLATE([OS_PATCH_VER], [Patch OS version])
 
+TOOLCHAIN_CFLAGS="-DRESIP_TOOLCHAIN_GNU"
+
 case $host_os in
 solaris*)
   CXXFLAGS="$CXXFLAGS -library=stlport4"
 #  CFLAGS="-mt"
 #  LDFLAGS="$LDFLAGS -DTHREAD=MULTI -mt -library=stlport4"
+  TOOLCHAIN_CFLAGS="-DRESIP_TOOLCHAIN_SUNPRO"
   ;;
 *)
   ;;
 esac
 
+OSTYPE=`uname`
+case $OSTYPE in
+solaris*)
+  OSTYPE=SunOS
+  ;;
+freebsd*)
+  OSTYPE=FreeBSD
+  ;;
+linux*)
+  OSTYPE=Linux
+  ;;
+darwin*)
+  OSTYPE=Darwin
+  ;;
+msys*)
+  OSTYPE=MinGW
+  ;;
+MINGW*)
+  OSTYPE=MinGW
+  ;;
+*)
+  echo "WARNING: Possibly unsupported OSTYPE: $OSTYPE"
+  echo "Please see configure.ac"
+  ;;
+esac
+
+ARCH=$host_cpu
 case $host_cpu in
 x86_64)
 #  LARCH=IA64
@@ -71,11 +101,12 @@ i?86)
   echo "Please review the CPU-specific settings in configure.ac"
 #  echo "and then re-run autoreconf --install"
 #  exit 1
+  ;;
 esac
-ARCH=`echo $host_cpu | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'`
-ARCH_CFLAGS="-DRESIP_OSTYPE_LINUX -DRESIP_ARCH_${ARCH} -DRESIP_LARCH_${LARCH} -D_REENTRANT"
-
-TOOLCHAIN_CFLAGS="-DRESIP_TOOLCHAIN_GNU"
+OSTYPE_UPPER=`echo $OSTYPE | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'`
+ARCH_UPPER=`echo $host_cpu | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'`
+LARCH_UPPER=`echo $LARCH | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'`
+ARCH_CFLAGS="-DRESIP_OSTYPE_${OSTYPE_UPPER} -DRESIP_ARCH_${ARCH_UPPER} -DRESIP_LARCH_${LARCH_UPPER} -D_REENTRANT"
 
 CXXFLAGS="${CXXFLAGS} ${ARCH_CFLAGS} ${TOOLCHAIN_CFLAGS}"
 CFLAGS="${CFLAGS} ${ARCH_CFLAGS} ${TOOLCHAIN_CFLAGS}"
