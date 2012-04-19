@@ -1,16 +1,32 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 2001-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 2001-2009 Oracle.  All rights reserved.
  *
- * $Id: fop.h,v 11.5 2004/01/28 03:36:02 bostic Exp $
+ * $Id$
  */
 
-#ifndef	_FOP_H_
-#define	_FOP_H_
+#ifndef	_DB_FOP_H_
+#define	_DB_FOP_H_
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
+#define	MAKE_INMEM(D) do {					\
+	F_SET((D), DB_AM_INMEM);				\
+	(void)__memp_set_flags((D)->mpf, DB_MPOOL_NOFILE, 1);	\
+} while (0)
+
+#define	CLR_INMEM(D) do {					\
+	F_CLR((D), DB_AM_INMEM);				\
+	(void)__memp_set_flags((D)->mpf, DB_MPOOL_NOFILE, 0);	\
+} while (0)
 
 #include "dbinc_auto/fileops_auto.h"
 #include "dbinc_auto/fileops_ext.h"
 
-#endif /* !_FOP_H_ */
+#if defined(__cplusplus)
+}
+#endif
+#endif /* !_DB_FOP_H_ */

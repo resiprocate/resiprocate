@@ -1,5 +1,5 @@
 #! /bin/sh
-#	$Id: dd.sh,v 1.3 2004/05/04 15:51:45 bostic Exp $
+#	$Id$
 #
 # Display environment's deadlocks based on "db_stat -Co" output.
 
@@ -22,13 +22,16 @@ else
 fi
 
 # Print out list of node wait states, and output cycles in the graph.
-egrep '\<WAIT\>.*\<page\>' $1 | awk '{print $1 " " $7}' |
-while read l p; do
-	p=`egrep "\<HELD\>.*\<page\>[	 ][	 ]*$p$" $1 | awk '{print $1}'`
-	echo "$l $p"
+egrep '\<WAIT\>.*\<page\>' $1 | awk '{print $1 " " $5 " " $7}' |
+while read l f p; do
+	for i in `egrep "\<HELD\>.*\<$f\>.*\<page\>.*\<$p\>" $1 |
+	    awk '{print $1}'`; do
+		echo "$l $i"
+	done
 done | tsort > /dev/null 2>$t1
 
 # Display the locks in a single cycle.
+c=1
 display_one() {
 	if [ -s $1 ]; then
 		echo "Deadlock #$c ============"
@@ -61,7 +64,6 @@ display_one() {
 # the child commits/aborts.  This means the deadlock where parent holds a
 # lock, thread A waits on parent, child waits on thread A won't be shown.
 if [ -s $t1 ]; then
-	c=1
 	:>$t2
 	while read a b; do
 		case $b in

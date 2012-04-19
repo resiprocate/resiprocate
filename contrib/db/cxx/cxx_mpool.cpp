@@ -1,20 +1,17 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1997-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1997-2009 Oracle.  All rights reserved.
  *
- * $Id: cxx_mpool.cpp,v 11.28 2004/01/28 03:35:56 bostic Exp $
+ * $Id$
  */
 
 #include "db_config.h"
 
-#include <errno.h>
+#include "db_int.h"
 
 #include "db_cxx.h"
 #include "dbinc/cxx_int.h"
-
-#include "db_int.h"
 
 // Helper macros for simple methods that pass through to the
 // underlying C method. It may return an error or raise an exception.
@@ -33,7 +30,7 @@ int DbMpoolFile::_name _argspec						\
 	else								\
 		ret = mpf->_name _arglist;				\
 	if (!_retok(ret))						\
-		DB_ERROR(DbEnv::get_DbEnv(mpf->dbenv), \
+		DB_ERROR(DbEnv::get_DbEnv(mpf->env->dbenv), 		\
 			"DbMpoolFile::"#_name, ret, ON_ERROR_UNKNOWN);	\
 	return (ret);							\
 }
@@ -65,7 +62,7 @@ int DbMpoolFile::close(u_int32_t flags)
 {
 	DB_MPOOLFILE *mpf = unwrap(this);
 	int ret;
-	DbEnv *dbenv = DbEnv::get_DbEnv(mpf->dbenv);
+	DbEnv *dbenv = DbEnv::get_DbEnv(mpf->env->dbenv);
 
 	if (mpf == NULL)
 		ret = EINVAL;
@@ -84,15 +81,15 @@ int DbMpoolFile::close(u_int32_t flags)
 	return (ret);
 }
 
-DB_MPOOLFILE_METHOD(get, (db_pgno_t *pgnoaddr, u_int32_t flags, void *pagep),
-    (mpf, pgnoaddr, flags, pagep), DB_RETOK_MPGET)
+DB_MPOOLFILE_METHOD(get,
+    (db_pgno_t *pgnoaddr, DbTxn *txn, u_int32_t flags, void *pagep),
+    (mpf, pgnoaddr, unwrap(txn), flags, pagep), DB_RETOK_MPGET)
 DB_MPOOLFILE_METHOD(open,
     (const char *file, u_int32_t flags, int mode, size_t pagesize),
     (mpf, file, flags, mode, pagesize), DB_RETOK_STD)
-DB_MPOOLFILE_METHOD(put, (void *pgaddr, u_int32_t flags),
-    (mpf, pgaddr, flags), DB_RETOK_STD)
-DB_MPOOLFILE_METHOD(set, (void *pgaddr, u_int32_t flags),
-    (mpf, pgaddr, flags), DB_RETOK_STD)
+DB_MPOOLFILE_METHOD(put,
+    (void *pgaddr, DB_CACHE_PRIORITY priority, u_int32_t flags),
+    (mpf, pgaddr, priority, flags), DB_RETOK_STD)
 DB_MPOOLFILE_METHOD(get_clear_len, (u_int32_t *lenp),
     (mpf, lenp), DB_RETOK_STD)
 DB_MPOOLFILE_METHOD(set_clear_len, (u_int32_t len),
@@ -109,6 +106,8 @@ DB_MPOOLFILE_METHOD(get_ftype, (int *ftypep),
     (mpf, ftypep), DB_RETOK_STD)
 DB_MPOOLFILE_METHOD(set_ftype, (int ftype),
     (mpf, ftype), DB_RETOK_STD)
+DB_MPOOLFILE_METHOD(get_last_pgno, (db_pgno_t *pgnop),
+    (mpf, pgnop), DB_RETOK_STD)
 DB_MPOOLFILE_METHOD(get_lsn_offset, (int32_t *offsetp),
     (mpf, offsetp), DB_RETOK_STD)
 DB_MPOOLFILE_METHOD(set_lsn_offset, (int32_t offset),

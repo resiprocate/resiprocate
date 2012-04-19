@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: vx_buildcd,v 1.6 2001/11/05 21:05:58 sue Exp $
+#	$Id$
 #
 # Build the Setup SDK CD image on the VxWorks host machine.
 
@@ -75,7 +75,7 @@ f=$D/filelist.demo
 (sed -f $s $D/vx_demofile.in) > $t
     (echo "Building $f" && rm -f $f && cp $t $f)
 
-# Copy the Sleepycat specific files into the SetupSDK area.
+# Copy files into the SetupSDK area.
 (cd $D && cp README.TXT $S)
 (cd $D && cp LICENSE.TXT $S)
 (cd $D && cp CONFIG.TCL $S/RESOURCE/TCL)
@@ -88,7 +88,7 @@ f=$D/filelist.demo
 f=../docs/LIB
 (echo "Building $f" && rm -f $f)
 cat <<ENDOFLIBTEXT >> $f
-{BerkeleyDB.$DB_VERSION_MAJOR.$DB_VERSION_MINOR.$DB_VERSION_PATCH} {Sleepycat Software Berkeley DB} {<b>BerkeleyDB.$DB_VERSION_MAJOR.$DB_VERSION_MINOR.$DB_VERSION_PATCH</b>} {<b><a href="./index.html">BerkeleyDB.$DB_VERSION_MAJOR.$DB_VERSION_MINOR.$DB_VERSION_PATCH</a></b>} {Sleepycat BerkeleyDB} {} {} {}
+{BerkeleyDB.$DB_VERSION_MAJOR.$DB_VERSION_MINOR.$DB_VERSION_PATCH} {Berkeley DB} {<b>BerkeleyDB.$DB_VERSION_MAJOR.$DB_VERSION_MINOR.$DB_VERSION_PATCH</b>} {<b><a href="./index.html">BerkeleyDB.$DB_VERSION_MAJOR.$DB_VERSION_MINOR.$DB_VERSION_PATCH</a></b>} {BerkeleyDB} {} {} {}
 ENDOFLIBTEXT
 
 #

@@ -1,8 +1,7 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1996-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
  */
 /*
  * Copyright (c) 1990, 1993
@@ -39,18 +38,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: hsearch.c,v 11.14 2004/01/28 03:36:11 bostic Exp $
+ * $Id$
  */
 
+#define	DB_DBM_HSEARCH	1
 #include "db_config.h"
 
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-
-#include <string.h>
-#endif
-
-#define	DB_DBM_HSEARCH	1
 #include "db_int.h"
 
 static DB	*dbp;
@@ -82,8 +75,8 @@ __db_hcreate(nel)
 	if ((ret = dbp->set_pagesize(dbp, 512)) != 0 ||
 	    (ret = dbp->set_h_ffactor(dbp, 16)) != 0 ||
 	    (ret = dbp->set_h_nelem(dbp, (u_int32_t)nel)) != 0 ||
-	    (ret = dbp->open(dbp,
-	    NULL, NULL, NULL, DB_HASH, DB_CREATE, __db_omode("rw----"))) != 0)
+	    (ret = dbp->open(dbp, NULL,
+	    NULL, NULL, DB_HASH, DB_CREATE, DB_MODE_600)) != 0)
 		__os_set_errno(ret);
 
 	/*
@@ -105,15 +98,12 @@ __db_hsearch(item, action)
 		__os_set_errno(EINVAL);
 		return (NULL);
 	}
-	memset(&key, 0, sizeof(key));
+	DB_INIT_DBT(key, item.key, strlen(item.key) + 1);
 	memset(&val, 0, sizeof(val));
-	key.data = item.key;
-	key.size = (u_int32_t)strlen(item.key) + 1;
 
 	switch (action) {
 	case ENTER:
-		val.data = item.data;
-		val.size = (u_int32_t)strlen(item.data) + 1;
+		DB_SET_DBT(val, item.data, strlen(item.data) + 1);
 
 		/*
 		 * Try and add the key to the database.  If we fail because

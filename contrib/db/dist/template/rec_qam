@@ -1,11 +1,5 @@
 #include "db_config.h"
 
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-
-#include <string.h>
-#endif
-
 #include "db_int.h"
 #include "dbinc/db_page.h"
 #include "dbinc/__qam.h"
@@ -16,11 +10,11 @@
  *	Recovery function for incfirst.
  *
  * PUBLIC: int __qam_incfirst_recover
- * PUBLIC:   __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+ * PUBLIC:   __P((env *, DBT *, DB_LSN *, db_recops, void *));
  */
 int
-__qam_incfirst_recover(dbenv, dbtp, lsnp, op, info)
-	DB_ENV *dbenv;
+__qam_incfirst_recover(env, dbtp, lsnp, op, info)
+	env *env;
 	DBT *dbtp;
 	DB_LSN *lsnp;
 	db_recops op;
@@ -30,11 +24,14 @@ __qam_incfirst_recover(dbenv, dbtp, lsnp, op, info)
 	DB *file_dbp;
 	DBC *dbc;
 	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
 	PAGE *pagep;
 	int cmp_n, cmp_p, modified, ret;
 
+	ip = ((DB_TXNHEAD *)info)->thread_info;
+
 	REC_PRINT(__qam_incfirst_print);
-	REC_INTRO(__qam_incfirst_read, 1);
+	REC_INTRO(__qam_incfirst_read, ip, 0);
 
 	if ((ret = mpf->get(mpf, &argp->pgno, 0, &pagep)) != 0)
 		if (DB_REDO(op)) {
@@ -78,11 +75,11 @@ out:	REC_CLOSE;
  *	Recovery function for mvptr.
  *
  * PUBLIC: int __qam_mvptr_recover
- * PUBLIC:   __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+ * PUBLIC:   __P((env *, DBT *, DB_LSN *, db_recops, void *));
  */
 int
-__qam_mvptr_recover(dbenv, dbtp, lsnp, op, info)
-	DB_ENV *dbenv;
+__qam_mvptr_recover(env, dbtp, lsnp, op, info)
+	env *env;
 	DBT *dbtp;
 	DB_LSN *lsnp;
 	db_recops op;
@@ -92,11 +89,14 @@ __qam_mvptr_recover(dbenv, dbtp, lsnp, op, info)
 	DB *file_dbp;
 	DBC *dbc;
 	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
 	PAGE *pagep;
 	int cmp_n, cmp_p, modified, ret;
 
+	ip = ((DB_TXNHEAD *)info)->thread_info;
+
 	REC_PRINT(__qam_mvptr_print);
-	REC_INTRO(__qam_mvptr_read, 1);
+	REC_INTRO(__qam_mvptr_read, ip, 0);
 
 	if ((ret = mpf->get(mpf, &argp->pgno, 0, &pagep)) != 0)
 		if (DB_REDO(op)) {
@@ -140,11 +140,11 @@ out:	REC_CLOSE;
  *	Recovery function for del.
  *
  * PUBLIC: int __qam_del_recover
- * PUBLIC:   __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+ * PUBLIC:   __P((env *, DBT *, DB_LSN *, db_recops, void *));
  */
 int
-__qam_del_recover(dbenv, dbtp, lsnp, op, info)
-	DB_ENV *dbenv;
+__qam_del_recover(env, dbtp, lsnp, op, info)
+	env *env;
 	DBT *dbtp;
 	DB_LSN *lsnp;
 	db_recops op;
@@ -154,11 +154,14 @@ __qam_del_recover(dbenv, dbtp, lsnp, op, info)
 	DB *file_dbp;
 	DBC *dbc;
 	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
 	PAGE *pagep;
 	int cmp_n, cmp_p, modified, ret;
 
+	ip = ((DB_TXNHEAD *)info)->thread_info;
+
 	REC_PRINT(__qam_del_print);
-	REC_INTRO(__qam_del_read, 1);
+	REC_INTRO(__qam_del_read, ip, 0);
 
 	if ((ret = mpf->get(mpf, &argp->pgno, 0, &pagep)) != 0)
 		if (DB_REDO(op)) {
@@ -202,11 +205,11 @@ out:	REC_CLOSE;
  *	Recovery function for add.
  *
  * PUBLIC: int __qam_add_recover
- * PUBLIC:   __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+ * PUBLIC:   __P((env *, DBT *, DB_LSN *, db_recops, void *));
  */
 int
-__qam_add_recover(dbenv, dbtp, lsnp, op, info)
-	DB_ENV *dbenv;
+__qam_add_recover(env, dbtp, lsnp, op, info)
+	env *env;
 	DBT *dbtp;
 	DB_LSN *lsnp;
 	db_recops op;
@@ -216,11 +219,14 @@ __qam_add_recover(dbenv, dbtp, lsnp, op, info)
 	DB *file_dbp;
 	DBC *dbc;
 	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
 	PAGE *pagep;
 	int cmp_n, cmp_p, modified, ret;
 
+	ip = ((DB_TXNHEAD *)info)->thread_info;
+
 	REC_PRINT(__qam_add_print);
-	REC_INTRO(__qam_add_read, 1);
+	REC_INTRO(__qam_add_read, ip, 0);
 
 	if ((ret = mpf->get(mpf, &argp->pgno, 0, &pagep)) != 0)
 		if (DB_REDO(op)) {
@@ -264,11 +270,11 @@ out:	REC_CLOSE;
  *	Recovery function for delext.
  *
  * PUBLIC: int __qam_delext_recover
- * PUBLIC:   __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+ * PUBLIC:   __P((env *, DBT *, DB_LSN *, db_recops, void *));
  */
 int
-__qam_delext_recover(dbenv, dbtp, lsnp, op, info)
-	DB_ENV *dbenv;
+__qam_delext_recover(env, dbtp, lsnp, op, info)
+	env *env;
 	DBT *dbtp;
 	DB_LSN *lsnp;
 	db_recops op;
@@ -278,11 +284,14 @@ __qam_delext_recover(dbenv, dbtp, lsnp, op, info)
 	DB *file_dbp;
 	DBC *dbc;
 	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
 	PAGE *pagep;
 	int cmp_n, cmp_p, modified, ret;
 
+	ip = ((DB_TXNHEAD *)info)->thread_info;
+
 	REC_PRINT(__qam_delext_print);
-	REC_INTRO(__qam_delext_read, 1);
+	REC_INTRO(__qam_delext_read, ip, 0);
 
 	if ((ret = mpf->get(mpf, &argp->pgno, 0, &pagep)) != 0)
 		if (DB_REDO(op)) {

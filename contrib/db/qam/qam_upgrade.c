@@ -1,19 +1,12 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1996-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
  *
- * $Id: qam_upgrade.c,v 11.16 2004/05/10 21:29:43 bostic Exp $
+ * $Id$
  */
 
 #include "db_config.h"
-
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-
-#include <string.h>
-#endif
 
 #include "db_int.h"
 #include "dbinc/db_upgrade.h"
@@ -32,8 +25,8 @@ __qam_31_qammeta(dbp, real_name, buf)
 	char *real_name;
 	u_int8_t *buf;
 {
-	QMETA31 *newmeta;
 	QMETA30 *oldmeta;
+	QMETA31 *newmeta;
 
 	COMPQUIET(dbp, NULL);
 	COMPQUIET(real_name, NULL);
@@ -76,8 +69,8 @@ __qam_32_qammeta(dbp, real_name, buf)
 	char *real_name;
 	u_int8_t *buf;
 {
-	QMETA32 *newmeta;
 	QMETA31 *oldmeta;
+	QMETA32 *newmeta;
 
 	COMPQUIET(dbp, NULL);
 	COMPQUIET(real_name, NULL);

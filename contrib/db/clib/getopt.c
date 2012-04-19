@@ -1,8 +1,7 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1996-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
  */
 /*
  * Copyright (c) 1987, 1993, 1994
@@ -32,16 +31,10 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: getopt.c,v 11.9 2004/01/28 03:35:52 bostic Exp $
+ * $Id$
  */
 
 #include "db_config.h"
-
-#ifndef NO_SYSTEM_INCLUDES
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#endif
 
 #include "db_int.h"
 
@@ -93,9 +86,9 @@ getopt(nargc, nargv, ostr)
 	}
 	if (!progname) {
 		if ((progname = __db_rpath(*nargv)) == NULL)
-	                progname = *nargv;
-        	else
-                	++progname;
+			progname = *nargv;
+		else
+			++progname;
 	}
 
 	if (optreset || !*place) {		/* update scanning pointer */
@@ -143,7 +136,7 @@ getopt(nargc, nargv, ostr)
 				    progname, optopt);
 			return (BADCH);
 		}
-	 	else				/* white space */
+		else				/* white space */
 			optarg = nargv[optind];
 		place = EMSG;
 		++optind;

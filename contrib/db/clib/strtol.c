@@ -30,24 +30,22 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: strtol.c,v 1.3 2004/10/28 19:27:19 bostic Exp $
+ * $Id$
  */
 
 #include "db_config.h"
 
-#ifndef NO_SYSTEM_INCLUDES
-#include <limits.h>
-#include <ctype.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <stdio.h>
-#endif
+#include "db_int.h"
 
 /*
  * Convert a string to a long integer.
  *
  * Assumes that the upper and lower case
  * alphabets and digits are each contiguous.
+ *
+ * PUBLIC: #ifndef HAVE_STRTOL
+ * PUBLIC: long strtol __P((const char *, char **, int));
+ * PUBLIC: #endif
  */
 long
 strtol(nptr, endptr, base)
@@ -137,7 +135,7 @@ strtol(nptr, endptr, base)
 noconv:
 		errno = EINVAL;
 	} else if (neg)
-		acc = -acc;
+		acc = -(long)acc;
 	if (endptr != NULL)
 		*endptr = (char *)(any ? s - 1 : nptr);
 	return (acc);

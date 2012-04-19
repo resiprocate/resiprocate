@@ -1,8 +1,7 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1996-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
  */
 /*
  * Copyright (c) 1995, 1996
@@ -32,11 +31,15 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: db_dispatch.h,v 11.38 2004/07/26 19:54:08 margo Exp $
+ * $Id$
  */
 
 #ifndef _DB_DISPATCH_H_
 #define	_DB_DISPATCH_H_
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
 /*
  * Declarations and typedefs for the list of transaction IDs used during
@@ -46,12 +49,13 @@
 typedef enum {
 	TXNLIST_DELETE,
 	TXNLIST_LSN,
-	TXNLIST_PGNO,
 	TXNLIST_TXNID
 } db_txnlist_type;
 
 #define	DB_TXNLIST_MASK(hp, n)  (n % hp->nslots)
 struct __db_txnhead {
+	void *td;		/* If abort, the detail for the txn. */
+	DB_THREAD_INFO *thread_info;	/* Thread information. */
 	u_int32_t maxid;	/* Maximum transaction id. */
 	DB_LSN maxlsn;		/* Maximum commit lsn. */
 	DB_LSN ckplsn;		/* LSN of last retained checkpoint. */
@@ -68,6 +72,7 @@ struct __db_txnhead {
 	LIST_HEAD(__db_headlink, __db_txnlist) head[1];
 };
 
+#define	DB_LSN_STACK_SIZE 4
 struct __db_txnlist {
 	db_txnlist_type type;
 	LIST_ENTRY(__db_txnlist) links;
@@ -78,38 +83,15 @@ struct __db_txnlist {
 			u_int32_t status;
 		} t;
 		struct {
-			u_int32_t ntxns;
-			u_int32_t maxn;
-			DB_LSN *lsn_array;
+			u_int32_t stack_size;
+			u_int32_t stack_indx;
+			DB_LSN *lsn_stack;
 		} l;
-		struct {
-			u_int32_t nentries;
-			u_int32_t maxentry;
-			int32_t locked;
-			char *fname;
-			int32_t fileid;
-			db_pgno_t *pgno_array;
-			u_int8_t uid[DB_FILE_ID_LEN];
-		} p;
 	} u;
 };
 
-/*
- * Flag value for __db_txnlist_lsnadd. Distinguish whether we are replacing
- * an entry in the transaction list or adding a new one.
- */
-#define	TXNLIST_NEW	0x1
-
-/*
- * States for limbo list processing.
- */
-
-typedef enum {
-	LIMBO_NORMAL,		/* Normal processing. */
-	LIMBO_PREPARE,		/* We are preparing a transaction. */
-	LIMBO_RECOVER,		/* We are in recovery. */
-	LIMBO_TIMESTAMP,	/* We are recovering to a timestamp. */
-	LIMBO_COMPENSATE	/* After recover to ts, generate log records. */
-} db_limbo_state;
+#if defined(__cplusplus)
+}
+#endif
 
 #endif /* !_DB_DISPATCH_H_ */

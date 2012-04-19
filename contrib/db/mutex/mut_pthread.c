@@ -1,139 +1,164 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1999-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1999-2009 Oracle.  All rights reserved.
  *
- * $Id: mut_pthread.c,v 11.62 2004/09/22 16:27:05 bostic Exp $
+ * $Id$
  */
 
 #include "db_config.h"
 
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-
-#include <string.h>
-#include <unistd.h>
-#endif
-
 #include "db_int.h"
 
-#ifdef DIAGNOSTIC
-#undef	MSG1
-#define	MSG1		"mutex_lock: ERROR: lock currently in use: pid: %lu.\n"
-#undef	MSG2
-#define	MSG2		"mutex_unlock: ERROR: lock already unlocked\n"
-#ifndef	STDERR_FILENO
-#define	STDERR_FILENO	2
-#endif
-#endif
+/*
+ * This is where we load in architecture/compiler specific mutex code.
+ */
+#define	LOAD_ACTUAL_MUTEX_CODE
 
 #ifdef HAVE_MUTEX_SOLARIS_LWP
 #define	pthread_cond_destroy(x)		0
 #define	pthread_cond_signal		_lwp_cond_signal
+#define	pthread_cond_broadcast		_lwp_cond_broadcast
 #define	pthread_cond_wait		_lwp_cond_wait
 #define	pthread_mutex_destroy(x)	0
 #define	pthread_mutex_lock		_lwp_mutex_lock
 #define	pthread_mutex_trylock		_lwp_mutex_trylock
 #define	pthread_mutex_unlock		_lwp_mutex_unlock
-/*
- * !!!
- * _lwp_self returns the LWP process ID which isn't a unique per-thread
- * identifier.  Use pthread_self instead, it appears to work even if we
- * are not a pthreads application.
- */
 #endif
 #ifdef HAVE_MUTEX_UI_THREADS
 #define	pthread_cond_destroy(x)		cond_destroy
-#define	pthread_cond_signal		cond_signal
+#define	pthread_cond_broadcast		cond_broadcast
 #define	pthread_cond_wait		cond_wait
 #define	pthread_mutex_destroy		mutex_destroy
 #define	pthread_mutex_lock		mutex_lock
 #define	pthread_mutex_trylock		mutex_trylock
 #define	pthread_mutex_unlock		mutex_unlock
-#define	pthread_self			thr_self
 #endif
 
-#define	PTHREAD_UNLOCK_ATTEMPTS	5
+/*
+ * According to HP-UX engineers contacted by Netscape,
+ * pthread_mutex_unlock() will occasionally return EFAULT for no good reason
+ * on mutexes in shared memory regions, and the correct caller behavior
+ * is to try again.  Do so, up to EFAULT_RETRY_ATTEMPTS consecutive times.
+ * Note that we don't bother to restrict this to HP-UX;
+ * it should be harmless elsewhere. [#2471]
+ */
+#define	EFAULT_RETRY_ATTEMPTS	5
+#define	RETRY_ON_EFAULT(func_invocation, ret) do {	\
+	int i;						\
+	i = EFAULT_RETRY_ATTEMPTS;			\
+	do {						\
+		RET_SET((func_invocation), ret);	\
+	} while (ret == EFAULT && --i > 0);		\
+} while (0)
+
+/*
+ * IBM's MVS pthread mutex implementation returns -1 and sets errno rather than
+ * returning errno itself.  As -1 is not a valid errno value, assume functions
+ * returning -1 have set errno.  If they haven't, return a random error value.
+ */
+#define	RET_SET(f, ret) do {						\
+	if (((ret) = (f)) == -1 && ((ret) = errno) == 0)		\
+		(ret) = EAGAIN;						\
+} while (0)
 
 /*
  * __db_pthread_mutex_init --
- *	Initialize a DB_MUTEX.
+ *	Initialize a pthread mutex: either a native one or
+ *	just the mutex for block/wakeup of a hybrid test-and-set mutex
  *
- * PUBLIC: int __db_pthread_mutex_init __P((DB_ENV *, DB_MUTEX *, u_int32_t));
+ *
+ * PUBLIC: int __db_pthread_mutex_init __P((ENV *, db_mutex_t, u_int32_t));
  */
 int
-__db_pthread_mutex_init(dbenv, mutexp, flags)
-	DB_ENV *dbenv;
-	DB_MUTEX *mutexp;
+__db_pthread_mutex_init(env, mutex, flags)
+	ENV *env;
+	db_mutex_t mutex;
 	u_int32_t flags;
 {
-	u_int32_t save;
+	DB_MUTEX *mutexp;
+	DB_MUTEXMGR *mtxmgr;
 	int ret;
 
+	mtxmgr = env->mutex_handle;
+	mutexp = MUTEXP_SET(mtxmgr, mutex);
 	ret = 0;
 
-	/*
-	 * The only setting/checking of the MUTEX_MPOOL flag is in the mutex
-	 * mutex allocation code (__db_mutex_alloc/free).  Preserve only that
-	 * flag.  This is safe because even if this flag was never explicitly
-	 * set, but happened to be set in memory, it will never be checked or
-	 * acted upon.
-	 */
-	save = F_ISSET(mutexp, MUTEX_MPOOL);
-	memset(mutexp, 0, sizeof(*mutexp));
-	F_SET(mutexp, save);
-
-	/*
-	 * If this is a thread lock or the process has told us that there are
-	 * no other processes in the environment, use thread-only locks, they
-	 * are faster in some cases.
-	 *
-	 * This is where we decide to ignore locks we don't need to set -- if
-	 * the application isn't threaded, there aren't any threads to block.
-	 */
-	if (LF_ISSET(MUTEX_THREAD) || F_ISSET(dbenv, DB_ENV_PRIVATE)) {
-		if (!F_ISSET(dbenv, DB_ENV_THREAD)) {
-			F_SET(mutexp, MUTEX_IGNORE);
-			return (0);
-		}
-	}
+#ifndef HAVE_MUTEX_HYBRID
+	/* Can't have self-blocking shared latches.  */
+	DB_ASSERT(env, !LF_ISSET(DB_MUTEX_SELF_BLOCK) ||
+	    !LF_ISSET(DB_MUTEX_SHARED));
+#endif
 
 #ifdef HAVE_MUTEX_PTHREADS
 	{
 	pthread_condattr_t condattr, *condattrp = NULL;
 	pthread_mutexattr_t mutexattr, *mutexattrp = NULL;
 
-	if (!LF_ISSET(MUTEX_THREAD)) {
-		ret = pthread_mutexattr_init(&mutexattr);
+#ifndef HAVE_MUTEX_HYBRID
+	if (LF_ISSET(DB_MUTEX_SHARED)) {
+#if defined(HAVE_SHARED_LATCHES)
+		pthread_rwlockattr_t rwlockattr, *rwlockattrp = NULL;
 #ifndef HAVE_MUTEX_THREAD_ONLY
-		if (ret == 0)
-			ret = pthread_mutexattr_setpshared(
-			    &mutexattr, PTHREAD_PROCESS_SHARED);
+		if (!LF_ISSET(DB_MUTEX_PROCESS_ONLY)) {
+			RET_SET((pthread_rwlockattr_init(&rwlockattr)), ret);
+			if (ret != 0)
+				goto err;
+			RET_SET((pthread_rwlockattr_setpshared(
+			    &rwlockattr, PTHREAD_PROCESS_SHARED)), ret);
+			rwlockattrp = &rwlockattr;
+		}
 #endif
+
+		if (ret == 0)
+			RET_SET((pthread_rwlock_init(&mutexp->u.rwlock,
+			    rwlockattrp)), ret);
+		if (rwlockattrp != NULL)
+			(void)pthread_rwlockattr_destroy(rwlockattrp);
+
+		F_SET(mutexp, DB_MUTEX_SHARED);
+		/* For rwlocks, we're done - cannot use the mutex or cond */
+		goto err;
+#endif
+	}
+#endif
+#ifndef HAVE_MUTEX_THREAD_ONLY
+	if (!LF_ISSET(DB_MUTEX_PROCESS_ONLY)) {
+		RET_SET((pthread_mutexattr_init(&mutexattr)), ret);
+		if (ret != 0)
+			goto err;
+		RET_SET((pthread_mutexattr_setpshared(
+		    &mutexattr, PTHREAD_PROCESS_SHARED)), ret);
 		mutexattrp = &mutexattr;
 	}
+#endif
 
 	if (ret == 0)
-		ret = pthread_mutex_init(&mutexp->mutex, mutexattrp);
+		RET_SET(
+		    (pthread_mutex_init(&mutexp->u.m.mutex, mutexattrp)), ret);
+
 	if (mutexattrp != NULL)
-		pthread_mutexattr_destroy(mutexattrp);
-	if (ret == 0 && LF_ISSET(MUTEX_SELF_BLOCK)) {
-		if (!LF_ISSET(MUTEX_THREAD)) {
-			ret = pthread_condattr_init(&condattr);
+		(void)pthread_mutexattr_destroy(mutexattrp);
+	if (ret != 0)
+		goto err;
+	if (LF_ISSET(DB_MUTEX_SELF_BLOCK)) {
 #ifndef HAVE_MUTEX_THREAD_ONLY
-			if (ret == 0) {
-				condattrp = &condattr;
-				ret = pthread_condattr_setpshared(
-				    &condattr, PTHREAD_PROCESS_SHARED);
-			}
-#endif
+		if (!LF_ISSET(DB_MUTEX_PROCESS_ONLY)) {
+			RET_SET((pthread_condattr_init(&condattr)), ret);
+			if (ret != 0)
+				goto err;
+
+			condattrp = &condattr;
+			RET_SET((pthread_condattr_setpshared(
+			    &condattr, PTHREAD_PROCESS_SHARED)), ret);
 		}
+#endif
 
 		if (ret == 0)
-			ret = pthread_cond_init(&mutexp->cond, condattrp);
+			RET_SET((pthread_cond_init(
+			    &mutexp->u.m.cond, condattrp)), ret);
 
-		F_SET(mutexp, MUTEX_SELF_BLOCK);
+		F_SET(mutexp, DB_MUTEX_SELF_BLOCK);
 		if (condattrp != NULL)
 			(void)pthread_condattr_destroy(condattrp);
 	}
@@ -149,7 +174,7 @@ __db_pthread_mutex_init(dbenv, mutexp, flags)
 	 * initialization values doesn't have surrounding braces.  There's not
 	 * much we can do.
 	 */
-	if (LF_ISSET(MUTEX_THREAD)) {
+	if (LF_ISSET(DB_MUTEX_PROCESS_ONLY)) {
 		static lwp_mutex_t mi = DEFAULTMUTEX;
 
 		mutexp->mutex = mi;
@@ -158,8 +183,8 @@ __db_pthread_mutex_init(dbenv, mutexp, flags)
 
 		mutexp->mutex = mi;
 	}
-	if (LF_ISSET(MUTEX_SELF_BLOCK)) {
-		if (LF_ISSET(MUTEX_THREAD)) {
+	if (LF_ISSET(DB_MUTEX_SELF_BLOCK)) {
+		if (LF_ISSET(DB_MUTEX_PROCESS_ONLY)) {
 			static lwp_cond_t ci = DEFAULTCV;
 
 			mutexp->cond = ci;
@@ -168,63 +193,135 @@ __db_pthread_mutex_init(dbenv, mutexp, flags)
 
 			mutexp->cond = ci;
 		}
-		F_SET(mutexp, MUTEX_SELF_BLOCK);
+		F_SET(mutexp, DB_MUTEX_SELF_BLOCK);
 	}
 #endif
 #ifdef HAVE_MUTEX_UI_THREADS
 	{
 	int type;
 
-	type = LF_ISSET(MUTEX_THREAD) ? USYNC_THREAD : USYNC_PROCESS;
+	type = LF_ISSET(DB_MUTEX_PROCESS_ONLY) ? USYNC_THREAD : USYNC_PROCESS;
 
 	ret = mutex_init(&mutexp->mutex, type, NULL);
-	if (ret == 0 && LF_ISSET(MUTEX_SELF_BLOCK)) {
+	if (ret == 0 && LF_ISSET(DB_MUTEX_SELF_BLOCK)) {
 		ret = cond_init(&mutexp->cond, type, NULL);
 
-		F_SET(mutexp, MUTEX_SELF_BLOCK);
+		F_SET(mutexp, DB_MUTEX_SELF_BLOCK);
 	}}
 #endif
 
-#ifdef HAVE_MUTEX_SYSTEM_RESOURCES
-	mutexp->reg_off = INVALID_ROFF;
-#endif
-	if (ret == 0)
-		F_SET(mutexp, MUTEX_INITED);
-	else
-		__db_err(dbenv,
-		    "unable to initialize mutex: %s", strerror(ret));
-
+err:	if (ret != 0) {
+		__db_err(env, ret, "unable to initialize mutex");
+	}
 	return (ret);
 }
 
 /*
  * __db_pthread_mutex_lock
- *	Lock on a mutex, logically blocking if necessary.
+ *	Lock on a mutex, blocking if necessary.
  *
- * PUBLIC: int __db_pthread_mutex_lock __P((DB_ENV *, DB_MUTEX *));
+ *	self-blocking shared latches are not supported
+ *
+ * PUBLIC: int __db_pthread_mutex_lock __P((ENV *, db_mutex_t));
  */
 int
-__db_pthread_mutex_lock(dbenv, mutexp)
+__db_pthread_mutex_lock(env, mutex)
+	ENV *env;
+	db_mutex_t mutex;
+{
 	DB_ENV *dbenv;
 	DB_MUTEX *mutexp;
-{
-	u_int32_t nspins;
-	int i, ret, waited;
+	DB_MUTEXMGR *mtxmgr;
+	DB_THREAD_INFO *ip;
+	int ret;
 
-	if (F_ISSET(dbenv, DB_ENV_NOLOCKING) || F_ISSET(mutexp, MUTEX_IGNORE))
+	dbenv = env->dbenv;
+
+	if (!MUTEX_ON(env) || F_ISSET(dbenv, DB_ENV_NOLOCKING))
 		return (0);
 
-	/* Attempt to acquire the resource for N spins. */
-	for (nspins = dbenv->tas_spins; nspins > 0; --nspins)
-		if (pthread_mutex_trylock(&mutexp->mutex) == 0)
-			break;
+	mtxmgr = env->mutex_handle;
+	mutexp = MUTEXP_SET(mtxmgr, mutex);
 
-	if (nspins == 0 && (ret = pthread_mutex_lock(&mutexp->mutex)) != 0)
+	CHECK_MTX_THREAD(env, mutexp);
+
+#if defined(HAVE_STATISTICS) && !defined(HAVE_MUTEX_HYBRID)
+	/*
+	 * We want to know which mutexes are contentious, but don't want to
+	 * do an interlocked test here -- that's slower when the underlying
+	 * system has adaptive mutexes and can perform optimizations like
+	 * spinning only if the thread holding the mutex is actually running
+	 * on a CPU.  Make a guess, using a normal load instruction.
+	 */
+	if (F_ISSET(mutexp, DB_MUTEX_LOCKED))
+		++mutexp->mutex_set_wait;
+	else
+		++mutexp->mutex_set_nowait;
+#endif
+
+	if (F_ISSET(dbenv, DB_ENV_FAILCHK)) {
+		for (;;) {
+			RET_SET_PTHREAD_TRYLOCK(mutexp, ret);
+			if (ret != EBUSY)
+				break;
+			if (dbenv->is_alive(dbenv,
+			    mutexp->pid, mutexp->tid, 0) == 0) {
+				ret = __env_set_state(env, &ip, THREAD_VERIFY);
+				if (ret != 0 ||
+				    ip->dbth_state == THREAD_FAILCHK)
+					return (DB_RUNRECOVERY);
+				else {
+					/*
+					 * Some thread other than the true
+					 * FAILCHK thread in this process is
+					 * asking for the mutex held by the
+					 * dead process/thread.  We will
+					 * block here until someone else
+					 * does the cleanup.  Same behavior
+					 * as if we hadnt gone down the 'if
+					 * DB_ENV_FAILCHK' path to start with.
+					 */
+					RET_SET_PTHREAD_LOCK(mutexp, ret);
+					break;
+				}
+			}
+		}
+	} else
+		RET_SET_PTHREAD_LOCK(mutexp, ret);
+	if (ret != 0)
 		goto err;
 
-	if (F_ISSET(mutexp, MUTEX_SELF_BLOCK)) {
-		for (waited = 0; mutexp->locked != 0; waited = 1) {
-			ret = pthread_cond_wait(&mutexp->cond, &mutexp->mutex);
+	if (F_ISSET(mutexp, DB_MUTEX_SELF_BLOCK)) {
+		/*
+		 * If we are using hybrid mutexes then the pthread mutexes
+		 * are only used to wait after spinning on the TAS mutex.
+		 * Set the wait flag before checking to see if the mutex
+		 * is still locked.  The holder will clear DB_MUTEX_LOCKED
+		 * before checking the wait counter.
+		 */
+#ifdef HAVE_MUTEX_HYBRID
+		mutexp->wait++;
+		MUTEX_MEMBAR(mutexp->wait);
+		while (F_ISSET(mutexp, DB_MUTEX_LOCKED)) {
+#else
+		while (MUTEXP_IS_BUSY(mutexp)) {
+#endif
+#if defined(HAVE_MUTEX_HYBRID)
+			STAT(mutexp->hybrid_wait++);
+#endif
+#ifdef MUTEX_DIAG
+			printf("block %d %x wait busy %x count %d\n",
+			    mutex, pthread_self(),
+			    MUTEXP_BUSY_FIELD(mutexp), mutexp->wait);
+#endif
+
+			RET_SET((pthread_cond_wait(
+			    &mutexp->u.m.cond, &mutexp->u.m.mutex)), ret);
+#ifdef MUTEX_DIAG
+			printf("block %d %x wait returns %d busy %x\n",
+			    mutex, pthread_self(),
+			    ret, MUTEXP_BUSY_FIELD(mutexp));
+#endif
 			/*
 			 * !!!
 			 * Solaris bug workaround:
@@ -240,127 +337,300 @@ __db_pthread_mutex_lock(dbenv, mutexp)
 			    ret != ETIME &&
 #endif
 			    ret != ETIMEDOUT) {
-				(void)pthread_mutex_unlock(&mutexp->mutex);
-				return (ret);
+				(void)pthread_mutex_unlock(&mutexp->u.m.mutex);
+				goto err;
 			}
+#ifdef HAVE_MUTEX_HYBRID
+			MUTEX_MEMBAR(mutexp->flags);
+#endif
 		}
 
-		if (waited)
-			++mutexp->mutex_set_wait;
-		else
-			++mutexp->mutex_set_nowait;
-
-#ifdef DIAGNOSTIC
-		mutexp->locked = (u_int32_t)pthread_self();
+#ifdef HAVE_MUTEX_HYBRID
+		mutexp->wait--;
 #else
-		mutexp->locked = 1;
+		F_SET(mutexp, DB_MUTEX_LOCKED);
+		dbenv->thread_id(dbenv, &mutexp->pid, &mutexp->tid);
 #endif
-		/*
-		 * According to HP-UX engineers contacted by Netscape,
-		 * pthread_mutex_unlock() will occasionally return EFAULT
-		 * for no good reason on mutexes in shared memory regions,
-		 * and the correct caller behavior is to try again.  Do
-		 * so, up to PTHREAD_UNLOCK_ATTEMPTS consecutive times.
-		 * Note that we don't bother to restrict this to HP-UX;
-		 * it should be harmless elsewhere. [#2471]
-		 */
-		i = PTHREAD_UNLOCK_ATTEMPTS;
-		do {
-			ret = pthread_mutex_unlock(&mutexp->mutex);
-		} while (ret == EFAULT && --i > 0);
+
+		/* #2471: HP-UX can sporadically return EFAULT. See above */
+		RETRY_ON_EFAULT(pthread_mutex_unlock(&mutexp->u.m.mutex), ret);
 		if (ret != 0)
 			goto err;
 	} else {
-		if (nspins == dbenv->tas_spins)
-			++mutexp->mutex_set_nowait;
-		else if (nspins > 0) {
-			++mutexp->mutex_set_spin;
-			mutexp->mutex_set_spins += dbenv->tas_spins - nspins;
-		} else
-			++mutexp->mutex_set_wait;
 #ifdef DIAGNOSTIC
-		if (mutexp->locked) {
-			char msgbuf[128];
-			(void)snprintf(msgbuf,
-			    sizeof(msgbuf), MSG1, (u_long)mutexp->locked);
-			(void)write(STDERR_FILENO, msgbuf, strlen(msgbuf));
+		if (F_ISSET(mutexp, DB_MUTEX_LOCKED)) {
+			char buf[DB_THREADID_STRLEN];
+			(void)dbenv->thread_id_string(dbenv,
+			    mutexp->pid, mutexp->tid, buf);
+			__db_errx(env,
+		    "pthread lock failed: lock currently in use: pid/tid: %s",
+			    buf);
+			ret = EINVAL;
+			goto err;
 		}
-		mutexp->locked = (u_int32_t)pthread_self();
-#else
-		mutexp->locked = 1;
 #endif
+		F_SET(mutexp, DB_MUTEX_LOCKED);
+		dbenv->thread_id(dbenv, &mutexp->pid, &mutexp->tid);
 	}
+
+#ifdef DIAGNOSTIC
+	/*
+	 * We want to switch threads as often as possible.  Yield every time
+	 * we get a mutex to ensure contention.
+	 */
+	if (F_ISSET(dbenv, DB_ENV_YIELDCPU))
+		__os_yield(env, 0, 0);
+#endif
 	return (0);
 
-err:	__db_err(dbenv, "unable to lock mutex: %s", strerror(ret));
-	return (ret);
+err:	__db_err(env, ret, "pthread lock failed");
+	return (__env_panic(env, ret));
 }
+
+#if defined(HAVE_SHARED_LATCHES) && !defined(HAVE_MUTEX_HYBRID)
+/*
+ * __db_pthread_mutex_readlock
+ *	Take a shared lock on a mutex, blocking if necessary.
+ *
+ * PUBLIC: #if defined(HAVE_SHARED_LATCHES)
+ * PUBLIC: int __db_pthread_mutex_readlock __P((ENV *, db_mutex_t));
+ * PUBLIC: #endif
+ */
+int
+__db_pthread_mutex_readlock(env, mutex)
+	ENV *env;
+	db_mutex_t mutex;
+{
+	DB_ENV *dbenv;
+	DB_MUTEX *mutexp;
+	DB_MUTEXMGR *mtxmgr;
+	int ret;
+
+	dbenv = env->dbenv;
+
+	if (!MUTEX_ON(env) || F_ISSET(dbenv, DB_ENV_NOLOCKING))
+		return (0);
+
+	mtxmgr = env->mutex_handle;
+	mutexp = MUTEXP_SET(mtxmgr, mutex);
+	DB_ASSERT(env, F_ISSET(mutexp, DB_MUTEX_SHARED));
+
+	CHECK_MTX_THREAD(env, mutexp);
+
+#if defined(HAVE_STATISTICS) && !defined(HAVE_MUTEX_HYBRID)
+	/*
+	 * We want to know which mutexes are contentious, but don't want to
+	 * do an interlocked test here -- that's slower when the underlying
+	 * system has adaptive mutexes and can perform optimizations like
+	 * spinning only if the thread holding the mutex is actually running
+	 * on a CPU.  Make a guess, using a normal load instruction.
+	 */
+	if (F_ISSET(mutexp, DB_MUTEX_LOCKED))
+		++mutexp->mutex_set_rd_wait;
+	else
+		++mutexp->mutex_set_rd_nowait;
+#endif
+
+	RET_SET((pthread_rwlock_rdlock(&mutexp->u.rwlock)), ret);
+	DB_ASSERT(env, !F_ISSET(mutexp, DB_MUTEX_LOCKED));
+	if (ret != 0)
+		goto err;
+
+#ifdef DIAGNOSTIC
+	/*
+	 * We want to switch threads as often as possible.  Yield every time
+	 * we get a mutex to ensure contention.
+	 */
+	if (F_ISSET(dbenv, DB_ENV_YIELDCPU))
+		__os_yield(env, 0, 0);
+#endif
+	return (0);
+
+err:	__db_err(env, ret, "pthread readlock failed");
+	return (__env_panic(env, ret));
+}
+#endif
 
 /*
  * __db_pthread_mutex_unlock --
- *	Release a lock.
+ *	Release a mutex.
  *
- * PUBLIC: int __db_pthread_mutex_unlock __P((DB_ENV *, DB_MUTEX *));
+ * PUBLIC: int __db_pthread_mutex_unlock __P((ENV *, db_mutex_t));
  */
 int
-__db_pthread_mutex_unlock(dbenv, mutexp)
+__db_pthread_mutex_unlock(env, mutex)
+	ENV *env;
+	db_mutex_t mutex;
+{
 	DB_ENV *dbenv;
 	DB_MUTEX *mutexp;
-{
-	int i, ret;
-
-	if (F_ISSET(dbenv, DB_ENV_NOLOCKING) || F_ISSET(mutexp, MUTEX_IGNORE))
-		return (0);
-
-#ifdef DIAGNOSTIC
-	if (!mutexp->locked)
-		(void)write(STDERR_FILENO, MSG2, sizeof(MSG2) - 1);
+	DB_MUTEXMGR *mtxmgr;
+	DB_THREAD_INFO *ip;
+	int ret;
+#if defined(MUTEX_DIAG) && defined(HAVE_MUTEX_HYBRID)
+	int waiters;
 #endif
 
-	if (F_ISSET(mutexp, MUTEX_SELF_BLOCK)) {
-		if ((ret = pthread_mutex_lock(&mutexp->mutex)) != 0)
+	dbenv = env->dbenv;
+
+	if (!MUTEX_ON(env) || F_ISSET(dbenv, DB_ENV_NOLOCKING))
+		return (0);
+
+	mtxmgr = env->mutex_handle;
+	mutexp = MUTEXP_SET(mtxmgr, mutex);
+#if defined(MUTEX_DIAG) && defined(HAVE_MUTEX_HYBRID)
+	waiters = mutexp->wait;
+#endif
+
+#if !defined(HAVE_MUTEX_HYBRID) && !defined(HAVE_SHARED_LATCHES) && \
+    defined(DIAGNOSTIC)
+	if (!F_ISSET(mutexp, DB_MUTEX_LOCKED)) {
+		__db_errx(
+		    env, "pthread unlock failed: lock already unlocked");
+		return (__env_panic(env, EACCES));
+	}
+#endif
+	if (F_ISSET(mutexp, DB_MUTEX_SELF_BLOCK)) {
+		if (F_ISSET(dbenv, DB_ENV_FAILCHK)) {
+			RET_SET((pthread_mutex_trylock(
+			    &mutexp->u.m.mutex)), ret);
+			while (ret == EBUSY) {
+				if (dbenv->is_alive(dbenv,
+				    mutexp->pid, mutexp->tid, 0) == 0 ) {
+					ret = __env_set_state(
+					    env, &ip, THREAD_VERIFY);
+					if (ret != 0 ||
+					   ip->dbth_state == THREAD_FAILCHK)
+						return (DB_RUNRECOVERY);
+					else {
+						/*
+						 * We are not the true
+						 * failchk thread, so go
+						 * ahead and block on mutex
+						 * until someone else does the
+						 * cleanup.  This is the same
+						 * behavior we would get if we
+						 * hadnt gone down the 'if
+						 * DB_ENV_FAILCHK' path.
+						 */
+						RET_SET((pthread_mutex_lock(
+						    &mutexp->u.m.mutex)), ret);
+						break;
+					}
+				}
+
+				RET_SET((pthread_mutex_trylock(
+				    &mutexp->u.m.mutex)), ret);
+			}
+		} else
+			RET_SET((pthread_mutex_lock(&mutexp->u.m.mutex)), ret);
+		if (ret != 0)
 			goto err;
 
-		mutexp->locked = 0;
+#ifdef HAVE_MUTEX_HYBRID
+		STAT(mutexp->hybrid_wakeup++);
+#else
+		F_CLR(mutexp, DB_MUTEX_LOCKED);	/* nop if DB_MUTEX_SHARED */
+#endif
 
-		if ((ret = pthread_cond_signal(&mutexp->cond)) != 0)
-			return (ret);
+		if (F_ISSET(mutexp, DB_MUTEX_SHARED))
+			RET_SET(
+			    (pthread_cond_broadcast(&mutexp->u.m.cond)), ret);
+		else
+			RET_SET((pthread_cond_signal(&mutexp->u.m.cond)), ret);
+		if (ret != 0)
+			goto err;
+	} else {
+#ifndef HAVE_MUTEX_HYBRID
+		F_CLR(mutexp, DB_MUTEX_LOCKED);
+#endif
+	}
 
-	} else
-		mutexp->locked = 0;
+	/* See comment above; workaround for [#2471]. */
+#if defined(HAVE_SHARED_LATCHES) && !defined(HAVE_MUTEX_HYBRID)
+	if (F_ISSET(mutexp, DB_MUTEX_SHARED))
+		RETRY_ON_EFAULT(pthread_rwlock_unlock(&mutexp->u.rwlock), ret);
+	else
+#endif
+		RETRY_ON_EFAULT(pthread_mutex_unlock(&mutexp->u.m.mutex), ret);
 
-	/* See comment above;  workaround for [#2471]. */
-	i = PTHREAD_UNLOCK_ATTEMPTS;
-	do {
-		ret = pthread_mutex_unlock(&mutexp->mutex);
-	} while (ret == EFAULT && --i > 0);
-	return (ret);
-
-err:	__db_err(dbenv, "unable to unlock mutex: %s", strerror(ret));
+err:	if (ret != 0) {
+		__db_err(env, ret, "pthread unlock failed");
+		return (__env_panic(env, ret));
+	}
+#if defined(MUTEX_DIAG) && defined(HAVE_MUTEX_HYBRID)
+	if (!MUTEXP_IS_BUSY(mutexp) && mutexp->wait != 0)
+		printf("unlock %d %x busy %x waiters %d/%d\n",
+		    mutex, pthread_self(), ret,
+		    MUTEXP_BUSY_FIELD(mutexp), waiters, mutexp->wait);
+#endif
 	return (ret);
 }
 
 /*
  * __db_pthread_mutex_destroy --
- *	Destroy a DB_MUTEX.
+ *	Destroy a mutex.
+ *	If it is a native shared latch (not hybrid) then
+ *	destroy only one half of the rwlock/mutex&cond union,
+ *	depending whether it was allocated as shared
  *
- * PUBLIC: int __db_pthread_mutex_destroy __P((DB_MUTEX *));
+ * PUBLIC: int __db_pthread_mutex_destroy __P((ENV *, db_mutex_t));
  */
 int
-__db_pthread_mutex_destroy(mutexp)
-	DB_MUTEX *mutexp;
+__db_pthread_mutex_destroy(env, mutex)
+	ENV *env;
+	db_mutex_t mutex;
 {
-	int ret, t_ret;
+	DB_MUTEX *mutexp;
+	DB_MUTEXMGR *mtxmgr;
+	DB_THREAD_INFO *ip;
+	int ret, t_ret, failchk_thread;
 
-	if (F_ISSET(mutexp, MUTEX_IGNORE))
+	if (!MUTEX_ON(env))
 		return (0);
 
+	mtxmgr = env->mutex_handle;
+	mutexp = MUTEXP_SET(mtxmgr, mutex);
+
 	ret = 0;
-	if (F_ISSET(mutexp, MUTEX_SELF_BLOCK) &&
-	    (ret = pthread_cond_destroy(&mutexp->cond)) != 0)
-		__db_err(NULL, "unable to destroy cond: %s", strerror(ret));
-	if ((t_ret = pthread_mutex_destroy(&mutexp->mutex)) != 0) {
-		__db_err(NULL, "unable to destroy mutex: %s", strerror(t_ret));
+	failchk_thread = FALSE;
+	/* Get information to determine if we are really the failchk thread. */
+	if (F_ISSET(env->dbenv, DB_ENV_FAILCHK)) {
+		ret = __env_set_state(env, &ip, THREAD_VERIFY);
+		if (ip != NULL && ip->dbth_state == THREAD_FAILCHK)
+			failchk_thread = TRUE;
+	}
+		
+#ifndef HAVE_MUTEX_HYBRID
+	if (F_ISSET(mutexp, DB_MUTEX_SHARED)) {
+#if defined(HAVE_SHARED_LATCHES)
+		/*
+		 * If there were dead processes waiting on the condition
+		 * we may not be able to destroy it.  Let failchk thread skip
+		 * this.  XXX What operating system resources might this leak?
+		 */
+		if (!failchk_thread)
+			RET_SET(
+			    (pthread_rwlock_destroy(&mutexp->u.rwlock)), ret);
+		/* For rwlocks, we're done - must not destroy rest of union */
+		return (ret);
+#endif
+	}
+#endif
+	if (F_ISSET(mutexp, DB_MUTEX_SELF_BLOCK)) {
+		/*
+		 * If there were dead processes waiting on the condition
+		 * we may not be able to destroy it.  Let failchk thread 
+		 * skip this. 
+		 */
+		if (!failchk_thread)
+			RET_SET((pthread_cond_destroy(&mutexp->u.m.cond)), ret);
+		if (ret != 0)
+			__db_err(env, ret, "unable to destroy cond");
+	}
+	RET_SET((pthread_mutex_destroy(&mutexp->u.m.mutex)), t_ret);
+	if (t_ret != 0 && !failchk_thread) {
+		__db_err(env, t_ret, "unable to destroy mutex");
 		if (ret == 0)
 			ret = t_ret;
 	}

@@ -1,30 +1,22 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1996-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
  *
- * $Id: mp_trickle.c,v 11.35 2004/10/15 16:59:43 bostic Exp $
+ * $Id$
  */
 
 #include "db_config.h"
 
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-
-#include <stdlib.h>
-#endif
-
 #include "db_int.h"
-#include "dbinc/db_shash.h"
 #include "dbinc/log.h"
 #include "dbinc/mp.h"
 
-static int __memp_trickle __P((DB_ENV *, int, int *));
+static int __memp_trickle __P((ENV *, int, int *));
 
 /*
  * __memp_trickle_pp --
- *	DB_ENV->memp_trickle pre/post processing.
+ *	ENV->memp_trickle pre/post processing.
  *
  * PUBLIC: int __memp_trickle_pp __P((DB_ENV *, int, int *));
  */
@@ -33,55 +25,56 @@ __memp_trickle_pp(dbenv, pct, nwrotep)
 	DB_ENV *dbenv;
 	int pct, *nwrotep;
 {
-	int rep_check, ret;
+	DB_THREAD_INFO *ip;
+	ENV *env;
+	int ret;
 
-	PANIC_CHECK(dbenv);
-	ENV_REQUIRES_CONFIG(dbenv,
-	    dbenv->mp_handle, "memp_trickle", DB_INIT_MPOOL);
+	env = dbenv->env;
 
-	rep_check = IS_ENV_REPLICATED(dbenv) ? 1 : 0;
-	if (rep_check)
-		__env_rep_enter(dbenv);
-	ret = __memp_trickle(dbenv, pct, nwrotep);
-	if (rep_check)
-		__env_db_rep_exit(dbenv);
+	ENV_REQUIRES_CONFIG(env,
+	    env->mp_handle, "memp_trickle", DB_INIT_MPOOL);
+
+	ENV_ENTER(env, ip);
+	REPLICATION_WRAP(env, (__memp_trickle(env, pct, nwrotep)), 0, ret);
+	ENV_LEAVE(env, ip);
 	return (ret);
 }
 
 /*
  * __memp_trickle --
- *	DB_ENV->memp_trickle.
+ *	ENV->memp_trickle.
  */
 static int
-__memp_trickle(dbenv, pct, nwrotep)
-	DB_ENV *dbenv;
+__memp_trickle(env, pct, nwrotep)
+	ENV *env;
 	int pct, *nwrotep;
 {
 	DB_MPOOL *dbmp;
 	MPOOL *c_mp, *mp;
-	u_int32_t dirty, i, total, dtmp, wrote;
-	int n, ret;
+	u_int32_t clean, dirty, i, need_clean, total, dtmp, wrote;
+	int ret;
 
-	dbmp = dbenv->mp_handle;
+	dbmp = env->mp_handle;
 	mp = dbmp->reginfo[0].primary;
 
 	if (nwrotep != NULL)
 		*nwrotep = 0;
 
-	if (pct < 1 || pct > 100)
+	if (pct < 1 || pct > 100) {
+		__db_errx(env,
+	    "DB_ENV->memp_trickle: %d: percent must be between 1 and 100",
+		    pct);
 		return (EINVAL);
+	}
 
 	/*
-	 * If there are sufficient clean buffers, no buffers or no dirty
-	 * buffers, we're done.
+	 * Loop through the caches counting total/dirty buffers.
 	 *
 	 * XXX
 	 * Using hash_page_dirty is our only choice at the moment, but it's not
 	 * as correct as we might like in the presence of pools having more
-	 * than one page size, as a free 512B buffer isn't the same as a free
-	 * 8KB buffer.
-	 *
-	 * Loop through the caches counting total/dirty buffers.
+	 * than one page size, as a free 512B buffer may not be equivalent to
+	 * having a free 8KB buffer.
 	 */
 	for (ret = 0, i = dirty = total = 0; i < mp->nreg; ++i) {
 		c_mp = dbmp->reginfo[i].primary;
@@ -91,16 +84,27 @@ __memp_trickle(dbenv, pct, nwrotep)
 	}
 
 	/*
-	 * !!!
-	 * Be careful in modifying this calculation, total may be 0.
+	 * If there are sufficient clean buffers, no buffers or no dirty
+	 * buffers, we're done.
 	 */
-	n = ((total * (u_int)pct) / 100) - (total - dirty);
-	if (dirty == 0 || n <= 0)
+	if (total == 0 || dirty == 0)
 		return (0);
 
-	ret = __memp_sync_int(
-	    dbenv, NULL, (u_int32_t)n, DB_SYNC_TRICKLE, &wrote);
-	mp->stat.st_page_trickle += wrote;
+	/*
+	 * The total number of pages is an exact number, but the dirty page
+	 * count can change while we're walking the hash buckets, and it's
+	 * even possible the dirty page count ends up larger than the total
+	 * number of pages.
+	 */
+	clean = total > dirty ? total - dirty : 0;
+	need_clean = (total * (u_int)pct) / 100;
+	if (clean >= need_clean)
+		return (0);
+
+	need_clean -= clean;
+	ret = __memp_sync_int(env, NULL,
+	    need_clean, DB_SYNC_TRICKLE | DB_SYNC_INTERRUPT_OK, &wrote, NULL);
+	STAT((mp->stat.st_page_trickle += wrote));
 	if (nwrotep != NULL)
 		*nwrotep = (int)wrote;
 

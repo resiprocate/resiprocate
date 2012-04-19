@@ -1,14 +1,17 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1999-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1999-2009 Oracle.  All rights reserved.
  *
- * $Id: qam.h,v 11.49 2004/09/17 22:00:27 mjc Exp $
+ * $Id$
  */
 
 #ifndef	_DB_QAM_H_
 #define	_DB_QAM_H_
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
 /*
  * QAM data elements: a status field and the data.
@@ -69,8 +72,9 @@ struct __queue {
 };
 
 /* Format for queue extent names. */
-#define	QUEUE_EXTENT "%s%c__dbq.%s.%d"
-#define	QUEUE_EXTENT_HEAD "__dbq.%s."
+#define	QUEUE_EXTENT		"%s%c__dbq.%s.%d"
+#define	QUEUE_EXTENT_HEAD	"__dbq.%s."
+#define	QUEUE_EXTENT_PREFIX	"__dbq."
 
 typedef struct __qam_filelist {
 	DB_MPOOLFILE *mpf;
@@ -119,16 +123,16 @@ typedef struct __qam_filelist {
     ((QUEUE *)(dbp)->q_internal)->re_len, sizeof(u_int32_t)) * index))))
 
 #define	QAM_AFTER_CURRENT(meta, recno)					\
-    ((recno) > (meta)->cur_recno &&					\
+    ((recno) >= (meta)->cur_recno &&					\
     ((meta)->first_recno <= (meta)->cur_recno ||			\
     ((recno) < (meta)->first_recno &&					\
     (recno) - (meta)->cur_recno < (meta)->first_recno - (recno))))
 
 #define	QAM_BEFORE_FIRST(meta, recno)					\
     ((recno) < (meta)->first_recno &&					\
-    ((meta->first_recno <= (meta)->cur_recno ||				\
+    ((meta)->first_recno <= (meta)->cur_recno ||			\
     ((recno) > (meta)->cur_recno &&					\
-    (recno) - (meta)->cur_recno > (meta)->first_recno - (recno)))))
+    (recno) - (meta)->cur_recno > (meta)->first_recno - (recno))))
 
 #define	QAM_NOT_VALID(meta, recno)					\
     (recno == RECNO_OOB ||						\
@@ -141,18 +145,10 @@ typedef struct __qam_filelist {
 #define	QAM_SETCUR		0x02
 #define	QAM_TRUNCATE		0x04
 
-/*
- * Parameter to __qam_position.
- */
-typedef enum {
-	QAM_READ,
-	QAM_WRITE,
-	QAM_CONSUME
-} qam_position_mode;
-
 typedef enum {
 	QAM_PROBE_GET,
 	QAM_PROBE_PUT,
+	QAM_PROBE_DIRTY,
 	QAM_PROBE_MPF
 } qam_probe_mode;
 
@@ -165,11 +161,19 @@ typedef enum {
 	QAM_NAME_REMOVE
 } qam_name_op;
 
-#define	__qam_fget(dbp, pgnoaddr, flags, addrp) \
-	__qam_fprobe(dbp, *pgnoaddr, addrp, QAM_PROBE_GET, flags)
+#define	__qam_fget(dbc, pgnoaddr, flags, addrp)		\
+	__qam_fprobe(dbc, *pgnoaddr,					\
+	    addrp, QAM_PROBE_GET, DB_PRIORITY_UNCHANGED, flags)
 
-#define	__qam_fput(dbp, pageno, addrp, flags) \
-	__qam_fprobe(dbp, pageno, addrp, QAM_PROBE_PUT, flags)
+#define	__qam_fput(dbc, pgno, addrp, priority)			\
+	__qam_fprobe(dbc, pgno, addrp, QAM_PROBE_PUT, priority, 0)
+
+#define	__qam_dirty(dbc, pgno, pagep, priority)		\
+	__qam_fprobe(dbc, pgno, pagep, QAM_PROBE_DIRTY, priority, 0)
+
+#if defined(__cplusplus)
+}
+#endif
 
 #include "dbinc_auto/qam_auto.h"
 #include "dbinc_auto/qam_ext.h"

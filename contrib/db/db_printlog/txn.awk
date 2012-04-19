@@ -1,4 +1,4 @@
-# $Id: txn.awk,v 10.3 2000/07/17 22:07:17 ubell Exp $
+# $Id$
 #
 # Print out all the records for a comma-separated list of transaction ids.
 NR == 1 {

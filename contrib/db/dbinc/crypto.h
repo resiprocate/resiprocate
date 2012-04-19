@@ -1,14 +1,17 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1996-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
  *
- * $Id: crypto.h,v 1.12 2004/01/28 03:36:00 bostic Exp $
+ * $Id$
  */
 
 #ifndef	_DB_CRYPTO_H_
 #define	_DB_CRYPTO_H_
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
 /*
  * !!!
@@ -34,10 +37,10 @@
  */
 struct __db_cipher {
 	u_int	(*adj_size) __P((size_t));
-	int	(*close) __P((DB_ENV *, void *));
-	int	(*decrypt) __P((DB_ENV *, void *, void *, u_int8_t *, size_t));
-	int	(*encrypt) __P((DB_ENV *, void *, void *, u_int8_t *, size_t));
-	int	(*init) __P((DB_ENV *, DB_CIPHER *));
+	int	(*close) __P((ENV *, void *));
+	int	(*decrypt) __P((ENV *, void *, void *, u_int8_t *, size_t));
+	int	(*encrypt) __P((ENV *, void *, void *, u_int8_t *, size_t));
+	int	(*init) __P((ENV *, DB_CIPHER *));
 
 	u_int8_t mac_key[DB_MAC_KEY];	/* MAC key. */
 	void	*data;			/* Algorithm-specific information */
@@ -56,7 +59,7 @@ struct __db_cipher {
 
 /*
  * Shared ciphering structure
- * No DB_MUTEX needed because all information is read-only after creation.
+ * No mutex needed because all information is read-only after creation.
  */
 typedef struct __cipher {
 	roff_t		passwd;		/* Offset to shared passwd */
@@ -75,4 +78,8 @@ typedef struct __aes_cipher {
 
 #include "dbinc_auto/crypto_ext.h"
 #endif /* HAVE_CRYPTO */
+
+#if defined(__cplusplus)
+}
+#endif
 #endif /* !_DB_CRYPTO_H_ */

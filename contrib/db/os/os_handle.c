@@ -1,21 +1,12 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1998-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1998-2009 Oracle.  All rights reserved.
  *
- * $Id: os_handle.c,v 11.40 2004/08/19 17:59:22 sue Exp $
+ * $Id$
  */
 
 #include "db_config.h"
-
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-
-#include <fcntl.h>
-#include <string.h>
-#include <unistd.h>
-#endif
 
 #include "db_int.h"
 
@@ -24,34 +15,47 @@
  *	Open a file, using POSIX 1003.1 open flags.
  *
  * PUBLIC: int __os_openhandle
- * PUBLIC:     __P((DB_ENV *, const char *, int, int, DB_FH **));
+ * PUBLIC:     __P((ENV *, const char *, int, int, DB_FH **));
  */
 int
-__os_openhandle(dbenv, name, flags, mode, fhpp)
-	DB_ENV *dbenv;
+__os_openhandle(env, name, flags, mode, fhpp)
+	ENV *env;
 	const char *name;
 	int flags, mode;
 	DB_FH **fhpp;
 {
 	DB_FH *fhp;
 	u_int nrepeat, retries;
-	int ret;
+	int fcntl_flags, ret;
 #ifdef HAVE_VXWORKS
 	int newflags;
 #endif
-
-	if ((ret = __os_calloc(dbenv, 1, sizeof(DB_FH), fhpp)) != 0)
+	/*
+	 * Allocate the file handle and copy the file name.  We generally only
+	 * use the name for verbose or error messages, but on systems where we
+	 * can't unlink temporary files immediately, we use the name to unlink
+	 * the temporary file when the file handle is closed.
+	 *
+	 * Lock the ENV handle and insert the new file handle on the list.
+	 */
+	if ((ret = __os_calloc(env, 1, sizeof(DB_FH), &fhp)) != 0)
 		return (ret);
-	fhp = *fhpp;
+	if ((ret = __os_strdup(env, name, &fhp->name)) != 0)
+		goto err;
+	if (env != NULL) {
+		MUTEX_LOCK(env, env->mtx_env);
+		TAILQ_INSERT_TAIL(&env->fdlist, fhp, q);
+		MUTEX_UNLOCK(env, env->mtx_env);
+		F_SET(fhp, DB_FH_ENVLINK);
+	}
 
 	/* If the application specified an interface, use it. */
 	if (DB_GLOBAL(j_open) != NULL) {
 		if ((fhp->fd = DB_GLOBAL(j_open)(name, flags, mode)) == -1) {
-			ret = __os_get_errno();
+			ret = __os_posix_err(__os_get_syserr());
 			goto err;
 		}
-		F_SET(fhp, DB_FH_OPENED);
-		return (0);
+		goto done;
 	}
 
 	retries = 0;
@@ -119,21 +123,11 @@ __os_openhandle(dbenv, name, flags, mode, fhpp)
 		fhp->fd = open(name, flags, mode);
 #endif
 		if (fhp->fd != -1) {
-			F_SET(fhp, DB_FH_OPENED);
-
-#if defined(HAVE_FCNTL_F_SETFD)
-			/* Deny file descriptor access to any child process. */
-			if (fcntl(fhp->fd, F_SETFD, 1) == -1) {
-				ret = __os_get_errno();
-				__db_err(dbenv,
-				    "fcntl(F_SETFD): %s", strerror(ret));
-				goto err;
-			}
-#endif
+			ret = 0;
 			break;
 		}
 
-		switch (ret = __os_get_errno()) {
+		switch (ret = __os_posix_err(__os_get_syserr())) {
 		case EMFILE:
 		case ENFILE:
 		case ENOSPC:
@@ -143,7 +137,7 @@ __os_openhandle(dbenv, name, flags, mode, fhpp)
 			 * if we can't open a database, an inability to open a
 			 * log file is cause for serious dismay.
 			 */
-			__os_sleep(dbenv, nrepeat * 2, 0);
+			__os_yield(env, nrepeat * 2, 0);
 			break;
 		case EAGAIN:
 		case EBUSY:
@@ -156,15 +150,31 @@ __os_openhandle(dbenv, name, flags, mode, fhpp)
 				--nrepeat;
 			break;
 		default:
-			break;
+			/* Open is silent on error. */
+			goto err;
 		}
 	}
 
-err:	if (ret != 0) {
-		(void)__os_closehandle(dbenv, fhp);
-		*fhpp = NULL;
+	if (ret == 0) {
+#if defined(HAVE_FCNTL_F_SETFD)
+		/* Deny file descriptor access to any child process. */
+		if ((fcntl_flags = fcntl(fhp->fd, F_GETFD)) == -1 ||
+		    fcntl(fhp->fd, F_SETFD, fcntl_flags | FD_CLOEXEC) == -1) {
+			ret = __os_get_syserr();
+			__db_syserr(env, ret, "fcntl(F_SETFD)");
+			ret = __os_posix_err(ret);
+			goto err;
+		}
+#else
+		COMPQUIET(fcntl_flags, 0);
+#endif
+
+done:		F_SET(fhp, DB_FH_OPENED);
+		*fhpp = fhp;
+		return (0);
 	}
 
+err:	(void)__os_closehandle(env, fhp);
 	return (ret);
 }
 
@@ -172,38 +182,60 @@ err:	if (ret != 0) {
  * __os_closehandle --
  *	Close a file.
  *
- * PUBLIC: int __os_closehandle __P((DB_ENV *, DB_FH *));
+ * PUBLIC: int __os_closehandle __P((ENV *, DB_FH *));
  */
 int
-__os_closehandle(dbenv, fhp)
-	DB_ENV *dbenv;
+__os_closehandle(env, fhp)
+	ENV *env;
 	DB_FH *fhp;
 {
+	DB_ENV *dbenv;
 	int ret;
 
 	ret = 0;
 
 	/*
-	 * If we have a valid handle, close it and unlink any temporary
-	 * file.
+	 * If we linked the DB_FH handle into the ENV, it needs to be
+	 * unlinked.
 	 */
+	DB_ASSERT(env, env != NULL || !F_ISSET(fhp, DB_FH_ENVLINK));
+
+	if (env != NULL) {
+		dbenv = env->dbenv;
+		if (fhp->name != NULL && FLD_ISSET(
+		    dbenv->verbose, DB_VERB_FILEOPS | DB_VERB_FILEOPS_ALL))
+			__db_msg(env, "fileops: close %s", fhp->name);
+
+		if (F_ISSET(fhp, DB_FH_ENVLINK)) {
+			/*
+			 * Lock the ENV handle and remove this file
+			 * handle from the list.
+			 */
+			MUTEX_LOCK(env, env->mtx_env);
+			TAILQ_REMOVE(&env->fdlist, fhp, q);
+			MUTEX_UNLOCK(env, env->mtx_env);
+		}
+	}
+
+	/* Discard any underlying system file reference. */
 	if (F_ISSET(fhp, DB_FH_OPENED)) {
 		if (DB_GLOBAL(j_close) != NULL)
 			ret = DB_GLOBAL(j_close)(fhp->fd);
 		else
 			RETRY_CHK((close(fhp->fd)), ret);
-
-		if (ret != 0)
-			__db_err(dbenv, "close: %s", strerror(ret));
-
-		/* Unlink the file if we haven't already done so. */
-		if (F_ISSET(fhp, DB_FH_UNLINK)) {
-			(void)__os_unlink(dbenv, fhp->name);
-			__os_free(dbenv, fhp->name);
+		if (ret != 0) {
+			__db_syserr(env, ret, "close");
+			ret = __os_posix_err(ret);
 		}
 	}
 
-	__os_free(dbenv, fhp);
+	/* Unlink the file if we haven't already done so. */
+	if (F_ISSET(fhp, DB_FH_UNLINK))
+		(void)__os_unlink(env, fhp->name, 0);
+
+	if (fhp->name != NULL)
+		__os_free(env, fhp->name);
+	__os_free(env, fhp);
 
 	return (ret);
 }

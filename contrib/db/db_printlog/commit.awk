@@ -1,4 +1,4 @@
-# $Id: commit.awk,v 10.2 1999/11/21 18:01:42 bostic Exp $
+# $Id$
 #
 # Output tid of committed transactions.
 

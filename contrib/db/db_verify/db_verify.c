@@ -1,33 +1,25 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1996-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
  *
- * $Id: db_verify.c,v 1.49 2004/08/01 00:21:58 bostic Exp $
+ * $Id$
  */
 
 #include "db_config.h"
 
+#include "db_int.h"
+
 #ifndef lint
 static const char copyright[] =
-    "Copyright (c) 1996-2004\nSleepycat Software Inc.  All rights reserved.\n";
+    "Copyright (c) 1996-2009 Oracle.  All rights reserved.\n";
 #endif
-
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#endif
-
-#include "db_int.h"
 
 int main __P((int, char *[]));
 int usage __P((void));
-int version_check __P((const char *));
+int version_check __P((void));
+
+const char *progname;
 
 int
 main(argc, argv)
@@ -36,7 +28,6 @@ main(argc, argv)
 {
 	extern char *optarg;
 	extern int optind;
-	const char *progname = "db_verify";
 	DB *dbp, *dbp1;
 	DB_ENV *dbenv;
 	u_int32_t flags, cache;
@@ -44,7 +35,12 @@ main(argc, argv)
 	int quiet, resize, ret;
 	char *home, *passwd;
 
-	if ((ret = version_check(progname)) != 0)
+	if ((progname = __db_rpath(argv[0])) == NULL)
+		progname = argv[0];
+	else
+		++progname;
+
+	if ((ret = version_check()) != 0)
 		return (ret);
 
 	dbenv = NULL;
@@ -150,9 +146,21 @@ retry:	if ((ret = db_env_create(&dbenv, 0)) != 0) {
 		}
 	}
 
+	/*
+	 * Find out if we have a transactional environment so that we can
+	 * make sure that we don't open the verify database with logging
+	 * enabled.
+	 */
 	for (; !__db_util_interrupted() && argv[0] != NULL; ++argv) {
 		if ((ret = db_create(&dbp, dbenv, 0)) != 0) {
 			dbenv->err(dbenv, ret, "%s: db_create", progname);
+			goto shutdown;
+		}
+
+		if (TXN_ON(dbenv->env) &&
+		    (ret = dbp->set_flags(dbp, DB_TXN_NOT_DURABLE)) != 0) {
+			dbenv->err(
+			    dbenv, ret, "%s: db_set_flags", progname);
 			goto shutdown;
 		}
 
@@ -168,6 +176,13 @@ retry:	if ((ret = db_env_create(&dbenv, 0)) != 0) {
 			if ((ret = db_create(&dbp1, dbenv, 0)) != 0) {
 				dbenv->err(
 				    dbenv, ret, "%s: db_create", progname);
+				goto shutdown;
+			}
+
+			if (TXN_ON(dbenv->env) && (ret =
+			    dbp1->set_flags(dbp1, DB_TXN_NOT_DURABLE)) != 0) {
+				dbenv->err(
+				    dbenv, ret, "%s: db_set_flags", progname);
 				goto shutdown;
 			}
 
@@ -230,14 +245,13 @@ shutdown:	exitval = 1;
 int
 usage()
 {
-	fprintf(stderr, "%s\n",
-	    "usage: db_verify [-NoqV] [-h home] [-P password] db_file ...");
+	fprintf(stderr, "usage: %s %s\n", progname,
+	    "[-NoqV] [-h home] [-P password] db_file ...");
 	return (EXIT_FAILURE);
 }
 
 int
-version_check(progname)
-	const char *progname;
+version_check()
 {
 	int v_major, v_minor, v_patch;
 

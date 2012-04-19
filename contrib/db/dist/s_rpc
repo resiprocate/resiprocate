@@ -1,5 +1,5 @@
 #!/bin/sh -
-#	$Id: s_rpc,v 11.20 2004/03/11 20:11:17 bostic Exp $
+#	$Id$
 #
 # Build the automatically generated RPC files
 
@@ -22,8 +22,8 @@ rm -f $client_file $ctmpl_file $server_file $stmpl_file $xdr_file
 #
 # Generate client/server/XDR code
 #
-xidsize=\
-`awk '/^#define/ { if ($2 == "DB_XIDDATASIZE") { print $3 }}' ../dbinc/db.in`
+gidsize=\
+`awk '/^#define/ { if ($2 == "DB_GID_SIZE") { print $3 }}' ../dbinc/db.in`
 
 awk -f gen_rpc.awk \
     -v client_file=$client_file \
@@ -33,6 +33,6 @@ awk -f gen_rpc.awk \
     -v server_file=$server_file \
     -v stmpl_file=$stmpl_file \
     -v xdr_file=$xdr_file \
-    -v xidsize=$xidsize < ../rpc_server/rpc.src
+    -v gidsize=$gidsize < ../rpc_server/rpc.src
 
 chmod 444 $client_file $server_file
