@@ -1,33 +1,25 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1996-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
  *
- * $Id: db_archive.c,v 11.46 2004/06/10 01:00:08 bostic Exp $
+ * $Id$
  */
 
 #include "db_config.h"
 
+#include "db_int.h"
+
 #ifndef lint
 static const char copyright[] =
-    "Copyright (c) 1996-2004\nSleepycat Software Inc.  All rights reserved.\n";
+    "Copyright (c) 1996-2009 Oracle.  All rights reserved.\n";
 #endif
-
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#endif
-
-#include "db_int.h"
 
 int main __P((int, char *[]));
 int usage __P((void));
-int version_check __P((const char *));
+int version_check __P((void));
+
+const char *progname;
 
 int
 main(argc, argv)
@@ -36,13 +28,17 @@ main(argc, argv)
 {
 	extern char *optarg;
 	extern int optind;
-	const char *progname = "db_archive";
 	DB_ENV	*dbenv;
 	u_int32_t flags;
 	int ch, exitval, ret, verbose;
 	char **file, *home, **list, *passwd;
 
-	if ((ret = version_check(progname)) != 0)
+	if ((progname = __db_rpath(argv[0])) == NULL)
+		progname = argv[0];
+	else
+		++progname;
+
+	if ((ret = version_check()) != 0)
 		return (ret);
 
 	dbenv = NULL;
@@ -80,6 +76,12 @@ main(argc, argv)
 			printf("%s\n", db_version(NULL, NULL, NULL));
 			return (EXIT_SUCCESS);
 		case 'v':
+			/*
+			 * !!!
+			 * The verbose flag no longer actually does anything,
+			 * but it's left rather than adding it back at some
+			 * future date.
+			 */
 			verbose = 1;
 			break;
 		case '?':
@@ -117,8 +119,7 @@ main(argc, argv)
 	 * If attaching to a pre-existing environment fails, create a
 	 * private one and try again.
 	 */
-	if ((ret = dbenv->open(dbenv,
-	    home, DB_JOINENV | DB_USE_ENVIRON, 0)) != 0 &&
+	if ((ret = dbenv->open(dbenv, home, DB_USE_ENVIRON, 0)) != 0 &&
 	    (ret == DB_VERSION_MISMATCH ||
 	    (ret = dbenv->open(dbenv, home, DB_CREATE |
 	    DB_INIT_LOG | DB_PRIVATE | DB_USE_ENVIRON, 0)) != 0)) {
@@ -161,13 +162,12 @@ int
 usage()
 {
 	(void)fprintf(stderr,
-	    "usage: db_archive [-adlsVv] [-h home] [-P password]\n");
+	    "usage: %s [-adlsVv] [-h home] [-P password]\n", progname);
 	return (EXIT_FAILURE);
 }
 
 int
-version_check(progname)
-	const char *progname;
+version_check()
 {
 	int v_major, v_minor, v_patch;
 

@@ -1,24 +1,15 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1996-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
  *
- * $Id: db_open.c,v 11.240 2004/09/22 20:53:19 margo Exp $
+ * $Id$
  */
 
 #include "db_config.h"
 
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-
-#include <stdlib.h>
-#include <string.h>
-#endif
-
 #include "db_int.h"
 #include "dbinc/db_page.h"
-#include "dbinc/db_shash.h"
 #include "dbinc/db_swap.h"
 #include "dbinc/btree.h"
 #include "dbinc/crypto.h"
@@ -42,19 +33,23 @@
  * 2. It can be called to open a subdatabase during normal operation.  In
  *    this case, name and subname will both be non-NULL and meta_pgno will
  *    be PGNO_BASE_MD (also PGNO_INVALID).
- * 3. It can be called during recovery to open a file/database, in which case
+ * 3. It can be called to open an in-memory database (name == NULL;
+ *    subname = name).
+ * 4. It can be called during recovery to open a file/database, in which case
  *    name will be non-NULL, subname will be NULL, and meta-pgno will be
  *    PGNO_BASE_MD.
- * 4. It can be called during recovery to open a subdatabase, in which case
+ * 5. It can be called during recovery to open a subdatabase, in which case
  *    name will be non-NULL, subname may be NULL and meta-pgno will be
  *    a valid pgno (i.e., not PGNO_BASE_MD).
+ * 6. It can be called during recovery to open an in-memory database.
  *
- * PUBLIC: int __db_open __P((DB *, DB_TXN *,
+ * PUBLIC: int __db_open __P((DB *, DB_THREAD_INFO *, DB_TXN *,
  * PUBLIC:     const char *, const char *, DBTYPE, u_int32_t, int, db_pgno_t));
  */
 int
-__db_open(dbp, txn, fname, dname, type, flags, mode, meta_pgno)
+__db_open(dbp, ip, txn, fname, dname, type, flags, mode, meta_pgno)
 	DB *dbp;
+	DB_THREAD_INFO *ip;
 	DB_TXN *txn;
 	const char *fname, *dname;
 	DBTYPE type;
@@ -62,12 +57,31 @@ __db_open(dbp, txn, fname, dname, type, flags, mode, meta_pgno)
 	int mode;
 	db_pgno_t meta_pgno;
 {
-	DB_ENV *dbenv;
+	DB *tdbp;
+	ENV *env;
 	int ret;
 	u_int32_t id;
 
-	dbenv = dbp->dbenv;
+	env = dbp->env;
 	id = TXN_INVALID;
+
+	/*
+	 * We must flush any existing pages before truncating the file
+	 * since they could age out of mpool and overwrite new pages.
+	 */
+	if (LF_ISSET(DB_TRUNCATE)) {
+		if ((ret = __db_create_internal(&tdbp, dbp->env, 0)) != 0)
+			goto err;
+		ret = __db_open(tdbp, ip, txn, fname, dname, DB_UNKNOWN,
+		     DB_NOERROR | (flags &  ~(DB_TRUNCATE|DB_CREATE)),
+		     mode, meta_pgno);
+		if (ret == 0)
+			ret = __memp_ftruncate(tdbp->mpf, txn, ip, 0, 0);
+		(void)__db_close(tdbp, txn, DB_NOSYNC);
+		if (ret != 0 && ret != ENOENT && ret != EINVAL)
+			goto err;
+		ret = 0;
+	}
 
 	DB_TEST_RECOVERY(dbp, DB_TEST_PREOPEN, ret, fname);
 
@@ -79,141 +93,170 @@ __db_open(dbp, txn, fname, dname, type, flags, mode, meta_pgno)
 	 * no way of knowing which dbp goes with which thread, so whichever
 	 * one it finds has to be usable in any of them.)
 	 */
-	if (F_ISSET(dbenv, DB_ENV_THREAD))
+	if (F_ISSET(env, ENV_THREAD))
 		LF_SET(DB_THREAD);
 
 	/* Convert any DB->open flags. */
 	if (LF_ISSET(DB_RDONLY))
 		F_SET(dbp, DB_AM_RDONLY);
-	if (LF_ISSET(DB_DIRTY_READ))
-		F_SET(dbp, DB_AM_DIRTY);
+	if (LF_ISSET(DB_READ_UNCOMMITTED))
+		F_SET(dbp, DB_AM_READ_UNCOMMITTED);
 
-	if (txn != NULL)
+	if (IS_REAL_TXN(txn))
 		F_SET(dbp, DB_AM_TXN);
 
 	/* Fill in the type. */
 	dbp->type = type;
 
 	/*
-	 * If fname is NULL, it's always a create, so make sure that we
-	 * have a type specified.  It would be nice if this checking
-	 * were done in __db_open where most of the interface checking
-	 * is done, but this interface (__db_dbopen) is used by the
-	 * recovery and limbo system, so we need to safeguard this
-	 * interface as well.
+	 * If both fname and subname are NULL, it's always a create, so make
+	 * sure that we have both DB_CREATE and a type specified.  It would
+	 * be nice if this checking were done in __db_open where most of the
+	 * interface checking is done, but this interface (__db_dbopen) is
+	 * used by the recovery and limbo system, so we need to safeguard
+	 * this interface as well.
 	 */
 	if (fname == NULL) {
-		F_SET(dbp, DB_AM_INMEM);
-
-		if (dbp->type == DB_UNKNOWN) {
-			__db_err(dbenv,
-			    "DBTYPE of unknown without existing file");
-			return (EINVAL);
+		if (dbp->p_internal != NULL) {
+			__db_errx(env,
+		    "Partitioned databases may not be in memory.");
+			return (ENOENT);
 		}
+		if (dname == NULL) {
+			if (!LF_ISSET(DB_CREATE)) {
+				__db_errx(env,
+			    "DB_CREATE must be specified to create databases.");
+				return (ENOENT);
+			}
 
-		if (dbp->pgsize == 0)
-			dbp->pgsize = DB_DEF_IOSIZE;
+			F_SET(dbp, DB_AM_INMEM);
+			F_SET(dbp, DB_AM_CREATED);
+
+			if (dbp->type == DB_UNKNOWN) {
+				__db_errx(env,
+				    "DBTYPE of unknown without existing file");
+				return (EINVAL);
+			}
+
+			if (dbp->pgsize == 0)
+				dbp->pgsize = DB_DEF_IOSIZE;
+
+			/*
+			 * If the file is a temporary file and we're
+			 * doing locking, then we have to create a
+			 * unique file ID.  We can't use our normal
+			 * dev/inode pair (or whatever this OS uses
+			 * in place of dev/inode pairs) because no
+			 * backing file will be created until the
+			 * mpool cache is filled forcing the buffers
+			 * to disk.  Grab a random locker ID to use
+			 * as a file ID.  The created ID must never
+			 * match a potential real file ID -- we know
+			 * it won't because real file IDs contain a
+			 * time stamp after the dev/inode pair, and
+			 * we're simply storing a 4-byte value.
+
+			 * !!!
+			 * Store the locker in the file id structure
+			 * -- we can get it from there as necessary,
+			 * and it saves having two copies.
+			*/
+			if (LOCKING_ON(env) && (ret = __lock_id(env,
+			    (u_int32_t *)dbp->fileid, NULL)) != 0)
+				return (ret);
+		} else
+			MAKE_INMEM(dbp);
 
 		/*
-		 * If the file is a temporary file and we're doing locking,
-		 * then we have to create a unique file ID.  We can't use our
-		 * normal dev/inode pair (or whatever this OS uses in place of
-		 * dev/inode pairs) because no backing file will be created
-		 * until the mpool cache is filled forcing the buffers to disk.
-		 * Grab a random locker ID to use as a file ID.  The created
-		 * ID must never match a potential real file ID -- we know it
-		 * won't because real file IDs contain a time stamp after the
-		 * dev/inode pair, and we're simply storing a 4-byte value.
-		 *
-		 * !!!
-		 * Store the locker in the file id structure -- we can get it
-		 * from there as necessary, and it saves having two copies.
+		 * Normally we would do handle locking here, however, with
+		 * in-memory files, we cannot do any database manipulation
+		 * until the mpool is open, so it happens later.
 		 */
-		if (LOCKING_ON(dbenv) &&
-		    (ret = __lock_id(dbenv, (u_int32_t *)dbp->fileid)) != 0)
-			return (ret);
 	} else if (dname == NULL && meta_pgno == PGNO_BASE_MD) {
 		/* Open/create the underlying file.  Acquire locks. */
-		if ((ret =
-		    __fop_file_setup(dbp, txn, fname, mode, flags, &id)) != 0)
+		if ((ret = __fop_file_setup(dbp, ip,
+		    txn, fname, mode, flags, &id)) != 0)
 			return (ret);
 	} else {
-		if ((ret = __fop_subdb_setup(dbp,
+		if (dbp->p_internal != NULL) {
+			__db_errx(env,
+    "Partitioned databases may not be included with multiple databases.");
+			return (ENOENT);
+		}
+		if ((ret = __fop_subdb_setup(dbp, ip,
 		    txn, fname, dname, mode, flags)) != 0)
 			return (ret);
 		meta_pgno = dbp->meta_pgno;
 	}
 
-	/*
-	 * If we created the file, set the truncate flag for the mpool.  This
-	 * isn't for anything we've done, it's protection against stupid user
-	 * tricks: if the user deleted a file behind Berkeley DB's back, we
-	 * may still have pages in the mpool that match the file's "unique" ID.
-	 *
-	 * Note that if we're opening a subdatabase, we don't want to set
-	 * the TRUNCATE flag even if we just created the file--we already
-	 * opened and updated the master using access method interfaces,
-	 * so we don't want to get rid of any pages that are in the mpool.
-	 * If we created the file when we opened the master, we already hit
-	 * this check in a non-subdatabase context then.
-	 */
-	if (dname == NULL && F_ISSET(dbp, DB_AM_CREATED))
-		LF_SET(DB_TRUNCATE);
-
 	/* Set up the underlying environment. */
-	if ((ret = __db_dbenv_setup(dbp, txn, fname, id, flags)) != 0)
+	if ((ret = __env_setup(dbp, txn, fname, dname, id, flags)) != 0)
 		return (ret);
 
-	/*
-	 * Set the open flag.  We use it to mean that the dbp has gone
-	 * through mpf setup, including dbreg_register.  Also, below,
-	 * the underlying access method open functions may want to do
-	 * things like acquire cursors, so the open flag has to be set
-	 * before calling them.
-	 */
-	F_SET(dbp, DB_AM_OPEN_CALLED);
-
-	/*
-	 * For unnamed files, we need to actually create the file now
-	 * that the mpool is open.
-	 */
-	if (fname == NULL && (ret = __db_new_file(dbp, txn, NULL, NULL)) != 0)
-		return (ret);
+	/* For in-memory databases, we now need to open/create the database. */
+	if (F_ISSET(dbp, DB_AM_INMEM)) {
+		if (dname == NULL)
+			ret = __db_new_file(dbp, ip, txn, NULL, NULL);
+		else {
+			id = TXN_INVALID;
+			if ((ret = __fop_file_setup(dbp, ip,
+			    txn, dname, mode, flags, &id)) == 0 &&
+			    DBENV_LOGGING(env) && !F_ISSET(dbp, DB_AM_RECOVER)
+#if !defined(DEBUG_ROP) && !defined(DEBUG_WOP) && !defined(DIAGNOSTIC)
+			    && txn != NULL
+#endif
+#if !defined(DEBUG_ROP)
+			    && !F_ISSET(dbp, DB_AM_RDONLY)
+#endif
+			)
+				ret = __dbreg_log_id(dbp,
+				    txn, dbp->log_filename->id, 1);
+		}
+		if (ret != 0)
+			goto err;
+	}
 
 	switch (dbp->type) {
-	case DB_BTREE:
-		ret = __bam_open(dbp, txn, fname, meta_pgno, flags);
-		break;
-	case DB_HASH:
-		ret = __ham_open(dbp, txn, fname, meta_pgno, flags);
-		break;
-	case DB_RECNO:
-		ret = __ram_open(dbp, txn, fname, meta_pgno, flags);
-		break;
-	case DB_QUEUE:
-		ret = __qam_open(dbp, txn, fname, meta_pgno, mode, flags);
-		break;
-	case DB_UNKNOWN:
-		return (__db_unknown_type(dbenv, "__db_dbopen", dbp->type));
+		case DB_BTREE:
+			ret = __bam_open(dbp, ip, txn, fname, meta_pgno, flags);
+			break;
+		case DB_HASH:
+			ret = __ham_open(dbp, ip, txn, fname, meta_pgno, flags);
+			break;
+		case DB_RECNO:
+			ret = __ram_open(dbp, ip, txn, fname, meta_pgno, flags);
+			break;
+		case DB_QUEUE:
+			ret = __qam_open(
+			    dbp, ip, txn, fname, meta_pgno, mode, flags);
+			break;
+		case DB_UNKNOWN:
+			return (
+			    __db_unknown_type(env, "__db_dbopen", dbp->type));
 	}
 	if (ret != 0)
 		goto err;
 
+#ifdef HAVE_PARTITION
+	if (dbp->p_internal != NULL && (ret =
+	    __partition_open(dbp, ip, txn, fname, type, flags, mode, 1)) != 0)
+		goto err;
+#endif
 	DB_TEST_RECOVERY(dbp, DB_TEST_POSTOPEN, ret, fname);
 
 	/*
-	 * Unnamed files don't need handle locks, so we only have to check
+	 * Temporary files don't need handle locks, so we only have to check
 	 * for a handle lock downgrade or lockevent in the case of named
 	 * files.
 	 */
-	if (!F_ISSET(dbp, DB_AM_RECOVER) &&
-	    fname != NULL && LOCK_ISSET(dbp->handle_lock)) {
-		if (txn != NULL) {
-			ret = __txn_lockevent(dbenv,
-			    txn, dbp, &dbp->handle_lock, dbp->lid);
-		} else if (LOCKING_ON(dbenv))
+	if (!F_ISSET(dbp, DB_AM_RECOVER) && (fname != NULL || dname != NULL) &&
+	    LOCK_ISSET(dbp->handle_lock)) {
+		if (IS_REAL_TXN(txn))
+			ret = __txn_lockevent(env,
+			    txn, dbp, &dbp->handle_lock, dbp->locker);
+		else if (LOCKING_ON(env))
 			/* Trade write handle lock for read handle lock. */
-			ret = __lock_downgrade(dbenv,
+			ret = __lock_downgrade(env,
 			    &dbp->handle_lock, DB_LOCK_READ, 0);
 	}
 DB_TEST_RECOVERY_LABEL
@@ -242,11 +285,13 @@ __db_get_open_flags(dbp, flagsp)
  * __db_new_file --
  *	Create a new database file.
  *
- * PUBLIC: int __db_new_file __P((DB *, DB_TXN *, DB_FH *, const char *));
+ * PUBLIC: int __db_new_file __P((DB *,
+ * PUBLIC:      DB_THREAD_INFO *, DB_TXN *, DB_FH *, const char *));
  */
 int
-__db_new_file(dbp, txn, fhp, name)
+__db_new_file(dbp, ip, txn, fhp, name)
 	DB *dbp;
+	DB_THREAD_INFO *ip;
 	DB_TXN *txn;
 	DB_FH *fhp;
 	const char *name;
@@ -256,17 +301,17 @@ __db_new_file(dbp, txn, fhp, name)
 	switch (dbp->type) {
 	case DB_BTREE:
 	case DB_RECNO:
-		ret = __bam_new_file(dbp, txn, fhp, name);
+		ret = __bam_new_file(dbp, ip, txn, fhp, name);
 		break;
 	case DB_HASH:
-		ret = __ham_new_file(dbp, txn, fhp, name);
+		ret = __ham_new_file(dbp, ip, txn, fhp, name);
 		break;
 	case DB_QUEUE:
-		ret = __qam_new_file(dbp, txn, fhp, name);
+		ret = __qam_new_file(dbp, ip, txn, fhp, name);
 		break;
 	case DB_UNKNOWN:
 	default:
-		__db_err(dbp->dbenv,
+		__db_errx(dbp->env,
 		    "%s: Invalid type %d specified", name, dbp->type);
 		ret = EINVAL;
 		break;
@@ -275,7 +320,7 @@ __db_new_file(dbp, txn, fhp, name)
 	DB_TEST_RECOVERY(dbp, DB_TEST_POSTLOGMETA, ret, name);
 	/* Sync the file in preparation for moving it into place. */
 	if (ret == 0 && fhp != NULL)
-		ret = __os_fsync(dbp->dbenv, fhp);
+		ret = __os_fsync(dbp->env, fhp);
 
 	DB_TEST_RECOVERY(dbp, DB_TEST_POSTSYNC, ret, name);
 
@@ -287,12 +332,14 @@ DB_TEST_RECOVERY_LABEL
  * __db_init_subdb --
  *	Initialize the dbp for a subdb.
  *
- * PUBLIC: int __db_init_subdb __P((DB *, DB *, const char *, DB_TXN *));
+ * PUBLIC: int __db_init_subdb __P((DB *,
+ * PUBLIC:       DB *, const char *, DB_THREAD_INFO *, DB_TXN *));
  */
 int
-__db_init_subdb(mdbp, dbp, name, txn)
+__db_init_subdb(mdbp, dbp, name, ip, txn)
 	DB *mdbp, *dbp;
 	const char *name;
+	DB_THREAD_INFO *ip;
 	DB_TXN *txn;
 {
 	DBMETA *meta;
@@ -303,10 +350,12 @@ __db_init_subdb(mdbp, dbp, name, txn)
 	if (!F_ISSET(dbp, DB_AM_CREATED)) {
 		/* Subdb exists; read meta-data page and initialize. */
 		mpf = mdbp->mpf;
-		if  ((ret = __memp_fget(mpf, &dbp->meta_pgno, 0, &meta)) != 0)
+		if  ((ret = __memp_fget(mpf, &dbp->meta_pgno,
+		    ip, txn, 0, &meta)) != 0)
 			goto err;
-		ret = __db_meta_setup(mdbp->dbenv, dbp, name, meta, 0, 0);
-		if ((t_ret = __memp_fput(mpf, meta, 0)) != 0 && ret == 0)
+		ret = __db_meta_setup(mdbp->env, dbp, name, meta, 0, 0);
+		if ((t_ret = __memp_fput(mpf,
+		    ip, meta, dbp->priority)) != 0 && ret == 0)
 			ret = t_ret;
 		/*
 		 * If __db_meta_setup found that the meta-page hadn't
@@ -321,17 +370,17 @@ __db_init_subdb(mdbp, dbp, name, txn)
 	switch (dbp->type) {
 	case DB_BTREE:
 	case DB_RECNO:
-		ret = __bam_new_subdb(mdbp, dbp, txn);
+		ret = __bam_new_subdb(mdbp, dbp, ip, txn);
 		break;
 	case DB_HASH:
-		ret = __ham_new_subdb(mdbp, dbp, txn);
+		ret = __ham_new_subdb(mdbp, dbp, ip, txn);
 		break;
 	case DB_QUEUE:
 		ret = EINVAL;
 		break;
 	case DB_UNKNOWN:
 	default:
-		__db_err(dbp->dbenv,
+		__db_errx(dbp->env,
 		    "Invalid subdatabase type %d specified", dbp->type);
 		return (EINVAL);
 	}
@@ -341,25 +390,27 @@ err:	return (ret);
 
 /*
  * __db_chk_meta --
- *	Take a buffer containing a meta-data page and check it for a checksum
- *	(and verify the checksum if necessary) and possibly decrypt it.
+ *	Take a buffer containing a meta-data page and check it for a valid LSN,
+ *	checksum (and verify the checksum if necessary) and possibly decrypt it.
  *
  *	Return 0 on success, >0 (errno) on error, -1 on checksum mismatch.
  *
- * PUBLIC: int __db_chk_meta __P((DB_ENV *, DB *, DBMETA *, int));
+ * PUBLIC: int __db_chk_meta __P((ENV *, DB *, DBMETA *, u_int32_t));
  */
 int
-__db_chk_meta(dbenv, dbp, meta, do_metachk)
-	DB_ENV *dbenv;
+__db_chk_meta(env, dbp, meta, flags)
+	ENV *env;
 	DB *dbp;
 	DBMETA *meta;
-	int do_metachk;
+	u_int32_t flags;
 {
+	DB_LSN swap_lsn;
 	int is_hmac, ret, swapped;
-	u_int32_t orig_chk;
+	u_int32_t magic, orig_chk;
 	u_int8_t *chksum;
 
 	ret = 0;
+	swapped = 0;
 
 	if (FLD_ISSET(meta->metaflags, DBMETA_CHKSUM)) {
 		if (dbp != NULL)
@@ -379,11 +430,11 @@ __db_chk_meta(dbenv, dbp, meta, do_metachk)
 		 * We cannot add this to __db_metaswap because that gets done
 		 * later after we've verified the checksum or decrypted.
 		 */
-		if (do_metachk) {
+		if (LF_ISSET(DB_CHK_META)) {
 			swapped = 0;
-chk_retry:		if ((ret = __db_check_chksum(dbenv,
-			    (DB_CIPHER *)dbenv->crypto_handle, chksum, meta,
-			    DBMETASIZE, is_hmac)) != 0) {
+chk_retry:		if ((ret =
+			    __db_check_chksum(env, NULL, env->crypto_handle,
+			    chksum, meta, DBMETASIZE, is_hmac)) != 0) {
 				if (is_hmac || swapped)
 					return (ret);
 
@@ -397,8 +448,43 @@ chk_retry:		if ((ret = __db_check_chksum(dbenv,
 		F_CLR(dbp, DB_AM_CHKSUM);
 
 #ifdef HAVE_CRYPTO
-	ret = __crypto_decrypt_meta(dbenv, dbp, (u_int8_t *)meta, do_metachk);
+	ret = __crypto_decrypt_meta(env,
+	     dbp, (u_int8_t *)meta, LF_ISSET(DB_CHK_META));
 #endif
+
+	/* Now that we're decrypted, we can check LSN. */
+	if (LOGGING_ON(env) && !LF_ISSET(DB_CHK_NOLSN)) {
+		/*
+		 * This gets called both before and after swapping, so we
+		 * need to check ourselves.  If we already swapped it above,
+		 * we'll know that here.
+		 */
+
+		swap_lsn = meta->lsn;
+		magic = meta->magic;
+lsn_retry:
+		if (swapped) {
+			M_32_SWAP(swap_lsn.file);
+			M_32_SWAP(swap_lsn.offset);
+			M_32_SWAP(magic);
+		}
+		switch (magic) {
+		case DB_BTREEMAGIC:
+		case DB_HASHMAGIC:
+		case DB_QAMMAGIC:
+		case DB_RENAMEMAGIC:
+			break;
+		default:
+			if (swapped)
+				return (EINVAL);
+			swapped = 1;
+			goto lsn_retry;
+		}
+		if (!IS_REP_CLIENT(env) &&
+		    !IS_NOT_LOGGED_LSN(swap_lsn) && !IS_ZERO_LSN(swap_lsn))
+			/* Need to do check. */
+			ret = __log_check_page_lsn(env, dbp, &swap_lsn);
+	}
 	return (ret);
 }
 
@@ -408,19 +494,19 @@ chk_retry:		if ((ret = __db_check_chksum(dbenv,
  * Take a buffer containing a meta-data page and figure out if it's
  * valid, and if so, initialize the dbp from the meta-data page.
  *
- * PUBLIC: int __db_meta_setup __P((DB_ENV *,
- * PUBLIC:     DB *, const char *, DBMETA *, u_int32_t, int));
+ * PUBLIC: int __db_meta_setup __P((ENV *,
+ * PUBLIC:     DB *, const char *, DBMETA *, u_int32_t, u_int32_t));
  */
 int
-__db_meta_setup(dbenv, dbp, name, meta, oflags, do_metachk)
-	DB_ENV *dbenv;
+__db_meta_setup(env, dbp, name, meta, oflags, flags)
+	ENV *env;
 	DB *dbp;
 	const char *name;
 	DBMETA *meta;
 	u_int32_t oflags;
-	int do_metachk;
+	u_int32_t flags;
 {
-	u_int32_t flags, magic;
+	u_int32_t magic;
 	int ret;
 
 	ret = 0;
@@ -433,7 +519,7 @@ __db_meta_setup(dbenv, dbp, name, meta, oflags, do_metachk)
 	 * we don't consider it an error, for example, if the user set
 	 * an expected byte order and the found file doesn't match it.
 	 */
-	F_CLR(dbp, DB_AM_SWAP);
+	F_CLR(dbp, DB_AM_SWAP | DB_AM_IN_RENAME);
 	magic = meta->magic;
 
 swap_retry:
@@ -450,8 +536,8 @@ swap_retry:
 		 * subdatabase had its meta-data page allocated, but
 		 * not yet initialized.
 		 */
-		if (F_ISSET(dbp, DB_AM_SUBDB) && ((IS_RECOVERING(dbenv) &&
-		    F_ISSET((DB_LOG *) dbenv->lg_handle, DBLOG_FORCE_OPEN)) ||
+		if (F_ISSET(dbp, DB_AM_SUBDB) && ((IS_RECOVERING(env) &&
+		    F_ISSET(env->lg_handle, DBLOG_FORCE_OPEN)) ||
 		    meta->pgno != PGNO_INVALID))
 			return (ENOENT);
 
@@ -472,9 +558,9 @@ swap_retry:
 	 * checksum match errors here, because we haven't opened the database
 	 * and even a checksum error isn't a reason to panic the environment.
 	 */
-	if ((ret = __db_chk_meta(dbenv, dbp, meta, do_metachk)) != 0) {
+	if ((ret = __db_chk_meta(env, dbp, meta, flags)) != 0) {
 		if (ret == -1)
-			__db_err(dbenv,
+			__db_errx(env,
 			    "%s: metadata page checksum error", name);
 		goto bad_format;
 	}
@@ -523,12 +609,20 @@ swap_retry:
 	default:
 		goto bad_format;
 	}
+
+	if (FLD_ISSET(meta->metaflags,
+	    DBMETA_PART_RANGE | DBMETA_PART_CALLBACK))
+		if ((ret =
+		    __partition_init(dbp, meta->metaflags)) != 0)
+			return (ret);
 	return (0);
 
 bad_format:
 	if (F_ISSET(dbp, DB_AM_RECOVER))
 		ret = ENOENT;
 	else
-		__db_err(dbenv, "%s: unexpected file type or format", name);
+		__db_errx(env,
+		    "__db_meta_setup: %s: unexpected file type or format",
+		    name);
 	return (ret == 0 ? EINVAL : ret);
 }

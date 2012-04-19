@@ -1,22 +1,12 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1996-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
  *
- * $Id: snprintf.c,v 11.18 2004/09/22 03:32:43 bostic Exp $
+ * $Id$
  */
 
 #include "db_config.h"
-
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>				/* Declare STDERR_FILENO. */
-#endif
 
 #include "db_int.h"
 
@@ -129,7 +119,7 @@ sprintf_overflow()
 	exit(1);
 
 	/* But firm. */
-	abort();
+	__os_abort(NULL);
 
 	/* NOTREACHED */
 }

@@ -30,18 +30,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: strdup.c,v 1.6 2004/01/28 03:35:52 bostic Exp $
+ * $Id$
  */
 
 #include "db_config.h"
 
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-
-#include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
-#endif
+#include "db_int.h"
 
 /*
  * strdup --

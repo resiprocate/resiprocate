@@ -1,5 +1,5 @@
 #!/bin/sh -
-#	$Id: s_tags,v 1.18 2004/04/01 15:11:14 bostic Exp $
+#	$Id$
 #
 # Build tags files.
 
@@ -25,14 +25,15 @@ files=`echo ../dbinc/*.h \
 	../mp/*.[ch] \
 	../mutex/*.[ch] \
 	../os/*.[ch] \
+	../os_qnx/*.[ch] \
 	../qam/*.[ch] \
 	../rep/*.[ch] \
+	../repmgr/*.[ch] \
 	../rpc_client/*.[ch] \
 	../rpc_server/c/*.[ch] \
 	../sequence/*.[ch] \
 	../tcl/*.[ch] \
 	../txn/*.[ch] \
-	../xa/*.[ch] \
 	../cxx/*.cpp \
 	../libdb_java/*.[ch] | sed 's/[^ ]*stub.c//g'`
 
@@ -55,7 +56,11 @@ fi
 ctags $flags $files 2>/dev/null
 chmod 444 $f
 
-f=../test_perf/tags
-echo "Building $f"
-(cd ../test_perf && ctags $flags *.[ch] 2>/dev/null)
-chmod 444 $f
+for i in test_perf test_repmgr test_server; do
+	test -d ../$i || continue
+
+	f=../$i/tags
+	echo "Building $f"
+	(cd ../$i && ctags $flags *.[ch] 2>/dev/null)
+	chmod 444 $f
+done

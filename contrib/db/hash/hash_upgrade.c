@@ -1,19 +1,12 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1996-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
  *
- * $Id: hash_upgrade.c,v 11.35 2004/04/06 12:38:08 bostic Exp $
+ * $Id$
  */
 
 #include "db_config.h"
-
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-
-#include <string.h>
-#endif
 
 #include "db_int.h"
 #include "dbinc/db_page.h"
@@ -32,14 +25,14 @@ __ham_30_hashmeta(dbp, real_name, obuf)
 	char *real_name;
 	u_int8_t *obuf;
 {
-	DB_ENV *dbenv;
+	ENV *env;
 	HASHHDR *oldmeta;
 	HMETA30 newmeta;
 	u_int32_t *o_spares, *n_spares;
 	u_int32_t fillf, i, maxb, max_entry, nelem;
 	int ret;
 
-	dbenv = dbp->dbenv;
+	env = dbp->env;
 	memset(&newmeta, 0, sizeof(newmeta));
 
 	oldmeta = (HASHHDR *)obuf;
@@ -99,7 +92,7 @@ __ham_30_hashmeta(dbp, real_name, obuf)
 		n_spares[i] = 1 + o_spares[i - 1];
 
 					/* Replace the unique ID. */
-	if ((ret = __os_fileid(dbenv, real_name, 1, newmeta.dbmeta.uid)) != 0)
+	if ((ret = __os_fileid(env, real_name, 1, newmeta.dbmeta.uid)) != 0)
 		return (ret);
 
 	/* Overwrite the original. */
@@ -123,14 +116,14 @@ __ham_30_sizefix(dbp, fhp, realname, metabuf)
 	u_int8_t *metabuf;
 {
 	u_int8_t buf[DB_MAX_PGSIZE];
-	DB_ENV *dbenv;
+	ENV *env;
 	HMETA30 *meta;
 	db_pgno_t last_actual, last_desired;
 	int ret;
 	size_t nw;
 	u_int32_t pagesize;
 
-	dbenv = dbp->dbenv;
+	env = dbp->env;
 	memset(buf, 0, DB_MAX_PGSIZE);
 
 	meta = (HMETA30 *)metabuf;
@@ -155,10 +148,10 @@ __ham_30_sizefix(dbp, fhp, realname, metabuf)
 	 * a zeroed page where last_desired would go.
 	 */
 	if (last_desired > last_actual) {
-		if ((ret = __os_seek(dbenv,
-		    fhp, pagesize, last_desired, 0, 0, DB_OS_SEEK_SET)) != 0)
+		if ((ret = __os_seek(
+		    env, fhp, last_desired, pagesize, 0)) != 0)
 			return (ret);
-		if ((ret = __os_write(dbenv, fhp, buf, pagesize, &nw)) != 0)
+		if ((ret = __os_write(env, fhp, buf, pagesize, &nw)) != 0)
 			return (ret);
 	}
 
@@ -181,8 +174,8 @@ __ham_31_hashmeta(dbp, real_name, flags, fhp, h, dirtyp)
 	PAGE *h;
 	int *dirtyp;
 {
-	HMETA31 *newmeta;
 	HMETA30 *oldmeta;
+	HMETA31 *newmeta;
 
 	COMPQUIET(dbp, NULL);
 	COMPQUIET(real_name, NULL);
@@ -259,6 +252,72 @@ __ham_31_hash(dbp, real_name, flags, fhp, h, dirtyp)
 			}
 		}
 	}
+
+	return (ret);
+}
+
+/*
+ * __ham_46_hashmeta --
+ *	Upgrade the database from version 8 to version 9.
+ *
+ * PUBLIC: int __ham_46_hashmeta
+ * PUBLIC:      __P((DB *, char *, u_int32_t, DB_FH *, PAGE *, int *));
+ */
+int
+__ham_46_hashmeta(dbp, real_name, flags, fhp, h, dirtyp)
+	DB *dbp;
+	char *real_name;
+	u_int32_t flags;
+	DB_FH *fhp;
+	PAGE *h;
+	int *dirtyp;
+{
+	HMETA33 *newmeta;
+
+	COMPQUIET(dbp, NULL);
+	COMPQUIET(real_name, NULL);
+	COMPQUIET(flags, 0);
+	COMPQUIET(fhp, NULL);
+
+	newmeta = (HMETA33 *)h;
+	/* Update the version. */
+	newmeta->dbmeta.version = 9;
+	*dirtyp = 1;
+
+	return (0);
+}
+
+/*
+ * __ham_46_hash --
+ *	Upgrade the database hash leaf pages.
+ *	From version 8 databases to version 9.
+ *	Involves sorting leaf pages, no format change.
+ *
+ * PUBLIC: int __ham_46_hash
+ * PUBLIC:      __P((DB *, char *, u_int32_t, DB_FH *, PAGE *, int *));
+ */
+int
+__ham_46_hash(dbp, real_name, flags, fhp, h, dirtyp)
+	DB *dbp;
+	char *real_name;
+	u_int32_t flags;
+	DB_FH *fhp;
+	PAGE *h;
+	int *dirtyp;
+{
+	DBC *dbc;
+	int ret, t_ret;
+
+	COMPQUIET(real_name, NULL);
+	COMPQUIET(flags, 0);
+	COMPQUIET(fhp, NULL);
+
+	if ((ret = __db_cursor(dbp, NULL, NULL, &dbc, 0)) != 0)
+		return (ret);
+	*dirtyp = 1;
+	ret = __ham_sort_page(dbc, NULL, h);
+	if ((t_ret = __dbc_close(dbc)) != 0 && ret == 0)
+		ret = t_ret;
 
 	return (ret);
 }

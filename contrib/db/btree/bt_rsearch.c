@@ -1,8 +1,7 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1996-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
  */
 /*
  * Copyright (c) 1990, 1993, 1994, 1995, 1996
@@ -36,19 +35,14 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: bt_rsearch.c,v 11.40 2004/07/23 17:21:09 bostic Exp $
+ * $Id$
  */
 
 #include "db_config.h"
 
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-#endif
-
 #include "db_int.h"
 #include "dbinc/db_page.h"
 #include "dbinc/btree.h"
-#include "dbinc/db_shash.h"
 #include "dbinc/lock.h"
 #include "dbinc/mp.h"
 
@@ -70,15 +64,18 @@ __bam_rsearch(dbc, recnop, flags, stop, exactp)
 	DB *dbp;
 	DB_LOCK lock;
 	DB_MPOOLFILE *mpf;
+	ENV *env;
 	PAGE *h;
 	RINTERNAL *ri;
 	db_indx_t adjust, deloffset, indx, top;
 	db_lockmode_t lock_mode;
 	db_pgno_t pg;
 	db_recno_t recno, t_recno, total;
+	u_int32_t get_mode;
 	int ret, stack, t_ret;
 
 	dbp = dbc->dbp;
+	env = dbp->env;
 	mpf = dbp->mpf;
 	cp = (BTREE_CURSOR *)dbc->internal;
 	h = NULL;
@@ -100,44 +97,15 @@ __bam_rsearch(dbc, recnop, flags, stop, exactp)
 	 *
 	 * Retrieve the root page.
 	 */
-	pg = cp->root;
-	stack = LF_ISSET(S_STACK) ? 1 : 0;
-	lock_mode = stack ? DB_LOCK_WRITE : DB_LOCK_READ;
-	if ((ret = __db_lget(dbc, 0, pg, lock_mode, 0, &lock)) != 0)
-		return (ret);
-	if ((ret = __memp_fget(mpf, &pg, 0, &h)) != 0) {
-		/* Did not read it, so we can release the lock */
-		(void)__LPUT(dbc, lock);
-		return (ret);
-	}
 
-	/*
-	 * Decide if we need to save this page; if we do, write lock it.
-	 * We deliberately don't lock-couple on this call.  If the tree
-	 * is tiny, i.e., one page, and two threads are busily updating
-	 * the root page, we're almost guaranteed deadlocks galore, as
-	 * each one gets a read lock and then blocks the other's attempt
-	 * for a write lock.
-	 */
-	if (!stack &&
-	    ((LF_ISSET(S_PARENT) && (u_int8_t)(stop + 1) >= h->level) ||
-	    (LF_ISSET(S_WRITE) && h->level == LEAFLEVEL))) {
-		ret = __memp_fput(mpf, h, 0);
-		if ((t_ret = __LPUT(dbc, lock)) != 0 && ret == 0)
-			ret = t_ret;
-		if (ret != 0)
-			return (ret);
-		lock_mode = DB_LOCK_WRITE;
-		if ((ret = __db_lget(dbc, 0, pg, lock_mode, 0, &lock)) != 0)
-			return (ret);
-		if ((ret = __memp_fget(mpf, &pg, 0, &h)) != 0) {
-			/* Did not read it, so we can release the lock */
-			(void)__LPUT(dbc, lock);
-			return (ret);
-		}
-		stack = 1;
-	}
+	if ((ret = __bam_get_root(dbc, cp->root, stop, flags, &stack)) != 0)
+		return (ret);
+	lock_mode = cp->csp->lock_mode;
+	get_mode = lock_mode == DB_LOCK_WRITE ? DB_MPOOL_DIRTY : 0;
+	lock = cp->csp->lock;
+	h = cp->csp->page;
 
+	BT_STK_CLR(cp);
 	/*
 	 * If appending to the tree, set the record number now -- we have the
 	 * root page locked.
@@ -151,7 +119,7 @@ __bam_rsearch(dbc, recnop, flags, stop, exactp)
 	 * a fast check now.
 	 */
 	total = RE_NREC(h);
-	if (LF_ISSET(S_APPEND)) {
+	if (LF_ISSET(SR_APPEND)) {
 		*exactp = 0;
 		*recnop = recno = total + 1;
 	} else {
@@ -160,7 +128,7 @@ __bam_rsearch(dbc, recnop, flags, stop, exactp)
 			*exactp = 1;
 		else {
 			*exactp = 0;
-			if (!LF_ISSET(S_PAST_EOF) || recno > total + 1) {
+			if (!LF_ISSET(SR_PAST_EOF) || recno > total + 1) {
 				/*
 				 * Keep the page locked for serializability.
 				 *
@@ -169,7 +137,8 @@ __bam_rsearch(dbc, recnop, flags, stop, exactp)
 				 * eliminate any concurrency.  A possible fix
 				 * would be to lock the last leaf page instead.
 				 */
-				ret = __memp_fput(mpf, h, 0);
+				ret = __memp_fput(mpf,
+				    dbc->thread_info, h, dbc->priority);
 				if ((t_ret =
 				    __TLPUT(dbc, lock)) != 0 && ret == 0)
 					ret = t_ret;
@@ -187,7 +156,16 @@ __bam_rsearch(dbc, recnop, flags, stop, exactp)
 	for (total = 0;;) {
 		switch (TYPE(h)) {
 		case P_LBTREE:
+			if (LF_ISSET(SR_MAX)) {
+				indx = NUM_ENT(h) - 2;
+				goto enter;
+			}
+			/* FALLTHROUGH */
 		case P_LDUP:
+			if (LF_ISSET(SR_MAX)) {
+				indx = NUM_ENT(h) - 1;
+				goto enter;
+			}
 			recno -= total;
 			/*
 			 * There may be logically deleted records on the page.
@@ -203,9 +181,11 @@ __bam_rsearch(dbc, recnop, flags, stop, exactp)
 			for (t_recno = 0, indx = 0;; indx += adjust) {
 				if (indx >= NUM_ENT(h)) {
 					*exactp = 0;
-					if (!LF_ISSET(S_PAST_EOF) ||
+					if (!LF_ISSET(SR_PAST_EOF) ||
 					    recno > t_recno + 1) {
-						ret = __memp_fput(mpf, h, 0);
+						ret = __memp_fput(mpf,
+						    dbc->thread_info,
+						    h, dbc->priority);
 						h = NULL;
 						if ((t_ret = __TLPUT(dbc,
 						    lock)) != 0 && ret == 0)
@@ -221,14 +201,17 @@ __bam_rsearch(dbc, recnop, flags, stop, exactp)
 					break;
 			}
 
-			/* Correct from 1-based to 0-based for a page offset. */
-			BT_STK_ENTER(dbp->dbenv,
-			    cp, h, indx, lock, lock_mode, ret);
+			BT_STK_ENTER(env, cp, h, indx, lock, lock_mode, ret);
 			if (ret != 0)
 				goto err;
+			if (LF_ISSET(SR_BOTH))
+				goto get_prev;
 			return (0);
 		case P_IBTREE:
-			for (indx = 0, top = NUM_ENT(h);;) {
+			if (LF_ISSET(SR_MAX)) {
+				indx = NUM_ENT(h);
+				bi = GET_BINTERNAL(dbp, h, indx - 1);
+			} else for (indx = 0, top = NUM_ENT(h);;) {
 				bi = GET_BINTERNAL(dbp, h, indx);
 				if (++indx == top || total + bi->nrecs >= recno)
 					break;
@@ -237,17 +220,45 @@ __bam_rsearch(dbc, recnop, flags, stop, exactp)
 			pg = bi->pgno;
 			break;
 		case P_LRECNO:
-			recno -= total;
+			if (LF_ISSET(SR_MAX))
+				recno = NUM_ENT(h);
+			else
+				recno -= total;
 
 			/* Correct from 1-based to 0-based for a page offset. */
 			--recno;
-			BT_STK_ENTER(dbp->dbenv,
-			    cp, h, recno, lock, lock_mode, ret);
+enter:			BT_STK_ENTER(env, cp, h, recno, lock, lock_mode, ret);
 			if (ret != 0)
 				goto err;
+			if (LF_ISSET(SR_BOTH)) {
+get_prev:			DB_ASSERT(env, LF_ISSET(SR_NEXT));
+				/*
+				 * We have a NEXT tree, now add the sub tree
+				 * that points gets to the previous page.
+				 */
+				cp->csp++;
+				indx = cp->sp->indx - 1;
+				h = cp->sp->page;
+				if (TYPE(h) == P_IRECNO) {
+					ri = GET_RINTERNAL(dbp, h, indx);
+					pg = ri->pgno;
+				} else {
+					DB_ASSERT(env, TYPE(h) == P_IBTREE);
+					bi = GET_BINTERNAL(dbp, h, indx);
+					pg = bi->pgno;
+				}
+				LF_CLR(SR_NEXT | SR_BOTH);
+				LF_SET(SR_MAX);
+				stack = 1;
+				h = NULL;
+				goto lock_next;
+			}
 			return (0);
 		case P_IRECNO:
-			for (indx = 0, top = NUM_ENT(h);;) {
+			if (LF_ISSET(SR_MAX)) {
+				indx = NUM_ENT(h);
+				ri = GET_RINTERNAL(dbp, h, indx - 1);
+			} else for (indx = 0, top = NUM_ENT(h);;) {
 				ri = GET_RINTERNAL(dbp, h, indx);
 				if (++indx == top || total + ri->nrecs >= recno)
 					break;
@@ -256,27 +267,49 @@ __bam_rsearch(dbc, recnop, flags, stop, exactp)
 			pg = ri->pgno;
 			break;
 		default:
-			return (__db_pgfmt(dbp->dbenv, h->pgno));
+			return (__db_pgfmt(env, h->pgno));
 		}
 		--indx;
 
+		/* Return if this is the lowest page wanted. */
+		if (stop == LEVEL(h)) {
+			BT_STK_ENTER(env, cp, h, indx, lock, lock_mode, ret);
+			if (ret != 0)
+				goto err;
+			return (0);
+		}
 		if (stack) {
-			/* Return if this is the lowest page wanted. */
-			if (LF_ISSET(S_PARENT) && stop == h->level) {
-				BT_STK_ENTER(dbp->dbenv,
-				    cp, h, indx, lock, lock_mode, ret);
-				if (ret != 0)
-					goto err;
-				return (0);
-			}
-			BT_STK_PUSH(dbp->dbenv,
-			    cp, h, indx, lock, lock_mode, ret);
+			BT_STK_PUSH(env, cp, h, indx, lock, lock_mode, ret);
 			if (ret != 0)
 				goto err;
 			h = NULL;
 
 			lock_mode = DB_LOCK_WRITE;
+			get_mode = DB_MPOOL_DIRTY;
 			if ((ret =
+			    __db_lget(dbc, 0, pg, lock_mode, 0, &lock)) != 0)
+				goto err;
+		} else if (LF_ISSET(SR_NEXT)) {
+			/*
+			 * For RECNO if we are doing a NEXT search the
+			 * search recno is the one we are looking for
+			 * but we want to keep the stack from the spanning
+			 * node on down.  We only know we have the spanning
+			 * node when its child's index is 0, so save
+			 * each node and discard the tree when we find out
+			 * its not needed.
+			 */
+			if (indx != 0 && cp->sp->page != NULL) {
+				BT_STK_POP(cp);
+				if ((ret = __bam_stkrel(dbc, STK_NOLOCK)) != 0)
+					goto err;
+			}
+
+			BT_STK_PUSH(env, cp, h, indx, lock, lock_mode, ret);
+			h = NULL;
+			if (ret != 0)
+				goto err;
+lock_next:		if ((ret =
 			    __db_lget(dbc, 0, pg, lock_mode, 0, &lock)) != 0)
 				goto err;
 		} else {
@@ -285,17 +318,20 @@ __bam_rsearch(dbc, recnop, flags, stop, exactp)
 			 * page in the stack.  If we do, write lock it and
 			 * never unlock it.
 			 */
-			if ((LF_ISSET(S_PARENT) &&
-			    (u_int8_t)(stop + 1) >= (u_int8_t)(h->level - 1)) ||
-			    (h->level - 1) == LEAFLEVEL)
+			if ((LF_ISSET(SR_PARENT) &&
+			    (u_int8_t)(stop + 1) >= (u_int8_t)(LEVEL(h) - 1)) ||
+			    (LEVEL(h) - 1) == LEAFLEVEL)
 				stack = 1;
 
-			if ((ret = __memp_fput(mpf, h, 0)) != 0)
+			if ((ret = __memp_fput(mpf,
+			    dbc->thread_info, h, dbc->priority)) != 0)
 				goto err;
 			h = NULL;
 
 			lock_mode = stack &&
-			    LF_ISSET(S_WRITE) ? DB_LOCK_WRITE : DB_LOCK_READ;
+			    LF_ISSET(SR_WRITE) ? DB_LOCK_WRITE : DB_LOCK_READ;
+			if (lock_mode == DB_LOCK_WRITE)
+				get_mode = DB_MPOOL_DIRTY;
 			if ((ret = __db_lget(dbc,
 			    LCK_COUPLE_ALWAYS, pg, lock_mode, 0, &lock)) != 0) {
 				/*
@@ -308,16 +344,18 @@ __bam_rsearch(dbc, recnop, flags, stop, exactp)
 			}
 		}
 
-		if ((ret = __memp_fget(mpf, &pg, 0, &h)) != 0)
+		if ((ret = __memp_fget(mpf, &pg,
+		     dbc->thread_info, dbc->txn, get_mode, &h)) != 0)
 			goto err;
 	}
 	/* NOTREACHED */
 
-err:	if (h != NULL && (t_ret = __memp_fput(mpf, h, 0)) != 0 && ret == 0)
+err:	if (h != NULL && (t_ret = __memp_fput(mpf,
+	    dbc->thread_info, h, dbc->priority)) != 0 && ret == 0)
 		ret = t_ret;
 
 	BT_STK_POP(cp);
-	__bam_stkrel(dbc, 0);
+	(void)__bam_stkrel(dbc, 0);
 
 	return (ret);
 }
@@ -350,6 +388,11 @@ __bam_adjust(dbc, adjust)
 	for (epg = cp->sp; epg <= cp->csp; ++epg) {
 		h = epg->page;
 		if (TYPE(h) == P_IBTREE || TYPE(h) == P_IRECNO) {
+			ret = __memp_dirty(mpf, &h,
+			    dbc->thread_info, dbc->txn, dbc->priority, 0);
+			epg->page = h;
+			if (ret != 0)
+				return (ret);
 			if (DBC_LOGGING(dbc)) {
 				if ((ret = __bam_cadjust_log(dbp, dbc->txn,
 				    &LSN(h), 0, PGNO(h), &LSN(h),
@@ -369,9 +412,6 @@ __bam_adjust(dbc, adjust)
 
 			if (PGNO(h) == root_pgno)
 				RE_NREC_ADJ(h, adjust);
-
-			if ((ret = __memp_fset(mpf, h, DB_MPOOL_DIRTY)) != 0)
-				return (ret);
 		}
 	}
 	return (0);
@@ -401,12 +441,13 @@ __bam_nrecs(dbc, rep)
 	pgno = dbc->internal->root;
 	if ((ret = __db_lget(dbc, 0, pgno, DB_LOCK_READ, 0, &lock)) != 0)
 		return (ret);
-	if ((ret = __memp_fget(mpf, &pgno, 0, &h)) != 0)
+	if ((ret = __memp_fget(mpf, &pgno,
+	     dbc->thread_info, dbc->txn, 0, &h)) != 0)
 		return (ret);
 
 	*rep = RE_NREC(h);
 
-	ret = __memp_fput(mpf, h, 0);
+	ret = __memp_fput(mpf, dbc->thread_info, h, dbc->priority);
 	if ((t_ret = __TLPUT(dbc, lock)) != 0 && ret == 0)
 		ret = t_ret;
 

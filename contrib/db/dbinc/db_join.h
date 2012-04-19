@@ -1,14 +1,17 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1998-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1998-2009 Oracle.  All rights reserved.
  *
- *	@(#)db_join.h	11.1 (Sleepycat) 7/25/99
+ * $Id$
  */
 
 #ifndef _DB_JOIN_H_
 #define	_DB_JOIN_H_
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
 /*
  * Joins use a join cursor that is similar to a regular DB cursor except
@@ -28,4 +31,7 @@ typedef struct __join_cursor {
 	u_int32_t flags;
 } JOIN_CURSOR;
 
+#if defined(__cplusplus)
+}
+#endif
 #endif /* !_DB_JOIN_H_ */

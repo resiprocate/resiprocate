@@ -1,19 +1,19 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1997-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1997-2009 Oracle.  All rights reserved.
  *
- * $Id: cxx_except.cpp,v 11.28 2004/09/22 03:34:48 bostic Exp $
+ * $Id$
  */
 
 #include "db_config.h"
 
-#include <string.h>
-#include <errno.h>
+#include "db_int.h"
 
 #include "db_cxx.h"
 #include "dbinc/cxx_int.h"
+
+static const int MAX_DESCRIPTION_LENGTH = 1024;
 
 // Note: would not be needed if we can inherit from exception
 // It does not appear to be possible to inherit from exception
@@ -39,28 +39,28 @@ DbException::~DbException() throw()
 
 DbException::DbException(int err)
 :	err_(err)
-,	env_(0)
+,	dbenv_(0)
 {
 	describe(0, 0);
 }
 
 DbException::DbException(const char *description)
 :	err_(0)
-,	env_(0)
+,	dbenv_(0)
 {
 	describe(0, description);
 }
 
 DbException::DbException(const char *description, int err)
 :	err_(err)
-,	env_(0)
+,	dbenv_(0)
 {
 	describe(0, description);
 }
 
 DbException::DbException(const char *prefix, const char *description, int err)
 :	err_(err)
-,	env_(0)
+,	dbenv_(0)
 {
 	describe(prefix, description);
 }
@@ -69,7 +69,7 @@ DbException::DbException(const DbException &that)
 :	__DB_STD(exception)()
 ,	what_(dupString(that.what_))
 ,	err_(that.err_)
-,	env_(0)
+,	dbenv_(0)
 {
 }
 
@@ -85,10 +85,11 @@ DbException &DbException::operator = (const DbException &that)
 
 void DbException::describe(const char *prefix, const char *description)
 {
-	char msgbuf[1024], *p, *end;
+	char *msgbuf, *p, *end;
 
+	msgbuf = new char[MAX_DESCRIPTION_LENGTH];
 	p = msgbuf;
-	end = msgbuf + sizeof(msgbuf) - 1;
+	end = msgbuf + MAX_DESCRIPTION_LENGTH - 1;
 
 	if (prefix != NULL) {
 		strncpy(p, prefix, (p < end) ? end - p: 0);
@@ -117,6 +118,7 @@ void DbException::describe(const char *prefix, const char *description)
 		*end = '\0';
 
 	what_ = dupString(msgbuf);
+	delete [] msgbuf;
 }
 
 int DbException::get_errno() const
@@ -131,12 +133,12 @@ const char *DbException::what() const throw()
 
 DbEnv *DbException::get_env() const
 {
-	return env_;
+	return dbenv_;
 }
 
-void DbException::set_env(DbEnv *env)
+void DbException::set_env(DbEnv *dbenv)
 {
-	env_= env;
+	dbenv_= dbenv;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -151,13 +153,13 @@ DbMemoryException::~DbMemoryException() throw()
 }
 
 DbMemoryException::DbMemoryException(Dbt *dbt)
-:	DbException(memory_err_desc, ENOMEM)
+:	DbException(memory_err_desc, DB_BUFFER_SMALL)
 ,	dbt_(dbt)
 {
 }
 
 DbMemoryException::DbMemoryException(const char *prefix, Dbt *dbt)
-:	DbException(prefix, memory_err_desc, ENOMEM)
+:	DbException(prefix, memory_err_desc, DB_BUFFER_SMALL)
 ,	dbt_(dbt)
 {
 }
@@ -293,6 +295,35 @@ DbLock* DbLockNotGrantedException::get_lock() const
 int DbLockNotGrantedException::get_index() const
 {
 	return index_;
+}
+
+////////////////////////////////////////////////////////////////////////
+//                                                                    //
+//                            DbRepHandleDeadException                //
+//                                                                    //
+////////////////////////////////////////////////////////////////////////
+
+DbRepHandleDeadException::~DbRepHandleDeadException() throw()
+{
+}
+
+DbRepHandleDeadException::DbRepHandleDeadException(const char *description)
+:	DbException(description, DB_REP_HANDLE_DEAD)
+{
+}
+
+DbRepHandleDeadException::DbRepHandleDeadException
+    (const DbRepHandleDeadException &that)
+:	DbException(that)
+{
+}
+
+DbRepHandleDeadException
+&DbRepHandleDeadException::operator =(const DbRepHandleDeadException &that)
+{
+	if (this != &that)
+		DbException::operator=(that);
+	return (*this);
 }
 
 ////////////////////////////////////////////////////////////////////////

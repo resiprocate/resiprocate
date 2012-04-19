@@ -1,4 +1,4 @@
-# $Id: status.awk,v 10.5 2004/09/24 00:43:17 bostic Exp $
+# $Id$
 #
 # Read through db_printlog output and list all the transactions encountered
 # and whether they committed or aborted.
@@ -10,7 +10,7 @@
 BEGIN {
 	cur_txn = 0
 }
-/^\[/{
+/^\[.*]\[/{
 	in_regop = 0
 	if (status[$5] == 0) {
 		status[$5] = 1;

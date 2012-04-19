@@ -1,23 +1,14 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1996-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
  *
- * $Id: lock_list.c,v 11.146 2004/09/22 03:48:29 bostic Exp $
+ * $Id$
  */
 
 #include "db_config.h"
 
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-
-#include <string.h>
-#include <stdlib.h>
-#endif
-
 #include "db_int.h"
-#include "dbinc/db_shash.h"
 #include "dbinc/lock.h"
 #include "dbinc/log.h"
 
@@ -61,23 +52,23 @@ static int __lock_sort_cmp __P((const void *, const void *));
 #define	RET_SIZE(size, count)  ((size) +				\
      sizeof(u_int32_t) + (count) * 2 * sizeof(u_int16_t))
 
-#define	PUT_COUNT(dp, count)	do {	u_int32_t *ip = (u_int32_t *)dp;\
-					*ip = count;			\
+#define	PUT_COUNT(dp, count)	do {	u_int32_t __c = (count);	\
+					LOGCOPY_32(env, dp, &__c);	\
 					dp = (u_int8_t *)dp +		\
 					     sizeof(u_int32_t);		\
 				} while (0)
-#define	PUT_PCOUNT(dp, count)	do {	u_int16_t *ip = (u_int16_t *)dp;\
-					*ip = count;			\
+#define	PUT_PCOUNT(dp, count)	do {	u_int16_t __c = (count);	\
+					LOGCOPY_16(env, dp, &__c);	\
 					dp = (u_int8_t *)dp +		\
 					    sizeof(u_int16_t);		\
 				} while (0)
-#define	PUT_SIZE(dp, size)	do {	u_int16_t *ip = (u_int16_t *)dp;\
-					*ip = size;			\
+#define	PUT_SIZE(dp, size)	do {	u_int16_t __s = (size);		\
+					LOGCOPY_16(env, dp, &__s);	\
 					dp = (u_int8_t *)dp +		\
 					    sizeof(u_int16_t);		\
 				} while (0)
-#define	PUT_PGNO(dp, pgno)	do {	db_pgno_t *ip = (db_pgno_t *)dp;\
-					*ip = pgno;			\
+#define	PUT_PGNO(dp, pgno)	do {	db_pgno_t __pg = (pgno);	\
+					LOGCOPY_32(env, dp, &__pg);	\
 					dp = (u_int8_t *)dp +		\
 					    sizeof(db_pgno_t);		\
 				} while (0)
@@ -88,23 +79,19 @@ static int __lock_sort_cmp __P((const void *, const void *));
 					     DB_ALIGN((obj)->size,	\
 					     sizeof(u_int32_t));	\
 				} while (0)
-#define	GET_COUNT(dp, count)	do {					\
-					(count) = *(u_int32_t *)dp;	\
+#define	GET_COUNT(dp, count)	do {	LOGCOPY_32(env, &count, dp);	\
 					dp = (u_int8_t *)dp +		\
 					     sizeof(u_int32_t);	\
 				} while (0)
-#define	GET_PCOUNT(dp, count)	do {					\
-					(count) = *(u_int16_t *)dp;	\
+#define	GET_PCOUNT(dp, count)	do {	LOGCOPY_16(env, &count, dp);	\
 					dp = (u_int8_t *)dp +		\
 					     sizeof(u_int16_t);	\
 				} while (0)
-#define	GET_SIZE(dp, size)	do {					\
-					(size) = *(u_int16_t *)dp;	\
+#define	GET_SIZE(dp, size)	do {	LOGCOPY_16(env, &size, dp);	\
 					dp = (u_int8_t *)dp +		\
 					     sizeof(u_int16_t);	\
 				} while (0)
-#define	GET_PGNO(dp, pgno)	do {					\
-					(pgno) = *(db_pgno_t *)dp;	\
+#define	GET_PGNO(dp, pgno)	do {	LOGCOPY_32(env, &pgno, dp);	\
 					dp = (u_int8_t *)dp +		\
 					     sizeof(db_pgno_t);	\
 				} while (0)
@@ -112,11 +99,11 @@ static int __lock_sort_cmp __P((const void *, const void *));
 /*
  * __lock_fix_list --
  *
- * PUBLIC: int __lock_fix_list __P((DB_ENV *, DBT *, u_int32_t));
+ * PUBLIC: int __lock_fix_list __P((ENV *, DBT *, u_int32_t));
  */
 int
-__lock_fix_list(dbenv, list_dbt, nlocks)
-	DB_ENV *dbenv;
+__lock_fix_list(env, list_dbt, nlocks)
+	ENV *env;
 	DBT *list_dbt;
 	u_int32_t nlocks;
 {
@@ -142,7 +129,7 @@ __lock_fix_list(dbenv, list_dbt, nlocks)
 	switch (nlocks) {
 	case 1:
 		size = RET_SIZE(obj->size, 1);
-		if ((ret = __os_malloc(dbenv, size, &data)) != 0)
+		if ((ret = __os_malloc(env, size, &data)) != 0)
 			return (ret);
 
 		dp = data;
@@ -195,7 +182,7 @@ not_ilock:	size = nfid * sizeof(DB_LOCK_ILOCK);
 		}
 
 		size = RET_SIZE(size, nfid);
-		if ((ret = __os_malloc(dbenv, size, &data)) != 0)
+		if ((ret = __os_malloc(env, size, &data)) != 0)
 			return (ret);
 
 		dp = data;
@@ -213,7 +200,7 @@ not_ilock:	size = nfid * sizeof(DB_LOCK_ILOCK);
 		}
 	}
 
-	__os_free(dbenv, list_dbt->data);
+	__os_free(env, list_dbt->data);
 
 	list_dbt->data = data;
 	list_dbt->size = size;
@@ -222,34 +209,51 @@ not_ilock:	size = nfid * sizeof(DB_LOCK_ILOCK);
 }
 
 /*
- * PUBLIC: int __lock_get_list __P((DB_ENV *, u_int32_t, u_int32_t,
+ * PUBLIC: int __lock_get_list __P((ENV *, DB_LOCKER *, u_int32_t,
  * PUBLIC:	      db_lockmode_t, DBT *));
  */
 int
-__lock_get_list(dbenv, locker, flags, lock_mode, list)
-	DB_ENV *dbenv;
-	u_int32_t locker, flags;
+__lock_get_list(env, locker, flags, lock_mode, list)
+	ENV *env;
+	DB_LOCKER *locker;
+	u_int32_t flags;
 	db_lockmode_t lock_mode;
 	DBT *list;
 {
 	DBT obj_dbt;
 	DB_LOCK ret_lock;
-	DB_LOCK_ILOCK *lock;
+	DB_LOCKREGION *region;
 	DB_LOCKTAB *lt;
+	DB_LOCK_ILOCK *lock;
 	db_pgno_t save_pgno;
 	u_int16_t npgno, size;
 	u_int32_t i, nlocks;
 	int ret;
-	void *dp;
+	void *data, *dp;
 
 	if (list->size == 0)
 		return (0);
 	ret = 0;
-	lt = dbenv->lk_handle;
+	data = NULL;
+
+	lt = env->lk_handle;
 	dp = list->data;
 
+	/*
+	 * There is no assurance log records will be aligned.  If not, then
+	 * copy the data to an aligned region so the rest of the code does
+	 * not have to worry about it.
+	 */
+	if ((uintptr_t)dp != DB_ALIGN((uintptr_t)dp, sizeof(u_int32_t))) {
+		if ((ret = __os_malloc(env, list->size, &data)) != 0)
+			return (ret);
+		memcpy(data, list->data, list->size);
+		dp = data;
+	}
+
+	region = lt->reginfo.primary;
+	LOCK_SYSTEM_LOCK(lt, region);
 	GET_COUNT(dp, nlocks);
-	LOCKREGION(dbenv, dbenv->lk_handle);
 
 	for (i = 0; i < nlocks; i++) {
 		GET_PCOUNT(dp, npgno);
@@ -271,8 +275,9 @@ __lock_get_list(dbenv, locker, flags, lock_mode, list)
 		lock->pgno = save_pgno;
 	}
 
-err:
-	UNLOCKREGION(dbenv, dbenv->lk_handle);
+err:	LOCK_SYSTEM_UNLOCK(lt, region);
+	if (data != NULL)
+		__os_free(env, data);
 	return (ret);
 }
 
@@ -304,11 +309,11 @@ __lock_sort_cmp(a, b)
 }
 
 /*
- * PUBLIC: void __lock_list_print __P((DB_ENV *, DBT *));
+ * PUBLIC: void __lock_list_print __P((ENV *, DBT *));
  */
 void
-__lock_list_print(dbenv, list)
-	DB_ENV *dbenv;
+__lock_list_print(env, list)
+	ENV *env;
 	DBT *list;
 {
 	DB_LOCK_ILOCK *lock;
@@ -316,7 +321,7 @@ __lock_list_print(dbenv, list)
 	u_int16_t npgno, size;
 	u_int32_t i, nlocks;
 	u_int8_t *fidp;
-	char *namep;
+	char *fname, *dname, *p, namebuf[26];
 	void *dp;
 
 	if (list->size == 0)
@@ -330,17 +335,25 @@ __lock_list_print(dbenv, list)
 		GET_SIZE(dp, size);
 		lock = (DB_LOCK_ILOCK *) dp;
 		fidp = lock->fileid;
-		if (__dbreg_get_name(dbenv, fidp, &namep) != 0)
-			namep = NULL;
+		(void)__dbreg_get_name(env, fidp, &fname, &dname);
 		printf("\t");
-		if (namep == NULL)
+		if (fname == NULL && dname == NULL)
 			printf("(%lx %lx %lx %lx %lx)",
 			(u_long)fidp[0], (u_long)fidp[1], (u_long)fidp[2],
 			(u_long)fidp[3], (u_long)fidp[4]);
-		else
-			printf("%-25s", namep);
+		else {
+			if (fname != NULL && dname != NULL) {
+				(void)snprintf(namebuf, sizeof(namebuf),
+				    "%14s.%-10s", fname, dname);
+				p = namebuf;
+			} else if (fname != NULL)
+				p = fname;
+			else
+				p = dname;
+			printf("%-25s", p);
+		}
 		dp = ((u_int8_t *)dp) + DB_ALIGN(size, sizeof(u_int32_t));
-		pgno = lock->pgno;
+		LOGCOPY_32(env, &pgno, &lock->pgno);
 		do {
 			printf(" %d", pgno);
 			if (npgno != 0)

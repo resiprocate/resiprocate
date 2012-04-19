@@ -1,20 +1,12 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 2004-2009 Oracle.  All rights reserved.
  *
- * $Id: os_truncate.c,v 11.7 2004/09/17 22:00:31 mjc Exp $
+ * $Id$
  */
 
 #include "db_config.h"
-
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-
-#include <string.h>
-#include <unistd.h>
-#endif
 
 #include "db_int.h"
 
@@ -22,23 +14,33 @@
  * __os_truncate --
  *	Truncate the file.
  *
- * PUBLIC: int __os_truncate __P((DB_ENV *, DB_FH *, db_pgno_t, u_int32_t));
+ * PUBLIC: int __os_truncate __P((ENV *, DB_FH *, db_pgno_t, u_int32_t));
  */
 int
-__os_truncate(dbenv, fhp, pgno, pgsize)
-	DB_ENV *dbenv;
+__os_truncate(env, fhp, pgno, pgsize)
+	ENV *env;
 	DB_FH *fhp;
 	db_pgno_t pgno;
 	u_int32_t pgsize;
 {
+	DB_ENV *dbenv;
 	off_t offset;
 	int ret;
+
+	dbenv = env == NULL ? NULL : env->dbenv;
 
 	/*
 	 * Truncate a file so that "pgno" is discarded from the end of the
 	 * file.
 	 */
 	offset = (off_t)pgsize * pgno;
+
+	if (dbenv != NULL &&
+	    FLD_ISSET(dbenv->verbose, DB_VERB_FILEOPS | DB_VERB_FILEOPS_ALL))
+		__db_msg(env,
+		    "fileops: truncate %s to %lu", fhp->name, (u_long)offset);
+
+	LAST_PANIC_CHECK_BEFORE_IO(env);
 
 	if (DB_GLOBAL(j_ftruncate) != NULL)
 		ret = DB_GLOBAL(j_ftruncate)(fhp->fd, offset);
@@ -50,9 +52,10 @@ __os_truncate(dbenv, fhp, pgno, pgsize)
 #endif
 	}
 
-	if (ret != 0)
-		__db_err(dbenv,
-		    "ftruncate: %lu: %s", (u_long)offset, strerror(ret));
+	if (ret != 0) {
+		__db_syserr(env, ret, "ftruncate: %lu", (u_long)offset);
+		ret = __os_posix_err(ret);
+	}
 
 	return (ret);
 }

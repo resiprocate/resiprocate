@@ -1,39 +1,30 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1996-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
  *
- * $Id: db_dump.c,v 11.99 2004/10/11 18:53:13 bostic Exp $
+ * $Id$
  */
 
 #include "db_config.h"
-
-#ifndef lint
-static const char copyright[] =
-    "Copyright (c) 1996-2004\nSleepycat Software Inc.  All rights reserved.\n";
-#endif
-
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#endif
 
 #include "db_int.h"
 #include "dbinc/db_page.h"
 #include "dbinc/db_am.h"
 
+#ifndef lint
+static const char copyright[] =
+    "Copyright (c) 1996-2009 Oracle.  All rights reserved.\n";
+#endif
+
 int	 db_init __P((DB_ENV *, char *, int, u_int32_t, int *));
 int	 dump_sub __P((DB_ENV *, DB *, char *, int, int));
-int	 is_sub __P((DB *, int *));
 int	 main __P((int, char *[]));
 int	 show_subs __P((DB *));
 int	 usage __P((void));
-int	 version_check __P((const char *));
+int	 version_check __P((void));
+
+const char *progname;
 
 int
 main(argc, argv)
@@ -42,26 +33,30 @@ main(argc, argv)
 {
 	extern char *optarg;
 	extern int optind;
-	const char *progname = "db_dump";
 	DB_ENV	*dbenv;
 	DB *dbp;
 	u_int32_t cache;
 	int ch;
-	int exitval, keyflag, lflag, nflag, pflag, private;
-	int ret, Rflag, rflag, resize, subs;
-	char *dopt, *home, *passwd, *subname;
+	int exitval, keyflag, lflag, mflag, nflag, pflag, sflag, private;
+	int ret, Rflag, rflag, resize;
+	char *dbname, *dopt, *filename, *home, *passwd;
 
-	if ((ret = version_check(progname)) != 0)
+	if ((progname = __db_rpath(argv[0])) == NULL)
+		progname = argv[0];
+	else
+		++progname;
+
+	if ((ret = version_check()) != 0)
 		return (ret);
 
 	dbenv = NULL;
 	dbp = NULL;
-	exitval = lflag = nflag = pflag = rflag = Rflag = 0;
+	exitval = lflag = mflag = nflag = pflag = rflag = Rflag = sflag = 0;
 	keyflag = 0;
 	cache = MEGABYTE;
 	private = 0;
-	dopt = home = passwd = subname = NULL;
-	while ((ch = getopt(argc, argv, "d:f:h:klNpP:rRs:V")) != EOF)
+	dbname = dopt = filename = home = passwd = NULL;
+	while ((ch = getopt(argc, argv, "d:f:h:klm:NpP:rRs:V")) != EOF)
 		switch (ch) {
 		case 'd':
 			dopt = optarg;
@@ -82,6 +77,10 @@ main(argc, argv)
 		case 'l':
 			lflag = 1;
 			break;
+		case 'm':
+			mflag = 1;
+			dbname = optarg;
+			break;
 		case 'N':
 			nflag = 1;
 			break;
@@ -98,7 +97,8 @@ main(argc, argv)
 			pflag = 1;
 			break;
 		case 's':
-			subname = optarg;
+			sflag = 1;
+			dbname = optarg;
 			break;
 		case 'R':
 			Rflag = 1;
@@ -117,7 +117,15 @@ main(argc, argv)
 	argc -= optind;
 	argv += optind;
 
-	if (argc != 1)
+	/*
+	 * A file name must be specified, unless we're looking for an in-memory
+	 * db,  in which case it must not.
+	 */
+	if (argc == 0 && mflag)
+		filename = NULL;
+	else if (argc == 1 && !mflag)
+		filename = argv[0];
+	else
 		return (usage());
 
 	if (dopt != NULL && pflag) {
@@ -126,9 +134,15 @@ main(argc, argv)
 		    progname);
 		return (EXIT_FAILURE);
 	}
-	if (lflag && subname != NULL) {
+	if (lflag && sflag) {
 		fprintf(stderr,
 		    "%s: the -l and -s options may not both be specified\n",
+		    progname);
+		return (EXIT_FAILURE);
+	}
+	if ((lflag || sflag) && mflag) {
+		fprintf(stderr,
+		    "%s: the -m option may not be specified with -l or -s\n",
 		    progname);
 		return (EXIT_FAILURE);
 	}
@@ -140,9 +154,9 @@ main(argc, argv)
 		return (EXIT_FAILURE);
 	}
 
-	if (subname != NULL && rflag) {
+	if ((mflag || sflag) && rflag) {
 		fprintf(stderr, "%s: %s",
-		    "the -s and -r or R options may not both be specified\n",
+		    "the -r or R options may not be specified with -m or -s\n",
 		    progname);
 		return (EXIT_FAILURE);
 	}
@@ -188,13 +202,22 @@ retry:	if ((ret = db_env_create(&dbenv, 0)) != 0) {
 		goto err;
 	}
 
+#if 0
+	Set application-specific btree compression functions here. For example:
+	if ((ret = dbp->set_bt_compress(
+	    dbp, local_compress_func, local_decompress_func)) != 0) {
+		dbp->err(dbp, ret, "DB->set_bt_compress");
+		goto err;
+	}
+#endif
+
 	/*
 	 * If we're salvaging, don't do an open;  it might not be safe.
 	 * Dispatch now into the salvager.
 	 */
 	if (rflag) {
 		/* The verify method is a destructor. */
-		ret = dbp->verify(dbp, argv[0], NULL, stdout,
+		ret = dbp->verify(dbp, filename, NULL, stdout,
 		    DB_SALVAGE |
 		    (Rflag ? DB_AGGRESSIVE : 0) |
 		    (pflag ? DB_PRINTABLE : 0));
@@ -205,8 +228,9 @@ retry:	if ((ret = db_env_create(&dbenv, 0)) != 0) {
 	}
 
 	if ((ret = dbp->open(dbp, NULL,
-	    argv[0], subname, DB_UNKNOWN, DB_RDONLY, 0)) != 0) {
-		dbp->err(dbp, ret, "open: %s", argv[0]);
+	    filename, dbname, DB_UNKNOWN, DB_RDWRMASTER|DB_RDONLY, 0)) != 0) {
+		dbp->err(dbp, ret, "open: %s",
+		    filename == NULL ? dbname : filename);
 		goto err;
 	}
 	if (private != 0) {
@@ -223,26 +247,23 @@ retry:	if ((ret = db_env_create(&dbenv, 0)) != 0) {
 	}
 
 	if (dopt != NULL) {
-		if ((ret = __db_dumptree(dbp, dopt, NULL)) != 0) {
-			dbp->err(dbp, ret, "__db_dumptree: %s", argv[0]);
+		if ((ret = __db_dumptree(dbp, NULL, dopt, NULL)) != 0) {
+			dbp->err(dbp, ret, "__db_dumptree: %s", filename);
 			goto err;
 		}
 	} else if (lflag) {
-		if (is_sub(dbp, &subs))
-			goto err;
-		if (subs == 0) {
+		if (dbp->get_multiple(dbp)) {
+			if (show_subs(dbp))
+				goto err;
+		} else {
 			dbp->errx(dbp,
-			    "%s: does not contain multiple databases", argv[0]);
+			    "%s: does not contain multiple databases",
+			    filename);
 			goto err;
 		}
-		if (show_subs(dbp))
-			goto err;
 	} else {
-		subs = 0;
-		if (subname == NULL && is_sub(dbp, &subs))
-			goto err;
-		if (subs) {
-			if (dump_sub(dbenv, dbp, argv[0], pflag, keyflag))
+		if (dbname == NULL && dbp->get_multiple(dbp)) {
+			if (dump_sub(dbenv, dbp, filename, pflag, keyflag))
 				goto err;
 		} else
 			if (dbp->dump(dbp, NULL,
@@ -291,7 +312,7 @@ db_init(dbenv, home, is_salvage, cache, is_privatep)
 	 * We wish to use the buffer pool so our information is as up-to-date
 	 * as possible, even if the mpool cache hasn't been flushed.
 	 *
-	 * If we are not doing a salvage, we wish to use the DB_JOINENV flag;
+	 * If we are not doing a salvage, we want to join the environment;
 	 * if a locking system is present, this will let us use it and be
 	 * safe to run concurrently with other threads of control.  (We never
 	 * need to use transactions explicitly, as we're read-only.)  Note
@@ -305,8 +326,8 @@ db_init(dbenv, home, is_salvage, cache, is_privatep)
 	 * before we create our own.
 	 */
 	*is_privatep = 0;
-	if ((ret = dbenv->open(dbenv, home, DB_USE_ENVIRON |
-	    (is_salvage ? DB_INIT_MPOOL : DB_JOINENV), 0)) == 0)
+	if ((ret = dbenv->open(dbenv, home,
+	    DB_USE_ENVIRON | (is_salvage ? DB_INIT_MPOOL : 0), 0)) == 0)
 		return (0);
 	if (ret == DB_VERSION_MISMATCH)
 		goto err;
@@ -330,47 +351,6 @@ db_init(dbenv, home, is_salvage, cache, is_privatep)
 	/* An environment is required. */
 err:	dbenv->err(dbenv, ret, "DB_ENV->open");
 	return (1);
-}
-
-/*
- * is_sub --
- *	Return if the database contains subdatabases.
- */
-int
-is_sub(dbp, yesno)
-	DB *dbp;
-	int *yesno;
-{
-	DB_BTREE_STAT *btsp;
-	DB_HASH_STAT *hsp;
-	int ret;
-
-	switch (dbp->type) {
-	case DB_BTREE:
-	case DB_RECNO:
-		if ((ret = dbp->stat(dbp, NULL, &btsp, DB_FAST_STAT)) != 0) {
-			dbp->err(dbp, ret, "DB->stat");
-			return (ret);
-		}
-		*yesno = btsp->bt_metaflags & BTM_SUBDB ? 1 : 0;
-		free(btsp);
-		break;
-	case DB_HASH:
-		if ((ret = dbp->stat(dbp, NULL, &hsp, DB_FAST_STAT)) != 0) {
-			dbp->err(dbp, ret, "DB->stat");
-			return (ret);
-		}
-		*yesno = hsp->hash_metaflags & DB_HASH_SUBDB ? 1 : 0;
-		free(hsp);
-		break;
-	case DB_QUEUE:
-		break;
-	case DB_UNKNOWN:
-	default:
-		dbp->errx(dbp, "unknown database type");
-		return (1);
-	}
-	return (0);
 }
 
 /*
@@ -401,7 +381,8 @@ dump_sub(dbenv, parent_dbp, parent_name, pflag, keyflag)
 
 	memset(&key, 0, sizeof(key));
 	memset(&data, 0, sizeof(data));
-	while ((ret = dbcp->c_get(dbcp, &key, &data, DB_NEXT)) == 0) {
+	while ((ret = dbcp->get(dbcp, &key, &data,
+	    DB_IGNORE_LEASE | DB_NEXT)) == 0) {
 		/* Nul terminate the subdatabase name. */
 		if ((subdb = malloc(key.size + 1)) == NULL) {
 			dbenv->err(dbenv, ENOMEM, NULL);
@@ -416,6 +397,18 @@ dump_sub(dbenv, parent_dbp, parent_name, pflag, keyflag)
 			free(subdb);
 			return (1);
 		}
+
+#if 0
+		Set application-specific btree compression functions here.
+		For example:
+
+		if ((ret = dbp->set_bt_compress(
+		    dbp, local_compress_func, local_decompress_func)) != 0) {
+			dbp->err(dbp, ret, "DB->set_bt_compress");
+			goto err;
+		}
+#endif
+
 		if ((ret = dbp->open(dbp, NULL,
 		    parent_name, subdb, DB_UNKNOWN, DB_RDONLY, 0)) != 0)
 			dbp->err(dbp, ret,
@@ -433,7 +426,7 @@ dump_sub(dbenv, parent_dbp, parent_name, pflag, keyflag)
 		return (1);
 	}
 
-	if ((ret = dbcp->c_close(dbcp)) != 0) {
+	if ((ret = dbcp->close(dbcp)) != 0) {
 		parent_dbp->err(parent_dbp, ret, "DBcursor->close");
 		return (1);
 	}
@@ -464,7 +457,8 @@ show_subs(dbp)
 
 	memset(&key, 0, sizeof(key));
 	memset(&data, 0, sizeof(data));
-	while ((ret = dbcp->c_get(dbcp, &key, &data, DB_NEXT)) == 0) {
+	while ((ret = dbcp->get(dbcp, &key, &data,
+	    DB_IGNORE_LEASE | DB_NEXT)) == 0) {
 		if ((ret = dbp->dbenv->prdbt(
 		    &key, 1, NULL, stdout, __db_pr_callback, 0)) != 0) {
 			dbp->errx(dbp, NULL);
@@ -476,7 +470,7 @@ show_subs(dbp)
 		return (1);
 	}
 
-	if ((ret = dbcp->c_close(dbcp)) != 0) {
+	if ((ret = dbcp->close(dbcp)) != 0) {
 		dbp->err(dbp, ret, "DBcursor->close");
 		return (1);
 	}
@@ -490,15 +484,16 @@ show_subs(dbp)
 int
 usage()
 {
-	(void)fprintf(stderr, "%s\n\t%s\n",
-	    "usage: db_dump [-klNprRV]",
+	(void)fprintf(stderr, "usage: %s [-klNprRV]\n\t%s\n",
+	    progname,
     "[-d ahr] [-f output] [-h home] [-P password] [-s database] db_file");
+	(void)fprintf(stderr, "usage: %s [-kNpV] %s\n",
+	    progname, "[-d ahr] [-f output] [-h home] -m database");
 	return (EXIT_FAILURE);
 }
 
 int
-version_check(progname)
-	const char *progname;
+version_check()
 {
 	int v_major, v_minor, v_patch;
 
