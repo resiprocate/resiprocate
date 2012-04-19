@@ -48,6 +48,15 @@ AH_TEMPLATE([OS_POINT_VER], [Point OS version])
 AC_DEFINE_UNQUOTED(OS_PATCH_VER, $OS_PATCH_VER)
 AH_TEMPLATE([OS_PATCH_VER], [Patch OS version])
 
+case $host_os in
+solaris*)
+  CXXFLAGS="$CXXFLAGS -library=stlport4"
+#  CFLAGS="-mt"
+#  LDFLAGS="$LDFLAGS -DTHREAD=MULTI -mt -library=stlport4"
+  ;;
+*)
+  ;;
+esac
 
 case $host_cpu in
 x86_64)
