@@ -133,14 +133,14 @@ AC_ARG_WITH(c-ares,
  AM_CONDITIONAL(USE_ARES, false)
  AM_CONDITIONAL(USE_CARES, true)
  AC_SEARCH_LIBS(ares_init, cares, , [
-     AC_MSG_ERROR([unable to find ares_init(), set LDFLAGS or use contrib/ares])
+     AC_MSG_ERROR([unable to find ares_init(), install libcares and/or set LDFLAGS, or use contrib/ares])
    ])],
  [ AC_DEFINE_UNQUOTED(USE_ARES, , USE_ARES)
    CXXFLAGS="$CXXFLAGS -I`pwd`/contrib/ares"
    LDFLAGS="$LDFLAGS -L`pwd`/contrib/ares"
    AC_SUBST(LIBARES_LIBADD, "-lares")
    AC_SEARCH_LIBS(ares_init, ares, , [
-     AC_MSG_ERROR([unable to find ares_init(), must build contrib/ares])
+     AC_MSG_ERROR([unable to find ares_init(), must build contrib/ares or specify --with-c-ares])
    ])])
 
 AM_CONDITIONAL(USE_SSL, false)
