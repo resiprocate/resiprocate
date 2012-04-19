@@ -82,8 +82,7 @@ MINGW*)
   OSTYPE=MinGW
   ;;
 *)
-  echo "WARNING: Possibly unsupported OSTYPE: $OSTYPE"
-  echo "Please see configure.ac"
+  echo "Using native OSTYPE value: $OSTYPE"
   ;;
 esac
 
@@ -97,10 +96,7 @@ i?86)
   ;;
 *)
   LARCH="$host_cpu"
-  echo "WARNING: Possibly unsupported host CPU: $host_cpu"
-  echo "Please review the CPU-specific settings in configure.ac"
-#  echo "and then re-run autoreconf --install"
-#  exit 1
+  echo "Using native ARCH/LARCH value from \$host_cpu: $host_cpu"
   ;;
 esac
 OSTYPE_UPPER=`echo $OSTYPE | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'`
