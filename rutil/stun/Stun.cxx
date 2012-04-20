@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <cassert>
 #include <cstring>
 #include <iostream>
@@ -1977,7 +1981,7 @@ stunSendTest( resip::Socket myFd, StunAddress4& dest,
          discard=true;
          break;
       default:
-         cerr << "Test " << testNum <<" is unkown\n";
+         cerr << "Test " << testNum <<" is unknown\n";
          assert(0);
    }
 	

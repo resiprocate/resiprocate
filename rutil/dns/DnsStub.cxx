@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 //	WINCE -- stl headers have to be defined before standard c headers because of
 //	MS non-consistent declaration of time_t. we defined _USE_32BIT_TIME_T
 //	in all projects and that solved the issue with beta compiler, however

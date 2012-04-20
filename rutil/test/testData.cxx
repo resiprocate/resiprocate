@@ -1295,6 +1295,7 @@ class TestData
             assert(  Data("1234567" ).base64encode() == d7 );
          }
          
+         for(int i=0; i<4; ++i)
          {
             const char* buf1="5d7a9b7c02034b5b";
             const char* buf2=" 5d7a9b7c02034b5b";
@@ -1305,15 +1306,15 @@ class TestData
             const char* ubuf3="  5D7A9B7C02034B5B";
             const char* ubuf4="   5D7A9B7C02034B5B";
 
-            Data d1(Data::Share, buf1, 16);
-            Data d2(Data::Share, buf2+1, 16);
-            Data d3(Data::Share, buf3+2, 16);
-            Data d4(Data::Share, buf4+3, 16);
+            Data d1(Data::Share, buf1, 16-i);
+            Data d2(Data::Share, buf2+1, 16-i);
+            Data d3(Data::Share, buf3+2, 16-i);
+            Data d4(Data::Share, buf4+3, 16-i);
 
-            Data u1(Data::Share, ubuf1, 16);
-            Data u2(Data::Share, ubuf2+1, 16);
-            Data u3(Data::Share, ubuf3+2, 16);
-            Data u4(Data::Share, ubuf4+3, 16);
+            Data u1(Data::Share, ubuf1, 16-i);
+            Data u2(Data::Share, ubuf2+1, 16-i);
+            Data u3(Data::Share, ubuf3+2, 16-i);
+            Data u4(Data::Share, ubuf4+3, 16-i);
 
             // All of these point to the same data, but aligned differently.
             assert(d1.hash()==d2.hash());

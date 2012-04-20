@@ -1,6 +1,10 @@
 #if !defined(RESIP_APICHECKLIST_HXX)
 #define RESIP_APICHECKLIST_HXX
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 
 #include "resip/stack/ApiCheck.hxx"
 

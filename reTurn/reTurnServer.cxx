@@ -5,6 +5,7 @@
 #include <boost/function.hpp>
 #include <boost/lexical_cast.hpp>
 #include <rutil/Data.hxx>
+#include "reTurnServer.hxx"
 #include "TcpServer.hxx"
 #include "TlsServer.hxx"
 #include "UdpServer.hxx"
@@ -40,6 +41,21 @@ BOOL WINAPI console_ctrl_handler(DWORD ctrl_type)
 
 int main(int argc, char* argv[])
 {
+   reTurn::ReTurnServerProcess proc;
+   return proc.main(argc, argv);
+}
+
+reTurn::ReTurnServerProcess::ReTurnServerProcess()
+{
+}
+
+reTurn::ReTurnServerProcess::~ReTurnServerProcess()
+{
+}
+
+int
+reTurn::ReTurnServerProcess::main(int argc, char* argv[])
+{
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
    resip::FindMemoryLeaks fml;
 #endif
@@ -47,29 +63,10 @@ int main(int argc, char* argv[])
    resip::Data defaultConfig("reTurnServer.config");
    reTurn::ReTurnConfig reTurnConfig(argc, argv, defaultConfig);
 
-#ifndef WIN32
+   setPidFile(reTurnConfig.mPidFile);
    // Daemonize if necessary
    if(reTurnConfig.mDaemonize)
-   {
-      pid_t pid;
-      if ((pid = fork()) < 0) 
-      {
-         // fork() failed
-         throw std::runtime_error(strerror(errno));
-      }
-      else if (pid != 0)
-      {
-         // parent process done
-         exit(0);
-      }
-      if(chdir("/") < 0)
-         throw std::runtime_error(strerror(errno));
-      // Nothing should be writing to stdout/stderr after this
-      close(STDIN_FILENO);
-      close(STDOUT_FILENO);
-      close(STDERR_FILENO);
-   }
-#endif
+      daemonize();
 
    try
    {

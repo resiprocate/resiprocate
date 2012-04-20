@@ -1,6 +1,10 @@
 #if !defined(RESIP_COUNTSTREAM_HXX)
 #define RESIP_COUNTSTREAM_HXX 
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <iostream>
 #include "rutil/Data.hxx"
 

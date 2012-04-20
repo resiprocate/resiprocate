@@ -1,6 +1,11 @@
 #if !defined(TlsConnection_hxx)
 #define TlsConnection_hxx
 
+#if defined(HAVE_CONFIG_H)
+  #include "config.h"
+#endif
+
+
 #include "resip/stack/Connection.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 #include "resip/stack/SecurityTypes.hxx"

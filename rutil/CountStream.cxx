@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "rutil/CountStream.hxx"
 
 // Remove warning about 'this' use in initiator list - pointer is only stored

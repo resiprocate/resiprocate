@@ -4,8 +4,8 @@
 #include <math.h>
 #include <limits.h>
 
-#if defined(HAVE_CONFIG_HXX)
-#include "resip/stack/config.hxx"
+#if defined(HAVE_CONFIG_H)
+#include "config.h"
 #endif
 
 #include "rutil/Data.hxx"
@@ -2012,7 +2012,7 @@ Data::rawCaseInsensitiveTokenHash(const unsigned char* data, size_t len)
     union 
     {
           UInt32 masked;
-          unsigned char cccc[4];
+          UInt16 ui16[2];
     };
 
     /* Main loop */
@@ -2020,8 +2020,8 @@ Data::rawCaseInsensitiveTokenHash(const unsigned char* data, size_t len)
     {
         // mask out bit 6 for case-insensitivity
         masked = (0x20202020 | get32bits(data));
-        hash  += get16bits(cccc);
-        tmp    = (get16bits(cccc+2) << 11) ^ hash;
+        hash  += ui16[0];
+        tmp    = ((UInt32)ui16[1] << 11) ^ hash;
         hash   = (hash << 16) ^ tmp;
         data  += 2*sizeof (UInt16);
         hash  += hash >> 11;

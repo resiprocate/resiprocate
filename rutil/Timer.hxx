@@ -1,5 +1,9 @@
 #if !defined(RESIP_TIMER_HXX)
 #define RESIP_TIMER_HXX 
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
      
 #include "rutil/Data.hxx"
 #include "rutil/HeapInstanceCounter.hxx"

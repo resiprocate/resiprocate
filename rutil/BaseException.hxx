@@ -1,6 +1,10 @@
 #if !defined(RESIP_BASEEXCEPTION_HXX)
 #define RESIP_BASEEXCEPTION_HXX 
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <exception>
 #include <iostream>
 

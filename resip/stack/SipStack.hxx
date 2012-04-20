@@ -1,6 +1,10 @@
 #if !defined(RESIP_SIPSTACK_HXX)
 #define RESIP_SIPSTACK_HXX
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <set>
 #include <iosfwd>
 
@@ -453,7 +457,7 @@ class SipStack : public FdSetIOObserver
 
           @param tu    TransactionUser to post to.
       */
-      void post(const std::auto_ptr<ApplicationMessage> message,
+      void post(std::auto_ptr<ApplicationMessage> message,
                 unsigned int secondsLater,
                 TransactionUser* tu=0);
 
@@ -480,7 +484,7 @@ class SipStack : public FdSetIOObserver
           
           @param message ApplicationMessage to post
       */
-      void post(const std::auto_ptr<ApplicationMessage> message);
+      void post(std::auto_ptr<ApplicationMessage> message);
 
       /**
           @brief Makes the message available to the TU later

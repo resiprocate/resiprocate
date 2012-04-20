@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/stack/config.hxx"
+#include "config.h"
 #endif
 
 #include "rutil/XMLCursor.hxx"
@@ -56,7 +56,7 @@ static const Data QUESTION_RA_QUOTE("?>");
 //
 // has the advantage of allowing
 // 1. lazier parsing
-// 2. embedded wierdnesses like <! > and <? >
+// 2. embedded weirdnesses like <! > and <? >
 XMLCursor::XMLCursor(const ParseBuffer& pb)
    : mRoot(0),
      mCursor(0),

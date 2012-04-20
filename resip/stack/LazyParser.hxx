@@ -1,6 +1,10 @@
 #if !defined(RESIP_LAZYPARSER_HXX)
 #define RESIP_LAZYPARSER_HXX 
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <iosfwd>
 #include "resip/stack/HeaderFieldValue.hxx"
 #include "rutil/resipfaststreams.hxx"

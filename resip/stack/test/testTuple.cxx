@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <iostream>
 #include "rutil/resipfaststreams.hxx"
 #include "rutil/Inserter.hxx"

@@ -1,3 +1,8 @@
+
+#if defined(HAVE_CONFIG_H)
+  #include "config.h"
+#endif
+
 #include "resip/stack/SecurityAttributes.hxx"
 #include "resip/stack/ShutdownMessage.hxx"
 #include "resip/stack/SipFrag.hxx"
@@ -1618,7 +1623,7 @@ DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
                }
                if( !validate100RelSuport(*sipMsg) )
                {
-                  DebugLog (<< "Remote party does not suport 100rel " << *sipMsg);
+                  DebugLog (<< "Remote party does not support 100rel " << *sipMsg);
                   return;
                }
                if( getMasterProfile()->validateContentEnabled() && !validateContent(*sipMsg) )

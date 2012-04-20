@@ -9,7 +9,7 @@
 #include <boost/function.hpp>
 #include <map>
 
-#include <srtp.h>
+#include <srtp/srtp.h>
 
 #ifdef USE_SSL  
 #include <openssl/x509.h>

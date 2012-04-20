@@ -282,7 +282,22 @@ ServerAuthManager::authorizedForThisIdentity(const resip::Data &user,
 {
    // !rwm! good enough for now.  TODO eventually consult a database to see what
    // combinations of user/realm combos are authorized for an identity
-   return ((fromUri.user() == user) && (fromUri.host() == realm));
+
+   // First try the form where the username parameter in the auth
+   // header is just the username component of the fromUri
+   //
+   if ((fromUri.user() == user) && (fromUri.host() == realm))
+      return true;
+
+   // Now try the form where the username parameter in the auth
+   // header is the full fromUri, e.g.
+   //    Proxy-Authorization: Digest username="user@domain" ...
+   //
+   if ((fromUri.getAorNoPort() == user) && (fromUri.host() == realm))
+      return true;
+
+   // catch-all: access denied
+   return false;
 }
 
 

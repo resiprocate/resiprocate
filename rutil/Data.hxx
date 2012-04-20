@@ -1,6 +1,10 @@
 #ifndef RESIP_Data_hxx
 #define RESIP_Data_hxx
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <iostream>
 #include <string>
 #include <bitset>

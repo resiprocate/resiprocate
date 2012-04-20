@@ -1,6 +1,11 @@
 #if !defined(RESIP_DNSRESULT_HXX)
 #define RESIP_DNSRESULT_HXX
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+
 #include <iosfwd>
 #include <set>
 #include <vector>

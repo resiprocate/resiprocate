@@ -42,7 +42,7 @@ class RRCache
                     const int rrType,
                     const int status,
                     RROverlay overlay);
-      bool lookup(const Data& target, int type, int proto, Result& records, int& status);
+      bool lookup(const Data& target, const int type, const int proto, Result& records, int& status);
       void clearCache();
       void logCache();
       void getCacheDump(Data& dnsCacheDump);

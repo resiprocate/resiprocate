@@ -1,6 +1,11 @@
 #if !defined(RESIP_TLSTRANSPORT_HXX)
 #define RESIP_TLSTRANSPORT_HXX
 
+#if defined(HAVE_CONFIG_H)
+  #include "config.h"
+#endif
+
+
 #include "resip/stack/TcpBaseTransport.hxx"
 #include "resip/stack/SecurityTypes.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
