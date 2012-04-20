@@ -88,8 +88,9 @@ class AsyncProcessorMessage;
 //         }
 //      }
 //
-//      // Virtual method called from WorkerThreads
-//      virtual void asyncProcess(AsyncProcessorMessage* msg)
+//      // Virtual method called from WorkerThreads - return true to queue to stack when complete,
+//      // false when no response is required
+//      virtual bool asyncProcess(AsyncProcessorMessage* msg)
 //      {
 //         MyAsyncProcessorAsyncMessage* async = dynamic_cast<MyAsyncProcessorAsyncMessage*>(msg);
 //         if(async)
@@ -119,7 +120,8 @@ class AsyncProcessor : public Processor
       virtual processor_action_t process(RequestContext &)=0;
 
       // Virtual method called from WorkerThreads
-      virtual void asyncProcess(AsyncProcessorMessage* msg)=0;
+      // return true to queue to stack when complete, false when no response is required
+      virtual bool asyncProcess(AsyncProcessorMessage* msg)=0;
 
    protected:
       Dispatcher* mAsyncDispatcher;

@@ -36,23 +36,32 @@ class BerkeleyDb: public AbstractDb
    private:
       void init(const resip::Data& dbPath, const resip::Data& dbName);
 
-      //DbEnv mEnv; // !cj! TODO - move to using envoronments
-      Db*   mDb[MaxTable];
-      Dbc*  mCursor[MaxTable];
+      DbEnv* mEnv;
+      Db*    mDb[MaxTable];
+      Dbc*   mCursor[MaxTable];
+      DbTxn* mTransaction[MaxTable];
       
       bool mSane;
       
       // Db manipulation routines
-      virtual void dbWriteRecord( const Table table, 
-                                  const resip::Data& key, 
-                                  const resip::Data& data );
-      virtual bool dbReadRecord( const Table table, 
+      virtual bool dbWriteRecord(const Table table, 
                                  const resip::Data& key, 
-                                 resip::Data& data ) const; // return false if not found
-      virtual void dbEraseRecord( const Table table, 
-                                  const resip::Data& key );
-      virtual resip::Data dbNextKey( const Table table, 
-                                     bool first=true); // return empty if no more  
+                                 const resip::Data& data);
+      virtual bool dbReadRecord(const Table table, 
+                                const resip::Data& key, 
+                                resip::Data& data) const; // return false if not found
+      virtual void dbEraseRecord(const Table table, 
+                                 const resip::Data& key);
+      virtual resip::Data dbNextKey(const Table table, 
+                                    bool first=true); // return empty if no more  
+      virtual bool dbNextRecord(const Table table,
+                                const resip::Data& key,
+                                resip::Data& data,
+                                bool forUpdate,
+                                bool first=false);  // return false if no more
+      virtual bool dbBeginTransaction(const Table table);
+      virtual bool dbCommitTransaction(const Table table);
+      virtual bool dbRollbackTransaction(const Table table);
 };
 
 }

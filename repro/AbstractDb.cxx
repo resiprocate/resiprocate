@@ -58,6 +58,16 @@ AbstractDb::dbFirstKey(const AbstractDb::Table table)
 }
 
 
+bool
+AbstractDb::dbFirstRecord(const AbstractDb::Table table, 
+                          const Data& key,
+                          Data& data,
+                          bool forUpdate)
+{
+   return dbNextRecord(table, key, data, forUpdate, true/*first*/);
+}
+
+
 AbstractDb::AbstractDb()
 {
 }
@@ -87,7 +97,7 @@ AbstractDb::encodeUser(const UserRecord& rec, resip::Data& data)
    s.flush();
 }
 
-void 
+bool
 AbstractDb::addUser( const AbstractDb::Key& key, const AbstractDb::UserRecord& rec )
 {  
    assert( !key.empty() );
@@ -95,7 +105,7 @@ AbstractDb::addUser( const AbstractDb::Key& key, const AbstractDb::UserRecord& r
    Data data;
    encodeUser(rec, data);
    
-   dbWriteRecord(UserTable,key,data);
+   return dbWriteRecord(UserTable,key,data);
 }
 
 
@@ -103,24 +113,6 @@ void
 AbstractDb::eraseUser( const AbstractDb::Key& key )
 {
    dbEraseRecord( UserTable, key);
-}
-
-
-void 
-AbstractDb::writeUser( const AbstractDb::Key& oldkey, const AbstractDb::Key& newkey, const AbstractDb::UserRecord& rec )
-{  
-   assert( !oldkey.empty() );
-   assert( !newkey.empty() );
-   
-   Data data;
-   encodeUser(rec, data);
-   
-   if (oldkey != newkey)   // the domain or user (or both) changed, so the key has changed
-   {
-      dbEraseRecord( UserTable, oldkey);
-   }
-   
-   dbWriteRecord(UserTable,newkey,data);
 }
 
 
@@ -157,7 +149,7 @@ AbstractDb::getUser( const AbstractDb::Key& key ) const
    }
    else
    {
-      // unkonwn version 
+      // unknown version 
       ErrLog( <<"Data in user database with unknown version " << version );
       ErrLog( <<"record size is " << data.size() );
    }
@@ -211,7 +203,7 @@ AbstractDb::encodeRoute(const RouteRecord& rec, resip::Data& data)
 }
 
 
-void 
+bool
 AbstractDb::addRoute( const AbstractDb::Key& key, 
                  const AbstractDb::RouteRecord& rec )
 { 
@@ -220,7 +212,7 @@ AbstractDb::addRoute( const AbstractDb::Key& key,
    Data data;
    encodeRoute(rec, data);
    
-   dbWriteRecord( RouteTable, key, data );
+   return dbWriteRecord( RouteTable, key, data );
 }
 
 
@@ -228,24 +220,6 @@ void
 AbstractDb::eraseRoute(  const AbstractDb::Key& key )
 {  
    dbEraseRecord (RouteTable, key);
-}
-
-
-void
-AbstractDb::writeRoute( const Key& oldkey, const Key& newkey, const RouteRecord& rec )
-{
-   assert( !oldkey.empty() );
-   assert( !newkey.empty() );
-   
-   Data data;
-   encodeRoute(rec, data);
-   
-   if (oldkey != newkey)   // the domain or user (or both) changed, so the key has changed
-   {
-      dbEraseRecord( RouteTable, oldkey);
-   }
-   
-   dbWriteRecord(RouteTable,newkey,data);
 }
 
 
@@ -281,7 +255,7 @@ AbstractDb::getRoute( const AbstractDb::Key& key) const
    }
    else
    {
-      // unkonwn version 
+      // unknown version 
       ErrLog( <<"Data in route database with unknown version " << version );
       ErrLog( <<"record size is " << data.size() );
    }
@@ -323,7 +297,7 @@ AbstractDb::nextRouteKey()
 }
 
 
-void 
+bool
 AbstractDb::addAcl( const AbstractDb::Key& key, 
                     const AbstractDb::AclRecord& rec )
 { 
@@ -347,7 +321,7 @@ AbstractDb::addAcl( const AbstractDb::Key& key,
       s.flush();
    }
    
-   dbWriteRecord( AclTable, key, data );
+   return dbWriteRecord( AclTable, key, data );
 }
 
 
@@ -390,7 +364,7 @@ AbstractDb::getAcl( const AbstractDb::Key& key) const
    }
    else
    {
-      // unkonwn version 
+      // unknown version 
       ErrLog( <<"Data in ACL database with unknown version " << version );
       ErrLog( <<"record size is " << data.size() );
    }
@@ -432,7 +406,7 @@ AbstractDb::nextAclKey()
 }
 
 
-void 
+bool
 AbstractDb::addConfig( const AbstractDb::Key& key, 
                  const AbstractDb::ConfigRecord& rec )
 { 
@@ -453,7 +427,7 @@ AbstractDb::addConfig( const AbstractDb::Key& key,
       s.flush();
    }
    
-   dbWriteRecord( ConfigTable, key, data );
+   return dbWriteRecord( ConfigTable, key, data );
 }
 
 
@@ -494,7 +468,7 @@ AbstractDb::getConfig( const AbstractDb::Key& key) const
    }
    else
    {
-      // unkonwn version 
+      // unknown version 
       ErrLog( <<"Data in ACL database with unknown version " << version );
       ErrLog( <<"record size is " << data.size() );
    }
@@ -535,7 +509,7 @@ AbstractDb::nextConfigKey()
    return dbNextKey(ConfigTable);
 }
 
-void 
+bool
 AbstractDb::addStaticReg( const AbstractDb::Key& key, 
                           const AbstractDb::StaticRegRecord& rec )
 { 
@@ -556,7 +530,7 @@ AbstractDb::addStaticReg( const AbstractDb::Key& key,
       s.flush();
    }
    
-   dbWriteRecord( StaticRegTable, key, data );
+   return dbWriteRecord( StaticRegTable, key, data );
 }
 
 
@@ -596,7 +570,7 @@ AbstractDb::getStaticReg( const AbstractDb::Key& key) const
    }
    else
    {
-      // unkonwn version 
+      // unknown version 
       ErrLog( <<"Data in StaticReg database with unknown version " << version );
       ErrLog( <<"record size is " << data.size() );
    }
@@ -663,7 +637,7 @@ AbstractDb::encodeFilter(const FilterRecord& rec, resip::Data& data)
 }
 
 
-void 
+bool
 AbstractDb::addFilter(const AbstractDb::Key& key, 
                       const AbstractDb::FilterRecord& rec)
 { 
@@ -671,7 +645,7 @@ AbstractDb::addFilter(const AbstractDb::Key& key,
    
    Data data;
    encodeFilter(rec, data);
-   dbWriteRecord(FilterTable, key, data);
+   return dbWriteRecord(FilterTable, key, data);
 }
 
 
@@ -679,24 +653,6 @@ void
 AbstractDb::eraseFilter(const AbstractDb::Key& key)
 {  
    dbEraseRecord(FilterTable, key);
-}
-
-
-void
-AbstractDb::writeFilter(const Key& oldkey, const Key& newkey, const FilterRecord& rec)
-{
-   assert(!oldkey.empty());
-   assert(!newkey.empty());
-   
-   Data data;
-   encodeFilter(rec, data);
-   
-   if (oldkey != newkey)   // the key has changed - remove old key
-   {
-      dbEraseRecord( FilterTable, oldkey);
-   }
-   
-   dbWriteRecord(FilterTable,newkey,data);
 }
 
 
@@ -737,7 +693,7 @@ AbstractDb::getFilter( const AbstractDb::Key& key) const
    }
    else
    {
-      // unkonwn version 
+      // unknown version 
       ErrLog( <<"Data in filter database with unknown version " << version );
       ErrLog( <<"record size is " << data.size() );
    }
@@ -778,6 +734,91 @@ AbstractDb::nextFilterKey()
    return dbNextKey(FilterTable);
 }
 
+bool
+AbstractDb::addToSilo(const Key& key, const SiloRecord& rec)
+{
+   assert( !key.empty() );
+   
+   Data data;
+   {
+      oDataStream s(data);
+
+      short version=1;
+      assert(sizeof( version) == 2);
+      s.write((char*)(&version) , sizeof(version));
+
+      encodeString(s, rec.mDestUri);
+      encodeString(s, rec.mSourceUri);
+      s.write((char*)(&rec.mOriginalSentTime), sizeof (rec.mOriginalSentTime));
+      assert(sizeof(rec.mOriginalSentTime) == 8);
+      encodeString(s, rec.mMimeType);
+      encodeString(s, rec.mMessageBody);
+
+      s.flush();
+   }
+   return dbWriteRecord(SiloTable, key, data);
+}
+
+void
+AbstractDb::decodeSiloRecord(Data& data, SiloRecord& rec)
+{
+   iDataStream s(data);
+
+   short version;
+   assert(sizeof(version) == 2);
+   s.read((char*)(&version), sizeof(version));
+   
+   if (version == 1)
+   {
+      rec.mDestUri = decodeString(s);
+      rec.mSourceUri = decodeString(s);
+      s.read((char*)(&rec.mOriginalSentTime), sizeof(rec.mOriginalSentTime)); 
+      assert(sizeof(rec.mOriginalSentTime) == 8);
+      rec.mMimeType = decodeString(s);
+      rec.mMessageBody = decodeString(s);
+   }
+   else
+   {
+      // unknown version 
+      ErrLog( <<"Data in silo database with unknown version " << version );
+      ErrLog( <<"record size is " << data.size() );
+   }
+}
+
+bool
+AbstractDb::getSiloRecords(const Key& key, AbstractDb::SiloRecordList& recordList)
+{
+   AbstractDb::SiloRecord rec;
+
+   // Retrieve and Delete records within a Transaction to ensure that we don't
+   // delete records that are simultaneously being added while we are reading.
+   if(dbBeginTransaction(SiloTable))
+   {
+      Data data;
+      bool moreRecords = dbFirstRecord(SiloTable, key, data, true /* forUpdate? */);
+      if(moreRecords)
+      {
+         // Decode and store data
+         decodeSiloRecord(data,rec);
+         recordList.push_back(rec);
+         while(moreRecords = dbNextRecord(SiloTable, key, data, true /* forUpdate? */))
+         {
+            // Decode and store data
+            decodeSiloRecord(data,rec);
+            recordList.push_back(rec);
+         }
+      }
+
+      // Delete all records just read (if key was provided)
+      if(recordList.size() > 0 && !key.empty())
+      {
+         dbEraseRecord(SiloTable, key);
+      }
+      return dbCommitTransaction(SiloTable);
+   }
+
+   return false;
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

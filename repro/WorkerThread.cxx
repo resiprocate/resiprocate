@@ -28,14 +28,14 @@ void
 WorkerThread::thread()
 {
    resip::ApplicationMessage* msg;
-   
+   bool queueToStack;
    while(mWorker && !isShutdown())
    {
       if( (msg=mFifo.getNext(100)) != 0 )
       {
-         mWorker->process(msg);
+         queueToStack = mWorker->process(msg);
 
-         if(mStack)
+         if(queueToStack && mStack)
          {
             // Post to stack instead of directly to TU, since stack does
             // some safety checks to ensure the TU still exists before posting

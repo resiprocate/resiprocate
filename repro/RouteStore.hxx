@@ -40,7 +40,7 @@ class RouteStore
                       const resip::Data& matchingPattern);
       void eraseRoute( const resip::Data& key );
 
-      void updateRoute( const resip::Data& originalKey,
+      bool updateRoute( const resip::Data& originalKey,
                         const resip::Data& method,
                         const resip::Data& event,
                         const resip::Data& matchingPattern,

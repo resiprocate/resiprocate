@@ -13,7 +13,7 @@ public:
    AsyncProcessorMessage(AsyncProcessor& proc,
                          const resip::Data& tid,
                          resip::TransactionUser* passedtu):
-      ProcessorMessage(proc,tid,passedtu),
+      ProcessorMessage(proc, tid, passedtu),
       mAsyncProcessor(proc)
    {
    }

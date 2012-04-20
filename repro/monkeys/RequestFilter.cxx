@@ -192,7 +192,7 @@ RequestFilter::process(RequestContext &rc)
    }
 }
 
-void 
+bool
 RequestFilter::asyncProcess(AsyncProcessorMessage* msg)
 {
    RequestFilterAsyncMessage* async = dynamic_cast<RequestFilterAsyncMessage*>(msg);
@@ -202,11 +202,13 @@ RequestFilter::asyncProcess(AsyncProcessorMessage* msg)
    if(mMySqlDb)
    {
       async->mQueryResult = mMySqlDb->singleResultQuery(async->mQuery, async->mQueryResultData);
+      return true;
    }
 #else
    assert(false);
    async->mQueryResult = -1;
 #endif
+   return false;
 }
 
 /* ====================================================================

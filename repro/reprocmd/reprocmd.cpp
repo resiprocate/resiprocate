@@ -43,6 +43,7 @@ main (int argc, char** argv)
       cerr << "  SetCongestionTolerance metric=<SIZE|WAIT_TIME|TIME_DEPTH> maxTolerance=<value>" << endl;
       cerr << "                         [fifoDescription=<desc>] - sets congestion tolerances" << endl;
       cerr << "  Shutdown - signal the proxy to shut down." << endl;
+      cerr << "  Restart - signal the proxy to restart - leaving active registrations in place." << endl;
       cerr << "  GetProxyConfig - retrieves the all of configuration being used by the proxy" << endl;
       exit(1);
    }

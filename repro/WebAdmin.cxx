@@ -58,8 +58,6 @@ WebAdmin::RemoveKey::operator<(const RemoveKey& rhs) const
    }
 }
 
-// !cj! TODO - make all the removes on the web pages work 
-
 WebAdmin::WebAdmin(  Proxy& proxy,
                      RegistrationPersistenceManager& regDb,
                      const Data& realm, // this realm is used for http challenges
@@ -393,8 +391,14 @@ WebAdmin::buildDomainsSubPage(DataStream& s)
    {
       domainUri = pos->second;
       domainTlsPort = mHttpParams["domainTlsPort"].convertInt();
-      mStore.mConfigStore.addDomain(domainUri,domainTlsPort);
-      s << "<p><em>Added</em> domain: " << domainUri << "</p>" << endl;
+      if(mStore.mConfigStore.addDomain(domainUri,domainTlsPort))
+      {
+         s << "<p><em>Added</em> domain: " << domainUri << "</p>" << endl;
+      }
+      else
+      {
+         s << "<p><em>Error</em> adding domain: likely database error (check logs).</p>\n";
+      }
    }   
 
    s <<
@@ -462,10 +466,12 @@ WebAdmin::buildAclsSubPage(DataStream& s)
       int port = mHttpParams["aclPort"].convertInt();
       TransportType transport = Tuple::toTransport(mHttpParams["aclTransport"]);
       
-      if (mStore.mAclStore.addAcl(hostOrIp, port, transport)){
+      if (mStore.mAclStore.addAcl(hostOrIp, port, transport))
+      {
          s << "<p><em>Added</em> trusted access for: " << hostOrIp << "</p>\n";
       }
-      else {
+      else 
+      {
          s << "<p>Error parsing: " << hostOrIp << "</p>\n";
       }
    }   
@@ -574,12 +580,14 @@ WebAdmin::buildAddUserSubPage( DataStream& s)
 //         realm = mHttpParams["domain"];
 //      }
             
-      mStore.mUserStore.addUser(user,domain,domain,mHttpParams["password"],true,mHttpParams["name"],mHttpParams["email"]);      
-      // !rwm! TODO check if the add was successful
-      // if (success)
-      //{
-            s << "<p><em>Added:</em> " << user << "@" << domain << "</p>\n";
-      //}
+      if(mStore.mUserStore.addUser(user,domain,domain,mHttpParams["password"],true,mHttpParams["name"],mHttpParams["email"]))
+      {
+         s << "<p><em>Added:</em> " << user << "@" << domain << "</p>\n";
+      }
+      else
+      {
+         s << "<p><em>Error</em> adding user: likely database error (check logs).</p>\n";
+      }
    }
 
       s << 
@@ -774,68 +782,72 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
             applyA1HashToPassword = false;
          }
          // write out the updated record to the database now
-         mStore.mUserStore.updateUser(key, user, domain, realm, password, applyA1HashToPassword, name, email );
-         
-         s << "<p><em>Updated:</em> " << key << "</p>" << endl; 
+         if(mStore.mUserStore.updateUser(key, user, domain, realm, password, applyA1HashToPassword, name, email))
+         {
+            s << "<p><em>Updated:</em> " << key << "</p>" << endl; 
+         }
+         else
+         {
+            s << "<p><em>Error</em> updating user: likely database error (check logs).</p>\n";
+         }
       }
    }
    
       
-      s << 
-         "<h2>Users</h2>" << endl <<
-         "<form id=\"showUsers\" method=\"get\" action=\"showUsers.html\" name=\"showUsers\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
-         "<table" REPRO_BORDERED_TABLE_PROPS ">" << endl << 
-         "<tr>" << endl << 
-         "  <td>User@Domain</td>" << endl << 
-         //  "  <td>Realm</td>" << endl << 
-         "  <td>Name</td>" << endl << 
-         "  <td>Email</td>" << endl << 
-         "  <td><input type=\"submit\" value=\"Remove\"/></td>" << endl << 
-         "</tr>" << endl;
-      
-      s << endl;
-      
-      int count =0;
-      
-      key = mStore.mUserStore.getFirstKey();
-      while ( !key.empty() )
-      {
-         rec = mStore.mUserStore.getUserInfo(key);
+   s << 
+      "<h2>Users</h2>" << endl <<
+      "<form id=\"showUsers\" method=\"get\" action=\"showUsers.html\" name=\"showUsers\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
+      "<table" REPRO_BORDERED_TABLE_PROPS ">" << endl << 
+      "<tr>" << endl << 
+      "  <td>User@Domain</td>" << endl << 
+      //  "  <td>Realm</td>" << endl << 
+      "  <td>Name</td>" << endl << 
+      "  <td>Email</td>" << endl << 
+      "  <td><input type=\"submit\" value=\"Remove\"/></td>" << endl << 
+      "</tr>" << endl;
+   
+   s << endl;
+   
+   int count =0;
+   
+   key = mStore.mUserStore.getFirstKey();
+   while ( !key.empty() )
+   {
+      rec = mStore.mUserStore.getUserInfo(key);
 
-         if ((rec.domain == Data::Empty) && (rec.user == "admin"))
-         {
-            key = mStore.mUserStore.getNextKey();
-            continue;   // skip the row for the admin web user
-         }
-      
-         s << "<tr>" << endl 
-           << "  <td><a href=\"editUser.html?key=";
-         key.urlEncode(s);
-         s << "\">" << rec.user << "@" << rec.domain << "</a></td>" << endl
-           << "  <td>" << rec.name << "</td>" << endl
-           << "  <td>" << rec.email << "</td>" << endl
-           << "  <td><input type=\"checkbox\" name=\"remove." << key << "\"/></td>" << endl
-           << "</tr>" << endl;
-         
+      if ((rec.domain == Data::Empty) && (rec.user == "admin"))
+      {
          key = mStore.mUserStore.getNextKey();
-
-         // make a limit to how many users are displayed 
-         if ( ++count > 1000 )
-         {
-            break;
-         }
+         continue;   // skip the row for the admin web user
       }
       
-      if ( !key.empty() )
+      s << "<tr>" << endl 
+        << "  <td><a href=\"editUser.html?key=";
+      key.urlEncode(s);
+      s << "\">" << rec.user << "@" << rec.domain << "</a></td>" << endl
+        << "  <td>" << rec.name << "</td>" << endl
+        << "  <td>" << rec.email << "</td>" << endl
+        << "  <td><input type=\"checkbox\" name=\"remove." << key << "\"/></td>" << endl
+        << "</tr>" << endl;
+         
+      key = mStore.mUserStore.getNextKey();
+
+      // make a limit to how many users are displayed 
+      if ( ++count > 1000 )
       {
-         s << "<tr><td>Only first 1000 users were displayed<td></tr>" << endl;
+         break;
       }
-      
-      s << 
-         "</table>" << endl << 
-         "</form>" << endl;
+   }
+   
+   if ( !key.empty() )
+   {
+      s << "<tr><td>Only first 1000 users were displayed<td></tr>" << endl;
+   }
+   
+   s << 
+      "</table>" << endl << 
+      "</form>" << endl;
 }
-
 
 void
 WebAdmin::buildAddFilterSubPage(DataStream& s)
@@ -1092,7 +1104,7 @@ WebAdmin::buildShowFiltersSubPage(DataStream& s)
             if(action == "Reject") actionShort = 1;
             else if(action == "SQL Query") actionShort = 2;
 
-            mStore.mFilterStore.updateFilter(key,
+            if(mStore.mFilterStore.updateFilter(key,
                                              mHttpParams["cond1header"],
                                              mHttpParams["cond1regex"],
                                              mHttpParams["cond2header"],
@@ -1101,10 +1113,15 @@ WebAdmin::buildShowFiltersSubPage(DataStream& s)
                                              mHttpParams["event"],
                                              actionShort,
                                              actionData,
-                                             mHttpParams["order"].convertInt());
-
-            s << "<p><em>Updated</em> request filter: " << mHttpParams["cond1header"] << "=" << mHttpParams["cond1regex"] << ", "
-                                                        << mHttpParams["cond2header"] << "=" << mHttpParams["cond2regex"] << "</p>\n";
+                                             mHttpParams["order"].convertInt()))
+            {
+               s << "<p><em>Updated</em> request filter: " << mHttpParams["cond1header"] << "=" << mHttpParams["cond1regex"] << ", "
+                                                           << mHttpParams["cond2header"] << "=" << mHttpParams["cond2regex"] << "</p>\n";
+            }
+            else
+            {
+               s << "<p><em>Error</em> updating request filter: likely database error (check logs).</p>\n";
+            }
          }
       }
    }
@@ -1400,9 +1417,14 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
          if (!matchingPattern.empty() && !rewriteExpression.empty())
          {
             // write out the updated record to the database now
-            mStore.mRouteStore.updateRoute(key, method,event,matchingPattern,rewriteExpression,order  );
-         
-            s << "<p><em>Updated:</em> " << rec.mMatchingPattern << "</p>" << endl; 
+            if(mStore.mRouteStore.updateRoute(key, method, event, matchingPattern, rewriteExpression, order))
+            {
+               s << "<p><em>Updated:</em> " << rec.mMatchingPattern << "</p>" << endl; 
+            }
+            else
+            {
+               s << "<p><em>Error</em> updating route: likely database error (check logs).</p>\n";
+            }
          }
          else
          {
@@ -1599,14 +1621,19 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
                rec.mSyncContact = true;  // Tag this permanent contact as being a syncronized contact so that it will
                                       // be syncronized to a paired server (this is actually configuration information)
 
-               // Add to RegistrationPersistanceManager
-               Uri aor(regAor);
-               mRegDb.updateContact(aor, rec);
-
                // Add to DB Store
-               mStore.mStaticRegStore.addStaticReg(aor, rec.mContact, rec.mSipPath);
-   
-               s << "<p><em>Added</em> permanent registered contact for: " << regAor << "</p>\n";
+               Uri aor(regAor);
+               if(mStore.mStaticRegStore.addStaticReg(aor, rec.mContact, rec.mSipPath))
+               {   
+                  // Add to RegistrationPersistanceManager
+                  mRegDb.updateContact(aor, rec);
+
+                  s << "<p><em>Added</em> permanent registered contact for: " << regAor << "</p>\n";
+               }
+               else
+               {
+                  s << "<p><em>Error</em> adding static registration: likely database error (check logs).</p>\n";
+               }
             }
             catch(resip::ParseBuffer::Exception& e)
             {

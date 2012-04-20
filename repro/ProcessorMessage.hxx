@@ -17,9 +17,9 @@ class ProcessorMessage : public resip::ApplicationMessage
                        resip::TransactionUser* tupassed):
          mTid(tid)
       {
-         tu=tupassed;
-         mReturnAddress=proc.getAddress();
-         mType=proc.getChainType();
+         mTu = tupassed;
+         mReturnAddress = proc.getAddress();
+         mType = proc.getChainType();
       }
 
       ProcessorMessage(const ProcessorMessage& orig) :
@@ -63,6 +63,7 @@ class ProcessorMessage : public resip::ApplicationMessage
       {
          return mTid;
       }
+
    protected:
       resip::Data mTid;
       std::vector<short> mReturnAddress;

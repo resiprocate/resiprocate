@@ -1,72 +1,45 @@
-#ifndef RESIP_Message_hxx
-#define RESIP_Message_hxx 
+#if !defined(REPRO_SILOSTORE_HXX)
+#define REPRO_SILOSTORE_HXX
 
+#include <time.h>
 #include "rutil/Data.hxx"
-#include <iosfwd>
-#include "rutil/resipfaststreams.hxx"
+#include "rutil/RWMutex.hxx"
+#include "repro/AbstractDb.hxx"
 
 namespace resip
 {
-class TransactionUser;
-
-/**
-   @ingroup resip_crit
-   @brief The base-class used for message-passing.
-*/
-class Message 
-{
-   public:
-      Message();
-      virtual ~Message() {}
-
-      /// facet for brief output to streams
-      class Brief
-      {
-         public:
-            Brief(const Message& src);
-            const Message& mSource;
-      };
-
-      /// return a facet for brief encoding of message
-      Brief brief() const;
-      virtual Message* clone() const = 0;
-      /// output the entire message to stream
-      virtual EncodeStream& encode(EncodeStream& strm) const = 0;
-      /// output a brief description to stream
-      virtual EncodeStream& encodeBrief(EncodeStream& str) const = 0; 
-
-   protected:
-      friend class TuSelector;
-      friend class TransactionController;
-      friend class TransactionState;
-      friend class SipStack;
-      bool hasTransactionUser() const { return mTu != 0; }
-      void setTransactionUser(TransactionUser* t) { mTu = t; }
-      TransactionUser* getTransactionUser() { return mTu; }
-      TransactionUser* mTu;      
-};
-
-//always need std streams where things are encoded to cout, cerr, MD5Stream, etc...
-#ifndef  RESIP_USE_STL_STREAMS
-EncodeStream& 
-operator<<(EncodeStream& strm, const Message& msg);
-
-EncodeStream& 
-operator<<(EncodeStream& strm, const Message::Brief& brief);
-#endif
-
-std::ostream& 
-operator<<(std::ostream& strm, const Message& msg);
-
-std::ostream& 
-operator<<(std::ostream& strm, const Message::Brief& brief);
-
+   class SipMessage;
 }
 
-#endif
+namespace repro
+{
+
+class SiloStore
+{
+   public:
+      SiloStore(AbstractDb& db);
+      ~SiloStore();
+
+      bool addMessage(const resip::Data& destUri,
+                      const resip::Data& sourceUri,
+                      time_t originalSendTime,
+                      const resip::Data& mimeType,
+                      const resip::Data& messageBody);
+
+      bool getSiloRecords(const AbstractDb::Key& key, AbstractDb::SiloRecordList& recordList);
+
+   private:
+      resip::RWMutex mMutex;
+      AbstractDb& mDb;
+};
+
+ }
+#endif  
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
+ * 
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -105,11 +78,4 @@ operator<<(std::ostream& strm, const Message::Brief& brief);
  * DAMAGE.
  * 
  * ====================================================================
- * 
- * This software consists of voluntary contributions made by Vovida
- * Networks, Inc. and many individuals on behalf of Vovida Networks,
- * Inc.  For more information on Vovida Networks, Inc., please see
- * <http://www.vovida.org/>.
- *
  */
-

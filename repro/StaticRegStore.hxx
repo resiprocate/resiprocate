@@ -32,7 +32,7 @@ class StaticRegStore
       StaticRegStore(AbstractDb& db);
       ~StaticRegStore();
       
-      void addStaticReg(const resip::Uri& aor,
+      bool addStaticReg(const resip::Uri& aor,
                         const resip::NameAddr& contact,
                         const resip::NameAddrs& path);
 

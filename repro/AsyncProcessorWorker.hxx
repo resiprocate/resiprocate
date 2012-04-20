@@ -14,15 +14,15 @@ public:
    AsyncProcessorWorker() {}
    virtual ~AsyncProcessorWorker() {}
 
-   virtual void process(resip::ApplicationMessage* msg)
+   virtual bool process(resip::ApplicationMessage* msg)
    {
       AsyncProcessorMessage* pmsg = dynamic_cast<AsyncProcessorMessage*>(msg);
       if(pmsg)
       {
-         pmsg->getAsyncProcessor().asyncProcess(pmsg);
-         return;
+         return pmsg->getAsyncProcessor().asyncProcess(pmsg);
       }
       assert(false);  // unexpected message type
+      return false;
    }
    virtual Worker* clone() const
    {

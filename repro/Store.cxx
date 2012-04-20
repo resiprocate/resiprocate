@@ -19,7 +19,8 @@ Store::Store( AbstractDb& db ):
    mAclStore(db),
    mConfigStore(db),
    mStaticRegStore(db),
-   mFilterStore(db)
+   mFilterStore(db),
+   mSiloStore(db)
 {
 }
 

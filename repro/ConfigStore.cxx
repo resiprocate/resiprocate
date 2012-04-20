@@ -32,7 +32,7 @@ ConfigStore::~ConfigStore()
 }
 
       
-void 
+bool
 ConfigStore::addDomain(const resip::Data& domain,
                        const int tlsPort )
 { 
@@ -42,11 +42,16 @@ ConfigStore::addDomain(const resip::Data& domain,
    rec.mDomain = domain;
    rec.mTlsPort = tlsPort;
    
-   mDb.addConfig( buildKey(domain), rec );
+   if(!mDb.addConfig(buildKey(domain), rec))
+   {
+      return false;
+   }
+
    {
       Lock lock(mMutex, VOCAL_WRITELOCK);
       mCachedConfigData[domain] = rec;
    }
+   return true;
 }
 
 

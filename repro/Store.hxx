@@ -8,7 +8,7 @@
 #include "repro/ConfigStore.hxx"
 #include "repro/StaticRegStore.hxx"
 #include "repro/FilterStore.hxx"
-
+#include "repro/SiloStore.hxx"
 
 namespace repro
 {
@@ -28,6 +28,7 @@ class Store
       ConfigStore mConfigStore;
       StaticRegStore mStaticRegStore;
       FilterStore mFilterStore;
+      SiloStore mSiloStore;
     private:
 };
 

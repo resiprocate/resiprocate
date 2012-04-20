@@ -74,3 +74,15 @@ CREATE TABLE `filtersavp` (
   `value` VARCHAR(1024),
   PRIMARY KEY (attr) 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Table structure for table `siloavp`
+-- Note:  No Primary Key is intentional so
+--        that we can have duplicate records
+--
+
+DROP TABLE IF EXISTS `siloavp`;
+CREATE TABLE `siloavp` (
+  `attr` VARCHAR(255) NOT NULL,
+  `value` VARCHAR(21080)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

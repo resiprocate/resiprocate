@@ -50,6 +50,7 @@
 #include "repro/monkeys/SimpleTargetHandler.hxx"
 #include "repro/monkeys/GeoProximityTargetSorter.hxx"
 #include "repro/monkeys/RequestFilter.hxx"
+#include "repro/monkeys/MessageSilo.hxx"
 
 #if defined(USE_SSL)
 #include "repro/stateAgents/CertServer.hxx"
@@ -93,6 +94,7 @@ ReproLogger g_ReproLogger;
 
 ReproRunner::ReproRunner()
    : mRunning(false)
+   , mRestarting(false)
    , mThreadedStack(false)
    , mSipAuthDisabled(false)
    , mUseV4(true)
@@ -138,12 +140,19 @@ ReproRunner::run(int argc, char** argv)
 {
    if(mRunning) return false;
 
+   if(!mRestarting)
+   {
+      // Store original arc and argv - so we can reuse them on restart request
+      mArgc = argc;
+      mArgv = argv;
+   }
+
    // Parse command line and configuration file
    assert(!mProxyConfig);
    Data defaultConfigFilename("repro.config");
    try
    {
-      mProxyConfig = new ProxyConfig(argc, argv, defaultConfigFilename);
+      mProxyConfig = new ProxyConfig(mArgc, mArgv, defaultConfigFilename);
    }
    catch(BaseException& ex)
    {
@@ -155,7 +164,7 @@ ReproRunner::run(int argc, char** argv)
    Data loggingType = mProxyConfig->getConfigData("LoggingType", "cout", true);
    Log::initialize(loggingType, 
                    mProxyConfig->getConfigData("LogLevel", "INFO", true), 
-                   argv[0], 
+                   mArgv[0], 
                    mProxyConfig->getConfigData("LogFilename", "repro.log", true).c_str(),
                    isEqualNoCase(loggingType, "file") ? &g_ReproLogger : 0); // if logging to file then write WARNINGS, and Errors to console still
 
@@ -167,14 +176,8 @@ ReproRunner::run(int argc, char** argv)
       return false;
    }
 
-   // Create the Proxy and associate objects
-   if(!createProxy())
-   {
-      return false;
-   }
-   
-   // Create HTTP WebAdmin and Thread
-   if(!createWebAdmin())
+   // Create datastore
+   if(!createDatastore())
    {
       return false;
    }
@@ -183,16 +186,26 @@ ReproRunner::run(int argc, char** argv)
    // and potentially certificate subscription server
    createDialogUsageManager();
 
-   // Register the Proxy class a stack transaction user
-   // Note:  This is done after creating the DialogUsageManager so that it acts 
-   // like a catchall and will handle all requests the DUM does not
-   mSipStack->registerTransactionUser(*mProxy);
+   // Create the Proxy and associate objects
+   if(!createProxy())
+   {
+      return false;
+   }
+
+   // Create HTTP WebAdmin and Thread
+   if(!createWebAdmin())
+   {
+      return false;
+   }
 
    // Create reg sync components if required
    createRegSync();
 
    // Create command server if required
-   createCommandServer();
+   if(!mRestarting)
+   {
+      createCommandServer();
+   }
 
    // Make it all go - startup all threads
    mThreadedStack = mProxyConfig->getConfigBool("ThreadedStack", true);
@@ -202,16 +215,16 @@ ReproRunner::run(int argc, char** argv)
       mSipStack->run();
    }
    mStackThread->run();
+   if(mDumThread)
+   {
+      mDumThread->run();
+   }
    mProxy->run();
    if(mWebAdminThread)
    {
       mWebAdminThread->run();
    }
-   if(mDumThread)
-   {
-      mDumThread->run();
-   }
-   if(mCommandServerThread)
+   if(!mRestarting && mCommandServerThread)
    {
       mCommandServerThread->run();
    }
@@ -234,8 +247,6 @@ ReproRunner::shutdown()
    if(!mRunning) return;
 
    // Tell all threads to shutdown
-   mProxy->shutdown();
-   mStackThread->shutdown();
    if(mWebAdminThread)
    {
       mWebAdminThread->shutdown();
@@ -244,7 +255,9 @@ ReproRunner::shutdown()
    {
       mDumThread->shutdown();
    }
-   if(mCommandServerThread)
+   mProxy->shutdown();
+   mStackThread->shutdown();
+   if(!mRestarting && mCommandServerThread)  // leave command server running if we are restarting
    {
       mCommandServerThread->shutdown();
    }
@@ -286,7 +299,7 @@ ReproRunner::shutdown()
       delete mAsyncProcessorDispatcher;
       mAsyncProcessorDispatcher = 0;
    }
-   if(mCommandServerThread)
+   if(!mRestarting && mCommandServerThread)  // we leave command server running during restart
    {
       mCommandServerThread->join();
    }
@@ -306,12 +319,26 @@ ReproRunner::shutdown()
 }
 
 void
+ReproRunner::restart()
+{
+   if(!mRunning) return;
+   mRestarting = true;
+   shutdown();
+   run(0, 0);
+   mRestarting = false;
+}
+
+void
 ReproRunner::cleanupObjects()
 {
    delete mCongestionManager; mCongestionManager = 0;
-   delete mCommandServerThread; mCommandServerThread = 0;
-   delete mCommandServerV6; mCommandServerV6 = 0;
-   delete mCommandServerV4; mCommandServerV4 = 0;
+   if(!mRestarting)
+   {
+      // We leave command server running during restart
+      delete mCommandServerThread; mCommandServerThread = 0;
+      delete mCommandServerV6; mCommandServerV6 = 0;
+      delete mCommandServerV4; mCommandServerV4 = 0;
+   }
    delete mRegSyncServerThread; mRegSyncServerThread = 0;
    delete mRegSyncServerV6; mRegSyncServerV6 = 0;
    delete mRegSyncServerV4; mRegSyncServerV4 = 0;
@@ -330,7 +357,11 @@ ReproRunner::cleanupObjects()
    delete mMonkeys; mMonkeys = 0;
    delete mAuthRequestDispatcher; mAuthRequestDispatcher = 0;
    delete mAsyncProcessorDispatcher; mAsyncProcessorDispatcher = 0;
-   delete mRegistrationPersistenceManager; mRegistrationPersistenceManager = 0;
+   if(!mRestarting) 
+   {
+      // If we are restarting then leave the In Memory Registration database intact
+      delete mRegistrationPersistenceManager; mRegistrationPersistenceManager = 0;
+   }
    delete mAbstractDb; mAbstractDb = 0;
    delete mStackThread; mStackThread = 0;
    delete mSipStack; mSipStack = 0;
@@ -518,8 +549,8 @@ ReproRunner::createSipStack()
    return true;
 }
 
-bool
-ReproRunner::createProxy()
+bool 
+ReproRunner::createDatastore()
 {
    // Create Database access objects
    assert(!mAbstractDb);
@@ -552,19 +583,134 @@ ReproRunner::createProxy()
    // Create ImMemory Registration Database
    mRegSyncPort = mProxyConfig->getConfigInt("RegSyncPort", 0);
    // We only need removed records to linger if we have reg sync enabled
-   assert(!mRegistrationPersistenceManager);
-   mRegistrationPersistenceManager = new InMemorySyncRegDb(mRegSyncPort ? 86400 /* 24 hours */ : 0 /* removeLingerSecs */);  // !slg! could make linger time a setting
+   if(!mRestarting)  // If we are restarting then we left the InMemoryRegistrationDb intact at shutdown - don't recreate
+   {
+      assert(!mRegistrationPersistenceManager);
+      mRegistrationPersistenceManager = new InMemorySyncRegDb(mRegSyncPort ? 86400 /* 24 hours */ : 0 /* removeLingerSecs */);  // !slg! could make linger time a setting
+   }
+   assert(mRegistrationPersistenceManager);
 
    // Copy contacts from the StaticRegStore to the RegistrationPersistanceManager
    populateRegistrations();
 
-   // Create UserAuthGrabber Worker Thread Pool if auth is enabled
-   mSipAuthDisabled = mProxyConfig->getConfigBool("DisableAuth", false);
-   assert(!mAuthRequestDispatcher);
-   if(!mSipAuthDisabled)
+   return true;
+}
+
+void
+ReproRunner::createDialogUsageManager()
+{
+   // Create Profile settings for DUM Instance that handles ServerRegistration,
+   // and potentially certificate subscription server
+   SharedPtr<MasterProfile> profile(new MasterProfile);
+   profile->clearSupportedMethods();
+   profile->addSupportedMethod(resip::REGISTER);
+#ifdef USE_SSL
+   profile->addSupportedScheme(Symbols::Sips);
+#endif
+   if(InteropHelper::getOutboundSupported())
    {
-      std::auto_ptr<Worker> grabber(new UserAuthGrabber(mProxyConfig->getDataStore()->mUserStore));
-      mAuthRequestDispatcher = new Dispatcher(grabber,mSipStack,mProxyConfig->getConfigInt("NumAuthGrabberWorkerThreads", 2));
+      profile->addSupportedOptionTag(Token(Symbols::Outbound));
+   }
+   profile->addSupportedOptionTag(Token(Symbols::Path));
+   if(mProxyConfig->getConfigBool("AllowBadReg", false))
+   {
+       profile->allowBadRegistrationEnabled() = true;
+   }
+   
+   // Create DialogeUsageManager if Registrar or Certificate Server are enabled
+   assert(!mRegistrar);
+   assert(!mDum);
+   assert(!mDumThread);
+   mRegistrar = new Registrar;
+   resip::MessageFilterRuleList ruleList;
+   bool registrarEnabled = !mProxyConfig->getConfigBool("DisableRegistrar", false);
+   bool certServerEnabled = mProxyConfig->getConfigBool("EnableCertServer", false);
+   if (registrarEnabled || certServerEnabled)
+   {
+      mDum = new DialogUsageManager(*mSipStack);
+      mDum->setMasterProfile(profile);
+      addDomains(*mDum, false /* log? already logged when adding to Proxy - no need to log again*/);
+   }
+
+   // If registrar is enabled, configure DUM to handle REGISTER requests
+   if (registrarEnabled)
+   {   
+      assert(mDum);
+      assert(mRegistrationPersistenceManager);
+      mDum->setServerRegistrationHandler(mRegistrar);
+      mDum->setRegistrationPersistenceManager(mRegistrationPersistenceManager);
+
+      // Install rules so that the registrar only gets REGISTERs
+      resip::MessageFilterRule::MethodList methodList;
+      methodList.push_back(resip::REGISTER);
+      ruleList.push_back(MessageFilterRule(resip::MessageFilterRule::SchemeList(),
+                                           resip::MessageFilterRule::DomainIsMe,
+                                           methodList) );
+   }
+   
+   // If Certificate Server is enabled, configure DUM to handle SUBSCRIBE and 
+   // PUBLISH requests for events: credential and certificate
+   assert(!mCertServer);
+   if (certServerEnabled)
+   {
+#if defined(USE_SSL)
+      mCertServer = new CertServer(*mDum);
+
+      // Install rules so that the cert server receives SUBSCRIBEs and PUBLISHs
+      resip::MessageFilterRule::MethodList methodList;
+      resip::MessageFilterRule::EventList eventList;
+      methodList.push_back(resip::SUBSCRIBE);
+      methodList.push_back(resip::PUBLISH);
+      eventList.push_back(resip::Symbols::Credential);
+      eventList.push_back(resip::Symbols::Certificate);
+      ruleList.push_back(MessageFilterRule(resip::MessageFilterRule::SchemeList(),
+                                           resip::MessageFilterRule::DomainIsMe,
+                                           methodList,
+                                           eventList));
+#endif
+   }
+
+   if (mDum)
+   {
+      mSipAuthDisabled = mProxyConfig->getConfigBool("DisableAuth", false);
+
+      // If Authentication is enabled, then configure DUM to authenticate requests
+      if (!mSipAuthDisabled)
+      {
+         // Create UserAuthGrabber Worker Thread Pool if auth is enabled
+         assert(!mAuthRequestDispatcher);
+         int numAuthGrabberWorkerThreads = mProxyConfig->getConfigInt("NumAuthGrabberWorkerThreads", 2);
+         if(numAuthGrabberWorkerThreads < 1) numAuthGrabberWorkerThreads = 1; // must have at least one thread
+         std::auto_ptr<Worker> grabber(new UserAuthGrabber(mProxyConfig->getDataStore()->mUserStore));
+         mAuthRequestDispatcher = new Dispatcher(grabber, mSipStack, numAuthGrabberWorkerThreads);
+
+         SharedPtr<ServerAuthManager> 
+            uasAuth( new ReproServerAuthManager(*mDum,
+                                                mAuthRequestDispatcher,
+                                                mProxyConfig->getDataStore()->mAclStore,
+                                                !mProxyConfig->getConfigBool("DisableAuthInt", false) /*useAuthInt*/,
+                                                mProxyConfig->getConfigBool("RejectBadNonces", false)));
+         mDum->setServerAuthManager(uasAuth);
+      }
+
+      // Set the MessageFilterRuleList on DUM and create a thread to run DUM in
+      mDum->setMessageFilterRuleList(ruleList);
+      mDumThread = new DumThread(*mDum);
+   }   
+}
+
+bool
+ReproRunner::createProxy()
+{
+   // Create AsyncProcessorDispatcher thread pool that is shared by the processsors for
+   // any asyncronous tasks (ie: RequestFilter and MessageSilo processors)
+   int numAsyncProcessorWorkerThreads = mProxyConfig->getConfigInt("NumAsyncProcessorWorkerThreads", 2);
+   if(numAsyncProcessorWorkerThreads > 0)
+   {
+      assert(!mAsyncProcessorDispatcher);
+      mAsyncProcessorDispatcher = new Dispatcher(std::auto_ptr<Worker>(new AsyncProcessorWorker), 
+                                                 mSipStack, 
+                                                 numAsyncProcessorWorkerThreads);
    }
 
    // Create proxy processor chains
@@ -598,6 +744,11 @@ ReproRunner::createProxy()
                       *mLemurs, 
                       *mBaboons);
    mHttpRealm = addDomains(*mProxy, true);
+
+   // Register the Proxy class a stack transaction user
+   // Note:  This is done after creating the DialogUsageManager so that it acts 
+   // like a catchall and will handle all requests the DUM does not
+   mSipStack->registerTransactionUser(*mProxy);
 
    return true;
 }
@@ -658,100 +809,6 @@ ReproRunner::createWebAdmin()
 }
 
 void
-ReproRunner::createDialogUsageManager()
-{
-   // Create Profile settings for DUM Instance that handles ServerRegistration,
-   // and potentially certificate subscription server
-   SharedPtr<MasterProfile> profile(new MasterProfile);
-   profile->clearSupportedMethods();
-   profile->addSupportedMethod(resip::REGISTER);
-#ifdef USE_SSL
-   profile->addSupportedScheme(Symbols::Sips);
-#endif
-   if(InteropHelper::getOutboundSupported())
-   {
-      profile->addSupportedOptionTag(Token(Symbols::Outbound));
-   }
-   profile->addSupportedOptionTag(Token(Symbols::Path));
-   if(mProxyConfig->getConfigBool("AllowBadReg", false))
-   {
-       profile->allowBadRegistrationEnabled() = true;
-   }
-   
-   // Create DialogeUsageManager if Registrar or Certificate Server are enabled
-   assert(!mRegistrar);
-   assert(!mDum);
-   assert(!mDumThread);
-   mRegistrar = new Registrar;
-   resip::MessageFilterRuleList ruleList;
-   bool registrarEnabled = !mProxyConfig->getConfigBool("DisableRegistrar", false);
-   bool certServerEnabled = mProxyConfig->getConfigBool("EnableCertServer", false);
-   if (registrarEnabled || certServerEnabled)
-   {
-      mDum = new DialogUsageManager(*mSipStack);
-      mDum->setMasterProfile(profile);
-      addDomains(*mDum, false /* log? already logged when adding to Proxy - no need to log again*/);
-   }
-
-   // If registrar is enabled, configure DUM to handle REGISTER requests
-   if (registrarEnabled)
-   {   
-      assert(mDum);
-      mDum->setServerRegistrationHandler(mRegistrar);
-      mDum->setRegistrationPersistenceManager(mRegistrationPersistenceManager);
-
-      // Install rules so that the registrar only gets REGISTERs
-      resip::MessageFilterRule::MethodList methodList;
-      methodList.push_back(resip::REGISTER);
-      ruleList.push_back(MessageFilterRule(resip::MessageFilterRule::SchemeList(),
-                                           resip::MessageFilterRule::DomainIsMe,
-                                           methodList) );
-   }
-   
-   // If Certificate Server is enabled, configure DUM to handle SUBSCRIBE and 
-   // PUBLISH requests for events: credential and certificate
-   assert(!mCertServer);
-   if (certServerEnabled)
-   {
-#if defined(USE_SSL)
-      mCertServer = new CertServer(*mDum);
-
-      // Install rules so that the cert server receives SUBSCRIBEs and PUBLISHs
-      resip::MessageFilterRule::MethodList methodList;
-      resip::MessageFilterRule::EventList eventList;
-      methodList.push_back(resip::SUBSCRIBE);
-      methodList.push_back(resip::PUBLISH);
-      eventList.push_back(resip::Symbols::Credential);
-      eventList.push_back(resip::Symbols::Certificate);
-      ruleList.push_back(MessageFilterRule(resip::MessageFilterRule::SchemeList(),
-                                           resip::MessageFilterRule::DomainIsMe,
-                                           methodList,
-                                           eventList));
-#endif
-   }
-
-   if (mDum)
-   {
-      // If Authentication is enabled, then configure DUM to authenticate requests
-      if (!mSipAuthDisabled)
-      {
-         assert(mAuthRequestDispatcher);
-         SharedPtr<ServerAuthManager> 
-            uasAuth( new ReproServerAuthManager(*mDum,
-                                                mAuthRequestDispatcher,
-                                                mProxyConfig->getDataStore()->mAclStore,
-                                                !mProxyConfig->getConfigBool("DisableAuthInt", false) /*useAuthInt*/,
-                                                mProxyConfig->getConfigBool("RejectBadNonces", false)));
-         mDum->setServerAuthManager(uasAuth);
-      }
-
-      // Set the MessageFilterRuleList on DUM and create a thread to run DUM in
-      mDum->setMessageFilterRuleList(ruleList);
-      mDumThread = new DumThread(*mDum);
-   }   
-}
-
-void
 ReproRunner::createRegSync()
 {
    assert(!mRegSyncClient);
@@ -795,12 +852,12 @@ ReproRunner::createCommandServer()
       std::list<CommandServer*> commandServerList;
       if(mUseV4) 
       {
-         mCommandServerV4 = new CommandServer(*mProxy, commandPort, V4);
+         mCommandServerV4 = new CommandServer(*this, commandPort, V4);
          commandServerList.push_back(mCommandServerV4);
       }
       if(mUseV6) 
       {
-         mCommandServerV6 = new CommandServer(*mProxy, commandPort, V6);
+         mCommandServerV6 = new CommandServer(*this, commandPort, V6);
          commandServerList.push_back(mCommandServerV6);
       }
       if(!commandServerList.empty())
@@ -832,7 +889,7 @@ ReproRunner::addDomains(TransactionUser& tu, bool log)
    }
 
    const ConfigStore::ConfigData& dList = mProxyConfig->getDataStore()->mConfigStore.getConfigs();
-   for (  ConfigStore::ConfigData::const_iterator i=dList.begin(); 
+   for (ConfigStore::ConfigData::const_iterator i=dList.begin(); 
            i != dList.end(); ++i)
    {
       if(log) InfoLog (<< "Adding domain " << i->second.mDomain << " from config");
@@ -1070,11 +1127,17 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    chain.addProcessor(std::auto_ptr<Processor>(new AmIResponsible)); 
 
    // Add RequestFilter monkey
-   assert(!mAsyncProcessorDispatcher);
-   mAsyncProcessorDispatcher = new Dispatcher(std::auto_ptr<Worker>(new AsyncProcessorWorker), 
-                                              mSipStack, 
-                                              mProxyConfig->getConfigInt("NumAsyncProcessorWorkerThreads", 2));
-   chain.addProcessor(std::auto_ptr<Processor>(new RequestFilter(*mProxyConfig, mAsyncProcessorDispatcher)));
+   if(!mProxyConfig->getConfigBool("DisableRequestFilterProcessor", false))
+   {
+      if(mAsyncProcessorDispatcher)
+      {
+         chain.addProcessor(std::auto_ptr<Processor>(new RequestFilter(*mProxyConfig, mAsyncProcessorDispatcher)));
+      }
+      else
+      {
+         WarningLog(<< "Could not start RequestFilter Processor due to no worker thread pool (NumAsyncProcessorWorkerThreads=0)");
+      }
+   }
 
    // [TODO] support for GRUU is on roadmap.  When it is added the GruuMonkey will go here
       
@@ -1096,6 +1159,21 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
       
    // Add location server monkey
    chain.addProcessor(std::auto_ptr<Processor>(new LocationServer(*mProxyConfig, *mRegistrationPersistenceManager)));
+
+   // Add message silo monkey
+   if(mProxyConfig->getConfigBool("MessageSiloEnabled", false))
+   {
+      if(mAsyncProcessorDispatcher && mRegistrar)
+      {
+         MessageSilo* silo = new MessageSilo(*mProxyConfig, mAsyncProcessorDispatcher);
+         mRegistrar->addRegistrarHandler(silo);
+         chain.addProcessor(std::auto_ptr<Processor>(silo));
+      }
+      else
+      {
+         WarningLog(<< "Could not start MessageSilo Processor due to no worker thread pool (NumAsyncProcessorWorkerThreads=0) or Registrar");
+      }
+   }
 }
 
 void  // Lemurs
