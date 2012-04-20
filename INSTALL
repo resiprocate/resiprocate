@@ -30,7 +30,7 @@ b) Run configure:
      ./configure \
        --with-ssl --with-mysql --with-radius --with-tfm \
        --enable-ipv6 \
-       CXXFLAGS="-DUSE_CARES -I`pwd`/tfm/contrib/Netxx-0.3.2/include" \
+       CXXFLAGS="-DHAVE_EPOLL -DUSE_CARES -I`pwd`/tfm/contrib/Netxx-0.3.2/include" \
        LDFLAGS="-L`pwd`/tfm/contrib/Netxx-0.3.2/src -lcares"
 
      (hint: if it fails to link against libNetxx.so, create a symlink, or
@@ -38,11 +38,7 @@ b) Run configure:
 
      OR (using contrib/ares - be sure to run ./build-contrib.sh first)
 
-     ./configure \
-       --with-ssl --with-mysql --enable-ipv6 \
-       CXXFLAGS="-DUSE_ARES -I`pwd`/contrib/ares" \
-       LDFLAGS="-L`pwd`/contrib/ares/ -lares"
-
+     ./configure --with-ssl --with-mysql --enable-ipv6 CXXFLAGS="-DHAVE_EPOLL"
 
 c) Build everything:
 
