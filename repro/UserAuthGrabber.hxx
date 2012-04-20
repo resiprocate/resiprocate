@@ -23,7 +23,7 @@ class UserAuthGrabber : public Worker
       
       virtual ~UserAuthGrabber(){}
       
-      virtual void process(resip::ApplicationMessage* msg)
+      virtual bool process(resip::ApplicationMessage* msg)
       {
          repro::UserInfoMessage* uinf = dynamic_cast<UserInfoMessage*>(msg);    // auth for repro's DigestAuthenticator
          resip::UserAuthInfo* uainf = dynamic_cast<resip::UserAuthInfo*>(msg);  // auth for DUM's ServerAuthManager
@@ -33,6 +33,7 @@ class UserAuthGrabber : public Worker
             DebugLog(<<"Grabbed user info for " 
                            << uinf->user() <<"@"<<uinf->realm()
                            << " : " << uinf->A1());
+            return true;
          }
          else if(uainf)
          {
@@ -44,11 +45,13 @@ class UserAuthGrabber : public Worker
             DebugLog(<<"Grabbed user info for " 
                            << uainf->getUser() <<"@"<<uainf->getRealm()
                            << " : " << uainf->getA1());
+            return true;
          }
          else
          {
             WarningLog(<<"Did not recognize message type...");
          }
+         return false;
       }
       
       virtual UserAuthGrabber* clone() const

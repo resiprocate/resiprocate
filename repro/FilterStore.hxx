@@ -56,7 +56,7 @@ class FilterStore
                        const resip::Data& event);
       void eraseFilter(const resip::Data& key);
 
-      void updateFilter(const resip::Data& originalKey,
+      bool updateFilter(const resip::Data& originalKey,
                         const resip::Data& cond1Header,
                         const resip::Data& cond1Regex,
                         const resip::Data& cond2Header,

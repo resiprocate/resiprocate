@@ -50,6 +50,7 @@ class ServerRegistration: public NonDialogUsage
       bool asyncProvideContacts(std::auto_ptr<resip::ContactPtrList> contacts);
 
       resip::SharedPtr<ContactList> getOriginalContacts() { return mOriginalContacts; }  // WARNING - use this only if async mode is not used
+      const ContactList& getRequestContacts() { return mRequestContacts; }
 
    protected:
       virtual ~ServerRegistration();
@@ -67,7 +68,8 @@ class ServerRegistration: public NonDialogUsage
 
       SipMessage mRequest;
       Uri mAor;
-      resip::SharedPtr<ContactList> mOriginalContacts;
+      resip::SharedPtr<ContactList> mOriginalContacts;  // Used only for non-async processing
+      ContactList mRequestContacts;  // Contains the Contacts from the REGISTER request
       bool mDidOutbound;
 
       // disabled

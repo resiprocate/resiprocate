@@ -9,7 +9,7 @@
 using namespace resip;
 
 
-Message::Message() : tu(0) 
+Message::Message() : mTu(0) 
 {}
 
 Message::Brief
@@ -20,14 +20,15 @@ Message::brief() const
 
 Message::Brief::Brief(const Message& source) :
    mSource(source)
-{}
+{
+}
 
 #ifndef  RESIP_USE_STL_STREAMS
 std::ostream& 
 resip::operator<<(std::ostream& strm, 
                   const resip::Message& msg)
 {
-	Data encoded;
+   Data encoded;
 
    DataStream encodeStream(encoded);
    msg.encode(encodeStream);
@@ -42,7 +43,7 @@ std::ostream&
 resip::operator<<(std::ostream& strm, 
                   const resip::Message::Brief& brief)
 {
-	Data encoded;
+   Data encoded;
 
    DataStream encodeStream(encoded);
    brief.mSource.encodeBrief(encodeStream);

@@ -373,14 +373,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\CommandServer.cxx"
-				>
-			</File>
-			<File
-				RelativePath=".\CommandServerThread.cxx"
-				>
-			</File>
-			<File
 				RelativePath=".\ConfigStore.cxx"
 				>
 			</File>
@@ -410,6 +402,10 @@
 			</File>
 			<File
 				RelativePath=".\monkeys\LocationServer.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\monkeys\MessageSilo.cxx"
 				>
 			</File>
 			<File
@@ -529,6 +525,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SiloStore.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\monkeys\SimpleStaticRoute.cxx"
 				>
 			</File>
@@ -623,14 +623,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\CommandServer.hxx"
-				>
-			</File>
-			<File
-				RelativePath=".\CommandServerThread.hxx"
-				>
-			</File>
-			<File
 				RelativePath=".\ConfigStore.hxx"
 				>
 			</File>
@@ -664,6 +656,10 @@
 			</File>
 			<File
 				RelativePath=".\monkeys\LocationServer.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\monkeys\MessageSilo.hxx"
 				>
 			</File>
 			<File
@@ -748,6 +744,10 @@
 			</File>
 			<File
 				RelativePath=".\RRDecorator.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\SiloStore.hxx"
 				>
 			</File>
 			<File

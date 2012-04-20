@@ -47,7 +47,7 @@ UserStore::getUserAuthInfo(  const resip::Data& user,
 }
 
 
-void 
+bool 
 UserStore::addUser( const Data& username,
                     const Data& domain,
                     const Data& realm,
@@ -79,7 +79,7 @@ UserStore::addUser( const Data& username,
    rec.email = emailAddress;
    rec.forwardAddress = Data::Empty;
 
-   mDb.addUser( buildKey(username,domain), rec);
+   return mDb.addUser( buildKey(username,domain), rec);
 }
 
 
@@ -89,7 +89,7 @@ UserStore::eraseUser( const Key& key )
    mDb.eraseUser( key );
 }
 
-void
+bool
 UserStore::updateUser( const Key& originalKey, 
                        const resip::Data& user, 
                        const resip::Data& domain, 
@@ -101,11 +101,12 @@ UserStore::updateUser( const Key& originalKey,
 {
    Key newkey = buildKey(user, domain);
    
-   addUser( user,domain,realm,password,applyA1HashToPassword,fullName,emailAddress);
+   bool ret = addUser(user, domain, realm, password, applyA1HashToPassword, fullName, emailAddress);
    if ( newkey != originalKey )
    {
       eraseUser(originalKey);
    }
+   return ret;
 }
 
 

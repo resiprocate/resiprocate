@@ -54,15 +54,38 @@ StaticRegStore::~StaticRegStore()
 {
 }
 
-      
-void 
+
+bool
 StaticRegStore::addStaticReg(const resip::Uri& aor,
                              const resip::NameAddr& contact,
                              const resip::NameAddrs& path)
 {
-   Key removeKey;
    Data aorData(Data::from(aor));
    Data contactData(Data::from(contact));
+
+   // Add new Db Record
+   Key addKey = buildKey(aorData, contactData);
+   AbstractDb::StaticRegRecord rec;
+   rec.mAor = aorData;
+   rec.mContact = contactData;
+   NameAddrs::const_iterator it = path.begin();
+   for(; it != path.end(); it++)
+   {
+      if(it != path.begin())
+      {
+         rec.mPath += ",";
+      }
+      rec.mPath += Data::from(*it);
+   }
+
+   InfoLog( << "Add StaticReg: key=" << addKey);
+
+   if(!mDb.addStaticReg(addKey, rec))
+   {
+      return false;
+   }
+
+   Key removeKey;
    {
       WriteLock lock(mMutex);
       std::pair<Uri, Uri> mapKey = make_pair(aor, contact.uri());
@@ -90,23 +113,7 @@ StaticRegStore::addStaticReg(const resip::Uri& aor,
       mDb.eraseStaticReg(removeKey);
    }
 
-   // Add new Db Record
-   Key addKey = buildKey(aorData, contactData);
-   AbstractDb::StaticRegRecord rec;
-   rec.mAor = aorData;
-   rec.mContact = contactData;
-   NameAddrs::const_iterator it = path.begin();
-   for(; it != path.end(); it++)
-   {
-      if(it != path.begin())
-      {
-         rec.mPath += ",";
-      }
-      rec.mPath += Data::from(*it);
-   }
-   mDb.addStaticReg(addKey, rec);
-
-   InfoLog( << "Add StaticReg: key=" << addKey);
+   return true;
 }
 
 

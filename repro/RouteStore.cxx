@@ -96,6 +96,12 @@ RouteStore::addRoute(const resip::Data& method,
    route.routeRecord.mMatchingPattern = matchingPattern;
    route.routeRecord.mRewriteExpression =  rewriteExpression;
    route.routeRecord.mOrder = order;
+
+   if(!mDb.addRoute(key , route.routeRecord))
+   {
+      return false;
+   }
+
    route.key = key;
    route.preq = 0;
    if( !route.routeRecord.mMatchingPattern.empty() )
@@ -120,7 +126,6 @@ RouteStore::addRoute(const resip::Data& method,
    }
    mCursor = mRouteOperators.begin(); 
 
-   mDb.addRoute( key , route.routeRecord );
    return true;
 }
 
@@ -188,7 +193,7 @@ RouteStore::eraseRoute(const resip::Data& key )
 }
 
 
-void
+bool
 RouteStore::updateRoute( const resip::Data& originalKey, 
                          const resip::Data& method,
                          const resip::Data& event,
@@ -196,9 +201,8 @@ RouteStore::updateRoute( const resip::Data& originalKey,
                          const resip::Data& rewriteExpression,
                          const int order )
 {
-   //resip::Data newkey = buildKey( method, event, matchingPattern );
    eraseRoute(originalKey);
-   addRoute( method, event, matchingPattern, rewriteExpression, order );
+   return addRoute(method, event, matchingPattern, rewriteExpression, order);
 }
 
 

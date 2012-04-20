@@ -270,7 +270,6 @@ ServerRegistration::processRegistration(const SipMessage& msg)
    ParserContainer<NameAddr> contactList(msg.header(h_Contacts));
    ParserContainer<NameAddr>::iterator i(contactList.begin());
    ParserContainer<NameAddr>::iterator iEnd(contactList.end());
-
    UInt64 now=Timer::getTimeSecs();
    UInt32 expires=0;
 
@@ -290,7 +289,7 @@ ServerRegistration::processRegistration(const SipMessage& msg)
       }
 
       expires = globalExpires;
-      handler->getContactExpires(*i,mDum.getMasterProfile(),expires,returnCode);       
+      handler->getContactExpires(*i, mDum.getMasterProfile(), expires, returnCode);
 
       // Check for "Contact: *" style deregistration
       if (i->isAllContacts())
@@ -353,6 +352,9 @@ ServerRegistration::processRegistration(const SipMessage& msg)
          delete(this);
          return;
       }
+
+      // Add ContactInstanceRecord to List
+      mRequestContacts.push_back(rec);
 
       // Check to see if this is a removal.
       if (expires == 0)

@@ -25,7 +25,7 @@ class RequestFilter : public AsyncProcessor
       virtual processor_action_t process(RequestContext &);
 
       // Virtual method called from WorkerThreads
-      virtual void asyncProcess(AsyncProcessorMessage* msg);
+      virtual bool asyncProcess(AsyncProcessorMessage* msg);
 
    private:
       short parseActionResult(const resip::Data& result, resip::Data& rejectReason);

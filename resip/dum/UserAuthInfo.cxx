@@ -42,7 +42,7 @@ UserAuthInfo::UserAuthInfo( const resip::Data& user,
    mUser(user),
    mRealm(realm)
 {
-   tu = transactionUser;
+   mTu = transactionUser;
 }
 
 UserAuthInfo::~UserAuthInfo()
@@ -61,13 +61,11 @@ UserAuthInfo::getA1() const
    return mA1;
 }
 
-
 const Data& 
 UserAuthInfo::getRealm() const
 {
    return mRealm;
 }
-
 
 const Data&
 UserAuthInfo::getUser() const
@@ -102,7 +100,6 @@ UserAuthInfo::clone() const
 {
    assert(false); return NULL;
 }
-
 
 EncodeStream& 
 UserAuthInfo::encode(EncodeStream& strm) const

@@ -228,9 +228,9 @@ Proxy::thread()
                   // !bwc! TODO make this ceiling configurable
                   if(sip->header(h_MaxForwards).value() > 255)
                   {
-                     sip->header(h_MaxForwards).value()=20;                     
+                     sip->header(h_MaxForwards).value() = 20;                     
                   }
-                  else if(sip->header(h_MaxForwards).value() <=0)
+                  else if(sip->header(h_MaxForwards).value() <= 0)
                   {
                      if (sip->header(h_RequestLine).method() != OPTIONS)
                      {

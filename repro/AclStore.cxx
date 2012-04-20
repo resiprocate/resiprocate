@@ -54,8 +54,8 @@ AclStore::~AclStore()
 {
 }
 
-      
-void 
+
+bool
 AclStore::addAcl(const resip::Data& tlsPeerName,
                   const resip::Data& address,
                   const short& mask,
@@ -75,7 +75,10 @@ AclStore::addAcl(const resip::Data& tlsPeerName,
    rec.mTransport = transport;
 
    // Add DB record
-   mDb.addAcl( key, rec );
+   if(!mDb.addAcl(key, rec))
+   {
+      return false;
+   }
 
    // Add local storage
    if(rec.mTlsPeerName.empty())  // If there is no TlsPeerName then record is an Address ACL
@@ -98,6 +101,7 @@ AclStore::addAcl(const resip::Data& tlsPeerName,
          mTlsPeerNameList.push_back(tlsPeerNameRecord); 
       }
    }
+   return true;
 }
 
 
@@ -160,14 +164,13 @@ AclStore::addAcl(const resip::Data& tlsPeerNameOrAddress,
                // add special localhost addresses for v4 and v6 to list and return
                addAcl(Data::Empty, "127.0.0.1", 8, port, resip::V4, transport);
                addAcl(Data::Empty, "::1", 128, port, resip::V6, transport);
-               addAcl(Data::Empty, "fe80::1", 64, port, resip::V6, transport);
+               return addAcl(Data::Empty, "fe80::1", 64, port, resip::V6, transport);
             }
             else
             {
                // hostOrIp += default domain name (future)
-               addAcl(hostOrIp, Data::Empty, 0, 0, 0, 0);
+               return addAcl(hostOrIp, Data::Empty, 0, 0, 0, 0);
             }
-            return true;
          }
          else if (*pb.position() == ':')     // Must be an IPv6 address
          {
@@ -198,8 +201,7 @@ AclStore::addAcl(const resip::Data& tlsPeerNameOrAddress,
             else
             {
                // hopefully it is a legal FQDN, try it.
-               addAcl(hostOrIp, Data::Empty, 0, 0, 0, 0);
-               return true;
+               return addAcl(hostOrIp, Data::Empty, 0, 0, 0, 0);
             }
          }   
       }
@@ -238,16 +240,17 @@ AclStore::addAcl(const resip::Data& tlsPeerNameOrAddress,
 
       if(pb.eof())
       {
+         bool ret;
          if (ipv6)
          {
-            addAcl(Data::Empty, hostOrIp, mask, port, resip::V6, transport);
+            ret = addAcl(Data::Empty, hostOrIp, mask, port, resip::V6, transport);
          }
 
          if (ipv4)
          {
-            addAcl(Data::Empty, hostOrIp, mask, port, resip::V4, transport);
+            ret = addAcl(Data::Empty, hostOrIp, mask, port, resip::V4, transport);
          }
-         return true;
+         return ret;
       }      
    }
    catch(ParseException& e)

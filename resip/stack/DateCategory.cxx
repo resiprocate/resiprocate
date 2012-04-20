@@ -70,38 +70,20 @@ DateCategory::DateCategory()
       return;
    }
    
-   struct tm gmt;
-#if defined(WIN32) || defined(__sun)
-   struct tm *gmtp = gmtime(&now);
-   if (gmtp == 0)
-   {
-	    int e = getErrno();
-        DebugLog (<< "Failed to convert to gmt: " << strerror(e));
-        Transport::error(e);
-        return;
-   }
-   memcpy(&gmt,gmtp,sizeof(gmt));
-#else
-  if (gmtime_r(&now, &gmt) == 0)
-  {
-     int e = getErrno();
-     DebugLog (<< "Failed to convert to gmt: " << strerror(e));
-     Transport::error(e);
-     return;
-  }
-#endif
+   setDatetime(now);
+}
 
-   mDayOfWeek = static_cast<DayOfWeek>(gmt.tm_wday);
-   mDayOfMonth = gmt.tm_mday;
-   mMonth = static_cast<Month>(gmt.tm_mon);
-   mYear = gmt.tm_year + 1900;
-   mHour = gmt.tm_hour;
-   mMin = gmt.tm_min;
-   mSec = gmt.tm_sec;
-   DebugLog (<< "Set date: day=" << mDayOfWeek 
-             << " month=" << mMonth
-             << " year=" << mYear
-             << " " << mHour << ":" << mMin << ":" << mSec);
+DateCategory::DateCategory(time_t datetime)
+   : ParserCategory(),
+     mDayOfWeek(Sun),
+     mDayOfMonth(),
+     mMonth(Jan),
+     mYear(0),
+     mHour(0),
+     mMin(0),
+     mSec(0)
+{
+   setDatetime(datetime);
 }
 
 DateCategory::DateCategory(const HeaderFieldValue& hfv, 
@@ -144,6 +126,44 @@ DateCategory::operator=(const DateCategory& rhs)
       mSec = rhs.mSec;
    }
    return *this;
+}
+
+bool 
+DateCategory::setDatetime(time_t datetime)
+{
+   struct tm gmt;
+#if defined(WIN32) || defined(__sun)
+   struct tm *gmtp = gmtime(&datetime);
+   if (gmtp == 0)
+   {
+        int e = getErrno();
+        DebugLog (<< "Failed to convert to gmt: " << strerror(e));
+        Transport::error(e);
+        return false;
+   }
+   memcpy(&gmt,gmtp,sizeof(gmt));
+#else
+  if (gmtime_r(&datetime, &gmt) == 0)
+  {
+     int e = getErrno();
+     DebugLog (<< "Failed to convert to gmt: " << strerror(e));
+     Transport::error(e);
+     return false;
+  }
+#endif
+
+   mDayOfWeek = static_cast<DayOfWeek>(gmt.tm_wday);
+   mDayOfMonth = gmt.tm_mday;
+   mMonth = static_cast<Month>(gmt.tm_mon);
+   mYear = gmt.tm_year + 1900;
+   mHour = gmt.tm_hour;
+   mMin = gmt.tm_min;
+   mSec = gmt.tm_sec;
+   DebugLog (<< "Set date: day=" << mDayOfWeek 
+             << " month=" << mMonth
+             << " year=" << mYear
+             << " " << mHour << ":" << mMin << ":" << mSec);
+   return true;
 }
 
 /* ANSI-C code produced by gperf version 2.7.2 */

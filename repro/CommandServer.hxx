@@ -18,13 +18,14 @@ class SipStack;
 
 namespace repro
 {
+class ReproRunner;
 
 class CommandServer: public XmlRpcServerBase,
                      public resip::GetDnsCacheDumpHandler,
                      public resip::ExternalStatsHandler
 {
 public:
-   CommandServer(Proxy& proxy,
+   CommandServer(ReproRunner& reproRunner,
                  int port, 
                  resip::IpVersion version);
    virtual ~CommandServer();
@@ -56,8 +57,9 @@ private:
    void handleSetCongestionToleranceRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
    void handleShutdownRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
    void handleGetProxyConfigRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
+   void handleRestartRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
 
-   Proxy& mProxy;
+   ReproRunner& mReproRunner;
    resip::Mutex mStatisticsWaitersMutex;
    typedef std::list<std::pair<unsigned int, unsigned int> > StatisticsWaitersList;
    StatisticsWaitersList mStatisticsWaiters;

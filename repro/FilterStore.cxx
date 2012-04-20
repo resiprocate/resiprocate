@@ -122,6 +122,12 @@ FilterStore::addFilter(const resip::Data& cond1Header,
    filter.filterRecord.mAction = action;
    filter.filterRecord.mActionData =  actionData;
    filter.filterRecord.mOrder = order;
+
+   if(!mDb.addFilter(key , filter.filterRecord))
+   {
+      return false;
+   }
+
    filter.key = key;
    filter.pcond1 = 0;
    filter.pcond2 = 0;
@@ -156,8 +162,6 @@ FilterStore::addFilter(const resip::Data& cond1Header,
       mFilterOperators.insert( filter );
    }
    mCursor = mFilterOperators.begin(); 
-
-   mDb.addFilter( key , filter.filterRecord );
 
    return true;
 }
@@ -230,7 +234,7 @@ FilterStore::eraseFilter(const resip::Data& key)
 }
 
 
-void
+bool
 FilterStore::updateFilter(const resip::Data& originalKey,
                           const resip::Data& cond1Header,
                           const resip::Data& cond1Regex,
@@ -243,7 +247,7 @@ FilterStore::updateFilter(const resip::Data& originalKey,
                           const short order)
 {
    eraseFilter(originalKey);
-   addFilter(cond1Header, cond1Regex, cond2Header, cond2Regex, method, event, action, actionData, order);
+   return addFilter(cond1Header, cond1Regex, cond2Header, cond2Regex, method, event, action, actionData, order);
 }
 
 

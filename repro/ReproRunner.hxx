@@ -41,11 +41,15 @@ public:
 
    virtual bool run(int argc, char** argv);
    virtual void shutdown();
+   virtual void restart();  // brings everydown and then backup again - leaves InMemoryRegistrationDb intact
+
+   virtual Proxy* getProxy() { return mProxy; }
 
 protected:
    virtual void cleanupObjects();
 
    virtual bool createSipStack();
+   virtual bool createDatastore();
    virtual bool createProxy();
    virtual void populateRegistrations();
    virtual bool createWebAdmin();
@@ -60,38 +64,41 @@ protected:
    virtual void makeTargetProcessorChain(repro::ProcessorChain& chain);
 
    bool mRunning;
+   bool mRestarting;
+   int mArgc;
+   char** mArgv;
    bool mThreadedStack;
    resip::Data mHttpRealm;
    bool mSipAuthDisabled;
    bool mUseV4;
    bool mUseV6;
    int mRegSyncPort;
-   repro::ProxyConfig* mProxyConfig;
+   ProxyConfig* mProxyConfig;
    resip::FdPollGrp* mFdPollGrp;
    resip::AsyncProcessHandler* mAsyncProcessHandler;
    resip::SipStack* mSipStack;
    resip::ThreadIf* mStackThread;
-   repro::AbstractDb* mAbstractDb;
+   AbstractDb* mAbstractDb;
    resip::RegistrationPersistenceManager* mRegistrationPersistenceManager;
-   repro::Dispatcher* mAuthRequestDispatcher;
-   repro::Dispatcher* mAsyncProcessorDispatcher;
-   repro::ProcessorChain* mMonkeys;
-   repro::ProcessorChain* mLemurs;
-   repro::ProcessorChain* mBaboons;
-   repro::Proxy* mProxy;
-   repro::WebAdmin* mWebAdmin;
-   repro::WebAdminThread* mWebAdminThread;
-   repro::Registrar* mRegistrar;
+   Dispatcher* mAuthRequestDispatcher;
+   Dispatcher* mAsyncProcessorDispatcher;
+   ProcessorChain* mMonkeys;
+   ProcessorChain* mLemurs;
+   ProcessorChain* mBaboons;
+   Proxy* mProxy;
+   WebAdmin* mWebAdmin;
+   WebAdminThread* mWebAdminThread;
+   Registrar* mRegistrar;
    resip::DialogUsageManager* mDum;
    resip::ThreadIf* mDumThread;
-   repro::CertServer* mCertServer;
-   repro::RegSyncClient* mRegSyncClient;
-   repro::RegSyncServer* mRegSyncServerV4;
-   repro::RegSyncServer* mRegSyncServerV6;
-   repro::RegSyncServerThread* mRegSyncServerThread;
-   repro::CommandServer* mCommandServerV4;
-   repro::CommandServer* mCommandServerV6;
-   repro::CommandServerThread* mCommandServerThread;
+   CertServer* mCertServer;
+   RegSyncClient* mRegSyncClient;
+   RegSyncServer* mRegSyncServerV4;
+   RegSyncServer* mRegSyncServerV6;
+   RegSyncServerThread* mRegSyncServerThread;
+   CommandServer* mCommandServerV4;
+   CommandServer* mCommandServerV6;
+   CommandServerThread* mCommandServerThread;
    resip::CongestionManager* mCongestionManager;
 };
 
