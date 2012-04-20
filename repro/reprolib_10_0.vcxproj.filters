@@ -159,6 +159,12 @@
     <ClCompile Include="FilterStore.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SiloStore.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="monkeys\MessageSilo.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDb.hxx">
@@ -330,6 +336,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="FilterStore.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SiloStore.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="monkeys\MessageSilo.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
