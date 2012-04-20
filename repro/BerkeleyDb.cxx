@@ -19,7 +19,7 @@ using namespace repro;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
-#define USE_DBENV   // Required for transaction support
+//#define USE_DBENV   // Required for transaction support
 
 BerkeleyDb::BerkeleyDb()
 {

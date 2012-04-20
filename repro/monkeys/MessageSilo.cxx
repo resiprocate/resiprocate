@@ -219,7 +219,6 @@ MessageSilo::asyncProcess(AsyncProcessorMessage* msg)
    AsyncAddToSiloMessage* addToSilo = dynamic_cast<AsyncAddToSiloMessage*>(msg);
    if(addToSilo)
    {
-      DebugLog(<< "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& S I L O &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");  // TODO delete me
       mSiloStore.addMessage(addToSilo->mDestUri, addToSilo->mSourceUri, addToSilo->mOriginalSendTime, addToSilo->mMimeType, addToSilo->mMessageBody);
       return false;
    }
@@ -227,7 +226,6 @@ MessageSilo::asyncProcess(AsyncProcessorMessage* msg)
    AsyncDrainSiloMessage* drainSilo = dynamic_cast<AsyncDrainSiloMessage*>(msg);
    if(drainSilo)
    {
-      DebugLog(<< "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& Drain SILO for " << drainSilo->mAor << " &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"); // TODO delete me
       AbstractDb::SiloRecordList recordList;
       if(mSiloStore.getSiloRecords(drainSilo->mAor, recordList))
       {
@@ -240,7 +238,7 @@ MessageSilo::asyncProcess(AsyncProcessorMessage* msg)
          AbstractDb::SiloRecordList::iterator siloIt = recordList.begin();
          for(; siloIt != recordList.end(); siloIt++)
          {
-            InfoLog(<< "SiloStore:  Dest=" << siloIt->mDestUri << ", Source=" << siloIt->mSourceUri << ", Datetime=" << Data::from(DateCategory(siloIt->mOriginalSentTime)) << ", MimeType=" << siloIt->mMimeType << ", Body=" << siloIt->mMessageBody);
+            DebugLog(<< "DrainSilo:  Dest=" << siloIt->mDestUri << ", Source=" << siloIt->mSourceUri << ", Datetime=" << Data::from(DateCategory(siloIt->mOriginalSentTime)) << ", MimeType=" << siloIt->mMimeType << ", Body=" << siloIt->mMessageBody);
             
             // Only send if not too old
             if((unsigned long)(now - siloIt->mOriginalSentTime) <= mExpirationTime)
