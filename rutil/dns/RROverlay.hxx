@@ -108,4 +108,3 @@ class RROverlay
  * <http://www.vovida.org/>.
  *
  */
- 
