@@ -457,7 +457,7 @@ class SipStack : public FdSetIOObserver
 
           @param tu    TransactionUser to post to.
       */
-      void post(const std::auto_ptr<ApplicationMessage> message,
+      void post(std::auto_ptr<ApplicationMessage> message,
                 unsigned int secondsLater,
                 TransactionUser* tu=0);
 
