@@ -405,6 +405,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\monkeys\MessageSilo.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\OutboundTarget.cxx"
 				>
 			</File>
@@ -518,6 +522,10 @@
 			</File>
 			<File
 				RelativePath=".\RRDecorator.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\SiloStore.cxx"
 				>
 			</File>
 			<File
@@ -659,6 +667,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\monkeys\MessageSilo.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\OutboundTarget.hxx"
 				>
 			</File>
@@ -740,6 +752,10 @@
 			</File>
 			<File
 				RelativePath=".\RRDecorator.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\SiloStore.hxx"
 				>
 			</File>
 			<File
