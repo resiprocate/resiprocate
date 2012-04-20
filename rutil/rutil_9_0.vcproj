@@ -476,6 +476,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ServerProcess.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ssl\SHA1Stream.cxx"
 				>
 				<FileConfiguration
@@ -811,6 +815,10 @@
 			</File>
 			<File
 				RelativePath=".\SelectInterruptor.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ServerProcess.hxx"
 				>
 			</File>
 			<File

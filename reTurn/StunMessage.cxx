@@ -1,3 +1,8 @@
+
+#if defined(HAVE_CONFIG_H)
+  #include "config.h"
+#endif
+
 #include "StunMessage.hxx"
 
 #include <rutil/Timer.hxx>
@@ -993,7 +998,7 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
                   WarningLog(<< "invalid attribute length for DontFragment attribute");
                   return false;
                }
-               StackLog(<< "Turn Dont Fragement = <exists>");
+               StackLog(<< "Turn DontFragement = <exists>");
             }
             else
             {

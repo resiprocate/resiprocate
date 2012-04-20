@@ -5,14 +5,14 @@
 #include <rutil/TimeLimitFifo.hxx>
 #include <rutil/Mutex.hxx>
 
-#include <srtp.h>
+#include <srtp/srtp.h>
 #include <boost/shared_ptr.hpp>
 
-#include "client/TurnAsyncUdpSocket.hxx"
-#include "client/TurnAsyncTcpSocket.hxx"
-#include "client/TurnAsyncTlsSocket.hxx"
-#include "client/TurnAsyncSocketHandler.hxx"
-#include "StunMessage.hxx"
+#include "reTurn/client/TurnAsyncUdpSocket.hxx"
+#include "reTurn/client/TurnAsyncTcpSocket.hxx"
+#include "reTurn/client/TurnAsyncTlsSocket.hxx"
+#include "reTurn/client/TurnAsyncSocketHandler.hxx"
+#include "reTurn/StunMessage.hxx"
 #include "FakeSelectSocketDescriptor.hxx"
 #include "dtls_wrapper/DtlsSocket.hxx"
 

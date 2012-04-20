@@ -1,6 +1,11 @@
 #ifndef RESIP_DNS_STUB_HXX
 #define RESIP_DNS_STUB_HXX
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+
 #include <vector>
 #include <list>
 #include <map>

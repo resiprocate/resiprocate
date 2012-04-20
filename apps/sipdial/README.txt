@@ -1,28 +1,85 @@
 
 
 Make/install:
+-------------
 
-  First you should build and install reSIProcate (libresip.so and libdum.so)
-  and any dependencies.
+  sipdialer is built as part of the main reSIProcate build
+  when you pass the option --with-apps to configure
 
-  make
-  cp libsipdial.so /usr/lib
-  cp sipdialer /usr/bin
+    ./configure --with-ssl --with-apps
+
+  From the top level of the reSIProcate source tree, running
+  the command
+
+    make install
+
+  should install sipdialer to $bindir (default /usr/local/bin)
+
+The configuration file:
+-----------------------
+
+  The configuration file must be located in $HOME/.sipdial/sipdial.cfg
+
+  You can copy the the example file included in the source
+
+  The parameter callerUserAgentVariety describes the type of phone
+  that will make the outgoing call.  Each VoIP phone implements 
+  support for click-to-dial in a different way.  These phones are
+  supported, and the same mechanisms may work with other phones
+  from the same manufacturer:
+
+  PolycomIP501:  adds the header field "AlertInfo: AA"
+  LinksysSPA941: adds the attribute answer-after=0 to header Callinfo
+  Cisco7940:     same as generic
+  Generic:       adds no special header fields
+
+  In all cases, sipdialer sends a SIP REFER message to the phone.
+
+Using TLS
+---------
+
+  sipdial expects to use TLS to security the exchange of
+  SIP REFER messages.
+
+  sipdial expects to find CA root certificates in files matching
+  the pattern ~/.sipdial/certs/root_cert_*.pem
+
+  If multiple certificates are concatenated in a PEM file, it will only
+  load the first.
+
+  To symlink all the standard root certs on a Debian system, you
+  can do the following:
+
+    mkdir -p ~/.sipdial/certs && \
+      cd /etc/ssl/certs && \
+      for i in *.pem ;
+        do ln -s /etc/ssl/certs/$i ~/.sipdial/certs/root_cert_${i}
+      done
+
+  In ~/.sipdial/sipdial.cfg, the callerUserAgentAddress must use
+  a sips URI:
+
+    callerUserAgentAddress sips:mydeskphone@example.org
 
 Install in gconf:
+-----------------
   
 Use the shell scipt/commands below to register the dialer with gconf.
 gconf aware applications like Mozilla will then be able to use the dialer
 to handle sip: and tel: URIs
 
-for scheme in tel sip;
+for scheme in tel sip sips;
 do
-  gconftool-2 -t string -s /desktop/gnome/url-handlers/$scheme/command "/usr/local/bin/sipdialer %s"
-  gconftool-2 -s /desktop/gnome/url-handlers/$scheme/needs_terminal false -t bool
-  gconftool-2 -t bool -s /desktop/gnome/url-handlers/$scheme/enabled true
+  gconftool-2 -t string \
+   -s /desktop/gnome/url-handlers/$scheme/command "/usr/local/bin/sipdialer %s"
+  gconftool-2 -t bool \
+   -s /desktop/gnome/url-handlers/$scheme/needs_terminal false 
+  gconftool-2 -t bool \
+   -s /desktop/gnome/url-handlers/$scheme/enabled true
 done
 
 Usage:
+------
 
   E.164 format:
    sipdialer tel:+442071357000
@@ -35,30 +92,22 @@ Usage:
 
 
 Testing with a SIP proxy:
+-------------------------
 
   The reSIProcate package includes the `repro' SIP proxy, which is ideal
   for testing tools such as sipdial.
 
-  Alternatively, you may also test with products like SER, OpenSER,
-  sipXpbx or possibly OpenPBX or Asterisk.
+  Alternatively, you may also test with products like Kamailio, OpenSIPS,
+  sipXpbx or possibly FreeSWITCH or Asterisk.
 
   Whichever proxy/PBX you choose must permit/recognise the SIP REFER request. 
-
-  If you don't want to install a proxy, you can test with the 
-  LVDX.com SIP proxy, visit
-
-     http://www.opentelecoms.org
-  
-  to register without obligation.
-
-Copyright (C) 2007 Daniel Pocock
 
 
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2007 Daniel Pocock  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

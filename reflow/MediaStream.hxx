@@ -5,7 +5,7 @@
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
 #endif
-#include <srtp.h>
+#include <srtp/srtp.h>
 
 #include "dtls_wrapper/DtlsFactory.hxx"
 #include "Flow.hxx"

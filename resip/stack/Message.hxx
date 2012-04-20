@@ -1,6 +1,10 @@
 #ifndef RESIP_Message_hxx
 #define RESIP_Message_hxx 
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "rutil/Data.hxx"
 #include <iosfwd>
 #include "rutil/resipfaststreams.hxx"

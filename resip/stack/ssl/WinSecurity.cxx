@@ -1,5 +1,10 @@
 #include <sys/types.h>
 
+#if defined(HAVE_CONFIG_H)
+  #include "config.h"
+#endif
+
+
 #ifdef USE_SSL
 #include "resip/stack/ssl/WinSecurity.hxx"
 #include <openssl/e_os2.h>
@@ -69,7 +74,7 @@ certStoreTypes(  WinSecurity::MsCertStoreType pType )
       case  WinSecurity::USERS_STORE:           return storeUsers;
       default:
       {
-         ErrLog( << "Some unkown certificate store type requested" << (int)(pType) );
+         ErrLog( << "Some unknown certificate store type requested" << (int)(pType) );
          assert(0);
       }
    }

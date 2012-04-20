@@ -1,6 +1,11 @@
 #if !defined(RESIP_WINSECURITY_HXX)
 #define RESIP_WINSECURITY_HXX
 
+#if defined(HAVE_CONFIG_H)
+  #include "config.h"
+#endif
+
+
 #include "resip/stack/ssl/Security.hxx"
 #include <wincrypt.h>
 

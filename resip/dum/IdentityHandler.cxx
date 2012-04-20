@@ -1,3 +1,8 @@
+
+#if defined(HAVE_CONFIG_H)
+  #include "config.h"
+#endif
+
 #include "rutil/Logger.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/dum/IdentityHandler.hxx"

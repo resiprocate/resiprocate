@@ -53,6 +53,10 @@ void DialerConfiguration::loadStream(std::istream& in)
          setTargetPrefix(Data(value));
       else if(param == string("targetDomain"))
          setTargetDomain(Data(value)); 
+/*      else if(param.size() > 0 && 
+         (param[0] == '#' || param[0] == ';'))
+         / / skip comment lines
+         { } */
       else if(param == string(""))
          // skip empty lines
          { }

@@ -1,5 +1,5 @@
-#if defined(HAVE_CONFIG_HXX)
-#include "resip/stack/config.hxx"
+#if defined(HAVE_CONFIG_H)
+#include "config.h"
 #endif
 
 #include <iostream>

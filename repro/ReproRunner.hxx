@@ -2,6 +2,7 @@
 #define RESIP_REPRORUNNER_HXX 
 
 #include "rutil/Data.hxx"
+#include "rutil/ServerProcess.hxx"
 
 namespace resip
 {
@@ -33,7 +34,7 @@ class RegSyncServerThread;
 class CommandServer;
 class CommandServerThread;
 
-class ReproRunner
+class ReproRunner : public resip::ServerProcess
 {
 public:
    ReproRunner();

@@ -160,6 +160,17 @@ ReproRunner::run(int argc, char** argv)
       return false;
    }
 
+   // Non-Windows server process stuff
+   if(!mRestarting)
+   {
+      setPidFile(mProxyConfig->getConfigData("PidFile", "", true));
+      if(mProxyConfig->getConfigBool("Daemonize", false))
+      {
+         daemonize();
+      }
+   }
+
+   // Initialize resip logger
    GenericLogImpl::MaxByteCount = mProxyConfig->getConfigUnsignedLong("LogFileMaxBytes", 5242880 /*5 Mb */);
    Data loggingType = mProxyConfig->getConfigData("LoggingType", "cout", true);
    Log::initialize(loggingType, 

@@ -57,6 +57,7 @@ public:
    resip::Data mLoggingFilename;
    unsigned int mLoggingFileMaxLineCount;
    bool mDaemonize;
+   resip::Data mPidFile;
 
    bool isUserNameValid(const resip::Data& username) const;
    const resip::Data& getPasswordForUsername(const resip::Data& username) const;

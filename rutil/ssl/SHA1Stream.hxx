@@ -1,6 +1,10 @@
 #if !defined(RESIP_SHA1STREAM_HXX)
 #define RESIP_SHA1STREAM_HXX 
 
+#if defined(HAVE_CONFIG_H)
+  #include "config.h"
+#endif
+
 #include <iostream>
 #include <memory>
 #include <vector>

@@ -2,6 +2,10 @@
 #ifndef __RADIUSDigestAuthenticator_h
 #define __RADIUSDigestAuthenticator_h
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #ifdef USE_RADIUS_CLIENT
 
 #include <radiusclient-ng.h>
@@ -31,14 +35,16 @@
 namespace resip
 {
 
-struct attr {
-        const char *n;
-        int v;
+struct attr
+{
+   const char *n;
+   int v;
 };
 
-struct val {
-        const char *n;
-        int v;
+struct val
+{
+   const char *n;
+   int v;
 };
 
 #define A_USER_NAME                     0
@@ -108,51 +114,79 @@ class TestRADIUSDigestAuthListener : public RADIUSDigestAuthListener
 // An instance of this class will attempt to authenticate the request
 // using RADIUS
 class RADIUSDigestAuthenticator : public resip::ThreadIf {
-//class RADIUSDigestAuthenticator : public ost::Thread {
+   //class RADIUSDigestAuthenticator : public ost::Thread {
 
-private:
+   private:
 
-  resip::Data username;	// username from ProxyAuth header
-  resip::Data digestUsername; // username from digest header
-  resip::Data digestRealm; // realm from digest header
-  resip::Data digestNonce; // nonce from digest header
-  resip::Data digestUri; // request URI from request line
-  resip::Data digestMethod; // request method (e.g. INVITE)
-  resip::Data digestQop; // QoP is one of "", "auth", "auth-int"
-  resip::Data digestNonceCount; // nonce count or ""
-  resip::Data digestCNonce; // cnonce or ""
-  resip::Data digestBodyDigest; // value of opaque or ""
-  resip::Data digestResponse; // digest string submitted by client
+      resip::Data username;	// username from ProxyAuth header
+      resip::Data digestUsername; // username from digest header
+      resip::Data digestRealm; // realm from digest header
+      resip::Data digestNonce; // nonce from digest header
+      resip::Data digestUri; // request URI from request line
+      resip::Data digestMethod; // request method (e.g. INVITE)
+      resip::Data digestQop; // QoP is one of "", "auth", "auth-int"
+      resip::Data digestNonceCount; // nonce count or ""
+      resip::Data digestCNonce; // cnonce or ""
+      resip::Data digestBodyDigest; // value of opaque or ""
+      resip::Data digestResponse; // digest string submitted by client
 
-  RADIUSDigestAuthListener *listener;
+      RADIUSDigestAuthListener *listener;
 
-public:
+   public:
 
-  static void init(const char *radiusConfigFile);
+      static void init(const char *radiusConfigFile);
+   
+      // No QoP
+      RADIUSDigestAuthenticator(const resip::Data& username, 
+                                const resip::Data& digestUsername,
+                                const resip::Data& digestRealm,
+                                const resip::Data& digestNonce,
+                                const resip::Data& digestUri,
+                                const resip::Data& digestMethod,
+                                const resip::Data& digestResponse, 
+                                RADIUSDigestAuthListener *listener);
+   
+      // QoP auth
+      RADIUSDigestAuthenticator(const resip::Data& username,
+                                const resip::Data& digestUsername,
+                                const resip::Data& digestRealm,
+                                const resip::Data& digestNonce,
+                                const resip::Data& digestUri,
+                                const resip::Data& digestMethod,
+                                const resip::Data& digestQop,
+                                const resip::Data& digestNonceCount,
+                                const resip::Data& digestCNonce,
+                                const resip::Data& digestResponse,
+                                RADIUSDigestAuthListener *listener);
+   
+      // QoP auth-int
+      RADIUSDigestAuthenticator(const resip::Data& username,
+                                const resip::Data& digestUsername,
+                                const resip::Data& digestRealm,
+                                const resip::Data& digestNonce,
+                                const resip::Data& digestUri,
+                                const resip::Data& digestMethod,
+                                const resip::Data& digestQop,
+                                const resip::Data& digestNonceCount,
+                                const resip::Data& digestCNonce,
+                                const resip::Data& digestBodyDigest,
+                                const resip::Data& digestResponse,
+                                RADIUSDigestAuthListener *listener); 
+   
+      virtual ~RADIUSDigestAuthenticator();
+   
+      int doRADIUSCheck();
 
-  // No QoP
-  RADIUSDigestAuthenticator(const resip::Data& username, const resip::Data& digestUsername, const resip::Data& digestRealm, const resip::Data& digestNonce, const resip::Data& digestUri, const resip::Data& digestMethod, const resip::Data& digestResponse, RADIUSDigestAuthListener *listener);
+   protected:
 
-  // QoP auth
-  RADIUSDigestAuthenticator(const resip::Data& username, const resip::Data& digestUsername, const resip::Data& digestRealm, const resip::Data& digestNonce, const resip::Data& digestUri, const resip::Data& digestMethod, const resip::Data& digestQop, const resip::Data& digestNonceCount, const resip::Data& digestCNonce, const resip::Data& digestResponse, RADIUSDigestAuthListener *listener);
-
-  // QoP auth-int
-  RADIUSDigestAuthenticator(const resip::Data& username, const resip::Data& digestUsername, const resip::Data& digestRealm, const resip::Data& digestNonce, const resip::Data& digestUri, const resip::Data& digestMethod, const resip::Data& digestQop, const resip::Data& digestNonceCount, const resip::Data& digestCNonce, const resip::Data& digestBodyDigest, const resip::Data& digestResponse, RADIUSDigestAuthListener *listener); 
-
-  virtual ~RADIUSDigestAuthenticator();
-
-  int doRADIUSCheck();
-
-protected:
-
-  static struct attr *attrs;
-  static struct val *vals;
-  static rc_handle *rh;
-
-  void thread();
-  void final();
-
-  VALUE_PAIR *createRADIUSRequest();
+      static struct attr *attrs;
+      static struct val *vals;
+      static rc_handle *rh;
+   
+      void thread();
+      void final();
+   
+      VALUE_PAIR *createRADIUSRequest();
 
 };
 

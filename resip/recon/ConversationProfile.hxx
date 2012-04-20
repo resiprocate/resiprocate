@@ -1,6 +1,10 @@
 #if !defined(ConversationProfile_hxx)
 #define ConversationProfile_hxx
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <resip/dum/UserProfile.hxx>
 #include <resip/stack/SdpContents.hxx>
 

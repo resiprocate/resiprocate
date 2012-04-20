@@ -1,6 +1,11 @@
 #if !defined(RESIP_TUPLE_HXX)
 #define RESIP_TUPLE_HXX
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+
 #include "rutil/Socket.hxx"
 #include "rutil/compat.hxx"
 

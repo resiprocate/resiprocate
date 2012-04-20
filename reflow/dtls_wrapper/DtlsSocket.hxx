@@ -6,7 +6,7 @@
 #include <memory>
 extern "C" 
 {
-#include <srtp.h>
+#include <srtp/srtp.h>
 }
 
 #include <openssl/e_os2.h>

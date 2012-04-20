@@ -1,6 +1,10 @@
 #ifndef RESIP_DTLSMESSAGE_HXX
 #define RESIP_DTLSMESSAGE_HXX
 
+#if defined(HAVE_CONFIG_H)
+  #include "config.h"
+#endif
+
 #ifdef USE_DTLS
 
 #include "resip/stack/Message.hxx"

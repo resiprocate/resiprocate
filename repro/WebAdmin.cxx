@@ -1,6 +1,10 @@
 #include <cassert>
 #include <time.h>
 
+#if defined(HAVE_CONFIG_H)
+  #include "config.h"
+#endif
+
 #include "resip/dum/RegistrationPersistenceManager.hxx"
 #include "resip/stack/Symbols.hxx"
 #include "resip/stack/Tuple.hxx"

@@ -1,6 +1,10 @@
 #if !defined(DUM_UserAgent_hxx)
 #define DUM_UserAgent_hxx
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "CommandLineParser.hxx"
 
 #include "resip/stack/StackThread.hxx"
