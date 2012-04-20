@@ -18,6 +18,7 @@
 #define RANDINT_PER_CYCLE (1000000)
 #define RANDSEQ_PER_CYCLE (1000)
 
+using namespace std;
 using namespace resip;
 
 class Barrier {
