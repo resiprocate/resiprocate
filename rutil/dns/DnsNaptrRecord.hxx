@@ -142,4 +142,3 @@ class DnsNaptrRecord : public DnsResourceRecord
  * <http://www.vovida.org/>.
  *
  */
- 
