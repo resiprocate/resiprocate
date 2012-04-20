@@ -44,6 +44,7 @@ SRC 	+=   \
 	AclStore.cxx \
 	StaticRegStore.cxx \
 	FilterStore.cxx \
+	SiloStore.cxx \
 	Store.cxx \
 	AbstractDb.cxx \
 	BerkeleyDb.cxx \
@@ -92,6 +93,7 @@ SRC 	+=   \
 	monkeys/QValueTargetHandler.cxx \
 	monkeys/SimpleTargetHandler.cxx \
 	monkeys/GeoProximityTargetSorter.cxx \
+	monkeys/MessageSilo.cxx \
 	\
 
 

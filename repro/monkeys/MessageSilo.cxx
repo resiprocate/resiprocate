@@ -320,7 +320,8 @@ MessageSilo::onAdd(resip::ServerRegistrationHandle h, const resip::SipMessage& r
    AsyncDrainSiloMessage* async = new AsyncDrainSiloMessage(*this, Data::Empty, 0);  // tid and tu not needed since no response expected
    async->mAor = reg.header(h_To).uri().getAOR(false /* addPort? */);
    async->mRequestContacts = h->getRequestContacts();
-   mAsyncDispatcher->post(std::auto_ptr<ApplicationMessage>(async));
+   std::auto_ptr<ApplicationMessage> async_ptr(async);
+   mAsyncDispatcher->post(async_ptr);
    return true;
 }
 
