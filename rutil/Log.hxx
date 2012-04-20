@@ -422,6 +422,15 @@ public:
    ~LogStaticInitializer();
 protected:
    static unsigned int mInstanceCounter;
+    
+   // LogStaticInitializer calls ThreadIf::tlsKeyCreate which 
+   // relies on the static TlsDestructorInitializer having set
+   // up mTlsDestructorsMutex which is used to Lock TLS access
+   // Since the order of static initialization is not reliable,
+   // we must make sure that TlsDestructorInitializer is initialized
+   // before LogStaticInitializer is inizialized:
+   TlsDestructorInitializer tlsDestructorInitializer;
+
 };
 static LogStaticInitializer _staticLogInit;
 
