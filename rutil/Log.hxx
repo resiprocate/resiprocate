@@ -423,6 +423,7 @@ public:
 protected:
    static unsigned int mInstanceCounter;
     
+#ifdef WIN32
    // LogStaticInitializer calls ThreadIf::tlsKeyCreate which 
    // relies on the static TlsDestructorInitializer having set
    // up mTlsDestructorsMutex which is used to Lock TLS access
@@ -430,7 +431,7 @@ protected:
    // we must make sure that TlsDestructorInitializer is initialized
    // before LogStaticInitializer is inizialized:
    TlsDestructorInitializer tlsDestructorInitializer;
-
+#endif
 };
 static LogStaticInitializer _staticLogInit;
 
