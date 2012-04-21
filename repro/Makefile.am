@@ -135,6 +135,7 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	RegSyncServerThread.hxx \
 	reproInfo.hxx \
 	ReproServerAuthManager.hxx \
+	ReproRunner.hxx \
 	ReproVersion.hxx \
 	RequestContext.hxx \
 	ResponseContext.hxx \
