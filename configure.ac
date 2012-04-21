@@ -167,6 +167,14 @@ AC_ARG_WITH(mysql,
  AM_CONDITIONAL(USE_MYSQL, true)], 
  [ AC_SUBST(LIBMYSQL_LIBADD, "")])
 
+AM_CONDITIONAL(USE_MAXMIND_GEOIP, false)
+AC_ARG_WITH(geoip,
+[  --with-geoip            Link against MaxMind GeoIP libraries],
+ [AC_DEFINE_UNQUOTED(USE_MAXMIND_GEOIP, , USE_MAXMIND_GEOIP)
+ AC_SUBST(LIBGEOIP_LIBADD, "-lGeoIP")
+ AM_CONDITIONAL(USE_MAXMIND_GEOIP, true)],
+ [ AC_SUBST(LIBGEOIP_LIBADD, "")])
+
 AM_CONDITIONAL(USE_RADIUS_CLIENT, false)
 AC_ARG_WITH(radius,
 [  --with-radius           Link against RADIUS client libraries],

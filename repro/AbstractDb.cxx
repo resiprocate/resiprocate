@@ -801,7 +801,7 @@ AbstractDb::getSiloRecords(const Key& key, AbstractDb::SiloRecordList& recordLis
          // Decode and store data
          decodeSiloRecord(data,rec);
          recordList.push_back(rec);
-         while(moreRecords = dbNextRecord(SiloTable, key, data, true /* forUpdate? */))
+         while((moreRecords = dbNextRecord(SiloTable, key, data, true /* forUpdate? */)))
          {
             // Decode and store data
             decodeSiloRecord(data,rec);

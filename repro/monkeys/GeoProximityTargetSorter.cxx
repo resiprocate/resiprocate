@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #ifndef RESIP_FIXED_POINT
 #include <algorithm>
 
@@ -116,7 +120,7 @@ GeoProximityTargetSorter::GeoProximityTargetSorter(ProxyConfig& config) :
       InfoLog(<< "GeoProximityTargetSorter: No IPv4 GeoIP database specified, IPv4 geo lookups will not take place.");
    }
 
-#if USE_IPV6
+#ifdef USE_IPV6
    Data geoIPv6Database = config.getConfigData("GeoProximityIPv6CityDatabaseFile", "GeoLiteCityv6.dat", false);
    if(!geoIPv6Database.empty())
    {

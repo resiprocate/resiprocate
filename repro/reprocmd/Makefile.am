@@ -12,7 +12,7 @@ reprocmd_LDADD += ../../resip/dum/libdum.la
 reprocmd_LDADD += ../../resip/stack/libresip.la ../../rutil/librutil.la
 #reprocmd_LDADD += ../contrib/ares/libares.a
 #reprocmd_LDADD += -L../contrib/ares -lares
-reprocmd_LDADD += @LIBSSL_LIBADD@ -lpthread
+reprocmd_LDADD += @LIBSSL_LIBADD@ -lpthread -lrt
 
 ##############################################################################
 # 

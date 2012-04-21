@@ -28,7 +28,7 @@ repro_LDADD += ../resip/dum/libdum.la
 repro_LDADD += ../resip/stack/libresip.la ../rutil/librutil.la
 #repro_LDADD += ../contrib/ares/libares.a
 #repro_LDADD += -L../contrib/ares -lares
-repro_LDADD += @LIBSSL_LIBADD@ -lpthread
+repro_LDADD += @LIBSSL_LIBADD@ -lpthread -lrt
 
 lib_LTLIBRARIES = librepro.la
 
@@ -40,6 +40,9 @@ librepro_la_SOURCES = \
 	UserStore.cxx \
 	ConfigStore.cxx \
 	AclStore.cxx \
+        StaticRegStore.cxx \
+	FilterStore.cxx \
+	SiloStore.cxx \
 	Store.cxx \
 	AbstractDb.cxx \
 	BerkeleyDb.cxx \
@@ -58,6 +61,7 @@ librepro_la_SOURCES = \
 	RegSyncClient.cxx \
 	RegSyncServer.cxx \
 	RegSyncServerThread.cxx \
+	ReproRunner.cxx \
 	ReproServerAuthManager.cxx \
 	RequestContext.cxx \
 	ResponseContext.cxx \
@@ -83,7 +87,10 @@ librepro_la_SOURCES = \
 	monkeys/SimpleStaticRoute.cxx \
 	monkeys/StaticRoute.cxx \
 	monkeys/QValueTargetHandler.cxx \
-	monkeys/SimpleTargetHandler.cxx
+	monkeys/SimpleTargetHandler.cxx \
+	monkeys/GeoProximityTargetSorter.cxx \
+	monkeys/RequestFilter.cxx \
+	monkeys/MessageSilo.cxx
 
 reproincludedir = $(includedir)/repro
 nobase_reproinclude_HEADERS = AbstractDb.hxx \
@@ -94,6 +101,7 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	CommandServerThread.hxx \
 	ConfigStore.hxx \
 	Dispatcher.hxx \
+	FilterStore.hxx \
 	ForkControlMessage.hxx \
 	HttpBase.hxx \
 	HttpConnection.hxx \
@@ -110,6 +118,9 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	monkeys/SimpleTargetHandler.hxx \
 	monkeys/StaticRoute.hxx \
 	monkeys/StrictRouteFixup.hxx \
+	monkeys/GeoProximityTargetSorter.hxx \
+	monkeys/RequestFilter.hxx \
+	monkeys/MessageSilo.hxx \
 	MySqlDb.hxx \
 	OutboundTarget.hxx \
 	ProcessorChain.hxx \
@@ -129,11 +140,13 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	ResponseContext.hxx \
 	RouteStore.hxx \
 	RRDecorator.hxx \
+	SiloStore.hxx \
 	stateAgents/CertPublicationHandler.hxx \
 	stateAgents/CertServer.hxx \
 	stateAgents/CertSubscriptionHandler.hxx \
 	stateAgents/PrivateKeyPublicationHandler.hxx \
 	stateAgents/PrivateKeySubscriptionHandler.hxx \
+	StaticRegStore.hxx \
 	Store.hxx \
 	Target.hxx \
 	TimerCMessage.hxx \
@@ -145,8 +158,7 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	Worker.hxx \
 	WorkerThread.hxx \
 	XmlRpcConnection.hxx \
-	XmlRpcServerBase.hxx \
-	repro.hxx
+	XmlRpcServerBase.hxx
 
 if USE_SSL
 librepro_la_SOURCES += \
@@ -160,6 +172,10 @@ endif
 if USE_MYSQL
 librepro_la_SOURCES += MySqlDb.cxx
 librepro_la_LIBADD += @LIBMYSQL_LIBADD@
+endif
+
+if USE_MAXMIND_GEOIP
+librepro_la_LIBADD += @LIBGEOIP_LIBADD@
 endif
 
 # reproInfo.hxx is created manually be other build systems
