@@ -121,6 +121,15 @@ class StlPoolAllocator
          return std::numeric_limits<size_type>::max()/sizeof(T);
       }
 
+      size_type max_size(size_type _sz) const
+      {
+         if(mPool)
+         {
+            return mPool->max_size();
+         }
+         return std::numeric_limits<size_type>::max()/_sz;
+      }
+
       void construct(pointer p, const_reference orig)
       {
          new (p) T(orig);
