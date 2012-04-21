@@ -205,7 +205,7 @@ CommandServer::handleGetDnsCacheRequest(unsigned int connectionId, unsigned int 
 }
 
 void 
-CommandServer::onDnsCacheDumpRetrieved(std::pair<unsigned int, unsigned int> key, const Data& dnsCache)
+CommandServer::onDnsCacheDumpRetrieved(std::pair<unsigned long, unsigned long> key, const Data& dnsCache)
 {
    if(dnsCache.empty())
    {
