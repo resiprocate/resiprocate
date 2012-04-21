@@ -28,7 +28,7 @@ noinst_HEADERS = DialogSetMgr.h \
 presSvr_LDADD = ../resip/stack/libresip.la ../rutil/librutil.la
 #presSvr_LDADD += ../contrib/ares/libares.a
 #presSvr_LDADD += -L../contrib/ares -lares
-presSvr_LDADD += @LIBSSL_LIBADD@ -lpthread 
+presSvr_LDADD += @LIBSSL_LIBADD@ -lpthread -lrt 
 
 
 ##############################################################################
