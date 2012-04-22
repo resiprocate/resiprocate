@@ -2,6 +2,9 @@
 #include "config.h"
 #endif
 
+#include "resip/stack/ExtensionHeader.hxx"
+#include "resip/stack/HeaderTypes.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/dum/ClientAuthManager.hxx"
 #include "resip/dum/ClientRegistration.hxx"
@@ -10,6 +13,7 @@
 #include "resip/dum/RegistrationHandler.hxx"
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/ServerProcess.hxx"
 #include "rutil/Subsystem.hxx"
 #include "resip/dum/KeepAliveManager.hxx"
 
@@ -21,7 +25,15 @@
 #endif
 #endif
 
+#ifndef WIN32
+#include <signal.h>
+#endif
+
+#include "RegConfig.hxx"
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
+
+#define DEFAULT_CONFIG_FILE "basicRegister.config"
 
 using namespace resip;
 using namespace std;
@@ -34,15 +46,6 @@ class ClientHandler : public ClientRegistrationHandler
       virtual void onSuccess(ClientRegistrationHandle h, const SipMessage& response)
       {
          InfoLog( << "ClientHandler::onSuccess: " << endl );
-
-         resipCerr << "Pausing before unregister" << endl;
-         
-#ifdef WIN32
-         Sleep(2000);
-#else
-         sleep(5);
-#endif
-         h->removeAll();
       }
 
       virtual void onRemoved(ClientRegistrationHandle, const SipMessage& response)
@@ -53,88 +56,150 @@ class ClientHandler : public ClientRegistrationHandler
 
       virtual void onFailure(ClientRegistrationHandle, const SipMessage& response)
       {
-         InfoLog ( << "ClientHandler::onFailure: " << response );
+         InfoLog ( << "ClientHandler::onFailure - check the configuration.  Peer response: " << response );
       }
 
       virtual int onRequestRetry(ClientRegistrationHandle, int retrySeconds, const SipMessage& response)
       {
-         InfoLog ( << "ClientHandler:onRequestRetry");
-         return -1;
+         WarningLog ( << "ClientHandler:onRequestRetry, want to retry immediately");
+         return 0;
       }
       
       bool done;
 };
 
-
-
-int 
-main (int argc, char** argv)
+static void
+signalHandler(int signo)
 {
-
-   if ( argc < 3 ) {
-      resipCout << "usage: " << argv[0] << " sip:user passwd\n";
-      return 0;
+#ifndef WIN32
+   if(signo == SIGHUP)
+   {
+      InfoLog(<<"Received HUP signal, logger reset");
+      Log::reset();
+      return;
    }
+#endif
+   WarningLog(<<"Unexpected signal, ignoring it: " << signo);
+}
 
-   Log::initialize(Log::Cout, Log::Stack, argv[0]);
+class MyClientRegistrationAgent : public ServerProcess
+{
+   public:
+      MyClientRegistrationAgent() {};
+      ~MyClientRegistrationAgent() {};
 
-   NameAddr userAor(argv[1]);
-   Data passwd(argv[2]);
+      void run(int argc, char **argv)
+      {
+         Data defaultConfigFile(DEFAULT_CONFIG_FILE);
+         RegConfig cfg;
+         try
+         {
+            cfg.parseConfig(argc, argv, defaultConfigFile);
+         }
+         catch(BaseException& ex)
+         {
+            std::cerr << "Error parsing configuration: " << ex << std::endl;
+            syslog(LOG_DAEMON | LOG_CRIT, "%s", ex.getMessage().c_str());
+            exit(1);
+         }
+
+         setPidFile(cfg.getConfigData("PidFile", "", true));
+         if(cfg.getConfigBool("Daemonize", false))
+         {
+            daemonize();
+         }
+
+         Data loggingType = cfg.getConfigData("LoggingType", "cout", true);
+         Data logLevel = cfg.getConfigData("LogLevel", "INFO", true);
+         Data logFilename = cfg.getConfigData("LogFilename", "basicRegister.log", true);
+         Log::initialize(loggingType, logLevel, argv[0], logFilename.c_str(), 0);
+#ifndef WIN32
+         if ( signal( SIGHUP, signalHandler ) == SIG_ERR )
+         {
+            ErrLog(<<"Couldn't install signal handler for SIGHUP");
+            exit(-1);
+         }
+#endif
+
+         InfoLog(<<"Starting client registration agent");
+
+         NameAddr userAor(cfg.getConfigData("UserAor", "", false));
+         Data passwd(cfg.getConfigData("Password", "", false));
 
 #ifdef USE_SSL
 #ifdef WIN32
-   Security* security = new WinSecurity;
+         Security* security = new WinSecurity;
 #else
-   Security* security = new Security;
+         Security* security = new Security;
+         security->addCADirectory(cfg.getConfigData("CADirectory", "/etc/ssl/certs", true));
 #endif
-   SipStack stack(security);
+         SipStack stack(security);
 #else
-   SipStack stack;
+         SipStack stack;
 #endif
 
-   DialogUsageManager clientDum(stack);
-   SharedPtr<MasterProfile> profile(new MasterProfile);
-   auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager);   
-   ClientHandler clientHandler;
+         DialogUsageManager clientDum(stack);
+         SharedPtr<MasterProfile> profile(new MasterProfile);
+         auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager);
+         ClientHandler clientHandler;
 
-   clientDum.addTransport(UDP, 0, V4);
-   // clientDum.addTransport(UDP, 0, V6);
-   clientDum.addTransport(TCP, 0, V4);
-   // clientDum.addTransport(TCP, 0, V6);
+         // stack.addTransport(UDP, 0, V4);
+         // stack.addTransport(UDP, 0, V6);
+         stack.addTransport(TCP, 0, V4);
+         // stack.addTransport(TCP, 0, V6);
 #ifdef USE_SSL
-   clientDum.addTransport(TLS, 0, V4);
-   // clientDum.addTransport(TLS, 0, V6);
+         // stack.addTransport(TLS, 0, V4);
+         // stack.addTransport(TLS, 0, V6);
 #endif
-   clientDum.setMasterProfile(profile);
-   clientDum.setClientRegistrationHandler(&clientHandler);
-   clientDum.setClientAuthManager(clientAuth);
-   clientDum.getMasterProfile()->setDefaultRegistrationTime(70);
+         clientDum.setMasterProfile(profile);
+         clientDum.setClientRegistrationHandler(&clientHandler);
+         clientDum.setClientAuthManager(clientAuth);
+         clientDum.getMasterProfile()->setDefaultRegistrationTime(cfg.getConfigInt("RegistrationExpiry", 3600));
+         // Retry every 60 seconds after a hard failure:
+         clientDum.getMasterProfile()->setDefaultRegistrationRetryTime(60);
 
-   // keep alive test.
-   auto_ptr<KeepAliveManager> keepAlive(new KeepAliveManager);
-   clientDum.setKeepAliveManager(keepAlive);
+         // keep alive test.
+         auto_ptr<KeepAliveManager> keepAlive(new KeepAliveManager);
+         clientDum.setKeepAliveManager(keepAlive);
 
-   clientDum.getMasterProfile()->setDefaultFrom(userAor);
-   profile->setDigestCredential(userAor.uri().host(),
-                                     userAor.uri().user(),
-                                     passwd);
+         clientDum.getMasterProfile()->setDefaultFrom(userAor);
+         profile->setDigestCredential(userAor.uri().host(),
+                                           userAor.uri().user(),
+                                           passwd);
 
-   SharedPtr<SipMessage> regMessage = clientDum.makeRegistration(userAor);
-   NameAddr contact;
+         profile->addSupportedOptionTag(Token(Symbols::Outbound));
+         profile->addSupportedOptionTag(Token(Symbols::Path));
 
-   clientDum.send( regMessage );
+         Data outboundProxy(cfg.getConfigData("OutboundProxy", "", true));
+         if(!outboundProxy.empty())
+         {
+            const Uri _outboundProxy(outboundProxy);
+            profile->setOutboundProxy(_outboundProxy);
+         }
 
-   int n = 0;
-   while ( !clientHandler.done )
-   {
-      stack.process(100);
-      while(clientDum.process());
+         SharedPtr<SipMessage> regMessage = clientDum.makeRegistration(userAor);
+         NameAddr contact(cfg.getConfigData("Contact", "", false));
+         contact.param(p_regid) = 1;
+         contact.param(p_Instance) = cfg.getConfigData("InstanceId", "", false);
+         regMessage->header(h_Contacts).clear();
+         regMessage->header(h_Contacts).push_back(contact);
 
-      if (n == 1000) clientHandler.done = true;
+         clientDum.send( regMessage );
 
-      if (!(n++ % 10)) cerr << "|/-\\"[(n/10)%4] << '\b';
-   }   
-   return 0;
+         int n = 0;
+         while ( true )
+         {
+            stack.process(100);
+            while(clientDum.process());
+         }
+       }
+};
+
+int
+main(int argc, char** argv)
+{
+   MyClientRegistrationAgent agent;
+   agent.run(argc, argv);
 }
 
 /* ====================================================================
