@@ -35,6 +35,7 @@
 
 #define DEFAULT_CONFIG_FILE "registrationClient.config"
 
+using namespace registrationclient;
 using namespace resip;
 using namespace std;
 

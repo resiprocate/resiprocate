@@ -3,6 +3,8 @@
 
 #include <rutil/ConfigParse.hxx>
 
+namespace registrationclient {
+
 class RegConfig : public resip::ConfigParse
 {
 
@@ -13,5 +15,7 @@ public:
     virtual void printHelpText(int argc, char **argv);
 
 };
+
+} // namespace
 
 #endif

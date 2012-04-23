@@ -1,6 +1,7 @@
 
 #include "RegConfig.hxx"
 
+using namespace registrationclient;
 using namespace std;
 
 RegConfig::RegConfig()
