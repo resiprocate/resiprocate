@@ -29,9 +29,10 @@
 #include <signal.h>
 #endif
 
+#include "AppSubsystem.hxx"
 #include "RegConfig.hxx"
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::TEST
+#define RESIPROCATE_SUBSYSTEM AppSubsystem::REGISTRATIONCLIENT
 
 #define DEFAULT_CONFIG_FILE "registrationClient.config"
 
