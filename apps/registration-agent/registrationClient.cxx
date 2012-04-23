@@ -33,7 +33,7 @@
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
-#define DEFAULT_CONFIG_FILE "basicRegister.config"
+#define DEFAULT_CONFIG_FILE "registrationClient.config"
 
 using namespace resip;
 using namespace std;
@@ -111,7 +111,7 @@ class MyClientRegistrationAgent : public ServerProcess
 
          Data loggingType = cfg.getConfigData("LoggingType", "cout", true);
          Data logLevel = cfg.getConfigData("LogLevel", "INFO", true);
-         Data logFilename = cfg.getConfigData("LogFilename", "basicRegister.log", true);
+         Data logFilename = cfg.getConfigData("LogFilename", "registrationClient.log", true);
          Log::initialize(loggingType, logLevel, argv[0], logFilename.c_str(), 0);
 #ifndef WIN32
          if ( signal( SIGHUP, signalHandler ) == SIG_ERR )
