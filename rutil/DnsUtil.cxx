@@ -548,8 +548,7 @@ DnsUtil::getInterfaces(const Data& matching)
       if (matching == Data::Empty || matching == name)
       {
          DebugLog (<< "  using this");
-         std::auto_ptr<Data> _name(new Data(name));
-         results.push_back(std::make_pair(*_name, ip));
+         results.push_back(std::make_pair(Data(name), ip));
       }
    }
 
