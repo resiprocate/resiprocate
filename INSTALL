@@ -35,7 +35,7 @@ b) Run configure:
      (hint: if it fails to link against libNetxx.so, create a symlink, or
             delete libNetxx.so and it should link against libNetxx.a)
 
-     OR (using contrib/ares - be sure to run ./build-contrib.sh first)
+     OR (using contrib/ares - be sure to run ./build-contribv6.sh first)
 
      ./configure --with-ssl --with-mysql --enable-ipv6 CXXFLAGS="-DHAVE_EPOLL"
 
