@@ -18,6 +18,10 @@ public:
        mRemoveLingerSecs(removeLingerSecs) {}
     bool operator () (const ContactInstanceRecord& rec)
     {
+       return mustRemove(rec);
+    }
+    bool mustRemove(const ContactInstanceRecord& rec)
+    {
        if((rec.mRegExpires <= mNow) && ((mNow - rec.mLastUpdated) > mRemoveLingerSecs)) 
        {
           DebugLog(<< "ContactInstanceRecord removed after linger: " << rec.mContact);
@@ -26,6 +30,28 @@ public:
       return false;
     }
 };
+
+/* Solaris with libCstd seems to choke on the use of an
+   object (such as RemoveIfRequired) as a predicate for remove_if.
+   Therefore, this wrapper function implements a workaround,
+   iterating the list explicitly and using erase(). */
+void
+contactsRemoveIfRequired(ContactList& contacts, UInt64& now,
+   unsigned int removeLingerSecs)
+{
+   RemoveIfRequired rei(now, removeLingerSecs);
+#ifdef __SUNPRO_CC
+   for(ContactList::iterator i = contacts.begin(); i != contacts.end(); )
+   {
+      if(rei.mustRemove(*i))
+         i = contacts.erase(i);
+      else
+         ++i;
+   }
+#else
+   contacts.remove_if(rei);
+#endif
+}
 
 InMemorySyncRegDb::InMemorySyncRegDb(unsigned int removeLingerSecs) : 
    mRemoveLingerSecs(removeLingerSecs),
@@ -55,7 +81,7 @@ InMemorySyncRegDb::initialSync(unsigned int connectionId)
          ContactList& contacts = *(it->second);
          if(mRemoveLingerSecs > 0) 
          {
-            contacts.remove_if(RemoveIfRequired(now, mRemoveLingerSecs));
+            contactsRemoveIfRequired(contacts, now, mRemoveLingerSecs);
          }
          if(mHandler) mHandler->onInitialSyncAor(connectionId, it->first, contacts);        
       }
@@ -308,7 +334,7 @@ InMemorySyncRegDb::getContacts(const Uri& aor, ContactList& container)
    {
       ContactList& contacts = *(i->second);
       UInt64 now = Timer::getTimeSecs();
-      contacts.remove_if(RemoveIfRequired(now, mRemoveLingerSecs));
+      contactsRemoveIfRequired(contacts, now, mRemoveLingerSecs);
       container.clear();
       for(ContactList::iterator it = contacts.begin(); it != contacts.end(); it++)
       {
@@ -338,7 +364,7 @@ InMemorySyncRegDb::getContactsFull(const Uri& aor, ContactList& container)
    if(mRemoveLingerSecs > 0)
    {
       UInt64 now = Timer::getTimeSecs();
-      contacts.remove_if(RemoveIfRequired(now, mRemoveLingerSecs));
+      contactsRemoveIfRequired(contacts, now, mRemoveLingerSecs);
    }
    container = contacts;
 }

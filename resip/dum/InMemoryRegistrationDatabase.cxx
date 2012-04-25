@@ -219,6 +219,10 @@ public:
     }
     bool operator () (const ContactInstanceRecord& rec)
     {
+       return expired(rec);
+    }
+    bool expired(const ContactInstanceRecord& rec)
+    {
       if(rec.mRegExpires <= now) 
       {
          DebugLog(<< "ContactInstanceRecord expired: " << rec.mContact);
@@ -227,6 +231,12 @@ public:
       return false;
     }
 };
+
+bool expired(const ContactInstanceRecord& rec)
+{
+   RemoveIfExpired rei;
+   return rei.expired(rec);
+}
 
 InMemoryRegistrationDatabase::database_map_t::iterator
 InMemoryRegistrationDatabase::findNotExpired(const Uri& aor) 
@@ -240,7 +250,11 @@ InMemoryRegistrationDatabase::findNotExpired(const Uri& aor)
    if(mCheckExpiry)
    {
       ContactList *contacts = i->second;
+#ifdef __SUNPRO_CC
+      contacts->remove_if(expired);
+#else
       contacts->remove_if(RemoveIfExpired());
+#endif
    }
    return i;
 }
