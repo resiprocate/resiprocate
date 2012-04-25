@@ -23,6 +23,7 @@
 
 autoreconf --install && \
   ./configure --with-ssl \
+              --with-c-ares \
               --with-mysql \
               --with-radius \
               --with-tfm \

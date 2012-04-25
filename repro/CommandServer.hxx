@@ -43,7 +43,7 @@ protected:
                               const resip::Data& request); 
 
    // Handlers
-   virtual void onDnsCacheDumpRetrieved(std::pair<unsigned int, unsigned int> key, const resip::Data& dnsEntryStrings);
+   virtual void onDnsCacheDumpRetrieved(std::pair<unsigned long, unsigned long> key, const resip::Data& dnsEntryStrings);
    virtual bool operator()(resip::StatisticsMessage &statsMessage);
 
 private: 
