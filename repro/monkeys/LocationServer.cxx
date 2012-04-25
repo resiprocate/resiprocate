@@ -7,6 +7,7 @@
 #include "resip/stack/ExtensionParameter.hxx"
 #include "repro/monkeys/LocationServer.hxx"
 #include "repro/RequestContext.hxx"
+#include "repro/UserInfoMessage.hxx"
 #include "repro/OutboundTarget.hxx"
 #include "repro/QValueTarget.hxx"
 #include "repro/Proxy.hxx"
@@ -28,16 +29,37 @@ LocationServer::process(RequestContext& context)
 {
    DebugLog(<< "Monkey handling request: " << *this << "; reqcontext = " << context);
 
+   // UserInfoMessage is used to look for existence of user if we cannot find
+   // them in the Regisration Database.  This code handles the asynchronous
+   // lookup.
+   UserInfoMessage *userInfo = dynamic_cast<UserInfoMessage*>(context.getCurrentEvent());
+   if(userInfo)
+   {
+      // If A1 is empty, then user does not exist - return 404
+      if(userInfo->A1().empty())
+      {
+         resip::SipMessage response;
+         Helper::makeResponse(response, context.getOriginalRequest(), 404); 
+         context.sendResponse(response);
+         return Processor::SkipThisChain;
+      }
+      else
+      {
+         // User exists, but is just not registered - continue processing
+         return Processor::Continue;
+      }
+   }
+
    resip::Uri inputUri = context.getOriginalRequest().header(h_RequestLine).uri().getAorAsUri(context.getOriginalRequest().getSource().getType());
 
    //!RjS! This doesn't look exception safe - need guards
    mStore.lockRecord(inputUri);
 
-   if (true) // TODO fix mStore.aorExists(inputUri))
-   {  
-      resip::ContactList contacts;
-      mStore.getContacts(inputUri,contacts);
-      
+   resip::ContactList contacts;
+   mStore.getContacts(inputUri,contacts);
+   
+   if(contacts.size() > 0)
+   {
       std::list<Target*> batch;
       std::map<resip::Data,resip::ContactList> outboundBatch;
       UInt64 now = Timer::getTimeSecs();
@@ -91,11 +113,27 @@ LocationServer::process(RequestContext& context)
    {
       mStore.unlockRecord(inputUri);
 
-      // make 404, send, dispose of memory 
-      resip::SipMessage response;
-      Helper::makeResponse(response, context.getOriginalRequest(), 404); 
-      context.sendResponse(response);
-      return Processor::SkipThisChain;
+      if(mUserInfoDispatcher)
+      {
+         // User does not have an active registration - check if they even exist or not
+         // so we know if should send a 404 vs a 480.
+         // Since users are not kept in memory we need to go to the database asynchrounously 
+         // to look for existance.  We will use the existing mechanism in place for asynhcronous 
+         // authentication lookups in order to check for existance - we don't need the returned 
+         // A1 hash, but the efficiency of this request is more than adequate for this purpose.
+         // Currently repro authentication treats authentication realm the same as users aor domain,
+         // if this changes in the future we may need to add a different mechanism to check for
+         // existance.
+         // Note:  repro authentication must be enabled in order for mUserInfoDispatcher to be
+         //        defined and for 404 responses to work
+         UserInfoMessage* async = new UserInfoMessage(*this, context.getTransactionId(), &(context.getProxy()));
+         async->user() = inputUri.user();
+         async->realm() = inputUri.host();
+         async->domain() = inputUri.host();
+         std::auto_ptr<ApplicationMessage> app(async);
+         mUserInfoDispatcher->post(app);
+         return WaitingForEvent;
+      }
    }
 
    return Processor::Continue;

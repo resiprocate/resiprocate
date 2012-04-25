@@ -1128,7 +1128,7 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    if (!mSipAuthDisabled)
    {
       assert(mAuthRequestDispatcher);
-      DigestAuthenticator* da = new DigestAuthenticator(*mProxyConfig, mAuthRequestDispatcher, mSipStack);
+      DigestAuthenticator* da = new DigestAuthenticator(*mProxyConfig, mAuthRequestDispatcher);
 
       // Add digest authenticator monkey
       chain.addProcessor(std::auto_ptr<Processor>(da)); 
@@ -1169,7 +1169,7 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    }
       
    // Add location server monkey
-   chain.addProcessor(std::auto_ptr<Processor>(new LocationServer(*mProxyConfig, *mRegistrationPersistenceManager)));
+   chain.addProcessor(std::auto_ptr<Processor>(new LocationServer(*mProxyConfig, *mRegistrationPersistenceManager, mAuthRequestDispatcher)));
 
    // Add message silo monkey
    if(mProxyConfig->getConfigBool("MessageSiloEnabled", false))

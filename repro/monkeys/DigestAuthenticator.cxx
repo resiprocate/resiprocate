@@ -28,8 +28,7 @@ using namespace repro;
 using namespace std;
 
 DigestAuthenticator::DigestAuthenticator(ProxyConfig& config,
-                                         Dispatcher* authRequestDispatcher,
-                                         resip::SipStack* stack) :
+                                         Dispatcher* authRequestDispatcher) :
    Processor("DigestAuthenticator"),
    mAuthRequestDispatcher(authRequestDispatcher),
    mNoIdentityHeaders(config.getConfigBool("DisableIdentity", false)),
@@ -371,7 +370,6 @@ DigestAuthenticator::requestUserAuthInfo(repro::RequestContext &rc, resip::Data 
 
    if (!user.empty())
    {
-      //database.requestUserAuthInfo(user, realm, rc.getTransactionId(), rc.getProxy());
       UserInfoMessage* async = new UserInfoMessage(*this, rc.getTransactionId(), &(rc.getProxy()));
       async->user()=user;
       async->realm()=realm;
