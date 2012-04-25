@@ -319,10 +319,14 @@ BerkeleyDb::dbNextRecord(const Table table,
    {
       flags = first ? DB_SET : DB_NEXT_DUP;
    }
+
+#ifdef USE_DBENV
    if(forUpdate)
    {
       flags |= DB_RMW;
    }
+#endif
+
    ret = mCursor[table]->get(&dbkey, &dbdata, flags);
    if (ret == DB_NOTFOUND)
    {

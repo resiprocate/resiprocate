@@ -2,6 +2,7 @@
 #define RESIP_LOCATIONSERVER_REQUEST_PROCESSOR_HXX 
 #include "repro/Processor.hxx"
 #include "repro/ProxyConfig.hxx"
+#include "repro/Dispatcher.hxx"
 #include "resip/dum/RegistrationPersistenceManager.hxx"
 
 namespace repro
@@ -10,9 +11,12 @@ namespace repro
   class LocationServer: public Processor
   {
     public:
-      LocationServer(ProxyConfig& config, resip::RegistrationPersistenceManager& store) : 
+      LocationServer(ProxyConfig& config, 
+                     resip::RegistrationPersistenceManager& store,
+                     Dispatcher* userInfoDispatcher) : 
          Processor("LocationServer"), 
-         mStore(store)  
+         mStore(store),
+         mUserInfoDispatcher(userInfoDispatcher)
       {};
 
       virtual ~LocationServer() {};
@@ -21,6 +25,7 @@ namespace repro
 
     private:
       resip::RegistrationPersistenceManager& mStore;
+      Dispatcher* mUserInfoDispatcher;
   };
 }
 #endif
