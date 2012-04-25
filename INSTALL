@@ -19,7 +19,7 @@ b) Run configure:
    e.g. on a Debian system:
 
      ./configure --with-ssl --with-mysql --with-c-ares \
-               CXXFLAGS="-DHAVE_EPOLL -DRESIP_FIXED_POINT"
+               CXXFLAGS="-DRESIP_FIXED_POINT"
 
    NOTE: some things (e.g. reTurnServer) will ONLY build if you
          specify --with-ssl to link against SSL libraries
@@ -29,7 +29,7 @@ b) Run configure:
      ./configure \
        --with-ssl --with-mysql --with-radius --with-tfm \
        --enable-ipv6 \
-       CXXFLAGS="-DHAVE_EPOLL -I`pwd`/tfm/contrib/Netxx-0.3.2/include" \
+       CXXFLAGS="-I`pwd`/tfm/contrib/Netxx-0.3.2/include" \
        LDFLAGS="-L`pwd`/tfm/contrib/Netxx-0.3.2/src"
 
      (hint: if it fails to link against libNetxx.so, create a symlink, or
@@ -37,7 +37,7 @@ b) Run configure:
 
      OR (using contrib/ares - be sure to run ./build-contribv6.sh first)
 
-     ./configure --with-ssl --with-mysql --enable-ipv6 CXXFLAGS="-DHAVE_EPOLL"
+     ./configure --with-ssl --with-mysql --enable-ipv6 --with-popt"
 
 c) Build everything:
 
