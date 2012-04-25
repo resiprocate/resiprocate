@@ -17,6 +17,7 @@
 #endif
 
 #include <stdio.h>
+#include <memory>
 
 #include "rutil/compat.hxx"
 #include "rutil/Socket.hxx"
@@ -547,7 +548,7 @@ DnsUtil::getInterfaces(const Data& matching)
       if (matching == Data::Empty || matching == name)
       {
          DebugLog (<< "  using this");
-         results.push_back(std::make_pair(name, ip));
+         results.push_back(std::make_pair(Data(name), ip));
       }
    }
 

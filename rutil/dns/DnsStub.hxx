@@ -37,7 +37,7 @@ class GetDnsCacheDumpHandler
    public:
       GetDnsCacheDumpHandler() {}
       virtual ~GetDnsCacheDumpHandler() {}
-      virtual void onDnsCacheDumpRetrieved(std::pair<unsigned int, unsigned int> key, const Data& dnsCache) = 0;
+      virtual void onDnsCacheDumpRetrieved(std::pair<unsigned long, unsigned long> key, const Data& dnsCache) = 0;
 };
 
 template<typename T>

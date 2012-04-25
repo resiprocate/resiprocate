@@ -145,4 +145,3 @@ class RRVip : public DnsStub::ResultTransform
  * <http://www.vovida.org/>.
  *
  */
- 

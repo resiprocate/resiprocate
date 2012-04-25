@@ -123,7 +123,7 @@ class XMLCursor
 			Data data_;
 			public:
 				AttributeValueEqual(const Data& data) : data_(data) {};
-				bool operator()(const std::pair<Data, Data>& data) { return data.second == data_; }
+				bool operator()(const std::pair<const Data, Data>& data) { return data.second == data_; }
 		};
 
    private:
