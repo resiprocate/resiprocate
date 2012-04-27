@@ -365,6 +365,21 @@ MySqlDb::dbWriteRecord(const Table table,
                        const resip::Data& pData)
 {
    Data command;
+
+   // Check if there is a secondary key or not and get it's value
+   char* secondaryKey;
+   unsigned int secondaryKeyLen;
+   if(AbstractDb::getSecondaryKey(table, pKey, pData, (void**)&secondaryKey, &secondaryKeyLen) == 0)
+   {
+      Data sKey(Data::Share, secondaryKey, secondaryKeyLen);
+      DataStream ds(command);
+      ds << "REPLACE INTO " << tableName(table)
+         << " SET attr='" << pKey
+         << "', attr2='" << sKey
+         << "', value='"  << pData.base64encode()
+         << "'";
+   }
+   else
    {
       DataStream ds(command);
       ds << "REPLACE INTO " << tableName(table) 
@@ -372,6 +387,7 @@ MySqlDb::dbWriteRecord(const Table table,
          << "', value='"  << pData.base64encode()
          << "'";
    }
+
    return query(command) == 0;
 }
 
@@ -416,15 +432,22 @@ MySqlDb::dbReadRecord(const Table table,
 
 
 void 
-MySqlDb::dbEraseRecord( const Table table, 
-                        const resip::Data& pKey )
+MySqlDb::dbEraseRecord(const Table table, 
+                       const resip::Data& pKey,
+                       bool isSecondaryKey) // allows deleting records from a table that supports secondary keying using a secondary key
 { 
    Data command;
    {
       DataStream ds(command);
-      ds << "DELETE FROM " << tableName(table) 
-         << " WHERE attr='" << pKey 
-         << "'";
+      ds << "DELETE FROM " << tableName(table);
+      if(isSecondaryKey)
+      {
+         ds << " WHERE attr2='" << pKey << "'";
+      }
+      else
+      {
+         ds << " WHERE attr='" << pKey << "'";
+      }
    }   
    query(command);
 }
@@ -500,7 +523,9 @@ MySqlDb::dbNextRecord(const Table table,
          ds << "SELECT value FROM " << tableName(table);
          if(!key.empty())
          {
-            ds << " WHERE attr='" << key << "'";
+            // dbNextRecord is used to iterator through database tables that support duplication records
+            // it is only appropriate for MySQL tables that contain the attr2 non-unique index (secondary key)
+            ds << " WHERE attr2='" << key << "'";
          }
          if(forUpdate)
          {

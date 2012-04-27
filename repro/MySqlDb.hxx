@@ -50,7 +50,8 @@ class MySqlDb: public AbstractDb
                                 const resip::Data& key, 
                                 resip::Data& data) const; // return false if not found
       virtual void dbEraseRecord(const Table table, 
-                                 const resip::Data& key);
+                                 const resip::Data& key,
+                                 bool isSecondaryKey=false);  // allows deleting records from a table that supports secondary keying using a secondary key
       virtual resip::Data dbNextKey(const Table table, 
                                     bool first=true); // return empty if no more
       virtual bool dbNextRecord(const Table table,

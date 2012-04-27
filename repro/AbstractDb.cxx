@@ -2,6 +2,7 @@
 
 #include "rutil/Data.hxx"
 #include "rutil/DataStream.hxx"
+#include "rutil/ParseBuffer.hxx"
 #include "resip/stack/Symbols.hxx"
 #include "rutil/Logger.hxx"
 
@@ -18,7 +19,7 @@ using namespace std;
 
 
 static void 
-encodeString( oDataStream& s, const Data& data )
+encodeString(oDataStream& s, const Data& data)
 {
    short len = (short)data.size();
    s.write( (char*)(&len) , sizeof( len ) );
@@ -26,28 +27,35 @@ encodeString( oDataStream& s, const Data& data )
 }
 
 
-static Data
-decodeString( iDataStream& s)
+static void
+decodeString(iDataStream& s, Data& data)
 {
-   if(s.eof()) return Data::Empty;
+   data.clear();
+
+   if(s.eof()) return;
 
    short len;
-   s.read( (char*)(&len), sizeof(len) ); 
-
-   if(s.eof()) return Data::Empty;
+   s.read((char*)(&len), sizeof(len));
+   if(s.eof()) return;
 
    // [TODO] This is probably OK for now, but we can do better than this.
    if (len > 8192)
    {
       ErrLog( << "Tried to decode a database record that was much larger (>8k) than expected.  Returning an empty Data instead." );
-      return Data::Empty;
+      return;
    }
 
-   char buf[8192];
-   s.read( buf, len );
+   s.read(data.getBuf(len), len);
+}
 
-   Data data( buf, len );
-   return data;
+
+AbstractDb::AbstractDb()
+{
+}
+
+
+AbstractDb::~AbstractDb()
+{
 }
 
 
@@ -68,13 +76,38 @@ AbstractDb::dbFirstRecord(const AbstractDb::Table table,
 }
 
 
-AbstractDb::AbstractDb()
+// Callback used by BerkeleyDb for secondary table support.  Returns key to use in
+// secondary database table
+// secondaryKey should point to persistent data (ie. typically something from data itself)
+int
+AbstractDb::getSecondaryKey(const Table table, 
+                            const Key& key, 
+                            const Data& data, 
+                            void** secondaryKey, 
+                            unsigned int* secondaryKeyLen)
 {
-}
+   if(table == SiloTable)
+   {
+      // Secondary Key for Silo table is DestUri
+      Data nonConstData(Data::Share, data.data(), data.size());
+      iDataStream s(nonConstData);
 
-
-AbstractDb::~AbstractDb()
-{
+      short version;
+      assert(sizeof(version) == 2);
+      s.read((char*)(&version), sizeof(version));
+      assert(version == 1);
+      if (version == 1)
+      {
+         // DestUri is first element after version
+         short len;
+         s.read( (char*)(&len), sizeof(len));
+         *secondaryKeyLen = (unsigned int)len;
+         *secondaryKey = (void*)(nonConstData.data() + (sizeof(version)+sizeof(len)));
+         return 0;
+      }
+   }
+   assert(false);
+   return -1;
 }
 
 
@@ -139,13 +172,13 @@ AbstractDb::getUser( const AbstractDb::Key& key ) const
    
    if ( version == 2 )
    {
-      rec.user = decodeString( s );
-      rec.domain  = decodeString( s );
-      rec.realm = decodeString( s );
-      rec.passwordHash = decodeString( s );
-      rec.name = decodeString( s );
-      rec.email = decodeString( s );
-      rec.forwardAddress = decodeString( s );
+      decodeString(s, rec.user);
+      decodeString(s, rec.domain);
+      decodeString(s, rec.realm);
+      decodeString(s, rec.passwordHash);
+      decodeString(s, rec.name);
+      decodeString(s, rec.email);
+      decodeString(s, rec.forwardAddress);
    }
    else
    {
@@ -246,10 +279,10 @@ AbstractDb::getRoute( const AbstractDb::Key& key) const
    
    if ( version == 1 )
    {
-      rec.mMethod = decodeString( s );
-      rec.mEvent  = decodeString( s );
-      rec.mMatchingPattern = decodeString( s );
-      rec.mRewriteExpression  = decodeString( s );
+      decodeString(s, rec.mMethod);
+      decodeString(s, rec.mEvent);
+      decodeString(s, rec.mMatchingPattern);
+      decodeString(s, rec.mRewriteExpression);
       s.read( (char*)(&rec.mOrder), sizeof(rec.mOrder) ); 
       assert( sizeof( rec.mOrder) == 2 );
    }
@@ -355,8 +388,8 @@ AbstractDb::getAcl( const AbstractDb::Key& key) const
    
    if ( version == 1 )
    {
-      rec.mTlsPeerName = decodeString( s );
-      rec.mAddress = decodeString( s );
+      decodeString(s, rec.mTlsPeerName);
+      decodeString(s, rec.mAddress);
       s.read( (char*)(&rec.mMask), sizeof(rec.mMask) ); 
       s.read( (char*)(&rec.mPort), sizeof(rec.mPort) ); 
       s.read( (char*)(&rec.mFamily), sizeof(rec.mFamily) ); 
@@ -461,7 +494,7 @@ AbstractDb::getConfig( const AbstractDb::Key& key) const
    
    if ( version == 1 )
    {
-      rec.mDomain = decodeString( s );   
+      decodeString(s, rec.mDomain);
 
       s.read( (char*)(&rec.mTlsPort), sizeof(rec.mTlsPort) ); 
       assert( sizeof( rec.mTlsPort) == 2 );
@@ -508,6 +541,7 @@ AbstractDb::nextConfigKey()
 { 
    return dbNextKey(ConfigTable);
 }
+
 
 bool
 AbstractDb::addStaticReg( const AbstractDb::Key& key, 
@@ -564,9 +598,9 @@ AbstractDb::getStaticReg( const AbstractDb::Key& key) const
    
    if ( version == 1 )
    {
-      rec.mAor = decodeString( s );
-      rec.mContact = decodeString ( s );
-      rec.mPath = decodeString ( s );
+      decodeString(s, rec.mAor);
+      decodeString(s, rec.mContact);
+      decodeString(s, rec.mPath);
    }
    else
    {
@@ -679,15 +713,15 @@ AbstractDb::getFilter( const AbstractDb::Key& key) const
    
    if (version == 1)
    {
-      rec.mCondition1Header = decodeString(s);
-      rec.mCondition1Regex = decodeString(s);
-      rec.mCondition2Header = decodeString(s);
-      rec.mCondition2Regex = decodeString(s);
-      rec.mMethod = decodeString(s);
-      rec.mEvent  = decodeString(s);
+      decodeString(s, rec.mCondition1Header);
+      decodeString(s, rec.mCondition1Regex);
+      decodeString(s, rec.mCondition2Header);
+      decodeString(s, rec.mCondition2Regex);
+      decodeString(s, rec.mMethod);
+      decodeString(s, rec.mEvent);
       s.read((char*)(&rec.mAction), sizeof(rec.mAction)); 
       assert(sizeof(rec.mAction) == 2);
-      rec.mActionData = decodeString(s);
+      decodeString(s, rec.mActionData);
       s.read((char*)(&rec.mOrder), sizeof(rec.mOrder)); 
       assert(sizeof(rec.mOrder) == 2);
    }
@@ -751,6 +785,7 @@ AbstractDb::addToSilo(const Key& key, const SiloRecord& rec)
       encodeString(s, rec.mSourceUri);
       s.write((char*)(&rec.mOriginalSentTime), sizeof (rec.mOriginalSentTime));
       assert(sizeof(rec.mOriginalSentTime) == 8);
+      encodeString(s, rec.mTid);
       encodeString(s, rec.mMimeType);
       encodeString(s, rec.mMessageBody);
 
@@ -770,12 +805,13 @@ AbstractDb::decodeSiloRecord(Data& data, SiloRecord& rec)
    
    if (version == 1)
    {
-      rec.mDestUri = decodeString(s);
-      rec.mSourceUri = decodeString(s);
+      decodeString(s, rec.mDestUri);
+      decodeString(s, rec.mSourceUri);
       s.read((char*)(&rec.mOriginalSentTime), sizeof(rec.mOriginalSentTime)); 
       assert(sizeof(rec.mOriginalSentTime) == 8);
-      rec.mMimeType = decodeString(s);
-      rec.mMessageBody = decodeString(s);
+      decodeString(s, rec.mTid);
+      decodeString(s, rec.mMimeType);
+      decodeString(s, rec.mMessageBody);
    }
    else
    {
@@ -786,38 +822,55 @@ AbstractDb::decodeSiloRecord(Data& data, SiloRecord& rec)
 }
 
 bool
-AbstractDb::getSiloRecords(const Key& key, AbstractDb::SiloRecordList& recordList)
+AbstractDb::getSiloRecords(const Key& skey, AbstractDb::SiloRecordList& recordList)
 {
    AbstractDb::SiloRecord rec;
 
-   // Retrieve and Delete records within a Transaction to ensure that we don't
-   // delete records that are simultaneously being added while we are reading.
-   if(dbBeginTransaction(SiloTable))
+   Data data;
+   bool moreRecords = dbFirstRecord(SiloTable, skey, data, false /* forUpdate? */);
+   if(moreRecords)
    {
-      Data data;
-      bool moreRecords = dbFirstRecord(SiloTable, key, data, true /* forUpdate? */);
-      if(moreRecords)
+      // Decode and store data
+      decodeSiloRecord(data,rec);
+      recordList.push_back(rec);
+      while((moreRecords = dbNextRecord(SiloTable, skey, data, false /* forUpdate? */)))
       {
          // Decode and store data
          decodeSiloRecord(data,rec);
          recordList.push_back(rec);
-         while((moreRecords = dbNextRecord(SiloTable, key, data, true /* forUpdate? */)))
-         {
-            // Decode and store data
-            decodeSiloRecord(data,rec);
-            recordList.push_back(rec);
-         }
       }
-
-      // Delete all records just read (if key was provided)
-      if(recordList.size() > 0 && !key.empty())
-      {
-         dbEraseRecord(SiloTable, key);
-      }
-      return dbCommitTransaction(SiloTable);
    }
 
-   return false;
+   return true;
+}
+
+void 
+AbstractDb::eraseSiloRecord(const Key& key)
+{
+   dbEraseRecord(SiloTable, key);
+}
+
+void 
+AbstractDb::cleanupExpiredSiloRecords(UInt64 now, unsigned long expirationTime)
+{
+   AbstractDb::Key key = dbFirstKey(SiloTable);  // Iterate on primary key
+   // Iterate through all silo records - retrieve Original send time embedded into the 
+   // primary key and see if the record has expired.
+   Data originalSendTimeData;
+   UInt64 originalSendTime;
+   while(!key.empty())
+   {
+      ParseBuffer pb(key);
+      const char* anchor = pb.position();
+      pb.skipToChar(':');
+      pb.data(originalSendTimeData, anchor);
+      originalSendTime = originalSendTimeData.convertUInt64();
+      if(unsigned long(now - originalSendTime) > expirationTime)
+      {
+         eraseSiloRecord(key);
+      }
+      key = dbNextKey(SiloTable);
+   }
 }
 
 /* ====================================================================

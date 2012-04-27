@@ -35,11 +35,21 @@ class BerkeleyDb: public AbstractDb
       
    private:
       void init(const resip::Data& dbPath, const resip::Data& dbName);
+      static int getSecondaryKeyCallback(Db *db, const Dbt *pkey, const Dbt *pdata, Dbt *skey);
+
+      class TableInfo
+      {
+      public:
+         TableInfo() : mDb(0), mCursor(0), mTransaction(0), mSecondaryDb(0), mSecondaryCursor(0) {}
+         Db*    mDb;
+         Dbc*   mCursor;
+         DbTxn* mTransaction;
+         Db*    mSecondaryDb;
+         Dbc*   mSecondaryCursor;
+      };
 
       DbEnv* mEnv;
-      Db*    mDb[MaxTable];
-      Dbc*   mCursor[MaxTable];
-      DbTxn* mTransaction[MaxTable];
+      TableInfo mTableInfo[MaxTable];
       
       bool mSane;
       
@@ -51,7 +61,8 @@ class BerkeleyDb: public AbstractDb
                                 const resip::Data& key, 
                                 resip::Data& data) const; // return false if not found
       virtual void dbEraseRecord(const Table table, 
-                                 const resip::Data& key);
+                                 const resip::Data& key,
+                                 bool isSecondaryKey=false);  // allows deleting records from a table that supports secondary keying using a secondary key
       virtual resip::Data dbNextKey(const Table table, 
                                     bool first=true); // return empty if no more  
       virtual bool dbNextRecord(const Table table,

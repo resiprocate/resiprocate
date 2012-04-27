@@ -89,6 +89,7 @@ class AbstractDb
             resip::Data mDestUri;
             resip::Data mSourceUri;
             UInt64 mOriginalSentTime;
+            resip::Data mTid;
             resip::Data mMimeType;
             resip::Data mMessageBody;
       };
@@ -104,56 +105,58 @@ class AbstractDb
       virtual bool isSane() = 0;
 
       // functions for User Records 
-      virtual bool addUser( const Key& key, const UserRecord& rec );
-      virtual void eraseUser( const Key& key );
-      virtual UserRecord getUser( const Key& key ) const;
-      virtual resip::Data getUserAuthInfo(  const Key& key ) const;
+      virtual bool addUser(const Key& key, const UserRecord& rec);
+      virtual void eraseUser(const Key& key);
+      virtual UserRecord getUser(const Key& key) const;
+      virtual resip::Data getUserAuthInfo(const Key& key) const;
       virtual Key firstUserKey();// return empty if no more
       virtual Key nextUserKey(); // return empty if no more 
          
       // functions for Route Records
-      virtual bool addRoute( const Key& key, const RouteRecord& rec );
-      virtual void eraseRoute( const Key& key );
-      virtual RouteRecord getRoute( const Key& key) const;
+      virtual bool addRoute(const Key& key, const RouteRecord& rec);
+      virtual void eraseRoute(const Key& key);
+      virtual RouteRecord getRoute(const Key& key) const;
       virtual RouteRecordList getAllRoutes();
       virtual Key firstRouteKey();// return empty if no more
       virtual Key nextRouteKey(); // return empty if no more 
 
       // functions for Acl Records
-      virtual bool addAcl( const Key& key, const AclRecord& rec );
-      virtual void eraseAcl( const Key& key );
+      virtual bool addAcl(const Key& key, const AclRecord& rec);
+      virtual void eraseAcl(const Key& key);
       virtual AclRecordList getAllAcls();
-      virtual AclRecord getAcl( const Key& key) const;
+      virtual AclRecord getAcl(const Key& key) const;
       virtual Key firstAclKey();// return empty if no more
       virtual Key nextAclKey(); // return empty if no more 
 
       // functions for Config Records
-      virtual bool addConfig( const Key& key, const ConfigRecord& rec );
-      virtual void eraseConfig(  const Key& key );
+      virtual bool addConfig(const Key& key, const ConfigRecord& rec);
+      virtual void eraseConfig(const Key& key);
       virtual ConfigRecordList getAllConfigs();
-      virtual ConfigRecord getConfig( const Key& key) const;
+      virtual ConfigRecord getConfig(const Key& key) const;
       virtual Key firstConfigKey();// return empty if no more
       virtual Key nextConfigKey(); // return empty if no more 
 
       // functions for StaticReg Records
-      virtual bool addStaticReg( const Key& key, const StaticRegRecord& rec );
-      virtual void eraseStaticReg(  const Key& key );
+      virtual bool addStaticReg(const Key& key, const StaticRegRecord& rec);
+      virtual void eraseStaticReg(const Key& key );
       virtual StaticRegRecordList getAllStaticRegs();
       virtual StaticRegRecord getStaticReg( const Key& key) const;
       virtual Key firstStaticRegKey();// return empty if no more
       virtual Key nextStaticRegKey(); // return empty if no more 
 
       // functions for Filter Records
-      virtual bool addFilter( const Key& key, const FilterRecord& rec );
-      virtual void eraseFilter(  const Key& key );
-      virtual FilterRecord getFilter( const Key& key) const;
+      virtual bool addFilter(const Key& key, const FilterRecord& rec);
+      virtual void eraseFilter(const Key& key);
+      virtual FilterRecord getFilter(const Key& key) const;
       virtual FilterRecordList getAllFilters();
       virtual Key firstFilterKey();// return empty if no more
       virtual Key nextFilterKey(); // return empty if no more 
 
       // functions for Silo Records
       virtual bool addToSilo(const Key& key, const SiloRecord& rec);
-      virtual bool getSiloRecords(const Key& key, SiloRecordList& recordList); 
+      virtual bool getSiloRecords(const Key& skey, SiloRecordList& recordList); 
+      virtual void eraseSiloRecord(const Key& key);
+      virtual void cleanupExpiredSiloRecords(UInt64 now, unsigned long expirationTime);
 
    protected:
       typedef enum 
@@ -167,17 +170,24 @@ class AbstractDb
          SiloTable,
          MaxTable  // This one MUST be last 
       } Table;
-      
+
+      virtual int getSecondaryKey(const Table table, 
+                                  const Key& key, 
+                                  const resip::Data& data, 
+                                  void** secondaryKey, 
+                                  unsigned int* secondaryKeyLen);
+
       // Db manipulation routines
-      virtual bool dbWriteRecord( const Table table, 
-                                  const resip::Data& key, 
-                                  const resip::Data& data ) =0;
-      /// return false if not found     
-      virtual bool dbReadRecord( const Table table, 
+      virtual bool dbWriteRecord(const Table table, 
                                  const resip::Data& key, 
-                                 resip::Data& data ) const =0;
+                                 const resip::Data& data) =0;
+      /// return false if not found     
+      virtual bool dbReadRecord(const Table table, 
+                                const resip::Data& key, 
+                                resip::Data& data) const =0;
       virtual void dbEraseRecord(const Table table, 
-                                 const resip::Data& key ) =0;
+                                 const resip::Data& key,
+                                 bool isSecondaryKey=false) =0;  // allows deleting records from a table that supports secondary keying using a secondary key
       virtual resip::Data dbFirstKey(const Table table);
       virtual resip::Data dbNextKey(const Table table,
                                     bool first=false) = 0; // return empty if no more

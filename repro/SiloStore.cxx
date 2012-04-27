@@ -13,7 +13,6 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
-
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
 
@@ -21,7 +20,6 @@ SiloStore::SiloStore(AbstractDb& db):
    mDb(db)
 {
 }
-
 
 SiloStore::~SiloStore()
 {
@@ -31,6 +29,7 @@ bool
 SiloStore::addMessage(const resip::Data& destUri,
                       const resip::Data& sourceUri,
                       time_t originalSendTime,
+                      const resip::Data& tid,
                       const resip::Data& mimeType,
                       const resip::Data& messageBody)
 {
@@ -38,18 +37,42 @@ SiloStore::addMessage(const resip::Data& destUri,
    rec.mDestUri = destUri;
    rec.mSourceUri = sourceUri;
    rec.mOriginalSentTime = originalSendTime;
+   rec.mTid = tid;
    rec.mMimeType = mimeType;
    rec.mMessageBody = messageBody;
 
-   WriteLock lock(mMutex);
-   return mDb.addToSilo(rec.mDestUri, rec);
+   Key key = buildKey(originalSendTime, tid);
+   return mDb.addToSilo(key, rec);
 }
 
 bool 
-SiloStore::getSiloRecords(const AbstractDb::Key& key, AbstractDb::SiloRecordList& recordList)
+SiloStore::getSiloRecords(const Data& uri, AbstractDb::SiloRecordList& recordList)
 {
-   ReadLock lock(mMutex);
-   return mDb.getSiloRecords(key, recordList);
+   // Note:  This fn uses the secondary cursor, and cleanupExpiredSiloRecords uses the
+   // primary cursor, so there should be no need to provide locking at this level (at
+   // least that's the theory - assuming the db performs it's own locking properly)
+   return mDb.getSiloRecords(uri, recordList);
+}
+
+void
+SiloStore::deleteSiloRecord(time_t originalSendTime, const resip::Data& tid)
+{
+   Key key = buildKey(originalSendTime, tid);
+   mDb.eraseSiloRecord(key);
+}
+
+void 
+SiloStore::cleanupExpiredSiloRecords(UInt64 now, unsigned long expirationTime)
+{
+   mDb.cleanupExpiredSiloRecords(now, expirationTime);
+}
+
+SiloStore::Key 
+SiloStore::buildKey(time_t originalSendTime, const resip::Data& tid) const
+{
+   Key key((UInt64)originalSendTime);
+   key += ":" + tid;
+   return key;
 }
 
 /* ====================================================================

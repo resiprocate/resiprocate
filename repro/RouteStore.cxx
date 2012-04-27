@@ -87,7 +87,7 @@ RouteStore::addRoute(const resip::Data& method,
    
    RouteOp route;
 
-   Key key = buildKey(method,event,matchingPattern);
+   Key key = buildKey(method, event, matchingPattern);
    
    if(findKey(key)) return false;
 
@@ -152,7 +152,7 @@ RouteStore::eraseRoute(const resip::Data& method,
                        const resip::Data& event,
                        const resip::Data& matchingPattern)
 {
-   Key key = buildKey(method,event,matchingPattern);
+   Key key = buildKey(method, event, matchingPattern);
    eraseRoute(key);
 }
 
