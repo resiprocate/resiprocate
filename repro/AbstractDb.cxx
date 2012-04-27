@@ -865,7 +865,7 @@ AbstractDb::cleanupExpiredSiloRecords(UInt64 now, unsigned long expirationTime)
       pb.skipToChar(':');
       pb.data(originalSendTimeData, anchor);
       originalSendTime = originalSendTimeData.convertUInt64();
-      if(unsigned long(now - originalSendTime) > expirationTime)
+      if((unsigned long)(now - originalSendTime) > expirationTime)
       {
          eraseSiloRecord(key);
       }
