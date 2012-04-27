@@ -1,14 +1,14 @@
 # $Id: $
 AUTOMAKE_OPTIONS = foreign
 
-CFLAGS=@CFLAGS@ ${WARN_CFLAGS} ${ERROR_CFLAGS}
+#CFLAGS=@CFLAGS@ ${WARN_CFLAGS} ${ERROR_CFLAGS}
 
-ALL_CFLAGS=${CPPFLAGS} ${CFLAGS} ${DEFS}
+#ALL_CFLAGS=${CPPFLAGS} ${CFLAGS} ${DEFS}
 
-INCLUDES = -I$(top_srcdir)
+#INCLUDES = -I$(top_srcdir)
 
-lib_LIBRARIES = libares.a
-libares_a_SOURCES = \
+lib_LTLIBRARIES = libresipares.la
+libresipares_la_SOURCES = \
 	ares__close_sockets.c ares__get_hostent.c ares__read_line.c \
 	ares_destroy.c ares_expand_name.c ares_fds.c ares_free_errmem.c \
 	ares_free_hostent.c ares_free_string.c ares_gethostbyaddr.c \
@@ -16,8 +16,8 @@ libares_a_SOURCES = \
 	ares_parse_ptr_reply.c ares_process.c ares_query.c ares_search.c \
 	ares_send.c ares_strerror.c ares_timeout.c ares_local.c
 
-libares_adir = ares
-libares_a_HEADERS =\
+libresipares_ladir = $(includedir)/rutil/dns/ares
+libresipares_la_HEADERS =\
 	ares.h ares_compat.h ares_dns.h ares_local.h ares_version.h
 
 noinst_HEADERS = ares_private.h
@@ -32,11 +32,11 @@ man3_MANS = \
 
 EXTRA_DIST = $(man3_MANS) adig.c ahost.c ares.vcproj ares_7_1.vcproj
 
-adig: adig.o libares.a
-	${CC} ${LDFLAGS} -o $@ adig.o libares.a ${LIBS}
+#adig: adig.o libares.a
+#	${CC} ${LDFLAGS} -o $@ adig.o libares.a ${LIBS}
 
-ahost: ahost.o libares.a
-	${CC} ${LDFLAGS} -o $@ ahost.o libares.a ${LIBS}
+#ahost: ahost.o libares.a
+#	${CC} ${LDFLAGS} -o $@ ahost.o libares.a ${LIBS}
 
 
 #distclean: clean

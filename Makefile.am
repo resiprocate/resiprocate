@@ -38,11 +38,3 @@ EXTRA_DIST += resip.spec
 
 EXTRA_DIST += RELEASE-PROCESS.txt
 
-# reSIProcate includes a modified version of ares
-# libc-ares can also be used (e.g. in Debian)
-# it is included in contrib and NOT automatically
-# build by autotools, if it is needed, it is necessary
-# to go into contrib/ares and build it before building
-# the main stack
-EXTRA_DIST += contrib/ares
-
