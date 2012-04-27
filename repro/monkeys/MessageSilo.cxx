@@ -132,6 +132,10 @@ MessageSilo::process(RequestContext& context)
    DebugLog(<< "Monkey handling request: " << *this << "; reqcontext = " << context);
    SipMessage& originalRequest = context.getOriginalRequest();
 
+   // Note:  A potential enhancement could be to also silo messages that fail to route due to a 
+   // 408 or 503 error.  In order to do this, this processor needs to be part of the ResponseChain
+   // as well.
+
    // Check if request is a MESSAGE request and if there were no targets found
    if(originalRequest.method() == MESSAGE &&
       !context.getResponseContext().hasTargets())
@@ -234,6 +238,7 @@ MessageSilo::asyncProcess(AsyncProcessorMessage* msg)
          mSiloStore.cleanupExpiredSiloRecords(addToSilo->mOriginalSendTime, mExpirationTime);
       }
 
+      // TODO - look for addMessage failures and queue up to be attempted to be written later (ie. when db is back and live)
       mSiloStore.addMessage(addToSilo->mDestUri, addToSilo->mSourceUri, addToSilo->mOriginalSendTime, addToSilo->getTransactionId(), addToSilo->mMimeType, addToSilo->mMessageBody);
       return false;
    }
@@ -319,6 +324,9 @@ MessageSilo::asyncProcess(AsyncProcessorMessage* msg)
             }
 
             // Delete record from database
+            // Note:  A potential feature enhancement would be to monitor the MESSAGE reponses and only remove
+            //        from the database when a 200 reponses is seen.  Care must be taken to avoid
+            //        looping and handle scenarios when a user never uses a device capable of IM.
             mSiloStore.deleteSiloRecord(siloIt->mOriginalSentTime, siloIt->mTid);
          }
       }
