@@ -37,11 +37,11 @@ private:
    regex_t *mMimeTypeFilterRegex;
    unsigned long mExpirationTime;
    bool mAddDateHeader;
-   unsigned long mMaxMessagesPerUser;
    unsigned long mMaxContentLength;
    unsigned short mSuccessStatusCode;
    unsigned short mFilteredMimeTypeStatusCode;
    unsigned short mFailureStatusCode;
+   time_t mLastSiloCleanupTime;
 };
 
 }

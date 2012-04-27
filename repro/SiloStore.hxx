@@ -17,19 +17,25 @@ namespace repro
 class SiloStore
 {
    public:
+      typedef resip::Data Key;
+
       SiloStore(AbstractDb& db);
       ~SiloStore();
 
       bool addMessage(const resip::Data& destUri,
                       const resip::Data& sourceUri,
                       time_t originalSendTime,
+                      const resip::Data& tid,
                       const resip::Data& mimeType,
                       const resip::Data& messageBody);
 
-      bool getSiloRecords(const AbstractDb::Key& key, AbstractDb::SiloRecordList& recordList);
+      bool getSiloRecords(const resip::Data& uri, AbstractDb::SiloRecordList& recordList);
+      void deleteSiloRecord(time_t originalSendTime, const resip::Data& tid);
+      void cleanupExpiredSiloRecords(Uin now, unsigned long expirationTime);
 
    private:
-      resip::RWMutex mMutex;
+      Key buildKey(time_t originalSendTime, const resip::Data& tid) const;
+
       AbstractDb& mDb;
 };
 

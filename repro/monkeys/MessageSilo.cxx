@@ -21,6 +21,8 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
+#define SILO_CLEANUP_PERIOD 86400   // look for expired records at most every 24 hours (86400 seconds)
+
 class AsyncAddToSiloMessage : public AsyncProcessorMessage 
 {
 public:
@@ -75,11 +77,11 @@ MessageSilo::MessageSilo(ProxyConfig& config, Dispatcher* asyncDispatcher) :
    mMimeTypeFilterRegex(0),
    mExpirationTime(config.getConfigUnsignedLong("MessageSiloExpirationTime", 2592000 /* 30 days */)),
    mAddDateHeader(config.getConfigBool("MessageSiloAddDateHeader", true)),
-   mMaxMessagesPerUser(config.getConfigUnsignedLong("MessageSiloMaxMessagesPerUser", 100)),
    mMaxContentLength(config.getConfigUnsignedLong("MessageSiloMaxContentLength", 4096)),
    mSuccessStatusCode(config.getConfigUnsignedShort("MessageSiloSuccessStatusCode", 202)),
    mFilteredMimeTypeStatusCode(config.getConfigUnsignedShort("MessageSiloFilteredMimeTypeStatusCode", 200)),
-   mFailureStatusCode(config.getConfigUnsignedShort("MessageSiloFailureStatusCode", 480))
+   mFailureStatusCode(config.getConfigUnsignedShort("MessageSiloFailureStatusCode", 480)),
+   mLastSiloCleanupTime(time(0))  // set to now
 {
    Data destFilterRegex = config.getConfigData("MessageSiloDestFilterRegex", "", false);
    Data mimeTypeFilterRegex = config.getConfigData("MessageSiloMimeTypeFilterRegex", "application\\/im\\-iscomposing\\+xml", false);
@@ -128,15 +130,16 @@ Processor::processor_action_t
 MessageSilo::process(RequestContext& context)
 {
    DebugLog(<< "Monkey handling request: " << *this << "; reqcontext = " << context);
+   SipMessage& originalRequest = context.getOriginalRequest();
 
    // Check if request is a MESSAGE request and if there were no targets found
-   if(context.getOriginalRequest().method() == MESSAGE &&
+   if(originalRequest.method() == MESSAGE &&
       !context.getResponseContext().hasTargets())
    {
-      // No targets for this request
+      // There are no targets for this request - silo candidate
 
       // Only need to silo if there is a message body
-      Contents* contents = context.getOriginalRequest().getContents();
+      Contents* contents = originalRequest.getContents();
       if(contents)
       {
          // Create async message now, so we can use it's storage and avoid some copies
@@ -149,7 +152,7 @@ MessageSilo::process(RequestContext& context)
          {
             InfoLog( << " MESSAGE not silo'd due to content-length exceeding max: " << async->mMessageBody.size());
             SipMessage response;
-            Helper::makeResponse(response, context.getOriginalRequest(), mFailureStatusCode);
+            Helper::makeResponse(response, originalRequest, mFailureStatusCode);
             context.sendResponse(response);
             return SkipThisChain;
          }
@@ -170,7 +173,7 @@ MessageSilo::process(RequestContext& context)
                else
                {
                   SipMessage response;
-                  Helper::makeResponse(response, context.getOriginalRequest(), mFilteredMimeTypeStatusCode);
+                  Helper::makeResponse(response, originalRequest, mFilteredMimeTypeStatusCode);
                   context.sendResponse(response);
                   return SkipThisChain;
                }
@@ -178,7 +181,7 @@ MessageSilo::process(RequestContext& context)
          }
 
          // Check if message passes Destination filter
-         async->mDestUri = context.getOriginalRequest().header(h_To).uri().getAOR(false /* addPort? */);
+         async->mDestUri = originalRequest.header(h_To).uri().getAOR(false /* addPort? */);
          if (mDestFilterRegex)
          {
             int ret = regexec(mDestFilterRegex, async->mDestUri.c_str(), 0, 0, 0/*eflags*/);
@@ -190,9 +193,9 @@ MessageSilo::process(RequestContext& context)
             }
          }
 
-         // TODO - check max messages per user
+         // TODO (future) - check a max messages per user setting
 
-         NameAddr from(context.getOriginalRequest().header(h_From));
+         NameAddr from(originalRequest.header(h_From));
          from.remove(p_tag); // remove from tag
          async->mSourceUri = Data::from(from);
          time(&async->mOriginalSendTime);  // Get now timestamp
@@ -219,7 +222,19 @@ MessageSilo::asyncProcess(AsyncProcessorMessage* msg)
    AsyncAddToSiloMessage* addToSilo = dynamic_cast<AsyncAddToSiloMessage*>(msg);
    if(addToSilo)
    {
-      mSiloStore.addMessage(addToSilo->mDestUri, addToSilo->mSourceUri, addToSilo->mOriginalSendTime, addToSilo->mMimeType, addToSilo->mMessageBody);
+      // Check if database cleanup period has passed, and if so run a cleanup pass through the database to remove
+      // silo'd messages that have been stored beyond the MessageSiloExpirationTime.  If mExpirationTime is configured
+      // as 0, then records never expire, so no need to peform the cleanup.
+      // Note: addToSilo->mOriginalSendTime is always now - so no need to requery current time
+      // Run cleanup before adding new records to save iterating through 1 extra item
+      if(mExpirationTime > 0 && (addToSilo->mOriginalSendTime - mLastSiloCleanupTime) > SILO_CLEANUP_PERIOD)
+      {
+         mLastSiloCleanupTime = addToSilo->mOriginalSendTime;  // reset stored silo cleanup time
+
+         mSiloStore.cleanupExpiredSiloRecords(addToSilo->mOriginalSendTime, mExpirationTime);
+      }
+
+      mSiloStore.addMessage(addToSilo->mDestUri, addToSilo->mSourceUri, addToSilo->mOriginalSendTime, addToSilo->getTransactionId(), addToSilo->mMimeType, addToSilo->mMessageBody);
       return false;
    }
 
@@ -229,11 +244,10 @@ MessageSilo::asyncProcess(AsyncProcessorMessage* msg)
       AbstractDb::SiloRecordList recordList;
       if(mSiloStore.getSiloRecords(drainSilo->mAor, recordList))
       {
-         time_t now;
-         time(&now);
+         time_t now = time(0);
 
-         // TODO - are database records always in insert order, or do we need to sort this list based on mOriginalSentTime?
-         //       (must check both berkelyDb and MySQL)
+         // Note:  Tesing with BerkeleyDb and MySQL reveals that these databases return the records in insert order
+         //        so there is no need to sort the records here.
 
          AbstractDb::SiloRecordList::iterator siloIt = recordList.begin();
          for(; siloIt != recordList.end(); siloIt++)
@@ -303,6 +317,9 @@ MessageSilo::asyncProcess(AsyncProcessorMessage* msg)
                   }
                }
             }
+
+            // Delete record from database
+            mSiloStore.deleteSiloRecord(siloIt->mOriginalSentTime, siloIt->mTid);
          }
       }
       return false;
