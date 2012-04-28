@@ -1,25 +1,3 @@
-#ifndef REGCONFIG_HXX
-#define REGCONFIG_HXX
-
-#include <rutil/ConfigParse.hxx>
-
-namespace registrationclient {
-
-class RegConfig : public resip::ConfigParse
-{
-
-public:
-    RegConfig();
-    virtual ~RegConfig();
-
-    virtual void printHelpText(int argc, char **argv);
-
-};
-
-} // namespace
-
-#endif
-
 /* ====================================================================
  *
  * Copyright 2012 Daniel Pocock http://danielpocock.com  All rights reserved.
