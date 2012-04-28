@@ -129,12 +129,38 @@ class MyClientRegistrationAgent : public ServerProcess
          Data passwd(cfg.getConfigData("Password", "", false));
 
 #ifdef USE_SSL
+         Data certPath = cfg.getConfigData("CertificatePath", Data::Empty);
+         Security* security;
 #ifdef WIN32
-         Security* security = new WinSecurity;
+         if(certPath.empty())
+         {
+            security = new WinSecurity;
+         }
+         else
+         {
+            security = new WinSecurity(certPath);
+         }
 #else
-         Security* security = new Security;
-         security->addCADirectory(cfg.getConfigData("CADirectory", "/etc/ssl/certs", true));
+         if(certPath.empty())
+         {
+            security = new Security;
+         }
+         else
+         {
+            security = new Security(certPath);
+         }
 #endif
+         Data caDir, caFile;
+         cfg.getConfigValue("CADirectory", caDir);
+         if(!caDir.empty())
+         {
+            security->addCADirectory(caDir);
+         }
+         cfg.getConfigValue("CAFile", caFile);
+         if(!caFile.empty())
+         {
+            security->addCAFile(caFile);
+         }
          SipStack stack(security);
 #else
          SipStack stack;
