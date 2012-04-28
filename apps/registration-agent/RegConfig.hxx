@@ -9,10 +9,10 @@ class RegConfig : public resip::ConfigParse
 {
 
 public:
-    RegConfig();
-    virtual ~RegConfig();
+   RegConfig();
+   virtual ~RegConfig();
 
-    virtual void printHelpText(int argc, char **argv);
+   virtual void printHelpText(int argc, char **argv);
 
 };
 
