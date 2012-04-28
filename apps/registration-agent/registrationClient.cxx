@@ -31,6 +31,7 @@
 
 #include "AppSubsystem.hxx"
 #include "RegConfig.hxx"
+#include "UserRegistrationClient.hxx"
 
 #define RESIPROCATE_SUBSYSTEM AppSubsystem::REGISTRATIONCLIENT
 
@@ -39,36 +40,6 @@
 using namespace registrationclient;
 using namespace resip;
 using namespace std;
-
-class ClientHandler : public ClientRegistrationHandler
-{
-   public:
-      ClientHandler() : done(false) {}
-
-      virtual void onSuccess(ClientRegistrationHandle h, const SipMessage& response)
-      {
-         InfoLog( << "ClientHandler::onSuccess: " << endl );
-      }
-
-      virtual void onRemoved(ClientRegistrationHandle, const SipMessage& response)
-      {
-         InfoLog ( << "ClientHandler::onRemoved ");
-         done = true;
-      }
-
-      virtual void onFailure(ClientRegistrationHandle, const SipMessage& response)
-      {
-         InfoLog ( << "ClientHandler::onFailure - check the configuration.  Peer response: " << response );
-      }
-
-      virtual int onRequestRetry(ClientRegistrationHandle, int retrySeconds, const SipMessage& response)
-      {
-         WarningLog ( << "ClientHandler:onRequestRetry, want to retry immediately");
-         return 0;
-      }
-      
-      bool done;
-};
 
 static void
 signalHandler(int signo)
@@ -169,7 +140,7 @@ class MyClientRegistrationAgent : public ServerProcess
          DialogUsageManager clientDum(stack);
          SharedPtr<MasterProfile> profile(new MasterProfile);
          auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager);
-         ClientHandler clientHandler;
+         UserRegistrationClient clientHandler;
 
          // stack.addTransport(UDP, 0, V4);
          // stack.addTransport(UDP, 0, V6);
