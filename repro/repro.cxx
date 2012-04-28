@@ -238,6 +238,14 @@ ReproProcess::main(int argc, char** argv)
 #endif
    config.getConfigValue("CertificatePath", certPath);
    security = new Security(certPath);
+   Data caDir;
+   config.getConfigValue("CADirectory", caDir);
+   if(caDir.size() > 0)
+      security->addCADirectory(caDir);
+   Data caFile;
+   config.getConfigValue("CAFile", caFile);
+   if(caFile.size() > 0)
+      security->addCAFile(caFile);
 #endif
 
 #ifdef USE_SIGCOMP
