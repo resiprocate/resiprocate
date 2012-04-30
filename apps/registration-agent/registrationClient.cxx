@@ -32,6 +32,7 @@
 #include "AppSubsystem.hxx"
 #include "RegConfig.hxx"
 #include "UserRegistrationClient.hxx"
+#include "KeyedFile.hxx"
 
 #define RESIPROCATE_SUBSYSTEM AppSubsystem::REGISTRATIONCLIENT
 
@@ -41,6 +42,8 @@ using namespace registrationclient;
 using namespace resip;
 using namespace std;
 
+volatile bool mustReload = false;
+
 static void
 signalHandler(int signo)
 {
@@ -49,6 +52,7 @@ signalHandler(int signo)
    {
       InfoLog(<<"Received HUP signal, logger reset");
       Log::reset();
+      mustReload = true;
       return;
    }
 #endif
@@ -96,9 +100,6 @@ class MyClientRegistrationAgent : public ServerProcess
 
          InfoLog(<<"Starting client registration agent");
 
-         NameAddr userAor(cfg.getConfigData("UserAor", "", false));
-         Data passwd(cfg.getConfigData("Password", "", false));
-
 #ifdef USE_SSL
          Data certPath = cfg.getConfigData("CertificatePath", Data::Empty);
          Security* security;
@@ -140,7 +141,6 @@ class MyClientRegistrationAgent : public ServerProcess
          DialogUsageManager clientDum(stack);
          SharedPtr<MasterProfile> profile(new MasterProfile);
          auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager);
-         UserRegistrationClient clientHandler;
 
          // stack.addTransport(UDP, 0, V4);
          // stack.addTransport(UDP, 0, V6);
@@ -151,7 +151,6 @@ class MyClientRegistrationAgent : public ServerProcess
          // stack.addTransport(TLS, 0, V6);
 #endif
          clientDum.setMasterProfile(profile);
-         clientDum.setClientRegistrationHandler(&clientHandler);
          clientDum.setClientAuthManager(clientAuth);
          clientDum.getMasterProfile()->setDefaultRegistrationTime(cfg.getConfigInt("RegistrationExpiry", 3600));
          // Retry every 60 seconds after a hard failure:
@@ -160,11 +159,6 @@ class MyClientRegistrationAgent : public ServerProcess
          // keep alive test.
          auto_ptr<KeepAliveManager> keepAlive(new KeepAliveManager);
          clientDum.setKeepAliveManager(keepAlive);
-
-         clientDum.getMasterProfile()->setDefaultFrom(userAor);
-         profile->setDigestCredential(userAor.uri().host(),
-                                           userAor.uri().user(),
-                                           passwd);
 
          profile->addSupportedOptionTag(Token(Symbols::Outbound));
          profile->addSupportedOptionTag(Token(Symbols::Path));
@@ -176,20 +170,24 @@ class MyClientRegistrationAgent : public ServerProcess
             profile->setOutboundProxy(_outboundProxy);
          }
 
-         SharedPtr<SipMessage> regMessage = clientDum.makeRegistration(userAor);
-         NameAddr contact(cfg.getConfigData("Contact", "", false));
-         contact.param(p_regid) = 1;
-         contact.param(p_Instance) = cfg.getConfigData("InstanceId", "", false);
-         regMessage->header(h_Contacts).clear();
-         regMessage->header(h_Contacts).push_back(contact);
-
-         clientDum.send( regMessage );
+         SharedPtr<UserAccountFileRowHandler> rowHandler(new UserAccountFileRowHandler(clientDum));
+         SharedPtr<KeyedFile> kf(new KeyedFile(cfg.getConfigData("UserAccountFile", "users.txt", false), SharedPtr<KeyedFileRowHandler>(rowHandler, dynamic_cast_tag())));
+         kf->setSharedPtr(kf);
+         UserRegistrationClient clientHandler(kf);
+         clientDum.setClientRegistrationHandler(&clientHandler);
+         rowHandler->setUserRegistrationClient(&clientHandler);
+         kf->doReload();
 
          int n = 0;
          while ( true )
          {
             stack.process(100);
             while(clientDum.process());
+            if(mustReload)
+            {
+               kf->doReload();
+               mustReload = false;
+            }
          }
        }
 };

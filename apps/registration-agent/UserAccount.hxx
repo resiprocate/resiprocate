@@ -1,38 +1,79 @@
-#ifndef USERREGISTRATIONCLIENT_HXX
-#define USERREGISTRATIONCLIENT_HXX
+#ifndef USERACCOUNT_HXX
+#define USERACCOUNT_HXX
 
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Uri.hxx"
 #include "resip/dum/ClientRegistration.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/RegistrationHandler.hxx"
 #include "resip/dum/UserProfile.hxx"
 
 #include "KeyedFile.hxx"
-#include "UserAccount.hxx"
 
 namespace registrationclient {
 
-class UserRegistrationClient : public resip::ClientRegistrationHandler
+class UserRegistrationClient;
+
+class UserAccountFileRowHandler : public KeyedFileRowHandler
+{
+public:
+   UserAccountFileRowHandler(resip::DialogUsageManager& dum);
+   virtual ~UserAccountFileRowHandler() {};
+   void setUserRegistrationClient(UserRegistrationClient* userRegistrationClient);
+
+   virtual resip::SharedPtr<KeyedFileLine> onNewLine(resip::SharedPtr<KeyedFile> keyedFile, const resip::Data& key, const std::vector<resip::Data>& columns);
+
+private:
+   resip::DialogUsageManager& mDum;
+   UserRegistrationClient *mUserRegistrationClient;
+};
+
+class UserAccount : public BasicKeyedFileLine
 {
 
 public:
-   UserRegistrationClient(resip::SharedPtr<KeyedFile> keyedFile);
-   virtual ~UserRegistrationClient();
+   UserAccount(resip::SharedPtr<KeyedFile> keyedFile, const resip::Uri& aor, const std::vector<resip::Data>& columns, resip::DialogUsageManager& dum, UserRegistrationClient *userRegistrationClient);
+   virtual ~UserAccount();
 
-   void addUserAccount(const resip::Uri& aor, resip::SharedPtr<UserAccount> userAccount);
-   void removeUserAccount(const resip::Uri& aor);
+   void activate();
+   void deactivate();
 
    virtual void onSuccess(resip::ClientRegistrationHandle h, const resip::SipMessage& response);
    virtual void onRemoved(resip::ClientRegistrationHandle, const resip::SipMessage& response);
    virtual void onFailure(resip::ClientRegistrationHandle, const resip::SipMessage& response);
    virtual int onRequestRetry(resip::ClientRegistrationHandle, int retrySeconds, const resip::SipMessage& response);
 
-protected:
-   resip::SharedPtr<UserAccount> userAccountForMessage(const resip::SipMessage& m);
+   virtual void onLineRemoved(resip::SharedPtr<KeyedFileLine> sp);
+   virtual void onLineChanged();
 
 private:
-   resip::SharedPtr<KeyedFile> mKeyedFile;
-   std::map<resip::Uri, resip::SharedPtr<UserAccount> > mAccounts;
+   void readColumns();
+   void doRegistration();
+   void removeAllActive();
+   void doCleanup();
+
+   resip::DialogUsageManager& mDum;
+   UserRegistrationClient *mUserRegistrationClient;
+   resip::NameAddr mAor;
+   resip::Uri mContact;
+   resip::Data mSecret;
+   resip::Data mAuthUser;
+   resip::Data mExpiry;
+   resip::Data mOutboundProxy;
+   resip::Data mRegId;
+   resip::Data mInstanceId;
+
+   typedef enum {
+      Inactive,      // initialized, not yet asked to register
+      Active,        // should be registered or trying to register
+      Ending,        // try to remove all registrations
+      Done           // all registrations ended
+   } State;
+   State mState;
+
+   resip::SharedPtr<resip::UserProfile> mProfile;
+
+   std::vector<resip::ClientRegistrationHandle> mHandles;
 };
 
 } // namespace

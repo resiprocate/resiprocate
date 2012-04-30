@@ -9,8 +9,8 @@ using namespace registrationclient;
 using namespace resip;
 using namespace std;
 
-UserRegistrationClient::UserRegistrationClient() :
-   mDone(false)
+UserRegistrationClient::UserRegistrationClient(resip::SharedPtr<KeyedFile> keyedFile) :
+   mKeyedFile(keyedFile)
 {
 }
 
@@ -19,31 +19,80 @@ UserRegistrationClient::~UserRegistrationClient()
 }
 
 void
+UserRegistrationClient::addUserAccount(const Uri& aor, SharedPtr<UserAccount> userAccount)
+{
+   mAccounts[aor] = userAccount;
+}
+
+void
+UserRegistrationClient::removeUserAccount(const Uri& aor)
+{
+   StackLog(<<"Removing UserAccount " << aor);
+   mAccounts.erase(aor);
+}
+
+void
 UserRegistrationClient::onSuccess(ClientRegistrationHandle h, const SipMessage& response)
 {
    InfoLog( << "ClientHandler::onSuccess: " << endl );
+   SharedPtr<UserAccount> userAccount = userAccountForMessage(response);
+   if(userAccount.get())
+   {
+      userAccount->onSuccess(h, response);
+   }
 }
 
 void
 UserRegistrationClient::onRemoved(ClientRegistrationHandle h, const SipMessage& response)
 {
    InfoLog ( << "ClientHandler::onRemoved ");
-   mDone = true;
+   SharedPtr<UserAccount> userAccount = userAccountForMessage(response);
+   if(userAccount.get())
+   {
+      userAccount->onRemoved(h, response);
+   }
 }
 
 void
 UserRegistrationClient::onFailure(ClientRegistrationHandle h, const SipMessage& response)
 {
    InfoLog ( << "ClientHandler::onFailure - check the configuration.  Peer response: " << response );
+   SharedPtr<UserAccount> userAccount = userAccountForMessage(response);
+   if(userAccount.get())
+   {
+      userAccount->onFailure(h, response);
+   }
 }
 
+/// From resip/dum/RegistrationHandler.hxx
+/// call on Retry-After failure.
+/// return values: -1 = fail, 0 = retry immediately, N = retry in N seconds
 int
 UserRegistrationClient::onRequestRetry(ClientRegistrationHandle h, int retrySeconds, const SipMessage& response)
 {
-   WarningLog ( << "ClientHandler:onRequestRetry, want to retry immediately");
-   return 0;
+   SharedPtr<UserAccount> userAccount = userAccountForMessage(response);
+   if(userAccount.get())
+   {
+      return userAccount->onRequestRetry(h, retrySeconds, response);
+   }
+   return 0;   // 0 - retry immediately
 }
 
+SharedPtr<UserAccount>
+UserRegistrationClient::userAccountForMessage(const resip::SipMessage& m)
+{
+   Uri aor = m.header(h_To).uri();
+   map<Uri, SharedPtr<UserAccount> >::iterator it = mAccounts.find(aor);
+   if(it != mAccounts.end())
+   {
+      return it->second;
+   }
+   else
+   {
+      WarningLog(<<"couldn't find UserAccount for " << aor);
+      return SharedPtr<UserAccount>();
+   }
+}
 
 /* ====================================================================
  *
