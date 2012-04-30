@@ -72,6 +72,7 @@ librepro_la_SOURCES = \
 	OutboundTarget.cxx \
 	QValueTarget.cxx \
 	\
+        monkeys/CertificateAuthenticator.cxx \
         monkeys/DigestAuthenticator.cxx \
 	monkeys/StrictRouteFixup.cxx \
 	monkeys/AmIResponsible.cxx \
@@ -98,6 +99,7 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	HttpBase.hxx \
 	HttpConnection.hxx \
 	monkeys/AmIResponsible.hxx \
+        monkeys/CertificateAuthenticator.hxx \
 	monkeys/ConstantLocationMonkey.hxx \
 	monkeys/DigestAuthenticator.hxx \
 	monkeys/GruuMonkey.hxx \
