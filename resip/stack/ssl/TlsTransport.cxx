@@ -30,12 +30,14 @@ TlsTransport::TlsTransport(Fifo<TransactionMessage>& fifo,
                            AfterSocketCreationFuncPtr socketFunc,
                            Compression &compression,
                            unsigned transportFlags,
-                           ClientVerificationMode cvm):
+                           ClientVerificationMode cvm,
+                           bool useEmailAsSIP):
    TcpBaseTransport(fifo, portNum, version, interfaceObj, socketFunc, compression, transportFlags),
    mSecurity(&security),
    mSslType(sslType),
    mDomainCtx(0),
-   mClientVerificationMode(cvm)
+   mClientVerificationMode(cvm),
+   mUseEmailAsSIP(useEmailAsSIP)
 {
    setTlsDomain(sipDomain);   
    mTuple.setType(transport());

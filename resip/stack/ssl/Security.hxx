@@ -168,7 +168,7 @@ class BaseSecurity
       static Data getCertName(X509 *cert);
 
       // retrieves a list of all certificate names (subjectAltNAme's and CommonName)
-      static void getCertNames(X509 *cert, std::list<PeerName> &peerNames);
+      static void getCertNames(X509 *cert, std::list<PeerName> &peerNames, bool useEmailAsSIP = false);
 
       static bool isSelfSigned(const X509* cert);
 

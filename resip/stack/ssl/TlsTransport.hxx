@@ -40,7 +40,8 @@ class TlsTransport : public TcpBaseTransport
                    AfterSocketCreationFuncPtr socketFunc=0,
                    Compression &compression = Compression::Disabled,
                    unsigned transportFlags = 0,
-                   ClientVerificationMode cvm = None);
+                   ClientVerificationMode cvm = None,
+                   bool useEmailAsSIP = false);
       virtual  ~TlsTransport();
 
       TransportType transport() const { return TLS; }
@@ -48,6 +49,8 @@ class TlsTransport : public TcpBaseTransport
 
       ClientVerificationMode getClientVerificationMode() 
          { return mClientVerificationMode; };
+      bool isUseEmailAsSIP()
+         { return mUseEmailAsSIP; };
 
    protected:
       Connection* createConnection(const Tuple& who, Socket fd, bool server=false);
@@ -56,6 +59,10 @@ class TlsTransport : public TcpBaseTransport
       SecurityTypes::SSLType mSslType;
       SSL_CTX* mDomainCtx;
       ClientVerificationMode mClientVerificationMode;
+      /* If true, we will accept the email address in a client's subjectAltName
+         as if it were a SIP URI.  This is convenient because many commercial
+         CAs offer email certificates but not sip: certificates */
+      bool mUseEmailAsSIP;
 };
 
 }

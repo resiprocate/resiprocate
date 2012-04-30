@@ -602,8 +602,12 @@ TlsConnection::computePeerName()
       return;
    }
 
+   TlsTransport *t = dynamic_cast<TlsTransport*>(mTransport);
+   assert(t);
+
    mPeerNames.clear();
-   BaseSecurity::getCertNames(cert, mPeerNames);
+   BaseSecurity::getCertNames(cert, mPeerNames,
+      t->isUseEmailAsSIP());
    if(mPeerNames.empty())
    {
       ErrLog(<< "Invalid certificate: no subjectAltName/CommonName found");

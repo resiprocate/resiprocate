@@ -2470,7 +2470,8 @@ BaseSecurity::getSslCtx ()
 }
 
 void 
-BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames) 
+BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
+                           bool useEmailAsSIP) 
 {
    if(NULL == cert)
       return;
@@ -2555,7 +2556,16 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames)
           
       if (gen->type == GEN_EMAIL)
       {
-         DebugLog(<< "subjectAltName of cert has EMAIL type" );
+         if(useEmailAsSIP)
+         {
+            ASN1_IA5STRING* asn = gen->d.rfc822Name;
+            Data email(asn->data, asn->length);
+            PeerName peerName(SubjectAltName, email);
+            peerNames.push_back(peerName);
+            InfoLog(<< "subjectAltName of TLS session cert contains EMAIL <" << email << ">" );
+         }
+         else
+            DebugLog(<< "subjectAltName of cert has EMAIL type" );
       }
           
       if(gen->type == GEN_URI) 
