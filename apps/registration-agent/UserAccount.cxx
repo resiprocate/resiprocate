@@ -56,7 +56,8 @@ UserAccount::~UserAccount()
 void
 UserAccount::readColumns()
 {
-   mContact = Uri(getParam(0));
+   mContact = getParam(0);
+   mContactUri = Uri(mContact);
    mSecret = paramCount() > 1 ? getParam(1) : Data::Empty;
    mAuthUser = paramCount() > 2 ? getParam(2) : Data::Empty;
    if(mAuthUser.empty())
@@ -91,6 +92,11 @@ UserAccount::activate()
 {
    if(mState == Inactive)
    {
+      if(mContact.empty())
+      {
+         StackLog(<<"AoR '" << mAor << "' has no Contact, not activating");
+         return;
+      }
       mState = Active;
       doRegistration();
    }
@@ -110,7 +116,7 @@ void
 UserAccount::doRegistration()
 {
    SharedPtr<SipMessage> regMessage = mDum.makeRegistration(mAor, mProfile);
-   NameAddr contact(mContact);
+   NameAddr contact(mContactUri);
    if(!mRegId.empty())
    {
       contact.param(p_regid) = mRegId.convertInt();

@@ -55,7 +55,8 @@ private:
    resip::DialogUsageManager& mDum;
    UserRegistrationClient *mUserRegistrationClient;
    resip::NameAddr mAor;
-   resip::Uri mContact;
+   resip::Data mContact;
+   resip::Uri mContactUri;
    resip::Data mSecret;
    resip::Data mAuthUser;
    resip::Data mExpiry;
