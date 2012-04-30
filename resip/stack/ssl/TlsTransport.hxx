@@ -23,6 +23,12 @@ class Security;
 class TlsTransport : public TcpBaseTransport
 {
    public:
+      typedef enum
+      {
+         None,
+         Optional,
+         Mandatory
+      } ClientVerificationMode;
       RESIP_HeapCount(TlsTransport);
       TlsTransport(Fifo<TransactionMessage>& fifo, 
                    int portNum, 
@@ -33,17 +39,23 @@ class TlsTransport : public TcpBaseTransport
                    SecurityTypes::SSLType sslType,
                    AfterSocketCreationFuncPtr socketFunc=0,
                    Compression &compression = Compression::Disabled,
-                   unsigned transportFlags = 0);
+                   unsigned transportFlags = 0,
+                   ClientVerificationMode cvm = None);
       virtual  ~TlsTransport();
 
       TransportType transport() const { return TLS; }
       SSL_CTX* getCtx() const;
+
+      ClientVerificationMode getClientVerificationMode() 
+         { return mClientVerificationMode; };
+
    protected:
       Connection* createConnection(const Tuple& who, Socket fd, bool server=false);
 
       Security* mSecurity;
       SecurityTypes::SSLType mSslType;
       SSL_CTX* mDomainCtx;
+      ClientVerificationMode mClientVerificationMode;
 };
 
 }

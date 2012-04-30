@@ -18,6 +18,7 @@
 #include "resip/stack/SecurityTypes.hxx"
 #include "resip/stack/StatisticsManager.hxx"
 #include "resip/stack/TuSelector.hxx"
+#include "resip/stack/ssl/TlsTransport.hxx"
 #include "rutil/dns/DnsStub.hxx"
 
 /**
@@ -302,7 +303,8 @@ class SipStack : public FdSetIOObserver
                                                                   // based stuff
                          const Data& privateKeyPassPhrase = Data::Empty,
                          SecurityTypes::SSLType sslType = SecurityTypes::TLSv1,
-                         unsigned transportFlags = 0);
+                         unsigned transportFlags = 0,
+                         TlsTransport::ClientVerificationMode cvm = TlsTransport::None);
 
       /**
           Used to plug-in custom transports.  Adds the transport to the Transport

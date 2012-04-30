@@ -60,7 +60,10 @@ TlsConnection::TlsConnection( Transport* transport, const Tuple& tuple,
    }
    assert( mSecurity );
 
-   SSL_CTX* ctx=dynamic_cast<TlsTransport*>(transport)->getCtx();
+   TlsTransport *t = dynamic_cast<TlsTransport*>(transport);
+   assert(t);
+
+   SSL_CTX* ctx=t->getCtx();
    assert(ctx);
    
    mSsl = SSL_new(ctx);
@@ -71,7 +74,25 @@ TlsConnection::TlsConnection( Transport* transport, const Tuple& tuple,
    if(mServer)
    {
       // clear SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE set in SSL_CTX if we are a server
-      SSL_set_verify(mSsl, 0, 0);
+      int verify_mode;
+      switch(t->getClientVerificationMode())
+      {
+      case TlsTransport::None:
+         verify_mode = SSL_VERIFY_NONE;
+         DebugLog(<< "Not expecting client certificate" );
+         break;
+      case TlsTransport::Optional:
+         verify_mode = SSL_VERIFY_PEER;
+         DebugLog(<< "Optional client certificate mode" );
+         break;
+      case TlsTransport::Mandatory:
+         verify_mode = SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
+         DebugLog(<< "Mandatory client certificate mode" );
+         break;
+      default:
+         assert( 0 );
+      }
+      SSL_set_verify(mSsl, verify_mode, 0);
    }
 
    mBio = BIO_new_socket((int)fd,0/*close flag*/);
