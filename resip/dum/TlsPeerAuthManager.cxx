@@ -56,6 +56,13 @@ TlsPeerAuthManager::authorizedForThisIdentity(
    const std::list<resip::Data> &peerNames,
    resip::Uri &fromUri)
 {
+   // If we are using TLS and client certificates are optional,
+   // clients who connect without a certificate won't supply
+   // any values in peerNames.  As the TLS mode is `optional',
+   // no further checks are done here
+   if(peerNames.size() == 0)
+      return true;
+
    Data aor = fromUri.getAorNoPort();
    Data domain = fromUri.host();
 
