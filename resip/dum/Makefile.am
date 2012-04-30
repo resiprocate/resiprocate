@@ -77,6 +77,7 @@ libdum_la_SOURCES =   \
 	SubscriptionHandler.cxx \
 	SubscriptionCreator.cxx \
 	SubscriptionState.cxx \
+        TlsPeerAuthManager.cxx \
 	KeepAliveManager.cxx \
 	KeepAliveTimeout.cxx \
 	NetworkAssociation.cxx \
@@ -199,6 +200,7 @@ nobase_duminclude_HEADERS = AppDialog.hxx \
 	SubscriptionPersistenceManager.hxx \
 	SubscriptionState.hxx \
 	TargetCommand.hxx \
+        TlsPeerAuthManager.hxx \
 	UsageUseException.hxx \
 	UserAuthInfo.hxx \
 	UserProfile.hxx
