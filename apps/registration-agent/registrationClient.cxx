@@ -142,12 +142,12 @@ class MyClientRegistrationAgent : public ServerProcess
          SharedPtr<MasterProfile> profile(new MasterProfile);
          auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager);
 
-         // stack.addTransport(UDP, 0, V4);
+         stack.addTransport(UDP, 0, V4);
          // stack.addTransport(UDP, 0, V6);
          stack.addTransport(TCP, 0, V4);
          // stack.addTransport(TCP, 0, V6);
 #ifdef USE_SSL
-         // stack.addTransport(TLS, 0, V4);
+         stack.addTransport(TLS, 0, V4);
          // stack.addTransport(TLS, 0, V6);
 #endif
          clientDum.setMasterProfile(profile);
