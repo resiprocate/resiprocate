@@ -17,6 +17,7 @@
 #include "resip/stack/ConnectionManager.hxx"
 #include "resip/dum/DumThread.hxx"
 #include "resip/dum/InMemoryRegistrationDatabase.hxx"
+#include "resip/dum/TlsPeerAuthManager.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/GeneralCongestionManager.hxx"
 #include "rutil/Log.hxx"
@@ -47,6 +48,7 @@
 #include "repro/RegSyncServerThread.hxx"
 #include "repro/monkeys/IsTrustedNode.hxx"
 #include "repro/monkeys/AmIResponsible.hxx"
+#include "repro/monkeys/CertificateAuthenticator.hxx"
 #include "repro/monkeys/ConstantLocationMonkey.hxx"
 #include "repro/monkeys/DigestAuthenticator.hxx"
 #include "repro/monkeys/LocationServer.hxx"
@@ -227,6 +229,8 @@ ReproProcess::main(int argc, char** argv)
 #endif
 
    Security* security = 0;
+   bool tlsClientCertPossible = false;
+   bool useEmailAsSIP = config.getConfigBool("TLSUseEmailAsSIP", false);
    Compression* compression = 0;
 
 #ifdef USE_SSL
@@ -308,7 +312,8 @@ ReproProcess::main(int argc, char** argv)
          // Sample config file format for advanced transport settings
          // Transport1Interface = 192.168.1.106:5061
          // Transport1Type = TLS
-         // Transprot1TlsDomain = sipdomain.com
+         // Transport1TlsDomain = sipdomain.com
+         // Transport1TlsClientVerification = None
          // Transport1RecordRouteUri = sip:sipdomain.com;transport=TLS
          // Transport1RcvBufLen = 2000
 
@@ -319,6 +324,7 @@ ReproProcess::main(int argc, char** argv)
          {
             Data typeSettingKey(settingKeyBase + "Type");
             Data tlsDomainSettingKey(settingKeyBase + "TlsDomain");
+            Data tlsCVMSettingKey(settingKeyBase + "TlsClientVerification");
             Data recordRouteUriSettingKey(settingKeyBase + "RecordRouteUri");
             Data rcvBufSettingKey(settingKeyBase + "RcvBufLen");
 
@@ -350,13 +356,27 @@ ReproProcess::main(int argc, char** argv)
                   CritLog(<< "Unknown transport type found in " << typeSettingKey << " setting: " << config.getConfigData(typeSettingKey, "UDP"));
                }
                Data tlsDomain = config.getConfigData(tlsDomainSettingKey, "");
+               Data tlsCVMValue = config.getConfigData(tlsCVMSettingKey, "NONE");
+               TlsTransport::ClientVerificationMode cvm = TlsTransport::None;
+               if(isEqualNoCase(tlsCVMValue, "Optional"))
+               {
+                  tlsClientCertPossible = true;
+                  cvm = TlsTransport::Optional;
+               }
+               else if(isEqualNoCase(tlsCVMValue, "Mandatory"))
+               {
+                  tlsClientCertPossible = true;
+                  cvm = TlsTransport::Mandatory;
+               }
+               else if(!isEqualNoCase(tlsCVMValue, "None"))
+                  CritLog(<< "Unknown TLS client verification mode found in " << tlsCVMSettingKey << " setting: " << tlsCVMValue);
                int rcvBufLen = config.getConfigInt(rcvBufSettingKey, 0);
                Transport *t = stack.addTransport(tt,
                                  port,
                                  DnsUtil::isIpV6Address(ipAddr) ? V6 : V4,
                                  StunEnabled, 
                                  ipAddr, // interface to bind to
-                                 tlsDomain);
+                                 tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, cvm, useEmailAsSIP);
 
                if (t && rcvBufLen>0 )
                {
@@ -433,6 +453,20 @@ ReproProcess::main(int argc, char** argv)
          int tlsPort = config.getConfigInt("TLSPort", 5061);
          int dtlsPort = config.getConfigInt("DTLSPort", 0);
          Data tlsDomain = config.getConfigData("TLSDomainName", "");
+         Data tlsCVMValue = config.getConfigData("TLSClientVerification", "NONE");              
+         TlsTransport::ClientVerificationMode cvm = TlsTransport::None;
+         if(isEqualNoCase(tlsCVMValue, "Optional"))
+         {
+            tlsClientCertPossible = true;
+            cvm = TlsTransport::Optional;
+         }
+         else if(isEqualNoCase(tlsCVMValue, "Mandatory"))
+         {
+            tlsClientCertPossible = true;
+            cvm = TlsTransport::Mandatory;
+         }
+         else if(!isEqualNoCase(tlsCVMValue, "None"))
+            CritLog(<< "Unknown TLS client verification mode found in TLSClientVerification setting: " << tlsCVMValue);
 
          if (udpPort)
          {
@@ -446,8 +480,8 @@ ReproProcess::main(int argc, char** argv)
          }
          if (tlsPort)
          {
-            if (useV4) stack.addTransport(TLS, tlsPort, V4, StunEnabled, Data::Empty, tlsDomain);
-            if (useV6) stack.addTransport(TLS, tlsPort, V6, StunEnabled, Data::Empty, tlsDomain);
+            if (useV4) stack.addTransport(TLS, tlsPort, V4, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, cvm, useEmailAsSIP);
+            if (useV6) stack.addTransport(TLS, tlsPort, V6, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, cvm, useEmailAsSIP);
          }
          if (dtlsPort)
          {
@@ -579,6 +613,13 @@ ReproProcess::main(int argc, char** argv)
 
       // Add is trusted node monkey
       requestProcessors.addProcessor(std::auto_ptr<Processor>(new IsTrustedNode(config)));
+
+      if (tlsClientCertPossible)
+      {
+         CertificateAuthenticator* ca = new CertificateAuthenticator(config, &stack);
+         requestProcessors.addProcessor(std::auto_ptr<Processor>(ca));
+      }
+
       if (!sipAuthDisabled)
       {
          assert(authRequestDispatcher);
@@ -734,6 +775,13 @@ ReproProcess::main(int argc, char** argv)
 
    if (dum)
    {
+      if (tlsClientCertPossible)
+      {
+         SharedPtr<TlsPeerAuthManager>
+            certAuth( new TlsPeerAuthManager(*dum, dum->dumIncomingTarget()));
+         dum->addIncomingFeature(certAuth);
+      }
+
       if (!sipAuthDisabled)
       {
          assert(authRequestDispatcher);
