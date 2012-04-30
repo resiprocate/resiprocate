@@ -610,18 +610,21 @@ TlsConnection::computePeerName()
       return;
    }
 
-   // add the certificate to the Security store
-   unsigned char* buf = NULL;
-   int len = i2d_X509( cert, &buf );
-   Data derCert( buf, len );
-   for(std::list<BaseSecurity::PeerName>::iterator it = mPeerNames.begin(); it != mPeerNames.end(); it++)
+   if(!mServer)
    {
-      if ( !mSecurity->hasDomainCert( it->mName ) )
+      // add the certificate to the Security store
+      unsigned char* buf = NULL;
+      int len = i2d_X509( cert, &buf );
+      Data derCert( buf, len );
+      for(std::list<BaseSecurity::PeerName>::iterator it = mPeerNames.begin(); it != mPeerNames.end(); it++)
       {
-         mSecurity->addDomainCertDER(it->mName,derCert);
+         if ( !mSecurity->hasDomainCert( it->mName ) )
+         {
+            mSecurity->addDomainCertDER(it->mName,derCert);
+         }
       }
+      OPENSSL_free(buf); buf=NULL;
    }
-   OPENSSL_free(buf); buf=NULL;
 
    X509_free(cert); cert=NULL;
 #endif // USE_SSL
