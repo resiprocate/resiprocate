@@ -18,6 +18,7 @@
 #include "resip/dum/MasterProfile.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/DumThread.hxx"
+#include "resip/dum/TlsPeerAuthManager.hxx"
 
 #include "repro/AsyncProcessorWorker.hxx"
 #include "repro/ReproRunner.hxx"
@@ -51,6 +52,7 @@
 #include "repro/monkeys/GeoProximityTargetSorter.hxx"
 #include "repro/monkeys/RequestFilter.hxx"
 #include "repro/monkeys/MessageSilo.hxx"
+#include "repro/monkeys/CertificateAuthenticator.hxx"
 
 #if defined(USE_SSL)
 #include "repro/stateAgents/CertServer.hxx"
@@ -683,6 +685,12 @@ ReproRunner::createDialogUsageManager()
 
    if (mDum)
    {
+      if(mProxyConfig->getConfigBool("EnableCertificateAuthenticator", false))
+      {
+         SharedPtr<TlsPeerAuthManager> certAuth(new TlsPeerAuthManager(*mDum, mDum->dumIncomingTarget()));
+         mDum->addIncomingFeature(certAuth);
+      }
+
       mSipAuthDisabled = mProxyConfig->getConfigBool("DisableAuth", false);
 
       // If Authentication is enabled, then configure DUM to authenticate requests
@@ -945,6 +953,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
    assert(mProxyConfig);
    assert(mSipStack);
    allTransportsSpecifyRecordRoute=false;
+   bool useEmailAsSIP = mProxyConfig->getConfigBool("TLSUseEmailAsSIP", false);
    try
    {
       // Check if advanced transport settings are provided
@@ -957,7 +966,8 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          // Sample config file format for advanced transport settings
          // Transport1Interface = 192.168.1.106:5061
          // Transport1Type = TLS
-         // Transprot1TlsDomain = sipdomain.com
+         // Transport1TlsDomain = sipdomain.com
+         // Transport1TlsClientVerification = None
          // Transport1RecordRouteUri = sip:sipdomain.com;transport=TLS
          // Transport1RcvBufLen = 2000
 
@@ -968,6 +978,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          {
             Data typeSettingKey(settingKeyBase + "Type");
             Data tlsDomainSettingKey(settingKeyBase + "TlsDomain");
+            Data tlsCVMSettingKey(settingKeyBase + "TlsClientVerification");
             Data recordRouteUriSettingKey(settingKeyBase + "RecordRouteUri");
             Data rcvBufSettingKey(settingKeyBase + "RcvBufLen");
 
@@ -999,13 +1010,32 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                   CritLog(<< "Unknown transport type found in " << typeSettingKey << " setting: " << mProxyConfig->getConfigData(typeSettingKey, "UDP"));
                }
                Data tlsDomain = mProxyConfig->getConfigData(tlsDomainSettingKey, "");
+               Data tlsCVMValue = mProxyConfig->getConfigData(tlsCVMSettingKey, "NONE");
+               SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None;
+               if(isEqualNoCase(tlsCVMValue, "Optional"))
+               {
+                  cvm = SecurityTypes::Optional;
+               }
+               else if(isEqualNoCase(tlsCVMValue, "Mandatory"))
+               {
+                  cvm = SecurityTypes::Mandatory;
+               }
+               else if(!isEqualNoCase(tlsCVMValue, "None"))
+               {
+                  CritLog(<< "Unknown TLS client verification mode found in " << tlsCVMSettingKey << " setting: " << tlsCVMValue);
+               }
                int rcvBufLen = mProxyConfig->getConfigInt(rcvBufSettingKey, 0);
                Transport *t = mSipStack->addTransport(tt,
                                  port,
                                  DnsUtil::isIpV6Address(ipAddr) ? V6 : V4,
                                  StunEnabled, 
-                                 ipAddr, // interface to bind to
-                                 tlsDomain);
+                                 ipAddr,       // interface to bind to
+                                 tlsDomain,
+                                 Data::Empty,  // private key passphrase - not currently used
+                                 SecurityTypes::TLSv1, // sslType
+                                 0,            // transport flags
+                                 cvm,          // tls client verification mode
+                                 useEmailAsSIP);
 
                if (t && rcvBufLen>0 )
                {
@@ -1082,6 +1112,20 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          int tlsPort = mProxyConfig->getConfigInt("TLSPort", 5061);
          int dtlsPort = mProxyConfig->getConfigInt("DTLSPort", 0);
          Data tlsDomain = mProxyConfig->getConfigData("TLSDomainName", "");
+         Data tlsCVMValue = mProxyConfig->getConfigData("TLSClientVerification", "NONE");
+         SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None;
+         if(isEqualNoCase(tlsCVMValue, "Optional"))
+         {
+            cvm = SecurityTypes::Optional;
+         }
+         else if(isEqualNoCase(tlsCVMValue, "Mandatory"))
+         {
+            cvm = SecurityTypes::Mandatory;
+         }
+         else if(!isEqualNoCase(tlsCVMValue, "None"))
+         {
+            CritLog(<< "Unknown TLS client verification mode found in TLSClientVerification setting: " << tlsCVMValue);
+         }
 
          if (udpPort)
          {
@@ -1095,8 +1139,8 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          }
          if (tlsPort)
          {
-            if (mUseV4) mSipStack->addTransport(TLS, tlsPort, V4, StunEnabled, Data::Empty, tlsDomain);
-            if (mUseV6) mSipStack->addTransport(TLS, tlsPort, V6, StunEnabled, Data::Empty, tlsDomain);
+            if (mUseV4) mSipStack->addTransport(TLS, tlsPort, V4, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, cvm, useEmailAsSIP);
+            if (mUseV6) mSipStack->addTransport(TLS, tlsPort, V6, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, cvm, useEmailAsSIP);
          }
          if (dtlsPort)
          {
@@ -1125,12 +1169,19 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
 
    // Add is trusted node monkey
    chain.addProcessor(std::auto_ptr<Processor>(new IsTrustedNode(*mProxyConfig)));
+
+   // Add Certificate Authenticator - if required
+   if(mProxyConfig->getConfigBool("EnableCertificateAuthenticator", false))
+   {
+      chain.addProcessor(std::auto_ptr<Processor>(new CertificateAuthenticator(*mProxyConfig, mSipStack)));
+   }
+
+   // Add digest authenticator monkey - if required
    if (!mSipAuthDisabled)
    {
       assert(mAuthRequestDispatcher);
       DigestAuthenticator* da = new DigestAuthenticator(*mProxyConfig, mAuthRequestDispatcher);
 
-      // Add digest authenticator monkey
       chain.addProcessor(std::auto_ptr<Processor>(da)); 
    }
 
