@@ -48,14 +48,14 @@ AH_TEMPLATE([OS_POINT_VER], [Point OS version])
 AC_DEFINE_UNQUOTED(OS_PATCH_VER, $OS_PATCH_VER)
 AH_TEMPLATE([OS_PATCH_VER], [Patch OS version])
 
-TOOLCHAIN_CFLAGS="-DRESIP_TOOLCHAIN_GNU"
+TOOLCHAIN_CPPFLAGS="-DRESIP_TOOLCHAIN_GNU"
 
 case $host_os in
 solaris*)
-  CXXFLAGS="$CXXFLAGS -library=stlport4"
+#  CXXFLAGS="$CXXFLAGS -library=stlport4"
 #  CFLAGS="-mt"
 #  LDFLAGS="$LDFLAGS -DTHREAD=MULTI -mt -library=stlport4"
-  TOOLCHAIN_CFLAGS="-DRESIP_TOOLCHAIN_SUNPRO"
+  TOOLCHAIN_CPPFLAGS="-DRESIP_TOOLCHAIN_SUNPRO"
   ;;
 *)
   ;;
@@ -102,10 +102,9 @@ esac
 OSTYPE_UPPER=`echo $OSTYPE | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'`
 ARCH_UPPER=`echo $host_cpu | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'`
 LARCH_UPPER=`echo $LARCH | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'`
-ARCH_CFLAGS="-DRESIP_OSTYPE_${OSTYPE_UPPER} -DRESIP_ARCH_${ARCH_UPPER} -DRESIP_LARCH_${LARCH_UPPER} -D_REENTRANT"
+ARCH_CPPFLAGS="-DRESIP_OSTYPE_${OSTYPE_UPPER} -DRESIP_ARCH_${ARCH_UPPER} -DRESIP_LARCH_${LARCH_UPPER} -D_REENTRANT"
 
-CXXFLAGS="${CXXFLAGS} ${ARCH_CFLAGS} ${TOOLCHAIN_CFLAGS}"
-CFLAGS="${CFLAGS} ${ARCH_CFLAGS} ${TOOLCHAIN_CFLAGS}"
+CPPFLAGS="${CPPFLAGS} ${ARCH_CPPFLAGS} ${TOOLCHAIN_CPPFLAGS}"
 
 AH_TEMPLATE([HAVE_sockaddr_in_len], [Define if sockaddr_in.sin_len exists])
 AC_CHECK_MEMBER([struct sockaddr_in.sin_len], AC_DEFINE(HAVE_sockaddr_in_len),,
@@ -132,12 +131,14 @@ AC_ARG_WITH(c-ares,
      AC_MSG_ERROR([unable to find ares_init(), install libcares and/or set LDFLAGS, or use contrib/ares])
    ])],
  [ AC_DEFINE_UNQUOTED(USE_ARES, , USE_ARES)
-   CXXFLAGS="$CXXFLAGS -I`pwd`/contrib/ares"
-   LDFLAGS="$LDFLAGS -L`pwd`/contrib/ares"
-   AC_SUBST(LIBARES_LIBADD, "-lares")
-   AC_SEARCH_LIBS(ares_init, ares, , [
-     AC_MSG_ERROR([unable to find ares_init(), must build contrib/ares or specify --with-c-ares])
-   ])])
+   CXXFLAGS="$CXXFLAGS -I`pwd`/rutil/dns/ares"
+   LDFLAGS="$LDFLAGS -L`pwd`/rutil/dns/ares"
+   AC_SUBST(LIBARES_LIBADD, "`pwd`/rutil/dns/ares/libresipares.la")
+   # We no longer check for this because it gets built by us:
+   #AC_SEARCH_LIBS(ares_init, ares, , [
+   #  AC_MSG_ERROR([unable to find ares_init(), must build contrib/ares or specify --with-c-ares])
+   #])
+   ])
 
 AM_CONDITIONAL(USE_SSL, false)
 AC_ARG_WITH(ssl, 
@@ -232,6 +233,7 @@ AC_SUBST(ABIVERSION)
 #  apps/ichat-gw/jabberconnector/Makefile
 # until it is tested with autotools
 AC_OUTPUT(Makefile \
+	rutil/dns/ares/Makefile \
 	rutil/Makefile \
 	rutil/test/Makefile \
 	resip/Makefile \

@@ -1,6 +1,12 @@
 # $Id$
 
-SUBDIRS = . test
+if USE_ARES
+SUBDIRS = dns/ares
+else
+SUBDIRS = 
+endif
+
+SUBDIRS += . test
 
 EXTRA_DIST = fixupGperf
 EXTRA_DIST += mainpage.doc

@@ -147,6 +147,9 @@
     <ClCompile Include="ProxyConfig.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="monkeys\CertificateAuthenticator.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="StaticRegStore.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -312,6 +315,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ProxyConfig.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="monkeys\CertificateAuthenticator.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="StaticRegStore.hxx">

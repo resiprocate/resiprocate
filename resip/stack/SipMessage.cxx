@@ -32,7 +32,11 @@ SipMessage::SipMessage(const Transport* fromWire)
      mIsBadAck200(false),     
      mIsExternal(fromWire != 0),
      mHeaders(StlPoolAllocator<HeaderFieldValueList*, PoolBase >(&mPool)),
+#ifndef __SUNPRO_CC
      mUnknownHeaders(StlPoolAllocator<std::pair<Data, HeaderFieldValueList*>, PoolBase >(&mPool)),
+#else
+     mUnknownHeaders(),
+#endif
      mTransport(fromWire),
      mRFC2543TransactionId(),
      mRequest(false),
@@ -48,7 +52,11 @@ SipMessage::SipMessage(const Transport* fromWire)
 
 SipMessage::SipMessage(const SipMessage& from)
    : mHeaders(StlPoolAllocator<HeaderFieldValueList*, PoolBase >(&mPool)),
+#ifndef __SUNPRO_CC
      mUnknownHeaders(StlPoolAllocator<std::pair<Data, HeaderFieldValueList*>, PoolBase >(&mPool)),
+#else
+     mUnknownHeaders(),
+#endif
      mCreatedTime(Timer::getTimeMicroSec())
 {
    init(from);

@@ -153,7 +153,11 @@ class SipMessage : public TransactionMessage
 {
    public:
       RESIP_HeapCount(SipMessage);
+#ifndef __SUNPRO_CC
       typedef std::list< std::pair<Data, HeaderFieldValueList*>, StlPoolAllocator<std::pair<Data, HeaderFieldValueList*>, PoolBase > > UnknownHeaders;
+#else
+      typedef std::list< std::pair<Data, HeaderFieldValueList*> > UnknownHeaders;
+#endif
 
       explicit SipMessage(const Transport* fromWire = 0);
       /// @todo .dlb. public, allows pass by value to compile.

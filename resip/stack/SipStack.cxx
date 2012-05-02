@@ -298,7 +298,9 @@ SipStack::addTransport( TransportType protocol,
                         const Data& sipDomainname,
                         const Data& privateKeyPassPhrase,
                         SecurityTypes::SSLType sslType,
-                        unsigned transportFlags)
+                        unsigned transportFlags,
+                        SecurityTypes::TlsClientVerificationMode cvm,
+                        bool useEmailAsSIP)
 {
    assert(!mShuttingDown);
 
@@ -350,7 +352,9 @@ SipStack::addTransport( TransportType protocol,
                                          sslType,
                                          mSocketFunc,
                                          *mCompression,
-                                         transportFlags);
+                                         transportFlags,
+                                         cvm,
+                                         useEmailAsSIP);
 #else
             CritLog (<< "TLS not supported in this stack. You don't have openssl");
             assert(0);

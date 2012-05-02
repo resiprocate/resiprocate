@@ -291,6 +291,15 @@ class SipStack : public FdSetIOObserver
                                       we are loading PKCS7 keys, so a pass phrase is not required.
 
          @param sslType               Version of the TLS specification to use:  SSLv23 or TLSv1
+
+         @param cvm                   SSL verify mode for the peer (whether we accept and/or
+                                      insist on a client certificate from the peer)
+
+         @param useEmailAsSIP         If true, we will accept the email address in a client's
+                                      subjectAltName as if it were a SIP URI.  This is convenient
+                                      because many commercial CAs offer email certificates but not
+                                      sip: certificates.  For reasons of standards compliance, it
+                                      is disabled by default.
       */
       Transport* addTransport( TransportType protocol,
                          int port,
@@ -302,7 +311,9 @@ class SipStack : public FdSetIOObserver
                                                                   // based stuff
                          const Data& privateKeyPassPhrase = Data::Empty,
                          SecurityTypes::SSLType sslType = SecurityTypes::TLSv1,
-                         unsigned transportFlags = 0);
+                         unsigned transportFlags = 0,
+                         SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None,
+                         bool useEmailAsSIP = false);
 
       /**
           Used to plug-in custom transports.  Adds the transport to the Transport
