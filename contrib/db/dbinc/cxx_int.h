@@ -1,14 +1,13 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1997-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1997-2009 Oracle.  All rights reserved.
  *
- * $Id: cxx_int.h,v 11.25 2004/09/22 22:20:31 mjc Exp $
+ * $Id$
  */
 
-#ifndef _CXX_INT_H_
-#define	_CXX_INT_H_
+#ifndef _DB_CXX_INT_H_
+#define	_DB_CXX_INT_H_
 
 // private data structures known to the implementation only
 
@@ -27,7 +26,6 @@
 // for a wrapper class that has an underlying pointer representation.
 //
 #define	WRAPPED_CLASS(_WRAPPER_CLASS, _IMP_CLASS, _WRAPPED_TYPE)           \
-									   \
 	class _IMP_CLASS {};                                               \
 									   \
 	inline _WRAPPED_TYPE *unwrap(_WRAPPER_CLASS *val)                  \
@@ -62,11 +60,11 @@ WRAPPED_CLASS(DbTxn, DbTxnImp, DB_TXN)
 // the tristate values given above.  If UNKNOWN is specified,
 // the behavior is taken from the last initialized DbEnv.
 //
-#define	DB_ERROR(env, caller, ecode, policy) \
-    DbEnv::runtime_error(env, caller, ecode, policy)
+#define	DB_ERROR(dbenv, caller, ecode, policy) \
+    DbEnv::runtime_error(dbenv, caller, ecode, policy)
 
-#define	DB_ERROR_DBT(env, caller, dbt, policy) \
-    DbEnv::runtime_error_dbt(env, caller, dbt, policy)
+#define	DB_ERROR_DBT(dbenv, caller, dbt, policy) \
+    DbEnv::runtime_error_dbt(dbenv, caller, dbt, policy)
 
 #define	DB_OVERFLOWED_DBT(dbt) \
 	(F_ISSET(dbt, DB_DBT_USERMEM) && dbt->size > dbt->ulen)
@@ -74,4 +72,4 @@ WRAPPED_CLASS(DbTxn, DbTxnImp, DB_TXN)
 /* values for Db::flags_ */
 #define	DB_CXX_PRIVATE_ENV      0x00000001
 
-#endif /* !_CXX_INT_H_ */
+#endif /* !_DB_CXX_INT_H_ */

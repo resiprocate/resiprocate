@@ -1,17 +1,12 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1996-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
  *
- * $Id: db_byteorder.c,v 11.10 2004/01/28 03:35:52 bostic Exp $
+ * $Id$
  */
 
 #include "db_config.h"
-
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-#endif
 
 #include "db_int.h"
 
@@ -41,30 +36,26 @@ __db_isbigendian()
  *	Return if we need to do byte swapping, checking for illegal
  *	values.
  *
- * PUBLIC: int __db_byteorder __P((DB_ENV *, int));
+ * PUBLIC: int __db_byteorder __P((ENV *, int));
  */
 int
-__db_byteorder(dbenv, lorder)
-	DB_ENV *dbenv;
+__db_byteorder(env, lorder)
+	ENV *env;
 	int lorder;
 {
-	int is_bigendian;
-
-	is_bigendian = __db_isbigendian();
-
 	switch (lorder) {
 	case 0:
 		break;
 	case 1234:
-		if (is_bigendian)
+		if (!F_ISSET(env, ENV_LITTLEENDIAN))
 			return (DB_SWAPBYTES);
 		break;
 	case 4321:
-		if (!is_bigendian)
+		if (F_ISSET(env, ENV_LITTLEENDIAN))
 			return (DB_SWAPBYTES);
 		break;
 	default:
-		__db_err(dbenv,
+		__db_errx(env,
 	    "unsupported byte order, only big and little-endian supported");
 		return (EINVAL);
 	}

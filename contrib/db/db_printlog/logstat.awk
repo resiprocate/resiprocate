@@ -1,4 +1,4 @@
-# $Id: logstat.awk,v 1.1 2002/05/10 15:19:13 bostic Exp $
+# $Id$
 #
 # Output accumulated log record count/size statistics.
 BEGIN {

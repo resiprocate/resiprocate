@@ -1,5 +1,5 @@
 #!/bin/sh -
-#	$Id: s_readme,v 1.7 2003/07/02 15:27:44 bostic Exp $
+#	$Id$
 #
 # Build the README.
 
@@ -15,9 +15,9 @@ trap 'rm -f $t; exit 0' 0 1 2 3 13 15
 cat << END_OF_README>$t
 $DB_VERSION_STRING
 
-This is version $DB_VERSION_MAJOR.$DB_VERSION_MINOR.$DB_VERSION_PATCH of Berkeley DB from Sleepycat Software.  To view
-the release and installation documentation, load the distribution file
-docs/index.html into your web browser.
+This is version $DB_VERSION_MAJOR.$DB_VERSION_MINOR.$DB_VERSION_PATCH of Berkeley DB from Oracle.  To view release and
+installation documentation, load the distribution file docs/index.html
+into your web browser.
 END_OF_README
 
 f=../README

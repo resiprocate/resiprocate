@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 11.264 2004/11/01 21:55:33 mark Exp $
+# $Id$
 
 srcdir=	@srcdir@/..
 builddir=.
@@ -22,26 +22,27 @@ transform=@program_transform_name@
 ##################################################
 # Paths for standard user-level commands.
 ##################################################
+AR=	@AR@
+CHMOD=	@CHMOD@
+CP=	@CP@
+LN=	@LN@
+MKDIR=	@MKDIR@
+RANLIB=	@RANLIB@
+RM=	@RM@
 SHELL=	@db_cv_path_sh@
-ar=	@db_cv_path_ar@
-chmod=	@db_cv_path_chmod@
-cp=	@db_cv_path_cp@
-ln=	@db_cv_path_ln@
-mkdir=	@db_cv_path_mkdir@
-ranlib=	@db_cv_path_ranlib@
-rm=	@db_cv_path_rm@
-strip=	@db_cv_path_strip@
+STRIP=	@STRIP@
 
 ##################################################
 # General library information.
 ##################################################
 DEF_LIB=	@DEFAULT_LIB@
 DEF_LIB_CXX=	@DEFAULT_LIB_CXX@
+DEF_LIB_STL=	@DEFAULT_LIB_STL@
 INSTALLER=	@INSTALLER@
 LIBTOOL=	@LIBTOOL@
 
 POSTLINK=	@POSTLINK@
-SOLINK=		@MAKEFILE_SOLINK@
+SOLINK=		@MAKEFILE_SOLINK@ @CFLAGS@
 SOFLAGS=	@SOFLAGS@
 LIBMAJOR=	@DB_VERSION_MAJOR@
 LIBVERSION=	@DB_VERSION_MAJOR@.@DB_VERSION_MINOR@
@@ -51,14 +52,14 @@ CPPFLAGS=	-I$(builddir) -I$(srcdir) @CPPFLAGS@
 ##################################################
 # C API.
 ##################################################
-CFLAGS=	 	-c $(CPPFLAGS) @CFLAGS@
+CFLAGS=		-c $(CPPFLAGS) @CFLAGS@
 CC=		@MAKEFILE_CC@
 CCLINK=		@MAKEFILE_CCLINK@ @CFLAGS@
 
 LDFLAGS=	@LDFLAGS@
-LIBS=		@LIBS@
+LIBS=		@LIBSO_LIBS@
 TEST_LIBS=	@TEST_LIBS@
-LIBSO_LIBS=	@LIBSO_LIBS@
+LIBCSO_LIBS=	@LIBCSO_LIBS@ @LIBSO_LIBS@
 
 libdb_base=	libdb
 libdb=		$(libdb_base).a
@@ -77,7 +78,7 @@ CXXFLAGS=	-c $(CPPFLAGS) @CXXFLAGS@
 CXX=		@MAKEFILE_CXX@
 CXXLINK=	@MAKEFILE_CXXLINK@ @CXXFLAGS@
 XSOLINK=	@MAKEFILE_XSOLINK@ @CXXFLAGS@
-LIBXSO_LIBS=	@LIBXSO_LIBS@
+LIBXSO_LIBS=	@LIBXSO_LIBS@ @LIBSO_LIBS@
 
 libcxx_base=	libdb_cxx
 libcxx=		$(libcxx_base).a
@@ -88,30 +89,43 @@ libxso_default=	$(libcxx_base)@SOSUFFIX@
 libxso_major=	$(libcxx_base)-$(LIBMAJOR)@SOSUFFIX@
 
 ##################################################
+# STL API.
+#
+# STL support is optional, and can be built with static or shared libraries.
+##################################################
+STLFLAGS=	$(CXXFLAGS) -I$(srcdir)/stl
+LIBSTLSO_LIBS=	@LIBXSO_LIBS@ @LIBSO_LIBS@
+
+libstl_base=	libdb_stl
+libstl=		$(libstl_base).a
+libstl_version=	$(libstl_base)-$(LIBVERSION).a
+libstlso=	$(libstl_base)-$(LIBVERSION)@SOSUFFIX@
+libstlso_target=$(libstl_base)-$(LIBVERSION).la
+libstlso_default=$(libstl_base)@SOSUFFIX@
+libstlso_major=	$(libstl_base)-$(LIBMAJOR)@SOSUFFIX@
+
+##################################################
 # Java API.
 #
 # Java support is optional and requires shared librarires.
 ##################################################
 CLASSPATH=	$(JAVA_CLASSTOP)
-LIBJSO_LIBS=	@LIBJSO_LIBS@
+LIBJSO_LIBS=	@LIBJSO_LIBS@ @LIBSO_LIBS@
+SWIGCFLAGS=	@SWIGCFLAGS@
 
 JAR=		@JAR@
+JAVA=		env CLASSPATH="$(CLASSPATH)" @JAVA@
 JAVAC=		env CLASSPATH="$(CLASSPATH)" @JAVAC@
 JAVACFLAGS=	@JAVACFLAGS@
 JAVA_CLASSTOP=	./classes
-JAVA_RPCCLASSTOP=./classes.rpc
 JAVA_EXCLASSTOP=./classes.ex
-JAVA_DBREL=	com/sleepycat/db
-JAVA_EXREL=	com/sleepycat/examples
-JAVA_RPCREL=	com/sleepycat/db/rpcserver
 JAVA_SRCDIR=	$(srcdir)/java/src
-JAVA_EXDIR=	$(srcdir)/examples_java/src/com/sleepycat/examples
-JAVA_RPCDIR=	$(srcdir)/rpc_server/java
+JAVA_EXDIR=	$(srcdir)/examples_java/src
 JAVA_SLEEPYCAT=	$(srcdir)/java/src/com/sleepycat
+JAVA_MANIFEST=	$(srcdir)/java/jarManifestEntries
 
 libj_jarfile=	db.jar
 libj_exjarfile=	dbexamples.jar
-rpc_jarfile=	dbsvc.jar
 libjso_base=	libdb_java
 libjso=		$(libjso_base)-$(LIBVERSION)@JMODSUFFIX@
 libjso_static=	$(libjso_base)-$(LIBVERSION).a
@@ -125,14 +139,14 @@ libjso_g=	$(libjso_base)-$(LIBVERSION)_g@JMODSUFFIX@
 #
 # Tcl support is optional and requires shared libraries.
 ##################################################
-TCFLAGS=	@TCFLAGS@
-LIBTSO_LIBS=	@LIBTSO_LIBS@
+TCL_INCLUDE_SPEC=	@TCL_INCLUDE_SPEC@
+LIBTSO_LIBS=	@LIBTSO_LIBS@ @LIBSO_LIBS@
 libtso_base=	libdb_tcl
-libtso=		$(libtso_base)-$(LIBVERSION)@MODSUFFIX@
+libtso=		$(libtso_base)-$(LIBVERSION)@LIBTSO_MODSUFFIX@
 libtso_static=	$(libtso_base)-$(LIBVERSION).a
 libtso_target=	$(libtso_base)-$(LIBVERSION).la
-libtso_default=	$(libtso_base)@MODSUFFIX@
-libtso_major=	$(libtso_base)-$(LIBMAJOR)@MODSUFFIX@
+libtso_default=	$(libtso_base)@LIBTSO_MODSUFFIX@
+libtso_major=	$(libtso_base)-$(LIBMAJOR)@LIBTSO_MODSUFFIX@
 
 ##################################################
 # db_dump185 UTILITY
@@ -155,10 +169,10 @@ DB185LIB=
 # Object and utility lists.
 ##################################################
 BTREE_OBJS=\
-	bt_compare@o@ bt_conv@o@ bt_curadj@o@ bt_cursor@o@ bt_delete@o@ \
-	bt_method@o@ bt_open@o@ bt_put@o@ bt_rec@o@ bt_reclaim@o@ \
-	bt_recno@o@ bt_rsearch@o@ bt_search@o@ bt_split@o@ bt_stat@o@ \
-	bt_upgrade@o@ btree_auto@o@
+	bt_compare@o@ bt_compress@o@ bt_conv@o@ bt_curadj@o@ bt_cursor@o@ \
+	bt_delete@o@ bt_method@o@ bt_open@o@ bt_put@o@ bt_rec@o@ \
+	bt_reclaim@o@ bt_recno@o@ bt_rsearch@o@ bt_search@o@ bt_split@o@ bt_stat@o@ \
+	bt_compact@o@ bt_upgrade@o@ btree_auto@o@
 BTREE_VRFY_OBJS=\
 	db_ovfl_vrfy@o@ db_vrfy@o@ db_vrfyutil@o@ bt_verify@o@
 HASH_OBJS=\
@@ -172,41 +186,52 @@ QUEUE_OBJS=\
 	qam_open@o@ qam_rec@o@ qam_stat@o@ qam_upgrade@o@
 QUEUE_VRFY_OBJS=\
 	qam_verify@o@
+LOCK_OBJS=\
+	lock@o@ lock_deadlock@o@ lock_failchk@o@ lock_id@o@ lock_list@o@ \
+	lock_method@o@ lock_region@o@ lock_stat@o@ lock_timer@o@ lock_util@o@
+MUTEX_OBJS=\
+	mut_alloc@o@ mut_failchk@o@ mut_method@o@ mut_region@o@ mut_stat@o@
 REP_OBJS=\
-	rep_auto@o@ rep_backup@o@ rep_method@o@ rep_record@o@ rep_region@o@ \
-	rep_stat@o@ rep_util@o@
+	rep_auto@o@ rep_backup@o@ rep_elect@o@ rep_lease@o@ rep_log@o@ \
+	rep_method@o@ rep_record@o@ rep_region@o@ rep_stat@o@ \
+	rep_util@o@ rep_verify@o@
+REPMGR_OBJS=\
+	os_addrinfo@o@\
+	repmgr_auto@o@ repmgr_elect@o@ repmgr_method@o@ repmgr_msg@o@ \
+	repmgr_net@o@ repmgr_posix@o@ repmgr_queue@o@ repmgr_sel@o@ \
+	repmgr_stat@o@ repmgr_util@o@
 PRINT_OBJS=\
 	btree_autop@o@ crdel_autop@o@ db_autop@o@ dbreg_autop@o@ \
-	fileops_autop@o@ hash_autop@o@ qam_autop@o@ rep_autop@o@ \
-	txn_autop@o@
+	fileops_autop@o@ hash_autop@o@ qam_autop@o@ txn_autop@o@
 
 C_OBJS= @ADDITIONAL_OBJS@ @REPLACEMENT_OBJS@ @CRYPTO_OBJS@ @RPC_CLIENT_OBJS@ \
 	crdel_auto@o@ crdel_rec@o@ db@o@ db_am@o@ db_auto@o@ \
-	db_byteorder@o@ db_cam@o@ db_conv@o@ db_dispatch@o@ db_dup@o@ \
-	db_err@o@ db_getlong@o@ db_idspace@o@ db_iface@o@ db_join@o@ \
-	db_log2@o@ db_meta@o@ db_method@o@ db_open@o@ db_overflow@o@ \
-	db_pr@o@ db_rec@o@ db_reclaim@o@ db_rename@o@ db_remove@o@ \
-	db_ret@o@ db_salloc@o@ db_setid@o@ db_setlsn@o@ db_shash@o@ \
-	db_stati@o@ db_truncate@o@ db_upg@o@ db_upg_opd@o@ dbm@o@ \
-	dbreg@o@ dbreg_auto@o@ dbreg_rec@o@ dbreg_stat@o@ dbreg_util@o@ \
-	env_file@o@ env_method@o@ env_open@o@ env_recover@o@ \
-	env_region@o@ env_stat@o@ fileops_auto@o@ fop_basic@o@ \
-	fop_rec@o@ fop_util@o@ hash_func@o@ hmac@o@ hsearch@o@ lock@o@ \
-	lock_deadlock@o@ lock_id@o@ lock_list@o@ lock_method@o@ \
-	lock_region@o@ lock_stat@o@ lock_timer@o@ lock_util@o@ log@o@ \
-	log_archive@o@ log_compare@o@ log_get@o@ log_method@o@ \
-	log_put@o@ log_stat@o@ mp_alloc@o@ mp_bh@o@ mp_fget@o@ \
+	db_byteorder@o@ db_cam@o@ db_cds@o@ db_compint@o@ db_conv@o@ db_dispatch@o@ \
+	db_dup@o@ db_err@o@ db_getlong@o@ db_idspace@o@ db_iface@o@ \
+	db_join@o@ db_log2@o@ db_meta@o@ db_method@o@ db_open@o@ \
+	db_overflow@o@ db_pr@o@ db_rec@o@ db_reclaim@o@ db_remove@o@ \
+	db_rename@o@ db_ret@o@ db_setid@o@ db_setlsn@o@ db_shash@o@ \
+	db_sort_multiple@o@ db_stati@o@ db_truncate@o@ db_upg@o@ \
+	db_upg_opd@o@ dbm@o@ dbreg@o@ dbreg_auto@o@ dbreg_rec@o@ dbreg_stat@o@ \
+	dbreg_util@o@ dbt@o@ env_alloc@o@ env_config@o@ env_failchk@o@ \
+	env_file@o@ env_globals@o@ env_method@o@ env_name@o@ env_open@o@ \
+	env_recover@o@ env_region@o@ env_register@o@ env_sig@o@ \
+	env_stat@o@ fileops_auto@o@ fop_basic@o@ fop_rec@o@ fop_util@o@ \
+	hash_func@o@ hmac@o@ hsearch@o@ log@o@ log_archive@o@ \
+	log_compare@o@ log_debug@o@ log_get@o@ log_method@o@ log_put@o@ \
+	log_stat@o@ mkpath@o@ mp_alloc@o@ mp_bh@o@ mp_fget@o@ \
 	mp_fmethod@o@ mp_fopen@o@ mp_fput@o@ mp_fset@o@ mp_method@o@ \
-	mp_region@o@ mp_register@o@ mp_stat@o@ mp_sync@o@ mp_trickle@o@ \
-	mutex@o@ os_abs@o@ os_alloc@o@ os_clock@o@ os_config@o@ \
-	os_dir@o@ os_errno@o@ os_fid@o@ os_fsync@o@ os_handle@o@ \
-	os_id@o@ os_map@o@ os_method@o@ os_oflags@o@ os_open@o@ \
-	os_region@o@ os_rename@o@ os_root@o@ os_rpath@o@ os_rw@o@ \
-	os_seek@o@ os_sleep@o@ os_spin@o@ os_stat@o@ os_tmpdir@o@ \
-	os_truncate@o@ os_unlink@o@ sha1@o@ seq_stat@o@ sequence@o@ \
-	snprintf@o@ txn@o@ txn_auto@o@ txn_method@o@ txn_rec@o@ \
-	txn_recover@o@ txn_region@o@ txn_stat@o@ txn_util@o@ xa@o@ \
-	xa_db@o@ xa_map@o@
+	mp_mvcc@o@ mp_region@o@ mp_register@o@ mp_resize@o@ mp_stat@o@ \
+	mp_sync@o@ mp_trickle@o@ openflags@o@ os_abort@o@ os_abs@o@ \
+	os_alloc@o@ os_clock@o@ os_cpu@o@ os_ctime@o@ os_config@o@ \
+	os_dir@o@ os_errno@o@ os_fid@o@ os_flock@o@ os_fsync@o@ \
+	os_getenv@o@ os_handle@o@ os_map@o@ os_method@o@ os_mkdir@o@ \
+	os_open@o@ os_pid@o@ os_rename@o@ os_root@o@ os_rpath@o@ \
+	os_rw@o@ os_seek@o@ os_stack@o@ os_stat@o@ os_tmpdir@o@ \
+	os_truncate@o@ os_uid@o@ os_unlink@o@ os_yield@o@ partition@o@ \
+	seq_stat@o@ sequence@o@ sha1@o@ snprintf@o@ txn@o@ txn_auto@o@ \
+	txn_chkpt@o@ txn_failchk@o@ txn_method@o@ txn_rec@o@ txn_recover@o@ \
+	txn_region@o@ txn_stat@o@ txn_util@o@ zerofill@o@
 
 CXX_OBJS=\
 	cxx_db@o@ cxx_dbc@o@ cxx_dbt@o@ cxx_env@o@ cxx_except@o@ cxx_lock@o@ \
@@ -220,11 +245,30 @@ JAVA_OBJS=\
 	db_java_wrap@o@
 
 JAVA_DBSRCS=\
+	$(JAVA_SLEEPYCAT)/asm/AnnotationVisitor.java \
+	$(JAVA_SLEEPYCAT)/asm/AnnotationWriter.java \
+	$(JAVA_SLEEPYCAT)/asm/Attribute.java \
+	$(JAVA_SLEEPYCAT)/asm/ByteVector.java \
+	$(JAVA_SLEEPYCAT)/asm/ClassAdapter.java \
+	$(JAVA_SLEEPYCAT)/asm/ClassReader.java \
+	$(JAVA_SLEEPYCAT)/asm/ClassVisitor.java \
+	$(JAVA_SLEEPYCAT)/asm/ClassWriter.java \
+	$(JAVA_SLEEPYCAT)/asm/Edge.java \
+	$(JAVA_SLEEPYCAT)/asm/FieldVisitor.java \
+	$(JAVA_SLEEPYCAT)/asm/FieldWriter.java \
+	$(JAVA_SLEEPYCAT)/asm/Handler.java \
+	$(JAVA_SLEEPYCAT)/asm/Item.java \
+	$(JAVA_SLEEPYCAT)/asm/Label.java \
+	$(JAVA_SLEEPYCAT)/asm/MethodVisitor.java \
+	$(JAVA_SLEEPYCAT)/asm/MethodWriter.java \
+	$(JAVA_SLEEPYCAT)/asm/Opcodes.java \
+	$(JAVA_SLEEPYCAT)/asm/Type.java \
 	$(JAVA_SLEEPYCAT)/bind/ByteArrayBinding.java \
 	$(JAVA_SLEEPYCAT)/bind/EntityBinding.java \
 	$(JAVA_SLEEPYCAT)/bind/EntryBinding.java \
 	$(JAVA_SLEEPYCAT)/bind/RecordNumberBinding.java \
 	$(JAVA_SLEEPYCAT)/bind/serial/ClassCatalog.java \
+	$(JAVA_SLEEPYCAT)/bind/serial/SerialBase.java \
 	$(JAVA_SLEEPYCAT)/bind/serial/SerialBinding.java \
 	$(JAVA_SLEEPYCAT)/bind/serial/SerialInput.java \
 	$(JAVA_SLEEPYCAT)/bind/serial/SerialOutput.java \
@@ -235,6 +279,7 @@ JAVA_DBSRCS=\
 	$(JAVA_SLEEPYCAT)/bind/serial/TupleSerialKeyCreator.java \
 	$(JAVA_SLEEPYCAT)/bind/serial/TupleSerialMarshalledBinding.java \
 	$(JAVA_SLEEPYCAT)/bind/serial/TupleSerialMarshalledKeyCreator.java \
+	$(JAVA_SLEEPYCAT)/bind/tuple/BigIntegerBinding.java \
 	$(JAVA_SLEEPYCAT)/bind/tuple/BooleanBinding.java \
 	$(JAVA_SLEEPYCAT)/bind/tuple/ByteBinding.java \
 	$(JAVA_SLEEPYCAT)/bind/tuple/CharacterBinding.java \
@@ -245,7 +290,10 @@ JAVA_DBSRCS=\
 	$(JAVA_SLEEPYCAT)/bind/tuple/MarshalledTupleEntry.java \
 	$(JAVA_SLEEPYCAT)/bind/tuple/MarshalledTupleKeyEntity.java \
 	$(JAVA_SLEEPYCAT)/bind/tuple/ShortBinding.java \
+	$(JAVA_SLEEPYCAT)/bind/tuple/SortedDoubleBinding.java \
+	$(JAVA_SLEEPYCAT)/bind/tuple/SortedFloatBinding.java \
 	$(JAVA_SLEEPYCAT)/bind/tuple/StringBinding.java \
+	$(JAVA_SLEEPYCAT)/bind/tuple/TupleBase.java \
 	$(JAVA_SLEEPYCAT)/bind/tuple/TupleBinding.java \
 	$(JAVA_SLEEPYCAT)/bind/tuple/TupleInput.java \
 	$(JAVA_SLEEPYCAT)/bind/tuple/TupleInputBinding.java \
@@ -255,14 +303,14 @@ JAVA_DBSRCS=\
 	$(JAVA_SLEEPYCAT)/bind/tuple/TupleTupleKeyCreator.java \
 	$(JAVA_SLEEPYCAT)/bind/tuple/TupleTupleMarshalledBinding.java \
 	$(JAVA_SLEEPYCAT)/bind/tuple/TupleTupleMarshalledKeyCreator.java \
+	$(JAVA_SLEEPYCAT)/collections/BaseIterator.java \
+	$(JAVA_SLEEPYCAT)/collections/BlockIterator.java \
 	$(JAVA_SLEEPYCAT)/collections/CurrentTransaction.java \
 	$(JAVA_SLEEPYCAT)/collections/DataCursor.java \
 	$(JAVA_SLEEPYCAT)/collections/DataView.java \
-	$(JAVA_SLEEPYCAT)/collections/KeyRange.java \
-	$(JAVA_SLEEPYCAT)/collections/KeyRangeException.java \
 	$(JAVA_SLEEPYCAT)/collections/MapEntryParameter.java \
+	$(JAVA_SLEEPYCAT)/collections/MyRangeCursor.java \
 	$(JAVA_SLEEPYCAT)/collections/PrimaryKeyAssigner.java \
-	$(JAVA_SLEEPYCAT)/collections/RangeCursor.java \
 	$(JAVA_SLEEPYCAT)/collections/StoredCollection.java \
 	$(JAVA_SLEEPYCAT)/collections/StoredCollections.java \
 	$(JAVA_SLEEPYCAT)/collections/StoredContainer.java \
@@ -281,6 +329,7 @@ JAVA_DBSRCS=\
 	$(JAVA_SLEEPYCAT)/collections/TransactionWorker.java \
 	$(JAVA_SLEEPYCAT)/collections/TupleSerialFactory.java \
 	$(JAVA_SLEEPYCAT)/compat/DbCompat.java \
+	$(JAVA_SLEEPYCAT)/db/BtreeCompressor.java \
 	$(JAVA_SLEEPYCAT)/db/BtreePrefixCalculator.java \
 	$(JAVA_SLEEPYCAT)/db/BtreeStats.java \
 	$(JAVA_SLEEPYCAT)/db/CacheFile.java \
@@ -288,6 +337,8 @@ JAVA_DBSRCS=\
 	$(JAVA_SLEEPYCAT)/db/CacheFileStats.java \
 	$(JAVA_SLEEPYCAT)/db/CacheStats.java \
 	$(JAVA_SLEEPYCAT)/db/CheckpointConfig.java \
+	$(JAVA_SLEEPYCAT)/db/CompactConfig.java \
+	$(JAVA_SLEEPYCAT)/db/CompactStats.java \
 	$(JAVA_SLEEPYCAT)/db/Cursor.java \
 	$(JAVA_SLEEPYCAT)/db/CursorConfig.java \
 	$(JAVA_SLEEPYCAT)/db/Database.java \
@@ -300,7 +351,12 @@ JAVA_DBSRCS=\
 	$(JAVA_SLEEPYCAT)/db/Environment.java \
 	$(JAVA_SLEEPYCAT)/db/EnvironmentConfig.java \
 	$(JAVA_SLEEPYCAT)/db/ErrorHandler.java \
+	$(JAVA_SLEEPYCAT)/db/EventHandler.java \
+	$(JAVA_SLEEPYCAT)/db/EventHandlerAdapter.java \
 	$(JAVA_SLEEPYCAT)/db/FeedbackHandler.java \
+	$(JAVA_SLEEPYCAT)/db/ForeignKeyDeleteAction.java \
+	$(JAVA_SLEEPYCAT)/db/ForeignKeyNullifier.java \
+	$(JAVA_SLEEPYCAT)/db/ForeignMultiKeyNullifier.java \
 	$(JAVA_SLEEPYCAT)/db/HashStats.java \
 	$(JAVA_SLEEPYCAT)/db/Hasher.java \
 	$(JAVA_SLEEPYCAT)/db/JoinConfig.java \
@@ -320,25 +376,45 @@ JAVA_DBSRCS=\
 	$(JAVA_SLEEPYCAT)/db/LogStats.java \
 	$(JAVA_SLEEPYCAT)/db/MemoryException.java \
 	$(JAVA_SLEEPYCAT)/db/MessageHandler.java \
+	$(JAVA_SLEEPYCAT)/db/MultipleNIODataEntry.java \
+	$(JAVA_SLEEPYCAT)/db/MultipleKeyNIODataEntry.java \
+	$(JAVA_SLEEPYCAT)/db/MultipleRecnoNIODataEntry.java \
 	$(JAVA_SLEEPYCAT)/db/MultipleDataEntry.java \
 	$(JAVA_SLEEPYCAT)/db/MultipleEntry.java \
 	$(JAVA_SLEEPYCAT)/db/MultipleKeyDataEntry.java \
 	$(JAVA_SLEEPYCAT)/db/MultipleRecnoDataEntry.java \
+	$(JAVA_SLEEPYCAT)/db/MutexStats.java \
 	$(JAVA_SLEEPYCAT)/db/OperationStatus.java \
 	$(JAVA_SLEEPYCAT)/db/PanicHandler.java \
+	$(JAVA_SLEEPYCAT)/db/PartitionHandler.java \
 	$(JAVA_SLEEPYCAT)/db/PreparedTransaction.java \
 	$(JAVA_SLEEPYCAT)/db/QueueStats.java \
 	$(JAVA_SLEEPYCAT)/db/RecordNumberAppender.java \
 	$(JAVA_SLEEPYCAT)/db/RecoveryOperation.java \
+	$(JAVA_SLEEPYCAT)/db/ReplicationConfig.java \
+	$(JAVA_SLEEPYCAT)/db/ReplicationDuplicateMasterException.java \
 	$(JAVA_SLEEPYCAT)/db/ReplicationHandleDeadException.java \
+	$(JAVA_SLEEPYCAT)/db/ReplicationHoldElectionException.java \
+	$(JAVA_SLEEPYCAT)/db/ReplicationHostAddress.java \
+	$(JAVA_SLEEPYCAT)/db/ReplicationJoinFailureException.java \
+	$(JAVA_SLEEPYCAT)/db/ReplicationLeaseExpiredException.java \
+	$(JAVA_SLEEPYCAT)/db/ReplicationLeaseTimeoutException.java \
+	$(JAVA_SLEEPYCAT)/db/ReplicationLockoutException.java \
+	$(JAVA_SLEEPYCAT)/db/ReplicationManagerAckPolicy.java \
+	$(JAVA_SLEEPYCAT)/db/ReplicationManagerSiteInfo.java \
+	$(JAVA_SLEEPYCAT)/db/ReplicationManagerStats.java \
+	$(JAVA_SLEEPYCAT)/db/ReplicationManagerStartPolicy.java \
+	$(JAVA_SLEEPYCAT)/db/ReplicationSiteUnavailableException.java \
 	$(JAVA_SLEEPYCAT)/db/ReplicationStats.java \
 	$(JAVA_SLEEPYCAT)/db/ReplicationStatus.java \
+	$(JAVA_SLEEPYCAT)/db/ReplicationTimeoutType.java \
 	$(JAVA_SLEEPYCAT)/db/ReplicationTransport.java \
 	$(JAVA_SLEEPYCAT)/db/RunRecoveryException.java \
 	$(JAVA_SLEEPYCAT)/db/SecondaryConfig.java \
 	$(JAVA_SLEEPYCAT)/db/SecondaryCursor.java \
 	$(JAVA_SLEEPYCAT)/db/SecondaryDatabase.java \
 	$(JAVA_SLEEPYCAT)/db/SecondaryKeyCreator.java \
+	$(JAVA_SLEEPYCAT)/db/SecondaryMultiKeyCreator.java \
 	$(JAVA_SLEEPYCAT)/db/Sequence.java \
 	$(JAVA_SLEEPYCAT)/db/SequenceConfig.java \
 	$(JAVA_SLEEPYCAT)/db/SequenceStats.java \
@@ -346,9 +422,10 @@ JAVA_DBSRCS=\
 	$(JAVA_SLEEPYCAT)/db/Transaction.java \
 	$(JAVA_SLEEPYCAT)/db/TransactionConfig.java \
 	$(JAVA_SLEEPYCAT)/db/TransactionStats.java \
+	$(JAVA_SLEEPYCAT)/db/VerboseConfig.java \
 	$(JAVA_SLEEPYCAT)/db/VerifyConfig.java \
+	$(JAVA_SLEEPYCAT)/db/VersionMismatchException.java \
 	$(JAVA_SLEEPYCAT)/db/internal/Db.java \
-	$(JAVA_SLEEPYCAT)/db/internal/DbClient.java \
 	$(JAVA_SLEEPYCAT)/db/internal/DbConstants.java \
 	$(JAVA_SLEEPYCAT)/db/internal/DbEnv.java \
 	$(JAVA_SLEEPYCAT)/db/internal/DbLock.java \
@@ -360,13 +437,123 @@ JAVA_DBSRCS=\
 	$(JAVA_SLEEPYCAT)/db/internal/Dbc.java \
 	$(JAVA_SLEEPYCAT)/db/internal/db_java.java \
 	$(JAVA_SLEEPYCAT)/db/internal/db_javaJNI.java \
+	$(JAVA_SLEEPYCAT)/persist/BasicCursor.java \
+	$(JAVA_SLEEPYCAT)/persist/BasicIndex.java \
+	$(JAVA_SLEEPYCAT)/persist/BasicIterator.java \
+	$(JAVA_SLEEPYCAT)/persist/DataValueAdapter.java \
+	$(JAVA_SLEEPYCAT)/persist/DatabaseNamer.java \
+	$(JAVA_SLEEPYCAT)/persist/EntityCursor.java \
+	$(JAVA_SLEEPYCAT)/persist/EntityIndex.java \
+	$(JAVA_SLEEPYCAT)/persist/EntityJoin.java \
+	$(JAVA_SLEEPYCAT)/persist/EntityStore.java \
+	$(JAVA_SLEEPYCAT)/persist/EntityValueAdapter.java \
+	$(JAVA_SLEEPYCAT)/persist/ForwardCursor.java \
+	$(JAVA_SLEEPYCAT)/persist/KeySelector.java \
+	$(JAVA_SLEEPYCAT)/persist/KeyValueAdapter.java \
+	$(JAVA_SLEEPYCAT)/persist/KeysIndex.java \
+	$(JAVA_SLEEPYCAT)/persist/PrimaryIndex.java \
+	$(JAVA_SLEEPYCAT)/persist/PrimaryKeyValueAdapter.java \
+	$(JAVA_SLEEPYCAT)/persist/SecondaryIndex.java \
+	$(JAVA_SLEEPYCAT)/persist/StoreConfig.java \
+	$(JAVA_SLEEPYCAT)/persist/StoreExistsException.java \
+	$(JAVA_SLEEPYCAT)/persist/StoreNotFoundException.java \
+	$(JAVA_SLEEPYCAT)/persist/SubIndex.java \
+	$(JAVA_SLEEPYCAT)/persist/SubIndexCursor.java \
+	$(JAVA_SLEEPYCAT)/persist/ValueAdapter.java \
+	$(JAVA_SLEEPYCAT)/persist/evolve/Conversion.java \
+	$(JAVA_SLEEPYCAT)/persist/evolve/Converter.java \
+	$(JAVA_SLEEPYCAT)/persist/evolve/DeletedClassException.java \
+	$(JAVA_SLEEPYCAT)/persist/evolve/Deleter.java \
+	$(JAVA_SLEEPYCAT)/persist/evolve/EntityConverter.java \
+	$(JAVA_SLEEPYCAT)/persist/evolve/EvolveConfig.java \
+	$(JAVA_SLEEPYCAT)/persist/evolve/EvolveEvent.java \
+	$(JAVA_SLEEPYCAT)/persist/evolve/EvolveInternal.java \
+	$(JAVA_SLEEPYCAT)/persist/evolve/EvolveListener.java \
+	$(JAVA_SLEEPYCAT)/persist/evolve/EvolveStats.java \
+	$(JAVA_SLEEPYCAT)/persist/evolve/IncompatibleClassException.java \
+	$(JAVA_SLEEPYCAT)/persist/evolve/Mutation.java \
+	$(JAVA_SLEEPYCAT)/persist/evolve/Mutations.java \
+	$(JAVA_SLEEPYCAT)/persist/evolve/Renamer.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/AbstractInput.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/Accessor.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/Catalog.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/CollectionProxy.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/ComplexFormat.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/ComparatorCatalog.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/CompositeKeyFormat.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/ConverterReader.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/Enhanced.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/EnhancedAccessor.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/EntityInput.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/EntityOutput.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/EnumFormat.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/Evolver.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/FieldInfo.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/Format.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/KeyLocation.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/MapProxy.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/NonPersistentFormat.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/ObjectArrayFormat.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/PersistCatalog.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/PersistComparator.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/PersistEntityBinding.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/PersistKeyAssigner.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/PersistKeyBinding.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/PersistKeyCreator.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/PrimitiveArrayFormat.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/ProxiedFormat.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/RawAbstractInput.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/RawAccessor.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/RawArrayInput.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/RawComplexInput.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/RawSingleInput.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/ReadOnlyCatalog.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/Reader.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/RecordInput.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/RecordOutput.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/ReflectionAccessor.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/SimpleCatalog.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/SimpleFormat.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/Store.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/StoredModel.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/VisitedObjects.java \
+	$(JAVA_SLEEPYCAT)/persist/impl/WidenerInput.java \
+	$(JAVA_SLEEPYCAT)/persist/model/AnnotationModel.java \
+	$(JAVA_SLEEPYCAT)/persist/model/BytecodeEnhancer.java \
+	$(JAVA_SLEEPYCAT)/persist/model/ClassEnhancer.java \
+	$(JAVA_SLEEPYCAT)/persist/model/ClassMetadata.java \
+	$(JAVA_SLEEPYCAT)/persist/model/DeleteAction.java \
+	$(JAVA_SLEEPYCAT)/persist/model/Entity.java \
+	$(JAVA_SLEEPYCAT)/persist/model/EntityMetadata.java \
+	$(JAVA_SLEEPYCAT)/persist/model/EntityModel.java \
+	$(JAVA_SLEEPYCAT)/persist/model/FieldMetadata.java \
+	$(JAVA_SLEEPYCAT)/persist/model/KeyField.java \
+	$(JAVA_SLEEPYCAT)/persist/model/ModelInternal.java \
+	$(JAVA_SLEEPYCAT)/persist/model/NotPersistent.java \
+	$(JAVA_SLEEPYCAT)/persist/model/NotTransient.java \
+	$(JAVA_SLEEPYCAT)/persist/model/Persistent.java \
+	$(JAVA_SLEEPYCAT)/persist/model/PersistentProxy.java \
+	$(JAVA_SLEEPYCAT)/persist/model/PrimaryKey.java \
+	$(JAVA_SLEEPYCAT)/persist/model/PrimaryKeyMetadata.java \
+	$(JAVA_SLEEPYCAT)/persist/model/Relationship.java \
+	$(JAVA_SLEEPYCAT)/persist/model/SecondaryKey.java \
+	$(JAVA_SLEEPYCAT)/persist/model/SecondaryKeyMetadata.java \
+	$(JAVA_SLEEPYCAT)/persist/raw/RawField.java \
+	$(JAVA_SLEEPYCAT)/persist/raw/RawObject.java \
+	$(JAVA_SLEEPYCAT)/persist/raw/RawStore.java \
+	$(JAVA_SLEEPYCAT)/persist/raw/RawType.java \
+	$(JAVA_SLEEPYCAT)/util/ErrorBuffer.java \
 	$(JAVA_SLEEPYCAT)/util/ExceptionUnwrapper.java \
 	$(JAVA_SLEEPYCAT)/util/ExceptionWrapper.java \
 	$(JAVA_SLEEPYCAT)/util/FastInputStream.java \
 	$(JAVA_SLEEPYCAT)/util/FastOutputStream.java \
 	$(JAVA_SLEEPYCAT)/util/IOExceptionWrapper.java \
+	$(JAVA_SLEEPYCAT)/util/PackedInteger.java \
 	$(JAVA_SLEEPYCAT)/util/RuntimeExceptionWrapper.java \
-	$(JAVA_SLEEPYCAT)/util/UtfOps.java
+	$(JAVA_SLEEPYCAT)/util/UtfOps.java \
+	$(JAVA_SLEEPYCAT)/util/keyrange/KeyRange.java \
+	$(JAVA_SLEEPYCAT)/util/keyrange/KeyRangeException.java \
+	$(JAVA_SLEEPYCAT)/util/keyrange/RangeCursor.java
 
 JAVA_EXSRCS=\
 	$(JAVA_EXDIR)/collections/access/AccessExample.java \
@@ -452,6 +639,7 @@ JAVA_EXSRCS=\
 	$(JAVA_EXDIR)/db/AccessExample.java \
 	$(JAVA_EXDIR)/db/BtRecExample.java \
 	$(JAVA_EXDIR)/db/BulkAccessExample.java \
+	$(JAVA_EXDIR)/db/BulkAccessNIOExample.java \
 	$(JAVA_EXDIR)/db/EnvExample.java \
 	$(JAVA_EXDIR)/db/GettingStarted/ExampleDatabaseLoad.java \
 	$(JAVA_EXDIR)/db/GettingStarted/ExampleDatabaseRead.java \
@@ -461,14 +649,41 @@ JAVA_EXSRCS=\
 	$(JAVA_EXDIR)/db/GettingStarted/MyDbs.java \
 	$(JAVA_EXDIR)/db/GettingStarted/Vendor.java \
 	$(JAVA_EXDIR)/db/LockExample.java \
-	$(JAVA_EXDIR)/db/RPCExample.java \
 	$(JAVA_EXDIR)/db/SequenceExample.java \
-	$(JAVA_EXDIR)/db/TpcbExample.java
+	$(JAVA_EXDIR)/db/TpcbExample.java \
+	$(JAVA_EXDIR)/db/repquote/RepConfig.java \
+	$(JAVA_EXDIR)/db/repquote/RepQuoteEnvironment.java \
+	$(JAVA_EXDIR)/db/repquote/RepQuoteExample.java \
+	$(JAVA_EXDIR)/db/repquote/RepRemoteHost.java \
+	$(JAVA_EXDIR)/db/repquote_gsg/RepConfig.java \
+	$(JAVA_EXDIR)/db/repquote_gsg/RepQuoteEnvironment.java \
+	$(JAVA_EXDIR)/db/repquote_gsg/RepQuoteExampleGSG.java \
+	$(JAVA_EXDIR)/db/repquote_gsg/SimpleConfig.java \
+	$(JAVA_EXDIR)/db/repquote_gsg/SimpleTxn.java \
+	$(JAVA_EXDIR)/db/txn/DBWriter.java \
+	$(JAVA_EXDIR)/db/txn/PayloadData.java \
+	$(JAVA_EXDIR)/db/txn/TxnGuide.java \
+	$(JAVA_EXDIR)/db/txn/TxnGuideInMemory.java \
+	$(JAVA_EXDIR)/persist/CustomKeyOrderExample.java \
+	$(JAVA_EXDIR)/persist/DplDump.java \
+	$(JAVA_EXDIR)/persist/EventExample.java \
+	$(JAVA_EXDIR)/persist/EventExampleDPL.java \
+	$(JAVA_EXDIR)/persist/PersonExample.java \
+	$(JAVA_EXDIR)/persist/gettingStarted/SimpleDA.java \
+	$(JAVA_EXDIR)/persist/gettingStarted/SimpleEntityClass.java \
+	$(JAVA_EXDIR)/persist/gettingStarted/SimpleStoreGet.java \
+	$(JAVA_EXDIR)/persist/gettingStarted/SimpleStorePut.java \
+	$(JAVA_EXDIR)/persist/txn/PayloadDataEntity.java \
+	$(JAVA_EXDIR)/persist/txn/StoreWriter.java \
+	$(JAVA_EXDIR)/persist/txn/TxnGuideDPL.java 
+
+STL_OBJS=\
+	dbstl_container@o@ dbstl_resource_manager@o@
 
 TCL_OBJS=\
 	tcl_compat@o@ tcl_db@o@ tcl_db_pkg@o@ tcl_dbcursor@o@ tcl_env@o@ \
-	tcl_internal@o@ tcl_lock@o@ tcl_log@o@ tcl_mp@o@ tcl_rep@o@ \
-	tcl_seq@o@ tcl_txn@o@ tcl_util@o@
+	tcl_internal@o@ tcl_lock@o@ tcl_log@o@ tcl_mp@o@ tcl_mutex@o@ \
+	tcl_rep@o@ tcl_seq@o@ tcl_txn@o@ tcl_util@o@
 
 RPC_CLIENT_OBJS=\
 	client@o@ db_server_clnt@o@ db_server_xdr@o@ gen_client@o@ \
@@ -482,162 +697,16 @@ RPC_CXXSRV_OBJS=\
 	db_server_cxxproc@o@ db_server_cxxutil@o@ db_server_svc@o@ \
 	gen_db_server@o@
 
-RPC_JAVASRV_SRCS=\
-	$(JAVA_RPCDIR)/AssociateCallbacks.java \
-	$(JAVA_RPCDIR)/Dispatcher.java \
-	$(JAVA_RPCDIR)/FreeList.java \
-	$(JAVA_RPCDIR)/JoinCursorAdapter.java \
-	$(JAVA_RPCDIR)/LocalIterator.java \
-	$(JAVA_RPCDIR)/RpcDb.java \
-	$(JAVA_RPCDIR)/RpcDbEnv.java \
-	$(JAVA_RPCDIR)/RpcDbTxn.java \
-	$(JAVA_RPCDIR)/RpcDbc.java \
-	$(JAVA_RPCDIR)/Server.java \
-	$(JAVA_RPCDIR)/Timer.java \
-	$(JAVA_RPCDIR)/Util.java \
-	$(JAVA_RPCDIR)/gen/ServerStubs.java \
-	$(JAVA_RPCDIR)/gen/__db_associate_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_associate_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_bt_maxkey_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_bt_maxkey_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_bt_minkey_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_bt_minkey_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_close_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_close_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_create_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_create_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_cursor_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_cursor_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_del_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_del_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_encrypt_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_encrypt_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_extentsize_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_extentsize_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_flags_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_flags_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_get_bt_minkey_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_get_bt_minkey_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_get_encrypt_flags_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_get_encrypt_flags_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_get_extentsize_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_get_extentsize_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_get_flags_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_get_flags_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_get_h_ffactor_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_get_h_ffactor_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_get_h_nelem_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_get_h_nelem_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_get_lorder_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_get_lorder_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_get_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_get_name_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_get_name_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_get_open_flags_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_get_open_flags_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_get_pagesize_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_get_pagesize_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_get_re_delim_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_get_re_delim_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_get_re_len_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_get_re_len_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_get_re_pad_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_get_re_pad_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_get_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_h_ffactor_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_h_ffactor_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_h_nelem_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_h_nelem_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_join_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_join_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_key_range_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_key_range_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_lorder_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_lorder_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_open_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_open_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_pagesize_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_pagesize_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_pget_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_pget_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_put_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_put_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_re_delim_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_re_delim_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_re_len_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_re_len_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_re_pad_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_re_pad_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_remove_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_remove_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_rename_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_rename_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_stat_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_stat_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_sync_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_sync_reply.java \
-	$(JAVA_RPCDIR)/gen/__db_truncate_msg.java \
-	$(JAVA_RPCDIR)/gen/__db_truncate_reply.java \
-	$(JAVA_RPCDIR)/gen/__dbc_close_msg.java \
-	$(JAVA_RPCDIR)/gen/__dbc_close_reply.java \
-	$(JAVA_RPCDIR)/gen/__dbc_count_msg.java \
-	$(JAVA_RPCDIR)/gen/__dbc_count_reply.java \
-	$(JAVA_RPCDIR)/gen/__dbc_del_msg.java \
-	$(JAVA_RPCDIR)/gen/__dbc_del_reply.java \
-	$(JAVA_RPCDIR)/gen/__dbc_dup_msg.java \
-	$(JAVA_RPCDIR)/gen/__dbc_dup_reply.java \
-	$(JAVA_RPCDIR)/gen/__dbc_get_msg.java \
-	$(JAVA_RPCDIR)/gen/__dbc_get_reply.java \
-	$(JAVA_RPCDIR)/gen/__dbc_pget_msg.java \
-	$(JAVA_RPCDIR)/gen/__dbc_pget_reply.java \
-	$(JAVA_RPCDIR)/gen/__dbc_put_msg.java \
-	$(JAVA_RPCDIR)/gen/__dbc_put_reply.java \
-	$(JAVA_RPCDIR)/gen/__env_cachesize_msg.java \
-	$(JAVA_RPCDIR)/gen/__env_cachesize_reply.java \
-	$(JAVA_RPCDIR)/gen/__env_close_msg.java \
-	$(JAVA_RPCDIR)/gen/__env_close_reply.java \
-	$(JAVA_RPCDIR)/gen/__env_create_msg.java \
-	$(JAVA_RPCDIR)/gen/__env_create_reply.java \
-	$(JAVA_RPCDIR)/gen/__env_dbremove_msg.java \
-	$(JAVA_RPCDIR)/gen/__env_dbremove_reply.java \
-	$(JAVA_RPCDIR)/gen/__env_dbrename_msg.java \
-	$(JAVA_RPCDIR)/gen/__env_dbrename_reply.java \
-	$(JAVA_RPCDIR)/gen/__env_encrypt_msg.java \
-	$(JAVA_RPCDIR)/gen/__env_encrypt_reply.java \
-	$(JAVA_RPCDIR)/gen/__env_flags_msg.java \
-	$(JAVA_RPCDIR)/gen/__env_flags_reply.java \
-	$(JAVA_RPCDIR)/gen/__env_get_cachesize_msg.java \
-	$(JAVA_RPCDIR)/gen/__env_get_cachesize_reply.java \
-	$(JAVA_RPCDIR)/gen/__env_get_encrypt_flags_msg.java \
-	$(JAVA_RPCDIR)/gen/__env_get_encrypt_flags_reply.java \
-	$(JAVA_RPCDIR)/gen/__env_get_flags_msg.java \
-	$(JAVA_RPCDIR)/gen/__env_get_flags_reply.java \
-	$(JAVA_RPCDIR)/gen/__env_get_home_msg.java \
-	$(JAVA_RPCDIR)/gen/__env_get_home_reply.java \
-	$(JAVA_RPCDIR)/gen/__env_get_open_flags_msg.java \
-	$(JAVA_RPCDIR)/gen/__env_get_open_flags_reply.java \
-	$(JAVA_RPCDIR)/gen/__env_open_msg.java \
-	$(JAVA_RPCDIR)/gen/__env_open_reply.java \
-	$(JAVA_RPCDIR)/gen/__env_remove_msg.java \
-	$(JAVA_RPCDIR)/gen/__env_remove_reply.java \
-	$(JAVA_RPCDIR)/gen/__txn_abort_msg.java \
-	$(JAVA_RPCDIR)/gen/__txn_abort_reply.java \
-	$(JAVA_RPCDIR)/gen/__txn_begin_msg.java \
-	$(JAVA_RPCDIR)/gen/__txn_begin_reply.java \
-	$(JAVA_RPCDIR)/gen/__txn_commit_msg.java \
-	$(JAVA_RPCDIR)/gen/__txn_commit_reply.java \
-	$(JAVA_RPCDIR)/gen/__txn_discard_msg.java \
-	$(JAVA_RPCDIR)/gen/__txn_discard_reply.java \
-	$(JAVA_RPCDIR)/gen/__txn_prepare_msg.java \
-	$(JAVA_RPCDIR)/gen/__txn_prepare_reply.java \
-	$(JAVA_RPCDIR)/gen/__txn_recover_msg.java \
-	$(JAVA_RPCDIR)/gen/__txn_recover_reply.java \
-	$(JAVA_RPCDIR)/gen/db_server.java
+TEST_MICRO_OBJS=\
+	b_curalloc@o@ b_curwalk@o@ b_del@o@ b_get@o@ b_inmem@o@ b_latch@o@ \
+	b_load@o@ b_open@o@ b_put@o@ b_recover@o@ b_txn@o@ b_txn_write@o@ \
+	b_uname@o@ b_util@o@ b_workload@o@ test_micro@o@ util_arg@o@
 
 UTIL_PROGS=\
 	@ADDITIONAL_PROGS@ \
-	db_archive db_checkpoint db_deadlock db_dump db_load db_printlog \
-	db_recover db_stat db_upgrade db_verify
+	db_archive db_checkpoint db_deadlock db_dump \
+	db_hotbackup db_load db_printlog db_recover db_sql db_stat db_upgrade \
+	db_verify
 
 ##################################################
 # List of files installed into the library directory.
@@ -655,6 +724,12 @@ LIB_INSTALL_FILE_LIST=\
 	$(libxso_major) \
 	$(libcxx_version) \
 	$(libxso_target) \
+	$(libstl) \
+	$(libstlso) \
+	$(libstlso_default) \
+	$(libstlso_major) \
+	$(libstlxx_version) \
+	$(libstlso_target) \
 	$(libtso) \
 	$(libtso_default) \
 	$(libtso_major) \
@@ -674,7 +749,7 @@ LIB_INSTALL_FILE_LIST=\
 ##################################################
 all: @BUILD_TARGET@
 
-install-strip install: all @INSTALL_TARGET@
+install: all @INSTALL_TARGET@
 
 ##################################################
 # Library and standard utilities build.
@@ -686,33 +761,50 @@ $(libdb): $(DEF_LIB)
 
 # Real static C library.
 $(libdb_version): $(C_OBJS)
-	$(ar) cr $@ $(C_OBJS)
-	test ! -f $(ranlib) || $(ranlib) $@
-	$(rm) -f $(libdb)
-	$(ln) -s $(libdb_version) $(libdb)
+	$(AR) cr $@ $(C_OBJS)
+	$(RANLIB) $@
+	$(RM) $(libdb)
+	$(LN) -s $(libdb_version) $(libdb)
 
 # Shared C library.
 $(libso_target): $(C_OBJS)
-	$(SOLINK) $(SOFLAGS) $(LDFLAGS) -o $@ $(C_OBJS) $(LIBSO_LIBS)
-	$(rm) -f $(libdb)
-	$(ln) -s .libs/$(libdb_version) $(libdb)
+	$(SOLINK) $(SOFLAGS) $(LDFLAGS) -o $@ $(C_OBJS) $(LIBCSO_LIBS)
+	$(RM) $(libdb)
+	$(LN) -s .libs/$(libdb_version) $(libdb)
 
 # Static C++ library named libdb_cxx.a.
 $(libcxx): $(DEF_LIB_CXX)
 
 # Real static C++ library.
 $(libcxx_version): $(CXX_OBJS) $(C_OBJS)
-	$(ar) cr $@ $(CXX_OBJS) $(C_OBJS)
-	test ! -f $(ranlib) || $(ranlib) $@
-	$(rm) -f $(libcxx)
-	$(ln) -s $(libcxx_version) $(libcxx)
+	$(AR) cr $@ $(CXX_OBJS) $(C_OBJS)
+	$(RANLIB) $@
+	$(RM) $(libcxx)
+	$(LN) -s $(libcxx_version) $(libcxx)
 
 # Shared C++ library.
 $(libxso_target): $(CXX_OBJS) $(C_OBJS)
 	$(XSOLINK) $(SOFLAGS) $(LDFLAGS) \
 	    -o $@ $(CXX_OBJS) $(C_OBJS) $(LIBXSO_LIBS)
-	$(rm) -f $(libcxx)
-	$(ln) -s .libs/$(libcxx_version) $(libcxx)
+	$(RM) $(libcxx)
+	$(LN) -s .libs/$(libcxx_version) $(libcxx)
+
+# Static STL library named libdb_stl.a.
+$(libstl): $(DEF_LIB_STL)
+
+# Real static STL library.
+$(libstl_version): $(STL_OBJS) $(CXX_OBJS) $(C_OBJS)
+	$(AR) cr $@ $(STL_OBJS) $(CXX_OBJS) $(C_OBJS)
+	$(RANLIB) $@
+	$(RM) $(libstl)
+	$(LN) -s $(libstl_version) $(libstl)
+
+# Shared STL library.
+$(libstlso_target): $(STL_OBJS) $(CXX_OBJS) $(C_OBJS)
+	$(XSOLINK) $(SOFLAGS) $(LDFLAGS) -o $@ \
+	    $(STL_OBJS) $(LIBSTLSO_LIBS) $(CXX_OBJS) $(C_OBJS) $(LIBXSO_LIBS)
+	$(RM) $(libstl)
+	$(LN) -s .libs/$(libstl_version) $(libstl)
 
 # Shared Java library.
 $(libjso_target): $(JAVA_OBJS) $(C_OBJS)
@@ -732,25 +824,21 @@ java:	$(libj_jarfile) $(libj_exjarfile)
 
 $(libj_jarfile): $(JAVA_DBSRCS)
 	@test -d $(JAVA_CLASSTOP) || \
-	   ($(mkdir) -p $(JAVA_CLASSTOP) && $(chmod) $(dmode) $(JAVA_CLASSTOP))
+	   ($(MKDIR) -p $(JAVA_CLASSTOP) && \
+	   $(CHMOD) $(dmode) $(JAVA_CLASSTOP))
 	$(JAVAC) -d $(JAVA_CLASSTOP) $(JAVACFLAGS) $(JAVA_DBSRCS)
-	cd $(JAVA_CLASSTOP) && $(JAR) cf ../$(libj_jarfile) ./com/sleepycat
+	$(JAVA) -classpath $(JAVA_CLASSTOP) \
+	    com.sleepycat.persist.model.ClassEnhancer $(JAVA_CLASSTOP)
+	cd $(JAVA_CLASSTOP) && \
+	     $(JAR) cfm ../$(libj_jarfile) ../$(JAVA_MANIFEST) ./com/sleepycat
 
 $(libj_exjarfile): $(libj_jarfile) $(JAVA_EXSRCS)
 	@test -d $(JAVA_EXCLASSTOP) || \
-	   ($(mkdir) -p $(JAVA_EXCLASSTOP) && \
-		$(chmod) $(dmode) $(JAVA_EXCLASSTOP))
+	   ($(MKDIR) -p $(JAVA_EXCLASSTOP) && \
+		$(CHMOD) $(dmode) $(JAVA_EXCLASSTOP))
 	$(JAVAC) -classpath $(libj_jarfile) -d $(JAVA_EXCLASSTOP) \
 		$(JAVACFLAGS) $(JAVA_EXSRCS)
 	cd $(JAVA_EXCLASSTOP) && $(JAR) cf ../$(libj_exjarfile) .
-
-$(rpc_jarfile): $(libj_jarfile) $(RPC_JAVASRV_SRCS)
-	@test -d $(JAVA_RPCCLASSTOP) || \
-	   ($(mkdir) -p $(JAVA_RPCCLASSTOP) && \
-	       $(chmod) $(dmode) $(JAVA_RPCCLASSTOP))
-	env CLASSPATH=$(CLASSPATH):$(JAVA_RPCDIR)/oncrpc.jar \
-	    @JAVAC@ -d $(JAVA_RPCCLASSTOP) $(JAVACFLAGS) $(RPC_JAVASRV_SRCS)
-	cd $(JAVA_RPCCLASSTOP) && $(JAR) cf ../$(rpc_jarfile) $(JAVA_RPCREL)
 
 ##################################################
 # Utilities
@@ -764,14 +852,6 @@ berkeley_db_cxxsvc: $(RPC_CXXSRV_OBJS) util_log@o@ $(DEF_LIB_CXX)
 	$(CXXLINK) -o $@ $(LDFLAGS) \
 	    $(RPC_CXXSRV_OBJS) util_log@o@ $(DEF_LIB_CXX) $(LIBS)
 	$(POSTLINK) $@
-
-berkeley_db_javasvc: $(rpc_jarfile)
-	echo "#!/bin/sh" > $@
-	echo CLASSPATH="$(CLASSPATH):$(rpc_jarfile):$(JAVA_RPCDIR)/oncrpc.jar" >> $@
-	echo LD_LIBRARY_PATH=.libs >> $@
-	echo export CLASSPATH LD_LIBRARY_PATH >> $@
-	echo exec java com.sleepycat.db.rpcserver.Server \$$@ >> $@
-	chmod +x $@
 
 db_archive: db_archive@o@ util_sig@o@ $(DEF_LIB)
 	$(CCLINK) -o $@ $(LDFLAGS) \
@@ -797,6 +877,11 @@ db_dump185: db_dump185@o@ @REPLACEMENT_OBJS@
 	$(CCLINK) -o $@ $(LDFLAGS) db_dump185@o@ @REPLACEMENT_OBJS@ $(DB185LIB)
 	$(POSTLINK) $@
 
+db_hotbackup: db_hotbackup@o@ util_sig@o@ $(DEF_LIB)
+	$(CCLINK) -o $@ $(LDFLAGS) \
+	    db_hotbackup@o@ util_sig@o@ $(DEF_LIB) $(LIBS)
+	$(POSTLINK) $@
+
 db_load: db_load@o@ util_cache@o@ util_sig@o@ $(DEF_LIB)
 	$(CCLINK) -o $@ $(LDFLAGS) \
 	    db_load@o@ util_cache@o@ util_sig@o@ $(DEF_LIB) $(LIBS)
@@ -810,6 +895,15 @@ db_printlog: db_printlog@o@ $(PRINT_OBJS) util_sig@o@ $(DEF_LIB)
 db_recover: db_recover@o@ util_sig@o@ $(DEF_LIB)
 	$(CCLINK) -o $@ $(LDFLAGS) \
 	    db_recover@o@ util_sig@o@ $(DEF_LIB) $(LIBS)
+	$(POSTLINK) $@
+
+DBSQL_OBJS=\
+          db_sql@o@ parse@o@ preparser@o@ parsefuncs@o@ tokenize@o@ \
+          sqlprintf@o@ buildpt@o@ utils@o@ generate@o@ generate_test@o@ \
+          generation_utils@o@ generate_verification@o@ hint_comment@o@
+db_sql: $(DBSQL_OBJS) $(DEF_LIB)
+	$(CCLINK) -o $@ $(LDFLAGS) $(DBSQL_OBJS) \
+            $(DEF_LIB) $(LIBS)
 	$(POSTLINK) $@
 
 db_stat: db_stat@o@ util_cache@o@ util_sig@o@ $(DEF_LIB)
@@ -837,122 +931,140 @@ uninstall: uninstall_include uninstall_lib uninstall_utilities uninstall_docs
 
 install_setup:
 	@test -d $(DESTDIR)$(prefix) || \
-	    ($(mkdir) -p $(DESTDIR)$(prefix) && \
-	    $(chmod) $(dmode) $(DESTDIR)$(prefix))
+	    ($(MKDIR) -p $(DESTDIR)$(prefix) && \
+	    $(CHMOD) $(dmode) $(DESTDIR)$(prefix))
 
 INCDOT=	db.h db_cxx.h @ADDITIONAL_INCS@
 install_include:
 	@echo "Installing DB include files: $(DESTDIR)$(includedir) ..."
 	@test -d $(DESTDIR)$(includedir) || \
-	    ($(mkdir) -p $(DESTDIR)$(includedir) && \
-	    $(chmod) $(dmode) $(DESTDIR)$(includedir))
-	@cd $(DESTDIR)$(includedir) && $(rm) -f $(INCDOT)
-	@$(cp) -p $(INCDOT) $(DESTDIR)$(includedir)
-	@cd $(DESTDIR)$(includedir) && $(chmod) $(fmode) $(INCDOT)
+	    ($(MKDIR) -p $(DESTDIR)$(includedir) && \
+	    $(CHMOD) $(dmode) $(DESTDIR)$(includedir))
+	@cd $(DESTDIR)$(includedir) && $(RM) $(INCDOT)
+	@for f in $(INCDOT); do \
+	    for d in . $(srcdir)/stl ; do \
+	        test -f $$d/$$f && \
+	            $(CP) -p $$d/$$f $(DESTDIR)$(includedir) ; \
+	    done ; \
+	    $(CHMOD) $(fmode) $(DESTDIR)$(includedir)/$$f ; \
+	done
 
 uninstall_include:
-	@cd $(DESTDIR)$(includedir) && $(rm) -f $(INCDOT)
+	@cd $(DESTDIR)$(includedir) && $(RM) $(INCDOT)
 
 install_lib:
 	@echo "Installing DB library: $(DESTDIR)$(libdir) ..."
 	@test -d $(DESTDIR)$(libdir) || \
-	    ($(mkdir) -p $(DESTDIR)$(libdir) && \
-	    $(chmod) $(dmode) $(DESTDIR)$(libdir))
-	@cd $(DESTDIR)$(libdir) && $(rm) -f $(LIB_INSTALL_FILE_LIST)
+	    ($(MKDIR) -p $(DESTDIR)$(libdir) && \
+	    $(CHMOD) $(dmode) $(DESTDIR)$(libdir))
+	@cd $(DESTDIR)$(libdir) && $(RM) $(LIB_INSTALL_FILE_LIST)
 	@$(INSTALLER) @INSTALL_LIBS@ $(DESTDIR)$(libdir)
 	@(cd $(DESTDIR)$(libdir) && \
-	    test -f $(libso) && $(ln) -s $(libso) $(libso_default); \
-	    test -f $(libso) && $(ln) -s $(libso) $(libso_major); \
-	    test -f $(libxso) && $(ln) -s $(libxso) $(libxso_default); \
-	    test -f $(libxso) && $(ln) -s $(libxso) $(libxso_major); \
-	    test -f $(libtso) && $(ln) -s $(libtso) $(libtso_default); \
-	    test -f $(libtso) && $(ln) -s $(libtso) $(libtso_major); \
-	    test -f $(libjso) && $(ln) -s $(libjso) $(libjso_default); \
-	    test -f $(libjso) && $(ln) -s $(libjso) $(libjso_major); \
-	    test -f $(libjso) && $(ln) -s $(libjso) $(libjso_g)) || true
+	    test -f $(libso) && $(LN) -s $(libso) $(libso_default); \
+	    test -f $(libso) && $(LN) -s $(libso) $(libso_major); \
+	    test -f $(libxso) && $(LN) -s $(libxso) $(libxso_default); \
+	    test -f $(libxso) && $(LN) -s $(libxso) $(libxso_major); \
+	    test -f $(libstlso) && $(LN) -s $(libstlso) $(libstlso_default); \
+	    test -f $(libstlso) && $(LN) -s $(libstlso) $(libstlso_major); \
+	    test -f $(libtso) && $(LN) -s $(libtso) $(libtso_default); \
+	    test -f $(libtso) && $(LN) -s $(libtso) $(libtso_major); \
+	    test -f $(libjso) && $(LN) -s $(libjso) $(libjso_default); \
+	    test -f $(libjso) && $(LN) -s $(libjso) $(libjso_major); \
+	    test -f $(libjso) && $(LN) -s $(libjso) $(libjso_g)) || exit 0
 	@(test -f $(libj_jarfile) && \
-	    $(cp) $(libj_jarfile) $(DESTDIR)$(libdir) && \
-	    $(chmod) $(fmode) $(DESTDIR)$(libdir)/$(libj_jarfile)) || true
+	    $(CP) $(libj_jarfile) $(DESTDIR)$(libdir) && \
+	    $(CHMOD) $(fmode) $(DESTDIR)$(libdir)/$(libj_jarfile)) || exit 0
 
 uninstall_lib:
-	@cd $(DESTDIR)$(libdir) && $(rm) -f $(LIB_INSTALL_FILE_LIST)
+	@cd $(DESTDIR)$(libdir) && $(RM) $(LIB_INSTALL_FILE_LIST)
 
 install_utilities:
 	@echo "Installing DB utilities: $(DESTDIR)$(bindir) ..."
 	@test -d $(DESTDIR)$(bindir) || \
-	    ($(mkdir) -p $(DESTDIR)$(bindir) && \
-	    $(chmod) $(dmode) $(DESTDIR)$(bindir))
+	    ($(MKDIR) -p $(DESTDIR)$(bindir) && \
+	    $(CHMOD) $(dmode) $(DESTDIR)$(bindir))
 	@for i in $(UTIL_PROGS); do \
-		$(rm) -f $(DESTDIR)$(bindir)/$$i $(DESTDIR)$(bindir)/$$i.exe; \
-		test -f $$i.exe && i=$$i.exe || true; \
+		test -f $$i.exe && i=$$i.exe || i=$$i; \
+		$(RM) $(DESTDIR)$(bindir)/$$i; \
 		$(INSTALLER) $$i $(DESTDIR)$(bindir)/$$i; \
-		test -f $(strip) && $(strip) $(DESTDIR)$(bindir)/$$i || true; \
-		$(chmod) $(emode) $(DESTDIR)$(bindir)/$$i; \
+		$(STRIP) $(DESTDIR)$(bindir)/$$i; \
+		$(CHMOD) $(emode) $(DESTDIR)$(bindir)/$$i; \
 	done
 
 uninstall_utilities:
 	@(cd $(DESTDIR)$(bindir); for i in $(UTIL_PROGS); do \
-		$(rm) -f $$i $$i.exe; \
+		$(RM) $$i $$i.exe; \
 	done)
 
-DOCLIST=api_c api_cxx api_tcl collections gsg images index.html java ref \
-	sleepycat utility
+DOCLIST=api_reference articles collections csharp gsg gsg_db_rep \
+	gsg_txn index.html java license porting programmer_reference
 
 install_docs:
 	@echo "Installing documentation: $(DESTDIR)$(docdir) ..."
 	@test -d $(DESTDIR)$(docdir) || \
-	    ($(mkdir) -p $(DESTDIR)$(docdir) && \
-	    $(chmod) $(dmode) $(DESTDIR)$(docdir))
-	@cd $(DESTDIR)$(docdir) && $(rm) -rf $(DOCLIST)
-	@cd $(srcdir)/docs && $(cp) -pr $(DOCLIST) $(DESTDIR)$(docdir)/
+	    ($(MKDIR) -p $(DESTDIR)$(docdir) && \
+	    $(CHMOD) $(dmode) $(DESTDIR)$(docdir))
+	@cd $(DESTDIR)$(docdir) && $(RM) -r $(DOCLIST)
+	@cd $(srcdir)/docs && $(CP) -pr $(DOCLIST) $(DESTDIR)$(docdir)/
 
 uninstall_docs:
-	@cd $(docdir) && $(rm) -rf $(DESTDIR)$(DOCLIST)
+	@cd $(DESTDIR)$(docdir) && $(RM) -r $(DOCLIST)
 
 ##################################################
 # Remaining standard Makefile targets.
 ##################################################
 CLEAN_LIST=\
-	bench_001 berkeley_db_cxxsvc berkeley_db_javasvc berkeley_db_svc \
-	db_dump185 db_perf dbs ex_access ex_apprec ex_btrec ex_dbclient \
-	ex_env ex_lock ex_mpool ex_repquote ex_sequence ex_thread \
-	ex_tpcb example_database_load example_database_read excxx_access \
+	StlTxnGuide TxnGuide TxnGuideInMemory bench_001 berkeley_db_cxxsvc \
+	berkeley_db_svc db_dump185 db_perf db_repsite db_reptest dbs ex_access \
+	ex_apprec ex_btrec ex_dbclient ex_env ex_lock ex_mpool \
+	ex_rep_base ex_rep_gsg_repmgr ex_rep_gsg_simple ex_rep_mgr \
+	ex_sequence ex_stream ex_thread ex_tpcb \
+	example_database_load example_database_read excxx_access \
 	excxx_btrec excxx_env excxx_example_database_load \
 	excxx_example_database_read excxx_lock excxx_mpool \
-	excxx_sequence excxx_tpcb
+	excxx_repquote excxx_repquote_gsg_repmgr excxx_repquote_gsg_simple \
+	excxx_sequence excxx_tpcb exstl_access exstl_repquote \
+	exstl_tpcb txn_guide test_dbstl txn_guide_inmemory
 
 mostly-clean clean:
-	$(rm) -rf $(C_OBJS)
-	$(rm) -rf $(CXX_OBJS) $(JAVA_OBJS) $(TCL_OBJS)
-	$(rm) -rf $(RPC_CLIENT_OBJS) $(RPC_SRV_OBJS) $(RPC_CXXSRV_OBJS)
-	$(rm) -rf $(UTIL_PROGS) *.exe $(CLEAN_LIST)
-	$(rm) -rf $(JAVA_CLASSTOP) $(JAVA_EXCLASSTOP)
-	$(rm) -rf $(JAVA_RPCCLASSES) $(rpc_jarfile)
-	$(rm) -rf tags *@o@ *.o *.o.lock *.lo core *.core
-	$(rm) -rf ALL.OUT.* PARALLEL_TESTDIR.*
-	$(rm) -rf RUN_LOG RUNQUEUE TESTDIR TESTDIR.A
-	$(rm) -rf TEST.LIST logtrack_seen.db tm .libs $(LIB_INSTALL_FILE_LIST)
+	$(RM) -r $(C_OBJS)
+	$(RM) -r $(CXX_OBJS) $(JAVA_OBJS) $(STL_OBJS) $(TCL_OBJS)
+	$(RM) -r $(RPC_CLIENT_OBJS) $(RPC_SRV_OBJS) $(RPC_CXXSRV_OBJS)
+	$(RM) -r $(UTIL_PROGS) *.exe $(CLEAN_LIST)
+	$(RM) -r $(JAVA_CLASSTOP) $(JAVA_EXCLASSTOP)
+	$(RM) -r $(DB_STL_TEST_OBJS) $(TEST_MICRO_OBJS)
+	$(RM) -r tags *@o@ *.o *.o.lock *.lo core *.core core.*
+	$(RM) -r ALL.OUT.* PARALLEL_TESTDIR.*
+	$(RM) -r RUN_LOG RUNQUEUE TESTDIR TESTDIR.A TEST.LIST
+	$(RM) -r logtrack_seen.db test_micro test_mutex .libs
+	$(RM) -r $(LIB_INSTALL_FILE_LIST)
 
 REALCLEAN_LIST=\
-	Makefile confdefs.h config.cache config.log config.status \
+	Makefile clib_port.h confdefs.h config.cache config.log config.status \
 	configure.lineno db.h db185_int.h db_185.h db_config.h \
 	db_cxx.h db_int.h db_int_def.h include.tcl \
 	db_server.h db_server_clnt.c db_server_svc.c db_server_xdr.c \
-	gen_db_server.c win_db.h
+	gen_db_server.c
 
 distclean maintainer-clean realclean: clean
-	$(rm) -rf $(REALCLEAN_LIST)
-	$(rm) -rf libtool
+	$(RM) -r $(REALCLEAN_LIST)
+	$(RM) -r libtool
 
 check depend dvi info obj TAGS:
-	@echo "$@: make target not supported" && true
+	@echo "make: $@ target not available"
 
 dist rpm rpmbuild:
-	@echo "$@: make target not supported" && false
+	@echo "make: $@ target not available" && exit 1
 
 ##################################################
-# Multi-threaded testers, benchmarks.
+# Testers, benchmarks.
 ##################################################
+bench_001@o@: $(srcdir)/examples_c/bench_001.c
+	$(CC) $(CFLAGS) $?
+bench_001: bench_001@o@ $(DEF_LIB)
+	$(CCLINK) -o $@ $(LDFLAGS) bench_001@o@ $(DEF_LIB) $(LIBS)
+	$(POSTLINK) $@
+
 dbs@o@: $(srcdir)/test_server/dbs.c
 	$(CC) $(CFLAGS) $?
 dbs_am@o@: $(srcdir)/test_server/dbs_am.c
@@ -1031,28 +1143,96 @@ DBPERF_OBJS=\
 	perf_dead@o@ perf_debug@o@ perf_file@o@ perf_key@o@ perf_log@o@ \
 	perf_misc@o@ perf_op@o@ perf_parse@o@ perf_rand@o@ perf_spawn@o@ \
 	perf_stat@o@ perf_sync@o@ perf_thread@o@ perf_trickle@o@ \
-	perf_txn@o@ perf_util@o@ perf_vx@o@
-
+	perf_txn@o@ perf_util@o@ perf_vx@o@ util_sig@o@
 db_perf: $(DBPERF_OBJS) $(DEF_LIB)
 	$(CCLINK) -o $@ \
 	    $(LDFLAGS) $(DBPERF_OBJS) $(DEF_LIB) $(TEST_LIBS) $(LIBS)
 	$(POSTLINK) $@
 
-tm@o@: $(srcdir)/mutex/tm.c
+db_repsite@o@: $(srcdir)/test_repmgr/db_repsite.cpp
+	$(CXX) $(CXXFLAGS) $?
+DBREPSITE_OBJS=db_repsite@o@
+db_repsite: $(DBREPSITE_OBJS) $(DEF_LIB_CXX)
+	$(CXXLINK) -o $@ \
+	   $(LDFLAGS) $(DBREPSITE_OBJS) $(DEF_LIB_CXX) $(TEST_LIBS) $(LIBS)
+	$(POSTLINK) $@ 
+
+db_reptest@o@: $(srcdir)/test_repmgr/db_reptest.c
 	$(CC) $(CFLAGS) $?
-tm: tm@o@ $(DEF_LIB)
-	$(CCLINK) -o $@ $(LDFLAGS) tm@o@ $(DEF_LIB) $(TEST_LIBS) $(LIBS)
+reptest_am@o@: $(srcdir)/test_repmgr/reptest_am.c
+	$(CC) $(CFLAGS) $?
+reptest_handles@o@: $(srcdir)/test_repmgr/reptest_handles.c
+	$(CC) $(CFLAGS) $?
+reptest_spawn@o@: $(srcdir)/test_repmgr/reptest_spawn.c
+	$(CC) $(CFLAGS) $?
+reptest_util@o@: $(srcdir)/test_repmgr/reptest_util.c
+	$(CC) $(CFLAGS) $?
+DBREPTEST_OBJS=\
+	db_reptest@o@ reptest_am@o@ reptest_handles@o@ \
+	reptest_spawn@o@ reptest_util@o@ 
+
+db_reptest: $(DBREPTEST_OBJS) $(DEF_LIB)
+	$(CCLINK) -o $@ \
+	    $(LDFLAGS) $(DBREPTEST_OBJS) $(DEF_LIB) $(TEST_LIBS) $(LIBS)
+	$(POSTLINK) $@
+
+test_dbstl@o@: $(srcdir)/test_stl/base/test_dbstl.cpp
+	$(CXX) $(STLFLAGS) $?
+test_util@o@: $(srcdir)/test_stl/base/test_util.cpp
+	$(CXX) $(STLFLAGS) $?
+DB_STL_TEST_OBJS=test_dbstl@o@ test_util@o@
+
+test_dbstl: $(DB_STL_TEST_OBJS) $(DEF_LIB_CXX) $(DEF_LIB_STL)
+	$(CXXLINK) -o $@ $(LDFLAGS) $(DB_STL_TEST_OBJS) \
+	    $(DEF_LIB_CXX) $(DEF_LIB_STL) $(LIBS) $(LIBSTLSO_LIBS)
+	$(POSTLINK) $@
+
+b_curalloc@o@: $(srcdir)/test_micro/source/b_curalloc.c
+	$(CC) $(CFLAGS) -I$(srcdir)/test_micro/source $?
+b_curwalk@o@: $(srcdir)/test_micro/source/b_curwalk.c
+	$(CC) $(CFLAGS) -I$(srcdir)/test_micro/source $?
+b_del@o@: $(srcdir)/test_micro/source/b_del.c
+	$(CC) $(CFLAGS) -I$(srcdir)/test_micro/source $?
+b_get@o@: $(srcdir)/test_micro/source/b_get.c
+	$(CC) $(CFLAGS) -I$(srcdir)/test_micro/source $?
+b_inmem@o@: $(srcdir)/test_micro/source/b_inmem.c
+	$(CC) $(CFLAGS) -I$(srcdir)/test_micro/source $?
+b_latch@o@: $(srcdir)/test_micro/source/b_latch.c
+	$(CC) $(CFLAGS) -I$(srcdir)/test_micro/source $?
+b_load@o@: $(srcdir)/test_micro/source/b_load.c
+	$(CC) $(CFLAGS) -I$(srcdir)/test_micro/source $?
+b_open@o@: $(srcdir)/test_micro/source/b_open.c
+	$(CC) $(CFLAGS) -I$(srcdir)/test_micro/source $?
+b_put@o@: $(srcdir)/test_micro/source/b_put.c
+	$(CC) $(CFLAGS) -I$(srcdir)/test_micro/source $?
+b_recover@o@: $(srcdir)/test_micro/source/b_recover.c
+	$(CC) $(CFLAGS) -I$(srcdir)/test_micro/source $?
+b_txn@o@: $(srcdir)/test_micro/source/b_txn.c
+	$(CC) $(CFLAGS) -I$(srcdir)/test_micro/source $?
+b_txn_write@o@: $(srcdir)/test_micro/source/b_txn_write.c
+	$(CC) $(CFLAGS) -I$(srcdir)/test_micro/source $?
+b_uname@o@: $(srcdir)/test_micro/source/b_uname.c
+	$(CC) $(CFLAGS) -I$(srcdir)/test_micro/source $?
+b_util@o@: $(srcdir)/test_micro/source/b_util.c
+	$(CC) $(CFLAGS) -I$(srcdir)/test_micro/source $?
+b_workload@o@: $(srcdir)/test_micro/source/b_workload.c
+	$(CC) $(CFLAGS) -I$(srcdir)/test_micro/source $?
+test_micro@o@: $(srcdir)/test_micro/source/test_micro.c
+	$(CC) $(CFLAGS) -I$(srcdir)/test_micro/source $?
+test_micro: $(TEST_MICRO_OBJS) $(DEF_LIB)
+	$(CCLINK) -o $@ \
+	    $(LDFLAGS) $(TEST_MICRO_OBJS) $(DEF_LIB) $(TEST_LIBS) $(LIBS)
+	$(POSTLINK) $@
+
+test_mutex@o@: $(srcdir)/mutex/test_mutex.c
+	$(CC) $(CFLAGS) $?
+test_mutex: test_mutex@o@ $(DEF_LIB)
+	$(CCLINK) -o $@ $(LDFLAGS) test_mutex@o@ $(DEF_LIB) $(TEST_LIBS) $(LIBS)
 	$(POSTLINK) $@
 
 ##################################################
 # Example programs for C.
 ##################################################
-bench_001@o@: $(srcdir)/examples_c/bench_001.c
-	$(CC) $(CFLAGS) $?
-bench_001: bench_001@o@ $(DEF_LIB)
-	$(CCLINK) -o $@ $(LDFLAGS) bench_001@o@ $(DEF_LIB) $(LIBS)
-	$(POSTLINK) $@
-
 ex_access@o@: $(srcdir)/examples_c/ex_access.c
 	$(CC) $(CFLAGS) $?
 ex_access: ex_access@o@ $(DEF_LIB)
@@ -1063,9 +1243,12 @@ ex_apprec@o@: $(srcdir)/examples_c/ex_apprec/ex_apprec.c
 	$(CC) $(CFLAGS) $?
 ex_apprec_auto@o@: $(srcdir)/examples_c/ex_apprec/ex_apprec_auto.c
 	$(CC) $(CFLAGS) $?
+ex_apprec_autop@o@: $(srcdir)/examples_c/ex_apprec/ex_apprec_autop.c
+	$(CC) $(CFLAGS) $?
 ex_apprec_rec@o@: $(srcdir)/examples_c/ex_apprec/ex_apprec_rec.c
 	$(CC) $(CFLAGS) $?
-EX_APPREC_OBJS=ex_apprec@o@ ex_apprec_auto@o@ ex_apprec_rec@o@
+EX_APPREC_OBJS=\
+	ex_apprec@o@ ex_apprec_auto@o@ ex_apprec_autop@o@ ex_apprec_rec@o@
 ex_apprec: $(EX_APPREC_OBJS) $(DEF_LIB)
 	$(CCLINK) -o $@ \
 	    $(LDFLAGS) $(EX_APPREC_OBJS) $(DEF_LIB) $(TEST_LIBS) $(LIBS)
@@ -1100,27 +1283,54 @@ ex_mpool: ex_mpool@o@ $(DEF_LIB)
 	$(CCLINK) -o $@ $(LDFLAGS) ex_mpool@o@ $(DEF_LIB) $(LIBS)
 	$(POSTLINK) $@
 
-ex_rq_client@o@: $(srcdir)/examples_c/ex_repquote/ex_rq_client.c
+rep_base@o@: $(srcdir)/examples_c/ex_rep/base/rep_base.c
 	$(CC) $(CFLAGS) $?
-ex_rq_main@o@:	$(srcdir)/examples_c/ex_repquote/ex_rq_main.c
+rep_common@o@: $(srcdir)/examples_c/ex_rep/common/rep_common.c
 	$(CC) $(CFLAGS) $?
-ex_rq_master@o@: $(srcdir)/examples_c/ex_repquote/ex_rq_master.c
+rep_msg@o@: $(srcdir)/examples_c/ex_rep/base/rep_msg.c
 	$(CC) $(CFLAGS) $?
-ex_rq_net@o@: $(srcdir)/examples_c/ex_repquote/ex_rq_net.c
+rep_net@o@: $(srcdir)/examples_c/ex_rep/base/rep_net.c
 	$(CC) $(CFLAGS) $?
-ex_rq_util@o@: $(srcdir)/examples_c/ex_repquote/ex_rq_util.c
-	$(CC) $(CFLAGS) $?
-EX_RQ_OBJS=\
-	ex_rq_client@o@ ex_rq_main@o@ ex_rq_master@o@ ex_rq_net@o@ ex_rq_util@o@
-ex_repquote: $(EX_RQ_OBJS) $(DEF_LIB)
+EX_REP_BASE_OBJS=\
+	rep_base@o@ rep_common@o@ rep_msg@o@ rep_net@o@
+ex_rep_base: $(EX_REP_BASE_OBJS) $(DEF_LIB)
 	$(CCLINK) -o $@ \
-	    $(LDFLAGS) $(EX_RQ_OBJS) $(DEF_LIB) $(TEST_LIBS) $(LIBS)
+	    $(LDFLAGS) $(EX_REP_BASE_OBJS) $(DEF_LIB) $(TEST_LIBS) $(LIBS)
+	$(POSTLINK) $@
+
+simple_txn@o@: $(srcdir)/examples_c/ex_rep_gsg/simple_txn.c
+	$(CC) $(CFLAGS) $?
+ex_rep_gsg_simple: simple_txn@o@ $(DEF_LIB)
+	$(CCLINK) -o $@ \
+	    $(LDFLAGS) simple_txn@o@ $(DEF_LIB) $(TEST_LIBS) $(LIBS)
+	$(POSTLINK) $@
+
+rep_mgr_gsg@o@: $(srcdir)/examples_c/ex_rep_gsg/rep_mgr_gsg.c
+	$(CC) $(CFLAGS) $?
+ex_rep_gsg_repmgr: rep_mgr_gsg@o@ $(DEF_LIB)
+	$(CCLINK) -o $@ \
+	    $(LDFLAGS) rep_mgr_gsg@o@ $(DEF_LIB) $(TEST_LIBS) $(LIBS)
+	$(POSTLINK) $@
+
+rep_mgr@o@: $(srcdir)/examples_c/ex_rep/mgr/rep_mgr.c
+	$(CC) $(CFLAGS) $?
+EX_REP_MGR_OBJS=\
+	rep_common@o@ rep_mgr@o@
+ex_rep_mgr: $(EX_REP_MGR_OBJS) $(DEF_LIB)
+	$(CCLINK) -o $@ \
+	    $(LDFLAGS) $(EX_REP_MGR_OBJS) $(DEF_LIB) $(TEST_LIBS) $(LIBS)
 	$(POSTLINK) $@
 
 ex_sequence@o@: $(srcdir)/examples_c/ex_sequence.c
 	$(CC) $(CFLAGS) $?
 ex_sequence: ex_sequence@o@ $(DEF_LIB)
 	$(CCLINK) -o $@ $(LDFLAGS) ex_sequence@o@ $(DEF_LIB) $(LIBS)
+	$(POSTLINK) $@
+
+ex_stream@o@: $(srcdir)/examples_c/ex_stream.c
+	$(CC) $(CFLAGS) $?
+ex_stream: ex_stream@o@ $(DEF_LIB)
+	$(CCLINK) -o $@ $(LDFLAGS) ex_stream@o@ $(DEF_LIB) $(LIBS)
 	$(POSTLINK) $@
 
 ex_thread@o@: $(srcdir)/examples_c/ex_thread.c
@@ -1138,7 +1348,7 @@ ex_tpcb: ex_tpcb@o@ $(DEF_LIB)
 
 gettingstarted_common@o@: \
     $(srcdir)/examples_c/getting_started/gettingstarted_common.c
-	$(CC) -I $(srcdir)/examples_c/getting_started $(CFLAGS) $?
+	$(CC) -I$(srcdir)/examples_c/getting_started $(CFLAGS) $?
 example_database_load@o@: \
     $(srcdir)/examples_c/getting_started/example_database_load.c
 	$(CC) $(CFLAGS) $?
@@ -1154,6 +1364,18 @@ example_database_read: example_database_read@o@ gettingstarted_common@o@ \
     $(DEF_LIB)
 	$(CCLINK) -o $@ $(LDFLAGS) \
 	    example_database_read@o@ gettingstarted_common@o@ $(DEF_LIB) $(LIBS)
+	$(POSTLINK) $@
+
+txn_guide_inmemory@o@: $(srcdir)/examples_c/txn_guide/txn_guide_inmemory.c
+	$(CC) $(CFLAGS) $?
+txn_guide_inmemory: txn_guide_inmemory@o@ $(DEF_LIB)
+	$(CCLINK) -o $@ $(LDFLAGS) txn_guide_inmemory@o@ $(DEF_LIB) $(LIBS)
+	$(POSTLINK) $@
+
+txn_guide@o@: $(srcdir)/examples_c/txn_guide/txn_guide.c
+	$(CC) $(CFLAGS) $?
+txn_guide: txn_guide@o@ $(DEF_LIB)
+	$(CCLINK) -o $@ $(LDFLAGS) txn_guide@o@ $(DEF_LIB) $(LIBS)
 	$(POSTLINK) $@
 
 ##################################################
@@ -1189,6 +1411,27 @@ excxx_mpool: MpoolExample@o@ $(DEF_LIB_CXX)
 	$(CXXLINK) -o $@ $(LDFLAGS) MpoolExample@o@ $(DEF_LIB_CXX) $(LIBS)
 	$(POSTLINK) $@
 
+RepQuoteExample@o@: $(srcdir)/examples_cxx/excxx_repquote/RepQuoteExample.cpp
+	$(CXX) -I$(srcdir)/examples_cxx/excxx_repquote $(CXXFLAGS) $?
+RepConfigInfo@o@: $(srcdir)/examples_cxx/excxx_repquote/RepConfigInfo.cpp
+	$(CXX) -I$(srcdir)/examples_cxx/excxx_repquote $(CXXFLAGS) $?
+excxx_repquote: RepQuoteExample@o@ RepConfigInfo@o@ $(DEF_LIB_CXX)
+	$(CXXLINK) -o $@ $(LDFLAGS) \
+	    RepQuoteExample@o@ RepConfigInfo@o@ $(DEF_LIB_CXX) $(LIBS)
+	$(POSTLINK) $@
+
+RepMgrGSG@o@: $(srcdir)/examples_cxx/excxx_repquote_gsg/RepMgrGSG.cpp
+	$(CXX) -I$(srcdir)/examples_cxx/excxx_repquote_gsg $(CXXFLAGS) $?
+excxx_repquote_gsg_repmgr: RepMgrGSG@o@ $(DEF_LIB_CXX)
+	$(CXXLINK) -o $@ $(LDFLAGS) RepMgrGSG@o@ $(DEF_LIB_CXX) $(LIBS)
+	$(POSTLINK) $@
+
+SimpleTxn@o@: $(srcdir)/examples_cxx/excxx_repquote_gsg/SimpleTxn.cpp
+	$(CXX) -I$(srcdir)/examples_cxx/excxx_repquote_gsg $(CXXFLAGS) $?
+excxx_repquote_gsg_simple: SimpleTxn@o@ $(DEF_LIB_CXX)
+	$(CXXLINK) -o $@ $(LDFLAGS) SimpleTxn@o@ $(DEF_LIB_CXX) $(LIBS)
+	$(POSTLINK) $@
+
 SequenceExample@o@: $(srcdir)/examples_cxx/SequenceExample.cpp
 	$(CXX) $(CXXFLAGS) $?
 excxx_sequence: SequenceExample@o@ $(DEF_LIB_CXX)
@@ -1220,12 +1463,56 @@ excxx_example_database_read: \
 	    excxx_example_database_read@o@ MyDb@o@ $(DEF_LIB_CXX) $(LIBS)
 	$(POSTLINK) $@
 
+TxnGuideInMemory@o@: $(srcdir)/examples_cxx/txn_guide/TxnGuideInMemory.cpp
+	$(CXX) $(CXXFLAGS) $?
+TxnGuideInMemory: TxnGuideInMemory@o@ $(DEF_LIB_CXX)
+	$(CXXLINK) -o $@ $(LDFLAGS) TxnGuideInMemory@o@ $(DEF_LIB_CXX) $(LIBS)
+	$(POSTLINK) $@
+
+TxnGuide@o@: $(srcdir)/examples_cxx/txn_guide/TxnGuide.cpp
+	$(CXX) $(CXXFLAGS) $?
+TxnGuide: TxnGuide@o@ $(DEF_LIB_CXX)
+	$(CXXLINK) -o $@ $(LDFLAGS) TxnGuide@o@ $(DEF_LIB_CXX) $(LIBS)
+	$(POSTLINK) $@
+
+##################################################
+# Example programs for STL.
+##################################################
+StlAccessExample@o@: $(srcdir)/examples_stl/StlAccessExample.cpp
+	$(CXX) $(STLFLAGS) $?
+exstl_access: StlAccessExample@o@ $(DEF_LIB_STL)
+	$(CXXLINK) -o $@ $(LDFLAGS) StlAccessExample@o@ $(DEF_LIB_STL) $(LIBS)
+	$(POSTLINK) $@
+
+StlRepQuoteExample@o@: $(srcdir)/examples_stl/repquote/StlRepQuoteExample.cpp
+	$(CXX) -I$(srcdir)/examples_stl/repquote $(STLFLAGS) $?
+StlRepConfigInfo@o@: $(srcdir)/examples_stl/repquote/StlRepConfigInfo.cpp
+	$(CXX) -I$(srcdir)/examples_stl/repquote $(STLFLAGS) $?
+exstl_repquote: StlRepQuoteExample@o@ StlRepConfigInfo@o@ $(DEF_LIB_STL)
+	$(CXXLINK) -o $@ $(LDFLAGS) \
+	    StlRepQuoteExample@o@ StlRepConfigInfo@o@ $(DEF_LIB_STL) $(LIBS)
+	$(POSTLINK) $@
+
+StlTpcbExample@o@: $(srcdir)/examples_stl/StlTpcbExample.cpp
+	$(CXX) $(STLFLAGS) $?
+exstl_tpcb: StlTpcbExample@o@ $(DEF_LIB_STL)
+	$(CXXLINK) -o $@ $(LDFLAGS) StlTpcbExample@o@ $(DEF_LIB_STL) $(LIBS)
+	$(POSTLINK) $@
+
+StlTransactionGuideExample@o@: $(srcdir)/examples_stl/StlTransactionGuideExample.cpp
+	$(CXX) $(STLFLAGS) $?
+StlTxnGuide: StlTransactionGuideExample@o@ $(DEF_LIB_STL)
+	$(CXXLINK) -o $@ $(LDFLAGS) StlTransactionGuideExample@o@ $(DEF_LIB_STL) $(LIBS)
+	$(POSTLINK) $@
+
 ##################################################
 # C API build rules.
 ##################################################
 aes_method@o@: $(srcdir)/crypto/aes_method.c
 	 $(CC) $(CFLAGS) $?
 bt_compare@o@: $(srcdir)/btree/bt_compare.c
+	 $(CC) $(CFLAGS) $?
+bt_compress@o@: $(srcdir)/btree/bt_compress.c
 	 $(CC) $(CFLAGS) $?
 bt_conv@o@: $(srcdir)/btree/bt_conv.c
 	 $(CC) $(CFLAGS) $?
@@ -1254,6 +1541,8 @@ bt_search@o@: $(srcdir)/btree/bt_search.c
 bt_split@o@: $(srcdir)/btree/bt_split.c
 	 $(CC) $(CFLAGS) $?
 bt_stat@o@: $(srcdir)/btree/bt_stat.c
+	 $(CC) $(CFLAGS) $?
+bt_compact@o@: $(srcdir)/btree/bt_compact.c
 	 $(CC) $(CFLAGS) $?
 bt_upgrade@o@: $(srcdir)/btree/bt_upgrade.c
 	 $(CC) $(CFLAGS) $?
@@ -1286,6 +1575,10 @@ db_autop@o@: $(srcdir)/db/db_autop.c
 db_byteorder@o@: $(srcdir)/common/db_byteorder.c
 	 $(CC) $(CFLAGS) $?
 db_cam@o@: $(srcdir)/db/db_cam.c
+	 $(CC) $(CFLAGS) $?
+db_cds@o@: $(srcdir)/db/db_cds.c
+	 $(CC) $(CFLAGS) $?
+db_compint@o@: $(srcdir)/common/db_compint.c
 	 $(CC) $(CFLAGS) $?
 db_conv@o@: $(srcdir)/db/db_conv.c
 	 $(CC) $(CFLAGS) $?
@@ -1331,9 +1624,9 @@ db_setid@o@: $(srcdir)/db/db_setid.c
 	 $(CC) $(CFLAGS) $?
 db_setlsn@o@: $(srcdir)/db/db_setlsn.c
 	 $(CC) $(CFLAGS) $?
-db_salloc@o@: $(srcdir)/env/db_salloc.c
+db_shash@o@: $(srcdir)/common/db_shash.c
 	 $(CC) $(CFLAGS) $?
-db_shash@o@: $(srcdir)/env/db_shash.c
+db_sort_multiple@o@: $(srcdir)/db/db_sort_multiple.c
 	 $(CC) $(CFLAGS) $?
 db_stati@o@: $(srcdir)/db/db_stati.c
 	 $(CC) $(CFLAGS) $?
@@ -1363,15 +1656,31 @@ dbreg_stat@o@: $(srcdir)/dbreg/dbreg_stat.c
 	 $(CC) $(CFLAGS) $?
 dbreg_util@o@: $(srcdir)/dbreg/dbreg_util.c
 	 $(CC) $(CFLAGS) $?
+dbt@o@: $(srcdir)/common/dbt.c
+	 $(CC) $(CFLAGS) $?
+env_alloc@o@: $(srcdir)/env/env_alloc.c
+	 $(CC) $(CFLAGS) $?
+env_config@o@: $(srcdir)/env/env_config.c
+	 $(CC) $(CFLAGS) $?
+env_failchk@o@: $(srcdir)/env/env_failchk.c
+	 $(CC) $(CFLAGS) $?
 env_file@o@: $(srcdir)/env/env_file.c
 	 $(CC) $(CFLAGS) $?
+env_globals@o@: $(srcdir)/env/env_globals.c
+	 $(CC) $(CFLAGS) $?
 env_method@o@: $(srcdir)/env/env_method.c
+	 $(CC) $(CFLAGS) $?
+env_name@o@: $(srcdir)/env/env_name.c
 	 $(CC) $(CFLAGS) $?
 env_open@o@: $(srcdir)/env/env_open.c
 	 $(CC) $(CFLAGS) $?
 env_recover@o@: $(srcdir)/env/env_recover.c
 	 $(CC) $(CFLAGS) $?
 env_region@o@: $(srcdir)/env/env_region.c
+	 $(CC) $(CFLAGS) $?
+env_register@o@: $(srcdir)/env/env_register.c
+	 $(CC) $(CFLAGS) $?
+env_sig@o@: $(srcdir)/env/env_sig.c
 	 $(CC) $(CFLAGS) $?
 env_stat@o@: $(srcdir)/env/env_stat.c
 	 $(CC) $(CFLAGS) $?
@@ -1425,6 +1734,8 @@ lock@o@: $(srcdir)/lock/lock.c
 	 $(CC) $(CFLAGS) $?
 lock_deadlock@o@:$(srcdir)/lock/lock_deadlock.c
 	 $(CC) $(CFLAGS) $?
+lock_failchk@o@:$(srcdir)/lock/lock_failchk.c
+	 $(CC) $(CFLAGS) $?
 lock_id@o@:$(srcdir)/lock/lock_id.c
 	 $(CC) $(CFLAGS) $?
 lock_list@o@:$(srcdir)/lock/lock_list.c
@@ -1434,6 +1745,8 @@ lock_method@o@:$(srcdir)/lock/lock_method.c
 lock_region@o@:$(srcdir)/lock/lock_region.c
 	 $(CC) $(CFLAGS) $?
 lock_stat@o@:$(srcdir)/lock/lock_stat.c
+	 $(CC) $(CFLAGS) $?
+lock_stub@o@: $(srcdir)/lock/lock_stub.c
 	 $(CC) $(CFLAGS) $?
 lock_timer@o@:$(srcdir)/lock/lock_timer.c
 	 $(CC) $(CFLAGS) $?
@@ -1445,6 +1758,8 @@ log_archive@o@: $(srcdir)/log/log_archive.c
 	 $(CC) $(CFLAGS) $?
 log_compare@o@: $(srcdir)/log/log_compare.c
 	 $(CC) $(CFLAGS) $?
+log_debug@o@: $(srcdir)/log/log_debug.c
+	 $(CC) $(CFLAGS) $?
 log_get@o@: $(srcdir)/log/log_get.c
 	 $(CC) $(CFLAGS) $?
 log_method@o@: $(srcdir)/log/log_method.c
@@ -1452,6 +1767,8 @@ log_method@o@: $(srcdir)/log/log_method.c
 log_put@o@: $(srcdir)/log/log_put.c
 	 $(CC) $(CFLAGS) $?
 log_stat@o@: $(srcdir)/log/log_stat.c
+	 $(CC) $(CFLAGS) $?
+mkpath@o@: $(srcdir)/common/mkpath.c
 	 $(CC) $(CFLAGS) $?
 mp_alloc@o@: $(srcdir)/mp/mp_alloc.c
 	 $(CC) $(CFLAGS) $?
@@ -1469,9 +1786,13 @@ mp_fset@o@: $(srcdir)/mp/mp_fset.c
 	 $(CC) $(CFLAGS) $?
 mp_method@o@: $(srcdir)/mp/mp_method.c
 	 $(CC) $(CFLAGS) $?
+mp_mvcc@o@: $(srcdir)/mp/mp_mvcc.c
+	 $(CC) $(CFLAGS) $?
 mp_region@o@: $(srcdir)/mp/mp_region.c
 	 $(CC) $(CFLAGS) $?
 mp_register@o@: $(srcdir)/mp/mp_register.c
+	 $(CC) $(CFLAGS) $?
+mp_resize@o@: $(srcdir)/mp/mp_resize.c
 	 $(CC) $(CFLAGS) $?
 mp_stat@o@: $(srcdir)/mp/mp_stat.c
 	 $(CC) $(CFLAGS) $?
@@ -1481,23 +1802,43 @@ mp_trickle@o@: $(srcdir)/mp/mp_trickle.c
 	 $(CC) $(CFLAGS) $?
 mt19937db@o@: $(srcdir)/crypto/mersenne/mt19937db.c
 	 $(CC) $(CFLAGS) $?
+mut_alloc@o@: $(srcdir)/mutex/mut_alloc.c
+	 $(CC) $(CFLAGS) $?
+mut_failchk@o@: $(srcdir)/mutex/mut_failchk.c
+	 $(CC) $(CFLAGS) $?
 mut_fcntl@o@: $(srcdir)/mutex/mut_fcntl.c
 	 $(CC) $(CFLAGS) $?
+mut_method@o@: $(srcdir)/mutex/mut_method.c
+	 $(CC) $(CFLAGS) $?
 mut_pthread@o@: $(srcdir)/mutex/mut_pthread.c
+	 $(CC) $(CFLAGS) $?
+mut_region@o@: $(srcdir)/mutex/mut_region.c
+	 $(CC) $(CFLAGS) $?
+mut_stat@o@: $(srcdir)/mutex/mut_stat.c
+	 $(CC) $(CFLAGS) $?
+mut_stub@o@: $(srcdir)/mutex/mut_stub.c
 	 $(CC) $(CFLAGS) $?
 mut_tas@o@: $(srcdir)/mutex/mut_tas.c
 	 $(CC) $(CFLAGS) $?
 mut_win32@o@: $(srcdir)/mutex/mut_win32.c
 	 $(CC) $(CFLAGS) $?
-mutex@o@: $(srcdir)/mutex/mutex.c
+openflags@o@: $(srcdir)/common/openflags.c
 	 $(CC) $(CFLAGS) $?
 os_abs@o@: $(srcdir)/@OSDIR@/os_abs.c
 	 $(CC) $(CFLAGS) $?
+os_abort@o@: $(srcdir)/os/os_abort.c
+	 $(CC) $(CFLAGS) $?
+os_addrinfo@o@: $(srcdir)/os/os_addrinfo.c
+	$(CC) $(CFLAGS) $?
 os_alloc@o@: $(srcdir)/os/os_alloc.c
 	 $(CC) $(CFLAGS) $?
 os_clock@o@: $(srcdir)/@OSDIR@/os_clock.c
 	 $(CC) $(CFLAGS) $?
 os_config@o@: $(srcdir)/@OSDIR@/os_config.c
+	 $(CC) $(CFLAGS) $?
+os_cpu@o@: $(srcdir)/@OSDIR@/os_cpu.c
+	 $(CC) $(CFLAGS) $?
+os_ctime@o@: $(srcdir)/os/os_ctime.c
 	 $(CC) $(CFLAGS) $?
 os_dir@o@: $(srcdir)/@OSDIR@/os_dir.c
 	 $(CC) $(CFLAGS) $?
@@ -1505,21 +1846,27 @@ os_errno@o@: $(srcdir)/@OSDIR@/os_errno.c
 	 $(CC) $(CFLAGS) $?
 os_fid@o@: $(srcdir)/@OSDIR@/os_fid.c
 	 $(CC) $(CFLAGS) $?
+os_flock@o@: $(srcdir)/@OSDIR@/os_flock.c
+	 $(CC) $(CFLAGS) $?
 os_fsync@o@: $(srcdir)/@OSDIR@/os_fsync.c
 	 $(CC) $(CFLAGS) $?
-os_id@o@: $(srcdir)/os/os_id.c
+os_getenv@o@: $(srcdir)/@OSDIR@/os_getenv.c
 	 $(CC) $(CFLAGS) $?
 os_handle@o@: $(srcdir)/@OSDIR@/os_handle.c
 	 $(CC) $(CFLAGS) $?
 os_map@o@: $(srcdir)/@OSDIR@/os_map.c
 	 $(CC) $(CFLAGS) $?
-os_method@o@: $(srcdir)/os/os_method.c
+os_method@o@: $(srcdir)/common/os_method.c
 	 $(CC) $(CFLAGS) $?
-os_oflags@o@: $(srcdir)/os/os_oflags.c
+os_mkdir@o@: $(srcdir)/@OSDIR@/os_mkdir.c
 	 $(CC) $(CFLAGS) $?
 os_open@o@: $(srcdir)/@OSDIR@/os_open.c
 	 $(CC) $(CFLAGS) $?
-os_region@o@: $(srcdir)/os/os_region.c
+os_pid@o@: $(srcdir)/os/os_pid.c
+	 $(CC) $(CFLAGS) $?
+os_qnx_fsync@o@: $(srcdir)/os_qnx/os_qnx_fsync.c
+	 $(CC) $(CFLAGS) $?
+os_qnx_open@o@: $(srcdir)/os_qnx/os_qnx_open.c
 	 $(CC) $(CFLAGS) $?
 os_rename@o@: $(srcdir)/@OSDIR@/os_rename.c
 	 $(CC) $(CFLAGS) $?
@@ -1531,9 +1878,7 @@ os_rw@o@: $(srcdir)/@OSDIR@/os_rw.c
 	 $(CC) $(CFLAGS) $?
 os_seek@o@: $(srcdir)/@OSDIR@/os_seek.c
 	 $(CC) $(CFLAGS) $?
-os_sleep@o@: $(srcdir)/@OSDIR@/os_sleep.c
-	 $(CC) $(CFLAGS) $?
-os_spin@o@: $(srcdir)/@OSDIR@/os_spin.c
+os_stack@o@: $(srcdir)/os/os_stack.c
 	 $(CC) $(CFLAGS) $?
 os_stat@o@: $(srcdir)/@OSDIR@/os_stat.c
 	 $(CC) $(CFLAGS) $?
@@ -1541,7 +1886,13 @@ os_tmpdir@o@: $(srcdir)/os/os_tmpdir.c
 	 $(CC) $(CFLAGS) $?
 os_truncate@o@: $(srcdir)/@OSDIR@/os_truncate.c
 	 $(CC) $(CFLAGS) $?
-os_unlink@o@: $(srcdir)/os/os_unlink.c
+os_uid@o@: $(srcdir)/os/os_uid.c
+	 $(CC) $(CFLAGS) $?
+os_unlink@o@: $(srcdir)/@OSDIR@/os_unlink.c
+	 $(CC) $(CFLAGS) $?
+os_yield@o@: $(srcdir)/@OSDIR@/os_yield.c
+	 $(CC) $(CFLAGS) $?
+partition@o@: $(srcdir)/db/partition.c
 	 $(CC) $(CFLAGS) $?
 qam@o@: $(srcdir)/qam/qam.c
 	 $(CC) $(CFLAGS) $?
@@ -1569,9 +1920,13 @@ qam_verify@o@: $(srcdir)/qam/qam_verify.c
 	 $(CC) $(CFLAGS) $?
 rep_auto@o@: $(srcdir)/rep/rep_auto.c
 	 $(CC) $(CFLAGS) $?
-rep_autop@o@: $(srcdir)/rep/rep_autop.c
-	 $(CC) $(CFLAGS) $?
 rep_backup@o@: $(srcdir)/rep/rep_backup.c
+	 $(CC) $(CFLAGS) $?
+rep_elect@o@: $(srcdir)/rep/rep_elect.c
+	 $(CC) $(CFLAGS) $?
+rep_lease@o@: $(srcdir)/rep/rep_lease.c
+	 $(CC) $(CFLAGS) $?
+rep_log@o@: $(srcdir)/rep/rep_log.c
 	 $(CC) $(CFLAGS) $?
 rep_method@o@: $(srcdir)/rep/rep_method.c
 	 $(CC) $(CFLAGS) $?
@@ -1585,6 +1940,30 @@ rep_stat@o@: $(srcdir)/rep/rep_stat.c
 	 $(CC) $(CFLAGS) $?
 rep_util@o@: $(srcdir)/rep/rep_util.c
 	 $(CC) $(CFLAGS) $?
+rep_verify@o@: $(srcdir)/rep/rep_verify.c
+	 $(CC) $(CFLAGS) $?
+repmgr_auto@o@: $(srcdir)/repmgr/repmgr_auto.c
+	 $(CC) $(CFLAGS) $?
+repmgr_elect@o@: $(srcdir)/repmgr/repmgr_elect.c
+	$(CC) $(CFLAGS) $?
+repmgr_method@o@: $(srcdir)/repmgr/repmgr_method.c
+	$(CC) $(CFLAGS) $?
+repmgr_msg@o@: $(srcdir)/repmgr/repmgr_msg.c
+	$(CC) $(CFLAGS) $?
+repmgr_net@o@: $(srcdir)/repmgr/repmgr_net.c
+	$(CC) $(CFLAGS) $?
+repmgr_posix@o@: $(srcdir)/repmgr/repmgr_posix.c
+	$(CC) $(CFLAGS) $?
+repmgr_queue@o@: $(srcdir)/repmgr/repmgr_queue.c
+	$(CC) $(CFLAGS) $?
+repmgr_sel@o@: $(srcdir)/repmgr/repmgr_sel.c
+	$(CC) $(CFLAGS) $?
+repmgr_stat@o@: $(srcdir)/repmgr/repmgr_stat.c
+	$(CC) $(CFLAGS) $?
+repmgr_stub@o@: $(srcdir)/repmgr/repmgr_stub.c
+	$(CC) $(CFLAGS) $?
+repmgr_util@o@: $(srcdir)/repmgr/repmgr_util.c
+	$(CC) $(CFLAGS) $?
 rijndael-alg-fst@o@: $(srcdir)/crypto/rijndael/rijndael-alg-fst.c
 	$(CC) $(CFLAGS) $?
 rijndael-api-fst@o@: $(srcdir)/crypto/rijndael/rijndael-api-fst.c
@@ -1603,6 +1982,10 @@ txn_auto@o@: $(srcdir)/txn/txn_auto.c
 	 $(CC) $(CFLAGS) $?
 txn_autop@o@: $(srcdir)/txn/txn_autop.c
 	 $(CC) $(CFLAGS) $?
+txn_chkpt@o@: $(srcdir)/txn/txn_chkpt.c
+	 $(CC) $(CFLAGS) $?
+txn_failchk@o@: $(srcdir)/txn/txn_failchk.c
+	 $(CC) $(CFLAGS) $?
 txn_method@o@: $(srcdir)/txn/txn_method.c
 	 $(CC) $(CFLAGS) $?
 txn_rec@o@: $(srcdir)/txn/txn_rec.c
@@ -1615,6 +1998,8 @@ txn_stat@o@: $(srcdir)/txn/txn_stat.c
 	 $(CC) $(CFLAGS) $?
 txn_util@o@: $(srcdir)/txn/txn_util.c
 	 $(CC) $(CFLAGS) $?
+util_arg@o@: $(srcdir)/common/util_arg.c
+	 $(CC) $(CFLAGS) $?
 util_cache@o@: $(srcdir)/common/util_cache.c
 	 $(CC) $(CFLAGS) $?
 util_log@o@: $(srcdir)/common/util_log.c
@@ -1623,11 +2008,7 @@ util_sig@o@: $(srcdir)/common/util_sig.c
 	 $(CC) $(CFLAGS) $?
 uts4_cc@o@: $(srcdir)/mutex/uts4_cc.s
 	$(AS) $(ASFLAGS) -o $@ $?
-xa@o@: $(srcdir)/xa/xa.c
-	 $(CC) $(CFLAGS) $?
-xa_db@o@: $(srcdir)/xa/xa_db.c
-	 $(CC) $(CFLAGS) $?
-xa_map@o@: $(srcdir)/xa/xa_map.c
+zerofill@o@: $(srcdir)/common/zerofill.c
 	 $(CC) $(CFLAGS) $?
 
 ##################################################
@@ -1660,37 +2041,47 @@ cxx_txn@o@: $(srcdir)/cxx/cxx_txn.cpp
 # Java API build rules.
 ##################################################
 db_java_wrap@o@: $(srcdir)/libdb_java/db_java_wrap.c
-	$(CC) $(CFLAGS) $?
+	$(CC) $(CFLAGS) $(SWIGCFLAGS) $?
+
+##################################################
+# STL API build rules.
+##################################################
+dbstl_container@o@: $(srcdir)/stl/dbstl_container.cpp
+	$(CXX) $(STLFLAGS) $?
+dbstl_resource_manager@o@: $(srcdir)/stl/dbstl_resource_manager.cpp
+	$(CXX) $(STLFLAGS) $?
 
 ##################################################
 # Tcl API build rules.
 ##################################################
 tcl_compat@o@: $(srcdir)/tcl/tcl_compat.c
-	$(CC) $(CFLAGS) $(TCFLAGS) $?
+	$(CC) $(CFLAGS) $(TCL_INCLUDE_SPEC) $?
 tcl_db@o@: $(srcdir)/tcl/tcl_db.c
-	$(CC) $(CFLAGS) $(TCFLAGS) $?
+	$(CC) $(CFLAGS) $(TCL_INCLUDE_SPEC) $?
 tcl_db_pkg@o@: $(srcdir)/tcl/tcl_db_pkg.c
-	$(CC) $(CFLAGS) $(TCFLAGS) $?
+	$(CC) $(CFLAGS) $(TCL_INCLUDE_SPEC) $?
 tcl_dbcursor@o@: $(srcdir)/tcl/tcl_dbcursor.c
-	$(CC) $(CFLAGS) $(TCFLAGS) $?
+	$(CC) $(CFLAGS) $(TCL_INCLUDE_SPEC) $?
 tcl_env@o@: $(srcdir)/tcl/tcl_env.c
-	$(CC) $(CFLAGS) $(TCFLAGS) $?
+	$(CC) $(CFLAGS) $(TCL_INCLUDE_SPEC) $?
 tcl_internal@o@: $(srcdir)/tcl/tcl_internal.c
-	$(CC) $(CFLAGS) $(TCFLAGS) $?
+	$(CC) $(CFLAGS) $(TCL_INCLUDE_SPEC) $?
 tcl_lock@o@: $(srcdir)/tcl/tcl_lock.c
-	$(CC) $(CFLAGS) $(TCFLAGS) $?
+	$(CC) $(CFLAGS) $(TCL_INCLUDE_SPEC) $?
 tcl_log@o@: $(srcdir)/tcl/tcl_log.c
-	$(CC) $(CFLAGS) $(TCFLAGS) $?
+	$(CC) $(CFLAGS) $(TCL_INCLUDE_SPEC) $?
 tcl_mp@o@: $(srcdir)/tcl/tcl_mp.c
-	$(CC) $(CFLAGS) $(TCFLAGS) $?
+	$(CC) $(CFLAGS) $(TCL_INCLUDE_SPEC) $?
+tcl_mutex@o@: $(srcdir)/tcl/tcl_mutex.c
+	$(CC) $(CFLAGS) $(TCL_INCLUDE_SPEC) $?
 tcl_rep@o@: $(srcdir)/tcl/tcl_rep.c
-	$(CC) $(CFLAGS) $(TCFLAGS) $?
+	$(CC) $(CFLAGS) $(TCL_INCLUDE_SPEC) $?
 tcl_seq@o@: $(srcdir)/tcl/tcl_seq.c
-	$(CC) $(CFLAGS) $(TCFLAGS) $?
+	$(CC) $(CFLAGS) $(TCL_INCLUDE_SPEC) $?
 tcl_txn@o@: $(srcdir)/tcl/tcl_txn.c
-	$(CC) $(CFLAGS) $(TCFLAGS) $?
+	$(CC) $(CFLAGS) $(TCL_INCLUDE_SPEC) $?
 tcl_util@o@: $(srcdir)/tcl/tcl_util.c
-	$(CC) $(CFLAGS) $(TCFLAGS) $?
+	$(CC) $(CFLAGS) $(TCL_INCLUDE_SPEC) $?
 
 ##################################################
 # RPC build rules.
@@ -1734,6 +2125,8 @@ db_dump@o@: $(srcdir)/db_dump/db_dump.c
 	$(CC) $(CFLAGS) $?
 db_dump185@o@: $(srcdir)/db_dump185/db_dump185.c
 	$(CC) $(DB185INC) $?
+db_hotbackup@o@: $(srcdir)/db_hotbackup/db_hotbackup.c
+	$(CC) $(CFLAGS) $?
 db_load@o@: $(srcdir)/db_load/db_load.c
 	$(CC) $(CFLAGS) $?
 db_printlog@o@: $(srcdir)/db_printlog/db_printlog.c
@@ -1747,12 +2140,51 @@ db_upgrade@o@: $(srcdir)/db_upgrade/db_upgrade.c
 db_verify@o@: $(srcdir)/db_verify/db_verify.c
 	$(CC) $(CFLAGS) $?
 
+db_sql@o@: $(srcdir)/db_sql/db_sql.c
+	$(CC) $(CFLAGS) $?
+preparser@o@: $(srcdir)/db_sql/preparser.c
+	$(CC) $(CFLAGS) $?
+parsefuncs@o@: $(srcdir)/db_sql/parsefuncs.c
+	$(CC) $(CFLAGS) $?
+tokenize@o@: $(srcdir)/db_sql/tokenize.c
+	$(CC) $(CFLAGS) $?
+buildpt@o@: $(srcdir)/db_sql/buildpt.c
+	$(CC) $(CFLAGS) $?
+utils@o@: $(srcdir)/db_sql/utils.c
+	$(CC) $(CFLAGS) $?
+generate@o@: $(srcdir)/db_sql/generate.c
+	$(CC) $(CFLAGS) $?
+generate_test@o@: $(srcdir)/db_sql/generate_test.c
+	$(CC) $(CFLAGS) $?
+generate_verification@o@: $(srcdir)/db_sql/generate_verification.c
+	$(CC) $(CFLAGS) $?
+generation_utils@o@: $(srcdir)/db_sql/generation_utils.c
+	$(CC) $(CFLAGS) $?
+hint_comment@o@: $(srcdir)/db_sql/hint_comment.c
+	$(CC) $(CFLAGS) $?
+sqlprintf@o@: $(srcdir)/db_sql/sqlite/sqlprintf.c
+	$(CC) $(CFLAGS) $?
+parse@o@: $(srcdir)/db_sql/sqlite/parse.c
+	$(CC) $(CFLAGS) $?
+
 ##################################################
 # C library replacement files.
 ##################################################
+atoi@o@: $(srcdir)/clib/atoi.c
+	$(CC) $(CFLAGS) $?
+atol@o@: $(srcdir)/clib/atol.c
+	$(CC) $(CFLAGS) $?
 getcwd@o@: $(srcdir)/clib/getcwd.c
 	$(CC) $(CFLAGS) $?
 getopt@o@: $(srcdir)/clib/getopt.c
+	$(CC) $(CFLAGS) $?
+isalpha@o@: $(srcdir)/clib/isalpha.c
+	$(CC) $(CFLAGS) $?
+isdigit@o@: $(srcdir)/clib/isdigit.c
+	$(CC) $(CFLAGS) $?
+isprint@o@: $(srcdir)/clib/isprint.c
+	$(CC) $(CFLAGS) $?
+isspace@o@: $(srcdir)/clib/isspace.c
 	$(CC) $(CFLAGS) $?
 memcmp@o@: $(srcdir)/clib/memcmp.c
 	$(CC) $(CFLAGS) $?
@@ -1760,7 +2192,13 @@ memcpy@o@: $(srcdir)/clib/memmove.c
 	$(CC) -DMEMCOPY $(CFLAGS) $? -o $@
 memmove@o@: $(srcdir)/clib/memmove.c
 	$(CC) -DMEMMOVE $(CFLAGS) $?
+printf@o@: $(srcdir)/clib/printf.c
+	$(CC) $(CFLAGS) $?
+qsort@o@: $(srcdir)/clib/qsort.c
+	$(CC) $(CFLAGS) $?
 raise@o@: $(srcdir)/clib/raise.c
+	$(CC) $(CFLAGS) $?
+rand@o@: $(srcdir)/clib/rand.c
 	$(CC) $(CFLAGS) $?
 strcasecmp@o@: $(srcdir)/clib/strcasecmp.c
 	$(CC) $(CFLAGS) $?
@@ -1768,9 +2206,23 @@ strdup@o@: $(srcdir)/clib/strdup.c
 	$(CC) $(CFLAGS) $?
 snprintf@o@: $(srcdir)/clib/snprintf.c
 	$(CC) $(CFLAGS) $?
+strcat@o@: $(srcdir)/clib/strcat.c
+	$(CC) $(CFLAGS) $?
+strchr@o@: $(srcdir)/clib/strchr.c
+	$(CC) $(CFLAGS) $?
 strerror@o@: $(srcdir)/clib/strerror.c
+	$(CC) $(CFLAGS) $?
+strncat@o@: $(srcdir)/clib/strncat.c
+	$(CC) $(CFLAGS) $?
+strncmp@o@: $(srcdir)/clib/strncmp.c
+	$(CC) $(CFLAGS) $?
+strrchr@o@: $(srcdir)/clib/strrchr.c
+	$(CC) $(CFLAGS) $?
+strsep@o@: $(srcdir)/clib/strsep.c
 	$(CC) $(CFLAGS) $?
 strtol@o@: $(srcdir)/clib/strtol.c
 	$(CC) $(CFLAGS) $?
 strtoul@o@: $(srcdir)/clib/strtoul.c
+	$(CC) $(CFLAGS) $?
+time@o@: $(srcdir)/clib/time.c
 	$(CC) $(CFLAGS) $?

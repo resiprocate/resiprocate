@@ -1,14 +1,17 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1996-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
  *
- * $Id: db_upgrade.h,v 1.12 2004/01/28 03:36:02 bostic Exp $
+ * $Id$
  */
 
 #ifndef _DB_UPGRADE_H_
 #define	_DB_UPGRADE_H_
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
 /*
  * This file defines the metadata pages from the previous release.
@@ -239,4 +242,7 @@ typedef struct hashhdr {	/* Disk resident portion */
 	 */
 } HASHHDR;
 
+#if defined(__cplusplus)
+}
+#endif
 #endif /* !_DB_UPGRADE_H_ */

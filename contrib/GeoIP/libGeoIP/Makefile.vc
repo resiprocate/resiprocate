@@ -1,0 +1,34 @@
+#NMAKE makefile for Windows developers. 
+#Produces a static library (GeoIP.lib). 
+ 
+COMPILER=cl 
+ 
+CFLAGS=-DWIN32 -MD -nologo 
+ 
+GEOIPINC = -I..\libGeoIP 
+ 
+CC1 = $(COMPILER) $(CFLAGS) $(GEOIPINC) -DGEOIPDATADIR=\"$(GEOIPDATADIR)\" 
+ 
+OBJS=GeoIP.obj GeoIPCity.obj regionName.obj md5.obj timeZone.obj
+ 
+EXTRA_LIBS= advapi32.lib wsock32.lib 
+ 
+AR=lib 
+ 
+GeoIP.lib:  GeoIP.obj GeoIPCity.obj regionName.obj md5.obj timeZone.obj
+   $(AR) -nologo $(OBJS) $(EXTRA_LIBS) /OUT:GeoIP.lib 
+ 
+GeoIP.obj: GeoIP.c 
+   $(CC1) -c GeoIP.c $(GEOIPINC) 
+ 
+GeoIPCity.obj: GeoIPCity.c 
+   $(CC1) -c GeoIPCity.c $(GEOIPINC)
+
+regionName.obj: regionName.c 
+   $(CC1) -c regionName.c $(GEOIPINC)
+
+md5.obj: md5.c 
+   $(CC1) -c md5.c $(GEOIPINC)
+
+timeZone.obj: timeZone.c 
+   $(CC1) -c timeZone.c $(GEOIPINC)

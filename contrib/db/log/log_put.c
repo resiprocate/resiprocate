@@ -1,31 +1,12 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1996-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
  *
- * $Id: log_put.c,v 11.168 2004/10/15 16:59:42 bostic Exp $
+ * $Id$
  */
 
 #include "db_config.h"
-
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-
-#if TIME_WITH_SYS_TIME
-#include <sys/time.h>
-#include <time.h>
-#else
-#if HAVE_SYS_TIME_H
-#include <sys/time.h>
-#else
-#include <time.h>
-#endif
-#endif
-
-#include <stdio.h>
-#include <string.h>
-#endif
 
 #include "db_int.h"
 #include "dbinc/crypto.h"
@@ -33,12 +14,12 @@
 #include "dbinc/log.h"
 #include "dbinc/txn.h"
 
-static int __log_encrypt_record __P((DB_ENV *, DBT *, HDR *, u_int32_t));
-static int __log_file __P((DB_ENV *, const DB_LSN *, char *, size_t));
+static int __log_encrypt_record __P((ENV *, DBT *, HDR *, u_int32_t));
+static int __log_file __P((ENV *, const DB_LSN *, char *, size_t));
 static int __log_fill __P((DB_LOG *, DB_LSN *, void *, u_int32_t));
-static int __log_flush_commit __P((DB_ENV *, const DB_LSN *, u_int32_t));
+static int __log_flush_commit __P((ENV *, const DB_LSN *, u_int32_t));
 static int __log_newfh __P((DB_LOG *, int));
-static int __log_put_next __P((DB_ENV *,
+static int __log_put_next __P((ENV *,
     DB_LSN *, const DBT *, HDR *, DB_LSN *));
 static int __log_putr __P((DB_LOG *,
     DB_LSN *, const DBT *, u_int32_t, HDR *));
@@ -46,7 +27,7 @@ static int __log_write __P((DB_LOG *, void *, u_int32_t));
 
 /*
  * __log_put_pp --
- *	DB_ENV->log_put pre/post processing.
+ *	ENV->log_put pre/post processing.
  *
  * PUBLIC: int __log_put_pp __P((DB_ENV *, DB_LSN *, const DBT *, u_int32_t));
  */
@@ -57,67 +38,102 @@ __log_put_pp(dbenv, lsnp, udbt, flags)
 	const DBT *udbt;
 	u_int32_t flags;
 {
-	int rep_check, ret;
+	DB_THREAD_INFO *ip;
+	ENV *env;
+	int ret;
 
-	PANIC_CHECK(dbenv);
-	ENV_REQUIRES_CONFIG(dbenv,
-	    dbenv->lg_handle, "DB_ENV->log_put", DB_INIT_LOG);
+	env = dbenv->env;
+
+	ENV_REQUIRES_CONFIG(env,
+	    env->lg_handle, "DB_ENV->log_put", DB_INIT_LOG);
 
 	/* Validate arguments: check for allowed flags. */
-	if ((ret = __db_fchk(dbenv, "DB_ENV->log_put", flags,
+	if ((ret = __db_fchk(env, "DB_ENV->log_put", flags,
 	    DB_LOG_CHKPNT | DB_LOG_COMMIT |
-	    DB_FLUSH | DB_LOG_NOCOPY | DB_LOG_PERM | DB_LOG_WRNOSYNC)) != 0)
+	    DB_FLUSH | DB_LOG_NOCOPY | DB_LOG_WRNOSYNC)) != 0)
 		return (ret);
 
 	/* DB_LOG_WRNOSYNC and DB_FLUSH are mutually exclusive. */
 	if (LF_ISSET(DB_LOG_WRNOSYNC) && LF_ISSET(DB_FLUSH))
-		return (__db_ferr(dbenv, "DB_ENV->log_put", 1));
+		return (__db_ferr(env, "DB_ENV->log_put", 1));
 
 	/* Replication clients should never write log records. */
-	if (IS_REP_CLIENT(dbenv)) {
-		__db_err(dbenv,
+	if (IS_REP_CLIENT(env)) {
+		__db_errx(env,
 		    "DB_ENV->log_put is illegal on replication clients");
 		return (EINVAL);
 	}
 
-	rep_check = IS_ENV_REPLICATED(dbenv) ? 1 : 0;
-	if (rep_check)
-		__env_rep_enter(dbenv);
-	ret = __log_put(dbenv, lsnp, udbt, flags);
-	if (rep_check)
-		__env_db_rep_exit(dbenv);
+	ENV_ENTER(env, ip);
+	REPLICATION_WRAP(env, (__log_put(env, lsnp, udbt, flags)), 0, ret);
+	ENV_LEAVE(env, ip);
 	return (ret);
 }
 
 /*
  * __log_put --
- *	DB_ENV->log_put.
+ *	ENV->log_put.
  *
- * PUBLIC: int __log_put __P((DB_ENV *, DB_LSN *, const DBT *, u_int32_t));
+ * PUBLIC: int __log_put __P((ENV *, DB_LSN *, const DBT *, u_int32_t));
  */
 int
-__log_put(dbenv, lsnp, udbt, flags)
-	DB_ENV *dbenv;
+__log_put(env, lsnp, udbt, flags)
+	ENV *env;
 	DB_LSN *lsnp;
 	const DBT *udbt;
 	u_int32_t flags;
 {
-	DB_CIPHER *db_cipher;
 	DBT *dbt, t;
+	DB_CIPHER *db_cipher;
 	DB_LOG *dblp;
 	DB_LSN lsn, old_lsn;
+	DB_REP *db_rep;
 	HDR hdr;
 	LOG *lp;
+	REP *rep;
 	int lock_held, need_free, ret;
 	u_int8_t *key;
 
-	dblp = dbenv->lg_handle;
+	dblp = env->lg_handle;
 	lp = dblp->reginfo.primary;
-	db_cipher = dbenv->crypto_handle;
+	db_cipher = env->crypto_handle;
+	db_rep = env->rep_handle;
+	if (db_rep != NULL)
+		rep = db_rep->region;
+	else
+		rep = NULL;
+
 	dbt = &t;
 	t = *udbt;
 	lock_held = need_free = 0;
 	ZERO_LSN(old_lsn);
+	hdr.len = hdr.prev = 0;
+
+	/*
+	 * In general, if we are not a rep application, but are sharing a master
+	 * rep env, we should not be writing log records.  However, we can allow
+	 * a non-replication-aware process to join a pre-existing repmgr
+	 * environment, if env handle meets repmgr's DB_THREAD requirement.
+	 */
+
+	if (IS_REP_MASTER(env) && db_rep->send == NULL) {
+#ifdef HAVE_REPLICATION_THREADS
+		if (F_ISSET(env, ENV_THREAD) &&
+		    rep->my_addr.host != INVALID_ROFF) {
+			if ((ret = __repmgr_autostart(env)) != 0)
+				return (ret);
+		} else
+#endif
+		{
+#if !defined(DEBUG_ROP) && !defined(DEBUG_WOP)
+			__db_errx(env, "%s %s",
+			    "Non-replication DB_ENV handle attempting",
+			    "to modify a replicated environment");
+			return (EINVAL);
+#endif
+		}
+	}
+	DB_ASSERT(env, !IS_REP_CLIENT(env));
 
 	/*
 	 * If we are coming from the logging code, we use an internal flag,
@@ -129,57 +145,65 @@ __log_put(dbenv, lsnp, udbt, flags)
 	 * so that we retain an unencrypted copy of the log record to send
 	 * to clients.
 	 */
-	if (!LF_ISSET(DB_LOG_NOCOPY) || IS_REP_MASTER(dbenv)) {
-		if (CRYPTO_ON(dbenv))
+	if (!LF_ISSET(DB_LOG_NOCOPY) || IS_REP_MASTER(env)) {
+		if (CRYPTO_ON(env))
 			t.size += db_cipher->adj_size(udbt->size);
-		if ((ret = __os_calloc(dbenv, 1, t.size, &t.data)) != 0)
+		if ((ret = __os_calloc(env, 1, t.size, &t.data)) != 0)
 			goto err;
 		need_free = 1;
 		memcpy(t.data, udbt->data, udbt->size);
 	}
-	if ((ret = __log_encrypt_record(dbenv, dbt, &hdr, udbt->size)) != 0)
+	if ((ret = __log_encrypt_record(env, dbt, &hdr, udbt->size)) != 0)
 		goto err;
-	if (CRYPTO_ON(dbenv))
+	if (CRYPTO_ON(env))
 		key = db_cipher->mac_key;
 	else
 		key = NULL;
-	/* Otherwise, we actually have a record to put.  Put it. */
 
-	/* Before we grab the region lock, calculate the record's checksum. */
-	__db_chksum(dbt->data, dbt->size, key, hdr.chksum);
+	__db_chksum(&hdr, dbt->data, dbt->size, key, hdr.chksum);
 
-	R_LOCK(dbenv, &dblp->reginfo);
+	LOG_SYSTEM_LOCK(env);
 	lock_held = 1;
 
-	if ((ret = __log_put_next(dbenv, &lsn, dbt, &hdr, &old_lsn)) != 0)
+	if ((ret = __log_put_next(env, &lsn, dbt, &hdr, &old_lsn)) != 0)
 		goto panic_check;
 
 	/*
-	 * If we are not a rep application, but are sharing a master rep env,
-	 * we should not be writing log records.
-	 */
-	if (IS_REP_MASTER(dbenv) && dbenv->rep_send == NULL) {
-		__db_err(dbenv, "%s %s",
-		    "Non-replication DB_ENV handle attempting",
-		    "to modify a replicated environment");
-		ret = EINVAL;
-		goto err;
-	}
-
-	/*
 	 * Assign the return LSN before dropping the region lock.  Necessary
-	 * in case the lsn is a begin_lsn from a TXN_DETAIL structure passed
-	 * in by the logging routines.
+	 * in case the lsn is a begin_lsn from a TXN_DETAIL structure passed in
+	 * by the logging routines.  We use atomic 32-bit operations because
+	 * during commit this will be a TXN_DETAIL visible_lsn field, and MVCC
+	 * relies on reading the fields atomically.
 	 */
-	*lsnp = lsn;
+	lsnp->file = lsn.file;
+	lsnp->offset = lsn.offset;
 
-	if (IS_REP_MASTER(dbenv)) {
+#ifdef HAVE_REPLICATION
+	if (IS_REP_MASTER(env)) {
+		__rep_newfile_args nf_args;
+		DBT newfiledbt;
+		REP_BULK bulk;
+		size_t len;
+		u_int32_t ctlflags;
+		u_int8_t buf[__REP_NEWFILE_SIZE];
+
 		/*
 		 * Replication masters need to drop the lock to send messages,
 		 * but want to drop and reacquire it a minimal number of times.
 		 */
-		R_UNLOCK(dbenv, &dblp->reginfo);
+		ctlflags = LF_ISSET(DB_LOG_COMMIT | DB_LOG_CHKPNT) ?
+		    REPCTL_PERM : 0;
+		/*
+		 * If using leases, keep track of our last PERM lsn.
+		 * Set this on a master under the log lock.
+		 */
+		if (IS_USING_LEASES(env) &&
+		    FLD_ISSET(ctlflags, REPCTL_PERM))
+			lp->max_perm_lsn = lsn;
+		LOG_SYSTEM_UNLOCK(env);
 		lock_held = 0;
+		if (LF_ISSET(DB_FLUSH))
+			ctlflags |= REPCTL_FLUSH;
 
 		/*
 		 * If we changed files and we're in a replicated environment,
@@ -191,29 +215,72 @@ __log_put(dbenv, lsnp, udbt, flags)
 		 * that the record we already put is a commit, so we don't just
 		 * want to return failure.
 		 */
-		if (!IS_ZERO_LSN(old_lsn))
-			(void)__rep_send_message(dbenv,
-			    DB_EID_BROADCAST, REP_NEWFILE, &old_lsn, NULL, 0);
+		if (!IS_ZERO_LSN(old_lsn)) {
+			memset(&newfiledbt, 0, sizeof(newfiledbt));
+			nf_args.version = lp->persist.version;
+			(void)__rep_newfile_marshal(env, &nf_args,
+			    buf, __REP_NEWFILE_SIZE, &len);
+			DB_INIT_DBT(newfiledbt, buf, len);
+			(void)__rep_send_message(env, DB_EID_BROADCAST,
+			    REP_NEWFILE, &old_lsn, &newfiledbt, 0, 0);
+		}
 
 		/*
-		 * Then send the log record itself on to our clients.
-		 *
+		 * If we're doing bulk processing put it in the bulk buffer.
+		 */
+		ret = 0;
+		if (FLD_ISSET(rep->config, REP_C_BULK)) {
+			/*
+			 * Bulk could have been turned on by another process.
+			 * If so, set the address into the bulk region now.
+			 */
+			if (db_rep->bulk == NULL)
+				db_rep->bulk = R_ADDR(&dblp->reginfo,
+				    lp->bulk_buf);
+			memset(&bulk, 0, sizeof(bulk));
+			bulk.addr = db_rep->bulk;
+			bulk.offp = &lp->bulk_off;
+			bulk.len = lp->bulk_len;
+			bulk.lsn = lsn;
+			bulk.type = REP_BULK_LOG;
+			bulk.eid = DB_EID_BROADCAST;
+			bulk.flagsp = &lp->bulk_flags;
+			ret = __rep_bulk_message(env, &bulk, NULL,
+			    &lsn, udbt, ctlflags);
+		}
+		if (!FLD_ISSET(rep->config, REP_C_BULK) ||
+		    ret == DB_REP_BULKOVF) {
+			/*
+			 * Then send the log record itself on to our clients.
+			 */
+			/*
+			 * !!!
+			 * In the crypto case, we MUST send the udbt, not the
+			 * now-encrypted dbt.  Clients have no way to decrypt
+			 * without the header.
+			 */
+			ret = __rep_send_message(env, DB_EID_BROADCAST,
+			    REP_LOG, &lsn, udbt, ctlflags, 0);
+		}
+		/*
 		 * If the send fails and we're a commit or checkpoint,
 		 * there's nothing we can do;  the record's in the log.
-		 * Flush it, even if we're running with TXN_NOSYNC, on the
-		 * grounds that it should be in durable form somewhere.
+		 * Flush it, even if we're running with TXN_NOSYNC,
+		 * on the grounds that it should be in durable
+		 * form somewhere.
 		 */
-		/*
-		 * !!!
-		 * In the crypto case, we MUST send the udbt, not the
-		 * now-encrypted dbt.  Clients have no way to decrypt
-		 * without the header.
-		 */
-		if ((__rep_send_message(dbenv,
-		    DB_EID_BROADCAST, REP_LOG, &lsn, udbt, flags) != 0) &&
-		    LF_ISSET(DB_LOG_PERM))
+		if (ret != 0 && FLD_ISSET(ctlflags, REPCTL_PERM))
 			LF_SET(DB_FLUSH);
+		/*
+		 * We ignore send failures so reset 'ret' to 0 here.
+		 * We needed to check special return values from
+		 * bulk transfer and errors from either bulk or normal
+		 * message sending need flushing on perm records.  But
+		 * otherwise we need to ignore it and reset it now.
+		 */
+		ret = 0;
 	}
+#endif
 
 	/*
 	 * If needed, do a flush.  Note that failures at this point
@@ -225,10 +292,10 @@ __log_put(dbenv, lsnp, udbt, flags)
 	 */
 	if (LF_ISSET(DB_FLUSH | DB_LOG_WRNOSYNC)) {
 		if (!lock_held) {
-			R_LOCK(dbenv, &dblp->reginfo);
+			LOG_SYSTEM_LOCK(env);
 			lock_held = 1;
 		}
-		if ((ret = __log_flush_commit(dbenv, &lsn, flags)) != 0)
+		if ((ret = __log_flush_commit(env, &lsn, flags)) != 0)
 			goto panic_check;
 	}
 
@@ -239,6 +306,9 @@ __log_put(dbenv, lsnp, udbt, flags)
 	if (LF_ISSET(DB_LOG_CHKPNT))
 		lp->stat.st_wc_bytes = lp->stat.st_wc_mbytes = 0;
 
+	/* Increment count of records added to the log. */
+	STAT(++lp->stat.st_record);
+
 	if (0) {
 panic_check:	/*
 		 * Writing log records cannot fail if we're a replication
@@ -247,51 +317,48 @@ panic_check:	/*
 		 * abort, otherwise the master would be out of sync with
 		 * the rest of the replication group.  Panic the system.
 		 */
-		if (ret != 0 && IS_REP_MASTER(dbenv))
-			ret = __db_panic(dbenv, ret);
+		if (ret != 0 && IS_REP_MASTER(env))
+			ret = __env_panic(env, ret);
 	}
 
 err:	if (lock_held)
-		R_UNLOCK(dbenv, &dblp->reginfo);
+		LOG_SYSTEM_UNLOCK(env);
 	if (need_free)
-		__os_free(dbenv, dbt->data);
+		__os_free(env, dbt->data);
 
 	/*
 	 * If auto-remove is set and we switched files, remove unnecessary
 	 * log files.
 	 */
 	if (ret == 0 && !IS_ZERO_LSN(old_lsn) && lp->db_log_autoremove)
-		__log_autoremove(dbenv);
+		__log_autoremove(env);
 
 	return (ret);
 }
 
 /*
- * __log_txn_lsn --
+ * __log_current_lsn --
+ *	Return the current LSN.
  *
- * PUBLIC: void __log_txn_lsn
- * PUBLIC:     __P((DB_ENV *, DB_LSN *, u_int32_t *, u_int32_t *));
+ * PUBLIC: int __log_current_lsn
+ * PUBLIC:     __P((ENV *, DB_LSN *, u_int32_t *, u_int32_t *));
  */
-void
-__log_txn_lsn(dbenv, lsnp, mbytesp, bytesp)
-	DB_ENV *dbenv;
+int
+__log_current_lsn(env, lsnp, mbytesp, bytesp)
+	ENV *env;
 	DB_LSN *lsnp;
 	u_int32_t *mbytesp, *bytesp;
 {
 	DB_LOG *dblp;
 	LOG *lp;
 
-	dblp = dbenv->lg_handle;
+	dblp = env->lg_handle;
 	lp = dblp->reginfo.primary;
 
-	R_LOCK(dbenv, &dblp->reginfo);
+	LOG_SYSTEM_LOCK(env);
 
 	/*
-	 * We are trying to get the LSN of the last entry in the log.  We use
-	 * this in two places: 1) DB_ENV->txn_checkpoint uses it as a first
-	 * value when trying to compute an LSN such that all transactions begun
-	 * before it are complete.   2) DB_ENV->txn_begin uses it as the
-	 * begin_lsn.
+	 * We need the LSN of the last entry in the log.
 	 *
 	 * Typically, it's easy to get the last written LSN, you simply look
 	 * at the current log pointer and back up the number of bytes of the
@@ -315,7 +382,9 @@ __log_txn_lsn(dbenv, lsnp, mbytesp, bytesp)
 		*bytesp = (u_int32_t)(lp->stat.st_wc_bytes + lp->b_off);
 	}
 
-	R_UNLOCK(dbenv, &dblp->reginfo);
+	LOG_SYSTEM_UNLOCK(env);
+
+	return (0);
 }
 
 /*
@@ -324,8 +393,8 @@ __log_txn_lsn(dbenv, lsnp, mbytesp, bytesp)
  * turn out to be.
  */
 static int
-__log_put_next(dbenv, lsn, dbt, hdr, old_lsnp)
-	DB_ENV *dbenv;
+__log_put_next(env, lsn, dbt, hdr, old_lsnp)
+	ENV *env;
 	DB_LSN *lsn;
 	const DBT *dbt;
 	HDR *hdr;
@@ -334,9 +403,9 @@ __log_put_next(dbenv, lsn, dbt, hdr, old_lsnp)
 	DB_LOG *dblp;
 	DB_LSN old_lsn;
 	LOG *lp;
-	int newfile, ret;
+	int adv_file, newfile, ret;
 
-	dblp = dbenv->lg_handle;
+	dblp = env->lg_handle;
 	lp = dblp->reginfo.primary;
 
 	/*
@@ -349,23 +418,32 @@ __log_put_next(dbenv, lsn, dbt, hdr, old_lsnp)
 	 */
 	old_lsn = lp->lsn;
 	newfile = 0;
+	adv_file = 0;
+	/*
+	 * If our current log is at an older version and we want to write
+	 * a record then we need to advance the log.
+	 */
+	if (lp->persist.version != DB_LOGVERSION) {
+		__log_set_version(env, DB_LOGVERSION);
+		adv_file = 1;
+	}
 
 	/*
 	 * If this information won't fit in the file, or if we're a
 	 * replication client environment and have been told to do so,
 	 * swap files.
 	 */
-	if (lp->lsn.offset == 0 ||
+	if (adv_file || lp->lsn.offset == 0 ||
 	    lp->lsn.offset + hdr->size + dbt->size > lp->log_size) {
 		if (hdr->size + sizeof(LOGP) + dbt->size > lp->log_size) {
-			__db_err(dbenv,
+			__db_errx(env,
 	    "DB_ENV->log_put: record larger than maximum file size (%lu > %lu)",
 			    (u_long)hdr->size + sizeof(LOGP) + dbt->size,
 			    (u_long)lp->log_size);
 			return (EINVAL);
 		}
 
-		if ((ret = __log_newfile(dblp, NULL, 0)) != 0)
+		if ((ret = __log_newfile(dblp, NULL, 0, 0)) != 0)
 			return (ret);
 
 		/*
@@ -377,12 +455,6 @@ __log_put_next(dbenv, lsn, dbt, hdr, old_lsnp)
 		 */
 		newfile = 1;
 	}
-
-	/*
-	 * The offset into the log file at this point is the LSN where
-	 * we're about to put this record, and is the LSN the caller wants.
-	 */
-	*lsn = lp->lsn;
 
 	/* If we switched log files, let our caller know where. */
 	if (newfile)
@@ -397,8 +469,8 @@ __log_put_next(dbenv, lsn, dbt, hdr, old_lsnp)
  *	Flush a record.
  */
 static int
-__log_flush_commit(dbenv, lsnp, flags)
-	DB_ENV *dbenv;
+__log_flush_commit(env, lsnp, flags)
+	ENV *env;
 	const DB_LSN *lsnp;
 	u_int32_t flags;
 {
@@ -407,7 +479,7 @@ __log_flush_commit(dbenv, lsnp, flags)
 	LOG *lp;
 	int ret;
 
-	dblp = dbenv->lg_handle;
+	dblp = env->lg_handle;
 	lp = dblp->reginfo.primary;
 	flush_lsn = *lsnp;
 
@@ -443,13 +515,13 @@ __log_flush_commit(dbenv, lsnp, flags)
 	 * Else, make sure that the commit record does not get out after we
 	 * abort the transaction.  Do this by overwriting the commit record
 	 * in the buffer.  (Note that other commits in this buffer will wait
-	 * wait until a successful write happens, we do not wake them.)  We
-	 * point at the right part of the buffer and write an abort record
-	 * over the commit.  We must then try and flush the buffer again,
-	 * since the interesting part of the buffer may have actually made
-	 * it out to disk before there was a failure, we can't know for sure.
+	 * until a successful write happens, we do not wake them.)  We point
+	 * at the right part of the buffer and write an abort record over the
+	 * commit.  We must then try and flush the buffer again, since the
+	 * interesting part of the buffer may have actually made it out to
+	 * disk before there was a failure, we can't know for sure.
 	 */
-	if (__txn_force_abort(dbenv,
+	if (__txn_force_abort(env,
 	    dblp->bufp + flush_lsn.offset - lp->w_off) == 0)
 		(void)__log_flush_int(dblp, &flush_lsn, 0);
 
@@ -461,32 +533,34 @@ __log_flush_commit(dbenv, lsnp, flags)
  *	Initialize and switch to a new log file.  (Note that this is
  * called both when no log yet exists and when we fill a log file.)
  *
- * PUBLIC: int __log_newfile __P((DB_LOG *, DB_LSN *, u_int32_t));
+ * PUBLIC: int __log_newfile __P((DB_LOG *, DB_LSN *, u_int32_t, u_int32_t));
  */
 int
-__log_newfile(dblp, lsnp, logfile)
+__log_newfile(dblp, lsnp, logfile, version)
 	DB_LOG *dblp;
 	DB_LSN *lsnp;
 	u_int32_t logfile;
+	u_int32_t version;
 {
-	DB_CIPHER *db_cipher;
-	DB_ENV *dbenv;
-	DB_LSN lsn;
 	DBT t;
+	DB_CIPHER *db_cipher;
+	DB_LSN lsn;
+	ENV *env;
 	HDR hdr;
 	LOG *lp;
+	LOGP *tpersist;
 	int need_free, ret;
 	u_int32_t lastoff;
 	size_t tsize;
-	u_int8_t *tmp;
 
-	dbenv = dblp->dbenv;
+	env = dblp->env;
 	lp = dblp->reginfo.primary;
 
-	DB_ASSERT(logfile == 0 || logfile > lp->lsn.file);
-
-	/* If we're not at the beginning of a file already, start a new one. */
-	if (lp->lsn.offset != 0) {
+	/*
+	 * If we're not specifying a specific log file number and we're
+	 * not at the beginning of a file already, start a new one.
+	 */
+	if (logfile == 0 && lp->lsn.offset != 0) {
 		/*
 		 * Flush the log so this file is out and can be closed.  We
 		 * cannot release the region lock here because we need to
@@ -526,11 +600,18 @@ __log_newfile(dblp, lsnp, logfile)
 	if (logfile != 0) {
 		lp->lsn.file = logfile;
 		lp->lsn.offset = 0;
-		if ((ret = __log_newfh(dblp, 1)) != 0)
-			return (ret);
+		lp->w_off = 0;
+		if (lp->db_log_inmemory) {
+			lsn = lp->lsn;
+			(void)__log_zero(env, &lsn);
+		} else {
+			lp->s_lsn = lp->lsn;
+			if ((ret = __log_newfh(dblp, 1)) != 0)
+				return (ret);
+		}
 	}
 
-	DB_ASSERT(lp->db_log_inmemory || lp->b_off == 0);
+	DB_ASSERT(env, lp->db_log_inmemory || lp->b_off == 0);
 	if (lp->db_log_inmemory &&
 	    (ret = __log_inmem_newfile(dblp, lp->lsn.file)) != 0)
 		return (ret);
@@ -545,23 +626,37 @@ __log_newfile(dblp, lsnp, logfile)
 
 	need_free = 0;
 	tsize = sizeof(LOGP);
-	db_cipher = dbenv->crypto_handle;
-	if (CRYPTO_ON(dbenv))
+	db_cipher = env->crypto_handle;
+	if (CRYPTO_ON(env))
 		tsize += db_cipher->adj_size(tsize);
-	if ((ret = __os_calloc(dbenv, 1, tsize, &tmp)) != 0)
+	if ((ret = __os_calloc(env, 1, tsize, &tpersist)) != 0)
 		return (ret);
-	lp->persist.log_size = lp->log_size = lp->log_nsize;
-	memcpy(tmp, &lp->persist, sizeof(LOGP));
-	t.data = tmp;
-	t.size = (u_int32_t)tsize;
 	need_free = 1;
+	/*
+	 * If we're told what version to make this file, then we
+	 * need to be at that version.  Update here.
+	 */
+	if (version != 0) {
+		__log_set_version(env, version);
+		if ((ret = __env_init_rec(env, version)) != 0)
+			goto err;
+	}
+	lp->persist.log_size = lp->log_size = lp->log_nsize;
+	memcpy(tpersist, &lp->persist, sizeof(LOGP));
+	DB_SET_DBT(t, tpersist, tsize);
+	if (LOG_SWAPPED(env))
+		__log_persistswap(tpersist);
 
 	if ((ret =
-	    __log_encrypt_record(dbenv, &t, &hdr, (u_int32_t)tsize)) != 0)
+	    __log_encrypt_record(env, &t, &hdr, (u_int32_t)tsize)) != 0)
 		goto err;
-	__db_chksum(t.data, t.size,
-	    (CRYPTO_ON(dbenv)) ? db_cipher->mac_key : NULL, hdr.chksum);
-	lsn = lp->lsn;
+	if (lp->persist.version != DB_LOGVERSION)
+		__db_chksum(NULL, t.data, t.size,
+		    (CRYPTO_ON(env)) ? db_cipher->mac_key : NULL, hdr.chksum);
+	else
+		__db_chksum(&hdr, t.data, t.size,
+		    (CRYPTO_ON(env)) ? db_cipher->mac_key : NULL, hdr.chksum);
+
 	if ((ret = __log_putr(dblp, &lsn,
 	    &t, lastoff == 0 ? 0 : lastoff - lp->len, &hdr)) != 0)
 		goto err;
@@ -571,7 +666,7 @@ __log_newfile(dblp, lsnp, logfile)
 		*lsnp = lp->lsn;
 
 err:	if (need_free)
-		__os_free(dbenv, tmp);
+		__os_free(env, tpersist);
 	return (ret);
 }
 
@@ -588,25 +683,25 @@ __log_putr(dblp, lsn, dbt, prev, h)
 	HDR *h;
 {
 	DB_CIPHER *db_cipher;
-	DB_ENV *dbenv;
 	DB_LSN f_lsn;
-	LOG *lp;
+	ENV *env;
 	HDR tmp, *hdr;
+	LOG *lp;
 	int ret, t_ret;
 	size_t b_off, nr;
 	u_int32_t w_off;
 
-	dbenv = dblp->dbenv;
+	env = dblp->env;
 	lp = dblp->reginfo.primary;
 
 	/*
 	 * If we weren't given a header, use a local one.
 	 */
-	db_cipher = dbenv->crypto_handle;
+	db_cipher = env->crypto_handle;
 	if (h == NULL) {
 		hdr = &tmp;
 		memset(hdr, 0, sizeof(HDR));
-		if (CRYPTO_ON(dbenv))
+		if (CRYPTO_ON(env))
 			hdr->size = HDR_CRYPTO_SZ;
 		else
 			hdr->size = HDR_NORMAL_SZ;
@@ -635,22 +730,50 @@ __log_putr(dblp, lsn, dbt, prev, h)
 	 * here.
 	 */
 	if (hdr->chksum[0] == 0)
-		__db_chksum(dbt->data, dbt->size,
-		    (CRYPTO_ON(dbenv)) ? db_cipher->mac_key : NULL,
-		    hdr->chksum);
+		if (lp->persist.version != DB_LOGVERSION)
+			__db_chksum(NULL, dbt->data, dbt->size,
+			    (CRYPTO_ON(env)) ? db_cipher->mac_key : NULL,
+			    hdr->chksum);
+		else
+			__db_chksum(hdr, dbt->data, dbt->size,
+			    (CRYPTO_ON(env)) ? db_cipher->mac_key : NULL,
+			    hdr->chksum);
+	else if (lp->persist.version == DB_LOGVERSION) {
+		/*
+		 * We need to correct for prev and len since they are not
+		 * set before here.
+		 */
+		LOG_HDR_SUM(CRYPTO_ON(env), hdr, hdr->chksum);
+	}
 
 	if (lp->db_log_inmemory && (ret = __log_inmem_chkspace(dblp,
 	    (u_int32_t)hdr->size + dbt->size)) != 0)
 		goto err;
 
-	if ((ret = __log_fill(dblp, lsn, hdr, (u_int32_t)hdr->size)) != 0)
+	/*
+	 * The offset into the log file at this point is the LSN where
+	 * we're about to put this record, and is the LSN the caller wants.
+	 */
+	*lsn = lp->lsn;
+
+	nr = hdr->size;
+	if (LOG_SWAPPED(env))
+		__log_hdrswap(hdr, CRYPTO_ON(env));
+
+	 /* nr can't overflow a 32 bit value - header size is internal. */
+	ret = __log_fill(dblp, lsn, hdr, (u_int32_t)nr);
+
+	if (LOG_SWAPPED(env))
+		__log_hdrswap(hdr, CRYPTO_ON(env));
+
+	if (ret != 0)
 		goto err;
 
 	if ((ret = __log_fill(dblp, lsn, dbt->data, dbt->size)) != 0)
 		goto err;
 
 	lp->len = (u_int32_t)(hdr->size + dbt->size);
-	lp->lsn.offset += (u_int32_t)(hdr->size + dbt->size);
+	lp->lsn.offset += lp->len;
 	return (0);
 err:
 	/*
@@ -659,15 +782,14 @@ err:
 	 * and be ignored.
 	 */
 	if (w_off + lp->buffer_size < lp->w_off) {
-		DB_ASSERT(!lp->db_log_inmemory);
-		if ((t_ret = __os_seek(dbenv,
-		    dblp->lfhp, 0, 0, w_off, 0, DB_OS_SEEK_SET)) != 0 ||
-		    (t_ret = __os_read(dbenv, dblp->lfhp, dblp->bufp,
+		DB_ASSERT(env, !lp->db_log_inmemory);
+		if ((t_ret = __os_seek(env, dblp->lfhp, 0, 0, w_off)) != 0 ||
+		    (t_ret = __os_read(env, dblp->lfhp, dblp->bufp,
 		    b_off, &nr)) != 0)
-			return (__db_panic(dbenv, t_ret));
+			return (__env_panic(env, t_ret));
 		if (nr != b_off) {
-			__db_err(dbenv, "Short read while restoring log");
-			return (__db_panic(dbenv, EIO));
+			__db_errx(env, "Short read while restoring log");
+			return (__env_panic(env, EIO));
 		}
 	}
 
@@ -681,7 +803,7 @@ err:
 
 /*
  * __log_flush_pp --
- *	DB_ENV->log_flush pre/post processing.
+ *	ENV->log_flush pre/post processing.
  *
  * PUBLIC: int __log_flush_pp __P((DB_ENV *, const DB_LSN *));
  */
@@ -690,40 +812,56 @@ __log_flush_pp(dbenv, lsn)
 	DB_ENV *dbenv;
 	const DB_LSN *lsn;
 {
-	int rep_check, ret;
+	DB_THREAD_INFO *ip;
+	ENV *env;
+	int ret;
 
-	PANIC_CHECK(dbenv);
-	ENV_REQUIRES_CONFIG(dbenv,
-	    dbenv->lg_handle, "DB_ENV->log_flush", DB_INIT_LOG);
+	env = dbenv->env;
 
-	rep_check = IS_ENV_REPLICATED(dbenv) ? 1 : 0;
-	if (rep_check)
-		__env_rep_enter(dbenv);
-	ret = __log_flush(dbenv, lsn);
-	if (rep_check)
-		__env_db_rep_exit(dbenv);
+	ENV_REQUIRES_CONFIG(env,
+	    env->lg_handle, "DB_ENV->log_flush", DB_INIT_LOG);
 
+	ENV_ENTER(env, ip);
+	REPLICATION_WRAP(env, (__log_flush(env, lsn)), 0, ret);
+	ENV_LEAVE(env, ip);
 	return (ret);
 }
 
 /*
+ * See if we need to wait.  s_lsn is not locked so some care is needed.
+ * The sync point can only move forward.  The lsnp->file cannot be
+ * greater than the s_lsn.file.  If the file we want is in the past
+ * we are done.  If the file numbers are the same check the offset.
+ * This all assumes we can read an 32-bit quantity in one state or
+ * the other, not in transition.
+ */
+#define	ALREADY_FLUSHED(lp, lsnp)					\
+	(((lp)->s_lsn.file > (lsnp)->file) ||				\
+	((lp)->s_lsn.file == (lsnp)->file &&				\
+	    (lp)->s_lsn.offset > (lsnp)->offset))
+
+/*
  * __log_flush --
- *	DB_ENV->log_flush
+ *	ENV->log_flush
  *
- * PUBLIC: int __log_flush __P((DB_ENV *, const DB_LSN *));
+ * PUBLIC: int __log_flush __P((ENV *, const DB_LSN *));
  */
 int
-__log_flush(dbenv, lsn)
-	DB_ENV *dbenv;
+__log_flush(env, lsn)
+	ENV *env;
 	const DB_LSN *lsn;
 {
 	DB_LOG *dblp;
+	LOG *lp;
 	int ret;
 
-	dblp = dbenv->lg_handle;
-	R_LOCK(dbenv, &dblp->reginfo);
+	dblp = env->lg_handle;
+	lp = dblp->reginfo.primary;
+	if (lsn != NULL && ALREADY_FLUSHED(lp, lsn))
+		return (0);
+	LOG_SYSTEM_LOCK(env);
 	ret = __log_flush_int(dblp, lsn, 1);
-	R_UNLOCK(dbenv, &dblp->reginfo);
+	LOG_SYSTEM_UNLOCK(env);
 	return (ret);
 }
 
@@ -741,23 +879,21 @@ __log_flush_int(dblp, lsnp, release)
 	int release;
 {
 	struct __db_commit *commit;
-	DB_ENV *dbenv;
+	ENV *env;
 	DB_LSN flush_lsn, f_lsn;
-	DB_MUTEX *flush_mutexp;
 	LOG *lp;
 	size_t b_off;
 	u_int32_t ncommit, w_off;
 	int do_flush, first, ret;
 
-	dbenv = dblp->dbenv;
+	env = dblp->env;
 	lp = dblp->reginfo.primary;
-	flush_mutexp = R_ADDR(&dblp->reginfo, lp->flush_mutex_off);
 	ncommit = 0;
 	ret = 0;
 
 	if (lp->db_log_inmemory) {
 		lp->s_lsn = lp->lsn;
-		++lp->stat.st_scount;
+		STAT(++lp->stat.st_scount);
 		return (0);
 	}
 
@@ -772,32 +908,18 @@ __log_flush_int(dblp, lsnp, release)
 	} else if (lsnp->file > lp->lsn.file ||
 	    (lsnp->file == lp->lsn.file &&
 	    lsnp->offset > lp->lsn.offset - lp->len)) {
-		__db_err(dbenv,
+		__db_errx(env,
     "DB_ENV->log_flush: LSN of %lu/%lu past current end-of-log of %lu/%lu",
 		    (u_long)lsnp->file, (u_long)lsnp->offset,
 		    (u_long)lp->lsn.file, (u_long)lp->lsn.offset);
-		__db_err(dbenv, "%s %s %s",
+		__db_errx(env, "%s %s %s",
 		    "Database environment corrupt; the wrong log files may",
 		    "have been removed or incompatible database files imported",
 		    "from another environment");
-		return (__db_panic(dbenv, DB_RUNRECOVERY));
+		return (__env_panic(env, DB_RUNRECOVERY));
 	} else {
-		/*
-		 * See if we need to wait.  s_lsn is not locked so some
-		 * care is needed.  The sync point can only move forward.
-		 * The lsnp->file cannot be greater than the s_lsn.file.
-		 * If the file we want is in the past we are done.
-		 * If the file numbers are the same check the offset.
-		 * This all assumes we can read an integer in one
-		 * state or the other, not in transition.
-		 */
-		if (lp->s_lsn.file > lsnp->file)
+		if (ALREADY_FLUSHED(lp, lsnp))
 			return (0);
-
-		if (lp->s_lsn.file == lsnp->file &&
-		    lp->s_lsn.offset > lsnp->offset)
-			return (0);
-
 		flush_lsn = *lsnp;
 	}
 
@@ -808,18 +930,16 @@ __log_flush_int(dblp, lsnp, release)
 	if (release && lp->in_flush != 0) {
 		if ((commit = SH_TAILQ_FIRST(
 		    &lp->free_commits, __db_commit)) == NULL) {
-			if ((ret = __db_shalloc(&dblp->reginfo,
-			    sizeof(struct __db_commit),
-			    MUTEX_ALIGN, &commit)) != 0)
+			if ((ret = __env_alloc(&dblp->reginfo,
+			    sizeof(struct __db_commit), &commit)) != 0)
 				goto flush;
 			memset(commit, 0, sizeof(*commit));
-			if ((ret = __db_mutex_setup(dbenv, &dblp->reginfo,
-			    &commit->mutex, MUTEX_SELF_BLOCK |
-			    MUTEX_NO_RLOCK)) != 0) {
-				__db_shalloc_free(&dblp->reginfo, commit);
+			if ((ret = __mutex_alloc(env, MTX_TXN_COMMIT,
+			    DB_MUTEX_SELF_BLOCK, &commit->mtx_txnwait)) != 0) {
+				__env_alloc_free(&dblp->reginfo, commit);
 				return (ret);
 			}
-			MUTEX_LOCK(dbenv, &commit->mutex);
+			MUTEX_LOCK(env, commit->mtx_txnwait);
 		} else
 			SH_TAILQ_REMOVE(
 			    &lp->free_commits, commit, links, __db_commit);
@@ -830,16 +950,16 @@ __log_flush_int(dblp, lsnp, release)
 		 * Flushes may be requested out of LSN order;  be
 		 * sure we only move lp->t_lsn forward.
 		 */
-		if (log_compare(&lp->t_lsn, &flush_lsn) < 0)
+		if (LOG_COMPARE(&lp->t_lsn, &flush_lsn) < 0)
 			lp->t_lsn = flush_lsn;
 
 		commit->lsn = flush_lsn;
 		SH_TAILQ_INSERT_HEAD(
 		    &lp->commits, commit, links, __db_commit);
-		R_UNLOCK(dbenv, &dblp->reginfo);
+		LOG_SYSTEM_UNLOCK(env);
 		/* Wait here for the in-progress flush to finish. */
-		MUTEX_LOCK(dbenv, &commit->mutex);
-		R_LOCK(dbenv, &dblp->reginfo);
+		MUTEX_LOCK(env, commit->mtx_txnwait);
+		LOG_SYSTEM_LOCK(env);
 
 		lp->ncommit--;
 		/*
@@ -862,7 +982,7 @@ __log_flush_int(dblp, lsnp, release)
 	 * Protect flushing with its own mutex so we can release
 	 * the region lock except during file switches.
 	 */
-flush:	MUTEX_LOCK(dbenv, flush_mutexp);
+flush:	MUTEX_LOCK(env, lp->mtx_flush);
 
 	/*
 	 * If the LSN is less than or equal to the last-sync'd LSN, we're done.
@@ -873,7 +993,7 @@ flush:	MUTEX_LOCK(dbenv, flush_mutexp);
 	if (flush_lsn.file < lp->s_lsn.file ||
 	    (flush_lsn.file == lp->s_lsn.file &&
 	    flush_lsn.offset < lp->s_lsn.offset)) {
-		MUTEX_UNLOCK(dbenv, flush_mutexp);
+		MUTEX_UNLOCK(env, lp->mtx_flush);
 		goto done;
 	}
 
@@ -886,17 +1006,17 @@ flush:	MUTEX_LOCK(dbenv, flush_mutexp);
 	 * written to this log file.  Acquire a file descriptor if we don't
 	 * already have one.
 	 */
-	if (lp->b_off != 0 && log_compare(&flush_lsn, &lp->f_lsn) >= 0) {
+	if (lp->b_off != 0 && LOG_COMPARE(&flush_lsn, &lp->f_lsn) >= 0) {
 		if ((ret = __log_write(dblp,
 		    dblp->bufp, (u_int32_t)lp->b_off)) != 0) {
-			MUTEX_UNLOCK(dbenv, flush_mutexp);
+			MUTEX_UNLOCK(env, lp->mtx_flush);
 			goto done;
 		}
 
 		lp->b_off = 0;
 	} else if (dblp->lfhp == NULL || dblp->lfname != lp->lsn.file)
 		if ((ret = __log_newfh(dblp, 0)) != 0) {
-			MUTEX_UNLOCK(dbenv, flush_mutexp);
+			MUTEX_UNLOCK(env, lp->mtx_flush);
 			goto done;
 		}
 
@@ -910,14 +1030,14 @@ flush:	MUTEX_LOCK(dbenv, flush_mutexp);
 	f_lsn = lp->f_lsn;
 	lp->in_flush++;
 	if (release)
-		R_UNLOCK(dbenv, &dblp->reginfo);
+		LOG_SYSTEM_UNLOCK(env);
 
 	/* Sync all writes to disk. */
-	if ((ret = __os_fsync(dbenv, dblp->lfhp)) != 0) {
-		MUTEX_UNLOCK(dbenv, flush_mutexp);
+	if ((ret = __os_fsync(env, dblp->lfhp)) != 0) {
+		MUTEX_UNLOCK(env, lp->mtx_flush);
 		if (release)
-			R_LOCK(dbenv, &dblp->reginfo);
-		ret = __db_panic(dbenv, ret);
+			LOG_SYSTEM_LOCK(env);
+		ret = __env_panic(env, ret);
 		return (ret);
 	}
 
@@ -933,12 +1053,12 @@ flush:	MUTEX_LOCK(dbenv, flush_mutexp);
 	if (b_off == 0)
 		lp->s_lsn.offset = w_off;
 
-	MUTEX_UNLOCK(dbenv, flush_mutexp);
+	MUTEX_UNLOCK(env, lp->mtx_flush);
 	if (release)
-		R_LOCK(dbenv, &dblp->reginfo);
+		LOG_SYSTEM_LOCK(env);
 
 	lp->in_flush--;
-	++lp->stat.st_scount;
+	STAT(++lp->stat.st_scount);
 
 	/*
 	 * How many flush calls (usually commits) did this call actually sync?
@@ -948,17 +1068,15 @@ flush:	MUTEX_LOCK(dbenv, flush_mutexp);
 done:
 	if (lp->ncommit != 0) {
 		first = 1;
-		for (commit = SH_TAILQ_FIRST(&lp->commits, __db_commit);
-		    commit != NULL;
-		    commit = SH_TAILQ_NEXT(commit, links, __db_commit))
-			if (log_compare(&lp->s_lsn, &commit->lsn) > 0) {
-				MUTEX_UNLOCK(dbenv, &commit->mutex);
+		SH_TAILQ_FOREACH(commit, &lp->commits, links, __db_commit)
+			if (LOG_COMPARE(&lp->s_lsn, &commit->lsn) > 0) {
+				MUTEX_UNLOCK(env, commit->mtx_txnwait);
 				SH_TAILQ_REMOVE(
 				    &lp->commits, commit, links, __db_commit);
 				ncommit++;
 			} else if (first == 1) {
 				F_SET(commit, DB_COMMIT_FLUSH);
-				MUTEX_UNLOCK(dbenv, &commit->mutex);
+				MUTEX_UNLOCK(env, commit->mtx_txnwait);
 				SH_TAILQ_REMOVE(
 				    &lp->commits, commit, links, __db_commit);
 				/*
@@ -971,11 +1089,13 @@ done:
 				first = 0;
 			}
 	}
+#ifdef HAVE_STATISTICS
 	if (lp->stat.st_maxcommitperflush < ncommit)
 		lp->stat.st_maxcommitperflush = ncommit;
 	if (lp->stat.st_mincommitperflush > ncommit ||
 	    lp->stat.st_mincommitperflush == 0)
 		lp->stat.st_mincommitperflush = ncommit;
+#endif
 
 	return (ret);
 }
@@ -1025,7 +1145,7 @@ __log_fill(dblp, lsn, addr, len)
 				return (ret);
 			addr = (u_int8_t *)addr + nrec * bsize;
 			len -= nrec * bsize;
-			++lp->stat.st_wcount_fill;
+			STAT(++lp->stat.st_wcount_fill);
 			continue;
 		}
 
@@ -1042,7 +1162,7 @@ __log_fill(dblp, lsn, addr, len)
 			if ((ret = __log_write(dblp, dblp->bufp, bsize)) != 0)
 				return (ret);
 			lp->b_off = 0;
-			++lp->stat.st_wcount_fill;
+			STAT(++lp->stat.st_wcount_fill);
 		}
 	}
 	return (0);
@@ -1058,15 +1178,15 @@ __log_write(dblp, addr, len)
 	void *addr;
 	u_int32_t len;
 {
-	DB_ENV *dbenv;
+	ENV *env;
 	LOG *lp;
 	size_t nw;
 	int ret;
 
-	dbenv = dblp->dbenv;
+	env = dblp->env;
 	lp = dblp->reginfo.primary;
 
-	DB_ASSERT(!lp->db_log_inmemory);
+	DB_ASSERT(env, !lp->db_log_inmemory);
 
 	/*
 	 * If we haven't opened the log file yet or the current one has
@@ -1074,7 +1194,8 @@ __log_write(dblp, addr, len)
 	 * about to write to the start of it, in other words, if the write
 	 * offset is zero.
 	 */
-	if (dblp->lfhp == NULL || dblp->lfname != lp->lsn.file)
+	if (dblp->lfhp == NULL || dblp->lfname != lp->lsn.file ||
+	    dblp->lf_timestamp != lp->timestamp)
 		if ((ret = __log_newfh(dblp, lp->w_off == 0)) != 0)
 			return (ret);
 
@@ -1083,43 +1204,52 @@ __log_write(dblp, addr, len)
 	 * guarantees unwritten blocks are zero-filled, we set the size of the
 	 * file in advance.  This increases sync performance on some systems,
 	 * because they don't need to update metadata on every sync.
+	 *
+	 * Ignore any error -- we may have run out of disk space, but that's no
+	 * reason to quit.
 	 */
 #ifdef HAVE_FILESYSTEM_NOTZERO
-	if (lp->w_off == 0 && !__os_fs_notzero())
+	if (lp->w_off == 0 && !__os_fs_notzero()) {
 #else
-	if (lp->w_off == 0)
+	if (lp->w_off == 0) {
 #endif
-		ret = __db_fileinit(dbenv, dblp->lfhp, lp->log_size, 0);
+		(void)__db_file_extend(env, dblp->lfhp, lp->log_size);
+		if (F_ISSET(dblp, DBLOG_ZERO))
+			(void)__db_zero_extend(env, dblp->lfhp,
+			     0, lp->log_size/lp->buffer_size, lp->buffer_size);
+
+	}
 
 	/*
 	 * Seek to the offset in the file (someone may have written it
 	 * since we last did).
 	 */
-	if ((ret = __os_seek(dbenv,
-	    dblp->lfhp, 0, 0, lp->w_off, 0, DB_OS_SEEK_SET)) != 0 ||
-	    (ret = __os_write(dbenv, dblp->lfhp, addr, len, &nw)) != 0)
+	if ((ret = __os_io(env, DB_IO_WRITE,
+	    dblp->lfhp, 0, 0, lp->w_off, len, addr, &nw)) != 0)
 		return (ret);
 
 	/* Reset the buffer offset and update the seek offset. */
 	lp->w_off += len;
 
 	/* Update written statistics. */
-	if ((lp->stat.st_w_bytes += len) >= MEGABYTE) {
-		lp->stat.st_w_bytes -= MEGABYTE;
-		++lp->stat.st_w_mbytes;
-	}
 	if ((lp->stat.st_wc_bytes += len) >= MEGABYTE) {
 		lp->stat.st_wc_bytes -= MEGABYTE;
 		++lp->stat.st_wc_mbytes;
 	}
+#ifdef HAVE_STATISTICS
+	if ((lp->stat.st_w_bytes += len) >= MEGABYTE) {
+		lp->stat.st_w_bytes -= MEGABYTE;
+		++lp->stat.st_w_mbytes;
+	}
 	++lp->stat.st_wcount;
+#endif
 
 	return (0);
 }
 
 /*
  * __log_file_pp --
- *	DB_ENV->log_file pre/post processing.
+ *	ENV->log_file pre/post processing.
  *
  * PUBLIC: int __log_file_pp __P((DB_ENV *, const DB_LSN *, char *, size_t));
  */
@@ -1130,34 +1260,36 @@ __log_file_pp(dbenv, lsn, namep, len)
 	char *namep;
 	size_t len;
 {
-	int rep_check, ret;
+	DB_THREAD_INFO *ip;
+	ENV *env;
+	int ret, set;
 
-	PANIC_CHECK(dbenv);
-	ENV_REQUIRES_CONFIG(dbenv,
-	    dbenv->lg_handle, "DB_ENV->log_file", DB_INIT_LOG);
+	env = dbenv->env;
 
-	if (F_ISSET(dbenv, DB_ENV_LOG_INMEMORY)) {
-		__db_err(dbenv,
-		    "DB_ENV->log_file is illegal with in-memory logs.");
+	ENV_REQUIRES_CONFIG(env,
+	    env->lg_handle, "DB_ENV->log_file", DB_INIT_LOG);
+
+	if ((ret = __log_get_config(dbenv, DB_LOG_IN_MEMORY, &set)) != 0)
+		return (ret);
+	if (set) {
+		__db_errx(env,
+		    "DB_ENV->log_file is illegal with in-memory logs");
 		return (EINVAL);
 	}
 
-	rep_check = IS_ENV_REPLICATED(dbenv) ? 1 : 0;
-	if (rep_check)
-		__env_rep_enter(dbenv);
-	ret = __log_file(dbenv, lsn, namep, len);
-	if (rep_check)
-		__env_db_rep_exit(dbenv);
+	ENV_ENTER(env, ip);
+	REPLICATION_WRAP(env, (__log_file(env, lsn, namep, len)), 0, ret);
+	ENV_LEAVE(env, ip);
 	return (ret);
 }
 
 /*
  * __log_file --
- *	DB_ENV->log_file.
+ *	ENV->log_file.
  */
 static int
-__log_file(dbenv, lsn, namep, len)
-	DB_ENV *dbenv;
+__log_file(env, lsn, namep, len)
+	ENV *env;
 	const DB_LSN *lsn;
 	char *namep;
 	size_t len;
@@ -1166,21 +1298,21 @@ __log_file(dbenv, lsn, namep, len)
 	int ret;
 	char *name;
 
-	dblp = dbenv->lg_handle;
-	R_LOCK(dbenv, &dblp->reginfo);
+	dblp = env->lg_handle;
+	LOG_SYSTEM_LOCK(env);
 	ret = __log_name(dblp, lsn->file, &name, NULL, 0);
-	R_UNLOCK(dbenv, &dblp->reginfo);
+	LOG_SYSTEM_UNLOCK(env);
 	if (ret != 0)
 		return (ret);
 
 	/* Check to make sure there's enough room and copy the name. */
 	if (len < strlen(name) + 1) {
 		*namep = '\0';
-		__db_err(dbenv, "DB_ENV->log_file: name buffer is too short");
+		__db_errx(env, "DB_ENV->log_file: name buffer is too short");
 		return (EINVAL);
 	}
 	(void)strcpy(namep, name);
-	__os_free(dbenv, name);
+	__os_free(env, name);
 
 	return (0);
 }
@@ -1194,33 +1326,34 @@ __log_newfh(dblp, create)
 	DB_LOG *dblp;
 	int create;
 {
-	DB_ENV *dbenv;
+	ENV *env;
 	LOG *lp;
 	u_int32_t flags;
 	int ret;
 	logfile_validity status;
 
-	dbenv = dblp->dbenv;
+	env = dblp->env;
 	lp = dblp->reginfo.primary;
 
 	/* Close any previous file descriptor. */
 	if (dblp->lfhp != NULL) {
-		(void)__os_closehandle(dbenv, dblp->lfhp);
+		(void)__os_closehandle(env, dblp->lfhp);
 		dblp->lfhp = NULL;
 	}
 
-	flags = DB_OSO_LOG | DB_OSO_SEQ |
+	flags = DB_OSO_SEQ |
 	    (create ? DB_OSO_CREATE : 0) |
-	    (F_ISSET(dbenv, DB_ENV_DIRECT_LOG) ? DB_OSO_DIRECT : 0) |
-	    (F_ISSET(dbenv, DB_ENV_DSYNC_LOG) ? DB_OSO_DSYNC : 0);
+	    (F_ISSET(dblp, DBLOG_DIRECT) ? DB_OSO_DIRECT : 0) |
+	    (F_ISSET(dblp, DBLOG_DSYNC) ? DB_OSO_DSYNC : 0);
 
 	/* Get the path of the new file and open it. */
 	dblp->lfname = lp->lsn.file;
 	if ((ret = __log_valid(dblp, dblp->lfname, 0, &dblp->lfhp,
-	    flags, &status)) != 0)
-		__db_err(dbenv,
-		    "DB_ENV->log_put: %d: %s", lp->lsn.file, db_strerror(ret));
-	else if (status != DB_LV_NORMAL && status != DB_LV_INCOMPLETE)
+	    flags, &status, NULL)) != 0)
+		__db_err(env, ret,
+		    "DB_ENV->log_newfh: %lu", (u_long)lp->lsn.file);
+	else if (status != DB_LV_NORMAL && status != DB_LV_INCOMPLETE &&
+	    status != DB_LV_OLD_READABLE)
 		ret = DB_NOTFOUND;
 
 	return (ret);
@@ -1240,16 +1373,16 @@ __log_name(dblp, filenumber, namep, fhpp, flags)
 	char **namep;
 	DB_FH **fhpp;
 {
-	DB_ENV *dbenv;
+	ENV *env;
 	LOG *lp;
-	int ret;
+	int mode, ret;
 	char *oname;
 	char old[sizeof(LFPREFIX) + 5 + 20], new[sizeof(LFPREFIX) + 10 + 20];
 
-	dbenv = dblp->dbenv;
+	env = dblp->env;
 	lp = dblp->reginfo.primary;
 
-	DB_ASSERT(!lp->db_log_inmemory);
+	DB_ASSERT(env, !lp->db_log_inmemory);
 
 	/*
 	 * !!!
@@ -1270,28 +1403,46 @@ __log_name(dblp, filenumber, namep, fhpp, flags)
 	 * file, return regardless.
 	 */
 	(void)snprintf(new, sizeof(new), LFNAME, filenumber);
-	if ((ret = __db_appname(dbenv,
-	    DB_APP_LOG, new, 0, NULL, namep)) != 0 || fhpp == NULL)
+	if ((ret = __db_appname(env,
+	    DB_APP_LOG, new, NULL, namep)) != 0 || fhpp == NULL)
 		return (ret);
 
+	/* The application may have specified an absolute file mode. */
+	if (lp->filemode == 0)
+		mode = env->db_mode;
+	else {
+		LF_SET(DB_OSO_ABSMODE);
+		mode = lp->filemode;
+	}
+
 	/* Open the new-style file -- if we succeed, we're done. */
-	if ((ret = __os_open_extend(dbenv, *namep, 0, flags,
-	    (int)lp->persist.mode, fhpp)) == 0)
+	dblp->lf_timestamp = lp->timestamp;
+	if ((ret = __os_open(env, *namep, 0, flags, mode, fhpp)) == 0)
 		return (0);
+
+	/*
+	 * If the open failed for reason other than the file
+	 * not being there, complain loudly, the wrong user
+	 * probably started up the application.
+	 */
+	if (ret != ENOENT) {
+		__db_err(env, ret, "%s: log file unreadable", *namep);
+		return (__env_panic(env, ret));
+	}
 
 	/*
 	 * The open failed... if the DB_RDONLY flag isn't set, we're done,
 	 * the caller isn't interested in old-style files.
 	 */
 	if (!LF_ISSET(DB_OSO_RDONLY)) {
-		__db_err(dbenv,
-		    "%s: log file open failed: %s", *namep, db_strerror(ret));
-		return (__db_panic(dbenv, ret));
+		__db_err(env, ret, "%s: log file open failed", *namep);
+		return (__env_panic(env, ret));
 	}
 
 	/* Create an old-style file name. */
 	(void)snprintf(old, sizeof(old), LFNAME_V1, filenumber);
-	if ((ret = __db_appname(dbenv, DB_APP_LOG, old, 0, NULL, &oname)) != 0)
+	if ((ret = __db_appname(env,
+	    DB_APP_LOG, old, NULL, &oname)) != 0)
 		goto err;
 
 	/*
@@ -1299,9 +1450,8 @@ __log_name(dblp, filenumber, namep, fhpp, flags)
 	 * space allocated for the new-style name and return the old-style
 	 * name to the caller.
 	 */
-	if ((ret =
-	    __os_open(dbenv, oname, flags, (int)lp->persist.mode, fhpp)) == 0) {
-		__os_free(dbenv, *namep);
+	if ((ret = __os_open(env, oname, 0, flags, mode, fhpp)) == 0) {
+		__os_free(env, *namep);
 		*namep = oname;
 		return (0);
 	}
@@ -1314,73 +1464,80 @@ __log_name(dblp, filenumber, namep, fhpp, flags)
 	 * old-style name, but we expected it to exist and we weren't just
 	 * looking for any log file.  That's not a likely error.
 	 */
-err:	__os_free(dbenv, oname);
+err:	__os_free(env, oname);
 	return (ret);
 }
 
 /*
  * __log_rep_put --
  *	Short-circuit way for replication clients to put records into the
- * log.  Replication clients' logs need to be laid out exactly their masters'
+ * log.  Replication clients' logs need to be laid out exactly as their masters'
  * are, so we let replication take responsibility for when the log gets
  * flushed, when log switches files, etc.  This is just a thin PUBLIC wrapper
  * for __log_putr with a slightly prettier interface.
  *
- * Note that the db_rep->db_mutexp should be held when this is called.
- * Note that we acquire the log region lock while holding db_mutexp.
+ * Note that the REP->mtx_clientdb should be held when this is called.
+ * Note that we acquire the log region mutex while holding mtx_clientdb.
  *
- * PUBLIC: int __log_rep_put __P((DB_ENV *, DB_LSN *, const DBT *));
+ * PUBLIC: int __log_rep_put __P((ENV *, DB_LSN *, const DBT *, u_int32_t));
  */
 int
-__log_rep_put(dbenv, lsnp, rec)
-	DB_ENV *dbenv;
+__log_rep_put(env, lsnp, rec, flags)
+	ENV *env;
 	DB_LSN *lsnp;
 	const DBT *rec;
+	u_int32_t flags;
 {
+	DBT *dbt, t;
 	DB_CIPHER *db_cipher;
 	DB_LOG *dblp;
 	HDR hdr;
-	DBT *dbt, t;
 	LOG *lp;
 	int need_free, ret;
 
-	dblp = dbenv->lg_handle;
+	dblp = env->lg_handle;
 	lp = dblp->reginfo.primary;
 
-	R_LOCK(dbenv, &dblp->reginfo);
+	LOG_SYSTEM_LOCK(env);
 	memset(&hdr, 0, sizeof(HDR));
 	t = *rec;
 	dbt = &t;
 	need_free = 0;
-	db_cipher = (DB_CIPHER *)dbenv->crypto_handle;
-	if (CRYPTO_ON(dbenv))
+	db_cipher = env->crypto_handle;
+	if (CRYPTO_ON(env))
 		t.size += db_cipher->adj_size(rec->size);
-	if ((ret = __os_calloc(dbenv, 1, t.size, &t.data)) != 0)
+	if ((ret = __os_calloc(env, 1, t.size, &t.data)) != 0)
 		goto err;
 	need_free = 1;
 	memcpy(t.data, rec->data, rec->size);
 
-	if ((ret = __log_encrypt_record(dbenv, dbt, &hdr, rec->size)) != 0)
+	if ((ret = __log_encrypt_record(env, dbt, &hdr, rec->size)) != 0)
 		goto err;
-	__db_chksum(t.data, t.size,
-	    (CRYPTO_ON(dbenv)) ? db_cipher->mac_key : NULL, hdr.chksum);
+	__db_chksum(&hdr, t.data, t.size,
+	    (CRYPTO_ON(env)) ? db_cipher->mac_key : NULL, hdr.chksum);
 
-	DB_ASSERT(log_compare(lsnp, &lp->lsn) == 0);
+	DB_ASSERT(env, LOG_COMPARE(lsnp, &lp->lsn) == 0);
 	ret = __log_putr(dblp, lsnp, dbt, lp->lsn.offset - lp->len, &hdr);
 err:
 	/*
-	 * !!! Assume caller holds db_rep->db_mutex to modify ready_lsn.
+	 * !!! Assume caller holds REP->mtx_clientdb to modify ready_lsn.
 	 */
 	lp->ready_lsn = lp->lsn;
-	R_UNLOCK(dbenv, &dblp->reginfo);
+
+	if (LF_ISSET(DB_LOG_CHKPNT))
+		lp->stat.st_wc_bytes = lp->stat.st_wc_mbytes = 0;
+
+	/* Increment count of records added to the log. */
+	STAT(++lp->stat.st_record);
+	LOG_SYSTEM_UNLOCK(env);
 	if (need_free)
-		__os_free(dbenv, t.data);
+		__os_free(env, t.data);
 	return (ret);
 }
 
 static int
-__log_encrypt_record(dbenv, dbt, hdr, orig)
-	DB_ENV *dbenv;
+__log_encrypt_record(env, dbt, hdr, orig)
+	ENV *env;
 	DBT *dbt;
 	HDR *hdr;
 	u_int32_t orig;
@@ -1388,11 +1545,11 @@ __log_encrypt_record(dbenv, dbt, hdr, orig)
 	DB_CIPHER *db_cipher;
 	int ret;
 
-	if (CRYPTO_ON(dbenv)) {
-		db_cipher = (DB_CIPHER *)dbenv->crypto_handle;
+	if (CRYPTO_ON(env)) {
+		db_cipher = env->crypto_handle;
 		hdr->size = HDR_CRYPTO_SZ;
 		hdr->orig_size = orig;
-		if ((ret = db_cipher->encrypt(dbenv, db_cipher->data,
+		if ((ret = db_cipher->encrypt(env, db_cipher->data,
 		    hdr->iv, dbt->data, dbt->size)) != 0)
 			return (ret);
 	} else {

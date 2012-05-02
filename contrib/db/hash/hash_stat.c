@@ -1,29 +1,21 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1996-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
  *
- * $Id: hash_stat.c,v 11.66 2004/09/22 03:46:22 bostic Exp $
+ * $Id$
  */
 
 #include "db_config.h"
 
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-
-#include <string.h>
-#endif
-
 #include "db_int.h"
 #include "dbinc/db_page.h"
-#include "dbinc/db_shash.h"
 #include "dbinc/btree.h"
 #include "dbinc/hash.h"
 #include "dbinc/mp.h"
 
 #ifdef HAVE_STATISTICS
-static int __ham_stat_callback __P((DB *, PAGE *, void *, int *));
+static int __ham_stat_callback __P((DBC *, PAGE *, void *, int *));
 
 /*
  * __ham_stat --
@@ -38,16 +30,16 @@ __ham_stat(dbc, spp, flags)
 	u_int32_t flags;
 {
 	DB *dbp;
-	DB_ENV *dbenv;
 	DB_HASH_STAT *sp;
 	DB_MPOOLFILE *mpf;
+	ENV *env;
 	HASH_CURSOR *hcp;
 	PAGE *h;
 	db_pgno_t pgno;
 	int ret;
 
 	dbp = dbc->dbp;
-	dbenv = dbp->dbenv;
+	env = dbp->env;
 
 	mpf = dbp->mpf;
 	sp = NULL;
@@ -58,12 +50,20 @@ __ham_stat(dbc, spp, flags)
 		goto err;
 
 	/* Allocate and clear the structure. */
-	if ((ret = __os_umalloc(dbenv, sizeof(*sp), &sp)) != 0)
+	if ((ret = __os_umalloc(env, sizeof(*sp), &sp)) != 0)
 		goto err;
 	memset(sp, 0, sizeof(*sp));
 	/* Copy the fields that we have. */
 	sp->hash_nkeys = hcp->hdr->dbmeta.key_count;
 	sp->hash_ndata = hcp->hdr->dbmeta.record_count;
+	/*
+	 * Don't take the page number from the meta-data page -- that value is
+	 * only maintained in the primary database, we may have been called on
+	 * a subdatabase.
+	 */
+	if ((ret = __memp_get_last_pgno(dbp->mpf, &pgno)) != 0)
+		goto err;
+	sp->hash_pagecnt = pgno + 1;
 	sp->hash_pagesize = dbp->pgsize;
 	sp->hash_buckets = hcp->hdr->max_bucket + 1;
 	sp->hash_magic = hcp->hdr->dbmeta.magic;
@@ -71,7 +71,7 @@ __ham_stat(dbc, spp, flags)
 	sp->hash_metaflags = hcp->hdr->dbmeta.flags;
 	sp->hash_ffactor = hcp->hdr->ffactor;
 
-	if (flags == DB_FAST_STAT || flags == DB_CACHED_COUNTS)
+	if (flags == DB_FAST_STAT)
 		goto done;
 
 	/* Walk the free list, counting pages. */
@@ -79,11 +79,12 @@ __ham_stat(dbc, spp, flags)
 	    pgno != PGNO_INVALID;) {
 		++sp->hash_free;
 
-		if ((ret = __memp_fget(mpf, &pgno, 0, &h)) != 0)
+		if ((ret = __memp_fget(mpf,
+		     &pgno, dbc->thread_info, dbc->txn, 0, &h)) != 0)
 			goto err;
 
 		pgno = h->next_pgno;
-		(void)__memp_fput(mpf, h, 0);
+		(void)__memp_fput(mpf, dbc->thread_info, h, dbc->priority);
 	}
 
 	/* Now traverse the rest of the table. */
@@ -94,7 +95,13 @@ __ham_stat(dbc, spp, flags)
 		goto err;
 
 	if (!F_ISSET(dbp, DB_AM_RDONLY)) {
-		if ((ret = __ham_dirty_meta(dbc)) != 0)
+		/*
+		 * A transaction is not required for DB->stat, so this update
+		 * can't safely make a copy of the meta page.  We have to
+		 * update in place.
+		 */
+		if ((ret = __ham_dirty_meta(dbc,
+		    (dbc->txn == NULL) ? DB_MPOOL_EDIT : 0)) != 0)
 			goto err;
 		hcp->hdr->dbmeta.key_count = sp->hash_nkeys;
 		hcp->hdr->dbmeta.record_count = sp->hash_ndata;
@@ -107,7 +114,7 @@ done:	if ((ret = __ham_release_meta(dbc)) != 0)
 	return (0);
 
 err:	if (sp != NULL)
-		__os_ufree(dbenv, sp);
+		__os_ufree(env, sp);
 
 	if (hcp->hdr != NULL)
 		(void)__ham_release_meta(dbc);
@@ -133,23 +140,23 @@ __ham_stat_print(dbc, flags)
 		{ 0,			NULL }
 	};
 	DB *dbp;
-	DB_ENV *dbenv;
+	ENV *env;
 	DB_HASH_STAT *sp;
 	int lorder, ret;
 	const char *s;
 
 	dbp = dbc->dbp;
-	dbenv = dbp->dbenv;
+	env = dbp->env;
 
-	if ((ret = __ham_stat(dbc, &sp, 0)) != 0)
+	if ((ret = __ham_stat(dbc, &sp, LF_ISSET(DB_FAST_STAT))) != 0)
 		return (ret);
 
 	if (LF_ISSET(DB_STAT_ALL)) {
-		__db_msg(dbenv, "%s", DB_GLOBAL(db_line));
-		__db_msg(dbenv, "Default Hash database information:");
+		__db_msg(env, "%s", DB_GLOBAL(db_line));
+		__db_msg(env, "Default Hash database information:");
 	}
-	__db_msg(dbenv, "%lx\tHash magic number", (u_long)sp->hash_magic);
-	__db_msg(dbenv,
+	__db_msg(env, "%lx\tHash magic number", (u_long)sp->hash_magic);
+	__db_msg(env,
 	    "%lu\tHash version number", (u_long)sp->hash_version);
 	(void)__db_get_lorder(dbp, &lorder);
 	switch (lorder) {
@@ -163,62 +170,66 @@ __ham_stat_print(dbc, flags)
 		s = "Unrecognized byte order";
 		break;
 	}
-	__db_msg(dbenv, "%s\tByte order", s);
-	__db_prflags(dbenv, NULL, sp->hash_metaflags, fn, NULL, "\tFlags");
-	__db_dl(dbenv,
+	__db_msg(env, "%s\tByte order", s);
+	__db_prflags(env, NULL, sp->hash_metaflags, fn, NULL, "\tFlags");
+	__db_dl(env,
+	    "Number of pages in the database", (u_long)sp->hash_pagecnt);
+	__db_dl(env,
 	    "Underlying database page size", (u_long)sp->hash_pagesize);
-	__db_dl(dbenv, "Specified fill factor", (u_long)sp->hash_ffactor);
-	__db_dl(dbenv,
+	__db_dl(env, "Specified fill factor", (u_long)sp->hash_ffactor);
+	__db_dl(env,
 	    "Number of keys in the database", (u_long)sp->hash_nkeys);
-	__db_dl(dbenv,
+	__db_dl(env,
 	    "Number of data items in the database", (u_long)sp->hash_ndata);
 
-	__db_dl(dbenv, "Number of hash buckets", (u_long)sp->hash_buckets);
-	__db_dl_pct(dbenv, "Number of bytes free on bucket pages",
+	__db_dl(env, "Number of hash buckets", (u_long)sp->hash_buckets);
+	__db_dl_pct(env, "Number of bytes free on bucket pages",
 	    (u_long)sp->hash_bfree, DB_PCT_PG(
 	    sp->hash_bfree, sp->hash_buckets, sp->hash_pagesize), "ff");
 
-	__db_dl(dbenv,
+	__db_dl(env,
 	    "Number of overflow pages", (u_long)sp->hash_bigpages);
-	__db_dl_pct(dbenv, "Number of bytes free in overflow pages",
+	__db_dl_pct(env, "Number of bytes free in overflow pages",
 	    (u_long)sp->hash_big_bfree, DB_PCT_PG(
 	    sp->hash_big_bfree, sp->hash_bigpages, sp->hash_pagesize), "ff");
 
-	__db_dl(dbenv,
+	__db_dl(env,
 	    "Number of bucket overflow pages", (u_long)sp->hash_overflows);
-	__db_dl_pct(dbenv,
+	__db_dl_pct(env,
 	    "Number of bytes free in bucket overflow pages",
 	    (u_long)sp->hash_ovfl_free, DB_PCT_PG(
 	    sp->hash_ovfl_free, sp->hash_overflows, sp->hash_pagesize), "ff");
 
-	__db_dl(dbenv, "Number of duplicate pages", (u_long)sp->hash_dup);
-	__db_dl_pct(dbenv, "Number of bytes free in duplicate pages",
+	__db_dl(env, "Number of duplicate pages", (u_long)sp->hash_dup);
+	__db_dl_pct(env, "Number of bytes free in duplicate pages",
 	    (u_long)sp->hash_dup_free, DB_PCT_PG(
 	    sp->hash_dup_free, sp->hash_dup, sp->hash_pagesize), "ff");
 
-	__db_dl(dbenv,
+	__db_dl(env,
 	    "Number of pages on the free list", (u_long)sp->hash_free);
 
-	__os_ufree(dbenv, sp);
+	__os_ufree(env, sp);
 
 	return (0);
 }
 
 static int
-__ham_stat_callback(dbp, pagep, cookie, putp)
-	DB *dbp;
+__ham_stat_callback(dbc, pagep, cookie, putp)
+	DBC *dbc;
 	PAGE *pagep;
 	void *cookie;
 	int *putp;
 {
-	DB_HASH_STAT *sp;
+	DB *dbp;
 	DB_BTREE_STAT bstat;
+	DB_HASH_STAT *sp;
 	db_indx_t indx, len, off, tlen, top;
 	u_int8_t *hk;
 	int ret;
 
 	*putp = 0;
 	sp = cookie;
+	dbp = dbc->dbp;
 
 	switch (pagep->type) {
 	case P_INVALID:
@@ -227,6 +238,7 @@ __ham_stat_callback(dbp, pagep, cookie, putp)
 		 * Obviously such pages have no data, so we can just proceed.
 		 */
 		break;
+	case P_HASH_UNSORTED:
 	case P_HASH:
 		/*
 		 * We count the buckets and the overflow pages
@@ -262,7 +274,7 @@ __ham_stat_callback(dbp, pagep, cookie, putp)
 				}
 				break;
 			default:
-				return (__db_pgfmt(dbp->dbenv, PGNO(pagep)));
+				return (__db_pgfmt(dbp->env, PGNO(pagep)));
 			}
 		}
 		sp->hash_nkeys += H_NUMPAIRS(pagep);
@@ -278,7 +290,7 @@ __ham_stat_callback(dbp, pagep, cookie, putp)
 		 * fields into our stat structure.
 		 */
 		memset(&bstat, 0, sizeof(bstat));
-		if ((ret = __bam_stat_callback(dbp, pagep, &bstat, putp)) != 0)
+		if ((ret = __bam_stat_callback(dbc, pagep, &bstat, putp)) != 0)
 			return (ret);
 		sp->hash_dup++;
 		sp->hash_dup_free += bstat.bt_leaf_pgfree +
@@ -290,7 +302,7 @@ __ham_stat_callback(dbp, pagep, cookie, putp)
 		sp->hash_big_bfree += P_OVFLSPACE(dbp, dbp->pgsize, pagep);
 		break;
 	default:
-		return (__db_pgfmt(dbp->dbenv, PGNO(pagep)));
+		return (__db_pgfmt(dbp->env, PGNO(pagep)));
 	}
 
 	return (0);
@@ -309,7 +321,6 @@ __ham_print_cursor(dbc)
 	static const FN fn[] = {
 		{ H_CONTINUE,	"H_CONTINUE" },
 		{ H_DELETED,	"H_DELETED" },
-		{ H_DIRTY,	"H_DIRTY" },
 		{ H_DUPONLY,	"H_DUPONLY" },
 		{ H_EXPAND,	"H_EXPAND" },
 		{ H_ISDUP,	"H_ISDUP" },
@@ -318,10 +329,10 @@ __ham_print_cursor(dbc)
 		{ H_OK,		"H_OK" },
 		{ 0,		NULL }
 	};
-	DB_ENV *dbenv;
+	ENV *env;
 	HASH_CURSOR *cp;
 
-	dbenv = dbc->dbp->dbenv;
+	env = dbc->env;
 	cp = (HASH_CURSOR *)dbc->internal;
 
 	STAT_ULONG("Bucket traversing", cp->bucket);
@@ -332,7 +343,7 @@ __ham_print_cursor(dbc)
 	STAT_ULONG("Bytes needed for add", cp->seek_size);
 	STAT_ULONG("Page on which we can insert", cp->seek_found_page);
 	STAT_ULONG("Order", cp->order);
-	__db_prflags(dbenv, NULL, cp->flags, fn, NULL, "\tInternal Flags");
+	__db_prflags(env, NULL, cp->flags, fn, NULL, "\tInternal Flags");
 }
 
 #else /* !HAVE_STATISTICS */
@@ -346,7 +357,7 @@ __ham_stat(dbc, spp, flags)
 	COMPQUIET(spp, NULL);
 	COMPQUIET(flags, 0);
 
-	return (__db_stat_not_built(dbc->dbp->dbenv));
+	return (__db_stat_not_built(dbc->env));
 }
 #endif
 
@@ -356,13 +367,13 @@ __ham_stat(dbc, spp, flags)
  * can use this both for stat collection and for deallocation.
  *
  * PUBLIC: int __ham_traverse __P((DBC *, db_lockmode_t,
- * PUBLIC:     int (*)(DB *, PAGE *, void *, int *), void *, int));
+ * PUBLIC:     int (*)(DBC *, PAGE *, void *, int *), void *, int));
  */
 int
 __ham_traverse(dbc, mode, callback, cookie, look_past_max)
 	DBC *dbc;
 	db_lockmode_t mode;
-	int (*callback) __P((DB *, PAGE *, void *, int *));
+	int (*callback) __P((DBC *, PAGE *, void *, int *));
 	void *cookie;
 	int look_past_max;
 {
@@ -418,7 +429,7 @@ __ham_traverse(dbc, mode, callback, cookie, look_past_max)
 		hcp->bucket = bucket;
 		hcp->pgno = pgno = BUCKET_TO_PAGE(hcp, bucket);
 		for (ret = __ham_get_cpage(dbc, mode); ret == 0;
-		    ret = __ham_next_cpage(dbc, pgno, 0)) {
+		    ret = __ham_next_cpage(dbc, pgno)) {
 
 			/*
 			 * If we are cleaning up pages past the max_bucket,
@@ -443,7 +454,7 @@ __ham_traverse(dbc, mode, callback, cookie, look_past_max)
 				case H_OFFDUP:
 					memcpy(&opgno, HOFFDUP_PGNO(hk),
 					    sizeof(db_pgno_t));
-					if ((ret = __db_c_newopd(dbc,
+					if ((ret = __dbc_newopd(dbc,
 					    opgno, NULL, &opd)) != 0)
 						return (ret);
 					if ((ret = __bam_traverse(opd,
@@ -451,7 +462,7 @@ __ham_traverse(dbc, mode, callback, cookie, look_past_max)
 					    callback, cookie))
 					    != 0)
 						goto err;
-					if ((ret = __db_c_close(opd)) != 0)
+					if ((ret = __dbc_close(opd)) != 0)
 						return (ret);
 					opd = NULL;
 					break;
@@ -465,7 +476,7 @@ __ham_traverse(dbc, mode, callback, cookie, look_past_max)
 					 */
 					memcpy(&opgno, HOFFPAGE_PGNO(hk),
 					    sizeof(db_pgno_t));
-					if ((ret = __db_traverse_big(dbp,
+					if ((ret = __db_traverse_big(dbc,
 					    opgno, callback, cookie)) != 0)
 						goto err;
 					break;
@@ -473,15 +484,14 @@ __ham_traverse(dbc, mode, callback, cookie, look_past_max)
 				case H_DUPLICATE:
 					break;
 				default:
-					DB_ASSERT(0);
-					ret = EINVAL;
+					ret = __db_unknown_path(
+					    dbp->env, "__ham_traverse");
 					goto err;
-
 				}
 			}
 
 			/* Call the callback on main pages. */
-			if ((ret = callback(dbp,
+			if ((ret = callback(dbc,
 			    hcp->page, cookie, &did_put)) != 0)
 				goto err;
 
@@ -494,14 +504,15 @@ __ham_traverse(dbc, mode, callback, cookie, look_past_max)
 			goto err;
 
 		if (hcp->page != NULL) {
-			if ((ret = __memp_fput(mpf, hcp->page, 0)) != 0)
+			if ((ret = __memp_fput(mpf,
+			    dbc->thread_info, hcp->page, dbc->priority)) != 0)
 				return (ret);
 			hcp->page = NULL;
 		}
 
 	}
 err:	if (opd != NULL &&
-	    (t_ret = __db_c_close(opd)) != 0 && ret == 0)
+	    (t_ret = __dbc_close(opd)) != 0 && ret == 0)
 		ret = t_ret;
 	return (ret);
 }

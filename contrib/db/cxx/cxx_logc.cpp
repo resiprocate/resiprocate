@@ -1,21 +1,18 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1997-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1997-2009 Oracle.  All rights reserved.
  *
- * $Id: cxx_logc.cpp,v 11.13 2004/02/05 02:25:12 mjc Exp $
+ * $Id$
  */
 
 #include "db_config.h"
 
-#include <errno.h>
-#include <string.h>
+#include "db_int.h"
 
 #include "db_cxx.h"
 #include "dbinc/cxx_int.h"
 
-#include "db_int.h"
 #include "dbinc/db_page.h"
 #include "dbinc_auto/db_auto.h"
 #include "dbinc_auto/crdel_auto.h"
@@ -35,7 +32,7 @@ int DbLogc::close(u_int32_t _flags)
 {
 	DB_LOGC *logc = this;
 	int ret;
-	DbEnv *dbenv2 = DbEnv::get_DbEnv(logc->dbenv);
+	DbEnv *dbenv2 = DbEnv::get_DbEnv(logc->env->dbenv);
 
 	ret = logc->close(logc, _flags);
 
@@ -46,21 +43,36 @@ int DbLogc::close(u_int32_t _flags)
 }
 
 // The name _flags prevents a name clash with __db_log_cursor::flags
-int DbLogc::get(DbLsn *lsn, Dbt *data, u_int32_t _flags)
+int DbLogc::get(DbLsn *get_lsn, Dbt *data, u_int32_t _flags)
 {
 	DB_LOGC *logc = this;
 	int ret;
 
-	ret = logc->get(logc, lsn, data, _flags);
+	ret = logc->get(logc, get_lsn, data, _flags);
 
 	if (!DB_RETOK_LGGET(ret)) {
 		if (ret == DB_BUFFER_SMALL)
-			DB_ERROR_DBT(DbEnv::get_DbEnv(logc->dbenv),
+			DB_ERROR_DBT(DbEnv::get_DbEnv(logc->env->dbenv),
 				"DbLogc::get", data, ON_ERROR_UNKNOWN);
 		else
-			DB_ERROR(DbEnv::get_DbEnv(logc->dbenv),
+			DB_ERROR(DbEnv::get_DbEnv(logc->env->dbenv),
 				"DbLogc::get", ret, ON_ERROR_UNKNOWN);
 	}
+
+	return (ret);
+}
+
+// The name _flags prevents a name clash with __db_log_cursor::flags
+int DbLogc::version(u_int32_t *versionp, u_int32_t _flags)
+{
+	DB_LOGC *logc = this;
+	int ret;
+
+	ret = logc->version(logc, versionp, _flags);
+
+	if (!DB_RETOK_LGGET(ret))
+		DB_ERROR(DbEnv::get_DbEnv(logc->env->dbenv),
+			"DbLogc::version", ret, ON_ERROR_UNKNOWN);
 
 	return (ret);
 }

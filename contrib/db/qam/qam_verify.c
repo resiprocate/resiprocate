@@ -1,29 +1,19 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1999-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1999-2009 Oracle.  All rights reserved.
  *
- * $Id: qam_verify.c,v 1.51 2004/10/11 18:47:51 bostic Exp $
+ * $Id$
  */
 
 #include "db_config.h"
-
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-
-#endif
 
 #include "db_int.h"
 #include "dbinc/db_page.h"
 #include "dbinc/db_verify.h"
 #include "dbinc/db_am.h"
-#include "dbinc/db_shash.h"
 #include "dbinc/mp.h"
 #include "dbinc/qam.h"
-#include <stdlib.h>
-#include <string.h>
-
 /*
  * __qam_vrfy_meta --
  *	Verify the queue-specific part of a metadata page.
@@ -39,7 +29,7 @@ __qam_vrfy_meta(dbp, vdp, meta, pgno, flags)
 	db_pgno_t pgno;
 	u_int32_t flags;
 {
-	DB_ENV *dbenv;
+	ENV *env;
 	QUEUE *qp;
 	VRFY_PAGEINFO *pip;
 	db_pgno_t *extents, extid, first, last;
@@ -49,23 +39,23 @@ __qam_vrfy_meta(dbp, vdp, meta, pgno, flags)
 
 	COMPQUIET(count, 0);
 
-	dbenv = dbp->dbenv;
+	env = dbp->env;
 	qp = (QUEUE *)dbp->q_internal;
 	extents = NULL;
 	first = last = 0;
+	isbad = 0;
 	buf = NULL;
 	names = NULL;
 
 	if ((ret = __db_vrfy_getpageinfo(vdp, pgno, &pip)) != 0)
 		return (ret);
-	isbad = 0;
 
 	/*
 	 * Queue can't be used in subdatabases, so if this isn't set
 	 * something very odd is going on.
 	 */
 	if (!F_ISSET(pip, VRFY_INCOMPLETE))
-		EPRINT((dbenv, "Page %lu: queue databases must be one-per-file",
+		EPRINT((env, "Page %lu: queue databases must be one-per-file",
 		    (u_long)pgno));
 
 	/*
@@ -82,7 +72,7 @@ __qam_vrfy_meta(dbp, vdp, meta, pgno, flags)
 	 */
 	if (DB_ALIGN(meta->re_len + sizeof(QAMDATA) - 1, sizeof(u_int32_t)) *
 	    meta->rec_page + QPAGE_SZ(dbp) > dbp->pgsize) {
-		EPRINT((dbenv,
+		EPRINT((env,
    "Page %lu: queue record length %lu too high for page size and recs/page",
 		    (u_long)pgno, (u_long)meta->re_len));
 		ret = DB_VERIFY_FATAL;
@@ -93,6 +83,8 @@ __qam_vrfy_meta(dbp, vdp, meta, pgno, flags)
 		 * it when handling extents.  It would get set up in open,
 		 * if we called open normally, but we don't.
 		 */
+		vdp->re_pad = meta->re_pad;
+		qp->re_pad = (int)meta->re_pad;
 		qp->re_len = vdp->re_len = meta->re_len;
 		qp->rec_page = vdp->rec_page = meta->rec_page;
 		qp->page_ext = vdp->page_ext = meta->page_ext;
@@ -112,7 +104,7 @@ __qam_vrfy_meta(dbp, vdp, meta, pgno, flags)
 	 */
 	if (F_ISSET(vdp, VRFY_QMETA_SET)) {
 		isbad = 1;
-		EPRINT((dbenv,
+		EPRINT((env,
 		    "Page %lu: database contains multiple Queue metadata pages",
 		    (u_long)pgno));
 		goto err;
@@ -135,16 +127,16 @@ __qam_vrfy_meta(dbp, vdp, meta, pgno, flags)
 	 * then report that and look there if we are salvaging.
 	 */
 
-	if ((ret = __db_appname(dbenv,
-	    DB_APP_DATA, qp->dir, 0, NULL, &buf)) != 0)
+	if ((ret = __db_appname(env,
+	    DB_APP_DATA, qp->dir, NULL, &buf)) != 0)
 		goto err;
-	if ((ret = __os_dirlist(dbenv, buf, &names, &count)) != 0)
+	if ((ret = __os_dirlist(env, buf, 0, &names, &count)) != 0)
 		goto err;
-	__os_free(dbenv, buf);
+	__os_free(env, buf);
 	buf = NULL;
 
 	len = strlen(QUEUE_EXTENT_HEAD) + strlen(qp->name) + 1;
-	if ((ret = __os_malloc(dbenv, len, &buf)) != 0)
+	if ((ret = __os_malloc(env, len, &buf)) != 0)
 		goto err;
 	len = (size_t)snprintf(buf, len, QUEUE_EXTENT_HEAD, qp->name);
 	for (i = nextents = 0; i < count; i++) {
@@ -157,7 +149,7 @@ __qam_vrfy_meta(dbp, vdp, meta, pgno, flags)
 			    (extid >= first || extid <= last)))
 				continue;
 			if (extents == NULL && (ret = __os_malloc(
-			     dbenv, (size_t)(count - i) * sizeof(extid),
+			     env, (size_t)(count - i) * sizeof(extid),
 			     &extents)) != 0)
 				goto err;
 			extents[nextents] = extid;
@@ -165,23 +157,134 @@ __qam_vrfy_meta(dbp, vdp, meta, pgno, flags)
 		}
 	}
 	if (nextents > 0)
-		__db_err(dbenv,
+		__db_errx(env,
 		     "Warning: %d extra extent files found", nextents);
 	vdp->nextents = nextents;
 	vdp->extents = extents;
 
-err:	if ((t_ret = __db_vrfy_putpageinfo(dbenv, vdp, pip)) != 0 && ret == 0)
+err:	if ((t_ret = __db_vrfy_putpageinfo(env, vdp, pip)) != 0 && ret == 0)
 		ret = t_ret;
 	if (names != NULL)
-		__os_dirfree(dbenv, names, count);
+		__os_dirfree(env, names, count);
 	if (buf != NULL)
-		__os_free(dbenv, buf);
+		__os_free(env, buf);
 	if (ret != 0 && extents != NULL)
-		__os_free(dbenv, extents);
+		__os_free(env, extents);
 	if (LF_ISSET(DB_SALVAGE) &&
 	   (t_ret = __db_salvage_markdone(vdp, pgno)) != 0 && ret == 0)
 		ret = t_ret;
 	return (ret == 0 && isbad == 1 ? DB_VERIFY_BAD : ret);
+}
+
+/*
+ * __qam_meta2pgset --
+ * For a given Queue meta page, add all of the db's pages to the pgset.  Dealing
+ * with extents complicates things, as it is possible for there to be gaps in
+ * the page number sequence (the user could have re-inserted record numbers that
+ * had been on deleted extents) so we test the existence of each extent before
+ * adding its pages to the pgset.  If there are no extents, just loop from
+ * first_recno to last_recno.
+ *
+ * PUBLIC: int __qam_meta2pgset __P((DB *, VRFY_DBINFO *, DB *));
+ */
+int
+__qam_meta2pgset(dbp, vdp, pgset)
+	DB *dbp;
+	VRFY_DBINFO *vdp;
+	DB *pgset;
+{
+	DBC *dbc;
+	PAGE *h;
+	db_pgno_t first, last, pgno, pg_ext, stop;
+	int ret, t_ret;
+	u_int32_t i;
+
+	ret = 0;
+	h = NULL;
+	if (vdp->last_recno <= vdp->first_recno)
+		return 0;
+
+	pg_ext = vdp->page_ext;
+
+	first = QAM_RECNO_PAGE(dbp, vdp->first_recno);
+
+	/*
+	 * last_recno gives the next recno to be allocated, we want the last
+	 * allocated recno.
+	 */
+	last = QAM_RECNO_PAGE(dbp, vdp->last_recno - 1);
+
+	if (first == PGNO_INVALID || last == PGNO_INVALID)
+		return (DB_VERIFY_BAD);
+
+	pgno = first;
+	if (first > last)
+		stop = QAM_RECNO_PAGE(dbp, UINT32_MAX);
+	else
+		stop = last;
+
+	/*
+	 * If this db doesn't have extents, just add all page numbers from first
+	 * to last.
+	 */
+	if (pg_ext == 0) {
+		for (pgno = first; pgno <= stop; pgno++)
+			if ((ret = __db_vrfy_pgset_inc(
+			    pgset, vdp->thread_info, pgno)) != 0)
+				break;
+		if (first > last)
+			for (pgno = 1; pgno <= last; pgno++)
+				if ((ret = __db_vrfy_pgset_inc(
+				    pgset, vdp->thread_info, pgno)) != 0)
+					break;
+
+		return ret;
+	}
+
+	if ((ret = __db_cursor(dbp, vdp->thread_info, NULL, &dbc, 0)) != 0)
+		return (ret);
+	/*
+	 * Check if we can get the first page of each extent.  If we can, then
+	 * add all of that extent's pages to the pgset.  If we can't, assume the
+	 * extent doesn't exist and don't add any pages, if we're wrong we'll
+	 * find the pages in __db_vrfy_walkpages.
+	 */
+begin:	for (; pgno <= stop; pgno += pg_ext) {
+		if ((ret = __qam_fget(dbc, &pgno, 0, &h)) != 0) {
+			if (ret == ENOENT || ret == DB_PAGE_NOTFOUND) {
+				ret = 0;
+				continue;
+			}
+			goto err;
+		}
+		if ((ret = __qam_fput(dbc, pgno, h, dbp->priority)) != 0)
+			goto err;
+
+		for (i = 0; i < pg_ext && pgno + i <= last; i++)
+			if ((ret = __db_vrfy_pgset_inc(
+			    pgset, vdp->thread_info, pgno + i)) != 0)
+				goto err;
+
+		/* The first recno won't always occur on the first page of the
+		 * extent.  Back up to the beginning of the extent before the
+		 * end of the loop so that the increment works correctly.
+		 */
+		if (pgno == first)
+			pgno = pgno % pg_ext + 1;
+	}
+
+	if (first > last) {
+		pgno = 1;
+		first = last;
+		stop = last;
+		goto begin;
+	}
+
+err:
+	if ((t_ret = __dbc_close(dbc)) != 0 && ret == 0)
+		ret = t_ret;
+
+	return ret;
 }
 
 /*
@@ -218,14 +321,14 @@ __qam_vrfy_data(dbp, vdp, h, pgno, flags)
 	for (i = 0; i < vdp->rec_page; i++) {
 		qp = QAM_GET_RECORD(&fakedb, h, i);
 		if ((u_int8_t *)qp >= (u_int8_t *)h + dbp->pgsize) {
-			EPRINT((dbp->dbenv,
+			EPRINT((dbp->env,
 		    "Page %lu: queue record %lu extends past end of page",
 			    (u_long)pgno, (u_long)i));
 			return (DB_VERIFY_BAD);
 		}
 
 		if (qp->flags & ~(QAM_VALID | QAM_SET)) {
-			EPRINT((dbp->dbenv,
+			EPRINT((dbp->env,
 			    "Page %lu: queue record %lu has bad flags (%#lx)",
 			    (u_long)pgno, (u_long)i, (u_long)qp->flags));
 			return (DB_VERIFY_BAD);
@@ -257,14 +360,14 @@ __qam_vrfy_structure(dbp, vdp, flags)
 		return (ret);
 
 	if (pip->type != P_QAMMETA) {
-		EPRINT((dbp->dbenv,
+		EPRINT((dbp->env,
 		    "Page %lu: queue database has no meta page",
 		    (u_long)PGNO_BASE_MD));
 		isbad = 1;
 		goto err;
 	}
 
-	if ((ret = __db_vrfy_pgset_inc(vdp->pgset, 0)) != 0)
+	if ((ret = __db_vrfy_pgset_inc(vdp->pgset, vdp->thread_info, 0)) != 0)
 		goto err;
 
 	for (i = 1; i <= vdp->last_pgno; i++) {
@@ -272,21 +375,22 @@ __qam_vrfy_structure(dbp, vdp, flags)
 		if (!LF_ISSET(DB_SALVAGE))
 			__db_vrfy_struct_feedback(dbp, vdp);
 
-		if ((ret = __db_vrfy_putpageinfo(dbp->dbenv, vdp, pip)) != 0 ||
+		if ((ret = __db_vrfy_putpageinfo(dbp->env, vdp, pip)) != 0 ||
 		    (ret = __db_vrfy_getpageinfo(vdp, i, &pip)) != 0)
 			return (ret);
 		if (!F_ISSET(pip, VRFY_IS_ALLZEROES) &&
 		    pip->type != P_QAMDATA) {
-			EPRINT((dbp->dbenv,
+			EPRINT((dbp->env,
 		    "Page %lu: queue database page of incorrect type %lu",
 			    (u_long)i, (u_long)pip->type));
 			isbad = 1;
 			goto err;
-		} else if ((ret = __db_vrfy_pgset_inc(vdp->pgset, i)) != 0)
+		} else if ((ret = __db_vrfy_pgset_inc(vdp->pgset,
+		    vdp->thread_info, i)) != 0)
 			goto err;
 	}
 
-err:	if ((ret = __db_vrfy_putpageinfo(dbp->dbenv, vdp, pip)) != 0)
+err:	if ((ret = __db_vrfy_putpageinfo(dbp->env, vdp, pip)) != 0)
 		return (ret);
 	return (isbad == 1 ? DB_VERIFY_BAD : 0);
 }
@@ -307,7 +411,8 @@ __qam_vrfy_walkqueue(dbp, vdp, handle, callback, flags)
 	int (*callback) __P((void *, const void *));
 	u_int32_t flags;
 {
-	DB_ENV *dbenv;
+	DBC *dbc;
+	ENV *env;
 	PAGE *h;
 	QUEUE *qp;
 	VRFY_PAGEINFO *pip;
@@ -316,11 +421,12 @@ __qam_vrfy_walkqueue(dbp, vdp, handle, callback, flags)
 
 	COMPQUIET(h, NULL);
 
-	dbenv = dbp->dbenv;
+	env = dbp->env;
 	qp = dbp->q_internal;
 	pip = NULL;
 	pg_ext = qp->page_ext;
 	isbad = ret = t_ret = 0;
+	h = NULL;
 
 	/* If this database has no extents, we've seen all the pages already. */
 	if (pg_ext == 0)
@@ -337,6 +443,8 @@ __qam_vrfy_walkqueue(dbp, vdp, handle, callback, flags)
 	nextents = vdp->nextents;
 
 	/* Verify/salvage each page. */
+	if ((ret = __db_cursor(dbp, vdp->thread_info, NULL, &dbc, 0)) != 0)
+		return (ret);
 begin:	for (; i <= stop; i++) {
 		/*
 		 * If DB_SALVAGE is set, we inspect our database of completed
@@ -344,7 +452,7 @@ begin:	for (; i <= stop; i++) {
 		 */
 		if (LF_ISSET(DB_SALVAGE) && (__db_salvage_isdone(vdp, i) != 0))
 			continue;
-		if ((t_ret = __qam_fget(dbp, &i, 0, &h)) != 0) {
+		if ((t_ret = __qam_fget(dbc, &i, 0, &h)) != 0) {
 			if (t_ret == ENOENT || t_ret == DB_PAGE_NOTFOUND) {
 				i += (pg_ext - ((i - 1) % pg_ext)) - 1;
 				continue;
@@ -358,8 +466,10 @@ begin:	for (; i <= stop; i++) {
 				if (ret == 0)
 					ret = t_ret;
 				continue;
-			} else
-				return (t_ret);
+			}
+			h = NULL;
+			ret = t_ret;
+			goto err;
 		}
 
 		if (LF_ISSET(DB_SALVAGE)) {
@@ -368,7 +478,7 @@ begin:	for (; i <= stop; i++) {
 			 * bomb hits.  May as well return that something
 			 * was screwy, however.
 			 */
-			if ((t_ret = __db_salvage(dbp,
+			if ((t_ret = __db_salvage_pg(dbp,
 			    vdp, i, h, handle, callback, flags)) != 0) {
 				if (ret == 0)
 					ret = t_ret;
@@ -392,17 +502,18 @@ begin:	for (; i <= stop; i++) {
 			__db_vrfy_struct_feedback(dbp, vdp);
 
 			if ((ret = __db_vrfy_getpageinfo(vdp, i, &pip)) != 0)
-				return (ret);
+				goto err;
 			if (F_ISSET(pip, VRFY_IS_ALLZEROES))
 				goto put;
 			if (pip->type != P_QAMDATA) {
-				EPRINT((dbenv,
+				EPRINT((env,
 		    "Page %lu: queue database page of incorrect type %lu",
 				    (u_long)i, (u_long)pip->type));
 				isbad = 1;
 				goto err;
 			}
-			if ((ret = __db_vrfy_pgset_inc(vdp->pgset, i)) != 0)
+			if ((ret = __db_vrfy_pgset_inc(vdp->pgset,
+			    vdp->thread_info, i)) != 0)
 				goto err;
 			if ((ret = __qam_vrfy_data(dbp, vdp,
 			    (QPAGE *)h, i, flags)) == DB_VERIFY_BAD)
@@ -410,19 +521,20 @@ begin:	for (; i <= stop; i++) {
 			else if (ret != 0)
 				goto err;
 
-put:			if ((ret = __db_vrfy_putpageinfo(dbenv, vdp, pip)) != 0)
-				goto err;
+put:			if ((ret = __db_vrfy_putpageinfo(env, vdp, pip)) != 0)
+				goto err1;
 			pip = NULL;
 		}
 
 		/* Again, keep going iff we're salvaging. */
-		if ((t_ret = __qam_fput(dbp, i, h, 0)) != 0) {
+		if ((t_ret = __qam_fput(dbc, i, h, dbp->priority)) != 0) {
 			if (LF_ISSET(DB_SALVAGE)) {
 				if (ret == 0)
 					ret = t_ret;
 				continue;
-			} else
-				return (t_ret);
+			}
+			ret = t_ret;
+			goto err1;
 		}
 	}
 
@@ -446,12 +558,15 @@ put:			if ((ret = __db_vrfy_putpageinfo(dbenv, vdp, pip)) != 0)
 	}
 
 	if (0) {
-err:		if ((t_ret = __qam_fput(dbp, i, h, 0)) != 0)
-			return (ret == 0 ? t_ret : ret);
-		if (pip != NULL &&
-		     (t_ret = __db_vrfy_putpageinfo(dbenv, vdp, pip)) != 0)
-			return (ret == 0 ? t_ret : ret);
+err:		if (h != NULL && (t_ret =
+		    __qam_fput(dbc, i, h, dbp->priority)) != 0 && ret == 0)
+			ret = t_ret;
+		if (pip != NULL && (t_ret =
+		    __db_vrfy_putpageinfo(env, vdp, pip)) != 0 && ret == 0)
+			ret = t_ret;
 	}
+err1:	if (dbc != NULL && (t_ret = __dbc_close(dbc)) != 0 && ret == 0)
+		ret = t_ret;
 	return ((isbad == 1 && ret == 0) ? DB_VERIFY_BAD : ret);
 }
 

@@ -1,19 +1,12 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1997-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1997-2009 Oracle.  All rights reserved.
  *
- * $Id: os_rename.c,v 11.17 2004/07/06 13:55:48 bostic Exp $
+ * $Id$
  */
 
 #include "db_config.h"
-
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-
-#include <string.h>
-#endif
 
 #include "db_int.h"
 
@@ -21,25 +14,39 @@
  * __os_rename --
  *	Rename a file.
  *
- * PUBLIC: int __os_rename __P((DB_ENV *,
+ * PUBLIC: int __os_rename __P((ENV *,
  * PUBLIC:    const char *, const char *, u_int32_t));
  */
 int
-__os_rename(dbenv, old, new, silent)
-	DB_ENV *dbenv;
-	const char *old, *new;
+__os_rename(env, oldname, newname, silent)
+	ENV *env;
+	const char *oldname, *newname;
 	u_int32_t silent;
 {
+	DB_ENV *dbenv;
 	int ret;
 
-	RETRY_CHK((DB_GLOBAL(j_rename) != NULL ?
-	    DB_GLOBAL(j_rename)(old, new) : rename(old, new)), ret);
+	dbenv = env == NULL ? NULL : env->dbenv;
+	if (dbenv != NULL &&
+	    FLD_ISSET(dbenv->verbose, DB_VERB_FILEOPS | DB_VERB_FILEOPS_ALL))
+		__db_msg(env, "fileops: rename %s to %s", oldname, newname);
+
+	LAST_PANIC_CHECK_BEFORE_IO(env);
+
+	if (DB_GLOBAL(j_rename) != NULL)
+		ret = DB_GLOBAL(j_rename)(oldname, newname);
+	else
+		RETRY_CHK((rename(oldname, newname)), ret);
 
 	/*
 	 * If "silent" is not set, then errors are OK and we should not output
 	 * an error message.
 	 */
-	if (!silent && ret != 0)
-		__db_err(dbenv, "rename %s %s: %s", old, new, strerror(ret));
+	if (ret != 0) {
+		if (!silent)
+			__db_syserr(
+			    env, ret, "rename %s %s", oldname, newname);
+		ret = __os_posix_err(ret);
+	}
 	return (ret);
 }

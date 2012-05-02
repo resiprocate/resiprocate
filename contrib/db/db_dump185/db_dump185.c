@@ -1,15 +1,14 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1996-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
  *
- * $Id: db_dump185.c,v 11.19 2004/01/28 03:36:00 bostic Exp $
+ * $Id$
  */
 
 #ifndef lint
-static char copyright[] =
-    "Copyright (c) 1996-2004\nSleepycat Software Inc.  All rights reserved.\n";
+static const char copyright[] =
+    "Copyright (c) 1996-2009 Oracle.  All rights reserved.\n";
 #endif
 
 #include <sys/types.h>
@@ -21,7 +20,11 @@ static char copyright[] =
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef HAVE_DB_185_H
+#include <db_185.h>
+#else
 #include <db.h>
+#endif
 
 /* Hash Table Information */
 typedef struct hashhdr185 {		/* Disk resident portion */

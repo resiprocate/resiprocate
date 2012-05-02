@@ -1,18 +1,17 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1996-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
  *
- * $Id: shqueue.h,v 11.15 2004/03/24 20:37:37 bostic Exp $
+ * $Id$
  */
 
-#ifndef	_SYS_SHQUEUE_H_
-#define	_SYS_SHQUEUE_H_
+#ifndef	_DB_SHQUEUE_H_
+#define	_DB_SHQUEUE_H_
 
 /*
- * This file defines two types of data structures: lists and tail queues
- * similarly to the include file <sys/queue.h>.
+ * This file defines three types of data structures: chains, lists and
+ * tail queues similarly to the include file <sys/queue.h>.
  *
  * The difference is that this set of macros can be used for structures that
  * reside in shared memory that may be mapped at different addresses in each
@@ -35,6 +34,70 @@
 extern "C" {
 #endif
 
+#define	SH_PTR_TO_OFF(src, dest)					\
+	((ssize_t)(((u_int8_t *)(dest)) - ((u_int8_t *)(src))))
+
+/*
+ * Shared memory chain definitions.
+ */
+#define	SH_CHAIN_ENTRY							\
+struct {								\
+	ssize_t sce_next;	/* relative offset to next element */	\
+	ssize_t sce_prev;	/* relative offset of prev element */	\
+}
+
+#define	SH_CHAIN_INIT(elm, field)					\
+	(elm)->field.sce_next = (elm)->field.sce_prev =	-1
+
+#define	SH_CHAIN_HASNEXT(elm, field)	((elm)->field.sce_next != -1)
+#define	SH_CHAIN_NEXTP(elm, field, type)				\
+    ((struct type *)((u_int8_t *)(elm) + (elm)->field.sce_next))
+#define	SH_CHAIN_NEXT(elm, field, type)	(SH_CHAIN_HASNEXT(elm, field) ?	\
+    SH_CHAIN_NEXTP(elm, field, type) : (struct type *)NULL)
+
+#define	SH_CHAIN_HASPREV(elm, field)	((elm)->field.sce_prev != -1)
+#define	SH_CHAIN_PREVP(elm, field, type)				\
+    ((struct type *)((u_int8_t *)(elm) + (elm)->field.sce_prev))
+#define	SH_CHAIN_PREV(elm, field, type)	(SH_CHAIN_HASPREV(elm, field) ?	\
+     SH_CHAIN_PREVP(elm, field, type) : (struct type *)NULL)
+
+#define	SH_CHAIN_SINGLETON(elm, field)					\
+    (!(SH_CHAIN_HASNEXT(elm, field) || SH_CHAIN_HASPREV(elm, field)))
+
+#define	SH_CHAIN_INSERT_AFTER(listelm, elm, field, type) do {		\
+	struct type *__next = SH_CHAIN_NEXT(listelm, field, type);	\
+	if (__next != NULL) {						\
+		(elm)->field.sce_next =	SH_PTR_TO_OFF(elm, __next);	\
+		__next->field.sce_prev = SH_PTR_TO_OFF(__next, elm);	\
+	} else								\
+		(elm)->field.sce_next = -1;				\
+	(elm)->field.sce_prev = SH_PTR_TO_OFF(elm, listelm);		\
+	(listelm)->field.sce_next = SH_PTR_TO_OFF(listelm, elm);	\
+} while (0)
+
+#define	SH_CHAIN_INSERT_BEFORE(listelm, elm, field, type) do {		\
+	struct type *__prev = SH_CHAIN_PREV(listelm, field, type);	\
+	if (__prev != NULL) {						\
+		(elm)->field.sce_prev = SH_PTR_TO_OFF(elm, __prev);	\
+		__prev->field.sce_next = SH_PTR_TO_OFF(__prev, elm);	\
+	} else								\
+		(elm)->field.sce_prev = -1;				\
+	(elm)->field.sce_next = SH_PTR_TO_OFF(elm, listelm);		\
+	(listelm)->field.sce_prev = SH_PTR_TO_OFF(listelm, elm);	\
+} while (0)
+
+#define	SH_CHAIN_REMOVE(elm, field, type) do {				\
+	struct type *__prev = SH_CHAIN_PREV(elm, field, type);		\
+	struct type *__next = SH_CHAIN_NEXT(elm, field, type);		\
+	if (__next != NULL)						\
+		__next->field.sce_prev = (__prev == NULL) ? -1 :	\
+		    SH_PTR_TO_OFF(__next, __prev);			\
+	if (__prev != NULL)						\
+		__prev->field.sce_next = (__next == NULL) ? -1 :	\
+		    SH_PTR_TO_OFF(__prev, __next);			\
+	SH_CHAIN_INIT(elm, field);					\
+} while (0)
+
 /*
  * Shared memory list definitions.
  */
@@ -55,7 +118,6 @@ struct {								\
 /*
  * Shared memory list functions.
  */
-
 #define	SH_LIST_EMPTY(head)						\
 	((head)->slh_first == -1)
 
@@ -82,15 +144,12 @@ struct {								\
 	((ssize_t *)(((u_int8_t *)(elm)) + (elm)->field.sle_prev))
 
 #define	SH_LIST_PREV(elm, field, type)					\
-	(struct type *)((ssize_t)elm - (*__SH_LIST_PREV_OFF(elm, field)))
+	(struct type *)((ssize_t)(elm) - (*__SH_LIST_PREV_OFF(elm, field)))
 
 #define	SH_LIST_FOREACH(var, head, field, type)				\
 	for ((var) = SH_LIST_FIRST((head), type);			\
-	    (var);							\
+	    (var) != NULL;						\
 	    (var) = SH_LIST_NEXT((var), field, type))
-
-#define	SH_PTR_TO_OFF(src, dest)					\
-	((ssize_t)(((u_int8_t *)(dest)) - ((u_int8_t *)(src))))
 
 /*
  * Given correct A.next: B.prev = SH_LIST_NEXT_TO_PREV(A)
@@ -227,12 +286,14 @@ struct {								\
 #define	__SH_TAILQ_LAST_OFF(head)					\
 	((ssize_t *)(((u_int8_t *)(head)) + (head)->stqh_last))
 
-#define	SH_TAILQ_LAST(head, field, type)				\
-	(SH_TAILQ_EMPTY(head) ? NULL :				\
-	(struct type *)((ssize_t)(head) +				\
+#define	SH_TAILQ_LASTP(head, field, type)				\
+	((struct type *)((ssize_t)(head) +				\
 	 ((ssize_t)((head)->stqh_last) -				\
 	 ((ssize_t)SH_PTR_TO_OFF(SH_TAILQ_FIRST(head, type),		\
-		&(SH_TAILQ_FIRST(head, type)->field.stqe_next))))))
+		&(SH_TAILQ_FIRSTP(head, type)->field.stqe_next))))))
+
+#define	SH_TAILQ_LAST(head, field, type)				\
+	(SH_TAILQ_EMPTY(head) ? NULL : SH_TAILQ_LASTP(head, field, type))
 
 /*
  * Given correct A.next: B.prev = SH_TAILQ_NEXT_TO_PREV(A)
@@ -250,12 +311,12 @@ struct {								\
 
 #define	SH_TAILQ_FOREACH(var, head, field, type)			\
 	for ((var) = SH_TAILQ_FIRST((head), type);			\
-	    (var);							\
+	    (var) != NULL;						\
 	    (var) = SH_TAILQ_NEXT((var), field, type))
 
 #define	SH_TAILQ_FOREACH_REVERSE(var, head, field, type)		\
 	for ((var) = SH_TAILQ_LAST((head), field, type);		\
-	    (var);							\
+	    (var) != NULL;						\
 	    (var) = SH_TAILQ_PREV((head), (var), field, type))
 
 #define	SH_TAILQ_INIT(head) {						\
@@ -319,7 +380,7 @@ struct {								\
 	} else {							\
 		(elm)->field.stqe_next = -1;				\
 		(head)->stqh_last =					\
-		    SH_PTR_TO_OFF(head, &elm->field.stqe_next);		\
+		    SH_PTR_TO_OFF(head, &(elm)->field.stqe_next);	\
 	}								\
 	(listelm)->field.stqe_next = SH_PTR_TO_OFF(listelm, elm);	\
 	(elm)->field.stqe_prev = SH_TAILQ_NEXT_TO_PREV(listelm, field);	\
@@ -331,7 +392,7 @@ struct {								\
 		    (elm)->field.stqe_prev +				\
 		    SH_PTR_TO_OFF(SH_TAILQ_NEXTP(elm,			\
 		    field, type), elm);					\
-		*__SH_TAILQ_PREV_OFF(elm, field) += elm->field.stqe_next;\
+		*__SH_TAILQ_PREV_OFF(elm, field) += (elm)->field.stqe_next;\
 	} else {							\
 		(head)->stqh_last = (elm)->field.stqe_prev +		\
 			SH_PTR_TO_OFF(head, elm);			\
@@ -342,4 +403,4 @@ struct {								\
 #if defined(__cplusplus)
 }
 #endif
-#endif	/* !_SYS_SHQUEUE_H_ */
+#endif	/* !_DB_SHQUEUE_H_ */

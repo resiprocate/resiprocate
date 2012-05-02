@@ -3,25 +3,28 @@
  *	Recovery function for FUNC.
  *
  * PUBLIC: int PREF_FUNC_recover
- * PUBLIC:   __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+ * PUBLIC:   __P((env *, DBT *, DB_LSN *, db_recops, void *));
  */
 int
-PREF_FUNC_recover(dbenv, dbtp, lsnp, op, info)
-	DB_ENV *dbenv;
+PREF_FUNC_recover(env, dbtp, lsnp, op, info)
+	env *env;
 	DBT *dbtp;
 	DB_LSN *lsnp;
 	db_recops op;
 	void *info;
 {
-	PREF_FUNC_args *argp;
+	PREF_DUP_args *argp;
 	DB *file_dbp;
 	DBC *dbc;
 	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
 	PAGE *pagep;
 	int cmp_n, cmp_p, modified, ret;
 
-	REC_PRINT(PREF_FUNC_print);
-	REC_INTRO(PREF_FUNC_read, 1);
+	ip = ((DB_TXNHEAD *)info)->thread_info;
+
+	REC_PRINT(PREF_DUP_print);
+	REC_INTRO(PREF_DUP_read, ip, 0);
 
 	if ((ret = mpf->get(mpf, &argp->pgno, 0, &pagep)) != 0)
 		if (DB_REDO(op)) {

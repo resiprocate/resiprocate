@@ -1,11 +1,5 @@
 #include "db_config.h"
 
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-
-#include <string.h>
-#endif
-
 #include "db_int.h"
 #include "dbinc/db_page.h"
 #include "dbinc/__dbreg.h"
@@ -16,11 +10,11 @@
  *	Recovery function for register.
  *
  * PUBLIC: int __dbreg_register_recover
- * PUBLIC:   __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+ * PUBLIC:   __P((env *, DBT *, DB_LSN *, db_recops, void *));
  */
 int
-__dbreg_register_recover(dbenv, dbtp, lsnp, op, info)
-	DB_ENV *dbenv;
+__dbreg_register_recover(env, dbtp, lsnp, op, info)
+	env *env;
 	DBT *dbtp;
 	DB_LSN *lsnp;
 	db_recops op;
@@ -30,11 +24,14 @@ __dbreg_register_recover(dbenv, dbtp, lsnp, op, info)
 	DB *file_dbp;
 	DBC *dbc;
 	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
 	PAGE *pagep;
 	int cmp_n, cmp_p, modified, ret;
 
+	ip = ((DB_TXNHEAD *)info)->thread_info;
+
 	REC_PRINT(__dbreg_register_print);
-	REC_INTRO(__dbreg_register_read, 1);
+	REC_INTRO(__dbreg_register_read, ip, 0);
 
 	if ((ret = mpf->get(mpf, &argp->pgno, 0, &pagep)) != 0)
 		if (DB_REDO(op)) {

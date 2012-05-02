@@ -1,14 +1,17 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1996-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
  *
- * $Id: hmac.h,v 1.5 2004/01/28 03:36:02 bostic Exp $
+ * $Id$
  */
 
 #ifndef	_DB_HMAC_H_
 #define	_DB_HMAC_H_
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
 /*
  * Algorithm specific information.
@@ -27,6 +30,10 @@ typedef struct {
  */
 #define	DB_MAC_MAGIC	"mac derivation key magic value"
 #define	DB_ENC_MAGIC	"encryption and decryption key value magic"
+
+#if defined(__cplusplus)
+}
+#endif
 
 #include "dbinc_auto/hmac_ext.h"
 #endif /* !_DB_HMAC_H_ */

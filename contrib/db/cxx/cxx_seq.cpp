@@ -1,21 +1,17 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1997-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1997-2009 Oracle.  All rights reserved.
  *
- * $Id: cxx_seq.cpp,v 11.3 2004/09/23 20:05:08 mjc Exp $
+ * $Id$
  */
 
 #include "db_config.h"
 
-#include <errno.h>
-#include <string.h>
+#include "db_int.h"
 
 #include "db_cxx.h"
 #include "dbinc/cxx_int.h"
-
-#include "db_int.h"
 
 // Helper macro for simple methods that pass through to the
 // underlying C method. It may return an error or raise an exception.
@@ -90,20 +86,20 @@ DBSEQ_METHOD(get_range, (db_seq_t *minp, db_seq_t *maxp), (seq, minp, maxp), 0)
 DBSEQ_METHOD(set_range, (db_seq_t min, db_seq_t max), (seq, min, max), 0)
 
 Db *DbSequence::get_db()
-{       
+{
 	DB_SEQUENCE *seq = unwrap(this);
 	DB *db;
 	(void)seq->get_db(seq, &db);
 	return Db::get_Db(db);
-}   
+}
 
 Dbt *DbSequence::get_key()
-{       
+{
 	DB_SEQUENCE *seq = unwrap(this);
-	memset(&key_, 0, sizeof (DBT));
+	memset(&key_, 0, sizeof(DBT));
 	(void)seq->get_key(seq, &key_);
 	return Dbt::get_Dbt(&key_);
-}   
+}
 
 // static method
 DbSequence *DbSequence::wrap_DB_SEQUENCE(DB_SEQUENCE *seq)
