@@ -294,6 +294,7 @@
     <ClCompile Include="AbstractDb.cxx" />
     <ClCompile Include="AclStore.cxx" />
     <ClCompile Include="monkeys\AmIResponsible.cxx" />
+    <ClCompile Include="monkeys\CertificateAuthenticator.cxx" />
     <ClCompile Include="ProxyConfig.cxx" />
     <ClCompile Include="stateAgents\CertPublicationHandler.cxx">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -366,6 +367,7 @@
     <ClInclude Include="Ack200DoneMessage.hxx" />
     <ClInclude Include="AclStore.hxx" />
     <ClInclude Include="monkeys\AmIResponsible.hxx" />
+    <ClInclude Include="monkeys\CertificateAuthenticator.hxx" />
     <ClInclude Include="ProxyConfig.hxx" />
     <ClInclude Include="stateAgents\CertPublicationHandler.hxx" />
     <ClInclude Include="stateAgents\CertServer.hxx" />

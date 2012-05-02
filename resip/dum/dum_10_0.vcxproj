@@ -371,6 +371,7 @@
     <ClCompile Include="SubscriptionHandler.cxx" />
     <ClCompile Include="SubscriptionState.cxx" />
     <ClCompile Include="TargetCommand.cxx" />
+    <ClCompile Include="TlsPeerAuthManager.cxx" />
     <ClCompile Include="UserAuthInfo.cxx" />
     <ClCompile Include="UserProfile.cxx" />
   </ItemGroup>
@@ -468,6 +469,7 @@
     <ClInclude Include="SubscriptionPersistenceManager.hxx" />
     <ClInclude Include="SubscriptionState.hxx" />
     <ClInclude Include="TargetCommand.hxx" />
+    <ClInclude Include="TlsPeerAuthManager.hxx" />
     <ClInclude Include="UsageUseException.hxx" />
     <ClInclude Include="UserAuthInfo.hxx" />
     <ClInclude Include="UserProfile.hxx" />

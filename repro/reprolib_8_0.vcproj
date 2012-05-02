@@ -305,6 +305,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\monkeys\CertificateAuthenticator.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\stateAgents\CertPublicationHandler.cxx"
 				>
 				<FileConfiguration
@@ -568,6 +572,10 @@
 			</File>
 			<File
 				RelativePath=".\monkeys\AmIResponsible.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\monkeys\CertificateAuthenticator.hxx"
 				>
 			</File>
 			<File

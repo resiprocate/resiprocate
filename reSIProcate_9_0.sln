@@ -50,7 +50,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "resip_test", "resip\stack\t
 		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106} = {3D0E5CEB-93DC-4FDB-918B-D08FA369E106}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ares", "contrib\ares\ares_9_0.vcproj", "{96CD935E-1951-43B8-AF75-F1C06B3778C1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ares", "rutil\dns\ares\ares_9_0.vcproj", "{96CD935E-1951-43B8-AF75-F1C06B3778C1}"
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "ReproSetup", "repro\WinSetup\Setup_9_0.vdproj", "{02954DA6-5079-4717-BC3D-B3ACA815CFED}"
 EndProject

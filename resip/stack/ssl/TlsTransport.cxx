@@ -30,7 +30,7 @@ TlsTransport::TlsTransport(Fifo<TransactionMessage>& fifo,
                            AfterSocketCreationFuncPtr socketFunc,
                            Compression &compression,
                            unsigned transportFlags,
-                           ClientVerificationMode cvm,
+                           SecurityTypes::TlsClientVerificationMode cvm,
                            bool useEmailAsSIP):
    TcpBaseTransport(fifo, portNum, version, interfaceObj, socketFunc, compression, transportFlags),
    mSecurity(&security),

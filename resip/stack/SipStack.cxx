@@ -299,7 +299,7 @@ SipStack::addTransport( TransportType protocol,
                         const Data& privateKeyPassPhrase,
                         SecurityTypes::SSLType sslType,
                         unsigned transportFlags,
-                        TlsTransport::ClientVerificationMode cvm,
+                        SecurityTypes::TlsClientVerificationMode cvm,
                         bool useEmailAsSIP)
 {
    assert(!mShuttingDown);
