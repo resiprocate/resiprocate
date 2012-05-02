@@ -4,6 +4,7 @@
 #include <iosfwd>
 #include <vector>
 #include "rutil/resipfaststreams.hxx"
+#include "rutil/Data.hxx"
 
 namespace repro
 {
@@ -20,8 +21,8 @@ class Processor
          TARGET_CHAIN
       } ChainType;
 
-      Processor(ChainType type=NO_TYPE);
-      virtual ~Processor()=0;
+      Processor(const resip::Data& name, ChainType type=NO_TYPE);
+      virtual ~Processor();
 
       typedef enum
       {
@@ -33,11 +34,12 @@ class Processor
       processor_action_t;
 
       virtual processor_action_t process(RequestContext &)=0;
-      virtual void dump(EncodeStream &os) const = 0;
       
       virtual void setChainType(ChainType type);
       virtual ChainType getChainType() const;
 
+      virtual void setName(const resip::Data& name);
+      virtual const resip::Data& getName() const;
 
       virtual void pushAddress(const std::vector<short>& address);
       virtual void pushAddress(const short address);
@@ -46,7 +48,8 @@ class Processor
       
    protected:
       std::vector<short> mAddress;
-      Processor::ChainType mType;
+      ChainType mType;
+      resip::Data mName;
 };
 
 EncodeStream &operator<<(EncodeStream &os, const repro::Processor &rp);

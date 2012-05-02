@@ -46,7 +46,7 @@ RequestContext::RequestContext(Proxy& proxy,
    mProxy(proxy),
    mResponseContext(*this),
    mTCSerial(0),
-   mFromTrustedNode(false)
+   mKeyValueStore(*Proxy::getRequestKeyValueStoreKeyAllocator())
 {
    mInitialTimerCSet=false;
 }
@@ -101,8 +101,8 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
       assert(sip);
       mOriginalRequest=sip;
       original = true;
-      mResponseContext.mIsSenderBehindNAT = InteropHelper::getClientNATDetectionMode() != InteropHelper::ClientNATDetectionDisabled && 
-                                            Helper::isSenderBehindNAT(*sip, 
+      mResponseContext.mIsClientBehindNAT = InteropHelper::getClientNATDetectionMode() != InteropHelper::ClientNATDetectionDisabled && 
+                                            Helper::isClientBehindNAT(*sip, 
                                                   InteropHelper::getClientNATDetectionMode() == InteropHelper::ClientNATDetectionPrivateToPublicOnly);
      
       // RFC 3261 Section 16.4
@@ -777,7 +777,7 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
 void
 RequestContext::handleSelfAimedStrayAck(SipMessage* sip)
 {
-    InfoLog(<<"Stray ACK aimed at us that routes back to us. Dropping it...");  
+   InfoLog(<<"Stray ACK aimed at us that routes back to us. Dropping it...");  
 }
 
 void
@@ -895,7 +895,7 @@ RequestContext::postAck200Done()
 void
 RequestContext::send(SipMessage& msg)
 {
-    mProxy.send(msg);
+   mProxy.send(msg);
 }
 
 void
@@ -903,7 +903,6 @@ RequestContext::sendResponse(SipMessage& msg)
 {
    assert (msg.isResponse());
    
-
    // We can't respond to an ACK request - so just drop it and generate an Ack200DoneMessage so the request context
    // gets cleaned up properly
    if(mOriginalRequest->method() == ACK)
@@ -967,22 +966,19 @@ RequestContext::sendResponse(SipMessage& msg)
    }
 }
 
-//      This function assumes that if ;lr shows up in the
-//      RURI, that it's a URI we put in a Record-Route header
-//      earlier. It will do the wrong thing if some other 
-//      malbehaving implementation lobs something at us with
-//      ;lr in the RURI and it wasn't us.
-//		(from Section 16.4 of RFC 3261)
+// This function assumes that if ;lr shows up in the RURI, that it's a URI 
+// we put in a Record-Route header earlier. It will do the wrong thing if 
+// some other malbehaving implementation lobs something at us with
+// ;lr in the RURI and it wasn't us. (from Section 16.4 of RFC 3261)
 void
 RequestContext::fixStrictRouterDamage()
 {
-   if (mOriginalRequest->header(h_RequestLine).uri().exists(p_lr))
+   if(mOriginalRequest->header(h_RequestLine).uri().exists(p_lr))
    {
-      if (    mOriginalRequest->exists(h_Routes)
-              && !mOriginalRequest->header(h_Routes).empty())
+      if (mOriginalRequest->exists(h_Routes)
+          && !mOriginalRequest->header(h_Routes).empty())
       {
-         mOriginalRequest->header(h_RequestLine).uri()=
-            mOriginalRequest->header(h_Routes).back().uri();
+         mOriginalRequest->header(h_RequestLine).uri() = mOriginalRequest->header(h_Routes).back().uri();
          mOriginalRequest->header(h_Routes).pop_back();
       }
       else
@@ -997,10 +993,9 @@ RequestContext::fixStrictRouterDamage()
 void
 RequestContext::removeTopRouteIfSelf()
 {
-   if (    mOriginalRequest->exists(h_Routes)
-           && !mOriginalRequest->header(h_Routes).empty()
-           &&  mProxy.isMyUri(mOriginalRequest->header(h_Routes).front().uri())
-      )
+   if(mOriginalRequest->exists(h_Routes)
+      && !mOriginalRequest->header(h_Routes).empty()
+      &&  mProxy.isMyUri(mOriginalRequest->header(h_Routes).front().uri()))
    {
       // save the top-most Route header field so monkeys can check it later
       mTopRoute = mOriginalRequest->header(h_Routes).front();
@@ -1045,27 +1040,13 @@ RequestContext::getTopRoute()
    return mTopRoute;
 }
 
-void 
-RequestContext::setFromTrustedNode()
-{
-   mFromTrustedNode = true;
-}
-
-bool 
-RequestContext::fromTrustedNode() const
-{
-   return mFromTrustedNode;
-}
-
 EncodeStream&
 repro::operator<<(EncodeStream& strm, const RequestContext& rc)
 {
-   strm << "RequestContext: "
-        << " identity=" << rc.mDigestIdentity
-        << " count=" << rc.mTransactionCount
+   strm << "numtrans=" << rc.mTransactionCount
         << " final=" << rc.mHaveSentFinalResponse;
-
-   if (rc.mOriginalRequest) strm << " orig requri=" << rc.mOriginalRequest->brief();
+   if(!rc.mDigestIdentity.empty()) strm << " identity=" << rc.mDigestIdentity;
+   if (rc.mOriginalRequest) strm << " req=" << rc.mOriginalRequest->brief();
    //if (rc.mCurrentEvent) strm << " current=" << rc.mCurrentEvent->brief();
    return strm;
 }

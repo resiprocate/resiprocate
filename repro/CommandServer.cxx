@@ -16,6 +16,7 @@
 
 #include "repro/XmlRpcServerBase.hxx"
 #include "repro/XmlRpcConnection.hxx"
+#include "repro/ReproRunner.hxx"
 #include "repro/CommandServer.hxx"
 
 using namespace repro;
@@ -25,13 +26,13 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
 
-CommandServer::CommandServer(Proxy& proxy,
+CommandServer::CommandServer(ReproRunner& reproRunner,
                              int port, 
                              IpVersion version) :
    XmlRpcServerBase(port, version),
-   mProxy(proxy)
+   mReproRunner(reproRunner)
 {
-   mProxy.getStack().setExternalStatsHandler(this);
+   reproRunner.getProxy()->getStack().setExternalStatsHandler(this);
 }
 
 CommandServer::~CommandServer()
@@ -66,6 +67,12 @@ CommandServer::handleRequest(unsigned int connectionId, unsigned int requestId, 
    {
       ParseBuffer pb(request);
       XMLCursor xml(pb);
+
+      if(!mReproRunner.getProxy())
+      {
+         sendResponse(connectionId, requestId, Data::Empty, 400, "Proxy not running.");
+         return;
+      }
 
       if(isEqualNoCase(xml.getTag(), "GetStackInfo"))
       {
@@ -107,6 +114,10 @@ CommandServer::handleRequest(unsigned int connectionId, unsigned int requestId, 
       {
          handleGetProxyConfigRequest(connectionId, requestId, xml);
       }
+      else if(isEqualNoCase(xml.getTag(), "Restart"))
+      {
+         handleRestartRequest(connectionId, requestId, xml);
+      }
       else 
       {
          WarningLog(<< "CommandServer::handleRequest: Received XML message with unknown method: " << xml.getTag());
@@ -127,7 +138,7 @@ CommandServer::handleGetStackInfoRequest(unsigned int connectionId, unsigned int
 
    Data buffer;
    DataStream strm(buffer);
-   mProxy.getStack().dump(strm);
+   mReproRunner.getProxy()->getStack().dump(strm);
    strm.flush();
 
    sendResponse(connectionId, requestId, buffer, 200, "Stack info retrieved.");
@@ -141,7 +152,7 @@ CommandServer::handleGetStackStatsRequest(unsigned int connectionId, unsigned in
    Lock lock(mStatisticsWaitersMutex);
    mStatisticsWaiters.push_back(std::make_pair(connectionId, requestId));
 
-   if(!mProxy.getStack().pollStatistics())
+   if(!mReproRunner.getProxy()->getStack().pollStatistics())
    {
       sendResponse(connectionId, requestId, Data::Empty, 400, "Statistics Manager is not enabled.");
    }
@@ -173,7 +184,7 @@ CommandServer::handleResetStackStatsRequest(unsigned int connectionId, unsigned 
 {
    InfoLog(<< "CommandServer::handleResetStackStatsRequest");
 
-   mProxy.getStack().zeroOutStatistics();
+   mReproRunner.getProxy()->getStack().zeroOutStatistics();
    sendResponse(connectionId, requestId, Data::Empty, 200, "Stack stats reset.");
 }
 
@@ -182,7 +193,7 @@ CommandServer::handleLogDnsCacheRequest(unsigned int connectionId, unsigned int 
 {
    InfoLog(<< "CommandServer::handleLogDnsCacheRequest");
 
-   mProxy.getStack().logDnsCache();
+   mReproRunner.getProxy()->getStack().logDnsCache();
    sendResponse(connectionId, requestId, Data::Empty, 200, "DNS cache logged.");
 }
 
@@ -191,7 +202,7 @@ CommandServer::handleClearDnsCacheRequest(unsigned int connectionId, unsigned in
 {
    InfoLog(<< "CommandServer::handleQueryDnsCacheRequest");
 
-   mProxy.getStack().clearDnsCache();
+   mReproRunner.getProxy()->getStack().clearDnsCache();
    sendResponse(connectionId, requestId, Data::Empty, 200, "DNS cache cleared.");
 }
 
@@ -200,7 +211,7 @@ CommandServer::handleGetDnsCacheRequest(unsigned int connectionId, unsigned int 
 {
    InfoLog(<< "CommandServer::handleGetDnsCacheRequest");
 
-   mProxy.getStack().getDnsCacheDump(make_pair(connectionId, requestId), this);
+   mReproRunner.getProxy()->getStack().getDnsCacheDump(make_pair(connectionId, requestId), this);
    // Note: Response will be sent when callback is invoked
 }
 
@@ -222,7 +233,7 @@ CommandServer::handleGetCongestionStatsRequest(unsigned int connectionId, unsign
 {
    InfoLog(<< "CommandServer::handleGetCongestionStatsRequest");
 
-   CongestionManager* congestionManager = mProxy.getStack().getCongestionManager();
+   CongestionManager* congestionManager = mReproRunner.getProxy()->getStack().getCongestionManager();
    if(congestionManager != 0)
    {
       Data buffer;
@@ -247,7 +258,7 @@ CommandServer::handleSetCongestionToleranceRequest(unsigned int connectionId, un
    GeneralCongestionManager::MetricType metric;
    unsigned long maxTolerance=0;
 
-   GeneralCongestionManager* congestionManager = dynamic_cast<GeneralCongestionManager*>(mProxy.getStack().getCongestionManager());
+   GeneralCongestionManager* congestionManager = dynamic_cast<GeneralCongestionManager*>(mReproRunner.getProxy()->getStack().getCongestionManager());
    if(congestionManager != 0)
    {
       // Check for Parameters
@@ -350,9 +361,26 @@ CommandServer::handleGetProxyConfigRequest(unsigned int connectionId, unsigned i
 
    Data buffer;
    DataStream strm(buffer);
-   strm << mProxy.getConfig();
+   strm << mReproRunner.getProxy()->getConfig();
 
    sendResponse(connectionId, requestId, buffer, 200, "Proxy config retrieved.");
+}
+
+void 
+CommandServer::handleRestartRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml)
+{
+   InfoLog(<< "CommandServer::handleRestartRequest");
+
+   mReproRunner.restart();
+   if(mReproRunner.getProxy())
+   {
+      mReproRunner.getProxy()->getStack().setExternalStatsHandler(this);
+      sendResponse(connectionId, requestId, Data::Empty, 200, "Restart completed.");
+   }
+   else
+   {
+      sendResponse(connectionId, requestId, Data::Empty, 200, "Restart failed.");
+   }
 }
 
 /* ====================================================================

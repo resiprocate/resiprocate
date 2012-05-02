@@ -36,7 +36,7 @@ class AclStore
       AclStore(AbstractDb& db);
       ~AclStore();
       
-      void addAcl(const resip::Data& tlsPeerName,
+      bool addAcl(const resip::Data& tlsPeerName,
                   const resip::Data& address,
                   const short& mask,
                   const short& port,

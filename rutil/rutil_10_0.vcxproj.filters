@@ -90,6 +90,9 @@
     <ClCompile Include="HeapInstanceCounter.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="KeyValueStore.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="Lock.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -297,6 +300,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="HeapInstanceCounter.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyValueStore.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Inserter.hxx">

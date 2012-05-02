@@ -29,35 +29,47 @@ main (int argc, char** argv)
    struct sockaddr_in localAddr, servAddr;
    struct hostent *h;
 
-   if(argc < 4) 
+   if(argc != 2 && argc != 4) 
    {
-      cerr << "usage: " << argv[0] <<" <server> <port> <command> [<parm>=<value>]" << endl;
+      cerr << "usage: " << argv[0] <<" [<server> <port>] <command> [<parm>=<value>]" << endl;
       cerr << "  Valid Commands are:" << endl;
       cerr << "  GetStackInfo - retrieves low level information about the stack state" << endl;
       cerr << "  GetStackStats - retrieves a dump of the stack statistics" << endl;
-      cerr << "  ResetStackStats - resets all cummulative stack statistics to zero" << endl;
+      cerr << "  ResetStackStats - resets all cumulative stack statistics to zero" << endl;
       cerr << "  LogDnsCache - causes the DNS cache contents to be written to the resip logs" << endl;
-      cerr << "  ClearDnsCache - emptys the stacks DNS cache" << endl;
+      cerr << "  ClearDnsCache - empties the stacks DNS cache" << endl;
       cerr << "  GetDnsCache - retrieves the DNS cache contents" << endl;
       cerr << "  GetCongestionStats - retrieves the stacks congestion manager stats and state" << endl;
       cerr << "  SetCongestionTolerance metric=<SIZE|WAIT_TIME|TIME_DEPTH> maxTolerance=<value>" << endl;
       cerr << "                         [fifoDescription=<desc>] - sets congestion tolerances" << endl;
-      cerr << "  Shutdown - signal the proxy to shutdown." << endl;
+      cerr << "  Shutdown - signal the proxy to shut down." << endl;
+      cerr << "  Restart - signal the proxy to restart - leaving active registrations in place." << endl;
       cerr << "  GetProxyConfig - retrieves the all of configuration being used by the proxy" << endl;
       exit(1);
    }
 
-   h = gethostbyname(argv[1]);
+   char* host = "127.0.0.1";
+   short port = 5081;
+   int cmdIndex=1;
+
+   if(argc == 4)
+   {
+      host = argv[1];
+      port = (short)atoi(argv[2]);
+      cmdIndex = 3;
+   }
+
+   h = gethostbyname(host);
    if(h==0) 
    {
-      cerr << "unknown host " << argv[1] << endl;
+      cerr << "unknown host " << host << endl;
       exit(1);
    }
 
    servAddr.sin_family = h->h_addrtype;
    memcpy((char *) &servAddr.sin_addr.s_addr, h->h_addr_list[0], h->h_length);
-   servAddr.sin_port = htons(atoi(argv[2]));
-
+   servAddr.sin_port = htons(port);
+  
    // Create TCP Socket
    sd = (int)socket(AF_INET, SOCK_STREAM, 0);
    if(sd < 0) 
@@ -88,9 +100,9 @@ main (int argc, char** argv)
 
    Data request(1024, Data::Preallocate);
    request += "<";
-   request += argv[3];
+   request += argv[cmdIndex];
    request += ">\r\n  <Request>\r\n";
-   for(int i = 4; i < argc; i++)
+   for(int i = cmdIndex+1; i < argc; i++)
    {
       Data parm;
       Data value;
@@ -116,7 +128,7 @@ main (int argc, char** argv)
    }
    request += "  </Request>\r\n";
    request += "</";
-   request += argv[3];
+   request += argv[cmdIndex];
    request += ">\r\n";
 
    //cout << "Sending:\r\n" << request << endl;

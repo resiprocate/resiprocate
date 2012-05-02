@@ -270,7 +270,6 @@ ServerRegistration::processRegistration(const SipMessage& msg)
    ParserContainer<NameAddr> contactList(msg.header(h_Contacts));
    ParserContainer<NameAddr>::iterator i(contactList.begin());
    ParserContainer<NameAddr>::iterator iEnd(contactList.end());
-
    UInt64 now=Timer::getTimeSecs();
    UInt32 expires=0;
 
@@ -290,7 +289,7 @@ ServerRegistration::processRegistration(const SipMessage& msg)
       }
 
       expires = globalExpires;
-      handler->getContactExpires(*i,mDum.getMasterProfile(),expires,returnCode);       
+      handler->getContactExpires(*i, mDum.getMasterProfile(), expires, returnCode);
 
       // Check for "Contact: *" style deregistration
       if (i->isAllContacts())
@@ -338,6 +337,8 @@ ServerRegistration::processRegistration(const SipMessage& msg)
       }
 
       rec.mLastUpdated=now;
+      rec.mReceivedFrom=msg.getSource();
+      rec.mPublicAddress=Helper::getClientPublicAddress(msg);
 
       bool hasFlow = tryFlow(rec,msg);
       
@@ -351,6 +352,9 @@ ServerRegistration::processRegistration(const SipMessage& msg)
          delete(this);
          return;
       }
+
+      // Add ContactInstanceRecord to List
+      mRequestContacts.push_back(rec);
 
       // Check to see if this is a removal.
       if (expires == 0)
@@ -373,7 +377,7 @@ ServerRegistration::processRegistration(const SipMessage& msg)
       {
          RegistrationPersistenceManager::update_status_t status;
          InfoLog(<< "Adding " << mAor << " -> " << *i);
-         DebugLog(<< "Contact has tuple " << rec.mReceivedFrom);
+         DebugLog(<< "Contact has tuple " << rec.mReceivedFrom << " and detected public address " << rec.mPublicAddress);
 
          if (!async)
          {
@@ -445,7 +449,7 @@ ServerRegistration::dump(EncodeStream& strm) const
 
 bool 
 ServerRegistration::tryFlow(ContactInstanceRecord& rec,
-                              const resip::SipMessage& msg)
+                            const resip::SipMessage& msg)
 {
    // .bwc. ie. Can we assure that the connection the client is using on the
    // first hop can be re-used later?
@@ -472,7 +476,7 @@ ServerRegistration::tryFlow(ContactInstanceRecord& rec,
                // We are directly connected to the client.
                // .bwc. In the outbound case, we should fail if the connection 
                // is gone. No recovery should be attempted by the server.
-               rec.mReceivedFrom=msg.getSource();
+               rec.mUseFlowRouting = true;
                rec.mReceivedFrom.onlyUseExistingConnection=true;
                mDidOutbound=true;
                return true;
@@ -481,15 +485,15 @@ ServerRegistration::tryFlow(ContactInstanceRecord& rec,
       }
 
       // Record-Route flow token hack, or client NAT detect hack; use with caution
-      if(msg.header(h_Vias).size() == 1)
+      if(msg.header(h_Vias).size() == 1)  // client is directly connected to this server
       {
          if(InteropHelper::getRRTokenHackEnabled() || 
             flowTokenNeededForTls(rec) || 
             flowTokenNeededForSigcomp(rec) ||
             (InteropHelper::getClientNATDetectionMode() != InteropHelper::ClientNATDetectionDisabled &&
-             Helper::isSenderBehindNAT(msg, InteropHelper::getClientNATDetectionMode() == InteropHelper::ClientNATDetectionPrivateToPublicOnly)))
+             Helper::isClientBehindNAT(msg, InteropHelper::getClientNATDetectionMode() == InteropHelper::ClientNATDetectionPrivateToPublicOnly)))
          {
-               rec.mReceivedFrom=msg.getSource();
+               rec.mUseFlowRouting = true;
                rec.mReceivedFrom.onlyUseExistingConnection=false;
                return true;
          }

@@ -6,6 +6,7 @@
 #include "rutil/Data.hxx"
 #include "resip/stack/Via.hxx"
 #include "resip/dum/ContactInstanceRecord.hxx"
+#include "rutil/KeyValueStore.hxx"
 
 namespace repro
 {
@@ -50,7 +51,10 @@ class Target
       virtual int getPriority() const;
       virtual bool shouldAutoProcess() const;
       
-      static bool targetPtrCompare(const Target* lhs, const Target* rhs)
+      // Accessor for per-target extensible state storage for monkeys
+      resip::KeyValueStore& getKeyValueStore() { return mKeyValueStore; }
+
+      static bool priorityMetricCompare(const Target* lhs, const Target* rhs)
       {
          return lhs->mPriorityMetric > rhs->mPriorityMetric;
       }
@@ -65,8 +69,11 @@ class Target
       Status mStatus;
       resip::Via mVia;
       resip::ContactInstanceRecord mRec;
-      
+      resip::KeyValueStore mKeyValueStore;
 };// class Target
+
+EncodeStream& 
+operator<<(EncodeStream& strm, const repro::Target& t);
 
 }// namespace repro
 

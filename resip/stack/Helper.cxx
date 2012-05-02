@@ -1637,14 +1637,14 @@ Helper::massageRoute(const SipMessage& request, NameAddr& rt)
    // .bwc. Let's not record-route with a tel uri or something, shall we?
    // If the topmost route header is malformed, we can get along without.
    if (!request.empty(h_Routes) && 
-         request.header(h_Routes).front().isWellFormed() &&
-         (request.header(h_Routes).front().uri().scheme() == "sip" ||
-         request.header(h_Routes).front().uri().scheme() == "sips" ) )
+       request.header(h_Routes).front().isWellFormed() &&
+       (request.header(h_Routes).front().uri().scheme() == "sip" ||
+        request.header(h_Routes).front().uri().scheme() == "sips" ))
    {
       rt.uri().scheme() = request.header(h_Routes).front().uri().scheme();
    }
    else if(request.header(h_RequestLine).uri().scheme() == "sip" ||
-            request.header(h_RequestLine).uri().scheme() == "sips")
+           request.header(h_RequestLine).uri().scheme() == "sips")
    {
       rt.uri().scheme() = request.header(h_RequestLine).uri().scheme();
    }
@@ -2177,13 +2177,15 @@ auto_ptr<SdpContents> Helper::getSdp(Contents* tree)
 }
 
 bool 
-Helper::isSenderBehindNAT(const SipMessage& request, bool privateToPublicOnly)
+Helper::isClientBehindNAT(const SipMessage& request, bool privateToPublicOnly)
 {
    assert(request.isRequest());
    assert(!request.header(h_Vias).empty());
 
    // If received parameter is on top Via, then the source of the message doesn't match
    // the address provided in the via.  Assume this is because the sender is behind a NAT.
+   // The assumption here is that this SipStack instance is the first hop in a public SIP server
+   // architecture, and that clients are directly connected to this instance.
    if(request.header(h_Vias).front().exists(p_received))
    {
       if(privateToPublicOnly)
@@ -2201,6 +2203,45 @@ Helper::isSenderBehindNAT(const SipMessage& request, bool privateToPublicOnly)
       return true;
    }
    return false;
+}
+
+
+Tuple
+Helper::getClientPublicAddress(const SipMessage& request)
+{
+   assert(request.isRequest());
+   assert(!request.header(h_Vias).empty());
+
+   // Iterate through Via's starting at the bottom (closest to the client).  Return the first
+   // public address found from received parameter if present, or Via host.
+   Vias::const_iterator it = request.header(h_Vias).end();
+   while(true)
+   {
+      it--;
+      if(it->exists(p_received))
+      {
+         // Check IP from received parameter
+         Tuple address(it->param(p_received), 0, UNKNOWN_TRANSPORT);
+         if(!address.isPrivateAddress())
+         {
+            address.setPort(it->exists(p_rport) ? it->param(p_rport).port() : it->sentPort());
+            address.setType(Tuple::toTransport(it->transport()));
+            return address;
+         }
+      }
+
+      // Check IP from Via sentHost
+      Tuple address(it->sentHost(), 0, UNKNOWN_TRANSPORT);
+      if(!address.isPrivateAddress())
+      {
+         address.setPort(it->exists(p_rport) ? it->param(p_rport).port() : it->sentPort());
+         address.setType(Tuple::toTransport(it->transport()));
+         return address;
+      }
+
+      if(it == request.header(h_Vias).begin()) break;
+   }
+   return Tuple();
 }
 
 

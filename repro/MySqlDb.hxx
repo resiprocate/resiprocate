@@ -32,25 +32,36 @@ class MySqlDb: public AbstractDb
       
       virtual bool isSane() {return mConnected;}
 
-      virtual void addUser( const Key& key, const UserRecord& rec );
+      virtual bool addUser( const Key& key, const UserRecord& rec );
       virtual void eraseUser( const Key& key );
       virtual UserRecord getUser( const Key& key ) const;
       virtual resip::Data getUserAuthInfo(  const Key& key ) const;
       virtual Key firstUserKey();// return empty if no more
       virtual Key nextUserKey(); // return empty if no more 
 
+      virtual int singleResultQuery(const resip::Data& queryCommand, resip::Data& resultData) const;
+
    private:
       // Db manipulation routines
-      virtual void dbWriteRecord( const Table table, 
-                                  const resip::Data& key, 
-                                  const resip::Data& data );
-      virtual bool dbReadRecord( const Table table, 
+      virtual bool dbWriteRecord(const Table table, 
                                  const resip::Data& key, 
-                                 resip::Data& data ) const; // return false if not found
-      virtual void dbEraseRecord( const Table table, 
-                                  const resip::Data& key );
-      virtual resip::Data dbNextKey( const Table table, 
-                                     bool first=true); // return empty if no more
+                                 const resip::Data& data);
+      virtual bool dbReadRecord(const Table table, 
+                                const resip::Data& key, 
+                                resip::Data& data) const; // return false if not found
+      virtual void dbEraseRecord(const Table table, 
+                                 const resip::Data& key,
+                                 bool isSecondaryKey=false);  // allows deleting records from a table that supports secondary keying using a secondary key
+      virtual resip::Data dbNextKey(const Table table, 
+                                    bool first=true); // return empty if no more
+      virtual bool dbNextRecord(const Table table,
+                                const resip::Data& key,
+                                resip::Data& data,
+                                bool forUpdate, // specifying to add SELECT ... FOR UPDATE so the rows are locked
+                                bool first=false);  // return false if no more
+      virtual bool dbBeginTransaction(const Table table);
+      virtual bool dbCommitTransaction(const Table table);
+      virtual bool dbRollbackTransaction(const Table table);
 
       void disconnectFromDatabase() const;
       int connectToDatabase() const;
@@ -64,7 +75,7 @@ class MySqlDb: public AbstractDb
       resip::Data mCustomUserAuthQuery;
 
       mutable MYSQL* mConn;
-      mutable MYSQL_RES* mResult[4];
+      mutable MYSQL_RES* mResult[MaxTable];
       mutable bool mConnected;
 
       const char* tableName( Table table ) const;

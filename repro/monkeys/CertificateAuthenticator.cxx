@@ -11,6 +11,7 @@
 #include "rutil/Logger.hxx"
 
 #include "repro/monkeys/CertificateAuthenticator.hxx"
+#include "repro/monkeys/IsTrustedNode.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/Proxy.hxx"
 #include "repro/UserInfoMessage.hxx"
@@ -27,7 +28,8 @@ using namespace repro;
 using namespace std;
 
 CertificateAuthenticator::CertificateAuthenticator(ProxyConfig& config,
-                                         resip::SipStack* stack)
+                                                   resip::SipStack* stack) :
+   Processor("CertificateAuthenticator")
 {
 }
 
@@ -77,7 +79,7 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
       
       if (proxy.isMyDomain(sipMessage->header(h_From).uri().host()))
       {
-         if (!rc.fromTrustedNode())
+         if (!rc.getKeyValueStore().getBoolValue(IsTrustedNode::mFromTrustedNodeKey))
          {
             if(authorizedForThisIdentity(sipMessage->getTlsPeerNames(), sipMessage->header(h_From).uri()))
                return Continue;

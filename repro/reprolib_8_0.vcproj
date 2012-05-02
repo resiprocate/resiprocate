@@ -393,11 +393,23 @@
 				>
 			</File>
 			<File
+				RelativePath=".\FilterStore.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\monkeys\GeoProximityTargetSorter.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\monkeys\IsTrustedNode.cxx"
 				>
 			</File>
 			<File
 				RelativePath=".\monkeys\LocationServer.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\monkeys\MessageSilo.cxx"
 				>
 			</File>
 			<File
@@ -501,6 +513,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\monkeys\RequestFilter.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ResponseContext.cxx"
 				>
 			</File>
@@ -513,11 +529,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SiloStore.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\monkeys\SimpleStaticRoute.cxx"
 				>
 			</File>
 			<File
 				RelativePath=".\monkeys\SimpleTargetHandler.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\StaticRegStore.cxx"
 				>
 			</File>
 			<File
@@ -579,6 +603,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\AsyncProcessor.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\AsyncProcessorMessage.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\AsyncProcessorWorker.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\stateAgents\CertPublicationHandler.hxx"
 				>
 			</File>
@@ -619,11 +655,27 @@
 				>
 			</File>
 			<File
+				RelativePath=".\FilterStore.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ForkControlMessage.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\monkeys\GeoProximityTargetSorter.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\monkeys\IsTrustedNode.hxx"
 				>
 			</File>
 			<File
 				RelativePath=".\monkeys\LocationServer.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\monkeys\MessageSilo.hxx"
 				>
 			</File>
 			<File
@@ -695,6 +747,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\monkeys\RequestFilter.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ResponseContext.hxx"
 				>
 			</File>
@@ -707,11 +763,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SiloStore.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\monkeys\SimpleStaticRoute.hxx"
 				>
 			</File>
 			<File
 				RelativePath=".\monkeys\SimpleTargetHandler.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\StaticRegStore.hxx"
 				>
 			</File>
 			<File

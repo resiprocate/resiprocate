@@ -9,28 +9,49 @@
 namespace repro
 {
 
+class RegistrarHandler
+{
+   public:
+      virtual ~RegistrarHandler() {}
+
+      /// Note: These very closely mimic the ServerRegistrationHandler callbacks
+
+      /// For all of the below callbacks - return true if no response was generated and processing
+      /// should continue.  If all handlers return true, then the Registrar will accept the request.
+
+      /// Called when registration is refreshed
+      virtual bool onRefresh(resip::ServerRegistrationHandle, const resip::SipMessage& reg)=0;
+      
+      /// called when one or more specified contacts is removed
+      virtual bool onRemove(resip::ServerRegistrationHandle, const resip::SipMessage& reg)=0;
+      
+      /// Called when all the contacts are removed using "Contact: *"
+      virtual bool onRemoveAll(resip::ServerRegistrationHandle, const resip::SipMessage& reg)=0;
+      
+      /** Called when one or more contacts are added. This is after 
+          authentication has all succeeded */
+      virtual bool onAdd(resip::ServerRegistrationHandle, const resip::SipMessage& reg)=0;
+
+      /// Called when a client queries for the list of current registrations
+      virtual bool onQuery(resip::ServerRegistrationHandle, const resip::SipMessage& reg)=0;
+};
+
 class Registrar: public resip::ServerRegistrationHandler
 {
    public:
       Registrar();
       virtual ~Registrar();
       
-      virtual void onRefresh(resip::ServerRegistrationHandle,
-                             const resip::SipMessage& reg);
+      virtual void addRegistrarHandler(RegistrarHandler* handler);
 
-      virtual void onRemove(resip::ServerRegistrationHandle,
-                            const resip::SipMessage& reg);
-      
-      virtual void onRemoveAll(resip::ServerRegistrationHandle,
-                               const resip::SipMessage& reg);
-      
-      virtual void onAdd(resip::ServerRegistrationHandle,
-                         const resip::SipMessage& reg);
-      
-      virtual void onQuery(resip::ServerRegistrationHandle,
-                           const resip::SipMessage& reg);
+      virtual void onRefresh(resip::ServerRegistrationHandle, const resip::SipMessage& reg);
+      virtual void onRemove(resip::ServerRegistrationHandle, const resip::SipMessage& reg);
+      virtual void onRemoveAll(resip::ServerRegistrationHandle, const resip::SipMessage& reg);
+      virtual void onAdd(resip::ServerRegistrationHandle, const resip::SipMessage& reg);
+      virtual void onQuery(resip::ServerRegistrationHandle, const resip::SipMessage& reg);
 
    private:
+      std::list<RegistrarHandler*> mRegistrarHandlers;
 };
 }
 #endif

@@ -1,6 +1,7 @@
 #if !defined(RESIP_ISTRUSTEDNODE_REQUEST_PROCESSOR_HXX)
 #define RESIP_ISTRUSTEDNODE_REQUEST_PROCESSOR_HXX 
 #include "repro/Processor.hxx"
+#include "rutil/KeyValueStore.hxx"
 
 #include <iosfwd>
 
@@ -12,11 +13,12 @@ namespace repro
   class IsTrustedNode: public Processor
   {
     public:
-      IsTrustedNode(ProxyConfig& config);
+      static resip::KeyValueStore::Key mFromTrustedNodeKey;
+
+       IsTrustedNode(ProxyConfig& config);
       virtual ~IsTrustedNode();
 
       virtual processor_action_t process(RequestContext &);
-      virtual void dump(EncodeStream &os) const;
 
   private:
        AclStore& mAclStore;

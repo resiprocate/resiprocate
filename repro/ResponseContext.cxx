@@ -29,7 +29,7 @@ ResponseContext::ResponseContext(RequestContext& context) :
    mRequestContext(context),
    mBestPriority(50),
    mSecure(false), //context.getOriginalRequest().header(h_RequestLine).uri().scheme() == Symbols::Sips)
-   mIsSenderBehindNAT(false)
+   mIsClientBehindNAT(false)
 {
 }
 
@@ -58,17 +58,17 @@ ResponseContext::~ResponseContext()
 }
 
 resip::Data
-ResponseContext::addTarget(const NameAddr& addr, bool beginImmediately, bool addToFirstBatch)
+ResponseContext::addTarget(const NameAddr& addr, bool beginImmediately)
 {
    InfoLog (<< "Adding candidate " << addr);
    std::auto_ptr<Target> target(new Target(addr));
    Data tid=target->tid();
-   addTarget(target, beginImmediately, addToFirstBatch);
+   addTarget(target, beginImmediately);
    return tid;
 }
 
 bool
-ResponseContext::addTarget(std::auto_ptr<repro::Target> target, bool beginImmediately, bool addToFirstBatch)
+ResponseContext::addTarget(std::auto_ptr<repro::Target> target, bool beginImmediately)
 {
    if(mRequestContext.mHaveSentFinalResponse || !target.get())
    {
@@ -103,18 +103,11 @@ ResponseContext::addTarget(std::auto_ptr<repro::Target> target, bool beginImmedi
    }
    else
    {
-      if(target->mShouldAutoProcess)
+      if(target->mShouldAutoProcess)  // note: for base repro - this is always true
       {
-         if(addToFirstBatch && !mTransactionQueueCollection.empty())
-         {
-            mTransactionQueueCollection.front().push_back(target->tid());
-         }
-         else
-         {
-            std::list<resip::Data> queue;
-            queue.push_back(target->tid());
-            mTransactionQueueCollection.push_back(queue);
-         }
+         std::list<resip::Data> queue;
+         queue.push_back(target->tid());
+         mTransactionQueueCollection.push_back(queue);
       }
 
       Target* toAdd=target.release();
@@ -126,8 +119,7 @@ ResponseContext::addTarget(std::auto_ptr<repro::Target> target, bool beginImmedi
 
 bool
 ResponseContext::addTargetBatch(std::list<Target*>& targets,
-                                 bool highPriority,
-                                 bool addToFirstBatch)
+                                bool highPriority)
 {
    std::list<resip::Data> queue;
    Target* target=0;
@@ -144,7 +136,6 @@ ResponseContext::addTargetBatch(std::list<Target*>& targets,
       return false;
    }
 
-   
    for(it=targets.begin();it!=targets.end();it++)
    {
       target=*it;
@@ -168,51 +159,13 @@ ResponseContext::addTargetBatch(std::list<Target*>& targets,
 
    targets.clear();
    
-   if(addToFirstBatch)
+   if(highPriority)  // note: for base repro - this is always false
    {
-      if(!mTransactionQueueCollection.empty())
-      {
-         //mTransactionQueueCollection.front().merge(queue); !slg! list merge requires that both lists first be sorted - implementing manual merge
-         std::list<resip::Data>::iterator it = queue.begin();
-         for(; it != queue.end(); it++)
-         {
-            mTransactionQueueCollection.front().push_back(*it);
-         }
-      }
-      else
-      {
-         mTransactionQueueCollection.push_back(queue);
-      }
+      mTransactionQueueCollection.push_front(queue);
    }
    else
    {
-      if(highPriority)
-      {
-         mTransactionQueueCollection.push_front(queue);
-      }
-      else
-      {
-         mTransactionQueueCollection.push_back(queue);
-      }
-   }
-   
-   return true;
-}
-
-bool
-ResponseContext::addOutboundBatch(std::map<resip::Data, std::list<Target*> > batch)
-{
-   std::map<resip::Data, std::list<Target*> >::iterator i;
-   for(i=batch.begin();i!=batch.end();++i)
-   {
-      std::list<resip::Data>& subList=mOutboundMap[i->first];
-      while(!i->second.empty())
-      {
-         Target* target = i->second.front();
-         mCandidateTransactionMap[target->tid()]=target;
-         i->second.pop_front();
-         subList.push_back(target->tid());
-      }
+      mTransactionQueueCollection.push_back(queue);
    }
    
    return true;
@@ -221,7 +174,6 @@ ResponseContext::addOutboundBatch(std::map<resip::Data, std::list<Target*> > bat
 bool 
 ResponseContext::beginClientTransactions()
 {
-   
    bool result=false;
    
    if(mCandidateTransactionMap.empty())
@@ -233,7 +185,7 @@ ResponseContext::beginClientTransactions()
    {
       if(!isDuplicate(i->second) && !mRequestContext.mHaveSentFinalResponse)
       {
-         mTargetList.push_back(i->second->rec());
+         mTargetList.push_back(i->second->rec());  // Add to Target list for future duplicate detection
          beginClientTransaction(i->second);
          result=true;
          // see rfc 3261 section 16.6
@@ -274,8 +226,8 @@ ResponseContext::beginClientTransaction(const resip::Data& tid)
       return false;
    }
    
-   mTargetList.push_back(i->second->rec());
-   
+   mTargetList.push_back(i->second->rec()); // Add to Target list for future duplicate detection
+
    beginClientTransaction(i->second);
    mActiveTransactionMap[i->second->tid()] = i->second;
    InfoLog(<< "Creating new client transaction " << i->second->tid() << " -> " << i->second->uri());
@@ -333,15 +285,7 @@ ResponseContext::cancelAllClientTransactions()
       }
    }
 
-   for (TransactionMap::iterator j = mCandidateTransactionMap.begin(); 
-        j != mCandidateTransactionMap.end();)
-   {
-      cancelClientTransaction(j->second);
-      mTerminatedTransactionMap[j->second->tid()] = j->second;
-      TransactionMap::iterator temp = j;
-      j++;
-      mCandidateTransactionMap.erase(temp);
-   }
+   clearCandidateTransactions();
    
    return true;
 
@@ -363,7 +307,6 @@ ResponseContext::clearCandidateTransactions()
    }
    
    return result;
-
 }
 
 bool 
@@ -548,8 +491,16 @@ ResponseContext::beginClientTransaction(repro::Target* target)
 
    SipMessage& orig=mRequestContext.getOriginalRequest();
    SipMessage request(orig);
-      
-   request.header(h_RequestLine).uri() = target->uri(); 
+
+   // If the target has a ;lr parameter, then perform loose routing
+   if(target->uri().exists(p_lr))
+   {
+      request.header(h_Routes).push_front(NameAddr(target->uri()));
+   }
+   else
+   {
+      request.header(h_RequestLine).uri() = target->uri();
+   }
 
    // .bwc. Proxy checks whether this is valid, and rejects if not.
    request.header(h_MaxForwards).value()--;
@@ -593,8 +544,9 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       
    if((resip::InteropHelper::getOutboundSupported() ||
        resip::InteropHelper::getRRTokenHackEnabled() ||
-       mIsSenderBehindNAT)
-       && target->rec().mReceivedFrom.mFlowKey)
+       mIsClientBehindNAT) &&
+      target->rec().mUseFlowRouting &&
+      target->rec().mReceivedFrom.mFlowKey)
    {
       // .bwc. We only override the destination if we are sending to an
       // outbound contact. If this is not an outbound contact, but the
@@ -612,10 +564,8 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       request.header(h_Routes).append(target->rec().mSipPath);
    }
 
-   // !jf! unleash the baboons here
    // a baboon might adorn the message, record call logs or CDRs, might
    // insert loose routes on the way to the next hop
-   
    Helper::processStrictRoute(request);
    
    //This is where the request acquires the tid of the Target. The tids 
@@ -733,7 +683,7 @@ ResponseContext::insertRecordRoute(SipMessage& outgoing,
                                                 !inboundFlowToken.empty(),
                                                 mRequestContext.mProxy.getRecordRouteForced(),
                                                 doPathInstead,
-                                                mIsSenderBehindNAT));
+                                                mIsClientBehindNAT));
       outgoing.addOutboundDecorator(rrDecorator);
    }
 }
@@ -786,7 +736,7 @@ ResponseContext::getInboundFlowToken(bool doPathInstead)
    if(flowToken.empty() && orig.header(h_Vias).size()==1)
    {
       if(resip::InteropHelper::getRRTokenHackEnabled() ||
-         mIsSenderBehindNAT ||
+         mIsClientBehindNAT ||
          needsFlowTokenToWork(contact))
       {
          // !bwc! TODO remove this when flow-token hack is no longer needed.
@@ -812,9 +762,10 @@ ResponseContext::outboundFlowTokenNeeded(Target* target)
       return false;
    }
 
-   if(target->rec().mReceivedFrom.mFlowKey
+   if((target->rec().mReceivedFrom.mFlowKey &&
+       target->rec().mUseFlowRouting)
       || resip::InteropHelper::getRRTokenHackEnabled()
-      || mIsSenderBehindNAT)
+      || mIsClientBehindNAT)
    {
       target->rec().mReceivedFrom.onlyUseExistingConnection=true;
       return true;
@@ -891,6 +842,42 @@ ResponseContext::sendRequest(resip::SipMessage& request)
 //         // !bwc! Need to fill in the Identity-Info header telling where our 
 //         // cert can be found.
 //      }
+   }
+
+   // TODO - P-Asserted-Identity Processing
+   // RFC3325 - section 5
+   // When a proxy forwards a message to another node, it must first
+   // determine if it trusts that node or not.  If it trusts the node, the
+   // proxy does not remove any P-Asserted-Identity header fields that it
+   // generated itself, or that it received from a trusted source.  If it
+   // does not trust the element, then the proxy MUST examine the Privacy
+   // header field (if present) to determine if the user requested that
+   // asserted identity information be kept private.
+
+   // Note:  Since we have no better mechanism to determine if destination is trusted or
+   //        not we will assume that all destinations outside our domain are not-trusted
+   //        and will remove the P-Asserted-Identity header, if Privacy is set to "id"
+   if(mRequestContext.getProxy().isPAssertedIdentityProcessingEnabled() &&
+      request.exists(h_Privacies) && 
+      request.header(h_Privacies).size() > 0 && 
+      request.exists(h_PAssertedIdentities) && 
+      !mRequestContext.getProxy().isMyUri(request.header(h_RequestLine).uri()))
+   {
+      // Look for "id" token
+      bool found = false;
+      PrivacyCategories::iterator it = request.header(h_Privacies).begin();
+      for(; it != request.header(h_Privacies).end() && !found; it++)
+      {
+         std::vector<Data>::iterator itToken = it->value().begin();
+         for(; itToken != it->value().end() && !found; itToken++)
+         {
+            if(*itToken == "id")
+            {
+               request.remove(h_PAssertedIdentities); 
+               found = true;
+            }
+         }
+      }
    }
 
    if (request.method() == ACK)
@@ -1018,7 +1005,7 @@ ResponseContext::processResponse(SipMessage& response)
       }
    }
    
-   InfoLog (<< "Search for " << mCurrentResponseTid << " in " << Inserter(mActiveTransactionMap));
+   DebugLog (<< "Search for " << mCurrentResponseTid << " in " << InserterP(mActiveTransactionMap));
 
    TransactionMap::iterator i = mActiveTransactionMap.find(mCurrentResponseTid);
 
@@ -1107,7 +1094,7 @@ ResponseContext::processResponse(SipMessage& response)
       case 4:
       case 5:
          DebugLog (<< "forwardedFinal=" << mRequestContext.mHaveSentFinalResponse 
-                   << " outstanding client transactions: " << Inserter(mActiveTransactionMap));
+                   << " outstanding client transactions: " << InserterP(mActiveTransactionMap));
          terminateClientTransaction(mCurrentResponseTid);
          if (!mRequestContext.mHaveSentFinalResponse)
          {
@@ -1227,7 +1214,6 @@ ResponseContext::cancelClientTransaction(repro::Target* target)
    {
       target->status() = Target::Terminated;
    }
-
 }
 
 void 
@@ -1239,7 +1225,7 @@ ResponseContext::terminateClientTransaction(const resip::Data& tid)
    TransactionMap::iterator i = mActiveTransactionMap.find(tid);
    if(i != mActiveTransactionMap.end())
    {
-      InfoLog (<< "client transactions: " << Inserter(mActiveTransactionMap));
+      InfoLog (<< "client transactions: " << InserterP(mActiveTransactionMap));
       i->second->status() = Target::Terminated;
       mTerminatedTransactionMap[tid] = i->second;
       mActiveTransactionMap.erase(i);
@@ -1249,7 +1235,7 @@ ResponseContext::terminateClientTransaction(const resip::Data& tid)
    TransactionMap::iterator j = mCandidateTransactionMap.find(tid);
    if(j != mCandidateTransactionMap.end())
    {
-      InfoLog (<< "client transactions: " << Inserter(mCandidateTransactionMap));
+      InfoLog (<< "client transactions: " << InserterP(mCandidateTransactionMap));
       j->second->status() = Target::Terminated;
       mTerminatedTransactionMap[tid] = j->second;
       mCandidateTransactionMap.erase(j);
@@ -1416,7 +1402,6 @@ ResponseContext::forwardBestResponse()
       cancelActiveClientTransactions();
    }
    
-   
    if(mBestResponse.header(h_StatusLine).statusCode() == 503)
    {
       //See RFC 3261 sec 16.7, page 110, paragraph 2
@@ -1437,15 +1422,6 @@ ResponseContext::forwardBestResponse()
    }
 }
 
-
-EncodeStream& 
-repro::operator<<(EncodeStream& strm, const repro::Target* t)
-{
-   strm << "Target: " << t->uri() << " " <<" status=" << t->status();
-   return strm;
-}
-
-
 EncodeStream&
 repro::operator<<(EncodeStream& strm, const ResponseContext& rc)
 {
@@ -1453,11 +1429,9 @@ repro::operator<<(EncodeStream& strm, const ResponseContext& rc)
         << " identity=" << rc.mRequestContext.getDigestIdentity()
         << " best=" << rc.mBestPriority << " " << rc.mBestResponse.brief()
         << " forwarded=" << rc.mRequestContext.mHaveSentFinalResponse
-        << " pending=" << Inserter(rc.mCandidateTransactionMap)
-        << " active=" << Inserter(rc.mActiveTransactionMap)
-        << " terminated=" << Inserter(rc.mTerminatedTransactionMap);
-      //<< " targets=" << Inserter(rc.mTargetSet)
-      //<< " clients=" << Inserter(rc.mClientTransactions);
+        << " pending=" << InserterP(rc.mCandidateTransactionMap)
+        << " active=" << InserterP(rc.mActiveTransactionMap)
+        << " terminated=" << InserterP(rc.mTerminatedTransactionMap);
 
    return strm;
 }

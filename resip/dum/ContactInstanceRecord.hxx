@@ -12,6 +12,8 @@
 
 namespace resip
 {
+static const UInt64 NeverExpire = 0xFFFFFFFFFFFFFFFFL;
+
 /** A single contact record, bound to an Aor during registration.
 */
 class ContactInstanceRecord 
@@ -26,11 +28,15 @@ class ContactInstanceRecord
       NameAddr mContact;    // can contain callee caps and q-values
       UInt64 mRegExpires;   // in seconds
       UInt64 mLastUpdated;  // in seconds
-      Tuple mReceivedFrom;  // source transport, IP address, and port 
+      Tuple mReceivedFrom;  // source transport, IP address, and port
+      Tuple mPublicAddress; // Public IP address closest to the client (from Via headers): note: Tuple::getType == UNKNOWN_TRANPORT if no public address was found
       NameAddrs mSipPath;   // Value of SIP Path header from the request
       Data mInstance;       // From the instance parameter; usually a UUID URI
       UInt32 mRegId;        // From regid parameter of Contact header
       bool mSyncContact;    // This contact came from registration sync process, instead of direct SIP registration
+      bool mUseFlowRouting; // Set to true when routing to this contact should use flow routing 
+                            // Note:  There is no need to regsync this field, since such records will also have 
+                            //        onlyUseExistingConnection set, and such contacts are not replicated.
       // Data mServerSessionId;// if there is no SIP Path header, the connection/session identifier 
       // Uri gruu;  (GRUU is currently derived)
       void      *mUserInfo;       //!< can be used to map user record information (database record id for faster updates?)

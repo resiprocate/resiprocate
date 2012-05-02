@@ -5,6 +5,7 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Helper.hxx"
 #include "repro/monkeys/StaticRoute.hxx"
+#include "repro/monkeys/IsTrustedNode.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/QValueTarget.hxx"
 
@@ -18,9 +19,11 @@ using namespace repro;
 using namespace std;
 
 StaticRoute::StaticRoute(ProxyConfig& config) :
+   Processor("StaticRoute"),
    mRouteStore(config.getDataStore()->mRouteStore),
    mNoChallenge(config.getConfigBool("DisableAuth", false)),
    mParallelForkStaticRoutes(config.getConfigBool("ParallelForkStaticRoutes", false)),
+   mContinueProcessingAfterRoutesFound(config.getConfigBool("ContinueProcessingAfterRoutesFound", false)),
    mUseAuthInt(!config.getConfigBool("DisableAuthInt", false))
 {}
 
@@ -47,18 +50,19 @@ StaticRoute::process(RequestContext& context)
                                                     method,
                                                     event));
    bool requireAuth = false;
-   if(!context.fromTrustedNode() && 
-      msg.method() != ACK && 
+   if(!context.getKeyValueStore().getBoolValue(IsTrustedNode::mFromTrustedNodeKey) && 
+      msg.method() != ACK &&  // Don't challenge ACK and BYE requests
       msg.method() != BYE)
    {
-      for ( RouteStore::UriList::const_iterator i = targets.begin();
-            i != targets.end(); i++ )
-      {      
+      requireAuth = !mNoChallenge;
+      //for ( RouteStore::UriList::const_iterator i = targets.begin();
+      //      i != targets.end(); i++ )
+      //{      
          // !rwm! TODO would be useful to check if these targets require authentication
          // but for know we will just fail safe and assume that all routes require auth
          // if the sender is not trusted
-         requireAuth |= !mNoChallenge;
-      }
+      //   requireAuth |= !mNoChallenge;
+      //}
    }
 
    if (requireAuth && context.getDigestIdentity().empty())
@@ -71,26 +75,32 @@ StaticRoute::process(RequestContext& context)
    }
    else
    {
-      for ( RouteStore::UriList::const_iterator i = targets.begin();
-            i != targets.end(); i++ )
+      std::list<Target*> parallelBatch;
+      for (RouteStore::UriList::const_iterator i = targets.begin();
+           i != targets.end(); i++ )
       {
-         if(i->exists(p_lr))
-         {
-            InfoLog(<< "Adding loose route target, route to " << *i << " with target " << msg.header(h_RequestLine).uri());
-            msg.header(h_Routes).push_front(NameAddr(*i));
-            context.getResponseContext().addTarget(NameAddr(msg.header(h_RequestLine).uri()));
-            return Processor::SkipThisChain;
-         }
          //Targets are only added after authentication
          InfoLog(<< "Adding target " << *i );
-         // .slg. adding StaticRoutes as QValueTargets allows them to be processed before the QValueTargets
-         //       added in the LocationServer monkey - since all QValueTargets are processed before simple Targets
-         ContactInstanceRecord targetAddr;
-         targetAddr.mContact.uri() = *i;
-         targetAddr.mContact.param(p_q).setValue(1000);
-         std::auto_ptr<Target> target(new QValueTarget(targetAddr));
-         context.getResponseContext().addTarget(target, false /* beginImmediately */, mParallelForkStaticRoutes /* addToFirstBatch */);
-         //context.addTarget(NameAddr(*i));
+
+         if(mParallelForkStaticRoutes)
+         {
+            Target* target = new Target(*i);
+            parallelBatch.push_back(target);
+         }
+         else
+         {
+            // Add Simple Target
+            context.getResponseContext().addTarget(NameAddr(*i));
+         }
+      }
+      if(parallelBatch.size() > 0)
+      {
+         context.getResponseContext().addTargetBatch(parallelBatch, false /* highPriority */);
+      }
+
+      if(!targets.empty() && !mContinueProcessingAfterRoutesFound)
+      {
+         return Processor::SkipThisChain;
       }
    }
    
@@ -108,12 +118,6 @@ StaticRoute::challengeRequest(repro::RequestContext &rc, resip::Data &realm)
    rc.sendResponse(*challenge);
 
    delete challenge;
-}
-
-void
-StaticRoute::dump(EncodeStream &os) const
-{
-   os << "Static Route Monkey" << std::endl;
 }
 
 

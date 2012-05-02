@@ -21,11 +21,26 @@ Registrar::~Registrar()
 }
 
 void 
+Registrar::addRegistrarHandler(RegistrarHandler* handler)
+{
+   mRegistrarHandlers.push_back(handler);
+}
+
+void 
 Registrar::onRefresh(resip::ServerRegistrationHandle sr,
                      const resip::SipMessage& reg)
 {
    DebugLog (<< "Registrar::onRefresh " << reg.brief());
-   sr->accept();
+   std::list<RegistrarHandler*>::iterator it = mRegistrarHandlers.begin();
+   bool continueProcessing = true;
+   for(; it != mRegistrarHandlers.end() && continueProcessing; it++)
+   {
+      continueProcessing = (*it)->onRefresh(sr, reg);
+   }
+   if(continueProcessing)
+   {
+      sr->accept();
+   }
 }
 
 void 
@@ -33,7 +48,16 @@ Registrar::onRemove(resip::ServerRegistrationHandle sr,
                     const resip::SipMessage& reg)
 {
    DebugLog (<< "Registrar::onRemove " << reg.brief());
-   sr->accept();
+   std::list<RegistrarHandler*>::iterator it = mRegistrarHandlers.begin();
+   bool continueProcessing = true;
+   for(; it != mRegistrarHandlers.end() && continueProcessing; it++)
+   {
+      continueProcessing = (*it)->onRemove(sr, reg);
+   }
+   if(continueProcessing)
+   {
+      sr->accept();
+   }
 }
       
 void 
@@ -41,7 +65,16 @@ Registrar::onRemoveAll(resip::ServerRegistrationHandle sr,
                        const resip::SipMessage& reg)
 {
    DebugLog (<< "Registrar::onRemoveAll " << reg.brief());
-   sr->accept();
+   std::list<RegistrarHandler*>::iterator it = mRegistrarHandlers.begin();
+   bool continueProcessing = true;
+   for(; it != mRegistrarHandlers.end() && continueProcessing; it++)
+   {
+      continueProcessing = (*it)->onRemoveAll(sr, reg);
+   }
+   if(continueProcessing)
+   {
+      sr->accept();
+   }
 }
       
 void 
@@ -49,14 +82,32 @@ Registrar::onAdd(resip::ServerRegistrationHandle sr,
                  const resip::SipMessage& reg)
 {
    DebugLog (<< "Registrar::onAdd " << reg.brief());
-   sr->accept();
+   std::list<RegistrarHandler*>::iterator it = mRegistrarHandlers.begin();
+   bool continueProcessing = true;
+   for(; it != mRegistrarHandlers.end() && continueProcessing; it++)
+   {
+      continueProcessing = (*it)->onAdd(sr, reg);
+   }
+   if(continueProcessing)
+   {
+      sr->accept();
+   }
 }
       
 void 
 Registrar::onQuery(resip::ServerRegistrationHandle sr,
                    const resip::SipMessage& reg)
 {
-  sr->accept();
+   std::list<RegistrarHandler*>::iterator it = mRegistrarHandlers.begin();
+   bool continueProcessing = true;
+   for(; it != mRegistrarHandlers.end() && continueProcessing; it++)
+   {
+      continueProcessing = (*it)->onQuery(sr, reg);
+   }
+   if(continueProcessing)
+   {
+      sr->accept();
+   }
 }
 
 /* ====================================================================

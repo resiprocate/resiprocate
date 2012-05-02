@@ -6,7 +6,8 @@
 namespace repro
 {
 
-SimpleTargetHandler::SimpleTargetHandler()
+SimpleTargetHandler::SimpleTargetHandler() :
+   Processor("SimpleTargetHandler")
 {
 }
 
@@ -18,28 +19,19 @@ Processor::processor_action_t
 SimpleTargetHandler::process(RequestContext &rc)
 {
    ResponseContext& rsp=rc.getResponseContext();
-   
-   std::list<std::list<resip::Data> >& tidBank=
-      rsp.mTransactionQueueCollection;
-      
-   std::list<std::list<resip::Data> >::iterator outer=tidBank.begin();
 
+   std::list<std::list<resip::Data> >& tidBank = rsp.mTransactionQueueCollection;
+   std::list<std::list<resip::Data> >::iterator outer=tidBank.begin();
    while(!rsp.hasActiveTransactions() && outer!=tidBank.end())
-   {
-   
-      for(;
-            outer!=tidBank.end() && !rsp.hasActiveTransactions();
-            outer++)
+   {   
+      for(; outer!=tidBank.end() && !rsp.hasActiveTransactions(); outer++)
       {
          std::list<resip::Data>::const_iterator i;
-
          for(i=outer->begin();i!=outer->end();i++)
          {
             rsp.beginClientTransaction(*i);
          }
-      
       }
-   
    }
    
    if(rsp.hasActiveTransactions())
@@ -54,16 +46,6 @@ SimpleTargetHandler::process(RequestContext &rc)
       return Processor::Continue;
    }
 }
-
-void 
-SimpleTargetHandler::dump(EncodeStream &os) const
-{
-  os << "SimpleTargetHandler baboon" << std::endl;
-}
-
-
-
-
 
 }
 

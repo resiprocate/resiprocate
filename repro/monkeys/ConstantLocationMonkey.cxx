@@ -14,7 +14,8 @@ using namespace repro;
 using namespace std;
 
 
-ConstantLocationMonkey::ConstantLocationMonkey()
+ConstantLocationMonkey::ConstantLocationMonkey() :
+   Processor("ConstantLocationMonkey")
 {}
 
 ConstantLocationMonkey::~ConstantLocationMonkey()
@@ -36,12 +37,6 @@ ConstantLocationMonkey::process(RequestContext& context)
   }
   
   return Processor::Continue;
-}
-
-void
-ConstantLocationMonkey::dump(EncodeStream &os) const
-{
-  os << "ConstantLocation Monkey" << std::endl;
 }
 
 

@@ -31,7 +31,7 @@ class UserStore
       resip::Data getUserAuthInfo( const resip::Data& user,
                                    const resip::Data& realm ) const;
       
-      void addUser( const resip::Data& user, 
+      bool addUser( const resip::Data& user, 
                     const resip::Data& domain, 
                     const resip::Data& realm, 
                     const resip::Data& password, 
@@ -41,7 +41,7 @@ class UserStore
       
       void eraseUser( const Key& key );
       
-      void updateUser( const Key& originalKey,
+      bool updateUser( const Key& originalKey,
                        const resip::Data& user, 
                        const resip::Data& domain, 
                        const resip::Data& realm, 

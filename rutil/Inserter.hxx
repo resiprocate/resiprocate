@@ -14,8 +14,47 @@
 #include "rutil/compat.hxx"
 #include "rutil/resipfaststreams.hxx"
 
+/* 
+Example of use Inserter
+
+int
+main(int argc, char** argv)
+{
+   std::vector<std::string> v;
+   
+   v.push_back("foo");
+   v.push_back("bar");
+   v.push_back("baz");
+
+   std::cerr << Inserter(v) << std::endl;
+   std::cerr << Inserter("nnn") << std::endl; // though you wouldn't bother
+}
+
+Example of use InserterP
+InserterP - allows processing of collections with pointers to items
+
+int
+main(int argc, char** argv)
+{
+   std::vector<std::string*> v;
+   
+   v.push_back(new std::string("foo"));
+   v.push_back(new std::string("bar"));
+   v.push_back(new std::string("baz"));
+
+   std::cerr << InserterP(v) << std::endl;
+}
+*/
+
 namespace resip
 {
+
+static const char* leftanglebracket("<");
+static const char* rightanglebracket(">");
+static const char* leftsqbracket("[");
+static const char* rightsqbracket("]");
+static const char* sparrowsp(" -> ");
+static const char* commaspace(", ");
 
 /// Completely generic insert function
 #ifdef REASONABLE_TEMPLATES
@@ -34,18 +73,18 @@ template <class T>
 EncodeStream&
 insert(EncodeStream& s, const std::vector <T>& c)
 {
-   s << "[";
+   s << leftsqbracket;
    for (typename std::vector <T>::const_iterator i = c.begin();
         i != c.end(); i++) 
    {
       if (i != c.begin()) 
       {
-         s << ", ";
+         s << commaspace;
       }
       // recurse
       insert(s, *i);
    }
-   s << "]";
+   s << rightsqbracket;
    return s;
 }
 
@@ -53,18 +92,18 @@ template <class T>
 EncodeStream&
 insert(EncodeStream& s, const std::deque<T>& c)
 {
-   s << "[";
+   s << leftsqbracket;
    for (typename std::deque <T>::const_iterator i = c.begin();
         i != c.end(); i++) 
    {
       if (i != c.begin()) 
       {
-         s << ", ";
+         s << commaspace;
       }
       // recurse
       insert(s, *i);
    }
-   s << "]";
+   s << rightsqbracket;
    return s;
 }
 
@@ -72,18 +111,18 @@ template <class T>
 EncodeStream&
 insert(EncodeStream& s, const std::list <T>& c)
 {
-   s << "[";
+   s << leftsqbracket;
    for (typename std::list <T>::const_iterator i = c.begin();
         i != c.end(); i++) 
    {
       if (i != c.begin()) 
       {
-         s << ", ";
+         s << commaspace;
       }
       // recurse
       insert(s, *i);
    }
-   s << "]";
+   s << rightsqbracket;
    return s;
 }
 
@@ -92,17 +131,17 @@ template <class K, class C>
 EncodeStream&
 insert(EncodeStream& s, const std::set <K, C>& c)
 {
-   s << "[";
+   s << leftsqbracket;
    for (typename std::set <K, C>::const_iterator i = c.begin();
         i != c.end(); i++) 
    {
       if (i != c.begin()) 
       {
-         s << ", ";
+         s << commaspace;
       }
       insert(s, *i);
    }
-   s << "]";
+   s << rightsqbracket;
    return s;
 }
 #endif
@@ -112,17 +151,17 @@ template <class K, class C>
 EncodeStream&
 insert(EncodeStream& s, const std::multiset <K, C>& c)
 {
-   s << "[";
+   s << leftsqbracket;
    for (typename std::multiset <K, C>::const_iterator i = c.begin();
         i != c.end(); i++) 
    {
       if (i != c.begin()) 
       {
-         s << ", ";
+         s << commaspace;
       }
       insert(s, *i);
    }
-   s << "]";
+   s << rightsqbracket;
    return s;
 }
 #endif
@@ -133,19 +172,19 @@ template <class K, class V, class H>
 EncodeStream&
 insert(EncodeStream& s, const HashMap<K,V,H>& c)
 {
-   s << "[";
+   s << leftsqbracket;
    for (typename HashMap<K,V,H>::const_iterator i = c.begin();
         i != c.end(); i++) 
    {
       if (i != c.begin()) 
       {
-         s << ", ";
+         s << commaspace;
       }
       insert(s, i->first);
-      s << " -> ";
+      s << sparrowsp;
       insert(s, i->second);      
    }
-   s << "]";
+   s << rightsqbracket;
    return s;
 }
 #endif
@@ -155,17 +194,17 @@ template <class V, class H>
 EncodeStream&
 insert(EncodeStream& s, const HashSet<V,H>& c)
 {
-   s << "[";
+   s << leftsqbracket;
    for (typename HashSet<V,H>::const_iterator i = c.begin();
         i != c.end(); i++) 
    {
       if (i != c.begin()) 
       {
-         s << ", ";
+         s << commaspace;
       }
       insert(s, *i);
    }
-   s << "]";
+   s << rightsqbracket;
    return s;
 }
 #endif
@@ -175,20 +214,19 @@ template <class K, class V, class H>
 EncodeStream&
 insert(EncodeStream& s, const std::map <K, V, H>& c)
 {
-   s << "[";
+   s << leftsqbracket;
    for (typename std::map<K,V, H>::const_iterator i = c.begin();
         i != c.end(); i++) 
    {
       if (i != c.begin()) 
       {
-         s << ", ";
+         s << commaspace;
       }
-	  insert(s, i->first);
-	  static const char* arrow(" -> ");
-      s << arrow;
+      insert(s, i->first);
+      s << sparrowsp;
       insert(s, i->second);  
    }
-   s << "]";
+   s << rightsqbracket;
    return s;
 }
 
@@ -208,7 +246,7 @@ EncodeStream&
 insert(EncodeStream& s, const std::pair<T, U>& p)
 {
    // use native <<
-   s << "<" << p.first << ", " << p.second << ">";
+   s << leftanglebracket << p.first << commaspace << p.second << rightanglebracket;
    return s;
 }
 
@@ -263,20 +301,257 @@ Inserter(const T& t)
 }
 
 
-/* Example of use
-int
-main(int argc, char** argv)
-{
-   std::vector<std::string> v;
-   
-   v.push_back("foo");
-   v.push_back("bar");
-   v.push_back("baz");
 
-   std::cerr << Inserter(v) << std::endl;
-   std::cerr << Inserter("nnn") << std::endl; // though you wouldn't bother
+///
+///  The following functions are more or less the same as the above, but add P to the naming
+///  and treat data items as pointers
+///
+
+
+
+/// Completely generic insert function
+#ifdef REASONABLE_TEMPLATES
+template <class T>
+EncodeStream&
+insertP(EncodeStream& s, const T& t)
+{
+   // use native <<
+   s << *t;
+   return s;
 }
-*/
+#endif
+
+// specific collections, sigh
+template <class T>
+EncodeStream&
+insertP(EncodeStream& s, const std::vector <T>& c)
+{
+   s << leftsqbracket;
+   for (typename std::vector <T>::const_iterator i = c.begin();
+        i != c.end(); i++) 
+   {
+      if (i != c.begin()) 
+      {
+         s << commaspace;
+      }
+      // recurse
+      insert(s, *(*i));
+   }
+   s << rightsqbracket;
+   return s;
+}
+
+template <class T>
+EncodeStream&
+insertP(EncodeStream& s, const std::deque<T>& c)
+{
+   s << leftsqbracket;
+   for (typename std::deque <T>::const_iterator i = c.begin();
+        i != c.end(); i++) 
+   {
+      if (i != c.begin()) 
+      {
+         s << commaspace;
+      }
+      // recurse
+      insert(s, *(*i));
+   }
+   s << rightsqbracket;
+   return s;
+}
+
+template <class T>
+EncodeStream&
+insertP(EncodeStream& s, const std::list <T>& c)
+{
+   s << leftsqbracket;
+   for (typename std::list <T>::const_iterator i = c.begin();
+        i != c.end(); i++) 
+   {
+      if (i != c.begin()) 
+      {
+         s << commaspace;
+      }
+      // recurse
+      insert(s, *(*i));
+   }
+   s << rightsqbracket;
+   return s;
+}
+
+#if !defined(__INTEL_COMPILER)
+template <class K, class C>
+EncodeStream&
+insertP(EncodeStream& s, const std::set <K, C>& c)
+{
+   s << leftsqbracket;
+   for (typename std::set <K, C>::const_iterator i = c.begin();
+        i != c.end(); i++) 
+   {
+      if (i != c.begin()) 
+      {
+         s << commaspace;
+      }
+      insert(s, *(*i));
+   }
+   s << rightsqbracket;
+   return s;
+}
+#endif
+
+#if !defined(__INTEL_COMPILER)
+template <class K, class C>
+EncodeStream&
+insertP(EncodeStream& s, const std::multiset <K, C>& c)
+{
+   s << leftsqbracket;
+   for (typename std::multiset <K, C>::const_iterator i = c.begin();
+        i != c.end(); i++) 
+   {
+      if (i != c.begin()) 
+      {
+         s << commaspace;
+      }
+      insert(s, *(*i));
+   }
+   s << rightsqbracket;
+   return s;
+}
+#endif
+
+// HashMap
+#if defined(HASH_MAP_NAMESPACE)
+template <class K, class V, class H>
+EncodeStream&
+insertP(EncodeStream& s, const HashMap<K,V,H>& c)
+{
+   s << leftsqbracket;
+   for (typename HashMap<K,V,H>::const_iterator i = c.begin();
+        i != c.end(); i++) 
+   {
+      if (i != c.begin()) 
+      {
+         s << commaspace;
+      }
+      insert(s, i->first);
+      s << sparrowsp;
+      insert(s, *i->second);      
+   }
+   s << rightsqbracket;
+   return s;
+}
+#endif
+
+#if defined(HASH_MAP_NAMESPACE)
+template <class V, class H>
+EncodeStream&
+insertP(EncodeStream& s, const HashSet<V,H>& c)
+{
+   s << leftsqbracket;
+   for (typename HashSet<V,H>::const_iterator i = c.begin();
+        i != c.end(); i++) 
+   {
+      if (i != c.begin()) 
+      {
+         s << commaspace;
+      }
+      insert(s, *(*i));
+   }
+   s << rightsqbracket;
+   return s;
+}
+#endif
+
+// map
+template <class K, class V, class H>
+EncodeStream&
+insertP(EncodeStream& s, const std::map <K, V, H>& c)
+{
+   s << leftsqbracket;
+   for (typename std::map<K,V, H>::const_iterator i = c.begin();
+        i != c.end(); i++) 
+   {
+      if (i != c.begin()) 
+      {
+         s << commaspace;
+      }
+      insert(s, i->first);
+      s << sparrowsp;
+      insert(s, *i->second);  
+   }
+   s << rightsqbracket;
+   return s;
+}
+
+// special case for basic_string container
+template <class T>
+EncodeStream&
+insertP(EncodeStream& s, const std::basic_string<T>& str)
+{
+   // use native <<
+   s << str;
+   return s;
+}
+
+// special case for pair
+template <class T, class U>
+EncodeStream&
+insertP(EncodeStream& s, const std::pair<T, U>& p)
+{
+   // use native <<
+   s << leftanglebracket << *p.first << commaspace << *p.second << rightanglebracket;
+   return s;
+}
+
+/**
+   @brief Allows a (possibly recursive) container of anything with operator<< to 
+   be dumped to a stream.
+
+   
+   This is particularly useful within a Log call.
+   e.g.
+   @code
+   void logNameAddrs(vector<resip::NameAddr>& contacts)
+   {
+      DebugLog(<< "Contacts: " << Inserter(contacts));
+   }
+   @endcode
+
+   @see Inserter()
+ */
+template <class T>
+class InserterPClass
+{
+   public:
+      InserterPClass(const T& t)
+         : _t(t)
+      {}
+      
+      const T& _t;
+};
+
+/// Function to allow an Inserter to be used directly with a stream
+template <class T>
+EncodeStream&
+operator<<(EncodeStream& s, const InserterPClass<T>& inserter)
+{
+#if defined(WIN32) && defined(_MSC_VER) && (_MSC_VER < 1310)
+	assert(0); // CJ - really need to fix this
+	return s;
+#else
+   return insertP(s, inserter._t);
+#endif
+}
+
+/// Templatized function to construct an instance of InserterClass for a
+/// container to be inserted. The function induces the template type, saving the
+/// user from thinking about it.
+template <class T>
+InserterPClass<T>
+InserterP(const T& t)
+{
+   return InserterPClass<T>(t);
+}
  
 } // resip
 

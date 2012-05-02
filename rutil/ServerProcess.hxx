@@ -14,13 +14,7 @@ public:
    ServerProcess();
    virtual ~ServerProcess();
 
-   /* The caller invokes run to run the application */
-   int run(int argc, char *argv[]);
-
 protected:
-   /* A main method to be provided by a subclass */
-   virtual int main(int argc, char *argv[]) = 0;
-
    /* The main subclass can call daemonize() if and
       when it wants to become a daemon */
    void daemonize();

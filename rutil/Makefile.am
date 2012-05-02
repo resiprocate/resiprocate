@@ -39,6 +39,7 @@ librutil_la_SOURCES = \
 	FileSystem.cxx \
 	GeneralCongestionManager.cxx \
 	HeapInstanceCounter.cxx \
+	KeyValueStore.cxx \
 	Lock.cxx \
 	Log.cxx \
 	MD5Stream.cxx \
@@ -102,6 +103,7 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	CongestionManager.hxx \
 	GeneralCongestionManager.hxx \
 	HeapInstanceCounter.hxx \
+	KeyValueStore.hxx \
 	SharedCount.hxx \
 	FdSetIOObserver.hxx \
 	Fifo.hxx \

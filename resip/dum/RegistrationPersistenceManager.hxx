@@ -38,7 +38,7 @@ class RegistrationPersistenceManager
                                           const ContactInstanceRecord& rec) = 0;
 
     virtual void removeContact(const Uri& aor,
-                                 const ContactInstanceRecord& rec) = 0;
+                               const ContactInstanceRecord& rec) = 0;
 
     virtual void getContacts(const Uri& aor, ContactList& container) = 0;  
 

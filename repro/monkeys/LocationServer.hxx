@@ -2,6 +2,7 @@
 #define RESIP_LOCATIONSERVER_REQUEST_PROCESSOR_HXX 
 #include "repro/Processor.hxx"
 #include "repro/ProxyConfig.hxx"
+#include "repro/Dispatcher.hxx"
 #include "resip/dum/RegistrationPersistenceManager.hxx"
 
 namespace repro
@@ -10,17 +11,21 @@ namespace repro
   class LocationServer: public Processor
   {
     public:
-      LocationServer(ProxyConfig& config, resip::RegistrationPersistenceManager& store)
-       :mStore(store),mParallelForkStaticRoutes(config.getConfigBool("ParallelForkStaticRoutes", false)){};
+      LocationServer(ProxyConfig& config, 
+                     resip::RegistrationPersistenceManager& store,
+                     Dispatcher* userInfoDispatcher) : 
+         Processor("LocationServer"), 
+         mStore(store),
+         mUserInfoDispatcher(userInfoDispatcher)
+      {};
 
-      virtual ~LocationServer(){};
+      virtual ~LocationServer() {};
 
       virtual processor_action_t process(RequestContext &);
-      virtual void dump(EncodeStream &os) const;
 
     private:
       resip::RegistrationPersistenceManager& mStore;
-      bool mParallelForkStaticRoutes;
+      Dispatcher* mUserInfoDispatcher;
   };
 }
 #endif

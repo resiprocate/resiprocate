@@ -13,8 +13,9 @@ class Worker
       Worker(){};
       virtual ~Worker(){};
       
-      virtual void process(resip::ApplicationMessage* msg){assert(0);}
-      virtual Worker* clone() const{assert(0);return 0;}
+      // return true to queue to stack when complete, false when no response is required
+      virtual bool process(resip::ApplicationMessage* msg)=0;
+      virtual Worker* clone() const=0;
 };
 }
 #endif

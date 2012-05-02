@@ -17,7 +17,10 @@ Store::Store( AbstractDb& db ):
    mUserStore(db),
    mRouteStore(db),
    mAclStore(db),
-   mConfigStore(db)
+   mConfigStore(db),
+   mStaticRegStore(db),
+   mFilterStore(db),
+   mSiloStore(db)
 {
 }
 

@@ -30,6 +30,7 @@ RouteStore::RouteStore(AbstractDb& db):
       RouteOp route;
       route.routeRecord =  mDb.getRoute(key);
       route.key = key;
+      route.preq = 0;
       
       if( !route.routeRecord.mMatchingPattern.empty() )
       {
@@ -75,7 +76,7 @@ RouteStore::~RouteStore()
 }
 
       
-void 
+bool
 RouteStore::addRoute(const resip::Data& method,
                      const resip::Data& event,
                      const resip::Data& matchingPattern,
@@ -86,13 +87,21 @@ RouteStore::addRoute(const resip::Data& method,
    
    RouteOp route;
 
-   Key key = buildKey(method,event,matchingPattern);
+   Key key = buildKey(method, event, matchingPattern);
    
+   if(findKey(key)) return false;
+
    route.routeRecord.mMethod = method;
    route.routeRecord.mEvent = event;
    route.routeRecord.mMatchingPattern = matchingPattern;
    route.routeRecord.mRewriteExpression =  rewriteExpression;
    route.routeRecord.mOrder = order;
+
+   if(!mDb.addRoute(key , route.routeRecord))
+   {
+      return false;
+   }
+
    route.key = key;
    route.preq = 0;
    if( !route.routeRecord.mMatchingPattern.empty() )
@@ -117,7 +126,7 @@ RouteStore::addRoute(const resip::Data& method,
    }
    mCursor = mRouteOperators.begin(); 
 
-   mDb.addRoute( key , route.routeRecord );
+   return true;
 }
 
       
@@ -143,7 +152,7 @@ RouteStore::eraseRoute(const resip::Data& method,
                        const resip::Data& event,
                        const resip::Data& matchingPattern)
 {
-   Key key = buildKey(method,event,matchingPattern);
+   Key key = buildKey(method, event, matchingPattern);
    eraseRoute(key);
 }
 
@@ -159,13 +168,7 @@ RouteStore::eraseRoute(const resip::Data& key )
       RouteOpList::iterator it = mRouteOperators.begin();
       while ( it != mRouteOperators.end() )
       {
-         Data method = it->routeRecord.mMethod;
-         Data event = it->routeRecord.mEvent;
-         Data match = it->routeRecord.mMatchingPattern ;
-      
-         Data k = buildKey( method, event, match );
-         
-         if ( k == key )
+         if (it->key == key )
          {
             RouteOpList::iterator i = it;
             it++;
@@ -190,7 +193,7 @@ RouteStore::eraseRoute(const resip::Data& key )
 }
 
 
-void
+bool
 RouteStore::updateRoute( const resip::Data& originalKey, 
                          const resip::Data& method,
                          const resip::Data& event,
@@ -198,9 +201,8 @@ RouteStore::updateRoute( const resip::Data& originalKey,
                          const resip::Data& rewriteExpression,
                          const int order )
 {
-   //resip::Data newkey = buildKey( method, event, matchingPattern );
    eraseRoute(originalKey);
-   addRoute( method, event, matchingPattern, rewriteExpression, order );
+   return addRoute(method, event, matchingPattern, rewriteExpression, order);
 }
 
 
@@ -264,64 +266,16 @@ RouteStore::getNextKey(Key& key)
 }
 
 
-resip::Data 
-RouteStore::getRouteMethod( const resip::Data& key )
+AbstractDb::RouteRecord 
+RouteStore::getRouteRecord(const resip::Data& key)
 {
    ReadLock lock(mMutex);
 
-   if ( !findKey(key) )
+   if (!findKey(key))
    {
-      return Data::Empty;
+      return AbstractDb::RouteRecord();
    }
-   return mCursor->routeRecord.mMethod;
-}
-
-resip::Data 
-RouteStore::getRouteEvent( const resip::Data& key )
-{
-   ReadLock lock(mMutex);
-
-   if ( !findKey(key) )
-   {
-      return Data::Empty;
-   }
-   return mCursor->routeRecord.mEvent ;
-}
-
-resip::Data 
-RouteStore::getRoutePattern( const resip::Data& key )
-{
-   ReadLock lock(mMutex);
-
-   if ( !findKey(key) )
-   {
-      return Data::Empty;
-   }
-   return mCursor->routeRecord.mMatchingPattern; ;
-}
-
-resip::Data 
-RouteStore::getRouteRewrite( const resip::Data& key )
-{
-   ReadLock lock(mMutex);
-
-   if ( !findKey(key) )
-   {
-      return Data::Empty;
-   }
-   return mCursor->routeRecord.mRewriteExpression ;
-}
-
-int         
-RouteStore::getRouteOrder( const resip::Data& key )
-{
-   ReadLock lock(mMutex);
-
-   if ( !findKey(key) )
-   {
-      return 0;
-   }
-   return mCursor->routeRecord.mOrder ;
+   return mCursor->routeRecord;
 }
 
 
@@ -330,8 +284,10 @@ RouteStore::process(const resip::Uri& ruri,
                     const resip::Data& method, 
                     const resip::Data& event )
 {
-   ReadLock lock(mMutex);
    RouteStore::UriList targetSet;
+   if(mRouteOperators.empty()) return targetSet;  // If there are no routes bail early to save a few cycles (size check is atomic enough, we don't need a lock)
+
+   ReadLock lock(mMutex);
 
    for (RouteOpList::iterator it = mRouteOperators.begin();
         it != mRouteOperators.end(); it++)
@@ -343,18 +299,18 @@ RouteStore::process(const resip::Uri& ruri,
 
       const AbstractDb::RouteRecord& rec = it->routeRecord;
       
-      if ( !rec.mMethod.empty() )
+      if(!rec.mMethod.empty())
       {
-         if ( rec.mMethod != method)
+         if(!isEqualNoCase(rec.mMethod,method))
          {
             DebugLog( << "  Skipped - method did not match" );
             continue;
          }
          
       }
-      if ( !rec.mEvent.empty() )
+      if(!rec.mEvent.empty())
       {
-         if ( rec.mEvent != event) 
+         if(!isEqualNoCase(rec.mEvent, event))
          {
             DebugLog( << "  Skipped - event did not match" );
             continue;

@@ -376,6 +376,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\KeyValueStore.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\dns\LocalDns.cxx"
 				>
 			</File>
@@ -711,6 +715,10 @@
 			</File>
 			<File
 				RelativePath=".\IntrusiveListElement.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\KeyValueStore.hxx"
 				>
 			</File>
 			<File

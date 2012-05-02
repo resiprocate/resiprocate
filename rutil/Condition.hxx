@@ -54,15 +54,15 @@ class Condition
       Condition();
       virtual ~Condition();
 
-	  /** wait for the condition to be signaled
-		@param mtx	The mutex associated with the condition variable
-	 */
+      /** wait for the condition to be signaled
+       @param mtx	The mutex associated with the condition variable
+      */
       void wait (Mutex& mtx);
-	  /** wait for the condition to be signaled
-		  @param mtx	The mutex associated with the condition variable
-          @retval true The condition was woken up by activity
-		  @retval false Timeout or interrupt.
-       */
+      /** wait for the condition to be signaled
+       @param mtx   The mutex associated with the condition variable
+       @retval true The condition was woken up by activity
+       @retval false Timeout or interrupt.
+      */
       bool wait (Mutex& mutex, unsigned int ms);
 
       // !kh!
@@ -71,14 +71,14 @@ class Condition
       bool wait (Mutex* mutex, unsigned int ms);
 
       /** Signal one waiting thread.
-			@return 0 Success
-			@return errorcode The error code of the failure
+       @return 0 Success
+       @return errorcode The error code of the failure
        */
       void signal();
 
       /** Signal all waiting threads.
-			@return 0 Success
-			@return errorcode The error code of the failure
+       @return 0 Success
+       @return errorcode The error code of the failure
        */
       void broadcast();
 

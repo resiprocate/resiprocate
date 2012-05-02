@@ -8,7 +8,6 @@
 #include "rutil/Data.hxx"
 #include <vector>
 
-
 namespace repro
 {
 
@@ -29,7 +28,6 @@ class QValueTargetHandler : public Processor
       virtual ~QValueTargetHandler();
       
       virtual processor_action_t process(RequestContext &);
-      virtual void dump(EncodeStream &os) const;
 
       void fillNextTargetGroup(std::vector<resip::Data>& fillHere,
                               const std::list<resip::Data>& queue,
@@ -39,7 +37,6 @@ class QValueTargetHandler : public Processor
       
       virtual void removeTerminated(std::list<resip::Data>& queue,
                                     const ResponseContext& rsp) const;
-      
    
    protected:
       ForkBehavior mForkBehavior;
@@ -47,10 +44,8 @@ class QValueTargetHandler : public Processor
       bool mWaitForTerminate;
       int mDelayBetweenForkGroups;
       int mCancellationDelay;
-      
-
-
 };
+
 }
 
 #endif

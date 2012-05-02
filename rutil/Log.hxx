@@ -112,9 +112,9 @@ class Log
             /** Commit logging */
             ~Guard();
 
-	    EncodeStream& asStream() {return mStream;}
-	    operator EncodeStream&() {return mStream;}
-	    
+            EncodeStream& asStream() {return mStream;}
+            operator EncodeStream&() {return mStream;}
+
          private:
             resip::Log::Level mLevel;
             const resip::Subsystem& mSubsystem;

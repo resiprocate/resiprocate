@@ -13,38 +13,40 @@ using namespace std;
 
 struct Foo
 {
-      Foo()
-	 : count(0),
-	    value()
-      {}
+   Foo() : 
+      count(0), 
+      value()
+   {
+   }
 
-      Foo(int c, const Data& v)
-	 : count(c),
-	   value(v)
-      {}
+   Foo(int c, const Data& v) : 
+      count(c),
+      value(v)
+   {
+   }
 
-      bool operator<(const Foo& rhs) const
+   bool operator<(const Foo& rhs) const
+   {
+      if (count < rhs.count)
       {
-	 if (count < rhs.count)
-	 {
-	    return true;
-	 }
-
-	 if (count > rhs.count)
-	 {
-	    return false;
-	 }
-
-	 return value < rhs.value;
+         return true;
       }
 
-      bool operator==(const Foo& rhs) const
+      if (count > rhs.count)
       {
-         return (!(*this < rhs) && !(rhs < *this));
+         return false;
       }
 
-      int count;
-      Data value;
+         return value < rhs.value;
+   }
+
+   bool operator==(const Foo& rhs) const
+   {
+      return (!(*this < rhs) && !(rhs < *this));
+   }
+
+   int count;
+   Data value;
 };
 
 HashValue(Foo);
@@ -59,6 +61,8 @@ EncodeStream& operator<<(EncodeStream& str, const Foo& foo)
 int
 main(int argc, char** argv)
 {
+   resipCerr << "Inserter tests..." << endl;
+
    {
       resipCerr << Inserter(Foo(0, "null")) << endl;
    }
@@ -108,6 +112,97 @@ main(int argc, char** argv)
       container.insert(Foo(3, "baz"));
 
       resipCerr << Inserter(container) << endl;      
+   }
+
+
+   resipCerr << "InserterP tests..." << endl;
+
+   {
+      Foo *foo = new Foo(0, "null");
+      resipCerr << InserterP(foo) << endl;
+      delete foo;
+   }
+
+   {
+      vector<Foo*> container;
+      
+      container.push_back(new Foo(1, "foo"));
+      container.push_back(new Foo(2, "bar"));
+      container.push_back(new Foo(3, "baz"));
+
+      resipCerr << InserterP(container) << endl;
+
+      // cleanup
+      vector<Foo*>::iterator it = container.begin(); 
+      for(;it!=container.end(); it++)
+      {
+         delete *it;
+      }
+   }
+
+   {
+      set<Foo*> container;
+      
+      container.insert(new Foo(1, "foo"));
+      container.insert(new Foo(2, "bar"));
+      container.insert(new Foo(3, "baz"));
+
+      resipCerr << InserterP(container) << endl;
+
+      // cleanup
+      set<Foo*>::iterator it = container.begin(); 
+      for(;it!=container.end(); it++)
+      {
+         delete *it;
+      }
+   }
+
+   {
+      map<int, Foo*> container;
+      container[1] = new Foo(1, "foo");
+      container[2] = new Foo(2, "bar");
+      container[3] = new Foo(3, "baz");
+
+      resipCerr << InserterP(container) << endl;
+
+      // cleanup
+      map<int, Foo*>::iterator it = container.begin(); 
+      for(;it!=container.end(); it++)
+      {
+         delete it->second;
+      }
+   }
+
+   {
+      HashMap<int, Foo*> container;
+      container[1] = new Foo(1, "foo");
+      container[2] = new Foo(2, "bar");
+      container[3] = new Foo(3, "baz");
+
+      resipCerr << InserterP(container) << endl;      
+
+      // cleanup
+      HashMap<int, Foo*>::iterator it = container.begin(); 
+      for(;it!=container.end(); it++)
+      {
+         delete it->second;
+      }
+   }
+
+   {
+      HashSet<Foo*> container;
+      container.insert(new Foo(1, "foo"));
+      container.insert(new Foo(2, "bar"));
+      container.insert(new Foo(3, "baz"));
+
+      resipCerr << InserterP(container) << endl;      
+
+      // cleanup
+      HashSet<Foo*>::iterator it = container.begin(); 
+      for(;it!=container.end(); it++)
+      {
+         delete *it;
+      }
    }
 
    resipCerr << "All Ok" << endl;
