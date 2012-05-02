@@ -27,7 +27,7 @@ CREATE TABLE `users` (
 DROP TABLE IF EXISTS `routesavp`;
 CREATE TABLE `routesavp` (
   `attr` VARCHAR(255) NOT NULL,
-  `value` VARCHAR(1024),
+  `value` VARCHAR(4096),
   PRIMARY KEY (`attr`) 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
