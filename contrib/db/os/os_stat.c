@@ -1,20 +1,12 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1997-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1997-2009 Oracle.  All rights reserved.
  *
- * $Id: os_stat.c,v 11.27 2004/07/06 13:55:48 bostic Exp $
+ * $Id$
  */
 
 #include "db_config.h"
-
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-#include <sys/stat.h>
-
-#include <string.h>
-#endif
 
 #include "db_int.h"
 
@@ -22,26 +14,30 @@
  * __os_exists --
  *	Return if the file exists.
  *
- * PUBLIC: int __os_exists __P((const char *, int *));
+ * PUBLIC: int __os_exists __P((ENV *, const char *, int *));
  */
 int
-__os_exists(path, isdirp)
+__os_exists(env, path, isdirp)
+	ENV *env;
 	const char *path;
 	int *isdirp;
 {
+	DB_ENV *dbenv;
 	struct stat sb;
 	int ret;
+
+	dbenv = env == NULL ? NULL : env->dbenv;
+
+	if (dbenv != NULL &&
+	    FLD_ISSET(dbenv->verbose, DB_VERB_FILEOPS | DB_VERB_FILEOPS_ALL))
+		__db_msg(env, "fileops: stat %s", path);
 
 	if (DB_GLOBAL(j_exists) != NULL)
 		return (DB_GLOBAL(j_exists)(path, isdirp));
 
-#ifdef HAVE_VXWORKS
-	RETRY_CHK((stat((char *)path, &sb)), ret);
-#else
-	RETRY_CHK((stat(path, &sb)), ret);
-#endif
+	RETRY_CHK((stat(CHAR_STAR_CAST path, &sb)), ret);
 	if (ret != 0)
-		return (ret);
+		return (__os_posix_err(ret));
 
 #if !defined(S_ISDIR) || defined(STAT_MACROS_BROKEN)
 #undef	S_ISDIR
@@ -62,12 +58,12 @@ __os_exists(path, isdirp)
  *	Return file size and I/O size; abstracted to make it easier
  *	to replace.
  *
- * PUBLIC: int __os_ioinfo __P((DB_ENV *, const char *,
+ * PUBLIC: int __os_ioinfo __P((ENV *, const char *,
  * PUBLIC:    DB_FH *, u_int32_t *, u_int32_t *, u_int32_t *));
  */
 int
-__os_ioinfo(dbenv, path, fhp, mbytesp, bytesp, iosizep)
-	DB_ENV *dbenv;
+__os_ioinfo(env, path, fhp, mbytesp, bytesp, iosizep)
+	ENV *env;
 	const char *path;
 	DB_FH *fhp;
 	u_int32_t *mbytesp, *bytesp, *iosizep;
@@ -79,13 +75,12 @@ __os_ioinfo(dbenv, path, fhp, mbytesp, bytesp, iosizep)
 		return (DB_GLOBAL(j_ioinfo)(path,
 		    fhp->fd, mbytesp, bytesp, iosizep));
 
-	/* Check for illegal usage. */
-	DB_ASSERT(F_ISSET(fhp, DB_FH_OPENED) && fhp->fd != -1);
+	DB_ASSERT(env, F_ISSET(fhp, DB_FH_OPENED) && fhp->fd != -1);
 
 	RETRY_CHK((fstat(fhp->fd, &sb)), ret);
 	if (ret != 0) {
-		__db_err(dbenv, "fstat: %s", strerror(ret));
-		return (ret);
+		__db_syserr(env, ret, "fstat");
+		return (__os_posix_err(ret));
 	}
 
 	/* Return the size of the file. */
@@ -95,7 +90,7 @@ __os_ioinfo(dbenv, path, fhp, mbytesp, bytesp, iosizep)
 		*bytesp = (u_int32_t)(sb.st_size % MEGABYTE);
 
 	/*
-	 * Return the underlying filesystem blocksize, if available.
+	 * Return the underlying filesystem I/O size, if available.
 	 *
 	 * XXX
 	 * Check for a 0 size -- the HP MPE/iX architecture has st_blksize,

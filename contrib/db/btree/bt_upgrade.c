@@ -1,18 +1,12 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1996-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
  *
- * $Id: bt_upgrade.c,v 11.30 2004/01/28 03:35:49 bostic Exp $
+ * $Id$
  */
+
 #include "db_config.h"
-
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-
-#include <string.h>
-#endif
 
 #include "db_int.h"
 #include "dbinc/db_page.h"
@@ -31,12 +25,12 @@ __bam_30_btreemeta(dbp, real_name, buf)
 	char *real_name;
 	u_int8_t *buf;
 {
-	BTMETA30 *newmeta;
 	BTMETA2X *oldmeta;
-	DB_ENV *dbenv;
+	BTMETA30 *newmeta;
+	ENV *env;
 	int ret;
 
-	dbenv = dbp->dbenv;
+	env = dbp->env;
 
 	newmeta = (BTMETA30 *)buf;
 	oldmeta = (BTMETA2X *)buf;
@@ -57,7 +51,7 @@ __bam_30_btreemeta(dbp, real_name, buf)
 
 	newmeta->dbmeta.version = 7;
 	/* Replace the unique ID. */
-	if ((ret = __os_fileid(dbenv, real_name, 1, buf + 36)) != 0)
+	if ((ret = __os_fileid(env, real_name, 1, buf + 36)) != 0)
 		return (ret);
 
 	newmeta->root = 1;
@@ -81,8 +75,8 @@ __bam_31_btreemeta(dbp, real_name, flags, fhp, h, dirtyp)
 	PAGE *h;
 	int *dirtyp;
 {
-	BTMETA31 *newmeta;
 	BTMETA30 *oldmeta;
+	BTMETA31 *newmeta;
 
 	COMPQUIET(dbp, NULL);
 	COMPQUIET(real_name, NULL);

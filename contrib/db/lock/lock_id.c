@@ -1,29 +1,20 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1996-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
  *
- * $Id: lock_id.c,v 11.146 2004/10/15 16:59:42 bostic Exp $
+ * $Id$
  */
 
 #include "db_config.h"
 
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-
-#include <string.h>
-#include <stdlib.h>
-#endif
-
 #include "db_int.h"
-#include "dbinc/db_shash.h"
 #include "dbinc/lock.h"
 #include "dbinc/log.h"
 
 /*
  * __lock_id_pp --
- *	DB_ENV->lock_id pre/post processing.
+ *	ENV->lock_id pre/post processing.
  *
  * PUBLIC: int __lock_id_pp __P((DB_ENV *, u_int32_t *));
  */
@@ -32,86 +23,111 @@ __lock_id_pp(dbenv, idp)
 	DB_ENV *dbenv;
 	u_int32_t *idp;
 {
-	int rep_check, ret;
+	DB_THREAD_INFO *ip;
+	ENV *env;
+	int ret;
 
-	PANIC_CHECK(dbenv);
-	ENV_REQUIRES_CONFIG(dbenv,
-	    dbenv->lk_handle, "DB_ENV->lock_id", DB_INIT_LOCK);
+	env = dbenv->env;
 
-	rep_check = IS_ENV_REPLICATED(dbenv) ? 1 : 0;
-	if (rep_check)
-		__env_rep_enter(dbenv);
-	ret = __lock_id(dbenv, idp);
-	if (rep_check)
-		__env_db_rep_exit(dbenv);
+	ENV_REQUIRES_CONFIG(env,
+	    env->lk_handle, "DB_ENV->lock_id", DB_INIT_LOCK);
+
+	ENV_ENTER(env, ip);
+	REPLICATION_WRAP(env, (__lock_id(env, idp, NULL)), 0, ret);
+	ENV_LEAVE(env, ip);
 	return (ret);
 }
 
 /*
  * __lock_id --
- *	DB_ENV->lock_id.
+ *	ENV->lock_id.
  *
- * PUBLIC: int  __lock_id __P((DB_ENV *, u_int32_t *));
+ * PUBLIC: int  __lock_id __P((ENV *, u_int32_t *, DB_LOCKER **));
  */
 int
-__lock_id(dbenv, idp)
-	DB_ENV *dbenv;
+__lock_id(env, idp, lkp)
+	ENV *env;
 	u_int32_t *idp;
+	DB_LOCKER **lkp;
 {
 	DB_LOCKER *lk;
-	DB_LOCKTAB *lt;
 	DB_LOCKREGION *region;
-	u_int32_t *ids, locker_ndx;
+	DB_LOCKTAB *lt;
+	u_int32_t id, *ids;
 	int nids, ret;
 
-	lt = dbenv->lk_handle;
+	lk = NULL;
+	lt = env->lk_handle;
 	region = lt->reginfo.primary;
+	id = DB_LOCK_INVALIDID;
 	ret = 0;
 
+	id = DB_LOCK_INVALIDID;
+	lk = NULL;
+
+	LOCK_LOCKERS(env, region);
+
 	/*
-	 * Allocate a new lock id.  If we wrap around then we
-	 * find the minimum currently in use and make sure we
-	 * can stay below that.  This code is similar to code
-	 * in __txn_begin_int for recovering txn ids.
-	 */
-	LOCKREGION(dbenv, lt);
-	/*
+	 * Allocate a new lock id.  If we wrap around then we find the minimum
+	 * currently in use and make sure we can stay below that.  This code is
+	 * similar to code in __txn_begin_int for recovering txn ids.
+	 *
 	 * Our current valid range can span the maximum valid value, so check
 	 * for it and wrap manually.
 	 */
-	if (region->stat.st_id == DB_LOCK_MAXID &&
-	    region->stat.st_cur_maxid != DB_LOCK_MAXID)
-		region->stat.st_id = DB_LOCK_INVALIDID;
-	if (region->stat.st_id == region->stat.st_cur_maxid) {
-		if ((ret = __os_malloc(dbenv,
-		    sizeof(u_int32_t) * region->stat.st_nlockers, &ids)) != 0)
+	if (region->lock_id == DB_LOCK_MAXID &&
+	    region->cur_maxid != DB_LOCK_MAXID)
+		region->lock_id = DB_LOCK_INVALIDID;
+	if (region->lock_id == region->cur_maxid) {
+		if ((ret = __os_malloc(env,
+		    sizeof(u_int32_t) * region->nlockers, &ids)) != 0)
 			goto err;
 		nids = 0;
-		for (lk = SH_TAILQ_FIRST(&region->lockers, __db_locker);
-		    lk != NULL;
-		    lk = SH_TAILQ_NEXT(lk, ulinks, __db_locker))
+		SH_TAILQ_FOREACH(lk, &region->lockers, ulinks, __db_locker)
 			ids[nids++] = lk->id;
-		region->stat.st_id = DB_LOCK_INVALIDID;
-		region->stat.st_cur_maxid = DB_LOCK_MAXID;
+		region->lock_id = DB_LOCK_INVALIDID;
+		region->cur_maxid = DB_LOCK_MAXID;
 		if (nids != 0)
 			__db_idspace(ids, nids,
-			    &region->stat.st_id, &region->stat.st_cur_maxid);
-		__os_free(dbenv, ids);
+			    &region->lock_id, &region->cur_maxid);
+		__os_free(env, ids);
 	}
-	*idp = ++region->stat.st_id;
+	id = ++region->lock_id;
 
 	/* Allocate a locker for this id. */
-	LOCKER_LOCK(lt, region, *idp, locker_ndx);
-	ret = __lock_getlocker(lt, *idp, locker_ndx, 1, &lk);
+	ret = __lock_getlocker_int(lt, id, 1, &lk);
 
-err:	UNLOCKREGION(dbenv, lt);
+err:	UNLOCK_LOCKERS(env, region);
+
+	if (idp != NULL)
+		*idp = id;
+	if (lkp != NULL)
+		*lkp = lk;
 
 	return (ret);
 }
 
 /*
+ * __lock_set_thread_id --
+ *	Set the thread_id in an existing locker.
+ * PUBLIC: void __lock_set_thread_id __P((void *, pid_t, db_threadid_t));
+ */
+void
+__lock_set_thread_id(lref_arg, pid, tid)
+	void *lref_arg;
+	pid_t pid;
+	db_threadid_t tid;
+{
+	DB_LOCKER *lref;
+
+	lref = lref_arg;
+	lref->pid = pid;
+	lref->tid = tid;
+}
+
+/*
  * __lock_id_free_pp --
- *	DB_ENV->lock_id_free pre/post processing.
+ *	ENV->lock_id_free pre/post processing.
  *
  * PUBLIC: int __lock_id_free_pp __P((DB_ENV *, u_int32_t));
  */
@@ -120,18 +136,46 @@ __lock_id_free_pp(dbenv, id)
 	DB_ENV *dbenv;
 	u_int32_t id;
 {
-	int rep_check, ret;
+	DB_LOCKER *sh_locker;
+	DB_LOCKREGION *region;
+	DB_LOCKTAB *lt;
+	DB_THREAD_INFO *ip;
+	ENV *env;
+	int handle_check, ret, t_ret;
 
-	PANIC_CHECK(dbenv);
-	ENV_REQUIRES_CONFIG(dbenv,
-	    dbenv->lk_handle, "DB_ENV->lock_id_free", DB_INIT_LOCK);
+	env = dbenv->env;
 
-	rep_check = IS_ENV_REPLICATED(dbenv) ? 1 : 0;
-	if (rep_check)
-		__env_rep_enter(dbenv);
-	ret = __lock_id_free(dbenv, id);
-	if (rep_check)
-		__env_db_rep_exit(dbenv);
+	ENV_REQUIRES_CONFIG(env,
+	    env->lk_handle, "DB_ENV->lock_id_free", DB_INIT_LOCK);
+
+	ENV_ENTER(env, ip);
+
+	/* Check for replication block. */
+	handle_check = IS_ENV_REPLICATED(env);
+	if (handle_check && (ret = __env_rep_enter(env, 0)) != 0) {
+		handle_check = 0;
+		goto err;
+	}
+
+	lt = env->lk_handle;
+	region = lt->reginfo.primary;
+
+	LOCK_LOCKERS(env, region);
+	if ((ret =
+	     __lock_getlocker_int(env->lk_handle, id, 0, &sh_locker)) == 0) {
+		if (sh_locker != NULL)
+			ret = __lock_freelocker(lt, region, sh_locker);
+		else {
+			__db_errx(env, "Unknown locker id: %lx", (u_long)id);
+			ret = EINVAL;
+		}
+	}
+	UNLOCK_LOCKERS(env, region);
+
+	if (handle_check && (t_ret = __env_db_rep_exit(env)) != 0 && ret == 0)
+		ret = t_ret;
+
+err:	ENV_LEAVE(env, ip);
 	return (ret);
 }
 
@@ -139,46 +183,32 @@ __lock_id_free_pp(dbenv, id)
  * __lock_id_free --
  *	Free a locker id.
  *
- * PUBLIC: int  __lock_id_free __P((DB_ENV *, u_int32_t));
+ * PUBLIC: int  __lock_id_free __P((ENV *, DB_LOCKER *));
  */
 int
-__lock_id_free(dbenv, id)
-	DB_ENV *dbenv;
-	u_int32_t id;
-{
+__lock_id_free(env, sh_locker)
+	ENV *env;
 	DB_LOCKER *sh_locker;
-	DB_LOCKTAB *lt;
+{
 	DB_LOCKREGION *region;
-	u_int32_t locker_ndx;
+	DB_LOCKTAB *lt;
 	int ret;
 
-	PANIC_CHECK(dbenv);
-	ENV_REQUIRES_CONFIG(dbenv,
-	    dbenv->lk_handle, "DB_ENV->lock_id_free", DB_INIT_LOCK);
-
-	lt = dbenv->lk_handle;
+	lt = env->lk_handle;
 	region = lt->reginfo.primary;
-
-	LOCKREGION(dbenv, lt);
-	LOCKER_LOCK(lt, region, id, locker_ndx);
-	if ((ret = __lock_getlocker(lt, id, locker_ndx, 0, &sh_locker)) != 0)
-		goto err;
-
-	if (sh_locker == NULL) {
-		__db_err(dbenv, "Unknown locker ID: %lx", (u_long)id);
-		ret = EINVAL;
-		goto err;
-	}
+	ret = 0;
 
 	if (sh_locker->nlocks != 0) {
-		__db_err(dbenv, "Locker still has locks");
+		__db_errx(env, "Locker still has locks");
 		ret = EINVAL;
 		goto err;
 	}
 
-	__lock_freelocker(lt, region, sh_locker, locker_ndx);
+	LOCK_LOCKERS(env, region);
+	ret = __lock_freelocker(lt, region, sh_locker);
+	UNLOCK_LOCKERS(env, region);
 
-err:	UNLOCKREGION(dbenv, lt);
+err:
 	return (ret);
 }
 
@@ -187,23 +217,23 @@ err:	UNLOCKREGION(dbenv, lt);
  *	Set the current locker ID and current maximum unused ID (for
  *	testing purposes only).
  *
- * PUBLIC: int __lock_id_set __P((DB_ENV *, u_int32_t, u_int32_t));
+ * PUBLIC: int __lock_id_set __P((ENV *, u_int32_t, u_int32_t));
  */
 int
-__lock_id_set(dbenv, cur_id, max_id)
-	DB_ENV *dbenv;
+__lock_id_set(env, cur_id, max_id)
+	ENV *env;
 	u_int32_t cur_id, max_id;
 {
-	DB_LOCKTAB *lt;
 	DB_LOCKREGION *region;
+	DB_LOCKTAB *lt;
 
-	ENV_REQUIRES_CONFIG(dbenv,
-	    dbenv->lk_handle, "lock_id_set", DB_INIT_LOCK);
+	ENV_REQUIRES_CONFIG(env,
+	    env->lk_handle, "lock_id_set", DB_INIT_LOCK);
 
-	lt = dbenv->lk_handle;
+	lt = env->lk_handle;
 	region = lt->reginfo.primary;
-	region->stat.st_id = cur_id;
-	region->stat.st_cur_maxid = max_id;
+	region->lock_id = cur_id;
+	region->cur_maxid = max_id;
 
 	return (0);
 }
@@ -214,43 +244,74 @@ __lock_id_set(dbenv, cur_id, max_id)
  * indicates if the locker should be created if it doesn't exist in
  * the table.
  *
- * This must be called with the locker bucket locked.
+ * This must be called with the locker mutex lock if create == 1.
  *
  * PUBLIC: int __lock_getlocker __P((DB_LOCKTAB *,
- * PUBLIC:     u_int32_t, u_int32_t, int, DB_LOCKER **));
+ * PUBLIC:     u_int32_t, int, DB_LOCKER **));
+ * PUBLIC: int __lock_getlocker_int __P((DB_LOCKTAB *,
+ * PUBLIC:     u_int32_t, int, DB_LOCKER **));
  */
 int
-__lock_getlocker(lt, locker, indx, create, retp)
+__lock_getlocker(lt, locker, create, retp)
 	DB_LOCKTAB *lt;
-	u_int32_t locker, indx;
+	u_int32_t locker;
 	int create;
 	DB_LOCKER **retp;
 {
-	DB_ENV *dbenv;
-	DB_LOCKER *sh_locker;
 	DB_LOCKREGION *region;
+	ENV *env;
+	int ret;
 
-	dbenv = lt->dbenv;
+	COMPQUIET(region, NULL);
+	env = lt->env;
 	region = lt->reginfo.primary;
 
-	HASHLOOKUP(lt->locker_tab,
-	    indx, __db_locker, links, locker, sh_locker, __lock_locker_cmp);
+	LOCK_LOCKERS(env, region);
+	ret = __lock_getlocker_int(lt, locker, create, retp);
+	UNLOCK_LOCKERS(env, region);
+
+	return (ret);
+}
+
+int
+__lock_getlocker_int(lt, locker, create, retp)
+	DB_LOCKTAB *lt;
+	u_int32_t locker;
+	int create;
+	DB_LOCKER **retp;
+{
+	DB_LOCKER *sh_locker;
+	DB_LOCKREGION *region;
+	ENV *env;
+	u_int32_t indx;
+
+	env = lt->env;
+	region = lt->reginfo.primary;
+
+	LOCKER_HASH(lt, region, locker, indx);
 
 	/*
-	 * If we found the locker, then we can just return it.  If
-	 * we didn't find the locker, then we need to create it.
+	 * If we find the locker, then we can just return it.  If we don't find
+	 * the locker, then we need to create it.
 	 */
+	SH_TAILQ_FOREACH(sh_locker, &lt->locker_tab[indx], links, __db_locker)
+		if (sh_locker->id == locker)
+			break;
 	if (sh_locker == NULL && create) {
 		/* Create new locker and then insert it into hash table. */
 		if ((sh_locker = SH_TAILQ_FIRST(
 		    &region->free_lockers, __db_locker)) == NULL)
-			return (__lock_nomem(dbenv, "locker entries"));
+			return (__lock_nomem(env, "locker entries"));
 		SH_TAILQ_REMOVE(
 		    &region->free_lockers, sh_locker, links, __db_locker);
-		if (++region->stat.st_nlockers > region->stat.st_maxnlockers)
-			region->stat.st_maxnlockers = region->stat.st_nlockers;
-
+		++region->nlockers;
+#ifdef HAVE_STATISTICS
+		if (region->nlockers > region->stat.st_maxnlockers)
+			region->stat.st_maxnlockers = region->nlockers;
+#endif
 		sh_locker->id = locker;
+		env->dbenv->thread_id(
+		    env->dbenv, &sh_locker->pid, &sh_locker->tid);
 		sh_locker->dd_id = 0;
 		sh_locker->master_locker = INVALID_ROFF;
 		sh_locker->parent_locker = INVALID_ROFF;
@@ -260,10 +321,11 @@ __lock_getlocker(lt, locker, indx, create, retp)
 		sh_locker->nlocks = 0;
 		sh_locker->nwrites = 0;
 		sh_locker->lk_timeout = 0;
-		LOCK_SET_TIME_INVALID(&sh_locker->tx_expire);
-		LOCK_SET_TIME_INVALID(&sh_locker->lk_expire);
+		timespecclear(&sh_locker->tx_expire);
+		timespecclear(&sh_locker->lk_expire);
 
-		HASHINSERT(lt->locker_tab, indx, __db_locker, links, sh_locker);
+		SH_TAILQ_INSERT_HEAD(
+		    &lt->locker_tab[indx], sh_locker, links, __db_locker);
 		SH_TAILQ_INSERT_HEAD(&region->lockers,
 		    sh_locker, ulinks, __db_locker);
 	}
@@ -276,27 +338,25 @@ __lock_getlocker(lt, locker, indx, create, retp)
  * __lock_addfamilylocker
  *	Put a locker entry in for a child transaction.
  *
- * PUBLIC: int __lock_addfamilylocker __P((DB_ENV *, u_int32_t, u_int32_t));
+ * PUBLIC: int __lock_addfamilylocker __P((ENV *, u_int32_t, u_int32_t));
  */
 int
-__lock_addfamilylocker(dbenv, pid, id)
-	DB_ENV *dbenv;
+__lock_addfamilylocker(env, pid, id)
+	ENV *env;
 	u_int32_t pid, id;
 {
 	DB_LOCKER *lockerp, *mlockerp;
 	DB_LOCKREGION *region;
 	DB_LOCKTAB *lt;
-	u_int32_t ndx;
 	int ret;
 
-	lt = dbenv->lk_handle;
+	COMPQUIET(region, NULL);
+	lt = env->lk_handle;
 	region = lt->reginfo.primary;
-	LOCKREGION(dbenv, lt);
+	LOCK_LOCKERS(env, region);
 
 	/* get/create the  parent locker info */
-	LOCKER_LOCK(lt, region, pid, ndx);
-	if ((ret = __lock_getlocker(dbenv->lk_handle,
-	    pid, ndx, 1, &mlockerp)) != 0)
+	if ((ret = __lock_getlocker_int(lt, pid, 1, &mlockerp)) != 0)
 		goto err;
 
 	/*
@@ -306,9 +366,7 @@ __lock_addfamilylocker(dbenv, pid, id)
 	 * we manipulate it, nor can another child in the
 	 * family be created at the same time.
 	 */
-	LOCKER_LOCK(lt, region, id, ndx);
-	if ((ret = __lock_getlocker(dbenv->lk_handle,
-	    id, ndx, 1, &lockerp)) != 0)
+	if ((ret = __lock_getlocker_int(lt, id, 1, &lockerp)) != 0)
 		goto err;
 
 	/* Point to our parent. */
@@ -330,8 +388,7 @@ __lock_addfamilylocker(dbenv, pid, id)
 	SH_LIST_INSERT_HEAD(
 	    &mlockerp->child_locker, lockerp, child_link, __db_locker);
 
-err:
-	UNLOCKREGION(dbenv, lt);
+err:	UNLOCK_LOCKERS(env, region);
 
 	return (ret);
 }
@@ -342,32 +399,28 @@ err:
  *
  * This must be called without the locker bucket locked.
  *
- * PUBLIC: int __lock_freefamilylocker  __P((DB_LOCKTAB *, u_int32_t));
+ * PUBLIC: int __lock_freefamilylocker  __P((DB_LOCKTAB *, DB_LOCKER *));
  */
 int
-__lock_freefamilylocker(lt, locker)
+__lock_freefamilylocker(lt, sh_locker)
 	DB_LOCKTAB *lt;
-	u_int32_t locker;
-{
-	DB_ENV *dbenv;
 	DB_LOCKER *sh_locker;
+{
 	DB_LOCKREGION *region;
-	u_int32_t indx;
+	ENV *env;
 	int ret;
 
-	dbenv = lt->dbenv;
+	env = lt->env;
 	region = lt->reginfo.primary;
 
-	LOCKREGION(dbenv, lt);
-	LOCKER_LOCK(lt, region, locker, indx);
+	if (sh_locker == NULL)
+		return (0);
 
-	if ((ret = __lock_getlocker(lt,
-	    locker, indx, 0, &sh_locker)) != 0 || sh_locker == NULL)
-		goto err;
+	LOCK_LOCKERS(env, region);
 
 	if (SH_LIST_FIRST(&sh_locker->heldby, __db_lock) != NULL) {
 		ret = EINVAL;
-		__db_err(dbenv, "Freeing locker with locks");
+		__db_errx(env, "Freeing locker with locks");
 		goto err;
 	}
 
@@ -375,10 +428,9 @@ __lock_freefamilylocker(lt, locker)
 	if (sh_locker->master_locker != INVALID_ROFF)
 		SH_LIST_REMOVE(sh_locker, child_link, __db_locker);
 
-	__lock_freelocker(lt, region, sh_locker, indx);
+	ret = __lock_freelocker(lt, region, sh_locker);
 
-err:
-	UNLOCKREGION(dbenv, lt);
+err:	UNLOCK_LOCKERS(env, region);
 	return (ret);
 }
 
@@ -387,21 +439,22 @@ err:
  *      Common code for deleting a locker; must be called with the
  *	locker bucket locked.
  *
- * PUBLIC: void __lock_freelocker
- * PUBLIC:    __P((DB_LOCKTAB *, DB_LOCKREGION *, DB_LOCKER *, u_int32_t));
+ * PUBLIC: int __lock_freelocker
+ * PUBLIC:    __P((DB_LOCKTAB *, DB_LOCKREGION *, DB_LOCKER *));
  */
-void
-__lock_freelocker(lt, region, sh_locker, indx)
+int
+__lock_freelocker(lt, region, sh_locker)
 	DB_LOCKTAB *lt;
 	DB_LOCKREGION *region;
 	DB_LOCKER *sh_locker;
-	u_int32_t indx;
 
 {
-	HASHREMOVE_EL(
-	    lt->locker_tab, indx, __db_locker, links, sh_locker);
+	u_int32_t indx;
+	LOCKER_HASH(lt, region, sh_locker->id, indx);
+	SH_TAILQ_REMOVE(&lt->locker_tab[indx], sh_locker, links, __db_locker);
 	SH_TAILQ_INSERT_HEAD(
 	    &region->free_lockers, sh_locker, links, __db_locker);
 	SH_TAILQ_REMOVE(&region->lockers, sh_locker, ulinks, __db_locker);
-	region->stat.st_nlockers--;
+	region->nlockers--;
+	return (0);
 }

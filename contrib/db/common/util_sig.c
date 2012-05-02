@@ -1,35 +1,56 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 2000-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 2000-2009 Oracle.  All rights reserved.
  *
- * $Id: util_sig.c,v 1.9 2004/01/28 03:35:54 bostic Exp $
+ * $Id$
  */
 
 #include "db_config.h"
 
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-
-#include <signal.h>
-#endif
-
 #include "db_int.h"
 
 static int	interrupt;
-static void	onint __P((int));
+static void	set_signal __P((int, int));
+static void	signal_handler __P((int));
 
 /*
- * onint --
+ * signal_handler --
  *	Interrupt signal handler.
  */
 static void
-onint(signo)
+signal_handler(signo)
 	int signo;
 {
+#ifndef HAVE_SIGACTION
+	/* Assume signal() is unreliable and reset it, first thing. */
+	set_signal(signo, 0);
+#endif
+	/* Some systems don't pass in the correct signal value -- check. */
 	if ((interrupt = signo) == 0)
 		interrupt = SIGINT;
+}
+
+/*
+ * set_signal
+ */
+static void
+set_signal(s, is_dflt)
+	int s, is_dflt;
+{
+	/*
+	 * Use sigaction if it's available, otherwise use signal().
+	 */
+#ifdef HAVE_SIGACTION
+	struct sigaction sa, osa;
+
+	sa.sa_handler = is_dflt ? SIG_DFL : signal_handler;
+	(void)sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
+	(void)sigaction(s, &sa, &osa);
+#else
+	(void)signal(s, is_dflt ? SIG_DFL : signal_handler);
+#endif
 }
 
 /*
@@ -46,13 +67,17 @@ __db_util_siginit()
 	 * we can.
 	 */
 #ifdef SIGHUP
-	(void)signal(SIGHUP, onint);
+	set_signal(SIGHUP, 0);
 #endif
-	(void)signal(SIGINT, onint);
+#ifdef SIGINT
+	set_signal(SIGINT, 0);
+#endif
 #ifdef SIGPIPE
-	(void)signal(SIGPIPE, onint);
+	set_signal(SIGPIPE, 0);
 #endif
-	(void)signal(SIGTERM, onint);
+#ifdef SIGTERM
+	set_signal(SIGTERM, 0);
+#endif
 }
 
 /*
@@ -77,7 +102,8 @@ __db_util_sigresend()
 {
 	/* Resend any caught signal. */
 	if (interrupt != 0) {
-		(void)signal(interrupt, SIG_DFL);
+		set_signal(interrupt, 1);
+
 		(void)raise(interrupt);
 		/* NOTREACHED */
 	}

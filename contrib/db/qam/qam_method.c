@@ -1,28 +1,22 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1999-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 2001, 2010 Oracle and/or its affiliates.  All rights reserved.
  *
- * $Id: qam_method.c,v 11.84 2004/10/14 18:09:32 bostic Exp $
+ * $Id$
  */
 
 #include "db_config.h"
 
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-#endif
-
 #include "db_int.h"
 #include "dbinc/db_page.h"
-#include "dbinc/db_shash.h"
 #include "dbinc/db_am.h"
 #include "dbinc/lock.h"
 #include "dbinc/mp.h"
 #include "dbinc/qam.h"
 #include "dbinc/txn.h"
 
-static int __qam_rr __P((DB *, DB_TXN *,
+static int __qam_rr __P((DB *, DB_THREAD_INFO *, DB_TXN *,
 	       const char *, const char *, const char *, qam_name_op));
 static int __qam_set_extentsize __P((DB *, u_int32_t));
 
@@ -40,7 +34,7 @@ __qam_db_create(dbp)
 	int ret;
 
 	/* Allocate and initialize the private queue structure. */
-	if ((ret = __os_calloc(dbp->dbenv, 1, sizeof(QUEUE), &t)) != 0)
+	if ((ret = __os_calloc(dbp->env, 1, sizeof(QUEUE), &t)) != 0)
 		return (ret);
 	dbp->q_internal = t;
 	dbp->get_q_extentsize = __qam_get_extentsize;
@@ -86,7 +80,7 @@ again:
 			    != 0 && ret == 0)
 				ret = t_ret;
 		}
-		__os_free(dbp->dbenv, array->mpfarray);
+		__os_free(dbp->env, array->mpfarray);
 	}
 	if (t->array2.n_extent != 0) {
 		array = &t->array2;
@@ -100,8 +94,8 @@ again:
 		ret = t_ret;
 
 	if (t->path != NULL)
-		__os_free(dbp->dbenv, t->path);
-	__os_free(dbp->dbenv, t);
+		__os_free(dbp->env, t->path);
+	__os_free(dbp->env, t);
 	dbp->q_internal = NULL;
 
 	return (ret);
@@ -130,7 +124,7 @@ __qam_set_extentsize(dbp, extentsize)
 	DB_ILLEGAL_AFTER_OPEN(dbp, "DB->set_extentsize");
 
 	if (extentsize < 1) {
-		__db_err(dbp->dbenv, "Extent size must be at least 1");
+		__db_errx(dbp->env, "Extent size must be at least 1");
 		return (EINVAL);
 	}
 
@@ -155,15 +149,17 @@ __queue_pageinfo(dbp, firstp, lastp, emptyp, prpage, flags)
 	u_int32_t flags;
 {
 	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
 	QMETA *meta;
 	db_pgno_t first, i, last;
 	int empty, ret, t_ret;
 
 	mpf = dbp->mpf;
+	ENV_GET_THREAD_INFO(dbp->env, ip);
 
 	/* Find out the page number of the last page in the database. */
 	i = PGNO_BASE_MD;
-	if ((ret = __memp_fget(mpf, &i, 0, &meta)) != 0)
+	if ((ret = __memp_fget(mpf, &i, ip, NULL, 0, &meta)) != 0)
 		return (ret);
 
 	first = QAM_RECNO_PAGE(dbp, meta->first_recno);
@@ -185,7 +181,8 @@ __queue_pageinfo(dbp, firstp, lastp, emptyp, prpage, flags)
 	COMPQUIET(flags, 0);
 #endif
 
-	if ((t_ret = __memp_fput(mpf, meta, 0)) != 0 && ret == 0)
+	if ((t_ret = __memp_fput(mpf,
+	    ip, meta, dbp->priority)) != 0 && ret == 0)
 		ret = t_ret;
 
 	return (ret);
@@ -203,9 +200,11 @@ __db_prqueue(dbp, flags)
 	DB *dbp;
 	u_int32_t flags;
 {
+	DBC *dbc;
+	DB_THREAD_INFO *ip;
 	PAGE *h;
 	db_pgno_t first, i, last, pg_ext, stop;
-	int empty, ret;
+	int empty, ret, t_ret;
 
 	if ((ret = __queue_pageinfo(dbp, &first, &last, &empty, 1, flags)) != 0)
 		return (ret);
@@ -213,6 +212,9 @@ __db_prqueue(dbp, flags)
 	if (empty || ret != 0)
 		return (ret);
 
+	ENV_GET_THREAD_INFO(dbp->env, ip);
+	if ((ret = __db_cursor(dbp, ip, NULL, &dbc, 0)) != 0)
+		return (ret);
 	i = first;
 	if (first > last)
 		stop = QAM_RECNO_PAGE(dbp, UINT32_MAX);
@@ -220,24 +222,25 @@ __db_prqueue(dbp, flags)
 		stop = last;
 
 	/* Dump each page. */
+	pg_ext = ((QUEUE *)dbp->q_internal)->page_ext;
 begin:
 	for (; i <= stop; ++i) {
-		if ((ret = __qam_fget(dbp, &i, 0, &h)) != 0) {
-			pg_ext = ((QUEUE *)dbp->q_internal)->page_ext;
+		if ((ret = __qam_fget(dbc, &i, 0, &h)) != 0) {
 			if (pg_ext == 0) {
 				if (ret == DB_PAGE_NOTFOUND && first == last)
-					return (0);
-				return (ret);
+					ret = 0;
+				goto err;
 			}
 			if (ret == ENOENT || ret == DB_PAGE_NOTFOUND) {
 				i += (pg_ext - ((i - 1) % pg_ext)) - 1;
+				ret = 0;
 				continue;
 			}
-			return (ret);
+			goto err;
 		}
 		(void)__db_prpage(dbp, h, flags);
-		if ((ret = __qam_fput(dbp, i, h, 0)) != 0)
-			return (ret);
+		if ((ret = __qam_fput(dbc, i, h, dbp->priority)) != 0)
+			goto err;
 	}
 
 	if (first > last) {
@@ -246,7 +249,11 @@ begin:
 		first = last;
 		goto begin;
 	}
-	return (0);
+
+err:
+	if ((t_ret = __dbc_close(dbc)) != 0 && ret == 0)
+		ret = t_ret;
+	return (ret);
 }
 #endif
 
@@ -254,31 +261,36 @@ begin:
  * __qam_remove --
  *	Remove method for a Queue.
  *
- * PUBLIC: int __qam_remove __P((DB *, DB_TXN *, const char *, const char *));
+ * PUBLIC: int __qam_remove __P((DB *, DB_THREAD_INFO *, DB_TXN *,
+ * PUBLIC:    const char *, const char *, u_int32_t));
  */
 int
-__qam_remove(dbp, txn, name, subdb)
+__qam_remove(dbp, ip, txn, name, subdb, flags)
 	DB *dbp;
+	DB_THREAD_INFO *ip;
 	DB_TXN *txn;
 	const char *name, *subdb;
+	u_int32_t flags;
 {
-	return (__qam_rr(dbp, txn, name, subdb, NULL, QAM_NAME_REMOVE));
+	COMPQUIET(flags, 0);
+	return (__qam_rr(dbp, ip, txn, name, subdb, NULL, QAM_NAME_REMOVE));
 }
 
 /*
  * __qam_rename --
  *	Rename method for a Queue.
  *
- * PUBLIC: int __qam_rename __P((DB *,
- * PUBLIC:         DB_TXN *, const char *, const char *, const char *));
+ * PUBLIC: int __qam_rename __P((DB *, DB_THREAD_INFO *, DB_TXN *,
+ * PUBLIC:         const char *, const char *, const char *));
  */
 int
-__qam_rename(dbp, txn, name, subdb, newname)
+__qam_rename(dbp, ip, txn, name, subdb, newname)
 	DB *dbp;
+	DB_THREAD_INFO *ip;
 	DB_TXN *txn;
 	const char *name, *subdb, *newname;
 {
-	return (__qam_rr(dbp, txn, name, subdb, newname, QAM_NAME_RENAME));
+	return (__qam_rr(dbp, ip, txn, name, subdb, newname, QAM_NAME_RENAME));
 }
 
 /*
@@ -286,24 +298,23 @@ __qam_rename(dbp, txn, name, subdb, newname)
  *	Remove/Rename method for a Queue.
  */
 static int
-__qam_rr(dbp, txn, name, subdb, newname, op)
+__qam_rr(dbp, ip, txn, name, subdb, newname, op)
 	DB *dbp;
+	DB_THREAD_INFO *ip;
 	DB_TXN *txn;
 	const char *name, *subdb, *newname;
 	qam_name_op op;
 {
-	DB_ENV *dbenv;
 	DB *tmpdbp;
+	ENV *env;
 	QUEUE *qp;
 	int ret, t_ret;
 
-	dbenv = dbp->dbenv;
+	env = dbp->env;
 	ret = 0;
 
-	PANIC_CHECK(dbenv);
-
-	if (subdb != NULL) {
-		__db_err(dbenv,
+	if (subdb != NULL && name != NULL) {
+		__db_errx(env,
 		    "Queue does not support multiple databases per file");
 		return (EINVAL);
 	}
@@ -315,15 +326,15 @@ __qam_rr(dbp, txn, name, subdb, newname, op)
 	if (F_ISSET(dbp, DB_AM_OPEN_CALLED))
 		tmpdbp = dbp;
 	else {
-		if ((ret = db_create(&tmpdbp, dbenv, 0)) != 0)
+		if ((ret = __db_create_internal(&tmpdbp, env, 0)) != 0)
 			return (ret);
 
 		/*
 		 * We need to make sure we don't self-deadlock, so give
 		 * this dbp the same locker as the incoming one.
 		 */
-		tmpdbp->lid = dbp->lid;
-		if ((ret = __db_open(tmpdbp, txn,
+		tmpdbp->locker = dbp->locker;
+		if ((ret = __db_open(tmpdbp, ip, txn,
 		    name, NULL, DB_QUEUE, DB_RDONLY, 0, PGNO_BASE_MD)) != 0)
 			goto err;
 	}
@@ -337,15 +348,15 @@ err:		/*
 		 * Since we copied the locker ID from the dbp, we'd better not
 		 * free it here.
 		 */
-		tmpdbp->lid = DB_LOCK_INVALIDID;
+		tmpdbp->locker = NULL;
 
 		/* We need to remove the lock event we associated with this. */
 		if (txn != NULL)
-			__txn_remlock(dbenv,
+			__txn_remlock(env,
 			    txn, &tmpdbp->handle_lock, DB_LOCK_INVALIDID);
 
-		if ((t_ret =
-		    __db_close(tmpdbp, txn, DB_NOSYNC)) != 0 && ret == 0)
+		if ((t_ret = __db_close(tmpdbp,
+		    txn, DB_NOSYNC)) != 0 && ret == 0)
 			ret = t_ret;
 	}
 	return (ret);

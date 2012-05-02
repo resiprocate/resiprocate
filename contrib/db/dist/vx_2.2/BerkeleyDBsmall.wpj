@@ -164,8 +164,7 @@ ccpentium
 <END>
 
 <BEGIN> BUILD_PENTIUM_release_MACRO_CFLAGS
--g \
-	-mcpu=pentiumpro \
+-mcpu=pentiumpro \
 	-march=pentiumpro \
 	-ansi \
 	-nostdlib \

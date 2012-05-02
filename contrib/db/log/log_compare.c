@@ -1,19 +1,15 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1996-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
  *
- * $Id: log_compare.c,v 11.8 2004/01/28 03:36:17 bostic Exp $
+ * $Id$
  */
 
 #include "db_config.h"
 
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-#endif
-
 #include "db_int.h"
+#include "dbinc/log.h"
 
 /*
  * log_compare --
@@ -25,11 +21,44 @@ int
 log_compare(lsn0, lsn1)
 	const DB_LSN *lsn0, *lsn1;
 {
-	if (lsn0->file != lsn1->file)
-		return (lsn0->file < lsn1->file ? -1 : 1);
+	return (LOG_COMPARE(lsn0, lsn1));
+}
 
-	if (lsn0->offset != lsn1->offset)
-		return (lsn0->offset < lsn1->offset ? -1 : 1);
+/*
+ * __log_check_page_lsn --
+ *	Panic if the page's lsn in past the end of the current log.
+ *
+ * PUBLIC: int __log_check_page_lsn __P((ENV *, DB *, DB_LSN *));
+ */
+int
+__log_check_page_lsn(env, dbp, lsnp)
+	ENV *env;
+	DB *dbp;
+	DB_LSN *lsnp;
+{
+	LOG *lp;
+	int ret;
 
-	return (0);
+	lp = env->lg_handle->reginfo.primary;
+	LOG_SYSTEM_LOCK(env);
+
+	ret = LOG_COMPARE(lsnp, &lp->lsn);
+
+	LOG_SYSTEM_UNLOCK(env);
+
+	if (ret < 0)
+		return (0);
+
+	__db_errx(env,
+	    "file %s has LSN %lu/%lu, past end of log at %lu/%lu",
+	    dbp == NULL || dbp->fname == NULL ? "unknown" : dbp->fname,
+	    (u_long)lsnp->file, (u_long)lsnp->offset,
+	    (u_long)lp->lsn.file, (u_long)lp->lsn.offset);
+	__db_errx(env, "%s",
+    "Commonly caused by moving a database from one database environment");
+	__db_errx(env, "%s",
+    "to another without clearing the database LSNs, or by removing all of");
+	__db_errx(env, "%s",
+    "the log files from a database environment");
+	return (EINVAL);
 }

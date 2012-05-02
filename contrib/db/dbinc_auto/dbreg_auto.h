@@ -5,7 +5,7 @@
 #define	DB___dbreg_register	2
 typedef struct ___dbreg_register_args {
 	u_int32_t type;
-	DB_TXN *txnid;
+	DB_TXN *txnp;
 	DB_LSN prev_lsn;
 	u_int32_t	opcode;
 	DBT	name;

@@ -5,7 +5,7 @@
 #define	DB___ham_insdel	21
 typedef struct ___ham_insdel_args {
 	u_int32_t type;
-	DB_TXN *txnid;
+	DB_TXN *txnp;
 	DB_LSN prev_lsn;
 	u_int32_t	opcode;
 	int32_t	fileid;
@@ -19,7 +19,7 @@ typedef struct ___ham_insdel_args {
 #define	DB___ham_newpage	22
 typedef struct ___ham_newpage_args {
 	u_int32_t type;
-	DB_TXN *txnid;
+	DB_TXN *txnp;
 	DB_LSN prev_lsn;
 	u_int32_t	opcode;
 	int32_t	fileid;
@@ -34,7 +34,7 @@ typedef struct ___ham_newpage_args {
 #define	DB___ham_splitdata	24
 typedef struct ___ham_splitdata_args {
 	u_int32_t type;
-	DB_TXN *txnid;
+	DB_TXN *txnp;
 	DB_LSN prev_lsn;
 	int32_t	fileid;
 	u_int32_t	opcode;
@@ -46,7 +46,7 @@ typedef struct ___ham_splitdata_args {
 #define	DB___ham_replace	25
 typedef struct ___ham_replace_args {
 	u_int32_t type;
-	DB_TXN *txnid;
+	DB_TXN *txnp;
 	DB_LSN prev_lsn;
 	int32_t	fileid;
 	db_pgno_t	pgno;
@@ -61,7 +61,7 @@ typedef struct ___ham_replace_args {
 #define	DB___ham_copypage	28
 typedef struct ___ham_copypage_args {
 	u_int32_t type;
-	DB_TXN *txnid;
+	DB_TXN *txnp;
 	DB_LSN prev_lsn;
 	int32_t	fileid;
 	db_pgno_t	pgno;
@@ -73,10 +73,26 @@ typedef struct ___ham_copypage_args {
 	DBT	page;
 } __ham_copypage_args;
 
+#define	DB___ham_metagroup_42	29
+typedef struct ___ham_metagroup_42_args {
+	u_int32_t type;
+	DB_TXN *txnp;
+	DB_LSN prev_lsn;
+	int32_t	fileid;
+	u_int32_t	bucket;
+	db_pgno_t	mmpgno;
+	DB_LSN	mmetalsn;
+	db_pgno_t	mpgno;
+	DB_LSN	metalsn;
+	db_pgno_t	pgno;
+	DB_LSN	pagelsn;
+	u_int32_t	newalloc;
+} __ham_metagroup_42_args;
+
 #define	DB___ham_metagroup	29
 typedef struct ___ham_metagroup_args {
 	u_int32_t type;
-	DB_TXN *txnid;
+	DB_TXN *txnp;
 	DB_LSN prev_lsn;
 	int32_t	fileid;
 	u_int32_t	bucket;
@@ -90,23 +106,35 @@ typedef struct ___ham_metagroup_args {
 	db_pgno_t	last_pgno;
 } __ham_metagroup_args;
 
-#define	DB___ham_groupalloc	32
-typedef struct ___ham_groupalloc_args {
+#define	DB___ham_groupalloc_42	32
+typedef struct ___ham_groupalloc_42_args {
 	u_int32_t type;
-	DB_TXN *txnid;
+	DB_TXN *txnp;
 	DB_LSN prev_lsn;
 	int32_t	fileid;
 	DB_LSN	meta_lsn;
 	db_pgno_t	start_pgno;
 	u_int32_t	num;
 	db_pgno_t	free;
+} __ham_groupalloc_42_args;
+
+#define	DB___ham_groupalloc	32
+typedef struct ___ham_groupalloc_args {
+	u_int32_t type;
+	DB_TXN *txnp;
+	DB_LSN prev_lsn;
+	int32_t	fileid;
+	DB_LSN	meta_lsn;
+	db_pgno_t	start_pgno;
+	u_int32_t	num;
+	db_pgno_t	unused;
 	db_pgno_t	last_pgno;
 } __ham_groupalloc_args;
 
 #define	DB___ham_curadj	33
 typedef struct ___ham_curadj_args {
 	u_int32_t type;
-	DB_TXN *txnid;
+	DB_TXN *txnp;
 	DB_LSN prev_lsn;
 	int32_t	fileid;
 	db_pgno_t	pgno;
@@ -121,7 +149,7 @@ typedef struct ___ham_curadj_args {
 #define	DB___ham_chgpg	34
 typedef struct ___ham_chgpg_args {
 	u_int32_t type;
-	DB_TXN *txnid;
+	DB_TXN *txnp;
 	DB_LSN prev_lsn;
 	int32_t	fileid;
 	db_ham_mode	mode;

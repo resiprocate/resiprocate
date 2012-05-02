@@ -1,8 +1,7 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1996-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
  */
 /*
  * Copyright (c) 1990, 1993
@@ -39,19 +38,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: dbm.c,v 11.18 2004/05/10 21:26:47 bostic Exp $
+ * $Id$
  */
 
+#define	DB_DBM_HSEARCH	1
 #include "db_config.h"
 
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-
-#include <fcntl.h>
-#include <string.h>
-#endif
-
-#define	DB_DBM_HSEARCH	1
 #include "db_int.h"
 
 /*
@@ -97,8 +89,7 @@ __db_dbm_init(file)
 {
 	if (__cur_db != NULL)
 		dbm_close(__cur_db);
-	if ((__cur_db =
-	    dbm_open(file, O_CREAT | O_RDWR, __db_omode("rw----"))) != NULL)
+	if ((__cur_db = dbm_open(file, O_CREAT | O_RDWR, DB_MODE_600)) != NULL)
 		return (0);
 	if ((__cur_db = dbm_open(file, O_RDONLY, 0)) != NULL)
 		return (0);
@@ -123,7 +114,8 @@ __db_dbm_fetch(key)
 
 	if (__cur_db == NULL) {
 		__db_no_open();
-		item.dptr = 0;
+		item.dptr = NULL;
+		item.dsize = 0;
 		return (item);
 	}
 	return (dbm_fetch(__cur_db, key));
@@ -136,7 +128,8 @@ __db_dbm_firstkey()
 
 	if (__cur_db == NULL) {
 		__db_no_open();
-		item.dptr = 0;
+		item.dptr = NULL;
+		item.dsize = 0;
 		return (item);
 	}
 	return (dbm_firstkey(__cur_db));
@@ -152,7 +145,8 @@ __db_dbm_nextkey(key)
 
 	if (__cur_db == NULL) {
 		__db_no_open();
-		item.dptr = 0;
+		item.dptr = NULL;
+		item.dsize = 0;
 		return (item);
 	}
 	return (dbm_nextkey(__cur_db));
@@ -204,7 +198,7 @@ __db_ndbm_open(file, oflags, mode)
 	DB *dbp;
 	DBC *dbc;
 	int ret;
-	char path[MAXPATHLEN];
+	char path[DB_MAXPATHLEN];
 
 	/*
 	 * !!!
@@ -236,7 +230,7 @@ __db_ndbm_open(file, oflags, mode)
 	    (ret = dbp->set_h_ffactor(dbp, 40)) != 0 ||
 	    (ret = dbp->set_h_nelem(dbp, 1)) != 0 ||
 	    (ret = dbp->open(dbp, NULL,
-	    path, NULL, DB_HASH, __db_oflags(oflags), mode)) != 0) {
+	    path, NULL, DB_HASH, __db_openflags(oflags), mode)) != 0) {
 		__os_set_errno(ret);
 		return (NULL);
 	}
@@ -282,13 +276,11 @@ __db_ndbm_fetch(dbm, key)
 
 	dbc = (DBC *)dbm;
 
-	memset(&_key, 0, sizeof(DBT));
+	DB_INIT_DBT(_key, key.dptr, key.dsize);
 	memset(&_data, 0, sizeof(DBT));
-	_key.size = (u_int32_t)key.dsize;
-	_key.data = key.dptr;
 
 	/*
-	 * Note that we can't simply use the dbc we have to do a c_get/SET,
+	 * Note that we can't simply use the dbc we have to do a get/SET,
 	 * because that cursor is the one used for sequential iteration and
 	 * it has to remain stable in the face of intervening gets and puts.
 	 */
@@ -327,7 +319,7 @@ __db_ndbm_firstkey(dbm)
 	memset(&_key, 0, sizeof(DBT));
 	memset(&_data, 0, sizeof(DBT));
 
-	if ((ret = dbc->c_get(dbc, &_key, &_data, DB_FIRST)) == 0) {
+	if ((ret = dbc->get(dbc, &_key, &_data, DB_FIRST)) == 0) {
 		key.dptr = _key.data;
 		key.dsize = (int)_key.size;
 	} else {
@@ -362,7 +354,7 @@ __db_ndbm_nextkey(dbm)
 	memset(&_key, 0, sizeof(DBT));
 	memset(&_data, 0, sizeof(DBT));
 
-	if ((ret = dbc->c_get(dbc, &_key, &_data, DB_NEXT)) == 0) {
+	if ((ret = dbc->get(dbc, &_key, &_data, DB_NEXT)) == 0) {
 		key.dptr = _key.data;
 		key.dsize = (int)_key.size;
 	} else {
@@ -394,9 +386,7 @@ __db_ndbm_delete(dbm, key)
 
 	dbc = (DBC *)dbm;
 
-	memset(&_key, 0, sizeof(DBT));
-	_key.data = key.dptr;
-	_key.size = (u_int32_t)key.dsize;
+	DB_INIT_DBT(_key, key.dptr, key.dsize);
 
 	if ((ret = dbc->dbp->del(dbc->dbp, NULL, &_key, 0)) == 0)
 		return (0);
@@ -428,13 +418,8 @@ __db_ndbm_store(dbm, key, data, flags)
 
 	dbc = (DBC *)dbm;
 
-	memset(&_key, 0, sizeof(DBT));
-	_key.data = key.dptr;
-	_key.size = (u_int32_t)key.dsize;
-
-	memset(&_data, 0, sizeof(DBT));
-	_data.data = data.dptr;
-	_data.size = (u_int32_t)data.dsize;
+	DB_INIT_DBT(_key, key.dptr, key.dsize);
+	DB_INIT_DBT(_data, data.dptr, data.dsize);
 
 	if ((ret = dbc->dbp->put(dbc->dbp, NULL,
 	    &_key, &_data, flags == DBM_INSERT ? DB_NOOVERWRITE : 0)) == 0)

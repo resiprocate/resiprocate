@@ -1,26 +1,22 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 2001-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 2001-2009 Oracle.  All rights reserved.
  *
  * Some parts of this code originally written by Adam Stubblefield,
  * -- astubble@rice.edu.
  *
- * $Id: hmac.c,v 1.27 2004/01/28 03:36:11 bostic Exp $
+ * $Id$
  */
 
 #include "db_config.h"
-
-#ifndef NO_SYSTEM_INCLUDES
-#include <string.h>
-#endif
 
 #include "db_int.h"
 #include "dbinc/crypto.h"
 #include "dbinc/db_page.h"	/* for hash.h only */
 #include "dbinc/hash.h"
 #include "dbinc/hmac.h"
+#include "dbinc/log.h"
 
 #define	HMAC_OUTPUT_SIZE	20
 #define	HMAC_BLOCK_SIZE	64
@@ -79,10 +75,12 @@ __db_hmac(k, data, data_len, mac)
  * __db_chksum --
  *	Create a MAC/SHA1 checksum.
  *
- * PUBLIC: void __db_chksum __P((u_int8_t *, size_t, u_int8_t *, u_int8_t *));
+ * PUBLIC: void __db_chksum __P((void *,
+ * PUBLIC:     u_int8_t *, size_t, u_int8_t *, u_int8_t *));
  */
 void
-__db_chksum(data, data_len, mac_key, store)
+__db_chksum(hdr, data, data_len, mac_key, store)
+	void *hdr;
 	u_int8_t *data;
 	size_t data_len;
 	u_int8_t *mac_key;
@@ -90,27 +88,37 @@ __db_chksum(data, data_len, mac_key, store)
 {
 	int sumlen;
 	u_int32_t hash4;
-	u_int8_t tmp[DB_MAC_KEY];
 
 	/*
 	 * Since the checksum might be on a page of data we are checksumming
 	 * we might be overwriting after checksumming, we zero-out the
 	 * checksum value so that we can have a known value there when
 	 * we verify the checksum.
+	 * If we are passed a log header XOR in prev and len so we have
+	 * some redundancy on these fields.  Mostly we need to be sure that
+	 * we detect a race when doing hot backups and reading a live log
+	 * file.
 	 */
 	if (mac_key == NULL)
 		sumlen = sizeof(u_int32_t);
 	else
 		sumlen = DB_MAC_KEY;
-	memset(store, 0, sumlen);
+	if (hdr == NULL)
+		memset(store, 0, sumlen);
+	else
+		store = ((HDR*)hdr)->chksum;
 	if (mac_key == NULL) {
 		/* Just a hash, no MAC */
 		hash4 = __ham_func4(NULL, data, (u_int32_t)data_len);
+		if (hdr != NULL)
+			hash4 ^= ((HDR *)hdr)->prev ^ ((HDR *)hdr)->len;
 		memcpy(store, &hash4, sumlen);
 	} else {
-		memset(tmp, 0, DB_MAC_KEY);
-		__db_hmac(mac_key, data, data_len, tmp);
-		memcpy(store, tmp, sumlen);
+		__db_hmac(mac_key, data, data_len, store);
+		if (hdr != 0) {
+			((int *)store)[0] ^= ((HDR *)hdr)->prev;
+			((int *)store)[1] ^= ((HDR *)hdr)->len;
+		}
 	}
 	return;
 }
@@ -144,12 +152,13 @@ __db_derive_mac(passwd, plen, mac_key)
  *
  *	Return 0 on success, >0 (errno) on error, -1 on checksum mismatch.
  *
- * PUBLIC: int __db_check_chksum __P((DB_ENV *,
- * PUBLIC:     DB_CIPHER *, u_int8_t *, void *, size_t, int));
+ * PUBLIC: int __db_check_chksum __P((ENV *,
+ * PUBLIC:     void *, DB_CIPHER *, u_int8_t *, void *, size_t, int));
  */
 int
-__db_check_chksum(dbenv, db_cipher, chksum, data, data_len, is_hmac)
-	DB_ENV *dbenv;
+__db_check_chksum(env, hdr, db_cipher, chksum, data, data_len, is_hmac)
+	ENV *env;
+	void *hdr;
 	DB_CIPHER *db_cipher;
 	u_int8_t *chksum;
 	void *data;
@@ -168,7 +177,7 @@ __db_check_chksum(dbenv, db_cipher, chksum, data, data_len, is_hmac)
 	 */
 	if (is_hmac == 0) {
 		if (db_cipher != NULL) {
-			__db_err(dbenv,
+			__db_errx(env,
     "Unencrypted checksum with a supplied encryption key");
 			return (EINVAL);
 		}
@@ -176,7 +185,7 @@ __db_check_chksum(dbenv, db_cipher, chksum, data, data_len, is_hmac)
 		mac_key = NULL;
 	} else {
 		if (db_cipher == NULL) {
-			__db_err(dbenv,
+			__db_errx(env,
     "Encrypted checksum: no encryption key specified");
 			return (EINVAL);
 		}
@@ -189,16 +198,36 @@ __db_check_chksum(dbenv, db_cipher, chksum, data, data_len, is_hmac)
 	 * Since the checksum might be on the page, we need to have known data
 	 * there so that we can generate the same original checksum.  We zero
 	 * it out, just like we do in __db_chksum above.
+	 * If there is a log header, XOR the prev and len fields.
 	 */
-	memcpy(old, chksum, sum_len);
-	memset(chksum, 0, sum_len);
+retry:
+	if (hdr == NULL) {
+		memcpy(old, chksum, sum_len);
+		memset(chksum, 0, sum_len);
+		chksum = old;
+	}
+
 	if (mac_key == NULL) {
 		/* Just a hash, no MAC */
 		hash4 = __ham_func4(NULL, data, (u_int32_t)data_len);
-		ret = memcmp((u_int32_t *)old, &hash4, sum_len) ? -1 : 0;
+		if (hdr != NULL)
+			LOG_HDR_SUM(0, hdr, &hash4);
+		ret = memcmp((u_int32_t *)chksum, &hash4, sum_len) ? -1 : 0;
 	} else {
 		__db_hmac(mac_key, data, data_len, new);
-		ret = memcmp(old, new, sum_len) ? -1 : 0;
+		if (hdr != NULL)
+			LOG_HDR_SUM(1, hdr, new);
+		ret = memcmp(chksum, new, sum_len) ? -1 : 0;
+	}
+	/*
+	 * !!!
+	 * We might be looking at an old log even with the new
+	 * code.  So, if we have a hdr, and the checksum doesn't
+	 * match, try again without a hdr.
+	 */
+	if (hdr != NULL && ret != 0) {
+		hdr = NULL;
+		goto retry;
 	}
 
 	return (ret);

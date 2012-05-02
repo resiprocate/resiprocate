@@ -1,4 +1,4 @@
-# $Id: range.awk,v 10.2 1999/11/21 18:01:42 bostic Exp $
+# $Id$
 #
 # Print out a range of the log
 

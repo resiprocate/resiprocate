@@ -1,10 +1,9 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1996-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
  *
- * $Id: db_page.h,v 11.63 2004/09/17 22:00:27 mjc Exp $
+ * $Id$
  */
 
 #ifndef _DB_PAGE_H_
@@ -36,7 +35,7 @@ extern "C" {
 /* Page types. */
 #define	P_INVALID	0	/* Invalid page type. */
 #define	__P_DUPLICATE	1	/* Duplicate. DEPRECATED in 3.1 */
-#define	P_HASH		2	/* Hash. */
+#define	P_HASH_UNSORTED	2	/* Hash pages created pre 4.6. DEPRECATED */
 #define	P_IBTREE	3	/* Btree internal. */
 #define	P_IRECNO	4	/* Recno internal. */
 #define	P_LBTREE	5	/* Btree leaf. */
@@ -47,7 +46,10 @@ extern "C" {
 #define	P_QAMMETA	10	/* Queue metadata page. */
 #define	P_QAMDATA	11	/* Queue data page. */
 #define	P_LDUP		12	/* Off-page duplicate leaf. */
-#define	P_PAGETYPE_MAX	13
+#define	P_HASH		13	/* Sorted hash page. */
+#define	P_PAGETYPE_MAX	14
+/* Flag to __db_new */
+#define	P_DONTEXTEND	0x8000	/* Don't allocate if there are no free pages. */
 
 /*
  * When we create pages in mpool, we ask mpool to clear some number of bytes
@@ -74,11 +76,13 @@ typedef struct _dbmeta33 {
 	u_int8_t  encrypt_alg;	/*    24: Encryption algorithm. */
 	u_int8_t  type;		/*    25: Page type. */
 #define	DBMETA_CHKSUM		0x01
+#define	DBMETA_PART_RANGE	0x02
+#define	DBMETA_PART_CALLBACK	0x04
 	u_int8_t  metaflags;	/* 26: Meta-only flags */
 	u_int8_t  unused1;	/* 27: Unused. */
 	u_int32_t free;		/* 28-31: Free list page number. */
 	db_pgno_t last_pgno;	/* 32-35: Page number of last page in db. */
-	u_int32_t unused3;	/* 36-39: Unused. */
+	u_int32_t nparts;	/* 36-39: Number of partitions. */
 	u_int32_t key_count;	/* 40-43: Cached key count. */
 	u_int32_t record_count;	/* 44-47: Cached record count. */
 	u_int32_t flags;	/* 48-51: Flags: unique to each AM. */
@@ -97,15 +101,16 @@ typedef struct _btmeta33 {
 #define	BTM_RENUMBER	0x010	/*	  Recno: renumber on insert/delete. */
 #define	BTM_SUBDB	0x020	/*	  Subdatabases. */
 #define	BTM_DUPSORT	0x040	/*	  Duplicates are sorted. */
-#define	BTM_MASK	0x07f
+#define	BTM_COMPRESS	0x080	/*	  Compressed. */
+#define	BTM_MASK	0x0ff
 	DBMETA	dbmeta;		/* 00-71: Generic meta-data header. */
 
-	u_int32_t maxkey;	/* 72-75: Btree: Maxkey. */
+	u_int32_t unused1;	/* 72-75: Unused space. */
 	u_int32_t minkey;	/* 76-79: Btree: Minkey. */
 	u_int32_t re_len;	/* 80-83: Recno: fixed-length record length. */
 	u_int32_t re_pad;	/* 84-87: Recno: fixed-length record pad. */
 	u_int32_t root;		/* 88-91: Root page. */
-	u_int32_t unused[92];	/* 92-459: Unused space */
+	u_int32_t unused2[92];	/* 92-459: Unused space. */
 	u_int32_t crypto_magic;		/* 460-463: Crypto magic number */
 	u_int32_t trash[3];		/* 464-475: Trash space - Do not use */
 	u_int8_t iv[DB_IV_BYTES];	/* 476-495: Crypto IV */
@@ -268,7 +273,7 @@ typedef struct _db_page {
 	(F_ISSET((dbp), DB_AM_ENCRYPT) ? ((u_int8_t *)(pg) +		\
 	SIZEOF_PAGE + SSZA(PG_CRYPTO, chksum)) :			\
 	(F_ISSET((dbp), DB_AM_CHKSUM) ? ((u_int8_t *)(pg) +		\
-	SIZEOF_PAGE + SSZA(PG_CHKSUM, chksum))			\
+	SIZEOF_PAGE + SSZA(PG_CHKSUM, chksum))				\
 	: NULL))
 
 /* PAGE element macros. */
@@ -454,9 +459,9 @@ typedef struct _hkeydata {
 	(HKEYDATA_SIZE(len) + sizeof(db_indx_t))
 
 /* Put a HKEYDATA item at the location referenced by a page entry. */
-#define	PUT_HKEYDATA(pe, kd, len, type) {				\
-	((HKEYDATA *)pe)->type = type;					\
-	memcpy((u_int8_t *)pe + sizeof(u_int8_t), kd, len);		\
+#define	PUT_HKEYDATA(pe, kd, len, etype) {				\
+	((HKEYDATA *)(pe))->type = etype;				\
+	memcpy((u_int8_t *)(pe) + sizeof(u_int8_t), kd, len);		\
 }
 
 /*
@@ -531,12 +536,9 @@ typedef struct _hoffdup {
 #define	B_DSET(t)	(t) |= B_DELETE
 #define	B_DISSET(t)	((t) & B_DELETE)
 
-#define	B_TYPE(t)	((t) & ~B_DELETE)
-#define	B_TSET(t, type, deleted) {					\
-	(t) = (type);							\
-	if (deleted)							\
-		B_DSET(t);						\
-}
+#define	B_TYPE(t)		((t) & ~B_DELETE)
+#define	B_TSET(t, type)	((t) = B_TYPE(type))
+#define	B_TSET_DELETED(t, type) ((t) = (type) | B_DELETE)
 
 /*
  * The first type is B_KEYDATA, represented by the BKEYDATA structure:
@@ -587,6 +589,14 @@ typedef struct _boverflow {
 	((u_int16_t)DB_ALIGN(sizeof(BOVERFLOW), sizeof(u_int32_t)))
 #define	BOVERFLOW_PSIZE							\
 	(BOVERFLOW_SIZE + sizeof(db_indx_t))
+
+#define	BITEM_SIZE(bk)							\
+	(B_TYPE((bk)->type) != B_KEYDATA ? BOVERFLOW_SIZE :		\
+	BKEYDATA_SIZE((bk)->len))
+
+#define	BITEM_PSIZE(bk)							\
+	(B_TYPE((bk)->type) != B_KEYDATA ? BOVERFLOW_PSIZE :		\
+	BKEYDATA_PSIZE((bk)->len))
 
 /*
  * Btree leaf and hash page layouts group indices in sets of two, one for the
@@ -649,6 +659,11 @@ typedef struct _rinternal {
 	(u_int16_t)DB_ALIGN(sizeof(RINTERNAL), sizeof(u_int32_t))
 #define	RINTERNAL_PSIZE							\
 	(RINTERNAL_SIZE + sizeof(db_indx_t))
+
+typedef struct __pglist {
+	db_pgno_t pgno, next_pgno;
+	DB_LSN lsn;
+} db_pglist_t;
 
 #if defined(__cplusplus)
 }

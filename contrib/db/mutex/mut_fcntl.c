@@ -1,117 +1,121 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1996-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
  *
- * $Id: mut_fcntl.c,v 11.26 2004/01/28 03:36:18 bostic Exp $
+ * $Id$
  */
 
 #include "db_config.h"
 
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-
-#include <fcntl.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>				/* SEEK_SET on SunOS. */
-#endif
-
 #include "db_int.h"
+
+static inline int __db_fcntl_mutex_lock_int __P((ENV *, db_mutex_t, int));
 
 /*
  * __db_fcntl_mutex_init --
- *	Initialize a DB mutex structure.
+ *	Initialize a fcntl mutex.
  *
- * PUBLIC: int __db_fcntl_mutex_init __P((DB_ENV *, DB_MUTEX *, u_int32_t));
+ * PUBLIC: int __db_fcntl_mutex_init __P((ENV *, db_mutex_t, u_int32_t));
  */
 int
-__db_fcntl_mutex_init(dbenv, mutexp, offset)
-	DB_ENV *dbenv;
-	DB_MUTEX *mutexp;
-	u_int32_t offset;
+__db_fcntl_mutex_init(env, mutex, flags)
+	ENV *env;
+	db_mutex_t mutex;
+	u_int32_t flags;
 {
-	u_int32_t save;
-
-	/*
-	 * The only setting/checking of the MUTEX_MPOOL flag is in the mutex
-	 * mutex allocation code (__db_mutex_alloc/free).  Preserve only that
-	 * flag.  This is safe because even if this flag was never explicitly
-	 * set, but happened to be set in memory, it will never be checked or
-	 * acted upon.
-	 */
-	save = F_ISSET(mutexp, MUTEX_MPOOL);
-	memset(mutexp, 0, sizeof(*mutexp));
-	F_SET(mutexp, save);
-
-	/*
-	 * This is where we decide to ignore locks we don't need to set -- if
-	 * the application is private, we don't need any locks.
-	 */
-	if (F_ISSET(dbenv, DB_ENV_PRIVATE)) {
-		F_SET(mutexp, MUTEX_IGNORE);
-		return (0);
-	}
-
-	mutexp->off = offset;
-#ifdef HAVE_MUTEX_SYSTEM_RESOURCES
-	mutexp->reg_off = INVALID_ROFF;
-#endif
-	F_SET(mutexp, MUTEX_INITED);
+	COMPQUIET(env, NULL);
+	COMPQUIET(mutex, MUTEX_INVALID);
+	COMPQUIET(flags, 0);
 
 	return (0);
 }
 
 /*
- * __db_fcntl_mutex_lock
- *	Lock on a mutex, blocking if necessary.
- *
- * PUBLIC: int __db_fcntl_mutex_lock __P((DB_ENV *, DB_MUTEX *));
+ * __db_fcntl_mutex_lock_int
+ *	Internal function to lock a mutex, blocking only when requested
  */
-int
-__db_fcntl_mutex_lock(dbenv, mutexp)
+inline int
+__db_fcntl_mutex_lock_int(env, mutex, wait)
+	ENV *env;
+	db_mutex_t mutex;
+	int wait;
+{
 	DB_ENV *dbenv;
 	DB_MUTEX *mutexp;
-{
+	DB_MUTEXMGR *mtxmgr;
+	DB_THREAD_INFO *ip;
 	struct flock k_lock;
-	int locked, ms, waited;
+	int locked, ms, ret;
 
-	if (F_ISSET(dbenv, DB_ENV_NOLOCKING))
+	dbenv = env->dbenv;
+
+	if (!MUTEX_ON(env) || F_ISSET(dbenv, DB_ENV_NOLOCKING))
 		return (0);
+
+	mtxmgr = env->mutex_handle;
+	mutexp = MUTEXP_SET(mtxmgr, mutex);
+
+	CHECK_MTX_THREAD(env, mutexp);
+
+#ifdef HAVE_STATISTICS
+	if (F_ISSET(mutexp, DB_MUTEX_LOCKED))
+		++mutexp->mutex_set_wait;
+	else
+		++mutexp->mutex_set_nowait;
+#endif
 
 	/* Initialize the lock. */
 	k_lock.l_whence = SEEK_SET;
-	k_lock.l_start = mutexp->off;
+	k_lock.l_start = mutex;
 	k_lock.l_len = 1;
 
-	for (locked = waited = 0;;) {
+	/*
+	 * Only check the thread state once, by initializing the thread
+	 * control block pointer to null.  If it is not the failchk
+	 * thread, then ip will have a valid value subsequent times
+	 * in the loop.
+	 */
+	ip = NULL;
+
+	for (locked = 0;;) {
 		/*
 		 * Wait for the lock to become available; wait 1ms initially,
 		 * up to 1 second.
 		 */
-		for (ms = 1; mutexp->pid != 0;) {
-			waited = 1;
-			__os_yield(NULL, ms * USEC_PER_MS);
+		for (ms = 1; F_ISSET(mutexp, DB_MUTEX_LOCKED);) {
+			if (F_ISSET(dbenv, DB_ENV_FAILCHK) &&
+			    ip == NULL && dbenv->is_alive(dbenv,
+			    mutexp->pid, mutexp->tid, 0) == 0) {
+				ret = __env_set_state(env, &ip, THREAD_VERIFY);
+				if (ret != 0 ||
+				    ip->dbth_state == THREAD_FAILCHK)
+					return (DB_RUNRECOVERY);
+			}
+			if (!wait)
+				return (DB_LOCK_NOTGRANTED);
+			__os_yield(NULL, 0, ms * US_PER_MS);
 			if ((ms <<= 1) > MS_PER_SEC)
 				ms = MS_PER_SEC;
 		}
 
-		/* Acquire an exclusive kernel lock. */
+		/* Acquire an exclusive kernel lock on the byte. */
 		k_lock.l_type = F_WRLCK;
-		if (fcntl(dbenv->lockfhp->fd, F_SETLKW, &k_lock))
-			return (__os_get_errno());
+		if (fcntl(env->lockfhp->fd, F_SETLKW, &k_lock))
+			goto err;
 
 		/* If the resource is still available, it's ours. */
-		if (mutexp->pid == 0) {
+		if (!F_ISSET(mutexp, DB_MUTEX_LOCKED)) {
 			locked = 1;
-			__os_id(&mutexp->pid);
+
+			F_SET(mutexp, DB_MUTEX_LOCKED);
+			dbenv->thread_id(dbenv, &mutexp->pid, &mutexp->tid);
 		}
 
 		/* Release the kernel lock. */
 		k_lock.l_type = F_UNLCK;
-		if (fcntl(dbenv->lockfhp->fd, F_SETLK, &k_lock))
-			return (__os_get_errno());
+		if (fcntl(env->lockfhp->fd, F_SETLK, &k_lock))
+			goto err;
 
 		/*
 		 * If we got the resource lock we're done.
@@ -126,57 +130,103 @@ __db_fcntl_mutex_lock(dbenv, mutexp)
 			break;
 	}
 
-	if (waited)
-		++mutexp->mutex_set_wait;
-	else
-		++mutexp->mutex_set_nowait;
+#ifdef DIAGNOSTIC
+	/*
+	 * We want to switch threads as often as possible.  Yield every time
+	 * we get a mutex to ensure contention.
+	 */
+	if (F_ISSET(dbenv, DB_ENV_YIELDCPU))
+		__os_yield(env, 0, 0);
+#endif
 	return (0);
+
+err:	ret = __os_get_syserr();
+	__db_syserr(env, ret, "fcntl lock failed");
+	return (__env_panic(env, __os_posix_err(ret)));
+}
+
+/*
+ * __db_fcntl_mutex_lock
+ *	Lock a mutex, blocking if necessary.
+ *
+ * PUBLIC: int __db_fcntl_mutex_lock __P((ENV *, db_mutex_t));
+ */
+int
+__db_fcntl_mutex_lock(env, mutex)
+	ENV *env;
+	db_mutex_t mutex;
+{
+	return (__db_fcntl_mutex_lock_int(env, mutex, 1));
+}
+
+/*
+ * __db_fcntl_mutex_trylock
+ *	Try to lock a mutex, without blocking when it is busy.
+ *
+ * PUBLIC: int __db_fcntl_mutex_trylock __P((ENV *, db_mutex_t));
+ */
+int
+__db_fcntl_mutex_trylock(env, mutex)
+	ENV *env;
+	db_mutex_t mutex;
+{
+	return (__db_fcntl_mutex_lock_int(env, mutex, 0));
 }
 
 /*
  * __db_fcntl_mutex_unlock --
- *	Release a lock.
+ *	Release a mutex.
  *
- * PUBLIC: int __db_fcntl_mutex_unlock __P((DB_ENV *, DB_MUTEX *));
+ * PUBLIC: int __db_fcntl_mutex_unlock __P((ENV *, db_mutex_t));
  */
 int
-__db_fcntl_mutex_unlock(dbenv, mutexp)
+__db_fcntl_mutex_unlock(env, mutex)
+	ENV *env;
+	db_mutex_t mutex;
+{
 	DB_ENV *dbenv;
 	DB_MUTEX *mutexp;
-{
-	if (F_ISSET(dbenv, DB_ENV_NOLOCKING))
+	DB_MUTEXMGR *mtxmgr;
+
+	dbenv = env->dbenv;
+
+	if (!MUTEX_ON(env) || F_ISSET(dbenv, DB_ENV_NOLOCKING))
 		return (0);
 
+	mtxmgr = env->mutex_handle;
+	mutexp = MUTEXP_SET(mtxmgr, mutex);
+
 #ifdef DIAGNOSTIC
-#define	MSG		"mutex_unlock: ERROR: released lock that was unlocked\n"
-#ifndef	STDERR_FILENO
-#define	STDERR_FILENO	2
-#endif
-	if (mutexp->pid == 0)
-		write(STDERR_FILENO, MSG, sizeof(MSG) - 1);
+	if (!F_ISSET(mutexp, DB_MUTEX_LOCKED)) {
+		__db_errx(env, "fcntl unlock failed: lock already unlocked");
+		return (__env_panic(env, EACCES));
+	}
 #endif
 
 	/*
 	 * Release the resource.  We don't have to acquire any locks because
-	 * processes trying to acquire the lock are checking for a pid set to
-	 * 0/non-0, not to any specific value.
+	 * processes trying to acquire the lock are waiting for the flag to
+	 * go to 0.  Once that happens the waiters will serialize acquiring
+	 * an exclusive kernel lock before locking the mutex.
 	 */
-	mutexp->pid = 0;
+	F_CLR(mutexp, DB_MUTEX_LOCKED);
 
 	return (0);
 }
 
 /*
  * __db_fcntl_mutex_destroy --
- *	Destroy a DB_MUTEX.
+ *	Destroy a mutex.
  *
- * PUBLIC: int __db_fcntl_mutex_destroy __P((DB_MUTEX *));
+ * PUBLIC: int __db_fcntl_mutex_destroy __P((ENV *, db_mutex_t));
  */
 int
-__db_fcntl_mutex_destroy(mutexp)
-	DB_MUTEX *mutexp;
+__db_fcntl_mutex_destroy(env, mutex)
+	ENV *env;
+	db_mutex_t mutex;
 {
-	COMPQUIET(mutexp, NULL);
+	COMPQUIET(env, NULL);
+	COMPQUIET(mutex, MUTEX_INVALID);
 
 	return (0);
 }

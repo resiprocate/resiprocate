@@ -1,50 +1,29 @@
 /*-
  * See the file LICENSE for redistribution information.
  *
- * Copyright (c) 1996-2004
- *	Sleepycat Software.  All rights reserved.
+ * Copyright (c) 2001, 2010 Oracle and/or its affiliates.  All rights reserved.
  *
- * $Id: db_stat.c,v 11.158 2004/07/15 18:26:48 ubell Exp $
+ * $Id$
  */
 
 #include "db_config.h"
 
+#include "db_int.h"
+
 #ifndef lint
 static const char copyright[] =
-    "Copyright (c) 1996-2004\nSleepycat Software Inc.  All rights reserved.\n";
+    "Copyright (c) 1996, 2010 Oracle and/or its affiliates.  All rights reserved.\n";
 #endif
 
-#ifndef NO_SYSTEM_INCLUDES
-#include <sys/types.h>
-
-#if TIME_WITH_SYS_TIME
-#include <sys/time.h>
-#include <time.h>
-#else
-#if HAVE_SYS_TIME_H
-#include <sys/time.h>
-#else
-#include <time.h>
-#endif
-#endif
-
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#endif
-
-#include "db_int.h"
-#include "dbinc/db_page.h"
-#include "dbinc/txn.h"
-
-typedef enum { T_NOTSET,
-    T_DB, T_ENV, T_LOCK, T_LOG, T_MPOOL, T_REP, T_TXN } test_t;
+typedef enum { T_NOTSET, T_DB,
+    T_ENV, T_LOCK, T_LOG, T_MPOOL, T_MUTEX, T_REP, T_TXN } test_t;
 
 int	 db_init __P((DB_ENV *, char *, test_t, u_int32_t, int *));
 int	 main __P((int, char *[]));
 int	 usage __P((void));
-int	 version_check __P((const char *));
+int	 version_check __P((void));
+
+const char *progname;
 
 int
 main(argc, argv)
@@ -53,28 +32,31 @@ main(argc, argv)
 {
 	extern char *optarg;
 	extern int optind;
-	const char *progname = "db_stat";
 	DB_ENV	*dbenv;
-	DB_BTREE_STAT *sp;
-	DB *alt_dbp, *dbp;
+	DB *dbp;
 	test_t ttype;
-	u_int32_t cache, env_flags, fast, flags;
+	u_int32_t cache, flags;
 	int ch, exitval;
 	int nflag, private, resize, ret;
 	char *db, *home, *p, *passwd, *subdb;
 
-	if ((ret = version_check(progname)) != 0)
+	if ((progname = __db_rpath(argv[0])) == NULL)
+		progname = argv[0];
+	else
+		++progname;
+
+	if ((ret = version_check()) != 0)
 		return (ret);
 
 	dbenv = NULL;
 	dbp = NULL;
 	ttype = T_NOTSET;
 	cache = MEGABYTE;
-	exitval = fast = flags = nflag = private = 0;
+	exitval = flags = nflag = private = 0;
 	db = home = passwd = subdb = NULL;
-	env_flags = 0;
 
-	while ((ch = getopt(argc, argv, "C:cd:Eefh:L:lM:mNP:R:rs:tVZ")) != EOF)
+	while ((ch = getopt(argc,
+	    argv, "C:cd:Eefgh:L:lM:mNP:R:rs:tVxX:Z")) != EOF)
 		switch (ch) {
 		case 'C': case 'c':
 			if (ttype != T_NOTSET && ttype != T_LOCK)
@@ -119,7 +101,10 @@ main(argc, argv)
 				LF_SET(DB_STAT_ALL);
 			break;
 		case 'f':
-			fast = DB_FAST_STAT;
+			if (ttype != T_NOTSET && ttype != T_DB)
+				goto argcombo;
+			ttype = T_DB;
+			LF_SET(DB_FAST_STAT);
 			break;
 		case 'h':
 			home = optarg;
@@ -194,13 +179,27 @@ main(argc, argv)
 argcombo:			fprintf(stderr,
 				    "%s: illegal option combination\n",
 				    progname);
-				return (EXIT_FAILURE);
+				return (usage());
 			}
 			ttype = T_TXN;
 			break;
 		case 'V':
 			printf("%s\n", db_version(NULL, NULL, NULL));
 			return (EXIT_SUCCESS);
+		case 'X': case 'x':
+			if (ttype != T_NOTSET && ttype != T_MUTEX)
+				goto argcombo;
+			ttype = T_MUTEX;
+			if (ch != 'x')
+				for (p = optarg; *p; ++p)
+					switch (*p) {
+						case 'A':
+							LF_SET(DB_STAT_ALL);
+							break;
+						default:
+							return (usage());
+					}
+			break;
 		case 'Z':
 			LF_SET(DB_STAT_CLEAR);
 			break;
@@ -216,18 +215,16 @@ argcombo:			fprintf(stderr,
 		if (db == NULL)
 			return (usage());
 		break;
-	case T_NOTSET:
-		return (usage());
-		/* NOTREACHED */
 	case T_ENV:
 	case T_LOCK:
 	case T_LOG:
 	case T_MPOOL:
+	case T_MUTEX:
 	case T_REP:
 	case T_TXN:
-		if (fast != 0)
-			return (usage());
 		break;
+	case T_NOTSET:
+		return (usage());
 	}
 
 	/* Handle possible interruptions. */
@@ -237,7 +234,7 @@ argcombo:			fprintf(stderr,
 	 * Create an environment object and initialize it for error
 	 * reporting.
 	 */
-retry:	if ((ret = db_env_create(&dbenv, env_flags)) != 0) {
+retry:	if ((ret = db_env_create(&dbenv, 0)) != 0) {
 		fprintf(stderr,
 		    "%s: db_env_create: %s\n", progname, db_strerror(ret));
 		goto err;
@@ -269,19 +266,37 @@ retry:	if ((ret = db_env_create(&dbenv, env_flags)) != 0) {
 
 	switch (ttype) {
 	case T_DB:
-		if (flags != 0)
-			return (usage());
-
 		/* Create the DB object and open the file. */
 		if ((ret = db_create(&dbp, dbenv, 0)) != 0) {
 			dbenv->err(dbenv, ret, "db_create");
 			goto err;
 		}
 
-		if ((ret = dbp->open(dbp,
-		    NULL, db, subdb, DB_UNKNOWN, DB_RDONLY, 0)) != 0) {
-			dbenv->err(dbenv, ret, "DB->open: %s", db);
-			goto err;
+		/*
+		 * We open the database for writing so we can update the cached
+		 * statistics, but it's OK to fail, we can open read-only and
+		 * proceed.
+		 *
+		 * Turn off error messages for now -- we can't open lots of
+		 * databases read-write (for example, master databases and
+		 * hash databases for which we don't know the hash function).
+		 */
+		dbenv->set_errfile(dbenv, NULL);
+		ret = dbp->open(dbp, NULL, db, subdb, DB_UNKNOWN, 0, 0);
+		dbenv->set_errfile(dbenv, stderr);
+		if (ret != 0) {
+			/* Handles cannot be reused after a failed DB->open. */
+			(void)dbp->close(dbp, 0);
+			if ((ret = db_create(&dbp, dbenv, 0)) != 0) {
+				dbenv->err(dbenv, ret, "db_create");
+				goto err;
+			}
+
+		       	if ((ret = dbp->open(dbp,
+			    NULL, db, subdb, DB_UNKNOWN, DB_RDONLY, 0)) != 0) {
+				dbenv->err(dbenv, ret, "DB->open: %s", db);
+				goto err;
+			}
 		}
 
 		/* Check if cache is too small for this DB's pagesize. */
@@ -296,40 +311,6 @@ retry:	if ((ret = db_env_create(&dbenv, env_flags)) != 0) {
 				dbenv = NULL;
 				goto retry;
 			}
-		}
-
-		/*
-		 * See if we can open this db read/write to update counts.
-		 * If its a master-db then we cannot.  So check to see,
-		 * if its btree then it might be.
-		 */
-		if (subdb == NULL && dbp->type == DB_BTREE &&
-		    (ret = dbp->stat(dbp, NULL, &sp, DB_FAST_STAT)) != 0) {
-			dbenv->err(dbenv, ret, "DB->stat");
-			goto err;
-		}
-
-		if (subdb != NULL ||
-		    dbp->type != DB_BTREE ||
-		    (sp->bt_metaflags & BTM_SUBDB) == 0) {
-			if ((ret = db_create(&alt_dbp, dbenv, 0)) != 0) {
-				dbenv->err(dbenv, ret, "db_create");
-				goto err;
-			}
-			if ((ret = dbp->open(alt_dbp, NULL,
-			    db, subdb, DB_UNKNOWN, DB_RDONLY, 0)) != 0) {
-				if (subdb == NULL)
-					dbenv->err(dbenv,
-					   ret, "DB->open: %s", db);
-				else
-					dbenv->err(dbenv,
-					   ret, "DB->open: %s:%s", db, subdb);
-				(void)alt_dbp->close(alt_dbp, DB_NOSYNC);
-				goto err;
-			}
-
-			(void)dbp->close(dbp, DB_NOSYNC);
-			dbp = alt_dbp;
 		}
 
 		if (dbp->stat_print(dbp, flags))
@@ -351,7 +332,15 @@ retry:	if ((ret = db_env_create(&dbenv, env_flags)) != 0) {
 		if (dbenv->memp_stat_print(dbenv, flags))
 			goto err;
 		break;
+	case T_MUTEX:
+		if (dbenv->mutex_stat_print(dbenv, flags))
+			goto err;
+		break;
 	case T_REP:
+#ifdef HAVE_REPLICATION_THREADS
+		if (dbenv->repmgr_stat_print(dbenv, flags))
+			goto err;
+#endif
 		if (dbenv->rep_stat_print(dbenv, flags))
 			goto err;
 		break;
@@ -412,8 +401,7 @@ db_init(dbenv, home, ttype, cache, is_private)
 	 * error, I think.
 	 */
 	*is_private = 0;
-	if ((ret =
-	    dbenv->open(dbenv, home, DB_JOINENV | DB_USE_ENVIRON, 0)) == 0)
+	if ((ret = dbenv->open(dbenv, home, DB_USE_ENVIRON, 0)) == 0)
 		return (0);
 	if (ret == DB_VERSION_MISMATCH)
 		goto err;
@@ -443,8 +431,6 @@ db_init(dbenv, home, ttype, cache, is_private)
 		oflags |= DB_INIT_MPOOL;
 	if (ttype == T_LOG)
 		oflags |= DB_INIT_LOG;
-	if (ttype == T_REP)
-		oflags |= DB_INIT_REP;
 	if ((ret = dbenv->open(dbenv, home, oflags, 0)) == 0)
 		return (0);
 
@@ -456,17 +442,16 @@ err:	dbenv->err(dbenv, ret, "DB_ENV->open");
 int
 usage()
 {
-	fprintf(stderr, "usage: db_stat %s\n",
+	fprintf(stderr, "usage: %s %s\n", progname,
 	    "-d file [-fN] [-h home] [-P password] [-s database]");
-	fprintf(stderr, "usage: db_stat %s\n\t%s\n",
-	    "[-cEelmNrtVZ] [-C Aclop]",
-	    "[-h home] [-L A] [-M A] [-P password] [-R A]");
+	fprintf(stderr, "usage: %s %s\n\t%s\n", progname,
+	    "[-cEelmNrtVxZ] [-C Aclop]",
+	    "[-h home] [-L A] [-M A] [-P password] [-R A] [-X A]");
 	return (EXIT_FAILURE);
 }
 
 int
-version_check(progname)
-	const char *progname;
+version_check()
 {
 	int v_major, v_minor, v_patch;
 

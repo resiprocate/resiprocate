@@ -21,11 +21,57 @@
 /* Define to 1 if you want a version with run-time diagnostic checking. */
 #undef DIAGNOSTIC
 
+/* Define to 1 if 64-bit types are available. */
+#undef HAVE_64BIT_TYPES
+
+/* Define to 1 if you have the `abort' function. */
+#undef HAVE_ABORT
+
+/* Define to 1 if you have the `atoi' function. */
+#undef HAVE_ATOI
+
+/* Define to 1 if you have the `atol' function. */
+#undef HAVE_ATOL
+
+/* Define to 1 to use Solaris library routes for atomic operations. */
+#undef HAVE_ATOMIC_SOLARIS
+
+/* Define to 1 to use native atomic operations. */
+#undef HAVE_ATOMIC_SUPPORT
+
+/* Define to 1 to use GCC and x86 or x86_64 assemlby language atomic
+   operations. */
+#undef HAVE_ATOMIC_X86_GCC_ASSEMBLY
+
+/* Define to 1 if you have the `backtrace' function. */
+#undef HAVE_BACKTRACE
+
+/* Define to 1 if you have the `backtrace_symbols' function. */
+#undef HAVE_BACKTRACE_SYMBOLS
+
+/* Define to 1 if building on BREW. */
+#undef HAVE_BREW
+
+/* Define to 1 if building on BREW (SDK2). */
+#undef HAVE_BREW_SDK2
+
 /* Define to 1 if you have the `clock_gettime' function. */
 #undef HAVE_CLOCK_GETTIME
 
+/* Define to 1 if clock_gettime supports CLOCK_MONOTONIC. */
+#undef HAVE_CLOCK_MONOTONIC
+
+/* Define to 1 if building compression support. */
+#undef HAVE_COMPRESSION
+
 /* Define to 1 if Berkeley DB release includes strong cryptography. */
 #undef HAVE_CRYPTO
+
+/* Define to 1 if you have the `ctime_r' function. */
+#undef HAVE_CTIME_R
+
+/* Define to 1 if ctime_r takes a buffer length as a third argument. */
+#undef HAVE_CTIME_R_3ARG
 
 /* Define to 1 if you have the `directio' function. */
 #undef HAVE_DIRECTIO
@@ -37,8 +83,20 @@
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
-/* Define to 1 if you have EXIT_SUCCESS/EXIT_FAILURE #defines. */
+/* Define to 1 if you have the <execinfo.h> header file. */
+#undef HAVE_EXECINFO_H
+
+/* Define to 1 if platform has EXIT_SUCCESS/EXIT_FAILURE #defines. */
 #undef HAVE_EXIT_SUCCESS
+
+/* Define to 1 if you have the `fchmod' function. */
+#undef HAVE_FCHMOD
+
+/* Define to 1 if you have the `fclose' function. */
+#undef HAVE_FCLOSE
+
+/* Define to 1 if you have the `fcntl' function. */
+#undef HAVE_FCNTL
 
 /* Define to 1 if fcntl/F_SETFD denies child access to file descriptors. */
 #undef HAVE_FCNTL_F_SETFD
@@ -46,17 +104,41 @@
 /* Define to 1 if you have the `fdatasync' function. */
 #undef HAVE_FDATASYNC
 
+/* Define to 1 if you have the `fgetc' function. */
+#undef HAVE_FGETC
+
+/* Define to 1 if you have the `fgets' function. */
+#undef HAVE_FGETS
+
 /* Define to 1 if allocated filesystem blocks are not zeroed. */
 #undef HAVE_FILESYSTEM_NOTZERO
+
+/* Define to 1 if you have the `fopen' function. */
+#undef HAVE_FOPEN
 
 /* Define to 1 if you have the `ftruncate' function. */
 #undef HAVE_FTRUNCATE
 
+/* Define to 1 if you have the `fwrite' function. */
+#undef HAVE_FWRITE
+
+/* Define to 1 if you have the `getaddrinfo' function. */
+#undef HAVE_GETADDRINFO
+
 /* Define to 1 if you have the `getcwd' function. */
 #undef HAVE_GETCWD
 
+/* Define to 1 if you have the `getenv' function. */
+#undef HAVE_GETENV
+
+/* Define to 1 if you have the `getgid' function. */
+#undef HAVE_GETGID
+
 /* Define to 1 if you have the `getopt' function. */
 #undef HAVE_GETOPT
+
+/* Define to 1 if getopt supports the optreset variable. */
+#undef HAVE_GETOPT_OPTRESET
 
 /* Define to 1 if you have the `getrusage' function. */
 #undef HAVE_GETRUSAGE
@@ -70,14 +152,26 @@
 /* Define to 1 if building Hash access method. */
 #undef HAVE_HASH
 
+/* Define to 1 if you have the `hstrerror' function. */
+#undef HAVE_HSTRERROR
+
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
-/* Define to 1 if you have the `nsl' library (-lnsl). */
-#undef HAVE_LIBNSL
+/* Define to 1 if you have the `isalpha' function. */
+#undef HAVE_ISALPHA
 
-/* Define to 1 if the system has the type `long long'. */
-#undef HAVE_LONG_LONG
+/* Define to 1 if you have the `isdigit' function. */
+#undef HAVE_ISDIGIT
+
+/* Define to 1 if you have the `isprint' function. */
+#undef HAVE_ISPRINT
+
+/* Define to 1 if you have the `isspace' function. */
+#undef HAVE_ISSPACE
+
+/* Define to 1 if you have the `localtime' function. */
+#undef HAVE_LOCALTIME
 
 /* Define to 1 if you have the `memcmp' function. */
 #undef HAVE_MEMCMP
@@ -96,6 +190,9 @@
 
 /* Define to 1 if you have the `mmap' function. */
 #undef HAVE_MMAP
+
+/* Define to 1 if you have the `mprotect' function. */
+#undef HAVE_MPROTECT
 
 /* Define to 1 if you have the `munlock' function. */
 #undef HAVE_MUNLOCK
@@ -128,8 +225,14 @@
 /* Define to 1 to use the msem_XXX mutexes on HP-UX. */
 #undef HAVE_MUTEX_HPPA_MSEM_INIT
 
+/* Define to 1 to use test-and-set mutexes with blocking mutexes. */
+#undef HAVE_MUTEX_HYBRID
+
 /* Define to 1 to use the GCC compiler and IA64 assembly language mutexes. */
 #undef HAVE_MUTEX_IA64_GCC_ASSEMBLY
+
+/* Define to 1 to use the GCC compiler and MIPS assembly language mutexes. */
+#undef HAVE_MUTEX_MIPS_GCC_ASSEMBLY
 
 /* Define to 1 to use the msem_XXX mutexes on systems other than HP-UX. */
 #undef HAVE_MUTEX_MSEM_INIT
@@ -169,11 +272,11 @@
 /* Define to 1 to use the GCC compiler and Sparc assembly language mutexes. */
 #undef HAVE_MUTEX_SPARC_GCC_ASSEMBLY
 
+/* Define to 1 if the Berkeley DB library should support mutexes. */
+#undef HAVE_MUTEX_SUPPORT
+
 /* Define to 1 if mutexes hold system resources. */
 #undef HAVE_MUTEX_SYSTEM_RESOURCES
-
-/* Define to 1 if fast mutexes are available. */
-#undef HAVE_MUTEX_THREADS
 
 /* Define to 1 to configure mutexes intra-process only. */
 #undef HAVE_MUTEX_THREAD_ONLY
@@ -199,7 +302,12 @@
 /* Define to 1 to use the GCC compiler and Windows mutexes. */
 #undef HAVE_MUTEX_WIN32_GCC
 
-/* Define to 1 to use the GCC compiler and x86 assembly language mutexes. */
+/* Define to 1 to use the GCC compiler and 64-bit x86 assembly language
+   mutexes. */
+#undef HAVE_MUTEX_X86_64_GCC_ASSEMBLY
+
+/* Define to 1 to use the GCC compiler and 32-bit x86 assembly language
+   mutexes. */
 #undef HAVE_MUTEX_X86_GCC_ASSEMBLY
 
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
@@ -208,17 +316,32 @@
 /* Define to 1 if you have the O_DIRECT flag. */
 #undef HAVE_O_DIRECT
 
+/* Define to 1 if building partitioned database support. */
+#undef HAVE_PARTITION
+
 /* Define to 1 if you have the `pread' function. */
 #undef HAVE_PREAD
 
+/* Define to 1 if you have the `printf' function. */
+#undef HAVE_PRINTF
+
 /* Define to 1 if you have the `pstat_getdynamic' function. */
 #undef HAVE_PSTAT_GETDYNAMIC
+
+/* Define to 1 if you have the `pthread_self' function. */
+#undef HAVE_PTHREAD_SELF
+
+/* Define to 1 if you have the `pthread_yield' function. */
+#undef HAVE_PTHREAD_YIELD
 
 /* Define to 1 if you have the `pwrite' function. */
 #undef HAVE_PWRITE
 
 /* Define to 1 if building on QNX. */
 #undef HAVE_QNX
+
+/* Define to 1 if you have the `qsort' function. */
+#undef HAVE_QSORT
 
 /* Define to 1 if building Queue access method. */
 #undef HAVE_QUEUE
@@ -229,11 +352,20 @@
 /* Define to 1 if you have the `rand' function. */
 #undef HAVE_RAND
 
+/* Define to 1 if you have the `random' function. */
+#undef HAVE_RANDOM
+
 /* Define to 1 if building replication support. */
 #undef HAVE_REPLICATION
 
+/* Define to 1 if building the Berkeley DB replication framework. */
+#undef HAVE_REPLICATION_THREADS
+
 /* Define to 1 if building RPC client/server. */
 #undef HAVE_RPC
+
+/* Define to 1 if building on S60. */
+#undef HAVE_S60
 
 /* Define to 1 if you have the `sched_yield' function. */
 #undef HAVE_SCHED_YIELD
@@ -241,17 +373,32 @@
 /* Define to 1 if you have the `select' function. */
 #undef HAVE_SELECT
 
-/* Define to 1 if building sequence support. */
-#undef HAVE_SEQUENCE
+/* Define to 1 if you have the `setgid' function. */
+#undef HAVE_SETGID
+
+/* Define to 1 if you have the `setuid' function. */
+#undef HAVE_SETUID
+
+/* Define to 1 to configure Berkeley DB to use read/write latches. */
+#undef HAVE_SHARED_LATCHES
+
+/* Define to 1 if shmctl/SHM_LOCK locks down shared memory segments. */
+#undef HAVE_SHMCTL_SHM_LOCK
 
 /* Define to 1 if you have the `shmget' function. */
 #undef HAVE_SHMGET
 
+/* Define to 1 if you have the `sigaction' function. */
+#undef HAVE_SIGACTION
+
+/* Define to 1 if thread identifier type db_threadid_t is integral. */
+#undef HAVE_SIMPLE_THREAD_TYPE
+
 /* Define to 1 if you have the `snprintf' function. */
 #undef HAVE_SNPRINTF
 
-/* Define to 1 if you have the `srand' function. */
-#undef HAVE_SRAND
+/* Define to 1 if you have the `stat' function. */
+#undef HAVE_STAT
 
 /* Define to 1 if building statistics support. */
 #undef HAVE_STATISTICS
@@ -265,11 +412,20 @@
 /* Define to 1 if you have the `strcasecmp' function. */
 #undef HAVE_STRCASECMP
 
+/* Define to 1 if you have the `strcat' function. */
+#undef HAVE_STRCAT
+
+/* Define to 1 if you have the `strchr' function. */
+#undef HAVE_STRCHR
+
 /* Define to 1 if you have the `strdup' function. */
 #undef HAVE_STRDUP
 
 /* Define to 1 if you have the `strerror' function. */
 #undef HAVE_STRERROR
+
+/* Define to 1 if you have the `strftime' function. */
+#undef HAVE_STRFTIME
 
 /* Define to 1 if you have the <strings.h> header file. */
 #undef HAVE_STRINGS_H
@@ -277,24 +433,36 @@
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
 
+/* Define to 1 if you have the `strncat' function. */
+#undef HAVE_STRNCAT
+
+/* Define to 1 if you have the `strncmp' function. */
+#undef HAVE_STRNCMP
+
+/* Define to 1 if you have the `strrchr' function. */
+#undef HAVE_STRRCHR
+
+/* Define to 1 if you have the `strsep' function. */
+#undef HAVE_STRSEP
+
 /* Define to 1 if you have the `strtol' function. */
 #undef HAVE_STRTOL
 
 /* Define to 1 if you have the `strtoul' function. */
 #undef HAVE_STRTOUL
 
-/* Define to 1 if `st_blksize' is member of `struct stat'. */
+/* Define to 1 if `st_blksize' is a member of `struct stat'. */
 #undef HAVE_STRUCT_STAT_ST_BLKSIZE
 
 /* Define to 1 if you have the `sysconf' function. */
 #undef HAVE_SYSCONF
 
+/* Define to 1 if port includes files in the Berkeley DB source code. */
+#undef HAVE_SYSTEM_INCLUDE_FILES
+
 /* Define to 1 if you have the <sys/dir.h> header file, and it defines `DIR'.
    */
 #undef HAVE_SYS_DIR_H
-
-/* Define to 1 if you have the <sys/fcntl.h> header file. */
-#undef HAVE_SYS_FCNTL_H
 
 /* Define to 1 if you have the <sys/ndir.h> header file, and it defines `DIR'.
    */
@@ -302,6 +470,9 @@
 
 /* Define to 1 if you have the <sys/select.h> header file. */
 #undef HAVE_SYS_SELECT_H
+
+/* Define to 1 if you have the <sys/socket.h> header file. */
+#undef HAVE_SYS_SOCKET_H
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #undef HAVE_SYS_STAT_H
@@ -312,14 +483,17 @@
 /* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
 
+/* Define to 1 if you have the `time' function. */
+#undef HAVE_TIME
+
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
 /* Define to 1 if unlink of file with open file descriptors will fail. */
 #undef HAVE_UNLINK_WITH_OPEN_FAILURE
 
-/* Define to 1 if the system has the type `unsigned long long'. */
-#undef HAVE_UNSIGNED_LONG_LONG
+/* Define to 1 if port includes historic database upgrade support. */
+#undef HAVE_UPGRADE_SUPPORT
 
 /* Define to 1 if building access method verification support. */
 #undef HAVE_VERIFY
@@ -327,7 +501,7 @@
 /* Define to 1 if you have the `vsnprintf' function. */
 #undef HAVE_VSNPRINTF
 
-/* Define to 1 if building VxWorks. */
+/* Define to 1 if building on VxWorks. */
 #undef HAVE_VXWORKS
 
 /* Define to 1 if you have the `yield' function. */
@@ -336,8 +510,9 @@
 /* Define to 1 if you have the `_fstati64' function. */
 #undef HAVE__FSTATI64
 
-/* Define to a value if using non-standard mutex alignment. */
-#undef MUTEX_ALIGN
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
 
 /* Define to the address where bug reports for this package should be sent. */
 #undef PACKAGE_BUGREPORT
@@ -351,43 +526,46 @@
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
 
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
+
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* The size of a `char', as computed by sizeof. */
+/* The size of `char', as computed by sizeof. */
 #undef SIZEOF_CHAR
 
-/* The size of a `char *', as computed by sizeof. */
+/* The size of `char *', as computed by sizeof. */
 #undef SIZEOF_CHAR_P
 
-/* The size of a `int', as computed by sizeof. */
+/* The size of `int', as computed by sizeof. */
 #undef SIZEOF_INT
 
-/* The size of a `long', as computed by sizeof. */
+/* The size of `long', as computed by sizeof. */
 #undef SIZEOF_LONG
 
-/* The size of a `long long', as computed by sizeof. */
+/* The size of `long long', as computed by sizeof. */
 #undef SIZEOF_LONG_LONG
 
-/* The size of a `short', as computed by sizeof. */
+/* The size of `short', as computed by sizeof. */
 #undef SIZEOF_SHORT
 
-/* The size of a `size_t', as computed by sizeof. */
+/* The size of `size_t', as computed by sizeof. */
 #undef SIZEOF_SIZE_T
 
-/* The size of a `unsigned char', as computed by sizeof. */
+/* The size of `unsigned char', as computed by sizeof. */
 #undef SIZEOF_UNSIGNED_CHAR
 
-/* The size of a `unsigned int', as computed by sizeof. */
+/* The size of `unsigned int', as computed by sizeof. */
 #undef SIZEOF_UNSIGNED_INT
 
-/* The size of a `unsigned long', as computed by sizeof. */
+/* The size of `unsigned long', as computed by sizeof. */
 #undef SIZEOF_UNSIGNED_LONG
 
-/* The size of a `unsigned long long', as computed by sizeof. */
+/* The size of `unsigned long long', as computed by sizeof. */
 #undef SIZEOF_UNSIGNED_LONG_LONG
 
-/* The size of a `unsigned short', as computed by sizeof. */
+/* The size of `unsigned short', as computed by sizeof. */
 #undef SIZEOF_UNSIGNED_SHORT
 
 /* Define to 1 if the `S_IS*' macros in <sys/stat.h> do not work properly. */
@@ -411,48 +589,11 @@
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const
 
-/*
- * Exit success/failure macros.
- */
-#ifndef	HAVE_EXIT_SUCCESS
-#define	EXIT_FAILURE	1
-#define	EXIT_SUCCESS	0
+/* Define to `__inline__' or `__inline' if that's what the C compiler
+   calls it, or to nothing if 'inline' is not supported under any name.  */
+#ifndef __cplusplus
+#undef inline
 #endif
 
-/*
- * Don't step on the namespace.  Other libraries may have their own
- * implementations of these functions, we don't want to use their
- * implementations or force them to use ours based on the load order.
- */
-#ifndef	HAVE_GETCWD
-#define	getcwd		__db_Cgetcwd
-#endif
-#ifndef	HAVE_MEMCMP
-#define	memcmp		__db_Cmemcmp
-#endif
-#ifndef	HAVE_MEMCPY
-#define	memcpy		__db_Cmemcpy
-#endif
-#ifndef	HAVE_MEMMOVE
-#define	memmove		__db_Cmemmove
-#endif
-#ifndef	HAVE_RAISE
-#define	raise		__db_Craise
-#endif
-#ifndef	HAVE_SNPRINTF
-#define	snprintf	__db_Csnprintf
-#endif
-#ifndef	HAVE_STRCASECMP
-#define	strcasecmp	__db_Cstrcasecmp
-#define	strncasecmp	__db_Cstrncasecmp
-#endif
-#ifndef	HAVE_STRERROR
-#define	strerror	__db_Cstrerror
-#endif
-#ifndef	HAVE_VSNPRINTF
-#define	vsnprintf	__db_Cvsnprintf
-#endif
-
-#ifdef DB_WIN32
-#include "win_db.h"
-#endif
+/* type to use in place of socklen_t if not defined */
+#undef socklen_t
