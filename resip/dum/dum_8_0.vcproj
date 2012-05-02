@@ -609,6 +609,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\TlsPeerAuthManager.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\UserAuthInfo.cxx"
 				>
 			</File>
@@ -942,7 +946,7 @@
 				RelativePath=".\RemoteCertStore.hxx"
 				>
 			</File>
-         <File
+			<File
 				RelativePath=".\RequestValidationHandler.hxx"
 				>
 			</File>
@@ -992,6 +996,10 @@
 			</File>
 			<File
 				RelativePath=".\TargetCommand.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\TlsPeerAuthManager.hxx"
 				>
 			</File>
 			<File

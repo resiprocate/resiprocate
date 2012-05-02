@@ -202,6 +202,22 @@ Security::Security(const Data& directory, const CipherList& cipherSuite) :
    }
 }
 
+void
+Security::addCADirectory(const Data& caDirectory)
+{
+   mCADirectories.push_back(caDirectory);
+   Data &_dir = mCADirectories.back();
+   if ( !_dir.postfix(Symbols::SLASH))
+   {
+      _dir += Symbols::SLASH;
+   }
+}
+
+void
+Security::addCAFile(const Data& caFile)
+{
+   mCAFiles.push_back(caFile);
+}
 
 void
 Security::preload()
@@ -259,6 +275,36 @@ Security::preload()
          {
             InfoLog(<<"Successfully loaded " << fileName );
          }
+      }
+   }
+   std::list<Data>::iterator it_d = mCADirectories.begin();
+   for (; it_d != mCADirectories.end(); ++it_d)
+   {
+      const Data _dir = *it_d;
+      FileSystem::Directory dir(_dir);
+      FileSystem::Directory::iterator it(dir);
+      for (; it != dir.end(); ++it)
+      {
+         Data name = *it;
+         Data fileName = _dir + name;
+         addCAFile(fileName);
+      }
+   }
+   std::list<Data>::iterator it_f = mCAFiles.begin();
+   for (; it_f != mCAFiles.end(); ++it_f)
+   {
+      const Data _file = *it_f;
+      try
+      {
+         addRootCertPEM(readIntoData(_file));
+      }
+      catch (Exception& e)
+      {
+         ErrLog(<< "Some problem reading " << _file << ": " << e);
+      }
+      catch (...)
+      {
+         ErrLog(<< "Some problem reading " << _file);
       }
    }
 }
@@ -2424,7 +2470,8 @@ BaseSecurity::getSslCtx ()
 }
 
 void 
-BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames) 
+BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
+                           bool useEmailAsSIP) 
 {
    if(NULL == cert)
       return;
@@ -2509,7 +2556,16 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames)
           
       if (gen->type == GEN_EMAIL)
       {
-         DebugLog(<< "subjectAltName of cert has EMAIL type" );
+         if(useEmailAsSIP)
+         {
+            ASN1_IA5STRING* asn = gen->d.rfc822Name;
+            Data email(asn->data, asn->length);
+            PeerName peerName(SubjectAltName, email);
+            peerNames.push_back(peerName);
+            InfoLog(<< "subjectAltName of TLS session cert contains EMAIL <" << email << ">" );
+         }
+         else
+            DebugLog(<< "subjectAltName of cert has EMAIL type" );
       }
           
       if(gen->type == GEN_URI) 

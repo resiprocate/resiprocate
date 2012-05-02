@@ -212,7 +212,7 @@ TransportSelector::addTransportInternal(std::auto_ptr<Transport> autoTransport)
 
    Tuple tuple(transport->interfaceName(), transport->port(),
                transport->ipVersion(), transport->transport());
-   mTypeToTransportMap.insert(std::make_pair(tuple,transport));
+   mTypeToTransportMap.insert(TypeToTransportMap::value_type(tuple,transport));
 
    switch (transport->transport())
    {

@@ -168,7 +168,7 @@ class BaseSecurity
       static Data getCertName(X509 *cert);
 
       // retrieves a list of all certificate names (subjectAltNAme's and CommonName)
-      static void getCertNames(X509 *cert, std::list<PeerName> &peerNames);
+      static void getCertNames(X509 *cert, std::list<PeerName> &peerNames, bool useEmailAsSIP = false);
 
       static bool isSelfSigned(const X509* cert);
 
@@ -241,6 +241,9 @@ class Security : public BaseSecurity
       Security(const Data& pathToCerts, const CipherList& = ExportableSuite);
       Security(const CipherList& = ExportableSuite);
 
+      void addCADirectory(const Data& caDirectory);
+      void addCAFile(const Data& caFile);
+
       virtual void preload();
       virtual SSL_CTX* createDomainCtx(const SSL_METHOD* method, const Data& domain);
 
@@ -250,6 +253,8 @@ class Security : public BaseSecurity
 
    private:
       Data mPath;
+      std::list<Data> mCADirectories;
+      std::list<Data> mCAFiles;
 };
 
 }
