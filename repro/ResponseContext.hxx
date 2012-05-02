@@ -38,7 +38,7 @@ class ResponseContext
       ~ResponseContext();
 
       /**
-         Adds this Target to the collection of Targets.
+         Adds this Target as a SimpleTarget to the collection of Targets.
          
          @param target The NameAdder used to form the Target to add.
 
@@ -48,7 +48,7 @@ class ResponseContext
          
          @note Targets are not checked for duplicate uris until an attempt is made to begin them.
       */
-      resip::Data addTarget(const resip::NameAddr& target, bool beginImmediately=false, bool addToFirstBatch=false);
+      resip::Data addTarget(const resip::NameAddr& target, bool beginImmediately=false);
 
       /**
          Adds this Target to the collection of Targets.
@@ -68,7 +68,7 @@ class ResponseContext
          @note Targets are not checked for duplicate uris until an attempt 
             is made to start them.
       */
-      bool addTarget(std::auto_ptr<repro::Target> target, bool beginImmediately=false, bool addToFirstBatch=false);
+      bool addTarget(std::auto_ptr<repro::Target> target, bool beginImmediately=false);
 
       /**
          Adds a batch of Targets. 
@@ -91,12 +91,8 @@ class ResponseContext
          will not break per se, but oddball target processing behavior might
          result.
       */
-      bool addTargetBatch(std::list<Target*>& targets,
-                           bool highPriority=false,
-                           bool addToFirstBatch=false);
-      
-      bool addOutboundBatch(std::map<resip::Data, std::list<Target*> > batch);
-      
+      bool addTargetBatch(std::list<Target*>& targets, bool highPriority=false);
+            
       /**
          Begins all Candidate client transactions.
          
@@ -187,8 +183,6 @@ class ResponseContext
 
       bool hasTargets() const;
       
-      int targetCount() const;
-      
       /**
          @returns true iff this target is in state Candidate
       */
@@ -217,16 +211,9 @@ class ResponseContext
       //tightly coupled.
       RequestContext& mRequestContext;
       
-//      typedef std::list<resip::Data> TransactionQueue;
-
       std::list<std::list<resip::Data> > mTransactionQueueCollection;
+      resip::Data mCurrentResponseTid;
 
-      // !bwc! Map from instance-id to lists of tid
-      // (Each elem in list has identical instance id)
-      typedef std::map<resip::Data, std::list<resip::Data> > OutboundMap;
-
-      OutboundMap mOutboundMap;
-      resip::Data mCurrentResponseTid;      
    private:
       // only constructed by RequestContext
       ResponseContext(RequestContext& parent);
@@ -267,7 +254,6 @@ class ResponseContext
       TransactionMap mActiveTransactionMap; //Targets with status Trying, Proceeding, or WaitingToCancel.
       TransactionMap mTerminatedTransactionMap; //Targets with status Terminated.
 
-      
       //Maybe someday canonicalized Uris will go here, and checking for duplicates
       //will be much faster
       resip::ContactList mTargetList;
@@ -277,7 +263,7 @@ class ResponseContext
       resip::SipMessage mBestResponse;
       int mBestPriority;
       bool mSecure;
-      bool mIsSenderBehindNAT;  // Only set if InteropHelper::getClientNATDetectionEnabled() is true
+      bool mIsClientBehindNAT;  // Only set if InteropHelper::getClientNATDetectionEnabled() is true
 
       void forwardBestResponse();
 
@@ -287,9 +273,6 @@ class ResponseContext
 
 EncodeStream&
 operator<<(EncodeStream& strm, const repro::ResponseContext& rc);
-
-EncodeStream& 
-operator<<(EncodeStream& strm, const repro::Target* t);
 
 }
 #endif

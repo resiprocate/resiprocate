@@ -107,6 +107,7 @@ USE_IPV6?=no
 USE_SSL?=yes
 USE_DTLS?=no
 RESIP_FIXED_POINT?=no
+USE_MAXMIND_GEOIP?=no
 
 #include $(BUILD)/Makefile.opt
 

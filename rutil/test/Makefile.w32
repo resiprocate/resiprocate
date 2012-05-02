@@ -15,6 +15,7 @@ all: \
  	testFileSystem.obj testFileSystem.exe \
 	testInserter.obj testInserter.exe \
 	testIntrusiveList.obj testIntrusiveList.exe \
+	testKeyValueStore.obj testKeyValueStore.exe \
 	testLogger.obj testLogger.exe \
 	testMD5Stream.obj testMD5Stream.exe \
 	testRandomHex.obj testRandomHex.exe \
@@ -42,6 +43,7 @@ run:
 	testFileSystem.exe
 	testInserter.exe
 	testIntrusiveList.exe
+	testKeyValueStore.exe
 	testLogger.exe   
 	testMD5Stream.exe
 	testRandomHex.exe

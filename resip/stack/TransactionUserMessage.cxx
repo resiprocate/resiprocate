@@ -5,8 +5,8 @@ using namespace resip;
 TransactionUserMessage::TransactionUserMessage(Type type, TransactionUser* ptu) :
    mType(type)
 {
-   tu = ptu;
-   assert(tu);
+   mTu = ptu;
+   assert(mTu);
 }
 
 EncodeStream& 

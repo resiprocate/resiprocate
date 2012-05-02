@@ -50,6 +50,7 @@ class ServerRegistration: public NonDialogUsage
       bool asyncProvideContacts(std::auto_ptr<resip::ContactPtrList> contacts);
 
       resip::SharedPtr<ContactList> getOriginalContacts() { return mOriginalContacts; }  // WARNING - use this only if async mode is not used
+      const ContactList& getRequestContacts() { return mRequestContacts; }
 
    protected:
       virtual ~ServerRegistration();
@@ -58,16 +59,17 @@ class ServerRegistration: public NonDialogUsage
       ServerRegistration(DialogUsageManager& dum, DialogSet& dialogSet, const SipMessage& request);
 
       bool tryFlow(ContactInstanceRecord& rec,
-                     const resip::SipMessage& msg);
+                   const resip::SipMessage& msg);
       bool flowTokenNeededForTls(const ContactInstanceRecord &rec) const;
       bool flowTokenNeededForSigcomp(const ContactInstanceRecord &rec) const;
       bool testFlowRequirements(ContactInstanceRecord &rec,
-                                 const resip::SipMessage& msg,
-                                 bool hasFlow) const;
+                                const resip::SipMessage& msg,
+                                bool hasFlow) const;
 
       SipMessage mRequest;
       Uri mAor;
-      resip::SharedPtr<ContactList> mOriginalContacts;
+      resip::SharedPtr<ContactList> mOriginalContacts;  // Used only for non-async processing
+      ContactList mRequestContacts;  // Contains the Contacts from the REGISTER request
       bool mDidOutbound;
 
       // disabled

@@ -44,8 +44,8 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../resip/stack&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;USE_ARES;USE_IPV6;LEAK_CHECK"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../resip/stack&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;;&quot;$(ProjectDir)../contrib/GeoIP/libGeoIP&quot;;&quot;$(ProjectDir)../contrib/MySQLConnectorC/include&quot;"
+				PreprocessorDefinitions="WIN32;_DEBUG;USE_ARES;USE_IPV6;LEAK_CHECK;;USE_MYSQL;USE_MAXMIND_GEOIP"
 				MinimalRebuild="false"
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="3"
@@ -109,8 +109,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../resip/stack&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;USE_ARES;USE_IPV6"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../resip/stack&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;;&quot;$(ProjectDir)../contrib/GeoIP/libGeoIP&quot;;&quot;$(ProjectDir)../contrib/MySQLConnectorC/include&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;USE_ARES;USE_IPV6;USE_MYSQL;USE_MAXMIND_GEOIP"
 				MinimalRebuild="false"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
@@ -174,8 +174,8 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../resip/stack&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;;&quot;$(ProjectDir)../contrib/openssl/include&quot;;&quot;$(ProjectDir)../contrib/openssl/inc32&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;USE_ARES;LEAK_CHECK;USE_IPV6;USE_SSL"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../resip/stack&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;;&quot;$(ProjectDir)../contrib/openssl/include&quot;;&quot;$(ProjectDir)../contrib/openssl/inc32&quot;;&quot;$(ProjectDir)../contrib/GeoIP/libGeoIP&quot;;&quot;$(ProjectDir)../contrib/MySQLConnectorC/include&quot;"
+				PreprocessorDefinitions="WIN32;_DEBUG;USE_ARES;LEAK_CHECK;USE_IPV6;USE_SSL;USE_MYSQL;USE_MAXMIND_GEOIP"
 				MinimalRebuild="false"
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="3"
@@ -239,8 +239,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../resip/stack&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;;&quot;$(ProjectDir)../contrib/openssl/include&quot;;&quot;$(ProjectDir)../contrib/openssl/inc32&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;USE_ARES;USE_IPV6;USE_SSL"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../resip/stack&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;;&quot;$(ProjectDir)../contrib/openssl/include&quot;;&quot;$(ProjectDir)../contrib/openssl/inc32&quot;;&quot;$(ProjectDir)../contrib/GeoIP/libGeoIP&quot;;&quot;$(ProjectDir)../contrib/MySQLConnectorC/include&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;USE_ARES;USE_IPV6;USE_SSL;USE_MYSQL;USE_MAXMIND_GEOIP"
 				MinimalRebuild="false"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
@@ -377,14 +377,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\CommandServer.cxx"
-				>
-			</File>
-			<File
-				RelativePath=".\CommandServerThread.cxx"
-				>
-			</File>
-			<File
 				RelativePath=".\ConfigStore.cxx"
 				>
 			</File>
@@ -401,11 +393,23 @@
 				>
 			</File>
 			<File
+				RelativePath=".\FilterStore.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\monkeys\GeoProximityTargetSorter.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\monkeys\IsTrustedNode.cxx"
 				>
 			</File>
 			<File
 				RelativePath=".\monkeys\LocationServer.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\monkeys\MessageSilo.cxx"
 				>
 			</File>
 			<File
@@ -509,6 +513,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\monkeys\RequestFilter.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ResponseContext.cxx"
 				>
 			</File>
@@ -521,11 +529,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SiloStore.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\monkeys\SimpleStaticRoute.cxx"
 				>
 			</File>
 			<File
 				RelativePath=".\monkeys\SimpleTargetHandler.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\StaticRegStore.cxx"
 				>
 			</File>
 			<File
@@ -587,6 +603,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\AsyncProcessor.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\AsyncProcessorMessage.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\AsyncProcessorWorker.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\stateAgents\CertPublicationHandler.hxx"
 				>
 			</File>
@@ -600,14 +628,6 @@
 			</File>
 			<File
 				RelativePath=".\ChainTraverser.hxx"
-				>
-			</File>
-			<File
-				RelativePath=".\CommandServer.hxx"
-				>
-			</File>
-			<File
-				RelativePath=".\CommandServerThread.hxx"
 				>
 			</File>
 			<File
@@ -627,11 +647,27 @@
 				>
 			</File>
 			<File
+				RelativePath=".\FilterStore.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ForkControlMessage.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\monkeys\GeoProximityTargetSorter.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\monkeys\IsTrustedNode.hxx"
 				>
 			</File>
 			<File
 				RelativePath=".\monkeys\LocationServer.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\monkeys\MessageSilo.hxx"
 				>
 			</File>
 			<File
@@ -695,15 +731,15 @@
 				>
 			</File>
 			<File
-				RelativePath="..\resip\rend\RendWavePres.hxx"
-				>
-			</File>
-			<File
 				RelativePath=".\ReproServerAuthManager.hxx"
 				>
 			</File>
 			<File
 				RelativePath=".\RequestContext.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\monkeys\RequestFilter.hxx"
 				>
 			</File>
 			<File
@@ -719,11 +755,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SiloStore.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\monkeys\SimpleStaticRoute.hxx"
 				>
 			</File>
 			<File
 				RelativePath=".\monkeys\SimpleTargetHandler.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\StaticRegStore.hxx"
 				>
 			</File>
 			<File

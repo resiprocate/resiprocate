@@ -45,7 +45,6 @@ MySqlDb::MySqlDb(const Data& server,
 { 
    InfoLog( << "Using MySQL DB with server=" << server << ", user=" << user << ", dbName=" << databaseName << ", port=" << port);
 
-   assert( MaxTable <= 4 );
    for (int i=0;i<MaxTable;i++)
    {
       mResult[i]=0;
@@ -169,7 +168,39 @@ MySqlDb::query(const Data& queryCommand) const
    return rc;
 }
 
-void 
+
+int
+MySqlDb::singleResultQuery(const Data& queryCommand, Data& resultData) const
+{
+   int rc = query(queryCommand);
+      
+   if(rc == 0)
+   {
+      MYSQL_RES* result = mysql_store_result(mConn);
+      if(result == 0)
+      {
+         rc = mysql_errno(mConn);
+         ErrLog( << "MySQL store result failed: error=" << rc << ": " << mysql_error(mConn));
+         return rc;
+      }
+
+      MYSQL_ROW row = mysql_fetch_row(result);
+      if(row)
+      {
+         resultData = Data(row[0]);
+      }
+      else
+      {
+         rc = mysql_errno(mConn);
+         ErrLog( << "MySQL fetch row failed: error=" << rc << ": " << mysql_error(mConn));
+      }
+      mysql_free_result(result);
+   }
+   return rc;
+}
+
+
+bool 
 MySqlDb::addUser(const AbstractDb::Key& key, const AbstractDb::UserRecord& rec)
 { 
    Data command;
@@ -184,7 +215,7 @@ MySqlDb::addUser(const AbstractDb::Key& key, const AbstractDb::UserRecord& rec)
          << "', forwardAddress='" << rec.forwardAddress
          << "'";
    }
-   query(command);
+   return query(command) == 0;
 }
 
 
@@ -266,25 +297,12 @@ MySqlDb::getUserAuthInfo(  const AbstractDb::Key& key ) const
          command.replace("$domain", domain);
       }
    }
-   if(query(command) != 0)
+
+   if(singleResultQuery(command, ret) != 0)
    {
       return Data::Empty;
    }
    
-   MYSQL_RES* result = mysql_store_result(mConn);
-   if(result == 0)
-   {
-      ErrLog( << "MySQL store result failed: error=" << mysql_errno(mConn) << ": " << mysql_error(mConn));
-      return ret;
-   }
-
-   MYSQL_ROW row = mysql_fetch_row(result);
-   if(row)
-   {
-      ret = Data(row[0]);
-   }
-   mysql_free_result(result);
-
    DebugLog( << "Auth password is " << ret);
    
    return ret;
@@ -341,12 +359,27 @@ MySqlDb::nextUserKey()
 }
 
 
-void 
-MySqlDb::dbWriteRecord( const Table table, 
-                          const resip::Data& pKey, 
-                          const resip::Data& pData )
+bool 
+MySqlDb::dbWriteRecord(const Table table, 
+                       const resip::Data& pKey, 
+                       const resip::Data& pData)
 {
    Data command;
+
+   // Check if there is a secondary key or not and get it's value
+   char* secondaryKey;
+   unsigned int secondaryKeyLen;
+   if(AbstractDb::getSecondaryKey(table, pKey, pData, (void**)&secondaryKey, &secondaryKeyLen) == 0)
+   {
+      Data sKey(Data::Share, secondaryKey, secondaryKeyLen);
+      DataStream ds(command);
+      ds << "REPLACE INTO " << tableName(table)
+         << " SET attr='" << pKey
+         << "', attr2='" << sKey
+         << "', value='"  << pData.base64encode()
+         << "'";
+   }
+   else
    {
       DataStream ds(command);
       ds << "REPLACE INTO " << tableName(table) 
@@ -354,7 +387,8 @@ MySqlDb::dbWriteRecord( const Table table,
          << "', value='"  << pData.base64encode()
          << "'";
    }
-   query(command);
+
+   return query(command) == 0;
 }
 
 
@@ -388,8 +422,7 @@ MySqlDb::dbReadRecord(const Table table,
       MYSQL_ROW row=mysql_fetch_row(result);
       if(row)
       {
-         Data enc(row[0]);          
-         pData = enc.base64decode();
+         pData = Data(Data::Share, row[0], (Data::size_type)strlen(row[0])).base64decode();
          success = true;
       }
       mysql_free_result(result);
@@ -399,15 +432,22 @@ MySqlDb::dbReadRecord(const Table table,
 
 
 void 
-MySqlDb::dbEraseRecord( const Table table, 
-                        const resip::Data& pKey )
+MySqlDb::dbEraseRecord(const Table table, 
+                       const resip::Data& pKey,
+                       bool isSecondaryKey) // allows deleting records from a table that supports secondary keying using a secondary key
 { 
    Data command;
    {
       DataStream ds(command);
-      ds << "DELETE FROM " << tableName(table) 
-         << " WHERE attr='" << pKey 
-         << "'";
+      ds << "DELETE FROM " << tableName(table);
+      if(isSecondaryKey)
+      {
+         ds << " WHERE attr2='" << pKey << "'";
+      }
+      else
+      {
+         ds << " WHERE attr='" << pKey << "'";
+      }
    }   
    query(command);
 }
@@ -460,10 +500,103 @@ MySqlDb::dbNextKey(const Table table, bool first)
    return Data(row[0]);
 }
 
+
+bool 
+MySqlDb::dbNextRecord(const Table table,
+                      const resip::Data& key,
+                      resip::Data& data,
+                      bool forUpdate,  // specifying to add SELECT ... FOR UPDATE so the rows are locked
+                      bool first)  // return false if no more
+{
+   if(first)
+   {
+      // free memory from previous search 
+      if (mResult[table])
+      {
+         mysql_free_result(mResult[table]); 
+         mResult[table] = 0;
+      }
+      
+      Data command;
+      {
+         DataStream ds(command);
+         ds << "SELECT value FROM " << tableName(table);
+         if(!key.empty())
+         {
+            // dbNextRecord is used to iterator through database tables that support duplication records
+            // it is only appropriate for MySQL tables that contain the attr2 non-unique index (secondary key)
+            ds << " WHERE attr2='" << key << "'";
+         }
+         if(forUpdate)
+         {
+            ds << " FOR UPDATE";
+         }
+      }
+
+      if(query(command) != 0)
+      {
+         return false;
+      }
+
+      mResult[table] = mysql_store_result(mConn);
+      if (mResult[table] == 0)
+      {
+         ErrLog( << "MySQL store result failed: error=" << mysql_errno(mConn) << ": " << mysql_error(mConn));
+         return false;
+      }
+   }
+   
+   if (mResult[table] == 0)
+   { 
+      return false;
+   }
+   
+   MYSQL_ROW row = mysql_fetch_row(mResult[table]);
+   if (!row)
+   {
+      mysql_free_result(mResult[table]); 
+      mResult[table] = 0;
+      return false;
+   }
+
+   data = Data(Data::Share, row[0], (Data::size_type)strlen(row[0])).base64decode();
+
+   return true;
+}
+
+bool 
+MySqlDb::dbBeginTransaction(const Table table)
+{
+   Data command("SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ");
+   if(query(command) == 0)
+   {
+      command = "START TRANSACTION";
+      return query(command) == 0;
+   }
+   return false;
+}
+
+bool 
+MySqlDb::dbCommitTransaction(const Table table)
+{
+   Data command("COMMIT");
+   return query(command) == 0;
+}
+
+bool 
+MySqlDb::dbRollbackTransaction(const Table table)
+{
+   Data command("ROLLBACK");
+   return query(command) == 0;
+}
+
 static const char usersavp[] = "usersavp";
 static const char routesavp[] = "routesavp";
 static const char aclsavp[] = "aclsavp";
 static const char configsavp[] = "configsavp";
+static const char staticregsavp[] = "staticregsavp";
+static const char filtersavp[] = "filtersavp";
+static const char siloavp[] = "siloavp";
 
 const char*
 MySqlDb::tableName(Table table) const
@@ -479,6 +612,12 @@ MySqlDb::tableName(Table table) const
          return aclsavp; 
       case ConfigTable:
          return configsavp;
+      case StaticRegTable:
+         return staticregsavp;
+      case FilterTable:
+         return filtersavp;
+      case SiloTable:
+         return siloavp;
       default:
          assert(0);
    }

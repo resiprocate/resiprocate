@@ -7,6 +7,7 @@
 #include "resip/stack/TransactionUser.hxx"
 #include "rutil/HashMap.hxx"
 #include "rutil/ThreadIf.hxx"
+#include "rutil/KeyValueStore.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/TimerCMessage.hxx"
 #include "repro/ProxyConfig.hxx"
@@ -55,6 +56,12 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
 
       // Crypto Random Key for Salting Flow Token HMACs
       static resip::Data FlowTokenSalt;
+      static resip::KeyValueStore::KeyValueStoreKeyAllocator* getGlobalKeyValueStoreKeyAllocator();
+      static resip::KeyValueStore::KeyValueStoreKeyAllocator* getRequestKeyValueStoreKeyAllocator();
+      static resip::KeyValueStore::KeyValueStoreKeyAllocator* getTargetKeyValueStoreKeyAllocator();
+      static resip::KeyValueStore::Key allocateGlobalKeyValueStoreKey();  // should only be called at static initialization time
+      static resip::KeyValueStore::Key allocateRequestKeyValueStoreKey();  // should only be called at static initialization time
+      static resip::KeyValueStore::Key allocateTargetKeyValueStoreKey();  // should only be called at static initialization time
 
       // Note:  These are not thread safe and should be called before run() only
       void setOptionsHandler(OptionsHandler* handler);
@@ -69,6 +76,8 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
 
       void setAssumePath(bool f) { mAssumePath = f; }
       bool getAssumePath() const { return mAssumePath; }
+
+      bool isPAssertedIdentityProcessingEnabled() { return mPAssertedIdentityProcessing; }
       
       UserStore& getUserStore();
       resip::SipStack& getStack(){return mStack;}
@@ -87,6 +96,10 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
 
       void setServerText(const resip::Data& text) { mServerText = text; }
       const resip::Data& getServerText() const { return mServerText; }
+
+      // Accessor for global extensible state storage for monkeys
+      resip::KeyValueStore& getKeyValueStore() { return mKeyValueStore; }
+
    protected:
       virtual const resip::Data& name() const;
 
@@ -96,8 +109,10 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       resip::NameAddr mRecordRoute;
       bool mRecordRouteForced;
       bool mAssumePath;
+      bool mPAssertedIdentityProcessing;
       resip::Data mServerText;
       int mTimerC;
+      resip::KeyValueStore mKeyValueStore;
       
       // needs to be a reference since parent owns it
       ProcessorChain& mRequestProcessorChain;

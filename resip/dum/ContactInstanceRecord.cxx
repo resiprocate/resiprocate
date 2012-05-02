@@ -1,4 +1,5 @@
 #include "resip/dum/ContactInstanceRecord.hxx"
+#include "resip/stack/Helper.hxx"
 #include "rutil/Timer.hxx"
 #include "resip/stack/SipMessage.hxx"
 
@@ -9,6 +10,7 @@ ContactInstanceRecord::ContactInstanceRecord() :
    mLastUpdated(Timer::getTimeSecs()),
    mRegId(0),
    mSyncContact(false),
+   mUseFlowRouting(false),
    mUserInfo(0)
 {
 }
@@ -49,6 +51,7 @@ ContactInstanceRecord::makeUpdateDelta(const NameAddr& contact,
    c.mContact = contact;
    c.mRegExpires = expires;
    c.mReceivedFrom = msg.getSource();
+   c.mPublicAddress = Helper::getClientPublicAddress(msg);
    if (msg.exists(h_Paths))
    {
       c.mSipPath = msg.header(h_Paths);

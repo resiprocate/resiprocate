@@ -305,6 +305,7 @@
     <ClCompile Include="FileSystem.cxx" />
     <ClCompile Include="GeneralCongestionManager.cxx" />
     <ClCompile Include="HeapInstanceCounter.cxx" />
+    <ClCompile Include="KeyValueStore.cxx" />
     <ClCompile Include="dns\LocalDns.cxx" />
     <ClCompile Include="Lock.cxx" />
     <ClCompile Include="Log.cxx" />
@@ -389,6 +390,7 @@
     <ClInclude Include="GenericIPAddress.hxx" />
     <ClInclude Include="HashMap.hxx" />
     <ClInclude Include="HeapInstanceCounter.hxx" />
+    <ClInclude Include="KeyValueStore.hxx" />
     <ClInclude Include="Inserter.hxx" />
     <ClInclude Include="IntrusiveListElement.hxx" />
     <ClInclude Include="dns\LocalDns.hxx" />

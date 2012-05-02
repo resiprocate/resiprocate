@@ -16,14 +16,14 @@ namespace repro
   class DigestAuthenticator : public Processor
   {
     public:
-      DigestAuthenticator(ProxyConfig& config, Dispatcher* authRequestDispatcher, resip::SipStack* stack);
+      DigestAuthenticator(ProxyConfig& config, Dispatcher* authRequestDispatcher);
       ~DigestAuthenticator();
 
       virtual processor_action_t process(RequestContext &);
-      virtual void dump(EncodeStream &os) const;
 
     private:
       bool authorizedForThisIdentity(const resip::Data &user, const resip::Data &realm, resip::Uri &fromUri);
+      resip::NameAddr getDefaultIdentity(const resip::Data &user, const resip::Data &realm, resip::NameAddr &from);
       void challengeRequest(RequestContext &, bool stale = false);
       processor_action_t requestUserAuthInfo(RequestContext &, resip::Data & realm);
       virtual resip::Data getRealm(RequestContext &);

@@ -148,6 +148,14 @@ AC_ARG_WITH(ssl,
  AM_CONDITIONAL(USE_SSL, true)],
  [ AC_SUBST(LIBSSL_LIBADD, "")])
 
+AM_CONDITIONAL(USE_POPT, false)
+AC_ARG_WITH(popt,
+[  --with-popt             Link against POPT libraries],
+ [AC_DEFINE_UNQUOTED(HAVE_POPT_H, , HAVE_POPT_H)
+ AC_SUBST(LIBPOPT_LIBADD, "-lpopt")
+ AM_CONDITIONAL(USE_POPT, true)],
+ [ AC_SUBST(LIBPOPT_LIBADD, "")])
+
 AC_ARG_WITH(sigcomp,
 [  --with-sigcomp          Link against Open SigComp libraries for SigComp],
  AC_DEFINE_UNQUOTED(USE_SIGCOMP, , USE_SIGCOMP), )
@@ -167,6 +175,14 @@ AC_ARG_WITH(mysql,
  AC_SUBST(LIBMYSQL_LIBADD, "-lmysqlclient")
  AM_CONDITIONAL(USE_MYSQL, true)], 
  [ AC_SUBST(LIBMYSQL_LIBADD, "")])
+
+AM_CONDITIONAL(USE_MAXMIND_GEOIP, false)
+AC_ARG_WITH(geoip,
+[  --with-geoip            Link against MaxMind GeoIP libraries],
+ [AC_DEFINE_UNQUOTED(USE_MAXMIND_GEOIP, , USE_MAXMIND_GEOIP)
+ AC_SUBST(LIBGEOIP_LIBADD, "-lGeoIP")
+ AM_CONDITIONAL(USE_MAXMIND_GEOIP, true)],
+ [ AC_SUBST(LIBGEOIP_LIBADD, "")])
 
 AM_CONDITIONAL(USE_RADIUS_CLIENT, false)
 AC_ARG_WITH(radius,
@@ -203,7 +219,11 @@ AC_ARG_WITH(p2p,
 AC_SEARCH_LIBS(gethostbyname, nsl)
 AC_SEARCH_LIBS(socket, socket)
 
+#Used to look for realtime library requirement (-lrt)
 CURL_CHECK_LIBS_CLOCK_GETTIME_MONOTONIC
+
+AX_HAVE_EPOLL(
+  [AC_DEFINE_UNQUOTED(HAVE_EPOLL, ,HAVE_EPOLL)],  )
 
 AM_MAINTAINER_MODE
 

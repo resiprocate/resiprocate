@@ -27,6 +27,9 @@
     <ClCompile Include="repro.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ReproRunner.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="ReproVersion.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -34,6 +37,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="WebAdminThread.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MySqlDb.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -47,6 +53,9 @@
     <ClInclude Include="HttpConnection.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ReproRunner.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="ReproVersion.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -54,6 +63,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="WebAdminThread.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MySqlDb.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

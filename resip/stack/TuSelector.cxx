@@ -45,12 +45,12 @@ TuSelector::process()
       switch (msg->type())
       {
          case TransactionUserMessage::RequestShutdown:
-            InfoLog (<< "TransactionUserMessage::RequestShutdown " << *(msg->tu));
-            markShuttingDown(msg->tu);
+            InfoLog (<< "TransactionUserMessage::RequestShutdown " << *(msg->getTransactionUser()));
+            markShuttingDown(msg->getTransactionUser());
             break;
          case TransactionUserMessage::RemoveTransactionUser:
-            InfoLog (<< "TransactionUserMessage::RemoveTransactionUser " << *(msg->tu));
-            remove(msg->tu);
+            InfoLog (<< "TransactionUserMessage::RemoveTransactionUser " << *(msg->getTransactionUser()));
+            remove(msg->getTransactionUser());
             break;
          default:
             assert(0);

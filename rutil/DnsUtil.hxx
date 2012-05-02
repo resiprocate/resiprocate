@@ -1,10 +1,10 @@
 #if !defined(RESIP_DNSUTIL_HXX)
 #define RESIP_DNSUTIL_HXX
 
-#include "rutil/Socket.hxx"
 #include <list>
-#include "BaseException.hxx"
-#include "Data.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/BaseException.hxx"
+#include "rutil/Data.hxx"
 
 #ifndef WIN32
 #include <netinet/in.h>

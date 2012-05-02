@@ -433,9 +433,9 @@ class SipMessage : public TransactionMessage
       void setRawHeader(const HeaderFieldValueList* hfvs, Headers::Type headerType);
       const UnknownHeaders& getRawUnknownHeaders() const {return mUnknownHeaders;}
       /**
-	 Return the raw body string (if it exists). The returned HFV
-	 and its underlying memory is owned by the SipMessage, and may
-	 be released when this SipMessage is manipulated.
+         Return the raw body string (if it exists). The returned HFV
+         and its underlying memory is owned by the SipMessage, and may
+         be released when this SipMessage is manipulated.
 
          This is a low-level interface; see getContents() for higher level.
       **/

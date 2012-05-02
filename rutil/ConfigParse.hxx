@@ -1,9 +1,10 @@
 #if !defined(ConfigParse_hxx)
 #define ConfigParse_hxx
 
-#include <map>
 #include <vector>
-#include <rutil/Data.hxx>
+#include "rutil/BaseException.hxx"
+#include "rutil/HashMap.hxx"
+#include "rutil/Data.hxx"
 
 namespace resip
 {
@@ -11,6 +12,17 @@ namespace resip
 class ConfigParse
 {
 public:
+   class Exception : public BaseException
+   {
+      public:
+         Exception(const Data& msg,
+                   const Data& file,
+                   const int line)
+            : BaseException(msg, file, line) {}            
+      protected:
+         virtual const char* name() const { return "ConfigParse::Exception"; }
+   };
+
    ConfigParse();
    ConfigParse(int argc, char** argv, const resip::Data& defaultConfigFilename);
    virtual ~ConfigParse();
@@ -35,16 +47,12 @@ public:
    bool getConfigValue(const resip::Data& name, unsigned short &value);
    unsigned short getConfigUnsignedShort(const resip::Data& name, int defaultValue);
 
-// FIXME: subclass into resip
-//   bool getConfigValue(const resip::Data& name, resip::Uri &value);
-//   resip::Uri getConfigUri(const resip::Data& name, const resip::Uri defaultValue, bool useDefaultIfEmpty=false);
-
    bool getConfigValue(const resip::Data& name, std::vector<resip::Data> &value);
    
 protected:
    void insertConfigValue(const resip::Data& name, const resip::Data& value);
 
-   typedef std::multimap<resip::Data, resip::Data> ConfigValuesMap;
+   typedef HashMultiMap<resip::Data, resip::Data> ConfigValuesMap;
    ConfigValuesMap mConfigValues;
 
    // Config filename from command line

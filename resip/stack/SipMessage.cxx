@@ -1104,9 +1104,8 @@ SipMessage::header(const ExtensionHeader& headerName) const
 {
    for (UnknownHeaders::const_iterator i = mUnknownHeaders.begin();
         i != mUnknownHeaders.end(); i++)
-   {
-      // !dlb! case sensitive?
-      if (i->first == headerName.getName())
+   {      
+      if (isEqualNoCase(i->first, headerName.getName()))
       {
          HeaderFieldValueList* hfvs = i->second;
          if (hfvs->getParserContainer() == 0)
@@ -1129,8 +1128,7 @@ SipMessage::header(const ExtensionHeader& headerName)
    for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
         i != mUnknownHeaders.end(); i++)
    {
-      // !dlb! case sensitive?
-      if (i->first == headerName.getName())
+      if (isEqualNoCase(i->first, headerName.getName()))
       {
          HeaderFieldValueList* hfvs = i->second;
          if (hfvs->getParserContainer() == 0)
@@ -1154,7 +1152,7 @@ SipMessage::exists(const ExtensionHeader& symbol) const
    for (UnknownHeaders::const_iterator i = mUnknownHeaders.begin();
         i != mUnknownHeaders.end(); i++)
    {
-      if (i->first == symbol.getName())
+      if (isEqualNoCase(i->first, symbol.getName()))
       {
          return true;
       }
@@ -1168,7 +1166,7 @@ SipMessage::remove(const ExtensionHeader& headerName)
    for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
         i != mUnknownHeaders.end(); i++)
    {
-      if (i->first == headerName.getName())
+      if (isEqualNoCase(i->first, headerName.getName()))
       {
          freeHfvl(i->second);
          mUnknownHeaders.erase(i);

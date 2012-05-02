@@ -81,7 +81,7 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
       mCancelKey = request.getTransactionId();
       mDum.mCancelMap[mCancelKey] = this;
    }
-   DebugLog ( << " ************* Created DialogSet(UAS)  -- " << mId << "*************" );
+   DebugLog ( << " ************* Created DialogSet(UAS) *************: " << mId);
 }
 
 DialogSet::~DialogSet()
@@ -914,7 +914,7 @@ DialogSet::findMatchingClientOutOfDialogReq(const SipMessage& msg)
 Dialog*
 DialogSet::findDialog(const DialogId id)
 {
-   StackLog (<< "findDialog: " << id << " in " << Inserter(mDialogs));
+   StackLog (<< "findDialog: " << id << " in " << InserterP(mDialogs));
 
    DialogMap::iterator i = mDialogs.find(id);
    if (i == mDialogs.end())
@@ -1149,6 +1149,14 @@ DialogSet::flowTerminated(const Tuple& flow)
    {
       it->second->flowTerminated();
    }
+}
+
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, const DialogSet& ds)
+{
+   // Used in Inserter, so keeping brief (ie. Id is already logged by Inserter)
+   strm << "state=" << ds.mState;
+   return strm;
 }
 
 

@@ -19,6 +19,7 @@ for i in \
 	testFileSystem \
 	testInserter \
 	testIntrusiveList \
+	testKeyValueStore \
 	testLogger \
 	testMD5Stream \
 	testRandomHex \

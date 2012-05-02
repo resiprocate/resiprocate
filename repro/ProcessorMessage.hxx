@@ -3,6 +3,7 @@
 
 #include "resip/stack/ApplicationMessage.hxx"
 #include "resip/stack/TransactionUser.hxx"
+#include "repro/Processor.hxx"
 
 namespace repro
 {
@@ -12,13 +13,13 @@ class ProcessorMessage : public resip::ApplicationMessage
    public:
    
       ProcessorMessage(const Processor& proc,
-                        const resip::Data& tid,
-                        resip::TransactionUser* tupassed):
+                       const resip::Data& tid,
+                       resip::TransactionUser* tupassed):
          mTid(tid)
       {
-         tu=tupassed;
-         mReturnAddress=proc.getAddress();
-         mType=proc.getChainType();
+         mTu = tupassed;
+         mReturnAddress = proc.getAddress();
+         mType = proc.getChainType();
       }
 
       ProcessorMessage(const ProcessorMessage& orig) :
@@ -62,6 +63,7 @@ class ProcessorMessage : public resip::ApplicationMessage
       {
          return mTid;
       }
+
    protected:
       resip::Data mTid;
       std::vector<short> mReturnAddress;

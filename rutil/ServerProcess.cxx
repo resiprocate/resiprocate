@@ -3,7 +3,7 @@
   #include "config.h"
 #endif
 
-#if !defined(WIN32)
+#ifndef WIN32
 #include <sys/types.h>
 #include <unistd.h>
 #endif
@@ -28,12 +28,6 @@ ServerProcess::ServerProcess() : mPidFile("")
 
 ServerProcess::~ServerProcess()
 {
-}
-
-int
-ServerProcess::run(int argc, char *argv[])
-{
-   return main(argc, argv);
 }
 
 void

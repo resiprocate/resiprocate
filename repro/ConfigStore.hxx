@@ -19,7 +19,7 @@ class ConfigStore
       ConfigStore(AbstractDb& db);
       ~ConfigStore();
       
-      void addDomain(const resip::Data& domain,
+      bool addDomain(const resip::Data& domain,
                      const int tlsPort);
       
       const ConfigData& getConfigs() const;

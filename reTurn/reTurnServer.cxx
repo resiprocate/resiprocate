@@ -42,7 +42,7 @@ BOOL WINAPI console_ctrl_handler(DWORD ctrl_type)
 int main(int argc, char* argv[])
 {
    reTurn::ReTurnServerProcess proc;
-   return proc.run(argc, argv);
+   return proc.main(argc, argv);
 }
 
 reTurn::ReTurnServerProcess::ReTurnServerProcess()

@@ -22,7 +22,7 @@ class TimerCMessage : public resip::ApplicationMessage
 
       virtual const resip::Data& getTransactionId() const { return mTid; }
       virtual TimerCMessage* clone() const {return new TimerCMessage(mTid,mSerial);}
-      virtual EncodeStream& encode(EncodeStream& ostr) const { ostr << "TimerCMessage("<<mTid<<") "; return ostr; }
+      virtual EncodeStream& encode(EncodeStream& ostr) const { ostr << "TimerCMessage(tid="<<mTid<<")"; return ostr; }
       virtual EncodeStream& encodeBrief(EncodeStream& ostr) const { return encode(ostr);}
 
       int mSerial;

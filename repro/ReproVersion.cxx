@@ -60,7 +60,7 @@ namespace repro
    {
       if (sVU == 0)
       {
-	 sVU = new VersionUtils;
+         sVU = new VersionUtils;
       }
       return *sVU;
    }

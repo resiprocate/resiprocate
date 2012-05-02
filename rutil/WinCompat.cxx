@@ -378,7 +378,7 @@ WinCompat::determineSourceInterfaceWithoutIPv6(const GenericIPAddress& destinati
             if(pIpAddrTable->table[j].dwIndex == dwNicIndex)  // Default address is first address found for NIC
             {
                sourceIP.sin_addr.s_addr = pIpAddrTable->table[j].dwAddr;               
-         delete [] (char *) pIpAddrTable;
+               delete [] (char *) pIpAddrTable;
                return GenericIPAddress(sourceIP);
             }
          }

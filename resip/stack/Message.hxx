@@ -44,10 +44,10 @@ class Message
       friend class TransactionController;
       friend class TransactionState;
       friend class SipStack;
-      bool hasTransactionUser() const { return tu != 0; }
-      void setTransactionUser(TransactionUser* t) { tu = t; }
-      TransactionUser* getTransactionUser() { return tu; }
-      TransactionUser* tu;      
+      bool hasTransactionUser() const { return mTu != 0; }
+      void setTransactionUser(TransactionUser* t) { mTu = t; }
+      TransactionUser* getTransactionUser() { return mTu; }
+      TransactionUser* mTu;      
 };
 
 //always need std streams where things are encoded to cout, cerr, MD5Stream, etc...

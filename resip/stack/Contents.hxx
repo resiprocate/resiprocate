@@ -287,10 +287,10 @@ class Contents : public LazyParser
    protected:
 
       /**
-	   @internal
-	   @todo !bwc! Calls freeMem(), then reverts members to a default state
-      (including setting pointers to 0)
-	    */
+        @internal
+        @todo !bwc! Calls freeMem(), then reverts members to a default state
+         (including setting pointers to 0)
+      */
       inline void clear()
       {
          freeMem();

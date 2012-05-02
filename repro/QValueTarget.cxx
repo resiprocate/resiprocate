@@ -7,9 +7,38 @@ namespace repro
 
 static int DefaultPriorityMetric = 1000;  // If no q-value is present, when we treat the target as having a 1.0 priority
 
-QValueTarget::QValueTarget(const resip::ContactInstanceRecord& rec)
+QValueTarget::QValueTarget(const resip::Uri& target) :
+   Target(target)
 {
-   mRec=rec;
+   // Note:  no neeed to call storePriorityMetric(), since q value parameter 
+   //        is a NameAddr parameter and all we have here is a URI
+}
+
+QValueTarget::QValueTarget(const resip::NameAddr& target) :
+   Target(target)
+{
+   storePriorityMetric();
+}
+
+QValueTarget::QValueTarget(const resip::ContactInstanceRecord& rec) :
+   Target(rec)
+{
+   storePriorityMetric();
+}
+   
+QValueTarget::~QValueTarget()
+{
+}
+
+QValueTarget* 
+QValueTarget::clone() const
+{
+   return new QValueTarget(*this);
+}
+
+void 
+QValueTarget::storePriorityMetric()
+{
    if(mRec.mContact.exists(resip::p_q))
    {
       try
@@ -25,14 +54,6 @@ QValueTarget::QValueTarget(const resip::ContactInstanceRecord& rec)
    {
       mPriorityMetric=DefaultPriorityMetric;
    }
-}
-   
-QValueTarget::~QValueTarget(){}
-
-QValueTarget* 
-QValueTarget::clone() const
-{
-   return new QValueTarget(*this);
 }
 
 }

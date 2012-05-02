@@ -19,7 +19,10 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
+KeyValueStore::Key IsTrustedNode::mFromTrustedNodeKey = Proxy::allocateRequestKeyValueStoreKey();
+
 IsTrustedNode::IsTrustedNode(ProxyConfig& config) :
+   Processor("IsTrustedNode"),
    mAclStore(config.getDataStore()->mAclStore)
 {}
 
@@ -36,21 +39,20 @@ IsTrustedNode::process(RequestContext& context)
 
    if(mAclStore.isRequestTrusted(request))
    {
-      context.setFromTrustedNode();
+      context.getKeyValueStore().setBoolValue(mFromTrustedNodeKey, true);
    }
-   // strip PAI headers that we don't trust
-   else if(request.exists(h_PAssertedIdentities))
+   else
    {
-      request.remove(h_PAssertedIdentities);
+      context.getKeyValueStore().setBoolValue(mFromTrustedNodeKey, false);
+
+      // strip PAI headers that we don't trust
+      if(request.exists(h_PAssertedIdentities))
+      {
+         request.remove(h_PAssertedIdentities);
+      }
    }
       
    return Processor::Continue;
-}
-
-void
-IsTrustedNode::dump(EncodeStream &os) const
-{
-  os << "IsTrustedNode monkey" << std::endl;
 }
 
 

@@ -13,7 +13,6 @@ class RecursiveRedirect: public Processor
       virtual ~RecursiveRedirect();
       
       virtual processor_action_t process(RequestContext &);
-      virtual void dump(EncodeStream &os) const;
 };
 
 }

@@ -14,9 +14,9 @@ public:
    ReTurnServerProcess();
    virtual ~ReTurnServerProcess();
 
-protected:
-   /* A main method to be provided by a subclass */
    virtual int main(int argc, char *argv[]);
+
+protected:
 };
 
 }
