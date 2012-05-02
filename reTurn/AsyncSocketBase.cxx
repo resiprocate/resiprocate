@@ -78,6 +78,8 @@ AsyncSocketBase::handleSend(const asio::error_code& e)
       onSendFailure(e);
    }
 
+   // TODO - check if closed here, and if so don't try and send more
+
    // Clear this data from the queue and see if there is more data to send
    mSendDataQueue.pop_front();
    if (!mSendDataQueue.empty())
