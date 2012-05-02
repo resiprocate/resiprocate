@@ -6,7 +6,19 @@ namespace resip
 
 namespace SecurityTypes 
 { 
-typedef enum { SSLv23 = 1, TLSv1 = 2 } SSLType; 
+typedef enum 
+{ 
+   SSLv23 = 1, 
+   TLSv1 = 2 
+} SSLType;
+
+typedef enum
+{
+   None,
+   Optional,
+   Mandatory
+} TlsClientVerificationMode;
+
 }; 
 
 };

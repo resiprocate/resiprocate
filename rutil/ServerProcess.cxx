@@ -3,8 +3,10 @@
   #include "config.h"
 #endif
 
+#if !defined(WIN32)
 #include <sys/types.h>
 #include <unistd.h>
+#endif
 
 #include <iostream>
 #include <fstream>

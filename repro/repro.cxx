@@ -357,16 +357,16 @@ ReproProcess::main(int argc, char** argv)
                }
                Data tlsDomain = config.getConfigData(tlsDomainSettingKey, "");
                Data tlsCVMValue = config.getConfigData(tlsCVMSettingKey, "NONE");
-               TlsTransport::ClientVerificationMode cvm = TlsTransport::None;
+               SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None;
                if(isEqualNoCase(tlsCVMValue, "Optional"))
                {
                   tlsClientCertPossible = true;
-                  cvm = TlsTransport::Optional;
+                  cvm = SecurityTypes::Optional;
                }
                else if(isEqualNoCase(tlsCVMValue, "Mandatory"))
                {
                   tlsClientCertPossible = true;
-                  cvm = TlsTransport::Mandatory;
+                  cvm = SecurityTypes::Mandatory;
                }
                else if(!isEqualNoCase(tlsCVMValue, "None"))
                   CritLog(<< "Unknown TLS client verification mode found in " << tlsCVMSettingKey << " setting: " << tlsCVMValue);
@@ -454,16 +454,16 @@ ReproProcess::main(int argc, char** argv)
          int dtlsPort = config.getConfigInt("DTLSPort", 0);
          Data tlsDomain = config.getConfigData("TLSDomainName", "");
          Data tlsCVMValue = config.getConfigData("TLSClientVerification", "NONE");              
-         TlsTransport::ClientVerificationMode cvm = TlsTransport::None;
+         SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None;
          if(isEqualNoCase(tlsCVMValue, "Optional"))
          {
             tlsClientCertPossible = true;
-            cvm = TlsTransport::Optional;
+            cvm = SecurityTypes::Optional;
          }
          else if(isEqualNoCase(tlsCVMValue, "Mandatory"))
          {
             tlsClientCertPossible = true;
-            cvm = TlsTransport::Mandatory;
+            cvm = SecurityTypes::Mandatory;
          }
          else if(!isEqualNoCase(tlsCVMValue, "None"))
             CritLog(<< "Unknown TLS client verification mode found in TLSClientVerification setting: " << tlsCVMValue);

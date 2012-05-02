@@ -24,8 +24,6 @@
 #endif
 #endif
 
-#include "rutil/dns/AresCompat.hxx"
-
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
@@ -677,43 +675,6 @@ DnsResult::retrieveSRV()
    StackLog (<< "SRV: " << Inserter(mSRVResults));
 
    return next;
-}
-
-// adapted from the adig.c example in ares
-const unsigned char* 
-DnsResult::skipDNSQuestion(const unsigned char *aptr,
-                           const unsigned char *abuf,
-                           int alen)
-{
-   char *name=0;
-   int status=0;
-   long len=0;
-   
-   // Parse the question name. 
-   status = ares_expand_name(aptr, abuf, alen, &name, &len);
-   if (status != ARES_SUCCESS)
-   {
-      StackLog (<< "Failed parse of RR");
-      return NULL;
-   }
-   aptr += len;
-
-   // Make sure there's enough data after the name for the fixed part
-   // of the question.
-   if (aptr + QFIXEDSZ > abuf + alen)
-   {
-      free(name);
-      StackLog (<< "Failed parse of RR");
-      return NULL;
-   }
-
-   // Parse the question type and class. 
-   //int type = DNS_QUESTION_TYPE(aptr);
-   //int dnsclass = DNS_QUESTION_CLASS(aptr);
-   aptr += QFIXEDSZ;
-   
-   free(name);
-   return aptr;
 }
 
 DnsResult::NAPTR::NAPTR() : order(0), pref(0)

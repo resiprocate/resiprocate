@@ -23,12 +23,6 @@ class Security;
 class TlsTransport : public TcpBaseTransport
 {
    public:
-      typedef enum
-      {
-         None,
-         Optional,
-         Mandatory
-      } ClientVerificationMode;
       RESIP_HeapCount(TlsTransport);
       TlsTransport(Fifo<TransactionMessage>& fifo, 
                    int portNum, 
@@ -40,14 +34,14 @@ class TlsTransport : public TcpBaseTransport
                    AfterSocketCreationFuncPtr socketFunc=0,
                    Compression &compression = Compression::Disabled,
                    unsigned transportFlags = 0,
-                   ClientVerificationMode cvm = None,
+                   SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None,
                    bool useEmailAsSIP = false);
       virtual  ~TlsTransport();
 
       TransportType transport() const { return TLS; }
       SSL_CTX* getCtx() const;
 
-      ClientVerificationMode getClientVerificationMode() 
+      SecurityTypes::TlsClientVerificationMode getClientVerificationMode() 
          { return mClientVerificationMode; };
       bool isUseEmailAsSIP()
          { return mUseEmailAsSIP; };
@@ -58,7 +52,7 @@ class TlsTransport : public TcpBaseTransport
       Security* mSecurity;
       SecurityTypes::SSLType mSslType;
       SSL_CTX* mDomainCtx;
-      ClientVerificationMode mClientVerificationMode;
+      SecurityTypes::TlsClientVerificationMode mClientVerificationMode;
       /* If true, we will accept the email address in a client's subjectAltName
          as if it were a SIP URI.  This is convenient because many commercial
          CAs offer email certificates but not sip: certificates */

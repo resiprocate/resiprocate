@@ -182,10 +182,6 @@ class DnsResult : public DnsResultSink
       // with the appropriate Tuples. 
       void primeResults();
       
-      // Some utilities for parsing dns results
-      static const unsigned char* skipDNSQuestion(const unsigned char *aptr,
-                                                  const unsigned char *abuf,
-                                                  int alen);
    private:
       DnsInterface& mInterface;
       DnsStub& mDns;

@@ -77,15 +77,15 @@ TlsConnection::TlsConnection( Transport* transport, const Tuple& tuple,
       int verify_mode;
       switch(t->getClientVerificationMode())
       {
-      case TlsTransport::None:
+      case SecurityTypes::None:
          verify_mode = SSL_VERIFY_NONE;
          DebugLog(<< "Not expecting client certificate" );
          break;
-      case TlsTransport::Optional:
+      case SecurityTypes::Optional:
          verify_mode = SSL_VERIFY_PEER;
          DebugLog(<< "Optional client certificate mode" );
          break;
-      case TlsTransport::Mandatory:
+      case SecurityTypes::Mandatory:
          verify_mode = SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
          DebugLog(<< "Mandatory client certificate mode" );
          break;
