@@ -75,7 +75,7 @@ StaticRoute::process(RequestContext& context)
    }
    else
    {
-      std::list<Target*> parallelBatch;
+      TargetPtrList parallelBatch;
       for (RouteStore::UriList::const_iterator i = targets.begin();
            i != targets.end(); i++ )
       {
