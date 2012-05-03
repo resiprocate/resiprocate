@@ -227,7 +227,7 @@ endlocal
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/db/build_windows;$(ProjectDir)../contrib/pcre;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../contrib/pcre;$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/db/build_windows;$(ProjectDir)../contrib/pcre;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;USE_IPV6;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -312,7 +312,7 @@ endlocal
 </Command>
     </PreBuildEvent>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/db/build_windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../contrib/pcre;$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/db/build_windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;USE_IPV6;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -400,7 +400,7 @@ endlocal
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/db/build_windows;$(ProjectDir)../contrib/openssl/include;$(ProjectDir)../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../contrib/pcre;$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/db/build_windows;$(ProjectDir)../contrib/openssl/include;$(ProjectDir)../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;USE_SSL;USE_IPV6;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -411,7 +411,7 @@ endlocal
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(TargetDir)reprolib.lib;Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\contrib\openssl\lib\vc\static\libeay32MDd.lib;$(ProjectDir)..\contrib\openssl\lib\vc\static\ssleay32MDd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(TargetDir)reprolib.lib;Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\contrib\opensslx64\lib\vc\static\libeay32MDd.lib;$(ProjectDir)..\contrib\opensslx64\lib\vc\static\ssleay32MDd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)repro.pdb</ProgramDatabaseFile>
@@ -485,7 +485,7 @@ endlocal
 </Command>
     </PreBuildEvent>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/db/build_windows;$(ProjectDir)../contrib/pcre;$(ProjectDir)../contrib/openssl/include;$(ProjectDir)../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../contrib/pcre;$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/db/build_windows;$(ProjectDir)../contrib/pcre;$(ProjectDir)../contrib/openssl/include;$(ProjectDir)../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;USE_SSL;USE_IPV6;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -495,7 +495,7 @@ endlocal
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(TargetDir)reprolib.lib;Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\contrib\openssl\lib\vc\static\libeay32MD.lib;$(ProjectDir)..\contrib\openssl\lib\vc\static\ssleay32MD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(TargetDir)reprolib.lib;Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\contrib\opensslx64\lib\vc\static\libeay32MD.lib;$(ProjectDir)..\contrib\opensslx64\lib\vc\static\ssleay32MD.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>

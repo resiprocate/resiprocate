@@ -31,7 +31,7 @@ GeneralCongestionManager::registerFifo(resip::FifoStatsInterface* fifo,
    info.metric=metric;
    info.maxTolerance=maxTolerance;
    mFifos.push_back(info);
-   fifo->setRole(mFifos.size()-1);
+   fifo->setRole((UInt8)mFifos.size()-1);
 }
 
 void 
@@ -134,7 +134,7 @@ GeneralCongestionManager::getCongestionPercent(const FifoStatsInterface* fifo) c
    switch(info.metric)
    {
       case SIZE:
-         return resipIntDiv(100*fifo->getCountDepth(),info.maxTolerance);
+         return resipIntDiv(100*(UInt16)fifo->getCountDepth(),info.maxTolerance);
       case TIME_DEPTH:
          return resipIntDiv(100*(UInt32)(fifo->getTimeDepth()),info.maxTolerance);
       case WAIT_TIME:

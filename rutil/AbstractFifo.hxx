@@ -322,7 +322,7 @@ class AbstractFifo : public FifoStatsInterface
                other.push_back(mFifo.front());
                mFifo.pop_front();
             }
-            onMessagePopped(num);
+            onMessagePopped((unsigned int)num);
          }
       }
 
@@ -376,7 +376,7 @@ class AbstractFifo : public FifoStatsInterface
                other.push_back(mFifo.front());
                mFifo.pop_front();
             }
-            onMessagePopped(num);
+            onMessagePopped((unsigned int)num);
          }
          return true;
       }
@@ -393,7 +393,7 @@ class AbstractFifo : public FifoStatsInterface
       size_t addMultiple(Messages& items)
       {
          Lock lock(mMutex); (void)lock;
-         int size=items.size();
+         size_t size=items.size();
          if(mFifo.empty())
          {
             std::swap(mFifo, items);
@@ -409,7 +409,7 @@ class AbstractFifo : public FifoStatsInterface
             }
          }
          mCondition.signal();
-         onMessagePushed(size);
+         onMessagePushed((int)size);
          return mFifo.size();
       }
 
