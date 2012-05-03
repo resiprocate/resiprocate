@@ -4,6 +4,7 @@
 	Version="9.00"
 	Name="netxx"
 	ProjectGUID="{9F26ED15-437C-4A8A-9062-75BF0E5A0F39}"
+	RootNamespace="netxx"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="131072"
 	>
@@ -106,7 +107,8 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				AdditionalIncludeDirectories=".\include;&quot;..\..\..\..\..\OpenSSL\openssl-0.9.7g\inc32&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;NETXX_NO_INET6"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"

@@ -6,7 +6,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tfm", "tfm.vcproj", "{55E1B
 		{D23D6465-7EA9-45FD-9784-54DBF8A1A5CE} = {D23D6465-7EA9-45FD-9784-54DBF8A1A5CE}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "netxx", "contrib\Netxx-0.3.2\netxx.vcproj", "{9F26ED15-437C-4A8A-9062-75BF0E5A0F39}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "netxx", "..\contrib\Netxx-0.3.2\netxx.vcproj", "{9F26ED15-437C-4A8A-9062-75BF0E5A0F39}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sanityTests", "repro\sanityTests.vcproj", "{A1AC2E44-0228-4A23-9C64-0C1FDE07D095}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -20,11 +20,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sanityTests", "repro\sanity
 		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106} = {3D0E5CEB-93DC-4FDB-918B-D08FA369E106}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cppunit", "contrib\cppunit\src\cppunit\cppunit.vcproj", "{D23D6465-7EA9-45FD-9784-54DBF8A1A5CE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cppunit", "..\contrib\cppunit\src\cppunit\cppunit.vcproj", "{D23D6465-7EA9-45FD-9784-54DBF8A1A5CE}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ares", "..\contrib\ares\ares_9_0.vcproj", "{96CD935E-1951-43B8-AF75-F1C06B3778C1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ares", "..\rutil\dns\ares\ares_9_0.vcproj", "{96CD935E-1951-43B8-AF75-F1C06B3778C1}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "db_static", "..\contrib\db\build_win32\db_static_9_0.vcproj", "{FD7075B0-7C44-4631-B356-39B42D7908CC}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "db_static", "..\contrib\db\build_windows\db_static_9_0.vcproj", "{FD7075B0-7C44-4631-B356-39B42D7908CC}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dum", "..\resip\dum\dum_9_0.vcproj", "{12720B4D-F4FC-4502-8FA9-589BF5166216}"
 EndProject
