@@ -35,7 +35,7 @@ LocationServer::process(RequestContext& context)
    // them in the Regisration Database.  This code handles the asynchronous
    // lookup.
    UserInfoMessage *userInfo = dynamic_cast<UserInfoMessage*>(context.getCurrentEvent());
-   if(userInfo)
+   if(userInfo && userInfo->getOriginatorAddress() == getAddress())  // Ensure we generated the UserInfo - it could be from the Digest Authenticator
    {
       // If A1 is empty, then user does not exist - return 404
       if(userInfo->A1().empty())

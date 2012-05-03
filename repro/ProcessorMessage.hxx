@@ -19,6 +19,7 @@ class ProcessorMessage : public resip::ApplicationMessage
       {
          mTu = tupassed;
          mReturnAddress = proc.getAddress();
+         mOriginatorAddress = mReturnAddress;
          mType = proc.getChainType();
       }
 
@@ -27,6 +28,7 @@ class ProcessorMessage : public resip::ApplicationMessage
          mTid(orig.mTid)
       {
          mReturnAddress=orig.mReturnAddress;
+         mOriginatorAddress=orig.mOriginatorAddress;
          mType=orig.mType;
       }
 
@@ -49,6 +51,11 @@ class ProcessorMessage : public resip::ApplicationMessage
          return addr;
       }
       
+      std::vector<short>& getOriginatorAddress()
+      {
+         return mOriginatorAddress;
+      }
+
       Processor::ChainType chainType() const
       {
          return mType;
@@ -67,6 +74,7 @@ class ProcessorMessage : public resip::ApplicationMessage
    protected:
       resip::Data mTid;
       std::vector<short> mReturnAddress;
+      std::vector<short> mOriginatorAddress;
       Processor::ChainType mType;
 };
 
