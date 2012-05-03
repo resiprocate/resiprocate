@@ -268,7 +268,7 @@ TransportSelector::addTransportInternal(std::auto_ptr<Transport> autoTransport)
    }
 
    mTransports.push_back(transport);
-   transport->setKey(mTransports.size());
+   transport->setKey((unsigned int)mTransports.size());
 }
 
 void
