@@ -211,7 +211,7 @@ CommandServer::handleGetDnsCacheRequest(unsigned int connectionId, unsigned int 
 {
    InfoLog(<< "CommandServer::handleGetDnsCacheRequest");
 
-   mReproRunner.getProxy()->getStack().getDnsCacheDump(make_pair(connectionId, requestId), this);
+   mReproRunner.getProxy()->getStack().getDnsCacheDump(make_pair((unsigned long)connectionId, (unsigned long)requestId), this);
    // Note: Response will be sent when callback is invoked
 }
 
