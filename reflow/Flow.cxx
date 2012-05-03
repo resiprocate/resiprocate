@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <asio.hpp>
 #include <boost/function.hpp>
 #include <rutil/Log.hxx>

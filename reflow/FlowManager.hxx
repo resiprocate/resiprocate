@@ -1,6 +1,10 @@
 #if !defined(FlowManager_hxx)
 #define FlowManager_hxx
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "MediaStream.hxx"
 #include "FlowManagerException.hxx"
 

@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "TurnTcpSocket.hxx"
 #include <boost/bind.hpp>
 #include <rutil/Logger.hxx>
