@@ -31,7 +31,8 @@ man3_MANS = \
 	ares_free_errmem.3      ares_gethostbyname.3  ares_parse_a_reply.3  \
 	ares_search.3
 
-EXTRA_DIST = $(man3_MANS) adig.c ahost.c ares.vcproj ares_7_1.vcproj
+EXTRA_DIST = $(man3_MANS) adig.c ahost.c
+EXTRA_DIST += *.vcproj
 
 #adig: adig.o libares.a
 #	${CC} ${LDFLAGS} -o $@ adig.o libares.a ${LIBS}
