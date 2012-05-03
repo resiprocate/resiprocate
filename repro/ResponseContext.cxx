@@ -118,12 +118,12 @@ ResponseContext::addTarget(std::auto_ptr<repro::Target> target, bool beginImmedi
 }
 
 bool
-ResponseContext::addTargetBatch(std::list<Target*>& targets,
+ResponseContext::addTargetBatch(TargetPtrList& targets,
                                 bool highPriority)
 {
    std::list<resip::Data> queue;
    Target* target=0;
-   std::list<Target*>::iterator it;
+   TargetPtrList::iterator it;
 
    if(mRequestContext.mHaveSentFinalResponse || targets.empty())
    {
