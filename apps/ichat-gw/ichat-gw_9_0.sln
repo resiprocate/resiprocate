@@ -22,10 +22,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pcre", "..\..\contrib\pcre\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "jabberconnector", "jabberconnector\jabberconnector_9_0.vcproj", "{A77DCD34-20CA-4602-B185-EE3EAD97713D}"
 	ProjectSection(ProjectDependencies) = postProject
-		{F15B61D6-2C77-45A1-99E6-FD29E5267A90} = {F15B61D6-2C77-45A1-99E6-FD29E5267A90}
+		{EEDA9797-BEAA-4377-96FC-C4B41E063290} = {EEDA9797-BEAA-4377-96FC-C4B41E063290}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gloox 0", "..\..\contrib\gloox\gloox.vcproj", "{F15B61D6-2C77-45A1-99E6-FD29E5267A90}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gloox", "..\..\contrib\gloox\gloox.vcproj", "{EEDA9797-BEAA-4377-96FC-C4B41E063290}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -61,10 +61,10 @@ Global
 		{A77DCD34-20CA-4602-B185-EE3EAD97713D}.Debug|Win32.Build.0 = Debug|Win32
 		{A77DCD34-20CA-4602-B185-EE3EAD97713D}.Release|Win32.ActiveCfg = Release|Win32
 		{A77DCD34-20CA-4602-B185-EE3EAD97713D}.Release|Win32.Build.0 = Release|Win32
-		{F15B61D6-2C77-45A1-99E6-FD29E5267A90}.Debug|Win32.ActiveCfg = Debug|Win32
-		{F15B61D6-2C77-45A1-99E6-FD29E5267A90}.Debug|Win32.Build.0 = Debug|Win32
-		{F15B61D6-2C77-45A1-99E6-FD29E5267A90}.Release|Win32.ActiveCfg = Release|Win32
-		{F15B61D6-2C77-45A1-99E6-FD29E5267A90}.Release|Win32.Build.0 = Release|Win32
+		{EEDA9797-BEAA-4377-96FC-C4B41E063290}.Debug|Win32.ActiveCfg = Debug|Win32
+		{EEDA9797-BEAA-4377-96FC-C4B41E063290}.Debug|Win32.Build.0 = Debug|Win32
+		{EEDA9797-BEAA-4377-96FC-C4B41E063290}.Release|Win32.ActiveCfg = Release|Win32
+		{EEDA9797-BEAA-4377-96FC-C4B41E063290}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

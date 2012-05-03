@@ -540,6 +540,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\repro\FilterStore.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\repro\FilterStore.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\repro\ForkControlMessage.hxx"
 				>
 			</File>
@@ -669,6 +677,22 @@
 			</File>
 			<File
 				RelativePath="..\repro\RRDecorator.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\repro\SiloStore.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\repro\SiloStore.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\repro\StaticRegStore.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\repro\StaticRegStore.hxx"
 				>
 			</File>
 			<File
