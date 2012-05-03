@@ -59,7 +59,7 @@ makeRequestProcessorChain(ProcessorChain& chain,
    IsTrustedNode* isTrusted = new IsTrustedNode(config);
    authenticators->addProcessor(std::auto_ptr<Processor>(isTrusted));
 
-   DigestAuthenticator* da = new DigestAuthenticator(config, authRequestDispatcher, stack);
+   DigestAuthenticator* da = new DigestAuthenticator(config, authRequestDispatcher);
    authenticators->addProcessor(std::auto_ptr<Processor>(da)); 
 
    StrictRouteFixup* srf = new StrictRouteFixup;
@@ -71,7 +71,7 @@ makeRequestProcessorChain(ProcessorChain& chain,
    StaticRoute* sr = new StaticRoute(config);
    locators->addProcessor(std::auto_ptr<Processor>(sr));
  
-   LocationServer* ls = new LocationServer(config, regData);
+   LocationServer* ls = new LocationServer(config, regData, authRequestDispatcher);
    locators->addProcessor(std::auto_ptr<Processor>(ls));
  
    chain.addProcessor(std::auto_ptr<Processor>(authenticators));

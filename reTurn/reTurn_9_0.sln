@@ -10,7 +10,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "reTurnServer", "reTurnServe
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "reTurnClient", "client\reTurnClient_9_0.vcproj", "{67B5906C-5C9D-4D09-AC7E-AF71D72175F8}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ares", "..\contrib\ares\ares_9_0.vcproj", "{96CD935E-1951-43B8-AF75-F1C06B3778C1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ares", "..\rutil\dns\ares\ares_9_0.vcproj", "{96CD935E-1951-43B8-AF75-F1C06B3778C1}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestClient", "client\test\TestClient_9_0.vcproj", "{73151749-13F0-4093-97F1-A6952ECECDBF}"
 	ProjectSection(ProjectDependencies) = postProject
