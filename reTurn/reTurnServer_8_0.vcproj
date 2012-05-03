@@ -63,7 +63,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="&quot;$(ProjectDir)..\contrib\openssl\out32.dbg\libeay32.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\out32.dbg\ssleay32.lib&quot;"
+				AdditionalDependencies="winmm.lib &quot;$(ProjectDir)..\contrib\openssl\out32.dbg\libeay32.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\out32.dbg\ssleay32.lib&quot;"
 				OutputFile="$(OutDir)/reTurnServer.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -141,7 +141,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="&quot;$(ProjectDir)..\contrib\openssl\out32\libeay32.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\out32\ssleay32.lib&quot;"
+				AdditionalDependencies="winmm.lib &quot;$(ProjectDir)..\contrib\openssl\out32\libeay32.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\out32\ssleay32.lib&quot;"
 				OutputFile="$(OutDir)/reTurnServer.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
@@ -284,6 +284,10 @@
 				RelativePath=".\UdpServer.cxx"
 				>
 			</File>
+			<File
+				RelativePath=".\UserAuthData.cxx"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -388,6 +392,10 @@
 			</File>
 			<File
 				RelativePath=".\UdpServer.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\UserAuthData.hxx"
 				>
 			</File>
 		</Filter>

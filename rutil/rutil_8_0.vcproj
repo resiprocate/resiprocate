@@ -373,7 +373,7 @@
 			<File
 				RelativePath=".\KeyValueStore.cxx"
 				>
-			</File>			
+			</File>
 			<File
 				RelativePath=".\dns\LocalDns.cxx"
 				>
@@ -468,6 +468,10 @@
 			</File>
 			<File
 				RelativePath=".\SelectInterruptor.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ServerProcess.cxx"
 				>
 			</File>
 			<File
@@ -697,15 +701,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\KeyValueStore.hxx"
-				>
-			</File>			
-			<File
 				RelativePath=".\Inserter.hxx"
 				>
 			</File>
 			<File
 				RelativePath=".\IntrusiveListElement.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\KeyValueStore.hxx"
 				>
 			</File>
 			<File
@@ -802,6 +806,10 @@
 			</File>
 			<File
 				RelativePath=".\SelectInterruptor.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ServerProcess.hxx"
 				>
 			</File>
 			<File
