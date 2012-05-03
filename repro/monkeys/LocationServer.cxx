@@ -2,6 +2,8 @@
 #include "config.h"
 #endif
 
+#include <algorithm>
+
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/ExtensionParameter.hxx"
@@ -60,7 +62,7 @@ LocationServer::process(RequestContext& context)
    
    if(contacts.size() > 0)
    {
-      std::list<Target*> batch;
+      TargetPtrList batch;
       std::map<resip::Data,resip::ContactList> outboundBatch;
       UInt64 now = Timer::getTimeSecs();
       for(resip::ContactList::iterator i  = contacts.begin(); i != contacts.end(); ++i)
@@ -103,7 +105,11 @@ LocationServer::process(RequestContext& context)
          // Note: some elements of list are already in a sorted order (see outbound bactch sorting
          // above), however list::sort is stable, so it's safe to sort twice, as relative order 
          // of equal elements is preserved
-         batch.sort(Target::priorityMetricCompare);  
+#ifdef __SUNPRO_CC
+         sort(batch.begin(), batch.end(), Target::priorityMetricCompare);
+#else
+         batch.sort(Target::priorityMetricCompare);
+#endif
          context.getResponseContext().addTargetBatch(batch, false /* high priority */);
          //ResponseContext should be consuming the vector
          assert(batch.empty());

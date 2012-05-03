@@ -1,6 +1,9 @@
 #ifndef TARGET_HXX
 #define TARGET_HXX 1
 
+#include <list>
+#include <vector>
+
 #include "resip/stack/Uri.hxx"
 #include "resip/stack/NameAddr.hxx"
 #include "rutil/Data.hxx"
@@ -71,6 +74,12 @@ class Target
       resip::ContactInstanceRecord mRec;
       resip::KeyValueStore mKeyValueStore;
 };// class Target
+
+#ifdef __SUNPRO_CC
+typedef std::vector<Target*> TargetPtrList;
+#else
+typedef std::list<Target*> TargetPtrList;
+#endif
 
 EncodeStream& 
 operator<<(EncodeStream& strm, const repro::Target& t);
