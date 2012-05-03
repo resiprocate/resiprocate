@@ -170,7 +170,7 @@
     </ClCompile>
     <ClCompile Include="XMLCursor.cxx">
       <Filter>Source Files</Filter>
-    </ClCompile>	
+    </ClCompile>
     <ClCompile Include="FdPoll.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -184,6 +184,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SelectInterruptor.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerProcess.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -441,6 +444,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="StlPoolAllocator.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ServerProcess.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
