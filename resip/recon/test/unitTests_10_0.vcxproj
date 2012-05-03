@@ -152,10 +152,6 @@
       <Project>{f3bca14e-f24d-4570-833e-8c20c4c393f7}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\contrib\ares\ares_10_0.vcxproj">
-      <Project>{ce7cf5e0-cad1-49d6-95d1-143ded7b226e}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
     <ProjectReference Include="..\..\..\contrib\pcre\pcre_10_0.vcxproj">
       <Project>{b933f895-8efb-4fdd-a46d-09b8c00d1d26}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>

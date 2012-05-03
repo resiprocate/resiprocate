@@ -5,7 +5,11 @@
 #include <rutil/TimeLimitFifo.hxx>
 #include <rutil/Mutex.hxx>
 
+#ifdef WIN32
+#include <srtp.h>
+#else
 #include <srtp/srtp.h>
+#endif
 #include <boost/shared_ptr.hpp>
 
 #include "reTurn/client/TurnAsyncUdpSocket.hxx"

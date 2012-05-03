@@ -2,7 +2,7 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "recon", "recon_10_0.vcxproj", "{16CD976A-5D3B-4329-88BA-A32560CDFCC7}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ares", "..\..\contrib\ares\ares_10_0.vcxproj", "{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ares", "..\..\rutil\dns\ares\ares_10_0.vcxproj", "{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rutil", "..\..\rutil\rutil_10_0.vcxproj", "{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}"
 EndProject
