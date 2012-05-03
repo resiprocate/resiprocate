@@ -31,7 +31,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dum", "..\..\resip\dum\dum_
 		Release.AspNetCompiler.Debug = "False"
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ares", "..\..\contrib\ares\ares_8_0.vcproj", "{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ares", "..\..\rutil\dns\ares\ares_8_0.vcproj", "{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}"
 	ProjectSection(WebsiteProperties) = preProject
 		Debug.AspNetCompiler.Debug = "True"
 		Release.AspNetCompiler.Debug = "False"

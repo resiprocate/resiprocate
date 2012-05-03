@@ -15,7 +15,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "resiprocate", "..\..\resip\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dum", "..\..\resip\dum\dum_9_0.vcproj", "{12720B4D-F4FC-4502-8FA9-589BF5166216}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ares", "..\..\contrib\ares\ares_9_0.vcproj", "{96CD935E-1951-43B8-AF75-F1C06B3778C1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ares", "..\..\rutil\dns\ares\ares_9_0.vcproj", "{96CD935E-1951-43B8-AF75-F1C06B3778C1}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pcre", "..\..\contrib\pcre\pcre_9_0.vcproj", "{38594885-CF9C-4C5F-B3F0-E4969D7E3F58}"
 EndProject
