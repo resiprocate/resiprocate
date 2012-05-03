@@ -91,7 +91,7 @@ class ResponseContext
          will not break per se, but oddball target processing behavior might
          result.
       */
-      bool addTargetBatch(std::list<Target*>& targets, bool highPriority=false);
+      bool addTargetBatch(TargetPtrList& targets, bool highPriority=false);
             
       /**
          Begins all Candidate client transactions.
