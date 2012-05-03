@@ -2,6 +2,8 @@
 #include "config.h"
 #endif
 
+#include <algorithm>
+
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/NameAddr.hxx"
 #include "repro/monkeys/RecursiveRedirect.hxx"
@@ -35,7 +37,7 @@ RecursiveRedirect::process(RequestContext& context)
        response->isResponse() && 
        response->header(h_StatusLine).statusCode() / 100 == 3)
    {
-      std::list<Target*> batch;
+      TargetPtrList batch;
       for (NameAddrs::const_iterator i=response->header(h_Contacts).begin(); 
            i != response->header(h_Contacts).end(); ++i)
       {
@@ -47,7 +49,11 @@ RecursiveRedirect::process(RequestContext& context)
       }
       if(!batch.empty())
       {
+#ifdef __SUNPRO_CC
+         sort(batch.begin(), batch.end(), Target::priorityMetricCompare);
+#else
          batch.sort(Target::priorityMetricCompare);
+#endif
          context.getResponseContext().addTargetBatch(batch);
          //ResponseContext should be consuming the vector
          assert(batch.empty());
