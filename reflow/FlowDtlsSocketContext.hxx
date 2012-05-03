@@ -4,7 +4,11 @@
 #define FlowDtlsSocketContext_hxx 
 
 #include <asio.hpp>
+#ifdef WIN32
+#include <srtp.h>
+#else
 #include <srtp/srtp.h>
+#endif
 
 #include "dtls_wrapper/DtlsSocket.hxx"
 #include "Flow.hxx"
