@@ -64,7 +64,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="&quot;$(ProjectDir)..\..\..\contrib\openssl\out32.dbg\libeay32.lib&quot; &quot;$(ProjectDir)..\..\..\contrib\openssl\out32.dbg\ssleay32.lib&quot; iphlpapi.lib"
+				AdditionalDependencies="winmm.lib &quot;$(ProjectDir)..\..\..\contrib\openssl\out32.dbg\libeay32.lib&quot; &quot;$(ProjectDir)..\..\..\contrib\openssl\out32.dbg\ssleay32.lib&quot; iphlpapi.lib"
 				OutputFile="$(OutDir)/TestClient.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -144,7 +144,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="&quot;$(ProjectDir)..\..\..\contrib\openssl\out32\libeay32.lib&quot; &quot;$(ProjectDir)..\..\..\contrib\openssl\out32\ssleay32.lib&quot; iphlpapi.lib"
+				AdditionalDependencies="winmm.lib &quot;$(ProjectDir)..\..\..\contrib\openssl\out32\libeay32.lib&quot; &quot;$(ProjectDir)..\..\..\contrib\openssl\out32\ssleay32.lib&quot; iphlpapi.lib"
 				OutputFile="$(OutDir)/TestClient.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
