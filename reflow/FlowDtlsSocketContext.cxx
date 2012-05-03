@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #ifdef USE_SSL
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>

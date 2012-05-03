@@ -1,6 +1,10 @@
 #if !defined(Flow_hxx)
 #define Flow_hxx
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <map>
 #include <rutil/TimeLimitFifo.hxx>
 #include <rutil/Mutex.hxx>

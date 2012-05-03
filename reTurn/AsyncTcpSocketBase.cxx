@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <boost/bind.hpp>
 
 #include "AsyncTcpSocketBase.hxx"

@@ -1,6 +1,10 @@
 #if !defined(MediaStream_hxx)
 #define MediaStream_hxx
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <asio.hpp>
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
