@@ -408,6 +408,18 @@ ReproRunner::createSipStack()
 #endif
    mProxyConfig->getConfigValue("CertificatePath", certPath);
    security = new Security(certPath);
+   Data caDir;
+   mProxyConfig->getConfigValue("CADirectory", caDir);
+   if(!caDir.empty())
+   {
+      security->addCADirectory(caDir);
+   }
+   Data caFile;
+   mProxyConfig->getConfigValue("CAFile", caFile);
+   if(!caFile.empty())
+   {
+      security->addCAFile(caFile);
+   }
 #endif
 
 #ifdef USE_SIGCOMP
