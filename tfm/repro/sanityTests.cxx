@@ -5795,7 +5795,7 @@ class TestHolder : public ReproFixture
             (
                jason->expect(INVITE, from(cullen), WaitForCommand, jason->ring()),
                cullen->expect(INVITE/180, from(jason), WaitForResponse, cullen->noAction()),
-               jason->expect(CANCEL, from(proxy), 3000, chain(jason->ok(), jason->send487())),
+               jason->expect(CANCEL, from(proxy), 6000, chain(jason->ok(), jason->send487())),
                jason->expect(ACK,from(proxy),WaitForResponse,jason->noAction()),
 
                derek->expect(INVITE, from(cullen), WaitForCommand, chain(derek->ring(),derek->ok())),
@@ -6854,7 +6854,7 @@ class TestHolder : public ReproFixture
             (
                derek->expect(INVITE,contact(david),WaitForCommand,derek->ring()),
                david->expect(INVITE/180,contact(derek),WaitForResponse,david->noAction()),
-               derek->expect(CANCEL,from(proxy),3000,chain(derek->ok(),derek->send487())),
+               derek->expect(CANCEL,from(proxy),6000,chain(derek->ok(),derek->send487())),
                And
                (
                   Sub
@@ -10660,17 +10660,6 @@ class MyTestCase
       static CppUnit::Test* suite()
       {
          CppUnit::TestSuite *suiteOfTests = new CppUnit::TestSuite( "Suite1" );
-
-         // The following tests are time sensitive and may have trouble on systems of slower speeds
-         //TEST(testSpiral);
-         //TEST(testSpiralWithCancel);
-         //TEST(testInviteLoop); 
-         //TEST(testInviteForkThenSpiral);
-         //TEST(testInviteSpiralThenFork);
-         //TEST(testInviteSeqForkThenSpiral);
-         //TEST(testInviteSpiralThenSeqFork);
-         //TEST(testInviteTransportFailure);
-         //return suiteOfTests;
 
 // These tests assume that digest auth has been disabled in the proxy. Some 
 // day, when we have the ability to reconfigure the proxy after it is up, we 
