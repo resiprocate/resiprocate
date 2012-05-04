@@ -21,7 +21,7 @@ libtfm_la_LIBADD = ../repro/librepro.la
 libtfm_la_LIBADD += ../resip/dum/libdum.la
 libtfm_la_LIBADD += ../resip/stack/libresip.la
 libtfm_la_LIBADD += ../rutil/librutil.la
-libtfm_la_LIBADD += @LIBSSL_LIBADD@ -lpthread -ldb_cxx-4.8 -lcppunit -lNetxx
+libtfm_la_LIBADD += @LIBSSL_LIBADD@ -lpthread -ldb_cxx -lcppunit -lNetxx
 
 libtfm_la_SOURCES = ActionBase.cxx \
         CppTestSelector.cxx \
