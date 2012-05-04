@@ -13,7 +13,7 @@ using namespace std;
 
 CommandLineParser::CommandLineParser(int argc, char** argv)
 {
-   const char* logType = "cout";
+   const char* logType = "file";
    const char* logLevel = "INFO";
    const char* tlsDomain = 0;
    const char* proxyHostName=0;
