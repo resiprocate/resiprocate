@@ -97,6 +97,9 @@ reproincludedir = $(includedir)/repro
 nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	Ack200DoneMessage.hxx \
 	AclStore.hxx \
+        AsyncProcessor.hxx \
+        AsyncProcessorMessage.hxx \
+        AsyncProcessorWorker.hxx \
 	BerkeleyDb.hxx \
 	CommandServer.hxx \
 	CommandServerThread.hxx \
