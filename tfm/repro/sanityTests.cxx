@@ -23,10 +23,14 @@ using namespace resip;
 
 static const int WaitFor100 = 1000;
 static const int WaitFor180 = 1000;
+static const int WaitFor180Spiral = 5000;  // Give more time since response is going to spiral first
 static const int WaitFor487 = 1000;
 static const int WaitForAck = 1000;  //immediate ACK for 4xx and CANCEL; not ACK for 200
 static const int WaitForCommand = 1000;
+static const int WaitForCommandSpiral = 5000;  // Give more time since command is going to spiral first
 static const int WaitForResponse = 1000;
+static const int WaitForResponseSpiral = 5000; // Give more time since respond is going to spiral first
+static const int WaitForResponseLoop = 40000; // Give more time since respond is going to loop first
 static const int WaitForRegistration = 1000;
 static const int PauseTime = 100;
 static const int WaitForPause = 1100;
@@ -2141,10 +2145,10 @@ class TestHolder : public ReproFixture
           derek->expect(INVITE/407, from(proxy), WaitForResponse, chain(derek->ack(),derek->digestRespond())),
 
           And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
-              Sub(david->expect(INVITE, contact(derek), WaitForCommand, chain(david->ring(), david->answer())),
-                  derek->expect(INVITE/180, from(david), WaitFor100, derek->noAction()),
-                  derek->expect(INVITE/200, contact(david), WaitForResponse, derek->ack()),
-                  david->expect(ACK, from(derek), WaitForResponse, derek->noAction()))),
+              Sub(david->expect(INVITE, contact(derek), WaitForCommandSpiral, chain(david->ring(), david->answer())),
+                  derek->expect(INVITE/180, from(david), WaitFor180Spiral, derek->noAction()),
+                  derek->expect(INVITE/200, contact(david), WaitForResponseSpiral, derek->ack()),
+                  david->expect(ACK, from(derek), WaitForResponseSpiral, derek->noAction()))),
           WaitForEndOfTest);
       ExecuteSequences();  
    }
@@ -2181,14 +2185,14 @@ class TestHolder : public ReproFixture
             Sub
             (
                optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
-               derek->expect(INVITE/180, from(david), WaitFor100, derek->cancel()),
-               derek->expect(CANCEL/200, from(proxy),WaitForResponse, derek->noAction()),
-               derek->expect(INVITE/487, from(david),WaitForResponse, derek->ack())
+               derek->expect(INVITE/180, from(david), WaitFor180Spiral, derek->cancel()),
+               derek->expect(CANCEL/200, from(proxy),WaitForResponseSpiral, derek->noAction()),
+               derek->expect(INVITE/487, from(david),WaitForResponseSpiral, derek->ack())
             ),
             Sub
             (
-               david->expect(INVITE, contact(derek), WaitForCommand, david->ring()),
-               david->expect(CANCEL, from(proxy), WaitForResponse, chain(david->ok(),david->send487())),
+               david->expect(INVITE, contact(derek), WaitForCommandSpiral, david->ring()),
+               david->expect(CANCEL, from(proxy), WaitForResponseSpiral, chain(david->ok(),david->send487())),
                david->expect(ACK, from(proxy),WaitForResponse,david->noAction())
             )
          ),
@@ -4054,7 +4058,7 @@ class TestHolder : public ReproFixture
           optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
           jason->expect(INVITE/407, from(proxy), WaitForResponse, chain(jason->ack(), condition(userInReqUri,jason->digestRespond()))),
           optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
-          jason->expect(INVITE/480, from(proxy), WaitForResponse, jason->ack()),
+          jason->expect(INVITE/404, from(proxy), WaitForResponse, jason->ack()),
           WaitForEndOfTest);
       ExecuteSequences();  
    }
@@ -4206,7 +4210,7 @@ class TestHolder : public ReproFixture
          optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          david->expect(INVITE/407, from(proxy), WaitForResponse, chain(david->ack(),david->digestRespond())),
          optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
-         david->expect(INVITE/483,from(proxy),2000,david->ack()),
+         david->expect(INVITE/483,from(proxy),WaitForResponseLoop,david->ack()),
          WaitForEndOfTest
       );
       
@@ -4967,20 +4971,20 @@ class TestHolder : public ReproFixture
             (
                jason->expect(INVITE,contact(david),WaitForCommand,jason->ring()),
                david->expect(INVITE/180,contact(jason),WaitForResponse,david->noAction()),
-               jason->expect(CANCEL,from(proxy),3000,chain(jason->ok(), jason->send487())),
+               jason->expect(CANCEL,from(proxy),WaitForResponseSpiral,chain(jason->ok(), jason->send487())),
                jason->expect(ACK,from(proxy),WaitForResponse,jason->noAction())
             ),
             Sub
             (
                derek->expect(INVITE,contact(david),WaitForCommand,derek->ring()),
-               david->expect(INVITE/180,contact(derek),WaitForResponse,david->noAction()),
-               derek->expect(CANCEL,from(proxy),3000,chain(derek->ok(), derek->send487())),
+               david->expect(INVITE/180,contact(derek),WaitFor180Spiral,david->noAction()),
+               derek->expect(CANCEL,from(proxy),WaitForResponseSpiral,chain(derek->ok(), derek->send487())),
                derek->expect(ACK,from(proxy),WaitForResponse,derek->noAction())
             ),
             Sub
             (
-               cullen->expect(INVITE,contact(david),WaitForCommand,chain(cullen->ring(),cullen->pause(100),cullen->answer())),
-               david->expect(INVITE/180,contact(cullen),WaitForResponse,david->noAction()),
+               cullen->expect(INVITE,contact(david),WaitForCommandSpiral,chain(cullen->ring(),cullen->pause(100),cullen->answer())),
+               david->expect(INVITE/180,contact(cullen),WaitFor180Spiral,david->noAction()),
                david->expect(INVITE/200,contact(cullen),WaitForResponse,david->ack()),
                cullen->expect(ACK,contact(david),WaitForCommand,cullen->noAction())
             )
@@ -5035,22 +5039,22 @@ class TestHolder : public ReproFixture
             ),
             Sub
             (
-               jason->expect(INVITE,contact(david),WaitForCommand,jason->ring()),
-               david->expect(INVITE/180,contact(jason),WaitForResponse,david->noAction()),
-               jason->expect(CANCEL,from(proxy),3000,chain(jason->ok(), jason->send487())),
+               jason->expect(INVITE,contact(david),WaitForCommandSpiral,jason->ring()),
+               david->expect(INVITE/180,contact(jason),WaitFor180Spiral,david->noAction()),
+               jason->expect(CANCEL,from(proxy),WaitForResponseSpiral,chain(jason->ok(), jason->send487())),
                jason->expect(ACK,from(proxy),WaitForResponse,jason->noAction())
             ),
             Sub
             (
-               derek->expect(INVITE,contact(david),WaitForCommand,derek->ring()),
-               david->expect(INVITE/180,contact(derek),WaitForResponse,david->noAction()),
-               derek->expect(CANCEL,from(proxy),3000,chain(derek->ok(), derek->send487())),
+               derek->expect(INVITE,contact(david),WaitForCommandSpiral,derek->ring()),
+               david->expect(INVITE/180,contact(derek),WaitFor180Spiral,david->noAction()),
+               derek->expect(CANCEL,from(proxy),WaitForResponseSpiral,chain(derek->ok(), derek->send487())),
                derek->expect(ACK,from(proxy),WaitForResponse,derek->noAction())
             ),
             Sub
             (
-               enlai->expect(INVITE,contact(david),WaitForCommand,chain(enlai->ring(),enlai->pause(300),enlai->answer())),
-               david->expect(INVITE/180,contact(enlai),WaitForResponse,david->noAction()),
+               enlai->expect(INVITE,contact(david),WaitForCommandSpiral,chain(enlai->ring(),enlai->pause(1000),enlai->answer())),
+               david->expect(INVITE/180,contact(enlai),WaitFor180Spiral,david->noAction()),
                david->expect(INVITE/200,contact(enlai),WaitForResponse,david->ack()),
                enlai->expect(ACK,contact(david),WaitForCommand,enlai->noAction())
             )
@@ -6310,9 +6314,9 @@ class TestHolder : public ReproFixture
             ),
             Sub
             (
-               cullen->expect(INVITE,contact(david),WaitForCommand,cullen->ring()),
-               david->expect(INVITE/180,contact(cullen),WaitForResponse,david->noAction()),
-               cullen->expect(CANCEL,from(proxy),3000,chain(cullen->ok(),cullen->send487())),
+               cullen->expect(INVITE,contact(david),WaitForCommandSpiral,cullen->ring()),
+               david->expect(INVITE/180,contact(cullen),WaitFor180Spiral,david->noAction()),
+               cullen->expect(CANCEL,from(proxy),WaitForCommandSpiral,chain(cullen->ok(),cullen->send487())),
                And
                (
                   Sub
@@ -6321,12 +6325,12 @@ class TestHolder : public ReproFixture
                   ),
                   Sub
                   (
-                     derek->expect(INVITE,contact(david),WaitForCommand,derek->ring())
+                     derek->expect(INVITE,contact(david),WaitForCommandSpiral,derek->ring())
                   )
                ),
 
-               david->expect(INVITE/180,contact(derek),WaitForResponse,david->noAction()),
-               derek->expect(CANCEL,from(proxy),3000,chain(derek->ok(), derek->send487())),
+               david->expect(INVITE/180,contact(derek),WaitFor180Spiral,david->noAction()),
+               derek->expect(CANCEL,from(proxy),WaitForCommandSpiral,chain(derek->ok(), derek->send487())),
                And
                (
                   Sub
@@ -6335,12 +6339,12 @@ class TestHolder : public ReproFixture
                   ),
                   Sub
                   (
-                     jason->expect(INVITE,contact(david),WaitForCommand,chain(jason->ring(),jason->answer()))
+                     jason->expect(INVITE,contact(david),WaitForCommandSpiral,chain(jason->ring(),jason->answer()))
                   )
                ),
 
-               david->expect(INVITE/180,contact(jason),WaitForResponse,david->noAction()),
-               david->expect(INVITE/200,contact(jason),WaitForResponse,david->ack()),
+               david->expect(INVITE/180,contact(jason),WaitFor180Spiral,david->noAction()),
+               david->expect(INVITE/200,contact(jason),WaitForResponseSpiral,david->ack()),
                jason->expect(ACK,contact(david),WaitForResponse,jason->noAction())
             )
          ),
@@ -6410,9 +6414,9 @@ class TestHolder : public ReproFixture
             ),
             Sub
             (
-               derek->expect(INVITE,contact(david),WaitForCommand,derek->ring()),
-               david->expect(INVITE/180,contact(derek),WaitForResponse,david->noAction()),
-               derek->expect(CANCEL,from(proxy),3000,chain(derek->ok(), derek->send487())),
+               derek->expect(INVITE,contact(david),WaitForCommandSpiral,derek->ring()),
+               david->expect(INVITE/180,contact(derek),WaitFor180Spiral,david->noAction()),
+               derek->expect(CANCEL,from(proxy),WaitForCommandSpiral,chain(derek->ok(), derek->send487())),
                And
                (
                   Sub
@@ -6421,12 +6425,12 @@ class TestHolder : public ReproFixture
                   ),
                   Sub
                   (
-                     jason->expect(INVITE,contact(david),WaitForCommand,jason->ring())
+                     jason->expect(INVITE,contact(david),WaitForCommandSpiral,jason->ring())
                   )
                ),
 
-               david->expect(INVITE/180,contact(jason),WaitForResponse,david->noAction()),
-               jason->expect(CANCEL,from(proxy),3000,chain(jason->ok(), jason->send487())),
+               david->expect(INVITE/180,contact(jason),WaitFor180Spiral,david->noAction()),
+               jason->expect(CANCEL,from(proxy),WaitForCommandSpiral,chain(jason->ok(), jason->send487())),
                And
                (
                   Sub
@@ -6435,11 +6439,11 @@ class TestHolder : public ReproFixture
                   ),
                   Sub
                   (
-                     enlai->expect(INVITE,contact(david),WaitForCommand,chain(enlai->ring(),enlai->answer()))
+                     enlai->expect(INVITE,contact(david),WaitForCommandSpiral,chain(enlai->ring(),enlai->answer()))
                   )
                ),
 
-               david->expect(INVITE/180,contact(enlai),WaitForResponse,david->noAction()),
+               david->expect(INVITE/180,contact(enlai),WaitFor180Spiral,david->noAction()),
                david->expect(INVITE/200,contact(enlai),WaitForResponse,david->ack()),
                enlai->expect(ACK,contact(david),WaitForCommand,enlai->noAction())            
             )
@@ -10656,6 +10660,20 @@ class MyTestCase
       static CppUnit::Test* suite()
       {
          CppUnit::TestSuite *suiteOfTests = new CppUnit::TestSuite( "Suite1" );
+
+         // The following tests are time sensitive and may have trouble on systems of slower speeds
+         //TEST(testNonInviteClientRetransmissionsWithTimeout);
+         //TEST(testSpiral);
+         //TEST(testSpiralWithCancel);
+         //TEST(testInviteLoop); 
+         //TEST(testInviteForkThenSpiral);
+         //TEST(testInviteSpiralThenFork);
+         //TEST(testInviteSeqForkThenSpiral);
+         //TEST(testInviteSpiralThenSeqFork);
+         //TEST(testInviteTransportFailure);
+
+         //return suiteOfTests;
+
 // These tests assume that digest auth has been disabled in the proxy. Some 
 // day, when we have the ability to reconfigure the proxy after it is up, we 
 // can work these into the usual suite.
@@ -11141,8 +11159,8 @@ class MyTestCase
          TEST(testInviteServerRetransmits486);
          TEST(testInviteServerRetransmits503);
          TEST(testInviteServerRetransmits603);
-         TEST(testInviteNoDNS);
-         TEST(testInviteNoDNSTcp);
+         TEST(testInviteNoDNS); // this requires your dns server to return no answer for unknown lookups
+         TEST(testInviteNoDNSTcp);  // this requires your dns server to return no answer for unknown lookups
          TEST(testInviteNoSuchUser);
          TEST(testInviteClientDiesAfterFirstInvite);
          TEST(testInviteClientDiesAfterSecondInvite);
