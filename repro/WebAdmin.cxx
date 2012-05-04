@@ -1733,7 +1733,16 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
                s <<"</td>" << endl 
                  << "<td>" << instanceId.xmlCharDataEncode() 
                  << "</td><td>" << regId 
-                 << "</td><td>"  << (contact.exists(p_q) ? contact.param(p_q).floatVal() : 1.0f) << "</td><td>";
+                 << "</td><td>";
+#ifdef RESIP_FIXED_POINT
+               if(contact.exists(p_q))
+                  s << contact.param(p_q);
+               else
+                  s << "1.0";
+               s << "</td><td>";
+#else
+               s << (contact.exists(p_q) ? contact.param(p_q).floatVal() : 1.0f) << "</td><td>";
+#endif
                NameAddrs::const_iterator naIt = r.mSipPath.begin();
                for(;naIt != r.mSipPath.end(); naIt++)
                {
