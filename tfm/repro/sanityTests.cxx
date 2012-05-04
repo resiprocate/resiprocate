@@ -2331,7 +2331,7 @@ class TestHolder : public ReproFixture
             Sub
             (
                optional(jason->expect(INVITE/100,from(proxy),WaitForResponse,jason->noAction())),
-               jason->expect(INVITE/180,contact(derek),WaitForResponse,jason->noAction()),
+               jason->expect(INVITE/180,contact(derek),WaitForResponse+500,jason->noAction()),
                jason->expect(INVITE/486,contact(derek),WaitForResponse,chain(jason->cancel(),jason->pause(30),jason->ack())),
                jason->expect(CANCEL/200,from(proxy),WaitForResponse,jason->noAction())
             ),
@@ -10662,8 +10662,6 @@ class MyTestCase
          CppUnit::TestSuite *suiteOfTests = new CppUnit::TestSuite( "Suite1" );
 
          // The following tests are time sensitive and may have trouble on systems of slower speeds
-         //TEST(testNonInviteWithInviteCollision);
-         //TEST(testNonInviteClientRetransmissionsWithTimeout);
          //TEST(testSpiral);
          //TEST(testSpiralWithCancel);
          //TEST(testInviteLoop); 
