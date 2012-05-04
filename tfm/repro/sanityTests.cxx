@@ -3704,7 +3704,7 @@ class TestHolder : public ReproFixture
                      jason->expect(ACK,contact(derek),WaitForCommand,jason->noAction()),
                      jason->expect(ACK,contact(derek),WaitForCommand,jason->noAction()),
                      jason->expect(ACK,contact(derek),WaitForCommand,jason->noAction()),
-                     jason->expect(ACK,contact(derek),WaitForCommand,jason->noAction())                  
+                     jason->expect(ACK,contact(derek),WaitForCommand+1000,jason->noAction())                  
                   )
                )
             )
