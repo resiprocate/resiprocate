@@ -30,7 +30,7 @@ static const int WaitForCommand = 1000;
 static const int WaitForCommandSpiral = 5000;  // Give more time since command is going to spiral first
 static const int WaitForResponse = 1000;
 static const int WaitForResponseSpiral = 5000; // Give more time since respond is going to spiral first
-static const int WaitForResponseLoop = 40000; // Give more time since respond is going to loop first
+static const int WaitForResponseLoop = 60000; // Give more time since respond is going to loop first
 static const int WaitForRegistration = 1000;
 static const int PauseTime = 100;
 static const int WaitForPause = 1100;
@@ -4970,22 +4970,22 @@ class TestHolder : public ReproFixture
             Sub
             (
                jason->expect(INVITE,contact(david),WaitForCommand,jason->ring()),
-               david->expect(INVITE/180,contact(jason),WaitForResponse,david->noAction()),
-               jason->expect(CANCEL,from(proxy),WaitForResponseSpiral,chain(jason->ok(), jason->send487())),
+               david->expect(INVITE/180,contact(jason),WaitFor180Spiral,david->noAction()),
+               jason->expect(CANCEL,from(proxy),WaitForResponseSpiral+2000,chain(jason->ok(), jason->send487())),
                jason->expect(ACK,from(proxy),WaitForResponse,jason->noAction())
             ),
             Sub
             (
                derek->expect(INVITE,contact(david),WaitForCommand,derek->ring()),
                david->expect(INVITE/180,contact(derek),WaitFor180Spiral,david->noAction()),
-               derek->expect(CANCEL,from(proxy),WaitForResponseSpiral,chain(derek->ok(), derek->send487())),
+               derek->expect(CANCEL,from(proxy),WaitForResponseSpiral+2000,chain(derek->ok(), derek->send487())),
                derek->expect(ACK,from(proxy),WaitForResponse,derek->noAction())
             ),
             Sub
             (
                cullen->expect(INVITE,contact(david),WaitForCommandSpiral,chain(cullen->ring(),cullen->pause(100),cullen->answer())),
                david->expect(INVITE/180,contact(cullen),WaitFor180Spiral,david->noAction()),
-               david->expect(INVITE/200,contact(cullen),WaitForResponse,david->ack()),
+               david->expect(INVITE/200,contact(cullen),WaitForResponseSpiral,david->ack()),
                cullen->expect(ACK,contact(david),WaitForCommand,cullen->noAction())
             )
          ),
@@ -5053,9 +5053,9 @@ class TestHolder : public ReproFixture
             ),
             Sub
             (
-               enlai->expect(INVITE,contact(david),WaitForCommandSpiral,chain(enlai->ring(),enlai->pause(1000),enlai->answer())),
+               enlai->expect(INVITE,contact(david),WaitForCommandSpiral,chain(enlai->ring(),enlai->pause(2000),enlai->answer())),
                david->expect(INVITE/180,contact(enlai),WaitFor180Spiral,david->noAction()),
-               david->expect(INVITE/200,contact(enlai),WaitForResponse,david->ack()),
+               david->expect(INVITE/200,contact(enlai),WaitForResponseSpiral,david->ack()),
                enlai->expect(ACK,contact(david),WaitForCommand,enlai->noAction())
             )
          ),
@@ -9323,7 +9323,7 @@ class TestHolder : public ReproFixture
          (
             derek->info(jason),
             derek->expect(INFO/407, from(proxy), 1000, derek->digestRespond()),
-            jason->expect(INFO, from(derek), 100, jason->noAction()),
+            jason->expect(INFO, from(derek), 500, jason->noAction()),
             jason->expect(INFO, from(derek), 600, jason->noAction()),
             jason->expect(INFO, from(derek), 1100, jason->noAction()),
             And
@@ -10662,6 +10662,7 @@ class MyTestCase
          CppUnit::TestSuite *suiteOfTests = new CppUnit::TestSuite( "Suite1" );
 
          // The following tests are time sensitive and may have trouble on systems of slower speeds
+         //TEST(testNonInviteWithInviteCollision);
          //TEST(testNonInviteClientRetransmissionsWithTimeout);
          //TEST(testSpiral);
          //TEST(testSpiralWithCancel);
@@ -10671,7 +10672,6 @@ class MyTestCase
          //TEST(testInviteSeqForkThenSpiral);
          //TEST(testInviteSpiralThenSeqFork);
          //TEST(testInviteTransportFailure);
-
          //return suiteOfTests;
 
 // These tests assume that digest auth has been disabled in the proxy. Some 
