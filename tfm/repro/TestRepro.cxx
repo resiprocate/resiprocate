@@ -38,8 +38,8 @@ TfmProxyConfig::TfmProxyConfig(AbstractDb* db, const CommandLineParser& args)
    insertConfigValue("QValueBehavior", "EQUAL_Q_PARALLEL");
    insertConfigValue("QValueCancelBetweenForkGroups", "true");
    insertConfigValue("QValueWaitForTerminateBetweenForkGroups", "true");
-   insertConfigValue("QValueMsBetweenForkGroups", "2000");
-   insertConfigValue("QValueMsBeforeCancel", "2000");
+   insertConfigValue("QValueMsBetweenForkGroups", "5000");
+   insertConfigValue("QValueMsBeforeCancel", "5000");
 
    insertConfigValue("ForceRecordRouting", "false");
    insertConfigValue("RecordRouteUri", resip::Data::from(args.mRecordRoute));
