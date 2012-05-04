@@ -247,6 +247,7 @@ AC_OUTPUT(Makefile \
 	repro/test/Makefile \
 	tfm/Makefile \
 	tfm/tfdum/Makefile \
+	tfm/repro/Makefile \
 	apps/Makefile \
 	apps/clicktocall/Makefile \
 	apps/ichat-gw/Makefile \
