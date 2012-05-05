@@ -12,8 +12,8 @@ EXTRA_DIST += *.vcproj
 #EXTRA_DIST += contrib
 
 SUBDIRS = .
-SUBDIRS += tfdum
 SUBDIRS += repro
+SUBDIRS += tfdum
 
 lib_LTLIBRARIES = libtfm.la
 
