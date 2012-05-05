@@ -5,12 +5,20 @@ TESTS = sanityTests
 
 check_PROGRAMS = sanityTests
 
+sanityTests_LDADD = ../libtfm.la
+sanityTests_LDADD += ../../repro/librepro.la
+sanityTests_LDADD += ../../resip/dum/libdum.la
+sanityTests_LDADD += ../../resip/stack/libresip.la
+sanityTests_LDADD += ../../rutil/librutil.la
+sanityTests_LDADD += @LIBSSL_LIBADD@
+sanityTests_LDADD += -lpopt
+sanityTests_LDADD += -lpthread
+sanityTests_SOURCES = sanityTests.cxx $(SHARED_SRC)
+
 SHARED_SRC = TestRepro.cxx \
         TestReproUser.cxx \
         CommandLineParser.cxx \
         ReproFixture.cxx
-
-sanityTests_SOURCES = sanityTests.cxx $(SHARED_SRC)
 
 noinst_HEADERS = CommandLineParser.hxx \
         ReproFixture.hxx \
