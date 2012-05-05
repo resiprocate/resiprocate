@@ -5,6 +5,24 @@ TESTS = TestLamba dumTests
 
 check_PROGRAMS = TestLamba dumTests
 
+TestLamba_LDADD = ../libtfm.la
+TestLamba_LDADD += ../../resip/dum/libdum.la
+TestLamba_LDADD += ../../resip/stack/libresip.la
+TestLamba_LDADD += ../../rutil/librutil.la
+TestLamba_LDADD += @LIBSSL_LIBADD@
+TestLamba_LDADD += -lpthread
+
+TestLamba_SOURCES = TestLamba.cxx $(SHARED_SRC)
+
+dumTests_LDADD = ../libtfm.la
+dumTests_LDADD += ../../resip/dum/libdum.la
+dumTests_LDADD += ../../resip/stack/libresip.la
+dumTests_LDADD += ../../rutil/librutil.la
+dumTests_LDADD += @LIBSSL_LIBADD@
+dumTests_LDADD += -lpthread
+
+dumTests_SOURCES = dumTests.cxx $(SHARED_SRC)
+
 SHARED_SRC = DumUserAgent.cxx \
         TestDialogEvent.cxx \
         DialogEventExpect.cxx \
@@ -23,10 +41,6 @@ SHARED_SRC = DumUserAgent.cxx \
         TestServerPagerMessage.cxx \
         TfdTcpTransport.cxx \
         TfdTestSipEndPoint.cxx
-
-TestLamba_SOURCES = TestLamba.cxx $(SHARED_SRC)
-
-dumTests_SOURCES = dumTests.cxx $(SHARED_SRC)
 
 noinst_HEADERS = BindHandle.hxx \
         ClientOutOfDialogReqEvent.hxx \
