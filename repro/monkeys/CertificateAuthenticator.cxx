@@ -28,8 +28,10 @@ using namespace repro;
 using namespace std;
 
 CertificateAuthenticator::CertificateAuthenticator(ProxyConfig& config,
-                                                   resip::SipStack* stack) :
-   Processor("CertificateAuthenticator")
+                                                   resip::SipStack* stack,
+                                                   std::set<Data>& trustedPeers) :
+   Processor("CertificateAuthenticator"),
+   mTrustedPeers(trustedPeers)
 {
 }
 
@@ -121,6 +123,11 @@ CertificateAuthenticator::authorizedForThisIdentity(const std::list<Data>& peerN
    for(; it != peerNames.end(); ++it)
    {
       const Data& i = *it;
+      if(mTrustedPeers.find(i) != mTrustedPeers.end())
+      {
+         DebugLog(<< "Matched certificate name " << i << " is a trusted peer, not checking against From URI");
+         return true;
+      }
       if(i == aor)
       {
          DebugLog(<< "Matched certificate name " << i << " against full AoR " << aor);

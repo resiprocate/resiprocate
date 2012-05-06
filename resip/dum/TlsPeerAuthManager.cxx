@@ -14,8 +14,9 @@
 using namespace resip;
 using namespace std;
 
-TlsPeerAuthManager::TlsPeerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target) :
-   DumFeature(dum, target)
+TlsPeerAuthManager::TlsPeerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target, std::set<Data>& trustedPeers) :
+   DumFeature(dum, target),
+   mTrustedPeers(trustedPeers)
 {
 }
 
@@ -70,6 +71,11 @@ TlsPeerAuthManager::authorizedForThisIdentity(
    for(; it != peerNames.end(); ++it)
    {
       const Data& i = *it;
+      if(mTrustedPeers.find(i) != mTrustedPeers.end())
+      {
+         DebugLog(<< "Matched certificate name " << i << " is a trusted peer, not checking against From URI");
+         return true;
+      }
       if(i == aor)
       {
          DebugLog(<< "Matched certificate name " << i << " against full AoR " << aor);

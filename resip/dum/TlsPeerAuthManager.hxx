@@ -2,6 +2,7 @@
 #define RESIP_TLSPEERAUTHMANAGER_HXX
 
 #include <map>
+#include <set>
 
 #include "resip/stack/SipMessage.hxx"
 #include "DumFeature.hxx"
@@ -21,7 +22,7 @@ class TlsPeerAuthManager : public DumFeature
          Rejected
       };
 
-      TlsPeerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target);
+      TlsPeerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target, std::set<Data>& trustedPeers);
       virtual ~TlsPeerAuthManager();
 
       virtual ProcessingResult process(Message* msg);      
@@ -38,6 +39,9 @@ class TlsPeerAuthManager : public DumFeature
       /// should return true if the request must be challenged
       /// The default is to challenge all requests - override this class to change this beviour
       virtual bool requiresAuthorization(const SipMessage& msg);
+
+   private:
+      std::set<Data> mTrustedPeers;
 };
 
  
