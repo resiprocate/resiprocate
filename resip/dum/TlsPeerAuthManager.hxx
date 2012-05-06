@@ -22,7 +22,7 @@ class TlsPeerAuthManager : public DumFeature
          Rejected
       };
 
-      TlsPeerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target, std::set<Data>& trustedPeers);
+      TlsPeerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target, std::set<Data>& trustedPeers, bool thirdPartyRequiresCertificate = true);
       virtual ~TlsPeerAuthManager();
 
       virtual ProcessingResult process(Message* msg);      
@@ -42,6 +42,7 @@ class TlsPeerAuthManager : public DumFeature
 
    private:
       std::set<Data> mTrustedPeers;
+      bool mThirdPartyRequiresCertificate;
 };
 
  

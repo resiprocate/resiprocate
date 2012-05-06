@@ -18,7 +18,7 @@ namespace repro
   class CertificateAuthenticator : public Processor
   {
     public:
-      CertificateAuthenticator(ProxyConfig& config, resip::SipStack* stack, std::set<resip::Data>& trustedPeers);
+      CertificateAuthenticator(ProxyConfig& config, resip::SipStack* stack, std::set<resip::Data>& trustedPeers, bool thirdPartyRequiresCertificate = true);
       ~CertificateAuthenticator();
 
       virtual processor_action_t process(RequestContext &);
@@ -28,6 +28,7 @@ namespace repro
       bool authorizedForThisIdentity(const std::list<resip::Data>& peerNames, resip::Uri &fromUri);
 
       std::set<resip::Data> mTrustedPeers;
+      bool mThirdPartyRequiresCertificate;
   };
   
 }
