@@ -29,9 +29,11 @@ using namespace std;
 
 CertificateAuthenticator::CertificateAuthenticator(ProxyConfig& config,
                                                    resip::SipStack* stack,
-                                                   std::set<Data>& trustedPeers) :
+                                                   std::set<Data>& trustedPeers,
+                                                   bool thirdPartyRequiresCertificate) :
    Processor("CertificateAuthenticator"),
-   mTrustedPeers(trustedPeers)
+   mTrustedPeers(trustedPeers),
+   mThirdPartyRequiresCertificate(thirdPartyRequiresCertificate)
 {
 }
 
@@ -79,11 +81,12 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
          return Continue;
       }
       
+      const std::list<resip::Data> &peerNames = sipMessage->getTlsPeerNames();
       if (proxy.isMyDomain(sipMessage->header(h_From).uri().host()))
       {
          if (!rc.getKeyValueStore().getBoolValue(IsTrustedNode::mFromTrustedNodeKey))
          {
-            if(authorizedForThisIdentity(sipMessage->getTlsPeerNames(), sipMessage->header(h_From).uri()))
+            if(authorizedForThisIdentity(peerNames, sipMessage->header(h_From).uri()))
                return Continue;
             rc.sendResponse(*auto_ptr<SipMessage>
                             (Helper::makeResponse(*sipMessage, 403, "Authentication Failed for peer cert")));
@@ -94,7 +97,13 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
       }
       else
       {
-         if(authorizedForThisIdentity(sipMessage->getTlsPeerNames(), sipMessage->header(h_From).uri()))
+         if(mThirdPartyRequiresCertificate && peerNames.size() == 0)
+         {
+            rc.sendResponse(*auto_ptr<SipMessage>
+                            (Helper::makeResponse(*sipMessage, 403, "Mutual TLS required to handle that message")));
+            return SkipAllChains;
+         }
+         if(authorizedForThisIdentity(peerNames, sipMessage->header(h_From).uri()))
             return Continue;
          rc.sendResponse(*auto_ptr<SipMessage>
                             (Helper::makeResponse(*sipMessage, 403, "Authentication Failed for peer cert")));

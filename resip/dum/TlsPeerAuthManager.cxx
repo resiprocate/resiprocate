@@ -14,9 +14,10 @@
 using namespace resip;
 using namespace std;
 
-TlsPeerAuthManager::TlsPeerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target, std::set<Data>& trustedPeers) :
+TlsPeerAuthManager::TlsPeerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target, std::set<Data>& trustedPeers, bool thirdPartyRequiresCertificate) :
    DumFeature(dum, target),
-   mTrustedPeers(trustedPeers)
+   mTrustedPeers(trustedPeers),
+   mThirdPartyRequiresCertificate(thirdPartyRequiresCertificate)
 {
 }
 
@@ -123,11 +124,12 @@ TlsPeerAuthManager::handle(SipMessage* sipMessage)
       return Skipped;
    }
 
+   const std::list<resip::Data> &peerNames = sipMessage->getTlsPeerNames();
    if (mDum.isMyDomain(sipMessage->header(h_From).uri().host()))
    {
       if (requiresAuthorization(*sipMessage))
       {
-         if(authorizedForThisIdentity(sipMessage->getTlsPeerNames(), sipMessage->header(h_From).uri()))
+         if(authorizedForThisIdentity(peerNames, sipMessage->header(h_From).uri()))
             return Authorized;
          SharedPtr<SipMessage> response(new SipMessage);
          Helper::makeResponse(*response, *sipMessage, 403, "Authorization Failed for peer cert");
@@ -139,7 +141,14 @@ TlsPeerAuthManager::handle(SipMessage* sipMessage)
    }
    else
    {
-      if(authorizedForThisIdentity(sipMessage->getTlsPeerNames(), sipMessage->header(h_From).uri()))
+      if(mThirdPartyRequiresCertificate && peerNames.size() == 0)
+      {
+         SharedPtr<SipMessage> response(new SipMessage);
+         Helper::makeResponse(*response, *sipMessage, 403, "Mutual TLS required to handle that message");
+         mDum.send(response);
+         return Rejected;
+      }
+      if(authorizedForThisIdentity(peerNames, sipMessage->header(h_From).uri()))
          return Authorized;
       SharedPtr<SipMessage> response(new SipMessage);
       Helper::makeResponse(*response, *sipMessage, 403, "Authorization Failed for peer cert");
