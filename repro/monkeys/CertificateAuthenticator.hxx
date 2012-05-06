@@ -1,6 +1,8 @@
 #if !defined(RESIP_CERTIFICATE_AUTHENTICATOR_HXX)
 #define RESIP_CERTIFICATE_AUTHENTICATOR_HXX 
 
+#include <set>
+
 #include "rutil/Data.hxx"
 #include "repro/Processor.hxx"
 #include "repro/Dispatcher.hxx"
@@ -16,7 +18,7 @@ namespace repro
   class CertificateAuthenticator : public Processor
   {
     public:
-      CertificateAuthenticator(ProxyConfig& config, resip::SipStack* stack);
+      CertificateAuthenticator(ProxyConfig& config, resip::SipStack* stack, std::set<resip::Data>& trustedPeers);
       ~CertificateAuthenticator();
 
       virtual processor_action_t process(RequestContext &);
@@ -24,6 +26,8 @@ namespace repro
 
     private:
       bool authorizedForThisIdentity(const std::list<resip::Data>& peerNames, resip::Uri &fromUri);
+
+      std::set<resip::Data> mTrustedPeers;
   };
   
 }

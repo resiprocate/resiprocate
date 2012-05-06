@@ -699,7 +699,11 @@ ReproRunner::createDialogUsageManager()
    {
       if(mProxyConfig->getConfigBool("EnableCertificateAuthenticator", false))
       {
-         SharedPtr<TlsPeerAuthManager> certAuth(new TlsPeerAuthManager(*mDum, mDum->dumIncomingTarget()));
+         // TODO: perhaps this should be initialised from the trusted node
+         // monkey?  Or should the list of trusted TLS peers be independent
+         // from the trusted node list?
+         std::set<Data> trustedPeers;
+         SharedPtr<TlsPeerAuthManager> certAuth(new TlsPeerAuthManager(*mDum, mDum->dumIncomingTarget(), trustedPeers));
          mDum->addIncomingFeature(certAuth);
       }
 
@@ -1185,7 +1189,13 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    // Add Certificate Authenticator - if required
    if(mProxyConfig->getConfigBool("EnableCertificateAuthenticator", false))
    {
-      chain.addProcessor(std::auto_ptr<Processor>(new CertificateAuthenticator(*mProxyConfig, mSipStack)));
+      // TODO: perhaps this should be initialised from the trusted node
+      // monkey?  Or should the list of trusted TLS peers be independent
+      // from the trusted node list?
+      // Should we used the same trustedPeers object that was
+      // passed to TlsPeerAuthManager perhaps?
+      std::set<Data> trustedPeers;
+      chain.addProcessor(std::auto_ptr<Processor>(new CertificateAuthenticator(*mProxyConfig, mSipStack, trustedPeers)));
    }
 
    // Add digest authenticator monkey - if required
