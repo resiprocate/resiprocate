@@ -13,6 +13,10 @@
  * without express or implied warranty.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <sys/types.h>
 #ifndef WIN32
 #include <netinet/in.h>
