@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "cppunit/TestCase.h"
 #include "cppunit/TestCaller.h"
 #include "cppunit/TestSuite.h"

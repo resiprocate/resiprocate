@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "repro/BerkeleyDb.hxx"
 #include "repro/ReproServerAuthManager.hxx"
 #include "repro/monkeys/AmIResponsible.hxx"
