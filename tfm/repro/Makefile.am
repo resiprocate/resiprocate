@@ -13,6 +13,9 @@ sanityTests_LDADD += ../../rutil/librutil.la
 sanityTests_LDADD += @LIBSSL_LIBADD@
 sanityTests_LDADD += -lpopt
 sanityTests_LDADD += -lpthread
+sanityTests_LDADD += -lcppunit
+sanityTests_LDADD += -lNetxx
+
 sanityTests_SOURCES = sanityTests.cxx $(SHARED_SRC)
 
 SHARED_SRC = TestRepro.cxx \
