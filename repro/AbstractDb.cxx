@@ -106,7 +106,6 @@ AbstractDb::getSecondaryKey(const Table table,
          return 0;
       }
    }
-   assert(false);
    return -1;
 }
 

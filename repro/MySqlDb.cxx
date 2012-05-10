@@ -192,7 +192,10 @@ MySqlDb::singleResultQuery(const Data& queryCommand, Data& resultData) const
       else
       {
          rc = mysql_errno(mConn);
-         ErrLog( << "MySQL fetch row failed: error=" << rc << ": " << mysql_error(mConn));
+         if(rc != 0)
+         {
+            ErrLog( << "MySQL fetch row failed: error=" << rc << ": " << mysql_error(mConn));
+         }
       }
       mysql_free_result(result);
    }
