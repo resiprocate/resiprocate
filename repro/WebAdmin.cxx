@@ -1735,11 +1735,8 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
                  << "</td><td>" << regId 
                  << "</td><td>";
 #ifdef RESIP_FIXED_POINT
-               if(contact.exists(p_q))
-                  s << contact.param(p_q);
-               else
-                  s << "1.0";
-               s << "</td><td>";
+               // If RESIP_FIXED_POINT is enabled then q-value is shown as an integer in the range of 0..1000 where 1000 = qvalue of 1.0
+               s << (contact.exists(p_q) ? contact.param(p_q) : 1000) << "</td><td>";  
 #else
                s << (contact.exists(p_q) ? contact.param(p_q).floatVal() : 1.0f) << "</td><td>";
 #endif
