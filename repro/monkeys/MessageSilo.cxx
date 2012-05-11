@@ -34,7 +34,12 @@ public:
    }
 
    AsyncAddToSiloMessage(const AsyncAddToSiloMessage& orig):
-      AsyncProcessorMessage(orig)
+      AsyncProcessorMessage(orig),
+      mDestUri(orig.mDestUri),
+      mSourceUri(orig.mSourceUri),
+      mOriginalSendTime(orig.mOriginalSendTime),
+      mMimeType(orig.mMimeType),
+      mMessageBody(orig.mMessageBody)
    {
    }
 
@@ -58,8 +63,10 @@ public:
    {
    }
 
-   AsyncDrainSiloMessage(const AsyncAddToSiloMessage& orig):
-      AsyncProcessorMessage(orig)
+   AsyncDrainSiloMessage(const AsyncDrainSiloMessage& orig):
+      AsyncProcessorMessage(orig),
+      mAor(orig.mAor),
+      mRequestContacts(orig.mRequestContacts)
    {
    }
 
