@@ -3,7 +3,6 @@
 #include "rutil/Lock.hxx"
 
 #include "resip/stack/SipMessage.hxx"
-#include "resip/stack/ExtensionHeader.hxx"
 
 #include "repro/SiloStore.hxx"
 #include "rutil/WinLeakCheck.hxx"
