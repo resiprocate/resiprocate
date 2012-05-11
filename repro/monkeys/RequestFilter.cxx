@@ -45,7 +45,7 @@ public:
 
    Data mQuery;
    int mQueryResult;
-   Data mQueryResultData;
+   std::vector<Data> mQueryResultData;
 };
 
 RequestFilter::RequestFilter(ProxyConfig& config,
@@ -146,14 +146,16 @@ RequestFilter::process(RequestContext &rc)
 
    if (async)
    {
-      InfoLog(<< "RequestFilter query complete: queryResult=" << async->mQueryResult << ", resultData=" << async->mQueryResultData);
-
-      if(async->mQueryResult == 0)  // If query was successful, then get query result
+      if(async->mQueryResult == 0 && async->mQueryResultData.size() > 0)  // If query was successful, then get query result
       {
-         return applyActionResult(rc, async->mQueryResultData);
+         InfoLog(<< "RequestFilter query completed successfully: queryResult=" << async->mQueryResult << ", resultData=" << async->mQueryResultData.front());
+
+         return applyActionResult(rc, async->mQueryResultData.front());
       }
       else
       {
+         InfoLog(<< "RequestFilter query failed: queryResult=" << async->mQueryResult);
+
          return applyActionResult(rc, mDefaultDBErrorBehavior);
       }
    }

@@ -104,6 +104,7 @@ MySqlDb::connectToDatabase() const
                                    mDBPort,             // port
                                    0,                   // unix socket file
                                    0);                  // client flags
+
    if (ret == 0)
    { 
       int rc = mysql_errno(mConn);
@@ -168,9 +169,8 @@ MySqlDb::query(const Data& queryCommand) const
    return rc;
 }
 
-
 int
-MySqlDb::singleResultQuery(const Data& queryCommand, Data& resultData) const
+MySqlDb::singleResultQuery(const Data& queryCommand, std::vector<Data>& fields) const
 {
    int rc = query(queryCommand);
       
@@ -180,14 +180,20 @@ MySqlDb::singleResultQuery(const Data& queryCommand, Data& resultData) const
       if(result == 0)
       {
          rc = mysql_errno(mConn);
-         ErrLog( << "MySQL store result failed: error=" << rc << ": " << mysql_error(mConn));
+         if(rc != 0)
+         {
+            ErrLog( << "MySQL store result failed: error=" << rc << ": " << mysql_error(mConn));
+         }
          return rc;
       }
 
       MYSQL_ROW row = mysql_fetch_row(result);
       if(row)
       {
-         resultData = Data(row[0]);
+         for(unsigned int i = 0; i < result->field_count; i++)
+         {
+            fields.push_back(Data(row[i]));
+         }
       }
       else
       {
@@ -201,7 +207,6 @@ MySqlDb::singleResultQuery(const Data& queryCommand, Data& resultData) const
    }
    return rc;
 }
-
 
 bool 
 MySqlDb::addUser(const AbstractDb::Key& key, const AbstractDb::UserRecord& rec)
@@ -280,7 +285,7 @@ MySqlDb::getUser( const AbstractDb::Key& key ) const
 resip::Data 
 MySqlDb::getUserAuthInfo(  const AbstractDb::Key& key ) const
 { 
-   Data ret;
+   std::vector<Data> ret;
 
    Data command;
    {
@@ -301,14 +306,14 @@ MySqlDb::getUserAuthInfo(  const AbstractDb::Key& key ) const
       }
    }
 
-   if(singleResultQuery(command, ret) != 0)
+   if(singleResultQuery(command, ret) != 0 || ret.size() == 0)
    {
       return Data::Empty;
    }
    
-   DebugLog( << "Auth password is " << ret);
+   DebugLog( << "Auth password is " << ret.front());
    
-   return ret;
+   return ret.front();
 }
 
 

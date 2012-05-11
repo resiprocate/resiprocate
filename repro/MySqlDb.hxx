@@ -39,7 +39,8 @@ class MySqlDb: public AbstractDb
       virtual Key firstUserKey();// return empty if no more
       virtual Key nextUserKey(); // return empty if no more 
 
-      virtual int singleResultQuery(const resip::Data& queryCommand, resip::Data& resultData) const;
+      // Perform a query that expects a single result/row - returns all column/field data in a vector
+      virtual int singleResultQuery(const resip::Data& queryCommand, std::vector<resip::Data>& fields) const;
 
    private:
       // Db manipulation routines
