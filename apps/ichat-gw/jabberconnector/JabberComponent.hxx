@@ -117,7 +117,7 @@ private:
    virtual bool handleIqID(gloox::Stanza *stanza, int context);
    virtual gloox::StringList handleDiscoNodeFeatures(const std::string& node);
    virtual gloox::StringMap handleDiscoNodeIdentities(const std::string& node, std::string& name);
-   virtual gloox::DiscoNodeItemList handleDiscoNodeItems(const std::string& node);
+   virtual gloox::Disco::ItemList handleDiscoNodeItems(const std::string& node);
 
    virtual void thread();
 
@@ -133,17 +133,17 @@ private:
    std::string makeVCRequestKey(const std::string& bareTo, const std::string& bareFrom);
 
    IChatCallRequestMap mOutstandingClientIChatCallRequests;
-   gloox::Mutex mOutstandingClientIChatCallRequestsMutex;
+   gloox::util::Mutex mOutstandingClientIChatCallRequestsMutex;
    IChatCallRequestMap::iterator findOutstandingClientIChatCallRequest(const std::string& bareTo, const std::string& bareFrom);
    void failOutstandingClientIChatCallRequest(const std::string& bareTo, const std::string& bareFrom, unsigned int code);
    void failOutstandingClientIChatCallRequest(const std::string& bareTo, unsigned int code);
 
    IChatCallRequestMap mOutstandingServerIChatCallRequests;
-   gloox::Mutex mOutstandingServerIChatCallRequestsMutex;
+   gloox::util::Mutex mOutstandingServerIChatCallRequestsMutex;
    IChatCallRequestMap::iterator findOutstandingServerIChatCallRequest(const std::string& bareTo, const std::string& bareFrom);
    void cancelOutstandingServerIChatCallRequest(const std::string& bareTo, const std::string& bareFrom);
 
-   gloox::Mutex mIChatUserMutex;
+   gloox::util::Mutex mIChatUserMutex;
    typedef std::map<std::string, IChatUser*> IChatUserMap;
    IChatUserMap mIChatUsers;
    void storeIChatSubscribedUser(const std::string& user, const std::string& subscribedJID);

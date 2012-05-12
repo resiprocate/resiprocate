@@ -28,7 +28,7 @@ IChatUser::updateResourceInfo(const std::string& resourceId, const gloox::Presen
    bool originalUnavailability = isUnavailable();
    if(resourceId.empty())
    {
-      if(presence == gloox::PresenceUnavailable)
+      if(presence == gloox::Presence::Unavailable)
       {
 	     // All resources are unanavaiable
          ResourceMap::iterator it = mResources.begin();
@@ -48,7 +48,7 @@ IChatUser::updateResourceInfo(const std::string& resourceId, const gloox::Presen
       ResourceMap::iterator it = mResources.find(resourceId);
       if(it != mResources.end())
       {
-         if(presence == gloox::PresenceUnavailable)
+         if(presence == gloox::Presence::Unavailable)
          {
             delete it->second;
             mResources.erase(it);
@@ -62,7 +62,7 @@ IChatUser::updateResourceInfo(const std::string& resourceId, const gloox::Presen
       }
       else
       {
-         if(presence != gloox::PresenceUnavailable)
+         if(presence != gloox::Presence::Unavailable)
          {
             mResources[resourceId] = new ResourceInfo(presence, priority, avAvail);
 		 }
