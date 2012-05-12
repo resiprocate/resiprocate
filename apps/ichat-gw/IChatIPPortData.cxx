@@ -1,3 +1,6 @@
+#if defined(HAVE_CONFIG_H)
+#include "config.h"
+#endif
 
 #include <rutil/Logger.hxx>
 #include <resip/stack/Helper.hxx>
@@ -63,9 +66,14 @@ IChatIPPortData::IChatIPPortData(const std::string& hexblob) : mHexBlob(hexblob)
       }
       else
       {
+#ifdef USE_IPV6
          in6_addr addr;
          memcpy(&addr, ipPortDataBlob->ipAddress, 16);
          addIPPortData(Data(ipPortDataBlob->interfaceName), Tuple(addr,ntohs(ipPortDataBlob->port),UDP));
+#else
+         ErrLog(<< "IPv6 support not enabled at compile time.");
+         assert(0);
+#endif
       }
       InfoLog(<< "IChatIPPortData: name=" << mIPPortDataList.back().first << " addr=" << mIPPortDataList.back().second);
    }
