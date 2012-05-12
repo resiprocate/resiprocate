@@ -114,7 +114,7 @@ public:
    virtual void lock() { mMutex.lock(); }
    virtual void unlock() { mMutex.unlock(); }
 private:
-   gloox::Mutex mMutex;
+   gloox::util::Mutex mMutex;
 };
 IPCMutexGloox g_IPCGlooxMutex;
 
@@ -557,7 +557,7 @@ JabberComponent::storeIChatPresence(const gloox::JID& jid, const gloox::Presence
    IChatUserMap::iterator it = mIChatUsers.find(jid.bare());
    if(it == mIChatUsers.end())
    {
-      if(presence != gloox::PresenceUnavailable && !jid.resource().empty())
+      if(presence != gloox::Presence::Unavailable && !jid.resource().empty())
       {
          // User is not yet present in map
          IChatUser* iChatUser = new IChatUser(*this, jid.bare());
@@ -1131,11 +1131,11 @@ JabberComponent::handleDiscoNodeIdentities(const std::string& node, std::string&
    return smap;
 }
 
-DiscoNodeItemList 
+Disco::ItemList 
 JabberComponent::handleDiscoNodeItems(const std::string& node)
 {
    handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "JabberComponent::handleDiscoNodeItems - node=" + node);
-   DiscoNodeItemList dlist;
+   Disco::ItemList dlist;
    return dlist;
 }
 
