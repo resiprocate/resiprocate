@@ -7,9 +7,9 @@ SUBDIRS = .
 #AM_CXXFLAGS = -DUSE_ARES
 
 sbin_PROGRAMS = ichat-gw-jc
-ichat_gw_jc_LDADD = ../../resip/dum/libdum.la
-ichat_gw_jc_LDADD += ../../resip/stack/libresip.la
-ichat_gw_jc_LDADD += ../../rutil/librutil.la
+ichat_gw_jc_LDADD = ../../../resip/dum/libdum.la
+ichat_gw_jc_LDADD += ../../../resip/stack/libresip.la
+ichat_gw_jc_LDADD += ../../../rutil/librutil.la
 ichat_gw_jc_LDADD += -lgloox
 ichat_gw_jc_LDADD += -lgnutls
 ichat_gw_jc_LDADD += -lidn
