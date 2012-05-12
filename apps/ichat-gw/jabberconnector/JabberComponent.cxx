@@ -10,6 +10,9 @@
 #include "JabberComponent.hxx"
 #include "IChatUser.hxx"
 
+#include <gloox/disco.h>
+#include <gloox/mutex.h>
+
 using namespace gateway;
 using namespace gloox;
 using namespace std;
