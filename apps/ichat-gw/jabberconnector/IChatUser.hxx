@@ -6,7 +6,8 @@
 #include <list>
 
 // Gloox includes
-#include <src/component.h>
+#include <gloox/component.h>
+#include <gloox/presence.h>
 
 namespace gateway
 {
