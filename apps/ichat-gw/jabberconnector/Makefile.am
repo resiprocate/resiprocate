@@ -3,10 +3,6 @@
 EXTRA_DIST = *.vcproj
 
 SUBDIRS = .
-# this has more external dependencies, it has been adapted
-# for autotools and can be enabled manually if the deps
-# are available
-#SUBDIRS += jabberconnector
 
 #AM_CXXFLAGS = -DUSE_ARES
 
