@@ -563,13 +563,14 @@ TransportSelector::findTransportByVia(SipMessage* msg, const Tuple& target,
    assert(!msg->const_header(h_Vias).empty());
    const Via& via = msg->const_header(h_Vias).front();
 
-   if (via.sentHost().empty())
+   if (via.sentHost().empty() && via.transport().empty())
    {
-      return NULL;
+      return 0;
    }
 
    // XXX: Is there better way to do below (without the copy)?
-   source = Tuple(via.sentHost(), via.sentPort(), target.ipVersion(), target.getType());
+   source = Tuple(via.sentHost(), via.sentPort(), target.ipVersion(), 
+      via.transport().empty() ? target.getType() : toTransportType(via.transport()));  // Transport type is pre-populated in via, lock to it
 
    if ( target.mFlowKey!=0 && (source.getPort()==0 || source.isAnyInterface()) )
    {
@@ -585,6 +586,7 @@ TransportSelector::findTransportByVia(SipMessage* msg, const Tuple& target,
       // transmit() will later use determineSourceInterface() to
       // get the actual interface to populate the Contact & Via headers.
       // Not sure if we should support this case or just assert.
+      // .gh. This should be supported, in case only the transport part of the Via is set
       msg->header(h_Vias).front().sentHost().clear();
    }
 
