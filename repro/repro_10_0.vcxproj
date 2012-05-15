@@ -269,7 +269,7 @@ endlocal
 </Command>
     </PreBuildEvent>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/db/build_windows;$(ProjectDir)../contrib/MySQLConnectorC/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/db/build_windows;$(ProjectDir)../contrib/MySQLConnectorC/include;$(ProjectDir)../contrib/pcre;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;USE_IPV6;USE_MYSQL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
