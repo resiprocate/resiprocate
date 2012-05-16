@@ -9,12 +9,13 @@ Deliverables
 ------------
 
 The only official deliverable is the tarball, for example,
-resiprocate-1.8.0.tar.gz
+
+    resiprocate-1.8.0.tar.gz
 
 As a courtesy to users, a contrib tarball is also produced,
-containing some third party code, some of it patched for
-use with a specific version of reSIProcate:
-resiprocate-contrib-1.8.0.tar.gz
+containing some third party code:
+
+    resiprocate-contrib-1.8.0.tar.gz
 
 Building of binary packages (e.g. for Debian, RPM, OpenCSW) is
 done after the tarball release.  That is not covered here.
@@ -35,10 +36,15 @@ git-svn is used because it makes it easier to build a clean tarball
 Version/tag
 -----------
 
+Here we give an example for building the release v1.8.5:
+
 Update version information and tag it:
 
   vi configure.ac         (update the version and ABIVERSION numbers)
-  git add configure.ac && git commit -m 'Update to version 1.8.5'
+
+  git add configure.ac
+  git commit -m 'Update to version 1.8.5'
+
   git svn dcommit         (send changes back to SVN)
 
   svn copy https://svn.resiprocate.org/rep/resiprocate/main/branches/release-1.8 https://svn.resiprocate.org/rep/resiprocate/main/tags/1.8.5
@@ -56,7 +62,18 @@ it should be discussed on the mailing list and noted in this document.
 Make a tarball
 --------------
 
-  ./configure --with-ssl && make dist
+  build/release-tarball.sh
+
+  * this script will call configure && make dist
+  * any previous configure settings will be overridden, so you
+    may want to preserve a copy of config.status and config.log
+    or just do this operation from a workspace that is independent
+    of your normal development workspace
+
+Make the contrib tarball
+------------------------
+
+  build/contrib-tarball.sh
 
 Sanity check on tarball
 -----------------------
