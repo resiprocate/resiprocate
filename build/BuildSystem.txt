@@ -204,3 +204,11 @@ WIN32_SYNCRONOUS_RESOLUTION_ON_ARES_FAILURE*
 RESIP_CONDITION_WIN32_CONFORMANCE_TO_POSIX*
 NO_IPHLPAPI*
 LEAK_CHECK*
+
+These variables are typically used on Windows builds to use
+the headers from an unpacked source tarball rather than using headers
+installed to the locations intended by the package.  In such cases,
+the path component preceeding the header filename often differs slightly:
+
+RESIP_CONTRIB_GLOOX    - use gloox headers from contrib
+

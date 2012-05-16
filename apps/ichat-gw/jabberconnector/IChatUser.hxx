@@ -5,9 +5,18 @@
 #include <set>
 #include <list>
 
+#ifdef WIN32
+#define RESIP_CONTRIB_GLOOX
+#endif
+
 // Gloox includes
+#ifndef RESIP_CONTRIB_GLOOX
 #include <gloox/component.h>
 #include <gloox/presence.h>
+#else
+#include <src/component.h>
+#include <src/presence.h>
+#endif
 
 namespace gateway
 {
