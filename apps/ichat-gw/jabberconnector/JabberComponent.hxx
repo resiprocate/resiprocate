@@ -9,7 +9,12 @@
 #include <set>
 #include <list>
 
+#ifdef WIN32
+#define RESIP_CONTRIB_GLOOX
+#endif
+
 // Gloox includes
+#ifndef RESIP_CONTRIB_GLOOX
 #include <gloox/component.h>
 #include <gloox/mutex.h>
 #include <gloox/messagehandler.h>
@@ -22,6 +27,20 @@
 #include <gloox/disco.h>
 #include <gloox/disconodehandler.h>
 #include <gloox/subscriptionhandler.h>
+#else
+#include <src/component.h>
+#include <src/mutex.h>
+#include <src/messagehandler.h>
+#include <src/presencehandler.h>
+#include <src/loghandler.h>
+#include <src/rostermanager.h>
+#include <src/connectionlistener.h>
+#include <src/stanzaextension.h>
+#include <src/iqhandler.h>
+#include <src/disco.h>
+#include <src/disconodehandler.h>
+#include <src/subscriptionhandler.h>
+#endif
 
 namespace gateway
 {
