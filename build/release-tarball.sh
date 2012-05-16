@@ -28,6 +28,7 @@ autoreconf --install && \
               --with-radius \
               --with-tfm \
               --with-apps \
+              --with-ichat-gw \
               --with-recon \
               --with-p2p && \
   make dist

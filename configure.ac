@@ -204,6 +204,12 @@ AC_ARG_WITH(apps,
  [AC_DEFINE_UNQUOTED(BUILD_APPS, , BUILD_APPS)
  AM_CONDITIONAL(BUILD_APPS, true)], )
 
+AM_CONDITIONAL(BUILD_ICHAT_GW, false)
+AC_ARG_WITH(ichat-gw,
+[  --with-ichat-gw         Build iChat gateway, links against gloox],
+ [AC_DEFINE_UNQUOTED(BUILD_ICHAT_GW, , BUILD_ICHAT_GW)
+ AM_CONDITIONAL(BUILD_ICHAT_GW, true)], )
+
 AM_CONDITIONAL(BUILD_RECON, false)
 AC_ARG_WITH(recon,
 [  --with-recon            Build recon, links against sipX],
