@@ -36,7 +36,7 @@ FilterStore::FilterStore(AbstractDb& db):
       filter.pcond2 = 0;
       
       int flags = REG_EXTENDED;
-      if(filter.filterRecord.mActionData.find("$") == Data::npos )
+      if(filter.filterRecord.mActionData.find("$") == Data::npos)
       {
          flags |= REG_NOSUB;
       }

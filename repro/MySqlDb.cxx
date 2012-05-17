@@ -208,6 +208,13 @@ MySqlDb::singleResultQuery(const Data& queryCommand, std::vector<Data>& fields) 
    return rc;
 }
 
+resip::Data& 
+MySqlDb::escapeString(const resip::Data& str, resip::Data& escapedStr) const
+{
+   escapedStr.truncate2(mysql_real_escape_string(mConn, (char*)escapedStr.getBuf(str.size()*2+1), str.c_str(), str.size()));
+   return escapedStr;
+}
+
 bool 
 MySqlDb::addUser(const AbstractDb::Key& key, const AbstractDb::UserRecord& rec)
 { 
@@ -377,13 +384,14 @@ MySqlDb::dbWriteRecord(const Table table,
    // Check if there is a secondary key or not and get it's value
    char* secondaryKey;
    unsigned int secondaryKeyLen;
+   Data escapedKey;
    if(AbstractDb::getSecondaryKey(table, pKey, pData, (void**)&secondaryKey, &secondaryKeyLen) == 0)
    {
       Data sKey(Data::Share, secondaryKey, secondaryKeyLen);
       DataStream ds(command);
       ds << "REPLACE INTO " << tableName(table)
-         << " SET attr='" << pKey
-         << "', attr2='" << sKey
+         << " SET attr='" << escapeString(pKey, escapedKey)
+         << "', attr2='" << escapeString(sKey, escapedKey)
          << "', value='"  << pData.base64encode()
          << "'";
    }
@@ -391,7 +399,7 @@ MySqlDb::dbWriteRecord(const Table table,
    {
       DataStream ds(command);
       ds << "REPLACE INTO " << tableName(table) 
-         << " SET attr='" << pKey 
+         << " SET attr='" << escapeString(pKey, escapedKey)
          << "', value='"  << pData.base64encode()
          << "'";
    }
@@ -399,17 +407,17 @@ MySqlDb::dbWriteRecord(const Table table,
    return query(command) == 0;
 }
 
-
 bool 
 MySqlDb::dbReadRecord(const Table table, 
                       const resip::Data& pKey, 
                       resip::Data& pData) const
 { 
    Data command;
+   Data escapedKey;
    {
       DataStream ds(command);
       ds << "SELECT value FROM " << tableName(table) 
-         << " WHERE attr='" << pKey 
+         << " WHERE attr='" << escapeString(pKey, escapedKey)
          << "'";
    }
 
@@ -447,14 +455,15 @@ MySqlDb::dbEraseRecord(const Table table,
    Data command;
    {
       DataStream ds(command);
+      Data escapedKey;
       ds << "DELETE FROM " << tableName(table);
       if(isSecondaryKey)
       {
-         ds << " WHERE attr2='" << pKey << "'";
+         ds << " WHERE attr2='" << escapeString(pKey, escapedKey) << "'";
       }
       else
       {
-         ds << " WHERE attr='" << pKey << "'";
+         ds << " WHERE attr='" << escapeString(pKey, escapedKey) << "'";
       }
    }   
    query(command);
@@ -531,9 +540,10 @@ MySqlDb::dbNextRecord(const Table table,
          ds << "SELECT value FROM " << tableName(table);
          if(!key.empty())
          {
+            Data escapedKey;
             // dbNextRecord is used to iterator through database tables that support duplication records
             // it is only appropriate for MySQL tables that contain the attr2 non-unique index (secondary key)
-            ds << " WHERE attr2='" << key << "'";
+            ds << " WHERE attr2='" << escapeString(key, escapedKey) << "'";
          }
          if(forUpdate)
          {

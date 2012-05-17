@@ -32,22 +32,22 @@ RouteStore::RouteStore(AbstractDb& db):
       route.key = key;
       route.preq = 0;
       
-      if( !route.routeRecord.mMatchingPattern.empty() )
+      if(!route.routeRecord.mMatchingPattern.empty())
       {
-        int flags = REG_EXTENDED;
-        if( route.routeRecord.mRewriteExpression.find("$") == Data::npos )
-        {
-          flags |= REG_NOSUB;
-        }
-        route.preq = new regex_t;
-        int ret = regcomp( route.preq, route.routeRecord.mMatchingPattern.c_str(), flags );
-        if( ret != 0 )
-        {
-          delete route.preq;
-          ErrLog( << "Routing rule has invalid match expression: "
-                  << route.routeRecord.mMatchingPattern );
-          route.preq = 0;
-        }
+         int flags = REG_EXTENDED;
+         if(route.routeRecord.mRewriteExpression.find("$") == Data::npos)
+         {
+            flags |= REG_NOSUB;
+         }
+         route.preq = new regex_t;
+         int ret = regcomp(route.preq, route.routeRecord.mMatchingPattern.c_str(), flags);
+         if(ret != 0)
+         {
+            delete route.preq;
+            ErrLog(<< "Routing rule has invalid match expression: "
+                   << route.routeRecord.mMatchingPattern);
+            route.preq = 0;
+         }
       }
 
       mRouteOperators.insert( route );
