@@ -67,6 +67,7 @@ class MySqlDb: public AbstractDb
       void disconnectFromDatabase() const;
       int connectToDatabase() const;
       int query(const resip::Data& queryCommand) const;
+      resip::Data& escapeString(const resip::Data& str, resip::Data& escapedStr) const;
 
       resip::Data mDBServer;
       resip::Data mDBUser;
