@@ -251,6 +251,7 @@ ReproRunner::run(int argc, char** argv)
    }
 
    mRunning = true;
+
    return true;
 }
 
@@ -487,6 +488,7 @@ ReproRunner::createSipStack()
    InteropHelper::setOutboundVersion(mProxyConfig->getConfigInt("OutboundVersion", 5626));
    InteropHelper::setOutboundSupported(mProxyConfig->getConfigBool("DisableOutbound", false) ? false : true);
    InteropHelper::setRRTokenHackEnabled(mProxyConfig->getConfigBool("EnableFlowTokens", false));
+   InteropHelper::setAssumeFirstHopSupportsOutboundEnabled(mProxyConfig->getConfigBool("AssumeFirstHopSupportsOutbound", false));
    Data clientNATDetectionMode = mProxyConfig->getConfigData("ClientNatDetectionMode", "DISABLED");
    if(isEqualNoCase(clientNATDetectionMode, "ENABLED"))
    {
@@ -1240,7 +1242,7 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
       // add simple static route monkey
       chain.addProcessor(std::auto_ptr<Processor>(new SimpleStaticRoute(*mProxyConfig))); 
    }
-      
+
    // Add location server monkey
    chain.addProcessor(std::auto_ptr<Processor>(new LocationServer(*mProxyConfig, *mRegistrationPersistenceManager, mAuthRequestDispatcher)));
 

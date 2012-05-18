@@ -18,13 +18,8 @@ public:
    {
    }
 
-   AsyncProcessorMessage(const AsyncProcessorMessage& orig):
-      ProcessorMessage(orig),
-      mAsyncProcessor(orig.mAsyncProcessor)
-   {
-   }
+   virtual Message* clone() const { assert(false); return 0; }
 
-   virtual Message* clone() const = 0;
    virtual EncodeStream& encode(EncodeStream& strm) const { strm << "AsyncProcessorMessage(tid="<<mTid<<")"; return strm; }
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm);}
 

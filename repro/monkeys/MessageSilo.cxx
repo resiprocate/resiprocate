@@ -33,18 +33,7 @@ public:
    {
    }
 
-   AsyncAddToSiloMessage(const AsyncAddToSiloMessage& orig):
-      AsyncProcessorMessage(orig),
-      mDestUri(orig.mDestUri),
-      mSourceUri(orig.mSourceUri),
-      mOriginalSendTime(orig.mOriginalSendTime),
-      mMimeType(orig.mMimeType),
-      mMessageBody(orig.mMessageBody)
-   {
-   }
-
-   virtual Message* clone() const { return new AsyncAddToSiloMessage(*this); }
-   virtual EncodeStream& encode(EncodeStream& strm) const { strm << "AsyncAddToSiloMessage(tid=" << mTid << ")"; return strm; }
+   virtual EncodeStream& encode(EncodeStream& strm) const { strm << "AsyncAddToSiloMessage(tid=" << mTid << ", aor=" << mDestUri << ")"; return strm; }
 
    Data mDestUri;
    Data mSourceUri;
@@ -63,15 +52,7 @@ public:
    {
    }
 
-   AsyncDrainSiloMessage(const AsyncDrainSiloMessage& orig):
-      AsyncProcessorMessage(orig),
-      mAor(orig.mAor),
-      mRequestContacts(orig.mRequestContacts)
-   {
-   }
-
-   virtual Message* clone() const { return new AsyncDrainSiloMessage(*this); }
-   virtual EncodeStream& encode(EncodeStream& strm) const { strm << "AsyncDrainSiloMessage(tid=" << mTid << ")"; return strm; }
+   virtual EncodeStream& encode(EncodeStream& strm) const { strm << "AsyncDrainSiloMessage(aor=" << mAor << ")"; return strm; }
 
    Data mAor;
    ContactList mRequestContacts;
@@ -95,7 +76,7 @@ MessageSilo::MessageSilo(ProxyConfig& config, Dispatcher* asyncDispatcher) :
    if(!destFilterRegex.empty())
    {
       mDestFilterRegex= new regex_t;
-      int ret = regcomp(mDestFilterRegex, destFilterRegex.c_str(), REG_EXTENDED);
+      int ret = regcomp(mDestFilterRegex, destFilterRegex.c_str(), REG_EXTENDED | REG_NOSUB);
       if( ret != 0 )
       {
          delete mDestFilterRegex;
@@ -106,7 +87,7 @@ MessageSilo::MessageSilo(ProxyConfig& config, Dispatcher* asyncDispatcher) :
    if(!mimeTypeFilterRegex.empty())
    {
       mMimeTypeFilterRegex= new regex_t;
-      int ret = regcomp(mMimeTypeFilterRegex, mimeTypeFilterRegex.c_str(), REG_EXTENDED);
+      int ret = regcomp(mMimeTypeFilterRegex, mimeTypeFilterRegex.c_str(), REG_EXTENDED | REG_NOSUB);
       if( ret != 0 )
       {
          delete mMimeTypeFilterRegex;

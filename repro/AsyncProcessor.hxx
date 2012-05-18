@@ -46,12 +46,6 @@ class AsyncProcessorMessage;
 //   {
 //   }
 //
-//   MyAsyncProcessorAsyncMessage(const MyAsyncProcessorAsyncMessage& orig):
-//      AsyncProcessorMessage(orig)
-//   {
-//   }
-//
-//   virtual Message* clone() const { return new MyAsyncProcessorAsyncMessage(*this); }
 //   virtual EncodeStream& encode(EncodeStream& strm) const { strm << "MyAsyncProcessorAsyncMessage(tid="<<mTid<<")"; return strm; }
 //
 //   Data mDataRequiredToCallBlockingFunction;

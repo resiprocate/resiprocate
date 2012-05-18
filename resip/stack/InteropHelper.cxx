@@ -8,6 +8,7 @@ unsigned int InteropHelper::flowTimerSeconds=0;  // 0 = disabled
 unsigned int InteropHelper::flowTimerGracePeriodSeconds=30;
 bool InteropHelper::useRRTokenHack=false;
 InteropHelper::ClientNATDetectionMode InteropHelper::clientNATDetection=InteropHelper::ClientNATDetectionDisabled;
+bool InteropHelper::assumeFirstHopSupportsOutbound=false;
 }
 
 /* ====================================================================

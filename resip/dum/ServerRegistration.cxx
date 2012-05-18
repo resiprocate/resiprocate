@@ -461,7 +461,8 @@ ServerRegistration::tryFlow(ContactInstanceRecord& rec,
          resip::NameAddr& contact(rec.mContact);
          if(contact.exists(p_Instance) && contact.exists(p_regid))
          {
-            if(!msg.empty(h_Paths) && msg.header(h_Paths).back().uri().exists(p_ob))
+            if(!msg.empty(h_Paths) && (msg.header(h_Paths).back().uri().exists(p_ob) ||
+                                       InteropHelper::getAssumeFirstHopSupportsOutboundEnabled()))
             {
                rec.mRegId=contact.param(p_regid);
                // Edge-proxy is directly connected to the client, and ready to 
