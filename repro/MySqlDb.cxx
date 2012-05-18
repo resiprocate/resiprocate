@@ -50,7 +50,15 @@ MySqlDb::MySqlDb(const Data& server,
       mResult[i]=0;
    }
 
-   connectToDatabase();
+   mysql_library_init(0, 0, 0);
+   if(!mysql_thread_safe())
+   {
+      ErrLog( << "Repro uses MySQL from multiple threads - you MUST link with a thread safe version of the mySQL client library!");
+   }
+   else
+   {
+      connectToDatabase();
+   }
 }
 
 
@@ -121,13 +129,14 @@ MySqlDb::connectToDatabase() const
    }
 }
 
-int  
-MySqlDb::query(const Data& queryCommand) const
+int
+MySqlDb::query(const Data& queryCommand, MYSQL_RES** result) const
 {
    int rc = 0;
 
    DebugLog( << "MySqlDb::query: executing query: " << queryCommand);
 
+   Lock lock(mMutex);
    if(mConn == 0 || !mConnected)
    {
       rc = connectToDatabase();
@@ -162,6 +171,20 @@ MySqlDb::query(const Data& queryCommand) const
       }
    }
 
+   // Now store result - if pointer to result pointer was supplied and no errors
+   if(rc == 0 && result)
+   {
+      *result = mysql_store_result(mConn);
+      if(*result == 0)
+      {
+         rc = mysql_errno(mConn);
+         if(rc != 0)
+         {
+            ErrLog( << "MySQL store result failed: error=" << rc << ": " << mysql_error(mConn));
+         }
+      }
+   }
+
    if(rc != 0)
    {
       ErrLog( << " SQL Command was: " << queryCommand) ;
@@ -172,18 +195,13 @@ MySqlDb::query(const Data& queryCommand) const
 int
 MySqlDb::singleResultQuery(const Data& queryCommand, std::vector<Data>& fields) const
 {
-   int rc = query(queryCommand);
+   MYSQL_RES* result=0;
+   int rc = query(queryCommand, &result);
       
    if(rc == 0)
    {
-      MYSQL_RES* result = mysql_store_result(mConn);
       if(result == 0)
       {
-         rc = mysql_errno(mConn);
-         if(rc != 0)
-         {
-            ErrLog( << "MySQL store result failed: error=" << rc << ": " << mysql_error(mConn));
-         }
          return rc;
       }
 
@@ -230,7 +248,7 @@ MySqlDb::addUser(const AbstractDb::Key& key, const AbstractDb::UserRecord& rec)
          << "', forwardAddress='" << rec.forwardAddress
          << "'";
    }
-   return query(command) == 0;
+   return query(command, 0) == 0;
 }
 
 
@@ -243,7 +261,7 @@ MySqlDb::eraseUser(const AbstractDb::Key& key )
       ds << "DELETE FROM users ";
       userWhereClauseToDataStream(key, ds);
    }
-   query(command);
+   query(command, 0);
 }
 
 
@@ -259,12 +277,12 @@ MySqlDb::getUser( const AbstractDb::Key& key ) const
       userWhereClauseToDataStream(key, ds);
    }
    
-   if(query(command) != 0)
+   MYSQL_RES* result=0;
+   if(query(command, &result) != 0)
    {
       return ret;
    }
    
-   MYSQL_RES* result = mysql_store_result(mConn);
    if (result==0)
    {
       ErrLog( << "MySQL store result failed: error=" << mysql_errno(mConn) << ": " << mysql_error(mConn));
@@ -336,12 +354,11 @@ MySqlDb::firstUserKey()
    
    Data command("SELECT user, domain FROM users");
 
-   if(query(command) != 0)
+   if(query(command, &mResult[UserTable]) != 0)
    {
       return Data::Empty;
    }
 
-   mResult[UserTable] = mysql_store_result(mConn);
    if(mResult[UserTable] == 0)
    {
       ErrLog( << "MySQL store result failed: error=" << mysql_errno(mConn) << ": " << mysql_error(mConn));
@@ -404,7 +421,7 @@ MySqlDb::dbWriteRecord(const Table table,
          << "'";
    }
 
-   return query(command) == 0;
+   return query(command, 0) == 0;
 }
 
 bool 
@@ -421,12 +438,12 @@ MySqlDb::dbReadRecord(const Table table,
          << "'";
    }
 
-   if(query(command) != 0)
+   MYSQL_RES* result = 0;
+   if(query(command, &result) != 0)
    {
       return false;
    }
 
-   MYSQL_RES* result = mysql_store_result(mConn);
    if (result == 0)
    {
       ErrLog( << "MySQL store result failed: error=" << mysql_errno(mConn) << ": " << mysql_error(mConn));
@@ -466,7 +483,7 @@ MySqlDb::dbEraseRecord(const Table table,
          ds << " WHERE attr='" << escapeString(pKey, escapedKey) << "'";
       }
    }   
-   query(command);
+   query(command, 0);
 }
 
 
@@ -488,22 +505,23 @@ MySqlDb::dbNextKey(const Table table, bool first)
          ds << "SELECT attr FROM " << tableName(table);
       }
       
-      if(query(command) != 0)
+      if(query(command, &mResult[table]) != 0)
       {
          return Data::Empty;
       }
 
-      mResult[table] = mysql_store_result(mConn);
       if (mResult[table] == 0)
       {
          ErrLog( << "MySQL store result failed: error=" << mysql_errno(mConn) << ": " << mysql_error(mConn));
          return Data::Empty;
       }
    }
-   
-   if (mResult[table] == 0)
-   { 
-      return Data::Empty;
+   else
+   {
+      if (mResult[table] == 0)
+      { 
+         return Data::Empty;
+      }
    }
    
    MYSQL_ROW row = mysql_fetch_row(mResult[table]);
@@ -551,12 +569,11 @@ MySqlDb::dbNextRecord(const Table table,
          }
       }
 
-      if(query(command) != 0)
+      if(query(command, &mResult[table]) != 0)
       {
          return false;
       }
 
-      mResult[table] = mysql_store_result(mConn);
       if (mResult[table] == 0)
       {
          ErrLog( << "MySQL store result failed: error=" << mysql_errno(mConn) << ": " << mysql_error(mConn));
@@ -586,10 +603,10 @@ bool
 MySqlDb::dbBeginTransaction(const Table table)
 {
    Data command("SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ");
-   if(query(command) == 0)
+   if(query(command, 0) == 0)
    {
       command = "START TRANSACTION";
-      return query(command) == 0;
+      return query(command, 0) == 0;
    }
    return false;
 }
@@ -598,14 +615,14 @@ bool
 MySqlDb::dbCommitTransaction(const Table table)
 {
    Data command("COMMIT");
-   return query(command) == 0;
+   return query(command, 0) == 0;
 }
 
 bool 
 MySqlDb::dbRollbackTransaction(const Table table)
 {
    Data command("ROLLBACK");
-   return query(command) == 0;
+   return query(command, 0) == 0;
 }
 
 static const char usersavp[] = "usersavp";

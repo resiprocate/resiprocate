@@ -66,7 +66,7 @@ class MySqlDb: public AbstractDb
 
       void disconnectFromDatabase() const;
       int connectToDatabase() const;
-      int query(const resip::Data& queryCommand) const;
+      int query(const resip::Data& queryCommand, MYSQL_RES** result) const;
       resip::Data& escapeString(const resip::Data& str, resip::Data& escapedStr) const;
 
       resip::Data mDBServer;
@@ -78,7 +78,11 @@ class MySqlDb: public AbstractDb
 
       mutable MYSQL* mConn;
       mutable MYSQL_RES* mResult[MaxTable];
-      mutable bool mConnected;
+      mutable volatile bool mConnected;
+      // when multiple threads are in use with the same connection, you need to 
+      // mutex calls to mysql_query and mysql_store_result: 
+      // http://dev.mysql.com/doc/refman/5.1/en/threaded-clients.html
+      mutable resip::Mutex mMutex;  
 
       const char* tableName( Table table ) const;
       void userWhereClauseToDataStream(const Key& key, resip::DataStream& ds) const;
