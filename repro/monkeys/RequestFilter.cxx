@@ -35,13 +35,7 @@ public:
    {
    }
 
-   RequestFilterAsyncMessage(const RequestFilterAsyncMessage& orig):
-      AsyncProcessorMessage(orig)
-   {
-   }
-
-   virtual Message* clone() const { return new RequestFilterAsyncMessage(*this); }
-   virtual EncodeStream& encode(EncodeStream& strm) const { strm << "RequestFilterAsyncMessage(tid="<<mTid<<")"; return strm; }
+   virtual EncodeStream& encode(EncodeStream& strm) const { strm << "RequestFilterAsyncMessage(tid=" << mTid << ")"; return strm; }
 
    Data mQuery;
    int mQueryResult;

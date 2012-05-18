@@ -57,6 +57,20 @@ class InteropHelper
       static InteropHelper::ClientNATDetectionMode getClientNATDetectionMode(){return clientNATDetection;}
       static void setClientNATDetectionMode(InteropHelper::ClientNATDetectionMode mode) {clientNATDetection=mode;}
 
+      // There are cases where the first hop in a particular network supports the concept of outbound
+      // and ensures all messaging for a client is delivered over the same connection used for
+      // registration.  This could be a SBC or other NAT traversal aid router that uses the Path 
+      // header.  However such endpoints may not be 100% compliant with outbound RFC and may not 
+      // include a ;ob parameter in the path header.  This parameter is required in order for repro
+      // to have knowledge that the first hop does support outbound, and it will reject registrations
+      // that appear to be using outboud (ie. instanceId and regId) with a 439 (First Hop Lacks Outbound
+      // Support).  In this case it can be desirable when using repro as the registrar to not reject
+      // REGISTRATION requests that contain an instanceId and regId with a 439.
+      // If this setting is enabled, then repro will assume the first hop supports outbound 
+      // and not return this error.
+      static bool getAssumeFirstHopSupportsOutboundEnabled(){return assumeFirstHopSupportsOutbound;}
+      static void setAssumeFirstHopSupportsOutboundEnabled(bool enabled) {assumeFirstHopSupportsOutbound=enabled;}
+
    private:
       InteropHelper();
       ~InteropHelper();
@@ -67,6 +81,7 @@ class InteropHelper
       static unsigned int flowTimerGracePeriodSeconds;
       static bool useRRTokenHack;
       static ClientNATDetectionMode clientNATDetection;
+      static bool assumeFirstHopSupportsOutbound;
 };
 }
 
