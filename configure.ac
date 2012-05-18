@@ -172,7 +172,7 @@ AM_CONDITIONAL(USE_MYSQL, false)
 AC_ARG_WITH(mysql,
 [  --with-mysql            Link against MySQL client libraries],
  [AC_DEFINE_UNQUOTED(USE_MYSQL, , USE_MYSQL)
- AC_SUBST(LIBMYSQL_LIBADD, "-lmysqlclient")
+ AC_SUBST(LIBMYSQL_LIBADD, "-lmysqlclient_r")
  AM_CONDITIONAL(USE_MYSQL, true)], 
  [ AC_SUBST(LIBMYSQL_LIBADD, "")])
 
