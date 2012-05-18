@@ -51,12 +51,12 @@ class MySQLInitializer
       }
       void setInitialized()
       {
-         ThreadIf::tlsSetValue(mThreadStorage, (LPVOID) TRUE);
+         ThreadIf::tlsSetValue(mThreadStorage, (void*) true);
       }
       bool isInitialized()
       {
          // Note:  if value is not set yet then 0 (false) is returned
-         return (BOOL) ThreadIf::tlsGetValue(mThreadStorage) == TRUE; 
+         return (bool) ThreadIf::tlsGetValue(mThreadStorage) == true; 
       }
 
    private:
