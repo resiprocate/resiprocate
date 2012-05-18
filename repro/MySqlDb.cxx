@@ -28,6 +28,34 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
+// This class helps ensure that each thread using the MySQL API's 
+// initialize by calling mysql_thread_init before calling any mySQL functions
+class MySQLInitializer
+{
+   public:
+      MySQLInitializer() : mThreadStorage(::TlsAlloc())
+      {
+         assert(mThreadStorage != TLS_OUT_OF_INDEXES);
+      }
+      ~MySQLInitializer()
+      {
+         ::TlsFree(mThreadStorage); 
+      }
+      void setInitialized()
+      {
+         ::TlsSetValue(mThreadStorage, (LPVOID) TRUE);
+      }
+      bool isInitialized()
+      {
+         // Note:  if value is not set yet then 0 (false) is returned
+         return (BOOL) ::TlsGetValue(mThreadStorage) == TRUE; 
+      }
+
+   private:
+      DWORD mThreadStorage;
+};
+static MySQLInitializer g_MySQLInitializer;
+
 MySqlDb::MySqlDb(const Data& server, 
                  const Data& user, 
                  const Data& password, 
@@ -65,6 +93,16 @@ MySqlDb::MySqlDb(const Data& server,
 MySqlDb::~MySqlDb()
 {
    disconnectFromDatabase();
+}
+
+void
+MySqlDb::initialize() const
+{
+   if(!g_MySQLInitializer.isInitialized())
+   {
+      g_MySQLInitializer.setInitialized();
+      mysql_thread_init();
+   }
 }
 
 void
@@ -133,6 +171,8 @@ int
 MySqlDb::query(const Data& queryCommand, MYSQL_RES** result) const
 {
    int rc = 0;
+
+   initialize();
 
    DebugLog( << "MySqlDb::query: executing query: " << queryCommand);
 

@@ -64,6 +64,7 @@ class MySqlDb: public AbstractDb
       virtual bool dbCommitTransaction(const Table table);
       virtual bool dbRollbackTransaction(const Table table);
 
+      void initialize() const;
       void disconnectFromDatabase() const;
       int connectToDatabase() const;
       int query(const resip::Data& queryCommand, MYSQL_RES** result) const;
