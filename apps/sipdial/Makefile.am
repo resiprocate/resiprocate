@@ -22,6 +22,9 @@ libsipdial_la_LDFLAGS += -export-dynamic
 
 bin_PROGRAMS = sipdialer
 sipdialer_LDADD = libsipdial.la
+sipdialer_LDADD += ../../resip/dum/libdum.la
+sipdialer_LDADD += ../../resip/stack/libresip.la
+sipdialer_LDADD += ../../rutil/librutil.la
 
 libsipdial_la_SOURCES = \
         DialInstance.cpp \
