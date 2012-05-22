@@ -1,36 +1,61 @@
-# $Id: Makefile,v 1.144 2004/05/18 01:40:48 jason Exp $
+# $Id$
 
-BUILD = ../build
-include $(BUILD)/Makefile.pre
+EXTRA_DIST = README.txt
 
-PACKAGES += DUM RESIP RUTIL OPENSSL ARES PTHREAD
+SUBDIRS = . 
 
-CXXFLAGS += -I..
-CODE_SUBDIRS = 
-TARGET_LIBRARY = libb2bua
-TESTPROGRAMS =
+#AM_CXXFLAGS = -DUSE_ARES
 
-SRC = \
-	AuthenticationManager.cxx \
-	B2BCall.cxx \
-	B2BCallManager.cxx \
-	B2BUA.cxx \
-	CallHandle.cxx \
-	DailyCDRHandler.cxx \
-	DefaultAuthorizationManager.cxx \
-	DialogUsageManagerRecurringTask.cxx \
-	DummyRegistrationPersistenceManager.cxx \
-	DummyServerRegistrationHandler.cxx \
-	MediaManager.cxx \
-	MediaProxy.cxx \
-	MyAppDialog.cxx \
-	MyDialogSetHandler.cxx \
-	MyInviteSessionHandler.cxx \
-	RtpProxyRecurringTask.cxx \
-	RtpProxyUtil.cxx \
-	TaskManager.cxx
+lib_LTLIBRARIES = libb2bua.la
 
-include $(BUILD)/Makefile.post
+libb2bua_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
+libb2bua_la_LIBADD = ../resip/dum/libdum.la
+libb2bua_la_LIBADD += ../resip/stack/libresip.la ../rutil/librutil.la
+libb2bua_la_LIBADD += @LIBSSL_LIBADD@ -lpthread
+
+libb2bua_la_SOURCES = \
+        AuthenticationManager.cxx \
+        B2BCall.cxx \
+        B2BCallManager.cxx \
+        B2BUA.cxx \
+        CallHandle.cxx \
+        DailyCDRHandler.cxx \
+        DefaultAuthorizationManager.cxx \
+        DialogUsageManagerRecurringTask.cxx \
+        DummyRegistrationPersistenceManager.cxx \
+        DummyServerRegistrationHandler.cxx \
+        MediaManager.cxx \
+        MediaProxy.cxx \
+        MyAppDialog.cxx \
+        MyDialogSetHandler.cxx \
+        MyInviteSessionHandler.cxx \
+        RtpProxyRecurringTask.cxx \
+        RtpProxyUtil.cxx \
+        TaskManager.cxx
+
+b2buaincludedir = $(includedir)/b2bua
+nobase_b2buainclude_HEADERS = \
+        AccountingManager.hxx \
+        AuthenticationManager.hxx \
+        AuthorizationManager.hxx \
+        B2BCall.hxx \
+        B2BCallManager.hxx \
+        B2BUA.hxx \
+        CallHandle.hxx \
+        CDRHandler.hxx \
+        DefaultAuthorizationManager.hxx \
+        DialogUsageManagerRecurringTask.hxx \
+        DummyRegistrationPersistenceManager.hxx \
+        DummyServerRegistrationHandler.hxx \
+        Logging.hxx \
+        MediaManager.hxx \
+        MediaProxy.hxx \
+        MyAppDialog.hxx \
+        MyDialogSetHandler.hxx \
+        MyInviteSessionHandler.hxx \
+        RtpProxyRecurringTask.hxx \
+        RtpProxyUtil.hxx \
+        TaskManager.hxx
 
 ##############################################################################
 # 
@@ -51,7 +76,7 @@ include $(BUILD)/Makefile.post
 # 3. Neither the name of the author(s) nor the names of any contributors
 #    may be used to endorse or promote products derived from this software
 #    without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE AUTHOR(S) AND CONTRIBUTORS "AS IS" AND
 # ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -63,8 +88,5 @@ include $(BUILD)/Makefile.post
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
-# 
-# ====================================================================
-# 
 # 
 ##############################################################################
