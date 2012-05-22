@@ -241,9 +241,6 @@ AX_HAVE_EPOLL(
 
 AM_MAINTAINER_MODE
 
-# this is temporarily removed:
-#  apps/ichat-gw/jabberconnector/Makefile
-# until it is tested with autotools
 AC_OUTPUT(Makefile \
 	rutil/dns/ares/Makefile \
 	rutil/Makefile \
@@ -263,6 +260,7 @@ AC_OUTPUT(Makefile \
 	apps/Makefile \
 	apps/clicktocall/Makefile \
 	apps/ichat-gw/Makefile \
+	apps/ichat-gw/jabberconnector/Makefile \
 	apps/sipdial/Makefile \
 	resip.spec \
 	reTurn/Makefile \
