@@ -193,6 +193,7 @@ reproInfo.hxx:
 ReproVersion.cxx: reproInfo.hxx
 
 dist_man_MANS = doc/repro.8
+dist_man_MANS += doc/reprocmd.8
 
 sysconf_DATA = etc/repro.conf
 
