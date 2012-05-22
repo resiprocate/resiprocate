@@ -17,6 +17,7 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
+#define REPRO_DB_VERSION_USERS 3
 
 static void 
 encodeString(oDataStream& s, const Data& data)
@@ -115,7 +116,7 @@ AbstractDb::encodeUser(const UserRecord& rec, resip::Data& data)
 {
    oDataStream s(data);
       
-   short version=2;
+   short version = REPRO_DB_VERSION_USERS;
    assert( sizeof( version) == 2 );
    s.write( (char*)(&version) , sizeof(version) );
       
@@ -123,6 +124,7 @@ AbstractDb::encodeUser(const UserRecord& rec, resip::Data& data)
    encodeString( s, rec.domain);
    encodeString( s, rec.realm);
    encodeString( s, rec.passwordHash);
+   encodeString( s, rec.passwordHashAlt);
    encodeString( s, rec.name);
    encodeString( s, rec.email);
    encodeString( s, rec.forwardAddress);
@@ -169,12 +171,13 @@ AbstractDb::getUser( const AbstractDb::Key& key ) const
    assert( sizeof(version) == 2 );
    s.read( (char*)(&version), sizeof(version) );
    
-   if ( version == 2 )
+   if ( version == REPRO_DB_VERSION_USERS )
    {
       decodeString(s, rec.user);
       decodeString(s, rec.domain);
       decodeString(s, rec.realm);
       decodeString(s, rec.passwordHash);
+      decodeString(s, rec.passwordHashAlt);
       decodeString(s, rec.name);
       decodeString(s, rec.email);
       decodeString(s, rec.forwardAddress);

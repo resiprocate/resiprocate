@@ -35,6 +35,7 @@ class UserStore
                     const resip::Data& domain, 
                     const resip::Data& realm, 
                     const resip::Data& password, 
+                    const resip::Data& passwordHashAlt,
                     bool  applyA1HashToPassword,
                     const resip::Data& fullName,
                     const resip::Data& emailAddress  );
@@ -46,6 +47,7 @@ class UserStore
                        const resip::Data& domain, 
                        const resip::Data& realm, 
                        const resip::Data& password, 
+                       const resip::Data& passwordHashAlt,
                        bool  applyA1HashToPassword,
                        const resip::Data& fullName,
                        const resip::Data& emailAddress );

@@ -52,6 +52,7 @@ UserStore::addUser( const Data& username,
                     const Data& domain,
                     const Data& realm,
                     const Data& password, 
+                    const Data& passwordHashAlt,
                     bool  applyA1HashToPassword,
                     const Data& fullName, 
                     const Data& emailAddress )
@@ -70,10 +71,23 @@ UserStore::addUser( const Data& username,
          << password;
       a1.flush();
       rec.passwordHash = a1.getHex();
+
+      // Some UAs might calculate A1
+      // using user@domain:realm:password
+      // so we store the hash of that permutation too
+      MD5Stream a1b;
+      a1b << username << Symbols::AT_SIGN << domain
+         << Symbols::COLON
+         << realm
+         << Symbols::COLON
+         << password;
+      a1b.flush();
+      rec.passwordHashAlt = a1b.getHex();
    }
    else
    {
       rec.passwordHash = password;
+      rec.passwordHashAlt = passwordHashAlt;
    }
    rec.name = fullName;
    rec.email = emailAddress;
@@ -95,13 +109,14 @@ UserStore::updateUser( const Key& originalKey,
                        const resip::Data& domain, 
                        const resip::Data& realm, 
                        const resip::Data& password, 
+                       const resip::Data& passwordHashAlt,
                        bool  applyA1HashToPassword,
                        const resip::Data& fullName,
                        const resip::Data& emailAddress )
 {
    Key newkey = buildKey(user, domain);
    
-   bool ret = addUser(user, domain, realm, password, applyA1HashToPassword, fullName, emailAddress);
+   bool ret = addUser(user, domain, realm, password, passwordHashAlt, applyA1HashToPassword, fullName, emailAddress);
    if ( newkey != originalKey )
    {
       eraseUser(originalKey);

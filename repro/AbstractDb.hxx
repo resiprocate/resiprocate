@@ -27,6 +27,7 @@ class AbstractDb
             resip::Data domain;
             resip::Data realm;
             resip::Data passwordHash;
+            resip::Data passwordHashAlt;
             resip::Data name;
             resip::Data email;
             resip::Data forwardAddress;
