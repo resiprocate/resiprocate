@@ -15,7 +15,7 @@ librecon_la_LIBADD = ../../reflow/libreflow.la
 librecon_la_LIBADD += ../../reTurn/client/libreTurnClient.la
 librecon_la_LIBADD += ../../rutil/librutil.la
 librecon_la_LIBADD += @LIBSSL_LIBADD@ -lsrtp
-librecon_la_LDFLAGS = -version-info 0:0:0 -release 1 -export-dynamic
+librecon_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
 
 librecon_la_SOURCES = BridgeMixer.cxx \
         Conversation.cxx \

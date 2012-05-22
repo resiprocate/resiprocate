@@ -32,7 +32,7 @@ repro_LDADD += @LIBSSL_LIBADD@ -lpthread
 
 lib_LTLIBRARIES = librepro.la
 
-librepro_la_LDFLAGS = -version-info 0:0:0 -release @ABIVERSION@ -export-dynamic
+librepro_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
 librepro_la_LIBADD = -ldb_cxx
 
 librepro_la_SOURCES = \

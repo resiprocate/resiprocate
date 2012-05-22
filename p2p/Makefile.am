@@ -8,7 +8,7 @@ lib_LTLIBRARIES = libp2p.la
 libp2p_la_LIBADD = s2c/s2c/libs2c.la
 libp2p_la_LIBADD += ../rutil/librutil.la
 libp2p_la_LIBADD += @LIBSSL_LIBADD@ -lpthread
-libp2p_la_LDFLAGS = -version-info 0:0:0 -release 1 -export-dynamic
+libp2p_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
 
 libp2p_la_SOURCES =   \
         ChordTopology.cxx \
