@@ -96,6 +96,7 @@ WebAdmin::WebAdmin(  Proxy& proxy,
                           Data::Empty, // domain 
                           Data::Empty, // realm 
                           (adminPassword==""?Data("admin"):adminPassword), // password 
+                          Data::Empty,
                           true,        // applyA1HashToPassword
                           Data::Empty, // name 
                           Data::Empty ); // email 
@@ -113,6 +114,7 @@ WebAdmin::WebAdmin(  Proxy& proxy,
                                        Data::Empty,
                                        Data::Empty,
                                        adminPassword,
+                                       Data::Empty,
                                        true,        // applyA1HashToPassword
                                        Data::Empty,
                                        Data::Empty);
@@ -584,7 +586,7 @@ WebAdmin::buildAddUserSubPage( DataStream& s)
 //         realm = mHttpParams["domain"];
 //      }
             
-      if(mStore.mUserStore.addUser(user,domain,domain,mHttpParams["password"],true,mHttpParams["name"],mHttpParams["email"]))
+      if(mStore.mUserStore.addUser(user,domain,domain,mHttpParams["password"],Data::Empty,true,mHttpParams["name"],mHttpParams["email"]))
       {
          s << "<p><em>Added:</em> " << user << "@" << domain << "</p>\n";
       }
@@ -775,6 +777,7 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
          Data domain = mHttpParams["domain"];                  
          Data realm = mHttpParams["domain"];   // eventually sort out realms
          Data password = mHttpParams["password"];
+         Data passwordHashAlt = Data::Empty;
          Data name = mHttpParams["name"];
          Data email = mHttpParams["email"];
          bool applyA1HashToPassword = true;
@@ -783,10 +786,11 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
          if(password == "" && user == rec.user && realm == rec.realm) 
          {
             password = rec.passwordHash;
+            passwordHashAlt = rec.passwordHashAlt;
             applyA1HashToPassword = false;
          }
          // write out the updated record to the database now
-         if(mStore.mUserStore.updateUser(key, user, domain, realm, password, applyA1HashToPassword, name, email))
+         if(mStore.mUserStore.updateUser(key, user, domain, realm, password, passwordHashAlt, applyA1HashToPassword, name, email))
          {
             s << "<p><em>Updated:</em> " << key << "</p>" << endl; 
          }

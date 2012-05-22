@@ -291,6 +291,7 @@ MySqlDb::addUser(const AbstractDb::Key& key, const AbstractDb::UserRecord& rec)
          << "', domain='" << rec.domain
          << "', realm='" << rec.realm
          << "', passwordHash='" << rec.passwordHash
+         << "', passwordHashAlt='" << rec.passwordHashAlt
          << "', name='" << rec.name
          << "', email='" << rec.email
          << "', forwardAddress='" << rec.forwardAddress
@@ -321,7 +322,7 @@ MySqlDb::getUser( const AbstractDb::Key& key ) const
    Data command;
    {
       DataStream ds(command);
-      ds << "SELECT user, domain, realm, passwordHash, name, email, forwardAddress FROM users ";
+      ds << "SELECT user, domain, realm, passwordHash, passwordHashAlt, name, email, forwardAddress FROM users ";
       userWhereClauseToDataStream(key, ds);
    }
    
@@ -340,13 +341,15 @@ MySqlDb::getUser( const AbstractDb::Key& key ) const
    MYSQL_ROW row = mysql_fetch_row(result);
    if (row)
    {
-      ret.user           = Data(row[0]);
-      ret.domain         = Data(row[1]);
-      ret.realm          = Data(row[2]);
-      ret.passwordHash   = Data(row[3]);
-      ret.name           = Data(row[4]);
-      ret.email          = Data(row[5]);
-      ret.forwardAddress = Data(row[6]);
+      int col = 0;
+      ret.user            = Data(row[col++]);
+      ret.domain          = Data(row[col++]);
+      ret.realm           = Data(row[col++]);
+      ret.passwordHash    = Data(row[col++]);
+      ret.passwordHashAlt = Data(row[col++]);
+      ret.name            = Data(row[col++]);
+      ret.email           = Data(row[col++]);
+      ret.forwardAddress  = Data(row[col++]);
    }
 
    mysql_free_result(result);

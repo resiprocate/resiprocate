@@ -13,6 +13,7 @@ CREATE TABLE `users` (
   `domain` VARCHAR(253),
   `realm` VARCHAR(253),
   `passwordHash` VARCHAR(32),
+  `passwordHashAlt` VARCHAR(32),
   `name` VARCHAR(256),
   `email` VARCHAR(256),
   `forwardAddress` VARCHAR(256),
