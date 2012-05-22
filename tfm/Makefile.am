@@ -17,7 +17,7 @@ SUBDIRS += tfdum
 
 lib_LTLIBRARIES = libtfm.la
 
-libtfm_la_LDFLAGS = -version-info 0:0:0 -release @ABIVERSION@ -export-dynamic
+libtfm_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
 libtfm_la_LIBADD = ../repro/librepro.la
 libtfm_la_LIBADD += ../resip/dum/libdum.la
 libtfm_la_LIBADD += ../resip/stack/libresip.la

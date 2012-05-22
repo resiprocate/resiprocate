@@ -2,7 +2,15 @@
 AC_INIT(resiprocate,1.8.0)
 AC_CONFIG_SRCDIR(repro/repro.cxx)
 
-ABIVERSION=1.8
+SO_RELEASE=`echo $PACKAGE_VERSION | cut -f1,2 -d.`
+AC_SUBST(SO_RELEASE)
+
+#LIBTOOL_VERSION_RELEASE="-version-info 0:0:0 -release @SO_RELEASE@"
+LIBTOOL_VERSION_RELEASE="-release $SO_RELEASE"
+AC_SUBST(LIBTOOL_VERSION_RELEASE)
+
+
+########## End of release/version data ######################
 
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
@@ -232,8 +240,6 @@ AX_HAVE_EPOLL(
   [AC_DEFINE_UNQUOTED(HAVE_EPOLL, ,HAVE_EPOLL)],  )
 
 AM_MAINTAINER_MODE
-
-AC_SUBST(ABIVERSION)
 
 # this is temporarily removed:
 #  apps/ichat-gw/jabberconnector/Makefile

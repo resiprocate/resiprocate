@@ -8,7 +8,7 @@ AUTOMAKE_OPTIONS = foreign
 #INCLUDES = -I$(top_srcdir)
 
 lib_LTLIBRARIES = libresipares.la
-libresipares_la_LDFLAGS = -version-info 0:0:0 -release @ABIVERSION@ -export-dynamic
+libresipares_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
 libresipares_la_SOURCES = \
 	ares__close_sockets.c ares__get_hostent.c ares__read_line.c \
 	ares_destroy.c ares_expand_name.c ares_fds.c ares_free_errmem.c \

@@ -17,7 +17,7 @@ lib_LTLIBRARIES = libsipdial.la
 libsipdial_la_LIBADD = ../../resip/dum/libdum.la
 libsipdial_la_LIBADD += ../../resip/stack/libresip.la ../../rutil/librutil.la
 libsipdial_la_LIBADD += @LIBSSL_LIBADD@ -lpthread
-libsipdial_la_LDFLAGS = -version-info 0:0:0 -release @ABIVERSION@
+libsipdial_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@
 libsipdial_la_LDFLAGS += -export-dynamic
 
 bin_PROGRAMS = sipdialer
