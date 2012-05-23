@@ -287,7 +287,18 @@ MySqlDb::addUser(const AbstractDb::Key& key, const AbstractDb::UserRecord& rec)
    Data command;
    {
       DataStream ds(command);
-      ds << "REPLACE INTO users SET user='" << rec.user 
+      ds << "INSERT INTO users (user, domain, realm, passwordHash, passwordHashAlt, name, email, forwardAddress)"
+         << " VALUES('" 
+         << rec.user << "', '"
+         << rec.domain << "', '"
+         << rec.realm << "', '"
+         << rec.passwordHash << "', '"
+         << rec.passwordHashAlt << "', '"
+         << rec.name << "', '"
+         << rec.email << "', '"
+         << rec.forwardAddress << "')"
+         << " ON DUPLICATE KEY UPDATE"
+         << " user='" << rec.user 
          << "', domain='" << rec.domain
          << "', realm='" << rec.realm
          << "', passwordHash='" << rec.passwordHash
