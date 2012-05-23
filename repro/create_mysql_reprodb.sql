@@ -9,6 +9,7 @@ USE repro;
 
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
+  `id` INT PRIMARY KEY AUTO_INCREMENT,
   `user` VARCHAR(64) NOT NULL,
   `domain` VARCHAR(253),
   `realm` VARCHAR(253),
@@ -17,7 +18,7 @@ CREATE TABLE `users` (
   `name` VARCHAR(256),
   `email` VARCHAR(256),
   `forwardAddress` VARCHAR(256),
-  PRIMARY KEY (`user`, `domain`)
+  CONSTRAINT c_user_domain UNIQUE INDEX idx_user_domain (`user`, `domain`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
