@@ -35,3 +35,33 @@ mysqlaccess -U root -P <pwd> \* \* repro --brief
 
 Can make sure all is flushed with 
 mysqladmin -u root -p refresh
+
+
+passwordHashAlt
+===============
+
+The schema contains a passwordHashAlt column
+
+This is much the same as the ha1b column used by Kamailio
+
+  passwordHash =    h(A1) = md5(user:realm:password)
+
+  passwordHashAlt = h(A1) = md5(user@domain:realm:password)
+
+repro will update the value in this column each time a user is added
+or their password is changed.  However, it is not currently consulted
+as part of the authentication process.
+
+To explicitly use this column instead of the regular passwordHash
+column, use this custom auth query:
+
+MySQLCustomUserAuthQuery = \
+   SELECT passwordHashAlt
+   FROM users
+   WHERE user = '$user'
+     AND concat(domain, '@', domain) = '$domain'
+
+A future version of repro will be able to use both columns during
+the authentication process, to concurrently support UAs using
+either authentication style.
+
