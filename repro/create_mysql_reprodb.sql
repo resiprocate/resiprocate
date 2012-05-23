@@ -3,12 +3,20 @@ CREATE DATABASE repro;
 
 USE repro;
 
+-- Uncomment the following to have all tables re-created
+-- DROP TABLE IF EXISTS `users`;
+-- DROP TABLE IF EXISTS `routesavp`;
+-- DROP TABLE IF EXISTS `aclsavp`;
+-- DROP TABLE IF EXISTS `configsavp`;
+-- DROP TABLE IF EXISTS `staticregsavp`;
+-- DROP TABLE IF EXISTS `filtersavp`;
+-- DROP TABLE IF EXISTS `siloavp`;
+
+
 --
 -- Table structure for table `users`
 --
-
-DROP TABLE IF EXISTS `users`;
-CREATE TABLE `users` (
+CREATE TABLE IF NOT EXISTS `users` (
   `id` INT PRIMARY KEY AUTO_INCREMENT,
   `user` VARCHAR(64) NOT NULL,
   `domain` VARCHAR(253),
@@ -21,13 +29,20 @@ CREATE TABLE `users` (
   CONSTRAINT c_user_domain UNIQUE INDEX idx_user_domain (`user`, `domain`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+-- Upgrade from version 2 schema to version 3
+ALTER TABLE `users` 
+   ADD COLUMN `id` INT NULL AUTO_INCREMENT  FIRST , 
+   ADD COLUMN `passwordHashAlt` VARCHAR(32) NULL DEFAULT NULL  AFTER `passwordHash` , 
+   CHANGE COLUMN `domain` `domain` VARCHAR(253) NULL DEFAULT NULL  
+, DROP PRIMARY KEY 
+, ADD PRIMARY KEY (`id`) 
+, ADD UNIQUE INDEX `idx_user_domain` (`user` ASC, `domain` ASC) ;
 
 --
 -- Table structure for table `routesavp`
 --
 
-DROP TABLE IF EXISTS `routesavp`;
-CREATE TABLE `routesavp` (
+CREATE TABLE IF NOT EXISTS `routesavp` (
   `attr` VARCHAR(255) NOT NULL,
   `value` VARCHAR(4096),
   PRIMARY KEY (`attr`) 
@@ -37,8 +52,7 @@ CREATE TABLE `routesavp` (
 -- Table structure for table `aclsavp`
 --
 
-DROP TABLE IF EXISTS `aclsavp`;
-CREATE TABLE `aclsavp` (
+CREATE TABLE IF NOT EXISTS `aclsavp` (
   `attr` VARCHAR(255) NOT NULL,
   `value` VARCHAR(4096),
   PRIMARY KEY (`attr`) 
@@ -48,8 +62,7 @@ CREATE TABLE `aclsavp` (
 -- Table structure for table `configsavp`
 --
 
-DROP TABLE IF EXISTS `configsavp`;
-CREATE TABLE `configsavp` (
+CREATE TABLE IF NOT EXISTS `configsavp` (
   `attr` VARCHAR(255) NOT NULL,
   `value` VARCHAR(4096),
   PRIMARY KEY (`attr`) 
@@ -59,8 +72,7 @@ CREATE TABLE `configsavp` (
 -- Table structure for table `staticregsavp`
 --
 
-DROP TABLE IF EXISTS `staticregsavp`;
-CREATE TABLE `staticregsavp` (
+CREATE TABLE IF NOT EXISTS `staticregsavp` (
   `attr` VARCHAR(255) NOT NULL,
   `value` VARCHAR(4096),
   PRIMARY KEY (`attr`) 
@@ -70,8 +82,7 @@ CREATE TABLE `staticregsavp` (
 -- Table structure for table `filtersavp`
 --
 
-DROP TABLE IF EXISTS `filtersavp`;
-CREATE TABLE `filtersavp` (
+CREATE TABLE IF NOT EXISTS `filtersavp` (
   `attr` VARCHAR(255) NOT NULL,
   `value` VARCHAR(4096),
   PRIMARY KEY (`attr`) 
@@ -82,8 +93,7 @@ CREATE TABLE `filtersavp` (
 -- Note:  This table contains 2 indexes
 --
 
-DROP TABLE IF EXISTS `siloavp`;
-CREATE TABLE `siloavp` (
+CREATE TABLE IF NOT EXISTS `siloavp` (
   `attr` VARCHAR(255) NOT NULL,
   `attr2` VARCHAR(255) NOT NULL,
   `value` VARCHAR(20315),
