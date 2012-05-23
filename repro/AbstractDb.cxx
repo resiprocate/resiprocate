@@ -182,6 +182,20 @@ AbstractDb::getUser( const AbstractDb::Key& key ) const
       decodeString(s, rec.email);
       decodeString(s, rec.forwardAddress);
    }
+   else if ( version == 2 )
+   {
+      // We can read from the older version DB, but the entry
+      // will be written back in the new format with
+      // passwordHashAlt blank
+      decodeString(s, rec.user);
+      decodeString(s, rec.domain);
+      decodeString(s, rec.realm);
+      decodeString(s, rec.passwordHash);
+      decodeString(s, rec.name);
+      decodeString(s, rec.email);
+      decodeString(s, rec.forwardAddress);
+      rec.passwordHashAlt = Data::Empty;
+   }
    else
    {
       // unknown version 
