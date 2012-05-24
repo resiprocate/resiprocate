@@ -4,6 +4,7 @@ EXTRA_DIST = readme.txt
 EXTRA_DIST += *.vcproj
 EXTRA_DIST += *.sln
 EXTRA_DIST += recon_10_0.vcxproj recon_10_0.vcxproj.filters
+EXTRA_DIST += doc
 
 SUBDIRS = .
 SUBDIRS += test
