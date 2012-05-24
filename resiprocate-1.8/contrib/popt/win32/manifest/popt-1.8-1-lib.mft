@@ -1,0 +1,10 @@
+include/popt.h
+include/poptdll.h
+lib/libpopt-bcc.lib
+lib/libpopt.a
+lib/libpopt.dll.a
+lib/libpopt.la
+lib/libpopt.lib
+lib/popt1.def
+manifest/popt-1.8-1-lib.mft
+manifest/popt-1.8-1-lib.ver

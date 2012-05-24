@@ -1,0 +1,856 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="GPerfFiles">
+      <UniqueIdentifier>{7670bbf8-7277-4dba-b6f5-bb726a96b4e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{11690c26-b5eb-442d-b7fb-5fb97ce10cf0}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc</Extensions>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4d95e332-af7e-4e86-9bd4-3c03fc017b97}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;def;odl;idl;hpj;bat;asm</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Aor.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ApiCheck.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ApplicationSip.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Auth.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BasicNonceHelper.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BranchParameter.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CallId.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Compression.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Connection.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ConnectionBase.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ConnectionManager.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Contents.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ContentsFactoryBase.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CpimContents.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CSeqCategory.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DataParameter.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DateCategory.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DeprecatedDialog.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DnsInterface.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DnsResult.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DtlsMessage.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Embedded.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ExistsOrDataParameter.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ExistsParameter.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ExpiresCategory.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ExtensionHeader.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ExtensionParameter.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ExternalBodyContents.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GenericContents.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GenericUri.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HeaderFieldValue.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HeaderFieldValueList.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HeaderHash.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Headers.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HeaderTypes.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Helper.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IntegerCategory.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IntegerParameter.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InternalTransport.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InteropHelper.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InterruptableStackThread.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InvalidContents.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="KeepAliveMessage.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LazyParser.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Message.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MessageFilterRule.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MessageWaitingContents.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MethodHash.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MethodTypes.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Mime.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MsgHeaderScanner.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MultipartAlternativeContents.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MultipartMixedContents.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MultipartRelatedContents.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MultipartSignedContents.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NameAddr.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NonceHelper.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="OctetContents.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Parameter.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ParameterHash.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ParameterTypes.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ParserCategories.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ParserCategory.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ParserContainerBase.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pidf.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pkcs7Contents.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pkcs8Contents.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PlainContents.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PrivacyCategory.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="QuotedDataParameter.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="QValue.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="QValueParameter.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RAckCategory.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RequestLine.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Rlmi.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RportParameter.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SdpContents.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SecurityAttributes.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SERNonceHelper.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SipFrag.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SipMessage.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SipStack.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ssl\DtlsTransport.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ssl\Security.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ssl\TlsConnection.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ssl\TlsTransport.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ssl\WinSecurity.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StackThread.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StatelessHandler.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StatisticsHandler.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StatisticsManager.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StatisticsMessage.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StatusLine.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StringCategory.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Symbols.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TcpBaseTransport.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TcpConnection.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TcpTransport.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TimeAccumulate.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TimerMessage.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TimerQueue.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Token.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TransactionController.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TransactionMap.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TransactionState.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TransactionUser.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TransactionUserMessage.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Transport.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TransportFailure.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TransportSelector.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TuIM.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tuple.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TupleMarkManager.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TuSelector.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UdpTransport.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UInt32Category.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UInt32Parameter.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UnknownParameter.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Uri.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Via.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WarningCategory.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="X509Contents.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EventStackThread.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TransportThread.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Aor.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ApiCheck.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ApiCheckList.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ApplicationMessage.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ApplicationSip.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Auth.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BasicNonceHelper.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BranchParameter.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CallId.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CancelableTimerQueue.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Compression.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Connection.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ConnectionBase.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ConnectionManager.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Contents.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ContentsFactory.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ContentsFactoryBase.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CpimContents.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CSeqCategory.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DataParameter.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DateCategory.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DeprecatedDialog.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DnsInterface.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DnsResult.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DtlsMessage.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Embedded.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ExistsOrDataParameter.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ExistsParameter.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ExpiresCategory.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ExtensionHeader.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ExtensionParameter.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ExternalBodyContents.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GenericContents.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GenericUri.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HeaderFieldValue.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HeaderFieldValueList.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HeaderHash.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HeaderTypes.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helper.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IntegerCategory.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IntegerParameter.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InternalTransport.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InteropHelper.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InterruptableStackThread.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InvalidContents.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="KeepAliveMessage.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LazyParser.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MarkListener.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Message.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MessageFilterRule.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MessageWaitingContents.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MethodHash.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MethodTypes.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Mime.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MsgHeaderScanner.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MultipartAlternativeContents.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MultipartMixedContents.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MultipartRelatedContents.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MultipartSignedContents.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NameAddr.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NonceHelper.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OctetContents.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Parameter.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ParameterHash.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ParameterTypeEnums.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ParameterTypes.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ParserCategories.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ParserCategory.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ParserContainer.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ParserContainerBase.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Pidf.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Pkcs7Contents.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Pkcs8Contents.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PlainContents.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PollStatistics.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PrivacyCategory.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QuotedDataParameter.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QValue.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QValueParameter.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RAckCategory.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RequestLine.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Rlmi.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RportParameter.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SdpContents.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SecurityAttributes.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SecurityTypes.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SendData.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SERNonceHelper.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ShutdownMessage.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SipFrag.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SipMessage.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SipStack.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ssl\DtlsTransport.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ssl\Security.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ssl\TlsConnection.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ssl\TlsTransport.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ssl\WinSecurity.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StackThread.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StatelessHandler.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StatisticsHandler.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StatisticsManager.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StatisticsMessage.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StatusLine.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StringCategory.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Symbols.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TcpBaseTransport.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TcpConnection.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TcpTransport.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TextParameter.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeAccumulate.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TimerMessage.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TimerQueue.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Token.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TransactionController.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TransactionMap.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TransactionMessage.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TransactionState.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TransactionTerminated.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TransactionUser.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TransactionUserMessage.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Transport.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TransportFailure.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TransportSelector.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TuIM.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Tuple.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TupleMarkManager.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TuSelector.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UdpTransport.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UInt32Category.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UInt32Parameter.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UnknownHeaderType.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UnknownParameter.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UnknownParameterType.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Uri.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ValueFifo.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Via.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WarningCategory.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="X509Contents.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ZeroOutStatistics.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EventStackThread.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ConnectionTerminated.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="KeepAlivePong.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TerminateFlow.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DnsResultMessage.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StartLine.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TransactionControllerThread.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TransportSelectorThread.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TransportThread.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CancelClientInviteTransaction.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MessageDecorator.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="HeaderHash.gperf">
+      <Filter>GPerfFiles</Filter>
+    </None>
+    <None Include="MethodHash.gperf">
+      <Filter>GPerfFiles</Filter>
+    </None>
+    <None Include="ParameterHash.gperf">
+      <Filter>GPerfFiles</Filter>
+    </None>
+  </ItemGroup>
+</Project>

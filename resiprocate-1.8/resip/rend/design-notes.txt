@@ -1,0 +1,132 @@
+
+There are dialogs (in the strict SIP sense), psuedo-dialogs (PUB,REG).
+And then there are sessions. A session may involve more than one
+dialog. For PUB/SUB, never concurrently. Thus it is possible to
+define session 1:1 to dialog, and "re-use" the dialog. But some
+sessions may involve multiple dialogs at same time. E.g., calling
+with call transfer for when getting multiple replies to one INVITE.
+
+Key question: should Wave-level have direct access to a dialog class,
+or should it indirect thru a some explicit "session" object?
+
+In either case, who "owns" the session object? Likely it is owned
+at the app level (e.g., wave), and no else has rights to it.
+
+Given a WaveGroup which owns set of sessions, are those sessions
+ever shared? E.g., are all sessions within a group treated the same?
+Does a session belong exclusively to a group?
+
+For PUB/SUB, lets assume not dialogs do not overlap within 
+a session, and dialog & session are same thing. Lets also assume
+that a dialog belongs exclusively to a group.
+
+
+
+Goals
+-----
+
+Want to provide TCP service to masses
+Need to determine capacity of repro relay
+Need to quantify how to measure capacity:
+   under certain load (#users, pub rate, resub rate, etc.) measure
+   memory utilization and latency
+Need to provide load at given rates and provide measurements
+Then try out making changes to repro (epoll, optimizations)
+
+"Standard" load test
+--------------------
+Emulate N "normal" users. E.g., users with 
+  * on-going reSUB and rePUB at normal intervals, 
+  * normal churn of starting and stopping dialogs
+  * state changes at normal rates (to trigger NOTIFY)
+
+Issues:
+  * For transport simulation, need to module how many subs per
+    connection. Options:
+    - Do worst case of one connection per dialog, and just worry about
+      number of subscriptions, etc. Number of users is not a independent
+      variable.
+    - Implement a per-user mode, where the transport for each user is
+      fixed.
+  * PUB-to-SUB ratio. "Easiest" if many subscribers for the same presentity.
+    Then can trigger many notifies with single publish, but this is not
+    realistic. (To aggressive).
+
+Full-matrix model:
+P=N
+S=N*N*F
+C = S/P = N*F	# this is not a linear model
+
+A linear model takes C as given:
+P=N
+S=C*N
+E.g., each user (of N) picks C presentities to watch
+Issue is that to get large number of subscribers, N must be very large
+which means many test accounts (for auth)
+
+When looking at generating load with many machines, if we assume
+each machine is independent, then scaling is linear with number of
+machines. Looking at absolute numbers is relavant. A given machine
+cannot generate more than ~50k connections (due to limited ports).
+
+F can be > 1 thru repeats and can be < 1 thru striding
+
+For N=200, F=1, ==> C=200 && S=200*200=40k < 50k
+For N=300, F=0.5, ==> C=150 && S=300*300*0.5=45k < 50k
+For N=400, F=0.25, ==> C=100 && S=400*400*0.25=40k < 50k
+For N=500, F=0.1, ==> C=50 && S=500*500*0.1=25k < 50k
+For N=1000, F=0.05, ==> C=50 && S=1k*1k*0.05=50k <= 50k
+
+There are diminishing returns by increasing accounts in matrix mode. 
+At some point need to create MANY test accounts and go with linear mode:
+
+For N=5000 C=9 ==> P+S=5k+9*5k=50k <= 50k
+
+
+
+Simple "aggressive" version:
+  * One connection per dialog.
+  * Full matrix
+  * reSUB and rePUB on 20min intervals
+  * NAT KeepAlive active (20sec)
+  * deltaPUB once per rePUB period
+
+Simple implementation:
+  * Walk thru all PUBs one at time, doing deltaPUB and verify.
+    Add wait time to spread out to match the renew time.
+
+Code improvements
+  * When checking NOTIFIES, don't check all SUBs, only those we
+    expect to change based upon the PUB
+  * Support singleton PUB & check
+  * Support multiple concurrent PUB waves and checking. Each wave
+    may be singleton. Retire each wave as complete. Big change to
+    message levels.
+  * Limit out-going requests: if dialog is busy (due to renew activity)
+    then hold new request and issue when possible
+  * Churn of subscriptions and publication dialogs
+  * Run-forever mode with signal to shutdown
+
+
+---------------------------------------------------
+
+Usage
+   * Need to sudo to get 
+   * Change /proc/sys/net/ipv4/ip_local_port_range to expand number
+     of dynamic available ports.
+
+
+To run oprofile, need to compile it. This requires:
+	apt-get install gcc libpopt-dev binutils-dev g++
+
+---------------------------------------------------
+
+Counts
+
+A. Wave counts
+   1. Reqs vs tuples
+   2. Good vs Fail
+      a. Req fail explicit
+      b. Req stale
+      c. Notify missing
+      d. Subscription killed (treat as lost?)

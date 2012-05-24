@@ -1,0 +1,18 @@
+.TH SIPDIALER "1" "March 2012" "sipdialer" "sipdialer"
+.SH NAME
+sipdialer \- initiate phone call (click-to-call)
+.SH SYNOPSIS
+.B sipdialer URI
+.SH DESCRIPTION
+sipdialer attempts to contact the phone described in ~/.sipdial/sipdial.cfg,
+sending a SIP REFER message to the phone, instructing it to dial the
+remote party specified by the URI parameter on the command line.
+sipdialer is typically registered in the gconf database or in the
+web browser configuration so that it will be invoked when the user
+clicks a sip:, sips: or tel: URI.
+.SH AUTHOR
+Daniel Pocock <daniel@pocock.com.au>
+.SH "REPORTING BUGS"
+See http://www.resiprocate.org
+.SH COPYRIGHT
+Copyright (C) 2007 Daniel Pocock - licenced under BSD terms

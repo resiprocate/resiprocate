@@ -1,0 +1,115 @@
+ICE TESTING RESULTS
+$Id: test-results.txt,v 1.1.1.1 2008/04/28 17:39:19 ekr Exp $
+
+In order to test the ICE stack, I gathered a non-random sample
+of "representative" NATs and one machine behind one NAT. I
+then attempted to establish connectivity between the sides
+using ICE.
+
+
+TOPOLOGY
+The basic topology is as follows:
+
+                            
+                            +------------+
+                            |   D-Link   |--------- STUN server 
+ 	     		    |   DI-604   |         192.168.223.2
+                            +------------+
+                           /   	          \
+		      	  / 	           \
+                  +------------+     +------------+
+                  |    NAT-A   |     |    NAT-B   |
+                  |            |     |            |
+                  +------------+     +------------+
+                         |                  |
+                         |                  |
+                  +------------+     +------------+
+                  |    pce7    |     |    pce9    |
+                  |            |     |            |
+                  +------------+     +------------+
+              10.0.0.107 |                  | 10.0.0.109
+                         +------------------+
+                                   |
+                                   | 10.0.0.2
+                            +------------+
+                            | Controller |
+                            |            |
+                            +------------+
+
+The D-Link DI-604 was used purely as a DHCP server to automatically
+assign addressed to each NAT. The NATs were configured as DHCP clients
+and acted as DHCP servers for the hosts behind them. The hosts were
+configured to use 10.0.0/24 as a control network for two purposes:
+
+- To exchange the offer and answer
+- To start and stop tests.
+
+However, the ICE stack was configured not to use this interface,
+as our basic regression tests test two-hosts behind the same 
+NAT topologies.
+
+No TURN server was used.
+
+
+NATS TESTED
+We tested the following NATs (types from [J07])
+
+NAT                                             Type
+---------------------------------------------------------------
+Dynex DXE-401                                    Full Cone
+Linksys NR041 (rev 1.0.3)                       Symmetric
+Netgear FVS318                                  Port Restricted
+Linksys NR041 (rev 1.0.2)                       Addr Restricted
+Airlink AOHO4P                                  Port Restricted
+D-Link DI-704P                                  Full Cone
+
+We believe these NATs were reasonably representative of the
+major available types.
+
+
+TEST METHODOLOGY
+The tests were run using "ice_test" and the "test-ice.pl" script in
+ICE/test. The configuration files were "test-remote-ekr.conf" and
+"set-config-ekr.pl".
+
+For each network configuration we performed two tests:
+
+- pce9 as offerer in regular nomination mode
+- pce9 as offerer in aggressive nomination mode
+- pce7 as offerer in regular nomination mode
+- pce7 as offerer in aggressive nomination mode
+
+This allowed us to test both directions with a single configuration.
+
+
+
+
+RESULTS
+
+Test #    NAT-A                   NAT-B                   Results
+-----------------------------------------------------------------
+1 *       -                       -                       Success
+2 *       Dynex DXE-401           -                       Success
+3         Linksys NR041 (1.0.3)   -                       Success
+5         Netgear PVS318          -                       Success
+6         Linksys NR041 (1.0.2)   -                       Success
+7         Airtech ASOHO4P         -                       Success
+8         Linksys NR041 (1.0.3)   Dynex DXE-401           Success
+9         Linksys NR041 (1.0.3)   Netgear FVS318          Failure
+10        Dynex DXE-401           Netgear FVS318          Success
+11        Airtech ASOHO4P         Netgear FVS318          Success
+12        D-Link DI-704PP         Dynex DXE-4018          Success
+13	  Linksys NR041 (1.0.3)   Linksys NR041 (1.0.2)   Success
+
+
+Notes: *ed tests were performed with a Netgear RT314 as the outer
+       DHCP server
+       Test 4 was abandoned because the planned NAT, a Hawking,
+       didn't seem to work at all (i.e., wouldn't issue addresses
+       or pass any traffic.)
+
+
+
+[J07] C. Jennings, "NAT Classification Test Results", 
+      draft-jennings-behave-test-results-04, July 2007.
+

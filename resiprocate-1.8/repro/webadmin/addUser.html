@@ -1,0 +1,44 @@
+<html>
+<body>
+
+<form id="addUserForm" action="input"  method="get" name="addUserForm" enctype="application/x-www-form-urlencoded">
+<table border="0" cellspacing="2" cellpadding="0" align="left">
+<tr>
+  <td align="right" valign="middle">User Name:</td>
+  <td align="left" valign="middle"><input type="text" name="user" size="24"/></td>
+</tr>
+<tr>
+  <td align="right" valign="middle" >Domain:</td>
+  <td align="left" valign="middle">
+    <select name="domain">
+      <option selected="true">default: localhost</option>
+      <option>example.com</option>
+      <option>example.org</option>
+    </select>
+  </td>
+</tr>
+<tr>
+
+  <td align="right" valign="middle" >Password:</td>
+  <td align="left" valign="middle"><input type="password" name="password" size="24"/></td>
+</tr>
+<tr>
+  <td align="right" valign="middle" >Full Name:</td>
+  <td align="left" valign="middle"><input type="text" name="name" size="24"/></td>
+</tr>
+<tr>
+  <td align="right" valign="middle" >Email:</td>
+
+  <td align="left" valign="middle"><input type="text" name="email" size="24"/></td>
+</tr>
+<tr>
+  <td colspan="2" align="right" valign="middle">
+    <input type="reset" value="Cancel"/>
+    <input type="submit" name="submit" value="Add"/>
+  </td>
+</tr>
+</table>
+</form>
+
+</body>
+</html>
