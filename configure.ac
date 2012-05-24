@@ -276,6 +276,7 @@ AC_OUTPUT(Makefile \
 	reTurn/client/test/Makefile \
 	reflow/Makefile \
 	resip/recon/Makefile \
+	resip/recon/test/Makefile \
 	presSvr/Makefile \
 	p2p/s2c/s2c/Makefile \
 	p2p/Makefile \

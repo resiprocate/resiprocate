@@ -6,7 +6,7 @@ EXTRA_DIST += *.sln
 EXTRA_DIST += recon_10_0.vcxproj recon_10_0.vcxproj.filters
 
 SUBDIRS = .
-#SUBDIRS += test
+SUBDIRS += test
 
 #AM_CXXFLAGS = -DUSE_ARES
 
