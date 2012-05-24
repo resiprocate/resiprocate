@@ -1,0 +1,80 @@
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "clicktocall", "clicktocall_8_0.vcproj", "{8BA87397-9B42-4820-BA53-62FF35C22CAE}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{2A8BE839-6466-4001-B224-8F1C3168D04A} = {2A8BE839-6466-4001-B224-8F1C3168D04A}
+		{B933F895-8EFB-4FDD-A46D-09B8C00D1D26} = {B933F895-8EFB-4FDD-A46D-09B8C00D1D26}
+		{31B0654F-E08E-405F-909F-80F86CB14B9D} = {31B0654F-E08E-405F-909F-80F86CB14B9D}
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E} = {CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}
+		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106} = {3D0E5CEB-93DC-4FDB-918B-D08FA369E106}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rutil", "..\..\rutil\rutil_8_0.vcproj", "{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "resiprocate", "..\..\resip\stack\resiprocate_8_0.vcproj", "{2A8BE839-6466-4001-B224-8F1C3168D04A}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dum", "..\..\resip\dum\dum_8_0.vcproj", "{31B0654F-E08E-405F-909F-80F86CB14B9D}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ares", "..\..\rutil\dns\ares\ares_8_0.vcproj", "{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pcre", "..\..\contrib\pcre\pcre_8_0.vcproj", "{B933F895-8EFB-4FDD-A46D-09B8C00D1D26}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8BA87397-9B42-4820-BA53-62FF35C22CAE}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8BA87397-9B42-4820-BA53-62FF35C22CAE}.Debug|Win32.Build.0 = Debug|Win32
+		{8BA87397-9B42-4820-BA53-62FF35C22CAE}.Release|Win32.ActiveCfg = Release|Win32
+		{8BA87397-9B42-4820-BA53-62FF35C22CAE}.Release|Win32.Build.0 = Release|Win32
+		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}.Debug|Win32.ActiveCfg = SSL-Debug|Win32
+		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}.Debug|Win32.Build.0 = SSL-Debug|Win32
+		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}.Release|Win32.ActiveCfg = SSL-Release|Win32
+		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}.Release|Win32.Build.0 = SSL-Release|Win32
+		{2A8BE839-6466-4001-B224-8F1C3168D04A}.Debug|Win32.ActiveCfg = SSL-Debug|Win32
+		{2A8BE839-6466-4001-B224-8F1C3168D04A}.Debug|Win32.Build.0 = SSL-Debug|Win32
+		{2A8BE839-6466-4001-B224-8F1C3168D04A}.Release|Win32.ActiveCfg = SSL-Release|Win32
+		{2A8BE839-6466-4001-B224-8F1C3168D04A}.Release|Win32.Build.0 = SSL-Release|Win32
+		{31B0654F-E08E-405F-909F-80F86CB14B9D}.Debug|Win32.ActiveCfg = SSL-Debug|Win32
+		{31B0654F-E08E-405F-909F-80F86CB14B9D}.Debug|Win32.Build.0 = SSL-Debug|Win32
+		{31B0654F-E08E-405F-909F-80F86CB14B9D}.Release|Win32.ActiveCfg = SSL-Release|Win32
+		{31B0654F-E08E-405F-909F-80F86CB14B9D}.Release|Win32.Build.0 = SSL-Release|Win32
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.Debug|Win32.Build.0 = Debug|Win32
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.Release|Win32.ActiveCfg = Release|Win32
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.Release|Win32.Build.0 = Release|Win32
+		{B933F895-8EFB-4FDD-A46D-09B8C00D1D26}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B933F895-8EFB-4FDD-A46D-09B8C00D1D26}.Debug|Win32.Build.0 = Debug|Win32
+		{B933F895-8EFB-4FDD-A46D-09B8C00D1D26}.Release|Win32.ActiveCfg = Release|Win32
+		{B933F895-8EFB-4FDD-A46D-09B8C00D1D26}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

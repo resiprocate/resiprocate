@@ -1,0 +1,214 @@
+
+This file contains helpful information about the contract between
+the reSIProcate stack and the build system.
+
+Build systems:
+- reSIP legacy build system:
+  - a custom system based on Makefiles
+  - typically used for UNIX and UNIX-like systems
+  - standard system used in releases <= 1.7.x
+- autotools build
+  - a traditional autotools setup with configure.ac, Makefile.am, etc
+  - typically used for UNIX and UNIX-like systems
+  - standard system used in releases >= 1.8.x
+- Windows build
+  - use of standard Visual Studio build environment with `vcproj' and `sln'
+    files
+  - supported on all releases as an alternative to the UNIX build system(s)
+
+Many of the comments within this document are intended to be common
+across ALL the build systems, unless stated otherwise.
+
+config.h
+--------
+
+config.h is an optional header file.  Any code that wants to use
+config.h should check if HAVE_CONFIG_H is defined.
+
+It is desireable to create a config.h file on any platform (autotools
+configure creates it automatically) and use it to obtain
+values like PACKAGE_VERSION.
+
+Some build variables
+--------------------
+
+These variables are set within the Makefiles and some of them are
+passed to the compiler using the -D option or a header file
+such as config.h.  Those marked with an asterisk (*) symbol 
+are passed to the compiler in some way.
+
+Some of them are similar to autotools varibles, however, the
+values used within the reSIProcate project are actually not
+identical to the values used in autotools, for legacy reasons.
+
+OSCLASS:  can be UNIX or VXWORKS
+
+VOCAL_TOOLCHAIN_TYPE
+  known values: 
+#     gnu      -- the gcc compiler  (default)
+#     armcross -- the ARM crosscompiler -- DEPRECATED, DO NOT USE
+#     sunpro   -- Sun's Forte C++ compiler  (default on SunOS)
+#     intel    --  intel's icc compiler for linux
+#     msgnu    -- Microsoft's Visual C++ compiler , but using GNU make
+#                 instead of project files.
+
+
+TARGET_TYPE = VOCAL_COMPILE_TYPE
+  known values: debug, opt, gopt, prof, gcov, nodebug, small
+
+Known values:
+ armcross
+ gnu-cross
+
+RESIP_FIXED_POINT*  (yes or no)
+
+INSTALL_PATH
+
+CROSS_PLATFORM
+ Used with VOCAL_TOOLCHAIN_TYPE=gnu-cross to set target environment
+
+
+OPEN_SSL_CONFIG
+
+
+#  OSTYPE  -- this variable is the OS type of the target system.  By default
+#             this is the OS of the host system
+
+RESIP_OSTYPE_something*
+    something = OSTYPE in uppercase, e.g. OSTYPE=linux, implies that
+                  -DRESIP_OSTYPE_LINUX will be passed to the compiler
+
+Ways of guessing it: uname
+
+Known OSTYPE values:
+ Linux 
+  linux (treated as Linux)
+ SunOS
+  solaris and solaris* (treated as SunOS)
+ FreeBSD
+  freebsd* (treated as FreeBSD)
+ Darwin
+  darwin and darwin* (treated as Darwin) 
+ MinGW
+  msys and MINGW32_NT-5.1 (treated as MinGW)
+
+  OSVER  -- OS version
+
+Ways of deriving it: uname -r | tr '()/' " "
+
+Known OSVER values:
+
+Also derived by breaking OSVER into components:
+OS_MAJOR_VER
+OS_MINOR_VER
+OS_POINT_VER
+OS_PATCH_VER
+
+#  ARCH    -- this is the machine architecture of the target system.
+#             By default this is the architecture of the host system.
+
+RESIP_ARCH_something*
+
+Ways of deriving it: uname -m | sed 's/ /_/g'
+
+Known ARCH values:
+  arm
+  sun4v
+  x86_64
+  i?86
+  i86pc
+  powermac
+    Power Macintosh: treated as powermac
+  sh   vxworks
+
+OS_ARCH  := $(OSTYPE).$(ARCH)
+TARGET_NAME := $(TARGET_TYPE).$(OS_ARCH)
+
+
+#  LARCH   -- this is the "logical" architecture for the target system.
+#             This is to let systems with different "architectures" but
+#             in the same family be the same, e.g. IA32 for i386, i486, i586,
+#             and i686.
+
+RESIP_LARCH_something*
+
+Ways of deriving it: LARCH = ARCH
+
+Known values:
+  ia32:   for ARCH IN (i86pc, i?86)
+  
+
+#  ROOT    -- this is the location of the "root" of the file system.  It
+#             requires that the BUILD macro be set to the path to the build
+#             directory.
+
+
+   ROOT = directory location of configure.ac
+
+   TOOLS = directory location of build stuff ($ROOT/build)
+
+
+RESIP_TOOLCHAIN_something*
+
+
+REPRO_BUILD_REV*
+REPRO_BUILD_HOST*
+REPRO_RELEASE_VERSION*
+
+DB_HEADER*   typically db.hxx
+
+USE_SSL*
+LIBSSL_LIBADD
+USE_IPV6*
+USE_DTLS*
+USE_MYSQL*
+LIBMYSQL_LIBADD
+USE_RADIUS_CLIENT*
+LIBRADIUS_LIBADD
+BUILD_TFM*
+BUILD_APPS*
+BUILD_RECON*
+BUILD_P2P*
+ABIVERSION
+HAVE_EPOLL*
+PEDANTIC_STACK*
+RESIP_DUM_THREAD_DEBUG*
+
+USE_BUILDDIR
+USE_CCACHE
+USE_CURL
+USE_DEBUG_GLIBCXX
+USE_DEBUG_MALLOC
+USE_DISTCC
+USE_EFENCE
+USE_GOOGLE_CPUPERF
+USE_GOOGLE_MALLOC
+USE_LIBGETOPT
+USE_POPT
+USE_POSIX_LOCKING
+USE_RANDOM_THREAD_LOCAL
+USE_R_WRAPPER
+USE_SIGCOMP*
+USE_MAXMIND_GEOIP*
+
+Defines outside current Build System
+RESIP_HAS_RVALUE_REFS*
+RESIP_HAS_STATEFUL_ALLOCATOR_SUPPORT*
+_RESIP_MONOTONIC_CLOCK*
+RESIP_RANDOM_THREAD_MUTEX*
+USE_DNS_VIP*
+
+Windows Only Defines
+RESIP_RANDOM_WIN32_RTL*
+WIN32_SYNCRONOUS_RESOLUTION_ON_ARES_FAILURE*
+RESIP_CONDITION_WIN32_CONFORMANCE_TO_POSIX*
+NO_IPHLPAPI*
+LEAK_CHECK*
+
+These variables are typically used on Windows builds to use
+the headers from an unpacked source tarball rather than using headers
+installed to the locations intended by the package.  In such cases,
+the path component preceeding the header filename often differs slightly:
+
+RESIP_CONTRIB_GLOOX    - use gloox headers from contrib
+

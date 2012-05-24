@@ -1,0 +1,6 @@
+"     </div>\n"
+"     <div style=\"clear:both;height: 10px\"><br /></div>\n"
+"     <div id=\"footer\" style=\"color: white; background-color: #395af6; text-align:center; padding-top: 10px; padding-bottom: 10px\">\n"
+"        <a href=\"http://www.resiprocate.org/About_Repro\">www.resiprocate.org</a></div>\n"
+"  </body>\n"
+"</html>\n"

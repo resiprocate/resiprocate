@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx</Extensions>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="BerkeleyDb.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpBase.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpConnection.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="repro.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ReproRunner.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ReproVersion.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WebAdmin.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WebAdminThread.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MySqlDb.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="BerkeleyDb.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HttpBase.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HttpConnection.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ReproRunner.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ReproVersion.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WebAdmin.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WebAdminThread.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MySqlDb.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="webadmin\pageOutlinePost.ixx" />
+    <None Include="webadmin\pageOutlinePre.ixx" />
+    <None Include="repro.config" />
+  </ItemGroup>
+</Project>

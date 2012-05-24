@@ -1,0 +1,62 @@
+primitive opaque u_char 8;
+primitive uint8 u_int8 8;
+primitive uint16 u_int16 16;
+primitive uint32 u_int32 32;
+primitive uint64 u_int64 64;
+primitive int32 int32 32;
+
+struct {
+  opaque id<255>;
+} resource_id;
+
+enum { single_value(1), array(2), dictionary(3) } kind_id ;
+     
+select {
+       case single_value:
+         opaque value<65000>;
+       case array:
+	int32 index;
+	opaque value<65000>;
+       case dictionary:
+	opaque key<65000>;
+	opaque value<65000>;
+} data_value;
+
+enum {signer_identity_peer (1), signer_identity_name (2),
+     signer_identity_certificate (3)} signer_identity_type;
+
+select {
+  case signer_identity_peer:
+    opaque peer_id[16];
+  case signer_identity_name:
+    opaque signer_name<255>;
+  case signer_identity_certificate:
+    opaque certificate<65000>;
+} signer_identity;
+
+public struct  {
+   uint8 algorithm;
+   opaque signature_value<65000>;
+   signer_identity identity;
+} signature;
+
+struct {
+       uint32 length;
+       uint64 storage_time;
+       uint32 lifetime;
+       data_value data;
+       signature sig;
+} stored_data;
+
+public struct {
+	uint32 kind;
+	uint8 data_model;
+	uint64 generation;
+	stored_data values<65000>;
+} store_kind_data;
+
+public struct {
+	resource_id resource;
+	store_kind_data store_data<4000000000>;
+} store_q;
+

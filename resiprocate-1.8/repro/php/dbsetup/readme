@@ -1,0 +1,19 @@
+to initialize a mysql database to an empty state, run the following commands:
+
+   mysql -u $user -p$pass $dbname < Users.sql
+   mysql -u $user -p$pass $dbname < Resources.sql
+
+these assume that you have an alias bound for mysql, or you have added the
+mysql /bin directory to your path.
+
+you should also replace $user and $pass with the username and 
+password you want to use to create the tables.  
+
+I recommend creating a separate database for the repro tables (called, 
+creatively, "repro" in my case) and locating them there.  In any case, the
+name of the database you want to use should be passed as the third argument
+$dbname.
+
+Note -- there is no space between the -p and the $pass.  If you put a space
+there, mysql will choke.
+

@@ -1,0 +1,47 @@
+INSTALL
+
+1) Download
+
+Downloads are available at: 
+
+	http://
+
+source is here:
+
+2) Get required libraries  
+
+You need the following libraries:
+openssl
+berkeley db libraries
+
+On the Mac, the easiest way to get these packages is using Fink or darwinports
+
+fink.sourceforge.net
+darwinports.com
+
+
+3) Compile if using the source
+
+
+4) Install the executable
+
+The file you downloaded is a standalone executable file. Copy the appropriate file to the directory where you would like to put the proxy (for example: /usr/local/bin/repro)
+
+mkdir /usr/local/repro
+mv ~/repro-fedora-0.1-RC1 /usr/local//repro/repro
+cd /usr/local/repro
+chown repro:repro repro
+chmod +x repro
+
+
+make a link to 
+
+
+Tested in these configurations
+Linux
+	Redhat Enterprise 9
+	Fedora Core 3
+Mac OS X 
+	10.3
+Windows
+	XP and 2000

@@ -1,0 +1,28 @@
+%{
+#include <string.h>
+#include <ctype.h>
+#include "resip/stack/MethodTypes.hxx"
+
+namespace resip
+{
+%}
+struct methods { const char *name; MethodTypes type; };
+%%
+ACK, ACK
+BYE, BYE
+CANCEL, CANCEL
+INVITE, INVITE
+NOTIFY, NOTIFY
+OPTIONS, OPTIONS
+PRACK, PRACK
+PUBLISH, PUBLISH
+REFER, REFER
+REGISTER, REGISTER
+SUBSCRIBE, SUBSCRIBE
+RESPONSE, RESPONSE
+MESSAGE, MESSAGE
+INFO, INFO
+SERVICE, SERVICE
+UPDATE, UPDATE
+%%
+}

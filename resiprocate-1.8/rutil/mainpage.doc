@@ -1,0 +1,8 @@
+/**
+@mainpage The reSIProcate Utility Library (rutil)
+
+The reSIProcate Utility (rutil) library provides various utility classes for use by the resip stack and Dialog Usage Manager. In some cases, these utility classes are used to provide cross-platform implementations of important system-level stuff; see resip::ThreadIf, resip::Mutex, resip::Lock, resip::Condition, resip::Random, and resip::Timer. In other cases, these classes are an alternative to commonly used classes defined in the stl (resip::Data being an alternative for a std::string). In addition, reSIProcate's DNS subsystem is part of rutil.
+
+Generally speaking, you will not find anything even tangentially related to SIP in rutil. For this, you need to look at the reSIProcate stack, or Dialog Usage Manager.
+
+*/

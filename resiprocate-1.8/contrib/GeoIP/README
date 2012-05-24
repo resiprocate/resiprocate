@@ -1,0 +1,208 @@
+				GeoIP 1.4.8
+				-----------
+
+*** Experimental IPv6 notice ***
+
+- the experimental IPv6 part of libGeoIP may change in the future.
+- It is possible, that geoiplookup and geoiplookup6 will merged.
+
+***
+
+The new perl script geoipupdate-pureperl.pl is a drop in replacement for
+geoipupdate. Useful, if you like to customize, pre or postprocess new or
+old databases. To archive the databases or signal apache whatever.
+Another advantage is, that geoipupdate-pureperl.pl is able to handle proxy
+requests even with authentication.
+
+IMPORTANT API Change for 1.3.x and above users for GeoIP Region database
+GeoIPRegion.region is no longer a pointer but an in-structure
+array so test the first byte of region == 0 rather testing if the region
+pointer is NULL.
+
+IMPORTANT API Change for 1.1.x and above users - as of GeoIP 1.1.0 the
+GeoIP_country_xxx_by_xxx functions return NULL if a country can not
+be found (it used to return '--' or 'N/A'.  Be sure to check the
+return value for NULL, to avoid segmentation faults!
+
+GeoIP is a C library that enables the user to find geographical and
+network information of an IP address.
+Included is a free GeoLite Country database
+that is updated at the beginning of every month.
+To download the latest free GeoLite Country database, go to:
+http://www.maxmind.com/app/geoip_country
+
+There is also a free city-level geolocation database, GeoLite City,
+available from:
+http://www.maxmind.com/app/geolitecity
+
+We also offer commercial GeoIP databases with greater accuracy and
+additional network information, for more details, see:
+http://www.maxmind.com/app/products
+
+As of version 1.4.5 geoipupdate can handle updates via  HTTP Proxy Server.
+If the environ variable http_proxy="http://proxy-host:port" is set.
+The username:password (as in FTP URLs) is not supported! 
+Thanks to Andrew Droffner for the patch!
+
+As of version 1.3.6, the GeoIP C library is thread safe, as long as
+GEOIP_CHECK_CACHE is not used.
+
+This module can be used to automatically select the geographically closest
+mirror, to analyze your web server logs to determine the countries of your
+visitors, for credit card fraud detection, and for software export controls. 
+
+If you use GeoIP to block access from high risk countries in order
+to reduce fraud or abuse, you should also block access from known
+proxy servers.  For more details, see:
+http://www.maxmind.com/app/proxy
+
+To install, run:
+
+./configure
+make
+make check
+make install
+
+The GeoIP C library relies on GNU make, not on BSD make
+
+MEMORY CACHING AND OTHER OPTIONS
+
+There are four options available:
+
+GEOIP_STANDARD - read database from filesystem, uses least memory.
+
+GEOIP_MEMORY_CACHE - load database into memory, faster performance
+	but uses more memory
+
+GEOIP_CHECK_CACHE - check for updated database.  If database has been updated,
+	reload filehandle and/or memory cache.
+
+GEOIP_INDEX_CACHE - just cache
+        the most frequently accessed index portion of the database, resulting
+        in faster lookups than GEOIP_STANDARD, but less memory usage than
+        GEOIP_MEMORY_CACHE - useful for larger databases such as
+	GeoIP Organization and GeoIP City.  Note, for GeoIP Country, Region
+	and Netspeed databases, GEOIP_INDEX_CACHE is equivalent to GEOIP_MEMORY_CACHE
+
+GEOIP_MMAP_CACHE - load database into mmap shared memory ( MMAP is not avail for WIN32 )
+
+The options can be combined using bit operators.  For example you can
+use both GEOIP_MEMORY_CACHE and GEOIP_CHECK_CACHE by calling:
+
+    GeoIP_open("/path/to/GeoIP.dat", GEOIP_MEMORY_CACHE | GEOIP_CHECK_CACHE);
+
+By default, the city name is returned in iso-8859-1 charset.  To obtain the
+city name in utf8 instead, run:
+
+    GeoIP_set_charset(gi, GEOIP_CHARSET_UTF8);
+
+To get the netmask of the netblock of the last lookup, use GeoIP_last_netblock(gi).
+
+EXAMPLES
+
+See
+test/
+     test-geoip.c
+     test-geoip-region.c
+     test-geoip-city.c
+     test-geoip-isp.c
+     test-geoip-org.c
+     test-geoip-netspeed.c
+
+for examples of how to use the API.  The test-geoip.c program works with both the GeoLite and
+GeoIP Country databases.  The test-geoip-city.c program works with both the GeoLite and
+GeoIP City databases.  The other example programs require the paid databases available
+from http://www.maxmind.com/app/products
+
+AUTOMATIC UPDATES
+
+MaxMind offers a service where you can have your database updated
+automically each week.  For more details see:
+
+http://www.maxmind.com/app/license_key
+
+RESOURCES Mailinglists
+
+Please join the very low traffic mailinglists you are interested in.
+
+http://sourceforge.net/mail/?group_id=66844
+
+Preformance Patches.
+
+Patrick McManus provide a patch to enhance the lookupspeed in MEMORY_CACHE mode. If you feel, that the current MEMORY_CACHE mode is to slow try the patch:
+
+http://sourceforge.net/mailarchive/forum.php?forum_name=geoip-c-discuss&max_rows=25&style=nested&viewmonth=200803
+
+TROUBLESHOOTING
+
+If you run into trouble building your application with GeoIP support, try adding -fms-extensions to your CFLAGS. If you use Solaris and there C-Compiler use -features=extensions instead. These options enable unnamed union support and fix problems like: 'improper member use: dma_code' or 'GeoIPRecord' has no member named 'dma_code'.
+
+Note that it is recommended that you use GNU make.  Also, if you are using
+OpenBSD, GeoIP requires OpenBSD 3.1 or greater.
+
+if you get "cannot load shared object file: No such file or directory"
+error, add the directory libGeoIP.so was installed to to /etc/ld.so.conf
+and run ldconfig
+
+On Solaris, if you get a
+ld: fatal: relocations remain against allocatable but non-writable sections
+error, try running
+
+# make clean
+# ./configure --disable-shared
+# make
+
+If you get a "ar : command not found" error, make sure that ar is
+in your path.  On Solaris, ar is typically found in /usr/ccs/bin
+
+If you get a "geoipupdate.c:24: getopt.h: No such file or directory"
+error, run
+
+# export CPPFLAGS="-I/usr/local/include"
+
+(assuming that getopt.h is in /usr/local/include)
+
+If you get a "zlib.h: No such file or directory" error, make sure
+that the zlib development libraries are installed on your server.
+These are typically included in a "zlib-devel" package.
+
+If you get a "bad interpreter: No such file or directory" error
+when running ./configure, make sure that there are no DOS
+returns in the configure script.  To remove DOS returns,
+run perl -pi -e 's!\r!!g' configure.
+
+If gcc fails while consuming a large amount of memory, try
+compiling with CFLAGS=-O1 (or -O0) instead of the default -O2.
+It seems that some
+versions of gcc have a bug and consume 1 GB of memory when optimizing
+certain source files (the other source file where this was reported is
+from XORG X-Server). It happens at least with gcc 3.3.1 and with gcc
+4.2(.0).  Thanks to Kai Schätzl for the report.
+
+If GEOIP_MMAP_CACHE doesn't work on a 64bit machine, try adding
+the flag "MAP_32BIT" to the mmap call.
+
+If you get a "passing argument 3 of 'gethostbyname_r' from incompatible pointer type"
+error on AIX, download and/or untar a fresh copy of GeoIP.  ( To avoid cached
+results from a previous ./configure run )
+
+cd ./GeoIP-1.4.6
+then edit the file ./configure
+
+and delete these two lines:
+
+#define HAVE_GETHOSTBYNAME_R 1
+
+#define GETHOSTBYNAME_R_RETURNS_INT 1
+
+then save the configure script
+
+and build it as usual
+
+./configure
+make
+sudo make install
+
+
+
+To submit a patch, please contact support@maxmind.com 
