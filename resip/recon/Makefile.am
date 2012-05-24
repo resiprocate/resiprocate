@@ -8,6 +8,7 @@ EXTRA_DIST += doc
 
 SUBDIRS = .
 SUBDIRS += test
+SUBDIRS += MOHParkServer
 
 #AM_CXXFLAGS = -DUSE_ARES
 
