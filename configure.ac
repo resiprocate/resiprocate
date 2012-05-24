@@ -266,6 +266,7 @@ AC_OUTPUT(Makefile \
 	tfm/tfdum/Makefile \
 	apps/Makefile \
 	apps/clicktocall/Makefile \
+	apps/clicktocall/test/Makefile \
 	apps/ichat-gw/Makefile \
 	apps/ichat-gw/jabberconnector/Makefile \
 	apps/sipdial/Makefile \
