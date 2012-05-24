@@ -273,6 +273,7 @@ AC_OUTPUT(Makefile \
 	reTurn/Makefile \
 	reTurn/test/Makefile \
 	reTurn/client/Makefile \
+	reTurn/client/test/Makefile \
 	reflow/Makefile \
 	resip/recon/Makefile \
 	presSvr/Makefile \
