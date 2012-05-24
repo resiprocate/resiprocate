@@ -19,7 +19,7 @@ endif
 
 # The Makefiles for these don't separate SSL stuff yet...
 if USE_SSL
-SUBDIRS += reTurn reTurn/client
+SUBDIRS += reTurn
 if BUILD_RECON
 SUBDIRS += reflow
 SUBDIRS += resip/recon

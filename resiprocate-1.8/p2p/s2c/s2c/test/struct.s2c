@@ -1,5 +1,0 @@
-public struct {
-       uint8   simple_int;
-       opaque  fixed[10];	
-       opaque  variable<0..2^16-1>;  
-} struct_test;
