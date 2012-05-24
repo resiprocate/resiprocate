@@ -1,5 +1,8 @@
 # $Id$
 
+EXTRA_DIST += *.vcproj
+EXTRA_DIST += *.vcxproj *.vcxproj.filters
+
 SUBDIRS = . 
 
 #AM_CXXFLAGS = -I../../contrib/ares -DUSE_ARES
