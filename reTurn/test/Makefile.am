@@ -5,27 +5,17 @@ EXTRA_DIST += *.vcproj
 
 #AM_CXXFLAGS = -DUSE_ARES
 
-LDADD = ../../rutil/librutil.la
-#LDADD += ../../contrib/ares/libares.a
+LDADD = ../client/libreTurnClient.la
+LDADD += ../../rutil/librutil.la
 LDADD += $(LIBSSL_LIBADD) -lpthread
 
-#
-# This doesn't work because the Stun classes for reTurn are built
-# into a binary rather than a library.
-#
-# Strategy:
-# - take common classes for reTurn client and server, make a library for
-#   out of them
-# - use the library for building the client and server
-# - use the library for building this test case again
-#
-#TESTS = \
-#	stunTestVectors
+TESTS = \
+	stunTestVectors
 
-#check_PROGRAMS = \
-#	stunTestVectors
+check_PROGRAMS = \
+	stunTestVectors
 
-#stunTestVectors_SOURCES = stunTestVectors.cxx
+stunTestVectors_SOURCES = stunTestVectors.cxx
 
 ##############################################################################
 # 

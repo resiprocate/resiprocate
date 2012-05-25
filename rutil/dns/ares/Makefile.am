@@ -19,7 +19,7 @@ libresipares_la_SOURCES = \
 
 libresipares_ladir = $(includedir)/rutil/dns/ares
 libresipares_la_HEADERS =\
-	ares.h ares_compat.h ares_dns.h ares_local.h ares_version.h
+	ares.h ares_compat.h ares_dns.h ares_local.h ares_socketfunc.h ares_version.h
 
 noinst_HEADERS = ares_private.h
 man3_MANS = \
@@ -33,6 +33,8 @@ man3_MANS = \
 
 EXTRA_DIST = $(man3_MANS) adig.c ahost.c
 EXTRA_DIST += *.vcproj
+EXTRA_DIST += *.vcxproj
+EXTRA_DIST += *.vcxproj.filters
 
 #adig: adig.o libares.a
 #	${CC} ${LDFLAGS} -o $@ adig.o libares.a ${LIBS}

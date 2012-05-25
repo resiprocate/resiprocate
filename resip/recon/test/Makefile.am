@@ -1,14 +1,26 @@
-BUILD := ../../../build
-include $(BUILD)/Makefile.pre
 
-PACKAGES += RETURNCLIENT ASIO RUTIL ARES OPENSSL BOOST PTHREAD 
+EXTRA_DIST = ca.pem
+EXTRA_DIST += *.vcxproj *.vcxproj.filters
+EXTRA_DIST += *.vcproj
+EXTRA_DIST += testua_readme.txt
 
-TESTPROGRAMS += \
-	TestClient.cxx \
-	TestAsyncClient.cxx \
-	TestRtpLoad.cxx
+LDADD = ../librecon.la
+LDADD += $(LIBSSL_LIBADD) -lpthread
 
-include $(BUILD)/Makefile.post
+TESTS = \
+        testUA \
+        sdpTests \
+        unitTests
+
+check_PROGRAMS = \
+	testUA \
+	sdpTests \
+	unitTests
+
+testUA_SOURCES = testUA.cxx
+sdpTests_SOURCES = sdpTests.cxx
+unitTests_SOURCES = unitTests.cxx
+
 
 
 ####################################################################

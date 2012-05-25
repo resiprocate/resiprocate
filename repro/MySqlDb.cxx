@@ -157,7 +157,7 @@ MySqlDb::connectToDatabase() const
                                    mDBName.c_str(),     // DB
                                    mDBPort,             // port
                                    0,                   // unix socket file
-                                   0);                  // client flags
+                                   CLIENT_MULTI_RESULTS); // client flags (enable multiple results, since some custom stored procedures might require this)
 
    if (ret == 0)
    { 

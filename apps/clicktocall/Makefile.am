@@ -6,7 +6,7 @@ EXTRA_DIST += *.sln
 EXTRA_DIST += *.vcproj
 
 SUBDIRS = .
-#SUBDIRS += test
+SUBDIRS += test
 
 #AM_CXXFLAGS = -DUSE_ARES
 
