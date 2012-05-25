@@ -1176,6 +1176,12 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
    return true;
 }
 
+void 
+ReproRunner::addProcessor(repro::ProcessorChain& chain, std::auto_ptr<Processor> processor)
+{
+   chain.addProcessor(processor);
+}
+
 void  // Monkeys
 ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
 {
@@ -1183,10 +1189,10 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    assert(mRegistrationPersistenceManager);
 
    // Add strict route fixup monkey
-   chain.addProcessor(std::auto_ptr<Processor>(new StrictRouteFixup));
+   addProcessor(chain, std::auto_ptr<Processor>(new StrictRouteFixup));
 
    // Add is trusted node monkey
-   chain.addProcessor(std::auto_ptr<Processor>(new IsTrustedNode(*mProxyConfig)));
+   addProcessor(chain, std::auto_ptr<Processor>(new IsTrustedNode(*mProxyConfig)));
 
    // Add Certificate Authenticator - if required
    if(mProxyConfig->getConfigBool("EnableCertificateAuthenticator", false))
@@ -1197,7 +1203,7 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
       // Should we used the same trustedPeers object that was
       // passed to TlsPeerAuthManager perhaps?
       std::set<Data> trustedPeers;
-      chain.addProcessor(std::auto_ptr<Processor>(new CertificateAuthenticator(*mProxyConfig, mSipStack, trustedPeers)));
+      addProcessor(chain, std::auto_ptr<Processor>(new CertificateAuthenticator(*mProxyConfig, mSipStack, trustedPeers)));
    }
 
    // Add digest authenticator monkey - if required
@@ -1206,18 +1212,18 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
       assert(mAuthRequestDispatcher);
       DigestAuthenticator* da = new DigestAuthenticator(*mProxyConfig, mAuthRequestDispatcher);
 
-      chain.addProcessor(std::auto_ptr<Processor>(da)); 
+      addProcessor(chain, std::auto_ptr<Processor>(da)); 
    }
 
    // Add am I responsible monkey
-   chain.addProcessor(std::auto_ptr<Processor>(new AmIResponsible)); 
+   addProcessor(chain, std::auto_ptr<Processor>(new AmIResponsible)); 
 
    // Add RequestFilter monkey
    if(!mProxyConfig->getConfigBool("DisableRequestFilterProcessor", false))
    {
       if(mAsyncProcessorDispatcher)
       {
-         chain.addProcessor(std::auto_ptr<Processor>(new RequestFilter(*mProxyConfig, mAsyncProcessorDispatcher)));
+         addProcessor(chain, std::auto_ptr<Processor>(new RequestFilter(*mProxyConfig, mAsyncProcessorDispatcher)));
       }
       else
       {
@@ -1235,16 +1241,16 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    if (routeSet.empty())
    {
       // add static route monkey
-      chain.addProcessor(std::auto_ptr<Processor>(new StaticRoute(*mProxyConfig))); 
+      addProcessor(chain, std::auto_ptr<Processor>(new StaticRoute(*mProxyConfig))); 
    }
    else
    {
       // add simple static route monkey
-      chain.addProcessor(std::auto_ptr<Processor>(new SimpleStaticRoute(*mProxyConfig))); 
+      addProcessor(chain, std::auto_ptr<Processor>(new SimpleStaticRoute(*mProxyConfig))); 
    }
 
    // Add location server monkey
-   chain.addProcessor(std::auto_ptr<Processor>(new LocationServer(*mProxyConfig, *mRegistrationPersistenceManager, mAuthRequestDispatcher)));
+   addProcessor(chain, std::auto_ptr<Processor>(new LocationServer(*mProxyConfig, *mRegistrationPersistenceManager, mAuthRequestDispatcher)));
 
    // Add message silo monkey
    if(mProxyConfig->getConfigBool("MessageSiloEnabled", false))
@@ -1253,7 +1259,7 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
       {
          MessageSilo* silo = new MessageSilo(*mProxyConfig, mAsyncProcessorDispatcher);
          mRegistrar->addRegistrarHandler(silo);
-         chain.addProcessor(std::auto_ptr<Processor>(silo));
+         addProcessor(chain, std::auto_ptr<Processor>(silo));
       }
       else
       {
@@ -1267,13 +1273,14 @@ ReproRunner::makeResponseProcessorChain(ProcessorChain& chain)
 {
    assert(mProxyConfig);
    assert(mRegistrationPersistenceManager);
+
    // Add outbound target handler lemur
-   chain.addProcessor(std::auto_ptr<Processor>(new OutboundTargetHandler(*mRegistrationPersistenceManager))); 
+   addProcessor(chain, std::auto_ptr<Processor>(new OutboundTargetHandler(*mRegistrationPersistenceManager))); 
 
    if (mProxyConfig->getConfigBool("RecursiveRedirect", false))
    {
       // Add recursive redirect lemur
-      chain.addProcessor(std::auto_ptr<Processor>(new RecursiveRedirect)); 
+      addProcessor(chain, std::auto_ptr<Processor>(new RecursiveRedirect)); 
    }
 }
 
@@ -1285,18 +1292,18 @@ ReproRunner::makeTargetProcessorChain(ProcessorChain& chain)
 #ifndef RESIP_FIXED_POINT
    if(mProxyConfig->getConfigBool("GeoProximityTargetSorting", false))
    {
-      chain.addProcessor(std::auto_ptr<Processor>(new GeoProximityTargetSorter(*mProxyConfig)));
+      addProcessor(chain, std::auto_ptr<Processor>(new GeoProximityTargetSorter(*mProxyConfig)));
    }
 #endif
 
    if(mProxyConfig->getConfigBool("QValue", true))
    {
       // Add q value target handler baboon
-      chain.addProcessor(std::auto_ptr<Processor>(new QValueTargetHandler(*mProxyConfig))); 
+      addProcessor(chain, std::auto_ptr<Processor>(new QValueTargetHandler(*mProxyConfig))); 
    }
    
    // Add simple target handler baboon
-   chain.addProcessor(std::auto_ptr<Processor>(new SimpleTargetHandler)); 
+   addProcessor(chain, std::auto_ptr<Processor>(new SimpleTargetHandler)); 
 }
 
 
