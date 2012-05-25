@@ -266,6 +266,7 @@ AC_OUTPUT(Makefile \
 	tfm/tfdum/Makefile \
 	apps/Makefile \
 	apps/clicktocall/Makefile \
+	apps/clicktocall/test/Makefile \
 	apps/ichat-gw/Makefile \
 	apps/ichat-gw/jabberconnector/Makefile \
 	apps/sipdial/Makefile \
@@ -273,8 +274,11 @@ AC_OUTPUT(Makefile \
 	reTurn/Makefile \
 	reTurn/test/Makefile \
 	reTurn/client/Makefile \
+	reTurn/client/test/Makefile \
 	reflow/Makefile \
 	resip/recon/Makefile \
+	resip/recon/MOHParkServer/Makefile \
+	resip/recon/test/Makefile \
 	presSvr/Makefile \
 	p2p/s2c/s2c/Makefile \
 	p2p/Makefile \

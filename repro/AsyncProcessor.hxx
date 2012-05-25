@@ -11,13 +11,13 @@ namespace repro
 {
 class AsyncProcessorMessage;
 
-// This class is used to create Processors that needs to accomplish blocking
+// This class is used to create Processors that need to accomplish blocking
 // tasks, such as database access.  The request/event is delivered to this 
 // Processor, like any other via the virtual method:
 // virtual processor_action_t process(RequestContext &)
 //
 // When a blocking task is required, it can be queued up for the thread pool 
-// of workers, that are implemented in the passed in asyncDispatcher, by
+// of workers, that are implemented in the constructor provided asyncDispatcher, by
 // constructing a new AsyncProcessorMessage and calling mAsyncDispatcher->post
 // AsyncProcessorMessage implementations should contain any data needed by the 
 // threads and contain any members required to hold the blocking functions
@@ -27,79 +27,80 @@ class AsyncProcessorMessage;
 // virtual void asyncProcess(AsyncProcessorMessage* msg)
 // The implementation of this method should perform the actual blocking function
 // calls - ie. database access call.  If there is any data to return it should be
-// set in the passed AsycnProcessorMessage before returning from asyncProcess.
+// set in the provided AsyncProcessorMessage before returning from asyncProcess.
 //
 // The dispatcher will then queue this message up to be sent back to the 
 // AsyncProcessor, via the virtual method:
 // virtual processor_action_t process(RequestContext &)
-// This virutal method will need to examine the event type to see if the event is
-// a new request or an asyncrouns result message (AsyncProcessorMessage).
+// This virtual method will need to examine the event type to see if the event is
+// a new request or an asynchronous result message (AsyncProcessorMessage).
 // 
-// Example:
-//class MyAsyncProcessorAsyncMessage : public AsyncProcessorMessage 
-//{
-//public:
-//   MyAsyncProcessorAsyncMessage(AsyncProcessor& proc,
-//                         const resip::Data& tid,
-//                         resip::TransactionUser* passedtu):
-//      AsyncProcessorMessage(proc,tid,passedtu)
-//   {
-//   }
-//
-//   virtual EncodeStream& encode(EncodeStream& strm) const { strm << "MyAsyncProcessorAsyncMessage(tid="<<mTid<<")"; return strm; }
-//
-//   Data mDataRequiredToCallBlockingFunction;
-//   Data mDataReturnedFromBlockingFunction;
-//};
-//
-//class MyAsyncProcessor : public AsyncProcessor
-//{
-//   public:
-//      MyAsyncProcessor(ProxyConfig& config, Dispatcher* asyncDispatcher) :
-//         AsyncProcessor("MyAsyncProcessor", asyncDispatcher) {}
-//      ~MyAsyncProcessor() {}
-//
-//      // Processor virutal method
-//      virtual processor_action_t process(RequestContext &rc)
-//      {
-//         Message *message = rc.getCurrentEvent();
-//
-//         MyAsyncProcessorAsyncMessage *async = dynamic_cast<MyAsyncProcessorAsyncMessage*>(message);
-//         if (async)
-//         {
-//            // Async Function is complete - do something with results and continue
-//            InfoLog(<< "Async function is complete, results are: " << async->mDataReturnedFromBlockingFunction);
-//            return Continue;
-//         }
-//         else
-//         {
-//            // Control enters here when request arrives and is passed through process chain
-//            // Dispatch async request to worker thread pool
-//            MyAsyncProcessorAsyncMessage* async = new MyAsyncProcessorAsyncMessage(*this, rc.getTransactionId(), &rc.getProxy());
-//            async->mDataRequiredToCallBlockingFunction = "foo";
-//            mAsyncDispatcher->post(std::auto_ptr<ApplicationMessage>(async));
-//            return WaitingForEvent;
-//         }
-//      }
-//
-//      // Virtual method called from WorkerThreads - return true to queue to stack when complete,
-//      // false when no response is required
-//      virtual bool asyncProcess(AsyncProcessorMessage* msg)
-//      {
-//         MyAsyncProcessorAsyncMessage* async = dynamic_cast<MyAsyncProcessorAsyncMessage*>(msg);
-//         if(async)
-//         {
-//            // Running inside a worker thread here, do blocking work here
-//            // set any results in MyAsyncProcessorAsyncMessage and return control to Dispatcher
-//            // that will queue this message back to this processor.
-//            async->mDataReturnedFromBlockingFunction = "bar";
-//         }
-//      }
-//
-//   private:
-//};
-//
-//
+
+/* Example:
+class MyAsyncProcessorAsyncMessage : public AsyncProcessorMessage 
+{
+public:
+   MyAsyncProcessorAsyncMessage(AsyncProcessor& proc,
+                         const resip::Data& tid,
+                         resip::TransactionUser* passedtu):
+      AsyncProcessorMessage(proc,tid,passedtu)  { }
+
+   virtual EncodeStream& encode(EncodeStream& strm) const 
+   { 
+      strm << "MyAsyncProcessorAsyncMessage(tid="<<mTid<<")"; return strm; 
+   }
+
+   Data mDataRequiredToCallBlockingFunction;
+   Data mDataReturnedFromBlockingFunction;
+};
+
+class MyAsyncProcessor : public AsyncProcessor
+{
+   public:
+      MyAsyncProcessor(ProxyConfig& config, Dispatcher* asyncDispatcher) :
+         AsyncProcessor("MyAsyncProcessor", asyncDispatcher) {}
+      ~MyAsyncProcessor() {}
+
+      // Processor virtual method
+      virtual processor_action_t process(RequestContext &rc)
+      {
+         Message *message = rc.getCurrentEvent();
+
+         MyAsyncProcessorAsyncMessage *async = dynamic_cast<MyAsyncProcessorAsyncMessage*>(message);
+         if (async)
+         {
+            // Async Function is complete - do something with results and continue
+            InfoLog(<< "Async function is complete, results are: " << async->mDataReturnedFromBlockingFunction);
+            return Continue;
+         }
+         else
+         {
+            // Control enters here when request arrives and is passed through process chain
+            // Dispatch async request to worker thread pool
+            MyAsyncProcessorAsyncMessage* async = new MyAsyncProcessorAsyncMessage(*this, rc.getTransactionId(), &rc.getProxy());
+            async->mDataRequiredToCallBlockingFunction = "foo";
+            mAsyncDispatcher->post(std::auto_ptr<ApplicationMessage>(async));
+            return WaitingForEvent;
+         }
+      }
+
+      // Virtual method called from WorkerThreads - return true to queue to stack when complete,
+      // false when no response is required
+      virtual bool asyncProcess(AsyncProcessorMessage* msg)
+      {
+         MyAsyncProcessorAsyncMessage* async = dynamic_cast<MyAsyncProcessorAsyncMessage*>(msg);
+         if(async)
+         {
+            // Running inside a worker thread here, do blocking work here
+            // set any results in MyAsyncProcessorAsyncMessage and return control to Dispatcher
+            // that will queue this message back to this processor.
+            async->mDataReturnedFromBlockingFunction = "bar";
+         }
+      }
+
+   private:
+};
+*/
 
 
 class AsyncProcessor : public Processor

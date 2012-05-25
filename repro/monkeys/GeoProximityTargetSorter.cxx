@@ -281,7 +281,7 @@ GeoProximityTargetSorter::process(RequestContext &rc)
             sort(flatTargetList.begin(), flatTargetList.end(), GeoProximityTargetContainer::instanceCompare);
          }
 
-         // Rebuild targetCollection - Note:  All batches are split up to invidual / serial targets
+         // Rebuild targetCollection - Note:  All batches are split up to individual / serial targets
          targetCollection.clear();
          std::vector<GeoProximityTargetContainer>::iterator it = flatTargetList.begin();
          outerCounter=1;
