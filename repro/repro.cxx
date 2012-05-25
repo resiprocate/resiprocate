@@ -6,8 +6,12 @@
 #include <signal.h>
 #include "repro/ReproRunner.hxx"
 #include "rutil/Socket.hxx"
+#include "rutil/Log.hxx"
+#include "rutil/Logger.hxx"
 
 #include "rutil/WinLeakCheck.hxx"
+
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 using namespace repro;
 using namespace resip;
@@ -23,10 +27,21 @@ signalHandler(int signo)
 }
 
 /*
-   Extending Repro by adding custom processors to the chain is as easy as overriding the 
-   ReproRunner class virtual methods makeRequestProcessorChain, makeResponseProcessorChain 
-   and/or makeTargetProcessorChain and adding your Processor to the chain.  Create
-   an instance of your overridden ReproRunner class and call run to start everything 
+   Extending Repro by adding custom processors to the chain is as easy as overriding one of the 
+   ReproRunner class virtual methods:
+   virtual void addProcessor(repro::ProcessorChain& chain, std::auto_ptr<repro::Processor> processor);
+   virtual void makeRequestProcessorChain(repro::ProcessorChain& chain);
+   virtual void makeResponseProcessorChain(repro::ProcessorChain& chain);
+   virtual void makeTargetProcessorChain(repro::ProcessorChain& chain);
+
+   Override the makeXXXProcessorChain methods to add processors to the beginning or end of any chain,
+   or override the addProcessor method, and you can examine the name of the processor being 
+   addeed and add your own process either before or after the correct processor.  
+
+   WARNING: Be careful when checking for names of optional processors.  Depending on the 
+            the configuration some processors may not be enabled.
+
+   Create an instance of your overridden ReproRunner class and call run to start everything 
    up.
 
    Example:
@@ -55,10 +70,14 @@ signalHandler(int signo)
       virtual ~MyReproRunner() {}
    
    protected:
-      virtual void makeRequestProcessorChain(repro::ProcessorChain& chain)
+      virtual void addProcessor(repro::ProcessorChain& chain, std::auto_ptr<repro::Processor> processor)
       {
-         ReproRunner::makeRequestProcessorChain(chain);
-         chain.addProcessor(std::auto_ptr<Processor>(new MyCustomProcessor(*mProxyConfig))); 
+         if(processor->getName() == "LocationServer")
+         {
+            // Add MyCustomProcessor before LocationServer
+            addProcessor(chain, std::auto_ptr<Processor>(new MyCustomProcessor(*mProxyConfig)));
+         }
+         ReproRunner::addProcessor(chain, processor);  // call base class implementation
       }
    };
 
