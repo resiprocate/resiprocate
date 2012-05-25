@@ -35,11 +35,11 @@ class UserStore
                     const resip::Data& domain, 
                     const resip::Data& realm, 
                     const resip::Data& password, 
-                    const resip::Data& passwordHashAlt,
                     bool  applyA1HashToPassword,
                     const resip::Data& fullName,
-                    const resip::Data& emailAddress  );
-      
+                    const resip::Data& emailAddress,
+                    const resip::Data& passwordHashAlt = resip::Data::Empty);  // Only required if applyA1HashToPassword is false
+
       void eraseUser( const Key& key );
       
       bool updateUser( const Key& originalKey,
@@ -47,10 +47,10 @@ class UserStore
                        const resip::Data& domain, 
                        const resip::Data& realm, 
                        const resip::Data& password, 
-                       const resip::Data& passwordHashAlt,
                        bool  applyA1HashToPassword,
                        const resip::Data& fullName,
-                       const resip::Data& emailAddress );
+                       const resip::Data& emailAddress,
+                       const resip::Data& passwordHashAlt = resip::Data::Empty);  // Only required if applyA1HashToPassword is false
       
       Key getFirstKey();// return empty if no more
       Key getNextKey(); // return empty if no more 

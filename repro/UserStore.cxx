@@ -52,10 +52,10 @@ UserStore::addUser( const Data& username,
                     const Data& domain,
                     const Data& realm,
                     const Data& password, 
-                    const Data& passwordHashAlt,
                     bool  applyA1HashToPassword,
                     const Data& fullName, 
-                    const Data& emailAddress )
+                    const Data& emailAddress,
+                    const Data& passwordHashAlt)
 {
    AbstractDb::UserRecord rec;
    rec.user = username;
@@ -109,14 +109,14 @@ UserStore::updateUser( const Key& originalKey,
                        const resip::Data& domain, 
                        const resip::Data& realm, 
                        const resip::Data& password, 
-                       const resip::Data& passwordHashAlt,
                        bool  applyA1HashToPassword,
                        const resip::Data& fullName,
-                       const resip::Data& emailAddress )
+                       const resip::Data& emailAddress,
+                       const resip::Data& passwordHashAlt)
 {
    Key newkey = buildKey(user, domain);
    
-   bool ret = addUser(user, domain, realm, password, passwordHashAlt, applyA1HashToPassword, fullName, emailAddress);
+   bool ret = addUser(user, domain, realm, password, applyA1HashToPassword, fullName, emailAddress, passwordHashAlt);
    if ( newkey != originalKey )
    {
       eraseUser(originalKey);
