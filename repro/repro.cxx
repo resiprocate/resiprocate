@@ -36,9 +36,9 @@ signalHandler(int signo)
 
    Override the makeXXXProcessorChain methods to add processors to the beginning or end of any chain,
    or override the addProcessor method, and you can examine the name of the processor being 
-   addeed and add your own process either before or after the correct processor.  
+   added and add your own process either before or after the correct processor.  
 
-   WARNING: Be careful when checking for names of optional processors.  Depending on the 
+   WARNING: Be careful when checking for names of optional processors.  Depending on
             the configuration some processors may not be enabled.
 
    Create an instance of your overridden ReproRunner class and call run to start everything 
