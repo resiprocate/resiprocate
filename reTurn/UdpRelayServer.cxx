@@ -39,8 +39,8 @@ void
 UdpRelayServer::stop()
 {
    asio::error_code ec;
-   mSocket.close(ec);
    mStopping = true;
+   mSocket.close(ec);
 }
 
 void 
@@ -93,7 +93,7 @@ UdpRelayServer::onSendSuccess()
 void
 UdpRelayServer::onSendFailure(const asio::error_code& error)
 {
-   if(error != asio::error::operation_aborted)
+   if(!mStopping && error != asio::error::operation_aborted)
    {
       WarningLog(<< "UdpRelayServer::onSendFailure: " << error.value() << "-" << error.message());
    }

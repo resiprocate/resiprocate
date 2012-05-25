@@ -87,7 +87,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(TargetPath) ..\..\repro"
+				CommandLine="copy &quot;$(TargetPath)&quot; ..\..\repro"
 			/>
 		</Configuration>
 		<Configuration
@@ -164,7 +164,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(TargetPath) ..\..\repro"
+				CommandLine="copy &quot;$(TargetPath)&quot; ..\..\repro"
 			/>
 		</Configuration>
 	</Configurations>
