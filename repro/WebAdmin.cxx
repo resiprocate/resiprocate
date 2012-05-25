@@ -96,7 +96,6 @@ WebAdmin::WebAdmin(  Proxy& proxy,
                           Data::Empty, // domain 
                           Data::Empty, // realm 
                           (adminPassword==""?Data("admin"):adminPassword), // password 
-                          Data::Empty,
                           true,        // applyA1HashToPassword
                           Data::Empty, // name 
                           Data::Empty ); // email 
@@ -114,7 +113,6 @@ WebAdmin::WebAdmin(  Proxy& proxy,
                                        Data::Empty,
                                        Data::Empty,
                                        adminPassword,
-                                       Data::Empty,
                                        true,        // applyA1HashToPassword
                                        Data::Empty,
                                        Data::Empty);
@@ -586,7 +584,7 @@ WebAdmin::buildAddUserSubPage( DataStream& s)
 //         realm = mHttpParams["domain"];
 //      }
             
-      if(mStore.mUserStore.addUser(user,domain,domain,mHttpParams["password"],Data::Empty,true,mHttpParams["name"],mHttpParams["email"]))
+      if(mStore.mUserStore.addUser(user,domain,domain,mHttpParams["password"],true,mHttpParams["name"],mHttpParams["email"]))
       {
          s << "<p><em>Added:</em> " << user << "@" << domain << "</p>\n";
       }
@@ -790,7 +788,7 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
             applyA1HashToPassword = false;
          }
          // write out the updated record to the database now
-         if(mStore.mUserStore.updateUser(key, user, domain, realm, password, passwordHashAlt, applyA1HashToPassword, name, email))
+         if(mStore.mUserStore.updateUser(key, user, domain, realm, password, applyA1HashToPassword, name, email, passwordHashAlt))
          {
             s << "<p><em>Updated:</em> " << key << "</p>" << endl; 
          }

@@ -41,11 +41,9 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int httpPort=5180;
    const char* enumSuffix="";
 
-
    int encrypt=false;
    int sign=false;
    int genUserCert = false;
-   
    
    mRegisterDuration = 3600;
    
@@ -137,15 +135,15 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       mRecordRoute = toUri(recordRoute, "Record-Route");
    }
 
-   mEnableFlowTokenHack = flowTokens;
+   mEnableFlowTokenHack = flowTokens != 0;
    mUdpPorts = toIntSet(udpPorts, "udp ports");
    mTcpPorts = toIntSet(tcpPorts, "tcp ports");
    mTlsPorts = toIntSet(tlsPorts, "tls ports");
    mDtlsPorts = toIntSet(dtlsPorts, "dtls ports");
-   mNoV4 = noV4;
-   mNoV6 = noV6;
-   mThreadedStack = threadedStack;
-   mUseCongestionManager = useCongestionManager;
+   mNoV4 = noV4 != 0;
+   mNoV6 = noV6 != 0;
+   mThreadedStack = threadedStack != 0;
+   mUseCongestionManager = useCongestionManager != 0;
    if (certPath) mCertPath = certPath;
    else mCertPath = basePath + "/.sipCerts";
    mNoChallenge = noChallenge != 0;
@@ -161,10 +159,9 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       mMySqlServer = Data(mySqlServer);
    }
 
-   
-   mEncrypt = encrypt;
-   mSign = sign;
-   mGenUserCert = genUserCert;
+   mEncrypt = encrypt != 0;
+   mSign = sign != 0;
+   mGenUserCert = genUserCert != 0;
    if (inputAor)
    {
       mAor = toUri(inputAor, "aor");
@@ -252,20 +249,16 @@ CommandLineParser::toIntSet(const char* input, const char* description)
          {
             try
             {
-             int temp;
-            temp = Data(token).convertInt();
-            arguments.insert(temp);
+               int temp;
+               temp = Data(token).convertInt();
+               arguments.insert(temp);
             } 
-            catch (ParseException& e)
+            catch (ParseException&)
             {
-
-
                exit(-1);
             }
             catch (...)
             {
-
-
             }
          }
       }
