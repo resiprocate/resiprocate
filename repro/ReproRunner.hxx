@@ -3,6 +3,7 @@
 
 #include "rutil/Data.hxx"
 #include "rutil/ServerProcess.hxx"
+#include <memory>
 
 namespace resip
 {
@@ -83,6 +84,7 @@ protected:
    resip::SipStack* mSipStack;
    resip::ThreadIf* mStackThread;
    AbstractDb* mAbstractDb;
+   AbstractDb* mRuntimeAbstractDb;
    resip::RegistrationPersistenceManager* mRegistrationPersistenceManager;
    Dispatcher* mAuthRequestDispatcher;
    Dispatcher* mAsyncProcessorDispatcher;

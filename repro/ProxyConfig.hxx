@@ -19,7 +19,7 @@ public:
 
    virtual void printHelpText(int argc, char **argv);
 
-   void createDataStore(AbstractDb* db);
+   void createDataStore(AbstractDb* db, AbstractDb* runtimedb=0);
    Store* getDataStore() { return mStore; }
 
    using resip::ConfigParse::getConfigValue;

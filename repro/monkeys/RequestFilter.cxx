@@ -51,32 +51,32 @@ RequestFilter::RequestFilter(ProxyConfig& config,
    mDefaultDBErrorBehavior(config.getConfigData("RequestFilterDefaultDBErrorBehavior", "500, Server Internal DB Error"))
 {
 #ifdef USE_MYSQL
+   Data mySQLSettingPrefix("RequestFilter");
    Data mySQLServer = config.getConfigData("RequestFilterMySQLServer", "");
    if(mySQLServer.empty())
    {
-      // If RequestFilterMySQLServer setting is blank, then fallback to global
-      // MySql settings - if set
-      mySQLServer = config.getConfigData("MySQLServer", "");
-      if(!mySQLServer.empty())
+      // If RequestFilterMySQLServer setting is blank, then fallback to
+      // RuntimeMySql settings
+      mySQLSettingPrefix = "Runtime";
+      mySQLServer = config.getConfigData("RuntimeMySQLServer", "");
+      if(mySQLServer.empty())
       {
-         // Initialize My SQL using Global settings
-         mMySqlDb = new MySqlDb(mySQLServer, 
-                       config.getConfigData("MySQLUser", ""), 
-                       config.getConfigData("MySQLPassword", ""),
-                       config.getConfigData("MySQLDatabaseName", ""),
-                       config.getConfigUnsignedLong("MySQLPort", 0),
-                       config.getConfigData("MySQLCustomUserAuthQuery", ""));
+         // If RuntimeMySQLServer setting is blank, then fallback to
+         // global MySql settings
+         mySQLSettingPrefix.clear();
+         mySQLServer = config.getConfigData("MySQLServer", "");
       }
    }
-   else // RequestFilterMySQLServer is set
+
+   if(!mySQLServer.empty())
    {
-      // Initialize My SQL settings using RequestFilter specific settings
-         mMySqlDb = new MySqlDb(mySQLServer, 
-                       config.getConfigData("RequestFilterMySQLUser", ""), 
-                       config.getConfigData("RequestFilterMySQLPassword", ""),
-                       config.getConfigData("RequestFilterMySQLDatabaseName", ""),
-                       config.getConfigUnsignedLong("RequestFilterMySQLPort", 0),
-                       config.getConfigData("RequestFilterMySQLCustomUserAuthQuery", ""));
+      // Initialize My SQL using Global settings
+      mMySqlDb = new MySqlDb(mySQLServer, 
+                    config.getConfigData(mySQLSettingPrefix + "MySQLUser", ""), 
+                    config.getConfigData(mySQLSettingPrefix + "MySQLPassword", ""),
+                    config.getConfigData(mySQLSettingPrefix + "MySQLDatabaseName", ""),
+                    config.getConfigUnsignedLong(mySQLSettingPrefix + "MySQLPort", 0),
+                    Data::Empty);
    }
 #endif
 }
