@@ -118,9 +118,10 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
 #else
    mSecurity(0),
 #endif
-   mStack(mSecurity, DnsStub::EmptyNameserverList, &mSelectInterruptor),
-   mDum(new DialogUsageManager(mStack)),
-   mStackThread(mStack, mSelectInterruptor),
+   mSelectInterruptor(new SelectInterruptor),
+   mStack(new SipStack(mSecurity, DnsStub::EmptyNameserverList, mSelectInterruptor)),
+   mStackThread(new InterruptableStackThread(*mStack, *mSelectInterruptor)),
+   mDum(new DialogUsageManager(*mStack)),
    mDumShutdownRequested(false),
    mDumShutdown(false),
    mRegistrationRetryDelayTime(0),
@@ -143,7 +144,7 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
 #endif
 
    // Disable Statistics Manager
-   mStack.statisticsManagerEnabled() = false;
+   mStack->statisticsManagerEnabled() = false;
 
    // Supported Methods
    mProfile->clearSupportedMethods();
@@ -307,16 +308,20 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
 
 BasicClientUserAgent::~BasicClientUserAgent()
 {
-   mStackThread.shutdown();
-   mStackThread.join();
+   mStackThread->shutdown();
+   mStackThread->join();
 
    delete mDum;
+   delete mStack;
+   delete mStackThread;
+   delete mSelectInterruptor;
+   // Note:  mStack descructor will delete mSecurity
 }
 
 void
 BasicClientUserAgent::startup()
 {
-   mStackThread.run(); 
+   mStackThread->run(); 
 
    if (mRegisterDuration)
    {
@@ -402,13 +407,13 @@ BasicClientUserAgent::addTransport(TransportType type, int port)
       {
          if (!mNoV4)
          {
-            mStack.addTransport(type, port+i, V4, StunEnabled, Data::Empty, mTlsDomain);
+            mStack->addTransport(type, port+i, V4, StunEnabled, Data::Empty, mTlsDomain);
             return;
          }
 
          if (mEnableV6)
          {
-            mStack.addTransport(type, port+i, V6, StunEnabled, Data::Empty, mTlsDomain);
+            mStack->addTransport(type, port+i, V6, StunEnabled, Data::Empty, mTlsDomain);
             return;
          }
       }
@@ -453,7 +458,7 @@ BasicClientUserAgent::sendNotify()
 
       // start timer for next one
       auto_ptr<ApplicationMessage> timer(new NotifyTimer(*this, ++mCurrentNotifyTimerId));
-      mStack.post(timer, NotifySendTime, mDum);
+      mStack->post(timer, NotifySendTime, mDum);
    }
 }
 
@@ -890,7 +895,6 @@ BasicClientUserAgent::onNewSubscription(ServerSubscriptionHandle h, const SipMes
    mServerSubscriptionHandle = h;
    mServerSubscriptionHandle->setSubscriptionState(Active);
    mServerSubscriptionHandle->send(mServerSubscriptionHandle->accept());
-
    sendNotify();
 }
 

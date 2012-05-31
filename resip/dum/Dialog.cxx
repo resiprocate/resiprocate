@@ -158,7 +158,20 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
       }
 
       mRemoteCSeq = request.header(h_CSeq).sequence();
-      mLocalCSeq = 1;
+
+      // This may actually be a UAC dialogset - ie. the case where the first NOTIFY creates the
+      // SUBSCRIPTION dialog, instead of the 200/SUB.  If so, then we need to make sure the local
+      // CSeq is correct - it's value may be greator than 1, if the original request (SUBSCRIBE)
+      // got digest challenged.
+      BaseCreator* creator = mDialogSet.getCreator();
+      if(creator)
+      {
+         mLocalCSeq = creator->getLastRequest()->header(h_CSeq).sequence();
+      }
+      else
+      {
+         mLocalCSeq = 1;
+      }
 
       DebugLog ( << "************** Created Dialog as UAS **************" );
       DebugLog ( << "mRemoteNameAddr: " << mRemoteNameAddr );
@@ -208,9 +221,8 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                   if (isEqualNoCase(contact.uri().scheme(), Symbols::Sips) ||
                      isEqualNoCase(contact.uri().scheme(), Symbols::Sip))
                   {
-                     BaseCreator* creator = mDialogSet.getCreator();					 
-
-                     if( 0 == creator )
+                     BaseCreator* creator = mDialogSet.getCreator();
+                     if(0 == creator)
                      {
                         ErrLog(<< "BaseCreator is null for DialogSet");
                         ErrLog(<< response);

@@ -13,14 +13,14 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
 
-Store::Store( AbstractDb& db ):
-   mUserStore(db),
+Store::Store(AbstractDb& db, AbstractDb* runtimedb):
+   mUserStore(runtimedb ? *runtimedb : db),
    mRouteStore(db),
    mAclStore(db),
    mConfigStore(db),
    mStaticRegStore(db),
    mFilterStore(db),
-   mSiloStore(db)
+   mSiloStore(runtimedb ? *runtimedb : db)
 {
 }
 
