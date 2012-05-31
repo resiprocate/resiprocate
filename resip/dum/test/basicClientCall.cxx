@@ -104,7 +104,7 @@ BasicClientCall::timerExpired()
 
    // start timer for next one
    auto_ptr<ApplicationMessage> timer(new CallTimer(mUserAgent, this));
-   mUserAgent.mStack.post(timer, CallTimerTime, &mUserAgent.getDialogUsageManager());
+   mUserAgent.mStack->post(timer, CallTimerTime, &mUserAgent.getDialogUsageManager());
 }
 
 SharedPtr<UserProfile> 
@@ -189,7 +189,7 @@ BasicClientCall::onNewSession(ServerInviteSessionHandle h, InviteSession::OfferA
          {
             // Restart Call Timer
             auto_ptr<ApplicationMessage> timer(new CallTimer(mUserAgent, this));
-            mUserAgent.mStack.post(timer, CallTimerTime, &mUserAgent.getDialogUsageManager());
+            mUserAgent.mStack->post(timer, CallTimerTime, &mUserAgent.getDialogUsageManager());
          }
 
          // Session to replace was found - end old session
@@ -258,7 +258,7 @@ BasicClientCall::onConnected(ClientInviteSessionHandle h, const SipMessage& msg)
 
       // start call timer
       auto_ptr<ApplicationMessage> timer(new CallTimer(mUserAgent, this));
-      mUserAgent.mStack.post(timer, CallTimerTime, &mUserAgent.getDialogUsageManager());
+      mUserAgent.mStack->post(timer, CallTimerTime, &mUserAgent.getDialogUsageManager());
    }
    else
    {
