@@ -3,6 +3,7 @@
 
 #include "rutil/Data.hxx"
 #include "rutil/ServerProcess.hxx"
+#include <memory>
 
 namespace resip
 {
@@ -33,6 +34,7 @@ class RegSyncServer;
 class RegSyncServerThread;
 class CommandServer;
 class CommandServerThread;
+class Processor;
 
 class ReproRunner : public resip::ServerProcess
 {
@@ -60,6 +62,8 @@ protected:
 
    virtual resip::Data addDomains(resip::TransactionUser& tu, bool log);
    virtual bool addTransports(bool& allTransportsSpecifyRecordRoute);
+   // Override this and examine the processor name to selectively add custom processors before or after the standard ones
+   virtual void addProcessor(repro::ProcessorChain& chain, std::auto_ptr<repro::Processor> processor);
    virtual void makeRequestProcessorChain(repro::ProcessorChain& chain);
    virtual void makeResponseProcessorChain(repro::ProcessorChain& chain);
    virtual void makeTargetProcessorChain(repro::ProcessorChain& chain);
@@ -80,6 +84,7 @@ protected:
    resip::SipStack* mSipStack;
    resip::ThreadIf* mStackThread;
    AbstractDb* mAbstractDb;
+   AbstractDb* mRuntimeAbstractDb;
    resip::RegistrationPersistenceManager* mRegistrationPersistenceManager;
    Dispatcher* mAuthRequestDispatcher;
    Dispatcher* mAsyncProcessorDispatcher;

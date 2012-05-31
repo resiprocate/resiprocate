@@ -19,7 +19,15 @@ class  AbstractDb;
 class Store
 {
    public:
-      Store( AbstractDb& db );
+      // If a seperate instance of AbstractDb is desired for the runtime database tables
+      // (ie. UserStore and SiloStore), then is can be provided, otherwise pass NULL.
+      // The Users and MessageSilo database tables are different from the other repro 
+      // configuration database tables, in that they are accessed at runtime as SIP 
+      // requests arrive.  It may be desirable to use BerkeleyDb for the other repro 
+      // tables (which are read at starup time, then cached in memory), and MySQL for 
+      // the runtime accessed tables; or two seperate MySQL instances for these different
+      // table sets.
+      Store(AbstractDb& db, AbstractDb* runtimedb=0);
       ~Store();
       
       UserStore mUserStore;

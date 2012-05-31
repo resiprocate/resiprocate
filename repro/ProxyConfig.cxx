@@ -96,10 +96,10 @@ ProxyConfig::printHelpText(int argc, char **argv)
 }
 
 void 
-ProxyConfig::createDataStore(AbstractDb* db)
+ProxyConfig::createDataStore(AbstractDb* db, AbstractDb* runtimedb)
 {
    assert(db);
-   mStore = new Store(*db);
+   mStore = new Store(*db, runtimedb);
 }
 
 }

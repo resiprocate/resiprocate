@@ -62,12 +62,12 @@ WebAdmin::RemoveKey::operator<(const RemoveKey& rhs) const
    }
 }
 
-WebAdmin::WebAdmin(  Proxy& proxy,
-                     RegistrationPersistenceManager& regDb,
-                     const Data& realm, // this realm is used for http challenges
-                     int port, 
-                     IpVersion version ):
-   HttpBase( port, version, realm ),
+WebAdmin::WebAdmin(Proxy& proxy,
+                   RegistrationPersistenceManager& regDb,
+                   const Data& realm, // this realm is used for http challenges
+                   int port, 
+                   IpVersion version ):
+   HttpBase(port, version, realm),
    mProxy(proxy),
    mStore(*mProxy.getConfig().getDataStore()),
    mRegDb(regDb),
@@ -79,44 +79,44 @@ WebAdmin::WebAdmin(  Proxy& proxy,
 #include "repro/webadmin/pageOutlinePost.ixx"
    )
 {
-      const Data adminName("admin");
-      const Data adminPassword= proxy.getConfig().getConfigData("HttpAdminPassword", "admin");
+   const Data adminName("admin");
+   const Data adminPassword= mProxy.getConfig().getConfigData("HttpAdminPassword", "admin");
 
-      // Place repro version into PageOutlinePre
-      mPageOutlinePre.replace("VERSION", VersionUtils::instance().releaseVersion().c_str());
+   // Place repro version into PageOutlinePre
+   mPageOutlinePre.replace("VERSION", VersionUtils::instance().releaseVersion().c_str());
 
-      Data dbA1 = mStore.mUserStore.getUserAuthInfo( adminName, Data::Empty );
+   Data dbA1 = mStore.mUserStore.getUserAuthInfo( adminName, Data::Empty );
       
-      DebugLog(<< " Looking to see if admin user exists (creating WebAdmin)");
-      if ( dbA1.empty() ) // if the admin user does not exist, add it 
-      { 
-         DebugLog(<< "Creating admin user" );
+   DebugLog(<< " Looking to see if admin user exists (creating WebAdmin)");
+   if ( dbA1.empty() ) // if the admin user does not exist, add it 
+   { 
+      DebugLog(<< "Creating admin user" );
          
-         mStore.mUserStore.addUser( adminName, // user
-                          Data::Empty, // domain 
-                          Data::Empty, // realm 
-                          (adminPassword==""?Data("admin"):adminPassword), // password 
-                          true,        // applyA1HashToPassword
-                          Data::Empty, // name 
-                          Data::Empty ); // email 
-         dbA1 = mStore.mUserStore.getUserAuthInfo( adminName, Data::Empty );
-         assert( !dbA1.empty() );
-      }
-      else if (adminPassword!=Data(""))
-      {
-         //All we're using for admin is the password.
-         //This next bit of code relies on it being ok that we 
-         //blow away any other information
-         //in that row. It also expects addUser to replace anything matching the existing key
-         DebugLog(<< "Changing the web admin password" );
-         mStore.mUserStore.addUser( adminName,
-                                       Data::Empty,
-                                       Data::Empty,
-                                       adminPassword,
-                                       true,        // applyA1HashToPassword
-                                       Data::Empty,
-                                       Data::Empty);
-      }
+      mStore.mUserStore.addUser(adminName, // user
+                                Data::Empty, // domain 
+                                Data::Empty, // realm 
+                                (adminPassword == "" ? Data("admin") : adminPassword), // password 
+                                 true,        // applyA1HashToPassword
+                                Data::Empty, // name 
+                                Data::Empty ); // email 
+      dbA1 = mStore.mUserStore.getUserAuthInfo( adminName, Data::Empty );
+      assert(!dbA1.empty());
+   }
+   else if (adminPassword!=Data(""))
+   {
+      //All we're using for admin is the password.
+      //This next bit of code relies on it being ok that we 
+      //blow away any other information
+      //in that row. It also expects addUser to replace anything matching the existing key
+      DebugLog(<< "Changing the web admin password" );
+      mStore.mUserStore.addUser(adminName,
+                                Data::Empty,
+                                Data::Empty,
+                                adminPassword,
+                                true,        // applyA1HashToPassword
+                                Data::Empty,
+                                Data::Empty);
+   }
 }
 
 
@@ -157,6 +157,7 @@ WebAdmin::buildPage( const Data& uri,
       ( pageName != Data("showRoutes.html") )&& 
       ( pageName != Data("registrations.html") ) &&  
       ( pageName != Data("settings.html") ) &&  
+      ( pageName != Data("restart.html") ) &&  
       ( pageName != Data("user.html")  ) )
    { 
       setPage( resip::Data::Empty, pageNumber, 301 );
@@ -282,10 +283,10 @@ WebAdmin::buildPage( const Data& uri,
       }
    }
       
-   // parse any URI tags from form entry 
+   // parse any URI tags from form entry
    mRemoveSet.clear();
    mHttpParams.clear();
-   
+
    if (!pb.eof())
    {
       pb.skipChar('?');
@@ -322,7 +323,6 @@ WebAdmin::buildPage( const Data& uri,
             mHttpParams[key] = value.urlDecoded();  // add other parameters to the Map
          }
       }
-
    }
    
    DebugLog( << "building page for user=" << authenticatedUser  );
@@ -353,7 +353,8 @@ WebAdmin::buildPage( const Data& uri,
       
       if ( pageName == Data("registrations.html")) buildRegistrationsSubPage(s);
       if ( pageName == Data("settings.html"))    buildSettingsSubPage(s);
-
+      if ( pageName == Data("restart.html"))     buildRestartSubPage(s);
+      
       s << mPageOutlinePost;
       s.flush();
 
@@ -567,7 +568,7 @@ WebAdmin::buildAclsSubPage(DataStream& s)
 
 
 void
-WebAdmin::buildAddUserSubPage( DataStream& s)
+WebAdmin::buildAddUserSubPage(DataStream& s)
 {
    Dictionary::iterator pos;
    Data user;
@@ -659,7 +660,7 @@ WebAdmin::buildAddUserSubPage( DataStream& s)
 
 
 void
-WebAdmin::buildEditUserSubPage( DataStream& s)
+WebAdmin::buildEditUserSubPage(DataStream& s)
 {
    Dictionary::iterator pos;
    pos = mHttpParams.find("key");
@@ -1780,6 +1781,11 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
 void
 WebAdmin::buildSettingsSubPage(DataStream& s)
 {
+   if (mHttpParams["action"] == "Clear DNS Cache")
+   {
+      mProxy.getStack().clearDnsCache();
+   }
+
    s << "<h2>Settings</h2>" << endl <<
         "<pre>" << mProxy.getConfig() << "</pre>";
 
@@ -1802,8 +1808,101 @@ WebAdmin::buildSettingsSubPage(DataStream& s)
         << "<pre>" <<  buffer << "</pre>"
         << endl;
    }
+
+   // Get Dns Cache
+   {
+      Lock lock(mDnsCacheMutex);
+      mProxy.getStack().getDnsCacheDump(make_pair(0, 0), this);
+      // Retrieving DNS cache is asyncronous
+      // Use condition variable to wait for DNS results to be returned in onDnsCacheDumpRetrieved
+      mDnsCacheCondition.wait(mDnsCacheMutex);
+      s << "<br>DNS Cache<br>"
+        << "<pre>" << mDnsCache << "</pre>"
+         << endl;
+   }
+
+   s << "<form id=\"clearDnsCache\" method=\"get\" action=\"settings.html\" name=\"clearDnsCache\">" << endl
+     << "  <br><input type=\"submit\" name=\"action\" value=\"Clear DNS Cache\"/>" << endl
+     << "</form>" << endl;
+
+   if(mProxy.getConfig().getConfigUnsignedShort("CommandPort", 0) != 0)
+   {
+      s << "<form id=\"restartProxy\" method=\"get\" action=\"restart.html\" name=\"restart\">" << endl
+        << "  <input type=\"submit\" name=\"action\" value=\"Restart Proxy\"/>" << endl
+        << "</form>" << endl;
+   }
 }
 
+void 
+WebAdmin::onDnsCacheDumpRetrieved(std::pair<unsigned long, unsigned long> key, const resip::Data& dnsEntryStrings)
+{
+   Lock lock(mDnsCacheMutex); (void)lock;
+   if(dnsEntryStrings.empty())
+   {
+      mDnsCache = "<i>empty</i>";
+   }
+   else
+   {
+      mDnsCache = dnsEntryStrings;
+   }
+   mDnsCacheCondition.signal();
+}
+
+void
+WebAdmin::buildRestartSubPage(DataStream& s)
+{
+   unsigned short port = mProxy.getConfig().getConfigUnsignedShort("CommandPort", 0);
+   if(port != 0)
+   {
+      // Send restart command to command server - it is not safe to invoke a restart from here
+      // since the webadmin thread and server is destroyed on the blocking ReproRunner::restart call
+      int sd, rc;
+      struct sockaddr_in localAddr, servAddr;
+      struct hostent *h;
+      char* host = "127.0.0.1";
+      h = gethostbyname(host);
+      if(h!=0) 
+      {
+         servAddr.sin_family = h->h_addrtype;
+         memcpy((char *) &servAddr.sin_addr.s_addr, h->h_addr_list[0], h->h_length);
+         servAddr.sin_port = htons(port);
+  
+         // Create TCP Socket
+         sd = (int)socket(AF_INET, SOCK_STREAM, 0);
+         if(sd > 0) 
+         {
+            // bind to any local interface/port
+            localAddr.sin_family = AF_INET;
+            localAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+            localAddr.sin_port = 0;
+
+            rc = bind(sd, (struct sockaddr *) &localAddr, sizeof(localAddr));
+            if(rc >= 0) 
+            {
+               // Connect to server
+               rc = connect(sd, (struct sockaddr *) &servAddr, sizeof(servAddr));
+               if(rc >= 0) 
+               {
+                  Data request("<Restart>\r\n  <Request>\r\b  </Request>\r\n</Restart>\r\n");
+                  rc = send(sd, request.c_str(), request.size(), 0);
+                  if(rc >= 0)
+                  {
+                     s << "Restarting proxy..." << endl;
+                     closeSocket(sd);
+                     return;
+                  }
+               }
+            }
+            closeSocket(sd);
+         }
+      }
+      s << "Error issuing restart command." << endl;
+   }
+   else
+   {
+      s << "CommandServer must be running to use restart feature." << endl;
+   }
+}
 
 Data 
 WebAdmin::buildUserPage()
@@ -1839,13 +1938,13 @@ WebAdmin::buildUserPage()
 Data
 WebAdmin::buildCertPage(const Data& domain)
 {
-	assert(!domain.empty());
+   assert(!domain.empty());
 #ifdef USE_SSL
-	assert( mProxy.getStack().getSecurity() );
-	return mProxy.getStack().getSecurity()->getDomainCertDER(domain);
+   assert( mProxy.getStack().getSecurity() );
+   return mProxy.getStack().getSecurity()->getDomainCertDER(domain);
 #else
-	ErrLog( << "Proxy not build with support for certificates" );
-	return Data::Empty;
+   ErrLog( << "Proxy not build with support for certificates" );
+   return Data::Empty;
 #endif
 }
 

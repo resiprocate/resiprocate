@@ -2,6 +2,8 @@
 #define RESIP_WEBADMIN_HXX 
 
 #include "rutil/Data.hxx"
+#include "rutil/Condition.hxx"
+#include "rutil/dns/DnsStub.hxx"
 #include "rutil/TransportType.hxx"
 #include "resip/stack/Tuple.hxx"
 #include "repro/HttpBase.hxx"
@@ -24,20 +26,24 @@ class RouteStore;
 typedef std::map<resip::Data, resip::Data> Dictionary;
 class Proxy;
 
-class WebAdmin: public HttpBase
+class WebAdmin : public HttpBase,
+                 public resip::GetDnsCacheDumpHandler
 {
    public:
-      WebAdmin( Proxy& proxy,
-                resip::RegistrationPersistenceManager& regDb,
-                const resip::Data& realm, // this realm is used for http challenges
-                int port=5080,
-                resip::IpVersion version=resip::V4 );
+      WebAdmin(Proxy& proxy,
+               resip::RegistrationPersistenceManager& regDb,
+               const resip::Data& realm, // this realm is used for http challenges
+               int port=5080,
+               resip::IpVersion version=resip::V4);
       
    protected:
       virtual void buildPage( const resip::Data& uri, 
                               int pageNumber,
                               const resip::Data& user,
                               const resip::Data& password);
+
+      // Handler
+      virtual void onDnsCacheDumpRetrieved(std::pair<unsigned long, unsigned long> key, const resip::Data& dnsEntryStrings);
 
    private: 
       resip::Data buildDefaultPage();
@@ -60,6 +66,7 @@ class WebAdmin: public HttpBase
 
       void buildRegistrationsSubPage(resip::DataStream& s);
       void buildSettingsSubPage(resip::DataStream& s);
+      void buildRestartSubPage(resip::DataStream& s);
 
       resip::Data buildCertPage(const resip::Data& domain);
 
@@ -67,6 +74,10 @@ class WebAdmin: public HttpBase
       Store& mStore;
       resip::RegistrationPersistenceManager& mRegDb;
 
+      resip::Data mDnsCache;
+      resip::Mutex mDnsCacheMutex;
+      resip::Condition mDnsCacheCondition;
+      
       bool mNoWebChallenges;
       
       Dictionary mHttpParams;
