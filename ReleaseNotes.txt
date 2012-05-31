@@ -1,0 +1,117 @@
+= Release Notes v 1.8 =
+
+*STARTING AT REVISION 9169
+*UP TO (not-including) REVISION 9367
+
+==General==
+===New features===
+*added new REND project for for Registration and Presence load testing
+
+
+==Build system==
+===New features===
+* The old build system was completely replaced with an autotools build system
+* TODO - add more detail here
+
+===Bug fixes===
+*fixed many compilation errors and warning on various platforms
+
+
+==rutil==
+===New features===
+*added Timer::resetT1 to make it easier to tweak T1
+*added ConfigParse class to aid on configuration file and command line parsing
+
+===Bug fixes===
+*fix a Windows API issue with ThreadLocalStorage. The Windows API functions for TLS do not guarantee that the id / index number will be less than 1088. Change the code to use a std::map<DWORD> instead of a fixed size array. The previous code would cause heap corruption if the OS passed back an index number of 1088.
+*fixed a bad assert in Random class - we shouldn't be using RAND_MAX to look at what is returned by random()
+
+
+==stack==
+===New features===
+*the various parameter types now have their scope restricted to the grammar element/s for which they are defined, instead of having them all be equally valid for all grammar elements.
+*added two new flags added to MessageDecorators that instruct the stack to copy the decorator from the INVITE request to any resulting stack generated CANCEL requests or ACK failure requests.  This functionality was added so that it is possible to decorate all request messaging on the wire.
+*Modified the MarkListener class to allow control over the DNS Grey / Black list.
+**The onMark function is now called before insertion to the list and you can now change the expiry value to 0 if you don't want the entry added to the grey/black list, or change the amount of time it is on the list.
+
+
+===Bug fixes===
+*fix for testStack running on OS X
+*fixed issue where resiprocate would encode headers that are not directly modified, potentially causing header formatting to change where there are difference in resip encoding vs received encoding.
+**modified LazyParser to encode from the raw HeaderFieldValue if it has not been modified (or at least, the non-const version of checkParsed() has not been called). 
+**added SipMessage::const_header for the various header types, to allow explicit const-only access with a non-const SipMessage
+**use this const_header function in a number of places where we do not want the LazyParser marking itself as "dirty".  
+*fixed a bug in URI parsing code when an @ or : appeared in a quoted parameter 
+*fix for DtlsTransport - fix in _doHandshake(), switch must be done on SSL_get_error() return value
+*fixed a static initialization race with the Uri encoding tables
+*fix for missing statistics in output string for stack statistics
+*fix possible memory corruption in SdpContents::Session::Medium::codecs() due to Codec::parse() and the Medium's AttributeHelper, the AttributeHelper free's up the memory that was used by parse()
+*fix to make nc (nonce count) lowercase, per definition of LHEX in RFC2831
+
+
+==DUM==
+===New features===
+*added a getRequest() method to ClientOutOfDialogReq so that the request for the response can be accessed
+*implemented InviteSession::reject while in the SentReinviteAnswered state. This is useful when needing to reject with an empty ACK an offer that was requested (using an empty INVITE) while in a dialog.
+*added ability to asynchronously end an AppDialogSet using AppDialogSet::endCommand. 
+*test/basicClient - allow subscription and call if not registering
+*added new public APIs to DialogUsageManager so that the application can find AppDialogs/AppDialogSets from a DialogId or a DialogSetId. This is useful if the application wants to find a dialog set from a SIP message alone.
+*added the ability to end a publication without sending a final PUBLISH with an expires of 0
+*modified client subscription to allow a subscription to be terminated without sending a final SUBSCRIBE request, useful in cases where an extension Subscription-State is used that signifies that the subscription is terminated
+
+===Bug fixes===
+*fixed a bug where we were using a description parameter in a Reason header, instead of a text parameter
+*fixed incorrect assert in ServerSubscription due to missing break statement
+
+
+==repro==
+===New features===
+*added abililty to tweak timer T1 in repro configuration
+*modified repro to allow an application overridden RequestContext to be able to provide a virtual fn for cancelClientTransaction
+*allow specifying a ;lr flag on static routes to perform loose routing, instead of re-writing the request URI
+*added new configuration mechanism for repro
+**removed use of popt
+**now using a new name/value pair approach
+**allow reading of settings from a .config file
+**allows command line options - but is not backwards compatible with old popt command line format
+*added resip ExternalLogger to repro, so that Error logs are also logged to the console when file logging is enabled
+*added some new configuration settings:  LogFileName, LogFileMaxBytes
+
+===Bug fixes===
+
+
+==reTurn==
+===New features===
+*reTurnServer: read config settings from reTurnServer.config instead of using hard coded values
+*add support for daemonizing on platforms supporting fork()
+
+===Bug fixes===
+*fixed problem where classic stun responses come from the wrong socket
+*ensure asio doesn't throw exceptions under error conditions
+
+
+==recon==
+===New features===
+
+===Bug fixes===
+
+
+==reflow==
+===Bug fixes===
+
+
+==clicktocall==
+===Bug fixes===
+
+
+==tfm (repro)==
+===New features===
+*added VS2008 project files for Windows
+
+===Bug fixes===
+
+
+==tfm (dum)==
+===Bug fixes===
+*fixed a place where a NameAddr param (methods) was being used as a Uri param
+
