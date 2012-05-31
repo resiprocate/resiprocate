@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iterator>
 #include <stdexcept>
+#include <map>
 
 #include "rutil/ConfigParse.hxx"
 #include "rutil/Log.hxx"
@@ -325,10 +326,18 @@ ConfigParse::parseConfigFile(const Data& filename)
 EncodeStream& 
 operator<<(EncodeStream& strm, const ConfigParse& config)
 {
+   // Yes this is horribly inefficient - however it's only used when a user requests it
+   // and we want to see the items in a sorted list and hash_maps are not sorted.
+   std::multimap<Data, Data> sortedMap;
    ConfigParse::ConfigValuesMap::const_iterator it = config.mConfigValues.begin();
    for(; it != config.mConfigValues.end(); it++)
    {
-      strm << it->first << " = " << it->second << endl;
+      sortedMap.insert(std::multimap<Data, Data>::value_type(it->first, it->second));
+   }
+   std::multimap<Data, Data>::iterator it2 = sortedMap.begin();
+   for(; it2 != sortedMap.end(); it2++)
+   {
+      strm << it2->first << " = " << it2->second << endl;
    }
    return strm;
 }
