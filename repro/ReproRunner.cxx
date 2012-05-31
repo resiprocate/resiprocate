@@ -108,6 +108,7 @@ ReproRunner::ReproRunner()
    , mSipStack(0)
    , mStackThread(0)
    , mAbstractDb(0)
+   , mRuntimeAbstractDb(0)
    , mRegistrationPersistenceManager(0)
    , mAuthRequestDispatcher(0)
    , mAsyncProcessorDispatcher(0)
@@ -377,6 +378,7 @@ ReproRunner::cleanupObjects()
       delete mRegistrationPersistenceManager; mRegistrationPersistenceManager = 0;
    }
    delete mAbstractDb; mAbstractDb = 0;
+   delete mRuntimeAbstractDb; mRuntimeAbstractDb = 0;
    delete mStackThread; mStackThread = 0;
    delete mSipStack; mSipStack = 0;
    delete mAsyncProcessHandler; mAsyncProcessHandler = 0;
@@ -581,16 +583,28 @@ ReproRunner::createDatastore()
 {
    // Create Database access objects
    assert(!mAbstractDb);
+   assert(!mRuntimeAbstractDb);
 #ifdef USE_MYSQL
    Data mySQLServer;
    mProxyConfig->getConfigValue("MySQLServer", mySQLServer);
-   if (!mySQLServer.empty())
+   if(!mySQLServer.empty())
    {
       mAbstractDb = new MySqlDb(mySQLServer, 
                        mProxyConfig->getConfigData("MySQLUser", ""), 
                        mProxyConfig->getConfigData("MySQLPassword", ""),
                        mProxyConfig->getConfigData("MySQLDatabaseName", ""),
                        mProxyConfig->getConfigUnsignedLong("MySQLPort", 0),
+                       mProxyConfig->getConfigData("MySQLCustomUserAuthQuery", ""));
+   }
+   Data runtimeMySQLServer;
+   mProxyConfig->getConfigValue("RuntimeMySQLServer", runtimeMySQLServer);
+   if(!runtimeMySQLServer.empty())
+   {
+      mRuntimeAbstractDb = new MySqlDb(runtimeMySQLServer,
+                       mProxyConfig->getConfigData("RuntimeMySQLUser", ""), 
+                       mProxyConfig->getConfigData("RuntimeMySQLPassword", ""),
+                       mProxyConfig->getConfigData("RuntimeMySQLDatabaseName", ""),
+                       mProxyConfig->getConfigUnsignedLong("RuntimeMySQLPort", 0),
                        mProxyConfig->getConfigData("MySQLCustomUserAuthQuery", ""));
    }
 #endif
@@ -605,7 +619,13 @@ ReproRunner::createDatastore()
       cleanupObjects();
       return false;
    }
-   mProxyConfig->createDataStore(mAbstractDb);
+   if(mRuntimeAbstractDb && !mRuntimeAbstractDb->isSane())
+   {
+      CritLog(<<"Failed to open runtime configuration database");
+      cleanupObjects();
+      return false;
+   }
+   mProxyConfig->createDataStore(mAbstractDb, mRuntimeAbstractDb);
 
    // Create ImMemory Registration Database
    mRegSyncPort = mProxyConfig->getConfigInt("RegSyncPort", 0);
