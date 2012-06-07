@@ -8,7 +8,10 @@
 ==Build system==
 ===New features===
 *the old build system was completely replaced with an autotools build system
-*resip now builds on Solaris SunPro
+*many components are now optional and must be enabled at configure time
+*autotools dist functionality now used to produce official release tarball
+*libtool now sets SONAME using the release number convention
+*resip now builds on Solaris SunPro (tested with third-party libs from OpenCSW)
 *update BerkeleyDb to 4.8 in contrib
 *added MaxMind GeoIP library to contrib
 *added MySQL client connector library to contrib
@@ -239,9 +242,10 @@
 **almost all logic that was in repro.cxx has been moved out to a new class (ReproRunner), and split into smaller virtual methods that can be overridden
 **see comments at the top of repro.cxx for an example of how to add custom processors
 *add support for daemonizing on platforms supporting fork()
-*added ability to create a linux PID file on startup
+*added ability to create a UNIX PID file on startup
 *add support for loading a directory of root certificates or a file containing a bundle of root certificates
 *support for mutual TLS/client certificate verification (as repro monkey)
+*tls: config option to accept email address subjectAltNames as if they were SIP URIs
 *added congestion manager settings to be configured in repro configuration file
 *added KeyValueStore to three strategic locations in repro, allowing custom Processors (Monkeys, Lemurs and Baboons) to store state scoped as follows:
 **Global Proxy Scope - Proxy::getKeyValueStore
@@ -299,7 +303,7 @@
 *log error in UdpServer if failure to bind
 *add StackLog logging of request type when encoding a message
 *added a man page for reTurnServer
-*added ability to create a linux PID file on startup
+*added ability to create a UNIX PID file on startup
 *return server - suppress socket errors when closing relay
 
 ===Bug fixes===
