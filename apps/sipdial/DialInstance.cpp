@@ -8,6 +8,8 @@
 #include "resip/stack/Uri.hxx"
 #include "resip/stack/ssl/Security.hxx"
 #include "rutil/Data.hxx"
+#include "rutil/Log.hxx"
+#include "rutil/Logger.hxx"
 #include "rutil/SharedPtr.hxx"
 
 #include "DialerConfiguration.hxx"
@@ -16,6 +18,8 @@
 
 using namespace resip;
 using namespace std;
+
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::APP
 
 DialInstance::DialInstance(const DialerConfiguration& dialerConfiguration, const resip::Uri& targetUri) :
    mDialerConfiguration(dialerConfiguration),
@@ -203,18 +207,21 @@ void DialInstance::onConnected(ClientInviteSessionHandle cis)
 
 void DialInstance::onReferSuccess()
 {
+   InfoLog(<< "Refer was successful");
    mResult = ReferSuccessful;
    mProgress = Done;
 }
 
 void DialInstance::onReferFailed()
 {
+   ErrLog(<< "Refer failed");
    mResult = ReferUnsuccessful;
    mProgress = Done;
 }
 
 void DialInstance::onTerminated()
 {
+   InfoLog(<< "onTerminated()");
    mProgress = Done;
 }
 
