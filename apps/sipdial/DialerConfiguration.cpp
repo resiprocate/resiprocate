@@ -1,5 +1,6 @@
 
 #include <iostream>
+#include <stdexcept>
 #include <string>
 
 #include "rutil/Data.hxx"
@@ -10,61 +11,58 @@
 using namespace resip;
 using namespace std;
 
-DialerConfiguration::DialerConfiguration()
+DialerConfiguration::DialerConfiguration() :
+   mDialerIdentity("anonymous@localhost"),
+   mAuthRealm(""),
+   mAuthUser(""),
+   mAuthPassword(""),
+   mCallerUserAgentAddress(""),
+   mCallerUserAgentVariety(Generic),
+   mTargetPrefix(""),
+   mTargetDomain("localhost"),
+   mCertPath(""),
+   mCADirectory("")
 {
+}
+
+DialerConfiguration::DialerConfiguration(int argc, char** argv, const resip::Data& defaultConfigFilename, int skipCount) :
+   resip::ConfigParse(argc, argv, defaultConfigFilename, skipCount),
+   mDialerIdentity(getConfigData("dialerIdentity", "anonymous@example.org")),
+   mAuthRealm(getConfigData("authRealm", "")),
+   mAuthUser(getConfigData("authUser", "")),
+   mAuthPassword(getConfigData("authPassword", "")),
+   mCallerUserAgentAddress(getConfigData("callerUserAgentAddress", "")),
+   mCallerUserAgentVariety(Generic),
+   mTargetPrefix(getConfigData("targetPrefix", "")),
+   mTargetDomain(getConfigData("targetDomain", "localhost")),
+   mCertPath(getConfigData("certPath", "")),
+   mCADirectory(getConfigData("CADirectory", ""))
+{
+   Data value(getConfigData("callerUserAgentVariety", "Generic"));
+   if(value == "LinksysSPA941")
+      setCallerUserAgentVariety(LinksysSPA941);
+   else if(value == "AlertInfo")
+      setCallerUserAgentVariety(AlertInfo);
+   else if(value == "Cisco7940")
+      setCallerUserAgentVariety(Cisco7940);
+   else if(value == "Generic")
+      setCallerUserAgentVariety(Generic);
+   else
+      throw std::runtime_error("Unexpected value for config setting callerUserAgentVariety");
 }
 
 DialerConfiguration::~DialerConfiguration()
 {
 }
 
-void DialerConfiguration::loadStream(std::istream& in)
+void
+DialerConfiguration::printHelpText(int argc, char **argv)
 {
-   while(!in.eof())
-   {
-      string param;
-      string value;
-      in >> param >> value;
-      cerr << "param = " << param << " and value = " << value << endl;
-      if(param == string("dialerIdentity"))
-         setDialerIdentity(NameAddr(Uri(Data(value))));
-      else if(param == string("authRealm"))
-         setAuthRealm(Data(value));
-      else if(param == string("authUser"))
-         setAuthUser(Data(value));
-      else if(param == string("authPassword"))
-         setAuthPassword(Data(value));
-      else if(param == string("callerUserAgentAddress"))
-         setCallerUserAgentAddress(Uri(Data(value)));
-      else if(param == string("callerUserAgentVariety"))
-      {
-         if(value == string("LinksysSPA941"))
-            setCallerUserAgentVariety(LinksysSPA941);
-         else if(value == string("PolycomIP501"))
-            setCallerUserAgentVariety(PolycomIP501);
-         else if(value == string("Cisco7940"))
-            setCallerUserAgentVariety(Cisco7940);
-         else if(value == string("Generic"))
-            setCallerUserAgentVariety(Generic);
-         else
-            assert(0);   // FIXME
-      }
-      else if(param == string("targetPrefix"))
-         setTargetPrefix(Data(value));
-      else if(param == string("targetDomain"))
-         setTargetDomain(Data(value)); 
-/*      else if(param.size() > 0 && 
-         (param[0] == '#' || param[0] == ';'))
-         / / skip comment lines
-         { } */
-      else if(param == string(""))
-         // skip empty lines
-         { }
-      else
-         assert(0); // FIXME
-   }
+   std::cerr << "Command line format is:" << std::endl;
+   std::cerr << "  " << argv[0] << " <targetUri> [<ConfigFilename>] [--<ConfigValueName>=<ConfigValue>] [--<ConfigValueName>=<ConfigValue>] ..." << std::endl;
+   std::cerr << "Sample Command line(s):" << std::endl;
+   std::cerr << "  " << argv[0] << " user@example.org" << std::endl;
 }
-
 
 /* ====================================================================
  *

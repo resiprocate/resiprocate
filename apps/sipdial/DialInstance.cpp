@@ -8,6 +8,8 @@
 #include "resip/stack/Uri.hxx"
 #include "resip/stack/ssl/Security.hxx"
 #include "rutil/Data.hxx"
+#include "rutil/Log.hxx"
+#include "rutil/Logger.hxx"
 #include "rutil/SharedPtr.hxx"
 
 #include "DialerConfiguration.hxx"
@@ -16,6 +18,10 @@
 
 using namespace resip;
 using namespace std;
+
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::APP
+
+#define REFER_TIMEOUT 10
 
 DialInstance::DialInstance(const DialerConfiguration& dialerConfiguration, const resip::Uri& targetUri) :
    mDialerConfiguration(dialerConfiguration),
@@ -30,9 +36,17 @@ DialInstance::DialResult DialInstance::execute()
    prepareAddress();
 
    Security* security = 0;
-   Data certPath(getenv("HOME"));
-   certPath += "/.sipdial/certs";
+
+   Data certPath(mDialerConfiguration.getCertPath());
+   if(certPath.size() == 0)
+   {
+      certPath = getenv("HOME");
+      certPath += "/.sipdial/certs";
+   }
    security = new Security(certPath);
+
+   if(mDialerConfiguration.getCADirectory().size() > 0)
+      security->addCADirectory(mDialerConfiguration.getCADirectory());
 
    mSipStack = new SipStack(security);
    mDum = new DialogUsageManager(*mSipStack);
@@ -61,10 +75,26 @@ DialInstance::DialResult DialInstance::execute()
       // Process all SIP stack activity
       mSipStack->process(fdset);
       while(mDum->process());
+
+      // FIXME - we should wait a little and make sure it really worked
+      if(mProgress == ReferSent)
+      {
+         time_t now;
+         time(&now);
+         if(mReferSentTime + REFER_TIMEOUT < now)
+         {
+            ErrLog(<< "REFER timeout");
+            mProgress = Done;
+         }
+      }
+
       if(mProgress == Connected && mClient->isConnected()) 
       {
+         InfoLog(<< "Sending the REFER");
          mClient->refer(NameAddr(mFullTarget));
+         InfoLog(<< "Done sending the REFER");
          mProgress = ReferSent;
+         time(&mReferSentTime);
       }
       
       if(mProgress == Done)
@@ -98,7 +128,10 @@ void DialInstance::prepareAddress()
       if(num[0] == '+')
       {
          // E.164
-         mFullTarget = Uri("sip:" + mDialerConfiguration.getTargetPrefix() + num.substr(1, num.size() - 1) + "@" + mDialerConfiguration.getTargetDomain());
+         if(mDialerConfiguration.getTargetPrefix().size() > 0)
+            mFullTarget = Uri("sip:" + mDialerConfiguration.getTargetPrefix() + num.substr(1, num.size() - 1) + "@" + mDialerConfiguration.getTargetDomain());
+         else
+            mFullTarget = Uri("sip:" + num + "@" + mDialerConfiguration.getTargetDomain());
          return;
       }
       mFullTarget = Uri("sip:" + num + "@" + mDialerConfiguration.getTargetDomain());
@@ -124,7 +157,7 @@ void DialInstance::sendInvite()
       hfv = new HeaderFieldValue("\\;answer-after=0", 16);
       msg->header(h_CallInfos).push_back(GenericUri(*hfv, Headers::CallInfo));
       break;
-   case DialerConfiguration::PolycomIP501:
+   case DialerConfiguration::AlertInfo:
       hfv = new HeaderFieldValue("AA", 2);
       msg->header(h_AlertInfos).push_back(GenericUri(*hfv, Headers::AlertInfo));
       break;
@@ -192,18 +225,21 @@ void DialInstance::onConnected(ClientInviteSessionHandle cis)
 
 void DialInstance::onReferSuccess()
 {
+   InfoLog(<< "Refer was successful");
    mResult = ReferSuccessful;
    mProgress = Done;
 }
 
 void DialInstance::onReferFailed()
 {
+   ErrLog(<< "Refer failed");
    mResult = ReferUnsuccessful;
    mProgress = Done;
 }
 
 void DialInstance::onTerminated()
 {
+   InfoLog(<< "onTerminated()");
    mProgress = Done;
 }
 

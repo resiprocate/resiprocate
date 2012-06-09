@@ -14,38 +14,31 @@
 using namespace resip;
 using namespace std;
 
-string getFullFilename()
+Data getFullFilename()
 {
 #ifdef WIN32
    char *home_drive = getenv("HOMEDRIVE");
    assert(home_drive); // FIXME
    char *home_path = getenv("HOMEPATH");
    assert(home_path); // FIXME
-   string full_filename(string(home_drive) + string(home_dir) + string("\sipdial\sipdial.cfg"));
+   Data full_filename(string(home_drive) + string(home_dir) + string("\sipdial\sipdial.cfg"));
    return full_filename;
 #else   
    char *home_dir = getenv("HOME");
    assert(home_dir); // FIXME
-   string full_filename(string(home_dir) + string("/.sipdial/sipdial.cfg"));
+   Data full_filename(string(home_dir) + string("/.sipdial/sipdial.cfg"));
    return full_filename;
 #endif
 }
 
 int main(int argc, char *argv[]) 
 {
-   if(argc != 2)
-      // FIXME
-      assert(0);
-   
-   DialerConfiguration *dc = new DialerConfiguration();
-   ifstream in(getFullFilename().c_str());
-   if(!in.is_open())
-      assert(0); // FIXME
+   Data defaultConfig(getFullFilename());
+   DialerConfiguration dc(argc, argv, defaultConfig, 1);
 
-   dc->loadStream(in);
-   in.close();
+   Data targetUri(argv[1]);
    
-   DialInstance di(*dc, Uri(Data(argv[1])));
+   DialInstance di(dc, Uri(targetUri));
    di.execute();
 
 }

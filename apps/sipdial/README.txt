@@ -18,7 +18,11 @@ Make/install:
 The configuration file:
 -----------------------
 
-  The configuration file must be located in $HOME/.sipdial/sipdial.cfg
+  sipdialer looks for a configuration file located in
+   $HOME/.sipdial/sipdial.cfg
+
+  You can also specify a configuration file on the command line
+  as the second parameter (after the target URI).
 
   You can copy the the example file included in the source
 
@@ -28,7 +32,8 @@ The configuration file:
   supported, and the same mechanisms may work with other phones
   from the same manufacturer:
 
-  PolycomIP501:  adds the header field "AlertInfo: AA"
+  AlertInfo:     adds the header field "AlertInfo: AA"
+                 (this value was formerly called PolycomIP501)
   LinksysSPA941: adds the attribute answer-after=0 to header Callinfo
   Cisco7940:     same as generic
   Generic:       adds no special header fields
@@ -38,28 +43,23 @@ The configuration file:
 Using TLS
 ---------
 
-  sipdial expects to use TLS to security the exchange of
+  sipdial expects to use TLS to secure the exchange of
   SIP REFER messages.
 
   sipdial expects to find CA root certificates in files matching
-  the pattern ~/.sipdial/certs/root_cert_*.pem
+  the pattern $HOME/.sipdial/certs/root_cert_*.pem
+  (the legacy reSIProcate SSL convention) or it can be told
+  to load all CA root certificates from a directory such
+  as /etc/ssl/certs on Debian by using the config option
+  CADirectory = /etc/ssl/certs
 
   If multiple certificates are concatenated in a PEM file, it will only
   load the first.
 
-  To symlink all the standard root certs on a Debian system, you
-  can do the following:
-
-    mkdir -p ~/.sipdial/certs && \
-      cd /etc/ssl/certs && \
-      for i in *.pem ;
-        do ln -s /etc/ssl/certs/$i ~/.sipdial/certs/root_cert_${i}
-      done
-
   In ~/.sipdial/sipdial.cfg, the callerUserAgentAddress must use
   a sips URI:
 
-    callerUserAgentAddress sips:mydeskphone@example.org
+    callerUserAgentAddress = sips:mydeskphone@example.org
 
 Install in gconf:
 -----------------
@@ -88,7 +88,7 @@ Usage:
    sipdialer tel:00442071357000
 
   SIP addresses:
-   sipdialer sip:442071357000@lvdx.com
+   sipdialer sip:helpdesk@sip5060.net
 
 
 Testing with a SIP proxy:
