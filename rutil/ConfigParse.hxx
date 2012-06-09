@@ -24,7 +24,7 @@ public:
    };
 
    ConfigParse();
-   ConfigParse(int argc, char** argv, const resip::Data& defaultConfigFilename);
+   ConfigParse(int argc, char** argv, const resip::Data& defaultConfigFilename, int skipCount = 0);
    virtual ~ConfigParse();
 
    virtual void printHelpText(int argc, char **argv) = 0;
@@ -60,6 +60,8 @@ protected:
 
 private:
    friend EncodeStream& operator<<(EncodeStream& strm, const ConfigParse& config);
+
+   int mSkipCount;
 };
 
 EncodeStream& operator<<(EncodeStream& strm, const ConfigParse& config);

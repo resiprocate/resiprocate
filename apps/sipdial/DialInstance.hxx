@@ -2,6 +2,8 @@
 #ifndef __DIALINSTANCE_H
 #define __DIALINSTANCE_H
 
+#include <time.h>
+
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/stack/Uri.hxx"
 #include "rutil/Data.hxx"
@@ -67,6 +69,8 @@ private:
       Done
    } DialProgress;
    DialProgress mProgress;
+
+   time_t mReferSentTime;
 
    DialResult mResult;
 

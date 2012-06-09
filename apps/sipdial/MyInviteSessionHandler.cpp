@@ -5,12 +5,16 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Tuple.hxx"
 #include "rutil/Data.hxx"
+#include "rutil/Log.hxx"
+#include "rutil/Logger.hxx"
 
 #include "DialInstance.hxx"
 #include "MyInviteSessionHandler.hxx"
 
 using namespace resip;
 using namespace std;
+
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::APP
 
 MyInviteSessionHandler::MyInviteSessionHandler(DialInstance& dialInstance) : 
    mDialInstance(dialInstance)
@@ -23,22 +27,27 @@ MyInviteSessionHandler::~MyInviteSessionHandler()
 
 void MyInviteSessionHandler::onSuccess(ClientRegistrationHandle h, const SipMessage& response) 
 {
+   InfoLog(<< "Unhandled method invoked");
 }
 
 void MyInviteSessionHandler::onFailure(ClientRegistrationHandle, const SipMessage& msg) 
 {
+   InfoLog(<< "Unhandled method invoked");
 }
 
 void MyInviteSessionHandler::onMessage(InviteSessionHandle, const resip::SipMessage& msg) 
 {
+   InfoLog(<< "Unhandled method invoked");
 }
 
 void MyInviteSessionHandler::onMessageSuccess(InviteSessionHandle, const resip::SipMessage&) 
 {
+   InfoLog(<< "Unhandled method invoked");
 }
 
 void MyInviteSessionHandler::onMessageFailure(InviteSessionHandle, const resip::SipMessage&) 
 {
+   InfoLog(<< "Unhandled method invoked");
 }
 
 void MyInviteSessionHandler::onFailure(ClientInviteSessionHandle cis, const SipMessage& msg) 
@@ -48,18 +57,22 @@ void MyInviteSessionHandler::onFailure(ClientInviteSessionHandle cis, const SipM
 
 void MyInviteSessionHandler::onForkDestroyed(ClientInviteSessionHandle) 
 {
+   InfoLog(<< "Unhandled method invoked");
 }
 
 void MyInviteSessionHandler::onInfoSuccess(InviteSessionHandle, const SipMessage& msg) 
 {
+   InfoLog(<< "Unhandled method invoked");
 }
 
 void MyInviteSessionHandler::onInfoFailure(InviteSessionHandle, const SipMessage& msg) 
 {
+   InfoLog(<< "Unhandled method invoked");
 }
 
 void MyInviteSessionHandler::onProvisional(ClientInviteSessionHandle cis, const SipMessage& msg) 
 {
+   InfoLog(<< "Unhandled method invoked");
 }
 
 void MyInviteSessionHandler::onConnected(ClientInviteSessionHandle cis, const SipMessage& msg) 
@@ -72,42 +85,52 @@ void MyInviteSessionHandler::onConnected(ClientInviteSessionHandle cis, const Si
 
 void MyInviteSessionHandler::onStaleCallTimeout(ClientInviteSessionHandle) 
 {
+   InfoLog(<< "Unhandled method invoked");
 }
 
 void MyInviteSessionHandler::onConnected(InviteSessionHandle, const SipMessage& msg) 
 {
+   InfoLog(<< "Unhandled method invoked");
 }
 
 void MyInviteSessionHandler::onRedirected(ClientInviteSessionHandle, const SipMessage& msg) 
 {
+   InfoLog(<< "Unhandled method invoked");
 }
 
 void MyInviteSessionHandler::onAnswer(InviteSessionHandle is, const SipMessage& msg, const SdpContents& sdp) 
 {
+   InfoLog(<< "Unhandled method invoked");
 }
 
 void MyInviteSessionHandler::onEarlyMedia(ClientInviteSessionHandle cis, const SipMessage& msg, const SdpContents& sdp) 
 {
+   InfoLog(<< "Unhandled method invoked");
 }
 
 void MyInviteSessionHandler::onOfferRequired(InviteSessionHandle, const SipMessage& msg) 
 {
+   InfoLog(<< "Unhandled method invoked");
 }
 
 void MyInviteSessionHandler::onOfferRejected(InviteSessionHandle, const SipMessage *msg) 
 {
+   InfoLog(<< "Unhandled method invoked");
 }
 
 void MyInviteSessionHandler::onDialogModified(InviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg) 
 {
+   InfoLog(<< "Unhandled method invoked");
 }
 
 void MyInviteSessionHandler::onInfo(InviteSessionHandle, const SipMessage& msg) 
 {
+   InfoLog(<< "Unhandled method invoked");
 }
 
 void MyInviteSessionHandler::onRefer(InviteSessionHandle, ServerSubscriptionHandle, const SipMessage& msg) 
 {
+   InfoLog(<< "Unhandled method invoked");
 }
 
 void MyInviteSessionHandler::onReferAccepted(InviteSessionHandle, ClientSubscriptionHandle, const SipMessage& msg) 
@@ -122,10 +145,12 @@ void MyInviteSessionHandler::onReferRejected(InviteSessionHandle, const SipMessa
 
 void MyInviteSessionHandler::onReferNoSub(InviteSessionHandle is, const resip::SipMessage& msg) 
 {
+   InfoLog(<< "Unhandled method invoked");
 }
 
 void MyInviteSessionHandler::onRemoved(ClientRegistrationHandle) 
 {
+   InfoLog(<< "Unhandled method invoked");
 }
 
 int MyInviteSessionHandler::onRequestRetry(ClientRegistrationHandle, int retrySeconds, const SipMessage& response) 
@@ -135,10 +160,12 @@ int MyInviteSessionHandler::onRequestRetry(ClientRegistrationHandle, int retrySe
 
 void MyInviteSessionHandler::onNewSession(ServerInviteSessionHandle sis, InviteSession::OfferAnswerType oat, const SipMessage& msg) 
 {
+   InfoLog(<< "Unhandled method invoked");
 }
 
 void MyInviteSessionHandler::onNewSession(ClientInviteSessionHandle cis, InviteSession::OfferAnswerType oat, const SipMessage& msg) 
 {
+   InfoLog(<< "Unhandled method invoked");
 }
 
 void MyInviteSessionHandler::onTerminated(InviteSessionHandle is, InviteSessionHandler::TerminatedReason reason, const SipMessage* msg) 
@@ -148,6 +175,7 @@ void MyInviteSessionHandler::onTerminated(InviteSessionHandle is, InviteSessionH
 
 void MyInviteSessionHandler::onOffer(InviteSessionHandle is, const SipMessage& msg, const SdpContents& sdp) 
 {
+   InfoLog(<< "Unhandled method invoked");
 }
 
 
