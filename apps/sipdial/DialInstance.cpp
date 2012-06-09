@@ -124,7 +124,7 @@ void DialInstance::sendInvite()
       hfv = new HeaderFieldValue("\\;answer-after=0", 16);
       msg->header(h_CallInfos).push_back(GenericUri(*hfv, Headers::CallInfo));
       break;
-   case DialerConfiguration::PolycomIP501:
+   case DialerConfiguration::AlertInfo:
       hfv = new HeaderFieldValue("AA", 2);
       msg->header(h_AlertInfos).push_back(GenericUri(*hfv, Headers::AlertInfo));
       break;

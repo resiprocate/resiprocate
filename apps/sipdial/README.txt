@@ -28,7 +28,8 @@ The configuration file:
   supported, and the same mechanisms may work with other phones
   from the same manufacturer:
 
-  PolycomIP501:  adds the header field "AlertInfo: AA"
+  AlertInfo:     adds the header field "AlertInfo: AA"
+                 (this value was formerly called PolycomIP501)
   LinksysSPA941: adds the attribute answer-after=0 to header Callinfo
   Cisco7940:     same as generic
   Generic:       adds no special header fields
