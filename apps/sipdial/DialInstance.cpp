@@ -98,7 +98,10 @@ void DialInstance::prepareAddress()
       if(num[0] == '+')
       {
          // E.164
-         mFullTarget = Uri("sip:" + mDialerConfiguration.getTargetPrefix() + num.substr(1, num.size() - 1) + "@" + mDialerConfiguration.getTargetDomain());
+         if(mDialerConfiguration.getTargetPrefix().size() > 0)
+            mFullTarget = Uri("sip:" + mDialerConfiguration.getTargetPrefix() + num.substr(1, num.size() - 1) + "@" + mDialerConfiguration.getTargetDomain());
+         else
+            mFullTarget = Uri("sip:" + num + "@" + mDialerConfiguration.getTargetDomain());
          return;
       }
       mFullTarget = Uri("sip:" + num + "@" + mDialerConfiguration.getTargetDomain());
