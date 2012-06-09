@@ -19,7 +19,9 @@ DialerConfiguration::DialerConfiguration() :
    mCallerUserAgentAddress(""),
    mCallerUserAgentVariety(Generic),
    mTargetPrefix(""),
-   mTargetDomain("localhost")
+   mTargetDomain("localhost"),
+   mCertPath(""),
+   mCADirectory("")
 {
 }
 
@@ -32,7 +34,9 @@ DialerConfiguration::DialerConfiguration(int argc, char** argv, const resip::Dat
    mCallerUserAgentAddress(getConfigData("callerUserAgentAddress", "")),
    mCallerUserAgentVariety(Generic),
    mTargetPrefix(getConfigData("targetPrefix", "")),
-   mTargetDomain(getConfigData("targetDomain", "localhost"))
+   mTargetDomain(getConfigData("targetDomain", "localhost")),
+   mCertPath(getConfigData("certPath", "")),
+   mCADirectory(getConfigData("CADirectory", ""))
 {
    Data value(getConfigData("callerUserAgentVariety", "Generic"));
    if(value == "LinksysSPA941")
