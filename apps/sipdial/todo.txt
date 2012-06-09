@@ -1,6 +1,6 @@
 
 Ensure that app does not keep running
-Generalise config options (e.g. PolycomIP501 rename to AlertInfo)
+Generalise config options (e.g. rename Cisco7940)
 Configurable protocol selection (UDP, TCP or TLS)
 Configurable cert dir location
 Better cert loading algorithm (also fix for repro)
