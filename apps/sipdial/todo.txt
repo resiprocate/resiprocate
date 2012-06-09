@@ -1,5 +1,5 @@
 
-Ensure that app does not keep running
+Make the REFER_TIMEOUT logic more robust and report errors in a more useful way
 Generalise config options (e.g. rename Cisco7940)
 Configurable protocol selection (UDP, TCP or TLS)
 Better cert loading algorithm (also fix for repro)
