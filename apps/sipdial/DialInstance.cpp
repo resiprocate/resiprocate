@@ -75,7 +75,9 @@ DialInstance::DialResult DialInstance::execute()
       while(mDum->process());
       if(mProgress == Connected && mClient->isConnected()) 
       {
+         InfoLog(<< "Sending the REFER");
          mClient->refer(NameAddr(mFullTarget));
+         InfoLog(<< "Done sending the REFER");
          mProgress = ReferSent;
       }
       
