@@ -43,23 +43,18 @@ The configuration file:
 Using TLS
 ---------
 
-  sipdial expects to use TLS to security the exchange of
+  sipdial expects to use TLS to secure the exchange of
   SIP REFER messages.
 
   sipdial expects to find CA root certificates in files matching
-  the pattern ~/.sipdial/certs/root_cert_*.pem
+  the pattern $HOME/.sipdial/certs/root_cert_*.pem
+  (the legacy reSIProcate SSL convention) or it can be told
+  to load all CA root certificates from a directory such
+  as /etc/ssl/certs on Debian by using the config option
+  CADirectory = /etc/ssl/certs
 
   If multiple certificates are concatenated in a PEM file, it will only
   load the first.
-
-  To symlink all the standard root certs on a Debian system, you
-  can do the following:
-
-    mkdir -p ~/.sipdial/certs && \
-      cd /etc/ssl/certs && \
-      for i in *.pem ;
-        do ln -s /etc/ssl/certs/$i ~/.sipdial/certs/root_cert_${i}
-      done
 
   In ~/.sipdial/sipdial.cfg, the callerUserAgentAddress must use
   a sips URI:

@@ -30,9 +30,17 @@ DialInstance::DialResult DialInstance::execute()
    prepareAddress();
 
    Security* security = 0;
-   Data certPath(getenv("HOME"));
-   certPath += "/.sipdial/certs";
+
+   Data certPath(mDialerConfiguration.getCertPath());
+   if(certPath.size() == 0)
+   {
+      certPath = getenv("HOME");
+      certPath += "/.sipdial/certs";
+   }
    security = new Security(certPath);
+
+   if(mDialerConfiguration.getCADirectory().size() > 0)
+      security->addCADirectory(mDialerConfiguration.getCADirectory());
 
    mSipStack = new SipStack(security);
    mDum = new DialogUsageManager(*mSipStack);
