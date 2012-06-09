@@ -18,7 +18,8 @@ using namespace std;
 namespace resip
 {
 
-ConfigParse::ConfigParse(int argc, char** argv, const resip::Data& defaultConfigFilename)
+ConfigParse::ConfigParse(int argc, char** argv, const resip::Data& defaultConfigFilename, int skipCount) :
+   mSkipCount(skipCount)
 {
    parseCommandLine(argc, argv);  // will fill in mCmdLineConfigFilename if present
    if(mCmdLineConfigFilename.empty())
@@ -209,16 +210,17 @@ ConfigParse::insertConfigValue(const resip::Data& name, const resip::Data& value
 void 
 ConfigParse::parseCommandLine(int argc, char** argv)
 {
-   int startingArgForNameValuePairs = 1;
+   int startingArgForNameValuePairs = 1 + mSkipCount;
+   char *firstArg = argv[startingArgForNameValuePairs];
    // First argument is the configuration filename - it is optional and is never proceeded with a - or /
 #ifdef WIN32
-   if(argc >= 2 && argv[1][0] != '-' && argv[1][0] != '/')
+   if(argc >= (startingArgForNameValuePairs + 1) && firstArg[0] != '-' && firstArg[0] != '/')
 #else
-   if(argc >= 2 && argv[1][0] != '-')
+   if(argc >= (startingArgForNameValuePairs + 1) && firstArg[0] != '-')
 #endif
    {
-      mCmdLineConfigFilename = argv[1];
-      startingArgForNameValuePairs = 2;
+      mCmdLineConfigFilename = firstArg;
+      startingArgForNameValuePairs++;
    }
 
    // Loop through command line arguments and process them
