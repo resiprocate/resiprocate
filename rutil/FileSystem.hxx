@@ -47,9 +47,11 @@ class FileSystem
                   bool operator==(const iterator& rhs) const;
                   const Data& operator*() const;
                   const Data* operator->() const;
+                  bool is_directory() const;
                private:
 #ifdef WIN32
                   HANDLE mWinSearch;
+                  bool mIsDirectory;
 #else
                   DIR* mNixDir;
                   struct dirent* mDirent;
