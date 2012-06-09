@@ -99,6 +99,12 @@ FileSystem::Directory::iterator::operator->() const
 {
    return &mFile;
 }
+
+bool
+FileSystem::Directory::iterator::is_directory() const
+{
+   return mDirent->d_type == DT_DIR;
+}
 #else
 
 
@@ -158,6 +164,7 @@ FileSystem::Directory::iterator::operator++()
    else
    {
       mFile = fileData.cFileName;
+      mIsDirectory = (fileData.dwFileAttributes & FILE_ATTRIBUTE_DEVICE) > 0;
    }  
    return *this;
 }
@@ -195,6 +202,12 @@ const Data*
 FileSystem::Directory::iterator::operator->() const
 {
    return &mFile;
+}
+
+bool
+FileSystem::Directory::iterator::is_directory() const
+{
+   return mIsDirectory;
 }
 #endif
 
