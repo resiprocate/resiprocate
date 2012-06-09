@@ -11,7 +11,7 @@ namespace resip
 class KeepAlivePong : public TransactionMessage
 {
    public:
-      RESIP_HeapCount(ConnectionPingStarted);
+      RESIP_HeapCount(KeepAlivePong);
 
       KeepAlivePong(const Tuple& flow) : 
          mFlow(flow)
