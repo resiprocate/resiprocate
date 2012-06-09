@@ -21,6 +21,8 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::APP
 
+#define REFER_TIMEOUT 10
+
 DialInstance::DialInstance(const DialerConfiguration& dialerConfiguration, const resip::Uri& targetUri) :
    mDialerConfiguration(dialerConfiguration),
    mTargetUri(targetUri),
@@ -73,12 +75,26 @@ DialInstance::DialResult DialInstance::execute()
       // Process all SIP stack activity
       mSipStack->process(fdset);
       while(mDum->process());
+
+      // FIXME - we should wait a little and make sure it really worked
+      if(mProgress == ReferSent)
+      {
+         time_t now;
+         time(&now);
+         if(mReferSentTime + REFER_TIMEOUT < now)
+         {
+            ErrLog(<< "REFER timeout");
+            mProgress = Done;
+         }
+      }
+
       if(mProgress == Connected && mClient->isConnected()) 
       {
          InfoLog(<< "Sending the REFER");
          mClient->refer(NameAddr(mFullTarget));
          InfoLog(<< "Done sending the REFER");
          mProgress = ReferSent;
+         time(&mReferSentTime);
       }
       
       if(mProgress == Done)
