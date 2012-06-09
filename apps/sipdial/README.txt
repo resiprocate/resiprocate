@@ -18,7 +18,11 @@ Make/install:
 The configuration file:
 -----------------------
 
-  The configuration file must be located in $HOME/.sipdial/sipdial.cfg
+  sipdialer looks for a configuration file located in
+   $HOME/.sipdial/sipdial.cfg
+
+  You can also specify a configuration file on the command line
+  as the second parameter (after the target URI).
 
   You can copy the the example file included in the source
 
@@ -60,7 +64,7 @@ Using TLS
   In ~/.sipdial/sipdial.cfg, the callerUserAgentAddress must use
   a sips URI:
 
-    callerUserAgentAddress sips:mydeskphone@example.org
+    callerUserAgentAddress = sips:mydeskphone@example.org
 
 Install in gconf:
 -----------------
@@ -89,7 +93,7 @@ Usage:
    sipdialer tel:00442071357000
 
   SIP addresses:
-   sipdialer sip:442071357000@lvdx.com
+   sipdialer sip:helpdesk@sip5060.net
 
 
 Testing with a SIP proxy:
