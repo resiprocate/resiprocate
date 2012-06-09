@@ -3,18 +3,23 @@
 #define __DIALERCONFIGURATION_H
 
 #include <iostream>
+#include <map>
+
+#include <rutil/ConfigParse.hxx>
 
 #include "resip/stack/NameAddr.hxx"
 #include "resip/stack/Uri.hxx"
 #include "rutil/Data.hxx"
 
-class DialerConfiguration {
+class DialerConfiguration : public resip::ConfigParse {
 
 public:
    DialerConfiguration();
+   DialerConfiguration(int argc, char** argv, const resip::Data& defaultConfigFilename, int skipCount);
    virtual ~DialerConfiguration();
 
-   void loadStream(std::istream& in);
+   void printHelpText(int argc, char **argv);
+   using resip::ConfigParse::getConfigValue;
 
    void setDialerIdentity(const resip::NameAddr& dialerIdentity)
       { mDialerIdentity = dialerIdentity; };
