@@ -40,7 +40,7 @@ public:
    {
       Generic,
       LinksysSPA941,
-      PolycomIP501,
+      AlertInfo,
       Cisco7940
    } UserAgentVariety;
    void setCallerUserAgentVariety(UserAgentVariety callerUserAgentVariety)

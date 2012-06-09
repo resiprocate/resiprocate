@@ -40,8 +40,8 @@ void DialerConfiguration::loadStream(std::istream& in)
       {
          if(value == string("LinksysSPA941"))
             setCallerUserAgentVariety(LinksysSPA941);
-         else if(value == string("PolycomIP501"))
-            setCallerUserAgentVariety(PolycomIP501);
+         else if(value == string("AlertInfo"))
+            setCallerUserAgentVariety(AlertInfo);
          else if(value == string("Cisco7940"))
             setCallerUserAgentVariety(Cisco7940);
          else if(value == string("Generic"))
