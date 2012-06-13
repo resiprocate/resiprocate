@@ -6,9 +6,9 @@ EXTRA_DIST += *.vcproj
 #AM_CXXFLAGS = -DUSE_ARES
 
 sbin_PROGRAMS = queuetostream
-reprocmd_SOURCES = queuetostream.cpp
-reprocmd_LDADD = ../librepro.la
-reprocmd_LDADD += @LIBSSL_LIBADD@ -lpthread
+queuetostream_SOURCES = queuetostream.cpp
+queuetostream_LDADD = ../librepro.la
+queuetostream_LDADD += @LIBSSL_LIBADD@ -lpthread
 
 ##############################################################################
 # 
