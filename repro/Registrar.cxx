@@ -3,6 +3,7 @@
 #endif
 
 #include "repro/Registrar.hxx"
+#include "repro/Proxy.hxx"
 #include "resip/dum/ServerRegistration.hxx"
 #include "rutil/Logger.hxx"
 
@@ -12,7 +13,7 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
-Registrar::Registrar()
+Registrar::Registrar() : mProxy(0)
 {
 }
 
@@ -39,6 +40,10 @@ Registrar::onRefresh(resip::ServerRegistrationHandle sr,
    }
    if(continueProcessing)
    {
+      if(mProxy)
+      {
+         mProxy->doRegistrationAccounting(AccountingCollector::RegistrationRefreshed, reg);
+      }
       sr->accept();
    }
 }
@@ -56,6 +61,10 @@ Registrar::onRemove(resip::ServerRegistrationHandle sr,
    }
    if(continueProcessing)
    {
+      if(mProxy)
+      {
+         mProxy->doRegistrationAccounting(AccountingCollector::RegistrationRemoved, reg);
+      }
       sr->accept();
    }
 }
@@ -73,6 +82,10 @@ Registrar::onRemoveAll(resip::ServerRegistrationHandle sr,
    }
    if(continueProcessing)
    {
+      if(mProxy)
+      {
+         mProxy->doRegistrationAccounting(AccountingCollector::RegistrationRemovedAll, reg);
+      }
       sr->accept();
    }
 }
@@ -90,6 +103,10 @@ Registrar::onAdd(resip::ServerRegistrationHandle sr,
    }
    if(continueProcessing)
    {
+      if(mProxy)
+      {
+         mProxy->doRegistrationAccounting(AccountingCollector::RegistrationAdded, reg);
+      }
       sr->accept();
    }
 }

@@ -32,6 +32,10 @@ AmIResponsible::process(RequestContext& context)
 
    resip::SipMessage& request = context.getOriginalRequest();
 
+   // This call is placed after the DigestAuthenticator, so that we only account for
+   // authenticated sessions.
+   context.getProxy().doSessionAccounting(request, true /* received */, context);
+
    // There should be no Routes on the request at this point, if there was a route, then
    // the StrictRouteFixup monkey would have routed to it already
    assert (!request.exists(h_Routes) || 

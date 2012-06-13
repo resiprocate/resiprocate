@@ -168,6 +168,12 @@
     <ClCompile Include="monkeys\MessageSilo.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PersistentMessageQueue.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AccountingCollector.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDb.hxx">
@@ -348,6 +354,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="monkeys\MessageSilo.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PersistentMessageQueue.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Worker.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AccountingCollector.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

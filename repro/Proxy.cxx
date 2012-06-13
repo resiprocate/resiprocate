@@ -91,7 +91,9 @@ Proxy::Proxy(SipStack& stack,
      mTargetProcessorChain(targetP),
      mUserStore(config.getDataStore()->mUserStore),
      mOptionsHandler(0),
-     mRequestContextFactory(new RequestContextFactory)
+     mRequestContextFactory(new RequestContextFactory),
+     mSessionAccountingEnabled(config.getConfigBool("SessionAccountingEnabled", false)),
+     mRegistrationAccountingEnabled(config.getConfigBool("RegistrationAccountingEnabled", false))
 {
    FlowTokenSalt = Random::getCryptoRandom(20);   // 20-octet Crypto Random Key for Salting Flow Token HMACs
 
@@ -100,6 +102,14 @@ Proxy::Proxy(SipStack& stack,
    if(InteropHelper::getOutboundSupported())
    {
       addSupportedOption("outbound");
+   }
+
+   // Create Accounting Collector if enabled
+   if(mSessionAccountingEnabled || mRegistrationAccountingEnabled)
+   {
+      mAccountingCollector = new AccountingCollector(config.getConfigData("DatabasePath", "./", true),
+                                                     mSessionAccountingEnabled, 
+                                                     mRegistrationAccountingEnabled);
    }
 }
 
@@ -621,6 +631,25 @@ Proxy::removeSupportedOption(const resip::Data& option)
    mSupportedOptions.erase(option);
 }
 
+void 
+Proxy::doSessionAccounting(const resip::SipMessage& sip, bool received, RequestContext& context)
+{
+   if(mSessionAccountingEnabled)
+   {
+      assert(mAccountingCollector);
+      mAccountingCollector->doSessionAccounting(sip, received, context);
+   }
+}
+
+void 
+Proxy::doRegistrationAccounting(AccountingCollector::RegistrationEvent regEvent, const resip::SipMessage& sip)
+{
+   if(mRegistrationAccountingEnabled)
+   {
+      assert(mAccountingCollector);
+      mAccountingCollector->doRegistrationAccounting(regEvent, sip);
+   }
+}
 
 
 /* ====================================================================

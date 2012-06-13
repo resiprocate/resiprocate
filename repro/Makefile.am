@@ -17,7 +17,7 @@ EXTRA_DIST += WinSetup WinSetupx64
 EXTRA_DIST += repro.config
 EXTRA_DIST += create_mysql_reprodb.sql
 
-SUBDIRS = . test reprocmd
+SUBDIRS = . test reprocmd accountingconsumers
 
 #AM_CXXFLAGS = -DUSE_ARES
 
@@ -56,6 +56,7 @@ librepro_la_SOURCES = \
 	WebAdmin.cxx \
 	WebAdminThread.cxx \
 	\
+	AccountingCollector.cxx \
 	Proxy.cxx \
 	Registrar.cxx \
 	RegSyncClient.cxx \
@@ -74,6 +75,7 @@ librepro_la_SOURCES = \
 	XmlRpcServerBase.cxx \
 	Dispatcher.cxx \
 	OutboundTarget.cxx \
+	PersistentMessageQueue.cxx \
 	QValueTarget.cxx \
 	\
         monkeys/CertificateAuthenticator.cxx \
@@ -95,6 +97,7 @@ librepro_la_SOURCES = \
 
 reproincludedir = $(includedir)/repro
 nobase_reproinclude_HEADERS = AbstractDb.hxx \
+	AccountingCollector.hxx \
 	Ack200DoneMessage.hxx \
 	AclStore.hxx \
         AsyncProcessor.hxx \
@@ -128,6 +131,7 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	monkeys/MessageSilo.hxx \
 	MySqlDb.hxx \
 	OutboundTarget.hxx \
+	PersistentMessageQueue.hxx \
 	ProcessorChain.hxx \
 	Processor.hxx \
 	ProcessorMessage.hxx \

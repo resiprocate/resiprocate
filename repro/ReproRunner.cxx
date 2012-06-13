@@ -807,6 +807,10 @@ ReproRunner::createProxy()
    // like a catchall and will handle all requests the DUM does not
    mSipStack->registerTransactionUser(*mProxy);
 
+   if(mRegistrar)
+   {
+      mRegistrar->setProxy(mProxy);
+   }
    return true;
 }
 

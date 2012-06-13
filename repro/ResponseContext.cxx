@@ -831,6 +831,9 @@ ResponseContext::sendRequest(resip::SipMessage& request)
 {
    assert (request.isRequest());
 
+   // Do any required session accounting with this forward request - allows Session Routed event
+   mRequestContext.getProxy().doSessionAccounting(request, false /* received */, mRequestContext);
+
    if (request.method() != CANCEL && 
        request.method() != ACK)
    {
