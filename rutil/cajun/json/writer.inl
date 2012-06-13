@@ -134,6 +134,8 @@ inline void Writer::Write_i(const String& stringElement)
 {
    m_ostr << '"';
 
+   static bool escapeU = ('\u' != 'u');
+
    const std::string& s = stringElement.Value();
    std::string::const_iterator it(s.begin()),
                                itEnd(s.end());
@@ -148,7 +150,7 @@ inline void Writer::Write_i(const String& stringElement)
          case '\n':        m_ostr << "\\n";    break;
          case '\r':        m_ostr << "\\r";    break;
          case '\t':        m_ostr << "\\t";    break;
-         case '\u':        m_ostr << "\\u";    break; // uh...
+         case '\u':        if(escapeU) { m_ostr << "\\u"; break; } // uh...
          default:          m_ostr << *it;      break;
       }
    }
