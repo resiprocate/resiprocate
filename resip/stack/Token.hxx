@@ -61,6 +61,7 @@ class Token : public ParserCategory
       friend class _enum##_Param
 
       defineParam(text, "text", ExistsOrDataParameter, "RFC 3840");
+      defineParam(cause, "cause", UInt32Parameter, "RFC 3326");
       defineParam(dAlg, "d-alg", DataParameter, "RFC 3329");
       defineParam(dQop, "d-qop", DataParameter, "RFC 3329");
       defineParam(dVer, "d-ver", QuotedDataParameter, "RFC 3329");

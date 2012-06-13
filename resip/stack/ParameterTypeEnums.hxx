@@ -61,7 +61,8 @@ class ParameterTypes
          defineParam(type, "type", QuotedDataParameter, "RFC 3840"), // list
          defineParam(isFocus, "isfocus", ExistsParameter, "RFC 3840"),
          defineParam(actor, "actor", QuotedDataParameter, "RFC 3840"), // principal|msg-taker|attendant|information
-         defineParam(text, "text", ExistsOrDataParameter, "RFC 3840"), // using ExistsOrDataParameter so this parameter is compatible with both RFC3840 and RFC3326
+         defineParam(text, "text", ExistsOrDataParameter, "RFC 3326/3840"), // using ExistsOrDataParameter so this parameter is compatible with both RFC3840 and RFC3326
+         defineParam(cause, "cause", UInt32Parameter, "RFC3326"),
          defineParam(extensions, "extensions", QuotedDataParameter, "RFC 3840"), //list
 
          defineParam(Instance, "+sip.instance", QuotedDataParameter, "RFC 5626"),  // <> quoted
