@@ -105,8 +105,18 @@ FileSystem::Directory::iterator::is_directory() const
 {
    return mDirent->d_type == DT_DIR;
 }
-#else
 
+int 
+FileSystem::Directory::create() const
+{
+   if(mkdir(mPath.c_str(), 0777) == -1)
+   {
+      return errno;
+   }
+   return 0;
+}
+
+#else
 
 FileSystem::Directory::iterator::iterator() :
    mWinSearch(0)
@@ -209,6 +219,17 @@ FileSystem::Directory::iterator::is_directory() const
 {
    return mIsDirectory;
 }
+
+int 
+FileSystem::Directory::create() const
+{
+   if(_mkdir(mPath.c_str()) == -1)
+   {
+      return (int)GetLastError();
+   }
+   return 0;
+}
+
 #endif
 
 

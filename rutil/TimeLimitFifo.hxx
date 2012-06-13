@@ -94,7 +94,7 @@ class TimeLimitFifo : public AbstractFifo< Timestamped<Msg*> >
       typedef enum {EnforceTimeDepth, IgnoreTimeDepth, InternalElement} DepthUsage;
 
       /// After it runs out of the lesser of these limits it will start to refuse messages
-	  TimeLimitFifo(unsigned int maxDurationSecs,
+      TimeLimitFifo(unsigned int maxDurationSecs,
                     unsigned int maxSize);
 
       virtual ~TimeLimitFifo();
@@ -108,24 +108,24 @@ class TimeLimitFifo : public AbstractFifo< Timestamped<Msg*> >
 
       /// @brief Add a message to the fifo.
       /// return true iff succeeds
-	  /// @param Msg* 'Message pointer'
+      /// @param Msg* 'Message pointer'
       /// @param DepthUsage : (Needs work...)
       ///    EnforceTimeDepth -- external (non ACK) requests
       ///    IgnoreTimeDepth -- external reponse and ACK
       ///    InternalElement -- internal messages (timers, application postbacks..); use reserved queue space
       ///
-	  ///    +------------------------------------------------------+
-	  ///    |                                |          |          |
-	  ///    +------------------------------------------------------+
-	  ///    <-----enforce------------------->
-	  ///    <---------------ignoreTimeDepth------------>
-	  ///    <--------------------- internalElement---------------->
-	  ///
-	  ///    enforce will drop things that exceed the queue 
-	  ///    ignore will go past that limit to the extent of the queue (eg. 
-	  ///    internal will basically not drop anything
-	  ///
-	  bool add(Msg* msg, DepthUsage usage);
+      ///    +------------------------------------------------------+
+      ///    |                                |          |          |
+      ///    +------------------------------------------------------+
+      ///    <-----enforce------------------->
+      ///    <---------------ignoreTimeDepth------------>
+      ///    <--------------------- internalElement---------------->
+      ///
+      ///    enforce will drop things that exceed the queue 
+      ///    ignore will go past that limit to the extent of the queue (eg. 
+      ///    internal will basically not drop anything
+      ///
+      bool add(Msg* msg, DepthUsage usage);
 
       /** 
          @brief Returns the first message available. 

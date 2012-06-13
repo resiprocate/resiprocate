@@ -5,11 +5,13 @@
 
 #if !defined(WIN32)
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/uio.h>
 #include <sys/fcntl.h>
 #include <unistd.h>
 #include <dirent.h>
 #else
+#include <direct.h>
 #include "rutil/Socket.hxx"
 #endif
 
@@ -62,6 +64,7 @@ class FileSystem
             iterator begin() const;
             iterator end() const;
             const Data& getPath() const { return mPath; }
+            int create() const;
          private:
             Data mPath;
       };
