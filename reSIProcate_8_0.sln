@@ -108,6 +108,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "reprolib", "repro\reprolib_
 		Release.AspNetCompiler.Debug = "False"
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "repro", "repro", "{89D1D684-90BC-49A2-8184-943535F66CD5}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -223,5 +229,10 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9D8D2649-213F-49D3-A8B0-C1849C611654} = {89D1D684-90BC-49A2-8184-943535F66CD5}
+		{31B0654F-E08E-405F-909F-80F86CB14B9E} = {89D1D684-90BC-49A2-8184-943535F66CD5}
+		{02954DA6-5079-4717-BC3D-B3ACA815CFED} = {89D1D684-90BC-49A2-8184-943535F66CD5}
 	EndGlobalSection
 EndGlobal
