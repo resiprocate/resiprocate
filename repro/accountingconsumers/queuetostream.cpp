@@ -75,7 +75,7 @@ main (int argc, char** argv)
             }
             else
             {
-               Sleep(1000);
+               sleepSeconds(1);
             }
          }
          else 
