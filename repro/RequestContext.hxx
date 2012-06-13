@@ -66,6 +66,9 @@ class RequestContext
       void updateTimerC();
       bool mInitialTimerCSet;
 
+      void setSessionCreatedEventSent() { mSessionCreatedEventSent = true; }
+      void setSessionEstablishedEventSent() { mSessionEstablishedEventSent = true; }
+
       void postTimedMessage(std::auto_ptr<resip::ApplicationMessage> msg,int seconds);
 
       // Accessor for per-requset extensible state storage for monkeys
@@ -96,6 +99,8 @@ class RequestContext
       ResponseContext mResponseContext;
       int mTCSerial;
       resip::KeyValueStore mKeyValueStore;
+      bool mSessionCreatedEventSent;
+      bool mSessionEstablishedEventSent;
 
       typedef std::vector<ProcessorChain::Chain::iterator>
 
