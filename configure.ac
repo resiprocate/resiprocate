@@ -258,6 +258,7 @@ AC_OUTPUT(Makefile \
 	resip/dum/test/Makefile \
 	resip/certs/Makefile \
 	repro/Makefile \
+	repro/accountingconsumers \
 	repro/reprocmd/Makefile \
 	repro/test/Makefile \
 	b2bua/Makefile \
