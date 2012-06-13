@@ -22,6 +22,7 @@ type, ParameterTypes::type
 isfocus, ParameterTypes::isFocus
 actor, ParameterTypes::actor
 text, ParameterTypes::text
+cause, ParameterTypes::cause
 extensions, ParameterTypes::extensions
 +sip.instance, ParameterTypes::Instance
 reg-id, ParameterTypes::regid
