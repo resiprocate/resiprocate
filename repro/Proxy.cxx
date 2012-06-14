@@ -93,7 +93,8 @@ Proxy::Proxy(SipStack& stack,
      mOptionsHandler(0),
      mRequestContextFactory(new RequestContextFactory),
      mSessionAccountingEnabled(config.getConfigBool("SessionAccountingEnabled", false)),
-     mRegistrationAccountingEnabled(config.getConfigBool("RegistrationAccountingEnabled", false))
+     mRegistrationAccountingEnabled(config.getConfigBool("RegistrationAccountingEnabled", false)),
+     mAccountingCollector(0)
 {
    FlowTokenSalt = Random::getCryptoRandom(20);   // 20-octet Crypto Random Key for Salting Flow Token HMACs
 
@@ -118,6 +119,7 @@ Proxy::~Proxy()
 {
    shutdown();
    join();
+   delete mAccountingCollector;
    InfoLog (<< "Proxy::thread shutdown with " << mServerRequestContexts.size() << " ServerRequestContexts and " << mClientRequestContexts.size() << " ClientRequestContexts.");
 }
 
