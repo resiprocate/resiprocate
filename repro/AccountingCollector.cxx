@@ -86,6 +86,9 @@ AccountingCollector::doRegistrationAccounting(AccountingCollector::RegistrationE
    case RegistrationRemoved:
       regEvent["EventName"] = String("Registration Removed");
       break;
+   case RegistrationRemovedAll:
+      regEvent["EventName"] = String("Registration Removed All");
+      break;
    }
    regEvent["Datetime"] = String(Data::from(datetime).c_str());
    regEvent["CallId"] = String(msg.header(h_CallId).value().c_str());
