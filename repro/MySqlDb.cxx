@@ -466,11 +466,12 @@ MySqlDb::dbWriteRecord(const Table table,
    Data escapedKey;
    if(AbstractDb::getSecondaryKey(table, pKey, pData, (void**)&secondaryKey, &secondaryKeyLen) == 0)
    {
+      Data escapedSKey;
       Data sKey(Data::Share, secondaryKey, secondaryKeyLen);
       DataStream ds(command);
       ds << "REPLACE INTO " << tableName(table)
          << " SET attr='" << escapeString(pKey, escapedKey)
-         << "', attr2='" << escapeString(sKey, escapedKey)
+         << "', attr2='" << escapeString(sKey, escapedSKey)
          << "', value='"  << pData.base64encode()
          << "'";
    }
