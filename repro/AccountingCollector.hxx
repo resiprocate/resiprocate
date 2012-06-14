@@ -15,6 +15,7 @@ namespace repro
 {
 class RequestContext;
 class PersistentMessageEnqueue;
+class ProxyConfig;
 
 class AccountingCollector : public resip::ThreadIf
 {
@@ -38,7 +39,7 @@ public:
       SessionError = 7
    } SessionEvent;
 
-   AccountingCollector(const resip::Data& dbBaseDir, bool initSessionAccounting, bool initRegistrationAccounting);
+   AccountingCollector(ProxyConfig& config);
    virtual ~AccountingCollector();
 
    virtual void doSessionAccounting(const resip::SipMessage& sip, bool received, RequestContext& context);
@@ -48,6 +49,10 @@ private:
    resip::Data mDbBaseDir;
    PersistentMessageEnqueue* mSessionEventQueue;
    PersistentMessageEnqueue* mRegistrationEventQueue;
+   bool mSessionAccountingAddRoutingHeaders;
+   bool mSessionAccountingAddViaHeaders;
+   bool mRegistrationAccountingAddRoutingHeaders;
+   bool mRegistrationAccountingAddViaHeaders;
 
    virtual void thread();
 

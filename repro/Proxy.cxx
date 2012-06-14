@@ -108,9 +108,7 @@ Proxy::Proxy(SipStack& stack,
    // Create Accounting Collector if enabled
    if(mSessionAccountingEnabled || mRegistrationAccountingEnabled)
    {
-      mAccountingCollector = new AccountingCollector(config.getConfigData("DatabasePath", "./", true),
-                                                     mSessionAccountingEnabled, 
-                                                     mRegistrationAccountingEnabled);
+      mAccountingCollector = new AccountingCollector(config);
    }
 }
 
