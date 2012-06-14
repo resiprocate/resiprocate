@@ -11,6 +11,7 @@
 
 #include "repro/AccountingCollector.hxx"
 #include "repro/RequestContext.hxx"
+#include "repro/ProxyConfig.hxx"
 #include "repro/PersistentMessageQueue.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "rutil/Logger.hxx"
@@ -27,20 +28,24 @@ using namespace std;
 const static Data sessionEventQueueName = "sessioneventqueue";
 const static Data registrationEventQueueName = "regeventqueue";
 
-AccountingCollector::AccountingCollector(const Data& dbBaseDir, bool initSessionAccounting, bool initRegistrationAccounting) :
-   mDbBaseDir(dbBaseDir),
+AccountingCollector::AccountingCollector(ProxyConfig& config) :
+   mDbBaseDir(config.getConfigData("DatabasePath", "./", true)),
    mSessionEventQueue(0),
    mRegistrationEventQueue(0),
+   mSessionAccountingAddRoutingHeaders(config.getConfigBool("SessionAccountingAddRoutingHeaders", true)),
+   mSessionAccountingAddViaHeaders(config.getConfigBool("SessionAccountingAddViaHeaders", true)),
+   mRegistrationAccountingAddRoutingHeaders(config.getConfigBool("RegistrationAccountingAddRoutingHeaders", true)),
+   mRegistrationAccountingAddViaHeaders(config.getConfigBool("RegistrationAccountingAddViaHeaders", true)),
    mFifo(0, 0)  // not limited by time or size
 {
-   if(initSessionAccounting)
+   if(config.getConfigBool("SessionAccountingEnabled", false))
    {
       if(!initializeEventQueue(SessionEventType))
       {
          ErrLog(<< "AccountingCollector: cannot initialize session event queue!");
       }
    }
-   if(initRegistrationAccounting)
+   if(config.getConfigBool("RegistrationAccountingEnabled", false))
    {
       if(!initializeEventQueue(RegistrationEventType))
       {
@@ -131,7 +136,8 @@ AccountingCollector::doRegistrationAccounting(AccountingCollector::RegistrationE
    {
       regEvent["Expires"] = Number(msg.header(h_Expires).value());
    }
-   if(msg.exists(h_Vias) && !msg.header(h_Vias).empty())
+   if(mRegistrationAccountingAddViaHeaders &&
+      msg.exists(h_Vias) && !msg.header(h_Vias).empty())
    {
       Array arrayVias;
       Vias::const_iterator viaIt = msg.header(h_Vias).begin();
@@ -147,7 +153,8 @@ AccountingCollector::doRegistrationAccounting(AccountingCollector::RegistrationE
          regEvent["Vias"] = arrayVias;
       }
    }
-   if(msg.exists(h_Paths) && !msg.header(h_Paths).empty())
+   if(mRegistrationAccountingAddRoutingHeaders &&
+      msg.exists(h_Paths) && !msg.header(h_Paths).empty())
    {
       Array arrayPaths;
       NameAddrs::const_iterator pathIt = msg.header(h_Paths).begin();
@@ -214,7 +221,8 @@ AccountingCollector::doSessionAccounting(const resip::SipMessage& msg, bool rece
             {
                sessionEvent["Contact"] = String(Data::from(msg.header(h_Contacts).front()).c_str());
             }
-            if(msg.exists(h_Vias) && !msg.header(h_Vias).empty())
+            if(mSessionAccountingAddViaHeaders &&
+               msg.exists(h_Vias) && !msg.header(h_Vias).empty())
             {
                Array arrayVias;
                Vias::const_iterator viaIt = msg.header(h_Vias).begin();
@@ -230,7 +238,8 @@ AccountingCollector::doSessionAccounting(const resip::SipMessage& msg, bool rece
                   sessionEvent["Vias"] = arrayVias;
                }
             }
-            if(msg.exists(h_Routes) && !msg.header(h_Routes).empty())
+            if(mSessionAccountingAddRoutingHeaders &&
+               msg.exists(h_Routes) && !msg.header(h_Routes).empty())
             {
                Array arrayRoutes;
                NameAddrs::const_iterator routeIt = msg.header(h_Routes).begin();
@@ -246,7 +255,8 @@ AccountingCollector::doSessionAccounting(const resip::SipMessage& msg, bool rece
                   sessionEvent["Routes"] = arrayRoutes;
                }
             }
-            if(msg.exists(h_RecordRoutes) && !msg.header(h_RecordRoutes).empty())
+            if(mSessionAccountingAddRoutingHeaders &&
+               msg.exists(h_RecordRoutes) && !msg.header(h_RecordRoutes).empty())
             {
                Array arrayRecordRoutes;
                NameAddrs::const_iterator recordRouteIt = msg.header(h_RecordRoutes).begin();
@@ -284,7 +294,8 @@ AccountingCollector::doSessionAccounting(const resip::SipMessage& msg, bool rece
             sessionEvent["Datetime"] = String(Data::from(datetime).c_str());
             sessionEvent["CallId"] = String(msg.header(h_CallId).value().c_str());
             sessionEvent["TargetUri"] = String(Data::from(msg.header(h_RequestLine).uri()).c_str());
-            if(msg.exists(h_Routes) && !msg.header(h_Routes).empty())
+            if(mSessionAccountingAddRoutingHeaders &&
+               msg.exists(h_Routes) && !msg.header(h_Routes).empty())
             {
                Array arrayRoutes;
                NameAddrs::const_iterator routeIt = msg.header(h_Routes).begin();
@@ -423,7 +434,8 @@ AccountingCollector::doSessionAccounting(const resip::SipMessage& msg, bool rece
             {
                sessionEvent["Contact"] = String(Data::from(msg.header(h_Contacts).front()).c_str());
             }
-            if(msg.exists(h_RecordRoutes) && !msg.header(h_RecordRoutes).empty())
+            if(mSessionAccountingAddRoutingHeaders &&
+               msg.exists(h_RecordRoutes) && !msg.header(h_RecordRoutes).empty())
             {
                Array arrayRecordRoutes;
                NameAddrs::const_iterator recordRouteIt = msg.header(h_RecordRoutes).begin();
