@@ -32,10 +32,10 @@ AccountingCollector::AccountingCollector(ProxyConfig& config) :
    mDbBaseDir(config.getConfigData("DatabasePath", "./", true)),
    mSessionEventQueue(0),
    mRegistrationEventQueue(0),
-   mSessionAccountingAddRoutingHeaders(config.getConfigBool("SessionAccountingAddRoutingHeaders", true)),
-   mSessionAccountingAddViaHeaders(config.getConfigBool("SessionAccountingAddViaHeaders", true)),
-   mRegistrationAccountingAddRoutingHeaders(config.getConfigBool("RegistrationAccountingAddRoutingHeaders", true)),
-   mRegistrationAccountingAddViaHeaders(config.getConfigBool("RegistrationAccountingAddViaHeaders", true)),
+   mSessionAccountingAddRoutingHeaders(config.getConfigBool("SessionAccountingAddRoutingHeaders", false)),
+   mSessionAccountingAddViaHeaders(config.getConfigBool("SessionAccountingAddViaHeaders", false)),
+   mRegistrationAccountingAddRoutingHeaders(config.getConfigBool("RegistrationAccountingAddRoutingHeaders", false)),
+   mRegistrationAccountingAddViaHeaders(config.getConfigBool("RegistrationAccountingAddViaHeaders", false)),
    mFifo(0, 0)  // not limited by time or size
 {
    if(config.getConfigBool("SessionAccountingEnabled", false))
