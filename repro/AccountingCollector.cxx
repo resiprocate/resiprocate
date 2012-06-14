@@ -322,6 +322,19 @@ AccountingCollector::doSessionAccounting(const resip::SipMessage& msg, bool rece
             }
             sessionEvent["From"]["Uri"] = String(Data::from(msg.header(h_From).uri()).c_str());
          }
+         if(msg.exists(h_Reasons) && !msg.header(h_Reasons).empty() && msg.header(h_Reasons).front().isWellFormed())
+         {
+            // Just look at first occurance
+            sessionEvent["Reason"]["Value"] = String(msg.header(h_Reasons).front().value().c_str());
+            if(msg.header(h_Reasons).front().exists(p_cause))
+            {
+               sessionEvent["Reason"]["Cause"] = Number(msg.header(h_Reasons).front().param(p_cause));
+            }
+            if(msg.header(h_Reasons).front().exists(p_text) && !msg.header(h_Reasons).front().param(p_text).empty())
+            {
+               sessionEvent["Reason"]["Text"] = String(msg.header(h_Reasons).front().param(p_text).c_str());
+            }
+         }
          pushEventObjectToQueue(sessionEvent, SessionEventType);
       }
       else if(msg.method() == CANCEL && received)
@@ -338,6 +351,19 @@ AccountingCollector::doSessionAccounting(const resip::SipMessage& msg, bool rece
          sessionEvent["EventName"] = String("Session Cancelled");
          sessionEvent["Datetime"] = String(Data::from(datetime).c_str());
          sessionEvent["CallId"] = String(msg.header(h_CallId).value().c_str());
+         if(msg.exists(h_Reasons) && !msg.header(h_Reasons).empty() && msg.header(h_Reasons).front().isWellFormed())
+         {
+            // Just look at first occurance
+            sessionEvent["Reason"]["Value"] = String(msg.header(h_Reasons).front().value().c_str());
+            if(msg.header(h_Reasons).front().exists(p_cause))
+            {
+               sessionEvent["Reason"]["Cause"] = Number(msg.header(h_Reasons).front().param(p_cause));
+            }
+            if(msg.header(h_Reasons).front().exists(p_text) && !msg.header(h_Reasons).front().param(p_text).empty())
+            {
+               sessionEvent["Reason"]["Text"] = String(msg.header(h_Reasons).front().param(p_text).c_str());
+            }
+         }
          pushEventObjectToQueue(sessionEvent, SessionEventType);
       }
       else if(msg.method() == REFER && received && msg.header(h_To).exists(p_tag))
@@ -485,6 +511,7 @@ AccountingCollector::doSessionAccounting(const resip::SipMessage& msg, bool rece
                   sessionEvent["Warning"]["Text"] = String(msg.header(h_Warnings).front().text().c_str());
                }
             }
+            // Note: a reason header is not usually present on a response - but we will use one if it is
             if(msg.exists(h_Reasons) && !msg.header(h_Reasons).empty() && msg.header(h_Reasons).front().isWellFormed())
             {
                // Just look at first occurance
