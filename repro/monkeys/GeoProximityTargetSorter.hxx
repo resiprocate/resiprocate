@@ -82,22 +82,35 @@ class GeoProximityTargetSorter : public Processor
       virtual ~GeoProximityTargetSorter();
       
       virtual processor_action_t process(RequestContext &);
-         
+      
+      // static fn available for other parts of repro to access the geoip library
+      // fills in any non-null field
+      static bool geoIPLookup(const resip::Tuple& address, 
+                              double* latitude, 
+                              double* longitude, 
+                              resip::Data* country=0, 
+                              resip::Data* region=0, 
+                              resip::Data* city=0);
+
    protected:
       void getClientGeoLocation(const resip::SipMessage& request, double& latitude, double& longitude);
       void getTargetGeoLocation(const Target& target, double& latitude, double& longitude);
       double getTargetDistance(const Target& target, double clientLatitude, double clientLongitude);
       void parseGeoLocationParameter(const resip::Data& parameter, double& latitude, double& longitude);
       double calculateDistance(double latitude1, double longitude1, double latitude2, double longitude2);
-      bool geoIPLookup(const resip::Tuple& address, double& latitude, double& longitude);
 
       resip::Data mRUriRegularExpressionData;
       regex_t* mRUriRegularExpression;
 
       unsigned long mDefaultDistance;
       bool mLoadBalanceEqualDistantTargets;
-      void* mGeoIPv4;
-      void* mGeoIPv6;
+
+      // Use static instance of the GeoIP library
+      // - allows static geoIPLookup method
+      // - reduces memory in cases where multiple instances of GeoProximityTargetSorter are needed
+      //   (take care when creating multipleinstances since static initialization is not mutexed)
+      static void* mGeoIPv4;
+      static void* mGeoIPv6;
 };
 
 }
