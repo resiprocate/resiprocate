@@ -453,9 +453,9 @@ GeoProximityTargetSorter::geoIPLookup(const Tuple& address, double* latitude, do
    
    if(gir != 0)
    {
-      Data countryData(Data::Share, gir->country_code);
-      Data regionData(Data::Share, gir->region);
-      Data cityData(Data::Share, gir->city);
+      Data countryData(Data::Share, gir->country_code ? gir->country_code : "");
+      Data regionData(Data::Share, gir->region ? gir->region : "");
+      Data cityData(Data::Share, gir->city ? gir->city : "");
       if(latitude) *latitude = gir->latitude;
       if(longitude) *longitude = gir->longitude;
       if(country) *country = countryData;
@@ -466,7 +466,7 @@ GeoProximityTargetSorter::geoIPLookup(const Tuple& address, double* latitude, do
                << ", Country=" << countryData
                << ", Region=" << regionData
                << ", City=" << cityData
-               << ", Lat/Long=" << latitude << "/" << longitude);
+               << ", Lat/Long=" << *latitude << "/" << *longitude);
 
       GeoIPRecord_delete(gir);
       return true;
