@@ -466,7 +466,7 @@ GeoProximityTargetSorter::geoIPLookup(const Tuple& address, double* latitude, do
                << ", Country=" << countryData
                << ", Region=" << regionData
                << ", City=" << cityData
-               << ", Lat/Long=" << *latitude << "/" << *longitude);
+               << ", Lat/Long=" << gir->latitude << "/" << gir->longitude);
 
       GeoIPRecord_delete(gir);
       return true;
