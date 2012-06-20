@@ -13,6 +13,8 @@
 #include "repro/RequestContext.hxx"
 #include "repro/ProxyConfig.hxx"
 #include "repro/PersistentMessageQueue.hxx"
+#include "resip/stack/Tuple.hxx"
+#include "resip/stack/Helper.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "rutil/Logger.hxx"
 
@@ -153,6 +155,13 @@ AccountingCollector::doRegistrationAccounting(AccountingCollector::RegistrationE
          regEvent["Vias"] = arrayVias;
       }
    }
+   Tuple publicAddress = Helper::getClientPublicAddress(msg);
+   if(publicAddress.getType() != UNKNOWN_TRANSPORT)
+   {
+      regEvent["ClientPublicAddress"]["Transport"] = String(Tuple::toData(publicAddress.getType()).c_str());
+      regEvent["ClientPublicAddress"]["IP"] = String(Tuple::inet_ntop(publicAddress).c_str());
+      regEvent["ClientPublicAddress"]["Port"] = Number(publicAddress.getPort());
+   }
    if(mRegistrationAccountingAddRoutingHeaders &&
       msg.exists(h_Paths) && !msg.header(h_Paths).empty())
    {
@@ -237,6 +246,13 @@ AccountingCollector::doSessionAccounting(const resip::SipMessage& msg, bool rece
                {
                   sessionEvent["Vias"] = arrayVias;
                }
+            }
+            Tuple publicAddress = Helper::getClientPublicAddress(msg);
+            if(publicAddress.getType() != UNKNOWN_TRANSPORT)
+            {
+               sessionEvent["ClientPublicAddress"]["Transport"] = String(Tuple::toData(publicAddress.getType()).c_str());
+               sessionEvent["ClientPublicAddress"]["IP"] = String(Tuple::inet_ntop(publicAddress).c_str());
+               sessionEvent["ClientPublicAddress"]["Port"] = Number(publicAddress.getPort());
             }
             if(mSessionAccountingAddRoutingHeaders &&
                msg.exists(h_Routes) && !msg.header(h_Routes).empty())
