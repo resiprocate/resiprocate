@@ -53,6 +53,7 @@ private:
    bool mSessionAccountingAddViaHeaders;
    bool mRegistrationAccountingAddRoutingHeaders;
    bool mRegistrationAccountingAddViaHeaders;
+   bool mRegistrationAccountingLogRefreshes;
 
    virtual void thread();
 
