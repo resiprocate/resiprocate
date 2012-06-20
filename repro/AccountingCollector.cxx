@@ -38,6 +38,7 @@ AccountingCollector::AccountingCollector(ProxyConfig& config) :
    mSessionAccountingAddViaHeaders(config.getConfigBool("SessionAccountingAddViaHeaders", false)),
    mRegistrationAccountingAddRoutingHeaders(config.getConfigBool("RegistrationAccountingAddRoutingHeaders", false)),
    mRegistrationAccountingAddViaHeaders(config.getConfigBool("RegistrationAccountingAddViaHeaders", false)),
+   mRegistrationAccountingLogRefreshes(config.getConfigBool("RegistrationAccountingLogRefreshes", false)),
    mFifo(0, 0)  // not limited by time or size
 {
    if(config.getConfigBool("SessionAccountingEnabled", false))
@@ -73,6 +74,12 @@ AccountingCollector::doRegistrationAccounting(AccountingCollector::RegistrationE
 {
    assert(msg.isRequest());
    assert(msg.method() == REGISTER);
+
+   if(regevent == RegistrationRefreshed && !mRegistrationAccountingLogRefreshes)
+   {
+      // if mRegistrationAccountingLogRefreshes is false then don't log refreshes
+      return;
+   }
 
    DateCategory datetime;
    if(!msg.exists(h_CallId) || !msg.header(h_CallId).isWellFormed())
