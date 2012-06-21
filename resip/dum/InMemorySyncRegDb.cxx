@@ -264,9 +264,18 @@ InMemorySyncRegDb::updateContact(const resip::Uri& aor,
    {
       if (*j == rec)
       {
+         update_status_t status = CONTACT_UPDATED;
+         if(mRemoveLingerSecs > 0 && j->mRegExpires == 0)
+         {
+            // If records linger, then check if updating a lingering record, if so
+            // modify status to CREATED so that ServerRegistration will properly generate
+            // an onAdd callback, instead of onRefresh.
+            // When contacts linger, their expires time is set to 0
+            status = CONTACT_CREATED;
+         }
          *j=rec;
          if(mHandler && !rec.mSyncContact) mHandler->onAorModified(aor, *contactList);
-         return CONTACT_UPDATED;
+         return status;
       }
    }
 
