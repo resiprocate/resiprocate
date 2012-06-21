@@ -140,6 +140,7 @@
 *added TlsDestructorInitializer as a field to LogStaticInitializer in order to make sure an instance of TlsDestructorInitializer is created before  LogStaticInitializer is initialized
 *removed print in TcpConnection that could end up printing garbage at the end of messages that are not null terminated
 *added loopback address checking to Tuple::isPrivateAddress
+*fixed a bad value passed to the macro RESIP_HeapCount in KeepAlivePong.h
 
 
 ==DUM==
@@ -163,6 +164,7 @@
 *removed unsafe logging statement in DumTimeout - if DUM and stack are in different threads, then crash could occur
 *fixed a bug where the CSeq can be wrong in a client subscription re-subscribe / refresh in the case where we receive the first NOTIFY before the 200/SUB response
 *dum/test/basicClient - fixed a trap during shutdown, due to order of destructed objects
+*fixed a bug when using the registration sync mechanism - the ServerRegistration onRefresh callback could be incorrectly generated instead of the onAdd callback when a registration is added, due to the record lingering in memory
 
 
 ==repro==
