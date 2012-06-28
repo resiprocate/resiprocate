@@ -170,6 +170,23 @@ AccountingCollector::doRegistrationAccounting(AccountingCollector::RegistrationE
       regEvent["ClientPublicAddress"]["Port"] = Number(publicAddress.getPort());
    }
    if(mRegistrationAccountingAddRoutingHeaders &&
+      msg.exists(h_Routes) && !msg.header(h_Routes).empty())
+   {
+      Array arrayRoutes;
+      NameAddrs::const_iterator routeIt = msg.header(h_Routes).begin();
+      for(; routeIt != msg.header(h_Routes).end(); routeIt++)
+      {
+         if(routeIt->isWellFormed())
+         {
+            arrayRoutes.Insert(String(Data::from(*routeIt).c_str()));
+         }
+      }
+      if(!arrayRoutes.Empty())
+      {
+         regEvent["Routes"] = arrayRoutes;
+      }
+   }
+   if(mRegistrationAccountingAddRoutingHeaders &&
       msg.exists(h_Paths) && !msg.header(h_Paths).empty())
    {
       Array arrayPaths;
