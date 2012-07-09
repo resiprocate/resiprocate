@@ -339,25 +339,31 @@ WinCompat::determineSourceInterfaceWithoutIPv6(const GenericIPAddress& destinati
    memset(&sourceIP, 0, sizeof(sockaddr_in));
    sourceIP.sin_family = AF_INET;
 
-   // look throught the local ip address - first we want to see if the address is local, if 
+   // look through the local ip address - first we want to see if the address is local, if 
    // not then we want to look for the Best route
    PMIB_IPADDRTABLE  pIpAddrTable = NULL;
    ULONG addrSize = 0;
          
    // allocate the space
-   if (ERROR_INSUFFICIENT_BUFFER == GetIpAddrTable(NULL, &addrSize, FALSE))
+   DWORD ret = GetIpAddrTable(NULL, &addrSize, FALSE);
+   if(ERROR_INSUFFICIENT_BUFFER == ret)
    {
       pIpAddrTable = (PMIB_IPADDRTABLE) new char [addrSize];
+      if(pIpAddrTable == 0)
+      {
+          throw Exception("Can't find source address for destination - unable to new memory", __FILE__,__LINE__);
+      }        
    } 
    else 
    {
-      throw Exception("Can't find source address for destination", __FILE__,__LINE__);
+      throw Exception("Can't find source address for destination (GetIpAddrTable to get buffer space failed), ret=" + Data(ret), __FILE__,__LINE__);
    }
-              
-   if (NO_ERROR != GetIpAddrTable(pIpAddrTable, &addrSize, FALSE)) 
+     
+   ret = GetIpAddrTable(pIpAddrTable, &addrSize, FALSE);
+   if (NO_ERROR != ret) 
    {
        delete [] (char *) pIpAddrTable;
-       return GenericIPAddress(sourceIP);
+       throw Exception("Can't find source address for destination (GetIpAddrTable failed), addrSize=" + Data(addrSize) + ", ret=" + Data(ret), __FILE__,__LINE__);
    }
 
    // Check if address is local or not
@@ -377,6 +383,7 @@ WinCompat::determineSourceInterfaceWithoutIPv6(const GenericIPAddress& destinati
          {
             if(pIpAddrTable->table[j].dwIndex == dwNicIndex)  // Default address is first address found for NIC
             {
+               DebugLog(<< "Routing to a local address - returning default address for NIC");
                sourceIP.sin_addr.s_addr = pIpAddrTable->table[j].dwAddr;               
                delete [] (char *) pIpAddrTable;
                return GenericIPAddress(sourceIP);
@@ -389,13 +396,14 @@ WinCompat::determineSourceInterfaceWithoutIPv6(const GenericIPAddress& destinati
    MIB_IPFORWARDROW bestRoute;
    memset(&bestRoute, 0, sizeof(bestRoute));
    const sockaddr_in& sin = (const sockaddr_in&)destination.address;
-   if (NO_ERROR != GetBestRoute(sin.sin_addr.s_addr, 0, &bestRoute)) 
+   ret = GetBestRoute(sin.sin_addr.s_addr, 0, &bestRoute);
+   if (NO_ERROR != ret) 
    {
       delete [] (char *) pIpAddrTable;
-      throw Exception("Can't find source address for destination", __FILE__,__LINE__);
+      throw Exception("Can't find source address for destination, ret=" + Data(ret), __FILE__,__LINE__);
    }
       
-   // look throught the local ip address to find one that match the best route.
+   // look through the local ip address to find one that match the best route.
    enum ENICEntryPreference {ENICUnknown = 0, ENextHopNotWithinNICSubnet, ENICSubnetIsAll1s, ENICServicesNextHop};
    ENICEntryPreference eCurrSelection = ENICUnknown;
 
