@@ -620,9 +620,9 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
          GenericIPAddress addr = WinCompat::determineSourceInterface(target.toGenericIPAddress());
          source.setSockaddr(addr);
       }
-      catch (WinCompat::Exception&)
+      catch (WinCompat::Exception& ex)
       {
-         ErrLog (<< "Can't find source interface to use");
+         ErrLog (<< "Can't find source interface to use: " << ex);
          throw Transport::Exception("Can't find source interface", __FILE__, __LINE__);
       }
 #else
