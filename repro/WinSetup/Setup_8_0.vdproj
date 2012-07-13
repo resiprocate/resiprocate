@@ -27,6 +27,18 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_589E4F8781B6EFF5018F0646F96CD14B"
+        "OwnerKey" = "8:_449747DB7BDE448E8557B9834BB2A62D"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_8E41C4D12C3648E1BC1DFEC42392972E"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_B0B648F097BA49E5AF24FE8FAAAA3E44"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -112,6 +124,46 @@
             {
             "SourcePath" = "8:readme.txt"
             "TargetName" = "8:readme.txt"
+            "Tag" = "8:"
+            "Folder" = "8:_96F138CFF79546568B8B0A6277D34A78"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_589E4F8781B6EFF5018F0646F96CD14B"
+            {
+            "SourcePath" = "8:IPHLPAPI.DLL"
+            "TargetName" = "8:IPHLPAPI.DLL"
+            "Tag" = "8:"
+            "Folder" = "8:_96F138CFF79546568B8B0A6277D34A78"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_8E41C4D12C3648E1BC1DFEC42392972E"
+            {
+            "SourcePath" = "8:..\\repro.config"
+            "TargetName" = "8:repro.config"
             "Tag" = "8:"
             "Folder" = "8:_96F138CFF79546568B8B0A6277D34A78"
             "Condition" = "8:"
@@ -348,6 +400,20 @@
             "Icon" = "8:"
             "Feature" = "8:"
             }
+            "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_67AC6DE8B6E64AC1A2DE2739B887577F"
+            {
+            "Name" = "8:repro.config"
+            "Arguments" = "8:"
+            "Description" = "8:"
+            "ShowCmd" = "3:1"
+            "IconIndex" = "3:0"
+            "Transitive" = "11:FALSE"
+            "Target" = "8:_8E41C4D12C3648E1BC1DFEC42392972E"
+            "Folder" = "8:_ADAE71E3079D4A2691B0E37C4D87E8F8"
+            "WorkingFolder" = "8:_96F138CFF79546568B8B0A6277D34A78"
+            "Icon" = "8:"
+            "Feature" = "8:"
+            }
             "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_7CDB993AF3BD44E495FF253FB8E164D9"
             {
             "Name" = "8:Repro SIP Proxy"
@@ -358,7 +424,7 @@
             "Transitive" = "11:FALSE"
             "Target" = "8:_449747DB7BDE448E8557B9834BB2A62D"
             "Folder" = "8:_ADAE71E3079D4A2691B0E37C4D87E8F8"
-            "WorkingFolder" = "8:"
+            "WorkingFolder" = "8:_96F138CFF79546568B8B0A6277D34A78"
             "Icon" = "8:"
             "Feature" = "8:"
             }
@@ -777,7 +843,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_449747DB7BDE448E8557B9834BB2A62D"
             {
-            "SourcePath" = "8:..\\debug\\repro.exe"
+            "SourcePath" = "8:..\\Debug\\repro.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_96F138CFF79546568B8B0A6277D34A78"

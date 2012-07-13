@@ -33,6 +33,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_4D212C1D21C34639B306B0B60769803D"
+        "OwnerKey" = "8:_449747DB7BDE448E8557B9834BB2A62D"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_5752D824D4BA4CC4AE9A4129533CC084"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -45,26 +51,20 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_61428F82929F493D8B88B795D8D3F1B1"
-        "OwnerKey" = "8:_449747DB7BDE448E8557B9834BB2A62D"
+        "MsmKey" = "8:_9B970858111B46D498BB6728C709EE22"
+        "OwnerKey" = "8:_4D212C1D21C34639B306B0B60769803D"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_990B1533EAE8425EB68FFC5FDA644E58"
-        "OwnerKey" = "8:_61428F82929F493D8B88B795D8D3F1B1"
+        "MsmKey" = "8:_A06A2BC6896346A8AC7E4F2FDC2B11DF"
+        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_B0B648F097BA49E5AF24FE8FAAAA3E44"
         "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_C04E882EF2F696D5E7C5F0B3E3420B6E"
-        "OwnerKey" = "8:_449747DB7BDE448E8557B9834BB2A62D"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -224,6 +224,26 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_A06A2BC6896346A8AC7E4F2FDC2B11DF"
+            {
+            "SourcePath" = "8:..\\repro.config"
+            "TargetName" = "8:repro.config"
+            "Tag" = "8:"
+            "Folder" = "8:_96F138CFF79546568B8B0A6277D34A78"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_B0B648F097BA49E5AF24FE8FAAAA3E44"
             {
             "SourcePath" = "8:..\\VERSION"
@@ -242,26 +262,6 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_C04E882EF2F696D5E7C5F0B3E3420B6E"
-            {
-            "SourcePath" = "8:LIBMYSQL.dll"
-            "TargetName" = "8:LIBMYSQL.dll"
-            "Tag" = "8:"
-            "Folder" = "8:_96F138CFF79546568B8B0A6277D34A78"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:TRUE"
-            "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
         }
@@ -332,7 +332,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Repro SIP Proxy"
         "ProductCode" = "8:{1D66F08D-5168-4EC9-B809-CC792E780CA9}"
-        "PackageCode" = "8:{34B673A4-150E-42BF-A6C4-1FB3B1232E8A}"
+        "PackageCode" = "8:{BFCE542D-12FA-45E4-B61E-18BFDCF126C1}"
         "UpgradeCode" = "8:{7BD08495-64E4-4565-A1DC-93954D304A2E}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:FALSE"
@@ -475,7 +475,7 @@
             "Transitive" = "11:FALSE"
             "Target" = "8:_449747DB7BDE448E8557B9834BB2A62D"
             "Folder" = "8:_ADAE71E3079D4A2691B0E37C4D87E8F8"
-            "WorkingFolder" = "8:"
+            "WorkingFolder" = "8:_96F138CFF79546568B8B0A6277D34A78"
             "Icon" = "8:"
             "Feature" = "8:"
             }
@@ -490,6 +490,20 @@
             "Target" = "8:_5752D824D4BA4CC4AE9A4129533CC084"
             "Folder" = "8:_ADAE71E3079D4A2691B0E37C4D87E8F8"
             "WorkingFolder" = "8:"
+            "Icon" = "8:"
+            "Feature" = "8:"
+            }
+            "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_E3DD708E008F4D00A29C2A04F00D7F0C"
+            {
+            "Name" = "8:repro.config"
+            "Arguments" = "8:"
+            "Description" = "8:"
+            "ShowCmd" = "3:1"
+            "IconIndex" = "3:0"
+            "Transitive" = "11:FALSE"
+            "Target" = "8:_A06A2BC6896346A8AC7E4F2FDC2B11DF"
+            "Folder" = "8:_ADAE71E3079D4A2691B0E37C4D87E8F8"
+            "WorkingFolder" = "8:_96F138CFF79546568B8B0A6277D34A78"
             "Icon" = "8:"
             "Feature" = "8:"
             }
@@ -889,7 +903,7 @@
         }
         "MergeModule"
         {
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_61428F82929F493D8B88B795D8D3F1B1"
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_4D212C1D21C34639B306B0B60769803D"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:TRUE"
@@ -903,7 +917,7 @@
             "Feature" = "8:"
             "IsolateTo" = "8:"
             }
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_990B1533EAE8425EB68FFC5FDA644E58"
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_9B970858111B46D498BB6728C709EE22"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:TRUE"
