@@ -1876,11 +1876,11 @@ WebAdmin::buildRestartSubPage(DataStream& s)
             localAddr.sin_addr.s_addr = htonl(INADDR_ANY);
             localAddr.sin_port = 0;
 
-            rc = bind(sd, (struct sockaddr *) &localAddr, sizeof(localAddr));
+            rc = ::bind(sd, (struct sockaddr *) &localAddr, sizeof(localAddr));
             if(rc >= 0) 
             {
                // Connect to server
-               rc = connect(sd, (struct sockaddr *) &servAddr, sizeof(servAddr));
+               rc = ::connect(sd, (struct sockaddr *) &servAddr, sizeof(servAddr));
                if(rc >= 0) 
                {
                   Data request("<Restart>\r\n  <Request>\r\b  </Request>\r\n</Restart>\r\n");

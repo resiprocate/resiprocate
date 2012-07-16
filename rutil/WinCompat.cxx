@@ -131,13 +131,13 @@ WinCompat::getVersion()
 WinCompat* WinCompat::mInstance = 0;
 
 
+static Mutex WinComaptInstanceMutex;
 WinCompat *
 WinCompat::instance()
 {
-   static Mutex mutex;
    if (!mInstance)
    {
-      Lock lock(mutex);
+      Lock lock(WinComaptInstanceMutex);
       if (!mInstance)
       {
          mInstance = new WinCompat();
@@ -173,11 +173,13 @@ WinCompat::WinCompat() :
    getBestInterfaceEx = (GetBestInterfaceExProc) GetProcAddress(hLib, TEXT("GetBestInterfaceEx"));
    getAdaptersAddresses = (GetAdaptersAddressesProc) GetProcAddress(hLib, TEXT("GetAdaptersAddresses"));
    getAdaptersInfo = (GetAdaptersInfoProc) GetProcAddress(hLib, TEXT("GetAdaptersInfo"));
+   getBestRoute = (GetBestRouteProc) GetProcAddress(hLib, TEXT("GetBestRoute"));
+   getIpAddrTable = (GetIpAddrTableProc) GetProcAddress(hLib, TEXT("GetIpAddrTable"));
    if (getAdaptersAddresses == NULL || getBestInterfaceEx == NULL)
    {   
       loadLibraryWithIPv6Failed = true;
    }
-   if (getAdaptersInfo == NULL)
+   if (getAdaptersInfo == NULL || getBestRoute == NULL || getIpAddrTable == NULL)
    {
       loadLibraryWithIPv4Failed = true;
    }
@@ -185,6 +187,7 @@ WinCompat::WinCompat() :
    loadLibraryWithIPv6Failed = true;
    loadLibraryWithIPv4Failed = true;
 #endif
+   DebugLog(<< "WinCompat constructor complete!");
 }
 
 void WinCompat::destroyInstance()
@@ -345,7 +348,7 @@ WinCompat::determineSourceInterfaceWithoutIPv6(const GenericIPAddress& destinati
    ULONG addrSize = 0;
          
    // allocate the space
-   DWORD ret = GetIpAddrTable(NULL, &addrSize, FALSE);
+   DWORD ret = instance()->getIpAddrTable(NULL, &addrSize, FALSE);
    if(ERROR_INSUFFICIENT_BUFFER == ret)
    {
       pIpAddrTable = (PMIB_IPADDRTABLE) new char [addrSize];
@@ -359,11 +362,11 @@ WinCompat::determineSourceInterfaceWithoutIPv6(const GenericIPAddress& destinati
       throw Exception("Can't find source address for destination (GetIpAddrTable to get buffer space failed), ret=" + Data(ret), __FILE__,__LINE__);
    }
      
-   ret = GetIpAddrTable(pIpAddrTable, &addrSize, FALSE);
+   ret = instance()->getIpAddrTable(pIpAddrTable, &addrSize, FALSE);
    if (NO_ERROR != ret) 
    {
-       delete [] (char *) pIpAddrTable;
-       throw Exception("Can't find source address for destination (GetIpAddrTable failed), addrSize=" + Data(addrSize) + ", ret=" + Data(ret), __FILE__,__LINE__);
+      delete [] (char *) pIpAddrTable;
+      throw Exception("Can't find source address for destination (GetIpAddrTable failed), addrSize=" + Data(addrSize) + ", ret=" + Data(ret), __FILE__,__LINE__);
    }
 
    // Check if address is local or not
@@ -396,7 +399,7 @@ WinCompat::determineSourceInterfaceWithoutIPv6(const GenericIPAddress& destinati
    MIB_IPFORWARDROW bestRoute;
    memset(&bestRoute, 0, sizeof(bestRoute));
    const sockaddr_in& sin = (const sockaddr_in&)destination.address;
-   ret = GetBestRoute(sin.sin_addr.s_addr, 0, &bestRoute);
+   ret = instance()->getBestRoute(sin.sin_addr.s_addr, 0, &bestRoute);
    if (NO_ERROR != ret) 
    {
       delete [] (char *) pIpAddrTable;
