@@ -201,6 +201,17 @@
   <ItemGroup>
     <ClCompile Include="queuetostream.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\contrib\db\build_windows\db_static_10_0.vcxproj">
+      <Project>{9e5a7645-1502-4467-91f8-bcf2eb06ef72}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\rutil\rutil_10_0.vcxproj">
+      <Project>{3d0e5ceb-93dc-4fdb-918b-d08fa369e106}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\reprolib_10_0.vcxproj">
+      <Project>{31b0654f-e08e-405f-909f-80f86cb14b9e}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

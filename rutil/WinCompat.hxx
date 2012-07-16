@@ -57,6 +57,8 @@ class WinCompat
       typedef DWORD (WINAPI * GetBestInterfaceExProc)(const sockaddr *, DWORD *);
       typedef DWORD (WINAPI * GetAdaptersAddressesProc)(ULONG, DWORD, VOID *, IP_ADAPTER_ADDRESSES *, ULONG *);
       typedef DWORD (WINAPI * GetAdaptersInfoProc)(PIP_ADAPTER_INFO, PULONG);
+      typedef DWORD (WINAPI * GetBestRouteProc)(DWORD dwDestAddr, DWORD dwSourceAddr, PMIB_IPFORWARDROW pBestRoute);
+      typedef DWORD (WINAPI * GetIpAddrTableProc)(PMIB_IPADDRTABLE pIpAddrTable, PULONG pdwSize, BOOL bOrder);
 
       WinCompat();
       ~WinCompat();
@@ -64,6 +66,8 @@ class WinCompat
       GetBestInterfaceExProc getBestInterfaceEx;
       GetAdaptersAddressesProc getAdaptersAddresses;
       GetAdaptersInfoProc getAdaptersInfo;
+      GetBestRouteProc getBestRoute;
+      GetIpAddrTableProc getIpAddrTable;
       bool loadLibraryWithIPv4Failed;
       bool loadLibraryWithIPv6Failed;
       HMODULE hLib;
