@@ -40,7 +40,7 @@ static char *RCSSTRING __UNUSED__="$Id: ice_socket.c,v 1.2 2008/04/28 17:59:01 e
 #include "stun.h"
 
     
-static void nr_ice_socket_readable_cb(int s, int how, void *cb_arg)
+static void nr_ice_socket_readable_cb(NR_SOCKET s, int how, void *cb_arg)
   {
     int r;
     nr_ice_stun_ctx *sc1,*sc2;
@@ -49,6 +49,7 @@ static void nr_ice_socket_readable_cb(int s, int how, void *cb_arg)
     char string[256];
     nr_transport_addr addr;
     int len;
+    size_t len_s;
     int is_stun;
     int is_req;
     int is_ind;
@@ -59,10 +60,17 @@ static void nr_ice_socket_readable_cb(int s, int how, void *cb_arg)
     /* Re-arm first! */
     NR_ASYNC_WAIT(s,how,nr_ice_socket_readable_cb,cb_arg);
 
-    if(r=nr_socket_recvfrom(sock->sock,buf,sizeof(buf),(size_t *)&len,0,&addr)){
+    if(r=nr_socket_recvfrom(sock->sock,buf,sizeof(buf),&len_s,0,&addr)){
       r_log(LOG_ICE,LOG_ERR,"ICE(%s): Error reading from socket",sock->ctx->label);
       return;
     }
+
+    /* Deal with the fact that sizeof(int) and sizeof(size_t) may not
+       be the same */
+    if (len_s > (size_t)INT_MAX)
+      return;
+
+    len = (int)len_s;
 
 #ifdef USE_TURN
   re_process:
@@ -215,7 +223,7 @@ int nr_ice_socket_destroy(nr_ice_socket **isockp)
 
 int nr_ice_socket_close(nr_ice_socket *isock)
   {
-    int fd=-1;
+    NR_SOCKET fd=-1;
 
     if (!isock||!isock->sock)
       return(0);
