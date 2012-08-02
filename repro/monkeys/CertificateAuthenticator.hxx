@@ -4,6 +4,7 @@
 #include <set>
 
 #include "rutil/Data.hxx"
+#include "rutil/KeyValueStore.hxx"
 #include "repro/Processor.hxx"
 #include "repro/Dispatcher.hxx"
 #include "repro/ProxyConfig.hxx"
@@ -18,6 +19,8 @@ namespace repro
   class CertificateAuthenticator : public Processor
   {
     public:
+      static resip::KeyValueStore::Key mCertificateVerifiedKey;
+
       CertificateAuthenticator(ProxyConfig& config, resip::SipStack* stack, std::set<resip::Data>& trustedPeers, bool thirdPartyRequiresCertificate = true);
       ~CertificateAuthenticator();
 

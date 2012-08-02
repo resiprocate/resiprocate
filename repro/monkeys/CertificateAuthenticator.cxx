@@ -27,6 +27,8 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
+KeyValueStore::Key CertificateAuthenticator::mCertificateVerifiedKey = Proxy::allocateRequestKeyValueStoreKey();
+
 CertificateAuthenticator::CertificateAuthenticator(ProxyConfig& config,
                                                    resip::SipStack* stack,
                                                    std::set<Data>& trustedPeers,
@@ -87,7 +89,10 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
          if (!rc.getKeyValueStore().getBoolValue(IsTrustedNode::mFromTrustedNodeKey))
          {
             if(authorizedForThisIdentity(peerNames, sipMessage->header(h_From).uri()))
+            {
+               rc.getKeyValueStore().setBoolValue(CertificateAuthenticator::mCertificateVerifiedKey, true);
                return Continue;
+            }
             rc.sendResponse(*auto_ptr<SipMessage>
                             (Helper::makeResponse(*sipMessage, 403, "Authentication Failed for peer cert")));
             return SkipAllChains;
@@ -104,7 +109,10 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
             return SkipAllChains;
          }
          if(authorizedForThisIdentity(peerNames, sipMessage->header(h_From).uri()))
+         {
+            rc.getKeyValueStore().setBoolValue(CertificateAuthenticator::mCertificateVerifiedKey, true);
             return Continue;
+         }
          rc.sendResponse(*auto_ptr<SipMessage>
                             (Helper::makeResponse(*sipMessage, 403, "Authentication Failed for peer cert")));
          return SkipAllChains;
