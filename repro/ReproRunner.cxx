@@ -478,6 +478,19 @@ ReproRunner::createSipStack()
       mSipStack->setEnumSuffixes(enumSuffixes);
    }
 
+   // Set any enum domains from configuration
+   std::map<Data,Data> enumDomains;
+   std::vector<Data> _enumDomains;
+   mProxyConfig->getConfigValue("EnumDomains", _enumDomains);
+   if (enumSuffixes.size() > 0)
+   {
+      for(std::vector<Data>::iterator it = _enumDomains.begin(); it != _enumDomains.end(); it++)
+      {
+         enumDomains[*it] = *it;
+      }
+      mSipStack->setEnumDomains(enumDomains);
+   }
+
    // Add stack transports
    bool allTransportsSpecifyRecordRoute=false;
    if(!addTransports(allTransportsSpecifyRecordRoute))
