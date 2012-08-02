@@ -250,7 +250,29 @@ bool
 Uri::isEnumSearchable() const
 {
    checkParsed();
-   return (!mUser.empty() && mUser.size() >= 2 && mUser[0] == '+');
+   int digits = 0;
+
+   if(mUser.empty())
+      return false;
+
+   // E.164 numbers must begin with a + and have at least
+   // 3 digits
+   if(mUser[0] != '+' || mUser.size() < 4)
+      return false;
+
+   // count the digits
+   for(const char* i=user().begin(); i!= user().end(); i++)
+   {
+      if(isdigit(*i))
+         digits++;
+      else
+         if(*i != '-')
+            return false; // Only digits and '-' permitted
+   }
+   if(digits > 15)
+      return false;
+
+   return true;
 }
 
 std::vector<Data> 
