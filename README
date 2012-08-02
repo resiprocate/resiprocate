@@ -1,0 +1,5 @@
+The code and patches previously in this directory are
+obsolete. 
+
+OpenSSL has DTLS-SRTP support as of OpenSSL 1.0.1.
+Please see: http://www.openssl.org/
