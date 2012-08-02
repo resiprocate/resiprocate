@@ -198,11 +198,13 @@ DnsResult::whitelistLast()
 }
 
 void
-DnsResult::lookup(const Uri& uri, const std::vector<Data> &enumSuffixes)
+DnsResult::lookup(const Uri& uri, const std::vector<Data> &enumSuffixes,
+   const std::map<Data,Data> &enumDomains)
 {
    DebugLog (<< "DnsResult::lookup " << uri);
    //int type = this->mType;
-   if (!enumSuffixes.empty() && uri.isEnumSearchable())
+   if (!enumSuffixes.empty() && uri.isEnumSearchable() &&
+      enumDomains.find(uri.host()) != enumDomains.end())
    {
       mInputUri = uri;
       mDoingEnum = true;
