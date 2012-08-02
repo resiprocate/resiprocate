@@ -252,26 +252,40 @@ Uri::isEnumSearchable() const
    checkParsed();
    int digits = 0;
 
-   if(mUser.empty())
+   if(mUser.size() < 4)
+   {
+      StackLog(<< "user part of Uri empty or too short for E.164");
       return false;
+   }
 
    // E.164 numbers must begin with a + and have at least
    // 3 digits
-   if(mUser[0] != '+' || mUser.size() < 4)
+   if(mUser[0] != '+')
+   {
+      StackLog(<< "user part of Uri does not begin with `+' or too short");
       return false;
+   }
 
-   // count the digits
-   for(const char* i=user().begin(); i!= user().end(); i++)
+   // count the digits (skip the leading `+')
+   for(const char* i=user().begin() + 1; i!= user().end(); i++)
    {
       if(isdigit(*i))
          digits++;
       else
          if(*i != '-')
+         {
+            StackLog(<< "user part of Uri contains non-digit: " << *i);
             return false; // Only digits and '-' permitted
+         }
    }
    if(digits > 15)
+   {
+      // E.164 only permits 15 digits in a phone number
+      StackLog(<< "user part of Uri contains more than 15 digits");
       return false;
+   }
 
+   DebugLog(<< "is in E.164 format for ENUM: " << mUser);
    return true;
 }
 
@@ -291,6 +305,7 @@ Uri::getEnumLookups(const std::vector<Data>& suffixes) const
             prefix += Symbols::DOT;
          }
       }
+      StackLog(<< "E.164 number reversed for ENUM query: " << prefix);
       for (std::vector<Data>::const_iterator j=suffixes.begin(); j != suffixes.end(); ++j)
       {
          results.push_back(prefix + *j);
