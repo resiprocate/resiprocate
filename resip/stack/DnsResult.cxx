@@ -207,7 +207,7 @@ DnsResult::lookup(const Uri& uri, const std::vector<Data> &enumSuffixes)
       mInputUri = uri;
       mDoingEnum = true;
       std::vector<Data> enums = uri.getEnumLookups(enumSuffixes);
-      assert(enums.size() <= 1);
+      assert(enums.size() >= 1);
       if (!enums.empty())
       {
          InfoLog (<< "Doing ENUM lookup on " << *enums.begin());
