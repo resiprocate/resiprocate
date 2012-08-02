@@ -60,8 +60,11 @@ class DnsResult : public DnsResultSink
          @param enumSuffixes If the uri is enum searchable, this is the list of
                   enum suffixes (for example "e164.arpa") that will be used in
                   the attempt to resolve this uri.
+         @param enumDomains The ENUM possibility is only considered if
+                the URI domain part is one of these domains
       */
-      void lookup(const Uri& uri, const std::vector<Data> &enumSuffixes);
+      void lookup(const Uri& uri, const std::vector<Data> &enumSuffixes,
+         const std::map<Data,Data> &enumDomains);
 
       /*!
          Blacklist the last returned result until the specified time (ms)

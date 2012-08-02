@@ -926,6 +926,12 @@ SipStack::setEnumSuffixes(const std::vector<Data>& suffixes)
 }
 
 void
+SipStack::setEnumDomains(const std::map<Data,Data>& domains)
+{
+   mDnsStub->setEnumDomains(domains);
+}
+
+void
 SipStack::clearDnsCache()
 {
    mDnsStub->clearDnsCache();
