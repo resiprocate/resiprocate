@@ -6,6 +6,7 @@
 
 #include "repro/Proxy.hxx"
 #include "repro/RequestContext.hxx"
+#include "repro/monkeys/CertificateAuthenticator.hxx"
 #include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TransactionTerminated.hxx"
@@ -51,6 +52,8 @@ RequestContext::RequestContext(Proxy& proxy,
    mKeyValueStore(*Proxy::getRequestKeyValueStoreKeyAllocator())
 {
    mInitialTimerCSet=false;
+
+   mKeyValueStore.setBoolValue(CertificateAuthenticator::mCertificateVerifiedKey, false);
 }
 
 RequestContext::~RequestContext()
