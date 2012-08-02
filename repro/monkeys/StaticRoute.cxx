@@ -4,6 +4,7 @@
 
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Helper.hxx"
+#include "repro/monkeys/CertificateAuthenticator.hxx"
 #include "repro/monkeys/StaticRoute.hxx"
 #include "repro/monkeys/IsTrustedNode.hxx"
 #include "repro/RequestContext.hxx"
@@ -65,7 +66,8 @@ StaticRoute::process(RequestContext& context)
       //}
    }
 
-   if (requireAuth && context.getDigestIdentity().empty())
+   if (requireAuth && context.getDigestIdentity().empty() &&
+      !context.getKeyValueStore().getBoolValue(CertificateAuthenticator::mCertificateVerifiedKey))
    {
       // !rwm! TODO do we need anything more sophisticated to figure out the realm?
       Data realm = msg.header(h_RequestLine).uri().host();
