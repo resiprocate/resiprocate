@@ -25,7 +25,7 @@ class StackThread : public ThreadIf
    public:
       // *sigh* doesn't end up yielding a very good warning, but at least you 
       // get a line number.
-      RESIP_DEPRECATED StackThread(SipStack& stack);
+      StackThread(SipStack& stack) RESIP_DEPRECATED;
       virtual ~StackThread();
       
       virtual void thread();
