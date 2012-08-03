@@ -999,7 +999,7 @@ public:
 
    virtual void executeCommand()
    {
-      mInviteSession.referCommand(mReferTo, mSessionToReplace, mReferSub);
+      mInviteSession.refer(mReferTo, mSessionToReplace, mReferSub);
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
