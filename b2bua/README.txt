@@ -31,7 +31,7 @@ Some key points about this code:
 
 - It produces a shared object - to produce an executable, 
   the B2BUA class must be instantiated and put to work.
-  Such an example exists in the apps/ directory.  A typical
+  Such an example exists in the apps/basicB2BUA directory.  A typical
   implementation of a B2BUA must implement the following
   classes:
   - b2bua::CallRoute
@@ -46,7 +46,9 @@ Some key points about this code:
   - fix a file descriptor bug
   - timeout on either direction
   The rtpproxy patches have been posted on the rtpproxy mailing
-  list
+  list:
+
+   http://lists.rtpproxy.org/pipermail/users/2008-May/000016.html
 
 Daniel Pocock
 daniel@pocock.com.au
