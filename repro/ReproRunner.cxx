@@ -732,16 +732,6 @@ ReproRunner::createDialogUsageManager()
 
    if (mDum)
    {
-      if(mProxyConfig->getConfigBool("EnableCertificateAuthenticator", false))
-      {
-         // TODO: perhaps this should be initialised from the trusted node
-         // monkey?  Or should the list of trusted TLS peers be independent
-         // from the trusted node list?
-         std::set<Data> trustedPeers;
-         SharedPtr<TlsPeerAuthManager> certAuth(new TlsPeerAuthManager(*mDum, mDum->dumIncomingTarget(), trustedPeers));
-         mDum->addIncomingFeature(certAuth);
-      }
-
       mSipAuthDisabled = mProxyConfig->getConfigBool("DisableAuth", false);
 
       // If Authentication is enabled, then configure DUM to authenticate requests
@@ -761,6 +751,19 @@ ReproRunner::createDialogUsageManager()
                                                 !mProxyConfig->getConfigBool("DisableAuthInt", false) /*useAuthInt*/,
                                                 mProxyConfig->getConfigBool("RejectBadNonces", false)));
          mDum->setServerAuthManager(uasAuth);
+      }
+
+      // Note that CertificateAuthenticator is added to the feature chain
+      // after DIGEST auth.  That is because certificate auth will
+      // in some cases allow a request that has been passed by DIGEST
+      if(mProxyConfig->getConfigBool("EnableCertificateAuthenticator", false))
+      {
+         // TODO: perhaps this should be initialised from the trusted node
+         // monkey?  Or should the list of trusted TLS peers be independent
+         // from the trusted node list?
+         std::set<Data> trustedPeers;
+         SharedPtr<TlsPeerAuthManager> certAuth(new TlsPeerAuthManager(*mDum, mDum->dumIncomingTarget(), trustedPeers));
+         mDum->addIncomingFeature(certAuth);
       }
 
       // Set the MessageFilterRuleList on DUM and create a thread to run DUM in
@@ -1237,6 +1240,15 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    // Add is trusted node monkey
    addProcessor(chain, std::auto_ptr<Processor>(new IsTrustedNode(*mProxyConfig)));
 
+   // Add digest authenticator monkey - if required
+   if (!mSipAuthDisabled)
+   {
+      assert(mAuthRequestDispatcher);
+      DigestAuthenticator* da = new DigestAuthenticator(*mProxyConfig, mAuthRequestDispatcher);
+
+      addProcessor(chain, std::auto_ptr<Processor>(da)); 
+   }
+
    // Add Certificate Authenticator - if required
    if(mProxyConfig->getConfigBool("EnableCertificateAuthenticator", false))
    {
@@ -1247,15 +1259,6 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
       // passed to TlsPeerAuthManager perhaps?
       std::set<Data> trustedPeers;
       addProcessor(chain, std::auto_ptr<Processor>(new CertificateAuthenticator(*mProxyConfig, mSipStack, trustedPeers)));
-   }
-
-   // Add digest authenticator monkey - if required
-   if (!mSipAuthDisabled)
-   {
-      assert(mAuthRequestDispatcher);
-      DigestAuthenticator* da = new DigestAuthenticator(*mProxyConfig, mAuthRequestDispatcher);
-
-      addProcessor(chain, std::auto_ptr<Processor>(da)); 
    }
 
    // Add am I responsible monkey
