@@ -11,6 +11,8 @@ namespace resip
 {
 class DialogUsageManager;
 
+typedef std::set<Data> PermittedFromAddresses;
+typedef std::map<Data, PermittedFromAddresses> CommonNameMappings;
 
 class TlsPeerAuthManager : public DumFeature
 {
@@ -23,6 +25,7 @@ class TlsPeerAuthManager : public DumFeature
       };
 
       TlsPeerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target, std::set<Data>& trustedPeers, bool thirdPartyRequiresCertificate = true);
+      TlsPeerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target, std::set<Data>& trustedPeers, bool thirdPartyRequiresCertificate, CommonNameMappings& commonNameMappings);
       virtual ~TlsPeerAuthManager();
 
       virtual ProcessingResult process(Message* msg);      
@@ -42,6 +45,7 @@ class TlsPeerAuthManager : public DumFeature
 
    private:
       std::set<Data> mTrustedPeers;
+      CommonNameMappings mCommonNameMappings;
       bool mThirdPartyRequiresCertificate;
 };
 
