@@ -957,6 +957,9 @@ ReproRunner::addDomains(TransactionUser& tu, bool log)
       }
    }
 
+   /* All of this logic has been commented out - the sysadmin must explicitly
+      add any of the items below to the Domains config option in repro.config
+
    Data localhostname(DnsUtil::getLocalHostName());
    if(log) InfoLog (<< "Adding local hostname domain " << localhostname );
    tu.addDomain(localhostname);
@@ -980,7 +983,10 @@ ReproRunner::addDomains(TransactionUser& tu, bool log)
    }
 
    if(log) InfoLog (<< "Adding 127.0.0.1 domain.");
-   tu.addDomain("127.0.0.1");
+   tu.addDomain("127.0.0.1"); */
+
+   if( realm.empty() )
+      realm = "Unconfigured";
 
    return realm;
 }
