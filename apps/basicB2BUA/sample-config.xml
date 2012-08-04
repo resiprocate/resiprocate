@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<b2bua>
+  <peers>
+    <peer>
+      <name>1</name>
+      <ip>10.0.0.1</ip>
+      <password>password1</password>
+      <context>ctx_abc</context>
+    </peer>
+    <peer>
+      <name>test2</name>
+      <ip>10.0.1.2</ip>
+      <password/>
+      <context>ctx_abc</context>
+    </peer>
+    <peer>
+      <name>test5</name>
+      <ip>192.168.1.2</ip>
+      <password/>
+      <context>ctx_abc</context>
+    </peer>
+    <peer>
+      <name>test8</name>
+      <ip>192.168.100.1</ip>
+      <password/>
+      <context>ctx_abc</context>
+    </peer>
+    <peer>
+      <name>testing</name>
+      <ip>192.168.100.2</ip>
+      <password/>
+      <context>ctx_abc</context>
+    </peer>
+    <peer>
+      <name>testM</name>
+      <ip>192.168.100.3</ip>
+      <password/>
+      <context>ctx_xyz</context>
+    </peer>
+  </peers>
+  <contexts>
+    <!-- handle calls coming to us from switch -->
+    <context>
+      <name>ctx_abc</name>
+      <rule>
+        <!-- pattern to match using PCRE -->
+        <pattern>^1122</pattern>
+        <!-- number of digits to strip -->
+        <strip>4</strip>
+        <!-- digits to insert at beginning -->
+        <insert>44</insert>
+        <peer>test5</peer>
+      </rule>
+      <rule>
+        <!-- pattern to match using PCRE -->
+        <pattern>1234</pattern>
+        <!-- number of digits to strip -->
+        <strip>4</strip>
+        <!-- digits to insert at beginning -->
+        <insert></insert>
+        <peer>test2</peer>
+      </rule>
+    </context>
+
+    <!-- handle calls coming to us from the VoIP switch -->
+    <context>
+      <name>ctx_xyz</name>
+      <rule>
+        <!-- pattern to match using PCRE -->
+        <pattern></pattern>
+        <!-- number of digits to strip -->
+        <strip>0</strip>
+        <!-- digits to insert at beginning -->
+        <insert></insert>
+        <peer>testing</peer>
+        <!-- if the first peer rejects the call, we can try a second -->
+        <peer>testM</peer>
+      </rule>
+    </context>
+
+    <!-- handle calls coming to us from any other remote peer -->
+    <context>
+      <name>ctx_external</name>
+    </context>
+  </contexts>
+</b2bua>
