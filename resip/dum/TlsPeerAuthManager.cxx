@@ -21,6 +21,13 @@ TlsPeerAuthManager::TlsPeerAuthManager(DialogUsageManager& dum, TargetCommand::T
 {
 }
 
+TlsPeerAuthManager::TlsPeerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target, std::set<Data>& trustedPeers, bool thirdPartyRequiresCertificate, CommonNameMappings& commonNameMappings) :
+   DumFeature(dum, target),
+   mTrustedPeers(trustedPeers),
+   mThirdPartyRequiresCertificate(thirdPartyRequiresCertificate),
+   mCommonNameMappings(commonNameMappings)
+{
+}
 
 TlsPeerAuthManager::~TlsPeerAuthManager()
 {
@@ -79,6 +86,23 @@ TlsPeerAuthManager::authorizedForThisIdentity(
       {
          DebugLog(<< "Matched certificate name " << i << " against domain " << domain);
          return true;
+      }
+      CommonNameMappings::iterator _mapping =
+         mCommonNameMappings.find(i);
+      if(_mapping != mCommonNameMappings.end())
+      {
+         DebugLog(<< "CN mapping(s) exist for the certificate " << i);
+         PermittedFromAddresses& permitted = _mapping->second;
+         if(permitted.find(aor) != permitted.end())
+         {
+            DebugLog(<< "Matched certificate name " << i << " against full AoR " << aor << " by common name mappings");
+            return true;
+         }
+         if(permitted.find(domain) != permitted.end())
+         {
+            DebugLog(<< "Matched certificate name " << i << " against domain " << domain << " by common name mappings");
+            return true;
+         }
       }
       DebugLog(<< "Certificate name " << i << " doesn't match AoR " << aor << " or domain " << domain);
    }
