@@ -292,6 +292,9 @@ int nr_stun_server_process_request(nr_stun_server_ctx *ctx, nr_socket *sock, cha
         _status = R_FAILED;
     }
 
+#if 0
+    /* EKR: suppressed these checks because if you have an error when 
+       you are sending an error, things go wonky */
 #ifdef SANITY_CHECKS
     if (_status == R_ALREADY) {
         assert(NR_STUN_GET_TYPE_CLASS(res->header.type) == NR_CLASS_ERROR_RESPONSE);
@@ -302,6 +305,7 @@ int nr_stun_server_process_request(nr_stun_server_ctx *ctx, nr_socket *sock, cha
         assert(!nr_stun_message_has_attribute(res, NR_STUN_ATTR_ERROR_CODE, 0));
     }
 #endif /* SANITY_CHECKS */
+#endif
 
     if (0) {
   skip_response:

@@ -392,12 +392,12 @@ nr_ice_peer_ctx_parse_global_attributes(nr_ice_peer_ctx *pctx, char **attrs, int
     int i;
     char *orig = 0;
     char *str;
-    char *component_id;
-    char *connection_address;
+    char *component_id = 0;
+    char *connection_address = 0;
     unsigned int port;
     in_addr_t addr;
-    char *ice_option_tag;
-
+    char *ice_option_tag = 0;
+    
     for(i=0;i<attr_ct;i++){
         orig = str = attrs[i];
 
