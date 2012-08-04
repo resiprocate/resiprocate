@@ -121,7 +121,12 @@ nr_stun_find_local_addresses(nr_transport_addr addrs[], int maxaddrs, int *count
        *count = maxaddrs;
     }
 
+#if 0
     if (*count > 0) {
+      /* TODO(ekr@rtfm.com): Commented out 2012-07-26.
+
+         This code is currently not used in Firefox and needs to be
+         ported to 64-bit */
         children = RCALLOC((*count + 10) * sizeof(*children));
         if (!children)
             ABORT(R_NO_MEMORY);
@@ -136,6 +141,7 @@ nr_stun_find_local_addresses(nr_transport_addr addrs[], int maxaddrs, int *count
                 ABORT(r);
         }
     }
+#endif
 
   done:
 
