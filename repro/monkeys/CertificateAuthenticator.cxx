@@ -39,6 +39,18 @@ CertificateAuthenticator::CertificateAuthenticator(ProxyConfig& config,
 {
 }
 
+CertificateAuthenticator::CertificateAuthenticator(ProxyConfig& config,
+                                                   resip::SipStack* stack,
+                                                   std::set<Data>& trustedPeers,
+                                                   bool thirdPartyRequiresCertificate,
+                                                   CommonNameMappings& commonNameMappings) :
+   Processor("CertificateAuthenticator"),
+   mTrustedPeers(trustedPeers),
+   mThirdPartyRequiresCertificate(thirdPartyRequiresCertificate),
+   mCommonNameMappings(commonNameMappings)
+{
+}
+
 CertificateAuthenticator::~CertificateAuthenticator()
 {
 }
@@ -154,6 +166,23 @@ CertificateAuthenticator::authorizedForThisIdentity(const std::list<Data>& peerN
       {
          DebugLog(<< "Matched certificate name " << i << " against domain " << domain);
          return true;
+      }
+      CommonNameMappings::iterator _mapping =
+         mCommonNameMappings.find(i);
+      if(_mapping != mCommonNameMappings.end())
+      {
+         DebugLog(<< "CN mapping(s) exist for the certificate " << i);
+         PermittedFromAddresses& permitted = _mapping->second;
+         if(permitted.find(aor) != permitted.end())
+         {
+            DebugLog(<< "Matched certificate name " << i << " against full AoR " << aor << " by common name mappings");
+            return true;
+         }
+         if(permitted.find(domain) != permitted.end())
+         {
+            DebugLog(<< "Matched certificate name " << i << " against domain " << domain << " by common name mappings");
+            return true;
+         }
       }
       DebugLog(<< "Certificate name " << i << " doesn't match AoR " << aor << " or domain " << domain);
    }
