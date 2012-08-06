@@ -639,7 +639,7 @@ class SipStack : public FdSetIOObserver
             do not support epoll, fd_set ends up being used anyway since there 
             is no other choice, but this is hidden from the app.
       */
-      RESIP_DEPRECATED virtual void buildFdSet(FdSet& fdset);
+      RESIP_DEPRECATED(virtual void buildFdSet(FdSet& fdset));
 
       /**
           This allows the executive to give processing time to stack components.
@@ -656,7 +656,7 @@ class SipStack : public FdSetIOObserver
             do not support epoll, fd_set ends up being used anyway since there 
             is no other choice, but this is hidden from the app.
       */
-      RESIP_DEPRECATED virtual void process(FdSet& fdset);
+      RESIP_DEPRECATED(virtual void process(FdSet& fdset));
 
       /**
          @brief Give processing time to the SipStack components, when operating 

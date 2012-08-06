@@ -244,8 +244,8 @@ class ParseBuffer
       UInt32 uInt32();
       UInt64 uInt64();
 
-      RESIP_DEPRECATED UInt64 unsignedLongLong(){return uInt64();} 
-      RESIP_DEPRECATED unsigned long unsignedInteger(){return uInt32();}
+      RESIP_DEPRECATED(UInt64 unsignedLongLong()){return uInt64();} 
+      RESIP_DEPRECATED(unsigned long unsignedInteger()){return uInt32();}
 
 #ifndef RESIP_FIXED_POINT		
       float floatVal();
