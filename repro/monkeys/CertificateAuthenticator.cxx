@@ -96,13 +96,6 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
       }
       
       const std::list<resip::Data> &peerNames = sipMessage->getTlsPeerNames();
-
-      if (peerNames.size() == 0 && !rc.getDigestIdentity().empty())
-      {
-         DebugLog(<< "User without certificate (or no valid names found in cert), but passed digest auth, allowing");
-         return Continue;
-      }
-
       if (proxy.isMyDomain(sipMessage->header(h_From).uri().host()))
       {
          if (!rc.getKeyValueStore().getBoolValue(IsTrustedNode::mFromTrustedNodeKey))
