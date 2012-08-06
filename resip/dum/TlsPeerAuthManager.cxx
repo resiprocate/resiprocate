@@ -142,23 +142,6 @@ TlsPeerAuthManager::handle(SipMessage* sipMessage)
    }
 
    const std::list<resip::Data> &peerNames = sipMessage->getTlsPeerNames();
-
-   if(peerNames.size() == 0 && sipMessage->exists(h_ProxyAuthorizations))
-   {
-      // if there is no cert (because TLS client auth mode is optional)
-      // and if the peer passed DIGEST auth, let it pass
-
-      ParserContainer<Auth>* auths = &sipMessage->header(h_ProxyAuthorizations);
-      for(Auths::iterator it = auths->begin(); it != auths->end(); it++)
-      {
-         if (mDum.isMyDomain(it->param(p_realm)))
-         {
-            DebugLog(<< "User without certificate (or no valid names found in cert), but passed DIGEST auth, allowing");
-            return Skipped;
-         }
-      }
-   }
-
    if (mDum.isMyDomain(sipMessage->header(h_From).uri().host()))
    {
       if (requiresAuthorization(*sipMessage))
