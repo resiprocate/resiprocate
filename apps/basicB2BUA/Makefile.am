@@ -18,3 +18,12 @@ basicB2BUA_SOURCES = \
 	BasicConfiguration.cxx \
 	BasicManager.cxx
 
+noinst_HEADERS = BasicB2BUA.hxx \
+	BasicConfiguration.hxx \
+	BasicManager.hxx \
+	Context.hxx \
+	ContextRule.hxx \
+	MyServerAuthManager.hxx \
+	Peer.hxx \
+	XMLHelpers.hxx
+
