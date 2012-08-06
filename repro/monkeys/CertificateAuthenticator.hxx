@@ -4,6 +4,7 @@
 #include <set>
 
 #include "rutil/Data.hxx"
+#include "resip/dum/TlsPeerAuthManager.hxx"
 #include "repro/Processor.hxx"
 #include "repro/Dispatcher.hxx"
 #include "repro/ProxyConfig.hxx"
@@ -19,6 +20,7 @@ namespace repro
   {
     public:
       CertificateAuthenticator(ProxyConfig& config, resip::SipStack* stack, std::set<resip::Data>& trustedPeers, bool thirdPartyRequiresCertificate = true);
+      CertificateAuthenticator(ProxyConfig& config, resip::SipStack* stack, std::set<resip::Data>& trustedPeers, bool thirdPartyRequiresCertificate, resip::CommonNameMappings& commonNameMappings);
       ~CertificateAuthenticator();
 
       virtual processor_action_t process(RequestContext &);
@@ -29,6 +31,7 @@ namespace repro
 
       std::set<resip::Data> mTrustedPeers;
       bool mThirdPartyRequiresCertificate;
+      resip::CommonNameMappings mCommonNameMappings;
   };
   
 }
