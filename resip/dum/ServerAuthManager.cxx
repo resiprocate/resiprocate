@@ -16,8 +16,9 @@
 using namespace resip;
 using namespace std;
 
-ServerAuthManager::ServerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target) :
-   DumFeature(dum, target)
+ServerAuthManager::ServerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target, bool challengeThirdParties) :
+   DumFeature(dum, target),
+   mChallengeThirdParties(challengeThirdParties)
 {
 }
 
@@ -271,6 +272,12 @@ ServerAuthManager::rejectBadNonces() const
 ServerAuthManager::AsyncBool
 ServerAuthManager::requiresChallenge(const SipMessage& msg)
 {
+   if(!mChallengeThirdParties)
+   {
+      const Uri& fromUri = msg.header(h_From).uri();
+      if(!mDum.isMyDomain(fromUri.host()))
+         return False;
+   }
    return True;  
 }
 
