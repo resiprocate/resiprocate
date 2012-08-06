@@ -17,8 +17,9 @@ ReproServerAuthManager::ReproServerAuthManager(DialogUsageManager& dum,
                                                Dispatcher* authRequestDispatcher,
                                                AclStore& aclDb,
                                                bool useAuthInt,
-                                               bool rejectBadNonces):
-   ServerAuthManager(dum, dum.dumIncomingTarget()),
+                                               bool rejectBadNonces,
+                                               bool challengeThirdParties):
+   ServerAuthManager(dum, dum.dumIncomingTarget(), challengeThirdParties),
    mDum(dum),
    mAuthRequestDispatcher(authRequestDispatcher),
    mAclDb(aclDb),
