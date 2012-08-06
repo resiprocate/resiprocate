@@ -49,7 +49,7 @@ ReproServerAuthManager::requiresChallenge(const SipMessage& msg)
    assert(msg.isRequest());
    if(!mAclDb.isRequestTrusted(msg))
    {
-      return True;
+      return ServerAuthManager::requiresChallenge(msg);
    }
    else
    {
