@@ -149,6 +149,8 @@ class DnsStub : public ExternalDnsHandler
       void removeResultTransform();
       void setEnumSuffixes(const std::vector<Data>& suffixes);
       const std::vector<Data>& getEnumSuffixes() const;
+      void setEnumDomains(const std::map<Data,Data>& domains);
+      const std::map<Data,Data>& getEnumDomains() const;
       void clearDnsCache();
       void logDnsCache();
       void getDnsCacheDump(std::pair<unsigned long, unsigned long> key, GetDnsCacheDumpHandler* handler);
@@ -315,6 +317,7 @@ class DnsStub : public ExternalDnsHandler
       };
 
       void doSetEnumSuffixes(const std::vector<Data>& suffixes);
+      void doSetEnumDomains(const std::map<Data,Data>& domains);
 
       class SetEnumSuffixesCommand : public Command
       {
@@ -333,6 +336,25 @@ class DnsStub : public ExternalDnsHandler
          private:
             DnsStub& mStub;
             std::vector<Data> mEnumSuffixes;
+      };
+
+      class SetEnumDomainsCommand : public Command
+      {
+         public:
+            SetEnumDomainsCommand(DnsStub& stub,
+                                   const std::map<Data,Data>& domains)
+               : mStub(stub),
+                 mEnumDomains(domains)
+            {}
+            ~SetEnumDomainsCommand() {}
+            void execute()
+            {
+               mStub.doSetEnumDomains(mEnumDomains);
+            }
+
+         private:
+            DnsStub& mStub;
+            std::map<Data,Data> mEnumDomains;
       };
 
       void doClearDnsCache();
@@ -414,6 +436,7 @@ class DnsStub : public ExternalDnsHandler
       std::set<Query*> mQueries;
 
       std::vector<Data> mEnumSuffixes; // where to do enum lookups
+      std::map<Data,Data> mEnumDomains;
 
       static int mDnsTimeout; // in seconds
       static int mDnsTries;
