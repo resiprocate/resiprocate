@@ -26,7 +26,7 @@ class ServerAuthManager : public DumFeature
          Rejected
       };
 
-      ServerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target);
+      ServerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target, bool challengeThirdParties = true);
       virtual ~ServerAuthManager();
 
       virtual ProcessingResult process(Message* msg);      
@@ -99,6 +99,9 @@ class ServerAuthManager : public DumFeature
 
       virtual void onAuthSuccess(const SipMessage& msg);
       virtual void onAuthFailure(AuthFailureReason reason, const SipMessage& msg);
+
+   private:
+      bool mChallengeThirdParties;
 };
 
  
