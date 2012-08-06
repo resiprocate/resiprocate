@@ -196,11 +196,11 @@ typedef unsigned int   UInt32;
 // like prior to that. As for SUNPRO, it uses gcc's frontend, so I would expect 
 // gnu-c function attributes to work, but does it define __GNUC__?
 #if defined(__GNUC__) || (__INTEL_COMPILER > 800)
-#define RESIP_DEPRECATED __attribute__ ((deprecated))
+#define RESIP_DEPRECATED(x) x __attribute__ ((deprecated))
 #elif defined(_MSC_VER)
-#define RESIP_DEPRECATED __declspec(deprecated)
+#define RESIP_DEPRECATED(x) __declspec(deprecated) x
 #else
-#define RESIP_DEPRECATED
+#define RESIP_DEPRECATED(x) x
 #endif
 
 #endif
