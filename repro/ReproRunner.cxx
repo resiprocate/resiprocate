@@ -2,6 +2,10 @@
 #include "config.h"
 #endif
 
+#include <iostream>
+#include <fstream>
+#include <stdexcept>
+
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
@@ -738,7 +742,8 @@ ReproRunner::createDialogUsageManager()
          // monkey?  Or should the list of trusted TLS peers be independent
          // from the trusted node list?
          std::set<Data> trustedPeers;
-         SharedPtr<TlsPeerAuthManager> certAuth(new TlsPeerAuthManager(*mDum, mDum->dumIncomingTarget(), trustedPeers));
+         loadCommonNameMappings();
+         SharedPtr<TlsPeerAuthManager> certAuth(new TlsPeerAuthManager(*mDum, mDum->dumIncomingTarget(), trustedPeers, true, mCommonNameMappings));
          mDum->addIncomingFeature(certAuth);
       }
 
@@ -1221,6 +1226,66 @@ ReproRunner::addProcessor(repro::ProcessorChain& chain, std::auto_ptr<Processor>
    chain.addProcessor(processor);
 }
 
+void
+ReproRunner::loadCommonNameMappings()
+{
+   // Already loaded?
+   if(!mCommonNameMappings.empty())
+      return;
+
+   Data mappingsFileName = mProxyConfig->getConfigData("CommonNameMappings", "");
+   if(mappingsFileName.empty())
+      return;
+
+   InfoLog(<< "trying to load common name mappings from file: " << mappingsFileName);
+
+   ifstream mappingsFile(mappingsFileName.c_str());
+   if(!mappingsFile)
+   {
+      throw std::runtime_error("Error opening/reading mappings file");
+   }
+
+   string sline;
+   while(getline(mappingsFile, sline))
+   {
+      Data line(sline);
+      Data cn;
+      PermittedFromAddresses permitted;
+      ParseBuffer pb(line);
+
+      pb.skipWhitespace();
+      const char * anchor = pb.position();
+      if(pb.eof() || *anchor == '#') continue;  // if line is a comment or blank then skip it
+
+      // Look for end of name
+      pb.skipToOneOf("\t");
+      pb.data(cn, anchor);
+      pb.skipChar('\t');
+
+      while(!pb.eof())
+      {
+         pb.skipWhitespace();
+         if(pb.eof())
+            continue;
+
+         Data value;
+         anchor = pb.position();
+         pb.skipToOneOf(",\r\n ");
+         pb.data(value, anchor);
+         if(!value.empty())
+         {
+            StackLog(<< "Loading CN '" << cn << "', found mapping '" << value << "'");
+            permitted.insert(value);
+         }
+         if(!pb.eof())
+            pb.skipChar();
+      }
+
+      DebugLog(<< "Loaded mapping for CN '" << cn << "', " << permitted.size() << " mapping(s)");
+      mCommonNameMappings[cn] = permitted;
+   }
+}
+
 void  // Monkeys
 ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
 {
@@ -1242,7 +1307,8 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
       // Should we used the same trustedPeers object that was
       // passed to TlsPeerAuthManager perhaps?
       std::set<Data> trustedPeers;
-      addProcessor(chain, std::auto_ptr<Processor>(new CertificateAuthenticator(*mProxyConfig, mSipStack, trustedPeers)));
+      loadCommonNameMappings();
+      addProcessor(chain, std::auto_ptr<Processor>(new CertificateAuthenticator(*mProxyConfig, mSipStack, trustedPeers, true, mCommonNameMappings)));
    }
 
    // Add digest authenticator monkey - if required

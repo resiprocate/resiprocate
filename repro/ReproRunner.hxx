@@ -3,6 +3,7 @@
 
 #include "rutil/Data.hxx"
 #include "rutil/ServerProcess.hxx"
+#include "resip/dum/TlsPeerAuthManager.hxx"
 #include <memory>
 
 namespace resip
@@ -68,6 +69,8 @@ protected:
    virtual void makeResponseProcessorChain(repro::ProcessorChain& chain);
    virtual void makeTargetProcessorChain(repro::ProcessorChain& chain);
 
+   virtual void loadCommonNameMappings();
+
    bool mRunning;
    bool mRestarting;
    int mArgc;
@@ -106,6 +109,7 @@ protected:
    CommandServer* mCommandServerV6;
    CommandServerThread* mCommandServerThread;
    resip::CongestionManager* mCongestionManager;
+   resip::CommonNameMappings mCommonNameMappings;
 };
 
 }
