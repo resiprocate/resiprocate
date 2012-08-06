@@ -736,7 +736,11 @@ ReproRunner::createDialogUsageManager()
 
    if (mDum)
    {
-      if(mProxyConfig->getConfigBool("EnableCertificateAuthenticator", false))
+      bool enableCertAuth = mProxyConfig->getConfigBool("EnableCertificateAuthenticator", false);
+      // Maintains existing behavior for non-TLS cert auth users
+      bool digestChallengeThirdParties = !enableCertAuth;
+
+      if(enableCertAuth)
       {
          // TODO: perhaps this should be initialised from the trusted node
          // monkey?  Or should the list of trusted TLS peers be independent
@@ -764,7 +768,8 @@ ReproRunner::createDialogUsageManager()
                                                 mAuthRequestDispatcher,
                                                 mProxyConfig->getDataStore()->mAclStore,
                                                 !mProxyConfig->getConfigBool("DisableAuthInt", false) /*useAuthInt*/,
-                                                mProxyConfig->getConfigBool("RejectBadNonces", false)));
+                                                mProxyConfig->getConfigBool("RejectBadNonces", false),
+                                                digestChallengeThirdParties));
          mDum->setServerAuthManager(uasAuth);
       }
 

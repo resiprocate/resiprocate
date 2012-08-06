@@ -17,8 +17,9 @@ ReproServerAuthManager::ReproServerAuthManager(DialogUsageManager& dum,
                                                Dispatcher* authRequestDispatcher,
                                                AclStore& aclDb,
                                                bool useAuthInt,
-                                               bool rejectBadNonces):
-   ServerAuthManager(dum, dum.dumIncomingTarget()),
+                                               bool rejectBadNonces,
+                                               bool challengeThirdParties):
+   ServerAuthManager(dum, dum.dumIncomingTarget(), challengeThirdParties),
    mDum(dum),
    mAuthRequestDispatcher(authRequestDispatcher),
    mAclDb(aclDb),
@@ -49,7 +50,7 @@ ReproServerAuthManager::requiresChallenge(const SipMessage& msg)
    assert(msg.isRequest());
    if(!mAclDb.isRequestTrusted(msg))
    {
-      return True;
+      return ServerAuthManager::requiresChallenge(msg);
    }
    else
    {
