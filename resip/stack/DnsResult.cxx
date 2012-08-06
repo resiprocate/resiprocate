@@ -47,13 +47,58 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
+EnumResult::EnumResult(EnumResultSink& resultSink, int order)
+   : mResultSink(resultSink),
+     mOrder(order)
+{
+}
+
+EnumResult::~EnumResult()
+{
+}
+
+void
+EnumResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
+{
+   assert(0);
+   delete this;
+}
+
+void
+EnumResult::onDnsResult(const DNSResult<DnsAAAARecord>& result)
+{
+   assert(0);
+   delete this;
+}
+
+void
+EnumResult::onDnsResult(const DNSResult<DnsSrvRecord>&)
+{
+   assert(0);
+   delete this;
+}
+
+void
+EnumResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
+{
+   mResultSink.onEnumResult(result, mOrder);
+   delete this;
+}
+
+void
+EnumResult::onDnsResult(const DNSResult<DnsCnameRecord>&)
+{
+   assert(0);
+   delete this;
+}
+
 DnsResult::DnsResult(DnsInterface& interfaceObj, DnsStub& dns, RRVip& vip, DnsHandler* handler) 
    : mInterface(interfaceObj),
      mDns(dns),
      mVip(vip),
      mHandler(handler),
      mSRVCount(0),
-     mDoingEnum(false),
+     mDoingEnum(0),
      mSips(false),
      mTransport(UNKNOWN_TRANSPORT),
      mPort(-1),
@@ -198,25 +243,33 @@ DnsResult::whitelistLast()
 }
 
 void
-DnsResult::lookup(const Uri& uri, const std::vector<Data> &enumSuffixes)
+DnsResult::lookup(const Uri& uri, const std::vector<Data> &enumSuffixes,
+   const std::map<Data,Data> &enumDomains)
 {
    DebugLog (<< "DnsResult::lookup " << uri);
    //int type = this->mType;
-   if (!enumSuffixes.empty() && uri.isEnumSearchable())
+   if (!enumSuffixes.empty() && uri.isEnumSearchable() &&
+      enumDomains.find(uri.host()) != enumDomains.end())
    {
       mInputUri = uri;
-      mDoingEnum = true;
+      int order = 0;
       std::vector<Data> enums = uri.getEnumLookups(enumSuffixes);
       assert(enums.size() >= 1);
       if (!enums.empty())
       {
-         InfoLog (<< "Doing ENUM lookup on " << *enums.begin());
-         mDns.lookup<RR_NAPTR>(*enums.begin(), Protocol::Enum, this); 
+         mDoingEnum = enums.size();
+         for(std::vector<Data>::iterator it = enums.begin();
+            it != enums.end(); it++)
+         {
+            InfoLog (<< "Doing ENUM lookup on " << *it);
+            mDns.lookup<RR_NAPTR>(*it, Protocol::Enum,
+               new EnumResult(*this, order++)); 
+         }
          return;
       }
    }
 
-   mDoingEnum = false;
+   mDoingEnum = 0;
    lookupInternal(uri);
 }
 
@@ -1112,9 +1165,14 @@ void DnsResult::onDnsResult(const DNSResult<DnsSrvRecord>& result)
 static Data enumService1("e2u+sip");
 static Data enumService2("sip+e2u");
 void
-DnsResult::onEnumResult(const DNSResult<DnsNaptrRecord>& result)
+DnsResult::onEnumResult(const DNSResult<DnsNaptrRecord>& result, int order)
 {
-   mDoingEnum = false;
+   Lock l(mEnumDestinationsMutex);
+   assert(mDoingEnum > 0);
+
+   mDoingEnum--;
+
+   StackLog(<< "checking result of ENUM query, remaining queries outstanding = " << mDoingEnum);
    
    if (result.status == 0)
    {
@@ -1158,23 +1216,33 @@ DnsResult::onEnumResult(const DNSResult<DnsNaptrRecord>& result)
          {
             Uri rewrite(best.regexp().apply(Data::from(mInputUri)));
             InfoLog (<< "Rewrote uri " << mInputUri << " -> " << rewrite);
-            mHandler->rewriteRequest(rewrite);
-            lookupInternal(rewrite);
+            mEnumDestinations[order] = rewrite;
          }
          catch (ParseException&  e )
          {
             ErrLog(<<"Caught exception: "<< e);
-            lookupInternal(mInputUri);
+            // we just don't add anything to mEnumDestinations...
+            // later, if mEnumDestinations is empty after all ENUM queries,
+            // it will fall back to mInputUri
          }
+      }
+   }
+
+   if(mDoingEnum == 0)
+   {
+      DebugLog(<< "All ENUM DNS queries done, checking for results...");
+      std::map<int,Uri>::iterator it = mEnumDestinations.begin();
+      if(it != mEnumDestinations.end())
+      {
+         DebugLog(<< "Using result for suffix " << (it->first + 1));
+         mHandler->rewriteRequest(it->second);
+         lookupInternal(it->second);
       }
       else
       {
+         DebugLog(<< "No valid ENUM query result, falling back to request URI");
          lookupInternal(mInputUri);
       }
-   }
-   else
-   {
-      lookupInternal(mInputUri);
    }
 }
 
@@ -1308,14 +1376,7 @@ DnsResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
       return;
    }
 
-   if (mDoingEnum)
-   {
-      onEnumResult(result);
-   }
-   else
-   {
-      onNaptrResult(result);
-   }
+   onNaptrResult(result);
   
 }
 

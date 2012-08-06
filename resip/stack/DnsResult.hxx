@@ -16,6 +16,7 @@
 #include "resip/stack/Tuple.hxx"
 #include "resip/stack/Transport.hxx"
 #include "resip/stack/Uri.hxx"
+#include "rutil/Condition.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 #include "rutil/dns/RRVip.hxx"
 #include "rutil/dns/DnsStub.hxx"
@@ -32,7 +33,39 @@ class DnsInterface;
 class DnsAAAARecord;
 class DnsHandler;
 
-class DnsResult : public DnsResultSink
+class EnumResultSink
+{
+   public:
+      virtual void onEnumResult(const DNSResult<DnsNaptrRecord>& result,
+         int order) = 0;
+};
+
+class EnumResult : public DnsResultSink
+{
+   public:
+      EnumResult(EnumResultSink& resultSink, int order);
+      ~EnumResult();
+
+      // DnsResultSink
+      void onDnsResult(const DNSResult<DnsHostRecord>&);
+
+//#ifdef USE_IPV6
+      void onDnsResult(const DNSResult<DnsAAAARecord>&);
+//#endif
+
+      void onDnsResult(const DNSResult<DnsSrvRecord>&);
+      void onDnsResult(const DNSResult<DnsNaptrRecord>&);
+      void onDnsResult(const DNSResult<DnsCnameRecord>&);
+
+      void onEnumResult(const DNSResult<DnsNaptrRecord>& result);
+      void onNaptrResult(const DNSResult<DnsNaptrRecord>& result);
+
+   private:
+      EnumResultSink& mResultSink;
+      int mOrder;
+};
+
+class DnsResult : public DnsResultSink, public EnumResultSink
 {
    public:
       RESIP_HeapCount(DnsResult);
@@ -60,8 +93,11 @@ class DnsResult : public DnsResultSink
          @param enumSuffixes If the uri is enum searchable, this is the list of
                   enum suffixes (for example "e164.arpa") that will be used in
                   the attempt to resolve this uri.
+         @param enumDomains The ENUM possibility is only considered if
+                the URI domain part is one of these domains
       */
-      void lookup(const Uri& uri, const std::vector<Data> &enumSuffixes);
+      void lookup(const Uri& uri, const std::vector<Data> &enumSuffixes,
+         const std::map<Data,Data> &enumDomains);
 
       /*!
          Blacklist the last returned result until the specified time (ms)
@@ -189,7 +225,9 @@ class DnsResult : public DnsResultSink
       DnsHandler* mHandler;
       int mSRVCount;
       Uri mInputUri;
-      bool mDoingEnum;
+      int mDoingEnum;
+      std::map<int,Uri> mEnumDestinations;
+      resip::Mutex mEnumDestinationsMutex;
       
       bool mSips;
       Data mTarget;
@@ -254,7 +292,7 @@ class DnsResult : public DnsResultSink
       void onDnsResult(const DNSResult<DnsNaptrRecord>&);
       void onDnsResult(const DNSResult<DnsCnameRecord>&);
 
-      void onEnumResult(const DNSResult<DnsNaptrRecord>& result);
+      void onEnumResult(const DNSResult<DnsNaptrRecord>& result, int order);
       void onNaptrResult(const DNSResult<DnsNaptrRecord>& result);
       
 

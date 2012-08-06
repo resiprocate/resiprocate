@@ -808,6 +808,16 @@ class SipStack : public FdSetIOObserver
       void setEnumSuffixes(const std::vector<Data>& suffixes);
 
       /**
+          @brief Specify which domains in the To: Uri will be subject to ENUM
+
+          @details If the Uri hostname/domain is one of these domains,
+          the user part will be considered for ENUM search
+
+          @ingroup resip_config
+      */
+      void setEnumDomains(const std::map<Data,Data>& domains);
+
+      /**
           @brief Clear the DNS Cache
       */
       void clearDnsCache();

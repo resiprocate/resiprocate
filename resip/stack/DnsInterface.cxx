@@ -114,7 +114,8 @@ DnsInterface::createDnsResult(DnsHandler* handler)
 void 
 DnsInterface::lookup(DnsResult* res, const Uri& uri)
 {
-   res->lookup(uri, mDnsStub.getEnumSuffixes());   
+   res->lookup(uri, mDnsStub.getEnumSuffixes(),
+      mDnsStub.getEnumDomains());
 }
 
 // DnsResult* 
