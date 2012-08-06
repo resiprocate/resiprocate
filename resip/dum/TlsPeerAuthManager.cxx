@@ -144,7 +144,9 @@ TlsPeerAuthManager::handle(SipMessage* sipMessage)
    const std::list<resip::Data> &peerNames = sipMessage->getTlsPeerNames();
    if (mDum.isMyDomain(sipMessage->header(h_From).uri().host()))
    {
-      if (requiresAuthorization(*sipMessage))
+      // peerNames is empty if client certificate mode is `optional'
+      // or if the message didn't come in on TLS transport
+      if (requiresAuthorization(*sipMessage) && !peerNames.empty())
       {
          if(authorizedForThisIdentity(peerNames, sipMessage->header(h_From).uri()))
             return Authorized;
@@ -158,12 +160,19 @@ TlsPeerAuthManager::handle(SipMessage* sipMessage)
    }
    else
    {
-      if(mThirdPartyRequiresCertificate && peerNames.size() == 0)
+      // peerNames is empty if client certificate mode is `optional'
+      // or if the message didn't come in on TLS transport
+      if(peerNames.empty())
       {
-         SharedPtr<SipMessage> response(new SipMessage);
-         Helper::makeResponse(*response, *sipMessage, 403, "Mutual TLS required to handle that message");
-         mDum.send(response);
-         return Rejected;
+         if(mThirdPartyRequiresCertificate)
+         {
+            SharedPtr<SipMessage> response(new SipMessage);
+            Helper::makeResponse(*response, *sipMessage, 403, "Mutual TLS required to handle that message");
+            mDum.send(response);
+            return Rejected;
+         }
+         else
+            return Skipped;
       }
       if(authorizedForThisIdentity(peerNames, sipMessage->header(h_From).uri()))
          return Authorized;
