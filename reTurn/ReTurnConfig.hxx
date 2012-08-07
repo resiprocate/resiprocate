@@ -17,8 +17,9 @@ class ReTurnConfig : public resip::ConfigParse
 {
 public:
    ReTurnConfig();
-   ReTurnConfig(int argc, char** argv, const resip::Data& defaultConfigFilename);
    virtual ~ReTurnConfig();
+
+   virtual void parseConfig(int argc, char** argv, const resip::Data& defaultConfigFilename);
 
    void printHelpText(int argc, char **argv);
    using resip::ConfigParse::getConfigValue;
