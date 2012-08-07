@@ -15,8 +15,9 @@ class DialerConfiguration : public resip::ConfigParse {
 
 public:
    DialerConfiguration();
-   DialerConfiguration(int argc, char** argv, const resip::Data& defaultConfigFilename, int skipCount);
    virtual ~DialerConfiguration();
+
+   virtual void parseConfig(int argc, char** argv, const resip::Data& defaultConfigFilename, int skipCount = 0);
 
    void printHelpText(int argc, char **argv);
    using resip::ConfigParse::getConfigValue;

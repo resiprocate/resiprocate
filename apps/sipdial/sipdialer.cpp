@@ -34,7 +34,8 @@ Data getFullFilename()
 int main(int argc, char *argv[]) 
 {
    Data defaultConfig(getFullFilename());
-   DialerConfiguration dc(argc, argv, defaultConfig, 1);
+   DialerConfiguration dc;
+   dc.parseConfig(argc, argv, defaultConfig, 1);
 
    Data targetUri(argv[1]);
    

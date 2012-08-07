@@ -12,11 +12,11 @@ using namespace resip;
 using namespace std;
 
 DialerConfiguration::DialerConfiguration() :
-   mDialerIdentity("anonymous@localhost"),
+   mDialerIdentity("sip:anonymous@localhost"),
    mAuthRealm(""),
    mAuthUser(""),
    mAuthPassword(""),
-   mCallerUserAgentAddress(""),
+   mCallerUserAgentAddress("sip:anonymous@localhost"),
    mCallerUserAgentVariety(Generic),
    mTargetPrefix(""),
    mTargetDomain("localhost"),
@@ -25,19 +25,23 @@ DialerConfiguration::DialerConfiguration() :
 {
 }
 
-DialerConfiguration::DialerConfiguration(int argc, char** argv, const resip::Data& defaultConfigFilename, int skipCount) :
-   resip::ConfigParse(argc, argv, defaultConfigFilename, skipCount),
-   mDialerIdentity(getConfigData("dialerIdentity", "anonymous@example.org")),
-   mAuthRealm(getConfigData("authRealm", "")),
-   mAuthUser(getConfigData("authUser", "")),
-   mAuthPassword(getConfigData("authPassword", "")),
-   mCallerUserAgentAddress(getConfigData("callerUserAgentAddress", "")),
-   mCallerUserAgentVariety(Generic),
-   mTargetPrefix(getConfigData("targetPrefix", "")),
-   mTargetDomain(getConfigData("targetDomain", "localhost")),
-   mCertPath(getConfigData("certPath", "")),
-   mCADirectory(getConfigData("CADirectory", ""))
+void DialerConfiguration::parseConfig(int argc, char** argv, const resip::Data& defaultConfigFilename, int skipCount) 
 {
+   resip::ConfigParse::parseConfig(argc, argv, defaultConfigFilename, skipCount);
+
+   NameAddr _dialerIdentity(getConfigData("dialerIdentity", "sip:anonymous@localhost"));
+   mDialerIdentity = _dialerIdentity;
+   mAuthRealm = getConfigData("authRealm", "");
+   mAuthUser = getConfigData("authUser", "");
+   mAuthPassword = getConfigData("authPassword", "");
+   Uri _callerUserAgentAddress(getConfigData("callerUserAgentAddress", "sip:anonymous@localhost"));
+   mCallerUserAgentAddress = _callerUserAgentAddress;
+   mCallerUserAgentVariety = Generic;
+   mTargetPrefix = getConfigData("targetPrefix", "");
+   mTargetDomain = getConfigData("targetDomain", "localhost");
+   mCertPath = getConfigData("certPath", "");
+   mCADirectory = getConfigData("CADirectory", "");
+
    Data value(getConfigData("callerUserAgentVariety", "Generic"));
    if(value == "LinksysSPA941")
       setCallerUserAgentVariety(LinksysSPA941);
