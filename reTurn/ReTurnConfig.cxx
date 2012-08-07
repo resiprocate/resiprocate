@@ -37,33 +37,15 @@ ReTurnConfig::ReTurnConfig() :
    calcUserAuthData();
 }
 
-ReTurnConfig::ReTurnConfig(int argc, char** argv, const resip::Data& defaultConfigFilename) :
-   resip::ConfigParse(argc, argv, defaultConfigFilename),
-   mTurnPort(getConfigUnsignedShort("TurnPort", 3478)),
-   mTlsTurnPort(getConfigUnsignedShort("TlsTurnPort", 5349)),
-   mAltStunPort(getConfigUnsignedShort("AltStunPort", 0)),
-   mTurnAddress(asio::ip::address::from_string(
-      getConfigData("TurnAddress", "0.0.0.0").c_str())),
-   mAltStunAddress(asio::ip::address::from_string(
-      getConfigData("AltStunAddress", "0.0.0.0").c_str())),
-   mAuthenticationMode(LongTermPassword),
-   mAuthenticationRealm(getConfigData("AuthenticationRealm", "reTurn")),
-   mNonceLifetime(getConfigUnsignedLong("NonceLifetime", 3600)),
-   mAllocationPortRangeMin(getConfigUnsignedShort("AllocationPortRangeMin", 49152)),
-   mAllocationPortRangeMax(getConfigUnsignedShort("AllocationPortRangeMax", 65535)),
-   mDefaultAllocationLifetime(getConfigUnsignedLong("DefaultAllocationLifetime", 600)),
-   mMaxAllocationLifetime(getConfigUnsignedLong("MaxAllocationLifetime", 3600)),
-   mMaxAllocationsPerUser(getConfigUnsignedLong("MaxAllocationsPerUser", 0)),
-   mTlsServerCertificateFilename(getConfigData("TlsServerCertificateFilename", "server.pem")),
-   mTlsTempDhFilename(getConfigData("TlsTempDhFilename", "dh512.pem")),
-   mTlsPrivateKeyPassword(getConfigData("TlsPrivateKeyPassword", "")),
-   mLoggingType(getConfigData("LoggingType", "cout")),
-   mLoggingLevel(getConfigData("LoggingLevel", "INFO")),
-   mLoggingFilename(getConfigData("LogFilename", "reTurnServer.log")),
-   mLoggingFileMaxLineCount(getConfigUnsignedLong("LogFileMaxLines", 50000)),
-   mDaemonize(getConfigBool("Daemonize", false)),
-   mPidFile(getConfigData("PidFile", ""))
+void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& defaultConfigFilename)
 {
+   resip::ConfigParse::parseConfig(argc, argv, defaultConfigFilename);
+
+   mTurnPort = getConfigUnsignedShort("TurnPort", 3478);
+   mTlsTurnPort = getConfigUnsignedShort("TlsTurnPort", 5349);
+   mAltStunPort = getConfigUnsignedShort("AltStunPort", 0);
+   mTurnAddress = asio::ip::address::from_string(getConfigData("TurnAddress", "0.0.0.0").c_str());
+   mAltStunAddress = asio::ip::address::from_string(getConfigData("AltStunAddress", "0.0.0.0").c_str());
    int authMode = getConfigUnsignedShort("AuthenticationMode", 2);
    switch(authMode)
    {
@@ -73,12 +55,28 @@ ReTurnConfig::ReTurnConfig(int argc, char** argv, const resip::Data& defaultConf
    default: 
       throw std::runtime_error("Unsupported AuthenticationMode value in config");
    }
+   mAuthenticationRealm = getConfigData("AuthenticationRealm", "reTurn");
+   mNonceLifetime = getConfigUnsignedLong("NonceLifetime", 3600);
+   mAllocationPortRangeMin = getConfigUnsignedShort("AllocationPortRangeMin", 49152);
+   mAllocationPortRangeMax = getConfigUnsignedShort("AllocationPortRangeMax", 65535);
+   mDefaultAllocationLifetime = getConfigUnsignedLong("DefaultAllocationLifetime", 600);
+   mMaxAllocationLifetime = getConfigUnsignedLong("MaxAllocationLifetime", 3600);
+   mMaxAllocationsPerUser = getConfigUnsignedLong("MaxAllocationsPerUser", 0);
+   mTlsServerCertificateFilename = getConfigData("TlsServerCertificateFilename", "server.pem");
+   mTlsTempDhFilename = getConfigData("TlsTempDhFilename", "dh512.pem");
+   mTlsPrivateKeyPassword = getConfigData("TlsPrivateKeyPassword", "");
+   mLoggingType = getConfigData("LoggingType", "cout");
+   mLoggingLevel = getConfigData("LoggingLevel", "INFO");
+   mLoggingFilename = getConfigData("LogFilename", "reTurnServer.log");
+   mLoggingFileMaxLineCount = getConfigUnsignedLong("LogFileMaxLines", 50000);
+   mDaemonize = getConfigBool("Daemonize", false);
+   mPidFile = getConfigData("PidFile", "");
 
    // fork is not possible on Windows
 #ifdef WIN32
    if(mDaemonize)
    {
-      throw std::runtime_error("Unable to fork/daemonize on Windows, please check the config");
+      throw ConfigParse::Exception("Unable to fork/daemonize on Windows, please check the config", __FILE__, __LINE__);
    }
 #endif
 
@@ -87,7 +85,7 @@ ReTurnConfig::ReTurnConfig(int argc, char** argv, const resip::Data& defaultConf
 
    if(user.size() == 0 || password.size() == 0)
    {
-      throw std::runtime_error("Missing or invalid credentials (LongTermAuthUsername/LongTermAuthPassword");
+      throw ConfigParse::Exception("Missing or invalid credentials (LongTermAuthUsername/LongTermAuthPassword", __FILE__, __LINE__);
    }
 
    mAuthenticationCredentials[user] = password;
@@ -118,9 +116,9 @@ void
 ReTurnConfig::printHelpText(int argc, char **argv)
 {
    std::cerr << "Command line format is:" << std::endl;
-   std::cerr << "  " << argv[0] << " [<ConfigFilename>] [--<ConfigValueName>=<ConfigValue>] [--<ConfigValueName>=<ConfigValue>] ..." << std::endl;
+   std::cerr << "  " << removePath(argv[0]) << " [<ConfigFilename>] [--<ConfigValueName>=<ConfigValue>] [--<ConfigValueName>=<ConfigValue>] ..." << std::endl;
    std::cerr << "Sample Command lines:" << std::endl;
-   std::cerr << "  " << argv[0] << "reTurnServer.config --LogLevel=INFO" << std::endl;
+   std::cerr << "  " << removePath(argv[0]) << " reTurnServer.config --LogLevel=INFO" << std::endl;
 }
 
 bool 
