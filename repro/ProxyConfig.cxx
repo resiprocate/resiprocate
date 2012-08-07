@@ -19,10 +19,6 @@ using namespace std;
 namespace repro 
 {
 
-ProxyConfig::ProxyConfig(int argc, char** argv, const resip::Data& defaultConfigFilename) : ConfigParse(argc, argv, defaultConfigFilename), mStore(0)
-{
-}
-
 ProxyConfig::ProxyConfig() : mStore(0)
 {
 }
@@ -89,10 +85,10 @@ void
 ProxyConfig::printHelpText(int argc, char **argv)
 {
    cout << "Command line format is:" << endl;
-   cout << "  " << argv[0] << " [<ConfigFilename>] [--<ConfigValueName>=<ConfigValue>] [--<ConfigValueName>=<ConfigValue>] ..." << endl;
+   cout << "  " << removePath(argv[0]) << " [<ConfigFilename>] [--<ConfigValueName>=<ConfigValue>] [--<ConfigValueName>=<ConfigValue>] ..." << endl;
    cout << "Sample Command lines:" << endl;
-   cout << "  " << argv[0] << "repro.config --RecordRouteUri=sip:proxy.sipdomain.com --ForceRecordRouting=true" << endl;
-   cout << "  " << argv[0] << "repro.config /RecordRouteUri:sip:proxy.sipdomain.com /ForceRecordRouting:true" << endl;
+   cout << "  " << removePath(argv[0]) << " repro.config --RecordRouteUri=sip:proxy.sipdomain.com --ForceRecordRouting=true" << endl;
+   cout << "  " << removePath(argv[0]) << " repro.config /RecordRouteUri:sip:proxy.sipdomain.com /ForceRecordRouting:true" << endl;
 }
 
 void 

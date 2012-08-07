@@ -372,7 +372,7 @@ Proxy::thread()
                         InfoLog (<< "Inserting new RequestContext tid=" << tid
                                   << " -> " << *context);
                         mServerRequestContexts[tid] = context;
-                        DebugLog (<< "RequestContexts: " << InserterP(mServerRequestContexts));
+                        //DebugLog (<< "RequestContexts: " << InserterP(mServerRequestContexts));  For a busy proxy - this generates a HUGE log statement!
                         try
                         {
                            context->process(std::auto_ptr<resip::SipMessage>(sip));
