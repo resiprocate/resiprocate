@@ -14,7 +14,6 @@ class ProxyConfig : public resip::ConfigParse
 {
 public:
    ProxyConfig();
-   ProxyConfig(int argc, char** argv, const resip::Data& defaultConfigFilename);
    virtual ~ProxyConfig();
 
    virtual void printHelpText(int argc, char **argv);
