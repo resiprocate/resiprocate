@@ -159,7 +159,8 @@ ReproRunner::run(int argc, char** argv)
    Data defaultConfigFilename("repro.config");
    try
    {
-      mProxyConfig = new ProxyConfig(mArgc, mArgv, defaultConfigFilename);
+      mProxyConfig = new ProxyConfig();
+      mProxyConfig->parseConfig(mArgc, mArgv, defaultConfigFilename);
    }
    catch(BaseException& ex)
    {
