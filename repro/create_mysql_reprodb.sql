@@ -1,7 +1,9 @@
 
-CREATE DATABASE repro;
-
-USE repro;
+-- execute statements like those below to create the empty
+-- database.  It is also necessary to create the repro
+-- user and grant the necessary privileges
+-- CREATE DATABASE repro;
+-- USE repro;
 
 -- Uncomment the following to have all tables re-created
 -- DROP TABLE IF EXISTS `users`;
