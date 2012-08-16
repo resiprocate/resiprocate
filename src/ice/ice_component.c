@@ -270,6 +270,10 @@ int nr_ice_component_prune_candidates(nr_ice_ctx *ctx, nr_ice_component *comp)
       if(c1->state!=NR_ICE_CAND_STATE_INITIALIZED){
         r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Removing non-initialized candidate %s",
           ctx->label,c1->label);
+        if (c1->state == NR_ICE_CAND_STATE_INITIALIZING) {
+          r_log(LOG_ICE,LOG_NOTICE, "ICE(%s): Removing candidate %s which is in INITIALIZING state",
+            ctx->label, c1->label);
+        }
         TAILQ_REMOVE(&comp->candidates,c1,entry_comp);
         comp->candidate_ct--;
         TAILQ_REMOVE(&c1->isock->candidates,c1,entry_sock);
@@ -638,7 +642,7 @@ int nr_ice_component_nominated_pair(nr_ice_component *comp, nr_ice_cand_pair *pa
 
       p2=TAILQ_NEXT(p2,entry);
     }
-    r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)/comp(%d): cancelling done %s",comp->stream->pctx->label,comp->stream->label,comp->component_id);
+    r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)/comp(%d): cancelling done",comp->stream->pctx->label,comp->stream->label,comp->component_id);
 
     if(r=nr_ice_media_stream_component_nominated(comp->stream,comp))
       ABORT(r);
@@ -724,9 +728,11 @@ int nr_ice_component_select_pair(nr_ice_peer_ctx *pctx, nr_ice_component *comp)
       pair=TAILQ_NEXT(pair,entry);
     }
 
-    if(r=pctx->handler->vtbl->select_pair(pctx->handler->obj,
-      comp->stream,comp->component_id,pairs,ct))
-      ABORT(r);
+    if (pctx->handler) {
+      if(r=pctx->handler->vtbl->select_pair(pctx->handler->obj,
+        comp->stream,comp->component_id,pairs,ct))
+        ABORT(r);
+    }
 
     _status=0;
   abort:
