@@ -272,7 +272,8 @@ TestRepro::TestRepro(const resip::Data& name,
                                                                    mAuthRequestDispatcher,
                                                                    mConfig.getDataStore()->mAclStore, 
                                                                    true, 
-                                                                   false));
+                                                                   false,
+                                                                   true));
    mDum.setServerAuthManager(authMgr);    
 
    mStack.registerTransactionUser(mProxy);

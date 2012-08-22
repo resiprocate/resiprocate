@@ -500,6 +500,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\repro\AccountingCollector.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\repro\AccountingCollector.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\repro\Ack200DoneMessage.hxx"
 				>
 			</File>
@@ -585,6 +593,14 @@
 			</File>
 			<File
 				RelativePath="..\repro\OutboundTarget.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\repro\PersistentMessageQueue.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\repro\PersistentMessageQueue.hxx"
 				>
 			</File>
 			<File
@@ -768,6 +784,14 @@
 				</File>
 				<File
 					RelativePath="..\repro\monkeys\AmIResponsible.hxx"
+					>
+				</File>
+				<File
+					RelativePath="..\repro\monkeys\CertificateAuthenticator.cxx"
+					>
+				</File>
+				<File
+					RelativePath="..\repro\monkeys\CertificateAuthenticator.hxx"
 					>
 				</File>
 				<File
