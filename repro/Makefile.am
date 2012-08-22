@@ -16,6 +16,7 @@ EXTRA_DIST += webadmin
 EXTRA_DIST += WinSetup WinSetupx64
 EXTRA_DIST += repro.config
 EXTRA_DIST += create_mysql_reprodb.sql
+EXTRA_DIST += genUsers.cxx
 
 SUBDIRS = . test reprocmd accountingconsumers
 
