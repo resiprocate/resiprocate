@@ -512,7 +512,10 @@ ServerRegistration::testFlowRequirements(ContactInstanceRecord &rec,
 {
    const resip::NameAddr& contact(rec.mContact);
 
-   if(contact.exists(p_Instance) && contact.exists(p_regid))
+   if(!msg.empty(h_Supporteds) &&
+      msg.header(h_Supporteds).find(Token(Symbols::Outbound)) &&
+      contact.exists(p_Instance) && 
+      contact.exists(p_regid))
    {
       // Client has explicitly requested Outbound processing, which requires us 
       // to have a flow.
