@@ -112,11 +112,9 @@ StaticRoute::process(RequestContext& context)
 void
 StaticRoute::challengeRequest(repro::RequestContext &rc, resip::Data &realm)
 {
-   Message *message = rc.getCurrentEvent();
-   SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
-   assert(sipMessage);
+   SipMessage& sipMessage = rc.getOriginalRequest();
 
-   SipMessage *challenge = Helper::makeProxyChallenge(*sipMessage, realm, mUseAuthInt /*auth-int*/, false /*stale*/);
+   SipMessage *challenge = Helper::makeProxyChallenge(sipMessage, realm, mUseAuthInt /*auth-int*/, false /*stale*/);
    rc.sendResponse(*challenge);
 
    delete challenge;
