@@ -208,7 +208,7 @@ Proxy::thread()
 
                         if(resip::InteropHelper::getOutboundSupported())
                         {
-                           resp->header(h_Supporteds).push_back(Token("outbound"));
+                           resp->header(h_Supporteds).push_back(Token(Symbols::Outbound));
                         }
                         mStack.send(*resp,this);
                         delete sip;
