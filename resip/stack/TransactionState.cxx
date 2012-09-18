@@ -1216,6 +1216,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                sendToTU(sip); // don't delete msg
                //terminateClientTransaction(mId);
                mMachine = ClientStale;
+               mState = Completed;
                // !bwc! We have a final response. We don't need either of
                // mMsgToRetransmit or mNextTransmission. We ignore further
                // traffic.
