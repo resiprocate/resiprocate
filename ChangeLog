@@ -141,6 +141,7 @@
 *removed print in TcpConnection that could end up printing garbage at the end of messages that are not null terminated
 *added loopback address checking to Tuple::isPrivateAddress
 *fixed a bad value passed to the macro RESIP_HeapCount in KeepAlivePong.h
+*fixed a trap with a race condition when sending a CANCEL as a 200 response is being received 
 
 
 ==DUM==
