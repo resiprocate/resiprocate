@@ -1,6 +1,8 @@
 #include "rutil/FileSystem.hxx"
 #include "rutil/Logger.hxx"
 
+#include <sys/stat.h>
+
 #include <cassert>
 using namespace resip;
 
@@ -103,7 +105,13 @@ FileSystem::Directory::iterator::operator->() const
 bool
 FileSystem::Directory::iterator::is_directory() const
 {
+#if HAVE_STRUCT_DIRENT_D_TYPE
    return mDirent->d_type == DT_DIR;
+#else
+   struct stat s;
+   stat(mDirent->d_name, &s);
+   return S_ISDIR(s.st_mode);
+#endif
 }
 
 int 
