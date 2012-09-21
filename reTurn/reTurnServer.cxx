@@ -1,4 +1,5 @@
 #include <iostream>
+#include <csignal>
 #include <string>
 #include <asio.hpp>
 #include <boost/bind.hpp>
