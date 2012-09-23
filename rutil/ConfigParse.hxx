@@ -28,7 +28,8 @@ public:
 
    // parses both command line and config file - using config file name from first command line parameter (if present)
    // skipcount represents the number of command line options to skip before looking for config filename or name value pairs
-   virtual void parseConfig(int argc, char** argv, const resip::Data& defaultConfigFilename, int skipCount = 0); 
+   virtual void parseConfig(int argc, char** argv, const resip::Data& defaultConfigFilename);
+   virtual void parseConfig(int argc, char** argv, const resip::Data& defaultConfigFilename, int skipCount); 
    virtual void parseCommandLine(int argc, char** argv, int skipCount = 0);
    virtual void parseConfigFile(const resip::Data& filename);
 

@@ -26,6 +26,12 @@ ConfigParse::~ConfigParse()
 {
 }
 
+void
+ConfigParse::parseConfig(int argc, char** argv, const resip::Data& defaultConfigFilename)
+{
+   ConfigParse::parseConfig(argc, argv, defaultConfigFilename, 0);
+}
+
 void 
 ConfigParse::parseConfig(int argc, char** argv, const resip::Data& defaultConfigFilename, int skipCount)
 {
