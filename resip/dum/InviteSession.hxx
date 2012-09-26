@@ -353,11 +353,11 @@ class InviteSession : public DialogUsage
       NitState mNitState;
       NitState mServerNitState;
 
-      std::auto_ptr<Contents> mCurrentLocalOfferAnswer;
-      std::auto_ptr<Contents> mProposedLocalOfferAnswer;
+      std::auto_ptr<Contents> mCurrentLocalOfferAnswer;    // This gets set with mProposedLocalOfferAnswer after we receive an SDP answer from the remote end or when we send and SDP answer to the remote end
+      std::auto_ptr<Contents> mProposedLocalOfferAnswer;   // This get set when we send an offer to the remote end
 
-      std::auto_ptr<Contents> mCurrentRemoteOfferAnswer;
-      std::auto_ptr<Contents> mProposedRemoteOfferAnswer;
+      std::auto_ptr<Contents> mCurrentRemoteOfferAnswer;   // This gets set with mProposedRemoteOfferAnswer after we send an SDP answer, or when we receive an SDP answer from the remote end
+      std::auto_ptr<Contents> mProposedRemoteOfferAnswer;  // This gets set when we receive an offer from the remote end
 
       SharedPtr<SipMessage> mLastLocalSessionModification; // last UPDATE or reINVITE sent
       SharedPtr<SipMessage> mLastRemoteSessionModification; // last UPDATE or reINVITE received

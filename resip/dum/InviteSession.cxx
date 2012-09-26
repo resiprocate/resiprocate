@@ -425,7 +425,7 @@ InviteSession::provideOffer(const Contents& offer,
          mDialog.makeRequest(*mLastLocalSessionModification, INVITE);
          startStaleReInviteTimer();
 
-		 setSessionTimerHeaders(*mLastLocalSessionModification);
+         setSessionTimerHeaders(*mLastLocalSessionModification);
 
          InfoLog (<< "Sending " << mLastLocalSessionModification->brief());
          InviteSession::setOfferAnswer(*mLastLocalSessionModification, offer, alternative);
@@ -1527,7 +1527,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          break;
 
       case On2xxAnswer:
-      case On2xxOffer:  // .slg. doesn't really make sense
+      case On2xxOffer:  // .slg. doesn't really make sense - should be in SentReinviteNoOffer to get this
       {
          mStaleReInviteTimerSeq++;
          transition(Connected);
@@ -1647,7 +1647,7 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
          // Some UA's send a 100 response to a ReInvite - just ignore it
          break;
 
-      case On2xxAnswer:  // .slg. doesn't really make sense
+      case On2xxAnswer:  // .slg. doesn't really make sense - should be in SentReinvite to get this
       case On2xxOffer:
       {
          mStaleReInviteTimerSeq++;
