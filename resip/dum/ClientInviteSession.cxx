@@ -585,7 +585,6 @@ ClientInviteSession::handleOffer (const SipMessage& msg, const Contents& offer)
 void
 ClientInviteSession::handleAnswer(const SipMessage& msg, const Contents& answer)
 {
-   //mCurrentLocalOfferAnswer = mProposedLocalOfferAnswer;
    setCurrentLocalOfferAnswer(msg);
    mCurrentEncryptionLevel = getEncryptionLevel(msg);
    mCurrentRemoteOfferAnswer = InviteSession::makeOfferAnswer(answer);
@@ -738,7 +737,6 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          transition(Connected);
          sendAck();
          handleFinalResponse(msg);
-         //mCurrentLocalOfferAnswer = mProposedLocalOfferAnswer;
          setCurrentLocalOfferAnswer(msg);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mCurrentRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
@@ -841,7 +839,6 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          transition(Connected);
          sendAck();
          handleFinalResponse(msg);
-         //mCurrentLocalOfferAnswer = mProposedLocalOfferAnswer;
          setCurrentLocalOfferAnswer(msg);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mCurrentRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
