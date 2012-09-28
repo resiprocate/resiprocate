@@ -116,7 +116,6 @@ DigestAuthenticator::process(repro::RequestContext &rc)
       pair<Helper::AuthResult,Data> result =
          Helper::advancedAuthenticateRequest(*sipMessage, realm, a1, 3000); // was 15
 
-//      Auths &authHeaders = sipMessage->header(h_ProxyAuthorizations);
       switch (result.first)
       {
          case Helper::Failed:
@@ -135,22 +134,26 @@ DigestAuthenticator::process(repro::RequestContext &rc)
             
             // Delete the Proxy-Auth header for this realm.  
             // other Proxy-Auth headers might be needed by a downsteram node
-/*            
-            Auths::iterator i = authHeaders.begin();
-            Auths::iterator j = authHeaders.begin();
-            while( i != authHeaders.end() )
+            if (sipMessage->exists(h_ProxyAuthorizations))
             {
-               if (proxy.isMyDomain(i->param(p_realm)))
+               Auths &authHeaders = sipMessage->header(h_ProxyAuthorizations);
+               Data realm = getRealm(rc);
+         
+               // if we find a Proxy-Authorization header for a realm we handle, 
+               // asynchronously fetch the relevant userAuthInfo from the database
+               for (Auths::iterator i = authHeaders.begin(); i != authHeaders.end(); )
                {
-                  j = i++;
-                  authHeaders.erase(j);
-               }
-               else
-               {
-                  ++i;
+                  if(i->exists(p_realm) && isEqualNoCase(i->param(p_realm), realm))
+                  {
+                     i = authHeaders.erase(i);
+                  }
+                  else
+                  {
+                     ++i;
+                  }
                }
             }
-*/            
+
             if(!sipMessage->header(h_From).isWellFormed() ||
                sipMessage->header(h_From).isAllContacts())
             {
