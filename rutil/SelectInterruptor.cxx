@@ -14,6 +14,8 @@ using namespace resip;
 SelectInterruptor::SelectInterruptor()
 {
 #ifdef WIN32
+   initNetwork();  // Required for windows
+
    mSocket = ::socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
    sockaddr_in loopback;
