@@ -43,7 +43,7 @@ class DnsUtil
        *   currently knows it ala gethostname(3) 
        */
 
-      static Data getLocalHostName();
+      static const Data& getLocalHostName();
 
       /** @returns the suffix after the first "." in whatever getLocalHostName returns */
       static Data getLocalDomainName();
