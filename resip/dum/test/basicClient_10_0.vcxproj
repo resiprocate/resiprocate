@@ -351,7 +351,7 @@
     <ClCompile>
       <AdditionalOptions>/MP %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)/../../../;$(ProjectDir)/../../../../;$(ProjectDir)../../../contrib/openssl/include;$(ProjectDir)../../../contrib/openssl/inc32;$(ProjectDir)../../../contrib/popt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)/../../../;$(ProjectDir)/../../../../;$(ProjectDir)../../../contrib/opensslx64/include;$(ProjectDir)../../../contrib/openssl/inc32;$(ProjectDir)../../../contrib/popt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;USE_ARES;LEAK_CHECK;USE_SSL;HAVE_POPT_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -425,7 +425,7 @@
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>$(ProjectDir)/../../../;$(ProjectDir)/../../../../;$(ProjectDir)../../../contrib/openssl/include;$(ProjectDir)../../../contrib/openssl/inc32;$(ProjectDir)../../../contrib/popt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)/../../../;$(ProjectDir)/../../../../;$(ProjectDir)../../../contrib/opensslx64/include;$(ProjectDir)../../../contrib/openssl/inc32;$(ProjectDir)../../../contrib/popt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;USE_SSL;HAVE_POPT_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <MinimalRebuild>false</MinimalRebuild>
