@@ -141,9 +141,14 @@ class ParameterTypes
 
          defineParam(url, "url", QuotedDataParameter, "draft-ietf-sip-content-indirect-mech-05"),
 
-
          defineParam(sigcompId, "sigcomp-id", QuotedDataParameter, "draft-ietf-rohc-sigcomp-sip"),
          defineParam(qop, "qop", DataParameter, "RFC 3261"),
+
+         defineParam(index, "index", DataParameter, "RFC 4244"),
+         defineParam(rc, "rc", DataParameter, "RFC 4244-bis"),
+         defineParam(mp, "mp", DataParameter, "RFC 4244-bis"),
+         defineParam(np, "np", DataParameter, "RFC 4244-bis"),
+
          defineParam(qopOptions, "qop", DataParameter, "RFC 3261"),
          defineParam(addTransport, "addTransport", ExistsParameter, "Internal"),
 
