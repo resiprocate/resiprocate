@@ -144,6 +144,11 @@ defineParam(url, "url", QuotedDataParameter, Mime, "RFC 4483");
 defineParam2(sigcompId, "sigcomp-id", QuotedDataParameter, Uri, Via, "RFC 5049");
 defineParam(qop,"qop",DataParameter, Auth, "RFC 3261");
 
+defineParam(index, "index", DataParameter, NameAddr, "RFC 4244");
+defineParam(rc, "rc", DataParameter, NameAddr, "RFC 4244-bis");
+defineParam(mp, "mp", DataParameter, NameAddr, "RFC 4244-bis");
+defineParam(np, "np", DataParameter, NameAddr, "RFC 4244-bis");
+
 // Internal use only
 defineParam(qopOptions,"qop",DataParameter, Auth, "RFC 3261");
 defineParam(addTransport, "addTransport", ExistsParameter, Uri, "RESIP INTERNAL");

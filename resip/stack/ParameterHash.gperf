@@ -96,6 +96,10 @@ app-id, ParameterTypes::appId
 network-user, ParameterTypes::networkUser
 url, ParameterTypes::url
 sigcomp-id, ParameterTypes::sigcompId
+index, ParameterTypes::index
+rc, ParameterTypes::rc
+mp, ParameterTypes::mp
+np, ParameterTypes::np
 addtransport, ParameterTypes::addTransport
 %%
 }
