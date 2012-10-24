@@ -23,6 +23,7 @@ class ClientPagerMessage : public NonDialogUsage
       //I don't know how this would interact with the queuing mechanism.
       //Will come back to re-visit this in the future.
       SipMessage& getMessageRequest();
+      SharedPtr<SipMessage> getMessageRequestSharedPtr() { return mRequest; }
 
       //!kh!
       //queues the message if there is one sent but not yet received a response
