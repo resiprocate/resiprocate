@@ -42,7 +42,6 @@ class ClientAuthManager
 //             bool operator()(const Auth& lhs, const Auth& rhs) const;
 //       };      
          
-
       class RealmState
       {
          public:     
@@ -77,10 +76,10 @@ class ClientAuthManager
             // FH add the realm state so it can change
             Auth *mAuthPtr;
             
-//             .dcm. only one credential per realm per challenge supported
-//             typedef std::map<Auth, UserProfile::DigestCredential, CompareAuth > CredentialMap;            
-//             CredentialMap proxyCredentials;
-//             CredentialMap wwwCredentials;  
+            // .dcm. only one credential per realm per challenge supported
+            // typedef std::map<Auth, UserProfile::DigestCredential, CompareAuth > CredentialMap;            
+            // CredentialMap proxyCredentials;
+            // CredentialMap wwwCredentials;  
       };      
 
       class AuthState
@@ -95,6 +94,8 @@ class ClientAuthManager
             typedef std::map<Data, RealmState> RealmStates;
             RealmStates mRealms;
             bool mFailed;
+            unsigned long mCacheUseLimit;
+            unsigned long mCacheUseCount;
       };
 
       typedef std::map<DialogSetId, AuthState> AttemptedAuthMap;
