@@ -175,7 +175,6 @@ ClientPagerMessage::dispatch(const SipMessage& msg)
 
    DebugLog ( << "ClientPagerMessageReq::dispatch(msg)" << msg.brief() );
    {
-      assert(mMsgQueue.empty() == false);
       if (code < 200)
       {
          DebugLog ( << "ClientPagerMessageReq::dispatch - encountered provisional response" << msg.brief() );
@@ -190,23 +189,29 @@ ClientPagerMessage::dispatch(const SipMessage& msg)
             {
                this->pageFirstMsgQueued();
             }
-
-            handler->onSuccess(getHandle(), msg);
          }
+         handler->onSuccess(getHandle(), msg);
       }
       else
       {
-         SipMessage errResponse;
-         MsgQueue::iterator contents;
-         for(contents = mMsgQueue.begin(); contents != mMsgQueue.end(); ++contents)
+         if(!mMsgQueue.empty())
          {
-            Contents* p = contents->contents;
-            WarningLog ( << "Paging failed " << *p );
-            Helper::makeResponse(errResponse, *mRequest, code);
-            handler->onFailure(getHandle(), errResponse, std::auto_ptr<Contents>(p));
-            contents->contents = 0;
+            SipMessage errResponse;
+            MsgQueue::iterator contents;
+            for(contents = mMsgQueue.begin(); contents != mMsgQueue.end(); ++contents)
+            {
+               Contents* p = contents->contents;
+               WarningLog ( << "Paging failed " << *p );
+               Helper::makeResponse(errResponse, *mRequest, code);
+               handler->onFailure(getHandle(), errResponse, std::auto_ptr<Contents>(p));
+               contents->contents = 0;
+            }
+            mMsgQueue.clear();
          }
-         mMsgQueue.clear();
+         else
+         {
+            handler->onFailure(getHandle(), msg, std::auto_ptr<Contents>(mRequest->releaseContents()));
+         }
       }
    }
 }

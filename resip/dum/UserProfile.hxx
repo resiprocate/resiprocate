@@ -88,6 +88,16 @@ class UserProfile : public Profile
                                         const Data& password,
                                         bool isPasswordA1Hash=false);
       virtual const DigestCredential& getDigestCredential( const Data& realm  );
+      // DigestCacheUseLimit is used to indicate the maximum number of times a particular Proxy or WWW Authorization
+      // header will be used in requests within a dialogset.  When this limit is reached then the
+      // next request in the DiaglogSet will go out without digest credentials.  This setting can be used to
+      // work around bugs/limitations in third-party implementations that have difficulty properly dealing with
+      // cached credentials.  A setting of 0 (default) will disable the limit and all requests in a Dialogset will 
+      // have the same cached Authorization header on them, until they are re-challenged by the far end.  A setting of 
+      // 1 disables caching entirely and future requests within the dialog set will go out without any authorization 
+      // headers.
+      virtual void setDigestCacheUseLimit(unsigned long digestCacheUseLimit) { mDigestCacheUseLimit = digestCacheUseLimit; }
+      virtual unsigned long getDigestCacheUseLimit() { return mDigestCacheUseLimit; }
 
       // Enable this to enable RFC5626 support in DUM - adds regId to registrations, and 
       // ;ob parameter to Path, Route, and Contact headers
@@ -136,6 +146,7 @@ class UserProfile : public Profile
       
       typedef std::set<DigestCredential> DigestCredentials;
       DigestCredentials mDigestCredentials;
+      unsigned long mDigestCacheUseLimit;
 
       friend EncodeStream& operator<<(EncodeStream&, const UserProfile& profile);
 };

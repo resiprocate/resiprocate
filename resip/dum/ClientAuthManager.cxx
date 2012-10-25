@@ -100,10 +100,10 @@ private:
     Data mNonceCountString;
 };
 
+
 ClientAuthManager::ClientAuthManager() 
 {
 }
-
 
 bool 
 ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, const SipMessage& response)
@@ -133,6 +133,7 @@ ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, con
          return false;
       }   
 
+      // 401 or 407...
       if (!(response.exists(h_WWWAuthenticates) || response.exists(h_ProxyAuthenticates)))
       {
          DebugLog (<< "Invalid challenge for " << id  << ", nothing to respond to; fail");         
@@ -176,14 +177,25 @@ ClientAuthManager::addAuthentication(SipMessage& request)
 void 
 ClientAuthManager::clearAuthenticationState(const DialogSetId& dsId)
 {
-   dialogSetDestroyed(dsId);
+   AttemptedAuthMap::iterator it = mAttemptedAuths.find(dsId);
+   if (it != mAttemptedAuths.end())
+   {
+      mAttemptedAuths.erase(it);
+   }
+}
+
+void 
+ClientAuthManager::dialogSetDestroyed(const DialogSetId& id)
+{
+   clearAuthenticationState(id);
 }
 
 ClientAuthManager::AuthState::AuthState() :
-   mFailed(false)
+   mFailed(false),
+   mCacheUseLimit(0),
+   mCacheUseCount(0)
 {
 }
-
 
 bool 
 ClientAuthManager::AuthState::handleChallenge(UserProfile& userProfile, const SipMessage& challenge)
@@ -192,11 +204,11 @@ ClientAuthManager::AuthState::handleChallenge(UserProfile& userProfile, const Si
    {
       return false;
    }   
-   bool handled = true;   
+   bool handled = true;
    if (challenge.exists(h_WWWAuthenticates))
    {
       for (Auths::const_iterator i = challenge.header(h_WWWAuthenticates).begin();  
-           i != challenge.header(h_WWWAuthenticates).end(); ++i)                    
+         i != challenge.header(h_WWWAuthenticates).end(); ++i)                    
       {    
          if (i->exists(p_realm))
          {
@@ -214,8 +226,8 @@ ClientAuthManager::AuthState::handleChallenge(UserProfile& userProfile, const Si
    }
    if (challenge.exists(h_ProxyAuthenticates))
    {
-      for (Auths::const_iterator i = challenge.header(h_ProxyAuthenticates).begin();  
-           i != challenge.header(h_ProxyAuthenticates).end(); ++i)                    
+      for(Auths::const_iterator i = challenge.header(h_ProxyAuthenticates).begin();  
+          i != challenge.header(h_ProxyAuthenticates).end(); ++i)                    
       {    
          if (i->exists(p_realm))
          {
@@ -225,15 +237,19 @@ ClientAuthManager::AuthState::handleChallenge(UserProfile& userProfile, const Si
                break;
             }
          }
-      else
-      {
-         return false;
+         else
+         {
+            return false;
+         }
       }
-      }
-      if(!handled)
-      {
-         InfoLog( << "ClientAuthManager::AuthState::handleChallenge failed for: " << challenge);
-      }
+   }
+   if(!handled)
+   {
+      InfoLog( << "ClientAuthManager::AuthState::handleChallenge failed for: " << challenge);
+   }
+   else
+   {
+      mCacheUseLimit = userProfile.getDigestCacheUseLimit();
    }
    return handled;
 }
@@ -244,6 +260,13 @@ ClientAuthManager::AuthState::authSucceeded()
    for(RealmStates::iterator i = mRealms.begin(); i!=mRealms.end(); i++)
    {
       i->second.authSucceeded();
+   }
+   mCacheUseCount++;
+   if(mCacheUseLimit != 0 && mCacheUseCount >= mCacheUseLimit)
+   {
+      // Cache use limit reached - clear auth state
+      mRealms.clear();
+      mCacheUseCount = 0;
    }
 }
 
@@ -388,11 +411,11 @@ ClientAuthManager::RealmState::findCredential(UserProfile& userProfile, const Au
    const Data& realm = auth.param(p_realm);                   
    //!dcm! -- icky, expose static empty soon...ptr instead of reference?
    mCredential = userProfile.getDigestCredential(realm);
-   if ( mCredential.realm.empty() )                       
+   if (mCredential.realm.empty())                       
    {                                        
       DebugLog( << "Got a 401 or 407 but could not find credentials for realm: " << realm);
-//      DebugLog (<< auth);
-//      DebugLog (<< response);
+      // DebugLog (<< auth);
+      // DebugLog (<< response);
       return false;
    }                     
    return true;   
@@ -417,14 +440,6 @@ ClientAuthManager::RealmState::addAuthentication(SipMessage& request)
    request.addOutboundDecorator(clientAuthDecorator);
 }
 
-void ClientAuthManager::dialogSetDestroyed(const DialogSetId& id)
-{
-   if ( mAttemptedAuths.find(id) != mAttemptedAuths.end())
-   {
-      mAttemptedAuths.erase(id);
-   }
-}
-
 // bool
 // ClientAuthManager::CompareAuth::operator()(const Auth& lhs, const Auth& rhs) const
 // {
@@ -441,7 +456,6 @@ void ClientAuthManager::dialogSetDestroyed(const DialogSetId& id)
 //       return lhs.param(p_username) < rhs.param(p_username);
 //    }
 // }
-
 
 
 /* ====================================================================
