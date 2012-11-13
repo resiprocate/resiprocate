@@ -58,6 +58,9 @@ main(int argc, char* argv[])
       exit( -1 );
    }
 
+   // Initialize network
+   initNetwork();
+
    try
    {
       BasicClientUserAgent ua(argc, argv);

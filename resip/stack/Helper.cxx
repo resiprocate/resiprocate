@@ -644,12 +644,10 @@ Helper::computeUniqueBranch()
    return result;
 }
 
-
-static Data localhostname = DnsUtil::getLocalHostName();
 Data
 Helper::computeCallId()
 {
-   Data hostAndSalt(localhostname + Random::getRandomHex(16));
+   Data hostAndSalt(DnsUtil::getLocalHostName() + Random::getRandomHex(16));
 #ifndef USE_SSL // .bwc. None of this is neccessary if we're using openssl
 #if defined(__linux__) || defined(__APPLE__)
    pid_t pid = getpid();
