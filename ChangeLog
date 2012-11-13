@@ -1,5 +1,26 @@
 = Release Notes v 1.8 =
 
+==1.8.6 Changes==
+*stack: fixed a bug where there is a failure to parse if the Request-Uri contains an ExistsOrData parameter at the end.  For example the following request-URI failed to parse properly (due to the ;gr parameter):  
+**INVITE sip:test@example.com;gr SIP/2.0
+*stack: fixed a trap with a race condition when sending a CANCEL as a 200 response is being received
+*stack: fix startup delay issue that is seen when building resiprocate into a Windows DLL
+**was related to having socket calls at static initialization time and the following globally scoped static initialization in Helper.cxx: static Data localhostname = DnsUtil::getLocalHostName();
+**since function scoped static initialization is prone to multi-threaded issues, a different solution was implemented
+**modified DnsUtil::getLocalHostname to store the hostname on first call in static Data - using a gate and a mutex to ensure it is also thread safe
+**this will improve performance for all invocations of DnsUtil::getLocalHostname 
+**added initNetwork call in a few places that help, since it won't be called from DnsUtil::getLocalHostname at global static init time any longer
+*repro: fixed potential assert in StaticRoute processor if RequestFilter does a SQL query and then the request needs to be challenged 
+*repro: ServerRegistration - do not send 439 First Hop Doesn't Support Outbound response if outbound is not in supported header
+*repro: added option remove Proxy-Authorization headers for successful Digest Challenges before forwarding message on
+*build: changes to VS2010 - 64bit builds to access OpenSSL from contrib/opensslx64, so that 32bit and 64bit versions of OpenSSL can be separated
+*build: fix VS2010 64-bit build issue with file in use when linking error
+**ensure intermediate directories are unique for every dum/test project
+**also make output directory consistent for all project configurations
+*rutil: provide overloaded definitions of parseConfig, because the use of a default value in the virtual function prototype causes warnings and potential confusion when overriding
+*reTurn: add csignal to ensure a clean compile on OpenWRT
+*tfm: added missing files to tarball for tfm repro to build, fixed tfm compilation issue with recent changes to ReproServerAuthManager
+ 
 ==General==
 ===New features===
 *added new REND project for for Registration and Presence load testing
