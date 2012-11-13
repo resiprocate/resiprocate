@@ -39,7 +39,7 @@ ExistsOrDataParameter::decode(ParameterTypes::Type type,
                               const std::bitset<256>& terminators,
                               PoolBase* pool)
 {
-   pb.skipWhitespace();
+   //pb.skipWhitespace();  // whitespace may be a terminator - don't skip it
    if (pb.eof() || terminators[*pb.position()])
    {
       return new (pool) ExistsOrDataParameter(type);

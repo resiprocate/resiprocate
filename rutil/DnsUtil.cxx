@@ -113,58 +113,72 @@ DnsUtil::lookupARecords(const Data& host)
    }
 }
 
-
-Data
+// The following statics ensure we can initialize the static storage of
+// localHostName at runtime, instead of at global static initialization time.
+// Under windows, when building a DLL you cannot call initNetwork and 
+// other socket API's reliably from DLLMain, so we need to delay this call.
+// We use the gate bool to ensure we don't need to do a mutex check everytime
+// and we use a Mutex to ensure that multiple threads can invokve getLocalHostName
+// for the first time, at the same time.
+static Mutex getLocalHostNameInitializerMutex;
+static bool  getLocalHostNameInitializerGate = false;
+static Data localHostName;
+const Data&
 DnsUtil::getLocalHostName()
 {
-   char buffer[MAXHOSTNAMELEN];
-   initNetwork();
-   buffer[0] = '\0';
-   if (gethostname(buffer,sizeof(buffer)) == -1)
+   if(!getLocalHostNameInitializerGate)
    {
-      int err = getErrno();
-      switch (err)
+      Lock lock(getLocalHostNameInitializerMutex);
+      char buffer[MAXHOSTNAMELEN];
+      initNetwork();
+      buffer[0] = '\0';
+      if (gethostname(buffer,sizeof(buffer)) == -1)
       {
+         int err = getErrno();
+         switch (err)
+         {
 // !RjS! This makes no sense for non-windows. The
 //       current hack (see the #define in .hxx) needs
 //       to be reworked.
-         case WSANOTINITIALISED:
-            CritLog( << "could not find local hostname because network not initialized:" << strerror(err) );
-            break;
-         default:
-            CritLog( << "could not find local hostname:" << strerror(err) );
-            break;
+            case WSANOTINITIALISED:
+               CritLog( << "could not find local hostname because network not initialized:" << strerror(err) );
+               break;
+            default:
+               CritLog( << "could not find local hostname:" << strerror(err) );
+               break;
+         }
+         throw Exception("could not find local hostname",__FILE__,__LINE__);
       }
-      throw Exception("could not find local hostname",__FILE__,__LINE__);
-   }
 
-   struct addrinfo* result=0;
-   struct addrinfo hints;
-   memset(&hints, 0, sizeof(hints));
-   hints.ai_flags |= AI_CANONNAME;
-   hints.ai_family |= AF_UNSPEC;
-   int res = getaddrinfo(buffer, 0, &hints, &result);
-   if (!res) 
-   {
-      // !jf! this should really use the Data class 
-      if (strchr(result->ai_canonname, '.') != 0) 
+      struct addrinfo* result=0;
+      struct addrinfo hints;
+      memset(&hints, 0, sizeof(hints));
+      hints.ai_flags |= AI_CANONNAME;
+      hints.ai_family |= AF_UNSPEC;
+      int res = getaddrinfo(buffer, 0, &hints, &result);
+      if (!res) 
       {
-         strncpy(buffer, result->ai_canonname, sizeof(buffer));
+         // !jf! this should really use the Data class 
+         if (strchr(result->ai_canonname, '.') != 0) 
+         {
+            strncpy(buffer, result->ai_canonname, sizeof(buffer));
+         }
+         else 
+         {
+            InfoLog( << "local hostname does not contain a domain part " << buffer);
+         }
+         freeaddrinfo(result);
       }
-      else 
+      else
       {
-         InfoLog( << "local hostname does not contain a domain part " << buffer);
+         InfoLog (<< "Couldn't determine local hostname. Error was: " << gai_strerror(res) << ". Returning empty string");
       }
-      freeaddrinfo(result);
-   }
-   else
-   {
-      InfoLog (<< "Couldn't determine local hostname. Error was: " << gai_strerror(res) << ". Returning empty string");
-   }
    
-   return Data(buffer);
+      localHostName = buffer;
+      getLocalHostNameInitializerGate = true;
+   }
+   return localHostName;
 }
-
 
 Data
 DnsUtil::getLocalDomainName()
