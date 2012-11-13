@@ -321,7 +321,8 @@ Global
 		{6527D843-EE53-4F1E-B0A9-12ABBA8E75CC}.SSL-Debug|x64.Build.0 = Debug|x64
 		{6527D843-EE53-4F1E-B0A9-12ABBA8E75CC}.SSL-Release|Win32.ActiveCfg = Release|Win32
 		{6527D843-EE53-4F1E-B0A9-12ABBA8E75CC}.SSL-Release|Win32.Build.0 = Release|Win32
-		{6527D843-EE53-4F1E-B0A9-12ABBA8E75CC}.SSL-Release|x64.ActiveCfg = Release|Win32
+		{6527D843-EE53-4F1E-B0A9-12ABBA8E75CC}.SSL-Release|x64.ActiveCfg = Release|x64
+		{6527D843-EE53-4F1E-B0A9-12ABBA8E75CC}.SSL-Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
