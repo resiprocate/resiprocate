@@ -1,0 +1,663 @@
+dn: uid=ac,ou=People,dc=resiprocate,dc=org
+cn: AC Mahendran
+mail: ac@qualcomm.com
+
+dn: uid=acbegen,ou=People,dc=resiprocate,dc=org
+cn: Ali C. Begen
+mail: abegen@cisco.com
+
+dn: uid=aclemm,ou=People,dc=resiprocate,dc=org
+cn: Alex Clemm
+mail: alex@cisco.com
+
+dn: uid=adam,ou=People,dc=resiprocate,dc=org
+cn: Adam Roach
+mail: adam@nostrum.com
+
+dn: uid=admin/add/wiki,ou=Admin,dc=resiprocate,dc=org
+cn: Add/Wiki LDAPAdmin
+
+dn: uid=admin/ro/web,ou=Admin,dc=resiprocate,dc=org
+cn: RO/Web LDAPAdmin
+
+dn: uid=admin/rw/web,ou=Admin,dc=resiprocate,dc=org
+cn: RW/Web LDAPAdmin
+
+dn: uid=aki,ou=People,dc=resiprocate,dc=org
+cn: Aki Niemi
+mail: aki.niemi@nokia.com
+
+dn: uid=alan,ou=People,dc=resiprocate,dc=org
+cn: Alan Hawrylyshen
+mail: alan@polyphase.ca
+
+dn: uid=alfredh,ou=People,dc=resiprocate,dc=org
+cn: Alfred Heggestad
+mail: aeh@db.org
+
+dn: uid=anant,ou=People,dc=resiprocate,dc=org
+cn: Anant Narayanan
+mail: anant@mozilla.com
+
+dn: uid=arosenberg,ou=People,dc=resiprocate,dc=org
+cn: Aron Rosenberg
+mail: aronrosenberg@gmail.com
+
+dn: uid=audet,ou=People,dc=resiprocate,dc=org
+cn: Francois Audet
+mail: audet@nortel.com
+
+dn: uid=bacampbe,ou=People,dc=resiprocate,dc=org
+cn: Ben Campbell
+mail: ben@nostrum.com
+
+dn: uid=backup-allow-charon,ou=People,dc=resiprocate,dc=org
+cn: AdminTool Update Backup Host IP/Charon
+mail: pckizer@resiprocate.org
+
+dn: uid=bandersson,ou=People,dc=resiprocate,dc=org
+cn: Bjorn Andersson
+mail: bjorn.andersson@aastra.com
+
+dn: uid=bbramwel,ou=People,dc=resiprocate,dc=org
+cn: Bob Bramwell
+mail: bob@jasomi.com
+
+dn: uid=bcampen,ou=People,dc=resiprocate,dc=org
+cn: Byron Campen
+mail: bcampen@estacado.net
+
+dn: uid=bhibbard,ou=People,dc=resiprocate,dc=org
+cn: Brian Hibbard
+mail: brian@estacado.net
+
+dn: uid=bko,ou=People,dc=resiprocate,dc=org
+cn: Bryan Ogawa
+mail: bko@cisco.com
+
+dn: uid=bob,ou=People,dc=resiprocate,dc=org
+cn: Bob Andreasen
+mail: bandreasen@pingtel.com
+
+dn: uid=bohara,ou=People,dc=resiprocate,dc=org
+cn: Bob O'Hara
+mail: bob@airespace.com
+
+dn: uid=bpenfield,ou=People,dc=resiprocate,dc=org
+cn: Bob Penfield
+mail: bpenfield@acmepacket.com
+
+dn: uid=brc,ou=People,dc=resiprocate,dc=org
+cn: Brian Carpenter
+mail: brc@zurich.ibm.com
+
+dn: uid=brian,ou=People,dc=resiprocate,dc=org
+cn: Brian D'Souza
+mail: dsouza@aksysnetworks.com
+
+dn: uid=brocha,ou=People,dc=resiprocate,dc=org
+cn: Brocha Strous
+mail: brocha.strous@kayote.com
+
+dn: uid=bryan,ou=People,dc=resiprocate,dc=org
+cn: David Bryan
+mail: bryan@ethernot.org
+
+dn: uid=carybran,ou=People,dc=resiprocate,dc=org
+cn: Cary Bran
+mail: cbran@cisco.com
+
+dn: uid=cbond,ou=People,dc=resiprocate,dc=org
+cn: Chris Bond
+mail: chris@counterpath.org
+
+dn: uid=cisco,ou=People,dc=resiprocate,dc=org
+cn: Francisco Hong
+mail: cisco@counterpath.com
+
+dn: uid=cktam,ou=People,dc=resiprocate,dc=org
+cn: Cheung Tam
+mail: cheung.tam@teltel.com
+
+dn: uid=clancy,ou=People,dc=resiprocate,dc=org
+cn: Charles Clancy
+mail: tcc@umd.edu
+
+dn: uid=clemm,ou=People,dc=resiprocate,dc=org
+cn: Alex Clemm
+mail: alex@cisco.com
+
+dn: uid=daniel,ou=People,dc=resiprocate,dc=org
+cn: Daniel Shi
+mail: daniel@xten.com
+
+dn: uid=danweber,ou=People,dc=resiprocate,dc=org
+cn: Dan Weber
+mail: dan@blinkmind.com
+
+dn: uid=danweber1,ou=People,dc=resiprocate,dc=org
+cn: Dan Weber
+mail: dan@mirrorlynx.com
+
+dn: uid=dbozzali,ou=People,dc=resiprocate,dc=org
+cn: Dario Bozzali
+mail: dario.bozzali@ifmgroup.it
+
+dn: uid=derek,ou=People,dc=resiprocate,dc=org
+cn: Derek MacDonald
+mail: derek@counterpath.com
+
+dn: uid=dkrzemin,ou=People,dc=resiprocate,dc=org
+cn: Damian Krzeminski
+mail: dkrzeminski@pingtel.com
+
+dn: uid=dlb,ou=People,dc=resiprocate,dc=org
+cn: david Butcher
+mail: davidlbutcher@gmail.com
+
+dn: uid=dnsbot,ou=People,dc=resiprocate,dc=org
+cn: dnsbot
+
+dn: uid=dpetrie,ou=People,dc=resiprocate,dc=org
+cn: Dan Petrie
+mail: dpetrie@sipez.com
+
+dn: uid=dpocock,ou=People,dc=resiprocate,dc=org
+cn: Daniel Pocock
+mail: daniel@readytechnology.co.uk
+
+dn: uid=dragos,ou=People,dc=resiprocate,dc=org
+cn: Dragos Liciu
+mail: dragos@counterpath.com
+
+dn: uid=dstuart,ou=People,dc=resiprocate,dc=org
+cn: David Stuart
+mail: dstuart@counterpath.com
+
+dn: uid=dsuh,ou=People,dc=resiprocate,dc=org
+cn: David Suh
+mail: dsuhpublic@gmail.com
+
+dn: uid=dthompson,ou=People,dc=resiprocate,dc=org
+cn: David Thomspson
+mail: davidt@route5060.com
+
+dn: uid=duane,ou=People,dc=resiprocate,dc=org
+cn: Duane Storey
+mail: duane@xten.com
+
+dn: uid=duanestorey,ou=People,dc=resiprocate,dc=org
+cn: Duane Storey
+mail: duanestorey@gmail.com
+
+dn: uid=dwing,ou=People,dc=resiprocate,dc=org
+cn: Dan Wing
+mail: dwing@cisco.com
+
+dn: uid=dworley,ou=People,dc=resiprocate,dc=org
+cn: Dale Worley
+mail: Dale.Worley@comcast.net
+
+dn: uid=ebbe,ou=People,dc=resiprocate,dc=org
+cn: Ebbe Altberg
+mail: Ebbe@ingenio.com
+
+dn: uid=eburger,ou=People,dc=resiprocate,dc=org
+cn: Eric Burger
+mail: eburger@bea.com
+
+dn: uid=ekr,ou=People,dc=resiprocate,dc=org
+cn: Eric Rescorla
+mail: ekr@networkresonance.com
+
+dn: uid=elwell,ou=People,dc=resiprocate,dc=org
+cn: John Elwell
+mail: john.elwell@siemens.com
+
+dn: uid=emcmurry,ou=People,dc=resiprocate,dc=org
+cn: Eric McMurry
+mail: emcmurry@estacado.net
+
+dn: uid=etxdua,ou=People,dc=resiprocate,dc=org
+cn: Alan Duric
+mail: alan.duric@telio.no
+
+dn: uid=fjoanis,ou=People,dc=resiprocate,dc=org
+cn: Francis Joanis
+mail: francis.joanis@gmail.com
+
+dn: uid=flemming,ou=People,dc=resiprocate,dc=org
+cn: Flemming Andraesen
+mail: fandreas@cisco.com
+
+dn: uid=fluffy,ou=People,dc=resiprocate,dc=org
+cn: Cullen Jennings
+mail: fluffy@cisco.com
+
+dn: uid=fnord,ou=People,dc=resiprocate,dc=org
+cn: Fnord Test
+mail: fnord@nostrum.com
+
+dn: uid=fritz,ou=People,dc=resiprocate,dc=org
+cn: Fritz Kizer
+mail: fritz@resiprocate.net
+
+dn: uid=gonzalo,ou=People,dc=resiprocate,dc=org
+cn: Gonzalo Camarillo
+mail: gonzalo.camarillo@ericsson.com
+
+dn: uid=greg,ou=People,dc=resiprocate,dc=org
+cn: Greg McGarry
+mail: greg@xten.com
+
+dn: uid=hakim,ou=People,dc=resiprocate,dc=org
+cn: Hakim Mehmood
+mail: naim@cisco.com
+
+dn: uid=hannes,ou=People,dc=resiprocate,dc=org
+cn: Hannes Tschofenig
+mail: hannes.tschofenig@mchp.siemens.de
+
+dn: uid=hannestschofenig,ou=People,dc=resiprocate,dc=org
+cn: Hannes Tschofenig
+mail: hannes.tschofenig@siemens.com
+
+dn: uid=henning,ou=People,dc=resiprocate,dc=org
+cn: Henning Schulzrinne
+mail: hgs@cs.columbia.edu
+
+dn: uid=hgs,ou=People,dc=resiprocate,dc=org
+cn: Henning Schulzrinne
+mail: hgs@cs.columbia.edu
+
+dn: uid=hisham,ou=People,dc=resiprocate,dc=org
+cn: Hisham Khartabil
+mail: hisham.khartabil@telio.no
+
+dn: uid=ipse,ou=People,dc=resiprocate,dc=org
+cn: Alexander Chemeris
+mail: alexander.chemeris@gmail.com
+
+dn: uid=jaekwon,ou=People,dc=resiprocate,dc=org
+cn: Jaekwon Oh
+mail: jaekwon.oh@samsung.com
+
+dn: uid=jantzgu,ou=People,dc=resiprocate,dc=org
+cn: Jani Hautakorpi
+mail: jani.hautakorpi@ericsson.com
+
+dn: uid=jari,ou=People,dc=resiprocate,dc=org
+cn: Jari Urpalainen
+mail: jari.urpalainen@nokia.com
+
+dn: uid=jari.arkko,ou=People,dc=resiprocate,dc=org
+cn: Jari Arkko
+mail: jari.arkko@piuha.net
+
+dn: uid=jason,ou=People,dc=resiprocate,dc=org
+cn: Jason Fischl
+mail: jason@iii.ca
+
+dn: uid=jdeverick,ou=People,dc=resiprocate,dc=org
+cn: Jim Deverick
+mail: jdeverick@sipeerior.com
+
+dn: uid=jdr,ou=People,dc=resiprocate,dc=org
+cn: jdr
+
+dn: uid=jdrosen,ou=People,dc=resiprocate,dc=org
+cn: Jonathan Rosenberg
+mail: jdrosen@cisco.com
+
+dn: uid=jfmule,ou=People,dc=resiprocate,dc=org
+cn: Jean-Francois Mule
+mail: jf.mule@cablelabs.com
+
+dn: uid=jgeras,ou=People,dc=resiprocate,dc=org
+cn: Jeremy Geras
+mail: JGeras@newheights.com
+
+dn: uid=jmatthewsr,ou=People,dc=resiprocate,dc=org
+cn: Justin Matthews
+mail: jmatthewsr@gmail.com
+
+dn: uid=joshl,ou=People,dc=resiprocate,dc=org
+cn: Josh Littlefield
+mail: joshl@cisco.com
+
+dn: uid=jozsef,ou=People,dc=resiprocate,dc=org
+cn: Jozsef Vass
+mail: jozsef@counterpath.com
+
+dn: uid=jryan,ou=People,dc=resiprocate,dc=org
+cn: James Ryan
+mail: jryan@icescape.com
+
+dn: uid=kchmilar,ou=People,dc=resiprocate,dc=org
+cn: Kevin Chmilar
+mail: kchmilar@jasomi.com
+
+dn: uid=kenho,ou=People,dc=resiprocate,dc=org
+cn: Ken Ho
+mail: kenho@bluebottle.com
+
+dn: uid=kittlitz,ou=People,dc=resiprocate,dc=org
+cn: Ken Kittlitz
+mail: ken@jasomi.com
+
+dn: uid=kumiko,ou=People,dc=resiprocate,dc=org
+cn: Kumiko Ono
+mail: kumiko@cs.columbia.edu
+
+dn: uid=kwhite,ou=People,dc=resiprocate,dc=org
+cn: Kennard White
+mail: kennard_white@logitech.com
+
+dn: uid=ldapadmin,ou=Admin,dc=resiprocate,dc=org
+cn: LDAP Admin
+cn: ldapadmin
+mail: ldapadmin@resiprocate.net
+
+dn: uid=ldusseault,ou=People,dc=resiprocate,dc=org
+cn: Lisa Dusseault
+mail: ldusseault@commerce.net
+
+dn: uid=lhotka,ou=People,dc=resiprocate,dc=org
+cn: Ladislav Lhotka
+mail: lhotka@cesnet.cz
+
+dn: uid=lowekamp,ou=People,dc=resiprocate,dc=org
+cn: Bruce Lowekamp
+mail: lowekamp@sipeerior.com
+
+dn: uid=mahoney,ou=People,dc=resiprocate,dc=org
+cn: Jean Mahoney
+mail: jean@estacado.net
+
+dn: uid=maltarai,ou=People,dc=resiprocate,dc=org
+cn: Mohammad Al-Taraireh
+mail: maltarai@cisco.com
+
+dn: uid=marc,ou=People,dc=resiprocate,dc=org
+cn: Marc Petit-Huguenin
+mail: marc@stonyfish.com
+
+dn: uid=mardy,ou=People,dc=resiprocate,dc=org
+cn: Mardy Marshal
+mail: mmarshall@pingtel.com
+
+dn: uid=mariano,ou=People,dc=resiprocate,dc=org
+cn: Mariano Stokle
+mail: mstokle@gmail.com
+
+dn: uid=matthias,ou=People,dc=resiprocate,dc=org
+cn: Matthias Granberry
+mail: matthias@estacado.net
+
+dn: uid=maxb,ou=People,dc=resiprocate,dc=org
+cn: Max Bowsher
+mail: maxb@f2s.com
+
+dn: uid=mbhatia,ou=People,dc=resiprocate,dc=org
+cn: Medhavi Bhatia
+mail: mbhatia@nextone.com
+
+dn: uid=mbj,ou=People,dc=resiprocate,dc=org
+cn: Martin Bjolklund
+mail: mbj@tail-f.com
+
+dn: uid=mcgrew,ou=People,dc=resiprocate,dc=org
+cn: David A. McGrew
+mail: david.a.mcgrew@mindspring.com
+
+dn: uid=mfroman,ou=People,dc=resiprocate,dc=org
+cn: Michael Froman
+mail: mfroman@estacado.net
+
+dn: uid=michaelp,ou=People,dc=resiprocate,dc=org
+cn: Michael Procter
+mail: michael@procter.org.uk
+
+dn: uid=mikko,ou=People,dc=resiprocate,dc=org
+cn: Mikko Lonnfors
+mail: mikko.lonnfors@nokia.com
+
+dn: uid=mmotoyam,ou=People,dc=resiprocate,dc=org
+cn: mmotoyam
+mail: mmotoyam@cisco.com
+
+dn: uid=moetje,ou=People,dc=resiprocate,dc=org
+cn: Matthias Moetje
+mail: moetje@terasens.de
+
+dn: uid=nagendra,ou=People,dc=resiprocate,dc=org
+cn: Nagendra Modadugu
+mail: nagendra@cs.stanford.edu
+
+dn: uid=nash,ou=People,dc=resiprocate,dc=org
+cn: Nash Tsai
+mail: nash@teltel.com
+
+dn: uid=newman,ou=People,dc=resiprocate,dc=org
+cn: Chris Newman
+mail: Chris.Newman@sun.com
+
+dn: uid=newtestuser,ou=People,dc=resiprocate,dc=org
+cn: newtestuser
+
+dn: uid=nils,ou=People,dc=resiprocate,dc=org
+cn: Nils Ohlmeier
+mail: develop@ohlmeier.org
+
+dn: uid=onovo,ou=People,dc=resiprocate,dc=org
+cn: Oscar Novo
+mail: oscar.novo@ericsson.com
+
+dn: uid=partain,ou=People,dc=resiprocate,dc=org
+cn: David Partain
+mail: david@partain.se
+
+dn: uid=partim,ou=People,dc=resiprocate,dc=org
+cn: Martin Hoffmann
+mail: hn@nvnc.de
+
+dn: uid=pasi,ou=People,dc=resiprocate,dc=org
+cn: Pasi Eronen
+mail: pasi.eronen@nokia.com
+
+dn: uid=pcalhoun,ou=People,dc=resiprocate,dc=org
+cn: Pat Calhoun
+mail: pcalhoun@airespace.com
+
+dn: uid=pckizer,ou=People,dc=resiprocate,dc=org
+cn: Philip Kizer
+mail: pckizer@resiprocate.org
+
+dn: uid=pcktest,ou=People,dc=resiprocate,dc=org
+cn: Philip Test
+mail: pckizer@nostrum.com
+
+dn: uid=peter,ou=People,dc=resiprocate,dc=org
+cn: Peter Blatherwick
+mail: peter_blatherwick@mitel.com
+
+dn: uid=petithug,ou=People,dc=resiprocate,dc=org
+cn: Marc Petit-Huguenin
+mail: petithug@acm.org
+
+dn: uid=philcarey,ou=People,dc=resiprocate,dc=org
+cn: Phillip Carey
+mail: phillip.carey@teltel.com
+
+dn: uid=pkyzivat,ou=People,dc=resiprocate,dc=org
+cn: Paul Kyzivat
+mail: pkyzivat@cisco.com
+
+dn: uid=pmatthews,ou=People,dc=resiprocate,dc=org
+cn: Phillip Matthews
+mail: philip_matthews@magma.ca
+
+dn: uid=presuhn,ou=People,dc=resiprocate,dc=org
+cn: Randy Presuhn
+mail: randy_presuhn@mindspring.com
+
+dn: uid=raheinz,ou=People,dc=resiprocate,dc=org
+cn: Rick Heinz
+mail: raheinz@estacado.net
+
+dn: uid=rhdurham,ou=People,dc=resiprocate,dc=org
+cn: Rod Durham
+mail: rhdurham@cmf.nrl.navy.mil
+
+dn: uid=rifaat,ou=People,dc=resiprocate,dc=org
+cn: RIFAAT SHEKH-YUSEF
+mail: rifatyu@avaya.com
+
+dn: uid=rjain,ou=People,dc=resiprocate,dc=org
+cn: Rajnish%2C Jain
+mail: rjain@excelswitching.com
+
+dn: uid=rjs,ou=People,dc=resiprocate,dc=org
+cn: Robert Sparks
+mail: rjs@resiprocate.net
+
+dn: uid=rjsparks,ou=People,dc=resiprocate,dc=org
+cn: Robert Sparks
+mail: RjS@nostrum.com
+
+dn: uid=rohan,ou=People,dc=resiprocate,dc=org
+cn: Rohan Mahy
+mail: rohan@ekabal.com
+
+dn: uid=ronh,ou=People,dc=resiprocate,dc=org
+cn: Ron Hough
+mail: ronh@estacado.net
+
+dn: uid=ruslan,ou=People,dc=resiprocate,dc=org
+cn: Ruslan Radvansky
+mail: prostoruslan@gmail.com
+
+dn: uid=rwaters,ou=People,dc=resiprocate,dc=org
+cn: Ryan Waters
+mail: rwaters@counterpath.com
+
+dn: uid=ryker,ou=People,dc=resiprocate,dc=org
+cn: Ryan Kereliuk
+mail: ryan@jasomi.com
+
+dn: uid=sah,ou=People,dc=resiprocate,dc=org
+cn: Scott Hollenbeck
+mail: sah@428cobrajet.net
+
+dn: uid=sailesh,ou=People,dc=resiprocate,dc=org
+cn: Sailesh Agrawal
+mail: sailesh@xten.com
+
+dn: uid=salman,ou=People,dc=resiprocate,dc=org
+cn: Salman
+mail: sa2086@columbia.edu
+
+dn: uid=sarin,ou=People,dc=resiprocate,dc=org
+cn: Alex Sarin
+mail: alex@ranchnetworks.com
+
+dn: uid=satluri,ou=People,dc=resiprocate,dc=org
+cn: Sudheera Atluri
+mail: sudheera.atluri@teltel.com
+
+dn: uid=schani,ou=People,dc=resiprocate,dc=org
+cn: Steve Chanin
+mail: Schanin@sapient.com
+
+dn: uid=schanin,ou=People,dc=resiprocate,dc=org
+cn: Steven Chanin
+mail: schani@sapient.com
+
+dn: uid=schisholm,ou=People,dc=resiprocate,dc=org
+cn: Sharon Chisholm
+mail: schishol@nortel.com
+
+dn: uid=scottlit,ou=People,dc=resiprocate,dc=org
+cn: Scott Litvinoff
+mail: scottlit@estacado.net
+
+dn: uid=sgodin,ou=People,dc=resiprocate,dc=org
+cn: Scott Godin
+mail: sgodin@sipspectrum.com
+
+dn: uid=shaun,ou=People,dc=resiprocate,dc=org
+cn: Shaun Dawson
+mail: scdawson@gmail.com
+
+dn: uid=siposp,ou=People,dc=resiprocate,dc=org
+cn: William Murray
+mail: wmurray@transnexus.com
+
+dn: uid=sumanth,ou=People,dc=resiprocate,dc=org
+cn: Sumanth Channabasappa
+mail: sumanth@cablelabs.com
+
+dn: uid=testuser,ou=People,dc=resiprocate,dc=org
+cn: Test User Updated
+mail: testuser@nostrum.com
+
+dn: uid=theo,ou=People,dc=resiprocate,dc=org
+cn: Zourzouvillys
+mail: theo@crazygreek.co.uk
+
+dn: uid=troll,ou=People,dc=resiprocate,dc=org
+cn: Alex Curlio
+mail: alex@counterpath.com
+
+dn: uid=unassigned,ou=People,dc=resiprocate,dc=org
+cn: Owner of all unassigned bugs
+mail: unassigned@resiprocate.org
+
+dn: uid=vann,ou=People,dc=resiprocate,dc=org
+cn: Van C. Nguyen
+mail: vanc.nguyen@polycom.com
+
+dn: uid=vasanthi,ou=People,dc=resiprocate,dc=org
+cn: Vasanthi
+mail: vasanthi@vapps.com
+
+dn: uid=vinit,ou=People,dc=resiprocate,dc=org
+cn: Vinit Karandikar
+mail: vinit@estacado.net
+
+dn: uid=vkg,ou=People,dc=resiprocate,dc=org
+cn: Vijay Gurbani
+mail: vkg@lucent.com
+
+dn: uid=volker,ou=People,dc=resiprocate,dc=org
+cn: Volker Hilt
+mail: volkerh@bell-labs.com
+
+dn: uid=warmbupt,ou=People,dc=resiprocate,dc=org
+cn: warmbupt@gmail.com
+mail: warmbupt@gmail.com
+
+dn: uid=wensong,ou=People,dc=resiprocate,dc=org
+cn: Wensong Zhang
+mail: wensong@purplecomm.com
+
+dn: uid=wsheu,ou=People,dc=resiprocate,dc=org
+cn: William Sheu
+mail: william.sheu@teltel.com
+
+dn: uid=xmlscott,ou=People,dc=resiprocate,dc=org
+cn: Scott Lawrence
+mail: slawrence@pingtel.com
+
+dn: uid=zach,ou=People,dc=resiprocate,dc=org
+cn: Zach Shelby
+mail: zach@sensinode.com
+
+dn: uid=oej,ou=People,dc=resiprocate,dc=org
+mail: oej@edvina.net
+cn: Olle Johansson
+
+dn: uid=jmswan,ou=People,dc=resiprocate,dc=org
+mail: jmswan@iol.unh.edu
+cn: James Swan
+
