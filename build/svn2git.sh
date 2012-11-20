@@ -8,7 +8,10 @@ set -x
 SVN_BASE=https://svn.resiprocate.org/rep/resiprocate/
 GIT_SERVER_URL=ssh://git@github.com/resiprocate/resiprocate.git
 
-CONVERT_BASE=/home/daniel/ssd/tmp/svn2git
+if [ -z "${CONVERT_BASE}" ];
+then
+  CONVERT_BASE=/tmp/svn2git
+fi
 
 #------------------------------------------------------------------
 
