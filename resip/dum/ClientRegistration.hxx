@@ -39,7 +39,6 @@ class ClientRegistration: public NonDialogUsage
           when complete */
       void removeMyBindings(bool stopRegisteringWhenDone=false);
 
-
       /** Request a manual refresh of the registration.  If 0 then default to using original 
           expires value (to remove use removeXXX() instead) */
       void requestRefresh(UInt32 expires = 0);  
@@ -53,7 +52,7 @@ class ClientRegistration: public NonDialogUsage
       /** returns a list of all contacts for this AOR - may include those added by other UA's */
       const NameAddrs& allContacts();
 
-      /** returns the number of seconds until the registration expires - relative */
+      /** returns the number of seconds until the registration expires - relative, returns 0 if already expired */
       UInt32 whenExpires() const; 
       
       /** Calls removeMyBindings and ends usage when complete */
@@ -108,10 +107,12 @@ class ClientRegistration: public NonDialogUsage
       unsigned int mTimerSeq; // expected timer seq (all < are stale)
 
       State mState;
+      bool mEnding;
       bool mEndWhenDone;
       bool mUserRefresh;
       UInt32 mRegistrationTime;
       UInt64 mExpires;
+      UInt64 mRefreshTime;
       State mQueuedState;
       SharedPtr<SipMessage> mQueuedRequest;
 
