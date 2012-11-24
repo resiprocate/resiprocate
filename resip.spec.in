@@ -22,19 +22,74 @@ commercial and open-source products. The project is dedicated to maintaining
 a complete, correct, and commercially usable implementation of SIP and a few
 related protocols.
 
-%package devel
+%package -n libresiprocate-1_8
+Summary: shared libraries http://www.resiprocate.org
+Group: Productivity/Telephony/SIP
+
+%description -n libresiprocate-1_8
+reSIProcate is a framework that aims to fully implement the SIP protocol
+in first class C++.  It is intended for use in other applications,
+such as the repro SIP proxy.
+This package provides the core libraries: librutil (utilities),
+libresip (SIP stack/RFC compliant message parsing) and
+libdum (SIP Dialog Usage Manager, a state machine for SIP dialogs).
+
+%package 1_8-devel
 Summary: Resiprocate development files
 Group: Development/Libraries
 Requires: %{name} = %{version}
 
-%description devel
+%description 1_8-devel
 Resiprocate SIP Stack development files.
+
+%package repro
+Summary: SIP proxy
+Group: Productivity/Telephony/SIP/Servers
+
+%description repro
+repro is the SIP proxy developed as part of the reSIProcate project.
+It provides a high-quality, low maintenance solution for serving
+small and large IP telephony installations.
+reSIProcate is a framework that aims to fully implement the SIP protocol
+in first class C++.  It is intended for use in other applications,
+such as the repro SIP proxy.
+
+%package turn-server
+Summary: ICE/STUN/TURN server
+Group: Productivity/Telephony/SIP/Servers
+
+%description turn-server
+reTurn is the TURN server developed as part of the reSIProcate project.
+TURN (RFC 5766) provides a standardised solution for VoIP applications
+to find the most efficient way to route media streams when NAT and
+firewall devices may be present.
+reTurn provides a high-quality, low maintenance solution for serving
+small and large IP telephony installations.  It has been used successfully
+with a variety of SIP and Jabber applications, including Lumicall,
+Jitsi, Empathy and Psi.
+reSIProcate is a framework that aims to fully implement the SIP protocol
+in first class C++.  It is intended for use in other applications,
+such as the repro SIP proxy.
+
+%package sipdialer
+Summary: click-to-call utility
+Group: Productivity/Telephony/SIP/Servers
+
+%description sipdialer
+sipdialer is a click-to-call application that uses the SIP REFER
+method to force a SIP phone (for example, the phone on your desk)
+to dial another number.  It can be registered in GConf to handle
+clicks on sip:, sips: and tel: URIs in other applications and the
+web browser.
+reSIProcate is a framework that aims to fully implement the SIP protocol
+in first class C++.  It is intended for use in other applications,
+such as the repro SIP proxy.
 
 %prep
 %setup -q
 
 %build
-%configure
+%configure --with-c-ares --with-ssl --with-mysql --with-radius --with-b2bua --with-apps --enable-ipv6
 make
 
 %install
@@ -43,18 +98,39 @@ make DESTDIR=%buildroot install
 %clean
 [ ${RPM_BUILD_ROOT} != "/" ] && rm -rf ${RPM_BUILD_ROOT}
 
-%post -p /sbin/ldconfig
-%postun -p /sbin/ldconfig
+%post -n libresiprocate-1_8 -p /sbin/ldconfig
 
-%files
+%post repro
+/sbin/ldconfig
+/sbin/chkconfig --add repro
+
+%post turn-server
+/sbin/chkconfig --add resiprocate-turn-server
+
+%preun repro
+if [ "$1" = 0 ]
+then
+   /etc/init.d/repro stop
+   /sbin/chkconfig --del repro
+fi
+
+%preun turn-server
+if [ "$1" = 0 ]
+then
+   /etc/init.d/resiprocate-turn-server stop
+   /sbin/chkconfig --del resiprocate-turn-server
+fi
+
+%postun -n libresiprocate-1_8 -p /sbin/ldconfig
+%postun repro -p /sbin/ldconfig
+
+%files -n libresiprocate-1_8
 %defattr(644,root,root,755)
 %{_libdir}/librutil.so
 %{_libdir}/libresip.so
 %{_libdir}/libdum.so
-%{_libdir}/librepro.so
-%{_bindir}/repro
 
-%files devel
+%files 1_8-devel
 %defattr(644,root,root,755)
 %{_includedir}/rutil/*.hxx
 %{_includedir}/rutil/dns/*.hxx
@@ -68,7 +144,22 @@ make DESTDIR=%buildroot install
 #%{_mandir}/man3/ares*gz
 /usr/man/man3/ares*.gz
 
+%files repro
+%defattr(644,root,root,755)
+%{_libdir}/librepro.so
+%{_sbindir}/repro
+%{_sbindir}/reprocmd
+
+%files turn-server
+%defattr(644,root,root,755)
+%{_sbindir}/reTurnServer
+
+%files sipdialer
+%defattr(644,root,root,755)
+%{_libdir}/libsipdial.so
+%{_bindir}/sipdialer
+
 %changelog
-* Sun Aug  7 2011 Daniel Pocock <daniel@pocock.com.au> -
-- Initial build based on autotools
+* Sat, 24 Nov 2012 11:44:33 +0100 Daniel Pocock <daniel@pocock.com.au> -- Produce multiple packages for stack/libs, daemons, sipdialer
+* Sun Aug  7 2011 Daniel Pocock <daniel@pocock.com.au> -- Initial build based on autotools
 
