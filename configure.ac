@@ -152,7 +152,7 @@ AM_CONDITIONAL(USE_SSL, false)
 AC_ARG_WITH(ssl, 
 [  --with-ssl              Link against OpenSSL libraries],
  [AC_DEFINE_UNQUOTED(USE_SSL, , USE_SSL)
- AC_SUBST(LIBSSL_LIBADD, "-lssl")
+ AC_SUBST(LIBSSL_LIBADD, "-lssl -lcrypto")
  AM_CONDITIONAL(USE_SSL, true)],
  [ AC_SUBST(LIBSSL_LIBADD, "")])
 
