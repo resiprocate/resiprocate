@@ -38,7 +38,10 @@ class ProducerFifoBuffer
 
       void flush()
       {
-         mFifo.addMultiple(mBuffer);
+         if(mBuffer.size() > 0)
+         {
+            mFifo.addMultiple(mBuffer);
+         }
       }
 
       inline size_t getBufferSize() const
