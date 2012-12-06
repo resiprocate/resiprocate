@@ -1,6 +1,8 @@
 = Release Notes v 1.8 =
 
 ==1.8.6 Changes==
+*stack: fix to Fifo to avoid calling AsyncProcessHandler in addMultiple if adding a list of 0 messages - was causing high CPU on process loops
+*stack: change to ProducerFifoBuffer to avoid calling mFifo.addMultiple if mBuffer is empty on flush()
 *stack: fixed a bug where there is a failure to parse if the Request-Uri contains an ExistsOrData parameter at the end.  For example the following request-URI failed to parse properly (due to the ;gr parameter):  
 **INVITE sip:test@example.com;gr SIP/2.0
 *stack: fixed a trap with a race condition when sending a CANCEL as a 200 response is being received
@@ -10,6 +12,7 @@
 **modified DnsUtil::getLocalHostname to store the hostname on first call in static Data - using a gate and a mutex to ensure it is also thread safe
 **this will improve performance for all invocations of DnsUtil::getLocalHostname 
 **added initNetwork call in a few places that help, since it won't be called from DnsUtil::getLocalHostname at global static init time any longer
+*dum: honour Min-SE header from inbound INVITE request - ensure we don't use a session timer that is smaller
 *repro: fixed potential assert in StaticRoute processor if RequestFilter does a SQL query and then the request needs to be challenged 
 *repro: ServerRegistration - do not send 439 First Hop Doesn't Support Outbound response if outbound is not in supported header
 *repro: added option remove Proxy-Authorization headers for successful Digest Challenges before forwarding message on
