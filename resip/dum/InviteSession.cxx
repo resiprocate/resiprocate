@@ -2423,7 +2423,7 @@ InviteSession::setSessionTimerPreferences()
    mSessionInterval = mDialog.mDialogSet.getUserProfile()->getDefaultSessionTime();  // Used only if remote doesn't request a time
    if(mSessionInterval != 0)
    {
-       // If session timers are no disabled then ensure interval is greater than or equal to MinSE
+       // If session timers are not disabled then ensure interval is greater than or equal to MinSE
        mSessionInterval = resipMax(mMinSE, mSessionInterval);
    }
    switch(mDialog.mDialogSet.getUserProfile()->getDefaultSessionTimerMode())
@@ -2530,6 +2530,11 @@ InviteSession::handleSessionTimerRequest(SipMessage &response, const SipMessage&
    // If session timers are locally supported then add necessary headers to response
    if(mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::Timer)))
    {
+      // Update MinSE if specified and longer than current value
+      if(request.exists(h_MinSE))
+      {
+         mMinSE = resipMax(mMinSE, request.header(h_MinSE).value());
+      }
       setSessionTimerPreferences();
 
       // Check if far-end supports
@@ -2545,12 +2550,6 @@ InviteSession::handleSessionTimerRequest(SipMessage &response, const SipMessage&
             {
                 mSessionRefresher = (request.header(h_SessionExpires).param(p_refresher) == Data("uas"));
             }
-         }
-
-         // Update MinSE if specified and longer than current value
-         if(request.exists(h_MinSE))
-         {
-             mMinSE = resipMax(mMinSE, request.header(h_MinSE).value());
          }
       }
       else
