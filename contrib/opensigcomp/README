@@ -1,0 +1,11 @@
+License terms are in the file called "LICENSE".
+
+Please see http://www.opensigcomp.org/ for documentation and
+frequently asked questions.
+
+If you need to change the configuration, edit the Makefile under src.
+This shouldn't be necessary for most common configurations.
+
+In most cases, you'll want to simply perform a make from the
+top level directory (as any user), and then do "make install"
+as root.

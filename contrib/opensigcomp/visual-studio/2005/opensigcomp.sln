@@ -1,0 +1,37 @@
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libopensigcomp", "libopensigcomp.vcproj", "{E77FC5F6-1650-421B-872F-B3E5025027C0}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unittest", "unittest.vcproj", "{F832FF18-8CFF-498A-ADA4-3D731CC19108}"
+	ProjectSection(ProjectDependencies) = postProject
+		{E77FC5F6-1650-421B-872F-B3E5025027C0} = {E77FC5F6-1650-421B-872F-B3E5025027C0}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Pocket PC 2003 (ARMV4) = Debug|Pocket PC 2003 (ARMV4)
+		Debug|Win32 = Debug|Win32
+		Release|Pocket PC 2003 (ARMV4) = Release|Pocket PC 2003 (ARMV4)
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E77FC5F6-1650-421B-872F-B3E5025027C0}.Debug|Pocket PC 2003 (ARMV4).ActiveCfg = Debug|Pocket PC 2003 (ARMV4)
+		{E77FC5F6-1650-421B-872F-B3E5025027C0}.Debug|Pocket PC 2003 (ARMV4).Build.0 = Debug|Pocket PC 2003 (ARMV4)
+		{E77FC5F6-1650-421B-872F-B3E5025027C0}.Debug|Pocket PC 2003 (ARMV4).Deploy.0 = Debug|Pocket PC 2003 (ARMV4)
+		{E77FC5F6-1650-421B-872F-B3E5025027C0}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E77FC5F6-1650-421B-872F-B3E5025027C0}.Debug|Win32.Build.0 = Debug|Win32
+		{E77FC5F6-1650-421B-872F-B3E5025027C0}.Release|Pocket PC 2003 (ARMV4).ActiveCfg = Debug|Pocket PC 2003 (ARMV4)
+		{E77FC5F6-1650-421B-872F-B3E5025027C0}.Release|Pocket PC 2003 (ARMV4).Build.0 = Debug|Pocket PC 2003 (ARMV4)
+		{E77FC5F6-1650-421B-872F-B3E5025027C0}.Release|Pocket PC 2003 (ARMV4).Deploy.0 = Debug|Pocket PC 2003 (ARMV4)
+		{E77FC5F6-1650-421B-872F-B3E5025027C0}.Release|Win32.ActiveCfg = Release|Win32
+		{E77FC5F6-1650-421B-872F-B3E5025027C0}.Release|Win32.Build.0 = Release|Win32
+		{F832FF18-8CFF-498A-ADA4-3D731CC19108}.Debug|Pocket PC 2003 (ARMV4).ActiveCfg = Debug|Pocket PC 2003 (ARMV4)
+		{F832FF18-8CFF-498A-ADA4-3D731CC19108}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F832FF18-8CFF-498A-ADA4-3D731CC19108}.Debug|Win32.Build.0 = Debug|Win32
+		{F832FF18-8CFF-498A-ADA4-3D731CC19108}.Release|Pocket PC 2003 (ARMV4).ActiveCfg = Debug|Pocket PC 2003 (ARMV4)
+		{F832FF18-8CFF-498A-ADA4-3D731CC19108}.Release|Win32.ActiveCfg = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
