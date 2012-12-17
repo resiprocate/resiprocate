@@ -83,7 +83,8 @@ nr_stun_xor_mapped_address(UINT4 magicCookie, nr_transport_addr *from, nr_transp
             from->protocol, to);
         break;
     case NR_IPV6:
-        UNIMPLEMENTED;
+        assert(0);
+        ABORT(R_INTERNAL);
         break;
     default:
         assert(0);
@@ -101,7 +102,6 @@ nr_stun_find_local_addresses(nr_transport_addr addrs[], int maxaddrs, int *count
 {
     int r,_status;
     NR_registry *children = 0;
-    int i;
 
     if ((r=NR_reg_get_child_count(NR_STUN_REG_PREF_ADDRESS_PRFX, (unsigned int*)count)))
         if (r == R_NOT_FOUND)

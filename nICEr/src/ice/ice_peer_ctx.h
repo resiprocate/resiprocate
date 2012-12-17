@@ -40,9 +40,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 struct nr_ice_peer_ctx_ {
-  int state;
   char *label;
-  
   nr_ice_ctx *ctx;
   nr_ice_handler *handler;
 
@@ -66,9 +64,12 @@ typedef STAILQ_HEAD(nr_ice_peer_ctx_head_, nr_ice_peer_ctx_) nr_ice_peer_ctx_hea
 int nr_ice_peer_ctx_create(nr_ice_ctx *ctx, nr_ice_handler *handler,char *label, nr_ice_peer_ctx **pctxp);
 int nr_ice_peer_ctx_destroy(nr_ice_peer_ctx **pctxp);
 int nr_ice_peer_ctx_parse_stream_attributes(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream, char **attrs, int attr_ct);
+int nr_ice_peer_ctx_parse_trickle_candidate(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream, char *cand);
+
 int nr_ice_peer_ctx_pair_candidates(nr_ice_peer_ctx *pctx);
 int nr_ice_peer_ctx_parse_global_attributes(nr_ice_peer_ctx *pctx, char **attrs, int attr_ct);
 int nr_ice_peer_ctx_start_checks(nr_ice_peer_ctx *pctx);
+int nr_ice_peer_ctx_start_checks2(nr_ice_peer_ctx *pctx, int allow_non_first);
 int nr_ice_peer_ctx_dump_state(nr_ice_peer_ctx *pctx,FILE *out);
 int nr_ice_peer_ctx_log_state(nr_ice_peer_ctx *pctx);
 int nr_ice_peer_ctx_stream_done(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream);

@@ -4,7 +4,7 @@ NRAPPKIT_BUILD_DIR=$(NRAPPKIT_SRCDIR)src/make/$(PLATFORM)
 
 OPENSSL_SRC_DIR=../../../../openssl-0.9.8g/
 
-CC=gcc -g
+CC=gcc -g -arch i386
 GLOBAL_CFLAGS += -DDARWIN -DHAVE_SIN_LEN
 
 include ../generic/pre.mk

@@ -113,7 +113,7 @@ char attr_buf[2048];
 void nr_test_ice_impatient_timer_cb(int s, int how, void *cb_arg)
   {
     impatient_info *info=cb_arg;
-    
+
     fprintf(stderr,"Impatient timer expired, choosing %s",info->chosen->as_string);
     nr_ice_candidate_pair_select(info->chosen);
     info->timer=0;
@@ -121,7 +121,7 @@ void nr_test_ice_impatient_timer_cb(int s, int how, void *cb_arg)
   }
 
 /*** ice_handler impl */
-  static int nr_test_ice_select_pair(void *obj,nr_ice_media_stream *stream, 
+  static int nr_test_ice_select_pair(void *obj,nr_ice_media_stream *stream,
 int component_id, nr_ice_cand_pair **potentials,int potential_ct)
   {
     int i;
@@ -138,9 +138,9 @@ int component_id, nr_ice_cand_pair **potentials,int potential_ct)
       }
     }
     assert(stream_num!=-1);
-      
+
     fprintf(stderr,"nr_test_ice_select_pair called.... stream=%s:%d\n",stream->label,component_id);
-    
+
     for(i=0;i<potential_ct;i++){
       fprintf(stderr,"  %s state=%d\n",potentials[i]->as_string,potentials[i]->state);
       fprintf(stderr,"      priority=%llu\n",potentials[i]->priority);
@@ -150,11 +150,11 @@ int component_id, nr_ice_cand_pair **potentials,int potential_ct)
         if(!chosen)
           chosen=potentials[i];
       }
-      else if((potentials[i]->state!=NR_ICE_PAIR_STATE_FAILED) && 
+      else if((potentials[i]->state!=NR_ICE_PAIR_STATE_FAILED) &&
         (potentials[i]->state!=NR_ICE_PAIR_STATE_CANCELLED))
         incomplete++;
     }
-    
+
     if(!chosen)
       return R_NOT_FOUND;
 
@@ -195,7 +195,7 @@ static int nr_test_ice_stream_ready(void *obj, nr_ice_media_stream *stream)
 static int nr_test_ice_stream_failed(void *obj, nr_ice_media_stream *stream)
   {
     fprintf(stderr,"nr_test_ice_stream_failed called.... stream=%s\n",stream->label);
-    
+
     fprintf(stderr,"FAILURE\n");
     exit(1);
 
@@ -244,7 +244,7 @@ static int nr_test_ice_completed(void *obj, nr_ice_peer_ctx *pctx)
     int i;
 
     nr_ice_ctx_finalize(pctx->ctx,pctx);
-    
+
 
     fprintf(stderr,"nr_test_ice_completed.... pctx=%s\n",pctx->label);
 
@@ -259,11 +259,11 @@ static int nr_test_ice_completed(void *obj, nr_ice_peer_ctx *pctx)
       fprintf(stderr,"Stream %s\n",s1->label);
 
       STAILQ_FOREACH_SAFE(c1, &s1->components, entry, c2){
-        
+
         fprintf(stderr,"  Component %d: %s\n",comp_num,c1->active->local->addr.as_string);
       }
     }
-        
+
     if(mode==MODE_OFFERER){
         /* generate traffic that'll be echoed back */
         STAILQ_FOREACH_SAFE(s1, &pctx->peer_streams, entry, s2){
@@ -278,7 +278,7 @@ static int nr_test_ice_completed(void *obj, nr_ice_peer_ctx *pctx)
         }
 
         send_data(0,0,0);
-        
+
         NR_ASYNC_TIMER_SET(1000,send_data,0,&timer);
     }
 
@@ -323,7 +323,7 @@ static int nr_test_ice_completed(void *obj, nr_ice_peer_ctx *pctx)
             exit(1);
         }
 
-        done = 1; 
+        done = 1;
         for (i = 0; i < stream_infos_ct; ++i) {
             if (strlen(stream_infos[i]) > 0) {
                 done = 0;
@@ -338,7 +338,7 @@ static int nr_test_ice_completed(void *obj, nr_ice_peer_ctx *pctx)
 
     if (done) {
         nr_ice_ctx *ictx=pctx->ctx;
-              
+
         nr_ice_peer_ctx_destroy(&pctx);
         nr_ice_ctx_destroy(&ictx);
     }
@@ -361,13 +361,13 @@ static int create_test_ice_ctx(char *label,int streams,UINT4 flags,test_ice_ctx 
     test_ice_ctx *tctx=0;
     int r;
     int i;
-    
+
     tctx=RCALLOC(sizeof(test_ice_ctx));
 
     tctx->label=r_strdup(label);
     if(r=nr_ice_ctx_create(label,flags,&tctx->ctx))
       nr_verr_exit("Couldn't create ICE ctx");
-    
+
     for(i=0;i<stream_ct;i++){
       char buf[1024];
 
@@ -376,7 +376,7 @@ static int create_test_ice_ctx(char *label,int streams,UINT4 flags,test_ice_ctx 
       if(r=nr_ice_add_media_stream(tctx->ctx,buf,1,&tctx->streams[tctx->stream_ct++]))
         nr_verr_exit("Couldn't create media stream");
     }
-    
+
     if(r=nr_ice_peer_ctx_create(tctx->ctx,&tctx->handler,label,&tctx->pctx))
       nr_verr_exit("Couldn't create peer ctx");
 
@@ -386,7 +386,7 @@ static int create_test_ice_ctx(char *label,int streams,UINT4 flags,test_ice_ctx 
 
     return(0);
   }
-      
+
 
 int write_attributes(test_ice_ctx *ctx, char *out, int maxlen)
   {
@@ -409,7 +409,7 @@ int write_attributes(test_ice_ctx *ctx, char *out, int maxlen)
         nr_verr_exit("Couldn't get attribute strings");
 
       snprintf(out,maxlen,"\n");
-      maxlen-=strlen(out); out+=strlen(out);      
+      maxlen-=strlen(out); out+=strlen(out);
 
       for(j=0;j<attrct;j++){
         snprintf(out,maxlen,"%s\n",attrs[j]);
@@ -419,7 +419,7 @@ int write_attributes(test_ice_ctx *ctx, char *out, int maxlen)
 
     }
     RFREE(attrs);
- 
+
     return(0);
   }
 
@@ -438,21 +438,21 @@ int _read_attributes(char **bufp,char **attrs,int *attr_ct,int maxct)
 
     while(buf){
       ptr=strchr(buf,'\n');
-      
+
       if(ptr)
         *ptr++=0;
-    
+
       if(ct>=maxct)
         nr_verr_exit("Too many attrs");
-      
+
       if(strlen(buf)==0)
         break;
 
       attrs[ct++]=r_strdup(buf);
-      
+
       buf=ptr;
     }
-    
+
     *attr_ct=ct;
     *bufp=ptr;
 
@@ -470,7 +470,7 @@ int read_attributes(test_ice_ctx *ctx, char *buf)
 
     if(r=nr_ice_peer_ctx_parse_global_attributes(ctx->pctx,attrs,attrct))
       nr_verr_exit("Couldn't parse global attributes");
-    
+
     for(j=0;j<attrct;j++)
       RFREE(attrs[j]);
 
@@ -478,16 +478,16 @@ int read_attributes(test_ice_ctx *ctx, char *buf)
       attrct=0;
 
       r=_read_attributes(&buf,attrs,&attrct,50);
-      
+
       if(r==R_EOD)
         break;
 
       if(r)
         nr_verr_exit("Error reading stream attributes");
-      
+
       if(r=nr_ice_peer_ctx_parse_stream_attributes(ctx->pctx,ctx->streams[i],attrs,attrct))
         nr_verr_exit("Couldn't parse peer attributes");
-      
+
       for(j=0;j<attrct;j++)
         RFREE(attrs[j]);
 
@@ -496,7 +496,7 @@ int read_attributes(test_ice_ctx *ctx, char *buf)
 
     for(j=0;j<attrct;j++)
       RFREE(attrs[j]);
-    
+
     return(0);
   }
 
@@ -508,7 +508,7 @@ void signalling_cb(int s, int how, void *cb_arg)
     int r;
 
     fprintf(stderr,"Signalling CB fired\n");
-    
+
     if(r=nr_socket_recvfrom(signal_socket,buf,sizeof(buf),(size_t *)&len,0,&peer_addr))
       nr_verr_exit("Couldn't read from signalling socket");
 
@@ -517,20 +517,20 @@ void signalling_cb(int s, int how, void *cb_arg)
 
     if(r=read_attributes(ctx,buf))
       nr_verr_exit("Error reading attributes");
-    
+
     if(mode==MODE_ANSWERER){
       write_attributes(ctx,attr_buf,sizeof(attr_buf));
       fprintf(stderr,"SENDING ATTRIBUTES=====\n%s=====\n",attr_buf);
       if(r=nr_socket_sendto(signal_socket,attr_buf,strlen(attr_buf)+1,0,&peer_addr))
         nr_verr_exit("Couldn't send signalling");
     }
-    
+
 
     fprintf(stderr,"Signalling complete\n");
 
     fprintf(stderr,"=========================================================\n");
     fprintf(stderr,"Kicking off ICE %s\n",ctx->label);
-    
+
     if(force_controlling)
       ctx->pctx->controlling=1;
 
@@ -562,22 +562,22 @@ void initialized_cb(int s, int how, void *cb_arg)
     for(j=0;j<attrct;j++){
       fprintf(stderr,"  ATTR:%s\n",attrs[j]);
       RFREE(attrs[j]);
-    } 
+    }
     RFREE(attrs);
 
     for(i=0;i<ctx->stream_ct;i++){
       if(r=nr_ice_media_stream_get_attributes(ctx->streams[i],&attrs,&attrct))
         nr_verr_exit("Couldn't get attribute strings");
-      
+
       fprintf(stderr,"STREAM %d: %d attributes\n",i,attrct);
-      
+
       for(j=0;j<attrct;j++){
         fprintf(stderr,"  ATTR:%s\n",attrs[j]);
         RFREE(attrs[j]);
       }
     }
     RFREE(attrs);
- 
+
     if(mode==MODE_OFFERER){
       write_attributes(ctx,attr_buf,sizeof(attr_buf));
       fprintf(stderr,"SENDING ATTRIBUTES=====\n%s=====\n",attr_buf);
@@ -594,7 +594,7 @@ void timed_exit(int s, int how, void *cb_arg)
     printf("Success!\n");
     exit(0);
   }
-    
+
 int main(int argc, char **argv)
   {
     int r;
@@ -659,7 +659,7 @@ int main(int argc, char **argv)
       nr_verr_exit("Couldn't initialize registry");
 
     r_log_init();
-    
+
     switch(mode){
       case MODE_OFFERER:
         if(r=nr_ip4_port_to_transport_addr(ntohl(inet_addr(signal_host)),signal_port,IPPROTO_UDP,&peer_addr))
@@ -681,7 +681,7 @@ int main(int argc, char **argv)
     if(r=nr_socket_local_create(&local_addr,&signal_socket))
       nr_verr_exit("Couldn't create signalling socket");
     nr_socket_getfd(signal_socket,&signal_fd);
-    
+
 if(reg_mode==NR_REG_MODE_LOCAL){
 #if 0
 NR_reg_set_char("logging.stderr.enabled", 1);
@@ -731,6 +731,7 @@ NR_reg_set_uchar("ice.pref.interface.en2", 248);
 NR_reg_set_uchar("ice.pref.interface.en3", 247);
 NR_reg_set_uchar("ice.pref.interface.em0", 251);
 NR_reg_set_uchar("ice.pref.interface.em1", 252);
+NR_reg_set_uchar("ice.pref.interface.tun0", 240);
 #endif
 NR_reg_set_uint4("stun.client.retransmission_timeout", 100);
 //NR_reg_set_uint4("stun.client.retransmission_timeout", 1000);
@@ -739,7 +740,7 @@ NR_reg_set_uint4("stun.client.retransmission_timeout", 100);
     NR_async_timer_init();
     gettimeofday(&tv,0);
     NR_async_timer_update_time(&tv);
-    
+
     create_test_ice_ctx("OCTX",1,flags,&g_tctx);
 
     /* Now initialize ICE */
@@ -760,7 +761,7 @@ NR_reg_set_uint4("stun.client.retransmission_timeout", 100);
       if(r=NR_async_event_wait2(&events,&towait)){
         if(r==R_EOD)
           break;
-        
+
         if(r!=R_WOULDBLOCK){
           fprintf(stderr,"Error in event wait\n");
           exit(1);
@@ -777,12 +778,12 @@ NR_reg_set_uint4("stun.client.retransmission_timeout", 100);
     }
 
     fprintf(stderr,"Success!\n");
-    
+
     exit(0);
   }
 
 
-    
-  
+
+
 
 

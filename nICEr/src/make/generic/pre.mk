@@ -7,7 +7,7 @@ include $(PWD)/../generic/dirs.mk
 include $(PWD)/../generic/test-dirs.mk
 -include $(PWD)/*.d
 
-GLOBAL_CFLAGS += -g -Werror -Wall -Wno-parentheses -DHAVE_STRDUP
+GLOBAL_CFLAGS += -g -Wall -Wno-parentheses -DHAVE_STRDUP
 GLOBAL_CFLAGS += -D__UNUSED__="__attribute__((unused))" -Drestrict=__restrict__
 GLOBAL_CFLAGS += -I$(NRAPPKIT_BUILD_DIR)
 GLOBAL_CFLAGS += -I$(NRAPPKIT_SRCDIR)/src/util

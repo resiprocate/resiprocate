@@ -62,7 +62,10 @@ static int TURN_PHASE_MODE[NUMBER_OF_STUN_CTX] = {
 
 
 static int nr_turn_client_next_action(nr_turn_client_ctx *ctx, int stun_ctx_state);
-static void nr_turn_client_cb(int s, int how, void *cb_arg);
+static void nr_turn_client_cb(NR_SOCKET s, int how, void *cb_arg);
+static int
+nr_turn_client_prepare_start(nr_turn_client_ctx *ctx, char *username, Data *password, UINT4 bandwidth_kbps, UINT4 lifetime_secs, NR_async_cb finished_cb, void *cb_arg);
+
 
 int
 nr_turn_client_next_action(nr_turn_client_ctx *ctx, int stun_ctx_state)
@@ -98,7 +101,8 @@ nr_turn_client_next_action(nr_turn_client_ctx *ctx, int stun_ctx_state)
 #if 0
             ctx->state = NR_TURN_CLIENT_STATE_ACTIVE;
 #else
-            UNIMPLEMENTED;
+            assert(0);
+            ABORT(R_INTERNAL);
 #endif
             r_log(NR_LOG_TURN,LOG_DEBUG,"TURN-CLIENT(%s): Active", ctx->label);
         }
@@ -109,7 +113,10 @@ nr_turn_client_next_action(nr_turn_client_ctx *ctx, int stun_ctx_state)
         }
         else {
             ++(ctx->phase);
-
+            if (ctx->phase > NUMBER_OF_STUN_CTX) {
+                ABORT(R_INTERNAL);
+            }
+            
             ctx->state=NR_TURN_CLIENT_STATE_RUNNING;
 
             r_log(NR_LOG_TURN,LOG_DEBUG,"TURN-CLIENT(%s): Starting phase %s", ctx->label, TURN_PHASE_LABEL[ctx->phase]);
@@ -154,7 +161,7 @@ nr_turn_client_next_action(nr_turn_client_ctx *ctx, int stun_ctx_state)
 }
 
 void
-nr_turn_client_cb(int s, int how, void *cb_arg)
+nr_turn_client_cb(NR_SOCKET s, int how, void *cb_arg)
 {
     int r,_status;
     nr_turn_client_ctx *ctx = (nr_turn_client_ctx*)cb_arg;
@@ -241,7 +248,7 @@ nr_turn_client_ctx_destroy(nr_turn_client_ctx **ctxp)
     return(0);
 }
 
-int
+static int
 nr_turn_client_prepare_start(nr_turn_client_ctx *ctx, char *username, Data *password, UINT4 bandwidth_kbps, UINT4 lifetime_secs, NR_async_cb finished_cb, void *cb_arg)
 {
     int r,_status;
