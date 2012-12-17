@@ -1,0 +1,24 @@
+The Open SigComp library is freely available under version 2 of the Gnu
+General Public License (GPL), a copy of which is available in the file
+"COPYING". We have released the library under the GPL in hopes that it can
+be of use for research, prototyping, and advancing the SigComp standard.
+
+Software distributed under the GPL is appropriate for use in prototypes,
+research, and other open source projects that use the GPL or a compatible
+license. The GPL does not prohibit use in a commercial product, but
+please be familiar with and comply with all GPL provisions concerning the
+redistribution of software that incorporates or links with Open SigComp.
+
+Estacado Systems offers an enhanced compression library based on Open
+SigComp. Please send email to info@estacado.net for more information.
+
+Additionally, there are certain components of the library that are
+covered by patents (such as advanced compression algorithms). Because
+these components require licensing from the holders of such patents, they
+are not released as open source. To take advantage of such components,
+you must obtain a non-open-source license from Estacado Systems.
+
+Finally, Estacado Systems grants specific permission to link the Open
+SigComp library with the reSIProcate library and the Open SSL library. Any
+products using Open SigComp linked with the either of these libraries,
+however, are still subject to the terms of the GPL.

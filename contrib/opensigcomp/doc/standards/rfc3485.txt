@@ -1,0 +1,1683 @@
+
+
+
+
+
+
+Network Working Group                                   M. Garcia-Martin
+Request for Comments: 3485                                      Ericsson
+Category: Standards Track                                     C. Bormann
+                                                                  J. Ott
+                                                          TZI/Uni Bremen
+                                                                R. Price
+                                                      Siemens/Roke Manor
+                                                             A. B. Roach
+                                                             dynamicsoft
+                                                           February 2003
+
+
+ The Session Initiation Protocol (SIP) and Session Description Protocol
+      (SDP) Static Dictionary for Signaling Compression (SigComp)
+
+Status of this Memo
+
+   This document specifies an Internet standards track protocol for the
+   Internet community, and requests discussion and suggestions for
+   improvements.  Please refer to the current edition of the "Internet
+   Official Protocol Standards" (STD 1) for the standardization state
+   and status of this protocol.  Distribution of this memo is unlimited.
+
+Copyright Notice
+
+   Copyright (C) The Internet Society (2003).  All Rights Reserved.
+
+Abstract
+
+   The Session Initiation Protocol (SIP) is a text-based protocol for
+   initiating and managing communication sessions.  The protocol can be
+   compressed by using Signaling Compression (SigComp).  Similarly, the
+   Session Description Protocol (SDP) is a text-based protocol intended
+   for describing multimedia sessions for the purposes of session
+   announcement, session invitation, and other forms of multimedia
+   session initiation.  This memo defines the SIP/SDP-specific static
+   dictionary that SigComp may use in order to achieve higher
+   efficiency.  The dictionary is compression algorithm independent.
+
+
+
+
+
+
+
+
+
+
+
+
+
+Garcia-Martin, et al.       Standards Track                     [Page 1]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+Table of Contents
+
+   1. Introduction.....................................................2
+   2. Design considerations............................................3
+   3. Binary representation of the SIP/SDP dictionary..................5
+   4. Security Considerations.........................................13
+   5. IANA Considerations.............................................13
+   6. Acknowledgements................................................14
+   7. References......................................................14
+      7.1 Normative References........................................14
+      7.2 Informative References......................................14
+   Appendix A. SIP input strings to the SIP/SDP static dictionary.....17
+   Appendix B. SDP input strings to the SIP/SDP static dictionary.....26
+   Authors' Addresses.................................................29
+   Full Copyright Statement...........................................30
+
+1. Introduction
+
+   SIP [3] and SDP [24] are text-based protocols that use the UTF-8
+   charset (RFC 2279 [5]).  SIP and SDP were designed for rich bandwidth
+   links.  However, when SIP/SDP is run over narrow bandwidth links,
+   such as radio interfaces or low speed serial links, the session setup
+   time increases substantially, compared to an operation over a rich
+   bandwidth link.
+
+   The session setup time can decrease dramatically if the SIP/SDP
+   signaling is compressed.  The signaling compression mechanisms
+   specified in SigComp [1] provide a multiple compression/decompression
+   algorithm framework to compress and decompress text-based protocols
+   such as SIP and SDP.
+
+   When compression is used in SIP/SDP, the compression achieves its
+   maximum rate once a few message exchanges have taken place.  This is
+   due to the fact that the first message the compressor sends to the
+   decompressor is only partially compressed, as there is not a previous
+   stored state to compress against.  As the goal is to reduce the
+   session setup time as much as possible, it seems sensible to
+   investigate a mechanism to boost the compression rate from the first
+   message.
+
+   In this memo we introduce the static dictionary for SIP and SDP.  The
+   dictionary is to be used in conjunction with SIP, SDP and SigComp.
+   The static SIP/SDP dictionary constitutes a SigComp state that can be
+   referenced in the first SIP message that the compressor sends out.
+
+
+
+
+
+
+
+Garcia-Martin, et al.       Standards Track                     [Page 2]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+2. Design considerations
+
+   The static SIP/SDP dictionary is a collection of well-known strings
+   that appear in most of the SIP and SDP messages.  The dictionary is
+   not a comprehensive list of reserved words, but it includes many of
+   the strings that appear in SIP and SDP signaling.
+
+   The static dictionary is unique and MUST be available in all SigComp
+   implementations for SIP/SDP.  The dictionary is not intended to
+   evolve as SIP or SDP evolve.  It is defined once, and stays as is
+   forever. This solves the problems of updating, upgrading and finding
+   out the dictionary that is supported at the remote end when several
+   versions of the same dictionary coexist.
+
+   Appendix A contains the collection of strings that SIP contributed to
+   the static dictionary.  The appendix includes references to the
+   documents that define those strings.
+
+   Appendix B contains the collection of strings that SDP contributed to
+   the static dictionary.  Again, the appendix includes references to
+   the documents that define those strings.
+
+   While these appendices are of an informative nature, Section 3 gives
+   the normative binary form of the SIP/SDP dictionary.  This is the
+   dictionary that is included in the SigComp implementation.  This
+   dictionary has been formed from the collection of individual
+   dictionaries given in appendices A and B.
+
+   The two input collections are collections of UTF-8 encoded character
+   strings.  In order to facilitate the readability, the appendices
+   describe them in one table for each collection.  In these tables,
+   each row represents an entry.  Each entry contains the string that
+   actually occurs in the dictionary, its priority (see below), its
+   offset from the first octet and its length (both in hexadecimal), and
+   one or more references that elucidate why this string is expected to
+   occur in SIP/SDP messages.  Note: Length in this document always
+   refers to octets.
+
+   The columns in the tables are described as follows:
+
+   String: represents the UTF-8 string that is inserted into the
+   dictionary.  Note that the quotes (") are not part of the string
+   itself.  Note also that the notation [CRLF] represents a Carriage
+   Return character (ASCII code 0x0D) followed by a Line Feed character
+   (ASCII code 0x0A).
+
+
+
+
+
+
+Garcia-Martin, et al.       Standards Track                     [Page 3]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+   Pr: indicates the priority of this string within the dictionary.
+   Some compression algorithms, such as DEFLATE, offer an increased
+   efficiency when the most commonly used strings are located at the
+   bottom of the dictionary.  To facilitate generating a dictionary that
+   has the most frequently occurring strings further down at the bottom,
+   we have decided to allocate a priority to each string in the
+   dictionary.  Priorities range from 1 until 5.  A low number in the
+   priority column (e.g., 1) indicates that we believe in a high
+   probability of finding the string in SIP or SDP messages.  A high
+   number in the priority column (e.g., 5) indicates lower probability
+   of finding the string in a SIP or SDP message.  This is typically the
+   case for less frequent error codes or optional infrequent tags.
+
+   Off: indicates the hexadecimal offset of the entry with respect to
+   the first octet in the dictionary.  Note that several strings in the
+   collections can share space in the dictionary if they exhibit
+   suitable common substrings.
+
+   Len: the length of the string (in octets, in hexadecimal).
+
+   References: contains one or more references to the specification and
+   the section within the specification where the string is defined.
+
+   Note that the strings stored in the dictionary are case sensitive.
+   (Again, the strings do not comprise the quotes ("), they are just
+   shown here to increase the readability.)  Where the string is a
+   header field, we also included the colon ":" and the amount of white
+   space expected to occur.  Note that this means that not all messages
+   that conform to the SIP Augmented BNF, which allows other
+   combinations (e.g., a white space or horizontal tabulator before the
+   colon (":")  sign), will benefit as much from the dictionary -- the
+   best increase in compression performance is to be expected for
+   messages that use the recommended formatting guidelines for SIP.
+
+   Some strings appear followed by an equal sign and some others do not.
+   This depends on whether the string is part of a parameter name or a
+   parameter value.
+
+   In a SIP message, all the SIP headers terminate with a CRLF pair of
+   characters.  As these characters are appended to the end of each SIP
+   header line, right after the header values, and because the header
+   values are typically not part of the static SIP dictionary, we cannot
+   include the terminating CRLF as part of the SIP static dictionary.
+   Instead, the approach we have taken is to include in each header
+   field entry the CRLF from the previous line that prefixes every
+   header field.  We have represented CRLF by the notation [CRLF].
+   Therefore, in generating the actual binary dictionary, an entry in
+   the dictionary represented as: "[CRLF]From: " has been interpreted as
+
+
+
+Garcia-Martin, et al.       Standards Track                     [Page 4]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+   an entry whose value is CR, LF, the word From, a colon and a
+   whitespace.
+
+   Note that most SIP header field names are included with the full
+   string from CRLF to the colon-blank pair.  However, in certain
+   situations, when the likelihood of occurrence is not considered high
+   (as indicated by a priority value of 3 to 5), and when there are
+   common substrings shared by a number of headers, we have added one
+   entry with the common substring and several entries with the non-
+   common substrings remaining.  An example is the "Proxy-Authenticate"
+   and "Proxy-Authorization" headers.  There are three entries in the
+   dictionary: the common substring "[CRLF]Proxy-", and the non-common
+   substrings "Authenticate: " and "Authorization: ".  This allows the
+   re-use of the non-common substrings by other entries and may save a
+   number of bytes in the binary form of the dictionary.  Note that this
+   splitting mechanism does not apply with strings that are likely to
+   occur very often (those whose priority is set to 1 or 2).
+
+   SIP responses start with a status code (e.g., "302") and a reason
+   phrase (e.g., "Moved Temporarily").  The status code is a normative
+   part, whereas the reason phrase is not normative, it is just a
+   suggested text.  For instance, both "302 Moved Temporarily" and "302
+   Redirect" are valid beginnings of SIP responses.
+
+   In the SIP dictionary we have included two entries per response code,
+   one including only the status code and a space (e.g., "302 ") and
+   another one including both the status code and the suggested reason
+   phrase (e.g., "302 Moved Temporarily").  The former can be used when
+   the SIP response changed the suggested reason phrase to another one.
+   The latter can be used when the suggested reason phrase is part of
+   the response.  In this way, we accommodate both alternatives.  (Note
+   that in the actual dictionary, both strings occupy the same space in
+   the string subset, but have two separate entries in the table
+   subset.)
+
+3. Binary representation of the SIP/SDP dictionary
+
+   This section contains the result of combining the SIP and the SDP
+   dictionaries described in appendices A and B in order to create a
+   single dictionary that is loaded into SigComp as a state.
+
+   The binary SigComp dictionary is comprised of two parts, the
+   concatenation of which serves as the state value of the state item: A
+   string subset, which contains all strings in the contributing
+   collections as a substring (roughly ordered such that strings with
+   low priority numbers occur at the end), and a table subset, which
+   contains pairs of length and offset values for all the strings in the
+   contributing collections.  In each of these pairs, the length is
+
+
+
+Garcia-Martin, et al.       Standards Track                     [Page 5]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+   stored as a one-byte value, and the offset is stored as a two-byte
+   value that has had 1024 added to the offset (this allows direct
+   referencing from the stored value if the dictionary state has been
+   loaded at address 1024).
+
+   The intention is that all compression algorithms will be able to use
+   the (or part of the) string subset, and some compression methods,
+   notably those that are related to the LZ78 family, will also use the
+   table in order to form an initial set of tokens for that compression
+   method.  The text below therefore gives examples for referencing both
+   the table subset and the string subset of the dictionary state item.
+
+   As defined in section 3.3.3 in the Signaling Compression
+   specification [1], a SigComp state is characterized by a certain set
+   of information.  For the static SIP/SDP dictionary, the information
+   in the following Table 1 fully characterizes the state item.
+
+   Note that the string subset of the dictionary can be accessed using:
+
+      STATE-ACCESS (%ps, 6, 0, 0x0D8C, %sa, 0),
+
+   and the table subset can be accessed using:
+
+      STATE-ACCESS (%ps, 6, 0x0D8C, 0x0558, %sa, 0),
+
+   where %ps points to UDVM memory containing
+
+      0xfbe507dfe5e6
+
+   and %sa is the desired destination address in UDVM memory (with UDVM
+   byte copying rules applied).
+
+   If only a subset of the dictionary up to a specific priority is
+   desired (e.g., to save UDVM space), the values for the third and
+   forth operand in these STATE-ACCESS instructions can be changed to:
+
+   Priorities  String  String  Table   Table
+   desired     offset  length  offset  length
+   ==========  ======  ======  ======  ======
+   1 only      0x0CB2  0x00DA  0x0D8C  0x003F
+   1..2        0x0920  0x046C  0x0D8C  0x0147
+   1..3        0x07B8  0x05D4  0x0D8C  0x01A7
+   1..4        0x0085  0x0D07  0x0D8C  0x044A
+   1..5        0x0000  0x0D8C  0x0D8C  0x0558
+
+
+
+
+
+
+
+Garcia-Martin, et al.       Standards Track                     [Page 6]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+   The state item consists of the following elements:
+
+   Name:                    Value:
+   =====================    ========================
+   state_identifier         0xfbe507dfe5e6aa5af2abb914ceaa05f99ce61ba5
+   state_length             0x12E4
+   state_address            0 (not relevant for the dictionary)
+   state_instruction        0 (not relevant for the dictionary)
+   minimum_access_length    6
+   state_value              Representation of the table below.
+
+   0000  0d0a 5265 6a65 6374 2d43 6f6e 7461 6374  ..Reject-Contact
+   0010  3a20 0d0a 4572 726f 722d 496e 666f 3a20  : ..Error-Info:
+   0020  0d0a 5469 6d65 7374 616d 703a 200d 0a43  ..Timestamp: ..C
+   0030  616c 6c2d 496e 666f 3a20 0d0a 5265 706c  all-Info: ..Repl
+   0040  792d 546f 3a20 0d0a 5761 726e 696e 673a  y-To: ..Warning:
+   0050  200d 0a53 7562 6a65 6374 3a20 3b68 616e   ..Subject: ;han
+   0060  646c 696e 673d 696d 6167 653b 7075 7270  dling=image;purp
+   0070  6f73 653d 3b63 6175 7365 3d3b 7465 7874  ose=;cause=;text
+   0080  3d63 6172 6433 3030 204d 756c 7469 706c  =card300 Multipl
+   0090  6520 4368 6f69 6365 736d 696d 6573 7361  e Choicesmimessa
+   00A0  6765 2f73 6970 6672 6167 3430 3720 5072  ge/sipfrag407 Pr
+   00B0  6f78 7920 4175 7468 656e 7469 6361 7469  oxy Authenticati
+   00C0  6f6e 2052 6571 7569 7265 6469 6765 7374  on Requiredigest
+   00D0  2d69 6e74 6567 7269 7479 3438 3420 4164  -integrity484 Ad
+   00E0  6472 6573 7320 496e 636f 6d70 6c65 7465  dress Incomplete
+   00F0  6c65 7068 6f6e 652d 6576 656e 7473 3439  lephone-events49
+   0100  3420 5365 6375 7269 7479 2041 6772 6565  4 Security Agree
+   0110  6d65 6e74 2052 6571 7569 7265 6465 6163  ment Requiredeac
+   0120  7469 7661 7465 6434 3831 2043 616c 6c2f  tivated481 Call/
+   0130  5472 616e 7361 6374 696f 6e20 446f 6573  Transaction Does
+   0140  204e 6f74 2045 7869 7374 616c 653d 3530   Not Existale=50
+   0150  3020 5365 7276 6572 2049 6e74 6572 6e61  0 Server Interna
+   0160  6c20 4572 726f 726f 6275 7374 2d73 6f72  l Errorobust-sor
+   0170  7469 6e67 3d34 3136 2055 6e73 7570 706f  ting=416 Unsuppo
+   0180  7274 6564 2055 5249 2053 6368 656d 6572  rted URI Schemer
+   0190  6765 6e63 7934 3135 2055 6e73 7570 706f  gency415 Unsuppo
+   01A0  7274 6564 204d 6564 6961 2054 7970 656e  rted Media Typen
+   01B0  6469 6e67 3438 3820 4e6f 7420 4163 6365  ding488 Not Acce
+   01C0  7074 6162 6c65 2048 6572 656a 6563 7465  ptable Herejecte
+   01D0  6434 3233 2049 6e74 6572 7661 6c20 546f  d423 Interval To
+   01E0  6f20 4272 6965 6672 6f6d 2d74 6167 512e  o Briefrom-tagQ.
+   01F0  3835 3035 2056 6572 7369 6f6e 204e 6f74  8505 Version Not
+   0200  2053 7570 706f 7274 6564 3430 3320 466f   Supported403 Fo
+   0210  7262 6964 6465 6e6f 6e2d 7572 6765 6e74  rbiddenon-urgent
+   0220  3432 3920 5072 6f76 6964 6520 5265 6665  429 Provide Refe
+   0230  7272 6f72 2049 6465 6e74 6974 7934 3230  rror Identity420
+   0240  2042 6164 2045 7874 656e 7369 6f6e 6f72   Bad Extensionor
+
+
+
+Garcia-Martin, et al.       Standards Track                     [Page 7]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+   0250  6573 6f75 7263 650d 0a61 3d6b 6579 2d6d  esource..a=key-m
+   0260  676d 743a 6d69 6b65 794f 5054 494f 4e53  gmt:mikeyOPTIONS
+   0270  204c 616e 6775 6167 653a 2035 3034 2053   Language: 504 S
+   0280  6572 7665 7220 5469 6d65 2d6f 7574 6f2d  erver Time-outo-
+   0290  7461 670d 0a41 7574 6865 6e74 6963 6174  tag..Authenticat
+   02A0  696f 6e2d 496e 666f 3a20 4465 6320 3338  ion-Info: Dec 38
+   02B0  3020 416c 7465 726e 6174 6976 6520 5365  0 Alternative Se
+   02C0  7276 6963 6535 3033 2053 6572 7669 6365  rvice503 Service
+   02D0  2055 6e61 7661 696c 6162 6c65 3432 3120   Unavailable421
+   02E0  4578 7465 6e73 696f 6e20 5265 7175 6972  Extension Requir
+   02F0  6564 3430 3520 4d65 7468 6f64 204e 6f74  ed405 Method Not
+   0300  2041 6c6c 6f77 6564 3438 3720 5265 7175   Allowed487 Requ
+   0310  6573 7420 5465 726d 696e 6174 6564 6175  est Terminatedau
+   0320  7468 2d69 6e74 6572 6c65 6176 696e 673d  th-interleaving=
+   0330  0d0a 6d3d 6170 706c 6963 6174 696f 6e20  ..m=application
+   0340  4175 6720 3531 3320 4d65 7373 6167 6520  Aug 513 Message
+   0350  546f 6f20 4c61 7267 6536 3837 2044 6961  Too Large687 Dia
+   0360  6c6f 6720 5465 726d 696e 6174 6564 3330  log Terminated30
+   0370  3220 4d6f 7665 6420 5465 6d70 6f72 6172  2 Moved Temporar
+   0380  696c 7933 3031 204d 6f76 6564 2050 6572  ily301 Moved Per
+   0390  6d61 6e65 6e74 6c79 6d75 6c74 6970 6172  manentlymultipar
+   03A0  742f 7369 676e 6564 0d0a 5265 7472 792d  t/signed..Retry-
+   03B0  4166 7465 723a 2047 4d54 6875 2c20 3430  After: GMThu, 40
+   03C0  3220 5061 796d 656e 7420 5265 7175 6972  2 Payment Requir
+   03D0  6564 0d0a 613d 6f72 6965 6e74 3a6c 616e  ed..a=orient:lan
+   03E0  6473 6361 7065 3430 3020 4261 6420 5265  dscape400 Bad Re
+   03F0  7175 6573 7472 7565 3439 3120 5265 7175  questrue491 Requ
+   0400  6573 7420 5065 6e64 696e 6735 3031 204e  est Pending501 N
+   0410  6f74 2049 6d70 6c65 6d65 6e74 6564 3430  ot Implemented40
+   0420  3620 4e6f 7420 4163 6365 7074 6162 6c65  6 Not Acceptable
+   0430  3630 3620 4e6f 7420 4163 6365 7074 6162  606 Not Acceptab
+   0440  6c65 0d0a 613d 7479 7065 3a62 726f 6164  le..a=type:broad
+   0450  6361 7374 6f6e 6534 3933 2055 6e64 6563  castone493 Undec
+   0460  6970 6865 7261 626c 650d 0a4d 494d 452d  ipherable..MIME-
+   0470  5665 7273 696f 6e3a 204d 6179 2034 3832  Version: May 482
+   0480  204c 6f6f 7020 4465 7465 6374 6564 0d0a   Loop Detected..
+   0490  4f72 6761 6e69 7a61 7469 6f6e 3a20 4a75  Organization: Ju
+   04A0  6e20 6d6f 6465 2d63 6861 6e67 652d 6e65  n mode-change-ne
+   04B0  6967 6862 6f72 3d63 7269 7469 6361 6c65  ighbor=criticale
+   04C0  7274 6370 2d66 6234 3839 2042 6164 2045  rtcp-fb489 Bad E
+   04D0  7665 6e74 6c73 0d0a 556e 7375 7070 6f72  ventls..Unsuppor
+   04E0  7465 643a 204a 616e 2035 3032 2042 6164  ted: Jan 502 Bad
+   04F0  2047 6174 6577 6179 6d6f 6465 2d63 6861   Gatewaymode-cha
+   0500  6e67 652d 7065 7269 6f64 3d0d 0a61 3d6f  nge-period=..a=o
+   0510  7269 656e 743a 7365 6173 6361 7065 0d0a  rient:seascape..
+   0520  613d 7479 7065 3a6d 6f64 6572 6174 6564  a=type:moderated
+   0530  3430 3420 4e6f 7420 466f 756e 6433 3035  404 Not Found305
+   0540  2055 7365 2050 726f 7879 0d0a 613d 7479   Use Proxy..a=ty
+
+
+
+Garcia-Martin, et al.       Standards Track                     [Page 8]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+   0550  7065 3a72 6563 766f 6e6c 790d 0a61 3d74  pe:recvonly..a=t
+   0560  7970 653a 6d65 6574 696e 670d 0a6b 3d70  ype:meeting..k=p
+   0570  726f 6d70 743a 0d0a 5265 6665 7272 6564  rompt:..Referred
+   0580  2d42 793a 200d 0a49 6e2d 5265 706c 792d  -By: ..In-Reply-
+   0590  546f 3a20 5452 5545 6e63 6f64 696e 673a  To: TRUEncoding:
+   05A0  2031 3832 2051 7565 7565 6441 7574 6865   182 QueuedAuthe
+   05B0  6e74 6963 6174 653a 200d 0a55 7365 722d  nticate: ..User-
+   05C0  4167 656e 743a 200d 0a61 3d66 7261 6d65  Agent: ..a=frame
+   05D0  7261 7465 3a0d 0a41 6c65 7274 2d49 6e66  rate:..Alert-Inf
+   05E0  6f3a 2043 414e 4345 4c20 0d0a 613d 6d61  o: CANCEL ..a=ma
+   05F0  7870 7469 6d65 3a3b 7265 7472 792d 6166  xptime:;retry-af
+   0600  7465 723d 7561 6368 616e 6e65 6c73 3d34  ter=uachannels=4
+   0610  3130 2047 6f6e 650d 0a52 6566 6572 2d54  10 Gone..Refer-T
+   0620  6f3a 200d 0a50 7269 6f72 6974 793a 200d  o: ..Priority: .
+   0630  0a6d 3d63 6f6e 7472 6f6c 200d 0a61 3d71  .m=control ..a=q
+   0640  7561 6c69 7479 3a0d 0a61 3d73 6470 6c61  uality:..a=sdpla
+   0650  6e67 3a0d 0a61 3d63 6861 7273 6574 3a0d  ng:..a=charset:.
+   0660  0a52 6570 6c61 6365 733a 2052 4546 4552  .Replaces: REFER
+   0670  2069 7073 6563 2d69 6b65 3b74 7261 6e73   ipsec-ike;trans
+   0680  706f 7274 3d0d 0a61 3d6b 6579 7764 733a  port=..a=keywds:
+   0690  0d0a 6b3d 6261 7365 3634 3a3b 7265 6672  ..k=base64:;refr
+   06A0  6573 6865 723d 0d0a 613d 7074 696d 653a  esher=..a=ptime:
+   06B0  0d0a 6b3d 636c 6561 723a 3b72 6563 6569  ..k=clear:;recei
+   06C0  7665 643d 3b64 7572 6174 696f 6e3d 0d0a  ved=;duration=..
+   06D0  4163 6365 7074 3a20 0d0a 613d 6772 6f75  Accept: ..a=grou
+   06E0  703a 4641 4c53 453a 2049 4e46 4f20 0d0a  p:FALSE: INFO ..
+   06F0  4163 6365 7074 2d0d 0a61 3d6c 616e 673a  Accept-..a=lang:
+   0700  0d0a 6d3d 6461 7461 206d 6f64 652d 7365  ..m=data mode-se
+   0710  743d 0d0a 613d 746f 6f6c 3a54 4c53 756e  t=..a=tool:TLSun
+   0720  2c20 0d0a 4461 7465 3a20 0d0a 613d 6361  , ..Date: ..a=ca
+   0730  743a 0d0a 6b3d 7572 693a 0d0a 5072 6f78  t:..k=uri:..Prox
+   0740  792d 3b72 6561 736f 6e3d 3b6d 6574 686f  y-;reason=;metho
+   0750  643d 0d0a 613d 6d69 643a 3b6d 6164 6472  d=..a=mid:;maddr
+   0760  3d6f 7061 7175 653d 0d0a 4d69 6e2d 3b61  =opaque=..Min-;a
+   0770  6c67 3d4d 6f6e 2c20 5475 652c 2057 6564  lg=Mon, Tue, Wed
+   0780  2c20 4672 692c 2053 6174 2c20 3b74 746c  , Fri, Sat, ;ttl
+   0790  3d61 7574 733d 0d0a 723d 0d0a 7a3d 0d0a  =auts=..r=..z=..
+   07A0  653d 3b69 643d 0d0a 693d 6372 633d 0d0a  e=;id=..i=crc=..
+   07B0  753d 3b71 3d75 6173 3431 3420 5265 7175  u=;q=uas414 Requ
+   07C0  6573 742d 5552 4920 546f 6f20 4c6f 6e67  est-URI Too Long
+   07D0  6976 6575 7072 6976 6163 7975 6470 7265  iveuprivacyudpre
+   07E0  6665 7236 3030 2042 7573 7920 4576 6572  fer600 Busy Ever
+   07F0  7977 6865 7265 7175 6972 6564 3438 3020  ywherequired480
+   0800  5465 6d70 6f72 6172 696c 7920 556e 6176  Temporarily Unav
+   0810  6169 6c61 626c 650d 0a61 3d74 7970 653a  ailable..a=type:
+   0820  482e 3333 3230 3220 4163 6365 7074 6564  H.33202 Accepted
+   0830  0d0a 5365 7373 696f 6e2d 4578 7069 7265  ..Session-Expire
+   0840  733a 200d 0a53 7562 7363 7269 7074 696f  s: ..Subscriptio
+
+
+
+Garcia-Martin, et al.       Standards Track                     [Page 9]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+   0850  6e2d 5374 6174 653a 204e 6f76 200d 0a53  n-State: Nov ..S
+   0860  6572 7669 6365 2d52 6f75 7465 3a20 5365  ervice-Route: Se
+   0870  7020 0d0a 416c 6c6f 772d 4576 656e 7473  p ..Allow-Events
+   0880  3a20 4665 6220 0d0a 613d 696e 6163 7469  : Feb ..a=inacti
+   0890  7665 5254 502f 5341 5650 2052 5450 2f41  veRTP/SAVP RTP/A
+   08A0  5650 4620 416e 6f6e 796d 6f75 7369 7073  VPF Anonymousips
+   08B0  3a0d 0a61 3d74 7970 653a 7465 7374 656c  :..a=type:testel
+   08C0  3a4d 4553 5341 4745 200d 0a61 3d72 6563  :MESSAGE ..a=rec
+   08D0  766f 6e6c 790d 0a61 3d73 656e 646f 6e6c  vonly..a=sendonl
+   08E0  790d 0a63 3d49 4e20 4950 3420 0d0a 5265  y..c=IN IP4 ..Re
+   08F0  6173 6f6e 3a20 0d0a 416c 6c6f 773a 200d  ason: ..Allow: .
+   0900  0a45 7665 6e74 3a20 0d0a 5061 7468 3a20  .Event: ..Path:
+   0910  3b75 7365 723d 0d0a 623d 4153 2043 5420  ;user=..b=AS CT
+   0920  0d0a 5757 572d 4175 7468 656e 7469 6361  ..WWW-Authentica
+   0930  7465 3a20 4469 6765 7374 200d 0a61 3d73  te: Digest ..a=s
+   0940  656e 6472 6563 7669 6465 6f63 7465 742d  endrecvideoctet-
+   0950  616c 6967 6e3d 6170 706c 6963 6174 696f  align=applicatio
+   0960  6e2f 7364 7061 7468 6561 6465 7273 7061  n/sdpatheaderspa
+   0970  7574 683d 0d0a 613d 6f72 6965 6e74 3a70  uth=..a=orient:p
+   0980  6f72 7472 6169 7469 6d65 6f75 7474 722d  ortraitimeouttr-
+   0990  696e 7469 636f 6e63 3d34 3833 2054 6f6f  inticonc=483 Too
+   09A0  204d 616e 7920 486f 7073 6c69 6e66 6f70   Many Hopslinfop
+   09B0  7469 6f6e 616c 676f 7269 7468 6d3d 3630  tionalgorithm=60
+   09C0  3420 446f 6573 204e 6f74 2045 7869 7374  4 Does Not Exist
+   09D0  2041 6e79 7768 6572 6573 706f 6e73 653d   Anywheresponse=
+   09E0  0d0a 0d0a 5265 7175 6573 742d 4469 7370  ....Request-Disp
+   09F0  6f73 6974 696f 6e3a 204d 4435 3830 2050  osition: MD580 P
+   0A00  7265 636f 6e64 6974 696f 6e20 4661 696c  recondition Fail
+   0A10  7572 6570 6c61 6365 7334 3232 2053 6573  ureplaces422 Ses
+   0A20  7369 6f6e 2049 6e74 6572 7661 6c20 546f  sion Interval To
+   0A30  6f20 536d 616c 6c6f 6361 6c31 3831 2043  o Smallocal181 C
+   0A40  616c 6c20 4973 2042 6569 6e67 2046 6f72  all Is Being For
+   0A50  7761 7264 6564 6f6d 6169 6e3d 6661 696c  wardedomain=fail
+   0A60  7572 656e 6465 7265 616c 6d3d 5355 4253  urenderealm=SUBS
+   0A70  4352 4942 4520 7072 6563 6f6e 6469 7469  CRIBE preconditi
+   0A80  6f6e 6f72 6d61 6c69 7073 6563 2d6d 616e  onormalipsec-man
+   0A90  6461 746f 7279 3431 3320 5265 7175 6573  datory413 Reques
+   0AA0  7420 456e 7469 7479 2054 6f6f 204c 6172  t Entity Too Lar
+   0AB0  6765 3265 3138 3320 5365 7373 696f 6e20  ge2e183 Session
+   0AC0  5072 6f67 7265 7373 6374 7034 3836 2042  Progressctp486 B
+   0AD0  7573 7920 4865 7265 6d6f 7465 726d 696e  usy Heremotermin
+   0AE0  6174 6564 414b 4176 312d 4d44 352d 7365  atedAKAv1-MD5-se
+   0AF0  7373 696f 6e6f 6e65 0d0a 4175 7468 6f72  ssionone..Author
+   0B00  697a 6174 696f 6e3a 2036 3033 2044 6563  ization: 603 Dec
+   0B10  6c69 6e65 7874 6e6f 6e63 653d 3438 3520  linextnonce=485
+   0B20  416d 6269 6775 6f75 7365 726e 616d 653d  Ambiguousername=
+   0B30  6175 6469 6f0d 0a43 6f6e 7465 6e74 2d54  audio..Content-T
+   0B40  7970 653a 204d 6172 200d 0a52 6563 6f72  ype: Mar ..Recor
+
+
+
+Garcia-Martin, et al.       Standards Track                    [Page 10]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+   0B50  642d 526f 7574 653a 204a 756c 2034 3031  d-Route: Jul 401
+   0B60  2055 6e61 7574 686f 7269 7a65 640d 0a52   Unauthorized..R
+   0B70  6571 7569 7265 3a20 0d0a 743d 3020 302e  equire: ..t=0 0.
+   0B80  302e 302e 300d 0a53 6572 7665 723a 2052  0.0.0..Server: R
+   0B90  4547 4953 5445 5220 0d0a 633d 494e 2049  EGISTER ..c=IN I
+   0BA0  5036 2031 3830 2052 696e 6769 6e67 3130  P6 180 Ringing10
+   0BB0  3020 5472 7969 6e67 763d 300d 0a6f 3d55  0 Tryingv=0..o=U
+   0BC0  5044 4154 4520 4e4f 5449 4659 200d 0a53  PDATE NOTIFY ..S
+   0BD0  7570 706f 7274 6564 3a20 756e 6b6e 6f77  upported: unknow
+   0BE0  6e41 4d52 5450 2f41 5650 200d 0a50 7269  nAMRTP/AVP ..Pri
+   0BF0  7661 6379 3a20 0d0a 5365 6375 7269 7479  vacy: ..Security
+   0C00  2d0d 0a45 7870 6972 6573 3a20 0d0a 613d  -..Expires: ..a=
+   0C10  7274 706d 6170 3a0d 0a6d 3d76 6964 656f  rtpmap:..m=video
+   0C20  200d 0a6d 3d61 7564 696f 200d 0a73 3d20   ..m=audio ..s=
+   0C30  6661 6c73 650d 0a61 3d63 6f6e 663a 3b65  false..a=conf:;e
+   0C40  7870 6972 6573 3d0d 0a52 6f75 7465 3a20  xpires=..Route:
+   0C50  0d0a 613d 666d 7470 3a0d 0a61 3d63 7572  ..a=fmtp:..a=cur
+   0C60  723a 436c 6965 6e74 3a20 5665 7269 6679  r:Client: Verify
+   0C70  3a20 0d0a 613d 6465 733a 0d0a 5241 636b  : ..a=des:..RAck
+   0C80  3a20 0d0a 5253 6571 3a20 4259 4520 636e  : ..RSeq: BYE cn
+   0C90  6f6e 6365 3d31 3030 7265 6c75 7269 3d71  once=100reluri=q
+   0CA0  6f70 3d54 4350 5544 5071 6f73 786d 6c3b  op=TCPUDPqosxml;
+   0CB0  6c72 0d0a 5669 613a 2053 4950 2f32 2e30  lr..Via: SIP/2.0
+   0CC0  2f54 4350 2034 3038 2052 6571 7565 7374  /TCP 408 Request
+   0CD0  2054 696d 656f 7574 696d 6572 7073 6970   Timeoutimerpsip
+   0CE0  3a0d 0a43 6f6e 7465 6e74 2d4c 656e 6774  :..Content-Lengt
+   0CF0  683a 204f 6374 200d 0a56 6961 3a20 5349  h: Oct ..Via: SI
+   0D00  502f 322e 302f 5544 5020 3b63 6f6d 703d  P/2.0/UDP ;comp=
+   0D10  7369 6763 6f6d 7072 6f62 6174 696f 6e61  sigcomprobationa
+   0D20  636b 3b62 7261 6e63 683d 7a39 6847 3462  ck;branch=z9hG4b
+   0D30  4b0d 0a4d 6178 2d46 6f72 7761 7264 733a  K..Max-Forwards:
+   0D40  2041 7072 2053 4354 5052 4143 4b20 494e   Apr SCTPRACK IN
+   0D50  5649 5445 200d 0a43 616c 6c2d 4944 3a20  VITE ..Call-ID:
+   0D60  0d0a 436f 6e74 6163 743a 2032 3030 204f  ..Contact: 200 O
+   0D70  4b0d 0a46 726f 6d3a 200d 0a43 5365 713a  K..From: ..CSeq:
+   0D80  200d 0a54 6f3a 203b 7461 673d 0410 dd10   ..To: ;tag=....
+   0D90  1131 0d11 0a07 10b9 0c10 fe12 10e1 0611  .1..............
+   0DA0  4e07 114e 0311 4a04 114a 0710 b208 1179  N..N..J..J.....y
+   0DB0  0611 810f 1122 0b11 5506 116b 0b11 6013  ....."..U..k..`.
+   0DC0  10b2 0811 7105 1187 1310 f709 0e8d 080d  ....q...........
+   0DD0  ae0c 10b9 0710 8e03 0d96 0310 8a04 108a  ................
+   0DE0  090d d70a 0f12 080f 8f09 0f8f 080d 6c06  ..............l.
+   0DF0  0e66 090e 6c0a 0e6c 060f c607 0fc6 0511  .f..l..l........
+   0E00  4806 1148 060f bf07 0fbf 070e 5506 0f16  H..H........U...
+   0E10  040e f403 0eb1 0310 a609 1050 0310 a30a  ...........P....
+   0E20  0db4 050e 3606 0ed6 030d f911 0ef8 040c  ....6...........
+   0E30  d908 0eea 0409 5303 0a4b 040e e410 0f35  ......S..K.....5
+   0E40  090e e408 0d3f 030f e10b 1001 0310 ac06  .....?..........
+
+
+
+Garcia-Martin, et al.       Standards Track                    [Page 11]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+   0E50  1095 0c0e 760b 0feb 0a0f ae05 102b 0410  ....v........+..
+   0E60  2b08 107a 100f 4907 0fb8 0910 3e0b 100c  +..z..I.....>...
+   0E70  070f 780b 0f6d 0910 4708 1082 0b0f f608  ..x..m..G.......
+   0E80  1062 080f 8708 106a 040f 780d 0fcd 080d  .b.....j..x.....
+   0E90  ae10 0f5d 0b0f 9814 0d20 1b0d 2004 0de0  ...]..... .. ...
+   0EA0  140e b40b 0fa3 0b07 340f 0d56 040e f403  ........4..V....
+   0EB0  10af 070d 3409 0f27 0410 9b04 109f 0910  ....4..'........
+   0EC0  5908 1072 0910 350a 1021 0a10 1708 0fe3  Y..r..5..!......
+   0ED0  0310 a905 0cac 040c bd07 0cc1 080c c109  ................
+   0EE0  0cf6 100c 720c 0c86 040d 640c 0cd5 090c  ....r.....d.....
+   0EF0  ff1b 0bfc 110c 5d13 0c30 090c a40c 0c24  ......]..0.....$
+   0F00  0c0d 3b03 0d1a 030d 1d16 0c43 090c 9209  ..;........C....
+   0F10  0c9b 0d0e cb04 0d16 060d 1005 04f2 0b0c  ................
+   0F20  e105 0bde 0a0c ec13 0be3 070b d408 0d08  ................
+   0F30  0c0c c909 0c3a 040a e50c 0a23 080b 3a0e  .....:.....#..:.
+   0F40  09ab 0f0e fa09 0f6f 0c0a 170f 0976 0c0a  .......o.....v..
+   0F50  5f17 0de2 0f07 a80a 0f85 0f08 d60e 09b9  _...............
+   0F60  0b0a 7a03 0bdb 0308 c104 0ec7 0308 d302  ..z.............
+   0F70  048d 080b 4a05 0b8c 070b 6106 0548 0407  ....J.....a..H..
+   0F80  f405 1030 0407 1e08 071e 050b 9110 04ca  ...0............
+   0F90  090a 7109 0e87 0504 9805 0b6e 0b04 9b0f  ..q........n....
+   0FA0  049b 0704 9b03 04a3 0704 a310 0798 0907  ................
+   0FB0  9805 0b73 050b 7805 0b7d 0507 b905 0b82  ...s..x..}......
+   0FC0  050b 8705 0b1d 0508 e405 0c81 050f 4405  ..............D.
+   0FD0  1140 0508 7805 089d 050f 5805 073f 050c  .@..x.....X..?..
+   0FE0  6d05 10f2 050c 5805 06a9 0407 b609 058c  m.....X.........
+   0FF0  0606 1a06 0e81 0a06 160a 0ac4 070b 5a0a  ..............Z.
+   1000  0aba 030b 1b04 1145 060c 8c07 05ad 0a0e  .......E........
+   1010  da08 0b42 0d09 f70b 051c 0911 1608 05c9  ...B............
+   1020  070d 8606 0bcf 0a06 4d04 0ba2 0606 8d08  ........M.......
+   1030  05e6 080e 110b 0a9b 030a 0403 0bb5 0510  ................
+   1040  d704 0994 050a e203 0bb2 060d 6704 0d11  ............g...
+   1050  0808 b71b 0e3b 0a09 a114 0485 1507 8315  .....;..........
+   1060  076e 0d09 3d17 06ae 0f07 e614 07be 0d06  .n..=...........
+   1070  0a0d 0930 1606 f212 081e 2104 aa13 10c5  ...0......!.....
+   1080  080a 0f1c 0e96 180b b81a 0595 1a05 7511  ..............u.
+   1090  063d 1606 dc1e 0e19 1605 d11d 0620 2305  .=........... #.
+   10A0  2711 087d 110d 9916 04da 0d0f 1c16 0708  '..}............
+   10B0  1705 b40d 08c7 1307 f812 0857 1f04 fe19  ...........W....
+   10C0  054e 1308 0b0f 08e9 1706 c513 067b 1905  .N...........{..
+   10D0  f115 0744 180d fb0b 0f09 1b0d be12 0830  ...D...........0
+   10E0  1507 5904 0ba6 040b ae04 0b9e 040b 9604  ..Y.............
+   10F0  0b9a 0a0a b00b 0a90 080b 320b 096b 080b  ..........2..k..
+   1100  2a0b 0a85 090b 120a 0aa6 0d09 ea13 0d74  *..............t
+   1110  1407 d213 090b 1208 4210 095b 1209 1e0d  ........B..[....
+   1120  0cb1 0e0c 1711 094a 0c0a 530c 0a47 090a  .......J..S..G..
+   1130  f70e 09c7 0c0a 3b07 0669 0806 6906 09e3  ......;..i..i...
+   1140  080b 520a 0ad8 1206 570d 0657 0709 e304  ..R.....W..W....
+
+
+
+Garcia-Martin, et al.       Standards Track                    [Page 12]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+   1150  0ae9 1007 3009 0b00 0c0a 2f05 0ae9 050a  ....0...../.....
+   1160  6b06 0a6b 0a0a ce09 0aee 030b db07 0f7e  k..k...........~
+   1170  0a09 970a 0671 0e09 d517 0693 070e 5c07  .....q........\.
+   1180  0fda 0a0f 350d 0dec 0a09 970a 0671 080b  ....5........q..
+   1190  220f 0985 060b 680c 0d4a 090b 0913 08f8  ".....h..J......
+   11A0  1508 a204 0baa 0f05 660d 0723 090a 060b  ........f..#....
+   11B0  0d4a 0f04 ee06 04f8 0409 2b04 0853 0708  .J........+..S..
+   11C0  c003 111f 0411 1e07 0d8c 0307 3404 10db  ............4...
+   11D0  0307 3603 0da9 0d04 200b 0451 0c04 3a04  ..6..... ..Q..:.
+   11E0  0bb8 040c 2404 0595 0404 7c04 0575 0404  ....$.....|..u..
+   11F0  8504 096b 0406 3d06 047b 0406 dc04 0783  ...k..=..{......
+   1200  040e 1912 0400 1008 8e10 0869 0e04 120d  ...........i....
+   1210  042d 0310 b904 05d1 0407 6e04 0620 0704  .-........n.. ..
+   1220  7404 0bfc 0a04 5c04 0527 0409 3d04 087d  t.....\..'..=..}
+   1230  040f ae04 0d99 0406 ae04 04da 0904 0908  ................
+   1240  1122 040f 1c04 07e6 040e cb05 08bd 0407  ."..............
+   1250  0804 0fa3 0406 5704 05b4 040f 5d04 08c7  ......W.....]...
+   1260  080b f404 07f8 0407 3004 07be 0408 5705  ........0.....W.
+   1270  0d46 0404 fe04 060a 0405 4e04 0e3b 0408  .F........N..;..
+   1280  0b04 0930 0408 e905 05ee 0406 c504 06f2  ...0............
+   1290  0406 7b04 09a1 0405 f104 081e 0407 4404  ..{...........D.
+   12A0  0bdd 040d fb04 04aa 040b e307 0eee 040f  ................
+   12B0  0904 0eb4 040d be04 10c5 0408 3005 0f30  ............0..0
+   12C0  0407 5904 0a0f 060e 6104 0481 040d ab04  ..Y.....a.......
+   12D0  0d93 0411 6b04 0e96 0504 6609 046b 0b04  ....k.....f..k..
+   12E0  4604 0ce1                                F...
+
+           Table 1: binary representation of the static SIP/SDP
+                          dictionary for SigComp
+
+4. Security Considerations
+
+   The security considerations of [1] apply.  This memo does not
+   introduce any known additional security risk.
+
+5. IANA Considerations
+
+   None.
+
+6. Acknowledgements
+
+   The authors would like to thank Lars-Erik Jonsson, Zhigang C. Liu and
+   Jonathan Rosenberg for their valuable comments.
+
+
+
+
+
+
+
+
+Garcia-Martin, et al.       Standards Track                    [Page 13]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+7. References
+
+7.1 Normative References
+
+   [1]   Price, R., Bormann, C., Christoffersson, J., Hannu, H., Liu, Z.
+         and J. Rosenberg, "Signaling Compression (SigComp)", RFC 3320,
+         January 2003.
+
+   [2]   Bradner, S., "Key words for use in RFCs to indicate requirement
+         levels", BCP 14, RFC 2119, March 1997.
+
+7.2 Informative References
+
+   [3]   Rosenberg, J., Schulzrinne, H., Camarillo, G., Johnston, A.,
+         Peterson, J., Sparks, R., Handley, M. and E. Schooler, "SIP:
+         Session Initiation Protocol", RFC 3261, June 2002.
+
+   [4]   Garcia-Martin, M., "3rd-Generation Partnership Project (3GPP)
+         Release 5 requirements on the Session Initiation Protocol
+         (SIP)", Work in Progress.
+
+   [5]   Yergeau, F., "UTF-8, a transformation format of ISO 10646", RFC
+         2279, January 1998.
+
+   [6]   Franks, J., Hallam-Baker, P., Hostetler, J., Lawrence, S.,
+         Leach, P., Luotonen, A. and  L. Stewart, "HTTP Authentication:
+         Basic and Digest Access Authentication", RFC 2617, June 1999.
+
+   [7]   Vaha-Sipila, A., "URLs for telephone calls", RFC 2806, April
+         2000.
+
+   [8]   Donovan, S., "The SIP INFO Method", RFC 2976, October 2000.
+
+   [9]   Roach, A. B., "Session Initiation Protocol (SIP)-Specific Event
+         Notification", RFC 3265, June 2002.
+
+   [10]  Rosenberg, J. and H. Schulzrinne, "Reliability of Provisional
+         Responses in Session Initiation Protocol (SIP)", RFC 3262, June
+         2002.
+
+   [11]  Rosenberg, J., "The Session Initiation Protocol UPDATE Method",
+         RFC 3311, October 2002.
+
+   [12]  Camarillo, G., Ed., Marshall, W., Ed. and J. Rosenberg,
+         "Integration of Resource Management and Session Initiation
+         Protocol (SIP)", RFC 3312, October 2002.
+
+   [13]  Sparks, R., "The SIP Refer Method", Work in Progress.
+
+
+
+Garcia-Martin, et al.       Standards Track                    [Page 14]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+   [14]  Mahy, R., Biggs, B. and R. Dean, "The Session Initiation
+         Protocol (SIP) "Replaces" Header", Work in Progress.
+
+   [15]  Sparks, R., "Internet Media Type message/sipfrag", RFC 3420,
+         November 2002.
+
+   [16]  Willis, D. and B. Hoeneisen, "Session Initiation Protocol (SIP)
+         Extension Header Field for Registering Non-Adjacent Contacts",
+         RFC 3327, December 2002.
+
+   [17]  Schulzrinne, H., Oran, D. and G. Camarillo, "The Reason Header
+         Field for the Session Initiation Protocol (SIP)", RFC 3326,
+         December 2002.
+
+   [18]  Donovan, S., and J. Rosenberg, "Session Timers in the Session
+         Initiation Protocol (SIP)", Work in Progress.
+
+   [19]  Niemi, A., Arkko, J. and V. Torvinen , "Hypertext Transfer
+         Protocol (HTTP) Digest Authentication Using Authentication and
+         Key Agreement (AKA)", RFC 3310, September 2002.
+
+   [20]  Arkko, J., Torvinen, V., Camarillo, G., Niemi A. and T. Haukka,
+         "Security Mechanism Agreement for the Session Initiation
+         Protocol (SIP)", RFC 3329, January 2003.
+
+   [21]  Campbell, B., Rosenberg, J., Schulzrinne, H., Huitema, C.  and
+         D. Gurle, "Session Initiation Protocol (SIP) Extension for
+         Instant Messaging", RFC 3428, December 2002.
+
+   [22]  Schulzrinne, H. and J. Rosenberg, "Session Initiation Protocol
+         (SIP) Caller Preferences and Callee Capabilities", Work in
+         Progress.
+
+   [23]  Camarillo, G., "Compressing the Session Initiation Protocol
+         (SIP)", RFC 3486, February 2003.
+
+   [24]  Handley, M., Jacobson, V. and C. Perkins, "SDP: Session
+         Description Protocol", Work in Progress.
+
+   [25]  Sjoberg, J., Westerlund, M., Lakaniemi, A. and Q. Xie, "Real-
+         Time Transport Protocol payload format and file storage format
+         for the Adaptive Multi-Rate (AMR) and Adaptive Multi-Rate
+         Wideband (AMR-WB) audio codecs", RFC 3267, June 2002.
+
+   [26]  Camarillo, G., Eriksson, G., Holler, J. and H. Schulzrinne,
+         "Grouping of Media Lines in the Session Description Protocol
+         (SDP)", RFC 3388, December 2002.
+
+
+
+
+Garcia-Martin, et al.       Standards Track                    [Page 15]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+   [27]  Schulzrinne, H. and S. Petrack, "RTP Payload for DTMF Digits,
+         Telephony Tones and Telephony Signals", RFC 2833, May 2000.
+
+   [28]  Arkko, J., Carrara, E., Lindholm, F., Naslund, M. and K.
+         Norrman, "Key Management Extensions for SDP and RTSP", Work in
+         Progress.
+
+   [29]  Arkko, J., Carrara, E., Lindholm, F., Naslund, M. and K.
+         Norrman, "MIKEY:  Multimedia Internet KEYing", Work in
+         Progress.
+
+   [30]  Baugher, M., Blom, R., Carrara, E., McGrew, D., Naslund, M.,
+         Norrman, K. and D. Oran, "The Secure Real Time Transport
+         Protocol", Work in Progress.
+
+   [31]  Ott, J., Wenger, S., Fukunaga, S., Sato, N., Burmeister, C.,
+         and Rey, J., "Extended RTP Profile for RTCP-based feedback
+         (RTP/AVPF)", Work in Progress.
+
+   [32]  Rosenberg, J. and H. Schulzrinne, "An Offer/Answer Model with
+         Session Description Protocol (SDP)", RFC 3264, June 2002.
+
+   [33]  Peterson, J., "A Privacy Mechanism for the Session Initiation
+         Protocol (SIP)", RFC 3323, November 2002.
+
+   [34]  Sparks, R., "The Referred-By mechanism", Work in Progress.
+
+   [35]  Willis, D. and B. Hoeneisen, "Session Initiation Protocol
+         Extension Header Field for Service Route Discovery During
+         Registration", Work in Progress.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Garcia-Martin, et al.       Standards Track                    [Page 16]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+Appendix A. SIP input strings to the SIP/SDP static dictionary
+
+   For reference, this section lists the SIP input strings that were
+   used in generating the dictionary, as well as a priority value, the
+   offset of the string in the generated dictionary, the length of the
+   string, and one or more references into the referenced documents that
+   motivate the presence of this string.  Note that the notation
+   "[CRLF]" stands for a sequence of two bytes with the values 0x0d and
+   0x0a, respectively.
+
+   The priority value is used for determining the position of the string
+   in the dictionary.  Lower priority values (higher priorities) cause
+   the string to occur at a later position in the dictionary, making it
+   more efficient to reference the string in certain compression
+   algorithms.  Hence, lower priority values were assigned to strings
+   more likely to occur.
+
+   String                                Pr Off  Len  References
+   ===================================== == ==== ==== ==========
+   "sip:"                                 1 0CDD 0004 [3] 19.1.1
+   "sips:"                                3 08AC 0005 [3] 19.1.1
+   "tel:"                                 3 08BD 0004 [7] 2.2
+   "SIP/2.0"                              1 0CB9 0007 [3] 25.1
+   "SIP/2.0/UDP "                         1 0CFE 000C [3] 25.1
+   "SIP/2.0/TCP "                         2 0CB9 000C [3] 25.1
+   "INVITE"                               1 0D4E 0006 [3] 25.1
+   "INVITE "                              1 0D4E 0007 [3] 25.1
+   "ACK"                                  1 0D4A 0003 [3] 25.1
+   "ACK "                                 1 0D4A 0004 [3] 25.1
+   "OPTIONS"                              4 0269 0007 [3] 25.1
+   "OPTIONS "                             4 0269 0008 [3] 25.1
+   "BYE"                                  2 0C8A 0003 [3] 25.1
+   "BYE "                                 2 0C8A 0004 [3] 25.1
+   "CANCEL"                               4 05E3 0006 [3] 25.1
+   "CANCEL "                              4 05E3 0007 [3] 25.1
+   "REGISTER"                             2 0B8F 0008 [3] 25.1
+   "REGISTER "                            2 0B8F 0009 [3] 25.1
+   "INFO"                                 4 06E9 0004 [8] 2
+   "INFO "                                4 06E9 0005 [8] 2
+   "SUBSCRIBE"                            2 0A6C 0009 [9] 8.1.1
+   "SUBSCRIBE "                           2 0A6C 000A [9] 8.1.1
+   "NOTIFY"                               2 0BC6 0006 [9] 8.1.2
+   "NOTIFY "                              2 0BC6 0007 [9] 8.1.2
+   "PRACK"                                2 0D48 0005 [10] 6
+   "PRACK "                               2 0D48 0006 [10] 6
+   "UPDATE"                               2 0BBF 0006 [11] 7, 10
+   "UPDATE "                              2 0BBF 0007 [11] 7, 10
+   "REFER"                                4 066B 0005 [13] 2.1, 7
+
+
+
+Garcia-Martin, et al.       Standards Track                    [Page 17]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+   "REFER "                               4 066B 0006 [13] 2.1, 7
+   "MESSAGE"                              3 08C1 0007 [21] 9
+   "MESSAGE "                             3 08C1 0008 [21] 9
+   "[CRLF]Accept: "                       4 06CE 000A [3] 20.1
+   "[CRLF]Accept-"                        4 06EE 0009 [22] 5,
+                                            [3] 20.2, 20.3
+   "Contact: "                            5 0009 0009 [22] 5
+   "Encoding: "                           4 0597 000A [3] 20.2,
+                                            [3] 20.12
+   "Language: "                           4 0271 000A [3] 20.3,
+                                            [3] 20.13
+   "[CRLF]Alert-Info: "                   4 05D5 000E [3] 20.4
+   "[CRLF]Allow: "                        3 08F6 0009 [3] 20.5
+   "[CRLF]Allow-Events: "                 3 0872 0010 [9] 8.2.1
+   "[CRLF]Authentication-Info: "          4 0293 0017 [3] 20.6
+   "[CRLF]Authorization: "                2 0AF8 0011 [3] 20.7
+   "[CRLF]Call-ID: "                      1 0D55 000B [3] 20.8
+   "[CRLF]Call-Info: "                    5 002D 000D [3] 20.9
+   "[CRLF]Contact: "                      1 0D60 000B [3] 20.10
+   "[CRLF]Content-"                       4 0B35 000A [3] 20.11,
+                                            20.12, 20.13, [3] 20.14,
+                                            20.15
+   "Disposition: "                        4 09EC 000D [3] 20.11
+   "Encoding: "                           4 0597 000A [3] 20.2,
+                                            [3] 20.12
+   "Language: "                           4 0271 000A [3] 20.3,
+                                            [3] 20.13
+   "[CRLF]Content-Length: "               1 0CE1 0012 [3] 20.14
+   "[CRLF]Content-Type: "                 2 0B35 0010 [3] 20.15
+   "[CRLF]CSeq: "                         1 0D79 0008 [3] 20.16
+   "[CRLF]Date: "                         4 0722 0008 [3] 20.17
+   "[CRLF]Error-Info: "                   5 0012 000E [3] 20.18
+   "[CRLF]Event: "                        3 08FF 0009 [9] 8.2.1
+   "[CRLF]Expires: "                      2 0C01 000B [3] 20.19
+   "[CRLF]From: "                         1 0D71 0008 [3] 20.20
+   "[CRLF]In-Reply-To: "                  4 0585 000F [3] 20.21
+   "[CRLF]Max-Forwards: "                 1 0D31 0010 [3] 20.22
+   "[CRLF]Min-"                           4 0768 0006 [3] 20.23,
+                                            [18] 5
+   "Expires: "                            4 083A 0009 [3] 20.23
+   "SE: "                                 4 06E5 0004 [18] 5
+   "[CRLF]MIME-Version: "                 5 0469 0010 [3] 20.24
+   "[CRLF]Organization: "                 5 048E 0010 [3] 20.25
+   "[CRLF]Path: "                         3 0908 0008 [16] 3
+   "[CRLF]Priority: "                     4 0623 000C [3] 20.26
+   "[CRLF]Privacy: "                      2 0BEB 000B [33] 4.2
+   "[CRLF]Proxy-"                         4 073A 0008 [3] 20.27,
+                                            20.28, 20.29
+
+
+
+Garcia-Martin, et al.       Standards Track                    [Page 18]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+   "Authenticate: "                       4 05AB 000E [3] 20.27
+   "Authorization: "                      4 0AFA 000F [3] 20.28
+   "Require: "                            4 0B6F 0009 [3] 20.29
+   "[CRLF]RAck: "                         2 0C7A 0008 [10] 7.2
+   "[CRLF]Reason: "                       3 08EC 000A [17] 2
+   "[CRLF]Record-Route: "                 2 0B49 0010 [3] 20.30
+   "[CRLF]Refer-To: "                     4 0617 000C [13] 2.1, 7
+   "[CRLF]Referred-By: "                  4 0576 000F [34] 9
+   "[CRLF]Reject-Contact: "               5 0000 0012 [22] 5
+   "[CRLF]Replaces: "                     4 065F 000C [14] 3.1
+   "[CRLF]Reply-To: "                     5 003A 000C [3] 20.31
+   "[CRLF]Request-Disposition: "          4 09E2 0017 [22] 5
+   "[CRLF]Require: "                      2 0B6D 000B [3] 20.32
+   "[CRLF]Retry-After: "                  4 03A8 000F [3] 20.33
+   "[CRLF]Route: "                        2 0C47 0009 [3] 20.34
+   "[CRLF]RSeq: "                         2 0C82 0008 [10] 7.1
+   "[CRLF]Security-"                      2 0BF6 000B [20] 3.3
+   "Client: "                             2 0C62 0008 [20] 3.3
+   "Server: "                             2 0B87 0008 [20] 3.3
+   "Verify: "                             2 0C6A 0008 [20] 3.3
+   "[CRLF]Server: "                       4 0B85 000A [3] 20.35
+   "[CRLF]Service-Route: "                3 085D 0011 [35]
+   "[CRLF]Session-Expires: "              3 0830 0013 [18] 4
+   "[CRLF]Subject: "                      5 0051 000B [3] 20.36
+   "[CRLF]Subscription-State: "           3 0843 0016 [9] 8.2.3
+   "[CRLF]Supported: "                    2 0BCD 000D [3] 20.37
+   "[CRLF]Timestamp: "                    5 0020 000D [3] 20.38
+   "[CRLF]To: "                           1 0D81 0006 [3] 20.39
+   "[CRLF]Unsupported: "                  4 04D6 000F [3] 20.40
+   "[CRLF]User-Agent: "                   4 05B9 000E [3] 20.41
+   "[CRLF]Via: "                          1 0CB2 0007 [3] 20.42
+   "[CRLF]Via: SIP/2.0/UDP "              1 0CF7 0013 [3] 20.42
+   "[CRLF]Via: SIP/2.0/TCP "              1 0CB2 0013 [3] 20.42
+   "[CRLF]Warning: "                      5 0046 000B [3] 20.43
+   "[CRLF]WWW-Authenticate: "             2 0920 0014 [3] 20.44
+   "[CRLF]WWW-Authenticate: Digest "      2 0920 001B [3] 20.44
+   "[CRLF][CRLF]"                         2 09E0 0004 [3] 7
+   ";transport="                          4 067A 000B [3] 25.1
+   "udp"                                  4 07DB 0003 [3] 25.1,
+                                            [24] A, [3] 25.1, [24] A
+   "tcp"                                  4 04C1 0003 [3] 25.1
+   "sctp"                                 4 0AC7 0004 [3] 25.1
+   "tls"                                  4 04D3 0003 [3] 25.1,
+                                            [20] 3.3
+   ";user="                               3 0910 0006 [3] 25.1
+   "phone"                                3 00F2 0005 [3] 25.1
+   "ip"                                   4 008D 0002 [3] 25.1
+   ";method="                             4 074A 0008 [3] 25.1
+
+
+
+Garcia-Martin, et al.       Standards Track                    [Page 19]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+   ";ttl="                                4 078C 0005 [3] 25.1
+   ";lr"                                  2 0CAF 0003 [3] 25.1
+   "Digest "                              2 0934 0007 [6] 3.2.1,
+                                            3.2.2
+   "username="                            2 0B27 0009 [6] 3.2.2
+   "uri="                                 2 0C9B 0004 [6] 3.2.2
+   "qop="                                 2 0C9F 0004 [6] 3.2.1,
+                                            3.2.2
+   "cnonce="                              2 0C8E 0007 [6] 3.2.2
+   "nc="                                  2 0996 0003 [6] 3.2.2
+   "response="                            2 09D7 0009 [6] 3.2.2
+   "nextnonce="                           2 0B12 000A [6] 3.2.3
+   "rspauth="                             2 096C 0008 [6] 3.2.3
+   "realm="                               2 0A66 0006 [6] 3.2.1
+   "domain="                              2 0A55 0007 [6] 3.2.1
+   "nonce="                               2 0B16 0006 [6] 3.2.1
+   "opaque="                              4 0761 0007 [6] 3.2.1
+   "stale="                               4 0148 0006 [6] 3.2.1
+   "true"                                 4 03F4 0004 [6] 3.2.1
+   "false"                                4 0C30 0005 [6] 3.2.1
+   "algorithm="                           2 09B4 000A [6] 3.2.1,
+                                            [19] 3.1
+   "MD5"                                  2 09F9 0003 [6] 3.2.1,
+                                            [19] 3.1
+   "MD5-sess"                             2 0AEA 0008 [6] 3.2.1,
+                                            [19] 3.1
+   "auth"                                 4 031E 0004 [6] 3.2.1
+   "auth-int"                             4 031E 0008 [6] 3.2.1
+   "AKAv"                                 2 0AE4 0004 [19] 3.1, 6
+   "AKAv1-MD5"                            2 0AE4 0009 [19] 3.1, 6
+   "auts="                                4 0791 0005 [19] 3.4
+   "digest-integrity"                     4 00CA 0010 [20] 3.3
+   "ipsec-ike"                            4 0671 0009 [20] 3.3
+   "ipsec-man"                            4 0A87 0009 [20] 3.3
+   "smime"                                4 0098 0005 [20] 3.3
+   ";alg="                                4 076E 0005 [20] 3.3
+   ";purpose="                            5 006B 0009 [3] 20.9
+   "icon"                                 5 0993 0004 [3] 20.9, 20.11
+   "info"                                 5 09AB 0004 [3] 20.9
+   "card"                                 5 0081 0004 [3] 20.9
+   ";expires="                            2 0C3E 0009 [3] 25.1,
+                                            [9] 8.4
+   "render"                               5 0A61 0006 [3] 20.11
+   "session"                              5 0AEE 0007 [3] 20.11,
+                                            [33] 4.2
+   "alert"                                5 04BD 0005 [3] 20.11
+   ";handling="                           5 005C 000A [3] 20.11
+   "optional"                             2 09AE 0008 [3] 20.11,
+
+
+
+Garcia-Martin, et al.       Standards Track                    [Page 20]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+                                            [12] 4, [3] 20.11, [12] 4
+   "required"                             5 07F4 0008 [3] 20.11
+   "text"                                 5 007C 0004 [3] 25.1
+   "image"                                5 0066 0005 [3] 25.1
+   "audio"                                5 0B30 0005 [3] 25.1
+   "video"                                5 0946 0005 [3] 25.1
+   "application"                          2 0334 000B [3] 25.1
+   "application/sdp"                      2 0956 000F [3] 25.1
+   "message/sip"                          4 009B 000B [3] 27.5
+   "message/sipfrag"                      4 009B 000F [15] 2
+   "message"                              4 009B 0007 [3] 27.5,
+                                            [15] 2
+   "sip"                                  4 00A3 0003 [3] 27.5
+   "sipfrag"                              4 00A3 0007 [15] 2
+   "multipart/signed"                     4 0398 0010 [3] 23.3
+   "multipart"                            4 0398 0009 [3] 25.1, 7.4.1
+   "sdp"                                  2 064B 0003
+   "xml"                                  2 0CAC 0003
+   "Mon, "                                4 0773 0005 [3] 25.1
+   "Tue, "                                4 0778 0005 [3] 25.1
+   "Wed, "                                4 077D 0005 [3] 25.1
+   "Thu, "                                4 03B9 0005 [3] 25.1
+   "Fri, "                                4 0782 0005 [3] 25.1
+   "Sat, "                                4 0787 0005 [3] 25.1
+   "Sun, "                                4 071D 0005 [3] 25.1
+   " Jan "                                4 04E4 0005 [3] 25.1
+   " Feb "                                4 0881 0005 [3] 25.1
+   " Mar "                                4 0B44 0005 [3] 25.1
+   " Apr "                                4 0D40 0005 [3] 25.1
+   " May "                                4 0478 0005 [3] 25.1
+   " Jun "                                4 049D 0005 [3] 25.1
+   " Jul "                                4 0B58 0005 [3] 25.1
+   " Aug "                                4 033F 0005 [3] 25.1
+   " Sep "                                4 086D 0005 [3] 25.1
+   " Oct "                                4 0CF2 0005 [3] 25.1
+   " Nov "                                4 0858 0005 [3] 25.1
+   " Dec "                                4 02A9 0005 [3] 25.1
+   " GMT"                                 4 03B6 0004 [3] 25.1
+   ";tag="                                1 0D87 0005 [3] 25.1
+   "emergency"                            4 018C 0009 [3] 20.26
+   "urgent"                               4 021A 0006 [3] 20.26
+   "normal"                               4 0A81 0006 [3] 20.26
+   "non-urgent"                           4 0216 000A [3] 20.26
+   ";duration="                           4 06C4 000A [3] 20.33
+   ";maddr="                              4 075A 0007 [3] 20.42
+   ";received="                           4 06BA 000A [3] 20.42
+   ";branch="                             5 0D22 0008 [3] 20.42
+   ";branch=z9hG4bK"                      1 0D22 000F [3] 8.1.1.7
+
+
+
+Garcia-Martin, et al.       Standards Track                    [Page 21]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+   "SIP"                                  5 0CB9 0003 [3] 25.1,
+                                            [17] 2
+   "UDP"                                  2 0CA6 0003 [3] 20.42
+   "TCP"                                  2 0CA3 0003 [3] 20.42
+   "TLS"                                  4 071B 0003 [3] 20.42
+   "SCTP"                                 4 0D45 0004 [3] 20.42
+   "active"                               4 088C 0006 [9] 8.4
+   "pending"                              4 01AD 0007 [9] 8.4
+   "terminated"                           4 0ADA 000A [9] 8.4
+   ";reason="                             4 0742 0008 [9] 8.4
+   ";retry-after="                        4 05F7 000D [9] 8.4
+   "deactivated"                          4 011C 000B [9] 8.4
+   "probation"                            4 0D16 0009 [9] 8.4
+   "rejected"                             4 01C9 0008 [9] 8.4
+   "timeout"                              4 0986 0007 [9] 8.4
+   "giveup"                               4 07CF 0006 [9] 8.4
+   "noresource"                           4 024D 000A [9] 8.4
+   ";id="                                 4 07A2 0004 [9] 8.4
+   "100rel"                               2 0C95 0006 [10] 8.1
+   "precondition"                         2 0A76 000C [12] 8
+   "refer"                                3 07DE 0005 [13] 3.1, 7
+   "to-tag"                               4 028D 0006 [14] 3.2
+   "from-tag"                             4 01E6 0008 [14] 3.2
+   "replaces"                             4 0A11 0008 [14] 3.4
+   "Q.850"                                5 01EE 0005 [17] 2
+   ";cause="                              5 0074 0007 [17] 2
+   ";text="                               5 007B 0006 [17] 2
+   "path"                                 3 0964 0004 [16] 3
+   ";refresher="                          4 069B 000B [18] 4
+   "uac"                                  4 0604 0003 [18] 4
+   "uas"                                  4 07B5 0003 [18] 4
+   "timer"                                4 0CD7 0005 [18] 7.1
+   "pref"                                 5 07DD 0004 [22] 4.1
+   "TRUE"                                 4 0594 0004 [22] 6.2
+   "FALSE"                                4 06E2 0005 [22] 6.2
+   ";q="                                  4 07B2 0003 [3] 25.1,
+                                            [22] 6.2, [20] 3.3
+   ";comp=sigcomp"                        1 0D0A 000D [23] 6
+   "privacy"                              3 07D4 0007 [33] 4.2
+   "header"                               4 0967 0006 [33] 4.2
+   "user"                                 4 0911 0004 [33] 4.2
+   "none"                                 2 0AF4 0004 [33] 4.2,
+                                            [12] 4
+   "critical"                             4 04B7 0008 [33] 4.2
+   "100 "                                 5 0BAE 0004 [3] 21.1.1
+   "100 Trying"                           2 0BAE 000A [3] 21.1.1
+   "180 "                                 5 0BA3 0004 [3] 21.1.2
+   "180 Ringing"                          2 0BA3 000B [3] 21.1.2
+
+
+
+Garcia-Martin, et al.       Standards Track                    [Page 22]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+   "181 "                                 5 0A3B 0004 [3] 21.1.3
+   "181 Call Is Being Forwarded"          4 0A3B 001B [3] 21.1.3
+   "182 "                                 5 05A1 0004 [3] 21.1.4
+   "182 Queued"                           4 05A1 000A [3] 21.1.4
+   "183 "                                 5 0AB4 0004 [3] 21.1.5
+   "183 Session Progress"                 2 0AB4 0014 [3] 21.1.5
+   "200 "                                 5 0D6B 0004 [3] 21.2.1
+   "200 OK"                               1 0D6B 0006 [3] 21.2.1
+   "202 "                                 5 0824 0004 [9] 8.3.1
+   "202 Accepted"                         3 0824 000C [9] 8.3.1
+   "300 "                                 5 0085 0004 [3] 21.3.1
+   "300 Multiple Choices"                 4 0085 0014 [3] 21.3.1
+   "301 "                                 5 0383 0004 [3] 21.3.2
+   "301 Moved Permanently"                4 0383 0015 [3] 21.3.2
+   "302 "                                 5 036E 0004 [3] 21.3.3
+   "302 Moved Temporarily"                4 036E 0015 [3] 21.3.3
+   "305 "                                 5 053D 0004 [3] 21.3.4
+   "305 Use Proxy"                        4 053D 000D [3] 21.3.4
+   "380 "                                 5 02AE 0004 [3] 21.3.5
+   "380 Alternative Service"              4 02AE 0017 [3] 21.3.5
+   "400 "                                 5 03E6 0004 [3] 21.4.1
+   "400 Bad Request"                      4 03E6 000F [3] 21.4.1
+   "401 "                                 5 0B5D 0004 [3] 21.4.2
+   "401 Unauthorized"                     2 0B5D 0010 [3] 21.4.2
+   "402 "                                 5 03BE 0004 [3] 21.4.3
+   "402 Payment Required"                 4 03BE 0014 [3] 21.4.3
+   "403 "                                 5 020A 0004 [3] 21.4.4
+   "403 Forbidden"                        4 020A 000D [3] 21.4.4
+   "404 "                                 5 0530 0004 [3] 21.4.5
+   "404 Not Found"                        4 0530 000D [3] 21.4.5
+   "405 "                                 5 02F2 0004 [3] 21.4.6
+   "405 Method Not Allowed"               4 02F2 0016 [3] 21.4.6
+   "406 "                                 5 041E 0004 [3] 21.4.7
+   "406 Not Acceptable"                   4 041E 0012 [3] 21.4.7
+   "407 "                                 5 00AA 0004 [3] 21.4.8
+   "407 Proxy Authentication Required"    4 00AA 0021 [3] 21.4.8
+   "408 "                                 5 0CC5 0004 [3] 21.4.9
+   "408 Request Timeout"                  4 0CC5 0013 [3] 21.4.9
+   "410 "                                 5 060F 0004 [3] 21.4.10
+   "410 Gone"                             4 060F 0008 [3] 21.4.10
+   "413 "                                 5 0A96 0004 [3] 21.4.11
+   "413 Request Entity Too Large"         4 0A96 001C [3] 21.4.11
+   "414 "                                 5 07B8 0004 [3] 21.4.12
+   "414 Request-URI Too Long"             4 07B8 0018 [3] 21.4.12
+   "415 "                                 5 0195 0004 [3] 21.4.13
+   "415 Unsupported Media Type"           4 0195 001A [3] 21.4.13
+   "416 "                                 5 0175 0004 [3] 21.4.14
+   "416 Unsupported URI Scheme"           4 0175 001A [3] 21.4.14
+
+
+
+Garcia-Martin, et al.       Standards Track                    [Page 23]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+   "420 "                                 5 023D 0004 [3] 21.4.15
+   "420 Bad Extension"                    4 023D 0011 [3] 21.4.15
+   "421 "                                 5 02DC 0004 [3] 21.4.16
+   "421 Extension Required"               4 02DC 0016 [3] 21.4.16
+   "422 "                                 5 0A19 0004 [18] 6, 12.1
+   "422 Session Interval Too Small"       4 0A19 001E [18] 6, 12.2
+   "423 "                                 5 01D1 0004 [3] 21.4.17
+   "423 Interval Too Brief"               4 01D1 0016 [3] 21.4.17
+   "429 "                                 5 0220 0004 [34] 9
+   "429 Provide Referror Identity"        4 0220 001D [34] 9
+   "480 "                                 5 07FC 0004 [3] 21.4.18
+   "480 Temporarily Unavailable"          3 07FC 001B [3] 21.4.18
+   "481 "                                 5 0127 0004 [3] 21.4.19
+   "481 Call/Transaction Does Not Exist"  4 0127 0023 [3] 21.4.19
+   "482 "                                 5 047D 0004 [3] 21.4.20
+   "482 Loop Detected"                    4 047D 0011 [3] 21.4.20
+   "483 "                                 5 0999 0004 [3] 21.4.21
+   "483 Too Many Hops"                    4 0999 0011 [3] 21.4.21
+   "484 "                                 5 00DA 0004 [3] 21.4.22
+   "484 Address Incomplete"               4 00DA 0016 [3] 21.4.22
+   "485 "                                 5 0B1C 0004 [3] 21.4.23
+   "485 Ambiguous"                        4 0B1C 000D [3] 21.4.23
+   "486 "                                 5 0ACB 0004 [3] 21.4.24
+   "486 Busy Here"                        3 0ACB 000D [3] 21.4.24
+   "487 "                                 5 0308 0004 [3] 21.4.25
+   "487 Request Terminated"               4 0308 0016 [3] 21.4.25
+   "488 "                                 5 01B4 0004 [3] 21.4.26
+   "488 Not Acceptable Here"              4 01B4 0017 [3] 21.4.26
+   "489 "                                 5 04C7 0004 [9] 8.3.2
+   "489 Bad Event"                        4 04C7 000D [9] 8.3.2
+   "491 "                                 5 03F8 0004 [3] 21.4.27
+   "491 Request Pending"                  4 03F8 0013 [3] 21.4.27
+   "493 "                                 5 0457 0004 [3] 21.4.28
+   "493 Undecipherable"                   4 0457 0012 [3] 21.4.28
+   "494 "                                 5 00FE 0004 [20] 3.3.1
+   "494 Security Agreement Required"      4 00FE 001F [20] 3.3.1
+   "500 "                                 5 014E 0004 [3] 21.5.1
+   "500 Server Internal Error"            4 014E 0019 [3] 21.5.1
+   "501 "                                 5 040B 0004 [3] 21.5.2
+   "501 Not Implemented"                  4 040B 0013 [3] 21.5.2
+   "502 "                                 5 04E9 0004 [3] 21.5.3
+   "502 Bad Gateway"                      4 04E9 000F [3] 21.5.3
+   "503 "                                 5 02C5 0004 [3] 21.5.4
+   "503 Service Unavailable"              4 02C5 0017 [3] 21.5.4
+   "504 "                                 5 027B 0004 [3] 21.5.5
+   "504 Server Time-out"                  4 027B 0013 [3] 21.5.5
+   "505 "                                 5 01F1 0004 [3] 21.5.6
+   "505 Version Not Supported"            4 01F1 0019 [3] 21.5.6
+
+
+
+Garcia-Martin, et al.       Standards Track                    [Page 24]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+   "513 "                                 5 0344 0004 [3] 21.5.7
+   "513 Message Too Large"                4 0344 0015 [3] 21.5.7
+   "580 "                                 5 09FB 0004 [12] 8
+   "580 Precondition Failure"             4 09FB 0018 [12] 8
+   "600 "                                 5 07E3 0004 [3] 21.6.1
+   "600 Busy Everywhere"                  3 07E3 0013 [3] 21.6.1
+   "603 "                                 5 0B09 0004 [3] 21.6.2
+   "603 Decline"                          4 0B09 000B [3] 21.6.2
+   "604 "                                 5 09BE 0004 [3] 21.6.3
+   "604 Does Not Exist Anywhere"          4 09BE 001B [3] 21.6.3
+   "606 "                                 5 0430 0004 [3] 21.6.4
+   "606 Not Acceptable"                   4 0430 0012 [3] 21.6.4
+   "687 "                                 5 0359 0004 [14] 3.5
+   "687 Dialog Terminated"                4 0359 0015 [14] 3.5
+   "Anonymous"                            3 08A4 0009 [3] 8.1.1.3
+
+          Table A.1: SIP input strings for the SIP/SDP dictionary
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Garcia-Martin, et al.       Standards Track                    [Page 25]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+Appendix B. SDP input strings to the SIP/SDP static dictionary
+
+   For reference, this section lists the SDP input strings that were
+   used in generating the dictionary, as well as a priority value, the
+   offset of the string in the generated dictionary, the length of the
+   string, and one or more references into the referenced documents that
+   motivate the presence of this string.  Note that the notation
+   "[CRLF]" stands for a sequence of two bytes with the values 0x0d and
+   0x0a, respectively.
+
+   The priority value is used for determining the position of the string
+   in the dictionary.  Lower priority values (higher priorities) cause
+   the string to occur at a later position in the dictionary, making it
+   more efficient to reference the string in certain compression
+   algorithms.  Hence, lower priority values were assigned to strings
+   more likely to occur.
+
+   String                                Pr Off  Len  References
+   ===================================== == ==== ==== ==========
+   "v=0[CRLF]o="                          2 0BB8 0007 [24] 6
+   "[CRLF]s="                             2 0C2B 0004 [24] 6
+   "[CRLF]s= "                            2 0C2B 0005 [32] 5
+   "[CRLF]i="                             4 07A6 0004 [24] 6
+   "[CRLF]u="                             4 07AE 0004 [24] 6
+   "[CRLF]e="                             4 079E 0004 [24] 6
+   "[CRLF]c=IN IP4 "                      3 08E1 000B [24] 6
+   "[CRLF]c=IN IP6 "                      2 0B98 000B [24] 6
+   "[CRLF]c="                             5 08E1 0004 [24] 6
+   "[CRLF]b="                             3 0916 0004 [24] 6
+   "[CRLF]t="                             2 0B78 0004 [24] 6
+   "[CRLF]t=0 0"                          2 0B78 0007 [32] 5
+   "[CRLF]r="                             4 0796 0004 [24] 6
+   "[CRLF]z="                             4 079A 0004 [24] 6
+   "[CRLF]k=clear:"                       4 06B0 000A [24] 6
+   "[CRLF]k=base64:"                      4 0690 000B [24] 6
+   "[CRLF]k=uri:"                         4 0732 0008 [24] 6
+   "[CRLF]k=prompt:"                      4 056B 000B [24] 6
+   "[CRLF]k="                             5 056B 0004 [24] 6
+   "[CRLF]a=cat:"                         4 072A 0008 [24] 6
+   "[CRLF]a=keywds:"                      4 0685 000B [24] 6
+   "[CRLF]a=tool:"                        4 0712 0009 [24] 6
+   "[CRLF]a=ptime:"                       4 06A6 000A [24] 6
+   "[CRLF]a=maxptime:"                    4 05EA 000D [24] 6
+   "[CRLF]a=rtpmap:"                      2 0C0C 000B [24] 6, [32] 5
+   "[CRLF]a=recvonly"                     3 08C9 000C [24] 6
+   "[CRLF]a=sendrecv"                     3 093B 000C [24] 6
+   "[CRLF]a=sendonly"                     3 08D5 000C [24] 6
+   "[CRLF]a=inactive"                     3 0886 000C [24] 6
+
+
+
+Garcia-Martin, et al.       Standards Track                    [Page 26]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+   "[CRLF]a=orient:portrait"              4 0974 0013 [24] 6
+   "[CRLF]a=orient:landscape"             4 03D2 0014 [24] 6
+   "[CRLF]a=orient:seascape"              4 050B 0013 [24] 6
+   "[CRLF]a=type:broadcast"               4 0442 0012 [24] 6
+   "[CRLF]a=type:meeting"                 4 055B 0010 [24] 6
+   "[CRLF]a=type:moderated"               4 051E 0012 [24] 6
+   "[CRLF]a=type:test"                    4 08B1 000D [24] 6
+   "[CRLF]a=type:H.332"                   4 0817 000E [24] 6
+   "[CRLF]a=type:recvonly"                4 054A 0011 [24] 6
+   "[CRLF]a=charset:"                     4 0653 000C [24] 6
+   "[CRLF]a=sdplang:"                     4 0647 000C [24] 6
+   "[CRLF]a=lang:"                        4 06F7 0009 [24] 6
+   "[CRLF]a=framerate:"                   4 05C7 000E [24] 6
+   "[CRLF]a=quality:"                     4 063B 000C [24] 6
+   "[CRLF]a=fmtp:"                        2 0C50 0009 [24] 6
+   "[CRLF]a=curr:"                        2 0C59 0009 [12] 4
+   "[CRLF]a=des:"                         2 0C72 0008 [12] 4
+   "[CRLF]a=conf:"                        2 0C35 0009 [12] 4
+   "[CRLF]a=mid:"                         4 0752 0008 [26] 3
+   "[CRLF]a=group:"                       4 06D8 000A [26] 3
+   "[CRLF]a=key-mgmt:mikey"               4 0257 0012 [28] 2.1,
+                                            [29] 6
+   "[CRLF]a=key-mgmt:"                    4 0257 000D [28] 2.1
+   "[CRLF]a="                             5 0257 0004 [24] 6
+   "[CRLF]m=audio "                       2 0C21 000A [24] 6
+   "[CRLF]m=video "                       2 0C17 000A [24] 6
+   "[CRLF]m=application "                 4 0330 0010 [24] 6
+   "[CRLF]m=data "                        4 0700 0009 [24] 6
+   "[CRLF]m=control "                     4 062F 000C [24] 6
+   "[CRLF]m="                             5 0330 0004 [24] 6
+   "AS "                                  3 091A 0003 [24] 6
+   "CT "                                  3 091D 0003 [24] 6
+   "RTP/AVP "                             2 0BE3 0008 [24] A
+   "RTP/SAVP "                            3 0892 0009 [30] 12
+   "RTP/AVPF "                            3 089B 0009 [31] 4.1
+   "udp"                                  4 07DB 0003 [3] 25.1,
+                                            [24] A, [3] 25.1, [24] A
+   "0.0.0.0"                              4 0B7E 0007 [24] A
+   "qos"                                  2 0CA9 0003 [12] 4
+   "mandatory"                            2 0A8D 0009 [12] 4
+   "optional"                             2 09AE 0008 [3] 20.11,
+                                            [12] 4, [3] 20.11, [12] 4
+   "none"                                 2 0AF4 0004 [33] 4.2,
+                                            [12] 4
+   "failure"                              4 0A5C 0007 [12] 4
+   "unknown"                              4 0BDA 0007 [12] 4
+   "e2e"                                  2 0AB1 0003 [12] 4
+   "local"                                2 0A36 0005 [12] 4
+
+
+
+Garcia-Martin, et al.       Standards Track                    [Page 27]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+   "remote"                               2 0AD6 0006 [12] 4
+   "send"                                 2 08D9 0004 [12] 4
+   "recv"                                 2 0553 0004 [12] 4
+   "sendrecv"                             2 093F 0008 [12] 4
+   "AMR"                                  2 0BE1 0003 [25] 8
+   "octet-align="                         4 094A 000C [25] 8
+   "mode-set="                            4 0709 0009 [25] 8
+   "mode-change-period="                  4 04F8 0013 [25] 8
+   "mode-change-neighbor="                4 04A2 0015 [25] 8
+   "crc="                                 4 07AA 0004 [25] 8
+   "robust-sorting="                      4 0166 000F [25] 8
+   "interleaving="                        4 0323 000D [25] 8
+   "channels="                            4 0606 0009 [25] 8
+   "octet-align"                          4 094A 000B [25] 8
+   "telephone-event"                      4 00EE 000F [27] 3.3, 6.1
+   "events"                               4 00F8 0006 [27] 6.1
+   "rate"                                 4 052B 0004 [27] 6.1, 6.2
+   "tone"                                 4 0453 0004 [27] 6.2
+   "rtcp-fb"                              4 04C0 0007 [31] 4
+   "ack"                                  4 0D1F 0003 [31] 4
+   "nack"                                 4 0D1E 0004 [31] 4
+   "ttr-int"                              4 098C 0007 [31] 4
+   "app"                                  4 0334 0003 [31] 4
+   "rpsi"                                 4 0CDB 0004 [31] 4
+   "pli"                                  4 0336 0003 [31] 4
+   "sli"                                  4 09A9 0003 [31] 4
+
+          Table B.1: SDP input strings for the SIP/SDP dictionary
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Garcia-Martin, et al.       Standards Track                    [Page 28]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+Authors' Addresses
+
+   Miguel A. Garcia-Martin
+   Ericsson
+   Hirsalantie 11
+   FIN-02420, Jorvas, Finland
+
+   Phone: +358 9299 3553
+   EMail: miguel.a.garcia@ericsson.com
+
+
+   Carsten Bormann
+   Universitaet Bremen TZI
+   Postfach 330440
+   D-28334 Bremen, Germany
+
+   Phone: +49 421 218 7024
+   EMail: cabo@tzi.org
+
+
+   Joerg Ott
+   Universitaet Bremen TZI
+   Postfach 330440
+   D-28334 Bremen, Germany
+
+   Phone: +49.421.201-7028
+   EMail: jo@tzi.org
+
+
+   Richard Price
+   Roke Manor Research Ltd
+   Romsey, Hants, SO51 0ZN, United Kingdom
+
+   Phone:  +44 1794 833681
+   EMail: richard.price@roke.co.uk
+
+
+   Adam Roach
+   dynamicsoft
+   5100 Tennyson Parkway, Suite 1200
+   Plano, TX 75024, USA
+
+   EMail: adam@dynamicsoft.com
+
+
+
+
+
+
+
+
+Garcia-Martin, et al.       Standards Track                    [Page 29]
+
+RFC 3485       SIP and SDP Static Dictionary for SigComp   February 2003
+
+
+Full Copyright Statement
+
+   Copyright (C) The Internet Society (2003).  All Rights Reserved.
+
+   This document and translations of it may be copied and furnished to
+   others, and derivative works that comment on or otherwise explain it
+   or assist in its implementation may be prepared, copied, published
+   and distributed, in whole or in part, without restriction of any
+   kind, provided that the above copyright notice and this paragraph are
+   included on all such copies and derivative works.  However, this
+   document itself may not be modified in any way, such as by removing
+   the copyright notice or references to the Internet Society or other
+   Internet organizations, except as needed for the purpose of
+   developing Internet standards in which case the procedures for
+   copyrights defined in the Internet Standards process must be
+   followed, or as required to translate it into languages other than
+   English.
+
+   The limited permissions granted above are perpetual and will not be
+   revoked by the Internet Society or its successors or assigns.
+
+   This document and the information contained herein is provided on an
+   "AS IS" basis and THE INTERNET SOCIETY AND THE INTERNET ENGINEERING
+   TASK FORCE DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING
+   BUT NOT LIMITED TO ANY WARRANTY THAT THE USE OF THE INFORMATION
+   HEREIN WILL NOT INFRINGE ANY RIGHTS OR ANY IMPLIED WARRANTIES OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+
+Acknowledgement
+
+   Funding for the RFC Editor function is currently provided by the
+   Internet Society.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Garcia-Martin, et al.       Standards Track                    [Page 30]
+
