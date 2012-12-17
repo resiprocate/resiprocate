@@ -121,7 +121,7 @@ int nr_stun_server_add_client(nr_stun_server_ctx *ctx, char *client_label, char 
     return(_status);
   }
 
-int nr_stun_server_get_password(void *arg, nr_stun_message *msg, Data **password)
+static int nr_stun_server_get_password(void *arg, nr_stun_message *msg, Data **password)
   {
     int _status;
     nr_stun_server_ctx *ctx = (nr_stun_server_ctx*)arg;
@@ -372,7 +372,8 @@ int nr_stun_get_message_client(nr_stun_server_ctx *ctx, nr_stun_message *req, nr
     }
 
     STAILQ_FOREACH(clnt, &ctx->clients, entry) {
-        if (!strcmp(clnt->username, attr->u.username))
+        if (!strncmp(clnt->username, attr->u.username,
+                     sizeof(attr->u.username)))
             break;
     }
     if (!clnt) {

@@ -48,7 +48,8 @@ struct nr_ice_candidate_ {
 #define NR_ICE_CAND_STATE_INITIALIZING     2
 #define NR_ICE_CAND_STATE_INITIALIZED      3
 #define NR_ICE_CAND_STATE_FAILED           4
-#define NR_ICE_CAND_PEER_CANDIDATE         10
+#define NR_ICE_CAND_PEER_CANDIDATE_UNPAIRED 9
+#define NR_ICE_CAND_PEER_CANDIDATE_PAIRED   10
   struct nr_ice_ctx_ *ctx;
   nr_ice_socket *isock;               /* The socket to read from
                                          (it contains all other candidates
@@ -96,7 +97,7 @@ int nr_ice_candidate_create(struct nr_ice_ctx_ *ctx,char *label, nr_ice_componen
 int nr_ice_candidate_initialize(nr_ice_candidate *cand, NR_async_cb ready_cb, void *cb_arg);
 int nr_ice_candidate_process_stun(nr_ice_candidate *cand, UCHAR *msg, int len, nr_transport_addr *faddr);
 int nr_ice_candidate_destroy(nr_ice_candidate **candp);
-void nr_ice_candidate_destroy_cb(int s, int h, void *cb_arg);
+void nr_ice_candidate_destroy_cb(NR_SOCKET s, int h, void *cb_arg);
 int nr_ice_format_candidate_attribute(nr_ice_candidate *cand, char *attr, int maxlen);
 int nr_ice_peer_candidate_from_attribute(nr_ice_ctx *ctx,char *attr,nr_ice_media_stream *stream,nr_ice_candidate **candp);
 int nr_ice_peer_peer_rflx_candidate_create(nr_ice_ctx *ctx,char *label, nr_ice_component *comp,nr_transport_addr *addr, nr_ice_candidate **candp);

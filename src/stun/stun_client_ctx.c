@@ -45,7 +45,8 @@ static char *RCSSTRING __UNUSED__="$Id: stun_client_ctx.c,v 1.2 2008/04/28 18:21
 #include "r_time.h"
 
 static int nr_stun_client_send_request(nr_stun_client_ctx *ctx);
-static void nr_stun_client_timer_expired_cb(int a, int b, void *cb_arg);
+static void nr_stun_client_timer_expired_cb(NR_SOCKET s, int b, void *cb_arg);
+static int nr_stun_client_get_password(void *arg, nr_stun_message *msg, Data **password);
 
 int nr_stun_client_ctx_create(char *label, nr_socket *sock, nr_transport_addr *peer, UINT4 RTO, nr_stun_client_ctx **ctxp)
   {
@@ -192,7 +193,7 @@ nr_stun_client_reset(nr_stun_client_ctx *ctx)
     return 0;
 }
 
-static void nr_stun_client_timer_expired_cb(int a, int b, void *cb_arg)
+static void nr_stun_client_timer_expired_cb(NR_SOCKET s, int b, void *cb_arg)
   {
     int _status;
     nr_stun_client_ctx *ctx=cb_arg;
@@ -394,7 +395,7 @@ static int nr_stun_client_send_request(nr_stun_client_ctx *ctx)
     return(_status);
   }
 
-int nr_stun_client_get_password(void *arg, nr_stun_message *msg, Data **password)
+static int nr_stun_client_get_password(void *arg, nr_stun_message *msg, Data **password)
 {
     *password = (Data*)arg;
     if (!arg)
