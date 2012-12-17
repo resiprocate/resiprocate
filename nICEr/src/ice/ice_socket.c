@@ -223,14 +223,20 @@ int nr_ice_socket_destroy(nr_ice_socket **isockp)
 
 int nr_ice_socket_close(nr_ice_socket *isock)
   {
+#ifdef NR_SOCKET_IS_VOID_PTR
+    NR_SOCKET fd=NULL;
+    NR_SOCKET no_socket = NULL;
+#else
     NR_SOCKET fd=-1;
+    NR_SOCKET no_socket = -1;
+#endif
 
     if (!isock||!isock->sock)
       return(0);
 
     nr_socket_getfd(isock->sock,&fd);
     assert(isock->sock!=0);
-    if(fd!=-1){
+    if(fd != no_socket){
       NR_ASYNC_CANCEL(fd,NR_ASYNC_WAIT_READ);
       NR_ASYNC_CANCEL(fd,NR_ASYNC_WAIT_WRITE);
       nr_socket_destroy(&isock->sock);

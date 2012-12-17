@@ -61,12 +61,14 @@ static char *RCSSTRING __UNUSED__="$Id: ice_candidate.c,v 1.2 2008/04/28 17:59:0
 #include "ice_util.h"
 #include "nr_socket_turn.h"
 
+static int next_automatic_preference = 224;
+
 static int nr_ice_get_foundation(nr_ice_ctx *ctx,nr_ice_candidate *cand);
 static int nr_ice_srvrflx_start_stun(nr_ice_candidate *cand, NR_async_cb ready_cb, void *cb_arg);
-static void nr_ice_srvrflx_stun_finished_cb(int sock, int how, void *cb_arg);
+static void nr_ice_srvrflx_stun_finished_cb(NR_SOCKET sock, int how, void *cb_arg);
 #ifdef USE_TURN
 static int nr_ice_start_relay_turn(nr_ice_candidate *cand, NR_async_cb ready_cb, void *cb_arg);
-static void nr_ice_turn_allocated_cb(int sock, int how, void *cb_arg);
+static void nr_ice_turn_allocated_cb(NR_SOCKET sock, int how, void *cb_arg);
 #endif /* USE_TURN */
 
 char *nr_ice_candidate_type_names[]={0,"host","srflx","prflx","relay",0};
@@ -76,7 +78,7 @@ int nr_ice_candidate_create(nr_ice_ctx *ctx,char *label,nr_ice_component *comp,n
     nr_ice_candidate *cand=0;
     nr_ice_candidate *tmp=0;
     int r,_status;
- 
+
     if(!(cand=RCALLOC(sizeof(nr_ice_candidate))))
       ABORT(R_NO_MEMORY);
     if(!(cand->label=r_strdup(label)))
@@ -196,7 +198,7 @@ int nr_ice_candidate_destroy(nr_ice_candidate **candp)
     return(0);
   }
 
-void nr_ice_candidate_destroy_cb(int s, int h, void *cb_arg)
+void nr_ice_candidate_destroy_cb(NR_SOCKET s, int h, void *cb_arg)
   {
     nr_ice_candidate *cand=cb_arg;
     nr_ice_candidate_destroy(&cand);
@@ -220,7 +222,7 @@ static int nr_ice_get_foundation(nr_ice_ctx *ctx,nr_ice_candidate *cand)
       if(cand->stun_server != foundation->stun_server)
         goto next;
 
-      sprintf(fnd,"%d",i);
+      snprintf(fnd,sizeof(fnd),"%d",i);
       if(!(cand->foundation=r_strdup(fnd)))
         ABORT(R_NO_MEMORY);
       return(0);
@@ -237,7 +239,7 @@ static int nr_ice_get_foundation(nr_ice_ctx *ctx,nr_ice_candidate *cand)
     foundation->stun_server=cand->stun_server;
     STAILQ_INSERT_TAIL(&ctx->foundations,foundation,entry);
 
-    sprintf(fnd,"%d",i);
+    snprintf(fnd,sizeof(fnd),"%d",i);
     if(!(cand->foundation=r_strdup(fnd)))
       ABORT(R_NO_MEMORY);
 
@@ -283,8 +285,24 @@ int nr_ice_candidate_compute_priority(nr_ice_candidate *cand)
 
       
     if(r=NR_reg_get2_uchar(NR_ICE_REG_PREF_INTERFACE_PRFX,cand->base.ifname,
-      &interface_preference))
-      ABORT(r);
+      &interface_preference)) {
+      if (r==R_NOT_FOUND) {
+        if (next_automatic_preference == 1) {
+          r_log(LOG_ICE,LOG_DEBUG,"Out of preference values. Can't assign one for interface %s",cand->base.ifname);
+          ABORT(R_NOT_FOUND);
+        }
+        r_log(LOG_ICE,LOG_DEBUG,"Automatically assigning preference for interface %s->%d",cand->base.ifname,
+          next_automatic_preference);
+        if (r=NR_reg_set2_uchar(NR_ICE_REG_PREF_INTERFACE_PRFX,cand->base.ifname,next_automatic_preference)){
+          ABORT(r);
+        }
+        interface_preference=next_automatic_preference;
+        next_automatic_preference--;
+      }
+      else {
+        ABORT(r);
+      }
+    }
 
     cand->priority=
       (type_preference << 24) |
@@ -313,7 +331,8 @@ int nr_ice_candidate_initialize(nr_ice_candidate *cand, NR_async_cb ready_cb, vo
           ABORT(r);
         cand->osock=cand->isock->sock;
         cand->state=NR_ICE_CAND_STATE_INITIALIZED;
-        ready_cb(0,0,cb_arg);
+        // Post this so that it doesn't happen in-line
+        NR_ASYNC_SCHEDULE(ready_cb,cb_arg);
         break;
 #ifdef USE_TURN
       case RELAYED:
@@ -340,7 +359,7 @@ int nr_ice_candidate_initialize(nr_ice_candidate *cand, NR_async_cb ready_cb, vo
     return(_status);
   }
 
-static void nr_ice_srvrflx_start_stun_timer_cb(int s, int how, void *cb_arg)
+static void nr_ice_srvrflx_start_stun_timer_cb(NR_SOCKET s, int how, void *cb_arg)
   {
     nr_ice_candidate *cand=cb_arg;
     int r,_status;
@@ -394,7 +413,7 @@ static int nr_ice_srvrflx_start_stun(nr_ice_candidate *cand, NR_async_cb ready_c
   }
 
 #ifdef USE_TURN
-static void nr_ice_start_relay_turn_timer_cb(int s, int how, void *cb_arg)
+static void nr_ice_start_relay_turn_timer_cb(NR_SOCKET s, int how, void *cb_arg)
   {
     nr_ice_candidate *cand=cb_arg;
     int r,_status;
@@ -450,7 +469,7 @@ static int nr_ice_start_relay_turn(nr_ice_candidate *cand, NR_async_cb ready_cb,
   }
 #endif /* USE_TURN */
 
-static void nr_ice_srvrflx_stun_finished_cb(int sock, int how, void *cb_arg)
+static void nr_ice_srvrflx_stun_finished_cb(NR_SOCKET sock, int how, void *cb_arg)
   {
     int _status;
     nr_ice_candidate *cand=cb_arg;
@@ -488,7 +507,7 @@ static void nr_ice_srvrflx_stun_finished_cb(int sock, int how, void *cb_arg)
   }
 
 #ifdef USE_TURN
-static void nr_ice_turn_allocated_cb(int s, int how, void *cb_arg)
+static void nr_ice_turn_allocated_cb(NR_SOCKET s, int how, void *cb_arg)
   {
     int r,_status;
     nr_ice_candidate *cand=cb_arg;
@@ -507,7 +526,7 @@ static void nr_ice_turn_allocated_cb(int s, int how, void *cb_arg)
     case NR_TURN_CLIENT_STATE_ALLOCATED:
         /* switch candidate from TURN mode to STUN mode */
 
-        if(r=nr_concat_strings(&label,"turn-relay(",cand->base.as_string,"|",turn->relay_addr.as_string,")",0))
+        if(r=nr_concat_strings(&label,"turn-relay(",cand->base.as_string,"|",turn->relay_addr.as_string,")",NULL))
           ABORT(r);
 
         r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Switching from TURN (%s) to RELAY (%s)",cand->u.relayed.turn->label,cand->label,label);

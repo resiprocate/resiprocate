@@ -52,16 +52,18 @@ struct nr_ice_media_stream_ {
   char *pwd;    /* ICE password */
 
   int ice_state;
-#define NR_ICE_MEDIA_STREAM_CHECKS_FROZEN      1
-#define NR_ICE_MEDIA_STREAM_CHECKS_ACTIVE      2
-#define NR_ICE_MEDIA_STREAM_CHECKS_COMPLETED   3
-#define NR_ICE_MEDIA_STREAM_CHECKS_FAILED      4
+
+#define NR_ICE_MEDIA_STREAM_UNPAIRED           1
+#define NR_ICE_MEDIA_STREAM_CHECKS_FROZEN      2
+#define NR_ICE_MEDIA_STREAM_CHECKS_ACTIVE      3
+#define NR_ICE_MEDIA_STREAM_CHECKS_COMPLETED   4
+#define NR_ICE_MEDIA_STREAM_CHECKS_FAILED      5
 
   nr_ice_cand_pair_head check_list;
   void *timer;  /* Check list periodic timer */
 
 //  nr_ice_cand_pair_head valid_list;
-  
+
   STAILQ_ENTRY(nr_ice_media_stream_) entry;
 };
 
@@ -72,6 +74,7 @@ int nr_ice_media_stream_destroy(nr_ice_media_stream **streamp);
 int nr_ice_media_stream_finalize(nr_ice_media_stream *lstr,nr_ice_media_stream *rstr);
 int nr_ice_media_stream_initialize(struct nr_ice_ctx_ *ctx, nr_ice_media_stream *stream);
 int nr_ice_media_stream_get_attributes(nr_ice_media_stream *stream, char ***attrsp,int *attrctp);
+int nr_ice_media_stream_get_default_candidate(nr_ice_media_stream *stream, int component, nr_ice_candidate **candp);
 int nr_ice_media_stream_pair_candidates(nr_ice_peer_ctx *pctx,nr_ice_media_stream *lstream,nr_ice_media_stream *pstream);
 int nr_ice_media_stream_start_checks(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream);
 int nr_ice_media_stream_unfreeze_pairs(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream);

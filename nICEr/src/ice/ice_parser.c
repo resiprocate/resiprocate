@@ -42,6 +42,7 @@ static char *RCSSTRING __UNUSED__="$Id: ice_parser.c,v 1.2 2008/04/28 17:59:01 e
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <strings.h>
 #endif
 #include <string.h>
 #include <assert.h>
@@ -100,7 +101,7 @@ grab_token(char **str, char **out)
     if (!tmp)
         ABORT(R_NO_MEMORY);
 
-    strncpy(tmp, *str, len);
+    memcpy(tmp, *str, len);
     tmp[len] = '\0';
 
     *str = c;
@@ -132,7 +133,7 @@ nr_ice_peer_candidate_from_attribute(nr_ice_ctx *ctx,char *orig,nr_ice_media_str
 
     cand->ctx=ctx;
     cand->isock=0;
-    cand->state=NR_ICE_CAND_PEER_CANDIDATE;
+    cand->state=NR_ICE_CAND_PEER_CANDIDATE_UNPAIRED;
     cand->stream=stream;
     skip_whitespace(&str);
 
@@ -318,12 +319,20 @@ nr_ice_peer_candidate_from_attribute(nr_ice_ctx *ctx,char *orig,nr_ice_media_str
 
     skip_whitespace(&str);
 
-    assert(strlen(str) == 0);
+    /* Ignore extensions per RFC 5245 S 15.1 */
+#if 0
+    /* This used to be an assert, but we don't want to exit on invalid
+       remote data */
+    if (strlen(str) != 0) {
+      ABORT(R_BAD_DATA);
+    }
+#endif
 
     *candp=cand;
 
     _status=0;
   abort:
+    /* TODO(ekr@rtfm.com): Fix memory leak if we have a parse error */
     if (_status)
         r_log(LOG_ICE,LOG_WARNING,"ICE(%s): Error parsing attribute: %s",ctx->label,orig);
 
@@ -371,9 +380,12 @@ nr_ice_peer_ctx_parse_media_stream_attribute(nr_ice_peer_ctx *pctx, nr_ice_media
     }
 
     skip_whitespace(&str);
-    /* it's expected to be at EOD at this point */
 
-    assert(strlen(str) == 0);
+    /* RFC 5245 grammar doesn't have an extension point for ice-pwd or
+       ice-ufrag: if there's anything left on the line, we treat it as bad. */
+    if (str[0] != '\0') {
+      ABORT(R_BAD_DATA);
+    }
 
     _status=0;
   abort:
@@ -397,7 +409,7 @@ nr_ice_peer_ctx_parse_global_attributes(nr_ice_peer_ctx *pctx, char **attrs, int
     unsigned int port;
     in_addr_t addr;
     char *ice_option_tag = 0;
-    
+
     for(i=0;i<attr_ct;i++){
         orig = str = attrs[i];
 
@@ -511,9 +523,13 @@ nr_ice_peer_ctx_parse_global_attributes(nr_ice_peer_ctx *pctx, char **attrs, int
         }
 
         skip_whitespace(&str);
-        /* it's expected to be at EOD at this point */
 
-        assert(strlen(str) == 0);
+      /* RFC 5245 grammar doesn't have an extension point for any of the
+         preceding attributes: if there's anything left on the line, we
+         treat it as bad data. */
+      if (str[0] != '\0') {
+        ABORT(R_BAD_DATA);
+      }
     }
 
     _status=0;

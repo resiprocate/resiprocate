@@ -50,6 +50,8 @@ static char *RCSSTRING __UNUSED__="$Id: stun_proc.c,v 1.2 2008/04/28 18:21:30 ek
 #include "stun_reg.h"
 #include "registry.h"
 
+static int
+nr_stun_add_realm_and_nonce(int new_nonce, nr_stun_server_client *clnt, nr_stun_message *res);
 
 /* draft-ietf-behave-rfc3489bis-10.txt S 7.3 */
 int
@@ -378,7 +380,7 @@ nr_stun_receive_response_short_term_auth(nr_stun_message *res)
      return _status;
 }
 
-int
+static int
 nr_stun_add_realm_and_nonce(int new_nonce, nr_stun_server_client *clnt, nr_stun_message *res)
 {
     int r,_status;

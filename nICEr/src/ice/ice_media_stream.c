@@ -42,7 +42,7 @@ static char *RCSSTRING __UNUSED__="$Id: ice_media_stream.c,v 1.2 2008/04/28 17:5
 #include "ice_ctx.h"
 
 static char *nr_ice_media_stream_states[]={"INVALID",
-  "FROZEN","ACTIVE","COMPLETED","FAILED"
+  "UNPAIRED","FROZEN","ACTIVE","COMPLETED","FAILED"
 };
 
 int nr_ice_media_stream_set_state(nr_ice_media_stream *str, int state);
@@ -73,7 +73,7 @@ int nr_ice_media_stream_create(nr_ice_ctx *ctx,char *label,int components, nr_ic
     TAILQ_INIT(&stream->check_list);
 
     stream->component_ct=components;
-    
+    stream->ice_state = NR_ICE_MEDIA_STREAM_UNPAIRED;
     *streamp=stream;
 
     _status=0;
@@ -81,7 +81,7 @@ int nr_ice_media_stream_create(nr_ice_ctx *ctx,char *label,int components, nr_ic
     if(_status){
       nr_ice_media_stream_destroy(&stream);
     }
-    return(_status);            
+    return(_status);
   }
 
 int nr_ice_media_stream_destroy(nr_ice_media_stream **streamp)
@@ -207,6 +207,60 @@ int nr_ice_media_stream_get_attributes(nr_ice_media_stream *stream, char ***attr
     return(_status);
   }
 
+
+/* Get a default candidate per 4.1.4 */
+int nr_ice_media_stream_get_default_candidate(nr_ice_media_stream *stream, int component, nr_ice_candidate **candp)
+  {
+    int _status;
+    nr_ice_component *comp;
+    nr_ice_candidate *cand;
+    nr_ice_candidate *best_cand = NULL;
+
+    comp=STAILQ_FIRST(&stream->components);
+    while(comp){
+      if (comp->component_id == component)
+        break;
+      
+      comp=STAILQ_NEXT(comp,entry);
+    }
+    
+    if (!comp)
+      ABORT(R_NOT_FOUND);
+
+    /* We have the component. Now find the "best" candidate, making 
+       use of the fact that more "reliable" candidate types have
+       higher numbers. So, we sort by type and then priority within
+       type
+    */
+    cand=TAILQ_FIRST(&comp->candidates);
+    while(cand){
+      if (!best_cand) {
+        best_cand = cand;
+      }
+      else {
+        if (best_cand->type < cand->type) {
+          best_cand = cand;
+        } else if (best_cand->type == cand->type) { 
+          if (best_cand->priority < cand->priority)
+            best_cand = cand;
+        }
+      }
+
+      cand=TAILQ_NEXT(cand,entry_comp);
+    }
+    
+    /* No candidates */
+    if (!best_cand)
+      ABORT(R_NOT_FOUND);
+
+    *candp = best_cand;
+
+    _status=0;
+  abort:
+    return(_status);
+  }
+
+
 int nr_ice_media_stream_pair_candidates(nr_ice_peer_ctx *pctx,nr_ice_media_stream *lstream,nr_ice_media_stream *pstream)
   {
     int r,_status;
@@ -217,10 +271,15 @@ int nr_ice_media_stream_pair_candidates(nr_ice_peer_ctx *pctx,nr_ice_media_strea
     while(pcomp){
       if(r=nr_ice_component_pair_candidates(pctx,lcomp,pcomp))
         ABORT(r);
-      
+
       lcomp=STAILQ_NEXT(lcomp,entry);
       pcomp=STAILQ_NEXT(pcomp,entry);
     };
+
+    if (pstream->ice_state == NR_ICE_MEDIA_STREAM_UNPAIRED) {
+      r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s): unfreezing stream %s",pstream->pctx->label,pstream->label);
+      pstream->ice_state = NR_ICE_MEDIA_STREAM_CHECKS_FROZEN;
+    }
 
     _status=0;
   abort:
@@ -229,7 +288,7 @@ int nr_ice_media_stream_pair_candidates(nr_ice_peer_ctx *pctx,nr_ice_media_strea
 
 /* S 5.8 -- run the highest priority WAITING pair or if not available
    FROZEN pair */
-static void nr_ice_media_stream_check_timer_cb(int s, int h, void *cb_arg)
+static void nr_ice_media_stream_check_timer_cb(NR_SOCKET s, int h, void *cb_arg)
   {
     int r,_status;
     nr_ice_media_stream *stream=cb_arg;
@@ -240,11 +299,13 @@ static void nr_ice_media_stream_check_timer_cb(int s, int h, void *cb_arg)
 
     timer_val=stream->pctx->ctx->Ta*stream->pctx->active_streams;
 
+    if (stream->ice_state == NR_ICE_MEDIA_STREAM_CHECKS_COMPLETED) {
+      r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s): bogus state for stream %s",stream->pctx->label,stream->label);
+    }
     assert(stream->ice_state != NR_ICE_MEDIA_STREAM_CHECKS_COMPLETED);
     
     r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s): check timer expired for media stream %s",stream->pctx->label,stream->label);
     stream->timer=0;
-
 
     /* Find the highest priority WAITING check and move it to RUNNING */
     pair=TAILQ_FIRST(&stream->check_list);
@@ -257,7 +318,7 @@ static void nr_ice_media_stream_check_timer_cb(int s, int h, void *cb_arg)
     /* Hmmm... No WAITING. Let's look for FROZEN */
     if(!pair){
       pair=TAILQ_FIRST(&stream->check_list);
-      
+
       while(pair){
         if(pair->state==NR_ICE_PAIR_STATE_FROZEN){
           if(r=nr_ice_candidate_pair_unfreeze(stream->pctx,pair))
@@ -272,6 +333,8 @@ static void nr_ice_media_stream_check_timer_cb(int s, int h, void *cb_arg)
       nr_ice_candidate_pair_start(pair->pctx,pair); /* Ignore failures */
       NR_ASYNC_TIMER_SET(timer_val,nr_ice_media_stream_check_timer_cb,cb_arg,&stream->timer);
     }
+    /* TODO(ekr@rtfm.com): Report on the special case where there are no checks to
+       run at all */
     _status=0;
   abort:
     return;
@@ -483,7 +546,9 @@ int nr_ice_media_stream_component_nominated(nr_ice_media_stream *stream,nr_ice_c
       stream->timer=0;
     }
 
-    stream->pctx->handler->vtbl->stream_ready(stream->pctx->handler->obj,stream->local_stream);
+    if (stream->pctx->handler) {
+      stream->pctx->handler->vtbl->stream_ready(stream->pctx->handler->obj,stream->local_stream);
+    }
 
     /* Now tell the peer_ctx that we're done */
     if(r=nr_ice_peer_ctx_stream_done(stream->pctx,stream))
@@ -522,7 +587,9 @@ int nr_ice_media_stream_component_failed(nr_ice_media_stream *stream,nr_ice_comp
       stream->timer=0;
     }
 
-    stream->pctx->handler->vtbl->stream_failed(stream->pctx->handler->obj,stream->local_stream);
+    if (stream->pctx->handler) {
+      stream->pctx->handler->vtbl->stream_failed(stream->pctx->handler->obj,stream->local_stream);
+    }
 
     /* Now tell the peer_ctx that we're done */
     if(r=nr_ice_peer_ctx_stream_done(stream->pctx,stream))

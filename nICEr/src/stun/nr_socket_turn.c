@@ -253,8 +253,10 @@ static int nr_socket_turn_getaddr(void *obj, nr_transport_addr *addrp)
 
 static int nr_socket_turn_close(void *obj)
   {
+#ifndef NDEBUG
     nr_socket_turn *sturn=obj;
     assert(sturn->magic_cookie == nr_socket_turn_magic_cookie);
+#endif
 
     return 0;
   }

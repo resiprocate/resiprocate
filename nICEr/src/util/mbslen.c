@@ -63,7 +63,7 @@ mbslen(const char *s, size_t *ncharsp)
     unsigned int i;
 #endif  /* WIN32 */
     int _status;
-    int nbytes;
+    size_t nbytes;
     int nchars;
     mbstate_t mbs;
 
@@ -109,11 +109,14 @@ mbslen(const char *s, size_t *ncharsp)
     while (*s != '\0' && (nbytes = mbrlen(s, strlen(s), &mbs)) != 0)
 #endif /* DARWIN */
     {
-        assert(nbytes >= 0);
-        if (nbytes == (size_t)-1)   /* should never happen */
+        if (nbytes == (size_t)-1)   /* should never happen */ {
+	    assert(0);
             ABORT(R_INTERNAL);
-        if (nbytes == (size_t)-2)   /* encoding error */
+	}
+        if (nbytes == (size_t)-2)   /* encoding error */ {
+	    assert(0);
             ABORT(R_BAD_DATA);
+	}
  
         s += nbytes;
         ++nchars;
