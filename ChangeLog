@@ -1,6 +1,8 @@
 = Release Notes v 1.8 =
 
 ==1.8.6 Changes==
+*rutil: fix for crash in DNS code (when DnsStub destructor calls setPollGrp(0))
+*stack: some memory leaks reported by Shypytiak Taras - some at stack destruction time
 *stack: fix to Fifo to avoid calling AsyncProcessHandler in addMultiple if adding a list of 0 messages - was causing high CPU on process loops
 *stack: change to ProducerFifoBuffer to avoid calling mFifo.addMultiple if mBuffer is empty on flush()
 *stack: fixed a bug where there is a failure to parse if the Request-Uri contains an ExistsOrData parameter at the end.  For example the following request-URI failed to parse properly (due to the ;gr parameter):  

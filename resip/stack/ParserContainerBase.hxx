@@ -58,7 +58,7 @@ class ParserContainerBase
       /**
         @brief clear the mParsers vector
         */
-      inline void clear() {mParsers.clear();}
+      inline void clear() {freeParsers(); mParsers.clear();}
 
       /**
         @brief pure virtual function to be implemented in derived classes 
