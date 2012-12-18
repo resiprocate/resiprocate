@@ -56,8 +56,12 @@ class AresDnsPollItem : public FdPollItemBase
    void resetPollGrp(FdPollGrp *grp)
    {
       mPollGrp->delPollItem(mPollHandle);
+      mPollHandle = 0;
       mPollGrp = grp;
-      mPollHandle = mPollGrp->addPollItem(mFd, FPEM_Read, this);
+      if(mPollGrp)
+      {
+         mPollHandle = mPollGrp->addPollItem(mFd, FPEM_Read, this);
+      }
    }
 
    AresDns&	mAres;
