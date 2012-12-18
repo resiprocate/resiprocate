@@ -136,10 +136,10 @@ AmIResponsible::process(RequestContext& context)
             }
          }
          
-         std::auto_ptr<Target> target(new Target(request.header(h_RequestLine).uri()));
+         std::auto_ptr<Target> target(new Target(uri));
          context.getResponseContext().addTarget(target);
 
-         InfoLog (<< "Sending to requri: " << request.header(h_RequestLine).uri());
+         InfoLog (<< "Sending to requri: " << uri);
          // skip the rest of the monkeys
          return Processor::SkipThisChain;	
       }
