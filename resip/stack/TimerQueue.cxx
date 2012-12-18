@@ -31,6 +31,15 @@ DtlsTimerQueue::DtlsTimerQueue( Fifo<DtlsMessage>& fifo )
 {
 }
 
+DtlsTimerQueue::~DtlsTimerQueue()
+{
+   while(!mTimers.empty())
+   {
+      delete mTimers.top().getMessage();
+      mTimers.pop();
+   }
+}
+
 #endif
 
 UInt64
@@ -53,6 +62,15 @@ DtlsTimerQueue::add( SSL *ssl, unsigned long msOffset )
 }
 
 #endif
+
+BaseTimeLimitTimerQueue::~BaseTimeLimitTimerQueue()
+{
+   while(!mTimers.empty())
+   {
+      delete mTimers.top().getMessage();
+      mTimers.pop();
+   }
+}
 
 UInt64
 BaseTimeLimitTimerQueue::add(unsigned int timeMs,Message* payload)
@@ -89,6 +107,15 @@ TimeLimitTimerQueue::addToFifo(Message*msg, TimeLimitFifo<Message>::DepthUsage d
 
 TuSelectorTimerQueue::TuSelectorTimerQueue(TuSelector& sel) : mFifoSelector(sel)
 {}
+
+TuSelectorTimerQueue::~TuSelectorTimerQueue()
+{
+   while(!mTimers.empty())
+   {
+      delete mTimers.top().getMessage();
+      mTimers.pop();
+   }
+}
 
 UInt64
 TuSelectorTimerQueue::add(unsigned int timeMs,Message* payload)

@@ -31,7 +31,6 @@ class TuSelector;
   * When using this in the main loop, call process() on this.
   * During Transaction processing, TimerMessages and SIP messages are generated.
   * 
-  * @todo !dcm! - refactor, templatize
     @todo .dlb. timer wheel for transaction-bound timers and a heap for 
       everything longer.
   */
@@ -42,8 +41,6 @@ class TimerQueue
       // This is the logic that runs when a timer goes off. This is the only
       // thing subclasses must implement.
       virtual void processTimer(const T& timer)=0;
-
-
 
       /// @brief deletes the message associated with the timer as well.
       virtual ~TimerQueue()
@@ -56,11 +53,11 @@ class TimerQueue
          }
       }
 
-	  /// @brief provides the time in milliseconds before the next timer will fire
+      /// @brief provides the time in milliseconds before the next timer will fire
       ///  @retval milliseconds time until the next timer will fire
-	  ///  @retval 0 implies that timers occur in the past
-	  /// @retval INT_MAX implies that there are no timers
-	  ///
+      ///  @retval 0 implies that timers occur in the past
+      /// @retval INT_MAX implies that there are no timers
+      ///
       unsigned int msTillNextTimer()
       {
          if (!mTimers.empty())
@@ -116,11 +113,11 @@ class TimerQueue
       {
          return (int)mTimers.size();
       }
+
       bool empty() const
       {
          return mTimers.empty();
       }
-
 
       std::ostream& encode(std::ostream& str) const
       {
@@ -161,6 +158,7 @@ class TimerQueue
 class BaseTimeLimitTimerQueue : public TimerQueue<TimerWithPayload>
 {
    public:
+      ~BaseTimeLimitTimerQueue();
       UInt64 add(unsigned int timeMs,Message* payload);
       virtual void processTimer(const TimerWithPayload& timer);
    protected:
@@ -189,6 +187,7 @@ class TuSelectorTimerQueue : public TimerQueue<TimerWithPayload>
 {
    public:
       TuSelectorTimerQueue(TuSelector& sel);
+      ~TuSelectorTimerQueue();
       UInt64 add(unsigned int timeMs,Message* payload);
       virtual void processTimer(const TimerWithPayload& timer);
    private:
@@ -219,8 +218,9 @@ class TransactionTimerQueue : public TimerQueue<TransactionTimer>
 class DtlsTimerQueue : public TimerQueue<TimerWithPayload>
 {
    public:
-      DtlsTimerQueue( Fifo<DtlsMessage>& fifo ) ;
-      UInt64 add( SSL *, unsigned long msOffset ) ;
+      DtlsTimerQueue(Fifo<DtlsMessage>& fifo);
+      ~DtlsTimerQueue();
+      UInt64 add(SSL *, unsigned long msOffset);
       virtual void processTimer(const TimerWithPayload& timer) ;
       
    private:
