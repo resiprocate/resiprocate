@@ -26,14 +26,20 @@ FdPollItemIf::~FdPollItemIf()
 }
 
 FdPollItemBase::FdPollItemBase(FdPollGrp *grp, Socket fd, FdPollEventMask mask) :
-  mPollGrp(grp), mPollSocket(fd)
+  mPollGrp(grp), mPollSocket(fd), mPollHandle(0)
 {
-    mPollHandle = mPollGrp->addPollItem(fd, mask, this);
+   if(mPollGrp)
+   {
+      mPollHandle = mPollGrp->addPollItem(fd, mask, this);
+   }
 }
 
 FdPollItemBase::~FdPollItemBase()
 {
-    mPollGrp->delPollItem(mPollHandle);
+   if(mPollGrp)
+   {
+      mPollGrp->delPollItem(mPollHandle);
+   }
 }
 
 /*****************************************************************
@@ -222,12 +228,9 @@ FdPollImplFdSet::addPollItem(Socket fd, FdPollEventMask newMask, FdPollItemIf *i
    info.mNextIdx = mLiveHeadIdx;
    mLiveHeadIdx = useIdx;
 
-   if ( info.mEvMask & FPEM_Read )
-      mSelectSet.setRead(info.mSocketFd);
-   if ( info.mEvMask & FPEM_Write )
-      mSelectSet.setWrite(info.mSocketFd);
-   if ( info.mEvMask & FPEM_Error )
-      mSelectSet.setExcept(info.mSocketFd);
+   if(info.mEvMask & FPEM_Read)  mSelectSet.setRead(info.mSocketFd);
+   if(info.mEvMask & FPEM_Write) mSelectSet.setWrite(info.mSocketFd);
+   if(info.mEvMask & FPEM_Error) mSelectSet.setExcept(info.mSocketFd);
 
    return IMPL_FDSET_IdxToHandle(useIdx);
 }
@@ -242,18 +245,20 @@ FdPollImplFdSet::modPollItem(const FdPollItemHandle handle, FdPollEventMask newM
    assert(info.mItemObj);
    info.mEvMask = newMask;
 
-   killCache(info.mSocketFd);
-   if ( info.mEvMask & FPEM_Read )
-      mSelectSet.setRead(info.mSocketFd);
-   if ( info.mEvMask & FPEM_Write )
-      mSelectSet.setWrite(info.mSocketFd);
-   if ( info.mEvMask & FPEM_Error )
-      mSelectSet.setExcept(info.mSocketFd);
+   if(info.mSocketFd != INVALID_SOCKET && info.mSocketFd)
+   {
+      killCache(info.mSocketFd);
+      if(info.mEvMask & FPEM_Read)  mSelectSet.setRead(info.mSocketFd);
+      if(info.mEvMask & FPEM_Write) mSelectSet.setWrite(info.mSocketFd);
+      if(info.mEvMask & FPEM_Error) mSelectSet.setExcept(info.mSocketFd);
+   }
 }
 
 void
 FdPollImplFdSet::delPollItem(FdPollItemHandle handle)
 {
+   if(!handle) return;
+
    int useIdx = IMPL_FDSET_HandleToIdx(handle);
    //DebugLog(<<"deleting epoll item fd="<<fd);
    assert(useIdx>=0 && ((unsigned)useIdx) < mItems.size());
@@ -316,7 +321,6 @@ FdPollImplFdSet::killCache(Socket fd)
 {
    mSelectSet.clear(fd);
 }
-
 
 bool
 FdPollImplFdSet::waitAndProcess(int ms)
@@ -381,12 +385,9 @@ FdPollImplFdSet::buildFdSet(FdSet& fdset)
       if ( info.mEvMask!=0 )
       {
          assert(info.mSocketFd!=INVALID_SOCKET);
-         if ( info.mEvMask & FPEM_Read )
-            fdset.setRead(info.mSocketFd);
-         if ( info.mEvMask & FPEM_Write )
-            fdset.setWrite(info.mSocketFd);
-         if ( info.mEvMask & FPEM_Error )
-            fdset.setExcept(info.mSocketFd);
+         if(info.mEvMask & FPEM_Read)  fdset.setRead(info.mSocketFd);
+         if(info.mEvMask & FPEM_Write) fdset.setWrite(info.mSocketFd);
+         if(info.mEvMask & FPEM_Error) fdset.setExcept(info.mSocketFd);
       }
       prevIdxRef = &info.mNextIdx;
    }
@@ -428,12 +429,9 @@ FdPollImplFdSet::processFdSet(FdSet& fdset)
       {
          FdPollEventMask usrMask = 0;
          assert(info.mSocketFd!=INVALID_SOCKET);
-         if ( fdset.readyToRead(info.mSocketFd) )
-            usrMask |= FPEM_Read;
-         if ( fdset.readyToWrite(info.mSocketFd) )
-            usrMask |= FPEM_Write;
-         if ( fdset.hasException(info.mSocketFd) )
-            usrMask |= FPEM_Error;
+         if(fdset.readyToRead(info.mSocketFd))  usrMask |= FPEM_Read;
+         if(fdset.readyToWrite(info.mSocketFd)) usrMask |= FPEM_Write;
+         if(fdset.hasException(info.mSocketFd)) usrMask |= FPEM_Error;
 
          // items's mask may have changed since select occured, so mask it again
          usrMask &= info.mEvMask;
@@ -477,8 +475,6 @@ FdPollImplFdSet::processFdSet(FdSet& fdset)
 
 namespace resip
 {
-
-
 
 class FdPollImplEpoll : public FdPollGrp
 {
@@ -563,12 +559,9 @@ static inline unsigned short
 CvtSysToUsrMask(unsigned long sysMask)
 {
    unsigned usrMask = 0;
-   if ( sysMask & EPOLLIN )
-       usrMask |= FPEM_Read;
-   if ( sysMask & EPOLLOUT )
-       usrMask |= FPEM_Write;
-   if ( sysMask & EPOLLERR )
-       usrMask |= FPEM_Error|FPEM_Read|FPEM_Write;
+   if(sysMask & EPOLLIN)  usrMask |= FPEM_Read;
+   if(sysMask & EPOLLOUT) usrMask |= FPEM_Write;
+   if(sysMask & EPOLLERR) usrMask |= FPEM_Error|FPEM_Read|FPEM_Write;
    // NOTE: above, fake read and write if error to encourage
    // apps to actually do something about it
    return usrMask;
@@ -578,12 +571,9 @@ static inline unsigned long
 CvtUsrToSysMask(unsigned short usrMask)
 {
    unsigned long sysMask = 0;
-   if ( usrMask & FPEM_Read )
-       sysMask |= EPOLLIN;
-   if ( usrMask & FPEM_Write )
-       sysMask |= EPOLLOUT;
-   if ( usrMask & FPEM_Edge )
-       sysMask |= EPOLLET;
+   if(usrMask & FPEM_Read)  sysMask |= EPOLLIN;
+   if(usrMask & FPEM_Write) sysMask |= EPOLLOUT;
+   if(usrMask & FPEM_Edge)  sysMask |= EPOLLET;
    return sysMask;
 }
 
