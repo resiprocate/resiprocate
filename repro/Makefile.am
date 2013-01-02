@@ -3,7 +3,7 @@
 EXTRA_DIST = *.html
 EXTRA_DIST += doc
 EXTRA_DIST += Doxyfile
-EXTRA_DIST += etc
+#EXTRA_DIST += etc
 EXTRA_DIST += php
 EXTRA_DIST += README_MySQL.txt
 EXTRA_DIST += repro_10_0.vcxproj repro_10_0.vcxproj.filters
@@ -200,7 +200,7 @@ ReproVersion.cxx: reproInfo.hxx
 dist_man_MANS = doc/repro.8
 dist_man_MANS += doc/reprocmd.8
 
-sysconf_DATA = etc/repro.conf
+#sysconf_DATA = etc/repro.conf
 
 ##############################################################################
 # 
