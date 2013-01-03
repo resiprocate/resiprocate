@@ -193,33 +193,33 @@ fi
 %defattr(644,root,root,755)
 %config(noreplace) /etc/repro.conf
 %{_libdir}/librepro*.so
-%{_sbindir}/repro
-%{_sbindir}/reprocmd
+%attr(755,-,-) %{_sbindir}/repro
+%attr(755,-,-) %{_sbindir}/reprocmd
 %{_mandir}/man8/repro*.8.gz
 
 %files turn-server
 %defattr(644,root,root,755)
-%{_sbindir}/reTurnServer
+%attr(755,-,-) %{_sbindir}/reTurnServer
 %{_libdir}/libreTurnClient*.so
 %{_mandir}/man8/reTurnServer.8.gz
 
 %files sipdialer
 %defattr(644,root,root,755)
 %{_libdir}/libsipdial*.so
-%{_bindir}/sipdialer
+%attr(755,-,-) %{_bindir}/sipdialer
 %{_mandir}/man1/sipdialer.1.gz
 
 %files clicktocall
 %defattr(644,root,root,755)
-%{_sbindir}/clicktocall
+%attr(755,-,-) %{_sbindir}/clicktocall
 
 %files b2bua
 %defattr(644,root,root,755)
-%{_bindir}/basicB2BUA
+%attr(755,-,-) %{_bindir}/basicB2BUA
 
 %files presence-server
 %defattr(644,root,root,755)
-%{_sbindir}/presSvr
+%attr(755,-,-) %{_sbindir}/presSvr
 
 %changelog
 * Sat Nov 24 2012 Daniel Pocock <daniel@pocock.com.au> -- Produce multiple packages for stack/libs, daemons, sipdialer
