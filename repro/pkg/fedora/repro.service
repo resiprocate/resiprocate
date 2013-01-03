@@ -1,0 +1,12 @@
+[Unit]
+Description=reSIProcate repro SIP proxy daemon
+After=syslog.target
+After=network.target
+
+[Service]
+Type=forking
+PIDFile=/var/run/repro.pid
+ExecStart=/usr/sbin/repro /etc/repro/repro.config --Daemonize=true --LoggingType=syslog --PidFile=/var/run/repro.pid
+
+[Install]
+WantedBy=multi-user.target
