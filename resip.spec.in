@@ -8,10 +8,20 @@ Vendor: resiprocate.org
 Packager: Daniel Pocock <daniel@pocock.com.au>
 Url: http://www.resiprocate.org
 Source: %name-%version.tar.gz
-BuildRequires: openssl-devel >= 0.9.7
-BuildRequires: popt
+BuildRequires: libtools automake autoconf
+BuildRequires: asio-devel
 BuildRequires: boost-devel
-Requires: openssl >= 0.9.7
+BuildRequires: c-ares-devel
+BuildRequires: cppunit-devel
+BuildRequires: gperf
+BuildRequires: libdb-cxx-devel
+BuildRequires: openssl-devel >= 0.9.8
+BuildRequires: mysql-devel
+BuildRequires: pcre-devel
+BuildRequires: perl
+BuildRequires: popt-devel
+BuildRequires: radiusclient-ng-devel
+Requires: openssl >= 0.9.8
 Requires: chkconfig
 Prefix: %_prefix
 BuildRoot: %{_tmppath}/%name-%version-root
