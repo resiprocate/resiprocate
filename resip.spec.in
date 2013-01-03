@@ -136,7 +136,10 @@ make
 %install
 make DESTDIR=%buildroot install
 install -p -D -m644 repro/pkg/fedora/repro.service $RPM_BUILD_ROOT%{_unitdir}/repro.service
+install -p -D -m644 reTurn/pkg/fedora/resiprocate-turn-server.service $RPM_BUILD_ROOT%{_unitdir}/resiprocate-turn-server.service
 install -p -D -m644 repro/repro.config $RPM_BUILD_ROOT/etc/repro/repro.config
+install -p -D -m644 reTurn/reTurnServer.config $RPM_BUILD_ROOT/etc/reTurnServer.config
+
 
 %clean
 [ ${RPM_BUILD_ROOT} != "/" ] && rm -rf ${RPM_BUILD_ROOT}
@@ -151,7 +154,10 @@ if [ $1 -eq 1 ] ; then
 fi
 
 %post turn-server
-/sbin/chkconfig --add resiprocate-turn-server
+if [ $1 -eq 1 ] ; then
+    # Initial installation
+    /bin/systemctl enable resiprocate-turn-server.service >/dev/null 2>&1 || :
+fi
 
 %preun repro
 if [ "$1" = 0 ]
@@ -164,8 +170,9 @@ fi
 %preun turn-server
 if [ "$1" = 0 ]
 then
-   /etc/init.d/resiprocate-turn-server stop
-   /sbin/chkconfig --del resiprocate-turn-server
+   # Package removal, not upgrade
+   /bin/systemctl --no-reload disable resiprocate-turn-server.service > /dev/null 2>&1 || :
+   /bin/systemctl stop resiprocate-turn-server.service > /dev/null 2>&1 || :
 fi
 
 %postun -n libresiprocate-1_8 -p /sbin/ldconfig
@@ -175,6 +182,13 @@ fi
 if [ $1 -ge 1 ] ; then
     # Package upgrade, not uninstall
     /bin/systemctl try-restart repro.service >/dev/null 2>&1 || :
+fi
+
+%postun turn-server
+/bin/systemctl daemon-reload >/dev/null 2>&1 || :
+if [ $1 -ge 1 ] ; then
+    # Package upgrade, not uninstall
+    /bin/systemctl try-restart resiprocate-turn-server.service >/dev/null 2>&1 || :
 fi
 
 %files -n libresiprocate-1_8
@@ -212,6 +226,8 @@ fi
 
 %files turn-server
 %defattr(644,root,root,755)
+%config(noreplace) /etc/reTurnServer.config
+%{_unitdir}/resiprocate-turn-server.service
 %attr(755,-,-) %{_sbindir}/reTurnServer
 %{_libdir}/libreTurnClient*.so
 %{_mandir}/man8/reTurnServer.8.gz

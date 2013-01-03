@@ -1,0 +1,12 @@
+[Unit]
+Description=reSIProcate reTurn ICE/STUN/TURN server daemon
+After=syslog.target
+After=network.target
+
+[Service]
+Type=forking
+PIDFile=/var/run/reTurnServer.pid
+ExecStart=/usr/sbin/reTurnServer /etc/reTurnServer.config --Daemonize=true --LoggingType=syslog --PidFile=/var/run/reTurnServer.pid
+
+[Install]
+WantedBy=multi-user.target
