@@ -8,19 +8,20 @@ Vendor: resiprocate.org
 Packager: Daniel Pocock <daniel@pocock.com.au>
 Url: http://www.resiprocate.org
 Source: %name-%version.tar.gz
-BuildRequires: libtools automake autoconf
+BuildRequires: libtool automake autoconf
 BuildRequires: asio-devel
 BuildRequires: boost-devel
 BuildRequires: c-ares-devel
 BuildRequires: cppunit-devel
 BuildRequires: gperf
-BuildRequires: libdb-cxx-devel
+BuildRequires: db4-devel
 BuildRequires: openssl-devel >= 0.9.8
 BuildRequires: mysql-devel
 BuildRequires: pcre-devel
 BuildRequires: perl
 BuildRequires: popt-devel
 BuildRequires: radiusclient-ng-devel
+BuildRequires: xerces-c-devel
 Requires: openssl >= 0.9.8
 Requires: chkconfig
 Prefix: %_prefix
@@ -95,11 +96,41 @@ reSIProcate is a framework that aims to fully implement the SIP protocol
 in first class C++.  It is intended for use in other applications,
 such as the repro SIP proxy.
 
+%package b2bua
+Summary: basic SIP B2BUA
+Group: Productivity/Telephony/SIP/Servers
+
+%description b2bua
+Provides a simple SIP B2BUA configured from a static XML file.
+reSIProcate is a framework that aims to fully implement the SIP protocol
+in first class C++.  It is intended for use in other applications,
+such as the repro SIP proxy.
+
+%package clicktocall
+Summary: click-to-call server process
+Group: Productivity/Telephony/SIP/Servers
+
+%description clicktocall
+Provides a simple SIP click-to-call service.
+reSIProcate is a framework that aims to fully implement the SIP protocol
+in first class C++.  It is intended for use in other applications,
+such as the repro SIP proxy.
+
+%package presence-server
+Summary: basic SIP presence server
+Group: Productivity/Telephony/SIP/Servers
+
+%description presence-server
+Provides a simple SIP presence server.
+reSIProcate is a framework that aims to fully implement the SIP protocol
+in first class C++.  It is intended for use in other applications,
+such as the repro SIP proxy.
+
 %prep
 %setup -q
 
 %build
-%configure --with-c-ares --with-ssl --with-mysql --with-radius --with-b2bua --with-apps --enable-ipv6
+%configure LDFLAGS=-L%{_libdir}/mysql --with-c-ares --with-ssl --with-mysql --with-radius --with-b2bua --with-apps --enable-ipv6
 make
 
 %install
@@ -136,40 +167,61 @@ fi
 
 %files -n libresiprocate-1_8
 %defattr(644,root,root,755)
-%{_libdir}/librutil.so
-%{_libdir}/libresip.so
-%{_libdir}/libdum.so
+%{_libdir}/librutil*.so
+%{_libdir}/libresip*.so
+%{_libdir}/libdum*.so
+%{_libdir}/libb2bua*.so
 
 %files 1_8-devel
 %defattr(644,root,root,755)
 %{_includedir}/rutil/*.hxx
-%{_includedir}/rutil/dns/*.hxx
-%{_includedir}/rutil/stun/*.hxx
+%{_includedir}/rutil/*/*.hxx
 %{_includedir}/resip/stack/*.hxx
-%{_includedir}/resip/stack/config.hxx.in
+%{_includedir}/resip/stack/ssl/*.hxx
 %{_includedir}/resip/dum/*.hxx
-#%{_libdir}/librutil.a
-#%{_libdir}/libresip.a
-%{_libdir}/libares.a
-#%{_mandir}/man3/ares*gz
-/usr/man/man3/ares*.gz
+%{_includedir}/resip/dum/ssl/*.hxx
+%{_includedir}/repro/*.hxx
+%{_includedir}/repro/*/*.hxx
+%{_includedir}/b2bua/*.hxx
+%{_includedir}/clicktocall/*.hxx
+%{_includedir}/reTurnClient/*.hxx
+%{_includedir}/sipdial/*.hxx
+%{_libdir}/lib*.a
+%{_libdir}/lib*.la
 
 %files repro
 %defattr(644,root,root,755)
-%{_libdir}/librepro.so
+%config(noreplace) /etc/repro.conf
+%{_libdir}/librepro*.so
 %{_sbindir}/repro
 %{_sbindir}/reprocmd
+%{_mandir}/man8/repro*.8.gz
 
 %files turn-server
 %defattr(644,root,root,755)
 %{_sbindir}/reTurnServer
+%{_libdir}/libreTurnClient*.so
+%{_mandir}/man8/reTurnServer.8.gz
 
 %files sipdialer
 %defattr(644,root,root,755)
-%{_libdir}/libsipdial.so
+%{_libdir}/libsipdial*.so
 %{_bindir}/sipdialer
+%{_mandir}/man1/sipdialer.1.gz
+
+%files clicktocall
+%defattr(644,root,root,755)
+%{_sbindir}/clicktocall
+
+%files b2bua
+%defattr(644,root,root,755)
+%{_bindir}/basicB2BUA
+
+%files presence-server
+%defattr(644,root,root,755)
+%{_sbindir}/presSvr
 
 %changelog
-* Sat, 24 Nov 2012 11:44:33 +0100 Daniel Pocock <daniel@pocock.com.au> -- Produce multiple packages for stack/libs, daemons, sipdialer
+* Sat Nov 24 2012 Daniel Pocock <daniel@pocock.com.au> -- Produce multiple packages for stack/libs, daemons, sipdialer
 * Sun Aug  7 2011 Daniel Pocock <daniel@pocock.com.au> -- Initial build based on autotools
 
