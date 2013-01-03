@@ -135,6 +135,8 @@ make
 
 %install
 make DESTDIR=%buildroot install
+install -p -D -m644 repro/pkg/fedora/repro.service $RPM_BUILD_ROOT%{_unitdir}/repro.service
+install -p -D -m644 repro/repro.config $RPM_BUILD_ROOT/etc/repro/repro.config
 
 %clean
 [ ${RPM_BUILD_ROOT} != "/" ] && rm -rf ${RPM_BUILD_ROOT}
@@ -143,7 +145,10 @@ make DESTDIR=%buildroot install
 
 %post repro
 /sbin/ldconfig
-/sbin/chkconfig --add repro
+if [ $1 -eq 1 ] ; then 
+    # Initial installation
+    /bin/systemctl enable repro.service >/dev/null 2>&1 || :
+fi
 
 %post turn-server
 /sbin/chkconfig --add resiprocate-turn-server
@@ -151,8 +156,9 @@ make DESTDIR=%buildroot install
 %preun repro
 if [ "$1" = 0 ]
 then
-   /etc/init.d/repro stop
-   /sbin/chkconfig --del repro
+   # Package removal, not upgrade
+   /bin/systemctl --no-reload disable repro.service > /dev/null 2>&1 || :
+   /bin/systemctl stop repro.service > /dev/null 2>&1 || :
 fi
 
 %preun turn-server
@@ -163,7 +169,13 @@ then
 fi
 
 %postun -n libresiprocate-1_8 -p /sbin/ldconfig
-%postun repro -p /sbin/ldconfig
+%postun repro
+/sbin/ldconfig
+/bin/systemctl daemon-reload >/dev/null 2>&1 || :
+if [ $1 -ge 1 ] ; then
+    # Package upgrade, not uninstall
+    /bin/systemctl try-restart repro.service >/dev/null 2>&1 || :
+fi
 
 %files -n libresiprocate-1_8
 %defattr(644,root,root,755)
@@ -191,7 +203,8 @@ fi
 
 %files repro
 %defattr(644,root,root,755)
-%config(noreplace) /etc/repro.conf
+%config(noreplace) /etc/repro/repro.config
+%{_unitdir}/repro.service
 %{_libdir}/librepro*.so
 %attr(755,-,-) %{_sbindir}/repro
 %attr(755,-,-) %{_sbindir}/reprocmd
