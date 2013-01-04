@@ -4,11 +4,13 @@ After=syslog.target
 After=network.target
 
 [Service]
+User=repro
+Group=repro
 Type=forking
-ExecStartPre=mkdir -p /var/run/repro
-ExecStartPre=chown repro:repro /var/run/repro
-PIDFile=/var/run/repro/repro.pid
-ExecStart=/usr/sbin/repro /etc/repro/repro.config --Daemonize=true --LoggingType=syslog --PidFile=/var/run/repro/repro.pid
+ExecStartPre=/bin/mkdir -p /tmp/repro
+ExecStartPre=/bin/chown repro:repro /tmp/repro
+PIDFile=/tmp/repro/repro.pid
+ExecStart=/usr/sbin/repro /etc/repro/repro.config --Daemonize=true --LoggingType=syslog --PidFile=/tmp/repro/repro.pid
 
 [Install]
 WantedBy=multi-user.target
