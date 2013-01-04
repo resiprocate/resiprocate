@@ -5,8 +5,10 @@ After=network.target
 
 [Service]
 Type=forking
-PIDFile=/var/run/reTurnServer.pid
-ExecStart=/usr/sbin/reTurnServer /etc/reTurnServer.config --Daemonize=true --LoggingType=syslog --PidFile=/var/run/reTurnServer.pid
+ExecStartPre=mkdir -p /var/run/return
+ExecStartPre=chown return:return /var/run/return
+PIDFile=/var/run/return/reTurnServer.pid
+ExecStart=/usr/sbin/reTurnServer /etc/reTurnServer.config --Daemonize=true --LoggingType=syslog --PidFile=/var/run/return/reTurnServer.pid
 
 [Install]
 WantedBy=multi-user.target
