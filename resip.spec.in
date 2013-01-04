@@ -139,7 +139,11 @@ make
 make DESTDIR=%buildroot install
 install -p -D -m644 repro/pkg/fedora/repro.service $RPM_BUILD_ROOT%{_unitdir}/repro.service
 install -p -D -m644 reTurn/pkg/fedora/resiprocate-turn-server.service $RPM_BUILD_ROOT%{_unitdir}/resiprocate-turn-server.service
-install -p -D -m644 repro/repro.config $RPM_BUILD_ROOT/etc/repro/repro.config
+install -m 0755 -d $RPM_BUILD_ROOT/etc/repro
+cat repro/repro.config | \
+  sed -e 's!^DatabasePath = ./$!DatabasePath = /var/lib/repro!' \
+    > $RPM_BUILD_ROOT/etc/repro/repro.config
+chmod 0644 $RPM_BUILD_ROOT/etc/repro/repro.config
 install -p -D -m644 reTurn/reTurnServer.config $RPM_BUILD_ROOT/etc/reTurnServer.config
 install -m 0755 -d $RPM_BUILD_ROOT/var/lib/repro
 
