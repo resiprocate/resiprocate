@@ -56,6 +56,7 @@ Resiprocate SIP Stack development files.
 %package repro
 Summary: SIP proxy
 Group: Productivity/Telephony/SIP/Servers
+Requires(pre): shadow-utils
 
 %description repro
 repro is the SIP proxy developed as part of the reSIProcate project.
@@ -68,6 +69,7 @@ such as the repro SIP proxy.
 %package turn-server
 Summary: ICE/STUN/TURN server
 Group: Productivity/Telephony/SIP/Servers
+Requires(pre): shadow-utils
 
 %description turn-server
 reTurn is the TURN server developed as part of the reSIProcate project.
@@ -139,10 +141,23 @@ install -p -D -m644 repro/pkg/fedora/repro.service $RPM_BUILD_ROOT%{_unitdir}/re
 install -p -D -m644 reTurn/pkg/fedora/resiprocate-turn-server.service $RPM_BUILD_ROOT%{_unitdir}/resiprocate-turn-server.service
 install -p -D -m644 repro/repro.config $RPM_BUILD_ROOT/etc/repro/repro.config
 install -p -D -m644 reTurn/reTurnServer.config $RPM_BUILD_ROOT/etc/reTurnServer.config
+install -m 0755 -d $RPM_BUILD_ROOT/var/lib/repro
 
 
 %clean
 [ ${RPM_BUILD_ROOT} != "/" ] && rm -rf ${RPM_BUILD_ROOT}
+
+%pre repro
+getent group repro >/dev/null || groupadd -r repro
+getent passwd repro >/dev/null || \
+    useradd -r -g repro -d /var/lib/repro -s /sbin/nologin \
+    -c "repro SIP proxy" repro
+
+%pre turn-server
+getent group return >/dev/null || groupadd -r return
+getent passwd return >/dev/null || \
+    useradd -r -g return -d / -s /sbin/nologin \
+    -c "reTurn TURN server" return
 
 %post -n libresiprocate-1_8 -p /sbin/ldconfig
 
@@ -152,6 +167,7 @@ if [ $1 -eq 1 ] ; then
     # Initial installation
     /bin/systemctl enable repro.service >/dev/null 2>&1 || :
 fi
+/bin/chmod 0755 /var/lib/repro
 
 %post turn-server
 if [ $1 -eq 1 ] ; then
@@ -217,6 +233,7 @@ fi
 
 %files repro
 %defattr(644,root,root,755)
+%attr(0755,repro,repro) %dir /var/lib/repro
 %config(noreplace) /etc/repro/repro.config
 %{_unitdir}/repro.service
 %{_libdir}/librepro*.so
