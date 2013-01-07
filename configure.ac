@@ -271,7 +271,7 @@ AC_OUTPUT(Makefile \
 	apps/ichat-gw/jabberconnector/Makefile \
 	apps/sipdial/Makefile \
 	apps/basicB2BUA/Makefile \
-	resip.spec \
+	resiprocate.spec \
 	reTurn/Makefile \
 	reTurn/test/Makefile \
 	reTurn/client/Makefile \
