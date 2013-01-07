@@ -37,7 +37,7 @@ EXTRA_DIST = reSIProcate_10_0.sln
 EXTRA_DIST += reSIProcate_8_0.sln
 EXTRA_DIST += reSIProcate_9_0.sln
 
-EXTRA_DIST += resip.spec
+EXTRA_DIST += resiprocate.spec
 
 EXTRA_DIST += RELEASE-PROCESS.txt
 
