@@ -10,7 +10,6 @@ EXTRA_DIST += repro_10_0.vcxproj repro_10_0.vcxproj.filters
 EXTRA_DIST += reprolib_10_0.vcxproj reprolib_10_0.vcxproj.filters
 EXTRA_DIST += *.vcproj
 #EXTRA_DIST += *.db
-EXTRA_DIST += repro.spec
 EXTRA_DIST += VERSION
 EXTRA_DIST += webadmin
 EXTRA_DIST += WinSetup WinSetupx64
