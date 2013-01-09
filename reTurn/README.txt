@@ -13,7 +13,15 @@ Stun/Turn drafts:  RFC5389, and draft-ietf-behave-turn-15
 
 Current External Library Usage
 ------------------------------
-- currently uses ASIO, BOOST and RUTIL
+- currently uses OpenSSL, ASIO, BOOST and RUTIL
+- OpenSSL
+       - Used for TLS support (optional)
+       - libcrypto used for calculating message authentication code (mandatory
+         part of TURN, even without TLS)
+       - Therefore,  unlike other parts of resiprocate, it is mandatory
+         to have OpenSSL present for building reTurn, and you must
+         specify --with-ssl when running configure or reTurn/* won't
+         be built at all.
 - ASIO - 1.2.0
        - Used for server sockets and transports
        - Tuple information used in StunMessage uses asio::ip::udp::endpoint - easily changed
