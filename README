@@ -1,4 +1,28 @@
- The reSIProcate build system is derived from the VOCAL build system (http://www.vovida.org). 
+
+
+
+IMPORTANT
+
+ - the notes below relate to the legacy build
+   system from reSIProcate <= 1.7.x
+
+ - now, with reSIProcate 1.8.x and beyond,
+   please see:
+
+    http://www.resiprocate.org/AutotoolsBuild
+
+   and
+
+    http://www.resiprocate.org/Configuration_Options
+
+
+-----------------------------------------------------------
+
+Notes for the legacy build system:
+
+
+The legacy reSIProcate build system is derived from
+the VOCAL build system (http://www.vovida.org). 
 
 Adding New Files to a module
 ----------------------------
