@@ -65,15 +65,18 @@ ClientPublication::end(bool immediate)
 class ClientPublicationEndCommand : public DumCommandAdapter
 {
 public:
-   ClientPublicationEndCommand(ClientPublication& clientPublication, bool immediate)
-      : mClientPublication(clientPublication), mImmediate(immediate)
+   ClientPublicationEndCommand(const ClientPublicationHandle& clientPublicationHandle, bool immediate)
+      : mClientPublicationHandle(clientPublicationHandle), mImmediate(immediate)
    {
 
    }
 
    virtual void executeCommand()
    {
-      mClientPublication.end(mImmediate);
+      if(mClientPublicationHandle.isValid())
+      {
+         mClientPublicationHandle->end(mImmediate);
+      }
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -81,14 +84,14 @@ public:
       return strm << "ClientPublicationEndCommand";
    }
 private:
-   ClientPublication& mClientPublication;
+   ClientPublicationHandle mClientPublicationHandle;
    bool mImmediate;
 };
 
 void
 ClientPublication::endCommand(bool immediate)
 {
-   mDum.post(new ClientPublicationEndCommand(*this, immediate));
+   mDum.post(new ClientPublicationEndCommand(getHandle(), immediate));
 }
 
 void 
@@ -250,8 +253,8 @@ ClientPublication::refresh(unsigned int expiration)
 class ClientPublicationRefreshCommand : public DumCommandAdapter
 {
 public:
-   ClientPublicationRefreshCommand(ClientPublication& clientPublication, unsigned int expiration)
-      : mClientPublication(clientPublication),
+   ClientPublicationRefreshCommand(const ClientPublicationHandle& clientPublicationHandle, unsigned int expiration)
+      : mClientPublicationHandle(clientPublicationHandle),
         mExpiration(expiration)
    {
 
@@ -259,7 +262,10 @@ public:
 
    virtual void executeCommand()
    {
-      mClientPublication.refresh(mExpiration);
+      if(mClientPublicationHandle.isValid())
+      {
+         mClientPublicationHandle->refresh(mExpiration);
+      }
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -268,14 +274,14 @@ public:
    }
 
 private:
-   ClientPublication& mClientPublication;
+   ClientPublicationHandle mClientPublicationHandle;
    unsigned int mExpiration;
 };
 
 void
 ClientPublication::refreshCommand(unsigned int expiration)
 {
-   mDum.post(new ClientPublicationRefreshCommand(*this, expiration));
+   mDum.post(new ClientPublicationRefreshCommand(getHandle(), expiration));
 }
 
 void
@@ -303,8 +309,8 @@ ClientPublication::update(const Contents* body)
 class ClientPublicationUpdateCommand : public DumCommandAdapter
 {
 public:
-   ClientPublicationUpdateCommand(ClientPublication& clientPublication, const Contents* body)
-      : mClientPublication(clientPublication),
+   ClientPublicationUpdateCommand(const ClientPublicationHandle& clientPublicationHandle, const Contents* body)
+      : mClientPublicationHandle(clientPublicationHandle),
       mBody(body?body->clone():0)
    {
 
@@ -312,7 +318,10 @@ public:
 
    virtual void executeCommand()
    {
-      mClientPublication.update(mBody.get());
+      if(mClientPublicationHandle.isValid())
+      {
+         mClientPublicationHandle->update(mBody.get());
+      }
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -321,14 +330,14 @@ public:
    }
 
 private:
-   ClientPublication& mClientPublication;
+   ClientPublicationHandle mClientPublicationHandle;
    std::auto_ptr<Contents> mBody;
 };
 
 void
 ClientPublication::updateCommand(const Contents* body)
 {
-   mDum.post(new ClientPublicationUpdateCommand(*this, body));
+   mDum.post(new ClientPublicationUpdateCommand(getHandle(), body));
 }
 
 void 

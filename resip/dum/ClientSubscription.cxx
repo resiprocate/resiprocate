@@ -525,15 +525,18 @@ ClientSubscription::requestRefresh(UInt32 expires)
 class ClientSubscriptionRefreshCommand : public DumCommandAdapter
 {
 public:
-   ClientSubscriptionRefreshCommand(ClientSubscription& clientSubscription, UInt32 expires)
-      : mClientSubscription(clientSubscription),
+   ClientSubscriptionRefreshCommand(const ClientSubscriptionHandle& clientSubscriptionHandle, UInt32 expires)
+      : mClientSubscriptionHandle(clientSubscriptionHandle),
         mExpires(expires)
    {
 
    }
    virtual void executeCommand()
    {
-      mClientSubscription.requestRefresh(mExpires);
+      if(mClientSubscriptionHandle.isValid())
+      {
+         mClientSubscriptionHandle->requestRefresh(mExpires);
+      }
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -541,14 +544,14 @@ public:
       return strm << "ClientSubscriptionRefreshCommand";
    }
 private:
-   ClientSubscription& mClientSubscription;
+   ClientSubscriptionHandle mClientSubscriptionHandle;
    UInt32 mExpires;
 };
 
 void
 ClientSubscription::requestRefreshCommand(UInt32 expires)
 {
-   mDum.post(new ClientSubscriptionRefreshCommand(*this, expires));
+   mDum.post(new ClientSubscriptionRefreshCommand(getHandle(), expires));
 }
 
 void
@@ -586,15 +589,18 @@ ClientSubscription::end(bool immediate)
 class ClientSubscriptionEndCommand : public DumCommandAdapter
 {
 public:
-   ClientSubscriptionEndCommand(ClientSubscription& clientSubscription, bool immediate)
-      :mClientSubscription(clientSubscription), mImmediate(immediate)
+   ClientSubscriptionEndCommand(const ClientSubscriptionHandle& clientSubscriptionHandle, bool immediate)
+      :mClientSubscriptionHandle(clientSubscriptionHandle), mImmediate(immediate)
    {
 
    }
 
    virtual void executeCommand()
    {
-      mClientSubscription.end(mImmediate);
+      if(mClientSubscriptionHandle.isValid())
+      {
+         mClientSubscriptionHandle->end(mImmediate);
+      }
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -602,14 +608,14 @@ public:
       return strm << "ClientSubscriptionEndCommand";
    }
 private:
-   ClientSubscription& mClientSubscription;
+   ClientSubscriptionHandle mClientSubscriptionHandle;
    bool mImmediate;
 };
 
 void
 ClientSubscription::endCommand(bool immediate)
 {
-   mDum.post(new ClientSubscriptionEndCommand(*this, immediate));
+   mDum.post(new ClientSubscriptionEndCommand(getHandle(), immediate));
 }
 
 void 
@@ -636,8 +642,8 @@ ClientSubscription::acceptUpdate(int statusCode, const char* reason)
 class ClientSubscriptionAcceptUpdateCommand : public DumCommandAdapter
 {
 public:
-   ClientSubscriptionAcceptUpdateCommand(ClientSubscription& clientSubscription, int statusCode, const char* reason)
-      : mClientSubscription(clientSubscription),
+   ClientSubscriptionAcceptUpdateCommand(const ClientSubscriptionHandle& clientSubscriptionHandle, int statusCode, const char* reason)
+      : mClientSubscriptionHandle(clientSubscriptionHandle),
         mStatusCode(statusCode),
         mReason(reason ? Data(reason) : Data::Empty)
    {
@@ -646,7 +652,10 @@ public:
 
    virtual void executeCommand()
    {
-      mClientSubscription.acceptUpdate(mStatusCode, mReason.c_str());
+      if(mClientSubscriptionHandle.isValid())
+      {
+         mClientSubscriptionHandle->acceptUpdate(mStatusCode, mReason.c_str());
+      }
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -654,7 +663,7 @@ public:
       return strm << "ClientSubscriptionAcceptUpdateCommand";
    }
 private:
-   ClientSubscription& mClientSubscription;
+   ClientSubscriptionHandle mClientSubscriptionHandle;
    int mStatusCode;
    Data mReason;
 };
@@ -662,7 +671,7 @@ private:
 void 
 ClientSubscription::acceptUpdateCommand(int statusCode, const char* reason)
 {
-   mDum.post(new ClientSubscriptionAcceptUpdateCommand(*this, statusCode, reason));
+   mDum.post(new ClientSubscriptionAcceptUpdateCommand(getHandle(), statusCode, reason));
 }
 
 void
@@ -739,8 +748,8 @@ ClientSubscription::rejectUpdate(int statusCode, const Data& reasonPhrase)
 class ClientSubscriptionRejectUpdateCommand : public DumCommandAdapter
 {
 public:
-   ClientSubscriptionRejectUpdateCommand(ClientSubscription& clientSubscription, int statusCode, const Data& reasonPhrase)
-      : mClientSubscription(clientSubscription),
+   ClientSubscriptionRejectUpdateCommand(const ClientSubscriptionHandle& clientSubscriptionHandle, int statusCode, const Data& reasonPhrase)
+      : mClientSubscriptionHandle(clientSubscriptionHandle),
         mStatusCode(statusCode),
         mReasonPhrase(reasonPhrase)
    {
@@ -748,7 +757,10 @@ public:
 
    virtual void executeCommand()
    {
-      mClientSubscription.rejectUpdate(mStatusCode, mReasonPhrase);
+      if(mClientSubscriptionHandle.isValid())
+      {
+         mClientSubscriptionHandle->rejectUpdate(mStatusCode, mReasonPhrase);
+      }
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -756,7 +768,7 @@ public:
       return strm << "ClientSubscriptionRejectUpdateCommand";
    }
 private:
-   ClientSubscription& mClientSubscription;
+   ClientSubscriptionHandle mClientSubscriptionHandle;
    int mStatusCode;
    Data mReasonPhrase;
 };
@@ -764,7 +776,7 @@ private:
 void 
 ClientSubscription::rejectUpdateCommand(int statusCode, const Data& reasonPhrase)
 {
-   mDum.post(new ClientSubscriptionRejectUpdateCommand(*this, statusCode, reasonPhrase));
+   mDum.post(new ClientSubscriptionRejectUpdateCommand(getHandle(), statusCode, reasonPhrase));
 }
 
 void ClientSubscription::dialogDestroyed(const SipMessage& msg)

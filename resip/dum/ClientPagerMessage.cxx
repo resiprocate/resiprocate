@@ -131,10 +131,10 @@ ClientPagerMessage::page(std::auto_ptr<Contents> contents,
 class ClientPagerMessagePageCommand : public DumCommandAdapter
 {
 public:
-   ClientPagerMessagePageCommand(ClientPagerMessage& clientPagerMessage, 
+   ClientPagerMessagePageCommand(const ClientPagerMessageHandle& clientPagerMessageHandle, 
       std::auto_ptr<Contents> contents,
       DialogUsageManager::EncryptionLevel level)
-      : mClientPagerMessage(clientPagerMessage),
+      : mClientPagerMessageHandle(clientPagerMessageHandle),
         mContents(contents),
         mLevel(level)
    {
@@ -143,7 +143,10 @@ public:
 
    virtual void executeCommand()
    {
-      mClientPagerMessage.page(mContents, mLevel);
+      if(mClientPagerMessageHandle.isValid())
+      {
+         mClientPagerMessageHandle->page(mContents, mLevel);
+      }
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -151,7 +154,7 @@ public:
       return strm << "ClientPagerMessagePageCommand";
    }
 private:
-   ClientPagerMessage& mClientPagerMessage;
+   ClientPagerMessageHandle mClientPagerMessageHandle;
    std::auto_ptr<Contents> mContents;
    DialogUsageManager::EncryptionLevel mLevel;
 };
@@ -160,7 +163,7 @@ void
 ClientPagerMessage::pageCommand(std::auto_ptr<Contents> contents,
                                 DialogUsageManager::EncryptionLevel level)
 {
-   mDum.post(new ClientPagerMessagePageCommand(*this, contents, level));
+   mDum.post(new ClientPagerMessagePageCommand(getHandle(), contents, level));
 }
 
 void
