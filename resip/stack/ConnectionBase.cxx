@@ -5,14 +5,19 @@
 #include "rutil/Logger.hxx"
 #include "resip/stack/ConnectionBase.hxx"
 #include "resip/stack/SipMessage.hxx"
+#include "resip/stack/WsDecorator.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
-#ifdef USE_SSL
+
+#if defined(USE_SSL)
 #include "resip/stack/ssl/Security.hxx"
 #include "resip/stack/ssl/TlsConnection.hxx"
+#include "rutil/ssl/SHA1Stream.hxx"
 #endif
 
-#ifdef USE_SIGCOMP
+#include "rutil/MD5Stream.hxx"
+
+#if defined(USE_SIGCOMP)
 #include <osc/Stack.h>
 #include <osc/TcpStream.h>
 #include <osc/SigcompMessage.h>
@@ -40,6 +45,7 @@ ConnectionBase::ConnectionBase(Transport* transport, const Tuple& who, Compressi
 // NO: #endif
      mSendingTransmissionFormat(Unknown),
      mReceivingTransmissionFormat(Unknown),
+	 mDeprecatedWebSocketVersion(false),
      mMessage(0),
      mBuffer(0),
      mBufferPos(0),
@@ -110,7 +116,7 @@ ConnectionBase::getFlowKey() const
 }
 
 bool
-ConnectionBase::preparseNewBytes(int bytesRead)
+ConnectionBase::preparseNewBytes(int bytesRead, bool isWsMg /*false*/, bool isWsMsgComplete /*= false*/)
 {
    DebugLog(<< "In State: " << connectionStates[mConnState]);
    
@@ -157,6 +163,10 @@ ConnectionBase::preparseNewBytes(int bytesRead)
 
          assert(mTransport);
          mMessage = new SipMessage(mTransport);
+		 if(mTransport->transport() == resip::WS){
+			 std::auto_ptr<resip::MessageDecorator> wsDecorator(new WsDecorator());
+			 mMessage->addOutboundDecorator(wsDecorator);
+		 }
          
          DebugLog(<< "ConnectionBase::process setting source " << mWho);
          mMessage->setSource(mWho);
@@ -209,7 +219,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
          unsigned int numUnprocessedChars = 
             (unsigned int)((mBuffer + chunkLength) - unprocessedCharPtr);
 
-         if(numUnprocessedChars > 2048 &&
+         if(numUnprocessedChars > ConnectionBase::ChunkSize &&
             scanChunkResult == MsgHeaderScanner::scrNextChunk)
          {
             WarningLog(<< "Discarding preparse; header-field-value (or "
@@ -305,7 +315,8 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             try
             {
                // The message header is complete.
-               contentLength=mMessage->const_header(h_ContentLength).value();
+				contentLength = isWsMg ? ( isWsMsgComplete ? numUnprocessedChars : (numUnprocessedChars + 1024) ):
+					 ( mMessage->const_header(h_ContentLength).value() );
             }
             catch(resip::BaseException& e)  // Could be SipMessage::Exception or ParseException
             {
@@ -435,7 +446,8 @@ ConnectionBase::preparseNewBytes(int bytesRead)
 
          try
          {
-             contentLength = mMessage->const_header(h_ContentLength).value();
+             contentLength = isWsMg ? ( isWsMsgComplete ? (mBufferPos + bytesRead) : ((mBufferPos + bytesRead) + 1024) ):
+					 ( mMessage->const_header(h_ContentLength).value() );
          }
          catch(resip::BaseException& e)  // Could be SipMessage::Exception or ParseException
          {
@@ -522,6 +534,242 @@ ConnectionBase::preparseNewBytes(int bytesRead)
          assert(0);
    }
    return true;
+}
+
+bool
+ConnectionBase::wsProcessHandshake(int bytesRead)
+{
+	mConnState = WebSocket;
+
+	mMessage = new SipMessage(mWho.transport);
+	assert(mMessage);
+
+    mMessage->setSource(mWho);
+    mMessage->setTlsDomain(mWho.transport->tlsDomain());
+    
+    mMsgHeaderScanner.prepareForMessage(mMessage);
+    char *unprocessedCharPtr;
+	MsgHeaderScanner::ScanChunkResult scanResult = mMsgHeaderScanner.scanChunk(mBuffer, bytesRead, &unprocessedCharPtr);
+    if (scanResult != MsgHeaderScanner::scrEnd)
+    {
+		if(scanResult != MsgHeaderScanner::scrNextChunk){
+			StackLog(<<"Failed to parse message");
+			StackLog(<< Data(mBuffer, bytesRead));
+		}
+       delete mMessage;
+       mMessage=0;
+	   return false;
+    }
+	
+	try{
+		Data wsResponse;
+		wsResponse =		"HTTP/1.1 101 WebSocket Protocol Handshake\r\n"
+							"Upgrade: WebSocket\r\n"
+							"Connection: Upgrade\r\n"
+							"Sec-WebSocket-Protocol: sip\r\n";
+
+		if(mMessage->exists(h_SecWebSocketKey1) && mMessage->exists(h_SecWebSocketKey2)){
+			Data SecWebSocketKey1 =  mMessage->const_header(h_SecWebSocketKey1).value();
+			Data SecWebSocketKey2 =  mMessage->const_header(h_SecWebSocketKey2).value();
+			Data Digits1, Digits2;
+			unsigned int SpacesCount1 = 0, SpacesCount2 = 0;
+			unsigned int Value1, Value2;
+			for(unsigned int i = 0; i < SecWebSocketKey1.size(); ++i){
+				if(SecWebSocketKey1[i] == ' ') ++SpacesCount1;
+				if(isdigit(SecWebSocketKey1[i])) Digits1 += SecWebSocketKey1[i];
+			}
+			Value1 = htonl(Digits1.convertUnsignedLong() / SpacesCount1);
+			for(unsigned int i = 0; i < SecWebSocketKey2.size(); ++i){
+				if(SecWebSocketKey2[i] == ' ') ++SpacesCount2;
+				if(isdigit(SecWebSocketKey2[i])) Digits2 += SecWebSocketKey2[i];
+			}
+			Value2 = htonl(Digits2.convertUnsignedLong() / SpacesCount2);
+			
+			MD5Stream wsMD5Stream;
+			char tmp[9] = { '\0' };
+			memcpy(tmp, &Value1, 4);
+			memcpy(&tmp[4], &Value2, 4);
+			wsMD5Stream << tmp;
+			if(unprocessedCharPtr < (mBuffer + bytesRead)){
+				unsigned int dataLen = (mBuffer + bytesRead) - unprocessedCharPtr;
+				Data content(unprocessedCharPtr, dataLen);
+				wsMD5Stream << content;
+			}
+			
+			if(mMessage->exists(h_Origin)){
+				wsResponse += "Sec-WebSocket-Origin: " + mMessage->const_header(h_Origin).value() + "\r\n";
+			}
+			if(mMessage->exists(h_Host)){
+				wsResponse += Data("Sec-WebSocket-Location: ") + Data(transport()->transport() == resip::WSS ? "wss://" : "ws://") + mMessage->const_header(h_Host).value() + Data("/\r\n");
+			}
+			wsResponse += "\r\n" + wsMD5Stream.getBin();
+			mDeprecatedWebSocketVersion = true;
+		}
+		else if(mMessage->exists(h_SecWebSocketKey)){
+			SHA1Stream wsSha1Stream;
+			wsSha1Stream << (mMessage->const_header(h_SecWebSocketKey).value() + Data("258EAFA5-E914-47DA-95CA-C5AB0DC85B11"));
+			Data wsAcceptKey = wsSha1Stream.getBin(160).base64encode();
+			wsResponse +=	"Sec-WebSocket-Accept: "+ wsAcceptKey +"\r\n"
+							"\r\n";
+			mDeprecatedWebSocketVersion = false;
+		}
+		else{
+			ErrLog(<<"No SecWebSocketKey header");
+		   delete mMessage;
+		   mMessage = 0;
+		   mBuffer = 0;
+		   return false;
+		}
+		
+		mOutstandingSends.push_back(new SendData(
+					   who(),
+					   wsResponse,
+					   Data::Empty,
+					   Data::Empty,
+					   true));
+	}
+	catch(resip::ParseException& e)
+    {
+       ErrLog(<<"Cannot auth request is missing " << e);
+       delete mMessage;
+       mMessage = 0;
+       mBuffer = 0;
+       return false;
+    }
+	
+	delete mMessage;
+    mMessage=0;
+
+	return true;
+}
+
+bool
+ConnectionBase::wsProcessData(int &bytesRead, bool &gotCompleteMsg)
+{
+	UInt8* uBuffer = (UInt8*)&mBuffer[mBufferPos];
+	gotCompleteMsg = false;
+	
+	if(mDeprecatedWebSocketVersion)
+	{
+		int i, j;
+		if(mBufferPos == 0)
+		{
+			mConnState = NewMessage;
+
+			// http://tools.ietf.org/html/draft-hixie-thewebsocketprotocol-76#page-19 5.3.  Data framing
+			const UInt8 type = mBuffer[0];
+			if(!(type & 0x80))
+			{
+				if(type != 0x00)
+				{
+					ErrLog(<< "Unexpected type: ");
+					return false;
+				}
+				for(i = j = 1; i < bytesRead; ++i)
+				{
+					if(uBuffer[i] == 0xFF)
+					{
+						gotCompleteMsg = true;
+						break;
+					}
+				}
+			}
+			else
+			{
+				ErrLog(<< "Not implemented yet: ");
+				return false;
+			}
+		}
+		else
+		{
+			for(i = j = 0; i < bytesRead; ++i)
+			{
+				if(uBuffer[i] == 0xFF)
+				{
+					gotCompleteMsg = true;
+					break;
+				}
+			}
+		}
+
+		bytesRead = (i - j);
+		memmove(uBuffer, &uBuffer[j], (i - j));
+		return true;
+	}
+	else
+	{
+		if(bytesRead < 2 && mBufferPos == 0)
+		{
+			ErrLog(<< "Too short to contain ws data [0]");
+			return false;
+		}
+		UInt8 *uData;
+		UInt64 payIdx, toRead, dataLen = 0;
+
+		if(mBufferPos == 0)
+		{
+			const UInt8 maskFlag = (uBuffer[1] >> 7);
+			
+			mConnState = NewMessage;		
+
+			if(uBuffer[0] & 0x40 || uBuffer[0] & 0x20 || uBuffer[0] & 0x10)
+			{
+				WarningLog(<< "Unknown extension: " << ((uBuffer[0] >> 4) & 0x07));
+				// do not exit
+			}
+
+			mWsPayLen = uBuffer[1] & 0x7F;
+			dataLen += 2;
+			
+			if(mWsPayLen == 126)
+			{
+				if((bytesRead - dataLen) < 2)
+				{
+					ErrLog(<< "Too short to contain ws data [1]");
+					return false;
+				}
+				mWsPayLen = (uBuffer[dataLen] << 8 | uBuffer[dataLen + 1]);
+				dataLen += 2;
+			}
+			else if(mWsPayLen == 127)
+			{
+				if((bytesRead - dataLen) < 4)
+				{
+					ErrLog(<< "Too short to contain ws data [2]");
+					return false;
+				}
+				mWsPayLen = (((UInt64)uBuffer[dataLen]) << 56 | ((UInt64)uBuffer[dataLen + 1]) << 48 | ((UInt64)uBuffer[dataLen + 2]) << 40 | ((UInt64)uBuffer[dataLen + 3]) << 32 | ((UInt64)uBuffer[dataLen + 4]) << 24 | ((UInt64)uBuffer[dataLen + 5]) << 16 | ((UInt64)uBuffer[dataLen + 6]) << 8 || ((UInt64)uBuffer[dataLen + 7]));
+				dataLen += 8;
+			}
+
+			if((bytesRead - dataLen) < 4)
+			{
+				ErrLog(<< "Too short to contain ws data [3]");
+				return false;
+			}
+			if(maskFlag)
+			{
+				mWsMaskKey[0] = uBuffer[dataLen];
+				mWsMaskKey[1] = uBuffer[dataLen + 1];
+				mWsMaskKey[2] = uBuffer[dataLen + 2];
+				mWsMaskKey[3] = uBuffer[dataLen + 3];
+				dataLen += 4;
+			}
+		}
+
+		toRead = resipMin(mWsPayLen, (bytesRead - dataLen));
+		uData = &uBuffer[dataLen];
+		for(payIdx = 0; payIdx < toRead; ++payIdx)
+		{
+			uBuffer[payIdx] = (uData[payIdx] ^ mWsMaskKey[(payIdx & 3)]);
+		}
+		
+		bytesRead = (int) toRead;
+		mWsPayLen -= toRead;
+		gotCompleteMsg = (mWsPayLen == 0);
+
+		return true;
+	}
 }
 
 #ifdef USE_SIGCOMP

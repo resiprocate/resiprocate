@@ -48,7 +48,7 @@ class ConnectionBase
       const UInt64& whenLastUsed() { return mLastUsed; }
       void resetLastUsed() { mLastUsed = Timer::getTimeMs(); }
 
-      enum { ChunkSize = 2048 }; // !jf! what is the optimal size here?
+      enum { ChunkSize = 0xFFFF }; // !jf! what is the optimal size here?
 
    protected:
       enum ConnState
@@ -57,6 +57,7 @@ class ConnectionBase
          ReadingHeaders,
          PartialBody,
          SigComp, // This indicates that incoming bytes are compressed.
+		 WebSocket,
          MAX
       };
 
@@ -64,11 +65,15 @@ class ConnectionBase
       {
          Unknown,
          Uncompressed,
-         Compressed
+         Compressed,
+		 WebSocketHandshake,
+		 WebSocketData,
       } TransmissionFormat;
 
       ConnState getCurrentState() const { return mConnState; }
-      bool preparseNewBytes(int bytesRead);
+      bool preparseNewBytes(int bytesRead, bool isWsMg = false, bool isWsMsgComplete = false);
+	  bool wsProcessHandshake(int bytesRead);
+	  bool wsProcessData(int &bytesRead, bool &gotCompleteMsg);
       void decompressNewBytes(int bytesRead);
       std::pair<char*, size_t> getWriteBuffer();
       std::pair<char*, size_t> getCurrentWriteBuffer();
@@ -100,12 +105,15 @@ class ConnectionBase
       osc::TcpStream *mSigcompFramer;
       TransmissionFormat mSendingTransmissionFormat;
       TransmissionFormat mReceivingTransmissionFormat;
+	  bool mDeprecatedWebSocketVersion;
 
    private:
       SipMessage* mMessage;
       char* mBuffer;
       size_t mBufferPos;
       size_t mBufferSize;
+	  UInt8 mWsMaskKey[4];
+	  UInt64 mWsPayLen;
 
       static char connectionStates[MAX][32];
       UInt64 mLastUsed;

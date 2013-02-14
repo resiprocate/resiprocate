@@ -118,15 +118,15 @@ AmIResponsible::process(RequestContext& context)
             // for now, just see if the sender claims to be from one of our domains
             // send a 403 if not on the list
 
-            // .slg. Allow trusted nodes to relay
+            // .slg. Allow trusted nodes to relay 
             if (!context.getKeyValueStore().getBoolValue(IsTrustedNode::mFromTrustedNodeKey) && 
-                !context.getProxy().isMyUri(request.header(h_From).uri()))
+                !context.getProxy().isMyUri(request.header(h_From).uri()) && !request.hasForceTarget())
             {
                // make 403, send, dispose of memory
                resip::SipMessage response;
                InfoLog (<< *this << ": will not relay to " << uri << " from " 
                         << request.header(h_From).uri() << ", send 403");
-               Helper::makeResponse(response, context.getOriginalRequest(), 403, "Relaying Forbidden"); 
+               Helper::makeResponse(response, context.getOriginalRequest(), 403, "Relaying Forbidden");
                context.sendResponse(response);
                return Processor::SkipThisChain;
             }

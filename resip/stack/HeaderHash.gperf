@@ -55,6 +55,12 @@ in-reply-to, Headers::InReplyTo
 min-expires, Headers::MinExpires
 mime-version, Headers::MIMEVersion
 organization, Headers::Organization
+sec-websocket-key, Headers::SecWebSocketKey
+sec-websocket-key1, Headers::SecWebSocketKey1
+sec-websocket-key2, Headers::SecWebSocketKey2
+sec-websocket-accept, Headers::SecWebSocketAccept
+origin, Headers::Origin
+host, Headers::Host
 priority, Headers::Priority
 proxy-authenticate, Headers::ProxyAuthenticate
 proxy-authorization, Headers::ProxyAuthorization

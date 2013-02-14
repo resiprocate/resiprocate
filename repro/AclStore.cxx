@@ -498,8 +498,8 @@ AclStore::isAddressTrusted(const Tuple& address)
 bool
 AclStore::isRequestTrusted(const SipMessage& request)
 {
-   bool trusted = false;
-   Tuple source = request.getSource();
+	Tuple source = request.getSource();
+	bool trusted = (source.getType() == resip::WS);
    
    // check if the request came over a secure channel and sucessfully authenticated 
    // (ex: TLS or DTLS)

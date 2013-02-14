@@ -98,7 +98,7 @@ ReproRunner::ReproRunner()
    : mRunning(false)
    , mRestarting(false)
    , mThreadedStack(false)
-   , mSipAuthDisabled(false)
+   , mSipAuthDisabled(true)
    , mUseV4(true)
    , mUseV6 (false)
    , mRegSyncPort(0)
@@ -1128,6 +1128,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          int udpPort = mProxyConfig->getConfigInt("UDPPort", 5060);
          int tcpPort = mProxyConfig->getConfigInt("TCPPort", 5060);
          int tlsPort = mProxyConfig->getConfigInt("TLSPort", 5061);
+		 int wsPort = mProxyConfig->getConfigInt("WSPort", 5062);
          int dtlsPort = mProxyConfig->getConfigInt("DTLSPort", 0);
          Data tlsDomain = mProxyConfig->getConfigData("TLSDomainName", "");
          Data tlsCVMValue = mProxyConfig->getConfigData("TLSClientVerification", "NONE");
@@ -1160,6 +1161,11 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
             if (mUseV4) mSipStack->addTransport(TLS, tlsPort, V4, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, cvm, useEmailAsSIP);
             if (mUseV6) mSipStack->addTransport(TLS, tlsPort, V6, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, cvm, useEmailAsSIP);
          }
+		 if (wsPort)
+		 {
+			if (mUseV4) mSipStack->addTransport(WS, wsPort, V4, StunEnabled);
+            if (mUseV6) mSipStack->addTransport(WS, wsPort, V6, StunEnabled);
+		 }
          if (dtlsPort)
          {
             if (mUseV4) mSipStack->addTransport(DTLS, dtlsPort, V4, StunEnabled, Data::Empty, tlsDomain);
@@ -1195,7 +1201,7 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    addProcessor(chain, std::auto_ptr<Processor>(new IsTrustedNode(*mProxyConfig)));
 
    // Add Certificate Authenticator - if required
-   if(mProxyConfig->getConfigBool("EnableCertificateAuthenticator", false))
+   if(mProxyConfig->getConfigBool("EnableCertificateAuthenticator", false) && mAuthRequestDispatcher)
    {
       // TODO: perhaps this should be initialised from the trusted node
       // monkey?  Or should the list of trusted TLS peers be independent
@@ -1212,7 +1218,7 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
       assert(mAuthRequestDispatcher);
       DigestAuthenticator* da = new DigestAuthenticator(*mProxyConfig, mAuthRequestDispatcher);
 
-      addProcessor(chain, std::auto_ptr<Processor>(da)); 
+      addProcessor(chain, std::auto_ptr<Processor>(da));
    }
 
    // Add am I responsible monkey

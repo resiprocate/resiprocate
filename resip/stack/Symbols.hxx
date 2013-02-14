@@ -76,6 +76,7 @@ class Symbols
 
       static const int DefaultSipPort;
       static const int SipTlsPort;
+	  static const int SipWsPort;
       static const int DefaultSipsPort;
 
       static const char* SrvSip;

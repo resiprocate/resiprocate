@@ -148,16 +148,32 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
    if (sip->isRequest())
    {
       DebugLog(<<"Got a request.");
-      bool postProcess=false;
+
+	  bool postProcess = false;
+
+	  Uri& requestUri = sip->header(h_RequestLine).uri();
+	  if(requestUri.exists(resip::p_wsSrcIp) && requestUri.exists(resip::p_wsSrcPort) && sip->getSource().getType() != resip::WS){
+		  requestUri.host() = requestUri.param(resip::p_wsSrcIp);
+		  requestUri.remove(resip::p_wsSrcIp);
+		  requestUri.port() = requestUri.param(resip::p_wsSrcPort);
+		  requestUri.remove(resip::p_wsSrcPort);
+		  requestUri.param(resip::p_transport) = "WS";
+		  sip->setForceTarget(requestUri);
+	  }
+
       switch(mOriginalRequest->method())
       {
          case ACK:
             processRequestAckTransaction(sip,original);
             break;
+
          case INVITE:
-            postProcess=processRequestInviteTransaction(sip,original);
-            if(postProcess) doPostRequestProcessing(sip,original);
+			 {
+				postProcess=processRequestInviteTransaction(sip,original);
+				if(postProcess) doPostRequestProcessing(sip,original);
+			 }
             break;
+
          default:
             postProcess=processRequestNonInviteTransaction(sip,original);
             if(postProcess) doPostRequestProcessing(sip,original);
@@ -167,6 +183,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
    {
       assert(!original);
       bool postProcess=false;
+
       switch(mOriginalRequest->method())
       {
          case ACK:
@@ -375,7 +392,7 @@ RequestContext::processRequestAckTransaction(SipMessage* msg, bool original)
          handleSelfAimedStrayAck(msg);
       }
       // Note: mTopRoute is only populated if RemoveTopRouteIfSelf successfully removes the top route.
-      else if(!mTopRoute.uri().host().empty() || getProxy().isMyUri(msg->header(h_From).uri()))
+      else if(msg->getSource().getType() == resip::WS || msg->hasForceTarget() || !mTopRoute.uri().host().empty() || getProxy().isMyUri(msg->header(h_From).uri()))
       {
          // Top most route is us, or From header uri is ours.  Note:  The From check is 
          // required to interoperate with endpoints that configure outbound proxy 
@@ -621,10 +638,15 @@ RequestContext::doPostResponseProcessing(SipMessage* msg)
       {
          ErrLog(<<"In RequestContext, after processing "
          << "a sip response (_not_ a NIT/408): all transactions are terminated,"
-         << " but we have not sent a final response. (What happened here?) ");
+         << " but we have not sent a final response. (What happened here?) -+");
 
+
+#if 0 // FIXME: this cause segmentation fault...why?
          // Send best response
          mResponseContext.forwardBestResponse();
+#else
+		 ErrLog(<<"Not calling forwardBestResponse() to avoid segmentation fault. By the wat, FD_SIZE=" << FD_SETSIZE);
+#endif
       }
    }
 }

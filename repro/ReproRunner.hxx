@@ -4,6 +4,8 @@
 #include "rutil/Data.hxx"
 #include "rutil/ServerProcess.hxx"
 
+#include <memory>
+
 namespace resip
 {
    class TransactionUser;

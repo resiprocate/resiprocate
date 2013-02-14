@@ -10,8 +10,8 @@ echo Note - Ensure gperf.exe is present in the path or resip/stack directory
 echo        before continuing
 echo.
 pause
-gperf -D -E -L C++ -t -k "*" --compare-strncmp -Z MethodHash MethodHash.gperf > MethodHash.cxx
-gperf -D -E -L C++ -t -k "*" --compare-strncmp -Z HeaderHash HeaderHash.gperf > HeaderHash.cxx
-gperf -D -E -L C++ -t -k "*" --compare-strncmp -Z ParameterHash ParameterHash.gperf > ParameterHash.cxx
+gperf -D -E -L C++ -t -k "*" --compare-strncmp --ignore-case -Z MethodHash MethodHash.gperf > MethodHash.cxx
+gperf -D -E -L C++ -t -k "*" --compare-strncmp --ignore-case -Z HeaderHash HeaderHash.gperf > HeaderHash.cxx
+gperf -D -E -L C++ -t -k "*" --compare-strncmp --ignore-case -Z ParameterHash ParameterHash.gperf > ParameterHash.cxx
 echo Don't forget to manually add the tolower calls - see gperfNotes.txt and Makefile
 pause

@@ -20,6 +20,8 @@ typedef enum
    SCTP,
    DCCP,
    DTLS,
+   WS,
+   WSS,
    MAX_TRANSPORT
 } TransportType;
 

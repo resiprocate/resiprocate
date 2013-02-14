@@ -153,7 +153,9 @@ libresip_la_SOURCES = \
 	X509Contents.cxx \
 	KeepAliveMessage.cxx \
 	StatelessHandler.cxx \
-	InvalidContents.cxx
+	InvalidContents.cxx \
+	WsTransport.cxx \
+	WsDecorator.cxx
 
 if USE_SSL
 libresip_la_SOURCES += \

@@ -28,6 +28,7 @@
 #include <list>
 #include <map>
 #include <cassert>
+#include "rutil/Logger.hxx"
 #include "rutil/BaseException.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/Timer.hxx"
@@ -45,6 +46,8 @@
 
 using namespace resip;
 using namespace std;
+
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
 RRCache::RRCache() 
    : mHead(),
@@ -96,23 +99,29 @@ RRCache::updateCache(const Data& target,
 {
    Data domain = (*begin).domain();
    FactoryMap::iterator it = mFactoryMap.find(rrType);
-   assert(it != mFactoryMap.end());
-   RRList* key = new RRList(domain, rrType);         
-   RRSet::iterator lb = mRRSet.lower_bound(key);
-   if (lb != mRRSet.end() &&
-       !(mRRSet.key_comp()(key, *lb)))
-   {
-      (*lb)->update(it->second, begin, end, mUserDefinedTTL);
-      touch(*lb);
+   // FIXME: assert() is raised sometime -> why?
+   //assert(it != mFactoryMap.end());
+   if(it != mFactoryMap.end()){
+	   RRList* key = new RRList(domain, rrType);         
+	   RRSet::iterator lb = mRRSet.lower_bound(key);
+	   if (lb != mRRSet.end() &&
+		   !(mRRSet.key_comp()(key, *lb)))
+	   {
+		  (*lb)->update(it->second, begin, end, mUserDefinedTTL);
+		  touch(*lb);
+	   }
+	   else
+	   {
+		  RRList* val = new RRList(it->second, domain, rrType, begin, end, mUserDefinedTTL);
+		  mRRSet.insert(val);
+		  mLruHead->push_back(val);
+		  purge();
+	   }
+	   delete key;
    }
-   else
-   {
-      RRList* val = new RRList(it->second, domain, rrType, begin, end, mUserDefinedTTL);
-      mRRSet.insert(val);
-      mLruHead->push_back(val);
-      purge();
+   else{
+	   ErrLog( << "it== mFactoryMap.end()" );
    }
-   delete key;
 }
 
 void 

@@ -19,7 +19,8 @@ endif
 
 # The Makefiles for these don't separate SSL stuff yet...
 if USE_SSL
-SUBDIRS += reTurn
+# By Mamadou: Do not enable reTurn
+#SUBDIRS += reTurn reTurn/client
 if BUILD_RECON
 SUBDIRS += reflow
 SUBDIRS += resip/recon

@@ -1625,8 +1625,16 @@ Helper::processStrictRoute(SipMessage& request)
       request.header(h_Routes).push_back(NameAddr(request.const_header(h_RequestLine).uri()));
       request.header(h_RequestLine).uri() = request.const_header(h_Routes).front().uri();
       request.header(h_Routes).pop_front(); // !jf!
-      assert(!request.hasForceTarget());
-      request.setForceTarget(request.const_header(h_RequestLine).uri());
+
+	  //FIXME: DMI
+#if 0
+	  assert(!request.hasForceTarget());
+#else
+	  if(request.hasForceTarget()){
+		CritLog(<< "assert(!request.hasForceTarget())");
+	  }
+#endif
+	  request.setForceTarget(request.const_header(h_RequestLine).uri());
    }
 }
 

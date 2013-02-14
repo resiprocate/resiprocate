@@ -96,5 +96,7 @@ network-user, ParameterTypes::networkUser
 url, ParameterTypes::url
 sigcomp-id, ParameterTypes::sigcompId
 addtransport, ParameterTypes::addTransport
+ws-src-ip, ParameterTypes::wsSrcIp
+ws-src-port, ParameterTypes::wsSrcPort
 %%
 }

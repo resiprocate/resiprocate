@@ -49,6 +49,7 @@ static Data UdpNAPTRType("SIP+D2U");
 static Data TcpNAPTRType("SIP+D2T");
 static Data TlsNAPTRType("SIPS+D2T");
 static Data DtlsNAPTRType("SIPS+D2U");
+static Data WsNAPTRType("SIP+D2W");
 void 
 DnsInterface::addTransportType(TransportType type, IpVersion version)
 {
@@ -66,7 +67,10 @@ DnsInterface::addTransportType(TransportType type, IpVersion version)
          break;
       case DTLS:
          mSupportedNaptrs.insert(DtlsNAPTRType);
-         break;         
+         break;
+	 case WS:
+         mSupportedNaptrs.insert(WsNAPTRType);
+         break;
       default:
          assert(0);
          break;

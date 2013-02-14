@@ -44,8 +44,8 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../resip/stack&quot;;&quot;$(ProjectDir)../contrib/db/build_windows&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;;&quot;$(ProjectDir)../contrib/MySQLConnectorC/include&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;USE_IPV6;USE_MYSQL;LEAK_CHECK"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../resip/stack&quot;;&quot;$(ProjectDir)../contrib/db/build_windows&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;;&quot;$(ProjectDir)../contrib/MySQLConnectorC/include&quot;;C:\Projects\doubango\branches\2.0\doubango\thirdparties\win32\include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;USE_IPV6;USE_MYSQL__;USE_SSL;LEAK_CHECK"
 				MinimalRebuild="false"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -66,7 +66,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib winmm.lib Dnsapi.lib &quot;$(ProjectDir)..\contrib\MySQLConnectorC\lib\debug\libmysql.lib&quot;"
+				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib winmm.lib Dnsapi.lib &quot;$(ProjectDir)..\contrib\MySQLConnectorC\lib\debug\libmysql.lib&quot; &quot;C:\Projects\doubango\branches\2.0\doubango\thirdparties\win32\lib\openssl\libeay32.lib&quot; &quot;C:\Projects\doubango\branches\2.0\doubango\thirdparties\win32\lib\openssl\ssleay32.lib&quot;"
 				OutputFile="$(OutDir)/repro.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories=""

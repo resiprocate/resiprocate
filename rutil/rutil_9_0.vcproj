@@ -43,8 +43,8 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)dns/ares&quot;;&quot;$(ProjectDir)../&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;USE_ARES;USE_IPV6;LEAK_CHECK"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)dns/ares&quot;;&quot;$(ProjectDir)../&quot;;C:\Projects\doubango\branches\2.0\doubango\thirdparties\win32\include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;USE_SSL;USE_ARES;USE_IPV6;LEAK_CHECK"
 				MinimalRebuild="false"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -403,14 +403,6 @@
 				RelativePath=".\ssl\OpenSSLInit.cxx"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="Release|Win32"
 					ExcludedFromBuild="true"
 					>
@@ -482,14 +474,6 @@
 			<File
 				RelativePath=".\ssl\SHA1Stream.cxx"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
 					ExcludedFromBuild="true"
