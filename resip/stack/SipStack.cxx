@@ -396,7 +396,7 @@ SipStack::addTransport( TransportType protocol,
             CritLog (<< "WSS not implemented yet");
             assert(0);
 #else
-            CritLog (<< "TLS not supported in this stack. You don't have openssl");
+            CritLog (<< "WSS not supported in this stack. You don't have openssl");
             assert(0);
 #endif
             break;
