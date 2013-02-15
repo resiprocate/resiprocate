@@ -75,7 +75,8 @@ const char * const Symbols::resipCookie= "-524287-";
 
 const int Symbols::DefaultSipPort = 5060;
 const int Symbols::SipTlsPort = 5061;
-const int Symbols::SipWsPort = 5062;
+const int Symbols::SipWsPort = 80;
+const int Symbols::SipWssPort = 433;
 const int Symbols::DefaultSipsPort = 5061;
 
 const char* Symbols::SrvSip = "_sip";
