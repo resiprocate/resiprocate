@@ -8,8 +8,7 @@
 #include "resip/stack/WsDecorator.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
-
-#if defined(USE_SSL)
+#ifdef USE_SSL
 #include "resip/stack/ssl/Security.hxx"
 #include "resip/stack/ssl/TlsConnection.hxx"
 #include "rutil/ssl/SHA1Stream.hxx"
@@ -17,7 +16,7 @@
 
 #include "rutil/MD5Stream.hxx"
 
-#if defined(USE_SIGCOMP)
+#ifdef USE_SIGCOMP
 #include <osc/Stack.h>
 #include <osc/TcpStream.h>
 #include <osc/SigcompMessage.h>
@@ -45,7 +44,7 @@ ConnectionBase::ConnectionBase(Transport* transport, const Tuple& who, Compressi
 // NO: #endif
      mSendingTransmissionFormat(Unknown),
      mReceivingTransmissionFormat(Unknown),
-	 mDeprecatedWebSocketVersion(false),
+     mDeprecatedWebSocketVersion(false),
      mMessage(0),
      mBuffer(0),
      mBufferPos(0),
