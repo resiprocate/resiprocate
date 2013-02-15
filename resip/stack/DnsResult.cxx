@@ -485,8 +485,7 @@ void DnsResult::lookupHost(const Data& target)
    {
       CritLog(<<"Cannot lookup target="<<target
 	      <<" because DnsInterface doesn't support transport="<<mTransport);
-	  // DMI
-      // assert(0);
+      assert(0);
    }
 }
 
