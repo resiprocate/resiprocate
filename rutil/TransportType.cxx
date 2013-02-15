@@ -85,6 +85,7 @@ isReliable(TransportType type)
       case TCP:
       case SCTP:
       case WS:
+      case WSS:
          return true;
       case UDP:
       case DCCP:
