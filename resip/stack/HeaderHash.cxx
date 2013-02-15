@@ -1,5 +1,5 @@
-/* C++ code produced by gperf version 3.0.4 */
-/* Command-line: gperf -D -E -L C++ -t -k '*' --compare-strncmp --ignore-case -Z HeaderHash HeaderHash.gperf  */
+/* C++ code produced by gperf version 3.0.3 */
+/* Command-line: gperf -C -D -E -L C++ -t -k '*' --compare-strncmp --ignore-case -Z HeaderHash HeaderHash.gperf  */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
       && ('%' == 37) && ('&' == 38) && ('\'' == 39) && ('(' == 40) \
@@ -91,13 +91,13 @@ class HeaderHash
 private:
   static inline unsigned int hash (const char *str, unsigned int len);
 public:
-  static const  struct headers *in_word_set (const char *str, unsigned int len);
+  static const struct headers *in_word_set (const char *str, unsigned int len);
 };
 
 inline unsigned int
 HeaderHash::hash (register const char *str, register unsigned int len)
 {
-  static unsigned short asso_values[] =
+  static const unsigned short asso_values[] =
     {
       479, 479, 479, 479, 479, 479, 479, 479, 479, 479,
       479, 479, 479, 479, 479, 479, 479, 479, 479, 479,
@@ -221,7 +221,7 @@ HeaderHash::in_word_set (register const char *str, register unsigned int len)
       MAX_HASH_VALUE = 478
     };
 
-  static struct headers wordlist[] =
+  static const struct headers wordlist[] =
     {
 #line 20 "HeaderHash.gperf"
       {"t", Headers::To},
@@ -439,7 +439,7 @@ HeaderHash::in_word_set (register const char *str, register unsigned int len)
       {"sec-websocket-key1", Headers::SecWebSocketKey1}
     };
 
-  static signed char lookup[] =
+  static const signed char lookup[] =
     {
        -1,   0,  -1,  -1,  -1,  -1,   1,   2,  -1,   3,
        -1,   4,  -1,  -1,  -1,  -1,   5,  -1,  -1,  -1,

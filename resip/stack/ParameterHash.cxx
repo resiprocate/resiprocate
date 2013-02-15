@@ -1,5 +1,5 @@
-/* C++ code produced by gperf version 3.0.4 */
-/* Command-line: gperf -D -E -L C++ -t -k '*' --compare-strncmp --ignore-case -Z ParameterHash ParameterHash.gperf  */
+/* C++ code produced by gperf version 3.0.3 */
+/* Command-line: gperf -C -D -E -L C++ -t -k '*' --compare-strncmp --ignore-case -Z ParameterHash ParameterHash.gperf  */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
       && ('%' == 37) && ('&' == 38) && ('\'' == 39) && ('(' == 40) \
@@ -95,7 +95,7 @@ public:
 inline unsigned int
 ParameterHash::hash (register const char *str, register unsigned int len)
 {
-  static unsigned char asso_values[] =
+  static const unsigned char asso_values[] =
     {
       228, 228, 228, 228, 228, 228, 228, 228, 228, 228,
       228, 228, 228, 228, 228, 228, 228, 228, 228, 228,
@@ -183,7 +183,7 @@ ParameterHash::in_word_set (register const char *str, register unsigned int len)
       MAX_HASH_VALUE = 227
     };
 
-  static struct params wordlist[] =
+  static const struct params wordlist[] =
     {
 #line 59 "ParameterHash.gperf"
       {"nc", ParameterTypes::nc},
@@ -369,7 +369,7 @@ ParameterHash::in_word_set (register const char *str, register unsigned int len)
       {"effective-by", ParameterTypes::effectiveBy}
     };
 
-  static signed char lookup[] =
+  static const signed char lookup[] =
     {
       -1, -1,  0, -1,  1,  2,  3, -1,  4,  5, -1, -1,  6,  7,
        8,  9, -1, 10, -1, -1, 11, 12, 13, 14, 15, -1, -1, 16,
