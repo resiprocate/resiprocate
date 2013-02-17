@@ -261,13 +261,23 @@ ParameterHash::in_word_set (register const char *str, register unsigned int len)
       {"application", ParameterTypes::application},
 #line 21 "ParameterHash.gperf"
       {"type", ParameterTypes::type},
-#line 64 "ParameterHash.gperf"
+#line 65 "ParameterHash.gperf"
       {"username", ParameterTypes::username},
 #line 84 "ParameterHash.gperf"
       {"mode", ParameterTypes::mode},
 #line 42 "ParameterHash.gperf"
       {"to-tag", ParameterTypes::toTag},
-#line 93 "ParameterHash.gperf"
+#line 92 "ParameterHash.gperf"
+      {"version", ParameterTypes::version},
+#line 76 "ParameterHash.gperf"
+      {"filename", ParameterTypes::filename},
+#line 70 "ParameterHash.gperf"
+      {"retry-after", ParameterTypes::retryAfter},
+#line 96 "ParameterHash.gperf"
+      {"network-user", ParameterTypes::networkUser},
+#line 19 "ParameterHash.gperf"
+      {"video", ParameterTypes::video},
+#line 94 "ParameterHash.gperf"
       {"document", ParameterTypes::document},
 #line 15 "ParameterHash.gperf"
       {"priority", ParameterTypes::priority},
@@ -365,7 +375,7 @@ ParameterHash::in_word_set (register const char *str, register unsigned int len)
       {"algorithm", ParameterTypes::algorithm},
 #line 65 "ParameterHash.gperf"
       {"early-only", ParameterTypes::earlyOnly},
-#line 92 "ParameterHash.gperf"
+#line 93 "ParameterHash.gperf"
       {"effective-by", ParameterTypes::effectiveBy}
     };
 
@@ -386,6 +396,7 @@ ParameterHash::in_word_set (register const char *str, register unsigned int len)
       -1, 88, -1, -1, -1, -1, -1, 89, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, 91, -1, -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, 90
     };

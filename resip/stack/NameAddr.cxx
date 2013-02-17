@@ -496,6 +496,10 @@ defineParam(tempGruu, "temp-gruu", QuotedDataParameter, "RFC 5627");
 defineParam(expires, "expires", UInt32Parameter, "RFC 3261");
 defineParam(q, "q", QValueParameter, "RFC 3261");
 defineParam(tag, "tag", DataParameter, "RFC 3261");
+defineParam(index, "index", DataParameter, "RFC 4244");
+defineParam(rc, "rc", DataParameter, "RFC 4244-bis");
+defineParam(mp, "mp", DataParameter, "RFC 4244-bis");
+defineParam(np, "np", DataParameter, "RFC 4244-bis");
 
 #undef defineParam
 

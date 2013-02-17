@@ -61,7 +61,8 @@ class ParameterTypes
          defineParam(type, "type", QuotedDataParameter, "RFC 3840"), // list
          defineParam(isFocus, "isfocus", ExistsParameter, "RFC 3840"),
          defineParam(actor, "actor", QuotedDataParameter, "RFC 3840"), // principal|msg-taker|attendant|information
-         defineParam(text, "text", ExistsOrDataParameter, "RFC 3840"), // using ExistsOrDataParameter so this parameter is compatible with both RFC3840 and RFC3326
+         defineParam(text, "text", ExistsOrDataParameter, "RFC 3326/3840"), // using ExistsOrDataParameter so this parameter is compatible with both RFC3840 and RFC3326
+         defineParam(cause, "cause", UInt32Parameter, "RFC3326"),
          defineParam(extensions, "extensions", QuotedDataParameter, "RFC 3840"), //list
 
          defineParam(Instance, "+sip.instance", QuotedDataParameter, "RFC 5626"),  // <> quoted
@@ -140,9 +141,14 @@ class ParameterTypes
 
          defineParam(url, "url", QuotedDataParameter, "draft-ietf-sip-content-indirect-mech-05"),
 
-
          defineParam(sigcompId, "sigcomp-id", QuotedDataParameter, "draft-ietf-rohc-sigcomp-sip"),
          defineParam(qop, "qop", DataParameter, "RFC 3261"),
+
+         defineParam(index, "index", DataParameter, "RFC 4244"),
+         defineParam(rc, "rc", DataParameter, "RFC 4244-bis"),
+         defineParam(mp, "mp", DataParameter, "RFC 4244-bis"),
+         defineParam(np, "np", DataParameter, "RFC 4244-bis"),
+
          defineParam(qopOptions, "qop", DataParameter, "RFC 3261"),
          defineParam(addTransport, "addTransport", ExistsParameter, "Internal"),
 		 defineParam(wsSrcIp, "ws-src-ip", DataParameter, ""),

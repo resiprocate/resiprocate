@@ -1,6 +1,8 @@
 #include "rutil/FileSystem.hxx"
 #include "rutil/Logger.hxx"
 
+#include <sys/stat.h>
+
 #include <cassert>
 using namespace resip;
 
@@ -99,8 +101,30 @@ FileSystem::Directory::iterator::operator->() const
 {
    return &mFile;
 }
-#else
 
+bool
+FileSystem::Directory::iterator::is_directory() const
+{
+#if HAVE_STRUCT_DIRENT_D_TYPE
+   return mDirent->d_type == DT_DIR;
+#else
+   struct stat s;
+   stat(mDirent->d_name, &s);
+   return S_ISDIR(s.st_mode);
+#endif
+}
+
+int 
+FileSystem::Directory::create() const
+{
+   if(mkdir(mPath.c_str(), 0777) == -1)
+   {
+      return errno;
+   }
+   return 0;
+}
+
+#else
 
 FileSystem::Directory::iterator::iterator() :
    mWinSearch(0)
@@ -158,6 +182,7 @@ FileSystem::Directory::iterator::operator++()
    else
    {
       mFile = fileData.cFileName;
+      mIsDirectory = (fileData.dwFileAttributes & FILE_ATTRIBUTE_DEVICE) > 0;
    }  
    return *this;
 }
@@ -196,6 +221,23 @@ FileSystem::Directory::iterator::operator->() const
 {
    return &mFile;
 }
+
+bool
+FileSystem::Directory::iterator::is_directory() const
+{
+   return mIsDirectory;
+}
+
+int 
+FileSystem::Directory::create() const
+{
+   if(_mkdir(mPath.c_str()) == -1)
+   {
+      return (int)GetLastError();
+   }
+   return 0;
+}
+
 #endif
 
 

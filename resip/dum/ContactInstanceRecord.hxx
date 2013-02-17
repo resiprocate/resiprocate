@@ -12,7 +12,7 @@
 
 namespace resip
 {
-static const UInt64 NeverExpire = 0xFFFFFFFFFFFFFFFFL;
+static const UInt64 NeverExpire = 0xFFFFFFFFFFFFFFFFULL;
 
 /** A single contact record, bound to an Aor during registration.
 */

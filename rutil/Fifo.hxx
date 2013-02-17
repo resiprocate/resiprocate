@@ -116,7 +116,7 @@ Fifo<Msg>::addMultiple(Messages& msgs)
 {
    size_t inSize = msgs.size();
    size_t size = AbstractFifo<Msg*>::addMultiple(msgs);
-   if(size==inSize && mInterruptor)
+   if(size==inSize && inSize != 0 && mInterruptor)
    {
       // Only do this when the queue goes from empty to not empty.
       mInterruptor->handleProcessNotification();

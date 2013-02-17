@@ -53,6 +53,8 @@ static char *RCSSTRING __UNUSED__="$Id: addrs.c,v 1.2 2008/04/28 18:21:30 ekr Ex
 #include <net/if_dl.h>
 #include <net/if_types.h>
 #include <sys/sockio.h>
+#else
+#include <linux/if.h>
 #endif
 #include <net/route.h>
 
@@ -112,6 +114,9 @@ static void stun_rt_xaddrs(caddr_t, caddr_t, struct rt_addrinfo *);
 static int stun_grab_addrs(char *name, int addrcount,
                struct ifa_msghdr *ifam,
                nr_transport_addr addrs[], int maxaddrs, int *count);
+static int
+nr_stun_is_duplicate_addr(nr_transport_addr addrs[], int count, nr_transport_addr *addr);
+
 
 /*
  * Expand the compacted form of addresses as returned via the
@@ -142,13 +147,13 @@ static int
 stun_grab_addrs(char *name, int addrcount, struct ifa_msghdr *ifam, nr_transport_addr addrs[], int maxaddrs, int *count)
 {
     int r,_status;
-    NR_SOCKET s = -1;
+    int s = -1;
     struct ifreq ifr;
     struct rt_addrinfo info;
     struct sockaddr_in *sin;
 
     ifr.ifr_addr.sa_family = AF_INET;
-    strncpy(ifr.ifr_name, name, sizeof ifr.ifr_name);
+    strlcpy(ifr.ifr_name, name, sizeof ifr.ifr_name);
 
     if ((s = socket(ifr.ifr_addr.sa_family, SOCK_DGRAM, 0)) < 0) {
       r_log(NR_LOG_STUN, LOG_WARNING, "unable to obtain addresses from socket");
@@ -186,7 +191,6 @@ stun_grab_addrs(char *name, int addrcount, struct ifa_msghdr *ifam, nr_transport
 
         ifam = (struct ifa_msghdr *)((char *)ifam + ifam->ifam_msglen);
     }
-
 
     _status = 0;
   abort:
@@ -257,7 +261,11 @@ stun_get_mib_addrs(nr_transport_addr addrs[], int maxaddrs, int *count)
             next += nextifm->ifm_msglen;
         }
 
-        strncpy(name, sdl->sdl_data, sdl->sdl_nlen);
+        if (sdl->sdl_nlen > sizeof(name) - 1) {
+            ABORT(R_INTERNAL);
+        }
+
+        memcpy(name, sdl->sdl_data, sdl->sdl_nlen);
         name[sdl->sdl_nlen] = '\0';
 
         stun_grab_addrs(name, addrcount, ifam, addrs, maxaddrs, count);
@@ -294,7 +302,7 @@ static int nr_win32_get_adapter_friendly_name(char *adapter_GUID, char **friendl
     mbstowcs_s(&converted_chars, adapter_GUID_tchar, strlen(adapter_GUID)+1,
                adapter_GUID, _TRUNCATE);
 #else
-    strncpy(adapter_GUID_tchar, _NR_MAX_NAME_LENGTH, adapter_GUID);
+    strlcpy(adapter_GUID_tchar, _NR_MAX_NAME_LENGTH, adapter_GUID);
 #endif
 
     _tcscpy_s(adapter_key, _NR_MAX_KEY_LENGTH, TEXT(_ADAPTERS_BASE_REG));
@@ -421,7 +429,7 @@ stun_get_win32_addrs(nr_transport_addr addrs[], int maxaddrs, int *count)
         addrs[n].addr=(struct sockaddr *)&(addrs[n].u.addr4);
         addrs[n].addr_len=sizeof(struct sockaddr_in);
 
-        strncpy(addrs[n].ifname, munged_ifname, sizeof(addrs[n].ifname));
+        strlcpy(addrs[n].ifname, munged_ifname, sizeof(addrs[n].ifname));
         snprintf(addrs[n].as_string,40,"IP4:%s:%d",inet_ntoa(addrs[n].u.addr4.sin_addr),
                  ntohs(addrs[n].u.addr4.sin_port));
 
@@ -521,7 +529,7 @@ stun_get_win32_addrs(nr_transport_addr addrs[], int maxaddrs, int *count)
             continue;
           }
 
-          strncpy(addrs[n].ifname, munged_ifname, sizeof(addrs[n].ifname));
+          strlcpy(addrs[n].ifname, munged_ifname, sizeof(addrs[n].ifname));
           if (++n >= maxaddrs)
             goto done;
         }
@@ -558,30 +566,34 @@ stun_get_siocgifconf_addrs(nr_transport_addr addrs[], int maxaddrs, int *count)
    int s = socket( AF_INET, SOCK_DGRAM, 0 );
    int len = 100 * sizeof(struct ifreq);
    int r;
+   int e;
+   char *ptr;
+   int tl;
+   int n;
+   struct ifreq ifr2;
 
    char buf[ len ];
 
    ifc.ifc_len = len;
    ifc.ifc_buf = buf;
 
-   int e = ioctl(s,SIOCGIFCONF,&ifc);
-   char *ptr = buf;
-   int tl = ifc.ifc_len;
-   int n=0;
+   e = ioctl(s,SIOCGIFCONF,&ifc);
+   ptr = buf;
+   tl = ifc.ifc_len;
+   n=0;
 
    while ( (tl > 0) && ( n < maxaddrs) )
    {
       struct ifreq* ifr = (struct ifreq *)ptr;
 
 #ifdef LINUX
-      int si = sizeof(ifr->ifr_name) + sizeof(ifr->ifr_addr);
+      int si = sizeof(struct ifreq);
 #else
       int si = sizeof(ifr->ifr_name) + MAX(ifr->ifr_addr.sa_len, sizeof(ifr->ifr_addr));
 #endif
       tl -= si;
       ptr += si;
 
-      struct ifreq ifr2;
       ifr2 = *ifr;
 
       e = ioctl(s,SIOCGIFADDR,&ifr2);
@@ -610,7 +622,7 @@ stun_get_siocgifconf_addrs(nr_transport_addr addrs[], int maxaddrs, int *count)
 }
 #endif
 
-int
+static int
 nr_stun_is_duplicate_addr(nr_transport_addr addrs[], int count, nr_transport_addr *addr)
 {
     int i;

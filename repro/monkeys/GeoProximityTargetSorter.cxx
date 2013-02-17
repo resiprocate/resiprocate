@@ -40,6 +40,9 @@ KeyValueStore::Key GeoProximityTargetSorter::mGeoTargetSortingDoneKey = Proxy::a
 // Geo IP tables is not required
 static ExtensionParameter p_geolocation("x-repro-geolocation");
 
+void* GeoProximityTargetSorter::mGeoIPv4 = 0;
+void* GeoProximityTargetSorter::mGeoIPv6 = 0;
+
 class GeoProximityTargetContainer
 {
 public:
@@ -66,9 +69,7 @@ GeoProximityTargetSorter::GeoProximityTargetSorter(ProxyConfig& config) :
    mRUriRegularExpressionData(config.getConfigData("GeoProximityRequestUriFilter", "")),
    mRUriRegularExpression(0),
    mDefaultDistance(config.getConfigUnsignedLong("GeoProximityDefaultDistance", 0)),
-   mLoadBalanceEqualDistantTargets(config.getConfigBool("LoadBalanceEqualDistantTargets", true)),
-   mGeoIPv4(0),
-   mGeoIPv6(0)
+   mLoadBalanceEqualDistantTargets(config.getConfigBool("LoadBalanceEqualDistantTargets", true))
 {
    int flags = REG_EXTENDED | REG_NOSUB;
 
@@ -97,6 +98,8 @@ GeoProximityTargetSorter::GeoProximityTargetSorter(ProxyConfig& config) :
       mGeoIPv4 = (GeoIP*)GeoIP_open(geoIPv4Database.c_str(), GEOIP_MEMORY_CACHE);  // Cache entire DB in memory - could make this configurable
       if(mGeoIPv4 != 0)
       {
+         InfoLog(<< "GeoProximityTargetSorter: IPv4 db info: " << GeoIP_database_info((GeoIP*)mGeoIPv4));
+
          int i = GeoIP_database_edition((GeoIP*)mGeoIPv4);
    
          if(i != GEOIP_CITY_EDITION_REV0 /* 6 */ &&
@@ -127,6 +130,8 @@ GeoProximityTargetSorter::GeoProximityTargetSorter(ProxyConfig& config) :
       mGeoIPv6 = (GeoIP*)GeoIP_open(geoIPv6Database.c_str(), GEOIP_MEMORY_CACHE);  // Cache entire DB in memory - could make this configurable
       if(mGeoIPv6 != 0)
       {
+         InfoLog(<< "GeoProximityTargetSorter: IPv6 db info: " << GeoIP_database_info((GeoIP*)mGeoIPv6));
+
          int i = GeoIP_database_edition((GeoIP*)mGeoIPv6);
 
          if(i != GEOIP_CITY_EDITION_REV1_V6 /* 30 */ &&
@@ -320,18 +325,16 @@ GeoProximityTargetSorter::getClientGeoLocation(const SipMessage& request, double
       }
    }
 
+   // If we cannot determine geo location of target - then return 0,0
+   latitude = 0;
+   longitude = 0;
+
    // Next - try and find the public IP of the client that sent the request
    Tuple publicAddress = Helper::getClientPublicAddress(request);
    if(publicAddress.getType() != UNKNOWN_TRANSPORT)
    {
       // Do a MaxMind GeoIP lookup to determine latitude and longitude
-      geoIPLookup(publicAddress, latitude, longitude);
-   }
-   else
-   {
-      // Cannot determine geo location of target - return 0,0
-      latitude = 0;
-      longitude = 0;
+      geoIPLookup(publicAddress, &latitude, &longitude);
    }
 }
 
@@ -345,11 +348,15 @@ GeoProximityTargetSorter::getTargetGeoLocation(const Target& target, double& lat
       return;
    }
 
+   // If we cannot determine geo location of client - then return 0,0
+   latitude = 0;
+   longitude = 0;
+
    // Next - see if we stored a public IP of the client at registration time
    if(target.rec().mPublicAddress.getType() != UNKNOWN_TRANSPORT)
    {
       // Do a MaxMind GeoIP lookup to determine latitude and longitude
-      geoIPLookup(target.rec().mPublicAddress, latitude, longitude);
+      geoIPLookup(target.rec().mPublicAddress, &latitude, &longitude);
    }
    else
    {
@@ -358,13 +365,7 @@ GeoProximityTargetSorter::getTargetGeoLocation(const Target& target, double& lat
       if(!contactAddress.isPrivateAddress())
       {
          // Do a MaxMind GeoIP lookup to determine latitude and longitude
-         geoIPLookup(contactAddress, latitude, longitude);
-      }
-      else
-      {
-         // Cannot determine geo location of client - return 0,0
-         latitude = 0;
-         longitude = 0;
+         geoIPLookup(contactAddress, &latitude, &longitude);
       }
    }
 }
@@ -434,7 +435,7 @@ GeoProximityTargetSorter::calculateDistance(double lat1, double long1, double la
 }
 
 bool 
-GeoProximityTargetSorter::geoIPLookup(const Tuple& address, double& latitude, double& longitude)
+GeoProximityTargetSorter::geoIPLookup(const Tuple& address, double* latitude, double* longitude, Data* country, Data* region, Data* city)
 {
 #ifdef USE_MAXMIND_GEOIP
    GeoIPRecord *gir = 0;
@@ -456,14 +457,20 @@ GeoProximityTargetSorter::geoIPLookup(const Tuple& address, double& latitude, do
    
    if(gir != 0)
    {
-      latitude = gir->latitude;
-      longitude = gir->longitude;
+      Data countryData(Data::Share, gir->country_code ? gir->country_code : "");
+      Data regionData(Data::Share, gir->region ? gir->region : "");
+      Data cityData(Data::Share, gir->city ? gir->city : "");
+      if(latitude) *latitude = gir->latitude;
+      if(longitude) *longitude = gir->longitude;
+      if(country) *country = countryData;
+      if(region) *region = regionData;
+      if(city) *city = cityData;
 
       DebugLog(<< "GeoProximityTargetSorter::geoIPLookup: Tuple=" << address 
-               << ", Country=" << Data(gir->country_code)
-               << ", Region=" << Data(gir->region)
-               << ", City=" << Data(gir->city)
-               << ", Lat/Long=" << latitude << "/" << longitude);
+               << ", Country=" << countryData
+               << ", Region=" << regionData
+               << ", City=" << cityData
+               << ", Lat/Long=" << gir->latitude << "/" << gir->longitude);
 
       GeoIPRecord_delete(gir);
       return true;
@@ -474,8 +481,6 @@ GeoProximityTargetSorter::geoIPLookup(const Tuple& address, double& latitude, do
    }
 #endif
 
-   latitude = 0;
-   longitude = 0;
    return false;
 }
 

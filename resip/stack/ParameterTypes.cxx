@@ -65,6 +65,7 @@ defineParam(type, "type", QuotedDataParameter, NameAddr, "RFC 3840"); // list
 defineParam(isFocus, "isfocus", ExistsParameter, NameAddr, "RFC 3840");
 defineParam(actor, "actor", QuotedDataParameter, NameAddr, "RFC 3840"); // principal|msg-taker|attendant|information
 defineParam2(text, "text", ExistsOrDataParameter, NameAddr, Token, "RFC 3326/3840");
+defineParam(cause, "cause", UInt32Parameter, Token, "RFC3326");
 defineParam(extensions, "extensions", QuotedDataParameter, NameAddr, "RFC 3840"); //list
 defineParam(Instance, "+sip.instance", QuotedDataParameter, NameAddr, "RFC 5626");  // <> quoted
 defineParam(regid, "reg-id", UInt32Parameter, NameAddr, "RFC 5626");
@@ -142,6 +143,11 @@ defineParam(url, "url", QuotedDataParameter, Mime, "RFC 4483");
 
 defineParam2(sigcompId, "sigcomp-id", QuotedDataParameter, Uri, Via, "RFC 5049");
 defineParam(qop,"qop",DataParameter, Auth, "RFC 3261");
+
+defineParam(index, "index", DataParameter, NameAddr, "RFC 4244");
+defineParam(rc, "rc", DataParameter, NameAddr, "RFC 4244-bis");
+defineParam(mp, "mp", DataParameter, NameAddr, "RFC 4244-bis");
+defineParam(np, "np", DataParameter, NameAddr, "RFC 4244-bis");
 
 // Internal use only
 defineParam(qopOptions,"qop",DataParameter, Auth, "RFC 3261");

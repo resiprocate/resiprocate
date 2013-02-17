@@ -11,14 +11,12 @@ It is built on top of reSIProcate's dialog usage manager (DUM)
 Building
 ========
 
-In the main reSIProcate directory:
+In the main reSIProcate directory, when you run configure, you
+must explicitly request that the library is built:
 
-./configure
-make b2bua
+./configure --with-b2bua
 
-NOTE:  the command `make' or `make all' will NOT build the B2BUA
-  by default.  I have left it out of the default build until
-  it has been tested more extensively by the reSIProcate community.
+NOTE:  configure does NOT include the B2BUA by default.
 
 Background and technical notes
 ==============================
@@ -33,7 +31,7 @@ Some key points about this code:
 
 - It produces a shared object - to produce an executable, 
   the B2BUA class must be instantiated and put to work.
-  Such an example will be added shortly.  A typical
+  Such an example exists in the apps/basicB2BUA directory.  A typical
   implementation of a B2BUA must implement the following
   classes:
   - b2bua::CallRoute
@@ -42,16 +40,18 @@ Some key points about this code:
   - b2bua::B2BUA
 
 - It relies on rtpproxy from http://www.rtpproxy.org to relay
-  the media streams.  I have created various patches for
+  the media streams.  There are also various patches for
   rtpproxy 0.2:
   - rtpproxy sends notification to the B2BUA on media timeout
   - fix a file descriptor bug
   - timeout on either direction
-  The rtpproxy patches are being posted on the rtpproxy mailing
-  list shortly.
+  The rtpproxy patches have been posted on the rtpproxy mailing
+  list:
+
+   http://lists.rtpproxy.org/pipermail/users/2008-May/000016.html
 
 Daniel Pocock
-daniel@readytechnology.co.uk
+daniel@pocock.com.au
 
 
 

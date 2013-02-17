@@ -21,6 +21,13 @@ TlsPeerAuthManager::TlsPeerAuthManager(DialogUsageManager& dum, TargetCommand::T
 {
 }
 
+TlsPeerAuthManager::TlsPeerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target, std::set<Data>& trustedPeers, bool thirdPartyRequiresCertificate, CommonNameMappings& commonNameMappings) :
+   DumFeature(dum, target),
+   mTrustedPeers(trustedPeers),
+   mThirdPartyRequiresCertificate(thirdPartyRequiresCertificate),
+   mCommonNameMappings(commonNameMappings)
+{
+}
 
 TlsPeerAuthManager::~TlsPeerAuthManager()
 {
@@ -80,6 +87,23 @@ TlsPeerAuthManager::authorizedForThisIdentity(
          DebugLog(<< "Matched certificate name " << i << " against domain " << domain);
          return true;
       }
+      CommonNameMappings::iterator _mapping =
+         mCommonNameMappings.find(i);
+      if(_mapping != mCommonNameMappings.end())
+      {
+         DebugLog(<< "CN mapping(s) exist for the certificate " << i);
+         PermittedFromAddresses& permitted = _mapping->second;
+         if(permitted.find(aor) != permitted.end())
+         {
+            DebugLog(<< "Matched certificate name " << i << " against full AoR " << aor << " by common name mappings");
+            return true;
+         }
+         if(permitted.find(domain) != permitted.end())
+         {
+            DebugLog(<< "Matched certificate name " << i << " against domain " << domain << " by common name mappings");
+            return true;
+         }
+      }
       DebugLog(<< "Certificate name " << i << " doesn't match AoR " << aor << " or domain " << domain);
    }
 
@@ -120,7 +144,9 @@ TlsPeerAuthManager::handle(SipMessage* sipMessage)
    const std::list<resip::Data> &peerNames = sipMessage->getTlsPeerNames();
    if (mDum.isMyDomain(sipMessage->header(h_From).uri().host()))
    {
-      if (requiresAuthorization(*sipMessage))
+      // peerNames is empty if client certificate mode is `optional'
+      // or if the message didn't come in on TLS transport
+      if (requiresAuthorization(*sipMessage) && !peerNames.empty())
       {
          if(authorizedForThisIdentity(peerNames, sipMessage->header(h_From).uri()))
             return Authorized;
@@ -134,12 +160,19 @@ TlsPeerAuthManager::handle(SipMessage* sipMessage)
    }
    else
    {
-      if(mThirdPartyRequiresCertificate && peerNames.size() == 0)
+      // peerNames is empty if client certificate mode is `optional'
+      // or if the message didn't come in on TLS transport
+      if(peerNames.empty())
       {
-         SharedPtr<SipMessage> response(new SipMessage);
-         Helper::makeResponse(*response, *sipMessage, 403, "Mutual TLS required to handle that message");
-         mDum.send(response);
-         return Rejected;
+         if(mThirdPartyRequiresCertificate)
+         {
+            SharedPtr<SipMessage> response(new SipMessage);
+            Helper::makeResponse(*response, *sipMessage, 403, "Mutual TLS required to handle that message");
+            mDum.send(response);
+            return Rejected;
+         }
+         else
+            return Skipped;
       }
       if(authorizedForThisIdentity(peerNames, sipMessage->header(h_From).uri()))
          return Authorized;

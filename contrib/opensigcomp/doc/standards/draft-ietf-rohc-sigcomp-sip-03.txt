@@ -1,0 +1,1195 @@
+
+Robust Header Compression                                     C. Bormann
+Internet-Draft                                   Universitaet Bremen TZI
+Expires: April 9, 2007                                            Z. Liu
+                                                   Nokia Research Center
+                                                                R. Price
+                                             Cogent Defence and Security
+                                                                Networks
+                                                            G. Camarillo
+                                                                Ericsson
+                                                         October 6, 2006
+
+
+   Applying Signaling Compression (SigComp) to the Session Initiation
+                             Protocol (SIP)
+                   draft-ietf-rohc-sigcomp-sip-03.txt
+
+Status of this Memo
+
+   By submitting this Internet-Draft, each author represents that any
+   applicable patent or other IPR claims of which he or she is aware
+   have been or will be disclosed, and any of which he or she becomes
+   aware will be disclosed, in accordance with Section 6 of BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF), its areas, and its working groups.  Note that
+   other groups may also distribute working documents as Internet-
+   Drafts.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   The list of current Internet-Drafts can be accessed at
+   http://www.ietf.org/ietf/1id-abstracts.txt.
+
+   The list of Internet-Draft Shadow Directories can be accessed at
+   http://www.ietf.org/shadow.html.
+
+   This Internet-Draft will expire on April 9, 2007.
+
+Copyright Notice
+
+   Copyright (C) The Internet Society (2006).
+
+Abstract
+
+   This document describes some specifics that apply when Signaling
+
+
+
+Bormann, et al.           Expires April 9, 2007                 [Page 1]
+
+
+Internet-Draft           Applying SigComp to SIP            October 2006
+
+
+   Compression (SigComp) is applied to the Session Initiation Protocol
+   (SIP), such as default minimum values of SigComp parameters,
+   compartment and state management, and a few issues on SigComp over
+   TCP.  Any implementation of SigComp for use with SIP must conform to
+   this document, in addition to SigComp and support of the SIP and
+   Session Description Protocol (SDP) static dictionary.
+
+
+Table of Contents
+
+   1.  Introduction . . . . . . . . . . . . . . . . . . . . . . . . .  3
+   2.  Terminology  . . . . . . . . . . . . . . . . . . . . . . . . .  3
+   3.  Minimum Values of SigComp Parameters for SIP/SigComp . . . . .  3
+     3.1.  decompression_memory_size (DMS) for SIP/SigComp  . . . . .  4
+     3.2.  state_memory_size (SMS) for SIP/SigComp  . . . . . . . . .  4
+     3.3.  cycles_per_bit (CPB) for SIP/SigComp . . . . . . . . . . .  5
+     3.4.  SigComp_version (SV) for SIP/SigComp . . . . . . . . . . .  5
+     3.5.  locally available state (LAS) for SIP/SigComp  . . . . . .  5
+   4.  Delimiting SIP Messages and SigComp Messages on the Same
+       Port . . . . . . . . . . . . . . . . . . . . . . . . . . . . .  5
+   5.  Continuous Mode over TCP . . . . . . . . . . . . . . . . . . .  6
+   6.  Compartment and State Management for SIP/SigComp . . . . . . .  6
+     6.1.  Remote Application Identification  . . . . . . . . . . . .  7
+     6.2.  Identifier Comparison Rules  . . . . . . . . . . . . . . .  9
+     6.3.  Compartment Opening and Closure  . . . . . . . . . . . . . 10
+     6.4.  Compartment Valid During a Transaction . . . . . . . . . . 11
+     6.5.  Compartment Valid During a Registration  . . . . . . . . . 11
+     6.6.  Compartment Valid During a Dialog  . . . . . . . . . . . . 12
+   7.  Recommendations for Network Administrators . . . . . . . . . . 12
+   8.  Private Agreements . . . . . . . . . . . . . . . . . . . . . . 13
+   9.  Backwards Compatibility  . . . . . . . . . . . . . . . . . . . 13
+   10. Example  . . . . . . . . . . . . . . . . . . . . . . . . . . . 13
+   11. Security Considerations  . . . . . . . . . . . . . . . . . . . 16
+   12. IANA Considerations  . . . . . . . . . . . . . . . . . . . . . 16
+   13. Acknowledgements . . . . . . . . . . . . . . . . . . . . . . . 17
+   14. References . . . . . . . . . . . . . . . . . . . . . . . . . . 17
+     14.1. Normative References . . . . . . . . . . . . . . . . . . . 17
+     14.2. Informative References . . . . . . . . . . . . . . . . . . 18
+   Appendix A.  Shim header for sending uncompressed messages . . . . 18
+   Authors' Addresses . . . . . . . . . . . . . . . . . . . . . . . . 20
+   Intellectual Property and Copyright Statements . . . . . . . . . . 21
+
+
+
+
+
+
+
+
+
+
+Bormann, et al.           Expires April 9, 2007                 [Page 2]
+
+
+Internet-Draft           Applying SigComp to SIP            October 2006
+
+
+1.  Introduction
+
+   SigComp [RFC3320] is a solution for compressing messages generated by
+   application protocols.  Although its primary driver is to compress
+   SIP [RFC3261] messages, the solution itself has been intentionally
+   designed to be application agnostic so that it can be applied to any
+   application protocol.  (This is denoted as ANY/SigComp.)
+   Consequently, many application dependent specifics are left out of
+   the base standard.  It is intended that a separate specification is
+   used to describe those specifics when SigComp is applied to a
+   particular application protocol.
+
+   This document binds SigComp and SIP (denoted as SIP/SigComp).  Any
+   SigComp implementation that is used for the compression of SIP
+   messages must conform to this document, as well as to [RFC3320].
+   Additionally, it must support the SIP/SDP static dictionary as
+   specified in [RFC3485] and the mechanism for discovering SigComp
+   support at the SIP layer as specified in [RFC3486].
+
+
+2.  Terminology
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+   document are to be interpreted as described in BCP 14 [RFC2119].
+
+
+3.  Minimum Values of SigComp Parameters for SIP/SigComp
+
+   In order to support a wide range of capabilities among endpoints
+   implementing SigComp, SigComp defines a few parameters to describe
+   SigComp behavior (see section 3.3 of [RFC3320]).  For each parameter,
+   [RFC3320] specifies a minimum value that any SigComp endpoint MUST
+   support for ANY/SigComp.  Those minimum values were determined with
+   the consideration of all imaginable devices in which SigComp may be
+   implemented.  Scalability was also considered as a key factor.
+
+   However, some of the minimum values specified in [RFC3320] are too
+   small to allow good performance for SIP message compression.
+   Therefore, they are increased for SIP/SigComp as specified in the
+   following sections.  For completeness, those parameters that are the
+   same for SIP/SigComp as they are for ANY/SigComp are also listed.
+
+   Note: the new minimum values are specific to SIP/SigComp.  They do
+   not apply to any other application protocols.
+
+   Note: a SigComp endpoint MAY offer additional resources if available;
+   these resources can be advertised to remote endpoints as described in
+
+
+
+Bormann, et al.           Expires April 9, 2007                 [Page 3]
+
+
+Internet-Draft           Applying SigComp to SIP            October 2006
+
+
+   section 9.4.9 of [RFC3320].
+
+3.1.  decompression_memory_size (DMS) for SIP/SigComp
+
+   Minimum value for ANY/SigComp: 2048 bytes, as specified in section
+   3.3.1 of [RFC3320].
+
+   Minimum value for SIP/SigComp: 8192 bytes.
+
+   Reason: a DMS of 2048 bytes is too small for SIP message compression,
+   as it seriously limits the compression ratio and even makes
+   compression impossible for certain messages.  For example, the
+   condition set by [RFC3320] for SigComp over UDP means: C + 2*B + R +
+   2*S + 128 < DMS (each term is described below).  On the other hand,
+   8KB additional memory should not cause any problem for an endpoint
+   that already implements SIP, SigComp, and applications that use SIP,
+   as DMS is memory only temporarily needed during decompression of a
+   SigComp message (the memory can be reclaimed when the message has
+   been decompressed).
+
+   C  size of compressed application message, depending on R
+   B  size of bytecode (note: two copies -- one as part of the SigComp
+      message and one in UDVM memory)
+   R  size of ring buffer in UDVM memory
+   S  any additional state uploaded other than that created from the
+      content of the ring buffer at the end of decompression (similar to
+      B, two copies of S are needed)
+   128 the smallest address in UDVM memory to copy bytecode to
+
+3.2.  state_memory_size (SMS) for SIP/SigComp
+
+   Minimum value for ANY/SigComp: 0 (zero) bytes, as specified in
+   section 3.3.1 of [RFC3320].
+
+   Minimum value for SIP/SigComp: 2048 bytes.
+
+   Reason: a non-zero SMS allows an endpoint to upload a state in the
+   first SIP message sent to a remote endpoint without the uncertainty
+   of whether or not it can be created in the remote endpoint.  A non-
+   zero SMS obviously requires the SIP/SigComp implementation to keep
+   state.  Based on the observation that there is little gain from
+   stateless SigComp compression, the assumption is that purely
+   stateless SIP implementations are unlikely to provide a SigComp
+   function.  Stateful implementations should have little problem to
+   keep 2K additional state for each compartment (see Section 6).
+
+   Note: SMS is a parameter that applies to each individual compartment.
+   An endpoint MAY offer different SMS values for different compartments
+
+
+
+Bormann, et al.           Expires April 9, 2007                 [Page 4]
+
+
+Internet-Draft           Applying SigComp to SIP            October 2006
+
+
+   as long as the SMS value is not less than 2048 bytes.
+
+   Compressors that make use of initial state memory MUST implement the
+   SigComp Negative Acknowledgement (NACK) Mechanism [RFC4077].  (Note
+   that there is no such requirement on decompressors, but see also
+   Section 6.)  For this requirement, initial state memory is defined as
+   the assumption of a non-zero SMS value before having received an
+   advertisement of non-zero SMS (e.g., via returned parameters as
+   specified in section 9.4.9 of [RFC3320]); ANY/SigComp as defined in
+   [RFC3320] does not have initial state memory.
+
+3.3.  cycles_per_bit (CPB) for SIP/SigComp
+
+   Minimum value for ANY/SigComp: 16, as specified in section 3.3.1 of
+   [RFC3320].
+
+   Minimum value for SIP/SigComp: 16 (same as above)
+
+3.4.  SigComp_version (SV) for SIP/SigComp
+
+   For ANY/SigComp: 0x01, as specified in section 3.3.2 of [RFC3320].
+
+   For SIP/SigComp: >= 0x02 (at least SigComp + NACK)
+
+3.5.  locally available state (LAS) for SIP/SigComp
+
+   Minimum LAS for ANY/SigComp: none, see section 3.3.3 of [RFC3320].
+
+   Minimum LAS for SIP/SigComp: the SIP/SDP static dictionary as defined
+   in [RFC3485].
+
+
+4.  Delimiting SIP Messages and SigComp Messages on the Same Port
+
+   In order to limit the number of ports required by a SigComp-aware
+   endpoint, it is possible to allow both SigComp messages and 'vanilla'
+   SIP messages (i.e. uncompressed SIP messages with no SigComp header)
+   to arrive on the same port.
+
+   For a message-based transport such as UDP or SCTP, this can be done
+   per message.  The receiving endpoint checks the first octet of the
+   UDP/SCTP payload to determine whether the message has been compressed
+   using SigComp.  If the MSBs of the octet are "11111" then the message
+   is considered to be a SigComp message and is parsed as per [RFC3320].
+   If the MSBs of the octet take any other value, then the message is
+   assumed to be an uncompressed SIP message, and is passed directly to
+   the application with no further effect on the SigComp layer.
+
+
+
+
+Bormann, et al.           Expires April 9, 2007                 [Page 5]
+
+
+Internet-Draft           Applying SigComp to SIP            October 2006
+
+
+   For a stream-based transport such as TCP, the distinction is per
+   connection.  The receiving endpoint checks the first octet of the TCP
+   data stream to determine whether the stream has been compressed using
+   SigComp.  If the MSBs of the octet are "11111" then the stream is
+   considered to contain SigComp messages and is parsed as per
+   [RFC3320].  If the MSBs of the octet take any other value, then the
+   stream is assumed to contain uncompressed SIP messages, and is passed
+   directly to the application with no further effect on the SigComp
+   layer.  Note that SigComp message delimiters MUST NOT be used if the
+   stream contains uncompressed SIP messages.
+
+   Applications MUST NOT mix SIP messages and SigComp messages on a
+   single TCP connection.  If the TCP connection is used to carry
+   SigComp messages then all messages sent over the connection MUST have
+   a SigComp header and be delimited by the use of 0xFFFF as described
+   in [RFC3320].
+
+   Note: Appendix A shows how to send uncompressed messages in a SigComp
+   structured TCP connection using a "well-known shim header".  Should
+   it for any reason not be desirable to set up more than one TCP
+   connection to a SIP implementation, but the flexibility to send both
+   compressed and uncompressed SIP messages be required, the compressor
+   can set up a SigComp structured connection and send any uncompressed
+   SIP messages using the well-known shim header.
+
+
+5.  Continuous Mode over TCP
+
+   Continuous Mode is a special feature of SigComp, which is designed to
+   improve the overall compression ratio for long-lived connections.
+   Its use requires pre-agreement between the SigComp compressor and
+   decompressor.  Continuous mode is not used with SIP/SigComp.
+
+   Reason: continuous mode requires the transport itself to provide a
+   certain level of protection against denial of service attacks.  TCP
+   alone is not considered to provide enough protection.
+
+
+6.  Compartment and State Management for SIP/SigComp
+
+   An application exchanging compressed traffic with a remote
+   application has a compartment that contains state information needed
+   to compress outgoing messages and to decompress incoming messages.
+   To increase the compression efficiency, the application must assign
+   distinct compartments to distinct remote applications.
+
+
+
+
+
+
+Bormann, et al.           Expires April 9, 2007                 [Page 6]
+
+
+Internet-Draft           Applying SigComp to SIP            October 2006
+
+
+6.1.  Remote Application Identification
+
+   SIP/SigComp applications identify remote applications by their SIP/
+   SigComp identifiers.  Each SIP/SigComp application MUST have SIP/
+   SigComp identifier URN (Uniform Resource Name) that uniquely
+   identifies the application.  Usage of a URN provides a persistent and
+   unique name for the SIP/SigComp identifier.  It also provides an easy
+   way to guarantee uniqueness.  This URN MUST be persistent across
+   power cycles of the device or devices hosting the SIP/SigComp
+   application.  The SIP/ SigComp identifier MUST NOT change as the
+   application moves from one network to another.
+
+   A SIP/Sigcomp application SHOULD use a UUID (Universally Unique
+   IDentifier) URN as its SIP/SigComp identifier.  The UUID URN
+   [RFC4122] allows for non-centralized computation of a URN based on
+   time, unique names (such as a MAC address), or a random number
+   generator.  If a URN scheme other than UUID is used, the URN MUST be
+   selected such that the application can be certain that no other SIP/
+   SigComp application would choose the same URN value.
+
+   Note that the definition of SIP/SigComp identifier is similar to the
+   definition of instance identifier in [I-D.ietf-sip-outbound].  One
+   difference is that instance identifiers are only required to be
+   unique within their AoR (Address of Record) while SIP/SigComp
+   identifiers are required to be globally unique.
+
+   Nevertheless, devices may choose to generate globally unique instance
+   identifiers.  A device with a globally unique instance identifier
+   SHOULD use its instance identifier as its SIP/SigComp identifier.
+
+   Server farms that share SIP/SigComp state across servers MUST use the
+   same SIP/SigComp identifier for all their servers.
+
+   SIP/SigComp identifiers are carried in the 'sigcomp-id' SIP URI
+   (Uniform Resource Identifier) or Via header field parameter.  The
+   'sigcomp-id' SIP URI parameter is a 'uri-parameter', as defined by
+   the SIP ABNF (Augmented Backus-Naur Form, Section 25.1 of [RFC3261]).
+   The following is its ABNF [RFC4234]:
+
+      sip-sigcomp-id = "sigcomp-id=" instance-val
+
+      instance-val   = *uric ; defined in RFC 2396
+
+   The Via 'sigcomp-id' parameter is a 'via-extension', as defined by
+   the SIP ABNF (Section 25.1 of [RFC3261]).  The following is its ABNF
+   [RFC4234]:
+
+
+
+
+
+Bormann, et al.           Expires April 9, 2007                 [Page 7]
+
+
+Internet-Draft           Applying SigComp to SIP            October 2006
+
+
+      via-sip-sigcomp-id = "sigcomp-id" EQUAL
+                           LDQUOT "<" instance-val ">" RDQUOT
+
+      instance-val   = *uric ; defined in RFC 2396
+
+   The following is an example of a Via header field with a 'sigcomp-id'
+   parameter:
+
+      Via: SIP/2.0/UDP server1.example.com:5060
+         ;branch=z9hG4bK87a7
+         ;comp=sigcomp
+         ;sigcomp-id="<urn:uuid:0C67446E-F1A1-11D9-94D3-000A95A0E128>"
+
+   Note that some characters that are allowed to appear in a Via header
+   field parameter, such as ':' (colon), are not allowed to appear in a
+   SIP URI parameter.  Those characters need to be escaped when they
+   appear in a SIP URI parameter.
+
+      The need to escape characters in parameters could be avoided by
+      defining Contact, Route, Record-Route, Path, and Service-Route
+      header field 'sigcomp-id' parameters instead of the 'sigcomp-id'
+      SIP URI parameter.  For example, instance identifiers typically
+      appear in '+sip.instance' Contact header field parameters, and not
+      in SIP URI parameters.  We have chosen to define 'sigcomp-id' as a
+      SIP URI parameter to be consistent with the use of the already-in-
+      use 'comp=sigcomp' parameter, which is a SIP URI parameter as
+      well.
+
+   The following is an example of a 'sigcomp-id' SIP URI parameter:
+
+      sigcomp-id:urn%3auuid%3a0C67446E-F1A1-11D9-94D3-000A95A0E128
+
+   SIP messages are matched with remote application identifiers as
+   follows.
+
+   Outgoing requests: the remote application identifier is the SIP/
+      SigComp identifier of the URI to which the request is sent.  If
+      the URI does not contain a SIP/SigComp identifier but is
+      associated with an instance identifier (e.g., the URI appears in a
+      Contact header field with a '+sip.instance' parameter), the
+      instance identifier is used as the remote application identifier.
+      In other cases, the remote application identifier is the host part
+      of the URI to which the request is sent (this is to support legacy
+      SIP/SigComp applications).
+
+
+
+
+
+
+
+Bormann, et al.           Expires April 9, 2007                 [Page 8]
+
+
+Internet-Draft           Applying SigComp to SIP            October 2006
+
+
+
+   Incoming responses: the remote application identifier is the same as
+      the one of the previously-sent request that initiated the
+      transaction the response belongs to.
+
+   Incoming requests: the remote application identifier is the SIP/
+      SigComp identifier of the top-most Via entry.  If the Via header
+      field does not contain a SIP/SigComp identifier, the remote
+      application identifier is the sent-by parameter of the top-most
+      Via entry (this is to support legacy SIP/SigComp applications).
+
+   Outgoing responses: the remote application identifier is the same as
+      the previously-received request that initiated the transaction the
+      response belongs to.
+
+   A SIP/SigComp application placing its URI with the 'comp=sigcomp'
+   parameter in a header field MUST add a 'sigcomp-id' parameter with
+   its SIP/SigComp identifier to that URI unless the URI is associated
+   with an instance identifier (e.g., the URI appears in a Contact
+   header field with a '+sip.instance' parameter).  If the URI is
+   associated with an instance identifier, the SIP/SigComp application
+   SHOULD NOT add a 'sigcomp-id' parameter to the URI.
+
+   A SIP/SigComp application generating its own Via entry containing the
+   'comp=sigcomp' parameter MUST add a 'sigcomp-id' parameter with its
+   SIP/SigComp identifier to that Via entry.
+
+   A given remote application identifier is mapped to a particular
+   SigComp compartment ID following the rules given in Section 6.3,
+   Section 6.4, Section 6.5, Section 6.6.
+
+6.2.  Identifier Comparison Rules
+
+   Equality comparisons between SIP/SigComp identifiers are performed
+   using the rules for URN equality that are specific to the scheme in
+   the URN.  If the element performing the comparisons does not
+   understand the URN scheme, it performs the comparisons using the
+   lexical equality rules defined in RFC 2141 [RFC2141].  Lexical
+   equality may result in two URNs being considered unequal when they
+   are actually equal.  In this specific usage of URNs, the only element
+   which provides the URN is the SIP/SigComp application identified by
+   that URN.  As a result, the SIP/SigComp application SHOULD provide
+   lexically equivalent URNs in each registration it generates.  This is
+   likely to be normal behavior in any case; applications are not likely
+   to modify the value of their SIP/SigComp identifiers so that they
+   remain functionally equivalent yet lexigraphically different from
+   previous identifiers.
+
+
+
+
+Bormann, et al.           Expires April 9, 2007                 [Page 9]
+
+
+Internet-Draft           Applying SigComp to SIP            October 2006
+
+
+   Comparisons between SIP/SigComp identifiers and instance identifiers
+   are performed following the same rules.
+
+6.3.  Compartment Opening and Closure
+
+   SIP applications need to know when to open a new compartment and when
+   to close it.  The lifetime of a compartment depends on how the SIP
+   application obtained the remote application identifier (e.g., in a
+   Record-Route header field of an incoming SIP message).  There are
+   compartments that are valid for the duration of a registration, of a
+   dialog, and of a single transaction.  The following sections specify
+   how a SIP application decides the lifetime of a particular
+   compartment.
+
+   If following the rules in the following sections, a SIP application
+   is supposed to open a compartment for a remote application identifier
+   for which it already has a compartment, the SIP application MUST use
+   the already existing compartment.  That is, the SIP application MUST
+   NOT open a new compartment.  Additionally, the SIP application MUST
+   adjust the closure time for the compartment so that it is only closed
+   when the SIP application does not need it any longer.
+
+   For example, a SIP application may open a compartment valid for the
+   duration of a registration for a particular remote application
+   identifier.  At a later point, the application is supposed to open a
+   new compartment for the duration of a particular dialog for the same
+   remote application identifier.  Following the previous rule, the SIP
+   application does not open a new compartment but use the already
+   existing one for that remote application identifier.  However, the
+   SIP application must not close that compartment until both, the
+   registration and the dialog are over.  So, if the registration
+   finishes before the dialog, the compartment will not be closed
+   (because the dialog is still active) even though the compartment was
+   originally opened for the registration.
+
+   Usually, any states created during the lifetime of a compartment will
+   be "logically" deleted when the compartment is closed.  As described
+   in section 6.2 of [RFC3320], a logical deletion can become a physical
+   deletion only when no compartment continues to exist that created the
+   (same) state.
+
+   A SigComp endpoint may offer to keep a state created upon request
+   from a SigComp peer endpoint beyond the default lifetime of a
+   compartment.  This may be used to improve compression efficiency of
+   subsequent SIP messages generated by the same remote application at
+   the SigComp peer endpoint.  To indicate that such state will continue
+   to be available, the SigComp endpoint can inform its peer SigComp
+   endpoint by announcing the (partial) state ID in the returned SigComp
+
+
+
+Bormann, et al.           Expires April 9, 2007                [Page 10]
+
+
+Internet-Draft           Applying SigComp to SIP            October 2006
+
+
+   parameters at the end of the registration, dialog, or transaction
+   that was supposed to limit the lifetime of the SigComp state.  That
+   signals the state will be maintained.  As there is no way to signal
+   any limit to the lifetime of this state, both decompressors that
+   intend to offer state with possibly limited lifetimes as well as
+   compressors that make use of such state SHOULD implement the SigComp
+   Negative Acknowledgement (NACK) Mechanism [RFC4077].
+
+   As an operational concern, bugs in the compartment management
+   implementation are likely to lead to sporadic, hard to diagnose
+   failures.  Decompressors may therefore want to cache old state and,
+   if still available, allow access while logging diagnostic
+   information.  Both compressors and decompressors are RECOMMENDED to
+   implement the SigComp Negative Acknowledgement (NACK) Mechanism
+   [RFC4077], which facilitates recovery in a situation where such old
+   state may no longer be available.
+
+6.4.  Compartment Valid During a Transaction
+
+   A SIP application that needs to send a compressed SIP request SHOULD
+   open a compartment for the request's remote application identifier.
+   This compartment will be used to receive compressed responses for the
+   request.  The application SHOULD NOT close the compartment until the
+   transaction is over.
+
+   A SIP application that receives a compressed SIP request SHOULD open
+   a compartment for the request's remote application identifier.  This
+   compartment will be used to send compressed responses for the
+   request.  The application SHOULD NOT close the compartment until the
+   transaction is over.
+
+   The previous rules ensure that SIP applications always have a
+   compartment to send and receive responses.
+
+6.5.  Compartment Valid During a Registration
+
+   A REGISTER transaction can cause an application to open a new
+   compartment to be valid for the duration of the registration
+   established by the REGISTER transaction.
+
+   A 200 (OK) response for a register may contain a Path [RFC3327] and a
+   Service-Route [RFC3308] header field.  These header fields indicate
+   the route future incoming and outgoing requests will follow.
+
+   A SIP application generating a 200 (OK) response for a REGISTER or
+   receiving such a response proceeds as follows.  If the application
+   inserted itself in the Contact (i.e., because it is the user agent)
+   or in the Path header field of the REGISTER, or it appears in the
+
+
+
+Bormann, et al.           Expires April 9, 2007                [Page 11]
+
+
+Internet-Draft           Applying SigComp to SIP            October 2006
+
+
+   Service-Route header field, the application constructs the route
+   future incoming requests will follow (using the Contact and the Path
+   header fields) and the route future outgoing requests will follow
+   (using the Contact and the Service-Route header fields).  The
+   application checks whether the URIs of its adjacent applications in
+   both routes have the 'comp=sigcomp' parameter.  The application
+   SHOULD open a new compartment for the remote application identifier
+   of the URIs with that parameter.  The application SHOULD NOT close
+   the compartments until the registration is over.
+
+   Note that the route for incoming requests is typically the same
+   (although traversed in the opposite direction) as the route for
+   outgoing requests.
+
+6.6.  Compartment Valid During a Dialog
+
+   A transaction that establishes a dialog can cause an application to
+   open a new compartment to be valid for the duration of the dialog
+   established by the transaction.
+
+   A SIP message that establishes a dialog (e.g., a 2xx response for an
+   INVITE) may contain a Record-Route header field.  This header field
+   indicates the route future requests within the dialog will follow.
+
+   On generating or receiving a SIP message that establishes a dialog, a
+   SIP application that inserted itself in the Contact (i.e., because it
+   is the user agent) or in the Record-Route header field of the
+   request, constructs (using the Contact, and the Record-Route header
+   fields) the route requests within the dialog will follow.  The
+   application checks whether the URIs of its adjacent applications in
+   that route have the 'comp=sigcomp' parameter.  The application SHOULD
+   open a new compartment for the remote application identifier of the
+   URIs with that parameter.  The application SHOULD NOT close the
+   compartments until the dialog is over.
+
+
+7.  Recommendations for Network Administrators
+
+   Network administrators can configure their networks so that the
+   compression efficiency achieved is increased.  The following
+   recommendations help network administrators perform their task.
+
+   For a given user agent, the route sets for incoming requests (created
+   by a Path header field) and for outgoing requests (created by a
+   Service-Route header field) are typically the same.  However,
+   registrars can, if they wish, insert proxies in the latter route that
+   do not appear in the former route and vice versa.  It is RECOMMENDED
+   that registrars are configured so that proxies performing SigComp
+
+
+
+Bormann, et al.           Expires April 9, 2007                [Page 12]
+
+
+Internet-Draft           Applying SigComp to SIP            October 2006
+
+
+   compression appear in both routes.
+
+   The routes described previously apply to requests sent outside a
+   dialog.  Requests inside a dialog follow a route constructed using
+   Record-Route header fields.  It is RECOMMENDED that the proxies
+   performing SigComp that are in the route for requests outside a
+   dialog are configured to place themselves (by inserting themselves in
+   the Record-Route header fields) in the routes used for requests
+   inside dialogs.
+
+
+8.  Private Agreements
+
+   SIP/SigComp implementations that are subject to private agreements
+   MAY deviate from this specification, if the private agreements
+   unambiguously specify so.  Plausible candidates for such deviations
+   include:
+
+   o  Minimum values (Section 3).
+   o  Compartment definition (Section 6).
+   o  Use of continuous mode (Section 5).
+
+
+9.  Backwards Compatibility
+
+   SigComp has a number of parameters that can be configured per
+   endpoint.  This document specifies a profile for SigComp when used
+   for SIP compression that further constrains the range that some of
+   these parameters may take.  Examples of this are Decompressor Memory
+   Size, State Memory Size, and SigComp Version (support for NACK).
+   Additionally, this document specifies how SIP/SigComp applications
+   should perform compartment mapping.
+
+   When this document was written, there already were a few existing
+   SIP/SigComp deployments.  The rules in this document have been
+   designed to maximize interoperability with those legacy SIP/SigComp
+   implementations.  Nevertheless, implementers should be aware that
+   legacy SIP/SigComp implementations may not conform to this
+   specification.  Examples of problems with legacy applications would
+   be smaller DMS than mandated in this document, lack of NACK support,
+   or a different comparment mapping.
+
+
+10.  Example
+
+   Figure 1 shows an example message flow where the user agent and the
+   outbound proxy exchange compressed SIP traffic.  Compressed messages
+   are marked with a (c).
+
+
+
+Bormann, et al.           Expires April 9, 2007                [Page 13]
+
+
+Internet-Draft           Applying SigComp to SIP            October 2006
+
+
+        User Agent      Outbound Proxy       Registrar
+
+             |(1) REGISTER (c) |                 |
+             |---------------->|                 |
+             |                 |(2) REGISTER     |
+             |                 |---------------->|
+             |                 |(3) 200 OK       |
+             |                 |<----------------|
+             |(4) 200 OK (c)   |                 |
+             |<----------------|                 |
+             |(5) INVITE (c)   |                 |
+             |---------------->|                 |
+             |                 |(6) INVITE       |
+             |                 |------------------------------>
+             |                 |(7) 200 OK       |
+             |                 |<------------------------------
+             |(8) 200 OK (c)   |                 |
+             |<----------------|                 |
+             |(9) ACK (c)      |                 |
+             |---------------->|                 |
+             |                 |(10) ACK         |
+             |                 |------------------------------>
+             |(11) BYE (c)     |                 |
+             |---------------->|                 |
+             |                 |(12) BYE         |
+             |                 |------------------------------>
+             |                 |(13) 200 OK      |
+             |                 |<------------------------------
+             |(14) 200 OK (c)  |                 |
+             |<----------------|                 |
+
+   Figure 1: Example message flow
+
+   The user agent in Figure 1 is initialy configured (e.g., using the
+   SIP configuration framework [I-D.ietf-sipping-config-framework]) with
+   the URI of its outbound proxy.  That URI contains the outbound's
+   proxy SIP/SigComp identifier, referred to as 'Outbound-id', in a
+   'sigcomp-id' parameter.
+
+   When the user agent sends an initial REGISTER request (1) to the
+   outbound proxy's URI, the user agent opens a new compartment for
+   'Outbound-id'.  This compartment will, in principle, be valid for the
+   duration of the REGISTER transaction, as discussed in Section 6.4.
+
+   On receiving this REGISTER request (1), the outbound proxy opens a
+   new compartment for the SIP/SigComp identifier that appears in the
+   'sigcomp-id' parameter of the top-most Via entry.  This identifier,
+   which is the user agent's SIP/SigComp identifier, is referred to as
+
+
+
+Bormann, et al.           Expires April 9, 2007                [Page 14]
+
+
+Internet-Draft           Applying SigComp to SIP            October 2006
+
+
+   'UA-id'.  The compartment opened by the outbound proxy will, in
+   principle, be valid for the duration of the REGISTER transaction, as
+   discussed in Section 6.4.  The outbound proxy adds Path header field
+   with its own URI to the REGISTER request and relays it to the
+   registrar (2).
+
+   When the outbound proxy receives a 200 (OK) response (3) for the
+   REGISTER request, it constructs the route future incoming requests
+   will follow (using the Contact and the Path header fields) and the
+   route future outgoing requests will follow (using the Contact and the
+   Service-Route header fields).  Both the Path and the Service-Route
+   header fields contain the outbound proxy's URI.  The Contact header
+   field contains the user agent's URI, which carries the user agent's
+   SIP/SigComp identifier 'UA-id'.
+
+   Consequently, the outbound proxy is supposed to open a new
+   compartment for 'UA-id' for the duration of the registration, as
+   discussed in Section 6.4.  However, since the outbound proxy has
+   already a compartment for 'UA-id', it reuses that comparment, as
+   discussed in Section 6.3.
+
+   On receiving the 200 (OK) response (4), the user agent constructs the
+   route future incoming requests will follow (using the Path header
+   field) and the route future outgoing requests will follow (using the
+   Service-Route header field).  The user agent is supposed to open a
+   new compartment for 'Outbound-id' for the duration of the
+   registration, as discussed in Section 6.4.  However, since the user
+   agent has already a compartment for 'Outbound-id', it reuses that
+   comparment, as discussed in Section 6.3.
+
+   At a later point, the user agent needs to send an INVITE request (5).
+   The user agent is supposed to open a new compartment for
+   'Outbound-id' for the duration of the INVITE transaction, as
+   discussed in Section 6.4.  However, since the user agent has already
+   a compartment for 'Outbound-id', it reuses that comparment, as
+   discussed in Section 6.3.
+
+   On receiving the INVITE request (5), the outbound proxy is supposed
+   to open a new compartment for 'UA-id' for the duration of the INVITE
+   transaction, as discussed in Section 6.4.  However, since the
+   outbound proxy has already a compartment for 'UA-id', it reuses that
+   comparment, as discussed in Section 6.3.  The outbound proxy Record-
+   Routes and relays the INVITE request (6) forward.
+
+   When the outbound proxy receives a dialog-establishing 200 (OK)
+   response (7) for the INVITE request, it constructs the route future
+   requests within the dialog will follow (using the Contact and Route
+   header fields).  The outbound proxy is supposed to open a new
+
+
+
+Bormann, et al.           Expires April 9, 2007                [Page 15]
+
+
+Internet-Draft           Applying SigComp to SIP            October 2006
+
+
+   compartment for 'UA-id' for the duration of the dialog, as discussed
+   in Section 6.6.  However, since the outbound proxy has already a
+   compartment for 'UA-id', it reuses that comparment, as discussed in
+   Section 6.3.
+
+   On receiving the 200 (OK) response (8), the user agent constructs the
+   route future requests within the dialog will follow (using the Route
+   header field).  The user agent is supposed to open a new compartment
+   for 'Outbound-id' for the duration of the dialog, as discussed in
+   Section 6.4.  However, since the user agent has already a compartment
+   for 'Outbound-id', it reuses that comparment, as discussed in
+   Section 6.3.
+
+   When the dialog is terminated by a BYE transaction (11), the user
+   agent is supposed to close the compartment for 'Outbound-id' and the
+   outbound proxy is supposed to close the compartment for 'UA-id', as
+   discussed in Section 6.6.  However, both compartments should be kept
+   open until the current registration expires.  Therefore, none of them
+   close their compartments yet.
+
+
+11.  Security Considerations
+
+   The same security considerations as described in [RFC3320] apply to
+   this document.  Note that keeping SigComp states longer than the
+   duration of a SIP dialog should not pose new security risks for two
+   reasons: a) the state has been allowed to be created in the first
+   place; and b) this is on voluntary basis and a SigComp endpoint can
+   choose not to offer it.
+
+
+12.  IANA Considerations
+
+   The IANA is requested to register the 'sigcomp-id' Via header field
+   parameter, which is defined in Section 6.1, under the Header Field
+   Parameters and Parameter Values subregistry within the SIP Parameters
+   registry:
+
+
+                                                  Predefined
+   Header Field                  Parameter Name     Values     Reference
+   ----------------------------  ---------------   ---------   ---------
+   Via                           sigcomp-id           No       [RFCxxxx]
+
+   The IANA is requested to register the 'sigcomp-id' SIP URI parameter,
+   which is defined in Section 6.1, under the SIP/SIPS URI Parameters
+   subregistry within the SIP Parameters registry:
+
+
+
+
+Bormann, et al.           Expires April 9, 2007                [Page 16]
+
+
+Internet-Draft           Applying SigComp to SIP            October 2006
+
+
+   Parameter Name     Predefined Values     Reference
+   --------------     -----------------     ---------
+   sigcomp-id         No                    [RFCxxxx]
+
+   Note to the RFC Editor: please, substitute RFCxxxx with the RFC
+   number this document will get.
+
+
+13.  Acknowledgements
+
+   Abigail Surtees provided the code and text for Appendix A.
+
+   The authors would like to thank the following people for their
+   comments and suggestions: Abigail Surtees, Jan Christoffersson, Joerg
+   Ott, Mark West, Pekka Pessi, Robert Sugar, Adam Roach, Jonathan
+   Rosenberg, and Robert Sparks.
+
+
+14.  References
+
+14.1.  Normative References
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119, March 1997.
+
+   [RFC2141]  Moats, R., "URN Syntax", RFC 2141, May 1997.
+
+   [RFC3261]  Rosenberg, J., Schulzrinne, H., Camarillo, G., Johnston,
+              A., Peterson, J., Sparks, R., Handley, M., and E.
+              Schooler, "SIP: Session Initiation Protocol", RFC 3261,
+              June 2002.
+
+   [RFC3308]  Calhoun, P., Luo, W., McPherson, D., and K. Peirce, "Layer
+              Two Tunneling Protocol (L2TP) Differentiated Services
+              Extension", RFC 3308, November 2002.
+
+   [RFC3320]  Price, R., Bormann, C., Christoffersson, J., Hannu, H.,
+              Liu, Z., and J. Rosenberg, "Signaling Compression
+              (SigComp)", RFC 3320, January 2003.
+
+   [RFC3327]  Willis, D. and B. Hoeneisen, "Session Initiation Protocol
+              (SIP) Extension Header Field for Registering Non-Adjacent
+              Contacts", RFC 3327, December 2002.
+
+   [RFC3485]  Garcia-Martin, M., Bormann, C., Ott, J., Price, R., and A.
+              Roach, "The Session Initiation Protocol (SIP) and Session
+              Description Protocol (SDP) Static Dictionary for Signaling
+              Compression (SigComp)", RFC 3485, February 2003.
+
+
+
+Bormann, et al.           Expires April 9, 2007                [Page 17]
+
+
+Internet-Draft           Applying SigComp to SIP            October 2006
+
+
+   [RFC3486]  Camarillo, G., "Compressing the Session Initiation
+              Protocol (SIP)", RFC 3486, February 2003.
+
+   [RFC4077]  Roach, A., "A Negative Acknowledgement Mechanism for
+              Signaling Compression", RFC 4077, May 2005.
+
+   [RFC4122]  Leach, P., Mealling, M., and R. Salz, "A Universally
+              Unique IDentifier (UUID) URN Namespace", RFC 4122,
+              July 2005.
+
+   [RFC4234]  Crocker, D., Ed. and P. Overell, "Augmented BNF for Syntax
+              Specifications: ABNF", RFC 4234, October 2005.
+
+   [I-D.ietf-sip-outbound]
+              Jennings, C. and R. Mahy, "Managing Client Initiated
+              Connections in the Session Initiation Protocol  (SIP)",
+              draft-ietf-sip-outbound-04 (work in progress), June 2006.
+
+14.2.  Informative References
+
+   [I-D.ietf-sipping-config-framework]
+              Petrie, D., "A Framework for Session Initiation Protocol
+              User Agent Profile Delivery",
+              draft-ietf-sipping-config-framework-08 (work in progress),
+              March 2006.
+
+
+Appendix A.  Shim header for sending uncompressed messages
+
+   This appendix presents bytecode that simply instructs the
+   decompressor to output the entire message (effectively sending it
+   uncompressed but within a SigComp message).
+
+   The mnemonic code is:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Bormann, et al.           Expires April 9, 2007                [Page 18]
+
+
+Internet-Draft           Applying SigComp to SIP            October 2006
+
+
+      at (0)
+      :udvm_memory_size         pad (2)
+      :cycles_per_bit           pad (2)
+      :sigcomp_version          pad (2)
+      :partial_state_id_length  pad (2)
+      :state_length             pad (2)
+      :reserved                 pad (2)
+      at (64)
+      :byte_copy_left           pad (2)
+      :byte_copy_right          pad (2)
+      :input_bit_order          pad (2)
+      :stack_location           pad (2)
+
+      ; Simple loop
+      ;       Read a byte
+      ;       Output a byte
+      ; Until there are no more bytes!
+
+      at (128)
+      :start
+      INPUT-BYTES (1, byte_copy_left, end)
+      OUTPUT (byte_copy_left, 1)
+      JUMP (start)
+
+      :end
+      END-MESSAGE (0,0,0,0,0,0,0)
+
+   which translates to give the following initial 13 bytes of the
+   SigComp message (in hexadecimal):
+
+   f8 00 a1 1c 01 86 09 22 86 01 16 f9 23
+
+   As an implementation optimization, a SigComp implementation MAY
+   compare the initial 13 bytes of each incoming message with the 13
+   bytes given (the "well-known shim header"), and, in case of a match,
+   simply copy the SigComp message data that follow the shim header
+   without even setting up a UDVM.  (Note that, before a SigComp message
+   is formed from the incoming TCP data, the record marking protocol
+   defined in section 4.2.2 of [RFC3320] has to be performed.)
+
+   To obtain the maximum benefit from this optimization, compressors
+   SHOULD employ exactly the well-known shim header given (and none of
+   the other conceivable byte code sequences for just copying input to
+   output) to send uncompressed data in a SigComp channel.
+
+
+
+
+
+
+
+Bormann, et al.           Expires April 9, 2007                [Page 19]
+
+
+Internet-Draft           Applying SigComp to SIP            October 2006
+
+
+Authors' Addresses
+
+   Carsten Bormann
+   Universitaet Bremen TZI
+   Postfach 330440
+   Bremen  D-28334
+   Germany
+
+   Phone: +49 421 218 7024
+   Fax:   +49 421 218 7000
+   Email: cabo@tzi.org
+
+
+   Zhigang Liu
+   Nokia Research Center
+   6000 Connection Drive
+   Irving, TX  75039
+   USA
+
+   Phone: +1 972 894-5935
+   Email: zhigang.c.liu@nokia.com
+
+
+   Richard Price
+   Cogent Defence and Security Networks
+   Queensway Meadows Industrial Estate
+   Meadows Road
+   Newport, Gwent  NP19 4SS
+
+   Phone: +44 (0)1794 833681
+   Email: richard.price@cogent-dsn.com
+   URI:   http://www.cogent-dsn.com
+
+
+   Gonzalo Camarillo
+   Ericsson
+   Hirsalantie 11
+   Jorvas  02420
+   Finland
+
+   Email: Gonzalo.Camarillo@ericsson.com
+
+
+
+
+
+
+
+
+
+
+Bormann, et al.           Expires April 9, 2007                [Page 20]
+
+
+Internet-Draft           Applying SigComp to SIP            October 2006
+
+
+Intellectual Property Statement
+
+   The IETF takes no position regarding the validity or scope of any
+   Intellectual Property Rights or other rights that might be claimed to
+   pertain to the implementation or use of the technology described in
+   this document or the extent to which any license under such rights
+   might or might not be available; nor does it represent that it has
+   made any independent effort to identify any such rights.  Information
+   on the procedures with respect to rights in RFC documents can be
+   found in BCP 78 and BCP 79.
+
+   Copies of IPR disclosures made to the IETF Secretariat and any
+   assurances of licenses to be made available, or the result of an
+   attempt made to obtain a general license or permission for the use of
+   such proprietary rights by implementers or users of this
+   specification can be obtained from the IETF on-line IPR repository at
+   http://www.ietf.org/ipr.
+
+   The IETF invites any interested party to bring to its attention any
+   copyrights, patents or patent applications, or other proprietary
+   rights that may cover technology that may be required to implement
+   this standard.  Please address the information to the IETF at
+   ietf-ipr@ietf.org.
+
+
+Disclaimer of Validity
+
+   This document and the information contained herein are provided on an
+   "AS IS" basis and THE CONTRIBUTOR, THE ORGANIZATION HE/SHE REPRESENTS
+   OR IS SPONSORED BY (IF ANY), THE INTERNET SOCIETY AND THE INTERNET
+   ENGINEERING TASK FORCE DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED,
+   INCLUDING BUT NOT LIMITED TO ANY WARRANTY THAT THE USE OF THE
+   INFORMATION HEREIN WILL NOT INFRINGE ANY RIGHTS OR ANY IMPLIED
+   WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+
+
+Copyright Statement
+
+   Copyright (C) The Internet Society (2006).  This document is subject
+   to the rights, licenses and restrictions contained in BCP 78, and
+   except as set forth therein, the authors retain all their rights.
+
+
+Acknowledgment
+
+   Funding for the RFC Editor function is currently provided by the
+   Internet Society.
+
+
+
+
+Bormann, et al.           Expires April 9, 2007                [Page 21]
+
+

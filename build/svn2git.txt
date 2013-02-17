@@ -1,0 +1,4 @@
+
+Getting users from LDAP:
+
+ldapsearch -xLLL -h www.resiprocate.org -b dc=resiprocate,dc=org uid=\* cn mail

@@ -797,6 +797,30 @@ DnsStub::doSetEnumSuffixes(const std::vector<Data>& suffixes)
 }
 
 void
+DnsStub::setEnumDomains(const std::map<Data,Data>& domains)
+{
+   SetEnumDomainsCommand* command = new SetEnumDomainsCommand(*this, domains);
+   mCommandFifo.add(command);
+
+   if (mAsyncProcessHandler)
+   {
+      mAsyncProcessHandler->handleProcessNotification();
+   }
+}
+
+const std::map<Data,Data>&
+DnsStub::getEnumDomains() const
+{
+   return mEnumDomains;
+}
+
+void
+DnsStub::doSetEnumDomains(const std::map<Data,Data>& domains)
+{
+   mEnumDomains = domains;
+}
+
+void
 DnsStub::clearDnsCache()
 {
    ClearDnsCacheCommand* command = new ClearDnsCacheCommand(*this);

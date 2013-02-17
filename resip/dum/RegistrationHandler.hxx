@@ -17,7 +17,7 @@ class ClientRegistrationHandler
    public:
       virtual ~ClientRegistrationHandler() { }
       /// Called when registraion succeeds or each time it is sucessfully
-      /// refreshed. 
+      /// refreshed (manual refreshes only). 
       virtual void onSuccess(ClientRegistrationHandle, const SipMessage& response)=0;
 
       // Called when all of my bindings have been removed

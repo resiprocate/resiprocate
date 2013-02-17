@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iterator>
 #include <stdexcept>
+#include <map>
 
 #include "rutil/ConfigParse.hxx"
 #include "rutil/Log.hxx"
@@ -17,9 +18,24 @@ using namespace std;
 namespace resip
 {
 
-ConfigParse::ConfigParse(int argc, char** argv, const resip::Data& defaultConfigFilename)
+ConfigParse::ConfigParse()
 {
-   parseCommandLine(argc, argv);  // will fill in mCmdLineConfigFilename if present
+}
+
+ConfigParse::~ConfigParse()
+{
+}
+
+void
+ConfigParse::parseConfig(int argc, char** argv, const resip::Data& defaultConfigFilename)
+{
+   ConfigParse::parseConfig(argc, argv, defaultConfigFilename, 0);
+}
+
+void 
+ConfigParse::parseConfig(int argc, char** argv, const resip::Data& defaultConfigFilename, int skipCount)
+{
+   parseCommandLine(argc, argv, skipCount);  // will fill in mCmdLineConfigFilename if present
    if(mCmdLineConfigFilename.empty())
    {
       parseConfigFile(defaultConfigFilename);
@@ -30,12 +46,122 @@ ConfigParse::ConfigParse(int argc, char** argv, const resip::Data& defaultConfig
    }
 }
 
-ConfigParse::ConfigParse()
+void 
+ConfigParse::parseCommandLine(int argc, char** argv, int skipCount)
 {
+   int startingArgForNameValuePairs = 1 + skipCount;
+   char *firstArg = argv[startingArgForNameValuePairs];
+   // First argument is the configuration filename - it is optional and is never proceeded with a - or /
+#ifdef WIN32
+   if(argc >= (startingArgForNameValuePairs + 1) && firstArg[0] != '-' && firstArg[0] != '/')
+#else
+   if(argc >= (startingArgForNameValuePairs + 1) && firstArg[0] != '-')
+#endif
+   {
+      mCmdLineConfigFilename = firstArg;
+      startingArgForNameValuePairs++;
+   }
+
+   // Loop through command line arguments and process them
+   for(int i = startingArgForNameValuePairs; i < argc; i++)
+   {
+      Data argData(argv[i]);
+
+      // Process all commandNames that don't take values
+      if(isEqualNoCase(argData, "-?") || 
+         isEqualNoCase(argData, "--?") ||
+         isEqualNoCase(argData, "--help") ||
+         isEqualNoCase(argData, "/?"))
+      {
+         printHelpText(argc, argv);
+         exit(1);
+      }
+      else if(argData.at(0) == '-' || argData.at(0) == '/')
+      {
+         Data name;
+         Data value;
+         ParseBuffer pb(argData);
+
+         try
+         {
+            pb.skipChars(Data::toBitset("-/"));  // Skip any leading -'s or /'s
+            const char * anchor = pb.position();
+            pb.skipToOneOf("=:");
+            if(!pb.eof())
+            {
+               pb.data(name, anchor);
+               pb.skipChar();
+               anchor = pb.position();
+               pb.skipToEnd();
+               pb.data(value, anchor);
+
+               //cout << "Command line Name='" << name << "' value='" << value << "'" << endl;
+               insertConfigValue(name, value);
+            }
+            else
+            {
+               cerr << "Invalid command line parameters:"  << endl;
+               cerr << " Name/Value pairs must contain an = or a : between the name and the value" << endl;
+               exit(-1);  // todo - should convert this stuff to exceptions and let user decide to exit or not
+            }
+         }
+         catch(BaseException& ex)
+         {
+            cerr << "Invalid command line parameters:"  << endl;
+            cerr << " Exception parsing Name/Value pairs: " << ex << endl;
+            exit(-1); // todo - should convert this stuff to exceptions and let user decide to exit or not
+         }
+      }
+      else
+      {
+         cerr << "Invalid command line parameters:"  << endl;
+         cerr << " Name/Value pairs must be prefixed with either a -, --, or a /" << endl;
+         exit(-1); // todo - should convert this stuff to exceptions and let user decide to exit or not
+      }
+   }
 }
 
-ConfigParse::~ConfigParse()
+void
+ConfigParse::parseConfigFile(const Data& filename)
 {
+   ifstream configFile(filename.c_str());
+   
+   if(!configFile)
+   {
+      throw Exception("Error opening/reading configuration file", __FILE__, __LINE__);
+   }
+
+   string sline;
+   const char * anchor;
+   while(getline(configFile, sline)) 
+   {
+      Data line(sline);
+      Data name;
+      Data value;
+      ParseBuffer pb(line);
+
+      pb.skipWhitespace();
+      anchor = pb.position();
+      if(pb.eof() || *anchor == '#') continue;  // if line is a comment or blank then skip it
+
+      // Look for end of name
+      pb.skipToOneOf("= \t");
+      pb.data(name,anchor);
+      if(*pb.position()!='=') 
+      {
+         pb.skipToChar('=');
+      }
+      pb.skipChar('=');
+      pb.skipWhitespace();
+      anchor = pb.position();
+      if(!pb.eof())
+      {
+         pb.skipToOneOf("\r\n");
+         pb.data(value, anchor);
+      }
+      //cout << "Config file Name='" << name << "' value='" << value << "'" << endl;
+      insertConfigValue(name, value);
+   }
 }
 
 bool 
@@ -205,130 +331,36 @@ ConfigParse::insertConfigValue(const resip::Data& name, const resip::Data& value
    mConfigValues.insert(ConfigValuesMap::value_type(lowerName, value));
 }
 
-void 
-ConfigParse::parseCommandLine(int argc, char** argv)
+resip::Data
+ConfigParse::removePath(const resip::Data& fileAndPath)
 {
-   int startingArgForNameValuePairs = 1;
-   // First argument is the configuration filename - it is optional and is never proceeded with a - or /
-#ifdef WIN32
-   if(argc >= 2 && argv[1][0] != '-' && argv[1][0] != '/')
-#else
-   if(argc >= 2 && argv[1][0] != '-')
-#endif
+   Data filenameOnly;
+   ParseBuffer pb(fileAndPath);
+   const char* anchor = pb.position();
+   while(pb.skipToOneOf("/\\") && !pb.eof())
    {
-      mCmdLineConfigFilename = argv[1];
-      startingArgForNameValuePairs = 2;
-   }
-
-   // Loop through command line arguments and process them
-   for(int i = startingArgForNameValuePairs; i < argc; i++)
-   {
-      Data argData(argv[i]);
-
-      // Process all commandNames that don't take values
-      if(isEqualNoCase(argData, "-?") || 
-         isEqualNoCase(argData, "--?") ||
-         isEqualNoCase(argData, "--help") ||
-         isEqualNoCase(argData, "/?"))
-      {
-         printHelpText(argc, argv);
-         exit(1);
-      }
-      else if(argData.at(0) == '-' || argData.at(0) == '/')
-      {
-         Data name;
-         Data value;
-         ParseBuffer pb(argData);
-
-         try
-         {
-            pb.skipChars(Data::toBitset("-/"));  // Skip any leading -'s or /'s
-            const char * anchor = pb.position();
-            pb.skipToOneOf("=:");
-            if(!pb.eof())
-            {
-               pb.data(name, anchor);
-               pb.skipChar();
-               anchor = pb.position();
-               pb.skipToEnd();
-               pb.data(value, anchor);
-
-               //cout << "Command line Name='" << name << "' value='" << value << "'" << endl;
-               insertConfigValue(name, value);
-            }
-            else
-            {
-               cerr << "Invalid command line parameters:"  << endl;
-               cerr << " Name/Value pairs must contain an = or a : between the name and the value" << endl;
-               exit(-1);
-            }
-         }
-         catch(BaseException& ex)
-         {
-            cerr << "Invalid command line parameters:"  << endl;
-            cerr << " Exception parsing Name/Value pairs: " << ex << endl;
-            exit(-1);
-         }
-      }
-      else
-      {
-         cerr << "Invalid command line parameters:"  << endl;
-         cerr << " Name/Value pairs must be prefixed with either a -, --, or a /" << endl;
-         exit(-1);
-      }
-   }
-}
-
-void
-ConfigParse::parseConfigFile(const Data& filename)
-{
-   ifstream configFile(filename.c_str());
-   
-   if(!configFile)
-   {
-      throw Exception("Error opening/reading configuration file", __FILE__, __LINE__);
-   }
-
-   string sline;
-   const char * anchor;
-   while(getline(configFile, sline)) 
-   {
-      Data line(sline);
-      Data name;
-      Data value;
-      ParseBuffer pb(line);
-
-      pb.skipWhitespace();
+      pb.skipChar();
       anchor = pb.position();
-      if(pb.eof() || *anchor == '#') continue;  // if line is a comment or blank then skip it
-
-      // Look for end of name
-      pb.skipToOneOf("= \t");
-      pb.data(name,anchor);
-      if(*pb.position()!='=') 
-      {
-         pb.skipToChar('=');
-      }
-      pb.skipChar('=');
-      pb.skipWhitespace();
-      anchor = pb.position();
-      if(!pb.eof())
-      {
-         pb.skipToOneOf("\r\n");
-         pb.data(value, anchor);
-      }
-      //cout << "Config file Name='" << name << "' value='" << value << "'" << endl;
-      insertConfigValue(name, value);
    }
+   pb.data(filenameOnly, anchor);
+   return filenameOnly;
 }
 
 EncodeStream& 
 operator<<(EncodeStream& strm, const ConfigParse& config)
 {
+   // Yes this is horribly inefficient - however it's only used when a user requests it
+   // and we want to see the items in a sorted list and hash_maps are not sorted.
+   std::multimap<Data, Data> sortedMap;
    ConfigParse::ConfigValuesMap::const_iterator it = config.mConfigValues.begin();
    for(; it != config.mConfigValues.end(); it++)
    {
-      strm << it->first << " = " << it->second << endl;
+      sortedMap.insert(std::multimap<Data, Data>::value_type(it->first, it->second));
+   }
+   std::multimap<Data, Data>::iterator it2 = sortedMap.begin();
+   for(; it2 != sortedMap.end(); it2++)
+   {
+      strm << it2->first << " = " << it2->second << endl;
    }
    return strm;
 }

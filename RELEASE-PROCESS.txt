@@ -47,7 +47,9 @@ Update version information and tag it:
 
   git svn dcommit         (send changes back to SVN)
 
-  svn copy https://svn.resiprocate.org/rep/resiprocate/main/branches/release-1.8 https://svn.resiprocate.org/rep/resiprocate/main/tags/1.8.5
+  svn copy -m 'release: Tag 1.8.5' \
+     https://svn.resiprocate.org/rep/resiprocate/branches/resiprocate-1.8 \
+     https://svn.resiprocate.org/rep/resiprocate/tags/resiprocate-1.8.5
 
 Bootstrap
 ---------

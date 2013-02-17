@@ -45,7 +45,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "transport_addr.h"
 
-#ifdef WIN32
+#ifdef __cplusplus
+#define restrict
+#elif defined(WIN32)
 #define restrict __restrict
 #endif
 

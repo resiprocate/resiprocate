@@ -152,7 +152,7 @@ AM_CONDITIONAL(USE_SSL, false)
 AC_ARG_WITH(ssl, 
 [  --with-ssl              Link against OpenSSL libraries],
  [AC_DEFINE_UNQUOTED(USE_SSL, , USE_SSL)
- AC_SUBST(LIBSSL_LIBADD, "-lssl")
+ AC_SUBST(LIBSSL_LIBADD, "-lssl -lcrypto")
  AM_CONDITIONAL(USE_SSL, true)],
  [ AC_SUBST(LIBSSL_LIBADD, "")])
 
@@ -258,6 +258,7 @@ AC_OUTPUT(Makefile \
 	resip/dum/test/Makefile \
 	resip/certs/Makefile \
 	repro/Makefile \
+	repro/accountingconsumers/Makefile \
 	repro/reprocmd/Makefile \
 	repro/test/Makefile \
 	b2bua/Makefile \
@@ -270,7 +271,8 @@ AC_OUTPUT(Makefile \
 	apps/ichat-gw/Makefile \
 	apps/ichat-gw/jabberconnector/Makefile \
 	apps/sipdial/Makefile \
-	resip.spec \
+	apps/basicB2BUA/Makefile \
+	resiprocate.spec \
 	reTurn/Makefile \
 	reTurn/test/Makefile \
 	reTurn/client/Makefile \

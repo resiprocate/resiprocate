@@ -52,6 +52,9 @@ StrictRouteFixup::process(RequestContext& context)
          return SkipAllChains;
       }
 
+      // Do any required session accounting
+      context.getProxy().doSessionAccounting(request, true /* received */, context);
+
       //Will cancel any active transactions (ideally there should be none)
       //and terminate any pending transactions.
       context.getResponseContext().cancelAllClientTransactions();

@@ -425,7 +425,7 @@ InviteSession::provideOffer(const Contents& offer,
          mDialog.makeRequest(*mLastLocalSessionModification, INVITE);
          startStaleReInviteTimer();
 
-		 setSessionTimerHeaders(*mLastLocalSessionModification);
+         setSessionTimerHeaders(*mLastLocalSessionModification);
 
          InfoLog (<< "Sending " << mLastLocalSessionModification->brief());
          InviteSession::setOfferAnswer(*mLastLocalSessionModification, offer, alternative);
@@ -467,11 +467,11 @@ InviteSession::provideOffer(const Contents& offer,
 class InviteSessionProvideOfferExCommand : public DumCommandAdapter
 {
 public:
-   InviteSessionProvideOfferExCommand(InviteSession& inviteSession, 
+   InviteSessionProvideOfferExCommand(const InviteSessionHandle& inviteSessionHandle, 
       const Contents& offer, 
       DialogUsageManager::EncryptionLevel level, 
       const Contents* alternative)
-      : mInviteSession(inviteSession),
+      : mInviteSessionHandle(inviteSessionHandle),
         mOffer(offer.clone()),
         mLevel(level),
 		mAlternative(alternative ? alternative->clone() : 0)
@@ -480,7 +480,10 @@ public:
 
    virtual void executeCommand()
    {
-      mInviteSession.provideOffer(*mOffer, mLevel, mAlternative.get());
+      if(mInviteSessionHandle.isValid())
+      {
+         mInviteSessionHandle->provideOffer(*mOffer, mLevel, mAlternative.get());
+      }
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -488,7 +491,7 @@ public:
       return strm << "InviteSessionProvideOfferExCommand";
    }
 private:
-   InviteSession& mInviteSession;
+   InviteSessionHandle mInviteSessionHandle;
    std::auto_ptr<const Contents> mOffer;
    DialogUsageManager::EncryptionLevel mLevel;
    std::auto_ptr<const Contents> mAlternative;
@@ -497,7 +500,7 @@ private:
 void
 InviteSession::provideOfferCommand(const Contents& offer, DialogUsageManager::EncryptionLevel level, const Contents* alternative)
 {
-   mDum.post(new InviteSessionProvideOfferExCommand(*this, offer, level, alternative));
+   mDum.post(new InviteSessionProvideOfferExCommand(getSessionHandle(), offer, level, alternative));
 }
 
 void
@@ -509,15 +512,18 @@ InviteSession::provideOffer(const Contents& offer)
 class InviteSessionProvideOfferCommand : public DumCommandAdapter
 {
 public:
-   InviteSessionProvideOfferCommand(InviteSession& inviteSession, const Contents& offer)
-      : mInviteSession(inviteSession),
+   InviteSessionProvideOfferCommand(const InviteSessionHandle& inviteSessionHandle, const Contents& offer)
+      : mInviteSessionHandle(inviteSessionHandle),
       mOffer(offer.clone())
    {
    }
 
    virtual void executeCommand()
    {
-      mInviteSession.provideOffer(*mOffer);
+      if(mInviteSessionHandle.isValid())
+      {
+         mInviteSessionHandle->provideOffer(*mOffer);
+      }
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -525,14 +531,14 @@ public:
       return strm << "InviteSessionProvideOfferCommand";
    }
 private:
-   InviteSession& mInviteSession;
+   InviteSessionHandle mInviteSessionHandle;
    std::auto_ptr<const Contents> mOffer;
 };
 
 void
 InviteSession::provideOfferCommand(const Contents& offer)
 {
-   mDum.post(new InviteSessionProvideOfferCommand(*this, offer));
+   mDum.post(new InviteSessionProvideOfferCommand(getSessionHandle(), offer));
 }
 
 void
@@ -586,15 +592,18 @@ InviteSession::provideAnswer(const Contents& answer)
 class InviteSessionProvideAnswerCommand : public DumCommandAdapter
 {
 public:
-   InviteSessionProvideAnswerCommand(InviteSession& inviteSession, const Contents& answer)
-      : mInviteSession(inviteSession),
+   InviteSessionProvideAnswerCommand(const InviteSessionHandle& inviteSessionHandle, const Contents& answer)
+      : mInviteSessionHandle(inviteSessionHandle),
         mAnswer(answer.clone())
    {
    }
 
    virtual void executeCommand()
    {
-      mInviteSession.provideAnswer(*mAnswer);
+      if(mInviteSessionHandle.isValid())
+      {
+         mInviteSessionHandle->provideAnswer(*mAnswer);
+      }
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -602,14 +611,14 @@ public:
       return strm << "InviteSessionProvideAnswerCommand";
    }
 private:
-   InviteSession& mInviteSession;
+   InviteSessionHandle mInviteSessionHandle;
    std::auto_ptr<const Contents> mAnswer;
 };
 
 void
 InviteSession::provideAnswerCommand(const Contents& answer)
 {
-   mDum.post(new InviteSessionProvideAnswerCommand(*this, answer));
+   mDum.post(new InviteSessionProvideAnswerCommand(getSessionHandle(), answer));
 }
 
 void
@@ -710,15 +719,18 @@ InviteSession::end(EndReason reason)
 class InviteSessionEndCommand : public DumCommandAdapter
 {
 public:
-   InviteSessionEndCommand(InviteSession& inviteSession, InviteSession::EndReason reason)
-      : mInviteSession(inviteSession),
+   InviteSessionEndCommand(const InviteSessionHandle& inviteSessionHandle, InviteSession::EndReason reason)
+      : mInviteSessionHandle(inviteSessionHandle),
         mReason(reason)
    {
    }
 
    virtual void executeCommand()
    {
-      mInviteSession.end(mReason);
+      if(mInviteSessionHandle.isValid())
+      {
+         mInviteSessionHandle->end(mReason);
+      }
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -726,14 +738,14 @@ public:
       return strm << "InviteSessionEndCommand";
    }
 private:
-   InviteSession& mInviteSession;
+   InviteSessionHandle mInviteSessionHandle;
    InviteSession::EndReason mReason;
 };
 
 void
 InviteSession::endCommand(EndReason reason)
 {
-   mDum.post(new InviteSessionEndCommand(*this, reason));
+   mDum.post(new InviteSessionEndCommand(getSessionHandle(), reason));
 }
 
 void
@@ -776,8 +788,8 @@ InviteSession::reject(int statusCode, WarningCategory *warning)
 class InviteSessionRejectCommand : public DumCommandAdapter
 {
 public:
-   InviteSessionRejectCommand(InviteSession& inviteSession, int code, WarningCategory* warning)
-      : mInviteSession(inviteSession),
+   InviteSessionRejectCommand(const InviteSessionHandle& inviteSessionHandle, int code, WarningCategory* warning)
+      : mInviteSessionHandle(inviteSessionHandle),
         mCode(code),
         mWarning(warning?new WarningCategory(*warning):0)
    {
@@ -785,7 +797,10 @@ public:
 
    virtual void executeCommand()
    {
-      mInviteSession.reject(mCode, mWarning.get());
+      if(mInviteSessionHandle.isValid())
+      {
+         mInviteSessionHandle->reject(mCode, mWarning.get());
+      }
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -793,7 +808,7 @@ public:
       return strm << "InviteSessionRejectCommand";
    }
 private:
-   InviteSession& mInviteSession;
+   InviteSessionHandle mInviteSessionHandle;
    int mCode;
    std::auto_ptr<WarningCategory> mWarning;
 };
@@ -801,7 +816,7 @@ private:
 void
 InviteSession::rejectCommand(int code, WarningCategory *warning)
 {
-   mDum.post(new InviteSessionRejectCommand(*this, code, warning));
+   mDum.post(new InviteSessionRejectCommand(getSessionHandle(), code, warning));
 }
 
 void
@@ -887,8 +902,8 @@ InviteSession::nitComplete()
 class InviteSessionReferCommand : public DumCommandAdapter
 {
 public:
-   InviteSessionReferCommand(InviteSession& inviteSession, const NameAddr& referTo, bool referSub)
-      : mInviteSession(inviteSession),
+   InviteSessionReferCommand(const InviteSessionHandle& inviteSessionHandle, const NameAddr& referTo, bool referSub)
+      : mInviteSessionHandle(inviteSessionHandle),
       mReferTo(referTo),
       mReferSub(referSub)
    {
@@ -897,7 +912,10 @@ public:
 
    virtual void executeCommand()
    {
-      mInviteSession.refer(mReferTo, mReferSub);
+      if(mInviteSessionHandle.isValid())
+      {
+         mInviteSessionHandle->refer(mReferTo, mReferSub);
+      }
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -906,7 +924,7 @@ public:
    }
 
 private:
-   InviteSession& mInviteSession;
+   InviteSessionHandle mInviteSessionHandle;
    NameAddr mReferTo;
    bool mReferSub;
 };
@@ -914,7 +932,7 @@ private:
 void
 InviteSession::referCommand(const NameAddr& referTo, bool referSub)
 {
-   mDum.post(new InviteSessionReferCommand(*this, referTo, referSub));
+   mDum.post(new InviteSessionReferCommand(getSessionHandle(), referTo, referSub));
 }
 
 void
@@ -989,8 +1007,8 @@ InviteSession::refer(const NameAddr& referTo, const CallId& replaces, std::auto_
 class InviteSessionReferExCommand : public DumCommandAdapter
 {
 public:
-   InviteSessionReferExCommand(InviteSession& inviteSession, const NameAddr& referTo, InviteSessionHandle sessionToReplace, bool referSub)
-      : mInviteSession(inviteSession),
+   InviteSessionReferExCommand(const InviteSessionHandle& inviteSessionHandle, const NameAddr& referTo, InviteSessionHandle sessionToReplace, bool referSub)
+      : mInviteSessionHandle(inviteSessionHandle),
       mSessionToReplace(sessionToReplace),
       mReferTo(referTo),
       mReferSub(referSub)
@@ -999,7 +1017,10 @@ public:
 
    virtual void executeCommand()
    {
-      mInviteSession.referCommand(mReferTo, mSessionToReplace, mReferSub);
+      if(mInviteSessionHandle.isValid())
+      {
+         mInviteSessionHandle->refer(mReferTo, mSessionToReplace, mReferSub);
+      }
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -1008,7 +1029,7 @@ public:
    }
 
 private:
-   InviteSession& mInviteSession;
+   InviteSessionHandle mInviteSessionHandle;
    InviteSessionHandle mSessionToReplace;
    NameAddr mReferTo;
    bool mReferSub;
@@ -1017,7 +1038,7 @@ private:
 void
 InviteSession::referCommand(const NameAddr& referTo, InviteSessionHandle sessionToReplace, bool referSub)
 {
-   mDum.post(new InviteSessionReferExCommand(*this, referTo, sessionToReplace, referSub));
+   mDum.post(new InviteSessionReferExCommand(getSessionHandle(), referTo, sessionToReplace, referSub));
 }
 
 void
@@ -1043,15 +1064,18 @@ InviteSession::info(const Contents& contents)
 class InviteSessionInfoCommand : public DumCommandAdapter
 {
 public:
-   InviteSessionInfoCommand(InviteSession& inviteSession, const Contents& contents)
-      : mInviteSession(inviteSession),
+   InviteSessionInfoCommand(const InviteSessionHandle& inviteSessionHandle, const Contents& contents)
+      : mInviteSessionHandle(inviteSessionHandle),
         mContents(contents.clone())
    {
    }
 
    virtual void executeCommand()
    {
-      mInviteSession.info(*mContents);
+      if(mInviteSessionHandle.isValid())
+      {
+         mInviteSessionHandle->info(*mContents);
+      }
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -1059,14 +1083,14 @@ public:
       return strm << "InviteSessionInfoCommand";
    }
 private:
-   InviteSession& mInviteSession;
+   InviteSessionHandle mInviteSessionHandle;
    std::auto_ptr<Contents> mContents;
 };
 
 void
 InviteSession::infoCommand(const Contents& contents)
 {
-   mDum.post(new InviteSessionInfoCommand(*this, contents));
+   mDum.post(new InviteSessionInfoCommand(getSessionHandle(), contents));
 }
 
 void
@@ -1093,15 +1117,18 @@ InviteSession::message(const Contents& contents)
 class InviteSessionMessageCommand : public DumCommandAdapter
 {
 public:
-   InviteSessionMessageCommand(InviteSession& inviteSession, const Contents& contents)
-      : mInviteSession(inviteSession),
+   InviteSessionMessageCommand(const InviteSessionHandle& inviteSessionHandle, const Contents& contents)
+      : mInviteSessionHandle(inviteSessionHandle),
         mContents(contents.clone())
    {
    }
 
    virtual void executeCommand()
    {
-      mInviteSession.message(*mContents);
+      if(mInviteSessionHandle.isValid())
+      {
+         mInviteSessionHandle->message(*mContents);
+      }
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -1109,7 +1136,7 @@ public:
       return strm << "InviteSessionMessageCommand";
    }
 private:
-   InviteSession& mInviteSession;
+   InviteSessionHandle mInviteSessionHandle;
    std::auto_ptr<Contents> mContents;
 };
 
@@ -1117,7 +1144,7 @@ private:
 void
 InviteSession::messageCommand(const Contents& contents)
 {
-   mDum.post(new InviteSessionMessageCommand(*this, contents));
+   mDum.post(new InviteSessionMessageCommand(getSessionHandle(), contents));
 }
 
 void
@@ -1527,7 +1554,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          break;
 
       case On2xxAnswer:
-      case On2xxOffer:  // .slg. doesn't really make sense
+      case On2xxOffer:  // .slg. doesn't really make sense - should be in SentReinviteNoOffer to get this
       {
          mStaleReInviteTimerSeq++;
          transition(Connected);
@@ -1647,7 +1674,7 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
          // Some UA's send a 100 response to a ReInvite - just ignore it
          break;
 
-      case On2xxAnswer:  // .slg. doesn't really make sense
+      case On2xxAnswer:  // .slg. doesn't really make sense - should be in SentReinvite to get this
       case On2xxOffer:
       {
          mStaleReInviteTimerSeq++;
@@ -2200,8 +2227,8 @@ InviteSession::acceptNIT(int statusCode, const Contents * contents)
 class InviteSessionAcceptNITCommand : public DumCommandAdapter
 {
 public:
-   InviteSessionAcceptNITCommand(InviteSession& inviteSession, int statusCode, const Contents* contents)
-      : mInviteSession(inviteSession),
+   InviteSessionAcceptNITCommand(const InviteSessionHandle& inviteSessionHandle, int statusCode, const Contents* contents)
+      : mInviteSessionHandle(inviteSessionHandle),
         mStatusCode(statusCode),
         mContents(contents?contents->clone():0)
    {
@@ -2210,7 +2237,10 @@ public:
 
    virtual void executeCommand()
    {
-      mInviteSession.acceptNITCommand(mStatusCode, mContents.get());
+      if(mInviteSessionHandle.isValid())
+      {
+         mInviteSessionHandle->acceptNIT(mStatusCode, mContents.get());
+      }
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -2218,7 +2248,7 @@ public:
       return strm << "InviteSessionAcceptNITCommand";
    }
 private:
-   InviteSession& mInviteSession;
+   InviteSessionHandle mInviteSessionHandle;
    int mStatusCode;
    std::auto_ptr<Contents> mContents;
 };
@@ -2226,7 +2256,7 @@ private:
 void
 InviteSession::acceptNITCommand(int statusCode, const Contents* contents)
 {
-   mDum.post(new InviteSessionAcceptNITCommand(*this, statusCode, contents));
+   mDum.post(new InviteSessionAcceptNITCommand(getSessionHandle(), statusCode, contents));
 } 
 
 void
@@ -2252,15 +2282,18 @@ InviteSession::rejectNIT(int statusCode)
 class InviteSessionRejectNITCommand : public DumCommandAdapter
 {
 public:
-   InviteSessionRejectNITCommand(InviteSession& inviteSession, int statusCode)
-      : mInviteSession(inviteSession),
+   InviteSessionRejectNITCommand(const InviteSessionHandle& inviteSessionHandle, int statusCode)
+      : mInviteSessionHandle(inviteSessionHandle),
       mStatusCode(statusCode)
    {
    }
 
    virtual void executeCommand()
    {
-      mInviteSession.rejectNITCommand(mStatusCode);
+      if(mInviteSessionHandle.isValid())
+      {
+         mInviteSessionHandle->rejectNIT(mStatusCode);
+      }
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -2268,14 +2301,14 @@ public:
       return strm << "InviteSessionRejectNITCommand";
    }
 private:
-   InviteSession& mInviteSession;
+   InviteSessionHandle mInviteSessionHandle;
    int mStatusCode;
 };
 
 void
 InviteSession::rejectNITCommand(int statusCode)
 {
-   mDum.post(new InviteSessionRejectNITCommand(*this, statusCode));
+   mDum.post(new InviteSessionRejectNITCommand(getSessionHandle(), statusCode));
 }
 
 void
@@ -2423,7 +2456,7 @@ InviteSession::setSessionTimerPreferences()
    mSessionInterval = mDialog.mDialogSet.getUserProfile()->getDefaultSessionTime();  // Used only if remote doesn't request a time
    if(mSessionInterval != 0)
    {
-       // If session timers are no disabled then ensure interval is greater than or equal to MinSE
+       // If session timers are not disabled then ensure interval is greater than or equal to MinSE
        mSessionInterval = resipMax(mMinSE, mSessionInterval);
    }
    switch(mDialog.mDialogSet.getUserProfile()->getDefaultSessionTimerMode())
@@ -2530,6 +2563,11 @@ InviteSession::handleSessionTimerRequest(SipMessage &response, const SipMessage&
    // If session timers are locally supported then add necessary headers to response
    if(mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::Timer)))
    {
+      // Update MinSE if specified and longer than current value
+      if(request.exists(h_MinSE))
+      {
+         mMinSE = resipMax(mMinSE, request.header(h_MinSE).value());
+      }
       setSessionTimerPreferences();
 
       // Check if far-end supports
@@ -2545,12 +2583,6 @@ InviteSession::handleSessionTimerRequest(SipMessage &response, const SipMessage&
             {
                 mSessionRefresher = (request.header(h_SessionExpires).param(p_refresher) == Data("uas"));
             }
-         }
-
-         // Update MinSE if specified and longer than current value
-         if(request.exists(h_MinSE))
-         {
-             mMinSE = resipMax(mMinSE, request.header(h_MinSE).value());
          }
       }
       else

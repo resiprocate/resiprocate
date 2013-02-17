@@ -1,0 +1,60 @@
+Changes since 0.9.4:
+
+  - Changes to the synchronization model for compartment and state
+    reference counting to prevent certain kinds of concurrency
+    problems.
+
+Changes since 0.9.3:
+
+  - Fixed relatively obscure bug in Deflate compressor which would
+    cause incorrect calculation of generated state (and consequent
+    decompression failures) for certain large messages
+
+  - Added "configure" script to aid in setting up the build
+    environment properly
+
+  - Fixed bad interaction between assembly scripts and perl 5.8.0
+
+  - Added checking to stack to prevent core dumps when the application
+    passes in a null pointer to a SigComp message
+
+  - Added parameters to the StateHandler that allow the application to
+    instruct the stack to assume minimum values of parameters (state
+    memory storage, etc) higher than those required by RFC 3320.
+
+  - Some endian-ness fixes for ARMv4 Windows Mobile devices built
+    with the Visual Studio 2005 compiler
+
+  - Optimized COPY-OFFSET opcode to execute in O(1) instead of O(n)
+
+  - Fixed complation issues with use of usleep in test drivers on
+    certain platforms
+
+Changes since 0.9.2:
+
+  - Added "make install" target to copy library and header files
+    to a common location.
+
+  - Modified primary interfaces towards application to take
+    void* instead of byte_t*; this eliminates a lot of arbitrary
+    casting in the application.
+
+  - A few const fixups in the application API
+
+  - Pruned file dependency tree back significantly
+
+  - A number of modifications to eliminate ABI changes when compiling
+    the library with different macros defined. This should eliminate
+    the requirement that the library and the application are compiled
+    with the same macros defined
+
+  - Additional changes to support Microsoft eMbedded Visual C++ 4,
+    MinGW, MS Visual Studio 2005
+
+Changes since 0.9.1:
+
+  - Fixed a bug in assembler that would cause an infinite loop
+    when the byte and word constructs were used to insert literal
+    bytes and words
+
+  - Several changes to support Microsoft Visual Studio 6.0

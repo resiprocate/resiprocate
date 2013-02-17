@@ -131,10 +131,10 @@ ClientPagerMessage::page(std::auto_ptr<Contents> contents,
 class ClientPagerMessagePageCommand : public DumCommandAdapter
 {
 public:
-   ClientPagerMessagePageCommand(ClientPagerMessage& clientPagerMessage, 
+   ClientPagerMessagePageCommand(const ClientPagerMessageHandle& clientPagerMessageHandle, 
       std::auto_ptr<Contents> contents,
       DialogUsageManager::EncryptionLevel level)
-      : mClientPagerMessage(clientPagerMessage),
+      : mClientPagerMessageHandle(clientPagerMessageHandle),
         mContents(contents),
         mLevel(level)
    {
@@ -143,7 +143,10 @@ public:
 
    virtual void executeCommand()
    {
-      mClientPagerMessage.page(mContents, mLevel);
+      if(mClientPagerMessageHandle.isValid())
+      {
+         mClientPagerMessageHandle->page(mContents, mLevel);
+      }
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -151,7 +154,7 @@ public:
       return strm << "ClientPagerMessagePageCommand";
    }
 private:
-   ClientPagerMessage& mClientPagerMessage;
+   ClientPagerMessageHandle mClientPagerMessageHandle;
    std::auto_ptr<Contents> mContents;
    DialogUsageManager::EncryptionLevel mLevel;
 };
@@ -160,7 +163,7 @@ void
 ClientPagerMessage::pageCommand(std::auto_ptr<Contents> contents,
                                 DialogUsageManager::EncryptionLevel level)
 {
-   mDum.post(new ClientPagerMessagePageCommand(*this, contents, level));
+   mDum.post(new ClientPagerMessagePageCommand(getHandle(), contents, level));
 }
 
 void
@@ -175,7 +178,6 @@ ClientPagerMessage::dispatch(const SipMessage& msg)
 
    DebugLog ( << "ClientPagerMessageReq::dispatch(msg)" << msg.brief() );
    {
-      assert(mMsgQueue.empty() == false);
       if (code < 200)
       {
          DebugLog ( << "ClientPagerMessageReq::dispatch - encountered provisional response" << msg.brief() );
@@ -190,23 +192,29 @@ ClientPagerMessage::dispatch(const SipMessage& msg)
             {
                this->pageFirstMsgQueued();
             }
-
-            handler->onSuccess(getHandle(), msg);
          }
+         handler->onSuccess(getHandle(), msg);
       }
       else
       {
-         SipMessage errResponse;
-         MsgQueue::iterator contents;
-         for(contents = mMsgQueue.begin(); contents != mMsgQueue.end(); ++contents)
+         if(!mMsgQueue.empty())
          {
-            Contents* p = contents->contents;
-            WarningLog ( << "Paging failed " << *p );
-            Helper::makeResponse(errResponse, *mRequest, code);
-            handler->onFailure(getHandle(), errResponse, std::auto_ptr<Contents>(p));
-            contents->contents = 0;
+            SipMessage errResponse;
+            MsgQueue::iterator contents;
+            for(contents = mMsgQueue.begin(); contents != mMsgQueue.end(); ++contents)
+            {
+               Contents* p = contents->contents;
+               WarningLog ( << "Paging failed " << *p );
+               Helper::makeResponse(errResponse, *mRequest, code);
+               handler->onFailure(getHandle(), errResponse, std::auto_ptr<Contents>(p));
+               contents->contents = 0;
+            }
+            mMsgQueue.clear();
          }
-         mMsgQueue.clear();
+         else
+         {
+            handler->onFailure(getHandle(), msg, std::auto_ptr<Contents>(mRequest->releaseContents()));
+         }
       }
    }
 }

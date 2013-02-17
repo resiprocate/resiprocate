@@ -2,6 +2,10 @@
 #include "config.h"
 #endif
 
+#include <iostream>
+#include <fstream>
+#include <stdexcept>
+
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
@@ -108,6 +112,7 @@ ReproRunner::ReproRunner()
    , mSipStack(0)
    , mStackThread(0)
    , mAbstractDb(0)
+   , mRuntimeAbstractDb(0)
    , mRegistrationPersistenceManager(0)
    , mAuthRequestDispatcher(0)
    , mAsyncProcessorDispatcher(0)
@@ -154,7 +159,8 @@ ReproRunner::run(int argc, char** argv)
    Data defaultConfigFilename("repro.config");
    try
    {
-      mProxyConfig = new ProxyConfig(mArgc, mArgv, defaultConfigFilename);
+      mProxyConfig = new ProxyConfig();
+      mProxyConfig->parseConfig(mArgc, mArgv, defaultConfigFilename);
    }
    catch(BaseException& ex)
    {
@@ -377,6 +383,7 @@ ReproRunner::cleanupObjects()
       delete mRegistrationPersistenceManager; mRegistrationPersistenceManager = 0;
    }
    delete mAbstractDb; mAbstractDb = 0;
+   delete mRuntimeAbstractDb; mRuntimeAbstractDb = 0;
    delete mStackThread; mStackThread = 0;
    delete mSipStack; mSipStack = 0;
    delete mAsyncProcessHandler; mAsyncProcessHandler = 0;
@@ -474,6 +481,19 @@ ReproRunner::createSipStack()
    if (enumSuffixes.size() > 0)
    {
       mSipStack->setEnumSuffixes(enumSuffixes);
+   }
+
+   // Set any enum domains from configuration
+   std::map<Data,Data> enumDomains;
+   std::vector<Data> _enumDomains;
+   mProxyConfig->getConfigValue("EnumDomains", _enumDomains);
+   if (enumSuffixes.size() > 0)
+   {
+      for(std::vector<Data>::iterator it = _enumDomains.begin(); it != _enumDomains.end(); it++)
+      {
+         enumDomains[*it] = *it;
+      }
+      mSipStack->setEnumDomains(enumDomains);
    }
 
    // Add stack transports
@@ -581,16 +601,28 @@ ReproRunner::createDatastore()
 {
    // Create Database access objects
    assert(!mAbstractDb);
+   assert(!mRuntimeAbstractDb);
 #ifdef USE_MYSQL
    Data mySQLServer;
    mProxyConfig->getConfigValue("MySQLServer", mySQLServer);
-   if (!mySQLServer.empty())
+   if(!mySQLServer.empty())
    {
       mAbstractDb = new MySqlDb(mySQLServer, 
                        mProxyConfig->getConfigData("MySQLUser", ""), 
                        mProxyConfig->getConfigData("MySQLPassword", ""),
                        mProxyConfig->getConfigData("MySQLDatabaseName", ""),
                        mProxyConfig->getConfigUnsignedLong("MySQLPort", 0),
+                       mProxyConfig->getConfigData("MySQLCustomUserAuthQuery", ""));
+   }
+   Data runtimeMySQLServer;
+   mProxyConfig->getConfigValue("RuntimeMySQLServer", runtimeMySQLServer);
+   if(!runtimeMySQLServer.empty())
+   {
+      mRuntimeAbstractDb = new MySqlDb(runtimeMySQLServer,
+                       mProxyConfig->getConfigData("RuntimeMySQLUser", ""), 
+                       mProxyConfig->getConfigData("RuntimeMySQLPassword", ""),
+                       mProxyConfig->getConfigData("RuntimeMySQLDatabaseName", ""),
+                       mProxyConfig->getConfigUnsignedLong("RuntimeMySQLPort", 0),
                        mProxyConfig->getConfigData("MySQLCustomUserAuthQuery", ""));
    }
 #endif
@@ -605,7 +637,13 @@ ReproRunner::createDatastore()
       cleanupObjects();
       return false;
    }
-   mProxyConfig->createDataStore(mAbstractDb);
+   if(mRuntimeAbstractDb && !mRuntimeAbstractDb->isSane())
+   {
+      CritLog(<<"Failed to open runtime configuration database");
+      cleanupObjects();
+      return false;
+   }
+   mProxyConfig->createDataStore(mAbstractDb, mRuntimeAbstractDb);
 
    // Create ImMemory Registration Database
    mRegSyncPort = mProxyConfig->getConfigInt("RegSyncPort", 0);
@@ -699,13 +737,18 @@ ReproRunner::createDialogUsageManager()
 
    if (mDum)
    {
-      if(mProxyConfig->getConfigBool("EnableCertificateAuthenticator", false))
+      bool enableCertAuth = mProxyConfig->getConfigBool("EnableCertificateAuthenticator", false);
+      // Maintains existing behavior for non-TLS cert auth users
+      bool digestChallengeThirdParties = !enableCertAuth;
+
+      if(enableCertAuth)
       {
          // TODO: perhaps this should be initialised from the trusted node
          // monkey?  Or should the list of trusted TLS peers be independent
          // from the trusted node list?
          std::set<Data> trustedPeers;
-         SharedPtr<TlsPeerAuthManager> certAuth(new TlsPeerAuthManager(*mDum, mDum->dumIncomingTarget(), trustedPeers));
+         loadCommonNameMappings();
+         SharedPtr<TlsPeerAuthManager> certAuth(new TlsPeerAuthManager(*mDum, mDum->dumIncomingTarget(), trustedPeers, true, mCommonNameMappings));
          mDum->addIncomingFeature(certAuth);
       }
 
@@ -726,7 +769,8 @@ ReproRunner::createDialogUsageManager()
                                                 mAuthRequestDispatcher,
                                                 mProxyConfig->getDataStore()->mAclStore,
                                                 !mProxyConfig->getConfigBool("DisableAuthInt", false) /*useAuthInt*/,
-                                                mProxyConfig->getConfigBool("RejectBadNonces", false)));
+                                                mProxyConfig->getConfigBool("RejectBadNonces", false),
+                                                digestChallengeThirdParties));
          mDum->setServerAuthManager(uasAuth);
       }
 
@@ -787,6 +831,10 @@ ReproRunner::createProxy()
    // like a catchall and will handle all requests the DUM does not
    mSipStack->registerTransactionUser(*mProxy);
 
+   if(mRegistrar)
+   {
+      mRegistrar->setProxy(mProxy);
+   }
    return true;
 }
 
@@ -937,6 +985,9 @@ ReproRunner::addDomains(TransactionUser& tu, bool log)
       }
    }
 
+   /* All of this logic has been commented out - the sysadmin must explicitly
+      add any of the items below to the Domains config option in repro.config
+
    Data localhostname(DnsUtil::getLocalHostName());
    if(log) InfoLog (<< "Adding local hostname domain " << localhostname );
    tu.addDomain(localhostname);
@@ -960,7 +1011,10 @@ ReproRunner::addDomains(TransactionUser& tu, bool log)
    }
 
    if(log) InfoLog (<< "Adding 127.0.0.1 domain.");
-   tu.addDomain("127.0.0.1");
+   tu.addDomain("127.0.0.1"); */
+
+   if( realm.empty() )
+      realm = "Unconfigured";
 
    return realm;
 }
@@ -1188,6 +1242,66 @@ ReproRunner::addProcessor(repro::ProcessorChain& chain, std::auto_ptr<Processor>
    chain.addProcessor(processor);
 }
 
+void
+ReproRunner::loadCommonNameMappings()
+{
+   // Already loaded?
+   if(!mCommonNameMappings.empty())
+      return;
+
+   Data mappingsFileName = mProxyConfig->getConfigData("CommonNameMappings", "");
+   if(mappingsFileName.empty())
+      return;
+
+   InfoLog(<< "trying to load common name mappings from file: " << mappingsFileName);
+
+   ifstream mappingsFile(mappingsFileName.c_str());
+   if(!mappingsFile)
+   {
+      throw std::runtime_error("Error opening/reading mappings file");
+   }
+
+   string sline;
+   while(getline(mappingsFile, sline))
+   {
+      Data line(sline);
+      Data cn;
+      PermittedFromAddresses permitted;
+      ParseBuffer pb(line);
+
+      pb.skipWhitespace();
+      const char * anchor = pb.position();
+      if(pb.eof() || *anchor == '#') continue;  // if line is a comment or blank then skip it
+
+      // Look for end of name
+      pb.skipToOneOf("\t");
+      pb.data(cn, anchor);
+      pb.skipChar('\t');
+
+      while(!pb.eof())
+      {
+         pb.skipWhitespace();
+         if(pb.eof())
+            continue;
+
+         Data value;
+         anchor = pb.position();
+         pb.skipToOneOf(",\r\n ");
+         pb.data(value, anchor);
+         if(!value.empty())
+         {
+            StackLog(<< "Loading CN '" << cn << "', found mapping '" << value << "'");
+            permitted.insert(value);
+         }
+         if(!pb.eof())
+            pb.skipChar();
+      }
+
+      DebugLog(<< "Loaded mapping for CN '" << cn << "', " << permitted.size() << " mapping(s)");
+      mCommonNameMappings[cn] = permitted;
+   }
+}
+
 void  // Monkeys
 ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
 {
@@ -1209,7 +1323,8 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
       // Should we used the same trustedPeers object that was
       // passed to TlsPeerAuthManager perhaps?
       std::set<Data> trustedPeers;
-      addProcessor(chain, std::auto_ptr<Processor>(new CertificateAuthenticator(*mProxyConfig, mSipStack, trustedPeers)));
+      loadCommonNameMappings();
+      addProcessor(chain, std::auto_ptr<Processor>(new CertificateAuthenticator(*mProxyConfig, mSipStack, trustedPeers, true, mCommonNameMappings)));
    }
 
    // Add digest authenticator monkey - if required

@@ -8,6 +8,7 @@
 
 namespace repro
 {
+class Proxy;
 
 class RegistrarHandler
 {
@@ -42,6 +43,8 @@ class Registrar: public resip::ServerRegistrationHandler
       Registrar();
       virtual ~Registrar();
       
+      void setProxy(Proxy* proxy) { mProxy = proxy; }
+
       virtual void addRegistrarHandler(RegistrarHandler* handler);
 
       virtual void onRefresh(resip::ServerRegistrationHandle, const resip::SipMessage& reg);
@@ -52,6 +55,7 @@ class Registrar: public resip::ServerRegistrationHandler
 
    private:
       std::list<RegistrarHandler*> mRegistrarHandlers;
+      Proxy* mProxy;
 };
 }
 #endif

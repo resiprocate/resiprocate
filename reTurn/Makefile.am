@@ -1,6 +1,7 @@
 # $Id$
 
 EXTRA_DIST = dh512.pem server.pem
+EXTRA_DIST += pkg
 EXTRA_DIST += README.txt
 EXTRA_DIST += *.sln
 EXTRA_DIST += *.vcproj
@@ -77,7 +78,7 @@ reTurnServer_LDADD = ../resip/dum/libdum.la
 reTurnServer_LDADD += ../resip/stack/libresip.la ../rutil/librutil.la
 #reTurnServer_LDADD += ../contrib/ares/libares.a
 #reTurnServer_LDADD += -L../contrib/ares -lares
-reTurnServer_LDADD += @LIBSSL_LIBADD@ -lpthread
+reTurnServer_LDADD += @LIBSSL_LIBADD@ -lcrypto -lpthread
 
 #lib_LTLIBRARIES = librepro.la
 

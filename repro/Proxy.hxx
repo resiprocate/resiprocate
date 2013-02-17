@@ -8,6 +8,7 @@
 #include "rutil/HashMap.hxx"
 #include "rutil/ThreadIf.hxx"
 #include "rutil/KeyValueStore.hxx"
+#include "repro/AccountingCollector.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/TimerCMessage.hxx"
 #include "repro/ProxyConfig.hxx"
@@ -100,6 +101,9 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       // Accessor for global extensible state storage for monkeys
       resip::KeyValueStore& getKeyValueStore() { return mKeyValueStore; }
 
+      void doSessionAccounting(const resip::SipMessage& sip, bool received, RequestContext& context);
+      void doRegistrationAccounting(repro::AccountingCollector::RegistrationEvent regEvent, const resip::SipMessage& sip);
+
    protected:
       virtual const resip::Data& name() const;
 
@@ -131,6 +135,10 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       std::set<resip::Data> mSupportedOptions;
       OptionsHandler* mOptionsHandler;
       std::auto_ptr<RequestContextFactory> mRequestContextFactory;
+
+      bool mSessionAccountingEnabled;
+      bool mRegistrationAccountingEnabled;
+      AccountingCollector* mAccountingCollector;
 
       // disabled
       Proxy();

@@ -46,6 +46,8 @@ RequestContext::RequestContext(Proxy& proxy,
    mProxy(proxy),
    mResponseContext(*this),
    mTCSerial(0),
+   mSessionCreatedEventSent(false),
+   mSessionEstablishedEventSent(false),
    mKeyValueStore(*Proxy::getRequestKeyValueStoreKeyAllocator())
 {
    mInitialTimerCSet=false;
@@ -237,6 +239,10 @@ RequestContext::processRequestInviteTransaction(SipMessage* msg, bool original)
    {
       if(msg->method()==CANCEL)
       {
+         if(mSessionCreatedEventSent && !mSessionEstablishedEventSent)
+         {
+            getProxy().doSessionAccounting(*msg, true /* received */, *this);
+         }
          mResponseContext.processCancel(*msg);
          doPostProcess=true;
       }
@@ -983,6 +989,10 @@ RequestContext::sendResponse(SipMessage& msg)
       if (!serverText.empty() && !msg.exists(h_Server) ) 
       {
          msg.header(h_Server).value() = serverText;
+      }
+      if(mSessionCreatedEventSent && !mSessionEstablishedEventSent)
+      {
+         getProxy().doSessionAccounting(msg, false /* received */, *this);
       }
       send(msg);
    }

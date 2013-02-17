@@ -131,11 +131,12 @@ protected:
    void onCallTimeout(BasicClientCall* call);
 
    SharedPtr<MasterProfile> mProfile;
+   // Using pointers for the following classes so that we can control object descruction order
    Security* mSecurity;
-   SipStack mStack;
-   DialogUsageManager* mDum; // DUM holds pointers to alot of objects that access this UserAgent class - using a pointer to DUM so that we can have more control over it's lifetime
-   SelectInterruptor mSelectInterruptor;
-   InterruptableStackThread mStackThread;
+   SelectInterruptor* mSelectInterruptor;
+   SipStack* mStack;
+   InterruptableStackThread* mStackThread;
+   DialogUsageManager* mDum;
    volatile bool mDumShutdownRequested;
    bool mDumShutdown;
    ClientRegistrationHandle mRegHandle;

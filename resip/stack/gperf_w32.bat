@@ -1,10 +1,7 @@
 @echo off
 echo WARNING - use of this batch file is only recommended for advanced users.  
 echo           It is used to automate the first step required in creating the 
-echo           GPERF HASH files for resiprocate on windows.  Once this step 
-echo           has completed the generated files must be manually edited 
-echo           (at least until proper win 32 scripts are created)
-echo           for case insensitvity.
+echo           GPERF HASH files for resiprocate on windows.
 echo.
 echo Note - Ensure gperf.exe is present in the path or resip/stack directory  
 echo        before continuing

@@ -2,22 +2,22 @@
 
 EXTRA_DIST = *.html
 EXTRA_DIST += doc
+EXTRA_DIST += pkg
 EXTRA_DIST += Doxyfile
-EXTRA_DIST += etc
 EXTRA_DIST += php
 EXTRA_DIST += README_MySQL.txt
 EXTRA_DIST += repro_10_0.vcxproj repro_10_0.vcxproj.filters
 EXTRA_DIST += reprolib_10_0.vcxproj reprolib_10_0.vcxproj.filters
 EXTRA_DIST += *.vcproj
 #EXTRA_DIST += *.db
-EXTRA_DIST += repro.spec
 EXTRA_DIST += VERSION
 EXTRA_DIST += webadmin
 EXTRA_DIST += WinSetup WinSetupx64
 EXTRA_DIST += repro.config
 EXTRA_DIST += create_mysql_reprodb.sql
+EXTRA_DIST += genUsers.cxx
 
-SUBDIRS = . test reprocmd
+SUBDIRS = . test reprocmd accountingconsumers
 
 #AM_CXXFLAGS = -DUSE_ARES
 
@@ -56,6 +56,7 @@ librepro_la_SOURCES = \
 	WebAdmin.cxx \
 	WebAdminThread.cxx \
 	\
+	AccountingCollector.cxx \
 	Proxy.cxx \
 	Registrar.cxx \
 	RegSyncClient.cxx \
@@ -74,6 +75,7 @@ librepro_la_SOURCES = \
 	XmlRpcServerBase.cxx \
 	Dispatcher.cxx \
 	OutboundTarget.cxx \
+	PersistentMessageQueue.cxx \
 	QValueTarget.cxx \
 	\
         monkeys/CertificateAuthenticator.cxx \
@@ -95,6 +97,7 @@ librepro_la_SOURCES = \
 
 reproincludedir = $(includedir)/repro
 nobase_reproinclude_HEADERS = AbstractDb.hxx \
+	AccountingCollector.hxx \
 	Ack200DoneMessage.hxx \
 	AclStore.hxx \
         AsyncProcessor.hxx \
@@ -128,6 +131,7 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	monkeys/MessageSilo.hxx \
 	MySqlDb.hxx \
 	OutboundTarget.hxx \
+	PersistentMessageQueue.hxx \
 	ProcessorChain.hxx \
 	Processor.hxx \
 	ProcessorMessage.hxx \
@@ -194,8 +198,6 @@ ReproVersion.cxx: reproInfo.hxx
 
 dist_man_MANS = doc/repro.8
 dist_man_MANS += doc/reprocmd.8
-
-sysconf_DATA = etc/repro.conf
 
 ##############################################################################
 # 

@@ -66,7 +66,8 @@ libtfm_la_SOURCES = ActionBase.cxx \
         \
         predicates/ExpectUtils.cxx \
         predicates/SubscribeExpired.cxx \
-        predicates/SubscribeExpires.cxx
+        predicates/SubscribeExpires.cxx \
+		predicates/NotifyContents.cxx
 
 #libtfmincludedir = $(includedir)/repro
 noinst_HEADERS =  ActionBase.hxx \

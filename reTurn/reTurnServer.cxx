@@ -1,4 +1,5 @@
 #include <iostream>
+#include <csignal>
 #include <string>
 #include <asio.hpp>
 #include <boost/bind.hpp>
@@ -61,12 +62,23 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
 #endif
 
    resip::Data defaultConfig("reTurnServer.config");
-   reTurn::ReTurnConfig reTurnConfig(argc, argv, defaultConfig);
+   reTurn::ReTurnConfig reTurnConfig;
+   try
+   {
+      reTurnConfig.parseConfig(argc, argv, defaultConfig);
+   }
+   catch(std::exception& e)
+   {
+      ErrLog(<< "Exception parsing configuration: " << e.what());
+      exit(-1);
+   }
 
    setPidFile(reTurnConfig.mPidFile);
    // Daemonize if necessary
    if(reTurnConfig.mDaemonize)
+   {
       daemonize();
+   }
 
    try
    {

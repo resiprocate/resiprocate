@@ -1,0 +1,327 @@
+#!/bin/sh
+
+for PERL in /usr/bin/perl \
+            /bin/perl \
+            /usr/local/bin/perl \
+            /usr/pkg/bin/perl \
+            /usr/athena/bin/perl \
+            `which perl`
+do
+  if [ -x $PERL ]
+  then
+    break
+  fi
+done
+
+if [ ! -x $PERL ]
+then
+  echo ""
+  echo "*** Warning: Could not find perl interpreter."
+  if [ ! -e build/Makefile.conf ]
+  then
+    echo "*** Creating default config file in build/Makefile.conf"
+    echo "*** Please install perl and re-run $0"
+    echo "INSTALL_ROOT := /usr/local
+BUILD := debug
+POSIX_LOCKING := yes
+HAVE_REALLOC := yes
+OPENSSL_SHA1 := yes
+RISC_OPTIMIZED := no
+PERL := perl" > build/Makefile.conf
+    exit
+  fi
+  echo "*** Leaving build/Makefile.conf unmodified"
+  exit
+fi
+
+exec $PERL -wx $0 $PERL $@
+
+#!perl
+
+######################################################################
+# Usage:
+#   ./configure [-y]
+#
+#   Options:
+#     -y  Run non-interactively
+######################################################################
+use Config;
+# Change directory so that we can find the Makefile.conf file
+$perl = shift;
+$mydir = $0;
+$mydir =~ s/\/[^\/]*$//;
+chdir ($mydir);
+
+$non_interactive = 0;
+
+#$uname = `uname`;
+
+@yesno = ('yes','no');
+@compiletypes = ('debug','size','speed','speed-profile',
+                 'speed-gprof','debug-size');
+
+######################################################################
+# The entries in the following array have the following
+# fields:
+#
+#   name        - Variable name to be used by the make system
+#
+#   description - Question to ask the user
+#
+#   default     - Value to use by default
+#
+#   validate    - Optional array of allowed values
+#
+#   predicate   - Optional logical test; if false, the user
+#                 will not be asked to configure the value
+#
+#   flag        - For "yes/no" entries, adds commandline
+#                 flags of "--enable-foo" and "--disable-foo"
+#
+#   option      - Adds commandline options of "--foo=..."
+#
+my $PMD = $Config{installarchlib};
+
+@parameters = (
+  {
+    name        => "INSTALL_ROOT",
+    description => "Where should the libraries be installed?",
+    default     => "/usr/local",
+    option      => "prefix",
+  },
+  {
+    name        => "BUILD",
+    description => "What kind of build do you want?",
+    default     => "debug",
+    validate    => [@compiletypes],
+    option      => "build",
+  },
+  {
+    name        => "POSIX_LOCKING",
+    description => "Should the system use POSIX pthread locking?",
+    default     => "yes",
+    validate    => [@yesno],
+    flag        => "posix-locking",
+  },
+  {
+    name        => "HAVE_REALLOC",
+    description => "Is realloc() available on the system?",
+    default     => "yes",
+    validate    => [@yesno],
+    flag        => "realloc",
+  },
+  {
+    name        => "OPENSSL_SHA1",
+    description => "Should the Open SSL SHA-1 implementation be used?",
+    default     => "yes",
+    validate    => [@yesno],
+    flag        => "openssl-sha1",
+  },
+  {
+    name        => "RISC_OPTIMIZED",
+    description => "Should the native SHA-1 implementation be optimized for RISC processors?",
+    default     => "no",
+    validate    => [@yesno],
+    predicate   => "\$config{OPENSSL_SHA1} eq 'no'",
+    flag        => "risc",
+  },
+  {
+    name        => "PERL",
+    description => "Where is your preferred perl interpreter?",
+    default     => $perl,
+    option      => "perl",
+  },
+);
+if (open (CONF, "build/Makefile.conf"))
+{
+  while (<CONF>)
+  {
+    chomp;
+    if (/([^ :=]+) *:?= *([^ #]*)/)
+    {
+      $config{$1} = $2 if (defined($2) and $2 );
+    }
+  }
+  close (CONF);
+}
+
+&parseOptions;
+
+foreach $parameter (@parameters)
+{
+  if (!exists($config{$parameter->{name}}))
+  {
+    $config{$parameter->{name}} = $parameter->{default};
+  }
+
+  if (exists($parameter->{predicate}) && !eval($parameter->{predicate}))
+  {
+    next;
+  }
+
+  # If we're running interactively, confirm with the user
+  if (!$non_interactive)
+  {
+    do
+    {
+      if (exists($parameter->{validate}) && 
+          !&validate($config{$parameter->{name}},@{$parameter->{validate}}))
+      {
+        print "*** '$config{$parameter->{name}}' is not a valid value for ".
+              "$parameter->{name}\n\n";
+        $config{$parameter->{name}} = $parameter->{default};
+      }
+
+      print "".$parameter->{description}."\n";
+
+      if (exists $parameter->{validate})
+      {
+        print "(".join(', ',@{$parameter->{validate}}).") ";
+      }
+
+      print "[".$config{$parameter->{name}}."] ";
+      $userinput = readline(*STDIN);
+      chomp ($userinput);
+      if (length($userinput))
+      {
+        $config{$parameter->{name}} = $userinput;
+      }
+      print "\n";
+    }
+    until (!exists($parameter->{validate}) ||
+           &validate($config{$parameter->{name}},@{$parameter->{validate}}));
+  }
+
+  if (exists($parameter->{validate}) && 
+      !&validate($config{$parameter->{name}},@{$parameter->{validate}}))
+  {
+    print "*** '$config{$parameter->{name}}' is not a valid value for ".
+          "$parameter->{name} -- using default: $parameter->{default}\n";
+    $config{$parameter->{name}} = $parameter->{default};
+  }
+
+}
+
+# Write out the resulting configure file to Makefile.conf
+open (CONF, ">build/Makefile.conf") || die "Could not write to build/Makefile.conf: $!";
+print "Writing Makefile.conf...\n";
+foreach $parameter (@parameters)
+{
+  print CONF ("# ".$parameter->{description}."\n");
+  if (exists $parameter->{validate})
+  {
+    print CONF ("# Allowed values: ".join(', ',@{$parameter->{validate}})."\n");
+  }
+  print CONF ($parameter->{name}." := ".$config{$parameter->{name}}."\n\n");
+}
+close (CONF);
+
+######################################################################
+sub validate
+{
+  my ($value, @allowed) = @_;
+  my ($allowed);
+
+  if (@allowed == 0)
+  {
+    return 1;
+  }
+
+  foreach $allowed (@allowed)
+  {
+    if ($value eq $allowed)
+    {
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
+sub parseOptions
+{
+  my($option);
+  my($curr);
+  option: foreach $option (@ARGV)
+  {
+    if ($option eq '-y' || $option eq '--non-interactive')
+    {
+      $non_interactive = 1;
+      next option;
+    }
+
+    foreach $parameter (@parameters)
+    {
+      if (defined $parameter->{flag})
+      {
+        $curr = $parameter->{flag};
+        if ($option =~ /^--(enable|disable)-$curr$/)
+        {
+          $config{$parameter->{name}} = ($1 eq 'enable'?'yes':'no');
+          next option;
+        }
+      }
+
+      if (defined $parameter->{option})
+      {
+        $curr = $parameter->{option};
+        if ($option =~ /^--$curr\=\"?([^"]*)\"?$/)
+        {
+          $config{$parameter->{name}} = $1;
+          next option;
+        }
+      }
+
+    }
+
+    print "\nUnknown option: $option\n\n";
+    &usage;
+  }
+}
+
+sub usage
+{
+  print <<EOT
+Usage:
+  $0 [options]
+
+  Options:
+
+      -y, --non-interactive
+        Run non-interactively
+
+EOT
+
+;
+  foreach $parameter (@parameters)
+  {
+    if (defined $parameter->{flag})
+    {
+      print "      --enable-".$parameter->{flag}."\n";
+      print "      --disable-".$parameter->{flag}."\n";
+      print "        ".$parameter->{description}." ";
+      if (defined $config{$parameter->{name}})
+      {
+        print "(Now ".($config{$parameter->{name}} eq 'yes'?
+               "enabled":"disabled").")\n";
+      }
+    }
+    if (defined $parameter->{option})
+    {
+      print "      --".$parameter->{option}."=\"...\"\n";
+      print "        ".$parameter->{description}." ";
+      if (defined $config{$parameter->{name}})
+      {
+        print "(Now \"".$config{$parameter->{name}}."\")\n";
+      }
+      if (defined $parameter->{validate})
+      {
+        print "\n        Valid values are: [".
+              join(', ',@{$parameter->{validate}})."]\n";
+      }
+    }
+
+    print "\n\n";
+  }
+  exit;
+}

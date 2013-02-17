@@ -91,7 +91,10 @@ Proxy::Proxy(SipStack& stack,
      mTargetProcessorChain(targetP),
      mUserStore(config.getDataStore()->mUserStore),
      mOptionsHandler(0),
-     mRequestContextFactory(new RequestContextFactory)
+     mRequestContextFactory(new RequestContextFactory),
+     mSessionAccountingEnabled(config.getConfigBool("SessionAccountingEnabled", false)),
+     mRegistrationAccountingEnabled(config.getConfigBool("RegistrationAccountingEnabled", false)),
+     mAccountingCollector(0)
 {
    FlowTokenSalt = Random::getCryptoRandom(20);   // 20-octet Crypto Random Key for Salting Flow Token HMACs
 
@@ -101,6 +104,12 @@ Proxy::Proxy(SipStack& stack,
    {
       addSupportedOption("outbound");
    }
+
+   // Create Accounting Collector if enabled
+   if(mSessionAccountingEnabled || mRegistrationAccountingEnabled)
+   {
+      mAccountingCollector = new AccountingCollector(config);
+   }
 }
 
 
@@ -108,6 +117,7 @@ Proxy::~Proxy()
 {
    shutdown();
    join();
+   delete mAccountingCollector;
    InfoLog (<< "Proxy::thread shutdown with " << mServerRequestContexts.size() << " ServerRequestContexts and " << mClientRequestContexts.size() << " ClientRequestContexts.");
 }
 
@@ -198,7 +208,7 @@ Proxy::thread()
 
                         if(resip::InteropHelper::getOutboundSupported())
                         {
-                           resp->header(h_Supporteds).push_back(Token("outbound"));
+                           resp->header(h_Supporteds).push_back(Token(Symbols::Outbound));
                         }
                         mStack.send(*resp,this);
                         delete sip;
@@ -362,7 +372,7 @@ Proxy::thread()
                         InfoLog (<< "Inserting new RequestContext tid=" << tid
                                   << " -> " << *context);
                         mServerRequestContexts[tid] = context;
-                        DebugLog (<< "RequestContexts: " << InserterP(mServerRequestContexts));
+                        //DebugLog (<< "RequestContexts: " << InserterP(mServerRequestContexts));  For a busy proxy - this generates a HUGE log statement!
                         try
                         {
                            context->process(std::auto_ptr<resip::SipMessage>(sip));
@@ -621,6 +631,25 @@ Proxy::removeSupportedOption(const resip::Data& option)
    mSupportedOptions.erase(option);
 }
 
+void 
+Proxy::doSessionAccounting(const resip::SipMessage& sip, bool received, RequestContext& context)
+{
+   if(mSessionAccountingEnabled)
+   {
+      assert(mAccountingCollector);
+      mAccountingCollector->doSessionAccounting(sip, received, context);
+   }
+}
+
+void 
+Proxy::doRegistrationAccounting(AccountingCollector::RegistrationEvent regEvent, const resip::SipMessage& sip)
+{
+   if(mRegistrationAccountingEnabled)
+   {
+      assert(mAccountingCollector);
+      mAccountingCollector->doRegistrationAccounting(regEvent, sip);
+   }
+}
 
 
 /* ====================================================================

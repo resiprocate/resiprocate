@@ -1,0 +1,70 @@
+skip: all
+.PHONY: skip
+
+ifneq ($(MAKECMDGOALS),clean)
+  include $(BUILD_DIR)/Makefile.conf
+endif
+
+$(BUILD_DIR)/Makefile.conf:
+	$(BUILD_DIR)/../configure -y
+
+INSTALL_LIB  := $(INSTALL_ROOT)/lib
+INSTALL_INC  := $(INSTALL_ROOT)/include/osc
+COPY         := cp
+MKDIR        := mkdir -p
+
+CPPFLAGS += -Wall -Werror
+CPPFLAGS += -fno-rtti
+
+ifeq ($(POSIX_LOCKING),yes)
+  CPPFLAGS += -DUSE_POSIX_LOCKING
+endif
+
+ifeq ($(HAVE_REALLOC),yes)
+  CPPFLAGS += -DHAVE_REALLOC
+endif
+
+ifeq ($(OPENSSL_SHA1),yes)
+  CPPFLAGS += -DUSE_OPENSSL_SHA1
+endif
+
+ifeq ($(RISC_OPTIMIZED),yes)
+  CPPFLAGS += -DRISC_OPTIMIZED
+endif
+
+ifeq ($(BUILD),size)
+  CPPFLAGS += -DOPTIMIZE_SIZE -Os
+  CPPFLAGS += -DNDEBUG
+endif
+
+ifeq ($(BUILD),speed)
+  CPPFLAGS += -O2
+  CPPFLAGS += -DNDEBUG
+  CPPFLAGS += -DUSE_OPENSSL_SHA1
+  CPPFLAGS += -finline-functions
+endif
+
+ifeq ($(BUILD),speed-profile)
+  CPPFLAGS += -g
+  CPPFLAGS += -O2
+  CPPFLAGS += -fno-inline
+endif
+
+ifeq ($(BUILD),speed-gprof)
+  CPPFLAGS += -g
+  CPPFLAGS += -pg
+  CPPFLAGS += -O2
+  CPPFLAGS += -fno-inline
+  LDFLAGS  += -pg
+endif
+
+ifeq ($(BUILD),debug-size)
+  CPPFLAGS += -DOPTIMIZE_SIZE
+  CPPFLAGS += -g
+  CPPFLAGS += -DDEBUG
+endif
+
+ifeq ($(BUILD),debug)
+  CPPFLAGS += -g
+  CPPFLAGS += -DDEBUG
+endif

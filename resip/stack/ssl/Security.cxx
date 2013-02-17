@@ -285,9 +285,12 @@ Security::preload()
       FileSystem::Directory::iterator it(dir);
       for (; it != dir.end(); ++it)
       {
-         Data name = *it;
-         Data fileName = _dir + name;
-         addCAFile(fileName);
+         if(!it.is_directory())
+         {
+            Data name = *it;
+            Data fileName = _dir + name;
+            addCAFile(fileName);
+         }
       }
    }
    std::list<Data>::iterator it_f = mCAFiles.begin();
@@ -297,6 +300,7 @@ Security::preload()
       try
       {
          addRootCertPEM(readIntoData(_file));
+         InfoLog(<<"Successfully loaded " << _file);
       }
       catch (Exception& e)
       {

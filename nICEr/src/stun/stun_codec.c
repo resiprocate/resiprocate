@@ -80,6 +80,8 @@ static int nr_stun_attr_nonce_illegal(nr_stun_attr_info *attr_info, int attrlen,
 static int nr_stun_attr_realm_illegal(nr_stun_attr_info *attr_info, int attrlen, void *data);
 static int nr_stun_attr_server_illegal(nr_stun_attr_info *attr_info, int attrlen, void *data);
 static int nr_stun_attr_username_illegal(nr_stun_attr_info *attr_info, int attrlen, void *data);
+static int
+nr_stun_attr_codec_fingerprint_decode(nr_stun_attr_info *attr_info, int attrlen, UCHAR *buf, int offset, int buflen, void *data);
 
 
 int
@@ -395,7 +397,8 @@ nr_stun_attr_codec_addr_encode(nr_stun_attr_info *attr_info, void *data, int off
         break;
 
     case NR_IPV6:
-        UNIMPLEMENTED;
+        assert(0);
+        ABORT(R_INTERNAL);
         break;
     default:
         assert(0);
@@ -639,7 +642,7 @@ nr_stun_attr_codec_fingerprint_encode(nr_stun_attr_info *attr_info, void *data, 
     return nr_stun_attr_codec_UINT4.encode(attr_info, &fingerprint->checksum, offset, buflen, buf, attrlen);
 }
 
-int
+static int
 nr_stun_attr_codec_fingerprint_decode(nr_stun_attr_info *attr_info, int attrlen, UCHAR *buf, int offset, int buflen, void *data)
 {
     int r,_status;

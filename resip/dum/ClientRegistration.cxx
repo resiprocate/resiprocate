@@ -33,10 +33,12 @@ ClientRegistration::ClientRegistration(DialogUsageManager& dum,
      mLastRequest(request),
      mTimerSeq(0),
      mState(mLastRequest->exists(h_Contacts) ? Adding : Querying),
+     mEnding(false),
      mEndWhenDone(false),
      mUserRefresh(false),
      mRegistrationTime(mDialogSet.mUserProfile->getDefaultRegistrationTime()),
      mExpires(0),
+     mRefreshTime(0),
      mQueuedState(None),
      mQueuedRequest(new SipMessage)
 {
@@ -217,6 +219,13 @@ ClientRegistration::removeMyBindings(bool stopRegisteringWhenDone)
 
    if (mQueuedState == None)
    {
+      if(mEnding && whenExpires() == 0)
+      {
+         assert(mEndWhenDone);  // will always be true when mEnding is true
+         // We are not actually registered, and we are ending - no need to send un-register - just terminate now
+         stopRegistering();
+         return;
+      }
       send(next);
    }
 }
@@ -224,15 +233,18 @@ ClientRegistration::removeMyBindings(bool stopRegisteringWhenDone)
 class ClientRegistrationRemoveMyBindings : public DumCommandAdapter
 {
 public:
-   ClientRegistrationRemoveMyBindings(ClientRegistration& clientRegistration, bool stopRegisteringWhenDone)
-      : mClientRegistration(clientRegistration),
+   ClientRegistrationRemoveMyBindings(const ClientRegistrationHandle& clientRegistrationHandle, bool stopRegisteringWhenDone)
+      : mClientRegistrationHandle(clientRegistrationHandle),
         mStopRegisteringWhenDone(stopRegisteringWhenDone)
    {
    }
 
    virtual void executeCommand()
    {
-      mClientRegistration.removeMyBindings(mStopRegisteringWhenDone);
+      if(mClientRegistrationHandle.isValid())
+      {
+         mClientRegistrationHandle->removeMyBindings(mStopRegisteringWhenDone);
+      }
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -240,14 +252,14 @@ public:
       return strm << "ClientRegistrationRemoveMyBindings";
    }
 private:
-   ClientRegistration& mClientRegistration;
+   ClientRegistrationHandle mClientRegistrationHandle;
    bool mStopRegisteringWhenDone;
 };
 
 void
 ClientRegistration::removeMyBindingsCommand(bool stopRegisteringWhenDone)
 {
-   mDum.post(new ClientRegistrationRemoveMyBindings(*this, stopRegisteringWhenDone));
+   mDum.post(new ClientRegistrationRemoveMyBindings(getHandle(), stopRegisteringWhenDone));
 }
 
 void 
@@ -308,30 +320,41 @@ ClientRegistration::allContacts()
 UInt32
 ClientRegistration::whenExpires() const
 {
-// !cj! - TODO - I'm supisious these time are getting confused on what units they are in 
    UInt64 now = Timer::getTimeSecs();
-   UInt64 ret = mExpires - now;
-   return (UInt32)ret;
+   if(mExpires > now)
+   {
+       return (UInt32)(mExpires - now);
+   }
+   else
+   {
+       return 0;
+   }
 }
 
 void
 ClientRegistration::end()
 {
-   removeMyBindings(true);
+   if(!mEnding)
+   {
+      mEnding = true;
+      removeMyBindings(true);
+   }
 }
 
 class ClientRegistrationEndCommand : public DumCommandAdapter
 {
 public:
-   ClientRegistrationEndCommand(ClientRegistration& clientRegistration)
-      : mClientRegistration(clientRegistration)
+   ClientRegistrationEndCommand(const ClientRegistrationHandle& clientRegistrationHandle)
+      : mClientRegistrationHandle(clientRegistrationHandle)
    {
-
    }
 
    virtual void executeCommand()
    {
-      mClientRegistration.end();
+      if(mClientRegistrationHandle.isValid())
+      {
+         mClientRegistrationHandle->end();
+      }
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -339,13 +362,13 @@ public:
       return strm << "ClientRegistrationEndCommand";
    }
 private:
-   ClientRegistration& mClientRegistration;
+   ClientRegistrationHandle mClientRegistrationHandle;
 };
 
 void
 ClientRegistration::endCommand()
 {
-   mDum.post(new ClientRegistrationEndCommand(*this));
+   mDum.post(new ClientRegistrationEndCommand(getHandle()));
 }
 
 EncodeStream& 
@@ -473,7 +496,9 @@ ClientRegistration::dispatch(const SipMessage& msg)
          // !ah! take list of ctcs and push into mMy or mOther as required.
 
          // make timers to re-register
+         UInt64 nowSecs = Timer::getTimeSecs();
          UInt32 expiry = calculateExpiry(msg);
+         mExpires = nowSecs + expiry;
          if(msg.exists(h_Contacts))
          {
             mAllContacts = msg.header(h_Contacts);
@@ -488,7 +513,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
             if(expiry>=7)
             {
                int exp = Helper::aBitSmallerThan(expiry);
-               mExpires = exp + Timer::getTimeSecs();
+               mRefreshTime = exp + nowSecs;
                mDum.addTimer(DumTimeout::Registration,
                              exp,
                              getBaseHandle(),
@@ -559,6 +584,13 @@ ClientRegistration::dispatch(const SipMessage& msg)
 
          if (mQueuedState != None)
          {
+            if(mQueuedState == Removing && mEnding && whenExpires() == 0)
+            {
+               assert(mEndWhenDone);  // will always be true when mEnding is true
+               // We are not actually registered, and we are ending - no need to send un-register - just terminate now
+               stopRegistering();
+               return;
+            }
             InfoLog (<< "Sending queued request: " << *mQueuedRequest);
             mState = mQueuedState;
             mQueuedState = None;
@@ -603,7 +635,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                else
                {
                   DebugLog(<< "Application requested delayed retry on 408 or internal 503: " << retry);
-                  mExpires = 0;
+                  mRefreshTime = 0;
                   switch(mState)
                   {
                   case Adding:
@@ -851,7 +883,7 @@ ClientRegistration::checkProfileRetry(const SipMessage& msg)
          // Use retry interval from error response
          retryInterval = msg.header(h_RetryAfter).value();
       }
-      mExpires = 0;
+      mRefreshTime = 0;
       switch(mState)
       {
       case Adding:

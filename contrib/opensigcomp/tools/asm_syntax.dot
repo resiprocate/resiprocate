@@ -1,0 +1,102 @@
+/* ***********************************************************************
+   Open SigComp -- Implementation of RFC 3320 Signaling Compression
+
+   Copyright 2005 Estacado Systems, LLC
+
+   Your use of this code is governed by the license under which it
+   has been provided to you. Unless you have a written and signed
+   document from Estacado Systems, LLC stating otherwise, your license
+   is as provided by the GNU General Public License version 2, a copy
+   of which is available in this project in the file named "LICENSE."
+   Alternately, a copy of the licence is available by writing to
+   the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+   Boston, MA 02110-1307 USA
+
+   Unless your use of this code is goverened by a written and signed
+   contract containing provisions to the contrary, this program is
+   distributed WITHOUT ANY WARRANTY; without even the implied warrant
+   of MERCHANTABILITY of FITNESS FOR A PARTICULAR PURPOSE. See the
+   license for additional details.
+
+   To discuss alternate licensing terms, contact info@estacado.net
+ *********************************************************************** */
+
+// This digraph defines the syntax state machine for parsing the
+// UDVM assembly language format.
+
+digraph udvm_asm_syntax
+{
+  NULL;
+
+  LABEL;
+
+  OPCODE1;
+  OPCODE2;
+  OPCODE3;
+  OPCODE4;
+
+  DIRECTIVE1;
+  DIRECTIVE2;
+  DIRECTIVE3;
+
+  EXPRESSION1;
+  EXPRESSION2;
+  EXPRESSION3;
+  EXPRESSION4;
+
+  /* Transitions from NULL */
+  NULL->OPCODE1 [label=OPCODE]
+  NULL->DIRECTIVE1 [label=NAME]
+  NULL->LABEL [label=COLON]
+
+  /* Transitions from OPCODE1 */
+  OPCODE1->OPCODE1 [label="OPCODE\n------------\nemit opcode"]
+  OPCODE1->DIRECTIVE1 [label="NAME\n------------\nemit opcode"]
+  OPCODE1->LABEL [label="COLON\n------------\nemit opcode"]
+  OPCODE1->OPCODE2 [label="OPENPAREN"]
+
+  /* Transitions from OPCODE2 */
+  OPCODE2->OPCODE2 [label="COMMA"]
+  OPCODE2->OPCODE3 [label="NAME,NUMBER\nDOT,BANG"]
+  OPCODE2->OPCODE4 [label="DOLLAR"]
+  OPCODE2->EXPRESSION1 [label="OPENPAREN\n------------\nphase[level]=opcode\nlevel++"]
+
+  /* Transitions from OPCODE3 */
+  OPCODE3->OPCODE2 [label="COMMA"]
+  OPCODE3->NULL [label="CLOSEPAREN\n------------\nemit opcode"]
+
+  /* Transitions from OPCODE4 */
+  OPCODE4->OPCODE3 [label="NAME,NUMBER\nDOT,BANG"]
+  OPCODE4->EXPRESSION1 [label="OPENPAREN\n------------\nphase[level]=opcode\nlevel++"]
+
+  /* Transitions from DIRECTIVE1 */
+  DIRECTIVE1->DIRECTIVE2 [label="OPENPAREN"]
+
+  /* Transitions from DIRECTIVE2 */
+  DIRECTIVE2->DIRECTIVE3 [label="NAME,NUMBER\nDOT,BANG"]
+  DIRECTIVE2->EXPRESSION1 [label="OPENPAREN\n------------\nphase[level]=directive\nlevel++"]
+  
+  /* Transitions from DIRECTIVE3 */
+  DIRECTIVE3->DIRECTIVE2 [label="COMMA"]
+  DIRECTIVE3->NULL [label="CLOSEPAREN\n------------\nenact directive"]
+
+  /* Transitions from LABEL */
+  LABEL->NULL [label="NAME\n------------\nrecord label"]
+
+  /* Transitions from EXPRESSION1 */
+  EXPRESSION1->EXPRESSION1 [label="OPENPAREN\n------------\nphase[level]=left\nlevel++"]
+  EXPRESSION1->EXPRESSION2 [label="NAME,NUMBER\nDOT,BANG"]
+
+  /* Transitions from EXPRESSION2 */
+  EXPRESSION2->EXPRESSION3 [label="OPERATOR"]
+
+  /* Transitions from EXPRESSION3 */
+  EXPRESSION3->EXPRESSION1 [label="OPENPAREN\n------------\nphase[level]=right\nlevel++"]
+  EXPRESSION3->EXPRESSION4 [label="NAME,NUMBER\nDOT,BANG"]
+
+  /* Transitions from EXPRESSION4 */
+  EXPRESSION4->OPCODE3 [label="CLOSEPAREN && phase[level]==opcode\n------------\nlevel--"]
+  EXPRESSION4->DIRECTIVE3 [label="CLOSEPAREN && phase[level]==directive\n------------\nlevel--"]
+  EXPRESSION4->EXPRESSION2 [label="CLOSEPAREN && phase[level]==left\n------------\nlevel--"]
+  EXPRESSION4->EXPRESSION4 [label="CLOSEPAREN && phase[level]==right\n------------\nlevel--"]
+}

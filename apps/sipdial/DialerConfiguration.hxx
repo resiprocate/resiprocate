@@ -3,18 +3,24 @@
 #define __DIALERCONFIGURATION_H
 
 #include <iostream>
+#include <map>
+
+#include <rutil/ConfigParse.hxx>
 
 #include "resip/stack/NameAddr.hxx"
 #include "resip/stack/Uri.hxx"
 #include "rutil/Data.hxx"
 
-class DialerConfiguration {
+class DialerConfiguration : public resip::ConfigParse {
 
 public:
    DialerConfiguration();
    virtual ~DialerConfiguration();
 
-   void loadStream(std::istream& in);
+   virtual void parseConfig(int argc, char** argv, const resip::Data& defaultConfigFilename, int skipCount = 0);
+
+   void printHelpText(int argc, char **argv);
+   using resip::ConfigParse::getConfigValue;
 
    void setDialerIdentity(const resip::NameAddr& dialerIdentity)
       { mDialerIdentity = dialerIdentity; };
@@ -40,7 +46,7 @@ public:
    {
       Generic,
       LinksysSPA941,
-      PolycomIP501,
+      AlertInfo,
       Cisco7940
    } UserAgentVariety;
    void setCallerUserAgentVariety(UserAgentVariety callerUserAgentVariety)
@@ -55,6 +61,14 @@ public:
       { mTargetDomain = targetDomain; };
    const resip::Data& getTargetDomain() 
       { return mTargetDomain; };
+   void setCertPath(const resip::Data& certPath)
+      { mCertPath = certPath; };
+   const resip::Data& getCertPath()
+      { return mCertPath; };
+   void setCADirectory(const resip::Data& caDirectory)
+      { mCADirectory = caDirectory; };
+   const resip::Data& getCADirectory()
+      { return mCADirectory; };
 
 protected:
 
@@ -82,6 +96,9 @@ protected:
    // For any tel: URI, the targetDomain will be appended to the number, to
    // construct a SIP URI
    resip::Data mTargetDomain;
+
+   resip::Data mCertPath;
+   resip::Data mCADirectory;
 
 
 };

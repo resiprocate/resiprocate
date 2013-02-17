@@ -4,6 +4,7 @@
 
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Helper.hxx"
+#include "repro/monkeys/CertificateAuthenticator.hxx"
 #include "repro/monkeys/StaticRoute.hxx"
 #include "repro/monkeys/IsTrustedNode.hxx"
 #include "repro/RequestContext.hxx"
@@ -65,7 +66,8 @@ StaticRoute::process(RequestContext& context)
       //}
    }
 
-   if (requireAuth && context.getDigestIdentity().empty())
+   if (requireAuth && context.getDigestIdentity().empty() &&
+      !context.getKeyValueStore().getBoolValue(CertificateAuthenticator::mCertificateVerifiedKey))
    {
       // !rwm! TODO do we need anything more sophisticated to figure out the realm?
       Data realm = msg.header(h_RequestLine).uri().host();
@@ -110,11 +112,9 @@ StaticRoute::process(RequestContext& context)
 void
 StaticRoute::challengeRequest(repro::RequestContext &rc, resip::Data &realm)
 {
-   Message *message = rc.getCurrentEvent();
-   SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
-   assert(sipMessage);
+   SipMessage& sipMessage = rc.getOriginalRequest();
 
-   SipMessage *challenge = Helper::makeProxyChallenge(*sipMessage, realm, mUseAuthInt /*auth-int*/, false /*stale*/);
+   SipMessage *challenge = Helper::makeProxyChallenge(sipMessage, realm, mUseAuthInt /*auth-int*/, false /*stale*/);
    rc.sendResponse(*challenge);
 
    delete challenge;

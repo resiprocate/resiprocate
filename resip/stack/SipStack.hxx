@@ -639,7 +639,7 @@ class SipStack : public FdSetIOObserver
             do not support epoll, fd_set ends up being used anyway since there 
             is no other choice, but this is hidden from the app.
       */
-      RESIP_DEPRECATED virtual void buildFdSet(FdSet& fdset);
+      RESIP_DEPRECATED(virtual void buildFdSet(FdSet& fdset));
 
       /**
           This allows the executive to give processing time to stack components.
@@ -656,7 +656,7 @@ class SipStack : public FdSetIOObserver
             do not support epoll, fd_set ends up being used anyway since there 
             is no other choice, but this is hidden from the app.
       */
-      RESIP_DEPRECATED virtual void process(FdSet& fdset);
+      RESIP_DEPRECATED(virtual void process(FdSet& fdset));
 
       /**
          @brief Give processing time to the SipStack components, when operating 
@@ -806,6 +806,16 @@ class SipStack : public FdSetIOObserver
           @ingroup resip_config
       */
       void setEnumSuffixes(const std::vector<Data>& suffixes);
+
+      /**
+          @brief Specify which domains in the To: Uri will be subject to ENUM
+
+          @details If the Uri hostname/domain is one of these domains,
+          the user part will be considered for ENUM search
+
+          @ingroup resip_config
+      */
+      void setEnumDomains(const std::map<Data,Data>& domains);
 
       /**
           @brief Clear the DNS Cache

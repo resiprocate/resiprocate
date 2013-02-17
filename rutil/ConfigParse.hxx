@@ -24,13 +24,16 @@ public:
    };
 
    ConfigParse();
-   ConfigParse(int argc, char** argv, const resip::Data& defaultConfigFilename);
    virtual ~ConfigParse();
 
-   virtual void printHelpText(int argc, char **argv) = 0;
+   // parses both command line and config file - using config file name from first command line parameter (if present)
+   // skipcount represents the number of command line options to skip before looking for config filename or name value pairs
+   virtual void parseConfig(int argc, char** argv, const resip::Data& defaultConfigFilename);
+   virtual void parseConfig(int argc, char** argv, const resip::Data& defaultConfigFilename, int skipCount); 
+   virtual void parseCommandLine(int argc, char** argv, int skipCount = 0);
+   virtual void parseConfigFile(const resip::Data& filename);
 
-   void parseCommandLine(int argc, char** argv);
-   void parseConfigFile(const resip::Data& filename);
+   virtual void printHelpText(int argc, char **argv) = 0;
 
    bool getConfigValue(const resip::Data& name, resip::Data &value);
    resip::Data getConfigData(const resip::Data& name, const resip::Data& defaultValue, bool useDefaultIfEmpty=false);
@@ -54,6 +57,8 @@ protected:
 
    typedef HashMultiMap<resip::Data, resip::Data> ConfigValuesMap;
    ConfigValuesMap mConfigValues;
+
+   resip::Data removePath(const resip::Data& fileAndPath);
 
    // Config filename from command line
    resip::Data mCmdLineConfigFilename;

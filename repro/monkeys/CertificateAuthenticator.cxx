@@ -27,6 +27,8 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
+KeyValueStore::Key CertificateAuthenticator::mCertificateVerifiedKey = Proxy::allocateRequestKeyValueStoreKey();
+
 CertificateAuthenticator::CertificateAuthenticator(ProxyConfig& config,
                                                    resip::SipStack* stack,
                                                    std::set<Data>& trustedPeers,
@@ -34,6 +36,18 @@ CertificateAuthenticator::CertificateAuthenticator(ProxyConfig& config,
    Processor("CertificateAuthenticator"),
    mTrustedPeers(trustedPeers),
    mThirdPartyRequiresCertificate(thirdPartyRequiresCertificate)
+{
+}
+
+CertificateAuthenticator::CertificateAuthenticator(ProxyConfig& config,
+                                                   resip::SipStack* stack,
+                                                   std::set<Data>& trustedPeers,
+                                                   bool thirdPartyRequiresCertificate,
+                                                   CommonNameMappings& commonNameMappings) :
+   Processor("CertificateAuthenticator"),
+   mTrustedPeers(trustedPeers),
+   mThirdPartyRequiresCertificate(thirdPartyRequiresCertificate),
+   mCommonNameMappings(commonNameMappings)
 {
 }
 
@@ -86,8 +100,15 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
       {
          if (!rc.getKeyValueStore().getBoolValue(IsTrustedNode::mFromTrustedNodeKey))
          {
-            if(authorizedForThisIdentity(peerNames, sipMessage->header(h_From).uri()))
+            // peerNames is empty if client certificate mode is `optional'
+            // or if the message didn't come in on TLS transport
+            if(peerNames.empty())
                return Continue;
+            if(authorizedForThisIdentity(peerNames, sipMessage->header(h_From).uri()))
+            {
+               rc.getKeyValueStore().setBoolValue(CertificateAuthenticator::mCertificateVerifiedKey, true);
+               return Continue;
+            }
             rc.sendResponse(*auto_ptr<SipMessage>
                             (Helper::makeResponse(*sipMessage, 403, "Authentication Failed for peer cert")));
             return SkipAllChains;
@@ -97,14 +118,24 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
       }
       else
       {
-         if(mThirdPartyRequiresCertificate && peerNames.size() == 0)
+         // peerNames is empty if client certificate mode is `optional'
+         // or if the message didn't come in on TLS transport
+         if(peerNames.empty())
          {
-            rc.sendResponse(*auto_ptr<SipMessage>
+            if(mThirdPartyRequiresCertificate)
+            {
+               rc.sendResponse(*auto_ptr<SipMessage>
                             (Helper::makeResponse(*sipMessage, 403, "Mutual TLS required to handle that message")));
-            return SkipAllChains;
+               return SkipAllChains;
+            }
+            else
+               return Continue;
          }
          if(authorizedForThisIdentity(peerNames, sipMessage->header(h_From).uri()))
+         {
+            rc.getKeyValueStore().setBoolValue(CertificateAuthenticator::mCertificateVerifiedKey, true);
             return Continue;
+         }
          rc.sendResponse(*auto_ptr<SipMessage>
                             (Helper::makeResponse(*sipMessage, 403, "Authentication Failed for peer cert")));
          return SkipAllChains;
@@ -139,6 +170,23 @@ CertificateAuthenticator::authorizedForThisIdentity(const std::list<Data>& peerN
       {
          DebugLog(<< "Matched certificate name " << i << " against domain " << domain);
          return true;
+      }
+      CommonNameMappings::iterator _mapping =
+         mCommonNameMappings.find(i);
+      if(_mapping != mCommonNameMappings.end())
+      {
+         DebugLog(<< "CN mapping(s) exist for the certificate " << i);
+         PermittedFromAddresses& permitted = _mapping->second;
+         if(permitted.find(aor) != permitted.end())
+         {
+            DebugLog(<< "Matched certificate name " << i << " against full AoR " << aor << " by common name mappings");
+            return true;
+         }
+         if(permitted.find(domain) != permitted.end())
+         {
+            DebugLog(<< "Matched certificate name " << i << " against domain " << domain << " by common name mappings");
+            return true;
+         }
       }
       DebugLog(<< "Certificate name " << i << " doesn't match AoR " << aor << " or domain " << domain);
    }

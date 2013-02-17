@@ -26,7 +26,8 @@ class ReproServerAuthManager: public resip::ServerAuthManager
                              Dispatcher* authRequestDispatcher,
                              AclStore& aclDb,
                              bool useAuthInt,
-                             bool rejectBadNonces);
+                             bool rejectBadNonces,
+                             bool challengeThirdParties);
       
       ~ReproServerAuthManager();
       

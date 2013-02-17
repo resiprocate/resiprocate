@@ -14,7 +14,8 @@ const resip::NameAddr UserProfile::mAnonymous("\"Anonymous\" <sip:anonymous@anon
 UserProfile::UserProfile() : Profile(), 
    mGruuEnabled(false),
    mRegId(0),
-   mClientOutboundEnabled(false)
+   mClientOutboundEnabled(false),
+   mDigestCacheUseLimit(0)
 {
     //InfoLog (<< "************ UserProfile created (no base)!: " << *this);
 }
@@ -22,7 +23,8 @@ UserProfile::UserProfile() : Profile(),
 UserProfile::UserProfile(SharedPtr<Profile> baseProfile) : Profile(baseProfile), 
    mGruuEnabled(false),
    mRegId(0),
-   mClientOutboundEnabled(false)
+   mClientOutboundEnabled(false),
+   mDigestCacheUseLimit(0)
 {
     //InfoLog (<< "************ UserProfile created (with base)!: " << *this);
 }

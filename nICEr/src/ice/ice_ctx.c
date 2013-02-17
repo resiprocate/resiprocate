@@ -63,7 +63,7 @@ static int nr_ice_fetch_stun_servers(int ct, nr_ice_stun_server **out);
 #ifdef USE_TURN
 static int nr_ice_fetch_turn_servers(int ct, nr_ice_turn_server **out);
 #endif /* USE_TURN */
-static void nr_ice_ctx_destroy_cb(int s, int how, void *cb_arg);
+static void nr_ice_ctx_destroy_cb(NR_SOCKET s, int how, void *cb_arg);
 
 int nr_ice_fetch_stun_servers(int ct, nr_ice_stun_server **out)
   {
@@ -278,7 +278,7 @@ int nr_ice_ctx_create(char *label, UINT4 flags, nr_ice_ctx **ctxp)
     return(_status);
   }
 
-static void nr_ice_ctx_destroy_cb(int s, int how, void *cb_arg)
+static void nr_ice_ctx_destroy_cb(NR_SOCKET s, int how, void *cb_arg)
   {
     nr_ice_ctx *ctx=cb_arg;
     nr_ice_foundation *f1,*f2;
@@ -330,7 +330,7 @@ int nr_ice_ctx_destroy(nr_ice_ctx **ctxp)
     return(0);
   }
 
-void nr_ice_initialize_finished_cb(int s, int h, void *cb_arg)
+void nr_ice_initialize_finished_cb(NR_SOCKET s, int h, void *cb_arg)
   {
     nr_ice_ctx *ctx=cb_arg;
 
@@ -375,7 +375,8 @@ int nr_ice_initialize(nr_ice_ctx *ctx, NR_async_cb done_cb, void *cb_arg)
 
     if(ctx->uninitialized_candidates)
       ABORT(R_WOULDBLOCK);
-
+    
+    
     _status=0;
   abort:
     return(_status);
