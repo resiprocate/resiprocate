@@ -1,49 +1,52 @@
-#if !defined(RESIP_TLSTRANSPORT_HXX)
-#define RESIP_TLSTRANSPORT_HXX
-
 #if defined(HAVE_CONFIG_H)
-  #include "config.h"
+#include "config.h"
 #endif
 
-#include "resip/stack/ssl/TlsBaseTransport.hxx"
-#include "resip/stack/TcpBaseTransport.hxx"
-#include "resip/stack/SecurityTypes.hxx"
-#include "rutil/HeapInstanceCounter.hxx"
-#include "resip/stack/Compression.hxx"
+#ifdef USE_SSL
 
-#include <openssl/ssl.h>
+#include <memory>
 
-namespace resip
+#include "rutil/compat.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Logger.hxx"
+#include "resip/stack/ssl/WssTransport.hxx"
+#include "resip/stack/ssl/TlsConnection.hxx"
+#include "resip/stack/ssl/Security.hxx"
+#include "rutil/WinLeakCheck.hxx"
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
+
+using namespace std;
+using namespace resip;
+
+WssTransport::WssTransport(Fifo<TransactionMessage>& fifo, 
+                           int portNum, 
+                           IpVersion version,
+                           const Data& interfaceObj,
+                           Security& security,
+                           const Data& sipDomain, 
+                           SecurityTypes::SSLType sslType,
+                           AfterSocketCreationFuncPtr socketFunc,
+                           Compression &compression,
+                           unsigned transportFlags,
+                           SecurityTypes::TlsClientVerificationMode cvm,
+                           bool useEmailAsSIP):
+   TlsBaseTransport(fifo, portNum, version, interfaceObj, security, sipDomain, sslType, transport(), socketFunc, compression, transportFlags, cvm, useEmailAsSIP)
 {
+   InfoLog (<< "Creating WSS transport for domain " 
+            << sipDomain << " interface=" << interfaceObj 
+            << " port=" << mTuple.getPort());
 
-class Connection;
-class Message;
-class Security;
-
-class TlsTransport : public TlsBaseTransport
-{
-   public:
-      RESIP_HeapCount(TlsTransport);
-      TlsTransport(Fifo<TransactionMessage>& fifo, 
-                   int portNum, 
-                   IpVersion version,
-                   const Data& interfaceObj,
-                   Security& security,
-                   const Data& sipDomain, 
-                   SecurityTypes::SSLType sslType,
-                   AfterSocketCreationFuncPtr socketFunc=0,
-                   Compression &compression = Compression::Disabled,
-                   unsigned transportFlags = 0,
-                   SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None,
-                   bool useEmailAsSIP = false);
-      virtual  ~TlsTransport();
-
-      TransportType transport() const { return TLS; }
-};
-
+   mTxFifo.setDescription("WssTransport::mTxFifo");
 }
 
-#endif
+
+WssTransport::~WssTransport()
+{
+}
+
+#endif /* USE_SSL */
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

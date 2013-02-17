@@ -43,7 +43,10 @@ TCPPort = 5060
 TLSPort = 0
 
 # Local port to listen on for SIP messages over WS (WebSocket) - 0 to disable
-WSPort = 5062
+WSPort = 80
+
+# Local port to listen on for SIP messages over WSS (WebSocket TLS) - 0 to disable
+WSSPort = 443
 
 # Local port to listen on for SIP messages over DTLS - 0 to disable
 DTLSPort = 0
@@ -114,9 +117,12 @@ Transport2Interface = 192.168.1.2:5060
 Transport2Type = TCP
 Transport2RecordRouteUri = auto
 
-
-
-
+Transport3Interface = 192.168.1.2:5063
+Transport3Type = WSS
+Transport3RecordRouteUri = auto
+Transport3TlsDomain = sipdomain.com
+Transport3TlsClientVerification = None
+Transport3RecordRouteUri = sip:sipdomain.com;transport=WS
 
 # Comma separated list of DNS servers, overrides default OS detected list (leave blank 
 # for default)

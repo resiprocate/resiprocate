@@ -60,7 +60,7 @@ TlsConnection::TlsConnection( Transport* transport, const Tuple& tuple,
    }
    assert( mSecurity );
 
-   TlsTransport *t = dynamic_cast<TlsTransport*>(transport);
+   TlsBaseTransport *t = dynamic_cast<TlsBaseTransport*>(transport);
    assert(t);
 
    SSL_CTX* ctx=t->getCtx();

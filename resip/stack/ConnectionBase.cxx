@@ -162,10 +162,11 @@ ConnectionBase::preparseNewBytes(int bytesRead, bool isWsMg /*false*/, bool isWs
 
          assert(mTransport);
          mMessage = new SipMessage(mTransport);
-		 if(mTransport->transport() == resip::WS){
-			 std::auto_ptr<resip::MessageDecorator> wsDecorator(new WsDecorator());
-			 mMessage->addOutboundDecorator(wsDecorator);
-		 }
+         if(mTransport->transport() == resip::WS || mTransport->transport() == resip::WSS)
+         {
+            std::auto_ptr<resip::MessageDecorator> wsDecorator(new WsDecorator());
+             mMessage->addOutboundDecorator(wsDecorator);
+         }
          
          DebugLog(<< "ConnectionBase::process setting source " << mWho);
          mMessage->setSource(mWho);

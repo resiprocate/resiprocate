@@ -37,7 +37,8 @@ Connection::Connection(Transport* transport,const Tuple& who, Socket socket,
    mWho.mFlowKey=(FlowKey)socket;
    InfoLog (<< "Connection::Connection: new connection created to who: " << mWho);
 
-   if(transport && transport->transport() == WS){
+   if(transport && (transport->transport() == WS ||
+      transport->transport() == WSS)) {
 		mSendingTransmissionFormat = WebSocketHandshake;
 		mReceivingTransmissionFormat = WebSocketHandshake;
    }

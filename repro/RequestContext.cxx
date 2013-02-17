@@ -154,7 +154,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
 	  bool postProcess = false;
 
 	  Uri& requestUri = sip->header(h_RequestLine).uri();
-	  if(requestUri.exists(resip::p_wsSrcIp) && requestUri.exists(resip::p_wsSrcPort) && sip->getSource().getType() != resip::WS){
+	  if(requestUri.exists(resip::p_wsSrcIp) && requestUri.exists(resip::p_wsSrcPort) && sip->getSource().getType() != resip::WS && sip->getSource().getType() != resip::WSS){
 		  requestUri.host() = requestUri.param(resip::p_wsSrcIp);
 		  requestUri.remove(resip::p_wsSrcIp);
 		  requestUri.port() = requestUri.param(resip::p_wsSrcPort);
@@ -398,7 +398,7 @@ RequestContext::processRequestAckTransaction(SipMessage* msg, bool original)
          handleSelfAimedStrayAck(msg);
       }
       // Note: mTopRoute is only populated if RemoveTopRouteIfSelf successfully removes the top route.
-      else if(msg->getSource().getType() == resip::WS || msg->hasForceTarget() || !mTopRoute.uri().host().empty() || getProxy().isMyUri(msg->header(h_From).uri()))
+      else if(msg->getSource().getType() == resip::WS || msg->getSource().getType() == resip::WS || msg->hasForceTarget() || !mTopRoute.uri().host().empty() || getProxy().isMyUri(msg->header(h_From).uri()))
       {
          // Top most route is us, or From header uri is ours.  Note:  The From check is 
          // required to interoperate with endpoints that configure outbound proxy 

@@ -1,5 +1,5 @@
-#if !defined(RESIP_TLSTRANSPORT_HXX)
-#define RESIP_TLSTRANSPORT_HXX
+#if !defined(RESIP_WSSTRANSPORT_HXX)
+#define RESIP_WSSTRANSPORT_HXX
 
 #if defined(HAVE_CONFIG_H)
   #include "config.h"
@@ -20,11 +20,11 @@ class Connection;
 class Message;
 class Security;
 
-class TlsTransport : public TlsBaseTransport
+class WssTransport : public TlsBaseTransport
 {
    public:
-      RESIP_HeapCount(TlsTransport);
-      TlsTransport(Fifo<TransactionMessage>& fifo, 
+      RESIP_HeapCount(WssTransport);
+      WssTransport(Fifo<TransactionMessage>& fifo, 
                    int portNum, 
                    IpVersion version,
                    const Data& interfaceObj,
@@ -36,9 +36,12 @@ class TlsTransport : public TlsBaseTransport
                    unsigned transportFlags = 0,
                    SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None,
                    bool useEmailAsSIP = false);
-      virtual  ~TlsTransport();
+      virtual  ~WssTransport();
 
-      TransportType transport() const { return TLS; }
+      TransportType transport() const { return WSS; }
+
+      bool isUseEmailAsSIP()
+         { return mUseEmailAsSIP; };
 };
 
 }

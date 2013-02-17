@@ -41,6 +41,7 @@
 #include "resip/stack/ssl/Security.hxx"
 #include "resip/stack/ssl/DtlsTransport.hxx"
 #include "resip/stack/ssl/TlsTransport.hxx"
+#include "resip/stack/ssl/WssTransport.hxx"
 #endif
 
 #if defined(WIN32) && !defined(__GNUC__)
@@ -393,8 +394,18 @@ SipStack::addTransport( TransportType protocol,
             break;
          case WSS:
 #if defined( USE_SSL )
-            CritLog (<< "WSS not implemented yet");
-            assert(0);
+            transport = new WssTransport(stateMacFifo,
+                                         port,
+                                         version,
+                                         ipInterface,
+                                         *mSecurity,
+                                         sipDomainname,
+                                         sslType,
+                                         mSocketFunc,
+                                         *mCompression,
+                                         transportFlags,
+                                         cvm,
+                                         useEmailAsSIP);
 #else
             CritLog (<< "WSS not supported in this stack. You don't have openssl");
             assert(0);

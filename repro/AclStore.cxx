@@ -499,7 +499,8 @@ bool
 AclStore::isRequestTrusted(const SipMessage& request)
 {
 	Tuple source = request.getSource();
-	bool trusted = (source.getType() == resip::WS);
+	bool trusted = (source.getType() == resip::WS ||
+           source.getType() == resip::WSS);
    
    // check if the request came over a secure channel and sucessfully authenticated 
    // (ex: TLS or DTLS)

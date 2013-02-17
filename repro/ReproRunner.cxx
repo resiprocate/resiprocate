@@ -1182,7 +1182,8 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          int udpPort = mProxyConfig->getConfigInt("UDPPort", 5060);
          int tcpPort = mProxyConfig->getConfigInt("TCPPort", 5060);
          int tlsPort = mProxyConfig->getConfigInt("TLSPort", 5061);
-		 int wsPort = mProxyConfig->getConfigInt("WSPort", 5062);
+         int wsPort = mProxyConfig->getConfigInt("WSPort", 80);
+         int wssPort = mProxyConfig->getConfigInt("WSSPort", 443);
          int dtlsPort = mProxyConfig->getConfigInt("DTLSPort", 0);
          Data tlsDomain = mProxyConfig->getConfigData("TLSDomainName", "");
          Data tlsCVMValue = mProxyConfig->getConfigData("TLSClientVerification", "NONE");
@@ -1215,11 +1216,16 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
             if (mUseV4) mSipStack->addTransport(TLS, tlsPort, V4, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, cvm, useEmailAsSIP);
             if (mUseV6) mSipStack->addTransport(TLS, tlsPort, V6, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, cvm, useEmailAsSIP);
          }
-		 if (wsPort)
-		 {
-			if (mUseV4) mSipStack->addTransport(WS, wsPort, V4, StunEnabled);
+         if (wsPort)
+         {
+            if (mUseV4) mSipStack->addTransport(WS, wsPort, V4, StunEnabled);
             if (mUseV6) mSipStack->addTransport(WS, wsPort, V6, StunEnabled);
-		 }
+         }
+         if (wssPort)
+         {
+            if (mUseV4) mSipStack->addTransport(WSS, wssPort, V4, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, cvm, useEmailAsSIP);
+            if (mUseV6) mSipStack->addTransport(WSS, wssPort, V6, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, cvm, useEmailAsSIP);
+         }
          if (dtlsPort)
          {
             if (mUseV4) mSipStack->addTransport(DTLS, dtlsPort, V4, StunEnabled, Data::Empty, tlsDomain);
