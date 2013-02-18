@@ -57,15 +57,7 @@ MessageFilterRule::matches(const SipMessage &msg) const
       if (!hostIsInList( msg.header(h_RequestLine).uri().host()))
       {
          DebugLog(<< "Host is not in list. Rule does not match.");
-		 //if(msg.header(resip::h_Contacts).size() > 0){
-		 //	 const resip::NameAddr& contact = msg.header(resip::h_Contacts).front();
-		 //	if (isEqualNoCase(contact.uri().host(), resip::Data("df7jal23ls0d.invalid"))){
-		//		//mTransactionUser->addDomain(msg.header(h_RequestLine).uri().host());
-		//		//goto Skip;
-		//	}
-		//}
-
-		 return false;
+         return false;
       }
    }
 

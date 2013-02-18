@@ -222,7 +222,6 @@ defineHeader(Subject, "Subject", StringCategory, "RFC 3261");
 defineHeader(UserAgent, "User-Agent", StringCategory, "RFC 3261");
 defineHeader(Timestamp, "Timestamp", StringCategory, "RFC 3261");
 
-
 //====================
 // ExpiresCategory:
 //====================

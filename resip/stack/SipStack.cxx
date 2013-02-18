@@ -378,34 +378,34 @@ SipStack::addTransport( TransportType protocol,
 #endif
             break;
 
-		case WS:
+         case WS:
 #if defined( USE_SSL )
             transport = new WsTransport(stateMacFifo, 
-								port, 
-								version, 
-								ipInterface, 
-								mSocketFunc, 
-								*mCompression, 
-								transportFlags);
+                  port,
+                  version,
+                  ipInterface,
+                  mSocketFunc,
+                  *mCompression,
+                  transportFlags);
 #else
-			CritLog (<< "WebSockets not supported in this stack. You don't have openssl");
+            CritLog (<< "WebSockets not supported in this stack. You don't have openssl");
             assert(0);
 #endif
             break;
          case WSS:
 #if defined( USE_SSL )
             transport = new WssTransport(stateMacFifo,
-                                         port,
-                                         version,
-                                         ipInterface,
-                                         *mSecurity,
-                                         sipDomainname,
-                                         sslType,
-                                         mSocketFunc,
-                                         *mCompression,
-                                         transportFlags,
-                                         cvm,
-                                         useEmailAsSIP);
+                  port,
+                  version,
+                  ipInterface,
+                  *mSecurity,
+                  sipDomainname,
+                  sslType,
+                  mSocketFunc,
+                  *mCompression,
+                  transportFlags,
+                  cvm,
+                  useEmailAsSIP);
 #else
             CritLog (<< "WSS not supported in this stack. You don't have openssl");
             assert(0);

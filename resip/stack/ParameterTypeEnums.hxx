@@ -151,8 +151,8 @@ class ParameterTypes
 
          defineParam(qopOptions, "qop", DataParameter, "RFC 3261"),
          defineParam(addTransport, "addTransport", ExistsParameter, "Internal"),
-		 defineParam(wsSrcIp, "ws-src-ip", DataParameter, ""),
-		 defineParam(wsSrcPort, "ws-src-port", UInt32Parameter, ""),
+         defineParam(wsSrcIp, "ws-src-ip", DataParameter, ""),
+         defineParam(wsSrcPort, "ws-src-port", UInt32Parameter, ""),
 
          MAX_PARAMETER
       };

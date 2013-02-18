@@ -57,7 +57,7 @@ class ConnectionBase
          ReadingHeaders,
          PartialBody,
          SigComp, // This indicates that incoming bytes are compressed.
-		 WebSocket,
+         WebSocket,
          MAX
       };
 
@@ -66,14 +66,14 @@ class ConnectionBase
          Unknown,
          Uncompressed,
          Compressed,
-		 WebSocketHandshake,
-		 WebSocketData,
+         WebSocketHandshake,
+         WebSocketData,
       } TransmissionFormat;
 
       ConnState getCurrentState() const { return mConnState; }
       bool preparseNewBytes(int bytesRead, bool isWsMg = false, bool isWsMsgComplete = false);
-	  bool wsProcessHandshake(int bytesRead);
-	  bool wsProcessData(int &bytesRead, bool &gotCompleteMsg);
+      bool wsProcessHandshake(int bytesRead);
+      bool wsProcessData(int &bytesRead, bool &gotCompleteMsg);
       void decompressNewBytes(int bytesRead);
       std::pair<char*, size_t> getWriteBuffer();
       std::pair<char*, size_t> getCurrentWriteBuffer();
@@ -112,8 +112,8 @@ class ConnectionBase
       char* mBuffer;
       size_t mBufferPos;
       size_t mBufferSize;
-	  UInt8 mWsMaskKey[4];
-	  UInt64 mWsPayLen;
+      UInt8 mWsMaskKey[4];
+      UInt64 mWsPayLen;
 
       static char connectionStates[MAX][32];
       UInt64 mLastUsed;

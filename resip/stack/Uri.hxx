@@ -248,8 +248,8 @@ class Uri : public ParserCategory
       defineParam(sigcompId, "sigcomp-id", QuotedDataParameter, "RFC 5049");
       defineParam(rinstance, "rinstance", DataParameter, "proprietary (resip)");
       defineParam(addTransport, "addTransport", ExistsParameter, "RESIP INTERNAL");
-	  defineParam(wsSrcIp, "ws-src-ip", DataParameter, "RESIP INTERNAL (WebSocket)");
-	  defineParam(wsSrcPort, "ws-src-port", UInt32Parameter, "RESIP INTERNAL (WebSocket)");
+      defineParam(wsSrcIp, "ws-src-ip", DataParameter, "RESIP INTERNAL (WebSocket)");
+      defineParam(wsSrcPort, "ws-src-port", UInt32Parameter, "RESIP INTERNAL (WebSocket)");
 
 #undef defineParam
 

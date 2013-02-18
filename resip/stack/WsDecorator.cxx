@@ -29,7 +29,7 @@ WsDecorator::decorateMessage(resip::SipMessage &msg, const resip::Tuple &source,
             contact.uri().host() = resip::Tuple::inet_ntop(source);
             contact.uri().port() = source.getPort();
             contact.uri().param(resip::p_transport) = resip::Tuple::toDataLower(source.getType());
-				
+
             contact.uri().param(resip::p_wsSrcIp) = resip::Tuple::inet_ntop(wsSource);
             contact.uri().param(resip::p_wsSrcPort) = wsSource.getPort();
          }

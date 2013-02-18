@@ -38,9 +38,9 @@ Connection::Connection(Transport* transport,const Tuple& who, Socket socket,
    InfoLog (<< "Connection::Connection: new connection created to who: " << mWho);
 
    if(transport && (transport->transport() == WS ||
-      transport->transport() == WSS)) {
-		mSendingTransmissionFormat = WebSocketHandshake;
-		mReceivingTransmissionFormat = WebSocketHandshake;
+         transport->transport() == WSS)) {
+      mSendingTransmissionFormat = WebSocketHandshake;
+      mReceivingTransmissionFormat = WebSocketHandshake;
    }
 
    if(mWho.mFlowKey && ConnectionBase::transport())
@@ -126,74 +126,73 @@ Connection::performWrite()
    }
    else if(mSendingTransmissionFormat == WebSocketHandshake)
    {
-	   mSendingTransmissionFormat = WebSocketData;
+      mSendingTransmissionFormat = WebSocketData;
    }
    else if(mSendingTransmissionFormat == WebSocketData)
    {
-	   SendData *dataWs, *oldSd;
-	   const Data& dataRaw = mOutstandingSends.front()->data;
-		UInt64 dataSize = 1 + 1 + dataRaw.size();
-		UInt64 lSize = (UInt64)dataRaw.size();
-		UInt8* uBuffer;
-		
-		if(!mDeprecatedWebSocketVersion)
-		{
-			if(lSize > 0x7D && lSize <= 0xFFFF){
-				dataSize += 2;
-			}
-			else if(lSize > 0xFFFF){
-				dataSize += 8;
-			}
-		}
-		
-		oldSd = mOutstandingSends.front();
-		dataWs = new SendData(oldSd->destination,
-									 Data(Data::Take, new char[(int)dataSize], (Data::size_type)dataSize),
-									 oldSd->transactionId,
-									 oldSd->sigcompId,
-									 false);
-		assert(dataWs && dataWs->data.data());
-		uBuffer = (UInt8*)dataWs->data.data();
+      SendData *dataWs, *oldSd;
+      const Data& dataRaw = mOutstandingSends.front()->data;
+      UInt64 dataSize = 1 + 1 + dataRaw.size();
+      UInt64 lSize = (UInt64)dataRaw.size();
+      UInt8* uBuffer;
 
-		if(mDeprecatedWebSocketVersion)
-		{
-			uBuffer[0] = 0x00;
-			uBuffer[dataSize - 1] = 0xFF;
-			uBuffer = &uBuffer[1];
-		}
-		else
-		{
-			uBuffer[0] = 0x82;
-			if(lSize <= 0x7D){
-				uBuffer[1] = (UInt8)lSize;
-				uBuffer = &uBuffer[2];
-			}
-			else if(lSize <= 0xFFFF){
-				uBuffer[1] = 0x7E;
-				uBuffer[2] = (lSize >> 8) & 0xFF;
-				uBuffer[3] = (lSize & 0xFF);
-				uBuffer = &uBuffer[4];
-			}
-			else{
-				uBuffer[1] = 0x7F;
-				uBuffer[2] = (lSize >> 56) & 0xFF;
-				uBuffer[3] = (lSize >> 48) & 0xFF;
-				uBuffer[4] = (lSize >> 40) & 0xFF;
-				uBuffer[5] = (lSize >> 32) & 0xFF;
-				uBuffer[6] = (lSize >> 24) & 0xFF;
-				uBuffer[7] = (lSize >> 16) & 0xFF;
-				uBuffer[8] = (lSize >> 8) & 0xFF;
-				uBuffer[9] = (lSize & 0xFF);
-				uBuffer = &uBuffer[10];
-			}
-		}
-		
-		memcpy(uBuffer, dataRaw.data(), dataRaw.size());		
-		mOutstandingSends.front() = dataWs;
-		dataWs = 0;
-		delete oldSd;
+      if(!mDeprecatedWebSocketVersion)
+      {
+         if(lSize > 0x7D && lSize <= 0xFFFF){
+            dataSize += 2;
+         }
+         else if(lSize > 0xFFFF){
+            dataSize += 8;
+         }
+      }
+
+      oldSd = mOutstandingSends.front();
+      dataWs = new SendData(oldSd->destination,
+            Data(Data::Take, new char[(int)dataSize], (Data::size_type)dataSize),
+            oldSd->transactionId,
+            oldSd->sigcompId,
+            false);
+      assert(dataWs && dataWs->data.data());
+      uBuffer = (UInt8*)dataWs->data.data();
+
+      if(mDeprecatedWebSocketVersion)
+      {
+         uBuffer[0] = 0x00;
+         uBuffer[dataSize - 1] = 0xFF;
+         uBuffer = &uBuffer[1];
+      }
+      else
+      {
+         uBuffer[0] = 0x82;
+         if(lSize <= 0x7D){
+            uBuffer[1] = (UInt8)lSize;
+            uBuffer = &uBuffer[2];
+         }
+         else if(lSize <= 0xFFFF){
+            uBuffer[1] = 0x7E;
+            uBuffer[2] = (lSize >> 8) & 0xFF;
+            uBuffer[3] = (lSize & 0xFF);
+            uBuffer = &uBuffer[4];
+         }
+         else{
+            uBuffer[1] = 0x7F;
+            uBuffer[2] = (lSize >> 56) & 0xFF;
+            uBuffer[3] = (lSize >> 48) & 0xFF;
+            uBuffer[4] = (lSize >> 40) & 0xFF;
+            uBuffer[5] = (lSize >> 32) & 0xFF;
+            uBuffer[6] = (lSize >> 24) & 0xFF;
+            uBuffer[7] = (lSize >> 16) & 0xFF;
+            uBuffer[8] = (lSize >> 8) & 0xFF;
+            uBuffer[9] = (lSize & 0xFF);
+            uBuffer = &uBuffer[10];
+         }
+      }
+
+      memcpy(uBuffer, dataRaw.data(), dataRaw.size());
+      mOutstandingSends.front() = dataWs;
+      dataWs = 0;
+      delete oldSd;
    }
-
 
 #ifdef USE_SIGCOMP
    // Perform compression here, if appropriate
@@ -352,40 +351,40 @@ Connection::read()
    else
 #endif
    {
-	 if (mReceivingTransmissionFormat == WebSocketHandshake){
-		 if(wsProcessHandshake(bytesRead))
-		 {
-			 ensureWritable();
-			 if(performWrites())
-			 {
-				mReceivingTransmissionFormat = WebSocketData;
-			 }
-		 }
-		 else
-		 {
-			 bytesRead=-1;
-		 }
-	 }
-	 else
-	 {
-		 if (mReceivingTransmissionFormat == WebSocketData){
-			int wsBytesRead = bytesRead;
-			bool gotCompleteMsg = false;
-			if(wsProcessData(wsBytesRead, gotCompleteMsg))
-			{
-				if(!preparseNewBytes(wsBytesRead, mDeprecatedWebSocketVersion/* FIXME: mangled sdp content */, gotCompleteMsg))
-				{
-					bytesRead=-1;
-				}
-			}
-		 }
-		 else if(!preparseNewBytes(bytesRead))
-		 {
-			// Iffy; only way we have right now to indicate that this connection has
-			// gone away.
-			bytesRead=-1;
-		 }
-	 }
+      if (mReceivingTransmissionFormat == WebSocketHandshake){
+         if(wsProcessHandshake(bytesRead))
+         {
+            ensureWritable();
+            if(performWrites())
+            {
+               mReceivingTransmissionFormat = WebSocketData;
+            }
+         }
+         else
+         {
+            bytesRead=-1;
+         }
+      }
+      else
+      {
+         if (mReceivingTransmissionFormat == WebSocketData){
+            int wsBytesRead = bytesRead;
+            bool gotCompleteMsg = false;
+            if(wsProcessData(wsBytesRead, gotCompleteMsg))
+            {
+               if(!preparseNewBytes(wsBytesRead, mDeprecatedWebSocketVersion/* FIXME: mangled sdp content */, gotCompleteMsg))
+               {
+                  bytesRead=-1;
+               }
+            }
+         }
+         else if(!preparseNewBytes(bytesRead))
+         {
+            // Iffy; only way we have right now to indicate that this connection has
+            // gone away.
+            bytesRead=-1;
+         }
+      }
    }
    return bytesRead;
 }

@@ -8,16 +8,16 @@ namespace resip
 {
 class WsDecorator : public MessageDecorator
 {
-	public:
-      WsDecorator();
-	  virtual ~WsDecorator();
+   public:
+   WsDecorator();
+   virtual ~WsDecorator();
 
-		virtual void decorateMessage(SipMessage &msg, 
-                                    const Tuple &source,
-                                    const Tuple &destination,
-                                    const Data& sigcompId) ;
-	  virtual void rollbackMessage(SipMessage& msg);
-      virtual MessageDecorator* clone() const;
+   virtual void decorateMessage(SipMessage &msg,
+         const Tuple &source,
+         const Tuple &destination,
+         const Data& sigcompId) ;
+   virtual void rollbackMessage(SipMessage& msg);
+   virtual MessageDecorator* clone() const;
 };
 
 }// namespace resip

@@ -17,20 +17,20 @@ using namespace std;
 using namespace resip;
 
 WsTransport::WsTransport(Fifo<TransactionMessage>& fifo, int portNum,
-                           IpVersion version, const Data& pinterface,
-                           AfterSocketCreationFuncPtr socketFunc,
-                           Compression &compression,
-                           unsigned transportFlags)
-   : TcpBaseTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags)
+      IpVersion version, const Data& pinterface,
+      AfterSocketCreationFuncPtr socketFunc,
+      Compression &compression,
+      unsigned transportFlags)
+: TcpBaseTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags)
 {
    mTuple.setType(transport());
 
    init();
 
    InfoLog (<< "Creating WS transport host=" << pinterface
-            << " port=" << mTuple.getPort()
-            << " ipv4=" << bool(version==V4) );
-            
+         << " port=" << mTuple.getPort()
+         << " ipv4=" << bool(version==V4) );
+
    mTxFifo.setDescription("WsTransport::mTxFifo");
 }
 
