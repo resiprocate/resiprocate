@@ -172,11 +172,11 @@ RRDecorator::singleRecordRoute(resip::SipMessage& request,
    }
 
    if(routes->size() > 0){
-		routes->front().uri().param(p_drr);
+      routes->front().uri().param(p_drr);
    }
-   
-	routes->push_front(rt);
-	++mAddedRecordRoute;
+
+   routes->push_front(rt);
+   ++mAddedRecordRoute;
 }
 
 void 
