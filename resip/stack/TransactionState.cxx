@@ -699,6 +699,23 @@ TransactionState::process(TransactionController& controller,
             }
             break;
       }
+
+      // .bwc. in private email 1 Feb 2013:
+      // According to the spec, there is no such thing as a reliable NIT
+      // retransmission; what we have just observed is a transaction id collision
+      // technically. Maybe a reliable NIT transaction collision needs special
+      // handling? It is probably a lot more common that this is a confused client,
+      // than a client that has innocently used the same tid as some other client,
+      // though. Maybe we should just ignore such requests?
+      if(sip->isExternal() && sip->isRequest() &&
+         method != ACK &&
+         state->mIsReliable)
+      {
+         InfoLog(<<"Someone sent us a request with a repeated transaction ID "
+                     "over a reliable transport.  Discarding the request.");
+         delete sip;
+         return;
+      }
    }
 
    if (state) // found transaction for sip msg
