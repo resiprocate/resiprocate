@@ -656,17 +656,37 @@ TransactionState::process(TransactionController& controller,
       // .bwc. This code ensures that the transaction state-machine can recover
       // from ACK/200 with the same tid as the original INVITE. This problem is
       // stupidly common. 
-      if(sip->isRequest() && method == ACK && !state->mAckIsValid)
+      if(sip->isRequest())
       {
-         // Must have received an ACK to a 200;
-         // We will never respond to this, so nothing will need this tid for
-         // driving transaction state. Additionally, 
-         InfoLog(<<"Someone sent us an ACK/200 with the same tid as the "
-                     "original INVITE. This is bad behavior, and should be "
-                     "corrected in the client.");
-         sip->mIsBadAck200=true;
-         // .bwc. This is a new stateless transaction, despite its tid.
-         state=0;
+         // .bwc. This code ensures that the transaction state-machine can recover
+         // from ACK/200 with the same tid as the original INVITE. This problem is
+         // stupidly common.
+         if(method == ACK && !state->mAckIsValid)
+         {
+            // Must have received an ACK to a 200;
+            // We will never respond to this, so nothing will need this tid for
+            // driving transaction state. Additionally, 
+            InfoLog(<<"Someone sent us an ACK/200 with the same tid as the "
+                        "original INVITE. This is bad behavior, and should be "
+                        "corrected in the client.");
+            sip->mIsBadAck200=true;
+            // .bwc. This is a new stateless transaction, despite its tid.
+            state=0;
+         }
+         // .bwc. in private email 1 Feb 2013:
+         // According to the spec, there is no such thing as a reliable NIT
+         // retransmission; what we have just observed is a transaction id collision
+         // technically. Maybe a reliable NIT transaction collision needs special
+         // handling? It is probably a lot more common that this is a confused client,
+         // than a client that has innocently used the same tid as some other client,
+         // though. Maybe we should just ignore such requests?
+         if(method != ACK && sip->getReceivedTransport()->isReliable())
+         {
+            InfoLog(<<"Someone sent us a request with a repeated transaction ID "
+                        "over a reliable transport.  Discarding the request.");
+            delete sip;
+            return;
+         }
       }
    }
 
