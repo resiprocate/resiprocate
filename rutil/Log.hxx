@@ -302,6 +302,7 @@ class Log
             LocalLoggerId id() const {return mId;}
             unsigned int maxLineCount() { return mMaxLineCount ? mMaxLineCount : MaxLineCount; }  // return local max, if not set use global max
             unsigned int maxByteCount() { return mMaxByteCount ? mMaxByteCount : MaxByteCount; }  // return local max, if not set use global max
+            Type type() const {return mType;}
 
             std::ostream& Instance(unsigned int bytesToWrite); ///< Return logger stream instance, creating it if needed.
             void reset(); ///< Frees logger stream
