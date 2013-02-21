@@ -12,12 +12,13 @@ LDADD += ../../../rutil/librutil.la
 #LDADD += ../../../contrib/ares/libares.a
 LDADD += $(LIBSSL_LIBADD) $(LIBPOPT_LIBADD) -lpthread
 
-TESTS = \
-	basicRegister \
-	BasicCall \
-	basicMessage \
-	basicClient \
-	testRequestValidationHandler
+TESTS = basicRegister
+TESTS += BasicCall
+TESTS += basicMessage
+# The basicClient test case doesn't seem to run without user interaction,
+# so it is not run automatically
+#TESTS += basicClient
+TESTS += testRequestValidationHandler
 
 check_PROGRAMS = \
 	basicRegister \
