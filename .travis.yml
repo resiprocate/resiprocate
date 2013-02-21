@@ -5,4 +5,4 @@ before_install:
 compiler:
   - clang
   - gcc
-script: autoreconf --install && ./configure --with-ssl --with-mysql --with-apps --enable-ipv6 --with-radius --with-c-ares --with-b2bua && make -j8 && make test
+script: autoreconf --install && ./configure --with-ssl --with-mysql --with-apps --enable-ipv6 --with-radius --with-c-ares --with-b2bua && make -j8 && make check
