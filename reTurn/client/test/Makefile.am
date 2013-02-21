@@ -7,10 +7,11 @@ LDADD = ../libreTurnClient.la
 LDADD += ../../../rutil/librutil.la
 LDADD += $(LIBSSL_LIBADD) -lpthread
 
-TESTS = \
-        TestClient \
-        TestAsyncClient \
-        TestRtpLoad
+# These tests all need to be run manually at the moment, so
+# they are commented out (they still get compiled by `make check'):
+#TESTS = TestClient
+#TESTS += TestAsyncClient
+#TESTs += TestRtpLoad
 
 check_PROGRAMS = \
 	TestClient \
