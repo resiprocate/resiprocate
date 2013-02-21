@@ -59,6 +59,7 @@ nagendra = Nagendra Modadugu <nagendra@cs.stanford.edu>
 nash = Nash Tsai <nash.teltel@gmail.com>
 nils = Nils Ohlmeier <nils@iptel.org>
 (no author) = <no_author@resiprocate.org>
+oej = Olle Johansson <oej@edvina.net>
 partim = Martin Hoffmann <hn@nvnc.de>
 pckizer = Philip Kizer <pckizer@estacado.net>
 philcarey = Phillip Carey <phillip.carey@teltel.com>
