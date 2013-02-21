@@ -181,9 +181,10 @@ ReproRunner::run(int argc, char** argv)
    // Initialize resip logger
    GenericLogImpl::MaxByteCount = mProxyConfig->getConfigUnsignedLong("LogFileMaxBytes", 5242880 /*5 Mb */);
    Data loggingType = mProxyConfig->getConfigData("LoggingType", "cout", true);
+   Data mAppName = mProxyConfig->getConfigData("LoggingInstanceName", mArgv[0], true);
    Log::initialize(loggingType, 
                    mProxyConfig->getConfigData("LogLevel", "INFO", true), 
-                   mArgv[0], 
+                   mAppName, 
                    mProxyConfig->getConfigData("LogFilename", "repro.log", true).c_str(),
                    isEqualNoCase(loggingType, "file") ? &g_ReproLogger : 0); // if logging to file then write WARNINGS, and Errors to console still
 
