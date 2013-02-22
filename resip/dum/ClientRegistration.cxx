@@ -224,15 +224,18 @@ ClientRegistration::removeMyBindings(bool stopRegisteringWhenDone)
 class ClientRegistrationRemoveMyBindings : public DumCommandAdapter
 {
 public:
-   ClientRegistrationRemoveMyBindings(ClientRegistration& clientRegistration, bool stopRegisteringWhenDone)
-      : mClientRegistration(clientRegistration),
+   ClientRegistrationRemoveMyBindings(const ClientRegistrationHandle& clientRegistrationHandle, bool stopRegisteringWhenDone)
+      : mClientRegistrationHandle(clientRegistrationHandle),
         mStopRegisteringWhenDone(stopRegisteringWhenDone)
    {
    }
 
    virtual void executeCommand()
    {
-      mClientRegistration.removeMyBindings(mStopRegisteringWhenDone);
+      if(mClientRegistrationHandle.isValid())
+      {
+         mClientRegistrationHandle->removeMyBindings(mStopRegisteringWhenDone);
+      }
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -240,14 +243,14 @@ public:
       return strm << "ClientRegistrationRemoveMyBindings";
    }
 private:
-   ClientRegistration& mClientRegistration;
+   ClientRegistrationHandle mClientRegistrationHandle;
    bool mStopRegisteringWhenDone;
 };
 
 void
 ClientRegistration::removeMyBindingsCommand(bool stopRegisteringWhenDone)
 {
-   mDum.post(new ClientRegistrationRemoveMyBindings(*this, stopRegisteringWhenDone));
+   mDum.post(new ClientRegistrationRemoveMyBindings(getHandle(), stopRegisteringWhenDone));
 }
 
 void 
@@ -323,15 +326,18 @@ ClientRegistration::end()
 class ClientRegistrationEndCommand : public DumCommandAdapter
 {
 public:
-   ClientRegistrationEndCommand(ClientRegistration& clientRegistration)
-      : mClientRegistration(clientRegistration)
+   ClientRegistrationEndCommand(const ClientRegistrationHandle& clientRegistrationHandle)
+      : mClientRegistrationHandle(clientRegistrationHandle)
    {
 
    }
 
    virtual void executeCommand()
    {
-      mClientRegistration.end();
+      if(mClientRegistrationHandle.isValid())
+      {
+         mClientRegistrationHandle->end();
+      }
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -339,13 +345,13 @@ public:
       return strm << "ClientRegistrationEndCommand";
    }
 private:
-   ClientRegistration& mClientRegistration;
+   ClientRegistrationHandle mClientRegistrationHandle;
 };
 
 void
 ClientRegistration::endCommand()
 {
-   mDum.post(new ClientRegistrationEndCommand(*this));
+   mDum.post(new ClientRegistrationEndCommand(getHandle()));
 }
 
 EncodeStream& 

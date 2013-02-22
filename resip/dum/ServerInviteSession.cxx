@@ -96,8 +96,8 @@ ServerInviteSession::redirect(const NameAddrs& contacts, int code)
 class ServerInviteSessionRedirectCommand : public DumCommandAdapter
 {
 public:
-   ServerInviteSessionRedirectCommand(ServerInviteSession& serverInviteSession, const NameAddrs& contacts, int code)
-      : mServerInviteSession(serverInviteSession),
+   ServerInviteSessionRedirectCommand(const ServerInviteSessionHandle& serverInviteSessionHandle, const NameAddrs& contacts, int code)
+      : mServerInviteSessionHandle(serverInviteSessionHandle),
       mContacts(contacts),
       mCode(code)
    {
@@ -106,7 +106,10 @@ public:
 
    virtual void executeCommand()
    {
-      mServerInviteSession.redirect(mContacts, mCode);
+      if(mServerInviteSessionHandle.isValid())
+      {
+         mServerInviteSessionHandle->redirect(mContacts, mCode);
+      }
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -114,7 +117,7 @@ public:
       return strm << "ServerInviteSessionRedirectCommand";
    }
 private:
-   ServerInviteSession& mServerInviteSession;
+   ServerInviteSessionHandle mServerInviteSessionHandle;
    NameAddrs mContacts;
    int mCode;
 };
@@ -122,7 +125,7 @@ private:
 void 
 ServerInviteSession::redirectCommand(const NameAddrs& contacts, int code)
 {
-   mDum.post(new ServerInviteSessionRedirectCommand(*this, contacts, code));
+   mDum.post(new ServerInviteSessionRedirectCommand(getHandle(), contacts, code));
 }
 
 void 
@@ -189,15 +192,18 @@ ServerInviteSession::provisional(int code, bool earlyFlag)
 class ServerInviteSessionProvisionalCommand : public DumCommandAdapter
 {
 public:
-   ServerInviteSessionProvisionalCommand(ServerInviteSession& serverInviteSession, int statusCode)
-      : mServerInviteSession(serverInviteSession),
+   ServerInviteSessionProvisionalCommand(const ServerInviteSessionHandle& serverInviteSessionHandle, int statusCode)
+      : mServerInviteSessionHandle(serverInviteSessionHandle),
         mStatusCode(statusCode)
    {
    }
 
    virtual void executeCommand()
    {
-      mServerInviteSession.provisional(mStatusCode);
+      if(mServerInviteSessionHandle.isValid())
+      {
+         mServerInviteSessionHandle->provisional(mStatusCode);
+      }
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -205,14 +211,14 @@ public:
       return strm << "ServerInviteSessionProvisionalCommand";
    }
 private:
-   ServerInviteSession& mServerInviteSession;
+   ServerInviteSessionHandle mServerInviteSessionHandle;
    int mStatusCode;
 };
 
 void 
 ServerInviteSession::provisionalCommand(int statusCode)
 {
-   mDum.post(new ServerInviteSessionProvisionalCommand(*this, statusCode));
+   mDum.post(new ServerInviteSessionProvisionalCommand(getHandle(), statusCode));
 }
 
 void
@@ -592,15 +598,18 @@ ServerInviteSession::accept(int code)
 class ServerInviteSessionAcceptCommand : public DumCommandAdapter
 {
 public:
-   ServerInviteSessionAcceptCommand(ServerInviteSession& serverInviteSession, int statusCode)
-      : mServerInviteSession(serverInviteSession),
+   ServerInviteSessionAcceptCommand(const ServerInviteSessionHandle& serverInviteSessionHandle, int statusCode)
+      : mServerInviteSessionHandle(serverInviteSessionHandle),
         mStatusCode(statusCode)
    {
    }
 
    virtual void executeCommand()
    {
-      mServerInviteSession.accept(mStatusCode);
+      if(mServerInviteSessionHandle.isValid())
+      {
+         mServerInviteSessionHandle->accept(mStatusCode);
+      }
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const
@@ -608,14 +617,14 @@ public:
       return strm << "ServerInviteSessionAcceptCommand";
    }
 private:
-   ServerInviteSession& mServerInviteSession;
+   ServerInviteSessionHandle mServerInviteSessionHandle;
    int mStatusCode;
 };
 
 void 
 ServerInviteSession::acceptCommand(int statusCode)
 {
-   mDum.post(new ServerInviteSessionAcceptCommand(*this, statusCode));
+   mDum.post(new ServerInviteSessionAcceptCommand(getHandle(), statusCode));
 }
 
 void 
