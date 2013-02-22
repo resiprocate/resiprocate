@@ -39,7 +39,14 @@ Headers::isCommaEncoding(Type type)
 const Data&
 Headers::getHeaderName(int type)
 {
-   return HeaderNames[type+1];
+   if(type < MAX_HEADERS)
+   {
+      return HeaderNames[type+1];
+   }
+   else
+   {
+      return Data::Empty;
+   }
 }
 
 bool
