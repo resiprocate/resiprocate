@@ -1054,7 +1054,9 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
             // Parse out interface settings
             ParseBuffer pb(interfaceSettings);
             anchor = pb.position();
-            pb.skipToChar(':');
+            pb.skipToEnd();
+            pb.skipBackToChar(':');  // For IPv6 the last : should be the port
+            pb.skipBackChar();
             if(!pb.eof())
             {
                Data ipAddr;
