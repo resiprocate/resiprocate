@@ -3,6 +3,5 @@ before_install:
  - sudo apt-get update -qq
  - sudo apt-get install -qq gperf libasio-dev libboost-dev libc-ares-dev libdb++-dev libpopt-dev libssl-dev perl libmysqlclient-dev libradiusclient-ng-dev libcppunit-dev autotools-dev libpcre3-dev libxerces-c-dev
 compiler:
-  - clang
   - gcc
 script: autoreconf --install && ./configure --with-ssl --with-mysql --with-apps --enable-ipv6 --with-radius --with-c-ares --with-b2bua && make -j8 && make check
