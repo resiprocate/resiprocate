@@ -14,7 +14,7 @@
 LoggingType = cout
 
 # Logging level: NONE|CRIT|ERR|WARNING|INFO|DEBUG|STACK
-LogLevel = STACK
+LogLevel = INFO
 
 # Log Filename
 LogFilename = repro.log
@@ -44,7 +44,7 @@ TLSPort = 0
 
 # Local port to listen on for SIP messages over WS (WebSocket) - 0 to disable
 WSPort = 80
-
+ 
 # Local port to listen on for SIP messages over WSS (WebSocket TLS) - 0 to disable
 WSSPort = 443
 
@@ -211,7 +211,7 @@ CertificatePath =
 #CAFile = /etc/ssl/certs/cacert.org.pem
 
 # The Path to read and write Berkely DB database files
-DatabasePath = /opt/resip/var/lib
+DatabasePath = ./
 
 # The hostname running MySQL server to connect to, leave blank to use BerkelyDB.
 # The value of host may be either a host name or an IP address. If host is "localhost",
@@ -524,7 +524,7 @@ CommonNameMappings = /etc/repro/tlsUserMappings.txt
 ########################################################
 
 # Disable DIGEST challenges - disables this monkey
-DisableAuth = false
+DisableAuth = true
 
 # Http hostname for this server (used in Identity headers)
 HttpHostname =
