@@ -181,10 +181,9 @@ ReproRunner::run(int argc, char** argv)
    // Initialize resip logger
    GenericLogImpl::MaxByteCount = mProxyConfig->getConfigUnsignedLong("LogFileMaxBytes", 5242880 /*5 Mb */);
    Data loggingType = mProxyConfig->getConfigData("LoggingType", "cout", true);
-   Data mAppName = mProxyConfig->getConfigData("LoggingInstanceName", mArgv[0], true);
    Log::initialize(loggingType, 
                    mProxyConfig->getConfigData("LogLevel", "INFO", true), 
-                   mAppName, 
+                   mArgv[0], 
                    mProxyConfig->getConfigData("LogFilename", "repro.log", true).c_str(),
                    isEqualNoCase(loggingType, "file") ? &g_ReproLogger : 0); // if logging to file then write WARNINGS, and Errors to console still
 
@@ -194,6 +193,15 @@ ReproRunner::run(int argc, char** argv)
    if(!createSipStack())
    {
       return false;
+   }
+
+   // Drop privileges (can do this now that sockets are bound)
+   Data runAsUser = mProxyConfig->getConfigData("RunAsUser", "", true);
+   Data runAsGroup = mProxyConfig->getConfigData("RunAsGroup", "", true); 
+   if(!runAsUser.empty())
+   {
+      InfoLog( << "Trying to drop privileges, configured uid = " << runAsUser << " gid = " << runAsGroup);
+      dropPrivileges(runAsUser, runAsGroup);
    }
 
    // Create datastore
@@ -1058,9 +1066,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
             // Parse out interface settings
             ParseBuffer pb(interfaceSettings);
             anchor = pb.position();
-            pb.skipToEnd();
-            pb.skipBackToChar(':');  // For IPv6 the last : should be the port
-            pb.skipBackChar();
+            pb.skipToChar(':');
             if(!pb.eof())
             {
                Data ipAddr;
