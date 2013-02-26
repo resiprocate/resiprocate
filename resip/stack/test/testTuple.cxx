@@ -28,7 +28,7 @@ main()
       Tuple testTuple4("150.1.1.106", 5069, V4, TCP);
       assert(!testTuple4.isPrivateAddress());
       Tuple testTuple5("127.0.0.1", 5069, V4, TCP);
-      assert(!testTuple5.isPrivateAddress());
+      assert(testTuple5.isPrivateAddress());
    }
 
 #ifdef USE_IPV6

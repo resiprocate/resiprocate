@@ -4,6 +4,8 @@
 #endif
 
 #ifndef WIN32
+#include <grp.h>
+#include <pwd.h>
 #include <sys/types.h>
 #include <unistd.h>
 #endif
@@ -28,6 +30,73 @@ ServerProcess::ServerProcess() : mPidFile("")
 
 ServerProcess::~ServerProcess()
 {
+}
+
+void
+ServerProcess::dropPrivileges(const Data& runAsUser, const Data& runAsGroup)
+{
+#ifdef WIN32
+   // setuid is not supported on Windows
+   throw std::runtime_error("Unable to drop privileges on Windows, please check the config");
+#else
+   int rval;
+   int new_gid;
+   struct passwd *pw;
+   struct group *gr;
+
+   if(runAsUser.empty())
+      throw std::runtime_error("Unable to drop privileges, username not specified");
+   pw = getpwnam(runAsUser.c_str());
+   if (pw == NULL)
+   {
+      throw std::runtime_error("Unable to drop privileges, user not found");
+   }
+
+   if(!runAsGroup.empty())
+   {
+      gr = getgrnam(runAsGroup.c_str());
+      if (gr == NULL)
+      {
+         throw std::runtime_error("Unable to drop privileges, group not found");
+      }
+      new_gid = gr->gr_gid;
+   }
+   else
+   {
+      // Use default group for the specified user
+      new_gid = pw->pw_gid;
+   }
+
+   rval = getgid();
+   if (rval != new_gid)
+   {
+      if (rval != 0)
+      {
+         throw std::runtime_error("Unable to drop privileges, not root!");
+      }
+
+      rval = setgid(new_gid);
+      if (rval < 0)
+      {
+         throw std::runtime_error("Unable to drop privileges, operation failed");
+      }
+   }
+
+   rval = getuid();
+   if (rval != pw->pw_uid)
+   {
+      if (rval != 0)
+      {
+         throw std::runtime_error("Unable to drop privileges, not root!");
+      }
+
+      rval = setuid(pw->pw_uid);
+      if (rval < 0)
+      {
+         throw std::runtime_error("Unable to drop privileges, operation failed");
+      }
+   }
+#endif
 }
 
 void

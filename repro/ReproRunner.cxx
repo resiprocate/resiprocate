@@ -195,6 +195,15 @@ ReproRunner::run(int argc, char** argv)
       return false;
    }
 
+   // Drop privileges (can do this now that sockets are bound)
+   Data runAsUser = mProxyConfig->getConfigData("RunAsUser", "", true);
+   Data runAsGroup = mProxyConfig->getConfigData("RunAsGroup", "", true); 
+   if(!runAsUser.empty())
+   {
+      InfoLog( << "Trying to drop privileges, configured uid = " << runAsUser << " gid = " << runAsGroup);
+      dropPrivileges(runAsUser, runAsGroup);
+   }
+
    // Create datastore
    if(!createDatastore())
    {

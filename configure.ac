@@ -175,6 +175,10 @@ AC_ARG_ENABLE(ipv6,
 AC_ARG_ENABLE(dtls,
 [  --enable-dtls           Enable DTLS support (requires OpenSSL)],
  [AC_DEFINE_UNQUOTED(USE_DTLS, 1, USE_DTLS)],  )
+
+AC_ARG_ENABLE(pedantic-stack,
+[  --enable-pedantic-stack Enable pedantic behavior (fully parse all messages)],
+ [AC_DEFINE_UNQUOTED(PEDANTIC_STACK, 1, PEDANTIC_STACK)],  )
  
 AM_CONDITIONAL(USE_MYSQL, false)
 AC_ARG_WITH(mysql,

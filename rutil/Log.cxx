@@ -366,14 +366,26 @@ Log::tags(Log::Level level,
         << GetCurrentThreadId() << Log::delim
         << file << ":" << line;
 #else // #if defined( WIN32 ) || defined( __APPLE__ )
-   strm << mDescriptions[level+1] << Log::delim
-        << timestamp(ts) << Log::delim  
-//        << mHostname << Log::delim  
-        << mAppName << Log::delim
-        << subsystem << Log::delim 
-//        << mPid << Log::delim
-        << pthread_self() << Log::delim
-        << pfile << ":" << line;
+   if(resip::Log::getLoggerData().type() == Syslog)
+   {
+      strm << mDescriptions[level+1] << Log::delim
+           << timestamp(ts) << Log::delim
+   //        << mHostname << Log::delim
+           << mAppName << Log::delim
+           << subsystem << Log::delim
+           << mPid << Log::delim
+           << pthread_self() << Log::delim
+           << pfile << ":" << line;
+   }
+   else
+      strm << mDescriptions[level+1] << Log::delim
+           << timestamp(ts) << Log::delim  
+   //        << mHostname << Log::delim  
+           << mAppName << Log::delim
+           << subsystem << Log::delim 
+   //        << mPid << Log::delim
+           << pthread_self() << Log::delim
+           << pfile << ":" << line;
 #endif
    return strm;
 }
