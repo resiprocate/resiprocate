@@ -171,6 +171,7 @@ RRDecorator::singleRecordRoute(resip::SipMessage& request,
       InfoLog(<< "Adding outbound Record-Route: " << rt);
    }
 
+   assert(routes->size() > 0);
    routes->front().uri().param(p_drr);
    routes->push_front(rt);
    ++mAddedRecordRoute;
