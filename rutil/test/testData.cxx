@@ -3,14 +3,29 @@
 #include "rutil/Log.hxx"
 #include "assert.h"
 #include <iostream>
+#include <limits>
+#include <math.h>
 
 using namespace resip;
 using namespace std;
+
+#define DOUBLE_EQUALITY(a, b) essentiallyEqual(a, b, std::numeric_limits<double>::epsilon())
 
 // for friends
 class TestData
 {
    public:
+
+      bool approximatelyEqual(double a, double b, float epsilon)
+      {
+         return fabs(a - b) <= ( (fabs(a) < fabs(b) ? fabs(b) : fabs(a)) * epsilon);
+      }
+
+      bool essentiallyEqual(double a, double b, double epsilon)
+      {
+         return fabs(a - b) <= ( (fabs(a) > fabs(b) ? fabs(b) : fabs(a)) * epsilon);
+      }
+
       int main()
       {
          Log::initialize(Log::Cout, Log::Debug, Data::Empty);
@@ -500,10 +515,10 @@ class TestData
             assert(s1.convertDouble() == 0);
 
             Data s2("12.12foo");
-            assert(s2.convertDouble() == 12.12L);
+            assert(DOUBLE_EQUALITY(s2.convertDouble(), 12.12L));
 
             Data s3("12.12");
-            assert(s3.convertDouble() == 12.12L);
+            assert(DOUBLE_EQUALITY(s3.convertDouble(), 12.12L));
 
             Data s4(".foo");
             assert(s4.convertDouble() == 0);
@@ -518,31 +533,31 @@ class TestData
             assert(s6a.convertDouble() == 0);
 
             Data s7("    +17.17");
-            assert(s7.convertDouble() == 17.17L);
+            assert(DOUBLE_EQUALITY(s7.convertDouble(), 17.17L));
 
             Data s8("    -17.17");
-            assert(s8.convertDouble() == -17.17L);
+            assert(DOUBLE_EQUALITY(s8.convertDouble(), -17.17L));
 
             Data s9("    -17.17foo");
-            assert(s9.convertDouble() == -17.17L);
+            assert(DOUBLE_EQUALITY(s9.convertDouble(), -17.17L));
 
             Data s10("    --17.17");
             assert(s10.convertDouble() == 0);
 
             Data s11("    -0000.017");
-            assert(s11.convertDouble() == -0.017L);
+            assert(DOUBLE_EQUALITY(s11.convertDouble(), -0.017L));
 
             Data s12(".017");
-            assert(s12.convertDouble() == 0.017L);
+            assert(DOUBLE_EQUALITY(s12.convertDouble(), 0.017L));
 
             Data s13("    .017");
-            assert(s13.convertDouble() == 0.017L);
+            assert(DOUBLE_EQUALITY(s13.convertDouble(), 0.017L));
 
             Data s14("    +.017");
-            assert(s14.convertDouble() == 0.017L);
+            assert(DOUBLE_EQUALITY(s14.convertDouble(), 0.017L));
 
             Data s15("    -.017");
-            assert(s15.convertDouble() == -0.017L);
+            assert(DOUBLE_EQUALITY(s15.convertDouble(), -0.017L));
 
          }
 #endif
