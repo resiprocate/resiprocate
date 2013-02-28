@@ -1330,7 +1330,7 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    addProcessor(chain, std::auto_ptr<Processor>(new IsTrustedNode(*mProxyConfig)));
 
    // Add Certificate Authenticator - if required
-   if(mProxyConfig->getConfigBool("EnableCertificateAuthenticator", false) && mAuthRequestDispatcher)
+   if(mProxyConfig->getConfigBool("EnableCertificateAuthenticator", false))
    {
       // TODO: perhaps this should be initialised from the trusted node
       // monkey?  Or should the list of trusted TLS peers be independent
