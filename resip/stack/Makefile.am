@@ -159,6 +159,7 @@ if USE_SSL
 libresip_la_SOURCES += \
 	ssl/DtlsTransport.cxx \
 	ssl/Security.cxx \
+	ssl/TlsBaseTransport.cxx \
 	ssl/TlsConnection.cxx \
 	ssl/TlsTransport.cxx
 endif
@@ -284,6 +285,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	ssl/DtlsTransport.hxx \
 	ssl/MacSecurity.hxx \
 	ssl/Security.hxx \
+	ssl/TlsBaseTransport.hxx \
 	ssl/TlsConnection.hxx \
 	ssl/TlsTransport.hxx \
 	ssl/WinSecurity.hxx \

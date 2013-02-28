@@ -10,7 +10,7 @@
 #include "rutil/Data.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/Logger.hxx"
-#include "resip/stack/ssl/TlsTransport.hxx"
+#include "resip/stack/ssl/TlsBaseTransport.hxx"
 #include "resip/stack/ssl/TlsConnection.hxx"
 #include "resip/stack/ssl/Security.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -20,30 +20,76 @@
 using namespace std;
 using namespace resip;
 
-TlsTransport::TlsTransport(Fifo<TransactionMessage>& fifo, 
+TlsBaseTransport::TlsBaseTransport(Fifo<TransactionMessage>& fifo, 
                            int portNum, 
                            IpVersion version,
                            const Data& interfaceObj,
                            Security& security,
                            const Data& sipDomain, 
                            SecurityTypes::SSLType sslType,
+                           TransportType transportType,
                            AfterSocketCreationFuncPtr socketFunc,
                            Compression &compression,
                            unsigned transportFlags,
                            SecurityTypes::TlsClientVerificationMode cvm,
-                           bool useEmailAsSIP):
-   TlsBaseTransport(fifo, portNum, version, interfaceObj, security, sipDomain, sslType, transport(), socketFunc, compression, transportFlags, cvm, useEmailAsSIP)
+                           bool useEmailAsSIP) :
+   TcpBaseTransport(fifo, portNum, version, interfaceObj, socketFunc, compression, transportFlags),
+   mSecurity(&security),
+   mSslType(sslType),
+   mDomainCtx(0),
+   mClientVerificationMode(cvm),
+   mUseEmailAsSIP(useEmailAsSIP)
 {
-   InfoLog (<< "Creating TLS transport for domain " 
-            << sipDomain << " interface=" << interfaceObj 
-            << " port=" << mTuple.getPort());
+   setTlsDomain(sipDomain);   
+   mTuple.setType(transportType);
 
-   mTxFifo.setDescription("TlsTransport::mTxFifo");
+   init();
+
+   // If we have specified a sipDomain, then we need to create a new context for this domain,
+   // otherwise we will use the SSL Ctx or TLS Ctx created in the Security class
+   if(!sipDomain.empty())
+   {
+      if (sslType == SecurityTypes::SSLv23)
+      {
+         mDomainCtx = mSecurity->createDomainCtx(SSLv23_method(), sipDomain);
+      }
+      else
+      {
+         mDomainCtx = mSecurity->createDomainCtx(TLSv1_method(), sipDomain);
+      }
+   }
 }
 
 
-TlsTransport::~TlsTransport()
+TlsBaseTransport::~TlsBaseTransport()
 {
+   if (mDomainCtx)
+   {
+      SSL_CTX_free(mDomainCtx);mDomainCtx=0;
+   }
+}
+
+SSL_CTX* 
+TlsBaseTransport::getCtx() const 
+{ 
+   if(mDomainCtx)
+   {
+      return mDomainCtx;
+   }
+   else if(mSslType == SecurityTypes::SSLv23)
+   {
+      return mSecurity->getSslCtx();
+   }
+   return mSecurity->getTlsCtx();
+}
+
+Connection* 
+TlsBaseTransport::createConnection(const Tuple& who, Socket fd, bool server)
+{
+   assert(this);
+   Connection* conn = new TlsConnection(this,who, fd, mSecurity, server,
+                                        tlsDomain(), mSslType, mCompression );
+   return conn;
 }
 
 #endif /* USE_SSL */

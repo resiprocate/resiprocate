@@ -1,11 +1,11 @@
-#if !defined(RESIP_TLSTRANSPORT_HXX)
-#define RESIP_TLSTRANSPORT_HXX
+#if !defined(RESIP_TLSBASETRANSPORT_HXX)
+#define RESIP_TLSBASETRANSPORT_HXX
 
 #if defined(HAVE_CONFIG_H)
   #include "config.h"
 #endif
 
-#include "resip/stack/ssl/TlsBaseTransport.hxx"
+
 #include "resip/stack/TcpBaseTransport.hxx"
 #include "resip/stack/SecurityTypes.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
@@ -20,25 +20,43 @@ class Connection;
 class Message;
 class Security;
 
-class TlsTransport : public TlsBaseTransport
+class TlsBaseTransport : public TcpBaseTransport
 {
    public:
-      RESIP_HeapCount(TlsTransport);
-      TlsTransport(Fifo<TransactionMessage>& fifo, 
+      RESIP_HeapCount(TlsBaseTransport);
+      TlsBaseTransport(Fifo<TransactionMessage>& fifo, 
                    int portNum, 
                    IpVersion version,
                    const Data& interfaceObj,
                    Security& security,
                    const Data& sipDomain, 
                    SecurityTypes::SSLType sslType,
+                   TransportType transportType,
                    AfterSocketCreationFuncPtr socketFunc=0,
                    Compression &compression = Compression::Disabled,
                    unsigned transportFlags = 0,
                    SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None,
                    bool useEmailAsSIP = false);
-      virtual  ~TlsTransport();
+      virtual  ~TlsBaseTransport();
 
-      TransportType transport() const { return TLS; }
+      SSL_CTX* getCtx() const;
+
+      SecurityTypes::TlsClientVerificationMode getClientVerificationMode() 
+         { return mClientVerificationMode; };
+      bool isUseEmailAsSIP()
+         { return mUseEmailAsSIP; };
+
+   protected:
+      Connection* createConnection(const Tuple& who, Socket fd, bool server=false);
+
+      Security* mSecurity;
+      SecurityTypes::SSLType mSslType;
+      SSL_CTX* mDomainCtx;
+      SecurityTypes::TlsClientVerificationMode mClientVerificationMode;
+      /* If true, we will accept the email address in a client's subjectAltName
+         as if it were a SIP URI.  This is convenient because many commercial
+         CAs offer email certificates but not sip: certificates */
+      bool mUseEmailAsSIP;
 };
 
 }
