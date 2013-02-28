@@ -131,7 +131,7 @@ AmIResponsible::process(RequestContext& context)
                resip::SipMessage response;
                InfoLog (<< *this << ": will not relay to " << uri << " from " 
                         << request.header(h_From).uri() << ", send 403");
-               Helper::makeResponse(response, context.getOriginalRequest(), 403, "Relaying Forbidden");
+               Helper::makeResponse(response, context.getOriginalRequest(), 403, "Relaying Forbidden"); 
                context.sendResponse(response);
                return Processor::SkipThisChain;
             }
