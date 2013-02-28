@@ -124,7 +124,8 @@ AmIResponsible::process(RequestContext& context)
 
             // .slg. Allow trusted nodes to relay
             if (!context.getKeyValueStore().getBoolValue(IsTrustedNode::mFromTrustedNodeKey) && 
-                !context.getProxy().isMyUri(request.header(h_From).uri()))
+                !context.getProxy().isMyUri(request.header(h_From).uri()) &&
+                !request.hasForceTarget())
             {
                // make 403, send, dispose of memory
                resip::SipMessage response;
