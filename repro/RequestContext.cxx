@@ -641,15 +641,10 @@ RequestContext::doPostResponseProcessing(SipMessage* msg)
       {
          ErrLog(<<"In RequestContext, after processing "
          << "a sip response (_not_ a NIT/408): all transactions are terminated,"
-         << " but we have not sent a final response. (What happened here?) -+");
+         << " but we have not sent a final response. (What happened here?) ");
 
-
-#if 0 // FIXME: this cause segmentation fault...why?
          // Send best response
          mResponseContext.forwardBestResponse();
-#else
-		 ErrLog(<<"Not calling forwardBestResponse() to avoid segmentation fault. By the wat, FD_SIZE=" << FD_SETSIZE);
-#endif
       }
    }
 }
