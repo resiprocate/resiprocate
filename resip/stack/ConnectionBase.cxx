@@ -209,7 +209,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
          unsigned int numUnprocessedChars = 
             (unsigned int)((mBuffer + chunkLength) - unprocessedCharPtr);
 
-         if(numUnprocessedChars > 2048 &&
+         if(numUnprocessedChars > ConnectionBase::ChunkSize &&
             scanChunkResult == MsgHeaderScanner::scrNextChunk)
          {
             WarningLog(<< "Discarding preparse; header-field-value (or "
