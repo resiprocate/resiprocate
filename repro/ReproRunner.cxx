@@ -1348,7 +1348,7 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
       assert(mAuthRequestDispatcher);
       DigestAuthenticator* da = new DigestAuthenticator(*mProxyConfig, mAuthRequestDispatcher);
 
-      addProcessor(chain, std::auto_ptr<Processor>(da));
+      addProcessor(chain, std::auto_ptr<Processor>(da)); 
    }
 
    // Add am I responsible monkey
