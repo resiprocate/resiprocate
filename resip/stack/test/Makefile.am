@@ -26,6 +26,7 @@ EXTRA_DIST += testTFSM-serverinvite
 EXTRA_DIST += testTFSM-servernoninvite
 
 #AM_CXXFLAGS = -DUSE_ARES
+AM_CXXFLAGS = -I $(top_srcdir)
 
 LDADD = ../libresip.la
 LDADD += ../../../rutil/librutil.la

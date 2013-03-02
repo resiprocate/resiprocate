@@ -8,6 +8,7 @@ SUBDIRS = .
 #SUBDIRS += dtls_wrapper/test
 
 #AM_CXXFLAGS = -DUSE_ARES
+AM_CXXFLAGS = -I $(top_srcdir)
 
 lib_LTLIBRARIES = libreflow.la
 libreflow_la_LIBADD = ../reTurn/client/libreTurnClient.la

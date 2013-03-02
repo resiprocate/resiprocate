@@ -3,6 +3,7 @@
 EXTRA_DIST = reg.py
 
 #AM_CXXFLAGS = -DUSE_ARES
+AM_CXXFLAGS = -I $(top_srcdir)
 
 LDADD = ../librepro.la
 LDADD += ../../resip/dum/libdum.la

@@ -5,6 +5,7 @@ EXTRA_DIST += *.vcproj
 EXTRA_DIST += fullHeaders.bytes
 
 #AM_CXXFLAGS = -DUSE_ARES
+AM_CXXFLAGS = -I $(top_srcdir)
 
 LDADD = ../libdum.la
 LDADD += ../../stack/libresip.la

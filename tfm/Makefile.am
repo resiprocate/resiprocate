@@ -15,6 +15,8 @@ SUBDIRS = .
 SUBDIRS += repro
 SUBDIRS += tfdum
 
+AM_CXXFLAGS = -I $(top_srcdir)
+
 lib_LTLIBRARIES = libtfm.la
 
 libtfm_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic

@@ -5,6 +5,7 @@ EXTRA_DIST = README.txt
 SUBDIRS = . 
 
 #AM_CXXFLAGS = -DUSE_ARES
+AM_CXXFLAGS = -I $(top_srcdir)
 
 lib_LTLIBRARIES = libb2bua.la
 

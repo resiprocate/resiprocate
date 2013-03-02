@@ -1,6 +1,7 @@
 # $Id$
 
 #AM_CXXFLAGS = -DUSE_ARES
+AM_CXXFLAGS = -I $(top_srcdir)
 
 sbin_PROGRAMS = presSvr
 presSvr_SOURCES = presSvr.cpp \

@@ -16,6 +16,10 @@ EXTRA_DIST += WinCompat.cxx
 EXTRA_DIST += dns/LocalDns.cxx
 
 #AM_CXXFLAGS = -I../contrib/ares -DUSE_ARES
+AM_CXXFLAGS = -I $(top_srcdir) 
+if USE_ARES
+AM_CXXFLAGS += -I $(top_srcdir)/rutil/dns/ares
+endif
 
 lib_LTLIBRARIES = librutil.la
 
