@@ -422,6 +422,7 @@
     <ClCompile Include="SipFrag.cxx" />
     <ClCompile Include="SipMessage.cxx" />
     <ClCompile Include="SipStack.cxx" />
+    <ClCompile Include="ssl\TlsBaseTransport.cxx" />
     <ClCompile Include="StackThread.cxx" />
     <ClCompile Include="StatelessHandler.cxx" />
     <ClCompile Include="StatisticsHandler.cxx" />
@@ -579,6 +580,7 @@
     <ClInclude Include="SipFrag.hxx" />
     <ClInclude Include="SipMessage.hxx" />
     <ClInclude Include="SipStack.hxx" />
+    <ClInclude Include="ssl\TlsBaseTransport.hxx" />
     <ClInclude Include="StackThread.hxx" />
     <ClInclude Include="StartLine.hxx" />
     <ClInclude Include="StatelessHandler.hxx" />
