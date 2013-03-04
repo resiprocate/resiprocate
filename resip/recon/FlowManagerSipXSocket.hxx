@@ -2,6 +2,11 @@
 #ifndef _FlowManagerSipXSocket_hxx_
 #define _FlowManagerSipXSocket_hxx_
 
+#ifdef WIN32
+#include <stdint.h>       // Use Visual Studio's stdint.h
+#define _MSC_STDINT_H_    // This define will ensure that stdint.h in sipXport tree is not used
+#endif
+
 #include "os/OsSocket.h"
 #include "FlowManager.hxx"
 

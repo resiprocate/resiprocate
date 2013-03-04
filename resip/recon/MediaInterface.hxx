@@ -1,6 +1,10 @@
 #if !defined(MediaInterface_hxx)
 #define MediaInterface_hxx
 
+#ifdef WIN32
+#include <stdint.h>       // Use Visual Studio's stdint.h
+#define _MSC_STDINT_H_    // This define will ensure that stdint.h in sipXport tree is not used
+#endif
 #include <os/OsMsgDispatcher.h>
 #include <mi/CpMediaInterface.h>
 #include "HandleTypes.hxx"

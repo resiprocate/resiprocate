@@ -2,6 +2,7 @@
 #define ConversationManagerCmds_hxx
 
 #include <resip/dum/DumCommand.hxx>
+#include <rutil/Logger.hxx>
 
 #include "ConversationManager.hxx"
 #include "Conversation.hxx"
