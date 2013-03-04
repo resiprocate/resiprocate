@@ -4,7 +4,7 @@
 # 
 # tests the rtpw sender and receiver functions
 
-RTPW=rtpw
+RTPW=./rtpw
 DEST_PORT=9999
 DURATION=3
 
@@ -18,7 +18,7 @@ ARGS="-k $key -ae"
 # they are killed, those processes will linger.  Re-running the script
 # will get rid of them.
 
-killall rtpw 2&>/dev/null
+killall rtpw 2>/dev/null
 
 if test -x $RTPW; then
 
@@ -62,6 +62,9 @@ sleep $DURATION
 
 kill $receiver_pid
 kill $sender_pid
+
+wait $receiver_pid
+wait $sender_pid
 
 echo $0 ": done (test passed)"
 

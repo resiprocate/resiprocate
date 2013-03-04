@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="libSRTP"
+	Name="srtp"
 	ProjectGUID="{EEF031CB-FED8-451E-A471-91EC8D4F6750}"
-	RootNamespace="libSRTP"
+	RootNamespace="srtp"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -17,7 +17,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
 			CharacterSet="1"
@@ -49,7 +49,7 @@
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;HAVE_CONFIG_H"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				StructMemberAlignment="0"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -86,7 +86,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
 			CharacterSet="1"
@@ -116,7 +116,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="crypto/include;include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;HAVE_CONFIG_H"
-				RuntimeLibrary="2"
+				RuntimeLibrary="0"
 				StructMemberAlignment="0"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -153,7 +153,7 @@
 		</Configuration>
 		<Configuration
 			Name="Debug Dll|Win32"
-			OutputDirectory="$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="1"
@@ -238,7 +238,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release Dll|Win32"
-			OutputDirectory="$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="1"
@@ -323,6 +323,10 @@
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
+			<File
+				RelativePath=".\srtp\ekt.c"
+				>
+			</File>
 			<File
 				RelativePath=".\srtp\srtp.c"
 				>
@@ -484,10 +488,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\crypto\include\crypto_math.h"
-				>
-			</File>
-			<File
 				RelativePath=".\crypto\include\crypto_types.h"
 				>
 			</File>
@@ -497,6 +497,10 @@
 			</File>
 			<File
 				RelativePath=".\crypto\include\datatypes.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\ekt.h"
 				>
 			</File>
 			<File
@@ -513,10 +517,6 @@
 			</File>
 			<File
 				RelativePath=".\crypto\include\integers.h"
-				>
-			</File>
-			<File
-				RelativePath=".\crypto\include\kernel_compat.h"
 				>
 			</File>
 			<File
@@ -548,15 +548,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\rtp.h"
-				>
-			</File>
-			<File
 				RelativePath=".\crypto\include\sha1.h"
 				>
 			</File>
 			<File
 				RelativePath=".\include\srtp.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\srtp_priv.h"
 				>
 			</File>
 			<File
@@ -567,10 +567,6 @@
 				RelativePath=".\include\ut_sim.h"
 				>
 			</File>
-			<File
-				RelativePath=".\crypto\include\xfm.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
@@ -578,6 +574,10 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 		</Filter>
+		<File
+			RelativePath=".\config.hw"
+			>
+		</File>
 		<File
 			RelativePath=".\srtp.def"
 			>

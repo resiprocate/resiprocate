@@ -200,6 +200,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="srtp\ekt.c" />
     <ClCompile Include="srtp\srtp.c" />
     <ClCompile Include="crypto\kernel\alloc.c" />
     <ClCompile Include="crypto\kernel\crypto_kernel.c" />
@@ -253,6 +254,7 @@
     <ClInclude Include="crypto\include\rand_source.h" />
     <ClInclude Include="crypto\include\rdb.h" />
     <ClInclude Include="crypto\include\rdbx.h" />
+    <ClInclude Include="include\ekt.h" />
     <ClInclude Include="include\rtp.h" />
     <ClInclude Include="crypto\include\sha1.h" />
     <ClInclude Include="include\srtp.h" />

@@ -14,17 +14,17 @@
 			Name="Debug|Win32"
 			OutputDirectory="Debug"
 			IntermediateDirectory="Debug"
-			ConfigurationType="4"
+			ConfigurationType="1"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				InlineFunctionExpansion="0"
-				AdditionalIncludeDirectories="..\srtp\crypto\include;..\openssl\inc32;..\srtp\include"
+				AdditionalIncludeDirectories="C:\dev\foo\srtp;&quot;$(SolutionDir)&quot;;.\include;.\crypto\include;&quot;..\..\OpenSSL\openssl-0.9.7i\inc32&quot;;&quot;C:Library\OpenSSL\openssl-0.9.8\inc32&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;DEBUG"
 				ExceptionHandling="FALSE"
 				BasicRuntimeChecks="0"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="TRUE"
@@ -33,15 +33,16 @@
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
-				Name="VCLibrarianTool"/>
+				Name="VCLinkerTool"
+				AdditionalDependencies="Ws2_32.lib libeay32.lib ssleay32.lib"
+				AdditionalLibraryDirectories="&quot;Library\OpenSSL\openssl-0.9.8\libs&quot;"
+				GenerateDebugInformation="TRUE"/>
 			<Tool
 				Name="VCMIDLTool"/>
 			<Tool
 				Name="VCPostBuildEventTool"/>
 			<Tool
-				Name="VCPreBuildEventTool"
-				Description="Creating windows build configuration"
-				CommandLine="copy config.h_win32vc7 crypto\include\config.h"/>
+				Name="VCPreBuildEventTool"/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
 			<Tool
@@ -50,6 +51,8 @@
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"/>
+			<Tool
+				Name="VCWebDeploymentTool"/>
 			<Tool
 				Name="VCManagedWrapperGeneratorTool"/>
 			<Tool
@@ -63,10 +66,10 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\srtp\crypto\include;..\openssl\inc32;..\srtp\include"
+				AdditionalIncludeDirectories="&quot;.\include&quot;;&quot;.\crypto\include&quot;;&quot;..\..\OpenSSL\openssl-0.9.7i\inc32&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				BasicRuntimeChecks="0"
-				RuntimeLibrary="2"
+				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
 				ObjectFile="$(IntDir)/"
 				WarningLevel="3"
@@ -81,9 +84,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"/>
 			<Tool
-				Name="VCPreBuildEventTool"
-				Description="Creating windows build configuration"
-				CommandLine="copy config.h_win32vc7 crypto\include\config.h"/>
+				Name="VCPreBuildEventTool"/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
 			<Tool
@@ -105,6 +106,9 @@
 			Name="Source Files"
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
+			<File
+				RelativePath=".\test\getopt.c">
+			</File>
 			<File
 				RelativePath=".\srtp\srtp.c">
 			</File>
