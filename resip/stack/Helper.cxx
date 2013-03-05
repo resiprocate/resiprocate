@@ -2229,12 +2229,19 @@ Helper::getClientPublicAddress(const SipMessage& request)
       }
 
       // Check IP from Via sentHost
-      Tuple address(it->sentHost(), 0, UNKNOWN_TRANSPORT);
-      if(!address.isPrivateAddress())
+      if(DnsUtil::isIpV4Address(it->sentHost()) 
+#ifdef USE_IPv6
+          || DnsUtil::isIpV6Address(it->sentHost())
+#endif
+          )
       {
-         address.setPort(it->exists(p_rport) ? it->param(p_rport).port() : it->sentPort());
-         address.setType(Tuple::toTransport(it->transport()));
-         return address;
+         Tuple address(it->sentHost(), 0, UNKNOWN_TRANSPORT);
+         if(!address.isPrivateAddress())
+         {
+            address.setPort(it->exists(p_rport) ? it->param(p_rport).port() : it->sentPort());
+            address.setType(Tuple::toTransport(it->transport()));
+            return address;
+         }
       }
 
       if(it == request.header(h_Vias).begin()) break;
