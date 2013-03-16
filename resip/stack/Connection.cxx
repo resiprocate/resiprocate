@@ -352,7 +352,8 @@ Connection::read()
 #endif
    {
       if (mReceivingTransmissionFormat == WebSocketHandshake){
-         if(wsProcessHandshake(bytesRead))
+         bool dropConnection = false;
+         if(wsProcessHandshake(bytesRead, dropConnection))
          {
             ensureWritable();
             if(performWrites())
@@ -360,19 +361,19 @@ Connection::read()
                mReceivingTransmissionFormat = WebSocketData;
             }
          }
-         else
+         else if(dropConnection)
          {
             bytesRead=-1;
          }
       }
       else
       {
-         if (mReceivingTransmissionFormat == WebSocketData){
-            int wsBytesRead = bytesRead;
-            bool gotCompleteMsg = false;
-            if(wsProcessData(wsBytesRead, gotCompleteMsg))
+         if (mReceivingTransmissionFormat == WebSocketData)
+         {
+            bool tryAgain = true;
+            while(tryAgain)
             {
-               if(!preparseNewBytes(wsBytesRead, mDeprecatedWebSocketVersion/* FIXME: mangled sdp content */, gotCompleteMsg))
+               if(!wsProcessData(bytesRead, tryAgain))
                {
                   bytesRead=-1;
                }

@@ -74,8 +74,8 @@ class ConnectionBase
 
       ConnState getCurrentState() const { return mConnState; }
       bool preparseNewBytes(int bytesRead, bool isWsMg = false, bool isWsMsgComplete = false);
-      bool wsProcessHandshake(int bytesRead);
-      bool wsProcessData(int &bytesRead, bool &gotCompleteMsg);
+      bool wsProcessHandshake(int bytesRead, bool &dropConnection);
+      bool wsProcessData(int bytesRead, bool &tryAgain);
       void decompressNewBytes(int bytesRead);
       std::pair<char*, size_t> getWriteBuffer();
       std::pair<char*, size_t> getCurrentWriteBuffer();
@@ -115,7 +115,9 @@ class ConnectionBase
       size_t mBufferPos;
       size_t mBufferSize;
       UInt8 mWsMaskKey[4];
-      UInt64 mWsPayLen;
+      // Accumulates the contents of a series of related WebSocket
+      // frame payloads that comprise a single SIP message
+      Data mWsBuffer;
 
       static char connectionStates[MAX][32];
       UInt64 mLastUsed;

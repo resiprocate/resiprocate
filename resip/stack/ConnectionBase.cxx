@@ -536,10 +536,15 @@ ConnectionBase::preparseNewBytes(int bytesRead, bool isWsMg /*false*/, bool isWs
    return true;
 }
 
+/*
+ * Returns true if handshake complete, false if more bytes needed
+ * Sets dropConnection = true if an error occurs
+ */
 bool
-ConnectionBase::wsProcessHandshake(int bytesRead)
+ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
 {
    mConnState = WebSocket;
+   dropConnection = false;
 
    mMessage = new SipMessage(mWho.transport);
    assert(mMessage);
@@ -549,15 +554,16 @@ ConnectionBase::wsProcessHandshake(int bytesRead)
 
    mMsgHeaderScanner.prepareForMessage(mMessage);
    char *unprocessedCharPtr;
-   MsgHeaderScanner::ScanChunkResult scanResult = mMsgHeaderScanner.scanChunk(mBuffer, bytesRead, &unprocessedCharPtr);
+   MsgHeaderScanner::ScanChunkResult scanResult = mMsgHeaderScanner.scanChunk(mBuffer, mBufferPos + bytesRead, &unprocessedCharPtr);
    if (scanResult != MsgHeaderScanner::scrEnd)
    {
       if(scanResult != MsgHeaderScanner::scrNextChunk){
-         StackLog(<<"Failed to parse message");
+         StackLog(<<"Failed to parse message, more bytes needed");
          StackLog(<< Data(mBuffer, bytesRead));
       }
       delete mMessage;
       mMessage=0;
+      mBufferPos += bytesRead;
       return false;
    }
 
@@ -590,8 +596,8 @@ ConnectionBase::wsProcessHandshake(int bytesRead)
          memcpy(tmp, &Value1, 4);
          memcpy(&tmp[4], &Value2, 4);
          wsMD5Stream << tmp;
-         if(unprocessedCharPtr < (mBuffer + bytesRead)){
-            unsigned int dataLen = (mBuffer + bytesRead) - unprocessedCharPtr;
+         if(unprocessedCharPtr < (mBuffer + mBufferPos + bytesRead)){
+            unsigned int dataLen = (mBuffer + mBufferPos + bytesRead) - unprocessedCharPtr;
             Data content(unprocessedCharPtr, dataLen);
             wsMD5Stream << content;
          }
@@ -617,7 +623,8 @@ ConnectionBase::wsProcessHandshake(int bytesRead)
          ErrLog(<<"No SecWebSocketKey header");
          delete mMessage;
          mMessage = 0;
-         mBuffer = 0;
+         mBufferPos = 0;
+         dropConnection = true;
          return false;
       }
 
@@ -633,25 +640,31 @@ ConnectionBase::wsProcessHandshake(int bytesRead)
       ErrLog(<<"Cannot auth request is missing " << e);
       delete mMessage;
       mMessage = 0;
-      mBuffer = 0;
+      mBufferPos = 0;
+      dropConnection = true;
       return false;
    }
 
    delete mMessage;
    mMessage=0;
+   mBufferPos = 0;
 
    return true;
 }
 
 bool
-ConnectionBase::wsProcessData(int &bytesRead, bool &gotCompleteMsg)
+ConnectionBase::wsProcessData(int bytesRead, bool &tryAgain)
 {
-   UInt8* uBuffer = (UInt8*)&mBuffer[mBufferPos];
-   gotCompleteMsg = false;
+   UInt8* uBuffer = (UInt8*)mBuffer;
+   tryAgain = false;
+
+   size_t bytes_available = mBufferPos + bytesRead;
 
    if(mDeprecatedWebSocketVersion)
    {
-      int i, j;
+      ErrLog(<<"mDeprecatedWebSocketVersion not supported!");
+      return false;
+/*      int i, j;
       if(mBufferPos == 0)
       {
          mConnState = NewMessage;
@@ -694,80 +707,146 @@ ConnectionBase::wsProcessData(int &bytesRead, bool &gotCompleteMsg)
 
       bytesRead = (i - j);
       memmove(uBuffer, &uBuffer[j], (i - j));
-      return true;
+      return true; */
    }
    else
    {
-      if(bytesRead < 2 && mBufferPos == 0)
+      if(bytes_available < 2)
       {
-         ErrLog(<< "Too short to contain ws data [0]");
-         return false;
+         StackLog(<< "Too short to contain ws data [0]");
+         mBufferPos += bytesRead;
+         return true;
       }
-      UInt8 *uData;
-      UInt64 payIdx, toRead, dataLen = 0;
+      UInt64 dataLen = 0;
 
-      if(mBufferPos == 0)
+      const UInt8 finalFrame = (uBuffer[0] >> 7);
+      const UInt8 maskFlag = (uBuffer[1] >> 7);
+
+      if(uBuffer[0] & 0x40 || uBuffer[0] & 0x20 || uBuffer[0] & 0x10)
       {
-         const UInt8 maskFlag = (uBuffer[1] >> 7);
+         WarningLog(<< "Unknown extension: " << ((uBuffer[0] >> 4) & 0x07));
+         // do not exit
+      }
 
-         mConnState = NewMessage;
+      UInt64 wsPayLen = uBuffer[1] & 0x7F;
+      dataLen += 2;
 
-         if(uBuffer[0] & 0x40 || uBuffer[0] & 0x20 || uBuffer[0] & 0x10)
+      if(wsPayLen == 126)
+      {
+         if((bytes_available - dataLen) < 2)
          {
-            WarningLog(<< "Unknown extension: " << ((uBuffer[0] >> 4) & 0x07));
-            // do not exit
+            StackLog(<< "Too short to contain ws data [1]");
+            mBufferPos += bytesRead;
+            return true;
          }
-
-         mWsPayLen = uBuffer[1] & 0x7F;
+         wsPayLen = (uBuffer[dataLen] << 8 | uBuffer[dataLen + 1]);
          dataLen += 2;
-
-         if(mWsPayLen == 126)
+      }
+      else if(wsPayLen == 127)
+      {
+         if((bytes_available - dataLen) < 4)
          {
-            if((bytesRead - dataLen) < 2)
-            {
-               ErrLog(<< "Too short to contain ws data [1]");
-               return false;
-            }
-            mWsPayLen = (uBuffer[dataLen] << 8 | uBuffer[dataLen + 1]);
-            dataLen += 2;
+            StackLog(<< "Too short to contain ws data [2]");
+            mBufferPos += bytesRead;
+            return true;
          }
-         else if(mWsPayLen == 127)
-         {
-            if((bytesRead - dataLen) < 4)
-            {
-               ErrLog(<< "Too short to contain ws data [2]");
-               return false;
-            }
-            mWsPayLen = (((UInt64)uBuffer[dataLen]) << 56 | ((UInt64)uBuffer[dataLen + 1]) << 48 | ((UInt64)uBuffer[dataLen + 2]) << 40 | ((UInt64)uBuffer[dataLen + 3]) << 32 | ((UInt64)uBuffer[dataLen + 4]) << 24 | ((UInt64)uBuffer[dataLen + 5]) << 16 | ((UInt64)uBuffer[dataLen + 6]) << 8 || ((UInt64)uBuffer[dataLen + 7]));
-            dataLen += 8;
-         }
-
-         if((bytesRead - dataLen) < 4)
-         {
-            ErrLog(<< "Too short to contain ws data [3]");
-            return false;
-         }
-         if(maskFlag)
-         {
-            mWsMaskKey[0] = uBuffer[dataLen];
-            mWsMaskKey[1] = uBuffer[dataLen + 1];
-            mWsMaskKey[2] = uBuffer[dataLen + 2];
-            mWsMaskKey[3] = uBuffer[dataLen + 3];
-            dataLen += 4;
-         }
+         wsPayLen = (((UInt64)uBuffer[dataLen]) << 56 | ((UInt64)uBuffer[dataLen + 1]) << 48 | ((UInt64)uBuffer[dataLen + 2]) << 40 | ((UInt64)uBuffer[dataLen + 3]) << 32 | ((UInt64)uBuffer[dataLen + 4]) << 24 | ((UInt64)uBuffer[dataLen + 5]) << 16 | ((UInt64)uBuffer[dataLen + 6]) << 8 || ((UInt64)uBuffer[dataLen + 7]));
+         dataLen += 8;
       }
 
-      toRead = resipMin(mWsPayLen, (bytesRead - dataLen));
-      uData = &uBuffer[dataLen];
+      if((bytes_available - dataLen) < 4)
+      {
+         StackLog(<< "Too short to contain ws data [3]");
+         mBufferPos += bytesRead;
+         return true;
+      }
+      if(maskFlag)
+      {
+         mWsMaskKey[0] = uBuffer[dataLen];
+         mWsMaskKey[1] = uBuffer[dataLen + 1];
+         mWsMaskKey[2] = uBuffer[dataLen + 2];
+         mWsMaskKey[3] = uBuffer[dataLen + 3];
+         dataLen += 4;
+      }
+
+      UInt64 payIdx, toRead, payLen, frameLen;
+      frameLen = dataLen + wsPayLen;
+      toRead = resipMin(wsPayLen, (bytes_available - dataLen));
+      StackLog(<<"Buffer has "<<bytes_available<<" bytes, frame has "<<frameLen<< " bytes, header = "<< dataLen<<" bytes, payload = "<< wsPayLen<<" bytes");
+      UInt8 *uData = new UInt8[toRead];
       for(payIdx = 0; payIdx < toRead; ++payIdx)
       {
-         uBuffer[payIdx] = (uData[payIdx] ^ mWsMaskKey[(payIdx & 3)]);
+         uData[payIdx] = (uBuffer[dataLen+payIdx] ^ mWsMaskKey[(payIdx & 3)]);
       }
+      mWsBuffer.append((char *)uData, toRead);
 
-      bytesRead = (int) toRead;
-      mWsPayLen -= toRead;
-      gotCompleteMsg = (mWsPayLen == 0);
+      // Are there more bytes available from the transport?  Leave them
+      // for next iteration
+      if(bytes_available > frameLen)
+      {
+         StackLog(<<"More bytes left over, total bytes_available = " << bytes_available << ", consumed only " << frameLen);
+         for(payIdx = 0; payIdx < (bytes_available - frameLen); payIdx++)
+         {
+            uBuffer[payIdx] = uBuffer[frameLen+payIdx];
+         }
+         tryAgain = true;
+      }
+      mBufferPos = bytes_available - frameLen;
+      StackLog(<<"new mBufferPos = "<<mBufferPos);
 
+      if(finalFrame == 1)
+      {
+         // mWsBuffer should now contain a discrete SIP message, let the
+         // stack go to work on it
+
+         mMessage = new SipMessage(mWho.transport);
+
+         mMessage->setSource(mWho);
+         mMessage->setTlsDomain(mWho.transport->tlsDomain());
+
+         Data::size_type msg_len = mWsBuffer.size();
+         char *sipBuffer = new char[msg_len];
+         memmove(sipBuffer, mWsBuffer.c_str(), msg_len);
+         mWsBuffer.clear();
+         mMessage->addBuffer(sipBuffer);
+         mMsgHeaderScanner.prepareForMessage(mMessage);
+         char *unprocessedCharPtr;
+         if (mMsgHeaderScanner.scanChunk(sipBuffer,
+                                    msg_len,
+                                    &unprocessedCharPtr) !=
+                       MsgHeaderScanner::scrEnd)
+         {
+            StackLog(<<"Scanner rejecting WebSocket SIP message as unparsable, length = " << msg_len);
+            StackLog(<< Data(sipBuffer, msg_len));
+            delete mMessage;
+            mMessage=0;
+         }
+
+         unsigned int used = unprocessedCharPtr - sipBuffer;
+         if (mMessage && (used < msg_len))
+         {
+            mMessage->setBody(sipBuffer+used, msg_len-used);
+         }
+
+         if (mMessage && !transport()->basicCheck(*mMessage))
+         {
+            delete mMessage;
+            mMessage = 0;
+         }
+
+         if (mMessage)
+         {
+            Transport::stampReceived(mMessage);
+            assert( mTransport );
+            mTransport->pushRxMsgUp(mMessage);
+            mMessage = 0;
+         }
+         else
+         {
+            // Something wrong...
+            ErrLog(<< "We don't have a valid SIP message, maybe drop the connection?");
+         }
+      }
       return true;
    }
 }
