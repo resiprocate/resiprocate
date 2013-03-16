@@ -42,6 +42,3 @@ clean:
 	for a in * ; do			                \
               if [ -f "$$a~" ] ; then rm -f $$a~; fi;	\
         done;
-
-superclean:
-	-rm -f Makefile

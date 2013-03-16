@@ -85,6 +85,7 @@ FlowDtlsSocketContext::handshakeCompleted()
       InfoLog(<< "SRTP Extension negotiated profile=" << srtp_profile->name << "  ComponentId=" << mFlow.getComponentId());
    }
 
+   // !slg! TODO - we should probably be basing the policy creation off of what is returned from getSrtpProfile
    mSocket->createSrtpSessionPolicies(mSRTPPolicyOut, mSRTPPolicyIn);
 
    r=srtp_create(&mSRTPSessionIn, &mSRTPPolicyIn);   

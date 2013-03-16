@@ -49,6 +49,8 @@
 #include "datatypes.h"          
 #include "rdbx.h"               /* for xtd_seq_num_t */
 #include "err.h"                /* for error codes  */
+#include "crypto.h"		/* for cipher_type_id_t */
+#include "crypto_types.h"	/* for values of cipher_type_id_t */
 
 
 /**
@@ -86,7 +88,7 @@ typedef err_status_t (*cipher_alloc_func_t)
  */
 
 typedef err_status_t (*cipher_init_func_t)
-  (void *state, const uint8_t *key, cipher_direction_t dir);
+(void *state, const uint8_t *key, int key_len, cipher_direction_t dir);
 
 /* a cipher_dealloc_func_t de-allocates a cipher_t */
 
@@ -108,8 +110,7 @@ typedef err_status_t (*cipher_decrypt_func_t)
      (void *state, uint8_t *buffer, unsigned int *octets_to_decrypt);
 
 /* 
- * a cipher_set_nonce_seq_func_t function sets both the nonce
- * and the extended sequence number
+ * a cipher_set_iv_func_t function sets the current initialization vector
  */
 
 typedef err_status_t (*cipher_set_iv_func_t)
@@ -147,6 +148,7 @@ typedef struct cipher_type_t {
   int                         ref_count;
   cipher_test_case_t         *test_data;
   debug_module_t             *debug;
+  cipher_type_id_t            id;
 } cipher_type_t;
 
 /*
@@ -169,7 +171,7 @@ typedef struct cipher_t {
 
 #define cipher_dealloc(c) (((c)->type)->dealloc(c))
 
-#define cipher_init(c, k, dir) (((c)->type)->init(((c)->state), (k), (dir)))
+#define cipher_init(c, k, dir) (((c)->type)->init(((c)->state), (k), ((c)->key_len), (dir)))
 
 #define cipher_encrypt(c, buf, len) \
         (((c)->type)->encrypt(((c)->state), (buf), (len)))
@@ -199,6 +201,16 @@ cipher_get_key_length(const cipher_t *c);
 
 err_status_t
 cipher_type_self_test(const cipher_type_t *ct);
+
+
+/* 
+ * cipher_type_test() tests a cipher against external test cases provided in 
+ * an array of values of key/xtd_seq_num_t/plaintext/ciphertext 
+ * that is known to be good
+ */
+
+err_status_t
+cipher_type_test(const cipher_type_t *ct, const cipher_test_case_t *test_data);
 
 
 /*
