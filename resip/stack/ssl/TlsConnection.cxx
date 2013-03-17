@@ -602,7 +602,7 @@ TlsConnection::computePeerName()
       return;
    }
 
-   TlsTransport *t = dynamic_cast<TlsTransport*>(mTransport);
+   TlsBaseTransport *t = dynamic_cast<TlsBaseTransport*>(mTransport);
    assert(t);
 
    mPeerNames.clear();
