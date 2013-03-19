@@ -467,7 +467,7 @@ TransactionState::process(TransactionController& controller,
    {
       tid = message->getTransactionId();
    }
-   catch(SipMessage::Exception&)
+   catch(resip::BaseException&)
    {
       // .bwc This is not our error. Do not ErrLog.
       DebugLog( << "TransactionState::process dropping message with invalid tid " << message->brief());
@@ -527,7 +527,7 @@ TransactionState::process(TransactionController& controller,
       {
          sip->parseAllHeaders();
       }
-      catch(resip::ParseException& e)
+      catch(resip::BaseException& e)
       {
          if(sip->isRequest() && method!=ACK)
          {
@@ -763,7 +763,7 @@ TransactionState::process(TransactionController& controller,
             delete sip;      
          }
       }
-      catch(resip::ParseException& e)   
+      catch(resip::BaseException& e)   
       {
          StackLog ( << "Got badly formatted sip message, error: " << e.what());      
          if(sip->isRequest() && sip->method()!=ACK)
