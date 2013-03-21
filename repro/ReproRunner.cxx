@@ -1251,6 +1251,7 @@ ReproRunner::loadCommonNameMappings()
    ifstream mappingsFile(mappingsFileName.c_str());
    if(!mappingsFile)
    {
+      ErrLog(<< "failed to open mappings file: " << mappingsFileName << ", aborting");
       throw std::runtime_error("Error opening/reading mappings file");
    }
 
