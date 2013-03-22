@@ -196,6 +196,7 @@ if [ $1 -ge 1 ] ; then
 fi
 
 %files libs
+%doc COPYING
 %{_libdir}/libb2bua-*.so
 %{_libdir}/libdum-*.so
 %{_libdir}/librepro-*.so
