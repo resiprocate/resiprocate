@@ -4,7 +4,7 @@ Release: 1%{?dist}
 Summary: SIP and TURN stacks, with SIP proxy and TURN server implementations
 License: VSL
 Url: http://www.resiprocate.org
-Source: %name-%version.tar.gz
+Source: https://www.resiprocate.org/files/pub/reSIProcate/releases/%name-%version.tar.gz
 BuildRequires: libtool automake autoconf
 BuildRequires: asio-devel
 BuildRequires: boost-devel
