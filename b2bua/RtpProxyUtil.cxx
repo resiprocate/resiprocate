@@ -77,7 +77,7 @@ void RtpProxyUtil::init() {
 
   if ((timeoutfd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
     B2BUA_LOG_ERR("socket: %m");
-    exit(1); // FIXME
+    throw; // FIXME
   }
 
   local.sun_family = AF_UNIX;
@@ -86,12 +86,12 @@ void RtpProxyUtil::init() {
   len = strlen(local.sun_path) + sizeof(local.sun_family);
   if (bind(timeoutfd, (struct sockaddr *)&local, len) == -1) {
     B2BUA_LOG_ERR("bind: %m");
-    exit(1); // FIXME
+    throw; // FIXME
   }
 
   if (listen(timeoutfd, 5) == -1) {
     B2BUA_LOG_ERR("listen: %m");
-    exit(1); // FIXME
+    throw; // FIXME
   } 
 
   flags = fcntl(timeoutfd, F_GETFL);
@@ -126,7 +126,7 @@ void RtpProxyUtil::do_timeouts() {
         return;
       }
       B2BUA_LOG_ERR("accept: %m");
-      exit(1);
+      throw; // FIXME
     }
     B2BUA_LOG_DEBUG("accepted a new connection from rtpproxy");
     flags = fcntl(timeout_clientfd, F_GETFL);
