@@ -108,7 +108,7 @@ in first class C++.  It is intended for use in other applications,
 such as the repro SIP proxy.
 
 %package presence-server
-Summary: basic SIP presence server
+Summary: Basic SIP presence server
 
 %description presence-server
 Provides a simple SIP presence server.
