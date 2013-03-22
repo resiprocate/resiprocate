@@ -1,7 +1,7 @@
 Name: @PACKAGE@
 Version: @VERSION@
 Release: 1%{?dist}
-Summary: Resiprocate SIP Stack
+Summary: SIP and TURN stacks, with SIP proxy and TURN server implementations
 License: VSL
 Url: http://www.resiprocate.org
 Source: %name-%version.tar.gz
