@@ -924,7 +924,7 @@ RequestContext::sendResponse(SipMessage& msg)
       {
          tid=msg.getTransactionId();
       }
-      catch(SipMessage::Exception&)
+      catch(BaseException&) // Could be SipMessage::Exception or ParseException
       {
          InfoLog(<< "Bad tid in response. Trying to replace with 2543 tid "
                   "from orig request.");

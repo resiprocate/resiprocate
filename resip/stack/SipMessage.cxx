@@ -642,7 +642,7 @@ SipMessage::encodeBrief(EncodeStream& str) const
       {
          str << getTransactionId();
       }
-      catch(SipMessage::Exception&)
+      catch(BaseException&)  // Could be SipMessage::Exception or ParseException
       {
          str << "BAD-VIA";
       }
