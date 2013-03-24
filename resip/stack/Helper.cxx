@@ -1658,8 +1658,7 @@ Helper::getPortForReply(SipMessage& request)
    int port = 0;
    TransportType transportType = toTransportType(
       request.const_header(h_Vias).front().transport());
-   if(transportType == TCP ||
-      transportType == TLS)
+   if(isReliable(transportType))
    {
       // 18.2.2 - bullet 1 and 2 
       port = request.getSource().getPort();
