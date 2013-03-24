@@ -21,6 +21,7 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/compat.hxx"
 #include "rutil/ParseBuffer.hxx"
+#include "rutil/TransportType.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Pkcs7Contents.hxx"
 #include "resip/stack/MultipartSignedContents.hxx"
@@ -1655,8 +1656,10 @@ Helper::getPortForReply(SipMessage& request)
 {
    assert(request.isRequest());
    int port = 0;
-   if(request.const_header(h_Vias).front().transport() == Symbols::TCP ||
-      request.const_header(h_Vias).front().transport() == Symbols::TLS)
+   TransportType transportType = toTransportType(
+      request.const_header(h_Vias).front().transport());
+   if(transportType == TCP ||
+      transportType == TLS)
    {
       // 18.2.2 - bullet 1 and 2 
       port = request.getSource().getPort();
@@ -1680,8 +1683,8 @@ Helper::getPortForReply(SipMessage& request)
    // If we haven't got a valid port yet, then use the default
    if (port <= 0 || port > 65535) 
    {
-      if(request.const_header(h_Vias).front().transport() == Symbols::TLS ||
-         request.const_header(h_Vias).front().transport() == Symbols::DTLS)
+      if(transportType == TLS ||
+         transportType == DTLS)
       {
          port = Symbols::DefaultSipsPort;
       }
