@@ -792,6 +792,7 @@ ConnectionBase::wsProcessData(int bytesRead, bool &tryAgain)
          uData[payIdx] = (uBuffer[wsFrameHdrLen+payIdx] ^ mWsMaskKey[(payIdx & 3)]);
       }
       mWsBuffer.append((char *)uData, wsPayLen);
+      delete uData;
 
       // Are there more bytes available from the transport?  Leave them
       // for next iteration
