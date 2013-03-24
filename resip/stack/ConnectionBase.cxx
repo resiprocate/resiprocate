@@ -792,7 +792,7 @@ ConnectionBase::wsProcessData(int bytesRead, bool &tryAgain)
          uData[payIdx] = (uBuffer[wsFrameHdrLen+payIdx] ^ mWsMaskKey[(payIdx & 3)]);
       }
       mWsBuffer.append((char *)uData, wsPayLen);
-      delete uData;
+      delete [] uData;
 
       // Are there more bytes available from the transport?  Leave them
       // for next iteration
@@ -967,7 +967,7 @@ ConnectionBase::decompressNewBytes(int bytesRead)
       sc = 0;
     }
   }
-  delete uncompressed;
+  delete [] uncompressed;
 
   // If there was a decompression failure, let the other side know.
   osc::SigcompMessage *nack = mSigcompStack->getNack();
