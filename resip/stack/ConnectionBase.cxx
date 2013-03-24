@@ -769,16 +769,29 @@ ConnectionBase::wsProcessData(int bytesRead, bool &tryAgain)
          wsFrameHdrLen += 4;
       }
 
-      UInt64 payIdx, toRead, payLen, frameLen;
+      UInt64 payIdx, payLen, frameLen;
       frameLen = wsFrameHdrLen + wsPayLen;
-      toRead = resipMin(wsPayLen, (bytes_available - wsFrameHdrLen));
+      if(bytes_available < frameLen)
+      {
+         StackLog(<< "need more bytes for a complete WS frame");
+         mBufferPos += bytesRead;
+         if(bytes_available == mBufferSize)
+         {
+            // If we get here, we're out of luck.  The size of mBuffer needs
+            // to grow to handle larger WS frames.  On the other hand,
+            // it should not be able to grow to consume all memory.
+            ErrLog(<< "no more space in mBuffer to receive more bytes, review ChunkSize");
+            return false;
+         }
+         return true;
+      }
       StackLog(<<"Buffer has "<<bytes_available<<" bytes, frame has "<<frameLen<< " bytes, header = "<< wsFrameHdrLen<<" bytes, payload = "<< wsPayLen<<" bytes");
-      UInt8 *uData = new UInt8[toRead];
-      for(payIdx = 0; payIdx < toRead; ++payIdx)
+      UInt8 *uData = new UInt8[wsPayLen];
+      for(payIdx = 0; payIdx < wsPayLen; ++payIdx)
       {
          uData[payIdx] = (uBuffer[wsFrameHdrLen+payIdx] ^ mWsMaskKey[(payIdx & 3)]);
       }
-      mWsBuffer.append((char *)uData, toRead);
+      mWsBuffer.append((char *)uData, wsPayLen);
 
       // Are there more bytes available from the transport?  Leave them
       // for next iteration
