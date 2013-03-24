@@ -717,7 +717,7 @@ ConnectionBase::wsProcessData(int bytesRead, bool &tryAgain)
          mBufferPos += bytesRead;
          return true;
       }
-      UInt64 dataLen = 0;
+      UInt64 wsFrameHdrLen = 0;
 
       const UInt8 finalFrame = (uBuffer[0] >> 7);
       const UInt8 maskFlag = (uBuffer[1] >> 7);
@@ -729,32 +729,32 @@ ConnectionBase::wsProcessData(int bytesRead, bool &tryAgain)
       }
 
       UInt64 wsPayLen = uBuffer[1] & 0x7F;
-      dataLen += 2;
+      wsFrameHdrLen += 2;
 
       if(wsPayLen == 126)
       {
-         if((bytes_available - dataLen) < 2)
+         if((bytes_available - wsFrameHdrLen) < 2)
          {
             StackLog(<< "Too short to contain ws data [1]");
             mBufferPos += bytesRead;
             return true;
          }
-         wsPayLen = (uBuffer[dataLen] << 8 | uBuffer[dataLen + 1]);
-         dataLen += 2;
+         wsPayLen = (uBuffer[wsFrameHdrLen] << 8 | uBuffer[wsFrameHdrLen + 1]);
+         wsFrameHdrLen += 2;
       }
       else if(wsPayLen == 127)
       {
-         if((bytes_available - dataLen) < 4)
+         if((bytes_available - wsFrameHdrLen) < 4)
          {
             StackLog(<< "Too short to contain ws data [2]");
             mBufferPos += bytesRead;
             return true;
          }
-         wsPayLen = (((UInt64)uBuffer[dataLen]) << 56 | ((UInt64)uBuffer[dataLen + 1]) << 48 | ((UInt64)uBuffer[dataLen + 2]) << 40 | ((UInt64)uBuffer[dataLen + 3]) << 32 | ((UInt64)uBuffer[dataLen + 4]) << 24 | ((UInt64)uBuffer[dataLen + 5]) << 16 | ((UInt64)uBuffer[dataLen + 6]) << 8 || ((UInt64)uBuffer[dataLen + 7]));
-         dataLen += 8;
+         wsPayLen = (((UInt64)uBuffer[wsFrameHdrLen]) << 56 | ((UInt64)uBuffer[wsFrameHdrLen + 1]) << 48 | ((UInt64)uBuffer[wsFrameHdrLen + 2]) << 40 | ((UInt64)uBuffer[wsFrameHdrLen + 3]) << 32 | ((UInt64)uBuffer[wsFrameHdrLen + 4]) << 24 | ((UInt64)uBuffer[wsFrameHdrLen + 5]) << 16 | ((UInt64)uBuffer[wsFrameHdrLen + 6]) << 8 || ((UInt64)uBuffer[wsFrameHdrLen + 7]));
+         wsFrameHdrLen += 8;
       }
 
-      if((bytes_available - dataLen) < 4)
+      if((bytes_available - wsFrameHdrLen) < 4)
       {
          StackLog(<< "Too short to contain ws data [3]");
          mBufferPos += bytesRead;
@@ -762,21 +762,21 @@ ConnectionBase::wsProcessData(int bytesRead, bool &tryAgain)
       }
       if(maskFlag)
       {
-         mWsMaskKey[0] = uBuffer[dataLen];
-         mWsMaskKey[1] = uBuffer[dataLen + 1];
-         mWsMaskKey[2] = uBuffer[dataLen + 2];
-         mWsMaskKey[3] = uBuffer[dataLen + 3];
-         dataLen += 4;
+         mWsMaskKey[0] = uBuffer[wsFrameHdrLen];
+         mWsMaskKey[1] = uBuffer[wsFrameHdrLen + 1];
+         mWsMaskKey[2] = uBuffer[wsFrameHdrLen + 2];
+         mWsMaskKey[3] = uBuffer[wsFrameHdrLen + 3];
+         wsFrameHdrLen += 4;
       }
 
       UInt64 payIdx, toRead, payLen, frameLen;
-      frameLen = dataLen + wsPayLen;
-      toRead = resipMin(wsPayLen, (bytes_available - dataLen));
-      StackLog(<<"Buffer has "<<bytes_available<<" bytes, frame has "<<frameLen<< " bytes, header = "<< dataLen<<" bytes, payload = "<< wsPayLen<<" bytes");
+      frameLen = wsFrameHdrLen + wsPayLen;
+      toRead = resipMin(wsPayLen, (bytes_available - wsFrameHdrLen));
+      StackLog(<<"Buffer has "<<bytes_available<<" bytes, frame has "<<frameLen<< " bytes, header = "<< wsFrameHdrLen<<" bytes, payload = "<< wsPayLen<<" bytes");
       UInt8 *uData = new UInt8[toRead];
       for(payIdx = 0; payIdx < toRead; ++payIdx)
       {
-         uData[payIdx] = (uBuffer[dataLen+payIdx] ^ mWsMaskKey[(payIdx & 3)]);
+         uData[payIdx] = (uBuffer[wsFrameHdrLen+payIdx] ^ mWsMaskKey[(payIdx & 3)]);
       }
       mWsBuffer.append((char *)uData, toRead);
 
