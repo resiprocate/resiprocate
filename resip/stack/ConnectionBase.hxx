@@ -48,9 +48,10 @@ class ConnectionBase
       const UInt64& whenLastUsed() { return mLastUsed; }
       void resetLastUsed() { mLastUsed = Timer::getTimeMs(); }
 
-      enum { ChunkSize = 4096 }; // !jf! what is the optimal size here?
-         // !dp! 4096 seems to be consistent with a page size and
-         //      also good for the larger SDP coming in with ICE attrs
+      enum { ChunkSize = 8192 }; // !jf! what is the optimal size here?
+         // !dp! 8192 seems to be consistent with a multiple of a page size and
+         //      also good for the larger SDP coming in with ICE attributes,
+         //      multiple media streams, etc
 
    protected:
       enum ConnState
