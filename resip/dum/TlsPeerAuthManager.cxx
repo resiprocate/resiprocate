@@ -135,7 +135,7 @@ TlsPeerAuthManager::handle(SipMessage* sipMessage)
    }
 
    // We are only concerned with connections over TLS
-   if(!sipMessage->isExternal() || sipMessage->getSource().getType() != TLS)
+   if(!sipMessage->isExternal() || !isSecure(sipMessage->getSource().getType()))
    {
       DebugLog(<<"Can't validate certificate on non-TLS connection");
       return Skipped;

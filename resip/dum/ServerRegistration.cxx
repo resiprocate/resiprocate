@@ -11,6 +11,7 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Timer.hxx"
+#include "rutil/TransportType.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -563,7 +564,7 @@ ServerRegistration::flowTokenNeededForTls(const ContactInstanceRecord &rec) cons
       if(contact.uri().exists(p_transport))
       {
          TransportType type = Tuple::toTransport(contact.uri().param(p_transport));
-         if(type==TLS || type == DTLS)
+         if(isSecure(type))
          {
             // secure transport and IP-address. Almost certainly won't work, but
             // we'll try anyway.

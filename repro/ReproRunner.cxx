@@ -11,6 +11,7 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/dns/DnsStub.hxx"
 #include "rutil/GeneralCongestionManager.hxx"
+#include "rutil/TransportType.hxx"
 
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/Compression.hxx"
@@ -1138,7 +1139,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                   {
                      if(isEqualNoCase(recordRouteUri, "auto")) // auto generated record route uri
                      {
-                        if(tt == TLS || tt == DTLS)
+                        if(isSecure(tt))
                         {
                            NameAddr rr;
                            rr.uri().host()=tlsDomain;

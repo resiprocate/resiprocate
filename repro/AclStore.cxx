@@ -8,6 +8,7 @@
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Lock.hxx"
+#include "rutil/TransportType.hxx"
 #include "resip/stack/Uri.hxx"
 #include "resip/stack/ConnectionManager.hxx"
 #include "resip/stack/SipMessage.hxx"
@@ -503,13 +504,10 @@ AclStore::isRequestTrusted(const SipMessage& request)
    
    // check if the request came over a secure channel and sucessfully authenticated 
    // (ex: TLS or DTLS)
-   const Data& receivedTransport = request.header(h_Vias).front().transport();
+   TransportType receivedTransport = toTransportType(
+      request.header(h_Vias).front().transport());
 #ifdef USE_SSL
-   if(receivedTransport == Symbols::TLS
-#ifdef USE_DTLS
-      || receivedTransport == Symbols::DTLS
-#endif
-      )
+   if(isSecure(receivedTransport))
    {
       const std::list<Data>& tlsPeerNames = request.getTlsPeerNames();
       if(!tlsPeerNames.empty() && isTlsPeerNameTrusted(tlsPeerNames))

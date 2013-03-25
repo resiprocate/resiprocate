@@ -17,6 +17,7 @@
 #include "repro/RequestContext.hxx"
 #include "repro/RRDecorator.hxx"
 #include "repro/Ack200DoneMessage.hxx"
+#include "rutil/TransportType.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
@@ -610,8 +611,7 @@ ResponseContext::insertRecordRoute(SipMessage& outgoing,
       }
       else
       {
-         if(receivedTransport->getTuple().getType()==TLS || 
-            receivedTransport->getTuple().getType()==DTLS)
+         if(isSecure(receivedTransport->getTuple().getType()))
          {
             // .bwc. Debatable. Should we be willing to reuse a TLS connection
             // at the behest of a Route header with no hostname in it?
@@ -790,7 +790,7 @@ ResponseContext::needsFlowTokenToWork(const resip::NameAddr& contact) const
       if(contact.uri().exists(p_transport))
       {
          TransportType type = toTransportType(contact.uri().param(p_transport));
-         if(type==TLS || type == DTLS)
+         if(isSecure(type))
          {
             // TLS with no FQDN. Impossible without flow-token fixup, even if no 
             // NAT is involved.
