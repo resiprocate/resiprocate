@@ -423,9 +423,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
             msg.header(h_Vias).front().transport());
          if(keepAliveTime == 0)
          {
-            if(receivedTransport == TCP ||
-               receivedTransport == TLS ||
-               receivedTransport == SCTP)
+            if(isReliable(receivedTransport))
             {
                keepAliveTime = mDialogSet.mUserProfile->getKeepAliveTimeForStream();
             }
