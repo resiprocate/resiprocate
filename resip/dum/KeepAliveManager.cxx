@@ -5,6 +5,7 @@
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/stack/Helper.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/TransportType.hxx"
 #include "resip/stack/SipStack.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -105,7 +106,7 @@ KeepAliveManager::process(KeepAliveTimeout& timeout)
          assert((it->second.keepAliveInterval*1000) > mKeepAlivePongTimeoutMs);
 
          // Start pong timeout if transport is TCP based (note: pong processing of Stun messaging is currently not implemented)
-         if(it->first.getType() == TCP || it->first.getType() == TLS)
+         if(isReliable(it->first.getType())
          {
             DebugLog( << "Starting pong timeout for keepalive id " << it->second.id);
             KeepAlivePongTimeout t(it->first, it->second.id);
