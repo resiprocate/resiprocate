@@ -14,6 +14,7 @@
 #include "resip/stack/Transport.hxx"
 
 #include "rutil/Logger.hxx"
+#include "rutil/TransportType.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
@@ -120,8 +121,7 @@ RRDecorator::singleRecordRoute(resip::SipMessage& request,
    // just downstream will remain in the call-path throughout the dialog.
    if(outboundFlowTokenNeeded(request, source, destination, sigcompId))
    {
-      if(destination.getType()==resip::TLS || 
-         destination.getType()==resip::DTLS)
+      if(isSecure(destination.getType()))
       {
          rt = mProxy.getRecordRoute(destination.transport);
          rt.uri().scheme()="sips";

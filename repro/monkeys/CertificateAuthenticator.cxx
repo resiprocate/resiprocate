@@ -9,6 +9,7 @@
 #include "resip/stack/Auth.hxx"
 #include "resip/stack/Helper.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/TransportType.hxx"
 
 #include "repro/monkeys/CertificateAuthenticator.hxx"
 #include "repro/monkeys/IsTrustedNode.hxx"
@@ -89,7 +90,7 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
       }
 
       // Get the certificate from the peer
-      if(sipMessage->isExternal() && sipMessage->getSource().getType() != TLS)
+      if(sipMessage->isExternal() && !isSecure(sipMessage->getSource().getType()))
       {
          DebugLog(<<"Can't validate certificate on non-TLS connection");
          return Continue;
