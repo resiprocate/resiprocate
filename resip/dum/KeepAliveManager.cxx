@@ -106,7 +106,7 @@ KeepAliveManager::process(KeepAliveTimeout& timeout)
          assert((it->second.keepAliveInterval*1000) > mKeepAlivePongTimeoutMs);
 
          // Start pong timeout if transport is TCP based (note: pong processing of Stun messaging is currently not implemented)
-         if(isReliable(it->first.getType())
+         if(isReliable(it->first.getType()))
          {
             DebugLog( << "Starting pong timeout for keepalive id " << it->second.id);
             KeepAlivePongTimeout t(it->first, it->second.id);
