@@ -14,6 +14,7 @@
 #include "rutil/Inserter.hxx"
 #include "rutil/Random.hxx"
 #include "rutil/ParseBuffer.hxx"
+#include "rutil/TransportType.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -418,12 +419,13 @@ ClientRegistration::dispatch(const SipMessage& msg)
 
       if(msg.isExternal())
       {
-         const Data& receivedTransport = msg.header(h_Vias).front().transport();
+         resip::TransportType receivedTransport = toTransportType(
+            msg.header(h_Vias).front().transport());
          if(keepAliveTime == 0)
          {
-            if(receivedTransport == Symbols::TCP ||
-               receivedTransport == Symbols::TLS ||
-               receivedTransport == Symbols::SCTP)
+            if(receivedTransport == TCP ||
+               receivedTransport == TLS ||
+               receivedTransport == SCTP)
             {
                keepAliveTime = mDialogSet.mUserProfile->getKeepAliveTimeForStream();
             }
