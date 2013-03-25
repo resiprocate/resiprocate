@@ -626,7 +626,7 @@ ConnectionBase::decompressNewBytes(int bytesRead)
       sc = 0;
     }
   }
-  delete uncompressed;
+  delete [] uncompressed;
 
   // If there was a decompression failure, let the other side know.
   osc::SigcompMessage *nack = mSigcompStack->getNack();
