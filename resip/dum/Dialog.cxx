@@ -405,11 +405,12 @@ Dialog::dispatch(const SipMessage& msg)
 
    if(msg.isExternal())
    {
-      const Data& receivedTransport = msg.header(h_Vias).front().transport();
+      TransportType receivedTransport = toTransportType(
+         msg.header(h_Vias).front().transport());
       int keepAliveTime = 0;
-      if(receivedTransport == Symbols::TCP ||
-         receivedTransport == Symbols::TLS ||
-         receivedTransport == Symbols::SCTP)
+      if(receivedTransport == TCP ||
+         receivedTransport == TLS ||
+         receivedTransport == SCTP)
       {
          keepAliveTime = mDialogSet.mUserProfile->getKeepAliveTimeForStream();
       }
