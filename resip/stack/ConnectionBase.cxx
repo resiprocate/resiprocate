@@ -115,7 +115,7 @@ ConnectionBase::getFlowKey() const
 }
 
 bool
-ConnectionBase::preparseNewBytes(int bytesRead, bool isWsMg /*false*/, bool isWsMsgComplete /*= false*/)
+ConnectionBase::preparseNewBytes(int bytesRead)
 {
    DebugLog(<< "In State: " << connectionStates[mConnState]);
    
@@ -162,11 +162,6 @@ ConnectionBase::preparseNewBytes(int bytesRead, bool isWsMg /*false*/, bool isWs
 
          assert(mTransport);
          mMessage = new SipMessage(mTransport);
-         if(mTransport->transport() == resip::WS || mTransport->transport() == resip::WSS)
-         {
-            std::auto_ptr<resip::MessageDecorator> wsDecorator(new WsDecorator());
-            mMessage->addOutboundDecorator(wsDecorator);
-         }
          
          DebugLog(<< "ConnectionBase::process setting source " << mWho);
          mMessage->setSource(mWho);
@@ -315,8 +310,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, bool isWsMg /*false*/, bool isWs
             try
             {
                // The message header is complete.
-               contentLength = isWsMg ? ( isWsMsgComplete ? numUnprocessedChars : (numUnprocessedChars + 1024) ):
-                     ( mMessage->const_header(h_ContentLength).value() );
+               contentLength=mMessage->const_header(h_ContentLength).value();
             }
             catch(resip::BaseException& e)  // Could be SipMessage::Exception or ParseException
             {
@@ -446,8 +440,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, bool isWsMg /*false*/, bool isWs
 
          try
          {
-            contentLength = isWsMg ? ( isWsMsgComplete ? (mBufferPos + bytesRead) : ((mBufferPos + bytesRead) + 1024) ):
-                  ( mMessage->const_header(h_ContentLength).value() );
+             contentLength = mMessage->const_header(h_ContentLength).value();
          }
          catch(resip::BaseException& e)  // Could be SipMessage::Exception or ParseException
          {

@@ -74,7 +74,7 @@ class ConnectionBase
       } TransmissionFormat;
 
       ConnState getCurrentState() const { return mConnState; }
-      bool preparseNewBytes(int bytesRead, bool isWsMg = false, bool isWsMsgComplete = false);
+      bool preparseNewBytes(int bytesRead);
       bool wsProcessHandshake(int bytesRead, bool &dropConnection);
       bool wsProcessData(int bytesRead, bool &tryAgain);
       void decompressNewBytes(int bytesRead);
