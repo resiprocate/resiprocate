@@ -1,10 +1,10 @@
 Name: @PACKAGE@
 Version: @VERSION@
 Release: 1%{?dist}
-Summary: Resiprocate SIP Stack
+Summary: SIP and TURN stacks, with SIP proxy and TURN server implementations
 License: VSL
 Url: http://www.resiprocate.org
-Source: %name-%version.tar.gz
+Source: https://www.resiprocate.org/files/pub/reSIProcate/releases/%name-%version.tar.gz
 BuildRequires: libtool automake autoconf
 BuildRequires: asio-devel
 BuildRequires: boost-devel
@@ -30,7 +30,7 @@ a complete, correct, and commercially usable implementation of SIP and a few
 related protocols.
 
 %package libs
-Summary: shared libraries http://www.resiprocate.org
+Summary: Shared libraries http://www.resiprocate.org
 
 %description libs
 reSIProcate is a framework that aims to fully implement the SIP protocol
@@ -41,7 +41,7 @@ libresip (SIP stack/RFC compliant message parsing) and
 libdum (SIP Dialog Usage Manager, a state machine for SIP dialogs).
 
 %package devel
-Summary: Resiprocate development files
+Summary: reSIProcate development files
 Requires: %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description devel
@@ -77,7 +77,7 @@ in first class C++.  It is intended for use in other applications,
 such as the repro SIP proxy.
 
 %package sipdialer
-Summary: click-to-call utility
+Summary: Click-to-call utility
 
 %description sipdialer
 sipdialer is a click-to-call application that uses the SIP REFER
@@ -90,7 +90,7 @@ in first class C++.  It is intended for use in other applications,
 such as the repro SIP proxy.
 
 %package b2bua
-Summary: basic SIP B2BUA
+Summary: Basic SIP B2BUA
 
 %description b2bua
 Provides a simple SIP B2BUA configured from a static XML file.
@@ -99,7 +99,7 @@ in first class C++.  It is intended for use in other applications,
 such as the repro SIP proxy.
 
 %package clicktocall
-Summary: click-to-call server process
+Summary: Click-to-call server process
 
 %description clicktocall
 Provides a simple SIP click-to-call service.
@@ -108,7 +108,7 @@ in first class C++.  It is intended for use in other applications,
 such as the repro SIP proxy.
 
 %package presence-server
-Summary: basic SIP presence server
+Summary: Basic SIP presence server
 
 %description presence-server
 Provides a simple SIP presence server.
@@ -196,6 +196,7 @@ if [ $1 -ge 1 ] ; then
 fi
 
 %files libs
+%doc COPYING
 %{_libdir}/libb2bua-*.so
 %{_libdir}/libdum-*.so
 %{_libdir}/librepro-*.so

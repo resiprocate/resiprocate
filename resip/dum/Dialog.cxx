@@ -17,6 +17,7 @@
 #include "resip/dum/UsageUseException.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
+#include "rutil/TransportType.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -405,11 +406,10 @@ Dialog::dispatch(const SipMessage& msg)
 
    if(msg.isExternal())
    {
-      const Data& receivedTransport = msg.header(h_Vias).front().transport();
+      TransportType receivedTransport = toTransportType(
+         msg.header(h_Vias).front().transport());
       int keepAliveTime = 0;
-      if(receivedTransport == Symbols::TCP ||
-         receivedTransport == Symbols::TLS ||
-         receivedTransport == Symbols::SCTP)
+      if(isReliable(receivedTransport))
       {
          keepAliveTime = mDialogSet.mUserProfile->getKeepAliveTimeForStream();
       }

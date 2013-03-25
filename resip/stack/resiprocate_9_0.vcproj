@@ -718,6 +718,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ssl\TlsBaseTransport.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ssl\TlsConnection.cxx"
 				>
 				<FileConfiguration
@@ -1320,6 +1324,10 @@
 			</File>
 			<File
 				RelativePath=".\TimerQueue.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ssl\TlsBaseTransport.hxx"
 				>
 			</File>
 			<File
