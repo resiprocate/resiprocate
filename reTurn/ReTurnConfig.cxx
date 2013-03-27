@@ -31,7 +31,9 @@ ReTurnConfig::ReTurnConfig() :
    mLoggingFilename("reTurnServer.log"),
    mLoggingFileMaxLineCount(50000),  // 50000 about 5M size
    mDaemonize(false),
-   mPidFile("")
+   mPidFile(""),
+   mRunAsUser(""),
+   mRunAsGroup("")
 {
    mAuthenticationCredentials["test"] = "1234";
    calcUserAuthData();
@@ -71,6 +73,8 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
    mLoggingFileMaxLineCount = getConfigUnsignedLong("LogFileMaxLines", 50000);
    mDaemonize = getConfigBool("Daemonize", false);
    mPidFile = getConfigData("PidFile", "");
+   mRunAsUser = getConfigData("RunAsUser", "");
+   mRunAsGroup = getConfigData("RunAsGroup", "");
 
    // fork is not possible on Windows
 #ifdef WIN32
