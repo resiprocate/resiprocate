@@ -629,5 +629,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="README.txt" />
+    <None Include="reTurnServer.config" />
   </ItemGroup>
 </Project>
