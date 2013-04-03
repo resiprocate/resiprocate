@@ -52,7 +52,7 @@ Tuple::Tuple(const GenericIPAddress& genericAddress, TransportType type,
    mTransportType(type),
    mTargetDomain(targetDomain)
 {
-  setSockaddr(genericAddress);
+   setSockaddr(genericAddress);
 }
 
 
@@ -98,7 +98,13 @@ Tuple::Tuple(const Data& printableAddr,
          DnsUtil::inet_pton( printableAddr, m_anonv6.sin6_addr);
       }
 #else
-	  assert(0);
+      // avoid asserts since Tuples created via printableAddr can be created from items 
+      // received from the wire or from configuration settings.  Just create an IPV4 inaddr_any tuple.
+      //assert(0);  
+      memset(&m_anonv4, 0, sizeof(m_anonv4));
+      m_anonv4.sin_family = AF_INET;
+      m_anonv4.sin_port = htons(port);
+      m_anonv4.sin_addr.s_addr = htonl(INADDR_ANY); 
 #endif
    }
 }
@@ -124,16 +130,24 @@ Tuple::Tuple(const Data& printableAddr,
       m_anonv4.sin_family = AF_INET;
       m_anonv4.sin_port = htons(port);
    }
-   else
-   {
 #ifdef USE_IPV6
+   else if(DnsUtil::isIpV6Address(printableAddr))
+   {
       memset(&m_anonv6, 0, sizeof(m_anonv6));
       DnsUtil::inet_pton( printableAddr, m_anonv6.sin6_addr);
       m_anonv6.sin6_family = AF_INET6;
       m_anonv6.sin6_port = htons(port);
-#else
-	  assert(0);
+   }
 #endif
+   else
+   {
+      // avoid asserts since Tuples created via printableAddr can be created from items 
+      // received from the wire or from configuration settings.  Just create an IPV4 inaddr_any tuple.
+      // assert(0);  
+      memset(&m_anonv4, 0, sizeof(m_anonv4));
+      m_anonv4.sin_family = AF_INET;
+      m_anonv4.sin_port = htons(port);
+      m_anonv4.sin_addr.s_addr = htonl(INADDR_ANY);
    }
 }
 
@@ -396,7 +410,7 @@ Tuple::setPort(int port)
 #ifdef USE_IPV6
       m_anonv6.sin6_port = htons(port);
 #else
-	  assert(0);
+      assert(0);
 #endif
    }
 }
@@ -413,7 +427,7 @@ Tuple::getPort() const
 #ifdef USE_IPV6
       return ntohs(m_anonv6.sin6_port);
 #else
-	  assert(0);
+      assert(0);
 #endif
    }
    
@@ -553,7 +567,7 @@ bool Tuple::operator==(const Tuple& rhs) const
                  memcmp(&m_anonv6.sin6_addr, &rhs.m_anonv6.sin6_addr, sizeof(in6_addr)) == 0);
 #else
          assert(0);
-		return false;
+         return false;
 #endif
       }
    }

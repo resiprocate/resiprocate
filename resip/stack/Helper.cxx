@@ -2190,21 +2190,34 @@ Helper::isClientBehindNAT(const SipMessage& request, bool privateToPublicOnly)
    {
       if(privateToPublicOnly)
       {
-         if(Tuple(request.header(h_Vias).front().sentHost(), 0, UNKNOWN_TRANSPORT).isPrivateAddress() &&
-            !Tuple(request.header(h_Vias).front().param(p_received), 0, UNKNOWN_TRANSPORT).isPrivateAddress())
+         // Ensure the via host is an IP address (note: web-rtc uses hostnames here instead)
+         if(DnsUtil::isIpV4Address(request.header(h_Vias).front().sentHost()) 
+#ifdef USE_IPv6
+             || DnsUtil::isIpV6Address(request.header(h_Vias).front().sentHost())
+#endif
+             )
          {
-            return true;
+            if(Tuple(request.header(h_Vias).front().sentHost(), 0, UNKNOWN_TRANSPORT).isPrivateAddress() &&
+                !Tuple(request.header(h_Vias).front().param(p_received), 0, UNKNOWN_TRANSPORT).isPrivateAddress())
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
          }
          else
          {
-            return false;
+             // In this case the via host is likely a hostname (possible with web-rtc) and we will assume the
+             // client is behind a NAT, even though we don't know for sure
+             return !Tuple(request.header(h_Vias).front().param(p_received), 0, UNKNOWN_TRANSPORT).isPrivateAddress();
          }
       }
       return true;
    }
    return false;
 }
-
 
 Tuple
 Helper::getClientPublicAddress(const SipMessage& request)
@@ -2231,7 +2244,7 @@ Helper::getClientPublicAddress(const SipMessage& request)
       }
 
       // Check IP from Via sentHost
-      if(DnsUtil::isIpV4Address(it->sentHost()) 
+      if(DnsUtil::isIpV4Address(it->sentHost())  // Ensure the via host is an IP address (note: web-rtc uses hostnames here instead)
 #ifdef USE_IPv6
           || DnsUtil::isIpV6Address(it->sentHost())
 #endif

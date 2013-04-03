@@ -21,6 +21,8 @@
 
 using namespace resip;
 
+static const int UnreasonablyLowExpirationThreshold = 7;  // The threshold before which we consider a contacts expiry to be unreasonably low
+
 ClientRegistrationHandle
 ClientRegistration::getHandle()
 {
@@ -510,7 +512,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
 
          if (expiry != 0 && expiry != UINT_MAX)
          {
-            if(expiry>=7)
+            if(expiry >= UnreasonablyLowExpirationThreshold)
             {
                int exp = Helper::aBitSmallerThan(expiry);
                mRefreshTime = exp + nowSecs;
@@ -797,19 +799,54 @@ ClientRegistration::calculateExpiry(const SipMessage& reg200) const
 
    const NameAddrs& contacts(reg200.header(h_Contacts));
 
+   // We are going to track two things here:
+   // 1. expiry - the lowest expiration value of all of our contacts
+   // 2. reasonableExpiry - the lowest expiration value of all of our contacts
+   //                       that is above the UnreasonablyLowExpirationThreshold (7 seconds)
+   // Before we return, if expiry is less than UnreasonablyLowExpirationThreshold
+   // but we had another contact that had a reasonable expiry value, then return
+   // that value instead.  This logic covers a very interesting scenario:
+   //
+   // Consider the case where we are registered over TCP due to DNS SRV record
+   // configuration.  Let's say an administrator reconfigures the DNS records to
+   // now make UDP the preferred transport.  When we re-register we will now
+   // send the re-registration message over UDP.  This will cause our contact
+   // address to be changed (ie: ;tranport=tcp will no longer exist).  So for a
+   // short period of time the registrar will return two contacts to us, both 
+   // belonging to us, one for TCP and one for UDP.  The TCP one will expire in
+   // a short amount of time, and if we return this expiry to the dispatch() 
+   // method then it will cause the ClientRegistration to end (see logic in 
+   // dispatch() that prints out the error "Server is using an unreasonably low 
+   // expiry: "...
+   unsigned long reasonableExpiry = 0xFFFFFFFF;
+
    for(NameAddrs::const_iterator c=contacts.begin();c!=contacts.end();++c)
    {
       // Our expiry is never going to increase if we find one of our contacts, 
       // so if the expiry is not lower, we just ignore it. For registrars that
       // leave our requested expiry alone, this code ends up being pretty quick,
-      // especially if there aren't contacts from other endpoints laying around.
-      if(c->isWellFormed() &&
-         c->exists(p_expires) && 
-         c->param(p_expires) < expiry &&
-         contactIsMine(*c))
+      // especially if there aren't contacts from other endpoints laying around.     
+      if(c->isWellFormed() && c->exists(p_expires))
       {
-         expiry=c->param(p_expires);
+         unsigned long contactExpires = c->param(p_expires);
+         if((contactExpires < expiry ||
+             contactExpires < reasonableExpiry) &&
+            contactIsMine(*c))
+         {
+            expiry = contactExpires;
+            if(contactExpires >= UnreasonablyLowExpirationThreshold)
+            {
+                reasonableExpiry = contactExpires;
+            }
+         }
       }
+   }
+   // If expiry is less than UnreasonablyLowExpirationThreshold and we have another
+   // contact that has a reasonable expiry value, then return that value instead.
+   // See large comment above for more details.
+   if(expiry < UnreasonablyLowExpirationThreshold && reasonableExpiry != 0xFFFFFFFF)
+   {
+       expiry = reasonableExpiry;
    }
    return expiry;
 }
