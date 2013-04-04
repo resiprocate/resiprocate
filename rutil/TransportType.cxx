@@ -12,7 +12,9 @@ static const Data transportNames[MAX_TRANSPORT] =
    Data("UDP"),
    Data("SCTP"),
    Data("DCCP"),
-   Data("DTLS")
+   Data("DTLS"),
+   Data("WS"),
+   Data("WSS")
 };
 
 static const Data transportNamesLower[MAX_TRANSPORT] =
@@ -23,7 +25,9 @@ static const Data transportNamesLower[MAX_TRANSPORT] =
    Data("udp"),
    Data("sctp"),
    Data("dccp"),
-   Data("dtls")
+   Data("dtls"),
+   Data("ws"),
+   Data("wss")
 };
 
 TransportType 
@@ -80,6 +84,8 @@ isReliable(TransportType type)
       case TLS:
       case TCP:
       case SCTP:
+      case WS:
+      case WSS:
          return true;
       case UDP:
       case DCCP:

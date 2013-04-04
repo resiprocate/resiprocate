@@ -1,80 +1,57 @@
-#if !defined(RESIP_TRANSPORTTYPE_HXX)
-#define RESIP_TRANSPORTTYPE_HXX
+#if defined(HAVE_CONFIG_H)
+#include "config.h"
+#endif
 
-#include <ostream>
-#include <string>
+#ifdef USE_SSL
+
+#include <memory>
+
+#include "rutil/compat.hxx"
 #include "rutil/Data.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Logger.hxx"
+#include "resip/stack/ssl/WssTransport.hxx"
+#include "resip/stack/ssl/TlsConnection.hxx"
+#include "resip/stack/ssl/Security.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
-namespace resip
+#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
+
+using namespace std;
+using namespace resip;
+
+WssTransport::WssTransport(Fifo<TransactionMessage>& fifo, 
+                           int portNum, 
+                           IpVersion version,
+                           const Data& interfaceObj,
+                           Security& security,
+                           const Data& sipDomain, 
+                           SecurityTypes::SSLType sslType,
+                           AfterSocketCreationFuncPtr socketFunc,
+                           Compression &compression,
+                           unsigned transportFlags,
+                           SecurityTypes::TlsClientVerificationMode cvm,
+                           bool useEmailAsSIP):
+   TlsBaseTransport(fifo, portNum, version, interfaceObj, security, sipDomain, sslType, transport(), socketFunc, compression, transportFlags, cvm, useEmailAsSIP)
 {
+   InfoLog (<< "Creating WSS transport for domain " 
+            << sipDomain << " interface=" << interfaceObj 
+            << " port=" << mTuple.getPort());
 
-/**
-   @brief An enumeration of transport protocols.
-*/
-typedef enum 
-{
-   UNKNOWN_TRANSPORT = 0,
-   TLS,
-   TCP,
-   UDP,
-   SCTP,
-   DCCP,
-   DTLS,
-   WS,
-   WSS,
-   MAX_TRANSPORT
-} TransportType;
-
-/**
-   @brief An enumeration of IP versions.
-*/
-typedef enum 
-{
-   V4,
-   V6
-} IpVersion;
-
-/**
-    Function which translates a transport name to its corrisponding integer enum value.
-    @param transportName the name of the transport e.g. "TCP"
-    @return the enum value for that transport
-**/
-TransportType getTransportTypeFromName(const std::string & transportName);
-TransportType toTransportType(const resip::Data & transportName);
-
-/**
-    Function which translates a transport enum value to its corrisponding name.
-    @param transportNum the enum value of the transport
-    @return the transport name
-
-    @note Data version is more efficient and doesn't involve a copy
-**/
-std::string getTransportNameFromType(const TransportType typeEnum);
-std::string getTransportNameFromTypeLower(const TransportType typeEnum);
-const resip::Data& toData(const TransportType typeEnum);
-const resip::Data& toDataLower(const TransportType typeEnum);
-
-/// Returns true if passed in transport type is a reliable transport protocol
-bool isReliable(TransportType type);
-
-/// Returns true if passed in transport type is a secure transport protocol
-bool isSecure(TransportType type);
-
-// Indicate whether or not to run a stun server on a Transport
-typedef enum
-{
-   StunDisabled,
-   StunEnabled
-} StunSetting;
-   
+   mTxFifo.setDescription("WssTransport::mTxFifo");
 }
 
-#endif
+
+WssTransport::~WssTransport()
+{
+}
+
+#endif /* USE_SSL */
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

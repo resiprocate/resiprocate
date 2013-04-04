@@ -1506,6 +1506,12 @@ defineMultiHeader(ServiceRoute, "Service-Route", NameAddr, "RFC 3608");
 
 defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", StringCategory, "RFC ?");
 defineHeader(Organization, "Organization", StringCategory, "RFC 3261");
+defineHeader(SecWebSocketKey, "Sec-WebSocket-Key", StringCategory, "RFC 6455");
+defineHeader(SecWebSocketKey1, "Sec-WebSocket-Key1", StringCategory, "draft-hixie- thewebsocketprotocol-76");
+defineHeader(SecWebSocketKey2, "Sec-WebSocket-Key2", StringCategory, "draft-hixie- thewebsocketprotocol-76");
+defineHeader(Origin, "Origin", StringCategory, "draft-hixie- thewebsocketprotocol-76");
+defineHeader(Host, "Host", StringCategory, "draft-hixie- thewebsocketprotocol-76");
+defineHeader(SecWebSocketAccept, "Sec-WebSocket-Accept", StringCategory, "RFC 6455");
 defineHeader(Server, "Server", StringCategory, "RFC 3261");
 defineHeader(Subject, "Subject", StringCategory, "RFC 3261");
 defineHeader(UserAgent, "User-Agent", StringCategory, "RFC 3261");

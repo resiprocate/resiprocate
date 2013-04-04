@@ -26,6 +26,7 @@
 #include "resip/stack/TcpBaseTransport.hxx"
 #include "resip/stack/TcpTransport.hxx"
 #include "resip/stack/UdpTransport.hxx"
+#include "resip/stack/WsTransport.hxx"
 #include "resip/stack/Uri.hxx"
 
 #include "rutil/DataStream.hxx"
@@ -46,6 +47,7 @@
 #include "resip/stack/ssl/DtlsTransport.hxx"
 #include "resip/stack/ssl/Security.hxx"
 #include "resip/stack/ssl/TlsTransport.hxx"
+#include "resip/stack/ssl/WssTransport.hxx"
 #endif
 
 #ifdef WIN32
@@ -205,6 +207,16 @@ TransportSelector::addTransportInternal(std::auto_ptr<Transport> autoTransport)
    }
 #endif
 #endif
+   else if(transport->transport()==WS)
+   {
+      assert(dynamic_cast<WsTransport*>(transport));
+   }
+#ifdef USE_SSL
+   else if(transport->transport()==WSS)
+   {
+      assert(dynamic_cast<WssTransport*>(transport));
+   }
+#endif
    else
    {
       assert(0);
@@ -218,6 +230,7 @@ TransportSelector::addTransportInternal(std::auto_ptr<Transport> autoTransport)
    {
       case UDP:
       case TCP:
+      case WS:
       {
          assert(mExactTransports.find(tuple) == mExactTransports.end() &&
                 mAnyInterfaceTransports.find(tuple) == mAnyInterfaceTransports.end());
@@ -243,6 +256,7 @@ TransportSelector::addTransportInternal(std::auto_ptr<Transport> autoTransport)
       break;
       case TLS:
       case DTLS:
+      case WSS:
       {
          TlsTransportKey key(transport->tlsDomain(),transport->transport(),transport->ipVersion());
          mTlsTransports[key]=transport;

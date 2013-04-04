@@ -151,6 +151,20 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
    {
       DebugLog(<<"Got a request.");
       bool postProcess=false;
+
+      Uri& requestUri = sip->header(h_RequestLine).uri();
+      if(requestUri.exists(resip::p_wsSrcIp) &&
+            requestUri.exists(resip::p_wsSrcPort) &&
+            sip->getSource().getType() != resip::WS &&
+            sip->getSource().getType() != resip::WSS){
+         requestUri.host() = requestUri.param(resip::p_wsSrcIp);
+         requestUri.remove(resip::p_wsSrcIp);
+         requestUri.port() = requestUri.param(resip::p_wsSrcPort);
+         requestUri.remove(resip::p_wsSrcPort);
+         requestUri.param(resip::p_transport) = "WS";
+         sip->setForceTarget(requestUri);
+      }
+
       switch(mOriginalRequest->method())
       {
          case ACK:

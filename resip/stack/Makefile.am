@@ -153,7 +153,9 @@ libresip_la_SOURCES = \
 	X509Contents.cxx \
 	KeepAliveMessage.cxx \
 	StatelessHandler.cxx \
-	InvalidContents.cxx
+	InvalidContents.cxx \
+	WsTransport.cxx \
+	WsDecorator.cxx
 
 if USE_SSL
 libresip_la_SOURCES += \
@@ -161,7 +163,8 @@ libresip_la_SOURCES += \
 	ssl/Security.cxx \
 	ssl/TlsBaseTransport.cxx \
 	ssl/TlsConnection.cxx \
-	ssl/TlsTransport.cxx
+	ssl/TlsTransport.cxx \
+	ssl/WssTransport.cxx
 endif
 
 SUFFIXES = .gperf .cxx
@@ -289,6 +292,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	ssl/TlsConnection.hxx \
 	ssl/TlsTransport.hxx \
 	ssl/WinSecurity.hxx \
+	ssl/WssTransport.hxx \
 	StackThread.hxx \
 	StartLine.hxx \
 	StatelessHandler.hxx \

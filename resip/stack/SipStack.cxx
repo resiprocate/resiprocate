@@ -30,6 +30,7 @@
 #include "rutil/AsyncProcessHandler.hxx"
 #include "resip/stack/TcpTransport.hxx"
 #include "resip/stack/UdpTransport.hxx"
+#include "resip/stack/WsTransport.hxx"
 #include "resip/stack/TransactionUser.hxx"
 #include "resip/stack/TransactionUserMessage.hxx"
 #include "resip/stack/TransactionControllerThread.hxx"
@@ -40,6 +41,7 @@
 #include "resip/stack/ssl/Security.hxx"
 #include "resip/stack/ssl/DtlsTransport.hxx"
 #include "resip/stack/ssl/TlsTransport.hxx"
+#include "resip/stack/ssl/WssTransport.hxx"
 #endif
 
 #if defined(WIN32) && !defined(__GNUC__)
@@ -372,6 +374,40 @@ SipStack::addTransport( TransportType protocol,
                                           *mCompression);
 #else
             CritLog (<< "DTLS not supported in this stack.");
+            assert(0);
+#endif
+            break;
+
+         case WS:
+#if defined( USE_SSL )
+            transport = new WsTransport(stateMacFifo, 
+                  port,
+                  version,
+                  ipInterface,
+                  mSocketFunc,
+                  *mCompression,
+                  transportFlags);
+#else
+            CritLog (<< "WebSockets not supported in this stack. You don't have openssl");
+            assert(0);
+#endif
+            break;
+         case WSS:
+#if defined( USE_SSL )
+            transport = new WssTransport(stateMacFifo,
+                  port,
+                  version,
+                  ipInterface,
+                  *mSecurity,
+                  sipDomainname,
+                  sslType,
+                  mSocketFunc,
+                  *mCompression,
+                  transportFlags,
+                  cvm,
+                  useEmailAsSIP);
+#else
+            CritLog (<< "WSS not supported in this stack. You don't have openssl");
             assert(0);
 #endif
             break;

@@ -2593,7 +2593,7 @@ TransactionState::sendCurrentToWire()
    }
    else
    {
-      assert(0);
+      //assert(0);
    }
 }
 

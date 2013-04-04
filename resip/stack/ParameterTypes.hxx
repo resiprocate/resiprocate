@@ -189,6 +189,8 @@ defineParam(np, "np", DataParameter, NameAddr, "RFC 4244-bis");
 // Internal use only
 defineParam(qopOptions,"qop",DataParameter, Auth, "RFC 3261");
 defineParam(addTransport, "addTransport", ExistsParameter, Uri, "RESIP INTERNAL");
+defineParam(wsSrcIp, "ws-src-ip", DataParameter, Uri, "RESIP INTERNAL (WebSocket)");
+defineParam(wsSrcPort, "ws-src-port", UInt32Parameter, Uri, "RESIP INTERNAL (WebSocket)");
 
 }
 

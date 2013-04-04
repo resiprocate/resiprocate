@@ -6,6 +6,8 @@
 #include "resip/dum/TlsPeerAuthManager.hxx"
 #include <memory>
 
+#include <memory>
+
 namespace resip
 {
    class TransactionUser;

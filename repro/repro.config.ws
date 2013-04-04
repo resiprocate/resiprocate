@@ -85,7 +85,7 @@ TLSUseEmailAsSIP = false
 # Transport<Num>Interface = <IPAddress>:<Port> - Note:  For IPv6 addresses last colon separates
 #                                                IP Address and Port - square bracket notation
 #                                                is not used.
-# Transport<Num>Type = <'TCP'|'UDP'|'TLS'|'DTLS'> - default is UDP if missing
+# Transport<Num>Type = <'TCP'|'UDP'|'TLS'|'DTLS'|'WS'|'WSS'> - default is UDP if missing
 # Transport<Num>TlsDomain = <TLSDomain> - only required if transport is TLS or DTLS
 # Transport<Num>TlsClientVerification = <'None'|'Optional'|'Mandatory'> - default is None
 # Transport<Num>RecordRouteUri = <'auto'|URI> - if set to auto then record route URI
@@ -118,6 +118,21 @@ TLSUseEmailAsSIP = false
 # Transport4Interface = 2666:f0d0:1008:88::4:5060
 # Transport4Type = UDP
 # Transport4RecordRouteUri = auto
+
+Transport1Interface = 192.168.1.2:5062
+Transport1Type = WS
+Transport1RecordRouteUri = auto
+
+Transport2Interface = 192.168.1.2:5060
+Transport2Type = TCP
+Transport2RecordRouteUri = auto
+
+Transport3Interface = 192.168.1.2:5063
+Transport3Type = WSS
+Transport3RecordRouteUri = auto
+Transport3TlsDomain = sipdomain.com
+Transport3TlsClientVerification = None
+Transport3RecordRouteUri = sip:sipdomain.com;transport=WS
 
 # Comma separated list of DNS servers, overrides default OS detected list (leave blank 
 # for default)
@@ -413,7 +428,7 @@ RecordRouteUri =
 ForceRecordRouting = false
 
 # Assume path option
-AssumePath = false
+AssumePath = true
 
 # Disable registrar
 DisableRegistrar = false
@@ -439,7 +454,7 @@ TimerT1 = 0
 # WARNING: Before enabling this, ensure you have a RecordRouteUri setup, or are using
 # the alternate transport specification mechanism and defining a RecordRouteUri per
 # transport: TransportXRecordRouteUri
-DisableOutbound = true
+DisableOutbound = false
 
 # Set the draft version of outbound to support (default: RFC5626)
 # Other accepted values are the versions of the IETF drafts, before RFC5626 was issued
@@ -463,7 +478,7 @@ AssumeFirstHopSupportsOutbound = false
 # WARNING: Before enabling this, ensure you have a RecordRouteUri setup, or are using
 # the alternate transport specification mechanism and defining a RecordRouteUri per
 # transport: TransportXRecordRouteUri
-EnableFlowTokens = false
+EnableFlowTokens = true
 
 # Enable use of flow-tokens in non-outbound cases for clients detected to be behind a NAT.  
 # This a more selective flow token hack mode for clients not supporting RFC5626.  The 
@@ -531,7 +546,7 @@ EnableCertificateAuthenticator = false
 ########################################################
 
 # Disable DIGEST challenges - disables this monkey
-DisableAuth = false
+DisableAuth = true
 
 # Http hostname for this server (used in Identity headers)
 HttpHostname =

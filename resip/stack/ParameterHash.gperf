@@ -101,5 +101,7 @@ rc, ParameterTypes::rc
 mp, ParameterTypes::mp
 np, ParameterTypes::np
 addtransport, ParameterTypes::addTransport
+ws-src-ip, ParameterTypes::wsSrcIp
+ws-src-port, ParameterTypes::wsSrcPort
 %%
 }

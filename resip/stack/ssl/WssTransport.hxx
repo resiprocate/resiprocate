@@ -1,72 +1,49 @@
-#if !defined(RESIP_TRANSPORTTYPE_HXX)
-#define RESIP_TRANSPORTTYPE_HXX
+#if !defined(RESIP_WSSTRANSPORT_HXX)
+#define RESIP_WSSTRANSPORT_HXX
 
-#include <ostream>
-#include <string>
-#include "rutil/Data.hxx"
+#if defined(HAVE_CONFIG_H)
+  #include "config.h"
+#endif
+
+#include "resip/stack/ssl/TlsBaseTransport.hxx"
+#include "resip/stack/TcpBaseTransport.hxx"
+#include "resip/stack/SecurityTypes.hxx"
+#include "rutil/HeapInstanceCounter.hxx"
+#include "resip/stack/Compression.hxx"
+
+#include <openssl/ssl.h>
 
 namespace resip
 {
 
-/**
-   @brief An enumeration of transport protocols.
-*/
-typedef enum 
+class Connection;
+class Message;
+class Security;
+
+class WssTransport : public TlsBaseTransport
 {
-   UNKNOWN_TRANSPORT = 0,
-   TLS,
-   TCP,
-   UDP,
-   SCTP,
-   DCCP,
-   DTLS,
-   WS,
-   WSS,
-   MAX_TRANSPORT
-} TransportType;
+   public:
+      RESIP_HeapCount(WssTransport);
+      WssTransport(Fifo<TransactionMessage>& fifo, 
+                   int portNum, 
+                   IpVersion version,
+                   const Data& interfaceObj,
+                   Security& security,
+                   const Data& sipDomain, 
+                   SecurityTypes::SSLType sslType,
+                   AfterSocketCreationFuncPtr socketFunc=0,
+                   Compression &compression = Compression::Disabled,
+                   unsigned transportFlags = 0,
+                   SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None,
+                   bool useEmailAsSIP = false);
+      virtual  ~WssTransport();
 
-/**
-   @brief An enumeration of IP versions.
-*/
-typedef enum 
-{
-   V4,
-   V6
-} IpVersion;
+      TransportType transport() const { return WSS; }
 
-/**
-    Function which translates a transport name to its corrisponding integer enum value.
-    @param transportName the name of the transport e.g. "TCP"
-    @return the enum value for that transport
-**/
-TransportType getTransportTypeFromName(const std::string & transportName);
-TransportType toTransportType(const resip::Data & transportName);
+      bool isUseEmailAsSIP()
+         { return mUseEmailAsSIP; };
+};
 
-/**
-    Function which translates a transport enum value to its corrisponding name.
-    @param transportNum the enum value of the transport
-    @return the transport name
-
-    @note Data version is more efficient and doesn't involve a copy
-**/
-std::string getTransportNameFromType(const TransportType typeEnum);
-std::string getTransportNameFromTypeLower(const TransportType typeEnum);
-const resip::Data& toData(const TransportType typeEnum);
-const resip::Data& toDataLower(const TransportType typeEnum);
-
-/// Returns true if passed in transport type is a reliable transport protocol
-bool isReliable(TransportType type);
-
-/// Returns true if passed in transport type is a secure transport protocol
-bool isSecure(TransportType type);
-
-// Indicate whether or not to run a stun server on a Transport
-typedef enum
-{
-   StunDisabled,
-   StunEnabled
-} StunSetting;
-   
 }
 
 #endif
@@ -74,7 +51,7 @@ typedef enum
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

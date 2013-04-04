@@ -5,12 +5,16 @@
 #include "rutil/Logger.hxx"
 #include "resip/stack/ConnectionBase.hxx"
 #include "resip/stack/SipMessage.hxx"
+#include "resip/stack/WsDecorator.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 #ifdef USE_SSL
 #include "resip/stack/ssl/Security.hxx"
 #include "resip/stack/ssl/TlsConnection.hxx"
+#include "rutil/ssl/SHA1Stream.hxx"
 #endif
+
+#include "rutil/MD5Stream.hxx"
 
 #ifdef USE_SIGCOMP
 #include <osc/Stack.h>
@@ -40,6 +44,7 @@ ConnectionBase::ConnectionBase(Transport* transport, const Tuple& who, Compressi
 // NO: #endif
      mSendingTransmissionFormat(Unknown),
      mReceivingTransmissionFormat(Unknown),
+     mDeprecatedWebSocketVersion(false),
      mMessage(0),
      mBuffer(0),
      mBufferPos(0),
@@ -522,6 +527,335 @@ ConnectionBase::preparseNewBytes(int bytesRead)
          assert(0);
    }
    return true;
+}
+
+/*
+ * Returns true if handshake complete, false if more bytes needed
+ * Sets dropConnection = true if an error occurs
+ */
+bool
+ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
+{
+   mConnState = WebSocket;
+   dropConnection = false;
+
+   mMessage = new SipMessage(mWho.transport);
+   assert(mMessage);
+
+   mMessage->setSource(mWho);
+   mMessage->setTlsDomain(mWho.transport->tlsDomain());
+
+   mMsgHeaderScanner.prepareForMessage(mMessage);
+   char *unprocessedCharPtr;
+   MsgHeaderScanner::ScanChunkResult scanResult = mMsgHeaderScanner.scanChunk(mBuffer, mBufferPos + bytesRead, &unprocessedCharPtr);
+   if (scanResult != MsgHeaderScanner::scrEnd)
+   {
+      if(scanResult != MsgHeaderScanner::scrNextChunk){
+         StackLog(<<"Failed to parse message, more bytes needed");
+         StackLog(<< Data(mBuffer, bytesRead));
+      }
+      delete mMessage;
+      mMessage=0;
+      mBufferPos += bytesRead;
+      return false;
+   }
+
+   try{
+      Data wsResponse;
+      wsResponse =		"HTTP/1.1 101 WebSocket Protocol Handshake\r\n"
+            "Upgrade: WebSocket\r\n"
+            "Connection: Upgrade\r\n"
+            "Sec-WebSocket-Protocol: sip\r\n";
+
+      if(mMessage->exists(h_SecWebSocketKey1) && mMessage->exists(h_SecWebSocketKey2)){
+         Data SecWebSocketKey1 =  mMessage->const_header(h_SecWebSocketKey1).value();
+         Data SecWebSocketKey2 =  mMessage->const_header(h_SecWebSocketKey2).value();
+         Data Digits1, Digits2;
+         unsigned int SpacesCount1 = 0, SpacesCount2 = 0;
+         unsigned int Value1, Value2;
+         for(unsigned int i = 0; i < SecWebSocketKey1.size(); ++i){
+            if(SecWebSocketKey1[i] == ' ') ++SpacesCount1;
+            if(isdigit(SecWebSocketKey1[i])) Digits1 += SecWebSocketKey1[i];
+         }
+         Value1 = htonl(Digits1.convertUnsignedLong() / SpacesCount1);
+         for(unsigned int i = 0; i < SecWebSocketKey2.size(); ++i){
+            if(SecWebSocketKey2[i] == ' ') ++SpacesCount2;
+            if(isdigit(SecWebSocketKey2[i])) Digits2 += SecWebSocketKey2[i];
+         }
+         Value2 = htonl(Digits2.convertUnsignedLong() / SpacesCount2);
+
+         MD5Stream wsMD5Stream;
+         char tmp[9] = { '\0' };
+         memcpy(tmp, &Value1, 4);
+         memcpy(&tmp[4], &Value2, 4);
+         wsMD5Stream << tmp;
+         if(unprocessedCharPtr < (mBuffer + mBufferPos + bytesRead)){
+            unsigned int dataLen = (mBuffer + mBufferPos + bytesRead) - unprocessedCharPtr;
+            Data content(unprocessedCharPtr, dataLen);
+            wsMD5Stream << content;
+         }
+
+         if(mMessage->exists(h_Origin)){
+            wsResponse += "Sec-WebSocket-Origin: " + mMessage->const_header(h_Origin).value() + "\r\n";
+         }
+         if(mMessage->exists(h_Host)){
+            wsResponse += Data("Sec-WebSocket-Location: ") + Data(transport()->transport() == resip::WSS ? "wss://" : "ws://") + mMessage->const_header(h_Host).value() + Data("/\r\n");
+         }
+         wsResponse += "\r\n" + wsMD5Stream.getBin();
+         mDeprecatedWebSocketVersion = true;
+      }
+      else if(mMessage->exists(h_SecWebSocketKey)){
+         SHA1Stream wsSha1Stream;
+         wsSha1Stream << (mMessage->const_header(h_SecWebSocketKey).value() + Data("258EAFA5-E914-47DA-95CA-C5AB0DC85B11"));
+         Data wsAcceptKey = wsSha1Stream.getBin(160).base64encode();
+         wsResponse +=	"Sec-WebSocket-Accept: "+ wsAcceptKey +"\r\n"
+               "\r\n";
+         mDeprecatedWebSocketVersion = false;
+      }
+      else{
+         ErrLog(<<"No SecWebSocketKey header");
+         delete mMessage;
+         mMessage = 0;
+         mBufferPos = 0;
+         dropConnection = true;
+         return false;
+      }
+
+      mOutstandingSends.push_back(new SendData(
+            who(),
+            wsResponse,
+            Data::Empty,
+            Data::Empty,
+            true));
+   }
+   catch(resip::ParseException& e)
+   {
+      ErrLog(<<"Cannot auth request is missing " << e);
+      delete mMessage;
+      mMessage = 0;
+      mBufferPos = 0;
+      dropConnection = true;
+      return false;
+   }
+
+   delete mMessage;
+   mMessage=0;
+   mBufferPos = 0;
+
+   return true;
+}
+
+bool
+ConnectionBase::wsProcessData(int bytesRead, bool &tryAgain)
+{
+   UInt8* uBuffer = (UInt8*)mBuffer;
+   tryAgain = false;
+
+   size_t bytes_available = mBufferPos + bytesRead;
+
+   if(mDeprecatedWebSocketVersion)
+   {
+      ErrLog(<<"mDeprecatedWebSocketVersion not supported!");
+      return false;
+/*      int i, j;
+      if(mBufferPos == 0)
+      {
+         mConnState = NewMessage;
+
+         // http://tools.ietf.org/html/draft-hixie-thewebsocketprotocol-76#page-19 5.3.  Data framing
+         const UInt8 type = mBuffer[0];
+         if(!(type & 0x80))
+         {
+            if(type != 0x00)
+            {
+               ErrLog(<< "Unexpected type: ");
+               return false;
+            }
+            for(i = j = 1; i < bytesRead; ++i)
+            {
+               if(uBuffer[i] == 0xFF)
+               {
+                  gotCompleteMsg = true;
+                  break;
+               }
+            }
+         }
+         else
+         {
+            ErrLog(<< "Not implemented yet: ");
+            return false;
+         }
+      }
+      else
+      {
+         for(i = j = 0; i < bytesRead; ++i)
+         {
+            if(uBuffer[i] == 0xFF)
+            {
+               gotCompleteMsg = true;
+               break;
+            }
+         }
+      }
+
+      bytesRead = (i - j);
+      memmove(uBuffer, &uBuffer[j], (i - j));
+      return true; */
+   }
+   else
+   {
+      if(bytes_available < 2)
+      {
+         StackLog(<< "Too short to contain ws data [0]");
+         mBufferPos += bytesRead;
+         return true;
+      }
+      UInt64 wsFrameHdrLen = 0;
+
+      const UInt8 finalFrame = (uBuffer[0] >> 7);
+      const UInt8 maskFlag = (uBuffer[1] >> 7);
+
+      if(uBuffer[0] & 0x40 || uBuffer[0] & 0x20 || uBuffer[0] & 0x10)
+      {
+         WarningLog(<< "Unknown extension: " << ((uBuffer[0] >> 4) & 0x07));
+         // do not exit
+      }
+
+      UInt64 wsPayLen = uBuffer[1] & 0x7F;
+      wsFrameHdrLen += 2;
+
+      if(wsPayLen == 126)
+      {
+         if((bytes_available - wsFrameHdrLen) < 2)
+         {
+            StackLog(<< "Too short to contain ws data [1]");
+            mBufferPos += bytesRead;
+            return true;
+         }
+         wsPayLen = (uBuffer[wsFrameHdrLen] << 8 | uBuffer[wsFrameHdrLen + 1]);
+         wsFrameHdrLen += 2;
+      }
+      else if(wsPayLen == 127)
+      {
+         if((bytes_available - wsFrameHdrLen) < 4)
+         {
+            StackLog(<< "Too short to contain ws data [2]");
+            mBufferPos += bytesRead;
+            return true;
+         }
+         wsPayLen = (((UInt64)uBuffer[wsFrameHdrLen]) << 56 | ((UInt64)uBuffer[wsFrameHdrLen + 1]) << 48 | ((UInt64)uBuffer[wsFrameHdrLen + 2]) << 40 | ((UInt64)uBuffer[wsFrameHdrLen + 3]) << 32 | ((UInt64)uBuffer[wsFrameHdrLen + 4]) << 24 | ((UInt64)uBuffer[wsFrameHdrLen + 5]) << 16 | ((UInt64)uBuffer[wsFrameHdrLen + 6]) << 8 || ((UInt64)uBuffer[wsFrameHdrLen + 7]));
+         wsFrameHdrLen += 8;
+      }
+
+      if((bytes_available - wsFrameHdrLen) < 4)
+      {
+         StackLog(<< "Too short to contain ws data [3]");
+         mBufferPos += bytesRead;
+         return true;
+      }
+      if(maskFlag)
+      {
+         mWsMaskKey[0] = uBuffer[wsFrameHdrLen];
+         mWsMaskKey[1] = uBuffer[wsFrameHdrLen + 1];
+         mWsMaskKey[2] = uBuffer[wsFrameHdrLen + 2];
+         mWsMaskKey[3] = uBuffer[wsFrameHdrLen + 3];
+         wsFrameHdrLen += 4;
+      }
+
+      UInt64 payIdx, payLen, frameLen;
+      frameLen = wsFrameHdrLen + wsPayLen;
+      if(bytes_available < frameLen)
+      {
+         StackLog(<< "need more bytes for a complete WS frame");
+         mBufferPos += bytesRead;
+         if(bytes_available == mBufferSize)
+         {
+            // If we get here, we're out of luck.  The size of mBuffer needs
+            // to grow to handle larger WS frames.  On the other hand,
+            // it should not be able to grow to consume all memory.
+            ErrLog(<< "no more space in mBuffer to receive more bytes, review ChunkSize");
+            return false;
+         }
+         return true;
+      }
+      StackLog(<<"Buffer has "<<bytes_available<<" bytes, frame has "<<frameLen<< " bytes, header = "<< wsFrameHdrLen<<" bytes, payload = "<< wsPayLen<<" bytes");
+      UInt8 *uData = new UInt8[wsPayLen];
+      for(payIdx = 0; payIdx < wsPayLen; ++payIdx)
+      {
+         uData[payIdx] = (uBuffer[wsFrameHdrLen+payIdx] ^ mWsMaskKey[(payIdx & 3)]);
+      }
+      mWsBuffer.append((char *)uData, wsPayLen);
+      delete [] uData;
+
+      // Are there more bytes available from the transport?  Leave them
+      // for next iteration
+      if(bytes_available > frameLen)
+      {
+         StackLog(<<"More bytes left over, total bytes_available = " << bytes_available << ", consumed only " << frameLen);
+         for(payIdx = 0; payIdx < (bytes_available - frameLen); payIdx++)
+         {
+            uBuffer[payIdx] = uBuffer[frameLen+payIdx];
+         }
+         tryAgain = true;
+      }
+      mBufferPos = bytes_available - frameLen;
+      StackLog(<<"new mBufferPos = "<<mBufferPos);
+
+      if(finalFrame == 1)
+      {
+         // mWsBuffer should now contain a discrete SIP message, let the
+         // stack go to work on it
+
+         mMessage = new SipMessage(mWho.transport);
+
+         mMessage->setSource(mWho);
+         mMessage->setTlsDomain(mWho.transport->tlsDomain());
+
+         Data::size_type msg_len = mWsBuffer.size();
+         char *sipBuffer = new char[msg_len];
+         memmove(sipBuffer, mWsBuffer.c_str(), msg_len);
+         mWsBuffer.clear();
+         mMessage->addBuffer(sipBuffer);
+         mMsgHeaderScanner.prepareForMessage(mMessage);
+         char *unprocessedCharPtr;
+         if (mMsgHeaderScanner.scanChunk(sipBuffer,
+                                    msg_len,
+                                    &unprocessedCharPtr) !=
+                       MsgHeaderScanner::scrEnd)
+         {
+            StackLog(<<"Scanner rejecting WebSocket SIP message as unparsable, length = " << msg_len);
+            StackLog(<< Data(sipBuffer, msg_len));
+            delete mMessage;
+            mMessage=0;
+         }
+
+         unsigned int used = unprocessedCharPtr - sipBuffer;
+         if (mMessage && (used < msg_len))
+         {
+            mMessage->setBody(sipBuffer+used, msg_len-used);
+         }
+
+         if (mMessage && !transport()->basicCheck(*mMessage))
+         {
+            delete mMessage;
+            mMessage = 0;
+         }
+
+         if (mMessage)
+         {
+            Transport::stampReceived(mMessage);
+            assert( mTransport );
+            mTransport->pushRxMsgUp(mMessage);
+            mMessage = 0;
+         }
+         else
+         {
+            // Something wrong...
+            ErrLog(<< "We don't have a valid SIP message, maybe drop the connection?");
+         }
+      }
+      return true;
+   }
 }
 
 #ifdef USE_SIGCOMP

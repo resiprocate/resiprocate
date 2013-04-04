@@ -550,6 +550,7 @@ DnsResult::getDefaultPort(TransportType transport, int port)
       switch (transport)
       {
          case UDP:
+         case WS:
             return Symbols::DefaultSipPort;
          case TCP:
             return mSips ? Symbols::DefaultSipsPort : Symbols::DefaultSipPort;
