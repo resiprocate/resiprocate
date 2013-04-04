@@ -550,13 +550,16 @@ DnsResult::getDefaultPort(TransportType transport, int port)
       switch (transport)
       {
          case UDP:
-         case WS:
             return Symbols::DefaultSipPort;
          case TCP:
             return mSips ? Symbols::DefaultSipsPort : Symbols::DefaultSipPort;
          case TLS:
          case DTLS:
             return Symbols::DefaultSipsPort;
+         case WS:
+            return Symbols::SipWsPort;
+         case WSS:
+            return Symbols::SipWssPort;
          default:
             ErrLog( << "Should not get this - unknown transport" );
             return Symbols::DefaultSipPort; // !cj! todo - remove 

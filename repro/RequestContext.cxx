@@ -156,12 +156,14 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
       if(requestUri.exists(resip::p_wsSrcIp) &&
             requestUri.exists(resip::p_wsSrcPort) &&
             sip->getSource().getType() != resip::WS &&
-            sip->getSource().getType() != resip::WSS){
+            sip->getSource().getType() != resip::WSS)
+      {
          requestUri.host() = requestUri.param(resip::p_wsSrcIp);
          requestUri.remove(resip::p_wsSrcIp);
          requestUri.port() = requestUri.param(resip::p_wsSrcPort);
          requestUri.remove(resip::p_wsSrcPort);
          requestUri.param(resip::p_transport) = "WS";
+         DebugLog(<< "recognised request for WS peer, setting forceTarget to " << requestUri);
          sip->setForceTarget(requestUri);
       }
 
