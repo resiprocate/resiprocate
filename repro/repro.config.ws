@@ -22,6 +22,10 @@ LogFilename = repro.log
 # Log file Max Bytes
 LogFileMaxBytes = 5242880
 
+# Instance name to be shown in logs, very useful when multiple instances
+# logging to syslog concurrently
+# If unspecified, defaults to argv[0] (name of the executable)
+#LoggingInstanceName repro-dev
 
 ########################################################
 # Transport settings
@@ -78,8 +82,10 @@ TLSUseEmailAsSIP = false
 # Alternate and more flexible method to specify transports to bind to.  If specified here
 # then IPAddress, and port settings above are ignored.
 # Transports MUST be numbered in sequential order, starting from 1.  Possible settings are:
-# Transport<Num>Interface = <IPAddress>:<Port>
-# Transport<Num>Type = <'TCP'|'UDP'|'TLS'|'DTLS'|'WS'> - default is UDP if missing
+# Transport<Num>Interface = <IPAddress>:<Port> - Note:  For IPv6 addresses last colon separates
+#                                                IP Address and Port - square bracket notation
+#                                                is not used.
+# Transport<Num>Type = <'TCP'|'UDP'|'TLS'|'DTLS'|'WS'|'WSS'> - default is UDP if missing
 # Transport<Num>TlsDomain = <TLSDomain> - only required if transport is TLS or DTLS
 # Transport<Num>TlsClientVerification = <'None'|'Optional'|'Mandatory'> - default is None
 # Transport<Num>RecordRouteUri = <'auto'|URI> - if set to auto then record route URI
@@ -108,6 +114,10 @@ TLSUseEmailAsSIP = false
 # Transport3TlsDomain = sipdomain.com
 # Transport3TlsClientVerification = Mandatory
 # Transport3RecordRouteUri = sip:h1.sipdomain.com;transport=TLS
+#
+# Transport4Interface = 2666:f0d0:1008:88::4:5060
+# Transport4Type = UDP
+# Transport4RecordRouteUri = auto
 
 Transport1Interface = 192.168.1.2:5062
 Transport1Type = WS
@@ -160,6 +170,15 @@ RegSyncPeer =
 ########################################################
 # Misc settings
 ########################################################
+
+# Drop privileges and run as some other user and group
+# If RunAsUser is specified and RunAsGroup is not specified,
+# then setgid will be invoked using the default group for
+# the specified user
+# If neither option is specified, then no attempt will be made
+# to call setuid/setgid (there is no default value)
+#RunAsUser = repro
+#RunAsGroup = repro
 
 # Must be true or false, default = false, not supported on Windows
 Daemonize = false
@@ -509,6 +528,9 @@ EnableCertificateAuthenticator = false
 # the holder of a particular certificate to use any of the `mapped'
 # `From:' addresses specified in the mappings file
 #
+# Default: there is no default value: if this filename is not specified,
+#          repro will not look for it
+#
 # File format:
 # common name<TAB><mapping>,<mapping>,...
 #
@@ -516,7 +538,7 @@ EnableCertificateAuthenticator = false
 #        <TAB> is exactly one tab
 #        <mapping> is `user@domain' or just `domain'
 #
-CommonNameMappings = /etc/repro/tlsUserMappings.txt
+#CommonNameMappings = /etc/repro/tlsUserMappings.txt
 
 
 ########################################################
