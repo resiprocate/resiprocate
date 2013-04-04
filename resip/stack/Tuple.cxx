@@ -120,8 +120,6 @@ Tuple::Tuple(const Data& printableAddr,
    mTransportType(ptype),
    mTargetDomain(targetDomain)
 {
-   if(mTransportType == UNKNOWN_TRANSPORT)
-      return;
    if (DnsUtil::isIpV4Address(printableAddr))
    {
       memset(&m_anonv4, 0, sizeof(m_anonv4));
@@ -503,9 +501,7 @@ static Tuple v6privateaddrbase("fc00::",0,UNKNOWN_TRANSPORT);
 bool 
 Tuple::isPrivateAddress() const
 {
-   if(mTransportType == UNKNOWN_TRANSPORT)
-      return true;
-   else if(ipVersion()==V4)
+   if(ipVersion()==V4)
    {
       // RFC 1918
       return isEqualWithMask(v4privateaddrbase1,8,true,true) ||  // 10.0.0.0        -   10.255.255.255  (10/8 prefix)
