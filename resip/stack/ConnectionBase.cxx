@@ -30,6 +30,10 @@ using namespace resip;
 char 
 ConnectionBase::connectionStates[ConnectionBase::MAX][32] = { "NewMessage", "ReadingHeaders", "PartialBody" };
 
+#ifndef RESIP_SIP_MSG_MAX_BYTES
+#define RESIP_SIP_MSG_MAX_BYTES  10485760
+#endif
+
 size_t
 ConnectionBase::messageSizeMax = RESIP_SIP_MSG_MAX_BYTES;
 
@@ -557,7 +561,8 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
    MsgHeaderScanner::ScanChunkResult scanResult = mMsgHeaderScanner.scanChunk(mBuffer, mBufferPos + bytesRead, &unprocessedCharPtr);
    if (scanResult != MsgHeaderScanner::scrEnd)
    {
-      if(scanResult != MsgHeaderScanner::scrNextChunk){
+      if(scanResult != MsgHeaderScanner::scrNextChunk)
+      {
          StackLog(<<"Failed to parse message, more bytes needed");
          StackLog(<< Data(mBuffer, bytesRead));
       }
@@ -567,25 +572,29 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
       return false;
    }
 
-   try{
+   try
+   {
       Data wsResponse;
       wsResponse =		"HTTP/1.1 101 WebSocket Protocol Handshake\r\n"
             "Upgrade: WebSocket\r\n"
             "Connection: Upgrade\r\n"
             "Sec-WebSocket-Protocol: sip\r\n";
 
-      if(mMessage->exists(h_SecWebSocketKey1) && mMessage->exists(h_SecWebSocketKey2)){
+      if(mMessage->exists(h_SecWebSocketKey1) && mMessage->exists(h_SecWebSocketKey2))
+      {
          Data SecWebSocketKey1 =  mMessage->const_header(h_SecWebSocketKey1).value();
          Data SecWebSocketKey2 =  mMessage->const_header(h_SecWebSocketKey2).value();
          Data Digits1, Digits2;
          unsigned int SpacesCount1 = 0, SpacesCount2 = 0;
          unsigned int Value1, Value2;
-         for(unsigned int i = 0; i < SecWebSocketKey1.size(); ++i){
+         for(unsigned int i = 0; i < SecWebSocketKey1.size(); ++i)
+         {
             if(SecWebSocketKey1[i] == ' ') ++SpacesCount1;
             if(isdigit(SecWebSocketKey1[i])) Digits1 += SecWebSocketKey1[i];
          }
          Value1 = htonl(Digits1.convertUnsignedLong() / SpacesCount1);
-         for(unsigned int i = 0; i < SecWebSocketKey2.size(); ++i){
+         for(unsigned int i = 0; i < SecWebSocketKey2.size(); ++i)
+         {
             if(SecWebSocketKey2[i] == ' ') ++SpacesCount2;
             if(isdigit(SecWebSocketKey2[i])) Digits2 += SecWebSocketKey2[i];
          }
@@ -596,30 +605,37 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
          memcpy(tmp, &Value1, 4);
          memcpy(&tmp[4], &Value2, 4);
          wsMD5Stream << tmp;
-         if(unprocessedCharPtr < (mBuffer + mBufferPos + bytesRead)){
+         if(unprocessedCharPtr < (mBuffer + mBufferPos + bytesRead))
+         {
             unsigned int dataLen = (mBuffer + mBufferPos + bytesRead) - unprocessedCharPtr;
             Data content(unprocessedCharPtr, dataLen);
             wsMD5Stream << content;
          }
 
-         if(mMessage->exists(h_Origin)){
+         if(mMessage->exists(h_Origin))
+         {
             wsResponse += "Sec-WebSocket-Origin: " + mMessage->const_header(h_Origin).value() + "\r\n";
          }
-         if(mMessage->exists(h_Host)){
+         if(mMessage->exists(h_Host))
+         {
             wsResponse += Data("Sec-WebSocket-Location: ") + Data(transport()->transport() == resip::WSS ? "wss://" : "ws://") + mMessage->const_header(h_Host).value() + Data("/\r\n");
          }
          wsResponse += "\r\n" + wsMD5Stream.getBin();
          mDeprecatedWebSocketVersion = true;
       }
-      else if(mMessage->exists(h_SecWebSocketKey)){
+      else if(mMessage->exists(h_SecWebSocketKey))
+      {
+#ifdef USE_SSL
          SHA1Stream wsSha1Stream;
          wsSha1Stream << (mMessage->const_header(h_SecWebSocketKey).value() + Data("258EAFA5-E914-47DA-95CA-C5AB0DC85B11"));
          Data wsAcceptKey = wsSha1Stream.getBin(160).base64encode();
          wsResponse +=	"Sec-WebSocket-Accept: "+ wsAcceptKey +"\r\n"
                "\r\n";
+#endif
          mDeprecatedWebSocketVersion = false;
       }
-      else{
+      else
+      {
          ErrLog(<<"No SecWebSocketKey header");
          delete mMessage;
          mMessage = 0;

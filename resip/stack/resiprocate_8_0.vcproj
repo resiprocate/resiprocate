@@ -875,6 +875,18 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\WsDecorator.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ssl\WssTransport.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\WsTransport.cxx"
+				>
+			</File>			
+			<File
 				RelativePath=".\X509Contents.cxx"
 				>
 			</File>
@@ -1459,6 +1471,18 @@
 				RelativePath=".\ssl\WinSecurity.hxx"
 				>
 			</File>
+			<File
+				RelativePath=".\WsDecorator.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ssl\WssTransport.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\WsTransport.hxx"
+				>	
+            </File>				
 			<File
 				RelativePath=".\X509Contents.hxx"
 				>

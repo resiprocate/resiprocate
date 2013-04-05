@@ -423,6 +423,7 @@
     <ClCompile Include="SipMessage.cxx" />
     <ClCompile Include="SipStack.cxx" />
     <ClCompile Include="ssl\TlsBaseTransport.cxx" />
+    <ClCompile Include="ssl\WssTransport.cxx" />
     <ClCompile Include="StackThread.cxx" />
     <ClCompile Include="StatelessHandler.cxx" />
     <ClCompile Include="StatisticsHandler.cxx" />
@@ -476,6 +477,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="WsDecorator.cxx" />
+    <ClCompile Include="WsTransport.cxx" />
     <ClCompile Include="X509Contents.cxx" />
   </ItemGroup>
   <ItemGroup>
@@ -581,6 +584,7 @@
     <ClInclude Include="SipMessage.hxx" />
     <ClInclude Include="SipStack.hxx" />
     <ClInclude Include="ssl\TlsBaseTransport.hxx" />
+    <ClInclude Include="ssl\WssTransport.hxx" />
     <ClInclude Include="StackThread.hxx" />
     <ClInclude Include="StartLine.hxx" />
     <ClInclude Include="StatelessHandler.hxx" />
@@ -629,6 +633,8 @@
     <ClInclude Include="Via.hxx" />
     <ClInclude Include="WarningCategory.hxx" />
     <ClInclude Include="ssl\WinSecurity.hxx" />
+    <ClInclude Include="WsDecorator.hxx" />
+    <ClInclude Include="WsTransport.hxx" />
     <ClInclude Include="X509Contents.hxx" />
     <ClInclude Include="ZeroOutStatistics.hxx" />
   </ItemGroup>

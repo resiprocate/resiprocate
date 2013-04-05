@@ -526,7 +526,9 @@ endlocal
     <ClInclude Include="WebAdminThread.hxx" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="repro.config" />
+    <None Include="repro.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="webadmin\pageOutlinePost.ixx" />
     <None Include="webadmin\pageOutlinePre.ixx" />
   </ItemGroup>

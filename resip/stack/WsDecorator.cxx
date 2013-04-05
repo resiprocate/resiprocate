@@ -21,11 +21,14 @@ WsDecorator::decorateMessage(resip::SipMessage &msg, const resip::Tuple &source,
 {
    const resip::Tuple& wsSource = msg.getSource();
 
-   if(wsSource.getType() == resip::WS) {
-      if(msg.exists(resip::h_Contacts)) {
+   if(wsSource.getType() == resip::WS) 
+   {
+      if(msg.exists(resip::h_Contacts)) 
+      {
          resip::NameAddr& contact = msg.header(resip::h_Contacts).front();
 
-         if (isEqualNoCase(contact.uri().host(), resip::Data("df7jal23ls0d.invalid"))) {
+         if (isEqualNoCase(contact.uri().host(), resip::Data("df7jal23ls0d.invalid"))) 
+         {
             contact.uri().host() = resip::Tuple::inet_ntop(source);
             contact.uri().port() = source.getPort();
             contact.uri().param(resip::p_transport) = resip::Tuple::toDataLower(source.getType());
@@ -35,9 +38,11 @@ WsDecorator::decorateMessage(resip::SipMessage &msg, const resip::Tuple &source,
          }
       }
 
-      if(msg.exists(resip::h_Vias)) {
+      if(msg.exists(resip::h_Vias)) 
+      {
          resip::Via &via = msg.header(resip::h_Vias).back();
-         if(isEqualNoCase(via.sentHost(), resip::Data("df7jal23ls0d.invalid"))) {
+         if(isEqualNoCase(via.sentHost(), resip::Data("df7jal23ls0d.invalid"))) 
+         {
             via.sentHost() = resip::Tuple::inet_ntop(wsSource);
             via.sentPort() = wsSource.getPort();
             via.transport() = "TCP"; // most servers get crazy if we send "WS" as transport
@@ -49,7 +54,6 @@ WsDecorator::decorateMessage(resip::SipMessage &msg, const resip::Tuple &source,
 void 
 WsDecorator::rollbackMessage(resip::SipMessage& msg)
 {
-
 }
 
 MessageDecorator* WsDecorator::clone() const

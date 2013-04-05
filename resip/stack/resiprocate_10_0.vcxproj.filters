@@ -389,6 +389,15 @@
     <ClCompile Include="ssl\TlsBaseTransport.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ssl\WssTransport.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WsDecorator.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WsTransport.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Aor.hxx">
@@ -845,6 +854,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ssl\TlsBaseTransport.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ssl\WssTransport.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WsDecorator.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WsTransport.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
