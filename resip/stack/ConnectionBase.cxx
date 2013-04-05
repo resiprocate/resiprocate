@@ -30,6 +30,8 @@ using namespace resip;
 char 
 ConnectionBase::connectionStates[ConnectionBase::MAX][32] = { "NewMessage", "ReadingHeaders", "PartialBody" };
 
+size_t
+ConnectionBase::messageSizeMax = RESIP_SIP_MSG_MAX_BYTES;
 
 ConnectionBase::ConnectionBase(Transport* transport, const Tuple& who, Compression &compression)
    : mSendPos(0),
@@ -326,12 +328,10 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                return false;
             }
             
-            if(contentLength > 10485760 || contentLength < 0)
+            if(contentLength > messageSizeMax || contentLength < 0)
             {
-               // !bwc! No more than 10M, thanks. We should make this
-               // configurable.
-               WarningLog(<<"Absurdly large Content-Length in connection-based "
-                           "transport.");
+               WarningLog(<<"Content-Length in connection-based "
+                           "transport exceeds maximum " << messageSizeMax);
                delete mMessage;
                mMessage = 0;
                mBuffer = 0;

@@ -127,6 +127,8 @@ AH_TEMPLATE([REPRO_RELEASE_VERSION], [Package version])
 AC_DEFINE_UNQUOTED(DB_HEADER, "db_cxx.h", DB_HEADER)
 AH_TEMPLATE([DB_HEADER], [Name of header for libdb])
 
+AC_DEFINE_UNQUOTED(RESIP_SIP_MSG_MAX_BYTES, ${RESIP_SIP_MSG_MAX_BYTES:-10485760}, [Maximum SIP message size to try and parse (bytes)])
+
 AM_CONDITIONAL(USE_ARES, true)
 AM_CONDITIONAL(USE_CARES, false)
 AC_ARG_WITH(c-ares,

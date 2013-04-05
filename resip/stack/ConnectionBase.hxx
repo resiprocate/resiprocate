@@ -124,6 +124,12 @@ class ConnectionBase
       UInt64 mLastUsed;
       ConnState mConnState;
       MsgHeaderScanner mMsgHeaderScanner;
+
+      static size_t messageSizeMax;
+
+   public:
+      static void setMessageSizeMax(size_t max)
+         { messageSizeMax = max; };
 };
 
 EncodeStream& 
