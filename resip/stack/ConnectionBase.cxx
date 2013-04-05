@@ -539,6 +539,13 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
    mConnState = WebSocket;
    dropConnection = false;
 
+   if(mBufferPos + bytesRead > messageSizeMax)
+   {
+      WarningLog(<<"Too many bytes received during WS handshake, dropping connection.  Max message size = " << messageSizeMax);
+      dropConnection = true;
+      return false;
+   }
+
    mMessage = new SipMessage(mWho.transport);
    assert(mMessage);
 
@@ -653,6 +660,13 @@ ConnectionBase::wsProcessData(int bytesRead, bool &tryAgain)
 
    size_t bytes_available = mBufferPos + bytesRead;
 
+   if(bytes_available > messageSizeMax)
+   {
+      WarningLog(<<"Too many bytes received during WS frame assembly, dropping connection.  Max message size = " << messageSizeMax);
+      tryAgain = false;
+      return false;
+   }
+
    if(mDeprecatedWebSocketVersion)
    {
       ErrLog(<<"mDeprecatedWebSocketVersion not supported!");
@@ -762,7 +776,16 @@ ConnectionBase::wsProcessData(int bytesRead, bool &tryAgain)
          wsFrameHdrLen += 4;
       }
 
-      UInt64 payIdx, payLen, frameLen;
+      // Validation of header fields
+      if(wsPayLen > messageSizeMax)
+      {
+         WarningLog(<<"WS frame header describes a payload size bigger than messageSizeMax, max = " << messageSizeMax 
+                 << ", dropping connection");
+         tryAgain = false;
+         return false;
+      }
+
+      UInt64 payIdx, frameLen;
       frameLen = wsFrameHdrLen + wsPayLen;
       if(bytes_available < frameLen)
       {
