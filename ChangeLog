@@ -1,29 +1,23 @@
 = Release Notes v 1.8 =
 
 ==1.8.7 Changes==
-release: update release branch for next in series, 1.8.7
-doc: Update README now that we use autotools
-- Ensured that all DUM usages/sessions DumCommandAdapter commands are using handles rather than references when saving the usage/session they apply to.
- - This fixes potential crashes in the case where a DumCommandAdapter would be enqueued onto the stack's queue while a usage terminating message is sitting in the queue.
- - The effect in that case would be that the saved reference to the usage would become invalid and this could cause a crash.
-- Also fixed an issue with InviteSession::*NITCommand() where DumCommandAdapter commands would end up being recursively queued onto the stack.
--there are places in the code that will call getHeaderName with Headers::NONE.  This
- value is not within the HeaderNames array bounds, so we check the type passed in
- to ensure it is in range so we won't seg fault
--thanks to Yannick Guay for reporting this
-eclipse: Add Ellemtel code style definition
-autotools: Add convenient configure option for pedantic stack behavior
-resip/stack: TransactionState: discard repeated requests received over reliable transports (2nd version of the fix).
-logging: stop sending process name to syslog, send PID instead
-test cases: adapt testTuple now that loopback is considered a private address (since r9633, merge b-repro-enh-20120205)
-Various changes to ensure test cases run
-Put back timestamps and mAppName when logging to Syslog (mAppName to be configurable from repro)
-repro: add LoggingInstanceName config option
--ensure that we can accept IPv6 addresses in the Transport settings in repro.config
-repro: fixes for CommonNameMappings, display meaningful error (backport r10052, r10053)
-rpm: various spec file fixes (backport r10044:10106 from main)
-travis-ci: add .travis.yml to 1.8 release branch
-rutil/test: testData: make comparison of double more tolerant (backport r10037)
+*doc: Update README now that we use autotools
+*dum: ensured that all DUM usages/sessions DumCommandAdapter commands are using handles rather than references when saving the usage/session they apply to.
+**This fixes potential crashes in the case where a DumCommandAdapter would be enqueued onto the stack's queue while a usage terminating message is sitting in the queue.
+**The effect in that case would be that the saved reference to the usage would become invalid and this could cause a crash.
+**Also fixed an issue with InviteSession::*NITCommand() where DumCommandAdapter commands would end up being recursively queued onto the stack.
+*stack: there are places in the code that will call getHeaderName with Headers::NONE.  This value is not within the HeaderNames array bounds, so we check the type passed in to ensure it is in range so we won't seg fault
+*eclipse: add Ellemtel code style definition
+*autotools: add convenient configure option for pedantic stack behavior
+*stack: TransactionState: discard repeated requests received over reliable transports
+*rutil: logging: stop sending process name to syslog, send PID instead
+*rutil: put back timestamps and mAppName when logging to Syslog (mAppName to be configurable from repro)
+*repro: add LoggingInstanceName config option
+*ensure that we can accept IPv6 addresses in the Transport settings in repro.config
+*repro: fixes for CommonNameMappings, display meaningful error (backport r10052, r10053)
+*rpm: various spec file fixes (backport r10044:10106 from main)
+*travis-ci: add .travis.yml to 1.8 release branch
+*rutil/test: testData: make comparison of double more tolerant (backport r10037)
 
 ==1.8.6 Changes==
 *rutil: fix for crash in DNS code (when DnsStub destructor calls setPollGrp(0))
