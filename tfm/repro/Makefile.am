@@ -3,6 +3,8 @@ EXTRA_DIST = sanityTests.vcproj
 
 TESTS = sanityTests
 
+AM_CXXFLAGS = -I $(top_srcdir)
+
 check_PROGRAMS = sanityTests
 
 sanityTests_LDADD = ../libtfm.la

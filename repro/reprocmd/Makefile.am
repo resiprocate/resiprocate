@@ -4,6 +4,7 @@ EXTRA_DIST = reprocmd_10_0.vcxproj reprocmd_10_0.vcxproj.filters
 EXTRA_DIST += *.vcproj
 
 #AM_CXXFLAGS = -DUSE_ARES
+AM_CXXFLAGS = -I $(top_srcdir)
 
 sbin_PROGRAMS = reprocmd
 reprocmd_SOURCES = reprocmd.cpp

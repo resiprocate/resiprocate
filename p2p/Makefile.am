@@ -1,7 +1,7 @@
 # $Id$
 
 #AM_CXXFLAGS = -DUSE_ARES 
-AM_CXXFLAGS = -I./s2c
+AM_CXXFLAGS = -I $(top_srcdir) -I $(top_srcdir)/p2p/s2c
 
 lib_LTLIBRARIES = libp2p.la
 

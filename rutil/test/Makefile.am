@@ -5,6 +5,7 @@ EXTRA_DIST += runtests.sh
 EXTRA_DIST += sweepRandom.sh
 
 #AM_CXXFLAGS = -DUSE_ARES
+AM_CXXFLAGS = -I $(top_srcdir)
 
 LDADD = ../librutil.la
 #LDADD += ../../contrib/ares/libares.a

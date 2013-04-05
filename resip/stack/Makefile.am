@@ -19,6 +19,8 @@ EXTRA_DIST += ssl/WinSecurity.cxx
 
 SUBDIRS = . test
 
+AM_CXXFLAGS = -I $(top_srcdir)
+
 # 
 # make chokes on the filenames under doc/ because some of them have spaces
 # in them.  The content needs to be reviewed and renamed appropriately

@@ -20,6 +20,7 @@ EXTRA_DIST += genUsers.cxx
 SUBDIRS = . test reprocmd accountingconsumers
 
 #AM_CXXFLAGS = -DUSE_ARES
+AM_CXXFLAGS = -I $(top_srcdir)
 
 sbin_PROGRAMS = repro
 repro_SOURCES = repro.cxx
