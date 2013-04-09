@@ -74,6 +74,9 @@ ConversationManager::ConversationManager(bool localAudioEnabled, MediaInterfaceM
 
    // Create MediaInterface
    MpCodecFactory *pCodecFactory = MpCodecFactory::getMpCodecFactory();
+   // For dynamic loading, we need to force the codecs to be loaded
+   // somehow, this should be exposed through the API
+   //pCodecFactory->loadAllDynCodecs("/tmp/codecs", "");
    unsigned int count = 0;
    const MppCodecInfoV1_1 **codecInfoArray;
    pCodecFactory->getCodecInfoArray(count, codecInfoArray);
