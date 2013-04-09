@@ -13,7 +13,7 @@
 
 // APPLICATION INCLUDES
 #include "reflow/Flow.hxx"
-#include "reflow/FlowManagerSipXSocket.hxx"
+#include "FlowManagerSipXSocket.hxx"
 
 using namespace std;
 using namespace recon;
