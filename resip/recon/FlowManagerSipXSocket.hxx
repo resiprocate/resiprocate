@@ -8,7 +8,7 @@
 #endif
 
 #include "os/OsSocket.h"
-#include "FlowManager.hxx"
+#include "reflow/FlowManager.hxx"
 
 using namespace flowmanager;
 
