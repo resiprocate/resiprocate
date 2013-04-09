@@ -10,7 +10,7 @@
 #include "UserAgentRegistration.hxx"
 #include "ReconSubsystem.hxx"
 
-#include "FlowManagerSubsystem.hxx"
+#include "reflow/FlowManagerSubsystem.hxx"
 
 #include <ReTurnSubsystem.hxx>
 

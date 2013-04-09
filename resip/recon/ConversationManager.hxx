@@ -23,7 +23,7 @@
 #include "HandleTypes.hxx"
 #include "MediaInterface.hxx"
 
-#include "FlowManager.hxx"
+#include "reflow/FlowManager.hxx"
 
 class CpMediaInterfaceFactory;
 

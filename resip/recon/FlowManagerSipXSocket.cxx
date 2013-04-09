@@ -12,8 +12,8 @@
 #endif
 
 // APPLICATION INCLUDES
-#include "Flow.hxx"
-#include "FlowManagerSipXSocket.hxx"
+#include "reflow/Flow.hxx"
+#include "reflow/FlowManagerSipXSocket.hxx"
 
 using namespace std;
 using namespace recon;

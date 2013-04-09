@@ -19,9 +19,9 @@
 #include "FlowManagerSipXSocket.hxx"
 
 // Flowmanager Includes
-#include "FlowManager.hxx"
-#include "Flow.hxx"
-#include "MediaStream.hxx"
+#include "reflow/FlowManager.hxx"
+#include "reflow/Flow.hxx"
+#include "reflow/MediaStream.hxx"
 
 #include "sdp/SdpHelperResip.hxx"
 #include "sdp/Sdp.hxx"
