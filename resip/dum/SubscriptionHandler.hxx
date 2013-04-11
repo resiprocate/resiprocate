@@ -53,6 +53,7 @@ class ServerSubscriptionHandler
                                const Contents* contents,
                                const SecurityAttributes* attrs);
 
+      virtual void onNotifyAccepted(ServerSubscriptionHandle, const SipMessage& msg);      
       virtual void onNotifyRejected(ServerSubscriptionHandle, const SipMessage& msg);      
 
       //called when this usage is destroyed for any reason. One of the following

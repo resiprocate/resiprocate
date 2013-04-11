@@ -291,8 +291,14 @@ ServerSubscription::dispatch(const SipMessage& msg)
       //.dcm. - will need to change if retry-afters are reaching here
       mLastRequest->releaseContents();
       int code = msg.header(h_StatusLine).statusCode();
-      if (code < 300)
-      { 
+
+      if(code < 200)
+      {
+         return;
+      }
+      else if (code < 300)
+      {
+         handler->onNotifyAccepted(getHandle(), msg);
          return;
       }
       else if (code < 400)

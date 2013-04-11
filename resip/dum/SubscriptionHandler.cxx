@@ -133,6 +133,10 @@ ServerSubscriptionHandler::onPublished(ServerSubscriptionHandle associated,
    // do nothing by default
 }
 
+void 
+ServerSubscriptionHandler::onNotifyAccepted(ServerSubscriptionHandle h, const SipMessage& msg)
+{
+}
 
 void 
 ServerSubscriptionHandler::onNotifyRejected(ServerSubscriptionHandle h, const SipMessage& msg)

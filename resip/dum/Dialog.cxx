@@ -792,9 +792,8 @@ Dialog::dispatch(const SipMessage& msg)
          break;
          case NOTIFY:
          {
-            //2xx responses are treated as retransmission quenchers(handled by
-            //the stack). Failures are dispatched to all ServerSubsscriptions,
-            //which may not be correct.
+            //Failures are dispatched to all ServerSubsscriptions,
+            //which may not be correct as per RFC 5057.
 
             int code = msg.header(h_StatusLine).statusCode();
             if (code >= 300)
@@ -811,11 +810,14 @@ Dialog::dispatch(const SipMessage& msg)
                mDestroying = false;
                possiblyDie();
             }
-//             ServerSubscription* server = findMatchingServerSub(response);
-//             if (server)
-//             {
-//                server->dispatch(response);
-//             }
+            else if (code >= 200)
+            {
+               ServerSubscription* server = findMatchingServerSub(response);
+               if (server)
+               {
+                  server->dispatch(response);
+               }
+            }
          }
          break;
          default:
