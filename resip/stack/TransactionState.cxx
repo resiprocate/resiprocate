@@ -241,6 +241,10 @@ TransactionState::processSipMessageAsNew(SipMessage* sip, TransactionController&
          }
          else if (method == CANCEL)
          {
+            // Note:  For cancel requests the tid member passed in will have the token "cancel" appended
+            // to it, so that the cancel request can be treated as it's own transaction.  sip->getTransactionId()
+            // will be the original tid from the wire and should match the tid of the INVITE request being 
+            // cancelled.
             TransactionState* matchingInvite = 
                controller.mServerTransactionMap.find(sip->getTransactionId());
             if (matchingInvite == 0)
@@ -547,9 +551,13 @@ TransactionState::process(TransactionController& controller,
       
    TransactionState* state = 0;
    if (message->isClientTransaction()) 
-     state = controller.mClientTransactionMap.find(tid);
+   {
+      state = controller.mClientTransactionMap.find(tid);
+   }
    else 
-     state = controller.mServerTransactionMap.find(tid);
+   {
+      state = controller.mServerTransactionMap.find(tid);
+   }
    
    if (state && sip && sip->isExternal())
    {
@@ -1475,6 +1483,14 @@ TransactionState::processServerNonInvite(TransactionMessage* msg)
          }
          else
          {
+            // We have already sent a 100, but we have just received a retransmission.  Requests 
+            // likely crossed on the wire.  We need to respond with another 100, but the last one was
+            // cleared so re-create the 100 now. 
+            SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+            if (sip && mMsgToRetransmit.empty() && !mNextTransmission)
+            {
+               resetNextTransmission(make100(sip));
+            }
             sendCurrentToWire();
          }
          delete msg;
