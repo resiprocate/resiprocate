@@ -177,6 +177,19 @@ public:
       InfoLog( << "MyTurnAsyncSocketHandler::onClearActiveDestinationFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
    }
 
+   virtual void onChannelBindRequestSent(unsigned int socketDesc, unsigned short channelNumber)
+   {
+      InfoLog( << "MyTurnAsyncSocketHandler::onChannelBindRequestSent: socketDest=" << socketDesc << " channelNumber=" << channelNumber);
+   }
+   virtual void onChannelBindSuccess(unsigned int socketDesc, unsigned short channelNumber)
+   {
+      InfoLog( << "MyTurnAsyncSocketHandler::onChannelBindSuccess: socketDest=" << socketDesc << " channelNumber=" << channelNumber);
+   }
+   virtual void onChannelBindFailure(unsigned int socketDesc, const asio::error_code& e)
+   {
+      WarningLog( << "MyTurnAsyncSocketHandler::onChannelBindFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
+   }
+
    virtual void onSendSuccess(unsigned int socketDesc)
    {
       //InfoLog( << "MyTurnAsyncSocketHandler::onSendSuccess: socketDest=" << socketDesc);

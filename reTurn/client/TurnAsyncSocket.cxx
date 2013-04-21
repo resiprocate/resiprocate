@@ -335,6 +335,8 @@ void TurnAsyncSocket::doChannelBinding(RemotePeer& remotePeer)
    {
       remotePeer.setChannelConfirmed();
    }
+
+   if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onChannelBindRequestSent(getSocketDescriptor(), remotePeer.getChannel());
 }
 
 void
@@ -700,13 +702,17 @@ TurnAsyncSocket::handleChannelBindResponse(StunMessage &request, StunMessage &re
       {
          // Remote Peer not found - discard
          WarningLog(<< "TurnAsyncSocket::handleChannelBindResponse: Received ChannelBindResponse for unknown channel (" << response.mTurnChannelNumber << ") - discarding");
-         return asio::error_code(reTurn::InvalidChannelNumberReceived, asio::error::misc_category);
+         asio::error_code ec(reTurn::InvalidChannelNumberReceived, asio::error::misc_category);
+         if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onChannelBindFailure(getSocketDescriptor(), ec);
+         return ec;
       }
 
       DebugLog(<< "TurnAsyncSocket::handleChannelBindResponse: Channel " << remotePeer->getChannel() << " is now bound to " << remotePeer->getPeerTuple());
       remotePeer->refresh();
       remotePeer->setChannelConfirmed();
       startChannelBindingTimer(remotePeer->getChannel());
+
+      if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onChannelBindSuccess(getSocketDescriptor(), remotePeer->getChannel());
    }
    else
    {
@@ -714,12 +720,16 @@ TurnAsyncSocket::handleChannelBindResponse(StunMessage &request, StunMessage &re
       if(response.mHasErrorCode)
       {
          ErrLog(<< "TurnAsyncSocket::handleChannelBindResponse: Received ChannelBindResponse error: " << response.mErrorCode.errorClass * 100 + response.mErrorCode.number);
-         return asio::error_code(response.mErrorCode.errorClass * 100 + response.mErrorCode.number, asio::error::misc_category);
+         asio::error_code ec(response.mErrorCode.errorClass * 100 + response.mErrorCode.number, asio::error::misc_category);
+         if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onChannelBindFailure(getSocketDescriptor(), ec);
+         return ec;
       }
       else
       {
          ErrLog(<< "TurnAsyncSocket::handleChannelBindResponse: Received ChannelBindResponse error but no error code attribute found.");
-         return asio::error_code(MissingAttributes, asio::error::misc_category);
+         asio::error_code ec(MissingAttributes, asio::error::misc_category);
+         if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onChannelBindFailure(getSocketDescriptor(), ec);
+         return ec;
       }
    }
    return asio::error_code();
@@ -1188,6 +1198,10 @@ TurnAsyncSocket::requestTimeout(UInt128 tid)
             mHaveAllocation = false;
             actualClose();
          }
+         break;
+      case StunMessage::TurnChannelBindMethod:  
+         // Note:  ChannelBind can happen after SetActiveDestination, after a sendTo, or during a channel bind refresh
+         if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onChannelBindFailure(getSocketDescriptor(), asio::error_code(reTurn::ResponseTimeout, asio::error::misc_category));
          break;
       default:
          assert(false);
