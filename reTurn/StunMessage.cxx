@@ -998,7 +998,7 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
                   WarningLog(<< "invalid attribute length for DontFragment attribute");
                   return false;
                }
-               StackLog(<< "Turn DontFragement = <exists>");
+               StackLog(<< "Turn Dont Fragement = <exists>");
             }
             else
             {
@@ -1544,6 +1544,8 @@ StunMessage::computeHmac(char* hmac, const char* input, int length, const char* 
 void
 StunMessage::computeHmac(char* hmac, const char* input, int length, const char* key, int sizeKey)
 {
+   //StackLog(<< "***computeHmac: input='" << Data(input, length).hex() << "', length=" << length << ", key='" << Data(key, sizeKey).hex() << "', keySize=" << sizeKey);
+
    unsigned int resultSize=20;
    HMAC(EVP_sha1(), 
         key, sizeKey, 

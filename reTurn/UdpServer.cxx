@@ -23,6 +23,7 @@ UdpServer::UdpServer(asio::io_service& ioService, RequestHandler& requestHandler
    if(ec)
    {
       ErrLog(<< "Unable to start UdpServer listening on " << address.to_string() << ":" << port << ", error=" << ec.value() << " - " << ec.message());
+      throw asio::system_error(ec);
    }
    else
    {

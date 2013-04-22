@@ -33,6 +33,9 @@ public:
                            unsigned int lifetime);
    ~TurnAllocation();
 
+   bool startRelay();
+   void stopRelay();
+
    const TurnAllocationKey& getKey() { return mKey; }
    void  refresh(unsigned int lifetime);  // update expiration time
 
@@ -79,6 +82,11 @@ private:
    boost::shared_ptr<UdpRelayServer> mUdpRelayServer;
 
    ChannelManager mChannelManager;
+
+   // Flags to control logging on Data channel/relay.  Used so that errors only print at Warning level once
+   bool mBadChannelErrorLogged;
+   bool mNoPermissionToPeerLogged;
+   bool mNoPermissionFromPeerLogged;
 };
 
 } 

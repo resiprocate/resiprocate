@@ -218,8 +218,8 @@ public:
    UInt16 mClass;    // Request, Response, Indication
    UInt16 mMethod;   // Binding Request, Shared Secret Request, Allocation Request, etc.
    bool mHasMagicCookie;  // Set to true if stun magic cookie is in message header
-   StunTuple mLocalTuple;  // Local address and port that received stun message
-   StunTuple mRemoteTuple; // Remote address and port that send stun message
+   StunTuple mLocalTuple;  // Local address and port that received the stun message
+   StunTuple mRemoteTuple; // Remote address and port that sent the stun message
    resip::Data mBuffer;
    resip::Data mHmacKey;
 

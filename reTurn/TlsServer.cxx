@@ -28,6 +28,7 @@ TlsServer::TlsServer(asio::io_service& ioService, RequestHandler& requestHandler
    if(ec)
    {
       ErrLog(<< "Unable to load server cert chain file: " << mRequestHandler.getConfig().mTlsServerCertificateFilename << ", error=" << ec.value() << "(" << ec.message() << ")");
+      throw asio::system_error(ec);
    }
 
    // Use a private key from a file.
@@ -35,6 +36,7 @@ TlsServer::TlsServer(asio::io_service& ioService, RequestHandler& requestHandler
    if(ec)
    {
       ErrLog(<< "Unable to load server private key file: " << mRequestHandler.getConfig().mTlsServerCertificateFilename << ", error=" << ec.value() << "(" << ec.message() << ")");
+      throw asio::system_error(ec);
    }
 
    // Use the specified file to obtain the temporary Diffie-Hellman parameters.
@@ -42,6 +44,7 @@ TlsServer::TlsServer(asio::io_service& ioService, RequestHandler& requestHandler
    if(ec)
    {
       ErrLog(<< "Unable to load temporary Diffie-Hellman parameters file: " << mRequestHandler.getConfig().mTlsTempDhFilename << ", error=" << ec.value() << "(" << ec.message() << ")");
+      throw asio::system_error(ec);
    }
 
    // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
@@ -81,6 +84,12 @@ TlsServer::handleAccept(const asio::error_code& e)
    else
    {
       ErrLog(<< "Error in handleAccept: " << e.value() << "-" << e.message());
+      if(e == asio::error::no_descriptors)
+      {
+         // Retry if too many open files (ie. out of socket descriptors)
+         mNewConnection.reset(new TlsConnection(mIOService, mConnectionManager, mRequestHandler, mContext));
+         mAcceptor.async_accept(((TlsConnection*)mNewConnection.get())->socket(), boost::bind(&TlsServer::handleAccept, this, asio::placeholders::error));
+      }
    }
 }
 

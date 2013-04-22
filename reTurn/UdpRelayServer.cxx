@@ -16,23 +16,40 @@ namespace reTurn {
 UdpRelayServer::UdpRelayServer(asio::io_service& ioService, TurnAllocation& turnAllocation)
 : AsyncUdpSocketBase(ioService),
   mTurnAllocation(turnAllocation),
-  mStopping(false)
+  mStopping(false),
+  mBindSuccess(false)
 {
-   InfoLog(<< "UdpRelayServer started.  Listening on " << mTurnAllocation.getRequestedTuple().getAddress().to_string() << ":" << mTurnAllocation.getRequestedTuple().getPort());
-
-   bind(turnAllocation.getRequestedTuple().getAddress(), turnAllocation.getRequestedTuple().getPort());
+   asio::error_code ec = bind(turnAllocation.getRequestedTuple().getAddress(), turnAllocation.getRequestedTuple().getPort());
+   if(ec)
+   {
+      ErrLog(<< "UdpRelayServer failed to start properly.  [" << mTurnAllocation.getRequestedTuple().getAddress().to_string() << ":" << mTurnAllocation.getRequestedTuple().getPort() << "], error=" << ec.value() << "-" << ec.message());
+   }
+   else
+   {
+      mBindSuccess = true;
+      InfoLog(<< "UdpRelayServer started.  [" << mTurnAllocation.getRequestedTuple().getAddress().to_string() << ":" << mTurnAllocation.getRequestedTuple().getPort() << "]");
+   }
 }
 
 UdpRelayServer::~UdpRelayServer()
 {
-   DebugLog(<< "~UdpRelayServer - destroyed");
+   InfoLog(<< "~UdpRelayServer - destroyed.  [" << mTurnAllocation.getRequestedTuple().getAddress().to_string() << ":" << mTurnAllocation.getRequestedTuple().getPort() << "]");
 }
 
-void 
-UdpRelayServer::start()
+bool
+UdpRelayServer::startReceiving()
 {
-   // Note:  This function is required, since you cannot call shared_from_this in the constructor: shared_from_this requires that at least one shared ptr exists already
-   doReceive();
+   if(mBindSuccess)
+   {
+      // Note:  This function is required, since you cannot call shared_from_this in the constructor: shared_from_this requires that at least one shared ptr exists already
+      doReceive();
+      return true;
+   }
+   else
+   {
+      stop();
+      return false;
+   }
 }
 
 void 
@@ -62,16 +79,8 @@ UdpRelayServer::onReceiveSuccess(const asio::ip::address& address, unsigned shor
       std::cout << std::dec << std::endl;
       */
 
-      // If no permission then just drop packet
-      if(mTurnAllocation.existsPermission(address)) 
-      {
-         // If active destination is not set, then send to client as a DataInd, otherwise send packet as is
-         mTurnAllocation.sendDataToClient(StunTuple(StunTuple::UDP, address, port), data);
-      }
-      else
-      {
-         InfoLog(<< "No permission for " << address.to_string() << " dropping data.");
-      }
+      // If active destination is not set, then send to client as a DataInd, otherwise send packet as is
+      mTurnAllocation.sendDataToClient(StunTuple(StunTuple::UDP, address, port), data);
    }
    doReceive();
 }
@@ -95,7 +104,15 @@ UdpRelayServer::onSendFailure(const asio::error_code& error)
 {
    if(!mStopping && error != asio::error::operation_aborted)
    {
-      WarningLog(<< "UdpRelayServer::onSendFailure: " << error.value() << "-" << error.message());
+      if(mLastSendErrorCode == error)
+      {
+         DebugLog(<< "UdpRelayServer::onSendFailure: [" << mTurnAllocation.getRequestedTuple().getAddress().to_string() << ":" << mTurnAllocation.getRequestedTuple().getPort() << "] " << error.value() << "-" << error.message());
+      }
+      else
+      {
+         mLastSendErrorCode = error;
+         WarningLog(<< "UdpRelayServer::onSendFailure: [" << mTurnAllocation.getRequestedTuple().getAddress().to_string() << ":" << mTurnAllocation.getRequestedTuple().getPort() << "] " << error.value() << "-" << error.message());
+      }
    }
 }
 

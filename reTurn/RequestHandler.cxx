@@ -21,7 +21,7 @@ using namespace resip;
 namespace reTurn {
 
 // !slg! TODO these need to be made into settings
-#define SOFTWARE_STRING "reTURNServer 0.4 - RFC5389/turn-12  "  // Note padding size to a multiple of 4, to help compatibility with older clients
+#define SOFTWARE_STRING "reTURNServer 0.5 (RFC5389)  "  // Note padding size to a multiple of 4, to help compatibility with older clients
 #define DEFAULT_BANDWIDTH 100  // 100 kbit/s - enough for G711 RTP ?slg? what do we want this to be?
 
 RequestHandler::RequestHandler(TurnManager& turnManager,
@@ -56,7 +56,7 @@ RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, StunMessage& req
       // Check if there were unknown require attributes
       if(request.mUnknownRequiredAttributes.numAttributes > 0)
       {
-         InfoLog(<< "Received Request with unknown comprehension-required attributes. Sending 420.");
+         InfoLog(<< "Received Request with unknown comprehension-required attributes. Sending 420. Sender=" << request.mRemoteTuple);
          buildErrorResponse(response, 420, "Unknown attribute", getConfig().mAuthenticationRealm.c_str());  
          response.mHasUnknownAttributes = true;
          response.mUnknownAttributes = request.mUnknownRequiredAttributes;
@@ -245,13 +245,13 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
    {
       if (getConfig().mAuthenticationMode == ReTurnConfig::ShortTermPassword) 
       {
-         InfoLog(<< "Received Request with no Message Integrity. Sending 400.");
+         InfoLog(<< "Received Request with no Message Integrity. Sending 400. Sender=" << request.mRemoteTuple);
          buildErrorResponse(response, 400, "Bad Request (no MessageIntegrity)");  
          return false;
       }
       else if(getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword)
       {
-         InfoLog(<< "Received Request with no Message Integrity. Sending 401.");
+         InfoLog(<< "Received Request with no Message Integrity. Sending 401. Sender=" << request.mRemoteTuple);
          buildErrorResponse(response, 401, "Unauthorized (no MessageIntegrity)", getConfig().mAuthenticationRealm.c_str());  
          return false;
       }
@@ -260,7 +260,7 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
    {
       if (!request.mHasUsername)
       {
-         WarningLog(<< "No Username and contains MessageIntegrity. Sending 400.");
+         WarningLog(<< "No Username and contains MessageIntegrity. Sending 400. Sender=" << request.mRemoteTuple);
          buildErrorResponse(response, 400, "Bad Request (no Username and contains MessageIntegrity)");
          return false;
       }
@@ -269,13 +269,13 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
       {
          if(!request.mHasRealm)
          {
-            WarningLog(<< "No Realm.  Sending 400.");
+            WarningLog(<< "No Realm.  Sending 400. Sender=" << request.mRemoteTuple);
             buildErrorResponse(response, 400, "Bad Request (No Realm)");
             return false;
          }
          if(!request.mHasNonce)
          {
-            WarningLog(<< "No Nonce and contains realm.  Sending 400.");
+            WarningLog(<< "No Nonce and contains realm.  Sending 400. Sender=" << request.mRemoteTuple);
             buildErrorResponse(response, 400, "Bad Request (No Nonce and contains Realm)");
             return false;
          }
@@ -285,13 +285,13 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
             // Do nothing
             break;
          case Expired:
-            WarningLog(<< "Nonce expired. Sending 438.");
+            WarningLog(<< "Nonce expired. Sending 438. Sender=" << request.mRemoteTuple);
             buildErrorResponse(response, 438, "Stale Nonce", getConfig().mAuthenticationRealm.c_str());
             return false;
             break;
          case NotValid:
          default:
-            WarningLog(<< "Invalid Nonce. Sending 400.");
+            WarningLog(<< "Invalid Nonce. Sending 400. Sender=" << request.mRemoteTuple);
             buildErrorResponse(response, 400, "BadRequest (Invalid Nonce)");
             return false;
             break;
@@ -306,7 +306,7 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
          //       and removals
          if(0)
          {
-            WarningLog(<< "Username expired. Sending 430.");
+            WarningLog(<< "Username expired. Sending 430. Sender=" << request.mRemoteTuple);
             buildErrorResponse(response, 430, "Stale Credentials");
             return false;
          }
@@ -318,8 +318,8 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
       //       credential, known within the realm of the REALM attribute of the request
       if (getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword && !getConfig().isUserNameValid(*request.mUsername))
       {
-         WarningLog(<< "Invalid username: " << *request.mUsername << ". Sending 401.");
-         buildErrorResponse(response, 401, "Unathorized", getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword ? getConfig().mAuthenticationRealm.c_str() : 0);
+         WarningLog(<< "Invalid username: " << *request.mUsername << ". Sending 401. Sender=" << request.mRemoteTuple);
+         buildErrorResponse(response, 401, "Unauthorized", getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword ? getConfig().mAuthenticationRealm.c_str() : 0);
          return false;
       }
 
@@ -337,7 +337,7 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
       
       if(!request.checkMessageIntegrity(hmacKey))
       {
-         WarningLog(<< "MessageIntegrity is bad. Sending 401.");
+         WarningLog(<< "MessageIntegrity is bad. Sending 401. Sender=" << request.mRemoteTuple);
          buildErrorResponse(response, 401, "Unauthorized", getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword ? getConfig().mAuthenticationRealm.c_str() : 0);
          return false;
       }
@@ -456,7 +456,7 @@ RequestHandler::processStunSharedSecretRequest(StunMessage& request, StunMessage
    // Only allow shared secret requests on TLS transport
    if(request.mLocalTuple.getTransportType() != StunTuple::TLS)
    {
-      WarningLog(<< "Invalid transport for shared secret request.  TLS required.  Sending 433."); 
+      WarningLog(<< "Invalid transport for shared secret request.  TLS required.  Sending 433. Sender=" << request.mRemoteTuple); 
       buildErrorResponse(response, 433, "Invalid transport.  TLS required.");
       return RespondFromReceiving;
    }
@@ -477,7 +477,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
    // then handleAuthentication would have validated authentication info)
    if(!request.mHasMessageIntegrity)
    {
-      WarningLog(<< "Turn allocate request without authentication.  Sending 401.");
+      WarningLog(<< "Turn allocate request without authentication.  Sending 401. Sender=" << request.mRemoteTuple);
       buildErrorResponse(response, 401, "Missing Message Integrity", getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword ? getConfig().mAuthenticationRealm.c_str() : 0 );  
       return RespondFromReceiving;
    }
@@ -493,7 +493,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
    // If this is a subsequent allocation request, return error
    if(allocation)
    {
-      WarningLog(<< "Allocation requested but already exists.  Sending 437.");
+      WarningLog(<< "Allocation requested but already exists.  Sending 437. Sender=" << request.mRemoteTuple);
       buildErrorResponse(response, 437, "Allocation Mismatch");  
       return RespondFromReceiving;
    }
@@ -511,7 +511,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
    {
       if(request.mTurnRequestedTransport != StunMessage::RequestedTransportUdp)  // We only support UDP allocations right now
       {
-         WarningLog(<< "Invalid transport requested.  Sending 442.");
+         WarningLog(<< "Invalid transport requested.  Sending 442. Sender=" << request.mRemoteTuple);
          buildErrorResponse(response, 442, "Unsupported Transport Protocol");  
          return RespondFromReceiving;
       }
@@ -519,7 +519,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
    }
    else
    {
-      WarningLog(<< "Missing requested transport header.  Sending 400.");
+      WarningLog(<< "Missing requested transport header.  Sending 400. Sender=" << request.mRemoteTuple);
       buildErrorResponse(response, 400, "Bad Request - Missing requested transport");  
       return RespondFromReceiving;
    }
@@ -527,7 +527,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
    // Check if Don't Fragment attribute is present - if so return an error - TODO implement DF bit, then remove this check
    if(request.mHasTurnDontFragment)
    {
-      WarningLog(<< "Turn allocate request with Don't Fragment requested, not yet implemented.  Sending 420.");
+      WarningLog(<< "Turn allocate request with Don't Fragment requested, not yet implemented.  Sending 420. Sender=" << request.mRemoteTuple);
       buildErrorResponse(response, 420, "Don't Fragment not yet implemented", getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword ? getConfig().mAuthenticationRealm.c_str() : 0 );  
       return RespondFromReceiving;
    }
@@ -543,7 +543,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
    {
       if(request.mHasTurnReservationToken)
       {
-         WarningLog(<< "Both Even Port and Reservation Token attributes are present.  Sending 400.");
+         WarningLog(<< "Both Even Port and Reservation Token attributes are present.  Sending 400. Sender=" << request.mRemoteTuple);
          buildErrorResponse(response, 400, "Bad request - both Even Port and Reservation Token present");  
          return RespondFromReceiving;
       }
@@ -563,7 +563,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
       }
       if(port == 0)
       {
-         WarningLog(<< "Unable to allocate requested port.  Sending 508.");
+         WarningLog(<< "Unable to allocate requested port.  Sending 508. Sender=" << request.mRemoteTuple);
          buildErrorResponse(response, 508, "Insufficient Port Capacity");  
          return RespondFromReceiving;
       }
@@ -575,7 +575,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
       port = (unsigned short)request.mTurnReservationToken;
       if(!mTurnManager.allocatePort(allocationTuple.getTransportType(), port, true /* allocate reserved */))
       {
-         WarningLog(<< "Unable to allocate requested port - bad reservation token.  Sending 508.");
+         WarningLog(<< "Unable to allocate requested port - bad reservation token.  Sending 508. Sender=" << request.mRemoteTuple);
          buildErrorResponse(response, 508, "Insufficient Port Capacity");  
          return RespondFromReceiving;
       }      
@@ -587,7 +587,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
       port = mTurnManager.allocateAnyPort(allocationTuple.getTransportType());      
       if(port == 0)
       {
-         WarningLog(<< "Unable to allocate port.  Sending 508.");
+         WarningLog(<< "Unable to allocate port.  Sending 508. Sender=" << request.mRemoteTuple);
          buildErrorResponse(response, 508, "Insufficient Port Capacity");  
          return RespondFromReceiving;
       }      
@@ -621,11 +621,18 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
                                       StunAuth(*request.mUsername, hmacKey), 
                                       allocationTuple, 
                                       lifetime);
+      if(!allocation->startRelay())
+      {
+         // TODO - we could handle this better perhaps try to allocate a new port
+         ErrLog(<< "Error starting allocation relay.  Sending 500. Sender=" << request.mRemoteTuple);
+         buildErrorResponse(response, 500, "Server Error");  
+         return RespondFromReceiving;
+      }
    }
    catch(asio::system_error e)
    {
       // TODO - handle port in use error better - try to allocate a new port or something?
-      ErrLog(<< "Error allocating socket for allocation.  Sending 500.");
+      ErrLog(<< "Error allocating socket for allocation.  Sending 500. Sender=" << request.mRemoteTuple);
       buildErrorResponse(response, 500, "Server Error");  
       return RespondFromReceiving;
    }
@@ -660,7 +667,7 @@ RequestHandler::processTurnRefreshRequest(StunMessage& request, StunMessage& res
    // then handleAuthentication would have validation authentication info)
    if(!request.mHasMessageIntegrity)
    {
-      WarningLog(<< "Turn refresh request without authentication.  Sending 401.");
+      WarningLog(<< "Turn refresh request without authentication.  Sending 401. Sender=" << request.mRemoteTuple);
       buildErrorResponse(response, 401, "Missing Message Integrity", getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword ? getConfig().mAuthenticationRealm.c_str() : 0 );  
       return RespondFromReceiving;
    }
@@ -673,7 +680,7 @@ RequestHandler::processTurnRefreshRequest(StunMessage& request, StunMessage& res
 
    if(!allocation)
    {
-      WarningLog(<< "Refresh requested with non-matching allocation.  Sending 437."); 
+      WarningLog(<< "Refresh requested with non-matching allocation.  Sending 437. Sender=" << request.mRemoteTuple); 
       buildErrorResponse(response, 437, "Allocation Mismatch");  
       return RespondFromReceiving;
    }
@@ -681,13 +688,13 @@ RequestHandler::processTurnRefreshRequest(StunMessage& request, StunMessage& res
    // If allocation was found, then ensure that the same username and shared secret was used
    if(allocation->getClientAuth().getClientUsername() != *request.mUsername)
    {
-      WarningLog(<< "Refresh requested with username not matching allocation.  Sending 441.");
+      WarningLog(<< "Refresh requested with username not matching allocation.  Sending 441. Sender=" << request.mRemoteTuple);
       buildErrorResponse(response, 441, "Wrong Credentials");  
       return RespondFromReceiving;
    }
    if(allocation->getClientAuth().getClientSharedSecret() != hmacKey)
    {
-      WarningLog(<< "Refresh requested with shared secret not matching allocation.  Sending 441.");
+      WarningLog(<< "Refresh requested with shared secret not matching allocation.  Sending 441. Sender=" << request.mRemoteTuple);
       buildErrorResponse(response, 441, "Wrong Credentials");   
       return RespondFromReceiving;
    }
@@ -749,7 +756,7 @@ RequestHandler::processTurnCreatePermissionRequest(StunMessage& request, StunMes
    // TurnCreatePermission requests must be authenticated
    if(!request.mHasMessageIntegrity)
    {
-      WarningLog(<< "Turn create permission request without authentication.  Send 401.");
+      WarningLog(<< "Turn create permission request without authentication.  Send 401. Sender=" << request.mRemoteTuple);
       buildErrorResponse(response, 401, "Missing Message Integrity", getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword ? getConfig().mAuthenticationRealm.c_str() : 0 );  
       return RespondFromReceiving;
    }
@@ -762,7 +769,7 @@ RequestHandler::processTurnCreatePermissionRequest(StunMessage& request, StunMes
 
    if(!allocation)
    {
-      WarningLog(<< "Turn create permission request for non-existing allocation.  Send 437."); 
+      WarningLog(<< "Turn create permission request for non-existing allocation.  Send 437. Sender=" << request.mRemoteTuple); 
       buildErrorResponse(response, 437, "No Allocation");  
       return RespondFromReceiving;
    }
@@ -770,13 +777,13 @@ RequestHandler::processTurnCreatePermissionRequest(StunMessage& request, StunMes
    // If allocation was found, then ensure that the same username and shared secret was used
    if(allocation->getClientAuth().getClientUsername() != *request.mUsername)
    {
-      WarningLog(<< "Create permission requested with username not matching allocation.  Sending 441.");
+      WarningLog(<< "Create permission requested with username not matching allocation.  Sending 441. Sender=" << request.mRemoteTuple);
       buildErrorResponse(response, 441, "Wrong Credentials");  
       return RespondFromReceiving;
    }
    if(allocation->getClientAuth().getClientSharedSecret() != hmacKey)
    {
-      WarningLog(<< "Create permission requested with shared secret not matching allocation.  Sending 441.");
+      WarningLog(<< "Create permission requested with shared secret not matching allocation.  Sending 441. Sender=" << request.mRemoteTuple);
       buildErrorResponse(response, 441, "Wrong Credentials");   
       return RespondFromReceiving;
    }
@@ -793,7 +800,7 @@ RequestHandler::processTurnCreatePermissionRequest(StunMessage& request, StunMes
    }
    else
    {
-      WarningLog(<< "Create permission request missing peer address.  Sending 400.");
+      WarningLog(<< "Create permission request missing peer address.  Sending 400. Sender=" << request.mRemoteTuple);
       buildErrorResponse(response, 400, "Bad Request - missing attribute");   
       return RespondFromReceiving;
    }
@@ -812,7 +819,7 @@ RequestHandler::processTurnChannelBindRequest(StunMessage& request, StunMessage&
    // TurnChannelBind requests must be authenticated
    if(!request.mHasMessageIntegrity)
    {
-      WarningLog(<< "Turn channel bind request without authentication.  Send 401.");
+      WarningLog(<< "Turn channel bind request without authentication.  Send 401. Sender=" << request.mRemoteTuple);
       buildErrorResponse(response, 401, "Missing Message Integrity", getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword ? getConfig().mAuthenticationRealm.c_str() : 0 );  
       return RespondFromReceiving;
    }
@@ -825,7 +832,7 @@ RequestHandler::processTurnChannelBindRequest(StunMessage& request, StunMessage&
 
    if(!allocation)
    {
-      WarningLog(<< "Turn channel bind request for non-existing allocation.  Send 437."); 
+      WarningLog(<< "Turn channel bind request for non-existing allocation.  Send 437. Sender=" << request.mRemoteTuple); 
       buildErrorResponse(response, 437, "No Allocation");  
       return RespondFromReceiving;
    }
@@ -833,13 +840,13 @@ RequestHandler::processTurnChannelBindRequest(StunMessage& request, StunMessage&
    // If allocation was found, then ensure that the same username and shared secret was used
    if(allocation->getClientAuth().getClientUsername() != *request.mUsername)
    {
-      WarningLog(<< "Channel bind requested with username not matching allocation.  Sending 441.");
+      WarningLog(<< "Channel bind requested with username not matching allocation.  Sending 441. Sender=" << request.mRemoteTuple);
       buildErrorResponse(response, 441, "Wrong Credentials");  
       return RespondFromReceiving;
    }
    if(allocation->getClientAuth().getClientSharedSecret() != hmacKey)
    {
-      WarningLog(<< "Channel bind requested with shared secret not matching allocation.  Sending 441.");
+      WarningLog(<< "Channel bind requested with shared secret not matching allocation.  Sending 441. Sender=" << request.mRemoteTuple);
       buildErrorResponse(response, 441, "Wrong Credentials");   
       return RespondFromReceiving;
    }
@@ -849,7 +856,7 @@ RequestHandler::processTurnChannelBindRequest(StunMessage& request, StunMessage&
       // Ensure channel number is in valid range
       if(request.mTurnChannelNumber < MIN_CHANNEL_NUM || request.mTurnChannelNumber > MAX_CHANNEL_NUM)
       {
-         WarningLog(<< "Channel bind requested with an out of range channel number=" << request.mTurnChannelNumber << ".  Sending 400.");
+         WarningLog(<< "Channel bind requested with an out of range channel number=" << request.mTurnChannelNumber << ".  Sending 400. Sender=" << request.mRemoteTuple);
          buildErrorResponse(response, 400, "Bad Request - channel number out of range");   
          return RespondFromReceiving;
       }
@@ -861,14 +868,14 @@ RequestHandler::processTurnChannelBindRequest(StunMessage& request, StunMessage&
 
       if(!allocation->addChannelBinding(remoteAddress, request.mTurnChannelNumber))
       {
-         WarningLog(<< "Channel bind request invalid.  Sending 400.");
+         WarningLog(<< "Channel bind request invalid.  Sending 400. Sender=" << request.mRemoteTuple);
          buildErrorResponse(response, 400, "Bad Request");   
          return RespondFromReceiving;
       }
    }
    else
    {
-      WarningLog(<< "Channel bind request missing peer address and/or channel number.  Sending 400.");
+      WarningLog(<< "Channel bind request missing peer address and/or channel number.  Sending 400. Sender=" << request.mRemoteTuple);
       buildErrorResponse(response, 400, "Bad Request - missing attribute");   
       return RespondFromReceiving;
    }
@@ -892,20 +899,20 @@ RequestHandler::processTurnSendIndication(StunMessage& request)
 
    if(!allocation)
    {
-      WarningLog(<< "Turn send indication for non-existing allocation.  Dropping.");
+      DebugLog(<< "Turn SendIndication for non existing allocation (Local=" << request.mLocalTuple << ", remote=" << request.mRemoteTuple << ").  Dropping.");
       return;
    }
 
    if(request.mCntTurnXorPeerAddress == 0 || !request.mHasTurnData)
    {
-      WarningLog(<< "Turn send indication with no peer address or data.  Dropping.");
+      DebugLog(<< "Turn send indication with no peer address or data (Local=" << request.mLocalTuple << ", remote=" << request.mRemoteTuple << ").  Dropping.");
       return;
    }
 
    // Check if Don't Fragment attribute is present - if so drop - TODO implement DF bit, then remove this check
    if(request.mHasTurnDontFragment)
    {
-      WarningLog(<< "Turn send indication with Don't Fragment requested, not yet implemented.  Dropping.");
+      DebugLog(<< "Turn send indication with Don't Fragment requested, not yet implemented. Dropping. Sender=" << request.mRemoteTuple);
       return;
    }
 
@@ -913,13 +920,6 @@ RequestHandler::processTurnSendIndication(StunMessage& request)
    remoteAddress.setTransportType(allocation->getRequestedTuple().getTransportType());
    // Shouldn't have more than one xor-peer-address attribute in this request
    StunMessage::setTupleFromStunAtrAddress(remoteAddress, request.mTurnXorPeerAddress[0]);
-
-   // Check if permission exists, if not then drop
-   if(!allocation->existsPermission(remoteAddress.getAddress()))
-   {
-      WarningLog(<< "Turn send indication for destination=" << remoteAddress << ", but no permission installed.  Dropping.");
-      return;
-   }
 
    boost::shared_ptr<DataBuffer> data(new DataBuffer(request.mTurnData->data(), request.mTurnData->size()));
    allocation->sendDataToPeer(remoteAddress, data, false /* isFramed? */);
@@ -932,7 +932,7 @@ RequestHandler::processTurnData(unsigned short channelNumber, const StunTuple& l
 
    if(!allocation)
    {
-      WarningLog(<< "Turn data for non existing allocation.  Dropping.");
+      DebugLog(<< "Turn channel data for non existing allocation. Dropping. Sender=" << remoteTuple);
       return;
    }
 

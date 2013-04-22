@@ -45,6 +45,12 @@ TcpServer::handleAccept(const asio::error_code& e)
    else
    {
       ErrLog(<< "Error in handleAccept: " << e.value() << "-" << e.message());
+      if(e == asio::error::no_descriptors)
+      {
+         // Retry if too many open files (ie. out of socket descriptors)
+         mNewConnection.reset(new TcpConnection(mIOService, mConnectionManager, mRequestHandler));
+         mAcceptor.async_accept(((TcpConnection*)mNewConnection.get())->socket(), boost::bind(&TcpServer::handleAccept, this, asio::placeholders::error));
+      }
    }
 }
 

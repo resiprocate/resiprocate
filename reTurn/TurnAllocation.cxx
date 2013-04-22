@@ -32,23 +32,15 @@ TurnAllocation::TurnAllocation(TurnManager& turnManager,
    mRequestedTuple(requestedTuple),
    mTurnManager(turnManager),
    mAllocationTimer(turnManager.getIOService()),
-   mLocalTurnSocket(localTurnSocket)
+   mLocalTurnSocket(localTurnSocket),
+   mBadChannelErrorLogged(false),
+   mNoPermissionToPeerLogged(false),
+   mNoPermissionFromPeerLogged(false)
 {
    InfoLog(<< "TurnAllocation created: clientLocal=" << clientLocalTuple << " clientRemote=" << 
            clientRemoteTuple << " allocation=" << requestedTuple << " lifetime=" << lifetime);
 
    refresh(lifetime);
-
-   if(mRequestedTuple.getTransportType() == StunTuple::UDP)
-   {
-      mUdpRelayServer.reset(new UdpRelayServer(turnManager.getIOService(), *this));
-      mUdpRelayServer->start();
-   }
-   else
-   {
-      ErrLog(<< "Only UDP relay's are currently implemented!");
-      assert(false);
-   }
 
    // Register for Turn Transport onDestroyed notification
    mLocalTurnSocket->registerAsyncSocketBaseHandler(this);
@@ -59,8 +51,7 @@ TurnAllocation::~TurnAllocation()
    InfoLog(<< "TurnAllocation destroyed: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
            mKey.getClientRemoteTuple() << " allocation=" << mRequestedTuple);
 
-   // Delete Relay Servers
-   if(mUdpRelayServer) mUdpRelayServer->stop();
+   stopRelay();
 
    // Deallocate Port
    mTurnManager.deallocatePort(mRequestedTuple.getTransportType(), mRequestedTuple.getPort());
@@ -73,7 +64,44 @@ TurnAllocation::~TurnAllocation()
    }
    
    // Unregister for TurnTransport notifications
-   mLocalTurnSocket->registerAsyncSocketBaseHandler(0);
+   if(mLocalTurnSocket)
+   {
+      mLocalTurnSocket->registerAsyncSocketBaseHandler(0);
+   }
+}
+
+bool 
+TurnAllocation::startRelay()
+{
+   if(mRequestedTuple.getTransportType() == StunTuple::UDP)
+   {
+      mUdpRelayServer.reset(new UdpRelayServer(mTurnManager.getIOService(), *this));
+      if(!mUdpRelayServer->startReceiving())
+      {
+         stopRelay();  // Ensure allocation timer is stopped
+         return false;
+      }
+      return true;
+   }
+   else
+   {
+      ErrLog(<< "Only UDP relay's are currently implemented!");
+      assert(false);
+      stopRelay();  // Ensure allocation timer is stopped
+      return false;
+   }
+}
+
+void 
+TurnAllocation::stopRelay()
+{
+   // Stop and detach Relay Server
+   if(mUdpRelayServer.get())
+   {
+      mUdpRelayServer->stop();
+      mUdpRelayServer.reset();
+   }
+   mAllocationTimer.cancel();
 }
 
 void  
@@ -148,8 +176,18 @@ TurnAllocation::sendDataToPeer(unsigned short channelNumber, boost::shared_ptr<D
    }
    else
    {
-      WarningLog(<< "sendDataToPeer bad channel number - discarding data: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-         mKey.getClientRemoteTuple() << " allocation=" << mRequestedTuple << " channelNumber=" << channelNumber);
+      // Log at Warning level first time only
+      if(mBadChannelErrorLogged)
+      {
+         DebugLog(<< "sendDataToPeer bad channel number - discarding data: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
+            mKey.getClientRemoteTuple() << " allocation=" << mRequestedTuple << " channelNumber=" << channelNumber);
+      }
+      else
+      {
+         mBadChannelErrorLogged = true;
+         WarningLog(<< "sendDataToPeer bad channel number - discarding data: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
+            mKey.getClientRemoteTuple() << " allocation=" << mRequestedTuple << " channelNumber=" << channelNumber);
+      }
    }
 }
 
@@ -159,6 +197,21 @@ TurnAllocation::sendDataToPeer(const StunTuple& peerAddress, boost::shared_ptr<D
    DebugLog(<< "TurnAllocation sendDataToPeer: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
            mKey.getClientRemoteTuple() << " allocation=" << mRequestedTuple << " peerAddress=" << peerAddress);
 
+   // Ensure permission exists
+   if(!existsPermission(peerAddress.getAddress()))
+   {
+      // Log at Warning level first time only
+      if(mNoPermissionToPeerLogged)
+      {
+         DebugLog(<< "Turn send indication for destination=" << peerAddress.getAddress() << ", but no permission installed.  Dropping.");
+      }
+      else
+      {
+         mNoPermissionToPeerLogged = true;
+         WarningLog(<< "Turn send indication for destination=" << peerAddress.getAddress() << ", but no permission installed.  Dropping.");
+      }
+      return;
+   }
    if(mRequestedTuple.getTransportType() == StunTuple::UDP)
    {
       assert(mUdpRelayServer);
@@ -179,6 +232,21 @@ TurnAllocation::sendDataToPeer(const StunTuple& peerAddress, boost::shared_ptr<D
 void 
 TurnAllocation::sendDataToClient(const StunTuple& peerAddress, boost::shared_ptr<DataBuffer>& data)
 {
+   // See if a permission exists
+   if(!existsPermission(peerAddress.getAddress()))
+   {
+      // Log at Warning level first time only
+      if(mNoPermissionFromPeerLogged)
+      {
+         DebugLog(<< "Data received from peer=" << peerAddress << ", but no permission installed.  Dropping.");
+      }
+      else
+      {
+         mNoPermissionFromPeerLogged = true;
+         WarningLog(<< "Data received from peer=" << peerAddress << ", but no permission installed.  Dropping.");
+      }
+      return;
+   }
    // See if a channel binding exists - if so, use it
    RemotePeer* remotePeer = mChannelManager.findRemotePeerByPeerAddress(peerAddress);
    if(remotePeer)

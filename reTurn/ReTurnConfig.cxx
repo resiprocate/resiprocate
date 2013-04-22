@@ -17,7 +17,7 @@ ReTurnConfig::ReTurnConfig() :
    mAltStunAddress(asio::ip::address::from_string("0.0.0.0")),
    mAuthenticationMode(LongTermPassword),  // required for TURN
    mAuthenticationRealm("reTurn"),
-   mNonceLifetime(3600),            // 1 hour - at least 1 hours is recommended by the draft
+   mNonceLifetime(3600),            // 1 hour - at least 1 hours is recommended by the RFC
    mAllocationPortRangeMin(49152),  // must be even - This default range is the Dynamic and/or Private Port range - recommended by RFC
    mAllocationPortRangeMax(65535),  // must be odd
    mDefaultAllocationLifetime(600), // 10 minutes
@@ -89,7 +89,7 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
 
    if(user.size() == 0 || password.size() == 0)
    {
-      throw ConfigParse::Exception("Missing or invalid credentials (LongTermAuthUsername/LongTermAuthPassword", __FILE__, __LINE__);
+      throw ConfigParse::Exception("Missing or invalid credentials (LongTermAuthUsername/LongTermAuthPassword)", __FILE__, __LINE__);
    }
 
    mAuthenticationCredentials[user] = password;
