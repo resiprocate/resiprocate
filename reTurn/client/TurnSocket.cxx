@@ -220,6 +220,10 @@ TurnSocket::createAllocation(unsigned int lifetime,
       return asio::error_code(reTurn::InvalidRequestedTransport, asio::error::misc_category); 
    }
 
+   // TURN RequestedAddressFamily 
+   //request.mHasTurnRequestedAddressFamily = true;
+   //request.mTurnRequestedAddressFamily = 0x01; // IPv4
+
    if(mRequestedProps != StunMessage::PropsNone)
    {
       request.mHasTurnEvenPort = true;

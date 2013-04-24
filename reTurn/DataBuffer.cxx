@@ -5,20 +5,50 @@
 
 namespace reTurn {
 
-DataBuffer::DataBuffer(const char* data, unsigned int size) : 
-mBuffer(size != 0 ? new char[size] : 0), mSize(size), mStart(mBuffer) 
+void ArrayDeallocator(char* data)
 {
-   memcpy(mBuffer, data, size);
+   delete [] data;
 }
 
-DataBuffer::DataBuffer(unsigned int size) : 
-mBuffer(size != 0 ? new char[size] : 0), mSize(size), mStart(mBuffer) 
+DataBuffer::DataBuffer(const char* data, unsigned int size, deallocator dealloc)
+   : mDealloc(dealloc)
 {
+   mBuffer = 0;
+   mSize   = size;
+   if ( mSize > 0 )
+   {
+      mBuffer = new char[mSize];
+      memcpy(mBuffer, data, mSize);
+   }
+   mStart = mBuffer;
+}
+
+DataBuffer::DataBuffer(unsigned int size, deallocator dealloc)
+   : mDealloc(dealloc)
+{
+   mBuffer = 0;
+   mSize   = size;
+   if ( mSize > 0 )
+   {
+      mBuffer = new char[mSize];
+      memset(mBuffer, 0, mSize);
+   }
+
+   mStart  = mBuffer;
 }
 
 DataBuffer::~DataBuffer() 
 { 
-   delete[] mBuffer; 
+   mDealloc(mBuffer);
+}
+
+DataBuffer* DataBuffer::own(char* data, unsigned int size, deallocator dealloc)
+{
+   DataBuffer* buff = new reTurn::DataBuffer(0, dealloc);
+   buff->mBuffer = data;
+   buff->mSize = size;
+   buff->mStart = buff->mBuffer;
+   return buff;
 }
 
 const char* 
@@ -31,6 +61,18 @@ unsigned int
 DataBuffer::size() 
 { 
    return mSize; 
+}
+
+char* 
+DataBuffer::mutableData()
+{
+   return mStart;
+}
+
+unsigned int&
+DataBuffer::mutableSize()
+{
+   return mSize;
 }
 
 char& 

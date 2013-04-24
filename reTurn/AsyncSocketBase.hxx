@@ -4,12 +4,13 @@
 #include <deque>
 #include <asio.hpp>
 #include <boost/bind.hpp>
+#include <boost/function.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
 #include "DataBuffer.hxx"
 #include "StunTuple.hxx"
 
-#define RECEIVE_BUFFER_SIZE 2048 // ?slg? should we shrink this to something closer to MTU (1500 bytes)?
+#define RECEIVE_BUFFER_SIZE 4096 // ?slg? should we shrink this to something closer to MTU (1500 bytes)? !hbr! never actually increase it otherwise re-assembled UDP packets get lost. (was 2048)
 
 namespace reTurn {
 
@@ -29,7 +30,7 @@ public:
 
    /// Note:  The following API's are thread safe and queue the request to be handled by the ioService thread
    virtual asio::error_code bind(const asio::ip::address& address, unsigned short port) = 0;
-   virtual void connect(const std::string& address, unsigned short port) = 0;  
+   virtual void connect(const std::string& address, unsigned short port, bool is_v6) = 0;  
    /// Note: destination is ignored for TCP and TLS connections
    virtual void send(const StunTuple& destination, boost::shared_ptr<DataBuffer>& data);  // Send unframed data
    virtual void send(const StunTuple& destination, unsigned short channel, boost::shared_ptr<DataBuffer>& data);  // send with turn framing
@@ -41,6 +42,8 @@ public:
    bool isConnected() { return mConnected; }
    asio::ip::address& getConnectedAddress() { return mConnectedAddress; }
    unsigned short getConnectedPort() { return mConnectedPort; }
+
+   virtual void setOnBeforeSocketClosedFp(boost::function<void(unsigned int)> fp) { mOnBeforeSocketCloseFp = fp; }
 
    /// Use these if you already operating within the ioService thread
    virtual void doSend(const StunTuple& destination, unsigned short channel, boost::shared_ptr<DataBuffer>& data, unsigned int bufferStartPos=0);
@@ -89,6 +92,10 @@ protected:
 
    /// Handlers
    AsyncSocketBaseHandler* mAsyncSocketBaseHandler;
+
+   /// Provides an opportunity for the app to clean up, e.g., QoS-related data or resources
+   /// just before the socket is closed
+   boost::function<void(unsigned int)> mOnBeforeSocketCloseFp;
 
 private:
    virtual void transportSend(const StunTuple& destination, std::vector<asio::const_buffer>& buffers) = 0;

@@ -146,6 +146,14 @@ StunMessage::init()
    mHasTurnReservationToken = false;
    mHasTurnConnectStat = false;
    mCntTurnXorPeerAddress = 0;
+   mHasTurnRequestedAddressFamily = false;
+   mHasIcePriority = false;
+   mIcePriority = 0;
+   mHasIceUseCandidate = false;
+   mHasIceControlled = false;
+   mIceControlledTieBreaker = 0;
+   mHasIceControlling = false;
+   mIceControllingTieBreaker = 0;
    mErrorCode.reason = 0;
    mUsername = 0;
    mPassword = 0;
@@ -269,6 +277,35 @@ StunMessage::setTurnData(const char* data, unsigned int len)
    {
       mTurnData = new Data(data, len);
    }
+}
+
+void 
+StunMessage::setIcePriority(UInt32 priority)
+{
+   mHasIcePriority = true;
+   mIcePriority = priority;
+}
+
+void 
+StunMessage::setIceUseCandidate()
+{
+   mHasIceUseCandidate = true;
+}
+
+void 
+StunMessage::setIceControlled()
+{
+   mHasIceControlled = true;
+   const resip::Data& tieBreaker = resip::Random::getCryptoRandom(8);
+   memcpy(&mIceControlledTieBreaker, tieBreaker.begin(), sizeof(mIceControlledTieBreaker));
+}
+
+void 
+StunMessage::setIceControlling()
+{
+   mHasIceControlling = true;
+   const resip::Data& tieBreaker = resip::Random::getCryptoRandom(8);
+   memcpy(&mIceControllingTieBreaker, tieBreaker.begin(), sizeof(mIceControllingTieBreaker));
 }
 
 void 
@@ -1040,6 +1077,75 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
             }
             break;
 					
+         // ICE attributes
+         case IcePriority:
+            if(!mHasIcePriority)
+            {
+               mHasIcePriority = true;
+               if (stunParseAtrUInt32( body, attrLen, mIcePriority) == false)
+               {
+                  WarningLog(<< "problem parsing ICE priority");
+                  return false;
+               }
+               StackLog(<< "Ice Priority = " << mIcePriority);
+            }
+            else
+            {
+               WarningLog(<< "Duplicate IcePriority in message - ignoring.");
+            }
+            break;
+
+         case IceUseCandidate:
+            if(!mHasIceUseCandidate)
+            {
+               mHasIceUseCandidate = true;
+               if(attrLen != 0)
+               {
+                  WarningLog(<< "invalid attribute length for IceUseCandidate attribute");
+                  return false;
+               }
+               StackLog(<< "Ice UseCandidate = <exists>");
+            }
+            else
+            {
+               WarningLog(<< "Duplicate IceUseCandidate in message - ignoring.");
+            }
+            break;
+
+         case IceControlled:
+            if(!mHasIceControlled)
+            {
+               mHasIceControlled = true;
+               if (stunParseAtrUInt64( body, attrLen, mIceControlledTieBreaker) == false)
+               {
+                  WarningLog(<< "problem parsing ICE controlled");
+                  return false;
+               }
+               StackLog(<< "Ice controlled = " << mIceControlledTieBreaker);
+            }
+            else
+            {
+               WarningLog(<< "Duplicate IceControlled in message - ignoring.");
+            }
+            break;
+
+         case IceControlling:
+            if(!mHasIceControlling)
+            {
+               mHasIceControlling = true;
+               if (stunParseAtrUInt64( body, attrLen, mIceControllingTieBreaker) == false)
+               {
+                  WarningLog(<< "problem parsing ICE controlling");
+                  return false;
+               }
+               StackLog(<< "Ice controlling = " << mIceControllingTieBreaker);
+            }
+            else
+            {
+               WarningLog(<< "Duplicate IceControlling in message - ignoring.");
+            }
+            break;
+					
          default:
             if ( atrType <= 0x7FFF ) 
             {
@@ -1489,6 +1595,32 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
       StackLog(<< "Encoding Turn Connect Stat: " << mTurnConnectStat);
       ptr = encodeAtrUInt32(ptr, TurnConnectStat, mTurnConnectStat);
    }   
+   if (mHasTurnRequestedAddressFamily)
+   {
+      StackLog(<< "Encoding Turn RequestedAddressFamily: " << mTurnRequestedAddressFamily);
+      ptr = encodeAtrUInt32(ptr, TurnRequestedAddressFamily, UInt32(mTurnRequestedAddressFamily << 16));
+   }
+   if (mHasIcePriority)
+   {
+      StackLog(<< "Encoding ICE Priority: " << mIcePriority);
+      ptr = encodeAtrUInt32(ptr, IcePriority, mIcePriority);
+   }
+   if (mHasIceUseCandidate)
+   {
+      StackLog(<< "Encoding ICE UseCandidate: <exists>");
+      ptr = encode16(ptr, IceUseCandidate);
+      ptr = encode16(ptr, 0); // 0 attribute length
+   }
+   if (mHasIceControlled)
+   {
+      StackLog(<< "Encoding ICE Controlled: " << mIceControlledTieBreaker);
+      ptr = encodeAtrUInt64(ptr, IceControlled, mIceControlledTieBreaker);
+   }
+   if (mHasIceControlling)
+   {
+      StackLog(<< "Encoding ICE Controlling: " << mIceControllingTieBreaker);
+      ptr = encodeAtrUInt64(ptr, IceControlling, mIceControllingTieBreaker);
+   }
 
    // Update Length in header now - needed in message integrity calculations
    UInt16 msgSize = ptr - buf - sizeof(StunMsgHdr);

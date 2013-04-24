@@ -3,12 +3,18 @@
 
 namespace reTurn {
 
+void ArrayDeallocator(char* data);
+
 class DataBuffer
 {
 public:
-   DataBuffer(const char* data, unsigned int size);  
-   DataBuffer(unsigned int size);  
+   typedef void(*deallocator)(char*);
+
+   DataBuffer(const char* data, unsigned int size, deallocator dealloc=ArrayDeallocator);  
+   DataBuffer(unsigned int size, deallocator dealloc=ArrayDeallocator);  
    ~DataBuffer();
+
+   static DataBuffer* own(char* data, unsigned int size, deallocator dealloc=ArrayDeallocator);
 
    const char* data();
    unsigned int size();
@@ -18,10 +24,14 @@ public:
    unsigned int truncate(unsigned int newSize);
    unsigned int offset(unsigned int bytes);
 
+   char* mutableData();
+   unsigned int& mutableSize();
+
 private:
    char* mBuffer;
    unsigned int mSize;
    char* mStart;
+   deallocator mDealloc;
 };
 
 }

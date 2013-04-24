@@ -36,18 +36,24 @@ AsyncUdpSocketBase::bind(const asio::ip::address& address, unsigned short port)
    if(!errorCode)
    {
       mSocket.set_option(asio::ip::udp::socket::reuse_address(true), errorCode);
+      mSocket.set_option(asio::socket_base::receive_buffer_size(66560));
+      //mSocket.set_option(asio::socket_base::send_buffer_size(66560));
       mSocket.bind(asio::ip::udp::endpoint(address, port), errorCode);
    }
    return errorCode;
 }
 
 void 
-AsyncUdpSocketBase::connect(const std::string& address, unsigned short port)
+AsyncUdpSocketBase::connect(const std::string& address, unsigned short port, bool is_v6)
 {
    // Start an asynchronous resolve to translate the address
    // into a list of endpoints.
    resip::Data service(port);
-   asio::ip::udp::resolver::query query(address, service.c_str());   
+#ifdef USE_IPV6
+   asio::ip::udp::resolver::query query((is_v6 ? asio::ip::udp::v6() : asio::ip::udp::v4()), address, service.c_str());   
+#else
+   asio::ip::udp::resolver::query query(asio::ip::udp::v4(), address, service.c_str());   
+#endif
    mResolver.async_resolve(query,
         boost::bind(&AsyncSocketBase::handleUdpResolve, shared_from_this(),
                     asio::placeholders::error,
@@ -112,6 +118,11 @@ AsyncUdpSocketBase::transportFramedReceive()
 void 
 AsyncUdpSocketBase::transportClose()
 {
+   if (mOnBeforeSocketCloseFp)
+   {
+      mOnBeforeSocketCloseFp(mSocket.native());
+   }
+
    asio::error_code ec;
    mSocket.close(ec);
 }

@@ -54,14 +54,18 @@ AsyncTlsSocketBase::bind(const asio::ip::address& address, unsigned short port)
 }
 
 void 
-AsyncTlsSocketBase::connect(const std::string& address, unsigned short port)
+AsyncTlsSocketBase::connect(const std::string& address, unsigned short port, bool is_v6)
 {
    mHostname = address;
 
    // Start an asynchronous resolve to translate the address
    // into a list of endpoints.
    resip::Data service(port);
+#ifdef USE_IPV6
    asio::ip::tcp::resolver::query query(address, service.c_str());   
+#else
+   asio::ip::tcp::resolver::query query(asio::ip::tcp::v4(), address, service.c_str());   
+#endif
    mResolver.async_resolve(query,
         boost::bind(&AsyncSocketBase::handleTcpResolve, shared_from_this(),
                     asio::placeholders::error,
@@ -308,6 +312,11 @@ AsyncTlsSocketBase::transportFramedReceive()
 void 
 AsyncTlsSocketBase::transportClose()
 {
+   if (mOnBeforeSocketCloseFp)
+   {
+      mOnBeforeSocketCloseFp(mSocket.lowest_layer().native());
+   }
+
    asio::error_code ec;
    //mSocket.shutdown(ec);  // ?slg? Should we use async_shutdown? !slg! note: this fn gives a stack overflow since ASIO 1.0.0 for some reason
    mSocket.lowest_layer().close(ec);
