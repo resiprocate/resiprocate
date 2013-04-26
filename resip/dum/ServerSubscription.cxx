@@ -203,7 +203,7 @@ ServerSubscription::setSubscriptionState(SubscriptionState state)
 void 
 ServerSubscription::dispatch(const SipMessage& msg)
 {
-   DebugLog( << "ServerSubscriptionHandler::dispatch: " << msg.brief());
+   DebugLog( << "ServerSubscription::dispatch: " << msg.brief());
 
    ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
    assert(handler);
@@ -313,7 +313,7 @@ ServerSubscription::dispatch(const SipMessage& msg)
          switch(Helper::determineFailureMessageEffect(msg))
          {
             case Helper::TransactionTermination:
-               DebugLog( << "ServerSubscriptionHandler::TransactionTermination: " << msg.brief());
+               DebugLog( << "ServerSubscription::TransactionTermination: " << msg.brief());
                handler->onNotifyRejected(getHandle(), msg);
                break;
             case Helper::UsageTermination:
@@ -321,7 +321,7 @@ ServerSubscription::dispatch(const SipMessage& msg)
             case Helper::OptionalRetryAfter:
             case Helper::ApplicationDependant: 
             case Helper::DialogTermination:
-               DebugLog( << "ServerSubscriptionHandler::UsageTermination: " << msg.brief());
+               DebugLog( << "ServerSubscription::UsageTermination: " << msg.brief());
                handler->onError(getHandle(), msg);
                handler->onTerminated(getHandle());
                delete this;
