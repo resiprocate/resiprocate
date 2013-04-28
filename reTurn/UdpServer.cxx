@@ -99,7 +99,7 @@ UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short por
             if(it == mResponseMap.end())
             {
                response = new StunMessage;
-               RequestHandler::ProcessResult result = mRequestHandler.processStunMessage(this, request, *response, isRFC3489BackwardsCompatServer());
+               RequestHandler::ProcessResult result = mRequestHandler.processStunMessage(this, mTurnAllocationManager, request, *response, isRFC3489BackwardsCompatServer());
 
                switch(result)
                {
@@ -159,10 +159,11 @@ UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short por
          }
          else
          {
-            mRequestHandler.processTurnData(channelNumber,
-                                          StunTuple(StunTuple::UDP, mSocket.local_endpoint().address(), mSocket.local_endpoint().port()),
-                                          StunTuple(StunTuple::UDP, address, port),
-                                          data);
+            mRequestHandler.processTurnData(mTurnAllocationManager,
+                                            channelNumber,
+                                            StunTuple(StunTuple::UDP, mSocket.local_endpoint().address(), mSocket.local_endpoint().port()),
+                                            StunTuple(StunTuple::UDP, address, port),
+                                            data);
          }
       }
    }

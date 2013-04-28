@@ -376,6 +376,7 @@
     <ClCompile Include="TlsServer.cxx" />
     <ClCompile Include="TurnAllocation.cxx" />
     <ClCompile Include="TurnAllocationKey.cxx" />
+    <ClCompile Include="TurnAllocationManager.cxx" />
     <ClCompile Include="TurnManager.cxx" />
     <ClCompile Include="TurnPermission.cxx" />
     <ClCompile Include="UdpRelayServer.cxx" />
@@ -404,6 +405,7 @@
     <ClInclude Include="TlsServer.hxx" />
     <ClInclude Include="TurnAllocation.hxx" />
     <ClInclude Include="TurnAllocationKey.hxx" />
+    <ClInclude Include="TurnAllocationManager.hxx" />
     <ClInclude Include="TurnManager.hxx" />
     <ClInclude Include="TurnPermission.hxx" />
     <ClInclude Include="UdpRelayServer.hxx" />

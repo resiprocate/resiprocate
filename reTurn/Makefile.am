@@ -39,6 +39,7 @@ reTurnServer_SOURCES = reTurnServer.cxx \
         TlsServer.cxx \
         TurnAllocation.cxx \
         TurnAllocationKey.cxx \
+		TurnAllocationManager.cxx \
         TurnManager.cxx \
         TurnPermission.cxx \
         UdpRelayServer.cxx \
@@ -66,6 +67,7 @@ noinst_HEADERS = AsyncSocketBaseHandler.hxx \
 	TlsConnection.hxx \
 	TlsServer.hxx \
 	TurnAllocation.hxx \
+	TurnAllocationManager.hxx \
 	TurnAllocationKey.hxx \
 	TurnManager.hxx \
 	TurnPermission.hxx \

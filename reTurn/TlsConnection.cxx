@@ -102,7 +102,7 @@ TlsConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short
          if(request.isValid())
          {
             StunMessage response;
-            RequestHandler::ProcessResult result = mRequestHandler.processStunMessage(this, request, response);
+            RequestHandler::ProcessResult result = mRequestHandler.processStunMessage(this, mTurnAllocationManager, request, response);
 
             switch(result)
             {
@@ -139,7 +139,8 @@ TlsConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short
          memcpy(&channelNumber, &(*data)[0], 2);
          channelNumber = ntohs(channelNumber);
 
-         mRequestHandler.processTurnData(channelNumber,
+         mRequestHandler.processTurnData(mTurnAllocationManager,
+                                         channelNumber,
                                          StunTuple(StunTuple::TLS, mSocket.lowest_layer().local_endpoint().address(), mSocket.lowest_layer().local_endpoint().port()),
                                          StunTuple(StunTuple::TLS, address, port),
                                          data);

@@ -1,48 +1,33 @@
-#ifndef TURNMANAGER_HXX
-#define TURNMANAGER_HXX
+#ifndef TURNALLOCATIONMANAGER_HXX
+#define TURNALLOCATIONMANAGER_HXX
 
 #include <map>
 #include <asio.hpp>
+#include "TurnAllocationKey.hxx"
 #include "ReTurnConfig.hxx"
 #include "StunTuple.hxx"
 
 namespace reTurn {
 
-class TurnManager
+class TurnAllocation;
+
+class TurnAllocationManager
 {
 public:
-   explicit TurnManager(asio::io_service& ioService, const ReTurnConfig& config);  // ioService used to start timers
-   ~TurnManager();
+   explicit TurnAllocationManager();
+   ~TurnAllocationManager();
 
-   asio::io_service& getIOService() { return mIOService; }
+   void addTurnAllocation(TurnAllocation* turnAllocation);
+   void removeTurnAllocation(const TurnAllocationKey& turnAllocationKey);
 
-   unsigned short allocateAnyPort(StunTuple::TransportType transport);
-   unsigned short allocateEvenPort(StunTuple::TransportType transport);
-   unsigned short allocateOddPort(StunTuple::TransportType transport);
-   unsigned short allocateEvenPortPair(StunTuple::TransportType transport);
-   bool allocatePort(StunTuple::TransportType transport, unsigned short port, bool reserved = false);
-   void deallocatePort(StunTuple::TransportType transport, unsigned short port);
+   TurnAllocation* findTurnAllocation(const TurnAllocationKey& turnAllocationKey);
+   TurnAllocation* findTurnAllocation(const StunTuple& requestedTuple);
 
-   const ReTurnConfig& getConfig() { return mConfig; }
+   void allocationExpired(const asio::error_code& e, const TurnAllocationKey& turnAllocationKey);
 
 private:
-
-   typedef enum
-   {
-      PortStateUnallocated,
-      PortStateAllocated,
-      PortStateReserved
-   } PortState;
-   typedef std::map<unsigned short, PortState> PortAllocationMap;
-   PortAllocationMap mUdpAllocationPorts;  // .slg. expand to be a map/hash table per ip address/interface
-   PortAllocationMap mTcpAllocationPorts;
-   unsigned short mLastAllocatedUdpPort;
-   unsigned short mLastAllocatedTcpPort;
-   PortAllocationMap& getPortAllocationMap(StunTuple::TransportType transport);
-   unsigned short advanceLastAllocatedPort(StunTuple::TransportType transport, unsigned int numToAdvance = 1);
-
-   asio::io_service& mIOService;
-   const ReTurnConfig& mConfig;
+   typedef std::map<TurnAllocationKey, TurnAllocation*> TurnAllocationMap;  // .slg. consider using hash table
+   TurnAllocationMap mTurnAllocationMap;
 };
 
 } 
@@ -83,3 +68,4 @@ private:
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  ==================================================================== */
+

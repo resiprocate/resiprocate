@@ -16,6 +16,7 @@ namespace reTurn {
 
 class TurnPermission;
 class TurnManager;
+class TurnAllocationManager;
 class AsyncSocketBase;
 class UdpRelayServer;
 
@@ -25,6 +26,7 @@ class TurnAllocation
 {
 public:
    explicit TurnAllocation(TurnManager& turnManager,
+                           TurnAllocationManager& turnAllocationManager,
                            AsyncSocketBase* localTurnSocket,
                            const StunTuple& clientLocalTuple, 
                            const StunTuple& clientRemoteTuple,
@@ -76,6 +78,7 @@ private:
    TurnPermissionMap mTurnPermissionMap;
 
    TurnManager& mTurnManager;
+   TurnAllocationManager& mTurnAllocationManager;
    asio::deadline_timer mAllocationTimer;
 
    AsyncSocketBase* mLocalTurnSocket;

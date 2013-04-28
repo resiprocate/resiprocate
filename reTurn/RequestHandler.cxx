@@ -45,7 +45,7 @@ RequestHandler::RequestHandler(TurnManager& turnManager,
 }
 
 RequestHandler::ProcessResult 
-RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, StunMessage& request, StunMessage& response, bool isRFC3489BackwardsCompatServer)
+RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, TurnAllocationManager& turnAllocationManager, StunMessage& request, StunMessage& response, bool isRFC3489BackwardsCompatServer)
 {
    ProcessResult result =  RespondFromReceiving;
 
@@ -78,7 +78,7 @@ RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, StunMessage& req
                break;
 
             case StunMessage::TurnAllocateMethod:
-               result = processTurnAllocateRequest(turnSocket, request, response);
+               result = processTurnAllocateRequest(turnSocket, turnAllocationManager, request, response);
                if(result != NoResponseToSend)
                {
                   // Add an XOrMappedAddress to all TurnAllocateResponses
@@ -88,15 +88,15 @@ RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, StunMessage& req
                break;
 
             case StunMessage::TurnRefreshMethod:
-               result = processTurnRefreshRequest(request, response);
+               result = processTurnRefreshRequest(turnAllocationManager, request, response);
                break;
 
             case StunMessage::TurnCreatePermissionMethod:
-               result = processTurnCreatePermissionRequest(request, response);
+               result = processTurnCreatePermissionRequest(turnAllocationManager, request, response);
                break;
 
             case StunMessage::TurnChannelBindMethod:
-               result = processTurnChannelBindRequest(request, response);
+               result = processTurnChannelBindRequest(turnAllocationManager, request, response);
                break;
 
             default:
@@ -110,7 +110,7 @@ RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, StunMessage& req
             switch (request.mMethod) 
             {
             case StunMessage::TurnSendMethod:
-               processTurnSendIndication(request);
+               processTurnSendIndication(turnAllocationManager, request);
                break;
    
             case StunMessage::BindMethod:
@@ -471,7 +471,7 @@ RequestHandler::processStunSharedSecretRequest(StunMessage& request, StunMessage
 }
 
 RequestHandler::ProcessResult 
-RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMessage& request, StunMessage& response)
+RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, TurnAllocationManager& turnAllocationManager, StunMessage& request, StunMessage& response)
 {
    // Turn Allocate requests must be authenticated (note: if this attribute is present 
    // then handleAuthentication would have validated authentication info)
@@ -488,7 +488,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
 
    DebugLog(<< "Allocation request received: localTuple=" << request.mLocalTuple << ", remoteTuple=" << request.mRemoteTuple);
 
-   TurnAllocation* allocation = mTurnManager.findTurnAllocation(TurnAllocationKey(request.mLocalTuple, request.mRemoteTuple));
+   TurnAllocation* allocation = turnAllocationManager.findTurnAllocation(TurnAllocationKey(request.mLocalTuple, request.mRemoteTuple));
 
    // If this is a subsequent allocation request, return error
    if(allocation)
@@ -615,6 +615,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
    try
    {
       allocation = new TurnAllocation(mTurnManager,
+                                      turnAllocationManager,
                                       turnSocket, 
                                       request.mLocalTuple, 
                                       request.mRemoteTuple, 
@@ -638,7 +639,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
    }
 
    // Add the new allocation to be managed
-   mTurnManager.addTurnAllocation(allocation);
+   turnAllocationManager.addTurnAllocation(allocation);
 
    // form the outgoing success response
    response.mClass = StunMessage::StunClassSuccessResponse;
@@ -661,7 +662,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
 }
 
 RequestHandler::ProcessResult 
-RequestHandler::processTurnRefreshRequest(StunMessage& request, StunMessage& response)
+RequestHandler::processTurnRefreshRequest(TurnAllocationManager& turnAllocationManager, StunMessage& request, StunMessage& response)
 {
    // Turn Allocate requests must be authenticated (note: if this attribute is present 
    // then handleAuthentication would have validation authentication info)
@@ -676,7 +677,7 @@ RequestHandler::processTurnRefreshRequest(StunMessage& request, StunMessage& res
    assert(request.mHasUsername);
    request.calculateHmacKey(hmacKey, getConfig().getPasswordForUsername(*request.mUsername));
 
-   TurnAllocation* allocation = mTurnManager.findTurnAllocation(TurnAllocationKey(request.mLocalTuple, request.mRemoteTuple));
+   TurnAllocation* allocation = turnAllocationManager.findTurnAllocation(TurnAllocationKey(request.mLocalTuple, request.mRemoteTuple));
 
    if(!allocation)
    {
@@ -711,7 +712,7 @@ RequestHandler::processTurnRefreshRequest(StunMessage& request, StunMessage& res
       // If allocation exists then delete it
       if(allocation)
       {
-         mTurnManager.removeTurnAllocation(allocation->getKey());  // will delete allocation
+         turnAllocationManager.removeTurnAllocation(allocation->getKey());  // will delete allocation
       }
 
       return RespondFromReceiving;
@@ -751,7 +752,7 @@ RequestHandler::processTurnRefreshRequest(StunMessage& request, StunMessage& res
 }
 
 RequestHandler::ProcessResult 
-RequestHandler::processTurnCreatePermissionRequest(StunMessage& request, StunMessage& response)
+RequestHandler::processTurnCreatePermissionRequest(TurnAllocationManager& turnAllocationManager, StunMessage& request, StunMessage& response)
 {
    // TurnCreatePermission requests must be authenticated
    if(!request.mHasMessageIntegrity)
@@ -765,7 +766,7 @@ RequestHandler::processTurnCreatePermissionRequest(StunMessage& request, StunMes
    assert(request.mHasUsername);
    request.calculateHmacKey(hmacKey, getConfig().getPasswordForUsername(*request.mUsername));
 
-   TurnAllocation* allocation = mTurnManager.findTurnAllocation(TurnAllocationKey(request.mLocalTuple, request.mRemoteTuple));
+   TurnAllocation* allocation = turnAllocationManager.findTurnAllocation(TurnAllocationKey(request.mLocalTuple, request.mRemoteTuple));
 
    if(!allocation)
    {
@@ -814,7 +815,7 @@ RequestHandler::processTurnCreatePermissionRequest(StunMessage& request, StunMes
 }
 
 RequestHandler::ProcessResult 
-RequestHandler::processTurnChannelBindRequest(StunMessage& request, StunMessage& response)
+RequestHandler::processTurnChannelBindRequest(TurnAllocationManager& turnAllocationManager, StunMessage& request, StunMessage& response)
 {
    // TurnChannelBind requests must be authenticated
    if(!request.mHasMessageIntegrity)
@@ -828,7 +829,7 @@ RequestHandler::processTurnChannelBindRequest(StunMessage& request, StunMessage&
    assert(request.mHasUsername);
    request.calculateHmacKey(hmacKey, getConfig().getPasswordForUsername(*request.mUsername));
 
-   TurnAllocation* allocation = mTurnManager.findTurnAllocation(TurnAllocationKey(request.mLocalTuple, request.mRemoteTuple));
+   TurnAllocation* allocation = turnAllocationManager.findTurnAllocation(TurnAllocationKey(request.mLocalTuple, request.mRemoteTuple));
 
    if(!allocation)
    {
@@ -893,9 +894,9 @@ RequestHandler::processTurnChannelBindRequest(StunMessage& request, StunMessage&
 }
 
 void
-RequestHandler::processTurnSendIndication(StunMessage& request)
+RequestHandler::processTurnSendIndication(TurnAllocationManager& turnAllocationManager, StunMessage& request)
 {
-   TurnAllocation* allocation = mTurnManager.findTurnAllocation(TurnAllocationKey(request.mLocalTuple, request.mRemoteTuple));
+   TurnAllocation* allocation = turnAllocationManager.findTurnAllocation(TurnAllocationKey(request.mLocalTuple, request.mRemoteTuple));
 
    if(!allocation)
    {
@@ -926,9 +927,9 @@ RequestHandler::processTurnSendIndication(StunMessage& request)
 }
 
 void 
-RequestHandler::processTurnData(unsigned short channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, boost::shared_ptr<DataBuffer>& data)
+RequestHandler::processTurnData(TurnAllocationManager& turnAllocationManager, unsigned short channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, boost::shared_ptr<DataBuffer>& data)
 {
-   TurnAllocation* allocation = mTurnManager.findTurnAllocation(TurnAllocationKey(localTuple, remoteTuple));
+   TurnAllocation* allocation = turnAllocationManager.findTurnAllocation(TurnAllocationKey(localTuple, remoteTuple));
 
    if(!allocation)
    {

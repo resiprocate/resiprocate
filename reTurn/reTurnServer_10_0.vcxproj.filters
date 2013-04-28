@@ -114,6 +114,9 @@
     <ClCompile Include="UserAuthData.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TurnAllocationManager.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AsyncSocketBase.hxx">
@@ -624,6 +627,9 @@
       <Filter>ASIO Header Files\asio\ssl\detail</Filter>
     </ClInclude>
     <ClInclude Include="UserAuthData.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TurnAllocationManager.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

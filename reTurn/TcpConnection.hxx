@@ -8,6 +8,7 @@
 #include "RequestHandler.hxx"
 #include "StunTuple.hxx"
 #include "AsyncTcpSocketBase.hxx"
+#include "TurnAllocationManager.hxx"
 
 namespace reTurn {
 
@@ -44,8 +45,11 @@ protected:
    virtual void onSendSuccess();
    virtual void onSendFailure(const asio::error_code& e);
 
-   /// The manager for this connection.
+   /// The connection manager for this connection.
    ConnectionManager& mConnectionManager;
+
+   /// Manages turn allocations
+   TurnAllocationManager mTurnAllocationManager;
 
    /// The handler used to process the incoming request.
    RequestHandler& mRequestHandler;
