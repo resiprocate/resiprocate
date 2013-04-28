@@ -1,8 +1,8 @@
 //
-// wrapped_handler.hpp
-// ~~~~~~~~~~~~~~~~~~~
+// detail/wrapped_handler.hpp
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2010 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -15,15 +15,11 @@
 # pragma once
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
-#include "asio/detail/push_options.hpp"
-
-#include "asio/detail/push_options.hpp"
-#include <boost/type_traits/add_reference.hpp>
-#include "asio/detail/pop_options.hpp"
-
 #include "asio/detail/bind_handler.hpp"
 #include "asio/detail/handler_alloc_helpers.hpp"
 #include "asio/detail/handler_invoke_helpers.hpp"
+
+#include "asio/detail/push_options.hpp"
 
 namespace asio {
 namespace detail {
@@ -34,9 +30,7 @@ class wrapped_handler
 public:
   typedef void result_type;
 
-  wrapped_handler(
-      typename boost::add_reference<Dispatcher>::type dispatcher,
-      Handler handler)
+  wrapped_handler(Dispatcher dispatcher, Handler handler)
     : dispatcher_(dispatcher),
       handler_(handler)
   {

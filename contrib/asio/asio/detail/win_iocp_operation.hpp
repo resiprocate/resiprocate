@@ -1,8 +1,8 @@
 //
-// win_iocp_operation.hpp
-// ~~~~~~~~~~~~~~~~~~~~~~
+// detail/win_iocp_operation.hpp
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2010 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -15,14 +15,15 @@
 # pragma once
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
-#include "asio/detail/push_options.hpp"
-
-#include "asio/detail/win_iocp_io_service_fwd.hpp"
+#include "asio/detail/config.hpp"
 
 #if defined(ASIO_HAS_IOCP)
 
-#include "asio/error_code.hpp"
 #include "asio/detail/op_queue.hpp"
+#include "asio/detail/win_iocp_io_service_fwd.hpp"
+#include "asio/error_code.hpp"
+
+#include "asio/detail/push_options.hpp"
 
 namespace asio {
 namespace detail {
@@ -82,8 +83,8 @@ private:
 } // namespace detail
 } // namespace asio
 
-#endif // defined(ASIO_HAS_IOCP)
-
 #include "asio/detail/pop_options.hpp"
+
+#endif // defined(ASIO_HAS_IOCP)
 
 #endif // ASIO_DETAIL_WIN_IOCP_OPERATION_HPP

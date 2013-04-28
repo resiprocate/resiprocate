@@ -2,7 +2,7 @@
 // buffers_iterator.hpp
 // ~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2010 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -15,19 +15,16 @@
 # pragma once
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
-#include "asio/detail/push_options.hpp"
-
-#include "asio/detail/push_options.hpp"
+#include "asio/detail/config.hpp"
 #include <cstddef>
 #include <boost/assert.hpp>
-#include <boost/config.hpp>
 #include <boost/detail/workaround.hpp>
 #include <boost/iterator.hpp>
 #include <boost/type_traits/is_convertible.hpp>
 #include <boost/type_traits/add_const.hpp>
-#include "asio/detail/pop_options.hpp"
-
 #include "asio/buffer.hpp"
+
+#include "asio/detail/push_options.hpp"
 
 namespace asio {
 
@@ -204,6 +201,15 @@ public:
   /// Addition operator.
   friend buffers_iterator operator+(const buffers_iterator& iter,
       std::ptrdiff_t difference)
+  {
+    buffers_iterator tmp(iter);
+    tmp.advance(difference);
+    return tmp;
+  }
+
+  /// Addition operator.
+  friend buffers_iterator operator+(std::ptrdiff_t difference,
+      const buffers_iterator& iter)
   {
     buffers_iterator tmp(iter);
     tmp.advance(difference);

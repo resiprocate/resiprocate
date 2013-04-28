@@ -1,9 +1,9 @@
 //
-// openssl_context_service.hpp
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ssl/detail/openssl_context_service.hpp
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
 // Copyright (c) 2005 Voipster / Indrek dot Juhani at voipster dot com
-// Copyright (c) 2005-2010 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2005-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -16,20 +16,17 @@
 # pragma once
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
-#include "asio/detail/push_options.hpp"
-
-#include "asio/detail/push_options.hpp"
+#include "asio/detail/config.hpp"
 #include <cstring>
 #include <string>
 #include <boost/function.hpp>
-#include "asio/detail/pop_options.hpp"
-
 #include "asio/error.hpp"
 #include "asio/io_service.hpp"
-#include "asio/detail/service_base.hpp"
 #include "asio/ssl/context_base.hpp"
 #include "asio/ssl/detail/openssl_init.hpp"
 #include "asio/ssl/detail/openssl_types.hpp"
+
+#include "asio/detail/push_options.hpp"
 
 namespace asio {
 namespace ssl {
@@ -68,8 +65,6 @@ public:
   {
     switch (m)
     {
-
-#if (OPENSSL_VERSION_NUMBER < 0x10000000L) // OpenSSL versions 1 and above deprecated support for v2)
     case context_base::sslv2:
       impl = ::SSL_CTX_new(::SSLv2_method());
       break;
@@ -79,7 +74,6 @@ public:
     case context_base::sslv2_server:
       impl = ::SSL_CTX_new(::SSLv2_server_method());
       break;
-#endif
     case context_base::sslv3:
       impl = ::SSL_CTX_new(::SSLv3_method());
       break;

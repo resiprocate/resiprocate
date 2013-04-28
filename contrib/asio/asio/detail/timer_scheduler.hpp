@@ -1,8 +1,8 @@
 //
-// timer_scheduler.hpp
-// ~~~~~~~~~~~~~~~~~~~
+// detail/timer_scheduler.hpp
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2010 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -15,8 +15,7 @@
 # pragma once
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
-#include "asio/detail/push_options.hpp"
-
+#include "asio/detail/config.hpp"
 #include "asio/detail/timer_scheduler_fwd.hpp"
 
 #if defined(ASIO_HAS_IOCP)
@@ -30,7 +29,5 @@
 #else
 # include "asio/detail/select_reactor.hpp"
 #endif
-
-#include "asio/detail/pop_options.hpp"
 
 #endif // ASIO_DETAIL_TIMER_SCHEDULER_HPP
