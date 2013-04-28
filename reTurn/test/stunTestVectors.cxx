@@ -1,4 +1,4 @@
-// This file implements test vectors from: draft-ietf-behave-stun-test-vectors-04
+// This file implements test vectors from: RFC5769
 
 #include <iostream>
 #include <string>
@@ -43,7 +43,10 @@ int main(int argc, char* argv[])
 
    assert(reqMessage.isValid());
    assert(reqMessage.mHasMagicCookie);
-   assert(reqMessage.mUnknownRequiredAttributes.numAttributes == 1);  // Test vector includes comprehension required Priority ICE attribute - we don't support this yet
+   assert(reqMessage.mHasIcePriority);
+   assert(reqMessage.mIcePriority == 1845494271);
+   assert(reqMessage.mHasIceControlled);
+   assert(reqMessage.mIceControlledTieBreaker == 3907759233994141587ULL);
    assert(reqMessage.mHasSoftware);
    assert(*reqMessage.mSoftware == "STUN test client");
    assert(reqMessage.mHasUsername);
