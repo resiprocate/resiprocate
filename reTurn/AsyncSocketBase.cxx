@@ -2,6 +2,10 @@
 #include "AsyncSocketBaseHandler.hxx"
 #include <boost/bind.hpp>
 #include <rutil/WinLeakCheck.hxx>
+#include <rutil/Logger.hxx>
+#include "ReTurnSubsystem.hxx"
+
+#define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 using namespace std;
 
@@ -25,7 +29,7 @@ AsyncSocketBase::~AsyncSocketBase()
 void 
 AsyncSocketBase::send(const StunTuple& destination, boost::shared_ptr<DataBuffer>& data)
 {
-   mIOService.post(boost::bind(&AsyncSocketBase::doSend, shared_from_this(), destination, data, 0));
+   mIOService.dispatch(boost::bind(&AsyncSocketBase::doSend, shared_from_this(), destination, data, 0));
 }
 
 void 
@@ -75,11 +79,11 @@ AsyncSocketBase::handleSend(const asio::error_code& e)
    }
    else
    {
+      DebugLog(<< "handleSend with error: " << e);
       onSendFailure(e);
    }
 
    // TODO - check if closed here, and if so don't try and send more
-
    // Clear this data from the queue and see if there is more data to send
    mSendDataQueue.pop_front();
    if (!mSendDataQueue.empty())
@@ -147,6 +151,7 @@ AsyncSocketBase::handleReceive(const asio::error_code& e, std::size_t bytesTrans
    }
    else
    {
+      DebugLog(<< "handleReceive with error: " << e);
       onReceiveFailure(e);
    }
 }

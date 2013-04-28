@@ -25,7 +25,7 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 //#define CONTINUOUSTESTMODE 
 
-resip::Data address = resip::DnsUtil::getLocalIpAddress();
+resip::Data address;
 
 void sleepSeconds(unsigned int seconds)
 {
@@ -110,18 +110,18 @@ public:
       InfoLog( << "MyTurnAsyncSocketHandler::onSharedSecretFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
    }
 
-   virtual void onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple)
+   virtual void onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& stunServerTuple)
    {
-      InfoLog( << "MyTurnAsyncSocketHandler::onBindingSuccess: socketDest=" << socketDesc << ", reflexive=" << reflexiveTuple);
+      InfoLog( << "MyTurnAsyncSocketHandler::onBindingSuccess: socketDest=" << socketDesc << ", reflexive=" << reflexiveTuple << ", serverTuple=" << stunServerTuple);
       mTurnAsyncSocket->createAllocation(30,       // TurnAsyncSocket::UnspecifiedLifetime, 
                                          TurnAsyncSocket::UnspecifiedBandwidth, 
                                          StunMessage::PropsPortPair,
                                          TurnAsyncSocket::UnspecifiedToken,
                                          StunTuple::UDP);  
    }
-   virtual void onBindFailure(unsigned int socketDesc, const asio::error_code& e)
+   virtual void onBindFailure(unsigned int socketDesc, const asio::error_code& e, const StunTuple& stunServerTuple)
    {
-      InfoLog( << "MyTurnAsyncSocketHandler::onBindingFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
+      InfoLog( << "MyTurnAsyncSocketHandler::onBindingFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").  serverTuple=" << stunServerTuple);
    }
 
    virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, UInt64 reservationToken)
@@ -235,6 +235,11 @@ public:
       InfoLog( << "MyTurnAsyncSocketHandler::onReceiveFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
    }
 
+   virtual void onIncomingBindRequestProcessed(unsigned int socketDesc, const StunTuple& sourceTuple)
+   {
+      InfoLog( << "MyTurnAsyncSocketHandler::onIncomingBindRequestProcessed: socketDest=" << socketDesc << ", sourceTuple=" << sourceTuple);
+   }
+
    void setTurnAsyncSocket(TurnAsyncSocket* turnAsyncSocket) { mTurnAsyncSocket = turnAsyncSocket; }
 
 private:
@@ -251,6 +256,7 @@ int main(int argc, char* argv[])
 
   try
   {
+    address = resip::DnsUtil::getLocalIpAddress();  // default
     if (argc != 3 && argc != 4)
     {
       std::cerr << "Usage: TestAsyncClient <turn host> <turn port> [<local address>]\n";

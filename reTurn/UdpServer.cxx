@@ -153,7 +153,7 @@ UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short por
          dataLen = ntohs(dataLen);
 
          // Check if the UDP datagram size is too short to contain the claimed length of the ChannelData message, then discard
-         if(data->size() < dataLen + 4)
+         if(data->size() < (unsigned int)(dataLen + 4))
          {
             WarningLog(<< "ChannelData message size=" << dataLen+4 << " too larger for UDP packet size=" << data->size() <<".  Dropping.");
          }

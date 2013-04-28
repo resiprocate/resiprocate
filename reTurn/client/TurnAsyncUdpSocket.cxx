@@ -48,7 +48,14 @@ TurnAsyncUdpSocket::onReceiveSuccess(const asio::ip::address& address, unsigned 
 void 
 TurnAsyncUdpSocket::onReceiveFailure(const asio::error_code& e)
 {
-   if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onReceiveFailure(getSocketDescriptor(), e);
+   if (e.value() == 234) // ?jjg? ERROR_MORE_DATA -- is this right on all platforms?
+   {
+      turnReceive();
+   }
+   else
+   {
+      if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onReceiveFailure(getSocketDescriptor(), e);
+   }
 }
  
 void 

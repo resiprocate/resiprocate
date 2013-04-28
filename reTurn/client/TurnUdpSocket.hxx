@@ -12,7 +12,7 @@ namespace reTurn {
 public:
    explicit TurnUdpSocket(const asio::ip::address& address, unsigned short port);  
 
-   virtual unsigned int getSocketDescriptor() { return mSocket.native(); }
+   virtual unsigned int getSocketDescriptor() { return (unsigned int)mSocket.native(); }
 
    virtual  asio::error_code connect(const std::string& address, unsigned short port);
 

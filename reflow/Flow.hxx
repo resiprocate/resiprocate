@@ -178,8 +178,8 @@ private:
    virtual void onSharedSecretSuccess(unsigned int socketDesc, const char* username, unsigned int usernameSize, const char* password, unsigned int passwordSize);
    virtual void onSharedSecretFailure(unsigned int socketDesc, const asio::error_code& e);
 
-   virtual void onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple);
-   virtual void onBindFailure(unsigned int socketDesc, const asio::error_code& e);
+   virtual void onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& stunServerTuple);
+   virtual void onBindFailure(unsigned int socketDesc, const asio::error_code& e, const StunTuple& stunServerTuple);
 
    virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, UInt64 reservationToken);
    virtual void onAllocationFailure(unsigned int socketDesc, const asio::error_code& e);
@@ -192,12 +192,18 @@ private:
    virtual void onClearActiveDestinationSuccess(unsigned int socketDesc);
    virtual void onClearActiveDestinationFailure(unsigned int socketDesc, const asio::error_code &e);
 
+   virtual void onChannelBindRequestSent(unsigned int socketDesc, unsigned short channelNumber); 
+   virtual void onChannelBindSuccess(unsigned int socketDesc, unsigned short channelNumber);
+   virtual void onChannelBindFailure(unsigned int socketDesc, const asio::error_code& e);
+
    //virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size);
    virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
    virtual void onReceiveFailure(unsigned int socketDesc, const asio::error_code& e);
 
    virtual void onSendSuccess(unsigned int socketDesc);
    virtual void onSendFailure(unsigned int socketDesc, const asio::error_code& e);
+
+   virtual void onIncomingBindRequestProcessed(unsigned int socketDesc, const StunTuple& sourceTuple);
 };
 
 }

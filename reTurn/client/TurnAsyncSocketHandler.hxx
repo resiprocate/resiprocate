@@ -21,8 +21,8 @@ public:
    virtual void onSharedSecretSuccess(unsigned int socketDesc, const char* username, unsigned int usernameSize, const char* password, unsigned int passwordSize) = 0;  
    virtual void onSharedSecretFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
 
-   virtual void onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple) = 0; 
-   virtual void onBindFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
+   virtual void onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& stunServerTuple) = 0; 
+   virtual void onBindFailure(unsigned int socketDesc, const asio::error_code& e, const StunTuple& stunServerTuple) = 0;
 
    virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, UInt64 reservationToken) = 0; 
    virtual void onAllocationFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
@@ -45,6 +45,8 @@ public:
 
    virtual void onSendSuccess(unsigned int socketDesc) = 0;
    virtual void onSendFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
+
+   virtual void onIncomingBindRequestProcessed(unsigned int socketDesc, const StunTuple& sourceTuple) = 0;
 
 private:
 };

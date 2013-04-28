@@ -29,7 +29,7 @@ AsyncTcpSocketBase::~AsyncTcpSocketBase()
 unsigned int 
 AsyncTcpSocketBase::getSocketDescriptor() 
 { 
-   return mSocket.native(); 
+   return (unsigned int)mSocket.native(); 
 }
 
 asio::error_code 
@@ -52,7 +52,11 @@ AsyncTcpSocketBase::connect(const std::string& address, unsigned short port)
    // Start an asynchronous resolve to translate the address
    // into a list of endpoints.
    resip::Data service(port);
+#ifdef USE_IPV6
    asio::ip::tcp::resolver::query query(address, service.c_str());   
+#else
+   asio::ip::tcp::resolver::query query(asio::ip::tcp::v4(), address, service.c_str());   
+#endif
    mResolver.async_resolve(query,
         boost::bind(&AsyncSocketBase::handleTcpResolve, shared_from_this(),
                     asio::placeholders::error,
@@ -199,6 +203,11 @@ AsyncTcpSocketBase::handleReadHeader(const asio::error_code& e)
 void 
 AsyncTcpSocketBase::transportClose()
 {
+   if (mOnBeforeSocketCloseFp)
+   {
+      mOnBeforeSocketCloseFp((unsigned int)mSocket.native());
+   }
+
    asio::error_code ec;
    mSocket.close(ec);
 }
