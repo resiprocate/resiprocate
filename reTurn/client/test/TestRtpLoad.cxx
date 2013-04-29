@@ -178,18 +178,18 @@ public:
       InfoLog( << "MyTurnAsyncSocketHandler::onSharedSecretFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
    }
 
-   virtual void onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple)
+   virtual void onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& stunServerTuple)
    {
-      InfoLog( << "MyTurnAsyncSocketHandler::onBindingSuccess: socketDest=" << socketDesc << ", reflexive=" << reflexiveTuple);
+      InfoLog( << "MyTurnAsyncSocketHandler::onBindingSuccess: socketDest=" << socketDesc << ", reflexive=" << reflexiveTuple << ", stunServerTuple=" << stunServerTuple);
       mTurnAsyncSocket->createAllocation(30,       // TurnSocket::UnspecifiedLifetime, 
                                          TurnSocket::UnspecifiedBandwidth, 
                                          StunMessage::PropsPortPair,
                                          TurnAsyncSocket::UnspecifiedToken,
                                          StunTuple::UDP);  
    }
-   virtual void onBindFailure(unsigned int socketDesc, const asio::error_code& e)
+   virtual void onBindFailure(unsigned int socketDesc, const asio::error_code& e, const StunTuple& stunServerTuple)
    {
-      InfoLog( << "MyTurnAsyncSocketHandler::onBindingFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
+      InfoLog( << "MyTurnAsyncSocketHandler::onBindingFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), stunServerTuple=" << stunServerTuple);
    }
 
    virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, UInt64 reservationToken)
@@ -288,6 +288,11 @@ public:
    virtual void onReceiveFailure(unsigned int socketDesc, const asio::error_code& e)
    {
       InfoLog( << "MyTurnAsyncSocketHandler::onReceiveFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
+   }
+
+   virtual void onIncomingBindRequestProcessed(unsigned int socketDesc, const StunTuple& sourceTuple)
+   {
+      InfoLog( << "MyTurnAsyncSocketHandler::onIncomingBindRequestProcessed: socketDest=" << socketDesc << " sourceTuple=" << sourceTuple);
    }
 
    void setTurnAsyncSocket(TurnAsyncSocket* turnAsyncSocket) { mTurnAsyncSocket = turnAsyncSocket; }
