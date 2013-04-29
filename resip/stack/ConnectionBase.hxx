@@ -76,7 +76,7 @@ class ConnectionBase
       ConnState getCurrentState() const { return mConnState; }
       bool preparseNewBytes(int bytesRead);
       bool wsProcessHandshake(int bytesRead, bool &dropConnection);
-      bool wsProcessData(int bytesRead, bool &tryAgain);
+      bool wsProcessData(int &bytesRead, bool &tryAgain);
       void decompressNewBytes(int bytesRead);
       std::pair<char*, size_t> getWriteBuffer();
       std::pair<char*, size_t> getCurrentWriteBuffer();

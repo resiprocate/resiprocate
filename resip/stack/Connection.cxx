@@ -351,7 +351,8 @@ Connection::read()
    else
 #endif
    {
-      if (mReceivingTransmissionFormat == WebSocketHandshake){
+      if (mReceivingTransmissionFormat == WebSocketHandshake)
+      {
          bool dropConnection = false;
          if(wsProcessHandshake(bytesRead, dropConnection))
          {
@@ -375,6 +376,7 @@ Connection::read()
             {
                if(!wsProcessData(bytesRead, tryAgain))
                {
+                  tryAgain = false;  // for safety
                   bytesRead=-1;
                }
             }

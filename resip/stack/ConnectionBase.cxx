@@ -669,17 +669,16 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
 }
 
 bool
-ConnectionBase::wsProcessData(int bytesRead, bool &tryAgain)
+ConnectionBase::wsProcessData(int& bytesRead, bool &tryAgain)
 {
    UInt8* uBuffer = (UInt8*)mBuffer;
    tryAgain = false;
 
    size_t bytes_available = mBufferPos + bytesRead;
 
-   if(bytes_available > messageSizeMax)
+   if(bytes_available > messageSizeMax)  // ?slg? is this really correct - there could be multiple messages in the read buffer
    {
       WarningLog(<<"Too many bytes received during WS frame assembly, dropping connection.  Max message size = " << messageSizeMax);
-      tryAgain = false;
       return false;
    }
 
@@ -797,7 +796,6 @@ ConnectionBase::wsProcessData(int bytesRead, bool &tryAgain)
       {
          WarningLog(<<"WS frame header describes a payload size bigger than messageSizeMax, max = " << messageSizeMax 
                  << ", dropping connection");
-         tryAgain = false;
          return false;
       }
 
@@ -836,8 +834,13 @@ ConnectionBase::wsProcessData(int bytesRead, bool &tryAgain)
             uBuffer[payIdx] = uBuffer[frameLen+payIdx];
          }
          tryAgain = true;
+         bytesRead = bytes_available - frameLen;
+         mBufferPos = 0;
       }
-      mBufferPos = bytes_available - frameLen;
+      else
+      {
+         mBufferPos = bytes_available - frameLen;
+      }
       StackLog(<<"new mBufferPos = "<<mBufferPos);
 
       if(finalFrame == 1)
