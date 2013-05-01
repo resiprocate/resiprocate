@@ -207,7 +207,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>winmm.lib;$(SolutionDir)$(Platform)\$(Configuration)\rutil.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\VC\static\libeay32MDd.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\VC\static\ssleay32MDd.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)TestAsyncClient.exe</OutputFile>
+      <OutputFile>$(OutDir)TestRTPLoad.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)TestAsyncClient.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
@@ -263,7 +263,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>winmm.lib;$(SolutionDir)$(Platform)\$(Configuration)\rutil.lib;$(ProjectDir)..\..\..\contrib\opensslx64\lib\VC\static\libeay32MDd.lib;$(ProjectDir)..\..\..\contrib\opensslx64\lib\VC\static\ssleay32MDd.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)TestAsyncClient.exe</OutputFile>
+      <OutputFile>$(OutDir)TestRTPLoad.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)TestAsyncClient.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
@@ -315,7 +315,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>winmm.lib;$(SolutionDir)$(Platform)\$(Configuration)\rutil.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\VC\static\libeay32MD.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\VC\static\ssleay32MD.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)TestAsyncClient.exe</OutputFile>
+      <OutputFile>$(OutDir)TestRTPLoad.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -368,7 +368,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>winmm.lib;$(SolutionDir)$(Platform)\$(Configuration)\rutil.lib;$(ProjectDir)..\..\..\contrib\opensslx64\lib\VC\static\libeay32MD.lib;$(ProjectDir)..\..\..\contrib\opensslx64\lib\VC\static\ssleay32MD.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)TestAsyncClient.exe</OutputFile>
+      <OutputFile>$(OutDir)TestRTPLoad.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>

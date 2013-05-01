@@ -47,7 +47,7 @@ static unsigned int PACKET_TIME_TO_SIMULATE=20;  // 20 ms
 // Test Config 4
 //#define ECHO_SERVER_ONLY
 
-resip::Data address = resip::DnsUtil::getLocalIpAddress();
+resip::Data address;
 unsigned short relayPort = 0;
 resip::Data turnAddress;
 char rtpPayloadData[172];  // 172 bytes of random data to simulate RTP payload
@@ -312,7 +312,7 @@ int main(int argc, char* argv[])
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
   resip::FindMemoryLeaks fml;
 #endif
-  resip::Log::initialize("cout", "DEBUG", "TestRtpLoad");
+  resip::Log::initialize("cout", "INFO", "TestRtpLoad");
 
   try
   {
@@ -324,16 +324,19 @@ int main(int argc, char* argv[])
     //   turnPeer.join();
     //   return 0;
     //}
+    
+    address = resip::DnsUtil::getLocalIpAddress();
 
     if (argc < 3)
     {
-      std::cerr << "Usage: TestRtpLoad <host> <port> [<PacketTime>]\n";
+      std::cerr << "Usage: TestRtpLoad <host> <port> <loaclAddress> [<PacketTime>]\n";
       return 1;
     }
     turnAddress = argv[1];
     unsigned int port = resip::Data(argv[2]).convertUnsignedLong();
+    address = argv[3];
 
-    if(argc == 4)
+    if(argc == 5)
     {
        PACKET_TIME_TO_SIMULATE = atoi(argv[3]);
     }
