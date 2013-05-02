@@ -26,7 +26,6 @@ LDADD += $(LIBSSL_LIBADD) -lpthread
 CPPFLAGS += -I$(top_srcdir)/resip/recon
 
 TESTS = \
-        testUA \
         sdpTests \
         unitTests
 
