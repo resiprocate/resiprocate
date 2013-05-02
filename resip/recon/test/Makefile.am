@@ -23,6 +23,8 @@ LDADD += ../../stack/libresip.la
 LDADD += ../../../rutil/librutil.la
 LDADD += $(LIBSSL_LIBADD) -lpthread
 
+CPPFLAGS += -I$(top_srcdir)/resip/recon
+
 TESTS = \
         testUA \
         sdpTests \
