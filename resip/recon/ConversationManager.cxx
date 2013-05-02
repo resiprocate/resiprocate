@@ -83,8 +83,15 @@ ConversationManager::ConversationManager(bool localAudioEnabled, MediaInterfaceM
 
    if(count == 0)
    {
-      ErrLog( << "No codec plugins found.  Cannot start.");
-      exit(-1);
+      // Try to load plugin modules, if possible...
+      InfoLog(<<"No statically linked codecs, trying to load codec plugin modules with dlopen()");
+      pCodecFactory->loadAllDynCodecs(NULL, "");
+      pCodecFactory->getCodecInfoArray(count, codecInfoArray);
+      if(count == 0)
+      {
+         ErrLog( << "No codec plugins found.  Cannot start.");
+         exit(-1);
+      }
    }
 
    InfoLog( << "Loaded codecs are:");
