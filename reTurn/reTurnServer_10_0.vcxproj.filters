@@ -632,6 +632,9 @@
     <ClInclude Include="TurnAllocationManager.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="reTurnServer.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="README.txt" />
