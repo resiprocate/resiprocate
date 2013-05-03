@@ -162,7 +162,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <BuildLog>
-      <Path>$(IntDir)BuildLog-TestAsyncClient.htm</Path>
+      <Path>$(IntDir)\$(MSBuildProjectName).log</Path>
     </BuildLog>
     <ClCompile>
       <Optimization>Disabled</Optimization>
@@ -173,15 +173,15 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <ProgramDataBaseFileName>$(OutDir)TestAsyncClient.pdb</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>$(IntDir)vc$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
       <AdditionalDependencies>winmm.lib;$(SolutionDir)$(Platform)\$(Configuration)\rutil.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\VC\static\libeay32MDd.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\VC\static\ssleay32MDd.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)TestAsyncClient.exe</OutputFile>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>$(OutDir)TestAsyncClient.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
@@ -218,7 +218,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'">
     <BuildLog>
-      <Path>$(IntDir)BuildLog-TestAsyncClient.htm</Path>
+      <Path>$(IntDir)\$(MSBuildProjectName).log</Path>
     </BuildLog>
     <ClCompile>
       <Optimization>Disabled</Optimization>
@@ -229,15 +229,15 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <ProgramDataBaseFileName>$(OutDir)TestAsyncClient.pdb</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>$(IntDir)vc$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
       <AdditionalDependencies>winmm.lib;$(SolutionDir)$(Platform)\$(Configuration)\rutil.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\VC\static\libeay32MDd.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\VC\static\ssleay32MDd.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)TestAsyncClient.exe</OutputFile>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>$(OutDir)TestAsyncClient.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
@@ -274,7 +274,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <BuildLog>
-      <Path>$(IntDir)BuildLog-TestAsyncClient.htm</Path>
+      <Path>$(IntDir)\$(MSBuildProjectName).log</Path>
     </BuildLog>
     <ClCompile>
       <AdditionalIncludeDirectories>../../../contrib/asio;../../../contrib/boost;../../../;../../../contrib/OpenSSL/include;../../../contrib/OpenSSL/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -282,13 +282,13 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <ProgramDataBaseFileName>$(OutDir)TestAsyncClient.pdb</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>$(IntDir)vc$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <AdditionalDependencies>winmm.lib;$(SolutionDir)$(Platform)\$(Configuration)\rutil.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\VC\static\libeay32MD.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\VC\static\ssleay32MD.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)TestAsyncClient.exe</OutputFile>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -297,6 +297,7 @@
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -327,7 +328,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'">
     <BuildLog>
-      <Path>$(IntDir)BuildLog-TestAsyncClient.htm</Path>
+      <Path>$(IntDir)\$(MSBuildProjectName).log</Path>
     </BuildLog>
     <ClCompile>
       <AdditionalIncludeDirectories>../../../contrib/asio;../../../contrib/boost;../../../;../../../contrib/OpenSSL/include;../../../contrib/OpenSSL/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -335,13 +336,13 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <ProgramDataBaseFileName>$(OutDir)TestAsyncClient.pdb</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>$(IntDir)vc$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <AdditionalDependencies>winmm.lib;$(SolutionDir)$(Platform)\$(Configuration)\rutil.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\VC\static\libeay32MD.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\VC\static\ssleay32MD.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)TestAsyncClient.exe</OutputFile>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -350,6 +351,7 @@
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|x64'">

@@ -175,9 +175,9 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>winmm.lib;$(SolutionDir)$(Platform)\$(Configuration)\rutil.lib;$(ProjectDir)..\..\contrib\openssl\lib\VC\static\libeay32MDd.lib;$(ProjectDir)..\..\contrib\openssl\lib\VC\static\ssleay32MDd.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)stunTestVectors.exe</OutputFile>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>$(OutDir)stunTestVectors.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
@@ -223,9 +223,9 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>winmm.lib;$(SolutionDir)$(Platform)\$(Configuration)\rutil.lib;$(ProjectDir)..\..\contrib\openssl\lib\VC\static\libeay32MDd.lib;$(ProjectDir)..\..\contrib\openssl\lib\VC\static\ssleay32MDd.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)stunTestVectors.exe</OutputFile>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>$(OutDir)stunTestVectors.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
@@ -268,7 +268,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>winmm.lib;$(SolutionDir)$(Platform)\$(Configuration)\rutil.lib;$(ProjectDir)..\..\contrib\openssl\lib\VC\static\libeay32MD.lib;$(ProjectDir)..\..\contrib\openssl\lib\VC\static\ssleay32MD.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)stunTestVectors.exe</OutputFile>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -277,6 +277,7 @@
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -313,7 +314,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>winmm.lib;$(SolutionDir)$(Platform)\$(Configuration)\rutil.lib;$(ProjectDir)..\..\contrib\openssl\lib\VC\static\libeay32MD.lib;$(ProjectDir)..\..\contrib\openssl\lib\VC\static\ssleay32MD.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)stunTestVectors.exe</OutputFile>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -322,6 +323,7 @@
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|x64'">
