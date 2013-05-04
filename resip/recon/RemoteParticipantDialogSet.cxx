@@ -540,6 +540,9 @@ RemoteParticipantDialogSet::setActiveDestination(const char* address, unsigned s
 #ifdef DISABLE_FLOWMANAGER_IF_NO_NAT_TRAVERSAL
    if(mNatTraversalMode != MediaStream::NoNatTraversal)
    {
+#else
+   if(!mMediaStream)
+      WarningLog(<<"mMediaStream == NULL, no RTP will be transmitted");
 #endif
    if(mMediaStream && mMediaStream->getRtpFlow())
    {
