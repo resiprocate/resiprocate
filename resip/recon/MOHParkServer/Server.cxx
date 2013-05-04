@@ -8,8 +8,8 @@
 #include <spawn.h>
 #endif
 
-#include "Server.hxx"
 #include "../UserAgent.hxx"
+#include "Server.hxx"
 #include "AppSubsystem.hxx"
 #include "WebAdmin.hxx"
 #include "WebAdminThread.hxx"
@@ -152,7 +152,7 @@ Server::Server(ConfigParser& config) :
    InfoLog( << "  Media Port Range Size = " << mConfig.mMediaPortRangeSize);
    InfoLog( << "  Log Level = " << mConfig.mLogLevel);
 
-   resip::Data ;
+   resip::Data foo;
 
    if(!mConfig.mAddress.empty())
    {
