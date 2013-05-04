@@ -91,7 +91,9 @@ class Symbols
 
       static const char* audio;
       static const char* RTP_AVP;
+      static const char* RTP_AVPF;
       static const char* RTP_SAVP;
+      static const char* RTP_SAVPF;
       static const char* UDP_TLS_RTP_SAVP;
 
       static const char* Presence;
