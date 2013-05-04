@@ -816,13 +816,19 @@ ConnectionBase::wsProcessData(int& bytesRead, bool &tryAgain)
          return true;
       }
       StackLog(<<"Buffer has "<<bytes_available<<" bytes, frame has "<<frameLen<< " bytes, header = "<< wsFrameHdrLen<<" bytes, payload = "<< wsPayLen<<" bytes");
-      UInt8 *uData = new UInt8[wsPayLen];
+      UInt8 *uData = (UInt8*)new char[wsPayLen];
       for(payIdx = 0; payIdx < wsPayLen; ++payIdx)
       {
          uData[payIdx] = (uBuffer[wsFrameHdrLen+payIdx] ^ mWsMaskKey[(payIdx & 3)]);
       }
-      mWsBuffer.append((char *)uData, wsPayLen);
-      delete [] uData;
+      if(mWsBuffer.size() == 0)
+         mWsBuffer.setBuf(Data::Take, (char *)uData, wsPayLen);
+      else
+      {
+         // This is unlikely to happen often
+         mWsBuffer.append((char *)uData, wsPayLen);
+         delete [] uData;
+      }
 
       // Are there more bytes available from the transport?  Leave them
       // for next iteration
