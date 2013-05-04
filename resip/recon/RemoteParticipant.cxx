@@ -1583,6 +1583,7 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
             if(mDialogSet.getSecureMediaMode() == ConversationProfile::Srtp || 
                (*itRemMediaLine)->getTransportProtocolType() == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_SAVP)
             {
+               DebugLog(<<"adjustRTPStreams: handle=" << mHandle << ", process crypto settings");
                sdpcontainer::SdpMediaLine::CryptoList::const_iterator itCrypto = (*itRemMediaLine)->getCryptos().begin();
                for(; itCrypto != (*itRemMediaLine)->getCryptos().end(); itCrypto++)
                {
@@ -1594,12 +1595,16 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
                      switch(itCrypto->getSuite())
                      {
                      case sdpcontainer::SdpMediaLine::CRYPTO_SUITE_TYPE_AES_CM_128_HMAC_SHA1_80:   
-                        mDialogSet.createSRTPSession(flowmanager::MediaStream::SRTP_AES_CM_128_HMAC_SHA1_80, cryptoKey.data(), cryptoKey.size());
-                        supportedCryptoSuite = true;
+                        if(mDialogSet.createSRTPSession(flowmanager::MediaStream::SRTP_AES_CM_128_HMAC_SHA1_80, cryptoKey.data(), cryptoKey.size()))
+                           supportedCryptoSuite = true;
+                        else
+                           InfoLog(<<"Failed creating SRTP session");
                         break;
                      case sdpcontainer::SdpMediaLine::CRYPTO_SUITE_TYPE_AES_CM_128_HMAC_SHA1_32:
-                        mDialogSet.createSRTPSession(flowmanager::MediaStream::SRTP_AES_CM_128_HMAC_SHA1_32, cryptoKey.data(), cryptoKey.size());
-                        supportedCryptoSuite = true;
+                        if(mDialogSet.createSRTPSession(flowmanager::MediaStream::SRTP_AES_CM_128_HMAC_SHA1_32, cryptoKey.data(), cryptoKey.size()))
+                           supportedCryptoSuite = true;
+                        else
+                           InfoLog(<<"Failed creating SRTP session");
                         break;
                      default:
                         break;
@@ -1611,6 +1616,7 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
                   }
                   if(supportedCryptoSuite)
                   {
+                     StackLog(<< "Supported crypto suite found");
                      break;
                   }
                }
@@ -1792,7 +1798,12 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
 
       if(numCodecs > 0)
       {
-         getMediaInterface()->getInterface()->startRtpSend(mDialogSet.getMediaConnectionId(), numCodecs, codecs);
+         InfoLog(<<"adjustRTPStreams: handle=" << mHandle << ", starting to send for " << numCodecs << " codecs");
+         int ret = getMediaInterface()->getInterface()->startRtpSend(mDialogSet.getMediaConnectionId(), numCodecs, codecs);
+         if(ret != OS_SUCCESS)
+         {
+            InfoLog(<<"adjustRTPStreams: handle=" << mHandle << ", failed to start RTP send, ret = " << ret);
+         }
       }
       else
       {
