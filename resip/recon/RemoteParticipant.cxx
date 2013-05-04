@@ -1595,16 +1595,14 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
                      switch(itCrypto->getSuite())
                      {
                      case sdpcontainer::SdpMediaLine::CRYPTO_SUITE_TYPE_AES_CM_128_HMAC_SHA1_80:   
-                        if(mDialogSet.createSRTPSession(flowmanager::MediaStream::SRTP_AES_CM_128_HMAC_SHA1_80, cryptoKey.data(), cryptoKey.size()))
-                           supportedCryptoSuite = true;
-                        else
+                        if(!mDialogSet.createSRTPSession(flowmanager::MediaStream::SRTP_AES_CM_128_HMAC_SHA1_80, cryptoKey.data(), cryptoKey.size()))
                            InfoLog(<<"Failed creating SRTP session");
+                        supportedCryptoSuite = true;
                         break;
                      case sdpcontainer::SdpMediaLine::CRYPTO_SUITE_TYPE_AES_CM_128_HMAC_SHA1_32:
-                        if(mDialogSet.createSRTPSession(flowmanager::MediaStream::SRTP_AES_CM_128_HMAC_SHA1_32, cryptoKey.data(), cryptoKey.size()))
-                           supportedCryptoSuite = true;
-                        else
+                        if(!mDialogSet.createSRTPSession(flowmanager::MediaStream::SRTP_AES_CM_128_HMAC_SHA1_32, cryptoKey.data(), cryptoKey.size()))
                            InfoLog(<<"Failed creating SRTP session");
+                        supportedCryptoSuite = true;
                         break;
                      default:
                         break;
