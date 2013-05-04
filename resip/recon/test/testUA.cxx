@@ -1246,6 +1246,8 @@ main (int argc, char** argv)
    //enableConsoleOutput(TRUE);  // Allow sipX console output
    OsSysLog::initialize(0, "testUA");
    OsSysLog::setOutputFile(0, "sipXtapilog.txt") ;
+   //OsSysLog::enableConsoleOutput(true);
+   //OsSysLog::setLoggingPriority(PRI_DEBUG);
    Log::initialize("Cout", logLevel, "testUA");
    //UserAgent::setLogLevel(Log::Warning, UserAgent::SubsystemAll);
    //UserAgent::setLogLevel(Log::Info, UserAgent::SubsystemRecon);
