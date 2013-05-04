@@ -833,14 +833,11 @@ ConnectionBase::wsProcessData(int& bytesRead, bool &tryAgain)
          {
             uBuffer[payIdx] = uBuffer[frameLen+payIdx];
          }
+         mBufferPos = bytes_available - frameLen;
          tryAgain = true;
-         bytesRead = bytes_available - frameLen;
-         mBufferPos = 0;
       }
       else
-      {
-         mBufferPos = bytes_available - frameLen;
-      }
+         mBufferPos = 0;
       StackLog(<<"new mBufferPos = "<<mBufferPos);
 
       if(finalFrame == 1)
