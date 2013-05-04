@@ -857,8 +857,9 @@ ConnectionBase::wsProcessData(int& bytesRead, bool &tryAgain)
          mMessage->setTlsDomain(mWho.transport->tlsDomain());
 
          Data::size_type msg_len = mWsBuffer.size();
-         char *sipBuffer = new char[msg_len];
-         memmove(sipBuffer, mWsBuffer.c_str(), msg_len);
+         char *sipBuffer = new char[msg_len + 1];
+         memmove(sipBuffer, mWsBuffer.data(), msg_len);
+         sipBuffer[msg_len] = 0;
          mWsBuffer.clear();
          mMessage->addBuffer(sipBuffer);
          mMsgHeaderScanner.prepareForMessage(mMessage);
