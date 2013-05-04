@@ -492,7 +492,8 @@ Flow::setActiveDestination(const char* address, unsigned short port)
 
       }
    }
-   WarningLog(<<"No TURN Socket, can't send media to destination");
+   else
+      WarningLog(<<"No TURN Socket, can't send media to destination");
 }
 
 #ifdef USE_SSL
