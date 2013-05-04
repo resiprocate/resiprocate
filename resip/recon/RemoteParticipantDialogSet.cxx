@@ -600,6 +600,7 @@ RemoteParticipantDialogSet::createSRTPSession(MediaStream::SrtpCryptoSuite crypt
       mMediaStream->createOutboundSRTPSession(cryptoSuite, mLocalSrtpSessionKey.data(), mLocalSrtpSessionKey.size());
       return mMediaStream->createInboundSRTPSession(cryptoSuite, remoteKey, remoteKeyLen);
    }
+   WarningLog(<<"createSRTPSession: can't create SRTP session without media stream, mMediaStream = " << mMediaStream);
    return false;
 }
 
