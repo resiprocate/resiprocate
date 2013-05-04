@@ -37,6 +37,20 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
+/* Technically, there are a range of features that need to be implemented
+   to be fully (S)AVPF compliant.
+   However, it is speculated that (S)AVPF peers will communicate with legacy
+   systems that just fudge the RTP/SAVPF protocol in their SDP.  Enabling
+   this define allows such behavior to be tested. 
+
+   http://www.ietf.org/mail-archive/web/rtcweb/current/msg01145.html
+   "1) RTCWEB end-point will always signal AVPF or SAVPF. I signalling
+   gateway to legacy will change that by removing the F to AVP or SAVP."
+
+   http://www.ietf.org/mail-archive/web/rtcweb/current/msg04380.html
+*/
+//#define RTP_SAVPF_FUDGE
+
 // UAC
 RemoteParticipant::RemoteParticipant(ParticipantHandle partHandle,
                                      ConversationManager& conversationManager, 
@@ -835,6 +849,9 @@ RemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
          if(mediaIt->name() == "audio" && 
             (mediaIt->protocol() == Symbols::RTP_AVP ||
              mediaIt->protocol() == Symbols::RTP_SAVP ||
+#ifdef RTP_SAVPF_FUDGE
+             mediaIt->protocol() == Symbols::RTP_SAVPF ||
+#endif
              mediaIt->protocol() == Symbols::UDP_TLS_RTP_SAVP))
          {
             audioMedium = &(*mediaIt);
@@ -933,7 +950,12 @@ RemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
       }
       if(mDialogSet.getSecureMediaRequired())
       {
-         audioMedium->protocol() = Symbols::RTP_SAVP;
+#ifdef RTP_SAVPF_FUDGE
+         if(mDialogSet.peerExpectsSAVPF())
+            audioMedium->protocol() = Symbols::RTP_SAVPF;
+         else
+#endif
+            audioMedium->protocol() = Symbols::RTP_SAVP;
       }
       else
       {
@@ -1018,19 +1040,32 @@ RemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessionCap
    if(sdpMediaLine.getMediaType() == sdpcontainer::SdpMediaLine::MEDIA_TYPE_AUDIO && 
       (protocolType == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_AVP ||
        protocolType == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_SAVP ||
+#ifdef RTP_SAVPF_FUDGE
+       protocolType == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_SAVPF ||
+#endif
        protocolType == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_UDP_TLS_RTP_SAVP) && 
       sdpMediaLine.getConnections().size() != 0 &&
       sdpMediaLine.getConnections().front().getPort() != 0)
    {
       SdpContents::Session::Medium medium("audio", getLocalRTPPort(), 1, 
+#ifndef RTP_SAVPF_FUDGE
                                           protocolType == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_SAVP ? Symbols::RTP_SAVP :
+#else
+                                          ( protocolType == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_SAVP
+                                           || protocolType == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_SAVPF)
+                                          ? (protocolType == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_SAVPF ? Symbols::RTP_SAVPF : Symbols::RTP_SAVP) :
+#endif
                                           (protocolType == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_UDP_TLS_RTP_SAVP ? Symbols::UDP_TLS_RTP_SAVP :
                                            Symbols::RTP_AVP));
 
       // Check secure media properties and requirements
       bool secureMediaRequired = mDialogSet.getSecureMediaRequired() || protocolType != sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_AVP;
+      mDialogSet.setPeerExpectsSAVPF(protocolType == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_SAVPF);
 
       if(mDialogSet.getSecureMediaMode() == ConversationProfile::Srtp || 
+#ifdef RTP_SAVPF_FUDGE
+         protocolType == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_SAVPF ||
+#endif
          protocolType == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_SAVP)  // allow accepting of SAVP profiles, even if SRTP is not enabled as a SecureMedia mode
       {
          bool supportedCryptoSuite = false;
@@ -1545,6 +1580,9 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
       if((*itMediaLine)->getMediaType() == sdpcontainer::SdpMediaLine::MEDIA_TYPE_AUDIO && 
          ((*itMediaLine)->getTransportProtocolType() == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_AVP ||
           (*itMediaLine)->getTransportProtocolType() == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_SAVP ||
+#ifdef RTP_SAVPF_FUDGE
+          (*itMediaLine)->getTransportProtocolType() == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_SAVPF ||
+#endif
           (*itMediaLine)->getTransportProtocolType() == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_UDP_TLS_RTP_SAVP) && 
          (*itMediaLine)->getConnections().size() != 0 &&
          (*itMediaLine)->getConnections().front().getPort() != 0)
@@ -1567,6 +1605,9 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
          if((*itRemMediaLine)->getMediaType() == sdpcontainer::SdpMediaLine::MEDIA_TYPE_AUDIO && 
             ((*itRemMediaLine)->getTransportProtocolType() == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_AVP ||
              (*itRemMediaLine)->getTransportProtocolType() == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_SAVP ||
+#ifdef RTP_SAVPF_FUDGE
+             (*itRemMediaLine)->getTransportProtocolType() == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_SAVPF ||
+#endif
              (*itRemMediaLine)->getTransportProtocolType() == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_UDP_TLS_RTP_SAVP) && 
             (*itRemMediaLine)->getConnections().size() != 0 &&
             (*itRemMediaLine)->getConnections().front().getPort() != 0)
@@ -1581,6 +1622,9 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
             // Process Crypto settings (if required) - createSRTPSession using remote key
             // Note:  Top crypto in remote sdp will always be the correct suite/key
             if(mDialogSet.getSecureMediaMode() == ConversationProfile::Srtp || 
+#ifdef RTP_SAVPF_FUDGE
+               (*itRemMediaLine)->getTransportProtocolType() == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_SAVPF ||
+#endif
                (*itRemMediaLine)->getTransportProtocolType() == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_SAVP)
             {
                DebugLog(<<"adjustRTPStreams: handle=" << mHandle << ", process crypto settings");

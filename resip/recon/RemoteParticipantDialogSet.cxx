@@ -55,6 +55,7 @@ RemoteParticipantDialogSet::RemoteParticipantDialogSet(ConversationManager& conv
    mConversationManager(conversationManager),
    mUACOriginalRemoteParticipant(0),
    mNumDialogs(0),
+   mPeerExpectsSAVPF(false),
    mLocalRTPPort(0),
    mAllocateLocalRTPPortFailed(false),
    mForkSelectMode(forkSelectMode),
