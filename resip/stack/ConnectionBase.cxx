@@ -828,6 +828,7 @@ ConnectionBase::wsProcessData(int& bytesRead, bool &tryAgain)
       else
       {
          // This is unlikely to happen often
+         DebugLog(<<"SIP message fragmented across multiple WebSocket frames");
          mWsBuffer.append((char *)uData, wsPayLen);
          delete [] uData;
       }
