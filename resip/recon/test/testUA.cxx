@@ -1449,9 +1449,13 @@ main (int argc, char** argv)
    // Build Codecs and media offering
    SdpContents::Session::Medium medium("audio", port, 1, "RTP/AVP");
    // For G.722, it is necessary to patch sipXmediaLib/src/mp/codecs/plgg722/plgg722.c
-   // #define USE_8K_SAMPLES 1
+   // #define USE_8K_SAMPLES G722_SAMPLE_RATE_8000
    // and change sample rate from 16000 to 8000
    // (tested against a Polycom device configured for G.722 8000)
+   // http://www.mail-archive.com/sipxtapi-dev@list.sipfoundry.org/msg02522.html
+   // A more generic solution is needed long term, as G.722 is peculiar and
+   // implementations are not consistent:
+   //  https://lists.cs.columbia.edu/pipermail/sip-implementors/2007-August/017292.html
    //SdpContents::Session::Codec g722codec("G722", 8000);
    //g722codec.payloadType() = 9;  /* RFC3551 */ ;
    //medium.addCodec(g722codec);
