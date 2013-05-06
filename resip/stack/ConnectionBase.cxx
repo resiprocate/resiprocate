@@ -822,7 +822,9 @@ ConnectionBase::wsProcessData(int& bytesRead, bool &tryAgain)
          uData[payIdx] = (uBuffer[wsFrameHdrLen+payIdx] ^ mWsMaskKey[(payIdx & 3)]);
       }
       if(mWsBuffer.size() == 0)
+      {
          mWsBuffer.setBuf(Data::Take, (char *)uData, wsPayLen);
+      }
       else
       {
          // This is unlikely to happen often
@@ -839,11 +841,14 @@ ConnectionBase::wsProcessData(int& bytesRead, bool &tryAgain)
          {
             uBuffer[payIdx] = uBuffer[frameLen+payIdx];
          }
-         mBufferPos = bytes_available - frameLen;
+         bytesRead = bytes_available - frameLen;
+         mBufferPos = 0;
          tryAgain = true;
       }
       else
-         mBufferPos = 0;
+      {
+         mBufferPos = bytes_available - frameLen;
+      }
       StackLog(<<"new mBufferPos = "<<mBufferPos);
 
       if(finalFrame == 1)
