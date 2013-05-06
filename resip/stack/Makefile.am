@@ -340,7 +340,9 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	ValueFifo.hxx \
 	Via.hxx \
 	WarningCategory.hxx \
+        WsDecorator.hxx \
 	WsFrameExtractor.hxx \
+        WsTransport.hxx \
 	X509Contents.hxx \
 	ZeroOutStatistics.hxx
 
