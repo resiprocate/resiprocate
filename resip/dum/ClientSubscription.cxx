@@ -88,7 +88,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
       //!dcm! -- heavy, should just store enough information to make response
       //mLastNotify = msg;
 
-      if (!mOnNewSubscriptionCalled && !getAppDialogSet()->isReUsed())
+      if (!mOnNewSubscriptionCalled && getAppDialogSet()->isReUsed())
       {
          InfoLog (<< "[ClientSubscription] " << mLastRequest->header(h_To));
          if (msg.exists(h_Contacts))
