@@ -279,6 +279,15 @@ Data::Data(ShareEnum se, const char* buffer, size_type length)
    assert(buffer);
 }
 
+Data::Data(ShareEnum se, const char* buffer, size_type length, size_type capacity)
+   : mBuf(const_cast<char*>(buffer)),
+     mSize(length),
+     mCapacity(capacity),
+     mShareEnum(se)
+{
+   assert(buffer);
+}
+
 Data::Data(ShareEnum se, const char* buffer)
    : mBuf(const_cast<char*>(buffer)),
      mSize(strlen(buffer)),
