@@ -35,7 +35,7 @@ check_PROGRAMS = \
 	sdpTests \
 	unitTests
 
-testUA_SOURCES = testUA.cxx
+testUA_SOURCES = testUA.cxx playback_prompt.h
 sdpTests_SOURCES = sdpTests.cxx
 unitTests_SOURCES = unitTests.cxx
 
