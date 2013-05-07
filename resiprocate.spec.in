@@ -11,7 +11,9 @@ BuildRequires: boost-devel
 BuildRequires: c-ares-devel
 BuildRequires: cppunit-devel
 BuildRequires: gperf
+%if 0%{?fedora} >= 18
 BuildRequires: db4-cxx-devel
+%endif
 BuildRequires: db4-devel
 BuildRequires: openssl-devel >= 0.9.8
 BuildRequires: mysql-devel
@@ -22,6 +24,9 @@ BuildRequires: radiusclient-ng-devel
 BuildRequires: xerces-c-devel
 Requires: openssl >= 0.9.8
 Requires: chkconfig
+%if 0%{?fedora} < 17
+Requires(preun): initscripts
+%endif
 
 %description
 The reSIProcate components, particularly the SIP stack, are in use in both
@@ -120,15 +125,21 @@ such as the repro SIP proxy.
 %setup -q
 
 %build
-CXXFLAGS="%{optflags} -I%{_includedir}/libdb4" LDFLAGS="-L%{_libdir}/mysql -L%{_libdir}/libdb4" %configure --with-c-ares --with-ssl --with-mysql --with-radius --with-b2bua --with-apps --enable-ipv6
+export LDFLAGS="${LDFLAGS} -L%{_libdir}/mysql -L%{_libdir}/libdb4"
+CXXFLAGS="%{optflags} -I%{_includedir}/libdb4" %configure --with-c-ares --with-ssl --with-mysql --with-radius --with-b2bua --with-apps --enable-ipv6
 sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
 sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 make %{?_smp_mflags}
 
 %install
 make DESTDIR=%{buildroot} install
+%if 0%{?fedora} >= 17
 install -p -D -m644 repro/pkg/fedora/repro.service %{buildroot}%{_unitdir}/repro.service
 install -p -D -m644 reTurn/pkg/fedora/resiprocate-turn-server.service %{buildroot}%{_unitdir}/resiprocate-turn-server.service
+%else
+install -p -D -m755 repro/pkg/fedora/repro.init %{buildroot}%{_initddir}/repro
+install -p -D -m755 reTurn/pkg/fedora/resiprocate-turn-server.init %{buildroot}%{_initddir}/resiprocate-turn-server
+%endif
 install -m 0755 -d %{buildroot}%{_sysconfdir}/repro
 install -p -D -m644 repro/repro.config %{buildroot}%{_sysconfdir}/repro/repro.config
 sed -i -e 's!^DatabasePath = ./$!DatabasePath = %{_localstatedir}/lib/repro!' %{buildroot}%{_sysconfdir}/repro/repro.config
@@ -155,29 +166,47 @@ getent passwd return >/dev/null || \
 /sbin/ldconfig
 if [ $1 -eq 1 ] ; then
     # Initial installation
+%if 0%{?fedora} >= 17
     /bin/systemctl enable repro.service >/dev/null 2>&1 || :
+%else
+    /sbin/chkconfig --add repro
+%endif
 fi
 
 %post turn-server
 if [ $1 -eq 1 ] ; then
     # Initial installation
+%if 0%{?fedora} >= 17
     /bin/systemctl enable resiprocate-turn-server.service >/dev/null 2>&1 || :
+%else
+    /sbin/chkconfig --add resiprocate-turn-server
+%endif
 fi
 
 %preun repro
 if [ "$1" = 0 ]
 then
    # Package removal, not upgrade
+%if 0%{?fedora} >= 17
    /bin/systemctl --no-reload disable repro.service > /dev/null 2>&1 || :
    /bin/systemctl stop repro.service > /dev/null 2>&1 || :
+%else
+   /sbin/service repro stop
+   /sbin/chkconfig --del repro
+%endif
 fi
 
 %preun turn-server
 if [ "$1" = 0 ]
 then
    # Package removal, not upgrade
+%if 0%{?fedora} >= 17
    /bin/systemctl --no-reload disable resiprocate-turn-server.service > /dev/null 2>&1 || :
    /bin/systemctl stop resiprocate-turn-server.service > /dev/null 2>&1 || :
+%else
+   /sbin/service resiprocate-turn-server stop
+   /sbin/chkconfig --del resiprocate-turn-server
+%endif
 fi
 
 %postun libs -p /sbin/ldconfig
@@ -187,14 +216,22 @@ fi
 /bin/systemctl daemon-reload >/dev/null 2>&1 || :
 if [ $1 -ge 1 ] ; then
     # Package upgrade, not uninstall
+%if 0%{?fedora} >= 17
     /bin/systemctl try-restart repro.service >/dev/null 2>&1 || :
+%else
+    /sbin/service repro try-restart
+%endif
 fi
 
 %postun turn-server
 /bin/systemctl daemon-reload >/dev/null 2>&1 || :
 if [ $1 -ge 1 ] ; then
     # Package upgrade, not uninstall
+%if 0%{?fedora} >= 17
     /bin/systemctl try-restart resiprocate-turn-server.service >/dev/null 2>&1 || :
+%else
+    /sbin/service resiprocate-turn-server try-restart
+%endif
 fi
 
 %files libs
@@ -248,14 +285,22 @@ fi
 %files repro
 %attr(0755,repro,repro) %dir %{_localstatedir}/lib/repro
 %config(noreplace) %{_sysconfdir}/repro/repro.config
+%if 0%{?fedora} >= 17
 %{_unitdir}/repro.service
+%else
+%{_initddir}/repro
+%endif
 %{_sbindir}/repro
 %{_sbindir}/reprocmd
 %{_mandir}/man8/repro*.8*
 
 %files turn-server
 %config(noreplace) %{_sysconfdir}/reTurnServer.config
+%if 0%{?fedora} >= 17
 %{_unitdir}/resiprocate-turn-server.service
+%else
+%{_initddir}/resiprocate-turn-server
+%endif
 %{_sbindir}/reTurnServer
 %{_mandir}/man8/reTurnServer.8*
 
