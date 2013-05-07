@@ -416,9 +416,10 @@ void
 Profile::addAdvertisedCapability(const Headers::Type header)
 {
    assert(header == Headers::Allow ||
-   header == Headers::AcceptEncoding ||
-   header == Headers::AcceptLanguage ||
-   header == Headers::Supported);
+          header == Headers::AcceptEncoding ||
+          header == Headers::AcceptLanguage ||
+          header == Headers::AllowEvents ||
+          header == Headers::Supported);
 
    mAdvertisedCapabilities.insert(header);
    mHasAdvertisedCapabilities = true;
