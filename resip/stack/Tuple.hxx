@@ -119,7 +119,7 @@ class Tuple
       inline FlowKey getFlowKey() const { return mFlowKey;} 
 
       /// @deprecated use ipVersion()
-	  /// @todo !dcm! -- should deprecate asap
+      /// @todo !dcm! -- should deprecate asap
       bool isV4() const; 
 
       /// Returns V4 or V6 as appropriate.
