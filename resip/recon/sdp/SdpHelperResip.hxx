@@ -23,19 +23,19 @@ namespace resip
 class SdpHelperResip
 {
 public:
-   static Sdp::SdpAddressType convertResipAddressType(resip::SdpContents::AddrType resipAddrType);
-   static SdpMediaLine::SdpEncryptionMethod convertResipEncryptionMethod(resip::SdpContents::Session::Encryption::KeyType resipMethod);
-   static Sdp* createSdpFromResipSdp(const resip::SdpContents& resipSdp);
+   static sdpcontainer::Sdp::SdpAddressType convertResipAddressType(resip::SdpContents::AddrType resipAddrType);
+   static sdpcontainer::SdpMediaLine::SdpEncryptionMethod convertResipEncryptionMethod(resip::SdpContents::Session::Encryption::KeyType resipMethod);
+   static sdpcontainer::Sdp* createSdpFromResipSdp(const resip::SdpContents& resipSdp);
 
-   static SdpMediaLine::SdpCrypto* parseCryptoLine(const resip::Data& cryptoLine);
-   static bool parseFingerPrintLine(const resip::Data& fingerprintLine, SdpMediaLine::SdpFingerPrintHashFuncType& hashType, resip::Data& fingerPrint);
-   static bool parseTransportCapabilitiesLine(const resip::Data& tcapLine, std::list<SdpMediaLine::SdpTransportProtocolCapabilities>& tcapList);
-   static bool parsePotentialConfigurationLine(const resip::Data& pcfgLine, std::list<SdpMediaLine::SdpPotentialConfiguration>& pcfgList);
+   static sdpcontainer::SdpMediaLine::SdpCrypto* parseCryptoLine(const resip::Data& cryptoLine);
+   static bool parseFingerPrintLine(const resip::Data& fingerprintLine, sdpcontainer::SdpMediaLine::SdpFingerPrintHashFuncType& hashType, resip::Data& fingerPrint);
+   static bool parseTransportCapabilitiesLine(const resip::Data& tcapLine, std::list<sdpcontainer::SdpMediaLine::SdpTransportProtocolCapabilities>& tcapList);
+   static bool parsePotentialConfigurationLine(const resip::Data& pcfgLine, std::list<sdpcontainer::SdpMediaLine::SdpPotentialConfiguration>& pcfgList);
 
 private:
-   static SdpMediaLine* parseMediaLine(const resip::SdpContents::Session::Medium& resipMedia, const resip::SdpContents::Session& resipSession, bool sessionRtcpEnabled);
+   static sdpcontainer::SdpMediaLine* parseMediaLine(const resip::SdpContents::Session::Medium& resipMedia, const resip::SdpContents::Session& resipSession, bool sessionRtcpEnabled);
    static void parseCryptoParams(resip::ParseBuffer& pb, 
-                                 SdpMediaLine::SdpCryptoKeyMethod& keyMethod, 
+                                 sdpcontainer::SdpMediaLine::SdpCryptoKeyMethod& keyMethod, 
                                  resip::Data& keyValue, 
                                  unsigned int& srtpLifetime, 
                                  unsigned int& srtpMkiValue, 

@@ -70,14 +70,24 @@ ConversationManager::ConversationManager(bool localAudioEnabled, MediaInterfaceM
 
    // Create MediaInterface
    MpCodecFactory *pCodecFactory = MpCodecFactory::getMpCodecFactory();
+   // For dynamic loading, we need to force the codecs to be loaded
+   // somehow, this should be exposed through the API
+   //pCodecFactory->loadAllDynCodecs("/tmp/codecs", "");
    unsigned int count = 0;
    const MppCodecInfoV1_1 **codecInfoArray;
    pCodecFactory->getCodecInfoArray(count, codecInfoArray);
 
    if(count == 0)
    {
-      ErrLog( << "No codec plugins found.  Cannot start.");
-      exit(-1);
+      // Try to load plugin modules, if possible...
+      InfoLog(<<"No statically linked codecs, trying to load codec plugin modules with dlopen()");
+      pCodecFactory->loadAllDynCodecs(NULL, "");
+      pCodecFactory->getCodecInfoArray(count, codecInfoArray);
+      if(count == 0)
+      {
+         ErrLog( << "No codec plugins found.  Cannot start.");
+         exit(-1);
+      }
    }
 
    InfoLog( << "Loaded codecs are:");

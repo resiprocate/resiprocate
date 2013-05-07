@@ -1008,32 +1008,32 @@ RemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
 }
 
 bool
-RemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessionCaps, const SdpMediaLine& sdpMediaLine, SdpContents& answer, bool potential)
+RemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessionCaps, const sdpcontainer::SdpMediaLine& sdpMediaLine, SdpContents& answer, bool potential)
 {
-   SdpMediaLine::SdpTransportProtocolType protocolType = sdpMediaLine.getTransportProtocolType();
+   sdpcontainer::SdpMediaLine::SdpTransportProtocolType protocolType = sdpMediaLine.getTransportProtocolType();
    bool valid = false;
 
    // If this is a valid audio medium then process it
-   if(sdpMediaLine.getMediaType() == SdpMediaLine::MEDIA_TYPE_AUDIO && 
-      (protocolType == SdpMediaLine::PROTOCOL_TYPE_RTP_AVP ||
-       protocolType == SdpMediaLine::PROTOCOL_TYPE_RTP_SAVP ||
-       protocolType == SdpMediaLine::PROTOCOL_TYPE_UDP_TLS_RTP_SAVP) && 
+   if(sdpMediaLine.getMediaType() == sdpcontainer::SdpMediaLine::MEDIA_TYPE_AUDIO && 
+      (protocolType == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_AVP ||
+       protocolType == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_SAVP ||
+       protocolType == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_UDP_TLS_RTP_SAVP) && 
       sdpMediaLine.getConnections().size() != 0 &&
       sdpMediaLine.getConnections().front().getPort() != 0)
    {
       SdpContents::Session::Medium medium("audio", getLocalRTPPort(), 1, 
-                                          protocolType == SdpMediaLine::PROTOCOL_TYPE_RTP_SAVP ? Symbols::RTP_SAVP :
-                                          (protocolType == SdpMediaLine::PROTOCOL_TYPE_UDP_TLS_RTP_SAVP ? Symbols::UDP_TLS_RTP_SAVP :
+                                          protocolType == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_SAVP ? Symbols::RTP_SAVP :
+                                          (protocolType == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_UDP_TLS_RTP_SAVP ? Symbols::UDP_TLS_RTP_SAVP :
                                            Symbols::RTP_AVP));
 
       // Check secure media properties and requirements
-      bool secureMediaRequired = mDialogSet.getSecureMediaRequired() || protocolType != SdpMediaLine::PROTOCOL_TYPE_RTP_AVP;
+      bool secureMediaRequired = mDialogSet.getSecureMediaRequired() || protocolType != sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_AVP;
 
       if(mDialogSet.getSecureMediaMode() == ConversationProfile::Srtp || 
-         protocolType == SdpMediaLine::PROTOCOL_TYPE_RTP_SAVP)  // allow accepting of SAVP profiles, even if SRTP is not enabled as a SecureMedia mode
+         protocolType == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_SAVP)  // allow accepting of SAVP profiles, even if SRTP is not enabled as a SecureMedia mode
       {
          bool supportedCryptoSuite = false;
-         SdpMediaLine::CryptoList::const_iterator itCrypto = sdpMediaLine.getCryptos().begin();
+         sdpcontainer::SdpMediaLine::CryptoList::const_iterator itCrypto = sdpMediaLine.getCryptos().begin();
          for(; !supportedCryptoSuite && itCrypto!=sdpMediaLine.getCryptos().end(); itCrypto++)
          {
             Data cryptoKeyB64(itCrypto->getCryptoKeyParams().front().getKeyValue());
@@ -1043,11 +1043,11 @@ RemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessionCap
             {
                switch(itCrypto->getSuite())
                {
-               case SdpMediaLine::CRYPTO_SUITE_TYPE_AES_CM_128_HMAC_SHA1_80:   
+               case sdpcontainer::SdpMediaLine::CRYPTO_SUITE_TYPE_AES_CM_128_HMAC_SHA1_80:   
                   medium.addAttribute("crypto", Data(itCrypto->getTag()) + " AES_CM_128_HMAC_SHA1_80 inline:" + mDialogSet.getLocalSrtpSessionKey().base64encode());
                   supportedCryptoSuite = true;
                   break;
-               case SdpMediaLine::CRYPTO_SUITE_TYPE_AES_CM_128_HMAC_SHA1_32:
+               case sdpcontainer::SdpMediaLine::CRYPTO_SUITE_TYPE_AES_CM_128_HMAC_SHA1_32:
                   medium.addAttribute("crypto", Data(itCrypto->getTag()) + " AES_CM_128_HMAC_SHA1_32 inline:" + mDialogSet.getLocalSrtpSessionKey().base64encode());
                   supportedCryptoSuite = true;
                   break;
@@ -1069,12 +1069,12 @@ RemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessionCap
 #ifdef USE_SSL
       else if(mConversationManager.getFlowManager().getDtlsFactory() &&
               (mDialogSet.getSecureMediaMode() == ConversationProfile::SrtpDtls || 
-               protocolType == SdpMediaLine::PROTOCOL_TYPE_UDP_TLS_RTP_SAVP))  // allow accepting of DTLS SAVP profiles, even if DTLS-SRTP is not enabled as a SecureMedia mode
+               protocolType == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_UDP_TLS_RTP_SAVP))  // allow accepting of DTLS SAVP profiles, even if DTLS-SRTP is not enabled as a SecureMedia mode
       {
          bool supportedFingerprint = false;
 
          // We will only process Dtls-Srtp if fingerprint is in SHA-1 format
-         if(sdpMediaLine.getFingerPrintHashFunction() == SdpMediaLine::FINGERPRINT_HASH_FUNC_SHA_1)
+         if(sdpMediaLine.getFingerPrintHashFunction() == sdpcontainer::SdpMediaLine::FINGERPRINT_HASH_FUNC_SHA_1)
          {
             answer.session().clearAttribute("fingerprint");  // ensure we don't add these twice
             answer.session().clearAttribute("setup");  // ensure we don't add these twice
@@ -1085,7 +1085,7 @@ RemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessionCap
             answer.session().addAttribute("fingerprint", "SHA-1 " + Data(fingerprint));
 
             // Add setup attribute
-            if(sdpMediaLine.getTcpSetupAttribute() == SdpMediaLine::TCP_SETUP_ATTRIBUTE_ACTIVE)
+            if(sdpMediaLine.getTcpSetupAttribute() == sdpcontainer::SdpMediaLine::TCP_SETUP_ATTRIBUTE_ACTIVE)
             {
                answer.session().addAttribute("setup", "passive");
             }
@@ -1110,7 +1110,7 @@ RemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessionCap
       }
       
       // Iterate through codecs and look for supported codecs - tag found ones by storing their payload id
-      SdpMediaLine::CodecList::const_iterator itCodec = sdpMediaLine.getCodecs().begin();
+      sdpcontainer::SdpMediaLine::CodecList::const_iterator itCodec = sdpMediaLine.getCodecs().begin();
       for(; itCodec != sdpMediaLine.getCodecs().end(); itCodec++)
       {
          std::list<SdpContents::Session::Codec>::iterator bestCapsCodecMatchIt = mediaSessionCaps.codecs().end();
@@ -1174,16 +1174,16 @@ RemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessionCap
 
          // Check requested direction
          unsigned int remoteRtpPort = sdpMediaLine.getConnections().front().getPort();
-         if(sdpMediaLine.getDirection() == SdpMediaLine::DIRECTION_TYPE_INACTIVE || 
-           (mLocalHold && (sdpMediaLine.getDirection() == SdpMediaLine::DIRECTION_TYPE_SENDONLY || remoteRtpPort == 0)))  // If remote inactive or both sides are holding
+         if(sdpMediaLine.getDirection() == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_INACTIVE || 
+           (mLocalHold && (sdpMediaLine.getDirection() == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDONLY || remoteRtpPort == 0)))  // If remote inactive or both sides are holding
          {
             medium.addAttribute("inactive");
          }
-         else if(sdpMediaLine.getDirection() == SdpMediaLine::DIRECTION_TYPE_SENDONLY || remoteRtpPort == 0 /* old RFC 2543 hold */)
+         else if(sdpMediaLine.getDirection() == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDONLY || remoteRtpPort == 0 /* old RFC 2543 hold */)
          {
             medium.addAttribute("recvonly");
          }
-         else if(sdpMediaLine.getDirection() == SdpMediaLine::DIRECTION_TYPE_RECVONLY || mLocalHold)
+         else if(sdpMediaLine.getDirection() == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_RECVONLY || mLocalHold)
          {
             medium.addAttribute("sendonly");
          }
@@ -1205,7 +1205,7 @@ RemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& answer)
    //       for responding "best-effort" / optional SRTP (Dtls-SRTP) offers
 
    bool valid = false;
-   Sdp* remoteSdp = SdpHelperResip::createSdpFromResipSdp(offer);
+   sdpcontainer::Sdp* remoteSdp = SdpHelperResip::createSdpFromResipSdp(offer);
 
    try
    {
@@ -1236,7 +1236,7 @@ RemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& answer)
       answer.session().media().clear();
 
       // Loop through each offered m= line and provide a response
-      Sdp::MediaLineList::const_iterator itMediaLine = remoteSdp->getMediaLines().begin();
+      sdpcontainer::Sdp::MediaLineList::const_iterator itMediaLine = remoteSdp->getMediaLines().begin();
       for(; itMediaLine != remoteSdp->getMediaLines().end(); itMediaLine++)
       {
          bool mediaLineValid = false;
@@ -1258,7 +1258,7 @@ RemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& answer)
          }
 
          // Give preference to potential configuration first - if there are any
-         SdpMediaLine::SdpMediaLineList::const_iterator itPotentialMediaLine = (*itMediaLine)->getPotentialMediaViews().begin();
+         sdpcontainer::SdpMediaLine::SdpMediaLineList::const_iterator itPotentialMediaLine = (*itMediaLine)->getPotentialMediaViews().begin();
          for(; itPotentialMediaLine != (*itMediaLine)->getPotentialMediaViews().end(); itPotentialMediaLine++)
          {
             mediaLineValid = answerMediaLine(mediaSessionCaps, *itPotentialMediaLine, answer, true);
@@ -1499,7 +1499,7 @@ RemoteParticipant::setRemoteSdp(const resip::SdpContents& sdp, bool answer)
 }
 
 void 
-RemoteParticipant::setRemoteSdp(const resip::SdpContents& sdp, Sdp* remoteSdp) // Note: sdp only passed for logging purposes
+RemoteParticipant::setRemoteSdp(const resip::SdpContents& sdp, sdpcontainer::Sdp* remoteSdp) // Note: sdp only passed for logging purposes
 {
    if(mRemoteSdp) delete mRemoteSdp;
    InfoLog(<< "setRemoteSdp: handle=" << mHandle << ", remoteSdp=" << sdp);
@@ -1510,14 +1510,14 @@ void
 RemoteParticipant::adjustRTPStreams(bool sendingOffer)
 {
    //if(mHandle) mConversationManager.onParticipantMediaUpdate(mHandle, localSdp, remoteSdp);   
-   int mediaDirection = SdpMediaLine::DIRECTION_TYPE_INACTIVE;
+   int mediaDirection = sdpcontainer::SdpMediaLine::DIRECTION_TYPE_INACTIVE;
    Data remoteIPAddress;
    unsigned int remoteRtpPort=0;
    unsigned int remoteRtcpPort=0;
-   Sdp *localSdp = sendingOffer ? mDialogSet.getProposedSdp() : mLocalSdp;
-   Sdp *remoteSdp = sendingOffer ? 0 : mRemoteSdp;
-   const SdpMediaLine::CodecList* localCodecs;
-   const SdpMediaLine::CodecList* remoteCodecs;
+   sdpcontainer::Sdp *localSdp = sendingOffer ? mDialogSet.getProposedSdp() : mLocalSdp;
+   sdpcontainer::Sdp *remoteSdp = sendingOffer ? 0 : mRemoteSdp;
+   const sdpcontainer::SdpMediaLine::CodecList* localCodecs;
+   const sdpcontainer::SdpMediaLine::CodecList* remoteCodecs;
    bool supportedCryptoSuite = false;
    bool supportedFingerprint = false;
 
@@ -1530,20 +1530,20 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
       InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", remoteSdp=" << *remoteSdp);
    }*/
 
-   int localMediaDirection = SdpMediaLine::DIRECTION_TYPE_INACTIVE;
+   int localMediaDirection = sdpcontainer::SdpMediaLine::DIRECTION_TYPE_INACTIVE;
 
-   Sdp::MediaLineList::const_iterator itMediaLine = localSdp->getMediaLines().begin();
+   sdpcontainer::Sdp::MediaLineList::const_iterator itMediaLine = localSdp->getMediaLines().begin();
    for(; itMediaLine != localSdp->getMediaLines().end(); itMediaLine++)
    {
       DebugLog(<< "adjustRTPStreams: handle=" << mHandle << 
-                  ", found media line in local sdp, mediaType=" << SdpMediaLine::SdpMediaTypeString[(*itMediaLine)->getMediaType()] << 
-                  ", transportType=" << SdpMediaLine::SdpTransportProtocolTypeString[(*itMediaLine)->getTransportProtocolType()] << 
+                  ", found media line in local sdp, mediaType=" << sdpcontainer::SdpMediaLine::SdpMediaTypeString[(*itMediaLine)->getMediaType()] << 
+                  ", transportType=" << sdpcontainer::SdpMediaLine::SdpTransportProtocolTypeString[(*itMediaLine)->getTransportProtocolType()] << 
                   ", numConnections=" << (*itMediaLine)->getConnections().size() <<
                   ", port=" << ((*itMediaLine)->getConnections().size() > 0 ? (*itMediaLine)->getConnections().front().getPort() : 0));
-      if((*itMediaLine)->getMediaType() == SdpMediaLine::MEDIA_TYPE_AUDIO && 
-         ((*itMediaLine)->getTransportProtocolType() == SdpMediaLine::PROTOCOL_TYPE_RTP_AVP ||
-          (*itMediaLine)->getTransportProtocolType() == SdpMediaLine::PROTOCOL_TYPE_RTP_SAVP ||
-          (*itMediaLine)->getTransportProtocolType() == SdpMediaLine::PROTOCOL_TYPE_UDP_TLS_RTP_SAVP) && 
+      if((*itMediaLine)->getMediaType() == sdpcontainer::SdpMediaLine::MEDIA_TYPE_AUDIO && 
+         ((*itMediaLine)->getTransportProtocolType() == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_AVP ||
+          (*itMediaLine)->getTransportProtocolType() == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_SAVP ||
+          (*itMediaLine)->getTransportProtocolType() == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_UDP_TLS_RTP_SAVP) && 
          (*itMediaLine)->getConnections().size() != 0 &&
          (*itMediaLine)->getConnections().front().getPort() != 0)
       {
@@ -1556,16 +1556,16 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
  
    if(remoteSdp)
    {
-      int remoteMediaDirection = SdpMediaLine::DIRECTION_TYPE_INACTIVE;
+      int remoteMediaDirection = sdpcontainer::SdpMediaLine::DIRECTION_TYPE_INACTIVE;
 
-      Sdp::MediaLineList::const_iterator itRemMediaLine = remoteSdp->getMediaLines().begin();
+      sdpcontainer::Sdp::MediaLineList::const_iterator itRemMediaLine = remoteSdp->getMediaLines().begin();
       for(; itRemMediaLine != remoteSdp->getMediaLines().end(); itRemMediaLine++)
       {
          //InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", found media line in remote sdp");
-         if((*itRemMediaLine)->getMediaType() == SdpMediaLine::MEDIA_TYPE_AUDIO && 
-            ((*itRemMediaLine)->getTransportProtocolType() == SdpMediaLine::PROTOCOL_TYPE_RTP_AVP ||
-             (*itRemMediaLine)->getTransportProtocolType() == SdpMediaLine::PROTOCOL_TYPE_RTP_SAVP ||
-             (*itRemMediaLine)->getTransportProtocolType() == SdpMediaLine::PROTOCOL_TYPE_UDP_TLS_RTP_SAVP) && 
+         if((*itRemMediaLine)->getMediaType() == sdpcontainer::SdpMediaLine::MEDIA_TYPE_AUDIO && 
+            ((*itRemMediaLine)->getTransportProtocolType() == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_AVP ||
+             (*itRemMediaLine)->getTransportProtocolType() == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_SAVP ||
+             (*itRemMediaLine)->getTransportProtocolType() == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_UDP_TLS_RTP_SAVP) && 
             (*itRemMediaLine)->getConnections().size() != 0 &&
             (*itRemMediaLine)->getConnections().front().getPort() != 0)
          {
@@ -1579,9 +1579,10 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
             // Process Crypto settings (if required) - createSRTPSession using remote key
             // Note:  Top crypto in remote sdp will always be the correct suite/key
             if(mDialogSet.getSecureMediaMode() == ConversationProfile::Srtp || 
-               (*itRemMediaLine)->getTransportProtocolType() == SdpMediaLine::PROTOCOL_TYPE_RTP_SAVP)
+               (*itRemMediaLine)->getTransportProtocolType() == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_SAVP)
             {
-               SdpMediaLine::CryptoList::const_iterator itCrypto = (*itRemMediaLine)->getCryptos().begin();
+               DebugLog(<<"adjustRTPStreams: handle=" << mHandle << ", process crypto settings");
+               sdpcontainer::SdpMediaLine::CryptoList::const_iterator itCrypto = (*itRemMediaLine)->getCryptos().begin();
                for(; itCrypto != (*itRemMediaLine)->getCryptos().end(); itCrypto++)
                {
                   Data cryptoKeyB64(itCrypto->getCryptoKeyParams().front().getKeyValue());
@@ -1591,12 +1592,14 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
                   {
                      switch(itCrypto->getSuite())
                      {
-                     case SdpMediaLine::CRYPTO_SUITE_TYPE_AES_CM_128_HMAC_SHA1_80:   
-                        mDialogSet.createSRTPSession(flowmanager::MediaStream::SRTP_AES_CM_128_HMAC_SHA1_80, cryptoKey.data(), cryptoKey.size());
+                     case sdpcontainer::SdpMediaLine::CRYPTO_SUITE_TYPE_AES_CM_128_HMAC_SHA1_80:   
+                        if(!mDialogSet.createSRTPSession(flowmanager::MediaStream::SRTP_AES_CM_128_HMAC_SHA1_80, cryptoKey.data(), cryptoKey.size()))
+                           InfoLog(<<"Failed creating SRTP session");
                         supportedCryptoSuite = true;
                         break;
-                     case SdpMediaLine::CRYPTO_SUITE_TYPE_AES_CM_128_HMAC_SHA1_32:
-                        mDialogSet.createSRTPSession(flowmanager::MediaStream::SRTP_AES_CM_128_HMAC_SHA1_32, cryptoKey.data(), cryptoKey.size());
+                     case sdpcontainer::SdpMediaLine::CRYPTO_SUITE_TYPE_AES_CM_128_HMAC_SHA1_32:
+                        if(!mDialogSet.createSRTPSession(flowmanager::MediaStream::SRTP_AES_CM_128_HMAC_SHA1_32, cryptoKey.data(), cryptoKey.size()))
+                           InfoLog(<<"Failed creating SRTP session");
                         supportedCryptoSuite = true;
                         break;
                      default:
@@ -1609,15 +1612,16 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
                   }
                   if(supportedCryptoSuite)
                   {
+                     StackLog(<< "Supported crypto suite found");
                      break;
                   }
                }
             }
             // Process Fingerprint and setup settings (if required) 
-            else if((*itRemMediaLine)->getTransportProtocolType() == SdpMediaLine::PROTOCOL_TYPE_UDP_TLS_RTP_SAVP)
+            else if((*itRemMediaLine)->getTransportProtocolType() == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_UDP_TLS_RTP_SAVP)
             {
                // We will only process Dtls-Srtp if fingerprint is in SHA-1 format
-               if((*itRemMediaLine)->getFingerPrintHashFunction() == SdpMediaLine::FINGERPRINT_HASH_FUNC_SHA_1)
+               if((*itRemMediaLine)->getFingerPrintHashFunction() == sdpcontainer::SdpMediaLine::FINGERPRINT_HASH_FUNC_SHA_1)
                {
                   if(!(*itRemMediaLine)->getFingerPrint().empty())
                   {
@@ -1626,7 +1630,7 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
                      mDialogSet.setRemoteSDPFingerprint((*itRemMediaLine)->getFingerPrint());
 
                      // If remote setup value is not active then we must be the Dtls client  - ensure client DtlsSocket is create
-                     if((*itRemMediaLine)->getTcpSetupAttribute() != SdpMediaLine::TCP_SETUP_ATTRIBUTE_ACTIVE)
+                     if((*itRemMediaLine)->getTcpSetupAttribute() != sdpcontainer::SdpMediaLine::TCP_SETUP_ATTRIBUTE_ACTIVE)
                      {
                         // If we are the active end, then kick start the DTLS handshake
                         mDialogSet.startDtlsClient(remoteIPAddress.c_str(), remoteRtpPort, remoteRtcpPort);
@@ -1635,7 +1639,7 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
                      supportedFingerprint = true;
                   }
                }
-               else if((*itRemMediaLine)->getFingerPrintHashFunction() != SdpMediaLine::FINGERPRINT_HASH_FUNC_NONE)
+               else if((*itRemMediaLine)->getFingerPrintHashFunction() != sdpcontainer::SdpMediaLine::FINGERPRINT_HASH_FUNC_NONE)
                {
                   InfoLog(<< "Fingerprint found, but is not using SHA-1 hash.");
                }
@@ -1645,8 +1649,8 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
          }
       }
 
-	  if(remoteMediaDirection == SdpMediaLine::DIRECTION_TYPE_INACTIVE ||
-	     remoteMediaDirection == SdpMediaLine::DIRECTION_TYPE_SENDONLY)
+	  if(remoteMediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_INACTIVE ||
+	     remoteMediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDONLY)
 	  {
 		  mRemoteHold = true;
 	  }
@@ -1669,44 +1673,44 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
 
       // Aggregate local and remote direction attributes to determine overall media direction
       if((mLocalHold && !broadcastOnly) ||
-         localMediaDirection == SdpMediaLine::DIRECTION_TYPE_INACTIVE || 
-         remoteMediaDirection == SdpMediaLine::DIRECTION_TYPE_INACTIVE)
+         localMediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_INACTIVE || 
+         remoteMediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_INACTIVE)
       {
-         mediaDirection = SdpMediaLine::DIRECTION_TYPE_INACTIVE;
+         mediaDirection = sdpcontainer::SdpMediaLine::DIRECTION_TYPE_INACTIVE;
       }
-      else if(localMediaDirection == SdpMediaLine::DIRECTION_TYPE_SENDONLY)
+      else if(localMediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDONLY)
       {
-         mediaDirection = SdpMediaLine::DIRECTION_TYPE_SENDONLY;
+         mediaDirection = sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDONLY;
       }
-      else if(localMediaDirection == SdpMediaLine::DIRECTION_TYPE_RECVONLY)
+      else if(localMediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_RECVONLY)
       {
-         mediaDirection = SdpMediaLine::DIRECTION_TYPE_RECVONLY;
+         mediaDirection = sdpcontainer::SdpMediaLine::DIRECTION_TYPE_RECVONLY;
       }
-      else if(remoteMediaDirection == SdpMediaLine::DIRECTION_TYPE_SENDONLY)
+      else if(remoteMediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDONLY)
       {
-         mediaDirection = SdpMediaLine::DIRECTION_TYPE_RECVONLY;
+         mediaDirection = sdpcontainer::SdpMediaLine::DIRECTION_TYPE_RECVONLY;
       }
-      else if(remoteMediaDirection == SdpMediaLine::DIRECTION_TYPE_SENDONLY)
+      else if(remoteMediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDONLY)
       {
-         mediaDirection = SdpMediaLine::DIRECTION_TYPE_RECVONLY;
+         mediaDirection = sdpcontainer::SdpMediaLine::DIRECTION_TYPE_RECVONLY;
       }
       else
       {
-         mediaDirection = SdpMediaLine::DIRECTION_TYPE_SENDRECV;
+         mediaDirection = sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDRECV;
       }
    }
    else
    {
       // No remote SDP info - so put direction into receive only mode (unless inactive)
       if(mLocalHold ||
-         localMediaDirection == SdpMediaLine::DIRECTION_TYPE_INACTIVE || 
-         localMediaDirection == SdpMediaLine::DIRECTION_TYPE_SENDONLY)
+         localMediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_INACTIVE || 
+         localMediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDONLY)
       {
-         mediaDirection = SdpMediaLine::DIRECTION_TYPE_INACTIVE;
+         mediaDirection = sdpcontainer::SdpMediaLine::DIRECTION_TYPE_INACTIVE;
       }
       else
       {
-         mediaDirection = SdpMediaLine::DIRECTION_TYPE_RECVONLY;
+         mediaDirection = sdpcontainer::SdpMediaLine::DIRECTION_TYPE_RECVONLY;
       }
    }
 
@@ -1717,27 +1721,27 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
       return;
    }
 
-   InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", mediaDirection=" << SdpMediaLine::SdpDirectionTypeString[mediaDirection] << ", remoteIp=" << remoteIPAddress << ", remotePort=" << remoteRtpPort);
+   InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", mediaDirection=" << sdpcontainer::SdpMediaLine::SdpDirectionTypeString[mediaDirection] << ", remoteIp=" << remoteIPAddress << ", remotePort=" << remoteRtpPort);
 
    if(!remoteIPAddress.empty() && remoteRtpPort != 0)
    {
       mDialogSet.setActiveDestination(remoteIPAddress.c_str(), remoteRtpPort, remoteRtcpPort);
    }
 
-   if((mediaDirection == SdpMediaLine::DIRECTION_TYPE_SENDRECV ||
-       mediaDirection == SdpMediaLine::DIRECTION_TYPE_SENDONLY) &&
+   if((mediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDRECV ||
+       mediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDONLY) &&
        !remoteIPAddress.empty() && remoteRtpPort != 0 && 
        remoteCodecs && localCodecs)
    {
       // Calculate intersection of local and remote codecs, and pass remote codecs that exist locally to RTP send fn
       int numCodecs=0;
       ::SdpCodec** codecs = new ::SdpCodec*[remoteCodecs->size()];
-      SdpMediaLine::CodecList::const_iterator itRemoteCodec = remoteCodecs->begin();
+      sdpcontainer::SdpMediaLine::CodecList::const_iterator itRemoteCodec = remoteCodecs->begin();
       for(; itRemoteCodec != remoteCodecs->end(); itRemoteCodec++)
       {
          bool modeInRemote = itRemoteCodec->getFormatParameters().prefix("mode=");
-         SdpMediaLine::CodecList::const_iterator bestCapsCodecMatchIt = localCodecs->end();
-         SdpMediaLine::CodecList::const_iterator itLocalCodec = localCodecs->begin();
+         sdpcontainer::SdpMediaLine::CodecList::const_iterator bestCapsCodecMatchIt = localCodecs->end();
+         sdpcontainer::SdpMediaLine::CodecList::const_iterator itLocalCodec = localCodecs->begin();
          for(; itLocalCodec != localCodecs->end(); itLocalCodec++)
          {
             if(isEqualNoCase(itRemoteCodec->getMimeSubtype(), itLocalCodec->getMimeSubtype()) &&
@@ -1790,7 +1794,12 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
 
       if(numCodecs > 0)
       {
-         getMediaInterface()->getInterface()->startRtpSend(mDialogSet.getMediaConnectionId(), numCodecs, codecs);
+         InfoLog(<<"adjustRTPStreams: handle=" << mHandle << ", starting to send for " << numCodecs << " codecs");
+         int ret = getMediaInterface()->getInterface()->startRtpSend(mDialogSet.getMediaConnectionId(), numCodecs, codecs);
+         if(ret != OS_SUCCESS)
+         {
+            InfoLog(<<"adjustRTPStreams: handle=" << mHandle << ", failed to start RTP send, ret = " << ret);
+         }
       }
       else
       {
@@ -1811,8 +1820,8 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
       InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", stop sending.");
    }
 
-   if(mediaDirection == SdpMediaLine::DIRECTION_TYPE_SENDRECV ||
-      mediaDirection == SdpMediaLine::DIRECTION_TYPE_RECVONLY)
+   if(mediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDRECV ||
+      mediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_RECVONLY)
    {
       if(!getMediaInterface()->getInterface()->isReceivingRtpAudio(mDialogSet.getMediaConnectionId()))
       {
@@ -1820,7 +1829,7 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
          // We are always willing to receive any of our locally supported codecs
          int numCodecs=0;
          ::SdpCodec** codecs = new ::SdpCodec*[localCodecs->size()];
-         SdpMediaLine::CodecList::const_iterator itLocalCodec = localCodecs->begin();
+         sdpcontainer::SdpMediaLine::CodecList::const_iterator itLocalCodec = localCodecs->begin();
          for(; itLocalCodec != localCodecs->end(); itLocalCodec++)
          {
             codecs[numCodecs++] = new ::SdpCodec(itLocalCodec->getPayloadType(), 

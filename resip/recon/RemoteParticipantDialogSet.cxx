@@ -15,9 +15,9 @@
 #include "FlowManagerSipXSocket.hxx"
 
 // Flowmanager Includes
-#include "FlowManager.hxx"
-#include "Flow.hxx"
-#include "MediaStream.hxx"
+#include "reflow/FlowManager.hxx"
+#include "reflow/Flow.hxx"
+#include "reflow/MediaStream.hxx"
 
 #include "sdp/SdpHelperResip.hxx"
 #include "sdp/Sdp.hxx"
@@ -536,6 +536,9 @@ RemoteParticipantDialogSet::setActiveDestination(const char* address, unsigned s
 #ifdef DISABLE_FLOWMANAGER_IF_NO_NAT_TRAVERSAL
    if(mNatTraversalMode != MediaStream::NoNatTraversal)
    {
+#else
+   if(!mMediaStream)
+      WarningLog(<<"mMediaStream == NULL, no RTP will be transmitted");
 #endif
    if(mMediaStream && mMediaStream->getRtpFlow())
    {
@@ -596,6 +599,7 @@ RemoteParticipantDialogSet::createSRTPSession(MediaStream::SrtpCryptoSuite crypt
       mMediaStream->createOutboundSRTPSession(cryptoSuite, mLocalSrtpSessionKey.data(), mLocalSrtpSessionKey.size());
       return mMediaStream->createInboundSRTPSession(cryptoSuite, remoteKey, remoteKeyLen);
    }
+   WarningLog(<<"createSRTPSession: can't create SRTP session without media stream, mMediaStream = " << mMediaStream);
    return false;
 }
 

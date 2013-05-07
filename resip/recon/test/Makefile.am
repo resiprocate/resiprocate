@@ -5,15 +5,33 @@ EXTRA_DIST += *.vcproj
 EXTRA_DIST += testua_readme.txt
 
 LDADD = ../librecon.la
+LDADD += ../../../reflow/libreflow.la
+# These need to be included for static linking, and we need to be able
+# to configure the runtime location to find them for dynamic loading
+#LDADD += ../../../../sipXtapi/sipXmediaLib/src/mp/codecs/plgl16/codec_l16.la
+#LDADD += ../../../../sipXtapi/sipXmediaLib/src/mp/codecs/plgtones/codec_tones.la
+#LDADD += ../../../../sipXtapi/sipXmediaLib/src/mp/codecs/plgpcmapcmu/codec_pcmapcmu.la
+#LDADD += ../../../../sipXtapi/sipXmediaLib/src/mp/codecs/plgilbc/codec_ilbc.la
+LDADD += -lsipXsdp
+#LDADD += /../../../sipXtapi/sipXmediaAdapterLib/interface/libmediainterface.la
+LDADD += -lsipXmediaProcessing
+LDADD += -lsipXmedia
+LDADD += -lsipXport
+LDADD += -lsipXtack
+LDADD += ../../dum/libdum.la
+LDADD += ../../stack/libresip.la
+LDADD += ../../../rutil/librutil.la
 LDADD += $(LIBSSL_LIBADD) -lpthread
 
+AM_CPPFLAGS = -I$(top_srcdir)/resip/recon
+
 TESTS = \
-        testUA \
         sdpTests \
         unitTests
 
+bin_PROGRAMS = testUA
+
 check_PROGRAMS = \
-	testUA \
 	sdpTests \
 	unitTests
 

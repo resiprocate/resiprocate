@@ -4,7 +4,7 @@
 #include "ConversationManager.hxx"
 
 #include <resip/dum/DumCommand.hxx>
-#include <StunTuple.hxx>
+#include <reTurn/StunTuple.hxx>
 
 namespace recon
 {

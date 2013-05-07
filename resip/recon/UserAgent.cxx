@@ -10,9 +10,9 @@
 #include "UserAgentRegistration.hxx"
 #include "ReconSubsystem.hxx"
 
-#include "FlowManagerSubsystem.hxx"
+#include "reflow/FlowManagerSubsystem.hxx"
 
-#include <ReTurnSubsystem.hxx>
+#include <reTurn/ReTurnSubsystem.hxx>
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>

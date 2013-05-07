@@ -12,7 +12,7 @@
 #endif
 
 // APPLICATION INCLUDES
-#include "Flow.hxx"
+#include "reflow/Flow.hxx"
 #include "FlowManagerSipXSocket.hxx"
 
 using namespace std;

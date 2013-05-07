@@ -10,7 +10,7 @@
 #include <resip/dum/SubscriptionHandler.hxx>
 
 // FlowManager Includes
-#include "MediaStream.hxx"
+#include "reflow/MediaStream.hxx"
 
 #include "ConversationManager.hxx"
 #include "ConversationProfile.hxx"

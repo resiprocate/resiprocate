@@ -1021,6 +1021,7 @@ main (int argc, char** argv)
                                SdpCodec::SDP_CODEC_ILBC_20MS /* 109 - Internet Low Bit Rate Codec, 20ms (RFC3951) */, 
                                SdpCodec::SDP_CODEC_SPEEX_5 /* 97 - speex NB 5,950bps */,
                                SdpCodec::SDP_CODEC_GSM /* 3 - GSM */,
+                               //SdpCodec::SDP_CODEC_G722 /* 9 - G.722 */,
                                SdpCodec::SDP_CODEC_TONES /* 110 - telephone-event */};
    unsigned int numCodecIds = sizeof(codecIds) / sizeof(codecIds[0]);
 
@@ -1246,6 +1247,8 @@ main (int argc, char** argv)
    //enableConsoleOutput(TRUE);  // Allow sipX console output
    OsSysLog::initialize(0, "testUA");
    OsSysLog::setOutputFile(0, "sipXtapilog.txt") ;
+   //OsSysLog::enableConsoleOutput(true);
+   //OsSysLog::setLoggingPriority(PRI_DEBUG);
    Log::initialize("Cout", logLevel, "testUA");
    //UserAgent::setLogLevel(Log::Warning, UserAgent::SubsystemAll);
    //UserAgent::setLogLevel(Log::Info, UserAgent::SubsystemRecon);
@@ -1445,6 +1448,13 @@ main (int argc, char** argv)
 
    // Build Codecs and media offering
    SdpContents::Session::Medium medium("audio", port, 1, "RTP/AVP");
+   // For G.722, it is necessary to patch sipXmediaLib/src/mp/codecs/plgg722/plgg722.c
+   // #define USE_8K_SAMPLES 1
+   // and change sample rate from 16000 to 8000
+   // (tested against a Polycom device configured for G.722 8000)
+   //SdpContents::Session::Codec g722codec("G722", 8000);
+   //g722codec.payloadType() = 9;  /* RFC3551 */ ;
+   //medium.addCodec(g722codec);
    SdpContents::Session::Codec g711ucodec("PCMU", 8000);
    g711ucodec.payloadType() = 0;  /* RFC3551 */ ;
    medium.addCodec(g711ucodec);
