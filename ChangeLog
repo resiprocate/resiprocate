@@ -1,5 +1,24 @@
 = Release Notes v 1.8 =
 
+==1.8.8 Changes==
+*added VS2010 project files for MOHParkServer
+*replaced deprecated bzero calls with memsets since bzero doesn't exist in Visual Studio compiler
+*allow AllowEvents to be an advertised capability
+*reflow, recon: Cumulative improvements to enable recon build
+*Fixed a bug that would prevent onNewSubscription (client) from being called
+*ensure we can send a 100 Trying for NonInviteTransaction retransmissions
+*rpm: update spec for older RH/Fedora versions, add init scripts
+*rpm: libtool hack to avoid rpath problems
+*fixing ClientRegistration issue (client registration can end on transport switchover)
+*don't assert in Tuple constructors that take printable addresses, since these addresses can come from the wire or from configuration
+*change to Helper::isClientBehindNAT to ensure we don't pass hostnames that might be Via host (ie: web-rtc) to a Tuple constructor
+*changed a couple more places where we should catch BaseException instead of ParseException
+*widen exception catching net
+**ensures we also catch ParseExceptions when retrieving transaction id's, a problem reported by Roman Romanchenko
+*don't create a Tuple out of a Via hostname if it isn't an IP address
+*exceptions where seen repro when handling web-rtc messages that contain hostnames in the via host
+*ensure that we can accept IPv6 addresses in the Transport settings in repro.config
+
 ==1.8.7 Changes==
 *doc: Update README now that we use autotools
 *dum: ensured that all DUM usages/sessions DumCommandAdapter commands are using handles rather than references when saving the usage/session they apply to.
