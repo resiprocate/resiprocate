@@ -5,6 +5,7 @@
   #include "config.h"
 #endif
 
+#include <functional>
 #include <queue>
 #include <set>
 #include <iosfwd>
