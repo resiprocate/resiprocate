@@ -138,7 +138,7 @@ MediaStream::createOutboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* 
          srtp_dealloc(mSRTPSessionOut);
       }
    }
-   bzero(&mSRTPPolicyOut, sizeof(mSRTPPolicyOut));
+   memset(&mSRTPPolicyOut, 0, sizeof(mSRTPPolicyOut));
 
    // Copy key locally
    memcpy(mSRTPMasterKeyOut, key, SRTP_MASTER_KEY_LEN);
@@ -203,7 +203,7 @@ MediaStream::createInboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* k
          srtp_dealloc(mSRTPSessionIn);
       }
    }
-   bzero(&mSRTPPolicyIn, sizeof(mSRTPPolicyIn));
+   memset(&mSRTPPolicyIn, 0, sizeof(mSRTPPolicyIn));
 
    // Copy key locally
    memcpy(mSRTPMasterKeyIn, key, SRTP_MASTER_KEY_LEN);
