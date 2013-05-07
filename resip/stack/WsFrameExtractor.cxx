@@ -91,7 +91,8 @@ WsFrameExtractor::processBytes(UInt8 *input, Data::size_type len, bool& dropConn
          if(mPayload == 0)
          {
             StackLog(<<"starting new frame buffer");
-            mPayload = (UInt8*)new char[mPayloadLength];
+            // Include an extra byte at the end for null terminator
+            mPayload = (UInt8*)new char[mPayloadLength + 1];
             mPayloadPos = 0;
          }
 
@@ -114,7 +115,7 @@ WsFrameExtractor::processBytes(UInt8 *input, Data::size_type len, bool& dropConn
          {
             StackLog(<<"Got a whole frame, queueing it");
             mMessageSize += mPayloadLength;
-            Data *mFrame = new Data(Data::Borrow, (char *)mPayload, mPayloadLength);
+            Data *mFrame = new Data(Data::Borrow, (char *)mPayload, mPayloadLength, mPayloadLength + 1);
             mFrames.push(mFrame);
             mHaveHeader = false;
             mHeaderLen = 0;
@@ -213,7 +214,21 @@ WsFrameExtractor::joinFrames()
 
    Data *msg = mFrames.front();
    mFrames.pop();
-   msg->reserve(mMessageSize);
+   if(!mFrames.empty())
+   {
+      // must expand buffer because there are multiple frames
+      // can't use Data::reserve() to increase the buffer, because the
+      // ShareEnum will change to Take when expanded
+      char *_msg = (char *)msg->data();
+      Data::size_type frameSize = msg->size();
+      delete msg;
+
+      // allow extra byte for null terminator
+      char *newBuf = new char [mMessageSize + 1]; 
+      memcpy(newBuf, _msg, frameSize);
+
+      msg = new Data(Data::Borrow, newBuf, frameSize, mMessageSize + 1);
+   }
    while(!mFrames.empty())
    {
       Data *mFrame = mFrames.front();
@@ -222,6 +237,11 @@ WsFrameExtractor::joinFrames()
       delete [] mFrame->data();
       delete mFrame;
    }
+
+   // It is safe to cast because we used Borrow:
+   char *_msg = (char *)msg->data();
+   // MsgHeaderScanner expects space for an extra byte at the end:
+   _msg[mMessageSize] = 0;
 
    mMessages.push(msg);
 
