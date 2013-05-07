@@ -9,6 +9,7 @@
 #include "resip/stack/Transport.hxx"
 #include "resip/stack/MsgHeaderScanner.hxx"
 #include "resip/stack/SendData.hxx"
+#include "resip/stack/WsFrameExtractor.hxx"
 
 namespace osc
 {
@@ -76,7 +77,7 @@ class ConnectionBase
       ConnState getCurrentState() const { return mConnState; }
       bool preparseNewBytes(int bytesRead);
       bool wsProcessHandshake(int bytesRead, bool &dropConnection);
-      bool wsProcessData(int &bytesRead, bool &tryAgain);
+      bool wsProcessData(int bytesRead);
       void decompressNewBytes(int bytesRead);
       std::pair<char*, size_t> getWriteBuffer();
       std::pair<char*, size_t> getCurrentWriteBuffer();
@@ -108,17 +109,13 @@ class ConnectionBase
       osc::TcpStream *mSigcompFramer;
       TransmissionFormat mSendingTransmissionFormat;
       TransmissionFormat mReceivingTransmissionFormat;
-	  bool mDeprecatedWebSocketVersion;
 
    private:
       SipMessage* mMessage;
       char* mBuffer;
       size_t mBufferPos;
       size_t mBufferSize;
-      UInt8 mWsMaskKey[4];
-      // Accumulates the contents of a series of related WebSocket
-      // frame payloads that comprise a single SIP message
-      Data mWsBuffer;
+      WsFrameExtractor mWsFrameExtractor;
 
       static char connectionStates[MAX][32];
       UInt64 mLastUsed;
