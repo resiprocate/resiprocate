@@ -1,9 +1,15 @@
 #if !defined(BridgeMixer_hxx)
 #define BridgeMixer_hxx
 
+#ifdef WIN32
+#include <stdint.h>       // Use Visual Studio's stdint.h
+#define _MSC_STDINT_H_    // This define will ensure that stdint.h in sipXport tree is not used
+#endif
+
 #include <mp/MprBridge.h>
 #include <mp/MpResourceTopology.h>
 #include <mi/CpMediaInterface.h>
+#include <mp/MpEncoderBase.h>  // required so that static methods in header get linked in
 
 namespace recon
 {

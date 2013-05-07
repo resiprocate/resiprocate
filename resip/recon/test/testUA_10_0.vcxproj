@@ -41,11 +41,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Debug\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Debug\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">testUA\$(Platform)\$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Release\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Release\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">testUA\$(Platform)\$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
@@ -62,7 +62,7 @@
     </BuildLog>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)/../;$(ProjectDir)/../../../;$(ProjectDir)/../../../../sipXtapi/sipXMediaAdapterLib/sipXmediaMediaProcessing/include;$(ProjectDir)/../../../../sipXtapi/sipXMediaAdapterLib/interface;$(ProjectDir)/../../../../sipXtapi/sipXPortLib/include;$(ProjectDir)/../../../../sipXtapi/sipXtackLib/include;$(ProjectDir)/../../../../sipXtapi/sipXsdpLib/include;$(ProjectDir)/../../../../sipXtapi/sipXMediaLib/include;$(ProjectDir)/../../../reTurn;$(ProjectDir)/../../../contrib/asio;$(ProjectDir)/../../../contrib/boost_1_34_1;$(ProjectDir)/../../../contrib/openssl/include;$(ProjectDir)/../../../contrib/srtp/include;$(ProjectDir)/../../../contrib/srtp/crypto/include;$(ProjectDir)/../../../reflow;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)/../;$(ProjectDir)/../../../;$(ProjectDir)/../../../../sipXtapi/sipXMediaAdapterLib/sipXmediaMediaProcessing/include;$(ProjectDir)/../../../../sipXtapi/sipXMediaAdapterLib/interface;$(ProjectDir)/../../../../sipXtapi/sipXPortLib/include;$(ProjectDir)/../../../../sipXtapi/sipXtackLib/include;$(ProjectDir)/../../../../sipXtapi/sipXsdpLib/include;$(ProjectDir)/../../../../sipXtapi/sipXMediaLib/include;$(ProjectDir)/../../../reTurn;$(ProjectDir)/../../../contrib/asio;$(ProjectDir)/../../../contrib/boost;$(ProjectDir)/../../../contrib/openssl/include;$(ProjectDir)/../../../contrib/srtp/include;$(ProjectDir)/../../../contrib/srtp/crypto/include;$(ProjectDir)/../../../reflow;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0501;_DEBUG;_CONSOLE;USE_IPV6;USE_ARES;DEFAULT_BRIDGE_MAX_IN_OUTPUTS=10;BOOST_ALL_NO_LIB;USE_SSL;LEAK_CHECK;_CRT_SECURE_NO_WARNINGS;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -77,7 +77,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;$(ProjectDir)..\..\..\contrib\openssl\out32.dbg\libeay32.lib;$(ProjectDir)..\..\..\contrib\openssl\out32.dbg\ssleay32.lib;$(ProjectDir)..\..\..\contrib\pcre\Debug\pcre.lib;$(ProjectDir)..\..\..\contrib\srtp\Debug\libSRTP.lib;winmm.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXportLib\Debug\sipxportlib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXsdpLib\Debug\sipxsdplib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaLib\Debug\sipxmedialib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaAdapterLib\Debug\sipxmediaadapterlib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaLib\contrib\libspeex\lib\libspeex.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\static\libeay32MDd.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\static\ssleay32MDd.lib;winmm.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXportLib\Debug\sipxportlib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXsdpLib\Debug\sipxsdplib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaLib\Debug\sipxmedialib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaAdapterLib\Debug\sipxmediaadapterlib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaLib\contrib\libspeex\lib\libspeex.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)testUA.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)testUA.pdb</ProgramDatabaseFile>
@@ -97,7 +97,7 @@
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>$(ProjectDir)/../;$(ProjectDir)/../../../;$(ProjectDir)/../../../../sipXtapi/sipXMediaAdapterLib/sipXmediaMediaProcessing/include;$(ProjectDir)/../../../../sipXtapi/sipXMediaAdapterLib/interface;$(ProjectDir)/../../../../sipXtapi/sipXPortLib/include;$(ProjectDir)/../../../../sipXtapi/sipXtackLib/include;$(ProjectDir)/../../../../sipXtapi/sipXsdpLib/include;$(ProjectDir)/../../../../sipXtapi/sipXMediaLib/include;$(ProjectDir)/../../../reTurn;$(ProjectDir)/../../../contrib/asio;$(ProjectDir)/../../../contrib/boost_1_34_1;$(ProjectDir)/../../../contrib/openssl/inc32;$(ProjectDir)/../../../contrib/srtp/include;$(ProjectDir)/../../../contrib/srtp/crypto/include;$(ProjectDir)/../../../reflow;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)/../;$(ProjectDir)/../../../;$(ProjectDir)/../../../../sipXtapi/sipXMediaAdapterLib/sipXmediaMediaProcessing/include;$(ProjectDir)/../../../../sipXtapi/sipXMediaAdapterLib/interface;$(ProjectDir)/../../../../sipXtapi/sipXPortLib/include;$(ProjectDir)/../../../../sipXtapi/sipXtackLib/include;$(ProjectDir)/../../../../sipXtapi/sipXsdpLib/include;$(ProjectDir)/../../../../sipXtapi/sipXMediaLib/include;$(ProjectDir)/../../../reTurn;$(ProjectDir)/../../../contrib/asio;$(ProjectDir)/../../../contrib/boost;$(ProjectDir)/../../../contrib/openssl/include;$(ProjectDir)/../../../contrib/srtp/include;$(ProjectDir)/../../../contrib/srtp/crypto/include;$(ProjectDir)/../../../reflow;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0501;NDEBUG;_CONSOLE;USE_IPV6;USE_ARES;DEFAULT_BRIDGE_MAX_IN_OUTPUTS=10;BOOST_ALL_NO_LIB;USE_SSL;_CRT_SECURE_NO_WARNINGS;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -112,7 +112,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;$(ProjectDir)..\..\..\contrib\openssl\out32\libeay32.lib;$(ProjectDir)..\..\..\contrib\openssl\out32\ssleay32.lib;$(ProjectDir)..\..\..\contrib\pcre\Release\pcre.lib;$(ProjectDir)..\..\..\contrib\srtp\Release\libSRTP.lib;winmm.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXportLib\Release\sipxportlib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXsdpLib\Release\sipxsdplib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaLib\Release\sipxmedialib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaAdapterLib\Release\sipxmediaadapterlib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaLib\contrib\libspeex\lib\libspeex.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\static\libeay32MD.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\static\ssleay32MD.lib;winmm.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXportLib\Release\sipxportlib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXsdpLib\Release\sipxsdplib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaLib\Release\sipxmedialib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaAdapterLib\Release\sipxmediaadapterlib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaLib\contrib\libspeex\lib\libspeex.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)testUA.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)testUA.pdb</ProgramDatabaseFile>

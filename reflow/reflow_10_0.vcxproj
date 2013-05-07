@@ -53,7 +53,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)/..;$(ProjectDir)/../reTurn;$(ProjectDir)/../contrib/asio;$(ProjectDir)/../contrib/boost_1_34_1;$(ProjectDir)/../contrib/openssl/inc32;$(ProjectDir)/../contrib/srtp/include;$(ProjectDir)/../contrib/srtp/crypto/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)/..;$(ProjectDir)/../reTurn;$(ProjectDir)/../contrib/asio;$(ProjectDir)/../contrib/boost;$(ProjectDir)/../contrib/openssl/include;$(ProjectDir)/../contrib/srtp/include;$(ProjectDir)/../contrib/srtp/crypto/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;_WIN32_WINNT=0x0501;USE_IPV6;USE_ARES;BOOST_ALL_NO_LIB;USE_SSL;LEAK_CHECK;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -71,7 +71,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)/..;$(ProjectDir)/../reTurn;$(ProjectDir)/../contrib/asio;$(ProjectDir)/../contrib/boost_1_34_1;$(ProjectDir)/../contrib/openssl/inc32;$(ProjectDir)/../contrib/srtp/include;$(ProjectDir)/../contrib/srtp/crypto/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)/..;$(ProjectDir)/../reTurn;$(ProjectDir)/../contrib/asio;$(ProjectDir)/../contrib/boost;$(ProjectDir)/../contrib/openssl/include;$(ProjectDir)/../contrib/srtp/include;$(ProjectDir)/../contrib/srtp/crypto/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_WIN32_WINNT=0x0501;USE_IPV6;USE_ARES;BOOST_ALL_NO_LIB;USE_SSL;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>

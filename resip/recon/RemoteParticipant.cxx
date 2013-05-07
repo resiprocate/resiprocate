@@ -956,7 +956,8 @@ RemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
          // Add fingerprint attribute
          char fingerprint[100];
          mConversationManager.getFlowManager().getDtlsFactory()->getMyCertFingerprint(fingerprint);
-         offer.session().addAttribute("fingerprint", "SHA-1 " + Data(fingerprint));
+         //offer.session().addAttribute("fingerprint", "SHA-1 " + Data(fingerprint));
+         offer.session().addAttribute("fingerprint", "SHA-256 " + Data(fingerprint));  // Use SHA-256 for web-rtc compatibility
          //offer.session().addAttribute("acap", "1 fingerprint:SHA-1 " + Data(fingerprint));
 
          // Add setup attribute
@@ -1082,7 +1083,8 @@ RemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessionCap
             // Add fingerprint attribute to answer
             char fingerprint[100];
             mConversationManager.getFlowManager().getDtlsFactory()->getMyCertFingerprint(fingerprint);                        
-            answer.session().addAttribute("fingerprint", "SHA-1 " + Data(fingerprint));
+            //answer.session().addAttribute("fingerprint", "SHA-1 " + Data(fingerprint));
+            answer.session().addAttribute("fingerprint", "SHA-256 " + Data(fingerprint));  // Use SHA-256 for web-rtc compatibility
 
             // Add setup attribute
             if(sdpMediaLine.getTcpSetupAttribute() == sdpcontainer::SdpMediaLine::TCP_SETUP_ATTRIBUTE_ACTIVE)

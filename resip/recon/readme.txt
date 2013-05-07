@@ -78,7 +78,7 @@ SDES Implementation Notes:
 - no support for SDES SRTP Session parameters: Unencrypted/Unauthenticated, FEC_ORDER, FEC_KEY, WSH
 
 DTLS Implementation Notes:
-1. Only SHA-1 fingerprint is supported (not SHA-224, SHA-256, SHA-384, SHA-512, MD5 or MD2)
+1. Only SHA-256 fingerprint is supported (not SHA-1, SHA-224, SHA-384, SHA-512, MD5 or MD2)
 2. Passive side must do a STUN connectivity check - text in draft is inconsistent
 3. Does not currently require that Identity header be present/validated.
 
@@ -101,46 +101,15 @@ Note:  sipXtapi SVN repository has recently changed locations from:
 
 Note:  Ensure you use at least SVN revision 11413 of sipXtapi.
 
-/resip/                     <- https://svn.resiprocate.org/rep/resiprocate/main
-/resip/contrib/openssl      <- https://svn.resiprocate.org/rep/resiprocate/contrib/dtls-srtp/openssl
-/resip/contrib/boost_1_34_1 <- BOOST 1.34.1 (required in this location for Windows builds only)
-/sipXtapi                   <- https://scm.sipfoundry.org/rep/sipX/branches/sipXtapi
-
-
-Building dtls-srtp version of OpenSSL on Windows
-------------------------------------------------
-recon currently uses a branch of OpenSSL that contains modification to do dtls-srtp.
-
-/resip/contrib/openssl <- https://svn.resiprocate.org/rep/resiprocate/contrib/dtls-srtp/openssl
-
-You will need ActiveState Perl, available from http://www.activestate.com/ActivePerl - there
-is a free version available for download.
-
-To build openSSL for windows using VS2003:
-1.  Use VS2003 Command Prompt window - Note: 0.9.8g will not build 
-    Crypto ASM fns with VS2003 MASM - we will build openssl with no ASM
-2.  From openssl root run: perl Configure VC-WIN32 enable-tlsext
-3.  Run: perl util\mkfiles.pl >MINFO
-4.  Run: perl util\mk1mf.pl no-asm debug VC-WIN32 > d32.mak
-5.  Run: perl util\mk1mf.pl no-asm VC-WIN32 > 32.mak
-6.  Run: nmake -f d32.mak
-7.  Run: nmake -f 32.mak
-
-To build openSSL for windows using VS2005:
-1.  Use VS2005 Command Prompt window
-2.  From openssl root run: perl Configure VC-WIN32 enable-tlsext
-3.  Run: ms\do_masm
-4.  Run: perl util\mkfiles.pl >MINFO
-5.  Run: perl util\mk1mf.pl debug VC-WIN32 > d32.mak
-6.  Run: perl util\mk1mf.pl VC-WIN32 > 32.mak
-7.  Run: nmake -f d32.mak
-8.  Run: nmake -f 32.mak
-
+/resip/                  <- https://svn.resiprocate.org/rep/resiprocate/main
+/resip/contrib/openssl   <- OpenSSL 1.0.1 or above
+/resip/contrib/boost     <- BOOST 1.34.1 (required in this location for Windows builds only)
+/sipXtapi                <- https://scm.sipfoundry.org/rep/sipX/branches/sipXtapi
 
 Building recon on Windows
 -------------------------
 1.  Ensure the build environment is setup as indicated above.
-2.  Use the recon_7_1.sln Visual Studio 2003 or recon_8_0.sln Visual Studio 2005 
+2.  Use the recon_8_0.sln Visual Studio 2005 or recon_10_0.sln Visual Studio 2010
     solution file
 3.  Open the sipXmediaAdapterLib project settings and enable the following defines:
     DISABLE_DEFAULT_PHONE_MEDIA_INTERFACE_FACTORY
