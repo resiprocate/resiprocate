@@ -148,8 +148,8 @@ WsFrameExtractor::parseHeader()
 
    UInt64 hdrPos = 2;
 
-   mFinalFrame = (mWsHeader[0] >> 7);
-   mMasked = (mWsHeader[1] >> 7);
+   mFinalFrame = (mWsHeader[0] >> 7) != 0;
+   mMasked = (mWsHeader[1] >> 7) != 0;
 
    if(mWsHeader[0] & 0x40 || mWsHeader[0] & 0x20 || mWsHeader[0] & 0x10)
    {
@@ -184,7 +184,7 @@ WsFrameExtractor::parseHeader()
       if((mHeaderLen - hdrPos) < 4)
       {
          StackLog(<< "Too short to contain ws data [3]");
-         return ((hdrPos + 4) - mHeaderLen);
+         return (int)((hdrPos + 4) - mHeaderLen);
       }
       mWsMaskKey[0] = mWsHeader[hdrPos];
       mWsMaskKey[1] = mWsHeader[hdrPos + 1];
