@@ -54,7 +54,7 @@ AsyncTlsSocketBase::bind(const asio::ip::address& address, unsigned short port)
 }
 
 void 
-AsyncTlsSocketBase::connect(const std::string& address, unsigned short port, bool is_v6)
+AsyncTlsSocketBase::connect(const std::string& address, unsigned short port, bool allowV6)
 {
    mHostname = address;
 

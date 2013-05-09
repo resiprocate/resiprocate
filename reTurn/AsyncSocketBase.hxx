@@ -30,7 +30,7 @@ public:
 
    /// Note:  The following API's are thread safe and queue the request to be handled by the ioService thread
    virtual asio::error_code bind(const asio::ip::address& address, unsigned short port) = 0;
-   virtual void connect(const std::string& address, unsigned short port, bool is_v6) = 0;  
+   virtual void connect(const std::string& address, unsigned short port, bool allowV6) = 0;  
    /// Note: destination is ignored for TCP and TLS connections
    virtual void send(const StunTuple& destination, boost::shared_ptr<DataBuffer>& data);  // Send unframed data
    virtual void send(const StunTuple& destination, unsigned short channel, boost::shared_ptr<DataBuffer>& data);  // send with turn framing

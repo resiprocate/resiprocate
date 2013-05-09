@@ -1100,9 +1100,9 @@ TurnAsyncSocket::sendToRemotePeer(RemotePeer& remotePeer, boost::shared_ptr<Data
 }
 
 void
-TurnAsyncSocket::connect(const std::string& address, unsigned short port, bool is_v6)
+TurnAsyncSocket::connect(const std::string& address, unsigned short port, bool allowV6)
 {
-   mAsyncSocketBase.connect(address, port, is_v6);
+   mAsyncSocketBase.connect(address, port, allowV6);
 }
 
 void

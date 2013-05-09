@@ -24,7 +24,7 @@ public:
    virtual unsigned int getSocketDescriptor();
 
    virtual asio::error_code bind(const asio::ip::address& address, unsigned short port);
-   virtual void connect(const std::string& address, unsigned short port, bool is_v6);  
+   virtual void connect(const std::string& address, unsigned short port, bool allowV6);  
 
    void doHandshake();
 

@@ -47,7 +47,7 @@ AsyncTcpSocketBase::bind(const asio::ip::address& address, unsigned short port)
 }
 
 void 
-AsyncTcpSocketBase::connect(const std::string& address, unsigned short port, bool is_v6)
+AsyncTcpSocketBase::connect(const std::string& address, unsigned short port, bool allowV6)
 {
    // Start an asynchronous resolve to translate the address
    // into a list of endpoints.

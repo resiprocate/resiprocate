@@ -368,7 +368,7 @@ int main(int argc, char* argv[])
     handler.setTurnAsyncSocket(turnSocket.get());
 
     // Connect to Stun/Turn Server
-    turnSocket->connect(turnAddress.c_str(), port);
+    turnSocket->connect(turnAddress.c_str(), port, false);
 
     // Set the username and password
     turnSocket->setUsernameAndPassword(username, password);

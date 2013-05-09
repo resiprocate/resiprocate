@@ -58,7 +58,7 @@ public:
    // Sets the local HmacKey, used to check the integrity of incoming STUN messages
    void setLocalPassword(const char* password);
 
-   void connect(const std::string& address, unsigned short port, bool is_v6);
+   void connect(const std::string& address, unsigned short port, bool allowV6);
 
    // Stun Binding Method - use getReflexiveTuple() to get binding info
    void bindRequest();

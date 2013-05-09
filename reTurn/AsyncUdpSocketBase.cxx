@@ -44,13 +44,13 @@ AsyncUdpSocketBase::bind(const asio::ip::address& address, unsigned short port)
 }
 
 void 
-AsyncUdpSocketBase::connect(const std::string& address, unsigned short port, bool is_v6)
+AsyncUdpSocketBase::connect(const std::string& address, unsigned short port, bool allowV6)
 {
    // Start an asynchronous resolve to translate the address
    // into a list of endpoints.
    resip::Data service(port);
 #ifdef USE_IPV6
-   asio::ip::udp::resolver::query query((is_v6 ? asio::ip::udp::v6() : asio::ip::udp::v4()), address, service.c_str());   
+   asio::ip::udp::resolver::query query((allowV6 ? asio::ip::udp::v6() : asio::ip::udp::v4()), address, service.c_str());   
 #else
    asio::ip::udp::resolver::query query(asio::ip::udp::v4(), address, service.c_str());   
 #endif
