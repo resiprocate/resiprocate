@@ -7,6 +7,7 @@
 #include "DataBuffer.hxx"
 #include "StunMessage.hxx"
 #include "TurnManager.hxx"
+#include "TurnAllocationManager.hxx"
 
 namespace reTurn {
 
@@ -32,8 +33,8 @@ public:
 
    /// Process a received StunMessage, and produce a reply
    /// Returns true if the response message is to be sent
-   ProcessResult processStunMessage(AsyncSocketBase* turnSocket, StunMessage& request, StunMessage& response, bool isRFC3489BackwardsCompatServer=false);
-   void processTurnData(unsigned short channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, boost::shared_ptr<DataBuffer>& data);
+   ProcessResult processStunMessage(AsyncSocketBase* turnSocket, TurnAllocationManager& turnAllocationManager, StunMessage& request, StunMessage& response, bool isRFC3489BackwardsCompatServer=false);
+   void processTurnData(TurnAllocationManager& turnAllocationManager, unsigned short channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, boost::shared_ptr<DataBuffer>& data);
 
    const ReTurnConfig& getConfig() { return mTurnManager.getConfig(); }
 
@@ -56,13 +57,13 @@ private:
    // Specific request processors
    ProcessResult processStunBindingRequest(StunMessage& request, StunMessage& response, bool isRFC3489BackwardsCompatServer);
    ProcessResult processStunSharedSecretRequest(StunMessage& request, StunMessage& response);
-   ProcessResult processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMessage& request, StunMessage& response);
-   ProcessResult processTurnRefreshRequest(StunMessage& request, StunMessage& response);
-   ProcessResult processTurnCreatePermissionRequest(StunMessage& request, StunMessage& response);
-   ProcessResult processTurnChannelBindRequest(StunMessage& request, StunMessage& response);
+   ProcessResult processTurnAllocateRequest(AsyncSocketBase* turnSocket, TurnAllocationManager& turnAllocationManager, StunMessage& request, StunMessage& response);
+   ProcessResult processTurnRefreshRequest(TurnAllocationManager& turnAllocationManager, StunMessage& request, StunMessage& response);
+   ProcessResult processTurnCreatePermissionRequest(TurnAllocationManager& turnAllocationManager, StunMessage& request, StunMessage& response);
+   ProcessResult processTurnChannelBindRequest(TurnAllocationManager& turnAllocationManager, StunMessage& request, StunMessage& response);
 
    // Specific Indication processors
-   void processTurnSendIndication(StunMessage& request);
+   void processTurnSendIndication(TurnAllocationManager& turnAllocationManager, StunMessage& request);
 
    // Utility methods
    void buildErrorResponse(StunMessage& response, unsigned short errorCode, const char* msg, const char* realm = 0);

@@ -1,6 +1,7 @@
 #include <boost/bind.hpp>
 
 #include "TurnAllocation.hxx"
+#include "TurnAllocationManager.hxx"
 #include "TurnManager.hxx"
 #include "TurnPermission.hxx"
 #include "AsyncSocketBase.hxx"
@@ -21,6 +22,7 @@ using namespace resip;
 namespace reTurn {
 
 TurnAllocation::TurnAllocation(TurnManager& turnManager,
+                               TurnAllocationManager& turnAllocationManager,
                                AsyncSocketBase* localTurnSocket,
                                const StunTuple& clientLocalTuple, 
                                const StunTuple& clientRemoteTuple,
@@ -31,6 +33,7 @@ TurnAllocation::TurnAllocation(TurnManager& turnManager,
    mClientAuth(clientAuth),
    mRequestedTuple(requestedTuple),
    mTurnManager(turnManager),
+   mTurnAllocationManager(turnAllocationManager),
    mAllocationTimer(turnManager.getIOService()),
    mLocalTurnSocket(localTurnSocket),
    mBadChannelErrorLogged(false),
@@ -114,7 +117,7 @@ TurnAllocation::refresh(unsigned int lifetime)  // update expiration time
 
    // start timer
    mAllocationTimer.expires_from_now(boost::posix_time::seconds(lifetime));
-   mAllocationTimer.async_wait(boost::bind(&TurnManager::allocationExpired, &mTurnManager, asio::placeholders::error, mKey));
+   mAllocationTimer.async_wait(boost::bind(&TurnAllocationManager::allocationExpired, &mTurnAllocationManager, asio::placeholders::error, mKey));
 }
 
 bool 
@@ -162,7 +165,7 @@ TurnAllocation::refreshPermission(const asio::ip::address& address)
 void 
 TurnAllocation::onSocketDestroyed()
 {
-   mTurnManager.removeTurnAllocation(mKey);   // will delete this
+   mTurnAllocationManager.removeTurnAllocation(mKey);   // will delete this
 }
 
 void 

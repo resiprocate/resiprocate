@@ -47,7 +47,7 @@ static unsigned int PACKET_TIME_TO_SIMULATE=20;  // 20 ms
 // Test Config 4
 //#define ECHO_SERVER_ONLY
 
-resip::Data address = resip::DnsUtil::getLocalIpAddress();
+resip::Data address;
 unsigned short relayPort = 0;
 resip::Data turnAddress;
 char rtpPayloadData[172];  // 172 bytes of random data to simulate RTP payload
@@ -178,18 +178,18 @@ public:
       InfoLog( << "MyTurnAsyncSocketHandler::onSharedSecretFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
    }
 
-   virtual void onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple)
+   virtual void onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& stunServerTuple)
    {
-      InfoLog( << "MyTurnAsyncSocketHandler::onBindingSuccess: socketDest=" << socketDesc << ", reflexive=" << reflexiveTuple);
+      InfoLog( << "MyTurnAsyncSocketHandler::onBindingSuccess: socketDest=" << socketDesc << ", reflexive=" << reflexiveTuple << ", stunServerTuple=" << stunServerTuple);
       mTurnAsyncSocket->createAllocation(30,       // TurnSocket::UnspecifiedLifetime, 
                                          TurnSocket::UnspecifiedBandwidth, 
                                          StunMessage::PropsPortPair,
                                          TurnAsyncSocket::UnspecifiedToken,
                                          StunTuple::UDP);  
    }
-   virtual void onBindFailure(unsigned int socketDesc, const asio::error_code& e)
+   virtual void onBindFailure(unsigned int socketDesc, const asio::error_code& e, const StunTuple& stunServerTuple)
    {
-      InfoLog( << "MyTurnAsyncSocketHandler::onBindingFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
+      InfoLog( << "MyTurnAsyncSocketHandler::onBindingFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), stunServerTuple=" << stunServerTuple);
    }
 
    virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, UInt64 reservationToken)
@@ -290,6 +290,11 @@ public:
       InfoLog( << "MyTurnAsyncSocketHandler::onReceiveFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
    }
 
+   virtual void onIncomingBindRequestProcessed(unsigned int socketDesc, const StunTuple& sourceTuple)
+   {
+      InfoLog( << "MyTurnAsyncSocketHandler::onIncomingBindRequestProcessed: socketDest=" << socketDesc << " sourceTuple=" << sourceTuple);
+   }
+
    void setTurnAsyncSocket(TurnAsyncSocket* turnAsyncSocket) { mTurnAsyncSocket = turnAsyncSocket; }
 
 private:
@@ -307,7 +312,7 @@ int main(int argc, char* argv[])
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
   resip::FindMemoryLeaks fml;
 #endif
-  resip::Log::initialize("cout", "DEBUG", "TestRtpLoad");
+  resip::Log::initialize("cout", "INFO", "TestRtpLoad");
 
   try
   {
@@ -319,16 +324,19 @@ int main(int argc, char* argv[])
     //   turnPeer.join();
     //   return 0;
     //}
+    
+    address = resip::DnsUtil::getLocalIpAddress();
 
     if (argc < 3)
     {
-      std::cerr << "Usage: TestRtpLoad <host> <port> [<PacketTime>]\n";
+      std::cerr << "Usage: TestRtpLoad <host> <port> <loaclAddress> [<PacketTime>]\n";
       return 1;
     }
     turnAddress = argv[1];
     unsigned int port = resip::Data(argv[2]).convertUnsignedLong();
+    address = argv[3];
 
-    if(argc == 4)
+    if(argc == 5)
     {
        PACKET_TIME_TO_SIMULATE = atoi(argv[3]);
     }

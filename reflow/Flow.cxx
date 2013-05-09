@@ -346,7 +346,7 @@ Flow::receiveFrom(const asio::ip::address& address, unsigned short port, char* b
          return asio::error_code(flowmanager::ReceiveTimeout, asio::error::misc_category);
       }
 
-      recvTimeout = timeout ? timeout - (Timer::getTimeMs() - startTime) : 0;
+      recvTimeout = timeout ? (unsigned int)(timeout - (Timer::getTimeMs() - startTime)) : 0;
       if(timeout != 0 && recvTimeout <= 0)
       {
          // timeout
@@ -492,6 +492,8 @@ Flow::setActiveDestination(const char* address, unsigned short port)
 
       }
    }
+   else
+      WarningLog(<<"No TURN Socket, can't send media to destination");
 }
 
 #ifdef USE_SSL
@@ -636,7 +638,7 @@ Flow::onSharedSecretFailure(unsigned int socketDesc, const asio::error_code& e)
 }
 
 void 
-Flow::onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple)
+Flow::onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& stunServerTuple)
 {
    InfoLog(<< "Flow::onBindingSuccess: socketDesc=" << socketDesc << ", reflexive=" << reflexiveTuple << ", componentId=" << mComponentId);
    {
@@ -647,7 +649,7 @@ Flow::onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple)
    mMediaStream.onFlowReady(mComponentId);
 }
 void 
-Flow::onBindFailure(unsigned int socketDesc, const asio::error_code& e)
+Flow::onBindFailure(unsigned int socketDesc, const asio::error_code& e, const StunTuple& stunServerTuple)
 {
    WarningLog(<< "Flow::onBindingFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId );
    changeFlowState(Connected);
@@ -723,6 +725,24 @@ Flow::onClearActiveDestinationFailure(unsigned int socketDesc, const asio::error
 }
 
 void 
+Flow::onChannelBindRequestSent(unsigned int socketDesc, unsigned short channelNumber)
+{
+   InfoLog(<< "Flow::onChannelBindRequestSent: socketDesc=" << socketDesc << ", channelNumber=" << channelNumber << ", componentId=" << mComponentId);
+}
+
+void 
+Flow::onChannelBindSuccess(unsigned int socketDesc, unsigned short channelNumber)
+{
+   InfoLog(<< "Flow::onChannelBindSuccess: socketDesc=" << socketDesc << ", channelNumber=" << channelNumber << ", componentId=" << mComponentId);
+}
+
+void 
+Flow::onChannelBindFailure(unsigned int socketDesc, const asio::error_code& e)
+{
+   WarningLog(<< "Flow::onChannelBindFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId );
+}
+
+void 
 Flow::onSendSuccess(unsigned int socketDesc)
 {
    //InfoLog(<< "Flow::onSendSuccess: socketDesc=" << socketDesc);
@@ -793,6 +813,13 @@ Flow::onReceiveFailure(unsigned int socketDesc, const asio::error_code& e)
       assert(mTurnSocket.get());
       mTurnSocket->turnReceive();
    }
+}
+
+void 
+Flow::onIncomingBindRequestProcessed(unsigned int socketDesc, const StunTuple& sourceTuple)
+{
+   InfoLog(<< "Flow::onIncomingBindRequestProcessed: socketDesc=" << socketDesc << ", sourceTuple=" << sourceTuple );
+   // TODO - handle
 }
 
 void 

@@ -731,6 +731,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ssl\TlsBaseTransport.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ssl\TlsConnection.cxx"
 				>
 				<FileConfiguration
@@ -879,6 +883,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\WsFrameExtractor.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ssl\WssTransport.cxx"
 				>
 			</File>
@@ -952,6 +960,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ConnectionTerminated.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\Contents.hxx"
 				>
 			</File>
@@ -1005,6 +1017,10 @@
 			</File>
 			<File
 				RelativePath=".\Embedded.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\EnableFlowTimer.hxx"
 				>
 			</File>
 			<File
@@ -1093,6 +1109,10 @@
 			</File>
 			<File
 				RelativePath=".\KeepAliveMessage.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\KeepAlivePong.hxx"
 				>
 			</File>
 			<File
@@ -1332,6 +1352,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\TerminateFlow.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\TextParameter.hxx"
 				>
 			</File>
@@ -1345,6 +1369,10 @@
 			</File>
 			<File
 				RelativePath=".\TimerQueue.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ssl\TlsBaseTransport.hxx"
 				>
 			</File>
 			<File
@@ -1473,6 +1501,10 @@
 			</File>
 			<File
 				RelativePath=".\WsDecorator.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\WsFrameExtractor.hxx"
 				>
 			</File>
 			<File

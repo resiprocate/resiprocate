@@ -12,28 +12,30 @@ LDADD += ../../../reflow/libreflow.la
 #LDADD += ../../../../sipXtapi/sipXmediaLib/src/mp/codecs/plgtones/codec_tones.la
 #LDADD += ../../../../sipXtapi/sipXmediaLib/src/mp/codecs/plgpcmapcmu/codec_pcmapcmu.la
 #LDADD += ../../../../sipXtapi/sipXmediaLib/src/mp/codecs/plgilbc/codec_ilbc.la
-LDADD += ../../../../sipXtapi/sipXsdpLib/src/libsipXsdp.la
-LDADD += ../../../../sipXtapi/sipXmediaAdapterLib/interface/libmediainterface.la
-LDADD += ../../../../sipXtapi/sipXmediaAdapterLib/sipXmediaMediaProcessing/src/libsipXmediaProcessing.la
-LDADD += ../../../../sipXtapi/sipXmediaLib/src/libsipXmedia.la
-LDADD += ../../../../sipXtapi/sipXportLib/src/libsipXport.la
-LDADD += ../../../../sipXtapi/sipXtackLib/src/libsipXtack.la
+LDADD += -lsipXsdp
+#LDADD += /../../../sipXtapi/sipXmediaAdapterLib/interface/libmediainterface.la
+LDADD += -lsipXmediaProcessing
+LDADD += -lsipXmedia
+LDADD += -lsipXport
+LDADD += -lsipXtack
 LDADD += ../../dum/libdum.la
 LDADD += ../../stack/libresip.la
 LDADD += ../../../rutil/librutil.la
 LDADD += $(LIBSSL_LIBADD) -lpthread
 
+AM_CPPFLAGS = -I$(top_srcdir)/resip/recon
+
 TESTS = \
-        testUA \
         sdpTests \
         unitTests
 
+bin_PROGRAMS = testUA
+
 check_PROGRAMS = \
-	testUA \
 	sdpTests \
 	unitTests
 
-testUA_SOURCES = testUA.cxx
+testUA_SOURCES = testUA.cxx playback_prompt.h record_prompt.h
 sdpTests_SOURCES = sdpTests.cxx
 unitTests_SOURCES = unitTests.cxx
 

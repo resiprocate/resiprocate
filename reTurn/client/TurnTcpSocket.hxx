@@ -13,7 +13,7 @@ public:
    explicit TurnTcpSocket(const asio::ip::address& address = UnspecifiedIpAddress, 
                           unsigned short port = 0);
 
-   virtual unsigned int getSocketDescriptor() { return mSocket.native(); }
+   virtual unsigned int getSocketDescriptor() { return (unsigned int)mSocket.native(); }
 
    // To use this socket without a Turn Relay, use this connect call to connect directly
    // to endpoint

@@ -1,6 +1,8 @@
 #include <cassert>
 #include <time.h>
 
+#include <resip/recon/UserAgent.hxx>
+
 #include <resip/stack/Symbols.hxx>
 #include <resip/stack/Tuple.hxx>
 #include <rutil/Data.hxx>

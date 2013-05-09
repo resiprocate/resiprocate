@@ -54,7 +54,7 @@ TurnAsyncUdpSocket::onReceiveFailure(const asio::error_code& e)
    }
    else
    {
-   if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onReceiveFailure(getSocketDescriptor(), e);
+      if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onReceiveFailure(getSocketDescriptor(), e);
    }
 }
  

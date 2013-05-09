@@ -78,7 +78,7 @@ TcpConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short
          if(request.isValid())
          {
             StunMessage response;
-            RequestHandler::ProcessResult result = mRequestHandler.processStunMessage(this, request, response);
+            RequestHandler::ProcessResult result = mRequestHandler.processStunMessage(this, mTurnAllocationManager, request, response);
 
             switch(result)
             {
@@ -115,7 +115,8 @@ TcpConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short
          memcpy(&channelNumber, &(*data)[0], 2);
          channelNumber = ntohs(channelNumber);
 
-         mRequestHandler.processTurnData(channelNumber,
+         mRequestHandler.processTurnData(mTurnAllocationManager,
+                                         channelNumber,
                                          StunTuple(StunTuple::TCP, mSocket.local_endpoint().address(), mSocket.local_endpoint().port()),
                                          StunTuple(StunTuple::TCP, address, port),
                                          data);

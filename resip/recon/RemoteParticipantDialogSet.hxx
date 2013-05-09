@@ -59,6 +59,9 @@ public:
    virtual bool isUACConnected();
    virtual bool isStaleFork(const resip::DialogId& dialogId);
 
+   virtual void setPeerExpectsSAVPF(bool value) { mPeerExpectsSAVPF = value; }
+   virtual bool peerExpectsSAVPF() { return mPeerExpectsSAVPF; }
+
    virtual void removeDialog(const resip::DialogId& dialogId);
    virtual ConversationManager::ParticipantForkSelectMode getForkSelectMode();
    virtual ParticipantHandle getActiveRemoteParticipantHandle() { return mActiveRemoteParticipantHandle; }
@@ -106,6 +109,7 @@ private:
    resip::DialogId mUACConnectedDialogId;
    ParticipantHandle mActiveRemoteParticipantHandle;
    std::map<resip::DialogId, RemoteParticipant*> mDialogs;
+   bool mPeerExpectsSAVPF;
 
    // Media Stream stuff
    flowmanager::MediaStream::NatTraversalMode mNatTraversalMode;

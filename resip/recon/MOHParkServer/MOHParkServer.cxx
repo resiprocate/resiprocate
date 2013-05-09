@@ -1,5 +1,7 @@
 #include <signal.h>
 
+#include <resip/recon/UserAgent.hxx>
+
 #include "AppSubsystem.hxx"
 #include "Server.hxx"
 

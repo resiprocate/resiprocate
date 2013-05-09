@@ -2,7 +2,7 @@
 // io_service.hpp
 // ~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2010 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -15,25 +15,29 @@
 # pragma once
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
-#include "asio/detail/push_options.hpp"
-
-#include "asio/detail/push_options.hpp"
+#include "asio/detail/config.hpp"
 #include <cstddef>
 #include <stdexcept>
 #include <typeinfo>
-#include <boost/config.hpp>
-#include <boost/throw_exception.hpp>
-#include "asio/detail/pop_options.hpp"
-
-#include "asio/error_code.hpp"
 #include "asio/detail/noncopyable.hpp"
-#include "asio/detail/reactor_fwd.hpp"
 #include "asio/detail/service_registry_fwd.hpp"
-#include "asio/detail/signal_init.hpp"
-#include "asio/detail/task_io_service_fwd.hpp"
-#include "asio/detail/win_iocp_io_service_fwd.hpp"
-#include "asio/detail/winsock_init.hpp"
 #include "asio/detail/wrapped_handler.hpp"
+#include "asio/error_code.hpp"
+
+#if defined(ASIO_HAS_IOCP)
+# include "asio/detail/win_iocp_io_service_fwd.hpp"
+#else
+# include "asio/detail/task_io_service_fwd.hpp"
+#endif
+
+#if defined(BOOST_WINDOWS) || defined(__CYGWIN__)
+# include "asio/detail/winsock_init.hpp"
+#elif defined(__sun) || defined(__QNX__) || defined(__hpux) || defined(_AIX) \
+  || defined(__osf__)
+# include "asio/detail/signal_init.hpp"
+#endif
+
+#include "asio/detail/push_options.hpp"
 
 namespace asio {
 
@@ -45,7 +49,7 @@ template <typename Service> bool has_service(io_service& ios);
 #if defined(ASIO_HAS_IOCP)
 namespace detail { typedef win_iocp_io_service io_service_impl; }
 #else
-namespace detail { typedef task_io_service<reactor> io_service_impl; }
+namespace detail { typedef task_io_service io_service_impl; }
 #endif
 
 /// Provides core I/O functionality.
@@ -196,7 +200,7 @@ public:
   class strand;
 
   /// Constructor.
-  io_service();
+  ASIO_DECL io_service();
 
   /// Constructor.
   /**
@@ -205,7 +209,7 @@ public:
    * @param concurrency_hint A suggestion to the implementation on how many
    * threads it should allow to run simultaneously.
    */
-  explicit io_service(std::size_t concurrency_hint);
+  ASIO_DECL explicit io_service(std::size_t concurrency_hint);
 
   /// Destructor.
   /**
@@ -239,7 +243,7 @@ public:
    * destructor defined above destroys all handlers, causing all @c shared_ptr
    * references to all connection objects to be destroyed.
    */
-  ~io_service();
+  ASIO_DECL ~io_service();
 
   /// Run the io_service object's event processing loop.
   /**
@@ -265,7 +269,7 @@ public:
    * The poll() function may also be used to dispatch ready handlers, but
    * without blocking.
    */
-  std::size_t run();
+  ASIO_DECL std::size_t run();
 
   /// Run the io_service object's event processing loop.
   /**
@@ -291,7 +295,7 @@ public:
    * The poll() function may also be used to dispatch ready handlers, but
    * without blocking.
    */
-  std::size_t run(asio::error_code& ec);
+  ASIO_DECL std::size_t run(asio::error_code& ec);
 
   /// Run the io_service object's event processing loop to execute at most one
   /// handler.
@@ -303,7 +307,7 @@ public:
    *
    * @throws asio::system_error Thrown on failure.
    */
-  std::size_t run_one();
+  ASIO_DECL std::size_t run_one();
 
   /// Run the io_service object's event processing loop to execute at most one
   /// handler.
@@ -315,7 +319,7 @@ public:
    *
    * @return The number of handlers that were executed.
    */
-  std::size_t run_one(asio::error_code& ec);
+  ASIO_DECL std::size_t run_one(asio::error_code& ec);
 
   /// Run the io_service object's event processing loop to execute ready
   /// handlers.
@@ -327,7 +331,7 @@ public:
    *
    * @throws asio::system_error Thrown on failure.
    */
-  std::size_t poll();
+  ASIO_DECL std::size_t poll();
 
   /// Run the io_service object's event processing loop to execute ready
   /// handlers.
@@ -339,7 +343,7 @@ public:
    *
    * @return The number of handlers that were executed.
    */
-  std::size_t poll(asio::error_code& ec);
+  ASIO_DECL std::size_t poll(asio::error_code& ec);
 
   /// Run the io_service object's event processing loop to execute one ready
   /// handler.
@@ -351,7 +355,7 @@ public:
    *
    * @throws asio::system_error Thrown on failure.
    */
-  std::size_t poll_one();
+  ASIO_DECL std::size_t poll_one();
 
   /// Run the io_service object's event processing loop to execute one ready
   /// handler.
@@ -363,7 +367,7 @@ public:
    *
    * @return The number of handlers that were executed.
    */
-  std::size_t poll_one(asio::error_code& ec);
+  ASIO_DECL std::size_t poll_one(asio::error_code& ec);
 
   /// Stop the io_service object's event processing loop.
   /**
@@ -372,7 +376,7 @@ public:
    * return as soon as possible. Subsequent calls to run(), run_one(), poll()
    * or poll_one() will return immediately until reset() is called.
    */
-  void stop();
+  ASIO_DECL void stop();
 
   /// Reset the io_service in preparation for a subsequent run() invocation.
   /**
@@ -385,7 +389,7 @@ public:
    * This function must not be called while there are any unfinished calls to
    * the run(), run_one(), poll() or poll_one() functions.
    */
-  void reset();
+  ASIO_DECL void reset();
 
   /// Request the io_service to invoke the given handler.
   /**
@@ -605,10 +609,10 @@ protected:
   /**
    * @param owner The io_service object that owns the service.
    */
-  service(asio::io_service& owner);
+  ASIO_DECL service(asio::io_service& owner);
 
   /// Destructor.
-  virtual ~service();
+  ASIO_DECL virtual ~service();
 
 private:
   /// Destroy all user-defined handler objects owned by the service.
@@ -631,10 +635,7 @@ class service_already_exists
   : public std::logic_error
 {
 public:
-  service_already_exists()
-    : std::logic_error("Service already exists.")
-  {
-  }
+  ASIO_DECL service_already_exists();
 };
 
 /// Exception thrown when trying to add a service object to an io_service where
@@ -643,16 +644,44 @@ class invalid_service_owner
   : public std::logic_error
 {
 public:
-  invalid_service_owner()
-    : std::logic_error("Invalid service owner.")
+  ASIO_DECL invalid_service_owner();
+};
+
+namespace detail {
+
+// Special derived service id type to keep classes header-file only.
+template <typename Type>
+class service_id
+  : public asio::io_service::id
+{
+};
+
+// Special service base class to keep classes header-file only.
+template <typename Type>
+class service_base
+  : public asio::io_service::service
+{
+public:
+  static asio::detail::service_id<Type> id;
+
+  // Constructor.
+  service_base(asio::io_service& io_service)
+    : asio::io_service::service(io_service)
   {
   }
 };
 
+template <typename Type>
+asio::detail::service_id<Type> service_base<Type>::id;
+
+} // namespace detail
 } // namespace asio
 
-#include "asio/impl/io_service.ipp"
-
 #include "asio/detail/pop_options.hpp"
+
+#include "asio/impl/io_service.hpp"
+#if defined(ASIO_HEADER_ONLY)
+# include "asio/impl/io_service.ipp"
+#endif // defined(ASIO_HEADER_ONLY)
 
 #endif // ASIO_IO_SERVICE_HPP

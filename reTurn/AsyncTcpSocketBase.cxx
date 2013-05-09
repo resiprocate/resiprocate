@@ -29,7 +29,7 @@ AsyncTcpSocketBase::~AsyncTcpSocketBase()
 unsigned int 
 AsyncTcpSocketBase::getSocketDescriptor() 
 { 
-   return mSocket.native(); 
+   return (unsigned int)mSocket.native(); 
 }
 
 asio::error_code 
@@ -205,7 +205,7 @@ AsyncTcpSocketBase::transportClose()
 {
    if (mOnBeforeSocketCloseFp)
    {
-      mOnBeforeSocketCloseFp(mSocket.native());
+      mOnBeforeSocketCloseFp((unsigned int)mSocket.native());
    }
 
    asio::error_code ec;

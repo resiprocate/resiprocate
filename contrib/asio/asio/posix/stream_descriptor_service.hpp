@@ -1,8 +1,8 @@
 //
-// stream_descriptor_service.hpp
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// posix/stream_descriptor_service.hpp
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2010 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -15,27 +15,17 @@
 # pragma once
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
-#include "asio/detail/push_options.hpp"
-
-#include "asio/detail/push_options.hpp"
-#include <cstddef>
-#include <boost/config.hpp>
-#include "asio/detail/pop_options.hpp"
-
-#include "asio/error.hpp"
-#include "asio/io_service.hpp"
-#include "asio/detail/service_base.hpp"
-
-#if !defined(ASIO_DISABLE_POSIX_STREAM_DESCRIPTOR)
-# if !defined(BOOST_WINDOWS) && !defined(__CYGWIN__)
-#  define ASIO_HAS_POSIX_STREAM_DESCRIPTOR 1
-# endif // !defined(BOOST_WINDOWS) && !defined(__CYGWIN__)
-#endif // !defined(ASIO_DISABLE_POSIX_STREAM_DESCRIPTOR)
+#include "asio/detail/config.hpp"
 
 #if defined(ASIO_HAS_POSIX_STREAM_DESCRIPTOR) \
   || defined(GENERATING_DOCUMENTATION)
 
+#include <cstddef>
+#include "asio/error.hpp"
+#include "asio/io_service.hpp"
 #include "asio/detail/reactive_descriptor_service.hpp"
+
+#include "asio/detail/push_options.hpp"
 
 namespace asio {
 namespace posix {
@@ -179,9 +169,9 @@ private:
 } // namespace posix
 } // namespace asio
 
+#include "asio/detail/pop_options.hpp"
+
 #endif // defined(ASIO_HAS_POSIX_STREAM_DESCRIPTOR)
        //   || defined(GENERATING_DOCUMENTATION)
-
-#include "asio/detail/pop_options.hpp"
 
 #endif // ASIO_POSIX_STREAM_DESCRIPTOR_SERVICE_HPP

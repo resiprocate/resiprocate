@@ -156,6 +156,7 @@ libresip_la_SOURCES = \
 	KeepAliveMessage.cxx \
 	StatelessHandler.cxx \
 	InvalidContents.cxx \
+	WsFrameExtractor.cxx \
 	WsTransport.cxx \
 	WsDecorator.cxx
 
@@ -339,6 +340,9 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	ValueFifo.hxx \
 	Via.hxx \
 	WarningCategory.hxx \
+        WsDecorator.hxx \
+	WsFrameExtractor.hxx \
+        WsTransport.hxx \
 	X509Contents.hxx \
 	ZeroOutStatistics.hxx
 

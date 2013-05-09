@@ -281,6 +281,14 @@ class Data
       Data(ShareEnum, const char* buffer, size_type length);
 
       /**
+        Creates a Data from the passed-in buffer.
+
+        @see ShareEnum
+      */
+
+      Data(ShareEnum, const char* buffer, size_type length, size_type capacity);
+
+      /**
         Takes a null-terminated string and creates a buffer.
 
         @see ShareEnum

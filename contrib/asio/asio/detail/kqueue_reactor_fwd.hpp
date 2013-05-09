@@ -1,8 +1,8 @@
 //
-// kqueue_reactor_fwd.hpp
-// ~~~~~~~~~~~~~~~~~~~~~~
+// detail/kqueue_reactor_fwd.hpp
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2010 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 // Copyright (c) 2005 Stefan Arentz (stefan at soze dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -16,15 +16,9 @@
 # pragma once
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
-#include "asio/detail/push_options.hpp"
+#include "asio/detail/config.hpp"
 
-#if !defined(ASIO_DISABLE_KQUEUE)
-
-#if (defined(__MACH__) && defined(__APPLE__)) \
-  || defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__)
-
-// Define this to indicate that kqueue is supported on the target platform.
-#define ASIO_HAS_KQUEUE 1
+#if defined(ASIO_HAS_KQUEUE)
 
 namespace asio {
 namespace detail {
@@ -34,11 +28,6 @@ class kqueue_reactor;
 } // namespace detail
 } // namespace asio
 
-#endif // (defined(__MACH__) && defined(__APPLE__))
-       // || defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__)
-
-#endif // !defined(ASIO_DISABLE_KQUEUE)
-
-#include "asio/detail/pop_options.hpp"
+#endif // defined(ASIO_HAS_KQUEUE)
 
 #endif // ASIO_DETAIL_KQUEUE_REACTOR_FWD_HPP

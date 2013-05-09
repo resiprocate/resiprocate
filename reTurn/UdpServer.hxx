@@ -40,6 +40,9 @@ private:
    virtual void onSendSuccess();
    virtual void onSendFailure(const asio::error_code& e);
 
+   /// Manages turn allocations
+   TurnAllocationManager mTurnAllocationManager;
+
    /// The handler for all incoming requests.
    RequestHandler& mRequestHandler;
 

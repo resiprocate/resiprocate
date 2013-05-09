@@ -138,6 +138,7 @@ MediaStream::createOutboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* 
          srtp_dealloc(mSRTPSessionOut);
       }
    }
+   memset(&mSRTPPolicyOut, 0, sizeof(mSRTPPolicyOut));
 
    // Copy key locally
    memcpy(mSRTPMasterKeyOut, key, SRTP_MASTER_KEY_LEN);
@@ -162,7 +163,7 @@ MediaStream::createOutboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* 
    // set remaining policy settings
    mSRTPPolicyOut.ssrc.type = ssrc_any_outbound;   
    mSRTPPolicyOut.key = mSRTPMasterKeyOut;
-   mSRTPPolicyOut.next = 0;
+   mSRTPPolicyOut.window_size = 64;
 
    // Allocate and initailize the SRTP sessions
    status = srtp_create(&mSRTPSessionOut, &mSRTPPolicyOut);
@@ -202,6 +203,7 @@ MediaStream::createInboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* k
          srtp_dealloc(mSRTPSessionIn);
       }
    }
+   memset(&mSRTPPolicyIn, 0, sizeof(mSRTPPolicyIn));
 
    // Copy key locally
    memcpy(mSRTPMasterKeyIn, key, SRTP_MASTER_KEY_LEN);
@@ -226,7 +228,7 @@ MediaStream::createInboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* k
    // set remaining policy settings
    mSRTPPolicyIn.ssrc.type = ssrc_any_inbound;   
    mSRTPPolicyIn.key = mSRTPMasterKeyIn;
-   mSRTPPolicyIn.next = 0;
+   mSRTPPolicyIn.window_size = 64;
 
    // Allocate and initailize the SRTP sessions
    status = srtp_create(&mSRTPSessionIn, &mSRTPPolicyIn);

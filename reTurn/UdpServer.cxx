@@ -99,7 +99,7 @@ UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short por
             if(it == mResponseMap.end())
             {
                response = new StunMessage;
-               RequestHandler::ProcessResult result = mRequestHandler.processStunMessage(this, request, *response, isRFC3489BackwardsCompatServer());
+               RequestHandler::ProcessResult result = mRequestHandler.processStunMessage(this, mTurnAllocationManager, request, *response, isRFC3489BackwardsCompatServer());
 
                switch(result)
                {
@@ -153,16 +153,17 @@ UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short por
          dataLen = ntohs(dataLen);
 
          // Check if the UDP datagram size is too short to contain the claimed length of the ChannelData message, then discard
-         if(data->size() < dataLen + 4)
+         if(data->size() < (unsigned int)(dataLen + 4))
          {
             WarningLog(<< "ChannelData message size=" << dataLen+4 << " too larger for UDP packet size=" << data->size() <<".  Dropping.");
          }
          else
          {
-            mRequestHandler.processTurnData(channelNumber,
-                                          StunTuple(StunTuple::UDP, mSocket.local_endpoint().address(), mSocket.local_endpoint().port()),
-                                          StunTuple(StunTuple::UDP, address, port),
-                                          data);
+            mRequestHandler.processTurnData(mTurnAllocationManager,
+                                            channelNumber,
+                                            StunTuple(StunTuple::UDP, mSocket.local_endpoint().address(), mSocket.local_endpoint().port()),
+                                            StunTuple(StunTuple::UDP, address, port),
+                                            data);
          }
       }
    }

@@ -1,8 +1,8 @@
 //
-// bind_handler.hpp
-// ~~~~~~~~~~~~~~~~
+// detail/bind_handler.hpp
+// ~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2010 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -15,10 +15,11 @@
 # pragma once
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
-#include "asio/detail/push_options.hpp"
-
+#include "asio/detail/config.hpp"
 #include "asio/detail/handler_alloc_helpers.hpp"
 #include "asio/detail/handler_invoke_helpers.hpp"
+
+#include "asio/detail/push_options.hpp"
 
 namespace asio {
 namespace detail {
@@ -35,7 +36,7 @@ public:
 
   void operator()()
   {
-    handler_(arg1_);
+    handler_(static_cast<const Arg1&>(arg1_));
   }
 
   void operator()() const
@@ -92,7 +93,8 @@ public:
 
   void operator()()
   {
-    handler_(arg1_, arg2_);
+    handler_(static_cast<const Arg1&>(arg1_),
+        static_cast<const Arg2&>(arg2_));
   }
 
   void operator()() const
@@ -152,7 +154,9 @@ public:
 
   void operator()()
   {
-    handler_(arg1_, arg2_, arg3_);
+    handler_(static_cast<const Arg1&>(arg1_),
+        static_cast<const Arg2&>(arg2_),
+        static_cast<const Arg3&>(arg3_));
   }
 
   void operator()() const
@@ -216,7 +220,10 @@ public:
 
   void operator()()
   {
-    handler_(arg1_, arg2_, arg3_, arg4_);
+    handler_(static_cast<const Arg1&>(arg1_),
+        static_cast<const Arg2&>(arg2_),
+        static_cast<const Arg3&>(arg3_),
+        static_cast<const Arg4&>(arg4_));
   }
 
   void operator()() const
@@ -287,7 +294,11 @@ public:
 
   void operator()()
   {
-    handler_(arg1_, arg2_, arg3_, arg4_, arg5_);
+    handler_(static_cast<const Arg1&>(arg1_),
+        static_cast<const Arg2&>(arg2_),
+        static_cast<const Arg3&>(arg3_),
+        static_cast<const Arg4&>(arg4_),
+        static_cast<const Arg5&>(arg5_));
   }
 
   void operator()() const

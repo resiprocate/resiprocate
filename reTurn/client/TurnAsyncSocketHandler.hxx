@@ -35,9 +35,9 @@ public:
    virtual void onClearActiveDestinationSuccess(unsigned int socketDesc) = 0;
    virtual void onClearActiveDestinationFailure(unsigned int socketDesc, const asio::error_code &e) = 0;
 
-   virtual void onChannelBindRequestSent(unsigned int socketDesc, unsigned short channelNumber) {}; 
-   virtual void onChannelBindSuccess(unsigned int socketDesc, unsigned short channelNumber) {};
-   virtual void onChannelBindFailure(unsigned int socketDesc, const asio::error_code& e) {};
+   virtual void onChannelBindRequestSent(unsigned int socketDesc, unsigned short channelNumber) = 0; 
+   virtual void onChannelBindSuccess(unsigned int socketDesc, unsigned short channelNumber) = 0;
+   virtual void onChannelBindFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
 
    //virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size) = 0;
    virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data) = 0;
@@ -46,7 +46,7 @@ public:
    virtual void onSendSuccess(unsigned int socketDesc) = 0;
    virtual void onSendFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
 
-   virtual void onIncomingBindRequestProcessed(unsigned int socketDest, const StunTuple& sourceTuple) = 0;
+   virtual void onIncomingBindRequestProcessed(unsigned int socketDesc, const StunTuple& sourceTuple) = 0;
 
 private:
 };

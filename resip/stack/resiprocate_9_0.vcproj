@@ -886,6 +886,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\WsFrameExtractor.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ssl\WssTransport.cxx"
 				>
 			</File>
@@ -1500,6 +1504,10 @@
 			</File>
 			<File
 				RelativePath=".\WsDecorator.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\WsFrameExtractor.hxx"
 				>
 			</File>
 			<File

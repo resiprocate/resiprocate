@@ -3,13 +3,10 @@
 
 #include <map>
 #include <asio.hpp>
-#include "TurnAllocationKey.hxx"
 #include "ReTurnConfig.hxx"
 #include "StunTuple.hxx"
 
 namespace reTurn {
-
-class TurnAllocation;
 
 class TurnManager
 {
@@ -17,17 +14,7 @@ public:
    explicit TurnManager(asio::io_service& ioService, const ReTurnConfig& config);  // ioService used to start timers
    ~TurnManager();
 
-   void addTurnAllocation(TurnAllocation* turnAllocation);
-   void removeTurnAllocation(const TurnAllocationKey& turnAllocationKey);
-
-   void startAllocationExpirationTimer(const TurnAllocationKey& turnAllocationKey, int lifetime);
-
-   TurnAllocation* findTurnAllocation(const TurnAllocationKey& turnAllocationKey);
-   TurnAllocation* findTurnAllocation(const StunTuple& requestedTuple);
-
    asio::io_service& getIOService() { return mIOService; }
-
-   void allocationExpired(const asio::error_code& e, const TurnAllocationKey& turnAllocationKey);
 
    unsigned short allocateAnyPort(StunTuple::TransportType transport);
    unsigned short allocateEvenPort(StunTuple::TransportType transport);
@@ -39,9 +26,7 @@ public:
    const ReTurnConfig& getConfig() { return mConfig; }
 
 private:
-   typedef std::map<TurnAllocationKey, TurnAllocation*> TurnAllocationMap;  // .slg. consider using hash table
-   TurnAllocationMap mTurnAllocationMap;
- 
+
    typedef enum
    {
       PortStateUnallocated,

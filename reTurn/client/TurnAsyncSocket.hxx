@@ -83,7 +83,9 @@ public:
    unsigned short getConnectedPort() { return mAsyncSocketBase.getConnectedPort(); }
 
    // Turn Send Methods
-   //virtual void send(const char* buffer, unsigned int size);
+   virtual void send(const char* buffer, unsigned int size);  // framed
+   virtual void sendTo(const asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size);  // framed
+
    virtual void sendUnframed(boost::shared_ptr<DataBuffer>& data);  // Send unframed data
    virtual void sendFramed(boost::shared_ptr<DataBuffer>& data);
    virtual void sendToUnframed(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
@@ -221,6 +223,8 @@ private:
    void doDestroyAllocation();
    void doSetActiveDestination(const asio::ip::address& address, unsigned short port);
    void doClearActiveDestination();
+   void doSendFramed(boost::shared_ptr<DataBuffer>& data);
+   void doSendToFramed(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
    void doClose();
    void actualClose();
    void doChannelBinding(RemotePeer& remotePeer);

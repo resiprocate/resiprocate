@@ -27,76 +27,7 @@ TurnManager::TurnManager(asio::io_service& ioService, const ReTurnConfig& config
 
 TurnManager::~TurnManager()
 {
-   TurnAllocationMap::iterator it = mTurnAllocationMap.begin();
-   for(;it != mTurnAllocationMap.end();it++)
-   {
-      delete it->second;
-   }
-
    InfoLog(<< "Turn Manager destroyed.");
-}
-
-void 
-TurnManager::addTurnAllocation(TurnAllocation* turnAllocation)
-{
-   assert(findTurnAllocation(turnAllocation->getKey()) == 0);   
-   mTurnAllocationMap[turnAllocation->getKey()] = turnAllocation;
-}
-
-void 
-TurnManager::removeTurnAllocation(const TurnAllocationKey& turnAllocationKey)
-{
-   TurnAllocationMap::iterator it = mTurnAllocationMap.find(turnAllocationKey);
-   if(it != mTurnAllocationMap.end())
-   {
-      delete it->second;
-      mTurnAllocationMap.erase(it);
-   }
-}
-
-TurnAllocation* 
-TurnManager::findTurnAllocation(const TurnAllocationKey& turnAllocationKey)
-{
-   TurnAllocationMap::iterator it = mTurnAllocationMap.find(turnAllocationKey);
-   if(it != mTurnAllocationMap.end())
-   {
-      return it->second;
-   }
-   return 0;
-}
-
-TurnAllocation* 
-TurnManager::findTurnAllocation(const StunTuple& requestedTuple)
-{
-   TurnAllocationMap::iterator it;
-   for(it = mTurnAllocationMap.begin(); it != mTurnAllocationMap.end(); it++)
-   {
-      if(it->second->getRequestedTuple() == requestedTuple)
-      {
-         return it->second;
-      }
-   }
-   return 0;
-}
-
-void 
-TurnManager::allocationExpired(const asio::error_code& e, const TurnAllocationKey& turnAllocationKey)
-{
-   if (e != asio::error::operation_aborted)  // Note: nothing currently stops timers
-   {
-      // Timer was not cancelled, take necessary action.
-      InfoLog(<< "Turn Allocation Expired! clientLocal=" << turnAllocationKey.getClientLocalTuple() << " clientRemote=" << turnAllocationKey.getClientRemoteTuple());
-
-      TurnAllocationMap::iterator it = mTurnAllocationMap.find(turnAllocationKey);
-      if(it != mTurnAllocationMap.end())
-      {
-         if(time(0) >= it->second->getExpires())
-         {
-            delete it->second;
-            mTurnAllocationMap.erase(it);
-         }
-      }
-   }
 }
 
 unsigned short 

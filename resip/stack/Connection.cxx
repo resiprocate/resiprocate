@@ -136,14 +136,13 @@ Connection::performWrite()
       UInt64 lSize = (UInt64)dataRaw.size();
       UInt8* uBuffer;
 
-      if(!mDeprecatedWebSocketVersion)
+      if(lSize > 0x7D && lSize <= 0xFFFF)
       {
-         if(lSize > 0x7D && lSize <= 0xFFFF){
-            dataSize += 2;
-         }
-         else if(lSize > 0xFFFF){
-            dataSize += 8;
-         }
+         dataSize += 2;
+      }
+      else if(lSize > 0xFFFF)
+      {
+         dataSize += 8;
       }
 
       oldSd = mOutstandingSends.front();
@@ -155,37 +154,28 @@ Connection::performWrite()
       assert(dataWs && dataWs->data.data());
       uBuffer = (UInt8*)dataWs->data.data();
 
-      if(mDeprecatedWebSocketVersion)
-      {
-         uBuffer[0] = 0x00;
-         uBuffer[dataSize - 1] = 0xFF;
-         uBuffer = &uBuffer[1];
+      uBuffer[0] = 0x82;
+      if(lSize <= 0x7D){
+         uBuffer[1] = (UInt8)lSize;
+         uBuffer = &uBuffer[2];
       }
-      else
-      {
-         uBuffer[0] = 0x82;
-         if(lSize <= 0x7D){
-            uBuffer[1] = (UInt8)lSize;
-            uBuffer = &uBuffer[2];
-         }
-         else if(lSize <= 0xFFFF){
-            uBuffer[1] = 0x7E;
-            uBuffer[2] = (lSize >> 8) & 0xFF;
-            uBuffer[3] = (lSize & 0xFF);
-            uBuffer = &uBuffer[4];
-         }
-         else{
-            uBuffer[1] = 0x7F;
-            uBuffer[2] = (lSize >> 56) & 0xFF;
-            uBuffer[3] = (lSize >> 48) & 0xFF;
-            uBuffer[4] = (lSize >> 40) & 0xFF;
-            uBuffer[5] = (lSize >> 32) & 0xFF;
-            uBuffer[6] = (lSize >> 24) & 0xFF;
-            uBuffer[7] = (lSize >> 16) & 0xFF;
-            uBuffer[8] = (lSize >> 8) & 0xFF;
-            uBuffer[9] = (lSize & 0xFF);
-            uBuffer = &uBuffer[10];
-         }
+      else if(lSize <= 0xFFFF){
+         uBuffer[1] = 0x7E;
+         uBuffer[2] = (lSize >> 8) & 0xFF;
+         uBuffer[3] = (lSize & 0xFF);
+         uBuffer = &uBuffer[4];
+      }
+      else{
+         uBuffer[1] = 0x7F;
+         uBuffer[2] = (lSize >> 56) & 0xFF;
+         uBuffer[3] = (lSize >> 48) & 0xFF;
+         uBuffer[4] = (lSize >> 40) & 0xFF;
+         uBuffer[5] = (lSize >> 32) & 0xFF;
+         uBuffer[6] = (lSize >> 24) & 0xFF;
+         uBuffer[7] = (lSize >> 16) & 0xFF;
+         uBuffer[8] = (lSize >> 8) & 0xFF;
+         uBuffer[9] = (lSize & 0xFF);
+         uBuffer = &uBuffer[10];
       }
 
       memcpy(uBuffer, dataRaw.data(), dataRaw.size());
@@ -351,7 +341,8 @@ Connection::read()
    else
 #endif
    {
-      if (mReceivingTransmissionFormat == WebSocketHandshake){
+      if (mReceivingTransmissionFormat == WebSocketHandshake)
+      {
          bool dropConnection = false;
          if(wsProcessHandshake(bytesRead, dropConnection))
          {
@@ -370,13 +361,9 @@ Connection::read()
       {
          if (mReceivingTransmissionFormat == WebSocketData)
          {
-            bool tryAgain = true;
-            while(tryAgain)
+            if(!wsProcessData(bytesRead))
             {
-               if(!wsProcessData(bytesRead, tryAgain))
-               {
-                  bytesRead=-1;
-               }
+               bytesRead=-1;
             }
          }
          else if(!preparseNewBytes(bytesRead))

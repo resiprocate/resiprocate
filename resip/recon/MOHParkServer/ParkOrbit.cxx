@@ -1,3 +1,4 @@
+#include "../UserAgent.hxx"
 #include "AppSubsystem.hxx"
 #include "ParkOrbit.hxx"
 #include "Server.hxx"

@@ -25,7 +25,7 @@ AsyncUdpSocketBase::~AsyncUdpSocketBase()
 unsigned int 
 AsyncUdpSocketBase::getSocketDescriptor() 
 { 
-   return mSocket.native(); 
+   return (unsigned int)mSocket.native(); 
 }
 
 asio::error_code 
@@ -120,7 +120,7 @@ AsyncUdpSocketBase::transportClose()
 {
    if (mOnBeforeSocketCloseFp)
    {
-      mOnBeforeSocketCloseFp(mSocket.native());
+      mOnBeforeSocketCloseFp((unsigned int)mSocket.native());
    }
 
    asio::error_code ec;

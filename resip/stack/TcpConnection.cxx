@@ -39,10 +39,10 @@ TcpConnection::read( char* buf, int count )
 #ifdef WIN32 //EWOULDBLOCK is not returned from recv on *nix/*bsd
          case EWOULDBLOCK:  
 #endif
-            InfoLog (<< "No data ready to read");
+            StackLog (<< "No data ready to read");
             return 0;
          case EINTR:
-            InfoLog (<< "The call was interrupted by a signal before any data was read.");
+            DebugLog (<< "The call was interrupted by a signal before any data was read.");
             return 0;            
             break;
          case EIO:
@@ -55,10 +55,10 @@ TcpConnection::read( char* buf, int count )
             InfoLog (<< "fd is attached to an object which is unsuitable for reading.");
             break;
          case EFAULT:
-            InfoLog (<< "buf is outside your accessible address space.");
+            ErrLog (<< "buf is outside your accessible address space.");
             break;
          default:
-            InfoLog (<< "Some other error");
+            ErrLog (<< "Some other error, code = " << e);
             break;
       }
 

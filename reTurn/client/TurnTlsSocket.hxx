@@ -21,7 +21,7 @@ public:
                           const asio::ip::address& address = UnspecifiedIpAddress, 
                           unsigned short port = 0);
 
-   virtual unsigned int getSocketDescriptor() { return mSocket.lowest_layer().native(); }
+   virtual unsigned int getSocketDescriptor() { return (unsigned int)mSocket.lowest_layer().native(); }
    virtual  asio::error_code connect(const std::string& address, unsigned short port);
 
 protected:

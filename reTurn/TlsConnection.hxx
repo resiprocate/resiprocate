@@ -52,6 +52,9 @@ protected:
    /// The manager for this connection.
    ConnectionManager& mConnectionManager;
 
+   /// Manages turn allocations
+   TurnAllocationManager mTurnAllocationManager;
+
    /// The handler used to process the incoming request.
    RequestHandler& mRequestHandler;
 
