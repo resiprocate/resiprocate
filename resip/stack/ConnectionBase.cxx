@@ -684,6 +684,15 @@ ConnectionBase::wsProcessData(int bytesRead)
       // mWsBuffer should now contain a discrete SIP message, let the
       // stack go to work on it
 
+      if(msg->size() == 4 && memcmp(msg->data(), "\r\n\r\n", 4) == 0)
+      {
+         // sending a keep alive reply now
+         StackLog(<<"got a SIP ping embedded in WebSocket frame, replying");
+         onDoubleCRLF();
+         msg = mWsFrameExtractor.processBytes(0, 0, dropConnection);
+         continue;
+      }
+
       mMessage = new SipMessage(mWho.transport);
 
       mMessage->setSource(mWho);
