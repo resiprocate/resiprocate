@@ -56,7 +56,7 @@ Bootstrap
 
 The bootstrap must always be done on the same version of autotools
 for consistency.  The currently endorsed version is the autotools
-distributed in Debian 6.0 (squeeze).  If another version is to be used,
+distributed in Debian 7.0 (wheezy).  If another version is to be used,
 it should be discussed on the mailing list and noted in this document.
 
   autoreconf --install

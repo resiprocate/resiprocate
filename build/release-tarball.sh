@@ -9,7 +9,7 @@
 #
 # - at the moment, the supported platform for official bootstraps
 #
-#                Debian 6.0 (squeeze)
+#                Debian 7.0 (wheezy)
 #
 # - to avoid errors about the `zip' and `compress' commands, run
 #   the following:
