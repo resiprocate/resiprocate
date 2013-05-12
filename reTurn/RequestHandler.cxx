@@ -316,7 +316,7 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
 
       // !slg! need to determine whether the USERNAME contains a known entity, and in the case of a long-term
       //       credential, known within the realm of the REALM attribute of the request
-      if (getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword && !getConfig().isUserNameValid(*request.mUsername))
+      if (getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword && !getConfig().isUserNameValid(*request.mUsername, *request.mRealm))
       {
          WarningLog(<< "Invalid username: " << *request.mUsername << ". Sending 401. Sender=" << request.mRemoteTuple);
          buildErrorResponse(response, 401, "Unauthorized", getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword ? getConfig().mAuthenticationRealm.c_str() : 0);
@@ -332,9 +332,16 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
 
       if(getConfig().mAuthenticationMode != ReTurnConfig::NoAuthentication)
       {
-         request.calculateHmacKey(hmacKey, getConfig().getPasswordForUsername(*request.mUsername));
+         if(request.mHasRealm)  // Longterm authenicationmode
+         {
+            request.calculateHmacKey(hmacKey, getConfig().getPasswordForUsername(*request.mUsername, *request.mRealm));
+         }
+         else
+         {
+            request.calculateHmacKey(hmacKey, getConfig().getPasswordForUsername(*request.mUsername));
+         }
       }
-      
+
       if(!request.checkMessageIntegrity(hmacKey))
       {
          WarningLog(<< "MessageIntegrity is bad. Sending 401. Sender=" << request.mRemoteTuple);

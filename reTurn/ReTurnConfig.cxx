@@ -1,6 +1,13 @@
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <sstream>
+
 #include "ReTurnConfig.hxx"
 
 #include "ReTurnSubsystem.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include <rutil/Logger.hxx>
 
 #define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
@@ -84,21 +91,162 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
    }
 #endif
 
-   Data user(getConfigData("LongTermAuthUsername", ""));
-   Data password(getConfigData("LongTermAuthPassword", ""));
+	// TODO: For ShortTermCredentials use mAuthenticationCredentials[username] = password;
 
-   if(user.size() == 0 || password.size() == 0)
+
+	// LongTermCredentials
+
+   Data usersDatabase(getConfigData("UserDatabaseFile", ""));
+
+   if(usersDatabase.size() == 0)
    {
-      throw ConfigParse::Exception("Missing or invalid credentials (LongTermAuthUsername/LongTermAuthPassword)", __FILE__, __LINE__);
+      throw ConfigParse::Exception("Missing user database option! Expected \"UserDatabaseFile = file location\".", __FILE__, __LINE__);
    }
 
-   mAuthenticationCredentials[user] = password;
+   authParse(usersDatabase);
    calcUserAuthData();
 }
 
 ReTurnConfig::~ReTurnConfig()
 {
 }
+
+void
+ReTurnConfig::addUser(const resip::Data& username, const resip::Data& password, const resip::Data& realm)
+{
+   mRealmUsersAuthenticaionCredentials[std::make_pair(username, realm)] = password;
+   RealmUsers& realmUsers(mUsers[realm]);
+
+   UserAuthData newUser(UserAuthData::createFromPassword(username, realm, password));
+   realmUsers.insert(pair<resip::Data,UserAuthData>(username, newUser));
+}
+
+void
+ReTurnConfig::authParse(const resip::Data& accountDatabaseFilename)
+{
+   std::ifstream accountDatabaseFile(accountDatabaseFilename.c_str());
+   std::string sline;
+   int lineNbr = 0;
+   if(!accountDatabaseFile)
+   {
+      throw ReTurnConfig::Exception("Error opening/reading user database file!", __FILE__, __LINE__);
+   }
+
+   while(std::getline(accountDatabaseFile, sline))
+   {
+      AccountState accountState;
+      Data username;
+      Data password;
+      Data realm;
+      Data state;
+      Data line(sline);
+      ParseBuffer pb(line);
+
+      lineNbr++;
+
+      // Jump over empty lines.
+      if(line.size() == 0)
+      {
+          continue;
+      }
+
+      pb.skipWhitespace();
+      const char * anchor = pb.position();
+
+      pb.skipToOneOf(" :");
+
+      if (pb.eof())
+      {
+         ErrLog(<< "Missing or invalid credentials at line " << lineNbr);
+         continue;
+      }
+
+      pb.data(username, anchor);
+
+      pb.skipToChar(':');
+      if (!pb.eof())
+      {
+         pb.skipChar(':');
+         pb.skipWhitespace();
+      }
+
+      anchor = pb.position();
+      pb.skipToOneOf(" :");
+
+      if (pb.eof())
+      {
+         ErrLog(<< "Missing or invalid credentials at line " << lineNbr);
+         continue;
+      }
+
+      pb.data(password, anchor);
+
+      pb.skipToChar(':');
+      if (!pb.eof())
+      {
+         pb.skipChar(':');
+         pb.skipWhitespace();
+      }
+
+      anchor = pb.position();
+      pb.skipToOneOf(" :");
+
+      if (pb.eof())
+      {
+         ErrLog(<< "Missing or invalid credentials at line " << lineNbr);
+         continue;
+      }
+
+      pb.data(realm, anchor);
+
+      pb.skipToChar(':');
+      if (!pb.eof())
+      {
+         pb.skipChar(':');
+         pb.skipWhitespace();
+      }
+
+      anchor = pb.position();
+      pb.skipToOneOf(" \t\n");
+
+      pb.data(state, anchor);
+      state.lowercase();
+
+      if (state.size() != 0)
+      {
+
+         if(state == "authorized")
+         {
+            accountState = AUTHORIZED;
+         }
+         else if(state == "restricted")
+         {
+            accountState = RESTRICTED;
+         }
+         else if(state == "refused")
+         {
+            accountState = REFUSED;
+         }
+         else
+         {
+            ErrLog(<< "Invalid state value at line " << lineNbr << ", state= " << state);
+            continue;
+         }
+      }
+      else
+      {
+         ErrLog(<< "Missing state value at line " << lineNbr);
+         continue;
+      }
+
+      if(accountState != REFUSED) {
+         addUser(username, password, realm);
+      }
+   }
+
+   accountDatabaseFile.close();
+}
+
 
 void
 ReTurnConfig::calcUserAuthData()
@@ -125,18 +273,40 @@ ReTurnConfig::printHelpText(int argc, char **argv)
    std::cerr << "  " << removePath(argv[0]) << " reTurnServer.config --LogLevel=INFO" << std::endl;
 }
 
-bool 
+// ShortTermAuthentication
+bool
 ReTurnConfig::isUserNameValid(const resip::Data& username) const
 {
    std::map<resip::Data,resip::Data>::const_iterator it = mAuthenticationCredentials.find(username);
    return it != mAuthenticationCredentials.end();
 }
 
-const Data& 
+// LongTermAuthentication
+bool
+ReTurnConfig::isUserNameValid(const resip::Data& username, const resip::Data& realm) const
+{
+   return getUser(username, realm) != NULL;
+}
+
+const Data&
 ReTurnConfig::getPasswordForUsername(const Data& username) const
 {
    std::map<resip::Data,resip::Data>::const_iterator it = mAuthenticationCredentials.find(username);
    if(it != mAuthenticationCredentials.end())
+   {
+      return it->second;
+   }
+   else
+   {
+      return Data::Empty;
+   }
+}
+
+const Data&
+ReTurnConfig::getPasswordForUsername(const Data& username, const resip::Data& realm) const
+{
+   std::map<RealmUserPair, resip::Data>::const_iterator it = mRealmUsersAuthenticaionCredentials.find(std::make_pair(username, realm));
+   if(it != mRealmUsersAuthenticaionCredentials.end())
    {
       return it->second;
    }

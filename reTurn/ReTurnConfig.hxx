@@ -6,16 +6,29 @@
 #include <rutil/ConfigParse.hxx>
 #include <rutil/Data.hxx>
 #include <rutil/Log.hxx>
+#include <rutil/BaseException.hxx>
 
 #include <reTurn/UserAuthData.hxx>
 
 namespace reTurn {
 
 typedef std::map<resip::Data,reTurn::UserAuthData> RealmUsers;
+typedef std::pair<resip::Data, resip::Data> RealmUserPair;
 
 class ReTurnConfig : public resip::ConfigParse
 {
 public:
+   class Exception : public resip::BaseException
+   {
+      public:
+         Exception(const resip::Data& msg,
+                   const resip::Data& file,
+                   const int line)
+            : resip::BaseException(msg, file, line) {}            
+      protected:
+         virtual const char* name() const { return "ReTurnConfig::Exception"; }
+   };
+   
    ReTurnConfig();
    virtual ~ReTurnConfig();
 
@@ -30,6 +43,13 @@ public:
       ShortTermPassword = 1,
       LongTermPassword = 2
    } AuthenticationMode;
+   
+   typedef enum
+   {
+	  AUTHORIZED,
+	  RESTRICTED,
+	  REFUSED 
+   } AccountState;
 
    unsigned short mTurnPort;
    unsigned short mTlsTurnPort;
@@ -41,6 +61,7 @@ public:
    resip::Data mAuthenticationRealm;
    std::map<resip::Data,resip::Data> mAuthenticationCredentials;
    std::map<resip::Data,RealmUsers> mUsers;
+   std::map<RealmUserPair, resip::Data> mRealmUsersAuthenticaionCredentials;
    unsigned long mNonceLifetime;
 
    unsigned short mAllocationPortRangeMin;
@@ -63,8 +84,12 @@ public:
    resip::Data mRunAsGroup;
 
    bool isUserNameValid(const resip::Data& username) const;
+   bool isUserNameValid(const resip::Data& username,  const resip::Data& realm) const;
    const resip::Data& getPasswordForUsername(const resip::Data& username) const;
+   const resip::Data& getPasswordForUsername(const resip::Data& username, const resip::Data& realm) const;
    const UserAuthData* getUser(const resip::Data& userName, const resip::Data& realm) const;
+   void addUser(const resip::Data& username, const resip::Data& password, const resip::Data& realm);
+   void authParse(const resip::Data& accountDatabaseFilename);
 
 protected:
    void calcUserAuthData();
