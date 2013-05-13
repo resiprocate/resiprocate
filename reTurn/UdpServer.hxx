@@ -46,6 +46,10 @@ private:
    /// The handler for all incoming requests.
    RequestHandler& mRequestHandler;
 
+   // Stores the local address and port
+   asio::ip::address mLocalAddress;
+   unsigned short mLocalPort;
+
    /// The RFC3489 Alternate Server
    UdpServer* mAlternatePortUdpServer;
    UdpServer* mAlternateIpUdpServer;

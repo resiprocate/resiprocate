@@ -44,6 +44,9 @@ UdpServer::~UdpServer()
 void 
 UdpServer::start()
 {
+   asio::error_code ec;
+   mLocalAddress = mSocket.local_endpoint(ec).address();
+   mLocalPort = mSocket.local_endpoint(ec).port();
    doReceive();
 }
 
@@ -88,7 +91,7 @@ UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short por
       if(((*data)[0] & 0xC0) == 0)  // Stun/Turn Messages always have bits 0 and 1 as 00 - otherwise ChannelData message
       {
          // Try to parse stun message
-         StunMessage request(StunTuple(StunTuple::UDP, mSocket.local_endpoint().address(), mSocket.local_endpoint().port()),
+         StunMessage request(StunTuple(StunTuple::UDP, mLocalAddress, mLocalPort),
                              StunTuple(StunTuple::UDP, address, port),
                              (char*)&(*data)[0], data->size());
          if(request.isValid())
@@ -161,7 +164,7 @@ UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short por
          {
             mRequestHandler.processTurnData(mTurnAllocationManager,
                                             channelNumber,
-                                            StunTuple(StunTuple::UDP, mSocket.local_endpoint().address(), mSocket.local_endpoint().port()),
+                                            StunTuple(StunTuple::UDP, mLocalAddress, mLocalPort),
                                             StunTuple(StunTuple::UDP, address, port),
                                             data);
          }

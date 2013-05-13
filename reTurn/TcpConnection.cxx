@@ -38,6 +38,9 @@ TcpConnection::start()
 {
    DebugLog(<< "TcpConnection started.");
    setConnectedAddressAndPort();
+   asio::error_code ec;
+   mLocalAddress = mSocket.local_endpoint(ec).address();
+   mLocalPort = mSocket.local_endpoint(ec).port();
    doFramedReceive();
 }
 
@@ -72,7 +75,7 @@ TcpConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short
       if(((*data)[0] & 0xC0) == 0)  // Stun/Turn Messages always have bits 0 and 1 as 00 - otherwise ChannelData message
       {
          // Try to parse stun message
-         StunMessage request(StunTuple(StunTuple::TCP, mSocket.local_endpoint().address(), mSocket.local_endpoint().port()),
+         StunMessage request(StunTuple(StunTuple::TCP, mLocalAddress, mLocalPort),
                              StunTuple(StunTuple::TCP, address, port),
                              (char*)&(*data)[0], data->size());
          if(request.isValid())
@@ -117,7 +120,7 @@ TcpConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short
 
          mRequestHandler.processTurnData(mTurnAllocationManager,
                                          channelNumber,
-                                         StunTuple(StunTuple::TCP, mSocket.local_endpoint().address(), mSocket.local_endpoint().port()),
+                                         StunTuple(StunTuple::TCP, mLocalAddress, mLocalPort),
                                          StunTuple(StunTuple::TCP, address, port),
                                          data);
       }

@@ -58,6 +58,10 @@ protected:
    /// The handler used to process the incoming request.
    RequestHandler& mRequestHandler;
 
+   // Stores the local address and port
+   asio::ip::address mLocalAddress;
+   unsigned short mLocalPort;
+
 private:
 };
 

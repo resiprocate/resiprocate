@@ -32,7 +32,7 @@ ReTurnConfig::ReTurnConfig() :
    mMaxAllocationsPerUser(0),       // 0 - no max
    mTlsServerCertificateFilename("server.pem"),
    mTlsTempDhFilename("dh512.pem"),
-   mTlsPrivateKeyPassword("password"),
+   mTlsPrivateKeyPassword(""),
    mLoggingType("cout"),
    mLoggingLevel("INFO"),
    mLoggingFilename("reTurnServer.log"),
@@ -50,12 +50,12 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
 {
    resip::ConfigParse::parseConfig(argc, argv, defaultConfigFilename);
 
-   mTurnPort = getConfigUnsignedShort("TurnPort", 3478);
-   mTlsTurnPort = getConfigUnsignedShort("TlsTurnPort", 5349);
-   mAltStunPort = getConfigUnsignedShort("AltStunPort", 0);
+   mTurnPort = getConfigUnsignedShort("TurnPort", mTurnPort);
+   mTlsTurnPort = getConfigUnsignedShort("TlsTurnPort", mTlsTurnPort);
+   mAltStunPort = getConfigUnsignedShort("AltStunPort", mAltStunPort);
    mTurnAddress = asio::ip::address::from_string(getConfigData("TurnAddress", "0.0.0.0").c_str());
    mAltStunAddress = asio::ip::address::from_string(getConfigData("AltStunAddress", "0.0.0.0").c_str());
-   int authMode = getConfigUnsignedShort("AuthenticationMode", 2);
+   int authMode = getConfigUnsignedShort("AuthenticationMode", (int)mAuthenticationMode);
    switch(authMode)
    {
    case 0: mAuthenticationMode = NoAuthentication; break;
@@ -64,24 +64,24 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
    default: 
       throw std::runtime_error("Unsupported AuthenticationMode value in config");
    }
-   mAuthenticationRealm = getConfigData("AuthenticationRealm", "reTurn");
-   mNonceLifetime = getConfigUnsignedLong("NonceLifetime", 3600);
-   mAllocationPortRangeMin = getConfigUnsignedShort("AllocationPortRangeMin", 49152);
-   mAllocationPortRangeMax = getConfigUnsignedShort("AllocationPortRangeMax", 65535);
-   mDefaultAllocationLifetime = getConfigUnsignedLong("DefaultAllocationLifetime", 600);
-   mMaxAllocationLifetime = getConfigUnsignedLong("MaxAllocationLifetime", 3600);
-   mMaxAllocationsPerUser = getConfigUnsignedLong("MaxAllocationsPerUser", 0);
-   mTlsServerCertificateFilename = getConfigData("TlsServerCertificateFilename", "server.pem");
-   mTlsTempDhFilename = getConfigData("TlsTempDhFilename", "dh512.pem");
-   mTlsPrivateKeyPassword = getConfigData("TlsPrivateKeyPassword", "");
-   mLoggingType = getConfigData("LoggingType", "cout");
-   mLoggingLevel = getConfigData("LoggingLevel", "INFO");
-   mLoggingFilename = getConfigData("LogFilename", "reTurnServer.log");
-   mLoggingFileMaxLineCount = getConfigUnsignedLong("LogFileMaxLines", 50000);
-   mDaemonize = getConfigBool("Daemonize", false);
-   mPidFile = getConfigData("PidFile", "");
-   mRunAsUser = getConfigData("RunAsUser", "");
-   mRunAsGroup = getConfigData("RunAsGroup", "");
+   mAuthenticationRealm = getConfigData("AuthenticationRealm", mAuthenticationRealm);
+   mNonceLifetime = getConfigUnsignedLong("NonceLifetime", mNonceLifetime);
+   mAllocationPortRangeMin = getConfigUnsignedShort("AllocationPortRangeMin", mAllocationPortRangeMin);
+   mAllocationPortRangeMax = getConfigUnsignedShort("AllocationPortRangeMax", mAllocationPortRangeMax);
+   mDefaultAllocationLifetime = getConfigUnsignedLong("DefaultAllocationLifetime", mDefaultAllocationLifetime);
+   mMaxAllocationLifetime = getConfigUnsignedLong("MaxAllocationLifetime", mMaxAllocationLifetime);
+   mMaxAllocationsPerUser = getConfigUnsignedLong("MaxAllocationsPerUser", mMaxAllocationsPerUser);
+   mTlsServerCertificateFilename = getConfigData("TlsServerCertificateFilename", mTlsServerCertificateFilename);
+   mTlsTempDhFilename = getConfigData("TlsTempDhFilename", mTlsTempDhFilename);
+   mTlsPrivateKeyPassword = getConfigData("TlsPrivateKeyPassword", mTlsPrivateKeyPassword);
+   mLoggingType = getConfigData("LoggingType", mLoggingType);
+   mLoggingLevel = getConfigData("LoggingLevel", mLoggingLevel);
+   mLoggingFilename = getConfigData("LogFilename", mLoggingFilename);
+   mLoggingFileMaxLineCount = getConfigUnsignedLong("LogFileMaxLines", mLoggingFileMaxLineCount);
+   mDaemonize = getConfigBool("Daemonize", mDaemonize);
+   mPidFile = getConfigData("PidFile", mPidFile);
+   mRunAsUser = getConfigData("RunAsUser", mRunAsUser);
+   mRunAsGroup = getConfigData("RunAsGroup", mRunAsGroup);
 
    // fork is not possible on Windows
 #ifdef WIN32
