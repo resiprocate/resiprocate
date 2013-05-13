@@ -3,6 +3,7 @@
 #endif
 
 #ifdef USE_SSL
+#ifdef USE_DTLS
 
 #include <iostream>
 #include <cassert>
@@ -420,6 +421,7 @@ DtlsSocket::getReadTimeout()
    return 500;
 }
 
+#endif
 #endif 
 /* ====================================================================
 

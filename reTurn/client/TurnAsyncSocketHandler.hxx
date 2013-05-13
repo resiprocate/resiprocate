@@ -9,6 +9,8 @@
 
 namespace reTurn {
 
+class StunMessage;
+
 class TurnAsyncSocketHandler
 {
 public:
@@ -46,7 +48,7 @@ public:
    virtual void onSendSuccess(unsigned int socketDesc) = 0;
    virtual void onSendFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
 
-   virtual void onIncomingBindRequestProcessed(unsigned int socketDesc, const StunTuple& sourceTuple) = 0;
+   virtual void onIncomingBindRequestProcessed(unsigned int socketDesc, const StunTuple& sourceTuple, const reTurn::StunMessage& bindRequest) = 0;
 
 private:
 };

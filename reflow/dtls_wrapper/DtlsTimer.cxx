@@ -3,6 +3,7 @@
 #endif
 
 #ifdef USE_SSL
+#ifdef USE_DTLS
 
 #include "DtlsTimer.hxx"
 
@@ -38,6 +39,7 @@ DtlsTimerContext::fire(DtlsTimer *timer)
    timer->fire();
 }
 
+#endif //USE_DTLS
 #endif //USE_SSL
 
 /* ====================================================================

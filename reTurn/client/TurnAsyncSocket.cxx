@@ -13,6 +13,7 @@ using namespace resip;
 
 //#define TURN_CHANNEL_BINDING_REFRESH_SECONDS 20   // TESTING only
 #define TURN_CHANNEL_BINDING_REFRESH_SECONDS 240   // 4 minuntes - this is one minute before the permission will expire, Note:  ChannelBinding refreshes also refresh permissions
+
 #define SOFTWARE_STRING "reTURN Async Client 0.3 - RFC5389/turn-12   "  // Note padding size to a multiple of 4, to help compatibility with older clients
 
 namespace reTurn {
@@ -836,7 +837,7 @@ TurnAsyncSocket::handleBindRequest(StunMessage& stunMessage)
    DebugLog(<< "Sending response to BIND to " << stunMessage.mRemoteTuple);
    sendStunMessage(response, false, UDP_MAX_RETRANSMITS, DEFAULT_RETRANS_INTERVAL_MS, &(stunMessage.mRemoteTuple));
    
-   if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onIncomingBindRequestProcessed(getSocketDescriptor(), stunMessage.mRemoteTuple);
+   if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onIncomingBindRequestProcessed(getSocketDescriptor(), stunMessage.mRemoteTuple, stunMessage);
 
    return asio::error_code();
 }
@@ -1070,8 +1071,6 @@ TurnAsyncSocket::doSendToFramed(const asio::ip::address& address, unsigned short
    }
    return sendToRemotePeer(*remotePeer, data);
 }
-
-
 
 void
 TurnAsyncSocket::sendToRemotePeer(RemotePeer& remotePeer, boost::shared_ptr<DataBuffer>& data)

@@ -10,11 +10,7 @@
 #include <memory>
 extern "C" 
 {
-#ifdef WIN32
 #include <srtp.h>
-#else
-#include <srtp/srtp.h>
-#endif
 }
 
 #include <openssl/e_os2.h>

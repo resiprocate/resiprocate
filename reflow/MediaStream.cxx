@@ -4,7 +4,6 @@
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
-#include <rutil/Timer.hxx>
 
 #include "FlowManagerSubsystem.hxx"
 #include "FlowManager.hxx"
@@ -12,7 +11,9 @@
 
 using namespace flowmanager;
 #ifdef USE_SSL
+#ifdef USE_DTLS
 using namespace dtls;
+#endif
 #endif
 using namespace resip;
 using namespace std;
@@ -20,14 +21,11 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM FlowManagerSubsystem::FLOWMANAGER
 
 MediaStream::MediaStream(asio::io_service& ioService,
-#ifdef USE_SSL
-                         asio::ssl::context& sslContext,
-#endif
                          MediaStreamHandler& mediaStreamHandler,
-                         const StunTuple& localRtpBinding, 
-                         const StunTuple& localRtcpBinding, 
 #ifdef USE_SSL
+#ifdef USE_DTLS
                          DtlsFactory* dtlsFactory,
+#endif 
 #endif 
                          NatTraversalMode natTraversalMode,
                          const char* natTraversalServerHostname, 
@@ -35,90 +33,153 @@ MediaStream::MediaStream(asio::io_service& ioService,
                          const char* stunUsername,
                          const char* stunPassword) :
 #ifdef USE_SSL
+#ifdef USE_DTLS
    mDtlsFactory(dtlsFactory),
+#endif  
 #endif  
    mSRTPSessionInCreated(false),
    mSRTPSessionOutCreated(false),
+   mSRTPEnabled(false),
    mNatTraversalMode(natTraversalMode),
+   mIceAttempted(natTraversalMode == Ice),
    mNatTraversalServerHostname(natTraversalServerHostname),
    mNatTraversalServerPort(natTraversalServerPort),
    mStunUsername(stunUsername),
    mStunPassword(stunPassword),
-   mMediaStreamHandler(mediaStreamHandler)
+   mMediaStreamHandler(mediaStreamHandler),
+   mRtcpEnabled(false),
+   mRtpFlow(NULL),
+   mRtcpFlow(NULL),
+   mIOService(ioService)
 {
-   // Rtcp is enabled if localRtcpBinding transport type != None
-   mRtcpEnabled = localRtcpBinding.getTransportType() != StunTuple::None;
+}
 
+MediaStream::~MediaStream() 
+{
+   shutdown();
+}
+
+void
+MediaStream::initialize(
+#ifdef USE_SSL
+                        asio::ssl::context* sslContext,
+#endif
+                        const StunTuple& localRtpBinding, 
+                        const StunTuple& localRtcpBinding
+)
+{
+   Lock lock(mMutex);
+   Condition cv;
+   mIOService.post(boost::bind(&MediaStream::initializeImpl, this, sslContext, localRtpBinding, localRtcpBinding, boost::ref(cv)));
+   cv.wait(mMutex);
+}
+
+void
+MediaStream::initializeImpl(
+#ifdef USE_SSL
+                        asio::ssl::context* sslContext,
+#endif
+                        const StunTuple& localRtpBinding, 
+                        const StunTuple& localRtcpBinding,
+                        resip::Condition& cv
+)
+{
+   Lock lock(mMutex);
+   mRtcpEnabled = (localRtcpBinding.getTransportType() != StunTuple::None);
    if(mRtcpEnabled)
    {
-      mRtpFlow = new Flow(ioService, 
+      mRtpFlow = new Flow(mIOService, 
 #ifdef USE_SSL
-                          sslContext, 
+                          *sslContext, 
 #endif
                           RTP_COMPONENT_ID, 
                           localRtpBinding, 
                           *this);
+      mRtpFlow->initialize();
 
-      mRtcpFlow = new Flow(ioService, 
+      mRtcpFlow = new Flow(mIOService, 
 #ifdef USE_SSL
-                           sslContext, 
+                           *sslContext, 
 #endif
                            RTCP_COMPONENT_ID,
                            localRtcpBinding, 
                            *this);
+      mRtcpFlow->initialize();
 
       mRtpFlow->activateFlow(StunMessage::PropsPortPair);
 
       // If doing an allocation then wait until RTP flow is allocated, then activate RTCP flow
-      if(natTraversalMode != TurnAllocation)
+      if(mNatTraversalMode != TurnAllocation)
       {
          mRtcpFlow->activateFlow();
       }
    }
    else
    {
-      mRtpFlow = new Flow(ioService, 
+      mRtpFlow = new Flow(mIOService, 
 #ifdef USE_SSL
-                          sslContext, 
+                          *sslContext, 
 #endif
                           RTP_COMPONENT_ID,
                           localRtpBinding, 
                           *this);
+      mRtpFlow->initialize();
       mRtpFlow->activateFlow(StunMessage::PropsPortEven);
       mRtcpFlow = 0;
    }
+   cv.signal();
 }
 
-MediaStream::~MediaStream() 
+void
+MediaStream::shutdown()
 {
-   {   
-      Lock lock(mMutex);
-      
-      if(mSRTPSessionOutCreated)
-      {
-         mSRTPSessionOutCreated = false;
-         srtp_dealloc(mSRTPSessionOut);
-      }
-      if(mSRTPSessionInCreated)
-      {
-         mSRTPSessionInCreated = false;
-         srtp_dealloc(mSRTPSessionIn);
-      }      
+   Lock lock(mMutex);
+   Condition cv;
+   mIOService.dispatch(boost::bind(&MediaStream::shutdownImpl, this, boost::ref(cv)));
+   cv.wait(mMutex);
+}
+
+void
+MediaStream::shutdownImpl(resip::Condition& cv)
+{
+   Lock lock(mMutex);
+
+   if(mSRTPSessionOutCreated)
+   {
+      mSRTPSessionOutCreated = false;
+      srtp_dealloc(mSRTPSessionOut);
    }
+   if(mSRTPSessionInCreated)
+   {
+      mSRTPSessionInCreated = false;
+      srtp_dealloc(mSRTPSessionIn);
+   }
+   
+   mRtpFlow->shutdown();
    delete mRtpFlow;
+
    if(mRtcpEnabled)
    {
+      mRtcpFlow->shutdown();
       delete mRtcpFlow;
    }
+
+   cv.signal();
 }
 
-bool 
-MediaStream::createOutboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen)
+void 
+MediaStream::createOutboundSRTPSession(SrtpCryptoSuite cryptoSuite, const resip::Data& key)
 {
-   if(keyLen != SRTP_MASTER_KEY_LEN)
+   mIOService.post(boost::bind(&MediaStream::createOutboundSRTPSessionImpl, this, cryptoSuite, key));
+}
+
+void 
+MediaStream::createOutboundSRTPSessionImpl(SrtpCryptoSuite cryptoSuite, const resip::Data& key)
+{
+   if(key.size() != SRTP_MASTER_KEY_LEN)
    {
-      ErrLog(<< "Unable to create outbound SRTP session, invalid keyLen=" << keyLen);
-      return false;
+      ErrLog(<< "Unable to create outbound SRTP session, invalid keyLen=" << key.size());
+      return;
    }
 
    err_status_t status;
@@ -126,10 +187,10 @@ MediaStream::createOutboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* 
    if(mSRTPSessionOutCreated)
    {
       // Check if settings are the same - if so just return true
-      if(cryptoSuite == mCryptoSuiteOut && memcmp(mSRTPMasterKeyOut, key, keyLen) == 0)
+      if(cryptoSuite == mCryptoSuiteOut && memcmp(mSRTPMasterKeyOut, key.data(), key.size()) == 0)
       {
          InfoLog(<< "Outbound SRTP session settings unchanged.");
-         return true;
+         return;
       }
       else
       {
@@ -138,12 +199,13 @@ MediaStream::createOutboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* 
          srtp_dealloc(mSRTPSessionOut);
       }
    }
-   memset(&mSRTPPolicyOut, 0, sizeof(mSRTPPolicyOut));
 
    // Copy key locally
-   memcpy(mSRTPMasterKeyOut, key, SRTP_MASTER_KEY_LEN);
+   memcpy(mSRTPMasterKeyOut, key.data(), SRTP_MASTER_KEY_LEN);
 
    // load default srtp/srtcp policy settings
+   memset(&mSRTPPolicyOut, 0, sizeof(srtp_policy_t));
+
    mCryptoSuiteOut = cryptoSuite;
    switch(cryptoSuite)
    {
@@ -157,12 +219,13 @@ MediaStream::createOutboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* 
       break;
    default:
       ErrLog(<< "Unable to create outbound SRTP session, invalid crypto suite=" << cryptoSuite);
-      return false;
+      return;
    }
 
    // set remaining policy settings
    mSRTPPolicyOut.ssrc.type = ssrc_any_outbound;   
    mSRTPPolicyOut.key = mSRTPMasterKeyOut;
+   mSRTPPolicyOut.next = 0;
    mSRTPPolicyOut.window_size = 64;
 
    // Allocate and initailize the SRTP sessions
@@ -170,20 +233,24 @@ MediaStream::createOutboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* 
    if(status)
    {
       ErrLog(<< "Unable to create srtp out session, error code=" << status);
-      return false;
+      return;
    }
    mSRTPSessionOutCreated = true;
-
-   return true;
 }
 
-bool 
-MediaStream::createInboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen)
+void 
+MediaStream::createInboundSRTPSession(SrtpCryptoSuite cryptoSuite, const resip::Data& key)
 {
-   if(keyLen != SRTP_MASTER_KEY_LEN)
+   mIOService.post(boost::bind(&MediaStream::createInboundSRTPSessionImpl, this, cryptoSuite, key));
+}
+
+void 
+MediaStream::createInboundSRTPSessionImpl(SrtpCryptoSuite cryptoSuite, const resip::Data& key)
+{
+   if(key.size() != SRTP_MASTER_KEY_LEN)
    {
-      ErrLog(<< "Unable to create inbound SRTP session, invalid keyLen=" << keyLen);
-      return false;
+      ErrLog(<< "Unable to create inbound SRTP session, invalid keyLen=" << key.size());
+      return;
    }
 
    err_status_t status;
@@ -191,10 +258,10 @@ MediaStream::createInboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* k
    if(mSRTPSessionInCreated)
    {
       // Check if settings are the same - if so just return true
-      if(cryptoSuite == mCryptoSuiteIn && memcmp(mSRTPMasterKeyIn, key, keyLen) == 0)
+      if(cryptoSuite == mCryptoSuiteIn && memcmp(mSRTPMasterKeyIn, key.data(), key.size()) == 0)
       {
          InfoLog(<< "Inbound SRTP session settings unchanged.");
-         return true;
+         return;
       }
       else
       {
@@ -203,10 +270,11 @@ MediaStream::createInboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* k
          srtp_dealloc(mSRTPSessionIn);
       }
    }
-   memset(&mSRTPPolicyIn, 0, sizeof(mSRTPPolicyIn));
 
    // Copy key locally
-   memcpy(mSRTPMasterKeyIn, key, SRTP_MASTER_KEY_LEN);
+   memcpy(mSRTPMasterKeyIn, key.data(), SRTP_MASTER_KEY_LEN);
+
+   memset(&mSRTPPolicyIn, 0, sizeof(srtp_policy_t));
 
    // load default srtp/srtcp policy settings
    mCryptoSuiteIn = cryptoSuite;
@@ -222,12 +290,13 @@ MediaStream::createInboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* k
       break;
    default:
       ErrLog(<< "Unable to create inbound SRTP session, invalid crypto suite=" << cryptoSuite);
-      return false;
+      return;
    }
 
    // set remaining policy settings
    mSRTPPolicyIn.ssrc.type = ssrc_any_inbound;   
    mSRTPPolicyIn.key = mSRTPMasterKeyIn;
+   mSRTPPolicyIn.next = 0;
    mSRTPPolicyIn.window_size = 64;
 
    // Allocate and initailize the SRTP sessions
@@ -235,17 +304,14 @@ MediaStream::createInboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* k
    if(status)
    {
       ErrLog(<< "Unable to create srtp in session, error code=" << status);
-      return false;
+      return;
    }
    mSRTPSessionInCreated = true;
-
-   return true;
 }
 
 err_status_t 
 MediaStream::srtpProtect(void* data, int* size, bool rtcp)
 {
-   Lock lock(mMutex);
    err_status_t status = err_status_no_ctx;
    if(mSRTPSessionOutCreated)
    {
@@ -264,7 +330,6 @@ MediaStream::srtpProtect(void* data, int* size, bool rtcp)
 err_status_t 
 MediaStream::srtpUnprotect(void* data, int* size, bool rtcp)
 {
-   Lock lock(mMutex);
    err_status_t status = err_status_no_ctx;
    if(mSRTPSessionInCreated)
    {
@@ -281,6 +346,46 @@ MediaStream::srtpUnprotect(void* data, int* size, bool rtcp)
 }
 
 void 
+MediaStream::setOutgoingIceUsernameAndPassword(const resip::Data& username, const resip::Data& password)
+{
+   mIOService.post(boost::bind(&MediaStream::setOutgoingIceUsernameAndPasswordImpl, this, username, password));
+}
+
+void
+MediaStream::setOutgoingIceUsernameAndPasswordImpl(const resip::Data& username, const resip::Data& password)
+{
+   Lock lock(mMutex);
+   if (mRtpFlow)
+   {
+      mRtpFlow->setOutgoingIceUsernameAndPassword(username, password);
+   }
+   if (mRtcpFlow)
+   {
+      mRtcpFlow->setOutgoingIceUsernameAndPassword(username, password);
+   }
+}
+
+void 
+MediaStream::setLocalIcePassword(const resip::Data& password)
+{
+   mIOService.post(boost::bind(&MediaStream::setLocalIcePasswordImpl, this, password));
+}
+
+void 
+MediaStream::setLocalIcePasswordImpl(const resip::Data& password)
+{
+   Lock lock(mMutex);
+   if (mRtpFlow)
+   {
+      mRtpFlow->setLocalIcePassword(password);
+   }
+   if (mRtcpFlow)
+   {
+      mRtcpFlow->setLocalIcePassword(password);
+   }
+}
+
+void 
 MediaStream::onFlowReady(unsigned int componentId)
 {
    if(componentId == RTP_COMPONENT_ID && mNatTraversalMode == TurnAllocation && mRtcpFlow)
@@ -294,12 +399,12 @@ MediaStream::onFlowReady(unsigned int componentId)
       {
          if(mRtpFlow->isReady() && mRtcpFlow->isReady())
          {
-            mMediaStreamHandler.onMediaStreamReady(mRtpFlow->getSessionTuple(), mRtcpFlow->getSessionTuple());
+            mMediaStreamHandler.onMediaStreamReady(this, mRtpFlow->getSessionTuple(), mRtcpFlow->getSessionTuple());
          }
       }
       else if(mRtpFlow && mRtpFlow->isReady())
       {
-         mMediaStreamHandler.onMediaStreamReady(mRtpFlow->getSessionTuple(), StunTuple());
+         mMediaStreamHandler.onMediaStreamReady(this, mRtpFlow->getSessionTuple(), StunTuple());
       }
    }
 }
@@ -307,7 +412,116 @@ MediaStream::onFlowReady(unsigned int componentId)
 void 
 MediaStream::onFlowError(unsigned int componentId, unsigned int errorCode)
 {
-   mMediaStreamHandler.onMediaStreamError(errorCode);  // TODO assign real error code
+   if ((errorCode == asio::error::host_not_found || errorCode == 8008) && mIceAttempted)
+   {
+      // .jjg. ignore this error if ICE is in use, since there's a chance media will still flow
+      if (mRtpFlow && mRtcpFlow)
+      {
+         if (componentId == RTCP_COMPONENT_ID)
+         {
+            mNatTraversalServerHostname = resip::Data::Empty;
+            mRtpFlow->activateFlow();
+            mRtcpFlow->activateFlow();
+         }
+      }
+      else if (mRtpFlow)
+      {
+         if (componentId == RTP_COMPONENT_ID)
+         {
+            mNatTraversalServerHostname = resip::Data::Empty;
+            mRtpFlow->activateFlow();
+         }
+      }
+   }
+   else
+   {
+      mMediaStreamHandler.onMediaStreamError(this, errorCode);  // TODO assign real error code
+   }
+}
+
+void 
+MediaStream::onFlowIceComplete(unsigned int componentId, bool iAmIceControlling)
+{
+   if(mNatTraversalMode == Ice)
+   {
+      if(mRtpFlow && mRtcpFlow)
+      {
+         if(mRtpFlow->isReady() && mRtcpFlow->isReady())
+         {
+            mMediaStreamHandler.onIceComplete(
+               this, 
+               mRtpFlow->getLocalNominatedIceCandidate(), 
+               mRtcpFlow->getLocalNominatedIceCandidate(), 
+               mRtpFlow->getRemoteNominatedIceCandidate(), 
+               mRtcpFlow->getRemoteNominatedIceCandidate(), 
+               iAmIceControlling);
+         }
+      }
+      else if(mRtpFlow && mRtpFlow->isReady())
+      {
+         mMediaStreamHandler.onIceComplete(
+            this, 
+            mRtpFlow->getLocalNominatedIceCandidate(), 
+            reTurn::IceCandidate(), 
+            mRtpFlow->getRemoteNominatedIceCandidate(), 
+            reTurn::IceCandidate(), 
+            iAmIceControlling);
+      }
+   }
+}
+
+void 
+MediaStream::onFlowIceFailed(unsigned int componentId, bool iAmIceControlling)
+{
+   if(mNatTraversalMode == Ice)
+   {
+      if(mRtpFlow && mRtcpFlow)
+      {
+         if(componentId == RTCP_COMPONENT_ID)
+         {
+            StunTuple fallbackRtpTuple = mRtpFlow->getSessionTuple();
+            StunTuple fallbackRtcpTuple = mRtcpFlow->getSessionTuple();
+            mNatTraversalMode = StunBindDiscovery;
+            mMediaStreamHandler.onIceFailed(
+               this,
+               fallbackRtpTuple,
+               fallbackRtcpTuple,
+               iAmIceControlling);
+         }
+      }
+      else if(mRtpFlow)
+      {
+         StunTuple fallbackRtpTuple = mRtpFlow->getSessionTuple();
+         mNatTraversalMode = StunBindDiscovery;
+         mMediaStreamHandler.onIceFailed(
+            this, 
+            fallbackRtpTuple,
+            StunTuple(),
+            iAmIceControlling);
+      }
+   }
+}
+
+void 
+MediaStream::setSRTPEnabled(bool enabled)
+{
+   mIOService.post(boost::bind(&MediaStream::setSRTPEnabledImpl, this, enabled));
+}
+
+void
+MediaStream::setIceDisabled()
+{
+   mIOService.post(boost::bind(&MediaStream::setIceDisabledImpl, this));
+}
+
+void
+MediaStream::setIceDisabledImpl()
+{
+   if(mNatTraversalMode == Ice)
+   {
+      // fall back to STUN, since we will still want our public IP (if we have one) to show up
+      mNatTraversalMode = StunBindDiscovery;
+   }
 }
 
 

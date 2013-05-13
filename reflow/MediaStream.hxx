@@ -9,11 +9,7 @@
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
 #endif
-#ifdef WIN32
 #include <srtp.h>
-#else
-#include <srtp/srtp.h>
-#endif
 
 #include "dtls_wrapper/DtlsFactory.hxx"
 #include "Flow.hxx"
@@ -36,8 +32,11 @@ public:
    MediaStreamHandler() {}
    virtual ~MediaStreamHandler() {}
 
-   virtual void onMediaStreamReady(const StunTuple& rtpTuple, const StunTuple& rtcpTuple) = 0;
-   virtual void onMediaStreamError(unsigned int errorCode) = 0;
+   virtual void onMediaStreamReady(MediaStream* ms, const StunTuple& rtpTuple, const StunTuple& rtcpTuple) = 0;
+   virtual void onMediaStreamError(MediaStream* ms, unsigned int errorCode) = 0;
+
+   virtual void onIceComplete(MediaStream* ms, const reTurn::IceCandidate& nominatedLocalRtpTuple, const reTurn::IceCandidate& nominatedLocalRtcpTuple, const reTurn::IceCandidate& nominatedRemoteRtpTuple, const reTurn::IceCandidate& nominatedRemoteRtcpTuple, bool iAmIceControlling) = 0;
+   virtual void onIceFailed(MediaStream* ms, const reTurn::StunTuple& rtpTuple, const reTurn::StunTuple& rtcpTuple, bool iAmIceControlling) = 0;
 };
 
 #define RTP_COMPONENT_ID   1
@@ -50,7 +49,8 @@ public:
    {
       NoNatTraversal,
       StunBindDiscovery,
-      TurnAllocation
+      TurnAllocation,
+      Ice
    };
 
    enum SrtpCryptoSuite
@@ -60,14 +60,11 @@ public:
    };
 
    MediaStream(asio::io_service& ioService,
-#ifdef USE_SSL
-               asio::ssl::context& sslContext,
-#endif
                MediaStreamHandler& mediaStreamHandler,
-               const StunTuple& localRtpBinding, 
-               const StunTuple& localRtcpBinding,   // pass in transport type = None to disable RTCP
  #ifdef USE_SSL
+ #ifdef USE_DTLS
                dtls::DtlsFactory* dtlsFactory = 0,
+ #endif 
  #endif 
                NatTraversalMode natTraversalMode = NoNatTraversal,
                const char* natTraversalServerHostname = 0, 
@@ -76,22 +73,39 @@ public:
                const char* stunPassword = 0); 
    virtual ~MediaStream();
 
+   void initialize(
+#ifdef USE_SSL
+      asio::ssl::context* sslContext,
+#endif
+      const StunTuple& localRtpBinding, 
+      const StunTuple& localRtcpBinding
+   );
+   void shutdown();
+
    Flow* getRtpFlow() { return mRtpFlow; }
    Flow* getRtcpFlow() { return mRtcpFlow; }
 
    // SRTP methods - should be called before sending or receiving on RTP or RTCP flows
-   bool createOutboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen);
-   bool createInboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen);
+   void setSRTPEnabled(bool enabled);
+   void createOutboundSRTPSession(SrtpCryptoSuite cryptoSuite, const resip::Data& key);
+   void createInboundSRTPSession(SrtpCryptoSuite cryptoSuite, const resip::Data& key);
+
+   void setOutgoingIceUsernameAndPassword(const resip::Data& username, const resip::Data& password);
+   void setLocalIcePassword(const resip::Data& password);
+   void setIceDisabled();
 
 protected:
    friend class Flow;
 
    // SRTP members
 #ifdef USE_SSL
+#ifdef USE_DTLS
    dtls::DtlsFactory* mDtlsFactory;
+#endif
 #endif
    volatile bool mSRTPSessionInCreated;
    volatile bool mSRTPSessionOutCreated;
+   volatile bool mSRTPEnabled;
    resip::Mutex mMutex;
    SrtpCryptoSuite mCryptoSuiteIn;
    SrtpCryptoSuite mCryptoSuiteOut;
@@ -107,6 +121,7 @@ protected:
   
    // Nat Traversal Members
    NatTraversalMode mNatTraversalMode;
+   bool mIceAttempted;
    resip::Data mNatTraversalServerHostname;
    unsigned short mNatTraversalServerPort;
    resip::Data mStunUsername;
@@ -118,11 +133,37 @@ private:
    MediaStreamHandler& mMediaStreamHandler;
    bool mRtcpEnabled;
 
+   asio::io_service& mIOService;
+
    Flow* mRtpFlow;
    Flow* mRtcpFlow;
 
    virtual void onFlowReady(unsigned int componentId);
    virtual void onFlowError(unsigned int componentId, unsigned int errorCode);
+   virtual void onFlowIceComplete(unsigned int componentId, bool iAmIceControlling);
+   virtual void onFlowIceFailed(unsigned int componentId, bool iAmIceControlling);
+
+   void initializeImpl(
+#ifdef USE_SSL
+      asio::ssl::context* sslContext,
+#endif
+      const StunTuple& localRtpBinding, 
+      const StunTuple& localRtcpBinding,
+      resip::Condition& cv
+   );
+   void shutdownImpl(
+      resip::Condition& cv);
+
+   // SRTP methods - should be called before sending or receiving on RTP or RTCP flows
+   void setSRTPEnabledImpl(bool enabled) { mSRTPEnabled = enabled; }
+   void createOutboundSRTPSessionImpl(SrtpCryptoSuite cryptoSuite, const resip::Data& key);
+   void createInboundSRTPSessionImpl(SrtpCryptoSuite cryptoSuite, const resip::Data& key);
+
+   void setOutgoingIceUsernameAndPasswordImpl(const resip::Data& username, const resip::Data& password);
+   void setLocalIcePasswordImpl(const resip::Data& password);
+   void setIceDisabledImpl();
+
+
 };
 
 }

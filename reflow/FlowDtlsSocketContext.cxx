@@ -3,13 +3,14 @@
 #endif
 
 #ifdef USE_SSL
-#include <rutil/Log.hxx>
-#include <rutil/Logger.hxx>
-#include <rutil/Timer.hxx>
+#ifdef USE_DTLS
 
 #include <asio.hpp>
 #include <boost/function.hpp>
 #include <iostream>
+
+#include <rutil/Log.hxx>
+#include <rutil/Logger.hxx>
 
 #include "FlowDtlsSocketContext.hxx"
 #include "FlowManagerSubsystem.hxx"
@@ -150,6 +151,7 @@ FlowDtlsSocketContext::srtpUnprotect(void* data, int* size, bool rtcp)
 }
 
 #endif 
+#endif
 /* ====================================================================
 
  Copyright (c) 2007-2008, Plantronics, Inc.

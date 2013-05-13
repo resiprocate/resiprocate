@@ -2,27 +2,23 @@
 #include "config.h"
 #endif
 
+#include <asio.hpp>
+#include <boost/function.hpp>
+#include <map>
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <rutil/ThreadIf.hxx>
 #include <rutil/Random.hxx>
 #include <rutil/SharedPtr.hxx>
-#include <rutil/Timer.hxx>
 
-#include <asio.hpp>
-#include <boost/function.hpp>
-#include <map>
-
-#ifdef WIN32
 #include <srtp.h>
-#else
-#include <srtp/srtp.h>
-#endif
 
 #ifdef USE_SSL  
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
+#ifdef USE_DTLS
 #include "FlowDtlsTimerContext.hxx"
+#endif //USE_DTLS
 #endif //USE_SSL
 
 #include "FlowManagerSubsystem.hxx"
@@ -31,8 +27,10 @@
 using namespace flowmanager;
 using namespace resip;
 #ifdef USE_SSL 
+#ifdef USE_DTLS
 using namespace dtls;
 #endif 
+#endif
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM FlowManagerSubsystem::FLOWMANAGER
@@ -45,6 +43,14 @@ public:
    IOServiceThread(asio::io_service& ioService) : mIOService(ioService) {}
 
    virtual ~IOServiceThread() {}
+
+#ifdef WIN32
+   virtual void run()
+   {
+      ThreadIf::run();
+      SetThreadPriority(mThread, THREAD_PRIORITY_HIGHEST);
+   }
+#endif
 
    virtual void thread()
    {
@@ -59,9 +65,12 @@ FlowManager::FlowManager()
 #ifdef USE_SSL
    : 
    mSslContext(mIOService, asio::ssl::context::tlsv1),
+#ifdef USE_DTLS
+   mDtlsFactory(0),
+#endif
    mClientCert(0),
-   mClientKey(0),
-   mDtlsFactory(0)
+   mClientKey(0)
+
 #endif  
 {
    mIOServiceWork = new asio::io_service::work(mIOService);
@@ -91,21 +100,29 @@ FlowManager::FlowManager()
    status = srtp_install_event_handler(FlowManager::srtpEventHandler);   
 }
   
-
 FlowManager::~FlowManager()
 {
+   if( mIOServiceWork != NULL )
+   {
+      mIOServiceWork->get_io_service().stop();
    delete mIOServiceWork;
+      mIOServiceWork = NULL;
+   }
+
    mIOServiceThread->join();
    delete mIOServiceThread;
  
  #ifdef USE_SSL
+ #ifdef USE_DTLS
    if(mDtlsFactory) delete mDtlsFactory;
+ #endif
    if(mClientCert) X509_free(mClientCert);
    if(mClientKey) EVP_PKEY_free(mClientKey);
  #endif 
 }
 
 #ifdef USE_SSL
+#ifdef USE_DTLS
 void 
 FlowManager::initializeDtlsFactory(const char* certAor)
 {
@@ -128,6 +145,7 @@ FlowManager::initializeDtlsFactory(const char* certAor)
    }   
 }
 #endif 
+#endif
 
 void
 FlowManager::srtpEventHandler(srtp_event_data_t *data) 
@@ -161,43 +179,27 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                const char* stunPassword)
 {
    MediaStream* newMediaStream = 0;
-   if(rtcpEnabled)
    {
-      StunTuple localRtcpBinding(localBinding.getTransportType(), localBinding.getAddress(), localBinding.getPort() + 1);
-      newMediaStream = new MediaStream(mIOService,
-#ifdef USE_SSL
-                                       mSslContext,
-#endif
+      StunTuple localRtcpBinding = (rtcpEnabled ? StunTuple(localBinding.getTransportType(), localBinding.getAddress(), localBinding.getPort() + 1) : StunTuple());
+      newMediaStream = new MediaStream(
+         mIOService,
                                        mediaStreamHandler,
-                                       localBinding,
-                                       localRtcpBinding,
 #ifdef USE_SSL
+#ifdef USE_DTLS
                                        mDtlsFactory,
 #endif 
+#endif
                                        natTraversalMode,
                                        natTraversalServerHostname, 
                                        natTraversalServerPort, 
                                        stunUsername, 
                                        stunPassword);
-   }
-   else
-   {
-      StunTuple rtcpDisabled;  // Default constructor sets transport type to None - this signals Rtcp is disabled
-      newMediaStream = new MediaStream(mIOService,
+      newMediaStream->initialize(
 #ifdef USE_SSL
-                                       mSslContext, 
+         &mSslContext, 
 #endif
-                                       mediaStreamHandler, 
                                        localBinding, 
-                                       rtcpDisabled, 
-#ifdef USE_SSL
-                                       mDtlsFactory,
-#endif 
-                                       natTraversalMode, 
-                                       natTraversalServerHostname, 
-                                       natTraversalServerPort, 
-                                       stunUsername, 
-                                       stunPassword);
+         localRtcpBinding);
    }
    return newMediaStream;
 }

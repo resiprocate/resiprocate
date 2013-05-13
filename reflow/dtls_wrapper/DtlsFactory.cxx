@@ -3,6 +3,7 @@
 #endif
 
 #ifdef USE_SSL
+#ifdef USE_DTLS
 
 #include <cassert>
 #include <iostream>
@@ -98,6 +99,7 @@ DtlsFactory::demuxPacket(const unsigned char *data, unsigned int len)
    return unknown;
 }
 
+#endif //USE_DTLS
 #endif //USE_SSL
 
 
