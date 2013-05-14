@@ -826,7 +826,7 @@ stunRand()
 #endif
 #elif defined(__GNUC__) && ( defined(__i686__) || defined(__i386__) || defined(__x86_64__) )
       asm("rdtsc" : "=A" (tick));
-#elif defined (__SUNPRO_CC) || defined( __sparc__ )	
+#elif defined (__SUNPRO_CC) || (defined(__sun) && defined(__SVR4))
       tick = gethrtime();
 #elif defined(__APPLE__) || defined(__MACH__)
       int fd=open("/dev/random",O_RDONLY);
