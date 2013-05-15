@@ -616,6 +616,7 @@ ConnectionBase::scanMsgHeader(int bytesRead)
       mBufferPos += bytesRead;
       return false;
    }
+   return true;
 }
 
 Data
