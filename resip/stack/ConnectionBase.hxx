@@ -97,6 +97,10 @@ class ConnectionBase
       ConnectionBase();
       ConnectionBase(const Connection&);
       ConnectionBase& operator=(const Connection&);
+      bool scanMsgHeader(int bytesRead);
+      Data makeWsHandshakeResponse();
+      bool isUsingSecWebSocketKey();
+      bool isUsingDeprecatedSecWebSocketKeys();
    protected:
       virtual void onDoubleCRLF(){}
       virtual void onSingleCRLF(){}
