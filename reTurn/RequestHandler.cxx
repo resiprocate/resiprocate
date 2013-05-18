@@ -312,7 +312,7 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
          }
       }
 
-      DebugLog(<< "Validating username: " << *request.mUsername);
+      StackLog(<< "Validating username: " << *request.mUsername);  // Note: we ensure username is present above
 
       // !slg! need to determine whether the USERNAME contains a known entity, and in the case of a long-term
       //       credential, known within the realm of the REALM attribute of the request
@@ -323,23 +323,16 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
          return false;
       }
 
-      DebugLog(<< "Validating MessageIntegrity");
+      StackLog(<< "Validating MessageIntegrity");
 
       // Need to calculate HMAC across entire message - for ShortTermAuthentication we use the password
       // as the key - for LongTermAuthentication we use username:realm:password string as the key
       Data hmacKey;
-      assert(request.mHasUsername);
+      assert(request.mHasUsername);  // Note:  This is checked above
 
       if(getConfig().mAuthenticationMode != ReTurnConfig::NoAuthentication)
       {
-         if(request.mHasRealm)  // Longterm authenicationmode
-         {
-            request.calculateHmacKey(hmacKey, getConfig().getPasswordForUsername(*request.mUsername, *request.mRealm));
-         }
-         else
-         {
-            request.calculateHmacKey(hmacKey, getConfig().getPasswordForUsername(*request.mUsername));
-         }
+         request.calculateHmacKey(hmacKey, getConfig().getPasswordForUsername(*request.mUsername));
       }
 
       if(!request.checkMessageIntegrity(hmacKey))
@@ -489,10 +482,6 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, TurnAllo
       return RespondFromReceiving;
    }
 
-   Data hmacKey;
-   assert(request.mHasUsername);
-   request.calculateHmacKey(hmacKey, getConfig().getPasswordForUsername(*request.mUsername));
-
    DebugLog(<< "Allocation request received: localTuple=" << request.mLocalTuple << ", remoteTuple=" << request.mRemoteTuple);
 
    TurnAllocation* allocation = turnAllocationManager.findTurnAllocation(TurnAllocationKey(request.mLocalTuple, request.mRemoteTuple));
@@ -626,7 +615,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, TurnAllo
                                       turnSocket, 
                                       request.mLocalTuple, 
                                       request.mRemoteTuple, 
-                                      StunAuth(*request.mUsername, hmacKey), 
+                                      StunAuth(*request.mUsername, response.mHmacKey), // The HMAC is already calculated and added to the response in handleAuthentication
                                       allocationTuple, 
                                       lifetime);
       if(!allocation->startRelay())
@@ -680,10 +669,6 @@ RequestHandler::processTurnRefreshRequest(TurnAllocationManager& turnAllocationM
       return RespondFromReceiving;
    }
 
-   Data hmacKey;
-   assert(request.mHasUsername);
-   request.calculateHmacKey(hmacKey, getConfig().getPasswordForUsername(*request.mUsername));
-
    TurnAllocation* allocation = turnAllocationManager.findTurnAllocation(TurnAllocationKey(request.mLocalTuple, request.mRemoteTuple));
 
    if(!allocation)
@@ -694,13 +679,13 @@ RequestHandler::processTurnRefreshRequest(TurnAllocationManager& turnAllocationM
    }
 
    // If allocation was found, then ensure that the same username and shared secret was used
-   if(allocation->getClientAuth().getClientUsername() != *request.mUsername)
+   if(allocation->getClientAuth().getClientUsername() != *request.mUsername)  // Note:  Its OK to assume that mUsername is set here, since handleAuthentication validates it
    {
       WarningLog(<< "Refresh requested with username not matching allocation.  Sending 441. Sender=" << request.mRemoteTuple);
       buildErrorResponse(response, 441, "Wrong Credentials");  
       return RespondFromReceiving;
    }
-   if(allocation->getClientAuth().getClientSharedSecret() != hmacKey)
+   if(allocation->getClientAuth().getClientSharedSecret() != response.mHmacKey) // The HMAC is already calculated and added to the response in handleAuthentication
    {
       WarningLog(<< "Refresh requested with shared secret not matching allocation.  Sending 441. Sender=" << request.mRemoteTuple);
       buildErrorResponse(response, 441, "Wrong Credentials");   
@@ -769,10 +754,6 @@ RequestHandler::processTurnCreatePermissionRequest(TurnAllocationManager& turnAl
       return RespondFromReceiving;
    }
 
-   Data hmacKey;
-   assert(request.mHasUsername);
-   request.calculateHmacKey(hmacKey, getConfig().getPasswordForUsername(*request.mUsername));
-
    TurnAllocation* allocation = turnAllocationManager.findTurnAllocation(TurnAllocationKey(request.mLocalTuple, request.mRemoteTuple));
 
    if(!allocation)
@@ -783,13 +764,13 @@ RequestHandler::processTurnCreatePermissionRequest(TurnAllocationManager& turnAl
    }
 
    // If allocation was found, then ensure that the same username and shared secret was used
-   if(allocation->getClientAuth().getClientUsername() != *request.mUsername)
+   if(allocation->getClientAuth().getClientUsername() != *request.mUsername)  // Note:  Its OK to assume that mUsername is set here, since handleAuthentication validates it
    {
       WarningLog(<< "Create permission requested with username not matching allocation.  Sending 441. Sender=" << request.mRemoteTuple);
       buildErrorResponse(response, 441, "Wrong Credentials");  
       return RespondFromReceiving;
    }
-   if(allocation->getClientAuth().getClientSharedSecret() != hmacKey)
+   if(allocation->getClientAuth().getClientSharedSecret() != response.mHmacKey) // The HMAC is already calculated and added to the response in handleAuthentication
    {
       WarningLog(<< "Create permission requested with shared secret not matching allocation.  Sending 441. Sender=" << request.mRemoteTuple);
       buildErrorResponse(response, 441, "Wrong Credentials");   
@@ -832,10 +813,6 @@ RequestHandler::processTurnChannelBindRequest(TurnAllocationManager& turnAllocat
       return RespondFromReceiving;
    }
 
-   Data hmacKey;
-   assert(request.mHasUsername);
-   request.calculateHmacKey(hmacKey, getConfig().getPasswordForUsername(*request.mUsername));
-
    TurnAllocation* allocation = turnAllocationManager.findTurnAllocation(TurnAllocationKey(request.mLocalTuple, request.mRemoteTuple));
 
    if(!allocation)
@@ -846,13 +823,13 @@ RequestHandler::processTurnChannelBindRequest(TurnAllocationManager& turnAllocat
    }
 
    // If allocation was found, then ensure that the same username and shared secret was used
-   if(allocation->getClientAuth().getClientUsername() != *request.mUsername)
+   if(allocation->getClientAuth().getClientUsername() != *request.mUsername)  // Note:  Its OK to assume that mUsername is set here, since handleAuthentication validates it
    {
       WarningLog(<< "Channel bind requested with username not matching allocation.  Sending 441. Sender=" << request.mRemoteTuple);
       buildErrorResponse(response, 441, "Wrong Credentials");  
       return RespondFromReceiving;
    }
-   if(allocation->getClientAuth().getClientSharedSecret() != hmacKey)
+   if(allocation->getClientAuth().getClientSharedSecret() != response.mHmacKey) // The HMAC is already calculated and added to the response in handleAuthentication
    {
       WarningLog(<< "Channel bind requested with shared secret not matching allocation.  Sending 441. Sender=" << request.mRemoteTuple);
       buildErrorResponse(response, 441, "Wrong Credentials");   

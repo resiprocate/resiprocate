@@ -511,7 +511,7 @@ StunMessage::stunParseAtrIntegrity( char* body, unsigned int hdrLen,  StunAtrInt
 bool
 StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
 {
-   DebugLog(<< "Received stun message: " << bufLen << " bytes");
+   StackLog(<< "Received stun message: " << bufLen << " bytes");
 	
    if (sizeof(StunMsgHdr) > bufLen)
    {
@@ -1805,7 +1805,7 @@ StunMessage::calculateHmacKey(Data& hmacKey, const Data& username, const Data& r
    r << username << ":" << realm << ":" << longtermAuthenticationPassword;
    hmacKey = r.getBin();
   
-   DebugLog(<< "calculateHmacKey: '" << username << ":" << realm << ":" << longtermAuthenticationPassword << "' = '" << hmacKey.hex() << "'");
+   StackLog(<< "calculateHmacKey: '" << username << ":" << realm << ":" << longtermAuthenticationPassword << "' = '" << hmacKey.hex() << "'");
 }
 
 bool 
