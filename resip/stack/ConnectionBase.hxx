@@ -98,7 +98,7 @@ class ConnectionBase
       ConnectionBase(const Connection&);
       ConnectionBase& operator=(const Connection&);
       bool scanMsgHeader(int bytesRead);
-      Data makeWsHandshakeResponse();
+      std::auto_ptr<Data> makeWsHandshakeResponse();
       bool isUsingSecWebSocketKey();
       bool isUsingDeprecatedSecWebSocketKeys();
    protected:

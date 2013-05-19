@@ -562,9 +562,10 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
 
    try
    {
-      Data wsResponse = makeWsHandshakeResponse();
-      if (!wsResponse.empty())
+      std::auto_ptr<Data> wsResponsePtr = makeWsHandshakeResponse();
+      if (wsResponsePtr.get())
       {
+         Data wsResponse = *wsResponsePtr.get();
          mOutstandingSends.push_back(new SendData(
                   who(),
                   wsResponse,
@@ -619,23 +620,23 @@ ConnectionBase::scanMsgHeader(int bytesRead)
    return true;
 }
 
-Data
+std::auto_ptr<Data>
 ConnectionBase::makeWsHandshakeResponse()
 {
-   Data response = "HTTP/1.1 101 WebSocket Protocol Handshake\r\n"
-      "Upgrade: WebSocket\r\n"
-      "Connection: Upgrade\r\n"
-      "Sec-WebSocket-Protocol: sip\r\n";
-
+   std::auto_ptr<Data> responsePtr(0);
    if(isUsingSecWebSocketKey())
    {
+      Data response = ("HTTP/1.1 101 WebSocket Protocol Handshake\r\n"
+         "Upgrade: WebSocket\r\n"
+         "Connection: Upgrade\r\n"
+         "Sec-WebSocket-Protocol: sip\r\n");
 #ifdef USE_SSL
       SHA1Stream wsSha1Stream;
       wsSha1Stream << (mMessage->const_header(h_SecWebSocketKey).value() + Data("258EAFA5-E914-47DA-95CA-C5AB0DC85B11"));
       Data wsAcceptKey = wsSha1Stream.getBin(160).base64encode();
       response += "Sec-WebSocket-Accept: " + wsAcceptKey + "\r\n\r\n";
 #endif
-      return response;
+      responsePtr = std::auto_ptr<Data>(&response);
    }
    else if(isUsingDeprecatedSecWebSocketKeys())
    {
@@ -645,7 +646,7 @@ ConnectionBase::makeWsHandshakeResponse()
    {
       ErrLog(<<"No SecWebSocketKey header");
    }
-   return NULL;
+   return responsePtr;
 }
 
 bool ConnectionBase::isUsingDeprecatedSecWebSocketKeys()
