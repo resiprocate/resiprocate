@@ -556,104 +556,31 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
    mMessage->setSource(mWho);
    mMessage->setTlsDomain(mWho.transport->tlsDomain());
 
-   mMsgHeaderScanner.prepareForMessage(mMessage);
-   char *unprocessedCharPtr;
-   MsgHeaderScanner::ScanChunkResult scanResult = mMsgHeaderScanner.scanChunk(mBuffer, mBufferPos + bytesRead, &unprocessedCharPtr);
-   if (scanResult != MsgHeaderScanner::scrEnd)
-   {
-      if(scanResult != MsgHeaderScanner::scrNextChunk)
-      {
-         StackLog(<<"Failed to parse message, more bytes needed");
-         StackLog(<< Data(mBuffer, bytesRead));
-      }
-      delete mMessage;
-      mMessage=0;
-      mBufferPos += bytesRead;
+   if (!scanMsgHeader(bytesRead)) {
       return false;
    }
 
    try
    {
-      Data wsResponse;
-      wsResponse =		"HTTP/1.1 101 WebSocket Protocol Handshake\r\n"
-            "Upgrade: WebSocket\r\n"
-            "Connection: Upgrade\r\n"
-            "Sec-WebSocket-Protocol: sip\r\n";
-
-      if(mMessage->exists(h_SecWebSocketKey1) && mMessage->exists(h_SecWebSocketKey2))
+      std::auto_ptr<Data> wsResponsePtr = makeWsHandshakeResponse();
+      if (wsResponsePtr.get())
       {
-         Data SecWebSocketKey1 =  mMessage->const_header(h_SecWebSocketKey1).value();
-         Data SecWebSocketKey2 =  mMessage->const_header(h_SecWebSocketKey2).value();
-         Data Digits1, Digits2;
-         unsigned int SpacesCount1 = 0, SpacesCount2 = 0;
-         unsigned int Value1, Value2;
-         for(unsigned int i = 0; i < SecWebSocketKey1.size(); ++i)
-         {
-            if(SecWebSocketKey1[i] == ' ') ++SpacesCount1;
-            if(isdigit(SecWebSocketKey1[i])) Digits1 += SecWebSocketKey1[i];
-         }
-         Value1 = htonl(Digits1.convertUnsignedLong() / SpacesCount1);
-         for(unsigned int i = 0; i < SecWebSocketKey2.size(); ++i)
-         {
-            if(SecWebSocketKey2[i] == ' ') ++SpacesCount2;
-            if(isdigit(SecWebSocketKey2[i])) Digits2 += SecWebSocketKey2[i];
-         }
-         Value2 = htonl(Digits2.convertUnsignedLong() / SpacesCount2);
-
-         MD5Stream wsMD5Stream;
-         char tmp[9] = { '\0' };
-         memcpy(tmp, &Value1, 4);
-         memcpy(&tmp[4], &Value2, 4);
-         wsMD5Stream << tmp;
-         if(unprocessedCharPtr < (mBuffer + mBufferPos + bytesRead))
-         {
-            unsigned int dataLen = (mBuffer + mBufferPos + bytesRead) - unprocessedCharPtr;
-            Data content(unprocessedCharPtr, dataLen);
-            wsMD5Stream << content;
-         }
-
-         if(mMessage->exists(h_Origin))
-         {
-            wsResponse += "Sec-WebSocket-Origin: " + mMessage->const_header(h_Origin).value() + "\r\n";
-         }
-         if(mMessage->exists(h_Host))
-         {
-            wsResponse += Data("Sec-WebSocket-Location: ") + Data(transport()->transport() == resip::WSS ? "wss://" : "ws://") + mMessage->const_header(h_Host).value() + Data("/\r\n");
-         }
-         wsResponse += "\r\n" + wsMD5Stream.getBin();
-         ErrLog(<<"WS client wants to use depracated protocol version, unsupported");
-         delete mMessage;
-         mMessage = 0;
-         mBufferPos = 0;
-         dropConnection = true;
-         return false;
-      }
-      else if(mMessage->exists(h_SecWebSocketKey))
-      {
-#ifdef USE_SSL
-         SHA1Stream wsSha1Stream;
-         wsSha1Stream << (mMessage->const_header(h_SecWebSocketKey).value() + Data("258EAFA5-E914-47DA-95CA-C5AB0DC85B11"));
-         Data wsAcceptKey = wsSha1Stream.getBin(160).base64encode();
-         wsResponse +=	"Sec-WebSocket-Accept: "+ wsAcceptKey +"\r\n"
-               "\r\n";
-#endif
+         Data wsResponse = *wsResponsePtr.get();
+         mOutstandingSends.push_back(new SendData(
+                  who(),
+                  wsResponse,
+                  Data::Empty,
+                  Data::Empty,
+                  true));
       }
       else
       {
-         ErrLog(<<"No SecWebSocketKey header");
+         dropConnection = true;
          delete mMessage;
          mMessage = 0;
          mBufferPos = 0;
-         dropConnection = true;
          return false;
       }
-
-      mOutstandingSends.push_back(new SendData(
-            who(),
-            wsResponse,
-            Data::Empty,
-            Data::Empty,
-            true));
    }
    catch(resip::ParseException& e)
    {
@@ -670,6 +597,67 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
    mBufferPos = 0;
 
    return true;
+}
+
+bool
+ConnectionBase::scanMsgHeader(int bytesRead)
+{
+   mMsgHeaderScanner.prepareForMessage(mMessage);
+   char *unprocessedCharPtr;
+   MsgHeaderScanner::ScanChunkResult scanResult = mMsgHeaderScanner.scanChunk(mBuffer, mBufferPos + bytesRead, &unprocessedCharPtr);
+   if (scanResult != MsgHeaderScanner::scrEnd)
+   {
+      if(scanResult != MsgHeaderScanner::scrNextChunk)
+      {
+         StackLog(<<"Failed to parse message, more bytes needed");
+         StackLog(<< Data(mBuffer, bytesRead));
+      }
+      delete mMessage;
+      mMessage=0;
+      mBufferPos += bytesRead;
+      return false;
+   }
+   return true;
+}
+
+std::auto_ptr<Data>
+ConnectionBase::makeWsHandshakeResponse()
+{
+   std::auto_ptr<Data> responsePtr(0);
+   if(isUsingSecWebSocketKey())
+   {
+      Data response = ("HTTP/1.1 101 WebSocket Protocol Handshake\r\n"
+         "Upgrade: WebSocket\r\n"
+         "Connection: Upgrade\r\n"
+         "Sec-WebSocket-Protocol: sip\r\n");
+#ifdef USE_SSL
+      SHA1Stream wsSha1Stream;
+      wsSha1Stream << (mMessage->const_header(h_SecWebSocketKey).value() + Data("258EAFA5-E914-47DA-95CA-C5AB0DC85B11"));
+      Data wsAcceptKey = wsSha1Stream.getBin(160).base64encode();
+      response += "Sec-WebSocket-Accept: " + wsAcceptKey + "\r\n\r\n";
+#endif
+      responsePtr = std::auto_ptr<Data>(&response);
+   }
+   else if(isUsingDeprecatedSecWebSocketKeys())
+   {
+      ErrLog(<<"WS client wants to use depracated protocol version, unsupported");
+   }
+   else
+   {
+      ErrLog(<<"No SecWebSocketKey header");
+   }
+   return responsePtr;
+}
+
+bool ConnectionBase::isUsingDeprecatedSecWebSocketKeys()
+{
+   return mMessage->exists(h_SecWebSocketKey1) &&
+      mMessage->exists(h_SecWebSocketKey2);
+}
+
+bool ConnectionBase::isUsingSecWebSocketKey()
+{
+   return mMessage->exists(h_SecWebSocketKey);
 }
 
 bool
