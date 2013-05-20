@@ -42,6 +42,8 @@ ReTurnConfig::ReTurnConfig() :
    mRunAsUser(""),
    mRunAsGroup("")
 {
+   mAuthenticationCredentials["test"] = "1234";
+   calcUserAuthData();
 }
 
 void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& defaultConfigFilename)
