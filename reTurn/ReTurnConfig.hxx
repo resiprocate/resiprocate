@@ -36,19 +36,12 @@ public:
 
    void printHelpText(int argc, char **argv);
    using resip::ConfigParse::getConfigValue;
-
-   typedef enum
-   {
-      NoAuthentication = 0,
-      ShortTermPassword = 1,
-      LongTermPassword = 2
-   } AuthenticationMode;
    
    typedef enum
    {
-	  AUTHORIZED,
-	  RESTRICTED,
-	  REFUSED 
+      AUTHORIZED,
+      RESTRICTED,
+      REFUSED 
    } AccountState;
 
    unsigned short mTurnPort;
@@ -57,9 +50,7 @@ public:
    asio::ip::address mTurnAddress;
    asio::ip::address mAltStunAddress;
 
-   AuthenticationMode mAuthenticationMode;
    resip::Data mAuthenticationRealm;
-   std::map<resip::Data,resip::Data> mAuthenticationCredentials;
    std::map<resip::Data,RealmUsers> mUsers;
    std::map<RealmUserPair, resip::Data> mRealmUsersAuthenticaionCredentials;
    unsigned long mNonceLifetime;
@@ -83,16 +74,11 @@ public:
    resip::Data mRunAsUser;
    resip::Data mRunAsGroup;
 
-   bool isUserNameValid(const resip::Data& username) const;
    bool isUserNameValid(const resip::Data& username,  const resip::Data& realm) const;
-   const resip::Data& getPasswordForUsername(const resip::Data& username) const;
    const resip::Data& getPasswordForUsername(const resip::Data& username, const resip::Data& realm) const;
    const UserAuthData* getUser(const resip::Data& userName, const resip::Data& realm) const;
    void addUser(const resip::Data& username, const resip::Data& password, const resip::Data& realm);
    void authParse(const resip::Data& accountDatabaseFilename);
-
-protected:
-   void calcUserAuthData();
 };
 
 } // namespace

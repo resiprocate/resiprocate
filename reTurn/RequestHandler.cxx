@@ -236,25 +236,16 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
    // Don't authenticate shared secret requests, Binding Requests or Indications (if LongTermCredentials are used)
    if((request.mClass == StunMessage::StunClassRequest && request.mMethod == StunMessage::SharedSecretMethod) ||
       (request.mClass == StunMessage::StunClassRequest && request.mMethod == StunMessage::BindMethod) ||
-      (getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword && request.mClass == StunMessage::StunClassIndication))
+      (request.mClass == StunMessage::StunClassIndication))
    {
       return true;
    }
 
    if (!request.mHasMessageIntegrity)
    {
-      if (getConfig().mAuthenticationMode == ReTurnConfig::ShortTermPassword) 
-      {
-         InfoLog(<< "Received Request with no Message Integrity. Sending 400. Sender=" << request.mRemoteTuple);
-         buildErrorResponse(response, 400, "Bad Request (no MessageIntegrity)");  
-         return false;
-      }
-      else if(getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword)
-      {
-         InfoLog(<< "Received Request with no Message Integrity. Sending 401. Sender=" << request.mRemoteTuple);
-         buildErrorResponse(response, 401, "Unauthorized (no MessageIntegrity)", getConfig().mAuthenticationRealm.c_str());  
-         return false;
-      }
+      InfoLog(<< "Received Request with no Message Integrity. Sending 401. Sender=" << request.mRemoteTuple);
+      buildErrorResponse(response, 401, "Unauthorized (no MessageIntegrity)", getConfig().mAuthenticationRealm.c_str());  
+      return false;
    }
    else
    {
@@ -265,87 +256,60 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
          return false;
       }
 
-      if(getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword)  
+      if(!request.mHasRealm)
       {
-         if(!request.mHasRealm)
-         {
-            WarningLog(<< "No Realm.  Sending 400. Sender=" << request.mRemoteTuple);
-            buildErrorResponse(response, 400, "Bad Request (No Realm)");
-            return false;
-         }
-         if(!request.mHasNonce)
-         {
-            WarningLog(<< "No Nonce and contains realm.  Sending 400. Sender=" << request.mRemoteTuple);
-            buildErrorResponse(response, 400, "Bad Request (No Nonce and contains Realm)");
-            return false;
-         }
-         switch(checkNonce(*request.mNonce))
-         {
-         case Valid:
-            // Do nothing
-            break;
-         case Expired:
-            WarningLog(<< "Nonce expired. Sending 438. Sender=" << request.mRemoteTuple);
-            buildErrorResponse(response, 438, "Stale Nonce", getConfig().mAuthenticationRealm.c_str());
-            return false;
-            break;
-         case NotValid:
-         default:
-            WarningLog(<< "Invalid Nonce. Sending 400. Sender=" << request.mRemoteTuple);
-            buildErrorResponse(response, 400, "BadRequest (Invalid Nonce)");
-            return false;
-            break;
-         }
+         WarningLog(<< "No Realm.  Sending 400. Sender=" << request.mRemoteTuple);
+         buildErrorResponse(response, 400, "Bad Request (No Realm)");
+         return false;
       }
-
-      if(getConfig().mAuthenticationMode == ReTurnConfig::ShortTermPassword)
+      if(!request.mHasNonce)
       {
-         // !slg! check if username field has expired
-         // !slg! we may want to delay this check for Turn Allocations so that expired 
-         //       authentications can still be accepted for existing allocation refreshes 
-         //       and removals
-         if(0)
-         {
-            WarningLog(<< "Username expired. Sending 430. Sender=" << request.mRemoteTuple);
-            buildErrorResponse(response, 430, "Stale Credentials");
-            return false;
-         }
+         WarningLog(<< "No Nonce and contains realm.  Sending 400. Sender=" << request.mRemoteTuple);
+         buildErrorResponse(response, 400, "Bad Request (No Nonce and contains Realm)");
+         return false;
+      }
+      switch(checkNonce(*request.mNonce))
+      {
+      case Valid:
+         // Do nothing
+         break;
+      case Expired:
+         WarningLog(<< "Nonce expired. Sending 438. Sender=" << request.mRemoteTuple);
+         buildErrorResponse(response, 438, "Stale Nonce", getConfig().mAuthenticationRealm.c_str());
+         return false;
+         break;
+      case NotValid:
+      default:
+         WarningLog(<< "Invalid Nonce. Sending 400. Sender=" << request.mRemoteTuple);
+         buildErrorResponse(response, 400, "BadRequest (Invalid Nonce)");
+         return false;
+         break;
       }
 
       StackLog(<< "Validating username: " << *request.mUsername);  // Note: we ensure username is present above
 
-      // !slg! need to determine whether the USERNAME contains a known entity, and in the case of a long-term
-      //       credential, known within the realm of the REALM attribute of the request
-      if (getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword && !getConfig().isUserNameValid(*request.mUsername, *request.mRealm))
+      // !slg! need to determine whether the USERNAME contains a known entity, and is known 
+      //       within the realm of the REALM attribute of the request
+      if (!getConfig().isUserNameValid(*request.mUsername, *request.mRealm))
       {
          WarningLog(<< "Invalid username: " << *request.mUsername << ". Sending 401. Sender=" << request.mRemoteTuple);
-         buildErrorResponse(response, 401, "Unauthorized", getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword ? getConfig().mAuthenticationRealm.c_str() : 0);
+         buildErrorResponse(response, 401, "Unauthorized", getConfig().mAuthenticationRealm.c_str());
          return false;
       }
 
       StackLog(<< "Validating MessageIntegrity");
 
-      // Need to calculate HMAC across entire message - for ShortTermAuthentication we use the password
-      // as the key - for LongTermAuthentication we use username:realm:password string as the key
+      // Need to calculate HMAC across entire message - for LongTermAuthentication we use 
+      // username:realm:password string as the key
       Data hmacKey;
       assert(request.mHasUsername);  // Note:  This is checked above
 
-      if(getConfig().mAuthenticationMode != ReTurnConfig::NoAuthentication)
-      {
-         if(request.mHasRealm)  // Longterm authenicationmode
-         {
-            request.calculateHmacKey(hmacKey, getConfig().getPasswordForUsername(*request.mUsername, *request.mRealm));
-         }
-         else
-         {
-            request.calculateHmacKey(hmacKey, getConfig().getPasswordForUsername(*request.mUsername));
-         }
-      }
+      request.calculateHmacKey(hmacKey, getConfig().getPasswordForUsername(*request.mUsername, *request.mRealm));
 
       if(!request.checkMessageIntegrity(hmacKey))
       {
          WarningLog(<< "MessageIntegrity is bad. Sending 401. Sender=" << request.mRemoteTuple);
-         buildErrorResponse(response, 401, "Unauthorized", getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword ? getConfig().mAuthenticationRealm.c_str() : 0);
+         buildErrorResponse(response, 401, "Unauthorized", getConfig().mAuthenticationRealm.c_str());
          return false;
       }
 
@@ -485,7 +449,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, TurnAllo
    if(!request.mHasMessageIntegrity)
    {
       WarningLog(<< "Turn allocate request without authentication.  Sending 401. Sender=" << request.mRemoteTuple);
-      buildErrorResponse(response, 401, "Missing Message Integrity", getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword ? getConfig().mAuthenticationRealm.c_str() : 0 );  
+      buildErrorResponse(response, 401, "Missing Message Integrity", getConfig().mAuthenticationRealm.c_str());  
       return RespondFromReceiving;
    }
 
@@ -531,7 +495,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, TurnAllo
    if(request.mHasTurnDontFragment)
    {
       WarningLog(<< "Turn allocate request with Don't Fragment requested, not yet implemented.  Sending 420. Sender=" << request.mRemoteTuple);
-      buildErrorResponse(response, 420, "Don't Fragment not yet implemented", getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword ? getConfig().mAuthenticationRealm.c_str() : 0 );  
+      buildErrorResponse(response, 420, "Don't Fragment not yet implemented", getConfig().mAuthenticationRealm.c_str());  
       return RespondFromReceiving;
    }
 
@@ -672,7 +636,7 @@ RequestHandler::processTurnRefreshRequest(TurnAllocationManager& turnAllocationM
    if(!request.mHasMessageIntegrity)
    {
       WarningLog(<< "Turn refresh request without authentication.  Sending 401. Sender=" << request.mRemoteTuple);
-      buildErrorResponse(response, 401, "Missing Message Integrity", getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword ? getConfig().mAuthenticationRealm.c_str() : 0 );  
+      buildErrorResponse(response, 401, "Missing Message Integrity", getConfig().mAuthenticationRealm.c_str());  
       return RespondFromReceiving;
    }
 
@@ -757,7 +721,7 @@ RequestHandler::processTurnCreatePermissionRequest(TurnAllocationManager& turnAl
    if(!request.mHasMessageIntegrity)
    {
       WarningLog(<< "Turn create permission request without authentication.  Send 401. Sender=" << request.mRemoteTuple);
-      buildErrorResponse(response, 401, "Missing Message Integrity", getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword ? getConfig().mAuthenticationRealm.c_str() : 0 );  
+      buildErrorResponse(response, 401, "Missing Message Integrity", getConfig().mAuthenticationRealm.c_str());  
       return RespondFromReceiving;
    }
 
@@ -816,7 +780,7 @@ RequestHandler::processTurnChannelBindRequest(TurnAllocationManager& turnAllocat
    if(!request.mHasMessageIntegrity)
    {
       WarningLog(<< "Turn channel bind request without authentication.  Send 401. Sender=" << request.mRemoteTuple);
-      buildErrorResponse(response, 401, "Missing Message Integrity", getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword ? getConfig().mAuthenticationRealm.c_str() : 0 );  
+      buildErrorResponse(response, 401, "Missing Message Integrity", getConfig().mAuthenticationRealm.c_str() );  
       return RespondFromReceiving;
    }
 

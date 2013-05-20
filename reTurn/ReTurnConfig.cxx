@@ -22,7 +22,6 @@ ReTurnConfig::ReTurnConfig() :
    mAltStunPort(0), // Note:  The default is to disable RFC3489 binding support
    mTurnAddress(asio::ip::address::from_string("0.0.0.0")),
    mAltStunAddress(asio::ip::address::from_string("0.0.0.0")),
-   mAuthenticationMode(LongTermPassword),  // required for TURN
    mAuthenticationRealm("reTurn"),
    mNonceLifetime(3600),            // 1 hour - at least 1 hours is recommended by the RFC
    mAllocationPortRangeMin(49152),  // must be even - This default range is the Dynamic and/or Private Port range - recommended by RFC
@@ -42,8 +41,6 @@ ReTurnConfig::ReTurnConfig() :
    mRunAsUser(""),
    mRunAsGroup("")
 {
-   mAuthenticationCredentials["test"] = "1234";
-   calcUserAuthData();
 }
 
 void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& defaultConfigFilename)
@@ -55,15 +52,6 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
    mAltStunPort = getConfigUnsignedShort("AltStunPort", mAltStunPort);
    mTurnAddress = asio::ip::address::from_string(getConfigData("TurnAddress", "0.0.0.0").c_str());
    mAltStunAddress = asio::ip::address::from_string(getConfigData("AltStunAddress", "0.0.0.0").c_str());
-   int authMode = getConfigUnsignedShort("AuthenticationMode", (int)mAuthenticationMode);
-   switch(authMode)
-   {
-   case 0: mAuthenticationMode = NoAuthentication; break;
-   case 1: mAuthenticationMode = ShortTermPassword; break;
-   case 2: mAuthenticationMode = LongTermPassword; break;
-   default: 
-      throw std::runtime_error("Unsupported AuthenticationMode value in config");
-   }
    mAuthenticationRealm = getConfigData("AuthenticationRealm", mAuthenticationRealm);
    mNonceLifetime = getConfigUnsignedLong("NonceLifetime", mNonceLifetime);
    mAllocationPortRangeMin = getConfigUnsignedShort("AllocationPortRangeMin", mAllocationPortRangeMin);
@@ -107,7 +95,6 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
    AddBasePathIfRequired(usersDatabase);
    
    authParse(usersDatabase);
-   calcUserAuthData();
 }
 
 ReTurnConfig::~ReTurnConfig()
@@ -217,7 +204,6 @@ ReTurnConfig::authParse(const resip::Data& accountDatabaseFilename)
 
       if (state.size() != 0)
       {
-
          if(state == "authorized")
          {
             accountState = AUTHORIZED;
@@ -242,29 +228,13 @@ ReTurnConfig::authParse(const resip::Data& accountDatabaseFilename)
          continue;
       }
 
-      if(accountState != REFUSED) {
+      if(accountState != REFUSED) 
+      {
          addUser(username, password, realm);
       }
    }
 
    accountDatabaseFile.close();
-}
-
-
-void
-ReTurnConfig::calcUserAuthData()
-{
-   RealmUsers& realmUsers(mUsers[mAuthenticationRealm]);
-   std::map<resip::Data,resip::Data>::const_iterator it = mAuthenticationCredentials.begin();
-   while(it != mAuthenticationCredentials.end())
-   {
-      UserAuthData newUser(UserAuthData::createFromPassword(
-            it->first,
-            mAuthenticationRealm,
-            it->second));
-      realmUsers.insert(pair<resip::Data,UserAuthData>(it->first,  newUser));
-      it++;
-   }
 }
 
 void
@@ -276,33 +246,11 @@ ReTurnConfig::printHelpText(int argc, char **argv)
    std::cerr << "  " << removePath(argv[0]) << " reTurnServer.config --LogLevel=INFO" << std::endl;
 }
 
-// ShortTermAuthentication
-bool
-ReTurnConfig::isUserNameValid(const resip::Data& username) const
-{
-   std::map<resip::Data,resip::Data>::const_iterator it = mAuthenticationCredentials.find(username);
-   return it != mAuthenticationCredentials.end();
-}
-
 // LongTermAuthentication
 bool
 ReTurnConfig::isUserNameValid(const resip::Data& username, const resip::Data& realm) const
 {
    return getUser(username, realm) != NULL;
-}
-
-const Data&
-ReTurnConfig::getPasswordForUsername(const Data& username) const
-{
-   std::map<resip::Data,resip::Data>::const_iterator it = mAuthenticationCredentials.find(username);
-   if(it != mAuthenticationCredentials.end())
-   {
-      return it->second;
-   }
-   else
-   {
-      return Data::Empty;
-   }
 }
 
 const Data&
