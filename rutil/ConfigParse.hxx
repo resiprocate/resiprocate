@@ -51,7 +51,9 @@ public:
    unsigned short getConfigUnsignedShort(const resip::Data& name, int defaultValue);
 
    bool getConfigValue(const resip::Data& name, std::vector<resip::Data> &value);
-   
+
+   bool AddBasePathIfRequired(Data& filename);
+
 protected:
    void insertConfigValue(const resip::Data& name, const resip::Data& value);
 
@@ -62,6 +64,8 @@ protected:
 
    // Config filename from command line
    resip::Data mCmdLineConfigFilename;
+
+   resip::Data mConfigBasePath;
 
 private:
    friend EncodeStream& operator<<(EncodeStream& strm, const ConfigParse& config);

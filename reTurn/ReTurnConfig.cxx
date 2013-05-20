@@ -42,8 +42,6 @@ ReTurnConfig::ReTurnConfig() :
    mRunAsUser(""),
    mRunAsGroup("")
 {
-   mAuthenticationCredentials["test"] = "1234";
-   calcUserAuthData();
 }
 
 void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& defaultConfigFilename)
@@ -91,18 +89,21 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
    }
 #endif
 
-	// TODO: For ShortTermCredentials use mAuthenticationCredentials[username] = password;
+   // TODO: For ShortTermCredentials use mAuthenticationCredentials[username] = password;
 
 
-	// LongTermCredentials
-
+   // LongTermCredentials
    Data usersDatabase(getConfigData("UserDatabaseFile", ""));
-
    if(usersDatabase.size() == 0)
    {
       throw ConfigParse::Exception("Missing user database option! Expected \"UserDatabaseFile = file location\".", __FILE__, __LINE__);
    }
 
+   AddBasePathIfRequired(mLoggingFilename);
+   AddBasePathIfRequired(mTlsServerCertificateFilename);
+   AddBasePathIfRequired(mTlsTempDhFilename);
+   AddBasePathIfRequired(usersDatabase);
+   
    authParse(usersDatabase);
    calcUserAuthData();
 }

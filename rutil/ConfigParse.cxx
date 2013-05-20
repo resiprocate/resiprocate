@@ -124,6 +124,16 @@ ConfigParse::parseCommandLine(int argc, char** argv, int skipCount)
 void
 ConfigParse::parseConfigFile(const Data& filename)
 {
+   // Store off base config path
+   ParseBuffer pb(filename);
+   const char* anchor = pb.start();
+   pb.skipToEnd();
+   pb.skipBackToOneOf("/\\");
+   if(!pb.bof())
+   {
+      mConfigBasePath = pb.data(pb.start());
+   }
+
    ifstream configFile(filename.c_str());
    
    if(!configFile)
@@ -132,7 +142,6 @@ ConfigParse::parseConfigFile(const Data& filename)
    }
 
    string sline;
-   const char * anchor;
    while(getline(configFile, sline)) 
    {
       Data line(sline);
@@ -344,6 +353,21 @@ ConfigParse::removePath(const resip::Data& fileAndPath)
    }
    pb.data(filenameOnly, anchor);
    return filenameOnly;
+}
+
+bool 
+ConfigParse::AddBasePathIfRequired(Data& filename)
+{
+   // If filename already has a path specified, then don't touch it
+   ParseBuffer pb(filename);
+   pb.skipToOneOf("/\\");
+   if(pb.eof())
+   {
+       // No slashes in filename, so no path present
+       filename = mConfigBasePath + filename;
+       return true;
+   }
+   return false;
 }
 
 EncodeStream& 
