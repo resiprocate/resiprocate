@@ -332,7 +332,14 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
 
       if(getConfig().mAuthenticationMode != ReTurnConfig::NoAuthentication)
       {
-         request.calculateHmacKey(hmacKey, getConfig().getPasswordForUsername(*request.mUsername));
+         if(request.mHasRealm)  // Longterm authenicationmode
+         {
+            request.calculateHmacKey(hmacKey, getConfig().getPasswordForUsername(*request.mUsername, *request.mRealm));
+         }
+         else
+         {
+            request.calculateHmacKey(hmacKey, getConfig().getPasswordForUsername(*request.mUsername));
+         }
       }
 
       if(!request.checkMessageIntegrity(hmacKey))
