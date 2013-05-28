@@ -626,17 +626,16 @@ ConnectionBase::makeWsHandshakeResponse()
    std::auto_ptr<Data> responsePtr(0);
    if(isUsingSecWebSocketKey())
    {
-      Data response = ("HTTP/1.1 101 WebSocket Protocol Handshake\r\n"
+      std::auto_ptr<Data> responsePtr(new Data("HTTP/1.1 101 WebSocket Protocol Handshake\r\n"
          "Upgrade: WebSocket\r\n"
          "Connection: Upgrade\r\n"
-         "Sec-WebSocket-Protocol: sip\r\n");
+         "Sec-WebSocket-Protocol: sip\r\n"));
 #ifdef USE_SSL
       SHA1Stream wsSha1Stream;
       wsSha1Stream << (mMessage->const_header(h_SecWebSocketKey).value() + Data("258EAFA5-E914-47DA-95CA-C5AB0DC85B11"));
       Data wsAcceptKey = wsSha1Stream.getBin(160).base64encode();
-      response += "Sec-WebSocket-Accept: " + wsAcceptKey + "\r\n\r\n";
+      *responsePtr += "Sec-WebSocket-Accept: " + wsAcceptKey + "\r\n\r\n";
 #endif
-      responsePtr = std::auto_ptr<Data>(&response);
    }
    else if(isUsingDeprecatedSecWebSocketKeys())
    {
