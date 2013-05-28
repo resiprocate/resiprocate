@@ -25,10 +25,10 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 #define CRLF "\r\n"
 
-class FakeTransport :  public Transport
+class FakeTCPTransport : public Transport
 {
    public:
-      FakeTransport(Fifo<TransactionMessage>& rxFifo, 
+      FakeTCPTransport(Fifo<TransactionMessage>& rxFifo, 
                     int portNum, 
                     IpVersion version, 
                     const Data& interfaceObj,
@@ -55,6 +55,36 @@ class FakeTransport :  public Transport
       void flush() {mStateMachineFifo.flush();}
 };
 
+class FakeWSTransport : public Transport
+{
+   public:
+      FakeWSTransport(Fifo<TransactionMessage>& rxFifo, 
+            int portNum, 
+            IpVersion version, 
+            const Data& interfaceObj,
+            const Data& tlsDomain = Data::Empty) :
+         Transport(rxFifo, portNum, version, interfaceObj, tlsDomain)
+   {}
+
+      virtual TransportType transport() const { return WS; }
+      virtual bool isFinished() const { assert(0); return true; }
+      virtual void process(FdSet& fdset) { assert(0); }
+      virtual void process() { assert(0); }
+      virtual void processTransmitQueue() { assert(0); }
+      virtual void buildFdSet( FdSet& fdset) { assert(0); }
+
+      virtual bool isReliable() const { assert(0); return true; }
+      virtual bool isDatagram() const { assert(0); return true; }
+      virtual bool shareStackProcessAndSelect() const { assert(0); return true;}
+      virtual void startOwnProcessing() { assert(0); }
+      virtual bool hasDataToSend() const { assert(0); return false; }
+      virtual void setPollGrp(FdPollGrp* grp) { assert(0); }
+      virtual unsigned int getFifoSize() const { assert(0); return 0; }
+
+      virtual void send(std::auto_ptr<SendData> data) { assert(0); }
+      void flush() { mStateMachineFifo.flush(); }
+};
+
 class TestConnection : public ConnectionBase
 {
    public:
@@ -66,75 +96,78 @@ class TestConnection : public ConnectionBase
       
       bool read(unsigned int minChunkSize, unsigned int maxChunkSize)
       {
-         unsigned int chunk = Random::getRandom() % maxChunkSize;
-         chunk = resipMax(chunk, minChunkSize);
-         chunk = resipMin(chunk, maxChunkSize);
-		 unsigned int chunkPos = mTestStream.size() - mStreamPos;
-         chunk = resipMin(chunk, chunkPos);
+
+         unsigned int chunk = chooseChunkSize(minChunkSize, maxChunkSize);
          assert(chunk > 0);
          std::pair<char*, size_t> writePair = getWriteBuffer();
          memcpy(writePair.first, mTestStream.data() + mStreamPos, chunk);
          mStreamPos += chunk;
          assert(mStreamPos <= mTestStream.size());
-
          preparseNewBytes(chunk);
          return mStreamPos != mTestStream.size();
       }
       
    private:
+      unsigned int chooseChunkSize(unsigned int min, unsigned int max)
+      {
+         unsigned int chunk = Random::getRandom() % max;
+         chunk = resipMax(chunk, min);
+         chunk = resipMin(chunk, max);
+         unsigned int chunkPos = mTestStream.size() - mStreamPos;
+         chunk = resipMin(chunk, chunkPos);
+         return chunk;
+      }
       Data mTestStream;
       unsigned int mStreamPos;
       // Fifo<TransactionMessage>& mRxFifo;
 };
 
-int
-main(int argc, char** argv)
+bool
+testTCPConnection()
 {
-   Log::initialize(Log::Cout, Log::Info, argv[0]);
-
    Data bytes("INVITE sip:192.168.2.92:5100;q=1 SIP/2.0\r\n"
-              "To: <sip:yiwen_AT_meet2talk.com@whistler.gloo.net>\r\n"
-              "From: Jason Fischl<sip:jason_AT_meet2talk.com@whistler.gloo.net>;tag=ba1aee2d\r\n"
-              "Via: SIP/2.0/UDP 192.168.2.220:5060;branch=z9hG4bK-c87542-da4d3e6a.0-1--c87542-;rport=5060;received=192.168.2.220;stid=579667358\r\n"
-              "Via: SIP/2.0/UDP 192.168.2.15:5100;branch=z9hG4bK-c87542-579667358-1--c87542-;rport=5100;received=192.168.2.15\r\n"
-              "Call-ID: 6c64b42fce01b007\r\n"
-              "CSeq: 2 INVITE\r\n"
-              "Route: <sip:proxy@192.168.2.220:5060;lr>\r\n"
-              "Contact: <sip:192.168.2.15:5100>\r\n"
-              "Content-Length: 0\r\n"
-              "\r\n"
-              "\r\n\r\n" //keepalive
-              "INVITE sip:192.168.2.92:5100;q=1 SIP/2.0\r\n"
-              "To: <sip:yiwen_AT_meet2talk.com@whistler.gloo.net>\r\n"
-              "From: Jason Fischl<sip:jason_AT_meet2talk.com@whistler.gloo.net>;tag=ba1aee2d\r\n"
-              "Via: SIP/2.0/UDP 192.168.2.220:5060;branch=z9hG4bK-c87542-da4d3e6a.0-1--c87542-;rport=5060;received=192.168.2.220;stid=579667358\r\n"
-              "Via: SIP/2.0/UDP 192.168.2.15:5100;branch=z9hG4bK-c87542-579667358-1--c87542-;rport=5100;received=192.168.2.15\r\n"
-              "Call-ID: 6c64b42fce01b007\r\n"
-              "CSeq: 2 INVITE\r\n"
-              "Record-Route: <sip:proxy@192.168.2.220:5060;lr>\r\n"
-              "Contact: <sip:192.168.2.15:5100>\r\n"
-              "Max-Forwards: 69\r\n"
-              "Content-Type: application/sdp\r\n"
-              "Content-Length: 307\r\n"
-              "\r\n"
-              "v=0\r\n"
-              "o=M2TUA 1589993278 1032390928 IN IP4 192.168.2.15\r\n"
-              "s=-\r\n"
-              "c=IN IP4 192.168.2.15\r\n"
-              "t=0 0\r\n"
-              "m=audio 9000 RTP/AVP 103 97 100 101 0 8 102\r\n"
-              "a=rtpmap:103 ISAC/16000\r\n"
-              "a=rtpmap:97 IPCMWB/16000\r\n"
-              "a=rtpmap:100 EG711U/8000\r\n"
-              "a=rtpmap:101 EG711A/8000\r\n"
-              "a=rtpmap:0 PCMU/8000\r\n"
-              "a=rtpmap:8 PCMA/8000\r\n"
-              "a=rtpmap:102 iLBC/8000\r\n");
-   
+         "To: <sip:yiwen_AT_meet2talk.com@whistler.gloo.net>\r\n"
+         "From: Jason Fischl<sip:jason_AT_meet2talk.com@whistler.gloo.net>;tag=ba1aee2d\r\n"
+         "Via: SIP/2.0/UDP 192.168.2.220:5060;branch=z9hG4bK-c87542-da4d3e6a.0-1--c87542-;rport=5060;received=192.168.2.220;stid=579667358\r\n"
+         "Via: SIP/2.0/UDP 192.168.2.15:5100;branch=z9hG4bK-c87542-579667358-1--c87542-;rport=5100;received=192.168.2.15\r\n"
+         "Call-ID: 6c64b42fce01b007\r\n"
+         "CSeq: 2 INVITE\r\n"
+         "Route: <sip:proxy@192.168.2.220:5060;lr>\r\n"
+         "Contact: <sip:192.168.2.15:5100>\r\n"
+         "Content-Length: 0\r\n"
+         "\r\n"
+         "\r\n\r\n" //keepalive
+         "INVITE sip:192.168.2.92:5100;q=1 SIP/2.0\r\n"
+         "To: <sip:yiwen_AT_meet2talk.com@whistler.gloo.net>\r\n"
+         "From: Jason Fischl<sip:jason_AT_meet2talk.com@whistler.gloo.net>;tag=ba1aee2d\r\n"
+         "Via: SIP/2.0/UDP 192.168.2.220:5060;branch=z9hG4bK-c87542-da4d3e6a.0-1--c87542-;rport=5060;received=192.168.2.220;stid=579667358\r\n"
+         "Via: SIP/2.0/UDP 192.168.2.15:5100;branch=z9hG4bK-c87542-579667358-1--c87542-;rport=5100;received=192.168.2.15\r\n"
+         "Call-ID: 6c64b42fce01b007\r\n"
+         "CSeq: 2 INVITE\r\n"
+         "Record-Route: <sip:proxy@192.168.2.220:5060;lr>\r\n"
+         "Contact: <sip:192.168.2.15:5100>\r\n"
+         "Max-Forwards: 69\r\n"
+         "Content-Type: application/sdp\r\n"
+         "Content-Length: 307\r\n"
+         "\r\n"
+         "v=0\r\n"
+         "o=M2TUA 1589993278 1032390928 IN IP4 192.168.2.15\r\n"
+         "s=-\r\n"
+         "c=IN IP4 192.168.2.15\r\n"
+         "t=0 0\r\n"
+         "m=audio 9000 RTP/AVP 103 97 100 101 0 8 102\r\n"
+         "a=rtpmap:103 ISAC/16000\r\n"
+         "a=rtpmap:97 IPCMWB/16000\r\n"
+         "a=rtpmap:100 EG711U/8000\r\n"
+         "a=rtpmap:101 EG711A/8000\r\n"
+         "a=rtpmap:0 PCMU/8000\r\n"
+         "a=rtpmap:8 PCMA/8000\r\n"
+         "a=rtpmap:102 iLBC/8000\r\n");
+
    Fifo<TransactionMessage> testRxFifo;
-   FakeTransport fake(testRxFifo, 5060, V4, Data::Empty);
+   FakeTCPTransport fake(testRxFifo, 5060, V4, Data::Empty);
    Tuple who(fake.getTuple());
-  
+
    int chunkRange = 700;
    unsigned int runs = 100;
 
@@ -147,9 +180,17 @@ main(int argc, char** argv)
       while(cBase.read(minChunk, maxChunk));      
    }
    fake.flush();
-   assert(testRxFifo.size() == runs * 3);
+   return testRxFifo.size() == runs * 3;
+}
+int
+main(int argc, char** argv)
+{
+   Log::initialize(Log::Cout, Log::Info, argv[0]);
 
-   cerr << "\nTEST OK" << endl;
+   assert(testTCPConnection());
+   cerr << "testTCPConnection OK" << endl; 
+
+   cerr << "ALL OK" << endl;
    return 0;
 }
 
