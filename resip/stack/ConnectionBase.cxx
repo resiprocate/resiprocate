@@ -626,7 +626,7 @@ ConnectionBase::makeWsHandshakeResponse()
    std::auto_ptr<Data> responsePtr(0);
    if(isUsingSecWebSocketKey())
    {
-      std::auto_ptr<Data> responsePtr(new Data("HTTP/1.1 101 WebSocket Protocol Handshake\r\n"
+      responsePtr.reset(new Data("HTTP/1.1 101 WebSocket Protocol Handshake\r\n"
          "Upgrade: WebSocket\r\n"
          "Connection: Upgrade\r\n"
          "Sec-WebSocket-Protocol: sip\r\n"));
@@ -635,6 +635,9 @@ ConnectionBase::makeWsHandshakeResponse()
       wsSha1Stream << (mMessage->const_header(h_SecWebSocketKey).value() + Data("258EAFA5-E914-47DA-95CA-C5AB0DC85B11"));
       Data wsAcceptKey = wsSha1Stream.getBin(160).base64encode();
       *responsePtr += "Sec-WebSocket-Accept: " + wsAcceptKey + "\r\n\r\n";
+#else
+      ErrLog(<<"WebSocket transports don't work when reSIProcate compiled without SSL support");
+      responsePtr.reset(0);
 #endif
    }
    else if(isUsingDeprecatedSecWebSocketKeys())
