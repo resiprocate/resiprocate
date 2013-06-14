@@ -22,7 +22,7 @@ ServerInviteSession::ServerInviteSession(DialogUsageManager& dum, Dialog& dialog
    : InviteSession(dum, dialog),
      mFirstRequest(request),
      m1xx(new SipMessage),
-     mCurrentRetransmit1xx(0)
+     mCurrentRetransmit1xxSeq(0)
 {
    assert(request.isRequest());
    mState = UAS_Start;
@@ -716,7 +716,7 @@ ServerInviteSession::dispatch(const DumTimeout& timeout)
 {
    if (timeout.type() == DumTimeout::Retransmit1xx)
    {
-      if (mCurrentRetransmit1xx && m1xx->header(h_CSeq).sequence() == timeout.seq())  // If timer isn't stopped and this timer is for last 1xx sent, then resend
+      if (timeout.seq() == mCurrentRetransmit1xxSeq)  // If timer isn't stopped and this timer is for last 1xx sent, then resend
       {
          send(m1xx);
          startRetransmit1xxTimer();
@@ -1220,11 +1220,10 @@ void
 ServerInviteSession::startRetransmit1xxTimer()
 {
    // RFC3261 13.3.1 says the UAS must send a non-100 provisional response every minute, to handle the possiblity of lost provisional responses
-   mCurrentRetransmit1xx = mDialog.mDialogSet.getUserProfile()->get1xxRetransmissionTime();  
-   if(mCurrentRetransmit1xx > 0)
-   {	
-      unsigned int seq = m1xx->header(h_CSeq).sequence();
-      mDum.addTimer(DumTimeout::Retransmit1xx, mCurrentRetransmit1xx, getBaseHandle(), seq);
+   int retransmissionTime = mDialog.mDialogSet.getUserProfile()->get1xxRetransmissionTime();
+   if(retransmissionTime > 0 && m1xx->header(resip::h_StatusLine).statusCode() > 100)
+   {
+      mDum.addTimer(DumTimeout::Retransmit1xx, retransmissionTime, getBaseHandle(), ++mCurrentRetransmit1xxSeq);
    }
 }
 
@@ -1234,7 +1233,7 @@ ServerInviteSession::sendProvisional(int code, bool earlyFlag)
    mDialog.makeResponse(*m1xx, mFirstRequest, code);
    if(!earlyFlag)
    {
-	   m1xx->setContents(0);  // clear contents if present
+      m1xx->setContents(0);  // clear contents if present
    }
    else
    {
@@ -1279,8 +1278,8 @@ ServerInviteSession::sendAccept(int code, Contents* offerAnswer)
    {
       setOfferAnswer(*mInvite200, offerAnswer);
    }
-   mCurrentRetransmit1xx = 0; // Stop the 1xx timer
-   startRetransmit200Timer(); // 2xx timer
+   mCurrentRetransmit1xxSeq++; // Stop the 1xx timer - causes timer to be ignored on expirey
+   startRetransmit200Timer();  // 2xx timer
    DumHelper::setOutgoingEncryptionLevel(*mInvite200, mCurrentEncryptionLevel);
 
    if (mDum.mDialogEventStateManager)
