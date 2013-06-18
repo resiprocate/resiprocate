@@ -98,7 +98,7 @@ DtlsTransport::DtlsTransport(Fifo<TransactionMessage>& fifo,
 
    mTxFifo.setDescription("DtlsTransport::mTxFifo");
 
-   mTuple.setType( transport() );
+   mTuple.setType( DTLS );
 
    mClientCtx = mSecurity->createDomainCtx(DTLSv1_client_method(), Data::Empty) ;
    mServerCtx = mSecurity->createDomainCtx(DTLSv1_server_method(), sipDomain) ;

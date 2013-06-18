@@ -24,7 +24,7 @@ class WsTransport : public TcpBaseTransport
                    unsigned transportFlags = 0);
       virtual  ~WsTransport();
 
-      TransportType transport() const { return WS; }
+      //TransportType transport() const { return WS; }
    protected:
       Connection* createConnection(const Tuple& who, Socket fd, bool server=false);
 };

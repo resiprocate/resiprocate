@@ -32,7 +32,7 @@ WssTransport::WssTransport(Fifo<TransactionMessage>& fifo,
                            unsigned transportFlags,
                            SecurityTypes::TlsClientVerificationMode cvm,
                            bool useEmailAsSIP):
-   TlsBaseTransport(fifo, portNum, version, interfaceObj, security, sipDomain, sslType, transport(), socketFunc, compression, transportFlags, cvm, useEmailAsSIP)
+   TlsBaseTransport(fifo, portNum, version, interfaceObj, security, sipDomain, sslType, WSS, socketFunc, compression, transportFlags, cvm, useEmailAsSIP)
 {
    InfoLog (<< "Creating WSS transport for domain " 
             << sipDomain << " interface=" << interfaceObj 

@@ -21,7 +21,7 @@ class TcpTransport : public TcpBaseTransport
                    unsigned transportFlags = 0);
       virtual  ~TcpTransport();
 
-      TransportType transport() const { return TCP; }
+      //TransportType transport() const { return TCP; }
 
    protected:
       Connection* createConnection(const Tuple& who, Socket fd, bool server=false);

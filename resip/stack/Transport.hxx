@@ -240,7 +240,7 @@ class Transport : public FdSetIOObserver
       const Tuple& getTuple() const { return mTuple; }
     
       /// @return This transport's TransportType.
-      virtual TransportType transport() const =0 ;
+      const TransportType transport() const { return mTuple.getType(); }
       virtual bool isReliable() const =0;
       virtual bool isDatagram() const =0;
 

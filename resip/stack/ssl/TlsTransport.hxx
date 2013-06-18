@@ -38,7 +38,7 @@ class TlsTransport : public TlsBaseTransport
                    bool useEmailAsSIP = false);
       virtual  ~TlsTransport();
 
-      TransportType transport() const { return TLS; }
+      //TransportType transport() const { return TLS; }
 };
 
 }

@@ -44,7 +44,7 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
    mPollEventCnt = 0;
    mTxTryCnt = mTxMsgCnt = mTxFailCnt = 0;
    mRxTryCnt = mRxMsgCnt = mRxKeepaliveCnt = mRxTransactionCnt = 0;
-   mTuple.setType(transport());
+   mTuple.setType(UDP);
    mFd = InternalTransport::socket(transport(), version);
    mTuple.mFlowKey=(FlowKey)mFd;
    bind();      // also makes it non-blocking

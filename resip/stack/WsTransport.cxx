@@ -23,7 +23,7 @@ WsTransport::WsTransport(Fifo<TransactionMessage>& fifo, int portNum,
       unsigned transportFlags)
 : TcpBaseTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags)
 {
-   mTuple.setType(transport());
+   mTuple.setType(WS);
 
    init();
 
