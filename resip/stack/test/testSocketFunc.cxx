@@ -38,6 +38,8 @@ int main()
 {
   Security *sec = new Security();
   SipStack sipStack(sec, DnsStub::EmptyNameserverList, 0, false, &afterSocketCreationFunction);
+  sipStack.addTransport(UDP, 5060, V4, StunDisabled, Data::Empty, "127.0.0.1");
+  sipStack.addTransport(TCP, 5062, V4, StunDisabled, Data::Empty, "127.0.0.1");
   sipStack.addTransport(TLS, 5061, V4, StunDisabled, Data::Empty, "127.0.0.1");
   return 0;
 }
