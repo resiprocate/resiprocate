@@ -1,0 +1,18 @@
+
+To prepare your machine for building the project:
+
+# apt-get -t unstable install libresiprocate-1.8-dev libsipxtapi-dev
+
+
+To build this project:
+
+$ git clone $REPOSITORY
+$ cd reConServer
+$ autoreconf --install
+$ ./configure
+$ make
+
+
+To run the project, see the original testua_readme.txt
+
+
