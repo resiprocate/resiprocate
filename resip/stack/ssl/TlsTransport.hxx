@@ -37,8 +37,6 @@ class TlsTransport : public TlsBaseTransport
                    SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None,
                    bool useEmailAsSIP = false);
       virtual  ~TlsTransport();
-
-      //TransportType transport() const { return TLS; }
 };
 
 }

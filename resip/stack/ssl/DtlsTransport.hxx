@@ -130,7 +130,6 @@ class DtlsTransport : public UdpTransport
       void process(FdSet& fdset);
       bool isReliable() const { return false; }
       bool isDatagram() const { return true; }
-      //TransportType transport() const { return DTLS; }
       virtual void buildFdSet( FdSet& fdset);
 
       static const unsigned long DtlsReceiveTimeout = 250000 ;

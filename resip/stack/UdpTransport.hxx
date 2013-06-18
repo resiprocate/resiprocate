@@ -66,7 +66,6 @@ public:
                 unsigned transportFlags = 0);
    virtual  ~UdpTransport();
 
-   //virtual TransportType transport() const { return UDP; }
    virtual bool isReliable() const { return false; }
    virtual bool isDatagram() const { return true; }
 

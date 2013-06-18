@@ -38,8 +38,6 @@ class WssTransport : public TlsBaseTransport
                    bool useEmailAsSIP = false);
       virtual  ~WssTransport();
 
-      //TransportType transport() const { return WSS; }
-
       bool isUseEmailAsSIP()
          { return mUseEmailAsSIP; };
 };
