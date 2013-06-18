@@ -81,12 +81,16 @@ DtlsTransport::DtlsTransport(Fifo<TransactionMessage>& fifo,
                              const Data& sipDomain,
                              AfterSocketCreationFuncPtr socketFunc,
                              Compression& compression)
- : UdpTransport( fifo, portNum, version,
-   StunDisabled, interfaceObj, socketFunc, compression ),
+ : UdpTransport( fifo, portNum, version, StunDisabled, interfaceObj, socketFunc, compression ),
    mTimer( mHandshakePending ),
    mSecurity( &security ),
    mDomain(sipDomain)
 {
+   // Note on AfterSocketCreateFuncPtr:  because this class uses UdpTransport the bind operation 
+   //   is called in the UdpTransport constructor and the transport type passed to AfterSocketCreationFuncPtr
+   //   will end up being UDP and not DTLS.  TODO - this should be fixed.  Creating a UdpBaseTransport is one
+   //   solution that would align with the TCP flavour of transports.
+   
    setTlsDomain(sipDomain);
    InfoLog ( << "Creating DTLS transport host=" << interfaceObj
              << " port=" << mTuple.getPort()
