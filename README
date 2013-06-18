@@ -1,7 +1,9 @@
 
 To prepare your machine for building the project:
 
-# apt-get -t unstable install libresiprocate-1.8-dev libsipxtapi-dev
+# apt-get -t unstable install \
+     libresiprocate-1.8-dev librecon-1.8-dev libsipxtapi-dev \
+     libresiprocate-turn-client-1.8-dev
 
 
 To build this project:
@@ -9,7 +11,7 @@ To build this project:
 $ git clone $REPOSITORY
 $ cd reConServer
 $ autoreconf --install
-$ ./configure
+$ ./configure CPPFLAGS="-I/usr/include/sipxtapi"
 $ make
 
 

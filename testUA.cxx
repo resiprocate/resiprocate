@@ -38,8 +38,8 @@ int _kbhit() {
 }
 #endif
 
-#include "../UserAgent.hxx"
-#include "../ReconSubsystem.hxx"
+#include "recon/UserAgent.hxx"
+#include "recon/ReconSubsystem.hxx"
 
 #include <os/OsSysLog.h>
 
