@@ -6,12 +6,12 @@ To prepare your machine for building the project:
      libresiprocate-turn-client-1.8-dev
 
 
-To build this project:
+To build this project, note that CPPFLAGS are necessary:
 
 $ git clone $REPOSITORY
 $ cd reConServer
 $ autoreconf --install
-$ ./configure CPPFLAGS="-I/usr/include/sipxtapi"
+$ ./configure CPPFLAGS="-I/usr/include/sipxtapi -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=10 -D__pingtel_on_posix__ -D_linux -D_REENTRANT -D_FILE_OFFSET_BITS=64"
 $ make
 
 
@@ -30,4 +30,6 @@ Doesn't quite compile yet against the Debian packages:
 - must also install missing stuff to /usr/include/reTurn
 
 - must consider fixing relative include paths within reTurn/*/*.hxx
+
+To work around the above issues, add -I${YOUR_RESIPROCATE_TREE} to CPPFLAGS
 
