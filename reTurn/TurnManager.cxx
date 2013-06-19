@@ -120,7 +120,7 @@ TurnManager::allocateEvenPort(StunTuple::TransportType transport)
    PortAllocationMap& portAllocationMap = getPortAllocationMap(transport);
    unsigned short startPortToCheck = advanceLastAllocatedPort(transport);
    // Ensure start port is even
-   if(startPortToCheck % 2 != 0)
+   while(startPortToCheck % 2 != 0)
    {
       startPortToCheck = advanceLastAllocatedPort(transport);
    }
@@ -141,7 +141,7 @@ TurnManager::allocateOddPort(StunTuple::TransportType transport)
    PortAllocationMap& portAllocationMap = getPortAllocationMap(transport);
    unsigned short startPortToCheck = advanceLastAllocatedPort(transport);
    // Ensure start port is odd
-   if(startPortToCheck % 2 != 1)
+   while(startPortToCheck % 2 != 1)
    {
       startPortToCheck = advanceLastAllocatedPort(transport);
    }
@@ -160,8 +160,10 @@ TurnManager::allocateEvenPortPair(StunTuple::TransportType transport)
 {
    PortAllocationMap& portAllocationMap = getPortAllocationMap(transport);
    unsigned short startPortToCheck = advanceLastAllocatedPort(transport);
-   // Ensure start port is even
-   if(startPortToCheck % 2 != 0)
+   // Ensure start port is even and that start port + 1 is in range
+   while(startPortToCheck % 2 != 0 ||
+         startPortToCheck + 1 == 0 ||
+         startPortToCheck + 1 > mConfig.mAllocationPortRangeMax )
    {
       startPortToCheck = advanceLastAllocatedPort(transport);
    }
@@ -244,6 +246,10 @@ TurnManager::advanceLastAllocatedPort(StunTuple::TransportType transport, unsign
       {
          mLastAllocatedTcpPort = mConfig.mAllocationPortRangeMin+(mLastAllocatedTcpPort-mConfig.mAllocationPortRangeMax-1);
       }
+      else if(mLastAllocatedTcpPort == 0 /* Wrap around */)
+      {
+         mLastAllocatedTcpPort = mConfig.mAllocationPortRangeMin;
+      }
       return mLastAllocatedTcpPort;
    case StunTuple::UDP:
    default:
@@ -251,6 +257,10 @@ TurnManager::advanceLastAllocatedPort(StunTuple::TransportType transport, unsign
       if(mLastAllocatedUdpPort > mConfig.mAllocationPortRangeMax) 
       {
          mLastAllocatedUdpPort = mConfig.mAllocationPortRangeMin+(mLastAllocatedUdpPort-mConfig.mAllocationPortRangeMax-1);
+      }
+      else if(mLastAllocatedUdpPort == 0 /* Wrap around */)
+      {
+         mLastAllocatedUdpPort = mConfig.mAllocationPortRangeMin;
       }
       return mLastAllocatedUdpPort;
    }
