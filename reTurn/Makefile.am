@@ -47,8 +47,8 @@ reTurnServer_SOURCES = reTurnServer.cxx \
         UdpServer.cxx \
 	UserAuthData.cxx
 
-#reTurnServerincludedir = $(includedir)/reTurnServer
-noinst_HEADERS = AsyncSocketBaseHandler.hxx \
+reTurnincludedir = $(includedir)/reTurn
+nobase_reTurninclude_HEADERS = AsyncSocketBaseHandler.hxx \
 	AsyncSocketBase.hxx \
 	AsyncTcpSocketBase.hxx \
 	AsyncTlsSocketBase.hxx \

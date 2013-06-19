@@ -34,7 +34,7 @@ libreTurnClient_la_SOURCES = \
         TurnTlsSocket.cxx \
         TurnUdpSocket.cxx
 
-libreTurnClientincludedir = $(includedir)/reTurnClient
+libreTurnClientincludedir = $(includedir)/reTurn/client
 nobase_libreTurnClientinclude_HEADERS = ErrorCode.hxx \
 	TurnAsyncSocketHandler.hxx \
 	TurnAsyncSocket.hxx \
