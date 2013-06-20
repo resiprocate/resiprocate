@@ -226,7 +226,7 @@ Connection::performWrite()
 
    if (nBytes < 0)
    {
-      if(errno!=EAGAIN)
+      if (errno != EAGAIN && errno != EWOULDBLOCK) // Treat EGAIN and EWOULDBLOCK as the same: http://stackoverflow.com/questions/7003234/which-systems-define-eagain-and-ewouldblock-as-different-values
       {
          //fail(data.transactionId);
          InfoLog(<< "Write failed on socket: " << this->getSocket() << ", closing connection");
