@@ -36,7 +36,9 @@ TcpConnection::read( char* buf, int count )
       switch (e)
       {
          case EAGAIN:
+#if EAGAIN != EWOULDBLOCK
          case EWOULDBLOCK:  // Treat EGAIN and EWOULDBLOCK as the same: http://stackoverflow.com/questions/7003234/which-systems-define-eagain-and-ewouldblock-as-different-values
+#endif
             StackLog (<< "No data ready to read");
             return 0;
          case EINTR:

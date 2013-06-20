@@ -206,7 +206,9 @@ TlsConnection::checkState()
                {
                   case EINTR:
                   case EAGAIN:
+#if EAGAIN != EWOULDBLOCK
                   case EWOULDBLOCK:  // Treat EGAIN and EWOULDBLOCK as the same: http://stackoverflow.com/questions/7003234/which-systems-define-eagain-and-ewouldblock-as-different-values
+#endif
                      StackLog( << "try later");
                      return mTlsState;
                }

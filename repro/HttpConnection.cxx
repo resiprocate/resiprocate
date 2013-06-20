@@ -218,7 +218,9 @@ HttpConnection::processSomeReads()
       switch (e)
       {
          case EAGAIN:
+#if EAGAIN != EWOULDBLOCK
          case EWOULDBLOCK:  // Treat EGAIN and EWOULDBLOCK as the same: http://stackoverflow.com/questions/7003234/which-systems-define-eagain-and-ewouldblock-as-different-values
+#endif
             InfoLog (<< "No data ready to read");
             return true;
          case EINTR:
