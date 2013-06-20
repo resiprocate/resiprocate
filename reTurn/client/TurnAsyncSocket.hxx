@@ -14,10 +14,10 @@
 #include <rutil/Mutex.hxx>
 #include <boost/function.hpp>
 
-#include "../StunTuple.hxx"
-#include "../StunMessage.hxx"
-#include "../ChannelManager.hxx"
-#include "../AsyncSocketBase.hxx"
+#include "reTurn/StunTuple.hxx"
+#include "reTurn/StunMessage.hxx"
+#include "reTurn/ChannelManager.hxx"
+#include "reTurn/AsyncSocketBase.hxx"
 #include "TurnAsyncSocketHandler.hxx"
 
 #define UDP_RT0 100  // RTO - Estimate of Roundtrip time - 100ms is recommened for fixed line transport - the initial value should be configurable

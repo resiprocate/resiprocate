@@ -11,7 +11,7 @@
 #include <asio/ssl.hpp>
 
 #include "TurnAsyncTcpSocket.hxx"
-#include "../AsyncTlsSocketBase.hxx"
+#include "reTurn/AsyncTlsSocketBase.hxx"
 
 namespace reTurn {
 

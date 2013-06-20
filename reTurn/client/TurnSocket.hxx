@@ -12,9 +12,9 @@
 #include <rutil/Data.hxx>
 #include <rutil/Mutex.hxx>
 
-#include "../StunTuple.hxx"
-#include "../StunMessage.hxx"
-#include "../ChannelManager.hxx"
+#include "reTurn/StunTuple.hxx"
+#include "reTurn/StunMessage.hxx"
+#include "reTurn/ChannelManager.hxx"
 
 namespace reTurn {
 
