@@ -1,5 +1,8 @@
 = Release Notes v 1.8 =
 
+==1.8.11 Changes==
+* resip/recon: MOHParkServer: add ssl to libs
+
 ==1.8.10 Changes==
 * add missed changelog entries from 1.8.9 release
 * autotools: add -lcrypto when using -lssl
