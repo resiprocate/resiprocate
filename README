@@ -6,6 +6,8 @@ To prepare your machine for building the project:
      libresiprocate-turn-client-1.8-dev
 
 
+NOTE: You must have at least reSIProcate v1.8.10
+
 To build this project, note that CPPFLAGS are necessary:
 
 $ git clone $REPOSITORY
@@ -16,20 +18,4 @@ $ make
 
 
 To run the project, see the original testua_readme.txt
-
-Outstanding issues
-------------------
-
-Doesn't quite compile yet against the Debian packages:
-
-- currently the reTurn client headers are installed to
-     /usr/include/reTurnClient
-
-- instead, we must install to /usr/include/reTurn/client
-
-- must also install missing stuff to /usr/include/reTurn
-
-- must consider fixing relative include paths within reTurn/*/*.hxx
-
-To work around the above issues, add -I${YOUR_RESIPROCATE_TREE} to CPPFLAGS
 
