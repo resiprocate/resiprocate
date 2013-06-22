@@ -1,5 +1,14 @@
 = Release Notes v 1.8 =
 
+==1.8.9 Changes==
+* resip/stack: TcpConnection: adjust logging levels
+* rutil: more specific check for Solaris, as there are now Linux builds on SPARC
+* reTurn: fix bugs with port allocation logic
+* applied patch from Tibor Velencei to fix issue with over active 1xx retransmissions
+* reTurn: correct header installation
+* treat EGAIN and EWOULDBLOCK the same
+* reTurn/client: adjust paths in headers
+
 ==1.8.8 Changes==
 *added VS2010 project files for MOHParkServer
 *replaced deprecated bzero calls with memsets since bzero doesn't exist in Visual Studio compiler
