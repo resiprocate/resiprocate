@@ -1,5 +1,9 @@
 = Release Notes v 1.8 =
 
+==1.8.10 Changes==
+* add missed changelog entries from 1.8.9 release
+* autotools: add -lcrypto when using -lssl
+
 ==1.8.9 Changes==
 * resip/stack: TcpConnection: adjust logging levels
 * rutil: more specific check for Solaris, as there are now Linux builds on SPARC
