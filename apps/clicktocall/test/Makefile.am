@@ -10,4 +10,5 @@ check_PROGRAMS = clicktocallxml
 
 clicktocallxml_SOURCES = clicktocallxml.cxx
 clicktocallxml_LDADD = ../../../rutil/librutil.la
+clicktocallxml_LDADD += -lpthread
 
