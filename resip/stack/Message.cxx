@@ -23,7 +23,6 @@ Message::Brief::Brief(const Message& source) :
 {
 }
 
-#ifndef  RESIP_USE_STL_STREAMS
 std::ostream& 
 resip::operator<<(std::ostream& strm, 
                   const resip::Message& msg)
@@ -53,8 +52,8 @@ resip::operator<<(std::ostream& strm,
 
    return strm;
 }
-#endif
 
+#ifndef  RESIP_USE_STL_STREAMS
 EncodeStream& 
 resip::operator<<(EncodeStream& strm, 
                   const resip::Message& msg)
@@ -68,6 +67,7 @@ resip::operator<<(EncodeStream& strm,
 {
    return brief.mSource.encodeBrief(strm);
 }
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
