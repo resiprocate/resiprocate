@@ -411,18 +411,19 @@ TransactionState::process(TransactionController& controller,
       ConnectionTerminated* term = dynamic_cast<ConnectionTerminated*>(message);
       if (term)
       {
-         if(term->hasTransactionUser())
-         {
-            controller.mTuSelector.add(term);
-         }
-         else
-         {
-            // .bwc. This means we are using this message to close a connection.
-            controller.mTransportSelector.closeConnection(term->getFlow());
-         }
+         controller.mTuSelector.add(term);
          delete term;
          return;
       }
+
+      // TODO - add a message for closing a connection
+      //CloseConnection* closeConnection = dynamic_cast<CloseConnection*>(message);
+      //if(closeConnection)
+      //{
+      //   controller.mTransportSelector.closeConnection(closeConnection->getFlow());
+      //   delete closeConnection;
+      //   return;
+      //}
 
       KeepAlivePong* pong = dynamic_cast<KeepAlivePong*>(message);
       if (pong)
