@@ -96,6 +96,22 @@ InternalTransport::socket(TransportType type, IpVersion ipVer)
       throw Transport::Exception("Can't create TcpBaseTransport", __FILE__,__LINE__);
    }
 
+#ifdef USE_IPV6
+#ifdef __linux__
+   int on = 1;
+   if (ipVer == V6)
+   {
+      if ( ::setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &on, sizeof(on)) )
+      {
+          int e = getErrno();
+          InfoLog (<< "Couldn't set sockoptions IPV6_V6ONLY: " << strerror(e));
+          error(e);
+          throw Exception("Failed setsockopt", __FILE__,__LINE__);
+      }
+   }
+#endif
+#endif
+
    DebugLog (<< "Creating fd=" << fd << (ipVer == V4 ? " V4/" : " V6/") << (type == UDP ? "UDP" : "TCP"));
 
    return fd;
