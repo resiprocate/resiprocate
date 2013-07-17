@@ -26,6 +26,7 @@ class CommandServer: public XmlRpcServerBase,
 {
 public:
    CommandServer(ReproRunner& reproRunner,
+                 resip::Data ipAddr,
                  int port, 
                  resip::IpVersion version);
    virtual ~CommandServer();

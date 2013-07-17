@@ -25,8 +25,8 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
 
-XmlRpcServerBase::XmlRpcServerBase(int port, IpVersion ipVer) :
-   mTuple(Data::Empty,port,ipVer,TCP,Data::Empty),
+XmlRpcServerBase::XmlRpcServerBase(int port, IpVersion ipVer, Data ipAddr) :
+   mTuple(ipAddr,port,ipVer,TCP,Data::Empty),
    mSane(true)
 {   
 #ifdef USE_IPV6

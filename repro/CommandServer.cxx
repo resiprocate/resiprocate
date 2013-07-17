@@ -27,9 +27,10 @@ using namespace std;
 
 
 CommandServer::CommandServer(ReproRunner& reproRunner,
+                             Data ipAddr,
                              int port, 
                              IpVersion version) :
-   XmlRpcServerBase(port, version),
+   XmlRpcServerBase(port, version, ipAddr),
    mReproRunner(reproRunner)
 {
    reproRunner.getProxy()->getStack().setExternalStatsHandler(this);
