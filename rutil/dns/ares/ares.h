@@ -61,6 +61,9 @@ extern "C" {
 #endif
 
 #include <sys/types.h>
+#if defined(__ANDROID__)
+#include <sys/select.h>
+#endif
 #ifndef WIN32
 /* why was this commented out?! ah, it was a 'fix for windows' */
 #include <netinet/in.h>
@@ -216,7 +219,7 @@ extern 	const char *ares_strerror(int code);
 extern 	void ares_free_errmem(char *mem);
 
 
-#if defined(WIN32) || defined (__CYGWIN__)
+#if defined(WIN32) || defined (__CYGWIN__) || defined (__ANDROID__)
 
 #define T_A             1               /* host address */
 #define T_NS            2               /* authoritative server */

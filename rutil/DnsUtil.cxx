@@ -191,7 +191,7 @@ DnsUtil::getLocalDomainName()
    }
    else
    {
-#if defined( __APPLE__ ) || defined( WIN32 ) || defined(__SUNPRO_CC) || defined(__sun__)
+#if defined( __APPLE__ ) || defined( WIN32 ) || defined(__SUNPRO_CC) || defined(__sun__) || defined( __ANDROID__ )
       throw Exception("Could not find domainname in local hostname",__FILE__,__LINE__);
 #else
       DebugLog( << "No domain portion in hostname <" << lhn << ">, so using getdomainname");
