@@ -2172,7 +2172,7 @@ Data::sizeEqualCaseInsensitiveTokenCompare(const Data& rhs) const
       return true;
    }
 
-   int unalignedPrefix((ptrdiff_t)d1 & 3);
+   int unalignedPrefix(4-((ptrdiff_t)d1 & 3));
 
    compUnalignedRemainder(d1, d2, unalignedPrefix);
 
