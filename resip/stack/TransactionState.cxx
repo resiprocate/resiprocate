@@ -1397,11 +1397,11 @@ TransactionState::processClientInvite(TransactionMessage* msg)
 
          case Timer::TimerCleanUp:
             // !ah! Cancelled Invite Cleanup Timer fired.
-            StackLog (<< "Timer::TimerCleanUp: " << *this << std::endl << *mNextTransmission);
             if (mState == Proceeding)
             {
                assert(mNextTransmission && mNextTransmission->isRequest() && 
                         mNextTransmission->method() == INVITE);
+               StackLog (<< "Timer::TimerCleanUp: " << *this << std::endl << *mNextTransmission);
                InfoLog(<<"Making 408 for canceled invite that received no response: "<< mNextTransmission->brief());
                if(mWaitingForDnsResult)
                {
