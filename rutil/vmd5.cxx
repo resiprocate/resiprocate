@@ -31,7 +31,7 @@
 
 /* Add _BIG_ENDIAN for Solaris */
 /* Add _BIG_ENDIAN__ for MAC OSX */
-#if defined(WORDS_BIGENDIAN) || defined(_BIG_ENDIAN) || defined( __BIG_ENDIAN__ )
+#if defined(WORDS_BIGENDIAN) || defined(_BIG_ENDIAN) || defined( __BIG_ENDIAN__ ) || (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__))
 void
 resip::byteSwap(u_int32_t *buf, unsigned words)
 {
