@@ -932,15 +932,31 @@ ReproRunner::createCommandServer()
    if(commandPort != 0)
    {
       std::list<CommandServer*> commandServerList;
-      if(mUseV4) 
+      if(mUseV4)
       {
          mCommandServerV4 = new CommandServer(*this, commandPort, V4);
-         commandServerList.push_back(mCommandServerV4);
+
+         if(mCommandServerV4->isSane())
+         {
+            commandServerList.push_back(mCommandServerV4);
+         }
+         else
+         {
+            ErrLog(<<"Failed to start CommandServerV4");
+         }
       }
-      if(mUseV6) 
+      if(mUseV6)
       {
          mCommandServerV6 = new CommandServer(*this, commandPort, V6);
-         commandServerList.push_back(mCommandServerV6);
+
+         if(mCommandServerV6->isSane())
+         {
+            commandServerList.push_back(mCommandServerV6);
+         }
+         else
+         {
+            ErrLog(<<"Failed to start CommandServerV6");
+         }
       }
       if(!commandServerList.empty())
       {
