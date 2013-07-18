@@ -2,6 +2,18 @@
 
 ==1.8.11 Changes==
 * resip/recon: MOHParkServer: add ssl to libs
+* fixed incorrect placement of #ifndef RESIP_USE_STIL_STREAMS as reported by Thomas Troy
+* fix for issue introduced in rev 9367 where a connection terminated event doesn't get properly dispatched to DUM - thanks to Jorge Bustamante for reporting this
+* rutil: MD5 code: more checks for big endian environments (gcc __BYTE_ORDER__)
+* Fixing a goof that was causing later code to operate on unaligned data as if it were aligned, which was causing the code to malfunction on many non-x86 platforms.
+* No longer trying to log mNextTransmission when it is possibly NULL
+* rutil: Android cross-compile: fix compile issues
+* build: add initial version of configure-android.sh
+* resip/stack: testSipMessage: Remove a very strange extraneous '#', scope a test
+* repro: fixed CommandServer being created even though listener bind failed
+* repro: fix port already in use error on linux, resulting from binding to both INADDR_ANY and in6addr_any
+* repro: added support for WebAdmin and CommandServer binding to specific IP addresses
+* rpm: configure repro and reTurn not to fork under systemd in Fedora (contributed by Michael Scherer)
 
 ==1.8.10 Changes==
 * add missed changelog entries from 1.8.9 release
