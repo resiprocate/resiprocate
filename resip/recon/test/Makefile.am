@@ -25,9 +25,10 @@ LDADD += $(LIBSSL_LIBADD) -lpthread
 
 AM_CPPFLAGS = -I$(top_srcdir)/resip/recon
 
-TESTS = \
-        sdpTests \
-        unitTests
+TESTS = sdpTests
+# disabled - doesn't run without local audio hardware:
+# lt-unitTests: mp/MpOss.cpp:828: static void* MpOss::soundCardIoWrapper(void*): Assertion `res == 0' failed.
+#TESTS += unitTests
 
 bin_PROGRAMS = testUA
 
