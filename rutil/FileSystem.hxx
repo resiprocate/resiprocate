@@ -6,7 +6,11 @@
 #if !defined(WIN32)
 #include <sys/types.h>
 #include <sys/uio.h>
+#if defined(__ANDROID__)
+#include <fcntl.h>
+#else
 #include <sys/fcntl.h>
+#endif
 #include <unistd.h>
 #include <dirent.h>
 #else
