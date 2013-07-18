@@ -64,10 +64,11 @@ WebAdmin::RemoveKey::operator<(const RemoveKey& rhs) const
 
 WebAdmin::WebAdmin(Proxy& proxy,
                    RegistrationPersistenceManager& regDb,
-                   const Data& realm, // this realm is used for http challenges
-                   int port, 
-                   IpVersion version ):
-   HttpBase(port, version, realm),
+                   const Data& realm, // this realm is used for http challenges                
+                   int port,
+                   IpVersion version,
+                   const Data& ipAddr):
+   HttpBase(port, version, realm, ipAddr),
    mProxy(proxy),
    mStore(*mProxy.getConfig().getDataStore()),
    mRegDb(regDb),

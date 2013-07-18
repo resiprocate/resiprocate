@@ -45,10 +45,10 @@ HttpBase::~HttpBase()
 }
 
 
-HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
+HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm, const resip::Data& ipAddr ):
    mRealm(realm),
    nextConnection(0),
-   mTuple(Data::Empty,port,ipVer,TCP,Data::Empty)
+   mTuple(ipAddr,port,ipVer,TCP,Data::Empty)
 {
    // !rwm! [TODO] check that this works for IPv6   
    //assert( ipVer == V4 );

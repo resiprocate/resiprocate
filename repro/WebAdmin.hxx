@@ -34,7 +34,8 @@ class WebAdmin : public HttpBase,
                resip::RegistrationPersistenceManager& regDb,
                const resip::Data& realm, // this realm is used for http challenges
                int port=5080,
-               resip::IpVersion version=resip::V4);
+               resip::IpVersion version=resip::V4,
+               const resip::Data& ipAddr = resip::Data::Empty);
       
    protected:
       virtual void buildPage( const resip::Data& uri, 
