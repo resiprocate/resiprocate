@@ -92,7 +92,9 @@ void RADIUSDigestAuthenticator::init(const char *radiusConfigFile)
 
    const char *myRADIUSConfigFile = RADIUS_CONFIG;
    if(radiusConfigFile != NULL)
-   myRADIUSConfigFile = radiusConfigFile;
+   {
+      myRADIUSConfigFile = radiusConfigFile;
+   }
    if((rh = rc_read_config((char *)myRADIUSConfigFile)) == NULL)
    {
       ErrLog(<< "radius: Error opening configuration file \n");
