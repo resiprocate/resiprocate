@@ -46,7 +46,7 @@ XmlRpcServerBase::XmlRpcServerBase(int port, IpVersion ipVer) :
 
    DebugLog (<< "XmlRpcServerBase::XmlRpcServerBase: Creating fd=" << (int)mFd 
              << (ipVer == V4 ? " V4/" : " V6/") );
-      
+
    int on = 1;
 #if !defined(WIN32)
    if (::setsockopt(mFd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)))
@@ -60,9 +60,25 @@ XmlRpcServerBase::XmlRpcServerBase(int port, IpVersion ipVer) :
       mSane = false;
       return;
    }
-   
+
+#ifdef USE_IPV6
+#ifdef __linux__
+   if (ipVer == V6)
+   {
+      if ( ::setsockopt(mFd, IPPROTO_IPV6, IPV6_V6ONLY, &on, sizeof(on)) )
+      {
+          int e = getErrno();
+          logSocketError(e);
+          ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Couldn't set sockoptions IPV6_V6ONLY: " << strerror(e));
+          mSane = false;
+          return;
+      }
+   }
+#endif
+#endif
+
    DebugLog(<< "XmlRpcServerBase::XmlRpcServerBase: Binding to " << Tuple::inet_ntop(mTuple));
-   
+
    if (::bind( mFd, &mTuple.getMutableSockaddr(), mTuple.length()) == SOCKET_ERROR)
    {
       int e = getErrno();
