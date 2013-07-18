@@ -89,7 +89,22 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
       sane = false;
       return;
    }
-   
+
+#ifdef USE_IPV6
+#ifdef __linux__
+   if (ipVer == V6)
+   {
+      if ( ::setsockopt(mFd, IPPROTO_IPV6, IPV6_V6ONLY, &on, sizeof(on)) )
+      {
+          int e = getErrno();
+          ErrLog(<< "HttpBase::HttpBase: Couldn't set sockoptions IPV6_V6ONLY: " << strerror(e));
+          sane = false;
+          return;
+      }
+   }
+#endif
+#endif
+
    DebugLog (<< "Binding to " << Tuple::inet_ntop(mTuple));
    
    if ( ::bind( mFd, &mTuple.getMutableSockaddr(), mTuple.length()) == SOCKET_ERROR )
