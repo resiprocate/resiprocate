@@ -247,7 +247,8 @@ fi
 %files devel
 %dir %{_includedir}/b2bua/
 %dir %{_includedir}/clicktocall/
-%dir %{_includedir}/reTurnClient/
+%dir %{_includedir}/reTurn/
+%dir %{_includedir}/reTurn/client/
 %dir %{_includedir}/repro/
 %dir %{_includedir}/repro/monkeys/
 %dir %{_includedir}/repro/stateAgents/
@@ -264,7 +265,8 @@ fi
 %dir %{_includedir}/sipdial/
 %{_includedir}/b2bua/*.hxx
 %{_includedir}/clicktocall/*.hxx
-%{_includedir}/reTurnClient/*.hxx
+%{_includedir}/reTurn/*.hxx
+%{_includedir}/reTurn/client/*.hxx
 %{_includedir}/repro/*.hxx
 %{_includedir}/repro/*/*.hxx
 %{_includedir}/resip/dum/*.hxx
