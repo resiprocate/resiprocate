@@ -6,11 +6,7 @@ After=network.target
 [Service]
 User=return
 Group=return
-Type=forking
-ExecStartPre=/bin/mkdir -p /tmp/return
-ExecStartPre=/bin/chown return:return /tmp/return
-PIDFile=/tmp/return/reTurnServer.pid
-ExecStart=/usr/sbin/reTurnServer /etc/reTurnServer.config --Daemonize=true --LoggingType=syslog --PidFile=/tmp/return/reTurnServer.pid
+ExecStart=/usr/sbin/reTurnServer /etc/reTurnServer.config
 
 [Install]
 WantedBy=multi-user.target
