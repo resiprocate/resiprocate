@@ -40,4 +40,5 @@ EXTRA_DIST += reSIProcate_9_0.sln
 EXTRA_DIST += resiprocate.spec
 
 EXTRA_DIST += RELEASE-PROCESS.txt
+EXTRA_DIST += build/configure-android.sh
 
