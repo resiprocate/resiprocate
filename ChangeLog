@@ -1,5 +1,7 @@
 = Release Notes v 1.8 =
 
+==1.8.12 Changes==
+
 ==1.8.11 Changes==
 * resip/recon: MOHParkServer: add ssl to libs
 * fixed incorrect placement of #ifndef RESIP_USE_STIL_STREAMS as reported by Thomas Troy
