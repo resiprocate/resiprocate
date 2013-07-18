@@ -16,7 +16,7 @@ class HttpBase
       friend class HttpConnection;
       
    public:
-      HttpBase( int port, resip::IpVersion version, const resip::Data& realm );
+      HttpBase( int port, resip::IpVersion version, const resip::Data& realm, const resip::Data& ipAddr = resip::Data::Empty );
       virtual ~HttpBase();
       
       void buildFdSet(resip::FdSet& fdset);

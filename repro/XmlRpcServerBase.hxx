@@ -48,7 +48,7 @@ class XmlRpcServerBase
    friend class XmlRpcConnection;
       
 public:
-   XmlRpcServerBase(int port, resip::IpVersion version);
+   XmlRpcServerBase(int port, resip::IpVersion version, resip::Data ipAddr = resip::Data::Empty);
    virtual ~XmlRpcServerBase();
       
    void buildFdSet(resip::FdSet& fdset);

@@ -120,7 +120,7 @@ ReproRunner::ReproRunner()
    , mLemurs(0)
    , mBaboons(0)
    , mProxy(0)
-   , mWebAdmin(0)
+   , mWebAdminList(0)
    , mWebAdminThread(0)
    , mRegistrar(0)
    , mDum(0)
@@ -130,8 +130,7 @@ ReproRunner::ReproRunner()
    , mRegSyncServerV4(0)
    , mRegSyncServerV6(0)
    , mRegSyncServerThread(0)
-   , mCommandServerV4(0)
-   , mCommandServerV6(0)
+   , mCommandServerList(0)
    , mCommandServerThread(0)
    , mCongestionManager(0)
 {
@@ -357,8 +356,11 @@ ReproRunner::cleanupObjects()
    {
       // We leave command server running during restart
       delete mCommandServerThread; mCommandServerThread = 0;
-      delete mCommandServerV6; mCommandServerV6 = 0;
-      delete mCommandServerV4; mCommandServerV4 = 0;
+      for(std::list<CommandServer*>::iterator it = mCommandServerList->begin(); it != mCommandServerList->end(); it++)
+      {
+         delete (*it);
+      }
+      delete mCommandServerList; mCommandServerList = 0;
    }
    delete mRegSyncServerThread; mRegSyncServerThread = 0;
    delete mRegSyncServerV6; mRegSyncServerV6 = 0;
@@ -371,7 +373,11 @@ ReproRunner::cleanupObjects()
    delete mDum; mDum = 0;
    delete mRegistrar; mRegistrar = 0;
    delete mWebAdminThread; mWebAdminThread = 0;
-   delete mWebAdmin; mWebAdmin = 0;
+   for(std::list<WebAdmin*>::iterator it = mWebAdminList->begin(); it != mWebAdminList->end(); it++)
+   {
+      delete (*it);
+   }
+   delete mWebAdminList; mWebAdminList = 0;
    delete mProxy; mProxy = 0;
    delete mBaboons; mBaboons = 0;
    delete mLemurs; mLemurs = 0;
@@ -870,24 +876,80 @@ ReproRunner::populateRegistrations()
 bool
 ReproRunner::createWebAdmin()
 {
-   assert(!mWebAdmin);
+   assert(!mWebAdminList);
    assert(!mWebAdminThread);
+
+   std::vector<resip::Data> httpServerBindAddresses;
+   mProxyConfig->getConfigValue("HttpBindAddress", httpServerBindAddresses);
    int httpPort = mProxyConfig->getConfigInt("HttpPort", 5080);
-   if (httpPort) 
+
+   mWebAdminList = new std::list<WebAdmin*>;
+   if(httpPort)
    {
-      mWebAdmin = new WebAdmin(*mProxy,
-                               *mRegistrationPersistenceManager, 
-                               mHttpRealm, 
-                               httpPort);
-      if (!mWebAdmin->isSane())
+      if(httpServerBindAddresses.empty())
       {
-         CritLog(<<"Failed to start the WebAdmin");
-         cleanupObjects();
-         return false;
+          if(mUseV4)
+          {
+             httpServerBindAddresses.push_back("0.0.0.0");
+          }
+           if(mUseV6)
+          {
+             httpServerBindAddresses.push_back("::");
+          }
       }
-      mWebAdminThread = new WebAdminThread(*mWebAdmin);
+
+      for(std::vector<resip::Data>::iterator it = httpServerBindAddresses.begin(); it != httpServerBindAddresses.end(); it++)
+      {
+         if(mUseV4 && DnsUtil::isIpV4Address(*it)) 
+         {
+            WebAdmin* WebAdminV4 = new WebAdmin(*mProxy,
+                                                *mRegistrationPersistenceManager, 
+                                                mHttpRealm, 
+                                                httpPort,
+                                                V4,
+                                                *it);
+
+            if (!WebAdminV4->isSane())
+            {
+               CritLog(<<"Failed to start WebAdminV4");
+               cleanupObjects();
+               return false;
+            }
+
+            mWebAdminList->push_back(WebAdminV4);
+         }
+
+         if(mUseV6 && DnsUtil::isIpV6Address(*it)) 
+         {
+            WebAdmin* WebAdminV6 = new WebAdmin(*mProxy,
+                                                *mRegistrationPersistenceManager, 
+                                                mHttpRealm, 
+                                                httpPort,
+                                                V6,
+                                                *it);
+
+            if (!WebAdminV6->isSane())
+            {
+               CritLog(<<"Failed to start WebAdminV6");
+               cleanupObjects();
+               return false;
+            }
+
+            mWebAdminList->push_back(WebAdminV6);
+         }
+      }
+
+      // This shouldn't happen because it would return false before
+      // it reached this point
+      if(!mWebAdminList->empty())
+      {
+         mWebAdminThread = new WebAdminThread(*mWebAdminList);
+         return true;
+      }
    }
-   return true;
+
+   CritLog(<<"Failed to start any WebAdmin");
+   return false;
 }
 
 void
@@ -925,42 +987,62 @@ ReproRunner::createRegSync()
 void
 ReproRunner::createCommandServer()
 {
-   assert(!mCommandServerV4);
-   assert(!mCommandServerV6);
+   assert(!mCommandServerList);
    assert(!mCommandServerThread);
+
+   std::vector<resip::Data> commandServerBindAddresses;
+   mProxyConfig->getConfigValue("CommandBindAddress", commandServerBindAddresses);
    int commandPort = mProxyConfig->getConfigInt("CommandPort", 5081);
+
+   mCommandServerList = new std::list<CommandServer*>;
    if(commandPort != 0)
    {
-      std::list<CommandServer*> commandServerList;
-      if(mUseV4)
+      if(commandServerBindAddresses.empty())
       {
-         mCommandServerV4 = new CommandServer(*this, commandPort, V4);
+          if(mUseV4)
+          {
+             commandServerBindAddresses.push_back("0.0.0.0");
+          }
+           if(mUseV6)
+          {
+             commandServerBindAddresses.push_back("::");
+          }
+      }
 
-         if(mCommandServerV4->isSane())
+      for(std::vector<resip::Data>::iterator it = commandServerBindAddresses.begin(); it != commandServerBindAddresses.end(); it++)
+      {
+         if(mUseV4 && DnsUtil::isIpV4Address(*it))
          {
-            commandServerList.push_back(mCommandServerV4);
+            CommandServer* CommandServerV4 = new CommandServer(*this, *it, commandPort, V4);
+
+            if(CommandServerV4->isSane())
+            {
+               mCommandServerList->push_back(CommandServerV4);
+            }
+            else
+            {
+               CritLog(<<"Failed to start CommandServerV4");
+            }
          }
-         else
+
+         if(mUseV6 && DnsUtil::isIpV6Address(*it))
          {
-            ErrLog(<<"Failed to start CommandServerV4");
+            CommandServer* CommandServerV6 = new CommandServer(*this, *it, commandPort, V6);
+
+            if(CommandServerV6->isSane())
+            {
+               mCommandServerList->push_back(CommandServerV6);
+            }
+            else
+            {
+               CritLog(<<"Failed to start CommandServerV6");
+            }
          }
       }
-      if(mUseV6)
-      {
-         mCommandServerV6 = new CommandServer(*this, commandPort, V6);
 
-         if(mCommandServerV6->isSane())
-         {
-            commandServerList.push_back(mCommandServerV6);
-         }
-         else
-         {
-            ErrLog(<<"Failed to start CommandServerV6");
-         }
-      }
-      if(!commandServerList.empty())
+      if(!mCommandServerList->empty())
       {
-         mCommandServerThread = new CommandServerThread(commandServerList);
+         mCommandServerThread = new CommandServerThread(*mCommandServerList);
       }
    }
 }
