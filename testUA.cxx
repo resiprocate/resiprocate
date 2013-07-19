@@ -48,6 +48,7 @@ int _kbhit() {
 #include "record_prompt.h"
 
 #include "reConServerConfig.hxx"
+#include "reConServer.hxx"
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -316,7 +317,25 @@ public:
    bool mLocalAudioEnabled;
 };
 
-void processCommandLine(Data& commandline, MyConversationManager& myConversationManager, MyUserAgent& myUserAgent)
+
+int main(int argc, char** argv)
+{
+   ReConServerProcess proc;
+   return proc.main(argc, argv);
+}
+
+
+
+
+ReConServerProcess::ReConServerProcess()
+{
+}
+
+ReConServerProcess::~ReConServerProcess()
+{
+}
+
+void ReConServerProcess::processCommandLine(Data& commandline, MyConversationManager& myConversationManager, MyUserAgent& myUserAgent)
 {
    Data command;
 #define MAX_ARGS 5
@@ -920,7 +939,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
 }
 
 #define KBD_BUFFER_SIZE 256
-void processKeyboard(char input, MyConversationManager& myConversationManager, MyUserAgent& myUserAgent)
+void ReConServerProcess::processKeyboard(char input, MyConversationManager& myConversationManager, MyUserAgent& myUserAgent)
 {
    static char buffer[KBD_BUFFER_SIZE];
    static int bufferpos = 0;
@@ -966,7 +985,7 @@ void processKeyboard(char input, MyConversationManager& myConversationManager, M
 }
 
 int 
-main (int argc, char** argv)
+ReConServerProcess::main (int argc, char** argv)
 {
 #ifndef _WIN32
    if ( signal( SIGPIPE, SIG_IGN) == SIG_ERR)
@@ -1029,6 +1048,10 @@ main (int argc, char** argv)
    Data loggingLevel = reConServerConfig.getConfigData("LoggingLevel", "INFO", true);
    Data loggingFilename = reConServerConfig.getConfigData("LogFilename", "reConServer.log", true);
    unsigned int loggingFileMaxLineCount = reConServerConfig.getConfigUnsignedLong("LogFileMaxLines", 50000);
+   bool daemonize = reConServerConfig.getConfigBool("Daemonize", false);
+   Data pidFile = reConServerConfig.getConfigData("PidFile", "", true);
+   Data runAsUser = reConServerConfig.getConfigData("RunAsUser", "", true);
+   Data runAsGroup = reConServerConfig.getConfigData("RunAsGroup", "", true);
 
 
    unsigned int codecIds[] = { SdpCodec::SDP_CODEC_PCMU /* 0 - pcmu */, 
@@ -1045,6 +1068,13 @@ main (int argc, char** argv)
                                SdpCodec::SDP_CODEC_TONES /* 110 - telephone-event */};
    unsigned int numCodecIds = sizeof(codecIds) / sizeof(codecIds[0]);
 
+
+   setPidFile(pidFile);
+   // Daemonize if necessary
+   if(daemonize)
+   {
+      ReConServerProcess::daemonize();
+   }
 
    //enableConsoleOutput(TRUE);  // Allow sipX console output
    OsSysLog::initialize(0, "testUA");
@@ -1082,8 +1112,10 @@ main (int argc, char** argv)
    InfoLog( << "  Log Type = " << loggingType);
    InfoLog( << "  Log Level = " << loggingLevel);
    InfoLog( << "  Log Filename = " << loggingFilename);
-   InfoLog( << "  Log file max lines = " << loggingFileMaxLineCount);
-
+   InfoLog( << "  Daemonize = " << (daemonize ? "true" : "false"));
+   InfoLog( << "  PidFile = " << pidFile);
+   InfoLog( << "  Run as user = " << runAsUser);
+   InfoLog( << "  Run as group = " << runAsGroup);
    InfoLog( << "type help or '?' for list of accepted commands." << endl);
 
    //////////////////////////////////////////////////////////////////////////////
@@ -1319,6 +1351,13 @@ main (int argc, char** argv)
       myConversationManager.startup();
 
       //ua.createSubscription("message-summary", uri, 120, Mime("application", "simple-message-summary")); // thread safe
+
+      // Drop privileges (can do this now that sockets are bound)
+      if(!runAsUser.empty())
+      {
+         InfoLog( << "Trying to drop privileges, configured uid = " << runAsUser << " gid = " << runAsGroup);
+         dropPrivileges(runAsUser, runAsGroup);
+      }
 
       int input;
       while(true)
