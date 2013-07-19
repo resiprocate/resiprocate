@@ -4,6 +4,8 @@ EXTRA_DIST = testua_readme.txt
 bin_PROGRAMS = testUA
 
 testUA_SOURCES = testUA.cxx
+testUA_SOURCES += reConServerConfig.cxx
+testUA_SOURCES += reConServerConfig.hxx
 testUA_SOURCES += playback_prompt.h
 testUA_SOURCES += record_prompt.h
 

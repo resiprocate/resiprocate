@@ -47,6 +47,8 @@ int _kbhit() {
 #include "playback_prompt.h"
 #include "record_prompt.h"
 
+#include "reConServerConfig.hxx"
+
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <rutil/DnsUtil.hxx>
@@ -991,26 +993,44 @@ main (int argc, char** argv)
       exit( -1 );
    }
 
-   // Defaults
-   bool registrationDisabled = false;
-   bool keepAlivesDisabled = false;
-   Data password;
-   Data dnsServers;
-   Data address = DnsUtil::getLocalIpAddress();
-   ConversationProfile::SecureMediaMode secureMediaMode = ConversationProfile::NoSecureMedia;
-   bool secureMediaRequired = false;
-   ConversationProfile::NatTraversalMode natTraversalMode = ConversationProfile::NoNatTraversal;
-   Data natTraversalServerHostname;
-   unsigned short natTraversalServerPort = 8777;
-   Data stunUsername;
-   Data stunPassword;
-   bool localAudioEnabled = true;
-   unsigned short sipPort = 5062;
-   unsigned short tlsPort = 5063;
-   unsigned short mediaPortStart = 17384;
-   Data tlsDomain = DnsUtil::getLocalHostName();
-   NameAddr outboundProxy;
-   Data logLevel("INFO");
+   Data defaultConfigFilename("reConServer.config");
+   ReConServerConfig reConServerConfig;
+   try
+   {
+      reConServerConfig.parseConfig(argc, argv, defaultConfigFilename);
+   }
+   catch(std::exception& e)
+   {
+      ErrLog(<< "Exception parsing configuration: " << e.what());
+      exit(-1);
+   }
+
+   autoAnswerEnabled = reConServerConfig.getConfigBool("EnableAutoAnswer", false);
+   bool registrationDisabled = reConServerConfig.getConfigBool("DisableRegistration", false);
+   bool keepAlivesDisabled = reConServerConfig.getConfigBool("DisableKeepAlives", false);
+   Data password = reConServerConfig.getConfigData("Password", "", true);
+   Data dnsServers = reConServerConfig.getConfigData("DNSServers", "", true);;
+   Data address = reConServerConfig.getConfigData("IPAddress", DnsUtil::getLocalIpAddress(), true);
+   ConversationProfile::SecureMediaMode secureMediaMode = reConServerConfig.getConfigSecureMediaMode("SecureMediaMode", ConversationProfile::NoSecureMedia);
+   bool secureMediaRequired = reConServerConfig.isSecureMediaModeRequired();
+   ConversationProfile::NatTraversalMode natTraversalMode = reConServerConfig.getConfigNatTraversalMode("NatTraversalMode", ConversationProfile::NoNatTraversal);
+   Data natTraversalServerHostname = reConServerConfig.getConfigData("NatTraversalServerHostname", "", true);
+   unsigned short natTraversalServerPort = reConServerConfig.getConfigUnsignedShort("NatTraversalServerPort", 8777);
+   Data stunUsername = reConServerConfig.getConfigData("StunUsername", "", true);
+   Data stunPassword = reConServerConfig.getConfigData("StunUsername", "", true);
+   bool localAudioEnabled = reConServerConfig.getConfigBool("EnableLocalAudio", true);
+   unsigned short sipPort = reConServerConfig.getConfigUnsignedShort("SIPPort", 5062);
+   unsigned short tlsPort = reConServerConfig.getConfigUnsignedShort("TLSPort", 5063);
+   unsigned short mediaPortStart = reConServerConfig.getConfigUnsignedShort("MediaPortStart", 17384);
+   Data tlsDomain = reConServerConfig.getConfigData("TLSDomain", DnsUtil::getLocalHostName(), true);
+   NameAddr outboundProxy = reConServerConfig.getConfigNameAddr("OutboundProxyUri", NameAddr(), true);
+   uri = reConServerConfig.getConfigNameAddr("SIPUri", uri, true);
+   Data loggingType = reConServerConfig.getConfigData("LoggingType", "cout", true);
+   Data loggingLevel = reConServerConfig.getConfigData("LoggingLevel", "INFO", true);
+   Data loggingFilename = reConServerConfig.getConfigData("LogFilename", "reConServer.log", true);
+   unsigned int loggingFileMaxLineCount = reConServerConfig.getConfigUnsignedLong("LogFileMaxLines", 50000);
+
+
    unsigned int codecIds[] = { SdpCodec::SDP_CODEC_PCMU /* 0 - pcmu */, 
                                SdpCodec::SDP_CODEC_PCMA /* 8 - pcma */, 
                                SdpCodec::SDP_CODEC_SPEEX /* 96 - speex NB 8,000bps */,
@@ -1025,231 +1045,14 @@ main (int argc, char** argv)
                                SdpCodec::SDP_CODEC_TONES /* 110 - telephone-event */};
    unsigned int numCodecIds = sizeof(codecIds) / sizeof(codecIds[0]);
 
-   // Loop through command line arguments and process them
-   for(int i = 1; i < argc; i++)
-   {
-      Data commandName(argv[i]);
-
-      // Process all commandNames that don't take values
-      if(isEqualNoCase(commandName, "-?") || 
-         isEqualNoCase(commandName, "--?") ||
-         isEqualNoCase(commandName, "--help") ||
-         isEqualNoCase(commandName, "/?"))
-      {
-         cout << "Command line options are:" << endl;
-         cout << " -aa - enable autoanswer" << endl;
-         cout << " -a <IP Address> - bind SIP transports to this IP address" << endl;
-         cout << " -u <SIP URI> - URI of this SIP user" << endl;
-         cout << " -p <password> - SIP password of this this SIP user" << endl;
-         cout << " -nr - no registration, set this to disable registration with SIP Proxy" << endl;
-         cout << " -d <DNS servers> - comma seperated list of DNS servers, overrides OS detected list" << endl;
-         cout << " -sp <port num> - local port number to use for SIP messaging (UDP/TCP)" << endl;
-         cout << " -mp <port num> - local port number to start allocating from for RTP media" << endl;
-#ifdef USE_SSL
-         cout << " -tp <port num> - local port number to use for TLS SIP messaging" << endl;
-         cout << " -td <domain name> - domain name to use for TLS server connections" << endl;
-#endif
-         cout << " -nk - no keepalives, set this to disable sending of keepalives" << endl;
-         cout << " -op <SIP URI> - URI of a proxy server to use a SIP outbound proxy" << endl;
-#ifdef USE_SSL
-         cout << " -sm <Srtp|SrtpReq|SrtpDtls|SrtpDtlsReq> - sets the secure media mode" << endl;
-         cout << " -nm <Bind|UdpAlloc|TcpAlloc|TlsAlloc> - sets the NAT traversal mode" << endl;
-#else
-         cout << " -sm <Srtp|SrtpReq> - sets the secure media mode" << endl;
-         cout << " -nm <Bind|UdpAlloc|TcpAlloc> - sets the NAT traversal mode" << endl;
-#endif
-         cout << " -ns <server:port> - set the hostname and port of the NAT STUN/TURN server" << endl;
-         cout << " -nu <username> - sets the STUN/TURN username to use for NAT server" << endl;
-         cout << " -np <password> - sets the STUN/TURN password to use for NAT server" << endl;
-         cout << " -nl - no local audio support - removed local sound hardware requirement" << endl;
-         cout << " -l <NONE|CRIT|ERR|WARNING|INFO|DEBUG|STACK> - logging level" << endl;
-         cout << endl;
-         cout << "Sample Command line:" << endl;
-         cout << "testUA -a 192.168.1.100 -u sip:1000@myproxy.com -p 123 -aa" << endl;
-         return 0;
-      }
-      else if(isEqualNoCase(commandName, "-nr"))
-      {
-         registrationDisabled = true;
-      }
-      else if(isEqualNoCase(commandName, "-aa"))
-      {
-         autoAnswerEnabled = true;
-      }
-      else if(isEqualNoCase(commandName, "-nk"))
-      {
-         keepAlivesDisabled = true;
-      }
-      else if(isEqualNoCase(commandName, "-nl"))
-      {
-         localAudioEnabled = false;
-      }
-      else
-      {
-         // Process commands that have values
-         Data commandValue(i+1 < argc ? argv[i+1] : Data::Empty);
-         if(commandValue.empty() || commandValue.at(0) == '-')
-         {
-            cerr << "Invalid command line parameters!" << endl;
-            exit(-1);
-         }
-         i++;  // increment argument
-
-         if(isEqualNoCase(commandName, "-a"))
-         {
-            address = commandValue;
-         }
-         else if(isEqualNoCase(commandName, "-u"))
-         {
-            try
-            {
-               NameAddr tempuri(commandValue);
-               uri = tempuri;
-            }
-            catch(resip::BaseException& e)
-            {
-               cerr << "Invalid uri format: " << e << endl;
-               exit(-1);
-            }
-         }
-         else if(isEqualNoCase(commandName, "-p"))
-         {
-            password = commandValue;
-         }
-         else if(isEqualNoCase(commandName, "-d"))
-         {
-            dnsServers = commandValue;
-         }
-         else if(isEqualNoCase(commandName, "-sm"))
-         {
-            if(isEqualNoCase(commandValue, "Srtp"))
-            {
-               secureMediaMode = ConversationProfile::Srtp;
-            }
-            else if(isEqualNoCase(commandValue, "SrtpReq"))
-            {
-               secureMediaMode = ConversationProfile::Srtp;
-               secureMediaRequired = true;
-            }
-#ifdef USE_SSL
-            else if(isEqualNoCase(commandValue, "SrtpDtls"))
-            {
-               secureMediaMode = ConversationProfile::SrtpDtls;
-            }
-            else if(isEqualNoCase(commandValue, "SrtpDtlsReq"))
-            {
-               secureMediaMode = ConversationProfile::SrtpDtls;
-               secureMediaRequired = true;
-            }
-#endif
-            else
-            {
-               cerr << "Invalid Secure Media Mode: " << commandValue << endl;
-               exit(-1);
-            }
-         }
-         else if(isEqualNoCase(commandName, "-nm"))
-         {
-            if(isEqualNoCase(commandValue, "Bind"))
-            {
-               natTraversalMode = ConversationProfile::StunBindDiscovery;
-            }
-            else if(isEqualNoCase(commandValue, "UdpAlloc"))
-            {
-               natTraversalMode = ConversationProfile::TurnUdpAllocation;
-            }
-            else if(isEqualNoCase(commandValue, "TcpAlloc"))
-            {
-               natTraversalMode = ConversationProfile::TurnTcpAllocation;
-            }
-#ifdef USE_SSL
-            else if(isEqualNoCase(commandValue, "TlsAlloc"))
-            {
-               natTraversalMode = ConversationProfile::TurnTlsAllocation;
-            }
-#endif
-            else
-            {
-               cerr << "Invalid NAT Traversal Mode: " << commandValue << endl;
-               exit(-1);
-            }
-         }
-         else if(isEqualNoCase(commandName, "-ns"))
-         {
-            // Read server and port
-            Data natServerAndPort = commandValue;
-            ParseBuffer pb(natServerAndPort);
-            pb.skipWhitespace();
-            const char *start = pb.position();
-            pb.skipToOneOf(ParseBuffer::Whitespace, ":");  // white space or ":" 
-            Data hostname;
-            pb.data(hostname, start);
-            natTraversalServerHostname = hostname;
-            if(!pb.eof())
-            {
-               pb.skipChar(':');
-               start = pb.position();
-               pb.skipToOneOf(ParseBuffer::Whitespace);  // white space 
-               Data port;
-               pb.data(port, start);
-               natTraversalServerPort = port.convertUnsignedLong();
-            }
-         }
-         else if(isEqualNoCase(commandName, "-nu"))
-         {
-            stunUsername = commandValue;
-         }
-         else if(isEqualNoCase(commandName, "-np"))
-         {
-            stunPassword = commandValue;
-         }
-         else if(isEqualNoCase(commandName, "-sp"))
-         {
-            sipPort = (unsigned short)commandValue.convertUnsignedLong();
-         }
-         else if(isEqualNoCase(commandName, "-mp"))
-         {
-            mediaPortStart = (unsigned short)commandValue.convertUnsignedLong();
-         }
-         else if(isEqualNoCase(commandName, "-tp"))
-         {
-            tlsPort = (unsigned short)commandValue.convertUnsignedLong();
-         }
-         else if(isEqualNoCase(commandName, "-td"))
-         {
-            tlsDomain = commandValue;
-         }
-         else if(isEqualNoCase(commandName, "-op"))
-         {
-            try
-            {
-               NameAddr tempuri(commandValue);
-               outboundProxy = tempuri;
-            }
-            catch(resip::BaseException& e)
-            {
-               cerr << "Invalid outbound proxy uri format: " << e << endl;
-               exit(-1);
-            }
-         }
-         else if(isEqualNoCase(commandName, "-l"))
-         {
-            logLevel = commandValue;
-         }
-         else
-         {
-            cerr << "Invalid command line parameters!" << endl;
-            exit(-1);
-         }
-      }
-   }
 
    //enableConsoleOutput(TRUE);  // Allow sipX console output
    OsSysLog::initialize(0, "testUA");
    OsSysLog::setOutputFile(0, "sipXtapilog.txt") ;
    //OsSysLog::enableConsoleOutput(true);
    //OsSysLog::setLoggingPriority(PRI_DEBUG);
-   Log::initialize("Cout", logLevel, "testUA");
+   Log::initialize(loggingType, loggingLevel, argv[0], loggingFilename.c_str());
+   GenericLogImpl::MaxLineCount = loggingFileMaxLineCount;
    //UserAgent::setLogLevel(Log::Warning, UserAgent::SubsystemAll);
    //UserAgent::setLogLevel(Log::Info, UserAgent::SubsystemRecon);
 
@@ -1276,8 +1079,11 @@ main (int argc, char** argv)
 #endif
    InfoLog( << "  Outbound Proxy = " << outboundProxy);
    InfoLog( << "  Local Audio Enabled = " << (localAudioEnabled ? "true" : "false"));
-   InfoLog( << "  Log Level = " << logLevel);
-   
+   InfoLog( << "  Log Type = " << loggingType);
+   InfoLog( << "  Log Level = " << loggingLevel);
+   InfoLog( << "  Log Filename = " << loggingFilename);
+   InfoLog( << "  Log file max lines = " << loggingFileMaxLineCount);
+
    InfoLog( << "type help or '?' for list of accepted commands." << endl);
 
    //////////////////////////////////////////////////////////////////////////////
