@@ -769,8 +769,8 @@ Tuple::isEqualWithMask(const Tuple& compare, short mask, bool ignorePort, bool i
 
          if(ignorePort || addr1->sin6_port == addr2->sin6_port)
          {
-            unsigned long mask6part;
-            unsigned long temp;
+            UInt32 mask6part;
+            UInt32 temp;
             bool match=true;
             for(int i = 3; i >= 0; i--)
             {
@@ -802,8 +802,8 @@ Tuple::isEqualWithMask(const Tuple& compare, short mask, bool ignorePort, bool i
                if((*((unsigned long*)&addr1->sin6_addr.__u6_addr.__u6_addr32[i]) & htonl(mask6part)) != 
                   (*((unsigned long*)&addr2->sin6_addr.__u6_addr.__u6_addr32[i]) & htonl(mask6part)))				  
 #else
-               if((*((unsigned long*)&addr1->sin6_addr.s6_addr16[i*2]) & htonl(mask6part)) != 
-                  (*((unsigned long*)&addr2->sin6_addr.s6_addr16[i*2]) & htonl(mask6part)))
+               if((*((UInt32*)&addr1->sin6_addr.s6_addr16[i*2]) & htonl(mask6part)) != 
+                  (*((UInt32*)&addr2->sin6_addr.s6_addr16[i*2]) & htonl(mask6part)))
 #endif
                {
                   match=false;
