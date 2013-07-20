@@ -56,7 +56,6 @@ TESTS = \
 	testSipFrag \
 	testSipMessage \
 	testSipMessageMemory \
-	testSocketFunc \
 	testStack \
 	testTcp \
 	testTime \
@@ -101,7 +100,6 @@ check_PROGRAMS = \
 	testSipMessageEncode \
 	testSipMessageMemory \
 	testSipStack1 \
- 	testSocketFunc \
 	testStack \
 	testTcp \
 	testTime \
@@ -112,6 +110,10 @@ check_PROGRAMS = \
 	testUdp \
 	testUri
 
+if USE_SSL
+TESTS += testSocketFunc
+check_PROGRAMS += testSocketFunc
+endif
 
 UAS_SOURCES = UAS.cxx
 testEmptyHfv_SOURCES = testEmptyHfv.cxx
