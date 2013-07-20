@@ -1,0 +1,84 @@
+#!/bin/bash
+set -e
+
+#NDK=${HOME}/android/android-ndk-r7
+NDK=${HOME}/android/android-ndk-r8e
+
+PLATFORM=android-8
+
+MY_NDK=${HOME}/ws/resiprocate/resip-ndk
+
+#$NDK/build/tools/make-standalone-toolchain.sh --platform=$PLATFORM \
+#  --install-dir=$MY_NDK --system=linux-x86_64
+#exit 0
+
+export CROSS_COMPILE=arm-linux-androideabi
+export TOOLCHAIN_PREFIX=${CROSS_COMPILE}
+
+export SYSROOT=${MY_NDK}/sysroot
+
+# you need OpenSSL from
+#  https://github.com/guardianproject/openssl-android.git
+# clone it and run "ndk-build"
+export OPENSSL_HOME=${HOME}/ws/openssl/openssl-android
+
+export PATH=${MY_NDK}/bin:$PATH
+export CPP=${TOOLCHAIN_PREFIX}-cpp
+export AR=${TOOLCHAIN_PREFIX}-ar
+export AS=${TOOLCHAIN_PREFIX}-as
+export NM=${TOOLCHAIN_PREFIX}-nm
+export CC=${TOOLCHAIN_PREFIX}-gcc
+export CXX=${TOOLCHAIN_PREFIX}-g++
+export LD=${TOOLCHAIN_PREFIX}-ld
+export RANLIB=${TOOLCHAIN_PREFIX}-ranlib
+
+export CPPFLAGS="${CPPFLAGS} -I${OPENSSL_HOME}/include"
+export LDFLAGS="${LDFLAGS} -L${OPENSSL_HOME}/libs/armeabi"
+
+autoreconf -fi
+
+./configure \
+  --host=${CROSS_COMPILE} \
+  --with-sysroot=${SYSROOT} \
+  --enable-android \
+  --with-ssl \
+  "$@"
+
+CPUS=`cat /proc/cpuinfo | grep -c ^proc`
+PAR=`expr $CPUS + 1`
+
+PROJECTS="rutil resip/stack resip/dum"
+for proj in $PROJECTS ;
+do
+  make -C $proj clean
+  make -C $proj -j$PAR
+done
+
+for proj in $PROJECTS ;
+do
+  make -C $proj -i -j$PAR check
+done
+
+adb shell mkdir /sdcard/resip-test
+adb shell mkdir /sdcard/resip-test/bin
+adb shell mkdir /sdcard/resip-test/lib
+
+find . -name test* | grep .libs/test* | \
+  while read ;
+  do 
+    adb push $REPLY /sdcard/resip-test/bin/
+  done 
+
+find . -name lib*-1.9.so -exec adb push {} /sdcard/resip-test/lib/ \;
+
+for i in ${OPENSSL_HOME}/libs/armeabi/lib*.so ;
+do
+  adb push $i /sdcard/resip-test/lib/
+done
+
+adb push \
+  ${MY_NDK}/arm-linux-androideabi/lib/libgnustl_shared.so \
+  /sdcard/resip-test/lib/
+
+adb push build/run-android-tests.sh /sdcard/run.sh
+
