@@ -10,7 +10,7 @@ LDADD += ../../resip/dum/libdum.la
 LDADD += ../../resip/stack/libresip.la
 LDADD += ../../rutil/librutil.la
 #LDADD += ../../contrib/ares/libares.a
-LDADD += $(LIBSSL_LIBADD) -lpthread
+LDADD += $(LIBSSL_LIBADD) @LIBPTHREAD_LIBADD@
 
 #
 # this test case doesn't appear to be up to date so it has been commented

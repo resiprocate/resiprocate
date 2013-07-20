@@ -12,7 +12,7 @@ lib_LTLIBRARIES = libb2bua.la
 libb2bua_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
 libb2bua_la_LIBADD = ../resip/dum/libdum.la
 libb2bua_la_LIBADD += ../resip/stack/libresip.la ../rutil/librutil.la
-libb2bua_la_LIBADD += @LIBSSL_LIBADD@ -lpthread
+libb2bua_la_LIBADD += @LIBSSL_LIBADD@ @LIBPTHREAD_LIBADD@
 
 libb2bua_la_SOURCES = \
         AuthenticationManager.cxx \

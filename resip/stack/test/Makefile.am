@@ -31,7 +31,7 @@ AM_CXXFLAGS = -I $(top_srcdir)
 LDADD = ../libresip.la
 LDADD += ../../../rutil/librutil.la
 #LDADD += ../../../contrib/ares/libares.a
-LDADD += $(LIBSSL_LIBADD) $(LIBPOPT_LIBADD) -lpthread
+LDADD += $(LIBSSL_LIBADD) $(LIBPOPT_LIBADD) @LIBSTL_LIBADD@ @LIBPTHREAD_LIBADD@
 
 TESTS = \
 	testAppTimer \

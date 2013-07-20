@@ -13,6 +13,7 @@ AM_CXXFLAGS = -I $(top_srcdir)
 lib_LTLIBRARIES = libdum.la
 
 libdum_la_LIBADD = @LIBSSL_LIBADD@ @LIBRADIUS_LIBADD@
+libdum_la_LIBADD += @LIBSTL_LIBADD@
 libdum_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
 
 libdum_la_SOURCES =   \

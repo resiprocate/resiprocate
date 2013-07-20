@@ -13,7 +13,7 @@ SUBDIRS += test
 sbin_PROGRAMS = clicktocall
 clicktocall_LDADD = ../../resip/dum/libdum.la
 clicktocall_LDADD += ../../resip/stack/libresip.la ../../rutil/librutil.la
-clicktocall_LDADD += @LIBSSL_LIBADD@ -lpcre -lpthread
+clicktocall_LDADD += @LIBSSL_LIBADD@ -lpcre @LIBPTHREAD_LIBADD@
 
 clicktocall_SOURCES = \
         AddressTranslator.cxx \

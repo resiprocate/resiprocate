@@ -14,7 +14,7 @@ ichat_gw_jc_LDADD += -lgloox
 ichat_gw_jc_LDADD += -lgnutls
 ichat_gw_jc_LDADD += -lidn
 ichat_gw_jc_LDADD += -lresolv
-ichat_gw_jc_LDADD += -lpthread
+ichat_gw_jc_LDADD += @LIBPTHREAD_LIBADD@
 
 ichat_gw_jc_SOURCES = \
         ichat-gw-jc.cxx \

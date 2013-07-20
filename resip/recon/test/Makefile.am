@@ -21,7 +21,7 @@ LDADD += -lsipXtack
 LDADD += ../../dum/libdum.la
 LDADD += ../../stack/libresip.la
 LDADD += ../../../rutil/librutil.la
-LDADD += $(LIBSSL_LIBADD) -lpthread
+LDADD += $(LIBSSL_LIBADD) @LIBPTHREAD_LIBADD@
 
 AM_CPPFLAGS = -I$(top_srcdir)/resip/recon
 

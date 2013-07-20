@@ -26,6 +26,7 @@ lib_LTLIBRARIES = librutil.la
 librutil_la_LIBADD = $(LIBSSL_LIBADD)
 librutil_la_LIBADD += $(LIBRADIUS_LIBADD)
 librutil_la_LIBADD += $(LIBARES_LIBADD)
+librutil_la_LIBADD += @LIBSTL_LIBADD@
 #librutil_la_LIBADD += -lrt
 librutil_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
 

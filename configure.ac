@@ -172,6 +172,13 @@ AC_ARG_WITH(sigcomp,
 [  --with-sigcomp          Link against Open SigComp libraries for SigComp],
  AC_DEFINE_UNQUOTED(USE_SIGCOMP, , USE_SIGCOMP), )
 
+AC_ARG_ENABLE(android,
+[  --enable-android        Enable Android build],
+   [AC_SUBST(LIBPTHREAD_LIBADD, ""),
+   AC_SUBST(LIBSTL_LIBADD, "-lgnustl_shared")],
+   [AC_SUBST(LIBPTHREAD_LIBADD, "-lpthread"),
+   AC_SUBST(LIBSTL_LIBADD, "")])
+
 AC_ARG_ENABLE(ipv6,
 [  --enable-ipv6           Enable IPv6 support],
  AC_DEFINE_UNQUOTED(USE_IPV6, , USE_IPV6), )

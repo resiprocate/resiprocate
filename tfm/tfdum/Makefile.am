@@ -10,7 +10,7 @@ TestLamba_LDADD += ../../resip/dum/libdum.la
 TestLamba_LDADD += ../../resip/stack/libresip.la
 TestLamba_LDADD += ../../rutil/librutil.la
 TestLamba_LDADD += @LIBSSL_LIBADD@
-TestLamba_LDADD += -lpthread
+TestLamba_LDADD += @LIBPTHREAD_LIBADD@
 
 TestLamba_SOURCES = TestLamba.cxx $(SHARED_SRC)
 
@@ -19,7 +19,7 @@ dumTests_LDADD += ../../resip/dum/libdum.la
 dumTests_LDADD += ../../resip/stack/libresip.la
 dumTests_LDADD += ../../rutil/librutil.la
 dumTests_LDADD += @LIBSSL_LIBADD@
-dumTests_LDADD += -lpthread
+dumTests_LDADD += @LIBPTHREAD_LIBADD@
 
 dumTests_SOURCES = dumTests.cxx $(SHARED_SRC)
 
