@@ -5,7 +5,11 @@
 
 #include <limits.h>
 #include <signal.h>
+#if defined(__ANDROID__)
+#include <fcntl.h>
+#else
 #include <sys/fcntl.h>
+#endif
 #include "rutil/Logger.hxx"
 #include "resip/stack/HeaderTypes.hxx"
 #include "resip/stack/ParameterTypeEnums.hxx"
