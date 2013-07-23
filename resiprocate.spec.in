@@ -258,6 +258,8 @@ fi
 %dir %{_includedir}/resip/stack/
 %dir %{_includedir}/resip/stack/ssl/
 %dir %{_includedir}/rutil/
+%dir %{_includedir}/rutil/cajun/
+%dir %{_includedir}/rutil/cajun/json/
 %dir %{_includedir}/rutil/dns/
 %dir %{_includedir}/rutil/ssl/
 %dir %{_includedir}/rutil/stun/
@@ -274,6 +276,8 @@ fi
 %{_includedir}/resip/stack/*.hxx
 %{_includedir}/resip/stack/ssl/*.hxx
 %{_includedir}/rutil/*.hxx
+%{_includedir}/rutil/cajun/json/*.h
+%{_includedir}/rutil/cajun/json/*.inl
 %{_includedir}/rutil/*/*.hxx
 %{_includedir}/sipdial/*.hxx
 %{_libdir}/libb2bua.so
@@ -294,6 +298,7 @@ fi
 %endif
 %{_sbindir}/repro
 %{_sbindir}/reprocmd
+%{_sbindir}/queuetostream
 %{_mandir}/man8/repro*.8*
 
 %files turn-server
