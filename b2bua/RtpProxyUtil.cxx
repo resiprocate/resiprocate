@@ -115,7 +115,7 @@ void RtpProxyUtil::do_timeouts() {
   struct sockaddr_un remote;
   int flags;
   int n;
-  char buf[100];
+  char buf[101];
   int p1, p2;
 
   if(timeout_clientfd == -1) {
