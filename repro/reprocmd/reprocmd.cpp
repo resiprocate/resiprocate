@@ -65,6 +65,11 @@ main (int argc, char** argv)
    }
 
    servAddr.sin_family = h->h_addrtype;
+   if(h->h_length > (int)sizeof(servAddr.sin_addr.s_addr))
+   {
+      cerr << "bad h_length" << endl;
+      exit(1);
+   }
    memcpy((char *) &servAddr.sin_addr.s_addr, h->h_addr_list[0], h->h_length);
    servAddr.sin_port = htons(port);
   
