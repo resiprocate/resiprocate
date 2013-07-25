@@ -70,7 +70,7 @@ class CollectCandidatesCommand : public TransporterCommand
 {
    public:
       CollectCandidatesCommand(Transporter *transporter,
-                               UInt64 tid,
+                               uint64_t tid,
                                NodeId &nodeId,
                                unsigned short appId)
          : TransporterCommand(transporter), mTransactionId(tid), 
@@ -79,7 +79,7 @@ class CollectCandidatesCommand : public TransporterCommand
       void operator()() { mTransporter->collectCandidatesImpl(mTransactionId, mNodeId, mAppId); }
 
    private:
-      UInt64 mTransactionId;
+      uint64_t mTransactionId;
       NodeId mNodeId;
       unsigned short mAppId;
 };
@@ -175,7 +175,7 @@ Transporter::send(FlowId flowId, std::auto_ptr<resip::Data> msg)
 }
   
 void
-Transporter::collectCandidates(const UInt64 tid, NodeId nodeId, unsigned short appId)
+Transporter::collectCandidates(const uint64_t tid, NodeId nodeId, unsigned short appId)
 {
    mCmdFifo.add(new CollectCandidatesCommand(this, tid, nodeId, appId));
 }

@@ -142,7 +142,7 @@ bool
 B2BSession::buildLocalOffer(SdpContents& offer)
 {
    // Build s=, o=, t=, and c= lines
-   UInt64 currentTime = Timer::getTimeMicroSec();
+   uint64_t currentTime = Timer::getTimeMicroSec();
 
    unsigned int port=8000;  // Placeholder port
 

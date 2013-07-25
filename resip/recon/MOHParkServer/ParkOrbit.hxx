@@ -15,7 +15,7 @@ public:
    ParticipantOrbitInfo(recon::ParticipantHandle participantHandle, const resip::Uri& parkedUri, const resip::Uri& parkerUri) : 
       mParticipantHandle(participantHandle), mParkedUri(parkedUri), mParkerUri(parkerUri) {} 
    recon::ParticipantHandle mParticipantHandle;
-   UInt64 mAllocationTime;
+   uint64_t mAllocationTime;
    resip::Uri mParkedUri;
    resip::Uri mParkerUri;
 };

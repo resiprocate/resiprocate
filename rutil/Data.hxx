@@ -88,7 +88,7 @@ class Data
    public:
       RESIP_HeapCount(Data);
 
-      typedef UInt32 size_type;
+      typedef uint32_t size_type;
 
       inline Data()
          : mBuf(mPreBuffer),
@@ -195,7 +195,7 @@ class Data
         that value. (E.g. "Data(75)" will create a Data
         with length=2, and contents of 0x37 0x35).
       */
-      explicit Data(unsigned long value);
+      explicit Data(uint32_t value);
 
       /**
         Converts the passed in value into ascii-decimal
@@ -203,15 +203,7 @@ class Data
         that value. (E.g. "Data(75)" will create a Data
         with length=2, and contents of 0x37 0x35).
       */
-      explicit Data(unsigned int value);
-
-      /**
-        Converts the passed in value into ascii-decimal
-        representation, and then creates a "Data" containing
-        that value. (E.g. "Data(75)" will create a Data
-        with length=2, and contents of 0x37 0x35).
-      */
-      explicit Data(UInt64 value);
+      explicit Data(uint64_t value);
 
 #ifndef RESIP_FIXED_POINT
       enum DoubleDigitPrecision 
@@ -774,7 +766,7 @@ class Data
         unsigned 64-bit integer. Will strip leading whitespace.
         This method stops upon encountering the first non-decimal digit.
       */ 
-      UInt64 convertUInt64() const;
+      uint64_t convertUInt64() const;
 
       /**
         Returns true if this Data starts with the bytes indicated by

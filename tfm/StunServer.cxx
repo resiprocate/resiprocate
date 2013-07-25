@@ -320,7 +320,7 @@ StunServer::sendTurnSetActiveDestinationResponse(boost::shared_ptr<StunRequestCo
 }
 
 void
-StunServer::sendTurnResponse(boost::shared_ptr<StunRequestContext> request, UInt16 messageType)
+StunServer::sendTurnResponse(boost::shared_ptr<StunRequestContext> request, uint16_t messageType)
 {
    Lock autoLock(mMutexLock);
    boost::shared_ptr<StunResponseContext> response = boost::shared_ptr<StunResponseContext>(new StunResponseContext());

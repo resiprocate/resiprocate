@@ -22,7 +22,7 @@ class ConnectionManager
    public:
       /** connection must have no inbound traffic for greater than this 
           time (in ms) before it is garbage collected */
-      static UInt64 MinimumGcAge;
+      static uint64_t MinimumGcAge;
       /** Enable Agressive Connection Garbage Collection to have resip
           perform garbage collection on every new connection.  If disabled
           then garbage collection is only performed if we run out of Fd's */
@@ -53,7 +53,7 @@ class ConnectionManager
 
       /// release excessively old connections (free up file descriptors)
       /// set maxToRemove to 0 for no-max
-      void gc(UInt64 threshold, unsigned int maxToRemove);
+      void gc(uint64_t threshold, unsigned int maxToRemove);
 
       /// move to youngest 
       void touch(Connection* connection);

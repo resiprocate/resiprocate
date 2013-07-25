@@ -191,7 +191,7 @@ Resolver::lookupARecords()
       for (char** pptr = result->h_addr_list; *pptr != 0; pptr++)
       {
          Tuple tuple;
-         tuple.ipv4.s_addr = *((u_int32_t*)(*pptr));
+         tuple.ipv4.s_addr = *((uint32_t*)(*pptr));
          tuple.port = mPort;
          tuple.transportType = mTransport;
 

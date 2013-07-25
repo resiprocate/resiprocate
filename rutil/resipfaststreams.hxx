@@ -18,6 +18,13 @@
 #include <cassert>
 #include "rutil/compat.hxx"
 
+#ifdef HAVE_INTTYPES_H
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+#else
+#error Please make sure HAVE_INTTYPES_H is defined (if valid on your platform) or implement an alternative
+#endif
+
 namespace resip
 {
 
@@ -32,7 +39,7 @@ class ResipStreamBuf
       virtual size_t readbuf(char *buf, size_t count) = 0;
       virtual size_t putbuf(char ch) = 0;
       virtual void flushbuf(void)=0;
-      virtual UInt64 tellpbuf(void)=0;
+      virtual uint64_t tellpbuf(void)=0;
 };
 
 class ResipBasicIOStream
@@ -66,6 +73,7 @@ class ResipBasicIOStream
 #define SNPRINTF_1(buffer,sizeofBuffer,count,format,var1) _snprintf_s(buffer,sizeofBuffer,_TRUNCATE,format,var1)
 #define LTOA(value,string,sizeofstring,radix) _ltoa_s(value,string,sizeofstring,radix)
 #define ULTOA(value,string,sizeofstring,radix) _ultoa_s(value,string,sizeofstring,radix)
+#define U32TOA(value,string,sizeofstring,radix) _ui32toa_s(value,string,sizeofstring,radix)
 #define I64TOA(value,string,sizeofstring,radix) _i64toa_s(value,string,sizeofstring,radix)
 #define UI64TOA(value,string,sizeofstring,radix) _ui64toa_s(value,string,sizeofstring,radix)
 #define GCVT(val,num,buffer,buffersize) _gcvt_s(buffer,buffersize,val,num)
@@ -74,6 +82,7 @@ class ResipBasicIOStream
 #define SNPRINTF_1(buffer,sizeofBuffer,count,format,var1) _snprintf(buffer,count,format,var1)
 #define LTOA(value,string,sizeofstring,radix) _ltoa(value,string,radix)
 #define ULTOA(value,string,sizeofstring,radix) _ultoa(value,string,radix)
+#define U32TOA(value,string,sizeofstring,radix) _ui32toa(value,string,radix)
 #define I64TOA(value,string,sizeofstring,radix) _i64toa(value,string,radix)
 #define UI64TOA(value,string,sizeofstring,radix) _ui64toa(value,string,radix)
 #define GCVT(val,sigdigits,buffer,buffersize) _gcvt(val,sigdigits,buffer)
@@ -84,8 +93,11 @@ class ResipBasicIOStream
 #define SNPRINTF_1(buffer,sizeofBuffer,count,format,var1) snprintf(buffer,sizeofBuffer,format,var1)
 #define LTOA(l,buffer,bufferlen,radix) SNPRINTF_1(buffer,bufferlen,bufferlen,"%li",l)
 #define ULTOA(ul,buffer,bufferlen,radix) SNPRINTF_1(buffer,bufferlen,bufferlen,"%lu",ul)
+#define U32TOA(ul,buffer,bufferlen,radix) SNPRINTF_1(buffer,bufferlen,bufferlen,"%u",ul)
 #define I64TOA(value,string,sizeofstring,radix) SNPRINTF_1(string,sizeofstring,sizeofstring,"%ll",value)
-#define UI64TOA(value,string,sizeofstring,radix) SNPRINTF_1(string,sizeofstring,sizeofstring,"%llu",value)
+// this is how we should do it, but the macro plays badly with some code:
+//#define UI64TOA(value,string,sizeofstring,radix) SNPRINTF_1(string,sizeofstring,sizeofstring,"%"PRIu64 ,value)
+#define UI64TOA(value,string,sizeofstring,radix) SNPRINTF_1(string,sizeofstring,sizeofstring,"%lu",value)
 #define GCVT(f,sigdigits,buffer,bufferlen) SNPRINTF_1(buffer,bufferlen,bufferlen,"%f",f)
 #define _CVTBUFSIZE 309+40
 #endif
@@ -102,7 +114,7 @@ class ResipFastOStream : public ResipBasicIOStream
       virtual ~ResipFastOStream(void)
       {}
 
-      virtual UInt64 tellp(void)
+      virtual uint64_t tellp(void)
       {
          if (rdbuf())
          {
@@ -180,12 +192,6 @@ class ResipFastOStream : public ResipBasicIOStream
          *this<<(static_cast<unsigned long>(ui));
          return *this;
       }
-#else
-      ResipFastOStream& operator<<(unsigned int ui)
-      {
-         *this<<(static_cast<unsigned long>(ui));
-         return *this;
-      }
 #endif
 
       ResipFastOStream& operator<<(long l)
@@ -205,14 +211,14 @@ class ResipFastOStream : public ResipBasicIOStream
          return *this;
       }
 
-      ResipFastOStream& operator<<(unsigned long ul)
+      ResipFastOStream& operator<<(uint32_t ul)
       {
          if (!buf_)
          {
             return *this;
          }
          char buf[33];
-         ULTOA(ul,buf,33,10);
+         U32TOA(ul,buf,33,10);
          size_t count = strlen(buf);
          if (buf_->writebuf(buf,count) < count)
          {
@@ -258,7 +264,7 @@ class ResipFastOStream : public ResipBasicIOStream
          return *this;
       }
 #else
-      ResipFastOStream& operator<<(UInt64 ui64)
+      ResipFastOStream& operator<<(uint64_t ui64)
       {
          if (!buf_)
          {
@@ -489,7 +495,7 @@ class ResipStdBuf : public ResipStreamBuf
       }
       virtual void flushbuf(void)
       {}
-      virtual UInt64 tellpbuf(void)
+      virtual uint64_t tellpbuf(void)
       {
          return 0;
       }

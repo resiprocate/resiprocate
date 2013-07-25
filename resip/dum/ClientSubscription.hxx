@@ -15,7 +15,7 @@ class ClientSubscription: public BaseSubscription
 {
    public:      
       ClientSubscription(DialogUsageManager& dum, Dialog& dialog,
-                         const SipMessage& request, UInt32 defaultSubExpiration);
+                         const SipMessage& request, uint32_t defaultSubExpiration);
 
       typedef Handle<ClientSubscription> ClientSubscriptionHandle;
       ClientSubscriptionHandle getHandle();
@@ -23,7 +23,7 @@ class ClientSubscription: public BaseSubscription
       //.dcm. no adornment for ease of use, can add if there is a use case
       void acceptUpdate(int statusCode = 200, const char* reason=0);
       void rejectUpdate(int statusCode = 400, const Data& reasonPhrase = Data::Empty);
-      void requestRefresh(UInt32 expires = 0);  // 0 defaults to using original expires value (to remove call end() instead)
+      void requestRefresh(uint32_t expires = 0);  // 0 defaults to using original expires value (to remove call end() instead)
       virtual void end();
       void end(bool immediate); // If immediate is true then usage is destroyed with no further messaging
       virtual void reSubscribe();  // forms a new Subscription dialog - reusing the same target and AppDialogSet      
@@ -32,7 +32,7 @@ class ClientSubscription: public BaseSubscription
        */
       void acceptUpdateCommand(int statusCode = 200, const char* reason=0);
       void rejectUpdateCommand(int statusCode = 400, const Data& reasonPhrase = Data::Empty);
-      void requestRefreshCommand(UInt32 expires = 0);  // 0 defaults to using original expires value (to remove call endCommand() instead)
+      void requestRefreshCommand(uint32_t expires = 0);  // 0 defaults to using original expires value (to remove call endCommand() instead)
       virtual void endCommand(bool immediate=false); // If immediate is true then usage is destroyed with no further messaging
 
       virtual EncodeStream& dump(EncodeStream& strm) const;
@@ -72,11 +72,11 @@ class ClientSubscription: public BaseSubscription
       //SipMessage mLastNotify;      
       bool mEnded;
       // .bwc. This is when our next reSUB is scheduled to happen.
-      UInt64 mNextRefreshSecs;
-      UInt64 mLastSubSecs;
+      uint64_t mNextRefreshSecs;
+      uint64_t mLastSubSecs;
 
       // this is the expires value from the 2xx coming from the SUB message
-      UInt32 mDefaultExpires;
+      uint32_t mDefaultExpires;
 
       bool mRefreshing;
       bool mHaveQueuedRefresh;

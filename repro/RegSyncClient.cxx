@@ -238,7 +238,7 @@ RegSyncClient::handleXml(const Data& xmlData)
 void 
 RegSyncClient::handleRegInfoEvent(resip::XMLCursor& xml)
 {
-   UInt64 now = Timer::getTimeSecs();
+   uint64_t now = Timer::getTimeSecs();
    Uri aor;
    ContactList contacts;
    DebugLog(<< "RegSyncClient::handleRegInfoEvent");
@@ -276,7 +276,7 @@ RegSyncClient::handleRegInfoEvent(resip::XMLCursor& xml)
                         if(xml.firstChild())
                         {
                            //InfoLog(<< "RegSyncClient::handleRegInfoEvent: expires=" << xml.getValue());
-                           UInt64 expires = xml.getValue().convertUInt64();
+                           uint64_t expires = xml.getValue().convertUInt64();
                            rec.mRegExpires = (expires == 0 ? 0 : now+expires);
                            xml.parent();
                         }

@@ -540,7 +540,7 @@ bool
 B2BSession::buildLocalOffer(SdpContents& offer)
 {
    // Build s=, o=, t=, and c= lines
-   UInt64 currentTime = Timer::getTimeMicroSec();
+   uint64_t currentTime = Timer::getTimeMicroSec();
 
    unsigned int port=0;
    if(mAnchorMedia)
@@ -602,7 +602,7 @@ B2BSession::buildLocalAnswer(SdpContents& answer)
          }
 
          // Set sessionid and version for this answer
-         UInt64 currentTime = Timer::getTimeMicroSec();
+         uint64_t currentTime = Timer::getTimeMicroSec();
          answer.session().origin().getSessionId() = currentTime;
          answer.session().origin().getVersion() = currentTime;  
 

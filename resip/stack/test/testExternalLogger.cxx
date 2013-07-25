@@ -134,7 +134,7 @@ main(int argc, char* argv[])
 
    if (false)
    {
-      UInt64 start = Timer::getTimeMs();
+      uint64_t start = Timer::getTimeMs();
       for (int i = 0; i < 10000; i++)
       {
          InfoLog(<< "string");
@@ -144,7 +144,7 @@ main(int argc, char* argv[])
 
    if (false)
    {
-      UInt64 start = Timer::getTimeMs();
+      uint64_t start = Timer::getTimeMs();
       for (int i = 0; i < 10000; i++)
       {
          DebugLog(<< "string");

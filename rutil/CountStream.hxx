@@ -43,7 +43,7 @@ class CountBuffer :
          return 0;
       }
 
-      virtual UInt64 tellpbuf(void);
+      virtual uint64_t tellpbuf(void);
 #endif
 
    private:

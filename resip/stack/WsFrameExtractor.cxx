@@ -17,7 +17,7 @@ WsFrameExtractor::WsFrameExtractor(Data::size_type maxMessage)
 {
    // we re-use this for multiple messages throughout
    // the lifetime of this parser object
-   mWsHeader = new UInt8[mMaxHeaderLen];
+   mWsHeader = new uint8_t[mMaxHeaderLen];
 }
 
 WsFrameExtractor::~WsFrameExtractor()
@@ -42,7 +42,7 @@ WsFrameExtractor::~WsFrameExtractor()
 }
 
 std::auto_ptr<Data>
-WsFrameExtractor::processBytes(UInt8 *input, Data::size_type len, bool& dropConnection)
+WsFrameExtractor::processBytes(uint8_t *input, Data::size_type len, bool& dropConnection)
 {
    std::auto_ptr<Data> ret(0);
    dropConnection = false;
@@ -92,7 +92,7 @@ WsFrameExtractor::processBytes(UInt8 *input, Data::size_type len, bool& dropConn
          {
             StackLog(<<"starting new frame buffer");
             // Include an extra byte at the end for null terminator
-            mPayload = (UInt8*)new char[mPayloadLength + 1];
+            mPayload = (uint8_t*)new char[mPayloadLength + 1];
             mPayloadPos = 0;
          }
 
@@ -147,7 +147,7 @@ WsFrameExtractor::parseHeader()
       return (2 - mHeaderLen);
    }
 
-   UInt64 hdrPos = 2;
+   uint64_t hdrPos = 2;
 
    mFinalFrame = (mWsHeader[0] >> 7) != 0;
    mMasked = (mWsHeader[1] >> 7) != 0;
@@ -176,7 +176,7 @@ WsFrameExtractor::parseHeader()
          StackLog(<< "Too short to contain ws data [2]");
          return (8 - mHeaderLen) + (mMasked ? 4 : 0);
       }
-      mPayloadLength = (((UInt64)mWsHeader[hdrPos]) << 56 | ((UInt64)mWsHeader[hdrPos + 1]) << 48 | ((UInt64)mWsHeader[hdrPos + 2]) << 40 | ((UInt64)mWsHeader[hdrPos + 3]) << 32 | ((UInt64)mWsHeader[hdrPos + 4]) << 24 | ((UInt64)mWsHeader[hdrPos + 5]) << 16 | ((UInt64)mWsHeader[hdrPos + 6]) << 8 || ((UInt64)mWsHeader[hdrPos + 7]));
+      mPayloadLength = (((uint64_t)mWsHeader[hdrPos]) << 56 | ((uint64_t)mWsHeader[hdrPos + 1]) << 48 | ((uint64_t)mWsHeader[hdrPos + 2]) << 40 | ((uint64_t)mWsHeader[hdrPos + 3]) << 32 | ((uint64_t)mWsHeader[hdrPos + 4]) << 24 | ((uint64_t)mWsHeader[hdrPos + 5]) << 16 | ((uint64_t)mWsHeader[hdrPos + 6]) << 8 || ((uint64_t)mWsHeader[hdrPos + 7]));
       hdrPos += 8;
    }
 

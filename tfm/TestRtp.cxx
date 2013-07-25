@@ -229,7 +229,7 @@ TestRtp::getName() const
 }
 
 bool
-TestRtp::isRtpPacket(const Data& packet, UInt32 ssrc) const
+TestRtp::isRtpPacket(const Data& packet, uint32_t ssrc) const
 {
    if( packet.size() < RTP_HEADER_SIZE )
       return false;
@@ -243,7 +243,7 @@ TestRtp::isRtpPacket(const Data& packet, UInt32 ssrc) const
 }
 
 bool
-TestRtp::isRtcpPacket(const Data& packet, UInt32 ssrc) const
+TestRtp::isRtcpPacket(const Data& packet, uint32_t ssrc) const
 {
    if( packet.size() < RTCP_HEADER_SIZE )
       return false;
@@ -266,7 +266,7 @@ TestRtp::isRtcpPacket(const Data& packet, UInt32 ssrc) const
    return true;
 }
 
-UInt16 
+uint16_t 
 TestRtp::getSeqNo(const Packet& packet)
 {
    RtpHeader& header = *((RtpHeader*)(packet.mData.data()));
@@ -276,8 +276,8 @@ TestRtp::getSeqNo(const Packet& packet)
 void
 TestRtp::RtpPacketInfo()
 {
-   UInt16 first = getSeqNo(mPacketsRtp.front());
-   UInt16 last = getSeqNo(mPacketsRtp.back());
+   uint16_t first = getSeqNo(mPacketsRtp.front());
+   uint16_t last = getSeqNo(mPacketsRtp.back());
 
    int received = (int) mPacketsRtp.size();
    InfoLog(<< "Received packates: " << received);
@@ -304,7 +304,7 @@ TestRtp::RtpPacketInfo()
 }
 
 void
-TestRtp::loadStream(const Data& file, UInt32 ssrc)
+TestRtp::loadStream(const Data& file, uint32_t ssrc)
 {
 #ifdef HAS_PCAP
    char errbuff[PCAP_ERRBUF_SIZE];
@@ -424,7 +424,7 @@ TestRtp::parsePacket(const Data& data)
    // !jv! for now, assume that RTP header is 12 bytes
    const RtpHeader& header = *((const RtpHeader*)data.data());
 
-   UInt8 remoteCodec = header.mPayloadType & 0x7f;
+   uint8_t remoteCodec = header.mPayloadType & 0x7f;
    bool matchAudio = false;
    bool matchVideo = false;
 
@@ -451,7 +451,7 @@ TestRtp::parsePacket(const Data& data)
       return false;
    }
 
-   UInt32 remoteSsrc = ntohl(header.mSsrc);
+   uint32_t remoteSsrc = ntohl(header.mSsrc);
    if( 0 == mRemoteSsrc )
    {
       InfoLog(<< "TestRtp::parsePacket():  RTP strem started");

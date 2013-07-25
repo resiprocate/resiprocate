@@ -17,17 +17,17 @@
 
 #ifndef RESIP_COMPAT_HXX
 // define some basic types
-typedef unsigned char  UInt8;
-typedef unsigned short UInt16;
+typedef unsigned char  uint8_t;
+typedef unsigned short uint16_t;
 #ifdef __APPLE__
-typedef unsigned long   UInt32;
+typedef unsigned long   uint32_t;
 #else
-typedef unsigned int   UInt32;
+typedef unsigned int   uint32_t;
 #endif
 #if defined( WIN32 )
-typedef unsigned __int64 UInt64;
+typedef unsigned __int64 uint64_t;
 #else
-typedef unsigned long long UInt64;
+typedef unsigned long long uint64_t;
 #endif
 #endif
 
@@ -39,66 +39,66 @@ bool operator==(const UInt128&, const UInt128&);
 #endif
 
 /// define a structure to hold a stun address 
-const UInt8  IPv4Family = 0x01;
-const UInt8  IPv6Family = 0x02;
+const uint8_t  IPv4Family = 0x01;
+const uint8_t  IPv6Family = 0x02;
 
 // define  flags  
-const UInt32 ChangeIpFlag   = 0x04;
-const UInt32 ChangePortFlag = 0x02;
+const uint32_t ChangeIpFlag   = 0x04;
+const uint32_t ChangePortFlag = 0x02;
 
 // define  stun attribute
-const UInt16 MappedAddress    = 0x0001;
-const UInt16 ResponseAddress  = 0x0002;
-const UInt16 ChangeRequest    = 0x0003;
-const UInt16 SourceAddress    = 0x0004;
-const UInt16 ChangedAddress   = 0x0005;
-const UInt16 Username         = 0x0006;
-const UInt16 Password         = 0x0007;
-const UInt16 MessageIntegrity = 0x0008;
-const UInt16 ErrorCode        = 0x0009;
-const UInt16 UnknownAttribute = 0x000A;
-const UInt16 ReflectedFrom    = 0x000B;
-const UInt16 XorMappedAddress = 0x8020;
-const UInt16 XorOnly          = 0x0021;
-const UInt16 ServerName       = 0x8022;
-const UInt16 SecondaryAddress = 0x8050; // Non standard extention
+const uint16_t MappedAddress    = 0x0001;
+const uint16_t ResponseAddress  = 0x0002;
+const uint16_t ChangeRequest    = 0x0003;
+const uint16_t SourceAddress    = 0x0004;
+const uint16_t ChangedAddress   = 0x0005;
+const uint16_t Username         = 0x0006;
+const uint16_t Password         = 0x0007;
+const uint16_t MessageIntegrity = 0x0008;
+const uint16_t ErrorCode        = 0x0009;
+const uint16_t UnknownAttribute = 0x000A;
+const uint16_t ReflectedFrom    = 0x000B;
+const uint16_t XorMappedAddress = 0x8020;
+const uint16_t XorOnly          = 0x0021;
+const uint16_t ServerName       = 0x8022;
+const uint16_t SecondaryAddress = 0x8050; // Non standard extention
 
 // !jf! TURN specific message attributes - from turn-08
-const UInt16 TurnLifetime     = 0x000d;
-const UInt16 TurnAlternateServer = 0x000e;
-const UInt16 TurnMagicCookie = 0x000f;
-const UInt16 TurnBandwidth = 0x0010;
-const UInt16 TurnDestinationAddress = 0x0011;
-const UInt16 TurnRemoteAddress = 0x0012;
-const UInt16 TurnData = 0x0013;
-const UInt16 TurnNonce = 0x0014;
-const UInt16 TurnRealm = 0x0015;
+const uint16_t TurnLifetime     = 0x000d;
+const uint16_t TurnAlternateServer = 0x000e;
+const uint16_t TurnMagicCookie = 0x000f;
+const uint16_t TurnBandwidth = 0x0010;
+const uint16_t TurnDestinationAddress = 0x0011;
+const uint16_t TurnRemoteAddress = 0x0012;
+const uint16_t TurnData = 0x0013;
+const uint16_t TurnNonce = 0x0014;
+const uint16_t TurnRealm = 0x0015;
 
 
 // define types for a stun message 
-const UInt16 BindRequestMsg               = 0x0001;
-const UInt16 BindResponseMsg              = 0x0101;
-const UInt16 BindErrorResponseMsg         = 0x0111;
-const UInt16 SharedSecretRequestMsg       = 0x0002;
-const UInt16 SharedSecretResponseMsg      = 0x0102;
-const UInt16 SharedSecretErrorResponseMsg = 0x0112;
+const uint16_t BindRequestMsg               = 0x0001;
+const uint16_t BindResponseMsg              = 0x0101;
+const uint16_t BindErrorResponseMsg         = 0x0111;
+const uint16_t SharedSecretRequestMsg       = 0x0002;
+const uint16_t SharedSecretResponseMsg      = 0x0102;
+const uint16_t SharedSecretErrorResponseMsg = 0x0112;
 
 // define types for a turn message - per turn-08
-const UInt16 TurnAllocateRequest = 0x0003;
-const UInt16 TurnAllocateResponse = 0x0103;
-const UInt16 TurnAllocateErrorResponse = 0x0113;
-const UInt16 TurnSendRequest = 0x0004;
-const UInt16 TurnSendResponse = 0x0104;
-const UInt16 TurnSendErrorResponse = 0x0114;
-const UInt16 TurnDataIndication = 0x0115;
-const UInt16 TurnSetActiveDestinationRequest = 0x0006;
-const UInt16 TurnSetActiveDestinationResponse = 0x0106;
-const UInt16 TurnSetActiveDestinationErrorResponse = 0x0116;
+const uint16_t TurnAllocateRequest = 0x0003;
+const uint16_t TurnAllocateResponse = 0x0103;
+const uint16_t TurnAllocateErrorResponse = 0x0113;
+const uint16_t TurnSendRequest = 0x0004;
+const uint16_t TurnSendResponse = 0x0104;
+const uint16_t TurnSendErrorResponse = 0x0114;
+const uint16_t TurnDataIndication = 0x0115;
+const uint16_t TurnSetActiveDestinationRequest = 0x0006;
+const uint16_t TurnSetActiveDestinationResponse = 0x0106;
+const uint16_t TurnSetActiveDestinationErrorResponse = 0x0116;
 
 typedef struct 
 {
-      UInt16 msgType;
-      UInt16 msgLength;
+      uint16_t msgType;
+      uint16_t msgLength;
       UInt128 id;
 } StunMsgHdr;
 
@@ -108,47 +108,47 @@ bool operator<(const StunMsgHdr&, const StunMsgHdr&);
 
 typedef struct
 {
-      UInt16 type;
-      UInt16 length;
+      uint16_t type;
+      uint16_t length;
 } StunAtrHdr;
 
 typedef struct
 {
-      UInt16 port;
-      UInt32 addr;
+      uint16_t port;
+      uint32_t addr;
 } StunAddress4;
 
 typedef struct
 {
-      UInt8 pad;
-      UInt8 family;
+      uint8_t pad;
+      uint8_t family;
       StunAddress4 ipv4;
 } StunAtrAddress4;
 
 typedef struct
 {
-      UInt32 value;
+      uint32_t value;
 } StunAtrChangeRequest;
 
 typedef struct
 {
-      UInt16 pad; // all 0
-      UInt8 errorClass;
-      UInt8 number;
+      uint16_t pad; // all 0
+      uint8_t errorClass;
+      uint8_t number;
       char reason[STUN_MAX_STRING];
-      UInt16 sizeReason;
+      uint16_t sizeReason;
 } StunAtrError;
 
 typedef struct
 {
-      UInt16 attrType[STUN_MAX_UNKNOWN_ATTRIBUTES];
-      UInt16 numAttributes;
+      uint16_t attrType[STUN_MAX_UNKNOWN_ATTRIBUTES];
+      uint16_t numAttributes;
 } StunAtrUnknown;
 
 typedef struct
 {
       char value[STUN_MAX_STRING];      
-      UInt16 sizeValue;
+      uint16_t sizeValue;
 } StunAtrString;
 
 typedef struct
@@ -216,16 +216,16 @@ typedef struct
       StunAtrAddress4 secondaryAddress;
 
       bool hasTurnLifetime;
-      UInt32 turnLifetime;
+      uint32_t turnLifetime;
       
       bool hasTurnAlternateServer;
       StunAtrAddress4 turnAlternateServer;
       
       bool hasTurnMagicCookie;
-      UInt32 turnMagicCookie;
+      uint32_t turnMagicCookie;
       
       bool hasTurnBandwidth;
-      UInt32 turnBandwidth;
+      uint32_t turnBandwidth;
       
       bool hasTurnDestinationAddress;
       StunAtrAddress4 turnDestinationAddress;
@@ -322,7 +322,7 @@ stunCreatePassword(const StunAtrString& username, StunAtrString* password);
 int 
 stunRand();
 
-UInt64
+uint64_t
 stunGetSystemTimeSecs();
 
 /// find the IP address of a the specified stun server - return false is fails parse 
@@ -331,9 +331,9 @@ stunParseServerName( char* serverName, StunAddress4& stunServerAddr);
 
 bool 
 stunParseHostName( char* peerName,
-                   UInt32& ip,
-                   UInt16& portVal,
-                   UInt16 defaultPort );
+                   uint32_t& ip,
+                   uint16_t& portVal,
+                   uint16_t defaultPort );
 
 /// return true if all is OK
 /// Create a media relay and do the STERN thing if startMediaPort is non-zero
@@ -353,7 +353,7 @@ stunServerProcess(StunServerInfo& info, bool verbose);
 
 /// returns number of address found - take array or addres 
 int 
-stunFindLocalInterfaces(UInt32* addresses, int maxSize );
+stunFindLocalInterfaces(uint32_t* addresses, int maxSize );
 
 bool 
 stunTest( StunAddress4& dest, int testNum, bool verbose, StunAddress4* srcAddr=0, unsigned long timeoutMs=5000 );

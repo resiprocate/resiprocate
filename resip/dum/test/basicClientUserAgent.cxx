@@ -988,7 +988,7 @@ BasicClientUserAgent::hasDefaultExpires() const
    return true;
 }
 
-UInt32 
+uint32_t 
 BasicClientUserAgent::getDefaultExpires() const
 {
    return 60;

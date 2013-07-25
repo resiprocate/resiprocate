@@ -17,9 +17,9 @@ using namespace p2p;
 using namespace s2c;
 using namespace resip;
 
-const UInt8 Message::MessageVersion = 0x1;
-const UInt8 Message::MessageTtl = 0x20;
-const UInt32 Message::MessageReloToken=0xd2454c4f;
+const uint8_t Message::MessageVersion = 0x1;
+const uint8_t Message::MessageTtl = 0x20;
+const uint32_t Message::MessageReloToken=0xd2454c4f;
 
 #include "p2p/P2PSubsystem.hxx"
 #define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P
@@ -274,38 +274,38 @@ Message::decrementTTL()
 	mPDU.mHeader->mTtl--;
 }
 
-UInt8 
+uint8_t 
 Message::getTTL() const
 {
 	return mPDU.mHeader->mTtl;
 }
 
 void
-Message::setTTL(UInt8 ttl)
+Message::setTTL(uint8_t ttl)
 {
 	mPDU.mHeader->mTtl = ttl;
 }
 
-UInt32 
+uint32_t 
 Message::getOverlay() const
 {
 	return mPDU.mHeader->mOverlay;
 }
 
-UInt64 
+uint64_t 
 Message::getTransactionId() const
 {
 	return mPDU.mHeader->mTransactionId;
 }
 
-UInt16 
+uint16_t 
 Message::getFlags() const 
 {
 	return mPDU.mHeader->mFlags;
 }
 
 ConnectAns *
-Message::makeConnectResponse(const resip::Data &frag, const resip::Data &password, UInt16 application, const resip::Data &role, const std::vector<Candidate> &candidates)
+Message::makeConnectResponse(const resip::Data &frag, const resip::Data &password, uint16_t application, const resip::Data &role, const std::vector<Candidate> &candidates)
 {
 	assert(getType() == ConnectReqType);
 
@@ -357,7 +357,7 @@ Message::encodePayload()
 	resip::SHA1Stream stream;
 	stream << mOverlayName;
         mPDU.mHeader->mReloToken=Message::MessageReloToken;
-	mPDU.mHeader->mMessageCode = static_cast<UInt16>(getType());
+	mPDU.mHeader->mMessageCode = static_cast<uint16_t>(getType());
    mPDU.mHeader->mOverlay = stream.getUInt32();
    
 	// TODO: Set flag to something goofy
@@ -406,7 +406,7 @@ Message::encodePayload()
 
 	// add the length to the header
 	assert(mPDU.mHeader->mVersion);
-	UInt32 *lengthWord = reinterpret_cast<UInt32 *>(const_cast<char *>(encodedData.data()) + 13);
+	uint32_t *lengthWord = reinterpret_cast<uint32_t *>(const_cast<char *>(encodedData.data()) + 13);
 
 	(*lengthWord) = (*lengthWord | (htonl(finalLength & 0x0fff) >> 8));
 

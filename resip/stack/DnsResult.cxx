@@ -145,7 +145,7 @@ DnsResult::destroy()
 }
 
 bool
-DnsResult::blacklistLast(UInt64 expiry)
+DnsResult::blacklistLast(uint64_t expiry)
 {
    if(mHaveReturnedResults)
    {
@@ -164,7 +164,7 @@ DnsResult::blacklistLast(UInt64 expiry)
 }
 
 bool
-DnsResult::greylistLast(UInt64 expiry)
+DnsResult::greylistLast(uint64_t expiry)
 {
    if(mHaveReturnedResults)
    {

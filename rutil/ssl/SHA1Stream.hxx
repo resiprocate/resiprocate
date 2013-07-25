@@ -81,8 +81,8 @@ class SHA1Stream : private SHA1Buffer, public std::ostream
        */
       Data getBin(unsigned int bits=160);
 
-      /** Calls getBin(32) and converts to a UInt32 */
-      UInt32 getUInt32();
+      /** Calls getBin(32) and converts to a uint32_t */
+      uint32_t getUInt32();
       
 };
 

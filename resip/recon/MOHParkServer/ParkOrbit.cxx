@@ -87,7 +87,7 @@ ParkOrbit::getNextQueuedParticipant()
    ParticipantHandle participantHandle = 0;
    if(!mParticipants.empty())
    {
-      UInt64 now = resip::Timer::getTimeSecs();
+      uint64_t now = resip::Timer::getTimeSecs();
       if(now - mParticipants.front()->mAllocationTime > ALLOCATIONTIME)
       {
          participantHandle = mParticipants.front()->mParticipantHandle;

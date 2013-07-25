@@ -2684,7 +2684,7 @@ TransactionState::sendToTU(TransactionMessage* msg)
                SipMessage* response(Helper::makeResponse(*sipMsg, 503));
                delete sipMsg;
                
-               UInt16 retryAfter=mController.mTuSelector.getExpectedWait(mTransactionUser);
+               uint16_t retryAfter=mController.mTuSelector.getExpectedWait(mTransactionUser);
                response->header(h_RetryAfter).value()=retryAfter;
                response->setFromTU();
                if(mMethod==INVITE)

@@ -133,7 +133,7 @@ class DeprecatedDialog
       
       bool secure; // indicates the messages in this Dialog must use TLS
 
-      UInt64 expireyTimeAbsoluteMs;
+      uint64_t expireyTimeAbsoluteMs;
       
       friend EncodeStream& operator<<(EncodeStream&, const DeprecatedDialog&);
 };

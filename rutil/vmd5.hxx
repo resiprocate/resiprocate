@@ -32,16 +32,16 @@ typedef unsigned char md5byte;
 
 struct MD5Context
 {
-      u_int32_t buf[4];
-      u_int32_t bytes[2];
-      u_int32_t in[16];
+      uint32_t buf[4];
+      uint32_t bytes[2];
+      uint32_t in[16];
 };
 
 void MD5Init(struct MD5Context *context);
 void MD5Update(struct MD5Context *context, md5byte const *buf, unsigned len);
 void MD5Final(unsigned char digest[16], struct MD5Context *context);
-void MD5Transform(u_int32_t buf[4], u_int32_t const in[16]);
-void byteSwap(u_int32_t *buf, unsigned words); 
+void MD5Transform(uint32_t buf[4], uint32_t const in[16]);
+void byteSwap(uint32_t *buf, unsigned words); 
 }
 
 /* !MD5_H */

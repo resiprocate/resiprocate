@@ -2490,7 +2490,7 @@ InviteSession::startSessionTimer()
       else
       {
          // Start Session-Expiration Timer to mSessionInterval - BYE should be sent a minimum of 32 and one third of the SessionInterval, seconds before the session expires (recommended by RFC4028)
-         mDum.addTimer(DumTimeout::SessionExpiration, mSessionInterval - resipMin((UInt32)32,mSessionInterval/3), getBaseHandle(), ++mSessionTimerSeq);
+         mDum.addTimer(DumTimeout::SessionExpiration, mSessionInterval - resipMin((uint32_t)32,mSessionInterval/3), getBaseHandle(), ++mSessionTimerSeq);
       }
    }
    else  // Session Interval less than 90 - consider timers disabled

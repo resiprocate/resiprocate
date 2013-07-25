@@ -64,8 +64,8 @@ public:
         MediaStream& mediaStream);
    ~Flow();
 
-   void activateFlow(UInt8 allocationProps = StunMessage::PropsNone);
-   void activateFlow(UInt64 reservationToken);
+   void activateFlow(uint8_t allocationProps = StunMessage::PropsNone);
+   void activateFlow(uint64_t reservationToken);
 
    bool isReady() { return mFlowState == Ready; }
 
@@ -110,7 +110,7 @@ public:
    StunTuple getSessionTuple();  // returns either local, reflexive, or relay tuple depending on NatTraversalMode
    StunTuple getRelayTuple();
    StunTuple getReflexiveTuple();
-   UInt64 getReservationToken();
+   uint64_t getReservationToken();
    unsigned int getComponentId() { return mComponentId; }
 
 private:
@@ -131,8 +131,8 @@ private:
    boost::shared_ptr<TurnAsyncSocket> mTurnSocket;
 
    // These are only set once, then accessed - thus they do not require mutex protection
-   UInt8 mAllocationProps;
-   UInt64 mReservationToken; 
+   uint8_t mAllocationProps;
+   uint64_t mReservationToken; 
 
    // Mutex to protect the following members that may be get/set from multiple threads
    resip::Mutex mMutex;
@@ -181,7 +181,7 @@ private:
    virtual void onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& stunServerTuple);
    virtual void onBindFailure(unsigned int socketDesc, const asio::error_code& e, const StunTuple& stunServerTuple);
 
-   virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, UInt64 reservationToken);
+   virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, uint64_t reservationToken);
    virtual void onAllocationFailure(unsigned int socketDesc, const asio::error_code& e);
 
    virtual void onRefreshSuccess(unsigned int socketDesc, unsigned int lifetime);

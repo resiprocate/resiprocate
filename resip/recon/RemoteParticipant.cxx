@@ -838,7 +838,7 @@ RemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
       offer = mInviteSessionHandle->getLocalSdp();
 
       // Set sessionid and version for this sdp
-      UInt64 currentTime = Timer::getTimeMicroSec();
+      uint64_t currentTime = Timer::getTimeMicroSec();
       offer.session().origin().getSessionId() = currentTime;
       offer.session().origin().getVersion() = currentTime;  
 
@@ -1250,7 +1250,7 @@ RemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& answer)
       answer = dynamic_cast<ConversationProfile*>(mDialogSet.getUserProfile().get())->sessionCaps();
 
       // Set sessionid and version for this answer
-      UInt64 currentTime = Timer::getTimeMicroSec();
+      uint64_t currentTime = Timer::getTimeMicroSec();
       answer.session().origin().getSessionId() = currentTime;
       answer.session().origin().getVersion() = currentTime;  
 
@@ -1379,7 +1379,7 @@ RemoteParticipant::formMidDialogSdpOfferOrAnswer(const SdpContents& localSdp, co
       newSdp.session().media().clear();
 
       // Set sessionid and version for this sdp
-      UInt64 currentTime = Timer::getTimeMicroSec();
+      uint64_t currentTime = Timer::getTimeMicroSec();
       newSdp.session().origin().getSessionId() = currentTime;
       newSdp.session().origin().getVersion() = currentTime;  
 

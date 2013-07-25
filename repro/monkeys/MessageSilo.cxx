@@ -257,7 +257,7 @@ MessageSilo::asyncProcess(AsyncProcessorMessage* msg)
                   ContactInstanceRecord& rec = *contactIt;
 
                   // Removed contacts can be in the list, but they will be expired, don't send to them
-                  if(rec.mRegExpires > (UInt64)now)  
+                  if(rec.mRegExpires > (uint64_t)now)  
                   {
                      std::auto_ptr<SipMessage> msg(new SipMessage);
                      RequestLine rLine(MESSAGE);

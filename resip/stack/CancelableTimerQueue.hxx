@@ -23,8 +23,8 @@ class CancelableTimerQueue
 
       typedef long Id;
    private:
-      typedef std::multimap< UInt64, std::pair<T, Id> > TimerMap;
-      typedef HashMap<Id, UInt64> IdToTimer;
+      typedef std::multimap< uint64_t, std::pair<T, Id> > TimerMap;
+      typedef HashMap<Id, uint64_t> IdToTimer;
 
    public:
       Id addRelative(T msg,
@@ -120,7 +120,7 @@ class CancelableTimerQueue
 
    private:
       
-      Id addTimer(T msg, UInt64 expiry)
+      Id addTimer(T msg, uint64_t expiry)
       {
          Id id = getNextId();
          mTimerMap.insert(std::make_pair(expiry, std::make_pair(msg, id)));

@@ -50,7 +50,7 @@ class GeneralCongestionManager : public CongestionManager
             - >100 percent of max tolerance -> REJECTING_NON_ESSENTIAL
       */
       GeneralCongestionManager(MetricType defaultMetric,
-                                 UInt32 defaultMaxTolerance);
+                                 uint32_t defaultMaxTolerance);
       virtual ~GeneralCongestionManager();
 
       /**
@@ -83,7 +83,7 @@ class GeneralCongestionManager : public CongestionManager
       */
       virtual bool updateFifoTolerances(const resip::Data& fifoDescription,
                                           MetricType metric,
-                                          UInt32 maxTolerance );
+                                          uint32_t maxTolerance );
 
       /**
          Add a fifo to the collection of fifos monitored by this 
@@ -106,7 +106,7 @@ class GeneralCongestionManager : public CongestionManager
       */
       virtual void registerFifo(resip::FifoStatsInterface* fifo,
                                  MetricType metric,
-                                 UInt32 maxTolerance );
+                                 uint32_t maxTolerance );
 
       /**
          Add a fifo to the collection of fifos monitored by this 
@@ -140,7 +140,7 @@ class GeneralCongestionManager : public CongestionManager
       /**
          @brief Returns the percent of maximum tolerances that this queue is at.
       */
-      virtual UInt16 getCongestionPercent(const FifoStatsInterface* fifo) const;
+      virtual uint16_t getCongestionPercent(const FifoStatsInterface* fifo) const;
 
       virtual EncodeStream& encodeFifoStats(const FifoStatsInterface& fifoStats, EncodeStream& strm) const;
 
@@ -148,13 +148,13 @@ class GeneralCongestionManager : public CongestionManager
       {
          FifoStatsInterface* fifo;
          volatile MetricType metric;
-         volatile UInt32 maxTolerance;
+         volatile uint32_t maxTolerance;
       } FifoInfo; // !bwc! TODO pick a better name
 
       std::vector<FifoInfo> mFifos;
-      UInt16 mRejectionThresholds[REJECTING_NON_ESSENTIAL+1];
+      uint16_t mRejectionThresholds[REJECTING_NON_ESSENTIAL+1];
       MetricType mDefaultMetric;
-      UInt32 mDefaultMaxTolerance;
+      uint32_t mDefaultMaxTolerance;
 
       // disabled
       GeneralCongestionManager();

@@ -66,7 +66,7 @@ class DialogEventInfo
       bool hasLocalOfferAnswer() const;
       bool hasRemoteOfferAnswer() const;
 
-      UInt64 getDurationSeconds() const; // in seconds
+      uint64_t getDurationSeconds() const; // in seconds
 
       bool hasReplacesId() const;
       const DialogId& getReplacesId() const;
@@ -95,7 +95,7 @@ class DialogEventInfo
       Uri mLocalTarget;
       std::auto_ptr<Uri> mRemoteTarget;
 
-      UInt64 mCreationTimeSeconds;
+      uint64_t mCreationTimeSeconds;
 
       std::auto_ptr<Contents> mLocalOfferAnswer;
       std::auto_ptr<Contents> mRemoteOfferAnswer;

@@ -145,7 +145,7 @@ RendDlgReg::getContactByInstance(const resip::SipMessage& msg, const resip::Data
       }
       if ( regId>0 
          && (!it->exists(resip::p_regid) 
-         || it->param(resip::p_regid) != (UInt32)regId) )
+         || it->param(resip::p_regid) != (uint32_t)regId) )
       {
          continue;
       }

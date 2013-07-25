@@ -106,7 +106,7 @@ class DnsResult : public DnsResultSink, public EnumResultSink
          @return true iff the last result could be blacklisted
          @note This is a no-op if no results have been returned.
       */
-      bool blacklistLast(UInt64 expiry);
+      bool blacklistLast(uint64_t expiry);
       
       /*!
          Greylist the last returned result until the specified time (ms)
@@ -117,7 +117,7 @@ class DnsResult : public DnsResultSink, public EnumResultSink
          @return true iff the last result could be greylisted
          @note This is a no-op if no results have been returned.
       */
-      bool greylistLast(UInt64 expiry);
+      bool greylistLast(uint64_t expiry);
       
       /*!
          Tries to load the next tuple. If Available is returned, the tuple may

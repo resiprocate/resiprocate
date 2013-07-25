@@ -135,8 +135,8 @@ bool SdpCandidatePair::operator<(const SdpCandidatePair& rhs) const
 #define sdpMax(a,b) (a > b ? a : a < b ? b : a)
 void SdpCandidatePair::resetPriority()
 {
-   UInt64 offererPriority = mOfferer == OFFERER_LOCAL ? mLocalCandidate.getPriority() : mRemoteCandidate.getPriority();
-   UInt64 answererPriority = mOfferer == OFFERER_LOCAL ? mRemoteCandidate.getPriority() : mLocalCandidate.getPriority();
+   uint64_t offererPriority = mOfferer == OFFERER_LOCAL ? mLocalCandidate.getPriority() : mRemoteCandidate.getPriority();
+   uint64_t answererPriority = mOfferer == OFFERER_LOCAL ? mRemoteCandidate.getPriority() : mLocalCandidate.getPriority();
    mPriority = (sdpMin(offererPriority, answererPriority)<<32) + 
                (sdpMax(offererPriority, answererPriority)<<1) + 
                (offererPriority > answererPriority ? 1 : 0);

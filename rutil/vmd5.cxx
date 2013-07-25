@@ -33,13 +33,13 @@
 /* Add _BIG_ENDIAN__ for MAC OSX */
 #if defined(WORDS_BIGENDIAN) || defined(_BIG_ENDIAN) || defined( __BIG_ENDIAN__ ) || (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)) || defined(RESIP_BIG_ENDIAN)
 void
-resip::byteSwap(u_int32_t *buf, unsigned words)
+resip::byteSwap(uint32_t *buf, unsigned words)
 {
    md5byte *p = (md5byte *)buf;
 
    do
    {
-      *buf++ = (u_int32_t)((unsigned)p[3] << 8 | p[2]) << 16 |
+      *buf++ = (uint32_t)((unsigned)p[3] << 8 | p[2]) << 16 |
          ((unsigned)p[1] << 8 | p[0]);
       p += 4;
    }
@@ -73,7 +73,7 @@ resip::MD5Init(struct MD5Context *ctx)
 void
 resip::MD5Update(struct MD5Context *ctx, md5byte const *buf, unsigned len)
 {
-   u_int32_t t;
+   uint32_t t;
 
    /* Update byte count */
 
@@ -165,9 +165,9 @@ resip::MD5Final(md5byte digest[16], struct MD5Context *ctx)
  * the data and converts bytes into longwords for this routine.
  */
 void
-resip::MD5Transform(u_int32_t buf[4], u_int32_t const in[16])
+resip::MD5Transform(uint32_t buf[4], uint32_t const in[16])
 {
-   register u_int32_t a, b, c, d;
+   register uint32_t a, b, c, d;
 
    a = buf[0];
    b = buf[1];

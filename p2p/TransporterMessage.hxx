@@ -135,13 +135,13 @@ class ApplicationMessageArrived : public Event
 class LocalCandidatesCollected : public Event
 {
    public:
-      LocalCandidatesCollected(UInt64 tid, NodeId& nodeId, unsigned short appId, std::vector<Candidate> &c) : 
+      LocalCandidatesCollected(uint64_t tid, NodeId& nodeId, unsigned short appId, std::vector<Candidate> &c) : 
          mTransactionId(tid), mNodeId(nodeId), mAppId(appId), mCandidates(c) {}
       ~LocalCandidatesCollected();
 
       virtual void dispatch(EventConsumer& consumer);
 
-      const UInt64  getTransactionId() const { return mTransactionId; }
+      const uint64_t  getTransactionId() const { return mTransactionId; }
       const NodeId& getNodeId() const { return mNodeId; }
       unsigned short getAppId() const { return mAppId; }
       std::vector<Candidate>& getCandidates() { return mCandidates; }
@@ -155,7 +155,7 @@ class LocalCandidatesCollected : public Event
    protected:
 
    private:
-      UInt64 mTransactionId;
+      uint64_t mTransactionId;
       NodeId mNodeId;
       unsigned short mAppId;
       std::vector<Candidate> mCandidates;

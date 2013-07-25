@@ -13,7 +13,7 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 //====================
-// UInt32:
+// uint32_t:
 //====================
 UInt32Category::UInt32Category()
    : ParserCategory(), 
@@ -64,7 +64,7 @@ UInt32Category::clone(PoolBase* pool) const
    return new (pool) UInt32Category(*this, pool);
 }
 
-const UInt32& 
+const uint32_t& 
 UInt32Category::value() const
 {
    checkParsed(); 
@@ -78,7 +78,7 @@ UInt32Category::comment() const
    return mComment;
 }
 
-UInt32& 
+uint32_t& 
 UInt32Category::value()
 {
    checkParsed(); 

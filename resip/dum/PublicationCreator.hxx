@@ -16,7 +16,7 @@ class PublicationCreator: public BaseCreator
                          SharedPtr<UserProfile> userProfile,
                          const Contents& body, 
                          const Data& eventType, 
-                         UInt32 expireSeconds );
+                         uint32_t expireSeconds );
 };
  
 }

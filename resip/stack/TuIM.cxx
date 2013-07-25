@@ -424,7 +424,7 @@ TuIM::processSubscribeRequest(SipMessage* msg)
    // do symetric subscriptions 
    // See if this person is our buddy list and if we are not subscribed to them
 
-    UInt64 now = Timer::getTimeMs();
+    uint64_t now = Timer::getTimeMs();
     Uri from = msg->header(h_From).uri();
 
     for ( BuddyIterator i=mBuddies.begin(); i != mBuddies.end(); i++)
@@ -1103,7 +1103,7 @@ TuIM::process()
 {
    assert( mStack );
 
-   UInt64 now = Timer::getTimeMs();
+   uint64_t now = Timer::getTimeMs();
    
    // check if register needs refresh
    if ( now > mNextTimeToRegister )

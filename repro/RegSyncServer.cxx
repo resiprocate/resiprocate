@@ -153,7 +153,7 @@ RegSyncServer::handleInitialSyncRequest(unsigned int connectionId, unsigned int 
 void 
 RegSyncServer::streamContactInstanceRecord(std::stringstream& ss, const ContactInstanceRecord& rec)
 {
-    UInt64 now = Timer::getTimeSecs();
+    uint64_t now = Timer::getTimeSecs();
 
     ss << "   <contactinfo>" << Symbols::CRLF;
     ss << "      <contacturi>" << Data::from(rec.mContact.uri()).xmlCharDataEncode() << "</contacturi>" << Symbols::CRLF;

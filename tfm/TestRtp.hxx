@@ -29,19 +29,19 @@ typedef enum
 
 struct RtpHeader
 {
-   UInt8 mVersion;
-   UInt8 mPayloadType;
-   UInt16 mSequenceNumber;
-   UInt32 mTimeStamp;
-   UInt32 mSsrc;
+   uint8_t mVersion;
+   uint8_t mPayloadType;
+   uint16_t mSequenceNumber;
+   uint32_t mTimeStamp;
+   uint32_t mSsrc;
 };
 
 struct RtcpHeader
 {
-   UInt8 mVersion;
-   UInt8 mPayloadType;
-   UInt16 mSequenceNumber;
-   UInt32 mSsrc;
+   uint8_t mVersion;
+   uint8_t mPayloadType;
+   uint16_t mSequenceNumber;
+   uint32_t mSsrc;
 };
 
 struct Packet
@@ -169,7 +169,7 @@ class TestRtp : public EndPoint,
        */
       void setLocalAddr(const resip::Data& addr);
 
-      void loadStream(const resip::Data& file, UInt32 ssrc);
+      void loadStream(const resip::Data& file, uint32_t ssrc);
 
       /**
        * Set to use hold method described by RFC 2543 (settings connections to 0.0.0.0)
@@ -193,9 +193,9 @@ class TestRtp : public EndPoint,
       ActionBase* enableSending(bool enable);
 
    private:
-      bool isRtcpPacket(const resip::Data& packet, UInt32 ssrc) const;
+      bool isRtcpPacket(const resip::Data& packet, uint32_t ssrc) const;
 
-      bool isRtpPacket(const resip::Data& packet, UInt32 ssrc) const;
+      bool isRtpPacket(const resip::Data& packet, uint32_t ssrc) const;
 
       void enableSendingDelegate(bool enable);
 
@@ -215,7 +215,7 @@ class TestRtp : public EndPoint,
        */
       void overrideSsrc(resip::Data& packet);
 
-      UInt16 getSeqNo(const Packet& packet);
+      uint16_t getSeqNo(const Packet& packet);
 
       void RtpPacketInfo();
 
@@ -232,9 +232,9 @@ class TestRtp : public EndPoint,
       resip::Tuple mLocalAddrVideoRtcp;
       resip::Tuple mRemoteAddrRtp;
       resip::Tuple mRemoteAddrRtcp;
-      UInt32 mLocalSsrc;
-      UInt32 mRemoteSsrc;
-      UInt8 mRemoteCodec;
+      uint32_t mLocalSsrc;
+      uint32_t mRemoteSsrc;
+      uint8_t mRemoteCodec;
 
       PacketSenderStatistics mSenderStatistics;
       PacketReceiverStatistics mReceiverStatistics;

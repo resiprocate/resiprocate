@@ -106,7 +106,7 @@ ClientRegistration::tryModification(ClientRegistration::State state)
 }
 
 void
-ClientRegistration::addBinding(const NameAddr& contact, UInt32 registrationTime)
+ClientRegistration::addBinding(const NameAddr& contact, uint32_t registrationTime)
 {
    SharedPtr<SipMessage> next = tryModification(Adding);
    mMyContacts.push_back(contact);
@@ -273,7 +273,7 @@ ClientRegistration::stopRegistering()
 }
 
 void
-ClientRegistration::requestRefresh(UInt32 expires)
+ClientRegistration::requestRefresh(uint32_t expires)
 {
     // Set flag so that handlers get called for success/failure
     mUserRefresh = true;
@@ -281,7 +281,7 @@ ClientRegistration::requestRefresh(UInt32 expires)
 }
 
 void
-ClientRegistration::internalRequestRefresh(UInt32 expires)
+ClientRegistration::internalRequestRefresh(uint32_t expires)
 {
    if(mState == RetryAdding && mState == RetryRefreshing)
    {
@@ -320,13 +320,13 @@ ClientRegistration::allContacts()
    return mAllContacts;
 }
 
-UInt32
+uint32_t
 ClientRegistration::whenExpires() const
 {
-   UInt64 now = Timer::getTimeSecs();
+   uint64_t now = Timer::getTimeSecs();
    if(mExpires > now)
    {
-       return (UInt32)(mExpires - now);
+       return (uint32_t)(mExpires - now);
    }
    else
    {
@@ -498,8 +498,8 @@ ClientRegistration::dispatch(const SipMessage& msg)
          // !ah! take list of ctcs and push into mMy or mOther as required.
 
          // make timers to re-register
-         UInt64 nowSecs = Timer::getTimeSecs();
-         UInt32 expiry = calculateExpiry(msg);
+         uint64_t nowSecs = Timer::getTimeSecs();
+         uint32_t expiry = calculateExpiry(msg);
          mExpires = nowSecs + expiry;
          if(msg.exists(h_Contacts))
          {
@@ -606,7 +606,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
          {
             if (code == 423) // interval too short
             {
-               UInt32 maxRegistrationTime = mDialogSet.mUserProfile->getDefaultMaxRegistrationTime();
+               uint32_t maxRegistrationTime = mDialogSet.mUserProfile->getDefaultMaxRegistrationTime();
                if (msg.exists(h_MinExpires) && 
                    (maxRegistrationTime == 0 || msg.header(h_MinExpires).value() < maxRegistrationTime)) // If maxRegistrationTime is enabled, then check it
                {

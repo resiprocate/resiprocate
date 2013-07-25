@@ -123,7 +123,7 @@ class StunServer
       void sendTurnSetActiveDestinationResponse(boost::shared_ptr<StunRequestContext> request);
 
    private:
-      void sendTurnResponse(boost::shared_ptr<StunRequestContext> request, UInt16 messageType);
+      void sendTurnResponse(boost::shared_ptr<StunRequestContext> request, uint16_t messageType);
 
       bool createResponse(boost::shared_ptr<StunRequestContext> request, boost::shared_ptr<StunResponseContext> response);
 

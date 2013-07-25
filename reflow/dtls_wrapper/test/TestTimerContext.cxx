@@ -19,16 +19,16 @@ TestTimerContext::addTimer(DtlsTimer *timer, unsigned int lifetime)
       delete mTimer;
 
    mTimer=timer;
-   UInt64 timeMs=Timer::getTimeMs();
+   uint64_t timeMs=Timer::getTimeMs();
    mExpiryTime=timeMs+lifetime;
 
    cerr << "Setting a timer for " << lifetime << " ms from now" << endl;
 }
 
-UInt64
+uint64_t
 TestTimerContext::getRemainingTime()
 {
-   UInt64 timeMs=Timer::getTimeMs();
+   uint64_t timeMs=Timer::getTimeMs();
 
    if(mTimer)
    {
@@ -46,7 +46,7 @@ TestTimerContext::getRemainingTime()
 void
 TestTimerContext::updateTimer()
 {
-   UInt64 timeMs=Timer::getTimeMs();
+   uint64_t timeMs=Timer::getTimeMs();
 
    if(mTimer) 
    {

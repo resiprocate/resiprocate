@@ -375,17 +375,17 @@ Data::Data(Data &&data)
 #endif
 
 // -2147483646
-static const int IntMaxSize = 12;
+static const int Int32MaxSize = 12;
 
 Data::Data(int val)
-   : mBuf(IntMaxSize > LocalAlloc 
-          ? new char[IntMaxSize + 1]
+   : mBuf(Int32MaxSize > LocalAlloc 
+          ? new char[Int32MaxSize + 1]
           : mPreBuffer),
      mSize(0),
-     mCapacity(IntMaxSize > LocalAlloc
-               ? IntMaxSize
+     mCapacity(Int32MaxSize > LocalAlloc
+               ? Int32MaxSize
                : LocalAlloc),
-     mShareEnum(IntMaxSize > LocalAlloc ? Take : Borrow)
+     mShareEnum(Int32MaxSize > LocalAlloc ? Take : Borrow)
 {
    if (val == 0)
    {
@@ -432,16 +432,15 @@ Data::Data(int val)
    }
 }
 
-static const int MaxLongSize = (sizeof(unsigned long)/sizeof(int))*IntMaxSize;
-Data::Data(unsigned long value)
-   : mBuf(MaxLongSize > LocalAlloc 
-          ? new char[MaxLongSize + 1]
+Data::Data(uint32_t value)
+   : mBuf(Int32MaxSize > LocalAlloc 
+          ? new char[Int32MaxSize + 1]
           : mPreBuffer),
      mSize(0),
-     mCapacity(MaxLongSize > LocalAlloc
-               ? MaxLongSize
+     mCapacity(Int32MaxSize > LocalAlloc
+               ? Int32MaxSize
                : LocalAlloc),
-     mShareEnum(MaxLongSize > LocalAlloc ? Take : Borrow)
+     mShareEnum(Int32MaxSize > LocalAlloc ? Take : Borrow)
 {
    if (value == 0)
    {
@@ -452,7 +451,7 @@ Data::Data(unsigned long value)
    }
 
    int c = 0;
-   unsigned long v = value;
+   uint32_t v = value;
    while (v /= 10)
    {
       ++c;
@@ -472,6 +471,7 @@ Data::Data(unsigned long value)
 }
 
 #ifndef RESIP_FIXED_POINT
+static const int MaxLongSize = (sizeof(unsigned long)/sizeof(int))*Int32MaxSize;
 static const int DoubleMaxSize = MaxLongSize + Data::MaxDigitPrecision;
 Data::Data(double value, 
            Data::DoubleDigitPrecision precision)
@@ -560,15 +560,15 @@ Data::Data(double value,
 }
 #endif
 
-Data::Data(unsigned int value)
-   : mBuf(IntMaxSize > LocalAlloc 
-          ? new char[IntMaxSize + 1]
+/*Data::Data(unsigned int value)
+   : mBuf(Int32MaxSize > LocalAlloc 
+          ? new char[Int32MaxSize + 1]
           : mPreBuffer),
      mSize(0),
-     mCapacity(IntMaxSize > LocalAlloc
-               ? IntMaxSize
+     mCapacity(Int32MaxSize > LocalAlloc
+               ? Int32MaxSize
                : LocalAlloc),
-     mShareEnum(IntMaxSize > LocalAlloc ? Take : Borrow)
+     mShareEnum(Int32MaxSize > LocalAlloc ? Take : Borrow)
 {
    if (value == 0)
    {
@@ -596,12 +596,12 @@ Data::Data(unsigned int value)
       mBuf[c--] = '0' + d;
       v /= 10;
    }
-}
+}*/
 
 // 18446744073709551615
 static const int UInt64MaxSize = 20;
 
-Data::Data(UInt64 value)
+Data::Data(uint64_t value)
    : mBuf(UInt64MaxSize > LocalAlloc 
           ? new char[UInt64MaxSize + 1]
           : mPreBuffer),
@@ -620,7 +620,7 @@ Data::Data(UInt64 value)
    }
 
    int c = 0;
-   UInt64 v = value;
+   uint64_t v = value;
    while (v /= 10)
    {
       ++c;
@@ -632,7 +632,7 @@ Data::Data(UInt64 value)
    v = value;
    while (v)
    {
-      UInt64 digit = v%10;
+      uint64_t digit = v%10;
       unsigned char d = (char)digit;
       mBuf[c--] = '0' + d;
       v /= 10;
@@ -1669,10 +1669,10 @@ sign_char:
    return val;
 }
 
-UInt64
+uint64_t
 Data::convertUInt64() const
 {
-   UInt64 val = 0;
+   uint64_t val = 0;
    char* p = mBuf;
    const char* const end = mBuf + mSize;
 
@@ -1979,8 +1979,8 @@ Data::rawCaseInsensitiveHash(const unsigned char* c, size_t size)
 #if defined(RESIP_BIG_ENDIAN) || (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__))
 
 #if !defined (get16bits)
-#define get16bits(d) ((((UInt32)(((const UInt8 *)(d))[0])) << 8)\
-                       +(UInt32)(((const UInt8 *)(d))[1]) )
+#define get16bits(d) ((((uint32_t)(((const uint8_t *)(d))[0])) << 8)\
+                       +(uint32_t)(((const uint8_t *)(d))[1]) )
 #endif
 
 #if !defined (get32bits)
@@ -1992,18 +1992,18 @@ Data::rawCaseInsensitiveHash(const unsigned char* c, size_t size)
 #undef get16bits
 #if (defined(__GNUC__) && defined(__i386__)) || defined(__WATCOMC__) \
   || defined(_MSC_VER) || defined (__BORLANDC__) || defined (__TURBOC__)
-#define get16bits(d) (*((const UInt16 *) (d)))
+#define get16bits(d) (*((const uint16_t *) (d)))
 #endif
 
 #if !defined (get16bits)
-#define get16bits(d) ((((UInt32)(((const UInt8 *)(d))[1])) << 8)\
-                       +(UInt32)(((const UInt8 *)(d))[0]) )
+#define get16bits(d) ((((uint32_t)(((const uint8_t *)(d))[1])) << 8)\
+                       +(uint32_t)(((const uint8_t *)(d))[0]) )
 #endif
 
 #undef get32bits
 #if (defined(__GNUC__) && defined(__i386__)) || defined(__WATCOMC__) \
   || defined(_MSC_VER) || defined (__BORLANDC__) || defined (__TURBOC__)
-#define get32bits(d) (*((const UInt32 *) (d)))
+#define get32bits(d) (*((const uint32_t *) (d)))
 #endif
 
 #if !defined (get32bits)
@@ -2024,7 +2024,7 @@ Data::rawCaseInsensitiveTokenHash(const unsigned char* data, size_t len)
 {
    // .bwc. Hsieh hash, with some bitmasking to get the case-insensitive 
    // property (this is what all the "0x2020 |" business is about.)
-   UInt32 hash = len, tmp;
+   uint32_t hash = len, tmp;
    int rem;
 
     if (len <= 0 || data == NULL) return 0;
@@ -2034,8 +2034,8 @@ Data::rawCaseInsensitiveTokenHash(const unsigned char* data, size_t len)
 
     union 
     {
-          UInt32 masked;
-          UInt16 ui16[2];
+          uint32_t masked;
+          uint16_t ui16[2];
     };
 
     /* Main loop */
@@ -2044,9 +2044,9 @@ Data::rawCaseInsensitiveTokenHash(const unsigned char* data, size_t len)
         // mask out bit 6 for case-insensitivity
         masked = (0x20202020 | get32bits(data));
         hash  += ui16[0];
-        tmp    = ((UInt32)ui16[1] << 11) ^ hash;
+        tmp    = ((uint32_t)ui16[1] << 11) ^ hash;
         hash   = (hash << 16) ^ tmp;
-        data  += 2*sizeof (UInt16);
+        data  += 2*sizeof (uint16_t);
         hash  += hash >> 11;
     }
 
@@ -2055,7 +2055,7 @@ Data::rawCaseInsensitiveTokenHash(const unsigned char* data, size_t len)
     {
         case 3: hash += (0x2020 | get16bits (data));
                 hash ^= hash << 16;
-                hash ^= (0x20 | data[sizeof (UInt16)]) << 18;
+                hash ^= (0x20 | data[sizeof (uint16_t)]) << 18;
                 hash += hash >> 11;
                 break;
         case 2: hash += (0x2020 | get16bits (data));
@@ -2093,8 +2093,8 @@ Data::rawCaseInsensitiveTokenHash(const unsigned char* data, size_t len)
 //   {
 //       union
 //       {
-//         UInt32 temp;
-//         UInt8 cccc[4];
+//         uint32_t temp;
+//         uint8_t cccc[4];
 //       };
 //       // .bwc. Mask out bit 6, use a multiplication op to write the 
 //       // resulting byte to each of the 4 bytes in temp, and xor the whole 
@@ -2191,14 +2191,14 @@ Data::sizeEqualCaseInsensitiveTokenCompare(const Data& rhs) const
    compUnalignedRemainder(d1, d2, unalignedPrefix);
 
    // We are now on a 32-bit boundary with d1.
-   UInt32* wd1((UInt32*)(d1));
+   uint32_t* wd1((uint32_t*)(d1));
    size_t wordLen=(mSize-unalignedPrefix)>>2;
    int rem=(mSize-unalignedPrefix)&3;
 
    if((ptrdiff_t)(d2)%4==0)
    {
       // d2 is aligned too. Happy day!
-      UInt32* wd2((UInt32*)(d2));
+      uint32_t* wd2((uint32_t*)(d2));
       for (;wordLen > 0; wordLen--)
       {
          // bitwise xor is zero iff equal, but we only really care about bits 
@@ -2218,7 +2218,7 @@ Data::sizeEqualCaseInsensitiveTokenCompare(const Data& rhs) const
       {
          // bitwise xor is zero iff equal, but we only really care about bits 
          // other than bit 6, so we mask out bit 6 after the xor.
-         UInt32 test=get32bits(d2);
+         uint32_t test=get32bits(d2);
          if( (*wd1 ^ test) & 0xDFDFDFDF)
          {
             return false;

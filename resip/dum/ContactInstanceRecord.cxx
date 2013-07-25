@@ -44,7 +44,7 @@ ContactInstanceRecord::makeRemoveDelta(const NameAddr& contact)
 
 ContactInstanceRecord 
 ContactInstanceRecord::makeUpdateDelta(const NameAddr& contact, 
-                                       UInt64 expires,  // absolute time in secs
+                                       uint64_t expires,  // absolute time in secs
                                        const SipMessage& msg)
 {
    ContactInstanceRecord c;

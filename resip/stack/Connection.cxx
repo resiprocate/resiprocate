@@ -132,9 +132,9 @@ Connection::performWrite()
    {
       SendData *dataWs, *oldSd;
       const Data& dataRaw = mOutstandingSends.front()->data;
-      UInt64 dataSize = 1 + 1 + dataRaw.size();
-      UInt64 lSize = (UInt64)dataRaw.size();
-      UInt8* uBuffer;
+      uint64_t dataSize = 1 + 1 + dataRaw.size();
+      uint64_t lSize = (uint64_t)dataRaw.size();
+      uint8_t* uBuffer;
 
       if(lSize > 0x7D && lSize <= 0xFFFF)
       {
@@ -152,11 +152,11 @@ Connection::performWrite()
             oldSd->sigcompId,
             false);
       assert(dataWs && dataWs->data.data());
-      uBuffer = (UInt8*)dataWs->data.data();
+      uBuffer = (uint8_t*)dataWs->data.data();
 
       uBuffer[0] = 0x82;
       if(lSize <= 0x7D){
-         uBuffer[1] = (UInt8)lSize;
+         uBuffer[1] = (uint8_t)lSize;
          uBuffer = &uBuffer[2];
       }
       else if(lSize <= 0xFFFF){

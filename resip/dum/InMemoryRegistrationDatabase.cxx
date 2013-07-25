@@ -211,7 +211,7 @@ InMemoryRegistrationDatabase::getContacts(const Uri& aor, ContactList& container
 class RemoveIfExpired
 {
 protected:
-    UInt64 now;
+    uint64_t now;
 public:
     RemoveIfExpired()
     {

@@ -81,7 +81,7 @@ int main(int argc,char **argv)
       fdset.setRead(0);
 #endif
 
-      UInt64 towait=ourTimer->getRemainingTime();
+      uint64_t towait=ourTimer->getRemainingTime();
 
       // cerr << "Invoking select for time " << towait << endl;
 

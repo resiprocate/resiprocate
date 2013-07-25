@@ -162,7 +162,7 @@ asio::error_code
 TurnSocket::createAllocation(unsigned int lifetime,
                              unsigned int bandwidth,
                              unsigned char requestedProps, 
-                             UInt64 reservationToken,
+                             uint64_t reservationToken,
                              StunTuple::TransportType requestedTransportType)
 {
    asio::error_code errorCode;
@@ -552,7 +552,7 @@ TurnSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size
       }
       else
       {
-         UInt16 turnDataSize = size;
+         uint16_t turnDataSize = size;
          turnDataSize = htons(turnDataSize);
          memcpy((void*)&framing[2], &turnDataSize, 2);
       }
@@ -646,7 +646,7 @@ TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, asio
             RemotePeer* remotePeer = mChannelManager.findRemotePeerByChannel(channelNumber);
             if(remotePeer)
             {
-               UInt16 dataLen;
+               uint16_t dataLen;
                memcpy(&dataLen, &mReadBuffer[2], 2);
                dataLen = ntohs(dataLen);
    

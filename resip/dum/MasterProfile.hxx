@@ -124,18 +124,18 @@ class MasterProfile : public UserProfile
       /// is less than this time, then dum will reject the message with a 423 and set the
       /// min-expires header to the value specified here.
       ///
-      virtual UInt32& serverRegistrationMinExpiresTime(void);
-      virtual const UInt32 serverRegistrationMinExpiresTime(void) const;
+      virtual uint32_t& serverRegistrationMinExpiresTime(void);
+      virtual const uint32_t serverRegistrationMinExpiresTime(void) const;
 
       ///
       /// If an inbound REGISTER has an Expires header or any individual contact bindings with expires greater
       /// than this value, use this Max expires instead of the one given by the client.
-      virtual UInt32& serverRegistrationMaxExpiresTime(void);
-      virtual const UInt32 serverRegistrationMaxExpiresTime(void) const;
+      virtual uint32_t& serverRegistrationMaxExpiresTime(void);
+      virtual const uint32_t serverRegistrationMaxExpiresTime(void) const;
 
       /// If no Expires header or individual contact bindings specify an expiration value, use this value.
-      virtual UInt32& serverRegistrationDefaultExpiresTime(void);
-      virtual const UInt32 serverRegistrationDefaultExpiresTime(void) const;
+      virtual uint32_t& serverRegistrationDefaultExpiresTime(void);
+      virtual const uint32_t serverRegistrationDefaultExpiresTime(void) const;
 
       ///Set this to include the RequestURI in merge request detection.
       ///*!*!*!*!*!*! RED FLASHING LIGHT *!*!*!*!*!*! 
@@ -170,9 +170,9 @@ class MasterProfile : public UserProfile
       bool mCheckReqUriInMergeDetectionEnabled;
       ReliableProvisionalMode mUacReliableProvisionalMode;
       ReliableProvisionalMode mUasReliableProvisionalMode;
-      UInt32 mServerRegistrationMinExpires;
-      UInt32 mServerRegistrationMaxExpires;
-      UInt32 mServerRegistrationDefaultExpires;
+      uint32_t mServerRegistrationMinExpires;
+      uint32_t mServerRegistrationMaxExpires;
+      uint32_t mServerRegistrationDefaultExpires;
 };
    
 }

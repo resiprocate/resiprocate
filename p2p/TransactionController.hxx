@@ -38,7 +38,7 @@ class TransactionController
       resip::Fifo<TransactionMessage> mStateMacFifo;
 
       // stores all of the transactions that are currently active in this stack 
-      typedef std::map<UInt64, TransactionState*> TransactionMap;
+      typedef std::map<uint64_t, TransactionState*> TransactionMap;
       TransactionMap mClientTransactionMap;  // used to send retransmission
       TransactionMap mServerTransactionMap;  // used to absorb retransmissions
 

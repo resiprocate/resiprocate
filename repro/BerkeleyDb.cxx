@@ -298,8 +298,8 @@ BerkeleyDb::dbWriteRecord(const Table table,
                           const resip::Data& pKey, 
                           const resip::Data& pData )
 {
-   Dbt key((void*)pKey.data(), (::u_int32_t)pKey.size());
-   Dbt data((void*)pData.data(), (::u_int32_t)pData.size());
+   Dbt key((void*)pKey.data(), (uint32_t)pKey.size());
+   Dbt data((void*)pData.data(), (uint32_t)pData.size());
    int ret;
    
    assert(mTableInfo[table].mDb);
@@ -323,7 +323,7 @@ BerkeleyDb::dbReadRecord(const Table table,
                          const resip::Data& pKey, 
                          resip::Data& pData) const
 { 
-   Dbt key((void*)pKey.data(), (::u_int32_t)pKey.size());
+   Dbt key((void*)pKey.data(), (uint32_t)pKey.size());
    Dbt data;
    data.set_flags(DB_DBT_MALLOC);  // required for DB_THREAD flag use
 
@@ -363,7 +363,7 @@ BerkeleyDb::dbEraseRecord(const Table table,
                           const resip::Data& pKey,
                           bool isSecondaryKey) // allows deleting records from a table that supports secondary keying using a secondary key
 { 
-   Dbt key((void*) pKey.data(), (::u_int32_t)pKey.size());
+   Dbt key((void*) pKey.data(), (uint32_t)pKey.size());
 
    Db* db = mTableInfo[table].mDb;
    if(isSecondaryKey && mTableInfo[table].mSecondaryDb)
@@ -411,7 +411,7 @@ BerkeleyDb::dbNextRecord(const Table table,
                          bool forUpdate,  // specifies to use DB_RMW flag to write lock reads
                          bool first)
 {
-   Dbt dbkey((void*) key.data(), (::u_int32_t)key.size());
+   Dbt dbkey((void*) key.data(), (uint32_t)key.size());
    Dbt dbdata;
    int ret;
 

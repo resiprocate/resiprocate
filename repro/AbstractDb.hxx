@@ -89,7 +89,7 @@ class AbstractDb
          public:
             resip::Data mDestUri;
             resip::Data mSourceUri;
-            UInt64 mOriginalSentTime;
+            uint64_t mOriginalSentTime;
             resip::Data mTid;
             resip::Data mMimeType;
             resip::Data mMessageBody;
@@ -157,7 +157,7 @@ class AbstractDb
       virtual bool addToSilo(const Key& key, const SiloRecord& rec);
       virtual bool getSiloRecords(const Key& skey, SiloRecordList& recordList); 
       virtual void eraseSiloRecord(const Key& key);
-      virtual void cleanupExpiredSiloRecords(UInt64 now, unsigned long expirationTime);
+      virtual void cleanupExpiredSiloRecords(uint64_t now, unsigned long expirationTime);
 
    protected:
       typedef enum 

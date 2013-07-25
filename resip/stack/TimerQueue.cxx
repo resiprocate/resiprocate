@@ -42,7 +42,7 @@ DtlsTimerQueue::~DtlsTimerQueue()
 
 #endif
 
-UInt64
+uint64_t
 TransactionTimerQueue::add(Timer::Type type, const Data& transactionId, unsigned long msOffset)
 {
    TransactionTimer t(msOffset, type, transactionId);
@@ -53,7 +53,7 @@ TransactionTimerQueue::add(Timer::Type type, const Data& transactionId, unsigned
 
 #ifdef USE_DTLS
 
-UInt64
+uint64_t
 DtlsTimerQueue::add( SSL *ssl, unsigned long msOffset )
 {
    TimerWithPayload t( msOffset, new DtlsMessage( ssl ) ) ;
@@ -72,7 +72,7 @@ BaseTimeLimitTimerQueue::~BaseTimeLimitTimerQueue()
    }
 }
 
-UInt64
+uint64_t
 BaseTimeLimitTimerQueue::add(unsigned int timeMs,Message* payload)
 {
    assert(payload);
@@ -117,7 +117,7 @@ TuSelectorTimerQueue::~TuSelectorTimerQueue()
    }
 }
 
-UInt64
+uint64_t
 TuSelectorTimerQueue::add(unsigned int timeMs,Message* payload)
 {
    assert(payload);

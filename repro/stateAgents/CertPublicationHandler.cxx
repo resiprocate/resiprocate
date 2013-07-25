@@ -16,7 +16,7 @@ CertPublicationHandler::onInitial(ServerPublicationHandle h,
                                   const SipMessage& pub, 
                                   const Contents* contents,
                                   const SecurityAttributes* attrs, 
-                                  UInt32 expires)
+                                  uint32_t expires)
 {
    add(h, contents);
 }
@@ -33,7 +33,7 @@ CertPublicationHandler::onRefresh(ServerPublicationHandle,
                                   const SipMessage& pub, 
                                   const Contents* contents,
                                   const SecurityAttributes* attrs,
-                                  UInt32 expires)
+                                  uint32_t expires)
 {
 }
 
@@ -43,13 +43,13 @@ CertPublicationHandler::onUpdate(ServerPublicationHandle h,
                                  const SipMessage& pub, 
                                  const Contents* contents,
                                  const SecurityAttributes* attrs,
-                                 UInt32 expires)
+                                 uint32_t expires)
 {
    add(h, contents);
 }
 
 void 
-CertPublicationHandler::onRemoved(ServerPublicationHandle h, const Data& etag, const SipMessage& pub, UInt32 expires)
+CertPublicationHandler::onRemoved(ServerPublicationHandle h, const Data& etag, const SipMessage& pub, uint32_t expires)
 {
    mSecurity.removeUserCert(h->getPublisher());
 }

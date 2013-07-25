@@ -552,7 +552,7 @@ ChordTopology::attach(const NodeId &attachTo)
 }
 
 void
-ChordTopology::startCandidateCollection(const UInt64 tid, const NodeId &attachTo)
+ChordTopology::startCandidateCollection(const uint64_t tid, const NodeId &attachTo)
 {
    DebugLog(<< "Starting candidate collection");
    
@@ -561,7 +561,7 @@ ChordTopology::startCandidateCollection(const UInt64 tid, const NodeId &attachTo
 
 
 void 
-ChordTopology::candidatesCollected(UInt64 tid,
+ChordTopology::candidatesCollected(uint64_t tid,
                                    const NodeId& node, unsigned short appId, std::vector<Candidate>& candidates)
 {
    

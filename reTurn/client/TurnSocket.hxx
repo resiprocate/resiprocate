@@ -48,7 +48,7 @@ public:
    asio::error_code createAllocation(unsigned int lifetime = UnspecifiedLifetime,
                                      unsigned int bandwidth = UnspecifiedBandwidth,
                                      unsigned char requestedProps = StunMessage::PropsNone, 
-                                     UInt64 reservationToken = UnspecifiedToken,
+                                     uint64_t reservationToken = UnspecifiedToken,
                                      StunTuple::TransportType requestedTransportType = StunTuple::None);
    asio::error_code refreshAllocation();
    asio::error_code destroyAllocation();
@@ -92,7 +92,7 @@ protected:
    unsigned int mRequestedLifetime;
    unsigned int mRequestedBandwidth;
    unsigned char mRequestedProps;
-   UInt64 mReservationToken;
+   uint64_t mReservationToken;
    StunTuple::TransportType mRequestedTransportType;
 
    // Turn Allocation Properties from response

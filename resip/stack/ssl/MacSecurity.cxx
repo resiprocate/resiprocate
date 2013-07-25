@@ -148,7 +148,7 @@ MacSecurity::getCerts()
       if (status == noErr)
       {        
          void *data;
-         UInt32 dataSize;
+         uint32_t dataSize;
          status = ::SecKeychainItemCopyAttributesAndData(
             itemRef,
             NULL,

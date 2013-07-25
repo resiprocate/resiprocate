@@ -28,7 +28,7 @@ DataBuffer::~DataBuffer()
 {}
 
 #ifndef RESIP_USE_STL_STREAMS
-UInt64 DataBuffer::tellpbuf(void)
+uint64_t DataBuffer::tellpbuf(void)
 { 
    return mStr.size(); 
 }

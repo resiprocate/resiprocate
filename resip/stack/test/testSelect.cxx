@@ -29,9 +29,9 @@ main(int argc, char* argv[])
    
  #define NUMCYCLES 50
    
-   UInt64 time1[NUMCYCLES];
-   UInt64 time2[NUMCYCLES];
-   UInt64 time3[NUMCYCLES];
+   uint64_t time1[NUMCYCLES];
+   uint64_t time2[NUMCYCLES];
+   uint64_t time3[NUMCYCLES];
    
    // open the fd 
    for( int port=startPort; port<endPort; port++)

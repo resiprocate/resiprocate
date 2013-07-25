@@ -16,7 +16,7 @@ class ServerSubscription : public BaseSubscription
       ServerSubscriptionHandle getHandle();
 
       const Data& getSubscriber() const { return mSubscriber; }
-      UInt32 getTimeLeft();
+      uint32_t getTimeLeft();
      
       //only 200 and 202 are permissable.  SubscriptionState is not affected.
       //currently must be called for a refresh as well as initial creation.
@@ -68,12 +68,12 @@ class ServerSubscription : public BaseSubscription
 //      const Contents* mCurrentEventDocument;
       SipMessage mLastSubscribe;
 
-      UInt32 mExpires;
+      uint32_t mExpires;
 
       // disabled
       ServerSubscription(const ServerSubscription&);
       ServerSubscription& operator=(const ServerSubscription&);
-      UInt64 mAbsoluteExpiry;      
+      uint64_t mAbsoluteExpiry;      
 };
  
 }

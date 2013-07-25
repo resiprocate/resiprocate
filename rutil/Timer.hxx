@@ -62,32 +62,32 @@ class Timer
 
       /** Returns the current clock time in microseconds.
       */
-      static UInt64 getTimeMicroSec()
+      static uint64_t getTimeMicroSec()
       {
          return ResipClock::getTimeMicroSec();
       }
       /** Returns the current clock time in milliseconds.
       */
-      static UInt64 getTimeMs()
+      static uint64_t getTimeMs()
       {
          return ResipClock::getTimeMs();
       }
       /** Returns the current clock time in seconds.
       */
-      static UInt64 getTimeSecs()
+      static uint64_t getTimeSecs()
       {
          return ResipClock::getTimeSecs();
       }
       /** Returns an absolute time in ms that is between 50% and 90% of
           passed in ms from now.
       */
-      static UInt64 getRandomFutureTimeMs(UInt64 futureMs)
+      static uint64_t getRandomFutureTimeMs(uint64_t futureMs)
       {
          return ResipClock::getRandomFutureTimeMs(futureMs);
       }
       /** Infinit time in future.
       */
-      static UInt64 getForever()
+      static uint64_t getForever()
       {
          return ResipClock::getForever();
       }
@@ -132,7 +132,7 @@ class Timer
 // {
 //    // blah blah blah
 //    private:
-//       UInt64 mTimestamp;
+//       uint64_t mTimestamp;
 //       Payload mPayload;
 // };
 class TransactionTimer
@@ -150,7 +150,7 @@ class TransactionTimer
       Timer::Type getType() const { return mType; }
       unsigned long getDuration() const { return mDuration;} 
 
-      UInt64 getWhen() const {return mWhen;}
+      uint64_t getWhen() const {return mWhen;}
 #ifndef RESIP_USE_STL_STREAMS
       EncodeStream& encode(EncodeStream& str) const;
 #endif
@@ -167,7 +167,7 @@ class TransactionTimer
       }
 
    protected:
-      UInt64 mWhen;
+      uint64_t mWhen;
       Timer::Type mType;
       Data mTransactionId;
       unsigned long mDuration; // duration of time in ms 
@@ -188,7 +188,7 @@ class TimerWithPayload
       // return the message to queue, possibly null
       Message* getMessage() const { return mMessage; }
 
-      UInt64 getWhen() const {return mWhen;}
+      uint64_t getWhen() const {return mWhen;}
 #ifndef RESIP_USE_STL_STREAMS
       EncodeStream& encode(EncodeStream& str) const;
 #endif
@@ -205,7 +205,7 @@ class TimerWithPayload
       }
 
    protected:
-      UInt64 mWhen;
+      uint64_t mWhen;
       Message* mMessage; // message to queue on timeout
 
    private:

@@ -70,7 +70,7 @@ main(int argc, char* argv[])
    StackThread sthread(receiver);
    sthread.run();
    
-   UInt64 startTime = Timer::getTimeMs();
+   uint64_t startTime = Timer::getTimeMs();
    int outstanding=0;
    int sent = 0;
 
@@ -125,7 +125,7 @@ main(int argc, char* argv[])
 
    InfoLog (<< "Finished " << count << " runs");
    
-   UInt64 elapsed = Timer::getTimeMs() - startTime;
+   uint64_t elapsed = Timer::getTimeMs() - startTime;
    if (!invite)
    {
       cout << runs << " registrations peformed in " << elapsed << " ms, a rate of " 

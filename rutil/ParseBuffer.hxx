@@ -240,11 +240,11 @@ class ParseBuffer
       int integer();
 
       
-      UInt8 uInt8();
-      UInt32 uInt32();
-      UInt64 uInt64();
+      uint8_t uInt8();
+      uint32_t uInt32();
+      uint64_t uInt64();
 
-      RESIP_DEPRECATED(UInt64 unsignedLongLong()){return uInt64();} 
+      RESIP_DEPRECATED(uint64_t unsignedLongLong()){return uInt64();} 
       RESIP_DEPRECATED(unsigned long unsignedInteger()){return uInt32();}
 
 #ifndef RESIP_FIXED_POINT		

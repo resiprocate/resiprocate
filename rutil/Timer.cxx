@@ -122,7 +122,7 @@ TransactionTimer::TransactionTimer(unsigned long ms,
 std::ostream& 
 TransactionTimer::encode(std::ostream& str) const
 {
-   UInt64 now(Timer::getTimeMs());
+   uint64_t now(Timer::getTimeMs());
    str << "TransactionTimer[ when=" << mWhen << " rel=";
    if (mWhen < now)
    {
@@ -140,7 +140,7 @@ TransactionTimer::encode(std::ostream& str) const
 EncodeStream& 
 TransactionTimer::encode(EncodeStream& str) const
 {
-   UInt64 now(Timer::getTimeMs());
+   uint64_t now(Timer::getTimeMs());
    str << "TransactionTimer[ when=" << mWhen << " rel=";
    if (mWhen < now)
    {
@@ -165,7 +165,7 @@ TimerWithPayload::TimerWithPayload(unsigned long ms, Message* message) :
 std::ostream& 
 TimerWithPayload::encode(std::ostream& str) const
 {
-   UInt64 now(Timer::getTimeMs());
+   uint64_t now(Timer::getTimeMs());
    str << "TimerWithPayload[ when=" << mWhen << " rel=";
    if (mWhen < now)
    {
@@ -183,7 +183,7 @@ TimerWithPayload::encode(std::ostream& str) const
 EncodeStream& 
 TimerWithPayload::encode(EncodeStream& str) const
 {
-   UInt64 now(Timer::getTimeMs());
+   uint64_t now(Timer::getTimeMs());
    str << "TimerWithPayload[ when=" << mWhen << " rel=";
    if (mWhen < now)
    {

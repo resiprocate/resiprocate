@@ -12,7 +12,7 @@ using namespace resip;
 RegistrationCreator::RegistrationCreator(DialogUsageManager& dum, 
                                          const NameAddr& target, 
                                          SharedPtr<UserProfile> userProfile, 
-                                         UInt32 registrationTime)
+                                         uint32_t registrationTime)
    : BaseCreator(dum, userProfile)
 {
    makeInitialRequest(target, target, REGISTER);

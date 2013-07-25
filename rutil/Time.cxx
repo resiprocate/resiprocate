@@ -74,7 +74,7 @@ ResipClock::WinMonoClock::Initialize(void)
 
 #define IS_ALIGNED(_pointer, _alignment) ((((ULONG_PTR) (_pointer)) & ((_alignment) - 1)) == 0)
 
-UInt64 ResipClock::WinMonoClock::GTCInterlocked::GTC64(void)
+uint64_t ResipClock::WinMonoClock::GTCInterlocked::GTC64(void)
 {
 #if defined(_MSC_VER) && (_MSC_VER >= 1400) //no atomic intrinsics on Visual Studio 2003 and below
    ULARGE_INTEGER timeVal;
@@ -117,9 +117,9 @@ UInt64 ResipClock::WinMonoClock::GTCInterlocked::GTC64(void)
 #endif //#if (_MSC_VER >= 1400) //no atomic intrinsics on Visual Studio 2003 and below
 }
 
-volatile UInt64 ResipClock::WinMonoClock::GTCInterlocked::mBaseTime = 0;
+volatile uint64_t ResipClock::WinMonoClock::GTCInterlocked::mBaseTime = 0;
 
-UInt64
+uint64_t
 ResipClock::WinMonoClock::GTCLock::GTC64(void)
 {
    Lock lock(mMutex);
@@ -137,7 +137,7 @@ ResipClock::WinMonoClock::GTCLock::GTC64(void)
 ULARGE_INTEGER ResipClock::WinMonoClock::GTCLock::mBaseTime = {0,0};
 Mutex ResipClock::WinMonoClock::GTCLock::mMutex;
 
-UInt64 ResipClock::WinMonoClock::GTCLockDuringRange::GTC64(void)
+uint64_t ResipClock::WinMonoClock::GTCLockDuringRange::GTC64(void)
 {
    // we assume that this function is called reasonable often
    // monitor wrap around only in dangerous time range:
@@ -152,7 +152,7 @@ UInt64 ResipClock::WinMonoClock::GTCLockDuringRange::GTC64(void)
       LARGE_INTEGER ret;
       ret.HighPart = mWrapCounter;
       ret.LowPart = tick;
-      return (UInt64)ret.QuadPart;
+      return (uint64_t)ret.QuadPart;
    }
    // most application will never be here - only long running servers
    Lock lock(mWrapCounterMutex);
@@ -164,18 +164,18 @@ UInt64 ResipClock::WinMonoClock::GTCLockDuringRange::GTC64(void)
    LARGE_INTEGER ret;
    ret.HighPart = mWrapCounter;
    ret.LowPart = tick;
-   return (UInt64)ret.QuadPart;
+   return (uint64_t)ret.QuadPart;
 }
 
-UInt32   ResipClock::WinMonoClock::GTCLockDuringRange::mWrapCounter = 0;
+uint32_t   ResipClock::WinMonoClock::GTCLockDuringRange::mWrapCounter = 0;
 DWORD    ResipClock::WinMonoClock::GTCLockDuringRange::mPrevTick = 0;
 Mutex    ResipClock::WinMonoClock::GTCLockDuringRange::mWrapCounterMutex;
 #endif
 
-UInt64
+uint64_t
 ResipClock::getSystemTime()
 {
-   assert(sizeof(UInt64) == 64/8);
+   assert(sizeof(uint64_t) == 64/8);
 
 #if defined(WIN32) || defined(UNDER_CE)
 #ifdef _RESIP_MONOTONIC_CLOCK
@@ -201,7 +201,7 @@ ResipClock::getSystemTime()
 
 #else //#if defined(WIN32) || defined(UNDER_CE)
 
-   UInt64 time=0;
+   uint64_t time=0;
 #ifdef _RESIP_MONOTONIC_CLOCK
    struct timespec now_monotonic;
    if (clock_gettime( CLOCK_MONOTONIC, &now_monotonic ) == 0)
@@ -223,10 +223,10 @@ ResipClock::getSystemTime()
 #endif
 }
 
-UInt64
+uint64_t
 ResipClock::getForever()
 {
-   assert( sizeof(UInt64) == 8 );
+   assert( sizeof(uint64_t) == 8 );
 #if defined(WIN32) && !defined(__GNUC__)
    return 18446744073709551615ui64;
 #else
@@ -234,16 +234,16 @@ ResipClock::getForever()
 #endif
 }
 
-UInt64
-ResipClock::getRandomFutureTimeMs( UInt64 futureMs )
+uint64_t
+ResipClock::getRandomFutureTimeMs( uint64_t futureMs )
 {
-   UInt64 now = getTimeMs();
+   uint64_t now = getTimeMs();
 
    // make r a random number between 5000 and 9000
    int r = Random::getRandom()%4000;
    r += 5000;
 
-   UInt64 ret = now;
+   uint64_t ret = now;
    ret += (futureMs*r)/10000;
 
    assert( ret >= now );

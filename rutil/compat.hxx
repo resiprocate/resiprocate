@@ -20,6 +20,33 @@
 //#include <sys/int_types.h>
 //#endif
 
+#ifndef __cplusplus
+#error Expecting __cplusplus (mandatory in for all C++ compilers)
+#endif
+
+#if __cplusplus >= 201103L
+#include <cstdint>
+using std::uint8_t;
+using std::uint8_t;
+using std::uint32_t;
+using std::uint64_t;
+#elif defined(HAVE_STDINT_H)
+#include <stdint.h>
+#elif defined(TARGET_OS_MAC) || defined(TARGET_OS_IPHONE)
+typedef UInt8 uint8_t;
+typedef UInt16 uint16_t;
+typedef UInt32 uint32_t;
+typedef unsigned long long uint64_t;
+#elif defined(__QNX__) || defined(__sun)
+typedef unsigned int uint32_t;
+typedef unsigned long long uint64_t;
+#elif defined(WIN32)
+typedef unsigned int uint32_t;
+typedef unsigned __int64 uint64_t;
+#else
+#error Failed to find or typedef fixed-size types, please add your platform to rutil/compat.hxx
+#endif
+
 #include <cstring>
 
 #ifndef WIN32
@@ -109,10 +136,6 @@ namespace resip
 #endif
 #endif
 
-#if defined(__QNX__) || defined(__sun) || defined(WIN32)
-  typedef unsigned int u_int32_t;
-#endif
-
 template<typename _Tp>
 inline const _Tp&
 resipMin(const _Tp& __a, const _Tp& __b)
@@ -141,21 +164,6 @@ resipIntDiv(const _Tp1& __a, const _Tp2& __b)
 }
 
 }
-
-// Mac OS X: UInt32 definition conflicts with the Mac OS or iPhone OS SDK.
-// If you've included either SDK then these will be defined.
-#if !defined(TARGET_OS_MAC) && !defined(TARGET_OS_IPHONE)
-typedef unsigned char  UInt8;
-typedef unsigned short UInt16;
-typedef unsigned int   UInt32;
-#endif
-
-#if defined( WIN32 )
-  typedef unsigned __int64 UInt64;
-#else
-  typedef unsigned long long UInt64;
-#endif
-//typedef struct { unsigned char octet[16]; }  UInt128;
 
 //template "levels; ie REASONABLE and COMPLETE
 //reasonable allows most things such as partial template specialization,

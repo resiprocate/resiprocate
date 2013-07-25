@@ -216,13 +216,13 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       
       SharedPtr<SipMessage> makeSubscription(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Data& eventType, AppDialogSet* = 0);
       SharedPtr<SipMessage> makeSubscription(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Data& eventType, 
-                                             UInt32 subscriptionTime, AppDialogSet* = 0);
+                                             uint32_t subscriptionTime, AppDialogSet* = 0);
       SharedPtr<SipMessage> makeSubscription(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Data& eventType, 
-                                             UInt32 subscriptionTime, int refreshInterval, AppDialogSet* = 0);
+                                             uint32_t subscriptionTime, int refreshInterval, AppDialogSet* = 0);
       SharedPtr<SipMessage> makeSubscription(const NameAddr& target, const Data& eventType, AppDialogSet* = 0);
-      SharedPtr<SipMessage> makeSubscription(const NameAddr& target, const Data& eventType, UInt32 subscriptionTime, AppDialogSet* = 0);
+      SharedPtr<SipMessage> makeSubscription(const NameAddr& target, const Data& eventType, uint32_t subscriptionTime, AppDialogSet* = 0);
       SharedPtr<SipMessage> makeSubscription(const NameAddr& target, const Data& eventType, 
-                                             UInt32 subscriptionTime, int refreshInterval, AppDialogSet* = 0);
+                                             uint32_t subscriptionTime, int refreshInterval, AppDialogSet* = 0);
 
       //unsolicited refer
       SharedPtr<SipMessage> makeRefer(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const H_ReferTo::Type& referTo, AppDialogSet* = 0);
@@ -232,18 +232,18 @@ class DialogUsageManager : public HandleManager, public TransactionUser
                                             const SharedPtr<UserProfile>& userProfile, 
                                             const Contents& body, 
                                             const Data& eventType, 
-                                            UInt32 expiresSeconds, 
+                                            uint32_t expiresSeconds, 
                                             AppDialogSet* = 0);
       SharedPtr<SipMessage> makePublication(const NameAddr& target, 
                                             const Contents& body, 
                                             const Data& eventType, 
-                                            UInt32 expiresSeconds, 
+                                            uint32_t expiresSeconds, 
                                             AppDialogSet* = 0);
 
       SharedPtr<SipMessage> makeRegistration(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, AppDialogSet* = 0);
-      SharedPtr<SipMessage> makeRegistration(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, UInt32 registrationTime, AppDialogSet* = 0);
+      SharedPtr<SipMessage> makeRegistration(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, uint32_t registrationTime, AppDialogSet* = 0);
       SharedPtr<SipMessage> makeRegistration(const NameAddr& target, AppDialogSet* = 0);
-      SharedPtr<SipMessage> makeRegistration(const NameAddr& target, UInt32 registrationTime, AppDialogSet* = 0);
+      SharedPtr<SipMessage> makeRegistration(const NameAddr& target, uint32_t registrationTime, AppDialogSet* = 0);
 
       SharedPtr<SipMessage> makeOutOfDialogRequest(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const MethodTypes meth, AppDialogSet* = 0);
       SharedPtr<SipMessage> makeOutOfDialogRequest(const NameAddr& target, const MethodTypes meth, AppDialogSet* = 0);

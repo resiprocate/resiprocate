@@ -147,7 +147,7 @@ class Dialog
       CallID mCallId;
       
       // used to capture the 2xx expiration value for the initial subscription response
-      UInt32 mDefaultSubExpiration;
+      uint32_t mDefaultSubExpiration;
 
       // store until we get a response (non-401/407)
       // !jf! this shouldn't be necessary

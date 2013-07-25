@@ -8,7 +8,7 @@
 namespace resip
 {
 GeneralCongestionManager::GeneralCongestionManager(MetricType defaultMetric,
-                                                   UInt32 defaultMaxTolerance) :
+                                                   uint32_t defaultMaxTolerance) :
    mDefaultMetric(defaultMetric),
    mDefaultMaxTolerance(defaultMaxTolerance)
 {
@@ -24,14 +24,14 @@ GeneralCongestionManager::~GeneralCongestionManager()
 void
 GeneralCongestionManager::registerFifo(resip::FifoStatsInterface* fifo,
                                        MetricType metric,
-                                       UInt32 maxTolerance)
+                                       uint32_t maxTolerance)
 {
    FifoInfo info;
    info.fifo=fifo;
    info.metric=metric;
    info.maxTolerance=maxTolerance;
    mFifos.push_back(info);
-   fifo->setRole((UInt8)mFifos.size()-1);
+   fifo->setRole((uint8_t)mFifos.size()-1);
 }
 
 void 
@@ -47,7 +47,7 @@ bool
 GeneralCongestionManager::updateFifoTolerances(
                                           const resip::Data& fifoDescription,
                                           MetricType metric,
-                                          UInt32 maxTolerance )
+                                          uint32_t maxTolerance )
 {
    for(std::vector<FifoInfo>::iterator i=mFifos.begin(); i!=mFifos.end(); ++i)
    {
@@ -68,7 +68,7 @@ GeneralCongestionManager::getRejectionBehavior(const FifoStatsInterface *fifo) c
    // !bwc! We need to also keep an eye on memory usage, and push back if it 
    // looks like we're going to start hitting swap sometime soon.
 
-   UInt16 percent=getCongestionPercent(fifo);
+   uint16_t percent=getCongestionPercent(fifo);
 
    // .bwc. We exit this sooner the more congested we are.
    if(percent > mRejectionThresholds[REJECTING_NON_ESSENTIAL])
@@ -120,7 +120,7 @@ GeneralCongestionManager::encodeCurrentState(EncodeStream& strm) const
    return strm;
 }
 
-UInt16
+uint16_t
 GeneralCongestionManager::getCongestionPercent(const FifoStatsInterface* fifo) const
 {
    if(fifo->getRole() >= mFifos.size())
@@ -134,11 +134,11 @@ GeneralCongestionManager::getCongestionPercent(const FifoStatsInterface* fifo) c
    switch(info.metric)
    {
       case SIZE:
-         return resipIntDiv(100*(UInt16)fifo->getCountDepth(),info.maxTolerance);
+         return resipIntDiv(100*(uint16_t)fifo->getCountDepth(),info.maxTolerance);
       case TIME_DEPTH:
-         return resipIntDiv(100*(UInt32)(fifo->getTimeDepth()),info.maxTolerance);
+         return resipIntDiv(100*(uint32_t)(fifo->getTimeDepth()),info.maxTolerance);
       case WAIT_TIME:
-         return resipIntDiv(100*(UInt32)(fifo->expectedWaitTimeMilliSec()),info.maxTolerance);
+         return resipIntDiv(100*(uint32_t)(fifo->expectedWaitTimeMilliSec()),info.maxTolerance);
       default:
          assert(0);
          return 0;

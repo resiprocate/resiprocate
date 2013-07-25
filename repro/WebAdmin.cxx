@@ -1710,13 +1710,13 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
          mRegDb.getContacts(uri, contacts);
          
          bool first = true;
-         UInt64 now = Timer::getTimeSecs();
+         uint64_t now = Timer::getTimeSecs();
          for (ContactList::iterator i = contacts.begin();
               i != contacts.end(); ++i )
          {
             if(i->mRegExpires > now)
             {
-               UInt64 secondsRemaining = i->mRegExpires - now;
+               uint64_t secondsRemaining = i->mRegExpires - now;
 
                s << "<tr>" << endl
                  << "  <td>" ;

@@ -228,8 +228,8 @@ ServerRegistration::processRegistration(const SipMessage& msg)
 
    enum {ADD, REMOVE, REFRESH} operation = REFRESH;
 
-   UInt32 globalExpires=3600;
-   UInt32 returnCode=0;
+   uint32_t globalExpires=3600;
+   uint32_t returnCode=0;
    handler->getGlobalExpires(msg,mDum.getMasterProfile(),globalExpires,returnCode);
 
    bool async = handler->asyncProcessing();
@@ -271,8 +271,8 @@ ServerRegistration::processRegistration(const SipMessage& msg)
    ParserContainer<NameAddr> contactList(msg.header(h_Contacts));
    ParserContainer<NameAddr>::iterator i(contactList.begin());
    ParserContainer<NameAddr>::iterator iEnd(contactList.end());
-   UInt64 now=Timer::getTimeSecs();
-   UInt32 expires=0;
+   uint64_t now=Timer::getTimeSecs();
+   uint32_t expires=0;
 
    for (; i != iEnd; ++i)
    {
@@ -325,7 +325,7 @@ ServerRegistration::processRegistration(const SipMessage& msg)
 
       ContactInstanceRecord rec;
       rec.mContact=*i;
-      rec.mRegExpires=(UInt64)expires+now;
+      rec.mRegExpires=(uint64_t)expires+now;
 
       if(i->exists(p_Instance))
       {
@@ -618,7 +618,7 @@ ServerRegistration::asyncProcessFinalOkMsg(SipMessage &msg, ContactPtrList &cont
 
       std::auto_ptr<ContactPtrList> expired;
 
-      UInt64 now=Timer::getTimeSecs();
+      uint64_t now=Timer::getTimeSecs();
 
       for (;it != itEnd;++it)
       {
@@ -640,7 +640,7 @@ ServerRegistration::asyncProcessFinalOkMsg(SipMessage &msg, ContactPtrList &cont
             continue;
          }
 
-         rec->mContact.param(p_expires) = UInt32(rec->mRegExpires - now);
+         rec->mContact.param(p_expires) = uint32_t(rec->mRegExpires - now);
          msg.header(h_Contacts).push_back(rec->mContact);
       }
 
@@ -665,7 +665,7 @@ ServerRegistration::processFinalOkMsg(SipMessage &msg, ContactList &contacts)
       ContactList::iterator itEnd(contacts.end());
 
       RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
-      UInt64 now=Timer::getTimeSecs();
+      uint64_t now=Timer::getTimeSecs();
 
       for (;it != itEnd;++it)
       {
@@ -674,7 +674,7 @@ ServerRegistration::processFinalOkMsg(SipMessage &msg, ContactList &contacts)
             database->removeContact(mAor,*it);
             continue;
          }
-         it->mContact.param(p_expires) = UInt32(it->mRegExpires - now);
+         it->mContact.param(p_expires) = uint32_t(it->mRegExpires - now);
          msg.header(h_Contacts).push_back(it->mContact);
       }
    }

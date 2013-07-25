@@ -17,7 +17,7 @@ ClientRegistrationHandler::onFlowTerminated(ClientRegistrationHandle h)
 
 void
 ServerRegistrationHandler::getGlobalExpires(const SipMessage& msg, SharedPtr<MasterProfile> masterProfile,
-      UInt32 &expires, UInt32 &returnCode)
+      uint32_t &expires, uint32_t &returnCode)
 {
    if (!masterProfile)
    {
@@ -37,7 +37,7 @@ ServerRegistrationHandler::getGlobalExpires(const SipMessage& msg, SharedPtr<Mas
       if (expires != 0)
       {
          //check min expires first since max expires will not return an error and will just change the expires value.
-         UInt32 minExpires = masterProfile->serverRegistrationMinExpiresTime();
+         uint32_t minExpires = masterProfile->serverRegistrationMinExpiresTime();
 
          if (expires < minExpires)
          {
@@ -46,7 +46,7 @@ ServerRegistrationHandler::getGlobalExpires(const SipMessage& msg, SharedPtr<Mas
          }
          else
          {
-            UInt32 maxExpires = masterProfile->serverRegistrationMaxExpiresTime();
+            uint32_t maxExpires = masterProfile->serverRegistrationMaxExpiresTime();
 
             if (expires > maxExpires)
             {
@@ -63,7 +63,7 @@ ServerRegistrationHandler::getGlobalExpires(const SipMessage& msg, SharedPtr<Mas
 
 void
 ServerRegistrationHandler::getContactExpires(const NameAddr &contact, SharedPtr<MasterProfile> masterProfile,
-      UInt32 &expires, UInt32 &returnCode)
+      uint32_t &expires, uint32_t &returnCode)
 {
    if (!masterProfile)
    {
@@ -81,7 +81,7 @@ ServerRegistrationHandler::getContactExpires(const NameAddr &contact, SharedPtr<
       if (expires != 0)
       {
          //check min expires first since max expires will not return an error and will just change the expires value.
-         UInt32 minExpires = masterProfile->serverRegistrationMinExpiresTime();
+         uint32_t minExpires = masterProfile->serverRegistrationMinExpiresTime();
 
          if (expires < minExpires)
          {
@@ -90,7 +90,7 @@ ServerRegistrationHandler::getContactExpires(const NameAddr &contact, SharedPtr<
          }
          else
          {
-            UInt32 maxExpires = masterProfile->serverRegistrationMaxExpiresTime();
+            uint32_t maxExpires = masterProfile->serverRegistrationMaxExpiresTime();
 
             if (expires > maxExpires)
             {

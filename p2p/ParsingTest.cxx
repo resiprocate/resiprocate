@@ -27,10 +27,10 @@ TestConnect()
 	DestinationId dest(node);
 	resip::Data noData;
 
-	//const DestinationId &dest, const resip::Data &frag, const resip::Data &password, UInt16 application, const resip::Data &role, const std::vector<Candidate> &candidates
+	//const DestinationId &dest, const resip::Data &frag, const resip::Data &password, uint16_t application, const resip::Data &role, const std::vector<Candidate> &candidates
 
 	resip::Data password = "password";
-	UInt16 application = 100;
+	uint16_t application = 100;
 	resip::Data role = "test";
 
 	std::vector<Candidate> candidates;

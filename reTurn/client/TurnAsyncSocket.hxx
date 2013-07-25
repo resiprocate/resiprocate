@@ -64,13 +64,13 @@ public:
    void bindRequest();
 
    // ICE connectivity check
-   void connectivityCheck(const StunTuple& targetAddr, UInt32 peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits, unsigned int retrans_iterval_ms);
+   void connectivityCheck(const StunTuple& targetAddr, uint32_t peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits, unsigned int retrans_iterval_ms);
 
    // Turn Allocation Methods
    void createAllocation(unsigned int lifetime = UnspecifiedLifetime,
                          unsigned int bandwidth = UnspecifiedBandwidth,
                          unsigned char requestedPortProps = StunMessage::PropsNone, 
-                         UInt64 reservationToken = UnspecifiedToken,
+                         uint64_t reservationToken = UnspecifiedToken,
                          StunTuple::TransportType requestedTransportType = StunTuple::None);
    void refreshAllocation(unsigned int lifetime);
    void destroyAllocation();
@@ -213,11 +213,11 @@ private:
    void doSetUsernameAndPassword(resip::Data* username, resip::Data* password, bool shortTermAuth);
    void doSetLocalPassword(resip::Data* password);
    void doBindRequest();
-   void doConnectivityCheck(StunTuple* targetAddr, UInt32 peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits, unsigned int retrans_iterval_ms);
+   void doConnectivityCheck(StunTuple* targetAddr, uint32_t peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits, unsigned int retrans_iterval_ms);
    void doCreateAllocation(unsigned int lifetime = UnspecifiedLifetime,
                            unsigned int bandwidth = UnspecifiedBandwidth,
                            unsigned char requestedPortProps = StunMessage::PropsNone, 
-                           UInt64 reservationToken = 0,
+                           uint64_t reservationToken = 0,
                            StunTuple::TransportType requestedTransportType = StunTuple::None);
    void doRefreshAllocation(unsigned int lifetime);
    void doDestroyAllocation();
@@ -229,7 +229,7 @@ private:
    void actualClose();
    void doChannelBinding(RemotePeer& remotePeer);
 
-   StunMessage* createNewStunMessage(UInt16 stunclass, UInt16 method, bool addAuthInfo=true);
+   StunMessage* createNewStunMessage(uint16_t stunclass, uint16_t method, bool addAuthInfo=true);
    void sendStunMessage(StunMessage* request, bool reTransmission=false, unsigned int numRetransmits=UDP_MAX_RETRANSMITS, unsigned int retrans_iterval_ms=DEFAULT_RETRANS_INTERVAL_MS, const StunTuple* targetAddress=NULL);
    void sendToRemotePeer(RemotePeer& remotePeer, boost::shared_ptr<DataBuffer>& data);
    void sendOverChannel(unsigned short channel, boost::shared_ptr<DataBuffer>& data);  // send with turn framing

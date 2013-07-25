@@ -34,15 +34,15 @@ rendMAX(const _Tp& __a, const _Tp& __b)
 #define sleepMs Sleep
 #endif
 
-typedef unsigned long long UInt64;
+typedef unsigned long long uint64_t;
 
-typedef UInt64 RendTimeUs; // usec
-#define REND_S2US(secs) (((UInt64)(secs))*1000000)
+typedef uint64_t RendTimeUs; // usec
+#define REND_S2US(secs) (((uint64_t)(secs))*1000000)
 #define REND_US2S(usecs) ((usecs)/1000000)
 #define REND_S2MS(secs) ((secs)*1000)
 #define REND_MS2S(msecs) ((msecs)/1000)
 
-#define REND_MS2US(msecs) (((UInt64)(msecs))*1000)
+#define REND_MS2US(msecs) (((uint64_t)(msecs))*1000)
 #define REND_US2MS(usecs) ((usecs)/1000)
 
 typedef unsigned int RendLocalKey;

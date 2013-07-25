@@ -550,7 +550,7 @@ protected:
    virtual void onExpiredByClient(resip::ServerSubscriptionHandle, const resip::SipMessage& sub, resip::SipMessage& notify);
    virtual void onExpired(resip::ServerSubscriptionHandle, resip::SipMessage& notify);
    virtual bool hasDefaultExpires() const;
-   virtual UInt32 getDefaultExpires() const;
+   virtual uint32_t getDefaultExpires() const;
 
    // OutOfDialogHandler //////////////////////////////////////////////////////////
    virtual void onSuccess(resip::ClientOutOfDialogReqHandle, const resip::SipMessage& response);

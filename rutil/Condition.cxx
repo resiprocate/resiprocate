@@ -240,7 +240,7 @@ Condition::wait(Mutex& mutex,
    unsigned int res = 0;
 
 #if 0  /*  unnecessary time stuff - used in BOOST implementation because expiry time is provided to do_timed_wait - we pass in an interval */
-   UInt64  start = Timer::getTimeMs();
+   uint64_t  start = Timer::getTimeMs();
 
    for (;;)
    {
@@ -250,7 +250,7 @@ Condition::wait(Mutex& mutex,
        ret = (res == WAIT_OBJECT_0);
        if (res == WAIT_TIMEOUT)
        {
-          UInt64  now = Timer::getTimeMs();
+          uint64_t  now = Timer::getTimeMs();
           unsigned int elapsed = (unsigned int)(now - start);
           if (ms > elapsed)
           {
@@ -372,7 +372,7 @@ Condition::wait(Mutex& mutex,
    return (ret == WAIT_OBJECT_0);
 #   endif
 #else	// WIN32
-   UInt64 expires64 = Timer::getTimeMs() + ms;
+   uint64_t expires64 = Timer::getTimeMs() + ms;
    timespec expiresTS;
    expiresTS.tv_sec = expires64 / 1000;
    expiresTS.tv_nsec = (expires64 % 1000) * 1000000L;

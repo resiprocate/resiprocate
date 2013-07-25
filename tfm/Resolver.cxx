@@ -200,7 +200,7 @@ Resolver::lookupARecords()
       for (char** pptr = result->h_addr_list; *pptr != 0; pptr++)
       {
          in_addr addr;
-         addr.s_addr = *((u_int32_t*)(*pptr)); 
+         addr.s_addr = *((uint32_t*)(*pptr)); 
          Tuple tuple(addr, mPort, mTransport);
          mNextHops.push_back(tuple);
       }

@@ -100,11 +100,11 @@ SHA1Stream::getBin(unsigned int bits)
    return SHA1Buffer::getBin(bits);
 }
 
-UInt32
+uint32_t
 SHA1Stream::getUInt32()
 {
    flush();
-   UInt32 input = *((UInt32*)getBin(32).c_str());
+   uint32_t input = *((uint32_t*)getBin(32).c_str());
    return ntohl(input);
 }
 

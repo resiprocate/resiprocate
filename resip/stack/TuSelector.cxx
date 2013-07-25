@@ -299,7 +299,7 @@ TuSelector::getRejectionBehavior(TransactionUser* tu) const
    return mCongestionManager->getRejectionBehavior(&mFallBackFifo);
 }
 
-UInt32 
+uint32_t 
 TuSelector::getExpectedWait(TransactionUser* tu) const
 {
    if(tu)
@@ -307,7 +307,7 @@ TuSelector::getExpectedWait(TransactionUser* tu) const
       return tu->getExpectedWait();
    }
 
-   return (UInt32)mFallBackFifo.expectedWaitTimeMilliSec();
+   return (uint32_t)mFallBackFifo.expectedWaitTimeMilliSec();
 }
 
 

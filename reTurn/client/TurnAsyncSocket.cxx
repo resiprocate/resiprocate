@@ -136,14 +136,14 @@ TurnAsyncSocket::doBindRequest()
 }
 
 void
-TurnAsyncSocket::connectivityCheck(const StunTuple& targetAddr, UInt32 peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits, unsigned int retrans_iterval_ms)
+TurnAsyncSocket::connectivityCheck(const StunTuple& targetAddr, uint32_t peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits, unsigned int retrans_iterval_ms)
 {
    assert(setIceControlling || setIceControlled);
    mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::doConnectivityCheck, this, new StunTuple(targetAddr.getTransportType(), targetAddr.getAddress(), targetAddr.getPort()), peerRflxPriority, setIceControlling, setIceControlled, numRetransmits, retrans_iterval_ms)));
 }
 
 void
-TurnAsyncSocket::doConnectivityCheck(StunTuple* targetAddr, UInt32 peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits, unsigned int retrans_iterval_ms)
+TurnAsyncSocket::doConnectivityCheck(StunTuple* targetAddr, uint32_t peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits, unsigned int retrans_iterval_ms)
 {
    // Form Stun Bind request
    StunMessage* request = createNewStunMessage(StunMessage::StunClassRequest, StunMessage::BindMethod);
@@ -167,7 +167,7 @@ void
 TurnAsyncSocket::createAllocation(unsigned int lifetime,
                                   unsigned int bandwidth,
                                   unsigned char requestedProps, 
-                                  UInt64 reservationToken,
+                                  uint64_t reservationToken,
                                   StunTuple::TransportType requestedTransportType)
 {
    mIOService.dispatch(weak_bind<AsyncSocketBase, void()>( mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::doCreateAllocation, this, lifetime, bandwidth, requestedProps, reservationToken, requestedTransportType )));
@@ -177,7 +177,7 @@ void
 TurnAsyncSocket::doCreateAllocation(unsigned int lifetime,
                                     unsigned int bandwidth,
                                     unsigned char requestedProps, 
-                                    UInt64 reservationToken,
+                                    uint64_t reservationToken,
                                     StunTuple::TransportType requestedTransportType)
 {
    // Store Allocation Properties
@@ -374,7 +374,7 @@ TurnAsyncSocket::doClearActiveDestination()
 }
 
 StunMessage* 
-TurnAsyncSocket::createNewStunMessage(UInt16 stunclass, UInt16 method, bool addAuthInfo)
+TurnAsyncSocket::createNewStunMessage(uint16_t stunclass, uint16_t method, bool addAuthInfo)
 {
    StunMessage* msg = new StunMessage();
    msg->createHeader(stunclass, method);
