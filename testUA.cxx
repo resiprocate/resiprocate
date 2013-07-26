@@ -1037,7 +1037,6 @@ ReConServerProcess::main (int argc, char** argv)
    unsigned short natTraversalServerPort = reConServerConfig.getConfigUnsignedShort("NatTraversalServerPort", 8777);
    Data stunUsername = reConServerConfig.getConfigData("StunUsername", "", true);
    Data stunPassword = reConServerConfig.getConfigData("StunUsername", "", true);
-   bool localAudioEnabled = reConServerConfig.getConfigBool("EnableLocalAudio", true);
    unsigned short tcpPort = reConServerConfig.getConfigUnsignedShort("TCPPOrt", 5062);
    unsigned short udpPort = reConServerConfig.getConfigUnsignedShort("UDPPort", 5062);
    unsigned short tlsPort = reConServerConfig.getConfigUnsignedShort("TLSPort", 5063);
@@ -1050,6 +1049,7 @@ ReConServerProcess::main (int argc, char** argv)
    Data loggingFilename = reConServerConfig.getConfigData("LogFilename", "reConServer.log", true);
    unsigned int loggingFileMaxLineCount = reConServerConfig.getConfigUnsignedLong("LogFileMaxLines", 50000);
    bool daemonize = reConServerConfig.getConfigBool("Daemonize", false);
+   bool localAudioEnabled = reConServerConfig.getConfigBool("EnableLocalAudio", !daemonize); // Defaults to false for daemon process
    Data pidFile = reConServerConfig.getConfigData("PidFile", "", true);
    Data runAsUser = reConServerConfig.getConfigData("RunAsUser", "", true);
    Data runAsGroup = reConServerConfig.getConfigData("RunAsGroup", "", true);
