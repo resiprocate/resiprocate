@@ -73,7 +73,7 @@ void sleepSeconds(unsigned int seconds)
 
 static bool finished = false;
 NameAddr uri("sip:noreg@127.0.0.1");
-bool autoAnswerEnabled = false;  // If enabled then testUA will automatically answer incoming calls by adding to lowest numbered conversation
+bool autoAnswerEnabled = false;  // If enabled then reConServer will automatically answer incoming calls by adding to lowest numbered conversation
 SharedPtr<ConversationProfile> conversationProfile;
 
 static void
@@ -1078,7 +1078,7 @@ ReConServerProcess::main (int argc, char** argv)
    }
 
    //enableConsoleOutput(TRUE);  // Allow sipX console output
-   OsSysLog::initialize(0, "testUA");
+   OsSysLog::initialize(0, "reConServer");
    OsSysLog::setOutputFile(0, "sipXtapilog.txt") ;
    //OsSysLog::enableConsoleOutput(true);
    //OsSysLog::setLoggingPriority(PRI_DEBUG);
@@ -1089,7 +1089,7 @@ ReConServerProcess::main (int argc, char** argv)
 
    initNetwork();
 
-   InfoLog( << "testUA settings:");
+   InfoLog( << "reConServer settings:");
    InfoLog( << "  No Keepalives = " << (keepAlivesDisabled ? "true" : "false"));
    InfoLog( << "  Autoanswer = " << (autoAnswerEnabled ? "true" : "false"));
    InfoLog( << "  Do not register = " << (registrationDisabled ? "true" : "false"));
@@ -1264,7 +1264,7 @@ ReConServerProcess::main (int argc, char** argv)
       profile->setOutboundProxy(outboundProxy.uri());
    }
 
-   profile->setUserAgent("ConversationManager/TestUA");
+   profile->setUserAgent("ConversationManager/reConServer");
    profile->rtpPortRangeMin() = mediaPortStart;
    profile->rtpPortRangeMax() = mediaPortStart + 101; // Allows 100 media streams
 
@@ -1391,7 +1391,7 @@ ReConServerProcess::main (int argc, char** argv)
 
       ua.shutdown();
    }
-   InfoLog(<< "testUA is shutdown.");
+   InfoLog(<< "reConServer is shutdown.");
    OsSysLog::shutdown();
    sleepSeconds(2);
 

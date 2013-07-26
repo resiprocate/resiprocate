@@ -1,14 +1,14 @@
 
-EXTRA_DIST = testua_readme.txt
+EXTRA_DIST = reConServer_readme.txt
 
-bin_PROGRAMS = testUA
+bin_PROGRAMS = reConServer
 
-testUA_SOURCES = testUA.cxx
-testUA_SOURCES += reConServer.hxx
-testUA_SOURCES += reConServerConfig.cxx
-testUA_SOURCES += reConServerConfig.hxx
-testUA_SOURCES += playback_prompt.h
-testUA_SOURCES += record_prompt.h
+reConServer_SOURCES = reConServer.cxx
+reConServer_SOURCES += reConServer.hxx
+reConServer_SOURCES += reConServerConfig.cxx
+reConServer_SOURCES += reConServerConfig.hxx
+reConServer_SOURCES += playback_prompt.h
+reConServer_SOURCES += record_prompt.h
 
 LDADD = -lrecon
 LDADD += -lreflow

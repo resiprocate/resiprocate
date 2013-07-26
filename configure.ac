@@ -1,6 +1,6 @@
 
 AC_INIT(reConServer,1.0.0)
-AC_CONFIG_SRCDIR(testUA.cxx)
+AC_CONFIG_SRCDIR(reConServer.cxx)
 
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])

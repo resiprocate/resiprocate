@@ -1,4 +1,4 @@
-User Agent Tester (testUA) Instructions
+User Agent Tester (reConServer) Instructions
 =======================================
 
 Author: Scott Godin (s g o d i n  a t  s i p s p e c t r u m  d o t  c o m)
@@ -17,7 +17,7 @@ modified such that they appear quiter or louder to other participants.
 
 There are three types of participants:
 1.  Local participant - this participant type consists of the default local speaker and 
-    microphone of the computer that is running the testUA console.  Local
+    microphone of the computer that is running the reConServer console.  Local
     participants are always only explicitly destroyed.
 2.  Media participant - this participant type consists of an audio file, audio stream,
     or tone played out.  Media participants are destroyed when the file or tone output is
@@ -39,7 +39,7 @@ Command line options are:
 
  -aa - enable autoanswer
 
-  Enabling autoanswer will cause testUA to automatically answer any inbound SIP calls
+  Enabling autoanswer will cause reConServer to automatically answer any inbound SIP calls
   and place them in the lowest numbered conversation currently created.
 
  -a <IP Address> - bind SIP transports to this IP address
@@ -50,7 +50,7 @@ Command line options are:
 
  -u <SIP URI> - URI of this SIP user
 
-  This option is used to specify the SIP URI for this instance of testUA.  testUA uses
+  This option is used to specify the SIP URI for this instance of reConServer.  reConServer uses
   this setting (-ip is not specified) in order to find the regisration server.  If 
   nothing is specified, then the default of sip:noreg@<ipaddress> will be used.
 
@@ -60,43 +60,43 @@ Command line options are:
 
  -nr - no registration, set this to disable registration with SIP Proxy
 
-  By default, if a SIP uri is specified, testUA will attempt to register with it.  Use 
+  By default, if a SIP uri is specified, reConServer will attempt to register with it.  Use 
   this switch to disable this.
 
  -d <DNS servers> - comma seperated list of DNS servers, overrides OS detected list
 
-  By default, testUA will query the OS for a list of DNS servers.  Use this option in 
+  By default, reConServer will query the OS for a list of DNS servers.  Use this option in 
   cases where the OS does not return any, or the correct values.
 
  -sp <port num> - local port number to use for SIP messaging (UDP/TCP)
 
-  By default, testUA will use port 5062 for SIP messaging, use this switch to specify
+  By default, reConServer will use port 5062 for SIP messaging, use this switch to specify
   something different.
 
  -mp <port num> - local port number to start allocating from for RTP media
 
-  By default, testUA will use media ports starting at 17384, use this switch to specify
+  By default, reConServer will use media ports starting at 17384, use this switch to specify
   something different.
 
  -tp <port num> - local port number to use for TLS SIP messaging
 
-  By default, testUA will listen for TLS connections on port 5063, use this switch to
+  By default, reConServer will listen for TLS connections on port 5063, use this switch to
   specify something different.  Note SIP certificiates must be present in executable 
   directory for windows hosts and ~/.sipCerts directory on linux hosts.
 
  -td <domain name> - domain name to use for TLS server connections
 
-  By default, testUA will query the OS for a local hostname for TLS, use this switch
+  By default, reConServer will query the OS for a local hostname for TLS, use this switch
   to override the OS queried result.
 
  -nk - no keepalives, set this to disable sending of keepalives
 
-  By default, testUA will enable UDP CRLF keepalives every 30 seconds and TCP keepalives 
+  By default, reConServer will enable UDP CRLF keepalives every 30 seconds and TCP keepalives 
   every 180 seconds.  Use this switch to disable CRLF keepalives.
 
  -op <SIP URI> - URI of a proxy server to use a SIP outbound proxy
 
-  By default testUA does not use an outbound proxy.  Use this switch to route all 
+  By default reConServer does not use an outbound proxy.  Use this switch to route all 
   outbound, out-of-dialog requests through a fixed proxy despite the destination URI.
 
  -sm <Srtp|SrtpReq|SrtpDtls|SrtpDtlsReq> - sets the secure media mode
@@ -153,16 +153,16 @@ Command line options are:
 
 
 Sample Command line:
-  testUA -a 192.168.1.100 -u sip:1000@myproxy.com -p 123 -aa
+  reConServer -a 192.168.1.100 -u sip:1000@myproxy.com -p 123 -aa
 
 
 
 Console Command Reference
 -------------------------
-Once the console is started, testUA will automatically register with a proxy server, 
+Once the console is started, reConServer will automatically register with a proxy server, 
 if required.
 
-When starting testUA, one Conversation (Handle=1) and one local participant (Handle=1) is 
+When starting reConServer, one Conversation (Handle=1) and one local participant (Handle=1) is 
 automatically created for convienience.
 
 The console then accepts the following commands:
@@ -258,7 +258,7 @@ destroySubscription:     <'destsub'|'ds'> <subHandle>
   Unsubscribes an existing subscription.
 
 setAutoAnswer            <'autoans'|'aa'> <'0'|'1'> (1 to enable (default)
-  Enable this to have testUA automatically answer incoming calls and add to the
+  Enable this to have reConServer automatically answer incoming calls and add to the
   lowest numbered created conversation.
 
 setCodecs                <'setcodecs'|'sc'> <codecId>[,<codecId>]+ (comma separated list)
