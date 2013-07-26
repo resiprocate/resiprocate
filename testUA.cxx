@@ -1038,7 +1038,8 @@ ReConServerProcess::main (int argc, char** argv)
    Data stunUsername = reConServerConfig.getConfigData("StunUsername", "", true);
    Data stunPassword = reConServerConfig.getConfigData("StunUsername", "", true);
    bool localAudioEnabled = reConServerConfig.getConfigBool("EnableLocalAudio", true);
-   unsigned short sipPort = reConServerConfig.getConfigUnsignedShort("SIPPort", 5062);
+   unsigned short tcpPort = reConServerConfig.getConfigUnsignedShort("TCPPOrt", 5062);
+   unsigned short udpPort = reConServerConfig.getConfigUnsignedShort("UDPPort", 5062);
    unsigned short tlsPort = reConServerConfig.getConfigUnsignedShort("TLSPort", 5063);
    unsigned short mediaPortStart = reConServerConfig.getConfigUnsignedShort("MediaPortStart", 17384);
    Data tlsDomain = reConServerConfig.getConfigData("TLSDomain", DnsUtil::getLocalHostName(), true);
@@ -1101,7 +1102,8 @@ ReConServerProcess::main (int argc, char** argv)
    InfoLog( << "  NAT Server = " << natTraversalServerHostname << ":" << natTraversalServerPort);
    InfoLog( << "  STUN/TURN user = " << stunUsername);
    InfoLog( << "  STUN/TURN password = " << stunPassword);
-   InfoLog( << "  SIP Port = " << sipPort);
+   InfoLog( << "  TCP Port = " << tcpPort);
+   InfoLog( << "  UDP Port = " << udpPort);
    InfoLog( << "  Media Port Range Start = " << mediaPortStart);
 #ifdef USE_SSL
    InfoLog( << "  TLS Port = " << tlsPort);
@@ -1125,10 +1127,19 @@ ReConServerProcess::main (int argc, char** argv)
    SharedPtr<UserAgentMasterProfile> profile(new UserAgentMasterProfile);
 
    // Add transports
-   profile->addTransport(UDP, sipPort, V4, address);
-   profile->addTransport(TCP, sipPort, V4, address);
+   if(udpPort)
+   {
+      profile->addTransport(UDP, udpPort, V4, address);
+   }
+   if(tcpPort)
+   {
+      profile->addTransport(TCP, tcpPort, V4, address);
+   }
 #ifdef USE_SSL
-   profile->addTransport(TLS, tlsPort, V4, address, tlsDomain);
+   if(tlsPort)
+   {
+      profile->addTransport(TLS, tlsPort, V4, address, tlsDomain);
+   }
 #endif
 
    // The following settings are used to avoid a kernel panic seen on an ARM embedded platform.
