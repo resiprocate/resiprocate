@@ -4,7 +4,7 @@ set -e
 #NDK=${HOME}/android/android-ndk-r7
 NDK=${HOME}/android/android-ndk-r8e
 
-PLATFORM=android-8
+PLATFORM=android-9
 
 MY_NDK=${HOME}/ws/resiprocate/resip-ndk
 
@@ -34,6 +34,12 @@ export RANLIB=${TOOLCHAIN_PREFIX}-ranlib
 
 export CPPFLAGS="${CPPFLAGS} -I${OPENSSL_HOME}/include"
 export LDFLAGS="${LDFLAGS} -L${OPENSSL_HOME}/libs/armeabi"
+
+# for 16 bit Thumb-1 (default is 32 bit ARM)
+export CPPFLAGS="${CPPFLAGS} -mthumb"
+# for ARMv7
+#export CPPFLAGS="${CPPFLAGS} -march=armv7-a -mfloat-abi=softfp"
+#export LDFLAGS="${LDFLAGS} -Wl,--fix-cortex-a8"
 
 autoreconf -fi
 
