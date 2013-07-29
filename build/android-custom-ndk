@@ -1,14 +1,17 @@
 #!/bin/bash
 set -e
 
-#NDK=${HOME}/android/android-ndk-r7
-NDK=${HOME}/android/android-ndk-r8e
+if [ -z "${NDK_HOME}" ];
+then
+  echo "Please set NDK_HOME"
+  exit 1
+fi
 
 PLATFORM=android-9
 
 MY_NDK=${HOME}/ws/resiprocate/resip-ndk
 
-#$NDK/build/tools/make-standalone-toolchain.sh --platform=$PLATFORM \
+#$NDK_HOME/build/tools/make-standalone-toolchain.sh --platform=$PLATFORM \
 #  --install-dir=$MY_NDK --system=linux-x86_64
 #exit 0
 
