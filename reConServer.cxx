@@ -1036,8 +1036,8 @@ ReConServerProcess::main (int argc, char** argv)
    Data natTraversalServerHostname = reConServerConfig.getConfigData("NatTraversalServerHostname", "", true);
    unsigned short natTraversalServerPort = reConServerConfig.getConfigUnsignedShort("NatTraversalServerPort", 8777);
    Data stunUsername = reConServerConfig.getConfigData("StunUsername", "", true);
-   Data stunPassword = reConServerConfig.getConfigData("StunUsername", "", true);
-   unsigned short tcpPort = reConServerConfig.getConfigUnsignedShort("TCPPOrt", 5062);
+   Data stunPassword = reConServerConfig.getConfigData("StunPassword", "", true);
+   unsigned short tcpPort = reConServerConfig.getConfigUnsignedShort("TCPPort", 5062);
    unsigned short udpPort = reConServerConfig.getConfigUnsignedShort("UDPPort", 5062);
    unsigned short tlsPort = reConServerConfig.getConfigUnsignedShort("TLSPort", 5063);
    unsigned short mediaPortStart = reConServerConfig.getConfigUnsignedShort("MediaPortStart", 17384);
