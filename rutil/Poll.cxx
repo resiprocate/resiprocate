@@ -1,5 +1,37 @@
 #include <stdlib.h>
+
+// One of the following macros must be defined:
+//#define RESIP_POLL_IMPL_POLL
+#define RESIP_POLL_IMPL_SELECT
+//#define RESIP_POLL_IMPL_EPOLL  // Not yet implemented.
+
+/*
+  Define this macro to support applications that must call system call "poll"
+  or its ilk themselves rather than calling method "Poll::wait".
+*/
+#define RESIP_POLL_EXTERN
+
 #include "rutil/Poll.hxx"
+
+#include <vector>
+
+#ifdef RESIP_POLL_IMPL_POLL
+#  include <sys/poll.h>
+#endif
+
+#ifdef RESIP_POLL_IMPL_SELECT
+# ifdef WIN32
+#  include <winsock2.h>
+# else
+#  include <sys/time.h>
+#  include <sys/types.h>
+#  include <unistd.h>
+# endif // WIN32
+#endif // RESIP_POLL_IMPL_SELECT
+
+#ifdef RESIP_POLL_EXTERN
+# include <map>
+#endif // RESIP_POLL_EXTERN
 
 using namespace resip;
 using namespace std;
@@ -7,6 +39,48 @@ using namespace std;
 #if !defined(RESIP_POLL_IMPL_POLL) && !defined(RESIP_POLL_IMPL_SELECT) && !defined(RESIP_POLL_EPOLL)
 #error "Define one of RESIP_POLL_IMPL_POLL, RESIP_POLL_IMPL_SELECT, or RESIP_POLL_EPOLL."
 #endif
+
+namespace resip
+{
+// We hide anything that effects the ABI here
+class PollImpl
+{
+   public:
+      PollImpl();
+      ~PollImpl();
+      // Fields:
+      std::vector<Poll::FDEntry *>          _fdEntryVector;
+#ifdef RESIP_POLL_IMPL_POLL
+      std::vector<pollfd>                   _pollFDVector;
+#endif
+#ifdef RESIP_POLL_IMPL_SELECT
+      int/*FD*/                        _maxFDPlus1;
+      fd_set                           _readFDSet;
+      fd_set                           _writeFDSet;
+#endif
+#ifdef RESIP_POLL_EXTERN
+      std::map<int/*FD*/, Poll::FDEntry *>  _fdEntryMap;
+#endif
+      std::vector<Poll::FDEntry *>          _waitResult;
+
+
+};
+}
+
+PollImpl::PollImpl()
+#ifdef RESIP_POLL_IMPL_SELECT
+   :
+_maxFDPlus1(0) //!jacob! Can select handle an empty poll set?
+#endif
+{
+#ifdef RESIP_POLL_IMPL_SELECT
+   FD_ZERO(&_readFDSet);
+   FD_ZERO(&_writeFDSet);
+#endif
+}
+
+PollImpl::~PollImpl()
+{}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -17,46 +91,46 @@ Poll::FDEntry::FDEntry(Poll* poll,
    _poll(poll),
    _fd(fd),
    _stateBitMask(isTransport ? Poll::FDEntry::rsbmIsTransport : 0),
-   _index((unsigned short)poll->_fdEntryVector.size())
+   _index((unsigned short)poll->mImpl->_fdEntryVector.size())
 {
-   _poll->_fdEntryVector.push_back(this);
+   _poll->mImpl->_fdEntryVector.push_back(this);
 #ifdef RESIP_POLL_IMPL_POLL
    pollfd pollFD;
    pollFD.fd = fd;
    pollFD.events = POLLIN;
-   _poll->_pollFDVector.push_back(pollFD);
+   _poll->mImpl->_pollFDVector.push_back(pollFD);
 #endif
 #ifdef RESIP_POLL_IMPL_SELECT
-   if (_fd >= _poll->_maxFDPlus1) 
+   if (_fd >= _poll->mImpl->_maxFDPlus1) 
    {
-      _poll->_maxFDPlus1 = _fd + 1;
+      _poll->mImpl->_maxFDPlus1 = _fd + 1;
    }
-   FD_SET(_fd, &(_poll->_readFDSet));
+   FD_SET(_fd, &(_poll->mImpl->_readFDSet));
 #endif
 #ifdef RESIP_POLL_EXTERN
-   _poll->_fdEntryMap.insert(std::pair<int/*FD*/, Poll::FDEntry *>(_fd, this));
+   _poll->mImpl->_fdEntryMap.insert(std::pair<int/*FD*/, Poll::FDEntry *>(_fd, this));
 #endif
 }
 
 //destructor
 Poll::FDEntry::~FDEntry()
 {
-   vector<Poll::FDEntry *> &fdEntryVector = _poll->_fdEntryVector;
+   vector<Poll::FDEntry *> &fdEntryVector = _poll->mImpl->_fdEntryVector;
    Poll::FDEntry *lastFDEntry = fdEntryVector[fdEntryVector.size() - 1];
    lastFDEntry->_index = _index;
    fdEntryVector[_index] = lastFDEntry;
    fdEntryVector.pop_back();
 #ifdef RESIP_POLL_IMPL_POLL
-   vector<pollfd> &pollFDVector = _poll->_pollFDVector;
+   vector<pollfd> &pollFDVector = _poll->mImpl->_pollFDVector;
    pollFDVector[_index] = pollFDVector[pollFDVector.size() - 1];
    pollFDVector.pop_back();
 #endif
 #ifdef RESIP_POLL_IMPL_SELECT
-   FD_CLR(_fd, &(_poll->_readFDSet));
-   FD_CLR(_fd, &(_poll->_writeFDSet));
+   FD_CLR(_fd, &(_poll->mImpl->_readFDSet));
+   FD_CLR(_fd, &(_poll->mImpl->_writeFDSet));
 #endif
 #ifdef RESIP_POLL_EXTERN
-   _poll->_fdEntryMap.erase(_fd);
+   _poll->mImpl->_fdEntryMap.erase(_fd);
 #endif
 }
 
@@ -73,19 +147,19 @@ Poll::FDEntry::setIsWritePending(bool isWritePending)
    {
       _stateBitMask |= Poll::FDEntry::rsbmIsWritePending;
 #ifdef RESIP_POLL_IMPL_POLL
-      _poll->_pollFDVector[_index].events |= Poll::FDEntry::fdsbmWritable;
+      _poll->mImpl->_pollFDVector[_index].events |= Poll::FDEntry::fdsbmWritable;
 #endif
 #ifdef RESIP_POLL_IMPL_SELECT
-      FD_SET(_fd, &(_poll->_writeFDSet));
+      FD_SET(_fd, &(_poll->mImpl->_writeFDSet));
 #endif
    } else 
    {
       _stateBitMask &= ~Poll::FDEntry::rsbmIsWritePending;
 #ifdef RESIP_POLL_IMPL_POLL
-      _poll->_pollFDVector[_index].events &= ~Poll::FDEntry::fdsbmWritable;
+      _poll->mImpl->_pollFDVector[_index].events &= ~Poll::FDEntry::fdsbmWritable;
 #endif
 #ifdef RESIP_POLL_IMPL_SELECT
-      FD_CLR(_fd, &(_poll->_writeFDSet));
+      FD_CLR(_fd, &(_poll->mImpl->_writeFDSet));
 #endif
    }
 }
@@ -124,17 +198,9 @@ Poll::findFDInWaitResult(int/*FD*/                        fd,
 }
 
 //constructor
-Poll::Poll()
-#ifdef RESIP_POLL_IMPL_SELECT
-   :
-_maxFDPlus1(0) //!jacob! Can select handle an empty poll set?
-#endif
-{
-#ifdef RESIP_POLL_IMPL_SELECT
-   FD_ZERO(&_readFDSet);
-   FD_ZERO(&_writeFDSet);
-#endif
-}
+Poll::Poll() :
+   mImpl(new PollImpl)
+{}
 
 //destructor
 Poll::~Poll()
@@ -146,8 +212,8 @@ Poll::~Poll()
 const vector<Poll::FDEntry *> &
 Poll::beforeExternWait()
 {
-   _waitResult.clear();
-   return _fdEntryVector;
+   mImpl->_waitResult.clear();
+   return mImpl->_fdEntryVector;
 }
 
 bool
@@ -155,13 +221,13 @@ Poll::setEntryFDStateForExternWait(int/*FD*/                    fd,
                                    Poll::FDEntry::StateBitMask  fdStateBitMask)
 {
    map<int/*FD*/, Poll::FDEntry *>::const_iterator fdEntryIterator =
-      _fdEntryMap.find(fd);
-   bool isFDInPoll = (fdEntryIterator != _fdEntryMap.end());
+      mImpl->_fdEntryMap.find(fd);
+   bool isFDInPoll = (fdEntryIterator != mImpl->_fdEntryMap.end());
    if (isFDInPoll) 
    {
       Poll::FDEntry *fdEntry = fdEntryIterator->second;
       fdEntry->_stateBitMask |= fdStateBitMask & Poll::FDEntry::fdsbmAll;
-      _waitResult.push_back(fdEntry);
+      mImpl->_waitResult.push_back(fdEntry);
    }
    return isFDInPoll;
 }
@@ -169,7 +235,7 @@ Poll::setEntryFDStateForExternWait(int/*FD*/                    fd,
 const vector<Poll::FDEntry *> &
 Poll::afterExternWait()
 {
-   return _waitResult;
+   return mImpl->_waitResult;
 }
 
 #else //!defined(RESIP_POLL_EXTERN)  } {
@@ -177,11 +243,11 @@ Poll::afterExternWait()
 const vector<Poll::FDEntry *> &
 Poll::wait(int timeoutMilliSeconds)
 {
-   _waitResult.clear();
+   mImpl->_waitResult.clear();
 #ifdef RESIP_POLL_IMPL_POLL
-   pollfd *pollFDArray = &(_pollFDVector.front());
+   pollfd *pollFDArray = &(mImpl->_pollFDVector.front());
    int numReadyFDs = poll(pollFDArray,
-                          _pollFDVector.size(),
+                          mImpl->_pollFDVector.size(),
                           timeoutMilliSeconds);
    if (numReadyFDs < 0) 
    {
@@ -192,26 +258,26 @@ Poll::wait(int timeoutMilliSeconds)
       int revents = pollFDArray[index].revents;
       if (revents) 
       {
-         Poll::FDEntry *fdEntry = _fdEntryVector[index];
+         Poll::FDEntry *fdEntry = mImpl->_fdEntryVector[index];
          fdEntry->_stateBitMask |= revents;
-         _waitResult.push_back(fdEntry);
+         mImpl->_waitResult.push_back(fdEntry);
          --numReadyFDs;
       }
    }//for
-   qsort(&(_waitResult.front()),
-         _waitResult.size(),
+   qsort(&(mImpl->_waitResult.front()),
+         mImpl->_waitResult.size(),
          sizeof(Poll::FDEntry *),
          reinterpret_cast<int(*)(const void *,
                                  const void *)>(&Poll::FDEntry::compare));
 #endif
 #ifdef RESIP_POLL_IMPL_SELECT
-   fd_set readableFDSet = _readFDSet;
-   fd_set writableFDSet = _writeFDSet;
-   fd_set errorFDSet = _readFDSet;
+   fd_set readableFDSet = mImpl->_readFDSet;
+   fd_set writableFDSet = mImpl->_writeFDSet;
+   fd_set errorFDSet = mImpl->_readFDSet;
    timeval timeoutTimeVal;
    timeoutTimeVal.tv_sec = timeoutMilliSeconds / 1000;
    timeoutTimeVal.tv_usec = 1000 * (timeoutMilliSeconds % 1000);
-   int numReadyFDs = select(_maxFDPlus1,
+   int numReadyFDs = select(mImpl->_maxFDPlus1,
                             &readableFDSet,
                             &writableFDSet,
                             &errorFDSet,
@@ -222,7 +288,7 @@ Poll::wait(int timeoutMilliSeconds)
    }
    for (unsigned short index = 0; numReadyFDs > 0; ++index) 
    {
-      Poll::FDEntry *fdEntry = _fdEntryVector[index];
+      Poll::FDEntry *fdEntry = mImpl->_fdEntryVector[index];
       bool isFDReadable = FD_ISSET(fdEntry->_fd, &readableFDSet);
       bool isFDWritable = FD_ISSET(fdEntry->_fd, &writableFDSet);
       bool isFDError = FD_ISSET(fdEntry->_fd, &errorFDSet);
@@ -240,12 +306,12 @@ Poll::wait(int timeoutMilliSeconds)
          {
             fdEntry->_stateBitMask |= Poll::FDEntry::fdsbmError;
          }
-         _waitResult.push_back(fdEntry);
+         mImpl->_waitResult.push_back(fdEntry);
          --numReadyFDs;
       }
    }//for
 #endif
-   return _waitResult;
+   return mImpl->_waitResult;
 }
 
 #endif //!defined(RESIP_POLL_EXTERN)  }
