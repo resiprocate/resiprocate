@@ -27,11 +27,13 @@ librutil_la_LIBADD = $(LIBSSL_LIBADD)
 librutil_la_LIBADD += $(LIBRADIUS_LIBADD)
 librutil_la_LIBADD += $(LIBARES_LIBADD)
 librutil_la_LIBADD += @LIBSTL_LIBADD@
+librutil_la_LIBADD += @LIBLOG_LIBADD@
 #librutil_la_LIBADD += -lrt
 librutil_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
 
 librutil_la_SOURCES = \
 	AbstractFifo.cxx \
+	AndroidLogger.cxx \
 	BaseException.cxx \
 	Coders.cxx \
 	Condition.cxx \
@@ -180,6 +182,7 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	DataStream.hxx \
 	GenericIPAddress.hxx \
 	AbstractFifo.hxx \
+	AndroidLogger.hxx \
 	ParseException.hxx \
 	BaseException.hxx \
 	DataException.hxx \
