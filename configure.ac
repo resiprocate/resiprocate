@@ -217,12 +217,6 @@ AC_ARG_WITH(radius,
  AM_CONDITIONAL(USE_RADIUS_CLIENT, true)],
  [ AC_SUBST(LIBRADIUS_LIBADD, "")])
 
-AM_CONDITIONAL(BUILD_B2BUA, false)
-AC_ARG_WITH(b2bua,
-[  --with-b2bua            Build B2BUA lib, no extra dependencies],
- [AC_DEFINE_UNQUOTED(BUILD_B2BUA, , BUILD_B2BUA)
- AM_CONDITIONAL(BUILD_B2BUA, true)], )
-
 AM_CONDITIONAL(BUILD_TFM, false)
 AC_ARG_WITH(tfm,
 [  --with-tfm              Build TFM, links against Netxx and cppunit],
@@ -278,7 +272,6 @@ AC_OUTPUT(Makefile \
 	repro/accountingconsumers/Makefile \
 	repro/reprocmd/Makefile \
 	repro/test/Makefile \
-	b2bua/Makefile \
 	tfm/Makefile \
 	tfm/repro/Makefile \
 	tfm/tfdum/Makefile \
@@ -288,7 +281,6 @@ AC_OUTPUT(Makefile \
 	apps/ichat-gw/Makefile \
 	apps/ichat-gw/jabberconnector/Makefile \
 	apps/sipdial/Makefile \
-	apps/basicB2BUA/Makefile \
 	resiprocate.spec \
 	reTurn/Makefile \
 	reTurn/test/Makefile \
