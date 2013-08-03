@@ -88,6 +88,13 @@ ClientSubscription::dispatch(const SipMessage& msg)
       //!dcm! -- heavy, should just store enough information to make response
       //mLastNotify = msg;
 
+      //!fj! There is a bug that prevents onNewSubscription from being called
+      //     when, for example, the UAS sends a 408 back and
+      //     ClientSubscriptionHandler::onRequestRetry returns 0. A fix was
+      //     attempted in revision 10128 but it created a more important
+      //     regression. See
+      //     http://list.resiprocate.org/archive/resiprocate-devel/thrd83.html#08362
+      //     for more details.
       if (!mOnNewSubscriptionCalled && !getAppDialogSet()->isReUsed())
       {
          InfoLog (<< "[ClientSubscription] " << mLastRequest->header(h_To));
