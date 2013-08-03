@@ -2,8 +2,6 @@
 #include "config.h"
 #endif
 
-#ifdef USE_SSL
-
 #ifndef DtlsSocket_hxx
 #define DtlsSocket_hxx
 
@@ -141,7 +139,6 @@ class DtlsSocket
 }
 #endif
 
-#endif 
 /* ====================================================================
 
  Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 

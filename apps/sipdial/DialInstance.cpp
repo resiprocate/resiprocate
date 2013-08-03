@@ -6,7 +6,11 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/Uri.hxx"
+
+#ifdef USE_SSL
 #include "resip/stack/ssl/Security.hxx"
+#endif
+
 #include "rutil/Data.hxx"
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
@@ -37,6 +41,7 @@ DialInstance::DialResult DialInstance::execute()
 
    Security* security = 0;
 
+#ifdef USE_SSL
    Data certPath(mDialerConfiguration.getCertPath());
    if(certPath.size() == 0)
    {
@@ -47,11 +52,16 @@ DialInstance::DialResult DialInstance::execute()
 
    if(mDialerConfiguration.getCADirectory().size() > 0)
       security->addCADirectory(mDialerConfiguration.getCADirectory());
+#endif
 
    mSipStack = new SipStack(security);
    mDum = new DialogUsageManager(*mSipStack);
    //mDum->addTransport(UDP, 5067, V4);
+#ifdef USE_SSL
    mDum->addTransport(TLS, 5067, V4);
+#else
+   mDum->addTransport(TCP, 5067, V4);
+#endif
    SharedPtr<MasterProfile> masterProfile = SharedPtr<MasterProfile>(new MasterProfile);
    mDum->setMasterProfile(masterProfile);
    auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager);

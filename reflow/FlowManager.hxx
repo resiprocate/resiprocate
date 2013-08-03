@@ -8,13 +8,11 @@
 #include "MediaStream.hxx"
 #include "FlowManagerException.hxx"
 
-#ifdef USE_SSL
-#include "dtls_wrapper/DtlsFactory.hxx"
-#include <openssl/crypto.h>
-#include <openssl/ssl.h>
-#endif //USE_SSL 
-
 #include <map>
+
+class X509;
+class EVP_PKEY;
+class dtls::DtlsFactory;
 
 using namespace reTurn;
 
@@ -50,10 +48,8 @@ public:
                                   const char* stunUsername = 0,
                                   const char* stunPassword = 0);
 
-#ifdef USE_SSL
    void initializeDtlsFactory(const char* certAor);
    dtls::DtlsFactory* getDtlsFactory() { return mDtlsFactory; }
-#endif //USE_SSL   
 
 protected: 
 
@@ -64,16 +60,12 @@ private:
    asio::io_service mIOService;
    IOServiceThread* mIOServiceThread;
    asio::io_service::work* mIOServiceWork;
-#ifdef USE_SSL
    static int createCert (const resip::Data& pAor, int expireDays, int keyLen, X509*& outCert, EVP_PKEY*& outKey );
-   asio::ssl::context mSslContext;
-#endif
+   asio::ssl::context* mSslContext;
    
-#ifdef USE_SSL
    X509* mClientCert;
    EVP_PKEY* mClientKey;
    dtls::DtlsFactory* mDtlsFactory;
-#endif    
 };
 
 }

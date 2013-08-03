@@ -12,7 +12,9 @@
 #include "../../StunTuple.hxx"
 #include "../../StunMessage.hxx"
 #include "../TurnTcpSocket.hxx"
+#ifdef USE_SSL
 #include "../TurnTlsSocket.hxx"
+#endif
 #include "../TurnUdpSocket.hxx"
 
 using namespace reTurn;

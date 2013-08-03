@@ -18,13 +18,14 @@
 
 #include "reTurn/client/TurnAsyncUdpSocket.hxx"
 #include "reTurn/client/TurnAsyncTcpSocket.hxx"
-#include "reTurn/client/TurnAsyncTlsSocket.hxx"
 #include "reTurn/client/TurnAsyncSocketHandler.hxx"
 #include "reTurn/StunMessage.hxx"
 #include "FakeSelectSocketDescriptor.hxx"
-#include "dtls_wrapper/DtlsSocket.hxx"
 
 using namespace reTurn;
+
+class asio::ssl::context;
+class dtls::DtlsSocket;
 
 namespace flowmanager
 {
@@ -56,9 +57,12 @@ public:
    };
 
    Flow(asio::io_service& ioService,
-#ifdef USE_SSL
-        asio::ssl::context& sslContext,
-#endif
+        unsigned int componentId,
+        const StunTuple& localBinding, 
+        MediaStream& mediaStream);
+
+   Flow(asio::io_service& ioService,
+	asio::ssl::context& sslContext,
         unsigned int componentId,
         const StunTuple& localBinding, 
         MediaStream& mediaStream);
@@ -114,10 +118,9 @@ public:
    unsigned int getComponentId() { return mComponentId; }
 
 private:
+   void init();
    asio::io_service& mIOService;
-#ifdef USE_SSL
-   asio::ssl::context& mSslContext;
-#endif
+   asio::ssl::context* mSslContext;
 
    // Note: these member variables are set at creation time and never changed, thus
    //       they do not require mutex protection
@@ -140,13 +143,11 @@ private:
    StunTuple mRelayTuple;
    resip::Data mRemoteSDPFingerprint;
 
-#ifdef USE_SSL
    // Map to store all DtlsSockets - in forking cases there can be more than one
    std::map<reTurn::StunTuple, dtls::DtlsSocket*> mDtlsSockets;
    dtls::DtlsSocket* getDtlsSocket(const reTurn::StunTuple& endpoint);
    dtls::DtlsSocket* createDtlsSocketClient(const StunTuple& endpoint);
    dtls::DtlsSocket* createDtlsSocketServer(const StunTuple& endpoint);
-#endif 
 
    volatile FlowState mFlowState;
    void changeFlowState(FlowState newState);

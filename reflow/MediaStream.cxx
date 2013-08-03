@@ -2,6 +2,10 @@
 #include "config.h"
 #endif
 
+#ifdef USE_SSL
+#include <asio/ssl.hpp>
+#endif
+
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <rutil/Timer.hxx>
@@ -20,23 +24,15 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM FlowManagerSubsystem::FLOWMANAGER
 
 MediaStream::MediaStream(asio::io_service& ioService,
-#ifdef USE_SSL
-                         asio::ssl::context& sslContext,
-#endif
                          MediaStreamHandler& mediaStreamHandler,
                          const StunTuple& localRtpBinding, 
                          const StunTuple& localRtcpBinding, 
-#ifdef USE_SSL
-                         DtlsFactory* dtlsFactory,
-#endif 
                          NatTraversalMode natTraversalMode,
                          const char* natTraversalServerHostname, 
                          unsigned short natTraversalServerPort, 
                          const char* stunUsername,
                          const char* stunPassword) :
-#ifdef USE_SSL
-   mDtlsFactory(dtlsFactory),
-#endif  
+   mDtlsFactory(NULL),
    mSRTPSessionInCreated(false),
    mSRTPSessionOutCreated(false),
    mNatTraversalMode(natTraversalMode),
@@ -45,6 +41,38 @@ MediaStream::MediaStream(asio::io_service& ioService,
    mStunUsername(stunUsername),
    mStunPassword(stunPassword),
    mMediaStreamHandler(mediaStreamHandler)
+{
+   init();
+}
+
+#ifdef USE_SSL
+MediaStream::MediaStream(asio::io_service& ioService,
+                         asio::ssl::context& sslContext,
+                         MediaStreamHandler& mediaStreamHandler,
+                         const StunTuple& localRtpBinding, 
+                         const StunTuple& localRtcpBinding, 
+                         DtlsFactory* dtlsFactory,
+                         NatTraversalMode natTraversalMode,
+                         const char* natTraversalServerHostname, 
+                         unsigned short natTraversalServerPort, 
+                         const char* stunUsername,
+                         const char* stunPassword) :
+   mDtlsFactory(dtlsFactory),
+   mSRTPSessionInCreated(false),
+   mSRTPSessionOutCreated(false),
+   mNatTraversalMode(natTraversalMode),
+   mNatTraversalServerHostname(natTraversalServerHostname),
+   mNatTraversalServerPort(natTraversalServerPort),
+   mStunUsername(stunUsername),
+   mStunPassword(stunPassword),
+   mMediaStreamHandler(mediaStreamHandler)
+{
+   init();
+}
+#endif
+
+void
+MediaStream::init()
 {
    // Rtcp is enabled if localRtcpBinding transport type != None
    mRtcpEnabled = localRtcpBinding.getTransportType() != StunTuple::None;
@@ -344,3 +372,6 @@ MediaStream::onFlowError(unsigned int componentId, unsigned int errorCode)
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  ==================================================================== */
+
+// vim: softtabstop=3:shiftwidth=3:expandtab
+

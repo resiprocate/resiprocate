@@ -3,7 +3,6 @@
   #include "config.h"
 #endif
 
-#ifdef USE_SSL
 #ifndef TURNASYNCTLSSOCKET_HXX
 #define TURNASYNCTLSSOCKET_HXX
 
@@ -41,7 +40,6 @@ private:
 
 } 
 
-#endif
 #endif
 
 /* ====================================================================

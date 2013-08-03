@@ -13,7 +13,12 @@
 #include "ErrorCode.hxx"
 #include "Flow.hxx"
 #include "MediaStream.hxx"
+
+#ifdef USE_SSL
 #include "FlowDtlsSocketContext.hxx"
+#include "reTurn/client/TurnAsyncTlsSocket.hxx"
+#include "dtls_wrapper/DtlsSocket.hxx"
+#endif
 
 using namespace flowmanager;
 using namespace resip;
@@ -114,16 +119,11 @@ char* srtp_error_string(err_status_t error)
 }
 
 Flow::Flow(asio::io_service& ioService,
-#ifdef USE_SSL
-           asio::ssl::context& sslContext,
-#endif
            unsigned int componentId,
            const StunTuple& localBinding, 
            MediaStream& mediaStream) 
   : mIOService(ioService),
-#ifdef USE_SSL
-    mSslContext(sslContext),
-#endif
+    mSslContext(NULL),
     mComponentId(componentId),
     mLocalBinding(localBinding), 
     mMediaStream(mediaStream),
@@ -131,6 +131,32 @@ Flow::Flow(asio::io_service& ioService,
     mReservationToken(0),
     mFlowState(Unconnected),
     mReceivedDataFifo(MAX_RECEIVE_FIFO_DURATION,MAX_RECEIVE_FIFO_SIZE)
+{
+   init();
+}
+
+#ifdef USE_SSL
+Flow::Flow(asio::io_service& ioService,
+           asio::ssl::context& sslContext,
+           unsigned int componentId,
+           const StunTuple& localBinding, 
+           MediaStream& mediaStream) 
+  : mIOService(ioService),
+    mSslContext(&sslContext),
+    mComponentId(componentId),
+    mLocalBinding(localBinding), 
+    mMediaStream(mediaStream),
+    mAllocationProps(StunMessage::PropsNone),
+    mReservationToken(0),
+    mFlowState(Unconnected),
+    mReceivedDataFifo(MAX_RECEIVE_FIFO_DURATION,MAX_RECEIVE_FIFO_SIZE)
+{
+   init();
+}
+#endif
+
+void
+Flow::init()
 {
    InfoLog(<< "Flow: flow created for " << mLocalBinding << "  ComponentId=" << mComponentId);
 
@@ -145,7 +171,7 @@ Flow::Flow(asio::io_service& ioService,
 #ifdef USE_SSL
    case StunTuple::TLS:
       mTurnSocket.reset(new TurnAsyncTlsSocket(mIOService, 
-                                               mSslContext, 
+                                               *mSslContext, 
                                                false, // validateServerCertificateHostname - TODO - make this configurable
                                                this, 
                                                mLocalBinding.getAddress(), 
@@ -932,3 +958,5 @@ Flow::createDtlsSocketServer(const StunTuple& endpoint)
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  ==================================================================== */
+
+// vim: softtabstop=3:shiftwidth=3:expandtab

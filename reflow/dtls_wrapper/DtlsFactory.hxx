@@ -2,8 +2,6 @@
 #include "config.h"
 #endif
 
-#ifdef USE_SSL
-
 #ifndef DtlsFactory_hxx
 #define DtlsFactory_hxx
 
@@ -67,7 +65,6 @@ private:
 }
 #endif
 
-#endif 
 /* ====================================================================
 
  Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 

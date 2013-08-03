@@ -2,8 +2,6 @@
 #include "config.h"
 #endif
 
-#ifdef USE_SSL 
-
 #ifndef DTLS_Timer_hxx
 #define DTLS_Timer_hxx
 
@@ -42,7 +40,6 @@ class DtlsTimerContext
 
 #endif
 
-#endif
 /* ====================================================================
 
  Copyright (c) 2007-2008, Eric Rescorla and Derek MacDonald 

@@ -20,6 +20,9 @@
 #endif
 
 #ifdef USE_SSL  
+#include "dtls_wrapper/DtlsFactory.hxx"
+#include <openssl/crypto.h>
+#include <openssl/ssl.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 #include "FlowDtlsTimerContext.hxx"
@@ -56,13 +59,13 @@ private:
 }
 
 FlowManager::FlowManager()
-#ifdef USE_SSL
    : 
-   mSslContext(mIOService, asio::ssl::context::tlsv1),
+#ifdef USE_SSL
+   mSslContext(new asio::ssl::context(mIOService, asio::ssl::context::tlsv1)),
+#endif  
    mClientCert(0),
    mClientKey(0),
    mDtlsFactory(0)
-#endif  
 {
    mIOServiceWork = new asio::io_service::work(mIOService);
    mIOServiceThread = new IOServiceThread(mIOService);
@@ -71,10 +74,10 @@ FlowManager::FlowManager()
 #ifdef USE_SSL
    // Setup SSL context
    asio::error_code ec; 
-   mSslContext.set_verify_mode(asio::ssl::context::verify_peer | 
+   mSslContext->set_verify_mode(asio::ssl::context::verify_peer | 
                                asio::ssl::context::verify_fail_if_no_peer_cert);
 #define VERIFY_FILE "ca.pem"
-   mSslContext.load_verify_file(VERIFY_FILE, ec);   // TODO make a setting
+   mSslContext->load_verify_file(VERIFY_FILE, ec);   // TODO make a setting
    if(ec)
    {
       ErrLog(<< "Unable to load verify file: " << VERIFY_FILE << ", error=" << ec.value() << "(" << ec.message() << ")");
@@ -102,6 +105,7 @@ FlowManager::~FlowManager()
    if(mDtlsFactory) delete mDtlsFactory;
    if(mClientCert) X509_free(mClientCert);
    if(mClientKey) EVP_PKEY_free(mClientKey);
+   delete mSslContext;
  #endif 
 }
 
@@ -166,7 +170,7 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
       StunTuple localRtcpBinding(localBinding.getTransportType(), localBinding.getAddress(), localBinding.getPort() + 1);
       newMediaStream = new MediaStream(mIOService,
 #ifdef USE_SSL
-                                       mSslContext,
+                                       *mSslContext,
 #endif
                                        mediaStreamHandler,
                                        localBinding,
@@ -185,7 +189,7 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
       StunTuple rtcpDisabled;  // Default constructor sets transport type to None - this signals Rtcp is disabled
       newMediaStream = new MediaStream(mIOService,
 #ifdef USE_SSL
-                                       mSslContext, 
+                                       *mSslContext, 
 #endif
                                        mediaStreamHandler, 
                                        localBinding, 
@@ -313,3 +317,6 @@ FlowManager::createCert(const resip::Data& pAor, int expireDays, int keyLen, X50
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  ==================================================================== */
+
+// vim: softtabstop=3:shiftwidth=3:expandtab
+
