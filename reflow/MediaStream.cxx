@@ -23,6 +23,9 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM FlowManagerSubsystem::FLOWMANAGER
 
+
+// .bwc. This would be _much_ less code if we could use C++11
+// constructor delegation.
 MediaStream::MediaStream(asio::io_service& ioService,
                          MediaStreamHandler& mediaStreamHandler,
                          const StunTuple& localRtpBinding, 
@@ -42,7 +45,11 @@ MediaStream::MediaStream(asio::io_service& ioService,
    mStunPassword(stunPassword),
    mMediaStreamHandler(mediaStreamHandler)
 {
-   init();
+   init(ioService, 
+         NULL, 
+         localRtpBinding, 
+         localRtcpBinding, 
+         natTraversalMode);
 }
 
 #ifdef USE_SSL
@@ -67,12 +74,20 @@ MediaStream::MediaStream(asio::io_service& ioService,
    mStunPassword(stunPassword),
    mMediaStreamHandler(mediaStreamHandler)
 {
-   init();
+   init(ioService, 
+         &sslContext, 
+         localRtpBinding, 
+         localRtcpBinding, 
+         natTraversalMode);
 }
 #endif
 
 void
-MediaStream::init()
+MediaStream::init(asio::io_service& ioService,
+                  asio::ssl::context* sslContext,
+                  const StunTuple& localRtpBinding, 
+                  const StunTuple& localRtcpBinding,
+                  NatTraversalMode natTraversalMode)
 {
    // Rtcp is enabled if localRtcpBinding transport type != None
    mRtcpEnabled = localRtcpBinding.getTransportType() != StunTuple::None;
@@ -81,7 +96,7 @@ MediaStream::init()
    {
       mRtpFlow = new Flow(ioService, 
 #ifdef USE_SSL
-                          sslContext, 
+                          *sslContext, 
 #endif
                           RTP_COMPONENT_ID, 
                           localRtpBinding, 
@@ -89,7 +104,7 @@ MediaStream::init()
 
       mRtcpFlow = new Flow(ioService, 
 #ifdef USE_SSL
-                           sslContext, 
+                           *sslContext, 
 #endif
                            RTCP_COMPONENT_ID,
                            localRtcpBinding, 
@@ -107,7 +122,7 @@ MediaStream::init()
    {
       mRtpFlow = new Flow(ioService, 
 #ifdef USE_SSL
-                          sslContext, 
+                          *sslContext, 
 #endif
                           RTP_COMPONENT_ID,
                           localRtpBinding, 

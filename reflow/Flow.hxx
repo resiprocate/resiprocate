@@ -24,8 +24,21 @@
 
 using namespace reTurn;
 
-class asio::ssl::context;
-class dtls::DtlsSocket;
+
+namespace asio
+{
+namespace ssl
+{
+class context_service;
+template <class S> class basic_context;
+typedef basic_context<context_service> context;
+}
+}
+
+namespace dtls
+{
+class DtlsSocket;
+}
 
 namespace flowmanager
 {

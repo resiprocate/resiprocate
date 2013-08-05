@@ -10,6 +10,7 @@
 #include <rutil/Timer.hxx>
 
 #include <asio.hpp>
+#include <asio/ssl/context.hpp>
 #include <boost/function.hpp>
 #include <map>
 

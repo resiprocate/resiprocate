@@ -9,9 +9,9 @@
 #include <rutil/Timer.hxx>
 #include <rutil/Lock.hxx>
 
+#include "Flow.hxx"
 #include "FlowManagerSubsystem.hxx"
 #include "ErrorCode.hxx"
-#include "Flow.hxx"
 #include "MediaStream.hxx"
 
 #ifdef USE_SSL
@@ -207,6 +207,7 @@ Flow::~Flow()
          delete it->second;
       }
    }
+   delete mSslContext;
  #endif //USE_SSL
 
    // Cleanup TurnSocket

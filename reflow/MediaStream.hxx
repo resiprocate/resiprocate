@@ -15,7 +15,16 @@
 #include "dtls_wrapper/DtlsFactory.hxx"
 #include "Flow.hxx"
 
-class asio::ssl::context;
+//namespace asio
+//{
+//namespace ssl
+//{
+//class context_service;
+//template <class S> class basic_context;
+//typedef basic_context<context_service> context;
+//}
+//}
+
 using namespace reTurn;
 
 namespace flowmanager
@@ -58,6 +67,15 @@ public:
    };
 
    MediaStream(asio::io_service& ioService,
+               MediaStreamHandler& mediaStreamHandler,
+               const StunTuple& localRtpBinding, 
+               const StunTuple& localRtcpBinding,   // pass in transport type = None to disable RTCP
+               NatTraversalMode natTraversalMode = NoNatTraversal,
+               const char* natTraversalServerHostname = 0, 
+               unsigned short natTraversalServerPort = 0, 
+               const char* stunUsername = 0,
+               const char* stunPassword = 0); 
+   MediaStream(asio::io_service& ioService,
                asio::ssl::context& sslContext,
                MediaStreamHandler& mediaStreamHandler,
                const StunTuple& localRtpBinding, 
@@ -78,7 +96,6 @@ public:
    bool createInboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen);
 
 protected:
-   void init();
    friend class Flow;
 
    // SRTP members
@@ -106,6 +123,12 @@ protected:
    resip::Data mStunPassword;
 
 private:
+   void init(asio::io_service& ioService,
+                  asio::ssl::context* sslContext,
+                  const StunTuple& localRtpBinding, 
+                  const StunTuple& localRtcpBinding,
+                  NatTraversalMode natTraversalMode);
+
    // Note: these member variables are set at creation time and never changed, thus
    //       they do not require mutex protection
    MediaStreamHandler& mMediaStreamHandler;

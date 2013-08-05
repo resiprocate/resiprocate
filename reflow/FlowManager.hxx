@@ -10,9 +10,13 @@
 
 #include <map>
 
-class X509;
-class EVP_PKEY;
-class dtls::DtlsFactory;
+//class X509;
+//class EVP_PKEY;
+
+namespace dtls
+{
+class DtlsFactory;
+}
 
 using namespace reTurn;
 
