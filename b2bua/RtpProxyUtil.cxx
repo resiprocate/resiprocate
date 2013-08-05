@@ -33,6 +33,11 @@
 
 #define RTPPROXY_RETRY_COUNT 3
 
+#ifndef UNIX_PATH_MAX
+// see man 7 unix, should be in sys/un.h:
+#define UNIX_PATH_MAX 108
+#endif
+
 using namespace b2bua;
 using namespace std;
 
@@ -81,7 +86,13 @@ void RtpProxyUtil::init() {
   }
 
   local.sun_family = AF_UNIX;
-  strcpy(local.sun_path, timeout_sock);
+  int path_len = strlen(timeout_sock);
+  if((path_len+1) > UNIX_PATH_MAX)
+  {
+     B2BUA_LOG_ERR("length of timeout_sock > UNIX_PATH_MAX");
+     throw; // FIXME
+  }
+  strncpy(local.sun_path, timeout_sock, path_len);
   unlink(local.sun_path);
   len = strlen(local.sun_path) + sizeof(local.sun_family);
   if (bind(timeoutfd, (struct sockaddr *)&local, len) == -1) {
