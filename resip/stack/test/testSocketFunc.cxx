@@ -34,13 +34,24 @@ void afterSocketCreationFunction(Socket sock, int transport, const char *file, i
 {
 }
 
+/* For TLS and WSS, it is necessary to create a key and cert with OpenSSL
+
+   openssl req -new -x509 -days 365 -nodes \
+       -out ~/.sipCerts/domain_cert_127.0.0.1.pem \
+       -keyout ~/.sipCerts/domain_key_127.0.0.1.pem \
+       -subj '/CN=127.0.0.1'
+
+  and then uncomment TLS and WSS below
+ */
+
 int main()
 {
   Security *sec = new Security();
   SipStack sipStack(sec, DnsStub::EmptyNameserverList, 0, false, &afterSocketCreationFunction);
   sipStack.addTransport(UDP, 5060, V4, StunDisabled, Data::Empty, "127.0.0.1");
   sipStack.addTransport(TCP, 5062, V4, StunDisabled, Data::Empty, "127.0.0.1");
-  sipStack.addTransport(TLS, 5061, V4, StunDisabled, Data::Empty, "127.0.0.1");
+  //sipStack.addTransport(TLS, 5061, V4, StunDisabled, Data::Empty, "127.0.0.1");
+  //sipStack.addTransport(WSS, 8443, V4, StunDisabled, Data::Empty, "127.0.0.1");
   return 0;
 }
 
