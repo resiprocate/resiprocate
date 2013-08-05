@@ -1,0 +1,7 @@
+
+MOD_ARCH=arm
+CROSS_COMPILE=arm-linux-androideabi
+
+# for 16 bit Thumb-1 (default is 32 bit ARM)
+CPPFLAGS="${CPPFLAGS} -mthumb"
+
