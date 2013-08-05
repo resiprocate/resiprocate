@@ -39,6 +39,19 @@ PAR=`expr $CPUS + 1`
 
 STAGE_PREBUILT=`mktemp -d`
 
+function cleanup {
+  if [ ! -z "${STAGE_PREBUILT}" ];
+  then
+    rm -rf "${STAGE_PREBUILT}"
+  fi
+  if [ ! -z "${MY_NDK}" ];
+  then
+    rm -rf "${MY_NDK}"
+  fi
+}
+
+trap cleanup EXIT
+
 for MOD_SRC in ${MODS_DIR}/* ;
 do
 
