@@ -16,7 +16,7 @@ SUBDIRS += jabberconnector
 sbin_PROGRAMS = ichat-gw
 ichat_gw_LDADD = ../../resip/dum/libdum.la
 ichat_gw_LDADD += ../../resip/stack/libresip.la ../../rutil/librutil.la
-ichat_gw_LDADD += @LIBSSL_LIBADD@ -lpcre -lpthread
+ichat_gw_LDADD += @LIBSSL_LIBADD@ -lpcre @LIBPTHREAD_LIBADD@
 
 ichat_gw_SOURCES = \
         AddressTranslator.cxx \

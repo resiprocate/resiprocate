@@ -12,7 +12,7 @@ sanityTests_LDADD += ../../resip/stack/libresip.la
 sanityTests_LDADD += ../../rutil/librutil.la
 sanityTests_LDADD += @LIBSSL_LIBADD@
 sanityTests_LDADD += -lpopt
-sanityTests_LDADD += -lpthread
+sanityTests_LDADD += @LIBPTHREAD_LIBADD@
 sanityTests_LDADD += -lcppunit
 sanityTests_LDADD += -lNetxx
 

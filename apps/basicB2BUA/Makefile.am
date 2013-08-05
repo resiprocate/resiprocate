@@ -7,7 +7,7 @@ basicB2BUA_LDADD += ../../resip/dum/libdum.la
 basicB2BUA_LDADD += ../../resip/stack/libresip.la
 basicB2BUA_LDADD += ../../rutil/librutil.la
 basicB2BUA_LDADD += -lxerces-c -lpcrecpp
-basicB2BUA_LDADD += @LIBSSL_LIBADD@ -lpthread
+basicB2BUA_LDADD += @LIBSSL_LIBADD@ @LIBPTHREAD_LIBADD@
 
 basicB2BUA_SOURCES = \
 	Context.cxx \

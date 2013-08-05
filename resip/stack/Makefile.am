@@ -31,6 +31,7 @@ SUBDIRS = . test
 lib_LTLIBRARIES = libresip.la
 
 libresip_la_LIBADD = @LIBSSL_LIBADD@
+libresip_la_LIBADD += @LIBSTL_LIBADD@
 libresip_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
 
 libresip_la_SOURCES = \

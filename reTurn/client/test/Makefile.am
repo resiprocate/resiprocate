@@ -5,7 +5,7 @@ EXTRA_DIST += *.vcproj
 
 LDADD = ../libreTurnClient.la
 LDADD += ../../../rutil/librutil.la
-LDADD += $(LIBSSL_LIBADD) -lpthread
+LDADD += $(LIBSSL_LIBADD) @LIBPTHREAD_LIBADD@
 
 # These tests all need to be run manually at the moment, so
 # they are commented out (they still get compiled by `make check'):

@@ -8,7 +8,7 @@ EXTRA_DIST += sweepRandom.sh
 
 LDADD = ../librutil.la
 #LDADD += ../../contrib/ares/libares.a
-LDADD += $(LIBSSL_LIBADD) -lpthread
+LDADD += $(LIBSSL_LIBADD) @LIBSTL_LIBADD@ @LIBPTHREAD_LIBADD@
 
 TESTS = \
 	testCoders \

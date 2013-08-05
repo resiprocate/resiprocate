@@ -13,6 +13,7 @@ lib_LTLIBRARIES = libreflow.la
 libreflow_la_LIBADD = ../reTurn/client/libreTurnClient.la
 libreflow_la_LIBADD += ../rutil/librutil.la
 libreflow_la_LIBADD += @LIBSSL_LIBADD@ -lsrtp
+libreflow_la_LIBADD += @LIBSTL_LIBADD@
 libreflow_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
 
 libreflow_la_SOURCES = FakeSelectSocketDescriptor.cxx \

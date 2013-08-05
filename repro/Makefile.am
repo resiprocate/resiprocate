@@ -28,7 +28,7 @@ repro_LDADD += ../resip/dum/libdum.la
 repro_LDADD += ../resip/stack/libresip.la ../rutil/librutil.la
 #repro_LDADD += ../contrib/ares/libares.a
 #repro_LDADD += -L../contrib/ares -lares
-repro_LDADD += @LIBSSL_LIBADD@ -lpthread
+repro_LDADD += @LIBSSL_LIBADD@ @LIBPTHREAD_LIBADD@
 
 lib_LTLIBRARIES = librepro.la
 
