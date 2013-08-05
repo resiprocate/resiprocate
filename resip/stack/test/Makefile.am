@@ -109,6 +109,10 @@ check_PROGRAMS = \
 	testUdp \
 	testUri
 
+if USE_SSL
+TESTS += testSocketFunc
+check_PROGRAMS += testSocketFunc
+endif
 
 UAS_SOURCES = UAS.cxx
 testEmptyHfv_SOURCES = testEmptyHfv.cxx
