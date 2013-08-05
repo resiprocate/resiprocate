@@ -1,6 +1,17 @@
 = Release Notes v 1.8 =
 
 ==1.8.12 Changes==
+* repro: enable IPv6 by default
+* resip/recon: test cases: suppress running unitTests binary, requires audio hardware
+* Add new macro RESIP_BIG_ENDIAN, fixes for big endian users
+* rpm: add new reTurn client header locations to spec file
+* resip/stack: Tuple: fix mask comparison for some platforms with 64 bit long
+* Android: various fixes, add support for DNS and logging
+* resip/stack: remove use of RSA_generate_key (depracated in OpenSSL)
+* various fixes for potential buffer overflow (not in SIP parsing)
+* TFM: finish setting up for autotools builds
+* rutil: Stabilize the ABI of Poll
+* resip/dum: revert fix for onNewSubscription() bug committed in 10183 (r1.8.8)
 
 ==1.8.11 Changes==
 * resip/recon: MOHParkServer: add ssl to libs
