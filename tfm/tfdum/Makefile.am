@@ -1,23 +1,32 @@
 
 EXTRA_DIST = tfdum.sln tfdum.vcproj
 
-TESTS = TestLamba dumTests
+TESTS = TestLamba
+# dumTests becomes stuck waiting for user input, not suitable for 
+# automated "make check", but it does compile and can be run manually
+#TESTS += dumTests
 
-check_PROGRAMS = TestLamba dumTests
+check_PROGRAMS = TestLamba
+check_PROGRAMS += dumTests
 
-TestLamba_LDADD = ../libtfm.la
+TestLamba_LDADD = ../repro/libtfmrepro.la
+TestLamba_LDADD += ../libtfm.la
 TestLamba_LDADD += ../../resip/dum/libdum.la
 TestLamba_LDADD += ../../resip/stack/libresip.la
 TestLamba_LDADD += ../../rutil/librutil.la
+TestLamba_LDADD += -lpopt
 TestLamba_LDADD += @LIBSSL_LIBADD@
 TestLamba_LDADD += @LIBPTHREAD_LIBADD@
 
 TestLamba_SOURCES = TestLamba.cxx $(SHARED_SRC)
 
-dumTests_LDADD = ../libtfm.la
+dumTests_LDADD = ../repro/libtfmrepro.la
+dumTests_LDADD += ../libtfm.la
 dumTests_LDADD += ../../resip/dum/libdum.la
 dumTests_LDADD += ../../resip/stack/libresip.la
 dumTests_LDADD += ../../rutil/librutil.la
+dumTests_LDADD += -lcppunit
+dumTests_LDADD += -lpopt
 dumTests_LDADD += @LIBSSL_LIBADD@
 dumTests_LDADD += @LIBPTHREAD_LIBADD@
 
