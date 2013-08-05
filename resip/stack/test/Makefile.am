@@ -150,6 +150,7 @@ testSipMessage_SOURCES = testSipMessage.cxx TestSupport.cxx
 testSipMessageEncode_SOURCES = testSipMessageEncode.cxx
 testSipMessageMemory_SOURCES = testSipMessageMemory.cxx TestSupport.cxx
 testSipStack1_SOURCES = testSipStack1.cxx
+testSocketFunc_SOURCES = testSocketFunc.cxx
 testStack_SOURCES = testStack.cxx
 testTcp_SOURCES = testTcp.cxx
 testTime_SOURCES = testTime.cxx
