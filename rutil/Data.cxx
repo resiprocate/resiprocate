@@ -1967,6 +1967,19 @@ Data::rawCaseInsensitiveHash(const unsigned char* c, size_t size)
    return ntohl((u_long)st);
 }
 
+#if defined(RESIP_BIG_ENDIAN) || (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__))
+
+#if !defined (get16bits)
+#define get16bits(d) ((((UInt32)(((const UInt8 *)(d))[0])) << 8)\
+                       +(UInt32)(((const UInt8 *)(d))[1]) )
+#endif
+
+#if !defined (get32bits)
+#define get32bits(d) ((get16bits(d) << 16) + get16bits(d+2))
+#endif
+
+#else  // little endian:
+
 #undef get16bits
 #if (defined(__GNUC__) && defined(__i386__)) || defined(__WATCOMC__) \
   || defined(_MSC_VER) || defined (__BORLANDC__) || defined (__TURBOC__)
@@ -1986,6 +1999,7 @@ Data::rawCaseInsensitiveHash(const unsigned char* c, size_t size)
 
 #if !defined (get32bits)
 #define get32bits(d) ((get16bits(d+2) << 16) + get16bits(d))
+#endif
 #endif
 
 // This is intended to be a faster case-insensitive hash function that works
