@@ -2,6 +2,8 @@
 #include "AppSubsystem.hxx"
 #include "MOHManager.hxx"
 #include "Server.hxx"
+#include "mp/MpResourceFactory.h"
+#include "mp/MprBridgeConstructor.h"
 
 #include <resip/stack/ExtensionParameter.hxx>
 #include <rutil/Log.hxx>

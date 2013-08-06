@@ -54,7 +54,7 @@ public:
    void outputBridgeMixWeights();
 
 private:
-   MpBridgeGain mMixMatrix[DEFAULT_BRIDGE_MAX_IN_OUTPUTS][DEFAULT_BRIDGE_MAX_IN_OUTPUTS];
+   MpBridgeGain* mMixMatrix;
    CpMediaInterface& mMediaInterface;
 };
 

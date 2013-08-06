@@ -2,6 +2,8 @@
 #include "AppSubsystem.hxx"
 #include "ParkOrbit.hxx"
 #include "Server.hxx"
+#include "mp/MpResourceFactory.h"
+#include "mp/MprBridgeConstructor.h"
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>

@@ -3,6 +3,8 @@
 #include "Participant.hxx"
 #include "RemoteParticipant.hxx"
 #include "Conversation.hxx"
+#include "mp/MpResourceFactory.h"
+#include "mp/MprBridgeConstructor.h"
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -17,15 +19,30 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
+const static size_t matrixSize = 
+   DEFAULT_BRIDGE_MAX_IN_OUTPUTS*DEFAULT_BRIDGE_MAX_IN_OUTPUTS;
+
+// GainMatrixPtr is a pointer to a 
+// MpBridgeGain[DEFAULT_BRIDGE_MAX_IN_OUTPUTS][DEFAULT_BRIDGE_MAX_IN_OUTPUTS]
+// This is better than simply having a MpBridgeGain[][] member variable,
+// since the ABI is more stable, but I bet that a mismatch between sipX and
+// our code will lead to trouble. sipX really should make it possible to 
+// determine this max at runtime, and we should avoid usage of this macro
+// altogether.
+typedef MpBridgeGain (*GainMatrixPtr)[DEFAULT_BRIDGE_MAX_IN_OUTPUTS][DEFAULT_BRIDGE_MAX_IN_OUTPUTS];
+
 BridgeMixer::BridgeMixer(CpMediaInterface& mediaInterface) :
+   mMixMatrix(NULL),
    mMediaInterface(mediaInterface)
 {
+   mMixMatrix = new MpBridgeGain[matrixSize];
    // Set default to 0 gain for entire matrix
-   memset(mMixMatrix, 0, sizeof(mMixMatrix));
+   memset(mMixMatrix, 0, sizeof(MpBridgeGain[matrixSize]));
 }
 
 BridgeMixer::~BridgeMixer()
 {
+   delete [] mMixMatrix;
 }
 
 void
@@ -41,9 +58,9 @@ BridgeMixer::calculateMixWeightsForParticipant(Participant* participant)
       // Default All Inputs/Outputs to 0, then calculate non-zero inputs/outputs
       for(int i = 0; i < DEFAULT_BRIDGE_MAX_IN_OUTPUTS; i++)
       {
-         mMixMatrix[i][bridgePort] = 0;
+         (*(GainMatrixPtr)mMixMatrix)[i][bridgePort] = 0;
          inputBridgeWeights[i] = 0;
-         mMixMatrix[bridgePort][i] = 0;
+         (*(GainMatrixPtr)mMixMatrix)[bridgePort][i] = 0;
       }
 
       // Walk through all Conversations this Participant is in
@@ -76,11 +93,11 @@ BridgeMixer::calculateMixWeightsForParticipant(Participant* participant)
                   //InfoLog( << "Setting mix level for bridge ports: " << bridgePort << " and " << otherBridgePort);
                   // Calculate the mixed output gain
                   unsigned int outputGain = ((it2->second.getOutputGain() * participantInputGain) / 100) * 10;  // 10 factor is to bring inline with MrpBridgeWeight int type
-                  mMixMatrix[bridgePort][otherBridgePort] = max((int)outputGain, mMixMatrix[bridgePort][otherBridgePort]);
+                  (*(GainMatrixPtr)mMixMatrix)[bridgePort][otherBridgePort] = max((int)outputGain, (*(GainMatrixPtr)mMixMatrix)[bridgePort][otherBridgePort]);
 
                   // Calculate the mixed input gain
                   unsigned int inputGain = ((it2->second.getInputGain() * participantOutputGain) / 100) * 10;  // 10 factor is to bring inline with MrpBridgeWeight int type
-                  inputBridgeWeights[otherBridgePort] = mMixMatrix[otherBridgePort][bridgePort] = max((int)inputGain, mMixMatrix[otherBridgePort][bridgePort]);                   
+                  inputBridgeWeights[otherBridgePort] = (*(GainMatrixPtr)mMixMatrix)[otherBridgePort][bridgePort] = max((int)inputGain, (*(GainMatrixPtr)mMixMatrix)[otherBridgePort][bridgePort]);                   
                }
             }
          }
@@ -89,7 +106,7 @@ BridgeMixer::calculateMixWeightsForParticipant(Participant* participant)
       //outputBridgeMixWeights();
 
       // Apply new bridge weights
-      MprBridge::setMixWeightsForOutput(DEFAULT_BRIDGE_RESOURCE_NAME, *mMediaInterface.getMsgQ(), bridgePort, DEFAULT_BRIDGE_MAX_IN_OUTPUTS, mMixMatrix[bridgePort]);
+      MprBridge::setMixWeightsForOutput(DEFAULT_BRIDGE_RESOURCE_NAME, *mMediaInterface.getMsgQ(), bridgePort, DEFAULT_BRIDGE_MAX_IN_OUTPUTS, (*(GainMatrixPtr)mMixMatrix)[bridgePort]);
       MprBridge::setMixWeightsForInput(DEFAULT_BRIDGE_RESOURCE_NAME, *mMediaInterface.getMsgQ(), bridgePort, DEFAULT_BRIDGE_MAX_IN_OUTPUTS, inputBridgeWeights);
    }   
 }
@@ -132,17 +149,17 @@ BridgeMixer::outputBridgeMixWeights()
       }
       for(int j = 0; j < DEFAULT_BRIDGE_MAX_IN_OUTPUTS; j++)
       {
-         if(mMixMatrix[i][j]/10 < 10)
+         if((*(GainMatrixPtr)mMixMatrix)[i][j]/10 < 10)
          {
-            data += " " + Data(mMixMatrix[i][j]/10) + "  ";
+            data += " " + Data((*(GainMatrixPtr)mMixMatrix)[i][j]/10) + "  ";
          }
-         else if(mMixMatrix[i][j]/10 < 100)
+         else if((*(GainMatrixPtr)mMixMatrix)[i][j]/10 < 100)
          {
-            data += Data(mMixMatrix[i][j]/10) + "  ";
+            data += Data((*(GainMatrixPtr)mMixMatrix)[i][j]/10) + "  ";
          }
          else
          {
-            data += Data(mMixMatrix[i][j]/10) + " ";
+            data += Data((*(GainMatrixPtr)mMixMatrix)[i][j]/10) + " ";
          }
       }
       InfoLog( << data);
@@ -183,3 +200,6 @@ BridgeMixer::outputBridgeMixWeights()
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  ==================================================================== */
+
+// vim: softtabstop=3:shiftwidth=3:expandtab
+
