@@ -1,5 +1,6 @@
 
 EXTRA_DIST = reConServer_readme.txt
+EXTRA_DIST += reConServer.config
 
 bin_PROGRAMS = reConServer
 
