@@ -4,6 +4,8 @@ EXTRA_DIST += reConServer.config
 
 bin_PROGRAMS = reConServer
 
+dist_man_MANS = reConServer.8
+
 reConServer_SOURCES = reConServer.cxx
 reConServer_SOURCES += reConServer.hxx
 reConServer_SOURCES += reConServerConfig.cxx
