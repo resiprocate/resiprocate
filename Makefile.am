@@ -2,7 +2,7 @@
 EXTRA_DIST = reConServer_readme.txt
 EXTRA_DIST += reConServer.config
 
-bin_PROGRAMS = reConServer
+sbin_PROGRAMS = reConServer
 
 dist_man_MANS = reConServer.8
 
