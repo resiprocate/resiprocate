@@ -174,11 +174,11 @@ AC_ARG_WITH(sigcomp,
 
 AC_ARG_ENABLE(android,
 [  --enable-android        Enable Android build],
-   [AC_SUBST(LIBPTHREAD_LIBADD, ""),
-   AC_SUBST(LIBLOG_LIBADD, "-llog"),
+   [AC_SUBST(LIBPTHREAD_LIBADD, "")
+   AC_SUBST(LIBLOG_LIBADD, "-llog")
    AC_SUBST(LIBSTL_LIBADD, "-lgnustl_shared")],
-   [AC_SUBST(LIBPTHREAD_LIBADD, "-lpthread"),
-   AC_SUBST(LIBLOG_LIBADD, ""),
+   [AC_SUBST(LIBPTHREAD_LIBADD, "-lpthread")
+   AC_SUBST(LIBLOG_LIBADD, "")
    AC_SUBST(LIBSTL_LIBADD, "")])
 
 AC_ARG_ENABLE(ipv6,
