@@ -29,6 +29,7 @@ librutil_la_LIBADD += $(LIBARES_LIBADD)
 librutil_la_LIBADD += @LIBSTL_LIBADD@
 librutil_la_LIBADD += @LIBLOG_LIBADD@
 #librutil_la_LIBADD += -lrt
+librutil_la_LIBADD += @LIBPTHREAD_LIBADD@
 librutil_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
 
 librutil_la_SOURCES = \

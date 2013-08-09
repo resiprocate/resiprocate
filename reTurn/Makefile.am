@@ -78,8 +78,7 @@ nobase_reTurninclude_HEADERS = AsyncSocketBaseHandler.hxx \
 	reTurnServer.hxx
 
 #reTurnServer_LDADD = librepro.la
-reTurnServer_LDADD = ../resip/dum/libdum.la
-reTurnServer_LDADD += ../resip/stack/libresip.la ../rutil/librutil.la
+reTurnServer_LDADD += ../rutil/librutil.la
 #reTurnServer_LDADD += ../contrib/ares/libares.a
 #reTurnServer_LDADD += -L../contrib/ares -lares
 reTurnServer_LDADD += @LIBSTL_LIBADD@
