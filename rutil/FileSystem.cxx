@@ -31,7 +31,12 @@ FileSystem::Directory::iterator::iterator(const Directory& dir)
    //InfoLog(<< "FileSystem::Directory::iterator::iterator: " << dir.getPath());   
    if ((mNixDir = opendir( dir.getPath().c_str() )))
    {
+      errno = 0;
       mDirent = readdir(mNixDir);
+      if(errno != 0)
+      {
+         throw Exception("Failed readdir", __FILE__, __LINE__);
+      }
       if (mDirent)
       {
          //InfoLog(<< "FileSystem::Directory::iterator::iterator, first file " << mFile);   
@@ -59,7 +64,12 @@ FileSystem::Directory::iterator::operator++()
 {
    if (mDirent)
    {
+      errno = 0;
       mDirent = readdir(mNixDir);
+      if(errno != 0)
+      {
+         throw Exception("Failed readdir", __FILE__, __LINE__);
+      }
       if (mDirent)
       {
          mFile = mDirent->d_name;
