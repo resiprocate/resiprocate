@@ -2394,8 +2394,8 @@ Data::base64encode(bool useSafeSet) const
    unsigned char* codeChar = useSafeSet ? codeCharSafe : codeCharUnsafe;
    
    int srcLength = (int)this->size();
-   unsigned int dstLimitLength = 4 * (srcLength / 3 + (srcLength%3 ? 0 : 1)) + 1;
-   unsigned char * dstData = new unsigned char[dstLimitLength];
+   unsigned int dstLimitLength = 4 * (srcLength / 3 + (srcLength%3==0 ? 0 : 1));
+   unsigned char * dstData = new unsigned char[dstLimitLength + 1];
    unsigned int dstIndex = 0;
    
    const char * p = static_cast<const char *>( this->data() );
@@ -2452,6 +2452,7 @@ Data::base64encode(bool useSafeSet) const
       // outputed all d0,d1, and d2
    }
 
+   dstData[dstIndex] = 0;
    return Data(Data::Take, reinterpret_cast<char*>(dstData),
                dstIndex);
 }
