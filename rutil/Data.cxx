@@ -2394,7 +2394,7 @@ Data::base64encode(bool useSafeSet) const
    unsigned char* codeChar = useSafeSet ? codeCharSafe : codeCharUnsafe;
    
    int srcLength = (int)this->size();
-   unsigned int dstLimitLength = srcLength*4/3 + 1 + 2; // +2 for the == chars
+   unsigned int dstLimitLength = 4 * (srcLength / 3 + (srcLength%3 ? 0 : 1)) + 1;
    unsigned char * dstData = new unsigned char[dstLimitLength];
    unsigned int dstIndex = 0;
    
