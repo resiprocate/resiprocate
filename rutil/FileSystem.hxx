@@ -1,6 +1,7 @@
 #ifndef RESIP_FileSystem_hxx
 #define RESIP_FileSystem_hxx
 
+#include "rutil/BaseException.hxx"
 #include "rutil/Data.hxx"
 
 #if !defined(WIN32)
@@ -30,6 +31,18 @@ namespace resip
 class FileSystem
 {
    public:
+
+      class Exception : public BaseException
+      {
+         public:
+            Exception(const Data& msg,
+                      const Data& file,
+                      const int line)
+               : BaseException(msg, file, line) {}
+         protected:
+            virtual const char* name() const { return "ConfigParse::Exception"; }
+      };
+
       class Directory
       {
          public:
