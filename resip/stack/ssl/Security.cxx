@@ -154,8 +154,8 @@ extern "C"
 static int 
 verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
 {
-   char cBuf1[500];
-   char cBuf2[500];
+   char cBuf1[257];
+   char cBuf2[501];
    X509 *pErrCert;
    int iErr = 0;
    int iDepth = 0;
@@ -166,7 +166,7 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
    if (NULL != pErrCert)
       X509_NAME_oneline(X509_get_subject_name(pErrCert),cBuf1,256);
 
-   sprintf(cBuf2,", depth=%d %s\n",iDepth,cBuf1);
+   snprintf(cBuf2, 500, ", depth=%d %s\n", iDepth, cBuf1);
    if(!iInCode)
       ErrLog(<< "Error when verifying server's chain of certificates: " << X509_verify_cert_error_string(pInStore->error) << cBuf2 );
  
