@@ -2,7 +2,9 @@
 #include <cassert>
 #include <ctype.h>
 #include <math.h>
+#include <limits>
 #include <limits.h>
+#include <stdexcept>
 
 #if defined(HAVE_CONFIG_H)
 #include "config.h"
@@ -223,39 +225,13 @@ Data::Data(size_type capacity, bool)
 #endif
 
 Data::Data(const char* str, size_type length) 
-   : mBuf(length > LocalAlloc 
-          ? new char[length + 1]
-          : mPreBuffer),
-     mSize(length),
-     mCapacity(mSize > LocalAlloc
-               ? mSize
-               : LocalAlloc),
-     mShareEnum(mSize > LocalAlloc ? Take : Borrow)
 {
-   if (mSize > 0)
-   {
-      assert(str);
-      memcpy(mBuf, str, mSize);
-   }
-   mBuf[mSize]=0;
+   initFromString(str, length);
 }
 
 Data::Data(const unsigned char* str, size_type length) 
-   : mBuf(length > LocalAlloc 
-          ? new char[length + 1]
-          : mPreBuffer),
-     mSize(length),
-     mCapacity(mSize > LocalAlloc
-               ? mSize
-               : LocalAlloc),
-     mShareEnum(mSize > LocalAlloc ? Take : Borrow)
 {
-   if (mSize > 0)
-   {
-      assert(str);
-      memcpy(mBuf, str, mSize);
-   }
-   mBuf[mSize]=0;
+   initFromString((const char*)str, length);
 }
 
 // share memory KNOWN to be in a surrounding scope
@@ -268,6 +244,39 @@ Data::Data(const char* str, size_type length, bool)
      mShareEnum(Share)
 {
    assert(str);
+}
+
+void
+Data::initFromString(const char* str, size_type len)
+{
+   mSize = len;
+   if(len > 0)
+   {
+      assert(str);
+   }
+   size_t bytes = len + 1;
+   if(bytes <= len)
+   {
+      // integer overflow
+      throw std::bad_alloc();
+   }
+   if(bytes > LocalAlloc)
+   {
+      mBuf = new char[bytes];
+      mCapacity = mSize;
+      mShareEnum = Take;
+   }
+   else
+   {
+      mBuf = mPreBuffer;
+      mCapacity = LocalAlloc;
+      mShareEnum = Borrow;
+   }
+   if(str)
+   {
+      memcpy(mBuf, str, len);
+   }
+   mBuf[mSize] = 0;
 }
 
 Data::Data(ShareEnum se, const char* buffer, size_type length)
@@ -310,60 +319,19 @@ Data::Data(ShareEnum se, const Data& staticData)
 }
 //=============================================================================
 
-Data::Data(const char* str) // We need mSize to init mBuf; do in body
-   : mSize(str ? strlen(str) : 0),
-     mCapacity(mSize > LocalAlloc
-               ? mSize
-               : LocalAlloc),
-     mShareEnum(mSize > LocalAlloc ? Take : Borrow)
+Data::Data(const char* str)
 {
-   if(mSize > LocalAlloc)
-   {
-      mBuf = new char[mSize+1];
-   }
-   else
-   {
-      mBuf = mPreBuffer;
-   }
-
-   if (str)
-   {
-      memcpy(mBuf, str, mSize+1);
-   }
-   else
-   {
-      mBuf[mSize] = 0;
-   }
+   initFromString(str, str ? strlen(str) : 0);
 }
 
 Data::Data(const string& str)
-   : mBuf(str.size() > LocalAlloc
-          ? new char[str.size() + 1]
-          : mPreBuffer),
-     mSize(str.size()),
-     mCapacity(mSize > LocalAlloc
-               ? mSize
-               : LocalAlloc),
-     mShareEnum(mSize > LocalAlloc ? Take : Borrow)
 {
-   memcpy(mBuf, str.c_str(), mSize + 1);
+   initFromString(str.c_str(), str.size());
 }
 
 Data::Data(const Data& data) 
-   : mBuf(data.mSize > LocalAlloc
-          ? new char[data.mSize + 1]
-          : mPreBuffer),
-     mSize(data.mSize),
-     mCapacity(mSize > LocalAlloc
-               ? mSize
-               : LocalAlloc),
-     mShareEnum(mSize > LocalAlloc ? Take : Borrow)
 {
-   if (mSize)
-   {
-      memcpy(mBuf, data.mBuf, mSize);
-   }
-   mBuf[mSize] = 0;
+   initFromString(data.mBuf, data.mSize);
 }
 
 #ifdef RESIP_HAS_RVALUE_REFS
@@ -1096,9 +1064,16 @@ Data::resize(size_type newCapacity,
    char *oldBuf = mBuf;
    bool needToDelete=(mShareEnum==Take);
 
+   size_t newBytes = newCapacity + 1;
+   if(newBytes <= newCapacity)
+   {
+      // integer overflow
+      throw std::range_error("newCapacity too big");
+   }
+
    if(newCapacity > LocalAlloc)
    {
-      mBuf = new char[newCapacity+1];
+      mBuf = new char[newBytes];
       mShareEnum = Take;
    }
    else

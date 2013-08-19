@@ -950,6 +950,11 @@ class Data
       Data(const char* buffer, size_type length, bool);
 
       /**
+        Used by string constructors
+      */
+      inline void initFromString(const char* str, size_type len);
+
+      /**
         Copies the contents of this data to a new buffer if the
         Data does not own the current buffer.
       */
