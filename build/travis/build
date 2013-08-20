@@ -10,7 +10,7 @@ set -e
 # Setting COVERITY_UNSUPPORTED=1 should work around the error:
 
 COVERITY_UNSUPPORTED=1 \
-PATH=/tmp/coverity-scan/cov-analysis/bin \
+PATH=/tmp/coverity-scan/cov-analysis/bin:${PATH} \
   cov-build --dir cov-int \
   make -j8
 
