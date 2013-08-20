@@ -4,7 +4,21 @@ set -e
 # Get latest URL from here:
 #    https://scan.coverity.com/download
 
-SCAN_TOOL=https://scan.coverity.com/build_tool/cov-analysis-linux32-6.5.1.tar.gz
+# travis docs say we are building on 32 bit, but that doesn't always
+# appear to be the case
+
+case `uname -m` in
+  i?86)
+    BITS=32
+  ;;
+  amd64|x86_64)
+    BITS=64
+  ;;
+esac
+
+SCAN_TOOL=https://scan.coverity.com/build_tool/cov-analysis-linux${BITS}-6.5.1.tar.gz
+
+echo "Using tool $SCAN_TOOL"
 
 TOOL_BASE=/tmp/coverity-scan
 if [ -d $TOOL_BASE ];
@@ -24,6 +38,9 @@ ln -s $TOOL_DIR $TOOL_BASE/cov-analysis
 
 echo "Coverity home = $TOOL_BASE/cov-analysis"
 ls -l $TOOL_BASE/cov-analysis
+
+echo "Checking lib dependencies..."
+ldd $TOOL_BASE/cov-analysis/bin/libcapture-linux.so
 
 echo "Coverity install done."
 
