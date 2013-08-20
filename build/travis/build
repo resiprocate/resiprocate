@@ -20,7 +20,7 @@ curl \
   --form project=reSIProcate \
   --form token=-OmW1wnKp9CVC7iGPDUlqw \
   --form email=daniel@pocock.com.au \
-  --form file=@tarball/file/location \
+  --form file=@resiprocate-coverity.tgz \
   --form version=unknown \
   --form description="Travis auto build" \
   http://scan5.coverity.com/cgi-bin/upload.py
