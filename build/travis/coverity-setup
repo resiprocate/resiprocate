@@ -22,4 +22,8 @@ tar xzf coverity_tool.tgz
 TOOL_DIR=`find $TOOL_BASE -type d -name 'cov-analysis*'`
 ln -s $TOOL_DIR $TOOL_BASE/cov-analysis
 
+echo "Coverity home = $TOOL_BASE/cov-analysis"
+ls -l $TOOL_BASE/cov-analysis
+
+echo "Coverity install done."
 
