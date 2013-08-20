@@ -1,0 +1,27 @@
+#!/bin/bash
+
+set -e
+
+PATH=/tmp/coverity-scan/cov-analysis/bin \
+  cov-build --dir cov-int \
+  make -j8
+
+# submit the coverity artifacts to their scanning service:
+tar czf resiprocate-coverity.tgz cov-int
+curl \
+  --form project=reSIProcate \
+  --form token=-OmW1wnKp9CVC7iGPDUlqw \
+  --form email=daniel@pocock.com.au \
+  --form file=@tarball/file/location \
+  --form version=unknown \
+  --form description="Travis auto build" \
+  http://scan5.coverity.com/cgi-bin/upload.py
+
+# we run the test cases after the Coverity scan for now, because
+# the Coverity scan might find false positives in the test code
+# it would be better to find a way to tell Coverity that the test
+# code is not released code, as scanning the test code may allow
+# it to evaluate more code paths through the stack itself
+
+make check
+
