@@ -37,10 +37,11 @@ TOOL_DIR=`find $TOOL_BASE -type d -name 'cov-analysis*'`
 ln -s $TOOL_DIR $TOOL_BASE/cov-analysis
 
 echo "Coverity home = $TOOL_BASE/cov-analysis"
-ls -l $TOOL_BASE/cov-analysis
+ls -l $TOOL_BASE/cov-analysis/
 
 echo "Checking lib dependencies..."
-ldd $TOOL_BASE/cov-analysis/bin/libcapture-linux.so
+# this appears to have different names in 32 and 64 bit
+#ldd $TOOL_BASE/cov-analysis/bin/libcapture-linux.so
 
 echo "Coverity install done."
 
