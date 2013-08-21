@@ -3,7 +3,7 @@ EXTRA_DIST = README.windows
 EXTRA_DIST += sip.mcp.xml
 EXTRA_DIST += update-svn-ignores.sh
 
-SUBDIRS = stack dum certs
+SUBDIRS = stack dum certs rend
 
 # recon has a lot of dependencies, e.g. sipX, so it is not yet
 # adapted for autotools
