@@ -777,6 +777,17 @@ ConnectionBase::decompressNewBytes(int bytesRead)
     mMessage->setSource(mWho);
     mMessage->setTlsDomain(mWho.transport->tlsDomain());
 
+#ifdef USE_SSL
+    // Set TlsPeerName if message is from TlsConnection
+    TlsConnection *tlsConnection = dynamic_cast<TlsConnection *>(this);
+    if(tlsConnection)
+    {
+       std::list<Data> peerNameList;
+       tlsConnection->getPeerNames(peerNameList);
+       mMessage->setTlsPeerNames(peerNameList);
+    }
+#endif
+
     char *sipBuffer = new char[bytesUncompressed];
     memmove(sipBuffer, uncompressed, bytesUncompressed);
     mMessage->addBuffer(sipBuffer);
