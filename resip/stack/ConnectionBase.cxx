@@ -690,6 +690,17 @@ ConnectionBase::wsProcessData(int bytesRead)
       mMessage->setSource(mWho);
       mMessage->setTlsDomain(mWho.transport->tlsDomain());
 
+#ifdef USE_SSL
+      // Set TlsPeerName if message is from TlsConnection
+      TlsConnection *tlsConnection = dynamic_cast<TlsConnection *>(this);
+      if(tlsConnection)
+      {
+         std::list<Data> peerNameList;
+         tlsConnection->getPeerNames(peerNameList);
+         mMessage->setTlsPeerNames(peerNameList);
+      }
+#endif
+
       Data::size_type msg_len = msg->size();
       // cast permitted, as it is borrowed:
       char *sipBuffer = (char *)msg->data();
