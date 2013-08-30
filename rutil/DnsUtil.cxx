@@ -129,10 +129,12 @@ DnsUtil::getLocalHostName()
    if(!getLocalHostNameInitializerGate)
    {
       Lock lock(getLocalHostNameInitializerMutex);
-      char buffer[MAXHOSTNAMELEN];
+      char buffer[MAXHOSTNAMELEN + 1];
       initNetwork();
-      buffer[0] = '\0';
-      if (gethostname(buffer,sizeof(buffer)) == -1)
+      // can't assume the name is NUL terminated when truncation occurs,
+      // so insert trailing NUL here
+      buffer[0] = buffer[MAXHOSTNAMELEN] = '\0';
+      if (gethostname(buffer,sizeof(buffer)-1) == -1)
       {
          int err = getErrno();
          switch (err)
@@ -191,12 +193,15 @@ DnsUtil::getLocalDomainName()
    }
    else
    {
-#if defined( __APPLE__ ) || defined( WIN32 ) || defined(__SUNPRO_CC) || defined(__sun__)
+#if defined( __APPLE__ ) || defined( WIN32 ) || defined(__SUNPRO_CC) || defined(__sun__) || defined( __ANDROID__ )
       throw Exception("Could not find domainname in local hostname",__FILE__,__LINE__);
 #else
       DebugLog( << "No domain portion in hostname <" << lhn << ">, so using getdomainname");
-      char buffer[MAXHOSTNAMELEN];
-      if (int e = getdomainname(buffer,sizeof(buffer)) == -1)
+      char buffer[MAXHOSTNAMELEN + 1];
+      // can't assume the name is NUL terminated when truncation occurs,
+      // so insert trailing NUL here
+      buffer[0] = buffer[MAXHOSTNAMELEN] = '\0';
+      if (int e = getdomainname(buffer,sizeof(buffer)-1) == -1)
       {
          if ( e != 0 )
          {

@@ -5,25 +5,31 @@ TESTS = sanityTests
 
 AM_CXXFLAGS = -I $(top_srcdir)
 
+lib_LTLIBRARIES = libtfmrepro.la
+
+libtfmrepro_la_LIBADD = ../libtfm.la
+libtfmrepro_la_LIBADD += ../../repro/librepro.la
+
+libtfmrepro_la_SOURCES = TestRepro.cxx \
+        TestReproUser.cxx \
+        CommandLineParser.cxx \
+        ReproFixture.cxx
+
 check_PROGRAMS = sanityTests
 
-sanityTests_LDADD = ../libtfm.la
+sanityTests_LDADD = libtfmrepro.la
+sanityTests_LDADD += ../libtfm.la
 sanityTests_LDADD += ../../repro/librepro.la
 sanityTests_LDADD += ../../resip/dum/libdum.la
 sanityTests_LDADD += ../../resip/stack/libresip.la
 sanityTests_LDADD += ../../rutil/librutil.la
 sanityTests_LDADD += @LIBSSL_LIBADD@
 sanityTests_LDADD += -lpopt
-sanityTests_LDADD += -lpthread
+sanityTests_LDADD += @LIBPTHREAD_LIBADD@
 sanityTests_LDADD += -lcppunit
 sanityTests_LDADD += -lNetxx
 
-sanityTests_SOURCES = sanityTests.cxx $(SHARED_SRC)
-
-SHARED_SRC = TestRepro.cxx \
-        TestReproUser.cxx \
-        CommandLineParser.cxx \
-        ReproFixture.cxx
+sanityTests_SOURCES = sanityTests.cxx
 
 noinst_HEADERS = CommandLineParser.hxx \
         ReproFixture.hxx \

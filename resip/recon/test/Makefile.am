@@ -21,13 +21,14 @@ LDADD += -lsipXtack
 LDADD += ../../dum/libdum.la
 LDADD += ../../stack/libresip.la
 LDADD += ../../../rutil/librutil.la
-LDADD += $(LIBSSL_LIBADD) -lpthread
+LDADD += $(LIBSSL_LIBADD) @LIBPTHREAD_LIBADD@
 
 AM_CPPFLAGS = -I$(top_srcdir)/resip/recon
 
-TESTS = \
-        sdpTests \
-        unitTests
+TESTS = sdpTests
+# disabled - doesn't run without local audio hardware:
+# lt-unitTests: mp/MpOss.cpp:828: static void* MpOss::soundCardIoWrapper(void*): Assertion `res == 0' failed.
+#TESTS += unitTests
 
 bin_PROGRAMS = testUA
 

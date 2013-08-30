@@ -31,7 +31,7 @@ AM_CXXFLAGS = -I $(top_srcdir)
 LDADD = ../libresip.la
 LDADD += ../../../rutil/librutil.la
 #LDADD += ../../../contrib/ares/libares.a
-LDADD += $(LIBSSL_LIBADD) $(LIBPOPT_LIBADD) -lpthread
+LDADD += $(LIBSSL_LIBADD) $(LIBPOPT_LIBADD) @LIBSTL_LIBADD@ @LIBPTHREAD_LIBADD@
 
 TESTS = \
 	testAppTimer \
@@ -56,7 +56,6 @@ TESTS = \
 	testSipFrag \
 	testSipMessage \
 	testSipMessageMemory \
-	testSocketFunc \
 	testStack \
 	testTcp \
 	testTime \
@@ -101,7 +100,6 @@ check_PROGRAMS = \
 	testSipMessageEncode \
 	testSipMessageMemory \
 	testSipStack1 \
- 	testSocketFunc \
 	testStack \
 	testTcp \
 	testTime \
@@ -112,6 +110,10 @@ check_PROGRAMS = \
 	testUdp \
 	testUri
 
+if USE_SSL
+TESTS += testSocketFunc
+check_PROGRAMS += testSocketFunc
+endif
 
 UAS_SOURCES = UAS.cxx
 testEmptyHfv_SOURCES = testEmptyHfv.cxx

@@ -94,15 +94,6 @@ reSIProcate is a framework that aims to fully implement the SIP protocol
 in first class C++.  It is intended for use in other applications,
 such as the repro SIP proxy.
 
-%package b2bua
-Summary: Basic SIP B2BUA
-
-%description b2bua
-Provides a simple SIP B2BUA configured from a static XML file.
-reSIProcate is a framework that aims to fully implement the SIP protocol
-in first class C++.  It is intended for use in other applications,
-such as the repro SIP proxy.
-
 %package clicktocall
 Summary: Click-to-call server process
 
@@ -126,7 +117,7 @@ such as the repro SIP proxy.
 
 %build
 export LDFLAGS="${LDFLAGS} -L%{_libdir}/mysql -L%{_libdir}/libdb4"
-CXXFLAGS="%{optflags} -I%{_includedir}/libdb4" %configure --with-c-ares --with-ssl --with-mysql --with-radius --with-b2bua --with-apps --enable-ipv6
+CXXFLAGS="%{optflags} -I%{_includedir}/libdb4" %configure --with-c-ares --with-ssl --with-mysql --with-radius --with-apps --enable-ipv6
 sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
 sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 make %{?_smp_mflags}
@@ -236,7 +227,6 @@ fi
 
 %files libs
 %doc COPYING
-%{_libdir}/libb2bua-*.so
 %{_libdir}/libdum-*.so
 %{_libdir}/librepro-*.so
 %{_libdir}/libresip-*.so
@@ -245,9 +235,9 @@ fi
 %{_libdir}/libsipdial-*.so
 
 %files devel
-%dir %{_includedir}/b2bua/
 %dir %{_includedir}/clicktocall/
-%dir %{_includedir}/reTurnClient/
+%dir %{_includedir}/reTurn/
+%dir %{_includedir}/reTurn/client/
 %dir %{_includedir}/repro/
 %dir %{_includedir}/repro/monkeys/
 %dir %{_includedir}/repro/stateAgents/
@@ -257,14 +247,16 @@ fi
 %dir %{_includedir}/resip/stack/
 %dir %{_includedir}/resip/stack/ssl/
 %dir %{_includedir}/rutil/
+%dir %{_includedir}/rutil/cajun/
+%dir %{_includedir}/rutil/cajun/json/
 %dir %{_includedir}/rutil/dns/
 %dir %{_includedir}/rutil/ssl/
 %dir %{_includedir}/rutil/stun/
 %dir %{_includedir}/rutil/wince/
 %dir %{_includedir}/sipdial/
-%{_includedir}/b2bua/*.hxx
 %{_includedir}/clicktocall/*.hxx
-%{_includedir}/reTurnClient/*.hxx
+%{_includedir}/reTurn/*.hxx
+%{_includedir}/reTurn/client/*.hxx
 %{_includedir}/repro/*.hxx
 %{_includedir}/repro/*/*.hxx
 %{_includedir}/resip/dum/*.hxx
@@ -272,9 +264,10 @@ fi
 %{_includedir}/resip/stack/*.hxx
 %{_includedir}/resip/stack/ssl/*.hxx
 %{_includedir}/rutil/*.hxx
+%{_includedir}/rutil/cajun/json/*.h
+%{_includedir}/rutil/cajun/json/*.inl
 %{_includedir}/rutil/*/*.hxx
 %{_includedir}/sipdial/*.hxx
-%{_libdir}/libb2bua.so
 %{_libdir}/libdum.so
 %{_libdir}/librepro.so
 %{_libdir}/libresip.so
@@ -292,6 +285,7 @@ fi
 %endif
 %{_sbindir}/repro
 %{_sbindir}/reprocmd
+%{_sbindir}/queuetostream
 %{_mandir}/man8/repro*.8*
 
 %files turn-server
@@ -310,9 +304,6 @@ fi
 
 %files clicktocall
 %{_sbindir}/clicktocall
-
-%files b2bua
-%{_bindir}/basicB2BUA
 
 %files presence-server
 %{_sbindir}/presSvr

@@ -1,0 +1,9 @@
+
+MOD_ARCH=arm
+CROSS_COMPILE=arm-linux-androideabi
+
+# for ARMv7
+export CPPFLAGS="${CPPFLAGS} -march=armv7-a -mfloat-abi=softfp"
+# this works around a bug:
+export LDFLAGS="${LDFLAGS} -Wl,--fix-cortex-a8"
+

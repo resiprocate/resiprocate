@@ -144,10 +144,9 @@ ConfigParse::parseConfigFile(const Data& filename)
    string sline;
    while(getline(configFile, sline)) 
    {
-      Data line(sline);
       Data name;
       Data value;
-      ParseBuffer pb(line);
+      ParseBuffer pb(sline.c_str(), sline.size());
 
       pb.skipWhitespace();
       anchor = pb.position();

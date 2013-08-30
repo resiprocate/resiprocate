@@ -2,7 +2,9 @@
 #include <cassert>
 #include <ctype.h>
 #include <math.h>
+#include <limits>
 #include <limits.h>
+#include <stdexcept>
 
 #if defined(HAVE_CONFIG_H)
 #include "config.h"
@@ -223,39 +225,13 @@ Data::Data(size_type capacity, bool)
 #endif
 
 Data::Data(const char* str, size_type length) 
-   : mBuf(length > LocalAlloc 
-          ? new char[length + 1]
-          : mPreBuffer),
-     mSize(length),
-     mCapacity(mSize > LocalAlloc
-               ? mSize
-               : LocalAlloc),
-     mShareEnum(mSize > LocalAlloc ? Take : Borrow)
 {
-   if (mSize > 0)
-   {
-      assert(str);
-      memcpy(mBuf, str, mSize);
-   }
-   mBuf[mSize]=0;
+   initFromString(str, length);
 }
 
 Data::Data(const unsigned char* str, size_type length) 
-   : mBuf(length > LocalAlloc 
-          ? new char[length + 1]
-          : mPreBuffer),
-     mSize(length),
-     mCapacity(mSize > LocalAlloc
-               ? mSize
-               : LocalAlloc),
-     mShareEnum(mSize > LocalAlloc ? Take : Borrow)
 {
-   if (mSize > 0)
-   {
-      assert(str);
-      memcpy(mBuf, str, mSize);
-   }
-   mBuf[mSize]=0;
+   initFromString((const char*)str, length);
 }
 
 // share memory KNOWN to be in a surrounding scope
@@ -268,6 +244,39 @@ Data::Data(const char* str, size_type length, bool)
      mShareEnum(Share)
 {
    assert(str);
+}
+
+void
+Data::initFromString(const char* str, size_type len)
+{
+   mSize = len;
+   if(len > 0)
+   {
+      assert(str);
+   }
+   size_t bytes = len + 1;
+   if(bytes <= len)
+   {
+      // integer overflow
+      throw std::bad_alloc();
+   }
+   if(bytes > LocalAlloc)
+   {
+      mBuf = new char[bytes];
+      mCapacity = mSize;
+      mShareEnum = Take;
+   }
+   else
+   {
+      mBuf = mPreBuffer;
+      mCapacity = LocalAlloc;
+      mShareEnum = Borrow;
+   }
+   if(str)
+   {
+      memcpy(mBuf, str, len);
+   }
+   mBuf[mSize] = 0;
 }
 
 Data::Data(ShareEnum se, const char* buffer, size_type length)
@@ -310,60 +319,19 @@ Data::Data(ShareEnum se, const Data& staticData)
 }
 //=============================================================================
 
-Data::Data(const char* str) // We need mSize to init mBuf; do in body
-   : mSize(str ? strlen(str) : 0),
-     mCapacity(mSize > LocalAlloc
-               ? mSize
-               : LocalAlloc),
-     mShareEnum(mSize > LocalAlloc ? Take : Borrow)
+Data::Data(const char* str)
 {
-   if(mSize > LocalAlloc)
-   {
-      mBuf = new char[mSize+1];
-   }
-   else
-   {
-      mBuf = mPreBuffer;
-   }
-
-   if (str)
-   {
-      memcpy(mBuf, str, mSize+1);
-   }
-   else
-   {
-      mBuf[mSize] = 0;
-   }
+   initFromString(str, str ? strlen(str) : 0);
 }
 
 Data::Data(const string& str)
-   : mBuf(str.size() > LocalAlloc
-          ? new char[str.size() + 1]
-          : mPreBuffer),
-     mSize(str.size()),
-     mCapacity(mSize > LocalAlloc
-               ? mSize
-               : LocalAlloc),
-     mShareEnum(mSize > LocalAlloc ? Take : Borrow)
 {
-   memcpy(mBuf, str.c_str(), mSize + 1);
+   initFromString(str.c_str(), str.size());
 }
 
 Data::Data(const Data& data) 
-   : mBuf(data.mSize > LocalAlloc
-          ? new char[data.mSize + 1]
-          : mPreBuffer),
-     mSize(data.mSize),
-     mCapacity(mSize > LocalAlloc
-               ? mSize
-               : LocalAlloc),
-     mShareEnum(mSize > LocalAlloc ? Take : Borrow)
 {
-   if (mSize)
-   {
-      memcpy(mBuf, data.mBuf, mSize);
-   }
-   mBuf[mSize] = 0;
+   initFromString(data.mBuf, data.mSize);
 }
 
 #ifdef RESIP_HAS_RVALUE_REFS
@@ -1096,9 +1064,16 @@ Data::resize(size_type newCapacity,
    char *oldBuf = mBuf;
    bool needToDelete=(mShareEnum==Take);
 
+   size_t newBytes = newCapacity + 1;
+   if(newBytes <= newCapacity)
+   {
+      // integer overflow
+      throw std::range_error("newCapacity too big");
+   }
+
    if(newCapacity > LocalAlloc)
    {
-      mBuf = new char[newCapacity+1];
+      mBuf = new char[newBytes];
       mShareEnum = Take;
    }
    else
@@ -1976,6 +1951,19 @@ Data::rawCaseInsensitiveHash(const unsigned char* c, size_t size)
    return ntohl((u_long)st);
 }
 
+#if defined(RESIP_BIG_ENDIAN) || (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__))
+
+#if !defined (get16bits)
+#define get16bits(d) ((((UInt32)(((const UInt8 *)(d))[0])) << 8)\
+                       +(UInt32)(((const UInt8 *)(d))[1]) )
+#endif
+
+#if !defined (get32bits)
+#define get32bits(d) ((get16bits(d) << 16) + get16bits(d+2))
+#endif
+
+#else  // little endian:
+
 #undef get16bits
 #if (defined(__GNUC__) && defined(__i386__)) || defined(__WATCOMC__) \
   || defined(_MSC_VER) || defined (__BORLANDC__) || defined (__TURBOC__)
@@ -1995,6 +1983,7 @@ Data::rawCaseInsensitiveHash(const unsigned char* c, size_t size)
 
 #if !defined (get32bits)
 #define get32bits(d) ((get16bits(d+2) << 16) + get16bits(d))
+#endif
 #endif
 
 // This is intended to be a faster case-insensitive hash function that works
@@ -2172,7 +2161,7 @@ Data::sizeEqualCaseInsensitiveTokenCompare(const Data& rhs) const
       return true;
    }
 
-   int unalignedPrefix((ptrdiff_t)d1 & 3);
+   int unalignedPrefix(4-((ptrdiff_t)d1 & 3));
 
    compUnalignedRemainder(d1, d2, unalignedPrefix);
 
@@ -2380,8 +2369,8 @@ Data::base64encode(bool useSafeSet) const
    unsigned char* codeChar = useSafeSet ? codeCharSafe : codeCharUnsafe;
    
    int srcLength = (int)this->size();
-   unsigned int dstLimitLength = srcLength*4/3 + 1 + 2; // +2 for the == chars
-   unsigned char * dstData = new unsigned char[dstLimitLength];
+   unsigned int dstLimitLength = 4 * (srcLength / 3 + (srcLength%3==0 ? 0 : 1));
+   unsigned char * dstData = new unsigned char[dstLimitLength + 1];
    unsigned int dstIndex = 0;
    
    const char * p = static_cast<const char *>( this->data() );
@@ -2438,6 +2427,7 @@ Data::base64encode(bool useSafeSet) const
       // outputed all d0,d1, and d2
    }
 
+   dstData[dstIndex] = 0;
    return Data(Data::Take, reinterpret_cast<char*>(dstData),
                dstIndex);
 }

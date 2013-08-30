@@ -1857,19 +1857,22 @@ WebAdmin::buildRestartSubPage(DataStream& s)
    {
       // Send restart command to command server - it is not safe to invoke a restart from here
       // since the webadmin thread and server is destroyed on the blocking ReproRunner::restart call
-      int sd, rc;
+      int sd = 0, rc;
       struct sockaddr_in localAddr, servAddr;
       struct hostent *h;
-      char* host = "127.0.0.1";
+      const char* host = "127.0.0.1";
       h = gethostbyname(host);
       if(h!=0) 
       {
          servAddr.sin_family = h->h_addrtype;
-         memcpy((char *) &servAddr.sin_addr.s_addr, h->h_addr_list[0], h->h_length);
-         servAddr.sin_port = htons(port);
+         if(h->h_length <= (int)sizeof(servAddr.sin_addr.s_addr))
+         {
+            memcpy((char *) &servAddr.sin_addr.s_addr, h->h_addr_list[0], h->h_length);
+            servAddr.sin_port = htons(port);
   
-         // Create TCP Socket
-         sd = (int)socket(AF_INET, SOCK_STREAM, 0);
+            // Create TCP Socket
+            sd = (int)socket(AF_INET, SOCK_STREAM, 0);
+         }
          if(sd > 0) 
          {
             // bind to any local interface/port

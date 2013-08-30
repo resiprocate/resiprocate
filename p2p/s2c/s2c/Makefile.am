@@ -7,7 +7,7 @@ SUBDIRS = .
 
 lib_LTLIBRARIES = libs2c.la
 
-libs2c_la_LIBADD = @LIBSSL_LIBADD@ -lpthread -lrt 
+libs2c_la_LIBADD = @LIBSSL_LIBADD@ @LIBPTHREAD_LIBADD@ -lrt 
 libs2c_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
 
 libs2c_la_SOURCES = s2c_native.cxx

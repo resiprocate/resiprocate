@@ -1,40 +1,14 @@
 #if !defined(RESIP_POLL_HXX)
 #define RESIP_POLL_HXX
 
-// One of the following macros must be defined:
-//#define RESIP_POLL_IMPL_POLL
-#define RESIP_POLL_IMPL_SELECT
-//#define RESIP_POLL_IMPL_EPOLL  // Not yet implemented.
-
-/*
-  Define this macro to support applications that must call system call "poll"
-  or its ilk themselves rather than calling method "Poll::wait".
-*/
-#define RESIP_POLL_EXTERN
-
+#include <memory>
 #include <vector>
-
-#ifdef RESIP_POLL_IMPL_POLL
-#  include <sys/poll.h>
-#endif
-
-#ifdef RESIP_POLL_IMPL_SELECT
-# ifdef WIN32
-#  include <winsock2.h>
-# else
-#  include <sys/time.h>
-#  include <sys/types.h>
-#  include <unistd.h>
-# endif // WIN32
-#endif // RESIP_POLL_IMPL_SELECT
-
-#ifdef RESIP_POLL_EXTERN
-# include <map>
-#endif // RESI
 
 namespace resip {
 
 ///////////////////////////////////////////////////////////////////////////////
+
+class PollImpl;
 
 /**
   @brief This class abstracts the Unix system call "poll".
@@ -136,22 +110,7 @@ class Poll {
       friend class Poll::FDEntry;
 
    private:
-
-      // Fields:
-      std::vector<Poll::FDEntry *>          _fdEntryVector;
-#ifdef RESIP_POLL_IMPL_POLL
-      std::vector<pollfd>                   _pollFDVector;
-#endif
-#ifdef RESIP_POLL_IMPL_SELECT
-      int/*FD*/                        _maxFDPlus1;
-      fd_set                           _readFDSet;
-      fd_set                           _writeFDSet;
-#endif
-#ifdef RESIP_POLL_EXTERN
-      std::map<int/*FD*/, Poll::FDEntry *>  _fdEntryMap;
-#endif
-      std::vector<Poll::FDEntry *>          _waitResult;
-
+      std::auto_ptr<PollImpl> mImpl;
    public:
 
       /*

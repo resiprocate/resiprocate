@@ -1,5 +1,5 @@
 
-AC_INIT(resiprocate,1.9.0~alpha0)
+AC_INIT(resiprocate,1.9.0~alpha2)
 AC_CONFIG_SRCDIR(repro/repro.cxx)
 
 SO_RELEASE=`echo $PACKAGE_VERSION | cut -f1,2 -d.`
@@ -112,6 +112,8 @@ ARCH_UPPER=`echo $host_cpu | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQ
 LARCH_UPPER=`echo $LARCH | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'`
 ARCH_CPPFLAGS="-DRESIP_OSTYPE_${OSTYPE_UPPER} -DRESIP_ARCH_${ARCH_UPPER} -DRESIP_LARCH_${LARCH_UPPER} -D_REENTRANT"
 
+AC_C_BIGENDIAN([AC_DEFINE_UNQUOTED(RESIP_BIG_ENDIAN, , RESIP_BIG_ENDIAN)])
+
 CPPFLAGS="${CPPFLAGS} ${ARCH_CPPFLAGS} ${TOOLCHAIN_CPPFLAGS}"
 
 AH_TEMPLATE([HAVE_sockaddr_in_len], [Define if sockaddr_in.sin_len exists])
@@ -170,6 +172,15 @@ AC_ARG_WITH(sigcomp,
 [  --with-sigcomp          Link against Open SigComp libraries for SigComp],
  AC_DEFINE_UNQUOTED(USE_SIGCOMP, , USE_SIGCOMP), )
 
+AC_ARG_ENABLE(android,
+[  --enable-android        Enable Android build],
+   [AC_SUBST(LIBPTHREAD_LIBADD, "")
+   AC_SUBST(LIBLOG_LIBADD, "-llog")
+   AC_SUBST(LIBSTL_LIBADD, "-lgnustl_shared")],
+   [AC_SUBST(LIBPTHREAD_LIBADD, "-lpthread")
+   AC_SUBST(LIBLOG_LIBADD, "")
+   AC_SUBST(LIBSTL_LIBADD, "")])
+
 AC_ARG_ENABLE(ipv6,
 [  --enable-ipv6           Enable IPv6 support],
  AC_DEFINE_UNQUOTED(USE_IPV6, , USE_IPV6), )
@@ -205,12 +216,6 @@ AC_ARG_WITH(radius,
  AC_SUBST(LIBRADIUS_LIBADD, "-lradiusclient-ng")
  AM_CONDITIONAL(USE_RADIUS_CLIENT, true)],
  [ AC_SUBST(LIBRADIUS_LIBADD, "")])
-
-AM_CONDITIONAL(BUILD_B2BUA, false)
-AC_ARG_WITH(b2bua,
-[  --with-b2bua            Build B2BUA lib, no extra dependencies],
- [AC_DEFINE_UNQUOTED(BUILD_B2BUA, , BUILD_B2BUA)
- AM_CONDITIONAL(BUILD_B2BUA, true)], )
 
 AM_CONDITIONAL(BUILD_TFM, false)
 AC_ARG_WITH(tfm,
@@ -263,11 +268,11 @@ AC_OUTPUT(Makefile \
 	resip/dum/Makefile \
 	resip/dum/test/Makefile \
 	resip/certs/Makefile \
+	resip/rend/Makefile \
 	repro/Makefile \
 	repro/accountingconsumers/Makefile \
 	repro/reprocmd/Makefile \
 	repro/test/Makefile \
-	b2bua/Makefile \
 	tfm/Makefile \
 	tfm/repro/Makefile \
 	tfm/tfdum/Makefile \
@@ -277,7 +282,6 @@ AC_OUTPUT(Makefile \
 	apps/ichat-gw/Makefile \
 	apps/ichat-gw/jabberconnector/Makefile \
 	apps/sipdial/Makefile \
-	apps/basicB2BUA/Makefile \
 	resiprocate.spec \
 	reTurn/Makefile \
 	reTurn/test/Makefile \

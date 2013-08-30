@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -e
+
+./configure \
+  --with-ssl \
+  --with-mysql \
+  --with-apps \
+  --enable-ipv6 \
+  --with-radius \
+  --with-c-ares
+

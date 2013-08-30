@@ -44,6 +44,10 @@
 #include <Windns.h>
 #endif
 
+#ifdef __ANDROID__
+#include <sys/system_properties.h>
+#endif
+
 #include "ares.h"
 #include "ares_private.h"
 
@@ -600,6 +604,57 @@ static int init_by_defaults(ares_channel channel)
 	  }
 #elif defined(__APPLE__) || defined(__MACH__)
       init_by_defaults_systemconfiguration(channel);
+#elif defined(__ANDROID__)
+      int android_prop_found = 0;
+      char props_dns[2][PROP_VALUE_MAX];
+      char prop_name[PROP_NAME_MAX];
+      const char *prop_keys[2] = { "net.dns1", "net.dns2" };
+      int i = 0, j = 0;
+      for(i = 0; i < 2; i++)
+        {
+          props_dns[android_prop_found][0] = 0;
+          const prop_info *prop = __system_property_find(prop_keys[i]);
+          if(prop != NULL)
+            {
+              __system_property_read(prop, NULL, props_dns[android_prop_found]);
+              if(props_dns[android_prop_found][0] != 0)
+                android_prop_found++;
+            }
+        }
+      if(android_prop_found > 0)
+        {
+          channel->servers = malloc( (android_prop_found) * sizeof(struct server_state));
+          if (!channel->servers)
+            {
+              return ARES_ENOMEM;
+            }
+          memset(channel->servers, '\0', android_prop_found * sizeof(struct server_state));
+
+          for(i = 0; i < android_prop_found; i++)
+            {
+              int rc = inet_pton(AF_INET, props_dns[i], &channel->servers[j].addr.s_addr);
+              if(rc == 1)
+                {
+#ifdef USE_IPV6
+                  channel->servers[j].family = AF_INET;
+#endif
+                  j++;
+                }
+#ifdef USE_IPV6
+              else
+                {
+                  rc = inet_pton(AF_INET6, props_dns[i], &channel->servers[j].addr6.s_addr);
+                  if(rc == 1)
+                    {
+                      channel->servers[j].family = AF_INET6;
+                      j++;
+                    }
+                }
+#endif
+            }
+          // how many really are valid IP addresses?
+          channel->nservers = j;
+        }
 #else
 		/* If nobody specified servers, try a local named. */
 		channel->servers = malloc(sizeof(struct server_state));

@@ -26,7 +26,6 @@ autoreconf --install && \
               --with-c-ares \
               --with-mysql \
               --with-radius \
-              --with-b2bua \
               --with-tfm \
               --with-apps \
               --with-ichat-gw \

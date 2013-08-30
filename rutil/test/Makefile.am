@@ -9,7 +9,7 @@ AM_CXXFLAGS = -I $(top_srcdir)
 
 LDADD = ../librutil.la
 #LDADD += ../../contrib/ares/libares.a
-LDADD += $(LIBSSL_LIBADD) -lpthread
+LDADD += $(LIBSSL_LIBADD) @LIBSTL_LIBADD@ @LIBPTHREAD_LIBADD@
 
 TESTS = \
 	testCoders \

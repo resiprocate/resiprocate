@@ -31,7 +31,11 @@
 #if !defined(WIN32)
 #include <sys/types.h>
 #include <sys/uio.h>
+#if defined(__ANDROID__)
+#include <fcntl.h>
+#else
 #include <sys/fcntl.h>
+#endif
 #include <unistd.h>
 #include <dirent.h>
 #endif
@@ -150,8 +154,8 @@ extern "C"
 static int 
 verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
 {
-   char cBuf1[500];
-   char cBuf2[500];
+   char cBuf1[257];
+   char cBuf2[501];
    X509 *pErrCert;
    int iErr = 0;
    int iDepth = 0;
@@ -162,7 +166,7 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
    if (NULL != pErrCert)
       X509_NAME_oneline(X509_get_subject_name(pErrCert),cBuf1,256);
 
-   sprintf(cBuf2,", depth=%d %s\n",iDepth,cBuf1);
+   snprintf(cBuf2, 500, ", depth=%d %s\n", iDepth, cBuf1);
    if(!iInCode)
       ErrLog(<< "Error when verifying server's chain of certificates: " << X509_verify_cert_error_string(pInStore->error) << cBuf2 );
  
@@ -1389,7 +1393,29 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    // Make sure that necessary algorithms exist:
    assert(EVP_sha1());
 
+#if OPENSSL_VERSION_NUMBER < 0x00908000l
    RSA* rsa = RSA_generate_key(keyLen, RSA_F4, NULL, NULL);
+#else
+   RSA* rsa = NULL;
+   {
+      BIGNUM *e = BN_new();
+      RSA *r = NULL;
+      if(!e) goto done;
+      if(! BN_set_word(e, RSA_F4)) goto done;
+      r = RSA_new();
+      if(!r) goto done;
+      if (RSA_generate_key_ex(r, keyLen, e, NULL) == -1)
+         goto done;
+
+      rsa = r;
+      r = NULL;
+   done:
+      if (e)
+         BN_free(e);
+      if (r)
+         RSA_free(r);
+    }
+#endif
    assert(rsa);    // couldn't make key pair
    
    EVP_PKEY* privkey = EVP_PKEY_new();
