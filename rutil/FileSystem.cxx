@@ -119,9 +119,10 @@ FileSystem::Directory::iterator::is_directory() const
    return mDirent->d_type == DT_DIR;
 #else
    struct stat s;
+   StackLog(<<"calling stat() for " << mDirent->d_name);
    if(stat(mDirent->d_name, &s) < 0)
    {
-      throw Exception("stad() failed", __FILE__, __LINE__);
+      throw Exception("stat() failed", __FILE__, __LINE__);
    }
    return S_ISDIR(s.st_mode);
 #endif
