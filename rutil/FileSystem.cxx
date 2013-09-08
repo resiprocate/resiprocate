@@ -122,6 +122,7 @@ FileSystem::Directory::iterator::is_directory() const
    StackLog(<<"calling stat() for " << mDirent->d_name);
    if(stat(mDirent->d_name, &s) < 0)
    {
+      ErrLog(<<"Error calling stat(): " << strerror(errno));
       throw Exception("stat() failed", __FILE__, __LINE__);
    }
    return S_ISDIR(s.st_mode);
