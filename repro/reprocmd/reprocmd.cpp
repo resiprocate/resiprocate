@@ -48,7 +48,7 @@ main (int argc, char** argv)
       exit(1);
    }
 
-   char* host = "127.0.0.1";
+   const char* host = "127.0.0.1";
    short port = 5081;
    int cmdIndex=1;
 
@@ -67,7 +67,7 @@ main (int argc, char** argv)
    }
 
    servAddr.sin_family = h->h_addrtype;
-   if(h->h_length > (int)sizeof(servAddr.sin_addr.s_addr))
+   if((unsigned int)h->h_length > sizeof(servAddr.sin_addr.s_addr))
    {
       cerr << "bad h_length" << endl;
       exit(1);
