@@ -36,7 +36,7 @@ AsyncTlsSocketBase::~AsyncTlsSocketBase()
 unsigned int 
 AsyncTlsSocketBase::getSocketDescriptor() 
 { 
-   return mSocket.lowest_layer().native(); 
+   return (unsigned int)mSocket.lowest_layer().native(); 
 }
 
 asio::error_code 
