@@ -1181,6 +1181,7 @@ SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLe
 {
    if (header != Headers::UNKNOWN)
    {
+      assert(header >= Headers::UNKNOWN && header < Headers::MAX_HEADERS);
       HeaderFieldValueList* hfvl=0;
       if (mHeaderIndices[header] == 0)
       {
