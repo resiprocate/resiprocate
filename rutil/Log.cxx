@@ -440,7 +440,7 @@ Log::timestamp(Data& res)
    char msbuf[5];
    /* Dividing (without remainder) by 1000 rounds the microseconds
       measure to the nearest millisecond. */
-   sprintf(msbuf, ".%3.3ld", long(tv.tv_usec / 1000));
+   snprintf(msbuf, 5, ".%3.3ld", long(tv.tv_usec / 1000));
 
    int datebufCharsRemaining = datebufSize - (int)strlen(datebuf);
    strncat (datebuf, msbuf, datebufCharsRemaining - 1);
