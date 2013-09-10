@@ -11,6 +11,7 @@ LDADD = ../librutil.la
 LDADD += $(LIBSSL_LIBADD) @LIBSTL_LIBADD@ @LIBPTHREAD_LIBADD@
 
 TESTS = \
+	testCompat \
 	testCoders \
 	testCountStream \
 	testData \
@@ -30,6 +31,7 @@ TESTS = \
 	testXMLCursor
 
 check_PROGRAMS = \
+	testCompat \
 	testCoders \
 	testCountStream \
 	testData \
@@ -48,6 +50,7 @@ check_PROGRAMS = \
 	testThreadIf \
 	testXMLCursor
 
+testCompat_SOURCES = testCompat.cxx
 testCoders_SOURCES = testCoders.cxx
 testCountStream_SOURCES = testCountStream.cxx
 testData_SOURCES = testData.cxx
