@@ -362,7 +362,7 @@ TlsConnection::read(char* buf, int count )
          {
             char buf[256];
             ERR_error_string_n(err,buf,sizeof(buf));
-            ErrLog( << "Got TLS read ret=" << bytesRead << " error=" << err  << " " << buf  );
+            ErrLog( << "Got TLS read ret=" << bytesRead << " error=" << err  << " " << buf << (err==5?" - intermediate certificates may be missing from local PEM file" : "") );
             return -1;
          }
          break;
