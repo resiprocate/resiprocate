@@ -74,6 +74,8 @@ class FileSystem
                   struct dirent* mDirent;
 #endif
                   Data mFile;
+                  Data mPath;
+                  Data mFullFilename;
             };
 
             iterator begin() const;

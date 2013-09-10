@@ -29,6 +29,7 @@ FileSystem::Directory::iterator::iterator(const Directory& dir)
 {
    assert(!dir.getPath().empty());   
    //InfoLog(<< "FileSystem::Directory::iterator::iterator: " << dir.getPath());   
+   mPath = dir.getPath();
    if ((mNixDir = opendir( dir.getPath().c_str() )))
    {
       errno = 0;
@@ -41,6 +42,7 @@ FileSystem::Directory::iterator::iterator(const Directory& dir)
       {
          //InfoLog(<< "FileSystem::Directory::iterator::iterator, first file " << mFile);   
          mFile = mDirent->d_name;
+         mFullFilename = mPath + '/' + mFile;
       }
    }
    else
@@ -73,6 +75,7 @@ FileSystem::Directory::iterator::operator++()
       if (mDirent)
       {
          mFile = mDirent->d_name;
+         mFullFilename = mPath + '/' + mFile;
          //InfoLog(<< "FileSystem::Directory::iterator::iterator, next file " << mFile);   
       }
    }
@@ -120,8 +123,9 @@ FileSystem::Directory::iterator::is_directory() const
 #else
    struct stat s;
    StackLog(<<"calling stat() for " << mDirent->d_name);
-   if(stat(mDirent->d_name, &s) < 0)
+   if(stat(mFullFilename.c_str(), &s) < 0)
    {
+      ErrLog(<<"Error calling stat() for " << mFullFilename.c_str() << ": " << strerror(errno));
       throw Exception("stat() failed", __FILE__, __LINE__);
    }
    return S_ISDIR(s.st_mode);
@@ -157,6 +161,7 @@ FileSystem::Directory::iterator::iterator(const Directory& dir)
    else
    {
       mFile = fileData.cFileName;
+      mFullFilename = mPath + '/' + mFile;
    }
 }
 
@@ -186,6 +191,7 @@ FileSystem::Directory::iterator::operator++()
    else
    {
       mFile = fileData.cFileName;
+      mFullFilename = mPath + '/' + mFile;
       mIsDirectory = (fileData.dwFileAttributes & FILE_ATTRIBUTE_DEVICE) > 0;
    }  
    return *this;
