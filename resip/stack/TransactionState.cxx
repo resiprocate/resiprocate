@@ -43,7 +43,7 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
-unsigned long TransactionState::StatelessIdCounter = 0;
+UInt32 TransactionState::StatelessIdCounter = 0;
 
 TransactionState::TransactionState(TransactionController& controller, Machine m, 
                                    State s, const Data& id, MethodTypes method, const Data& methodText, TransactionUser* tu) : 

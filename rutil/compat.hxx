@@ -148,6 +148,7 @@ resipIntDiv(const _Tp1& __a, const _Tp2& __b)
 typedef unsigned char  UInt8;
 typedef unsigned short UInt16;
 typedef unsigned int   UInt32;
+typedef int            Int32;
 #endif
 
 #if defined( WIN32 )

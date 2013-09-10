@@ -187,7 +187,7 @@ class Data
         that value. (E.g. "Data(75)" will create a Data
         with length=2, and contents of 0x37 0x35).
       */
-      explicit Data(int value);
+      explicit Data(Int32 value);
 
       /**
         Converts the passed in value into ascii-decimal
@@ -195,15 +195,7 @@ class Data
         that value. (E.g. "Data(75)" will create a Data
         with length=2, and contents of 0x37 0x35).
       */
-      explicit Data(unsigned long value);
-
-      /**
-        Converts the passed in value into ascii-decimal
-        representation, and then creates a "Data" containing
-        that value. (E.g. "Data(75)" will create a Data
-        with length=2, and contents of 0x37 0x35).
-      */
-      explicit Data(unsigned int value);
+      explicit Data(UInt32 value);
 
       /**
         Converts the passed in value into ascii-decimal
