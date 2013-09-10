@@ -5,9 +5,9 @@
 #include <iostream>
 
 // JSON library includes
-#include "rutil/cajun/json/reader.h"
-#include "rutil/cajun/json/writer.h"
-#include "rutil/cajun/json/elements.h"
+#include "cajun/json/reader.h"
+#include "cajun/json/writer.h"
+#include "cajun/json/elements.h"
 
 #include "repro/AccountingCollector.hxx"
 #include "repro/RequestContext.hxx"
