@@ -32,18 +32,14 @@ public:
       StunBindDiscovery,
       TurnUdpAllocation,
       TurnTcpAllocation,
-#ifdef USE_SSL
       TurnTlsAllocation
-#endif
    };
 
    enum SecureMediaMode
    {
       NoSecureMedia, // Will accept secure media offers, but will not offer secure media in calls placed
       Srtp,       // SRTP with keying outside of media stream - ie. SDES key negotiation via SDP
-#ifdef USE_SSL
       SrtpDtls    // SRTP with DTLS key negotiation
-#endif
    };
 
    enum SecureMediaCryptoSuite
