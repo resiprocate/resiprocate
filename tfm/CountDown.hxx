@@ -25,7 +25,7 @@ class CountDown : public TestEndPoint::ExpectPreCon
       virtual bool passes(boost::shared_ptr<Event>);
    private:
       resip::Data _description;
-      unsigned int _count;
+      UInt32 _count;
 };
 
 #endif
