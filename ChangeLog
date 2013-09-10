@@ -1,6 +1,17 @@
 = Release Notes v 1.8 =
 
 ==1.8.13 Changes==
+* resip/stack: error gives hint about missing intermediate cert
+* reflow+recon: remove conditional pre-processor logic for USE_SSL from headers
+* rutil: add test cases for compat.hxx
+* rutil: FileSystem: various fixes for Directory iterator (was non-functional before)
+* rutil: various fixes for build on GNU HURD
+* resip/stack: include TLS peer names in SIP messages received using SigComp
+* rend: added to the autotools build
+* rutil: fix some compile warnings
+* rutil: improve buffer size allocation in base64encode
+* rutil: handle potential truncation in gethostname()
+* build: improve LIBADD declarations for pthread and others
 
 ==1.8.12 Changes==
 * repro: enable IPv6 by default
