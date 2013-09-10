@@ -1,0 +1,31 @@
+; h:\mingw\bin\dlltool.exe --add-indirect --export-all-symbols --output-def popt1.def DLLTMPDIR.libpopt.a/findme.o DLLTMPDIR.libpopt.a/popt.o DLLTMPDIR.libpopt.a/poptconfig.o DLLTMPDIR.libpopt.a/popthelp.o DLLTMPDIR.libpopt.a/poptparse.o popt1-rc.o
+EXPORTS
+	findProgramPath @ 1 ; 
+	poptAddAlias @ 2 ; 
+	poptAddItem @ 3 ; 
+	poptAliasOptions @ 4 DATA ; 
+	poptBadOption @ 5 ; 
+	poptConfigFileToString @ 6 ; 
+	poptDupArgv @ 7 ; 
+	poptFreeContext @ 8 ; 
+	poptGetArg @ 9 ; 
+	poptGetArgs @ 10 ; 
+	poptGetContext @ 11 ; 
+	poptGetInvocationName @ 12 ; 
+	poptGetNextOpt @ 13 ; 
+	poptGetOptArg @ 14 ; 
+	poptHelpOptions @ 15 DATA ; 
+	poptParseArgvString @ 16 ; 
+	poptPeekArg @ 17 ; 
+	poptPrintHelp @ 18 ; 
+	poptPrintUsage @ 19 ; 
+	poptReadConfigFile @ 20 ; 
+	poptReadDefaultConfig @ 21 ; 
+	poptResetContext @ 22 ; 
+	poptSaveInt @ 23 ; 
+	poptSaveLong @ 24 ; 
+	poptSetExecPath @ 25 ; 
+	poptSetOtherOptionHelp @ 26 ; 
+	poptStrerror @ 27 ; 
+	poptStrippedArgv @ 28 ; 
+	poptStuffArgs @ 29 ; 

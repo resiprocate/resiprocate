@@ -1,0 +1,89 @@
+
+Please add your name, email address and if you contribute on
+behalf of a company, please identity the name of the company,
+company registration number and the place of incorporation.
+
+This file identifies the authors/contributors/copyright holders who
+have contributed works of any kind to the main reSIProcate
+distribution tarball.
+
+This file does not cover the material in the contrib/ directory of
+the source control system, as each of those components is
+unmodified and distributed with it's own AUTHORS file.
+
+$ git log | grep ^Author | sort -u | cut -f2 -d' '
+
+adam
+adamr
+alan
+arosenberg
+bbramwel
+bcampen
+bko
+bob
+brocha
+bryan
+cbond
+cisco
+cktam
+dabryan
+daniel
+danweber
+Danweber
+davidb
+dbozzali
+dean
+derek
+Derek
+derekm
+dlb
+dpetrie
+dpocock: Daniel Pocock <daniel@pocock.com.au>
+dragos
+dsuh
+duanestorey
+dworley
+ekr
+emcmurry
+fjoanis
+fluffy
+greg
+jason
+jdeverick
+jgeras
+jmatthewsr
+jozsef
+kchmilar
+kdc
+kenho
+ken
+kittlitz
+kwhite
+lowekamp
+matthias
+maxb
+mfroman
+moetje
+nagendra
+nash
+nils
+(no
+partim
+pckizer
+rjsparks
+rohan
+ronh
+ryker
+sailesh
+satluri
+schanin
+sgodin
+shaun
+troll
+vann
+veer
+vinit
+wensong
+xmlscott
+
+

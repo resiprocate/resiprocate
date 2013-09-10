@@ -1,0 +1,123 @@
+#!/bin/bash
+set -e
+
+PLATFORM=android-9
+
+PROJECTS="rutil resip/stack resip/dum"
+
+NDK_DIST=${HOME}/ndk-prebuilt
+PROJECT=resip
+PROJECT_DIST=${NDK_DIST}/${PROJECT}
+
+MODS_DIR=build/android/modulations
+
+if [ -z "${NDK_HOME}" ];
+then
+  echo "Please set NDK_HOME"
+  exit 1
+fi
+
+if [ ! -d ${MODS_DIR} ];
+then
+  echo "Can't find directory ${MODS_DIR}"
+  exit 1
+fi
+
+# you need OpenSSL from
+#  https://github.com/guardianproject/openssl-android.git
+# clone it and run "prebuilt/deploy-prebuilt.sh" or just "ndk-build"
+export OPENSSL_HOME=${HOME}/ws/openssl/openssl-android
+
+if [ ! -d ${OPENSSL_HOME} ];
+then
+  echo "Can't find ${OPENSSL_HOME}"
+  exit 1
+fi
+
+CPUS=`cat /proc/cpuinfo | grep -c ^proc`
+PAR=`expr $CPUS + 1`
+
+STAGE_PREBUILT=`mktemp -d`
+
+function cleanup {
+  if [ ! -z "${STAGE_PREBUILT}" ];
+  then
+    rm -rf "${STAGE_PREBUILT}"
+  fi
+  if [ ! -z "${MY_NDK}" ];
+  then
+    rm -rf "${MY_NDK}"
+  fi
+}
+
+trap cleanup EXIT
+
+for MOD_SRC in ${MODS_DIR}/* ;
+do
+
+  echo "Trying modulation ${MOD_SRC} ..."
+  MOD_NAME=`basename ${MOD_SRC}`
+
+  export CPPFLAGS=""
+  export LDFLAGS=""
+
+  source ${MOD_SRC}
+
+  MY_NDK=`mktemp -d`
+  echo "Creating a toolchain in ${MY_NDK}"
+
+  ${NDK_HOME}/build/tools/make-standalone-toolchain.sh --platform=${PLATFORM} \
+    --install-dir=${MY_NDK} --system=linux-x86_64 --arch=${MOD_ARCH}
+
+  export CROSS_COMPILE
+  export TOOLCHAIN_PREFIX=${CROSS_COMPILE}
+
+  export SYSROOT=${MY_NDK}/sysroot
+
+  export PATH=${MY_NDK}/bin:$PATH
+  export CPP=${TOOLCHAIN_PREFIX}-cpp
+  export AR=${TOOLCHAIN_PREFIX}-ar
+  export AS=${TOOLCHAIN_PREFIX}-as
+  export NM=${TOOLCHAIN_PREFIX}-nm
+  export CC=${TOOLCHAIN_PREFIX}-gcc
+  export CXX=${TOOLCHAIN_PREFIX}-g++
+  export LD=${TOOLCHAIN_PREFIX}-ld
+  export RANLIB=${TOOLCHAIN_PREFIX}-ranlib
+
+  export CPPFLAGS="${CPPFLAGS} -I${OPENSSL_HOME}/include"
+  export LDFLAGS="${LDFLAGS} -L${OPENSSL_HOME}/libs/${MOD_NAME}"
+
+  autoreconf -fi
+
+  ./configure \
+    --libdir=/libs/${MOD_NAME} \
+    --host=${CROSS_COMPILE} \
+    --with-sysroot=${SYSROOT} \
+    --enable-android \
+    --with-ssl \
+    "$@"
+
+  for proj in $PROJECTS ;
+  do
+    make -C $proj clean
+    make -C $proj -j${PAR} DESTDIR=${STAGE_PREBUILT} install
+  done
+
+  #for proj in $PROJECTS ;
+  #do
+  #  make -C $proj -i -j$PAR check
+  #done
+
+  echo "Removing temporary toolchain ${MY_NDK} ..."
+  rm -rf "${MY_NDK}"
+
+done
+
+echo "Copying libs into place ..."
+mkdir -p ${PROJECT_DIST}
+cp -r ${STAGE_PREBUILT}/libs/* ${PROJECT_DIST}
+cp build/android/prebuilt/Android.mk ${PROJECT_DIST}
+rm -rf "${STAGE_PREBUILT}"
+
+echo "All done"
+

@@ -1,0 +1,32 @@
+Important stuff in Info.plist:
+
+- used for registering for tel: and sip: URLs
+
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>SIP URL</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>sip</string>
+			</array>
+			<key>LSIsAppleDefaultForScheme</key>
+			<string>1</string>
+		</dict>
+    <dict>
+			<key>CFBundleURLName</key>
+			<string>TEL URL</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>tel</string>
+			</array>
+			<key>LSIsAppleDefaultForScheme</key>
+			<string>1</string>
+		</dict>
+	</array>
+
+- used for hiding from Dock
+
+  <key>LSBackgroundOnly</key>
+  <true />

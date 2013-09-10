@@ -1,0 +1,326 @@
+Name: @PACKAGE@
+Version: @VERSION@
+Release: 1%{?dist}
+Summary: SIP and TURN stacks, with SIP proxy and TURN server implementations
+License: VSL
+Url: http://www.resiprocate.org
+Source: https://www.resiprocate.org/files/pub/reSIProcate/releases/%name-%version.tar.gz
+BuildRequires: libtool automake autoconf
+BuildRequires: asio-devel
+BuildRequires: boost-devel
+BuildRequires: c-ares-devel
+BuildRequires: cppunit-devel
+BuildRequires: gperf
+%if 0%{?fedora} >= 18
+BuildRequires: db4-cxx-devel
+%endif
+BuildRequires: db4-devel
+BuildRequires: openssl-devel >= 0.9.8
+BuildRequires: mysql-devel
+BuildRequires: pcre-devel
+BuildRequires: perl
+BuildRequires: popt-devel
+BuildRequires: radiusclient-ng-devel
+BuildRequires: xerces-c-devel
+Requires: openssl >= 0.9.8
+Requires: chkconfig
+%if 0%{?fedora} < 17
+Requires(preun): initscripts
+%endif
+
+%description
+The reSIProcate components, particularly the SIP stack, are in use in both
+commercial and open-source products. The project is dedicated to maintaining
+a complete, correct, and commercially usable implementation of SIP and a few
+related protocols.
+
+%package libs
+Summary: Shared libraries http://www.resiprocate.org
+
+%description libs
+reSIProcate is a framework that aims to fully implement the SIP protocol
+in first class C++.  It is intended for use in other applications,
+such as the repro SIP proxy.
+This package provides the core libraries: librutil (utilities),
+libresip (SIP stack/RFC compliant message parsing) and
+libdum (SIP Dialog Usage Manager, a state machine for SIP dialogs).
+
+%package devel
+Summary: reSIProcate development files
+Requires: %{name}-libs%{?_isa} = %{version}-%{release}
+
+%description devel
+Resiprocate SIP Stack development files.
+
+%package repro
+Summary: SIP proxy
+Requires(pre): shadow-utils
+
+%description repro
+repro is the SIP proxy developed as part of the reSIProcate project.
+It provides a high-quality, low maintenance solution for serving
+small and large IP telephony installations.
+reSIProcate is a framework that aims to fully implement the SIP protocol
+in first class C++.  It is intended for use in other applications,
+such as the repro SIP proxy.
+
+%package turn-server
+Summary: ICE/STUN/TURN server
+Requires(pre): shadow-utils
+
+%description turn-server
+reTurn is the TURN server developed as part of the reSIProcate project.
+TURN (RFC 5766) provides a standardised solution for VoIP applications
+to find the most efficient way to route media streams when NAT and
+firewall devices may be present.
+reTurn provides a high-quality, low maintenance solution for serving
+small and large IP telephony installations.  It has been used successfully
+with a variety of SIP and Jabber applications, including Lumicall,
+Jitsi, Empathy and Psi.
+reSIProcate is a framework that aims to fully implement the SIP protocol
+in first class C++.  It is intended for use in other applications,
+such as the repro SIP proxy.
+
+%package sipdialer
+Summary: Click-to-call utility
+
+%description sipdialer
+sipdialer is a click-to-call application that uses the SIP REFER
+method to force a SIP phone (for example, the phone on your desk)
+to dial another number.  It can be registered in GConf to handle
+clicks on sip:, sips: and tel: URIs in other applications and the
+web browser.
+reSIProcate is a framework that aims to fully implement the SIP protocol
+in first class C++.  It is intended for use in other applications,
+such as the repro SIP proxy.
+
+%package b2bua
+Summary: Basic SIP B2BUA
+
+%description b2bua
+Provides a simple SIP B2BUA configured from a static XML file.
+reSIProcate is a framework that aims to fully implement the SIP protocol
+in first class C++.  It is intended for use in other applications,
+such as the repro SIP proxy.
+
+%package clicktocall
+Summary: Click-to-call server process
+
+%description clicktocall
+Provides a simple SIP click-to-call service.
+reSIProcate is a framework that aims to fully implement the SIP protocol
+in first class C++.  It is intended for use in other applications,
+such as the repro SIP proxy.
+
+%package presence-server
+Summary: Basic SIP presence server
+
+%description presence-server
+Provides a simple SIP presence server.
+reSIProcate is a framework that aims to fully implement the SIP protocol
+in first class C++.  It is intended for use in other applications,
+such as the repro SIP proxy.
+
+%prep
+%setup -q
+
+%build
+export LDFLAGS="${LDFLAGS} -L%{_libdir}/mysql -L%{_libdir}/libdb4"
+CXXFLAGS="%{optflags} -I%{_includedir}/libdb4" %configure --with-c-ares --with-ssl --with-mysql --with-radius --with-b2bua --with-apps --enable-ipv6
+sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
+sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
+make %{?_smp_mflags}
+
+%install
+make DESTDIR=%{buildroot} install
+%if 0%{?fedora} >= 17
+install -p -D -m644 repro/pkg/fedora/repro.service %{buildroot}%{_unitdir}/repro.service
+install -p -D -m644 reTurn/pkg/fedora/resiprocate-turn-server.service %{buildroot}%{_unitdir}/resiprocate-turn-server.service
+%else
+install -p -D -m755 repro/pkg/fedora/repro.init %{buildroot}%{_initddir}/repro
+install -p -D -m755 reTurn/pkg/fedora/resiprocate-turn-server.init %{buildroot}%{_initddir}/resiprocate-turn-server
+%endif
+install -m 0755 -d %{buildroot}%{_sysconfdir}/repro
+install -p -D -m644 repro/repro.config %{buildroot}%{_sysconfdir}/repro/repro.config
+sed -i -e 's!^DatabasePath = ./$!DatabasePath = %{_localstatedir}/lib/repro!' %{buildroot}%{_sysconfdir}/repro/repro.config
+install -p -D -m644 reTurn/reTurnServer.config %{buildroot}%{_sysconfdir}/reTurnServer.config
+install -m 0755 -d %{buildroot}%{_localstatedir}/lib/repro
+rm -f %{buildroot}%{_libdir}/lib*.a
+rm -f %{buildroot}%{_libdir}/lib*.la
+
+%pre repro
+getent group repro >/dev/null || groupadd -r repro
+getent passwd repro >/dev/null || \
+    useradd -r -g repro -d %{_localstatedir}/lib/repro -s /sbin/nologin \
+    -c "repro SIP proxy" repro
+
+%pre turn-server
+getent group return >/dev/null || groupadd -r return
+getent passwd return >/dev/null || \
+    useradd -r -g return -d / -s /sbin/nologin \
+    -c "reTurn TURN server" return
+
+%post libs -p /sbin/ldconfig
+
+%post repro
+/sbin/ldconfig
+if [ $1 -eq 1 ] ; then
+    # Initial installation
+%if 0%{?fedora} >= 17
+    /bin/systemctl enable repro.service >/dev/null 2>&1 || :
+%else
+    /sbin/chkconfig --add repro
+%endif
+fi
+
+%post turn-server
+if [ $1 -eq 1 ] ; then
+    # Initial installation
+%if 0%{?fedora} >= 17
+    /bin/systemctl enable resiprocate-turn-server.service >/dev/null 2>&1 || :
+%else
+    /sbin/chkconfig --add resiprocate-turn-server
+%endif
+fi
+
+%preun repro
+if [ "$1" = 0 ]
+then
+   # Package removal, not upgrade
+%if 0%{?fedora} >= 17
+   /bin/systemctl --no-reload disable repro.service > /dev/null 2>&1 || :
+   /bin/systemctl stop repro.service > /dev/null 2>&1 || :
+%else
+   /sbin/service repro stop
+   /sbin/chkconfig --del repro
+%endif
+fi
+
+%preun turn-server
+if [ "$1" = 0 ]
+then
+   # Package removal, not upgrade
+%if 0%{?fedora} >= 17
+   /bin/systemctl --no-reload disable resiprocate-turn-server.service > /dev/null 2>&1 || :
+   /bin/systemctl stop resiprocate-turn-server.service > /dev/null 2>&1 || :
+%else
+   /sbin/service resiprocate-turn-server stop
+   /sbin/chkconfig --del resiprocate-turn-server
+%endif
+fi
+
+%postun libs -p /sbin/ldconfig
+
+%postun repro
+/sbin/ldconfig
+/bin/systemctl daemon-reload >/dev/null 2>&1 || :
+if [ $1 -ge 1 ] ; then
+    # Package upgrade, not uninstall
+%if 0%{?fedora} >= 17
+    /bin/systemctl try-restart repro.service >/dev/null 2>&1 || :
+%else
+    /sbin/service repro try-restart
+%endif
+fi
+
+%postun turn-server
+/bin/systemctl daemon-reload >/dev/null 2>&1 || :
+if [ $1 -ge 1 ] ; then
+    # Package upgrade, not uninstall
+%if 0%{?fedora} >= 17
+    /bin/systemctl try-restart resiprocate-turn-server.service >/dev/null 2>&1 || :
+%else
+    /sbin/service resiprocate-turn-server try-restart
+%endif
+fi
+
+%files libs
+%doc COPYING
+%{_libdir}/libb2bua-*.so
+%{_libdir}/libdum-*.so
+%{_libdir}/librepro-*.so
+%{_libdir}/libresip-*.so
+%{_libdir}/libreTurnClient-*.so
+%{_libdir}/librutil-*.so
+%{_libdir}/libsipdial-*.so
+
+%files devel
+%dir %{_includedir}/b2bua/
+%dir %{_includedir}/clicktocall/
+%dir %{_includedir}/reTurn/
+%dir %{_includedir}/reTurn/client/
+%dir %{_includedir}/repro/
+%dir %{_includedir}/repro/monkeys/
+%dir %{_includedir}/repro/stateAgents/
+%dir %{_includedir}/resip/
+%dir %{_includedir}/resip/dum/
+%dir %{_includedir}/resip/dum/ssl/
+%dir %{_includedir}/resip/stack/
+%dir %{_includedir}/resip/stack/ssl/
+%dir %{_includedir}/rutil/
+%dir %{_includedir}/rutil/dns/
+%dir %{_includedir}/rutil/ssl/
+%dir %{_includedir}/rutil/stun/
+%dir %{_includedir}/rutil/wince/
+%dir %{_includedir}/sipdial/
+%{_includedir}/b2bua/*.hxx
+%{_includedir}/clicktocall/*.hxx
+%{_includedir}/reTurn/*.hxx
+%{_includedir}/reTurn/client/*.hxx
+%{_includedir}/repro/*.hxx
+%{_includedir}/repro/*/*.hxx
+%{_includedir}/resip/dum/*.hxx
+%{_includedir}/resip/dum/ssl/*.hxx
+%{_includedir}/resip/stack/*.hxx
+%{_includedir}/resip/stack/ssl/*.hxx
+%{_includedir}/rutil/*.hxx
+%{_includedir}/rutil/*/*.hxx
+%{_includedir}/sipdial/*.hxx
+%{_libdir}/libb2bua.so
+%{_libdir}/libdum.so
+%{_libdir}/librepro.so
+%{_libdir}/libresip.so
+%{_libdir}/libreTurnClient.so
+%{_libdir}/librutil.so
+%{_libdir}/libsipdial.so
+
+%files repro
+%attr(0755,repro,repro) %dir %{_localstatedir}/lib/repro
+%config(noreplace) %{_sysconfdir}/repro/repro.config
+%if 0%{?fedora} >= 17
+%{_unitdir}/repro.service
+%else
+%{_initddir}/repro
+%endif
+%{_sbindir}/repro
+%{_sbindir}/reprocmd
+%{_mandir}/man8/repro*.8*
+
+%files turn-server
+%config(noreplace) %{_sysconfdir}/reTurnServer.config
+%if 0%{?fedora} >= 17
+%{_unitdir}/resiprocate-turn-server.service
+%else
+%{_initddir}/resiprocate-turn-server
+%endif
+%{_sbindir}/reTurnServer
+%{_mandir}/man8/reTurnServer.8*
+
+%files sipdialer
+%{_bindir}/sipdialer
+%{_mandir}/man1/sipdialer.1*
+
+%files clicktocall
+%{_sbindir}/clicktocall
+
+%files b2bua
+%{_bindir}/basicB2BUA
+
+%files presence-server
+%{_sbindir}/presSvr
+
+%changelog
+* Sat Nov 24 2012 Daniel Pocock <daniel@pocock.com.au> - @VERSION@-1
+- Produce multiple packages for stack/libs, daemons, sipdialer
+- Initial build based on autotools
+

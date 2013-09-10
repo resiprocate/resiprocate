@@ -1,0 +1,3 @@
+S2C_S2C_TEST_SRCDIR=$(S2C_S2C_SRCDIR)test/
+
+include $(S2C_S2C_TEST_SRCDIR)targets.mk

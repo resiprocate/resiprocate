@@ -1,0 +1,79 @@
+
+
+a) If using source code from the repository (not a tarball download),
+   you must bootstrap the source tree:
+
+     autoreconf --install
+
+   This must be done:
+   - after checking out the code for the first time
+   - after changing configure.ac or any Makefile.am file
+
+   NOTE: the bootstrap process only works reliably when using the same
+         (or a very similar) version of autotools as the officially
+         tested reSIProcate releases.  The official releases are
+         bootstrapped using autotools on a Debian 6.0 (squeeze) system.
+
+b) Run configure:
+
+   e.g. on a Debian system:
+
+     ./configure --with-ssl --with-mysql --with-c-ares \
+               CXXFLAGS="-DRESIP_FIXED_POINT"
+
+   NOTE: some things (e.g. reTurnServer) will ONLY build if you
+         specify --with-ssl to link against SSL libraries
+
+   A more complete example, with tfm:
+
+     ./configure \
+       --with-ssl --with-mysql --with-radius --with-tfm \
+       --enable-ipv6 \
+       CXXFLAGS="-I`pwd`/contrib/Netxx-0.3.2/include" \
+       LDFLAGS="-L`pwd`/contrib/Netxx-0.3.2/src"
+
+     (hint: if it fails to link against libNetxx.so, create a symlink, or
+            delete libNetxx.so and it should link against libNetxx.a)
+
+     OR (using contrib/ares)
+
+     ./configure --with-ssl --with-mysql --enable-ipv6 --with-popt"
+
+c) Build everything:
+
+     make
+
+   or to build just one thing:
+
+     make -C rutil
+
+   and if you have multiple CPUs/CPU-cores/hyper-threading, you can build
+   faster by telling make to use them in parallel, e.g.:
+
+     make -j 12
+
+d) Test it, e.g. to test rutil:
+
+     make -C rutil check
+
+e) Install somewhere:
+
+     mkdir /tmp/my-resip && make DESTDIR=/tmp/my-resip install
+
+Supported Systems
+-----------------
+
+Supported Platforms: (to add new platform support see build/Makefile.osarch)
+FreeBSD
+Linux
+QNX
+SunOS
+Mac
+cygwin
+
+Supported toolchains: (to add new toolchain support see build/Makefile.tools)
+gnu  (g++)
+Intel (icc)
+ARM cross-compiler (arm-linux-g++)
+Sunpro (CC)
+

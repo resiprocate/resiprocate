@@ -1,0 +1,70 @@
+Rend is somewhat special in that we open up many (local) transports
+and typically only send to one (remote) proxy. This is the opposite
+of the "typical" client, which uses one local transport to
+send to many different proxies.
+
+The Tu has list of available Transports (that it has
+previously opened), and it round-robins thru these to supply to
+dialogs.
+
+Basic Message Routing
+---------------------
+When a dialog is initialized, the Tu assigned it an available Transport
+(on a round-robin basis).
+For sending responses, the stack's TransactionState maintains mResponseTarget
+(with flowkey). It will automatically route out the same way we received
+the request -- we don't need to do anything special.
+
+For requests, the dialog's assigned transport is set as the outgoing
+Via's host and port. The stack's TransportSelector picks this up, and
+uses that transport.
+
+For in-dialog requests in outbound-like mode, we capture the
+proxy's source tuple (which contains the flow key), set the
+onlyUseExistingConnection flags, and use that on subsequent requests.
+This ensures that future request of the dialog use the same connection.
+
+For in-dialog requests not in outbound-like mode, we do NOT use the
+captured tuple for subsequent requests. Thus
+
+For in-dialog requests, there was a previous 2xx response that established
+the dialog. The source Tuple of this 2xx is stored as the RemoteTarget. For
+these in-dialog requests, there are a few options depending upon mode:
+  * In strict outbound, use the RemoteTarget with onlyUseExisting true.
+  * In locked mode, use the RemoteTarget with onlyUseExisting false. This locks
+    the dialog to the same peer proxy and avoids any DNS lookup. But it
+    allows new TCP connections to be established "under the covers".
+  * In standard mode, the RemoteTarget is not used, and instead message
+    is forwarded according to any record-route and/or R-URI. This allows
+    for new DNS lookups on every transaction.
+
+	DIR state mode	target
+	req new	  *    	OutgoingProxy
+	req est   std	OutgoingProxy
+	req est   ob	Peer
+   	rsp *	  *	handled by stack
+
+   NOTE:
+   * "est" means we have received 2xx response for this dialog.
+   * "OutgoingProxy" is static startup-time configuration. It is
+     a Uri, so allows for DNS lookup.
+   * "Peer" means source of first 2xx (XXX or latest?)
+   * "
+
+   
+
+Flow Failure
+------------
+On flow failure, we want to notify all dialogs that the flow has
+failed. There are several approaches:
+1. Search thru all dialogs, looking for dialogs using that flow,
+  and then signal that flow.
+2. Have KeepAliveMgr keep list of dialogs that each flow is using,
+  and traverse this list. The list of dialogs for each flow could
+  be implemented by (2a) directly linking the dialogs into
+  the Assoc object (via say double link list intrusive link),
+  or (2b) maintaining independent list within Assoc object
+  of dialog's local tag.
+3. Keep "global" multimap at the Tu-level that maps a flow to set 
+  of dialog local keys. Interestingly, the same basic multimap
+  could map from flows to a KaAssocs.
