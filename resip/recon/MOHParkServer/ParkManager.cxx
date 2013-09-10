@@ -112,7 +112,7 @@ ParkManager::initializeOrbitConversationProfiles(unsigned long orbitStart,
    for(unsigned long orbit = mOrbitRangeStart; orbit < mOrbitRangeStart + mNumOrbits; orbit++)
    {
       SharedPtr<ConversationProfile> orbitConversationProfile = SharedPtr<ConversationProfile>(new ConversationProfile(mServer.mUserAgentMasterProfile));
-      Data orbitData(orbit);
+      Data orbitData((UInt64)orbit);
       orbitConversationProfile->setDefaultRegistrationTime(registrationTime);  
       orbitConversationProfile->setDefaultRegistrationRetryTime(120);  // 2 mins
       orbitConversationProfile->setDefaultFrom(uri);
@@ -298,7 +298,7 @@ ParkManager::parkParticipant(ParticipantHandle participantHandle, const SipMessa
          mFreeOrbitList.push_back(freeorbit);
          InfoLog(<< "ParkManager::parkParticipant no valid orbit specified (orbit=" << orbit << ") redirecting to free orbit=" << freeorbit);
          NameAddr destination(mParkUri);
-         destination.uri().param(p_orbit) = Data(freeorbit);
+         destination.uri().param(p_orbit) = Data((UInt64)freeorbit);
          mServer.redirectParticipant(participantHandle, destination);
       }
       else
@@ -408,7 +408,7 @@ ParkManager::getActiveCallsInfo(CallInfoList& callInfos)
        {
           callInfos.push_back(ActiveCallInfo((*it2)->mParkedUri, 
                                              (*it2)->mParkerUri, 
-                                             Data("Parked at " + Data(it->first)), 
+                                             Data("Parked at " + Data((UInt64)(it->first))), 
                                              (*it2)->mParticipantHandle, 
                                              it->second->mConversationHandle));
        }
