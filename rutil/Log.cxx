@@ -33,7 +33,6 @@ unsigned int Log::MaxByteCount = 0; // no limit by default
 
 #ifdef WIN32
 int Log::mPid=0;
-#define snprintf _snprintf
 #else 
 pid_t Log::mPid=0;
 #endif
