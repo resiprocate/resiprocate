@@ -43,7 +43,7 @@ nobase_rendinclude_HEADERS = \
 	RendDlgAcct.hxx \
 	RendKa.hxx \
 	RendMisc.hxx \
-	RendReport.hxx
+	RendReport.hxx \
 	RendRunner.hxx \
 	RendSketch.hxx \
 	RendTroop.hxx \
