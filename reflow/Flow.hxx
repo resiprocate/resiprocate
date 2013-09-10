@@ -56,9 +56,7 @@ public:
    };
 
    Flow(asio::io_service& ioService,
-#ifdef USE_SSL
         asio::ssl::context& sslContext,
-#endif
         unsigned int componentId,
         const StunTuple& localBinding, 
         MediaStream& mediaStream);
@@ -115,9 +113,7 @@ public:
 
 private:
    asio::io_service& mIOService;
-#ifdef USE_SSL
    asio::ssl::context& mSslContext;
-#endif
 
    // Note: these member variables are set at creation time and never changed, thus
    //       they do not require mutex protection
@@ -140,13 +136,11 @@ private:
    StunTuple mRelayTuple;
    resip::Data mRemoteSDPFingerprint;
 
-#ifdef USE_SSL
    // Map to store all DtlsSockets - in forking cases there can be more than one
    std::map<reTurn::StunTuple, dtls::DtlsSocket*> mDtlsSockets;
    dtls::DtlsSocket* getDtlsSocket(const reTurn::StunTuple& endpoint);
    dtls::DtlsSocket* createDtlsSocketClient(const StunTuple& endpoint);
    dtls::DtlsSocket* createDtlsSocketServer(const StunTuple& endpoint);
-#endif 
 
    volatile FlowState mFlowState;
    void changeFlowState(FlowState newState);

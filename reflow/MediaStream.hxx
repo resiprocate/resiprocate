@@ -6,9 +6,7 @@
 #endif
 
 #include <asio.hpp>
-#ifdef USE_SSL
 #include <asio/ssl.hpp>
-#endif
 #ifdef WIN32
 #include <srtp.h>
 #else
@@ -60,15 +58,11 @@ public:
    };
 
    MediaStream(asio::io_service& ioService,
-#ifdef USE_SSL
                asio::ssl::context& sslContext,
-#endif
                MediaStreamHandler& mediaStreamHandler,
                const StunTuple& localRtpBinding, 
                const StunTuple& localRtcpBinding,   // pass in transport type = None to disable RTCP
- #ifdef USE_SSL
                dtls::DtlsFactory* dtlsFactory = 0,
- #endif 
                NatTraversalMode natTraversalMode = NoNatTraversal,
                const char* natTraversalServerHostname = 0, 
                unsigned short natTraversalServerPort = 0, 
@@ -87,9 +81,7 @@ protected:
    friend class Flow;
 
    // SRTP members
-#ifdef USE_SSL
    dtls::DtlsFactory* mDtlsFactory;
-#endif
    volatile bool mSRTPSessionInCreated;
    volatile bool mSRTPSessionOutCreated;
    resip::Mutex mMutex;
