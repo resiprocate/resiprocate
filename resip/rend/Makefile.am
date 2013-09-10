@@ -1,7 +1,6 @@
 # $Id$
 
-EXTRA_DIST = VERSION
-EXTRA_DIST += readme.txt
+EXTRA_DIST = readme.txt
 EXTRA_DIST += design-notes.txt
 EXTRA_DIST += flownotes.txt
 

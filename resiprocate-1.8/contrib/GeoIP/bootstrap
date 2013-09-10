@@ -1,8 +1,0 @@
-#! /bin/sh
-
-# disable dependency trackeing for OS X with multiply arch option's
-# automake -i --gnu --add-missing
-
-aclocal \
-&& automake -i --gnu --add-missing \
-&& autoconf
