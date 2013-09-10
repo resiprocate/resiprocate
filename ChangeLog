@@ -1,5 +1,7 @@
 = Release Notes v 1.8 =
 
+==1.8.13 Changes==
+
 ==1.8.12 Changes==
 * repro: enable IPv6 by default
 * resip/recon: test cases: suppress running unitTests binary, requires audio hardware
