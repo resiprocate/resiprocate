@@ -267,6 +267,7 @@ AC_OUTPUT(Makefile \
 	resip/stack/test/Makefile \
 	resip/dum/Makefile \
 	resip/dum/test/Makefile \
+	resip/db/Makefile \
 	resip/certs/Makefile \
 	resip/rend/Makefile \
 	repro/Makefile \
