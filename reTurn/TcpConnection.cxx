@@ -80,9 +80,7 @@ TcpConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short
                              (char*)&(*data)[0], data->size());
          if(request.isValid())
          {
-            StunMessage *response = new StunMessage;
-            RequestHandler::ProcessResult result = mRequestHandler.processStunMessage(this, mTurnAllocationManager, request, response);
-            sendStunResponse(result, response);
+            mRequestHandler.processStunMessageAsync(this, mTurnAllocationManager, request, boost::bind(&reTurn::TcpConnection::sendStunResponse, this, _1, _2));
          }
          else
          {

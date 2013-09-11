@@ -101,9 +101,7 @@ UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short por
             ResponseMap::iterator it = mResponseMap.find(request.mHeader.magicCookieAndTid);
             if(it == mResponseMap.end())
             {
-               response = new StunMessage;
-               RequestHandler::ProcessResult result = mRequestHandler.processStunMessage(this, mTurnAllocationManager, request, response, isRFC3489BackwardsCompatServer());
-               sendStunResponse(result, response);
+               mRequestHandler.processStunMessageAsync(this, mTurnAllocationManager, request, boost::bind(&reTurn::UdpServer::sendStunResponse, this, _1, _2), isRFC3489BackwardsCompatServer());
             }
             else
             {

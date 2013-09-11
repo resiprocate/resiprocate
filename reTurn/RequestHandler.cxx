@@ -27,7 +27,8 @@ namespace reTurn {
 RequestHandler::RequestHandler(TurnManager& turnManager,
                                const asio::ip::address* prim3489Address, unsigned short* prim3489Port,
                                const asio::ip::address* alt3489Address, unsigned short* alt3489Port) 
- : mTurnManager(turnManager)
+ : mTurnManager(turnManager),
+   mStrand(turnManager.getIOService())
 {
    if(prim3489Address && prim3489Port && alt3489Address && alt3489Port)
    {
