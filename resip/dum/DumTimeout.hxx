@@ -20,6 +20,7 @@ class DumTimeout : public ApplicationMessage
          Publication,
          Retransmit200,
          Retransmit1xx,
+         Retransmit1xxRel,
          WaitForAck,    // UAS gets no ACK
          CanDiscardAck, 
          StaleCall,     // UAC gets no final response

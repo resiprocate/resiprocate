@@ -41,6 +41,7 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
      mLocalNameAddr(),
      mRemoteNameAddr(),
      mCallId(msg.header(h_CallID)),
+     mLocalRSeq(0),
      mDefaultSubExpiration(0),
      mAppDialog(0),
      mDestroying(false),
@@ -476,6 +477,17 @@ Dialog::dispatch(const SipMessage& msg)
             if (mInviteSession == 0)
             {
                InfoLog ( << "Spurious MESSAGE" );
+               return;
+            }
+            else
+            {
+               mInviteSession->dispatch(request);
+            }
+            break;
+         case PRACK:
+            if (mInviteSession == 0)
+            {
+               InfoLog ( << "Spurious PRACK" );
                return;
             }
             else
@@ -1071,6 +1083,7 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
              request.header(h_RequestLine).getMethod() == NOTIFY ||
              request.header(h_RequestLine).getMethod() == INFO ||
              request.header(h_RequestLine).getMethod() == OPTIONS ||
+             request.header(h_RequestLine).getMethod() == PRACK ||
              request.header(h_RequestLine).getMethod() == UPDATE
              );
 
@@ -1081,6 +1094,7 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
       response.header(h_To).param(p_tag) = mId.getLocalTag();
 
       if((request.header(h_RequestLine).getMethod() == INVITE ||
+          request.header(h_RequestLine).getMethod() == PRACK ||
           request.header(h_RequestLine).getMethod() == UPDATE)
          && code >= 200 && code < 300)
       {
@@ -1111,6 +1125,19 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
    {
       Helper::makeResponse(response, request, code);
       response.header(h_To).param(p_tag) = mId.getLocalTag();
+   }
+
+   if( code > 100 && code < 200
+       && getInviteSession().isValid()
+       && getInviteSession()->isReliable(request) )
+   {
+      DebugLog ( << "100rel supported" );
+      if (!response.exists(h_Requires) ||
+          !response.header(h_Requires).find(Token(Symbols::C100rel)))
+      {
+         response.header(h_Requires).push_back(Token(Symbols::C100rel));
+      }
+      response.header(h_RSeq).value() = ++mLocalRSeq;
    }
 
    DebugLog ( << "Dialog::makeResponse: " << std::endl << std::endl << response);

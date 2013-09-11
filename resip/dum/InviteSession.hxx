@@ -220,12 +220,17 @@ class InviteSession : public DialogUsage
 
          UAS_AcceptedWaitingAnswer, 
          UAS_ReceivedOfferReliable,
+         UAS_ReceivedOfferReliableProvidedAnswer,
          UAS_NoOfferReliable,
+         UAS_ProvidedOfferReliable,
          UAS_FirstSentOfferReliable,
          UAS_FirstSentAnswerReliable,
+         UAS_FirstNoAnswerReliable,
          UAS_NegotiatedReliable,
+         UAS_NoAnswerReliable,
          UAS_SentUpdate,
          UAS_SentUpdateAccepted,
+         UAS_SentUpdateGlare,
          UAS_ReceivedUpdate,
          UAS_ReceivedUpdateWaitingAnswer,
          UAS_WaitingToTerminate,
@@ -319,7 +324,7 @@ class InviteSession : public DialogUsage
       void transition(State target);
 
       std::auto_ptr<Contents> getOfferAnswer(const SipMessage& msg);
-      bool isReliable(const SipMessage& msg);
+      bool isReliable(const SipMessage& msg) const;
       static std::auto_ptr<Contents> makeOfferAnswer(const Contents& offerAnswer);
       static std::auto_ptr<Contents> makeOfferAnswer(const Contents& offerAnswer, const Contents* alternative);
       static void setOfferAnswer(SipMessage& msg, const Contents& offerAnswer, const Contents* alternative = 0);
@@ -364,6 +369,7 @@ class InviteSession : public DialogUsage
       SharedPtr<SipMessage> mInvite200;               // 200 OK for reINVITE for retransmissions
       SharedPtr<SipMessage> mLastNitResponse;         // 
                                                       //?dcm? -- ptr, delete when not needed?
+      SharedPtr<SipMessage> mSavedInviteAtUpdate;
 
       SipMessage  mLastReferNoSubRequest;
       

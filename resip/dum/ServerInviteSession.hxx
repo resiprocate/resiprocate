@@ -26,9 +26,12 @@ class ServerInviteSession: public InviteSession
       /** Called to set the offer that will be used in the next message that
           sends an offer. If possible, this will synchronously send the
           appropriate request or response. In some cases, the UAS might have to
-          call accept in order to cause the message to be sent. */
-      virtual void provideOffer(const Contents& offer);
-      virtual void provideOffer(const Contents& offer, DialogUsageManager::EncryptionLevel level, const Contents* alternative);
+          call accept in order to cause the message to be sent.
+          If sendOfferAtAccept is true, no UPDATE will be sent if media is negotiated reliable,
+          it will be sent at accept */
+      virtual void provideOffer(const Contents& offer, bool sendOfferAtAccept=false);
+      virtual void provideOffer(const Contents& offer, DialogUsageManager::EncryptionLevel level,
+                                const Contents* alternative, bool sendOfferAtAccept=false);
 
       /** Called to request that the far end provide an offer.  This will cause a 
           reinvite with no body to be sent.  */
@@ -58,6 +61,8 @@ class ServerInviteSession: public InviteSession
       void provisionalCommand(int code=180);
       void acceptCommand(int statusCode=200);
 
+      bool provisionalWillBeSentReliable() const;
+
    private:
       friend class Dialog;
 
@@ -73,6 +78,8 @@ class ServerInviteSession: public InviteSession
       void dispatchOfferReliable(const SipMessage& msg);
       void dispatchNoOfferReliable(const SipMessage& msg);
       void dispatchFirstSentOfferReliable(const SipMessage& msg);
+      void dispatchFirstSentAnswerReliable(const SipMessage& msg);
+      void dispatchFirstNoAnswerReliable(const SipMessage& msg);
       void dispatchFirstEarlyReliable(const SipMessage& msg);
       void dispatchEarlyReliable(const SipMessage& msg);
       void dispatchSentUpdate(const SipMessage& msg);
@@ -81,6 +88,7 @@ class ServerInviteSession: public InviteSession
       void dispatchReceivedUpdateWaitingAnswer(const SipMessage& msg);
       void dispatchWaitingToTerminate(const SipMessage& msg);
       void dispatchWaitingToHangup(const SipMessage& msg);
+      void dispatchNegotiatedReliable(const SipMessage& msg);
 
       void dispatchCancel(const SipMessage& msg);
       void dispatchBye(const SipMessage& msg);
@@ -88,9 +96,14 @@ class ServerInviteSession: public InviteSession
 
       // utilities
       void startRetransmit1xxTimer();
+      void startRetransmit1xxRelTimer();
       void sendAccept(int code, Contents* offerAnswer); // sends 2xxI
       void sendProvisional(int code, bool earlyFlag);
+      void queueResponse(int code, bool earlyFlag);
       void sendUpdate(const Contents& offerAnswer);
+      bool prackCheckProvisionals(const SipMessage& msg); // verify that prack has corresponding 1xx
+      void prackCheckQueue();                             // send a queued message after prack
+      void updateCheckQueue();                            // send a queued message after update
 
       ServerInviteSession(DialogUsageManager& dum, Dialog& dialog, const SipMessage& msg);
 
@@ -103,8 +116,10 @@ class ServerInviteSession: public InviteSession
       SharedPtr<SipMessage> m1xx; // for 1xx retransmissions
       unsigned long mCurrentRetransmit1xxSeq;
       
-      //std::deque<SipMessage> mUnacknowledgedProvisionals; // all of them
-      //SipMessage m200; // for retransmission
+      std::deque< SharedPtr<SipMessage> > mUnacknowledgedProvisionals; // all of them
+      std::deque< std::pair<int,bool> > mQueuedResponses;
+      bool mAnswerSentReliably;
+      SharedPtr<SipMessage> mPrackWithOffer; // for 1xx retransmissions
 };
 
 }

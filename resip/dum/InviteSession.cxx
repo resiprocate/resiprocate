@@ -18,7 +18,6 @@
 #include "resip/dum/DumHelper.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
-#include "rutil/MD5Stream.hxx"
 #include "rutil/Timer.hxx"
 #include "rutil/Random.hxx"
 #include "rutil/compat.hxx"
@@ -333,10 +332,12 @@ InviteSession::isAccepted() const
 {
    switch (mState)
    {
+      // TODO - Verify that this list complete
       case UAS_Start:
       case UAS_Offer:
       case UAS_NoOffer:
       case UAS_NoOfferReliable:
+      case UAS_ProvidedOfferReliable:
       case UAS_ProvidedOffer:
       case UAS_OfferProvidedAnswer:
       case UAS_EarlyOffer:
@@ -346,6 +347,7 @@ InviteSession::isAccepted() const
       case UAS_FirstSentAnswerReliable:
       case UAS_FirstSentOfferReliable:
       case UAS_NegotiatedReliable:
+      case UAS_NoAnswerReliable:
          return false;
       default:
          return true;
@@ -1569,13 +1571,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          {
             mSessionRefreshReInvite = false;
          
-            MD5Stream currentRemote;
-            currentRemote<< *mCurrentRemoteOfferAnswer;
-            MD5Stream newRemote;
-            newRemote << *offerAnswer;
-            bool changed = currentRemote.getHex() != newRemote.getHex();
-
-            if (changed)
+            if (*mCurrentRemoteOfferAnswer != *offerAnswer)
             {
                mCurrentRemoteOfferAnswer = offerAnswer; 
                handler->onRemoteAnswerChanged(getSessionHandle(), msg, *mCurrentRemoteOfferAnswer);
@@ -2702,18 +2698,28 @@ InviteSession::toData(State state)
          return "UAS_Start";
       case UAS_ReceivedOfferReliable:
          return "UAS_ReceivedOfferReliable";
+      case UAS_ReceivedOfferReliableProvidedAnswer:
+         return "UAS_ReceivedOfferReliableProvidedAnswer";
       case UAS_NoOfferReliable:
          return "UAS_NoOfferReliable";
+      case UAS_ProvidedOfferReliable:
+         return "UAS_ProvidedOfferReliable";
       case UAS_FirstSentOfferReliable:
          return "UAS_FirstSentOfferReliable";
       case UAS_FirstSentAnswerReliable:
          return "UAS_FirstSentAnswerReliable";
+      case UAS_FirstNoAnswerReliable:
+         return "UAS_FirstNoAnswerReliable";
+      case UAS_NoAnswerReliable:
+         return "UAS_NoAnswerReliable";
       case UAS_NegotiatedReliable:
          return "UAS_NegotiatedReliable";
       case UAS_SentUpdate:
          return "UAS_SentUpdate";
       case UAS_SentUpdateAccepted:
          return "UAS_SentUpdateAccepted";
+      case UAS_SentUpdateGlare:
+         return "UAS_SentUpdateGlare";
       case UAS_ReceivedUpdate:
          return "UAS_ReceivedUpdate";
       case UAS_ReceivedUpdateWaitingAnswer:
@@ -2738,7 +2744,7 @@ InviteSession::transition(State target)
 }
 
 bool
-InviteSession::isReliable(const SipMessage& msg)
+InviteSession::isReliable(const SipMessage& msg) const
 {
    if(msg.method() != INVITE)
    {
@@ -2747,13 +2753,15 @@ InviteSession::isReliable(const SipMessage& msg)
    if(msg.isRequest())
    {
       return mDum.getMasterProfile()->getUasReliableProvisionalMode() > MasterProfile::Never
-         && ((msg.exists(h_Supporteds) && msg.header(h_Supporteds).find(Token(Symbols::C100rel)))
-             || (msg.exists(h_Requires) && msg.header(h_Requires).find(Token(Symbols::C100rel))));
+         && (msg.exists(h_Supporteds) && msg.header(h_Supporteds).find(Token(Symbols::C100rel)) 
+             || msg.exists(h_Requires)   && msg.header(h_Requires).find(Token(Symbols::C100rel)));
    }
    else
    {
       return mDum.getMasterProfile()->getUacReliableProvisionalMode() > MasterProfile::Never
-         && msg.exists(h_Requires) && msg.header(h_Requires).find(Token(Symbols::C100rel));
+         && (msg.exists(h_Supporteds) && msg.header(h_Supporteds).find(Token(Symbols::C100rel))
+             && msg.exists(h_RSeq)
+             || (msg.exists(h_Requires) && msg.header(h_Requires).find(Token(Symbols::C100rel))));
    }
 }
 

@@ -100,6 +100,9 @@ DumTimeout::encode(EncodeStream& strm) const
       case Retransmit1xx:
          strm <<"Retransmit1xx";
          break;
+      case Retransmit1xxRel:
+         strm <<"Retransmit1xxRel";
+         break;
       case WaitForAck:
          strm <<"WaitForAck";
          break;

@@ -8,6 +8,7 @@
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/OctetContents.hxx"
+#include "rutil/MD5Stream.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
@@ -660,6 +661,22 @@ void
 Contents::addBuffer(char* buf)
 {
    mBufferList.push_back(buf);
+}
+
+bool
+resip::operator==(const Contents& lhs, const Contents& rhs)
+{
+   MD5Stream lhsStream;
+   lhsStream << lhs;
+   MD5Stream rhsStream;
+   rhsStream << rhs;
+   return lhsStream.getHex() == rhsStream.getHex();
+}
+
+bool
+resip::operator!=(const Contents& lhs, const Contents& rhs)
+{
+   return !operator==(lhs,rhs);
 }
 
 /* ====================================================================

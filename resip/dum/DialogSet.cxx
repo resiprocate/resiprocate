@@ -547,6 +547,7 @@ DialogSet::dispatch(const SipMessage& msg)
          case BYE:
          case INFO:
          case ACK:
+         case PRACK:
          case UPDATE:
             if(!dialog)
             {
