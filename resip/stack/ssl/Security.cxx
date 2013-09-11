@@ -86,62 +86,6 @@ pemTypePrefixes(  Security::PEMType pType )
 }
 
 static Data
-readIntoData(const Data& filename)
-{
-   DebugLog( << "Trying to read file " << filename );
-   
-   ifstream is;
-   is.open(filename.c_str(), ios::binary );
-   if ( !is.is_open() )
-   {
-      ErrLog( << "Could not open file " << filename << " for read");
-      throw BaseSecurity::Exception("Could not read file ", 
-                                    __FILE__,__LINE__);
-   }
-   
-   assert(is.is_open());
-   
-   int length = 0;
-   
-   // get length of file:
-#if !defined(__MSL_CPP__) || (__MSL_CPP_ >= 0x00012000)
-   is.seekg (0, ios::end);
-   length = (int)is.tellg();
-   is.seekg (0, ios::beg);
-#else
-   // this is a work around for a bug in CodeWarrior 9's implementation of seekg.
-   // http://groups.google.ca/group/comp.sys.mac.programmer.codewarrior/browse_frm/thread/a4279eb75f3bd55a
-   FILE * tmpFile = fopen(filename.c_str(), "r+b");
-   assert(tmpFile != NULL);
-   fseek(tmpFile, 0, SEEK_END);
-   length = ftell(tmpFile);
-   fseek(tmpFile, 0, SEEK_SET);
-#endif // __MWERKS__
-   
-   // tellg/tell will return -1 if the stream is bad
-   if (length == -1)
-   {
-      ErrLog( << "Could not seek into file " << filename);
-      throw BaseSecurity::Exception("Could not seek into file ", 
-                                    __FILE__,__LINE__);
-   }
-   
-   // !jf! +1 is a workaround for a bug in Data::c_str() that adds the 0 without
-   // resizing. 
-   char* buffer = new char [length+1]; 
-   
-   // read data as a block:
-   is.read (buffer,length);
-   
-   Data target(Data::Take, buffer, length);
-   
-   is.close();
-   
-   return target;
-}
-
-
-static Data
 getAor(const Data& filename, const  Security::PEMType &pemType )
 {
    const Data& prefix = pemTypePrefixes( pemType );
@@ -242,23 +186,23 @@ Security::preload()
          {
             if (name.prefix(pemTypePrefixes(UserCert)))
             {
-               addCertPEM( UserCert, getAor(name, UserCert), readIntoData(fileName), false );
+               addCertPEM( UserCert, getAor(name, UserCert), Data::fromFile(fileName), false );
             }
             else if (name.prefix(pemTypePrefixes(UserPrivateKey)))
             {
-               addPrivateKeyPEM( UserPrivateKey, getAor(name, UserPrivateKey), readIntoData(fileName), false);
+               addPrivateKeyPEM( UserPrivateKey, getAor(name, UserPrivateKey), Data::fromFile(fileName), false);
             }
             else if (name.prefix(pemTypePrefixes(DomainCert)))
             {
-               addCertPEM( DomainCert, getAor(name, DomainCert), readIntoData(fileName), false);
+               addCertPEM( DomainCert, getAor(name, DomainCert), Data::fromFile(fileName), false);
             }
             else if (name.prefix(pemTypePrefixes(DomainPrivateKey)))
             {
-               addPrivateKeyPEM( DomainPrivateKey, getAor(name, DomainPrivateKey), readIntoData(fileName), false);
+               addPrivateKeyPEM( DomainPrivateKey, getAor(name, DomainPrivateKey), Data::fromFile(fileName), false);
             }
             else if (name.prefix(pemTypePrefixes(RootCert)))
             {
-               addRootCertPEM(readIntoData(fileName));
+               addRootCertPEM(Data::fromFile(fileName));
             }
             else
             {
@@ -303,7 +247,7 @@ Security::preload()
       const Data _file = *it_f;
       try
       {
-         addRootCertPEM(readIntoData(_file));
+         addRootCertPEM(Data::fromFile(_file));
          InfoLog(<<"Successfully loaded " << _file);
       }
       catch (Exception& e)
@@ -376,7 +320,7 @@ Security::onReadPEM(const Data& name, PEMType type, Data& buffer) const
 
    InfoLog (<< "Reading PEM file " << filename << " into " << name);
    // .dlb. extra copy
-   buffer = readIntoData(filename);
+   buffer = Data::fromFile(filename);
 }
 
 
