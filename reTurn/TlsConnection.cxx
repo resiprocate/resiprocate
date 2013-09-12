@@ -104,32 +104,9 @@ TlsConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short
                              (char*)&(*data)[0], data->size());
          if(request.isValid())
          {
-            StunMessage response;
+            StunMessage *response = new StunMessage;
             RequestHandler::ProcessResult result = mRequestHandler.processStunMessage(this, mTurnAllocationManager, request, response);
-
-            switch(result)
-            {
-            case RequestHandler::NoResponseToSend:
-               // No response to send - just receive next message
-               doFramedReceive();
-               return;
-            case RequestHandler::RespondFromAlternatePort:
-            case RequestHandler::RespondFromAlternateIp:
-            case RequestHandler::RespondFromAlternateIpPort:
-               // These only happen for UDP server for RFC3489 backwards compatibility
-               assert(false);
-               break;
-            case RequestHandler::RespondFromReceiving:
-            default:
-               break;
-            }
-#define RESPONSE_BUFFER_SIZE 1024
-            boost::shared_ptr<DataBuffer> buffer = allocateBuffer(RESPONSE_BUFFER_SIZE);
-            unsigned int responseSize;
-            responseSize = response.stunEncodeMessage((char*)buffer->data(), RESPONSE_BUFFER_SIZE);
-            buffer->truncate(responseSize);  // set size to real size
-
-            doSend(response.mRemoteTuple, buffer);
+            sendStunResponse(result, response);
          }
          else
          {
@@ -183,6 +160,36 @@ TlsConnection::onSendFailure(const asio::error_code& error)
       InfoLog(<< "TlsConnection::onSendFailure: " << error.value() << "-" << error.message());
       close();
    }
+}
+
+void
+TlsConnection::sendStunResponse(RequestHandler::ProcessResult result, StunMessage* response)
+{
+   switch(result)
+   {
+   case RequestHandler::NoResponseToSend:
+      // No response to send - just receive next message
+      delete response;
+      return;
+   case RequestHandler::RespondFromAlternatePort:
+   case RequestHandler::RespondFromAlternateIp:
+   case RequestHandler::RespondFromAlternateIpPort:
+      // These only happen for UDP server for RFC3489 backwards compatibility
+      delete response;
+      assert(false);
+      break;
+   case RequestHandler::RespondFromReceiving:
+   default:
+      break;
+   }
+#define RESPONSE_BUFFER_SIZE 1024
+   boost::shared_ptr<DataBuffer> buffer = allocateBuffer(RESPONSE_BUFFER_SIZE);
+   unsigned int responseSize;
+   responseSize = response->stunEncodeMessage((char*)buffer->data(), RESPONSE_BUFFER_SIZE);
+   buffer->truncate(responseSize);  // set size to real size
+
+   doSend(response->mRemoteTuple, buffer);
+   delete response;
 }
 
 } 
