@@ -2,6 +2,8 @@
 #define REQUEST_HANDLER_HXX
 
 #include <string>
+#include <boost/bind.hpp>
+#include <boost/function.hpp>
 #include <boost/noncopyable.hpp>
 
 #include "DataBuffer.hxx"
@@ -32,8 +34,22 @@ public:
    } ProcessResult;
 
    /// Process a received StunMessage, and produce a reply
-   /// Returns true if the response message is to be sent
    ProcessResult processStunMessage(AsyncSocketBase* turnSocket, TurnAllocationManager& turnAllocationManager, StunMessage& request, StunMessage* response, bool isRFC3489BackwardsCompatServer=false);
+
+   /// Operates asynchronously, returns immediately, calls the handler to send the response
+   template<class Handler>
+     void processStunMessageAsync(AsyncSocketBase* turnSocket, TurnAllocationManager& turnAllocationManager, StunMessage& request, Handler stunResponseDispatcher, bool isRFC3489BackwardsCompatServer=false) 
+   {
+      StunMessage* response = new StunMessage;
+      ProcessResult result = processStunMessage(turnSocket, turnAllocationManager, request, response, isRFC3489BackwardsCompatServer);
+      if(result == NoResponseToSend)
+      {
+         delete response;
+         return;
+      }
+      mStrand.post(boost::bind(stunResponseDispatcher, result, response));
+   }
+
    void processTurnData(TurnAllocationManager& turnAllocationManager, unsigned short channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, boost::shared_ptr<DataBuffer>& data);
 
    const ReTurnConfig& getConfig() { return mTurnManager.getConfig(); }
@@ -41,6 +57,7 @@ public:
 private:
 
    TurnManager& mTurnManager;
+   asio::io_service::strand mStrand;
 
    // RFC3489 Server List
    bool mRFC3489SupportEnabled;
