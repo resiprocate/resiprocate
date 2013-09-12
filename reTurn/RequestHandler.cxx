@@ -27,8 +27,7 @@ namespace reTurn {
 RequestHandler::RequestHandler(TurnManager& turnManager,
                                const asio::ip::address* prim3489Address, unsigned short* prim3489Port,
                                const asio::ip::address* alt3489Address, unsigned short* alt3489Port) 
- : mTurnManager(turnManager),
-   mStrand(turnManager.getIOService())
+ : mTurnManager(turnManager)
 {
    if(prim3489Address && prim3489Port && alt3489Address && alt3489Port)
    {
@@ -46,21 +45,21 @@ RequestHandler::RequestHandler(TurnManager& turnManager,
 }
 
 RequestHandler::ProcessResult 
-RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, TurnAllocationManager& turnAllocationManager, StunMessage& request, StunMessage* response, bool isRFC3489BackwardsCompatServer)
+RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, TurnAllocationManager& turnAllocationManager, StunMessage& request, StunMessage& response, bool isRFC3489BackwardsCompatServer)
 {
    ProcessResult result =  RespondFromReceiving;
 
-   response->mRemoteTuple = request.mRemoteTuple; // Default to send response back to sender
+   response.mRemoteTuple = request.mRemoteTuple; // Default to send response back to sender
 
-   if(handleAuthentication(request, *response))  
+   if(handleAuthentication(request, response))  
    {
       // Check if there were unknown require attributes
       if(request.mUnknownRequiredAttributes.numAttributes > 0)
       {
          InfoLog(<< "Received Request with unknown comprehension-required attributes. Sending 420. Sender=" << request.mRemoteTuple);
-         buildErrorResponse(*response, 420, "Unknown attribute", getConfig().mAuthenticationRealm.c_str());  
-         response->mHasUnknownAttributes = true;
-         response->mUnknownAttributes = request.mUnknownRequiredAttributes;
+         buildErrorResponse(response, 420, "Unknown attribute", getConfig().mAuthenticationRealm.c_str());  
+         response.mHasUnknownAttributes = true;
+         response.mUnknownAttributes = request.mUnknownRequiredAttributes;
       }
       else
       {
@@ -71,37 +70,37 @@ RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, TurnAllocationMa
             switch (request.mMethod) 
             {
             case StunMessage::BindMethod:
-               result = processStunBindingRequest(request, *response, isRFC3489BackwardsCompatServer);
+               result = processStunBindingRequest(request, response, isRFC3489BackwardsCompatServer);
                break;
 
             case StunMessage::SharedSecretMethod:
-               result = processStunSharedSecretRequest(request, *response);
+               result = processStunSharedSecretRequest(request, response);
                break;
 
             case StunMessage::TurnAllocateMethod:
-               result = processTurnAllocateRequest(turnSocket, turnAllocationManager, request, *response);
+               result = processTurnAllocateRequest(turnSocket, turnAllocationManager, request, response);
                if(result != NoResponseToSend)
                {
                   // Add an XOrMappedAddress to all TurnAllocateResponses
-                  response->mHasXorMappedAddress = true;
-                  StunMessage::setStunAtrAddressFromTuple(response->mXorMappedAddress, request.mRemoteTuple);
+                  response.mHasXorMappedAddress = true;
+                  StunMessage::setStunAtrAddressFromTuple(response.mXorMappedAddress, request.mRemoteTuple);
                }
                break;
 
             case StunMessage::TurnRefreshMethod:
-               result = processTurnRefreshRequest(turnAllocationManager, request, *response);
+               result = processTurnRefreshRequest(turnAllocationManager, request, response);
                break;
 
             case StunMessage::TurnCreatePermissionMethod:
-               result = processTurnCreatePermissionRequest(turnAllocationManager, request, *response);
+               result = processTurnCreatePermissionRequest(turnAllocationManager, request, response);
                break;
 
             case StunMessage::TurnChannelBindMethod:
-               result = processTurnChannelBindRequest(turnAllocationManager, request, *response);
+               result = processTurnChannelBindRequest(turnAllocationManager, request, response);
                break;
 
             default:
-               buildErrorResponse(*response, 400, "Invalid Request Method");  
+               buildErrorResponse(response, 400, "Invalid Request Method");  
                break;
             }
             break;
@@ -138,20 +137,20 @@ RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, TurnAllocationMa
    if(result != NoResponseToSend)
    {
       // Fill in common response properties
-      response->mMethod = request.mMethod;
+      response.mMethod = request.mMethod;
 
       // Copy over TransactionId
-      response->mHeader.magicCookieAndTid = request.mHeader.magicCookieAndTid;
+      response.mHeader.magicCookieAndTid = request.mHeader.magicCookieAndTid;
 
       if (1) // add Software name - could be a setting in the future
       {
-         response->setSoftware(SOFTWARE_STRING);
+         response.setSoftware(SOFTWARE_STRING);
       }
 
       // If fingerprint is used in request, then use fingerprint in response
       if(request.mHasFingerprint)
       {
-         response->mHasFingerprint = true;
+         response.mHasFingerprint = true;
       }
    }
 

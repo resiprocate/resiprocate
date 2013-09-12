@@ -63,10 +63,6 @@ protected:
    unsigned short mLocalPort;
 
 private:
-   // This is the callback we give the RequestHandler so it
-   // can give a response back to the correct server instance
-   // to send it over the right socket
-   void sendStunResponse(RequestHandler::ProcessResult result, StunMessage* response);
 };
 
 }

@@ -101,15 +101,48 @@ UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short por
             ResponseMap::iterator it = mResponseMap.find(request.mHeader.magicCookieAndTid);
             if(it == mResponseMap.end())
             {
-               mRequestHandler.processStunMessageAsync(this, mTurnAllocationManager, request, boost::bind(&reTurn::UdpServer::sendStunResponse, this, _1, _2), isRFC3489BackwardsCompatServer());
+               response = new StunMessage;
+               RequestHandler::ProcessResult result = mRequestHandler.processStunMessage(this, mTurnAllocationManager, request, *response, isRFC3489BackwardsCompatServer());
+
+               switch(result)
+               {
+               case RequestHandler::NoResponseToSend:
+                  // No response to send - just receive next message
+                  delete response;
+                  doReceive();
+                  return;
+               case RequestHandler::RespondFromAlternatePort:
+                  responseUdpServer = mAlternatePortUdpServer;
+                  break;
+               case RequestHandler::RespondFromAlternateIp:
+                  responseUdpServer = mAlternateIpUdpServer;
+                  break;
+               case RequestHandler::RespondFromAlternateIpPort:
+                  responseUdpServer = mAlternateIpPortUdpServer;
+                  break;
+               case RequestHandler::RespondFromReceiving:
+               default:
+                  responseUdpServer = this;
+                  break;
+               }
+
+               // Store response in Map - to be resent if a retranmission is received
+               mResponseMap[response->mHeader.magicCookieAndTid] = new ResponseEntry(this, responseUdpServer, response);
             }
             else
             {
                InfoLog(<< "UdpServer: received retransmission of request with tid: " << request.mHeader.magicCookieAndTid);
                response = it->second->mResponseMessage;
                responseUdpServer = it->second->mResponseUdpServer;
-               responseUdpServer->encodeAndSendResponse(response);
             }
+
+#define RESPONSE_BUFFER_SIZE 1024
+            boost::shared_ptr<DataBuffer> buffer = allocateBuffer(RESPONSE_BUFFER_SIZE);
+            unsigned int responseSize;
+            responseSize = response->stunEncodeMessage((char*)buffer->data(), RESPONSE_BUFFER_SIZE);
+            buffer->truncate(responseSize);  // set size to real size
+
+            responseUdpServer->doSend(response->mRemoteTuple, buffer);
          }            
       }
       else // ChannelData message
@@ -195,49 +228,6 @@ UdpServer::cleanupResponseMap(const asio::error_code& e, UInt128 tid)
       delete it->second;
       mResponseMap.erase(it);
    }
-}
-
-void
-UdpServer::sendStunResponse(RequestHandler::ProcessResult result, StunMessage* response)
-{
-   UdpServer* responseUdpServer;
-   switch(result)
-   {
-   case RequestHandler::NoResponseToSend:
-      // No response to send - just receive next message
-      delete response;
-      return;
-   case RequestHandler::RespondFromAlternatePort:
-      responseUdpServer = mAlternatePortUdpServer;
-      break;
-   case RequestHandler::RespondFromAlternateIp:
-      responseUdpServer = mAlternateIpUdpServer;
-      break;
-   case RequestHandler::RespondFromAlternateIpPort:
-      responseUdpServer = mAlternateIpPortUdpServer;
-      break;
-   case RequestHandler::RespondFromReceiving:
-   default:
-      responseUdpServer = this;
-      break;
-   }
-
-   // Store response in Map - to be resent if a retranmission is received
-   mResponseMap[response->mHeader.magicCookieAndTid] = new ResponseEntry(this, responseUdpServer, response);
-
-   responseUdpServer->encodeAndSendResponse(response);
-}
-
-void
-UdpServer::encodeAndSendResponse(StunMessage* response)
-{
-#define RESPONSE_BUFFER_SIZE 1024
-   boost::shared_ptr<DataBuffer> buffer = allocateBuffer(RESPONSE_BUFFER_SIZE);
-   unsigned int responseSize;
-   responseSize = response->stunEncodeMessage((char*)buffer->data(), RESPONSE_BUFFER_SIZE);
-   buffer->truncate(responseSize);  // set size to real size
-
-   doSend(response->mRemoteTuple, buffer);
 }
 
 }
