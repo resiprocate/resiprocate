@@ -1278,7 +1278,7 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
       case OnPrack:
       {
          if(!prackCheckProvisionals(msg))
-      {
+         {
             return; // prack does not correspond to an unacknowedged provisional
          }
 
@@ -1293,7 +1293,7 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
             SharedPtr<SipMessage> p200(new SipMessage);
             mDialog.makeResponse(*p200, msg, 200);
             send(p200);
-            transition(UAS_NoAnswerReliable);
+            transition(UAS_NoAnswerReliable);  // TODO !slg!  this doesn't seem right - we've already Accepted the call
             prackCheckQueue();
          }
          break;
@@ -1581,11 +1581,11 @@ ServerInviteSession::dispatchFirstNoAnswerReliable(const SipMessage& msg)
          }
          else
          {
-             SharedPtr<SipMessage> p200(new SipMessage);
-             mDialog.makeResponse(*p200, msg, 200);
-             send(p200);
-             transition(UAS_NoAnswerReliable);
-             prackCheckQueue();
+            SharedPtr<SipMessage> p200(new SipMessage);
+            mDialog.makeResponse(*p200, msg, 200);
+            send(p200);
+            transition(UAS_NoAnswerReliable);
+            prackCheckQueue();
          }
          break;
       }
@@ -1597,8 +1597,6 @@ ServerInviteSession::dispatchFirstNoAnswerReliable(const SipMessage& msg)
          }
          break;
    }
-
-
 }
 
 void

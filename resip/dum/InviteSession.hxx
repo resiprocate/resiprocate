@@ -235,6 +235,8 @@ class InviteSession : public DialogUsage
          UAS_ReceivedUpdateWaitingAnswer,
          UAS_WaitingToTerminate,
          UAS_WaitingToHangup
+         // !!!!WARNING!!!! when adding new UAS state - make sure you check if they 
+         //                 need to be added to the isAccepted method
       } State;
 
       typedef enum

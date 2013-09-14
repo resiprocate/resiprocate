@@ -332,23 +332,38 @@ InviteSession::isAccepted() const
 {
    switch (mState)
    {
-      // TODO - Verify that this list complete
       case UAS_Start:
       case UAS_Offer:
-      case UAS_NoOffer:
-      case UAS_NoOfferReliable:
-      case UAS_ProvidedOfferReliable:
-      case UAS_ProvidedOffer:
       case UAS_OfferProvidedAnswer:
       case UAS_EarlyOffer:
-      case UAS_EarlyProvidedOffer:
       case UAS_EarlyProvidedAnswer:
+
+      case UAS_NoOffer:
+      case UAS_ProvidedOffer:
       case UAS_EarlyNoOffer:
-      case UAS_FirstSentAnswerReliable:
+      case UAS_EarlyProvidedOffer:
+      //case UAS_Accepted:              // Obvious
+      //case UAS_WaitingToOffer:        // We have accepted here and are waiting for ACK to Offer
+      //case UAS_WaitingToRequestOffer: // We have accepted here and are waiting for ACK to request an offer
+
+      //case UAS_AcceptedWaitingAnswer: // Obvious
+      case UAS_ReceivedOfferReliable:
+      case UAS_ReceivedOfferReliableProvidedAnswer:
+      case UAS_NoOfferReliable:
+      case UAS_ProvidedOfferReliable:
       case UAS_FirstSentOfferReliable:
+      case UAS_FirstSentAnswerReliable:
+      case UAS_FirstNoAnswerReliable:
       case UAS_NegotiatedReliable:
-      case UAS_NoAnswerReliable:
+      case UAS_NoAnswerReliable:        // TODO !slg! happens after accepted in one case. but I suspect it's a bug - determine if it should be here or not
+      case UAS_SentUpdate:         
+      //case UAS_SentUpdateAccepted:    // we have accepted here
+      case UAS_SentUpdateGlare:
+      case UAS_ReceivedUpdate:
+      //case UAS_ReceivedUpdateWaitingAnswer:  // happens only after accept is called
+      //case UAS_WaitingToHangup:       // always from an accepted state
          return false;
+
       default:
          return true;
    }
@@ -2752,16 +2767,16 @@ InviteSession::isReliable(const SipMessage& msg) const
    }
    if(msg.isRequest())
    {
-      return mDum.getMasterProfile()->getUasReliableProvisionalMode() > MasterProfile::Never
-         && (msg.exists(h_Supporteds) && msg.header(h_Supporteds).find(Token(Symbols::C100rel)) 
-             || msg.exists(h_Requires)   && msg.header(h_Requires).find(Token(Symbols::C100rel)));
+      return mDum.getMasterProfile()->getUasReliableProvisionalMode() > MasterProfile::Never &&
+             ((msg.exists(h_Supporteds) && msg.header(h_Supporteds).find(Token(Symbols::C100rel))) || 
+              (msg.exists(h_Requires)   && msg.header(h_Requires).find(Token(Symbols::C100rel))));
    }
    else
    {
-      return mDum.getMasterProfile()->getUacReliableProvisionalMode() > MasterProfile::Never
-         && (msg.exists(h_Supporteds) && msg.header(h_Supporteds).find(Token(Symbols::C100rel))
-             && msg.exists(h_RSeq)
-             || (msg.exists(h_Requires) && msg.header(h_Requires).find(Token(Symbols::C100rel))));
+      // RFC3262 says reliable provisionals MUST have a Require: 100rel and an RSeq
+      return mDum.getMasterProfile()->getUacReliableProvisionalMode() > MasterProfile::Never &&
+             msg.exists(h_Requires) && msg.header(h_Requires).find(Token(Symbols::C100rel)) && 
+             msg.exists(h_RSeq);
    }
 }
 

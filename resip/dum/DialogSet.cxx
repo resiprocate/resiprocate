@@ -520,7 +520,7 @@ DialogSet::dispatch(const SipMessage& msg)
          }
          else
          {
-          StackLog (<< "Matching dialog is destroying, dropping response message " << endl << msg);
+            StackLog (<< "Matching dialog is destroying, dropping response message " << endl << msg);
          }
          return;
       }
@@ -743,7 +743,7 @@ DialogSet::dispatch(const SipMessage& msg)
             return;
 
          case MESSAGE:
-             if (dialog)
+            if (dialog)
             {
                 break;
             }
@@ -755,6 +755,7 @@ DialogSet::dispatch(const SipMessage& msg)
 
          case INFO:   
          case UPDATE:
+         // case PRACK:  ?slg? TODO - shouldn't this be here
             if (dialog)
             {
                break;
