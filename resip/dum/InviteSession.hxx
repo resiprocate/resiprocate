@@ -367,9 +367,7 @@ class InviteSession : public DialogUsage
       SharedPtr<SipMessage> mLastLocalSessionModification; // last UPDATE or reINVITE sent
       SharedPtr<SipMessage> mLastRemoteSessionModification; // last UPDATE or reINVITE received
       SharedPtr<SipMessage> mInvite200;               // 200 OK for reINVITE for retransmissions
-      SharedPtr<SipMessage> mLastNitResponse;         // 
-                                                      //?dcm? -- ptr, delete when not needed?
-      SharedPtr<SipMessage> mSavedInviteAtUpdate;
+      SharedPtr<SipMessage> mLastNitResponse;
 
       SipMessage  mLastReferNoSubRequest;
       

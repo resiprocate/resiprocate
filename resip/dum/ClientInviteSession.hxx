@@ -64,8 +64,8 @@ class ClientInviteSession : public InviteSession
       void handleRedirect (const SipMessage& msg);
       void handleProvisional (const SipMessage& msg);
       void handleFinalResponse (const SipMessage& msg);
-      void handleOffer (const SipMessage& msg, const Contents& offer);
-      void handleAnswer (const SipMessage& msg, const Contents& answer);
+      void handle1xxOffer (const SipMessage& msg, const Contents& offer);
+      void handle1xxAnswer (const SipMessage& msg, const Contents& answer);
       void sendPrackIfNeeded(const SipMessage& msg);
       void sendPrack(const Contents& offerAnswer);
       

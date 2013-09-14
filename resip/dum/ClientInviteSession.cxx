@@ -1,5 +1,6 @@
 
 #include "resip/stack/Contents.hxx"
+#include "resip/dum/BaseCreator.hxx"
 #include "resip/dum/ClientInviteSession.hxx"
 #include "resip/dum/Dialog.hxx"
 #include "resip/dum/DialogEventStateManager.hxx"
@@ -66,11 +67,6 @@ ClientInviteSession::provideOffer(const Contents& offer, DialogUsageManager::Enc
       case UAC_EarlyWithAnswer:
       {
          transition(UAC_SentUpdateEarly);
-         if (!mSavedInviteAtUpdate.get())
-         {
-             // save ongoing invite
-             mSavedInviteAtUpdate = SharedPtr<SipMessage>(new SipMessage(*mLastLocalSessionModification));
-         }
 
          //  Creates an UPDATE request with application supplied offer.
          mDialog.makeRequest(*mLastLocalSessionModification, UPDATE);
@@ -542,9 +538,8 @@ ClientInviteSession::handleProvisional(const SipMessage& msg)
    // state machine can be affected(termination).
 
    // !dcm! should we really end the InviteSession or should be discard the 1xx instead?
-   if ( (mSavedInviteAtUpdate.get() &&
-         msg.header(h_CSeq).sequence() != mSavedInviteAtUpdate->header(h_CSeq).sequence()) ||
-        (msg.header(h_CSeq).sequence() != mLastLocalSessionModification->header(h_CSeq).sequence()) )
+   // Check CSeq in 1xx against original INVITE request
+   if (msg.header(h_CSeq).sequence() != mDialog.mDialogSet.getCreator()->getLastRequest()->header(h_CSeq).sequence())
    {
       InfoLog (<< "Failure:  CSeq doesn't match invite: " << msg.brief());
       onFailureAspect(getHandle(), msg);
@@ -579,7 +574,7 @@ ClientInviteSession::handleFinalResponse(const SipMessage& msg)
 }
 
 void
-ClientInviteSession::handleOffer (const SipMessage& msg, const Contents& offer)
+ClientInviteSession::handle1xxOffer (const SipMessage& msg, const Contents& offer)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
 
@@ -590,7 +585,7 @@ ClientInviteSession::handleOffer (const SipMessage& msg, const Contents& offer)
 }
 
 void
-ClientInviteSession::handleAnswer(const SipMessage& msg, const Contents& answer)
+ClientInviteSession::handle1xxAnswer(const SipMessage& msg, const Contents& answer)
 {
    setCurrentLocalOfferAnswer(msg);
    mCurrentEncryptionLevel = getEncryptionLevel(msg);
@@ -681,12 +676,12 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          if(!isTerminated())  
          {
             handleProvisional(msg);
-            sendPrackIfNeeded(msg); //may wish to move emprty PRACK handling
-                                 //outside the state machine            
+            sendPrackIfNeeded(msg);  // may wish to move emprty PRACK handling
+                                     // outside the state machine            
          }
          break;
 
-      case On1xxEarly:
+      case On1xxEarly:  // only unreliable
          //!dcm! according to draft-ietf-sipping-offeranswer there can be a non
          // reliable 1xx followed by a reliable 1xx.  Also, the intial 1xx
          // doesn't have to have an offer. However, DUM will only generate
@@ -710,7 +705,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          handler->onNewSession(getHandle(), InviteSession::Offer, msg);
          if(!isTerminated())  
          {
-            handleOffer(msg, *offerAnswer);
+            handle1xxOffer(msg, *offerAnswer);
          }
          break;
 
@@ -719,7 +714,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          handler->onNewSession(getHandle(), InviteSession::Answer, msg);
          if(!isTerminated())  
          {
-            handleAnswer(msg, *offerAnswer);
+            handle1xxAnswer(msg, *offerAnswer);
          }
          break;
 
@@ -805,10 +800,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
       case On1xx:
          transition(UAC_Early);
          handleProvisional(msg);
-         if(!isTerminated())  
-         {
-            sendPrackIfNeeded(msg);
-         }
+         sendPrackIfNeeded(msg);
          break;
 
       case On1xxEarly: // only unreliable
@@ -823,12 +815,12 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
 
       case On1xxOffer:
          transition(UAC_EarlyWithOffer);
-         handleOffer(msg, *offerAnswer);
+         handle1xxOffer(msg, *offerAnswer);
          break;
 
       case On1xxAnswer:
          transition(UAC_EarlyWithAnswer);
-         handleAnswer(msg, *offerAnswer);
+         handle1xxAnswer(msg, *offerAnswer);
          break;
 
       case On2xxOffer:
@@ -1223,7 +1215,7 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
          if(!isTerminated())  
          {
             transition(UAC_EarlyWithOffer);
-            handleOffer(msg, *offerAnswer);
+            handle1xxOffer(msg, *offerAnswer);
          }
          break;
       case On2xx:
