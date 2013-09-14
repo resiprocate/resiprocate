@@ -219,8 +219,8 @@ class InviteSession : public DialogUsage
          UAS_WaitingToRequestOffer, 
 
          UAS_AcceptedWaitingAnswer, 
-         UAS_ReceivedOfferReliable,
-         UAS_ReceivedOfferReliableProvidedAnswer,
+         UAS_OfferReliable,
+         UAS_OfferReliableProvidedAnswer,
          UAS_NoOfferReliable,
          UAS_ProvidedOfferReliable,
          UAS_FirstSentOfferReliable,

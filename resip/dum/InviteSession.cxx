@@ -347,8 +347,8 @@ InviteSession::isAccepted() const
       //case UAS_WaitingToRequestOffer: // We have accepted here and are waiting for ACK to request an offer
 
       //case UAS_AcceptedWaitingAnswer: // Obvious
-      case UAS_ReceivedOfferReliable:
-      case UAS_ReceivedOfferReliableProvidedAnswer:
+      case UAS_OfferReliable:
+      case UAS_OfferReliableProvidedAnswer:
       case UAS_NoOfferReliable:
       case UAS_ProvidedOfferReliable:
       case UAS_FirstSentOfferReliable:
@@ -2711,10 +2711,10 @@ InviteSession::toData(State state)
          
       case UAS_Start:
          return "UAS_Start";
-      case UAS_ReceivedOfferReliable:
-         return "UAS_ReceivedOfferReliable";
-      case UAS_ReceivedOfferReliableProvidedAnswer:
-         return "UAS_ReceivedOfferReliableProvidedAnswer";
+      case UAS_OfferReliable:
+         return "UAS_OfferReliable";
+      case UAS_OfferReliableProvidedAnswer:
+         return "UAS_OfferReliableProvidedAnswer";
       case UAS_NoOfferReliable:
          return "UAS_NoOfferReliable";
       case UAS_ProvidedOfferReliable:

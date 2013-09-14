@@ -54,7 +54,7 @@ ServerInviteSession::redirect(const NameAddrs& contacts, int code)
       case UAS_ProvidedOfferReliable:
       case UAS_Offer:
       case UAS_OfferProvidedAnswer:
-      case UAS_ReceivedOfferReliable: 
+      case UAS_OfferReliable: 
       case UAS_ProvidedOffer:
       case UAS_ReceivedUpdate:
       case UAS_ReceivedUpdateWaitingAnswer:
@@ -183,7 +183,7 @@ ServerInviteSession::provisional(int code, bool earlyFlag)
          }
          break;
          
-      case UAS_ReceivedOfferReliable: 
+      case UAS_OfferReliable: 
          if(code!=100)
          {
             transition(UAS_FirstNoAnswerReliable);
@@ -199,7 +199,7 @@ ServerInviteSession::provisional(int code, bool earlyFlag)
          sendProvisional(code, earlyFlag);
          break;
 
-      case UAS_ReceivedOfferReliableProvidedAnswer: 
+      case UAS_OfferReliableProvidedAnswer: 
          if(code!=100)
          {
             transition(UAS_FirstSentAnswerReliable);
@@ -314,7 +314,7 @@ ServerInviteSession::provideOffer(const Contents& offer,
       case UAS_FirstSentOfferReliable:
       case UAS_Offer:
       case UAS_EarlyOffer:
-      case UAS_ReceivedOfferReliable: 
+      case UAS_OfferReliable: 
       case UAS_OfferProvidedAnswer:
       case UAS_ProvidedOffer:
       case UAS_ProvidedOfferReliable:
@@ -384,10 +384,10 @@ ServerInviteSession::provideAnswer(const Contents& answer)
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
          break;
          
-      case UAS_ReceivedOfferReliable: 
+      case UAS_OfferReliable: 
          mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
-         transition(UAS_ReceivedOfferReliableProvidedAnswer);
+         transition(UAS_OfferReliableProvidedAnswer);
          break;
 
       case UAS_FirstNoAnswerReliable: 
@@ -504,8 +504,8 @@ ServerInviteSession::end(EndReason reason)
          reject(480);
          break;         
          
-      case UAS_ReceivedOfferReliable: 
-      case UAS_ReceivedOfferReliableProvidedAnswer:
+      case UAS_OfferReliable: 
+      case UAS_OfferReliableProvidedAnswer:
       case UAS_NegotiatedReliable:
       case UAS_FirstSentOfferReliable:
       case UAS_FirstSentAnswerReliable:
@@ -571,8 +571,8 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
       case UAS_NoAnswerReliable:
       case UAS_FirstSentOfferReliable:
       case UAS_NoOfferReliable:
-      case UAS_ReceivedOfferReliable: 
-      case UAS_ReceivedOfferReliableProvidedAnswer:
+      case UAS_OfferReliable: 
+      case UAS_OfferReliableProvidedAnswer:
       case UAS_ReceivedUpdate:
       case UAS_SentUpdate:
       {
@@ -671,7 +671,7 @@ ServerInviteSession::accept(int code)
          }
          break;
 
-      case UAS_ReceivedOfferReliableProvidedAnswer: 
+      case UAS_OfferReliableProvidedAnswer: 
          transition(UAS_Accepted);
          sendAccept(code, mCurrentLocalOfferAnswer.get());
          handler->onConnected(getSessionHandle(), *mInvite200);
@@ -702,7 +702,7 @@ ServerInviteSession::accept(int code)
          break;
          
       case UAS_NoOfferReliable:
-      case UAS_ReceivedOfferReliable: 
+      case UAS_OfferReliable: 
       case UAS_ReceivedUpdateWaitingAnswer:
       case UAS_SentUpdateAccepted:
       case UAS_Start:
@@ -807,7 +807,7 @@ ServerInviteSession::dispatch(const SipMessage& msg)
       case UAS_NoOfferReliable:
          dispatchNoOfferReliable(msg);
          break;
-      case UAS_ReceivedOfferReliable:
+      case UAS_OfferReliable:
          dispatchOfferReliable(msg);
          break;
       case UAS_ReceivedUpdate:
@@ -937,7 +937,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
          break;
       case OnInviteReliableOffer:
          *mLastRemoteSessionModification = msg;
-         transition(UAS_ReceivedOfferReliable);
+         transition(UAS_OfferReliable);
          mProposedRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          handler->onNewSession(getHandle(), InviteSession::Offer, msg);

@@ -14,7 +14,7 @@ digraph UAS {
   Start -> Offer                                        [ label = "onInvite-offer/app::onNewSession,app::onOffer" ];
 
   Offer -> OfferProvidedAnswer                          [ label = "dum::provideAnswer/store::answer" ];
-  Offer -> EarlyOffer                                   [ label = "dum::provisional/send::1xx,timer::1xx" ]; // include early-media
+  Offer -> EarlyOffer                                   [ label = "dum::provisional/send::1xx,timer::1xx" ];
   Offer -> Assert                                       [ label = "dum::accept/assert" ];
   Offer -> Terminated                                   [ label = "dum::end/send::4XXI,app::onTerminated,dum::destroy" ];
   Offer -> Terminated                                   [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ];
@@ -128,19 +128,19 @@ digraph UAS {
   //////////////////////////////////////////
 
 
-  Start -> ReceivedOfferReliable                        [ label = "onInvite-offer-rel/app::onNewSession,app::onOffer" ];
+  Start -> OfferReliable                        [ label = "onInvite-offer-rel/app::onNewSession,app::onOffer" ];
   Start -> NoOfferReliable                              [ label = "onInvite-rel/app::onNewSession,app::onOfferRequired" ];
 
-  ReceivedOfferReliable -> ReceivedOfferReliableProvidedAnswer [ label = "dum::provideAnswer" ];
-  ReceivedOfferReliable -> Terminated                   [ label = "dum::end/send::4XXI,app::onTerminated,dum::destroy" ];
-  ReceivedOfferReliable -> Terminated                   [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ];
-  ReceivedOfferReliable -> Terminated                   [ label = "dum::redirect/send::3XXI,app::onTerminated,dum::destroy" ];
+  OfferReliable -> OfferReliableProvidedAnswer [ label = "dum::provideAnswer" ];
+  OfferReliable -> Terminated                   [ label = "dum::end/send::4XXI,app::onTerminated,dum::destroy" ];
+  OfferReliable -> Terminated                   [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ];
+  OfferReliable -> Terminated                   [ label = "dum::redirect/send::3XXI,app::onTerminated,dum::destroy" ];
 
-  ReceivedOfferReliableProvidedAnswer -> FirstSentAnswerReliable [ label = "dum::provisional/send::1xx-answer,timer::1xx" ];
-  ReceivedOfferReliableProvidedAnswer -> Accepted                [ label = "dum::accept/send::2xx,timer::2xx,app::onConnected" ];
-  ReceivedOfferReliableProvidedAnswer -> Terminated              [ label = "dum::end/send::4XXI,app::onTerminated,dum::destroy" ];
-  ReceivedOfferReliableProvidedAnswer -> Terminated              [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ];
-  ReceivedOfferReliableProvidedAnswer -> Terminated              [ label = "dum::redirect/send::3XXI,app::onTerminated,dum::destroy" ];
+  OfferReliableProvidedAnswer -> FirstSentAnswerReliable [ label = "dum::provisional/send::1xx-answer,timer::1xx" ];
+  OfferReliableProvidedAnswer -> Accepted                [ label = "dum::accept/send::2xx,timer::2xx,app::onConnected" ];
+  OfferReliableProvidedAnswer -> Terminated              [ label = "dum::end/send::4XXI,app::onTerminated,dum::destroy" ];
+  OfferReliableProvidedAnswer -> Terminated              [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ];
+  OfferReliableProvidedAnswer -> Terminated              [ label = "dum::redirect/send::3XXI,app::onTerminated,dum::destroy" ];
 
   NoOfferReliable -> NoOfferReliable                    [ label = "dum::provisional/send::1xx,timer:1xx" ];
   NoOfferReliable -> ProvidedOfferReliable              [ label = "dum::provideOffer/store::offer" ];
