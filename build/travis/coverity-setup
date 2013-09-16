@@ -7,6 +7,8 @@ set -e
 # travis docs say we are building on 32 bit, but that doesn't always
 # appear to be the case
 
+COV_VERSION=6.6.1
+
 case `uname -m` in
   i?86)
     BITS=32
@@ -16,7 +18,7 @@ case `uname -m` in
   ;;
 esac
 
-SCAN_TOOL=https://scan.coverity.com/build_tool/cov-analysis-linux${BITS}-6.5.1.tar.gz
+SCAN_TOOL=https://scan.coverity.com/build_tool/cov-analysis-linux${BITS}-${COV_VERSION}.tar.gz
 
 echo "Using tool $SCAN_TOOL"
 
