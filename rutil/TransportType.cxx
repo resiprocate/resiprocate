@@ -102,11 +102,13 @@ isSecure(TransportType type)
    {
       case TLS:
       case DTLS:
+      case WSS:
          return true;
       case UDP:
       case TCP:
       case DCCP:
       case SCTP:
+      case WS:
       default:
          return false;
    }
