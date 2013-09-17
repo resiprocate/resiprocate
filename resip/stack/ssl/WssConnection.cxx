@@ -10,9 +10,10 @@ using namespace resip;
 
 WssConnection::WssConnection(Transport* transport, const Tuple& who, Socket fd,
                               Security* security, bool server, Data domain,
-                              SecurityTypes::SSLType sslType ,
-                              Compression &compression)
-  : TlsConnection(transport, who, fd, security, server, domain, sslType, compression)
+                              SecurityTypes::SSLType sslType , Compression &compression,
+                              SharedPtr<WsConnectionValidator> wsConnectionValidator)
+  : TlsConnection(transport, who, fd, security, server, domain, sslType, compression),
+    WsConnectionBase(wsConnectionValidator)
 {
    DebugLog (<< "Creating WSS connection " << who << " on " << fd);
 }

@@ -18,7 +18,9 @@
 #include "resip/stack/SecurityTypes.hxx"
 #include "resip/stack/StatisticsManager.hxx"
 #include "resip/stack/TuSelector.hxx"
+#include "resip/stack/WsConnectionValidator.hxx"
 #include "rutil/dns/DnsStub.hxx"
+#include "rutil/SharedPtr.hxx"
 
 /**
     Let external applications know that this version of the stack
@@ -313,7 +315,8 @@ class SipStack : public FdSetIOObserver
                          SecurityTypes::SSLType sslType = SecurityTypes::TLSv1,
                          unsigned transportFlags = 0,
                          SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None,
-                         bool useEmailAsSIP = false);
+                         bool useEmailAsSIP = false,
+                         SharedPtr<WsConnectionValidator> = SharedPtr<WsConnectionValidator>());
 
       /**
           Used to plug-in custom transports.  Adds the transport to the Transport

@@ -5,11 +5,13 @@
   #include "config.h"
 #endif
 
+#include "resip/stack/WsConnectionValidator.hxx"
 #include "resip/stack/ssl/TlsBaseTransport.hxx"
 #include "resip/stack/TcpBaseTransport.hxx"
 #include "resip/stack/SecurityTypes.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 #include "resip/stack/Compression.hxx"
+#include "rutil/SharedPtr.hxx"
 
 #include <openssl/ssl.h>
 
@@ -35,7 +37,8 @@ class WssTransport : public TlsBaseTransport
                    Compression &compression = Compression::Disabled,
                    unsigned transportFlags = 0,
                    SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None,
-                   bool useEmailAsSIP = false);
+                   bool useEmailAsSIP = false,
+                   SharedPtr<WsConnectionValidator> = SharedPtr<WsConnectionValidator>());
       virtual  ~WssTransport();
 
       bool isUseEmailAsSIP()
@@ -44,6 +47,8 @@ class WssTransport : public TlsBaseTransport
    protected:
       Connection* createConnection(const Tuple& who, Socket fd, bool server=false);
 
+   private:
+      SharedPtr<WsConnectionValidator> mConnectionValidator;
 };
 
 }

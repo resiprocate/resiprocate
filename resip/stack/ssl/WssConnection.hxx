@@ -7,6 +7,7 @@
 
 #include "resip/stack/ssl/TlsConnection.hxx"
 #include "resip/stack/WsConnectionBase.hxx"
+#include "rutil/SharedPtr.hxx"
 
 namespace resip
 {
@@ -16,8 +17,8 @@ class WssConnection :  public TlsConnection, public WsConnectionBase
    public:
       WssConnection( Transport* transport, const Tuple& who, Socket fd,
                      Security* security, bool server, Data domain,
-                     SecurityTypes::SSLType sslType ,
-                     Compression &compression);
+                     SecurityTypes::SSLType sslType, Compression &compression,
+                     SharedPtr<WsConnectionValidator> wsConnectionValidator);
 
    private:
       /// No default c'tor

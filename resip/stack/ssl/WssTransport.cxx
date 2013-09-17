@@ -31,8 +31,10 @@ WssTransport::WssTransport(Fifo<TransactionMessage>& fifo,
                            Compression &compression,
                            unsigned transportFlags,
                            SecurityTypes::TlsClientVerificationMode cvm,
-                           bool useEmailAsSIP):
-   TlsBaseTransport(fifo, portNum, version, interfaceObj, security, sipDomain, sslType, WSS, socketFunc, compression, transportFlags, cvm, useEmailAsSIP)
+                           bool useEmailAsSIP,
+                           SharedPtr<WsConnectionValidator> connectionValidator):
+   TlsBaseTransport(fifo, portNum, version, interfaceObj, security, sipDomain, sslType, WSS, socketFunc, compression, transportFlags, cvm, useEmailAsSIP),
+   mConnectionValidator(connectionValidator)
 {
    InfoLog (<< "Creating WSS transport for domain " 
             << sipDomain << " interface=" << interfaceObj 
@@ -51,7 +53,8 @@ WssTransport::createConnection(const Tuple& who, Socket fd, bool server)
 {
    assert(this);
    Connection* conn = new WssConnection(this,who, fd, mSecurity, server,
-                                        tlsDomain(), mSslType, mCompression );
+                                        tlsDomain(), mSslType, mCompression,
+                                        mConnectionValidator);
    return conn;
 }
 

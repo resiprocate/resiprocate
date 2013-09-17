@@ -8,9 +8,11 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-WsConnection::WsConnection(Transport* transport,const Tuple& who, Socket fd,
-                             Compression &compression)
-  : TcpConnection(transport,who, fd, compression)
+WsConnection::WsConnection(Transport* transport,
+                           const Tuple& who, Socket fd,
+                           Compression &compression,
+                           SharedPtr<WsConnectionValidator> wsConnectionValidator)
+  : TcpConnection(transport,who, fd, compression), WsConnectionBase(wsConnectionValidator)
 {
    DebugLog (<< "Creating WS connection " << who << " on " << fd);
 }

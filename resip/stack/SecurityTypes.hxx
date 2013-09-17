@@ -8,6 +8,7 @@ namespace SecurityTypes
 { 
 typedef enum 
 { 
+   NoSLL = 0,
    SSLv23 = 1, 
    TLSv1 = 2 
 } SSLType;

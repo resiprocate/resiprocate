@@ -1,8 +1,10 @@
 #if !defined(RESIP_WSTRANSPORT_HXX)
 #define RESIP_WSTRANSPORT_HXX
 
+#include "resip/stack/WsConnectionValidator.hxx"
 #include "resip/stack/TcpBaseTransport.hxx"
 #include "resip/stack/Compression.hxx"
+#include "rutil/SharedPtr.hxx"
 
 namespace resip
 {
@@ -21,11 +23,15 @@ class WsTransport : public TcpBaseTransport
                    const Data& interfaceObj,
                    AfterSocketCreationFuncPtr socketFunc=0,
                    Compression &compression = Compression::Disabled,
-                   unsigned transportFlags = 0);
+                   unsigned transportFlags = 0,
+                   SharedPtr<WsConnectionValidator> = SharedPtr<WsConnectionValidator>());
       virtual  ~WsTransport();
 
    protected:
       Connection* createConnection(const Tuple& who, Socket fd, bool server=false);
+
+   private:
+      SharedPtr<WsConnectionValidator> mConnectionValidator;
 };
 
 }

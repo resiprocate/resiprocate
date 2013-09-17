@@ -20,8 +20,10 @@ WsTransport::WsTransport(Fifo<TransactionMessage>& fifo, int portNum,
       IpVersion version, const Data& pinterface,
       AfterSocketCreationFuncPtr socketFunc,
       Compression &compression,
-      unsigned transportFlags)
-: TcpBaseTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags)
+      unsigned transportFlags,
+      SharedPtr<WsConnectionValidator> connectionValidator)
+: TcpBaseTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags),
+  mConnectionValidator(connectionValidator)
 {
    mTuple.setType(WS);
 
@@ -42,7 +44,7 @@ Connection*
 WsTransport::createConnection(const Tuple& who, Socket fd, bool server)
 {
    assert(this);
-   Connection* conn = new WsConnection(this,who, fd, mCompression);
+   Connection* conn = new WsConnection(this,who, fd, mCompression, mConnectionValidator);
    return conn;
 }
 
