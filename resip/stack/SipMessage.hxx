@@ -17,6 +17,7 @@
 #include "resip/stack/Tuple.hxx"
 #include "resip/stack/Uri.hxx"
 #include "resip/stack/MessageDecorator.hxx"
+#include "resip/stack/Cookie.hxx"
 #include "rutil/BaseException.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/DinkyPool.hxx"
@@ -519,8 +520,8 @@ class SipMessage : public TransactionMessage
       const std::list<Data>& getTlsPeerNames() const { return mTlsPeerNames; }
       void setTlsPeerNames(const std::list<Data>& tlsPeerNames) { mTlsPeerNames = tlsPeerNames; }
 
-      const std::list<Data>& getWsCookies() const { return mWsCookies; }
-      void setWsCookies(const std::list<Data>& wsCookies) { mWsCookies = wsCookies; }
+      const CookieList getWsCookies() const { return mWsCookies; }
+      void setWsCookies(const CookieList& wsCookies) { mWsCookies = wsCookies; }
 
       Data getCanonicalIdentityString() const;
       
@@ -688,7 +689,7 @@ class SipMessage : public TransactionMessage
       std::list<Data> mTlsPeerNames;
 
       // cookies associated with this message from the WebSocket Upgrade request
-      std::list<Data>  mWsCookies;
+      CookieList mWsCookies;
 
       std::auto_ptr<SecurityAttributes> mSecurityAttributes;
 
