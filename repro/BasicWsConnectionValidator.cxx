@@ -18,7 +18,7 @@ using namespace repro;
 using namespace std;
 
 
-BasicWsConnectionValidator::BasicWsConnectionValidator(Data wsCookieAuthSharedSecret)
+BasicWsConnectionValidator::BasicWsConnectionValidator(const Data& wsCookieAuthSharedSecret)
    : mWsCookieAuthSharedSecret(wsCookieAuthSharedSecret)
 {
 }
@@ -49,6 +49,16 @@ bool BasicWsConnectionValidator::validateConnection(resip::CookieList cookieList
       }
    }
 
+   Data message = wsSessionInfo + ':' + wsSessionExtra;
+   unsigned char hmac[20];
+   computeHmac((char*)hmac, message.data(), message.size(), mWsCookieAuthSharedSecret.data(), mWsCookieAuthSharedSecret.size());
+
+   if(memcmp(wsSessionMAC.data(), Data(hmac, 20).hex().data(), 20) != 0)
+   {
+      WarningLog(<< "Cookie MAC validation failed");
+      return false;
+   }
+
    ParseBuffer pb(wsSessionInfo);
    pb.skipToChar(':');
    pb.skipChar(':');
@@ -57,16 +67,6 @@ bool BasicWsConnectionValidator::validateConnection(resip::CookieList cookieList
    if(difftime(time(NULL), expires) < 0)
    {
       WarningLog(<< "Received expired cookie");
-      return false;
-   }
-
-   Data message = wsSessionInfo + ':' + wsSessionExtra;
-   unsigned char hmac[20];
-   computeHmac((char*)hmac, message.data(), message.size(), mWsCookieAuthSharedSecret.data(), mWsCookieAuthSharedSecret.size());
-
-   if(memcmp(wsSessionMAC.data(), Data(hmac, 20).hex().data(), 20) != 0)
-   {
-      WarningLog(<< "Cookie MAC validation failed");
       return false;
    }
 
