@@ -62,6 +62,7 @@
 #if defined(USE_SSL)
 #include "repro/stateAgents/CertServer.hxx"
 #include "resip/stack/ssl/Security.hxx"
+#include "repro/BasicWsConnectionValidator.hxx"
 #endif
 
 #if defined(USE_MYSQL)
@@ -1134,6 +1135,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
    assert(mSipStack);
    allTransportsSpecifyRecordRoute=false;
    bool useEmailAsSIP = mProxyConfig->getConfigBool("TLSUseEmailAsSIP", false);
+   SharedPtr<BasicWsConnectionValidator> basicWsConnectionValidator(new BasicWsConnectionValidator(mProxyConfig->getConfigData("WSCookieAuthSharedSecret", "")));
    try
    {
       // Check if advanced transport settings are provided
@@ -1217,7 +1219,8 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                                  SecurityTypes::TLSv1, // sslType
                                  0,            // transport flags
                                  cvm,          // tls client verification mode
-                                 useEmailAsSIP);
+                                 useEmailAsSIP,
+                                 basicWsConnectionValidator);
 
                if (t && rcvBufLen>0 )
                {
@@ -1328,13 +1331,13 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          }
          if (wsPort)
          {
-            if (mUseV4) mSipStack->addTransport(WS, wsPort, V4, StunEnabled);
-            if (mUseV6) mSipStack->addTransport(WS, wsPort, V6, StunEnabled);
+            if (mUseV4) mSipStack->addTransport(WS, wsPort, V4, StunEnabled,  Data::Empty, Data::Empty, Data::Empty, SecurityTypes::NoSLL, 0, SecurityTypes::None, false, basicWsConnectionValidator);
+            if (mUseV6) mSipStack->addTransport(WS, wsPort, V6, StunEnabled,  Data::Empty, Data::Empty, Data::Empty, SecurityTypes::NoSLL, 0, SecurityTypes::None, false, basicWsConnectionValidator);
          }
          if (wssPort)
          {
-            if (mUseV4) mSipStack->addTransport(WSS, wssPort, V4, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, cvm, useEmailAsSIP);
-            if (mUseV6) mSipStack->addTransport(WSS, wssPort, V6, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, cvm, useEmailAsSIP);
+            if (mUseV4) mSipStack->addTransport(WSS, wssPort, V4, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, cvm, useEmailAsSIP, basicWsConnectionValidator);
+            if (mUseV6) mSipStack->addTransport(WSS, wssPort, V6, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, cvm, useEmailAsSIP, basicWsConnectionValidator);
          }
          if (dtlsPort)
          {
