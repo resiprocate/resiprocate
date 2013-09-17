@@ -40,6 +40,10 @@ class WssTransport : public TlsBaseTransport
 
       bool isUseEmailAsSIP()
          { return mUseEmailAsSIP; };
+
+   protected:
+      Connection* createConnection(const Tuple& who, Socket fd, bool server=false);
+
 };
 
 }

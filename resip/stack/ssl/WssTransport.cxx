@@ -11,7 +11,7 @@
 #include "rutil/Socket.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/ssl/WssTransport.hxx"
-#include "resip/stack/ssl/TlsConnection.hxx"
+#include "resip/stack/ssl/WssConnection.hxx"
 #include "resip/stack/ssl/Security.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
@@ -45,6 +45,16 @@ WssTransport::WssTransport(Fifo<TransactionMessage>& fifo,
 WssTransport::~WssTransport()
 {
 }
+
+Connection*
+WssTransport::createConnection(const Tuple& who, Socket fd, bool server)
+{
+   assert(this);
+   Connection* conn = new WssConnection(this,who, fd, mSecurity, server,
+                                        tlsDomain(), mSslType, mCompression );
+   return conn;
+}
+
 
 #endif /* USE_SSL */
 
