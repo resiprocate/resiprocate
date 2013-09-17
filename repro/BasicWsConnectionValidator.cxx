@@ -66,7 +66,7 @@ bool BasicWsConnectionValidator::validateConnection(resip::CookieList cookieList
 
    if(memcmp(wsSessionMAC.data(), Data(hmac, 20).hex().data(), 20) != 0)
    {
-      WarningLog(<< "Received invalid cookie");
+      WarningLog(<< "Cookie MAC validation failed");
       return false;
    }
 

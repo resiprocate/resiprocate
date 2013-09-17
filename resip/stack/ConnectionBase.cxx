@@ -623,7 +623,7 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
          {
             if(!wsConnectionValidator->validateConnection(cookieList))
             {
-               ErrLog(<<"WebSocket authentication failed");
+               ErrLog(<<"WebSocket cookie validation failed, dropping connection");
                delete mMessage;
                mMessage = 0;
                mBufferPos = 0;
