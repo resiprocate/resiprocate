@@ -1135,7 +1135,14 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
    assert(mSipStack);
    allTransportsSpecifyRecordRoute=false;
    bool useEmailAsSIP = mProxyConfig->getConfigBool("TLSUseEmailAsSIP", false);
-   SharedPtr<BasicWsConnectionValidator> basicWsConnectionValidator(new BasicWsConnectionValidator(mProxyConfig->getConfigData("WSCookieAuthSharedSecret", "")));
+
+   Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", "");
+   SharedPtr<BasicWsConnectionValidator> basicWsConnectionValidator; // NULL
+   if(!wsCookieAuthSharedSecret.empty())
+   {
+      basicWsConnectionValidator.reset(new BasicWsConnectionValidator(wsCookieAuthSharedSecret));
+   }
+
    try
    {
       // Check if advanced transport settings are provided
