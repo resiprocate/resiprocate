@@ -4,6 +4,7 @@
 
 #include "rutil/Logger.hxx"
 #include "resip/stack/ConnectionBase.hxx"
+#include "resip/stack/WsConnectionBase.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/WsDecorator.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -563,8 +564,27 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
    try
    {
       std::auto_ptr<Data> wsResponsePtr = makeWsHandshakeResponse();
+
+      WsConnectionBase* wsConnectionBase = dynamic_cast<WsConnectionBase*>(this);
+      std::list<Data> cookies;
+      if(wsConnectionBase)
+      {
+         if (mMessage->exists(h_Cookies))
+         {
+            StringCategories::iterator it = mMessage->header(h_Cookies).begin();
+            for (; it != mMessage->header(h_Cookies).end(); ++it)
+            {
+               cookies.push_back((*it).value());
+               DebugLog(<<"Cookie: " << (*it).value());
+            }
+            wsConnectionBase->setCookies(cookies);
+         }
+      }
+
       if (wsResponsePtr.get())
       {
+         DebugLog (<< "WebSocket upgrade accepted, cookie count = " << cookies.size());
+
          mOutstandingSends.push_back(new SendData(
                   who(),
                   *wsResponsePtr.get(),
