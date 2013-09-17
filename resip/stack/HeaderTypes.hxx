@@ -88,6 +88,7 @@ class Headers
          defineHeader(Origin, "Origin", StringCategory, "draft-hixie- thewebsocketprotocol-76"),
          defineHeader(Host, "Host", StringCategory, "draft-hixie- thewebsocketprotocol-76"),
          defineHeader(SecWebSocketAccept, "Sec-WebSocket-Accept", StringCategory, "RFC 6455"),
+         defineMultiHeader(Cookie, "Cookie", StringCategory, "RFC 6265"),
          defineHeader(Priority, "Priority", Token, "RFC 3261"),
          defineMultiHeader(ProxyAuthorization, "Proxy-Authorization", Auth, "RFC 3261"),
          defineHeader(ReplyTo, "Reply-To", NameAddr, "RFC 3261"),

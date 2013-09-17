@@ -59,6 +59,7 @@ sec-websocket-key, Headers::SecWebSocketKey
 sec-websocket-key1, Headers::SecWebSocketKey1
 sec-websocket-key2, Headers::SecWebSocketKey2
 sec-websocket-accept, Headers::SecWebSocketAccept
+cookie, Headers::Cookie
 origin, Headers::Origin
 host, Headers::Host
 priority, Headers::Priority
