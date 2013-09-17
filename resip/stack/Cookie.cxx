@@ -18,8 +18,8 @@ Cookie::Cookie() :
 {}
 
 Cookie::Cookie(const Data& name, const Data& value) :
-     mName(name),
-     mValue(value)
+     mName(name.urlDecoded()),
+     mValue(value.urlDecoded())
 {}
 
 Cookie&
