@@ -41,7 +41,7 @@ Cookie::operator==(const Cookie& other) const
 
 bool Cookie::operator<(const Cookie& rhs) const
 {
-   return name() < rhs.name();
+   return name() + value() < rhs.name() + rhs.value();
 }
 
 EncodeStream&
