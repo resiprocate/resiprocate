@@ -41,6 +41,7 @@ libresip_la_SOURCES = \
 	Auth.cxx \
 	CSeqCategory.cxx \
 	CallId.cxx \
+	Cookie.cxx \
 	DateCategory.cxx \
 	ExpiresCategory.cxx \
 	GenericUri.cxx \
@@ -201,6 +202,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	BasicNonceHelper.hxx \
 	BranchParameter.hxx \
 	CallId.hxx \
+	Cookie.hxx \
 	CancelableTimerQueue.hxx \
 	CancelClientInviteTransaction.hxx \
 	Compression.hxx \
