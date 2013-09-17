@@ -24,6 +24,7 @@
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/DumThread.hxx"
 #include "resip/dum/TlsPeerAuthManager.hxx"
+#include "resip/dum/WsCookieAuthManager.hxx"
 
 #include "repro/AsyncProcessorWorker.hxx"
 #include "repro/ReproRunner.hxx"
@@ -771,6 +772,13 @@ ReproRunner::createDialogUsageManager()
       }
 
       mSipAuthDisabled = mProxyConfig->getConfigBool("DisableAuth", false);
+
+      Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", "");
+      if(mSipAuthDisabled && !wsCookieAuthSharedSecret.empty())
+      {
+         SharedPtr<WsCookieAuthManager> cookieAuth(new WsCookieAuthManager(*mDum, mDum->dumIncomingTarget()));
+         mDum->addIncomingFeature(cookieAuth);
+      }
 
       // If Authentication is enabled, then configure DUM to authenticate requests
       if (!mSipAuthDisabled)
