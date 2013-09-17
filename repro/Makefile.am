@@ -50,6 +50,7 @@ librepro_la_SOURCES = \
 	Store.cxx \
 	AbstractDb.cxx \
 	BerkeleyDb.cxx \
+	BasicWsConnectionValidator.cxx \
 	\
 	CommandServer.cxx \
 	CommandServerThread.cxx \
@@ -108,6 +109,7 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
         AsyncProcessorMessage.hxx \
         AsyncProcessorWorker.hxx \
 	BerkeleyDb.hxx \
+	BasicWsConnectionValidator.hxx \
 	CommandServer.hxx \
 	CommandServerThread.hxx \
 	ConfigStore.hxx \
