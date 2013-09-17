@@ -519,6 +519,9 @@ class SipMessage : public TransactionMessage
       const std::list<Data>& getTlsPeerNames() const { return mTlsPeerNames; }
       void setTlsPeerNames(const std::list<Data>& tlsPeerNames) { mTlsPeerNames = tlsPeerNames; }
 
+      const std::list<Data>& getWsCookies() const { return mWsCookies; }
+      void setWsCookies(const std::list<Data>& wsCookies) { mWsCookies = wsCookies; }
+
       Data getCanonicalIdentityString() const;
       
       SipMessage& mergeUri(const Uri& source);      
@@ -682,7 +685,10 @@ class SipMessage : public TransactionMessage
       Data mTlsDomain;
 
       // peers domain associate with this message (MTLS)
-      std::list<Data> mTlsPeerNames; 
+      std::list<Data> mTlsPeerNames;
+
+      // cookies associated with this message from the WebSocket Upgrade request
+      std::list<Data>  mWsCookies;
 
       std::auto_ptr<SecurityAttributes> mSecurityAttributes;
 
