@@ -1338,8 +1338,8 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          }
          if (wsPort)
          {
-            if (mUseV4) mSipStack->addTransport(WS, wsPort, V4, StunEnabled,  Data::Empty, Data::Empty, Data::Empty, SecurityTypes::NoSLL, 0, SecurityTypes::None, false, basicWsConnectionValidator);
-            if (mUseV6) mSipStack->addTransport(WS, wsPort, V6, StunEnabled,  Data::Empty, Data::Empty, Data::Empty, SecurityTypes::NoSLL, 0, SecurityTypes::None, false, basicWsConnectionValidator);
+            if (mUseV4) mSipStack->addTransport(WS, wsPort, V4, StunEnabled,  Data::Empty, Data::Empty, Data::Empty, SecurityTypes::NoSSL, 0, SecurityTypes::None, false, basicWsConnectionValidator);
+            if (mUseV6) mSipStack->addTransport(WS, wsPort, V6, StunEnabled,  Data::Empty, Data::Empty, Data::Empty, SecurityTypes::NoSSL, 0, SecurityTypes::None, false, basicWsConnectionValidator);
          }
          if (wssPort)
          {
