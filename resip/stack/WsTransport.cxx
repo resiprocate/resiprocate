@@ -8,7 +8,7 @@
 #include "rutil/Socket.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/WsTransport.hxx"
-#include "resip/stack/TcpConnection.hxx"
+#include "resip/stack/WsConnection.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
@@ -42,7 +42,7 @@ Connection*
 WsTransport::createConnection(const Tuple& who, Socket fd, bool server)
 {
    assert(this);
-   Connection* conn = new TcpConnection(this,who, fd, mCompression);
+   Connection* conn = new WsConnection(this,who, fd, mCompression);
    return conn;
 }
 
