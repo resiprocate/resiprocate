@@ -85,6 +85,7 @@ librepro_la_SOURCES = \
 	\
         monkeys/CertificateAuthenticator.cxx \
         monkeys/DigestAuthenticator.cxx \
+ 		monkeys/CookieAuthenticator.cxx \
 	monkeys/StrictRouteFixup.cxx \
 	monkeys/AmIResponsible.cxx \
 	monkeys/IsTrustedNode.cxx \
@@ -120,6 +121,7 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	HttpConnection.hxx \
 	monkeys/AmIResponsible.hxx \
         monkeys/CertificateAuthenticator.hxx \
+		monkeys/CookieAuthenticator.hxx \
 	monkeys/ConstantLocationMonkey.hxx \
 	monkeys/DigestAuthenticator.hxx \
 	monkeys/GruuMonkey.hxx \
