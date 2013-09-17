@@ -721,6 +721,14 @@ ConnectionBase::wsProcessData(int bytesRead)
       }
 #endif
 
+      WsConnectionBase *wsConnectionBase = dynamic_cast<WsConnectionBase *>(this);
+      if (wsConnectionBase)
+      {
+         std::list<Data> cookieList;
+         wsConnectionBase->getCookies(cookieList);
+         mMessage->setWsCookies(cookieList);
+      }
+
       Data::size_type msg_len = msg->size();
       // cast permitted, as it is borrowed:
       char *sipBuffer = (char *)msg->data();
