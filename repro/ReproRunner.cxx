@@ -63,6 +63,7 @@
 #include "repro/stateAgents/CertServer.hxx"
 #include "resip/stack/ssl/Security.hxx"
 #include "repro/BasicWsConnectionValidator.hxx"
+#include "repro/monkeys/CookieAuthenticator.hxx"
 #endif
 
 #if defined(USE_MYSQL)
@@ -1452,6 +1453,12 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
       std::set<Data> trustedPeers;
       loadCommonNameMappings();
       addProcessor(chain, std::auto_ptr<Processor>(new CertificateAuthenticator(*mProxyConfig, mSipStack, trustedPeers, true, mCommonNameMappings)));
+   }
+
+   Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", "");
+   if(mSipAuthDisabled && !wsCookieAuthSharedSecret.empty())
+   {
+      addProcessor(chain, std::auto_ptr<Processor>(new CookieAuthenticator(wsCookieAuthSharedSecret, mSipStack)));
    }
 
    // Add digest authenticator monkey - if required
