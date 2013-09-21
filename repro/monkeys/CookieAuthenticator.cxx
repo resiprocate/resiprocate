@@ -69,7 +69,7 @@ CookieAuthenticator::process(repro::RequestContext &rc)
       if(!sipMessage->header(h_From).isWellFormed() ||
          sipMessage->header(h_From).isAllContacts() )
       {
-         InfoLog(<<"Malformed From header: cannot verify against any certificate. Rejecting.");
+         InfoLog(<<"Malformed From header: cannot verify against cookie. Rejecting.");
          rc.sendResponse(*auto_ptr<SipMessage>
                          (Helper::makeResponse(*sipMessage, 400, "Malformed From header")));
          return SkipAllChains;
@@ -80,7 +80,6 @@ CookieAuthenticator::process(repro::RequestContext &rc)
       {
          if (!rc.getKeyValueStore().getBoolValue(IsTrustedNode::mFromTrustedNodeKey))
          {
-            // no cookies, skip to next processor
             if(cookieList.empty())
                return Continue;
             if(authorizedForThisIdentity(cookieList, sipMessage->header(h_From).uri(), sipMessage->header(h_To).uri()))
@@ -96,7 +95,6 @@ CookieAuthenticator::process(repro::RequestContext &rc)
       }
       else
       {
-         // no cookies, skip to next processor
          if(cookieList.empty())
          {
                return Continue;

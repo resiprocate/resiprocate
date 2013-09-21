@@ -138,7 +138,7 @@ WsCookieAuthManager::handle(SipMessage* sipMessage)
    if(!sipMessage->header(h_From).isWellFormed() ||
       sipMessage->header(h_From).isAllContacts() )
    {
-      InfoLog(<<"Malformed From header: cannot verify against any certificate. Rejecting.");
+      InfoLog(<<"Malformed From header: cannot verify against cookie. Rejecting.");
       SharedPtr<SipMessage> response(new SipMessage);
       Helper::makeResponse(*response, *sipMessage, 400, "Malformed From header");
       mDum.send(response);
@@ -148,7 +148,6 @@ WsCookieAuthManager::handle(SipMessage* sipMessage)
    const CookieList &cookieList = sipMessage->getWsCookies();
    if (mDum.isMyDomain(sipMessage->header(h_From).uri().host()))
    {
-      // no cookies, skip to next processor
       if (requiresAuthorization(*sipMessage) && !cookieList.empty())
       {
          if(authorizedForThisIdentity(cookieList, sipMessage->header(h_From).uri(), sipMessage->header(h_To).uri()))
@@ -163,8 +162,6 @@ WsCookieAuthManager::handle(SipMessage* sipMessage)
    }
    else
    {
-      // peerNames is empty if client certificate mode is `optional'
-      // or if the message didn't come in on TLS transport
       if(cookieList.empty())
       {
             return Skipped;
