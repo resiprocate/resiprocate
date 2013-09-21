@@ -106,16 +106,14 @@ WsCookieAuthManager::authorizedForThisIdentity(
     pb.data(uriString, anchor);
     wsDestUri = Uri("sip:" + uriString);
 
-    if(wsFromUri.user() == fromUri.user() && wsFromUri.host() == fromUri.host())
+    if(isEqualNoCase(wsFromUri.user(), fromUri.user()) && isEqualNoCase(wsFromUri.host(), fromUri.host()))
     {
        DebugLog(<< "Matched cookie source URI field" << wsFromUri << " against request From header field URI " << fromUri);
-       return true;
-    }
-
-    if(wsDestUri.user() == toUri.user() && wsDestUri.host() == toUri.host())
-    {
-       DebugLog(<< "Matched cookie destination URI field" << wsDestUri << " against request To header field URI " << toUri);
-       return true;
+       if(isEqualNoCase(wsDestUri.user(), toUri.user()) && isEqualNoCase(wsDestUri.host(), toUri.host()))
+          {
+             DebugLog(<< "Matched cookie destination URI field" << wsDestUri << " against request To header field URI " << toUri);
+             return true;
+          }
     }
 
     // catch-all: access denied
