@@ -162,10 +162,8 @@ WsCookieAuthManager::handle(SipMessage* sipMessage)
    {
       if(cookieList.empty())
       {
-            return Skipped;
+         return Skipped;
       }
-      if(authorizedForThisIdentity(cookieList, sipMessage->header(h_From).uri(), sipMessage->header(h_To).uri()))
-         return Authorized;
       SharedPtr<SipMessage> response(new SipMessage);
       Helper::makeResponse(*response, *sipMessage, 403, "Authorization failed");
       mDum.send(response);

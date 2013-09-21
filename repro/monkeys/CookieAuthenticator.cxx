@@ -60,12 +60,6 @@ CookieAuthenticator::process(repro::RequestContext &rc)
          return Continue;
       }
 
-      // if there was no Proxy-Auth header already, and the request is purportedly From
-      // one of our domains, send a challenge, unless this is from a trusted node in one
-      // of "our" domains (ex: from a gateway).
-      //
-      // Note that other monkeys can still challenge the request later if needed
-      // for other reasons (for example, the StaticRoute monkey)
       if(!sipMessage->header(h_From).isWellFormed() ||
          sipMessage->header(h_From).isAllContacts() )
       {
@@ -78,31 +72,20 @@ CookieAuthenticator::process(repro::RequestContext &rc)
       const CookieList &cookieList = sipMessage->getWsCookies();
       if (proxy.isMyDomain(sipMessage->header(h_From).uri().host()))
       {
-         if (!rc.getKeyValueStore().getBoolValue(IsTrustedNode::mFromTrustedNodeKey))
-         {
-            if(cookieList.empty())
-               return Continue;
-            if(authorizedForThisIdentity(cookieList, sipMessage->header(h_From).uri(), sipMessage->header(h_To).uri()))
-            {
-               return Continue;
-            }
-            rc.sendResponse(*auto_ptr<SipMessage>
-                            (Helper::makeResponse(*sipMessage, 403, "Authentication against cookie failed")));
-            return SkipAllChains;
-         }
-         else
-            return Continue;
-      }
-      else
-      {
          if(cookieList.empty())
-         {
-               return Continue;
-         }
+            return Continue;
          if(authorizedForThisIdentity(cookieList, sipMessage->header(h_From).uri(), sipMessage->header(h_To).uri()))
          {
             return Continue;
          }
+         rc.sendResponse(*auto_ptr<SipMessage>
+                        (Helper::makeResponse(*sipMessage, 403, "Authentication against cookie failed")));
+         return SkipAllChains;
+      }
+      else
+      {
+         if(cookieList.empty())
+            return Continue;
          rc.sendResponse(*auto_ptr<SipMessage>
                             (Helper::makeResponse(*sipMessage, 403, "Authentication against cookie failed")));
          return SkipAllChains;
