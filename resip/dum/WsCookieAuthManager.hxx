@@ -7,6 +7,7 @@
 #include "resip/stack/SipMessage.hxx"
 #include "DumFeature.hxx"
 #include "resip/stack/Cookie.hxx"
+#include "resip/stack/WsCookieContext.hxx"
 
 namespace resip
 {
@@ -36,7 +37,7 @@ class WsCookieAuthManager : public DumFeature
       virtual Result handle(SipMessage* sipMsg);
 
       /// should return true if the passed in user is authorized for the provided uri
-      bool authorizedForThisIdentity(const CookieList &cookieList, resip::Uri &fromUri, resip::Uri &toUri);
+      bool authorizedForThisIdentity(const WsCookieContext &wsCookieContext, resip::Uri &fromUri, resip::Uri &toUri);
 
       /// should return true if the request must be challenged
       /// The default is to challenge all requests - override this class to change this beviour

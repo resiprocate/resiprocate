@@ -161,8 +161,9 @@ libresip_la_SOURCES = \
 	InvalidContents.cxx \
 	WsFrameExtractor.cxx \
 	WsTransport.cxx \
-   WsConnection.cxx \
-   WsConnectionBase.cxx \
+	WsConnection.cxx \
+	WsConnectionBase.cxx \
+	WsCookieContext.cxx \
 	WsDecorator.cxx
 
 if USE_SSL
@@ -303,7 +304,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	ssl/TlsTransport.hxx \
 	ssl/WinSecurity.hxx \
 	ssl/WssTransport.hxx \
-   ssl/WssConnection.hxx \
+	ssl/WssConnection.hxx \
 	StackThread.hxx \
 	StartLine.hxx \
 	StatelessHandler.hxx \
@@ -350,10 +351,11 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	WarningCategory.hxx \
    WsDecorator.hxx \
 	WsFrameExtractor.hxx \
-   WsTransport.hxx \
-   WsConnection.hxx \
-   WsConnectionBase.hxx \
+	WsTransport.hxx \
+	WsConnection.hxx \
+	WsConnectionBase.hxx \
 	WsConnectionValidator.hxx \
+	WsCookieContext.hxx \
 	X509Contents.hxx \
 	ZeroOutStatistics.hxx
 

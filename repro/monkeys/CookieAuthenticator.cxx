@@ -70,11 +70,12 @@ CookieAuthenticator::process(repro::RequestContext &rc)
       }
 
       const CookieList &cookieList = sipMessage->getWsCookies();
+      const WsCookieContext &wsCookieContext = sipMessage->getWsCookieContext();
       if (proxy.isMyDomain(sipMessage->header(h_From).uri().host()))
       {
          if(cookieList.empty())
             return Continue;
-         if(authorizedForThisIdentity(cookieList, sipMessage->header(h_From).uri(), sipMessage->header(h_To).uri()))
+         if(authorizedForThisIdentity(wsCookieContext, sipMessage->header(h_From).uri(), sipMessage->header(h_To).uri()))
          {
             return Continue;
          }
@@ -96,59 +97,20 @@ CookieAuthenticator::process(repro::RequestContext &rc)
 }
 
 bool
-CookieAuthenticator::authorizedForThisIdentity(const CookieList& cookieList,
+CookieAuthenticator::authorizedForThisIdentity(const WsCookieContext& wsCookieContext,
                                                 resip::Uri &fromUri,
                                                 resip::Uri &toUri)
 {
-   Data wsSessionInfo;
-   Data wsSessionExtra;
-   Data wsSessionMAC;
-
-   for (CookieList::const_iterator it = cookieList.begin(); it != cookieList.end(); ++it)
+   if(difftime(time(NULL), wsCookieContext.getExpiresTime()) < 0)
    {
-      if ((*it).name() == "WSSessionInfo")
-      {
-         wsSessionInfo = (*it).value();
-      }
-      else if ((*it).name() == "WSSessionExtra")
-      {
-         wsSessionExtra = (*it).value();
-      }
-      else if ((*it).name() == "WSSessionMAC")
-      {
-         wsSessionMAC = (*it).value();
-         ;
-      }
-   }
-
-   ParseBuffer pb(wsSessionInfo);
-   pb.skipToChar(':');
-   pb.skipChar(':');
-   time_t expires = (time_t) pb.uInt64();
-
-   if (difftime(time(NULL), expires) < 0)
-   {
-      WarningLog(<< "Cookie has expired");
+      WarningLog(<< "Received expired cookie");
       return false;
    }
 
-   const char* anchor;
-   Data uriString;
-   Uri wsFromUri;
-   Uri wsDestUri;
+   return true;
 
-   pb.skipToChar(':');
-   pb.skipChar(':');
-   anchor = pb.position();
-   pb.skipToChar(':');
-   pb.data(uriString, anchor);
-   wsFromUri = Uri("sip:" + uriString);
-
-   pb.skipChar(':');
-   anchor = pb.position();
-   pb.skipToChar(':');
-   pb.data(uriString, anchor);
-   wsDestUri = Uri("sip:" + uriString);
+   Uri wsFromUri = wsCookieContext.getWsFromUri();
+   Uri wsDestUri = wsCookieContext.getWsDestUri();
 
    if(isEqualNoCase(wsFromUri.user(), fromUri.user()) && isEqualNoCase(wsFromUri.host(), fromUri.host()))
    {

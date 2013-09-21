@@ -18,6 +18,7 @@
 #include "resip/stack/Uri.hxx"
 #include "resip/stack/MessageDecorator.hxx"
 #include "resip/stack/Cookie.hxx"
+#include "resip/stack/WsCookieContext.hxx"
 #include "rutil/BaseException.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/DinkyPool.hxx"
@@ -523,6 +524,9 @@ class SipMessage : public TransactionMessage
       const CookieList getWsCookies() const { return mWsCookies; }
       void setWsCookies(const CookieList& wsCookies) { mWsCookies = wsCookies; }
 
+      const WsCookieContext getWsCookieContext() const { return mWsCookieContext; }
+      void setWsCookieContext(const WsCookieContext& wsCookieContext) { mWsCookieContext = wsCookieContext; }
+
       Data getCanonicalIdentityString() const;
       
       SipMessage& mergeUri(const Uri& source);      
@@ -690,6 +694,9 @@ class SipMessage : public TransactionMessage
 
       // cookies associated with this message from the WebSocket Upgrade request
       CookieList mWsCookies;
+
+      // parsed cookie authentication elements associated with this message from the WebSocket Upgrade request
+      WsCookieContext mWsCookieContext;
 
       std::auto_ptr<SecurityAttributes> mSecurityAttributes;
 

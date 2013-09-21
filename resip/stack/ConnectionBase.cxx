@@ -8,6 +8,7 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/WsDecorator.hxx"
 #include "resip/stack/Cookie.hxx"
+#include "resip/stack/WsCookieContext.hxx"
 #include "rutil/WinLeakCheck.hxx"
 #include "rutil/SharedPtr.hxx"
 
@@ -610,18 +611,21 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
    {
       WsConnectionBase* wsConnectionBase = dynamic_cast<WsConnectionBase*>(this);
       CookieList cookieList;
+      WsCookieContext wsCookieContext;
       if(wsConnectionBase)
       {
          if (mMessage->exists(h_Cookies))
          {
             wsParseCookies(cookieList, mMessage);
+            wsCookieContext = WsCookieContext(cookieList);
             wsConnectionBase->setCookies(cookieList);
+            wsConnectionBase->setWsCookieContext(wsCookieContext);
          }
 
          SharedPtr<WsConnectionValidator> wsConnectionValidator = wsConnectionBase->connectionValidator();
          if(wsConnectionValidator)
          {
-            if(!wsConnectionValidator->validateConnection(cookieList))
+            if(!wsConnectionValidator->validateConnection(wsCookieContext))
             {
                ErrLog(<<"WebSocket cookie validation failed, dropping connection");
                delete mMessage;
@@ -779,8 +783,11 @@ ConnectionBase::wsProcessData(int bytesRead)
       if (wsConnectionBase)
       {
          CookieList cookieList;
+         WsCookieContext wsCookieContext;
          wsConnectionBase->getCookies(cookieList);
+         wsConnectionBase->getWsCookieContext(wsCookieContext);
          mMessage->setWsCookies(cookieList);
+         mMessage->setWsCookieContext(wsCookieContext);
       }
 
       Data::size_type msg_len = msg->size();

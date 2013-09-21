@@ -4,6 +4,7 @@
 #include "rutil/Data.hxx"
 #include "repro/Processor.hxx"
 #include "resip/stack/Cookie.hxx"
+#include "resip/stack/WsCookieContext.hxx"
 #include "resip/stack/SipStack.hxx"
 
 using namespace resip;
@@ -21,7 +22,7 @@ namespace repro
       virtual void dump(EncodeStream &os) const;
 
     private:
-      bool authorizedForThisIdentity(const CookieList &cookieList, resip::Uri &fromUri, resip::Uri &toUri);
+      bool authorizedForThisIdentity(const WsCookieContext& wsCookieContext, resip::Uri &fromUri, resip::Uri &toUri);
   };
 
 }

@@ -52,72 +52,33 @@ WsCookieAuthManager::process(Message* msg)
 
 bool
 WsCookieAuthManager::authorizedForThisIdentity(
-   const CookieList &cookieList,
+   const WsCookieContext &wsCookieContext,
    resip::Uri &fromUri,
    resip::Uri &toUri)
 {
-   Data wsSessionInfo;
-    Data wsSessionExtra;
-    Data wsSessionMAC;
+   if(difftime(time(NULL), wsCookieContext.getExpiresTime()) < 0)
+   {
+      WarningLog(<< "Received expired cookie");
+      return false;
+   }
 
-    for (CookieList::const_iterator it = cookieList.begin(); it != cookieList.end(); ++it)
-    {
-       if ((*it).name() == "WSSessionInfo")
-       {
-          wsSessionInfo = (*it).value();
-       }
-       else if ((*it).name() == "WSSessionExtra")
-       {
-          wsSessionExtra = (*it).value();
-       }
-       else if ((*it).name() == "WSSessionMAC")
-       {
-          wsSessionMAC = (*it).value();
-          ;
-       }
-    }
+   return true;
 
-    ParseBuffer pb(wsSessionInfo);
-    pb.skipToChar(':');
-    pb.skipChar(':');
-    time_t expires = (time_t) pb.uInt64();
+   Uri wsFromUri = wsCookieContext.getWsFromUri();
+   Uri wsDestUri = wsCookieContext.getWsDestUri();
 
-    if (difftime(time(NULL), expires) < 0)
-    {
-       WarningLog(<< "Cookie has expired");
-       return false;
-    }
+   if(isEqualNoCase(wsFromUri.user(), fromUri.user()) && isEqualNoCase(wsFromUri.host(), fromUri.host()))
+   {
+      DebugLog(<< "Matched cookie source URI field" << wsFromUri << " against request From header field URI " << fromUri);
+      if(isEqualNoCase(wsDestUri.user(), toUri.user()) && isEqualNoCase(wsDestUri.host(), toUri.host()))
+         {
+            DebugLog(<< "Matched cookie destination URI field" << wsDestUri << " against request To header field URI " << toUri);
+            return true;
+         }
+   }
 
-    const char* anchor;
-    Data uriString;
-    Uri wsFromUri;
-    Uri wsDestUri;
-
-    pb.skipToChar(':');
-    pb.skipChar(':');
-    anchor = pb.position();
-    pb.skipToChar(':');
-    pb.data(uriString, anchor);
-    wsFromUri = Uri("sip:" + uriString);
-
-    pb.skipChar(':');
-    anchor = pb.position();
-    pb.skipToChar(':');
-    pb.data(uriString, anchor);
-    wsDestUri = Uri("sip:" + uriString);
-
-    if(isEqualNoCase(wsFromUri.user(), fromUri.user()) && isEqualNoCase(wsFromUri.host(), fromUri.host()))
-    {
-       DebugLog(<< "Matched cookie source URI field" << wsFromUri << " against request From header field URI " << fromUri);
-       if(isEqualNoCase(wsDestUri.user(), toUri.user()) && isEqualNoCase(wsDestUri.host(), toUri.host()))
-          {
-             DebugLog(<< "Matched cookie destination URI field" << wsDestUri << " against request To header field URI " << toUri);
-             return true;
-          }
-    }
-
-    // catch-all: access denied
-    return false;
+   // catch-all: access denied
+   return false;
 }
 
 // return true if request has been consumed
@@ -144,11 +105,12 @@ WsCookieAuthManager::handle(SipMessage* sipMessage)
    }
 
    const CookieList &cookieList = sipMessage->getWsCookies();
+   const WsCookieContext &wsCookieContext = sipMessage->getWsCookieContext();
    if (mDum.isMyDomain(sipMessage->header(h_From).uri().host()))
    {
       if (requiresAuthorization(*sipMessage) && !cookieList.empty())
       {
-         if(authorizedForThisIdentity(cookieList, sipMessage->header(h_From).uri(), sipMessage->header(h_To).uri()))
+         if(authorizedForThisIdentity(wsCookieContext, sipMessage->header(h_From).uri(), sipMessage->header(h_To).uri()))
             return Authorized;
          SharedPtr<SipMessage> response(new SipMessage);
          Helper::makeResponse(*response, *sipMessage, 403, "Authorization failed");

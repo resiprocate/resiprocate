@@ -17,7 +17,7 @@ class BasicWsConnectionValidator: public WsConnectionValidator
       BasicWsConnectionValidator(const Data& wsCookieAuthSharedSecret);
       virtual ~BasicWsConnectionValidator();
 
-      virtual bool validateConnection(resip::CookieList cookieList);
+      virtual bool validateConnection(const resip::WsCookieContext& wsCookieContext);
 
    private:
       Data mWsCookieAuthSharedSecret;

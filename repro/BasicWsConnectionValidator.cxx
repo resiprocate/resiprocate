@@ -5,6 +5,7 @@
 
 #include "repro/BasicWsConnectionValidator.hxx"
 #include "resip/stack/Cookie.hxx"
+#include "resip/stack/WsCookieContext.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/stun/Stun.hxx"
 #include "rutil/Logger.hxx"
@@ -27,44 +28,19 @@ BasicWsConnectionValidator::~BasicWsConnectionValidator()
 {
 }
 
-bool BasicWsConnectionValidator::validateConnection(resip::CookieList cookieList)
+bool BasicWsConnectionValidator::validateConnection(const resip::WsCookieContext& wsCookieContext)
 {
-   Data wsSessionInfo;
-   Data wsSessionExtra;
-   Data wsSessionMAC;
-
-   for(CookieList::iterator it = cookieList.begin(); it != cookieList.end(); ++it)
-   {
-      if((*it).name() == "WSSessionInfo")
-      {
-         wsSessionInfo = (*it).value();
-      }
-      else if ((*it).name() == "WSSessionExtra")
-      {
-         wsSessionExtra = (*it).value();
-      }
-      else if  ((*it).name() == "WSSessionMAC")
-      {
-         wsSessionMAC = (*it).value();;
-      }
-   }
-
-   Data message = wsSessionInfo + ':' + wsSessionExtra;
+   Data message = wsCookieContext.getWsSessionInfo() + ':' + wsCookieContext.getWsSessionExtra();
    unsigned char hmac[20];
    computeHmac((char*)hmac, message.data(), message.size(), mWsCookieAuthSharedSecret.data(), mWsCookieAuthSharedSecret.size());
 
-   if(memcmp(wsSessionMAC.data(), Data(hmac, 20).hex().data(), 20) != 0)
+   if(memcmp(wsCookieContext.getWsSessionMAC().data(), Data(hmac, 20).hex().data(), 20) != 0)
    {
       WarningLog(<< "Cookie MAC validation failed");
       return false;
    }
 
-   ParseBuffer pb(wsSessionInfo);
-   pb.skipToChar(':');
-   pb.skipChar(':');
-   time_t expires = (time_t)pb.uInt64();
-
-   if(difftime(time(NULL), expires) < 0)
+   if(difftime(time(NULL), wsCookieContext.getExpiresTime()) < 0)
    {
       WarningLog(<< "Received expired cookie");
       return false;

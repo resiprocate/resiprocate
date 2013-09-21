@@ -1,7 +1,7 @@
 #ifndef RESIP_WsConnectionValidator_hxx
 #define RESIP_WsConnectionValidator_hxx
 
-#include "Cookie.hxx"
+#include "WsCookieContext.hxx"
 
 namespace resip
 {
@@ -9,7 +9,7 @@ namespace resip
 class WsConnectionValidator
 {
    public:
-      virtual bool validateConnection(CookieList cookieList)=0;
+      virtual bool validateConnection(const WsCookieContext& wsCookieContext)=0;
 };
 
 }
