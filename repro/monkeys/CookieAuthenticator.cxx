@@ -82,10 +82,6 @@ CookieAuthenticator::process(repro::RequestContext &rc)
       const WsCookieContext &wsCookieContext = sipMessage->getWsCookieContext();
       if (proxy.isMyDomain(sipMessage->header(h_From).uri().host()))
       {
-         if(cookieList.empty())
-         {
-            return Continue;
-         }
          if(authorizedForThisIdentity(wsCookieContext, sipMessage->header(h_From).uri(), sipMessage->header(h_To).uri()))
          {
             return Continue;
@@ -96,10 +92,6 @@ CookieAuthenticator::process(repro::RequestContext &rc)
       }
       else
       {
-         if(cookieList.empty())
-         {
-            return Continue;
-         }
          rc.sendResponse(*auto_ptr<SipMessage>
                            (Helper::makeResponse(*sipMessage, 403, "Authentication against cookie failed")));
          return SkipAllChains;

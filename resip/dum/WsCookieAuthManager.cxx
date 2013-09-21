@@ -117,7 +117,7 @@ WsCookieAuthManager::handle(SipMessage* sipMessage)
    const WsCookieContext &wsCookieContext = sipMessage->getWsCookieContext();
    if (mDum.isMyDomain(sipMessage->header(h_From).uri().host()))
    {
-      if (requiresAuthorization(*sipMessage) && !cookieList.empty())
+      if (requiresAuthorization(*sipMessage))
       {
          if(authorizedForThisIdentity(wsCookieContext, sipMessage->header(h_From).uri(), sipMessage->header(h_To).uri()))
          {
@@ -135,10 +135,6 @@ WsCookieAuthManager::handle(SipMessage* sipMessage)
    }
    else
    {
-      if(cookieList.empty())
-      {
-         return Skipped;
-      }
       SharedPtr<SipMessage> response(new SipMessage);
       Helper::makeResponse(*response, *sipMessage, 403, "Authorization failed");
       mDum.send(response);
