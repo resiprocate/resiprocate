@@ -56,7 +56,7 @@ WsCookieAuthManager::authorizedForThisIdentity(
    resip::Uri &fromUri,
    resip::Uri &toUri)
 {
-   if(difftime(time(NULL), wsCookieContext.getExpiresTime()) < 0)
+   if(difftime(wsCookieContext.getExpiresTime(), time(NULL)) < 0)
    {
       WarningLog(<< "Received expired cookie");
       return false;

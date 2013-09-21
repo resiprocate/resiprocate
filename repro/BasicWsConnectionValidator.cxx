@@ -40,7 +40,7 @@ bool BasicWsConnectionValidator::validateConnection(const resip::WsCookieContext
       return false;
    }
 
-   if(difftime(time(NULL), wsCookieContext.getExpiresTime()) < 0)
+   if(difftime(wsCookieContext.getExpiresTime(), time(NULL)) < 0)
    {
       WarningLog(<< "Received expired cookie");
       return false;
