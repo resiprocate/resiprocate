@@ -13,7 +13,10 @@ class WsCookieContext
    public:
       WsCookieContext();
       WsCookieContext(const CookieList& cookieList);
+      WsCookieContext(const WsCookieContext& rhs);
       ~WsCookieContext();
+
+      WsCookieContext& operator=(const WsCookieContext& rhs);
 
       Data getWsSessionInfo() const { return mWsSessionInfo; };
       Data getWsSessionExtra() const { return mWsSessionExtra; };

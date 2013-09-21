@@ -74,21 +74,25 @@ CookieAuthenticator::process(repro::RequestContext &rc)
       if (proxy.isMyDomain(sipMessage->header(h_From).uri().host()))
       {
          if(cookieList.empty())
+         {
             return Continue;
+         }
          if(authorizedForThisIdentity(wsCookieContext, sipMessage->header(h_From).uri(), sipMessage->header(h_To).uri()))
          {
             return Continue;
          }
          rc.sendResponse(*auto_ptr<SipMessage>
-                        (Helper::makeResponse(*sipMessage, 403, "Authentication against cookie failed")));
+                           (Helper::makeResponse(*sipMessage, 403, "Authentication against cookie failed")));
          return SkipAllChains;
       }
       else
       {
          if(cookieList.empty())
+         {
             return Continue;
+         }
          rc.sendResponse(*auto_ptr<SipMessage>
-                            (Helper::makeResponse(*sipMessage, 403, "Authentication against cookie failed")));
+                           (Helper::makeResponse(*sipMessage, 403, "Authentication against cookie failed")));
          return SkipAllChains;
       }
    }
@@ -107,19 +111,20 @@ CookieAuthenticator::authorizedForThisIdentity(const WsCookieContext& wsCookieCo
       return false;
    }
 
-   return true;
-
    Uri wsFromUri = wsCookieContext.getWsFromUri();
    Uri wsDestUri = wsCookieContext.getWsDestUri();
-
    if(isEqualNoCase(wsFromUri.user(), fromUri.user()) && isEqualNoCase(wsFromUri.host(), fromUri.host()))
    {
       DebugLog(<< "Matched cookie source URI field" << wsFromUri << " against request From header field URI " << fromUri);
+      if(isEqualNoCase(fromUri.user(), toUri.user()) && isEqualNoCase(fromUri.host(), toUri.host()))
+      {
+         return true;
+      }
       if(isEqualNoCase(wsDestUri.user(), toUri.user()) && isEqualNoCase(wsDestUri.host(), toUri.host()))
-         {
-            DebugLog(<< "Matched cookie destination URI field" << wsDestUri << " against request To header field URI " << toUri);
-            return true;
-         }
+      {
+         DebugLog(<< "Matched cookie destination URI field" << wsDestUri << " against request To header field URI " << toUri);
+         return true;
+      }
    }
 
    // catch-all: access denied

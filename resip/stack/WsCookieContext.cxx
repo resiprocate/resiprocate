@@ -7,6 +7,31 @@ WsCookieContext::WsCookieContext()
 {
 }
 
+WsCookieContext::WsCookieContext(const WsCookieContext& rhs)
+{
+   mWsSessionInfo = rhs.getWsSessionInfo();
+   mWsSessionExtra = rhs.getWsSessionExtra();
+   mWsSessionMAC = rhs.getWsSessionMAC();
+   mWsFromUri = rhs.getWsFromUri();
+   mWsDestUri = rhs.getWsDestUri();
+   mExpiresTime = rhs.getExpiresTime();
+}
+
+
+WsCookieContext& WsCookieContext::operator=(const WsCookieContext& rhs)
+{
+   if(this != &rhs)
+   {
+      mWsSessionInfo = rhs.getWsSessionInfo();
+      mWsSessionExtra = rhs.getWsSessionExtra();
+      mWsSessionMAC = rhs.getWsSessionMAC();
+      mWsFromUri = rhs.getWsFromUri();
+      mWsDestUri = rhs.getWsDestUri();
+      mExpiresTime = rhs.getExpiresTime();
+   }
+   return *this;
+}
+
 WsCookieContext:: WsCookieContext(const CookieList& cookieList)
 {
    for (CookieList::const_iterator it = cookieList.begin(); it != cookieList.end(); ++it)
