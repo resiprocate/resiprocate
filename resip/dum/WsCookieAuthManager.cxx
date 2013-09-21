@@ -5,6 +5,8 @@
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/TargetCommand.hxx"
 #include "resip/dum/WsCookieAuthManager.hxx"
+#include "resip/stack/WsTransport.hxx"
+#include "resip/stack/ssl/WssTransport.hxx"
 #include "resip/stack/Helper.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -86,6 +88,12 @@ WsCookieAuthManager::authorizedForThisIdentity(
 WsCookieAuthManager::Result
 WsCookieAuthManager::handle(SipMessage* sipMessage)
 {
+   // Only check message coming over WebSockets
+   if(!dynamic_cast<const WsTransport*>(sipMessage->getReceivedTransport()) &&
+      !dynamic_cast<const WssTransport*>(sipMessage->getReceivedTransport()))
+   {
+      return Skipped;
+   }
    //InfoLog( << "trying to do auth" );
    if (!sipMessage->isRequest() ||
        sipMessage->header(h_RequestLine).method() == ACK ||

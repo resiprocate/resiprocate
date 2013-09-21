@@ -8,6 +8,8 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Auth.hxx"
 #include "resip/stack/Helper.hxx"
+#include "resip/stack/WsTransport.hxx"
+#include "resip/stack/ssl/WssTransport.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/TransportType.hxx"
 #include "rutil/stun/Stun.hxx"
@@ -54,6 +56,13 @@ CookieAuthenticator::process(repro::RequestContext &rc)
 
    if (sipMessage)
    {
+      // Only check message coming over WebSockets
+      if(!dynamic_cast<const WsTransport*>(sipMessage->getReceivedTransport()) &&
+         !dynamic_cast<const WssTransport*>(sipMessage->getReceivedTransport()))
+      {
+         return Continue;
+      }
+
       if (sipMessage->method() == ACK ||
             sipMessage->method() == BYE)
       {
