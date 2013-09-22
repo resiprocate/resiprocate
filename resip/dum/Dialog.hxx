@@ -145,7 +145,6 @@ class Dialog
       NameAddr mLocalNameAddr;
       NameAddr mRemoteNameAddr;
       CallID mCallId;
-      unsigned int mLocalRSeq;
       
       // used to capture the 2xx expiration value for the initial subscription response
       UInt32 mDefaultSubExpiration;

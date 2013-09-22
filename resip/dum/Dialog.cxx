@@ -41,7 +41,6 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
      mLocalNameAddr(),
      mRemoteNameAddr(),
      mCallId(msg.header(h_CallID)),
-     mLocalRSeq(0),
      mDefaultSubExpiration(0),
      mAppDialog(0),
      mDestroying(false),
@@ -1125,19 +1124,6 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
    {
       Helper::makeResponse(response, request, code);
       response.header(h_To).param(p_tag) = mId.getLocalTag();
-   }
-
-   if( code > 100 && code < 200
-       && getInviteSession().isValid()
-       && getInviteSession()->isReliable(request) )
-   {
-      DebugLog ( << "100rel supported" );
-      if (!response.exists(h_Requires) ||
-          !response.header(h_Requires).find(Token(Symbols::C100rel)))
-      {
-         response.header(h_Requires).push_back(Token(Symbols::C100rel));
-      }
-      response.header(h_RSeq).value() = ++mLocalRSeq;
    }
 
    DebugLog ( << "Dialog::makeResponse: " << std::endl << std::endl << response);

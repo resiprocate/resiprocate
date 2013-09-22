@@ -23,6 +23,7 @@ ServerInviteSession::ServerInviteSession(DialogUsageManager& dum, Dialog& dialog
      mFirstRequest(request),
      m1xx(new SipMessage),
      mCurrentRetransmit1xxSeq(0),
+     mLocalRSeq(0),
      mAnswerSentReliably(false)
 {
    assert(request.isRequest());
@@ -390,13 +391,16 @@ ServerInviteSession::provideAnswer(const Contents& answer)
          break;
 
       case UAS_FirstNoAnswerReliable: 
+         // Store answer and wait for PRACK
          mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
          break;
 
       case UAS_ReceivedUpdate:
          {
-         transition(UAS_NegotiatedReliable);
+            transition(UAS_NegotiatedReliable);
+
+            // Send answer in 200/Update
             SharedPtr<SipMessage> response(new SipMessage);
             mDialog.makeResponse(*response, *mLastRemoteSessionModification, 200);
             InviteSession::setOfferAnswer(*response, answer, 0);
@@ -417,16 +421,20 @@ ServerInviteSession::provideAnswer(const Contents& answer)
             mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
             InfoLog (<< "Sending " << response->brief());
             DumHelper::setOutgoingEncryptionLevel(*response, mCurrentEncryptionLevel);
-            // TODO - why are we building a response and never sending it?
-            updateCheckQueue();  // TODO - ????
+            send(response);
+
+            // send the queued 200/Invite
+            updateCheckQueue();
          }
          break;
 
       case UAS_NoAnswerReliable:
          mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
+         transition(UAS_OfferReliableProvidedAnswer);  // TODO - is this ok?
          break;
 
+      // TODO - why would we call provideAnswer in NegotiatedReliable?  Is provisional offer/answer handled out of state in NegotiatedReliable?
       case UAS_NegotiatedReliable:
          mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
@@ -509,10 +517,13 @@ ServerInviteSession::end(EndReason reason)
       case UAS_NegotiatedReliable:
       case UAS_FirstSentOfferReliable:
       case UAS_FirstSentAnswerReliable:
+      case UAS_FirstNoAnswerReliable:
+      case UAS_NoAnswerReliable:
       case UAS_NoOfferReliable:
       case UAS_ReceivedUpdate:   // !slg! todo: send 488U
       case UAS_ReceivedUpdateWaitingAnswer: // !slg! todo: send 488U
       case UAS_SentUpdate:
+      case UAS_SentUpdateGlare:
       case UAS_WaitingToTerminate:
          reject(480);
          break;
@@ -565,6 +576,7 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
       case UAS_ProvidedOffer:
       case UAS_ProvidedOfferReliable:
 
+      case UAS_AcceptedWaitingAnswer:
       case UAS_NegotiatedReliable:
       case UAS_FirstSentAnswerReliable:
       case UAS_FirstNoAnswerReliable:
@@ -575,6 +587,7 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
       case UAS_OfferReliableProvidedAnswer:
       case UAS_ReceivedUpdate:
       case UAS_SentUpdate:
+      case UAS_SentUpdateGlare:
       {
          // !jf! the cleanup for 3xx may be a bit strange if we are in the middle of
          // an offer/answer exchange with PRACK. 
@@ -1892,38 +1905,62 @@ ServerInviteSession::sendProvisional(int code, bool earlyFlag)
 {
    m1xx->setContents(0);
    mDialog.makeResponse(*m1xx, mFirstRequest, code);
-      
+
+   // If Invite Requires reliable responses then all provisionals must be reliable   OR
+   // If we require it then all provisionals must be reliable
+   // Other cases caught below
+   bool sendReliably = code > 100 && 
+                       ((mFirstRequest.exists(h_Requires) && mFirstRequest.header(h_Requires).find(Token(Symbols::C100rel))) ||
+                         mDum.getMasterProfile()->getUasReliableProvisionalMode() == MasterProfile::Required);
+
    switch (mState)
    {
       case UAS_OfferProvidedAnswer:
       case UAS_EarlyProvidedAnswer:
-      case UAS_FirstSentAnswerReliable:
-      case UAS_NoAnswerReliable:
-         if (earlyFlag && !mAnswerSentReliably && mCurrentLocalOfferAnswer.get()) // early media
+         if (code > 100 && earlyFlag && mCurrentLocalOfferAnswer.get()) // early media
          {
             setOfferAnswer(*m1xx, mCurrentLocalOfferAnswer.get());
-            if (isReliable(mFirstRequest))
-            {
-                mAnswerSentReliably = true;
-            }
          }
          break;
 
-      case UAS_NoOfferReliable:  // TODO ?slg? does this make sense - if provide offer is called then we go to ProvidedOfferReliable
-         if (code>100 && earlyFlag && !mAnswerSentReliably && mProposedLocalOfferAnswer.get()) // early media
+      case UAS_FirstSentAnswerReliable:  
+          // TODO shouldn't be possible - we would have queued the 1xx
+          assert(false);
+          break;
+
+      case UAS_NoAnswerReliable:
+         if (code > 100 && earlyFlag && !mAnswerSentReliably && mCurrentLocalOfferAnswer.get()) // early media
+         {
+            setOfferAnswer(*m1xx, mCurrentLocalOfferAnswer.get());
+            mAnswerSentReliably = true;
+            sendReliably = true;
+         }
+         break;
+
+      case UAS_NoOfferReliable:
+         if(sendReliably)
+         {
+             // Invite requires reliable responses - since there was no offer in the INVITE we MUST 
+             // provide an offer in the first reliable response.  We would be in the ProvidedOfferReliable
+             // state if that was the case.  Looks like provisional was called too early!
+             assert(false);
+             return;
+         }
+         break;
+
+      case UAS_ProvidedOfferReliable:
+         if ((earlyFlag || sendReliably) && mProposedLocalOfferAnswer.get())  // ignore early flag if we must sendReliably, since first reliable 1xx MUST contain Offer
          {
             setOfferAnswer(*m1xx, mProposedLocalOfferAnswer.get());
-            mAnswerSentReliably = true;
-            transition(UAS_FirstSentOfferReliable);
+            sendReliably = true;
          }
          break;
 
       case UAS_ProvidedOffer:
-      case UAS_ProvidedOfferReliable:
       case UAS_EarlyProvidedOffer:
          if (earlyFlag && mProposedLocalOfferAnswer.get()) 
          {
-               setOfferAnswer(*m1xx, mProposedLocalOfferAnswer.get());
+            setOfferAnswer(*m1xx, mProposedLocalOfferAnswer.get());
          }
          break;
 
@@ -1932,13 +1969,16 @@ ServerInviteSession::sendProvisional(int code, bool earlyFlag)
    }
    DumHelper::setOutgoingEncryptionLevel(*m1xx, mProposedEncryptionLevel);
 
-   if (mDum.mDialogEventStateManager)
+   if(sendReliably)
    {
-      mDum.mDialogEventStateManager->onEarly(mDialog, getSessionHandle());
-   }
+      DebugLog ( << "Sending provisional reliably" );
+      if (!m1xx->exists(h_Requires) ||
+          !m1xx->header(h_Requires).find(Token(Symbols::C100rel)))
+      {
+         m1xx->header(h_Requires).push_back(Token(Symbols::C100rel));
+      }
+      m1xx->header(h_RSeq).value() = ++mLocalRSeq;
 
-   if(isReliable(*m1xx))
-   {
       assert(!mUnacknowledgedProvisional.get());
       mUnacknowledgedProvisional = m1xx;
       startRetransmit1xxRelTimer();
@@ -1946,6 +1986,11 @@ ServerInviteSession::sendProvisional(int code, bool earlyFlag)
    else
    {
        startRetransmit1xxTimer();
+   }
+
+   if (mDum.mDialogEventStateManager)
+   {
+      mDum.mDialogEventStateManager->onEarly(mDialog, getSessionHandle());
    }
 
    send(m1xx);

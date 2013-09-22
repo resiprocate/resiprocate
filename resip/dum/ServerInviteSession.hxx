@@ -114,6 +114,8 @@ class ServerInviteSession: public InviteSession
       SharedPtr<SipMessage> m1xx; // for 1xx retransmissions
       unsigned long mCurrentRetransmit1xxSeq;
       
+      // UAS Prack members
+      unsigned int mLocalRSeq;
       SharedPtr<SipMessage> mUnacknowledgedProvisional; // We won't send a new reliable provisional until the previous one is acknowledge - used for re-transmissions
       std::deque< std::pair<int, bool> > mQueuedResponses;
       bool mAnswerSentReliably;
