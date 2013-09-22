@@ -614,17 +614,16 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
       WsCookieContext wsCookieContext;
       if(wsConnectionBase)
       {
-         if (mMessage->exists(h_Cookies))
-         {
-            wsParseCookies(cookieList, mMessage);
-            wsCookieContext = WsCookieContext(cookieList);
-            wsConnectionBase->setCookies(cookieList);
-            wsConnectionBase->setWsCookieContext(wsCookieContext);
-         }
-
          SharedPtr<WsConnectionValidator> wsConnectionValidator = wsConnectionBase->connectionValidator();
          if(wsConnectionValidator)
          {
+            if (mMessage->exists(h_Cookies))
+            {
+               wsParseCookies(cookieList, mMessage);
+               wsCookieContext = WsCookieContext(cookieList);
+               wsConnectionBase->setCookies(cookieList);
+               wsConnectionBase->setWsCookieContext(wsCookieContext);
+            }
             if(!wsConnectionValidator->validateConnection(wsCookieContext))
             {
                ErrLog(<<"WebSocket cookie validation failed, dropping connection");
