@@ -128,21 +128,35 @@ digraph UAS {
   //////////////////////////////////////////
 
 
-  Start -> OfferReliable                        [ label = "onInvite-offer-rel/app::onNewSession,app::onOffer" ];
+  Start -> OfferReliable                                [ label = "onInvite-offer-rel/app::onNewSession,app::onOffer" ];
   Start -> NoOfferReliable                              [ label = "onInvite-rel/app::onNewSession,app::onOfferRequired" ];
 
-  OfferReliable -> OfferReliableProvidedAnswer [ label = "dum::provideAnswer" ];
-  OfferReliable -> Terminated                   [ label = "dum::end/send::4XXI,app::onTerminated,dum::destroy" ];
-  OfferReliable -> Terminated                   [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ];
-  OfferReliable -> Terminated                   [ label = "dum::redirect/send::3XXI,app::onTerminated,dum::destroy" ];
+  OfferReliable -> OfferReliableProvidedAnswer          [ label = "dum::provideAnswer" ];
+  OfferReliable -> FirstNoAnswerReliable                [ label = "dum::provisional"/send::1xx,timer:1xx]
+  OfferReliable -> Terminated                           [ label = "dum::end/send::4XXI,app::onTerminated,dum::destroy" ];
+  OfferReliable -> Terminated                           [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ];
+  OfferReliable -> Terminated                           [ label = "dum::redirect/send::3XXI,app::onTerminated,dum::destroy" ];
 
   OfferReliableProvidedAnswer -> FirstSentAnswerReliable [ label = "dum::provisional/send::1xx-answer,timer::1xx" ];
-  OfferReliableProvidedAnswer -> Accepted                [ label = "dum::accept/send::2xx,timer::2xx,app::onConnected" ];
-  OfferReliableProvidedAnswer -> Terminated              [ label = "dum::end/send::4XXI,app::onTerminated,dum::destroy" ];
-  OfferReliableProvidedAnswer -> Terminated              [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ];
-  OfferReliableProvidedAnswer -> Terminated              [ label = "dum::redirect/send::3XXI,app::onTerminated,dum::destroy" ];
+  OfferReliableProvidedAnswer -> Accepted               [ label = "dum::accept/send::2xx,timer::2xx,app::onConnected" ];
+  OfferReliableProvidedAnswer -> Terminated             [ label = "dum::end/send::4XXI,app::onTerminated,dum::destroy" ];
+  OfferReliableProvidedAnswer -> Terminated             [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ];
+  OfferReliableProvidedAnswer -> Terminated             [ label = "dum::redirect/send::3XXI,app::onTerminated,dum::destroy" ];
 
-  NoOfferReliable -> NoOfferReliable                    [ label = "dum::provisional/send::1xx,timer:1xx" ];
+  FirstNoAnswerReliable -> FirstNoAnswerReliable        [ label = "dum::provisional/send::1xx-answer,timer::1xx" ];
+  FirstNoAnswerReliable -> FirstNoAnswerReliable        [ label = "dum::provideAnswer/store answer" ];
+  FirstNoAnswerReliable -> FirstNoAnswerReliable        [ label = "dum::accept/queue 200 waiting for PRACK" ];
+  FirstNoAnswerReliable -> NoAnswerReliable             [ label = "onPRACK/200P" ];
+  FirstNoAnswerReliable -> Terminated                   [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ];
+  FirstNoAnswerReliable -> Terminated                   [ label = "onCancel/,app::onTerminated,dum::destroy" ];
+
+  NoAnswerReliable -> NoAnswerReliable                  [ label = "dum::provisional/send::1xx-answer,timer::1xx" ];
+  NoAnswerReliable -> NoAnswerReliable                  [ label = "dum::provideAnswer/store answer" ];  // TODO should go to OfferReliableProvidedAnswer???
+  NoAnswerReliable -> Accepted                          [ label = "dum::accept/send::2xx-answer,timer:2xx,timer::NoAck,app::onConnected" ];
+  NoAnswerReliable -> UAS_NegotiatedReliable            [ label = "onPRACK/200P" ];  // TODO - Needs checking!!!
+  NoAnswerReliable -> Terminated                        [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ];
+
+  NoOfferReliable -> NoOfferReliable                    [ label = "dum::provisional/send::1xx,timer:1xx" ];  // TODO - not allowed, right??
   NoOfferReliable -> ProvidedOfferReliable              [ label = "dum::provideOffer/store::offer" ];
   NoOfferReliable -> Terminated                         [ label = "dum::end/send::4XXI,app::onTerminated,dum::destroy" ];
   NoOfferReliable -> Terminated                         [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ];

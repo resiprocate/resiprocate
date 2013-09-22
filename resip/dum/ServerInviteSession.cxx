@@ -165,14 +165,13 @@ ServerInviteSession::provisional(int code, bool earlyFlag)
          sendProvisional(code, earlyFlag);
          break;
          
-
       case UAS_NoOfferReliable:
       case UAS_NegotiatedReliable:
       case UAS_FirstSentAnswerReliable:
       case UAS_FirstNoAnswerReliable: 
       case UAS_NoAnswerReliable:
       case UAS_FirstSentOfferReliable:
-         if(mUnacknowledgedProvisionals.size()>0)
+         if(mUnacknowledgedProvisional.get())
          {
             InfoLog (<< "Waiting for PRACK. queued provisional" );
             queueResponse(code, earlyFlag);
@@ -418,7 +417,8 @@ ServerInviteSession::provideAnswer(const Contents& answer)
             mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
             InfoLog (<< "Sending " << response->brief());
             DumHelper::setOutgoingEncryptionLevel(*response, mCurrentEncryptionLevel);
-            updateCheckQueue();
+            // TODO - why are we building a response and never sending it?
+            updateCheckQueue();  // TODO - ????
          }
          break;
 
@@ -658,7 +658,7 @@ ServerInviteSession::accept(int code)
          break;
          
       case UAS_NegotiatedReliable:
-         if(mUnacknowledgedProvisionals.size()>0)
+         if(mUnacknowledgedProvisional.get())
          {
             InfoLog (<< "Waiting for PRACK. queued provisional" );
             queueResponse(code, false);
@@ -678,7 +678,7 @@ ServerInviteSession::accept(int code)
          break;
 
       case UAS_NoAnswerReliable:
-         if(mUnacknowledgedProvisionals.size()>0)
+         if(mUnacknowledgedProvisional.get())
          {
             InfoLog (<< "Waiting for PRACK. queued 200 OK" );
             queueResponse(code, false);
@@ -850,8 +850,8 @@ ServerInviteSession::dispatch(const DumTimeout& timeout)
    }
    else if (timeout.type() == DumTimeout::Retransmit1xxRel)
    {
-      if (mUnacknowledgedProvisionals.size() 
-          && mUnacknowledgedProvisionals.front()->header(h_RSeq).value() == timeout.seq())
+      if (mUnacknowledgedProvisional.get() &&  
+          mUnacknowledgedProvisional->header(h_RSeq).value() == timeout.seq())
       {
          unsigned int duration = 2*timeout.secondarySeq();
          if(duration>=64*Timer::T1)
@@ -877,7 +877,7 @@ ServerInviteSession::dispatch(const DumTimeout& timeout)
          else
          {
             InfoLog (<< "Reliable provisional retransmit" );
-            send(mUnacknowledgedProvisionals.front());
+            send(mUnacknowledgedProvisional);
             mDum.addTimerMs(DumTimeout::Retransmit1xxRel, duration, getBaseHandle(), timeout.seq(), duration);
          }
       }
@@ -1035,7 +1035,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
         
       case OnPrack:
       {
-         if(!prackCheckProvisionals(msg))
+         if(!handlePrack(msg))
          {
             return; // prack does not correspond to an unacknowedged provisional
          }
@@ -1277,7 +1277,7 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
 
       case OnPrack:
       {
-         if(!prackCheckProvisionals(msg))
+         if(!handlePrack(msg))
          {
             return; // prack does not correspond to an unacknowedged provisional
          }
@@ -1366,7 +1366,7 @@ ServerInviteSession::dispatchFirstSentOfferReliable(const SipMessage& msg)
 
       case OnPrack:
       {
-         if(!prackCheckProvisionals(msg))
+         if(!handlePrack(msg))
          {
             return; // prack does not correspond to an unacknowedged provisional
          }
@@ -1382,7 +1382,7 @@ ServerInviteSession::dispatchFirstSentOfferReliable(const SipMessage& msg)
             mCurrentEncryptionLevel = getEncryptionLevel(msg);
             handler->onAnswer(getSessionHandle(), msg, *offerAnswer);
 
-            if( mState != UAS_Accepted)    // queued 200 OK was sent in prackCheckProvisionals
+            if( mState != UAS_Accepted)    // queued 200 OK was sent in handlePrack/onPRACK 
             {                              // and state was changed there
                transition(UAS_NegotiatedReliable);
             }
@@ -1411,25 +1411,22 @@ ServerInviteSession::dispatchFirstSentOfferReliable(const SipMessage& msg)
 }
 
 bool
-ServerInviteSession::prackCheckProvisionals(const SipMessage& msg)
+ServerInviteSession::handlePrack(const SipMessage& msg)
 {
-   std::deque< SharedPtr<SipMessage> >::iterator msgIt = mUnacknowledgedProvisionals.begin();
+   InfoLog (<< "handlePrack");
 
-   InfoLog (<< "prackCheckProvisionals: " << mUnacknowledgedProvisionals.size() );
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
 
-   while(msgIt!=mUnacknowledgedProvisionals.end())
+   if(mUnacknowledgedProvisional.get() && 
+      mUnacknowledgedProvisional->header(h_RSeq).value() == msg.header(h_RAck).rSequence() &&
+      mUnacknowledgedProvisional->header(h_CSeq).sequence() == msg.header(h_RAck).cSequence() &&
+      mUnacknowledgedProvisional->header(h_CSeq).method() == msg.header(h_RAck).method())
    {
-      if((*msgIt)->header(h_RSeq).value() == msg.header(h_RAck).rSequence()
-         && (*msgIt)->header(h_CSeq).sequence() == msg.header(h_RAck).cSequence()
-         && (*msgIt)->header(h_CSeq).method() == msg.header(h_RAck).method())
-      {
-          mUnacknowledgedProvisionals.erase(msgIt);
-          handler->onPrack(getHandle(),msg);
-          InfoLog (<< "Found matching provisional. Outstanding: " << mUnacknowledgedProvisionals.size() );
-          return true;
-      }
-      msgIt++;
+       mUnacknowledgedProvisional.reset();  // Clear storage we have received our PRACK
+
+       handler->onPrack(getHandle(),msg);
+       InfoLog (<< "Found matching provisional for PRACK.");
+       return true;
    }
 
    InfoLog (<< "spurious PRACK in state=" << toData(mState));
@@ -1437,7 +1434,6 @@ ServerInviteSession::prackCheckProvisionals(const SipMessage& msg)
    mDialog.makeResponse(*p481, msg, 481);
    send(p481);
    return false;
-
 }
 
 void
@@ -1462,7 +1458,7 @@ ServerInviteSession::prackCheckQueue()
       }
       sendAccept(mQueuedResponses.front().first, sdp);
       handler->onConnected(getSessionHandle(), *mInvite200);
-      mQueuedResponses.pop_front();
+      mQueuedResponses.clear();  // shouldn't be any provisionals or 200's behind us in queue - just clear the entire queue
    }
 
 }
@@ -1482,7 +1478,6 @@ ServerInviteSession::updateCheckQueue()
       handler->onConnected(getSessionHandle(), *mInvite200);
       mQueuedResponses.pop_front();
    }
-
 }
 
 void 
@@ -1502,7 +1497,7 @@ ServerInviteSession::dispatchFirstSentAnswerReliable(const SipMessage& msg)
 
       case OnPrack:
       {
-         if(!prackCheckProvisionals(msg))
+         if(!handlePrack(msg))
          {
             return; // prack does not correspond to an unacknowedged provisional
          }
@@ -1533,7 +1528,7 @@ ServerInviteSession::dispatchFirstSentAnswerReliable(const SipMessage& msg)
              SharedPtr<SipMessage> p200(new SipMessage);
              mDialog.makeResponse(*p200, msg, 200);
              send(p200);
-             if( mState != UAS_Accepted)    // queued 200 OK was sent in prackCheckProvisionals
+             if( mState != UAS_Accepted)    // queued 200 OK was sent in handlePrack/onPrack
              {                              // and state was changed there
                 transition(UAS_NegotiatedReliable);
              }
@@ -1568,7 +1563,7 @@ ServerInviteSession::dispatchFirstNoAnswerReliable(const SipMessage& msg)
 
       case OnPrack:
       {
-         if(!prackCheckProvisionals(msg))
+         if(!handlePrack(msg))
          {
             return; // prack does not correspond to an unacknowedged provisional
          }
@@ -1620,7 +1615,7 @@ ServerInviteSession::dispatchEarlyReliable(const SipMessage& msg)
       }
       case OnPrack:
       {
-         if(!prackCheckProvisionals(msg))
+         if(!handlePrack(msg))
          {
             return; // prack does not correspond to an unacknowedged provisional
          }
@@ -1907,14 +1902,14 @@ ServerInviteSession::sendProvisional(int code, bool earlyFlag)
          if (earlyFlag && !mAnswerSentReliably && mCurrentLocalOfferAnswer.get()) // early media
          {
             setOfferAnswer(*m1xx, mCurrentLocalOfferAnswer.get());
-            if (provisionalWillBeSentReliable())
+            if (isReliable(mFirstRequest))
             {
                 mAnswerSentReliably = true;
             }
          }
          break;
 
-      case UAS_NoOfferReliable:
+      case UAS_NoOfferReliable:  // TODO ?slg? does this make sense - if provide offer is called then we go to ProvidedOfferReliable
          if (code>100 && earlyFlag && !mAnswerSentReliably && mProposedLocalOfferAnswer.get()) // early media
          {
             setOfferAnswer(*m1xx, mProposedLocalOfferAnswer.get());
@@ -1935,7 +1930,6 @@ ServerInviteSession::sendProvisional(int code, bool earlyFlag)
       default:
          break;
    }
-   startRetransmit1xxTimer();
    DumHelper::setOutgoingEncryptionLevel(*m1xx, mProposedEncryptionLevel);
 
    if (mDum.mDialogEventStateManager)
@@ -1943,10 +1937,15 @@ ServerInviteSession::sendProvisional(int code, bool earlyFlag)
       mDum.mDialogEventStateManager->onEarly(mDialog, getSessionHandle());
    }
 
-   if(m1xx->exists(h_Requires) && m1xx->header(h_Requires).find(Token(Symbols::C100rel)))
+   if(isReliable(*m1xx))
    {
-      mUnacknowledgedProvisionals.push_back(m1xx);
+      assert(!mUnacknowledgedProvisional.get());
+      mUnacknowledgedProvisional = m1xx;
       startRetransmit1xxRelTimer();
+   }
+   else
+   {
+       startRetransmit1xxTimer();
    }
 
    send(m1xx);
@@ -1955,9 +1954,8 @@ ServerInviteSession::sendProvisional(int code, bool earlyFlag)
 void
 ServerInviteSession::queueResponse(int code, bool earlyFlag)
 {
-   InfoLog (<< "Reliable provisional queued" );
-   mQueuedResponses.push_back( std::make_pair(code,earlyFlag) );
-    
+   InfoLog (<< "Response " << code << " queued." );
+   mQueuedResponses.push_back( std::make_pair(code, earlyFlag) );
 }
 
 void
@@ -1996,12 +1994,6 @@ ServerInviteSession::sendUpdate(const Contents& offerAnswer)
    {
       throw UsageUseException("Can't send UPDATE to peer", __FILE__, __LINE__);
    }
-}
-
-bool 
-ServerInviteSession::provisionalWillBeSentReliable() const
-{
-   return isReliable(mFirstRequest);
 }
 
 /* ====================================================================

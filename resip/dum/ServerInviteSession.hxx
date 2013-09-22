@@ -61,8 +61,6 @@ class ServerInviteSession: public InviteSession
       void provisionalCommand(int code=180);
       void acceptCommand(int statusCode=200);
 
-      bool provisionalWillBeSentReliable() const;
-
    private:
       friend class Dialog;
 
@@ -101,7 +99,7 @@ class ServerInviteSession: public InviteSession
       void sendProvisional(int code, bool earlyFlag);
       void queueResponse(int code, bool earlyFlag);
       void sendUpdate(const Contents& offerAnswer);
-      bool prackCheckProvisionals(const SipMessage& msg); // verify that prack has corresponding 1xx
+      bool handlePrack(const SipMessage& msg); // verify that prack matches our last send reliable 1xx
       void prackCheckQueue();                             // send a queued message after prack
       void updateCheckQueue();                            // send a queued message after update
 
@@ -116,8 +114,8 @@ class ServerInviteSession: public InviteSession
       SharedPtr<SipMessage> m1xx; // for 1xx retransmissions
       unsigned long mCurrentRetransmit1xxSeq;
       
-      std::deque< SharedPtr<SipMessage> > mUnacknowledgedProvisionals; // all of them
-      std::deque< std::pair<int,bool> > mQueuedResponses;
+      SharedPtr<SipMessage> mUnacknowledgedProvisional; // We won't send a new reliable provisional until the previous one is acknowledge - used for re-transmissions
+      std::deque< std::pair<int, bool> > mQueuedResponses;
       bool mAnswerSentReliably;
       SharedPtr<SipMessage> mPrackWithOffer; // for 1xx retransmissions
 };
