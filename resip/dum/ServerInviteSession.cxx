@@ -434,7 +434,9 @@ ServerInviteSession::provideAnswer(const Contents& answer)
          transition(UAS_OfferReliableProvidedAnswer);  // TODO - is this ok?
          break;
 
-      // TODO - why would we call provideAnswer in NegotiatedReliable?  Is provisional offer/answer handled out of state in NegotiatedReliable?
+      // If we received an offer in a PRACK then we transition to NegotiateReliable and expect
+      // provideAnswer to be called to send the 200/Prack containing the answer.  TODO  seems
+      // like we really ought to be defining a new state for this
       case UAS_NegotiatedReliable:
          mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
@@ -806,7 +808,7 @@ ServerInviteSession::dispatch(const SipMessage& msg)
          dispatchAcceptedWaitingAnswer(msg);
          break;         
       case UAS_NoAnswerReliable:
-         dispatchEarlyReliable(msg);
+         dispatchNoAnswerReliable(msg);
          break;
       case UAS_FirstSentAnswerReliable:
          dispatchFirstSentAnswerReliable(msg);
@@ -885,7 +887,6 @@ ServerInviteSession::dispatch(const DumTimeout& timeout)
             mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Timeout);
             mDum.destroy(this);
             return;
-          
          }
          else
          {
@@ -1055,6 +1056,15 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
          
          if(offerAnswer.get())  // New offer
          {
+            // TODO - what should we do if the PRACK recieved after we accept the 
+            // call has an offer in it.  Should we process it? or Ignore it?
+            // Ignoring for now - should at least reject
+            // 
+            // TODO - reject PRACK, teardown call?
+            ErrLog (<< "PRACK with new offer when in state=" << toData(mState));
+            assert(false);
+            return;
+            /* 
             if(!mAnswerSentReliably)    // new offer before previous answer sent 
             {
                // TODO - reject PRACK, teardown call?
@@ -1072,7 +1082,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
                {
                   handler->onOffer(getSessionHandle(), msg, *offerAnswer);
                }
-            }
+            }*/
          }
          else
          {
@@ -1306,8 +1316,8 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
             SharedPtr<SipMessage> p200(new SipMessage);
             mDialog.makeResponse(*p200, msg, 200);
             send(p200);
-            transition(UAS_NoAnswerReliable);  // TODO !slg!  this doesn't seem right - we've already Accepted the call
-            prackCheckQueue();
+            //transition(UAS_NoAnswerReliable);  // TODO !slg!  this doesn't seem right - we've already Accepted the call
+            //prackCheckQueue();
          }
          break;
       }
@@ -1395,21 +1405,22 @@ ServerInviteSession::dispatchFirstSentOfferReliable(const SipMessage& msg)
             mCurrentEncryptionLevel = getEncryptionLevel(msg);
             handler->onAnswer(getSessionHandle(), msg, *offerAnswer);
 
-            if( mState != UAS_Accepted)    // queued 200 OK was sent in handlePrack/onPRACK 
-            {                              // and state was changed there
+            if( mState != UAS_Accepted)    // queued 200 OK was sent in handlePrack/onPRACK and state was changed there
+            {
                transition(UAS_NegotiatedReliable);
             }
-           
          }
          else
          {
             mEndReason = IllegalNegotiation;
             transition(Terminated);
             handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
+
             SharedPtr<SipMessage> p406(new SipMessage);
             mDialog.makeResponse(*p406, msg, 406);
             send(p406);
-            // TODO - something is missing here - we are transitioning to terminated, but we are not destroying ourself
+
+            mDum.destroy(this);
          }
          break;
       }
@@ -1473,12 +1484,12 @@ ServerInviteSession::prackCheckQueue()
       handler->onConnected(getSessionHandle(), *mInvite200);
       mQueuedResponses.clear();  // shouldn't be any provisionals or 200's behind us in queue - just clear the entire queue
    }
-
 }
 
 void
 ServerInviteSession::updateCheckQueue()
 {
+   // TODO  - should we be skipping over or ignoring any provisionals in the queue?
    InfoLog (<< "updateCheckQueue: " << mQueuedResponses.size() );
    if(mQueuedResponses.size() > 0  && 
       mQueuedResponses.front().first >= 200 &&
@@ -1501,7 +1512,6 @@ ServerInviteSession::dispatchFirstSentAnswerReliable(const SipMessage& msg)
 
    switch (toEvent(msg, offerAnswer.get()))
    {
-         
       case OnCancel:
       {
          dispatchCancel(msg);
@@ -1541,8 +1551,8 @@ ServerInviteSession::dispatchFirstSentAnswerReliable(const SipMessage& msg)
              SharedPtr<SipMessage> p200(new SipMessage);
              mDialog.makeResponse(*p200, msg, 200);
              send(p200);
-             if( mState != UAS_Accepted)    // queued 200 OK was sent in handlePrack/onPrack
-             {                              // and state was changed there
+             if( mState != UAS_Accepted)    // queued 200 OK was sent in handlePrack/onPrack and state was changed there
+             {
                 transition(UAS_NegotiatedReliable);
              }
              prackCheckQueue();
@@ -1608,12 +1618,7 @@ ServerInviteSession::dispatchFirstNoAnswerReliable(const SipMessage& msg)
 }
 
 void
-ServerInviteSession::dispatchFirstEarlyReliable(const SipMessage& msg)
-{
-}
-
-void
-ServerInviteSession::dispatchEarlyReliable(const SipMessage& msg)
+ServerInviteSession::dispatchNoAnswerReliable(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
@@ -1626,6 +1631,7 @@ ServerInviteSession::dispatchEarlyReliable(const SipMessage& msg)
          dispatchCancel(msg);
          break;
       }
+
       case OnPrack:
       {
          if(!handlePrack(msg))
@@ -1761,11 +1767,13 @@ ServerInviteSession::dispatchSentUpdateAccepted(const SipMessage& msg)
 void
 ServerInviteSession::dispatchReceivedUpdate(const SipMessage& msg)
 {
+    // TODO - should we handle Cancel here?  anything else?
 }
 
 void
 ServerInviteSession::dispatchReceivedUpdateWaitingAnswer(const SipMessage& msg)
 {
+    // TODO - should we handle Cancel here?  anything else?
 }
 
 void
@@ -1788,12 +1796,12 @@ ServerInviteSession::dispatchNegotiatedReliable(const SipMessage& msg)
          break;
          
       case OnUpdate:
-         // TODO - reject UPDATE, teardown call?
+         // TODO - reject UPDATE, teardown call?  Or just respond with 200
          ErrLog (<< "UPDATE with no offer when in state=" << toData(mState));
          break;
 
       default:
-         dispatchEarlyReliable(msg);
+         dispatchNoAnswerReliable(msg);
          break;
    }
 }
