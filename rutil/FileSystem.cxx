@@ -30,6 +30,7 @@ FileSystem::Directory::iterator::iterator(const Directory& dir)
    assert(!dir.getPath().empty());   
    //InfoLog(<< "FileSystem::Directory::iterator::iterator: " << dir.getPath());
    mPath = dir.getPath();
+   mPath = dir.getPath();
    if ((mNixDir = opendir( dir.getPath().c_str() )))
    {
       errno = 0;

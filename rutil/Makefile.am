@@ -191,14 +191,7 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	StlPoolAllocator.hxx \
 	ProducerFifoBuffer.hxx \
 	DinkyPool.hxx \
-	ConsumerFifoBuffer.hxx \
-	cajun/json/elements.h \
-	cajun/json/elements.inl \
-	cajun/json/reader.h \
-	cajun/json/reader.inl \
-	cajun/json/visitor.h \
-	cajun/json/writer.h \
-	cajun/json/writer.inl
+	ConsumerFifoBuffer.hxx
 
 
 ##############################################################################

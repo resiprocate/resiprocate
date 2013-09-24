@@ -125,7 +125,7 @@ void Producer::thread()
    cerr << "Producer running..." << endl;
 #endif
 
-   for (unsigned long n = 0; n < 0x1ffff; n++) 
+   for (UInt32 n = 0; n < 0x1ffff; n++) 
    {
       if (mFifo.wouldAccept(TimeLimitFifo<Foo>::EnforceTimeDepth))
       {

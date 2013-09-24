@@ -1,125 +1,29 @@
-#include <string>
-#include "rutil/TransportType.hxx"
+#include <cassert>
 
-namespace resip
+#include "rutil/compat.hxx"
+
+using namespace resip;
+using namespace std;
+
+int
+main()
 {
 
-static const Data transportNames[MAX_TRANSPORT] =
-{
-   Data("UNKNOWN_TRANSPORT"),
-   Data("TLS"),
-   Data("TCP"),
-   Data("UDP"),
-   Data("SCTP"),
-   Data("DCCP"),
-   Data("DTLS"),
-   Data("WS"),
-   Data("WSS")
-};
+   // make sure these are consistent on all platforms
 
-static const Data transportNamesLower[MAX_TRANSPORT] =
-{
-   Data("UNKNOWN_TRANSPORT"),
-   Data("tls"),
-   Data("tcp"),
-   Data("udp"),
-   Data("sctp"),
-   Data("dccp"),
-   Data("dtls"),
-   Data("ws"),
-   Data("wss")
-};
+   assert(sizeof(UInt8) == 1);
+   assert(sizeof(UInt16) == 2);
+   assert(sizeof(UInt32) == 4);
+   assert(sizeof(Int32) == 4);
+   assert(sizeof(UInt64) == 8);
 
-TransportType 
-getTransportTypeFromName(const std::string& transportName)
-{
-    return toTransportType(transportName.c_str());
-}
-
-TransportType 
-toTransportType(const resip::Data& transportName)
-{
-   for (TransportType i = UNKNOWN_TRANSPORT; i < MAX_TRANSPORT; 
-        i = static_cast<TransportType>(i + 1))
-    {
-      if (isEqualNoCase(transportName, transportNames[i]))
-    {
-         return i;
-    }
-    }
-    return UNKNOWN_TRANSPORT;
-}
-
-std::string 
-getTransportNameFromType(const TransportType typeEnum)
-{
-   return toData(typeEnum).c_str();
-}
-
-std::string 
-getTransportNameFromTypeLower(const TransportType typeEnum)
-{
-   return toDataLower(typeEnum).c_str();
-}
-
-const resip::Data& 
-toData(const TransportType typeEnum)
-{
-   assert(typeEnum >= UNKNOWN_TRANSPORT && typeEnum < MAX_TRANSPORT);
-   return transportNames[typeEnum];
-}
-
-const resip::Data& 
-toDataLower(const TransportType typeEnum)
-{
-   assert(typeEnum >= UNKNOWN_TRANSPORT && typeEnum < MAX_TRANSPORT);
-   return transportNamesLower[typeEnum];
-}
-
-bool
-isReliable(TransportType type)
-{
-   switch(type)
-   {
-      case TLS:
-      case TCP:
-      case SCTP:
-      case WS:
-      case WSS:
-         return true;
-      case UDP:
-      case DCCP:
-      case DTLS:
-      default:
-         return false;
-   }
-}
-
-bool
-isSecure(TransportType type)
-{
-   switch(type)
-   {
-      case TLS:
-      case DTLS:
-      case WSS:
-         return true;
-      case UDP:
-      case TCP:
-      case DCCP:
-      case SCTP:
-      case WS:
-      default:
-         return false;
-   }
-}
-
+   return 0;
 }
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2005 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

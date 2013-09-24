@@ -12,8 +12,8 @@ EXTRA_DIST += users.txt
 dist_man_MANS = reTurnServer.8
 
 SUBDIRS = .
-SUBDIRS += test
 SUBDIRS += client
+SUBDIRS += test
 
 #AM_CXXFLAGS = -DUSE_ARES
 AM_CXXFLAGS = -I $(top_srcdir)

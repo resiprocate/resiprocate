@@ -179,7 +179,7 @@ class TransactionState : public DnsHandler
       TransportFailure::FailureReason mFailureReason;      
       int mFailureSubCode;
 
-      static unsigned long StatelessIdCounter;
+      static UInt32 StatelessIdCounter;
       
       friend EncodeStream& operator<<(EncodeStream& strm, const TransactionState& state);
       friend class TransactionController;

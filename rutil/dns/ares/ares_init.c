@@ -258,22 +258,21 @@ static int init_by_options(ares_channel channel, struct ares_options *options,
      for (i = 0; i < options->nservers; i++)
      {
 #ifdef USE_IPV6
-	channel->servers[i].family = options->servers[i].family;
-	if (options->servers[i].family == AF_INET6)
-	{
-	  channel->servers[i].addr6 = options->servers[i].addr6;
-	}
-	else
-	{
-	  assert( channel->servers[i].family == AF_INET );
-	  channel->servers[i].addr = options->servers[i].addr;
-	}
+	    channel->servers[i].family = options->servers[i].family;
+	    if (options->servers[i].family == AF_INET6)
+	    {
+	       channel->servers[i].addr6 = options->servers[i].addr6;
+	    }
+	    else
+	    {
+	       assert( channel->servers[i].family == AF_INET );
+		   channel->servers[i].addr = options->servers[i].addr;
+	    }
 #else	  
-	channel->servers[i].addr = options->servers[i];
+	    channel->servers[i].addr = options->servers[i];
 #endif
-	// .kw. why is this inside the loop?
-        channel->nservers = options->nservers;
      }
+     channel->nservers = options->nservers;
   }
 
   /* Copy the domains, if given.  Keep channel->ndomains consistent so
@@ -489,12 +488,13 @@ static int init_by_defaults(ares_channel channel)
      /*
       * Way of getting nameservers that should work on all Windows from 98 on.
       */
-      FIXED_INFO *     FixedInfo;
-      ULONG            ulOutBufLen;
+      FIXED_INFO *     FixedInfo = NULL;
+      ULONG            ulOutBufLen = 0;
       DWORD            dwRetVal;
       IP_ADDR_STRING * pIPAddr;
 	  HANDLE           hLib;
-	  int num;
+	  int              num;
+      int              trys = 0;
 	  DWORD (WINAPI *GetNetworkParams)(FIXED_INFO*, DWORD*); 
 
 	  hLib = LoadLibrary(TEXT("iphlpapi.dll"));
@@ -510,20 +510,22 @@ static int init_by_defaults(ares_channel channel)
 		  return ARES_ENOTIMP;
 	  }
       //printf("ARES: figuring out DNS servers\n");
-      FixedInfo = (FIXED_INFO *) GlobalAlloc( GPTR, sizeof( FIXED_INFO ) );
-      ulOutBufLen = sizeof( FIXED_INFO );
-
-      if( ERROR_BUFFER_OVERFLOW == (*GetNetworkParams)( FixedInfo, &ulOutBufLen ) ) 
-	  {
-        GlobalFree( FixedInfo );
+      while(ERROR_BUFFER_OVERFLOW == (dwRetVal = GetNetworkParams( FixedInfo, &ulOutBufLen )) && trys++ < 5)
+      {
+        if(FixedInfo != NULL)
+        {
+            GlobalFree( FixedInfo );
+        }
         FixedInfo = (FIXED_INFO *)GlobalAlloc( GPTR, ulOutBufLen );
       }
-
-      if ( dwRetVal = (*GetNetworkParams)( FixedInfo, &ulOutBufLen ) )
+      if( dwRetVal != 0)
       {
-        //printf("ARES: couldn't get network params\n");
-        GlobalFree( FixedInfo );
-  	    FreeLibrary(hLib);
+        //printf("ARES: couldn't get network params, dwRet=0x%x\n", dwRetVal);
+        if(FixedInfo != NULL)
+        {
+            GlobalFree( FixedInfo );
+        }
+        FreeLibrary(hLib);
         return ARES_ENODATA;
       }
       else
@@ -543,6 +545,14 @@ static int init_by_defaults(ares_channel channel)
           num++;
           pIPAddr = pIPAddr ->Next;
         }
+        //if(num == 0)
+        //{
+        //    printf("ARES: no nameservers! size=%d\n", ulOutBufLen);
+        //}
+        //else
+        //{
+        //    printf("ARES: num nameservers: %d, size=%d\n", num, ulOutBufLen);
+        //}
         if(num>0)
         {
            channel->servers = malloc( (num) * sizeof(struct server_state));
@@ -1042,6 +1052,7 @@ static int get_physical_address(char *physicalAddr, int physicalAddrBufSz, int* 
   }
   else
   {
+    //printf("ARES: couldn't get adapters addresses, dwRet=0x%x\n", dwRet);
     rc = ARES_ENODATA;
     goto cleanup;
   }
@@ -1049,6 +1060,7 @@ static int get_physical_address(char *physicalAddr, int physicalAddrBufSz, int* 
   dwRet = (*GetAdaptersAddressesProc)(AF_UNSPEC, 0, NULL, pAdapterAddresses, &dwSize);
   if (dwRet != ERROR_SUCCESS)
   {
+    //printf("ARES: couldn't get adapters addresses (2), dwRet=0x%x\n", dwRet);
     rc = ARES_ENODATA;
     goto cleanup;
   }

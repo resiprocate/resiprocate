@@ -480,6 +480,7 @@ TransportSelector::dnsResolve(DnsResult* result,
    }
 }
 
+// FIXME: maybe this should move to rutil/TransportType?
 bool isDgramTransport (TransportType type)
 {
    static const bool unknown_transport = false;
@@ -493,6 +494,8 @@ bool isDgramTransport (TransportType type)
 
       case TCP:
       case TLS:
+      case WS:
+      case WSS:
          return   false;
 
       default:

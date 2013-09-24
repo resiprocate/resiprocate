@@ -427,14 +427,15 @@ ReproRunner::createSipStack()
    Security* security = 0;
    Compression* compression = 0;
 #ifdef USE_SSL
-#ifdef WIN32
-   Data certPath("C:\\sipCerts");
-#else 
-   Data certPath(getenv("HOME"));
-   certPath += "/.sipCerts";
-#endif
-   mProxyConfig->getConfigValue("CertificatePath", certPath);
-   security = new Security(certPath);
+   Data certPath = mProxyConfig->getConfigData("CertificatePath", "");
+   if(certPath.empty())
+   {
+      security = new Security();
+   }
+   else
+   {
+      security = new Security(certPath);
+   }
    Data caDir;
    mProxyConfig->getConfigValue("CADirectory", caDir);
    if(!caDir.empty())
@@ -754,6 +755,8 @@ ReproRunner::createDialogUsageManager()
 #endif
    }
 
+   mSipAuthDisabled = mProxyConfig->getConfigBool("DisableAuth", false);
+
    if (mDum)
    {
       bool enableCertAuth = mProxyConfig->getConfigBool("EnableCertificateAuthenticator", false);
@@ -770,8 +773,6 @@ ReproRunner::createDialogUsageManager()
          SharedPtr<TlsPeerAuthManager> certAuth(new TlsPeerAuthManager(*mDum, mDum->dumIncomingTarget(), trustedPeers, true, mCommonNameMappings));
          mDum->addIncomingFeature(certAuth);
       }
-
-      mSipAuthDisabled = mProxyConfig->getConfigBool("DisableAuth", false);
 
       Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", "");
       if(mSipAuthDisabled && !wsCookieAuthSharedSecret.empty())
@@ -1165,6 +1166,8 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          // Transport1Interface = 192.168.1.106:5061
          // Transport1Type = TLS
          // Transport1TlsDomain = sipdomain.com
+         // Transport1TlsCertificate = /etc/ssl/crt/sipdomain.com.pem
+         // Transport1TlsPrivateKey = /etc/ssl/private/sipdomain.com.pem
          // Transport1TlsClientVerification = None
          // Transport1RecordRouteUri = sip:sipdomain.com;transport=TLS
          // Transport1RcvBufLen = 2000
@@ -1176,6 +1179,8 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          {
             Data typeSettingKey(settingKeyBase + "Type");
             Data tlsDomainSettingKey(settingKeyBase + "TlsDomain");
+            Data tlsCertificateSettingKey(settingKeyBase + "TlsCertificate");
+            Data tlsPrivateKeySettingKey(settingKeyBase + "TlsPrivateKey");
             Data tlsCVMSettingKey(settingKeyBase + "TlsClientVerification");
             Data recordRouteUriSettingKey(settingKeyBase + "RecordRouteUri");
             Data rcvBufSettingKey(settingKeyBase + "RcvBufLen");
@@ -1210,6 +1215,8 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                   CritLog(<< "Unknown transport type found in " << typeSettingKey << " setting: " << mProxyConfig->getConfigData(typeSettingKey, "UDP"));
                }
                Data tlsDomain = mProxyConfig->getConfigData(tlsDomainSettingKey, "");
+               Data tlsCertificate = mProxyConfig->getConfigData(tlsCertificateSettingKey, "");
+               Data tlsPrivateKey = mProxyConfig->getConfigData(tlsPrivateKeySettingKey, "");
                Data tlsCVMValue = mProxyConfig->getConfigData(tlsCVMSettingKey, "NONE");
                SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None;
                if(isEqualNoCase(tlsCVMValue, "Optional"))
@@ -1224,6 +1231,23 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                {
                   CritLog(<< "Unknown TLS client verification mode found in " << tlsCVMSettingKey << " setting: " << tlsCVMValue);
                }
+
+               // Make sure certificate material available before trying to instantiate Transport
+               if(isSecure(tt))
+               {
+                  Security* security = mSipStack->getSecurity();
+                  assert(security != 0);
+                  // FIXME: see comments about CertificatePath
+                  if(!tlsCertificate.empty())
+                  {
+                     security->addDomainCertPEM(tlsDomain, Data::fromFile(tlsCertificate));
+                  }
+                  if(!tlsPrivateKey.empty())
+                  {
+                     security->addDomainPrivateKeyPEM(tlsDomain, Data::fromFile(tlsPrivateKey));
+                  }
+               }
+
                int rcvBufLen = mProxyConfig->getConfigInt(rcvBufSettingKey, 0);
                Transport *t = mSipStack->addTransport(tt,
                                  port,
@@ -1315,6 +1339,8 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          int wssPort = mProxyConfig->getConfigInt("WSSPort", 443);
          int dtlsPort = mProxyConfig->getConfigInt("DTLSPort", 0);
          Data tlsDomain = mProxyConfig->getConfigData("TLSDomainName", "");
+         Data tlsCertificate = mProxyConfig->getConfigData("TLSCertificate", "");
+         Data tlsPrivateKey = mProxyConfig->getConfigData("TLSPrivateKey", "");
          Data tlsCVMValue = mProxyConfig->getConfigData("TLSClientVerification", "NONE");
          SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None;
          if(isEqualNoCase(tlsCVMValue, "Optional"))
@@ -1328,6 +1354,25 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          else if(!isEqualNoCase(tlsCVMValue, "None"))
          {
             CritLog(<< "Unknown TLS client verification mode found in TLSClientVerification setting: " << tlsCVMValue);
+         }
+
+         // Make sure certificate material available before trying to instantiate Transport
+         if (tlsPort || wssPort || dtlsPort)
+         {
+            Security* security = mSipStack->getSecurity();
+            assert(security != 0);
+            // FIXME: should check that EITHER CertificatePath was set or both of these
+            // are supplied
+            // In any case, it will still give a helpful error when it fails to
+            // create the transport
+            if(!tlsCertificate.empty())
+            {
+               security->addDomainCertPEM(tlsDomain, Data::fromFile(tlsCertificate));
+            }
+            if(!tlsPrivateKey.empty())
+            {
+               security->addDomainPrivateKeyPEM(tlsDomain, Data::fromFile(tlsPrivateKey));
+            }
          }
 
          if (udpPort)

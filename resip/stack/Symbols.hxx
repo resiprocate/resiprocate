@@ -52,6 +52,8 @@ class Symbols
       static const char* TLS;
       static const char* DTLS;
       static const char* SCTP;
+      static const char* WS;
+      static const char* WSS;
       static const char* SRVUDP;
       static const char* SRVTCP;
       static const char* SRVTLS;

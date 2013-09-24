@@ -21,6 +21,7 @@ ReTurnConfig::ReTurnConfig() :
    mTlsTurnPort(5349),
    mAltStunPort(0), // Note:  The default is to disable RFC3489 binding support
    mTurnAddress(asio::ip::address::from_string("0.0.0.0")),
+   mTurnV6Address(asio::ip::address::from_string("::0")),
    mAltStunAddress(asio::ip::address::from_string("0.0.0.0")),
    mAuthenticationRealm("reTurn"),
    mNonceLifetime(3600),            // 1 hour - at least 1 hours is recommended by the RFC
@@ -51,6 +52,7 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
    mTlsTurnPort = getConfigUnsignedShort("TlsTurnPort", mTlsTurnPort);
    mAltStunPort = getConfigUnsignedShort("AltStunPort", mAltStunPort);
    mTurnAddress = asio::ip::address::from_string(getConfigData("TurnAddress", "0.0.0.0").c_str());
+   mTurnV6Address = asio::ip::address::from_string(getConfigData("TurnV6Address", "::0").c_str());
    mAltStunAddress = asio::ip::address::from_string(getConfigData("AltStunAddress", "0.0.0.0").c_str());
    mAuthenticationRealm = getConfigData("AuthenticationRealm", mAuthenticationRealm);
    mNonceLifetime = getConfigUnsignedLong("NonceLifetime", mNonceLifetime);
