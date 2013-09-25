@@ -1214,6 +1214,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                   CritLog(<< "Unknown TLS client verification mode found in " << tlsCVMSettingKey << " setting: " << tlsCVMValue);
                }
 
+#if defined(USE_SSL)
                // Make sure certificate material available before trying to instantiate Transport
                if(isSecure(tt))
                {
@@ -1229,6 +1230,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                      security->addDomainPrivateKeyPEM(tlsDomain, Data::fromFile(tlsPrivateKey));
                   }
                }
+#endif
 
                int rcvBufLen = mProxyConfig->getConfigInt(rcvBufSettingKey, 0);
                Transport *t = mSipStack->addTransport(tt,
@@ -1337,6 +1339,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
             CritLog(<< "Unknown TLS client verification mode found in TLSClientVerification setting: " << tlsCVMValue);
          }
 
+#if defined(USE_SSL)
          // Make sure certificate material available before trying to instantiate Transport
          if (tlsPort || wssPort || dtlsPort)
          {
@@ -1355,6 +1358,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                security->addDomainPrivateKeyPEM(tlsDomain, Data::fromFile(tlsPrivateKey));
             }
          }
+#endif
 
          if (udpPort)
          {
