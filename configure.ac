@@ -217,6 +217,12 @@ AC_ARG_WITH(radius,
  AM_CONDITIONAL(USE_RADIUS_CLIENT, true)],
  [ AC_SUBST(LIBRADIUS_LIBADD, "")])
 
+AM_CONDITIONAL(BUILD_REPRO, false)
+AC_ARG_WITH(repro,
+[  --with-repro            Build repro, requires CAJUN and bdb],
+ [AC_DEFINE_UNQUOTED(BUILD_REPRO, , BUILD_REPRO)
+ AM_CONDITIONAL(BUILD_REPRO, true)], )
+
 AM_CONDITIONAL(BUILD_TFM, false)
 AC_ARG_WITH(tfm,
 [  --with-tfm              Build TFM, links against Netxx and cppunit],
