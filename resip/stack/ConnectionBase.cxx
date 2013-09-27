@@ -782,12 +782,8 @@ ConnectionBase::wsProcessData(int bytesRead)
       WsConnectionBase *wsConnectionBase = dynamic_cast<WsConnectionBase *>(this);
       if (wsConnectionBase)
       {
-         CookieList cookieList;
-         WsCookieContext wsCookieContext;
-         wsConnectionBase->getCookies(cookieList);
-         wsConnectionBase->getWsCookieContext(wsCookieContext);
-         mMessage->setWsCookies(cookieList);
-         mMessage->setWsCookieContext(wsCookieContext);
+         mMessage->setWsCookies(wsConnectionBase->getCookies());
+         mMessage->setWsCookieContext(wsConnectionBase->getWsCookieContext());
       }
 
       Data::size_type msg_len = msg->size();

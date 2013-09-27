@@ -20,8 +20,8 @@ class WsConnectionBase
       virtual ~WsConnectionBase();
 
       void setCookies(CookieList& cookies) { mCookies = cookies; };
-      void getCookies(CookieList& cookies) const { cookies = mCookies; };
-      void getWsCookieContext(WsCookieContext& wsCookieContext) const { wsCookieContext = mWsCookieContext; }
+      const CookieList& getCookies() const { return mCookies; };
+      const WsCookieContext& getWsCookieContext() const { return mWsCookieContext; }
       void setWsCookieContext(const WsCookieContext& wsCookieContext) { mWsCookieContext = wsCookieContext; }
       SharedPtr<WsConnectionValidator> connectionValidator() const;
 
