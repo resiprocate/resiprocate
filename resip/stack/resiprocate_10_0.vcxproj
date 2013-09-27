@@ -340,6 +340,7 @@
     <ClCompile Include="ConnectionManager.cxx" />
     <ClCompile Include="Contents.cxx" />
     <ClCompile Include="ContentsFactoryBase.cxx" />
+    <ClCompile Include="Cookie.cxx" />
     <ClCompile Include="CpimContents.cxx" />
     <ClCompile Include="CSeqCategory.cxx" />
     <ClCompile Include="DataParameter.cxx" />
@@ -422,8 +423,18 @@
     <ClCompile Include="SipFrag.cxx" />
     <ClCompile Include="SipMessage.cxx" />
     <ClCompile Include="SipStack.cxx" />
-    <ClCompile Include="ssl\TlsBaseTransport.cxx" />
-    <ClCompile Include="ssl\WssTransport.cxx" />
+    <ClCompile Include="ssl\TlsBaseTransport.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="ssl\WssConnection.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="ssl\WssTransport.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="StackThread.cxx" />
     <ClCompile Include="StatelessHandler.cxx" />
     <ClCompile Include="StatisticsHandler.cxx" />
@@ -477,6 +488,9 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="WsConnection.cxx" />
+    <ClCompile Include="WsConnectionBase.cxx" />
+    <ClCompile Include="WsCookieContext.cxx" />
     <ClCompile Include="WsDecorator.cxx" />
     <ClCompile Include="WsFrameExtractor.cxx" />
     <ClCompile Include="WsTransport.cxx" />
@@ -502,6 +516,7 @@
     <ClInclude Include="Contents.hxx" />
     <ClInclude Include="ContentsFactory.hxx" />
     <ClInclude Include="ContentsFactoryBase.hxx" />
+    <ClInclude Include="Cookie.hxx" />
     <ClInclude Include="CpimContents.hxx" />
     <ClInclude Include="CSeqCategory.hxx" />
     <ClInclude Include="DataParameter.hxx" />
@@ -585,6 +600,7 @@
     <ClInclude Include="SipMessage.hxx" />
     <ClInclude Include="SipStack.hxx" />
     <ClInclude Include="ssl\TlsBaseTransport.hxx" />
+    <ClInclude Include="ssl\WssConnection.hxx" />
     <ClInclude Include="ssl\WssTransport.hxx" />
     <ClInclude Include="StackThread.hxx" />
     <ClInclude Include="StartLine.hxx" />
@@ -634,6 +650,10 @@
     <ClInclude Include="Via.hxx" />
     <ClInclude Include="WarningCategory.hxx" />
     <ClInclude Include="ssl\WinSecurity.hxx" />
+    <ClInclude Include="WsConnection.hxx" />
+    <ClInclude Include="WsConnectionBase.hxx" />
+    <ClInclude Include="WsConnectionValidator.hxx" />
+    <ClInclude Include="WsCookieContext.hxx" />
     <ClInclude Include="WsDecorator.hxx" />
     <ClInclude Include="WsFrameExtractor.hxx" />
     <ClInclude Include="WsTransport.hxx" />

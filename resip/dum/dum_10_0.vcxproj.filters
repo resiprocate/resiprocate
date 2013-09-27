@@ -249,6 +249,9 @@
     <ClCompile Include="TlsPeerAuthManager.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="WsCookieAuthManager.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppDialog.hxx">
@@ -540,6 +543,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TlsPeerAuthManager.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WsCookieAuthManager.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
