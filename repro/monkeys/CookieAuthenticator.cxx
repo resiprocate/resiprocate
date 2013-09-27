@@ -82,7 +82,7 @@ CookieAuthenticator::process(repro::RequestContext &rc)
       const WsCookieContext &wsCookieContext = sipMessage->getWsCookieContext();
       if (proxy.isMyDomain(sipMessage->header(h_From).uri().host()))
       {
-         if(authorizedForThisIdentity(wsCookieContext, sipMessage->header(h_From).uri(), sipMessage->header(h_To).uri()))
+         if(authorizedForThisIdentity(sipMessage->header(h_RequestLine).method(), wsCookieContext, sipMessage->header(h_From).uri(), sipMessage->header(h_To).uri()))
          {
             return Continue;
          }
@@ -111,7 +111,8 @@ CookieAuthenticator::cookieUriMatch(const resip::Uri &first, const resip::Uri &s
 }
 
 bool
-CookieAuthenticator::authorizedForThisIdentity(const WsCookieContext& wsCookieContext,
+CookieAuthenticator::authorizedForThisIdentity(const MethodTypes method,
+                                                const WsCookieContext& wsCookieContext,
                                                 resip::Uri &fromUri,
                                                 resip::Uri &toUri)
 {
@@ -126,7 +127,9 @@ CookieAuthenticator::authorizedForThisIdentity(const WsCookieContext& wsCookieCo
    if(cookieUriMatch(wsFromUri, fromUri))
    {
       DebugLog(<< "Matched cookie source URI field" << wsFromUri << " against request From header field URI " << fromUri);
-      if(isEqualNoCase(fromUri.user(), toUri.user()) && isEqualNoCase(fromUri.host(), toUri.host()))
+      // When registering, "From" URI == "To" URI, so we can ignore the
+      // "To" URI restriction from the cookie when processing REGISTER
+      if(method == REGISTER && isEqualNoCase(fromUri.user(), toUri.user()) && isEqualNoCase(fromUri.host(), toUri.host()))
       {
          return true;
       }

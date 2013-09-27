@@ -23,7 +23,7 @@ namespace repro
 
     private:
       bool cookieUriMatch(const resip::Uri &first, const resip::Uri &second);
-      bool authorizedForThisIdentity(const WsCookieContext& wsCookieContext, resip::Uri &fromUri, resip::Uri &toUri);
+      bool authorizedForThisIdentity(const MethodTypes method, const WsCookieContext& wsCookieContext, resip::Uri &fromUri, resip::Uri &toUri);
   };
 
 }
