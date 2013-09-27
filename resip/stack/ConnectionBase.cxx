@@ -627,6 +627,10 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
             if(!wsConnectionValidator->validateConnection(wsCookieContext))
             {
                ErrLog(<<"WebSocket cookie validation failed, dropping connection");
+               // FIXME: should send back a HTTP error code:
+               //   400 if the cookie was not in the right syntax
+               //   403 if the cookie was well formed but rejected
+               //       due to expiry or a bad HMAC
                delete mMessage;
                mMessage = 0;
                mBufferPos = 0;
