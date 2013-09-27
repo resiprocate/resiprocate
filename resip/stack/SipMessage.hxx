@@ -521,10 +521,10 @@ class SipMessage : public TransactionMessage
       const std::list<Data>& getTlsPeerNames() const { return mTlsPeerNames; }
       void setTlsPeerNames(const std::list<Data>& tlsPeerNames) { mTlsPeerNames = tlsPeerNames; }
 
-      const CookieList getWsCookies() const { return mWsCookies; }
+      const CookieList& getWsCookies() const { return mWsCookies; }
       void setWsCookies(const CookieList& wsCookies) { mWsCookies = wsCookies; }
 
-      const WsCookieContext getWsCookieContext() const { return mWsCookieContext; }
+      const WsCookieContext& getWsCookieContext() const { return mWsCookieContext; }
       void setWsCookieContext(const WsCookieContext& wsCookieContext) { mWsCookieContext = wsCookieContext; }
 
       Data getCanonicalIdentityString() const;
