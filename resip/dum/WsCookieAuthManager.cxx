@@ -6,7 +6,9 @@
 #include "resip/dum/TargetCommand.hxx"
 #include "resip/dum/WsCookieAuthManager.hxx"
 #include "resip/stack/WsTransport.hxx"
+#ifdef USE_SSL
 #include "resip/stack/ssl/WssTransport.hxx"
+#endif
 #include "resip/stack/Helper.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -101,8 +103,11 @@ WsCookieAuthManager::Result
 WsCookieAuthManager::handle(SipMessage* sipMessage)
 {
    // Only check message coming over WebSockets
-   if(!dynamic_cast<const WsTransport*>(sipMessage->getReceivedTransport()) &&
-      !dynamic_cast<const WssTransport*>(sipMessage->getReceivedTransport()))
+   if(!dynamic_cast<const WsTransport*>(sipMessage->getReceivedTransport())
+#ifdef USE_SSL
+       && !dynamic_cast<const WssTransport*>(sipMessage->getReceivedTransport())
+#endif
+       )
    {
       return Skipped;
    }

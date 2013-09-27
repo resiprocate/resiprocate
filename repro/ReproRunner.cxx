@@ -44,6 +44,8 @@
 #include "repro/RegSyncServerThread.hxx"
 #include "repro/CommandServer.hxx"
 #include "repro/CommandServerThread.hxx"
+#include "repro/BasicWsConnectionValidator.hxx"
+#include "repro/monkeys/CookieAuthenticator.hxx"
 #include "repro/monkeys/IsTrustedNode.hxx"
 #include "repro/monkeys/AmIResponsible.hxx"
 #include "repro/monkeys/DigestAuthenticator.hxx"
@@ -63,8 +65,6 @@
 #if defined(USE_SSL)
 #include "repro/stateAgents/CertServer.hxx"
 #include "resip/stack/ssl/Security.hxx"
-#include "repro/BasicWsConnectionValidator.hxx"
-#include "repro/monkeys/CookieAuthenticator.hxx"
 #endif
 
 #if defined(USE_MYSQL)
@@ -1232,6 +1232,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                   CritLog(<< "Unknown TLS client verification mode found in " << tlsCVMSettingKey << " setting: " << tlsCVMValue);
                }
 
+#ifdef USE_SSL
                // Make sure certificate material available before trying to instantiate Transport
                if(isSecure(tt))
                {
@@ -1247,6 +1248,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                      security->addDomainPrivateKeyPEM(tlsDomain, Data::fromFile(tlsPrivateKey));
                   }
                }
+#endif
 
                int rcvBufLen = mProxyConfig->getConfigInt(rcvBufSettingKey, 0);
                Transport *t = mSipStack->addTransport(tt,
@@ -1356,6 +1358,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
             CritLog(<< "Unknown TLS client verification mode found in TLSClientVerification setting: " << tlsCVMValue);
          }
 
+#ifdef USE_SSL
          // Make sure certificate material available before trying to instantiate Transport
          if (tlsPort || wssPort || dtlsPort)
          {
@@ -1374,6 +1377,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                security->addDomainPrivateKeyPEM(tlsDomain, Data::fromFile(tlsPrivateKey));
             }
          }
+#endif
 
          if (udpPort)
          {
