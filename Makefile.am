@@ -5,7 +5,9 @@ ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = rutil
 SUBDIRS += resip
+if BUILD_REPRO
 SUBDIRS += repro
+endif
 if BUILD_TFM
 SUBDIRS += tfm
 endif

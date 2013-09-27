@@ -1,3 +1,7 @@
+2.0.3 (2013-09-26)
+* fix for UTF-8 support on Linux builds
+* add spec file for RPM packaging
+
 2.0.2 (12/04/2011)
 * Fixed exception text construction bug (pointer + offset, instead of std::string + std::string)
 * Fixed crash in UnknownElement::operator=

@@ -114,6 +114,19 @@ isSecure(TransportType type)
    }
 }
 
+bool
+isWebSocket(TransportType type)
+{
+   switch(type)
+   {
+      case WS:
+      case WSS:
+         return true;
+      default:
+         return false;
+   }
+}
+
 }
 
 /* ====================================================================
