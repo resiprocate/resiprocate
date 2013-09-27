@@ -416,6 +416,9 @@
     <ClCompile Include="Cookie.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="WsBaseTransport.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Aor.hxx">
@@ -902,6 +905,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Cookie.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WsBaseTransport.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

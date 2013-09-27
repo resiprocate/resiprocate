@@ -488,6 +488,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="WsBaseTransport.cxx" />
     <ClCompile Include="WsConnection.cxx" />
     <ClCompile Include="WsConnectionBase.cxx" />
     <ClCompile Include="WsCookieContext.cxx" />
@@ -650,6 +651,7 @@
     <ClInclude Include="Via.hxx" />
     <ClInclude Include="WarningCategory.hxx" />
     <ClInclude Include="ssl\WinSecurity.hxx" />
+    <ClInclude Include="WsBaseTransport.hxx" />
     <ClInclude Include="WsConnection.hxx" />
     <ClInclude Include="WsConnectionBase.hxx" />
     <ClInclude Include="WsConnectionValidator.hxx" />
