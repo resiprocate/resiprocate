@@ -33,6 +33,9 @@ class WsCookieAuthManager : public DumFeature
       // can return Authorized, Rejected, Skipped
       virtual Result handle(SipMessage* sipMsg);
 
+      /// compares URI user and host, allows wildcards in first URI
+      bool cookieUriMatch(const resip::Uri &first, const resip::Uri &second);
+
       /// should return true if the passed in user is authorized for the provided uri
       bool authorizedForThisIdentity(const MethodTypes method, const WsCookieContext &wsCookieContext, const resip::Uri &fromUri, const resip::Uri &toUri);
 

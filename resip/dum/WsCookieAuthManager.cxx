@@ -53,6 +53,15 @@ WsCookieAuthManager::process(Message* msg)
 }
 
 bool
+WsCookieAuthManager::cookieUriMatch(const resip::Uri &first, const resip::Uri &second)
+{
+   return(
+      (isEqualNoCase(first.user(), second.user()) || first.user() == "*") &&
+      (isEqualNoCase(first.host(), second.host()) || first.host() == "*")
+         );
+}
+
+bool
 WsCookieAuthManager::authorizedForThisIdentity(
    const MethodTypes method,
    const WsCookieContext &wsCookieContext,
@@ -67,7 +76,7 @@ WsCookieAuthManager::authorizedForThisIdentity(
 
    Uri wsFromUri = wsCookieContext.getWsFromUri();
    Uri wsDestUri = wsCookieContext.getWsDestUri();
-   if(isEqualNoCase(wsFromUri.user(), fromUri.user()) && isEqualNoCase(wsFromUri.host(), fromUri.host()))
+   if(cookieUriMatch(wsFromUri, fromUri))
    {
       DebugLog(<< "Matched cookie source URI field" << wsFromUri << " against request From header field URI " << fromUri);
       // When registering, "From" URI == "To" URI, so we can ignore the
@@ -76,7 +85,7 @@ WsCookieAuthManager::authorizedForThisIdentity(
       {
          return true;
       }
-      if(isEqualNoCase(wsDestUri.user(), toUri.user()) && isEqualNoCase(wsDestUri.host(), toUri.host()))
+      if(cookieUriMatch(wsDestUri, toUri))
       {
           DebugLog(<< "Matched cookie destination URI field" << wsDestUri << " against request To header field URI " << toUri);
           return true;

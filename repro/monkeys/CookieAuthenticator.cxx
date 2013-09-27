@@ -102,6 +102,15 @@ CookieAuthenticator::process(repro::RequestContext &rc)
 }
 
 bool
+CookieAuthenticator::cookieUriMatch(const resip::Uri &first, const resip::Uri &second)
+{
+   return(
+      (isEqualNoCase(first.user(), second.user()) || first.user() == "*") &&
+      (isEqualNoCase(first.host(), second.host()) || first.host() == "*")
+         );
+}
+
+bool
 CookieAuthenticator::authorizedForThisIdentity(const WsCookieContext& wsCookieContext,
                                                 resip::Uri &fromUri,
                                                 resip::Uri &toUri)
@@ -114,14 +123,14 @@ CookieAuthenticator::authorizedForThisIdentity(const WsCookieContext& wsCookieCo
 
    Uri wsFromUri = wsCookieContext.getWsFromUri();
    Uri wsDestUri = wsCookieContext.getWsDestUri();
-   if(isEqualNoCase(wsFromUri.user(), fromUri.user()) && isEqualNoCase(wsFromUri.host(), fromUri.host()))
+   if(cookieUriMatch(wsFromUri, fromUri))
    {
       DebugLog(<< "Matched cookie source URI field" << wsFromUri << " against request From header field URI " << fromUri);
       if(isEqualNoCase(fromUri.user(), toUri.user()) && isEqualNoCase(fromUri.host(), toUri.host()))
       {
          return true;
       }
-      if(isEqualNoCase(wsDestUri.user(), toUri.user()) && isEqualNoCase(wsDestUri.host(), toUri.host()))
+      if(cookieUriMatch(wsDestUri, toUri))
       {
          DebugLog(<< "Matched cookie destination URI field" << wsDestUri << " against request To header field URI " << toUri);
          return true;

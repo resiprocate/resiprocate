@@ -22,6 +22,7 @@ namespace repro
       virtual void dump(EncodeStream &os) const;
 
     private:
+      bool cookieUriMatch(const resip::Uri &first, const resip::Uri &second);
       bool authorizedForThisIdentity(const WsCookieContext& wsCookieContext, resip::Uri &fromUri, resip::Uri &toUri);
   };
 
