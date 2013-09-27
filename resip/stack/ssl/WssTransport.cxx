@@ -34,7 +34,7 @@ WssTransport::WssTransport(Fifo<TransactionMessage>& fifo,
                            bool useEmailAsSIP,
                            SharedPtr<WsConnectionValidator> connectionValidator):
    TlsBaseTransport(fifo, portNum, version, interfaceObj, security, sipDomain, sslType, WSS, socketFunc, compression, transportFlags, cvm, useEmailAsSIP),
-   mConnectionValidator(connectionValidator)
+   WsBaseTransport(connectionValidator)
 {
    InfoLog (<< "Creating WSS transport for domain " 
             << sipDomain << " interface=" << interfaceObj 

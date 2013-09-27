@@ -1,6 +1,7 @@
 #if !defined(RESIP_WSTRANSPORT_HXX)
 #define RESIP_WSTRANSPORT_HXX
 
+#include "resip/stack/WsBaseTransport.hxx"
 #include "resip/stack/WsConnectionValidator.hxx"
 #include "resip/stack/TcpBaseTransport.hxx"
 #include "resip/stack/Compression.hxx"
@@ -13,7 +14,7 @@ class Connection;
 class Message;
 class Security;
 
-class WsTransport : public TcpBaseTransport
+class WsTransport : public TcpBaseTransport, public WsBaseTransport
 {
    public:
       RESIP_HeapCount(WsTransport);
@@ -29,9 +30,6 @@ class WsTransport : public TcpBaseTransport
 
    protected:
       Connection* createConnection(const Tuple& who, Socket fd, bool server=false);
-
-   private:
-      SharedPtr<WsConnectionValidator> mConnectionValidator;
 };
 
 }

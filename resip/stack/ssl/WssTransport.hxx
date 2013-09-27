@@ -5,6 +5,7 @@
   #include "config.h"
 #endif
 
+#include "resip/stack/WsBaseTransport.hxx"
 #include "resip/stack/WsConnectionValidator.hxx"
 #include "resip/stack/ssl/TlsBaseTransport.hxx"
 #include "resip/stack/TcpBaseTransport.hxx"
@@ -22,7 +23,7 @@ class Connection;
 class Message;
 class Security;
 
-class WssTransport : public TlsBaseTransport
+class WssTransport : public TlsBaseTransport, public WsBaseTransport
 {
    public:
       RESIP_HeapCount(WssTransport);
@@ -46,9 +47,6 @@ class WssTransport : public TlsBaseTransport
 
    protected:
       Connection* createConnection(const Tuple& who, Socket fd, bool server=false);
-
-   private:
-      SharedPtr<WsConnectionValidator> mConnectionValidator;
 };
 
 }
