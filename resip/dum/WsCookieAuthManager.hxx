@@ -34,7 +34,7 @@ class WsCookieAuthManager : public DumFeature
       virtual Result handle(SipMessage* sipMsg);
 
       /// should return true if the passed in user is authorized for the provided uri
-      bool authorizedForThisIdentity(const WsCookieContext &wsCookieContext, resip::Uri &fromUri, resip::Uri &toUri);
+      bool authorizedForThisIdentity(const MethodTypes method, const WsCookieContext &wsCookieContext, const resip::Uri &fromUri, const resip::Uri &toUri);
 
       /// should return true if the request must be challenged
       /// The default is to challenge all requests - override this class to change this beviour
