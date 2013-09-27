@@ -124,7 +124,7 @@ WsCookieAuthManager::handle(SipMessage* sipMessage)
             return Authorized;
          }
          SharedPtr<SipMessage> response(new SipMessage);
-         Helper::makeResponse(*response, *sipMessage, 403, "Authorization failed");
+         Helper::makeResponse(*response, *sipMessage, 403, "Cookie-based authorization failed");
          mDum.send(response);
          return Rejected;
       }
@@ -136,7 +136,7 @@ WsCookieAuthManager::handle(SipMessage* sipMessage)
    else
    {
       SharedPtr<SipMessage> response(new SipMessage);
-      Helper::makeResponse(*response, *sipMessage, 403, "Authorization failed");
+      Helper::makeResponse(*response, *sipMessage, 403, "Cookie-based authorization failed");
       mDum.send(response);
       return Rejected;
    }
