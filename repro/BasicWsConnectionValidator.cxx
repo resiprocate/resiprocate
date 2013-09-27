@@ -34,7 +34,7 @@ bool BasicWsConnectionValidator::validateConnection(const resip::WsCookieContext
    unsigned char hmac[20];
    computeHmac((char*)hmac, message.data(), message.size(), mWsCookieAuthSharedSecret.data(), mWsCookieAuthSharedSecret.size());
 
-   if(memcmp(wsCookieContext.getWsSessionMAC().data(), Data(hmac, 20).hex().data(), 20) != 0)
+   if(strncasecmp(wsCookieContext.getWsSessionMAC().data(), Data(hmac, 20).hex().data(), 20) != 0)
    {
       WarningLog(<< "Cookie MAC validation failed");
       return false;
