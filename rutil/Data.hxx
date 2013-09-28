@@ -935,6 +935,8 @@ class Data
       std::ostream& escapeToStream(std::ostream& str, 
                                    const std::bitset<256>& shouldEscape) const;
 
+      static Data fromFile(const Data& filename);
+
    private:
       /**
         @deprecated use Data(ShareEnum ...)
