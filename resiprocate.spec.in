@@ -117,7 +117,7 @@ such as the repro SIP proxy.
 
 %build
 export LDFLAGS="${LDFLAGS} -L%{_libdir}/mysql -L%{_libdir}/libdb4"
-CXXFLAGS="%{optflags} -I%{_includedir}/libdb4" %configure --with-c-ares --with-ssl --with-mysql --with-radius --with-apps --enable-ipv6
+CXXFLAGS="%{optflags} -I%{_includedir}/libdb4" %configure --with-c-ares --with-ssl --with-mysql --with-radius --with-repro --with-apps --enable-ipv6
 sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
 sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 make %{?_smp_mflags}
