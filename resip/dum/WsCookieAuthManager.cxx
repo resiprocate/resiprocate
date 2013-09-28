@@ -99,8 +99,7 @@ WsCookieAuthManager::Result
 WsCookieAuthManager::handle(SipMessage* sipMessage)
 {
    // Only check message coming over WebSockets
-    if(sipMessage->getReceivedTransport()->transport() != WS &&
-       sipMessage->getReceivedTransport()->transport() != WSS)
+   if(!isWebSocket(sipMessage->getReceivedTransport()->transport()))
    {
       return Skipped;
    }

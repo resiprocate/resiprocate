@@ -155,8 +155,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
       Uri& requestUri = sip->header(h_RequestLine).uri();
       if(requestUri.exists(resip::p_wsSrcIp) &&
             requestUri.exists(resip::p_wsSrcPort) &&
-            sip->getSource().getType() != resip::WS &&
-            sip->getSource().getType() != resip::WSS)
+            !isWebSocket(sip->getSource().getType()))
       {
          requestUri.host() = requestUri.param(resip::p_wsSrcIp);
          requestUri.remove(resip::p_wsSrcIp);

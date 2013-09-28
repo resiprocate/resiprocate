@@ -55,8 +55,7 @@ CookieAuthenticator::process(repro::RequestContext &rc)
    if (sipMessage)
    {
       // Only check message coming over WebSockets
-      if(sipMessage->getReceivedTransport()->transport() != WS &&
-         sipMessage->getReceivedTransport()->transport() != WSS)
+      if(!isWebSocket(sipMessage->getReceivedTransport()->transport()))
       {
          return Continue;
       }
