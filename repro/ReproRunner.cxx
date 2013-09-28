@@ -415,14 +415,15 @@ ReproRunner::createSipStack()
    Security* security = 0;
    Compression* compression = 0;
 #ifdef USE_SSL
-#ifdef WIN32
-   Data certPath("C:\\sipCerts");
-#else 
-   Data certPath(getenv("HOME"));
-   certPath += "/.sipCerts";
-#endif
-   mProxyConfig->getConfigValue("CertificatePath", certPath);
-   security = new Security(certPath);
+   Data certPath = mProxyConfig->getConfigData("CertificatePath", "");
+   if(certPath.empty())
+   {
+      security = new Security();
+   }
+   else
+   {
+      security = new Security(certPath);
+   }
    Data caDir;
    mProxyConfig->getConfigValue("CADirectory", caDir);
    if(!caDir.empty())
