@@ -1326,7 +1326,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
 
 #if defined(USE_SSL)
          // Make sure certificate material available before trying to instantiate Transport
-         if (tlsPort || wssPort || dtlsPort)
+         if (tlsPort || dtlsPort)
          {
             Security* security = mSipStack->getSecurity();
             assert(security != 0);
