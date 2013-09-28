@@ -8,6 +8,7 @@ Source: https://www.resiprocate.org/files/pub/reSIProcate/releases/%name-%versio
 BuildRequires: libtool automake autoconf
 BuildRequires: asio-devel
 BuildRequires: boost-devel
+BuildRequires: cajun-jsonapi-devel
 BuildRequires: c-ares-devel
 BuildRequires: cppunit-devel
 BuildRequires: gperf
