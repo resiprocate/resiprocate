@@ -221,6 +221,12 @@ AC_ARG_WITH(b2bua,
  [AC_DEFINE_UNQUOTED(BUILD_B2BUA, , BUILD_B2BUA)
  AM_CONDITIONAL(BUILD_B2BUA, true)], )
 
+AM_CONDITIONAL(BUILD_REND, false)
+AC_ARG_WITH(rend,
+[  --with-rend             Build rend],
+ [AC_DEFINE_UNQUOTED(BUILD_REND, , BUILD_REND)
+ AM_CONDITIONAL(BUILD_REND, true)], )
+
 AM_CONDITIONAL(BUILD_TFM, false)
 AC_ARG_WITH(tfm,
 [  --with-tfm              Build TFM, links against Netxx and cppunit],
