@@ -89,6 +89,23 @@ isReliable(TransportType type)
    }
 }
 
+bool
+isSecure(TransportType type)
+{
+   switch(type)
+   {
+      case TLS:
+      case DTLS:
+         return true;
+      case UDP:
+      case TCP:
+      case DCCP:
+      case SCTP:
+      default:
+         return false;
+   }
+}
+
 }
 
 /* ====================================================================
