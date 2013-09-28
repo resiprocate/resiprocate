@@ -234,6 +234,7 @@ defineHeader(SecWebSocketKey2, "Sec-WebSocket-Key2", StringCategory, "draft-hixi
 defineHeader(Origin, "Origin", StringCategory, "draft-hixie- thewebsocketprotocol-76");
 defineHeader(Host, "Host", StringCategory, "draft-hixie- thewebsocketprotocol-76");
 defineHeader(SecWebSocketAccept, "Sec-WebSocket-Accept", StringCategory, "RFC 6455");
+defineMultiHeader(Cookie, "Cookie", StringCategory, "RFC 6265");
 defineHeader(Server, "Server", StringCategory, "RFC 3261");
 defineHeader(Subject, "Subject", StringCategory, "RFC 3261");
 defineHeader(UserAgent, "User-Agent", StringCategory, "RFC 3261");

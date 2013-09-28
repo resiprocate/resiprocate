@@ -4,9 +4,13 @@
 
 #include "rutil/Logger.hxx"
 #include "resip/stack/ConnectionBase.hxx"
+#include "resip/stack/WsConnectionBase.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/WsDecorator.hxx"
+#include "resip/stack/Cookie.hxx"
+#include "resip/stack/WsCookieContext.hxx"
 #include "rutil/WinLeakCheck.hxx"
+#include "rutil/SharedPtr.hxx"
 
 #ifdef USE_SSL
 #include "resip/stack/ssl/Security.hxx"
@@ -533,6 +537,49 @@ ConnectionBase::preparseNewBytes(int bytesRead)
    return true;
 }
 
+void
+ConnectionBase::wsParseCookies(CookieList& cookieList, const SipMessage* message)
+{
+   Data name;
+   Data value;
+   StringCategories::const_iterator it = message->header(h_Cookies).begin();
+   for (; it != message->header(h_Cookies).end(); ++it)
+   {
+      ParseBuffer pb((*it).value());
+      while(!pb.eof())
+      {
+         const char* anchor =  pb.skipWhitespace();
+
+         pb.skipToChar(Symbols::EQUALS[0]);
+         pb.data(name, anchor);
+
+         anchor = pb.skipChar(Symbols::EQUALS[0]);
+         if(*(pb.position()) == Symbols::DOUBLE_QUOTE[0])
+         {
+            anchor = pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
+            pb.skipToChar(Symbols::DOUBLE_QUOTE[0]);
+            pb.data(value, anchor);
+            pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
+         }
+         else
+         {
+            pb.skipToOneOf(Symbols::SEMI_COLON, ParseBuffer::Whitespace);
+            pb.data(value, anchor);
+         }
+
+         cookieList.push_back(Cookie(name, value));
+         DebugLog(<< "Cookie: " << Cookie(name, value));
+
+         if(!pb.eof() && *(pb.position()) == Symbols::SEMI_COLON[0])
+         {
+            pb.skipChar(Symbols::SEMI_COLON[0]);
+         }
+
+         pb.skipWhitespace();
+      }
+   }
+}
+
 /*
  * Returns true if handshake complete, false if more bytes needed
  * Sets dropConnection = true if an error occurs
@@ -562,9 +609,40 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
 
    try
    {
+      WsConnectionBase* wsConnectionBase = dynamic_cast<WsConnectionBase*>(this);
+      CookieList cookieList;
+      WsCookieContext wsCookieContext;
+      if(wsConnectionBase)
+      {
+         if (mMessage->exists(h_Cookies))
+         {
+            wsParseCookies(cookieList, mMessage);
+            wsCookieContext = WsCookieContext(cookieList);
+            wsConnectionBase->setCookies(cookieList);
+            wsConnectionBase->setWsCookieContext(wsCookieContext);
+         }
+         SharedPtr<WsConnectionValidator> wsConnectionValidator = wsConnectionBase->connectionValidator();
+         if(wsConnectionValidator && !wsConnectionValidator->validateConnection(wsCookieContext))
+         {
+            ErrLog(<<"WebSocket cookie validation failed, dropping connection");
+            // FIXME: should send back a HTTP error code:
+            //   400 if the cookie was not in the right syntax
+            //   403 if the cookie was well formed but rejected
+            //       due to expiry or a bad HMAC
+            delete mMessage;
+            mMessage = 0;
+            mBufferPos = 0;
+            dropConnection = true;
+            return false;
+         }
+      }
+
       std::auto_ptr<Data> wsResponsePtr = makeWsHandshakeResponse();
+
       if (wsResponsePtr.get())
       {
+         DebugLog (<< "WebSocket upgrade accepted, cookie count = " << cookieList.size());
+
          mOutstandingSends.push_back(new SendData(
                   who(),
                   *wsResponsePtr.get(),
@@ -700,6 +778,13 @@ ConnectionBase::wsProcessData(int bytesRead)
          mMessage->setTlsPeerNames(peerNameList);
       }
 #endif
+
+      WsConnectionBase *wsConnectionBase = dynamic_cast<WsConnectionBase *>(this);
+      if (wsConnectionBase)
+      {
+         mMessage->setWsCookies(wsConnectionBase->getCookies());
+         mMessage->setWsCookieContext(wsConnectionBase->getWsCookieContext());
+      }
 
       Data::size_type msg_len = msg->size();
       // cast permitted, as it is borrowed:

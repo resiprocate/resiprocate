@@ -24,6 +24,7 @@
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/DumThread.hxx"
 #include "resip/dum/TlsPeerAuthManager.hxx"
+#include "resip/dum/WsCookieAuthManager.hxx"
 
 #include "repro/AsyncProcessorWorker.hxx"
 #include "repro/ReproRunner.hxx"
@@ -43,6 +44,8 @@
 #include "repro/RegSyncServerThread.hxx"
 #include "repro/CommandServer.hxx"
 #include "repro/CommandServerThread.hxx"
+#include "repro/BasicWsConnectionValidator.hxx"
+#include "repro/monkeys/CookieAuthenticator.hxx"
 #include "repro/monkeys/IsTrustedNode.hxx"
 #include "repro/monkeys/AmIResponsible.hxx"
 #include "repro/monkeys/DigestAuthenticator.hxx"
@@ -771,6 +774,13 @@ ReproRunner::createDialogUsageManager()
          mDum->addIncomingFeature(certAuth);
       }
 
+      Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", "");
+      if(mSipAuthDisabled && !wsCookieAuthSharedSecret.empty())
+      {
+         SharedPtr<WsCookieAuthManager> cookieAuth(new WsCookieAuthManager(*mDum, mDum->dumIncomingTarget()));
+         mDum->addIncomingFeature(cookieAuth);
+      }
+
       // If Authentication is enabled, then configure DUM to authenticate requests
       if (!mSipAuthDisabled)
       {
@@ -1135,6 +1145,14 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
    assert(mSipStack);
    allTransportsSpecifyRecordRoute=false;
    bool useEmailAsSIP = mProxyConfig->getConfigBool("TLSUseEmailAsSIP", false);
+
+   Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", "");
+   SharedPtr<BasicWsConnectionValidator> basicWsConnectionValidator; // NULL
+   if(!wsCookieAuthSharedSecret.empty())
+   {
+      basicWsConnectionValidator.reset(new BasicWsConnectionValidator(wsCookieAuthSharedSecret));
+   }
+
    try
    {
       // Check if advanced transport settings are provided
@@ -1214,7 +1232,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                   CritLog(<< "Unknown TLS client verification mode found in " << tlsCVMSettingKey << " setting: " << tlsCVMValue);
                }
 
-#if defined(USE_SSL)
+#ifdef USE_SSL
                // Make sure certificate material available before trying to instantiate Transport
                if(isSecure(tt))
                {
@@ -1243,7 +1261,8 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                                  SecurityTypes::TLSv1, // sslType
                                  0,            // transport flags
                                  cvm,          // tls client verification mode
-                                 useEmailAsSIP);
+                                 useEmailAsSIP,
+                                 basicWsConnectionValidator);
 
                if (t && rcvBufLen>0 )
                {
@@ -1339,7 +1358,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
             CritLog(<< "Unknown TLS client verification mode found in TLSClientVerification setting: " << tlsCVMValue);
          }
 
-#if defined(USE_SSL)
+#ifdef USE_SSL
          // Make sure certificate material available before trying to instantiate Transport
          if (tlsPort || wssPort || dtlsPort)
          {
@@ -1377,13 +1396,13 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          }
          if (wsPort)
          {
-            if (mUseV4) mSipStack->addTransport(WS, wsPort, V4, StunEnabled);
-            if (mUseV6) mSipStack->addTransport(WS, wsPort, V6, StunEnabled);
+            if (mUseV4) mSipStack->addTransport(WS, wsPort, V4, StunEnabled,  Data::Empty, Data::Empty, Data::Empty, SecurityTypes::NoSSL, 0, SecurityTypes::None, false, basicWsConnectionValidator);
+            if (mUseV6) mSipStack->addTransport(WS, wsPort, V6, StunEnabled,  Data::Empty, Data::Empty, Data::Empty, SecurityTypes::NoSSL, 0, SecurityTypes::None, false, basicWsConnectionValidator);
          }
          if (wssPort)
          {
-            if (mUseV4) mSipStack->addTransport(WSS, wssPort, V4, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, cvm, useEmailAsSIP);
-            if (mUseV6) mSipStack->addTransport(WSS, wssPort, V6, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, cvm, useEmailAsSIP);
+            if (mUseV4) mSipStack->addTransport(WSS, wssPort, V4, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, cvm, useEmailAsSIP, basicWsConnectionValidator);
+            if (mUseV6) mSipStack->addTransport(WSS, wssPort, V6, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, cvm, useEmailAsSIP, basicWsConnectionValidator);
          }
          if (dtlsPort)
          {
@@ -1491,6 +1510,12 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
       std::set<Data> trustedPeers;
       loadCommonNameMappings();
       addProcessor(chain, std::auto_ptr<Processor>(new CertificateAuthenticator(*mProxyConfig, mSipStack, trustedPeers, true, mCommonNameMappings)));
+   }
+
+   Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", "");
+   if(mSipAuthDisabled && !wsCookieAuthSharedSecret.empty())
+   {
+      addProcessor(chain, std::auto_ptr<Processor>(new CookieAuthenticator(wsCookieAuthSharedSecret, mSipStack)));
    }
 
    // Add digest authenticator monkey - if required

@@ -401,6 +401,24 @@
     <ClCompile Include="WsFrameExtractor.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="WsConnection.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WsConnectionBase.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WsCookieContext.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ssl\WssConnection.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Cookie.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WsBaseTransport.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Aor.hxx">
@@ -869,6 +887,27 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="WsFrameExtractor.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WsConnection.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WsConnectionBase.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WsConnectionValidator.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WsCookieContext.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ssl\WssConnection.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Cookie.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WsBaseTransport.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

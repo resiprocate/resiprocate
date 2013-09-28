@@ -2,55 +2,83 @@
 #include "config.h"
 #endif
 
-#include <memory>
-#include "rutil/compat.hxx"
-#include "rutil/Data.hxx"
-#include "rutil/Socket.hxx"
-#include "rutil/Logger.hxx"
-#include "resip/stack/WsTransport.hxx"
-#include "resip/stack/WsConnection.hxx"
-#include "rutil/WinLeakCheck.hxx"
+#include "resip/stack/Cookie.hxx"
+#include "resip/stack/StringCategory.hxx"
+#include "resip/stack/Symbols.hxx"
+#include "rutil/ParseBuffer.hxx"
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
-
-using namespace std;
 using namespace resip;
 
-WsTransport::WsTransport(Fifo<TransactionMessage>& fifo, int portNum,
-      IpVersion version, const Data& pinterface,
-      AfterSocketCreationFuncPtr socketFunc,
-      Compression &compression,
-      unsigned transportFlags,
-      SharedPtr<WsConnectionValidator> connectionValidator)
-: TcpBaseTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags),
-  WsBaseTransport(connectionValidator)
+//====================
+// Cookie
+//====================
+Cookie::Cookie() :
+   mName(),
+   mValue()
+{}
+
+Cookie::Cookie(const Data& name, const Data& value) :
+     mName(name.urlDecoded()),
+     mValue(value.urlDecoded())
+{}
+
+Cookie&
+Cookie::operator=(const Cookie& rhs)
 {
-   mTuple.setType(WS);
-
-   init();
-
-   InfoLog (<< "Creating WS transport host=" << pinterface
-         << " port=" << mTuple.getPort()
-         << " ipv4=" << bool(version==V4) );
-
-   mTxFifo.setDescription("WsTransport::mTxFifo");
+   if (this != &rhs)
+   {
+      mName = rhs.mName;
+      mValue = rhs.mValue;
+   }
+   return *this;
 }
 
-WsTransport::~WsTransport()
+bool
+Cookie::operator==(const Cookie& other) const
 {
+   return name() == other.name() && value() == other.value();
 }
 
-Connection*
-WsTransport::createConnection(const Tuple& who, Socket fd, bool server)
+bool Cookie::operator<(const Cookie& rhs) const
 {
-   assert(this);
-   Connection* conn = new WsConnection(this,who, fd, mCompression, mConnectionValidator);
-   return conn;
+   return name() + value() < rhs.name() + rhs.value();
+}
+
+EncodeStream&
+resip::operator<<(EncodeStream& strm, const Cookie& c)
+{
+   strm << c.name() << Symbols::EQUALS[0] << c.value();
+   return strm;
+}
+
+const Data&
+Cookie::name() const
+{
+   return mName;
+}
+
+Data&
+Cookie::name()
+{
+   return mName;
+}
+
+const Data&
+Cookie::value() const
+{
+   return mValue;
+}
+
+Data&
+Cookie::value()
+{
+   return mValue;
 }
 
 /* ====================================================================
+ * BSD License
  *
- * Copyright 2012 Doubango Telecom.  All rights reserved.
+ * Copyright (c) 2013 Catalin Constantin Usurelu  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -82,6 +110,4 @@ WsTransport::createConnection(const Tuple& who, Socket fd, bool server)
  *
  * ====================================================================
  *
- *
  */
-

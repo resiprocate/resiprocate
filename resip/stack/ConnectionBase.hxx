@@ -10,6 +10,7 @@
 #include "resip/stack/MsgHeaderScanner.hxx"
 #include "resip/stack/SendData.hxx"
 #include "resip/stack/WsFrameExtractor.hxx"
+#include "resip/stack/Cookie.hxx"
 
 namespace osc
 {
@@ -78,6 +79,7 @@ class ConnectionBase
       bool preparseNewBytes(int bytesRead);
       bool wsProcessHandshake(int bytesRead, bool &dropConnection);
       bool wsProcessData(int bytesRead);
+      void wsParseCookies(CookieList& cookieList, const SipMessage* message);
       void decompressNewBytes(int bytesRead);
       std::pair<char*, size_t> getWriteBuffer();
       std::pair<char*, size_t> getCurrentWriteBuffer();

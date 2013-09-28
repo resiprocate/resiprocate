@@ -374,6 +374,7 @@
     <ClCompile Include="TlsPeerAuthManager.cxx" />
     <ClCompile Include="UserAuthInfo.cxx" />
     <ClCompile Include="UserProfile.cxx" />
+    <ClCompile Include="WsCookieAuthManager.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppDialog.hxx" />
@@ -473,6 +474,7 @@
     <ClInclude Include="UsageUseException.hxx" />
     <ClInclude Include="UserAuthInfo.hxx" />
     <ClInclude Include="UserProfile.hxx" />
+    <ClInclude Include="WsCookieAuthManager.hxx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\stack\resiprocate_10_0.vcxproj">

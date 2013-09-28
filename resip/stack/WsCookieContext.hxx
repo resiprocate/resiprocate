@@ -1,56 +1,47 @@
-#if defined(HAVE_CONFIG_H)
-#include "config.h"
+#ifndef RESIP_WsCookieContext_hxx
+#define RESIP_WsCookieContext_hxx
+
+#include "Cookie.hxx"
+#include "rutil/Data.hxx"
+#include "Uri.hxx"
+
+namespace resip
+{
+
+class WsCookieContext
+{
+   public:
+      WsCookieContext();
+      WsCookieContext(const CookieList& cookieList);
+      WsCookieContext(const WsCookieContext& rhs);
+      ~WsCookieContext();
+
+      WsCookieContext& operator=(const WsCookieContext& rhs);
+
+      Data getWsSessionInfo() const { return mWsSessionInfo; };
+      Data getWsSessionExtra() const { return mWsSessionExtra; };
+      Data getWsSessionMAC() const { return mWsSessionMAC; };
+      Uri getWsFromUri() const { return mWsFromUri; };
+      Uri getWsDestUri() const { return mWsDestUri; };
+      time_t getExpiresTime() const { return mExpiresTime; };
+
+   private:
+      Data mWsSessionInfo;
+      Data mWsSessionExtra;
+      Data mWsSessionMAC;
+      Uri mWsFromUri;
+      Uri mWsDestUri;
+      time_t mExpiresTime;
+};
+
+}
+
 #endif
 
-#include <memory>
-#include "rutil/compat.hxx"
-#include "rutil/Data.hxx"
-#include "rutil/Socket.hxx"
-#include "rutil/Logger.hxx"
-#include "resip/stack/WsTransport.hxx"
-#include "resip/stack/WsConnection.hxx"
-#include "rutil/WinLeakCheck.hxx"
-
-#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
-
-using namespace std;
-using namespace resip;
-
-WsTransport::WsTransport(Fifo<TransactionMessage>& fifo, int portNum,
-      IpVersion version, const Data& pinterface,
-      AfterSocketCreationFuncPtr socketFunc,
-      Compression &compression,
-      unsigned transportFlags,
-      SharedPtr<WsConnectionValidator> connectionValidator)
-: TcpBaseTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags),
-  WsBaseTransport(connectionValidator)
-{
-   mTuple.setType(WS);
-
-   init();
-
-   InfoLog (<< "Creating WS transport host=" << pinterface
-         << " port=" << mTuple.getPort()
-         << " ipv4=" << bool(version==V4) );
-
-   mTxFifo.setDescription("WsTransport::mTxFifo");
-}
-
-WsTransport::~WsTransport()
-{
-}
-
-Connection*
-WsTransport::createConnection(const Tuple& who, Socket fd, bool server)
-{
-   assert(this);
-   Connection* conn = new WsConnection(this,who, fd, mCompression, mConnectionValidator);
-   return conn;
-}
-
 /* ====================================================================
+ * BSD License
  *
- * Copyright 2012 Doubango Telecom.  All rights reserved.
+ * Copyright (c) 2013 Catalin Constantin Usurelu  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -82,6 +73,4 @@ WsTransport::createConnection(const Tuple& who, Socket fd, bool server)
  *
  * ====================================================================
  *
- *
  */
-

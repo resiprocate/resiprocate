@@ -1,56 +1,48 @@
-#if defined(HAVE_CONFIG_H)
-#include "config.h"
+#if !defined(RESIP_COOKIE_HXX)
+#define RESIP_COOKIE_HXX
+
+
+#include "rutil/Data.hxx"
+
+#include <vector>
+
+namespace resip
+{
+
+class Cookie
+{
+   public:
+
+      Cookie();
+      Cookie(const Data& name, const Data& value);
+
+      Cookie& operator=(const Cookie&);
+      bool operator==(const Cookie& other) const;
+      bool operator<(const Cookie& rhs) const;
+      friend EncodeStream& operator<<(EncodeStream& strm, const Cookie& c);
+
+      const Data& name() const;
+      Data& name();
+
+      const Data& value() const;
+      Data& value();
+
+   private:
+      Data mName;
+      Data mValue;
+};
+
+typedef std::vector<Cookie> CookieList;
+
+}
+
 #endif
 
-#include <memory>
-#include "rutil/compat.hxx"
-#include "rutil/Data.hxx"
-#include "rutil/Socket.hxx"
-#include "rutil/Logger.hxx"
-#include "resip/stack/WsTransport.hxx"
-#include "resip/stack/WsConnection.hxx"
-#include "rutil/WinLeakCheck.hxx"
-
-#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
-
-using namespace std;
-using namespace resip;
-
-WsTransport::WsTransport(Fifo<TransactionMessage>& fifo, int portNum,
-      IpVersion version, const Data& pinterface,
-      AfterSocketCreationFuncPtr socketFunc,
-      Compression &compression,
-      unsigned transportFlags,
-      SharedPtr<WsConnectionValidator> connectionValidator)
-: TcpBaseTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags),
-  WsBaseTransport(connectionValidator)
-{
-   mTuple.setType(WS);
-
-   init();
-
-   InfoLog (<< "Creating WS transport host=" << pinterface
-         << " port=" << mTuple.getPort()
-         << " ipv4=" << bool(version==V4) );
-
-   mTxFifo.setDescription("WsTransport::mTxFifo");
-}
-
-WsTransport::~WsTransport()
-{
-}
-
-Connection*
-WsTransport::createConnection(const Tuple& who, Socket fd, bool server)
-{
-   assert(this);
-   Connection* conn = new WsConnection(this,who, fd, mCompression, mConnectionValidator);
-   return conn;
-}
 
 /* ====================================================================
+ * BSD License
  *
- * Copyright 2012 Doubango Telecom.  All rights reserved.
+ * Copyright (c) 2013 Catalin Constantin Usurelu  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -82,6 +74,4 @@ WsTransport::createConnection(const Tuple& who, Socket fd, bool server)
  *
  * ====================================================================
  *
- *
  */
-

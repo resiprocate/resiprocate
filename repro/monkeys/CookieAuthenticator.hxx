@@ -1,56 +1,39 @@
-#if defined(HAVE_CONFIG_H)
-#include "config.h"
-#endif
+#if !defined(RESIP_COOKIE_AUTHENTICATOR_HXX)
+#define RESIP_COOKIE_AUTHENTICATOR_HXX
 
-#include <memory>
-#include "rutil/compat.hxx"
 #include "rutil/Data.hxx"
-#include "rutil/Socket.hxx"
-#include "rutil/Logger.hxx"
-#include "resip/stack/WsTransport.hxx"
-#include "resip/stack/WsConnection.hxx"
-#include "rutil/WinLeakCheck.hxx"
+#include "repro/Processor.hxx"
+#include "resip/stack/Cookie.hxx"
+#include "resip/stack/WsCookieContext.hxx"
+#include "resip/stack/SipStack.hxx"
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
-
-using namespace std;
 using namespace resip;
 
-WsTransport::WsTransport(Fifo<TransactionMessage>& fifo, int portNum,
-      IpVersion version, const Data& pinterface,
-      AfterSocketCreationFuncPtr socketFunc,
-      Compression &compression,
-      unsigned transportFlags,
-      SharedPtr<WsConnectionValidator> connectionValidator)
-: TcpBaseTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags),
-  WsBaseTransport(connectionValidator)
+namespace repro
 {
-   mTuple.setType(WS);
+  class CookieAuthenticator : public Processor
+  {
+    public:
 
-   init();
+      CookieAuthenticator(const Data& wsCookieAuthSharedSecret, resip::SipStack* stack);
+      ~CookieAuthenticator();
 
-   InfoLog (<< "Creating WS transport host=" << pinterface
-         << " port=" << mTuple.getPort()
-         << " ipv4=" << bool(version==V4) );
+      virtual processor_action_t process(RequestContext &);
+      virtual void dump(EncodeStream &os) const;
 
-   mTxFifo.setDescription("WsTransport::mTxFifo");
+    private:
+      bool cookieUriMatch(const resip::Uri &first, const resip::Uri &second);
+      bool authorizedForThisIdentity(const MethodTypes method, const WsCookieContext& wsCookieContext, resip::Uri &fromUri, resip::Uri &toUri);
+  };
+
 }
+#endif
 
-WsTransport::~WsTransport()
-{
-}
-
-Connection*
-WsTransport::createConnection(const Tuple& who, Socket fd, bool server)
-{
-   assert(this);
-   Connection* conn = new WsConnection(this,who, fd, mCompression, mConnectionValidator);
-   return conn;
-}
 
 /* ====================================================================
+ * BSD License
  *
- * Copyright 2012 Doubango Telecom.  All rights reserved.
+ * Copyright (c) 2013 Catalin Constantin Usurelu  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -82,6 +65,4 @@ WsTransport::createConnection(const Tuple& who, Socket fd, bool server)
  *
  * ====================================================================
  *
- *
  */
-

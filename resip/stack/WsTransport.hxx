@@ -1,8 +1,11 @@
 #if !defined(RESIP_WSTRANSPORT_HXX)
 #define RESIP_WSTRANSPORT_HXX
 
+#include "resip/stack/WsBaseTransport.hxx"
+#include "resip/stack/WsConnectionValidator.hxx"
 #include "resip/stack/TcpBaseTransport.hxx"
 #include "resip/stack/Compression.hxx"
+#include "rutil/SharedPtr.hxx"
 
 namespace resip
 {
@@ -11,7 +14,7 @@ class Connection;
 class Message;
 class Security;
 
-class WsTransport : public TcpBaseTransport
+class WsTransport : public TcpBaseTransport, public WsBaseTransport
 {
    public:
       RESIP_HeapCount(WsTransport);
@@ -21,7 +24,8 @@ class WsTransport : public TcpBaseTransport
                    const Data& interfaceObj,
                    AfterSocketCreationFuncPtr socketFunc=0,
                    Compression &compression = Compression::Disabled,
-                   unsigned transportFlags = 0);
+                   unsigned transportFlags = 0,
+                   SharedPtr<WsConnectionValidator> = SharedPtr<WsConnectionValidator>());
       virtual  ~WsTransport();
 
    protected:
