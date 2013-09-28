@@ -35,6 +35,15 @@ AsyncUdpSocketBase::bind(const asio::ip::address& address, unsigned short port)
    mSocket.open(address.is_v6() ? asio::ip::udp::v6() : asio::ip::udp::v4(), errorCode);
    if(!errorCode)
    {
+#ifdef USE_IPV6
+#ifdef __linux__
+      if(address.is_v6())
+      {
+         asio::ip::v6_only v6_opt(true);
+         mSocket.set_option(v6_opt);
+      }
+#endif
+#endif
       mSocket.set_option(asio::ip::udp::socket::reuse_address(true), errorCode);
       mSocket.bind(asio::ip::udp::endpoint(address, port), errorCode);
    }

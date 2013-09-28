@@ -35,6 +35,7 @@ public:
    unsigned short mTlsTurnPort;
    unsigned short mAltStunPort;  
    asio::ip::address mTurnAddress;
+   asio::ip::address mTurnV6Address;
    asio::ip::address mAltStunAddress;
 
    AuthenticationMode mAuthenticationMode;
