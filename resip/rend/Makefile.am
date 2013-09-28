@@ -13,6 +13,7 @@ librend_la_LIBADD = ../../resip/dum/libdum.la
 librend_la_LIBADD += ../../resip/stack/libresip.la
 librend_la_LIBADD += ../../rutil/librutil.la
 librend_la_LIBADD += @LIBSSL_LIBADD@ @LIBPTHREAD_LIBADD@
+librend_la_LIBADD += -lpopt
 librend_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@
 librend_la_LDFLAGS += -export-dynamic
 
