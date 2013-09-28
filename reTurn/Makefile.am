@@ -11,8 +11,8 @@ EXTRA_DIST += reTurnServer.config
 dist_man_MANS = reTurnServer.8
 
 SUBDIRS = .
-SUBDIRS += test
 SUBDIRS += client
+SUBDIRS += test
 
 #AM_CXXFLAGS = -DUSE_ARES
 
