@@ -271,7 +271,7 @@ static void read_tcp_data(ares_channel channel, int server_idx, fd_set *read_fds
       server = &channel->servers[i];
       if (server->tcp_socket == -1 )
         continue;
-      if (!FD_ISSET(server->tcp_socket, read_fds))
+      if (read_fds && !FD_ISSET(server->tcp_socket, read_fds))
 	continue;
 
       if (server->tcp_lenbuf_pos != 2)
