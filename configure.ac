@@ -211,9 +211,16 @@ AC_ARG_WITH(geoip,
 
 AM_CONDITIONAL(USE_RADIUS_CLIENT, false)
 AC_ARG_WITH(radius,
-[  --with-radius           Link against RADIUS client libraries],
+[  --with-radius           Link against RADIUS client libraries (ng)],
  [AC_DEFINE_UNQUOTED(USE_RADIUS_CLIENT, , USE_RADIUS_CLIENT)
  AC_SUBST(LIBRADIUS_LIBADD, "-lradiusclient-ng")
+ AM_CONDITIONAL(USE_RADIUS_CLIENT, true)],
+ [ AC_SUBST(LIBRADIUS_LIBADD, "")])
+AC_ARG_WITH(freeradius,
+[  --with-freeradius       Link against FreeRADIUS client libraries],
+ [AC_DEFINE_UNQUOTED(USE_RADIUS_CLIENT, , USE_RADIUS_CLIENT)
+  AC_DEFINE_UNQUOTED(RESIP_HAVE_FREERADIUS_CLIENT, , RESIP_HAVE_FREERADIUS_CLIENT)
+ AC_SUBST(LIBRADIUS_LIBADD, "-lfreeradius-client")
  AM_CONDITIONAL(USE_RADIUS_CLIENT, true)],
  [ AC_SUBST(LIBRADIUS_LIBADD, "")])
 

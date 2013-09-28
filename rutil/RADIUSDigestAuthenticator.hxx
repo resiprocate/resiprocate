@@ -8,7 +8,12 @@
 
 #ifdef USE_RADIUS_CLIENT
 
+#ifdef RESIP_HAVE_FREERADIUS_CLIENT
+#include <freeradius-client.h>
+typedef uint32_t UINT4;
+#else
 #include <radiusclient-ng.h>
+#endif
 
 #include "rutil/Data.hxx"
 #include "rutil/ThreadIf.hxx"
