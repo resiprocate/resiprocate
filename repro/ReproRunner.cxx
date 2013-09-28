@@ -743,6 +743,8 @@ ReproRunner::createDialogUsageManager()
 #endif
    }
 
+   mSipAuthDisabled = mProxyConfig->getConfigBool("DisableAuth", false);
+
    if (mDum)
    {
       bool enableCertAuth = mProxyConfig->getConfigBool("EnableCertificateAuthenticator", false);
@@ -759,8 +761,6 @@ ReproRunner::createDialogUsageManager()
          SharedPtr<TlsPeerAuthManager> certAuth(new TlsPeerAuthManager(*mDum, mDum->dumIncomingTarget(), trustedPeers, true, mCommonNameMappings));
          mDum->addIncomingFeature(certAuth);
       }
-
-      mSipAuthDisabled = mProxyConfig->getConfigBool("DisableAuth", false);
 
       // If Authentication is enabled, then configure DUM to authenticate requests
       if (!mSipAuthDisabled)
