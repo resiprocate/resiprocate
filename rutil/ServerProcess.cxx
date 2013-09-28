@@ -45,10 +45,14 @@ ServerProcess::dropPrivileges(const Data& runAsUser, const Data& runAsGroup)
    struct group *gr;
 
    if(runAsUser.empty())
+   {
+      ErrLog(<<"Unable to drop privileges, username not specified");
       throw std::runtime_error("Unable to drop privileges, username not specified");
+   }
    pw = getpwnam(runAsUser.c_str());
    if (pw == NULL)
    {
+      ErrLog(<<"Unable to drop privileges, user not found");
       throw std::runtime_error("Unable to drop privileges, user not found");
    }
 
@@ -57,6 +61,7 @@ ServerProcess::dropPrivileges(const Data& runAsUser, const Data& runAsGroup)
       gr = getgrnam(runAsGroup.c_str());
       if (gr == NULL)
       {
+         ErrLog(<<"Unable to drop privileges, group not found");
          throw std::runtime_error("Unable to drop privileges, group not found");
       }
       new_gid = gr->gr_gid;
@@ -72,12 +77,14 @@ ServerProcess::dropPrivileges(const Data& runAsUser, const Data& runAsGroup)
    {
       if (rval != 0)
       {
+         ErrLog(<<"Unable to drop privileges, not root!");
          throw std::runtime_error("Unable to drop privileges, not root!");
       }
 
       rval = setgid(new_gid);
       if (rval < 0)
       {
+         ErrLog(<<"Unable to drop privileges, operation failed");
          throw std::runtime_error("Unable to drop privileges, operation failed");
       }
    }
@@ -87,12 +94,14 @@ ServerProcess::dropPrivileges(const Data& runAsUser, const Data& runAsGroup)
    {
       if (rval != 0)
       {
+         ErrLog(<<"Unable to drop privileges, not root!");
          throw std::runtime_error("Unable to drop privileges, not root!");
       }
 
       rval = setuid(pw->pw_uid);
       if (rval < 0)
       {
+         ErrLog(<<"Unable to drop privileges, operation failed");
          throw std::runtime_error("Unable to drop privileges, operation failed");
       }
    }
@@ -104,12 +113,14 @@ ServerProcess::daemonize()
 {
 #ifdef WIN32
    // fork is not possible on Windows
+   ErrLog(<<"Unable to fork/daemonize on Windows, please check the config");
    throw std::runtime_error("Unable to fork/daemonize on Windows, please check the config");
 #else
    pid_t pid;
    if ((pid = fork()) < 0) 
    {
       // fork() failed
+      ErrLog(<<"fork() failed: "<<strerror(errno));
       throw std::runtime_error(strerror(errno));
    }
    else if (pid != 0)
@@ -118,7 +129,10 @@ ServerProcess::daemonize()
       exit(0);
    }
    if(chdir("/") < 0)
+   {
+      ErrLog(<<"chdir() failed: "<<strerror(errno));
       throw std::runtime_error(strerror(errno));
+   }
    // Nothing should be writing to stdout/stderr after this
    close(STDIN_FILENO);
    close(STDOUT_FILENO);
