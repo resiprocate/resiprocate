@@ -1,5 +1,22 @@
 = Release Notes v 1.8 =
 
+==1.8.14 Changes==
+* rutil: support HURD net device interface names with leading slash
+* reTurn: add support for dropping privileges, necessary for starting as root to run on port 443
+* reTurn: add comments to reTurnServer.config
+* reTurn: build tests after client
+* reTurn: listen on IPv6 as well as IPv4
+* fix for potential crash where read_fds may be null in ares read_tcp_data
+* repro: allow specification of arbitrary domain cert/key PEM files
+* repro: make the CertificatePath optional with no default
+* rend: add popt to LDFLAGS for librend
+* ares_init.c modifications for Windows platforms
+* fix bug that causes assert if you try to configure repro registrar and authentication disabled
+* remove randomized addition of time to stale call timer
+* rutil: TransportType: add isSecure()
+* repro: Add support for starting as root and dropping privileges
+* rutil: ServerProcess: better logging about startup failures
+
 ==1.8.13 Changes==
 * resip/stack: error gives hint about missing intermediate cert
 * reflow+recon: remove conditional pre-processor logic for USE_SSL from headers
