@@ -40,7 +40,9 @@ ServerProcess::dropPrivileges(const Data& runAsUser, const Data& runAsGroup)
    throw std::runtime_error("Unable to drop privileges on Windows, please check the config");
 #else
    int rval;
-   int new_gid;
+   uid_t cur_uid;
+   gid_t cur_gid;
+   gid_t new_gid;
    struct passwd *pw;
    struct group *gr;
 
@@ -72,10 +74,10 @@ ServerProcess::dropPrivileges(const Data& runAsUser, const Data& runAsGroup)
       new_gid = pw->pw_gid;
    }
 
-   rval = getgid();
-   if (rval != new_gid)
+   cur_gid = getgid();
+   if (cur_gid != new_gid)
    {
-      if (rval != 0)
+      if (cur_gid != 0)
       {
          ErrLog(<<"Unable to drop privileges, not root!");
          throw std::runtime_error("Unable to drop privileges, not root!");
@@ -89,10 +91,10 @@ ServerProcess::dropPrivileges(const Data& runAsUser, const Data& runAsGroup)
       }
    }
 
-   rval = getuid();
-   if (rval != pw->pw_uid)
+   cur_uid = getuid();
+   if (cur_uid != pw->pw_uid)
    {
-      if (rval != 0)
+      if (cur_uid != 0)
       {
          ErrLog(<<"Unable to drop privileges, not root!");
          throw std::runtime_error("Unable to drop privileges, not root!");
