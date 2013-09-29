@@ -17,6 +17,13 @@ main()
    assert(sizeof(Int32) == 4);
    assert(sizeof(UInt64) == 8);
 
+   UInt64 data = 0;
+   UInt8 *tmp = (UInt8*)&data;
+   tmp[7] = 1;
+   assert(ntoh64(data) == 1);
+   UInt64 data2 = hton64(data);
+   assert(tmp[7] == 1);
+
    return 0;
 }
 

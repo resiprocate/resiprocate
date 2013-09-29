@@ -129,6 +129,22 @@ inline int c99_snprintf(char* str, size_t size, const char* format, ...)
 #  define T_A 1
 #endif
 
+// Mac OS X: UInt32 definition conflicts with the Mac OS or iPhone OS SDK.
+// If you've included either SDK then these will be defined.
+#if !defined(TARGET_OS_MAC) && !defined(TARGET_OS_IPHONE)
+typedef unsigned char  UInt8;
+typedef unsigned short UInt16;
+typedef unsigned int   UInt32;
+typedef int            Int32;
+#endif
+
+#if defined( WIN32 )
+  typedef unsigned __int64 UInt64;
+#else
+  typedef unsigned long long UInt64;
+#endif
+//typedef struct { unsigned char octet[16]; }  UInt128;
+
 namespace resip
 {
 
@@ -172,23 +188,49 @@ resipIntDiv(const _Tp1& __a, const _Tp2& __b)
    return __a/__b;
 }
 
+#if defined(WORDS_BIGENDIAN) || defined(_BIG_ENDIAN) || defined( __BIG_ENDIAN__ ) || (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)) || defined(RESIP_BIG_ENDIAN)
+
+inline UInt64
+ntoh64(const UInt64 input)
+{
+   return input;
 }
 
-// Mac OS X: UInt32 definition conflicts with the Mac OS or iPhone OS SDK.
-// If you've included either SDK then these will be defined.
-#if !defined(TARGET_OS_MAC) && !defined(TARGET_OS_IPHONE)
-typedef unsigned char  UInt8;
-typedef unsigned short UInt16;
-typedef unsigned int   UInt32;
-typedef int            Int32;
+inline UInt64
+hton64(const UInt64 input)
+{
+   return input;
+}
+
+#else
+
+inline UInt64
+ntoh64(const UInt64 input)
+{
+   UInt64 rval;
+   UInt8 *data = (UInt8 *)&rval;
+
+   data[0] = input >> 56;
+   data[1] = input >> 48;
+   data[2] = input >> 40;
+   data[3] = input >> 32;
+   data[4] = input >> 24;
+   data[5] = input >> 16;
+   data[6] = input >> 8;
+   data[7] = input >> 0;
+
+   return rval;
+}
+
+inline UInt64
+hton64(const UInt64 input)
+{
+   return (ntoh64(input));
+}
+
 #endif
 
-#if defined( WIN32 )
-  typedef unsigned __int64 UInt64;
-#else
-  typedef unsigned long long UInt64;
-#endif
-//typedef struct { unsigned char octet[16]; }  UInt128;
+}
 
 //template "levels; ie REASONABLE and COMPLETE
 //reasonable allows most things such as partial template specialization,
