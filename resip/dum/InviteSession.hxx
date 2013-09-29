@@ -225,7 +225,7 @@ class InviteSession : public DialogUsage
          UAS_ProvidedOfferReliable,
          UAS_FirstSentOfferReliable,
          UAS_FirstSentAnswerReliable,
-         UAS_FirstNoAnswerReliable,
+         UAS_NoAnswerReliableWaitingPrack,
          UAS_NegotiatedReliable,
          UAS_NoAnswerReliable,
          UAS_SentUpdate,
@@ -233,7 +233,7 @@ class InviteSession : public DialogUsage
          UAS_SentUpdateGlare,
          UAS_ReceivedUpdate,
          UAS_ReceivedUpdateWaitingAnswer,
-         UAS_WaitingToTerminate,
+         UAS_WaitingToTerminate,    // TODO Unused - remove this?
          UAS_WaitingToHangup
          // !!!!WARNING!!!! when adding new UAS state - make sure you check if they 
          //                 need to be added to the isAccepted method

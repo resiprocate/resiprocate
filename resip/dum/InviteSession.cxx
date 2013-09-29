@@ -353,10 +353,10 @@ InviteSession::isAccepted() const
       case UAS_ProvidedOfferReliable:
       case UAS_FirstSentOfferReliable:
       case UAS_FirstSentAnswerReliable:
-      case UAS_FirstNoAnswerReliable:
+      case UAS_NoAnswerReliableWaitingPrack:
       case UAS_NegotiatedReliable:
-      case UAS_NoAnswerReliable:        // TODO !slg! happens after accepted in one case. but I suspect it's a bug - determine if it should be here or not
-      case UAS_SentUpdate:         
+      case UAS_NoAnswerReliable:
+      case UAS_SentUpdate:
       //case UAS_SentUpdateAccepted:    // we have accepted here
       case UAS_SentUpdateGlare:
       case UAS_ReceivedUpdate:
@@ -2723,8 +2723,8 @@ InviteSession::toData(State state)
          return "UAS_FirstSentOfferReliable";
       case UAS_FirstSentAnswerReliable:
          return "UAS_FirstSentAnswerReliable";
-      case UAS_FirstNoAnswerReliable:
-         return "UAS_FirstNoAnswerReliable";
+      case UAS_NoAnswerReliableWaitingPrack:
+         return "UAS_NoAnswerReliableWaitingPrack";
       case UAS_NoAnswerReliable:
          return "UAS_NoAnswerReliable";
       case UAS_NegotiatedReliable:

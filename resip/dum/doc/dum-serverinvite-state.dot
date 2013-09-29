@@ -124,6 +124,9 @@ digraph UAS {
   AcceptedWaitingAnswer -> WaitingToHangup              [ label = "dum::end" ];
   // reject is not allowed once accepted
 
+  WaitingToHangup -> Terminated                         [ label = "onACK/send::BYE" ];
+  WaitingToHangup -> Terminated                         [ label = "onTimerNoACK/send::BYE" ];
+  
 
   //////////////////////////////////////////
 
@@ -131,108 +134,114 @@ digraph UAS {
   Start -> OfferReliable                                [ label = "onInvite-offer-rel/app::onNewSession,app::onOffer" ];
   Start -> NoOfferReliable                              [ label = "onInvite-rel/app::onNewSession,app::onOfferRequired" ];
 
-  OfferReliable -> OfferReliableProvidedAnswer          [ label = "dum::provideAnswer" ];
-  OfferReliable -> FirstNoAnswerReliable                [ label = "dum::provisional"/send::1xx,timer:1xx]
+  OfferReliable -> OfferReliableProvidedAnswer          [ label = "dum::provideAnswer/store answer" ];
+  OfferReliable -> NoAnswerReliableWaitingPrack         [ label = "dum::provisional-rel/send::1xx,timer:1xxRel" ]
+  OfferReliable -> OfferReliable                        [ label = "dum::provisional/send::1xx,timer:1xx" ]
   OfferReliable -> Terminated                           [ label = "dum::end/send::4XXI,app::onTerminated,dum::destroy" ];
   OfferReliable -> Terminated                           [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ];
   OfferReliable -> Terminated                           [ label = "dum::redirect/send::3XXI,app::onTerminated,dum::destroy" ];
+  OfferReliable -> Terminated                           [ label = "onCancel/send::200C,send::487I,app::onTerminated,dum::destroy" ];
 
-  OfferReliableProvidedAnswer -> FirstSentAnswerReliable [ label = "dum::provisional/send::1xx-answer,timer::1xx" ];
+  OfferReliableProvidedAnswer -> FirstSentAnswerReliable [ label = "dum::provisional-rel/send::1xx-answer,timer::1xxRel" ];
+  OfferReliableProvidedAnswer -> OfferReliableProvidedAnswer [ label = "dum::provisional/send::1xx,timer::1xx" ];
   OfferReliableProvidedAnswer -> Accepted               [ label = "dum::accept/send::2xx,timer::2xx,app::onConnected" ];
   OfferReliableProvidedAnswer -> Terminated             [ label = "dum::end/send::4XXI,app::onTerminated,dum::destroy" ];
   OfferReliableProvidedAnswer -> Terminated             [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ];
   OfferReliableProvidedAnswer -> Terminated             [ label = "dum::redirect/send::3XXI,app::onTerminated,dum::destroy" ];
+  OfferReliableProvidedAnswer -> Terminated             [ label = "onCancel/send::200C,send::487I,app::onTerminated,dum::destroy" ];
 
-  FirstNoAnswerReliable -> FirstNoAnswerReliable        [ label = "dum::provisional/send::1xx-answer,timer::1xx" ];
-  FirstNoAnswerReliable -> FirstNoAnswerReliable        [ label = "dum::provideAnswer/store answer" ];
-  FirstNoAnswerReliable -> FirstNoAnswerReliable        [ label = "dum::accept/queue 200 waiting for PRACK" ];
-  FirstNoAnswerReliable -> NoAnswerReliable             [ label = "onPRACK/200P" ];
-  FirstNoAnswerReliable -> Terminated                   [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ];
-  FirstNoAnswerReliable -> Terminated                   [ label = "onCancel/,app::onTerminated,dum::destroy" ];
+  NoAnswerReliableWaitingPrack -> NoAnswerReliableWaitingPrack [ label = "dum::provisional/queue 1xx waiting for PRACK" ];
+  NoAnswerReliableWaitingPrack -> NoAnswerReliableWaitingPrack [ label = "dum::provideAnswer/store answer waiting for PRACK" ];
+  NoAnswerReliableWaitingPrack -> NoAnswerReliableWaitingPrack [ label = "dum::accept/queue 200 waiting for PRACK" ];
+  NoAnswerReliableWaitingPrack -> NoAnswerReliable      [ label = "onPRACK/200P" ];
+  NoAnswerReliableWaitingPrack -> Accepted              [ label = "onPRACK/200P,200 in queue,send2xx,timer::2xx,app::onConnected" ];
+  NoAnswerReliableWaitingPrack -> Terminated            [ label = "onTimeout/send:5XXI,app::onTerminated,dum::destroy" ];
+  NoAnswerReliableWaitingPrack -> Terminated            [ label = "dum::end/send::4XXI,app::onTerminated,dum::destroy" ];
+  NoAnswerReliableWaitingPrack -> Terminated            [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ];
+  NoAnswerReliableWaitingPrack -> Terminated            [ label = "dum::redirect/send::3XXI,app::onTerminated,dum::destroy" ];
+  NoAnswerReliableWaitingPrack -> Terminated            [ label = "onCancel/,app::onTerminated,dum::destroy" ];
 
-  NoAnswerReliable -> NoAnswerReliable                  [ label = "dum::provisional/send::1xx-answer,timer::1xx" ];
-  NoAnswerReliable -> NoAnswerReliable                  [ label = "dum::provideAnswer/store answer" ];  // TODO should go to OfferReliableProvidedAnswer???
-  NoAnswerReliable -> Accepted                          [ label = "dum::accept/send::2xx-answer,timer:2xx,timer::NoAck,app::onConnected" ];
-  NoAnswerReliable -> UAS_NegotiatedReliable            [ label = "onPRACK/200P" ];  // TODO - Needs checking!!!
+  NoAnswerReliable -> NoAnswerReliable                  [ label = "dum::provisional/send::1xx,timer::1xx" ];
+  NoAnswerReliable -> NoAnswerReliableWaitingPrack      [ label = "dum::provisional-rel/send::1xx,timer::1xxRel" ];
+  NoAnswerReliable -> OfferReliableProvidedAnswer       [ label = "dum::provideAnswer/store answer" ];
+  NoAnswerReliable -> Terminated                        [ label = "dum::end/send::4XXI,app::onTerminated,dum::destroy" ];
   NoAnswerReliable -> Terminated                        [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ];
+  NoAnswerReliable -> Terminated                        [ label = "dum::redirect/send::3XXI,app::onTerminated,dum::destroy" ];
+  NoAnswerReliable -> Terminated                        [ label = "onCancel/,app::onTerminated,dum::destroy" ];
 
-  NoOfferReliable -> NoOfferReliable                    [ label = "dum::provisional/send::1xx,timer:1xx" ];  // TODO - not allowed, right??
+  NoOfferReliable -> NoOfferReliable                    [ label = "dum::provisional/send::1xx,timer:1xx" ]; 
   NoOfferReliable -> ProvidedOfferReliable              [ label = "dum::provideOffer/store::offer" ];
   NoOfferReliable -> Terminated                         [ label = "dum::end/send::4XXI,app::onTerminated,dum::destroy" ];
   NoOfferReliable -> Terminated                         [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ];
   NoOfferReliable -> Terminated                         [ label = "dum::redirect/send::3XXI,app::onTerminated,dum::destroy" ];
+  NoOfferReliable -> Terminated                         [ label = "onCancel/,app::onTerminated,dum::destroy" ];
 
-  ProvidedOfferReliable -> FirstSentOfferReliable       [ label = "dum::provisional/send::1xx-offer,timer:1xx" ];
+  ProvidedOfferReliable -> FirstSentOfferReliable       [ label = "dum::provisional-rel/send::1xx-offer,timer:1xxRel" ];
   ProvidedOfferReliable -> AcceptedWaitingAnswer        [ label = "dum::accept/send::2xx-offer,timer:2xx,timer::NoAck,app::onConnected" ];
   ProvidedOfferReliable -> Terminated                   [ label = "dum::end/send::4XXI,app::onTerminated,dum::destroy" ];
   ProvidedOfferReliable -> Terminated                   [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ];
+  ProvidedOfferReliable -> Terminated                   [ label = "dum::redirect/send::3XXI,app::onTerminated,dum::destroy" ];
+  ProvidedOfferReliable -> Terminated                   [ label = "onCancel/,app::onTerminated,dum::destroy" ];
 
-  FirstSentOfferReliable -> FirstSentOfferReliable      [ label = "onTimer/resend::1xx" ];
-  FirstSentOfferReliable -> NegotiatedReliable          [ label = "onPRACK/200P,app::onAnswer" ];
+  FirstSentOfferReliable -> FirstSentOfferReliable      [ label = "dum::provisional/store 1xx waiting for PRACK" ]; 
+  FirstSentOfferReliable -> NegotiatedReliable          [ label = "onPRACK-answer/200P,app::onAnswer" ];
+  FirstSentOfferReliable -> Terminated                  [ label = "onPRACK-noanswer/send::406P,send::406I,app::onTerminated,dum::destroy" ];
   FirstSentOfferReliable -> Terminated                  [ label = "onTimeout/send:5XXI,app::onTerminated,dum::destroy" ];
   FirstSentOfferReliable -> Terminated                  [ label = "dum::end/send::4XXI,app::onTerminated,dum::destroy" ];  
   FirstSentOfferReliable -> Terminated                  [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ]; 
   FirstSentOfferReliable -> Terminated                  [ label = "dum::redirect/send::3XXI,app::onTerminated,dum::destroy" ];
+  FirstSentOfferReliable -> Terminated                  [ label = "onCancel/,app::onTerminated,dum::destroy" ];
 
-  FirstSentAnswerReliable -> FirstSentAnswerReliable    [ label = "onTimer/resend::1xx,timer::1xx" ];
-  FirstSentAnswerReliable -> AcceptedAwaitingPrack      [ label = "dum::accept/queue::2xx" ];
+  FirstSentAnswerReliable -> FirstSentAnswerReliable    [ label = "dum::provisional/store 1xx waiting for PRACK" ]; 
+  FirstSentAnswerReliable -> FirstSentAnswerReliable    [ label = "dum::accept/queue::2xx waiting for PRACK" ];
   FirstSentAnswerReliable -> NegotiatedReliable         [ label = "onPRACK/200P" ];
+  FirstSentAnswerReliable -> NegotiatedReliable         [ label = "onPRACK-offer/onOffer" ];
+  FirstSentAnswerReliable -> Accepted                   [ label = "onPRACK/200P/200 in queue,send2xx,timer::2xx,app::onConnected" ];
+  FirstSentAnswerReliable -> Terminated                 [ label = "onTimeout/send:5XXI,app::onTerminated,dum::destroy" ];
   FirstSentAnswerReliable -> Terminated                 [ label = "dum::end/send::4XXI,app::onTerminated,dum::destroy" ];  
   FirstSentAnswerReliable -> Terminated                 [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ];
   FirstSentAnswerReliable -> Terminated                 [ label = "dum::redirect/send::3XXI,app::onTerminated,dum::destroy" ];
-
-  AcceptedAwaitingPrack -> AcceptedAwaitingPrack        [ label = "onTimer/resend:1xx" ];
-  AcceptedAwaitingPrack -> Accepted                     [ label = "onPRACK/send::200P,send::200I" ];
-  AcceptedAwaitingPrack -> Terminated                   [ label = "onTimeout/send:5XXI,app::onTerminated,dum::destroy" ];
-  AcceptedAwaitingPrack -> Terminated                   [ label = "dum::end/send::4XXI,app::onTerminated,dum::destroy" ];
-  AcceptedAwaitingPrack -> Terminated                   [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ];
+  FirstSentAnswerReliable -> Terminated                 [ label = "onCancel/,app::onTerminated,dum::destroy" ];
 
   NegotiatedReliable -> NegotiatedReliable              [ label = "onPRACK/send::200P" ]; 
   NegotiatedReliable -> NegotiatedReliable              [ label = "dum::provisional/send::1xx,timer::1xx" ];
-  NegotiatedReliable -> NegotiatedReliable              [ label = "onTimer/resend::1xx" ];
+  NegotiatedReliable -> NegotiatedReliable              [ label = "dum::provisional-rel/send::1xx,timer::1xxRel" ];
   NegotiatedReliable -> Accepted                        [ label = "dum::accept/send::2xx,timer::2xx" ];
-  NegotiatedReliable -> ReceivedUpdate                  [ label = "onUpdate/app::onOffer" ];
+  NegotiatedReliable -> NegotiatedReliable              [ label = "dum::accept-queue 2xx if waiting for PRACK" ];
+  NegotiatedReliable -> ReceivedUpdate                  [ label = "onUpdate-offer/app::onOffer" ];
   NegotiatedReliable -> SentUpdate                      [ label = "dum::provideOffer/send::UPDATE" ];
+  NegotiatedReliable -> ProvidedOffer                   [ label = "dum::provideOffer-sendOfferAtAccept/store offer" ];
+  NegotiatedReliable -> NegotiateReliable               [ label = "dum::provideAnswer/send::200P-answer" ];
   NegotiatedReliable -> Terminated                      [ label = "dum::end/send::4XXI,app::onTerminated,dum::destroy" ];
   NegotiatedReliable -> Terminated                      [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ]; 
   NegotiatedReliable -> Terminated                      [ label = "dum::redirect/send::3XXI,app::onTerminated,dum::destroy" ]; 
-
-  Accepted -> Connected                                 [ label = "onACK" ];
-  Accepted -> Connected                                 [ label = "onACK-answer" ];  // on Ack-answer is illegal - but accept anyway for interop
-  Accepted -> Accepted                                  [ label = "onCANCEL/send::200C" ]; 
-  Accepted -> Accepted                                  [ label = "onPRACK/send::2XXP,send::2XXI,timer::2xx" ];
-  Accepted -> Accepted                                  [ label = "onTimer2xx/resend::2XXI" ];
-  Accepted -> Terminated                                [ label = "onTimerNoACK/send::BYE" ];
-  Accepted -> WaitingToHangup                           [ label = "dum::end" ];
-  Accepted -> Terminated                                [ label = "onBye/send::200B,app::onTerminated,dum::destroy" ];
-  // reject is not allowed once accepted
-
-  SentUpdate -> SentUpdateAccepted                      [ label = "dum::accept/send::2xxI" ];
-  SentUpdate -> NegotiatedReliable                           [ label = "on2XXU" ];
+  NegotiatedReliable -> Terminated                      [ label = "onCancel/,app::onTerminated,dum::destroy" ];
+    
+  SentUpdate -> SentUpdateAccepted                      [ label = "dum::accept/queue 2xx" ];
+  SentUpdate -> NegotiatedReliable                      [ label = "on2XXU/app:onAnswer" ];
+  SentUpdate -> SentUpdateGlare                         [ label = "on491U/start 491 timer" ];
+  SentUpdate -> NegotiatedReliable                      [ label = "on4XXU/app::onOfferRejected" ];
   SentUpdate -> Terminated                              [ label = "dum::end/send::4XXI,app::onTerminated,dum::destroy" ];
   SentUpdate -> Terminated                              [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ]; 
   SentUpdate -> Terminated                              [ label = "dum::redirect/send::3XXI,app::onTerminated,dum::destroy" ]; 
+  SentUpdate -> Terminated                              [ label = "onCancel/,app::onTerminated,dum::destroy" ];
 
-  SentUpdateAccepted -> Accepted                        [ label = "on2xxU/app::onAnswer" ];
-  SentUpdateAccepted -> Accepted                        [ label = "on4XXU/app::onOfferRejected" ];
-  SentUpdateAccepted -> WaitingToHangup                 [ label = "dum::end" ];
+  SentUpdateAccepted -> Accepted                        [ label = "on2xxU/app::onAnswer,send::2XXI" ];
+  SentUpdateAccepted -> Accepted                        [ label = "on4XXU/app::onOfferRejected,send::2XXI" ];
+  SentUpdateAccepted -> Accepted                        [ label = "on491U/app::onOfferRejected,send::2XXI" ];
+  SentUpdateAccepted -> Terminated                      [ label = "dum::end/send::4XXI,app::onTerminated,dum::destroy" ];
+  SentUpdateAccepted -> Terminated                      [ label = "onCancel/,app::onTerminated,dum::destroy" ];
   // reject is not allowed once accepted
 
   ReceivedUpdate -> ReceivedUpdateWaitingAnswer         [ label = "dum::accept/queue::2xx" ];
-  ReceivedUpdate -> NegotiatedReliable                       [ label = "dum::provideAnswer/send::200U-answer" ];
+  ReceivedUpdate -> NegotiatedReliable                  [ label = "dum::provideAnswer/send::200U-answer" ];
   ReceivedUpdate -> Terminated                          [ label = "dum::end/send::488U,send::4XXI,app::onTerminated,dum::destroy" ];
   ReceivedUpdate -> Terminated                          [ label = "dum::reject/send::488U,send::4XXI,app::onTerminated,dum::destroy" ]; 
   ReceivedUpdate -> Terminated                          [ label = "dum::redirect/send::488U,send::3XXI,app::onTerminated,dum::destroy" ]; 
+  ReceivedUpdate -> Terminated                          [ label = "onCancel/,app::onTerminated,dum::destroy" ];
 
   ReceivedUpdateWaitingAnswer -> Accepted               [ label = "dum::provideAnswer/send::2XXU-answer,send::2XXI" ];
   ReceivedUpdateWaitingAnswer -> Terminated             [ label = "dum::end/send::488U,send::4XXI,dum::destroy" ];
-  // reject is not allowed once accepted
-
-  WaitingToTerminate -> Terminated                      [ label = "onPRACK/send::4xx,dum::destroy" ];
-  // reject is not allowed once accepted
-
-  WaitingToHangup -> Terminated                         [ label = "onPRACK/send::BYE" ];
-  WaitingToHangup -> Terminated                         [ label = "onACK/send::BYE" ];
-  WaitingToHangup -> Terminated                         [ label = "onTimerNoACK/send::BYE" ];
+  ReceivedUpdateWaitingAnswer -> Terminated             [ label = "onCancel/,app::onTerminated,dum::destroy" ];
   // reject is not allowed once accepted
 }

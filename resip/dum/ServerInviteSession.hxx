@@ -73,12 +73,9 @@ class ServerInviteSession: public InviteSession
       void dispatchWaitingToOffer(const SipMessage& msg);
       void dispatchWaitingToRequestOffer(const SipMessage& msg);
       void dispatchAcceptedWaitingAnswer(const SipMessage& msg);
-      void dispatchOfferReliable(const SipMessage& msg);
-      void dispatchNoOfferReliable(const SipMessage& msg);
       void dispatchFirstSentOfferReliable(const SipMessage& msg);
       void dispatchFirstSentAnswerReliable(const SipMessage& msg);
-      void dispatchFirstNoAnswerReliable(const SipMessage& msg);
-      void dispatchNoAnswerReliable(const SipMessage& msg);
+      void dispatchNoAnswerReliableWaitingPrack(const SipMessage& msg);
       void dispatchSentUpdate(const SipMessage& msg);
       void dispatchSentUpdateAccepted(const SipMessage& msg);
       void dispatchReceivedUpdate(const SipMessage& msg);
@@ -95,7 +92,7 @@ class ServerInviteSession: public InviteSession
       void startRetransmit1xxTimer();
       void startRetransmit1xxRelTimer();
       void sendAccept(int code, Contents* offerAnswer); // sends 2xxI
-      void sendProvisional(int code, bool earlyFlag);
+      bool sendProvisional(int code, bool earlyFlag);  // returns true if sent reliably
       void queueResponse(int code, bool earlyFlag);
       void sendUpdate(const Contents& offerAnswer);
       bool handlePrack(const SipMessage& msg); // verify that prack matches our last send reliable 1xx
@@ -115,7 +112,7 @@ class ServerInviteSession: public InviteSession
       
       // UAS Prack members
       unsigned int mLocalRSeq;
-      SharedPtr<SipMessage> mUnacknowledgedProvisional; // We won't send a new reliable provisional until the previous one is acknowledge - used for re-transmissions
+      SharedPtr<SipMessage> mUnacknowledgedReliableProvisional; // We won't send a new reliable provisional until the previous one is acknowledge - used for re-transmissions
       std::deque< std::pair<int, bool> > mQueuedResponses;
       bool mAnswerSentReliably;
       SharedPtr<SipMessage> mPrackWithOffer; // for 1xx retransmissions
