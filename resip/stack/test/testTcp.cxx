@@ -315,6 +315,10 @@ main(int argc, char* argv[])
          SipMessage* received = dynamic_cast<SipMessage*>(msg);
          // .bwc. These are all unrecoverable garbage, we should not get
          // any sip traffic on this fifo.
+         if(received)
+         {
+            cout << "Unexpected message received: " << received << endl;
+         }
          assert(!received);
          delete msg;
       }
