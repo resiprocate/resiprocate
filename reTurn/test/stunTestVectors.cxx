@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
    assert(reqMessage.mHasIcePriority);
    assert(reqMessage.mIcePriority == 1845494271);
    assert(reqMessage.mHasIceControlled);
-   assert(reqMessage.mIceControlledTieBreaker == 3907759233994141587ULL);
+   assert(reqMessage.mIceControlledTieBreaker == 10605970187446795062ULL);
    assert(reqMessage.mHasSoftware);
    assert(*reqMessage.mSoftware == "STUN test client");
    assert(reqMessage.mHasUsername);
