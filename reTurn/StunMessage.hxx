@@ -367,6 +367,7 @@ private:
 
    char* encode16(char* buf, UInt16 data);
    char* encode32(char* buf, UInt32 data);
+   char* encode64(char* buf, const UInt64 data);
    char* encode(char* buf, const char* data, unsigned int length);
    char* encodeTurnData(char *ptr, const resip::Data* td);
    char* encodeAtrUInt32(char* ptr, UInt16 type, UInt32 value);

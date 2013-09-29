@@ -5,6 +5,7 @@
 
 #include "StunMessage.hxx"
 
+#include <rutil/compat.hxx>
 #include <rutil/Timer.hxx>
 #include <rutil/Random.hxx>
 #include <rutil/DataStream.hxx>
@@ -454,6 +455,7 @@ StunMessage::stunParseAtrUInt64( char* body, unsigned int hdrLen,  UInt64& resul
    else
    {
       memcpy(&result, body, 8);
+      result = ntoh64(result);
       return true;
    }
 }
@@ -1297,6 +1299,14 @@ StunMessage::encode32(char* buf, UInt32 data)
    return buf + sizeof(UInt32);
 }
 
+char*
+StunMessage::encode64(char* buf, const UInt64 data)
+{
+   UInt64 ndata = hton64(data);
+   memcpy(buf, reinterpret_cast<void*>(&ndata), sizeof(UInt64));
+   return buf + sizeof(UInt64);
+}
+
 char* 
 StunMessage::encode(char* buf, const char* data, unsigned int length)
 {
@@ -1331,8 +1341,8 @@ StunMessage::encodeAtrUInt64(char* ptr, UInt16 type, UInt64 value)
 {
    ptr = encode16(ptr, type);
    ptr = encode16(ptr, 8);
-   memcpy(ptr, reinterpret_cast<void*>(&value), sizeof(UInt64));
-   return ptr + sizeof(UInt64);
+   ptr = encode64(ptr, value);
+   return ptr;
 }
 
 char*
