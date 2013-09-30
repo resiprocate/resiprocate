@@ -4,6 +4,8 @@
 #include <string>
 #include <stdarg.h>
 
+#include "rutil/compat.hxx"
+
 /**
     2^32/3600/24/365 = 136 years in 32-bits
     2^64/3600/24/265/1000000 = 584 years in 64-bits w micro-sec resolution
@@ -33,8 +35,6 @@ rendMAX(const _Tp& __a, const _Tp& __b)
 #else
 #define sleepMs Sleep
 #endif
-
-typedef unsigned long long UInt64;
 
 typedef UInt64 RendTimeUs; // usec
 #define REND_S2US(secs) (((UInt64)(secs))*1000000)
