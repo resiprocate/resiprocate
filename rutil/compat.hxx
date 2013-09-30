@@ -287,14 +287,14 @@ ntoh64(const UInt64 input)
    UInt64 rval;
    UInt8 *data = (UInt8 *)&rval;
 
-   data[0] = input >> 56;
-   data[1] = input >> 48;
-   data[2] = input >> 40;
-   data[3] = input >> 32;
-   data[4] = input >> 24;
-   data[5] = input >> 16;
-   data[6] = input >> 8;
-   data[7] = input >> 0;
+   data[0] = (UInt8)((input >> 56) & 0xFF);
+   data[1] = (UInt8)((input >> 48) & 0xFF);
+   data[2] = (UInt8)((input >> 40) & 0xFF);
+   data[3] = (UInt8)((input >> 32) & 0xFF);
+   data[4] = (UInt8)((input >> 24) & 0xFF);
+   data[5] = (UInt8)((input >> 16) & 0xFF);
+   data[6] = (UInt8)((input >> 8) & 0xFF);
+   data[7] = (UInt8)((input >> 0) & 0xFF);
 
    return rval;
 }

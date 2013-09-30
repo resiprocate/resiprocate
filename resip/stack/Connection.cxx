@@ -161,20 +161,20 @@ Connection::performWrite()
       }
       else if(lSize <= 0xFFFF){
          uBuffer[1] = 0x7E;
-         uBuffer[2] = (lSize >> 8) & 0xFF;
-         uBuffer[3] = (lSize & 0xFF);
+         uBuffer[2] = (UInt8)((lSize >> 8) & 0xFF);
+         uBuffer[3] = (UInt8)(lSize & 0xFF);
          uBuffer = &uBuffer[4];
       }
       else{
          uBuffer[1] = 0x7F;
-         uBuffer[2] = (lSize >> 56) & 0xFF;
-         uBuffer[3] = (lSize >> 48) & 0xFF;
-         uBuffer[4] = (lSize >> 40) & 0xFF;
-         uBuffer[5] = (lSize >> 32) & 0xFF;
-         uBuffer[6] = (lSize >> 24) & 0xFF;
-         uBuffer[7] = (lSize >> 16) & 0xFF;
-         uBuffer[8] = (lSize >> 8) & 0xFF;
-         uBuffer[9] = (lSize & 0xFF);
+         uBuffer[2] = (UInt8)((lSize >> 56) & 0xFF);
+         uBuffer[3] = (UInt8)((lSize >> 48) & 0xFF);
+         uBuffer[4] = (UInt8)((lSize >> 40) & 0xFF);
+         uBuffer[5] = (UInt8)((lSize >> 32) & 0xFF);
+         uBuffer[6] = (UInt8)((lSize >> 24) & 0xFF);
+         uBuffer[7] = (UInt8)((lSize >> 16) & 0xFF);
+         uBuffer[8] = (UInt8)((lSize >> 8) & 0xFF);
+         uBuffer[9] = (UInt8)(lSize & 0xFF);
          uBuffer = &uBuffer[10];
       }
 
