@@ -151,42 +151,43 @@ class ResipFastOStream : public ResipBasicIOStream
       ResipFastOStream& operator<<(bool b)
       {
          //int i = (b == true) ? (1):(0);
-         *this<<(static_cast<int32_t>(b));
+         *this<<(static_cast<Int32>(b));
          return *this;
       }
 
-      ResipFastOStream& operator<<(int8_t s)
+      ResipFastOStream& operator<<(Int8 s)
       {
-         *this<<(static_cast<int32_t>(s));
+         *this<<(static_cast<Int32>(s));
          return *this;
       }
 
-      ResipFastOStream& operator<<(uint8_t us)
+      ResipFastOStream& operator<<(UInt8 us)
       {
-         *this<<(static_cast<uint32_t>(us));
+         *this<<(static_cast<UInt32>(us));
          return *this;
       }
 
-      ResipFastOStream& operator<<(int16_t i)
+      ResipFastOStream& operator<<(Int16 i)
       {
-         *this<<(static_cast<int32_t>(i));
+         *this<<(static_cast<Int32>(i));
          return *this;
       }
 
-      ResipFastOStream& operator<<(uint16_t ui)
+      ResipFastOStream& operator<<(UInt16 ui)
       {
-         *this<<(static_cast<uint32_t>(ui));
+         *this<<(static_cast<UInt32>(ui));
          return *this;
       }
 
-      ResipFastOStream& operator<<(int32_t l)
+      ResipFastOStream& operator<<(Int32 l)
       {
          if (!buf_)
          {
             return *this;
          }
          char buf[33];
-         snprintf(buf,33,"%" PRId32,l);
+         //snprintf(buf,33,"%" PRId32,l);
+         LTOA(l,buf,33,10);
          size_t count = strlen(buf);
          if (buf_->writebuf(buf,count) < count)
          {
@@ -196,14 +197,15 @@ class ResipFastOStream : public ResipBasicIOStream
          return *this;
       }
 
-      ResipFastOStream& operator<<(uint32_t ul)
+      ResipFastOStream& operator<<(UInt32 ul)
       {
          if (!buf_)
          {
             return *this;
          }
          char buf[33];
-         snprintf(buf,33,"%" PRIu32,ul);
+         //snprintf(buf,33,"%" PRIu32,ul);
+         ULTOA(ul,buf,33,10);
          size_t count = strlen(buf);
          if (buf_->writebuf(buf,count) < count)
          {
@@ -221,7 +223,8 @@ class ResipFastOStream : public ResipBasicIOStream
          }
 
          char buf[66];
-         snprintf(buf,66,"%" PRIu64,ui64);
+         //snprintf(buf,66,"%" PRIu64,ui64);
+         UI64TOA(ui64,buf,66,10);
 
          size_t count = strlen(buf);
          if (buf_->writebuf(buf,count) < count)
