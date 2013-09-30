@@ -74,7 +74,9 @@ using std::uint64_t;
 #elif defined(HAVE_STDINT_H)
 #include <stdint.h>
 #if defined(HAVE_INTTYPES_H)
+#ifndef __STDC_FORMAT_MACROS
 #define __STDC_FORMAT_MACROS
+#endif
 #include <inttypes.h>
 #else
 #error inttypes is required
