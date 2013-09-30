@@ -20,6 +20,80 @@
 //#include <sys/int_types.h>
 //#endif
 
+#ifndef __cplusplus
+#error Expecting __cplusplus (mandatory in for all C++ compilers)
+#endif
+
+/* Introduction of cstdint types from C++11
+ *
+ * Traditionally, reSIProcate has used custom types UInt8, UInt32, ...
+ * For the v1.9.x release series, reSIProcate supports both the
+ * custom types and the <cstdint> style.  A future release of
+ * reSIProcate may deprecate and eventually remove UInt8, UInt32 and friends.
+ *
+ * C++11 is not required, compat.hxx aims to correctly typedef the
+ * expected <cstdint> types on platforms where they don't exist.
+ * rutil/test/testCompat.cxx will even test the types using sizeof() to
+ * make sure they are always declared correctly.
+ *
+ *** Known issues ***
+ *
+ * One side-effect of this change is that code in some environments,
+ * unsigned long may be the same as uint32_t or uint64_t.
+ * In these cases, overloaded methods will appear to have identical
+ * prototypes and the compile will fail with an error.  It is believed
+ * that all such issues have been eliminated from the stack itself
+ * but such errors may be encountered while re-compiling application
+ * code against v1.9 or later.
+ *
+ * If a build fails like this:
+ * resipfaststreams.hxx: In member function 'resip::ResipFastOStream& resip::ResipFastOStream::operator<<(int32_t)':
+ * resipfaststreams.hxx:198:30: error: expected ')' before 'PRIi32'
+ * resipfaststreams.hxx:198:38: warning: spurious trailing '%' in format [-Wformat]
+ * resipfaststreams.hxx:198:38: warning: too many arguments for format [-Wformat-extra-args]
+ * resipfaststreams.hxx:198:38: warning: spurious trailing '%' in format [-Wformat]
+ * resipfaststreams.hxx:198:38: warning: too many arguments for format [-Wformat-extra-args]
+ *
+ * it is a sign that some header included inttypes.h without declaring
+ * __STDC_FORMAT_MACROS.  You can define __STDC_FORMAT_MACROS in CPPFLAGS
+ * or just make sure you always include rutil/compat.hxx ahead of other headers
+ * and it will define __STDC_FORMAT_MACROS when required.
+ *
+ */
+#if __cplusplus >= 201103L
+#include <cinttypes>
+#include <cstdint>
+using std::PRId32;
+using std::PRIu32;
+using std::PRId64;
+using std::PRIu64;
+using std::uint8_t;
+using std::uint8_t;
+using std::uint32_t;
+using std::uint64_t;
+#elif defined(HAVE_STDINT_H)
+#include <stdint.h>
+#if defined(HAVE_INTTYPES_H)
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+#else
+#error inttypes is required
+#endif
+#elif defined(TARGET_OS_MAC) || defined(TARGET_OS_IPHONE)
+typedef UInt8 uint8_t;
+typedef UInt16 uint16_t;
+typedef UInt32 uint32_t;
+typedef unsigned long long uint64_t;
+#elif defined(__QNX__) || defined(__sun)
+typedef unsigned int uint32_t;
+typedef unsigned long long uint64_t;
+#elif defined(WIN32)
+typedef unsigned int uint32_t;
+typedef unsigned __int64 uint64_t;
+#else
+#error Failed to find or typedef fixed-size types, please add your platform to rutil/compat.hxx
+#endif
+
 #include <cstring>
 
 #ifndef WIN32
@@ -132,17 +206,14 @@ inline int c99_snprintf(char* str, size_t size, const char* format, ...)
 // Mac OS X: UInt32 definition conflicts with the Mac OS or iPhone OS SDK.
 // If you've included either SDK then these will be defined.
 #if !defined(TARGET_OS_MAC) && !defined(TARGET_OS_IPHONE)
-typedef unsigned char  UInt8;
-typedef unsigned short UInt16;
-typedef unsigned int   UInt32;
-typedef int            Int32;
+typedef uint8_t    UInt8;
+typedef uint16_t   UInt16;
+typedef uint32_t   UInt32;
+typedef int32_t    Int32;
 #endif
 
-#if defined( WIN32 )
-  typedef unsigned __int64 UInt64;
-#else
-  typedef unsigned long long UInt64;
-#endif
+typedef uint64_t UInt64;
+
 //typedef struct { unsigned char octet[16]; }  UInt128;
 
 namespace resip
@@ -158,7 +229,8 @@ namespace resip
 #endif
 
 #if defined(__QNX__) || defined(__sun) || defined(WIN32)
-  typedef unsigned int u_int32_t;
+  // FIXME: look for all uses of u_int32_t and remove them
+  typedef uint32_t u_int32_t;
 #endif
 
 template<typename _Tp>

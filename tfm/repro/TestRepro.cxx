@@ -2,6 +2,9 @@
 #include "config.h"
 #endif
 
+// Need to include this early to avoid problems with __STDC_FORMAT_MACROS
+#include "rutil/compat.hxx"
+
 #include "repro/BerkeleyDb.hxx"
 #include "repro/ReproServerAuthManager.hxx"
 #include "repro/monkeys/AmIResponsible.hxx"
