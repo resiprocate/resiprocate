@@ -187,7 +187,7 @@ class ResipFastOStream : public ResipBasicIOStream
          }
          char buf[33];
          //snprintf(buf,33,"%" PRId32,l);
-         LTOA(l,buf,33,10);
+         LTOA((long int)l,buf,33,10);
          size_t count = strlen(buf);
          if (buf_->writebuf(buf,count) < count)
          {
@@ -205,7 +205,7 @@ class ResipFastOStream : public ResipBasicIOStream
          }
          char buf[33];
          //snprintf(buf,33,"%" PRIu32,ul);
-         ULTOA(ul,buf,33,10);
+         ULTOA((unsigned long int)ul,buf,33,10);
          size_t count = strlen(buf);
          if (buf_->writebuf(buf,count) < count)
          {
