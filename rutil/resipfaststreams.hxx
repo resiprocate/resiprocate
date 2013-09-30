@@ -173,20 +173,11 @@ class ResipFastOStream : public ResipBasicIOStream
          return *this;
       }
 
-#ifdef _W64
-      //for size_t
-      ResipFastOStream& operator<<(_W64 unsigned int ui)
-      {
-         *this<<(static_cast<unsigned long>(ui));
-         return *this;
-      }
-#else
       ResipFastOStream& operator<<(uint16_t ui)
       {
          *this<<(static_cast<uint32_t>(ui));
          return *this;
       }
-#endif
 
       ResipFastOStream& operator<<(int32_t l)
       {
@@ -195,7 +186,7 @@ class ResipFastOStream : public ResipBasicIOStream
             return *this;
          }
          char buf[33];
-         snprintf(buf,33,"%" PRIi32,l);
+         snprintf(buf,33,"%" PRId32,l);
          size_t count = strlen(buf);
          if (buf_->writebuf(buf,count) < count)
          {
@@ -212,7 +203,7 @@ class ResipFastOStream : public ResipBasicIOStream
             return *this;
          }
          char buf[33];
-         snprintf(buf,33,"%" PRId32,ul);
+         snprintf(buf,33,"%" PRIu32,ul);
          size_t count = strlen(buf);
          if (buf_->writebuf(buf,count) < count)
          {
@@ -222,42 +213,6 @@ class ResipFastOStream : public ResipBasicIOStream
          return *this;
       }
 
-#ifdef WIN32
-      ResipFastOStream& operator<<(__int64 i64)
-      {
-         if (!buf_)
-         {
-            return *this;
-         }
-         char buf[66];
-         snprintf(buf,66,"%" PRId64,i64);
-         size_t count = strlen(buf);
-         if (buf_->writebuf(buf,count) < count)
-         {
-            good_ = false;
-         }
-
-         return *this;
-      }
-
-      ResipFastOStream& operator<<(unsigned __int64 ui64)
-      {
-         if (!buf_)
-         {
-            return *this;
-         }
-
-         char buf[66];
-         snprintf(buf,66,"%" PRIu64,ui64);
-         size_t count = strlen(buf);
-         if (buf_->writebuf(buf,count) < count)
-         {
-            good_ = false;
-         }
-
-         return *this;
-      }
-#else
       ResipFastOStream& operator<<(UInt64 ui64)
       {
          if (!buf_)
@@ -276,7 +231,6 @@ class ResipFastOStream : public ResipBasicIOStream
 
          return *this;
       }
-#endif
 
       ResipFastOStream& operator<<(float f)
       {
