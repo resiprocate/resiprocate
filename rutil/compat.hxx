@@ -90,17 +90,11 @@ typedef unsigned long long uint64_t;
 typedef unsigned int uint32_t;
 typedef unsigned long long uint64_t;
 #elif defined(WIN32)
-typedef unsigned __int8 uint8_t;
-typedef unsigned __int16 uint16_t;
-typedef unsigned __int32 uint32_t;
-typedef signed   __int32 int32_t;
-typedef unsigned __int64 uint64_t;
-// Visual Studio doesn't have inttypes.h so declare these too:
-#define PRIi32 "I32i"
-#define PRId32 "I32d"
-#define PRIi64 "I64i"
-#define PRId64 "I64d"
-#define PRIu64 "I64u"
+#include "rutil/msvc/stdint.h"
+#ifndef __STDC_FORMAT_MACROS
+#define __STDC_FORMAT_MACROS
+#endif
+#include "rutil/msvc/inttypes.h"
 #else
 #error Failed to find or typedef fixed-size types, please add your platform to rutil/compat.hxx
 #endif
