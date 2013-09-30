@@ -88,7 +88,10 @@ typedef unsigned long long uint64_t;
 typedef unsigned int uint32_t;
 typedef unsigned long long uint64_t;
 #elif defined(WIN32)
-typedef unsigned int uint32_t;
+typedef unsigned __int8 uint8_t;
+typedef unsigned __int16 uint16_t;
+typedef unsigned __int32 uint32_t;
+typedef signed   __int32 int32_t;
 typedef unsigned __int64 uint64_t;
 #else
 #error Failed to find or typedef fixed-size types, please add your platform to rutil/compat.hxx
