@@ -155,18 +155,6 @@ class ResipFastOStream : public ResipBasicIOStream
          return *this;
       }
 
-      ResipFastOStream& operator<<(Int8 s)
-      {
-         *this<<(static_cast<Int32>(s));
-         return *this;
-      }
-
-      ResipFastOStream& operator<<(UInt8 us)
-      {
-         *this<<(static_cast<UInt32>(us));
-         return *this;
-      }
-
       ResipFastOStream& operator<<(Int16 i)
       {
          *this<<(static_cast<Int32>(i));
@@ -206,6 +194,64 @@ class ResipFastOStream : public ResipBasicIOStream
          char buf[33];
          //snprintf(buf,33,"%" PRIu32,ul);
          ULTOA((unsigned long int)ul,buf,33,10);
+         size_t count = strlen(buf);
+         if (buf_->writebuf(buf,count) < count)
+         {
+            good_ = false;
+         }
+
+         return *this;
+      }
+
+      ResipFastOStream& operator<<(long l)
+      {
+         if (!buf_)
+         {
+            return *this;
+         }
+
+         char buf[66];
+         LTOA(l,buf,66,10);
+
+         size_t count = strlen(buf);
+         if (buf_->writebuf(buf,count) < count)
+         {
+            good_ = false;
+         }
+
+         return *this;
+      }
+
+      ResipFastOStream& operator<<(unsigned long ul)
+      {
+         if (!buf_)
+         {
+            return *this;
+         }
+
+         char buf[66];
+         ULTOA(ul,buf,66,10);
+
+         size_t count = strlen(buf);
+         if (buf_->writebuf(buf,count) < count)
+         {
+            good_ = false;
+         }
+
+         return *this;
+      }
+
+      ResipFastOStream& operator<<(Int64 i64)
+      {
+         if (!buf_)
+         {
+            return *this;
+         }
+
+         char buf[66];
+         //snprintf(buf,66,"%" PRId64,i64);
+         I64TOA(i64,buf,66,10);
+
          size_t count = strlen(buf);
          if (buf_->writebuf(buf,count) < count)
          {
