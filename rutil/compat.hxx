@@ -141,8 +141,10 @@ typedef int            Int32;
 #endif
 
 #if defined( WIN32 )
+  typedef signed __int64   Int64;
   typedef unsigned __int64 UInt64;
 #else
+  typedef signed long long   Int64;
   typedef unsigned long long UInt64;
 #endif
 //typedef struct { unsigned char octet[16]; }  UInt128;
