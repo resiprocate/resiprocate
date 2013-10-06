@@ -357,11 +357,11 @@ TestServerInviteSession::expect(InviteEvent::Type t,
 
 
 CommonAction* 
-TestServerInviteSession::provideOffer(const resip::SdpContents& offer, resip::DialogUsageManager::EncryptionLevel level, resip::SdpContents* alternative)
+TestServerInviteSession::provideOffer(const resip::SdpContents& offer, resip::DialogUsageManager::EncryptionLevel level, resip::SdpContents* alternative, bool sendOfferAtAccept)
 {
    return new CommonAction(mUa, "ServerInviteSession::provideOffer",
                            boost::bind(&ServerInviteSession::provideOffer, boost::bind<ServerInviteSession*>(&ServerInviteSessionHandle::get, boost::ref(mHandle)),
-                                       offer, level, alternative));
+                                       offer, level, alternative, sendOfferAtAccept));
 }
 
 CommonAction* 

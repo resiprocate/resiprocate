@@ -115,7 +115,7 @@ class TestServerInviteSession : public TestInviteSession
       resip::Data getName() const { return "TestServerInviteSession"; }
 
       CommonAction* provideOffer(const resip::SdpContents& offer, resip::DialogUsageManager::EncryptionLevel level = resip::DialogUsageManager::None, 
-                                 resip::SdpContents* alternative = 0);
+                                 resip::SdpContents* alternative = 0, bool sendOfferAtAccept = false);
       CommonAction* provideAnswer(const resip::SdpContents& answer);
       CommonAction* end(resip::InviteSession::EndReason = resip::InviteSession::NotSpecified);
       CommonAction* reject(int statusCode, resip::WarningCategory* warning=0);
