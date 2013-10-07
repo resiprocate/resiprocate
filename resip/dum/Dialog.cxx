@@ -711,6 +711,7 @@ Dialog::dispatch(const SipMessage& msg)
          case INFO:
          case MESSAGE:
          case UPDATE:
+         case PRACK:
             if (mInviteSession)
             {
                mInviteSession->dispatch(response);

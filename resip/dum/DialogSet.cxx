@@ -755,7 +755,7 @@ DialogSet::dispatch(const SipMessage& msg)
 
          case INFO:   
          case UPDATE:
-         // case PRACK:  ?slg? TODO - shouldn't this be here
+         case PRACK:
             if (dialog)
             {
                break;

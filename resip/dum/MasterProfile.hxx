@@ -42,9 +42,10 @@ class MasterProfile : public UserProfile
 
       typedef enum
       {
-         Never,
-         Supported, 
-         Required
+         Never,     
+         SupportedEssential,  // If UAS - Only use reliable provisionals if sending a body and far end supports
+         Supported,           // If UAS - Always use reliable provisionals if far end supports
+         Required             // If UAS - Always use reliable provisionals
       } ReliableProvisionalMode;
 
 
@@ -59,7 +60,8 @@ class MasterProfile : public UserProfile
       // a really bad idea, as an answer must be generated; the offer cannot be
       // rejected. UPDATE should always be used for O/A exchanges once the
       // dialog is established.
-      // Invite/18x(offer)/PRACK(ans) should work but has not been tested.
+      // Invite/18x(offer)/PRACK(ans) should work but has not been tested. 
+      // TODO - update above comment after testing
       //
       // Explicit limitations are:
       // Overlapping reliable provisional responses that contain a body are not
@@ -71,7 +73,7 @@ class MasterProfile : public UserProfile
       virtual ReliableProvisionalMode getUacReliableProvisionalMode() const;
 
       //Not supported as UAS. Calling setUacReliableProvisionalMode will result
-      //in an assert.
+      //in an assert.  TODO - Update this comment block
       virtual void setUasReliableProvisionalMode(ReliableProvisionalMode mode);
       virtual ReliableProvisionalMode getUasReliableProvisionalMode() const;
 

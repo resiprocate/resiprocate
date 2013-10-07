@@ -1457,8 +1457,8 @@ ServerInviteSession::dispatchFirstSentAnswerReliable(const SipMessage& msg)
          break;
 
       case OnBye:
-          dispatchBye(msg);
-          break;
+         dispatchBye(msg);
+         break;
 
       case OnPrack:
          if(!handlePrack(msg))
@@ -1662,6 +1662,17 @@ ServerInviteSession::dispatchReceivedUpdate(const SipMessage& msg)
           dispatchBye(msg);
           break;
 
+      case OnUpdate:
+      case OnUpdateOffer:
+         // A UAS that receives an UPDATE before it has generated a final response to a previous UPDATE on the 
+         // same dialog MUST return a 500 response
+         {
+            SharedPtr<SipMessage> u500(new SipMessage);
+            mDialog.makeResponse(*u500, msg, 500);
+            send(u500);
+         }
+         break;
+
       default:
          if(msg.isRequest())
          {
@@ -1685,6 +1696,17 @@ ServerInviteSession::dispatchReceivedUpdateWaitingAnswer(const SipMessage& msg)
       case OnBye:
           dispatchBye(msg);
           break;
+
+      case OnUpdate:
+      case OnUpdateOffer:
+         // A UAS that receives an UPDATE before it has generated a final response to a previous UPDATE on the 
+         // same dialog MUST return a 500 response
+         {
+            SharedPtr<SipMessage> u500(new SipMessage);
+            mDialog.makeResponse(*u500, msg, 500);
+            send(u500);
+         }
+         break;
 
       default:
          if(msg.isRequest())
@@ -1749,8 +1771,12 @@ ServerInviteSession::dispatchNegotiatedReliable(const SipMessage& msg)
          break;
          
       case OnUpdate:
-         // TODO - reject UPDATE, teardown call?  Or just respond with 200
-         ErrLog (<< "UPDATE with no offer when in state=" << toData(mState));
+         {
+            // UPDATE with no offer just respond with 200
+            SharedPtr<SipMessage> u200(new SipMessage);
+            mDialog.makeResponse(*u200, msg, 200);
+            send(u200);
+         }
          break;
 
       default:
@@ -1832,9 +1858,11 @@ ServerInviteSession::dispatchBye(const SipMessage& msg)
 void
 ServerInviteSession::dispatchUnknown(const SipMessage& msg)
 {
-   SharedPtr<SipMessage> r481(new SipMessage); // !jf! what should we send here? 
-   mDialog.makeResponse(*r481, msg, 481);
-   send(r481);
+   InfoLog (<< "Unknown request (" << msg.brief() << ") received in state=" << toData(mState) << ", rejecting request and terminating call.");
+
+   SharedPtr<SipMessage> r500(new SipMessage);
+   mDialog.makeResponse(*r500, msg, 500);
+   send(r500);
    
    SharedPtr<SipMessage> i400(new SipMessage);
    mDialog.makeResponse(*i400, mFirstRequest, 400);
@@ -1869,12 +1897,11 @@ ServerInviteSession::sendProvisional(int code, bool earlyFlag)
    m1xx->setContents(0);
    mDialog.makeResponse(*m1xx, mFirstRequest, code);
 
-   // If Invite Requires reliable responses then all provisionals must be reliable   OR
-   // If we require it then all provisionals must be reliable
-   // Other cases caught below
-   bool sendReliably = code > 100 && 
-                       ((mFirstRequest.exists(h_Requires) && mFirstRequest.header(h_Requires).find(Token(Symbols::C100rel))) ||
-                         mDum.getMasterProfile()->getUasReliableProvisionalMode() == MasterProfile::Required);
+   bool sendReliably = code > 100 &&   // Must be a non-100 response
+                       ((mFirstRequest.exists(h_Requires) && mFirstRequest.header(h_Requires).find(Token(Symbols::C100rel))) ||     // Far end requires it (note:  we must at least support it or the invite would have been rejected already)
+                         mDum.getMasterProfile()->getUasReliableProvisionalMode() == MasterProfile::Required ||                     // OR we require it (note: far end must at least support it or the invite would have been rejected)
+                         (mFirstRequest.exists(h_Supporteds) && mFirstRequest.header(h_Supporteds).find(Token(Symbols::C100rel)) && // OR far ends supports it and we support it 
+                          mDum.getMasterProfile()->getUasReliableProvisionalMode() == MasterProfile::Supported));                   // (note:  SupportedEssential is not trapped here, cases for it are added below)
 
    switch (mState)
    {
@@ -1896,7 +1923,7 @@ ServerInviteSession::sendProvisional(int code, bool earlyFlag)
          {
             setOfferAnswer(*m1xx, mCurrentLocalOfferAnswer.get());
             mAnswerSentReliably = true;
-            sendReliably = true;
+            sendReliably = true;  // If UasReliableProvisionalMode is SupportEssential this may flip sendReliably to true
          }
          break;
 
@@ -1916,7 +1943,7 @@ ServerInviteSession::sendProvisional(int code, bool earlyFlag)
          if (code > 100 && (earlyFlag || sendReliably) && mProposedLocalOfferAnswer.get())  
          {
             setOfferAnswer(*m1xx, mProposedLocalOfferAnswer.get());
-            sendReliably = true;
+            sendReliably = true; // If UasReliableProvisionalMode is SupportEssential this may flip sendReliably to true
          }
          break;
 

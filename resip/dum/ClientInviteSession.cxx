@@ -635,7 +635,7 @@ ClientInviteSession::sendPrack(const Contents& offerAnswer)
 }
 
 
-/*
+/* - TODO - Remove me?
 bool
 ClientInviteSession::isNextProvisional(const SipMessage& msg)
 {
