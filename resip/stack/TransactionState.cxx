@@ -656,15 +656,6 @@ TransactionState::process(TransactionController& controller,
                InfoLog(<<"Other end changed our CSeq number... replacing.");
                sip->header(h_CSeq).sequence()=old;
             }
-
-            if(state->mNextTransmission->exists(h_RAck))
-            {
-               if(!(sip->const_header(h_RAck)==state->mNextTransmission->const_header(h_RAck)))
-               {
-                  InfoLog(<<"Other end changed our RAck... replacing.");
-                  sip->header(h_RAck)=state->mNextTransmission->const_header(h_RAck);
-               }
-            }
          }
       }
       // .bwc. This code ensures that the transaction state-machine can recover
