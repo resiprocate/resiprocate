@@ -112,12 +112,18 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
 
       udpTurnServer.reset(new reTurn::UdpServer(ioService, requestHandler, reTurnConfig.mTurnAddress, reTurnConfig.mTurnPort));
       tcpTurnServer.reset(new reTurn::TcpServer(ioService, requestHandler, reTurnConfig.mTurnAddress, reTurnConfig.mTurnPort));
-      tlsTurnServer.reset(new reTurn::TlsServer(ioService, requestHandler, reTurnConfig.mTurnAddress, reTurnConfig.mTlsTurnPort));
+      if(reTurnConfig.mTlsTurnPort != 0)
+      {
+         tlsTurnServer.reset(new reTurn::TlsServer(ioService, requestHandler, reTurnConfig.mTurnAddress, reTurnConfig.mTlsTurnPort));
+      }
 
 #ifdef USE_IPV6
       udpV6TurnServer.reset(new reTurn::UdpServer(ioService, requestHandler, reTurnConfig.mTurnV6Address, reTurnConfig.mTurnPort));
       tcpV6TurnServer.reset(new reTurn::TcpServer(ioService, requestHandler, reTurnConfig.mTurnV6Address, reTurnConfig.mTurnPort));
-      tlsV6TurnServer.reset(new reTurn::TlsServer(ioService, requestHandler, reTurnConfig.mTurnV6Address, reTurnConfig.mTlsTurnPort));
+      if(reTurnConfig.mTlsTurnPort != 0)
+      {
+         tlsV6TurnServer.reset(new reTurn::TlsServer(ioService, requestHandler, reTurnConfig.mTurnV6Address, reTurnConfig.mTlsTurnPort));
+      }
 #endif
 
       if(reTurnConfig.mAltStunPort != 0) // if alt stun port is non-zero, then RFC3489 support is enabled
@@ -136,12 +142,18 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
 
       udpTurnServer->start();
       tcpTurnServer->start();
-      tlsTurnServer->start();
+      if(tlsTurnServer)
+      {
+         tlsTurnServer->start();
+      }
 
 #ifdef USE_IPV6
       udpV6TurnServer->start();
       tcpV6TurnServer->start();
-      tlsV6TurnServer->start();
+      if(tlsV6TurnServer)
+      {
+         tlsV6TurnServer->start();
+      }
 #endif
 
       // Drop privileges (can do this now that sockets are bound)
