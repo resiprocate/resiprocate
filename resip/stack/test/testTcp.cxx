@@ -317,7 +317,7 @@ main(int argc, char* argv[])
          // any sip traffic on this fifo.
          if(received)
          {
-            cout << "Unexpected message received: " << received << endl;
+            cout << "Unexpected message received: " << *received << endl;
          }
          assert(!received);
          delete msg;
