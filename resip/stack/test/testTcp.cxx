@@ -328,6 +328,11 @@ main(int argc, char* argv[])
          assert(!received);
       }
 
+      // Throw in a couple of process calls to ensure that both sides have
+      // torn down the connection.
+      process(sender, receiver);
+      process(sender, receiver);
+
       // Verify that good traffic can come through
       std::auto_ptr<SendData> goodSend(sender->makeSendData(dest, wellFormed, Data(tid++), Data::Empty));
       sender->send(goodSend);
