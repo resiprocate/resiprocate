@@ -30,6 +30,27 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
+void
+process(TcpBaseTransport* sender,
+        TcpBaseTransport* receiver)
+{
+   FdSet fdset; 
+   if (receiver) receiver->buildFdSet(fdset);
+   sender->buildFdSet(fdset);
+
+   fdset.selectMilliSeconds(1); 
+
+   try
+   {
+      if (receiver) receiver->process(fdset);
+   }
+   catch(std::exception& e)
+   {
+      // .bwc. Do nothing substantive, since the stack thread doesn't
+   }
+   sender->process(fdset);
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -216,7 +237,6 @@ main(int argc, char* argv[])
         << runs / ((float) elapsed / 1000.0) << " calls per second.]" << endl;
 
    SipMessage::checkContentLength=false;
-   list<SipMessage*> garbage;
    {
       UInt64 startTime = Timer::getTimeMs();
       for (int i=0; i<runs; i++)
@@ -226,7 +246,7 @@ main(int argc, char* argv[])
          m->header(h_Vias).front().sentHost() = "localhost";
          m->header(h_Vias).front().sentPort() = sender->port();
           
-         garbage.push_back(m);
+         messages.push_back(m);
       }
 
       UInt64 elapsed = Timer::getTimeMs() - startTime;
@@ -239,80 +259,66 @@ main(int argc, char* argv[])
    int type=0;
    Data badContentLength1("-1");
    Data badContentLength2("999999999999999999999999999999");
-   std::string hugeString(4096,'h');
+   std::string hugeString(ConnectionBase::ChunkSize*2,'h');
    ExtensionHeader h_huge(Data::from(hugeString));
 
-   while (!garbage.empty())
+   while (!messages.empty())
    {
-      Data encoded;
+      // We need a well formed message to test that any traffic has
+      // gotten through at all.
+      Data wellFormed;
+      std::auto_ptr<SipMessage> next(messages.front());
+      messages.pop_front();
             
+      {
+         DataStream strm(wellFormed);
+         next->encode(strm);
+         outstanding++;
+      }
+
+      Data garbage;
+      const uint32_t NEGATIVE_CONTENT_LENGTH = 0;
+      const uint32_t HUGE_CONTENT_LENGTH = 1;
+      const uint32_t HUGE_HEADER_NAME = 2;
+      const uint32_t HUGE_HEADER_VALUE = 3;
+
       switch(type%4)
       {
-         case 0:
-         case 1:
+         case NEGATIVE_CONTENT_LENGTH:
+         case HUGE_CONTENT_LENGTH:
          {
+            garbage = wellFormed;
             // .bwc. Send one at a time for maximum potential damage.
-            {
-               DataStream strm(encoded);
-               SipMessage* next = garbage.front();
-               garbage.pop_front();
-               // .bwc. encodeSipFrag doesn't encode Content-Length if there is no
-               // body; allowing us to add a bad one without conflicting.
-               next->encodeSipFrag(strm);
-               outstanding++;
-               delete next;
-            }
-
-            encoded.replace("\r\n\r\n","\r\nContent-Length: "+( type ? badContentLength1 : badContentLength2)+"\r\n\r\n");
+            garbage.replace("Content-Length: 0","Content-Length: "+( type == NEGATIVE_CONTENT_LENGTH ? badContentLength1 : badContentLength2));
          }
          break;
-         case 2:
+         case HUGE_HEADER_NAME:
          {
-            DataStream strm(encoded);
-            SipMessage* next = garbage.front();
-            garbage.pop_front();
+            DataStream strm(garbage);
             next->header(h_Subject).value()=Data(hugeString.data(), hugeString.size());
             next->encode(strm);
-            delete next;
          }
          break;
-         case 3:
+         case HUGE_HEADER_VALUE:
          {
-            DataStream strm(encoded);
-            SipMessage* next = garbage.front();
-            garbage.pop_front();
+            DataStream strm(garbage);
             next->header(h_huge).push_front(StringCategory("foo"));
             next->encode(strm);
-            delete next;
          }
          break;
       }
 
       ++type;
-      std::auto_ptr<SendData> toSend(sender->makeSendData(dest, encoded, Data(tid++), Data::Empty));
-      sender->send(toSend);
+      // Send a garbage request, followed by a good request
+      std::auto_ptr<SendData> garbageSend(sender->makeSendData(dest, garbage, Data(tid++), Data::Empty));
+      sender->send(garbageSend);
 
-      FdSet fdset; 
-      if (receiver) receiver->buildFdSet(fdset);
-      sender->buildFdSet(fdset);
-
-      fdset.selectMilliSeconds(seltime); 
-      
-      try
+     
+      for(int p=0; p < 10; ++p)
       {
-         if (receiver) receiver->process(fdset);
-      }
-      catch(std::exception& e)
-      {
-         // .bwc. Do nothing substantive, since the stack thread doesn't
-      }
-      sender->process(fdset);
-      
-      Message* msg;
-      while (rxFifo.messageAvailable())
-      {
-         msg = rxFifo.getNext();
-         SipMessage* received = dynamic_cast<SipMessage*>(msg);
+         process(sender, receiver);
+         std::auto_ptr<Message> msg(rxFifo.getNext(1));
+         SipMessage* received = dynamic_cast<SipMessage*>(msg.get());
          // .bwc. These are all unrecoverable garbage, we should not get
          // any sip traffic on this fifo.
          if(received)
@@ -320,8 +326,25 @@ main(int argc, char* argv[])
             cout << "Unexpected message received: " << *received << endl;
          }
          assert(!received);
-         delete msg;
       }
+
+      // Verify that good traffic can come through
+      std::auto_ptr<SendData> goodSend(sender->makeSendData(dest, wellFormed, Data(tid++), Data::Empty));
+      sender->send(goodSend);
+      bool failedToReceiveGoodMessage = true;
+      for(int p=0; p < 10; ++p)
+      {
+         process(sender, receiver);
+         std::auto_ptr<Message> msg(rxFifo.getNext(10));
+         SipMessage* received = dynamic_cast<SipMessage*>(msg.get());
+         if(received)
+         {
+            cout << *received << endl;
+            failedToReceiveGoodMessage = false;
+            break;
+         }
+      }      
+      assert(!failedToReceiveGoodMessage);
    }
 
    return 0;
