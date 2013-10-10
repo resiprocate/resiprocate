@@ -256,7 +256,7 @@ main(int argc, char* argv[])
       InfoLog (<< "Messages created");
    }
 
-   int type=0;
+   uint32_t type=0;
    Data badContentLength1("-1");
    Data badContentLength2("999999999999999999999999999999");
    std::string hugeString(ConnectionBase::ChunkSize*2,'h');
@@ -399,3 +399,6 @@ main(int argc, char* argv[])
  * <http://www.vovida.org/>.
  *
  */
+
+// vim: softtabstop=3:shiftwidth=3:expandtab
+
