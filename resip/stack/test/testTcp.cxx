@@ -328,9 +328,13 @@ main(int argc, char* argv[])
          assert(!received);
       }
 
-      // Throw in a couple of process calls to ensure that both sides have
+      // Send a stun ping to make sure the sender has noticed the connection
+      // is closed.
+      std::auto_ptr<SendData> ping(sender->makeSendData(dest, "\r\n\r\n", Data(tid++), Data::Empty));
+      sender->send(ping);
+
+      // Throw in a process call to ensure that both sides have
       // torn down the connection.
-      process(sender, receiver);
       process(sender, receiver);
 
       // Verify that good traffic can come through
