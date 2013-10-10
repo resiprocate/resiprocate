@@ -256,7 +256,7 @@ main(int argc, char* argv[])
       InfoLog (<< "Messages created");
    }
 
-   uint32_t type=0;
+   UInt32 type=0;
    Data badContentLength1("-1");
    Data badContentLength2("999999999999999999999999999999");
    std::string hugeString(ConnectionBase::ChunkSize*2,'h');
@@ -277,10 +277,10 @@ main(int argc, char* argv[])
       }
 
       Data garbage;
-      const uint32_t NEGATIVE_CONTENT_LENGTH = 0;
-      const uint32_t HUGE_CONTENT_LENGTH = 1;
-      const uint32_t HUGE_HEADER_NAME = 2;
-      const uint32_t HUGE_HEADER_VALUE = 3;
+      const UInt32 NEGATIVE_CONTENT_LENGTH = 0;
+      const UInt32 HUGE_CONTENT_LENGTH = 1;
+      const UInt32 HUGE_HEADER_NAME = 2;
+      const UInt32 HUGE_HEADER_VALUE = 3;
 
       switch(type%4)
       {

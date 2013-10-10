@@ -6,11 +6,13 @@
 #include "config.h"
 #endif
 
+#include "compat.hxx"
+
 #ifdef USE_RADIUS_CLIENT
 
 #ifdef RESIP_HAVE_FREERADIUS_CLIENT
 #include <freeradius-client.h>
-typedef uint32_t UINT4;
+typedef UInt32 UINT4;
 #else
 #include <radiusclient-ng.h>
 #endif
