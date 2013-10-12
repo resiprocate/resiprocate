@@ -240,6 +240,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy ..\..\contrib\popt\win32\*.dll .\"
 			/>
 		</Configuration>
 		<Configuration

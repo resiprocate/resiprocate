@@ -4,6 +4,7 @@
 	Version="9.00"
 	Name="cppunit"
 	ProjectGUID="{D23D6465-7EA9-45FD-9784-54DBF8A1A5CE}"
+	RootNamespace="cppunit"
 	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
@@ -89,6 +90,7 @@
 				Name="VCPostBuildEventTool"
 				Description="Copying target to lib/"
 				CommandLine="copy &quot;$(TargetPath)&quot; ..\..\lib\&quot;$(TargetName)&quot;.lib"
+				ExcludedFromBuild="true"
 			/>
 		</Configuration>
 		<Configuration
@@ -168,6 +170,7 @@
 				Name="VCPostBuildEventTool"
 				Description="Copying target to lib/"
 				CommandLine="copy &quot;$(TargetPath)&quot; ..\..\lib\&quot;$(TargetName)&quot;.lib"
+				ExcludedFromBuild="true"
 			/>
 		</Configuration>
 	</Configurations>
@@ -400,11 +403,11 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\TextTestRunner.h"
+				RelativePath="..\..\include\cppunit\ui\text\TextTestRunner.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\include\cppunit\ui\text\TextTestRunner.h"
+				RelativePath="..\..\include\cppunit\TextTestRunner.h"
 				>
 			</File>
 		</Filter>
@@ -1792,11 +1795,11 @@
 			>
 		</File>
 		<File
-			RelativePath="..\..\include\cppunit\Makefile.am"
+			RelativePath="Makefile.am"
 			>
 		</File>
 		<File
-			RelativePath="Makefile.am"
+			RelativePath="..\..\include\cppunit\Makefile.am"
 			>
 		</File>
 	</Files>
