@@ -50,8 +50,7 @@ class TestRepro : public TestProxy
                                const resip::Data& method, 
                                const resip::Data& event);
       virtual bool addTrustedHost(const resip::Data& host, resip::TransportType transport, short port = 0);
-      // no current support in AclStore to remove entry (AclStore::buildKey is private).
-      // void deleteTrustedHost(const resip::Data& host, resip::TransportType transport, short port = 0);
+      virtual void deleteTrustedHost(const resip::Data& host, resip::TransportType transport, short port = 0);
 
    private:
       resip::SipStack mStack;

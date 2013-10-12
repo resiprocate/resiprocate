@@ -87,15 +87,8 @@ void sleepSeconds(unsigned int seconds)
 
 class DumTestCase : public DumFixture
 {
-	CPPUNIT_TEST_SUITE( DumTestCase ); 
+   CPPUNIT_TEST_SUITE( DumTestCase ); 
 #if 0
-      CPPUNIT_TEST(testInviteBasicSuccessWithPrack);       
-      CPPUNIT_TEST(testPrackUpdate);       
-      CPPUNIT_TEST(testPrackRetrans);
-      CPPUNIT_TEST(testPrackOptionTag);
-      CPPUNIT_TEST(testPrackUasUpdate);      
-      CPPUNIT_TEST(testPrackUac491);      
-      CPPUNIT_TEST(testPrackUas491);      
       // this test relies on a really long sleep, so don't run it unless you wanna wait:
       CPPUNIT_TEST(testSessionTimerUasRefresher);
 #else
@@ -109,20 +102,18 @@ class DumTestCase : public DumFixture
       CPPUNIT_TEST(testDialogEventCancelUac);
       CPPUNIT_TEST(testDialogEventReplaces);
       CPPUNIT_TEST(testDialogEventInvite500);
+
       CPPUNIT_TEST(testPrackEmpty180rel);
-      
       CPPUNIT_TEST(testPrackMultiple180rel);
-      CPPUNIT_TEST(testInviteBasicSuccessWithPrack);       
-      CPPUNIT_TEST(testPrackUpdate);       
+      CPPUNIT_TEST(testInviteBasicSuccessWithPrack);
+      CPPUNIT_TEST(testPrackUpdate);
       CPPUNIT_TEST(testPrackRetrans);
       CPPUNIT_TEST(testPrackOptionTag);
-      CPPUNIT_TEST(testPrackUasUpdate);      
-      CPPUNIT_TEST(testPrackUac491);      
-      CPPUNIT_TEST(testPrackUas491);      
+      CPPUNIT_TEST(testPrackUasUpdate);
+      CPPUNIT_TEST(testPrackUac491);
+      CPPUNIT_TEST(testPrackUas491);
 
-      //CPPUNIT_TEST(testReinviteWithByeSentAfterMissedAck);
-      //CPPUNIT_TEST(testConnectionTermination);
-      //CPPUNIT_TEST(testConnectionTerminationRefreshFail);
+      //CPPUNIT_TEST(testReinviteWithByeSentAfterMissedAck);  // comment above indicates test case needs handling for retransmissions
 
       CPPUNIT_TEST(testOutOfDialogReferNoReferSubWithoutReferSubHeader);
       CPPUNIT_TEST(testOutOfDialogRefer);
@@ -136,6 +127,7 @@ class DumTestCase : public DumFixture
       CPPUNIT_TEST(test3pccFlow1Reject);
       CPPUNIT_TEST(testBlindTransfer);
       CPPUNIT_TEST(testBlindTransferRejected);
+
       CPPUNIT_TEST(testInvite302);
       CPPUNIT_TEST(testInviteBusy);
       CPPUNIT_TEST(testInviteLateMediaSuccess);
@@ -145,7 +137,7 @@ class DumTestCase : public DumFixture
       CPPUNIT_TEST(testReInviteIpChange);
       CPPUNIT_TEST(testRegisterBasicWithoutRinstance);
       CPPUNIT_TEST(testReinviteLateMedia);
-      CPPUNIT_TEST(testReinviteRejected);
+      CPPUNIT_TEST(testReinviteRejected); 
       CPPUNIT_TEST(testTransferNoReferSub);
       CPPUNIT_TEST(testTransferNoReferSubWithoutReferSubHeaderIn202);
       CPPUNIT_TEST(testInviteBasicSuccess);
@@ -154,13 +146,13 @@ class DumTestCase : public DumFixture
       CPPUNIT_TEST(testPublish423);
       CPPUNIT_TEST(testPublishBasic);
       CPPUNIT_TEST(testPublishRefresh);
-      CPPUNIT_TEST(testPublishUpdate);
-      //CPPUNIT_TEST(testRegisterBasicWithMethodsParam);
+      CPPUNIT_TEST(testPublishUpdate); 
+
+      CPPUNIT_TEST(testRegisterBasicWithMethodsParam);
       CPPUNIT_TEST(testRegisterBasicWithoutMethodsParam);
-      CPPUNIT_TEST(testRegisterBasicWithRinstance);
-//      CPPUNIT_TEST(testServiceRoute); //could be correct; see
-//      draft-rosenberg-sip-route-construct-02.txt. Desired behaviour needs to
-//      be determined.
+      // CPPUNIT_TEST(testRegisterBasicWithRinstance);  // An instance id is set in DumUserAgent::makeProfile - so rinstance won't be used
+      // CPPUNIT_TEST(testServiceRoute); //could be correct; see draft-rosenberg-sip-route-construct-02.txt. Desired behaviour needs to be determined.
+      
       CPPUNIT_TEST(testStaleNonceHandling);
       CPPUNIT_TEST(testSubscribe);
       CPPUNIT_TEST(testSubscribe406);
@@ -176,8 +168,8 @@ class DumTestCase : public DumFixture
       CPPUNIT_TEST(testInDialogSubscribeWithoutEventHandler);
       CPPUNIT_TEST(testOutOfDialogSubscribeWithoutEventHandler);
       CPPUNIT_TEST(testReInviteRemoveVideo);
-      CPPUNIT_TEST(testByesCrossedOnTheWire);
-//         CPPUNIT_TEST(testReinviteNo200);
+      // CPPUNIT_TEST(testByesCrossedOnTheWire);  // When running through repro using record-routing (hardcoded default) the 200 to the first bye beats the crossed bye and we get a 481 response instead
+      CPPUNIT_TEST(testReinviteNo200);  // Requires record routing
 #endif
       CPPUNIT_TEST_SUITE_END(); 
 
@@ -1029,6 +1021,9 @@ class DumTestCase : public DumFixture
       {
          InfoLog(<< "testDialogEventUasBasic");
 
+         // Disable digest authentication for this test by treating messages from loopback adaptor as trusted
+         proxy->addTrustedHost("127.0.0.1", UDP);
+
          jason->getDum().addServerSubscriptionHandler("dialog", jason);
          DialogEventStateManager* desm(jason->getDum().createDialogEventStateManager(jason));
          (void)desm;
@@ -1090,11 +1085,17 @@ class DumTestCase : public DumFixture
                  Sub(testDialogEvt.expect(DialogEvent_Terminated, *pDi4, InviteSessionHandler::LocalBye, WaitForCommand, uac.noAction()))),
              WaitForEndOfSeq);
          ExecuteSequences();
+
+         // Re-enable digest auth for localhost
+         proxy->deleteTrustedHost("127.0.0.1", UDP);
       }
 
       void testDialogEvent302Uas()
       {
          InfoLog(<< "testDialogEvent302Uas");
+
+         // Disable digest authentication for this test by treating messages from loopback adaptor as trusted
+         proxy->addTrustedHost("127.0.0.1", UDP);
 
          jason->getDum().addServerSubscriptionHandler("dialog", jason);
          DialogEventStateManager* desm(jason->getDum().createDialogEventStateManager(jason));
@@ -1151,11 +1152,17 @@ class DumTestCase : public DumFixture
                          Sub(sheila->expect(INVITE/302, from(proxy), WaitForResponse, sheila->ack()))))),
              WaitForEndOfSeq);
          ExecuteSequences();
+
+         // Re-enable digest auth for localhost
+         proxy->deleteTrustedHost("127.0.0.1", UDP);
       }
 
       void testDialogEventCancelUas()
       {
          InfoLog(<< "testDialogEventCancelUas");
+
+         // Disable digest authentication for this test by treating messages from loopback adaptor as trusted
+         proxy->addTrustedHost("127.0.0.1", UDP);
 
          jason->getDum().addServerSubscriptionHandler("dialog", jason);
          DialogEventStateManager* desm(jason->getDum().createDialogEventStateManager(jason));
@@ -1215,6 +1222,9 @@ class DumTestCase : public DumFixture
                              sheila->expect(INVITE/487, from(proxy), WaitForResponse, sheila->ack()))))),
              WaitForEndOfSeq);
          ExecuteSequences();
+
+         // Re-enable digest auth for localhost
+         proxy->deleteTrustedHost("127.0.0.1", UDP);
       }
 
       void testReinviteNo200()
@@ -1232,7 +1242,7 @@ class DumTestCase : public DumFixture
          Seq(david->registerUser(60, david->getDefaultContacts()),
              optional(david->expect(REGISTER/407, from(proxy), WaitForResponse, david->digestRespond())),
              david->expect(REGISTER/200, from(proxy), WaitForResponse, derek->registerUa()),
-             derek->expect(Register_Success, clientReg, hasRinstance(), WaitForRegistration, david->invite(derek->getAor().uri())),
+             derek->expect(Register_Success, clientReg, *TestEndPoint::AlwaysTruePred, WaitForRegistration, david->invite(derek->getAor().uri())),
              optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
              david->expect(INVITE/407, from(proxy), WaitForResponse, chain(david->ack(), david->digestRespond())),
              optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
@@ -1255,7 +1265,7 @@ class DumTestCase : public DumFixture
              david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
              david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
              david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
-             uas.expect(Invite_OfferRejected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.end()),
+             uas.expect(Invite_OfferRejected, *TestEndPoint::AlwaysTruePred, 5000, uas.end()),
              And(Sub(uas.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction())),
                  Sub(david->expect(BYE, from(proxy), CallTimeout, david->ok()))),
              CallTimeout);
@@ -1272,7 +1282,7 @@ class DumTestCase : public DumFixture
          Seq(david->registerUser(60, david->getDefaultContacts()),
              optional(david->expect(REGISTER/407, from(proxy), WaitForResponse, david->digestRespond())),
              david->expect(REGISTER/200, from(proxy), WaitForResponse, derek->registerUa()), 
-             derek->expect(Register_Success, clientReg, hasRinstance(), WaitForRegistration, david->invite(derek->getAor().uri())),
+             derek->expect(Register_Success, clientReg, *TestEndPoint::AlwaysTruePred, WaitForRegistration, david->invite(derek->getAor().uri())),
              optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
              david->expect(INVITE/407, from(proxy), WaitForResponse, chain(david->ack(), david->digestRespond())),
              optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
@@ -1301,7 +1311,7 @@ class DumTestCase : public DumFixture
           Seq(david->registerUser(60, david->getDefaultContacts()),
              optional(david->expect(REGISTER/407, from(proxy), WaitForResponse, david->digestRespond())),
              david->expect(REGISTER/200, from(proxy), WaitForResponse, derek->registerUa()), 
-             derek->expect(Register_Success, clientReg, hasRinstance(), WaitForRegistration, david->invite(derek->getAor().uri())),
+             derek->expect(Register_Success, clientReg, *TestEndPoint::AlwaysTruePred, WaitForRegistration, david->invite(derek->getAor().uri())),
              optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
              david->expect(INVITE/407, from(proxy), WaitForResponse, chain(david->ack(), david->digestRespond())),
              optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
@@ -3085,7 +3095,7 @@ class DumTestCase : public DumFixture
          TestClientRegistration clientReg(jason);
 
          Seq(jason->registerUa(),
-             jason->expect(Register_Success, clientReg, hasRinstance(), WaitForRegistration, jason->noAction()),
+             jason->expect(Register_Success, clientReg, *TestEndPoint::AlwaysTruePred, WaitForRegistration, jason->noAction()),
              WaitForEndOfSeq);
          ExecuteSequences();
 
@@ -3141,7 +3151,7 @@ class DumTestCase : public DumFixture
 
          TestClientRegistration clientReg(derek);
          Seq(derek->registerUa(),
-             derek->expect(Register_Success, clientReg, hasRinstance(), WaitForRegistration, derek->noAction()),
+             derek->expect(Register_Success, clientReg, *TestEndPoint::AlwaysTruePred, WaitForRegistration, derek->noAction()),
              WaitForEndOfSeq);
          ExecuteSequences();
 
@@ -3172,7 +3182,7 @@ class DumTestCase : public DumFixture
 
          TestClientRegistration clientReg(derek);
          Seq(derek->registerUa(),
-             derek->expect(Register_Success, clientReg, hasRinstance(), WaitForRegistration, derek->noAction()),
+             derek->expect(Register_Success, clientReg, *TestEndPoint::AlwaysTruePred, WaitForRegistration, derek->noAction()),
              WaitForEndOfSeq);
          ExecuteSequences();
 
@@ -3208,7 +3218,7 @@ class DumTestCase : public DumFixture
 
          TestClientRegistration clientReg(derek);
          Seq(derek->registerUa(),
-             derek->expect(Register_Success, clientReg, hasRinstance(), WaitForRegistration, derek->noAction()),
+             derek->expect(Register_Success, clientReg, *TestEndPoint::AlwaysTruePred, WaitForRegistration, derek->noAction()),
              WaitForEndOfSeq);
          ExecuteSequences();
 
@@ -4272,7 +4282,6 @@ class DumTestCase : public DumFixture
              WaitForEndOfTest);
          ExecuteSequences();
       }
-
 };
 
 // Registers the fixture into the 'registry'
@@ -4309,51 +4318,48 @@ int main(int argc, char** argv)
       resip::Timer::T2 = 8000;
 
       CommandLineSelector testSelector;
-	  CPPUNIT_NS::TextTestRunner testrunner; 
+      CPPUNIT_NS::TextTestRunner testrunner; 
 
-       // informs test-listener about testresults
-       CPPUNIT_NS::TestResult testresult;
-       // register listener for collecting the test-results
-       CPPUNIT_NS::TestResultCollector collectedresults;
-       testresult.addListener (&collectedresults);
-	   // Add a listener that displays test progres
-       CPTextTestProgressListener progress;
-       testresult.addListener( &progress );   
+      // informs test-listener about testresults
+      CPPUNIT_NS::TestResult testresult;
+      // register listener for collecting the test-results
+      CPPUNIT_NS::TestResultCollector collectedresults;
+      testresult.addListener (&collectedresults);
+      // Add a listener that displays test progres
+      CPTextTestProgressListener progress;
+      testresult.addListener( &progress );   
 
-	   // Get the top level suite from the registry
-       CppUnit::Test *suite = CppUnit::TestFactoryRegistry::getRegistry().makeTest();
+      // Get the top level suite from the registry
+      CppUnit::Test *suite = CppUnit::TestFactoryRegistry::getRegistry().makeTest();
 
-	   int numRepetitions = 1;
-	   if(CppTestSelector::SelectTests(suite,testrunner, testSelector,numRepetitions) > 0)
-	   {
-	      DumFixture::initialize(argc, argv);
+      int numRepetitions = 1;
+      if(CppTestSelector::SelectTests(suite,testrunner, testSelector,numRepetitions) > 0)
+      {
+         DumFixture::initialize(argc, argv);
 
-		  for(int x=0; x<numRepetitions; x++)
-             testrunner.run (testresult);
+         for(int x=0; x<numRepetitions; x++)
+            testrunner.run (testresult);
 
-		  DumFixture::destroyStatic();
+         DumFixture::destroyStatic();
 
-	     // output results in text-format
-	     //TextOutputter (TestResultCollector *result, OStream &stream)
+         // output results in text-format
+         //TextOutputter (TestResultCollector *result, OStream &stream)
          CPPUNIT_NS :: TextOutputter textoutputter (&collectedresults, std::cerr);
          textoutputter.write ();
-	     textoutputter.printStatistics();
+         textoutputter.printStatistics();
 
          // output results in xml-format		
-	     ofstream testResult(TEST_RESULT_FILE);
+         ofstream testResult(TEST_RESULT_FILE);
          CPPUNIT_NS :: XmlOutputter xmloutputter (&collectedresults, testResult);
          xmloutputter.write ();
-	     testResult.close();
-		 
-	   }
+         testResult.close();
+      }
 
       //CppUnit::TextUi::TestRunner runner;
 
       //runner.addTest( MyTestCase::suite() );
       //runner.run();
-      DebugLog(<< "Finished");
-
-      
+      DebugLog(<< "Finished");      
    }
    catch (BaseException& e)
    {
