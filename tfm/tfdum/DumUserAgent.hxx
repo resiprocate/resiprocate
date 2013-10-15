@@ -90,7 +90,6 @@ class DumUserAgent : public EndPoint,
       const resip::Data& getInstanceId() const;
       resip::Uri getContact() const;
 
-      
       static resip::SharedPtr<resip::MasterProfile> makeProfile(const resip::Uri& aor, const resip::Data& password);
 
       resip::SharedPtr<resip::MasterProfile> getProfile() const 
@@ -98,7 +97,11 @@ class DumUserAgent : public EndPoint,
          return mProfile;
       }
 
-      const resip::NameAddr& getAor() const;      
+      const resip::NameAddr& getAor() const;
+
+      // special handling required for UAC Prack scenario - must call provideOffer from 
+      // onAnswer callback in order to get Offer to be provided in first PRACK
+      ExpectAction* setOfferToProvideInNextOnAnswerCallback(boost::shared_ptr<resip::SdpContents> offer);
 
 //      DumUaAction* start();
       DumUaAction* shutdownUa();
@@ -531,6 +534,7 @@ class DumUserAgent : public EndPoint,
       virtual void onIllegalNegotiation(resip::InviteSessionHandle, const resip::SipMessage& msg);
       virtual void onSessionExpired(resip::InviteSessionHandle);
       virtual void onReferNoSub(resip::InviteSessionHandle, const resip::SipMessage& msg);
+      virtual void onPrack(resip::ServerInviteSessionHandle, const resip::SipMessage &msg);
 
       // ClientPublicationHandler
       virtual void onSuccess(resip::ClientPublicationHandle, const resip::SipMessage&);
@@ -607,6 +611,10 @@ private:
       // out of dialog refer
       resip::ServerSubscriptionHandle mServerSubscription;
       resip::SipMessage mReferMessage;
+
+      // special handling required for UAC Prack scenario - must call provideOffer from 
+      // onAnswer callback in order to get Offer to be provided in first PRACK
+      boost::shared_ptr<resip::SdpContents> mOfferToProvideInNextOnAnswerCallback;
 
       typedef std::set<TestUsage*> TestUsages;
       TestUsages mTestUsages;

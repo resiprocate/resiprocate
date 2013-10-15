@@ -32,7 +32,8 @@ ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
    InviteSession(dum, dialog),
    mStaleCallTimerSeq(1),
    mCancelledTimerSeq(1),
-   mServerSub(serverSub)
+   mServerSub(serverSub),
+   mAllowOfferInPrack(false)
 {
    assert(request->isRequest());
    if(initialOffer)  
@@ -65,22 +66,32 @@ ClientInviteSession::provideOffer(const Contents& offer, DialogUsageManager::Enc
    switch(mState)
    {
       case UAC_EarlyWithAnswer:
-      {
-         transition(UAC_SentUpdateEarly);
+         if(mAllowOfferInPrack)
+         {
+            // This flag is enabled when we are about to send our first PRACK.  We are
+            // allowed to send an offer in our first PRACK request, so don't use UPDATE in 
+            // this case.
+            //  Remember proposed local offferAnswer.
+            mProposedLocalOfferAnswer = InviteSession::makeOfferAnswer(offer, alternative);
+            mProposedEncryptionLevel = level;
+         }
+         else
+         {
+            transition(UAC_SentUpdateEarly);
 
-         //  Creates an UPDATE request with application supplied offer.
-         mDialog.makeRequest(*mLastLocalSessionModification, UPDATE);
-         InviteSession::setOfferAnswer(*mLastLocalSessionModification, offer);
+            //  Creates an UPDATE request with application supplied offer.
+            mDialog.makeRequest(*mLastLocalSessionModification, UPDATE);
+            InviteSession::setOfferAnswer(*mLastLocalSessionModification, offer);
 
-         //  Remember proposed local offferAnswer.
-         mProposedLocalOfferAnswer = InviteSession::makeOfferAnswer(offer, alternative);
-         mProposedEncryptionLevel = level;
+            //  Remember proposed local offferAnswer.
+            mProposedLocalOfferAnswer = InviteSession::makeOfferAnswer(offer, alternative);
+            mProposedEncryptionLevel = level;
 
-         //  Send the req and do state transition.
-         DumHelper::setOutgoingEncryptionLevel(*mLastLocalSessionModification, mProposedEncryptionLevel);
-         send(mLastLocalSessionModification);
+            //  Send the req and do state transition.
+            DumHelper::setOutgoingEncryptionLevel(*mLastLocalSessionModification, mProposedEncryptionLevel);
+            send(mLastLocalSessionModification);
+         }
          break;
-      }
 
       case UAC_SentAnswer:
          // just queue it for later
@@ -128,8 +139,8 @@ ClientInviteSession::provideAnswer (const Contents& answer)
          mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
 
-         //  Creates an PRACK request with application supplied offer.
-         sendPrack(answer);
+         //  Creates a PRACK request with application supplied answer
+         sendPrack(answer, mCurrentEncryptionLevel);
          break;
       }
 
@@ -574,7 +585,7 @@ ClientInviteSession::handleFinalResponse(const SipMessage& msg)
 }
 
 void
-ClientInviteSession::handle1xxOffer (const SipMessage& msg, const Contents& offer)
+ClientInviteSession::handle1xxOffer(const SipMessage& msg, const Contents& offer)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
 
@@ -595,7 +606,16 @@ ClientInviteSession::handle1xxAnswer(const SipMessage& msg, const Contents& answ
    handleProvisional(msg);
    handler->onAnswer(getSessionHandle(), msg, answer);
 
-   sendPrackIfNeeded(msg);
+   // If offer is provided in onAnswer callback and we are allowed to offer in the 
+   // PRACK (ie: first PRACK) then send offer in PRACK
+   if(mAllowOfferInPrack && mProposedLocalOfferAnswer.get())
+   {
+      sendPrack(*mProposedLocalOfferAnswer.get(), mProposedEncryptionLevel);
+   }
+   else
+   {
+      sendPrackIfNeeded(msg);
+   }
 }
 
 // will not include SDP (this is a subsequent 1xx)
@@ -615,11 +635,12 @@ ClientInviteSession::sendPrackIfNeeded(const SipMessage& msg)
    }
 }
 
-// This version is used to send an answer to the UAS in PRACK
-// from EarlyWithOffer state. Assumes that it is the first PRACK. Subsequent
-// PRACK will not have SDP
+// This version is used to send an answer to the UAS in PRACK from EarlyWithOffer 
+// state. Assumes that it is the first PRACK. Subsequent PRACK will not have SDP
+// Also used to send an offer in the first PRACK if the 18x included an
+// answer.
 void
-ClientInviteSession::sendPrack(const Contents& offerAnswer)
+ClientInviteSession::sendPrack(const Contents& offerAnswer, DialogUsageManager::EncryptionLevel encryptionLevel)
 {
    SharedPtr<SipMessage> prack(new SipMessage);
    mDialog.makeRequest(*prack, PRACK);
@@ -630,7 +651,7 @@ ClientInviteSession::sendPrack(const Contents& offerAnswer)
    //  Remember last session modification.
    // mLastSessionModification = prack; // ?slg? is this needed?
 
-   DumHelper::setOutgoingEncryptionLevel(*prack, mCurrentEncryptionLevel);
+   DumHelper::setOutgoingEncryptionLevel(*prack, encryptionLevel);
    send(prack);
 }
 
@@ -714,7 +735,13 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          handler->onNewSession(getHandle(), InviteSession::Answer, msg);
          if(!isTerminated())  
          {
+            // flag to let handle1xxAnswer know that it is OK to send an offer in the 
+            // first PRACK and to let providerOffer know that the offer will be going in an 
+            // PRACK and not in an update.  Flag is not needed after handle1xxAnswer is 
+            // called so it is reset.
+            mAllowOfferInPrack = true;  
             handle1xxAnswer(msg, *offerAnswer);
+            mAllowOfferInPrack = false;
          }
          break;
 
@@ -907,6 +934,9 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          send(response);
          break;
       }
+     
+      case On200Prack:
+         break;
 
       default:
          // !kh!
@@ -1211,6 +1241,7 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
          handleProvisional(msg);
          sendPrackIfNeeded(msg);
          break;
+
       case On1xxOffer:
          if(!isTerminated())  
          {
@@ -1218,6 +1249,7 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
             handle1xxOffer(msg, *offerAnswer);
          }
          break;
+
       case On2xx:
          transition(Connected);
          sendAck();
@@ -1280,6 +1312,18 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
 
       case OnBye:
          dispatchBye(msg);
+         break;
+
+      case On200Prack:
+         // We may have sent a PRACK with an offer (if provideOffer was called from onAnswer 
+         // from the first reliable provisional) - if so this will have SDP we need to call onAnswer
+         if(offerAnswer.get() && mProposedLocalOfferAnswer.get())
+         {
+            setCurrentLocalOfferAnswer(msg);
+            mCurrentEncryptionLevel = getEncryptionLevel(msg);
+            mCurrentRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
+            handler->onAnswer(getSessionHandle(), msg, *offerAnswer);
+         }
          break;
 
       default:
@@ -1346,6 +1390,9 @@ ClientInviteSession::dispatchSentUpdateEarly (const SipMessage& msg)
          onFailureAspect(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
          mDum.destroy(this);
+         break;
+
+      case On200Prack:
          break;
 
       default:

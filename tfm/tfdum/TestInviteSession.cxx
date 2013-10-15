@@ -406,9 +406,9 @@ TestServerInviteSession::redirect(const resip::NameAddrs& contacts, int code)
 }
 
 CommonAction*
-TestServerInviteSession::provisional(int code)
+TestServerInviteSession::provisional(int code, bool earlyFlag)
 {
    return new CommonAction(mUa, "ServerInviteSession::provisional",
                            boost::bind(&ServerInviteSession::provisional, boost::bind<ServerInviteSession*>(&ServerInviteSessionHandle::get, 
-                                                                                                            boost::ref(mHandle)), code, false));
+                                                                                                            boost::ref(mHandle)), code, earlyFlag));
 }

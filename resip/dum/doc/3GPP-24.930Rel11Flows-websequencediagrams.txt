@@ -1,0 +1,162 @@
+title 3GPP 24.930 Rel 11 Flows http://www.websequencediagrams.com/#
+
+participant AppUAC
+participant UAC
+participant UAS
+participant AppUAS
+
+opt
+note over AppUAC, UAC, UAS, AppUAS: Scenario 1: 5.1.2, 5.2.2
+AppUAC->UAC: makeInviteSession
+UAC->UAS: INVITE (Offer)
+UAS->AppUAS: onNewSession
+UAS->AppUAS: onOffer
+AppUAS->UAS: provideAnswer
+AppUAS->UAS: provisional(183, true)
+UAS->UAC: 183 (Answer)
+UAC->AppUAC: onNewSession
+UAC->AppUAC: onProvisional
+UAC->AppUAC: onAnswer
+UAC->UAS: PRACK 
+UAS->AppUAS: onPrack
+UAS->UAC: 200/Prack
+AppUAC->UAC: provideOffer
+UAC->UAS: UPDATE (Offer)
+UAS->AppUAS: onOffer
+AppUAS->UAS: provideAnswer
+UAS->UAC: 200/Update (Answer)
+UAC->AppUAC: onAnswer
+AppUAS->UAS: provisional(180)
+UAS->UAC: 180 (unreliabled)
+UAC->AppUAC: onProvisional
+AppUAS->UAS: accept
+UAS->AppUAS: onConnected
+UAS->UAC: 200/Invite
+UAC->AppUAC: onConnected
+UAC->UAS: ACK
+end
+
+opt
+note over AppUAC, UAC, UAS, AppUAS: Scenario 2: 5.2.3, 5.3.4
+AppUAC->UAC: makeInviteSession
+UAC->UAS: INVITE (Offer)
+UAS->AppUAS: onNewSession
+UAS->AppUAS: onOffer
+AppUAS->UAS: provideAnswer
+AppUAS->UAS: provisional(183, true)
+UAS->UAC: 183 (Answer)
+UAC->AppUAC: onNewSession
+UAC->AppUAC: onProvisional
+UAC->AppUAC: onAnswer
+UAC->UAS: PRACK 
+UAS->AppUAS: onPrack
+UAS->UAC: 200/Prack
+AppUAS->UAS: provisional(180)
+UAS->UAC: 180 (unreliabled)
+UAC->AppUAC: onProvisional
+AppUAS->UAS: accept
+UAS->AppUAS: onConnected
+UAS->UAC: 200/Invite
+UAC->AppUAC: onConnected
+UAC->UAS: ACK
+end
+
+opt
+note over AppUAC, UAC, UAS, AppUAS: Scenario 3: 5.3.2, 5.5.2, 5.6.2
+AppUAC->UAC: makeInviteSession
+UAC->UAS: INVITE (Offer)
+UAS->AppUAS: onNewSession
+UAS->AppUAS: onOffer
+AppUAS->UAS: provisional(180)
+UAS->UAC: 180 (unreliabled)
+UAC->AppUAC: onNewSession
+UAC->AppUAC: onProvisional
+AppUAS->UAS: accept
+UAS->AppUAS: onConnected
+UAS->UAC: 200/Invite (Answer)
+UAC->AppUAC: onAnswer
+UAC->AppUAC: onConnected
+UAC->UAS: ACK
+end
+
+opt
+note over AppUAC, UAC, UAS, AppUAS: Scenario 4: 5.3.3, 5.6.2
+AppUAC->UAC: makeInviteSession
+UAC->UAS: INVITE (Offer)
+UAS->AppUAS: onNewSession
+UAS->AppUAS: onOffer
+AppUAS->UAS: provideAnswer
+AppUAS->UAS: provisional(180, true)
+UAS->UAC: 180 (Answer)
+UAC->AppUAC: onNewSession
+UAC->AppUAC: onProvisional
+UAC->AppUAC: onAnswer
+UAC->UAS: PRACK 
+UAS->AppUAS: onPrack
+UAS->UAC: 200/Prack
+AppUAS->UAS: accept
+UAS->AppUAS: onConnected
+UAS->UAC: 200/Invite
+UAC->AppUAC: onConnected
+UAC->UAS: ACK
+end
+
+opt
+note over AppUAC, UAC, UAS, AppUAS: Scenario 5: 5.4.2, 5.4.4
+AppUAC->UAC: makeInviteSession
+UAC->UAS: INVITE (Offer)
+UAS->AppUAS: onNewSession
+UAS->AppUAS: onOffer
+AppUAS->UAS: provisional(180)
+UAS->UAC: 180 (unreliabled)
+UAC->AppUAC: onNewSession
+UAC->AppUAC: onProvisional
+AppUAS->UAS: accept
+UAS->AppUAS: onConnected
+UAS->UAC: 200/Invite (Answer)
+UAC->AppUAC: onAnswer
+UAC->AppUAC: onConnected
+UAC->UAS: ACK
+AppUAC->UAC: provideOffer
+UAC->UAS: reINVITE (Offer)
+UAS->AppUAS: onOffer
+AppUAS->UAS: provideAnswer
+UAS->UAC: 200/Invite (Answer)
+UAC->AppUAC: onAnswer
+UAC->UAS: ACK
+end
+
+opt
+note over AppUAC, UAC, UAS, AppUAS: Scenario 6: 5.4.3
+AppUAC->UAC: makeInviteSession
+UAC->UAS: INVITE (Offer)
+UAS->AppUAS: onNewSession
+UAS->AppUAS: onOffer
+AppUAS->UAS: provideAnswer
+AppUAS->UAS: provisional(183, true)
+UAS->UAC: 183 (Answer)
+UAC->AppUAC: onNewSession
+UAC->AppUAC: onProvisional
+UAC->AppUAC: onAnswer
+note over AppUAC, UAC: provideOffer must be called from onAnswer callback
+AppUAC->UAC: provideOffer
+UAC->UAS: PRACK (Offer)
+UAS->AppUAS: onPrack
+UAS->AppUAS: onOffer
+UAS->UAC: 200/Prack (Answer)
+UAC->AppUAC: onAnswer
+AppUAC->UAC: provideOffer
+UAC->UAS: UPDATE (Offer)
+UAS->AppUAS: onOffer
+AppUAS->UAS: provideAnswer
+UAS->UAC: 200/Update (Answer)
+UAC->AppUAC: onAnswer
+AppUAS->UAS: provisional(180)
+UAS->UAC: 180 (unreliabled)
+UAC->AppUAC: onProvisional
+AppUAS->UAS: accept
+UAS->AppUAS: onConnected
+UAS->UAC: 200/Invite
+UAC->AppUAC: onConnected
+UAC->UAS: ACK
+end

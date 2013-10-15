@@ -400,7 +400,7 @@ class InviteSession : public DialogUsage
       SharedPtr<SipMessage> mLastSentNITRequest;
 
       DialogUsageManager::EncryptionLevel mCurrentEncryptionLevel;
-      DialogUsageManager::EncryptionLevel mProposedEncryptionLevel; // UPDATE or RE-INVITE
+      DialogUsageManager::EncryptionLevel mProposedEncryptionLevel; // UPDATE or RE-INVITE or PRACK
 
       EndReason mEndReason;
 

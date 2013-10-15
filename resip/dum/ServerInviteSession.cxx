@@ -443,8 +443,8 @@ ServerInviteSession::provideAnswer(const Contents& answer)
       case UAS_NegotiatedReliable:
          if(mPrackWithOffer.get())
          {
-             mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
-             mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
+            mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+            mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
             SharedPtr<SipMessage> p200(new SipMessage);
             mDialog.makeResponse(*p200, *mPrackWithOffer, 200);
             setOfferAnswer(*p200, mCurrentLocalOfferAnswer.get());
@@ -1913,12 +1913,8 @@ ServerInviteSession::sendProvisional(int code, bool earlyFlag)
          }
          break;
 
-      case UAS_FirstSentAnswerReliable:  
-          // TODO shouldn't be possible - we would have queued the 1xx
-          assert(false);
-          break;
-
-      case UAS_NoAnswerReliable:
+      case UAS_FirstSentAnswerReliable: // This is possible if someone called provisional() from the onPrack callback (since we change states after we call onPrack)
+      case UAS_OfferReliableProvidedAnswer:  // MAY send answer in reliable response - send only if earlyFlag is set
          if (code > 100 && earlyFlag && !mAnswerSentReliably && mCurrentLocalOfferAnswer.get()) // early media
          {
             setOfferAnswer(*m1xx, mCurrentLocalOfferAnswer.get());
@@ -1949,7 +1945,6 @@ ServerInviteSession::sendProvisional(int code, bool earlyFlag)
 
       case UAS_ProvidedOffer:
       case UAS_EarlyProvidedOffer:
-      case UAS_OfferReliableProvidedAnswer:  // MAY send answer in reliable response - send only if earlyFlag is set
          if (code > 100 && earlyFlag && mProposedLocalOfferAnswer.get()) 
          {
             setOfferAnswer(*m1xx, mProposedLocalOfferAnswer.get());
@@ -1977,7 +1972,24 @@ ServerInviteSession::sendProvisional(int code, bool earlyFlag)
    }
    else
    {
-       startRetransmit1xxTimer();
+      // Make sure there is no RSeq or Requires 100rel
+      if(m1xx->exists(h_RSeq))
+      {
+         m1xx->remove(h_RSeq);
+      }
+      if(m1xx->exists(h_Requires))
+      {
+         ParserContainer<Token>::iterator it = m1xx->header(h_Requires).begin();
+         for(; it != m1xx->header(h_Requires).end(); it++)
+         {
+            if((*it) == Token(Symbols::C100rel))
+            {
+               m1xx->header(h_Requires).erase(it);
+               break;
+            }
+         }
+      }
+      startRetransmit1xxTimer();
    }
 
    if (mDum.mDialogEventStateManager)

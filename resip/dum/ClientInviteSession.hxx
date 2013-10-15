@@ -67,7 +67,7 @@ class ClientInviteSession : public InviteSession
       void handle1xxOffer (const SipMessage& msg, const Contents& offer);
       void handle1xxAnswer (const SipMessage& msg, const Contents& answer);
       void sendPrackIfNeeded(const SipMessage& msg);
-      void sendPrack(const Contents& offerAnswer);
+      void sendPrack(const Contents& offerAnswer, DialogUsageManager::EncryptionLevel encryptionLevel);
       
       // Called by the DialogSet (friend) when the app has CANCELed the request
       void cancel();
@@ -89,8 +89,9 @@ class ClientInviteSession : public InviteSession
 
       RAckCategory mRelRespInfo;
       unsigned int mStaleCallTimerSeq;
-      unsigned int mCancelledTimerSeq;      
+      unsigned int mCancelledTimerSeq;
       ServerSubscriptionHandle mServerSub;
+      bool mAllowOfferInPrack;
 
       // disabled
       ClientInviteSession(const ClientInviteSession&);

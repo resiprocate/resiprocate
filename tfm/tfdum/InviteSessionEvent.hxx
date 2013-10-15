@@ -39,7 +39,8 @@ typedef enum
    Invite_AckNotReceived,
    Invite_IllegalNegotiation,
    Invite_SessionExpired,
-   Invite_ReferNoSub
+   Invite_ReferNoSub,
+   Invite_Prack
 } InviteEventType;
 
 static const char* InviteEventTypeText[] = 
@@ -73,7 +74,9 @@ static const char* InviteEventTypeText[] =
    "Refer Rejected",
    "Ack Not Received",
    "Illegal Negotiation",
-   "Session Expired"
+   "Session Expired",
+   "Refer No Sub",
+   "Prack"
 };
 
 class InviteEvent : public DumEvent
