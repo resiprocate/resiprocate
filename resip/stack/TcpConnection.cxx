@@ -94,9 +94,14 @@ TcpConnection::write( const char* buf, const int count )
    if (bytesWritten == INVALID_SOCKET)
    {
       int e = getErrno();
+      //setFailureReason(TransportFailure::ConnectionException, e+1000);
+      if (e == EAGAIN || e == EWOULDBLOCK) // Treat EGAIN and EWOULDBLOCK as the same: http://stackoverflow.com/questions/7003234/which-systems-define-eagain-and-ewouldblock-as-different-values
+      {
+          // TCP buffers are backed up - we couldn't write anything - but we shouldn't treat this an error - return we wrote 0 bytes
+          return 0;
+      }
       InfoLog (<< "Failed write on " << getSocket() << " " << strerror(e));
       Transport::error(e);
-      //setFailureReason(TransportFailure::ConnectionException, e+1000);
       return -1;
    }
    

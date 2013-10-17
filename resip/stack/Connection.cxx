@@ -226,16 +226,15 @@ Connection::performWrite()
 
    if (nBytes < 0)
    {
-      if (errno != EAGAIN && errno != EWOULDBLOCK) // Treat EGAIN and EWOULDBLOCK as the same: http://stackoverflow.com/questions/7003234/which-systems-define-eagain-and-ewouldblock-as-different-values
-      {
-         //fail(data.transactionId);
-         InfoLog(<< "Write failed on socket: " << this->getSocket() << ", closing connection");
-         return -1;
-      }
-      else
-      {
-         return 0;
-      }
+      //fail(data.transactionId);
+      InfoLog(<< "Write failed on socket: " << this->getSocket() << ", closing connection");
+      return -1;
+   }
+   else if (nBytes == 0)
+   {
+       // Nothing was written - likely socket buffers are backed up and EWOULDBLOCK was returned
+       // no need to do calculations in else statement
+       return 0;
    }
    else
    {
