@@ -1338,6 +1338,7 @@ ServerInviteSession::dispatchFirstSentOfferReliable(const SipMessage& msg)
          
          if(offerAnswer.get())  // Answer
          {
+            transition(UAS_NegotiatedReliable);
             SharedPtr<SipMessage> p200(new SipMessage);
             mDialog.makeResponse(*p200, msg, 200);
             send(p200);
@@ -1345,12 +1346,8 @@ ServerInviteSession::dispatchFirstSentOfferReliable(const SipMessage& msg)
             setCurrentLocalOfferAnswer(msg);
             mCurrentRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
             mCurrentEncryptionLevel = getEncryptionLevel(msg);
+            handler->onPrack(getHandle(), msg);
             handler->onAnswer(getSessionHandle(), msg, *offerAnswer);
-
-            if( mState != UAS_Accepted)    // queued 200 OK was sent in handlePrack/onPRACK and state was changed there
-            {
-               transition(UAS_NegotiatedReliable);
-            }
          }
          else
          {
@@ -1395,7 +1392,6 @@ ServerInviteSession::handlePrack(const SipMessage& msg)
    {
        mUnacknowledgedReliableProvisional.reset();  // Clear storage we have received our PRACK
 
-       handler->onPrack(getHandle(),msg);
        InfoLog (<< "Found matching provisional for PRACK.");
        return true;
    }
@@ -1492,6 +1488,7 @@ ServerInviteSession::dispatchOfferReliableProvidedAnswer(const SipMessage& msg)
              {
                 transition(UAS_FirstSentAnswerReliable);
              }
+             handler->onPrack(getHandle(), msg);
              prackCheckQueue();
          }
          break;
@@ -1534,6 +1531,7 @@ ServerInviteSession::dispatchFirstSentAnswerReliable(const SipMessage& msg)
             mPrackWithOffer = resip::SharedPtr<SipMessage>(new SipMessage(msg));
             mProposedRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
             mCurrentEncryptionLevel = getEncryptionLevel(msg);
+            handler->onPrack(getHandle(), msg);
             if(!isTerminated())  
             {
                handler->onOffer(getSessionHandle(), msg, *offerAnswer);
@@ -1544,10 +1542,8 @@ ServerInviteSession::dispatchFirstSentAnswerReliable(const SipMessage& msg)
              SharedPtr<SipMessage> p200(new SipMessage);
              mDialog.makeResponse(*p200, msg, 200);
              send(p200);
-             if( mState != UAS_Accepted)    // queued 200 OK was sent in handlePrack/onPrack and state was changed there
-             {
-                transition(UAS_NegotiatedReliable);
-             }
+             transition(UAS_NegotiatedReliable);
+             handler->onPrack(getHandle(), msg);
              prackCheckQueue();
          }
          break;
@@ -1564,7 +1560,7 @@ ServerInviteSession::dispatchFirstSentAnswerReliable(const SipMessage& msg)
 void 
 ServerInviteSession::dispatchNoAnswerReliableWaitingPrack(const SipMessage& msg)
 {
-//   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
@@ -1596,6 +1592,7 @@ ServerInviteSession::dispatchNoAnswerReliableWaitingPrack(const SipMessage& msg)
             mDialog.makeResponse(*p200, msg, 200);
             send(p200);
             transition(UAS_NoAnswerReliable);
+            handler->onPrack(getHandle(), msg);
             prackCheckQueue();
          }
          break;
@@ -1806,6 +1803,7 @@ ServerInviteSession::dispatchNegotiatedReliable(const SipMessage& msg)
             mPrackWithOffer = resip::SharedPtr<SipMessage>(new SipMessage(msg));
             mProposedRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
             mCurrentEncryptionLevel = getEncryptionLevel(msg);
+            handler->onPrack(getHandle(), msg);
             if(!isTerminated())  
             {
                handler->onOffer(getSessionHandle(), msg, *offerAnswer);
@@ -1813,10 +1811,11 @@ ServerInviteSession::dispatchNegotiatedReliable(const SipMessage& msg)
          }
          else
          {
-             SharedPtr<SipMessage> p200(new SipMessage);
-             mDialog.makeResponse(*p200, msg, 200);
-             send(p200);
-             prackCheckQueue();
+            SharedPtr<SipMessage> p200(new SipMessage);
+            mDialog.makeResponse(*p200, msg, 200);
+            send(p200);
+            handler->onPrack(getHandle(), msg);
+            prackCheckQueue();
          }
          break;
 
