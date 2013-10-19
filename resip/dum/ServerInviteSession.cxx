@@ -176,7 +176,7 @@ ServerInviteSession::provisional(int code, bool earlyFlag)
       case UAS_FirstSentOfferReliable:
          if(mUnacknowledgedReliableProvisional.get())
          {
-            InfoLog (<< "Waiting for PRACK. queued provisional" );
+            InfoLog (<< "Waiting for PRACK. queued provisional, code=" << code << ", early=" << (earlyFlag ? "YES" : "NO") );
             queueResponse(code, earlyFlag);
          }
          else
@@ -203,9 +203,14 @@ ServerInviteSession::provisional(int code, bool earlyFlag)
          break;
 
       case UAS_OfferReliableProvidedAnswer: 
-         if(sendProvisional(code, earlyFlag))
+         if(mUnacknowledgedReliableProvisional.get())  // First 18x may not have containted answer and still be outstanding
          {
-            // If sent reliably then change state
+            InfoLog (<< "Waiting for PRACK. queued provisional, code=" << code << ", early=" << (earlyFlag ? "YES" : "NO") );
+            queueResponse(code, earlyFlag);
+         }
+         else if(sendProvisional(code, earlyFlag) && earlyFlag)
+         {
+            // If sent reliably and earlyFlag set (answer actually sent) then change state
             transition(UAS_FirstSentAnswerReliable);
          }
          break;
@@ -790,9 +795,11 @@ ServerInviteSession::dispatch(const SipMessage& msg)
       case UAS_NoOfferReliable:
       case UAS_OfferReliable:
       case UAS_NoAnswerReliable:
-      case UAS_OfferReliableProvidedAnswer: 
          dispatchOfferOrEarly(msg);
-         break;       
+         break;
+      case UAS_OfferReliableProvidedAnswer: 
+         dispatchOfferReliableProvidedAnswer(msg);
+         break;
       case UAS_Accepted:
          dispatchAccepted(msg);
          break;
@@ -1441,6 +1448,60 @@ ServerInviteSession::updateCheckQueue()
       sendAccept(mQueuedResponses.front().first, 0);
       handler->onConnected(getSessionHandle(), *mInvite200);
       mQueuedResponses.pop_front();
+   }
+}
+
+void 
+ServerInviteSession::dispatchOfferReliableProvidedAnswer(const SipMessage& msg)
+{
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+
+   switch (toEvent(msg, offerAnswer.get()))
+   {
+      case OnCancel:
+         dispatchCancel(msg);
+         break;
+
+      case OnBye:
+         dispatchBye(msg);
+         break;
+
+      case OnPrack:
+         if(!handlePrack(msg))
+         {
+            return; // prack does not correspond to an unacknowedged provisional
+         }
+         
+         if(offerAnswer.get())  // New offer - can't happen -we haven't provided answer yet
+         {
+            // 2nd offer, we haven't answered the first one
+            // TODO - reject PRACK, teardown call?
+            ErrLog (<< "PRACK with new offer when in state=" << toData(mState));
+            return;
+         }
+         else
+         {
+             SharedPtr<SipMessage> p200(new SipMessage);
+             mDialog.makeResponse(*p200, msg, 200);
+             send(p200);
+             // If we have a provisional to send with answer then transition to UAS_FirstSentAnswerReliable
+             if(mQueuedResponses.size() > 0 && 
+                mQueuedResponses.front().first < 200 &&
+                mQueuedResponses.front().second)  // Early flag is on
+             {
+                transition(UAS_FirstSentAnswerReliable);
+             }
+             prackCheckQueue();
+         }
+         break;
+
+      default:
+         if(msg.isRequest())
+         {
+            dispatchUnknown(msg);
+         }
+         break;
    }
 }
 

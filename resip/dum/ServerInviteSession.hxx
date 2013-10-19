@@ -74,6 +74,7 @@ class ServerInviteSession: public InviteSession
       void dispatchWaitingToRequestOffer(const SipMessage& msg);
       void dispatchAcceptedWaitingAnswer(const SipMessage& msg);
       void dispatchFirstSentOfferReliable(const SipMessage& msg);
+      void dispatchOfferReliableProvidedAnswer(const SipMessage& msg);
       void dispatchFirstSentAnswerReliable(const SipMessage& msg);
       void dispatchNoAnswerReliableWaitingPrack(const SipMessage& msg);
       void dispatchSentUpdate(const SipMessage& msg);

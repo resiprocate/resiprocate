@@ -598,6 +598,12 @@ ClientInviteSession::handle1xxOffer(const SipMessage& msg, const Contents& offer
 void
 ClientInviteSession::handle1xxAnswer(const SipMessage& msg, const Contents& answer)
 {
+   // flag to let handle1xxAnswer know that it is OK to send an offer in the 
+   // first PRACK (for a provisional with SDP answer) and to let providerOffer know 
+   // that the offer will be going in an PRACK and not in an update.  Flag is not 
+   // needed after handle1xxAnswer is called so it is reset.
+   mAllowOfferInPrack = true;  
+
    setCurrentLocalOfferAnswer(msg);
    mCurrentEncryptionLevel = getEncryptionLevel(msg);
    mCurrentRemoteOfferAnswer = InviteSession::makeOfferAnswer(answer);
@@ -606,9 +612,8 @@ ClientInviteSession::handle1xxAnswer(const SipMessage& msg, const Contents& answ
    handleProvisional(msg);
    handler->onAnswer(getSessionHandle(), msg, answer);
 
-   // If offer is provided in onAnswer callback and we are allowed to offer in the 
-   // PRACK (ie: first PRACK) then send offer in PRACK
-   if(mAllowOfferInPrack && mProposedLocalOfferAnswer.get())
+   // If offer is provided in onAnswer callback then send offer in PRACK
+   if(mProposedLocalOfferAnswer.get())
    {
       sendPrack(*mProposedLocalOfferAnswer.get(), mProposedEncryptionLevel);
    }
@@ -616,6 +621,9 @@ ClientInviteSession::handle1xxAnswer(const SipMessage& msg, const Contents& answ
    {
       sendPrackIfNeeded(msg);
    }
+
+   // Reset flag - no longer needed
+   mAllowOfferInPrack = false;
 }
 
 // will not include SDP (this is a subsequent 1xx)
@@ -735,13 +743,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          handler->onNewSession(getHandle(), InviteSession::Answer, msg);
          if(!isTerminated())  
          {
-            // flag to let handle1xxAnswer know that it is OK to send an offer in the 
-            // first PRACK and to let providerOffer know that the offer will be going in an 
-            // PRACK and not in an update.  Flag is not needed after handle1xxAnswer is 
-            // called so it is reset.
-            mAllowOfferInPrack = true;  
             handle1xxAnswer(msg, *offerAnswer);
-            mAllowOfferInPrack = false;
          }
          break;
 
