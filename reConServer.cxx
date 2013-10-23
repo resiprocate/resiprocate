@@ -1024,6 +1024,15 @@ ReConServerProcess::main (int argc, char** argv)
       exit(-1);
    }
 
+   Data pidFile = reConServerConfig.getConfigData("PidFile", "", true);
+   bool daemonize = reConServerConfig.getConfigBool("Daemonize", false);
+   setPidFile(pidFile);
+   // Daemonize if necessary
+   if(daemonize)
+   {
+      ReConServerProcess::daemonize();
+   }
+
    autoAnswerEnabled = reConServerConfig.getConfigBool("EnableAutoAnswer", false);
    bool registrationDisabled = reConServerConfig.getConfigBool("DisableRegistration", false);
    bool keepAlivesDisabled = reConServerConfig.getConfigBool("DisableKeepAlives", false);
@@ -1048,9 +1057,7 @@ ReConServerProcess::main (int argc, char** argv)
    Data loggingLevel = reConServerConfig.getConfigData("LoggingLevel", "INFO", true);
    Data loggingFilename = reConServerConfig.getConfigData("LogFilename", "reConServer.log", true);
    unsigned int loggingFileMaxLineCount = reConServerConfig.getConfigUnsignedLong("LogFileMaxLines", 50000);
-   bool daemonize = reConServerConfig.getConfigBool("Daemonize", false);
    bool localAudioEnabled = reConServerConfig.getConfigBool("EnableLocalAudio", !daemonize); // Defaults to false for daemon process
-   Data pidFile = reConServerConfig.getConfigData("PidFile", "", true);
    Data runAsUser = reConServerConfig.getConfigData("RunAsUser", "", true);
    Data runAsGroup = reConServerConfig.getConfigData("RunAsGroup", "", true);
 
@@ -1068,14 +1075,6 @@ ReConServerProcess::main (int argc, char** argv)
                                //SdpCodec::SDP_CODEC_G722 /* 9 - G.722 */,
                                SdpCodec::SDP_CODEC_TONES /* 110 - telephone-event */};
    unsigned int numCodecIds = sizeof(codecIds) / sizeof(codecIds[0]);
-
-
-   setPidFile(pidFile);
-   // Daemonize if necessary
-   if(daemonize)
-   {
-      ReConServerProcess::daemonize();
-   }
 
    //enableConsoleOutput(TRUE);  // Allow sipX console output
    OsSysLog::initialize(0, "reConServer");
