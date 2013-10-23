@@ -1,6 +1,7 @@
 
 EXTRA_DIST = reConServer_readme.txt
 EXTRA_DIST += reConServer.config
+EXTRA_DIST += *.wav
 
 sbin_PROGRAMS = reConServer
 
