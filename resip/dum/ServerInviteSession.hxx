@@ -78,6 +78,7 @@ class ServerInviteSession: public InviteSession
       void dispatchFirstSentAnswerReliable(const SipMessage& msg);
       void dispatchNoAnswerReliableWaitingPrack(const SipMessage& msg);
       void dispatchSentUpdate(const SipMessage& msg);
+      void dispatchSentUpdateGlare(const SipMessage& msg);
       void dispatchSentUpdateAccepted(const SipMessage& msg);
       void dispatchReceivedUpdate(const SipMessage& msg);
       void dispatchReceivedUpdateWaitingAnswer(const SipMessage& msg);

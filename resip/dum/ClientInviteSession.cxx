@@ -267,7 +267,8 @@ ClientInviteSession::reject (int statusCode, WarningCategory *warning)
          break;
       }
 
-      case UAC_Answered:{
+      case UAC_Answered:
+      {
          // We received an offer in a 2xx response, and we want to reject it
          // ACK with no body, then send bye
          sendAck();
@@ -598,19 +599,23 @@ ClientInviteSession::handle1xxOffer(const SipMessage& msg, const Contents& offer
 void
 ClientInviteSession::handle1xxAnswer(const SipMessage& msg, const Contents& answer)
 {
-   // flag to let handle1xxAnswer know that it is OK to send an offer in the 
-   // first PRACK (for a provisional with SDP answer) and to let providerOffer know 
-   // that the offer will be going in an PRACK and not in an update.  Flag is not 
-   // needed after handle1xxAnswer is called so it is reset.
-   mAllowOfferInPrack = true;  
-
    setCurrentLocalOfferAnswer(msg);
    mCurrentEncryptionLevel = getEncryptionLevel(msg);
    mCurrentRemoteOfferAnswer = InviteSession::makeOfferAnswer(answer);
 
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    handleProvisional(msg);
+
+   // flag to let handle1xxAnswer know that it is OK to send an offer in the 
+   // first PRACK (for a provisional with SDP answer) and to let providerOffer know 
+   // that the offer will be going in an PRACK and not in an update.  Flag is not 
+   // needed after handle1xxAnswer is called so it is reset.
+   mAllowOfferInPrack = true;  
+
    handler->onAnswer(getSessionHandle(), msg, answer);
+
+   // Reset flag - no longer needed
+   mAllowOfferInPrack = false;
 
    // If offer is provided in onAnswer callback then send offer in PRACK
    if(mProposedLocalOfferAnswer.get())
@@ -621,9 +626,6 @@ ClientInviteSession::handle1xxAnswer(const SipMessage& msg, const Contents& answ
    {
       sendPrackIfNeeded(msg);
    }
-
-   // Reset flag - no longer needed
-   mAllowOfferInPrack = false;
 }
 
 // will not include SDP (this is a subsequent 1xx)

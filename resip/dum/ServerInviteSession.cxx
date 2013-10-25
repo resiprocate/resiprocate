@@ -830,6 +830,9 @@ ServerInviteSession::dispatch(const SipMessage& msg)
       case UAS_SentUpdate:
          dispatchSentUpdate(msg);
          break;
+      case UAS_SentUpdateGlare:
+         dispatchSentUpdateGlare(msg);
+         break;
       case UAS_WaitingToHangup:
          dispatchWaitingToHangup(msg);
          break;
@@ -1622,6 +1625,16 @@ ServerInviteSession::dispatchSentUpdate(const SipMessage& msg)
           dispatchBye(msg);
           break;
 
+      case OnUpdate:
+      case OnUpdateOffer:
+      {
+         // Glare
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, msg, 491);
+         send(response);
+         break;
+      }
+
       case On200Update:
          transition(UAS_NegotiatedReliable);
          if (offerAnswer.get())
@@ -1642,6 +1655,38 @@ ServerInviteSession::dispatchSentUpdate(const SipMessage& msg)
       case On491Update:
          transition(UAS_SentUpdateGlare);
          start491Timer();
+         break;
+
+      default:
+         if(msg.isRequest())
+         {
+            dispatchUnknown(msg);
+         }
+         break;
+   }
+}
+
+void
+ServerInviteSession::dispatchSentUpdateGlare(const SipMessage& msg)
+{
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+
+   switch (toEvent(msg, offerAnswer.get()))
+   {
+      case OnCancel:
+         dispatchCancel(msg);
+         break;
+
+      case OnBye:
+          dispatchBye(msg);
+          break;
+
+      case OnUpdate:
+      case OnUpdateOffer:
+         handler->onOfferRejected(getSessionHandle(), &msg);
+         // handle as if we received in NegotiatedReliable
+         dispatchNegotiatedReliable(msg);
          break;
 
       default:
