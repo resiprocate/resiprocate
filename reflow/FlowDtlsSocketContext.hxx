@@ -2,8 +2,6 @@
 #include "config.h"
 #endif
 
-#ifdef USE_SSL
-
 #if !defined(FlowDtlsSocketContext_hxx)
 #define FlowDtlsSocketContext_hxx 
 
@@ -62,8 +60,6 @@ private:
 }
 
 #endif
-
-#endif //USE_SSL
 /* ====================================================================
 
  Copyright (c) 2007-2008, Plantronics, Inc.

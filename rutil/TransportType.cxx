@@ -102,11 +102,26 @@ isSecure(TransportType type)
    {
       case TLS:
       case DTLS:
+      case WSS:
          return true;
       case UDP:
       case TCP:
       case DCCP:
       case SCTP:
+      case WS:
+      default:
+         return false;
+   }
+}
+
+bool
+isWebSocket(TransportType type)
+{
+   switch(type)
+   {
+      case WS:
+      case WSS:
+         return true;
       default:
          return false;
    }

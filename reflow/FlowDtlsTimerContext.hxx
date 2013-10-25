@@ -1,6 +1,3 @@
-#ifdef USE_SSL 
-
-
 #if !defined(FlowDtlsTimerContext_hxx)
 #define FlowDtlsTimerContext_hxx 
 
@@ -32,8 +29,6 @@ class FlowDtlsTimerContext: public dtls::DtlsTimerContext
 }
 
 #endif
-
-#endif //USE_SSL
 
 /* ====================================================================
 

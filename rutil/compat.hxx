@@ -129,6 +129,26 @@ inline int c99_snprintf(char* str, size_t size, const char* format, ...)
 #  define T_A 1
 #endif
 
+// Mac OS X: UInt32 definition conflicts with the Mac OS or iPhone OS SDK.
+// If you've included either SDK then these will be defined.
+#if !defined(TARGET_OS_MAC) && !defined(TARGET_OS_IPHONE)
+typedef unsigned char  UInt8;
+typedef unsigned short UInt16;
+typedef unsigned int   UInt32;
+typedef char           Int8;
+typedef short          Int16;
+typedef int            Int32;
+#endif
+
+#if defined( WIN32 )
+  typedef signed __int64   Int64;
+  typedef unsigned __int64 UInt64;
+#else
+  typedef signed long long   Int64;
+  typedef unsigned long long UInt64;
+#endif
+//typedef struct { unsigned char octet[16]; }  UInt128;
+
 namespace resip
 {
 
@@ -172,22 +192,49 @@ resipIntDiv(const _Tp1& __a, const _Tp2& __b)
    return __a/__b;
 }
 
+#if defined(WORDS_BIGENDIAN) || defined(_BIG_ENDIAN) || defined( __BIG_ENDIAN__ ) || (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)) || defined(RESIP_BIG_ENDIAN)
+
+inline UInt64
+ntoh64(const UInt64 input)
+{
+   return input;
 }
 
-// Mac OS X: UInt32 definition conflicts with the Mac OS or iPhone OS SDK.
-// If you've included either SDK then these will be defined.
-#if !defined(TARGET_OS_MAC) && !defined(TARGET_OS_IPHONE)
-typedef unsigned char  UInt8;
-typedef unsigned short UInt16;
-typedef unsigned int   UInt32;
+inline UInt64
+hton64(const UInt64 input)
+{
+   return input;
+}
+
+#else
+
+inline UInt64
+ntoh64(const UInt64 input)
+{
+   UInt64 rval;
+   UInt8 *data = (UInt8 *)&rval;
+
+   data[0] = (UInt8)((input >> 56) & 0xFF);
+   data[1] = (UInt8)((input >> 48) & 0xFF);
+   data[2] = (UInt8)((input >> 40) & 0xFF);
+   data[3] = (UInt8)((input >> 32) & 0xFF);
+   data[4] = (UInt8)((input >> 24) & 0xFF);
+   data[5] = (UInt8)((input >> 16) & 0xFF);
+   data[6] = (UInt8)((input >> 8) & 0xFF);
+   data[7] = (UInt8)((input >> 0) & 0xFF);
+
+   return rval;
+}
+
+inline UInt64
+hton64(const UInt64 input)
+{
+   return (ntoh64(input));
+}
+
 #endif
 
-#if defined( WIN32 )
-  typedef unsigned __int64 UInt64;
-#else
-  typedef unsigned long long UInt64;
-#endif
-//typedef struct { unsigned char octet[16]; }  UInt128;
+}
 
 //template "levels; ie REASONABLE and COMPLETE
 //reasonable allows most things such as partial template specialization,
@@ -233,6 +280,37 @@ typedef unsigned int   UInt32;
 #define RESIP_DEPRECATED(x) __declspec(deprecated) x
 #else
 #define RESIP_DEPRECATED(x) x
+#endif
+
+// These used to live in resipfaststreams.hxx and may only be used there
+#if (defined(WIN32) || defined(_WIN32_WCE))
+
+#if (defined(_MSC_VER) && _MSC_VER >= 1400 )
+#define SNPRINTF_1(buffer,sizeofBuffer,count,format,var1) _snprintf_s(buffer,sizeofBuffer,_TRUNCATE,format,var1)
+#define LTOA(value,string,sizeofstring,radix) _ltoa_s(value,string,sizeofstring,radix)
+#define ULTOA(value,string,sizeofstring,radix) _ultoa_s(value,string,sizeofstring,radix)
+#define I64TOA(value,string,sizeofstring,radix) _i64toa_s(value,string,sizeofstring,radix)
+#define UI64TOA(value,string,sizeofstring,radix) _ui64toa_s(value,string,sizeofstring,radix)
+#define GCVT(val,num,buffer,buffersize) _gcvt_s(buffer,buffersize,val,num)
+#else
+#define _TRUNCATE -1
+#define SNPRINTF_1(buffer,sizeofBuffer,count,format,var1) _snprintf(buffer,count,format,var1)
+#define LTOA(value,string,sizeofstring,radix) _ltoa(value,string,radix)
+#define ULTOA(value,string,sizeofstring,radix) _ultoa(value,string,radix)
+#define I64TOA(value,string,sizeofstring,radix) _i64toa(value,string,radix)
+#define UI64TOA(value,string,sizeofstring,radix) _ui64toa(value,string,radix)
+#define GCVT(val,sigdigits,buffer,buffersize) _gcvt(val,sigdigits,buffer)
+#endif
+
+#else //non-windows
+#define _TRUNCATE -1
+#define SNPRINTF_1(buffer,sizeofBuffer,count,format,var1) snprintf(buffer,sizeofBuffer,format,var1)
+#define LTOA(l,buffer,bufferlen,radix) SNPRINTF_1(buffer,bufferlen,bufferlen,"%li",l)
+#define ULTOA(ul,buffer,bufferlen,radix) SNPRINTF_1(buffer,bufferlen,bufferlen,"%lu",ul)
+#define I64TOA(value,string,sizeofstring,radix) SNPRINTF_1(string,sizeofstring,sizeofstring,"%lli",value)
+#define UI64TOA(value,string,sizeofstring,radix) SNPRINTF_1(string,sizeofstring,sizeofstring,"%llu",value)
+#define GCVT(f,sigdigits,buffer,bufferlen) SNPRINTF_1(buffer,bufferlen,bufferlen,"%f",f)
+#define _CVTBUFSIZE 309+40
 #endif
 
 #endif

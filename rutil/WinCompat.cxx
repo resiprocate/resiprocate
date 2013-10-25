@@ -359,14 +359,14 @@ WinCompat::determineSourceInterfaceWithoutIPv6(const GenericIPAddress& destinati
    } 
    else 
    {
-      throw Exception("Can't find source address for destination (GetIpAddrTable to get buffer space failed), ret=" + Data(ret), __FILE__,__LINE__);
+      throw Exception("Can't find source address for destination (GetIpAddrTable to get buffer space failed), ret=" + Data((UInt32)ret), __FILE__,__LINE__);
    }
      
    ret = instance()->getIpAddrTable(pIpAddrTable, &addrSize, FALSE);
    if (NO_ERROR != ret) 
    {
       delete [] (char *) pIpAddrTable;
-      throw Exception("Can't find source address for destination (GetIpAddrTable failed), addrSize=" + Data(addrSize) + ", ret=" + Data(ret), __FILE__,__LINE__);
+      throw Exception("Can't find source address for destination (GetIpAddrTable failed), addrSize=" + Data((UInt32)addrSize) + ", ret=" + Data((UInt32)ret), __FILE__,__LINE__);
    }
 
    // Check if address is local or not
@@ -403,7 +403,7 @@ WinCompat::determineSourceInterfaceWithoutIPv6(const GenericIPAddress& destinati
    if (NO_ERROR != ret) 
    {
       delete [] (char *) pIpAddrTable;
-      throw Exception("Can't find source address for destination, ret=" + Data(ret), __FILE__,__LINE__);
+      throw Exception("Can't find source address for destination, ret=" + Data((UInt32)ret), __FILE__,__LINE__);
    }
       
    // look through the local ip address to find one that match the best route.

@@ -557,7 +557,11 @@ DnsUtil::getInterfaces(const Data& matching)
          continue;
       }
       
-      if (  (name[0]<'A') || (name[0]>'z') ) // should never happen
+      if ( ( (name[0]<'A') || (name[0]>'z') )
+#if defined(__MACH__) && defined(__GNU__)   // for GNU HURD
+            && (name[0] != '/')
+#endif
+         ) // should never happen
       {  
          DebugLog (<< "  ignore because: name looks bogus");
          assert(0);

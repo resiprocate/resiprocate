@@ -24,7 +24,7 @@ CountDown::dec()
 
 resip::Data CountDown::toString() const
 {
-   return _description + " " + resip::Data((unsigned long)_count);
+   return _description + " " + resip::Data(_count);
 }
 
 bool CountDown::passes(boost::shared_ptr<Event>)

@@ -97,6 +97,12 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
       boost::shared_ptr<reTurn::UdpServer> a2p1StunUdpServer;
       boost::shared_ptr<reTurn::UdpServer> a2p2StunUdpServer;
 
+#ifdef USE_IPV6
+      boost::shared_ptr<reTurn::UdpServer> udpV6TurnServer;
+      boost::shared_ptr<reTurn::TcpServer> tcpV6TurnServer;
+      boost::shared_ptr<reTurn::TlsServer> tlsV6TurnServer;
+#endif
+
       // The one and only RequestHandler - if altStunPort is non-zero, then assume RFC3489 support is enabled and pass settings to request handler
       reTurn::RequestHandler requestHandler(turnManager, 
          reTurnConfig.mAltStunPort != 0 ? &reTurnConfig.mTurnAddress : 0, 
@@ -106,7 +112,19 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
 
       udpTurnServer.reset(new reTurn::UdpServer(ioService, requestHandler, reTurnConfig.mTurnAddress, reTurnConfig.mTurnPort));
       tcpTurnServer.reset(new reTurn::TcpServer(ioService, requestHandler, reTurnConfig.mTurnAddress, reTurnConfig.mTurnPort));
-      tlsTurnServer.reset(new reTurn::TlsServer(ioService, requestHandler, reTurnConfig.mTurnAddress, reTurnConfig.mTlsTurnPort));
+      if(reTurnConfig.mTlsTurnPort != 0)
+      {
+         tlsTurnServer.reset(new reTurn::TlsServer(ioService, requestHandler, reTurnConfig.mTurnAddress, reTurnConfig.mTlsTurnPort));
+      }
+
+#ifdef USE_IPV6
+      udpV6TurnServer.reset(new reTurn::UdpServer(ioService, requestHandler, reTurnConfig.mTurnV6Address, reTurnConfig.mTurnPort));
+      tcpV6TurnServer.reset(new reTurn::TcpServer(ioService, requestHandler, reTurnConfig.mTurnV6Address, reTurnConfig.mTurnPort));
+      if(reTurnConfig.mTlsTurnPort != 0)
+      {
+         tlsV6TurnServer.reset(new reTurn::TlsServer(ioService, requestHandler, reTurnConfig.mTurnV6Address, reTurnConfig.mTlsTurnPort));
+      }
+#endif
 
       if(reTurnConfig.mAltStunPort != 0) // if alt stun port is non-zero, then RFC3489 support is enabled
       {
@@ -124,7 +142,19 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
 
       udpTurnServer->start();
       tcpTurnServer->start();
-      tlsTurnServer->start();
+      if(tlsTurnServer)
+      {
+         tlsTurnServer->start();
+      }
+
+#ifdef USE_IPV6
+      udpV6TurnServer->start();
+      tcpV6TurnServer->start();
+      if(tlsV6TurnServer)
+      {
+         tlsV6TurnServer->start();
+      }
+#endif
 
       // Drop privileges (can do this now that sockets are bound)
       if(!reTurnConfig.mRunAsUser.empty())

@@ -1,7 +1,6 @@
 # $Id$
 
-EXTRA_DIST = VERSION
-EXTRA_DIST += readme.txt
+EXTRA_DIST = readme.txt
 EXTRA_DIST += design-notes.txt
 EXTRA_DIST += flownotes.txt
 
@@ -14,6 +13,7 @@ librend_la_LIBADD = ../../resip/dum/libdum.la
 librend_la_LIBADD += ../../resip/stack/libresip.la
 librend_la_LIBADD += ../../rutil/librutil.la
 librend_la_LIBADD += @LIBSSL_LIBADD@ @LIBPTHREAD_LIBADD@
+librend_la_LIBADD += -lpopt
 librend_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@
 librend_la_LDFLAGS += -export-dynamic
 
@@ -44,7 +44,7 @@ nobase_rendinclude_HEADERS = \
 	RendDlgAcct.hxx \
 	RendKa.hxx \
 	RendMisc.hxx \
-	RendReport.hxx
+	RendReport.hxx \
 	RendRunner.hxx \
 	RendSketch.hxx \
 	RendTroop.hxx \

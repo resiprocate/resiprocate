@@ -1270,7 +1270,7 @@ class TestData
             assert(c == "S");
          }         
          {
-            Data d((unsigned long)235235);
+            Data d((UInt64)235235);
             assert(d == "235235");
          }
  

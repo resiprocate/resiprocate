@@ -17,6 +17,8 @@
 #include "resip/stack/Tuple.hxx"
 #include "resip/stack/Uri.hxx"
 #include "resip/stack/MessageDecorator.hxx"
+#include "resip/stack/Cookie.hxx"
+#include "resip/stack/WsCookieContext.hxx"
 #include "rutil/BaseException.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/DinkyPool.hxx"
@@ -392,6 +394,7 @@ class SipMessage : public TransactionMessage
       defineHeader(Origin, "Origin", StringCategory, "draft-hixie- thewebsocketprotocol-76");
       defineHeader(Host, "Host", StringCategory, "draft-hixie- thewebsocketprotocol-76");
       defineHeader(SecWebSocketAccept, "Sec-WebSocket-Accept", StringCategory, "RFC 6455");
+      defineMultiHeader(Cookie, "Cookie", StringCategory, "RFC 6265");
       defineHeader(Server, "Server", StringCategory, "RFC 3261");
       defineHeader(Subject, "Subject", StringCategory, "RFC 3261");
       defineHeader(UserAgent, "User-Agent", StringCategory, "RFC 3261");
@@ -517,6 +520,12 @@ class SipMessage : public TransactionMessage
 
       const std::list<Data>& getTlsPeerNames() const { return mTlsPeerNames; }
       void setTlsPeerNames(const std::list<Data>& tlsPeerNames) { mTlsPeerNames = tlsPeerNames; }
+
+      const CookieList& getWsCookies() const { return mWsCookies; }
+      void setWsCookies(const CookieList& wsCookies) { mWsCookies = wsCookies; }
+
+      const WsCookieContext& getWsCookieContext() const { return mWsCookieContext; }
+      void setWsCookieContext(const WsCookieContext& wsCookieContext) { mWsCookieContext = wsCookieContext; }
 
       Data getCanonicalIdentityString() const;
       
@@ -681,7 +690,13 @@ class SipMessage : public TransactionMessage
       Data mTlsDomain;
 
       // peers domain associate with this message (MTLS)
-      std::list<Data> mTlsPeerNames; 
+      std::list<Data> mTlsPeerNames;
+
+      // cookies associated with this message from the WebSocket Upgrade request
+      CookieList mWsCookies;
+
+      // parsed cookie authentication elements associated with this message from the WebSocket Upgrade request
+      WsCookieContext mWsCookieContext;
 
       std::auto_ptr<SecurityAttributes> mSecurityAttributes;
 

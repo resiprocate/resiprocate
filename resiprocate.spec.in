@@ -8,6 +8,7 @@ Source: https://www.resiprocate.org/files/pub/reSIProcate/releases/%name-%versio
 BuildRequires: libtool automake autoconf
 BuildRequires: asio-devel
 BuildRequires: boost-devel
+BuildRequires: cajun-jsonapi-devel
 BuildRequires: c-ares-devel
 BuildRequires: cppunit-devel
 BuildRequires: gperf
@@ -117,7 +118,7 @@ such as the repro SIP proxy.
 
 %build
 export LDFLAGS="${LDFLAGS} -L%{_libdir}/mysql -L%{_libdir}/libdb4"
-CXXFLAGS="%{optflags} -I%{_includedir}/libdb4" %configure --with-c-ares --with-ssl --with-mysql --with-radius --with-apps --enable-ipv6
+CXXFLAGS="%{optflags} -I%{_includedir}/libdb4" %configure --with-c-ares --with-ssl --with-mysql --with-radius --with-repro --with-apps --enable-ipv6
 sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
 sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 make %{?_smp_mflags}
@@ -247,8 +248,6 @@ fi
 %dir %{_includedir}/resip/stack/
 %dir %{_includedir}/resip/stack/ssl/
 %dir %{_includedir}/rutil/
-%dir %{_includedir}/rutil/cajun/
-%dir %{_includedir}/rutil/cajun/json/
 %dir %{_includedir}/rutil/dns/
 %dir %{_includedir}/rutil/ssl/
 %dir %{_includedir}/rutil/stun/
@@ -264,8 +263,6 @@ fi
 %{_includedir}/resip/stack/*.hxx
 %{_includedir}/resip/stack/ssl/*.hxx
 %{_includedir}/rutil/*.hxx
-%{_includedir}/rutil/cajun/json/*.h
-%{_includedir}/rutil/cajun/json/*.inl
 %{_includedir}/rutil/*/*.hxx
 %{_includedir}/sipdial/*.hxx
 %{_libdir}/libdum.so

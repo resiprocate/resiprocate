@@ -357,7 +357,6 @@ ClientInviteSession::startStaleCallTimer()
 {
    InfoLog (<< toData(mState) << ": startStaleCallTimer");
    unsigned long when = mDialog.mDialogSet.getUserProfile()->getDefaultStaleCallTime();
-   when += Random::getRandom() % 120;
    
    mDum.addTimer(DumTimeout::StaleCall, 
                  when, 

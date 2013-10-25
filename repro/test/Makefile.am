@@ -1,6 +1,6 @@
 # $Id$
 
-EXTRA_DIST = reg.py
+EXTRA_DIST = reg.py web/websocket-cookie-test.php
 
 #AM_CXXFLAGS = -DUSE_ARES
 AM_CXXFLAGS = -I $(top_srcdir)

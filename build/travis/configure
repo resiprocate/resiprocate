@@ -8,5 +8,7 @@ set -e
   --with-apps \
   --enable-ipv6 \
   --with-radius \
+  --with-repro \
+  --with-rend \
   --with-c-ares
 

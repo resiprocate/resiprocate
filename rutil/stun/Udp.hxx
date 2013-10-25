@@ -9,7 +9,10 @@
          typedef int socklen_t;
 #     endif
 #  else
-      typedef int socklen_t;
+// GNU HURD also defines __MACH__ but does not require this typedef
+#     ifndef __GNU__
+         typedef int socklen_t;
+#     endif
 #  endif
 #endif
 

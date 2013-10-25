@@ -1,5 +1,8 @@
 #include <signal.h>
 
+// Need to include this early to avoid problems with __STDC_FORMAT_MACROS
+#include "rutil/compat.hxx"
+
 #include "repro/PersistentMessageQueue.hxx"
 #include <rutil/Logger.hxx>
 #include <rutil/WinLeakCheck.hxx>

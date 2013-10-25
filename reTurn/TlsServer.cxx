@@ -52,6 +52,15 @@ TlsServer::TlsServer(asio::io_service& ioService, RequestHandler& requestHandler
 
    mAcceptor.open(endpoint.protocol());
    mAcceptor.set_option(asio::ip::tcp::acceptor::reuse_address(true));
+#ifdef USE_IPV6
+#ifdef __linux__
+   if(address.is_v6())
+   {
+      asio::ip::v6_only v6_opt(true);
+      mAcceptor.set_option(v6_opt);
+   }
+#endif
+#endif
    mAcceptor.bind(endpoint);
    mAcceptor.listen();
 

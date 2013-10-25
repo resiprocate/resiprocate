@@ -1,5 +1,5 @@
 
-AC_INIT(resiprocate,1.9.0~alpha2)
+AC_INIT(resiprocate,1.9.0~beta6)
 AC_CONFIG_SRCDIR(repro/repro.cxx)
 
 SO_RELEASE=`echo $PACKAGE_VERSION | cut -f1,2 -d.`
@@ -210,12 +210,30 @@ AC_ARG_WITH(geoip,
  [ AC_SUBST(LIBGEOIP_LIBADD, "")])
 
 AM_CONDITIONAL(USE_RADIUS_CLIENT, false)
+AC_SUBST(LIBRADIUS_LIBADD, "")
 AC_ARG_WITH(radius,
-[  --with-radius           Link against RADIUS client libraries],
+[  --with-radius           Link against RADIUS client libraries (ng)],
  [AC_DEFINE_UNQUOTED(USE_RADIUS_CLIENT, , USE_RADIUS_CLIENT)
  AC_SUBST(LIBRADIUS_LIBADD, "-lradiusclient-ng")
- AM_CONDITIONAL(USE_RADIUS_CLIENT, true)],
- [ AC_SUBST(LIBRADIUS_LIBADD, "")])
+ AM_CONDITIONAL(USE_RADIUS_CLIENT, true)])
+AC_ARG_WITH(freeradius,
+[  --with-freeradius       Link against FreeRADIUS client libraries],
+ [AC_DEFINE_UNQUOTED(USE_RADIUS_CLIENT, , USE_RADIUS_CLIENT)
+  AC_DEFINE_UNQUOTED(RESIP_HAVE_FREERADIUS_CLIENT, , RESIP_HAVE_FREERADIUS_CLIENT)
+ AC_SUBST(LIBRADIUS_LIBADD, "-lfreeradius-client")
+ AM_CONDITIONAL(USE_RADIUS_CLIENT, true)])
+
+AM_CONDITIONAL(BUILD_REPRO, false)
+AC_ARG_WITH(repro,
+[  --with-repro            Build repro, requires CAJUN and bdb],
+ [AC_DEFINE_UNQUOTED(BUILD_REPRO, , BUILD_REPRO)
+ AM_CONDITIONAL(BUILD_REPRO, true)], )
+
+AM_CONDITIONAL(BUILD_REND, false)
+AC_ARG_WITH(rend,
+[  --with-rend             Build rend],
+ [AC_DEFINE_UNQUOTED(BUILD_REND, , BUILD_REND)
+ AM_CONDITIONAL(BUILD_REND, true)], )
 
 AM_CONDITIONAL(BUILD_TFM, false)
 AC_ARG_WITH(tfm,

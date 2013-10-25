@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cassert>
 #include <ctype.h>
+#include <fstream>
 #include <math.h>
 #include <limits>
 #include <limits.h>
@@ -11,6 +12,7 @@
 #endif
 
 #include "rutil/Data.hxx"
+#include "rutil/DataException.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/vmd5.hxx"
 #include "rutil/Coders.hxx"
@@ -343,17 +345,22 @@ Data::Data(Data &&data)
 #endif
 
 // -2147483646
-static const int IntMaxSize = 12;
+static const int Int32MaxSize = 11;
 
-Data::Data(int val)
-   : mBuf(IntMaxSize > LocalAlloc 
-          ? new char[IntMaxSize + 1]
+static const int MaxLongSize = (sizeof(unsigned long)/sizeof(int))*Int32MaxSize;
+
+// 18446744073709551615
+static const int UInt64MaxSize = 20;
+
+Data::Data(Int32 val)
+   : mBuf(Int32MaxSize > LocalAlloc 
+          ? new char[Int32MaxSize + 1]
           : mPreBuffer),
      mSize(0),
-     mCapacity(IntMaxSize > LocalAlloc
-               ? IntMaxSize
+     mCapacity(Int32MaxSize > LocalAlloc
+               ? Int32MaxSize
                : LocalAlloc),
-     mShareEnum(IntMaxSize > LocalAlloc ? Take : Borrow)
+     mShareEnum(Int32MaxSize > LocalAlloc ? Take : Borrow)
 {
    if (val == 0)
    {
@@ -365,7 +372,7 @@ Data::Data(int val)
 
    bool neg = false;
    
-   int value = val;
+   Int32 value = val;
    if (value < 0)
    {
       value = -value;
@@ -373,7 +380,7 @@ Data::Data(int val)
    }
 
    int c = 0;
-   int v = value;
+   Int32 v = value;
    while (v /= 10)
    {
       ++c;
@@ -400,47 +407,8 @@ Data::Data(int val)
    }
 }
 
-static const int MaxLongSize = (sizeof(unsigned long)/sizeof(int))*IntMaxSize;
-Data::Data(unsigned long value)
-   : mBuf(MaxLongSize > LocalAlloc 
-          ? new char[MaxLongSize + 1]
-          : mPreBuffer),
-     mSize(0),
-     mCapacity(MaxLongSize > LocalAlloc
-               ? MaxLongSize
-               : LocalAlloc),
-     mShareEnum(MaxLongSize > LocalAlloc ? Take : Borrow)
-{
-   if (value == 0)
-   {
-      mBuf[0] = '0';
-      mBuf[1] = 0;
-      mSize = 1;
-      return;
-   }
-
-   int c = 0;
-   unsigned long v = value;
-   while (v /= 10)
-   {
-      ++c;
-   }
-
-   mSize = c+1;
-   mBuf[c+1] = 0;
-   
-   v = value;
-   while (v)
-   {
-      unsigned int digit = v%10;
-      unsigned char d = (char)digit;
-      mBuf[c--] = '0' + d;
-      v /= 10;
-   }
-}
-
 #ifndef RESIP_FIXED_POINT
-static const int DoubleMaxSize = MaxLongSize + Data::MaxDigitPrecision;
+static const int DoubleMaxSize = UInt64MaxSize + Data::MaxDigitPrecision;
 Data::Data(double value, 
            Data::DoubleDigitPrecision precision)
    : mBuf(DoubleMaxSize + precision > LocalAlloc 
@@ -463,7 +431,7 @@ Data::Data(double value,
       v = -v;
    }
 
-   Data m((unsigned long)v);
+   Data m((UInt64)v);
 
    // remainder
    v = v - floor(v);
@@ -528,15 +496,15 @@ Data::Data(double value,
 }
 #endif
 
-Data::Data(unsigned int value)
-   : mBuf(IntMaxSize > LocalAlloc 
-          ? new char[IntMaxSize + 1]
+Data::Data(UInt32 value)
+   : mBuf(Int32MaxSize > LocalAlloc 
+          ? new char[Int32MaxSize + 1]
           : mPreBuffer),
      mSize(0),
-     mCapacity(IntMaxSize > LocalAlloc
-               ? IntMaxSize
+     mCapacity(Int32MaxSize > LocalAlloc
+               ? Int32MaxSize
                : LocalAlloc),
-     mShareEnum(IntMaxSize > LocalAlloc ? Take : Borrow)
+     mShareEnum(Int32MaxSize > LocalAlloc ? Take : Borrow)
 {
    if (value == 0)
    {
@@ -547,7 +515,7 @@ Data::Data(unsigned int value)
    }
 
    int c = 0;
-   unsigned long v = value;
+   UInt32 v = value;
    while (v /= 10)
    {
       ++c;
@@ -565,9 +533,6 @@ Data::Data(unsigned int value)
       v /= 10;
    }
 }
-
-// 18446744073709551615
-static const int UInt64MaxSize = 20;
 
 Data::Data(UInt64 value)
    : mBuf(UInt64MaxSize > LocalAlloc 
@@ -2268,6 +2233,57 @@ Data::escapeToStream(std::ostream& str,
       str.write((char*)anchor, p-anchor);
    }
    return str;
+}
+
+Data
+Data::fromFile(const Data& filename)
+{
+   ifstream is;
+   is.open(filename.c_str(), ios::binary );
+   if ( !is.is_open() )
+   {
+      throw DataException("Could not read file ",
+                                    __FILE__,__LINE__);
+   }
+
+   assert(is.is_open());
+
+   int length = 0;
+
+   // get length of file:
+#if !defined(__MSL_CPP__) || (__MSL_CPP_ >= 0x00012000)
+   is.seekg (0, ios::end);
+   length = (int)is.tellg();
+   is.seekg (0, ios::beg);
+#else
+   // this is a work around for a bug in CodeWarrior 9's implementation of seekg.
+   // http://groups.google.ca/group/comp.sys.mac.programmer.codewarrior/browse_frm/thread/a4279eb75f3bd55a
+   FILE * tmpFile = fopen(filename.c_str(), "r+b");
+   assert(tmpFile != NULL);
+   fseek(tmpFile, 0, SEEK_END);
+   length = ftell(tmpFile);
+   fseek(tmpFile, 0, SEEK_SET);
+#endif // __MWERKS__
+
+   // tellg/tell will return -1 if the stream is bad
+   if (length == -1)
+   {
+      throw DataException("Could not seek into file ",
+                                    __FILE__,__LINE__);
+   }
+
+   // !jf! +1 is a workaround for a bug in Data::c_str() that adds the 0 without
+   // resizing.
+   char* buffer = new char [length+1];
+
+   // read data as a block:
+   is.read (buffer,length);
+
+   Data target(Data::Take, buffer, length);
+
+   is.close();
+
+   return target;
 }
 
 HashValueImp(resip::Data, data.hash());

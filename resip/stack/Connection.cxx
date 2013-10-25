@@ -37,8 +37,8 @@ Connection::Connection(Transport* transport,const Tuple& who, Socket socket,
    mWho.mFlowKey=(FlowKey)socket;
    InfoLog (<< "Connection::Connection: new connection created to who: " << mWho);
 
-   if(transport && (transport->transport() == WS ||
-         transport->transport() == WSS)) {
+   if(transport && isWebSocket(transport->transport()))
+   {
       mSendingTransmissionFormat = WebSocketHandshake;
       mReceivingTransmissionFormat = WebSocketHandshake;
    }
@@ -161,20 +161,20 @@ Connection::performWrite()
       }
       else if(lSize <= 0xFFFF){
          uBuffer[1] = 0x7E;
-         uBuffer[2] = (lSize >> 8) & 0xFF;
-         uBuffer[3] = (lSize & 0xFF);
+         uBuffer[2] = (UInt8)((lSize >> 8) & 0xFF);
+         uBuffer[3] = (UInt8)(lSize & 0xFF);
          uBuffer = &uBuffer[4];
       }
       else{
          uBuffer[1] = 0x7F;
-         uBuffer[2] = (lSize >> 56) & 0xFF;
-         uBuffer[3] = (lSize >> 48) & 0xFF;
-         uBuffer[4] = (lSize >> 40) & 0xFF;
-         uBuffer[5] = (lSize >> 32) & 0xFF;
-         uBuffer[6] = (lSize >> 24) & 0xFF;
-         uBuffer[7] = (lSize >> 16) & 0xFF;
-         uBuffer[8] = (lSize >> 8) & 0xFF;
-         uBuffer[9] = (lSize & 0xFF);
+         uBuffer[2] = (UInt8)((lSize >> 56) & 0xFF);
+         uBuffer[3] = (UInt8)((lSize >> 48) & 0xFF);
+         uBuffer[4] = (UInt8)((lSize >> 40) & 0xFF);
+         uBuffer[5] = (UInt8)((lSize >> 32) & 0xFF);
+         uBuffer[6] = (UInt8)((lSize >> 24) & 0xFF);
+         uBuffer[7] = (UInt8)((lSize >> 16) & 0xFF);
+         uBuffer[8] = (UInt8)((lSize >> 8) & 0xFF);
+         uBuffer[9] = (UInt8)(lSize & 0xFF);
          uBuffer = &uBuffer[10];
       }
 
@@ -226,16 +226,15 @@ Connection::performWrite()
 
    if (nBytes < 0)
    {
-      if (errno != EAGAIN && errno != EWOULDBLOCK) // Treat EGAIN and EWOULDBLOCK as the same: http://stackoverflow.com/questions/7003234/which-systems-define-eagain-and-ewouldblock-as-different-values
-      {
-         //fail(data.transactionId);
-         InfoLog(<< "Write failed on socket: " << this->getSocket() << ", closing connection");
-         return -1;
-      }
-      else
-      {
-         return 0;
-      }
+      //fail(data.transactionId);
+      InfoLog(<< "Write failed on socket: " << this->getSocket() << ", closing connection");
+      return -1;
+   }
+   else if (nBytes == 0)
+   {
+       // Nothing was written - likely socket buffers are backed up and EWOULDBLOCK was returned
+       // no need to do calculations in else statement
+       return 0;
    }
    else
    {

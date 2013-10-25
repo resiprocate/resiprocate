@@ -25,10 +25,12 @@ AM_CXXFLAGS = -I $(top_srcdir)
 sbin_PROGRAMS = repro
 repro_SOURCES = repro.cxx
 repro_LDADD = librepro.la
+repro_LDADD += ../resip/dum/libdum.la
 repro_LDADD += ../resip/stack/libresip.la
 repro_LDADD += ../rutil/librutil.la
 #repro_LDADD += ../contrib/ares/libares.a
 #repro_LDADD += -L../contrib/ares -lares
+repro_LDADD += @LIBRADIUS_LIBADD@
 repro_LDADD += @LIBSSL_LIBADD@ @LIBPTHREAD_LIBADD@
 
 lib_LTLIBRARIES = librepro.la
@@ -50,6 +52,7 @@ librepro_la_SOURCES = \
 	Store.cxx \
 	AbstractDb.cxx \
 	BerkeleyDb.cxx \
+	BasicWsConnectionValidator.cxx \
 	\
 	CommandServer.cxx \
 	CommandServerThread.cxx \
@@ -84,6 +87,7 @@ librepro_la_SOURCES = \
 	\
         monkeys/CertificateAuthenticator.cxx \
         monkeys/DigestAuthenticator.cxx \
+ 		monkeys/CookieAuthenticator.cxx \
 	monkeys/StrictRouteFixup.cxx \
 	monkeys/AmIResponsible.cxx \
 	monkeys/IsTrustedNode.cxx \
@@ -108,6 +112,7 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
         AsyncProcessorMessage.hxx \
         AsyncProcessorWorker.hxx \
 	BerkeleyDb.hxx \
+	BasicWsConnectionValidator.hxx \
 	CommandServer.hxx \
 	CommandServerThread.hxx \
 	ConfigStore.hxx \
@@ -118,6 +123,7 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	HttpConnection.hxx \
 	monkeys/AmIResponsible.hxx \
         monkeys/CertificateAuthenticator.hxx \
+		monkeys/CookieAuthenticator.hxx \
 	monkeys/ConstantLocationMonkey.hxx \
 	monkeys/DigestAuthenticator.hxx \
 	monkeys/GruuMonkey.hxx \
