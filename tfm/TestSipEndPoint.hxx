@@ -218,12 +218,19 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             RawConditionerFn mRawConditioner;
       };
 
+      typedef enum
+      {
+         RelProvModeNone,
+         RelProvModeSupported,
+         RelProvModeRequired
+      } EndpointReliableProvisionalMode;
       class Invite : public MessageAction
       {
          public:
             Invite(TestSipEndPoint* from, 
                    const resip::Uri& to, 
                    bool useOutbound=false,
+                   EndpointReliableProvisionalMode mode=RelProvModeNone,
                    boost::shared_ptr<resip::SdpContents> sdp = 
                    boost::shared_ptr<resip::SdpContents>());
             virtual resip::Data toString() const;
@@ -232,21 +239,22 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             virtual boost::shared_ptr<resip::SipMessage> go();
             boost::shared_ptr<resip::SdpContents> mSdp;
             bool mUseOutbound;
+            EndpointReliableProvisionalMode mRelProvMode;
       };
       friend class Invite;
-      Invite* invite(const TestUser& endPoint);
-      Invite* invite(const TestSipEndPoint& endPoint);
-      Invite* invite(const resip::Uri& url);
-      Invite* invite(const TestUser& endPoint, const boost::shared_ptr<resip::SdpContents>& sdp);
-      Invite* invite(const resip::Uri& url, const boost::shared_ptr<resip::SdpContents>& sdp);
-      Invite* invite(const resip::Data& url);
+      Invite* invite(const TestUser& endPoint, EndpointReliableProvisionalMode mode = RelProvModeNone);
+      Invite* invite(const TestSipEndPoint& endPoint, EndpointReliableProvisionalMode mode = RelProvModeNone);
+      Invite* invite(const resip::Uri& url, EndpointReliableProvisionalMode mode = RelProvModeNone);
+      Invite* invite(const TestUser& endPoint, const boost::shared_ptr<resip::SdpContents>& sdp, EndpointReliableProvisionalMode mode = RelProvModeNone);
+      Invite* invite(const resip::Uri& url, const boost::shared_ptr<resip::SdpContents>& sdp, EndpointReliableProvisionalMode mode = RelProvModeNone);
+      Invite* invite(const resip::Data& url, EndpointReliableProvisionalMode mode = RelProvModeNone);
 
-      Invite* inviteWithOutbound(const TestUser& endPoint);
-      Invite* inviteWithOutbound(const TestSipEndPoint& endPoint);
-      Invite* inviteWithOutbound(const resip::Uri& url);
-      Invite* inviteWithOutbound(const TestUser& endPoint, const boost::shared_ptr<resip::SdpContents>& sdp);
-      Invite* inviteWithOutbound(const resip::Uri& url, const boost::shared_ptr<resip::SdpContents>& sdp);
-      Invite* inviteWithOutbound(const resip::Data& url);
+      Invite* inviteWithOutbound(const TestUser& endPoint, EndpointReliableProvisionalMode mode = RelProvModeNone);
+      Invite* inviteWithOutbound(const TestSipEndPoint& endPoint, EndpointReliableProvisionalMode mode = RelProvModeNone);
+      Invite* inviteWithOutbound(const resip::Uri& url, EndpointReliableProvisionalMode mode = RelProvModeNone);
+      Invite* inviteWithOutbound(const TestUser& endPoint, const boost::shared_ptr<resip::SdpContents>& sdp, EndpointReliableProvisionalMode mode = RelProvModeNone);
+      Invite* inviteWithOutbound(const resip::Uri& url, const boost::shared_ptr<resip::SdpContents>& sdp, EndpointReliableProvisionalMode mode = RelProvModeNone);
+      Invite* inviteWithOutbound(const resip::Data& url, EndpointReliableProvisionalMode mode = RelProvModeNone);
 
       class SendSip : public MessageAction
       {
@@ -937,6 +945,18 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       EXPECT_FUNCTOR(TestSipEndPoint, Cancel);
       MessageExpectAction* cancel();
 
+      class Prack : public MessageExpectAction
+      {
+         public:
+            explicit Prack(TestSipEndPoint& endPoint, boost::shared_ptr<resip::SdpContents> sdp = boost::shared_ptr<resip::SdpContents>());
+            virtual boost::shared_ptr<resip::SipMessage> go(boost::shared_ptr<resip::SipMessage> msg);
+         private:
+            TestSipEndPoint& mEndPoint;
+            boost::shared_ptr<resip::SdpContents> mSdp;
+      };
+      MessageExpectAction* prack();
+      MessageExpectAction* prack(const boost::shared_ptr<resip::SdpContents>& sdp);
+
       EXPECT_FUNCTOR_TARGETED(TestSipEndPoint, Notify200To);
       ExpectAction* notify200(const resip::Uri& target);
       ExpectAction* notify200(const TestSipEndPoint& target);
@@ -1227,6 +1247,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       ReceivedSubscribeList mSubscribesReceived;
       ReceivedPublishList mPublishReceived;
       RequestMap mRequests;
+      resip::RAckCategory mRelRespInfo;
       
       static boost::shared_ptr<resip::SipMessage> nil;
 

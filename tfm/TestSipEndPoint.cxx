@@ -1145,10 +1145,12 @@ TestSipEndPoint::MessageAction::operator()(boost::shared_ptr<Event> event)
 TestSipEndPoint::Invite::Invite(TestSipEndPoint* from, 
                                 const resip::Uri& to, 
                                 bool useOutbound,
+                                EndpointReliableProvisionalMode mode,
                                 boost::shared_ptr<resip::SdpContents> sdp)
    : MessageAction(*from, to),
-     mSdp(sdp),
-     mUseOutbound(useOutbound)
+     mUseOutbound(useOutbound),
+     mRelProvMode(mode),
+     mSdp(sdp)
 {}
 
 boost::shared_ptr<SipMessage>
@@ -1165,6 +1167,29 @@ TestSipEndPoint::Invite::go()
       invite->header(h_Contacts).front().uri().param(p_ob);
    }
 
+   if(mRelProvMode == RelProvModeSupported)
+   {
+      invite->header(h_Supporteds).push_back(Token(Symbols::C100rel));
+   }
+   else if(mRelProvMode == RelProvModeRequired)
+   {
+      invite->header(h_Requires).push_back(Token(Symbols::C100rel));
+   }
+
+   // Add allow header
+   invite->header(h_Allows).push_back(Token(getMethodName(INVITE)));
+   invite->header(h_Allows).push_back(Token(getMethodName(ACK)));
+   invite->header(h_Allows).push_back(Token(getMethodName(CANCEL)));
+   invite->header(h_Allows).push_back(Token(getMethodName(OPTIONS)));
+   invite->header(h_Allows).push_back(Token(getMethodName(BYE)));
+   invite->header(h_Allows).push_back(Token(getMethodName(UPDATE)));
+   invite->header(h_Allows).push_back(Token(getMethodName(INFO)));
+   invite->header(h_Allows).push_back(Token(getMethodName(MESSAGE)));
+   invite->header(h_Allows).push_back(Token(getMethodName(REFER)));
+   invite->header(h_Allows).push_back(Token(getMethodName(PRACK)));
+   invite->header(h_Allows).push_back(Token(getMethodName(NOTIFY)));
+   invite->header(h_Allows).push_back(Token(getMethodName(SUBSCRIBE)));
+
    mEndPoint.storeSentInvite(invite);
    return invite;
 }
@@ -1176,77 +1201,77 @@ TestSipEndPoint::Invite::toString() const
 }
 
 TestSipEndPoint::Invite* 
-TestSipEndPoint::invite(const TestUser& endPoint)
+TestSipEndPoint::invite(const TestUser& endPoint, EndpointReliableProvisionalMode mode)
 {
-   return new Invite(this, endPoint.getAddressOfRecord());
+   return new Invite(this, endPoint.getAddressOfRecord(), false, mode);
 }
 
 
 TestSipEndPoint::Invite*
-TestSipEndPoint::invite(const TestUser& endPoint, const boost::shared_ptr<resip::SdpContents>& sdp)
+TestSipEndPoint::invite(const TestUser& endPoint, const boost::shared_ptr<resip::SdpContents>& sdp, EndpointReliableProvisionalMode mode)
 {
-   return new Invite(this, endPoint.getAddressOfRecord(), false, sdp);
+   return new Invite(this, endPoint.getAddressOfRecord(), false, mode, sdp);
 }
 
 TestSipEndPoint::Invite* 
-TestSipEndPoint::invite(const TestSipEndPoint& endPoint) 
+TestSipEndPoint::invite(const TestSipEndPoint& endPoint, EndpointReliableProvisionalMode mode) 
 {
-   return new Invite(this, endPoint.mAor); 
+   return new Invite(this, endPoint.mAor, false, mode); 
 }
 
 TestSipEndPoint::Invite* 
-TestSipEndPoint::invite(const resip::Uri& url) 
+TestSipEndPoint::invite(const resip::Uri& url, EndpointReliableProvisionalMode mode) 
 {
-   return new Invite(this, url); 
+   return new Invite(this, url, false, mode); 
 }
 
 TestSipEndPoint::Invite* 
-TestSipEndPoint::invite(const resip::Uri& url, const boost::shared_ptr<resip::SdpContents>& sdp) 
+TestSipEndPoint::invite(const resip::Uri& url, const boost::shared_ptr<resip::SdpContents>& sdp, EndpointReliableProvisionalMode mode) 
 {
-   return new Invite(this, url, false, sdp); 
+   return new Invite(this, url, false, mode, sdp); 
 }
 
 TestSipEndPoint::Invite* 
-TestSipEndPoint::invite(const resip::Data& url)
+TestSipEndPoint::invite(const resip::Data& url, EndpointReliableProvisionalMode mode)
 {
-   return new Invite(this, resip::Uri(url)); 
+   return new Invite(this, resip::Uri(url), false, mode); 
 }
 
 TestSipEndPoint::Invite* 
-TestSipEndPoint::inviteWithOutbound(const TestUser& endPoint)
+TestSipEndPoint::inviteWithOutbound(const TestUser& endPoint, EndpointReliableProvisionalMode mode)
 {
-   return new Invite(this, endPoint.getAddressOfRecord(), true);
+   return new Invite(this, endPoint.getAddressOfRecord(), true, mode);
 }
 
 
 TestSipEndPoint::Invite*
-TestSipEndPoint::inviteWithOutbound(const TestUser& endPoint, const boost::shared_ptr<resip::SdpContents>& sdp)
+TestSipEndPoint::inviteWithOutbound(const TestUser& endPoint, const boost::shared_ptr<resip::SdpContents>& sdp, EndpointReliableProvisionalMode mode)
 {
-   return new Invite(this, endPoint.getAddressOfRecord(), true, sdp);
+   return new Invite(this, endPoint.getAddressOfRecord(), true, mode, sdp);
 }
 
 TestSipEndPoint::Invite* 
-TestSipEndPoint::inviteWithOutbound(const TestSipEndPoint& endPoint) 
+TestSipEndPoint::inviteWithOutbound(const TestSipEndPoint& endPoint, EndpointReliableProvisionalMode mode) 
 {
-   return new Invite(this, endPoint.mAor, true); 
+   return new Invite(this, endPoint.mAor, true, mode); 
 }
 
 TestSipEndPoint::Invite* 
-TestSipEndPoint::inviteWithOutbound(const resip::Uri& url) 
+TestSipEndPoint::inviteWithOutbound(const resip::Uri& url, EndpointReliableProvisionalMode mode) 
 {
-   return new Invite(this, url, true); 
+   return new Invite(this, url, true, mode); 
 }
 
 TestSipEndPoint::Invite* 
-TestSipEndPoint::inviteWithOutbound(const resip::Uri& url, const boost::shared_ptr<resip::SdpContents>& sdp) 
+TestSipEndPoint::inviteWithOutbound(const resip::Uri& url, const boost::shared_ptr<resip::SdpContents>& sdp, EndpointReliableProvisionalMode mode) 
 {
-   return new Invite(this, url, true, sdp); 
+   return new Invite(this, url, true, mode, sdp); 
 }
 
 TestSipEndPoint::Invite* 
-TestSipEndPoint::inviteWithOutbound(const resip::Data& url)
+TestSipEndPoint::inviteWithOutbound(const resip::Data& url, EndpointReliableProvisionalMode mode)
 {
-   return new Invite(this, resip::Uri(url), true); 
+   return new Invite(this, resip::Uri(url), true, mode); 
 }
 
 TestSipEndPoint::SendSip::SendSip(TestSipEndPoint* from,
@@ -3297,6 +3322,52 @@ TestSipEndPoint::cancel()
    return new Cancel(*this);
 }
 
+TestSipEndPoint::Prack::Prack(TestSipEndPoint & endPoint, const boost::shared_ptr<resip::SdpContents> sdp)
+   : MessageExpectAction(endPoint),
+     mEndPoint(endPoint),
+     mSdp(sdp)
+{
+}
+
+boost::shared_ptr<SipMessage>
+TestSipEndPoint::Prack::go(boost::shared_ptr<SipMessage> msg)
+{
+   resip::Data remoteTag(msg->isRequest() ? msg->header(h_From).param(p_tag) :
+                                            msg->header(h_To).param(p_tag) );
+   DeprecatedDialog* dialog = mEndPoint.getDialog(msg->header(h_CallId),remoteTag);
+   if(!dialog)
+   {
+      resip::Data localTag(!msg->isRequest() ? msg->header(h_From).param(p_tag):
+                                               msg->header(h_To).param(p_tag) );
+      dialog=mEndPoint.getDialog(msg->header(h_CallId),localTag);
+   }
+   assert(dialog);
+   boost::shared_ptr<SipMessage> prack(dialog->makeRequest(PRACK));
+
+   // Add RAck header
+   prack->header(h_RAck) = mEndPoint.mRelRespInfo;
+
+   // Add body if provided
+   if(mSdp.get())
+   {
+      prack->setContents(mSdp.get());
+   }
+
+   return prack;
+}
+
+TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::prack()
+{
+   return new Prack(*this);
+}
+
+TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::prack(const boost::shared_ptr<resip::SdpContents>& sdp)
+{
+   return new Prack(*this, sdp);
+}
+
 ExpectAction* 
 TestSipEndPoint::notify200(const resip::Uri& target)
 {
@@ -4005,6 +4076,16 @@ TestSipEndPoint::handleEvent(boost::shared_ptr<Event> event)
          boost::shared_ptr<SipMessage> invite = getSentInvite(msg->header(h_CallId));
          //DebugLog (<< "invite map = " << mInvitesSent);
          
+         // If this is a reliable provisional, then store the sequence numbers for insertion into
+         // the result PRACK message
+         if (msg->exists(h_RSeq))
+         {
+            // store state about the provisional if reliable
+            mRelRespInfo.rSequence() = (unsigned int) msg->header(h_RSeq).value();
+            mRelRespInfo.cSequence() = msg->header(h_CSeq).sequence();
+            mRelRespInfo.method() = msg->header(h_CSeq).method();
+         }
+
          assert(invite != 0);
          
          DeprecatedDialog* dialog = getDialog(msg->header(h_CallId),
