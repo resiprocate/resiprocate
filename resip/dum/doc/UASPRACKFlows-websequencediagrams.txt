@@ -60,14 +60,6 @@ end
 
 opt
 note over UAC, UAS: Negotiated Reliable Flow 1
-UAS->UAC: 18x (Offer)
-UAC->UAS: PRACK (Answer)
-UAS->UAC: 200/Prack
-note over UAC, UAS: Negotiated Reliable
-end
-
-opt
-note over UAC, UAS: Negotiated Reliable Flow 2
 UAS->UAC: 18x
 UAC->UAS: PRACK (Offer)
 UAS->UAC: 200/Prack (Answer)
@@ -75,7 +67,7 @@ note over UAC, UAS: Negotiated Reliable
 end
 
 opt
-note over UAC, UAS: Negotiated Reliable Flow 3
+note over UAC, UAS: Negotiated Reliable Flow 2
 UAS->UAC: 18x
 UAC->UAS: PRACK
 UAS->UAC: 200/Prack
@@ -83,21 +75,21 @@ note over UAC, UAS: Negotiated Reliable
 end
 
 opt
-note over UAC, UAS: Negotiated Reliable Flow 4
+note over UAC, UAS: Negotiated Reliable Flow 3
 UAS->UAC: UPDATE (Offer)
 UAC->UAS: 200/Update (Answer)
 note over UAC, UAS: Negotiated Reliable
 end
 
 opt
-note over UAC, UAS: Negotiated Reliable Flow 5
+note over UAC, UAS: Negotiated Reliable Flow 4
 UAC->UAS: UPDATE (Offer)
 UAS->UAC: 200/Update (Answer)
 note over UAC, UAS: Negotiated Reliable
 end
 
 opt
-note over UAC, UAS: Negotiated Reliable Flow 6
+note over UAC, UAS: Negotiated Reliable Flow 5
 UAS->UAC: 200/Invite
 UAC->UAS: ACK
 end
