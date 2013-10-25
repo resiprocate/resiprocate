@@ -54,6 +54,19 @@ end
 opt
 note over UAC, UAS: Flow 6
 UAC->UAS: INVITE (Offer)
+UAS->UAC: 18x (unreliable)
+UAS->UAC: 18x (reliable)
+UAC->UAS: PRACK 
+UAS->UAC: 200/Prack
+UAS->UAC: 18x (Answer)
+UAC->UAS: PRACK (Offer)
+UAS->UAC: 200/Prack (Answer)
+note over UAC, UAS: Negotiated Reliable
+end
+
+opt
+note over UAC, UAS: Flow 7
+UAC->UAS: INVITE (Offer)
 UAS->UAC: 200/Invite (Answer)
 UAC->UAS: ACK
 end
