@@ -2480,7 +2480,7 @@ DialogUsageManager::createDialogEventStateManager(DialogEventHandler* handler)
 }
 
 void 
-DialogUsageManager::setAdvertisedCapabilities(SipMessage& msg, SharedPtr<UserProfile>& userProfile)
+DialogUsageManager::setAdvertisedCapabilities(SipMessage& msg, SharedPtr<UserProfile> userProfile)
 {
    if(userProfile->isAdvertisedCapability(Headers::Allow)) 
    {
