@@ -378,7 +378,6 @@ InviteSession::isTerminated() const
       case WaitingToTerminate:
       case WaitingToHangup:
       case UAC_Cancelled:
-      case UAS_WaitingToTerminate:
       case UAS_WaitingToHangup:
          return true;
       default:
@@ -1691,7 +1690,6 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
          mStaleReInviteTimerSeq++;
          transition(SentReinviteAnswered);
          handleSessionTimerResponse(msg);
-         // mLastSessionModification = msg;   // ?slg? why are we storing 200's?
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mProposedRemoteOfferAnswer = offerAnswer; 
          handler->onOffer(getSessionHandle(), msg, *mProposedRemoteOfferAnswer);
@@ -2739,8 +2737,6 @@ InviteSession::toData(State state)
          return "UAS_ReceivedUpdate";
       case UAS_ReceivedUpdateWaitingAnswer:
          return "UAS_ReceivedUpdateWaitingAnswer";
-      case UAS_WaitingToTerminate:
-         return "UAS_WaitingToTerminate";
       case UAS_WaitingToHangup:
          return "UAS_WaitingToHangup";
       case UAS_WaitingToRequestOffer:

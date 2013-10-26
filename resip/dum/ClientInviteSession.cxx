@@ -151,7 +151,6 @@ ClientInviteSession::provideAnswer (const Contents& answer)
 
          mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
-         // mLastSessionModification = ack;  // ?slg? is this needed?
          break;
       }
       case UAC_ReceivedUpdateEarly:
@@ -417,7 +416,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
         }
      }
 
-     if (checkRseq(msg))
+     if (isBadRseq(msg))
      {
         return;
      }
@@ -657,34 +656,9 @@ ClientInviteSession::sendPrack(const Contents& offerAnswer, DialogUsageManager::
    
    InviteSession::setOfferAnswer(*prack, offerAnswer);
 
-   //  Remember last session modification.
-   // mLastSessionModification = prack; // ?slg? is this needed?
-
    DumHelper::setOutgoingEncryptionLevel(*prack, encryptionLevel);
    send(prack);
 }
-
-
-/* - TODO - Remove me?
-bool
-ClientInviteSession::isNextProvisional(const SipMessage& msg)
-{
-}
-
-bool
-ClientInviteSession::isRetransmission(const SipMessage& msg)
-{
-   if ( mLastReceivedRSeq == 0 ||
-        msg.header(h_RSeq).value() <= mLastReceivedRSeq)
-   {
-      return false;
-   }
-   else
-   {
-      return true;
-   }
-}
-*/
 
 void
 ClientInviteSession::dispatchStart (const SipMessage& msg)
@@ -1448,19 +1422,26 @@ ClientInviteSession::dispatchSentUpdateEarlyGlare (const SipMessage& msg)
 void
 ClientInviteSession::dispatchReceivedUpdateEarly (const SipMessage& msg)
 {
-   /*
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
+      case OnUpdate:
+      case OnUpdateOffer:
+         // If we receive an UPDATE before we have generated a final response to a previous UPDATE on the 
+         // same dialog, then we MUST return a 500 response with a Retry-After header (random duration 0-10 seconds)
+         {
+            SharedPtr<SipMessage> u500(new SipMessage);
+            mDialog.makeResponse(*u500, msg, 500);
+            u500->header(h_RetryAfter).value() = Random::getRandom() % 10;
+            send(u500);
+         }
+
       default:
-         // !kh!
-         // should not assert here for peer sent us garbage.
          WarningLog (<< "Don't know what this is : " << msg);
          break;
    }
-   */
    WarningLog (<< "Ignoring message received in ReceivedUpdateEarly: " << msg);
 }
 
@@ -1508,7 +1489,7 @@ ClientInviteSession::dispatchCancelled (const SipMessage& msg)
 
 //true if 180rel should be ignored. Saves rseq as a side effect.
 bool 
-ClientInviteSession::checkRseq(const SipMessage& msg)
+ClientInviteSession::isBadRseq(const SipMessage& msg)
 {
    int code = msg.isResponse() ? msg.header(h_StatusLine).statusCode() : 0;
    if (msg.method() == INVITE && code > 100 && code < 200)

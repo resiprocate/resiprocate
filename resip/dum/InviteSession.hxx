@@ -233,7 +233,6 @@ class InviteSession : public DialogUsage
          UAS_SentUpdateGlare,
          UAS_ReceivedUpdate,
          UAS_ReceivedUpdateWaitingAnswer,
-         UAS_WaitingToTerminate,    // TODO Unused - remove this?
          UAS_WaitingToHangup
          // !!!!WARNING!!!! when adding new UAS state - make sure you check if they 
          //                 need to be added to the isAccepted method
@@ -366,9 +365,9 @@ class InviteSession : public DialogUsage
       std::auto_ptr<Contents> mCurrentRemoteOfferAnswer;   // This gets set with mProposedRemoteOfferAnswer after we send an SDP answer, or when we receive an SDP answer from the remote end
       std::auto_ptr<Contents> mProposedRemoteOfferAnswer;  // This gets set when we receive an offer from the remote end
 
-      SharedPtr<SipMessage> mLastLocalSessionModification; // last UPDATE or reINVITE sent
+      SharedPtr<SipMessage> mLastLocalSessionModification;  // last UPDATE or reINVITE sent
       SharedPtr<SipMessage> mLastRemoteSessionModification; // last UPDATE or reINVITE received
-      SharedPtr<SipMessage> mInvite200;               // 200 OK for reINVITE for retransmissions
+      SharedPtr<SipMessage> mInvite200;                     // 200 OK for reINVITE for retransmissions
       SharedPtr<SipMessage> mLastNitResponse;
 
       SipMessage  mLastReferNoSubRequest;

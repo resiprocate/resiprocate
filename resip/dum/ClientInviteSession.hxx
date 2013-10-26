@@ -75,7 +75,7 @@ class ClientInviteSession : public InviteSession
       // Called by the DialogSet when it receives a 2xx response
       void onForkAccepted();
 
-      bool checkRseq(const SipMessage& msg);
+      bool isBadRseq(const SipMessage& msg);
    private:
       void startCancelTimer();
       void startStaleCallTimer();

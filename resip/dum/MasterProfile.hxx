@@ -48,32 +48,42 @@ class MasterProfile : public UserProfile
          Required             // If UAS - Always use reliable provisionals
       } ReliableProvisionalMode;
 
-
       // UAC PRACK support.  UPDATE must be enabled(currently defaults to on, do
       // not disable w/out disabling UAC PRACK support).
       //
       // Flows where an an answer is received in a 180rel and subsequent O/A
       // exchanges using UPDATE occur in the early dialog
-      // have been tested.  
+      // have been tested.
       //
       // A subsequent O/A exchange using 180rel/PRACK is also supported. This is
       // a really bad idea, as an answer must be generated; the offer cannot be
       // rejected. UPDATE should always be used for O/A exchanges once the
       // dialog is established.
-      // Invite/18x(offer)/PRACK(ans) should work but has not been tested. 
-      // TODO - update above comment after testing
+      // 
+      // Invite/18x(offer)/PRACK(ans) also works
+      // 
+      // Invite(offer)/18x(ans)/PRACK(offer)/200P(ans) issupported, but not recommended.  
+      // The UAC MUST call provideOffer from the onAnswer callback in order to generate 
+      // the offer in the PRACK.
       //
       // Explicit limitations are:
-      // Overlapping reliable provisional responses that contain a body are not
-      // handled.
-      // Offers in a 200(PRACK) are not supported, and anyone who generates them
-      // should be summarily executed.
-
+      // - Overlapping reliable provisional responses that contain a body are not
+      //   handled.
+      //
+      // Note:  Using SupportedEssential is exactly the same as using Supported, 
+      //        SupportedEssential only effects UAS Prack implementation
       virtual void setUacReliableProvisionalMode(ReliableProvisionalMode mode);
       virtual ReliableProvisionalMode getUacReliableProvisionalMode() const;
 
-      //Not supported as UAS. Calling setUacReliableProvisionalMode will result
-      //in an assert.  TODO - Update this comment block
+      // UAS PRACK support.  UPDATE must be enabled(currently defaults to on, do
+      // not disable w/out disabling UAS PRACK support).
+      //
+      // All flows and limitations mentioned in UAC Prack comments apply
+      //
+      // Modes work as follows:
+      // SupportedEssential - Only send reliable provisionals if sending a body and far end supports
+      // Supported - Always send reliable provisionals if far end supports
+      // Required - Always send reliable provisionals
       virtual void setUasReliableProvisionalMode(ReliableProvisionalMode mode);
       virtual ReliableProvisionalMode getUasReliableProvisionalMode() const;
 

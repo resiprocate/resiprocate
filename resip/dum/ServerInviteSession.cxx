@@ -10,6 +10,7 @@
 #include "resip/dum/UsageUseException.hxx"
 #include "resip/dum/DumHelper.hxx"
 #include "resip/dum/DumCommand.hxx"
+#include "rutil/Random.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/compat.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -88,7 +89,6 @@ ServerInviteSession::redirect(const NameAddrs& contacts, int code)
       case UAS_WaitingToOffer:
       case UAS_WaitingToRequestOffer:
       case UAS_WaitingToHangup:
-      case UAS_WaitingToTerminate:
       case UAS_SentUpdateAccepted:
       case UAS_ReceivedUpdateWaitingAnswer:
       case UAS_Start:
@@ -224,7 +224,6 @@ ServerInviteSession::provisional(int code, bool earlyFlag)
       case UAS_SentUpdateAccepted:
       case UAS_Start:
       case UAS_WaitingToHangup:
-      case UAS_WaitingToTerminate:
       default:
          assert(0);
          break;
@@ -332,7 +331,6 @@ ServerInviteSession::provideOffer(const Contents& offer,
       case UAS_SentUpdateAccepted:
       case UAS_Start:
       case UAS_WaitingToHangup:
-      case UAS_WaitingToTerminate:
       case UAS_WaitingToRequestOffer:
       case UAS_AcceptedWaitingAnswer:
          assert(0);
@@ -443,8 +441,7 @@ ServerInviteSession::provideAnswer(const Contents& answer)
          break;
 
       // If we received an offer in a PRACK then we transition to NegotiateReliable and expect
-      // provideAnswer to be called to send the 200/Prack containing the answer.  TODO  seems
-      // like we really ought to be defining a new state for this
+      // provideAnswer to be called to send the 200/Prack containing the answer.
       case UAS_NegotiatedReliable:
          if(mPrackWithOffer.get())
          {
@@ -480,7 +477,6 @@ ServerInviteSession::provideAnswer(const Contents& answer)
       case UAS_SentUpdateAccepted:
       case UAS_Start:
       case UAS_WaitingToHangup:
-      case UAS_WaitingToTerminate:
       case UAS_AcceptedWaitingAnswer:
          assert(0);
          break;
@@ -539,7 +535,6 @@ ServerInviteSession::end(EndReason reason)
       case UAS_SentUpdate:
       case UAS_SentUpdateGlare:
       case UAS_SentUpdateAccepted:
-      case UAS_WaitingToTerminate:
          reject(480);
          break;
          
@@ -628,7 +623,6 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
       case UAS_SentUpdateAccepted:
       case UAS_Start:
       case UAS_WaitingToHangup:
-      case UAS_WaitingToTerminate:
          assert(0);
          break;
 
@@ -721,7 +715,6 @@ ServerInviteSession::accept(int code)
       case UAS_SentUpdateAccepted:
       case UAS_Start:
       case UAS_WaitingToHangup:
-      case UAS_WaitingToTerminate:
       default:
          assert(0);
          break;
@@ -836,9 +829,6 @@ ServerInviteSession::dispatch(const SipMessage& msg)
       case UAS_WaitingToHangup:
          dispatchWaitingToHangup(msg);
          break;
-      case UAS_WaitingToTerminate:
-         dispatchWaitingToTerminate(msg);
-         break;
       case UAS_SentUpdateAccepted:
          dispatchSentUpdateAccepted(msg);
          break;
@@ -860,6 +850,19 @@ ServerInviteSession::dispatch(const DumTimeout& timeout)
       {
          send(m1xx);
          startRetransmit1xxTimer();
+      }
+   }
+   else if (timeout.type() == DumTimeout::Resubmit1xxRel)
+   {
+      if (timeout.seq() == mCurrentRetransmit1xxSeq)  // If timer isn't stopped and this timer is for last 1xx sent, then resend
+      {
+         // This is not a retransmission, it is a resubmission - ensure the RSeq number is incremented
+         if(m1xx->exists(h_RSeq))
+         {
+            m1xx->header(h_RSeq).value()++;
+            send(m1xx);
+            startResubmit1xxRelTimer();
+         }
       }
    }
    else if (timeout.type() == DumTimeout::Retransmit1xxRel)
@@ -1047,51 +1050,14 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
       }
         
       case OnPrack:
-         assert(0);  // TODO why is this handling here - remove it?
-         /*
-         if(!handlePrack(msg))
-         {
-            return; // prack does not correspond to an unacknowedged provisional
-         }
-         
-         if(offerAnswer.get())  // New offer
-         {
-            // TODO - what should we do if the PRACK recieved after we accept the 
-            // call has an offer in it.  Should we process it? or Ignore it?
-            // Ignoring for now - should at least reject
-            // 
-            // TODO - reject PRACK, teardown call?
-            ErrLog (<< "PRACK with new offer when in state=" << toData(mState));
-            assert(false);
-            return;
-
-            if(!mAnswerSentReliably)    // new offer before previous answer sent 
-            {
-               // TODO - reject PRACK, teardown call?
-               ErrLog (<< "PRACK with new offer when in state=" << toData(mState));
-               return;
-            }
-            else
-            {
-               // dispatch offer here and respond with 200OK in provideAnswer
-               transition(UAS_NegotiatedReliable);  // TODO - this doesn't look right - needs review
-               mPrackWithOffer = resip::SharedPtr<SipMessage>(new SipMessage(msg));
-               mProposedRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
-               mCurrentEncryptionLevel = getEncryptionLevel(msg);
-               if(!isTerminated())  
-               {
-                  handler->onOffer(getSessionHandle(), msg, *offerAnswer);
-               }
-            }
-         }
-         else
-         {
-             SharedPtr<SipMessage> p200(new SipMessage);
-             mDialog.makeResponse(*p200, msg, 200);
-             send(p200);
-             prackCheckQueue();
-         }*/
+      {
+         // should never get a prack here - we always queue up our 200/Inv response
+         InfoLog (<< "spurious PRACK in state=" << toData(mState));
+         SharedPtr<SipMessage> p481(new SipMessage);
+         mDialog.makeResponse(*p481, msg, 481);
+         send(p481);
          break;
+      }
       
       default:
          if(msg.isRequest())
@@ -1125,7 +1091,6 @@ ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
       }
 
       case OnAck:
-      //case OnAckAnswer:   // illegal but accept anyway for improved interop - TODO - do we want this or the reject below?
          assert(mProposedLocalOfferAnswer.get());
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
          provideProposedOffer(); 
@@ -1191,7 +1156,6 @@ ServerInviteSession::dispatchWaitingToRequestOffer(const SipMessage& msg)
       }
 
       case OnAck:
-      //case OnAckAnswer:   // illegal but accept anyway for improved interop  - TODO do we want this or the reject below
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
          requestOffer(); 
          break;
@@ -1285,28 +1249,14 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
       }
 
       case OnPrack:
-         assert(0);  // TODO why is this handling here - remove it?
-         /*
-         if(!handlePrack(msg))
-         {
-            return; // prack does not correspond to an unacknowedged provisional
-         }
-
-         if(offerAnswer.get())
-         {
-            // TODO - reject PRACK, teardown call?
-            ErrLog (<< "PRACK with new offer when in state=" << toData(mState));
-            return;
-         }
-         else
-         {
-            SharedPtr<SipMessage> p200(new SipMessage);
-            mDialog.makeResponse(*p200, msg, 200);
-            send(p200);
-            //transition(UAS_NoAnswerReliable);  // TODO !slg!  this doesn't seem right - we've already Accepted the call
-            //prackCheckQueue();
-         }*/
+      {
+         // should never get a prack here - we always queue up our 200/Inv response
+         InfoLog (<< "spurious PRACK in state=" << toData(mState));
+         SharedPtr<SipMessage> p481(new SipMessage);
+         mDialog.makeResponse(*p481, msg, 481);
+         send(p481);
          break;
+      }
 
       default:
          if(msg.isRequest())
@@ -1334,41 +1284,39 @@ ServerInviteSession::dispatchFirstSentOfferReliable(const SipMessage& msg)
           break;
 
       case OnPrack:
-         if(!handlePrack(msg))
+         if(handlePrack(msg))
          {
-            return; // prack does not correspond to an unacknowedged provisional
-         }
-         
-         if(offerAnswer.get())  // Answer
-         {
-            transition(UAS_NegotiatedReliable);
-            SharedPtr<SipMessage> p200(new SipMessage);
-            mDialog.makeResponse(*p200, msg, 200);
-            send(p200);
+            if(offerAnswer.get())  // Answer
+            {
+               transition(UAS_NegotiatedReliable);
+               SharedPtr<SipMessage> p200(new SipMessage);
+               mDialog.makeResponse(*p200, msg, 200);
+               send(p200);
 
-            setCurrentLocalOfferAnswer(msg);
-            mCurrentRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
-            mCurrentEncryptionLevel = getEncryptionLevel(msg);
-            handler->onPrack(getHandle(), msg);
-            handler->onAnswer(getSessionHandle(), msg, *offerAnswer);
-         }
-         else
-         {
-            mEndReason = IllegalNegotiation;
-            transition(Terminated);
-            handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
+               setCurrentLocalOfferAnswer(msg);
+               mCurrentRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
+               mCurrentEncryptionLevel = getEncryptionLevel(msg);
+               handler->onPrack(getHandle(), msg);
+               handler->onAnswer(getSessionHandle(), msg, *offerAnswer);
+            }
+            else
+            {
+               mEndReason = IllegalNegotiation;
+               transition(Terminated);
+               handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
 
-            // 406 the Prack
-            SharedPtr<SipMessage> p406(new SipMessage);
-            mDialog.makeResponse(*p406, msg, 406);
-            send(p406);
+               // 406 the Prack
+               SharedPtr<SipMessage> p406(new SipMessage);
+               mDialog.makeResponse(*p406, msg, 406);
+               send(p406);
 
-            // 406 the Invite
-            SharedPtr<SipMessage> i406(new SipMessage);
-            mDialog.makeResponse(*i406, mFirstRequest, 406);
-            send(i406);
+               // 406 the Invite
+               SharedPtr<SipMessage> i406(new SipMessage);
+               mDialog.makeResponse(*i406, mFirstRequest, 406);
+               send(i406);
 
-            mDum.destroy(this);
+               mDum.destroy(this);
+            }
          }
          break;
 
@@ -1467,32 +1415,46 @@ ServerInviteSession::dispatchOfferReliableProvidedAnswer(const SipMessage& msg)
          break;
 
       case OnPrack:
-         if(!handlePrack(msg))
+         if(handlePrack(msg))
          {
-            return; // prack does not correspond to an unacknowedged provisional
-         }
-         
-         if(offerAnswer.get())  // New offer - can't happen -we haven't provided answer yet
-         {
-            // 2nd offer, we haven't answered the first one
-            // TODO - reject PRACK, teardown call?
-            ErrLog (<< "PRACK with new offer when in state=" << toData(mState));
-            return;
-         }
-         else
-         {
-             SharedPtr<SipMessage> p200(new SipMessage);
-             mDialog.makeResponse(*p200, msg, 200);
-             send(p200);
-             // If we have a provisional to send with answer then transition to UAS_FirstSentAnswerReliable
-             if(mQueuedResponses.size() > 0 && 
-                mQueuedResponses.front().first < 200 &&
-                mQueuedResponses.front().second)  // Early flag is on
-             {
-                transition(UAS_FirstSentAnswerReliable);
-             }
-             handler->onPrack(getHandle(), msg);
-             prackCheckQueue();
+            if(offerAnswer.get())
+            {
+               // 2nd offer, we haven't answered the first one - log error an proceed by igoring body
+               ErrLog (<< "PRACK with new offer when in state=" << toData(mState));
+
+               mEndReason = IllegalNegotiation;
+               transition(Terminated);
+               handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
+
+               // 406 the Prack
+               SharedPtr<SipMessage> p406(new SipMessage);
+               mDialog.makeResponse(*p406, msg, 406);
+               send(p406);
+
+               // 406 the Invite
+               SharedPtr<SipMessage> i406(new SipMessage);
+               mDialog.makeResponse(*i406, mFirstRequest, 406);
+               send(i406);
+
+               mDum.destroy(this);
+            }
+            else
+            {
+               // Send 200/PRACK
+               SharedPtr<SipMessage> p200(new SipMessage);
+               mDialog.makeResponse(*p200, msg, 200);
+               send(p200);
+
+               // If we have a provisional to send with answer then transition to UAS_FirstSentAnswerReliable
+               if(mQueuedResponses.size() > 0 && 
+                  mQueuedResponses.front().first < 200 &&
+                  mQueuedResponses.front().second)  // Early flag is on
+               {
+                  transition(UAS_FirstSentAnswerReliable);
+               }
+               handler->onPrack(getHandle(), msg);
+               prackCheckQueue();
+            }
          }
          break;
 
@@ -1522,32 +1484,30 @@ ServerInviteSession::dispatchFirstSentAnswerReliable(const SipMessage& msg)
          break;
 
       case OnPrack:
-         if(!handlePrack(msg))
+         if(handlePrack(msg))
          {
-            return; // prack does not correspond to an unacknowedged provisional
-         }
-         
-         if(offerAnswer.get())  // New offer
-         {
-            // dispatch offer here and respond with 200OK in provideAnswer
-            transition(UAS_NegotiatedReliable);
-            mPrackWithOffer = resip::SharedPtr<SipMessage>(new SipMessage(msg));
-            mProposedRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
-            mCurrentEncryptionLevel = getEncryptionLevel(msg);
-            handler->onPrack(getHandle(), msg);
-            if(!isTerminated())  
+            if(offerAnswer.get())  // New offer
             {
-               handler->onOffer(getSessionHandle(), msg, *offerAnswer);
+               // dispatch offer here and respond with 200OK in provideAnswer
+               transition(UAS_NegotiatedReliable);
+               mPrackWithOffer = resip::SharedPtr<SipMessage>(new SipMessage(msg));
+               mProposedRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
+               mCurrentEncryptionLevel = getEncryptionLevel(msg);
+               handler->onPrack(getHandle(), msg);
+               if(!isTerminated())  
+               {
+                  handler->onOffer(getSessionHandle(), msg, *offerAnswer);
+               }
             }
-         }
-         else
-         {
-             SharedPtr<SipMessage> p200(new SipMessage);
-             mDialog.makeResponse(*p200, msg, 200);
-             send(p200);
-             transition(UAS_NegotiatedReliable);
-             handler->onPrack(getHandle(), msg);
-             prackCheckQueue();
+            else
+            {
+               SharedPtr<SipMessage> p200(new SipMessage);
+               mDialog.makeResponse(*p200, msg, 200);
+               send(p200);
+               transition(UAS_NegotiatedReliable);
+               handler->onPrack(getHandle(), msg);
+               prackCheckQueue();
+            }
          }
          break;
 
@@ -1577,26 +1537,40 @@ ServerInviteSession::dispatchNoAnswerReliableWaitingPrack(const SipMessage& msg)
           break;
 
       case OnPrack:
-         if(!handlePrack(msg))
+         if(handlePrack(msg))
          {
-            return; // prack does not correspond to an unacknowedged provisional
-         }
-         
-         if(offerAnswer.get())
-         {
-            // 2nd offer, we haven't answered the first one
-            // TODO - reject PRACK, teardown call?
-            ErrLog (<< "PRACK with new offer when in state=" << toData(mState));
-            return;
-         }
-         else
-         {
-            SharedPtr<SipMessage> p200(new SipMessage);
-            mDialog.makeResponse(*p200, msg, 200);
-            send(p200);
-            transition(UAS_NoAnswerReliable);
-            handler->onPrack(getHandle(), msg);
-            prackCheckQueue();
+            if(offerAnswer.get())
+            {
+               // 2nd offer, we haven't answered the first one - log error an proceed by igoring body
+               ErrLog (<< "PRACK with new offer when in state=" << toData(mState));
+
+               mEndReason = IllegalNegotiation;
+               transition(Terminated);
+               handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
+
+               // 406 the Prack
+               SharedPtr<SipMessage> p406(new SipMessage);
+               mDialog.makeResponse(*p406, msg, 406);
+               send(p406);
+
+               // 406 the Invite
+               SharedPtr<SipMessage> i406(new SipMessage);
+               mDialog.makeResponse(*i406, mFirstRequest, 406);
+               send(i406);
+
+               mDum.destroy(this);
+            }
+            else
+            {
+               // Send 200/PRACK
+               SharedPtr<SipMessage> p200(new SipMessage);
+               mDialog.makeResponse(*p200, msg, 200);
+               send(p200);
+
+               transition(UAS_NoAnswerReliable);
+               handler->onPrack(getHandle(), msg);
+               prackCheckQueue();
+            }
          }
          break;
 
@@ -1767,11 +1741,12 @@ ServerInviteSession::dispatchReceivedUpdate(const SipMessage& msg)
 
       case OnUpdate:
       case OnUpdateOffer:
-         // A UAS that receives an UPDATE before it has generated a final response to a previous UPDATE on the 
-         // same dialog MUST return a 500 response
+         // If we receive an UPDATE before we have generated a final response to a previous UPDATE on the 
+         // same dialog, then we MUST return a 500 response with a Retry-After header (random duration 0-10 seconds)
          {
             SharedPtr<SipMessage> u500(new SipMessage);
             mDialog.makeResponse(*u500, msg, 500);
+            u500->header(h_RetryAfter).value() = Random::getRandom() % 10;
             send(u500);
          }
          break;
@@ -1837,30 +1812,28 @@ ServerInviteSession::dispatchNegotiatedReliable(const SipMessage& msg)
           break;
 
       case OnPrack:
-         if(!handlePrack(msg))
+         if(handlePrack(msg))
          {
-            return; // prack does not correspond to an unacknowedged provisional
-         }
-         
-         if(offerAnswer.get())  // New offer
-         {
-            // dispatch offer here and respond with 200OK in provideAnswer
-            mPrackWithOffer = resip::SharedPtr<SipMessage>(new SipMessage(msg));
-            mProposedRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
-            mCurrentEncryptionLevel = getEncryptionLevel(msg);
-            handler->onPrack(getHandle(), msg);
-            if(!isTerminated())  
+            if(offerAnswer.get())  // New offer
             {
-               handler->onOffer(getSessionHandle(), msg, *offerAnswer);
+               // dispatch offer here and respond with 200OK in provideAnswer
+               mPrackWithOffer = resip::SharedPtr<SipMessage>(new SipMessage(msg));
+               mProposedRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
+               mCurrentEncryptionLevel = getEncryptionLevel(msg);
+               handler->onPrack(getHandle(), msg);
+               if(!isTerminated())  
+               {
+                  handler->onOffer(getSessionHandle(), msg, *offerAnswer);
+               }
             }
-         }
-         else
-         {
-            SharedPtr<SipMessage> p200(new SipMessage);
-            mDialog.makeResponse(*p200, msg, 200);
-            send(p200);
-            handler->onPrack(getHandle(), msg);
-            prackCheckQueue();
+            else
+            {
+               SharedPtr<SipMessage> p200(new SipMessage);
+               mDialog.makeResponse(*p200, msg, 200);
+               send(p200);
+               handler->onPrack(getHandle(), msg);
+               prackCheckQueue();
+            }
          }
          break;
 
@@ -1891,11 +1864,6 @@ ServerInviteSession::dispatchNegotiatedReliable(const SipMessage& msg)
          }
          break;
    }
-}
-
-void
-ServerInviteSession::dispatchWaitingToTerminate(const SipMessage& msg)
-{
 }
 
 void
@@ -1989,6 +1957,17 @@ ServerInviteSession::startRetransmit1xxTimer()
    }
 }
 
+void 
+ServerInviteSession::startResubmit1xxRelTimer()
+{
+   // RFC3262 section says the UAS SHOULD send reliable provisional responses once every two and half minutes
+   int resubmitTime = mDialog.mDialogSet.getUserProfile()->get1xxRelResubmitTime();
+   if(resubmitTime > 0 && m1xx->header(resip::h_StatusLine).statusCode() > 100)
+   {
+      mDum.addTimer(DumTimeout::Resubmit1xxRel, resubmitTime, getBaseHandle(), ++mCurrentRetransmit1xxSeq);  // This timer serves the same purpose at the unreliable retransmit timer - use the same sequence number
+   }
+}
+
 void
 ServerInviteSession::startRetransmit1xxRelTimer()
 {
@@ -2034,6 +2013,7 @@ ServerInviteSession::sendProvisional(int code, bool earlyFlag)
              // Invite requires reliable responses - since there was no offer in the INVITE we MUST 
              // provide an offer in the first reliable response.  We would be in the ProvidedOfferReliable
              // state if that was the case.  Looks like provisional was called too early!
+             DebugLog( << "Sending a reliable provisional after receiving an INVITE with no offer, requires provideOffer to be called first (RFC3262-Section 5).");
              assert(false);
              return false;
          }
@@ -2071,9 +2051,14 @@ ServerInviteSession::sendProvisional(int code, bool earlyFlag)
       }
       m1xx->header(h_RSeq).value() = ++mLocalRSeq;
 
+      // We are supposed to advertised our Allow header in reliable provisionals - Add Advertised 
+      // Capabilities - allows UAC to detect UPDATE support before 200 response
+      mDum.setAdvertisedCapabilities(*m1xx.get(), mDialog.mDialogSet.getUserProfile());
+
       assert(!mUnacknowledgedReliableProvisional.get());
       mUnacknowledgedReliableProvisional = m1xx;
-      startRetransmit1xxRelTimer();
+      startRetransmit1xxRelTimer();  // handles retransmissions until PRACK arrives
+      startResubmit1xxRelTimer(); // handles - RFC3262 section says the UAS SHOULD send provisional reliable responses once every two and half minutes
    }
    else
    {

@@ -82,7 +82,6 @@ class ServerInviteSession: public InviteSession
       void dispatchSentUpdateAccepted(const SipMessage& msg);
       void dispatchReceivedUpdate(const SipMessage& msg);
       void dispatchReceivedUpdateWaitingAnswer(const SipMessage& msg);
-      void dispatchWaitingToTerminate(const SipMessage& msg);
       void dispatchWaitingToHangup(const SipMessage& msg);
       void dispatchNegotiatedReliable(const SipMessage& msg);
 
@@ -92,6 +91,7 @@ class ServerInviteSession: public InviteSession
 
       // utilities
       void startRetransmit1xxTimer();
+      void startResubmit1xxRelTimer();
       void startRetransmit1xxRelTimer();
       void sendAccept(int code, Contents* offerAnswer); // sends 2xxI
       bool sendProvisional(int code, bool earlyFlag);  // returns true if sent reliably
