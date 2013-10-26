@@ -646,12 +646,7 @@ TransactionState::process(TransactionController& controller,
          if(state->mController.getFixBadCSeqNumbers())
          {
             unsigned int old=state->mNextTransmission->const_header(h_CSeq).sequence();
-            // TODO - bandersson had this code in the original prack branch - but I can't understand why
-            //        leaving commented out for now so I might be able to understand why.
-            //        Note:  his commit comment was: don't do fixBadCseqNumbers if response method doesn't match request
-            //if(state->mMsgToRetransmit->header(h_CSeq).method()==sip->header(h_CSeq).method() &&
-            //   sip->header(h_CSeq).sequence()!=old)
-            if(sip->const_header(h_CSeq).sequence()!=old)
+            if(sip->const_header(h_CSeq).sequence() != old)
             {
                InfoLog(<<"Other end changed our CSeq number... replacing.");
                sip->header(h_CSeq).sequence()=old;
