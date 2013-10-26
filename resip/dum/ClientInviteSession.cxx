@@ -1420,7 +1420,7 @@ ClientInviteSession::dispatchSentUpdateEarlyGlare (const SipMessage& msg)
 }
 
 void
-ClientInviteSession::dispatchReceivedUpdateEarly (const SipMessage& msg)
+ClientInviteSession::dispatchReceivedUpdateEarly(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
@@ -1437,6 +1437,7 @@ ClientInviteSession::dispatchReceivedUpdateEarly (const SipMessage& msg)
             u500->header(h_RetryAfter).value() = Random::getRandom() % 10;
             send(u500);
          }
+         break;
 
       default:
          WarningLog (<< "Don't know what this is : " << msg);
