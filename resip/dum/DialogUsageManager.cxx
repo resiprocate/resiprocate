@@ -2479,6 +2479,30 @@ DialogUsageManager::createDialogEventStateManager(DialogEventHandler* handler)
    return mDialogEventStateManager;
 }
 
+void 
+DialogUsageManager::setAdvertisedCapabilities(SipMessage& msg, SharedPtr<UserProfile>& userProfile)
+{
+   if(userProfile->isAdvertisedCapability(Headers::Allow)) 
+   {
+      msg.header(h_Allows) = getMasterProfile()->getAllowedMethods();
+   }
+   if(userProfile->isAdvertisedCapability(Headers::AcceptEncoding)) 
+   {
+      msg.header(h_AcceptEncodings) = getMasterProfile()->getSupportedEncodings();
+   }
+   if(userProfile->isAdvertisedCapability(Headers::AcceptLanguage)) 
+   {
+      msg.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
+   }
+   if(userProfile->isAdvertisedCapability(Headers::AllowEvents)) 
+   {
+      msg.header(h_AllowEvents) = getMasterProfile()->getAllowedEvents();
+   }
+   if(userProfile->isAdvertisedCapability(Headers::Supported)) 
+   {
+      msg.header(h_Supporteds) = getMasterProfile()->getSupportedOptionTags();
+   }
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0
