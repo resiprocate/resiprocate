@@ -373,7 +373,6 @@ ServerInviteSession::requestOffer()
 void 
 ServerInviteSession::provideAnswer(const Contents& answer)
 {
-   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    InfoLog (<< toData(mState) << ": provideAnswer");
    mAnswerSentReliably = false;
    switch (mState)
@@ -859,7 +858,13 @@ ServerInviteSession::dispatch(const DumTimeout& timeout)
          // This is not a retransmission, it is a resubmission - ensure the RSeq number is incremented
          if(m1xx->exists(h_RSeq))
          {
+            // increment RSeq
             m1xx->header(h_RSeq).value()++;
+
+            // Remove any body/sdp
+            m1xx->setContents(0);
+
+            mUnacknowledgedReliableProvisional = m1xx;
             send(m1xx);
             startResubmit1xxRelTimer();
          }
@@ -1333,8 +1338,6 @@ bool
 ServerInviteSession::handlePrack(const SipMessage& msg)
 {
    InfoLog (<< "handlePrack");
-
-   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
 
    if(mUnacknowledgedReliableProvisional.get() && 
       mUnacknowledgedReliableProvisional->header(h_RSeq).value() == msg.header(h_RAck).rSequence() &&
