@@ -130,11 +130,12 @@ class DumTestCase : public DumFixture
       CPPUNIT_TEST(testPrackInviteOffer2ndRelProvAnswerPrackOffer);
       CPPUNIT_TEST(testPrackNegotiatedReliableProvisional);
       CPPUNIT_TEST(testPrackNegotiatedReliableUpdates);
-      CPPUNIT_TEST(testPrackNegotiatedUpdateGlare);
+      CPPUNIT_TEST(testPrackNegotiatedReliableUpdateGlare);
 
       // UAS Prack Scenarios - only UAS is DUM endpoint
-      CPPUNIT_TEST(testUASPrackNegotiatedUpdateGlareResend);
-      CPPUNIT_TEST(testUASPrackNegotiatedUpdateGlareCrossed);
+      CPPUNIT_TEST(testUASPrackNegotiatedReliableUpdateGlareResend);
+      CPPUNIT_TEST(testUASPrackNegotiatedReliableUpdateGlareCrossed);
+      CPPUNIT_TEST(testUASPrackNegotiatedReliableOfferInPrack);
 
       //CPPUNIT_TEST(testReinviteWithByeSentAfterMissedAck);  // comment above indicates test case needs handling for retransmissions
 
@@ -4751,9 +4752,9 @@ class DumTestCase : public DumFixture
          scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
       }
 
-      void testPrackNegotiatedUpdateGlare() 
+      void testPrackNegotiatedReliableUpdateGlare() 
       {
-         InfoLog(<< "testPrackNegotiatedUpdateGlare");
+         InfoLog(<< "testPrackNegotiatedReliableUpdateGlare");
 
          jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
          jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);
@@ -4791,9 +4792,9 @@ class DumTestCase : public DumFixture
          scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
       }
 
-      void testUASPrackNegotiatedUpdateGlareResend() 
+      void testUASPrackNegotiatedReliableUpdateGlareResend() 
       {
-         InfoLog(<< "testUASPrackNegotiatedUpdateGlareResend");
+         InfoLog(<< "testUASPrackNegotiatedReliableUpdateGlareResend");
 
          scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
          scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);
@@ -4832,9 +4833,9 @@ class DumTestCase : public DumFixture
          scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
       }
 
-      void testUASPrackNegotiatedUpdateGlareCrossed() 
+      void testUASPrackNegotiatedReliableUpdateGlareCrossed() 
       {
-         InfoLog(<< "testUASPrackNegotiatedUpdateGlareCrossed");
+         InfoLog(<< "testUASPrackNegotiatedReliableUpdateGlareCrossed");
 
          scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
          scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);
@@ -4875,6 +4876,47 @@ class DumTestCase : public DumFixture
          scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
       }
 
+      void testUASPrackNegotiatedReliableOfferInPrack() 
+      {
+         InfoLog(<< "testUASPrackNegotiatedReliableOfferInPrack");
+
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);
+
+         TestClientRegistration regScott(scott);
+
+         boost::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         TestServerInviteSession uas(scott);
+         
+         Seq(david->invite(scott->getAor().uri(), offer, TestSipEndPoint::RelProvModeSupported),
+             optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(INVITE/407, from(proxy), WaitForResponse, chain(david->ack(), david->digestRespond())),
+             optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.provisional(183, true))),
+             david->expect(INVITE/183, from(scott->getInstanceId()), WaitForCommand, david->prack()),
+             david->expect(PRACK/407, from(proxy), WaitForCommand, chain(uas.provisional(183, false), david->digestRespond())),  // will cause a queued provisional to be send in NegotiatedReliable state
+             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
+             david->expect(PRACK/200, from(scott->getInstanceId()), WaitForCommand, david->noAction()),
+             david->expect(INVITE/183, from(scott->getInstanceId()), WaitForCommand, david->prack(offer)),
+             david->expect(PRACK/407, from(proxy), WaitForCommand, david->digestRespond()),
+             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.accept()),
+             And(Sub(david->expect(INVITE/200, from(scott->getInstanceId()), WaitForCommand, david->ack())),
+                 Sub(scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+      }
 };
 
 // Registers the fixture into the 'registry'
