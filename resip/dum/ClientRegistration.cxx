@@ -48,7 +48,13 @@ ClientRegistration::ClientRegistration(DialogUsageManager& dum,
    // If no Contacts header, this is a query
    if (mLastRequest->exists(h_Contacts))
    {
-      mMyContacts = mLastRequest->header(h_Contacts);
+      NameAddr all;
+      all.setAllContacts();
+      if(!(mLastRequest->header(h_Contacts).front() == all))
+      {
+         // store if not special all contacts header
+         mMyContacts = mLastRequest->header(h_Contacts);
+      }
    }
 
    if(mLastRequest->exists(h_Expires) && 
