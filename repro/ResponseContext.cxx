@@ -850,7 +850,7 @@ ResponseContext::sendRequest(resip::SipMessage& request)
    // If this request is destined outside our domain then remove certain headers
    bool isMyUri;
    if(request.exists(h_Routes) &&
-      request.const_header(h_Routes).empty())
+      !request.const_header(h_Routes).empty())
    {
       isMyUri = mRequestContext.getProxy().isMyUri(request.const_header(h_Routes).front().uri());
    }
