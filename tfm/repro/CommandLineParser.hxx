@@ -16,6 +16,7 @@ class CommandLineParser
 
       resip::Data mLogType;
       resip::Data mLogLevel;
+      bool mInteractive;
       resip::Data mTlsDomain;
       resip::Data mProxyHostName;
       resip::Data mUserIPAddr;

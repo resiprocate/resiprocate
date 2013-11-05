@@ -2,8 +2,10 @@
 #include "config.h"
 #endif
 
-#include "cppunit/TextTestRunner.h"
-#include "cppunit/TextTestResult.h"
+#include <cppunit/TextTestRunner.h>
+#include <cppunit/TextTestResult.h>
+#include <cppunit/TextOutputter.h>
+#include <cppunit/XmlOutputter.h>
 
 #include <signal.h>
 #include "resip/stack/ApiCheckList.hxx"
@@ -19,8 +21,12 @@
 #include "tfm/TestUser.hxx"
 #include "tfm/CheckFetchedContacts.hxx"
 #include "tfm/predicates/ExpectUtils.hxx"
+#include "tfm/CppTestSelector.hxx"
+#include "tfm/CPTextTestProgressListener.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
+
+#define TEST_RESULT_FILE "./testResult.xml"
 
 using namespace CppUnit;
 using namespace resip;
@@ -3874,7 +3880,18 @@ class TestHolder : public ReproFixture
          optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
          jason->expect(INVITE,contact(derek),WaitForCommand,chain(jason->ring(),jason->answer())),
          derek->expect(INVITE/180,contact(jason),WaitForResponse,derek->noAction()),
-         derek->expect(INVITE/200,contact(jason),WaitForResponse,chain(ack <= derek->ack(), derek->retransmit(ack),derek->retransmit(ack),derek->retransmit(ack))),
+         derek->expect(INVITE/200,contact(jason),WaitForResponse,chain(ack <= derek->ack(),derek->pause(200),derek->retransmit(ack),derek->pause(200),derek->retransmit(ack),derek->pause(200),derek->retransmit(ack))),
+         // pauses above are required or we may trigger the following code block in TransactionState:
+         // .bwc. While the resolver was attempting to find a target, another
+         // request came down from the TU. This could be a bug in the TU, or 
+         // could be a retransmission of an ACK/200. Either way, we cannot
+         // expect to ever be able to send this request (nowhere to store it
+         // temporarily).
+         // DebugLog(<< "Received a second request from the TU for a transaction"
+         //             " that already existed, before the DNS subsystem was done "
+         //             "resolving the target for the first request. Either the TU"
+         //             " has messed up, or it is retransmitting ACK/200 (the only"
+         //             " valid case for this to happen)");
          jason->expect(ACK,contact(derek),WaitForCommand,jason->noAction()),
          jason->expect(ACK,contact(derek),WaitForCommand,jason->noAction()),
          jason->expect(ACK,contact(derek),WaitForCommand,jason->noAction()),
@@ -4082,7 +4099,7 @@ class TestHolder : public ReproFixture
           derek->expect(INVITE/407, from(proxy), WaitForResponse, chain(derek->ack(),
                                                                         derek->digestRespond())),
           optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
-          derek->expect(INVITE/480, from(proxy), WaitForResponse, derek->ack()),
+          derek->expect(INVITE/480, from(proxy), WaitForResponseSpiral, derek->ack()),  // Give more time than just WaitForResponse - TCP connection failure detection can take some time
           WaitForEndOfTest);
       ExecuteSequences();  
    }
@@ -4214,7 +4231,14 @@ class TestHolder : public ReproFixture
          optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          david->expect(INVITE/407, from(proxy), WaitForResponse, chain(david->ack(),david->digestRespond())),
          optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
+#ifdef WIN32
+         // On Windows we get the following error: 
+         // INFO | 20131105-090333.841 | tfrepro.exe | RESIP:TRANSPORT | 17872 | transport.cxx:145 |  The message was too large to fit into the specified buffer and was truncated.  
+         // which causes a 408 before a 483 can be generated.
+         david->expect(INVITE/408,from(proxy),WaitForResponseLoop,david->ack()),
+#else
          david->expect(INVITE/483,from(proxy),WaitForResponseLoop,david->ack()),
+#endif
          WaitForEndOfTest
       );
       
@@ -10591,7 +10615,7 @@ class TestHolder : public ReproFixture
 
          Seq(jozsef->registerUser(60, jozsef->getDefaultContacts()),
              jozsef->expect(REGISTER/407, from(proxy), WaitForResponse, jozsef->digestRespond()),
-             jozsef->expect(REGISTER/200, from(proxy), WaitForResponse, chain(jozsef->rawSend(server, errMsg), jozsef->pause(50), jozsef->registerUser(60, jozsef->getDefaultContacts()))),
+             jozsef->expect(REGISTER/200, from(proxy), WaitForResponse, chain(jozsef->rawSend(server, errMsg), jozsef->pause(200), jozsef->registerUser(60, jozsef->getDefaultContacts()))),
              jozsef->expect(REGISTER/407, from(proxy), WaitForResponse, jozsef->digestRespond()),
              jozsef->expect(REGISTER/200, from(proxy), WaitForResponse, jozsef->noAction()),
              WaitForEndOfTest);
@@ -10672,22 +10696,17 @@ class MyTestCase
          TEST(testReflectedInvite);
          TEST(testProxyAlive);
       
-      
          TEST(testInviteReflectedAsNonInvite);
          TEST(testProxyAlive);
-      
       
          TEST(testInviteReflectedAsAck);
          TEST(testProxyAlive);
       
-      
          TEST(testInviteNonInviteResponse);
          TEST(testProxyAlive);
       
-      
          TEST(testInviteAckResponse);
          TEST(testProxyAlive);
-      
       
       
       // ******************** non-INVITE ********************//
@@ -10695,30 +10714,23 @@ class MyTestCase
          TEST(testNitReflectedAsInvite);
          TEST(testProxyAlive);
       
-      
          TEST(testNitReflected);
          TEST(testProxyAlive);
-      
       
          TEST(testNitReflectedAsDifferentNit);
          TEST(testProxyAlive);
       
-      
          TEST(testNitReflectedAsAck);
          TEST(testProxyAlive);
-      
       
          TEST(testNitInviteResponse);
          TEST(testProxyAlive);
       
-      
          TEST(testNitDifferentNitResponse);
          TEST(testProxyAlive);
       
-      
          TEST(testNitAckResponse);
          TEST(testProxyAlive);
-      
       
       
       // ******************** ACK ********************//
@@ -10726,38 +10738,29 @@ class MyTestCase
          TEST(testAck200ReflectedAsInvite);
          TEST(testProxyAlive);
       
-      
          TEST(testAck200ReflectedAsNit);
          TEST(testProxyAlive);
-      
       
          TEST(testAck200Reflected);
          TEST(testProxyAlive);
       
-      
          TEST(testAckFailureReflectedAsInvite);
          TEST(testProxyAlive);
-      
       
          TEST(testAckFailureReflectedAsNit);
          TEST(testProxyAlive);
       
-      
          TEST(testAckFailureReflected);
          TEST(testProxyAlive);
-      
       
          TEST(testAck200InviteResponse);
          TEST(testProxyAlive);
       
-      
          TEST(testAck200NitResponse);
          TEST(testProxyAlive);
       
-      
          TEST(testAckFailureInviteResponse);
          TEST(testProxyAlive);
-      
       
          TEST(testAckFailureNitResponse);
          TEST(testProxyAlive);
@@ -10768,18 +10771,14 @@ class MyTestCase
          TEST(testInviteBranchCaseAltered);
          TEST(testProxyAlive);
       
-      
          TEST(testNitBranchCaseAltered);
          TEST(testProxyAlive);
-      
       
          TEST(testInvite6xxThen2xx);
          TEST(testProxyAlive);
       
-      
          TEST(testInvite2xxThen6xx);
          TEST(testProxyAlive);
-      
       
       
       //****************** Misbehaving UAS ********************//
@@ -10787,58 +10786,44 @@ class MyTestCase
          TEST(testInviteUASRemovesProxyVia);
          TEST(testProxyAlive);
       
-      
          TEST(testInviteUASAddsVia);
          TEST(testProxyAlive);
-      
       
          TEST(testInviteUASChangesProxyBranch);
          TEST(testProxyAlive);
       
-      
          TEST(testInvite2xxThen1xx);
          TEST(testProxyAlive);
-      
       
          TEST(testInvite4xxThen1xx);
          TEST(testProxyAlive);
       
-      
          TEST(testInvite2xxThen4xx);
          TEST(testProxyAlive);
-      
       
          TEST(testInvite4xxThen2xx);
          TEST(testProxyAlive);
       
-      
          TEST(testInviteMultiple4xx);
          TEST(testProxyAlive);
-      
       
          TEST(testInviteMalformed1xxWithTimeout);
          TEST(testProxyAlive);
       
-      
          TEST(testAck200WithResponse);
          TEST(testProxyAlive);
-      
       
          TEST(testAckFailureWithResponse);
          TEST(testProxyAlive);
       
-      
          TEST(testNitUASRemovesProxyVia);
          TEST(testProxyAlive);
-      
       
          TEST(testNitUASAddsVia);
          TEST(testProxyAlive);
       
-      
          TEST(testNitUASChangesProxyBranch);
          TEST(testProxyAlive);
-      
       
          TEST(testNit2xxThen1xx);
          TEST(testProxyAlive);
@@ -10847,18 +10832,14 @@ class MyTestCase
          TEST(testNit4xxThen1xx);
          TEST(testProxyAlive);
       
-      
          TEST(testNit2xxThen4xx);
          TEST(testProxyAlive);
-      
       
          TEST(testNit4xxThen2xx);
          TEST(testProxyAlive);
       
-      
          TEST(testNitMultiple4xx);
          TEST(testProxyAlive);
-      
       
          TEST(testNitMalformed1xxWithTimeout);
          TEST(testProxyAlive);
@@ -10873,22 +10854,17 @@ class MyTestCase
          TEST(testInviteAndNitCollide);
          TEST(testProxyAlive);
       
-      
          TEST(testInviteAndAckCollide);
          TEST(testProxyAlive);
-      
       
          TEST(testInviteAndResponse);
          TEST(testProxyAlive);
       
-      
          TEST(testInviteAndNitResponse);
          TEST(testProxyAlive);
       
-      
          TEST(testInviteAndAckResponse);
          TEST(testProxyAlive);
-      
       
       
       // ******************** non-INVITE ********************//
@@ -10896,30 +10872,23 @@ class MyTestCase
          TEST(testNitAndInviteCollide);
          TEST(testProxyAlive);
       
-      
          TEST(testNitAndDifferentNitCollide);
          TEST(testProxyAlive);
-      
       
          TEST(testNitAndAckCollide);
          TEST(testProxyAlive);
       
-      
          TEST(testNitAndInviteResponse);
          TEST(testProxyAlive);
-      
       
          TEST(testNitAndResponse);
          TEST(testProxyAlive);
       
-      
          TEST(testNitAndDifferentNitResponse);
          TEST(testProxyAlive);
       
-      
          TEST(testNitAndAckResponse);
          TEST(testProxyAlive);
-      
       
       
       // ******************** ACK ********************//
@@ -10927,42 +10896,32 @@ class MyTestCase
          TEST(testAck200AndInviteCollide);
          TEST(testProxyAlive);
       
-      
          TEST(testAck200AndNitCollide);
          TEST(testProxyAlive);
-      
       
          TEST(testAck200AndInviteResponse);
          TEST(testProxyAlive);
       
-      
          TEST(testAck200AndNitResponse);
          TEST(testProxyAlive);
-      
       
          TEST(testAck200AndAckResponse);
          TEST(testProxyAlive);
       
-      
          TEST(testAckFailureAndInviteCollide);
          TEST(testProxyAlive);
-      
       
          TEST(testAckFailureAndNitCollide);
          TEST(testProxyAlive);
       
-      
          TEST(testAckFailureAndInviteResponse);
          TEST(testProxyAlive);
-      
       
          TEST(testAckFailureAndNitResponse);
          TEST(testProxyAlive);
       
-      
          TEST(testAckFailureAndAckResponse);
          TEST(testProxyAlive);
-      
       
       
       //****************** Oddball UAS ********************//
@@ -10970,10 +10929,8 @@ class MyTestCase
          TEST(testInvite2543Tid);
          TEST(testProxyAlive);
       
-      
          TEST(testNit2543Tid);
          TEST(testProxyAlive);
-      
       
          TEST(testAck2543Tid);
          TEST(testProxyAlive);
@@ -11249,29 +11206,82 @@ int main(int argc, char** argv)
 #endif
 
    initNetwork();
+   bool interactive = false;
    try
    {
       CommandLineParser args(argc, argv);
       Log::initialize(args.mLogType, args.mLogLevel, argv[0]);
       resip::Timer::T100 = 0;
       
-      TestHolder::createStatic();
-      ReproFixture::initialize(args);
-      
-      CppUnit::TextTestRunner runner;
+      if(args.mInteractive)
+      {
+         interactive = true;
+         CommandLineSelector testSelector;
+         CppUnit::TextTestRunner testrunner;
 
-      runner.addTest( MyTestCase::suite() );
-      runner.run();
-      DebugLog(<< "Finished: waiting for all transactions to die.");
-      
-      sleepSeconds(32);
+         // informs test-listener about testresults
+         CPPUNIT_NS::TestResult testresult;
+         // register listener for collecting the test-results
+         CPPUNIT_NS::TestResultCollector collectedresults;
+         testresult.addListener (&collectedresults);
+         // Add a listener that displays test progres
+         CPTextTestProgressListener progress;
+         testresult.addListener( &progress );   
 
-      ReproFixture::destroyStatic();
+         int numRepetitions = 1;
+         if(CppTestSelector::SelectTests(MyTestCase::suite(), testrunner, testSelector, numRepetitions) > 0)
+         {
+            ReproFixture::initialize(args);
+
+            for(int x=0; x<numRepetitions; x++)
+            {
+               testrunner.run (testresult);
+            }
+
+            ReproFixture::destroyStatic();
+
+            // output results in text-format
+            //TextOutputter (TestResultCollector *result, OStream &stream)
+            CPPUNIT_NS::TextOutputter textoutputter (&collectedresults, std::cerr);
+            textoutputter.write ();
+            textoutputter.printStatistics();
+
+            // output results in xml-format
+            ofstream testResult(TEST_RESULT_FILE);
+            CPPUNIT_NS :: XmlOutputter xmloutputter (&collectedresults, testResult);
+            xmloutputter.write ();
+            testResult.close();
+         }
+
+         DebugLog(<< "Finished");
+      }
+      else
+      {
+         TestHolder::createStatic();
+         ReproFixture::initialize(args);
+      
+         CppUnit::TextTestRunner runner;
+
+         runner.addTest( MyTestCase::suite() );
+         runner.run();
+         DebugLog(<< "Finished: waiting for all transactions to die.");
+      
+         sleepSeconds(32);
+
+         ReproFixture::destroyStatic();
+      } 
    }
    catch (BaseException& e)
    {
       cerr << "Fatal error: " << e << endl;
       exit(-1);
+   }
+
+   if(interactive)
+   {
+      char ch;
+      std::cout <<"Press <enter> to exit: ";
+      std::cin >>ch;
    }
 
    return 0;

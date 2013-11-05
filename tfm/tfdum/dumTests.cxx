@@ -5269,6 +5269,7 @@ int main(int argc, char** argv)
 #endif
 
    initNetwork();
+   bool interactive = false;
    try
    {
       CommandLineParser args(argc, argv);
@@ -5288,49 +5289,64 @@ int main(int argc, char** argv)
       resip::Timer::T1 = 2000;
       resip::Timer::T2 = 8000;
 
-      CommandLineSelector testSelector;
-      CPPUNIT_NS::TextTestRunner testrunner; 
+      if(args.mInteractive)
+      {
+         interactive = true;
+         CommandLineSelector testSelector;
+         CPPUNIT_NS::TextTestRunner testrunner; 
 
-      // informs test-listener about testresults
-      CPPUNIT_NS::TestResult testresult;
-      // register listener for collecting the test-results
-      CPPUNIT_NS::TestResultCollector collectedresults;
-      testresult.addListener (&collectedresults);
-      // Add a listener that displays test progres
-      CPTextTestProgressListener progress;
-      testresult.addListener( &progress );   
+         // informs test-listener about testresults
+         CPPUNIT_NS::TestResult testresult;
+         // register listener for collecting the test-results
+         CPPUNIT_NS::TestResultCollector collectedresults;
+         testresult.addListener (&collectedresults);
+         // Add a listener that displays test progres
+         CPTextTestProgressListener progress;
+         testresult.addListener( &progress );   
 
-      // Get the top level suite from the registry
-      CppUnit::Test *suite = CppUnit::TestFactoryRegistry::getRegistry().makeTest();
+         // Get the top level suite from the registry
+         CppUnit::Test *suite = CppUnit::TestFactoryRegistry::getRegistry().makeTest();
 
-      int numRepetitions = 1;
-      if(CppTestSelector::SelectTests(suite,testrunner, testSelector,numRepetitions) > 0)
+         int numRepetitions = 1;
+         if(CppTestSelector::SelectTests(suite,testrunner, testSelector,numRepetitions) > 0)
+         {
+            DumFixture::initialize(argc, argv);
+
+            for(int x=0; x<numRepetitions; x++)
+            {
+               testrunner.run (testresult);
+            }
+
+            DumFixture::destroyStatic();
+
+            // output results in text-format
+            //TextOutputter (TestResultCollector *result, OStream &stream)
+            CPPUNIT_NS :: TextOutputter textoutputter (&collectedresults, std::cerr);
+            textoutputter.write ();
+            textoutputter.printStatistics();
+
+            // output results in xml-format		
+            ofstream testResult(TEST_RESULT_FILE);
+            CPPUNIT_NS :: XmlOutputter xmloutputter (&collectedresults, testResult);
+            xmloutputter.write ();
+            testResult.close();
+         }
+         DebugLog(<< "Finished");
+      }
+      else
       {
          DumFixture::initialize(argc, argv);
+      
+         CppUnit::TextTestRunner runner;
 
-         for(int x=0; x<numRepetitions; x++)
-            testrunner.run (testresult);
+         runner.addTest( CppUnit::TestFactoryRegistry::getRegistry().makeTest() );
+         runner.run();
+         DebugLog(<< "Finished: waiting for all transactions to die.");
+      
+         sleepSeconds(32);
 
          DumFixture::destroyStatic();
-
-         // output results in text-format
-         //TextOutputter (TestResultCollector *result, OStream &stream)
-         CPPUNIT_NS :: TextOutputter textoutputter (&collectedresults, std::cerr);
-         textoutputter.write ();
-         textoutputter.printStatistics();
-
-         // output results in xml-format		
-         ofstream testResult(TEST_RESULT_FILE);
-         CPPUNIT_NS :: XmlOutputter xmloutputter (&collectedresults, testResult);
-         xmloutputter.write ();
-         testResult.close();
       }
-
-      //CppUnit::TextUi::TestRunner runner;
-
-      //runner.addTest( MyTestCase::suite() );
-      //runner.run();
-      DebugLog(<< "Finished");      
    }
    catch (BaseException& e)
    {
@@ -5338,11 +5354,12 @@ int main(int argc, char** argv)
       exit(-1);
    }
 
-#if 1
-   char ch;
-   std::cout <<"Press <enter> to exit: ";
-   std::cin >>ch;
-#endif
+   if(interactive)
+   {
+      char ch;
+      std::cout <<"Press <enter> to exit: ";
+      std::cin >>ch;
+   }
 
    return 0;
 }

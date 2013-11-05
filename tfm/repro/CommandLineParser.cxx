@@ -15,6 +15,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
 {
    const char* logType = "file";
    const char* logLevel = "INFO";
+   int interactive = 0;
    const char* tlsDomain = 0;
    const char* proxyHostName=0;
    const char* userIPAddr=0;
@@ -63,6 +64,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    struct poptOption table[] = {
       {"log-type",     'l',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
       {"log-level",    'v',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logLevel,  0, "specify the default log level", "DEBUG|INFO|WARN|ERROR|FATAL"},
+      {"interactive",  'i',  POPT_ARG_NONE,   &interactive, 0, "enable interactive test mode", 0},
       {"record-route",  'r',  POPT_ARG_STRING, &recordRoute,  0, "specify uri to use as Record-Route", "sip:example.com"},
       {"enable-flow-tokens",  'f',  POPT_ARG_NONE, &flowTokens,  0, "enable flow token hack", 0},
       {"tls-domain",   't',  POPT_ARG_STRING, &tlsDomain,  0, "act as a TLS server for specified domain", "example.com"},
@@ -111,6 +113,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mHttpPort = httpPort;
    mLogType = logType;
    mLogLevel = logLevel;
+   mInteractive = interactive != 0;
+
    //Log::initialize(mLogType, mLogLevel, argv[0]);
 
    if (tlsDomain) 
