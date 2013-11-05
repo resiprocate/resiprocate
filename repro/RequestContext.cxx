@@ -1065,6 +1065,41 @@ RequestContext::getTopRoute()
    return mTopRoute;
 }
 
+const resip::Data&
+RequestContext::getDigestRealm()
+{
+   // (1) Check Preferred Identity
+   if (mOriginalRequest->exists(h_PPreferredIdentities))
+   {
+      // !abr! Add this when we get a chance
+      // find the fist sip or sips P-Preferred-Identity header
+      // for (;;)
+      // {
+      //    if ((i->uri().scheme() == Symbols::SIP) || (i->uri().scheme() == Symbols::SIPS))
+      //    {
+      //       return i->uri().host();
+      //    }
+      // }
+   }
+
+   // (2) Check From domain
+   if (mProxy.isMyDomain(mOriginalRequest->header(h_From).uri().host()))
+   {
+      return mOriginalRequest->header(h_From).uri().host();
+   }
+
+   // (3) Check Top Route Header
+   if (mOriginalRequest->exists(h_Routes) &&
+         mOriginalRequest->header(h_Routes).size()!=0 &&
+         mOriginalRequest->header(h_Routes).front().isWellFormed())
+   {
+      // !abr! Add this when we get a chance
+   }
+
+   // (4) Punt: Use Request URI
+   return mOriginalRequest->header(h_RequestLine).uri().host();
+}
+
 EncodeStream&
 repro::operator<<(EncodeStream& strm, const RequestContext& rc)
 {
