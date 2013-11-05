@@ -847,39 +847,72 @@ ResponseContext::sendRequest(resip::SipMessage& request)
 //      }
    }
 
-   // TODO - P-Asserted-Identity Processing
-   // RFC3325 - section 5
-   // When a proxy forwards a message to another node, it must first
-   // determine if it trusts that node or not.  If it trusts the node, the
-   // proxy does not remove any P-Asserted-Identity header fields that it
-   // generated itself, or that it received from a trusted source.  If it
-   // does not trust the element, then the proxy MUST examine the Privacy
-   // header field (if present) to determine if the user requested that
-   // asserted identity information be kept private.
-
-   // Note:  Since we have no better mechanism to determine if destination is trusted or
-   //        not we will assume that all destinations outside our domain are not-trusted
-   //        and will remove the P-Asserted-Identity header, if Privacy is set to "id"
-   if(mRequestContext.getProxy().isPAssertedIdentityProcessingEnabled() &&
-      request.exists(h_Privacies) && 
-      request.header(h_Privacies).size() > 0 && 
-      request.exists(h_PAssertedIdentities) && 
-      !mRequestContext.getProxy().isMyUri(request.header(h_RequestLine).uri()))
+   // If this request is destined outside our domain then remove certain headers
+   bool isMyUri;
+   if(request.exists(h_Routes) &&
+      !request.const_header(h_Routes).empty())
    {
-      // Look for "id" token
-      bool found = false;
-      PrivacyCategories::iterator it = request.header(h_Privacies).begin();
-      for(; it != request.header(h_Privacies).end() && !found; it++)
+      isMyUri = mRequestContext.getProxy().isMyUri(request.const_header(h_Routes).front().uri());
+   }
+   else
+   {
+      isMyUri = mRequestContext.getProxy().isMyUri(request.const_header(h_RequestLine).uri());
+   }
+   if(!isMyUri)
+   {
+      // TODO - P-Asserted-Identity Processing
+      // RFC3325 - section 5
+      // When a proxy forwards a message to another node, it must first
+      // determine if it trusts that node or not.  If it trusts the node, the
+      // proxy does not remove any P-Asserted-Identity header fields that it
+      // generated itself, or that it received from a trusted source.  If it
+      // does not trust the element, then the proxy MUST examine the Privacy
+      // header field (if present) to determine if the user requested that
+      // asserted identity information be kept private.
+
+       // Note:  Since we have no better mechanism to determine if destination is trusted or
+      //        not we will assume that all destinations outside our domain are not-trusted
+      //        and will remove the P-Asserted-Identity header, if Privacy is set to "id"
+      if(mRequestContext.getProxy().isPAssertedIdentityProcessingEnabled() &&
+         request.exists(h_Privacies) && 
+         request.header(h_Privacies).size() > 0 && 
+         request.exists(h_PAssertedIdentities))
       {
-         std::vector<Data>::iterator itToken = it->value().begin();
-         for(; itToken != it->value().end() && !found; itToken++)
+         // Look for "id" token
+         bool found = false;
+         PrivacyCategories::iterator it = request.header(h_Privacies).begin();
+         for(; it != request.header(h_Privacies).end() && !found; it++)
          {
-            if(*itToken == "id")
+            std::vector<Data>::iterator itToken = it->value().begin();
+            for(; itToken != it->value().end() && !found; itToken++)
             {
-               request.remove(h_PAssertedIdentities); 
-               found = true;
+               if(*itToken == "id")
+               {
+                  request.remove(h_PAssertedIdentities); 
+                  found = true;
+               }
             }
          }
+      }
+
+      // Delete the Proxy-Auth header for this realm if forwarding outside our domain
+      // other Proxy-Auth headers might be needed by a downsteram node
+      if (request.exists(h_ProxyAuthorizations))
+      {
+         Auths &authHeaders = request.header(h_ProxyAuthorizations);
+         Data realm = mRequestContext.getDigestRealm();
+
+         for (Auths::iterator i = authHeaders.begin(); i != authHeaders.end(); )
+         {
+            if(i->exists(p_realm) && isEqualNoCase(i->param(p_realm), realm))
+            {
+               i = authHeaders.erase(i);
+            }
+            else
+            {
+               ++i;
+           }
+         } 
       }
    }
 

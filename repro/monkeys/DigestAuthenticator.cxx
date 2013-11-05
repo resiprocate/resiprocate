@@ -132,28 +132,6 @@ DigestAuthenticator::process(repro::RequestContext &rc)
          case Helper::Authenticated:
             InfoLog (<< "Authentication ok for " << user);
             
-            // Delete the Proxy-Auth header for this realm.  
-            // other Proxy-Auth headers might be needed by a downsteram node
-            if (sipMessage->exists(h_ProxyAuthorizations))
-            {
-               Auths &authHeaders = sipMessage->header(h_ProxyAuthorizations);
-               Data realm = getRealm(rc);
-         
-               // if we find a Proxy-Authorization header for a realm we handle, 
-               // asynchronously fetch the relevant userAuthInfo from the database
-               for (Auths::iterator i = authHeaders.begin(); i != authHeaders.end(); )
-               {
-                  if(i->exists(p_realm) && isEqualNoCase(i->param(p_realm), realm))
-                  {
-                     i = authHeaders.erase(i);
-                  }
-                  else
-                  {
-                     ++i;
-                  }
-               }
-            }
-
             if(!sipMessage->header(h_From).isWellFormed() ||
                sipMessage->header(h_From).isAllContacts())
             {
@@ -398,41 +376,7 @@ DigestAuthenticator::requestUserAuthInfo(repro::RequestContext &rc, resip::Data 
 resip::Data
 DigestAuthenticator::getRealm(RequestContext &rc)
 {
-   Data realm;
-
-   Proxy &proxy = rc.getProxy();
-   SipMessage& sipMessage = rc.getOriginalRequest();
-
-   // (1) Check Preferred Identity
-   if (sipMessage.exists(h_PPreferredIdentities))
-   {
-      // !abr! Add this when we get a chance
-      // find the fist sip or sips P-Preferred-Identity header
-      // for (;;)
-      // {
-      //    if ((i->uri().scheme() == Symbols::SIP) || (i->uri().scheme() == Symbols::SIPS))
-      //    {
-      //       return i->uri().host();
-      //    }
-      // }
-   }
-
-   // (2) Check From domain
-   if (proxy.isMyDomain(sipMessage.header(h_From).uri().host()))
-   {
-      return sipMessage.header(h_From).uri().host();
-   }
-
-   // (3) Check Top Route Header
-   if (sipMessage.exists(h_Routes) &&
-         sipMessage.header(h_Routes).size()!=0 &&
-         sipMessage.header(h_Routes).front().isWellFormed())
-   {
-      // !abr! Add this when we get a chance
-   }
-
-   // (4) Punt: Use Request URI
-   return sipMessage.header(h_RequestLine).uri().host();
+   return rc.getDigestRealm();
 }
 
 

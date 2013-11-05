@@ -56,6 +56,7 @@ class RequestContext
       ResponseContext& getResponseContext();
       
       resip::NameAddr& getTopRoute();
+      const resip::Data& getDigestRealm();
             
       virtual void send(resip::SipMessage& msg);
       void sendResponse(resip::SipMessage& response);
