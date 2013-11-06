@@ -4503,6 +4503,10 @@ class TestHolder : public ReproFixture
    void testNit2543Tid()
    {
       WarningLog(<<"*!testNit2543Tid!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -4513,12 +4517,18 @@ class TestHolder : public ReproFixture
       );
       
       ExecuteSequences();
+
+      enableDigestAuth();
    }
 
 
    void testAck2543Tid()
    {
       WarningLog(<<"*!testAck2543Tid!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -4530,6 +4540,8 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      enableDigestAuth();
    }
 
    void testNonInvite2543Tid()
@@ -7766,6 +7778,10 @@ class TestHolder : public ReproFixture
    void testReflectedInvite()
    {
       WarningLog(<<"*!testReflectedInvite!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
 
       Seq
@@ -7794,12 +7810,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testInviteReflectedAsNonInvite()
    {
       WarningLog(<<"*!testInviteReflectedAsNonInvite!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -7826,12 +7849,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testInviteReflectedAsAck()
    {
       WarningLog(<<"*!testInviteReflectedAsAck!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -7857,12 +7887,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testInviteNonInviteResponse()
    {
       WarningLog(<<"*!testInviteNonInviteResponse!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -7888,12 +7925,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testInviteAckResponse()
    {
       WarningLog(<<"*!testInviteAckResponse!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -7919,6 +7963,9 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
@@ -7928,6 +7975,10 @@ class TestHolder : public ReproFixture
    void testNitReflectedAsInvite()
    {
       WarningLog(<<"*!testNitReflectedAsInvite!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -7958,12 +8009,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testNitReflected()
    {
       WarningLog(<<"*!testNitReflected!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -7993,12 +8051,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testNitReflectedAsDifferentNit()
    {
       WarningLog(<<"*!testNitReflectedAsDifferentNit!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8028,12 +8093,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testNitReflectedAsAck()
    {
       WarningLog(<<"*!testNitReflectedAsAck!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8053,12 +8125,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testNitInviteResponse()
    {
       WarningLog(<<"*!testNitInviteResponse!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8078,12 +8157,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testNitDifferentNitResponse()
    {
       WarningLog(<<"*!testNitDifferentNitResponse!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8103,12 +8189,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testNitAckResponse()
    {
       WarningLog(<<"*!testNitAckResponse!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8128,8 +8221,10 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
-   }
 
+      // Reenable digest authentication
+      enableDigestAuth();
+   }
 
 
 // ******************** ACK ********************//
@@ -8137,6 +8232,10 @@ class TestHolder : public ReproFixture
    void testAck200ReflectedAsInvite()
    {
       WarningLog(<<"*!testAck200ReflectedAsInvite!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8150,12 +8249,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testAck200ReflectedAsNit()
    {
       WarningLog(<<"*!testAck200ReflectedAsNit!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8168,12 +8274,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testAck200Reflected()
    {
       WarningLog(<<"*!testAck200Reflected!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8185,12 +8298,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testAckFailureReflectedAsInvite()
    {
       WarningLog(<<"*!testAckFailureReflectedAsInvite!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8213,12 +8333,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testAckFailureReflectedAsNit()
    {
       WarningLog(<<"*!testAckFailureReflectedAsNit!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8240,12 +8367,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testAckFailureReflected()
    {
       WarningLog(<<"*!testAckFailureReflected!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8266,12 +8400,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testAck200InviteResponse()
    {
       WarningLog(<<"*!testAck200InviteResponse!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8283,12 +8424,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testAck200NitResponse()
    {
       WarningLog(<<"*!testAck200NitResponse!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8300,12 +8448,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testAckFailureInviteResponse()
    {
       WarningLog(<<"*!testAckFailureInviteResponse!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8326,12 +8481,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testAckFailureNitResponse()
    {
       WarningLog(<<"*!testAckFailureNitResponse!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8352,6 +8514,9 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
@@ -8360,6 +8525,10 @@ class TestHolder : public ReproFixture
    void testInviteBranchCaseAltered()
    {
       WarningLog(<<"*!testInviteBranchCaseAltered!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8371,12 +8540,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testNitBranchCaseAltered()
    {
       WarningLog(<<"*!testNitBranchCaseAltered!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8386,12 +8562,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testInvite6xxThen2xx()
    {
       WarningLog(<<"*!testInvite6xxThen2xx!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8412,12 +8595,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testInvite2xxThen6xx()
    {
       WarningLog(<<"*!testInvite2xxThen6xx!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8429,8 +8619,10 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
-   }
 
+      // Reenable digest authentication
+      enableDigestAuth();
+   }
 
 
 //****************** Misbehaving UAS ********************//
@@ -8438,6 +8630,10 @@ class TestHolder : public ReproFixture
    void testInviteUASRemovesProxyVia()
    {
       WarningLog(<<"*!testInviteUASRemovesProxyVia!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8448,12 +8644,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testInviteUASAddsVia()
    {
       WarningLog(<<"*!testInviteUASAddsVia!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8464,12 +8667,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testInviteUASChangesProxyBranch()
    {
       WarningLog(<<"*!testInviteUASChangesProxyBranch!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8480,12 +8690,18 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
-   }
 
+      // Reenable digest authentication
+      enableDigestAuth();
+   }
 
    void testInvite2xxThen1xx()
    {
       WarningLog(<<"*!testInvite2xxThen1xx!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8497,12 +8713,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testInvite4xxThen1xx()
    {
       WarningLog(<<"*!testInvite4xxThen1xx!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8523,12 +8746,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testInvite2xxThen4xx()
    {
       WarningLog(<<"*!testInvite2xxThen4xx!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8540,12 +8770,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testInvite4xxThen2xx()
    {
       WarningLog(<<"*!testInvite4xxThen2xx!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8566,12 +8803,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testInviteMultiple4xx()
    {
       WarningLog(<<"*!testInviteMultiple4xx!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8594,12 +8838,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testInviteMalformed1xxWithTimeout()
    {
       WarningLog(<<"*!testInviteMalformed1xxWithTimeout!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8625,12 +8876,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testAck200WithResponse()
    {
       WarningLog(<<"*!testAck200WithResponse!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8642,12 +8900,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testAckFailureWithResponse()
    {
       WarningLog(<<"*!testAckFailureWithResponse!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8668,12 +8933,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testNitUASRemovesProxyVia()
    {
       WarningLog(<<"*!testNitUASRemovesProxyVia!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8683,12 +8955,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testNitUASAddsVia()
    {
       WarningLog(<<"*!testNitUASAddsVia!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8698,12 +8977,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testNitUASChangesProxyBranch()
    {
       WarningLog(<<"*!testNitUASChangesProxyBranch!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8713,12 +8999,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testNit2xxThen1xx()
    {
       WarningLog(<<"*!testNit2xxThen1xx!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8728,12 +9021,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testNit4xxThen1xx()
    {
       WarningLog(<<"*!testNit4xxThen1xx!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8743,12 +9043,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testNit2xxThen4xx()
    {
       WarningLog(<<"*!testNit2xxThen4xx!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8758,12 +9065,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testNit4xxThen2xx()
    {
       WarningLog(<<"*!testNit4xxThen2xx!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8773,12 +9087,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testNitMultiple4xx()
    {
       WarningLog(<<"*!testNitMultiple4xx!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8788,12 +9109,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testNitMalformed1xxWithTimeout()
    {
       WarningLog(<<"*!testNitMalformed1xxWithTimeout!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       Seq
       (
@@ -8813,6 +9141,9 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
@@ -8825,6 +9156,10 @@ class TestHolder : public ReproFixture
    void testInviteAndNitCollide()
    {
       WarningLog(<<"*!testInviteAndNitCollide!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       boost::shared_ptr<SipMessage> inv;
       Seq
@@ -8846,12 +9181,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testInviteAndAckCollide()
    {
       WarningLog(<<"*!testInviteAndAckCollide!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       boost::shared_ptr<SipMessage> inv;
       Seq
@@ -8873,12 +9215,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testInviteAndResponse()
    {
       WarningLog(<<"*!testInviteAndResponse!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       boost::shared_ptr<SipMessage> inv;
       Seq
@@ -8900,12 +9249,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testInviteAndNitResponse()
    {
       WarningLog(<<"*!testInviteAndNitResponse!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       boost::shared_ptr<SipMessage> inv;
       Seq
@@ -8927,12 +9283,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testInviteAndAckResponse()
    {
       WarningLog(<<"*!testInviteAndAckResponse!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       boost::shared_ptr<SipMessage> inv;
       Seq
@@ -8954,6 +9317,9 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
@@ -8963,6 +9329,10 @@ class TestHolder : public ReproFixture
    void testNitAndInviteCollide()
    {
       WarningLog(<<"*!testNitAndInviteCollide!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       boost::shared_ptr<SipMessage> msg;
       Seq
@@ -8973,12 +9343,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testNitAndDifferentNitCollide()
    {
       WarningLog(<<"*!testNitAndDifferentNitCollide!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       boost::shared_ptr<SipMessage> msg;
       Seq
@@ -8989,12 +9366,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testNitAndAckCollide()
    {
       WarningLog(<<"*!testNitAndAckCollide!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       boost::shared_ptr<SipMessage> msg;
       Seq
@@ -9005,12 +9389,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testNitAndInviteResponse()
    {
       WarningLog(<<"*!testNitAndInviteResponse!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       boost::shared_ptr<SipMessage> msg;
       Seq
@@ -9021,12 +9412,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testNitAndResponse()
    {
       WarningLog(<<"*!testNitAndResponse!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       boost::shared_ptr<SipMessage> msg;
       Seq
@@ -9037,12 +9435,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testNitAndDifferentNitResponse()
    {
       WarningLog(<<"*!testNitAndDifferentNitResponse!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       boost::shared_ptr<SipMessage> msg;
       Seq
@@ -9053,12 +9458,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testNitAndAckResponse()
    {
       WarningLog(<<"*!testNitAndAckResponse!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       boost::shared_ptr<SipMessage> msg;
       Seq
@@ -9069,6 +9481,9 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 // ******************** ACK ********************//
@@ -9076,6 +9491,10 @@ class TestHolder : public ReproFixture
    void testAck200AndInviteCollide()
    {
       WarningLog(<<"*!testAck200AndInviteCollide!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       boost::shared_ptr<SipMessage> ack;
       Seq
@@ -9099,12 +9518,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testAck200AndNitCollide()
    {
       WarningLog(<<"*!testAck200AndNitCollide!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       boost::shared_ptr<SipMessage> ack;
       Seq
@@ -9127,12 +9553,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testAck200AndInviteResponse()
    {
       WarningLog(<<"*!testAck200AndInviteResponse!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       boost::shared_ptr<SipMessage> ack;
       Seq
@@ -9145,12 +9578,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testAck200AndNitResponse()
    {
       WarningLog(<<"*!testAck200AndNitResponse!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       boost::shared_ptr<SipMessage> ack;
       Seq
@@ -9163,12 +9603,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testAck200AndAckResponse()
    {
       WarningLog(<<"*!testAck200AndAckResponse!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       boost::shared_ptr<SipMessage> ack;
       Seq
@@ -9181,12 +9628,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testAckFailureAndInviteCollide()
    {
       WarningLog(<<"*!testAckFailureAndInviteCollide!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       boost::shared_ptr<SipMessage> ack;
       Seq
@@ -9208,12 +9662,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testAckFailureAndNitCollide()
    {
       WarningLog(<<"*!testAckFailureAndNitCollide!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       boost::shared_ptr<SipMessage> ack;
       Seq
@@ -9235,12 +9696,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testAckFailureAndInviteResponse()
    {
       WarningLog(<<"*!testAckFailureAndInviteResponse!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       boost::shared_ptr<SipMessage> ack;
       Seq
@@ -9262,12 +9730,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testAckFailureAndNitResponse()
    {
       WarningLog(<<"*!testAckFailureAndNitResponse!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       boost::shared_ptr<SipMessage> ack;
       Seq
@@ -9289,12 +9764,19 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
    void testAckFailureAndAckResponse()
    {
       WarningLog(<<"*!testAckFailureAndAckResponse!*");
+
+      // Disable digest authentication for this test
+      disableDigestAuth();
+
       refreshRegistration();
       boost::shared_ptr<SipMessage> ack;
       Seq
@@ -9316,6 +9798,9 @@ class TestHolder : public ReproFixture
          WaitForEndOfTest
       );
       ExecuteSequences();
+
+      // Reenable digest authentication
+      enableDigestAuth();
    }
 
 
@@ -10650,6 +11135,22 @@ class TestHolder : public ReproFixture
       static void createStatic()
       {
       }
+
+      void disableDigestAuth()
+      {
+         // Disable digest authentication fby treating messages from loopback adaptor as trusted
+         proxy->addTrustedHost("127.0.0.1", UDP);
+         proxy->addTrustedHost("127.0.0.1", TCP);
+         proxy->addTrustedHost("127.0.0.1", TLS);
+      }
+
+      void enableDigestAuth()
+      {
+         // Re-enable digest auth for localhost
+         proxy->deleteTrustedHost("127.0.0.1", UDP);
+         proxy->deleteTrustedHost("127.0.0.1", TCP);
+         proxy->deleteTrustedHost("127.0.0.1", TLS);
+      }
 };
 
 #define TEST(_method) \
@@ -10689,254 +11190,96 @@ class MyTestCase
       {
          CppUnit::TestSuite *suiteOfTests = new CppUnit::TestSuite( "Suite1" );
 
-// These tests assume that digest auth has been disabled in the proxy. Some 
-// day, when we have the ability to reconfigure the proxy after it is up, we 
-// can work these into the usual suite.
-#if 0
          TEST(testReflectedInvite);
-         TEST(testProxyAlive);
-      
          TEST(testInviteReflectedAsNonInvite);
-         TEST(testProxyAlive);
-      
          TEST(testInviteReflectedAsAck);
-         TEST(testProxyAlive);
-      
          TEST(testInviteNonInviteResponse);
-         TEST(testProxyAlive);
-      
          TEST(testInviteAckResponse);
-         TEST(testProxyAlive);
-      
-      
+
       // ******************** non-INVITE ********************//
-      
          TEST(testNitReflectedAsInvite);
-         TEST(testProxyAlive);
-      
          TEST(testNitReflected);
-         TEST(testProxyAlive);
-      
          TEST(testNitReflectedAsDifferentNit);
-         TEST(testProxyAlive);
-      
          TEST(testNitReflectedAsAck);
-         TEST(testProxyAlive);
-      
          TEST(testNitInviteResponse);
-         TEST(testProxyAlive);
-      
          TEST(testNitDifferentNitResponse);
-         TEST(testProxyAlive);
-      
-         TEST(testNitAckResponse);
-         TEST(testProxyAlive);
-      
-      
+         BUGTEST(testNitAckResponse);
+
       // ******************** ACK ********************//
-      
          TEST(testAck200ReflectedAsInvite);
-         TEST(testProxyAlive);
-      
          TEST(testAck200ReflectedAsNit);
-         TEST(testProxyAlive);
-      
          TEST(testAck200Reflected);
-         TEST(testProxyAlive);
-      
          TEST(testAckFailureReflectedAsInvite);
-         TEST(testProxyAlive);
-      
          TEST(testAckFailureReflectedAsNit);
-         TEST(testProxyAlive);
-      
          TEST(testAckFailureReflected);
-         TEST(testProxyAlive);
-      
          TEST(testAck200InviteResponse);
-         TEST(testProxyAlive);
-      
          TEST(testAck200NitResponse);
-         TEST(testProxyAlive);
-      
          TEST(testAckFailureInviteResponse);
-         TEST(testProxyAlive);
-      
          TEST(testAckFailureNitResponse);
-         TEST(testProxyAlive);
-      
       
       //****************** Oddball UAS ********************//
-      
          TEST(testInviteBranchCaseAltered);
-         TEST(testProxyAlive);
-      
          TEST(testNitBranchCaseAltered);
-         TEST(testProxyAlive);
-      
          TEST(testInvite6xxThen2xx);
-         TEST(testProxyAlive);
-      
          TEST(testInvite2xxThen6xx);
-         TEST(testProxyAlive);
-      
       
       //****************** Misbehaving UAS ********************//
-      
-         TEST(testInviteUASRemovesProxyVia);
-         TEST(testProxyAlive);
-      
-         TEST(testInviteUASAddsVia);
-         TEST(testProxyAlive);
-      
-         TEST(testInviteUASChangesProxyBranch);
-         TEST(testProxyAlive);
-      
+         BUGTEST(testInviteUASRemovesProxyVia);
+         BUGTEST(testInviteUASAddsVia);
+         BUGTEST(testInviteUASChangesProxyBranch);
          TEST(testInvite2xxThen1xx);
-         TEST(testProxyAlive);
-      
          TEST(testInvite4xxThen1xx);
-         TEST(testProxyAlive);
-      
          TEST(testInvite2xxThen4xx);
-         TEST(testProxyAlive);
-      
          TEST(testInvite4xxThen2xx);
-         TEST(testProxyAlive);
-      
          TEST(testInviteMultiple4xx);
-         TEST(testProxyAlive);
-      
          TEST(testInviteMalformed1xxWithTimeout);
-         TEST(testProxyAlive);
-      
          TEST(testAck200WithResponse);
-         TEST(testProxyAlive);
-      
          TEST(testAckFailureWithResponse);
-         TEST(testProxyAlive);
-      
-         TEST(testNitUASRemovesProxyVia);
-         TEST(testProxyAlive);
-      
-         TEST(testNitUASAddsVia);
-         TEST(testProxyAlive);
-      
-         TEST(testNitUASChangesProxyBranch);
-         TEST(testProxyAlive);
-      
+         BUGTEST(testNitUASRemovesProxyVia);
+         BUGTEST(testNitUASAddsVia);
+         BUGTEST(testNitUASChangesProxyBranch);
          TEST(testNit2xxThen1xx);
-         TEST(testProxyAlive);
-      
-      
          TEST(testNit4xxThen1xx);
-         TEST(testProxyAlive);
-      
          TEST(testNit2xxThen4xx);
-         TEST(testProxyAlive);
-      
          TEST(testNit4xxThen2xx);
-         TEST(testProxyAlive);
-      
          TEST(testNitMultiple4xx);
-         TEST(testProxyAlive);
-      
          TEST(testNitMalformed1xxWithTimeout);
-         TEST(testProxyAlive);
-      
 
 //***************************** UAS tests ********************************//
-      
       //****************** Transaction collision ********************//
-      
       // ******************** INVITE ********************//
-      
          TEST(testInviteAndNitCollide);
-         TEST(testProxyAlive);
-      
          TEST(testInviteAndAckCollide);
-         TEST(testProxyAlive);
-      
          TEST(testInviteAndResponse);
-         TEST(testProxyAlive);
-      
          TEST(testInviteAndNitResponse);
-         TEST(testProxyAlive);
-      
          TEST(testInviteAndAckResponse);
-         TEST(testProxyAlive);
-      
       
       // ******************** non-INVITE ********************//
-      
          TEST(testNitAndInviteCollide);
-         TEST(testProxyAlive);
-      
          TEST(testNitAndDifferentNitCollide);
-         TEST(testProxyAlive);
-      
          TEST(testNitAndAckCollide);
-         TEST(testProxyAlive);
-      
          TEST(testNitAndInviteResponse);
-         TEST(testProxyAlive);
-      
          TEST(testNitAndResponse);
-         TEST(testProxyAlive);
-      
          TEST(testNitAndDifferentNitResponse);
-         TEST(testProxyAlive);
-      
          TEST(testNitAndAckResponse);
-         TEST(testProxyAlive);
-      
       
       // ******************** ACK ********************//
-      
          TEST(testAck200AndInviteCollide);
-         TEST(testProxyAlive);
-      
          TEST(testAck200AndNitCollide);
-         TEST(testProxyAlive);
-      
          TEST(testAck200AndInviteResponse);
-         TEST(testProxyAlive);
-      
          TEST(testAck200AndNitResponse);
-         TEST(testProxyAlive);
-      
          TEST(testAck200AndAckResponse);
-         TEST(testProxyAlive);
-      
          TEST(testAckFailureAndInviteCollide);
-         TEST(testProxyAlive);
-      
          TEST(testAckFailureAndNitCollide);
-         TEST(testProxyAlive);
-      
          TEST(testAckFailureAndInviteResponse);
-         TEST(testProxyAlive);
-      
          TEST(testAckFailureAndNitResponse);
-         TEST(testProxyAlive);
-      
          TEST(testAckFailureAndAckResponse);
-         TEST(testProxyAlive);
-      
       
       //****************** Oddball UAS ********************//
-      
          TEST(testInvite2543Tid);
-         TEST(testProxyAlive);
-      
          TEST(testNit2543Tid);
-         TEST(testProxyAlive);
-      
          TEST(testAck2543Tid);
-         TEST(testProxyAlive);
-#endif
 
-#if 1
 // Non-invite tests
          TEST(testNonInviteWithInviteCollision);
          TEST(testNonInviteBusy);
@@ -11176,21 +11519,21 @@ class MyTestCase
          TEST(testInviteForkBothBusy);
          TEST(testEarlyMedia);
 
-	 // Tests of the routing pattern matching logic.
+         // Tests of the routing pattern matching logic.
          TEST(testRoutingBasic);
          TEST(testTCPMultiMsg);
          // TCP send errors 
          TEST(testTCPPreparseError);
          TEST(testTCPParseBufferError);
 
+         TEST(testRegisterBasic);
+         TEST(testMultiple1);
+         TEST(testInviteAllBusyContacts);
+
          // .bwc. This needs to come last, since it tears down one of the test-
          // user's transports.
          TEST(testInviteTransportFailure);
-#else
-         TEST(testRegisterBasic);
-//         TEST(testMultiple1);
-//         TEST(testInviteAllBusyContacts);
-#endif         
+
          return suiteOfTests;
       }
 };
