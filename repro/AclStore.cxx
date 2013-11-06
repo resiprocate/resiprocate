@@ -54,11 +54,9 @@ AclStore::AclStore(AbstractDb& db):
    mAddressCursor = mAddressList.begin();
 }
 
-
 AclStore::~AclStore()
 {
 }
-
 
 bool
 AclStore::addAcl(const resip::Data& tlsPeerName,
@@ -71,6 +69,27 @@ AclStore::addAcl(const resip::Data& tlsPeerName,
    Data key = buildKey(tlsPeerName, address, mask, port, family, transport);
    InfoLog( << "Add ACL: key=" << key);
    
+   // Check if key exists already
+   if(key.prefix(":"))  // a key that starts with a : has no peer name - thus a Address key
+   {
+      ReadLock lock(mMutex);
+      if(findAddressKey(key))
+      {
+         // Key already exists - don't add again
+         return false;
+      }
+   }
+   else
+   {
+      ReadLock lock(mMutex);
+      if(findTlsPeerNameKey(key))
+      {
+         // Key already exists - don't add again
+         return false;
+      }
+   }
+
+   // Key doesn't exist - add it
    AbstractDb::AclRecord rec;
    rec.mTlsPeerName = tlsPeerName;
    rec.mAddress = address;
@@ -90,20 +109,22 @@ AclStore::addAcl(const resip::Data& tlsPeerName,
    {
       AddressRecord addressRecord(rec.mAddress, rec.mPort, (resip::TransportType)rec.mTransport);
       addressRecord.mMask = rec.mMask;
-      addressRecord.key = buildKey(Data::Empty, rec.mAddress, rec.mMask, rec.mPort, rec.mFamily, rec.mTransport);
+      addressRecord.key = key;
       {
          WriteLock lock(mMutex);
          mAddressList.push_back(addressRecord);
+         mAddressCursor = mAddressList.begin();  // Put cursor back at start
       }
    }
    else
    {
       TlsPeerNameRecord tlsPeerNameRecord;
       tlsPeerNameRecord.mTlsPeerName = rec.mTlsPeerName;
-      tlsPeerNameRecord.key = buildKey(rec.mTlsPeerName, Data::Empty, 0, 0, 0, 0);
+      tlsPeerNameRecord.key = key;
       {
          WriteLock lock(mMutex);
          mTlsPeerNameList.push_back(tlsPeerNameRecord); 
+         mTlsPeerNameCursor = mTlsPeerNameList.begin(); // Put cursor back at start
       }
    }
    return true;
@@ -278,7 +299,7 @@ AclStore::eraseAcl(const resip::Data& key)
       WriteLock lock(mMutex);
       if(findAddressKey(key))
       {
-         mAddressList.erase(mAddressCursor);
+         mAddressCursor = mAddressList.erase(mAddressCursor);
       }
    }
    else

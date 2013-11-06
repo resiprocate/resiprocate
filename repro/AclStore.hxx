@@ -62,7 +62,6 @@ class AclStore
       bool isAddressTrusted(const resip::Tuple& address);
       bool isRequestTrusted(const resip::SipMessage& request);
 
-
    private:
       AbstractDb& mDb;  
       
