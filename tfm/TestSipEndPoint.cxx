@@ -3269,6 +3269,10 @@ TestSipEndPoint::Reflect::go(boost::shared_ptr<resip::SipMessage> msg)
       reflect->header(h_RequestLine).uri()=mReqUri;
    }
 
+   if(mMethod == INVITE)
+   {
+      mEndPoint.storeSentInvite(reflect);
+   }
    return reflect;
 }
 
