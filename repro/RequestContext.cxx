@@ -644,8 +644,17 @@ RequestContext::doPostResponseProcessing(SipMessage* msg)
          << "a sip response (_not_ a NIT/408): all transactions are terminated,"
          << " but we have not sent a final response. (What happened here?) ");
 
-         // Send best response
-         mResponseContext.forwardBestResponse();
+         // Send best response if there is one - otherwise send 500
+         if(mResponseContext.mBestResponse.isResponse())
+         {
+            mResponseContext.forwardBestResponse();
+         }
+         else
+         {
+            resip::SipMessage response;
+            Helper::makeResponse(response, *mOriginalRequest, 500); 
+            sendResponse(response);
+         }
       }
    }
 }
