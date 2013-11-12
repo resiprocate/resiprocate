@@ -6,12 +6,15 @@
 #include "tfm/SequenceSet.hxx"
 #include "tfm/ExpectActionEvent.hxx"
 
+#include <boost/version.hpp>
+
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
 using namespace boost;
 using namespace std;
 using resip::Data;
 using resip::DataStream;
+
 
 SequenceSet::SequenceSet()
    : mSequences(),
@@ -228,7 +231,11 @@ SequenceSet::handle(boost::shared_ptr<Event> event)
    DebugLog(<< "handle_event::dequeue(" << event << ") " << event->briefString());
    //CerrLog(<< "Dequeued: " << event->briefString());
          
+#if BOOST_VERSION >= 103500
+   boost::shared_ptr<ExpectActionEvent> action = dynamic_pointer_cast<ExpectActionEvent>(event);
+#else
    boost::shared_ptr<ExpectActionEvent> action = shared_dynamic_cast<ExpectActionEvent>(event);
+#endif   
    if (action)
    {
       try
@@ -243,7 +250,11 @@ SequenceSet::handle(boost::shared_ptr<Event> event)
       return;
    }
          
+#if BOOST_VERSION >= 103500
+   boost::shared_ptr<TimeoutEvent> timeout = dynamic_pointer_cast<TimeoutEvent>(event);
+#else
    boost::shared_ptr<TimeoutEvent> timeout = shared_dynamic_cast<TimeoutEvent>(event);
+#endif   
    if (timeout)
    {
       Data errorMessage;
@@ -272,7 +283,11 @@ SequenceSet::handle(boost::shared_ptr<Event> event)
       return;
    }
          
+#if BOOST_VERSION >= 103500
+   boost::shared_ptr<SequenceDoneEvent> seqDone = dynamic_pointer_cast<SequenceDoneEvent>(event);
+#else
    boost::shared_ptr<SequenceDoneEvent> seqDone = shared_dynamic_cast<SequenceDoneEvent>(event);
+#endif   
    if (seqDone)
    {
       // remove sequences that have completed
@@ -327,7 +342,11 @@ SequenceSet::handleEvent(boost::shared_ptr<Event> event)
       }
    }
 
+#if BOOST_VERSION >= 103500
+   if (!handled && !dynamic_pointer_cast<OptionalTimeoutEvent>(event))
+#else
    if (!handled && !shared_dynamic_cast<OptionalTimeoutEvent>(event))
+#endif   
    {
       if (!mFailed)
       {

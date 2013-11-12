@@ -39,6 +39,8 @@
 #include "tfm/TestProxy.hxx"
 #include "tfm/TestUser.hxx"
 
+#include <boost/version.hpp>
+
 using namespace resip;
 using namespace boost;
 using namespace std;
@@ -4065,7 +4067,11 @@ TestSipEndPoint::process(FdSet& fdset)
 void 
 TestSipEndPoint::handleEvent(boost::shared_ptr<Event> event)
 {
+#if BOOST_VERSION >= 103500
+   boost::shared_ptr<SipEvent> sipEvent = dynamic_pointer_cast<SipEvent>(event);
+#else
    boost::shared_ptr<SipEvent> sipEvent = shared_dynamic_cast<SipEvent>(event);
+#endif
    assert(sipEvent);
    boost::shared_ptr<SipMessage> msg = sipEvent->getMessage();
    mLastMessage = msg;
