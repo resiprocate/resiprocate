@@ -654,9 +654,7 @@ static int init_by_defaults_windows_nameservers_getadaptersaddresses(ares_channe
                      if (find_server6(channel->servers, channel->nservers, sa6->sin6_addr) == -1)
                      {
                         // printf( "ARES: %s\n", inet_ntop6(sa6->sin6_addr) );
-#ifdef USE_IPV6
                         channel->servers[ channel->nservers ].family = AF_INET6;
-#endif
                         memcpy(&channel->servers[channel->nservers].addr6, &sa6->sin6_addr, sizeof(channel->servers[channel->nservers].addr6));
 
                         // Copy over physical address for use in ARES_FLAG_TRY_NEXT_SERVER_ON_RCODE3 mode
