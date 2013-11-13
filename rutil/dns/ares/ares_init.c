@@ -75,7 +75,9 @@ static const char *try_option(const char *p, const char *q, const char *opt);
 static int ip_addr(const char *s, int len, struct in_addr *addr);
 static void natural_mask(struct apattern *pat);
 static int find_server(struct server_state *servers, int nservers, struct in_addr addr);
-static int get_physical_address(char *physicalAddr, int physicalAddrBufSz, int* physAddrLen, struct in_addr addr);
+#ifdef USE_IPV6
+static int find_server6(struct server_state *servers, int nservers, struct in_addr6 addr);
+#endif
 
 static int	inet_pton4(const char *src, u_char *dst);
 #ifdef USE_IPV6
@@ -250,26 +252,25 @@ static int init_by_options(ares_channel channel, struct ares_options *options,
   /* Copy the servers, if given. */
   if ((optmask & ARES_OPT_SERVERS) && channel->nservers == -1 && options->nservers>0 )
   {
-     channel->servers =
-        malloc(options->nservers * sizeof(struct server_state));
+     channel->servers = malloc(options->nservers * sizeof(struct server_state));
      if (channel->servers == NULL)
         return ARES_ENOMEM;
      memset(channel->servers, '\0', options->nservers * sizeof(struct server_state));
      for (i = 0; i < options->nservers; i++)
      {
 #ifdef USE_IPV6
-	    channel->servers[i].family = options->servers[i].family;
-	    if (options->servers[i].family == AF_INET6)
-	    {
-	       channel->servers[i].addr6 = options->servers[i].addr6;
-	    }
-	    else
-	    {
-	       assert( channel->servers[i].family == AF_INET );
-		   channel->servers[i].addr = options->servers[i].addr;
-	    }
-#else	  
-	    channel->servers[i].addr = options->servers[i];
+       channel->servers[i].family = options->servers[i].family;
+       if (options->servers[i].family == AF_INET6)
+       {
+         channel->servers[i].addr6 = options->servers[i].addr6;
+       }
+       else
+       {
+         assert( channel->servers[i].family == AF_INET );
+         channel->servers[i].addr = options->servers[i].addr;
+       }
+#else
+       channel->servers[i].addr = options->servers[i];
 #endif
      }
      channel->nservers = options->nservers;
@@ -398,7 +399,7 @@ static int init_by_resolv_conf(ares_channel channel)
 }
 
 #if defined(__APPLE__) || defined(__MACH__)
-static void init_by_defaults_systemconfiguration(ares_channel channel)
+static void init_by_defaults_apple_nameservers(ares_channel channel)
 {
   SCDynamicStoreContext context = {0, NULL, NULL, NULL, NULL};
   SCDynamicStoreRef store = 0;
@@ -407,7 +408,7 @@ static void init_by_defaults_systemconfiguration(ares_channel channel)
   // .amr. iPhone/iOS SDK's don't support SCDynamicStoreCreate so in that case fall back
   // to the nservers=0 case.
 #ifndef TARGET_OS_IPHONE
-  store = SCDynamicStoreCreate(NULL, CFSTR("init_by_defaults_systemconfiguration"), NULL, &context);
+  store = SCDynamicStoreCreate(NULL, CFSTR("init_by_defaults_apple_nameservers"), NULL, &context);
 
   if (store)
   {
@@ -447,288 +448,456 @@ static void init_by_defaults_systemconfiguration(ares_channel channel)
     CFRelease(store);
   }
 #endif // TARGET_OS_IPHONE
-
-  /* If no specified servers, try a local named. */
-  if (channel->nservers == 0)
-  {
-    channel->servers = malloc(sizeof(struct server_state));
-    memset(channel->servers, '\0', sizeof(struct server_state));
-		
-#ifdef USE_IPV6			 
-    channel->servers[0].family = AF_INET;
+}
 #endif
-		
-    channel->servers[0].addr.s_addr = htonl(INADDR_LOOPBACK);
-    channel->servers[0].default_localhost_server = 1;
-    channel->nservers = 1;
-  }
+
+#if defined(__ANDROID__)
+static int init_by_defaults_andriod_nameservers(ares_channel channel)
+{
+   int android_prop_found = 0;
+   char props_dns[2][PROP_VALUE_MAX];
+   char prop_name[PROP_NAME_MAX];
+   const char *prop_keys[2] = { "net.dns1", "net.dns2" };
+   int i = 0, j = 0;
+
+   for(i = 0; i < 2; i++)
+   {
+      props_dns[android_prop_found][0] = 0;
+      const prop_info *prop = __system_property_find(prop_keys[i]);
+      if(prop != NULL)
+      {
+         __system_property_read(prop, NULL, props_dns[android_prop_found]);
+         if(props_dns[android_prop_found][0] != 0)
+            android_prop_found++;
+      }
+   }
+   if(android_prop_found > 0)
+   {
+      channel->servers = malloc( (android_prop_found) * sizeof(struct server_state));
+      if (!channel->servers)
+      {
+         return ARES_ENOMEM;
+      }
+      memset(channel->servers, '\0', android_prop_found * sizeof(struct server_state));
+
+      for(i = 0; i < android_prop_found; i++)
+      {
+         int rc = inet_pton(AF_INET, props_dns[i], &channel->servers[j].addr.s_addr);
+         if(rc == 1)
+         {
+#ifdef USE_IPV6
+            channel->servers[j].family = AF_INET;
+#endif
+            j++;
+         }
+#ifdef USE_IPV6
+         else
+         {
+            rc = inet_pton(AF_INET6, props_dns[i], &channel->servers[j].addr6.s_addr);
+            if(rc == 1)
+            {
+               channel->servers[j].family = AF_INET6;
+               j++;
+            }
+         }
+#endif
+      }
+      // how many really are valid IP addresses?
+      channel->nservers = j;
+   }
+   return ARES_SUCCESS;
+}
+#endif
+
+#ifdef WIN32
+static int init_by_defaults_windows_nameservers_getadaptersaddresses(ares_channel channel)
+{
+   DWORD (WINAPI * GetAdaptersAddressesProc)(ULONG, DWORD, VOID *, IP_ADAPTER_ADDRESSES *, ULONG *);
+   HANDLE hLib = 0;
+   DWORD dwRet = ERROR_BUFFER_OVERFLOW;
+   DWORD dwSize = 0;
+   int trys = 0;
+   IP_ADAPTER_ADDRESSES *pAdapterAddresses = 0;
+   int rc = ARES_ENOTFOUND;
+   int loopnum = 0;
+   int numreturned = 0;
+
+   hLib = LoadLibrary(TEXT("iphlpapi.dll"));
+   if (!hLib)
+   {
+      return ARES_ENOTIMP;
+   }
+
+   (void*)GetAdaptersAddressesProc = GetProcAddress(hLib, TEXT("GetAdaptersAddresses"));
+   if(!GetAdaptersAddressesProc)
+   {
+      rc = ARES_ENOTIMP;
+      goto cleanup;
+   }
+
+   // Allocate 15kb of buffer to avoid calling twice - recommended in MSDN
+   dwSize = 15 * 1024;
+   pAdapterAddresses = (IP_ADAPTER_ADDRESSES *) malloc(dwSize);
+   if(!pAdapterAddresses)
+   {
+      rc = ARES_ENOMEM;
+      goto cleanup;
+   }
+
+   while(ERROR_BUFFER_OVERFLOW == (dwRet = GetAdaptersAddressesProc( AF_UNSPEC, 0, NULL, pAdapterAddresses, &dwSize )) && trys++ < 5)
+   {
+      pAdapterAddresses = (IP_ADAPTER_ADDRESSES *) realloc(pAdapterAddresses, dwSize);
+      if(!pAdapterAddresses)
+      {
+         rc = ARES_ENOMEM;
+         goto cleanup;
+      }
+   }
+   if( dwRet != 0)
+   {
+      rc = ARES_ENODATA;
+      goto cleanup;
+   }
+
+   // We have some data - process it
+   // We walk the data twice - the first time is to figure out how many DNS servers there are so that we can allocate
+   // the channel memory.  Note:  If there are duplicates we may end up allocating more memory than we use - but that is fine.
+   // The seconds walk through the data we add the actual DNS servers to the channel structure
+   while(++loopnum <= 2)
+   {
+      IP_ADAPTER_ADDRESSES * AI = NULL;
+
+      // If this is the 2nd lap through the loop we now know the amount of memory to allocate: 
+      // enough for numreturned dns servers
+      if(loopnum == 2)
+      {
+         if(numreturned == 0)
+         {
+            rc = ARES_ENODATA;
+            goto cleanup;
+         }
+
+         channel->servers = malloc( (numreturned) * sizeof(struct server_state));
+         if (!channel->servers)
+         {
+            rc = ARES_ENOMEM;
+            goto cleanup;
+         }
+         memset(channel->servers, '\0', numreturned * sizeof(struct server_state));
+         channel->nservers = 0;
+      }
+
+      // Process each adapter
+      for (AI = pAdapterAddresses; AI != NULL; AI = AI->Next)
+      {
+         PIP_ADAPTER_DNS_SERVER_ADDRESS dnsServers = AI->FirstDnsServerAddress;
+
+         if(AI->IfType == IF_TYPE_TUNNEL || AI->IfType == IF_TYPE_SOFTWARE_LOOPBACK)
+         {
+            // Don't process TUNNEL or LOOPBACK adapters
+            continue;
+         }
+
+         // Process each DNS server for the adapter
+         for (; dnsServers; dnsServers = dnsServers->Next)
+         {
+            // Safety check for null sockaddr - shouldn't happen
+            if (! dnsServers->Address.lpSockaddr)
+            {
+               continue;
+            }
+
+            if (dnsServers->Address.lpSockaddr->sa_family == AF_INET)
+            {
+               struct sockaddr_in *sa4 = (struct sockaddr_in *)dnsServers->Address.lpSockaddr;
+               if((sa4->sin_addr.S_un.S_addr != INADDR_ANY) && (sa4->sin_addr.S_un.S_addr != INADDR_NONE))
+               {
+                  if(loopnum == 1)
+                  {
+                     numreturned++;
+                  }
+                  else
+                  {
+                     // add v4 server if it doesn't exist already
+                     if (find_server(channel->servers, channel->nservers, sa4->sin_addr) == -1)
+                     {
+                        // printf( "ARES: %s\n", inet_ntop(sa4->sin_addr) );
+#ifdef USE_IPV6
+                        channel->servers[ channel->nservers ].family = AF_INET;
+#endif
+                        channel->servers[channel->nservers].addr = sa4->sin_addr;
+
+                        // Copy over physical address for use in ARES_FLAG_TRY_NEXT_SERVER_ON_RCODE3 mode
+                        if (AI->PhysicalAddressLength <= sizeof(channel->servers[channel->nservers].physical_addr))
+                        {
+                           channel->servers[channel->nservers].physical_addr_len = AI->PhysicalAddressLength;
+                           memcpy(channel->servers[channel->nservers].physical_addr, &AI->PhysicalAddress[0], AI->PhysicalAddressLength);
+                        }
+                        channel->nservers++;
+                     }
+                  }
+               }
+            }
+#ifdef USE_IPV6
+            else if(dnsServers->Address.lpSockaddr->sa_family == AF_INET6)
+            {
+               struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)dnsServers->Address.lpSockaddr;
+               if (memcmp(&sa6->sin6_addr, &in6addr_any, sizeof(sa6->sin6_addr)) != 0)
+               {
+                  if(loopnum == 1)
+                  {
+                     numreturned++;
+                  }
+                  else
+                  {
+                     // add v6 server if it doesn't exist already
+                     if (find_server6(channel->servers, channel->nservers, sa6->sin6_addr) == -1)
+                     {
+                        // printf( "ARES: %s\n", inet_ntop6(sa6->sin6_addr) );
+#ifdef USE_IPV6
+                        channel->servers[ channel->nservers ].family = AF_INET6;
+#endif
+                        memcpy(&channel->servers[channel->nservers].addr6, &sa6->sin6_addr, sizeof(channel->servers[channel->nservers].addr6));
+
+                        // Copy over physical address for use in ARES_FLAG_TRY_NEXT_SERVER_ON_RCODE3 mode
+                        if (AI->PhysicalAddressLength <= sizeof(channel->servers[channel->nservers].physical_addr))
+                        {
+                           channel->servers[channel->nservers].physical_addr_len = AI->PhysicalAddressLength;
+                           memcpy(channel->servers[channel->nservers].physical_addr, &AI->PhysicalAddress[0], AI->PhysicalAddressLength);
+                        }
+                        channel->nservers++;
+                     }
+                  }
+               }
+            }
+#endif
+         }
+      }
+   }
+
+cleanup:
+   if (pAdapterAddresses)
+   {
+      free(pAdapterAddresses);
+   }
+   if (hLib)
+   {
+      FreeLibrary(hLib);
+   }
+   return rc;
+}
+
+static int init_by_defaults_windows_nameservers_getnetworkparams(ares_channel channel)
+{
+   /*
+   * Way of getting nameservers that should work on all Windows from 98 / Server 2000 and on.  Doesn't support IPv6 nameservers.
+   */
+   FIXED_INFO *     FixedInfo = NULL;
+   ULONG            ulOutBufLen = 0;
+   DWORD            dwRetVal;
+   IP_ADDR_STRING * pIPAddr;
+   HANDLE           hLib;
+   int              num;
+   int              trys = 0;
+   DWORD (WINAPI *GetNetworkParamsProc)(FIXED_INFO*, DWORD*); 
+
+   hLib = LoadLibrary(TEXT("iphlpapi.dll"));
+   if(!hLib)
+   {
+      return ARES_ENOTIMP;
+   }
+
+   (void*)GetNetworkParamsProc = GetProcAddress(hLib, TEXT("GetNetworkParams"));
+   if(!GetNetworkParamsProc)
+   {
+      FreeLibrary(hLib);
+      return ARES_ENOTIMP;
+   }
+   //printf("ARES: figuring out DNS servers\n");
+   while(ERROR_BUFFER_OVERFLOW == (dwRetVal = GetNetworkParamsProc( FixedInfo, &ulOutBufLen )) && trys++ < 5)
+   {
+      if(FixedInfo != NULL)
+      {
+         GlobalFree( FixedInfo );
+      }
+      FixedInfo = (FIXED_INFO *)GlobalAlloc( GPTR, ulOutBufLen );
+   }
+   if( dwRetVal != 0)
+   {
+      //printf("ARES: couldn't get network params, dwRet=0x%x\n", dwRetVal);
+      if(FixedInfo != NULL)
+      {
+         GlobalFree( FixedInfo );
+      }
+      FreeLibrary(hLib);
+      return ARES_ENODATA;
+   }
+
+   /**
+   printf( "Host Name: %s\n", FixedInfo -> HostName );
+   printf( "Domain Name: %s\n", FixedInfo -> DomainName );
+   printf( "DNS Servers:\n" );
+   printf( "\t%s\n", FixedInfo -> DnsServerList.IpAddress.String );
+   **/
+
+   // Count how many nameserver entries we have and allocate memory for them.
+   num = 0;
+   pIPAddr = &FixedInfo->DnsServerList;     
+   while ( pIPAddr && strlen(pIPAddr->IpAddress.String) > 0)
+   {
+      num++;
+      pIPAddr = pIPAddr ->Next;
+   }
+   //if(num == 0)
+   //{
+   //    printf("ARES: no nameservers! size=%d\n", ulOutBufLen);
+   //}
+   //else
+   //{
+   //    printf("ARES: num nameservers: %d, size=%d\n", num, ulOutBufLen);
+   //}
+   if(num>0)
+   {
+      channel->servers = malloc( (num) * sizeof(struct server_state));
+      if (!channel->servers)
+      {
+         GlobalFree( FixedInfo );
+         FreeLibrary(hLib);
+         return ARES_ENOMEM;
+      }
+      memset(channel->servers, '\0', num * sizeof(struct server_state));
+
+      channel->nservers = 0;
+      pIPAddr = &FixedInfo->DnsServerList;   
+      while ( pIPAddr && strlen(pIPAddr->IpAddress.String) > 0)
+      {
+         struct in_addr addr;
+         addr.s_addr = inet_addr(pIPAddr->IpAddress.String);
+         // append unique only
+         if (find_server(channel->servers, channel->nservers, addr) == -1)
+         {
+            // printf( "ARES: %s\n", pIPAddr ->IpAddress.String );
+#ifdef USE_IPV6
+            channel->servers[ channel->nservers ].family = AF_INET;
+#endif
+            channel->servers[channel->nservers].addr = addr;
+            channel->nservers++;
+         }
+
+         pIPAddr = pIPAddr ->Next;
+      }
+      //printf("ARES: got all %d nameservers\n",num);
+   }
+
+   GlobalFree( FixedInfo );
+   FreeLibrary(hLib);
+
+   return ARES_SUCCESS;
 }
 #endif
 
 static int init_by_defaults(ares_channel channel)
 {
-  char hostname[MAXHOSTNAMELEN + 1];
+   char hostname[MAXHOSTNAMELEN + 1];
 
-  if (channel->flags == -1)
-    channel->flags = 0;
-  if (channel->timeout == -1)
-    channel->timeout = DEFAULT_TIMEOUT;
-  if (channel->tries == -1)
-    channel->tries = DEFAULT_TRIES;
-  if (channel->ndots == -1)
-    channel->ndots = 1;
-  if (channel->udp_port == -1)
-    channel->udp_port = htons(NAMESERVER_PORT);
-  if (channel->tcp_port == -1)
-    channel->tcp_port = htons(NAMESERVER_PORT);
+   if (channel->flags == -1)
+      channel->flags = 0;
+   if (channel->timeout == -1)
+      channel->timeout = DEFAULT_TIMEOUT;
+   if (channel->tries == -1)
+      channel->tries = DEFAULT_TRIES;
+   if (channel->ndots == -1)
+      channel->ndots = 1;
+   if (channel->udp_port == -1)
+      channel->udp_port = htons(NAMESERVER_PORT);
+   if (channel->tcp_port == -1)
+      channel->tcp_port = htons(NAMESERVER_PORT);
 
-  if (channel->nservers == -1)
-    {
+   if (channel->nservers == -1)
+   {
+      // OS Specific Inits for nameservers
 #ifdef WIN32
-     /*
-      * Way of getting nameservers that should work on all Windows from 98 on.
-      */
-      FIXED_INFO *     FixedInfo = NULL;
-      ULONG            ulOutBufLen = 0;
-      DWORD            dwRetVal;
-      IP_ADDR_STRING * pIPAddr;
-	  HANDLE           hLib;
-	  int              num;
-      int              trys = 0;
-	  DWORD (WINAPI *GetNetworkParams)(FIXED_INFO*, DWORD*); 
-
-	  hLib = LoadLibrary(TEXT("iphlpapi.dll"));
-	  if(!hLib)
-	  {
-		  return ARES_ENOTIMP;
-	  }
-
-	  (void*)GetNetworkParams = GetProcAddress(hLib, TEXT("GetNetworkParams"));
-	  if(!GetNetworkParams)
-	  {
-		  FreeLibrary(hLib);
-		  return ARES_ENOTIMP;
-	  }
-      //printf("ARES: figuring out DNS servers\n");
-      while(ERROR_BUFFER_OVERFLOW == (dwRetVal = GetNetworkParams( FixedInfo, &ulOutBufLen )) && trys++ < 5)
+      if(init_by_defaults_windows_nameservers_getadaptersaddresses(channel) == ARES_ENOMEM)
       {
-        if(FixedInfo != NULL)
-        {
-            GlobalFree( FixedInfo );
-        }
-        FixedInfo = (FIXED_INFO *)GlobalAlloc( GPTR, ulOutBufLen );
+         return ARES_ENOMEM;
       }
-      if( dwRetVal != 0)
+      if (channel->nservers <= 0)
       {
-        //printf("ARES: couldn't get network params, dwRet=0x%x\n", dwRetVal);
-        if(FixedInfo != NULL)
-        {
-            GlobalFree( FixedInfo );
-        }
-        FreeLibrary(hLib);
-        return ARES_ENODATA;
+         // If GetAdaptersAddresses approach didn't work then try GetNetworkParams (non IPv6 compatible)
+         if(init_by_defaults_windows_nameservers_getnetworkparams(channel) == ARES_ENOMEM)
+         {
+            return ARES_ENOMEM;
+         }
       }
-      else
-      {
-       /**
-        printf( "Host Name: %s\n", FixedInfo -> HostName );
-        printf( "Domain Name: %s\n", FixedInfo -> DomainName );
-        printf( "DNS Servers:\n" );
-        printf( "\t%s\n", FixedInfo -> DnsServerList.IpAddress.String );
-        **/
-
-        // Count how many nameserver entries we have and allocate memory for them.
-        num = 0;
-        pIPAddr = &FixedInfo->DnsServerList;     
-        while ( pIPAddr && strlen(pIPAddr->IpAddress.String) > 0)
-        {
-          num++;
-          pIPAddr = pIPAddr ->Next;
-        }
-        //if(num == 0)
-        //{
-        //    printf("ARES: no nameservers! size=%d\n", ulOutBufLen);
-        //}
-        //else
-        //{
-        //    printf("ARES: num nameservers: %d, size=%d\n", num, ulOutBufLen);
-        //}
-        if(num>0)
-        {
-           channel->servers = malloc( (num) * sizeof(struct server_state));
-		   if (!channel->servers)
-		   {
-	           GlobalFree( FixedInfo );
- 		       FreeLibrary(hLib);
-			   return ARES_ENOMEM;
-		   }
-           memset(channel->servers, '\0', num * sizeof(struct server_state));
-
-		   channel->nservers = 0;
-           pIPAddr = &FixedInfo->DnsServerList;   
-           while ( pIPAddr && strlen(pIPAddr->IpAddress.String) > 0)
-		   {
-             struct in_addr addr;
-             addr.s_addr = inet_addr(pIPAddr->IpAddress.String);
-             // append unique only
-             if (find_server(channel->servers, channel->nservers, addr) == -1)
-             {
-                // printf( "ARES: %s\n", pIPAddr ->IpAddress.String );
-#ifdef USE_IPV6			 
-                channel->servers[ channel->nservers ].family = AF_INET;
-#endif
-                channel->servers[channel->nservers].addr = addr;
-                if ((channel->flags & ARES_FLAG_TRY_NEXT_SERVER_ON_RCODE3))
-                {
-                   get_physical_address(channel->servers[channel->nservers].physical_addr,
-                                        MAX_ADAPTER_ADDRESS_LENGTH,
-                                        &channel->servers[channel->nservers].physical_addr_len,
-                                        addr);
-                }
-			       channel->nservers++;
-             }
-
-             pIPAddr = pIPAddr ->Next;
-           }
-           //printf("ARES: got all %d nameservers\n",num);
-        }
-        else
-        {
-  		   /* If no specified servers, try a local named. */
-		   channel->servers = malloc(sizeof(struct server_state));
-		   if (!channel->servers)
-              return ARES_ENOMEM;
-           memset(channel->servers, '\0', sizeof(struct server_state));
-
-#ifdef USE_IPV6			 
-           channel->servers[0].family = AF_INET;
-#endif
-
-		   channel->servers[0].addr.s_addr = htonl(INADDR_LOOPBACK);
-           channel->servers[0].default_localhost_server = 1;
-		   channel->nservers = 1;
-        }
-
-        GlobalFree( FixedInfo );
-	    FreeLibrary(hLib);
-	  }
 #elif defined(__APPLE__) || defined(__MACH__)
-      init_by_defaults_systemconfiguration(channel);
+      init_by_defaults_apple_nameservers(channel);
 #elif defined(__ANDROID__)
-      int android_prop_found = 0;
-      char props_dns[2][PROP_VALUE_MAX];
-      char prop_name[PROP_NAME_MAX];
-      const char *prop_keys[2] = { "net.dns1", "net.dns2" };
-      int i = 0, j = 0;
-      for(i = 0; i < 2; i++)
-        {
-          props_dns[android_prop_found][0] = 0;
-          const prop_info *prop = __system_property_find(prop_keys[i]);
-          if(prop != NULL)
-            {
-              __system_property_read(prop, NULL, props_dns[android_prop_found]);
-              if(props_dns[android_prop_found][0] != 0)
-                android_prop_found++;
-            }
-        }
-      if(android_prop_found > 0)
-        {
-          channel->servers = malloc( (android_prop_found) * sizeof(struct server_state));
-          if (!channel->servers)
-            {
-              return ARES_ENOMEM;
-            }
-          memset(channel->servers, '\0', android_prop_found * sizeof(struct server_state));
+      if(init_by_defaults_andriod_nameservers(channel) == ARES_ENOMEM)
+      {
+         return ARES_ENOMEM;
+      }
+#endif
 
-          for(i = 0; i < android_prop_found; i++)
-            {
-              int rc = inet_pton(AF_INET, props_dns[i], &channel->servers[j].addr.s_addr);
-              if(rc == 1)
-                {
+      /* If no specified servers, try a local named. */
+      if (channel->nservers <= 0)
+      {
+         channel->servers = malloc(sizeof(struct server_state));
+         if (!channel->servers)
+            return ARES_ENOMEM;
+         memset(channel->servers, '\0', sizeof(struct server_state));
+
 #ifdef USE_IPV6
-                  channel->servers[j].family = AF_INET;
-#endif
-                  j++;
-                }
-#ifdef USE_IPV6
-              else
-                {
-                  rc = inet_pton(AF_INET6, props_dns[i], &channel->servers[j].addr6.s_addr);
-                  if(rc == 1)
-                    {
-                      channel->servers[j].family = AF_INET6;
-                      j++;
-                    }
-                }
-#endif
-            }
-          // how many really are valid IP addresses?
-          channel->nservers = j;
-        }
-#else
-		/* If nobody specified servers, try a local named. */
-		channel->servers = malloc(sizeof(struct server_state));
-		if (!channel->servers)
-			return ARES_ENOMEM;
-        memset(channel->servers, '\0', sizeof(struct server_state));
-
-		// need a way to test here if v4 or v6 is running
-		// if v4 is running...
-		channel->servers[0].addr.s_addr = htonl(INADDR_LOOPBACK);
-        channel->servers[0].default_localhost_server = 1;
-#ifdef USE_IPV6             
-        channel->servers[0].family = AF_INET;
-#endif
-		// if v6 is running...
-        //	channel->servers[0].addr6.s_addr = htonl6(IN6ADDR_LOOPBACK_INIT);
-#ifdef USE_IPV6             
-        // channel->servers[0].family = AF_INET6;
+         channel->servers[0].family = AF_INET;
 #endif
 
-		// hard to decide if there is one server or two here
-		channel->nservers = 1;
-#endif
-    
-    }
+         channel->servers[0].addr.s_addr = htonl(INADDR_LOOPBACK);
+         channel->servers[0].default_localhost_server = 1;
+         channel->nservers = 1;
 
-  if (channel->ndomains == -1)
-    {
+         // if v6 is running...
+         //   channel->servers[0].family = AF_INET6;
+         //   channel->servers[0].addr6.s_addr = htonl6(IN6ADDR_LOOPBACK_INIT);
+         // hard to decide if there is one server or two here
+      }
+   }
+
+   if (channel->ndomains == -1)
+   {
       /* Derive a default domain search list from the kernel hostname,
-       * or set it to empty if the hostname isn't helpful.
-       */
-      if (gethostname(hostname, sizeof(hostname)) == -1
-	  || !strchr(hostname, '.'))
-	{
-	  channel->domains = 0; // malloc(0);
-	  channel->ndomains = 0;
-	}
+      * or set it to empty if the hostname isn't helpful.
+      */
+      if (gethostname(hostname, sizeof(hostname)) == -1 || !strchr(hostname, '.'))
+      {
+         channel->domains = 0; // malloc(0);
+         channel->ndomains = 0;
+      }
       else
-	{
-	  channel->domains = malloc(sizeof(char *));
-	  if (!channel->domains)
-	    return ARES_ENOMEM;
-	  channel->ndomains = 0;
-	  channel->domains[0] = strdup(strchr(hostname, '.') + 1);
-	  if (!channel->domains[0])
-	    return ARES_ENOMEM;
-	  channel->ndomains = 1;
-	}
-    }
+      {
+         channel->domains = malloc(sizeof(char *));
+         if (!channel->domains)
+            return ARES_ENOMEM;
+         channel->ndomains = 0;
+         channel->domains[0] = strdup(strchr(hostname, '.') + 1);
+         if (!channel->domains[0])
+            return ARES_ENOMEM;
+         channel->ndomains = 1;
+      }
+   }
 
-  if (channel->nsort == -1)
-    {
+   if (channel->nsort == -1)
+   {
       channel->sortlist = NULL;
       channel->nsort = 0;
-    }
+   }
 
-  if (!channel->lookups)
-    {
+   if (!channel->lookups)
+   {
       channel->lookups = strdup("bf");
       if (!channel->lookups)
-	return ARES_ENOMEM;
-    }
+         return ARES_ENOMEM;
+   }
 
-  return ARES_SUCCESS;
+   return ARES_SUCCESS;
 }
 
 static int config_domain(ares_channel channel, char *str)
@@ -780,13 +949,13 @@ static int config_nameserver(struct server_state **servers, int *nservers,
   /* Add a nameserver entry, if this is a valid address. */
 
   if (inet_pton4(str, (u_char *) & addr))   /* is it an IPv4 address? */
-	family = AF_INET;
+    family = AF_INET;
   else
   { 
-	if (inet_pton6(str, (u_char *) & addr6))  /* how about an IPv6 address? */
-	  family = AF_INET6;
-	else	
-	  return ARES_SUCCESS;	/* nope, it was garbage, return early */
+    if (inet_pton6(str, (u_char *) & addr6))  /* how about an IPv6 address? */
+      family = AF_INET6;
+    else	
+      return ARES_SUCCESS;	/* nope, it was garbage, return early */
   }
 #else
   /* Add a nameserver entry, if this is a valid address. */
@@ -806,7 +975,7 @@ static int config_nameserver(struct server_state **servers, int *nservers,
     newserv[*nservers].addr6 = addr6;  
   else  
 #endif
-	newserv[*nservers].addr = addr;
+    newserv[*nservers].addr = addr;
 
   *servers = newserv;
   (*nservers)++;
@@ -997,114 +1166,49 @@ static void natural_mask(struct apattern *pat)
  */
 static int find_server(struct server_state *servers, int nservers, struct in_addr addr)
 {
-  int i = 0;
+   int i = 0;
 
-  if (nservers == 0)
-     return -1;
+   if (nservers == 0)
+   {
+      return -1;
+   }
 
-  for (; i < nservers; i++)
-    {
+   for (; i < nservers; i++)
+   {
       if (servers[i].addr.s_addr == addr.s_addr)
-         break;
-    }
-  return (i < nservers ? i : -1);
-}
-
-/*
- * V4. Get the physical address of the first NIC whose list of DNS servers contain 'addr'.
- * return: ARES_SUCCESS, etc.
- */
-static int get_physical_address(char *physicalAddr, int physicalAddrBufSz, int* physAddrLen, struct in_addr addr)
-{
-#ifdef WIN32
-  DWORD (WINAPI * GetAdaptersAddressesProc)(ULONG, DWORD, VOID *, IP_ADAPTER_ADDRESSES *, ULONG *);
-  HANDLE hLib = 0;
-  DWORD dwRet = ERROR_BUFFER_OVERFLOW;
-  DWORD dwSize = 0;
-  IP_ADAPTER_ADDRESSES *pAdapterAddresses = 0;
-  int rc = ARES_ENOTFOUND;
-
-  memset(physicalAddr, '\0', physicalAddrBufSz);
-  *physAddrLen = 0;
-
-  hLib = LoadLibrary(TEXT("iphlpapi.dll"));
-  if (!hLib)
-    return ARES_ENOTIMP;
-
-  (void*)GetAdaptersAddressesProc = GetProcAddress(hLib, TEXT("GetAdaptersAddresses"));
-  if(!GetAdaptersAddressesProc)
-  {
-    rc = ARES_ENOTIMP;
-    goto cleanup;
-  }
-
-  // Getting buffer size, expects overflow error
-  dwRet = (*GetAdaptersAddressesProc)(AF_UNSPEC, 0, NULL, NULL, &dwSize);
-  assert(dwRet == ERROR_BUFFER_OVERFLOW);
-  if (dwRet == ERROR_BUFFER_OVERFLOW)
-  {
-    pAdapterAddresses = (IP_ADAPTER_ADDRESSES *) LocalAlloc(LMEM_ZEROINIT, dwSize);
-    if (! pAdapterAddresses)
-    {
-      rc = ARES_ENOMEM;
-      goto cleanup;
-    }
-  }
-  else
-  {
-    //printf("ARES: couldn't get adapters addresses, dwRet=0x%x\n", dwRet);
-    rc = ARES_ENODATA;
-    goto cleanup;
-  }
-
-  dwRet = (*GetAdaptersAddressesProc)(AF_UNSPEC, 0, NULL, pAdapterAddresses, &dwSize);
-  if (dwRet != ERROR_SUCCESS)
-  {
-    //printf("ARES: couldn't get adapters addresses (2), dwRet=0x%x\n", dwRet);
-    rc = ARES_ENODATA;
-    goto cleanup;
-  }
-
-  {
-    IP_ADAPTER_ADDRESSES * AI = NULL;
-    for (AI = pAdapterAddresses; AI != NULL; AI = AI->Next)
-    {
-      PIP_ADAPTER_DNS_SERVER_ADDRESS dnsServers = AI->FirstDnsServerAddress;
-      // find 'addr' in adapter's list of dns servers.
-      for (; dnsServers; dnsServers = dnsServers->Next)
       {
-        if (! dnsServers->Address.lpSockaddr)
-          continue;
-
-        if (dnsServers->Address.lpSockaddr->sa_family == AF_INET)
-        {
-          struct sockaddr_in sockAddr = *(struct sockaddr_in*)(dnsServers->Address.lpSockaddr);
-          if (memcmp(&addr, &sockAddr.sin_addr.s_addr, sizeof(struct in_addr)) == 0)
-          {
-            *physAddrLen = AI->PhysicalAddressLength;
-            if (*physAddrLen > physicalAddrBufSz)
-              *physAddrLen = physicalAddrBufSz;
-            memcpy(physicalAddr, &AI->PhysicalAddress[0], *physAddrLen);
-            rc = ARES_SUCCESS;
-            goto cleanup;
-          }
-        }
+         break;
       }
-    }
-  }
-  rc = ARES_ENOTFOUND;
-
-cleanup:
-  if (hLib)
-    FreeLibrary(hLib);
-  if (pAdapterAddresses)
-    LocalFree(pAdapterAddresses);
-  return rc;
-#else // WIN32
-  return ARES_ENOTIMP;
-#endif // WIN32
+   }
+   return (i < nservers ? i : -1);
 }
 
+#ifdef USE_IPV6
+/*
+ * Finds a V6 addr in list of servers.
+ * return:
+ *  index i of servers whose servers[i].addr6 == addr
+ *  else -1, failed to find
+ */
+static int find_server6(struct server_state *servers, int nservers, struct in_addr6 addr)
+{
+   int i = 0;
+
+   if (nservers == 0)
+   {
+      return -1;
+   }
+
+   for (; i < nservers; i++)
+   {
+      if (memcmp(&servers[i].addr6, &addr, sizeof(addr)) == 0)
+      {
+         break;
+      }
+   }
+   return (i < nservers ? i : -1);
+}
+#endif
 
 #define  NS_INT16SZ   2
 #define  NS_INADDRSZ  4
