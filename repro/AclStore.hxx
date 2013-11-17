@@ -47,6 +47,13 @@ class AclStore
                   const short& port,
                   const short& transport);
       
+      void eraseAcl(const resip::Data& tlsPeerName,
+                    const resip::Data& address,
+                    const short& mask,
+                    const short& port,
+                    const short& family,
+                    const short& transport);
+
       void eraseAcl(const resip::Data& key);
       
       resip::Data getTlsPeerName( const resip::Data& key );

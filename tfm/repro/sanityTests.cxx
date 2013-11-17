@@ -77,20 +77,12 @@ class DisableDigestAuthGuard
       DisableDigestAuthGuard(TestProxy& proxy) : mProxy(proxy)
        {
           // Disable digest authentication by treating messages from loopback adaptor as trusted
-          mProxy.addTrustedHost("127.0.0.1", UDP);
-          mProxy.addTrustedHost("127.0.0.1", TCP);
-#ifdef USE_SSL
-          mProxy.addTrustedHost("127.0.0.1", TLS);
-#endif
+          mProxy.addTrustedHost("127.0.0.1", UDP, 0, 8, V4);
        }
 
        ~DisableDigestAuthGuard() 
        { 
-          mProxy.deleteTrustedHost("127.0.0.1", UDP);
-          mProxy.deleteTrustedHost("127.0.0.1", TCP);
-#ifdef USE_SSL
-          mProxy.deleteTrustedHost("127.0.0.1", TLS);
-#endif
+          mProxy.deleteTrustedHost("127.0.0.1", UDP, 0, 8, V4);
        }
 
    private:

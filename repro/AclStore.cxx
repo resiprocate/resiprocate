@@ -286,6 +286,17 @@ AclStore::addAcl(const resip::Data& tlsPeerNameOrAddress,
    return false;
 }
 
+void AclStore::eraseAcl(const resip::Data& tlsPeerName,
+                        const resip::Data& address,
+                        const short& mask,
+                        const short& port,
+                        const short& family,
+                        const short& transport)
+{
+   Data key = buildKey(tlsPeerName, address, mask, port, family, transport);
+   InfoLog( << "Erase ACL: key=" << key);
+   eraseAcl(key);
+}
 
 void 
 AclStore::eraseAcl(const resip::Data& key)

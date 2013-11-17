@@ -372,29 +372,26 @@ TestRepro::deleteRoute(const resip::Data& matchingPattern,
 }
 
 bool
-TestRepro::addTrustedHost(const resip::Data& host, resip::TransportType transport, short port)
+TestRepro::addTrustedHost(const resip::Data& host, resip::TransportType transport, short port, short mask, short family)
 {
-   return mConfig.getDataStore()->mAclStore.addAcl(host, port, static_cast<const short&>(transport));
+   return mConfig.getDataStore()->mAclStore.addAcl(
+       transport == TLS ? host : Data::Empty,
+       transport == TLS ? Data::Empty : host, 
+       mask,
+       port,
+       family,
+       static_cast<const short&>(transport));
 }
 
 void 
-TestRepro::deleteTrustedHost(const resip::Data& host, resip::TransportType transport, short port)
+TestRepro::deleteTrustedHost(const resip::Data& host, resip::TransportType transport, short port, short mask, short family)
 {
-   //note: this routine will fail if are using a host with a mask
-   Tuple deleteTuple(host, port, transport);
-
-   AclStore& aclStore = mConfig.getDataStore()->mAclStore;
-   // Find ACL then delete it
-   AclStore::Key key = aclStore.getFirstAddressKey();
-   while(!key.empty())
-   {
-      Tuple aclTuple = aclStore.getAddressTuple(key);
-      if(aclTuple == deleteTuple)
-      {
-         aclStore.eraseAcl(key);
-         break;
-      }
-      key = aclStore.getNextAddressKey(key);
-   }
+   mConfig.getDataStore()->mAclStore.eraseAcl(
+       transport == TLS ? host : Data::Empty,
+       transport == TLS ? Data::Empty : host, 
+       mask,
+       port,
+       family,
+       static_cast<const short&>(transport));
 }
 
