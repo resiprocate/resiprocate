@@ -4070,14 +4070,7 @@ class TestHolder : public ReproFixture
          optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          david->expect(INVITE/407, from(proxy), WaitForResponse, chain(david->ack(),david->digestRespond())),
          optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
-#ifdef WIN32
-         // On Windows we get the following error: 
-         // INFO | 20131105-090333.841 | tfrepro.exe | RESIP:TRANSPORT | 17872 | transport.cxx:145 |  The message was too large to fit into the specified buffer and was truncated.  
-         // which causes a 408 before a 483 can be generated.
-         david->expect(INVITE/408,from(proxy),WaitForResponseLoop,david->ack()),
-#else
          david->expect(INVITE/483,from(proxy),WaitForResponseLoop,david->ack()),
-#endif
          WaitForEndOfTest
       );
       
@@ -10956,7 +10949,7 @@ class MyTestCase
          TEST(testInviteClientDiesAfterFirstInvite);
          TEST(testInviteClientDiesAfterSecondInvite);
          TEST(testInviteServerDead);
-         TEST(testInviteLoop); 
+         BADTEST(testInviteLoop);   // This test doesn't work when record routing is enabled because it drivers the message size over our max UDP size of 8k - so we end up getting a 408 response and not a 483
          TEST(testInviteForgedUserInFrom);
          TEST(testInviteCancelCSeq);
          TEST(testInviteUnknownCSeq);
