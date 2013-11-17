@@ -40,7 +40,9 @@
 #  ifndef __GNUC__
 #    pragma warning(disable : 4996)
 #  endif
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
+#endif
 #  include <windows.h>
 #  include <winsock2.h>
 #undef WIN32_LEAN_AND_MEAN

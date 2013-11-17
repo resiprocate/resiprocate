@@ -355,10 +355,10 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
       for (int i = 0; i < (*channel)->nservers; ++i)
       {
 #ifdef USE_IPV6
-         if((*channel)->servers[i].family == AF_INET6) 
+         if((*channel)->servers[i].family == AF_INET6)
          {
             InfoLog(<< " name server: " << DnsUtil::inet_ntop((*channel)->servers[i].addr6));
-         } 
+         }
          else
 #endif
          {
@@ -443,11 +443,23 @@ bool AresDns::checkDnsChange()
          // Compare them one-by-one
          for (int i = 0; i < mChannel->nservers; ++i)
          {
-            if (mChannel->servers[i].addr.s_addr
-                != channel->servers[i].addr.s_addr)
+#ifdef USE_IPV6
+            if(channel->servers[i].family == AF_INET6)
             {
-               bRet = true;
-               break;
+               if(memcmp(&mChannel->servers[i].addr6, &channel->servers[i].addr6, sizeof(mChannel->servers[i].addr6)) != 0)
+               {
+                  bRet = true;
+                  break;
+               }
+            }
+            else
+#endif
+            {
+               if (mChannel->servers[i].addr.s_addr != channel->servers[i].addr.s_addr)
+               {
+                  bRet = true;
+                  break;
+               }
             }
          }
       }
@@ -614,7 +626,7 @@ AresDns::processTimers()
 #endif
 }
 
-void 
+void
 AresDns::process(FdSet& fdset)
 {
    process(fdset.read, fdset.write);
