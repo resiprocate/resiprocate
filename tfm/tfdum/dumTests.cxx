@@ -4806,8 +4806,8 @@ class DumTestCase : public DumFixture
              scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.provisional(183, true))),
              jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
-             jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideOffer(*standardOffer)),  // UPDATE UAC->UAS
-             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.provideOffer(*standardOffer)),   // UPDATE UAS->UAC
+             jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uac.provideOffer(*standardOffer), uas.provideOffer(*standardOffer))),   // UPDATE UAC->UAS, UPDATE UAS->UAC
              jason->expect(Invite_OfferRejected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              jason->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideAnswer(*standardAnswer)), 
              scott->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.accept()),
@@ -5113,11 +5113,11 @@ class DumTestCase : public DumFixture
              scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.provisional(183, true))),
              david->expect(INVITE/183, from(scott->getInstanceId()), WaitForCommand, david->noAction()),  // first 18x
              david->expect(INVITE/183, from(scott->getInstanceId()), retransInterval+WaitForCommand, david->noAction()),  // first retrans - resip::Timer::T1 later (allow 1000ms time variance)
-             david->expect(INVITE/183, from(scott->getInstanceId()), (retransInterval*=2)+WaitForCommand, david->noAction()),  // next retrans - resip::Timer::T1*2 ms later (allow 1000ms time variance)
-             david->expect(INVITE/183, from(scott->getInstanceId()), (retransInterval*=2)+WaitForCommand, david->noAction()),  // next retrans
-             david->expect(INVITE/183, from(scott->getInstanceId()), (retransInterval*=2)+WaitForCommand, david->noAction()),  // next retrans
-             david->expect(INVITE/183, from(scott->getInstanceId()), (retransInterval*=2)+WaitForCommand, david->noAction()),  // next retrans
-             scott->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, (retransInterval*=2)+WaitForCommand, uas.noAction()),
+             david->expect(INVITE/183, from(scott->getInstanceId()), (retransInterval*2)+WaitForCommand, david->noAction()),  // next retrans - resip::Timer::T1*2 ms later (allow 1000ms time variance)
+             david->expect(INVITE/183, from(scott->getInstanceId()), (retransInterval*2*2)+WaitForCommand, david->noAction()),  // next retrans
+             david->expect(INVITE/183, from(scott->getInstanceId()), (retransInterval*2*2*2)+WaitForCommand, david->noAction()),  // next retrans
+             david->expect(INVITE/183, from(scott->getInstanceId()), (retransInterval*2*2*2*2)+WaitForCommand, david->noAction()),  // next retrans
+             scott->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, (retransInterval*2*2*2*2*2)+WaitForCommand, uas.noAction()),
              david->expect(INVITE/504, alwaysMatches(), WaitForCommand, david->ack()),  // 504 error - no PRACK
              WaitForEndOfSeq);
          ExecuteSequences();
@@ -5142,8 +5142,6 @@ class DumTestCase : public DumFixture
              scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
              WaitForEndOfSeq);
          ExecuteSequences();
-
-         int retransInterval = resip::Timer::T1;
 
          TestServerInviteSession uas(scott);
          
@@ -5189,8 +5187,6 @@ class DumTestCase : public DumFixture
              WaitForEndOfSeq);
          ExecuteSequences();
 
-         int retransInterval = resip::Timer::T1;
-
          TestServerInviteSession uas(scott);
          
          Seq(david->invite(scott->getAor().uri(), offer, TestSipEndPoint::RelProvModeSupported),
@@ -5229,8 +5225,6 @@ class DumTestCase : public DumFixture
              scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
              WaitForEndOfSeq);
          ExecuteSequences();
-
-         int retransInterval = resip::Timer::T1;
 
          TestServerInviteSession uas(scott);
          
