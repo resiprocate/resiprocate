@@ -76,7 +76,7 @@ static int ip_addr(const char *s, int len, struct in_addr *addr);
 static void natural_mask(struct apattern *pat);
 static int find_server(struct server_state *servers, int nservers, struct in_addr addr);
 #ifdef USE_IPV6
-static int find_server6(struct server_state *servers, int nservers, struct in_addr6 addr);
+static int find_server6(struct server_state *servers, int nservers, struct in6_addr addr);
 #endif
 
 static int	inet_pton4(const char *src, u_char *dst);
@@ -1188,7 +1188,7 @@ static int find_server(struct server_state *servers, int nservers, struct in_add
  *  index i of servers whose servers[i].addr6 == addr
  *  else -1, failed to find
  */
-static int find_server6(struct server_state *servers, int nservers, struct in_addr6 addr)
+static int find_server6(struct server_state *servers, int nservers, struct in6_addr addr)
 {
    int i = 0;
 
