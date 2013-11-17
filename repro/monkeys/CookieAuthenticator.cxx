@@ -75,7 +75,6 @@ CookieAuthenticator::process(repro::RequestContext &rc)
          return SkipAllChains;
       }
 
-      const CookieList &cookieList = sipMessage->getWsCookies();
       const WsCookieContext &wsCookieContext = sipMessage->getWsCookieContext();
       if (proxy.isMyDomain(sipMessage->header(h_From).uri().host()))
       {
