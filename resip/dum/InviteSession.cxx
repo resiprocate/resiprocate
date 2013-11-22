@@ -18,7 +18,6 @@
 #include "resip/dum/DumHelper.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
-#include "rutil/MD5Stream.hxx"
 #include "rutil/Timer.hxx"
 #include "rutil/Random.hxx"
 #include "rutil/compat.hxx"
@@ -335,18 +334,36 @@ InviteSession::isAccepted() const
    {
       case UAS_Start:
       case UAS_Offer:
-      case UAS_NoOffer:
-      case UAS_NoOfferReliable:
-      case UAS_ProvidedOffer:
       case UAS_OfferProvidedAnswer:
       case UAS_EarlyOffer:
-      case UAS_EarlyProvidedOffer:
       case UAS_EarlyProvidedAnswer:
+
+      case UAS_NoOffer:
+      case UAS_ProvidedOffer:
       case UAS_EarlyNoOffer:
-      case UAS_FirstSentAnswerReliable:
+      case UAS_EarlyProvidedOffer:
+      //case UAS_Accepted:              // Obvious
+      //case UAS_WaitingToOffer:        // We have accepted here and are waiting for ACK to Offer
+      //case UAS_WaitingToRequestOffer: // We have accepted here and are waiting for ACK to request an offer
+
+      //case UAS_AcceptedWaitingAnswer: // Obvious
+      case UAS_OfferReliable:
+      case UAS_OfferReliableProvidedAnswer:
+      case UAS_NoOfferReliable:
+      case UAS_ProvidedOfferReliable:
       case UAS_FirstSentOfferReliable:
+      case UAS_FirstSentAnswerReliable:
+      case UAS_NoAnswerReliableWaitingPrack:
       case UAS_NegotiatedReliable:
+      case UAS_NoAnswerReliable:
+      case UAS_SentUpdate:
+      //case UAS_SentUpdateAccepted:    // we have accepted here
+      case UAS_SentUpdateGlare:
+      case UAS_ReceivedUpdate:
+      //case UAS_ReceivedUpdateWaitingAnswer:  // happens only after accept is called
+      //case UAS_WaitingToHangup:       // always from an accepted state
          return false;
+
       default:
          return true;
    }
@@ -361,7 +378,6 @@ InviteSession::isTerminated() const
       case WaitingToTerminate:
       case WaitingToHangup:
       case UAC_Cancelled:
-      case UAS_WaitingToTerminate:
       case UAS_WaitingToHangup:
          return true;
       default:
@@ -1569,13 +1585,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          {
             mSessionRefreshReInvite = false;
          
-            MD5Stream currentRemote;
-            currentRemote<< *mCurrentRemoteOfferAnswer;
-            MD5Stream newRemote;
-            newRemote << *offerAnswer;
-            bool changed = currentRemote.getHex() != newRemote.getHex();
-
-            if (changed)
+            if (*mCurrentRemoteOfferAnswer != *offerAnswer)
             {
                mCurrentRemoteOfferAnswer = offerAnswer; 
                handler->onRemoteAnswerChanged(getSessionHandle(), msg, *mCurrentRemoteOfferAnswer);
@@ -1680,7 +1690,6 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
          mStaleReInviteTimerSeq++;
          transition(SentReinviteAnswered);
          handleSessionTimerResponse(msg);
-         // mLastSessionModification = msg;   // ?slg? why are we storing 200's?
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mProposedRemoteOfferAnswer = offerAnswer; 
          handler->onOffer(getSessionHandle(), msg, *mProposedRemoteOfferAnswer);
@@ -2700,26 +2709,34 @@ InviteSession::toData(State state)
          
       case UAS_Start:
          return "UAS_Start";
-      case UAS_ReceivedOfferReliable:
-         return "UAS_ReceivedOfferReliable";
+      case UAS_OfferReliable:
+         return "UAS_OfferReliable";
+      case UAS_OfferReliableProvidedAnswer:
+         return "UAS_OfferReliableProvidedAnswer";
       case UAS_NoOfferReliable:
          return "UAS_NoOfferReliable";
+      case UAS_ProvidedOfferReliable:
+         return "UAS_ProvidedOfferReliable";
       case UAS_FirstSentOfferReliable:
          return "UAS_FirstSentOfferReliable";
       case UAS_FirstSentAnswerReliable:
          return "UAS_FirstSentAnswerReliable";
+      case UAS_NoAnswerReliableWaitingPrack:
+         return "UAS_NoAnswerReliableWaitingPrack";
+      case UAS_NoAnswerReliable:
+         return "UAS_NoAnswerReliable";
       case UAS_NegotiatedReliable:
          return "UAS_NegotiatedReliable";
       case UAS_SentUpdate:
          return "UAS_SentUpdate";
       case UAS_SentUpdateAccepted:
          return "UAS_SentUpdateAccepted";
+      case UAS_SentUpdateGlare:
+         return "UAS_SentUpdateGlare";
       case UAS_ReceivedUpdate:
          return "UAS_ReceivedUpdate";
       case UAS_ReceivedUpdateWaitingAnswer:
          return "UAS_ReceivedUpdateWaitingAnswer";
-      case UAS_WaitingToTerminate:
-         return "UAS_WaitingToTerminate";
       case UAS_WaitingToHangup:
          return "UAS_WaitingToHangup";
       case UAS_WaitingToRequestOffer:
@@ -2738,7 +2755,7 @@ InviteSession::transition(State target)
 }
 
 bool
-InviteSession::isReliable(const SipMessage& msg)
+InviteSession::isReliable(const SipMessage& msg) const
 {
    if(msg.method() != INVITE)
    {
@@ -2746,14 +2763,16 @@ InviteSession::isReliable(const SipMessage& msg)
    }
    if(msg.isRequest())
    {
-      return mDum.getMasterProfile()->getUasReliableProvisionalMode() > MasterProfile::Never
-         && ((msg.exists(h_Supporteds) && msg.header(h_Supporteds).find(Token(Symbols::C100rel)))
-             || (msg.exists(h_Requires) && msg.header(h_Requires).find(Token(Symbols::C100rel))));
+      return mDum.getMasterProfile()->getUasReliableProvisionalMode() > MasterProfile::Never &&
+             ((msg.exists(h_Supporteds) && msg.header(h_Supporteds).find(Token(Symbols::C100rel))) || 
+              (msg.exists(h_Requires)   && msg.header(h_Requires).find(Token(Symbols::C100rel))));
    }
    else
    {
-      return mDum.getMasterProfile()->getUacReliableProvisionalMode() > MasterProfile::Never
-         && msg.exists(h_Requires) && msg.header(h_Requires).find(Token(Symbols::C100rel));
+      // RFC3262 says reliable provisionals MUST have a Require: 100rel and an RSeq
+      return mDum.getMasterProfile()->getUacReliableProvisionalMode() > MasterProfile::Never &&
+             msg.exists(h_Requires) && msg.header(h_Requires).find(Token(Symbols::C100rel)) && 
+             msg.exists(h_RSeq);
    }
 }
 

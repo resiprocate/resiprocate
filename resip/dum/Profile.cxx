@@ -38,6 +38,7 @@ Profile::reset()
    unsetDefaultSessionTime(); 
    unsetDefaultSessionTimerMode();   
    unset1xxRetransmissionTime();   
+   unset1xxRelResubmitTime();
    unsetOverrideHostAndPort(); 
    unsetAdvertisedCapabilities();
    unsetOutboundProxy(); 
@@ -374,6 +375,38 @@ Profile::unset1xxRetransmissionTime()
    {
       mHas1xxRetransmissionTime = true;
       m1xxRetransmissionTime = 60;  // RFC3261 13.3.1 specifies this timeout should be 1 minute
+   }
+}
+
+void
+Profile::set1xxRelResubmitTime(int secs)
+{
+   m1xxRelResubmitTime = secs;
+   mHas1xxRelResubmitTime = true;
+}
+
+int 
+Profile::get1xxRelResubmitTime() const
+{
+   // Fall through seting (if required)
+   if(!mHas1xxRelResubmitTime && mBaseProfile.get())
+   {
+       return mBaseProfile->get1xxRelResubmitTime();
+   }
+   return m1xxRelResubmitTime;
+}
+
+void
+Profile::unset1xxRelResubmitTime()
+{
+   if(mBaseProfile.get()) 
+   {
+      mHas1xxRelResubmitTime = false;
+   }
+   else // No Base profile - so return to default setting
+   {
+      mHas1xxRelResubmitTime = true;
+      m1xxRelResubmitTime = 150;  // RFC3262 section says the UAS SHOULD send provisional reliable responses once every two and half minutes
    }
 }
 

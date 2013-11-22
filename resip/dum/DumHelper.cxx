@@ -7,15 +7,17 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
-void DumHelper::setOutgoingEncryptionLevel(SipMessage& message,
-                                          DialogUsageManager::EncryptionLevel level)
+void 
+DumHelper::setOutgoingEncryptionLevel(SipMessage& message,
+                                      DialogUsageManager::EncryptionLevel level)
 {
    SecurityAttributes* attr = new SecurityAttributes();
    attr->setOutgoingEncryptionLevel(convert(level));
    message.setSecurityAttributes(auto_ptr<SecurityAttributes>(attr));
 }
 
-void DumHelper::setEncryptionPerformed(SipMessage& message)
+void 
+DumHelper::setEncryptionPerformed(SipMessage& message)
 {
    SecurityAttributes* attr = new SecurityAttributes();
    attr->setOutgoingEncryptionLevel(message.getSecurityAttributes()->getOutgoingEncryptionLevel());
@@ -23,7 +25,8 @@ void DumHelper::setEncryptionPerformed(SipMessage& message)
    message.setSecurityAttributes(auto_ptr<SecurityAttributes>(attr));
 }
 
-SecurityAttributes::OutgoingEncryptionLevel DumHelper::convert(DialogUsageManager::EncryptionLevel level)
+SecurityAttributes::OutgoingEncryptionLevel 
+DumHelper::convert(DialogUsageManager::EncryptionLevel level)
 {
    SecurityAttributes::OutgoingEncryptionLevel ret = SecurityAttributes::None;
 

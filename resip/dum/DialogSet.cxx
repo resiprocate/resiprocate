@@ -520,7 +520,7 @@ DialogSet::dispatch(const SipMessage& msg)
          }
          else
          {
-          StackLog (<< "Matching dialog is destroying, dropping response message " << endl << msg);
+            StackLog (<< "Matching dialog is destroying, dropping response message " << endl << msg);
          }
          return;
       }
@@ -547,6 +547,7 @@ DialogSet::dispatch(const SipMessage& msg)
          case BYE:
          case INFO:
          case ACK:
+         case PRACK:
          case UPDATE:
             if(!dialog)
             {
@@ -742,7 +743,7 @@ DialogSet::dispatch(const SipMessage& msg)
             return;
 
          case MESSAGE:
-             if (dialog)
+            if (dialog)
             {
                 break;
             }
@@ -754,6 +755,7 @@ DialogSet::dispatch(const SipMessage& msg)
 
          case INFO:   
          case UPDATE:
+         case PRACK:
             if (dialog)
             {
                break;

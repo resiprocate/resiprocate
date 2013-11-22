@@ -118,6 +118,11 @@ InviteSessionHandler::onConnectedConfirmed(InviteSessionHandle handle, const Sip
 }
 
 void 
+InviteSessionHandler::onPrack(ServerInviteSessionHandle, const SipMessage &msg)
+{
+}
+
+void 
 InviteSessionHandler::onFlowTerminated(InviteSessionHandle)
 {
    InfoLog(<< "InviteSessionHandler::onFlowTerminated");

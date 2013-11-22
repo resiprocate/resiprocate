@@ -354,6 +354,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       // at the same time it deletes other handlers when DUM is destroyed.
       DialogEventStateManager* createDialogEventStateManager(DialogEventHandler* handler);
 
+      void setAdvertisedCapabilities(SipMessage& msg, SharedPtr<UserProfile> userProfile);
+
    protected:
       virtual void onAllHandlesDestroyed();      
       //TransactionUser virtuals

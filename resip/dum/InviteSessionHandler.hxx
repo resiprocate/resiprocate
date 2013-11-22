@@ -67,6 +67,9 @@ class InviteSessionHandler
       /// called when ACK (with out an answer) is received for initial invite (UAS)
       virtual void onConnectedConfirmed(InviteSessionHandle, const SipMessage &msg);
 
+      /// called when PRACK is received for a reliable provisional answer (UAS)
+      virtual void onPrack(ServerInviteSessionHandle, const SipMessage &msg);
+
       /** UAC gets no final response within the stale call timeout (default is 3
        * minutes). This is just a notification. After the notification is
        * called, the InviteSession will then call

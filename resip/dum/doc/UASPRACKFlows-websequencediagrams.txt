@@ -1,0 +1,109 @@
+title UAS PRACK Flows http://www.websequencediagrams.com/#
+
+opt
+note over UAC, UAS: Flow 1
+UAC->UAS: INVITE (NoOffer)
+UAS->UAC: 18x (Offer)
+UAC->UAS: PRACK (Answer)
+UAS->UAC: 200/Prack
+note over UAC, UAS: Negotiated Reliable
+end
+
+opt
+note over UAC, UAS: Flow 2
+UAC->UAS: INVITE (Offer)
+UAS->UAC: 18x (Answer)
+UAC->UAS: PRACK 
+UAS->UAC: 200/Prack
+note over UAC, UAS: Negotiated Reliable
+end
+
+opt
+note over UAC, UAS: Flow 3
+UAC->UAS: INVITE (Offer)
+UAS->UAC: 18x (Answer)
+UAC->UAS: PRACK (Offer)
+UAS->UAC: 200/Prack (Answer)
+note over UAC, UAS: Negotiated Reliable
+end
+
+opt
+note over UAC, UAS: Flow 4
+UAC->UAS: INVITE (Offer)
+UAS->UAC: 18x
+UAC->UAS: PRACK 
+UAS->UAC: 200/Prack
+UAS->UAC: 18x (Answer)
+UAC->UAS: PRACK 
+UAS->UAC: 200/Prack
+note over UAC, UAS: Negotiated Reliable
+end
+
+opt
+note over UAC, UAS: Flow 5
+UAC->UAS: INVITE (Offer)
+UAS->UAC: 18x
+UAC->UAS: PRACK 
+UAS->UAC: 200/Prack
+UAS->UAC: 18x (Answer)
+UAC->UAS: PRACK (Offer)
+UAS->UAC: 200/Prack (Answer)
+note over UAC, UAS: Negotiated Reliable
+end
+
+opt
+note over UAC, UAS: Flow 6
+UAC->UAS: INVITE (Offer)
+UAS->UAC: 18x (unreliable)
+UAS->UAC: 18x (reliable)
+UAC->UAS: PRACK 
+UAS->UAC: 200/Prack
+UAS->UAC: 18x (Answer)
+UAC->UAS: PRACK (Offer)
+UAS->UAC: 200/Prack (Answer)
+note over UAC, UAS: Negotiated Reliable
+end
+
+opt
+note over UAC, UAS: Flow 7
+UAC->UAS: INVITE (Offer)
+UAS->UAC: 200/Invite (Answer)
+UAC->UAS: ACK
+end
+
+opt
+note over UAC, UAS: Negotiated Reliable Flow 1
+UAS->UAC: 18x
+UAC->UAS: PRACK (Offer)
+UAS->UAC: 200/Prack (Answer)
+note over UAC, UAS: Negotiated Reliable
+end
+
+opt
+note over UAC, UAS: Negotiated Reliable Flow 2
+UAS->UAC: 18x
+UAC->UAS: PRACK
+UAS->UAC: 200/Prack
+note over UAC, UAS: Negotiated Reliable
+end
+
+opt
+note over UAC, UAS: Negotiated Reliable Flow 3
+UAS->UAC: UPDATE (Offer)
+UAC->UAS: 200/Update (Answer)
+note over UAC, UAS: Negotiated Reliable
+end
+
+opt
+note over UAC, UAS: Negotiated Reliable Flow 4
+UAC->UAS: UPDATE (Offer)
+UAS->UAC: 200/Update (Answer)
+note over UAC, UAS: Negotiated Reliable
+end
+
+opt
+note over UAC, UAS: Negotiated Reliable Flow 5
+UAS->UAC: 200/Invite
+UAC->UAS: ACK
+end
+

@@ -483,6 +483,17 @@ Dialog::dispatch(const SipMessage& msg)
                mInviteSession->dispatch(request);
             }
             break;
+         case PRACK:
+            if (mInviteSession == 0)
+            {
+               InfoLog ( << "Spurious PRACK" );
+               return;
+            }
+            else
+            {
+               mInviteSession->dispatch(request);
+            }
+            break;
          case ACK:
          case CANCEL:
             if (mInviteSession == 0)
@@ -700,6 +711,7 @@ Dialog::dispatch(const SipMessage& msg)
          case INFO:
          case MESSAGE:
          case UPDATE:
+         case PRACK:
             if (mInviteSession)
             {
                mInviteSession->dispatch(response);
@@ -1038,11 +1050,8 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
    // If method is INVITE then advertise required headers
    if(method == INVITE || method == UPDATE)
    {
-      if(mDialogSet.mUserProfile->isAdvertisedCapability(Headers::Allow)) request.header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
-      if(mDialogSet.mUserProfile->isAdvertisedCapability(Headers::AcceptEncoding)) request.header(h_AcceptEncodings) = mDum.getMasterProfile()->getSupportedEncodings();
-      if(mDialogSet.mUserProfile->isAdvertisedCapability(Headers::AcceptLanguage)) request.header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
-      if(mDialogSet.mUserProfile->isAdvertisedCapability(Headers::AllowEvents)) request.header(h_AllowEvents) = mDum.getMasterProfile()->getAllowedEvents();
-      if(mDialogSet.mUserProfile->isAdvertisedCapability(Headers::Supported)) request.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
+      // Add Advertised Capabilities
+      mDum.setAdvertisedCapabilities(request, mDialogSet.mUserProfile);
    }
 
    if (mDialogSet.mUserProfile->isAnonymous())
@@ -1071,6 +1080,7 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
              request.header(h_RequestLine).getMethod() == NOTIFY ||
              request.header(h_RequestLine).getMethod() == INFO ||
              request.header(h_RequestLine).getMethod() == OPTIONS ||
+             request.header(h_RequestLine).getMethod() == PRACK ||
              request.header(h_RequestLine).getMethod() == UPDATE
              );
 
@@ -1081,30 +1091,12 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
       response.header(h_To).param(p_tag) = mId.getLocalTag();
 
       if((request.header(h_RequestLine).getMethod() == INVITE ||
+          request.header(h_RequestLine).getMethod() == PRACK ||
           request.header(h_RequestLine).getMethod() == UPDATE)
          && code >= 200 && code < 300)
       {
-         // Check if we should add our capabilites to the invite success response
-         if(mDialogSet.mUserProfile->isAdvertisedCapability(Headers::Allow)) 
-         {
-            response.header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
-         }
-         if(mDialogSet.mUserProfile->isAdvertisedCapability(Headers::AcceptEncoding)) 
-         {
-            response.header(h_AcceptEncodings) = mDum.getMasterProfile()->getSupportedEncodings();
-         }
-         if(mDialogSet.mUserProfile->isAdvertisedCapability(Headers::AcceptLanguage)) 
-         {
-            response.header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
-         }
-         if(mDialogSet.mUserProfile->isAdvertisedCapability(Headers::AllowEvents)) 
-         {
-            response.header(h_AllowEvents) = mDum.getMasterProfile()->getAllowedEvents();
-         }
-         if(mDialogSet.mUserProfile->isAdvertisedCapability(Headers::Supported)) 
-         {
-            response.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
-         }
+         // Add Advertised Capabilities
+         mDum.setAdvertisedCapabilities(response, mDialogSet.mUserProfile);
       }
    }
    else

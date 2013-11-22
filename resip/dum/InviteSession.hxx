@@ -219,17 +219,23 @@ class InviteSession : public DialogUsage
          UAS_WaitingToRequestOffer, 
 
          UAS_AcceptedWaitingAnswer, 
-         UAS_ReceivedOfferReliable,
+         UAS_OfferReliable,
+         UAS_OfferReliableProvidedAnswer,
          UAS_NoOfferReliable,
+         UAS_ProvidedOfferReliable,
          UAS_FirstSentOfferReliable,
          UAS_FirstSentAnswerReliable,
+         UAS_NoAnswerReliableWaitingPrack,
          UAS_NegotiatedReliable,
+         UAS_NoAnswerReliable,
          UAS_SentUpdate,
          UAS_SentUpdateAccepted,
+         UAS_SentUpdateGlare,
          UAS_ReceivedUpdate,
          UAS_ReceivedUpdateWaitingAnswer,
-         UAS_WaitingToTerminate,
          UAS_WaitingToHangup
+         // !!!!WARNING!!!! when adding new UAS state - make sure you check if they 
+         //                 need to be added to the isAccepted method
       } State;
 
       typedef enum
@@ -319,7 +325,7 @@ class InviteSession : public DialogUsage
       void transition(State target);
 
       std::auto_ptr<Contents> getOfferAnswer(const SipMessage& msg);
-      bool isReliable(const SipMessage& msg);
+      bool isReliable(const SipMessage& msg) const;
       static std::auto_ptr<Contents> makeOfferAnswer(const Contents& offerAnswer);
       static std::auto_ptr<Contents> makeOfferAnswer(const Contents& offerAnswer, const Contents* alternative);
       static void setOfferAnswer(SipMessage& msg, const Contents& offerAnswer, const Contents* alternative = 0);
@@ -359,11 +365,10 @@ class InviteSession : public DialogUsage
       std::auto_ptr<Contents> mCurrentRemoteOfferAnswer;   // This gets set with mProposedRemoteOfferAnswer after we send an SDP answer, or when we receive an SDP answer from the remote end
       std::auto_ptr<Contents> mProposedRemoteOfferAnswer;  // This gets set when we receive an offer from the remote end
 
-      SharedPtr<SipMessage> mLastLocalSessionModification; // last UPDATE or reINVITE sent
+      SharedPtr<SipMessage> mLastLocalSessionModification;  // last UPDATE or reINVITE sent
       SharedPtr<SipMessage> mLastRemoteSessionModification; // last UPDATE or reINVITE received
-      SharedPtr<SipMessage> mInvite200;               // 200 OK for reINVITE for retransmissions
-      SharedPtr<SipMessage> mLastNitResponse;         // 
-                                                      //?dcm? -- ptr, delete when not needed?
+      SharedPtr<SipMessage> mInvite200;                     // 200 OK for reINVITE for retransmissions
+      SharedPtr<SipMessage> mLastNitResponse;
 
       SipMessage  mLastReferNoSubRequest;
       
@@ -394,7 +399,7 @@ class InviteSession : public DialogUsage
       SharedPtr<SipMessage> mLastSentNITRequest;
 
       DialogUsageManager::EncryptionLevel mCurrentEncryptionLevel;
-      DialogUsageManager::EncryptionLevel mProposedEncryptionLevel; // UPDATE or RE-INVITE
+      DialogUsageManager::EncryptionLevel mProposedEncryptionLevel; // UPDATE or RE-INVITE or PRACK
 
       EndReason mEndReason;
 

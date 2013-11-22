@@ -26,9 +26,12 @@ class ServerInviteSession: public InviteSession
       /** Called to set the offer that will be used in the next message that
           sends an offer. If possible, this will synchronously send the
           appropriate request or response. In some cases, the UAS might have to
-          call accept in order to cause the message to be sent. */
-      virtual void provideOffer(const Contents& offer);
-      virtual void provideOffer(const Contents& offer, DialogUsageManager::EncryptionLevel level, const Contents* alternative);
+          call accept in order to cause the message to be sent.
+          If sendOfferAtAccept is true, no UPDATE will be sent if media is negotiated reliable,
+          it will be sent at accept */
+      virtual void provideOffer(const Contents& offer, bool sendOfferAtAccept=false);
+      virtual void provideOffer(const Contents& offer, DialogUsageManager::EncryptionLevel level,
+                                const Contents* alternative, bool sendOfferAtAccept=false);
 
       /** Called to request that the far end provide an offer.  This will cause a 
           reinvite with no body to be sent.  */
@@ -70,17 +73,17 @@ class ServerInviteSession: public InviteSession
       void dispatchWaitingToOffer(const SipMessage& msg);
       void dispatchWaitingToRequestOffer(const SipMessage& msg);
       void dispatchAcceptedWaitingAnswer(const SipMessage& msg);
-      void dispatchOfferReliable(const SipMessage& msg);
-      void dispatchNoOfferReliable(const SipMessage& msg);
       void dispatchFirstSentOfferReliable(const SipMessage& msg);
-      void dispatchFirstEarlyReliable(const SipMessage& msg);
-      void dispatchEarlyReliable(const SipMessage& msg);
+      void dispatchOfferReliableProvidedAnswer(const SipMessage& msg);
+      void dispatchFirstSentAnswerReliable(const SipMessage& msg);
+      void dispatchNoAnswerReliableWaitingPrack(const SipMessage& msg);
       void dispatchSentUpdate(const SipMessage& msg);
+      void dispatchSentUpdateGlare(const SipMessage& msg);
       void dispatchSentUpdateAccepted(const SipMessage& msg);
       void dispatchReceivedUpdate(const SipMessage& msg);
       void dispatchReceivedUpdateWaitingAnswer(const SipMessage& msg);
-      void dispatchWaitingToTerminate(const SipMessage& msg);
       void dispatchWaitingToHangup(const SipMessage& msg);
+      void dispatchNegotiatedReliable(const SipMessage& msg);
 
       void dispatchCancel(const SipMessage& msg);
       void dispatchBye(const SipMessage& msg);
@@ -88,9 +91,15 @@ class ServerInviteSession: public InviteSession
 
       // utilities
       void startRetransmit1xxTimer();
+      void startResubmit1xxRelTimer();
+      void startRetransmit1xxRelTimer();
       void sendAccept(int code, Contents* offerAnswer); // sends 2xxI
-      void sendProvisional(int code, bool earlyFlag);
+      bool sendProvisional(int code, bool earlyFlag);  // returns true if sent reliably
+      void queueResponse(int code, bool earlyFlag);
       void sendUpdate(const Contents& offerAnswer);
+      bool handlePrack(const SipMessage& msg); // verify that prack matches our last send reliable 1xx
+      void prackCheckQueue();                             // send a queued message after prack
+      void updateCheckQueue();                            // send a queued message after update
 
       ServerInviteSession(DialogUsageManager& dum, Dialog& dialog, const SipMessage& msg);
 
@@ -103,8 +112,12 @@ class ServerInviteSession: public InviteSession
       SharedPtr<SipMessage> m1xx; // for 1xx retransmissions
       unsigned long mCurrentRetransmit1xxSeq;
       
-      //std::deque<SipMessage> mUnacknowledgedProvisionals; // all of them
-      //SipMessage m200; // for retransmission
+      // UAS Prack members
+      unsigned int mLocalRSeq;
+      SharedPtr<SipMessage> mUnacknowledgedReliableProvisional; // We won't send a new reliable provisional until the previous one is acknowledge - used for re-transmissions
+      std::deque< std::pair<int, bool> > mQueuedResponses;
+      bool mAnswerSentReliably;
+      SharedPtr<SipMessage> mPrackWithOffer; // for 1xx retransmissions
 };
 
 }

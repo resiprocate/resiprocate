@@ -122,9 +122,12 @@ MasterProfile::getUnsupportedOptionsTags(const Tokens& requiresOptionTags)
       {
          tokens.push_back(Token("malformedTag"));
       }
-      else if (*i == Token(Symbols::C100rel) && mUasReliableProvisionalMode == Never)
+      else if (*i == Token(Symbols::C100rel) )
       {
-         tokens.push_back(*i);
+         if (mUasReliableProvisionalMode == Never)
+         {
+            tokens.push_back(*i);
+         }
       }
       // if this option is not supported
       else if (!mSupportedOptionTags.find(*i))
@@ -157,8 +160,6 @@ MasterProfile::setUacReliableProvisionalMode(ReliableProvisionalMode mode)
 void
 MasterProfile::setUasReliableProvisionalMode(ReliableProvisionalMode mode)
 {
-   //.dcm. not supported yet
-  assert(0);
   mUasReliableProvisionalMode = mode;
 }
 
