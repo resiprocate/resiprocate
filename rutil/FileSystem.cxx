@@ -153,7 +153,7 @@ FileSystem::Directory::iterator::iterator() :
 FileSystem::Directory::iterator::iterator(const Directory& dir)
 {
    Data searchPath;
-   if (dir.getPath().postfix("/") || dir.getPath().postfix("\\"))
+   if (dir.getPath().empty() || dir.getPath().postfix("/") || dir.getPath().postfix("\\"))
    {
       searchPath = dir.getPath() + Data("*");
    }

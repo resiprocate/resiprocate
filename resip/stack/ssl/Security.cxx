@@ -142,9 +142,8 @@ Security::Security(const Data& directory, const CipherList& cipherSuite) :
    BaseSecurity(cipherSuite), 
    mPath(directory)
 {
-   // since the preloader won't work otherwise and VERY difficult to figure
-   // out. 
-   if ( !mPath.postfix(Symbols::SLASH))
+   // since the preloader won't work otherwise and VERY difficult to figure out.
+   if (!mPath.empty() && !mPath.postfix(Symbols::SLASH))
    {
       mPath += Symbols::SLASH;
    }
