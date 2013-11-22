@@ -75,9 +75,6 @@ class TestUser : public TestSipEndPoint
       EXPECT_FUNCTOR(TestUser, DigestChallenge);
       MessageExpectAction* digestChallenge();
 
-      EXPECT_FUNCTOR(TestUser, Prack);
-      MessageExpectAction* prack();
-
    protected:
       resip::Data mAuthName;
       resip::Data mPassword;

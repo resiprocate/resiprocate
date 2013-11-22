@@ -87,21 +87,14 @@ void sleepSeconds(unsigned int seconds)
 
 class DumTestCase : public DumFixture
 {
-	CPPUNIT_TEST_SUITE( DumTestCase ); 
+   CPPUNIT_TEST_SUITE( DumTestCase ); 
 #if 0
-      CPPUNIT_TEST(testInviteBasicSuccessWithPrack);       
-      CPPUNIT_TEST(testPrackUpdate);       
-      CPPUNIT_TEST(testPrackRetrans);
-      CPPUNIT_TEST(testPrackOptionTag);
-      CPPUNIT_TEST(testPrackUasUpdate);      
-      CPPUNIT_TEST(testPrackUac491);      
-      CPPUNIT_TEST(testPrackUas491);      
       // this test relies on a really long sleep, so don't run it unless you wanna wait:
       CPPUNIT_TEST(testSessionTimerUasRefresher);
 #else
       CPPUNIT_TEST(testDialogEventUacBasic);
       CPPUNIT_TEST(testDialogEventUasBasic);
-      CPPUNIT_TEST(testDialogEventUacTwoBranchesProvisional);
+      //CPPUNIT_TEST(testDialogEventUacTwoBranchesProvisional);  // test has commented out code and will cause onStaleCallTimeout to fire later in the middle of another test - commenting out until fixed
       CPPUNIT_TEST(testDialogEvent302Uac);
       CPPUNIT_TEST(testDialogEvent302Uas);
       CPPUNIT_TEST(testDialogEventReferUas);
@@ -109,20 +102,49 @@ class DumTestCase : public DumFixture
       CPPUNIT_TEST(testDialogEventCancelUac);
       CPPUNIT_TEST(testDialogEventReplaces);
       CPPUNIT_TEST(testDialogEventInvite500);
-      CPPUNIT_TEST(testPrackEmpty180rel);
-      
-      CPPUNIT_TEST(testPrackMultiple180rel);
-      CPPUNIT_TEST(testInviteBasicSuccessWithPrack);       
-      CPPUNIT_TEST(testPrackUpdate);       
-      CPPUNIT_TEST(testPrackRetrans);
-      CPPUNIT_TEST(testPrackOptionTag);
-      CPPUNIT_TEST(testPrackUasUpdate);      
-      CPPUNIT_TEST(testPrackUac491);      
-      CPPUNIT_TEST(testPrackUas491);      
 
-      //CPPUNIT_TEST(testReinviteWithByeSentAfterMissedAck);
-      //CPPUNIT_TEST(testConnectionTermination);
-      //CPPUNIT_TEST(testConnectionTerminationRefreshFail);
+      // UAC Prack Scenarios - only UAC is DUM endpoint
+      CPPUNIT_TEST(testUACPrackEmpty180rel);
+      CPPUNIT_TEST(testUACPrackMultiple180rel);
+      CPPUNIT_TEST(testUACPrackInviteBasicSuccess);
+      CPPUNIT_TEST(testUACPrackUpdate);
+      CPPUNIT_TEST(testUACPrackRetrans);
+      CPPUNIT_TEST(testUACPrackOptionTag);
+      CPPUNIT_TEST(testUACPrackUasUpdate);
+      CPPUNIT_TEST(testUACPrackUasDoubleUpdate);
+      CPPUNIT_TEST(testUACPrackUac491);
+      CPPUNIT_TEST(testUACPrackUas491);
+
+      // 3GPP PRACK Scenarios - both UAC and UAS as DUM endpoints
+      CPPUNIT_TEST(testPrack3GPP_1);  // 3GPP 24.930 Rel 11 - 5.1.2, 5.2.2
+      CPPUNIT_TEST(testPrack3GPP_2);  // 3GPP 24.930 Rel 11 - 5.2.3, 5.3.4
+      CPPUNIT_TEST(testPrack3GPP_3);  // 3GPP 24.930 Rel 11 - 5.3.2, 5.5.2, 5.6.2
+      CPPUNIT_TEST(testPrack3GPP_4);  // 3GPP 24.930 Rel 11 - 5.3.3, 5.6.2
+      CPPUNIT_TEST(testPrack3GPP_5);  // 3GPP 24.930 Rel 11 - 5.4.2, 5.4.4
+      CPPUNIT_TEST(testPrack3GPP_6);  // 3GPP 24.930 Rel 11 - 5.4.3
+
+      // Other Prack Scenarios - both UAC and UAS as DUM endpoints
+      CPPUNIT_TEST(testPrackInviteNoOffer);
+      CPPUNIT_TEST(testPrackInviteNoOffer2ndProvisionalOffer);
+      CPPUNIT_TEST(testPrackInviteOffer2ndReliableProvisionalAnswer);
+      CPPUNIT_TEST(testPrackInviteOffer2ndRelProvAnswerPrackOffer);
+      CPPUNIT_TEST(testPrackNegotiatedReliableProvisional);
+      CPPUNIT_TEST(testPrackNegotiatedReliableUpdates);
+      CPPUNIT_TEST(testPrackNegotiatedReliableUpdateGlare);
+      CPPUNIT_TEST(testPrack1xxResubmission);  // takes 2.5 mintues to run
+      CPPUNIT_TEST(testPrackRequiredWithSupportedEssential);
+
+      // UAS Prack Scenarios - only UAS is DUM endpoint
+      CPPUNIT_TEST(testUASPrackNegotiatedReliableUpdateGlareResend);
+      CPPUNIT_TEST(testUASPrackNegotiatedReliableUpdateGlareCrossed);
+      CPPUNIT_TEST(testUASPrackNegotiatedReliableUACDoubleUpdate);
+      CPPUNIT_TEST(testUASPrackNegotiatedReliableOfferInPrack);
+      CPPUNIT_TEST(testUASPrack18xRetransmissions);  // takes ~128 seconds to run when T1 timer is set to 2000ms
+      CPPUNIT_TEST(testUASPrackStrayPrack);
+      CPPUNIT_TEST(testUASPrack2ndOfferInNoAnswerReliableWaitingPrack);
+      CPPUNIT_TEST(testUASPrack2ndOfferInOfferReliableProvidedAnswer);
+
+      //CPPUNIT_TEST(testReinviteWithByeSentAfterMissedAck);  // comment above indicates test case needs handling for retransmissions
 
       CPPUNIT_TEST(testOutOfDialogReferNoReferSubWithoutReferSubHeader);
       CPPUNIT_TEST(testOutOfDialogRefer);
@@ -136,6 +158,7 @@ class DumTestCase : public DumFixture
       CPPUNIT_TEST(test3pccFlow1Reject);
       CPPUNIT_TEST(testBlindTransfer);
       CPPUNIT_TEST(testBlindTransferRejected);
+
       CPPUNIT_TEST(testInvite302);
       CPPUNIT_TEST(testInviteBusy);
       CPPUNIT_TEST(testInviteLateMediaSuccess);
@@ -145,7 +168,7 @@ class DumTestCase : public DumFixture
       CPPUNIT_TEST(testReInviteIpChange);
       CPPUNIT_TEST(testRegisterBasicWithoutRinstance);
       CPPUNIT_TEST(testReinviteLateMedia);
-      CPPUNIT_TEST(testReinviteRejected);
+      CPPUNIT_TEST(testReinviteRejected); 
       CPPUNIT_TEST(testTransferNoReferSub);
       CPPUNIT_TEST(testTransferNoReferSubWithoutReferSubHeaderIn202);
       CPPUNIT_TEST(testInviteBasicSuccess);
@@ -154,13 +177,13 @@ class DumTestCase : public DumFixture
       CPPUNIT_TEST(testPublish423);
       CPPUNIT_TEST(testPublishBasic);
       CPPUNIT_TEST(testPublishRefresh);
-      CPPUNIT_TEST(testPublishUpdate);
-      //CPPUNIT_TEST(testRegisterBasicWithMethodsParam);
+      CPPUNIT_TEST(testPublishUpdate); 
+
+      CPPUNIT_TEST(testRegisterBasicWithMethodsParam);
       CPPUNIT_TEST(testRegisterBasicWithoutMethodsParam);
-      CPPUNIT_TEST(testRegisterBasicWithRinstance);
-//      CPPUNIT_TEST(testServiceRoute); //could be correct; see
-//      draft-rosenberg-sip-route-construct-02.txt. Desired behaviour needs to
-//      be determined.
+      // CPPUNIT_TEST(testRegisterBasicWithRinstance);  // An instance id is set in DumUserAgent::makeProfile - so rinstance won't be used
+      // CPPUNIT_TEST(testServiceRoute); //could be correct; see draft-rosenberg-sip-route-construct-02.txt. Desired behaviour needs to be determined.
+      
       CPPUNIT_TEST(testStaleNonceHandling);
       CPPUNIT_TEST(testSubscribe);
       CPPUNIT_TEST(testSubscribe406);
@@ -176,8 +199,8 @@ class DumTestCase : public DumFixture
       CPPUNIT_TEST(testInDialogSubscribeWithoutEventHandler);
       CPPUNIT_TEST(testOutOfDialogSubscribeWithoutEventHandler);
       CPPUNIT_TEST(testReInviteRemoveVideo);
-      CPPUNIT_TEST(testByesCrossedOnTheWire);
-//         CPPUNIT_TEST(testReinviteNo200);
+      CPPUNIT_TEST(testByesCrossedOnTheWire);  
+      CPPUNIT_TEST(testReinviteNo200);  // Requires record routing
 #endif
       CPPUNIT_TEST_SUITE_END(); 
 
@@ -1029,6 +1052,9 @@ class DumTestCase : public DumFixture
       {
          InfoLog(<< "testDialogEventUasBasic");
 
+         // Disable digest authentication for this test by treating messages from loopback adaptor as trusted
+         proxy->addTrustedHost("127.0.0.1", UDP);
+
          jason->getDum().addServerSubscriptionHandler("dialog", jason);
          DialogEventStateManager* desm(jason->getDum().createDialogEventStateManager(jason));
          (void)desm;
@@ -1090,11 +1116,17 @@ class DumTestCase : public DumFixture
                  Sub(testDialogEvt.expect(DialogEvent_Terminated, *pDi4, InviteSessionHandler::LocalBye, WaitForCommand, uac.noAction()))),
              WaitForEndOfSeq);
          ExecuteSequences();
+
+         // Re-enable digest auth for localhost
+         proxy->deleteTrustedHost("127.0.0.1", UDP);
       }
 
       void testDialogEvent302Uas()
       {
          InfoLog(<< "testDialogEvent302Uas");
+
+         // Disable digest authentication for this test by treating messages from loopback adaptor as trusted
+         proxy->addTrustedHost("127.0.0.1", UDP);
 
          jason->getDum().addServerSubscriptionHandler("dialog", jason);
          DialogEventStateManager* desm(jason->getDum().createDialogEventStateManager(jason));
@@ -1151,11 +1183,17 @@ class DumTestCase : public DumFixture
                          Sub(sheila->expect(INVITE/302, from(proxy), WaitForResponse, sheila->ack()))))),
              WaitForEndOfSeq);
          ExecuteSequences();
+
+         // Re-enable digest auth for localhost
+         proxy->deleteTrustedHost("127.0.0.1", UDP);
       }
 
       void testDialogEventCancelUas()
       {
          InfoLog(<< "testDialogEventCancelUas");
+
+         // Disable digest authentication for this test by treating messages from loopback adaptor as trusted
+         proxy->addTrustedHost("127.0.0.1", UDP);
 
          jason->getDum().addServerSubscriptionHandler("dialog", jason);
          DialogEventStateManager* desm(jason->getDum().createDialogEventStateManager(jason));
@@ -1215,6 +1253,9 @@ class DumTestCase : public DumFixture
                              sheila->expect(INVITE/487, from(proxy), WaitForResponse, sheila->ack()))))),
              WaitForEndOfSeq);
          ExecuteSequences();
+
+         // Re-enable digest auth for localhost
+         proxy->deleteTrustedHost("127.0.0.1", UDP);
       }
 
       void testReinviteNo200()
@@ -1232,7 +1273,7 @@ class DumTestCase : public DumFixture
          Seq(david->registerUser(60, david->getDefaultContacts()),
              optional(david->expect(REGISTER/407, from(proxy), WaitForResponse, david->digestRespond())),
              david->expect(REGISTER/200, from(proxy), WaitForResponse, derek->registerUa()),
-             derek->expect(Register_Success, clientReg, hasRinstance(), WaitForRegistration, david->invite(derek->getAor().uri())),
+             derek->expect(Register_Success, clientReg, *TestEndPoint::AlwaysTruePred, WaitForRegistration, david->invite(derek->getAor().uri())),
              optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
              david->expect(INVITE/407, from(proxy), WaitForResponse, chain(david->ack(), david->digestRespond())),
              optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
@@ -1255,7 +1296,7 @@ class DumTestCase : public DumFixture
              david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
              david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
              david->expect(INVITE/200, from(proxy), CallTimeout, david->noAction()),
-             uas.expect(Invite_OfferRejected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.end()),
+             uas.expect(Invite_OfferRejected, *TestEndPoint::AlwaysTruePred, 5000, uas.end()),
              And(Sub(uas.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction())),
                  Sub(david->expect(BYE, from(proxy), CallTimeout, david->ok()))),
              CallTimeout);
@@ -1272,7 +1313,7 @@ class DumTestCase : public DumFixture
          Seq(david->registerUser(60, david->getDefaultContacts()),
              optional(david->expect(REGISTER/407, from(proxy), WaitForResponse, david->digestRespond())),
              david->expect(REGISTER/200, from(proxy), WaitForResponse, derek->registerUa()), 
-             derek->expect(Register_Success, clientReg, hasRinstance(), WaitForRegistration, david->invite(derek->getAor().uri())),
+             derek->expect(Register_Success, clientReg, *TestEndPoint::AlwaysTruePred, WaitForRegistration, david->invite(derek->getAor().uri())),
              optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
              david->expect(INVITE/407, from(proxy), WaitForResponse, chain(david->ack(), david->digestRespond())),
              optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
@@ -1301,7 +1342,7 @@ class DumTestCase : public DumFixture
           Seq(david->registerUser(60, david->getDefaultContacts()),
              optional(david->expect(REGISTER/407, from(proxy), WaitForResponse, david->digestRespond())),
              david->expect(REGISTER/200, from(proxy), WaitForResponse, derek->registerUa()), 
-             derek->expect(Register_Success, clientReg, hasRinstance(), WaitForRegistration, david->invite(derek->getAor().uri())),
+             derek->expect(Register_Success, clientReg, *TestEndPoint::AlwaysTruePred, WaitForRegistration, david->invite(derek->getAor().uri())),
              optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
              david->expect(INVITE/407, from(proxy), WaitForResponse, chain(david->ack(), david->digestRespond())),
              optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
@@ -3085,7 +3126,7 @@ class DumTestCase : public DumFixture
          TestClientRegistration clientReg(jason);
 
          Seq(jason->registerUa(),
-             jason->expect(Register_Success, clientReg, hasRinstance(), WaitForRegistration, jason->noAction()),
+             jason->expect(Register_Success, clientReg, *TestEndPoint::AlwaysTruePred, WaitForRegistration, jason->noAction()),
              WaitForEndOfSeq);
          ExecuteSequences();
 
@@ -3141,7 +3182,7 @@ class DumTestCase : public DumFixture
 
          TestClientRegistration clientReg(derek);
          Seq(derek->registerUa(),
-             derek->expect(Register_Success, clientReg, hasRinstance(), WaitForRegistration, derek->noAction()),
+             derek->expect(Register_Success, clientReg, *TestEndPoint::AlwaysTruePred, WaitForRegistration, derek->noAction()),
              WaitForEndOfSeq);
          ExecuteSequences();
 
@@ -3172,7 +3213,7 @@ class DumTestCase : public DumFixture
 
          TestClientRegistration clientReg(derek);
          Seq(derek->registerUa(),
-             derek->expect(Register_Success, clientReg, hasRinstance(), WaitForRegistration, derek->noAction()),
+             derek->expect(Register_Success, clientReg, *TestEndPoint::AlwaysTruePred, WaitForRegistration, derek->noAction()),
              WaitForEndOfSeq);
          ExecuteSequences();
 
@@ -3208,7 +3249,7 @@ class DumTestCase : public DumFixture
 
          TestClientRegistration clientReg(derek);
          Seq(derek->registerUa(),
-             derek->expect(Register_Success, clientReg, hasRinstance(), WaitForRegistration, derek->noAction()),
+             derek->expect(Register_Success, clientReg, *TestEndPoint::AlwaysTruePred, WaitForRegistration, derek->noAction()),
              WaitForEndOfSeq);
          ExecuteSequences();
 
@@ -3976,9 +4017,9 @@ class DumTestCase : public DumFixture
          ExecuteSequences();
       }
 
-      void testInviteBasicSuccessWithPrack()
+      void testUACPrackInviteBasicSuccess()
       {
-         InfoLog(<< "testInviteBasicSuccessWithPrack");
+         InfoLog(<< "testUACPrackInviteBasicSuccess");
 
          jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
          TestSipEndPoint* sheila = sipEndPoint;
@@ -3986,8 +4027,7 @@ class DumTestCase : public DumFixture
          boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
          
          Seq(jason->invite(sheila->getContact(), standardOffer),
-             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, 
-                            sheila->reliableProvisional(answer, 1)),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(answer, 1)),
              jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
@@ -3999,10 +4039,9 @@ class DumTestCase : public DumFixture
          jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
       }
 
-
-      void testPrackEmpty180rel()
+      void testUACPrackEmpty180rel()
       {
-         InfoLog(<< "testPrackEmpty180rel");
+         InfoLog(<< "testUACPrackEmpty180rel");
 
          jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
          TestSipEndPoint* sheila = sipEndPoint;
@@ -4025,9 +4064,9 @@ class DumTestCase : public DumFixture
          jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
       }
 
-     void testPrackMultiple180rel()
+     void testUACPrackMultiple180rel()
       {
-         InfoLog(<< "testPrackMultiple180rel");
+         InfoLog(<< "testUACPrackMultiple180rel");
 
          jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
          TestSipEndPoint* sheila = sipEndPoint;
@@ -4035,8 +4074,7 @@ class DumTestCase : public DumFixture
          boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
          
          Seq(jason->invite(sheila->getContact(), standardOffer),
-             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, 
-                            sheila->reliableProvisional(answer, 1)),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(answer, 1)),
              jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
@@ -4051,9 +4089,9 @@ class DumTestCase : public DumFixture
          jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
       }
 
-      void testPrackUpdate()
+      void testUACPrackUpdate()
       {
-         InfoLog(<< "testPrackUpdate");
+         InfoLog(<< "testUACPrackUpdate");
 
          jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
          TestSipEndPoint* sheila = sipEndPoint;
@@ -4061,115 +4099,90 @@ class DumTestCase : public DumFixture
          boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
          
          Seq(jason->invite(sheila->getContact(), standardOffer),
-             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, 
-                            sheila->reliableProvisional(answer, 1)),
-             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, 
-                           WaitForCommand, uac.noAction()),
-             jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, 
-                           WaitForCommand, uac.noAction()),
-             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
-             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, 
-                            chain(sheila->ok(), uac.provideOffer(*standardOffer))),
-             sheila->expect(UPDATE, from(jason->getInstanceId()), WaitForCommand, 
-                            sheila->answerUpdate(answer)),
-             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, sheila->answer()),
-             And(Sub(uac.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
-                 Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, sheila->noAction()))),
-             WaitForEndOfSeq);
-         ExecuteSequences();
-         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
-      }
-
-
-      void testPrackUac491()
-      {
-         InfoLog(<< "testPrackUac491");
-
-         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
-         TestSipEndPoint* sheila = sipEndPoint;
-         TestClientInviteSession uac(jason);
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
-         
-         Seq(jason->invite(sheila->getContact(), standardOffer),
-             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, 
-                            sheila->reliableProvisional(answer, 1)),
-             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, 
-                           WaitForCommand, uac.noAction()),
-             jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, 
-                           WaitForCommand, uac.noAction()),
-             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
-             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, 
-                            chain(sheila->ok(), uac.provideOffer(*standardOffer))),
-             sheila->expect(UPDATE, from(jason->getInstanceId()), WaitForCommand, 
-                            chain(sheila->update("jason", answer), sheila->send491())),
-             sheila->expect(UPDATE/491, alwaysMatches(), WaitForCommand, 
-                            sheila->noAction()), 
-             sheila->expect(UPDATE, from(jason->getInstanceId()), Owner491, 
-                            sheila->answerUpdate(answer)), 
-             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, sheila->answer()),
-             And(Sub(uac.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
-                 Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, sheila->noAction()))),
-             WaitForEndOfSeq);
-         ExecuteSequences();
-         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
-      }
-
-
-      void testPrackUas491()
-      {
-         InfoLog(<< "testPrackUac491");
-
-         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
-         TestSipEndPoint* sheila = sipEndPoint;
-         TestClientInviteSession uac(jason);
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
-         
-         Seq(jason->invite(sheila->getContact(), standardOffer),
-             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, 
-                            sheila->reliableProvisional(answer, 1)),
-             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, 
-                           WaitForCommand, uac.noAction()),
-             jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, 
-                           WaitForCommand, uac.noAction()),
-             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
-             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, 
-                            chain(sheila->ok(), uac.provideOffer(*standardOffer))),
-             sheila->expect(UPDATE, from(jason->getInstanceId()), WaitForCommand, 
-                            chain(sheila->update("jason", answer), sheila->send491())),
-             sheila->expect(UPDATE/491, alwaysMatches(), WaitForCommand, 
-                            chain(sheila->pause(1000), sheila->update("jason", answer))),
-             uac.expect(Invite_OfferRejected, *TestEndPoint::AlwaysTruePred, Owner491, uac.noAction()),
-             uac.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideAnswer(*standardAnswer)),
-             sheila->expect(UPDATE/200, from(jason->getInstanceId()), WaitForCommand, sheila->answer()),
-             And(Sub(uac.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, 
-                                uac.noAction())),
-                 Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, 
-                                    sheila->noAction()))),
-             WaitForEndOfSeq);
-         
-         ExecuteSequences();
-         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
-      }
-
-      void testPrackUasUpdate()
-      {
-         InfoLog(<< "testPrackUasUpdate");
-
-         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
-         //jason->getProfile()->addSupportedMethod(UPDATE); //!dcm! --
-         //                                               //!automatically from above?
-         TestSipEndPoint* sheila = sipEndPoint;
-         TestClientInviteSession uac(jason);
-         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
-         
-         Seq(jason->invite(sheila->getContact(), standardOffer),
-             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, 
-                            sheila->reliableProvisional(answer, 1)),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(answer, 1)),
              jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
-             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, 
-                            chain(sheila->ok(), sheila->update("jason", answer))),
+             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), uac.provideOffer(*standardOffer))),
+             sheila->expect(UPDATE, from(jason->getInstanceId()), WaitForCommand, sheila->answerUpdate(answer)),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, sheila->answer()),
+             And(Sub(uac.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, sheila->noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testUACPrackUac491()
+      {
+         InfoLog(<< "testUACPrackUac491");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(answer, 1)),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), uac.provideOffer(*standardOffer))),
+             sheila->expect(UPDATE, from(jason->getInstanceId()), WaitForCommand, chain(sheila->update("jason", answer), sheila->send491())),
+             sheila->expect(UPDATE/491, alwaysMatches(), WaitForCommand, sheila->noAction()), 
+             sheila->expect(UPDATE, from(jason->getInstanceId()), Owner491, sheila->answerUpdate(answer)), 
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, sheila->answer()),
+             And(Sub(uac.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, sheila->noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testUACPrackUas491()
+      {
+         InfoLog(<< "testUACPrackUas491");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(answer, 1)),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), uac.provideOffer(*standardOffer))),
+             sheila->expect(UPDATE, from(jason->getInstanceId()), WaitForCommand, chain(sheila->update("jason", answer), sheila->send491())),
+             sheila->expect(UPDATE/491, alwaysMatches(), WaitForCommand, chain(sheila->pause(1000), sheila->update("jason", answer))),
+             uac.expect(Invite_OfferRejected, *TestEndPoint::AlwaysTruePred, Owner491, uac.noAction()),
+             uac.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideAnswer(*standardAnswer)),
+             sheila->expect(UPDATE/200, from(jason->getInstanceId()), WaitForCommand, sheila->answer()),
+             And(Sub(uac.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, sheila->noAction()))),
+             WaitForEndOfSeq);
+         
+         ExecuteSequences();
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testUACPrackUasUpdate()
+      {
+         InfoLog(<< "testUACPrackUasUpdate");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(answer, 1)),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), sheila->update("jason", answer))),
              uac.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideAnswer(*standardAnswer)),
              sheila->expect(UPDATE/200, from(jason->getInstanceId()), WaitForCommand, sheila->answer()),
              And(Sub(uac.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
@@ -4179,10 +4192,35 @@ class DumTestCase : public DumFixture
          jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
       }
 
-
-      void testPrackRetrans()
+      void testUACPrackUasDoubleUpdate()
       {
-         InfoLog(<< "testPrackRetrans");
+         InfoLog(<< "testUACPrackUasDoubleUpdate");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+
+         TestSipEndPoint* sheila = sipEndPoint;
+         TestClientInviteSession uac(jason);
+         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+         
+         Seq(jason->invite(sheila->getContact(), standardOffer),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(answer, 1)),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), sheila->update("jason", answer))),
+             uac.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, sheila->update("jason", answer)),  // 2nd update before previous one is answered
+             sheila->expect(UPDATE/500, alwaysMatches(), WaitForCommand, uac.provideAnswer(*standardAnswer)),
+             sheila->expect(UPDATE/200, from(jason->getInstanceId()), WaitForCommand, sheila->answer()),
+             And(Sub(uac.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, sheila->noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testUACPrackRetrans()
+      {
+         InfoLog(<< "testUACPrackRetrans");
 
          jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
          TestSipEndPoint* sheila = sipEndPoint;
@@ -4192,13 +4230,14 @@ class DumTestCase : public DumFixture
          boost::shared_ptr<resip::SipMessage> prov;
 
          Seq(jason->invite(sheila->getContact(), standardOffer),
-             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, 
-                            save(prov, sheila->reliableProvisional(answer, 1))),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, save(prov, sheila->reliableProvisional(answer, 1))),
              jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
-             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, 
-                            chain(sheila->ok(), sheila->pause(1000),sheila->retransmit(prov), sheila->answer())),             
+             sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), 
+                                                                                       sheila->pause(1000),
+                                                                                       sheila->retransmit(prov), 
+                                                                                       sheila->answer())),
              And(Sub(uac.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
                  Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, sheila->noAction()))),
              WaitForEndOfSeq);
@@ -4206,9 +4245,9 @@ class DumTestCase : public DumFixture
          jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
       }
 
-      void testPrackOptionTag()
+      void testUACPrackOptionTag()
       {
-         InfoLog(<< "testPrackOptionTag");
+         InfoLog(<< "testUACPrackOptionTag");
 
          jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Required);
          TestSipEndPoint* sheila = sipEndPoint;
@@ -4218,8 +4257,7 @@ class DumTestCase : public DumFixture
          boost::shared_ptr<resip::SipMessage> prov;
 
          Seq(jason->invite(sheila->getContact(), standardOffer),
-             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, 
-                            sheila->send420(Token(Symbols::C100rel))),
+             sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->send420(Token(Symbols::C100rel))),
              And(Sub(jason->expect(Invite_Failure, *TestEndPoint::AlwaysTruePred, WaitForResponse, jason->noAction()),
                      jason->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForResponse, jason->noAction())),
                  Sub(sheila->expect(ACK, alwaysMatches(), WaitForResponse, sheila->noAction()))),
@@ -4237,7 +4275,6 @@ class DumTestCase : public DumFixture
          derekContact.port() = derek->getPort();
 
          TestClientRegistration regDerek(derek);
-
 
          Seq(david->registerUser(60, david->getDefaultContacts()),
              optional(david->expect(REGISTER/407, from(proxy), WaitForResponse, david->digestRespond())),
@@ -4261,7 +4298,7 @@ class DumTestCase : public DumFixture
 
          Seq(invDerek.end(),
              And(Sub(invDerek.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, invDerek.noAction())),
-                 Sub(david->expect(BYE, contact(NameAddr(derekContact)), WaitForPause, chain(david->bye(), david->ok())),
+                 Sub(david->expect(BYE, contact(NameAddr(derekContact)), WaitForPause, chain(david->bye(), david->pause(100), david->ok())),
                      david->expect(BYE/200, contact(NameAddr(derekContact)), WaitForPause, david->noAction()))),
              WaitForEndOfSeq);
          ExecuteSequences();
@@ -4273,6 +4310,943 @@ class DumTestCase : public DumFixture
          ExecuteSequences();
       }
 
+      void testPrack3GPP_1() 
+      {
+         InfoLog(<< "testPrack3GPP_1: 3GPP 24.930 Rel 11 - 5.1.2, 5.2.2");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::SupportedEssential);
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::SupportedEssential);
+
+         TestClientRegistration regScott(scott);
+         
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         TestClientInviteSession uac(jason);
+         TestServerInviteSession uas(scott);
+         
+         Seq(jason->invite(scott->getProfile()->getDefaultFrom(), standardOffer),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.provisional(183, true))),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideOffer(*standardOffer) /* jason to send update */),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.provideAnswer(*standardAnswer)), 
+             jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provisional(180), uas.accept())),
+             And(Sub(jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+                     jason->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testPrack3GPP_2() 
+      {
+         InfoLog(<< "testPrack3GPP_2: 3GPP 24.930 Rel 11 - 5.2.3, 5.3.4");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::SupportedEssential);
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::SupportedEssential);
+
+         TestClientRegistration regScott(scott);
+         
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         TestClientInviteSession uac(jason);
+         TestServerInviteSession uas(scott);
+         
+         Seq(jason->invite(scott->getProfile()->getDefaultFrom(), standardOffer),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.provisional(183, true))),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provisional(180), uas.accept())),
+             And(Sub(jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+                     jason->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testPrack3GPP_3()
+      {
+         InfoLog(<< "testPrack3GPP_3: 3GPP 24.930 Rel 11 - 5.3.2, 5.5.2, 5.6.2");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::SupportedEssential);
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::SupportedEssential);
+
+         TestClientRegistration regScott(scott);
+         
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         TestClientInviteSession uac(jason);
+         TestServerInviteSession uas(scott);
+         
+         Seq(jason->invite(scott->getProfile()->getDefaultFrom(), standardOffer),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.provisional(180))),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.accept()),
+             And(Sub(jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+                     jason->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testPrack3GPP_4() 
+      {
+         InfoLog(<< "testPrack3GPP_4: 3GPP 24.930 Rel 11 - 5.3.3, 5.6.2");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::SupportedEssential);
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::SupportedEssential);
+
+         TestClientRegistration regScott(scott);
+         
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         TestClientInviteSession uac(jason);
+         TestServerInviteSession uas(scott);
+         
+         Seq(jason->invite(scott->getProfile()->getDefaultFrom(), standardOffer),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.provisional(183, true))),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.accept()),
+             And(Sub(jason->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testPrack3GPP_5()
+      {
+         InfoLog(<< "testPrack3GPP_5: 3GPP 24.930 Rel 11 - 5.4.2, 5.4.4");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::SupportedEssential);
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::SupportedEssential);
+
+         TestClientRegistration regScott(scott);
+         
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         TestClientInviteSession uac(jason);
+         TestServerInviteSession uas(scott);
+         
+         Seq(jason->invite(scott->getProfile()->getDefaultFrom(), standardOffer),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.provisional(180))),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.accept()),
+             And(Sub(jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+                     jason->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideOffer(*standardOffer))),
+                 Sub(scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.provideAnswer(*standardAnswer)),
+             jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testPrack3GPP_6() 
+      {
+         InfoLog(<< "testPrack3GPP_6: 3GPP 24.930 Rel 11 - 5.4.3");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::SupportedEssential);
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::SupportedEssential);
+
+         TestClientRegistration regScott(scott);
+         
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         TestClientInviteSession uac(jason);
+         TestServerInviteSession uas(scott);
+         
+         boost::shared_ptr<SdpContents> prackOffer(static_cast<SdpContents*>(standardOffer->clone()));
+
+         Seq(jason->invite(scott->getProfile()->getDefaultFrom(), standardOffer),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.provisional(183, true))),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, jason->setOfferToProvideInNextOnAnswerCallback(prackOffer) /* special flag to instruct jason to send new offer in PRACK - requires calling directly from onAnswer callback */),
+             jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.provideAnswer(*standardAnswer)),
+             jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideOffer(*standardOffer) /* jason to send new offer in UPDATE */),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.provideAnswer(*standardAnswer)), 
+             jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provisional(180), uas.accept())),
+             And(Sub(jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+                     jason->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testPrackInviteNoOffer() 
+      {
+         InfoLog(<< "testPrackInviteNoOffer");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::SupportedEssential);
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::SupportedEssential);
+
+         TestClientRegistration regScott(scott);
+         
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         TestClientInviteSession uac(jason);
+         TestServerInviteSession uas(scott);
+         
+         Seq(jason->invite(scott->getProfile()->getDefaultFrom(), 0 /* No Offer */),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             scott->expect(Invite_OfferRequired, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideOffer(*standardOffer), uas.provisional(183, true))),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideAnswer(*standardAnswer)),
+             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.accept()),
+             And(Sub(jason->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testPrackInviteNoOffer2ndProvisionalOffer() 
+      {
+         InfoLog(<< "testPrackInviteNoOffer2ndProvisionalOffer");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::SupportedEssential);
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::SupportedEssential);
+
+         TestClientRegistration regScott(scott);
+         
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         TestClientInviteSession uac(jason);
+         TestServerInviteSession uas(scott);
+         
+         Seq(jason->invite(scott->getProfile()->getDefaultFrom(), 0 /* No Offer */),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             scott->expect(Invite_OfferRequired, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideOffer(*standardOffer), uas.provisional(183, false))),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.provisional(183, true)),
+             jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideAnswer(*standardAnswer)),
+             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.accept()),
+             And(Sub(jason->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testPrackInviteOffer2ndReliableProvisionalAnswer() 
+      {
+         InfoLog(<< "testPrackInviteOffer2ndReliableProvisionalAnswer");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);  // Not using SupportEssential will allow reliable provisionals with no sdp
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);
+
+         TestClientRegistration regScott(scott);
+         
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         TestClientInviteSession uac(jason);
+         TestServerInviteSession uas(scott);
+         
+         Seq(jason->invite(scott->getProfile()->getDefaultFrom(), standardOffer),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.provisional(183, false))),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.provisional(183, true)),
+             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
+             jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.accept()),
+             And(Sub(jason->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testPrackInviteOffer2ndRelProvAnswerPrackOffer() 
+      {
+         InfoLog(<< "testPrackInviteOffer2ndRelProvAnswerPrackOffer");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);  // Not using SupportEssential will allow reliable provisionals with no sdp
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);
+
+         TestClientRegistration regScott(scott);
+         
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         boost::shared_ptr<SdpContents> prackOffer(static_cast<SdpContents*>(standardOffer->clone()));
+
+         TestClientInviteSession uac(jason);
+         TestServerInviteSession uas(scott);
+         
+         Seq(jason->invite(scott->getProfile()->getDefaultFrom(), standardOffer),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.provisional(183, false))),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.provisional(183, true)),
+             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
+             jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, jason->setOfferToProvideInNextOnAnswerCallback(prackOffer)),
+             jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.accept())),
+             And(Sub(jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+                     jason->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testPrackNegotiatedReliableProvisional() 
+      {
+         InfoLog(<< "testPrackNegotiatedReliableProvisional");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);
+
+         TestClientRegistration regScott(scott);
+         
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         TestClientInviteSession uac(jason);
+         TestServerInviteSession uas(scott);
+         
+         Seq(jason->invite(scott->getProfile()->getDefaultFrom(), standardOffer),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.provisional(183, true))),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.provisional(183, false)), // will cause a queued provisional to be send in NegotiatedReliable state
+             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
+             jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.accept()),  // Note:  accept before prack will cause 200 to be queued - interesting test case
+             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
+             And(Sub(jason->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testPrackNegotiatedReliableUpdates() 
+      {
+         InfoLog(<< "testPrackNegotiatedReliableUpdates");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);
+
+         TestClientRegistration regScott(scott);
+         
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         TestClientInviteSession uac(jason);
+         TestServerInviteSession uas(scott);
+         
+         Seq(jason->invite(scott->getProfile()->getDefaultFrom(), standardOffer),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.provisional(183, true))),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.provideOffer(*standardOffer)),  // UPDATE UAS->UAC
+             jason->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideAnswer(*standardAnswer)),
+             scott->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideOffer(*standardOffer)), // UPDATE UAC->UAS
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.provideAnswer(*standardAnswer)),
+             jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.accept()),
+             And(Sub(jason->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testPrackNegotiatedReliableUpdateGlare() 
+      {
+         InfoLog(<< "testPrackNegotiatedReliableUpdateGlare");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);
+
+         TestClientRegistration regScott(scott);
+         
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         TestClientInviteSession uac(jason);
+         TestServerInviteSession uas(scott);
+         
+         Seq(jason->invite(scott->getProfile()->getDefaultFrom(), standardOffer),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.provisional(183, true))),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uac.provideOffer(*standardOffer), uas.provideOffer(*standardOffer))),   // UPDATE UAC->UAS, UPDATE UAS->UAC
+             jason->expect(Invite_OfferRejected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideAnswer(*standardAnswer)), 
+             scott->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.accept()),
+             And(Sub(jason->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testPrack1xxResubmission() 
+      {
+         InfoLog(<< "testPrack1xxResubmission (takes 2.5 mintues to run)");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);
+
+         TestClientRegistration regScott(scott);
+         
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         TestClientInviteSession uac(jason);
+         TestServerInviteSession uas(scott);
+         
+         Seq(jason->invite(scott->getProfile()->getDefaultFrom(), standardOffer),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.provisional(183, true))),
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
+             jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, 150000 + WaitForCommand, uac.noAction()),  // Wait 2.5 mins + 1000ms buffer time
+             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.accept()),
+             And(Sub(jason->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testPrackRequiredWithSupportedEssential() 
+      {
+         InfoLog(<< "testPrackRequiredWithSupportedEssential");
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Required);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::Required);
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::SupportedEssential);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::SupportedEssential);
+
+         TestClientRegistration regScott(scott);
+         
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         TestClientInviteSession uac(jason);
+         TestServerInviteSession uas(scott);
+         
+         Seq(jason->invite(scott->getProfile()->getDefaultFrom(), standardOffer),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.provisional(183, false))),  // should be reliable provisional (no answer) due to required in invite
+             jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.accept()),
+             And(Sub(jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
+                     jason->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
+                 Sub(scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         jason->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         jason->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testUASPrackNegotiatedReliableUpdateGlareResend() 
+      {
+         InfoLog(<< "testUASPrackNegotiatedReliableUpdateGlareResend");
+
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);
+
+         TestClientRegistration regScott(scott);
+
+         boost::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         TestServerInviteSession uas(scott);
+         
+         Seq(david->invite(scott->getProfile()->getDefaultFrom().uri(), offer, TestSipEndPoint::RelProvModeSupported),
+             optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(INVITE/407, from(proxy), WaitForResponse, chain(david->ack(), david->digestRespond())),
+             optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.provisional(183, true))),
+             david->expect(INVITE/183, from(scott->getInstanceId()), WaitForCommand, david->prack()),
+             optional(david->expect(PRACK/100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(PRACK/407, from(proxy), WaitForCommand, david->digestRespond()),
+             optional(david->expect(PRACK/100, from(proxy), WaitFor100, david->noAction())),
+             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.provideOffer(*standardOffer)),  // UAS send UPDATE
+             david->expect(PRACK/200, from(scott->getInstanceId()), WaitForCommand, david->noAction()),
+             david->expect(UPDATE, from(scott->getInstanceId()), WaitForCommand, david->send491()),
+             david->expect(UPDATE, from(scott->getInstanceId()), 5000, david->answerUpdate(answer)),   // Expect UAS to resend UPDATE within 5 seconds
+             scott->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.accept()),
+             And(Sub(david->expect(INVITE/200, from(scott->getInstanceId()), WaitForCommand, david->ack())),
+                 Sub(scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testUASPrackNegotiatedReliableUpdateGlareCrossed() 
+      {
+         InfoLog(<< "testUASPrackNegotiatedReliableUpdateGlareCrossed");
+
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);
+
+         TestClientRegistration regScott(scott);
+
+         boost::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         TestServerInviteSession uas(scott);
+         
+         Seq(david->invite(scott->getAor().uri(), offer, TestSipEndPoint::RelProvModeSupported),
+             optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(INVITE/407, from(proxy), WaitForResponse, chain(david->ack(), david->digestRespond())),
+             optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.provisional(183, true))),
+             david->expect(INVITE/183, from(scott->getInstanceId()), WaitForCommand, david->prack()),
+             optional(david->expect(PRACK/100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(PRACK/407, from(proxy), WaitForCommand, david->digestRespond()),
+             optional(david->expect(PRACK/100, from(proxy), WaitFor100, david->noAction())),
+             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.provideOffer(*standardOffer)),  // UAS send UPDATE
+             david->expect(PRACK/200, from(scott->getInstanceId()), WaitForCommand, david->noAction()),
+             david->expect(UPDATE, from(scott->getInstanceId()), WaitForCommand, chain(david->send491(), david->update(scott->getAor().uri().user(), offer))),  // UAC send 491 to UPDATE and send crossed UPDATE to UAS
+             optional(david->expect(UPDATE/100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(UPDATE/407, from(proxy), WaitForCommand, david->digestRespond()),
+             And(Sub(scott->expect(Invite_OfferRejected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
+                     scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.accept())),
+                     scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction())),
+                 Sub(optional(david->expect(UPDATE/100, from(proxy), WaitFor100, david->noAction())),
+                     david->expect(UPDATE/200, from(scott->getInstanceId()), WaitForCommand, uas.noAction()),
+                     david->expect(INVITE/200, from(scott->getInstanceId()), WaitForCommand, david->ack()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testUASPrackNegotiatedReliableUACDoubleUpdate() 
+      {
+         InfoLog(<< "testUASPrackNegotiatedReliableUACDoubleUpdate");
+
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);
+
+         TestClientRegistration regScott(scott);
+
+         boost::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         TestServerInviteSession uas(scott);
+         
+         Seq(david->invite(scott->getAor().uri(), offer, TestSipEndPoint::RelProvModeSupported),
+             optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(INVITE/407, from(proxy), WaitForResponse, chain(david->ack(), david->digestRespond())),
+             optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.provisional(183, true))),
+             david->expect(INVITE/183, from(scott->getInstanceId()), WaitForCommand, david->prack()),
+             optional(david->expect(PRACK/100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(PRACK/407, from(proxy), WaitForCommand, david->digestRespond()),
+             optional(david->expect(PRACK/100, from(proxy), WaitFor100, david->noAction())),
+             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, david->update(scott->getAor().uri().user(), offer)),
+             david->expect(PRACK/200, from(scott->getInstanceId()), WaitForCommand, david->noAction()),
+             optional(david->expect(UPDATE/100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(UPDATE/407, from(proxy), WaitForCommand, david->digestRespond()),
+             optional(david->expect(UPDATE/100, from(proxy), WaitFor100, david->noAction())),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, david->update(scott->getAor().uri().user(), offer)),  // 2nd offer - before answer for first has been sent
+             optional(david->expect(UPDATE/100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(UPDATE/407, from(proxy), WaitForCommand, david->digestRespond()),
+             optional(david->expect(UPDATE/100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(UPDATE/500, alwaysMatches(), WaitForCommand, uas.provideAnswer(*standardAnswer)),
+             david->expect(UPDATE/200, from(scott->getInstanceId()), WaitForCommand, uas.accept()),
+             And(Sub(david->expect(INVITE/200, from(scott->getInstanceId()), WaitForCommand, david->ack())),
+                 Sub(scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testUASPrackNegotiatedReliableOfferInPrack() 
+      {
+         InfoLog(<< "testUASPrackNegotiatedReliableOfferInPrack");
+
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);
+
+         TestClientRegistration regScott(scott);
+
+         boost::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         TestServerInviteSession uas(scott);
+         
+         Seq(david->invite(scott->getAor().uri(), offer, TestSipEndPoint::RelProvModeSupported),
+             optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(INVITE/407, from(proxy), WaitForResponse, chain(david->ack(), david->digestRespond())),
+             optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.provisional(183, true))),
+             david->expect(INVITE/183, from(scott->getInstanceId()), WaitForCommand, david->prack()),
+             optional(david->expect(PRACK/100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(PRACK/407, from(proxy), WaitForCommand, chain(uas.provisional(183, false), david->digestRespond())),  // will cause a queued provisional to be send in NegotiatedReliable state
+             optional(david->expect(PRACK/100, from(proxy), WaitFor100, david->noAction())),
+             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
+             david->expect(PRACK/200, from(scott->getInstanceId()), WaitForCommand, david->noAction()),
+             david->expect(INVITE/183, from(scott->getInstanceId()), WaitForCommand, david->prack(offer)),
+             optional(david->expect(PRACK/100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(PRACK/407, from(proxy), WaitForCommand, david->digestRespond()),
+             optional(david->expect(PRACK/100, from(proxy), WaitFor100, david->noAction())),
+             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.accept())),
+             And(Sub(david->expect(PRACK/200, from(scott->getInstanceId()), WaitForCommand, david->noAction()),
+                     david->expect(INVITE/200, from(scott->getInstanceId()), WaitForCommand, david->ack())),
+                 Sub(scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testUASPrack18xRetransmissions() 
+      {
+         InfoLog(<< "testUASPrack18xRetransmissions (takes ~128 seconds to run)");
+
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);
+
+         TestClientRegistration regScott(scott);
+
+         boost::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         int retransInterval = resip::Timer::T1;
+
+         TestServerInviteSession uas(scott);
+         
+         Seq(david->invite(scott->getAor().uri(), offer, TestSipEndPoint::RelProvModeSupported),
+             optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(INVITE/407, from(proxy), WaitForResponse, chain(david->ack(), david->digestRespond())),
+             optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.provisional(183, true))),
+             david->expect(INVITE/183, from(scott->getInstanceId()), WaitForCommand, david->noAction()),  // first 18x
+             david->expect(INVITE/183, from(scott->getInstanceId()), retransInterval+WaitForCommand, david->noAction()),  // first retrans - resip::Timer::T1 later (allow 1000ms time variance)
+             david->expect(INVITE/183, from(scott->getInstanceId()), (retransInterval*2)+WaitForCommand, david->noAction()),  // next retrans - resip::Timer::T1*2 ms later (allow 1000ms time variance)
+             david->expect(INVITE/183, from(scott->getInstanceId()), (retransInterval*2*2)+WaitForCommand, david->noAction()),  // next retrans
+             david->expect(INVITE/183, from(scott->getInstanceId()), (retransInterval*2*2*2)+WaitForCommand, david->noAction()),  // next retrans
+             david->expect(INVITE/183, from(scott->getInstanceId()), (retransInterval*2*2*2*2)+WaitForCommand, david->noAction()),  // next retrans
+             scott->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, (retransInterval*2*2*2*2*2)+WaitForCommand, uas.noAction()),
+             david->expect(INVITE/504, alwaysMatches(), WaitForCommand, david->ack()),  // 504 error - no PRACK
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testUASPrackStrayPrack() 
+      {
+         InfoLog(<< "testUASPrackStrayPrack");
+
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);
+
+         TestClientRegistration regScott(scott);
+
+         boost::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         TestServerInviteSession uas(scott);
+         
+         Seq(david->invite(scott->getAor().uri(), offer, TestSipEndPoint::RelProvModeSupported),
+             optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(INVITE/407, from(proxy), WaitForResponse, chain(david->ack(), david->digestRespond())),
+             optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.provisional(183, true))),
+             david->expect(INVITE/183, from(scott->getInstanceId()), WaitForCommand, david->prack()),
+             optional(david->expect(PRACK/100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(PRACK/407, from(proxy), WaitForCommand, david->digestRespond()),
+             optional(david->expect(PRACK/100, from(proxy), WaitFor100, david->noAction())),
+             scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
+             david->expect(PRACK/200, from(scott->getInstanceId()), WaitForCommand, david->prack()),  // Stray prack (will be a copy of last one)
+             optional(david->expect(PRACK/100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(PRACK/407, from(proxy), WaitForCommand, david->digestRespond()),
+             optional(david->expect(PRACK/100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(PRACK/481, alwaysMatches(), WaitForCommand, uas.accept()),
+             And(Sub(david->expect(INVITE/200, from(scott->getInstanceId()), WaitForCommand, david->ack())),
+                 Sub(scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testUASPrack2ndOfferInNoAnswerReliableWaitingPrack() 
+      {
+         InfoLog(<< "testUASPrack2ndOfferInNoAnswerReliableWaitingPrack");
+
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);
+
+         TestClientRegistration regScott(scott);
+
+         boost::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         TestServerInviteSession uas(scott);
+         
+         Seq(david->invite(scott->getAor().uri(), offer, TestSipEndPoint::RelProvModeSupported),
+             optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(INVITE/407, from(proxy), WaitForResponse, chain(david->ack(), david->digestRespond())),
+             optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.provisional(183, false)),  // provisional no answer
+             david->expect(INVITE/183, from(scott->getInstanceId()), WaitForCommand, david->prack(offer)),  // 2nd offer without an answer - session should be torn down
+             optional(david->expect(PRACK/100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(PRACK/407, from(proxy), WaitForCommand, david->digestRespond()),
+             optional(david->expect(PRACK/100, from(proxy), WaitFor100, david->noAction())),
+             scott->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
+             david->expect(PRACK/406, alwaysMatches(), WaitForCommand, david->noAction()),
+             david->expect(INVITE/406, alwaysMatches(), WaitForCommand, david->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testUASPrack2ndOfferInOfferReliableProvidedAnswer() 
+      {
+         InfoLog(<< "testUASPrack2ndOfferInOfferReliableProvidedAnswer");
+
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Supported);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Supported);
+
+         TestClientRegistration regScott(scott);
+
+         boost::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+         boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
+
+         Seq(scott->registerUa(),
+             scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         TestServerInviteSession uas(scott);
+         
+         Seq(david->invite(scott->getAor().uri(), offer, TestSipEndPoint::RelProvModeSupported),
+             optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(INVITE/407, from(proxy), WaitForResponse, chain(david->ack(), david->digestRespond())),
+             optional(david->expect(INVITE/100, from(proxy), WaitFor100, david->noAction())),
+             scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+             scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.provisional(183, false))),  // provisional no answer
+             david->expect(INVITE/183, from(scott->getInstanceId()), WaitForCommand, david->prack(offer)),  // 2nd offer without an answer - session should be torn down
+             optional(david->expect(PRACK/100, from(proxy), WaitFor100, david->noAction())),
+             david->expect(PRACK/407, from(proxy), WaitForCommand, david->digestRespond()),
+             optional(david->expect(PRACK/100, from(proxy), WaitFor100, david->noAction())),
+             scott->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
+             david->expect(PRACK/406, alwaysMatches(), WaitForCommand, david->noAction()),
+             david->expect(INVITE/406, alwaysMatches(), WaitForCommand, david->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+         scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+      }
 };
 
 // Registers the fixture into the 'registry'
@@ -4289,6 +5263,7 @@ int main(int argc, char** argv)
 #endif
 
    initNetwork();
+   bool interactive = false;
    try
    {
       CommandLineParser args(argc, argv);
@@ -4308,52 +5283,64 @@ int main(int argc, char** argv)
       resip::Timer::T1 = 2000;
       resip::Timer::T2 = 8000;
 
-      CommandLineSelector testSelector;
-	  CPPUNIT_NS::TextTestRunner testrunner; 
+      if(args.mInteractive)
+      {
+         interactive = true;
+         CommandLineSelector testSelector;
+         CPPUNIT_NS::TextTestRunner testrunner; 
 
-       // informs test-listener about testresults
-       CPPUNIT_NS::TestResult testresult;
-       // register listener for collecting the test-results
-       CPPUNIT_NS::TestResultCollector collectedresults;
-       testresult.addListener (&collectedresults);
-	   // Add a listener that displays test progres
-       CPTextTestProgressListener progress;
-       testresult.addListener( &progress );   
+         // informs test-listener about testresults
+         CPPUNIT_NS::TestResult testresult;
+         // register listener for collecting the test-results
+         CPPUNIT_NS::TestResultCollector collectedresults;
+         testresult.addListener (&collectedresults);
+         // Add a listener that displays test progres
+         CPTextTestProgressListener progress;
+         testresult.addListener( &progress );   
 
-	   // Get the top level suite from the registry
-       CppUnit::Test *suite = CppUnit::TestFactoryRegistry::getRegistry().makeTest();
+         // Get the top level suite from the registry
+         CppUnit::Test *suite = CppUnit::TestFactoryRegistry::getRegistry().makeTest();
 
-	   int numRepetitions = 1;
-	   if(CppTestSelector::SelectTests(suite,testrunner, testSelector,numRepetitions) > 0)
-	   {
-	      DumFixture::initialize(argc, argv);
+         int numRepetitions = 1;
+         if(CppTestSelector::SelectTests(suite,testrunner, testSelector,numRepetitions) > 0)
+         {
+            DumFixture::initialize(argc, argv);
 
-		  for(int x=0; x<numRepetitions; x++)
-             testrunner.run (testresult);
+            for(int x=0; x<numRepetitions; x++)
+            {
+               testrunner.run (testresult);
+            }
 
-		  DumFixture::destroyStatic();
+            DumFixture::destroyStatic();
 
-	     // output results in text-format
-	     //TextOutputter (TestResultCollector *result, OStream &stream)
-         CPPUNIT_NS :: TextOutputter textoutputter (&collectedresults, std::cerr);
-         textoutputter.write ();
-	     textoutputter.printStatistics();
+            // output results in text-format
+            //TextOutputter (TestResultCollector *result, OStream &stream)
+            CPPUNIT_NS :: TextOutputter textoutputter (&collectedresults, std::cerr);
+            textoutputter.write ();
+            textoutputter.printStatistics();
 
-         // output results in xml-format		
-	     ofstream testResult(TEST_RESULT_FILE);
-         CPPUNIT_NS :: XmlOutputter xmloutputter (&collectedresults, testResult);
-         xmloutputter.write ();
-	     testResult.close();
-		 
-	   }
-
-      //CppUnit::TextUi::TestRunner runner;
-
-      //runner.addTest( MyTestCase::suite() );
-      //runner.run();
-      DebugLog(<< "Finished");
-
+            // output results in xml-format		
+            ofstream testResult(TEST_RESULT_FILE);
+            CPPUNIT_NS :: XmlOutputter xmloutputter (&collectedresults, testResult);
+            xmloutputter.write ();
+            testResult.close();
+         }
+         DebugLog(<< "Finished");
+      }
+      else
+      {
+         DumFixture::initialize(argc, argv);
       
+         CppUnit::TextTestRunner runner;
+
+         runner.addTest( CppUnit::TestFactoryRegistry::getRegistry().makeTest() );
+         runner.run();
+         DebugLog(<< "Finished: waiting for all transactions to die.");
+      
+         sleepSeconds(32);
+
+         DumFixture::destroyStatic();
+      }
    }
    catch (BaseException& e)
    {
@@ -4361,11 +5348,12 @@ int main(int argc, char** argv)
       exit(-1);
    }
 
-#if 1
-   char ch;
-   std::cout <<"Press <enter> to exit: ";
-   std::cin >>ch;
-#endif
+   if(interactive)
+   {
+      char ch;
+      std::cout <<"Press <enter> to exit: ";
+      std::cin >>ch;
+   }
 
    return 0;
 }

@@ -121,15 +121,6 @@ TestUser::DigestChallenge::go(boost::shared_ptr<SipMessage> request)
    return challenge;
 }
 
-boost::shared_ptr<SipMessage>
-TestUser::Prack::go(boost::shared_ptr<SipMessage> response)
-{
-   assert(response->isResponse());
-   boost::shared_ptr<SipMessage> msg(mEndPoint.getDialog(response->header(h_CallId))->makeRequest(PRACK));
-
-   return msg;
-}
-
 TestUser::Register::Register(TestUser* endPoint,
                              int requestedExpireSecs,
                              const std::set<resip::NameAddr>& contacts,
@@ -218,12 +209,6 @@ TestUser::digestRespond()
 
 TestSipEndPoint::MessageExpectAction* 
 TestUser::digestChallenge()
-{
-   return new DigestChallenge(*this);
-}
-
-TestSipEndPoint::MessageExpectAction* 
-TestUser::prack()
 {
    return new DigestChallenge(*this);
 }

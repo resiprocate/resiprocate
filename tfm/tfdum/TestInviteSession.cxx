@@ -45,7 +45,7 @@ TestInviteSession::provideAnswer(const resip::SdpContents& answer)
 CommonAction* 
 TestInviteSession::end(resip::InviteSession::EndReason reason)
 {
-   void (resip::InviteSession::*fn)(resip::InviteSession::EndReason);
+   void (resip::InviteSession::*fn)(resip::InviteSession::EndReason) = &InviteSession::end;
    return new CommonAction(mUa, "InviteSession::end",
                            boost::bind(fn, boost::bind<InviteSession*>(&InviteSessionHandle::get, boost::ref(mSessionHandle)), reason));
 }
@@ -293,7 +293,7 @@ TestClientInviteSession::provideAnswer(const resip::SdpContents& answer)
 CommonAction* 
 TestClientInviteSession::end(resip::InviteSession::EndReason reason)
 {
-   void (resip::ClientInviteSession::*fn)(resip::InviteSession::EndReason);
+   void (resip::ClientInviteSession::*fn)(resip::InviteSession::EndReason) = &ClientInviteSession::end;
    return new CommonAction(mUa, "ClientInviteSession::end",
                            boost::bind(fn, boost::bind<ClientInviteSession*>(&ClientInviteSessionHandle::get, boost::ref(mHandle)), 
                                        reason));
@@ -357,11 +357,11 @@ TestServerInviteSession::expect(InviteEvent::Type t,
 
 
 CommonAction* 
-TestServerInviteSession::provideOffer(const resip::SdpContents& offer, resip::DialogUsageManager::EncryptionLevel level, resip::SdpContents* alternative)
+TestServerInviteSession::provideOffer(const resip::SdpContents& offer, resip::DialogUsageManager::EncryptionLevel level, resip::SdpContents* alternative, bool sendOfferAtAccept)
 {
    return new CommonAction(mUa, "ServerInviteSession::provideOffer",
                            boost::bind(&ServerInviteSession::provideOffer, boost::bind<ServerInviteSession*>(&ServerInviteSessionHandle::get, boost::ref(mHandle)),
-                                       offer, level, alternative));
+                                       offer, level, alternative, sendOfferAtAccept));
 }
 
 CommonAction* 
@@ -375,7 +375,7 @@ TestServerInviteSession::provideAnswer(const resip::SdpContents& answer)
 CommonAction* 
 TestServerInviteSession::end(resip::InviteSession::EndReason reason)
 {
-   void (resip::ServerInviteSession::*fn)(resip::InviteSession::EndReason);
+   void (resip::ServerInviteSession::*fn)(resip::InviteSession::EndReason) = &ServerInviteSession::end;
    return new CommonAction(mUa, "ServerInviteSession::end",
                            boost::bind(fn, boost::bind<ServerInviteSession*>(&ServerInviteSessionHandle::get, boost::ref(mHandle)),
                               reason));
@@ -406,9 +406,9 @@ TestServerInviteSession::redirect(const resip::NameAddrs& contacts, int code)
 }
 
 CommonAction*
-TestServerInviteSession::provisional(int code)
+TestServerInviteSession::provisional(int code, bool earlyFlag)
 {
    return new CommonAction(mUa, "ServerInviteSession::provisional",
                            boost::bind(&ServerInviteSession::provisional, boost::bind<ServerInviteSession*>(&ServerInviteSessionHandle::get, 
-                                                                                                            boost::ref(mHandle)), code, false));
+                                                                                                            boost::ref(mHandle)), code, earlyFlag));
 }

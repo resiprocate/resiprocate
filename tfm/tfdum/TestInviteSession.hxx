@@ -57,12 +57,10 @@ class TestInviteSession : public TestUsage
       void setServerSubscription(resip::ServerSubscriptionHandle h) { mServerSubscription = h; }
       void setReferMessage(const resip::SipMessage& refer) { mReferMessage = refer; }
 
-
       resip::InviteSessionHandle mSessionHandle;
       resip::ClientSubscriptionHandle mClientSubscription;
       resip::ServerSubscriptionHandle mServerSubscription;
       resip::SipMessage mReferMessage;
-
 };
 
 class TestClientInviteSession : public TestInviteSession
@@ -115,13 +113,13 @@ class TestServerInviteSession : public TestInviteSession
       resip::Data getName() const { return "TestServerInviteSession"; }
 
       CommonAction* provideOffer(const resip::SdpContents& offer, resip::DialogUsageManager::EncryptionLevel level = resip::DialogUsageManager::None, 
-                                 resip::SdpContents* alternative = 0);
+                                 resip::SdpContents* alternative = 0, bool sendOfferAtAccept = false);
       CommonAction* provideAnswer(const resip::SdpContents& answer);
       CommonAction* end(resip::InviteSession::EndReason = resip::InviteSession::NotSpecified);
       CommonAction* reject(int statusCode, resip::WarningCategory* warning=0);
       CommonAction* accept(int statusCode=200);
       CommonAction* redirect(const resip::NameAddrs& contacts, int code=302);
-      CommonAction* provisional(int code=180);
+      CommonAction* provisional(int code=180, bool earlyFlag = false);
 
       bool isMyEvent(Event*);
 

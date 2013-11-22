@@ -73,7 +73,6 @@ DumUserAgent::makeProfile(const resip::Uri& aor, const Data& password)
    profile->setDefaultFrom(NameAddr(aor));
    profile->setUserAgent("dum/tfm");
    profile->setDigestCredential(aor.host(), aor.user(), aor.password());   
-   profile->addSupportedMethod(REFER);   
    profile->setInstanceId(resip::Random::getRandomHex(4));   
    profile->gruuEnabled() = true;
    
@@ -84,6 +83,12 @@ const resip::NameAddr&
 DumUserAgent::getAor() const
 {
    return getProfile()->getDefaultFrom();
+}
+
+ExpectAction* DumUserAgent::setOfferToProvideInNextOnAnswerCallback(boost::shared_ptr<resip::SdpContents> offer) 
+{ 
+   mOfferToProvideInNextOnAnswerCallback = offer; 
+   return new NoAction();
 }
 
 // DumUaAction* 
@@ -165,6 +170,7 @@ DumUserAgent::init()
    mProfile->addSupportedMethod(INFO);
    mProfile->addSupportedMethod(MESSAGE);
    mProfile->addSupportedMethod(REFER);
+   mProfile->addSupportedMethod(PRACK);
   
    mDum.setMasterProfile(mProfile);
 
@@ -561,12 +567,14 @@ DumUserAgent::onTerminated(InviteSessionHandle h, InviteSessionHandler::Terminat
 void
 DumUserAgent::onForkDestroyed(ClientInviteSessionHandle h)
 {
+   DebugLog(<< "onForkDestroyed");
    handleEvent(new ClientInviteEvent(this, Invite_ForkDestroyed, h));
 }
 
 void
 DumUserAgent::onRedirected(ClientInviteSessionHandle h, const SipMessage& msg)
 {
+   DebugLog(<< "onRedirected");
    handleEvent(new ClientInviteEvent(this, Invite_Redirected, h, msg));
 }
 
@@ -575,6 +583,12 @@ DumUserAgent::onAnswer(InviteSessionHandle h, const SipMessage& msg, const SdpCo
 {
    DebugLog(<< "onAnswer");
    handleEvent(new InviteEvent(this, Invite_Answer, h, msg));
+   if(mOfferToProvideInNextOnAnswerCallback.get())
+   {
+      DebugLog(<< "onAnswer - calling provideOffer from onAnswer callback");
+      h->provideOffer(*mOfferToProvideInNextOnAnswerCallback);
+      mOfferToProvideInNextOnAnswerCallback.reset();
+   }
 }
 
 void 
@@ -610,44 +624,54 @@ DumUserAgent::onOfferRejected(InviteSessionHandle h, const SipMessage* msg)
 {
    DebugLog(<< "onOfferRejected");
    if( msg )
+   {
       handleEvent(new InviteEvent(this, Invite_OfferRejected, h, *msg));
+   }
    else
+   {
       handleEvent(new InviteEvent(this, Invite_OfferRejected, h));
+   }
 }
 
 void
 DumUserAgent::onInfo(InviteSessionHandle h, const SipMessage& msg)
 {
+   DebugLog(<< "onInfo");
    handleEvent(new InviteEvent(this, Invite_Info, h, msg));
 }
 
 void
 DumUserAgent::onInfoSuccess(InviteSessionHandle h, const SipMessage& msg)
 {
+   DebugLog(<< "onInfoSuccess");
    handleEvent(new InviteEvent(this, Invite_InfoSuccess, h, msg));
 }
 
 void
 DumUserAgent::onInfoFailure(InviteSessionHandle h, const SipMessage& msg)
 {
+   DebugLog(<< "onInfoFailure");
    handleEvent(new InviteEvent(this, Invite_InfoFailure, h, msg));
 }
  
 void
 DumUserAgent::onMessage(InviteSessionHandle h, const SipMessage& msg)
 {
+   DebugLog(<< "onMessage");
    handleEvent(new InviteEvent(this, Invite_Message, h, msg));
 }
 
 void
 DumUserAgent::onMessageSuccess(InviteSessionHandle h, const SipMessage& msg)
 {
+   DebugLog(<< "onMessageSuccess");
    handleEvent(new InviteEvent(this, Invite_MessageSuccess, h, msg));
 }
  
 void
 DumUserAgent::onMessageFailure(InviteSessionHandle h, const SipMessage& msg)
 {
+   DebugLog(<< "onMessageFailure");
    handleEvent(new InviteEvent(this, Invite_MessageFailure, h, msg));
 }
 
@@ -704,7 +728,15 @@ DumUserAgent::onIllegalNegotiation(InviteSessionHandle h, const SipMessage& msg)
 void
 DumUserAgent::onSessionExpired(InviteSessionHandle h)
 {
+   DebugLog(<< "onSessionExpired");
    handleEvent(new InviteEvent(this, Invite_SessionExpired, h));
+}
+
+void 
+DumUserAgent::onPrack(ServerInviteSessionHandle h, const SipMessage &msg)
+{
+   DebugLog(<< "onPrack");
+   handleEvent(new ServerInviteEvent(this, Invite_Prack, h, msg));
 }
 
 DumUserAgent::ExpectBase* 
